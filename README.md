@@ -34,6 +34,21 @@ The flow is:
 That means a role is not simply "this model always does code review." Instead, the router can assign a
 role to whichever endpoint currently satisfies the role's task and capability requirements best.
 
+## How preferences and observed performance affect routing
+
+Role matching is only part of the decision.
+
+Once the router has a set of eligible endpoints, it can also consider:
+
+- **observed performance** such as latency, throughput, failures, cost estimates, freshness, and confidence
+- **benchmark-derived quality** when benchmark evidence exists
+- **declared capabilities** from endpoint profiles
+- **user or policy preferences** such as preferring lower cost, lower latency, better quality, or local execution
+
+The routing policy is deterministic: hard constraints and denies apply first, then the router uses
+measured and declared evidence to score the remaining candidates. If multiple candidates are close,
+policy preferences like locality, cost, and latency help break ties in a predictable way.
+
 ## What you get
 
 - JSON Schema contracts under `protocol/`
