@@ -5,6 +5,35 @@
 It gives you a shared way to describe AI endpoints, routing policies, role/task requirements, and
 observability artifacts such as router decisions, traces, usage events, and observed performance.
 
+## The protocol in plain English
+
+The protocol gives a router a consistent vocabulary for answering questions like:
+
+- what kind of task is being requested
+- which capabilities and modalities that task requires
+- which endpoints claim or demonstrate those capabilities
+- which policy or operational rules should influence selection
+- how the final routing decision should be recorded and explained
+
+In practice, the repository defines schemas for endpoint identity, declared and observed capability
+profiles, routing policy, router decisions, traces, usage events, and related fixtures and examples.
+
+## How roles are assigned to models
+
+In `role-model`, roles are assigned through **routing metadata**, not by hard-coding a single model to
+a prompt persona.
+
+The flow is:
+
+1. A `RoleDefinition` describes a role such as `general.chat`, `coder.patch`, `coder.review`, or `tool.agent`.
+2. That role constrains which task families are allowed and what capabilities are required, preferred, or forbidden.
+3. A task definition declares the capabilities and modalities needed for execution.
+4. Endpoint profiles describe what a model or host can actually do.
+5. The router filters for eligible endpoints, then selects among them using policy plus declared and observed evidence.
+
+That means a role is not simply "this model always does code review." Instead, the router can assign a
+role to whichever endpoint currently satisfies the role's task and capability requirements best.
+
 ## What you get
 
 - JSON Schema contracts under `protocol/`
