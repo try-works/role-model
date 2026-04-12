@@ -1,7 +1,7 @@
 {
   "endpoint_id": "cli.local.coder",
-  "endpoint_kind": "cli-agent",
-  "provider_kind": "provider-cli",
+  "endpoint_kind": "local_engine",
+  "provider_kind": "cli",
   "serving_source": "local-process",
   "model_id": "gpt-5.4",
   "package_id": "role-model-router/provider-cli",

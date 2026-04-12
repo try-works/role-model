@@ -1,0 +1,1079 @@
+.                                        | ΓÇëWARNΓÇë Unsupported engine: wanted: {"node":">=22 <23"} (current: {"node":"v24.11.0","pnpm":"10.6.5"})
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/01-protocol-routing-obs/packages/conformance[39m
+
+ [31mΓ¥»[39m src/protocol-schema-conformance.test.ts [2m([22m[2m8 tests[22m[2m | [22m[31m8 failed[39m[2m)[22m[33m 1325[2mms[22m[39m
+[31m   [31m├ù[31m run01 protocol schema conformance[2m > [22mendpoint identity permits run01 optional metadata fields to be absent[39m[33m 345[2mms[22m[39m
+[31m     ΓåÆ [
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "package_id"
+    },
+    "message": "must have required property 'package_id'"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "variant_id"
+    },
+    "message": "must have required property 'variant_id'"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "quantization"
+    },
+    "message": "must have required property 'quantization'"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "precision"
+    },
+    "message": "must have required property 'precision'"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "host_class"
+    },
+    "message": "must have required property 'host_class'"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "device_class"
+    },
+    "message": "must have required property 'device_class'"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "region"
+    },
+    "message": "must have required property 'region'"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "org_scope"
+    },
+    "message": "must have required property 'org_scope'"
+  }
+][39m
+[31m   [31m├ù[31m run01 protocol schema conformance[2m > [22mdeclared capability profile accepts tool_calling as the required object[39m[32m 176[2mms[22m[39m
+[31m     ΓåÆ [
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "platform_constraints"
+    },
+    "message": "must have required property 'platform_constraints'"
+  },
+  {
+    "instancePath": "/tool_calling",
+    "schemaPath": "#/properties/tool_calling/type",
+    "keyword": "type",
+    "params": {
+      "type": "boolean"
+    },
+    "message": "must be boolean"
+  }
+][39m
+[31m   [31m├ù[31m run01 protocol schema conformance[2m > [22mrouting policy accepts the run01 compute, budget, privacy, and target fields[39m[32m 134[2mms[22m[39m
+[31m     ΓåÆ [
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "policy_id"
+    },
+    "message": "must have required property 'policy_id'"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "prefer_local"
+    },
+    "message": "must have required property 'prefer_local'"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "budget_mode"
+    },
+    "message": "must have required property 'budget_mode'"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "tie_break_order"
+    },
+    "message": "must have required property 'tie_break_order'"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/additionalProperties",
+    "keyword": "additionalProperties",
+    "params": {
+      "additionalProperty": "compute_preference"
+    },
+    "message": "must NOT have additional properties"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/additionalProperties",
+    "keyword": "additionalProperties",
+    "params": {
+      "additionalProperty": "required_capabilities"
+    },
+    "message": "must NOT have additional properties"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/additionalProperties",
+    "keyword": "additionalProperties",
+    "params": {
+      "additionalProperty": "required_modalities"
+    },
+    "message": "must NOT have additional properties"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/additionalProperties",
+    "keyword": "additionalProperties",
+    "params": {
+      "additionalProperty": "require_tools"
+    },
+    "message": "must NOT have additional properties"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/additionalProperties",
+    "keyword": "additionalProperties",
+    "params": {
+      "additionalProperty": "deny_endpoints"
+    },
+    "message": "must NOT have additional properties"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/additionalProperties",
+    "keyword": "additionalProperties",
+    "params": {
+      "additionalProperty": "allow_endpoints"
+    },
+    "message": "must NOT have additional properties"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/additionalProperties",
+    "keyword": "additionalProperties",
+    "params": {
+      "additionalProperty": "deny_provider_kinds"
+    },
+    "message": "must NOT have additional properties"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/additionalProperties",
+    "keyword": "additionalProperties",
+    "params": {
+      "additionalProperty": "allow_provider_kinds"
+    },
+    "message": "must NOT have additional properties"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/additionalProperties",
+    "keyword": "additionalProperties",
+    "params": {
+      "additionalProperty": "budget"
+    },
+    "message": "must NOT have additional properties"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/additionalProperties",
+    "keyword": "additionalProperties",
+    "params": {
+      "additionalProperty": "privacy"
+    },
+    "message": "must NOT have additional properties"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/additionalProperties",
+    "keyword": "additionalProperties",
+    "params": {
+      "additionalProperty": "targets"
+    },
+    "message": "must NOT have additional properties"
+  }
+][39m
+[31m   [31m├ù[31m run01 protocol schema conformance[2m > [22mobserved performance accepts sample_window and sources without requiring legacy single-sample fields[39m[32m 131[2mms[22m[39m
+[31m     ΓåÆ [
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "measurement_window"
+    },
+    "message": "must have required property 'measurement_window'"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "judge_score"
+    },
+    "message": "must have required property 'judge_score'"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "cold_start_ms"
+    },
+    "message": "must have required property 'cold_start_ms'"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "error_class_rates"
+    },
+    "message": "must have required property 'error_class_rates'"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "cost_per_1k_tokens_est"
+    },
+    "message": "must have required property 'cost_per_1k_tokens_est'"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "currency"
+    },
+    "message": "must have required property 'currency'"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/additionalProperties",
+    "keyword": "additionalProperties",
+    "params": {
+      "additionalProperty": "sample_window"
+    },
+    "message": "must NOT have additional properties"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/additionalProperties",
+    "keyword": "additionalProperties",
+    "params": {
+      "additionalProperty": "sources"
+    },
+    "message": "must NOT have additional properties"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/additionalProperties",
+    "keyword": "additionalProperties",
+    "params": {
+      "additionalProperty": "quality_score"
+    },
+    "message": "must NOT have additional properties"
+  }
+][39m
+[31m   [31m├ù[31m run01 protocol schema conformance[2m > [22mtrace event accepts payload and request routing linkage for router decision creation[39m[32m 121[2mms[22m[39m
+[31m     ΓåÆ [
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "span_id"
+    },
+    "message": "must have required property 'span_id'"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "message"
+    },
+    "message": "must have required property 'message'"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/additionalProperties",
+    "keyword": "additionalProperties",
+    "params": {
+      "additionalProperty": "request_id"
+    },
+    "message": "must NOT have additional properties"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/additionalProperties",
+    "keyword": "additionalProperties",
+    "params": {
+      "additionalProperty": "routing_decision_id"
+    },
+    "message": "must NOT have additional properties"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/additionalProperties",
+    "keyword": "additionalProperties",
+    "params": {
+      "additionalProperty": "payload"
+    },
+    "message": "must NOT have additional properties"
+  }
+][39m
+[31m   [31m├ù[31m run01 protocol schema conformance[2m > [22mtrace span accepts request linkage and canonical span_type[39m[32m 132[2mms[22m[39m
+[31m     ΓåÆ [
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "name"
+    },
+    "message": "must have required property 'name'"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/additionalProperties",
+    "keyword": "additionalProperties",
+    "params": {
+      "additionalProperty": "request_id"
+    },
+    "message": "must NOT have additional properties"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/additionalProperties",
+    "keyword": "additionalProperties",
+    "params": {
+      "additionalProperty": "routing_decision_id"
+    },
+    "message": "must NOT have additional properties"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/additionalProperties",
+    "keyword": "additionalProperties",
+    "params": {
+      "additionalProperty": "span_type"
+    },
+    "message": "must NOT have additional properties"
+  }
+][39m
+[31m   [31m├ù[31m run01 protocol schema conformance[2m > [22musage event accepts sample_source while leaving org model and package optional[39m[32m 138[2mms[22m[39m
+[31m     ΓåÆ [
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "org_id"
+    },
+    "message": "must have required property 'org_id'"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "model_id"
+    },
+    "message": "must have required property 'model_id'"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "package_id"
+    },
+    "message": "must have required property 'package_id'"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "cost_estimate"
+    },
+    "message": "must have required property 'cost_estimate'"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "currency"
+    },
+    "message": "must have required property 'currency'"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "error_class"
+    },
+    "message": "must have required property 'error_class'"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/additionalProperties",
+    "keyword": "additionalProperties",
+    "params": {
+      "additionalProperty": "sample_source"
+    },
+    "message": "must NOT have additional properties"
+  }
+][39m
+[31m   [31m├ù[31m run01 protocol schema conformance[2m > [22mrole binding accepts the candidate status required by run01[39m[32m 141[2mms[22m[39m
+[31m     ΓåÆ [
+  {
+    "instancePath": "/status",
+    "schemaPath": "#/properties/status/enum",
+    "keyword": "enum",
+    "params": {
+      "allowedValues": [
+        "active",
+        "disabled",
+        "experimental"
+      ]
+    },
+    "message": "must be equal to one of the allowed values"
+  }
+][39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 8 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  src/protocol-schema-conformance.test.ts > run01 protocol schema conformance > endpoint identity permits run01 optional metadata fields to be absent
+Error: [
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "package_id"
+    },
+    "message": "must have required property 'package_id'"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "variant_id"
+    },
+    "message": "must have required property 'variant_id'"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "quantization"
+    },
+    "message": "must have required property 'quantization'"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "precision"
+    },
+    "message": "must have required property 'precision'"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "host_class"
+    },
+    "message": "must have required property 'host_class'"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "device_class"
+    },
+    "message": "must have required property 'device_class'"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "region"
+    },
+    "message": "must have required property 'region'"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "org_scope"
+    },
+    "message": "must have required property 'org_scope'"
+  }
+]
+ Γ¥» assertValid src/protocol-schema-conformance.test.ts:37:11
+     35| ): void {
+     36|   if (!validate(payload)) {
+     37|     throw new Error(JSON.stringify(validate.errors, null, 2));
+       |           ^
+     38|   }
+     39| }
+ Γ¥» src/protocol-schema-conformance.test.ts:49:5
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/8]ΓÄ»
+
+ FAIL  src/protocol-schema-conformance.test.ts > run01 protocol schema conformance > declared capability profile accepts tool_calling as the required object
+Error: [
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "platform_constraints"
+    },
+    "message": "must have required property 'platform_constraints'"
+  },
+  {
+    "instancePath": "/tool_calling",
+    "schemaPath": "#/properties/tool_calling/type",
+    "keyword": "type",
+    "params": {
+      "type": "boolean"
+    },
+    "message": "must be boolean"
+  }
+]
+ Γ¥» assertValid src/protocol-schema-conformance.test.ts:37:11
+     35| ): void {
+     36|   if (!validate(payload)) {
+     37|     throw new Error(JSON.stringify(validate.errors, null, 2));
+       |           ^
+     38|   }
+     39| }
+ Γ¥» src/protocol-schema-conformance.test.ts:66:5
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[2/8]ΓÄ»
+
+ FAIL  src/protocol-schema-conformance.test.ts > run01 protocol schema conformance > routing policy accepts the run01 compute, budget, privacy, and target fields
+Error: [
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "policy_id"
+    },
+    "message": "must have required property 'policy_id'"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "prefer_local"
+    },
+    "message": "must have required property 'prefer_local'"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "budget_mode"
+    },
+    "message": "must have required property 'budget_mode'"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "tie_break_order"
+    },
+    "message": "must have required property 'tie_break_order'"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/additionalProperties",
+    "keyword": "additionalProperties",
+    "params": {
+      "additionalProperty": "compute_preference"
+    },
+    "message": "must NOT have additional properties"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/additionalProperties",
+    "keyword": "additionalProperties",
+    "params": {
+      "additionalProperty": "required_capabilities"
+    },
+    "message": "must NOT have additional properties"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/additionalProperties",
+    "keyword": "additionalProperties",
+    "params": {
+      "additionalProperty": "required_modalities"
+    },
+    "message": "must NOT have additional properties"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/additionalProperties",
+    "keyword": "additionalProperties",
+    "params": {
+      "additionalProperty": "require_tools"
+    },
+    "message": "must NOT have additional properties"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/additionalProperties",
+    "keyword": "additionalProperties",
+    "params": {
+      "additionalProperty": "deny_endpoints"
+    },
+    "message": "must NOT have additional properties"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/additionalProperties",
+    "keyword": "additionalProperties",
+    "params": {
+      "additionalProperty": "allow_endpoints"
+    },
+    "message": "must NOT have additional properties"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/additionalProperties",
+    "keyword": "additionalProperties",
+    "params": {
+      "additionalProperty": "deny_provider_kinds"
+    },
+    "message": "must NOT have additional properties"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/additionalProperties",
+    "keyword": "additionalProperties",
+    "params": {
+      "additionalProperty": "allow_provider_kinds"
+    },
+    "message": "must NOT have additional properties"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/additionalProperties",
+    "keyword": "additionalProperties",
+    "params": {
+      "additionalProperty": "budget"
+    },
+    "message": "must NOT have additional properties"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/additionalProperties",
+    "keyword": "additionalProperties",
+    "params": {
+      "additionalProperty": "privacy"
+    },
+    "message": "must NOT have additional properties"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/additionalProperties",
+    "keyword": "additionalProperties",
+    "params": {
+      "additionalProperty": "targets"
+    },
+    "message": "must NOT have additional properties"
+  }
+]
+ Γ¥» assertValid src/protocol-schema-conformance.test.ts:37:11
+     35| ): void {
+     36|   if (!validate(payload)) {
+     37|     throw new Error(JSON.stringify(validate.errors, null, 2));
+       |           ^
+     38|   }
+     39| }
+ Γ¥» src/protocol-schema-conformance.test.ts:86:5
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[3/8]ΓÄ»
+
+ FAIL  src/protocol-schema-conformance.test.ts > run01 protocol schema conformance > observed performance accepts sample_window and sources without requiring legacy single-sample fields
+Error: [
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "measurement_window"
+    },
+    "message": "must have required property 'measurement_window'"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "judge_score"
+    },
+    "message": "must have required property 'judge_score'"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "cold_start_ms"
+    },
+    "message": "must have required property 'cold_start_ms'"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "error_class_rates"
+    },
+    "message": "must have required property 'error_class_rates'"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "cost_per_1k_tokens_est"
+    },
+    "message": "must have required property 'cost_per_1k_tokens_est'"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "currency"
+    },
+    "message": "must have required property 'currency'"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/additionalProperties",
+    "keyword": "additionalProperties",
+    "params": {
+      "additionalProperty": "sample_window"
+    },
+    "message": "must NOT have additional properties"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/additionalProperties",
+    "keyword": "additionalProperties",
+    "params": {
+      "additionalProperty": "sources"
+    },
+    "message": "must NOT have additional properties"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/additionalProperties",
+    "keyword": "additionalProperties",
+    "params": {
+      "additionalProperty": "quality_score"
+    },
+    "message": "must NOT have additional properties"
+  }
+]
+ Γ¥» assertValid src/protocol-schema-conformance.test.ts:37:11
+     35| ): void {
+     36|   if (!validate(payload)) {
+     37|     throw new Error(JSON.stringify(validate.errors, null, 2));
+       |           ^
+     38|   }
+     39| }
+ Γ¥» src/protocol-schema-conformance.test.ts:120:5
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[4/8]ΓÄ»
+
+ FAIL  src/protocol-schema-conformance.test.ts > run01 protocol schema conformance > trace event accepts payload and request routing linkage for router decision creation
+Error: [
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "span_id"
+    },
+    "message": "must have required property 'span_id'"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "message"
+    },
+    "message": "must have required property 'message'"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/additionalProperties",
+    "keyword": "additionalProperties",
+    "params": {
+      "additionalProperty": "request_id"
+    },
+    "message": "must NOT have additional properties"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/additionalProperties",
+    "keyword": "additionalProperties",
+    "params": {
+      "additionalProperty": "routing_decision_id"
+    },
+    "message": "must NOT have additional properties"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/additionalProperties",
+    "keyword": "additionalProperties",
+    "params": {
+      "additionalProperty": "payload"
+    },
+    "message": "must NOT have additional properties"
+  }
+]
+ Γ¥» assertValid src/protocol-schema-conformance.test.ts:37:11
+     35| ): void {
+     36|   if (!validate(payload)) {
+     37|     throw new Error(JSON.stringify(validate.errors, null, 2));
+       |           ^
+     38|   }
+     39| }
+ Γ¥» src/protocol-schema-conformance.test.ts:149:5
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[5/8]ΓÄ»
+
+ FAIL  src/protocol-schema-conformance.test.ts > run01 protocol schema conformance > trace span accepts request linkage and canonical span_type
+Error: [
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "name"
+    },
+    "message": "must have required property 'name'"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/additionalProperties",
+    "keyword": "additionalProperties",
+    "params": {
+      "additionalProperty": "request_id"
+    },
+    "message": "must NOT have additional properties"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/additionalProperties",
+    "keyword": "additionalProperties",
+    "params": {
+      "additionalProperty": "routing_decision_id"
+    },
+    "message": "must NOT have additional properties"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/additionalProperties",
+    "keyword": "additionalProperties",
+    "params": {
+      "additionalProperty": "span_type"
+    },
+    "message": "must NOT have additional properties"
+  }
+]
+ Γ¥» assertValid src/protocol-schema-conformance.test.ts:37:11
+     35| ): void {
+     36|   if (!validate(payload)) {
+     37|     throw new Error(JSON.stringify(validate.errors, null, 2));
+       |           ^
+     38|   }
+     39| }
+ Γ¥» src/protocol-schema-conformance.test.ts:169:5
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[6/8]ΓÄ»
+
+ FAIL  src/protocol-schema-conformance.test.ts > run01 protocol schema conformance > usage event accepts sample_source while leaving org model and package optional
+Error: [
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "org_id"
+    },
+    "message": "must have required property 'org_id'"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "model_id"
+    },
+    "message": "must have required property 'model_id'"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "package_id"
+    },
+    "message": "must have required property 'package_id'"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "cost_estimate"
+    },
+    "message": "must have required property 'cost_estimate'"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "currency"
+    },
+    "message": "must have required property 'currency'"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "error_class"
+    },
+    "message": "must have required property 'error_class'"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/additionalProperties",
+    "keyword": "additionalProperties",
+    "params": {
+      "additionalProperty": "sample_source"
+    },
+    "message": "must NOT have additional properties"
+  }
+]
+ Γ¥» assertValid src/protocol-schema-conformance.test.ts:37:11
+     35| ): void {
+     36|   if (!validate(payload)) {
+     37|     throw new Error(JSON.stringify(validate.errors, null, 2));
+       |           ^
+     38|   }
+     39| }
+ Γ¥» src/protocol-schema-conformance.test.ts:188:5
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[7/8]ΓÄ»
+
+ FAIL  src/protocol-schema-conformance.test.ts > run01 protocol schema conformance > role binding accepts the candidate status required by run01
+Error: [
+  {
+    "instancePath": "/status",
+    "schemaPath": "#/properties/status/enum",
+    "keyword": "enum",
+    "params": {
+      "allowedValues": [
+        "active",
+        "disabled",
+        "experimental"
+      ]
+    },
+    "message": "must be equal to one of the allowed values"
+  }
+]
+ Γ¥» assertValid src/protocol-schema-conformance.test.ts:37:11
+     35| ): void {
+     36|   if (!validate(payload)) {
+     37|     throw new Error(JSON.stringify(validate.errors, null, 2));
+       |           ^
+     38|   }
+     39| }
+ Γ¥» src/protocol-schema-conformance.test.ts:210:5
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[8/8]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m8 failed[39m[22m[90m (8)[39m
+[2m   Start at [22m 13:57:31
+[2m   Duration [22m 4.75s[2m (transform 355ms, setup 0ms, collect 889ms, tests 1.32s, environment 1ms, prepare 909ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\01-protocol-routing-obs\packages\conformance:
+ΓÇëERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓÇë Command failed with exit code 1: vitest run src/protocol-schema-conformance.test.ts

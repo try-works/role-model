@@ -1,0 +1,13 @@
+{
+  "trace_id": "trace-001",
+  "span_id": "span-router-selection",
+  "request_id": "request-001",
+  "routing_decision_id": "decision-001",
+  "span_type": "router.selection",
+  "started_at_ms": 1712880000000,
+  "ended_at_ms": 1712880000010,
+  "status": "ok",
+  "attributes": {
+    "chosen_endpoint_id": "local-cli"
+  }
+}

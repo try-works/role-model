@@ -91,14 +91,45 @@ async function main(): Promise<void> {
   );
 
   const now = Date.now();
+  const eligibleCount = decision.eligibility.filter((candidate) => candidate.eligible).length;
+  const ineligibleCount = decision.eligibility.length - eligibleCount;
   await writeTraceArtifacts(
     outputDir,
     [
       {
         trace_id: "trace-gateway-smoke",
-        span_id: "span-router",
-        name: "router.selection",
+        span_id: "span-router-eligibility",
+        request_id: decision.request_id,
+        routing_decision_id: decision.routing_decision_id,
+        span_type: "router.eligibility",
         started_at_ms: now,
+        ended_at_ms: now + 3,
+        status: "ok",
+        attributes: {
+          eligible_count: eligibleCount,
+          ineligible_count: ineligibleCount,
+        },
+      },
+      {
+        trace_id: "trace-gateway-smoke",
+        span_id: "span-router-scoring",
+        request_id: decision.request_id,
+        routing_decision_id: decision.routing_decision_id,
+        span_type: "router.scoring",
+        started_at_ms: now + 3,
+        ended_at_ms: now + 7,
+        status: "ok",
+        attributes: {
+          scored_candidate_count: decision.scored_candidates.length,
+        },
+      },
+      {
+        trace_id: "trace-gateway-smoke",
+        span_id: "span-router-selection",
+        request_id: decision.request_id,
+        routing_decision_id: decision.routing_decision_id,
+        span_type: "router.selection",
+        started_at_ms: now + 7,
         ended_at_ms: now + 10,
         status: "ok",
         attributes: { chosen_endpoint_id: decision.chosen_endpoint_id },
@@ -108,27 +139,48 @@ async function main(): Promise<void> {
       {
         event_id: "event-eligibility",
         trace_id: "trace-gateway-smoke",
-        span_id: "span-router",
+        span_id: "span-router-eligibility",
+        request_id: decision.request_id,
+        routing_decision_id: decision.routing_decision_id,
         timestamp_ms: now + 1,
-        event_type: "router.eligibility",
-        message: "Eligibility evaluated",
-        attributes: { eligible_count: decision.eligible_candidates.length },
+        event_type: "trace.span.opened",
+        payload: {
+          span_id: "span-router-eligibility",
+          span_type: "router.eligibility",
+          eligible_count: eligibleCount,
+          ineligible_count: ineligibleCount,
+        },
+      },
+      {
+        event_id: "event-scoring",
+        trace_id: "trace-gateway-smoke",
+        span_id: "span-router-scoring",
+        request_id: decision.request_id,
+        routing_decision_id: decision.routing_decision_id,
+        timestamp_ms: now + 5,
+        event_type: "trace.span.opened",
+        payload: {
+          span_id: "span-router-scoring",
+          span_type: "router.scoring",
+          scored_candidate_count: decision.scored_candidates.length,
+        },
       },
       {
         event_id: "event-selection",
         trace_id: "trace-gateway-smoke",
-        span_id: "span-router",
-        timestamp_ms: now + 2,
-        event_type: "router.selection",
-        message: "Endpoint selected",
-        attributes: { chosen_endpoint_id: decision.chosen_endpoint_id },
+        span_id: "span-router-selection",
+        request_id: decision.request_id,
+        routing_decision_id: decision.routing_decision_id,
+        timestamp_ms: now + 8,
+        event_type: "router.decision.created",
+        payload: { chosen_endpoint_id: decision.chosen_endpoint_id },
       },
     ],
   );
 
   await appendUsageEvent(outputDir, {
     event_id: "usage-gateway-smoke",
-    timestamp_ms: now + 3,
+    timestamp_ms: now + 11,
     app_id: "gateway-smoke",
     org_id: "local-dev",
     request_id: decision.request_id,

@@ -29,7 +29,10 @@ export function detectMcpEndpoints(configs: DeclaredEndpointConfig[]): EndpointC
       capabilities: config.capabilities,
       modalities: config.modalities,
       max_context_tokens: 65536,
-      tool_calling: true,
+      tool_calling: {
+        supported: true,
+        style: "openai",
+      },
       supports_embeddings: true,
       platform_constraints: [],
     },

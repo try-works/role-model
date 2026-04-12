@@ -1,0 +1,56 @@
+.                                        | ΓÇëWARNΓÇë Unsupported engine: wanted: {"node":">=22 <23"} (current: {"node":"v24.11.0","pnpm":"10.6.5"})
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/01-protocol-routing-obs/packages/conformance[39m
+
+ [31mΓ¥»[39m src/router-fixture-conformance.test.ts [2m([22m[2m1 test[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 47[2mms[22m[39m
+[31m   [31m├ù[31m router fixture conformance[2m > [22mvalidates golden routing cases from fixture inputs[39m[32m 42[2mms[22m[39m
+[31m     ΓåÆ expected [ 'capability-missing.json', ΓÇª(9) ] to deeply equal ArrayContaining{ΓÇª}[39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  src/router-fixture-conformance.test.ts > router fixture conformance > validates golden routing cases from fixture inputs
+AssertionError: expected [ 'capability-missing.json', ΓÇª(9) ] to deeply equal ArrayContaining{ΓÇª}
+
+- Expected
++ Received
+
+- ArrayContaining [
++ [
+    "capability-missing.json",
+-   "modality-unsupported.json",
++   "cost-strategy-lower-cost-wins.json",
++   "inactive-role-binding.json",
+    "insufficient-context.json",
+-   "tools-unsupported.json",
++   "local-preference-near-tie.json",
++   "modality-unsupported.json",
+    "privacy-remote-deny.json",
+-   "quality-strategy-measured-vs-declared.json",
+-   "endpoint-id-tie-break.json",
+-   "preferred-capability-selection.json",
+-   "fallback-chain-ordering.json",
+-   "unknown-metric-redistribution.json",
++   "provider-kind-allow-list-basic.json",
++   "role-task-unsupported.json",
++   "tools-unsupported.json",
+  ]
+
+ Γ¥» src/router-fixture-conformance.test.ts:44:23
+     42|     const fileNames = (await readdir(fixtureDir)).filter((fileName) =>ΓÇª
+     43|     expect(fileNames.length).toBeGreaterThan(0);
+     44|     expect(fileNames).toEqual(expect.arrayContaining([...requiredCaseFΓÇª
+       |                       ^
+     45| 
+     46|     for (const fileName of fileNames) {
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m   Start at [22m 17:42:35
+[2m   Duration [22m 2.72s[2m (transform 451ms, setup 0ms, collect 410ms, tests 47ms, environment 1ms, prepare 952ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\01-protocol-routing-obs\packages\conformance:
+ΓÇëERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓÇë Command failed with exit code 1: vitest run src/router-fixture-conformance.test.ts

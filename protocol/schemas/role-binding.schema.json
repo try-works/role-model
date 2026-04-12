@@ -16,7 +16,7 @@
     "binding_id": { "type": "string" },
     "role_id": { "type": "string" },
     "endpoint_id": { "type": "string" },
-    "status": { "type": "string", "enum": ["active", "disabled", "experimental"] },
+    "status": { "type": "string", "enum": ["active", "disabled", "candidate"] },
     "policy_overrides": { "type": "object", "additionalProperties": true },
     "effective_capabilities": { "type": "array", "items": { "type": "string" } },
     "effective_task_types": { "type": "array", "items": { "type": "string" } }

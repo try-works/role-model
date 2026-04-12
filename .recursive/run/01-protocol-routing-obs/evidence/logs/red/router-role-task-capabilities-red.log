@@ -1,0 +1,40 @@
+.                                        | ΓÇëWARNΓÇë Unsupported engine: wanted: {"node":">=22 <23"} (current: {"node":"v24.11.0","pnpm":"10.6.5"})
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/01-protocol-routing-obs/packages/conformance[39m
+
+ [31mΓ¥»[39m src/router-role-task-eligibility.test.ts [2m([22m[2m3 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 88[2mms[22m[39m
+   [32mΓ£ô[39m routeRequest role/task eligibility[2m > [22mexcludes endpoints when the requested task is unsupported by the role and the role is not allowed for the task[32m 18[2mms[22m[39m
+   [32mΓ£ô[39m routeRequest role/task eligibility[2m > [22mexcludes endpoints when the matching role binding is not active[32m 2[2mms[22m[39m
+[31m   [31m├ù[31m routeRequest role/task eligibility[2m > [22mexcludes endpoints missing required capabilities inherited from the requested role and task[39m[32m 60[2mms[22m[39m
+[31m     ΓåÆ expected [] to have a length of 1 but got +0[39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  src/router-role-task-eligibility.test.ts > routeRequest role/task eligibility > excludes endpoints missing required capabilities inherited from the requested role and task
+AssertionError: expected [] to have a length of 1 but got +0
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ Γ¥» src/router-role-task-eligibility.test.ts:259:42
+    257|     } as never);
+    258| 
+    259|     expect(result.ineligible_candidates).toHaveLength(1);
+       |                                          ^
+    260|     expect(result.ineligible_candidates[0]?.reasons ?? []).toEqual(
+    261|       expect.arrayContaining(["CAPABILITY_MISSING"]),
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m2 passed[39m[22m[90m (3)[39m
+[2m   Start at [22m 14:52:25
+[2m   Duration [22m 3.56s[2m (transform 560ms, setup 0ms, collect 562ms, tests 88ms, environment 1ms, prepare 1.10s)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\01-protocol-routing-obs\packages\conformance:
+ΓÇëERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓÇë Command failed with exit code 1: vitest run src/router-role-task-eligibility.test.ts

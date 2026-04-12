@@ -1,0 +1,8 @@
+ΓÇëWARNΓÇë Unsupported engine: wanted: {"node":">=22 <23"} (current: {"node":"v24.11.0","pnpm":"10.6.5"})
+
+> role-model@0.0.0 schemas:validate D:\DEV\role-model\.worktrees\01-protocol-routing-obs
+> pnpm --filter @role-model/schema-tools exec tsx src/validate-schemas.ts validate
+
+.                                        | ΓÇëWARNΓÇë Unsupported engine: wanted: {"node":">=22 <23"} (current: {"node":"v24.11.0","pnpm":"10.33.0"})
+Validated 19 schema file(s).
+Validated 12 fixture file(s).

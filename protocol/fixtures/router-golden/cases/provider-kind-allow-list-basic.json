@@ -1,0 +1,116 @@
+{
+  "name": "excludes endpoints not in the provider kind allow list",
+  "input": {
+    "request": {
+      "requestId": "req-provider-kind-allow-1",
+      "taskType": "code.edit",
+      "requiredCapabilities": [
+        "code.edit"
+      ],
+      "preferredCapabilities": [],
+      "requiredModalities": [
+        "text"
+      ],
+      "contextTokens": 2048,
+      "needsTools": false,
+      "strategy": "balanced",
+      "preferLocal": false,
+      "allowProviderKinds": [
+        "provider-cli"
+      ]
+    },
+    "candidates": [
+      {
+        "identity": {
+          "endpoint_id": "local-cli",
+          "endpoint_kind": "local-engine",
+          "provider_kind": "provider-cli",
+          "serving_source": "local-process",
+          "model_id": "gpt-5.4",
+          "package_id": "provider-cli",
+          "variant_id": "default",
+          "runtime_version": "1.0.0",
+          "quantization": "none",
+          "precision": "fp16",
+          "host_class": "skill-router",
+          "device_class": "workstation",
+          "region": "local",
+          "org_scope": "personal"
+        },
+        "declared": {
+          "endpoint_id": "local-cli",
+          "capabilities": [
+            "code.edit"
+          ],
+          "modalities": [
+            "text"
+          ],
+          "max_context_tokens": 32768,
+          "tool_calling": {
+            "supported": true,
+            "style": "openai"
+          },
+          "supports_embeddings": false,
+          "platform_constraints": []
+        },
+        "status": "active"
+      },
+      {
+        "identity": {
+          "endpoint_id": "remote-mcp",
+          "endpoint_kind": "mcp-endpoint",
+          "provider_kind": "provider-mcp",
+          "serving_source": "remote-service",
+          "model_id": "gpt-5.4-mini",
+          "package_id": "provider-mcp",
+          "variant_id": "default",
+          "runtime_version": "1.0.0",
+          "quantization": "none",
+          "precision": "fp16",
+          "host_class": "skill-router",
+          "device_class": "remote",
+          "region": "us-east",
+          "org_scope": "team"
+        },
+        "declared": {
+          "endpoint_id": "remote-mcp",
+          "capabilities": [
+            "code.edit"
+          ],
+          "modalities": [
+            "text"
+          ],
+          "max_context_tokens": 32768,
+          "tool_calling": {
+            "supported": true,
+            "style": "openai"
+          },
+          "supports_embeddings": false,
+          "platform_constraints": []
+        },
+        "status": "active"
+      }
+    ]
+  },
+  "expected": {
+    "chosen_endpoint_id": "local-cli",
+    "fallback_endpoint_ids": [],
+    "selection_reasons": [
+      "BEST_TOTAL_SCORE",
+      "DECLARED_PROFILE_USED",
+      "DEFAULT_PROFILE_USED"
+    ],
+    "eligibility": [
+      {
+        "endpoint_id": "remote-mcp",
+        "eligible": false,
+        "exclusions": [
+          {
+            "code": "POLICY_DENY_ENDPOINT",
+            "detail": "Endpoint is denied by routing policy."
+          }
+        ]
+      }
+    ]
+  }
+}

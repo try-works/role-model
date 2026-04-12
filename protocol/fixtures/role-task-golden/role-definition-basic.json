@@ -1,0 +1,17 @@
+{
+  "role_id": "developer",
+  "name": "Developer",
+  "description": "Routes code editing requests.",
+  "role_kind": "assistant",
+  "default_system_instructions": "Help with code editing tasks.",
+  "task_types_supported": ["code.edit"],
+  "required_capabilities": ["code.edit"],
+  "preferred_capabilities": ["reasoning.multi_step"],
+  "forbidden_capabilities": [],
+  "tool_policy": {
+    "mode": "allowed"
+  },
+  "routing_policy_overrides": {},
+  "output_contracts": [],
+  "safety_policy_refs": []
+}

@@ -1,0 +1,43 @@
+.                                        | ΓÇëWARNΓÇë Unsupported engine: wanted: {"node":">=22 <23"} (current: {"node":"v24.11.0","pnpm":"10.6.5"})
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/01-protocol-routing-obs/packages/conformance[39m
+
+ [31mΓ¥»[39m src/router-conformance.test.ts [2m([22m[2m9 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 110[2mms[22m[39m
+   [32mΓ£ô[39m routeRequest[2m > [22mexcludes capability-missing candidates[32m 9[2mms[22m[39m
+   [32mΓ£ô[39m routeRequest[2m > [22mexcludes insufficient context candidates[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m routeRequest[2m > [22mexcludes tool-unsupported candidates[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m routeRequest[2m > [22mapplies local preference for balanced ties[32m 2[2mms[22m[39m
+   [32mΓ£ô[39m routeRequest[2m > [22mprefers measured profile strength when available[32m 2[2mms[22m[39m
+   [32mΓ£ô[39m routeRequest[2m > [22mcan optimize for cost[32m 2[2mms[22m[39m
+   [32mΓ£ô[39m routeRequest[2m > [22mapplies role and task preferred capabilities through preference scoring[32m 5[2mms[22m[39m
+   [32mΓ£ô[39m routeRequest[2m > [22mbreaks ties deterministically by endpoint id last[32m 48[2mms[22m[39m
+[31m   [31m├ù[31m routeRequest[2m > [22mtreats near-equal total scores as ties and breaks them by higher quality first[39m[32m 34[2mms[22m[39m
+[31m     ΓåÆ expected 'lower-quality-cheaper' to be 'higher-quality-costlier' // Object.is equality[39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  src/router-conformance.test.ts > routeRequest > treats near-equal total scores as ties and breaks them by higher quality first
+AssertionError: expected 'lower-quality-cheaper' to be 'higher-quality-costlier' // Object.is equality
+
+Expected: "higher-quality-costlier"
+Received: "lower-quality-cheaper"
+
+ Γ¥» src/router-conformance.test.ts:342:39
+    340|     });
+    341| 
+    342|     expect(result.chosen_endpoint_id).toBe("higher-quality-costlier");
+       |                                       ^
+    343|   });
+    344| });
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m8 passed[39m[22m[90m (9)[39m
+[2m   Start at [22m 16:21:44
+[2m   Duration [22m 2.92s[2m (transform 496ms, setup 0ms, collect 490ms, tests 110ms, environment 1ms, prepare 774ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\01-protocol-routing-obs\packages\conformance:
+ΓÇëERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓÇë Command failed with exit code 1: vitest run src/router-conformance.test.ts

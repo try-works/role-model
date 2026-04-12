@@ -9,15 +9,22 @@
     "modalities",
     "max_context_tokens",
     "tool_calling",
-    "supports_embeddings",
-    "platform_constraints"
+    "supports_embeddings"
   ],
   "properties": {
     "endpoint_id": { "type": "string" },
     "capabilities": { "type": "array", "minItems": 1, "items": { "type": "string" } },
     "modalities": { "type": "array", "minItems": 1, "items": { "type": "string" } },
     "max_context_tokens": { "type": "integer", "minimum": 1 },
-    "tool_calling": { "type": "boolean" },
+    "tool_calling": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["supported", "style"],
+      "properties": {
+        "supported": { "type": "boolean" },
+        "style": { "type": "string", "enum": ["openai", "json", "none"] }
+      }
+    },
     "supports_embeddings": { "type": "boolean" },
     "platform_constraints": { "type": "array", "items": { "type": "string" } }
   }

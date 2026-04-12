@@ -1,0 +1,354 @@
+ WARN  Unsupported engine: wanted: {"node":">=22 <23"} (current: {"node":"v24.11.0","pnpm":"10.6.5"})
+
+> role-model@0.0.0 build D:\DEV\role-model\.worktrees\01-protocol-routing-obs
+> pnpm run types:generate && pnpm -r --if-present build:\WINDOWS\system32\cmd.exe  WARN  Unsupported engine: wanted: {"node":">=22 <23"} (current: {"node":"v24.11.0","pnpm":"10.33.0"})
+
+> role-model@0.0.0 types:generate D:\DEV\role-model\.worktrees\01-protocol-routing-obs
+> pnpm --filter @role-model/schema-tools exec tsx src/validate-schemas.ts generate-types.                                        |  WARN  Unsupported engine: wanted: {"node":">=22 <23"} (current: {"node":"v24.11.0","pnpm":"10.33.0"})
+Generated types for benchmark-run.schema.json
+Generated types for benchmark-suite.schema.json
+Generated types for capability-taxonomy.schema.json
+Generated types for declared-capability-profile.schema.json
+Generated types for endpoint-identity.schema.json
+Generated types for judge-score.schema.json
+Generated types for model-pack-manifest.schema.json
+Generated types for observed-performance-profile.schema.json
+Generated types for package-manifest.schema.json
+Generated types for planspec.schema.json
+Generated types for role-binding.schema.json
+Generated types for role-definition.schema.json
+Generated types for router-decision.schema.json
+Generated types for routing-policy.schema.json
+Generated types for task-definition.schema.json
+Generated types for task-execution-profile.schema.json
+Generated types for trace-event.schema.json
+Generated types for trace-span.schema.json
+Generated types for usage-event.schema.json
+Formatted 1 file in 11ms. Fixed 1 file.
+.                                        |  WARN  Unsupported engine: wanted: {"node":">=22 <23"} (current: {"node":"v24.11.0","pnpm":"10.33.0"})
+Scope: 21 of 22 workspace projects
+packages/packaging build$ tsc -p tsconfig.json
+└─ Running...
+packages/protocol-types build$ tsc -p tsconfig.json
+└─ Running...
+packages/store-contract build$ tsc -p tsconfig.json
+└─ Running...
+packages/schema-tools build$ tsc -p tsconfig.json
+└─ Running...
+└─ Done in 3.2srole-model-router/packages/bench-core build$ tsc -p tsconfig.json
+└─ Running...
+└─ Done in 3.3srole-model-router/packages/bench-judge build$ tsc -p tsconfig.json
+└─ Running...
+└─ Done in 3.3srole-model-router/packages/core build$ tsc -p tsconfig.json
+└─ Running...
+└─ Done in 5.1s.../packages/profile-aggregator build$ tsc -p tsconfig.json
+└─ Running...
+└─ Done in 3.1srole-model-router/packages/roles build$ tsc -p tsconfig.json
+└─ Running...
+└─ Done in 3.2srole-model-router/packages/runtime-web build$ tsc -p tsconfig.json
+└─ Running...
+└─ Done in 4srole-model-router/packages/tasks build$ tsc -p tsconfig.json
+└─ Running...
+└─ Done in 3.8srole-model-router/packages/trace build$ tsc -p tsconfig.json
+└─ Running...
+└─ Done in 3.5srole-model-router/packages/usage build$ tsc -p tsconfig.json
+└─ Running...
+└─ Done in 3.5s└─ Done in 3.6s└─ Done in 4s└─ Done in 3.8s
+packages/conformance build$ tsc -p tsconfig.json
+└─ Running...
+role-model-router/apps/bench-cli build$ tsc -p tsconfig.json
+└─ Running...
+role-model-router/packages/openai-compat build$ tsc -p tsconfig.json
+└─ Running...
+role-model-router/packages/provider-acp build$ tsc -p tsconfig.json
+└─ Running...
+└─ Done in 3.9srole-model-router/packages/provider-cli build$ tsc -p tsconfig.json
+└─ Running...
+└─ Done in 4.4srole-model-router/packages/provider-mcp build$ tsc -p tsconfig.json
+└─ Running...
+└─ Done in 4.5s└─ Done in 6.4s└─ Done in 3.4s└─ Done in 3.2s
+role-model-router/apps/router-devtools build$ tsc -p tsconfig.json
+└─ Running...
+└─ Done in 2.4s
+role-model-router/apps/gateway-smoke build$ tsc -p tsconfig.json
+└─ Running...
+└─ Done in 2.8s
+:\Program Files\PowerShell\7\pwsh.exe WARN  Unsupported engine: wanted: {"node":">=22 <23"} (current: {"node":"v24.11.0","pnpm":"10.6.5"})
+
+> role-model@0.0.0 test D:\DEV\role-model\.worktrees\01-protocol-routing-obs
+> pnpm -r --if-present test
+
+:\WINDOWS\system32\cmd.exe .                                        |  WARN  Unsupported engine: wanted: {"node":">=22 <23"} (current: {"node":"v24
+4.11.0","pnpm":"10.33.0"})
+Scope: 21 of 22 workspace projects
+packages/schema-tools test$ vitest run
+└─ Running...
+ode (vitest)│  RUN  v3.2.4 D:/DEV/role-model/.worktrees/01-protocol-routing-obs/packages/schema-tools
+└─ Running...
+ode (vitest 2)ode (vitest 1)ode (vitest 4)ode (vitest 3)ode (vitest 8)ode (vitest 5)ode (vitest 7)ode (vitest 6)ode (vitest 10)ode (vitest 9)ode (vitest 12)ode (vitest 11)ode (vitest 15)ode (vitest 13)│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…
+└─ Running...
+│ Generated types for benchmark-run.schema.json
+└─ Running...
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…
+└─ Running...
+│ Generated types for benchmark-suite.schema.json
+└─ Running...
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…
+└─ Running...
+│ Generated types for capability-taxonomy.schema.json
+└─ Running...
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…
+└─ Running...
+│ Generated types for declared-capability-profile.schema.json
+└─ Running...
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…
+└─ Running...
+[1 lines collapsed]                                                                                                     │ Generated types for endpoint-identity.schema.json
+└─ Running...
+5
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…  
+│ Generated types for capability-taxonomy.schema.json
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…  
+│ Generated types for declared-capability-profile.schema.json
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…  
+│ Generated types for endpoint-identity.schema.json
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…  
+│ Generated types for judge-score.schema.json
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…  
+│ Generated types for model-pack-manifest.schema.json6
+│ Generated types for capability-taxonomy.schema.json
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…
+│ Generated types for declared-capability-profile.schema.json
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…
+│ Generated types for endpoint-identity.schema.json
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…
+│ Generated types for judge-score.schema.json
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…
+│ Generated types for model-pack-manifest.schema.json
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…9
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…  
+│ Generated types for endpoint-identity.schema.json
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…  
+│ Generated types for judge-score.schema.json
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…  
+│ Generated types for model-pack-manifest.schema.json
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…  
+│ Generated types for observed-performance-profile.schema.json
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…  
+│ Generated types for package-manifest.schema.json[11 lines collapsed]
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…  
+│ Generated types for judge-score.schema.json
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…  
+│ Generated types for model-pack-manifest.schema.json
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…  
+│ Generated types for observed-performance-profile.schema.json
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…  
+│ Generated types for package-manifest.schema.json
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…  
+│ Generated types for planspec.schema.json3
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…  
+│ Generated types for model-pack-manifest.schema.json
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…  
+│ Generated types for observed-performance-profile.schema.json
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…  
+│ Generated types for package-manifest.schema.json
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…  
+│ Generated types for planspec.schema.json
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…  
+│ Generated types for role-binding.schema.json5
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…  
+│ Generated types for observed-performance-profile.schema.json
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…  
+│ Generated types for package-manifest.schema.json
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…  
+│ Generated types for planspec.schema.json
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…  
+│ Generated types for role-binding.schema.json
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…  
+│ Generated types for role-definition.schema.json7
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…  
+│ Generated types for package-manifest.schema.json
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…  
+│ Generated types for planspec.schema.json
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…  
+│ Generated types for role-binding.schema.json
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…  
+│ Generated types for role-definition.schema.json
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…  
+│ Generated types for router-decision.schema.json9
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…  
+│ Generated types for planspec.schema.json
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…  
+│ Generated types for role-binding.schema.json
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…  
+│ Generated types for role-definition.schema.json
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…  
+│ Generated types for router-decision.schema.json
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…  
+│ Generated types for routing-policy.schema.json23
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…  
+│ Generated types for role-definition.schema.json
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…  
+│ Generated types for router-decision.schema.json
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…  
+│ Generated types for routing-policy.schema.json
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…  
+│ Generated types for task-definition.schema.json
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…  
+│ Generated types for task-execution-profile.schema.json7
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…  
+│ Generated types for routing-policy.schema.json
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…  
+│ Generated types for task-definition.schema.json
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…  
+│ Generated types for task-execution-profile.schema.json
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…  
+│ Generated types for trace-event.schema.json
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…  
+│ Generated types for trace-span.schema.json9
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…  
+│ Generated types for task-definition.schema.json
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…  
+│ Generated types for task-execution-profile.schema.json
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…  
+│ Generated types for trace-event.schema.json
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…  
+│ Generated types for trace-span.schema.json
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…  
+│ Generated types for usage-event.schema.json30
+│ Generated types for task-definition.schema.json
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…
+│ Generated types for task-execution-profile.schema.json
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…
+│ Generated types for trace-event.schema.json
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…
+│ Generated types for trace-span.schema.json
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…
+│ Generated types for usage-event.schema.json
+│ Formatted 1 file in 8ms. Fixed 1 file.1
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…
+│ Generated types for task-execution-profile.schema.json
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…
+│ Generated types for trace-event.schema.json
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…
+│ Generated types for trace-span.schema.json
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…
+│ Generated types for usage-event.schema.json
+│ Formatted 1 file in 8ms. Fixed 1 file.
+│  ✓ test/generate-protocol-types.test.ts (1 test) 789ms2
+│ Generated types for task-execution-profile.schema.json
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…
+│ Generated types for trace-event.schema.json
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…
+│ Generated types for trace-span.schema.json
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…
+│ Generated types for usage-event.schema.json
+│ Formatted 1 file in 8ms. Fixed 1 file.
+│  ✓ test/generate-protocol-types.test.ts (1 test) 789ms
+│    ✓ generateProtocolTypes > does not emit duplicate exported interfaces for externally referenced schemas  786ms3
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…
+│ Generated types for trace-event.schema.json
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…
+│ Generated types for trace-span.schema.json
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…
+│ Generated types for usage-event.schema.json
+│ Formatted 1 file in 8ms. Fixed 1 file.
+│  ✓ test/generate-protocol-types.test.ts (1 test) 789ms
+│    ✓ generateProtocolTypes > does not emit duplicate exported interfaces for externally referenced schemas  786ms
+│  Test Files  1 passed (1)6
+│ Generated types for trace-span.schema.json
+│ stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces…  
+│ Generated types for usage-event.schema.json
+│ Formatted 1 file in 8ms. Fixed 1 file.
+│  ✓ test/generate-protocol-types.test.ts (1 test) 789ms
+│    ✓ generateProtocolTypes > does not emit duplicate exported interfaces for externally referenced schemas  786ms     
+│  Test Files  1 passed (1)
+│       Tests  1 passed (1)
+│    Start at  17:31:18
+│    Duration  3.24s (transform 250ms, setup 0ms, collect 636ms, tests 789ms, environment 1ms, prepare 642ms)ode (vitest 1)└─ Done in 5.2s
+packages/conformance test$ vitest run
+└─ Running...
+ode (vitest)│  RUN  v3.2.4 D:/DEV/role-model/.worktrees/01-protocol-routing-obs/packages/conformance
+└─ Running...
+ode (vitest 2)ode (vitest 1)ode (vitest 3)ode (vitest 4)ode (vitest 5)ode (vitest 11)ode (vitest 10)ode (vitest 9)ode (vitest 7)ode (vitest 8)ode (vitest 6)ode (vitest 12)ode (vitest 13)ode (vitest 15)ode (vitest 14)│  ✓ src/profile-aggregation-deterministic.test.ts (5 tests) 34ms
+└─ Running...
+│  ✓ src/router-role-task-eligibility.test.ts (7 tests) 43ms
+└─ Running...
+│  ✓ src/router-fixture-conformance.test.ts (1 test) 48ms
+└─ Running...
+│  ✓ src/router-conformance.test.ts (12 tests) 100ms
+└─ Running...
+ode (vitest 5)ode (vitest 6)ode (vitest 7)ode (vitest 4)│  ✓ src/protocol-schema-conformance.test.ts (8 tests) 1520ms
+└─ Running...
+│    ✓ run01 protocol schema conformance > endpoint identity permits run01 optional metadata fields to be absent  649…
+└─ Running...
+ode (vitest 3)│  ✓ src/protocol-fixture-conformance.test.ts (2 tests) 7322ms
+└─ Running...
+│    ✓ run01 protocol fixture conformance > top-level example fixtures and required fixture directories validate agai…
+└─ Running...
+│    ✓ run01 protocol fixture conformance > schemas:validate reports fixture validation as part of the canonical sche…
+└─ Running...
+ode (vitest 2)[1 lines collapsed]│  ✓ src/gateway-smoke-observability.test.ts (2 tests) 10292ms
+└─ Running...
+3
+│  ✓ src/router-fixture-conformance.test.ts (1 test) 48ms
+│  ✓ src/router-conformance.test.ts (12 tests) 100ms
+│  ✓ src/protocol-schema-conformance.test.ts (8 tests) 1520ms
+│    ✓ run01 protocol schema conformance > endpoint identity permits run01 optional metadata fields to be absent  649…
+│  ✓ src/protocol-fixture-conformance.test.ts (2 tests) 7322ms
+│    ✓ run01 protocol fixture conformance > top-level example fixtures and required fixture directories validate agai…  
+│    ✓ run01 protocol fixture conformance > schemas:validate reports fixture validation as part of the canonical sche…
+│  ✓ src/gateway-smoke-observability.test.ts (2 tests) 10292ms
+│    ✓ gateway smoke observability conformance > emits trace and usage artifacts with run01 linkage ids and canonical…  
+│    ✓ gateway smoke observability conformance > emits observed performance with the run01 sample window and sources …4
+│  ✓ src/router-conformance.test.ts (12 tests) 100ms
+│  ✓ src/protocol-schema-conformance.test.ts (8 tests) 1520ms
+│    ✓ run01 protocol schema conformance > endpoint identity permits run01 optional metadata fields to be absent  649…
+│  ✓ src/protocol-fixture-conformance.test.ts (2 tests) 7322ms
+│    ✓ run01 protocol fixture conformance > top-level example fixtures and required fixture directories validate agai…
+│    ✓ run01 protocol fixture conformance > schemas:validate reports fixture validation as part of the canonical sche…
+│  ✓ src/gateway-smoke-observability.test.ts (2 tests) 10292ms
+│    ✓ gateway smoke observability conformance > emits trace and usage artifacts with run01 linkage ids and canonical…
+│    ✓ gateway smoke observability conformance > emits observed performance with the run01 sample window and sources …
+│  Test Files  7 passed (7)7
+│  ✓ src/protocol-fixture-conformance.test.ts (2 tests) 7322ms
+│    ✓ run01 protocol fixture conformance > top-level example fixtures and required fixture directories validate agai…  
+│    ✓ run01 protocol fixture conformance > schemas:validate reports fixture validation as part of the canonical sche…  
+│  ✓ src/gateway-smoke-observability.test.ts (2 tests) 10292ms
+│    ✓ gateway smoke observability conformance > emits trace and usage artifacts with run01 linkage ids and canonical…  
+│    ✓ gateway smoke observability conformance > emits observed performance with the run01 sample window and sources …  
+│  Test Files  7 passed (7)
+│       Tests  37 passed (37)
+│    Start at  17:31:23
+│    Duration  12.59s (transform 1.21s, setup 0ms, collect 2.57s, tests 19.36s, environment 7ms, prepare 5.65s)ode (vitest 1)└─ Done in 14.6s
+role-model-router/apps/router-devtools test$ vitest run test/index.test.ts
+└─ Running...
+ode (vitest)│  RUN  v3.2.4 D:/DEV/role-model/.worktrees/01-protocol-routing-obs/role-model-router/apps/router-devtools
+└─ Running...
+ode (vitest 2)ode (vitest 1)ode (vitest 3)ode (vitest 7)ode (vitest 4)ode (vitest 9)ode (vitest 5)ode (vitest 6)ode (vitest 12)ode (vitest 8)ode (vitest 11)ode (vitest 13)ode (vitest 10)ode (vitest 14)ode (vitest 15)│  ✓ test/index.test.ts (1 test) 26ms
+└─ Running...
+│  Test Files  1 passed (1)
+└─ Running...
+│       Tests  1 passed (1)
+└─ Running...
+│    Start at  17:31:38
+└─ Running...
+│    Duration  2.14s (transform 300ms, setup 0ms, collect 323ms, tests 26ms, environment 1ms, prepare 625ms)
+└─ Running...
+ode (vitest 1)└─ Done in 4.2s
+:\Program Files\PowerShell\7\pwsh.exe WARN  Unsupported engine: wanted: {"node":">=22 <23"} (current: {"node":"v24.11.0","pnpm":"10.6.5"})
+
+> role-model@0.0.0 smoke D:\DEV\role-model\.worktrees\01-protocol-routing-obs
+> pnpm --filter @role-model-router/gateway-smoke exec tsx src/index.ts
+
+:\WINDOWS\system32\cmd.exe .                                        |  WARN  Unsupported engine: wanted: {"node":">=22 <23"} (current: {"node":"v24
+4.11.0","pnpm":"10.33.0"})
+{
+  "chosen_endpoint_id": "cli.local.coder",
+  "router_decision_path": "D:\\DEV\\role-model\\.worktrees\\01-protocol-routing-obs\\runtime-output\\gateway-smoke\\rout
+ter-decision.json",
+  "config_export_path": "D:\\DEV\\role-model\\.worktrees\\01-protocol-routing-obs\\runtime-output\\router-devtools\\conf
+fig-export.json"
+}
+:\Program Files\PowerShell\7\pwsh.exe___BEGIN___COMMAND_DONE_MARKER___0
+PS D:\DEV\role-model\.worktrees\01-protocol-routing-obs> 

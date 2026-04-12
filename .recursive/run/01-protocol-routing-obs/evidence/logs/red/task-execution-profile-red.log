@@ -1,0 +1,150 @@
+.                                        | ΓÇëWARNΓÇë Unsupported engine: wanted: {"node":">=22 <23"} (current: {"node":"v24.11.0","pnpm":"10.6.5"})
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/01-protocol-routing-obs/packages/conformance[39m
+
+ [31mΓ¥»[39m src/protocol-schema-conformance.test.ts [2m([22m[2m9 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[33m 1911[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m run01 protocol schema conformance[2m > [22mendpoint identity permits run01 optional metadata fields to be absent [33m 825[2mms[22m[39m
+   [32mΓ£ô[39m run01 protocol schema conformance[2m > [22mdeclared capability profile accepts tool_calling as the required object[32m 203[2mms[22m[39m
+   [32mΓ£ô[39m run01 protocol schema conformance[2m > [22mrouting policy accepts the run01 compute, budget, privacy, and target fields[32m 126[2mms[22m[39m
+   [32mΓ£ô[39m run01 protocol schema conformance[2m > [22mobserved performance accepts sample_window and sources without requiring legacy single-sample fields[32m 98[2mms[22m[39m
+   [32mΓ£ô[39m run01 protocol schema conformance[2m > [22mtrace event accepts payload and request routing linkage for router decision creation[32m 97[2mms[22m[39m
+   [32mΓ£ô[39m run01 protocol schema conformance[2m > [22mtrace span accepts request linkage and canonical span_type[32m 98[2mms[22m[39m
+   [32mΓ£ô[39m run01 protocol schema conformance[2m > [22musage event accepts sample_source while leaving org model and package optional[32m 132[2mms[22m[39m
+   [32mΓ£ô[39m run01 protocol schema conformance[2m > [22mrole binding accepts the candidate status required by run01[32m 165[2mms[22m[39m
+[31m   [31m├ù[31m run01 protocol schema conformance[2m > [22mtask execution profile requires role_id and routing_policy_patch[39m[32m 159[2mms[22m[39m
+[31m     ΓåÆ [
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "required_modalities"
+    },
+    "message": "must have required property 'required_modalities'"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "output_constraints"
+    },
+    "message": "must have required property 'output_constraints'"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "evaluation_suites"
+    },
+    "message": "must have required property 'evaluation_suites'"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "default_routing_strategy"
+    },
+    "message": "must have required property 'default_routing_strategy'"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/additionalProperties",
+    "keyword": "additionalProperties",
+    "params": {
+      "additionalProperty": "role_id"
+    },
+    "message": "must NOT have additional properties"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/additionalProperties",
+    "keyword": "additionalProperties",
+    "params": {
+      "additionalProperty": "routing_policy_patch"
+    },
+    "message": "must NOT have additional properties"
+  }
+][39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  src/protocol-schema-conformance.test.ts > run01 protocol schema conformance > task execution profile requires role_id and routing_policy_patch
+Error: [
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "required_modalities"
+    },
+    "message": "must have required property 'required_modalities'"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "output_constraints"
+    },
+    "message": "must have required property 'output_constraints'"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "evaluation_suites"
+    },
+    "message": "must have required property 'evaluation_suites'"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "default_routing_strategy"
+    },
+    "message": "must have required property 'default_routing_strategy'"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/additionalProperties",
+    "keyword": "additionalProperties",
+    "params": {
+      "additionalProperty": "role_id"
+    },
+    "message": "must NOT have additional properties"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/additionalProperties",
+    "keyword": "additionalProperties",
+    "params": {
+      "additionalProperty": "routing_policy_patch"
+    },
+    "message": "must NOT have additional properties"
+  }
+]
+ Γ¥» assertValid src/schema-test-helpers.ts:36:11
+     34|   if (!validate(payload)) {
+     35|     const details = JSON.stringify(validate.errors, null, 2);
+     36|     throw new Error(label ? `${label}\n${details}` : details);
+       |           ^
+     37|   }
+     38| }
+ Γ¥» src/protocol-schema-conformance.test.ts:200:5
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m8 passed[39m[22m[90m (9)[39m
+[2m   Start at [22m 18:44:45
+[2m   Duration [22m 4.51s[2m (transform 402ms, setup 0ms, collect 365ms, tests 1.91s, environment 1ms, prepare 776ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\01-protocol-routing-obs\packages\conformance:
+ΓÇëERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓÇë Command failed with exit code 1: vitest run src/protocol-schema-conformance.test.ts

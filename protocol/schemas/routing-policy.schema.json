@@ -3,12 +3,29 @@
   "title": "RoutingPolicy",
   "type": "object",
   "additionalProperties": false,
-  "required": ["policy_id", "strategy", "prefer_local", "budget_mode", "tie_break_order"],
+  "required": [
+    "strategy",
+    "compute_preference",
+    "required_capabilities",
+    "required_modalities",
+    "require_tools",
+    "deny_endpoints",
+    "allow_endpoints",
+    "deny_provider_kinds",
+    "allow_provider_kinds",
+    "budget",
+    "privacy",
+    "targets"
+  ],
   "properties": {
     "policy_id": { "type": "string" },
     "strategy": {
       "type": "string",
-      "enum": ["balanced", "low-latency", "high-quality", "low-cost"]
+      "enum": ["balanced", "cost", "latency", "quality"]
+    },
+    "compute_preference": {
+      "type": "string",
+      "enum": ["auto", "local", "remote", "hybrid"]
     },
     "prefer_local": { "type": "boolean" },
     "budget_mode": { "type": "string", "enum": ["strict", "advisory", "disabled"] },
@@ -16,6 +33,60 @@
       "type": "array",
       "minItems": 1,
       "items": { "type": "string" }
+    },
+    "required_capabilities": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "required_modalities": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "require_tools": { "type": "boolean" },
+    "deny_endpoints": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "allow_endpoints": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "deny_provider_kinds": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "allow_provider_kinds": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled", "currency"],
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "currency": { "type": "string" },
+        "max_cost_per_request": { "type": "number", "minimum": 0 },
+        "target_cost_per_request": { "type": "number", "minimum": 0 }
+      }
+    },
+    "privacy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["allow_remote"],
+      "properties": {
+        "allow_remote": { "type": "boolean" }
+      }
+    },
+    "targets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["latency_target_ms", "latency_max_ms", "throughput_target_tps"],
+      "properties": {
+        "latency_target_ms": { "type": "number", "minimum": 0 },
+        "latency_max_ms": { "type": "number", "minimum": 0 },
+        "throughput_target_tps": { "type": "number", "minimum": 0 }
+      }
     }
   }
 }

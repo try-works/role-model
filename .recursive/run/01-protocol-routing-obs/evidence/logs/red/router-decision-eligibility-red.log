@@ -1,0 +1,62 @@
+.                                        | ΓÇëWARNΓÇë Unsupported engine: wanted: {"node":">=22 <23"} (current: {"node":"v24.11.0","pnpm":"10.6.5"})
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/01-protocol-routing-obs/packages/conformance[39m
+
+ [31mΓ¥»[39m src/router-conformance.test.ts [2m([22m[2m14 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 137[2mms[22m[39m
+   [32mΓ£ô[39m routeRequest[2m > [22mexcludes capability-missing candidates[32m 15[2mms[22m[39m
+   [32mΓ£ô[39m routeRequest[2m > [22mexcludes insufficient context candidates[32m 2[2mms[22m[39m
+   [32mΓ£ô[39m routeRequest[2m > [22mexcludes tool-unsupported candidates[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m routeRequest[2m > [22mexcludes tool-unsupported candidates when tool_calling.supported is false[32m 1[2mms[22m[39m
+[31m   [31m├ù[31m routeRequest[2m > [22memits canonical eligibility entries with exclusions instead of legacy ineligible candidate lists[39m[32m 36[2mms[22m[39m
+[31m     ΓåÆ expected undefined to deeply equal [ { endpoint_id: 'local-cli', ΓÇª(2) } ][39m
+   [32mΓ£ô[39m routeRequest[2m > [22mapplies local preference for balanced ties[32m 5[2mms[22m[39m
+   [32mΓ£ô[39m routeRequest[2m > [22mapplies canonical remote compute preference during scoring[32m 2[2mms[22m[39m
+   [32mΓ£ô[39m routeRequest[2m > [22mprefers measured profile strength when available[32m 2[2mms[22m[39m
+   [32mΓ£ô[39m routeRequest[2m > [22mcan optimize for cost[32m 2[2mms[22m[39m
+   [32mΓ£ô[39m routeRequest[2m > [22maccepts canonical cost strategy inputs[32m 2[2mms[22m[39m
+   [32mΓ£ô[39m routeRequest[2m > [22muses balanced strategy weights so substantially lower cost can beat slightly higher quality[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m routeRequest[2m > [22mapplies role and task preferred capabilities through preference scoring[32m 4[2mms[22m[39m
+   [32mΓ£ô[39m routeRequest[2m > [22mbreaks ties deterministically by endpoint id last[32m 56[2mms[22m[39m
+   [32mΓ£ô[39m routeRequest[2m > [22mtreats near-equal total scores as ties and breaks them by higher quality first[32m 1[2mms[22m[39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  src/router-conformance.test.ts > routeRequest > emits canonical eligibility entries with exclusions instead of legacy ineligible candidate lists
+AssertionError: expected undefined to deeply equal [ { endpoint_id: 'local-cli', ΓÇª(2) } ]
+
+- Expected: 
+[
+  {
+    "eligible": false,
+    "endpoint_id": "local-cli",
+    "exclusions": [
+      {
+        "code": "TOOLS_UNSUPPORTED",
+        "detail": "Endpoint does not support tool calling.",
+      },
+    ],
+  },
+]
+
++ Received: 
+undefined
+
+ Γ¥» src/router-conformance.test.ts:219:32
+    217|     };
+    218| 
+    219|     expect(result.eligibility).toEqual([
+       |                                ^
+    220|       {
+    221|         endpoint_id: "local-cli",
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m13 passed[39m[22m[90m (14)[39m
+[2m   Start at [22m 19:04:55
+[2m   Duration [22m 2.79s[2m (transform 540ms, setup 0ms, collect 562ms, tests 137ms, environment 1ms, prepare 717ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\01-protocol-routing-obs\packages\conformance:
+ΓÇëERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓÇë Command failed with exit code 1: vitest run src/router-conformance.test.ts

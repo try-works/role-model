@@ -8,11 +8,12 @@
   "endpoint_id": "cli.local.coder",
   "model_id": "gpt-5.4",
   "package_id": "role-model-router/provider-cli",
-  "provider_kind": "provider-cli",
+  "provider_kind": "cli",
   "tokens_in": 48,
   "tokens_out": 24,
   "latency_ms": 180,
   "cost_estimate": 0.001,
   "currency": "USD",
-  "error_class": "none"
+  "error_class": "none",
+  "sample_source": "live_request"
 }

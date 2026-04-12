@@ -1,0 +1,10 @@
+{
+  "task_type": "code.edit",
+  "description": "Perform code edits.",
+  "required_inputs": ["source.patch"],
+  "required_capabilities": ["code.edit"],
+  "preferred_capabilities": ["reasoning.multi_step"],
+  "quality_metrics": ["patch_correctness"],
+  "allowed_roles": ["developer"],
+  "default_benchmark_suites": ["code-edit-basic"]
+}

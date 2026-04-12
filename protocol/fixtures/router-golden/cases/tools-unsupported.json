@@ -1,0 +1,74 @@
+{
+  "name": "excludes endpoints when tools are required but unsupported",
+  "input": {
+    "request": {
+      "requestId": "req-tools-unsupported-1",
+      "taskType": "code.edit",
+      "requiredCapabilities": [
+        "code.edit"
+      ],
+      "preferredCapabilities": [],
+      "requiredModalities": [
+        "text"
+      ],
+      "contextTokens": 2048,
+      "needsTools": true,
+      "strategy": "balanced",
+      "preferLocal": false
+    },
+    "candidates": [
+      {
+        "identity": {
+          "endpoint_id": "endpoint-1",
+          "endpoint_kind": "local-engine",
+          "provider_kind": "provider-cli",
+          "serving_source": "local-process",
+          "model_id": "gpt-5.4",
+          "package_id": "provider-cli",
+          "variant_id": "default",
+          "runtime_version": "1.0.0",
+          "quantization": "none",
+          "precision": "fp16",
+          "host_class": "skill-router",
+          "device_class": "workstation",
+          "region": "local",
+          "org_scope": "personal"
+        },
+        "declared": {
+          "endpoint_id": "endpoint-1",
+          "capabilities": [
+            "code.edit"
+          ],
+          "modalities": [
+            "text"
+          ],
+          "max_context_tokens": 32768,
+          "tool_calling": {
+            "supported": false,
+            "style": "none"
+          },
+          "supports_embeddings": false,
+          "platform_constraints": []
+        },
+        "status": "active"
+      }
+    ]
+  },
+  "expected": {
+    "chosen_endpoint_id": "",
+    "fallback_endpoint_ids": [],
+    "selection_reasons": [],
+    "eligibility": [
+      {
+        "endpoint_id": "endpoint-1",
+        "eligible": false,
+        "exclusions": [
+          {
+            "code": "TOOLS_UNSUPPORTED",
+            "detail": "Endpoint does not support tool calling."
+          }
+        ]
+      }
+    ]
+  }
+}

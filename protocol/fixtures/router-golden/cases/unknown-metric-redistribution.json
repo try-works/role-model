@@ -1,0 +1,113 @@
+{
+  "name": "unknown metric redistribution prevents endpoint-id tie break from masking better quality",
+  "input": {
+    "request": {
+      "requestId": "req-unknown-metric-redistribution-1",
+      "taskType": "code.edit",
+      "requiredCapabilities": [
+        "code.edit"
+      ],
+      "preferredCapabilities": [],
+      "requiredModalities": [
+        "text"
+      ],
+      "contextTokens": 4096,
+      "needsTools": false,
+      "strategy": "quality",
+      "preferLocal": false
+    },
+    "candidates": [
+      {
+        "identity": {
+          "endpoint_id": "alpha-lower-quality",
+          "endpoint_kind": "mcp-endpoint",
+          "provider_kind": "provider-mcp",
+          "serving_source": "remote-service",
+          "model_id": "gpt-5.4-mini",
+          "package_id": "provider-mcp",
+          "variant_id": "default",
+          "runtime_version": "1.0.0",
+          "quantization": "none",
+          "precision": "fp16",
+          "host_class": "skill-router",
+          "device_class": "remote",
+          "region": "us-east",
+          "org_scope": "team"
+        },
+        "declared": {
+          "endpoint_id": "alpha-lower-quality",
+          "capabilities": [
+            "code.edit"
+          ],
+          "modalities": [
+            "text"
+          ],
+          "max_context_tokens": 32768,
+          "tool_calling": {
+            "supported": false,
+            "style": "none"
+          },
+          "supports_embeddings": false,
+          "platform_constraints": []
+        },
+        "observed": {
+          "endpoint_id": "alpha-lower-quality",
+          "judge_score": 0.8
+        },
+        "status": "active"
+      },
+      {
+        "identity": {
+          "endpoint_id": "zeta-higher-quality",
+          "endpoint_kind": "mcp-endpoint",
+          "provider_kind": "provider-mcp",
+          "serving_source": "remote-service",
+          "model_id": "gpt-5.4",
+          "package_id": "provider-mcp",
+          "variant_id": "default",
+          "runtime_version": "1.0.0",
+          "quantization": "none",
+          "precision": "fp16",
+          "host_class": "skill-router",
+          "device_class": "remote",
+          "region": "us-west",
+          "org_scope": "team"
+        },
+        "declared": {
+          "endpoint_id": "zeta-higher-quality",
+          "capabilities": [
+            "code.edit"
+          ],
+          "modalities": [
+            "text"
+          ],
+          "max_context_tokens": 32768,
+          "tool_calling": {
+            "supported": false,
+            "style": "none"
+          },
+          "supports_embeddings": false,
+          "platform_constraints": []
+        },
+        "observed": {
+          "endpoint_id": "zeta-higher-quality",
+          "judge_score": 0.8101
+        },
+        "status": "active"
+      }
+    ]
+  },
+  "expected": {
+    "chosen_endpoint_id": "zeta-higher-quality",
+    "fallback_endpoint_ids": [
+      "alpha-lower-quality"
+    ],
+    "selection_reasons": [
+      "BEST_TOTAL_SCORE",
+      "MEASURED_PROFILE_USED",
+      "HIGH_QUALITY_TARGET_MET",
+      "FALLBACK_CHAIN_COMPUTED"
+    ],
+    "eligibility": []
+  }
+}

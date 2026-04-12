@@ -3,12 +3,38 @@
   "title": "TraceSpan",
   "type": "object",
   "additionalProperties": false,
-  "required": ["trace_id", "span_id", "name", "started_at_ms", "ended_at_ms", "status"],
+  "required": [
+    "trace_id",
+    "span_id",
+    "request_id",
+    "routing_decision_id",
+    "span_type",
+    "started_at_ms",
+    "ended_at_ms",
+    "status"
+  ],
   "properties": {
     "trace_id": { "type": "string" },
     "span_id": { "type": "string" },
     "parent_span_id": { "type": "string" },
-    "name": { "type": "string" },
+    "request_id": { "type": "string" },
+    "routing_decision_id": { "type": "string" },
+    "span_type": {
+      "type": "string",
+      "enum": [
+        "router.eligibility",
+        "router.scoring",
+        "router.selection",
+        "provider.load",
+        "provider.queue",
+        "provider.prefill",
+        "provider.decode",
+        "tool.execution",
+        "router.fallback",
+        "router.retry",
+        "request.failure"
+      ]
+    },
     "started_at_ms": { "type": "integer", "minimum": 0 },
     "ended_at_ms": { "type": "integer", "minimum": 0 },
     "status": { "type": "string", "enum": ["ok", "error", "cancelled"] },

@@ -9,20 +9,30 @@
     "provider_kind",
     "serving_source",
     "model_id",
-    "package_id",
-    "variant_id",
-    "runtime_version",
-    "quantization",
-    "precision",
-    "host_class",
-    "device_class",
-    "region",
-    "org_scope"
+    "runtime_version"
   ],
   "properties": {
     "endpoint_id": { "type": "string" },
-    "endpoint_kind": { "type": "string" },
-    "provider_kind": { "type": "string" },
+    "endpoint_kind": {
+      "type": "string",
+      "enum": ["local_engine", "remote_api", "browser_engine", "dispatch_adapter"]
+    },
+    "provider_kind": {
+      "type": "string",
+      "enum": [
+        "acp",
+        "mcp",
+        "cli",
+        "remote_openai_compat",
+        "onnx",
+        "mlx",
+        "litertlm",
+        "gguf",
+        "webllm",
+        "mediapipe_genai",
+        "mediapipe_text"
+      ]
+    },
     "serving_source": { "type": "string" },
     "model_id": { "type": "string" },
     "package_id": { "type": "string" },
@@ -33,6 +43,7 @@
     "host_class": { "type": "string" },
     "device_class": { "type": "string" },
     "region": { "type": "string" },
-    "org_scope": { "type": "string" }
+    "org_scope": { "type": "string" },
+    "endpoint_version": { "type": "string" }
   }
 }

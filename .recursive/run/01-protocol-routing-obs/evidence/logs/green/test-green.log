@@ -1,0 +1,82 @@
+ΓÇëWARNΓÇë Unsupported engine: wanted: {"node":">=22 <23"} (current: {"node":"v24.11.0","pnpm":"10.6.5"})
+
+> role-model@0.0.0 test D:\DEV\role-model\.worktrees\01-protocol-routing-obs
+> pnpm -r --if-present test
+
+.                                        | ΓÇëWARNΓÇë Unsupported engine: wanted: {"node":">=22 <23"} (current: {"node":"v24.11.0","pnpm":"10.33.0"})
+Scope: 21 of 22 workspace projects
+packages/schema-tools test$ vitest run
+packages/schema-tools test: [1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/01-protocol-routing-obs/packages/schema-tools[39m
+packages/schema-tools test: [90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2mdoes not emit duplicate exported interfaces for externally referenced schemas
+packages/schema-tools test: [22m[39mGenerated types for benchmark-run.schema.json
+packages/schema-tools test: [90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2mdoes not emit duplicate exported interfaces for externally referenced schemas
+packages/schema-tools test: [22m[39mGenerated types for benchmark-suite.schema.json
+packages/schema-tools test: [90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2mdoes not emit duplicate exported interfaces for externally referenced schemas
+packages/schema-tools test: [22m[39mGenerated types for capability-taxonomy.schema.json
+packages/schema-tools test: [90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2mdoes not emit duplicate exported interfaces for externally referenced schemas
+packages/schema-tools test: [22m[39mGenerated types for declared-capability-profile.schema.json
+packages/schema-tools test: [90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2mdoes not emit duplicate exported interfaces for externally referenced schemas
+packages/schema-tools test: [22m[39mGenerated types for endpoint-identity.schema.json
+packages/schema-tools test: [90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2mdoes not emit duplicate exported interfaces for externally referenced schemas
+packages/schema-tools test: [22m[39mGenerated types for judge-score.schema.json
+packages/schema-tools test: [90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2mdoes not emit duplicate exported interfaces for externally referenced schemas
+packages/schema-tools test: [22m[39mGenerated types for model-pack-manifest.schema.json
+packages/schema-tools test: [90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2mdoes not emit duplicate exported interfaces for externally referenced schemas
+packages/schema-tools test: [22m[39mGenerated types for observed-performance-profile.schema.json
+packages/schema-tools test: [90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2mdoes not emit duplicate exported interfaces for externally referenced schemas
+packages/schema-tools test: [22m[39mGenerated types for package-manifest.schema.json
+packages/schema-tools test: [90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2mdoes not emit duplicate exported interfaces for externally referenced schemas
+packages/schema-tools test: [22m[39mGenerated types for planspec.schema.json
+packages/schema-tools test: [90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2mdoes not emit duplicate exported interfaces for externally referenced schemas
+packages/schema-tools test: [22m[39mGenerated types for role-binding.schema.json
+packages/schema-tools test: [90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2mdoes not emit duplicate exported interfaces for externally referenced schemas
+packages/schema-tools test: [22m[39mGenerated types for role-definition.schema.json
+packages/schema-tools test: [90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2mdoes not emit duplicate exported interfaces for externally referenced schemas
+packages/schema-tools test: [22m[39mGenerated types for router-decision.schema.json
+packages/schema-tools test: [90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2mdoes not emit duplicate exported interfaces for externally referenced schemas
+packages/schema-tools test: [22m[39mGenerated types for routing-policy.schema.json
+packages/schema-tools test: [90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2mdoes not emit duplicate exported interfaces for externally referenced schemas
+packages/schema-tools test: [22m[39mGenerated types for task-definition.schema.json
+packages/schema-tools test: [90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2mdoes not emit duplicate exported interfaces for externally referenced schemas
+packages/schema-tools test: [22m[39mGenerated types for task-execution-profile.schema.json
+packages/schema-tools test: [90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2mdoes not emit duplicate exported interfaces for externally referenced schemas
+packages/schema-tools test: [22m[39mGenerated types for trace-event.schema.json
+packages/schema-tools test: [90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2mdoes not emit duplicate exported interfaces for externally referenced schemas
+packages/schema-tools test: [22m[39mGenerated types for trace-span.schema.json
+packages/schema-tools test: [90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2mdoes not emit duplicate exported interfaces for externally referenced schemas
+packages/schema-tools test: [22m[39mGenerated types for usage-event.schema.json
+packages/schema-tools test: Formatted 1 file in 18ms. Fixed 1 file.
+packages/schema-tools test:  [32mΓ£ô[39m test/generate-protocol-types.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 1580[2mms[22m[39m
+packages/schema-tools test:    [33m[2mΓ£ô[22m[39m generateProtocolTypes[2m > [22mdoes not emit duplicate exported interfaces for externally referenced schemas [33m 1575[2mms[22m[39m
+packages/schema-tools test: [2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+packages/schema-tools test: [2m      Tests [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+packages/schema-tools test: [2m   Start at [22m 16:41:38
+packages/schema-tools test: [2m   Duration [22m 4.80s[2m (transform 474ms, setup 0ms, collect 1.16s, tests 1.58s, environment 1ms, prepare 915ms)[22m
+packages/schema-tools test: Done
+packages/conformance test$ vitest run
+packages/conformance test: [1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/01-protocol-routing-obs/packages/conformance[39m
+packages/conformance test:  [32mΓ£ô[39m src/profile-aggregation-deterministic.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 24[2mms[22m[39m
+packages/conformance test:  [32mΓ£ô[39m src/router-role-task-eligibility.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 44[2mms[22m[39m
+packages/conformance test:  [32mΓ£ô[39m src/router-conformance.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 116[2mms[22m[39m
+packages/conformance test:  [32mΓ£ô[39m src/protocol-schema-conformance.test.ts [2m([22m[2m8 tests[22m[2m)[22m[33m 2593[2mms[22m[39m
+packages/conformance test:    [33m[2mΓ£ô[22m[39m run01 protocol schema conformance[2m > [22mendpoint identity permits run01 optional metadata fields to be absent [33m 996[2mms[22m[39m
+packages/conformance test:    [33m[2mΓ£ô[22m[39m run01 protocol schema conformance[2m > [22mobserved performance accepts sample_window and sources without requiring legacy single-sample fields [33m 526[2mms[22m[39m
+packages/conformance test:  [32mΓ£ô[39m src/protocol-fixture-conformance.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 12041[2mms[22m[39m
+packages/conformance test:    [33m[2mΓ£ô[22m[39m run01 protocol fixture conformance[2m > [22mtop-level example fixtures and required fixture directories validate against canonical schemas [33m 1355[2mms[22m[39m
+packages/conformance test:    [33m[2mΓ£ô[22m[39m run01 protocol fixture conformance[2m > [22mschemas:validate reports fixture validation as part of the canonical schema-tool path [33m 10680[2mms[22m[39m
+packages/conformance test:  [32mΓ£ô[39m src/gateway-smoke-observability.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 15997[2mms[22m[39m
+packages/conformance test:    [33m[2mΓ£ô[22m[39m gateway smoke observability conformance[2m > [22memits trace and usage artifacts with run01 linkage ids and canonical trace shapes [33m 9433[2mms[22m[39m
+packages/conformance test:    [33m[2mΓ£ô[22m[39m gateway smoke observability conformance[2m > [22memits observed performance with the run01 sample window and sources shape [33m 6556[2mms[22m[39m
+packages/conformance test: [2m Test Files [22m [1m[32m6 passed[39m[22m[90m (6)[39m
+packages/conformance test: [2m      Tests [22m [1m[32m29 passed[39m[22m[90m (29)[39m
+packages/conformance test: [2m   Start at [22m 16:41:46
+packages/conformance test: [2m   Duration [22m 19.11s[2m (transform 2.18s, setup 0ms, collect 3.66s, tests 30.81s, environment 6ms, prepare 5.57s)[22m
+packages/conformance test: Done
+role-model-router/apps/router-devtools test$ vitest run test/index.test.ts
+role-model-router/apps/router-devtools test: [1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/01-protocol-routing-obs/role-model-router/apps/router-devtools[39m
+role-model-router/apps/router-devtools test:  [32mΓ£ô[39m test/index.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 34[2mms[22m[39m
+role-model-router/apps/router-devtools test: [2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+role-model-router/apps/router-devtools test: [2m      Tests [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+role-model-router/apps/router-devtools test: [2m   Start at [22m 16:42:09
+role-model-router/apps/router-devtools test: [2m   Duration [22m 3.06s[2m (transform 600ms, setup 0ms, collect 550ms, tests 34ms, environment 1ms, prepare 821ms)[22m
+role-model-router/apps/router-devtools test: Done

@@ -7,19 +7,13 @@
     "event_id",
     "timestamp_ms",
     "app_id",
-    "org_id",
     "request_id",
     "routing_decision_id",
     "endpoint_id",
-    "model_id",
-    "package_id",
     "provider_kind",
     "tokens_in",
     "tokens_out",
-    "latency_ms",
-    "cost_estimate",
-    "currency",
-    "error_class"
+    "latency_ms"
   ],
   "properties": {
     "event_id": { "type": "string" },
@@ -37,6 +31,7 @@
     "latency_ms": { "type": "number", "minimum": 0 },
     "cost_estimate": { "type": "number", "minimum": 0 },
     "currency": { "type": "string" },
-    "error_class": { "type": "string" }
+    "error_class": { "type": "string" },
+    "sample_source": { "type": "string", "enum": ["live_request", "benchmark"] }
   }
 }

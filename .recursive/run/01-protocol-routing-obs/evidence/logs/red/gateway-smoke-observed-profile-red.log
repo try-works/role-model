@@ -1,0 +1,89 @@
+.                                        | ΓÇëWARNΓÇë Unsupported engine: wanted: {"node":">=22 <23"} (current: {"node":"v24.11.0","pnpm":"10.6.5"})
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/01-protocol-routing-obs/packages/conformance[39m
+
+ [31mΓ¥»[39m src/gateway-smoke-observability.test.ts [2m([22m[2m2 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[33m 8035[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m gateway smoke observability conformance[2m > [22memits trace and usage artifacts with run01 linkage ids and canonical trace shapes [33m 3813[2mms[22m[39m
+[31m   [31m├ù[31m gateway smoke observability conformance[2m > [22memits observed performance with the run01 sample window and sources shape[39m[33m 4218[2mms[22m[39m
+[31m     ΓåÆ [
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "sample_window"
+    },
+    "message": "must have required property 'sample_window'"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "sources"
+    },
+    "message": "must have required property 'sources'"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/additionalProperties",
+    "keyword": "additionalProperties",
+    "params": {
+      "additionalProperty": "measurement_window"
+    },
+    "message": "must NOT have additional properties"
+  }
+][39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  src/gateway-smoke-observability.test.ts > gateway smoke observability conformance > emits observed performance with the run01 sample window and sources shape
+Error: [
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "sample_window"
+    },
+    "message": "must have required property 'sample_window'"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/required",
+    "keyword": "required",
+    "params": {
+      "missingProperty": "sources"
+    },
+    "message": "must have required property 'sources'"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/additionalProperties",
+    "keyword": "additionalProperties",
+    "params": {
+      "additionalProperty": "measurement_window"
+    },
+    "message": "must NOT have additional properties"
+  }
+]
+ Γ¥» assertValid src/gateway-smoke-observability.test.ts:41:11
+     39| ): void {
+     40|   if (!validate(payload)) {
+     41|     throw new Error(JSON.stringify(validate.errors, null, 2));
+       |           ^
+     42|   }
+     43| }
+ Γ¥» src/gateway-smoke-observability.test.ts:159:7
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m1 passed[39m[22m[90m (2)[39m
+[2m   Start at [22m 14:13:13
+[2m   Duration [22m 10.20s[2m (transform 230ms, setup 0ms, collect 431ms, tests 8.03s, environment 1ms, prepare 633ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\01-protocol-routing-obs\packages\conformance:
+ΓÇëERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓÇë Command failed with exit code 1: vitest run src/gateway-smoke-observability.test.ts

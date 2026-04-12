@@ -8,6 +8,7 @@
   },
   "files": ["src", "dist"],
   "scripts": {
-    "build": "tsc -p tsconfig.json"
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run"
   }
 }

@@ -1,0 +1,31 @@
+.                                        | ΓÇëWARNΓÇë Unsupported engine: wanted: {"node":">=22 <23"} (current: {"node":"v24.11.0","pnpm":"10.6.5"})
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/01-protocol-routing-obs/packages/conformance[39m
+
+ [31mΓ¥»[39m src/router-fixture-conformance.test.ts [2m([22m[2m1 test[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 72[2mms[22m[39m
+[31m   [31m├ù[31m router fixture conformance[2m > [22mvalidates golden routing cases from fixture inputs[39m[32m 61[2mms[22m[39m
+[31m     ΓåÆ ENOENT: no such file or directory, scandir 'D:\DEV\role-model\.worktrees\01-protocol-routing-obs\protocol\fixtures\router-golden\cases'[39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  src/router-fixture-conformance.test.ts > router fixture conformance > validates golden routing cases from fixture inputs
+Error: ENOENT: no such file or directory, scandir 'D:\DEV\role-model\.worktrees\01-protocol-routing-obs\protocol\fixtures\router-golden\cases'
+ Γ¥» src/router-fixture-conformance.test.ts:30:24
+     28| describe("router fixture conformance", () => {
+     29|   test("validates golden routing cases from fixture inputs", async () ΓÇª
+     30|     const fileNames = (await readdir(fixtureDir)).filter((fileName) =>ΓÇª
+       |                        ^
+     31|     expect(fileNames.length).toBeGreaterThan(0);
+     32| 
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m   Start at [22m 17:04:12
+[2m   Duration [22m 4.57s[2m (transform 1.12s, setup 0ms, collect 1.18s, tests 72ms, environment 1ms, prepare 1.24s)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\01-protocol-routing-obs\packages\conformance:
+ΓÇëERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓÇë Command failed with exit code 1: vitest run src/router-fixture-conformance.test.ts

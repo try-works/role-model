@@ -1,0 +1,12 @@
+{
+  "event_id": "event-router-created-001",
+  "trace_id": "trace-001",
+  "span_id": "span-router-selection",
+  "request_id": "request-001",
+  "routing_decision_id": "decision-001",
+  "timestamp_ms": 1712880000005,
+  "event_type": "router.decision.created",
+  "payload": {
+    "chosen_endpoint_id": "local-cli"
+  }
+}

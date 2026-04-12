@@ -3,19 +3,36 @@
   "title": "TraceEvent",
   "type": "object",
   "additionalProperties": false,
-  "required": ["event_id", "trace_id", "span_id", "timestamp_ms", "event_type", "message"],
+  "required": [
+    "event_id",
+    "trace_id",
+    "request_id",
+    "routing_decision_id",
+    "timestamp_ms",
+    "event_type",
+    "payload"
+  ],
   "properties": {
     "event_id": { "type": "string" },
     "trace_id": { "type": "string" },
     "span_id": { "type": "string" },
+    "request_id": { "type": "string" },
+    "routing_decision_id": { "type": "string" },
     "timestamp_ms": { "type": "integer", "minimum": 0 },
-    "event_type": { "type": "string" },
-    "message": { "type": "string" },
-    "attributes": {
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "router.decision.created",
+        "trace.span.opened",
+        "trace.span.closed",
+        "usage.event.created",
+        "profile.sample.recorded",
+        "profile.updated"
+      ]
+    },
+    "payload": {
       "type": "object",
-      "additionalProperties": {
-        "anyOf": [{ "type": "string" }, { "type": "number" }, { "type": "boolean" }]
-      }
+      "additionalProperties": true
     }
   }
 }

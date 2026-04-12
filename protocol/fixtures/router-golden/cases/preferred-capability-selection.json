@@ -1,0 +1,176 @@
+{
+  "name": "preferred capabilities affect selection through preference score",
+  "input": {
+    "request": {
+      "requestId": "req-preferred-capability-fixture-1",
+      "requestedRoleId": "developer",
+      "taskType": "code.edit",
+      "requiredCapabilities": [
+        "code.edit"
+      ],
+      "preferredCapabilities": [],
+      "requiredModalities": [
+        "text"
+      ],
+      "contextTokens": 4096,
+      "needsTools": true,
+      "strategy": "balanced",
+      "preferLocal": false,
+      "budgetLimit": 0.01
+    },
+    "candidates": [
+      {
+        "identity": {
+          "endpoint_id": "zeta-local",
+          "endpoint_kind": "cli-agent",
+          "provider_kind": "provider-cli",
+          "serving_source": "remote-service",
+          "model_id": "gpt-5.4",
+          "package_id": "provider-cli",
+          "variant_id": "default",
+          "runtime_version": "1.0.0",
+          "quantization": "none",
+          "precision": "fp16",
+          "host_class": "skill-router",
+          "device_class": "remote",
+          "region": "us-west",
+          "org_scope": "personal"
+        },
+        "declared": {
+          "endpoint_id": "zeta-local",
+          "capabilities": [
+            "code.edit",
+            "reasoning.multi_step",
+            "tools.function_calling"
+          ],
+          "modalities": [
+            "text"
+          ],
+          "max_context_tokens": 32768,
+          "tool_calling": {
+            "supported": true,
+            "style": "openai"
+          },
+          "supports_embeddings": false,
+          "platform_constraints": []
+        },
+        "observed": {
+          "endpoint_id": "zeta-local",
+          "judge_score": 0.88,
+          "latency_ms_p50": 115,
+          "latency_ms_p95": 170,
+          "tokens_per_sec": 70,
+          "cold_start_ms": 40,
+          "failure_rate": 0,
+          "cost_per_1k_tokens_est": 0.001,
+          "freshness_score": 0.93,
+          "confidence_score": 0.93
+        },
+        "status": "active"
+      },
+      {
+        "identity": {
+          "endpoint_id": "alpha-remote",
+          "endpoint_kind": "mcp-endpoint",
+          "provider_kind": "provider-mcp",
+          "serving_source": "remote-service",
+          "model_id": "gpt-5.4-mini",
+          "package_id": "provider-mcp",
+          "variant_id": "default",
+          "runtime_version": "1.0.0",
+          "quantization": "none",
+          "precision": "fp16",
+          "host_class": "skill-router",
+          "device_class": "remote",
+          "region": "us-east",
+          "org_scope": "team"
+        },
+        "declared": {
+          "endpoint_id": "alpha-remote",
+          "capabilities": [
+            "code.edit",
+            "tools.function_calling"
+          ],
+          "modalities": [
+            "text"
+          ],
+          "max_context_tokens": 32768,
+          "tool_calling": {
+            "supported": true,
+            "style": "openai"
+          },
+          "supports_embeddings": true,
+          "platform_constraints": []
+        },
+        "observed": {
+          "endpoint_id": "alpha-remote",
+          "judge_score": 0.88,
+          "latency_ms_p50": 115,
+          "latency_ms_p95": 170,
+          "tokens_per_sec": 70,
+          "cold_start_ms": 35,
+          "failure_rate": 0,
+          "cost_per_1k_tokens_est": 0.001,
+          "freshness_score": 0.93,
+          "confidence_score": 0.93
+        },
+        "status": "active"
+      }
+    ],
+    "roleDefinitions": [
+      {
+        "role_id": "developer",
+        "name": "Developer",
+        "description": "Code editing role",
+        "role_kind": "assistant",
+        "default_system_instructions": "Help with code edits.",
+        "task_types_supported": [
+          "code.edit"
+        ],
+        "required_capabilities": [],
+        "preferred_capabilities": [
+          "reasoning.multi_step"
+        ],
+        "forbidden_capabilities": [],
+        "tool_policy": {
+          "mode": "allowed"
+        },
+        "routing_policy_overrides": {},
+        "output_contracts": [],
+        "safety_policy_refs": []
+      }
+    ],
+    "taskDefinitions": [
+      {
+        "task_type": "code.edit",
+        "description": "Code editing task",
+        "required_inputs": [],
+        "required_capabilities": [
+          "code.edit"
+        ],
+        "preferred_capabilities": [
+          "reasoning.multi_step"
+        ],
+        "quality_metrics": [],
+        "allowed_roles": [
+          "developer"
+        ],
+        "default_benchmark_suites": []
+      }
+    ],
+    "roleBindings": []
+  },
+  "expected": {
+    "chosen_endpoint_id": "zeta-local",
+    "fallback_endpoint_ids": [
+      "alpha-remote"
+    ],
+    "selection_reasons": [
+      "BEST_TOTAL_SCORE",
+      "ROLE_PREFERENCE_APPLIED",
+      "TASK_REQUIREMENTS_SATISFIED",
+      "FALLBACK_CHAIN_COMPUTED"
+    ],
+    "eligibility": []
+  }
+}

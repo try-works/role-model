@@ -6,25 +6,37 @@
   "required": [
     "endpoint_id",
     "measured_at_ms",
-    "measurement_window",
+    "sample_window",
     "sample_size",
-    "judge_score",
+    "sources",
     "latency_ms_p50",
     "latency_ms_p95",
-    "tokens_per_sec",
-    "cold_start_ms",
     "failure_rate",
-    "error_class_rates",
-    "cost_per_1k_tokens_est",
-    "currency",
     "freshness_score",
     "confidence_score"
   ],
   "properties": {
     "endpoint_id": { "type": "string" },
     "measured_at_ms": { "type": "integer", "minimum": 0 },
-    "measurement_window": { "type": "string" },
+    "sample_window": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["started_at_ms", "ended_at_ms"],
+      "properties": {
+        "started_at_ms": { "type": "integer", "minimum": 0 },
+        "ended_at_ms": { "type": "integer", "minimum": 0 }
+      }
+    },
     "sample_size": { "type": "integer", "minimum": 1 },
+    "sources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["live_request_samples", "benchmark_samples"],
+      "properties": {
+        "live_request_samples": { "type": "integer", "minimum": 0 },
+        "benchmark_samples": { "type": "integer", "minimum": 0 }
+      }
+    },
     "judge_score": { "type": "number" },
     "latency_ms_p50": { "type": "number", "minimum": 0 },
     "latency_ms_p95": { "type": "number", "minimum": 0 },
@@ -37,6 +49,7 @@
     },
     "cost_per_1k_tokens_est": { "type": "number", "minimum": 0 },
     "currency": { "type": "string" },
+    "quality_score": { "type": "number", "minimum": 0, "maximum": 1 },
     "freshness_score": { "type": "number", "minimum": 0, "maximum": 1 },
     "confidence_score": { "type": "number", "minimum": 0, "maximum": 1 }
   }

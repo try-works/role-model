@@ -1,0 +1,31 @@
+{
+  "task_type": "code.edit",
+  "role_id": "developer",
+  "required_capabilities": ["code.edit"],
+  "preferred_capabilities": ["reasoning.multi_step"],
+  "routing_policy_patch": {
+    "strategy": "balanced",
+    "compute_preference": "local",
+    "required_capabilities": ["code.edit"],
+    "required_modalities": ["text"],
+    "require_tools": true,
+    "deny_endpoints": [],
+    "allow_endpoints": [],
+    "deny_provider_kinds": [],
+    "allow_provider_kinds": ["cli"],
+    "budget": {
+      "enabled": true,
+      "currency": "USD",
+      "max_cost_per_request": 0.01,
+      "target_cost_per_request": 0.005
+    },
+    "privacy": {
+      "allow_remote": false
+    },
+    "targets": {
+      "latency_target_ms": 150,
+      "latency_max_ms": 300,
+      "throughput_target_tps": 40
+    }
+  }
+}

@@ -10,8 +10,9 @@ Watch-Paths:
 Source-Runs:
 - `none (generic repository guidance)`
 - `00-baseline`
+- `01-protocol-routing-obs`
 Validated-At-Commit: `generic-repository-guidance`
-Last-Validated: `2026-04-12T04:14:11Z`
+Last-Validated: `2026-04-12T10:05:59.2124550Z`
 Tags:
 - `skills`
 - `subagent`
@@ -29,6 +30,7 @@ Before accepting meaningful delegated work, the main agent should verify:
 - claimed file impact against the actual diff-owned file set
 - claimed artifact reads or updates against files that actually exist
 - review-bundle contents against the current reviewed artifact and artifact hash
+- baseline `git diff --name-only <anchor>` results against `git status --short --untracked-files=all` whenever run-local artifact trees may still be untracked
 - requirement, plan, addenda, and prior recursive docs that materially informed acceptance
 - whether any post-review repair made the delegated context stale
 - whether the delegated narrative contains stale statements about bundle existence or review scope even when the substantive verdict is still usable

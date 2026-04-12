@@ -41,6 +41,9 @@ importers:
       '@role-model-router/core':
         specifier: workspace:*
         version: link:../../role-model-router/packages/core
+      '@role-model-router/profile-aggregator':
+        specifier: workspace:*
+        version: link:../../role-model-router/packages/profile-aggregator
 
   packages/packaging: {}
 

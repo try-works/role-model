@@ -1,0 +1,45 @@
+.                                        | ΓÇëWARNΓÇë Unsupported engine: wanted: {"node":">=22 <23"} (current: {"node":"v24.11.0","pnpm":"10.6.5"})
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/01-protocol-routing-obs/packages/conformance[39m
+
+ [31mΓ¥»[39m src/router-conformance.test.ts [2m([22m[2m11 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 254[2mms[22m[39m
+   [32mΓ£ô[39m routeRequest[2m > [22mexcludes capability-missing candidates[32m 19[2mms[22m[39m
+   [32mΓ£ô[39m routeRequest[2m > [22mexcludes insufficient context candidates[32m 2[2mms[22m[39m
+   [32mΓ£ô[39m routeRequest[2m > [22mexcludes tool-unsupported candidates[32m 2[2mms[22m[39m
+   [32mΓ£ô[39m routeRequest[2m > [22mapplies local preference for balanced ties[32m 6[2mms[22m[39m
+   [32mΓ£ô[39m routeRequest[2m > [22mapplies canonical remote compute preference during scoring[32m 4[2mms[22m[39m
+   [32mΓ£ô[39m routeRequest[2m > [22mprefers measured profile strength when available[32m 3[2mms[22m[39m
+   [32mΓ£ô[39m routeRequest[2m > [22mcan optimize for cost[32m 5[2mms[22m[39m
+[31m   [31m├ù[31m routeRequest[2m > [22muses balanced strategy weights so substantially lower cost can beat slightly higher quality[39m[32m 96[2mms[22m[39m
+[31m     ΓåÆ expected 'alpha-expensive' to be 'zeta-cheaper' // Object.is equality[39m
+   [32mΓ£ô[39m routeRequest[2m > [22mapplies role and task preferred capabilities through preference scoring[32m 8[2mms[22m[39m
+   [32mΓ£ô[39m routeRequest[2m > [22mbreaks ties deterministically by endpoint id last[32m 95[2mms[22m[39m
+   [32mΓ£ô[39m routeRequest[2m > [22mtreats near-equal total scores as ties and breaks them by higher quality first[32m 1[2mms[22m[39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  src/router-conformance.test.ts > routeRequest > uses balanced strategy weights so substantially lower cost can beat slightly higher quality
+AssertionError: expected 'alpha-expensive' to be 'zeta-cheaper' // Object.is equality
+
+Expected: "zeta-cheaper"
+Received: "alpha-expensive"
+
+ Γ¥» src/router-conformance.test.ts:314:39
+    312|     });
+    313| 
+    314|     expect(result.chosen_endpoint_id).toBe("zeta-cheaper");
+       |                                       ^
+    315|   });
+    316| 
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m10 passed[39m[22m[90m (11)[39m
+[2m   Start at [22m 16:50:30
+[2m   Duration [22m 4.60s[2m (transform 847ms, setup 0ms, collect 870ms, tests 254ms, environment 1ms, prepare 1.03s)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\01-protocol-routing-obs\packages\conformance:
+ΓÇëERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓÇë Command failed with exit code 1: vitest run src/router-conformance.test.ts

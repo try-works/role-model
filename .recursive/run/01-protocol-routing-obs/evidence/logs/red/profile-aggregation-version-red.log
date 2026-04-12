@@ -1,0 +1,41 @@
+.                                        | ΓÇëWARNΓÇë Unsupported engine: wanted: {"node":">=22 <23"} (current: {"node":"v24.11.0","pnpm":"10.6.5"})
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/01-protocol-routing-obs/packages/conformance[39m
+
+ [31mΓ¥»[39m src/profile-aggregation-deterministic.test.ts [2m([22m[2m4 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 42[2mms[22m[39m
+   [32mΓ£ô[39m profile aggregation[2m > [22maggregates multiple samples into deterministic window and latency percentiles[32m 10[2mms[22m[39m
+   [32mΓ£ô[39m profile aggregation[2m > [22maggregates failure_rate and error_class_rates correctly[32m 2[2mms[22m[39m
+   [32mΓ£ô[39m profile aggregation[2m > [22mapplies freshness half-life decay and increases confidence with sample count[32m 3[2mms[22m[39m
+[31m   [31m├ù[31m profile aggregation[2m > [22mrejects mixed endpoint versions as different profile streams[39m[32m 23[2mms[22m[39m
+[31m     ΓåÆ expected [Function] to throw an error[39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  src/profile-aggregation-deterministic.test.ts > profile aggregation > rejects mixed endpoint versions as different profile streams
+AssertionError: expected [Function] to throw an error
+
+- Expected: 
+null
+
++ Received: 
+undefined
+
+ Γ¥» src/profile-aggregation-deterministic.test.ts:218:7
+    216|         { nowMs: 200 },
+    217|       ),
+    218|     ).toThrow(/endpoint_version/i);
+       |       ^
+    219|   });
+    220| });
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m3 passed[39m[22m[90m (4)[39m
+[2m   Start at [22m 17:27:57
+[2m   Duration [22m 2.27s[2m (transform 298ms, setup 0ms, collect 258ms, tests 42ms, environment 1ms, prepare 851ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\01-protocol-routing-obs\packages\conformance:
+ΓÇëERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓÇë Command failed with exit code 1: vitest run src/profile-aggregation-deterministic.test.ts

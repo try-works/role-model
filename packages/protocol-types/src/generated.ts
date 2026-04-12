@@ -80,26 +80,41 @@ export interface DeclaredCapabilityProfile {
    */
   modalities: [string, ...string[]];
   max_context_tokens: number;
-  tool_calling: boolean;
+  tool_calling: {
+    supported: boolean;
+    style: "openai" | "json" | "none";
+  };
   supports_embeddings: boolean;
-  platform_constraints: string[];
+  platform_constraints?: string[];
 }
 
 export interface EndpointIdentity {
   endpoint_id: string;
-  endpoint_kind: string;
-  provider_kind: string;
+  endpoint_kind: "local_engine" | "remote_api" | "browser_engine" | "dispatch_adapter";
+  provider_kind:
+    | "acp"
+    | "mcp"
+    | "cli"
+    | "remote_openai_compat"
+    | "onnx"
+    | "mlx"
+    | "litertlm"
+    | "gguf"
+    | "webllm"
+    | "mediapipe_genai"
+    | "mediapipe_text";
   serving_source: string;
   model_id: string;
-  package_id: string;
-  variant_id: string;
+  package_id?: string;
+  variant_id?: string;
   runtime_version: string;
-  quantization: string;
-  precision: string;
-  host_class: string;
-  device_class: string;
-  region: string;
-  org_scope: string;
+  quantization?: string;
+  precision?: string;
+  host_class?: string;
+  device_class?: string;
+  region?: string;
+  org_scope?: string;
+  endpoint_version?: string;
 }
 
 export interface JudgeScore {
@@ -130,19 +145,27 @@ export interface ModelPackManifest {
 export interface ObservedPerformanceProfile {
   endpoint_id: string;
   measured_at_ms: number;
-  measurement_window: string;
+  sample_window: {
+    started_at_ms: number;
+    ended_at_ms: number;
+  };
   sample_size: number;
-  judge_score: number;
+  sources: {
+    live_request_samples: number;
+    benchmark_samples: number;
+  };
+  judge_score?: number;
   latency_ms_p50: number;
   latency_ms_p95: number;
-  tokens_per_sec: number;
-  cold_start_ms: number;
+  tokens_per_sec?: number;
+  cold_start_ms?: number;
   failure_rate: number;
-  error_class_rates: {
+  error_class_rates?: {
     [k: string]: number;
   };
-  cost_per_1k_tokens_est: number;
-  currency: string;
+  cost_per_1k_tokens_est?: number;
+  currency?: string;
+  quality_score?: number;
   freshness_score: number;
   confidence_score: number;
 }
@@ -182,7 +205,7 @@ export interface RoleBinding {
   binding_id: string;
   role_id: string;
   endpoint_id: string;
-  status: "active" | "disabled" | "experimental";
+  status: "active" | "disabled" | "candidate";
   policy_overrides: {
     [k: string]: unknown;
   };
@@ -215,13 +238,28 @@ export interface RouterDecision {
   routing_decision_id: string;
   request_id: string;
   policy_snapshot: RoutingPolicy;
-  eligible_candidates: string[];
-  ineligible_candidates: {
+  eligibility: {
     endpoint_id: string;
-    /**
-     * @minItems 1
-     */
-    reasons: [string, ...string[]];
+    eligible: boolean;
+    exclusions: {
+      code:
+        | "CAPABILITY_MISSING"
+        | "MODALITY_UNSUPPORTED"
+        | "CONTEXT_TOO_SMALL"
+        | "TOOLS_UNSUPPORTED"
+        | "POLICY_DENY_ENDPOINT"
+        | "POLICY_DENY_REMOTE"
+        | "ENTITLEMENT_MISSING"
+        | "PACKAGE_NOT_INSTALLED"
+        | "VARIANT_INCOMPATIBLE"
+        | "PROVIDER_OFFLINE"
+        | "BUDGET_EXCEEDED"
+        | "REVOKED"
+        | "ROLE_NOT_ALLOWED"
+        | "TASK_NOT_SUPPORTED"
+        | "ROLE_BINDING_INACTIVE";
+      detail: string;
+    }[];
   }[];
   scored_candidates: {
     endpoint_id: string;
@@ -237,26 +275,38 @@ export interface RouterDecision {
   used_declared: boolean;
   scoring_version: string;
 }
-export interface RoutingPolicy {
-  policy_id: string;
-  strategy: "balanced" | "low-latency" | "high-quality" | "low-cost";
-  prefer_local: boolean;
-  budget_mode: "strict" | "advisory" | "disabled";
-  /**
-   * @minItems 1
-   */
-  tie_break_order: [string, ...string[]];
-}
 
 export interface RoutingPolicy {
-  policy_id: string;
-  strategy: "balanced" | "low-latency" | "high-quality" | "low-cost";
-  prefer_local: boolean;
-  budget_mode: "strict" | "advisory" | "disabled";
+  policy_id?: string;
+  strategy: "balanced" | "cost" | "latency" | "quality";
+  compute_preference: "auto" | "local" | "remote" | "hybrid";
+  prefer_local?: boolean;
+  budget_mode?: "strict" | "advisory" | "disabled";
   /**
    * @minItems 1
    */
-  tie_break_order: [string, ...string[]];
+  tie_break_order?: [string, ...string[]];
+  required_capabilities: string[];
+  required_modalities: string[];
+  require_tools: boolean;
+  deny_endpoints: string[];
+  allow_endpoints: string[];
+  deny_provider_kinds: string[];
+  allow_provider_kinds: string[];
+  budget: {
+    enabled: boolean;
+    currency: string;
+    max_cost_per_request?: number;
+    target_cost_per_request?: number;
+  };
+  privacy: {
+    allow_remote: boolean;
+  };
+  targets: {
+    latency_target_ms: number;
+    latency_max_ms: number;
+    throughput_target_tps: number;
+  };
 }
 
 export interface TaskDefinition {
@@ -272,23 +322,28 @@ export interface TaskDefinition {
 
 export interface TaskExecutionProfile {
   task_type: string;
+  role_id: string;
   required_capabilities: string[];
   preferred_capabilities: string[];
-  required_modalities: string[];
-  output_constraints: string[];
-  evaluation_suites: string[];
-  default_routing_strategy: string;
+  routing_policy_patch: RoutingPolicy;
 }
 
 export interface TraceEvent {
   event_id: string;
   trace_id: string;
-  span_id: string;
+  span_id?: string;
+  request_id: string;
+  routing_decision_id: string;
   timestamp_ms: number;
-  event_type: string;
-  message: string;
-  attributes?: {
-    [k: string]: string | number | boolean;
+  event_type:
+    | "router.decision.created"
+    | "trace.span.opened"
+    | "trace.span.closed"
+    | "usage.event.created"
+    | "profile.sample.recorded"
+    | "profile.updated";
+  payload: {
+    [k: string]: unknown;
   };
 }
 
@@ -296,7 +351,20 @@ export interface TraceSpan {
   trace_id: string;
   span_id: string;
   parent_span_id?: string;
-  name: string;
+  request_id: string;
+  routing_decision_id: string;
+  span_type:
+    | "router.eligibility"
+    | "router.scoring"
+    | "router.selection"
+    | "provider.load"
+    | "provider.queue"
+    | "provider.prefill"
+    | "provider.decode"
+    | "tool.execution"
+    | "router.fallback"
+    | "router.retry"
+    | "request.failure";
   started_at_ms: number;
   ended_at_ms: number;
   status: "ok" | "error" | "cancelled";
@@ -309,17 +377,18 @@ export interface UsageEvent {
   event_id: string;
   timestamp_ms: number;
   app_id: string;
-  org_id: string;
+  org_id?: string;
   request_id: string;
   routing_decision_id: string;
   endpoint_id: string;
-  model_id: string;
-  package_id: string;
+  model_id?: string;
+  package_id?: string;
   provider_kind: string;
   tokens_in: number;
   tokens_out: number;
   latency_ms: number;
-  cost_estimate: number;
-  currency: string;
-  error_class: string;
+  cost_estimate?: number;
+  currency?: string;
+  error_class?: string;
+  sample_source?: "live_request" | "benchmark";
 }

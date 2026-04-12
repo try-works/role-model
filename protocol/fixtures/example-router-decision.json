@@ -4,12 +4,44 @@
   "policy_snapshot": {
     "policy_id": "balanced-default",
     "strategy": "balanced",
+    "compute_preference": "local",
+    "required_capabilities": [
+      "code.edit"
+    ],
+    "required_modalities": [
+      "text"
+    ],
+    "require_tools": true,
+    "deny_endpoints": [],
+    "allow_endpoints": [
+      "cli.local.coder"
+    ],
+    "deny_provider_kinds": [],
+    "allow_provider_kinds": [
+      "cli"
+    ],
+    "budget": {
+      "enabled": true,
+      "currency": "USD",
+      "max_cost_per_request": 0.01,
+      "target_cost_per_request": 0.001
+    },
+    "privacy": {
+      "allow_remote": false
+    },
+    "targets": {
+      "latency_target_ms": 150,
+      "latency_max_ms": 300,
+      "throughput_target_tps": 20
+    },
     "prefer_local": true,
     "budget_mode": "advisory",
-    "tie_break_order": ["prefer_local", "score", "endpoint_id"]
+    "tie_break_order": [
+      "prefer_local",
+      "score",
+      "endpoint_id"
+    ]
   },
-  "eligible_candidates": ["cli.local.coder"],
-  "ineligible_candidates": [],
   "scored_candidates": [
     {
       "endpoint_id": "cli.local.coder",
@@ -18,8 +50,18 @@
   ],
   "chosen_endpoint_id": "cli.local.coder",
   "fallback_endpoint_ids": [],
-  "selection_reasons": ["BEST_TOTAL_SCORE", "LOCAL_PREFERENCE_APPLIED"],
+  "selection_reasons": [
+    "BEST_TOTAL_SCORE",
+    "LOCAL_PREFERENCE_APPLIED"
+  ],
   "used_measured": true,
   "used_declared": true,
-  "scoring_version": "baseline-v1"
+  "scoring_version": "baseline-v1",
+  "eligibility": [
+    {
+      "endpoint_id": "cli.local.coder",
+      "eligible": true,
+      "exclusions": []
+    }
+  ]
 }

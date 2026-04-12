@@ -1,0 +1,75 @@
+ΓÇëWARNΓÇë Unsupported engine: wanted: {"node":">=22 <23"} (current: {"node":"v24.11.0","pnpm":"10.6.5"})
+
+> role-model@0.0.0 build D:\DEV\role-model\.worktrees\01-protocol-routing-obs
+> pnpm run types:generate && pnpm -r --if-present build
+
+ΓÇëWARNΓÇë Unsupported engine: wanted: {"node":">=22 <23"} (current: {"node":"v24.11.0","pnpm":"10.33.0"})
+
+> role-model@0.0.0 types:generate D:\DEV\role-model\.worktrees\01-protocol-routing-obs
+> pnpm --filter @role-model/schema-tools exec tsx src/validate-schemas.ts generate-types
+
+.                                        | ΓÇëWARNΓÇë Unsupported engine: wanted: {"node":">=22 <23"} (current: {"node":"v24.11.0","pnpm":"10.33.0"})
+Generated types for benchmark-run.schema.json
+Generated types for benchmark-suite.schema.json
+Generated types for capability-taxonomy.schema.json
+Generated types for declared-capability-profile.schema.json
+Generated types for endpoint-identity.schema.json
+Generated types for judge-score.schema.json
+Generated types for model-pack-manifest.schema.json
+Generated types for observed-performance-profile.schema.json
+Generated types for package-manifest.schema.json
+Generated types for planspec.schema.json
+Generated types for role-binding.schema.json
+Generated types for role-definition.schema.json
+Generated types for router-decision.schema.json
+Generated types for routing-policy.schema.json
+Generated types for task-definition.schema.json
+Generated types for task-execution-profile.schema.json
+Generated types for trace-event.schema.json
+Generated types for trace-span.schema.json
+Generated types for usage-event.schema.json
+Formatted 1 file in 11ms. Fixed 1 file.
+.                                        | ΓÇëWARNΓÇë Unsupported engine: wanted: {"node":">=22 <23"} (current: {"node":"v24.11.0","pnpm":"10.33.0"})
+Scope: 21 of 22 workspace projects
+packages/packaging build$ tsc -p tsconfig.json
+packages/protocol-types build$ tsc -p tsconfig.json
+packages/store-contract build$ tsc -p tsconfig.json
+packages/schema-tools build$ tsc -p tsconfig.json
+packages/store-contract build: Done
+role-model-router/packages/bench-core build$ tsc -p tsconfig.json
+packages/packaging build: Done
+role-model-router/packages/bench-judge build$ tsc -p tsconfig.json
+packages/protocol-types build: Done
+role-model-router/packages/core build$ tsc -p tsconfig.json
+packages/schema-tools build: Done
+.../packages/profile-aggregator build$ tsc -p tsconfig.json
+role-model-router/packages/bench-core build: Done
+role-model-router/packages/bench-judge build: Done
+role-model-router/packages/roles build$ tsc -p tsconfig.json
+role-model-router/packages/runtime-web build$ tsc -p tsconfig.json
+role-model-router/packages/core build: Done
+role-model-router/packages/tasks build$ tsc -p tsconfig.json
+.../packages/profile-aggregator build: Done
+role-model-router/packages/trace build$ tsc -p tsconfig.json
+role-model-router/packages/runtime-web build: Done
+role-model-router/packages/usage build$ tsc -p tsconfig.json
+role-model-router/packages/roles build: Done
+role-model-router/packages/tasks build: Done
+role-model-router/packages/trace build: Done
+role-model-router/packages/usage build: Done
+packages/conformance build$ tsc -p tsconfig.json
+role-model-router/apps/bench-cli build$ tsc -p tsconfig.json
+role-model-router/packages/openai-compat build$ tsc -p tsconfig.json
+role-model-router/packages/provider-acp build$ tsc -p tsconfig.json
+role-model-router/apps/bench-cli build: Done
+role-model-router/packages/provider-cli build$ tsc -p tsconfig.json
+role-model-router/packages/provider-acp build: Done
+role-model-router/packages/provider-mcp build$ tsc -p tsconfig.json
+role-model-router/packages/openai-compat build: Done
+packages/conformance build: Done
+role-model-router/packages/provider-cli build: Done
+role-model-router/packages/provider-mcp build: Done
+role-model-router/apps/router-devtools build$ tsc -p tsconfig.json
+role-model-router/apps/router-devtools build: Done
+role-model-router/apps/gateway-smoke build$ tsc -p tsconfig.json
+role-model-router/apps/gateway-smoke build: Done

@@ -1,0 +1,59 @@
+{
+  "routing_decision_id": "decision-router-golden-001",
+  "request_id": "request-router-golden-001",
+  "policy_snapshot": {
+    "policy_id": "router-golden-balanced",
+    "strategy": "balanced",
+    "compute_preference": "local",
+    "required_capabilities": [
+      "code.edit"
+    ],
+    "required_modalities": [
+      "text"
+    ],
+    "require_tools": true,
+    "deny_endpoints": [],
+    "allow_endpoints": [
+      "local-cli"
+    ],
+    "deny_provider_kinds": [],
+    "allow_provider_kinds": [
+      "cli"
+    ],
+    "budget": {
+      "enabled": true,
+      "currency": "USD",
+      "max_cost_per_request": 0.01,
+      "target_cost_per_request": 0.002
+    },
+    "privacy": {
+      "allow_remote": false
+    },
+    "targets": {
+      "latency_target_ms": 120,
+      "latency_max_ms": 300,
+      "throughput_target_tps": 30
+    }
+  },
+  "scored_candidates": [
+    {
+      "endpoint_id": "local-cli",
+      "score": 0.91
+    }
+  ],
+  "chosen_endpoint_id": "local-cli",
+  "fallback_endpoint_ids": [],
+  "selection_reasons": [
+    "BEST_TOTAL_SCORE"
+  ],
+  "used_measured": true,
+  "used_declared": true,
+  "scoring_version": "run01-fixture",
+  "eligibility": [
+    {
+      "endpoint_id": "local-cli",
+      "eligible": true,
+      "exclusions": []
+    }
+  ]
+}

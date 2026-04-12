@@ -30,7 +30,10 @@ export function detectAcpEndpoints(configs: DeclaredEndpointConfig[]): EndpointC
       capabilities: config.capabilities,
       modalities: config.modalities,
       max_context_tokens: 32768,
-      tool_calling: true,
+      tool_calling: {
+        supported: true,
+        style: "openai",
+      },
       supports_embeddings: false,
       platform_constraints: [],
     },

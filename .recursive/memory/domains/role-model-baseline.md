@@ -1,6 +1,6 @@
 Type: `domain`
 Status: `CURRENT`
-Scope: `Stable baseline ownership for the repo workspace, canonical protocol tree, shared packages, router family, fixtures, and validation surfaces introduced by run 00-baseline.`
+Scope: `Stable baseline ownership for the repo workspace, canonical protocol tree, shared packages, router family, fixtures, and validation surfaces introduced by run 00 and tightened by run 01 protocol-routing-observability refinements.`
 Owns-Paths:
 - `/README.md`
 - `/LICENSE`
@@ -21,8 +21,9 @@ Watch-Paths:
 - `/.recursive/DECISIONS.md`
 Source-Runs:
 - `00-baseline`
+- `01-protocol-routing-obs`
 Validated-At-Commit: `working-tree`
-Last-Validated: `2026-04-12T04:14:11Z`
+Last-Validated: `2026-04-12T10:05:59.2124550Z`
 Tags:
 - `baseline`
 - `workspace`
@@ -47,7 +48,11 @@ This repository now has a real product baseline rather than only recursive scaff
 - Canonical machine-readable protocol contracts live under `/protocol/schemas/`
 - Generated protocol types live under `/packages/protocol-types/src/generated.ts`
 - The deterministic router contract lives under `/role-model-router/packages/core/`
-- The smoke path exercises the baseline end to end and emits protocol-shaped artifacts
+- Schema validation covers the canonical schema set plus the required fixture corpus
+- Fixture-driven router conformance lives under `/packages/conformance/src/router-fixture-conformance.test.ts` and is backed by `/protocol/fixtures/router-golden/cases/`
+- The router now applies role/task-aware eligibility, provider and endpoint policy filters, canonical compute-preference/strategy aliases, normalized weighted scoring, and unknown-metric redistribution
+- Observed-performance aggregation now uses deterministic multi-sample semantics with `sample_window`, `sources`, failure/error-class rates, freshness/confidence, and mixed-version rejection
+- The smoke path exercises the baseline end to end and emits run-01 protocol-shaped artifacts
 - The stable config export path emits normalized ACP, MCP, and CLI endpoint inventory rather than a CLI-only snapshot
 - The protocol docs carry concrete baseline role/task examples directly in `/docs/protocol/roles.md`, `/docs/protocol/tasks.md`, and `/docs/protocol/role-task-capability-mapping.md`
 - Browser, edge, and native provider families are intentionally scaffold-grade in this baseline

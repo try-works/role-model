@@ -7,8 +7,7 @@
     "routing_decision_id",
     "request_id",
     "policy_snapshot",
-    "eligible_candidates",
-    "ineligible_candidates",
+    "eligibility",
     "scored_candidates",
     "chosen_endpoint_id",
     "fallback_endpoint_ids",
@@ -21,16 +20,46 @@
     "routing_decision_id": { "type": "string" },
     "request_id": { "type": "string" },
     "policy_snapshot": { "$ref": "./routing-policy.schema.json" },
-    "eligible_candidates": { "type": "array", "items": { "type": "string" } },
-    "ineligible_candidates": {
+    "eligibility": {
       "type": "array",
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["endpoint_id", "reasons"],
+        "required": ["endpoint_id", "eligible", "exclusions"],
         "properties": {
           "endpoint_id": { "type": "string" },
-          "reasons": { "type": "array", "minItems": 1, "items": { "type": "string" } }
+          "eligible": { "type": "boolean" },
+          "exclusions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["code", "detail"],
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "enum": [
+                    "CAPABILITY_MISSING",
+                    "MODALITY_UNSUPPORTED",
+                    "CONTEXT_TOO_SMALL",
+                    "TOOLS_UNSUPPORTED",
+                    "POLICY_DENY_ENDPOINT",
+                    "POLICY_DENY_REMOTE",
+                    "ENTITLEMENT_MISSING",
+                    "PACKAGE_NOT_INSTALLED",
+                    "VARIANT_INCOMPATIBLE",
+                    "PROVIDER_OFFLINE",
+                    "BUDGET_EXCEEDED",
+                    "REVOKED",
+                    "ROLE_NOT_ALLOWED",
+                    "TASK_NOT_SUPPORTED",
+                    "ROLE_BINDING_INACTIVE"
+                  ]
+                },
+                "detail": { "type": "string" }
+              }
+            }
+          }
         }
       }
     },
