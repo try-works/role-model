@@ -71,7 +71,9 @@ export function aggregateObservedPerformanceSamples(
   if (samples.some((sample) => sample.endpoint_id !== endpointId)) {
     throw new Error("All aggregated samples must belong to the same endpoint.");
   }
-  const definedEndpointVersions = [...new Set(samples.flatMap((sample) => sample.endpoint_version ?? []))];
+  const definedEndpointVersions = [
+    ...new Set(samples.flatMap((sample) => sample.endpoint_version ?? [])),
+  ];
   if (definedEndpointVersions.length > 1) {
     throw new Error("All aggregated samples must share one endpoint_version.");
   }
@@ -94,7 +96,10 @@ export function aggregateObservedPerformanceSamples(
   const errorClassCounts = new Map<string, number>();
   for (const sample of samples) {
     if (sample.failure_class) {
-      errorClassCounts.set(sample.failure_class, (errorClassCounts.get(sample.failure_class) ?? 0) + 1);
+      errorClassCounts.set(
+        sample.failure_class,
+        (errorClassCounts.get(sample.failure_class) ?? 0) + 1,
+      );
     }
   }
 
@@ -105,17 +110,18 @@ export function aggregateObservedPerformanceSamples(
   const sampleSize = samples.length;
   const ageMs = Math.max(0, nowMs - sampleWindow.ended_at_ms);
   const freshnessHalfLifeMs = 7 * 24 * 60 * 60 * 1000;
-  const freshnessScore = clamp(
-    Math.exp((-Math.log(2) * ageMs) / freshnessHalfLifeMs),
-    0,
-    1,
-  );
+  const freshnessScore = clamp(Math.exp((-Math.log(2) * ageMs) / freshnessHalfLifeMs), 0, 1);
   const confidenceScore = clamp(Math.log1p(sampleSize) / Math.log1p(50), 0, 1);
-  const failureRate = errorClassCounts.size === 0 ? 0 : samples.filter((sample) => sample.failure_class).length / sampleSize;
+  const failureRate =
+    errorClassCounts.size === 0
+      ? 0
+      : samples.filter((sample) => sample.failure_class).length / sampleSize;
   const errorClassRates = Object.fromEntries(
     [...errorClassCounts.entries()].map(([errorClass, count]) => [errorClass, count / sampleSize]),
   );
-  const liveRequestSamples = samples.filter((sample) => sample.sample_source === "live_request").length;
+  const liveRequestSamples = samples.filter(
+    (sample) => sample.sample_source === "live_request",
+  ).length;
   const benchmarkSamples = samples.filter((sample) => sample.sample_source === "benchmark").length;
   const meanJudgeScore =
     judgeScores.length > 0
@@ -146,7 +152,9 @@ export function aggregateObservedPerformanceSamples(
       ? { cold_start_ms: median(coldStartValues) }
       : {}),
     failure_rate: failureRate,
-    ...(Object.keys(errorClassRates).length > 0 ? { error_class_rates: errorClassRates } : { error_class_rates: {} }),
+    ...(Object.keys(errorClassRates).length > 0
+      ? { error_class_rates: errorClassRates }
+      : { error_class_rates: {} }),
     ...(typeof median(costValues) === "number"
       ? {
           cost_per_1k_tokens_est: median(costValues),

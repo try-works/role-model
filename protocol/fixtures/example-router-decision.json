@@ -5,21 +5,13 @@
     "policy_id": "balanced-default",
     "strategy": "balanced",
     "compute_preference": "local",
-    "required_capabilities": [
-      "code.edit"
-    ],
-    "required_modalities": [
-      "text"
-    ],
+    "required_capabilities": ["code.edit"],
+    "required_modalities": ["text"],
     "require_tools": true,
     "deny_endpoints": [],
-    "allow_endpoints": [
-      "cli.local.coder"
-    ],
+    "allow_endpoints": ["cli.local.coder"],
     "deny_provider_kinds": [],
-    "allow_provider_kinds": [
-      "cli"
-    ],
+    "allow_provider_kinds": ["cli"],
     "budget": {
       "enabled": true,
       "currency": "USD",
@@ -36,11 +28,7 @@
     },
     "prefer_local": true,
     "budget_mode": "advisory",
-    "tie_break_order": [
-      "prefer_local",
-      "score",
-      "endpoint_id"
-    ]
+    "tie_break_order": ["prefer_local", "score", "endpoint_id"]
   },
   "scored_candidates": [
     {
@@ -50,10 +38,7 @@
   ],
   "chosen_endpoint_id": "cli.local.coder",
   "fallback_endpoint_ids": [],
-  "selection_reasons": [
-    "BEST_TOTAL_SCORE",
-    "LOCAL_PREFERENCE_APPLIED"
-  ],
+  "selection_reasons": ["BEST_TOTAL_SCORE", "LOCAL_PREFERENCE_APPLIED"],
   "used_measured": true,
   "used_declared": true,
   "scoring_version": "baseline-v1",

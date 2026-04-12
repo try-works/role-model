@@ -32,7 +32,9 @@ const topLevelFixtures = [
 const requiredFixtureGroups = [
   {
     directory: "router-golden",
-    fixtures: [{ fileName: "router-decision-basic.json", schemaFile: "router-decision.schema.json" }],
+    fixtures: [
+      { fileName: "router-decision-basic.json", schemaFile: "router-decision.schema.json" },
+    ],
   },
   {
     directory: "profile-golden",

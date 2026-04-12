@@ -6,28 +6,17 @@
     "strategy": "balanced",
     "prefer_local": true,
     "budget_mode": "strict",
-    "tie_break_order": [
-      "prefer_local",
-      "cost",
-      "latency_ms_p95",
-      "endpoint_id"
-    ]
+    "tie_break_order": ["prefer_local", "cost", "latency_ms_p95", "endpoint_id"]
   },
-  "eligible_candidates": [
-    "cli.local.coder"
-  ],
+  "eligible_candidates": ["cli.local.coder"],
   "ineligible_candidates": [
     {
       "endpoint_id": "acp.remote.general",
-      "reasons": [
-        "CAPABILITY_MISSING"
-      ]
+      "reasons": ["CAPABILITY_MISSING"]
     },
     {
       "endpoint_id": "mcp.remote.embedder",
-      "reasons": [
-        "CAPABILITY_MISSING"
-      ]
+      "reasons": ["CAPABILITY_MISSING"]
     }
   ],
   "scored_candidates": [

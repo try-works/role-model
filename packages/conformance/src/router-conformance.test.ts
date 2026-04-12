@@ -142,7 +142,9 @@ describe("routeRequest", () => {
 
     expect(
       result.eligibility.every(
-        (candidate) => candidate.eligible || candidate.exclusions.some((reason) => reason.code === "CONTEXT_TOO_SMALL"),
+        (candidate) =>
+          candidate.eligible ||
+          candidate.exclusions.some((reason) => reason.code === "CONTEXT_TOO_SMALL"),
       ),
     ).toBe(true);
   });
