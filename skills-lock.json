@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "skills": {
+    "recursive-debugging": {
+      "source": "try-works/recursive-mode",
+      "sourceType": "github",
+      "computedHash": "d693db5974e9ce68ad45e04027cb23d6696c7ba87b30185e546ffcda6dbddf1b"
+    },
+    "recursive-mode": {
+      "source": "try-works/recursive-mode",
+      "sourceType": "github",
+      "computedHash": "65258e6353888303a3f760e7696ae458e60fbd9ccaed2ba0e89c8bec702f9e29"
+    },
+    "recursive-review-bundle": {
+      "source": "try-works/recursive-mode",
+      "sourceType": "github",
+      "computedHash": "34a03994c5b3dac6e1202f031d40768a7b04b49aef02456cc09e37b6dc61b5e9"
+    },
+    "recursive-subagent": {
+      "source": "try-works/recursive-mode",
+      "sourceType": "github",
+      "computedHash": "cebac45a178c85af511caf539b837f9c9ac2cb5cd46e04e5d83d8a6ceb9a7315"
+    },
+    "recursive-tdd": {
+      "source": "try-works/recursive-mode",
+      "sourceType": "github",
+      "computedHash": "cbd004f55ef24f1ff4b83db8b9a05990229eeb81956813ea9246ce17bbc82fea"
+    },
+    "recursive-worktree": {
+      "source": "try-works/recursive-mode",
+      "sourceType": "github",
+      "computedHash": "b313bbbd0972ac7ef240dc4f2f4cd39df61c6b0e626ba0c37af1b9283b3f3b23"
+    }
+  }
+}
