@@ -5,13 +5,9 @@
       "requestId": "req-preferred-capability-fixture-1",
       "requestedRoleId": "developer",
       "taskType": "code.edit",
-      "requiredCapabilities": [
-        "code.edit"
-      ],
+      "requiredCapabilities": ["code.edit"],
       "preferredCapabilities": [],
-      "requiredModalities": [
-        "text"
-      ],
+      "requiredModalities": ["text"],
       "contextTokens": 4096,
       "needsTools": true,
       "strategy": "balanced",
@@ -38,14 +34,8 @@
         },
         "declared": {
           "endpoint_id": "zeta-local",
-          "capabilities": [
-            "code.edit",
-            "reasoning.multi_step",
-            "tools.function_calling"
-          ],
-          "modalities": [
-            "text"
-          ],
+          "capabilities": ["code.edit", "reasoning.multi_step", "tools.function_calling"],
+          "modalities": ["text"],
           "max_context_tokens": 32768,
           "tool_calling": {
             "supported": true,
@@ -87,13 +77,8 @@
         },
         "declared": {
           "endpoint_id": "alpha-remote",
-          "capabilities": [
-            "code.edit",
-            "tools.function_calling"
-          ],
-          "modalities": [
-            "text"
-          ],
+          "capabilities": ["code.edit", "tools.function_calling"],
+          "modalities": ["text"],
           "max_context_tokens": 32768,
           "tool_calling": {
             "supported": true,
@@ -124,13 +109,9 @@
         "description": "Code editing role",
         "role_kind": "assistant",
         "default_system_instructions": "Help with code edits.",
-        "task_types_supported": [
-          "code.edit"
-        ],
+        "task_types_supported": ["code.edit"],
         "required_capabilities": [],
-        "preferred_capabilities": [
-          "reasoning.multi_step"
-        ],
+        "preferred_capabilities": ["reasoning.multi_step"],
         "forbidden_capabilities": [],
         "tool_policy": {
           "mode": "allowed"
@@ -145,16 +126,10 @@
         "task_type": "code.edit",
         "description": "Code editing task",
         "required_inputs": [],
-        "required_capabilities": [
-          "code.edit"
-        ],
-        "preferred_capabilities": [
-          "reasoning.multi_step"
-        ],
+        "required_capabilities": ["code.edit"],
+        "preferred_capabilities": ["reasoning.multi_step"],
         "quality_metrics": [],
-        "allowed_roles": [
-          "developer"
-        ],
+        "allowed_roles": ["developer"],
         "default_benchmark_suites": []
       }
     ],
@@ -162,9 +137,7 @@
   },
   "expected": {
     "chosen_endpoint_id": "zeta-local",
-    "fallback_endpoint_ids": [
-      "alpha-remote"
-    ],
+    "fallback_endpoint_ids": ["alpha-remote"],
     "selection_reasons": [
       "BEST_TOTAL_SCORE",
       "ROLE_PREFERENCE_APPLIED",

@@ -4,20 +4,14 @@
     "request": {
       "requestId": "req-provider-kind-allow-1",
       "taskType": "code.edit",
-      "requiredCapabilities": [
-        "code.edit"
-      ],
+      "requiredCapabilities": ["code.edit"],
       "preferredCapabilities": [],
-      "requiredModalities": [
-        "text"
-      ],
+      "requiredModalities": ["text"],
       "contextTokens": 2048,
       "needsTools": false,
       "strategy": "balanced",
       "preferLocal": false,
-      "allowProviderKinds": [
-        "provider-cli"
-      ]
+      "allowProviderKinds": ["provider-cli"]
     },
     "candidates": [
       {
@@ -39,12 +33,8 @@
         },
         "declared": {
           "endpoint_id": "local-cli",
-          "capabilities": [
-            "code.edit"
-          ],
-          "modalities": [
-            "text"
-          ],
+          "capabilities": ["code.edit"],
+          "modalities": ["text"],
           "max_context_tokens": 32768,
           "tool_calling": {
             "supported": true,
@@ -74,12 +64,8 @@
         },
         "declared": {
           "endpoint_id": "remote-mcp",
-          "capabilities": [
-            "code.edit"
-          ],
-          "modalities": [
-            "text"
-          ],
+          "capabilities": ["code.edit"],
+          "modalities": ["text"],
           "max_context_tokens": 32768,
           "tool_calling": {
             "supported": true,
@@ -95,11 +81,7 @@
   "expected": {
     "chosen_endpoint_id": "local-cli",
     "fallback_endpoint_ids": [],
-    "selection_reasons": [
-      "BEST_TOTAL_SCORE",
-      "DECLARED_PROFILE_USED",
-      "DEFAULT_PROFILE_USED"
-    ],
+    "selection_reasons": ["BEST_TOTAL_SCORE", "DECLARED_PROFILE_USED", "DEFAULT_PROFILE_USED"],
     "eligibility": [
       {
         "endpoint_id": "remote-mcp",

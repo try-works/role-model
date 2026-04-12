@@ -155,7 +155,9 @@ function assertFixtureValid(
   filePath: string,
 ): void {
   if (!validate(payload)) {
-    throw new Error(`Fixture ${filePath} failed validation:\n${JSON.stringify(validate.errors, null, 2)}`);
+    throw new Error(
+      `Fixture ${filePath} failed validation:\n${JSON.stringify(validate.errors, null, 2)}`,
+    );
   }
 }
 
