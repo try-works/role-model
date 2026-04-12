@@ -40,6 +40,7 @@ Keep this file concise. Link to child docs instead of duplicating them.
 ## Current Docs
 
 - `/.recursive/memory/skills/usage/skill-discovery-and-evaluation.md`
+- `/.recursive/memory/skills/patterns/biome-ci-parity-and-clean-checkouts.md`
 - `/.recursive/memory/skills/patterns/delegated-verification-and-refresh.md`
 - `/.recursive/memory/skills/patterns/phase8-skill-memory-promotion.md`
 - Add child docs here only when they are intentionally promoted as reusable repository guidance.

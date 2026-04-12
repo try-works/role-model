@@ -23,7 +23,7 @@ Source-Runs:
 - `00-baseline`
 - `01-protocol-routing-obs`
 Validated-At-Commit: `working-tree`
-Last-Validated: `2026-04-12T10:05:59.2124550Z`
+Last-Validated: `2026-04-12T21:46:55Z`
 Tags:
 - `baseline`
 - `workspace`
@@ -61,6 +61,8 @@ This repository now has a real product baseline rather than only recursive scaff
 
 - Prefer the repo's existing validation chain rather than ad hoc commands
 - In environments without a global pnpm shim, invoking pnpm through `corepack pnpm` is an acceptable execution fallback so long as repo semantics stay unchanged
+- GitHub Actions validates this repo from a clean checkout of tracked files only; local Biome parity work should prefer a clean export or tracked-file-targeted checks instead of repo-root sweeps that also traverse nested `.worktrees/`
+- On Windows, CRLF-only worktree churn can make local status noisier than the real Linux CI content diff; use `git diff` to identify the actual files that need formatter commits
 
 ## Scope Boundary
 
