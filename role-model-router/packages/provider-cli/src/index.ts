@@ -1,0 +1,50 @@
+import type { EndpointCandidate } from "@role-model-router/core";
+export interface DeclaredEndpointConfig {
+  endpoint_id: string;
+  model_id: string;
+  capabilities: string[];
+  modalities: string[];
+}
+
+export function detectCliEndpoints(configs: DeclaredEndpointConfig[]): EndpointCandidate[] {
+  return configs.map((config) => ({
+    identity: {
+      endpoint_id: config.endpoint_id,
+      endpoint_kind: "cli-agent",
+      provider_kind: "provider-cli",
+      serving_source: "local-process",
+      model_id: config.model_id,
+      package_id: "provider-cli",
+      variant_id: "default",
+      runtime_version: "1.0.0",
+      quantization: "none",
+      precision: "fp16",
+      host_class: "skill-router",
+      device_class: "developer-workstation",
+      region: "local",
+      org_scope: "personal",
+    },
+    declared: {
+      endpoint_id: config.endpoint_id,
+      capabilities: config.capabilities,
+      modalities: config.modalities,
+      max_context_tokens: 32768,
+      tool_calling: true,
+      supports_embeddings: false,
+      platform_constraints: [],
+    },
+    observed: {
+      endpoint_id: config.endpoint_id,
+      judge_score: 0.9,
+      latency_ms_p50: 100,
+      latency_ms_p95: 150,
+      tokens_per_sec: 60,
+      cold_start_ms: 25,
+      failure_rate: 0,
+      cost_per_1k_tokens_est: 0,
+      freshness_score: 0.9,
+      confidence_score: 0.85,
+    },
+    status: "active",
+  }));
+}

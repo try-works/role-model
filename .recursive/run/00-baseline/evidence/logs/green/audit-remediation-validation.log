@@ -1,0 +1,11 @@
+.                                        | ΓÇëWARNΓÇë Unsupported engine: wanted: {"node":">=22 <23"} (current: {"node":"v24.11.0","pnpm":"10.6.5"})
+
+> @role-model-router/router-devtools@0.0.0 build D:\DEV\role-model\.worktrees\00-baseline\role-model-router\apps\router-devtools
+> tsc -p tsconfig.json
+
+.                                        | ΓÇëWARNΓÇë Unsupported engine: wanted: {"node":">=22 <23"} (current: {"node":"v24.11.0","pnpm":"10.6.5"})
+{
+  "chosen_endpoint_id": "cli.local.coder",
+  "router_decision_path": "D:\\DEV\\role-model\\.worktrees\\00-baseline\\runtime-output\\gateway-smoke\\router-decision.json",
+  "config_export_path": "D:\\DEV\\role-model\\.worktrees\\00-baseline\\runtime-output\\router-devtools\\config-export.json"
+}

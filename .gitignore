@@ -1,5 +1,8 @@
 .worktrees/
 node_modules/
+.pnpm-store/
 dist/
 coverage/
 *.tsbuildinfo
+role-model-router/rust/target/
+runtime-output/

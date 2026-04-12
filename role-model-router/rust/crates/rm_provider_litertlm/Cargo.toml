@@ -1,0 +1,12 @@
+[package]
+name = "rm_provider_litertlm"
+version = "0.0.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+tracing = "0.1"
+tracing-subscriber = "0.3"

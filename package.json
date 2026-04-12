@@ -1,0 +1,34 @@
+{
+  "name": "role-model",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Stable baseline for the role-model protocol and role-model-router family.",
+  "type": "module",
+  "packageManager": "pnpm@10.6.5",
+  "engines": {
+    "node": ">=22 <23"
+  },
+  "scripts": {
+    "lint": "biome check . && pnpm run lint:rust",
+    "format": "biome format --write .",
+    "lint:rust": "cargo fmt --manifest-path role-model-router/rust/Cargo.toml --all --check && cargo clippy --manifest-path role-model-router/rust/Cargo.toml --workspace --all-targets -- -D warnings",
+    "schemas:validate": "pnpm --filter @role-model/schema-tools exec tsx src/validate-schemas.ts validate",
+    "types:generate": "pnpm --filter @role-model/schema-tools exec tsx src/validate-schemas.ts generate-types",
+    "build": "pnpm run types:generate && pnpm -r --if-present build",
+    "test": "pnpm -r --if-present test",
+    "test:rust": "cargo test --manifest-path role-model-router/rust/Cargo.toml --workspace",
+    "smoke": "pnpm --filter @role-model-router/gateway-smoke exec tsx src/index.ts",
+    "ci:check": "pnpm run lint && pnpm run schemas:validate && pnpm run build && pnpm run test && pnpm run test:rust && pnpm run smoke"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@types/node": "^22.15.3",
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1",
+    "commander": "^13.1.0",
+    "json-schema-to-typescript": "^15.0.4",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3",
+    "vitest": "^3.1.2"
+  }
+}

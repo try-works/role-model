@@ -1,0 +1,13 @@
+[
+  {
+    "trace_id": "trace-gateway-smoke",
+    "span_id": "span-router",
+    "name": "router.selection",
+    "started_at_ms": 1775965647082,
+    "ended_at_ms": 1775965647092,
+    "status": "ok",
+    "attributes": {
+      "chosen_endpoint_id": "cli.local.coder"
+    }
+  }
+]

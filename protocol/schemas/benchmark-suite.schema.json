@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "BenchmarkSuite",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["suite_id", "task_type", "capability_targets", "cases"],
+  "properties": {
+    "suite_id": { "type": "string" },
+    "task_type": { "type": "string" },
+    "capability_targets": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["case_id", "prompt_ref"],
+        "properties": {
+          "case_id": { "type": "string" },
+          "prompt_ref": { "type": "string" },
+          "expected_shape": { "type": "string" }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "suite_id": "reasoning-multi-step-baseline",
+  "task_type": "reasoning.multi_step",
+  "cases": [
+    {
+      "case_id": "reasoning-001",
+      "prompt_ref": "testdata/prompts/chat-basic.json"
+    }
+  ]
+}

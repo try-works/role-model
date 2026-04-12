@@ -9,8 +9,9 @@ Watch-Paths:
 - `/agents/implementer.md`
 Source-Runs:
 - `none (generic repository guidance)`
+- `00-baseline`
 Validated-At-Commit: `generic-repository-guidance`
-Last-Validated: `2026-04-09T00:00:00Z`
+Last-Validated: `2026-04-12T04:14:11Z`
 Tags:
 - `skills`
 - `subagent`
@@ -30,6 +31,8 @@ Before accepting meaningful delegated work, the main agent should verify:
 - review-bundle contents against the current reviewed artifact and artifact hash
 - requirement, plan, addenda, and prior recursive docs that materially informed acceptance
 - whether any post-review repair made the delegated context stale
+- whether the delegated narrative contains stale statements about bundle existence or review scope even when the substantive verdict is still usable
+- whether newly created stage-local addenda must now appear in later audited phases' effective inputs, reread sections, and reconciliation notes before those phases can relock
 
 ## Record In The Phase Artifact
 

@@ -1,0 +1,13 @@
+{
+  "name": "@role-model-router/bench-cli",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@role-model-router/bench-core": "workspace:*",
+    "@role-model-router/bench-judge": "workspace:*"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  }
+}

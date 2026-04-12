@@ -1,0 +1,42 @@
+.                                        | ΓÇëWARNΓÇë Unsupported engine: wanted: {"node":">=22 <23"} (current: {"node":"v24.11.0","pnpm":"10.6.5"})
+
+> @role-model-router/router-devtools@0.0.0 test D:\DEV\role-model\.worktrees\00-baseline\role-model-router\apps\router-devtools
+> vitest run test/index.test.ts
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/00-baseline/role-model-router/apps/router-devtools[39m
+
+ [31mΓ¥»[39m test/index.test.ts [2m([22m[2m1 test[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 47[2mms[22m[39m
+[31m   [31m├ù[31m exportStableConfig[2m > [22mexports normalized ACP, MCP, and CLI endpoints to a stable machine-readable artifact[39m[32m 43[2mms[22m[39m
+[31m     ΓåÆ expected [ { ΓÇª(3) } ] to have a length of 3 but got 1[39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/index.test.ts > exportStableConfig > exports normalized ACP, MCP, and CLI endpoints to a stable machine-readable artifact
+AssertionError: expected [ { ΓÇª(3) } ] to have a length of 3 but got 1
+
+- Expected
++ Received
+
+- 3
++ 1
+
+ Γ¥» test/index.test.ts:18:32
+     16|     };
+     17| 
+     18|     expect(artifact.endpoints).toHaveLength(3);
+       |                                ^
+     19|     expect(artifact.endpoints.map((endpoint) => endpoint.endpointId).sΓÇª
+     20|       "acp.remote.general",
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m   Start at [22m 11:43:44
+[2m   Duration [22m 2.18s[2m (transform 386ms, setup 0ms, collect 371ms, tests 47ms, environment 1ms, prepare 783ms)[22m
+
+D:\DEV\role-model\.worktrees\00-baseline\role-model-router\apps\router-devtools:
+ΓÇëERR_PNPM_RECURSIVE_RUN_FIRST_FAILΓÇë @role-model-router/router-devtools@0.0.0 test: `vitest run test/index.test.ts`
+Exit status 1

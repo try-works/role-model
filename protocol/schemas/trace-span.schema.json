@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "TraceSpan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["trace_id", "span_id", "name", "started_at_ms", "ended_at_ms", "status"],
+  "properties": {
+    "trace_id": { "type": "string" },
+    "span_id": { "type": "string" },
+    "parent_span_id": { "type": "string" },
+    "name": { "type": "string" },
+    "started_at_ms": { "type": "integer", "minimum": 0 },
+    "ended_at_ms": { "type": "integer", "minimum": 0 },
+    "status": { "type": "string", "enum": ["ok", "error", "cancelled"] },
+    "attributes": {
+      "type": "object",
+      "additionalProperties": {
+        "anyOf": [{ "type": "string" }, { "type": "number" }, { "type": "boolean" }]
+      }
+    }
+  }
+}

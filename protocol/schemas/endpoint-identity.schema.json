@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "EndpointIdentity",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "endpoint_id",
+    "endpoint_kind",
+    "provider_kind",
+    "serving_source",
+    "model_id",
+    "package_id",
+    "variant_id",
+    "runtime_version",
+    "quantization",
+    "precision",
+    "host_class",
+    "device_class",
+    "region",
+    "org_scope"
+  ],
+  "properties": {
+    "endpoint_id": { "type": "string" },
+    "endpoint_kind": { "type": "string" },
+    "provider_kind": { "type": "string" },
+    "serving_source": { "type": "string" },
+    "model_id": { "type": "string" },
+    "package_id": { "type": "string" },
+    "variant_id": { "type": "string" },
+    "runtime_version": { "type": "string" },
+    "quantization": { "type": "string" },
+    "precision": { "type": "string" },
+    "host_class": { "type": "string" },
+    "device_class": { "type": "string" },
+    "region": { "type": "string" },
+    "org_scope": { "type": "string" }
+  }
+}

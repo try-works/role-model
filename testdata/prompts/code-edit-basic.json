@@ -1,0 +1,5 @@
+{
+  "prompt_id": "code-edit-basic",
+  "task_type": "code.edit",
+  "input": "Add a guard clause for empty input and explain the change."
+}

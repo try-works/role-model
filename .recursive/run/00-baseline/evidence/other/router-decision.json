@@ -1,0 +1,50 @@
+{
+  "routing_decision_id": "decision-gateway-smoke",
+  "request_id": "gateway-smoke",
+  "policy_snapshot": {
+    "policy_id": "balanced-policy",
+    "strategy": "balanced",
+    "prefer_local": true,
+    "budget_mode": "strict",
+    "tie_break_order": [
+      "prefer_local",
+      "cost",
+      "latency_ms_p95",
+      "endpoint_id"
+    ]
+  },
+  "eligible_candidates": [
+    "cli.local.coder"
+  ],
+  "ineligible_candidates": [
+    {
+      "endpoint_id": "acp.remote.general",
+      "reasons": [
+        "CAPABILITY_MISSING"
+      ]
+    },
+    {
+      "endpoint_id": "mcp.remote.embedder",
+      "reasons": [
+        "CAPABILITY_MISSING"
+      ]
+    }
+  ],
+  "scored_candidates": [
+    {
+      "endpoint_id": "cli.local.coder",
+      "score": 108.5
+    }
+  ],
+  "chosen_endpoint_id": "cli.local.coder",
+  "fallback_endpoint_ids": [],
+  "selection_reasons": [
+    "BEST_TOTAL_SCORE",
+    "DECLARED_PROFILE_USED",
+    "MEASURED_PROFILE_USED",
+    "LOCAL_PREFERENCE_APPLIED"
+  ],
+  "used_measured": true,
+  "used_declared": true,
+  "scoring_version": "baseline-v1"
+}

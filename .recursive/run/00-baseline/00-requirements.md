@@ -1,3 +1,73 @@
+Run: `/.recursive/run/00-baseline/`
+Phase: `00 Requirements`
+Status: `LOCKED`
+LockedAt: `2026-04-12T02:08:01Z`
+LockHash: `bb80b617581a911a0600387f4d97ee41499675ec8fc13590d6c6a0e4cda76d36`
+Workflow version: `recursive-mode-audit-v1`
+Inputs:
+- `/.recursive/RECURSIVE.md`
+- `/.recursive/run/00-baseline/00-requirements.md`
+Outputs:
+- `/.recursive/run/00-baseline/00-requirements.md`
+Scope note: This document defines the stable requirement identifiers, explicit out-of-scope identifiers, constraints, assumptions, and detailed acceptance criteria for the `00-baseline` run.
+
+## TODO
+
+- [x] Normalize the user-authored requirements into the recursive artifact shape
+- [x] Preserve stable requirement identifiers and acceptance criteria
+- [x] Assign explicit out-of-scope identifiers for downstream traceability
+- [x] Record constraints and assumptions needed for later phases
+- [x] Complete Coverage Gate checklist
+- [x] Complete Approval Gate checklist
+
+## Requirements
+
+- `R1`, `R2`: repository ownership boundaries and required directory layout
+- `R52`, `R53`, `R54`, `R55`, `R56`, `R57`, `R58`, `R59`, `R60`: implementation languages, workspace/tooling, canonical schema source-of-truth, dependency policy, and root quality-gate commands
+- `R3`, `R4`, `R5`: required architecture docs, protocol docs, and decision records
+- `R6`, `R7`, `R8`, `R9`, `R10`, `R11`, `R12`, `R13`: protocol schemas and core protocol entities
+- `R14`, `R15`, `R16`, `R17`, `R18`, `R19`: explicit roles, tasks, bindings, execution profiles, and mapping docs
+- `R20`: expanded capability taxonomy
+- `R21`, `R22`, `R23`, `R24`, `R25`, `R26`: deterministic routing contract and conformance coverage
+- `R27`, `R28`, `R29`, `R30`: observability-first data model and artifact persistence
+- `R31`, `R32`, `R33`, `R34`: endpoint-centric benchmark framework baseline
+- `R35`, `R36`, `R37`, `R38`: lightweight `role-model-router` host baseline and export/detection flows
+- `R39`, `R40`, `R41`, `R42`: browser, edge, and native provider-family scaffolding
+- `R43`, `R44`, `R45`, `R46`, `R47`: required shared root packages
+- `R48`, `R49`: CI baseline and documented validation commands
+- `R50`, `R51`: root and router README coverage
+
+## Out of Scope
+
+- `OOS1`: full Pi daemon host
+- `OOS2`: full desktop router/runtime host
+- `OOS3`: full localhost OpenAI gateway with long-lived process management
+- `OOS4`: full EdgeHDF5 memory backend
+- `OOS5`: package publishing and marketplace flows
+- `OOS6`: model pack installation
+- `OOS7`: judge service hosting
+- `OOS8`: production-grade browser inference
+- `OOS9`: production-grade native LiteRT-LM integration
+- `OOS10`: production-grade ONNX, MLX, or GGUF native providers
+
+## Constraints
+
+- The canonical upstream/origin for this run is `https://github.com/try-works/role-model.git`.
+- The run executes under `Workflow version: recursive-mode-audit-v1`.
+- Phase 0 must use an isolated git worktree on branch `recursive/00-baseline`.
+- The baseline must stay honest about scope: future provider/runtime families may be scaffolded and documented, but not claimed as production-complete.
+- Host-specific implementation must not redefine protocol semantics.
+- The user-provided updated requirement source must be reflected fully in this canonical artifact.
+
+## Assumptions
+
+- User command `implement recursive run 00` maps to `/.recursive/run/00-baseline/` because it is the only discovered run folder in the repository.
+- The upstream origin repository is currently empty, so the initial local commit establishes the first project history for this run.
+- Browser, edge, and native runtime families are represented through protocol and package/crate scaffolding in this run, with concrete runtime work deferred unless explicitly required later.
+- The latest user-provided wording is treated as authoritative and has been merged into this canonical worktree artifact.
+
+## Detailed Requirement Specification
+
 # role-model — Stable Baseline Requirements
 
 ## Document purpose
@@ -82,7 +152,125 @@ Scaffolding, protocol support, and adapter interfaces for later work are in scop
 
 ---
 
-## 5. Required top-level repository structure
+## 5. Implementation language, tooling, and dependency baseline
+
+This baseline must lock the implementation stack before repository scaffolding begins. The implementation must not leave language, package manager, schema source-of-truth, or validation tooling ambiguous.
+
+### R52. Languages must be fixed
+
+The baseline must use the following languages and artifact formats:
+
+- **TypeScript** for root shared packages, router-side packages, CLIs, schema tooling, protocol-type generation, lightweight host logic, and browser/runtime-web scaffolding.
+- **Rust** for native router hosts, native provider crates, native stores, and native benchmark/gateway components.
+- **Markdown** for protocol, architecture, and decision documents.
+- **JSON Schema** for canonical machine-readable protocol contracts.
+
+No additional primary implementation language may be introduced in this baseline. Small shell scripts for repo automation are allowed, but Python, Go, or other languages must not become part of the baseline implementation surface.
+
+### R53. Node and package-management baseline must be fixed
+
+The repository must standardize on:
+
+- **Node.js 22 LTS**
+- **pnpm 10.x** workspaces at the repo root
+- a root `package.json`
+- a root `pnpm-workspace.yaml`
+
+Using npm, yarn, bun, or multiple JS package managers in parallel is not allowed for this baseline.
+
+### R54. TypeScript baseline must be fixed
+
+The repository must standardize on:
+
+- **TypeScript 5.6 or newer**
+- **ESM-first** package configuration for TypeScript packages unless a package has a documented reason to emit both ESM and CJS
+- one shared root `tsconfig` strategy, with package-level `tsconfig.json` files extending a root base config
+
+The baseline must not allow package-by-package ad hoc compiler settings without a shared base config.
+
+### R55. Rust baseline must be fixed
+
+The repository must standardize on:
+
+- **Rust stable**, pinned by `rust-toolchain.toml`
+- a Cargo workspace rooted at `role-model-router/rust/`
+- `cargo fmt` and `cargo clippy` as baseline Rust quality gates
+
+The baseline must not require nightly Rust.
+
+### R56. Protocol schema source-of-truth must be fixed
+
+The canonical source of truth for protocol entities must be the JSON Schema files under `protocol/schemas/`.
+
+This means:
+
+- `protocol/schemas/*.schema.json` are authoritative for protocol shape
+- generated TypeScript types in `packages/protocol-types/` must be derived from those schemas
+- runtime validation in TypeScript must validate against those schemas
+- Rust-side protocol parsing may mirror the schema definitions, but it must not redefine conflicting canonical protocol semantics
+
+The baseline must not establish a competing second source of truth such as hand-maintained Zod models or hand-maintained TypeScript interfaces that drift from the canonical schema files.
+
+### R57. TypeScript dependency baseline must be fixed
+
+The baseline must include or standardize on the following TypeScript-side dependencies where they are relevant:
+
+- `typescript`
+- `ajv` for JSON Schema validation
+- `ajv-formats` where schema formats are used
+- `json-schema-to-typescript` for generated protocol types
+- `vitest` for TypeScript package and router conformance tests
+- `tsx` for local dev execution of TypeScript scripts and CLIs
+- `@types/node`
+- `commander` for Node-based CLIs unless a package documents another minimal CLI parser
+- `@biomejs/biome` for formatting and TypeScript/JSON/Markdown-adjacent linting
+
+This baseline must not introduce both Zod and Ajv as parallel primary validation systems for the protocol surface. Ajv plus canonical JSON Schema is the required baseline.
+
+### R58. Rust dependency baseline must be fixed
+
+The baseline must include or standardize on the following Rust-side dependencies where they are relevant:
+
+- `serde`
+- `serde_json`
+- `thiserror`
+- `anyhow`
+- `tracing`
+- `tracing-subscriber`
+- `tokio` only for crates that actually require async runtime behavior such as gateway or host crates
+- `clap` for Rust CLI entry points where applicable
+
+Crates must not add large framework dependencies without a documented reason.
+
+### R59. Runtime and adapter dependency policy must be explicit
+
+The baseline must distinguish between:
+
+- **core baseline dependencies**, which are required now to build the repo and protocol baseline
+- **future runtime dependencies**, which are only added once the corresponding adapter/provider package is implemented beyond scaffolding
+
+For this baseline:
+
+- WebLLM, MediaPipe GenAI, MediaPipe text tasks, LiteRT, and LiteRT-LM must have reserved package or crate homes and documented integration targets
+- those runtime libraries must **not** be added as unconditional hard dependencies at the repo root if the corresponding adapter/provider is only scaffolded
+- if a scaffolded provider package does include a runtime dependency early, that package README must explain why it is already needed in the baseline
+
+### R60. Quality gates and root commands must be fixed
+
+The baseline must define and document root-level commands for at least:
+
+- workspace install/bootstrap
+- schema validation
+- protocol type generation
+- TypeScript tests
+- Rust tests
+- formatting/linting
+
+The exact script names may vary, but they must be documented in the root `README.md` and must work from a clean checkout.
+
+---
+
+## 6. Required top-level repository structure
 
 The repo **must** be created with this top-level structure:
 
@@ -156,7 +344,7 @@ Missing any of the directories above is a failure against this requirement.
 
 ---
 
-## 6. Required protocol documentation
+## 7. Required protocol documentation
 
 The following protocol and architecture docs must be created as actual `.md` files, not stubs with one-line placeholders.
 
@@ -213,7 +401,7 @@ The following decision records must exist under `docs/decisions/`:
 
 ---
 
-## 7. Required protocol schemas
+## 8. Required protocol schemas
 
 The baseline must define machine-readable schemas in `protocol/schemas/` for the following entities.
 
@@ -256,7 +444,7 @@ Stub schemas with only `type: object` and no meaningful properties are not accep
 
 ---
 
-## 8. Core protocol entities and field requirements
+## 9. Core protocol entities and field requirements
 
 ### R8. EndpointIdentity must be defined
 
@@ -369,7 +557,7 @@ The protocol must define trace event/span types covering, at minimum:
 
 ---
 
-## 9. Roles, tasks, and capability mapping
+## 10. Roles, tasks, and capability mapping
 
 ### R14. Roles must be explicit protocol entities
 
@@ -467,7 +655,7 @@ The protocol docs must include concrete examples for at least the following task
 
 ---
 
-## 10. Capability taxonomy requirements
+## 11. Capability taxonomy requirements
 
 ### R20. The capability taxonomy must be expanded beyond chat
 
@@ -497,7 +685,7 @@ The taxonomy docs must define these as protocol-level capability identifiers rat
 
 ---
 
-## 11. Routing contract requirements
+## 12. Routing contract requirements
 
 ### R21. A deterministic routing policy must be implemented
 
@@ -590,7 +778,7 @@ At least one conformance test suite must be runnable in CI.
 
 ---
 
-## 12. Observability and telemetry requirements
+## 13. Observability and telemetry requirements
 
 ### R27. Observability is first-class
 
@@ -634,7 +822,7 @@ The dashboard does not need to be built now. The data model must support it.
 
 ---
 
-## 13. Benchmark framework baseline requirements
+## 14. Benchmark framework baseline requirements
 
 ### R31. Benchmarking must be endpoint-centric
 
@@ -677,7 +865,7 @@ The benchmark docs and schema must define how benchmark outputs feed `ObservedPe
 
 ---
 
-## 14. Lightweight role-model-router baseline requirements
+## 15. Lightweight role-model-router baseline requirements
 
 ### R35. role-model-router must contain a lightweight host path
 
@@ -744,7 +932,7 @@ The host does not need to execute a real model inference end-to-end for every pr
 
 ---
 
-## 15. Browser and edge runtime support scaffolding
+## 16. Browser and edge runtime support scaffolding
 
 ### R39. Browser and edge runtimes must fit the protocol now
 
@@ -794,11 +982,11 @@ The implementation may be skeletal, but the repo must reserve these homes and do
 
 ---
 
-## 16. Root shared package requirements
+## 17. Root shared package requirements
 
 ### R43. protocol-types package must exist
 
-`packages/protocol-types/` must provide generated or hand-maintained types corresponding to protocol schemas.
+`packages/protocol-types/` must provide generated types corresponding to the canonical protocol schemas. It must not become a second hand-maintained source of truth that can drift from `protocol/schemas/`.
 
 ### R44. conformance package must exist
 
@@ -818,7 +1006,7 @@ The implementation may be skeletal, but the repo must reserve these homes and do
 
 ---
 
-## 17. CI and validation requirements
+## 18. CI and validation requirements
 
 ### R48. CI baseline must exist
 
@@ -839,7 +1027,7 @@ The repo root README or dedicated docs must document how to run:
 
 ---
 
-## 18. README requirements
+## 19. README requirements
 
 ### R50. Root README must explain the actual repo
 
@@ -863,7 +1051,7 @@ The root `README.md` must explain:
 
 ---
 
-## 19. Minimum acceptance tests
+## 20. Minimum acceptance tests
 
 Implementation is accepted only if all of the following are true.
 
@@ -911,28 +1099,29 @@ Implementation is accepted only if all of the following are true.
 
 ---
 
-## 20. Implementation order requirement
+## 21. Implementation order requirement
 
 The implementation should proceed in this order unless a repository-local constraint forces a small variation:
 
-1. create repo skeleton,
-2. write architecture boundary docs,
-3. write protocol docs,
-4. create schemas,
-5. implement protocol types and schema tooling,
-6. implement pure routing core,
-7. add conformance tests,
-8. implement observability artifact emission,
-9. add role/task packages and schemas,
-10. add lightweight host scaffolding,
-11. add browser/edge provider scaffolding,
-12. wire CI.
+1. initialize the root Node/pnpm workspace and the Rust toolchain/workspace,
+2. create repo skeleton,
+3. write architecture boundary docs,
+4. write protocol docs,
+5. create schemas,
+6. implement protocol types and schema tooling,
+7. implement pure routing core,
+8. add conformance tests,
+9. implement observability artifact emission,
+10. add role/task packages and schemas,
+11. add lightweight host scaffolding,
+12. add browser/edge provider scaffolding,
+13. wire CI.
 
 The implementation must not begin with host-specific code before the protocol and routing contracts are defined.
 
 ---
 
-## 21. Non-goal enforcement
+## 22. Non-goal enforcement
 
 The implementation must not do any of the following during this baseline in a way that confuses scope:
 
@@ -944,7 +1133,7 @@ The implementation must not do any of the following during this baseline in a wa
 
 ---
 
-## 22. Definition of success
+## 23. Definition of success
 
 This requirement is satisfied only when the repository has reached a state where:
 
@@ -956,3 +1145,25 @@ This requirement is satisfied only when the repository has reached a state where
 6. future native, browser, and edge runtime families have clean extension points,
 7. later phases can build on this baseline without changing the core conceptual model.
 
+## Coverage Gate
+
+- Requirement coverage check:
+  - `R1`-`R60`: preserved in the detailed specification below and ready for downstream traceability
+- Out-of-scope confirmation:
+  - `OOS1`-`OOS10`: explicitly identified and unchanged from the authored requirement intent
+- Constraints and assumptions recorded for Phase 0 execution
+
+Coverage: PASS
+
+## Approval Gate
+
+- Objective readiness checks:
+  - requirement IDs and acceptance criteria are stable for downstream phases
+  - tooling, dependency, and workspace constraints are fixed explicitly
+  - out-of-scope boundaries are explicit
+  - constraints and assumptions needed for planning are documented
+  - no required Phase 0 section is missing
+- Remaining blockers:
+  - none
+
+Approval: PASS

@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RoleBinding",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "binding_id",
+    "role_id",
+    "endpoint_id",
+    "status",
+    "policy_overrides",
+    "effective_capabilities",
+    "effective_task_types"
+  ],
+  "properties": {
+    "binding_id": { "type": "string" },
+    "role_id": { "type": "string" },
+    "endpoint_id": { "type": "string" },
+    "status": { "type": "string", "enum": ["active", "disabled", "experimental"] },
+    "policy_overrides": { "type": "object", "additionalProperties": true },
+    "effective_capabilities": { "type": "array", "items": { "type": "string" } },
+    "effective_task_types": { "type": "array", "items": { "type": "string" } }
+  }
+}

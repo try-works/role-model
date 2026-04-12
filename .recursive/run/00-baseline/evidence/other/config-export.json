@@ -1,0 +1,49 @@
+{
+  "artifactId": "router-devtools-config",
+  "generatedAtMs": 1775965647094,
+  "endpoints": [
+    {
+      "endpointId": "acp.remote.general",
+      "endpointKind": "acp-endpoint",
+      "providerKind": "provider-acp",
+      "modelId": "gpt-5.4-mini",
+      "servingSource": "remote-service",
+      "modalities": [
+        "text"
+      ],
+      "strategyTags": [
+        "text.chat",
+        "tools.function_calling"
+      ]
+    },
+    {
+      "endpointId": "cli.local.coder",
+      "endpointKind": "cli-agent",
+      "providerKind": "provider-cli",
+      "modelId": "gpt-5.4",
+      "servingSource": "local-process",
+      "modalities": [
+        "text"
+      ],
+      "strategyTags": [
+        "code.edit",
+        "reasoning.multi_step",
+        "tools.function_calling"
+      ]
+    },
+    {
+      "endpointId": "mcp.remote.embedder",
+      "endpointKind": "mcp-endpoint",
+      "providerKind": "provider-mcp",
+      "modelId": "text-embedding-3-large",
+      "servingSource": "remote-service",
+      "modalities": [
+        "text"
+      ],
+      "strategyTags": [
+        "embeddings.text",
+        "tools.function_calling"
+      ]
+    }
+  ]
+}

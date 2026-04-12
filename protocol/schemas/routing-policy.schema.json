@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RoutingPolicy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["policy_id", "strategy", "prefer_local", "budget_mode", "tie_break_order"],
+  "properties": {
+    "policy_id": { "type": "string" },
+    "strategy": {
+      "type": "string",
+      "enum": ["balanced", "low-latency", "high-quality", "low-cost"]
+    },
+    "prefer_local": { "type": "boolean" },
+    "budget_mode": { "type": "string", "enum": ["strict", "advisory", "disabled"] },
+    "tie_break_order": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string" }
+    }
+  }
+}

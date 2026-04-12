@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RoleDefinition",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "role_id",
+    "name",
+    "description",
+    "role_kind",
+    "default_system_instructions",
+    "task_types_supported",
+    "required_capabilities",
+    "preferred_capabilities",
+    "forbidden_capabilities",
+    "tool_policy",
+    "routing_policy_overrides",
+    "output_contracts",
+    "safety_policy_refs"
+  ],
+  "properties": {
+    "role_id": { "type": "string" },
+    "name": { "type": "string" },
+    "description": { "type": "string" },
+    "role_kind": { "type": "string" },
+    "default_system_instructions": { "type": "string" },
+    "task_types_supported": { "type": "array", "items": { "type": "string" } },
+    "required_capabilities": { "type": "array", "items": { "type": "string" } },
+    "preferred_capabilities": { "type": "array", "items": { "type": "string" } },
+    "forbidden_capabilities": { "type": "array", "items": { "type": "string" } },
+    "tool_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode"],
+      "properties": {
+        "mode": { "type": "string", "enum": ["disabled", "limited", "allowed"] },
+        "allowed_tools": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "routing_policy_overrides": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "output_contracts": { "type": "array", "items": { "type": "string" } },
+    "safety_policy_refs": { "type": "array", "items": { "type": "string" } }
+  }
+}

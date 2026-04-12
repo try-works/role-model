@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "JudgeScore",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["judge_id", "case_id", "score", "rationale"],
+  "properties": {
+    "judge_id": { "type": "string" },
+    "case_id": { "type": "string" },
+    "score": { "type": "number" },
+    "rationale": { "type": "string" }
+  }
+}

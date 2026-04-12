@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PackageManifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["package_id", "version", "kind", "entrypoints"],
+  "properties": {
+    "package_id": { "type": "string" },
+    "version": { "type": "string" },
+    "kind": { "type": "string" },
+    "entrypoints": { "type": "array", "items": { "type": "string" } },
+    "capability_exports": { "type": "array", "items": { "type": "string" } }
+  }
+}

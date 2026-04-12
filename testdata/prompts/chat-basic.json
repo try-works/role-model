@@ -1,0 +1,5 @@
+{
+  "prompt_id": "chat-basic",
+  "task_type": "text.chat",
+  "input": "Summarize why endpoint-centric routing matters."
+}

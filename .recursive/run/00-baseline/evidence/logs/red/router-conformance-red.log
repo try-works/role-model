@@ -1,0 +1,11 @@
+RED command: corepack pnpm --filter @role-model/conformance test
+Observed during Phase 3 before package export/source-entrypoint fixes.
+
+Failure summary:
+Error: Failed to resolve entry for package "@role-model-router/core". The package may have incorrect main/module/exports specified in its package.json.
+Plugin: vite:import-analysis
+File: D:/DEV/role-model/.worktrees/00-baseline/packages/conformance/src/router-conformance.test.ts:3:29
+
+Impact:
+- The pre-existing conformance suite could not execute because the new router package only exported dist/ before a build existed.
+- Fix applied: expose workspace source entrypoints for local tsx/vitest resolution, then rerun the conformance suite.

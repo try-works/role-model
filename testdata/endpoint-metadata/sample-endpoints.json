@@ -1,0 +1,26 @@
+{
+  "acp": [
+    {
+      "endpoint_id": "acp.remote.general",
+      "model_id": "gpt-5.4-mini",
+      "capabilities": ["text.chat", "tools.function_calling"],
+      "modalities": ["text"]
+    }
+  ],
+  "cli": [
+    {
+      "endpoint_id": "cli.local.coder",
+      "model_id": "gpt-5.4",
+      "capabilities": ["code.edit", "reasoning.multi_step", "tools.function_calling"],
+      "modalities": ["text"]
+    }
+  ],
+  "mcp": [
+    {
+      "endpoint_id": "mcp.remote.embedder",
+      "model_id": "text-embedding-3-large",
+      "capabilities": ["embeddings.text", "tools.function_calling"],
+      "modalities": ["text"]
+    }
+  ]
+}

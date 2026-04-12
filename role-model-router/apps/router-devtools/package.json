@@ -1,0 +1,20 @@
+{
+  "name": "@role-model-router/router-devtools",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": ["src", "dist"],
+  "dependencies": {
+    "@role-model/packaging": "workspace:*",
+    "@role-model-router/provider-acp": "workspace:*",
+    "@role-model-router/provider-cli": "workspace:*",
+    "@role-model-router/provider-mcp": "workspace:*"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run test/index.test.ts"
+  }
+}

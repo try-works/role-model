@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "UsageEvent",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "event_id",
+    "timestamp_ms",
+    "app_id",
+    "org_id",
+    "request_id",
+    "routing_decision_id",
+    "endpoint_id",
+    "model_id",
+    "package_id",
+    "provider_kind",
+    "tokens_in",
+    "tokens_out",
+    "latency_ms",
+    "cost_estimate",
+    "currency",
+    "error_class"
+  ],
+  "properties": {
+    "event_id": { "type": "string" },
+    "timestamp_ms": { "type": "integer", "minimum": 0 },
+    "app_id": { "type": "string" },
+    "org_id": { "type": "string" },
+    "request_id": { "type": "string" },
+    "routing_decision_id": { "type": "string" },
+    "endpoint_id": { "type": "string" },
+    "model_id": { "type": "string" },
+    "package_id": { "type": "string" },
+    "provider_kind": { "type": "string" },
+    "tokens_in": { "type": "integer", "minimum": 0 },
+    "tokens_out": { "type": "integer", "minimum": 0 },
+    "latency_ms": { "type": "number", "minimum": 0 },
+    "cost_estimate": { "type": "number", "minimum": 0 },
+    "currency": { "type": "string" },
+    "error_class": { "type": "string" }
+  }
+}

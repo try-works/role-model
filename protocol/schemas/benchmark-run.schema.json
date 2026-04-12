@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "BenchmarkRun",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["run_id", "suite_id", "endpoint_id", "started_at_ms", "finished_at_ms", "results"],
+  "properties": {
+    "run_id": { "type": "string" },
+    "suite_id": { "type": "string" },
+    "endpoint_id": { "type": "string" },
+    "started_at_ms": { "type": "integer", "minimum": 0 },
+    "finished_at_ms": { "type": "integer", "minimum": 0 },
+    "results": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["case_id", "latency_ms", "success"],
+        "properties": {
+          "case_id": { "type": "string" },
+          "latency_ms": { "type": "number", "minimum": 0 },
+          "success": { "type": "boolean" },
+          "judge_score": { "type": "number" }
+        }
+      }
+    }
+  }
+}

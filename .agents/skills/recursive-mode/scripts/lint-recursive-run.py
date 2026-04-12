@@ -97,6 +97,18 @@ QA_EXECUTION_MODES = {"human", "agent-operated", "hybrid"}
 TRANSIENT_RUNTIME_DIR_MARKERS = {"__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache", ".hypothesis", ".tox", ".nox"}
 TRANSIENT_RUNTIME_FILE_NAMES = {".ds_store", "thumbs.db"}
 TRANSIENT_RUNTIME_SUFFIXES = (".pyc", ".pyo", ".pyd")
+ROOT_EXTENSIONLESS_FILE_NAMES = {
+    "LICENSE",
+    "NOTICE",
+    "DOCKERFILE",
+    "CONTAINERFILE",
+    "MAKEFILE",
+    "PROCFILE",
+    "GEMFILE",
+    "RAKEFILE",
+    "VAGRANTFILE",
+    "JUSTFILE",
+}
 DIFF_BASIS_ALLOWED_TYPES = {"local commit", "local branch", "remote ref", "merge-base derived"}
 WORKING_TREE_COMPARISON_REFS = {"working-tree", "working-tree@head", "worktree", "working-tree+head"}
 REQUIREMENT_DISPOSITION_STATUSES = {
@@ -288,7 +300,7 @@ def extract_paths_from_text(text: str) -> set[str]:
             continue
         if normalized.startswith("<") and normalized.endswith(">"):
             continue
-        if "/" in normalized or "." in Path(normalized).name:
+        if "/" in normalized or "." in Path(normalized).name or Path(normalized).name.upper() in ROOT_EXTENSIONLESS_FILE_NAMES:
             paths.add(normalized)
     return paths
 
@@ -304,7 +316,7 @@ def extract_paths_from_field_value(text: str) -> set[str]:
             continue
         if normalized.startswith("<") and normalized.endswith(">"):
             continue
-        if "/" in normalized or "." in Path(normalized).name:
+        if "/" in normalized or "." in Path(normalized).name or Path(normalized).name.upper() in ROOT_EXTENSIONLESS_FILE_NAMES:
             discovered.add(normalized)
     return discovered
 

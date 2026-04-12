@@ -1,0 +1,10 @@
+{
+  "trace_id": "sample-trace",
+  "events": [
+    {
+      "event_id": "trace-event-1",
+      "event_type": "router.selection",
+      "message": "Sample trace for documentation"
+    }
+  ]
+}

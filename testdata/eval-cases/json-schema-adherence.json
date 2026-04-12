@@ -1,0 +1,10 @@
+{
+  "suite_id": "json-schema-adherence-baseline",
+  "task_type": "json.schema_adherence",
+  "cases": [
+    {
+      "case_id": "json-schema-001",
+      "prompt_ref": "testdata/prompts/code-edit-basic.json"
+    }
+  ]
+}

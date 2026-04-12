@@ -1,0 +1,3 @@
+[workspace]
+members = ["crates/rm_provider_litertlm", "crates/rm_provider_mediapipe_bridge"]
+resolver = "2"

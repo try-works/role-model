@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RouterDecision",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "routing_decision_id",
+    "request_id",
+    "policy_snapshot",
+    "eligible_candidates",
+    "ineligible_candidates",
+    "scored_candidates",
+    "chosen_endpoint_id",
+    "fallback_endpoint_ids",
+    "selection_reasons",
+    "used_measured",
+    "used_declared",
+    "scoring_version"
+  ],
+  "properties": {
+    "routing_decision_id": { "type": "string" },
+    "request_id": { "type": "string" },
+    "policy_snapshot": { "$ref": "./routing-policy.schema.json" },
+    "eligible_candidates": { "type": "array", "items": { "type": "string" } },
+    "ineligible_candidates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["endpoint_id", "reasons"],
+        "properties": {
+          "endpoint_id": { "type": "string" },
+          "reasons": { "type": "array", "minItems": 1, "items": { "type": "string" } }
+        }
+      }
+    },
+    "scored_candidates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["endpoint_id", "score"],
+        "properties": {
+          "endpoint_id": { "type": "string" },
+          "score": { "type": "number" }
+        }
+      }
+    },
+    "chosen_endpoint_id": { "type": "string" },
+    "fallback_endpoint_ids": { "type": "array", "items": { "type": "string" } },
+    "selection_reasons": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+    "used_measured": { "type": "boolean" },
+    "used_declared": { "type": "boolean" },
+    "scoring_version": { "type": "string" }
+  }
+}

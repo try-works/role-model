@@ -1,0 +1,16 @@
+{
+  "endpoint_id": "cli.local.coder",
+  "endpoint_kind": "cli-agent",
+  "provider_kind": "provider-cli",
+  "serving_source": "local-process",
+  "model_id": "gpt-5.4",
+  "package_id": "role-model-router/provider-cli",
+  "variant_id": "default",
+  "runtime_version": "1.0.0",
+  "quantization": "none",
+  "precision": "fp16",
+  "host_class": "skill-router",
+  "device_class": "developer-workstation",
+  "region": "local",
+  "org_scope": "personal"
+}

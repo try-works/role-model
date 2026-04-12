@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "TaskDefinition",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "task_type",
+    "description",
+    "required_inputs",
+    "required_capabilities",
+    "preferred_capabilities",
+    "quality_metrics",
+    "allowed_roles",
+    "default_benchmark_suites"
+  ],
+  "properties": {
+    "task_type": { "type": "string" },
+    "description": { "type": "string" },
+    "required_inputs": { "type": "array", "items": { "type": "string" } },
+    "required_capabilities": { "type": "array", "items": { "type": "string" } },
+    "preferred_capabilities": { "type": "array", "items": { "type": "string" } },
+    "quality_metrics": { "type": "array", "items": { "type": "string" } },
+    "allowed_roles": { "type": "array", "items": { "type": "string" } },
+    "default_benchmark_suites": { "type": "array", "items": { "type": "string" } }
+  }
+}

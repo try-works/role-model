@@ -1,0 +1,25 @@
+{
+  "routing_decision_id": "decision-001",
+  "request_id": "request-001",
+  "policy_snapshot": {
+    "policy_id": "balanced-default",
+    "strategy": "balanced",
+    "prefer_local": true,
+    "budget_mode": "advisory",
+    "tie_break_order": ["prefer_local", "score", "endpoint_id"]
+  },
+  "eligible_candidates": ["cli.local.coder"],
+  "ineligible_candidates": [],
+  "scored_candidates": [
+    {
+      "endpoint_id": "cli.local.coder",
+      "score": 0.92
+    }
+  ],
+  "chosen_endpoint_id": "cli.local.coder",
+  "fallback_endpoint_ids": [],
+  "selection_reasons": ["BEST_TOTAL_SCORE", "LOCAL_PREFERENCE_APPLIED"],
+  "used_measured": true,
+  "used_declared": true,
+  "scoring_version": "baseline-v1"
+}

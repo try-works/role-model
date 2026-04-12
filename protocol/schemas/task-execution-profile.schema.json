@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "TaskExecutionProfile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "task_type",
+    "required_capabilities",
+    "preferred_capabilities",
+    "required_modalities",
+    "output_constraints",
+    "evaluation_suites",
+    "default_routing_strategy"
+  ],
+  "properties": {
+    "task_type": { "type": "string" },
+    "required_capabilities": { "type": "array", "items": { "type": "string" } },
+    "preferred_capabilities": { "type": "array", "items": { "type": "string" } },
+    "required_modalities": { "type": "array", "items": { "type": "string" } },
+    "output_constraints": { "type": "array", "items": { "type": "string" } },
+    "evaluation_suites": { "type": "array", "items": { "type": "string" } },
+    "default_routing_strategy": { "type": "string" }
+  }
+}
