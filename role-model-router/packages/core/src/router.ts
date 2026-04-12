@@ -3,11 +3,11 @@ import type {
   CandidateEligibility,
   CandidateExclusion,
   EndpointCandidate,
-  RouteRequestInput,
   RoleBindingRecord,
   RoleDefinitionRecord,
-  RoutingPolicySnapshot,
+  RouteRequestInput,
   RouterDecisionRecord,
+  RoutingPolicySnapshot,
   RoutingPolicyStrategy,
   ScoredCandidate,
   TaskDefinitionRecord,
@@ -110,7 +110,9 @@ function getRequestedRoleAndTask(input: RouteRequestInput): {
   const requestedRole = input.request.requestedRoleId
     ? input.roleDefinitions?.find((role) => role.role_id === input.request.requestedRoleId)
     : undefined;
-  const requestedTask = input.taskDefinitions?.find((task) => task.task_type === input.request.taskType);
+  const requestedTask = input.taskDefinitions?.find(
+    (task) => task.task_type === input.request.taskType,
+  );
 
   return { requestedRole, requestedTask };
 }
@@ -133,7 +135,9 @@ function getEffectivePreferredCapabilities(input: RouteRequestInput): string[] {
   ]);
 }
 
-function toPolicyStrategy(strategy: RouteRequestInput["request"]["strategy"]): RoutingPolicyStrategy {
+function toPolicyStrategy(
+  strategy: RouteRequestInput["request"]["strategy"],
+): RoutingPolicyStrategy {
   switch (strategy) {
     case "cost":
     case "low-cost":
@@ -267,7 +271,8 @@ function getThroughputMetric(candidate: EndpointCandidate): MetricScore {
     return { score: 0.5, unknown: true };
   }
 
-  const normalized = Math.log1p(candidate.observed.tokens_per_sec) / Math.log1p(THROUGHPUT_TARGET_TPS);
+  const normalized =
+    Math.log1p(candidate.observed.tokens_per_sec) / Math.log1p(THROUGHPUT_TARGET_TPS);
   return { score: clamp(normalized), unknown: false };
 }
 
@@ -391,8 +396,7 @@ function getRedistributedWeights(
   }
 
   for (const metricName of remainingMetrics) {
-    redistributedWeights[metricName] +=
-      removedWeight * (baseWeights[metricName] / remainingWeight);
+    redistributedWeights[metricName] += removedWeight * (baseWeights[metricName] / remainingWeight);
   }
 
   return redistributedWeights;
@@ -454,7 +458,11 @@ function evaluateEligibility(input: RouteRequestInput): {
     if (requestedRole && !requestedRole.task_types_supported.includes(input.request.taskType)) {
       reasons.push("TASK_NOT_SUPPORTED");
     }
-    if (requestedRoleId && requestedTask && !requestedTask.allowed_roles.includes(requestedRoleId)) {
+    if (
+      requestedRoleId &&
+      requestedTask &&
+      !requestedTask.allowed_roles.includes(requestedRoleId)
+    ) {
       reasons.push("ROLE_NOT_ALLOWED");
     }
     if (
@@ -602,7 +610,8 @@ export function routeRequest(input: RouteRequestInput): RouterDecisionRecord {
     scoreCandidate(
       candidate,
       input,
-      metricsByEndpoint.get(candidate.identity.endpoint_id) ?? getCandidateMetricScores(candidate, input),
+      metricsByEndpoint.get(candidate.identity.endpoint_id) ??
+        getCandidateMetricScores(candidate, input),
       redistributedWeights,
     ),
   );

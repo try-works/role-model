@@ -5,21 +5,13 @@
     "policy_id": "router-golden-balanced",
     "strategy": "balanced",
     "compute_preference": "local",
-    "required_capabilities": [
-      "code.edit"
-    ],
-    "required_modalities": [
-      "text"
-    ],
+    "required_capabilities": ["code.edit"],
+    "required_modalities": ["text"],
     "require_tools": true,
     "deny_endpoints": [],
-    "allow_endpoints": [
-      "local-cli"
-    ],
+    "allow_endpoints": ["local-cli"],
     "deny_provider_kinds": [],
-    "allow_provider_kinds": [
-      "cli"
-    ],
+    "allow_provider_kinds": ["cli"],
     "budget": {
       "enabled": true,
       "currency": "USD",
@@ -43,9 +35,7 @@
   ],
   "chosen_endpoint_id": "local-cli",
   "fallback_endpoint_ids": [],
-  "selection_reasons": [
-    "BEST_TOTAL_SCORE"
-  ],
+  "selection_reasons": ["BEST_TOTAL_SCORE"],
   "used_measured": true,
   "used_declared": true,
   "scoring_version": "run01-fixture",

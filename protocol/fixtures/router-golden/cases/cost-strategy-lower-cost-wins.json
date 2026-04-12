@@ -4,13 +4,9 @@
     "request": {
       "requestId": "req-fixture-cost-1",
       "taskType": "code.edit",
-      "requiredCapabilities": [
-        "code.edit"
-      ],
+      "requiredCapabilities": ["code.edit"],
       "preferredCapabilities": [],
-      "requiredModalities": [
-        "text"
-      ],
+      "requiredModalities": ["text"],
       "contextTokens": 4096,
       "needsTools": true,
       "strategy": "cost",
@@ -37,13 +33,8 @@
         },
         "declared": {
           "endpoint_id": "alpha-expensive",
-          "capabilities": [
-            "code.edit",
-            "tools.function_calling"
-          ],
-          "modalities": [
-            "text"
-          ],
+          "capabilities": ["code.edit", "tools.function_calling"],
+          "modalities": ["text"],
           "max_context_tokens": 32768,
           "tool_calling": {
             "supported": true,
@@ -85,13 +76,8 @@
         },
         "declared": {
           "endpoint_id": "zeta-cheaper",
-          "capabilities": [
-            "code.edit",
-            "tools.function_calling"
-          ],
-          "modalities": [
-            "text"
-          ],
+          "capabilities": ["code.edit", "tools.function_calling"],
+          "modalities": ["text"],
           "max_context_tokens": 32768,
           "tool_calling": {
             "supported": true,
@@ -118,14 +104,8 @@
   },
   "expected": {
     "chosen_endpoint_id": "zeta-cheaper",
-    "fallback_endpoint_ids": [
-      "alpha-expensive"
-    ],
-    "selection_reasons": [
-      "BEST_TOTAL_SCORE",
-      "BUDGET_OPTIMIZATION",
-      "FALLBACK_CHAIN_COMPUTED"
-    ],
+    "fallback_endpoint_ids": ["alpha-expensive"],
+    "selection_reasons": ["BEST_TOTAL_SCORE", "BUDGET_OPTIMIZATION", "FALLBACK_CHAIN_COMPUTED"],
     "eligibility": []
   }
 }

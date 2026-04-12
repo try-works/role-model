@@ -4,13 +4,9 @@
     "request": {
       "requestId": "req-tools-unsupported-1",
       "taskType": "code.edit",
-      "requiredCapabilities": [
-        "code.edit"
-      ],
+      "requiredCapabilities": ["code.edit"],
       "preferredCapabilities": [],
-      "requiredModalities": [
-        "text"
-      ],
+      "requiredModalities": ["text"],
       "contextTokens": 2048,
       "needsTools": true,
       "strategy": "balanced",
@@ -36,12 +32,8 @@
         },
         "declared": {
           "endpoint_id": "endpoint-1",
-          "capabilities": [
-            "code.edit"
-          ],
-          "modalities": [
-            "text"
-          ],
+          "capabilities": ["code.edit"],
+          "modalities": ["text"],
           "max_context_tokens": 32768,
           "tool_calling": {
             "supported": false,

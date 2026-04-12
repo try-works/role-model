@@ -4,13 +4,9 @@
     "request": {
       "requestId": "req-quality-strategy-1",
       "taskType": "code.edit",
-      "requiredCapabilities": [
-        "code.edit"
-      ],
+      "requiredCapabilities": ["code.edit"],
       "preferredCapabilities": [],
-      "requiredModalities": [
-        "text"
-      ],
+      "requiredModalities": ["text"],
       "contextTokens": 4096,
       "needsTools": true,
       "strategy": "quality",
@@ -37,13 +33,8 @@
         },
         "declared": {
           "endpoint_id": "alpha-declared",
-          "capabilities": [
-            "code.edit",
-            "tools.function_calling"
-          ],
-          "modalities": [
-            "text"
-          ],
+          "capabilities": ["code.edit", "tools.function_calling"],
+          "modalities": ["text"],
           "max_context_tokens": 32768,
           "tool_calling": {
             "supported": true,
@@ -73,13 +64,8 @@
         },
         "declared": {
           "endpoint_id": "zeta-measured",
-          "capabilities": [
-            "code.edit",
-            "tools.function_calling"
-          ],
-          "modalities": [
-            "text"
-          ],
+          "capabilities": ["code.edit", "tools.function_calling"],
+          "modalities": ["text"],
           "max_context_tokens": 32768,
           "tool_calling": {
             "supported": true,
@@ -106,9 +92,7 @@
   },
   "expected": {
     "chosen_endpoint_id": "zeta-measured",
-    "fallback_endpoint_ids": [
-      "alpha-declared"
-    ],
+    "fallback_endpoint_ids": ["alpha-declared"],
     "selection_reasons": [
       "BEST_TOTAL_SCORE",
       "MEASURED_PROFILE_USED",
