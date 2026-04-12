@@ -1,48 +1,63 @@
 # role-model
 
-`role-model` defines the protocol, schemas, tooling, and baseline host scaffolding for capability-aware
-AI routing. The protocol lives as repository content, not as chat convention.
+`role-model` is an open protocol and reference router for capability-aware AI routing.
 
-## Stable baseline
+It gives you a shared way to describe AI endpoints, routing policies, role/task requirements, and
+observability artifacts such as router decisions, traces, usage events, and observed performance.
 
-This baseline establishes:
+## What you get
 
-- canonical protocol docs and JSON Schemas under `protocol/` and `docs/`
-- generated protocol types plus schema validation tooling under `packages/`
-- a deterministic routing core with conformance tests
-- observability artifacts for router decisions, traces, usage, and observed performance
-- a lightweight `role-model-router` host path for ACP, MCP, and CLI-backed routing
-- reserved homes for browser, edge, and native provider families without claiming full runtime support
+- JSON Schema contracts under `protocol/`
+- TypeScript schema tooling and generated protocol types under `packages/`
+- a deterministic reference router under `role-model-router/`
+- fixture-driven conformance tests for schemas and routing behavior
+- a lightweight smoke path that exercises routing end to end
 
-## Intentionally deferred
+## Quick start
 
-This repository does **not** claim production-complete support for:
+This repository expects **Node.js 22** and **pnpm 10.x**.
 
-- Pi daemon or desktop router hosts
-- long-lived localhost OpenAI gateways
-- production-grade WebLLM, MediaPipe, LiteRT-LM, ONNX, MLX, or GGUF execution
-- package publishing, model-pack installation, or full memory backends
+```bash
+pnpm install
+pnpm run schemas:validate
+pnpm run types:generate
+pnpm run build
+pnpm run test
+pnpm run smoke
+```
 
-## Repository map
+For CI-parity validation, run:
 
-| Path | Purpose |
+```bash
+pnpm run ci:check
+```
+
+## Repository layout
+
+| Path | What it contains |
 | --- | --- |
-| `protocol/` | Canonical JSON Schema contracts and fixtures |
-| `docs/` | Architecture, protocol semantics, and ADRs |
-| `packages/` | Shared protocol-wide tooling and contracts |
-| `role-model-router/` | Routing packages, host scaffolds, apps, and native placeholders |
-| `testdata/` | Prompts, eval cases, traces, and endpoint metadata fixtures |
+| `protocol/` | Canonical schemas and example fixtures |
+| `docs/` | Protocol docs, architecture notes, and decisions |
+| `packages/` | Shared tooling, generated types, and conformance packages |
+| `role-model-router/` | Reference router packages, adapters, and smoke apps |
+| `testdata/` | Prompts, eval cases, traces, and endpoint metadata |
 
-## Root commands
+## Current scope
 
-All commands run from the repository root with **Node.js 22** and **pnpm 10.x**.
+Today this repository is best understood as a **reference baseline**:
 
-1. `pnpm install` — bootstrap workspace dependencies
-2. `pnpm run schemas:validate` — validate canonical JSON Schemas
-3. `pnpm run types:generate` — generate protocol TypeScript types from schemas
-4. `pnpm run lint` — Biome plus Rust formatting/clippy checks
-5. `pnpm run build` — build TypeScript workspace packages after type generation
-6. `pnpm run test` — run TypeScript and routing tests
-7. `pnpm run test:rust` — run Rust workspace tests
-8. `pnpm run smoke` — execute the lightweight gateway smoke flow
-9. `pnpm run ci:check` — CI-parity aggregate command
+- the protocol and schemas are real
+- the router core and conformance coverage are real
+- the smoke path and observability artifacts are real
+- some future runtime hosts and provider families are still scaffold-level rather than production-ready
+
+## Learn more
+
+- Start with `docs/protocol/` for the protocol model
+- See `docs/protocol/routing-policy.md` for routing policy semantics
+- See `docs/protocol/roles.md` and `docs/protocol/tasks.md` for role/task concepts
+- See `role-model-router/README.md` for the router implementation surface
+
+## License
+
+Apache-2.0
