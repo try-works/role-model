@@ -1,0 +1,51 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/02-audit-remediation[39m
+
+ [31m❯[39m packages/conformance/src/protocol-fixture-conformance.test.ts [2m([22m[2m2 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[33m 2522[2mms[22m[39m
+   [33m[2m✓[22m[39m run01 protocol fixture conformance[2m > [22mtop-level example fixtures and required fixture directories validate against canonical schemas [33m 439[2mms[22m[39m
+[31m   [31m×[31m run01 protocol fixture conformance[2m > [22mschemas:validate reports fixture validation as part of the canonical schema-tool path[39m[33m 2078[2mms[22m[39m
+[31m     → Command failed: cmd.exe /c corepack pnpm run schemas:validate
+'pnpm' is not recognized as an internal or external command,
+operable program or batch file.
+[39m
+ [31m❯[39m packages/conformance/src/gateway-smoke-observability.test.ts [2m([22m[2m2 tests[22m[2m | [22m[31m2 failed[39m[2m)[22m[33m 4104[2mms[22m[39m
+[31m   [31m×[31m gateway smoke observability conformance[2m > [22memits trace and usage artifacts with run01 linkage ids and canonical trace shapes[39m[33m 2088[2mms[22m[39m
+[31m     → Command failed: cmd.exe /c corepack pnpm run smoke
+'pnpm' is not recognized as an internal or external command,
+operable program or batch file.
+[39m
+[31m   [31m×[31m gateway smoke observability conformance[2m > [22memits observed performance with the run01 sample window and sources shape[39m[33m 2012[2mms[22m[39m
+[31m     → Command failed: cmd.exe /c corepack pnpm run smoke
+'pnpm' is not recognized as an internal or external command,
+operable program or batch file.
+[39m
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  packages/conformance/src/gateway-smoke-observability.test.ts > gateway smoke observability conformance > emits trace and usage artifacts with run01 linkage ids and canonical trace shapes
+Error: Command failed: cmd.exe /c corepack pnpm run smoke
+'pnpm' is not recognized as an internal or external command,
+operable program or batch file.
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  packages/conformance/src/gateway-smoke-observability.test.ts > gateway smoke observability conformance > emits observed performance with the run01 sample window and sources shape
+Error: Command failed: cmd.exe /c corepack pnpm run smoke
+'pnpm' is not recognized as an internal or external command,
+operable program or batch file.
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  packages/conformance/src/protocol-fixture-conformance.test.ts > run01 protocol fixture conformance > schemas:validate reports fixture validation as part of the canonical schema-tool path
+Error: Command failed: cmd.exe /c corepack pnpm run schemas:validate
+'pnpm' is not recognized as an internal or external command,
+operable program or batch file.
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+[2m Test Files [22m [1m[31m2 failed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[31m3 failed[39m[22m[2m | [22m[1m[32m1 passed[39m[22m[90m (4)[39m
+[2m   Start at [22m 08:57:53
+[2m   Duration [22m 5.71s[2m (transform 311ms, setup 0ms, collect 375ms, tests 6.63s, environment 1ms, prepare 984ms)[22m
+

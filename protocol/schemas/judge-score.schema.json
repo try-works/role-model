@@ -1,5 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "judge-score.schema.json",
   "title": "JudgeScore",
   "type": "object",
   "additionalProperties": false,

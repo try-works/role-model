@@ -1,0 +1,11 @@
+ WARN  Unsupported engine: wanted: {"node":">=22 <23"} (current: {"node":"v24.11.0","pnpm":"10.6.5"})
+
+> role-model@0.0.0 smoke D:\DEV\role-model\.worktrees\02-audit-remediation
+> corepack pnpm --filter @role-model-router/gateway-smoke exec tsx src/index.ts
+
+.                                        |  WARN  Unsupported engine: wanted: {"node":">=22 <23"} (current: {"node":"v24.11.0","pnpm":"10.6.5"})
+{
+  "chosen_endpoint_id": "cli.local.coder",
+  "router_decision_path": "D:\\DEV\\role-model\\.worktrees\\02-audit-remediation\\runtime-output\\gateway-smoke\\router-decision.json",
+  "config_export_path": "D:\\DEV\\role-model\\.worktrees\\02-audit-remediation\\runtime-output\\router-devtools\\config-export.json"
+}

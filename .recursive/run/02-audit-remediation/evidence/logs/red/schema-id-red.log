@@ -1,0 +1,80 @@
+{
+  "missing": [
+    {
+      "name": "benchmark-run.schema.json",
+      "id": null
+    },
+    {
+      "name": "benchmark-suite.schema.json",
+      "id": null
+    },
+    {
+      "name": "capability-taxonomy.schema.json",
+      "id": null
+    },
+    {
+      "name": "declared-capability-profile.schema.json",
+      "id": null
+    },
+    {
+      "name": "endpoint-identity.schema.json",
+      "id": null
+    },
+    {
+      "name": "judge-score.schema.json",
+      "id": null
+    },
+    {
+      "name": "model-pack-manifest.schema.json",
+      "id": null
+    },
+    {
+      "name": "observed-performance-profile.schema.json",
+      "id": null
+    },
+    {
+      "name": "package-manifest.schema.json",
+      "id": null
+    },
+    {
+      "name": "planspec.schema.json",
+      "id": null
+    },
+    {
+      "name": "role-binding.schema.json",
+      "id": null
+    },
+    {
+      "name": "role-definition.schema.json",
+      "id": null
+    },
+    {
+      "name": "router-decision.schema.json",
+      "id": null
+    },
+    {
+      "name": "routing-policy.schema.json",
+      "id": null
+    },
+    {
+      "name": "task-definition.schema.json",
+      "id": null
+    },
+    {
+      "name": "task-execution-profile.schema.json",
+      "id": null
+    },
+    {
+      "name": "trace-event.schema.json",
+      "id": null
+    },
+    {
+      "name": "trace-span.schema.json",
+      "id": null
+    },
+    {
+      "name": "usage-event.schema.json",
+      "id": null
+    }
+  ]
+}

@@ -1,5 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "benchmark-run.schema.json",
   "title": "BenchmarkRun",
   "type": "object",
   "additionalProperties": false,

@@ -1,5 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "model-pack-manifest.schema.json",
   "title": "ModelPackManifest",
   "type": "object",
   "additionalProperties": false,

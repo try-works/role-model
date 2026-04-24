@@ -10,16 +10,16 @@
     "node": ">=22 <23"
   },
   "scripts": {
-    "lint": "biome check . && pnpm run lint:rust",
+    "lint": "biome check . && corepack pnpm run lint:rust",
     "format": "biome format --write .",
     "lint:rust": "cargo fmt --manifest-path role-model-router/rust/Cargo.toml --all --check && cargo clippy --manifest-path role-model-router/rust/Cargo.toml --workspace --all-targets -- -D warnings",
-    "schemas:validate": "pnpm --filter @role-model/schema-tools exec tsx src/validate-schemas.ts validate",
-    "types:generate": "pnpm --filter @role-model/schema-tools exec tsx src/validate-schemas.ts generate-types",
-    "build": "pnpm run types:generate && pnpm -r --if-present build",
-    "test": "pnpm -r --if-present test",
+    "schemas:validate": "corepack pnpm --filter @role-model/schema-tools exec tsx src/validate-schemas.ts validate",
+    "types:generate": "corepack pnpm --filter @role-model/schema-tools exec tsx src/validate-schemas.ts generate-types",
+    "build": "corepack pnpm run types:generate && corepack pnpm -r --if-present build",
+    "test": "corepack pnpm -r --if-present test",
     "test:rust": "cargo test --manifest-path role-model-router/rust/Cargo.toml --workspace",
-    "smoke": "pnpm --filter @role-model-router/gateway-smoke exec tsx src/index.ts",
-    "ci:check": "pnpm run lint && pnpm run schemas:validate && pnpm run build && pnpm run test && pnpm run test:rust && pnpm run smoke"
+    "smoke": "corepack pnpm --filter @role-model-router/gateway-smoke exec tsx src/index.ts",
+    "ci:check": "corepack pnpm run lint && corepack pnpm run schemas:validate && corepack pnpm run build && corepack pnpm run test && corepack pnpm run test:rust && corepack pnpm run smoke"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",

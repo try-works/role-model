@@ -1,0 +1,15 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/02-audit-remediation[39m
+
+ [32m✓[39m packages/conformance/src/protocol-fixture-conformance.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 3767[2mms[22m[39m
+   [33m[2m✓[22m[39m run01 protocol fixture conformance[2m > [22mtop-level example fixtures and required fixture directories validate against canonical schemas [33m 340[2mms[22m[39m
+   [33m[2m✓[22m[39m run01 protocol fixture conformance[2m > [22mschemas:validate reports fixture validation as part of the canonical schema-tool path [33m 3424[2mms[22m[39m
+ [32m✓[39m packages/conformance/src/gateway-smoke-observability.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 5393[2mms[22m[39m
+   [33m[2m✓[22m[39m gateway smoke observability conformance[2m > [22memits trace and usage artifacts with run01 linkage ids and canonical trace shapes [33m 2901[2mms[22m[39m
+   [33m[2m✓[22m[39m gateway smoke observability conformance[2m > [22memits observed performance with the run01 sample window and sources shape [33m 2489[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m2 passed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[32m4 passed[39m[22m[90m (4)[39m
+[2m   Start at [22m 09:13:38
+[2m   Duration [22m 6.68s[2m (transform 224ms, setup 0ms, collect 234ms, tests 9.16s, environment 1ms, prepare 810ms)[22m
+

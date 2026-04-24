@@ -1,5 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "router-decision.schema.json",
   "title": "RouterDecision",
   "type": "object",
   "additionalProperties": false,

@@ -6,6 +6,20 @@ const require = createRequire(import.meta.url);
 
 type JsonSchema = Record<string, unknown>;
 
+function assertCanonicalSchemaId(fileName: string, schema: JsonSchema): asserts schema is JsonSchema & {
+  $id: string;
+} {
+  const schemaId = schema.$id;
+
+  if (typeof schemaId !== "string" || !schemaId) {
+    throw new Error(`Schema ${fileName} is missing a top-level string $id.`);
+  }
+
+  if (schemaId !== fileName) {
+    throw new Error(`Schema ${fileName} must declare $id "${fileName}", received "${schemaId}".`);
+  }
+}
+
 export async function createAjv(schemaDir: string) {
   const ajvModule: typeof import("ajv/dist/2020.js") = require("ajv/dist/2020.js");
   const formatsModule: typeof import("ajv-formats") = require("ajv-formats");
@@ -20,7 +34,8 @@ export async function createAjv(schemaDir: string) {
   const names = (await readdir(schemaDir)).filter((name) => name.endsWith(".schema.json")).sort();
   for (const fileName of names) {
     const schema = JSON.parse(await readFile(path.join(schemaDir, fileName), "utf8")) as JsonSchema;
-    ajv.addSchema({ $id: fileName, ...schema }, fileName);
+    assertCanonicalSchemaId(fileName, schema);
+    ajv.addSchema(schema, schema.$id);
   }
 
   return ajv;

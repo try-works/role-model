@@ -28,6 +28,7 @@ const biomeExecutable = path.join(
 );
 
 type JsonSchema = Record<string, unknown>;
+type CanonicalJsonSchema = JsonSchema & { $id: string };
 type FixtureEntry = {
   filePath: string;
   schemaFile: string;
@@ -112,22 +113,32 @@ const requiredFixtureGroups = [
   },
 ] as const;
 
-export async function loadSchemas(): Promise<Array<{ fileName: string; schema: JsonSchema }>> {
-  const names = (await readdir(schemaDir)).filter((name) => name.endsWith(".schema.json")).sort();
-  const schemas = await Promise.all(
-    names.map(async (fileName) => ({
-      fileName,
-      schema: JSON.parse(await readFile(path.join(schemaDir, fileName), "utf8")) as JsonSchema,
-    })),
-  );
+function assertCanonicalSchemaId(fileName: string, schema: JsonSchema): CanonicalJsonSchema {
+  const schemaId = schema.$id;
 
-  return schemas.map(({ fileName, schema }) => ({
-    fileName,
-    schema: {
-      $id: fileName,
-      ...schema,
-    },
-  }));
+  if (typeof schemaId !== "string" || !schemaId) {
+    throw new Error(`Schema ${fileName} is missing a top-level string $id.`);
+  }
+
+  if (schemaId !== fileName) {
+    throw new Error(`Schema ${fileName} must declare $id "${fileName}", received "${schemaId}".`);
+  }
+
+  return schema as CanonicalJsonSchema;
+}
+
+export async function loadSchemas(): Promise<Array<{ fileName: string; schema: CanonicalJsonSchema }>> {
+  const names = (await readdir(schemaDir)).filter((name) => name.endsWith(".schema.json")).sort();
+  return Promise.all(
+    names.map(async (fileName) => {
+      const schema = JSON.parse(await readFile(path.join(schemaDir, fileName), "utf8")) as JsonSchema;
+
+      return {
+        fileName,
+        schema: assertCanonicalSchemaId(fileName, schema),
+      };
+    }),
+  );
 }
 
 async function createAjv() {
@@ -143,7 +154,7 @@ async function createAjv() {
 
   const schemas = await loadSchemas();
   for (const { schema } of schemas) {
-    ajv.addSchema(schema, String(schema.$id));
+    ajv.addSchema(schema, schema.$id);
   }
 
   return { ajv, schemas };

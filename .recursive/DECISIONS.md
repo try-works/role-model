@@ -59,3 +59,33 @@
 - Known issues / follow-ups:
   - unsupported-engine warnings persist under `Node v24`
   - repo-wide Biome formatting drift remains a pre-existing Windows-baseline issue and was intentionally not widened into this run
+
+### Run `02-audit-remediation`
+
+- Run folder: `/.recursive/run/02-audit-remediation/`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `01.5-root-cause.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `03.5-code-review.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - added stable top-level `$id` values to all committed canonical schema files under `/protocol/schemas/`
+  - removed schema-id masking from `/packages/schema-tools/src/validate-schemas.ts` and `/packages/conformance/src/schema-test-helpers.ts`
+  - repaired the root script command path by switching nested pnpm calls in `/package.json` to `corepack pnpm ...`
+- Why:
+  - to bring the repository back into conformance with the documented canonical-schema contract and restore the supported root `corepack pnpm run ...` validation path
+- How:
+  - implemented a strict RED/GREEN loop with a new schema-source regression, reused the failing wrapper-path conformance slice as red evidence, and revalidated via root `schemas:validate`, `test`, and `smoke`
+- What was not done:
+  - no unrelated protocol, router, provider, runtime, or repo-wide formatting work was widened into this remediation run
+- Known issues / follow-ups:
+  - unsupported-engine warnings still persist under `Node v24`
+  - `packages/protocol-types/src/generated.ts` can show local CRLF-only status churn after generator-backed tests even when there is no semantic content diff

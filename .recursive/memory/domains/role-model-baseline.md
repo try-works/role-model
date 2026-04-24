@@ -22,8 +22,9 @@ Watch-Paths:
 Source-Runs:
 - `00-baseline`
 - `01-protocol-routing-obs`
+- `02-audit-remediation`
 Validated-At-Commit: `working-tree`
-Last-Validated: `2026-04-12T21:46:55Z`
+Last-Validated: `2026-04-24T01:20:00Z`
 Tags:
 - `baseline`
 - `workspace`
@@ -49,6 +50,7 @@ This repository now has a real product baseline rather than only recursive scaff
 - Generated protocol types live under `/packages/protocol-types/src/generated.ts`
 - The deterministic router contract lives under `/role-model-router/packages/core/`
 - Schema validation covers the canonical schema set plus the required fixture corpus
+- Canonical schema sources under `/protocol/schemas/` now self-identify with stable in-file `$id` values, and both schema-tools and conformance fail fast if those ids are missing or mismatched
 - Fixture-driven router conformance lives under `/packages/conformance/src/router-fixture-conformance.test.ts` and is backed by `/protocol/fixtures/router-golden/cases/`
 - The router now applies role/task-aware eligibility, provider and endpoint policy filters, canonical compute-preference/strategy aliases, normalized weighted scoring, and unknown-metric redistribution
 - Observed-performance aggregation now uses deterministic multi-sample semantics with `sample_window`, `sources`, failure/error-class rates, freshness/confidence, and mixed-version rejection
@@ -60,7 +62,7 @@ This repository now has a real product baseline rather than only recursive scaff
 ## Validation Path
 
 - Prefer the repo's existing validation chain rather than ad hoc commands
-- In environments without a global pnpm shim, invoking pnpm through `corepack pnpm` is an acceptable execution fallback so long as repo semantics stay unchanged
+- Root workspace scripts now use PATH-independent nested `corepack pnpm ...` invocations so the canonical shell-out entrypoints stay stable even when a child shell does not expose a global pnpm shim
 - GitHub Actions validates this repo from a clean checkout of tracked files only; local Biome parity work should prefer a clean export or tracked-file-targeted checks instead of repo-root sweeps that also traverse nested `.worktrees/`
 - On Windows, CRLF-only worktree churn can make local status noisier than the real Linux CI content diff; use `git diff` to identify the actual files that need formatter commits
 
