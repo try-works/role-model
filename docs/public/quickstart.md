@@ -5,7 +5,7 @@ This quickstart uses the real `gateway-smoke` app in the repository. It is the f
 
 ## Prerequisites
 
-- Node.js 22
+- Node.js 24
 - pnpm 10.x
 
 ## Run the smoke flow

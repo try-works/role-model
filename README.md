@@ -63,7 +63,7 @@ Today this repository is a **real baseline**, not only a design sketch:
 
 ## Quick start
 
-This repository expects **Node.js 22** and **pnpm 10.x**.
+This repository expects **Node.js 24** and **pnpm 10.x**.
 
 ```bash
 pnpm install

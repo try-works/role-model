@@ -18,5 +18,5 @@
   - `corepack pnpm run smoke`
 - The root workspace scripts in `/package.json` now invoke nested workspace commands through `corepack pnpm ...`, which restores the canonical wrapper-path behavior used by the conformance suite and other shell-outs.
 - Operational caveats:
-  - unsupported-engine warnings persist because the repo expects `Node >=22 <23` while this environment is running `Node v24`
+  - the repo now expects `Node >=24 <25`, which matches the current environment and removes the earlier Node-engine mismatch
   - `corepack pnpm exec biome check .` still reports pre-existing Windows formatting drift in tracked baseline files and was intentionally kept out of run-01 scope
