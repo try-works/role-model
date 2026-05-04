@@ -1,0 +1,102 @@
+---
+title: Roles and tasks
+description: The semantic split between execution roles, task definitions, bindings, and task execution patches.
+---
+
+# Roles and tasks
+
+The protocol separates **what kind of work is being done** from **how that work should be carried out**.
+
+- `TaskDefinition` models the unit of work.
+- `RoleDefinition` models the execution persona and operating contract.
+- `RoleBinding` attaches a role to a concrete endpoint.
+- `TaskExecutionProfile` adjusts execution requirements for a particular task/role combination.
+
+## Why roles and tasks are separate
+
+This split lets the protocol express:
+
+- one role supporting multiple tasks
+- one task allowing multiple roles
+- different tool policies or output contracts for the same capability family
+- endpoint-specific activation state via role binding
+
+If roles and tasks were collapsed into one record, those distinctions would be much harder to represent.
+
+## `RoleDefinition`
+
+Role definitions carry:
+
+- `task_types_supported`
+- `required_capabilities`
+- `preferred_capabilities`
+- `forbidden_capabilities`
+- `tool_policy`
+- `routing_policy_overrides`
+- `output_contracts`
+- `safety_policy_refs`
+
+The baseline role set includes examples such as `general.chat`, `coder.patch`, `coder.review`,
+`tool.agent`, `embedder`, `classifier`, and `language.detector`.
+
+## `TaskDefinition`
+
+Task definitions carry:
+
+- `required_inputs`
+- `required_capabilities`
+- `preferred_capabilities`
+- `quality_metrics`
+- `allowed_roles`
+- `default_benchmark_suites`
+
+The baseline task set includes `text.chat`, `code.edit`, `tools.function_calling`, `embeddings.text`,
+`text.classification`, `text.language_detection`, and `json.schema_adherence`.
+
+## `RoleBinding`
+
+Role bindings are what make role support concrete at the endpoint level. Each binding states:
+
+- which `role_id` is bound to which `endpoint_id`
+- whether the binding is `active`, `disabled`, or `candidate`
+- policy overrides
+- effective capabilities
+- effective task types
+
+If a requested role has a non-active binding for an endpoint, the reference router rejects that endpoint with
+`ROLE_BINDING_INACTIVE`.
+
+## How roles become concrete
+
+Roles are abstract protocol entities until they are bound into routable infrastructure.
+
+That happens through `RoleBinding`, which binds a `role_id` to a concrete `endpoint_id`. Because endpoint
+identity also carries model lineage, this is how roles become attached to **model-serving endpoints** in
+practice.
+
+role-model does not assume that one model permanently owns one role. A role may be active on multiple
+endpoints, including multiple endpoints serving the same model under different deployment conditions. The
+router uses those bindings to define the eligible set, then uses observed performance and policy to decide
+which endpoint actually wins.
+
+## `TaskExecutionProfile`
+
+`TaskExecutionProfile` is a patch layer with:
+
+- `task_type`
+- `role_id`
+- `required_capabilities`
+- `preferred_capabilities`
+- `routing_policy_patch`
+
+It exists so the protocol can express that a task performed under a specific role may need a narrower or
+different execution shape than the generic task definition suggests.
+
+## Mapping pattern
+
+| Object | What it contributes |
+| --- | --- |
+| `RoleDefinition` | says which task families and execution constraints are allowed |
+| `TaskDefinition` | says what the unit of work requires |
+| `RoleBinding` | says whether a specific endpoint can currently serve that role |
+| `TaskExecutionProfile` | says how execution is patched for that role-task pairing |

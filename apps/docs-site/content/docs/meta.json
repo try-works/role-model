@@ -1,0 +1,16 @@
+{
+  "title": "role-model",
+  "description": "Protocol-first documentation for role-model.",
+  "root": true,
+  "defaultOpen": true,
+  "pages": [
+    "index",
+    "introduction",
+    "core-vocabulary",
+    "protocol-object-model",
+    "protocol-lifecycle",
+    "protocol",
+    "routing",
+    "reference"
+  ]
+}

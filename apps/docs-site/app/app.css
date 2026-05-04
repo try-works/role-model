@@ -1,0 +1,41 @@
+@import "tailwindcss";
+@import "fumadocs-ui/css/neutral.css";
+@import "fumadocs-ui/css/preset.css";
+
+html {
+  scrollbar-gutter: stable;
+}
+
+html > body[data-scroll-locked] {
+  margin-right: 0px !important;
+  --removed-body-scroll-bar-size: 0px !important;
+}
+
+@media (min-width: 768px) {
+  .role-model-docs-layout #nd-sidebar [data-search-full],
+  .role-model-docs-layout [data-sidebar-panel] [data-search] {
+    display: none;
+  }
+
+  .role-model-docs-layout #nd-sidebar > div:last-child {
+    display: none;
+  }
+
+  .role-model-docs-layout [data-sidebar-panel] {
+    top: calc(var(--fd-docs-row-1) + 0.75rem) !important;
+  }
+
+  .role-model-docs-layout #nd-page {
+    padding-top: 2rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .role-model-docs-layout .role-model-docs-header-actions {
+    transform: translateX(calc(var(--fd-toc-width) * 0.38));
+  }
+
+  .role-model-docs-layout #nd-toc {
+    padding-top: 5.5rem;
+  }
+}

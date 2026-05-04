@@ -1,0 +1,6 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "role-model-dev",
+  "pages_build_output_dir": "./build/client",
+  "compatibility_date": "2026-05-04"
+}

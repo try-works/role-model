@@ -1,0 +1,6 @@
+{
+  "title": "Reference",
+  "description": "Schema and reason-code reference material.",
+  "defaultOpen": true,
+  "pages": ["canonical-schemas-reference", "reason-codes-and-rejection-taxonomy"]
+}

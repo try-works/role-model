@@ -1,0 +1,82 @@
+---
+title: Protocol object model
+description: How the canonical protocol entities connect to each other.
+---
+
+# Protocol object model
+
+The protocol is best understood as a graph of related artifacts rather than a flat list of schemas.
+
+<ProtocolObjectModelDiagram />
+
+## Relationship map
+
+| From | To | Why the relationship exists |
+| --- | --- | --- |
+| `EndpointIdentity` | `DeclaredCapabilityProfile` | declared capabilities only make sense when attached to a concrete endpoint |
+| `EndpointIdentity` | `ObservedPerformanceProfile` | measurements are endpoint-specific and must not be merged across materially different deployments |
+| `RoleDefinition` | `TaskDefinition` | roles state which task families they support; tasks state which roles are allowed |
+| `RoleBinding` | endpoint + role | binds a role to one endpoint with an activation status and effective capabilities |
+| `TaskExecutionProfile` | task + role + policy | adjusts capability and policy requirements for a particular execution shape |
+| candidate set + policy + execution intent | `RouterDecision` | a decision is the evaluated result of those inputs |
+| `RouterDecision` | traces + usage | later artifacts refer back to the decision via IDs so routing stays inspectable |
+| traces + usage | observed profile | execution evidence feeds future routing through measured performance updates |
+
+## Two complementary evidence layers
+
+### Declared layer
+
+The declared layer is the **compatibility floor**. It determines whether an endpoint can plausibly satisfy the
+task at all:
+
+- required capabilities
+- required modalities
+- context size
+- tool-calling support
+- platform constraints
+
+### Observed layer
+
+The observed layer is the **comparative evidence layer**. It determines how endpoints trade off once more than
+one endpoint is eligible:
+
+- latency
+- throughput
+- failure rate
+- quality or judge score
+- cost estimate
+- freshness
+- confidence
+
+## Where the model lives in the object model
+
+The protocol does not define a separate routing object called "model candidate."
+
+Instead, model lineage lives inside `EndpointIdentity`:
+
+- `model_id`
+- `package_id`
+- `variant_id`
+
+That design preserves model identity without pretending that model name alone is enough for routing. Declared
+capability, observed performance, and policy all need a concrete endpoint-shaped object to attach to.
+
+## Why profiles attach to endpoints
+
+Profiles attach to endpoints because two endpoints serving the same model may behave differently in practice.
+
+role-model keeps those profiles endpoint-specific so the router can compare real deployments rather than
+collapsing everything under one model label.
+
+## Why the model is split this way
+
+The object model deliberately separates:
+
+1. **identity** from capability claims
+2. **capability claims** from measured performance
+3. **execution intent** from endpoint metadata
+4. **routing inputs** from routing outputs
+5. **routing outputs** from later observability and feedback artifacts
+
+That separation prevents routers from inferring hidden state or collapsing different operational concerns into
+one overloaded record.

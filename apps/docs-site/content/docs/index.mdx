@@ -1,0 +1,83 @@
+---
+title: role-model protocol and routing
+description: The canonical role-model protocol and the routing semantics built on top of it.
+---
+
+# role-model protocol and routing
+
+This site explains how **role-model assigns roles and tasks to concrete model-serving endpoints**.
+
+The protocol does not route by model name alone. It carries model identity inside endpoint identity, then
+routes across eligible endpoints using declared capability, routing policy, and observed performance.
+
+That distinction matters because the same model can be served by multiple endpoints with different provider,
+runtime, region, quantization, locality, and measured behavior.
+
+## Why it is called role-model
+
+The name reflects the two layers the protocol is trying to connect:
+
+1. **roles and tasks** describe the work the system needs done
+2. **models** provide the underlying capability, but they are reached through concrete endpoints
+
+In practice, the router assigns work to **model-serving endpoints**, not to abstract model labels. The model
+still matters, but the endpoint is the concrete routing unit because that is where runtime, deployment, and
+observed-performance differences become visible.
+
+## The routing stack
+
+role-model works across four levels:
+
+- **Role / task** - what kind of work is being requested
+- **Model lineage** - which model family the endpoint belongs to
+- **Endpoint identity** - the concrete deployment target the router can actually choose
+- **Observed performance + policy** - why one eligible endpoint wins over another
+
+This is why role-model is both **role-aware** and **endpoint-aware**: the model matters, but routing must
+still choose the right concrete endpoint serving that model.
+
+<RoleModelRoutingDiagram />
+
+## Why not just route by model name?
+
+A model name is too coarse for reliable routing.
+
+The same base model may appear through multiple endpoints:
+
+- in different regions
+- through different providers
+- under different runtimes
+- with different quantization or precision
+- with different measured latency, quality, failure rate, freshness, or cost
+
+role-model therefore treats the **endpoint** as the routing unit while still preserving the **model lineage**
+inside endpoint identity.
+
+## What to read first
+
+| If you want to understand... | Start here |
+| --- | --- |
+| what role-model actually standardizes | [/introduction](/introduction) |
+| how roles, models, and endpoints fit together | [/introduction](/introduction), [/core-vocabulary](/core-vocabulary), [/protocol/endpoint-identity](/protocol/endpoint-identity), [/protocol/roles-and-tasks](/protocol/roles-and-tasks) |
+| the protocol vocabulary and object graph | [/core-vocabulary](/core-vocabulary), [/protocol-object-model](/protocol-object-model) |
+| endpoint identity and profile semantics | [/protocol/endpoint-identity](/protocol/endpoint-identity), [/protocol/declared-capability-profiles](/protocol/declared-capability-profiles), [/protocol/observed-performance-profiles](/protocol/observed-performance-profiles) |
+| how routing works end to end | [/routing/how-routing-works-end-to-end](/routing/how-routing-works-end-to-end) |
+| why a router accepted or rejected a candidate | [/routing/eligibility-and-rejection](/routing/eligibility-and-rejection), [/reference/reason-codes-and-rejection-taxonomy](/reference/reason-codes-and-rejection-taxonomy) |
+| the field-level schema inventory | [/reference/canonical-schemas-reference](/reference/canonical-schemas-reference) |
+
+## Site structure
+
+- **Overview** explains the protocol boundary, vocabulary, object model, and lifecycle.
+- **Protocol** defines the canonical objects and their field semantics.
+- **Routing** explains how the reference router evaluates, scores, selects, and records outcomes.
+- **Reference** collects schema-by-schema and reason-code reference material.
+
+## Canonical sources
+
+- `protocol/README.md`
+- `protocol/schemas/*.schema.json`
+- `docs/decisions/0001-protocol-is-canonical.md`
+- `docs/decisions/0004-observed-performance-is-first-class.md`
+- `docs/protocol/*.md`
+- `role-model-router/packages/core/**`
+

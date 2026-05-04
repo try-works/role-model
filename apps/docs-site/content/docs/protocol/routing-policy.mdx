@@ -1,0 +1,88 @@
+---
+title: Routing policy
+description: Policy as a first-class protocol input rather than a hidden router setting.
+---
+
+# Routing policy
+
+`RoutingPolicy` is a canonical input to routing. It is not an implementation-only config blob.
+
+The schema models:
+
+- optimization strategy
+- compute preference
+- required capabilities and modalities
+- tool requirements
+- endpoint and provider allow/deny lists
+- budget controls
+- privacy controls
+- performance targets
+- optional tie-break ordering
+
+## Strategy and compute preference
+
+The baseline policy strategy enum is:
+
+- `balanced`
+- `cost`
+- `latency`
+- `quality`
+
+The schema's `compute_preference` enum is:
+
+- `auto`
+- `local`
+- `remote`
+- `hybrid`
+
+In the reference router, request flags such as `preferLocal`, `computePreference`, and `denyRemote` are
+folded into the effective policy snapshot before routing proceeds.
+
+## Hard-constraint fields
+
+These fields participate directly in eligibility:
+
+- `required_capabilities`
+- `required_modalities`
+- `require_tools`
+- `deny_endpoints`
+- `allow_endpoints`
+- `deny_provider_kinds`
+- `allow_provider_kinds`
+- `privacy.allow_remote`
+
+They determine which candidates may even remain in consideration.
+
+## Budget and privacy
+
+The `budget` object states whether budget enforcement is enabled and what cost bounds apply. The reference
+router emits a `budget_mode` of `strict` when a request budget exists and `disabled` otherwise.
+
+The `privacy` object currently includes `allow_remote`, which is how policy can force routing to stay local.
+
+## Targets and tie-breaks
+
+The `targets` object models optimization goals such as:
+
+- `latency_target_ms`
+- `latency_max_ms`
+- `throughput_target_tps`
+
+The reference router currently snapshots a default tie-break order of:
+
+1. `prefer_local`
+2. lower cost
+3. lower `latency_ms_p95`
+4. stable `endpoint_id`
+
+That snapshot is important because the final `RouterDecision` should explain the policy that was actually
+applied, not just the policy a caller remembers sending.
+
+## Policy snapshot semantics
+
+The router copies the effective policy into the `RouterDecision` as `policy_snapshot`. This gives downstream
+consumers a stable record of:
+
+1. what constraints were active
+2. what optimization mode was in effect
+3. what locality, budget, and target settings governed the decision

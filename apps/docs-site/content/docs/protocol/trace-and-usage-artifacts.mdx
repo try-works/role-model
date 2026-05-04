@@ -1,0 +1,75 @@
+---
+title: Trace and usage artifacts
+description: The protocol-owned observability model emitted around routing and execution.
+---
+
+# Trace and usage artifacts
+
+role-model treats observability as protocol-owned data, not as leftover implementation logs.
+
+## The three artifact types
+
+| Artifact | Purpose |
+| --- | --- |
+| `TraceSpan` | timed phases such as eligibility, scoring, selection, provider decode, fallback, or retry |
+| `TraceEvent` | point events that announce things such as a decision being created, a span opening or closing, or a profile update |
+| `UsageEvent` | accounting and execution outcome data such as tokens, latency, provider, endpoint, and cost estimate |
+
+## `TraceSpan`
+
+`TraceSpan` captures duration and status. The schema includes baseline span types such as:
+
+- `router.eligibility`
+- `router.scoring`
+- `router.selection`
+- `router.fallback`
+- `router.retry`
+- `provider.load`
+- `provider.queue`
+- `provider.prefill`
+- `provider.decode`
+- `tool.execution`
+- `request.failure`
+
+This lets routing and execution be described as phases instead of opaque wall-clock time.
+
+## `TraceEvent`
+
+`TraceEvent` is the lighter-weight lifecycle signal. Baseline `event_type` values include:
+
+- `router.decision.created`
+- `trace.span.opened`
+- `trace.span.closed`
+- `usage.event.created`
+- `profile.sample.recorded`
+- `profile.updated`
+
+These events connect the decision, trace, usage, and profile-update layers together.
+
+## `UsageEvent`
+
+`UsageEvent` records execution/accounting facts such as:
+
+- `endpoint_id`
+- `provider_kind`
+- `tokens_in`
+- `tokens_out`
+- `latency_ms`
+- optional `cost_estimate`
+- optional `error_class`
+- optional `sample_source`
+
+This is how routing decisions become durable usage evidence.
+
+## Linking semantics
+
+All three artifact families use shared identifiers to remain joinable:
+
+- `request_id`
+- `routing_decision_id`
+- `trace_id`
+- `span_id`
+- `endpoint_id`
+
+That joinability is the key reason these artifacts belong in the protocol model rather than in custom log
+formats that every host invents independently.

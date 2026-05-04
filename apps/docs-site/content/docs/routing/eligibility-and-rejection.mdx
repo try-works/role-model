@@ -1,0 +1,61 @@
+---
+title: Eligibility and rejection
+description: The hard exclusion paths that remove candidates before scoring.
+---
+
+# Eligibility and rejection
+
+Eligibility is the hard-filtering phase. A candidate that fails here is not scored.
+
+## Actual exclusion checks in the reference router
+
+`evaluateEligibility()` in `router.ts` currently rejects candidates for the following reasons:
+
+| Code | Trigger in the reference router |
+| --- | --- |
+| `PROVIDER_OFFLINE` | candidate status is `offline` |
+| `REVOKED` | candidate status is `revoked` |
+| `POLICY_DENY_ENDPOINT` | explicit deny markers, allow-list misses, provider allow/deny failures, or forbidden role capabilities |
+| `POLICY_DENY_REMOTE` | request forbids remote routing and the candidate is not local |
+| `ROLE_BINDING_INACTIVE` | a requested role has a non-active binding for this endpoint |
+| `TASK_NOT_SUPPORTED` | the requested role does not support the request's task type |
+| `ROLE_NOT_ALLOWED` | the task definition does not allow the requested role |
+| `CAPABILITY_MISSING` | one or more effective required capabilities are missing |
+| `MODALITY_UNSUPPORTED` | one or more required modalities are missing |
+| `CONTEXT_TOO_SMALL` | requested context tokens exceed `max_context_tokens` |
+| `TOOLS_UNSUPPORTED` | the request needs tools and the endpoint does not support tool calling |
+| `BUDGET_EXCEEDED` | observed cost estimate exceeds the request budget |
+
+## Effective required capabilities
+
+The router does not only look at request-level required capabilities. It merges:
+
+- request required capabilities
+- requested role required capabilities
+- requested task required capabilities
+
+This is why a candidate can be rejected even if it satisfied the request-level capability list alone.
+
+## One code, several policy sources
+
+The router intentionally collapses several policy failures into `POLICY_DENY_ENDPOINT`, including:
+
+- explicit endpoint deny lists
+- allow-list misses
+- provider-kind allow-list misses
+- provider-kind denies
+- role-forbidden capability conflicts
+
+The protocol is communicating the semantic class of failure: policy removed this endpoint.
+
+## Reserved but not currently emitted codes
+
+The broader protocol surface also names codes such as:
+
+- `PACKAGE_NOT_INSTALLED`
+- `VARIANT_INCOMPATIBLE`
+- `ENTITLEMENT_MISSING`
+
+Those codes appear in schema or constants, but the current `evaluateEligibility()` implementation does not
+emit them yet. They should therefore be read as **reserved protocol vocabulary**, not as active reference
+router behavior today.

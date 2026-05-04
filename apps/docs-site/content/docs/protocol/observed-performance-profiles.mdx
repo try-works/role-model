@@ -1,0 +1,96 @@
+---
+title: Observed performance profiles
+description: The measured evidence layer used by routing, ranking, and feedback.
+---
+
+# Observed performance profiles
+
+`ObservedPerformanceProfile` is the protocol's measured evidence layer. It records how an endpoint has
+actually behaved over time.
+
+This is a protocol entity, not an implementation side note.
+
+## Why observed performance is not model-only
+
+role-model records observed performance for concrete endpoints, not just for model names in the abstract.
+
+That is necessary because two endpoints serving the same model may still differ in:
+
+- latency
+- throughput
+- cost
+- failure behavior
+- freshness
+- measured quality under real deployment conditions
+
+Observed evidence is therefore endpoint-specific for the same reason routing itself is endpoint-specific.
+
+## Required measured fields
+
+The schema requires:
+
+- `endpoint_id`
+- `measured_at_ms`
+- `sample_window`
+- `sample_size`
+- `sources`
+- `latency_ms_p50`
+- `latency_ms_p95`
+- `failure_rate`
+- `freshness_score`
+- `confidence_score`
+
+Optional measured fields add quality, throughput, cold start, error class rates, and cost estimates.
+
+## What the profile measures
+
+| Metric family | Fields |
+| --- | --- |
+| quality | `judge_score`, `quality_score` |
+| latency | `latency_ms_p50`, `latency_ms_p95`, optional `cold_start_ms` |
+| throughput | `tokens_per_sec` |
+| reliability | `failure_rate`, `error_class_rates` |
+| cost | `cost_per_1k_tokens_est`, `currency` |
+| evidence quality | `sample_window`, `sample_size`, `sources`, `freshness_score`, `confidence_score` |
+
+## Where the evidence comes from
+
+The baseline aggregator accepts samples from two sources:
+
+- `benchmark`
+- `live_request`
+
+The aggregated profile keeps both counts in `sources` so consumers can distinguish curated benchmark evidence
+from production traffic evidence.
+
+## How the reference aggregator derives metrics
+
+The profile aggregator in `role-model-router/packages/profile-aggregator` does the following:
+
+- computes `latency_ms_p50` and `latency_ms_p95` from recorded latency samples
+- uses median values for `tokens_per_sec`, `cold_start_ms`, and `cost_per_1k_tokens_est` when present
+- computes `failure_rate` from samples that carry a `failure_class`
+- computes `error_class_rates` as per-class proportions
+- averages judge scores into `judge_score` and mirrors that into `quality_score`
+- computes `freshness_score` with an exponential decay using a 7-day half-life
+- computes `confidence_score` from `log1p(sample_size) / log1p(50)`, clamped to `[0, 1]`
+
+## Why observed data outranks declared data
+
+Declared data tells the router what should be possible. Observed data tells it what has actually happened.
+
+That is why the intended routing order is:
+
+1. hard compatibility and policy constraints
+2. observed real-world behavior
+3. declared capability metadata
+4. neutral defaults where evidence is missing
+
+## Freshness and confidence are first-class
+
+Not all measurements are equally trustworthy. The protocol therefore encodes:
+
+- **freshness**: how old the latest evidence is
+- **confidence**: how much evidence exists
+
+This prevents old or thin data from looking as authoritative as recent, high-volume evidence.

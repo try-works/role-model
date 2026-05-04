@@ -1,0 +1,63 @@
+{
+  "name": "@role-model/docs-site",
+  "private": true,
+  "type": "module",
+  "x-upstream-template": {
+    "repo": "fuma-nama/fumadocs",
+    "path": "examples/react-router-spa",
+    "ref": "1e6725185d249803e078a54809a0317bbfc09b08",
+    "managedPaths": [
+      ".gitignore",
+      "app/app.css",
+      "app/components",
+      "app/lib/cn.ts",
+      "app/lib/layout.shared.tsx",
+      "app/lib/source.ts",
+      "app/llms",
+      "app/root.tsx",
+      "app/routes/search.ts",
+      "public",
+      "serve.json",
+      "source.config.ts",
+      "tsconfig.json",
+      "vite.config.ts"
+    ]
+  },
+  "scripts": {
+    "build": "react-router build && npm run types:check && node ./scripts/materialize-search-index.mjs",
+    "dev": "react-router dev",
+    "pages:create": "wrangler pages project create role-model-dev --production-branch main --compatibility-date 2026-05-04",
+    "pages:dev": "npm run build && wrangler pages dev ./build/client",
+    "pages:deploy": "npm run build && wrangler pages deploy ./build/client --project-name role-model-dev",
+    "start": "serve ./build/client --config ./serve.json",
+    "types:check": "react-router typegen && fumadocs-mdx && tsc --noEmit",
+    "upstream:sync": "node ./scripts/upstream-sync.mjs --write",
+    "upstream:sync:latest": "node ./scripts/upstream-sync.mjs --write --ref main"
+  },
+  "dependencies": {
+    "@orama/orama": "^3.1.18",
+    "@react-router/node": "^7.14.2",
+    "fumadocs-core": "^16.8.7",
+    "fumadocs-mdx": "^14.3.2",
+    "fumadocs-ui": "^16.8.7",
+    "isbot": "^5.1.39",
+    "lucide-react": "^1.14.0",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "react-router": "^7.14.2",
+    "tailwind-merge": "^3.5.0"
+  },
+  "devDependencies": {
+    "@react-router/dev": "^7.14.2",
+    "@tailwindcss/vite": "^4.2.4",
+    "@types/mdx": "^2.0.13",
+    "@types/node": "^25.6.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "serve": "^14.2.6",
+    "tailwindcss": "^4.2.4",
+    "typescript": "^6.0.3",
+    "vite": "^8.0.10",
+    "wrangler": "^4.87.0"
+  }
+}

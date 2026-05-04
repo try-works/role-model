@@ -1,0 +1,22 @@
+---
+title: Routing overview
+description: A concise summary of the reference routing flow.
+---
+
+# Routing overview
+
+The reference router performs four big steps:
+
+1. build an effective policy snapshot from request intent
+2. reject candidates that fail hard constraints
+3. score the remaining candidates using measured and declared evidence
+4. emit a `RouterDecision` with fallbacks and reason codes
+
+The deep routing pages are:
+
+- [/routing/how-routing-works-end-to-end](/routing/how-routing-works-end-to-end)
+- [/routing/eligibility-and-rejection](/routing/eligibility-and-rejection)
+- [/routing/comparison-and-tradeoffs](/routing/comparison-and-tradeoffs)
+- [/routing/decision-semantics](/routing/decision-semantics)
+
+For the decision artifact itself, read [/protocol/router-decision-artifact](/protocol/router-decision-artifact).

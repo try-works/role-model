@@ -1,0 +1,15 @@
+{
+  "title": "Routing",
+  "description": "How the reference router turns protocol objects into explainable decisions.",
+  "defaultOpen": true,
+  "pages": [
+    "how-routing-works-end-to-end",
+    "candidate-discovery",
+    "eligibility-and-rejection",
+    "comparison-and-tradeoffs",
+    "decision-semantics",
+    "routing-outcomes-and-failure-modes",
+    "observability-of-routing",
+    "protocol-to-router-mapping"
+  ]
+}

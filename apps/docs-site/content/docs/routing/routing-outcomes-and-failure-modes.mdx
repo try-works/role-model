@@ -1,0 +1,62 @@
+---
+title: Routing outcomes and failure modes
+description: What success, no-match, and degraded outcomes mean at the protocol level.
+---
+
+# Routing outcomes and failure modes
+
+Routing can succeed, fail cleanly, or succeed in a degraded evidence state.
+
+## Successful selection
+
+Success means:
+
+- at least one candidate was eligible
+- at least one candidate was scored
+- `chosen_endpoint_id` is populated
+- `selection_reasons` explain the winning choice
+
+If more than one candidate was eligible, the decision also carries a fallback chain.
+
+## No eligible endpoint
+
+This is the canonical routing failure shape:
+
+- all candidates appear in `eligibility`
+- each rejected candidate carries exclusion details
+- `chosen_endpoint_id` is empty
+- `fallback_endpoint_ids` is empty
+- `selection_reasons` is empty
+
+This is not an exception-shaped outcome. It is still a valid protocol artifact.
+
+## Policy conflict
+
+Policy conflict usually appears as "all candidates rejected by policy," for example:
+
+- every endpoint is denied by allow/deny rules
+- remote routing is forbidden but no local candidate exists
+- role-forbidden capabilities eliminate the remaining candidates
+
+The protocol communicates this through candidate-level exclusions rather than through one special top-level
+error code.
+
+## Degraded selection with defaults
+
+A router can still select an endpoint without observed performance evidence. In that case the decision will
+typically include:
+
+- `DEFAULT_PROFILE_USED`
+- `used_measured: false`
+
+This is a degraded-evidence success, not a hard failure.
+
+## Insufficient evidence is usually not a rejection
+
+In the reference router, lack of measured data is usually handled by:
+
+- neutral default metric scores
+- weight redistribution when an entire metric is unknown
+
+That means "insufficient evidence" is typically represented as a weaker, more default-driven decision rather
+than as a hard exclusion.

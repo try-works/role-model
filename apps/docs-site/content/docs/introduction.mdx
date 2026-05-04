@@ -1,0 +1,85 @@
+---
+title: What role-model defines
+description: The protocol boundary, what is canonical, and what belongs to a router implementation.
+---
+
+# What role-model defines
+
+role-model standardizes the **protocol artifacts** that describe AI endpoints and the decisions made about
+them. It does **not** make the router implementation canonical.
+
+The core design rule is simple:
+
+> The combination of protocol docs and JSON Schemas under `protocol/schemas/` is the canonical contract.
+
+That means generated types, validators, adapters, registries, or routers are allowed to mirror the protocol,
+but they are not allowed to redefine it.
+
+## The protocol boundary
+
+| Protocol-owned | Router-implementation-owned |
+| --- | --- |
+| JSON Schemas for identity, profiles, roles, tasks, policy, decisions, traces, and usage | how candidates are discovered before being passed into a router |
+| the meaning of each field and artifact | weight tuning, neutral defaults, and optimization formulas |
+| the shape of an explainable router decision | registry backends, cache layers, transport integration |
+| the observability artifacts emitted around routing and execution | deployment topology, scheduling, retries beyond the protocol artifacts themselves |
+
+The reference router is important because it demonstrates a coherent mapping from those protocol objects to a
+selection outcome, but the router remains **an implementation of the protocol**, not the definition of it.
+
+## The problem domains role-model models
+
+The protocol gives names and shapes to the objects a role-aware model-routing system needs:
+
+- **Roles and tasks** as the semantic description of the work
+- **Endpoint identity** as the concrete model-serving deployment the router may choose
+- **Declared capability profiles** as what an endpoint claims to support
+- **Observed performance profiles** as what measurements say it actually does
+- **Capability taxonomy** as the stable compatibility language used across profiles, roles, tasks, and policy
+- **Routing policy** as hard constraints and optimization intent
+- **Router decisions, traces, and usage artifacts** as the explainable output and evidence trail
+
+## Role, model, and endpoint
+
+role-model is not just an endpoint catalog, and it is not just a model picker.
+
+It is a protocol for taking a **role/task-shaped request** and mapping it onto a **concrete endpoint that
+serves a model**.
+
+In that stack:
+
+- the **role** describes the execution contract
+- the **task** describes the unit of work
+- the **model** provides the capability family being invoked
+- the **endpoint** is the real deployment target the router can actually choose
+
+## Why endpoints are the routing unit
+
+role-model routes to **endpoints**, not bare model names.
+
+That does **not** mean models are unimportant. It means model identity alone is not enough to route safely.
+
+The same base model may be served by multiple endpoints with different:
+
+- provider and serving surface
+- runtime version
+- region or locality
+- quantization and precision
+- observed latency, quality, failure behavior, freshness, or cost
+
+role-model therefore preserves the model inside endpoint identity, but performs routing at the endpoint level
+where those operational differences are actually visible.
+
+## The canonical dataflow
+
+<ProtocolPipelineDiagram />
+
+## What this site optimizes for
+
+This is a **definition and semantics** site, not an install guide. The main reading path focuses on:
+
+1. what the protocol objects mean
+2. how those objects relate
+3. how the reference router uses them to produce deterministic, explainable outcomes
+
+Next: read the [core vocabulary](/core-vocabulary) and the [protocol object model](/protocol-object-model).

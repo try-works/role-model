@@ -1,0 +1,7 @@
+{
+  "title": "Summaries",
+  "description": "High-level summaries kept for direct links from the earlier docs set.",
+  "collapsible": true,
+  "defaultOpen": false,
+  "pages": ["how-role-model-works", "protocol-overview", "routing-overview"]
+}

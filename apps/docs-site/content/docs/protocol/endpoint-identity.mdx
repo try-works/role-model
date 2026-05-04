@@ -1,0 +1,96 @@
+---
+title: Endpoint identity
+description: Why endpoints are the routing unit and how the canonical identity record is structured.
+---
+
+# Endpoint identity
+
+`EndpointIdentity` is the protocol record that says **what concrete thing the router is allowed to choose**.
+
+The router does not choose a bare model name. It chooses an endpoint whose identity captures serving and
+deployment distinctions that materially affect behavior.
+
+## Required core fields
+
+The schema requires:
+
+- `endpoint_id`
+- `endpoint_kind`
+- `provider_kind`
+- `serving_source`
+- `model_id`
+- `runtime_version`
+
+Optional fields such as `package_id`, `variant_id`, `quantization`, `region`, `org_scope`, and
+`endpoint_version` refine that identity further.
+
+## Field groups
+
+| Group | Fields | Meaning |
+| --- | --- | --- |
+| stable endpoint handle | `endpoint_id`, `endpoint_version` | the specific routable unit and, optionally, the version of that unit |
+| endpoint class | `endpoint_kind`, `provider_kind`, `serving_source` | what kind of endpoint it is and how it is reached |
+| model and package lineage | `model_id`, `package_id`, `variant_id` | which model or package family the endpoint belongs to |
+| runtime representation | `runtime_version`, `quantization`, `precision` | how the model is actually executed |
+| deployment environment | `host_class`, `device_class`, `region`, `org_scope` | where and under what operational scope the endpoint runs |
+
+## Why this level of identity matters
+
+Two endpoints can expose the same base model and still differ in ways that change routing:
+
+- one runs locally and another remotely
+- one is quantized and another is full precision
+- one runs in a different region
+- one has a different runtime version
+- one has a different package or endpoint version
+
+If those differences are not captured in identity, measurements and policy decisions get mixed together
+incorrectly.
+
+## One model, many endpoints
+
+The same `model_id` can appear in multiple `EndpointIdentity` records.
+
+That is expected. role-model treats those records as distinct routable units because each endpoint may differ
+in provider, region, runtime version, quantization, locality, package lineage, or operational scope.
+
+| endpoint_id | model_id | region | runtime_version | quantization | why routing may differ |
+| --- | --- | --- | --- | --- | --- |
+| `remote.kimi.us.k2-6` | `kimi-k2.6` | `us` | `remote-api-v1` | `none` | different locality, provider behavior, and cost profile |
+| `remote.kimi.eu.k2-6` | `kimi-k2.6` | `eu` | `remote-api-v1` | `none` | different region and latency profile |
+| `local.gguf.kimi-k2-6` | `kimi-k2.6` | `local` | `llama.cpp-x` | `q4` | different runtime, quantization, and measured tradeoffs |
+
+`EndpointIdentity` therefore means more than "this is model X." It means "this is model X as served by this
+specific concrete endpoint."
+
+## `endpoint_kind` vs. `provider_kind`
+
+`endpoint_kind` answers **what sort of endpoint this is**. In the schema, baseline values include:
+
+- `local_engine`
+- `remote_api`
+- `browser_engine`
+- `dispatch_adapter`
+
+`provider_kind` answers **what provider family or integration produced the endpoint**, such as:
+
+- `acp`
+- `mcp`
+- `cli`
+- `remote_openai_compat`
+- `onnx`
+- `mlx`
+- `gguf`
+- `webllm`
+
+One is the endpoint class; the other is the provider or runtime family behind it.
+
+## Normalization implications
+
+Identity normalization matters because:
+
+1. routing decisions must remain stable when comparing candidates
+2. observability must attribute metrics to the correct endpoint
+3. profile aggregation must avoid mixing evidence from materially different deployments
+
+In practice, identity is the anchor record that the declared and observed profile layers attach to.

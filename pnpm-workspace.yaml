@@ -1,4 +1,5 @@
 packages:
+  - "apps/*"
   - "packages/*"
   - "role-model-router/packages/*"
   - "role-model-router/apps/*"

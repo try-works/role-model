@@ -1,0 +1,88 @@
+---
+title: Comparison and tradeoffs
+description: How eligible candidates are scored once hard filtering is complete.
+---
+
+# Comparison and tradeoffs
+
+After eligibility filtering, the router compares only the remaining candidates.
+
+Comparison happens at the endpoint level because routing often needs to choose between multiple concrete
+deployments of the same model, not just between different model names.
+
+Observed performance is what lets the router distinguish those deployments in a principled and explainable
+way.
+
+## Strategy weights
+
+The baseline router defines these weight sets:
+
+| Strategy | quality | latency | throughput | cost | reliability | preference |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| `balanced` | 0.30 | 0.20 | 0.10 | 0.20 | 0.15 | 0.05 |
+| `quality` | 0.50 | 0.10 | 0.05 | 0.10 | 0.20 | 0.05 |
+| `latency` | 0.15 | 0.45 | 0.15 | 0.05 | 0.15 | 0.05 |
+| `cost` | 0.15 | 0.10 | 0.05 | 0.50 | 0.15 | 0.05 |
+
+## Metric normalization
+
+The reference router scores each candidate on:
+
+- quality
+- latency
+- throughput
+- cost
+- reliability
+- preference
+
+The implementation uses normalized or clamped values rather than raw metrics so heterogeneous measurements can
+be combined into one score.
+
+## Important scoring details
+
+### Quality
+
+- uses `judge_score` when present
+- otherwise uses `quality_score`
+- otherwise falls back to `0.5` and marks the metric unknown
+
+### Latency
+
+The router derives an effective latency from `p50` and `p95`, then normalizes that value against target and
+max latency defaults.
+
+### Throughput
+
+`tokens_per_sec` is normalized logarithmically against a target throughput.
+
+### Cost
+
+Cost only becomes a measured metric when both a request budget and an observed cost estimate exist. Otherwise
+it falls back to a neutral unknown score.
+
+### Reliability
+
+Reliability uses `1 - failure_rate` when present, otherwise a mildly optimistic default of `0.7`.
+
+### Preference
+
+Preference encodes locality and preferred capability matches. It also gets a bonus when an active role binding
+exists.
+
+## Unknown-metric redistribution
+
+If every eligible candidate has a given metric marked unknown, the router:
+
+1. removes that metric's base weight
+2. redistributes the removed weight proportionally across the remaining known metrics
+
+This prevents the score from being anchored to a dimension nobody has evidence for.
+
+## Extra bonuses
+
+On top of weighted metrics, the reference router adds a small `0.01` bonus each for:
+
+- role preferred-capability matches
+- task preferred-capability matches
+
+Those bonuses are deliberately small so they refine close contests without overwhelming the main metric mix.

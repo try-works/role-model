@@ -1,0 +1,49 @@
+---
+title: Canonical schemas reference
+description: Field-level reference coverage for the canonical role-model schemas.
+---
+
+# Canonical schemas reference
+
+This page is the compact inventory of the canonical JSON Schemas under `protocol/schemas/`.
+
+## Endpoint and profile schemas
+
+| Schema | Purpose | Key fields |
+| --- | --- | --- |
+| `endpoint-identity.schema.json` | identifies the concrete routable endpoint | `endpoint_id`, `endpoint_kind`, `provider_kind`, `serving_source`, `model_id`, `runtime_version`, optional deployment details |
+| `declared-capability-profile.schema.json` | provider-declared compatibility claims | `capabilities`, `modalities`, `max_context_tokens`, `tool_calling`, `supports_embeddings`, `platform_constraints` |
+| `observed-performance-profile.schema.json` | measured endpoint behavior | sample window, sample size, latency, throughput, failure, cost, freshness, confidence |
+| `capability-taxonomy.schema.json` | stable capability vocabulary | `version`, `capabilities[]`, each with `id`, `family`, `description` |
+
+## Role and task schemas
+
+| Schema | Purpose | Key fields |
+| --- | --- | --- |
+| `role-definition.schema.json` | execution persona and operating contract | supported tasks, required/preferred/forbidden capabilities, tool policy, overrides, output contracts |
+| `role-binding.schema.json` | endpoint-specific role activation | `role_id`, `endpoint_id`, `status`, `policy_overrides`, `effective_capabilities`, `effective_task_types` |
+| `task-definition.schema.json` | unit of work contract | required inputs, required/preferred capabilities, quality metrics, allowed roles, benchmark suites |
+| `task-execution-profile.schema.json` | role-and-task-specific execution patch | `task_type`, `role_id`, required/preferred capabilities, `routing_policy_patch` |
+
+## Routing schemas
+
+| Schema | Purpose | Key fields |
+| --- | --- | --- |
+| `routing-policy.schema.json` | routing constraints and optimization intent | strategy, compute preference, capability/modality requirements, budget, privacy, targets |
+| `router-decision.schema.json` | explainable routing outcome | policy snapshot, eligibility, scored candidates, chosen endpoint, fallbacks, selection reasons, evidence flags |
+
+## Observability schemas
+
+| Schema | Purpose | Key fields |
+| --- | --- | --- |
+| `trace-span.schema.json` | timed execution phases | trace IDs, span IDs, span type, start/end timestamps, status, attributes |
+| `trace-event.schema.json` | point lifecycle events | event IDs, routing IDs, event type, payload |
+| `usage-event.schema.json` | accounting and execution outcome | request, endpoint, provider, tokens, latency, optional cost and error class |
+
+## Invariants to remember
+
+- identity anchors profile records
+- observed profiles are endpoint-specific and evidence-bearing
+- policy is an input; decision is an output
+- traces and usage link back to routing via shared IDs
+- schema meaning is canonical even when a specific implementation only uses part of the available surface

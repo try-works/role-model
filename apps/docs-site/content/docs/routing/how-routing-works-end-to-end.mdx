@@ -1,0 +1,105 @@
+---
+title: How routing works end to end
+description: The full reference routing flow from request input to decision and observability output.
+---
+
+# How routing works end to end
+
+The reference router in `role-model-router/packages/core/src/router.ts` is a clear implementation of the
+protocol's routing model.
+
+## End-to-end flow
+
+<RoutingFlowDiagram />
+
+## Step 1: Normalize request intent into policy
+
+The router first computes:
+
+- the effective compute preference
+- the effective required capabilities
+- the effective preferred capabilities
+- a canonical policy strategy
+
+This becomes the `policy_snapshot` embedded in the final decision.
+
+## Step 1b: Narrow to role-eligible model-serving endpoints
+
+If the request names a role, the router first narrows the comparison set to endpoints where that role is
+active and compatible.
+
+Those endpoints may represent:
+
+- different models
+- or multiple endpoints serving the same model
+
+At this stage, the router is not choosing a bare model name. It is constructing the set of concrete
+model-serving endpoints that are allowed to compete.
+
+## Step 2: Evaluate eligibility
+
+Every candidate is checked for:
+
+- status
+- policy denies and allow lists
+- local/remote restrictions
+- role-binding status
+- task support and role allowance
+- capability and modality compatibility
+- context window sufficiency
+- tool support
+- budget compatibility
+
+This phase produces the `eligibility` array and the set of still-eligible candidates.
+
+## Step 3: Compute metric scores
+
+Eligible candidates receive per-metric scores for:
+
+- quality
+- latency
+- throughput
+- cost
+- reliability
+- preference
+
+Scoring compares eligible **endpoints**, not abstract model families. That matters because the same model may
+be available through multiple endpoints with different observed performance and policy implications.
+
+Measured evidence is used when present; neutral defaults are used when it is absent.
+
+## Step 4: Redistribute missing-metric weight
+
+If an entire metric is unknown for **all** eligible candidates, the reference router removes that metric's
+weight and redistributes it proportionally across the remaining metrics. This keeps scoring from being
+dominated by evidence that does not exist.
+
+## Step 5: Score and annotate candidates
+
+Each eligible candidate gets:
+
+- a numeric score
+- selection-reason annotations such as `MEASURED_PROFILE_USED` or `ROLE_PREFERENCE_APPLIED`
+
+## Step 6: Sort and tie-break
+
+The router sorts by total score, but if two candidates are within `SCORE_TIE_EPSILON = 0.01`, it breaks ties
+by:
+
+1. higher quality score
+2. lower effective latency
+3. higher reliability score
+4. lexicographically stable `endpoint_id`
+
+## Step 7: Emit the decision
+
+The final `RouterDecision` contains:
+
+- the policy snapshot
+- full eligibility outcomes
+- ranked scored candidates
+- the chosen endpoint
+- fallbacks
+- selection reasons
+- evidence flags
+- scoring version

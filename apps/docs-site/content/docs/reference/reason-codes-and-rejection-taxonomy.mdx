@@ -1,0 +1,53 @@
+---
+title: Reason codes and rejection taxonomy
+description: The stable vocabulary for candidate exclusions and selection explanations.
+---
+
+# Reason codes and rejection taxonomy
+
+Reason codes are the stable vocabulary used to explain why candidates were rejected and why one candidate won.
+
+## Exclusion codes
+
+| Code | Meaning | Current reference-router emission |
+| --- | --- | --- |
+| `CAPABILITY_MISSING` | a required capability is absent | emitted |
+| `MODALITY_UNSUPPORTED` | a required modality is absent | emitted |
+| `CONTEXT_TOO_SMALL` | context window is insufficient | emitted |
+| `TOOLS_UNSUPPORTED` | tool use was required but unsupported | emitted |
+| `POLICY_DENY_ENDPOINT` | policy removed the candidate | emitted |
+| `POLICY_DENY_REMOTE` | remote execution is forbidden | emitted |
+| `BUDGET_EXCEEDED` | observed cost exceeds budget | emitted |
+| `PROVIDER_OFFLINE` | provider is offline | emitted |
+| `REVOKED` | endpoint is revoked | emitted |
+| `TASK_NOT_SUPPORTED` | the requested role does not support the task | emitted |
+| `ROLE_NOT_ALLOWED` | the task does not allow the requested role | emitted |
+| `ROLE_BINDING_INACTIVE` | the relevant role binding is not active | emitted |
+| `VARIANT_INCOMPATIBLE` | variant does not satisfy request constraints | reserved vocabulary; not currently emitted |
+| `ENTITLEMENT_MISSING` | a required entitlement is absent | reserved vocabulary; not currently emitted |
+| `PACKAGE_NOT_INSTALLED` | endpoint package is unavailable locally | reserved vocabulary; not currently emitted |
+
+## Selection reasons
+
+| Code | Meaning |
+| --- | --- |
+| `BEST_TOTAL_SCORE` | the candidate won the final ranking |
+| `MEASURED_PROFILE_USED` | observed performance data contributed to ranking |
+| `DECLARED_PROFILE_USED` | declared capability data contributed to ranking |
+| `DEFAULT_PROFILE_USED` | missing measured data forced neutral defaults |
+| `LOCAL_PREFERENCE_APPLIED` | locality preference favored or evaluated the candidate as local |
+| `REMOTE_PREFERENCE_APPLIED` | locality preference favored or evaluated the candidate as remote |
+| `BUDGET_OPTIMIZATION` | cost strategy was active |
+| `LOW_LATENCY_TARGET_MET` | latency strategy was active |
+| `HIGH_QUALITY_TARGET_MET` | quality strategy was active |
+| `ROLE_PREFERENCE_APPLIED` | role preferred-capability matches improved the candidate |
+| `TASK_REQUIREMENTS_SATISFIED` | task preferred-capability matches improved the candidate |
+| `FALLBACK_CHAIN_COMPUTED` | more than one eligible candidate existed, so fallbacks were ordered |
+
+## Semantics to keep straight
+
+- exclusion codes explain **why a candidate never reached scoring**
+- selection reasons explain **why a scored candidate became the chosen endpoint**
+- a decision can contain both rejected candidates and a fully explained winning endpoint
+
+In other words, reason codes are not just error labels. They are the protocol's explainability vocabulary.

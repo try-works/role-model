@@ -1,61 +1,65 @@
 # role-model
 
-`role-model` is an open protocol and reference router for capability-aware AI routing.
+`role-model` is an open protocol for capability-aware AI routing, plus a reference router that implements
+that protocol.
 
-It gives you a shared way to describe AI endpoints, routing policies, role/task requirements, and
-observability artifacts such as router decisions, traces, usage events, and observed performance.
+It gives a router a durable contract for describing **what a request needs**, **what an endpoint can do**,
+**what policy allows**, and **why a final routing decision was made**.
 
-## The protocol in plain English
+## Start here
 
-The protocol gives a router a consistent vocabulary for answering questions like:
+The public-facing docs live under [`docs/public/`](docs/public/README.md). That folder is intentionally
+separate so a future docs site can serve directly from it without mixing onboarding content with lower-level
+reference docs.
 
-- what kind of task is being requested
-- which capabilities and modalities that task requires
-- which endpoints claim or demonstrate those capabilities
-- which policy or operational rules should influence selection
-- how the final routing decision should be recorded and explained
+| Read this | If you want |
+| --- | --- |
+| [`docs/public/README.md`](docs/public/README.md) | the docs hub |
+| [`docs/public/introduction.md`](docs/public/introduction.md) | what role-model is and why it exists |
+| [`docs/public/quickstart.md`](docs/public/quickstart.md) | a real end-to-end smoke run |
+| [`docs/public/concepts/how-role-model-works.md`](docs/public/concepts/how-role-model-works.md) | the system flow |
+| [`docs/public/concepts/protocol-overview.md`](docs/public/concepts/protocol-overview.md) | the protocol surface |
+| [`docs/public/concepts/routing-overview.md`](docs/public/concepts/routing-overview.md) | how routing decisions happen |
 
-In practice, the repository defines schemas for endpoint identity, declared and observed capability
-profiles, routing policy, router decisions, traces, usage events, and related fixtures and examples.
+## What role-model is
 
-## How roles are assigned to models
+At a high level, `role-model` separates AI routing into a few stable pieces:
 
-In `role-model`, roles are assigned through **routing metadata**, not by hard-coding a single model to
-a prompt persona.
+1. **Requests** describe task type, required capabilities, modalities, tool needs, and constraints.
+2. **Endpoint identities and profiles** describe concrete routable endpoints rather than abstract model names.
+3. **Routing policy** applies hard denies, preferences, budgets, and tie-break rules.
+4. **Observability artifacts** record the decision, trace, usage, and observed performance.
 
-The flow is:
+That makes routing explainable and portable across different providers, hosts, and deployment shapes.
 
-1. A `RoleDefinition` describes a role such as `general.chat`, `coder.patch`, `coder.review`, or `tool.agent`.
-2. That role constrains which task families are allowed and what capabilities are required, preferred, or forbidden.
-3. A task definition declares the capabilities and modalities needed for execution.
-4. Endpoint profiles describe what a model or host can actually do.
-5. The router filters for eligible endpoints, then selects among them using policy plus declared and observed evidence.
+## What role-model is not
 
-That means a role is not simply "this model always does code review." Instead, the router can assign a
-role to whichever endpoint currently satisfies the role's task and capability requirements best.
+`role-model` is not:
 
-## How preferences and observed performance affect routing
+- a single provider SDK
+- a prompt-role library that permanently binds one persona to one model
+- a monolithic runtime host
+- a benchmark-only project with no routing contract
 
-Role matching is only part of the decision.
+The protocol is the canonical contract. The router in `role-model-router/` is the reference implementation
+of that contract.
 
-Once the router has a set of eligible endpoints, it can also consider:
+## What you get in this repository
 
-- **observed performance** such as latency, throughput, failures, cost estimates, freshness, and confidence
-- **benchmark-derived quality** when benchmark evidence exists
-- **declared capabilities** from endpoint profiles
-- **user or policy preferences** such as preferring lower cost, lower latency, better quality, or local execution
+- canonical schemas and fixtures under [`protocol/`](protocol/README.md)
+- protocol and architecture reference docs under [`docs/`](docs)
+- shared tooling and generated types under `packages/`
+- a deterministic reference router under [`role-model-router/`](role-model-router/README.md)
+- a smoke flow that emits real routing artifacts under `runtime-output/gateway-smoke/`
 
-The routing policy is deterministic: hard constraints and denies apply first, then the router uses
-measured and declared evidence to score the remaining candidates. If multiple candidates are close,
-policy preferences like locality, cost, and latency help break ties in a predictable way.
+## Current baseline
 
-## What you get
+Today this repository is a **real baseline**, not only a design sketch:
 
-- JSON Schema contracts under `protocol/`
-- TypeScript schema tooling and generated protocol types under `packages/`
-- a deterministic reference router under `role-model-router/`
-- fixture-driven conformance tests for schemas and routing behavior
-- a lightweight smoke path that exercises routing end to end
+- the protocol and schemas are implemented
+- the router core and conformance coverage are implemented
+- the smoke path and emitted artifacts are implemented
+- some future host/runtime families are still architecture-stage rather than production-ready
 
 ## Quick start
 
@@ -63,44 +67,30 @@ This repository expects **Node.js 22** and **pnpm 10.x**.
 
 ```bash
 pnpm install
-pnpm run schemas:validate
-pnpm run types:generate
-pnpm run build
-pnpm run test
 pnpm run smoke
 ```
 
-For CI-parity validation, run:
-
-```bash
-pnpm run ci:check
-```
+For a fuller walkthrough, see [`docs/public/quickstart.md`](docs/public/quickstart.md).
 
 ## Repository layout
 
 | Path | What it contains |
 | --- | --- |
-| `protocol/` | Canonical schemas and example fixtures |
-| `docs/` | Protocol docs, architecture notes, and decisions |
-| `packages/` | Shared tooling, generated types, and conformance packages |
-| `role-model-router/` | Reference router packages, adapters, and smoke apps |
-| `testdata/` | Prompts, eval cases, traces, and endpoint metadata |
+| `docs/public/` | public-facing docs and future docs-site content root |
+| `docs/protocol/` | protocol concept/reference docs |
+| `docs/architecture/` | architecture and baseline model notes |
+| `protocol/` | canonical schemas and example fixtures |
+| `packages/` | schema tooling, generated types, and conformance packages |
+| `role-model-router/` | reference router packages, adapters, and smoke apps |
+| `testdata/` | endpoint metadata, traces, eval inputs, and supporting fixtures |
 
-## Current scope
+## Reference docs
 
-Today this repository is best understood as a **reference baseline**:
-
-- the protocol and schemas are real
-- the router core and conformance coverage are real
-- the smoke path and observability artifacts are real
-- some future runtime hosts and provider families are still scaffold-level rather than production-ready
-
-## Learn more
-
-- Start with `docs/protocol/` for the protocol model
-- See `docs/protocol/routing-policy.md` for routing policy semantics
-- See `docs/protocol/roles.md` and `docs/protocol/tasks.md` for role/task concepts
-- See `role-model-router/README.md` for the router implementation surface
+- [`protocol/README.md`](protocol/README.md)
+- [`docs/protocol/routing-policy.md`](docs/protocol/routing-policy.md)
+- [`docs/protocol/roles.md`](docs/protocol/roles.md)
+- [`docs/protocol/tasks.md`](docs/protocol/tasks.md)
+- [`role-model-router/README.md`](role-model-router/README.md)
 
 ## License
 

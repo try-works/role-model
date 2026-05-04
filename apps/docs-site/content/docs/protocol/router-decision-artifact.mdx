@@ -1,0 +1,67 @@
+---
+title: Router decision artifact
+description: The canonical output of routing and what each part of it means.
+---
+
+# Router decision artifact
+
+`RouterDecision` is the canonical routing output. It records not only who won, but also **why** and **under
+what policy snapshot**.
+
+## Core fields
+
+| Field | Meaning |
+| --- | --- |
+| `routing_decision_id` | stable identifier for the decision artifact |
+| `request_id` | the request the decision belongs to |
+| `policy_snapshot` | the effective policy that governed evaluation |
+| `eligibility` | per-candidate pass/fail state plus exclusion details |
+| `scored_candidates` | the eligible candidates and their final scores |
+| `chosen_endpoint_id` | the selected endpoint, or an empty string when none is eligible |
+| `fallback_endpoint_ids` | the remaining eligible candidates in ranked order |
+| `selection_reasons` | reason codes explaining why the chosen candidate won |
+| `used_measured` | whether the chosen candidate had observed performance data |
+| `used_declared` | whether a chosen candidate existed and therefore declared data was used |
+| `scoring_version` | the scoring implementation version used to compute the result |
+
+## Eligibility block
+
+The `eligibility` array is the record of hard filtering. Each candidate gets:
+
+- `endpoint_id`
+- `eligible`
+- `exclusions`
+
+Even candidates that passed are listed, which makes the final decision auditable.
+
+## Score block
+
+The `scored_candidates` array contains only eligible candidates. It is the ranked result after metric
+scoring and tie-breaking.
+
+The fallback list is derived from that ranking:
+
+- `chosen_endpoint_id` is the `endpoint_id` from the first scored candidate.
+- `fallback_endpoint_ids` is the ordered list of the remaining scored candidates.
+
+## Explainability flags
+
+`used_measured` and `used_declared` are compact summary flags:
+
+- `used_measured = true` when the chosen endpoint had an observed profile
+- `used_declared = true` when a candidate was chosen at all
+
+They let downstream systems quickly tell whether a result relied on measured evidence, declared-only
+compatibility, or neither.
+
+## Failure shape
+
+When no endpoint is eligible, the reference router returns:
+
+- a populated `eligibility` array
+- an empty `scored_candidates` array
+- `chosen_endpoint_id: ""`
+- no fallbacks
+- no selection reasons
+
+That is still a valid, protocol-shaped decision artifact.

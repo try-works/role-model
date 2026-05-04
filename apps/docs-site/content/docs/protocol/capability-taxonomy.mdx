@@ -1,0 +1,63 @@
+---
+title: Capability taxonomy
+description: The stable compatibility language shared across profiles, roles, tasks, and policy.
+---
+
+# Capability taxonomy
+
+Capabilities are **stable protocol identifiers**, not one-off strings invented by individual adapters.
+
+The capability taxonomy schema defines a versioned list of capability records, each with:
+
+- `id`
+- `family`
+- `description`
+
+## Why a stable taxonomy matters
+
+The same identifiers are reused in:
+
+- declared capability profiles
+- role definitions
+- task definitions
+- task execution profiles
+- routing policy
+- router eligibility checks
+
+Without a stable taxonomy, "capability matching" would collapse into string conventions with no protocol
+guarantees.
+
+## Baseline capability families
+
+The baseline docs group capabilities into families such as:
+
+| Family | Examples |
+| --- | --- |
+| text | `text.chat`, `text.translation`, `text.classification`, `text.language_detection` |
+| reasoning and code | `reasoning.multi_step`, `code.chat`, `code.edit`, `json.schema_adherence` |
+| tool use | `tools.function_calling` |
+| embeddings and multimodal | `embeddings.text`, `multimodal.vision_text`, `multimodal.audio_text` |
+| media I/O | `image.generation`, `image.understanding`, `audio.asr`, `audio.tts` |
+| runtime and decoding | `adapter.lora_runtime`, `decoding.constrained` |
+
+## Required, preferred, and forbidden
+
+The protocol uses three different relationship types:
+
+- **required capability**: the candidate must have it or be rejected
+- **preferred capability**: the candidate should have it and may receive a scoring bonus
+- **forbidden capability**: the candidate must not have it in the relevant role context
+
+These are not interchangeable. Required capabilities affect eligibility; preferred capabilities influence
+scoring; forbidden capabilities act as hard denies in role-aware routing.
+
+## Capability vs. modality
+
+The taxonomy identifies what the endpoint can do. Modalities identify what forms of data it can process.
+
+For example:
+
+- `tools.function_calling` is a capability
+- text, vision-text, or audio-text are modalities
+
+An endpoint might satisfy one and not the other, which is why the router evaluates both.

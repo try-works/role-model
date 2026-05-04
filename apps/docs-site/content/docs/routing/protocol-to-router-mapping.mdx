@@ -1,0 +1,62 @@
+---
+title: Protocol-to-router mapping
+description: Which semantics are canonical in the protocol and which belong to the reference router.
+---
+
+# Protocol-to-router mapping
+
+The protocol and the reference router are tightly related, but they are not the same layer.
+
+## What is canonical
+
+The canonical layer lives in `protocol/` and the associated protocol docs:
+
+- schema names
+- field meanings
+- artifact relationships
+- observability artifact types
+- the existence of routing policy and router decisions as protocol objects
+
+## What the reference router adds
+
+The reference router in `role-model-router/packages/core` adds baseline implementation choices such as:
+
+- how request flags become an effective policy snapshot
+- the exact strategy weights
+- the neutral defaults used when metrics are missing
+- the redistribution rule for unknown metrics
+- the tie epsilon and tie-break ordering
+- the current `baseline-v1` scoring version
+
+These choices are useful and coherent, but they are not themselves the canonical protocol.
+
+## Important current gaps between protocol vocabulary and router behavior
+
+The protocol surface is broader than the current router implementation in a few places:
+
+| Protocol surface | Current reference-router state |
+| --- | --- |
+| `compute_preference` schema includes `hybrid` | the current request-normalization logic only derives `auto`, `local`, or `remote` |
+| exclusion vocabulary includes `PACKAGE_NOT_INSTALLED`, `VARIANT_INCOMPATIBLE`, `ENTITLEMENT_MISSING` | the current `evaluateEligibility()` logic does not emit those codes |
+| `tie_break_order` is part of `RoutingPolicy` | the reference router snapshots a fixed default order rather than interpreting arbitrary tie-break expressions |
+
+These are not contradictions in the protocol. They indicate that the protocol reserves more expressive surface
+than the current reference implementation actively uses.
+
+## From model lineage to candidate endpoint
+
+In the protocol, model lineage lives inside `EndpointIdentity` through fields like `model_id`, `package_id`,
+and `variant_id`.
+
+In the router, that identity is carried inside an `EndpointCandidate`, which is the concrete object the
+implementation filters, scores, and selects.
+
+The model is therefore still present in routing, but it is present **inside the endpoint-shaped routing
+unit**, not as a separate top-level routing object.
+
+## The practical rule
+
+When documentation needs to answer "what does role-model mean?", use the protocol schemas and protocol docs.
+
+When documentation needs to answer "how does the baseline router currently behave?", use the router
+implementation.

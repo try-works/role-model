@@ -1,0 +1,15 @@
+{
+  "title": "Protocol",
+  "description": "Canonical protocol objects and field semantics.",
+  "defaultOpen": true,
+  "pages": [
+    "endpoint-identity",
+    "declared-capability-profiles",
+    "observed-performance-profiles",
+    "capability-taxonomy",
+    "roles-and-tasks",
+    "routing-policy",
+    "router-decision-artifact",
+    "trace-and-usage-artifacts"
+  ]
+}

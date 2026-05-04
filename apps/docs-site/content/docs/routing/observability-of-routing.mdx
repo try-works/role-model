@@ -1,0 +1,50 @@
+---
+title: Observability of routing
+description: How routing remains inspectable after the decision has been made.
+---
+
+# Observability of routing
+
+The protocol makes routing inspectable by emitting a family of linked artifacts rather than a single winner
+field.
+
+<RoutingObservabilityDiagram />
+
+## Decision as summary
+
+`RouterDecision` is the compact summary of:
+
+- policy
+- eligibility
+- ranking
+- winner
+- fallbacks
+- reasons
+
+It tells you what happened at routing time.
+
+## Traces as phase-level explanation
+
+Trace spans and events explain **how** the request moved through routing and execution:
+
+- when eligibility opened and closed
+- when scoring ran
+- whether fallback or retry happened
+- where provider-side latency accumulated
+
+## Usage as outcome and accounting
+
+`UsageEvent` answers the practical outcome questions:
+
+- which endpoint actually served the request
+- how many tokens were consumed
+- how long it took
+- what it likely cost
+- whether an error class occurred
+
+## Feedback loop
+
+The observability model is not write-only. Usage and benchmark samples become new measured evidence, and the
+profile aggregator folds them into updated observed profiles with freshness and confidence scores.
+
+That is how routing becomes a feedback system rather than a static policy engine.

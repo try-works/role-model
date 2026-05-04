@@ -13,6 +13,14 @@
     }
   },
   "files": {
-    "ignore": ["**/dist/**", "**/target/**", "**/runtime-output/**"]
+    "ignore": [
+      "**/.react-router/**",
+      "**/.source/**",
+      "**/.worktrees/**",
+      "**/build/**",
+      "**/dist/**",
+      "**/target/**",
+      "**/runtime-output/**"
+    ]
   }
 }

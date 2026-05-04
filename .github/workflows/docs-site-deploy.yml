@@ -1,0 +1,71 @@
+name: Docs site deploy
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/docs-site-deploy.yml"
+      - "apps/docs-site/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "tsconfig.base.json"
+  pull_request:
+    paths:
+      - ".github/workflows/docs-site-deploy.yml"
+      - "apps/docs-site/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "tsconfig.base.json"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docs-site-${{ github.event.pull_request.head.ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Deploy to Cloudflare Pages
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build docs site
+        run: pnpm docs:build
+
+      - name: Select Pages branch
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            echo "PAGES_BRANCH=${{ github.head_ref }}" >> "$GITHUB_ENV"
+          else
+            echo "PAGES_BRANCH=${{ github.ref_name }}" >> "$GITHUB_ENV"
+          fi
+
+      - name: Deploy docs site
+        run: |
+          pnpm exec wrangler pages deploy apps/docs-site/build/client \
+            --project-name role-model-dev \
+            --branch "$PAGES_BRANCH" \
+            --commit-hash "${GITHUB_SHA}"

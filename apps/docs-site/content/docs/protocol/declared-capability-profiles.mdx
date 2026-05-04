@@ -1,0 +1,67 @@
+---
+title: Declared capability profiles
+description: The provider-declared side of endpoint description and what it can and cannot prove.
+---
+
+# Declared capability profiles
+
+`DeclaredCapabilityProfile` is the self-declared side of endpoint description. It is the protocol layer that
+states what an endpoint claims to support before measured evidence is available.
+
+## Schema fields
+
+| Field | Meaning |
+| --- | --- |
+| `endpoint_id` | the endpoint this profile applies to |
+| `capabilities` | stable capability identifiers the endpoint claims to support |
+| `modalities` | the forms of input or output the endpoint claims to handle |
+| `max_context_tokens` | the largest context window the endpoint claims to support |
+| `tool_calling.supported` | whether the endpoint can perform tool calling |
+| `tool_calling.style` | the tool-calling shape: `openai`, `json`, or `none` |
+| `supports_embeddings` | whether embedding generation is supported |
+| `platform_constraints` | operational constraints that matter to scheduling or compatibility |
+
+## What the declared profile is for
+
+The declared profile establishes the **eligibility floor**:
+
+- missing required capability -> reject
+- missing required modality -> reject
+- context window too small -> reject
+- tool use required but unsupported -> reject
+
+These are hard compatibility questions. They cannot be answered from latency or cost metrics alone.
+
+## Capabilities vs. modalities
+
+The protocol treats capabilities and modalities as related but distinct:
+
+- a **capability** names something the endpoint can do
+- a **modality** names the shape of data it can accept or emit
+
+For example, an endpoint might support text chat as a capability but still not support an image modality.
+
+## What declared data cannot prove
+
+Declared data is necessary, but it is not enough to prove:
+
+- real latency under production load
+- reliability and failure classes
+- actual cost behavior
+- judge-scored quality
+- freshness of current measurements
+
+That is why the protocol also models `ObservedPerformanceProfile`.
+
+## Why the router still needs this layer
+
+A router cannot wait for perfect measurements on every endpoint. The declared layer gives it a baseline
+compatibility language even when:
+
+- an endpoint is new
+- observed data is sparse
+- metrics are stale
+- benchmarking is incomplete
+
+When no measured evidence exists, the reference router still uses declared compatibility plus neutral scoring
+defaults to keep routing functional.

@@ -1,0 +1,55 @@
+---
+title: Decision semantics
+description: What makes a router decision stable, explainable, and deterministic.
+---
+
+# Decision semantics
+
+The protocol wants router decisions to be explainable and stable enough to reason about, even when multiple
+candidates are close.
+
+## Determinism and tie handling
+
+The reference router sorts candidates by total score, but it treats scores within `0.01` as effectively tied.
+
+When that happens, the implementation breaks the tie by:
+
+1. higher quality score
+2. lower effective latency
+3. higher reliability score
+4. lexicographically smaller `endpoint_id`
+
+This creates a deterministic final order even when aggregate scores are nearly indistinguishable.
+
+## Fallback ordering semantics
+
+The fallback chain is not a second pass. It is simply the remaining scored candidates after ranking.
+
+That means a valid decision contains:
+
+- one chosen endpoint
+- zero or more fallback endpoints already in deterministic order
+
+## Explainability requirements
+
+A useful `RouterDecision` must say:
+
+- what policy snapshot was applied
+- which candidates were rejected and why
+- which candidates were scored
+- which endpoint won
+- why that endpoint won
+- whether measured evidence was used
+- which scoring version produced the result
+
+## Versioned scoring
+
+The reference router stamps the decision with `scoring_version: "baseline-v1"`.
+
+That matters because metric formulas, weights, or tie-break logic can evolve over time. A decision artifact
+without a scoring version is harder to interpret historically.
+
+## Stable but not frozen
+
+The protocol requires explainability and stable semantics. It does not require every implementation to use the
+same weights forever. Instead, it requires routers to make their choices legible in decision artifacts.

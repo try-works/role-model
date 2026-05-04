@@ -1,0 +1,58 @@
+---
+title: Protocol lifecycle
+description: How protocol artifacts relate over time from endpoint publication through routing and feedback.
+---
+
+# Protocol lifecycle
+
+The protocol describes a lifecycle, not just a static schema set.
+
+<ProtocolLifecycleDiagram />
+
+## Lifecycle stages
+
+### 1. Endpoint definition
+
+An endpoint enters the system with an `EndpointIdentity`. This is the routable thing the rest of the protocol
+attaches to.
+
+### 2. Declared profile publication
+
+The system publishes a `DeclaredCapabilityProfile` for that endpoint. This establishes compatibility claims
+such as supported capabilities, modalities, context window, and tool-calling behavior.
+
+### 3. Observed profile accumulation
+
+Benchmarks and live requests generate samples that later aggregate into `ObservedPerformanceProfile` records.
+This is how the protocol captures operational evidence rather than leaving it in ad hoc dashboards.
+
+### 4. Execution intent assembly
+
+A request chooses or implies:
+
+- a role
+- a task
+- a policy
+- a candidate set
+
+This is the full input space the router reasons over.
+
+### 5. Routing decision
+
+The router evaluates eligibility, scores eligible candidates, applies tie-breaks, and emits a
+`RouterDecision`.
+
+### 6. Observability emission
+
+After or around execution, the system emits:
+
+- `TraceSpan`
+- `TraceEvent`
+- `UsageEvent`
+
+Each artifact links back to the request and routing decision IDs so the run can be reconstructed later.
+
+### 7. Feedback into future routing
+
+Usage and tracing outcomes become new measured samples. The profile aggregator converts those samples into
+freshness-weighted, confidence-scored observed profiles that influence the next routing decision.

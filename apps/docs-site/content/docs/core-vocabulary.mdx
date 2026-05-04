@@ -1,0 +1,62 @@
+---
+title: Core vocabulary
+description: The technical language used across the protocol and router docs.
+---
+
+# Core vocabulary
+
+The protocol uses a small set of precise terms. The rest of the docs assume these meanings.
+
+| Term | Meaning |
+| --- | --- |
+| **endpoint** | A concrete execution target the system can route to. |
+| **model-serving endpoint** | A concrete endpoint whose identity includes the model lineage it serves and whose declared and observed behavior are tracked independently from other endpoints. |
+| **endpoint identity** | The stable, protocol-shaped description of an endpoint's provider, runtime, model, region, and deployment attributes. |
+| **declared profile** | Provider-declared capabilities and constraints such as supported capabilities, modalities, context window, and tool-calling support. |
+| **observed profile** | Measured behavior over time: latency, throughput, failures, cost estimates, freshness, and confidence. |
+| **capability** | A stable protocol identifier for something an endpoint can do, such as `tools.function_calling` or `code.edit`. |
+| **modality** | The input or output form required by the task, such as text, vision-text, or audio-text. |
+| **role definition** | A protocol object describing an execution persona, its supported task families, constraints, tool policy, and output contracts. |
+| **role binding** | The record that binds a role to a specific endpoint and states whether that binding is active. |
+| **task definition** | A protocol object describing a unit of work, its required inputs, capabilities, quality metrics, and allowed roles. |
+| **task execution profile** | A role-and-task-specific patch layer that adjusts required/preferred capabilities or policy for execution. |
+| **routing policy** | Hard constraints plus optimization intent: strategy, locality preference, denies/allows, privacy, budget, and targets. |
+| **router decision** | The explainable routing output containing eligibility, scores, chosen endpoint, fallbacks, reason codes, and the applied policy snapshot. |
+| **trace span** | A timed phase of routing or execution, such as eligibility evaluation or provider decode. |
+| **trace event** | A point event that links routing, tracing, usage, and profile updates into one observable lifecycle. |
+| **usage event** | The accounting and execution record for a request: tokens, latency, provider, endpoint, cost estimate, and optional error class. |
+
+## Important distinctions
+
+### Endpoint vs. model
+
+A **model** is not the same thing as a **routable target**.
+
+In role-model, model lineage is carried inside `EndpointIdentity` through fields such as `model_id`,
+`package_id`, and `variant_id`. The router still chooses the **endpoint**, because that is where provider,
+runtime, region, quantization, and observed-performance differences actually live.
+
+Put differently: a model explains **what family of system is being served**; an endpoint explains **which
+concrete deployment of that model is actually being selected**.
+
+### Candidate vs. endpoint
+
+In routing docs, a **candidate** means a **candidate endpoint**.
+
+The term "candidate" describes the endpoint's temporary role inside the routing algorithm. It does not mean an
+abstract candidate model.
+
+### Declared vs. observed
+
+Declared data answers "what this endpoint says it supports." Observed data answers "what measurement says it
+actually does." The router uses both, but measured evidence is the stronger signal.
+
+### Role vs. task
+
+A role is the operating contract and persona. A task is the unit of work. The protocol keeps them separate so
+one role can support multiple tasks and one task can permit multiple roles.
+
+### Policy vs. decision
+
+Policy is an input. A router decision is the output produced after that policy has been applied to a candidate
+set.

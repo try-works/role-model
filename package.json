@@ -10,6 +10,13 @@
     "node": ">=22 <23"
   },
   "scripts": {
+    "docs:dev": "corepack pnpm --filter @role-model/docs-site dev",
+    "docs:build": "corepack pnpm --filter @role-model/docs-site build",
+    "docs:preview": "corepack pnpm --filter @role-model/docs-site pages:dev",
+    "docs:pages:create": "corepack pnpm --filter @role-model/docs-site pages:create",
+    "docs:deploy": "corepack pnpm --filter @role-model/docs-site pages:deploy",
+    "docs:upstream-sync": "corepack pnpm --filter @role-model/docs-site upstream:sync",
+    "docs:upstream-sync:latest": "corepack pnpm --filter @role-model/docs-site upstream:sync:latest",
     "lint": "biome check . && corepack pnpm run lint:rust",
     "format": "biome format --write .",
     "lint:rust": "cargo fmt --manifest-path role-model-router/rust/Cargo.toml --all --check && cargo clippy --manifest-path role-model-router/rust/Cargo.toml --workspace --all-targets -- -D warnings",

@@ -1,0 +1,65 @@
+---
+title: Candidate discovery
+description: What enters the routing candidate set before scoring begins.
+---
+
+# Candidate discovery
+
+The reference router does **not** discover endpoints by itself. It consumes a `RouteRequestInput` that already
+contains a candidate set plus the relevant protocol records needed to interpret it.
+
+That means candidate discovery is conceptually upstream of routing.
+
+## What a candidate is
+
+In this documentation, a **candidate** means a **candidate endpoint**.
+
+The candidate set may include endpoints serving different models, or multiple endpoints serving the same
+model. Candidate discovery is therefore the stage where concrete model-serving deployments are assembled into a
+routable comparison set.
+
+## What must already exist
+
+Each candidate should carry:
+
+- `identity`
+- `declared`
+- optional `observed`
+- `status`
+- optional policy-deny marker
+
+Additional protocol context can be supplied alongside the candidates:
+
+- `roleDefinitions`
+- `taskDefinitions`
+- `roleBindings`
+
+## Discovery prerequisites
+
+Before an endpoint is useful to the router, the host or registry layer must have already established:
+
+1. a concrete `EndpointIdentity`
+2. a `DeclaredCapabilityProfile`
+3. optional `ObservedPerformanceProfile`
+4. optional role bindings and task/role catalogs
+
+Without those inputs, the router can rank less intelligently or reject candidates outright.
+
+## Role and task context
+
+Candidate discovery is not only about listing endpoints. It is also about ensuring the request includes enough
+catalog context to interpret them:
+
+- a requested role only matters if the router can read the corresponding role definition
+- task compatibility only matters if the task definition is available
+- role-binding status only matters if bindings are supplied
+
+## Practical implication
+
+The protocol treats "candidate discovery" and "routing" as adjacent but separate concerns:
+
+- **discovery** says which endpoints are in scope
+- **routing** says how those endpoints are evaluated and ranked
+
+That separation is intentional. It lets different hosts build different registries while still producing the
+same protocol-shaped decision artifacts once candidates are handed to the router.
