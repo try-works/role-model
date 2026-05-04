@@ -12,6 +12,11 @@ export function DocsHeader() {
     slots,
     props: { nav },
   } = useDocsLayout();
+  const actionLinkClass = buttonVariants({
+    color: "outline",
+    size: "sm",
+    className: "gap-2",
+  });
 
   return (
     <header
@@ -36,11 +41,16 @@ export function DocsHeader() {
         {slots.themeSwitch ? <slots.themeSwitch className="shrink-0" /> : null}
 
         <Link
-          className={buttonVariants({
-            color: "outline",
-            size: "sm",
-            className: "gap-2",
-          })}
+          className={actionLinkClass}
+          external={true}
+          href="https://x.com/trydotworks"
+        >
+          <SquareArrowOutUpRight className="size-4" />
+          @trydotworks
+        </Link>
+
+        <Link
+          className={actionLinkClass}
           external={true}
           href={`https://github.com/${gitConfig.user}/${gitConfig.repo}`}
         >
