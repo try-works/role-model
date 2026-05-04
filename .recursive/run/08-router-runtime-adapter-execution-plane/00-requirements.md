@@ -32,6 +32,7 @@ Acceptance criteria:
 - the provider adapter contract is in scope
 - first provider-family implementations are in scope
 - the contract keeps protocol semantics separate from provider-specific request and response shapes
+- the contract includes explicit provider capability negotiation for tool calling, structured outputs, streaming granularity, usage semantics, and prompt caching
 
 ### `R2` Implement request building and response normalization
 
@@ -42,6 +43,7 @@ Acceptance criteria:
 - request builder paths and response normalizer paths are in scope
 - the run preserves endpoint/account/runtime context needed by downstream observability and host layers
 - the run does not rely on host-specific behavior as a substitute for adapter normalization
+- the run includes fallback behavior for provider or model families that lack native strict schema, fine-grained streaming, or equivalent capability support
 
 ### `R3` Extract execution-time tool, streaming, error, and usage data
 
@@ -52,6 +54,7 @@ Acceptance criteria:
 - tool, streaming, error, and usage extraction hooks are in scope
 - extracted data is shaped so later observability work can consume it without reopening provider adapter semantics
 - adapter failures remain diagnosable from local captures and logs
+- prompt-caching and token-accounting hooks are in scope where provider support exists
 
 ### `R4` Preserve mandatory local validation and adapter diagnostics
 
@@ -93,6 +96,8 @@ Acceptance criteria:
 - Add the provider adapter contract and first provider-family implementations.
 - Add request builder and response normalizer paths.
 - Add tool, streaming, error, and usage extraction hooks.
+- Add provider capability negotiation and fallback handling for tool, schema, streaming, usage, and caching differences.
+- Add prompt-caching and token-accounting hooks where provider support exists.
 - Preserve the roadmap-local validation rule:
   - run the local adapter execution path against the supported smoke/dev flow
   - read adapter logs, request/response captures, and usage extraction output

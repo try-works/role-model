@@ -32,6 +32,7 @@ Acceptance criteria:
 - resilience and degraded-mode testing are in scope
 - multi-tenant validation is in scope
 - rollback handling is in scope
+- replay and shadow-routing evaluation are in scope
 
 ### `R2` Finalize the operator-facing operational guidance
 
@@ -42,6 +43,7 @@ Acceptance criteria:
 - vendor update procedure is in scope
 - deployment and upgrade guidance are in scope
 - local operational playbooks for validation and repair are in scope
+- backup/restore and deletion/export drills for runtime data are in scope
 
 ### `R3` Close the sequence with the strongest local end-to-end validation path available
 
@@ -52,6 +54,7 @@ Acceptance criteria:
 - the strongest local end-to-end path available for the assembled runtime is part of the run
 - remaining operational breakage is repaired or explicitly documented with evidence rather than ignored
 - the run closes the router-runtime sequence without weakening earlier protocol, routing, account, or memory guarantees
+- the run uses replay, shadow, golden-set, or judge-assisted evidence where deterministic assertions alone are not enough
 
 ### `R4` Preserve mandatory local validation and operational log review
 
@@ -93,6 +96,7 @@ Acceptance criteria:
 - Add resilience/degraded-mode testing, multi-tenant validation, and rollback handling.
 - Add the vendor update procedure plus deployment/upgrade guidance.
 - Add local operational playbooks for validation and repair.
+- Add replay/shadow evaluation plus backup/restore and deletion/export drills for runtime data.
 - Preserve the roadmap-local validation rule:
   - run the strongest local end-to-end path available for the assembled runtime
   - read host, adapter, SQLite, and control-plane logs for failure signatures

@@ -32,6 +32,7 @@ Acceptance criteria:
 - structured diagnostics are in scope
 - usage extraction completion is in scope
 - observed-performance updates are in scope and are connected back to the runtime flows that produce them
+- OpenTelemetry GenAI export mapping is included without weakening the canonical protocol artifact layer
 
 ### `R2` Make auth/account and memory quality failures inspectable
 
@@ -42,6 +43,7 @@ Acceptance criteria:
 - auth/account failure tracking is in scope
 - memory retrieval quality signals are in scope
 - the run preserves the earlier protocol, account, and memory boundaries while making their failures visible
+- redaction and capture-policy behavior is made inspectable for memory, traces, and request/response artifacts
 
 ### `R3` Expose operator inspection surfaces for emitted artifacts
 
@@ -52,6 +54,7 @@ Acceptance criteria:
 - operator inspection surfaces for decisions, traces, usage, profile updates, or related diagnostics are in scope
 - emitted artifacts are shaped so later hardening and operations work can consume them without reworking their schema
 - the run does not depend on implicit log scraping as the only inspection mechanism
+- replay-oriented artifacts are retained or intentionally suppressed according to explicit capture and redaction policy
 
 ### `R4` Preserve mandatory local validation and observability diagnostics
 
@@ -92,6 +95,7 @@ Acceptance criteria:
 
 - Add structured diagnostics and complete usage extraction.
 - Add observed-performance updates plus auth/account failure tracking and memory retrieval quality signals.
+- Add OpenTelemetry GenAI interoperability and redaction-aware capture behavior.
 - Add operator inspection surfaces for the emitted artifacts.
 - Preserve the roadmap-local validation rule:
   - run the local flow that emits decisions, traces, usage, and profile updates

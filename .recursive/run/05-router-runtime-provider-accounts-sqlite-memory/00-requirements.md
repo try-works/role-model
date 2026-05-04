@@ -43,6 +43,7 @@ Acceptance criteria:
 - the run includes the SQLite memory schema and the memory store location contract described in the roadmap
 - the schema covers the roadmap's local-memory responsibilities rather than reducing memory to a single opaque blob
 - the run preserves the SQLite-first decision while keeping extension seams for later secondary stores
+- the run defines schema-version and migration responsibilities, plus the same-host local-disk assumption for the primary SQLite store
 
 ### `R3` Establish retention and maintenance expectations for the memory layer
 
@@ -53,6 +54,7 @@ Acceptance criteria:
 - retention and maintenance baseline behavior is part of the run scope
 - the run defines how schema initialization or migration is expected to happen locally
 - the run preserves the earlier roadmap rule that local memory is required for context continuity and routed-model handoff
+- the run defines privacy, redaction, backup, and deletion expectations for local memory and related capture artifacts
 
 ### `R4` Preserve mandatory local validation and SQLite/auth diagnostics
 
@@ -95,6 +97,8 @@ Acceptance criteria:
 - Add credential-reference and auth-mode abstractions.
 - Add the SQLite memory schema and store location contract.
 - Add the retention and maintenance baseline for the local memory layer.
+- Add SQLite schema-version, migration, backup, and restore responsibilities.
+- Add local-memory privacy, redaction, and deletion expectations.
 - Preserve the roadmap-local validation rule:
   - run the local account-configuration and SQLite init/migration path
   - read SQLite errors, migration logs, and auth/account diagnostics

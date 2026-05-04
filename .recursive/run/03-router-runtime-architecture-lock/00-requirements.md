@@ -29,7 +29,7 @@ Description:
 This run must turn the roadmap's architecture-lock slice into explicit repo requirements that later implementation runs can follow without re-litigating the core runtime boundaries.
 
 Acceptance criteria:
-- provider taxonomy, provider id versus provider kind, auth/account boundary, protocol-driven routing projection boundary, SQLite-first memory boundary, routing-model configuration boundary, and protocol-versus-runtime-config boundary are all stated explicitly in the run outputs
+- provider taxonomy, provider id versus provider kind, auth/account boundary, protocol-driven routing projection boundary, SQLite-first memory boundary, routing-model configuration boundary, protocol-versus-runtime-config boundary, provider-capability-negotiation boundary, observability-interoperability boundary, and runtime-data-governance boundary are all stated explicitly in the run outputs
 - the architecture lock keeps the protocol canonical and keeps runtime-specific state out of protocol artifacts
 - ambiguous areas are resolved in repo artifacts or addenda rather than left implicit in chat
 
@@ -92,6 +92,10 @@ Acceptance criteria:
 
 - Lock the runtime architecture decisions before starting product-changing router-runtime work.
 - Keep protocol semantics canonical while keeping runtime config, auth/account state, and secrets outside protocol artifacts.
+- Lock the boundaries for:
+  - provider capability negotiation across tool calling, structured outputs, streaming, and caching
+  - OpenTelemetry GenAI interoperability relative to canonical protocol artifacts
+  - data governance for local memory, traces, and request/response captures
 - Preserve the upstream-vendor split:
   - `models.dev` as catalog input
   - `llama-swap` as execution-plane host reference

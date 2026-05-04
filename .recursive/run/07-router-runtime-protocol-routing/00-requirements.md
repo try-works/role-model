@@ -53,6 +53,7 @@ Acceptance criteria:
 - SQLite-backed context retrieval for routing is in scope
 - routing-core eligibility expansion plus expanded exclusion and selection reason codes are in scope
 - routing conformance growth covers both local and cloud-oriented cases rather than only the preexisting baseline fixtures
+- cache-aware routing and cost-signal integration are included where provider/runtime support exists
 
 ### `R4` Preserve mandatory local validation and routing diagnostics
 
@@ -94,7 +95,7 @@ Acceptance criteria:
 - Add protocol-driven request and candidate projection.
 - Add configurable routing-model selection.
 - Add SQLite-backed context retrieval for routing.
-- Expand routing-core eligibility, exclusion/selection reason codes, and local/cloud conformance.
+- Expand routing-core eligibility, exclusion/selection reason codes, local/cloud conformance, and cache-aware routing signals where supported.
 - Preserve the roadmap-local validation rule:
   - run the local routing path end to end with representative requests
   - read router decisions, exclusion logs, retrieval receipts, and routing-model diagnostics
