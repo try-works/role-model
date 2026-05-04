@@ -127,11 +127,15 @@ function assertCanonicalSchemaId(fileName: string, schema: JsonSchema): Canonica
   return schema as CanonicalJsonSchema;
 }
 
-export async function loadSchemas(): Promise<Array<{ fileName: string; schema: CanonicalJsonSchema }>> {
+export async function loadSchemas(): Promise<
+  Array<{ fileName: string; schema: CanonicalJsonSchema }>
+> {
   const names = (await readdir(schemaDir)).filter((name) => name.endsWith(".schema.json")).sort();
   return Promise.all(
     names.map(async (fileName) => {
-      const schema = JSON.parse(await readFile(path.join(schemaDir, fileName), "utf8")) as JsonSchema;
+      const schema = JSON.parse(
+        await readFile(path.join(schemaDir, fileName), "utf8"),
+      ) as JsonSchema;
 
       return {
         fileName,

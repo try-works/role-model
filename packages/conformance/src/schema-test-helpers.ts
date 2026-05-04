@@ -6,7 +6,10 @@ const require = createRequire(import.meta.url);
 
 type JsonSchema = Record<string, unknown>;
 
-function assertCanonicalSchemaId(fileName: string, schema: JsonSchema): asserts schema is JsonSchema & {
+function assertCanonicalSchemaId(
+  fileName: string,
+  schema: JsonSchema,
+): asserts schema is JsonSchema & {
   $id: string;
 } {
   const schemaId = schema.$id;
