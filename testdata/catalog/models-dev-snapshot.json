@@ -1,0 +1,88 @@
+{
+  "source": {
+    "vendor": "models.dev",
+    "commit": "8f3c2d1",
+    "capturedAt": "2026-05-04T12:00:00Z",
+    "schemaVersion": "models.dev.v1"
+  },
+  "providers": [
+    {
+      "providerId": "openai",
+      "displayName": "OpenAI",
+      "npmPackage": "@ai-sdk/openai",
+      "apiBase": "https://api.openai.com/v1",
+      "envVars": ["OPENAI_API_KEY"],
+      "adapterFamilyHint": "openai-responses"
+    },
+    {
+      "providerId": "anthropic",
+      "displayName": "Anthropic",
+      "npmPackage": "@ai-sdk/anthropic",
+      "apiBase": "https://api.anthropic.com/v1",
+      "envVars": ["ANTHROPIC_API_KEY"],
+      "adapterFamilyHint": "anthropic-messages"
+    }
+  ],
+  "models": [
+    {
+      "modelId": "gpt-4.1-mini",
+      "providerId": "openai",
+      "displayName": "GPT-4.1 Mini",
+      "version": "2025-04-14",
+      "capabilities": ["text.chat", "tools.function_calling", "structured.output"],
+      "modalities": ["text"],
+      "contextWindow": 1047576,
+      "maxOutputTokens": 32768,
+      "pricing": {
+        "inputPer1M": 0.4,
+        "outputPer1M": 1.6,
+        "currency": "USD"
+      },
+      "requestShapeHints": {
+        "providerShape": "openai.responses",
+        "bodyKeys": ["temperature", "max_output_tokens"],
+        "headerKeys": ["OpenAI-Beta"]
+      },
+      "experimentalModes": [
+        {
+          "modeId": "reasoning.high",
+          "label": "High reasoning depth"
+        }
+      ]
+    },
+    {
+      "modelId": "openai/gpt-4.1-mini-fast",
+      "providerId": "openai",
+      "displayName": "GPT-4.1 Mini Fast",
+      "extends": "gpt-4.1-mini",
+      "version": "2025-04-14-fast",
+      "experimentalModes": [
+        {
+          "modeId": "reasoning.high",
+          "label": "High reasoning depth"
+        }
+      ]
+    },
+    {
+      "modelId": "claude-3.7-sonnet",
+      "providerId": "anthropic",
+      "displayName": "Claude 3.7 Sonnet",
+      "version": "2025-02-24",
+      "capabilities": ["text.chat", "tools.function_calling"],
+      "modalities": ["text"],
+      "contextWindow": 200000,
+      "maxOutputTokens": 8192,
+      "pricing": {
+        "inputPer1M": 3,
+        "outputPer1M": 15,
+        "currency": "USD"
+      },
+      "requestShapeHints": {
+        "providerShape": "anthropic.messages",
+        "bodyKeys": ["max_tokens", "temperature"],
+        "headerKeys": ["anthropic-version"]
+      },
+      "experimentalModes": []
+    }
+  ]
+}

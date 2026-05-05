@@ -1,0 +1,12 @@
+{
+  "ledgerVersion": "1",
+  "vendors": [
+    {
+      "vendor": "models.dev",
+      "role": "catalog-source",
+      "commit": "8f3c2d1",
+      "capturedAt": "2026-05-04T12:00:00Z",
+      "schemaVersion": "models.dev.v1"
+    }
+  ]
+}

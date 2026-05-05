@@ -1,0 +1,6 @@
+
+> role-model@0.0.0 catalog:export D:\DEV\role-model\.worktrees\05-router-runtime-catalog-foundation
+> corepack pnpm --filter @role-model-router/catalog exec tsx src/cli.ts
+
+D:\DEV\role-model\.worktrees\05-router-runtime-catalog-foundation\runtime-output\router-catalog\normalized-catalog.json
+D:\DEV\role-model\.worktrees\05-router-runtime-catalog-foundation\runtime-output\router-catalog\vendor-version-ledger.json

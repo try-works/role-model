@@ -1,0 +1,35 @@
+
+> @role-model-router/catalog@0.0.0 test D:\DEV\role-model\.worktrees\05-router-runtime-catalog-foundation\role-model-router\packages\catalog
+> vitest run test/index.test.ts
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/05-router-runtime-catalog-foundation/role-model-router/packages/catalog[39m
+
+ [31mΓ¥»[39m test/index.test.ts [2m([22m[2m2 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 30[2mms[22m[39m
+   [32mΓ£ô[39m normalizeCatalogSnapshot[2m > [22mpreserves upstream provenance while layering role-model enrichment[32m 23[2mms[22m[39m
+[31m   [31m├ù[31m exportCatalogArtifacts[2m > [22mwrites stable normalized catalog and vendor ledger artifacts for local validation[39m[32m 5[2mms[22m[39m
+[31m     ΓåÆ (0 , exportCatalogArtifacts) is not a function[39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/index.test.ts > exportCatalogArtifacts > writes stable normalized catalog and vendor ledger artifacts for local validation
+TypeError: (0 , exportCatalogArtifacts) is not a function
+ Γ¥» test/index.test.ts:74:26
+     72|     const outputDir = await mkdtemp(path.join(os.tmpdir(), "role-modelΓÇª
+     73| 
+     74|     const result = await exportCatalogArtifacts({
+       |                          ^
+     75|       snapshotPath: path.join(repoRoot, "testdata", "catalog", "modelsΓÇª
+     76|       overridesPath: path.join(repoRoot, "testdata", "catalog", "modelΓÇª
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m1 passed[39m[22m[90m (2)[39m
+[2m   Start at [22m 10:28:34
+[2m   Duration [22m 649ms[2m (transform 79ms, setup 0ms, collect 75ms, tests 30ms, environment 0ms, prepare 202ms)[22m
+
+D:\DEV\role-model\.worktrees\05-router-runtime-catalog-foundation\role-model-router\packages\catalog:
+ΓÇëERR_PNPM_RECURSIVE_RUN_FIRST_FAILΓÇë @role-model-router/catalog@0.0.0 test: `vitest run test/index.test.ts`
+Exit status 1

@@ -145,3 +145,31 @@
 - Known issues / follow-ups:
   - the selected run-04 worktree still reproduces the inherited `schemas:validate` PASS / `build` FAIL / `test` FAIL / `smoke` PASS pattern because `packages/schema-tools` still hits the Biome `No files were processed in the specified paths` failure during generated-type formatting
   - the new architecture lock is now the repo-native handoff source that later runs must consume directly
+
+### Run `05-router-runtime-catalog-foundation`
+
+- Run folder: `/.recursive/run/05-router-runtime-catalog-foundation/`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - added `/role-model-router/packages/catalog/` as the first role-model-owned normalized catalog foundation with pinned snapshot loading, inheritance-aware normalization, provider-kind/auth-family enrichment, local override support, and vendor-version ledger derivation
+  - added pinned input fixtures under `/testdata/catalog/` and durable tracked handoff artifacts under `/role-model-router/packages/catalog/data/`
+  - added the repo-local `catalog:export` command while preserving the broader inherited schema-tools/Biome validation caveat
+- Why:
+  - to turn the architecture-lock decision into a reusable catalog foundation that later provider-account and endpoint-registry runs can consume without rediscovering upstream provenance, enrichment rules, or vendor versions ad hoc
+- How:
+  - implemented strict RED/GREEN TDD across three behavior slices (normalization, artifact export, CLI wrapper), validated the catalog package directly, and confirmed the broader repo still shows only the inherited `packages/schema-tools` failure pattern
+- What was not done:
+  - provider-account records, credential storage, concrete endpoints, routing projection, adapter execution, host integration, and broader UI work remain out of scope
+- Known issues / follow-ups:
+  - `runtime-output/` is ignored by repo policy, so run `05` uses tracked copies under `/role-model-router/packages/catalog/data/` as the durable handoff path
+  - the broader root `build` and `test` commands still fail on the inherited schema-tools/Biome generated-types path rather than on the new catalog package
