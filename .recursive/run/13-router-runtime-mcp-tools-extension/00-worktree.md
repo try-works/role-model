@@ -1,11 +1,11 @@
-Run: `/.recursive/run/03-router-runtime-architecture-lock/`
+Run: `/.recursive/run/13-router-runtime-mcp-tools-extension/`
 Phase: `00 Worktree`
 Status: `DRAFT`
 Inputs:
-- `/.recursive/run/03-router-runtime-architecture-lock/00-requirements.md`
+- `/.recursive/run/13-router-runtime-mcp-tools-extension/00-requirements.md`
 - Current git repository state
 Outputs:
-- `/.recursive/run/03-router-runtime-architecture-lock/00-worktree.md`
+- `/.recursive/run/13-router-runtime-mcp-tools-extension/00-worktree.md`
 Scope note: This document records the Phase 0 worktree context and the executable diff basis that all later audited phases must reuse.
 
 ## TODO
@@ -20,7 +20,7 @@ Scope note: This document records the Phase 0 worktree context and the executabl
 ## Directory Selection
 
 - Repository root: `D:\DEV\role-model`
-- Preferred worktree location: `.worktrees/03-router-runtime-architecture-lock/`
+- Preferred worktree location: `.worktrees/13-router-runtime-mcp-tools-extension/`
 - Update this section with the actual selected location before locking Phase 0.
 
 ## Safety Verification
@@ -51,16 +51,16 @@ Scope note: This document records the Phase 0 worktree context and the executabl
 
 - Base branch: `main`
 - Worktree branch: `main`
-- Base commit: `38c3fa78167057e947390c04cb7d31aa8602a24b`
+- Base commit: `80df2f6ada2da58a7c22654c67d31e8c5cb307e7`
 
 ## Diff Basis For Later Audits
 
 - Baseline type: `local commit`
-- Baseline reference: `38c3fa78167057e947390c04cb7d31aa8602a24b`
+- Baseline reference: `80df2f6ada2da58a7c22654c67d31e8c5cb307e7`
 - Comparison reference: `working-tree`
-- Normalized baseline: `38c3fa78167057e947390c04cb7d31aa8602a24b`
+- Normalized baseline: `80df2f6ada2da58a7c22654c67d31e8c5cb307e7`
 - Normalized comparison: `working-tree`
-- Normalized diff command: `git diff --name-only 38c3fa78167057e947390c04cb7d31aa8602a24b`
+- Normalized diff command: `git diff --name-only 80df2f6ada2da58a7c22654c67d31e8c5cb307e7`
 - Base branch: `main`
 - Worktree branch: `main`
 - Diff basis notes: `recursive-init prefilled this executable diff basis from the current HEAD commit. If Phase 0 later changes the chosen baseline, update every diff-basis field and rerun lint before locking.`

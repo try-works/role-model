@@ -1,4 +1,4 @@
-Run: `/.recursive/run/04-router-runtime-catalog-foundation/`
+Run: `/.recursive/run/05-router-runtime-catalog-foundation/`
 Phase: `00 Requirements`
 Status: `DRAFT`
 Workflow version: `recursive-mode-audit-v1`
@@ -7,10 +7,10 @@ Inputs:
 - `/.recursive/RECURSIVE.md`
 - `/.recursive/STATE.md`
 - `/.recursive/DECISIONS.md`
-- `/.recursive/run/03-router-runtime-architecture-lock/00-requirements.md`
+- `/.recursive/run/04-router-runtime-architecture-lock/00-requirements.md`
 Outputs:
-- `/.recursive/run/04-router-runtime-catalog-foundation/00-requirements.md`
-Scope note: This document defines the stable requirement contract for the catalog-foundation run. It maps roadmap `Run 01 - Catalog foundation` onto repo run `04-router-runtime-catalog-foundation`.
+- `/.recursive/run/05-router-runtime-catalog-foundation/00-requirements.md`
+Scope note: This document defines the stable requirement contract for the catalog-foundation run. It maps roadmap `Run 05 - Catalog foundation` onto repo run `05-router-runtime-catalog-foundation`.
 
 ## TODO
 
@@ -71,9 +71,9 @@ Acceptance criteria:
 
 ## Constraints
 
-- Repo run `04-router-runtime-catalog-foundation` corresponds to roadmap `Run 01 - Catalog foundation`.
+- Repo run `05-router-runtime-catalog-foundation` corresponds to roadmap `Run 05 - Catalog foundation`.
 - This run must reread `C:\Users\erikb\OneDrive\##### DEV\role-model\requirements\role-model-router-runtime-roadmap.md` before later implementation phases start.
-- The run must consume the boundary decisions captured in `03-router-runtime-architecture-lock` rather than reopening them.
+- The run must consume the boundary decisions captured in `04-router-runtime-architecture-lock` rather than reopening them.
 - Vendor tracking must stay role-model-owned and must not depend on mutable conversational memory.
 
 ## Assumptions
@@ -83,9 +83,9 @@ Acceptance criteria:
 
 ## Sequence Integration
 
-- Roadmap slot: `Run 01 - Catalog foundation`
-- Previous repo dependency: `03-router-runtime-architecture-lock`
-- Next repo dependency: `05-router-runtime-provider-accounts-sqlite-memory`
+- Roadmap slot: `Run 05 - Catalog foundation`
+- Previous repo dependency: `04-router-runtime-architecture-lock`
+- Next repo dependency: `06-router-runtime-provider-accounts-sqlite-memory`
 - Required handoff: normalized catalog outputs, local enrichment rules, and initial vendor version ledger entries that later account/endpoint runs can consume
 
 ## Detailed Requirement Specification

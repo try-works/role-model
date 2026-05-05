@@ -1,4 +1,4 @@
-Run: `/.recursive/run/09-router-runtime-host-integration/`
+Run: `/.recursive/run/10-router-runtime-host-integration/`
 Phase: `00 Requirements`
 Status: `DRAFT`
 Workflow version: `recursive-mode-audit-v1`
@@ -7,10 +7,10 @@ Inputs:
 - `/.recursive/RECURSIVE.md`
 - `/.recursive/STATE.md`
 - `/.recursive/DECISIONS.md`
-- `/.recursive/run/08-router-runtime-adapter-execution-plane/00-requirements.md`
+- `/.recursive/run/09-router-runtime-adapter-execution-plane/00-requirements.md`
 Outputs:
-- `/.recursive/run/09-router-runtime-host-integration/00-requirements.md`
-Scope note: This document defines the stable requirement contract for the host-integration run. It maps roadmap `Run 06 - Host integration` onto repo run `09-router-runtime-host-integration`.
+- `/.recursive/run/10-router-runtime-host-integration/00-requirements.md`
+Scope note: This document defines the stable requirement contract for the host-integration run. It maps roadmap `Run 10 - Host integration` onto repo run `10-router-runtime-host-integration`.
 
 ## TODO
 
@@ -71,7 +71,7 @@ Acceptance criteria:
 
 ## Constraints
 
-- Repo run `09-router-runtime-host-integration` corresponds to roadmap `Run 06 - Host integration`.
+- Repo run `10-router-runtime-host-integration` corresponds to roadmap `Run 10 - Host integration`.
 - This run must consume the earlier adapter execution outputs as prerequisites.
 - The run must reread `C:\Users\erikb\OneDrive\##### DEV\role-model\requirements\role-model-router-runtime-roadmap.md` before later implementation phases start.
 - If `llama-swap` is used, it must remain an execution-plane host integration and not a replacement for protocol-governed routing logic.
@@ -83,9 +83,9 @@ Acceptance criteria:
 
 ## Sequence Integration
 
-- Roadmap slot: `Run 06 - Host integration`
-- Previous repo dependency: `08-router-runtime-adapter-execution-plane`
-- Next repo dependency: `10-router-runtime-observability-feedback`
+- Roadmap slot: `Run 10 - Host integration`
+- Previous repo dependency: `09-router-runtime-adapter-execution-plane`
+- Next repo dependency: `11-router-runtime-observability-feedback`
 - Required handoff: request-serving host path, lifecycle/concurrency integration, artifact-emission hooks, and local operator log/capture access
 
 ## Detailed Requirement Specification

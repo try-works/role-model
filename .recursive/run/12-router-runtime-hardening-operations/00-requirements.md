@@ -1,4 +1,4 @@
-Run: `/.recursive/run/11-router-runtime-hardening-operations/`
+Run: `/.recursive/run/12-router-runtime-hardening-operations/`
 Phase: `00 Requirements`
 Status: `DRAFT`
 Workflow version: `recursive-mode-audit-v1`
@@ -7,10 +7,10 @@ Inputs:
 - `/.recursive/RECURSIVE.md`
 - `/.recursive/STATE.md`
 - `/.recursive/DECISIONS.md`
-- `/.recursive/run/10-router-runtime-observability-feedback/00-requirements.md`
+- `/.recursive/run/11-router-runtime-observability-feedback/00-requirements.md`
 Outputs:
-- `/.recursive/run/11-router-runtime-hardening-operations/00-requirements.md`
-Scope note: This document defines the stable requirement contract for the hardening-and-operations run. It maps roadmap `Run 08 - Hardening and operations` onto repo run `11-router-runtime-hardening-operations`.
+- `/.recursive/run/12-router-runtime-hardening-operations/00-requirements.md`
+Scope note: This document defines the stable requirement contract for the hardening-and-operations run. It maps roadmap `Run 12 - Hardening and operations` onto repo run `12-router-runtime-hardening-operations`.
 
 ## TODO
 
@@ -74,10 +74,10 @@ Acceptance criteria:
 
 ## Constraints
 
-- Repo run `11-router-runtime-hardening-operations` corresponds to roadmap `Run 08 - Hardening and operations`.
+- Repo run `12-router-runtime-hardening-operations` corresponds to roadmap `Run 12 - Hardening and operations`.
 - This run must consume the earlier observability and feedback outputs as prerequisites.
 - The run must reread `C:\Users\erikb\OneDrive\##### DEV\role-model\requirements\role-model-router-runtime-roadmap.md` before later implementation phases start.
-- The run is the final default run in the sequence and should prefer repair or explicit documentation over silent residual breakage.
+- The run is the final default run in the first-milestone sequence and should prefer repair or explicit documentation over silent residual breakage before the deferred extension run.
 
 ## Assumptions
 
@@ -86,9 +86,9 @@ Acceptance criteria:
 
 ## Sequence Integration
 
-- Roadmap slot: `Run 08 - Hardening and operations`
-- Previous repo dependency: `10-router-runtime-observability-feedback`
-- Next repo dependency: `none`
+- Roadmap slot: `Run 12 - Hardening and operations`
+- Previous repo dependency: `11-router-runtime-observability-feedback`
+- Next repo dependency: `13-router-runtime-mcp-tools-extension`
 - Required handoff: finalized hardening evidence, vendor update procedure, deployment/upgrade guidance, and local operational playbooks
 
 ## Detailed Requirement Specification

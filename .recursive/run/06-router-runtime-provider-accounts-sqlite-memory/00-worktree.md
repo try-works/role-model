@@ -1,11 +1,11 @@
-Run: `/.recursive/run/04-router-runtime-catalog-foundation/`
+Run: `/.recursive/run/06-router-runtime-provider-accounts-sqlite-memory/`
 Phase: `00 Worktree`
 Status: `DRAFT`
 Inputs:
-- `/.recursive/run/04-router-runtime-catalog-foundation/00-requirements.md`
+- `/.recursive/run/06-router-runtime-provider-accounts-sqlite-memory/00-requirements.md`
 - Current git repository state
 Outputs:
-- `/.recursive/run/04-router-runtime-catalog-foundation/00-worktree.md`
+- `/.recursive/run/06-router-runtime-provider-accounts-sqlite-memory/00-worktree.md`
 Scope note: This document records the Phase 0 worktree context and the executable diff basis that all later audited phases must reuse.
 
 ## TODO
@@ -20,7 +20,7 @@ Scope note: This document records the Phase 0 worktree context and the executabl
 ## Directory Selection
 
 - Repository root: `D:\DEV\role-model`
-- Preferred worktree location: `.worktrees/04-router-runtime-catalog-foundation/`
+- Preferred worktree location: `.worktrees/06-router-runtime-provider-accounts-sqlite-memory/`
 - Update this section with the actual selected location before locking Phase 0.
 
 ## Safety Verification

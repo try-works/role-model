@@ -1,11 +1,11 @@
-Run: `/.recursive/run/06-router-runtime-endpoint-registry-context-envelope/`
+Run: `/.recursive/run/07-router-runtime-endpoint-registry-context-envelope/`
 Phase: `00 Worktree`
 Status: `DRAFT`
 Inputs:
-- `/.recursive/run/06-router-runtime-endpoint-registry-context-envelope/00-requirements.md`
+- `/.recursive/run/07-router-runtime-endpoint-registry-context-envelope/00-requirements.md`
 - Current git repository state
 Outputs:
-- `/.recursive/run/06-router-runtime-endpoint-registry-context-envelope/00-worktree.md`
+- `/.recursive/run/07-router-runtime-endpoint-registry-context-envelope/00-worktree.md`
 Scope note: This document records the Phase 0 worktree context and the executable diff basis that all later audited phases must reuse.
 
 ## TODO
@@ -20,7 +20,7 @@ Scope note: This document records the Phase 0 worktree context and the executabl
 ## Directory Selection
 
 - Repository root: `D:\DEV\role-model`
-- Preferred worktree location: `.worktrees/06-router-runtime-endpoint-registry-context-envelope/`
+- Preferred worktree location: `.worktrees/07-router-runtime-endpoint-registry-context-envelope/`
 - Update this section with the actual selected location before locking Phase 0.
 
 ## Safety Verification

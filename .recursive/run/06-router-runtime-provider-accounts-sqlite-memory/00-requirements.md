@@ -1,4 +1,4 @@
-Run: `/.recursive/run/05-router-runtime-provider-accounts-sqlite-memory/`
+Run: `/.recursive/run/06-router-runtime-provider-accounts-sqlite-memory/`
 Phase: `00 Requirements`
 Status: `DRAFT`
 Workflow version: `recursive-mode-audit-v1`
@@ -7,11 +7,11 @@ Inputs:
 - `/.recursive/RECURSIVE.md`
 - `/.recursive/STATE.md`
 - `/.recursive/DECISIONS.md`
-- `/.recursive/run/03-router-runtime-architecture-lock/00-requirements.md`
-- `/.recursive/run/04-router-runtime-catalog-foundation/00-requirements.md`
+- `/.recursive/run/04-router-runtime-architecture-lock/00-requirements.md`
+- `/.recursive/run/05-router-runtime-catalog-foundation/00-requirements.md`
 Outputs:
-- `/.recursive/run/05-router-runtime-provider-accounts-sqlite-memory/00-requirements.md`
-Scope note: This document defines the stable requirement contract for the provider-account and SQLite-memory-schema run. It maps roadmap `Run 02 - Provider accounts and SQLite memory schema` onto repo run `05-router-runtime-provider-accounts-sqlite-memory`.
+- `/.recursive/run/06-router-runtime-provider-accounts-sqlite-memory/00-requirements.md`
+Scope note: This document defines the stable requirement contract for the provider-account and SQLite-memory-schema run. It maps roadmap `Run 06 - Provider accounts and SQLite memory schema` onto repo run `06-router-runtime-provider-accounts-sqlite-memory`.
 
 ## TODO
 
@@ -74,21 +74,21 @@ Acceptance criteria:
 
 ## Constraints
 
-- Repo run `05-router-runtime-provider-accounts-sqlite-memory` corresponds to roadmap `Run 02 - Provider accounts and SQLite memory schema`.
+- Repo run `06-router-runtime-provider-accounts-sqlite-memory` corresponds to roadmap `Run 06 - Provider accounts and SQLite memory schema`.
 - This run must consume the catalog outputs and architecture boundaries produced by the earlier router-runtime runs.
 - The run must reread `C:\Users\erikb\OneDrive\##### DEV\role-model\requirements\role-model-router-runtime-roadmap.md` before later implementation phases start.
 - The memory contract must remain compatible with later endpoint-registry, context-envelope, and routing runs.
 
 ## Assumptions
 
-- The normalized catalog layer from run `04-router-runtime-catalog-foundation` provides enough provider metadata to anchor provider-account and auth-mode modeling.
+- The normalized catalog layer from run `05-router-runtime-catalog-foundation` provides enough provider metadata to anchor provider-account and auth-mode modeling.
 - SQLite remains the approved initial authoritative memory backend unless a later addendum explicitly changes the roadmap.
 
 ## Sequence Integration
 
-- Roadmap slot: `Run 02 - Provider accounts and SQLite memory schema`
-- Previous repo dependency: `04-router-runtime-catalog-foundation`
-- Next repo dependency: `06-router-runtime-endpoint-registry-context-envelope`
+- Roadmap slot: `Run 06 - Provider accounts and SQLite memory schema`
+- Previous repo dependency: `05-router-runtime-catalog-foundation`
+- Next repo dependency: `07-router-runtime-endpoint-registry-context-envelope`
 - Required handoff: provider-account/auth abstractions, SQLite schema and store contract, and retention/maintenance baseline needed by registry and routing work
 
 ## Detailed Requirement Specification

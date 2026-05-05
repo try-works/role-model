@@ -1,4 +1,4 @@
-Run: `/.recursive/run/08-router-runtime-adapter-execution-plane/`
+Run: `/.recursive/run/09-router-runtime-adapter-execution-plane/`
 Phase: `00 Requirements`
 Status: `DRAFT`
 Workflow version: `recursive-mode-audit-v1`
@@ -7,10 +7,10 @@ Inputs:
 - `/.recursive/RECURSIVE.md`
 - `/.recursive/STATE.md`
 - `/.recursive/DECISIONS.md`
-- `/.recursive/run/07-router-runtime-protocol-routing/00-requirements.md`
+- `/.recursive/run/08-router-runtime-protocol-routing/00-requirements.md`
 Outputs:
-- `/.recursive/run/08-router-runtime-adapter-execution-plane/00-requirements.md`
-Scope note: This document defines the stable requirement contract for the adapter-execution-plane run. It maps roadmap `Run 05 - Adapter execution plane` onto repo run `08-router-runtime-adapter-execution-plane`.
+- `/.recursive/run/09-router-runtime-adapter-execution-plane/00-requirements.md`
+Scope note: This document defines the stable requirement contract for the adapter-execution-plane run. It maps roadmap `Run 09 - Adapter execution plane` onto repo run `09-router-runtime-adapter-execution-plane`.
 
 ## TODO
 
@@ -74,7 +74,7 @@ Acceptance criteria:
 
 ## Constraints
 
-- Repo run `08-router-runtime-adapter-execution-plane` corresponds to roadmap `Run 05 - Adapter execution plane`.
+- Repo run `09-router-runtime-adapter-execution-plane` corresponds to roadmap `Run 09 - Adapter execution plane`.
 - This run must consume the protocol-driven routing outputs as prerequisites instead of duplicating routing logic inside adapters.
 - The run must reread `C:\Users\erikb\OneDrive\##### DEV\role-model\requirements\role-model-router-runtime-roadmap.md` before later implementation phases start.
 - Adapter implementations must remain extensible to more provider families without weakening the canonical protocol contract.
@@ -86,9 +86,9 @@ Acceptance criteria:
 
 ## Sequence Integration
 
-- Roadmap slot: `Run 05 - Adapter execution plane`
-- Previous repo dependency: `07-router-runtime-protocol-routing`
-- Next repo dependency: `09-router-runtime-host-integration`
+- Roadmap slot: `Run 09 - Adapter execution plane`
+- Previous repo dependency: `08-router-runtime-protocol-routing`
+- Next repo dependency: `10-router-runtime-host-integration`
 - Required handoff: provider adapter contract, first provider-family implementations, normalized request/response flow, and tool/streaming/error/usage extraction hooks
 
 ## Detailed Requirement Specification

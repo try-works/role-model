@@ -1,4 +1,4 @@
-Run: `/.recursive/run/10-router-runtime-observability-feedback/`
+Run: `/.recursive/run/11-router-runtime-observability-feedback/`
 Phase: `00 Requirements`
 Status: `DRAFT`
 Workflow version: `recursive-mode-audit-v1`
@@ -7,10 +7,10 @@ Inputs:
 - `/.recursive/RECURSIVE.md`
 - `/.recursive/STATE.md`
 - `/.recursive/DECISIONS.md`
-- `/.recursive/run/09-router-runtime-host-integration/00-requirements.md`
+- `/.recursive/run/10-router-runtime-host-integration/00-requirements.md`
 Outputs:
-- `/.recursive/run/10-router-runtime-observability-feedback/00-requirements.md`
-Scope note: This document defines the stable requirement contract for the observability-and-feedback run. It maps roadmap `Run 07 - Observability and feedback loop` onto repo run `10-router-runtime-observability-feedback`.
+- `/.recursive/run/11-router-runtime-observability-feedback/00-requirements.md`
+Scope note: This document defines the stable requirement contract for the observability-and-feedback run. It maps roadmap `Run 11 - Observability and feedback loop` onto repo run `11-router-runtime-observability-feedback`.
 
 ## TODO
 
@@ -74,7 +74,7 @@ Acceptance criteria:
 
 ## Constraints
 
-- Repo run `10-router-runtime-observability-feedback` corresponds to roadmap `Run 07 - Observability and feedback loop`.
+- Repo run `11-router-runtime-observability-feedback` corresponds to roadmap `Run 11 - Observability and feedback loop`.
 - This run must consume the earlier host integration outputs as prerequisites.
 - The run must reread `C:\Users\erikb\OneDrive\##### DEV\role-model\requirements\role-model-router-runtime-roadmap.md` before later implementation phases start.
 - Observability outputs must remain compatible with the protocol-grade artifact model already present in the repo baseline.
@@ -86,9 +86,9 @@ Acceptance criteria:
 
 ## Sequence Integration
 
-- Roadmap slot: `Run 07 - Observability and feedback loop`
-- Previous repo dependency: `09-router-runtime-host-integration`
-- Next repo dependency: `11-router-runtime-hardening-operations`
+- Roadmap slot: `Run 11 - Observability and feedback loop`
+- Previous repo dependency: `10-router-runtime-host-integration`
+- Next repo dependency: `12-router-runtime-hardening-operations`
 - Required handoff: structured diagnostics, complete usage extraction, observed-performance updates, failure tracking, memory-quality signals, and operator inspection surfaces
 
 ## Detailed Requirement Specification

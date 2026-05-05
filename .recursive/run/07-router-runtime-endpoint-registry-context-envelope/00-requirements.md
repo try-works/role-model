@@ -1,4 +1,4 @@
-Run: `/.recursive/run/06-router-runtime-endpoint-registry-context-envelope/`
+Run: `/.recursive/run/07-router-runtime-endpoint-registry-context-envelope/`
 Phase: `00 Requirements`
 Status: `DRAFT`
 Workflow version: `recursive-mode-audit-v1`
@@ -7,11 +7,11 @@ Inputs:
 - `/.recursive/RECURSIVE.md`
 - `/.recursive/STATE.md`
 - `/.recursive/DECISIONS.md`
-- `/.recursive/run/04-router-runtime-catalog-foundation/00-requirements.md`
-- `/.recursive/run/05-router-runtime-provider-accounts-sqlite-memory/00-requirements.md`
+- `/.recursive/run/05-router-runtime-catalog-foundation/00-requirements.md`
+- `/.recursive/run/06-router-runtime-provider-accounts-sqlite-memory/00-requirements.md`
 Outputs:
-- `/.recursive/run/06-router-runtime-endpoint-registry-context-envelope/00-requirements.md`
-Scope note: This document defines the stable requirement contract for the endpoint-registry and context-envelope run. It maps roadmap `Run 03 - Endpoint registry and context envelope` onto repo run `06-router-runtime-endpoint-registry-context-envelope`.
+- `/.recursive/run/07-router-runtime-endpoint-registry-context-envelope/00-requirements.md`
+Scope note: This document defines the stable requirement contract for the endpoint-registry and context-envelope run. It maps roadmap `Run 07 - Endpoint registry and context envelope` onto repo run `07-router-runtime-endpoint-registry-context-envelope`.
 
 ## TODO
 
@@ -72,7 +72,7 @@ Acceptance criteria:
 
 ## Constraints
 
-- Repo run `06-router-runtime-endpoint-registry-context-envelope` corresponds to roadmap `Run 03 - Endpoint registry and context envelope`.
+- Repo run `07-router-runtime-endpoint-registry-context-envelope` corresponds to roadmap `Run 07 - Endpoint registry and context envelope`.
 - This run must consume the earlier catalog and provider-account/SQLite outputs as prerequisites.
 - The run must reread `C:\Users\erikb\OneDrive\##### DEV\role-model\requirements\role-model-router-runtime-roadmap.md` before later implementation phases start.
 - The resulting registry and context-envelope outputs must be usable by the protocol-driven routing run without a second identity-model redesign.
@@ -84,9 +84,9 @@ Acceptance criteria:
 
 ## Sequence Integration
 
-- Roadmap slot: `Run 03 - Endpoint registry and context envelope`
-- Previous repo dependency: `05-router-runtime-provider-accounts-sqlite-memory`
-- Next repo dependency: `07-router-runtime-protocol-routing`
+- Roadmap slot: `Run 07 - Endpoint registry and context envelope`
+- Previous repo dependency: `06-router-runtime-provider-accounts-sqlite-memory`
+- Next repo dependency: `08-router-runtime-protocol-routing`
 - Required handoff: runtime endpoint registry, lifecycle state handling, session/conversation identity model, context envelopes, and retrieval receipts
 
 ## Detailed Requirement Specification

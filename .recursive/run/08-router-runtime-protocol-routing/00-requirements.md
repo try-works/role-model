@@ -1,4 +1,4 @@
-Run: `/.recursive/run/07-router-runtime-protocol-routing/`
+Run: `/.recursive/run/08-router-runtime-protocol-routing/`
 Phase: `00 Requirements`
 Status: `DRAFT`
 Workflow version: `recursive-mode-audit-v1`
@@ -7,11 +7,11 @@ Inputs:
 - `/.recursive/RECURSIVE.md`
 - `/.recursive/STATE.md`
 - `/.recursive/DECISIONS.md`
-- `/.recursive/run/03-router-runtime-architecture-lock/00-requirements.md`
-- `/.recursive/run/06-router-runtime-endpoint-registry-context-envelope/00-requirements.md`
+- `/.recursive/run/04-router-runtime-architecture-lock/00-requirements.md`
+- `/.recursive/run/07-router-runtime-endpoint-registry-context-envelope/00-requirements.md`
 Outputs:
-- `/.recursive/run/07-router-runtime-protocol-routing/00-requirements.md`
-Scope note: This document defines the stable requirement contract for the protocol-driven routing run. It maps roadmap `Run 04 - Protocol-driven routing and configurable routing model` onto repo run `07-router-runtime-protocol-routing`.
+- `/.recursive/run/08-router-runtime-protocol-routing/00-requirements.md`
+Scope note: This document defines the stable requirement contract for the protocol-driven routing run. It maps roadmap `Run 08 - Protocol-driven routing and configurable routing model` onto repo run `08-router-runtime-protocol-routing`.
 
 ## TODO
 
@@ -73,7 +73,7 @@ Acceptance criteria:
 
 ## Constraints
 
-- Repo run `07-router-runtime-protocol-routing` corresponds to roadmap `Run 04 - Protocol-driven routing and configurable routing model`.
+- Repo run `08-router-runtime-protocol-routing` corresponds to roadmap `Run 08 - Protocol-driven routing and configurable routing model`.
 - This run must treat `C:\Users\erikb\OneDrive\##### DEV\role-model\requirements\role-model-router-runtime-roadmap.md` as the canonical source when design conflicts appear.
 - The run must consume the earlier architecture, registry, context-envelope, and SQLite-memory outputs as prerequisites.
 - The configurable routing-model path must remain subordinate to protocol semantics and explicit policy enforcement.
@@ -85,9 +85,9 @@ Acceptance criteria:
 
 ## Sequence Integration
 
-- Roadmap slot: `Run 04 - Protocol-driven routing and configurable routing model`
-- Previous repo dependency: `06-router-runtime-endpoint-registry-context-envelope`
-- Next repo dependency: `08-router-runtime-adapter-execution-plane`
+- Roadmap slot: `Run 08 - Protocol-driven routing and configurable routing model`
+- Previous repo dependency: `07-router-runtime-endpoint-registry-context-envelope`
+- Next repo dependency: `09-router-runtime-adapter-execution-plane`
 - Required handoff: protocol-driven projection, configurable routing-model selection, SQLite-backed routing retrieval, and expanded routing conformance outputs
 
 ## Detailed Requirement Specification

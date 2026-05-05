@@ -1,4 +1,4 @@
-Run: `/.recursive/run/03-router-runtime-architecture-lock/`
+Run: `/.recursive/run/04-router-runtime-architecture-lock/`
 Phase: `00 Requirements`
 Status: `DRAFT`
 Workflow version: `recursive-mode-audit-v1`
@@ -9,8 +9,8 @@ Inputs:
 - `/.recursive/DECISIONS.md`
 - prior repo baseline runs `00-baseline`, `01-protocol-routing-obs`, and `02-audit-remediation`
 Outputs:
-- `/.recursive/run/03-router-runtime-architecture-lock/00-requirements.md`
-Scope note: This document defines the stable requirement contract for the first router-runtime sequence run. It maps roadmap `Run 00 - Architecture lock` onto repo run `03-router-runtime-architecture-lock`.
+- `/.recursive/run/04-router-runtime-architecture-lock/00-requirements.md`
+Scope note: This document defines the stable requirement contract for the first router-runtime sequence run after the committed protocol baseline hardening. It maps roadmap `Run 04 - Architecture lock` onto repo run `04-router-runtime-architecture-lock`.
 
 ## TODO
 
@@ -49,7 +49,7 @@ Description:
 This run must create a clean handoff into the rest of the router-runtime sequence.
 
 Acceptance criteria:
-- the run explicitly identifies repo run `04-router-runtime-catalog-foundation` as the next implementation dependency
+- the run explicitly identifies repo run `05-router-runtime-catalog-foundation` as the next implementation dependency
 - downstream runs are required to reread `C:\Users\erikb\OneDrive\##### DEV\role-model\requirements\role-model-router-runtime-roadmap.md` at phase start when resolving scope or design choices
 - the architecture lock identifies which outputs later runs consume rather than assuming oral continuity
 
@@ -71,7 +71,7 @@ Acceptance criteria:
 
 ## Constraints
 
-- Repo run `03-router-runtime-architecture-lock` corresponds to roadmap `Run 00 - Architecture lock`.
+- Repo run `04-router-runtime-architecture-lock` corresponds to roadmap `Run 04 - Architecture lock`.
 - This run must treat `C:\Users\erikb\OneDrive\##### DEV\role-model\requirements\role-model-router-runtime-roadmap.md` as the canonical source of truth when conflicts or ambiguities appear.
 - This run must stay at the requirement/control-plane layer and must not silently widen into later product runs.
 - Later run requirements should inherit the local validation and log-driven repair rule from this run instead of redefining a weaker standard.
@@ -83,9 +83,9 @@ Acceptance criteria:
 
 ## Sequence Integration
 
-- Roadmap slot: `Run 00 - Architecture lock`
+- Roadmap slot: `Run 04 - Architecture lock`
 - Previous repo dependency: `02-audit-remediation`
-- Next repo dependency: `04-router-runtime-catalog-foundation`
+- Next repo dependency: `05-router-runtime-catalog-foundation`
 - Required handoff: locked architecture boundaries for provider taxonomy, provider/account separation, routing projection, SQLite-first memory, and routing-model configuration
 
 ## Detailed Requirement Specification

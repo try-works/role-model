@@ -1,11 +1,11 @@
-Run: `/.recursive/run/11-router-runtime-hardening-operations/`
+Run: `/.recursive/run/10-router-runtime-host-integration/`
 Phase: `00 Worktree`
 Status: `DRAFT`
 Inputs:
-- `/.recursive/run/11-router-runtime-hardening-operations/00-requirements.md`
+- `/.recursive/run/10-router-runtime-host-integration/00-requirements.md`
 - Current git repository state
 Outputs:
-- `/.recursive/run/11-router-runtime-hardening-operations/00-worktree.md`
+- `/.recursive/run/10-router-runtime-host-integration/00-worktree.md`
 Scope note: This document records the Phase 0 worktree context and the executable diff basis that all later audited phases must reuse.
 
 ## TODO
@@ -20,7 +20,7 @@ Scope note: This document records the Phase 0 worktree context and the executabl
 ## Directory Selection
 
 - Repository root: `D:\DEV\role-model`
-- Preferred worktree location: `.worktrees/11-router-runtime-hardening-operations/`
+- Preferred worktree location: `.worktrees/10-router-runtime-host-integration/`
 - Update this section with the actual selected location before locking Phase 0.
 
 ## Safety Verification
