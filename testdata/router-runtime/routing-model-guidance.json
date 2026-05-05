@@ -1,0 +1,7 @@
+{
+  "endpointId": "cli.local.coder",
+  "preferredEndpointIds": [
+    "openai.personal.primary.us-east-1.fast",
+    "cli.local.coder"
+  ]
+}

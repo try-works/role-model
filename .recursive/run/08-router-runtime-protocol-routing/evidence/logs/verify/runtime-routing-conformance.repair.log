@@ -1,0 +1,12 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/08-router-runtime-protocol-routing/packages/conformance[39m
+
+(node:4884) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [32mΓ£ô[39m src/runtime-routing-conformance.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 220[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m2 passed[39m[22m[90m (2)[39m
+[2m   Start at [22m 13:06:38
+[2m   Duration [22m 1.09s[2m (transform 208ms, setup 0ms, collect 251ms, tests 220ms, environment 0ms, prepare 224ms)[22m
+

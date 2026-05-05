@@ -1,0 +1,35 @@
+
+> @role-model-router/protocol-routing@0.0.0 test D:\DEV\role-model\.worktrees\08-router-runtime-protocol-routing\role-model-router\packages\protocol-routing
+> vitest run test/index.test.ts
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/08-router-runtime-protocol-routing/role-model-router/packages/protocol-routing[39m
+
+ [31mΓ¥»[39m test/index.test.ts [2m([22m[2m2 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 14[2mms[22m[39m
+   [32mΓ£ô[39m projectRuntimeRouteInput[2m > [22mmerges registry candidates, observed profiles, and runtime routing signals[32m 6[2mms[22m[39m
+[31m   [31m├ù[31m routeRuntimeRequest[2m > [22mkeeps explicit policy denial ahead of routing-model guidance[39m[32m 6[2mms[22m[39m
+[31m     ΓåÆ (0 , routeRuntimeRequest) is not a function[39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/index.test.ts > routeRuntimeRequest > keeps explicit policy denial ahead of routing-model guidance
+TypeError: (0 , routeRuntimeRequest) is not a function
+ Γ¥» test/index.test.ts:211:20
+    209| describe("routeRuntimeRequest", () => {
+    210|   test("keeps explicit policy denial ahead of routing-model guidance",ΓÇª
+    211|     const result = routeRuntimeRequest({
+       |                    ^
+    212|       request: {
+    213|         requestId: "req-runtime-2",
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m1 passed[39m[22m[90m (2)[39m
+[2m   Start at [22m 12:27:51
+[2m   Duration [22m 748ms[2m (transform 99ms, setup 0ms, collect 101ms, tests 14ms, environment 0ms, prepare 265ms)[22m
+
+D:\DEV\role-model\.worktrees\08-router-runtime-protocol-routing\role-model-router\packages\protocol-routing:
+ΓÇëERR_PNPM_RECURSIVE_RUN_FIRST_FAILΓÇë @role-model-router/protocol-routing@0.0.0 test: `vitest run test/index.test.ts`
+Exit status 1

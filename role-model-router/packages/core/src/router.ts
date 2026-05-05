@@ -1,4 +1,5 @@
 import type {
+  CandidateExclusion,
   EndpointCandidate,
   RoleBindingRecord,
   RoleDefinitionRecord,
@@ -16,7 +17,7 @@ function isLocalCandidate(candidate: EndpointCandidate): boolean {
   );
 }
 
-function unique(values: readonly string[]): string[] {
+function unique<TValue extends string>(values: readonly TValue[]): TValue[] {
   return [...new Set(values)];
 }
 
@@ -90,8 +91,9 @@ type TieBreakDiagnostic = {
   reliability: number;
   endpoint_id: string;
 };
+type SelectionReasonCode = RouterDecisionRecord["selection_reasons"][number];
 type CandidateScoreResult = ScoredCandidate & {
-  selectionReasons: string[];
+  selectionReasons: SelectionReasonCode[];
   usedMeasured: boolean;
   usedDeclared: boolean;
 };
@@ -455,6 +457,28 @@ function getPreferenceMetric(
     source = "declared";
   }
 
+  if (candidate.routingSignals?.continuityAffinity) {
+    score += 0.1;
+    adjustments.continuity_affinity = true;
+    adjustments.continuity_affinity_delta = 0.1;
+    source = "declared";
+  }
+
+  if (candidate.routingSignals?.cacheAffinity) {
+    score += 0.1;
+    adjustments.cache_affinity = true;
+    adjustments.cache_affinity_delta = 0.1;
+    source = "declared";
+  }
+
+  if (typeof candidate.routingSignals?.routingModelRank === "number") {
+    const delta = Math.max(0, 0.15 - candidate.routingSignals.routingModelRank * 0.05);
+    score += delta;
+    adjustments.routing_model_rank = candidate.routingSignals.routingModelRank;
+    adjustments.routing_model_rank_delta = delta;
+    source = "declared";
+  }
+
   return {
     value: clamp(score),
     source,
@@ -518,11 +542,14 @@ function getRedistributedWeights(
   return redistributedWeights;
 }
 
-function toCandidateExclusion(code: string): { code: string; detail: string } {
+function toCandidateExclusion(code: CandidateExclusion["code"]): CandidateExclusion {
   const details: Record<string, string> = {
+    ACCOUNT_DISABLED: "Endpoint account is disabled.",
+    AUTH_UNAVAILABLE: "Endpoint authentication is unavailable for routing/execution.",
     BUDGET_EXCEEDED: "Endpoint cost exceeds the request budget.",
     CAPABILITY_MISSING: "Endpoint is missing a required capability.",
     CONTEXT_TOO_SMALL: "Endpoint context window is too small for the request.",
+    DEPLOYMENT_CLASS_MISMATCH: "Endpoint deployment class does not satisfy the request.",
     ENTITLEMENT_MISSING: "Endpoint is missing a required entitlement.",
     FORBIDDEN_CAPABILITY_PRESENT: "Endpoint exposes a capability forbidden by the requested role.",
     MODALITY_UNSUPPORTED: "Endpoint does not support all required modalities.",
@@ -530,6 +557,8 @@ function toCandidateExclusion(code: string): { code: string; detail: string } {
     POLICY_DENY_ENDPOINT: "Endpoint is denied by routing policy.",
     POLICY_DENY_REMOTE: "Remote endpoints are denied by routing policy.",
     PROVIDER_OFFLINE: "Endpoint provider is offline.",
+    QUOTA_EXHAUSTED: "Endpoint quota is exhausted.",
+    REGION_DISALLOWED: "Endpoint region is disallowed for the current account or request.",
     REVOKED: "Endpoint has been revoked.",
     ROLE_BINDING_CAPABILITY_MISSING:
       "Endpoint role binding does not allow all required capabilities for this request.",
@@ -563,8 +592,32 @@ function evaluateEligibility(
   const effectiveRequiredCapabilities = getEffectiveRequiredCapabilities(input);
 
   for (const candidate of input.candidates) {
-    const reasons: string[] = [];
+    const reasons: CandidateExclusion["code"][] = [];
 
+    if (candidate.runtimeEligibility?.accountDisabled) {
+      reasons.push("ACCOUNT_DISABLED");
+    }
+    if (candidate.runtimeEligibility?.authUnavailable) {
+      reasons.push("AUTH_UNAVAILABLE");
+    }
+    if (candidate.runtimeEligibility?.quotaExhausted) {
+      reasons.push("QUOTA_EXHAUSTED");
+    }
+    if (candidate.runtimeEligibility?.budgetExceeded) {
+      reasons.push("BUDGET_EXCEEDED");
+    }
+    if (candidate.runtimeEligibility?.regionDisallowed) {
+      reasons.push("REGION_DISALLOWED");
+    }
+    if (candidate.runtimeEligibility?.entitlementMissing) {
+      reasons.push("ENTITLEMENT_MISSING");
+    }
+    if (candidate.runtimeEligibility?.providerUnavailable) {
+      reasons.push("PROVIDER_OFFLINE");
+    }
+    if (candidate.runtimeEligibility?.deploymentClassMismatch) {
+      reasons.push("DEPLOYMENT_CLASS_MISMATCH");
+    }
     if (candidate.status === "offline") {
       reasons.push("PROVIDER_OFFLINE");
     }
@@ -717,7 +770,7 @@ function scoreCandidate(
     metricScores.reliability.value * weights.reliability +
     metricScores.preference.value * weights.preference;
 
-  const selectionReasons: string[] = ["DECLARED_PROFILE_USED"];
+  const selectionReasons: RouterDecisionRecord["selection_reasons"] = ["DECLARED_PROFILE_USED"];
   const { requestedTask } = getRequestedRoleAndTask(input);
   const hasMeasuredMetric = Object.values(metricScores).some((metric) => metric.source === "measured");
   const hasDefaultMetric = Object.values(metricScores).some((metric) => metric.source === "default");
@@ -734,6 +787,18 @@ function scoreCandidate(
   }
   if (policySnapshot.compute_preference === "remote" && !isLocalCandidate(candidate)) {
     selectionReasons.push("REMOTE_PREFERENCE_APPLIED");
+  }
+  if (candidate.routingSignals?.continuityAffinity) {
+    selectionReasons.push("CONTINUITY_AFFINITY_APPLIED");
+  }
+  if (candidate.routingSignals?.cacheAffinity) {
+    selectionReasons.push("CACHE_AFFINITY_APPLIED");
+  }
+  if (
+    typeof candidate.routingSignals?.routingModelRank === "number" &&
+    Math.max(0, 0.15 - candidate.routingSignals.routingModelRank * 0.05) > 0
+  ) {
+    selectionReasons.push("ROUTING_MODEL_PREFERENCE_APPLIED");
   }
 
   if (toPolicyStrategy(input.request.strategy) === "cost" || policySnapshot.budget_mode === "advisory") {
@@ -828,11 +893,11 @@ export function routeRequest(input: RouteRequestInput): RouterDecisionRecord {
   });
 
   const chosen = scored[0];
-  const selectionReasons = chosen
-    ? unique([
+  const selectionReasons: SelectionReasonCode[] = chosen
+    ? unique<SelectionReasonCode>([
         "BEST_TOTAL_SCORE",
         ...chosen.selectionReasons,
-        ...(scored.length > 1 ? ["FALLBACK_CHAIN_COMPUTED"] : []),
+        ...(scored.length > 1 ? (["FALLBACK_CHAIN_COMPUTED"] as const) : []),
       ])
     : [];
   const scoredCandidates = scored.map(

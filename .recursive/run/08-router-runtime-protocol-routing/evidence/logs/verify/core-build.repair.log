@@ -1,0 +1,4 @@
+
+> @role-model-router/core@0.0.0 build D:\DEV\role-model\.worktrees\08-router-runtime-protocol-routing\role-model-router\packages\core
+> tsc -p tsconfig.json
+

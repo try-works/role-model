@@ -32,12 +32,31 @@ export type CandidateEligibility = RouterDecisionRecord["eligibility"][number];
 export type CandidateExclusion = CandidateEligibility["exclusions"][number];
 export type ScoredCandidate = RouterDecisionRecord["scored_candidates"][number];
 
+export interface RuntimeRoutingSignals {
+  continuityAffinity?: boolean;
+  cacheAffinity?: boolean;
+  routingModelRank?: number;
+}
+
+export interface RuntimeEligibilitySignals {
+  accountDisabled?: boolean;
+  authUnavailable?: boolean;
+  quotaExhausted?: boolean;
+  budgetExceeded?: boolean;
+  regionDisallowed?: boolean;
+  entitlementMissing?: boolean;
+  providerUnavailable?: boolean;
+  deploymentClassMismatch?: boolean;
+}
+
 export interface EndpointCandidate {
   identity: EndpointIdentityRecord;
   declared: DeclaredCapabilityProfileRecord;
   observed?: ObservedPerformanceProfileRecord;
   status: EndpointStatus;
   deniedByPolicy?: boolean;
+  runtimeEligibility?: RuntimeEligibilitySignals;
+  routingSignals?: RuntimeRoutingSignals;
 }
 
 export interface RoutingRequest {

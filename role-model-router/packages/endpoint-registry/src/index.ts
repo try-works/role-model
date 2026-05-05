@@ -46,6 +46,18 @@ export interface EndpointCandidate {
   };
   readonly status: string;
   readonly deniedByPolicy?: boolean;
+  readonly runtimeEligibility?: RuntimeEligibility;
+}
+
+export interface RuntimeEligibility {
+  readonly accountDisabled?: boolean;
+  readonly authUnavailable?: boolean;
+  readonly quotaExhausted?: boolean;
+  readonly budgetExceeded?: boolean;
+  readonly regionDisallowed?: boolean;
+  readonly entitlementMissing?: boolean;
+  readonly providerUnavailable?: boolean;
+  readonly deploymentClassMismatch?: boolean;
 }
 
 export interface CloudRegistrySource {
@@ -153,6 +165,47 @@ function isModelAllowed(account: ProviderAccountRecord, modelId: string): boolea
   return account.allowedModels.some((candidate) => comparableIds.has(candidate));
 }
 
+function toRuntimeEligibility(
+  account: ProviderAccountRecord,
+  source: CloudRegistrySource,
+): RuntimeEligibility | undefined {
+  const runtimeEligibility: Partial<Record<keyof RuntimeEligibility, boolean>> = {};
+
+  if (account.status === "disabled") {
+    runtimeEligibility.accountDisabled = true;
+  }
+  if (
+    account.healthStatus === "credentials-missing" ||
+    account.healthStatus === "refresh-failing" ||
+    account.healthStatus === "provider-auth-error"
+  ) {
+    runtimeEligibility.authUnavailable = true;
+  }
+  if (account.healthStatus === "quota-exhausted") {
+    runtimeEligibility.quotaExhausted = true;
+  }
+  if (account.healthStatus === "budget-exhausted") {
+    runtimeEligibility.budgetExceeded = true;
+  }
+  if (
+    account.healthStatus === "regional-restriction" ||
+    !isRegionAllowed(account, source.region)
+  ) {
+    runtimeEligibility.regionDisallowed = true;
+  }
+  if (account.healthStatus === "entitlement-missing") {
+    runtimeEligibility.entitlementMissing = true;
+  }
+  if (
+    source.healthStatus === "provider-unavailable" ||
+    source.healthStatus === "provider-outage"
+  ) {
+    runtimeEligibility.providerUnavailable = true;
+  }
+
+  return Object.keys(runtimeEligibility).length > 0 ? runtimeEligibility : undefined;
+}
+
 function createCloudEndpoint(model: NormalizedCatalogModel, account: ProviderAccountRecord, source: CloudRegistrySource): EndpointCandidate {
   return {
     identity: {
@@ -183,7 +236,8 @@ function createCloudEndpoint(model: NormalizedCatalogModel, account: ProviderAcc
       supports_embeddings: model.capabilities.includes("embeddings.text"),
       platform_constraints: [],
     },
-    status: source.lifecycleState,
+    status: account.status === "revoked" ? "revoked" : source.lifecycleState,
+    runtimeEligibility: toRuntimeEligibility(account, source),
   };
 }
 
@@ -257,7 +311,6 @@ export function buildEndpointRegistry(input: BuildEndpointRegistryInput): Endpoi
         code: "REGION_NOT_ALLOWED",
         message: `Region ${source.region} is not allowed by provider account ${account.providerAccountId}.`,
       });
-      continue;
     }
 
     if (!isModelAllowed(account, source.modelId)) {
