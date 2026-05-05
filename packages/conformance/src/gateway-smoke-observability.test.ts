@@ -136,8 +136,20 @@ describe("gateway smoke observability conformance", () => {
 
     const observedProfile = JSON.parse(
       await readFile(path.join(smokeOutputDir, "observed-performance.json"), "utf8"),
-    ) as unknown;
+    ) as {
+      endpoint_version?: string;
+      measurement_window?: {
+        started_at_ms: number;
+        ended_at_ms: number;
+      };
+    };
 
     assertValid(validateObserved, observedProfile, "observed-performance.json");
+    if (typeof observedProfile.endpoint_version !== "string" || !observedProfile.endpoint_version) {
+      throw new Error("observed-performance.json must include endpoint_version");
+    }
+    if (!observedProfile.measurement_window) {
+      throw new Error("observed-performance.json must include measurement_window");
+    }
   }, 60_000);
 });

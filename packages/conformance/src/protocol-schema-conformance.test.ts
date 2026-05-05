@@ -82,7 +82,7 @@ describe("run01 protocol schema conformance", () => {
     });
   });
 
-  test("observed performance accepts sample_window and sources without requiring legacy single-sample fields", async () => {
+  test("observed performance accepts measurement_window, endpoint_version, and aggregate source counts", async () => {
     const ajv = await createAjv(schemaDir);
     const validate = ajv.getSchema("observed-performance-profile.schema.json");
     if (!validate) {
@@ -91,8 +91,9 @@ describe("run01 protocol schema conformance", () => {
 
     assertValid(validate, {
       endpoint_id: "local-cli",
+      endpoint_version: "gpt-5.4@2026-04",
       measured_at_ms: 1_700_000_000_000,
-      sample_window: {
+      measurement_window: {
         started_at_ms: 1_699_999_999_000,
         ended_at_ms: 1_700_000_000_000,
       },
@@ -172,7 +173,7 @@ describe("run01 protocol schema conformance", () => {
     });
   });
 
-  test("role binding accepts the candidate status required by run01", async () => {
+  test("role binding accepts the active inactive disabled status vocabulary", async () => {
     const ajv = await createAjv(schemaDir);
     const validate = ajv.getSchema("role-binding.schema.json");
     if (!validate) {
@@ -183,7 +184,7 @@ describe("run01 protocol schema conformance", () => {
       binding_id: "binding-1",
       role_id: "developer",
       endpoint_id: "local-cli",
-      status: "candidate",
+      status: "inactive",
       policy_overrides: {},
       effective_capabilities: ["code.edit"],
       effective_task_types: ["code.edit"],

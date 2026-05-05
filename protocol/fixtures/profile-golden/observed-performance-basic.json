@@ -1,7 +1,8 @@
 {
   "endpoint_id": "local-cli",
+  "endpoint_version": "1.0.0:default",
   "measured_at_ms": 1712880000000,
-  "sample_window": {
+  "measurement_window": {
     "started_at_ms": 1712879999000,
     "ended_at_ms": 1712880000000
   },
@@ -11,6 +12,7 @@
     "benchmark_samples": 1
   },
   "judge_score": 0.87,
+  "quality_score": 0.87,
   "latency_ms_p50": 110,
   "latency_ms_p95": 160,
   "tokens_per_sec": 48,

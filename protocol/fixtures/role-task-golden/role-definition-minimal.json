@@ -1,0 +1,17 @@
+{
+  "role_id": "general.chat",
+  "name": "General Chat",
+  "description": "Minimal chat role fixture.",
+  "role_kind": "assistant",
+  "default_system_instructions": "",
+  "task_types_supported": ["text.chat"],
+  "required_capabilities": [],
+  "preferred_capabilities": [],
+  "forbidden_capabilities": [],
+  "tool_policy": {
+    "mode": "allowed"
+  },
+  "routing_policy_overrides": {},
+  "output_contracts": [],
+  "safety_policy_refs": []
+}

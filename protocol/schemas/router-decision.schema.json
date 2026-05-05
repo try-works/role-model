@@ -7,6 +7,8 @@
   "required": [
     "routing_decision_id",
     "request_id",
+    "app_id",
+    "org_id",
     "policy_snapshot",
     "eligibility",
     "scored_candidates",
@@ -20,6 +22,8 @@
   "properties": {
     "routing_decision_id": { "type": "string" },
     "request_id": { "type": "string" },
+    "app_id": { "type": "string" },
+    "org_id": { "type": ["string", "null"] },
     "policy_snapshot": { "$ref": "./routing-policy.schema.json" },
     "eligibility": {
       "type": "array",
@@ -41,9 +45,16 @@
                   "type": "string",
                   "enum": [
                     "CAPABILITY_MISSING",
+                    "FORBIDDEN_CAPABILITY_PRESENT",
                     "MODALITY_UNSUPPORTED",
                     "CONTEXT_TOO_SMALL",
                     "TOOLS_UNSUPPORTED",
+                    "ROLE_NOT_ALLOWED",
+                    "TASK_NOT_SUPPORTED_BY_ROLE",
+                    "ROLE_BINDING_INACTIVE",
+                    "ROLE_BINDING_DISABLED",
+                    "ROLE_BINDING_TASK_NOT_ALLOWED",
+                    "ROLE_BINDING_CAPABILITY_MISSING",
                     "POLICY_DENY_ENDPOINT",
                     "POLICY_DENY_REMOTE",
                     "ENTITLEMENT_MISSING",
@@ -51,10 +62,7 @@
                     "VARIANT_INCOMPATIBLE",
                     "PROVIDER_OFFLINE",
                     "BUDGET_EXCEEDED",
-                    "REVOKED",
-                    "ROLE_NOT_ALLOWED",
-                    "TASK_NOT_SUPPORTED",
-                    "ROLE_BINDING_INACTIVE"
+                    "REVOKED"
                   ]
                 },
                 "detail": { "type": "string" }
@@ -69,18 +77,86 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["endpoint_id", "score"],
+        "required": ["endpoint_id", "total_score", "metric_breakdown", "tie_break"],
         "properties": {
           "endpoint_id": { "type": "string" },
-          "score": { "type": "number" }
+          "total_score": { "type": "number" },
+          "metric_breakdown": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "quality",
+              "latency",
+              "throughput",
+              "cost",
+              "reliability",
+              "preference"
+            ],
+            "properties": {
+              "quality": { "$ref": "#/$defs/metricEntry" },
+              "latency": { "$ref": "#/$defs/metricEntry" },
+              "throughput": { "$ref": "#/$defs/metricEntry" },
+              "cost": { "$ref": "#/$defs/metricEntry" },
+              "reliability": { "$ref": "#/$defs/metricEntry" },
+              "preference": { "$ref": "#/$defs/metricEntry" }
+            }
+          },
+          "tie_break": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["quality", "latency_ms", "reliability", "endpoint_id"],
+            "properties": {
+              "quality": { "type": "number" },
+              "latency_ms": { "type": "number", "minimum": 0 },
+              "reliability": { "type": "number" },
+              "endpoint_id": { "type": "string" }
+            }
+          }
         }
       }
     },
     "chosen_endpoint_id": { "type": "string" },
     "fallback_endpoint_ids": { "type": "array", "items": { "type": "string" } },
-    "selection_reasons": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+    "selection_reasons": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "BEST_TOTAL_SCORE",
+          "MEASURED_PROFILE_USED",
+          "DECLARED_PROFILE_USED",
+          "DEFAULT_PROFILE_USED",
+          "LOCAL_PREFERENCE_APPLIED",
+          "REMOTE_PREFERENCE_APPLIED",
+          "BUDGET_OPTIMIZATION",
+          "LOW_LATENCY_TARGET_MET",
+          "HIGH_QUALITY_TARGET_MET",
+          "ROLE_POLICY_APPLIED",
+          "TASK_POLICY_APPLIED",
+          "FALLBACK_CHAIN_COMPUTED"
+        ]
+      }
+    },
     "used_measured": { "type": "boolean" },
     "used_declared": { "type": "boolean" },
     "scoring_version": { "type": "string" }
+  },
+  "$defs": {
+    "metricEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value", "source"],
+      "properties": {
+        "value": { "type": "number", "minimum": 0, "maximum": 1 },
+        "source": {
+          "type": "string",
+          "enum": ["measured", "declared", "default"]
+        },
+        "raw": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    }
   }
 }

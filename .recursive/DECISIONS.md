@@ -89,3 +89,31 @@
 - Known issues / follow-ups:
   - unsupported-engine warnings still persist under `Node v24`
   - `packages/protocol-types/src/generated.ts` can show local CRLF-only status churn after generator-backed tests even when there is no semantic content diff
+
+### Run `03-protocol-baseline-hardening`
+
+- Run folder: `/.recursive/run/03-protocol-baseline-hardening/`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - froze the M1 protocol baseline by expanding fixture coverage to valid, invalid, minimal, and edge families, tightening the router-decision and observed-performance schemas, and enforcing the full fixture manifest through schema-tools
+  - hardened the TypeScript router into an explainable role, task, and binding-aware reference implementation with explicit exclusion codes, scored-candidate diagnostics, and deterministic tie-break metadata
+  - added stable observability linkage helpers plus a fixture-driven, self-validating `gateway-smoke` harness that validates router, trace, usage, and observed-performance artifacts against the canonical schemas
+- Why:
+  - to complete the next baseline-hardening block for M1-M3 before widening into deferred native-host, package-loading, or browser/runtime expansion
+- How:
+  - used a strict RED/GREEN loop driven by router and observability conformance failures, extended schema-tools to validate the expanded fixture corpus, and revalidated the repo through root `schemas:validate`, `test`, and `smoke`
+- What was not done:
+  - native hosts, memory/backend integration, package/model-pack loading, and real browser-local inference integrations remain out of scope
+- Known issues / follow-ups:
+  - unsupported-engine warnings still persist under `Node v24`
+  - repo-wide CRLF/Biome drift remains an existing Windows hygiene issue and was intentionally not widened into this run

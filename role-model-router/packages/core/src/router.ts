@@ -1,7 +1,4 @@
-import { SELECTION_REASON_CODES } from "./reason-codes.js";
 import type {
-  CandidateEligibility,
-  CandidateExclusion,
   EndpointCandidate,
   RoleBindingRecord,
   RoleDefinitionRecord,
@@ -19,7 +16,7 @@ function isLocalCandidate(candidate: EndpointCandidate): boolean {
   );
 }
 
-function unique(values: string[]): string[] {
+function unique(values: readonly string[]): string[] {
   return [...new Set(values)];
 }
 
@@ -31,7 +28,9 @@ const SCORE_TIE_EPSILON = 0.01;
 const LATENCY_TARGET_MS = 150;
 const LATENCY_MAX_MS = 300;
 const THROUGHPUT_TARGET_TPS = 40;
-const ROLE_OR_TASK_PREFERENCE_BONUS = 0.01;
+const DEFAULT_COST_TARGET = 0.01;
+const FRESHNESS_NEUTRAL = 0.5;
+const RELIABILITY_NEUTRAL = 0.7;
 const STRATEGY_WEIGHTS: Record<
   RoutingPolicyStrategy,
   Record<"quality" | "latency" | "throughput" | "cost" | "reliability" | "preference", number>
@@ -78,30 +77,24 @@ type ScoringMetricName =
   | "reliability"
   | "preference";
 
-type MetricScore = {
-  score: number;
-  unknown: boolean;
+type MetricSource = "measured" | "declared" | "default";
+type MetricEntry = {
+  value: number;
+  source: MetricSource;
+  raw?: Record<string, unknown>;
 };
-
-type CandidateMetricScores = Record<ScoringMetricName, MetricScore>;
-
-function getEffectiveComputePreference(
-  request: RouteRequestInput["request"],
-): RoutingPolicySnapshot["compute_preference"] {
-  if (request.denyRemote) {
-    return "local";
-  }
-
-  if (request.computePreference) {
-    return request.computePreference;
-  }
-
-  if (request.preferLocal) {
-    return "local";
-  }
-
-  return "auto";
-}
+type CandidateMetricScores = Record<ScoringMetricName, MetricEntry>;
+type TieBreakDiagnostic = {
+  quality: number;
+  latency_ms: number;
+  reliability: number;
+  endpoint_id: string;
+};
+type CandidateScoreResult = ScoredCandidate & {
+  selectionReasons: string[];
+  usedMeasured: boolean;
+  usedDeclared: boolean;
+};
 
 function getRequestedRoleAndTask(input: RouteRequestInput): {
   requestedRole: RoleDefinitionRecord | undefined;
@@ -153,15 +146,41 @@ function toPolicyStrategy(
   }
 }
 
-function buildPolicySnapshot(input: RouteRequestInput): RoutingPolicySnapshot {
+function getRequestedComputePreference(
+  request: RouteRequestInput["request"],
+): RoutingPolicySnapshot["compute_preference"] {
+  if (request.denyRemote) {
+    return "local";
+  }
+  if (request.computePreference) {
+    return request.computePreference;
+  }
+  if (request.preferLocal) {
+    return "local";
+  }
+  return "auto";
+}
+
+function getBudgetMode(request: RouteRequestInput["request"]): "strict" | "advisory" | "disabled" {
+  if (request.budgetMode) {
+    return request.budgetMode;
+  }
+  if (typeof request.budgetLimit === "number") {
+    return "strict";
+  }
+  return "disabled";
+}
+
+function buildBasePolicySnapshot(input: RouteRequestInput): RoutingPolicySnapshot {
   const budgetEnabled = typeof input.request.budgetLimit === "number";
-  const effectiveRequiredCapabilities = getEffectiveRequiredCapabilities(input);
-  const computePreference = getEffectiveComputePreference(input.request);
   return {
     policy_id: `${input.request.strategy}-policy`,
     strategy: toPolicyStrategy(input.request.strategy),
-    compute_preference: computePreference,
-    required_capabilities: effectiveRequiredCapabilities,
+    compute_preference: getRequestedComputePreference(input.request),
+    prefer_local: input.request.preferLocal,
+    budget_mode: getBudgetMode(input.request),
+    tie_break_order: ["quality", "latency_ms", "reliability", "endpoint_id"],
+    required_capabilities: getEffectiveRequiredCapabilities(input),
     required_modalities: [...input.request.requiredModalities],
     require_tools: input.request.needsTools,
     deny_endpoints: [...(input.request.denyEndpoints ?? [])],
@@ -182,13 +201,52 @@ function buildPolicySnapshot(input: RouteRequestInput): RoutingPolicySnapshot {
       allow_remote: !input.request.denyRemote,
     },
     targets: {
-      latency_target_ms: 150,
-      latency_max_ms: 300,
-      throughput_target_tps: 40,
+      latency_target_ms: LATENCY_TARGET_MS,
+      latency_max_ms: LATENCY_MAX_MS,
+      throughput_target_tps: THROUGHPUT_TARGET_TPS,
     },
-    prefer_local: input.request.preferLocal,
-    budget_mode: budgetEnabled ? "strict" : "disabled",
-    tie_break_order: ["prefer_local", "cost", "latency_ms_p95", "endpoint_id"],
+  };
+}
+
+function mergePolicyOverrides(
+  base: RoutingPolicySnapshot,
+  overrides: Record<string, unknown> | undefined,
+): RoutingPolicySnapshot {
+  if (!overrides || Object.keys(overrides).length === 0) {
+    return base;
+  }
+
+  const override = overrides as Partial<RoutingPolicySnapshot>;
+  return {
+    ...base,
+    ...override,
+    budget: override.budget ? { ...base.budget, ...override.budget } : base.budget,
+    privacy: override.privacy ? { ...base.privacy, ...override.privacy } : base.privacy,
+    targets: override.targets ? { ...base.targets, ...override.targets } : base.targets,
+    required_capabilities: override.required_capabilities ?? base.required_capabilities,
+    required_modalities: override.required_modalities ?? base.required_modalities,
+    deny_endpoints: override.deny_endpoints ?? base.deny_endpoints,
+    allow_endpoints: override.allow_endpoints ?? base.allow_endpoints,
+    deny_provider_kinds: override.deny_provider_kinds ?? base.deny_provider_kinds,
+    allow_provider_kinds: override.allow_provider_kinds ?? base.allow_provider_kinds,
+    tie_break_order: override.tie_break_order ?? base.tie_break_order,
+  };
+}
+
+function buildPolicySnapshot(input: RouteRequestInput): {
+  policySnapshot: RoutingPolicySnapshot;
+  rolePolicyApplied: boolean;
+} {
+  const { requestedRole } = getRequestedRoleAndTask(input);
+  const basePolicySnapshot = buildBasePolicySnapshot(input);
+  const rolePolicyApplied = Boolean(
+    requestedRole?.routing_policy_overrides &&
+      Object.keys(requestedRole.routing_policy_overrides).length > 0,
+  );
+
+  return {
+    policySnapshot: mergePolicyOverrides(basePolicySnapshot, requestedRole?.routing_policy_overrides),
+    rolePolicyApplied,
   };
 }
 
@@ -233,147 +291,205 @@ function getEffectiveLatency(candidate: EndpointCandidate): number {
   return 250;
 }
 
-function getQualityMetric(candidate: EndpointCandidate): MetricScore {
+function getQualityMetric(candidate: EndpointCandidate): MetricEntry {
   if (typeof candidate.observed?.judge_score === "number") {
-    return { score: clamp(candidate.observed.judge_score), unknown: false };
+    return {
+      value: clamp(candidate.observed.judge_score),
+      source: "measured",
+      raw: { judge_score: candidate.observed.judge_score },
+    };
   }
 
   if (typeof candidate.observed?.quality_score === "number") {
-    return { score: clamp(candidate.observed.quality_score), unknown: false };
+    return {
+      value: clamp(candidate.observed.quality_score),
+      source: "measured",
+      raw: { quality_score: candidate.observed.quality_score },
+    };
   }
 
-  return { score: 0.5, unknown: true };
+  return {
+    value: 0.5,
+    source: "default",
+  };
 }
 
-function getQualityScore(candidate: EndpointCandidate): number {
-  return getQualityMetric(candidate).score;
-}
-
-function getLatencyMetric(candidate: EndpointCandidate): MetricScore {
+function getLatencyMetric(candidate: EndpointCandidate, policySnapshot: RoutingPolicySnapshot): MetricEntry {
   if (
     typeof candidate.observed?.latency_ms_p50 !== "number" ||
     typeof candidate.observed?.latency_ms_p95 !== "number"
   ) {
-    return { score: 0.5, unknown: true };
+    return {
+      value: 0.5,
+      source: "default",
+    };
   }
 
   const effectiveLatencyMs = getEffectiveLatency(candidate);
   const normalized =
     1 -
-    Math.log1p(effectiveLatencyMs / LATENCY_TARGET_MS) /
-      Math.log1p(LATENCY_MAX_MS / LATENCY_TARGET_MS);
+    Math.log1p(effectiveLatencyMs / policySnapshot.targets.latency_target_ms) /
+      Math.log1p(policySnapshot.targets.latency_max_ms / policySnapshot.targets.latency_target_ms);
 
-  return { score: clamp(normalized), unknown: false };
+  return {
+    value: clamp(normalized),
+    source: "measured",
+    raw: {
+      latency_ms_p50: candidate.observed.latency_ms_p50,
+      latency_ms_p95: candidate.observed.latency_ms_p95,
+      effective_latency_ms: effectiveLatencyMs,
+    },
+  };
 }
 
-function getThroughputMetric(candidate: EndpointCandidate): MetricScore {
+function getThroughputMetric(
+  candidate: EndpointCandidate,
+  policySnapshot: RoutingPolicySnapshot,
+): MetricEntry {
   if (typeof candidate.observed?.tokens_per_sec !== "number") {
-    return { score: 0.5, unknown: true };
+    return {
+      value: 0.5,
+      source: "default",
+    };
   }
 
   const normalized =
-    Math.log1p(candidate.observed.tokens_per_sec) / Math.log1p(THROUGHPUT_TARGET_TPS);
-  return { score: clamp(normalized), unknown: false };
-}
-
-function getCostMetric(candidate: EndpointCandidate, input: RouteRequestInput): MetricScore {
-  if (
-    typeof input.request.budgetLimit !== "number" ||
-    typeof candidate.observed?.cost_per_1k_tokens_est !== "number"
-  ) {
-    return { score: 0.5, unknown: true };
-  }
-
+    Math.log1p(candidate.observed.tokens_per_sec) /
+    Math.log1p(policySnapshot.targets.throughput_target_tps);
   return {
-    score: clamp(1 - candidate.observed.cost_per_1k_tokens_est / input.request.budgetLimit),
-    unknown: false,
+    value: clamp(normalized),
+    source: "measured",
+    raw: { tokens_per_sec: candidate.observed.tokens_per_sec },
   };
 }
 
-function getReliabilityMetric(candidate: EndpointCandidate): MetricScore {
-  if (typeof candidate.observed?.failure_rate !== "number") {
-    return { score: 0.7, unknown: true };
+function getCostMetric(candidate: EndpointCandidate, policySnapshot: RoutingPolicySnapshot): MetricEntry {
+  if (typeof candidate.observed?.cost_per_1k_tokens_est !== "number") {
+    return {
+      value: 0.5,
+      source: "default",
+    };
   }
 
-  return { score: clamp(1 - candidate.observed.failure_rate), unknown: false };
+  const targetCost = policySnapshot.budget.target_cost_per_request ?? DEFAULT_COST_TARGET;
+  return {
+    value: clamp(1 - candidate.observed.cost_per_1k_tokens_est / targetCost),
+    source: "measured",
+    raw: {
+      cost_per_1k_tokens_est: candidate.observed.cost_per_1k_tokens_est,
+      target_cost_per_request: targetCost,
+    },
+  };
 }
 
-function getPreferenceMetric(candidate: EndpointCandidate, input: RouteRequestInput): MetricScore {
+function getReliabilityMetric(candidate: EndpointCandidate): MetricEntry {
+  if (typeof candidate.observed?.failure_rate !== "number") {
+    return {
+      value: RELIABILITY_NEUTRAL,
+      source: "default",
+    };
+  }
+
+  return {
+    value: clamp(1 - candidate.observed.failure_rate),
+    source: "measured",
+    raw: { failure_rate: candidate.observed.failure_rate },
+  };
+}
+
+function getPreferenceMetric(
+  candidate: EndpointCandidate,
+  input: RouteRequestInput,
+  policySnapshot: RoutingPolicySnapshot,
+  rolePolicyApplied: boolean,
+): MetricEntry {
   const effectiveRequiredCapabilities = getEffectiveRequiredCapabilities(input);
   const effectivePreferredCapabilities = getEffectivePreferredCapabilities(input);
-  const computePreference = getEffectiveComputePreference(input.request);
+  const requestedRoleId = input.request.requestedRoleId;
+  const { requestedRole, requestedTask } = getRequestedRoleAndTask(input);
+  const activeBinding = getRoleBindingForCandidate(candidate, input)?.status === "active";
+
+  const adjustments: Record<string, unknown> = {};
   let score = 0.5;
+  let source: MetricSource = "default";
 
-  if (computePreference === "local") {
-    score += isLocalCandidate(candidate) ? 0.15 : -0.15;
-  } else if (computePreference === "remote") {
-    score += isLocalCandidate(candidate) ? -0.15 : 0.15;
+  if (policySnapshot.compute_preference === "local") {
+    const delta = isLocalCandidate(candidate) ? 0.15 : -0.15;
+    score += delta;
+    adjustments.compute_preference = "local";
+    adjustments.compute_delta = delta;
+    source = "declared";
+  } else if (policySnapshot.compute_preference === "remote") {
+    const delta = isLocalCandidate(candidate) ? -0.15 : 0.15;
+    score += delta;
+    adjustments.compute_preference = "remote";
+    adjustments.compute_delta = delta;
+    source = "declared";
   }
 
-  if (
-    effectivePreferredCapabilities.some(
-      (capability) =>
-        !effectiveRequiredCapabilities.includes(capability) &&
-        candidate.declared.capabilities.includes(capability),
-    )
-  ) {
+  const preferredCapabilityMatches = effectivePreferredCapabilities.filter(
+    (capability) =>
+      !effectiveRequiredCapabilities.includes(capability) &&
+      candidate.declared.capabilities.includes(capability),
+  ).length;
+  if (preferredCapabilityMatches > 0) {
+    const delta = Math.min(0.25, preferredCapabilityMatches * 0.25);
+    score += delta;
+    adjustments.preferred_capability_matches = preferredCapabilityMatches;
+    adjustments.preferred_capability_delta = delta;
+    source = "declared";
+  }
+
+  if (requestedRoleId && activeBinding) {
     score += 0.1;
+    adjustments.active_role_binding = true;
+    source = "declared";
   }
 
-  if (getRoleBindingForCandidate(candidate, input)?.status === "active") {
-    score += 0.1;
+  if (requestedRole && rolePolicyApplied) {
+    adjustments.role_policy_applied = true;
+    source = "declared";
   }
-
-  return { score: clamp(score), unknown: false };
-}
-
-function toCandidateExclusion(code: string): CandidateExclusion {
-  const details: Record<string, string> = {
-    BUDGET_EXCEEDED: "Endpoint cost exceeds the request budget.",
-    CAPABILITY_MISSING: "Endpoint is missing a required capability.",
-    CONTEXT_TOO_SMALL: "Endpoint context window is too small for the request.",
-    MODALITY_UNSUPPORTED: "Endpoint does not support all required modalities.",
-    PACKAGE_NOT_INSTALLED: "Endpoint package is not installed.",
-    POLICY_DENY_ENDPOINT: "Endpoint is denied by routing policy.",
-    POLICY_DENY_REMOTE: "Remote endpoints are denied by routing policy.",
-    PROVIDER_OFFLINE: "Endpoint provider is offline.",
-    REVOKED: "Endpoint has been revoked.",
-    ROLE_BINDING_INACTIVE: "Endpoint role binding is not active.",
-    ROLE_NOT_ALLOWED: "Requested role is not allowed for this task.",
-    TASK_NOT_SUPPORTED: "Requested task is not supported by the role.",
-    TOOLS_UNSUPPORTED: "Endpoint does not support tool calling.",
-    VARIANT_INCOMPATIBLE: "Endpoint variant is incompatible with the request.",
-    ENTITLEMENT_MISSING: "Endpoint is missing a required entitlement.",
-  };
+  if (requestedTask) {
+    adjustments.task_policy_present = true;
+    source = "declared";
+  }
 
   return {
-    code,
-    detail: details[code] ?? `Endpoint exclusion: ${code}.`,
+    value: clamp(score),
+    source,
+    ...(Object.keys(adjustments).length > 0 ? { raw: adjustments } : {}),
   };
 }
 
 function getCandidateMetricScores(
   candidate: EndpointCandidate,
   input: RouteRequestInput,
+  policySnapshot: RoutingPolicySnapshot,
+  rolePolicyApplied: boolean,
 ): CandidateMetricScores {
   return {
     quality: getQualityMetric(candidate),
-    latency: getLatencyMetric(candidate),
-    throughput: getThroughputMetric(candidate),
-    cost: getCostMetric(candidate, input),
+    latency: getLatencyMetric(candidate, policySnapshot),
+    throughput: getThroughputMetric(candidate, policySnapshot),
+    cost: getCostMetric(candidate, policySnapshot),
     reliability: getReliabilityMetric(candidate),
-    preference: getPreferenceMetric(candidate, input),
+    preference: getPreferenceMetric(candidate, input, policySnapshot, rolePolicyApplied),
   };
 }
 
+function isMetricUnknown(metric: MetricEntry): boolean {
+  return metric.source === "default";
+}
+
 function getRedistributedWeights(
-  input: RouteRequestInput,
+  strategy: RoutingPolicyStrategy,
   metrics: readonly CandidateMetricScores[],
 ): Record<ScoringMetricName, number> {
-  const baseWeights = STRATEGY_WEIGHTS[toPolicyStrategy(input.request.strategy)];
+  const baseWeights = STRATEGY_WEIGHTS[strategy];
   const metricNames = Object.keys(baseWeights) as ScoringMetricName[];
   const unknownForAll = metricNames.filter((metricName) =>
-    metrics.every((candidateMetrics) => candidateMetrics[metricName].unknown),
+    metrics.every((candidateMetrics) => isMetricUnknown(candidateMetrics[metricName])),
   );
 
   if (unknownForAll.length === 0 || unknownForAll.length === metricNames.length) {
@@ -402,16 +518,46 @@ function getRedistributedWeights(
   return redistributedWeights;
 }
 
-function getReliabilityScore(candidate: EndpointCandidate): number {
-  return getReliabilityMetric(candidate).score;
+function toCandidateExclusion(code: string): { code: string; detail: string } {
+  const details: Record<string, string> = {
+    BUDGET_EXCEEDED: "Endpoint cost exceeds the request budget.",
+    CAPABILITY_MISSING: "Endpoint is missing a required capability.",
+    CONTEXT_TOO_SMALL: "Endpoint context window is too small for the request.",
+    ENTITLEMENT_MISSING: "Endpoint is missing a required entitlement.",
+    FORBIDDEN_CAPABILITY_PRESENT: "Endpoint exposes a capability forbidden by the requested role.",
+    MODALITY_UNSUPPORTED: "Endpoint does not support all required modalities.",
+    PACKAGE_NOT_INSTALLED: "Endpoint package is not installed.",
+    POLICY_DENY_ENDPOINT: "Endpoint is denied by routing policy.",
+    POLICY_DENY_REMOTE: "Remote endpoints are denied by routing policy.",
+    PROVIDER_OFFLINE: "Endpoint provider is offline.",
+    REVOKED: "Endpoint has been revoked.",
+    ROLE_BINDING_CAPABILITY_MISSING:
+      "Endpoint role binding does not allow all required capabilities for this request.",
+    ROLE_BINDING_DISABLED: "Endpoint role binding is disabled.",
+    ROLE_BINDING_INACTIVE: "Endpoint role binding is inactive.",
+    ROLE_BINDING_TASK_NOT_ALLOWED:
+      "Endpoint role binding does not allow the requested task type.",
+    ROLE_NOT_ALLOWED: "Requested role is not allowed for this task.",
+    TASK_NOT_SUPPORTED_BY_ROLE: "Requested task is not supported by the requested role.",
+    TOOLS_UNSUPPORTED: "Endpoint does not support tool calling.",
+    VARIANT_INCOMPATIBLE: "Endpoint variant is incompatible with the request.",
+  };
+
+  return {
+    code,
+    detail: details[code] ?? `Endpoint exclusion: ${code}.`,
+  };
 }
 
-function evaluateEligibility(input: RouteRequestInput): {
+function evaluateEligibility(
+  input: RouteRequestInput,
+  policySnapshot: RoutingPolicySnapshot,
+): {
   eligible: EndpointCandidate[];
-  eligibility: CandidateEligibility[];
+  eligibility: RouterDecisionRecord["eligibility"];
 } {
   const eligible: EndpointCandidate[] = [];
-  const eligibility: CandidateEligibility[] = [];
+  const eligibility: RouterDecisionRecord["eligibility"] = [];
   const requestedRoleId = input.request.requestedRoleId;
   const { requestedRole, requestedTask } = getRequestedRoleAndTask(input);
   const effectiveRequiredCapabilities = getEffectiveRequiredCapabilities(input);
@@ -429,49 +575,27 @@ function evaluateEligibility(input: RouteRequestInput): {
       reasons.push("POLICY_DENY_ENDPOINT");
     }
     if (
-      input.request.allowEndpoints &&
-      input.request.allowEndpoints.length > 0 &&
-      !input.request.allowEndpoints.includes(candidate.identity.endpoint_id)
+      policySnapshot.allow_endpoints.length > 0 &&
+      !policySnapshot.allow_endpoints.includes(candidate.identity.endpoint_id)
     ) {
       reasons.push("POLICY_DENY_ENDPOINT");
     }
-    if (input.request.denyEndpoints?.includes(candidate.identity.endpoint_id)) {
+    if (policySnapshot.deny_endpoints.includes(candidate.identity.endpoint_id)) {
       reasons.push("POLICY_DENY_ENDPOINT");
     }
     if (
-      input.request.allowProviderKinds &&
-      input.request.allowProviderKinds.length > 0 &&
-      !input.request.allowProviderKinds.includes(candidate.identity.provider_kind)
+      policySnapshot.allow_provider_kinds.length > 0 &&
+      !policySnapshot.allow_provider_kinds.includes(candidate.identity.provider_kind)
     ) {
       reasons.push("POLICY_DENY_ENDPOINT");
     }
-    if (input.request.denyProviderKinds?.includes(candidate.identity.provider_kind)) {
+    if (policySnapshot.deny_provider_kinds.includes(candidate.identity.provider_kind)) {
       reasons.push("POLICY_DENY_ENDPOINT");
     }
-    if (input.request.denyRemote && !isLocalCandidate(candidate)) {
+    if (!policySnapshot.privacy.allow_remote && !isLocalCandidate(candidate)) {
       reasons.push("POLICY_DENY_REMOTE");
     }
-    const roleBinding = getRoleBindingForCandidate(candidate, input);
-    if (roleBinding && roleBinding.status !== "active") {
-      reasons.push("ROLE_BINDING_INACTIVE");
-    }
-    if (requestedRole && !requestedRole.task_types_supported.includes(input.request.taskType)) {
-      reasons.push("TASK_NOT_SUPPORTED");
-    }
-    if (
-      requestedRoleId &&
-      requestedTask &&
-      !requestedTask.allowed_roles.includes(requestedRoleId)
-    ) {
-      reasons.push("ROLE_NOT_ALLOWED");
-    }
-    if (
-      requestedRole?.forbidden_capabilities.some((capability) =>
-        candidate.declared.capabilities.includes(capability),
-      )
-    ) {
-      reasons.push("POLICY_DENY_ENDPOINT");
-    }
+
     if (
       effectiveRequiredCapabilities.some(
         (capability) => !candidate.declared.capabilities.includes(capability),
@@ -480,7 +604,14 @@ function evaluateEligibility(input: RouteRequestInput): {
       reasons.push("CAPABILITY_MISSING");
     }
     if (
-      input.request.requiredModalities.some(
+      requestedRole?.forbidden_capabilities.some((capability) =>
+        candidate.declared.capabilities.includes(capability),
+      )
+    ) {
+      reasons.push("FORBIDDEN_CAPABILITY_PRESENT");
+    }
+    if (
+      policySnapshot.required_modalities.some(
         (modality) => !candidate.declared.modalities.includes(modality),
       )
     ) {
@@ -489,13 +620,49 @@ function evaluateEligibility(input: RouteRequestInput): {
     if (input.request.contextTokens > candidate.declared.max_context_tokens) {
       reasons.push("CONTEXT_TOO_SMALL");
     }
-    if (input.request.needsTools && !candidate.declared.tool_calling.supported) {
+    if (policySnapshot.require_tools && !candidate.declared.tool_calling.supported) {
       reasons.push("TOOLS_UNSUPPORTED");
     }
+
+    if (requestedRole && !requestedRole.task_types_supported.includes(input.request.taskType)) {
+      reasons.push("TASK_NOT_SUPPORTED_BY_ROLE");
+    }
     if (
-      typeof input.request.budgetLimit === "number" &&
+      requestedRoleId &&
+      requestedTask &&
+      !requestedTask.allowed_roles.includes(requestedRoleId)
+    ) {
+      reasons.push("ROLE_NOT_ALLOWED");
+    }
+
+    const roleBinding = getRoleBindingForCandidate(candidate, input);
+    if (roleBinding?.status === "inactive") {
+      reasons.push("ROLE_BINDING_INACTIVE");
+    }
+    if (roleBinding?.status === "disabled") {
+      reasons.push("ROLE_BINDING_DISABLED");
+    }
+    if (
+      roleBinding?.status === "active" &&
+      effectiveRequiredCapabilities.some(
+        (capability) => !roleBinding.effective_capabilities.includes(capability),
+      )
+    ) {
+      reasons.push("ROLE_BINDING_CAPABILITY_MISSING");
+    }
+    if (
+      roleBinding?.status === "active" &&
+      !roleBinding.effective_task_types.includes(input.request.taskType)
+    ) {
+      reasons.push("ROLE_BINDING_TASK_NOT_ALLOWED");
+    }
+
+    if (
+      policySnapshot.budget.enabled &&
+      policySnapshot.budget_mode !== "advisory" &&
+      typeof policySnapshot.budget.max_cost_per_request === "number" &&
       typeof candidate.observed?.cost_per_1k_tokens_est === "number" &&
-      candidate.observed.cost_per_1k_tokens_est > input.request.budgetLimit
+      candidate.observed.cost_per_1k_tokens_est > policySnapshot.budget.max_cost_per_request
     ) {
       reasons.push("BUDGET_EXCEEDED");
     }
@@ -520,132 +687,147 @@ function evaluateEligibility(input: RouteRequestInput): {
   return { eligible, eligibility };
 }
 
+function buildTieBreak(
+  candidate: EndpointCandidate,
+  metricBreakdown: CandidateMetricScores,
+): TieBreakDiagnostic {
+  return {
+    quality: metricBreakdown.quality.value,
+    latency_ms: typeof metricBreakdown.latency.raw?.effective_latency_ms === "number"
+      ? (metricBreakdown.latency.raw.effective_latency_ms as number)
+      : getEffectiveLatency(candidate),
+    reliability: metricBreakdown.reliability.value,
+    endpoint_id: candidate.identity.endpoint_id,
+  };
+}
+
 function scoreCandidate(
   candidate: EndpointCandidate,
   input: RouteRequestInput,
+  policySnapshot: RoutingPolicySnapshot,
   metricScores: CandidateMetricScores,
   weights: Record<ScoringMetricName, number>,
-): {
-  endpoint_id: string;
-  score: number;
-  selectionReasons: string[];
-} {
-  let score =
-    metricScores.quality.score * weights.quality +
-    metricScores.latency.score * weights.latency +
-    metricScores.throughput.score * weights.throughput +
-    metricScores.cost.score * weights.cost +
-    metricScores.reliability.score * weights.reliability +
-    metricScores.preference.score * weights.preference;
-  const selectionReasons: string[] = [];
-  const { requestedRole, requestedTask } = getRequestedRoleAndTask(input);
-  const rolePreferenceApplied =
-    requestedRole?.preferred_capabilities.some((capability) =>
-      candidate.declared.capabilities.includes(capability),
-    ) ?? false;
-  const taskPreferenceApplied =
-    requestedTask?.preferred_capabilities.some((capability) =>
-      candidate.declared.capabilities.includes(capability),
-    ) ?? false;
+  rolePolicyApplied: boolean,
+): CandidateScoreResult {
+  const totalScore =
+    metricScores.quality.value * weights.quality +
+    metricScores.latency.value * weights.latency +
+    metricScores.throughput.value * weights.throughput +
+    metricScores.cost.value * weights.cost +
+    metricScores.reliability.value * weights.reliability +
+    metricScores.preference.value * weights.preference;
 
-  selectionReasons.push("DECLARED_PROFILE_USED");
-  if (rolePreferenceApplied) {
-    score += ROLE_OR_TASK_PREFERENCE_BONUS;
-    selectionReasons.push("ROLE_PREFERENCE_APPLIED");
-  }
-  if (taskPreferenceApplied) {
-    score += ROLE_OR_TASK_PREFERENCE_BONUS;
-    selectionReasons.push("TASK_REQUIREMENTS_SATISFIED");
-  }
+  const selectionReasons: string[] = ["DECLARED_PROFILE_USED"];
+  const { requestedTask } = getRequestedRoleAndTask(input);
+  const hasMeasuredMetric = Object.values(metricScores).some((metric) => metric.source === "measured");
+  const hasDefaultMetric = Object.values(metricScores).some((metric) => metric.source === "default");
 
-  if (candidate.observed) {
+  if (hasMeasuredMetric) {
     selectionReasons.push("MEASURED_PROFILE_USED");
-  } else {
+  }
+  if (hasDefaultMetric) {
     selectionReasons.push("DEFAULT_PROFILE_USED");
   }
 
-  const computePreference = getEffectiveComputePreference(input.request);
-  if (computePreference === "local") {
-    if (isLocalCandidate(candidate)) {
-      selectionReasons.push("LOCAL_PREFERENCE_APPLIED");
-    } else {
-      selectionReasons.push("REMOTE_PREFERENCE_APPLIED");
-    }
-  } else if (computePreference === "remote") {
-    if (isLocalCandidate(candidate)) {
-      selectionReasons.push("LOCAL_PREFERENCE_APPLIED");
-    } else {
-      selectionReasons.push("REMOTE_PREFERENCE_APPLIED");
-    }
+  if (policySnapshot.compute_preference === "local" && isLocalCandidate(candidate)) {
+    selectionReasons.push("LOCAL_PREFERENCE_APPLIED");
+  }
+  if (policySnapshot.compute_preference === "remote" && !isLocalCandidate(candidate)) {
+    selectionReasons.push("REMOTE_PREFERENCE_APPLIED");
   }
 
-  const canonicalStrategy = toPolicyStrategy(input.request.strategy);
-  if (canonicalStrategy === "cost") {
+  if (toPolicyStrategy(input.request.strategy) === "cost" || policySnapshot.budget_mode === "advisory") {
     selectionReasons.push("BUDGET_OPTIMIZATION");
   }
-  if (canonicalStrategy === "latency") {
+  if (
+    toPolicyStrategy(input.request.strategy) === "latency" ||
+    buildTieBreak(candidate, metricScores).latency_ms <= policySnapshot.targets.latency_target_ms
+  ) {
     selectionReasons.push("LOW_LATENCY_TARGET_MET");
   }
-  if (canonicalStrategy === "quality") {
+  if (
+    toPolicyStrategy(input.request.strategy) === "quality" ||
+    metricScores.quality.value >= 0.75
+  ) {
     selectionReasons.push("HIGH_QUALITY_TARGET_MET");
+  }
+  if (input.request.requestedRoleId || rolePolicyApplied) {
+    selectionReasons.push("ROLE_POLICY_APPLIED");
+  }
+  if (requestedTask) {
+    selectionReasons.push("TASK_POLICY_APPLIED");
   }
 
   return {
     endpoint_id: candidate.identity.endpoint_id,
-    score,
+    total_score: totalScore,
+    metric_breakdown: metricScores,
+    tie_break: buildTieBreak(candidate, metricScores),
     selectionReasons: unique(selectionReasons),
+    usedMeasured: hasMeasuredMetric,
+    usedDeclared: true,
   };
 }
 
+function compareTieBreak(left: TieBreakDiagnostic, right: TieBreakDiagnostic): number {
+  if (Math.abs(right.quality - left.quality) > 0) {
+    return right.quality - left.quality;
+  }
+  if (Math.abs(left.latency_ms - right.latency_ms) > 0) {
+    return left.latency_ms - right.latency_ms;
+  }
+  if (Math.abs(right.reliability - left.reliability) > 0) {
+    return right.reliability - left.reliability;
+  }
+  return left.endpoint_id.localeCompare(right.endpoint_id);
+}
+
 export function routeRequest(input: RouteRequestInput): RouterDecisionRecord {
-  const { eligible, eligibility } = evaluateEligibility(input);
+  const { policySnapshot, rolePolicyApplied } = buildPolicySnapshot(input);
+  const { eligible, eligibility } = evaluateEligibility(input, policySnapshot);
   const metricsByEndpoint = new Map(
     eligible.map((candidate) => [
       candidate.identity.endpoint_id,
-      getCandidateMetricScores(candidate, input),
+      getCandidateMetricScores(candidate, input, policySnapshot, rolePolicyApplied),
     ]),
   );
-  const redistributedWeights = getRedistributedWeights(input, [...metricsByEndpoint.values()]);
+  const redistributedWeights = getRedistributedWeights(policySnapshot.strategy, [
+    ...metricsByEndpoint.values(),
+  ]);
   const scored = eligible.map((candidate) =>
     scoreCandidate(
       candidate,
       input,
+      policySnapshot,
       metricsByEndpoint.get(candidate.identity.endpoint_id) ??
-        getCandidateMetricScores(candidate, input),
+        getCandidateMetricScores(candidate, input, policySnapshot, rolePolicyApplied),
       redistributedWeights,
+      rolePolicyApplied,
     ),
   );
 
   scored.sort((left, right) => {
-    if (Math.abs(right.score - left.score) > SCORE_TIE_EPSILON) {
-      return right.score - left.score;
+    if (Math.abs(right.total_score - left.total_score) > SCORE_TIE_EPSILON) {
+      return right.total_score - left.total_score;
     }
 
     const leftCandidate = findEligibleCandidate(eligible, left.endpoint_id);
     const rightCandidate = findEligibleCandidate(eligible, right.endpoint_id);
-    const qualityDelta = getQualityScore(rightCandidate) - getQualityScore(leftCandidate);
-    if (qualityDelta !== 0) {
-      return qualityDelta;
-    }
-
-    const latencyDelta = getEffectiveLatency(leftCandidate) - getEffectiveLatency(rightCandidate);
-    if (latencyDelta !== 0) {
-      return latencyDelta;
-    }
-
-    const reliabilityDelta =
-      getReliabilityScore(rightCandidate) - getReliabilityScore(leftCandidate);
-    if (reliabilityDelta !== 0) {
-      return reliabilityDelta;
-    }
-
-    return left.endpoint_id.localeCompare(right.endpoint_id);
+    return compareTieBreak(
+      buildTieBreak(
+        leftCandidate,
+        metricsByEndpoint.get(left.endpoint_id) ??
+          getCandidateMetricScores(leftCandidate, input, policySnapshot, rolePolicyApplied),
+      ),
+      buildTieBreak(
+        rightCandidate,
+        metricsByEndpoint.get(right.endpoint_id) ??
+          getCandidateMetricScores(rightCandidate, input, policySnapshot, rolePolicyApplied),
+      ),
+    );
   });
 
   const chosen = scored[0];
-  const chosenCandidate = eligible.find(
-    (candidate) => candidate.identity.endpoint_id === chosen?.endpoint_id,
-  );
   const selectionReasons = chosen
     ? unique([
         "BEST_TOTAL_SCORE",
@@ -653,23 +835,24 @@ export function routeRequest(input: RouteRequestInput): RouterDecisionRecord {
         ...(scored.length > 1 ? ["FALLBACK_CHAIN_COMPUTED"] : []),
       ])
     : [];
-
-  const scoredCandidates: ScoredCandidate[] = scored.map(({ endpoint_id, score }) => ({
-    endpoint_id,
-    score,
-  }));
+  const scoredCandidates = scored.map(
+    ({ selectionReasons: _selectionReasons, usedMeasured: _usedMeasured, usedDeclared: _usedDeclared, ...candidate }) =>
+      candidate,
+  );
 
   return {
     routing_decision_id: `decision-${input.request.requestId}`,
     request_id: input.request.requestId,
-    policy_snapshot: buildPolicySnapshot(input),
+    app_id: input.request.appId ?? "unknown-app",
+    org_id: input.request.orgId ?? null,
+    policy_snapshot: policySnapshot,
     eligibility,
     scored_candidates: scoredCandidates,
     chosen_endpoint_id: chosen?.endpoint_id ?? "",
     fallback_endpoint_ids: scored.slice(1).map((candidate) => candidate.endpoint_id),
     selection_reasons: selectionReasons,
-    used_measured: Boolean(chosenCandidate?.observed),
-    used_declared: Boolean(chosenCandidate),
-    scoring_version: "baseline-v1",
+    used_measured: chosen?.usedMeasured ?? false,
+    used_declared: chosen?.usedDeclared ?? false,
+    scoring_version: "baseline-v2",
   };
 }

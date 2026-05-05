@@ -144,17 +144,19 @@ export interface ModelPackManifest {
 
 export interface ObservedPerformanceProfile {
   endpoint_id: string;
+  endpoint_version: string;
   measured_at_ms: number;
-  sample_window: {
+  measurement_window: {
     started_at_ms: number;
     ended_at_ms: number;
   };
   sample_size: number;
   sources: {
-    live_request_samples: number;
     benchmark_samples: number;
+    live_request_samples: number;
   };
   judge_score?: number;
+  quality_score?: number;
   latency_ms_p50: number;
   latency_ms_p95: number;
   tokens_per_sec?: number;
@@ -165,7 +167,6 @@ export interface ObservedPerformanceProfile {
   };
   cost_per_1k_tokens_est?: number;
   currency?: string;
-  quality_score?: number;
   freshness_score: number;
   confidence_score: number;
 }
@@ -205,7 +206,7 @@ export interface RoleBinding {
   binding_id: string;
   role_id: string;
   endpoint_id: string;
-  status: "active" | "disabled" | "candidate";
+  status: "active" | "inactive" | "disabled";
   policy_overrides: {
     [k: string]: unknown;
   };
@@ -237,6 +238,8 @@ export interface RoleDefinition {
 export interface RouterDecision {
   routing_decision_id: string;
   request_id: string;
+  app_id: string;
+  org_id: string | null;
   policy_snapshot: RoutingPolicy;
   eligibility: {
     endpoint_id: string;
@@ -244,9 +247,16 @@ export interface RouterDecision {
     exclusions: {
       code:
         | "CAPABILITY_MISSING"
+        | "FORBIDDEN_CAPABILITY_PRESENT"
         | "MODALITY_UNSUPPORTED"
         | "CONTEXT_TOO_SMALL"
         | "TOOLS_UNSUPPORTED"
+        | "ROLE_NOT_ALLOWED"
+        | "TASK_NOT_SUPPORTED_BY_ROLE"
+        | "ROLE_BINDING_INACTIVE"
+        | "ROLE_BINDING_DISABLED"
+        | "ROLE_BINDING_TASK_NOT_ALLOWED"
+        | "ROLE_BINDING_CAPABILITY_MISSING"
         | "POLICY_DENY_ENDPOINT"
         | "POLICY_DENY_REMOTE"
         | "ENTITLEMENT_MISSING"
@@ -254,23 +264,44 @@ export interface RouterDecision {
         | "VARIANT_INCOMPATIBLE"
         | "PROVIDER_OFFLINE"
         | "BUDGET_EXCEEDED"
-        | "REVOKED"
-        | "ROLE_NOT_ALLOWED"
-        | "TASK_NOT_SUPPORTED"
-        | "ROLE_BINDING_INACTIVE";
+        | "REVOKED";
       detail: string;
     }[];
   }[];
   scored_candidates: {
     endpoint_id: string;
-    score: number;
+    total_score: number;
+    metric_breakdown: {
+      quality: MetricEntry;
+      latency: MetricEntry;
+      throughput: MetricEntry;
+      cost: MetricEntry;
+      reliability: MetricEntry;
+      preference: MetricEntry;
+    };
+    tie_break: {
+      quality: number;
+      latency_ms: number;
+      reliability: number;
+      endpoint_id: string;
+    };
   }[];
   chosen_endpoint_id: string;
   fallback_endpoint_ids: string[];
-  /**
-   * @minItems 1
-   */
-  selection_reasons: [string, ...string[]];
+  selection_reasons: (
+    | "BEST_TOTAL_SCORE"
+    | "MEASURED_PROFILE_USED"
+    | "DECLARED_PROFILE_USED"
+    | "DEFAULT_PROFILE_USED"
+    | "LOCAL_PREFERENCE_APPLIED"
+    | "REMOTE_PREFERENCE_APPLIED"
+    | "BUDGET_OPTIMIZATION"
+    | "LOW_LATENCY_TARGET_MET"
+    | "HIGH_QUALITY_TARGET_MET"
+    | "ROLE_POLICY_APPLIED"
+    | "TASK_POLICY_APPLIED"
+    | "FALLBACK_CHAIN_COMPUTED"
+  )[];
   used_measured: boolean;
   used_declared: boolean;
   scoring_version: string;

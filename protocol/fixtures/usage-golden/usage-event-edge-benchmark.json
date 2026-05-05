@@ -1,0 +1,19 @@
+{
+  "event_id": "usage-edge-001",
+  "timestamp_ms": 1712880000015,
+  "app_id": "gateway-smoke",
+  "org_id": "local-dev",
+  "request_id": "request-edge-001",
+  "routing_decision_id": "decision-edge-001",
+  "endpoint_id": "local-cli",
+  "model_id": "gpt-5.4",
+  "package_id": "provider-cli",
+  "provider_kind": "cli",
+  "tokens_in": 48,
+  "tokens_out": 24,
+  "latency_ms": 160,
+  "cost_estimate": 0.001,
+  "currency": "USD",
+  "error_class": "none",
+  "sample_source": "benchmark"
+}

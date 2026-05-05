@@ -1,0 +1,9 @@
+{
+  "binding_id": "binding-invalid-001",
+  "role_id": "developer",
+  "endpoint_id": "local-cli",
+  "status": "candidate",
+  "policy_overrides": {},
+  "effective_capabilities": ["code.edit"],
+  "effective_task_types": ["code.edit"]
+}

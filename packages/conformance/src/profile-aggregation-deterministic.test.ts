@@ -16,8 +16,9 @@ describe("profile aggregation", () => {
       [
         {
           endpoint_id: "endpoint-1",
-          sample_source: "benchmark",
-          recorded_at_ms: 100,
+          endpoint_version: "v1",
+          source_type: "benchmark",
+          timestamp_ms: 100,
           latency_ms: 10,
           tokens_per_sec: 100,
           cost_per_1k_tokens_est: 0.001,
@@ -25,19 +26,21 @@ describe("profile aggregation", () => {
         },
         {
           endpoint_id: "endpoint-1",
-          sample_source: "live_request",
-          recorded_at_ms: 200,
+          endpoint_version: "v1",
+          source_type: "live_request",
+          timestamp_ms: 200,
           latency_ms: 20,
           tokens_per_sec: 95,
           cost_per_1k_tokens_est: 0.002,
-          judge_score: 0.82,
+          failure: false,
           request_id: "req-1",
           routing_decision_id: "decision-1",
         },
         {
           endpoint_id: "endpoint-1",
-          sample_source: "benchmark",
-          recorded_at_ms: 300,
+          endpoint_version: "v1",
+          source_type: "benchmark",
+          timestamp_ms: 300,
           latency_ms: 30,
           tokens_per_sec: 90,
           cost_per_1k_tokens_est: 0.003,
@@ -45,19 +48,21 @@ describe("profile aggregation", () => {
         },
         {
           endpoint_id: "endpoint-1",
-          sample_source: "live_request",
-          recorded_at_ms: 400,
+          endpoint_version: "v1",
+          source_type: "live_request",
+          timestamp_ms: 400,
           latency_ms: 40,
           tokens_per_sec: 85,
           cost_per_1k_tokens_est: 0.004,
-          judge_score: 0.86,
+          failure: false,
           request_id: "req-2",
           routing_decision_id: "decision-2",
         },
         {
           endpoint_id: "endpoint-1",
-          sample_source: "benchmark",
-          recorded_at_ms: 500,
+          endpoint_version: "v1",
+          source_type: "benchmark",
+          timestamp_ms: 500,
           latency_ms: 50,
           tokens_per_sec: 80,
           cost_per_1k_tokens_est: 0.005,
@@ -68,8 +73,9 @@ describe("profile aggregation", () => {
     );
 
     expect(result.endpoint_id).toBe("endpoint-1");
+    expect(result.endpoint_version).toBe("v1");
     expect(result.sample_size).toBe(5);
-    expect(result.sample_window).toEqual({
+    expect(result.measurement_window).toEqual({
       started_at_ms: 100,
       ended_at_ms: 500,
     });
@@ -94,35 +100,43 @@ describe("profile aggregation", () => {
       [
         {
           endpoint_id: "endpoint-2",
-          sample_source: "benchmark",
-          recorded_at_ms: 100,
+          endpoint_version: "v2",
+          source_type: "benchmark",
+          timestamp_ms: 100,
           latency_ms: 50,
         },
         {
           endpoint_id: "endpoint-2",
-          sample_source: "live_request",
-          recorded_at_ms: 200,
+          endpoint_version: "v2",
+          source_type: "live_request",
+          timestamp_ms: 200,
           latency_ms: 75,
-          failure_class: "timeout",
+          failure: true,
+          error_class: "timeout",
         },
         {
           endpoint_id: "endpoint-2",
-          sample_source: "benchmark",
-          recorded_at_ms: 300,
+          endpoint_version: "v2",
+          source_type: "benchmark",
+          timestamp_ms: 300,
           latency_ms: 60,
-          failure_class: "timeout",
+          failure: true,
+          error_class: "timeout",
         },
         {
           endpoint_id: "endpoint-2",
-          sample_source: "live_request",
-          recorded_at_ms: 400,
+          endpoint_version: "v2",
+          source_type: "live_request",
+          timestamp_ms: 400,
           latency_ms: 80,
-          failure_class: "rate_limit",
+          failure: true,
+          error_class: "rate_limit",
         },
         {
           endpoint_id: "endpoint-2",
-          sample_source: "benchmark",
-          recorded_at_ms: 500,
+          endpoint_version: "v2",
+          source_type: "benchmark",
+          timestamp_ms: 500,
           latency_ms: 55,
         },
       ],
@@ -152,8 +166,9 @@ describe("profile aggregation", () => {
       [
         {
           endpoint_id: "endpoint-3",
-          sample_source: "benchmark",
-          recorded_at_ms: nowMs,
+          endpoint_version: "v3",
+          source_type: "benchmark",
+          timestamp_ms: nowMs,
           latency_ms: 25,
         },
       ],
@@ -163,8 +178,9 @@ describe("profile aggregation", () => {
       [
         {
           endpoint_id: "endpoint-4",
-          sample_source: "benchmark",
-          recorded_at_ms: nowMs - halfLifeMs,
+          endpoint_version: "v4",
+          source_type: "benchmark",
+          timestamp_ms: nowMs - halfLifeMs,
           latency_ms: 25,
         },
       ],
@@ -173,8 +189,9 @@ describe("profile aggregation", () => {
     const manySamplesResult = aggregateObservedPerformanceSamples(
       Array.from({ length: 50 }, (_, index) => ({
         endpoint_id: "endpoint-5",
-        sample_source: "benchmark" as const,
-        recorded_at_ms: nowMs - index,
+        endpoint_version: "v5",
+        source_type: "benchmark" as const,
+        timestamp_ms: nowMs - index,
         latency_ms: 25,
       })),
       { nowMs },
@@ -201,15 +218,15 @@ describe("profile aggregation", () => {
           {
             endpoint_id: "endpoint-6",
             endpoint_version: "v1",
-            sample_source: "benchmark",
-            recorded_at_ms: 100,
+            source_type: "benchmark",
+            timestamp_ms: 100,
             latency_ms: 25,
           },
           {
             endpoint_id: "endpoint-6",
             endpoint_version: "v2",
-            sample_source: "live_request",
-            recorded_at_ms: 200,
+            source_type: "live_request",
+            timestamp_ms: 200,
             latency_ms: 30,
           },
         ],
@@ -231,21 +248,24 @@ describe("profile aggregation", () => {
       [
         {
           endpoint_id: "endpoint-7",
-          sample_source: "benchmark",
-          recorded_at_ms: 100,
+          endpoint_version: "v7",
+          source_type: "benchmark",
+          timestamp_ms: 100,
           latency_ms: 25,
           judge_score: 0.8,
         },
         {
           endpoint_id: "endpoint-7",
-          sample_source: "live_request",
-          recorded_at_ms: 200,
+          endpoint_version: "v7",
+          source_type: "live_request",
+          timestamp_ms: 200,
           latency_ms: 30,
         },
         {
           endpoint_id: "endpoint-7",
-          sample_source: "benchmark",
-          recorded_at_ms: 300,
+          endpoint_version: "v7",
+          source_type: "benchmark",
+          timestamp_ms: 300,
           latency_ms: 35,
           judge_score: 0.9,
         },
@@ -257,14 +277,16 @@ describe("profile aggregation", () => {
       [
         {
           endpoint_id: "endpoint-8",
-          sample_source: "benchmark",
-          recorded_at_ms: 100,
+          endpoint_version: "v8",
+          source_type: "benchmark",
+          timestamp_ms: 100,
           latency_ms: 25,
         },
         {
           endpoint_id: "endpoint-8",
-          sample_source: "live_request",
-          recorded_at_ms: 200,
+          endpoint_version: "v8",
+          source_type: "live_request",
+          timestamp_ms: 200,
           latency_ms: 30,
         },
       ],
@@ -275,5 +297,38 @@ describe("profile aggregation", () => {
     expect(mixedJudgeResult.judge_score).toBeCloseTo(0.85, 8);
     expect("quality_score" in noJudgeResult).toBe(false);
     expect("judge_score" in noJudgeResult).toBe(false);
+  });
+
+  test("does not invent throughput or cost when samples omit those measurements", () => {
+    const aggregateObservedPerformanceSamples = Reflect.get(
+      profileAggregator,
+      "aggregateObservedPerformanceSamples",
+    );
+    if (typeof aggregateObservedPerformanceSamples !== "function") {
+      throw new Error("aggregateObservedPerformanceSamples is not implemented");
+    }
+
+    const result = aggregateObservedPerformanceSamples(
+      [
+        {
+          endpoint_id: "endpoint-9",
+          endpoint_version: "v9",
+          source_type: "benchmark",
+          timestamp_ms: 100,
+          latency_ms: 25,
+        },
+        {
+          endpoint_id: "endpoint-9",
+          endpoint_version: "v9",
+          source_type: "live_request",
+          timestamp_ms: 200,
+          latency_ms: 35,
+        },
+      ],
+      { nowMs: 200 },
+    );
+
+    expect("tokens_per_sec" in result).toBe(false);
+    expect("cost_per_1k_tokens_est" in result).toBe(false);
   });
 });

@@ -1,0 +1,135 @@
+.                                        |  WARN  Unsupported engine: wanted: {"node":">=22 <23"} (current: {"node":"v24.11.0","pnpm":"10.6.5"})
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/03-protocol-baseline-hardening/packages/conformance[39m
+
+ [31m❯[39m src/profile-aggregation-deterministic.test.ts [2m([22m[2m6 tests[22m[2m | [22m[31m3 failed[39m[2m)[22m[32m 40[2mms[22m[39m
+[31m   [31m×[31m profile aggregation[2m > [22maggregates multiple samples into deterministic window and latency percentiles[39m[32m 25[2mms[22m[39m
+[31m     → expected undefined to be 'v1' // Object.is equality[39m
+[31m   [31m×[31m profile aggregation[2m > [22maggregates failure_rate and error_class_rates correctly[39m[32m 6[2mms[22m[39m
+[31m     → expected +0 to be 0.6 // Object.is equality[39m
+[31m   [31m×[31m profile aggregation[2m > [22mapplies freshness half-life decay and increases confidence with sample count[39m[32m 2[2mms[22m[39m
+[31m     → expected NaN to be close to 1, received difference is NaN, but expected 5e-9[39m
+   [32m✓[39m profile aggregation[2m > [22mrejects mixed endpoint versions as different profile streams[32m 2[2mms[22m[39m
+   [32m✓[39m profile aggregation[2m > [22maggregates quality_score only from available judge scores[32m 1[2mms[22m[39m
+   [32m✓[39m profile aggregation[2m > [22mdoes not invent throughput or cost when samples omit those measurements[32m 0[2mms[22m[39m
+ [31m❯[39m src/observability-linkage.test.ts [2m([22m[2m2 tests[22m[2m | [22m[31m2 failed[39m[2m)[22m[32m 27[2mms[22m[39m
+[31m   [31m×[31m observability linkage helpers[2m > [22mdetects invalid trace-event to trace-span linkage[39m[32m 21[2mms[22m[39m
+[31m     → expected [Function] to throw error matching /span/i but got '(0 , validateTr…'[39m
+[31m   [31m×[31m observability linkage helpers[2m > [22mdetects invalid usage-event to router-decision linkage and summarizes valid usage events[39m[32m 3[2mms[22m[39m
+[31m     → expected [Function] to throw error matching /request_id/i but got '(0 , validateUs…'[39m
+ [31m❯[39m src/gateway-smoke-observability.test.ts [2m([22m[2m2 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[33m 5761[2mms[22m[39m
+   [33m[2m✓[22m[39m gateway smoke observability conformance[2m > [22memits trace and usage artifacts with run01 linkage ids and canonical trace shapes [33m 3126[2mms[22m[39m
+[31m   [31m×[31m gateway smoke observability conformance[2m > [22memits observed performance with the run01 sample window and sources shape[39m[33m 2631[2mms[22m[39m
+[31m     → observed-performance.json must include endpoint_version[39m
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/gateway-smoke-observability.test.ts > gateway smoke observability conformance > emits observed performance with the run01 sample window and sources shape
+Error: observed-performance.json must include endpoint_version
+ ❯ src/gateway-smoke-observability.test.ts:149:13
+    147|     assertValid(validateObserved, observedProfile, "observed-performan…
+    148|     if (typeof observedProfile.endpoint_version !== "string" || !obser…
+    149|       throw new Error("observed-performance.json must include endpoint…
+       |             ^
+    150|     }
+    151|     if (!observedProfile.measurement_window) {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  src/observability-linkage.test.ts > observability linkage helpers > detects invalid trace-event to trace-span linkage
+AssertionError: expected [Function] to throw error matching /span/i but got '(0 , validateTr…'
+
+- Expected: 
+/span/i
+
++ Received: 
+"(0 , __vite_ssr_import_1__.validateTraceLinkage) is not a function"
+
+ ❯ src/observability-linkage.test.ts:36:7
+     34|         ],
+     35|       ),
+     36|     ).toThrow(/span/i);
+       |       ^
+     37|   });
+     38| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  src/observability-linkage.test.ts > observability linkage helpers > detects invalid usage-event to router-decision linkage and summarizes valid usage events
+AssertionError: expected [Function] to throw error matching /request_id/i but got '(0 , validateUs…'
+
+- Expected: 
+/request_id/i
+
++ Received: 
+"(0 , __vite_ssr_import_2__.validateUsageLinkage) is not a function"
+
+ ❯ src/observability-linkage.test.ts:84:7
+     82|         routing_decision_id: "decision-1",
+     83|       }),
+     84|     ).toThrow(/request_id/i);
+       |       ^
+     85| 
+     86|     expect(summarizeUsageEvents(usageEvents)).toEqual(
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+ FAIL  src/profile-aggregation-deterministic.test.ts > profile aggregation > aggregates multiple samples into deterministic window and latency percentiles
+AssertionError: expected undefined to be 'v1' // Object.is equality
+
+- Expected: 
+"v1"
+
++ Received: 
+undefined
+
+ ❯ src/profile-aggregation-deterministic.test.ts:76:37
+     74| 
+     75|     expect(result.endpoint_id).toBe("endpoint-1");
+     76|     expect(result.endpoint_version).toBe("v1");
+       |                                     ^
+     77|     expect(result.sample_size).toBe(5);
+     78|     expect(result.measurement_window).toEqual({
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯
+
+ FAIL  src/profile-aggregation-deterministic.test.ts > profile aggregation > aggregates failure_rate and error_class_rates correctly
+AssertionError: expected +0 to be 0.6 // Object.is equality
+
+- Expected
++ Received
+
+- 0.6
++ 0
+
+ ❯ src/profile-aggregation-deterministic.test.ts:146:33
+    144|     );
+    145| 
+    146|     expect(result.failure_rate).toBe(0.6);
+       |                                 ^
+    147|     expect(result.error_class_rates).toEqual({
+    148|       timeout: 0.4,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
+
+ FAIL  src/profile-aggregation-deterministic.test.ts > profile aggregation > applies freshness half-life decay and increases confidence with sample count
+AssertionError: expected NaN to be close to 1, received difference is NaN, but expected 5e-9
+ ❯ src/profile-aggregation-deterministic.test.ts:200:41
+    198|     );
+    199| 
+    200|     expect(freshResult.freshness_score).toBeCloseTo(1, 8);
+       |                                         ^
+    201|     expect(staleResult.freshness_score).toBeCloseTo(0.5, 8);
+    202|     expect(manySamplesResult.confidence_score).toBeCloseTo(1, 8);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/6]⎯
+
+
+[2m Test Files [22m [1m[31m3 failed[39m[22m[90m (3)[39m
+[2m      Tests [22m [1m[31m6 failed[39m[22m[2m | [22m[1m[32m4 passed[39m[22m[90m (10)[39m
+[2m   Start at [22m 05:28:21
+[2m   Duration [22m 8.04s[2m (transform 420ms, setup 0ms, collect 492ms, tests 5.83s, environment 2ms, prepare 1.92s)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\03-protocol-baseline-hardening\packages\conformance:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/profile-aggregation-deterministic.test.ts src/gateway-smoke-observability.test.ts src/observability-linkage.test.ts

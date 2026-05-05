@@ -18,3 +18,23 @@ Concrete baseline examples:
 - `embedder` -> `embeddings.text` -> embedding-generation capability -> suitable for retrieval pipelines and vector-store ingestion.
 - `classifier` -> `text.classification` -> label selection and deterministic output behavior -> suitable for policy or intent tagging.
 - `language.detector` -> `text.language_detection` -> lightweight text-analysis capability -> suitable for locale or routing prechecks.
+
+The current routing baseline evaluates these layers in order:
+
+1. task rules define the role set and capability floor,
+2. role rules add required/preferred/forbidden capability policy and tool policy,
+3. role bindings narrow that role further through `status`, `effective_capabilities`, and `effective_task_types`,
+4. endpoint profiles and live status decide whether the endpoint can satisfy the remaining contract,
+5. policy and measured or declared evidence score only the endpoints that survived the earlier filters.
+
+This is why the router now emits binding-aware exclusions such as:
+
+- `TASK_NOT_SUPPORTED_BY_ROLE`
+- `FORBIDDEN_CAPABILITY_PRESENT`
+- `ROLE_BINDING_INACTIVE`
+- `ROLE_BINDING_DISABLED`
+- `ROLE_BINDING_TASK_NOT_ALLOWED`
+- `ROLE_BINDING_CAPABILITY_MISSING`
+
+Scored candidates only appear for eligible endpoints. Each scored candidate exposes `total_score`,
+per-metric breakdowns, and a deterministic `tie_break` object so routing is explainable and fixture-testable.

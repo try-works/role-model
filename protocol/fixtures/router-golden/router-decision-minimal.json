@@ -1,0 +1,62 @@
+{
+  "routing_decision_id": "decision-router-minimal-001",
+  "request_id": "request-router-minimal-001",
+  "app_id": "router-golden",
+  "org_id": null,
+  "policy_snapshot": {
+    "strategy": "balanced",
+    "compute_preference": "auto",
+    "required_capabilities": [],
+    "required_modalities": ["text"],
+    "require_tools": false,
+    "deny_endpoints": [],
+    "allow_endpoints": [],
+    "deny_provider_kinds": [],
+    "allow_provider_kinds": [],
+    "budget": {
+      "enabled": false,
+      "currency": "USD"
+    },
+    "privacy": {
+      "allow_remote": true
+    },
+    "targets": {
+      "latency_target_ms": 150,
+      "latency_max_ms": 300,
+      "throughput_target_tps": 40
+    }
+  },
+  "scored_candidates": [
+    {
+      "endpoint_id": "endpoint-1",
+      "total_score": 0.5,
+      "metric_breakdown": {
+        "quality": { "value": 0.5, "source": "default" },
+        "latency": { "value": 0.5, "source": "default" },
+        "throughput": { "value": 0.5, "source": "default" },
+        "cost": { "value": 0.5, "source": "default" },
+        "reliability": { "value": 0.7, "source": "default" },
+        "preference": { "value": 0.5, "source": "default" }
+      },
+      "tie_break": {
+        "quality": 0.5,
+        "latency_ms": 250,
+        "reliability": 0.7,
+        "endpoint_id": "endpoint-1"
+      }
+    }
+  ],
+  "chosen_endpoint_id": "endpoint-1",
+  "fallback_endpoint_ids": [],
+  "selection_reasons": ["BEST_TOTAL_SCORE"],
+  "used_measured": false,
+  "used_declared": true,
+  "scoring_version": "baseline-v2",
+  "eligibility": [
+    {
+      "endpoint_id": "endpoint-1",
+      "eligible": true,
+      "exclusions": []
+    }
+  ]
+}

@@ -14,3 +14,16 @@ Baseline example task types include:
 
 Tasks define required inputs, required/preferred capabilities, quality metrics, allowed roles, and
 default benchmark suites.
+
+The router uses task definitions as hard contract inputs, not just catalog metadata. In the current
+baseline, a task definition must tell the router:
+
+- the `task_type` and human-readable purpose,
+- which inputs are required to execute the task safely,
+- which capabilities are required versus merely preferred,
+- which role IDs are allowed to serve the task,
+- which `quality_metrics` matter for scoring and benchmark interpretation.
+
+This keeps task eligibility deterministic. A role can support a task only if the task allows that role,
+the role advertises the task in `task_types_supported`, and any effective binding restrictions still
+permit the task and its required capabilities.

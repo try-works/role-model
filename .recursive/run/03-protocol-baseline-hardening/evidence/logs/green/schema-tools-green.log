@@ -1,0 +1,72 @@
+.                                        |  WARN  Unsupported engine: wanted: {"node":">=22 <23"} (current: {"node":"v24.11.0","pnpm":"10.6.5"})
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/03-protocol-baseline-hardening/packages/schema-tools[39m
+
+[90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2mdoes not emit duplicate exported interfaces for externally referenced schemas
+[22m[39mGenerated types for benchmark-run.schema.json
+
+[90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2mdoes not emit duplicate exported interfaces for externally referenced schemas
+[22m[39mGenerated types for benchmark-suite.schema.json
+
+[90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2mdoes not emit duplicate exported interfaces for externally referenced schemas
+[22m[39mGenerated types for capability-taxonomy.schema.json
+
+[90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2mdoes not emit duplicate exported interfaces for externally referenced schemas
+[22m[39mGenerated types for declared-capability-profile.schema.json
+
+[90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2mdoes not emit duplicate exported interfaces for externally referenced schemas
+[22m[39mGenerated types for endpoint-identity.schema.json
+
+[90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2mdoes not emit duplicate exported interfaces for externally referenced schemas
+[22m[39mGenerated types for judge-score.schema.json
+
+[90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2mdoes not emit duplicate exported interfaces for externally referenced schemas
+[22m[39mGenerated types for model-pack-manifest.schema.json
+
+[90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2mdoes not emit duplicate exported interfaces for externally referenced schemas
+[22m[39mGenerated types for observed-performance-profile.schema.json
+
+[90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2mdoes not emit duplicate exported interfaces for externally referenced schemas
+[22m[39mGenerated types for package-manifest.schema.json
+
+[90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2mdoes not emit duplicate exported interfaces for externally referenced schemas
+[22m[39mGenerated types for planspec.schema.json
+
+[90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2mdoes not emit duplicate exported interfaces for externally referenced schemas
+[22m[39mGenerated types for role-binding.schema.json
+
+[90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2mdoes not emit duplicate exported interfaces for externally referenced schemas
+[22m[39mGenerated types for role-definition.schema.json
+
+[90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2mdoes not emit duplicate exported interfaces for externally referenced schemas
+[22m[39mGenerated types for router-decision.schema.json
+
+[90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2mdoes not emit duplicate exported interfaces for externally referenced schemas
+[22m[39mGenerated types for routing-policy.schema.json
+
+[90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2mdoes not emit duplicate exported interfaces for externally referenced schemas
+[22m[39mGenerated types for task-definition.schema.json
+
+[90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2mdoes not emit duplicate exported interfaces for externally referenced schemas
+[22m[39mGenerated types for task-execution-profile.schema.json
+
+[90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2mdoes not emit duplicate exported interfaces for externally referenced schemas
+[22m[39mGenerated types for trace-event.schema.json
+
+[90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2mdoes not emit duplicate exported interfaces for externally referenced schemas
+[22m[39mGenerated types for trace-span.schema.json
+
+[90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2mdoes not emit duplicate exported interfaces for externally referenced schemas
+[22m[39mGenerated types for usage-event.schema.json
+
+ [32m✓[39m test/validate-schemas.test.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 647[2mms[22m[39m
+   [33m[2m✓[22m[39m loadSchemas[2m > [22mtreats manifest expectations as authoritative for valid and invalid fixtures [33m 398[2mms[22m[39m
+Formatted 1 file in 43ms. Fixed 1 file.
+ [32m✓[39m test/generate-protocol-types.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 729[2mms[22m[39m
+   [33m[2m✓[22m[39m generateProtocolTypes[2m > [22mdoes not emit duplicate exported interfaces for externally referenced schemas [33m 726[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m2 passed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[32m6 passed[39m[22m[90m (6)[39m
+[2m   Start at [22m 06:08:58
+[2m   Duration [22m 2.14s[2m (transform 200ms, setup 0ms, collect 685ms, tests 1.38s, environment 1ms, prepare 766ms)[22m
+

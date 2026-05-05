@@ -140,8 +140,8 @@
     "fallback_endpoint_ids": ["alpha-remote"],
     "selection_reasons": [
       "BEST_TOTAL_SCORE",
-      "ROLE_PREFERENCE_APPLIED",
-      "TASK_REQUIREMENTS_SATISFIED",
+      "ROLE_POLICY_APPLIED",
+      "TASK_POLICY_APPLIED",
       "FALLBACK_CHAIN_COMPUTED"
     ],
     "eligibility": []

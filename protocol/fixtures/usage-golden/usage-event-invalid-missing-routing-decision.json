@@ -1,0 +1,11 @@
+{
+  "event_id": "usage-invalid-001",
+  "timestamp_ms": 1712880000015,
+  "app_id": "gateway-smoke",
+  "request_id": "request-invalid-001",
+  "endpoint_id": "local-cli",
+  "provider_kind": "cli",
+  "tokens_in": 48,
+  "tokens_out": 24,
+  "latency_ms": 160
+}

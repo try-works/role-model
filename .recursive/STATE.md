@@ -3,20 +3,20 @@
 ## Current State
 
 - The repository is a pnpm workspace with shared TypeScript and Rust baselines, canonical JSON Schemas under `/protocol/schemas/`, shared root packages under `/packages/`, router packages/apps under `/role-model-router/`, fixtures under `/protocol/fixtures/` and `/testdata/`, and CI under `/.github/workflows/ci.yml`.
-- Schema validation and protocol type generation are handled by `/packages/schema-tools/` and `/packages/protocol-types/`; the canonical validation path now validates `19` schema files plus `12` required fixture files, and the committed canonical schema sources now declare stable in-file `$id` values that both schema-tools and conformance fail fast on if missing or mismatched.
-- The deterministic routing core lives in `/role-model-router/packages/core/` and now applies role/task-aware eligibility, provider/endpoint policy filters, canonical `computePreference` and strategy aliases, normalized weighted scoring, unknown-metric redistribution, and deterministic fallback ordering.
-- Fixture-driven routing conformance now lives in `/packages/conformance/src/router-fixture-conformance.test.ts` and is backed by the router golden corpus under `/protocol/fixtures/router-golden/cases/`.
-- The observed-performance aggregation path in `/role-model-router/packages/profile-aggregator/` now uses deterministic multi-sample semantics with `sample_window`, `sources`, median/p95 latency, failure/error-class rates, freshness/confidence, and mixed `endpoint_version` rejection.
-- The smoke path in `/role-model-router/apps/gateway-smoke/` emits linked router-decision, trace, usage, config-export, and observed-performance artifacts under `/runtime-output/` using run-01 linkage ids and canonical trace/event/span shapes.
+- Schema validation and protocol type generation are handled by `/packages/schema-tools/` and `/packages/protocol-types/`; the canonical validation path now validates `19` schema files plus `28` fixture files across valid, invalid, minimal, and edge coverage, and the committed canonical schema sources declare stable in-file `$id` values that both schema-tools and conformance fail fast on if missing or mismatched.
+- The deterministic routing core lives in `/role-model-router/packages/core/` and now applies role/task/binding-aware eligibility, provider and endpoint policy filters, canonical strategy aliases, explicit exclusion codes, normalized weighted scoring, full per-candidate metric breakdowns, deterministic tie-break metadata, and stable `app_id`/`org_id` emission in router decisions.
+- Fixture-driven routing conformance now lives in `/packages/conformance/src/router-fixture-conformance.test.ts` and is backed by the router golden corpus under `/protocol/fixtures/router-golden/cases/`, while `/packages/conformance/src/protocol-fixture-conformance.test.ts` and `/packages/schema-tools/` enforce the expanded schema fixture manifest.
+- The observed-performance aggregation path in `/role-model-router/packages/profile-aggregator/` now uses deterministic multi-sample semantics with `measurement_window`, `endpoint_version`, benchmark/live-request source counts, failure/error-class rates, freshness/confidence formulas, and explicit runtime validation of source-count consistency.
+- `/role-model-router/packages/trace/` and `/role-model-router/packages/usage/` now provide read helpers plus linkage/summarization helpers, so trace spans, trace events, usage events, and router decisions can be validated as one linked observability model.
+- The smoke path in `/role-model-router/apps/gateway-smoke/` now loads a fixture-driven router case, emits linked router-decision, trace, usage, config-export, and observed-performance artifacts under `/runtime-output/`, validates them against canonical schemas and linkage helpers before exit, and fails on invalid output.
 - The stable config export under `/role-model-router/apps/router-devtools/` emits a normalized ACP/MCP/CLI endpoint inventory with endpoint identity fields plus declared capability metadata in `runtime-output/router-devtools/config-export.json`.
-- The protocol docs under `/docs/protocol/` now include stricter run-01 routing-policy, profile, trace, usage, role, task, and role-task-capability details in addition to the baseline role/task examples added in run 00.
+- The protocol docs under `/docs/protocol/` now describe the hardened M1-M3 baseline, including `measurement_window`, role/task/binding routing semantics, trace and usage linkage, benchmark-to-profile aggregation, and the expanded reason-code vocabulary.
 - Future browser, edge, and native runtime families are still represented as scaffold-grade package/crate boundaries rather than production-complete implementations.
-- The current validated run-01 command chain is:
+- The current validated root command chain is:
   - `corepack pnpm run schemas:validate`
-  - `corepack pnpm run build`
   - `corepack pnpm run test`
   - `corepack pnpm run smoke`
 - The root workspace scripts in `/package.json` now invoke nested workspace commands through `corepack pnpm ...`, which restores the canonical wrapper-path behavior used by the conformance suite and other shell-outs.
 - Operational caveats:
   - unsupported-engine warnings persist because the repo expects `Node >=22 <23` while this environment is running `Node v24`
-  - `corepack pnpm exec biome check .` still reports pre-existing Windows formatting drift in tracked baseline files and was intentionally kept out of run-01 scope
+  - `corepack pnpm exec biome check .` still reports pre-existing Windows formatting drift in tracked baseline files and was intentionally kept out of run `03-protocol-baseline-hardening` scope

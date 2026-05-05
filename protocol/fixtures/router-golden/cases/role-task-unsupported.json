@@ -89,8 +89,8 @@
         "eligible": false,
         "exclusions": [
           {
-            "code": "TASK_NOT_SUPPORTED",
-            "detail": "Requested task is not supported by the role."
+            "code": "TASK_NOT_SUPPORTED_BY_ROLE",
+            "detail": "Requested task is not supported by the requested role."
           },
           {
             "code": "ROLE_NOT_ALLOWED",

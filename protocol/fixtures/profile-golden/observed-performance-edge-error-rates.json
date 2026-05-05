@@ -1,0 +1,23 @@
+{
+  "endpoint_id": "endpoint-edge",
+  "endpoint_version": "v2",
+  "measured_at_ms": 1712880000000,
+  "measurement_window": {
+    "started_at_ms": 1712879990000,
+    "ended_at_ms": 1712880000000
+  },
+  "sample_size": 5,
+  "sources": {
+    "benchmark_samples": 2,
+    "live_request_samples": 2
+  },
+  "latency_ms_p50": 100,
+  "latency_ms_p95": 180,
+  "failure_rate": 0.4,
+  "error_class_rates": {
+    "timeout": 0.2,
+    "rate_limit": 0.2
+  },
+  "freshness_score": 0.8,
+  "confidence_score": 0.6
+}

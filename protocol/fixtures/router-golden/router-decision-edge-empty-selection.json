@@ -1,0 +1,48 @@
+{
+  "routing_decision_id": "decision-router-edge-001",
+  "request_id": "request-router-edge-001",
+  "app_id": "router-golden",
+  "org_id": null,
+  "policy_snapshot": {
+    "strategy": "balanced",
+    "compute_preference": "auto",
+    "required_capabilities": ["code.edit"],
+    "required_modalities": ["text"],
+    "require_tools": true,
+    "deny_endpoints": [],
+    "allow_endpoints": [],
+    "deny_provider_kinds": [],
+    "allow_provider_kinds": [],
+    "budget": {
+      "enabled": false,
+      "currency": "USD"
+    },
+    "privacy": {
+      "allow_remote": true
+    },
+    "targets": {
+      "latency_target_ms": 150,
+      "latency_max_ms": 300,
+      "throughput_target_tps": 40
+    }
+  },
+  "scored_candidates": [],
+  "chosen_endpoint_id": "",
+  "fallback_endpoint_ids": [],
+  "selection_reasons": [],
+  "used_measured": false,
+  "used_declared": false,
+  "scoring_version": "baseline-v2",
+  "eligibility": [
+    {
+      "endpoint_id": "endpoint-1",
+      "eligible": false,
+      "exclusions": [
+        {
+          "code": "CAPABILITY_MISSING",
+          "detail": "Endpoint is missing a required capability."
+        }
+      ]
+    }
+  ]
+}

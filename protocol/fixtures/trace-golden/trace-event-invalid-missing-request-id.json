@@ -1,0 +1,10 @@
+{
+  "event_id": "event-invalid-001",
+  "trace_id": "trace-invalid-001",
+  "routing_decision_id": "decision-invalid-001",
+  "timestamp_ms": 1712880000005,
+  "event_type": "router.decision.created",
+  "payload": {
+    "chosen_endpoint_id": "local-cli"
+  }
+}

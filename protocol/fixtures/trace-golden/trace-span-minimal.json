@@ -1,0 +1,10 @@
+{
+  "trace_id": "trace-minimal-001",
+  "span_id": "span-minimal-001",
+  "request_id": "request-minimal-001",
+  "routing_decision_id": "decision-minimal-001",
+  "span_type": "router.eligibility",
+  "started_at_ms": 1712880000000,
+  "ended_at_ms": 1712880000001,
+  "status": "ok"
+}

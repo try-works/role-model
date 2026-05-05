@@ -1,0 +1,12 @@
+{
+  "event_id": "usage-minimal-001",
+  "timestamp_ms": 1712880000015,
+  "app_id": "gateway-smoke",
+  "request_id": "request-minimal-001",
+  "routing_decision_id": "decision-minimal-001",
+  "endpoint_id": "local-cli",
+  "provider_kind": "cli",
+  "tokens_in": 1,
+  "tokens_out": 1,
+  "latency_ms": 10
+}
