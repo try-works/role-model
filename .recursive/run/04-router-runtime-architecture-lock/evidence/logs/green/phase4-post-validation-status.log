@@ -1,0 +1,24 @@
+ M .recursive/run/04-router-runtime-architecture-lock/00-requirements.md
+ M .recursive/run/04-router-runtime-architecture-lock/00-worktree.md
+ M .recursive/run/05-router-runtime-catalog-foundation/00-requirements.md
+ M .recursive/run/06-router-runtime-provider-accounts-sqlite-memory/00-requirements.md
+ M .recursive/run/07-router-runtime-endpoint-registry-context-envelope/00-requirements.md
+ M .recursive/run/08-router-runtime-protocol-routing/00-requirements.md
+ M .recursive/run/09-router-runtime-adapter-execution-plane/00-requirements.md
+ M .recursive/run/10-router-runtime-host-integration/00-requirements.md
+ M .recursive/run/11-router-runtime-observability-feedback/00-requirements.md
+ M .recursive/run/12-router-runtime-hardening-operations/00-requirements.md
+ M .recursive/run/13-router-runtime-mcp-tools-extension/00-requirements.md
+ M docs/architecture/05-memory-model.md
+?? .recursive/run/04-router-runtime-architecture-lock/01-as-is.md
+?? .recursive/run/04-router-runtime-architecture-lock/02-to-be-plan.md
+?? .recursive/run/04-router-runtime-architecture-lock/03-implementation-summary.md
+?? .recursive/run/04-router-runtime-architecture-lock/evidence/logs/green/phase3-diff-scope.log
+?? .recursive/run/04-router-runtime-architecture-lock/evidence/logs/green/phase3-run-lint.log
+?? .recursive/run/04-router-runtime-architecture-lock/evidence/logs/green/phase3-status-scope.log
+?? .recursive/run/04-router-runtime-architecture-lock/evidence/logs/green/phase4-build.log
+?? .recursive/run/04-router-runtime-architecture-lock/evidence/logs/green/phase4-schemas-validate.log
+?? .recursive/run/04-router-runtime-architecture-lock/evidence/logs/red/phase4-smoke.log
+?? .recursive/run/04-router-runtime-architecture-lock/evidence/logs/red/phase4-test.log
+?? .recursive/run/04-router-runtime-architecture-lock/subagents/run04-phase1-as-is-audit.md
+?? docs/architecture/06-router-runtime-architecture-lock.md

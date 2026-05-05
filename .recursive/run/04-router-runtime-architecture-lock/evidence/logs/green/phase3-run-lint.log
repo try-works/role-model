@@ -1,0 +1,18 @@
+Linting run: 04-router-runtime-architecture-lock
+Path: D:\DEV\role-model\.worktrees\04-router-runtime-architecture-lock\.recursive\run\04-router-runtime-architecture-lock
+Workflow Profile: recursive-mode-audit-v1
+
+[WARN] Missing artifact (ok if not reached yet): D:\DEV\role-model\.worktrees\04-router-runtime-architecture-lock\.recursive\run\04-router-runtime-architecture-lock\01.5-root-cause.md
+[WARN] Missing artifact (ok if not reached yet): D:\DEV\role-model\.worktrees\04-router-runtime-architecture-lock\.recursive\run\04-router-runtime-architecture-lock\03.5-code-review.md
+[WARN] Missing artifact (ok if not reached yet): D:\DEV\role-model\.worktrees\04-router-runtime-architecture-lock\.recursive\run\04-router-runtime-architecture-lock\04-test-summary.md
+[WARN] Missing artifact (ok if not reached yet): D:\DEV\role-model\.worktrees\04-router-runtime-architecture-lock\.recursive\run\04-router-runtime-architecture-lock\05-manual-qa.md
+[WARN] Missing artifact (ok if not reached yet): D:\DEV\role-model\.worktrees\04-router-runtime-architecture-lock\.recursive\run\04-router-runtime-architecture-lock\06-decisions-update.md
+[WARN] Missing artifact (ok if not reached yet): D:\DEV\role-model\.worktrees\04-router-runtime-architecture-lock\.recursive\run\04-router-runtime-architecture-lock\07-state-update.md
+[WARN] Missing artifact (ok if not reached yet): D:\DEV\role-model\.worktrees\04-router-runtime-architecture-lock\.recursive\run\04-router-runtime-architecture-lock\08-memory-impact.md
+----
+
+Summary
+- FAIL: 0
+- WARN: 7
+
+[OK] Lint passed

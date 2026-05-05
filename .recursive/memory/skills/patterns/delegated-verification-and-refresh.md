@@ -50,6 +50,9 @@ When delegated work materially contributes, `## Subagent Contribution Verificati
 
 If repairs materially change the reviewed artifact, changed-file scope, or evidence basis, refresh the review bundle or action record before relying on delegated work for lockable evidence.
 
+- If a reviewed artifact is locked after the action record or review bundle was generated, treat the lock itself as a content change and refresh the delegated evidence so artifact hashes match the locked file, not the pre-lock draft.
+- When no review bundle exists, omit the `Review Bundle:` line entirely; the recursive validators treat any value there as a real path and will fail on placeholders such as `none`.
+
 ## Rejection Rule
 
 If the main agent cannot verify delegated claims against actual files, actual artifacts, and the actual diff scope, reject the delegated result and fall back to self-audit for lockable completion evidence.

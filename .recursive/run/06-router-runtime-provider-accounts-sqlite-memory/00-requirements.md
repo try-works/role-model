@@ -9,6 +9,8 @@ Inputs:
 - `/.recursive/DECISIONS.md`
 - `/.recursive/run/04-router-runtime-architecture-lock/00-requirements.md`
 - `/.recursive/run/05-router-runtime-catalog-foundation/00-requirements.md`
+- `/docs/architecture/05-memory-model.md`
+- `/docs/architecture/06-router-runtime-architecture-lock.md`
 Outputs:
 - `/.recursive/run/06-router-runtime-provider-accounts-sqlite-memory/00-requirements.md`
 Scope note: This document defines the stable requirement contract for the provider-account and SQLite-memory-schema run. It maps roadmap `Run 06 - Provider accounts and SQLite memory schema` onto repo run `06-router-runtime-provider-accounts-sqlite-memory`.
@@ -33,6 +35,7 @@ Acceptance criteria:
 - provider-account records and validation are in scope
 - credential-reference abstraction and auth-mode abstraction are in scope
 - the run keeps secrets, refresh tokens, and signing material out of protocol artifacts while still modeling the runtime references needed to execute requests
+- the account and persistence contracts can later compose with stable `app_id` / `org_id`, endpoint identity, and the committed run-03 linkage model without reshaping protocol artifacts
 
 ### `R2` Define the SQLite-first memory schema and store contract
 
@@ -77,7 +80,9 @@ Acceptance criteria:
 - Repo run `06-router-runtime-provider-accounts-sqlite-memory` corresponds to roadmap `Run 06 - Provider accounts and SQLite memory schema`.
 - This run must consume the catalog outputs and architecture boundaries produced by the earlier router-runtime runs.
 - The run must reread `C:\Users\erikb\OneDrive\##### DEV\role-model\requirements\role-model-router-runtime-roadmap.md` before later implementation phases start.
+- The architecture lock docs are the repo-native source for the auth/account boundary, SQLite-first same-host scope, and local governance expectations.
 - The memory contract must remain compatible with later endpoint-registry, context-envelope, and routing runs.
+- The memory and account model must also remain compatible with the committed run-03 artifact and linkage semantics.
 
 ## Assumptions
 
@@ -101,6 +106,7 @@ Acceptance criteria:
 - Add local-memory privacy, redaction, and deletion expectations.
 - Preserve the roadmap-local validation rule:
   - run the local account-configuration and SQLite init/migration path
+  - confirm the new account/memory contracts do not weaken the committed protocol-artifact and smoke-validation baseline
   - read SQLite errors, migration logs, and auth/account diagnostics
   - repair newly introduced schema/init/migration failures before the run is considered complete
 

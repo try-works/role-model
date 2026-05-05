@@ -8,6 +8,7 @@ Inputs:
 - `/.recursive/STATE.md`
 - `/.recursive/DECISIONS.md`
 - `/.recursive/run/08-router-runtime-protocol-routing/00-requirements.md`
+- `/docs/architecture/06-router-runtime-architecture-lock.md`
 Outputs:
 - `/.recursive/run/09-router-runtime-adapter-execution-plane/00-requirements.md`
 Scope note: This document defines the stable requirement contract for the adapter-execution-plane run. It maps roadmap `Run 09 - Adapter execution plane` onto repo run `09-router-runtime-adapter-execution-plane`.
@@ -33,6 +34,7 @@ Acceptance criteria:
 - first provider-family implementations are in scope
 - the contract keeps protocol semantics separate from provider-specific request and response shapes
 - the contract includes explicit provider capability negotiation for tool calling, structured outputs, streaming granularity, usage semantics, and prompt caching
+- adapter outputs remain compatible with the committed run-03 trace, usage, observed-performance, and smoke-artifact contracts
 
 ### `R2` Implement request building and response normalization
 
@@ -77,7 +79,9 @@ Acceptance criteria:
 - Repo run `09-router-runtime-adapter-execution-plane` corresponds to roadmap `Run 09 - Adapter execution plane`.
 - This run must consume the protocol-driven routing outputs as prerequisites instead of duplicating routing logic inside adapters.
 - The run must reread `C:\Users\erikb\OneDrive\##### DEV\role-model\requirements\role-model-router-runtime-roadmap.md` before later implementation phases start.
+- The architecture lock doc is the repo-native source for provider capability-negotiation scope and the explicit deferral of provider-agnostic MCP/tool execution to run `13`.
 - Adapter implementations must remain extensible to more provider families without weakening the canonical protocol contract.
+- Adapter execution must preserve the committed protocol-grade artifact vocabulary rather than emitting provider-local substitutes.
 
 ## Assumptions
 
@@ -100,6 +104,7 @@ Acceptance criteria:
 - Add prompt-caching and token-accounting hooks where provider support exists.
 - Preserve the roadmap-local validation rule:
   - run the local adapter execution path against the supported smoke/dev flow
+  - confirm adapter execution still produces schema-valid, linkage-valid artifacts on the local path
   - read adapter logs, request/response captures, and usage extraction output
   - repair newly introduced adapter execution failures before the run is considered complete
 

@@ -11,6 +11,8 @@
 - The smoke path in `/role-model-router/apps/gateway-smoke/` now loads a fixture-driven router case, emits linked router-decision, trace, usage, config-export, and observed-performance artifacts under `/runtime-output/`, validates them against canonical schemas and linkage helpers before exit, and fails on invalid output.
 - The stable config export under `/role-model-router/apps/router-devtools/` emits a normalized ACP/MCP/CLI endpoint inventory with endpoint identity fields plus declared capability metadata in `runtime-output/router-devtools/config-export.json`.
 - The protocol docs under `/docs/protocol/` now describe the hardened M1-M3 baseline, including `measurement_window`, role/task/binding routing semantics, trace and usage linkage, benchmark-to-profile aggregation, and the expanded reason-code vocabulary.
+- `/docs/architecture/06-router-runtime-architecture-lock.md` now freezes the first router-runtime milestone as a single-host local-machine runtime built on the committed run-03 baseline, with explicit boundaries for provider taxonomy, account ownership, endpoint instantiation, protocol-driven projection, routing-model control, cache policy, OpenTelemetry interoperability, vendor/frontend/operator scope, and deferred MCP/tool work.
+- `/docs/architecture/05-memory-model.md` now states that the first runtime milestone is architecturally SQLite-first and same-host/local-disk scoped even though the production runtime memory backend is still deferred.
 - Future browser, edge, and native runtime families are still represented as scaffold-grade package/crate boundaries rather than production-complete implementations.
 - The current validated root command chain is:
   - `corepack pnpm run schemas:validate`
@@ -20,3 +22,4 @@
 - Operational caveats:
   - the repo now expects `Node >=24 <25`, which matches the current environment and removes the earlier Node-engine mismatch
   - `corepack pnpm exec biome check .` still reports pre-existing Windows formatting drift in tracked baseline files and was intentionally kept out of run `03-protocol-baseline-hardening` scope
+  - the selected run-04 worktree still reproduces `corepack pnpm run schemas:validate` PASS, `corepack pnpm run build` FAIL, `corepack pnpm run test` FAIL, and `corepack pnpm run smoke` PASS because `packages/schema-tools` still hits the Biome `No files were processed in the specified paths` failure while formatting generated protocol types

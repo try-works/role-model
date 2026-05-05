@@ -8,6 +8,7 @@ Inputs:
 - `/.recursive/STATE.md`
 - `/.recursive/DECISIONS.md`
 - `/.recursive/run/10-router-runtime-host-integration/00-requirements.md`
+- `/docs/architecture/06-router-runtime-architecture-lock.md`
 Outputs:
 - `/.recursive/run/11-router-runtime-observability-feedback/00-requirements.md`
 Scope note: This document defines the stable requirement contract for the observability-and-feedback run. It maps roadmap `Run 11 - Observability and feedback loop` onto repo run `11-router-runtime-observability-feedback`.
@@ -33,6 +34,7 @@ Acceptance criteria:
 - usage extraction completion is in scope
 - observed-performance updates are in scope and are connected back to the runtime flows that produce them
 - OpenTelemetry GenAI export mapping is included without weakening the canonical protocol artifact layer
+- the run continues to use the committed `measurement_window`, `endpoint_version`, benchmark/live-request source accounting, and linkage-helper model from run 03, including `validateTraceLinkage`, `validateUsageLinkage`, and `summarizeUsageEvents`
 
 ### `R2` Make auth/account and memory quality failures inspectable
 
@@ -78,6 +80,8 @@ Acceptance criteria:
 - This run must consume the earlier host integration outputs as prerequisites.
 - The run must reread `C:\Users\erikb\OneDrive\##### DEV\role-model\requirements\role-model-router-runtime-roadmap.md` before later implementation phases start.
 - Observability outputs must remain compatible with the protocol-grade artifact model already present in the repo baseline.
+- The architecture lock doc is the repo-native source for OpenTelemetry interoperability, cache observability, and capture-governance boundaries.
+- OpenTelemetry and operator-facing observability must augment, not replace, the committed run-03 artifact contracts.
 
 ## Assumptions
 
@@ -97,8 +101,13 @@ Acceptance criteria:
 - Add observed-performance updates plus auth/account failure tracking and memory retrieval quality signals.
 - Add OpenTelemetry GenAI interoperability and redaction-aware capture behavior.
 - Add operator inspection surfaces for the emitted artifacts.
+- Preserve the canonical linkage-helper surface from run 03:
+  - `validateTraceLinkage`
+  - `validateUsageLinkage`
+  - `summarizeUsageEvents`
 - Preserve the roadmap-local validation rule:
   - run the local flow that emits decisions, traces, usage, and profile updates
+  - confirm observability expansion does not replace or invalidate the canonical run-03 artifact contracts
   - read emitted artifacts plus local observability and error logs
   - repair newly introduced missing or malformed artifacts before the run is considered complete
 

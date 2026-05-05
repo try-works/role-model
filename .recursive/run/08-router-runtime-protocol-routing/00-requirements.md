@@ -9,6 +9,7 @@ Inputs:
 - `/.recursive/DECISIONS.md`
 - `/.recursive/run/04-router-runtime-architecture-lock/00-requirements.md`
 - `/.recursive/run/07-router-runtime-endpoint-registry-context-envelope/00-requirements.md`
+- `/docs/architecture/06-router-runtime-architecture-lock.md`
 Outputs:
 - `/.recursive/run/08-router-runtime-protocol-routing/00-requirements.md`
 Scope note: This document defines the stable requirement contract for the protocol-driven routing run. It maps roadmap `Run 08 - Protocol-driven routing and configurable routing model` onto repo run `08-router-runtime-protocol-routing`.
@@ -33,6 +34,7 @@ Acceptance criteria:
 - protocol-driven request and candidate projection is in scope and is treated as non-optional
 - routing continues to honor hard protocol constraints, policy gates, and deterministic eligibility checks rather than deferring to provider-native dispatch shortcuts
 - the run builds on the earlier endpoint-registry outputs instead of inventing a second candidate source
+- the run preserves the committed router-decision surface from run 03, including `app_id`, `org_id`, `metric_breakdown`, `tie_break`, the expanded role/task/binding-aware explainability model, and the explicit `role-binding.status = active|inactive|disabled` vocabulary that routing logic must honor
 
 ### `R2` Support a user-configurable routing model without weakening protocol control
 
@@ -76,7 +78,9 @@ Acceptance criteria:
 - Repo run `08-router-runtime-protocol-routing` corresponds to roadmap `Run 08 - Protocol-driven routing and configurable routing model`.
 - This run must treat `C:\Users\erikb\OneDrive\##### DEV\role-model\requirements\role-model-router-runtime-roadmap.md` as the canonical source when design conflicts appear.
 - The run must consume the earlier architecture, registry, context-envelope, and SQLite-memory outputs as prerequisites.
+- The architecture lock doc is the repo-native source for routing-model control, cache-aware routing preference, and the non-protocol-native projection boundary.
 - The configurable routing-model path must remain subordinate to protocol semantics and explicit policy enforcement.
+- The run must extend the committed run-03 router core rather than quietly replacing or simplifying it.
 
 ## Assumptions
 
@@ -96,8 +100,10 @@ Acceptance criteria:
 - Add configurable routing-model selection.
 - Add SQLite-backed context retrieval for routing.
 - Expand routing-core eligibility, exclusion/selection reason codes, local/cloud conformance, and cache-aware routing signals where supported.
+- Keep routing eligibility and explainability aligned with the committed `role-binding.status = active|inactive|disabled` baseline.
 - Preserve the roadmap-local validation rule:
   - run the local routing path end to end with representative requests
+  - confirm runtime routing changes do not regress the committed fixture-driven conformance and smoke-validation surfaces
   - read router decisions, exclusion logs, retrieval receipts, and routing-model diagnostics
   - repair incorrect routing decisions or newly introduced runtime errors before the run is considered complete
 

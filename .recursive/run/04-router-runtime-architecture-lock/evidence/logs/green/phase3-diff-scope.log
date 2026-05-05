@@ -1,0 +1,14 @@
+warning: in the working copy of '.recursive/run/04-router-runtime-architecture-lock/00-requirements.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '.recursive/run/04-router-runtime-architecture-lock/00-worktree.md', LF will be replaced by CRLF the next time Git touches it
+.recursive/run/04-router-runtime-architecture-lock/00-requirements.md
+.recursive/run/04-router-runtime-architecture-lock/00-worktree.md
+.recursive/run/05-router-runtime-catalog-foundation/00-requirements.md
+.recursive/run/06-router-runtime-provider-accounts-sqlite-memory/00-requirements.md
+.recursive/run/07-router-runtime-endpoint-registry-context-envelope/00-requirements.md
+.recursive/run/08-router-runtime-protocol-routing/00-requirements.md
+.recursive/run/09-router-runtime-adapter-execution-plane/00-requirements.md
+.recursive/run/10-router-runtime-host-integration/00-requirements.md
+.recursive/run/11-router-runtime-observability-feedback/00-requirements.md
+.recursive/run/12-router-runtime-hardening-operations/00-requirements.md
+.recursive/run/13-router-runtime-mcp-tools-extension/00-requirements.md
+docs/architecture/05-memory-model.md
