@@ -13,6 +13,27 @@ const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "..", "..", "..", "..");
 const vendorRoot = path.join(repoRoot, "role-model-router", "vendor", "llama-swap");
 
+export interface RuntimeHostValidationResult {
+  readonly host_base_url: string;
+  readonly model_count: number;
+  readonly returned_model: string;
+  readonly request_id: string;
+  readonly output_text: string;
+  readonly total_tokens: number;
+  readonly structured_recent_count: number;
+  readonly structured_endpoint_id: string;
+  readonly structured_profile_sample_size: number;
+  readonly otel_trace_id: string;
+  readonly otel_request_id: string | undefined;
+  readonly logs_contains_bridge: boolean;
+  readonly capture_id: number;
+  readonly capture_path: string;
+  readonly request_capture_keys: readonly string[];
+  readonly response_capture_type: string;
+  readonly stdout_tail: string;
+  readonly stderr_tail: string;
+}
+
 async function allocateLocalPort(): Promise<number> {
   return await new Promise<number>((resolve, reject) => {
     const server = createServer();
@@ -52,7 +73,7 @@ async function waitForOk(url: string, timeoutMs: number): Promise<Response> {
   throw new Error(`Timed out waiting for ${url}`);
 }
 
-async function main(): Promise<void> {
+export async function runRuntimeHostValidation(): Promise<RuntimeHostValidationResult> {
   const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-host-"));
   const stdoutChunks: string[] = [];
   const stderrChunks: string[] = [];
@@ -201,38 +222,35 @@ async function main(): Promise<void> {
       resp_body: unknown;
     };
 
-    console.log(
-      JSON.stringify(
-        {
-          host_base_url: hostBaseUrl,
-          model_count: models.data.length,
-          returned_model: completion.model,
-          request_id: requestId,
-          output_text: completion.choices[0]?.message?.content ?? "",
-          total_tokens: completion.usage.total_tokens,
-          structured_recent_count: recentRequests.length,
-          structured_endpoint_id: endpointProfile.endpointId,
-          structured_profile_sample_size: endpointProfile.latestProfile?.sample_size ?? 0,
-          otel_trace_id: otelExport.traceId,
-          otel_request_id: otelExport.attributes["gen_ai.request.id"],
-          logs_contains_bridge: logs.includes("role-model bridge"),
-          capture_id: captureMetric.id,
-          capture_path: capture.req_path,
-          request_capture_keys:
-            capture.req_body && typeof capture.req_body === "object"
-              ? Object.keys(capture.req_body as Record<string, unknown>)
-              : [],
-          response_capture_type:
-            capture.resp_body && typeof capture.resp_body === "object"
-              ? "object"
-              : typeof capture.resp_body,
-          stdout_tail: stdoutChunks.join("").slice(-400),
-          stderr_tail: stderrChunks.join("").slice(-400),
-        },
-        null,
-        2,
-      ),
-    );
+    return {
+      host_base_url: hostBaseUrl,
+      model_count: models.data.length,
+      returned_model: completion.model,
+      request_id: requestId,
+      output_text: completion.choices[0]?.message?.content ?? "",
+      total_tokens: completion.usage.total_tokens,
+      structured_recent_count: recentRequests.length,
+      structured_endpoint_id: endpointProfile.endpointId,
+      structured_profile_sample_size: endpointProfile.latestProfile?.sample_size ?? 0,
+      otel_trace_id: otelExport.traceId,
+      otel_request_id:
+        typeof otelExport.attributes["gen_ai.request.id"] === "string"
+          ? otelExport.attributes["gen_ai.request.id"]
+          : undefined,
+      logs_contains_bridge: logs.includes("role-model bridge"),
+      capture_id: captureMetric.id,
+      capture_path: capture.req_path,
+      request_capture_keys:
+        capture.req_body && typeof capture.req_body === "object"
+          ? Object.keys(capture.req_body as Record<string, unknown>)
+          : [],
+      response_capture_type:
+        capture.resp_body && typeof capture.resp_body === "object"
+          ? "object"
+          : typeof capture.resp_body,
+      stdout_tail: stdoutChunks.join("").slice(-400),
+      stderr_tail: stderrChunks.join("").slice(-400),
+    };
   } finally {
     hostProcess.kill("SIGTERM");
     const exited = await Promise.race([
@@ -250,5 +268,7 @@ async function main(): Promise<void> {
   }
 }
 
-await main();
-process.exit(0);
+if (process.argv[1] === __filename) {
+  console.log(JSON.stringify(await runRuntimeHostValidation(), null, 2));
+  process.exit(0);
+}

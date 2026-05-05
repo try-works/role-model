@@ -1,0 +1,193 @@
+
+> role-model@0.0.0 runtime:validate-routing D:\DEV\role-model\.worktrees\12-router-runtime-hardening-operations
+> corepack pnpm --filter @role-model-router/protocol-routing exec tsx src/cli.ts
+
+(node:54056) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+{
+  "databasePath": "C:\\Users\\erikb\\AppData\\Local\\Temp\\role-model-runtime-routing\\local-validation\\memory\\memory.sqlite",
+  "registrySize": 3,
+  "decision": {
+    "routing_decision_id": "decision-req-routing-validation",
+    "request_id": "req-routing-validation",
+    "app_id": "app-runtime",
+    "org_id": "org-runtime",
+    "policy_snapshot": {
+      "policy_id": "balanced-policy",
+      "strategy": "balanced",
+      "compute_preference": "local",
+      "prefer_local": true,
+      "budget_mode": "strict",
+      "tie_break_order": [
+        "quality",
+        "latency_ms",
+        "reliability",
+        "endpoint_id"
+      ],
+      "required_capabilities": [
+        "code.edit"
+      ],
+      "required_modalities": [
+        "text"
+      ],
+      "require_tools": false,
+      "deny_endpoints": [],
+      "allow_endpoints": [],
+      "deny_provider_kinds": [],
+      "allow_provider_kinds": [],
+      "budget": {
+        "enabled": true,
+        "currency": "USD",
+        "max_cost_per_request": 0.01,
+        "target_cost_per_request": 0.01
+      },
+      "privacy": {
+        "allow_remote": true
+      },
+      "targets": {
+        "latency_target_ms": 150,
+        "latency_max_ms": 300,
+        "throughput_target_tps": 40
+      }
+    },
+    "eligibility": [
+      {
+        "endpoint_id": "openai.personal.primary.us-east-1.fast",
+        "eligible": false,
+        "exclusions": [
+          {
+            "code": "CAPABILITY_MISSING",
+            "detail": "Endpoint is missing a required capability."
+          }
+        ]
+      },
+      {
+        "endpoint_id": "anthropic.team.shared.us-east-1.default",
+        "eligible": false,
+        "exclusions": [
+          {
+            "code": "CAPABILITY_MISSING",
+            "detail": "Endpoint is missing a required capability."
+          }
+        ]
+      },
+      {
+        "endpoint_id": "cli.local.coder",
+        "eligible": true,
+        "exclusions": []
+      }
+    ],
+    "scored_candidates": [
+      {
+        "endpoint_id": "cli.local.coder",
+        "total_score": 0.8967200260133529,
+        "metric_breakdown": {
+          "quality": {
+            "value": 0.9,
+            "source": "measured",
+            "raw": {
+              "judge_score": 0.9
+            }
+          },
+          "latency": {
+            "value": 0.641100130066764,
+            "source": "measured",
+            "raw": {
+              "latency_ms_p50": 65,
+              "latency_ms_p95": 95,
+              "effective_latency_ms": 72.5
+            }
+          },
+          "throughput": {
+            "value": 1,
+            "source": "measured",
+            "raw": {
+              "tokens_per_sec": 70
+            }
+          },
+          "cost": {
+            "value": 1,
+            "source": "measured",
+            "raw": {
+              "cost_per_1k_tokens_est": 0,
+              "target_cost_per_request": 0.01
+            }
+          },
+          "reliability": {
+            "value": 0.99,
+            "source": "measured",
+            "raw": {
+              "failure_rate": 0.01
+            }
+          },
+          "preference": {
+            "value": 1,
+            "source": "declared",
+            "raw": {
+              "compute_preference": "local",
+              "compute_delta": 0.15,
+              "preferred_capability_matches": 1,
+              "preferred_capability_delta": 0.25,
+              "active_role_binding": true,
+              "task_policy_present": true,
+              "cache_affinity": true,
+              "cache_affinity_delta": 0.1,
+              "routing_model_rank": 1,
+              "routing_model_rank_delta": 0.09999999999999999
+            }
+          }
+        },
+        "tie_break": {
+          "quality": 0.9,
+          "latency_ms": 72.5,
+          "reliability": 0.99,
+          "endpoint_id": "cli.local.coder"
+        }
+      }
+    ],
+    "chosen_endpoint_id": "cli.local.coder",
+    "fallback_endpoint_ids": [],
+    "selection_reasons": [
+      "BEST_TOTAL_SCORE",
+      "DECLARED_PROFILE_USED",
+      "MEASURED_PROFILE_USED",
+      "LOCAL_PREFERENCE_APPLIED",
+      "CACHE_AFFINITY_APPLIED",
+      "ROUTING_MODEL_PREFERENCE_APPLIED",
+      "LOW_LATENCY_TARGET_MET",
+      "HIGH_QUALITY_TARGET_MET",
+      "ROLE_POLICY_APPLIED",
+      "TASK_POLICY_APPLIED"
+    ],
+    "used_measured": true,
+    "used_declared": true,
+    "scoring_version": "baseline-v2"
+  },
+  "routingDiagnostics": {
+    "retrievalReceiptId": "conversation-main-retrieval-receipt",
+    "routingModel": {
+      "enabled": true,
+      "endpointId": "cli.local.coder",
+      "preferredEndpointIds": [
+        "openai.personal.primary.us-east-1.fast",
+        "cli.local.coder"
+      ],
+      "ignoredEndpointIds": []
+    }
+  },
+  "retrievalReceipt": {
+    "receiptId": "conversation-main-retrieval-receipt",
+    "summary": {
+      "selectedTurns": 2,
+      "selectedArtifacts": 1,
+      "omittedTurns": 2,
+      "omittedArtifacts": 2,
+      "estimatedTokens": 240
+    }
+  },
+  "contextEnvelope": {
+    "conversationId": "conversation-main",
+    "latestHandoffId": "handoff-1",
+    "estimatedTokenCount": 240
+  }
+}

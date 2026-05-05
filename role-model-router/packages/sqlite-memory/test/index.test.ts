@@ -416,6 +416,204 @@ describe("initializeSqliteMemory", () => {
       sample_size: 2,
     });
   });
+
+  test("exports persisted runtime state for operator drills", async () => {
+    expect(
+      typeof (
+        sqliteMemory as {
+          exportRuntimeState?: unknown;
+        }
+      ).exportRuntimeState,
+    ).toBe("function");
+
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+    const validation = await runRuntimeAdapterValidation({
+      repoRoot,
+      runtimeStateRoot,
+      scopeId: "workspace-dev",
+    });
+    const history = await readJson<{
+      byEndpointId: Record<string, Parameters<typeof createRuntimeObservationBundle>[0]["priorSamples"]>;
+    }>("testdata/router-runtime/observability-history.json");
+    const policy = await readJson<Parameters<typeof createRuntimeObservationBundle>[0]["capturePolicy"]>(
+      "testdata/router-runtime/observability-policy.json",
+    );
+    const bundle = createRuntimeObservationBundle({
+      decision: validation.decision,
+      routingDiagnostics: validation.routingDiagnostics,
+      retrievalReceipt: validation.retrievalReceipt,
+      contextEnvelope: validation.contextEnvelope,
+      execution: validation.execution,
+      priorSamples: history.byEndpointId[validation.decision.chosen_endpoint_id] ?? [],
+      maintenancePolicy: {
+        "redaction.level": "strict",
+        "retention.class": "standard",
+      },
+      capturePolicy: policy,
+    });
+
+    (
+      sqliteMemory as {
+        persistRuntimeObservationBundle(input: {
+          databasePath: string;
+          observation: ReturnType<typeof createRuntimeObservationBundle>;
+        }): void;
+      }
+    ).persistRuntimeObservationBundle({
+      databasePath: validation.databasePath,
+      observation: bundle,
+    });
+
+    const exportPath = path.join(runtimeStateRoot, "runtime-export.json");
+    const summary = (
+      sqliteMemory as {
+        exportRuntimeState(input: { databasePath: string; exportPath: string }): {
+          exportPath: string;
+          observationCount: number;
+          profileCount: number;
+        };
+      }
+    ).exportRuntimeState({
+      databasePath: validation.databasePath,
+      exportPath,
+    });
+
+    const exported = JSON.parse(await readFile(exportPath, "utf8")) as {
+      maintenancePolicy: Record<string, string>;
+      observations: Array<{ requestId: string; endpointId: string }>;
+      observedProfiles: Array<{ endpointId: string }>;
+    };
+
+    expect(summary).toEqual({
+      exportPath,
+      observationCount: 1,
+      profileCount: 1,
+    });
+    expect(exported.maintenancePolicy).toEqual({
+      "backup.policy": "wal-copy-on-demand",
+      "deletion.policy": "explicit-export-delete",
+      "redaction.level": "strict",
+      "retention.class": "standard",
+    });
+    expect(exported.observations).toEqual([
+      {
+        requestId: validation.decision.request_id,
+        endpointId: validation.decision.chosen_endpoint_id,
+      },
+    ]);
+    expect(exported.observedProfiles).toEqual([
+      {
+        endpointId: validation.decision.chosen_endpoint_id,
+      },
+    ]);
+  });
+
+  test("restores runtime state from a backup after scoped deletion", async () => {
+    expect(
+      typeof (
+        sqliteMemory as {
+          backupRuntimeState?: unknown;
+        }
+      ).backupRuntimeState,
+    ).toBe("function");
+    expect(
+      typeof (
+        sqliteMemory as {
+          deleteRuntimeState?: unknown;
+        }
+      ).deleteRuntimeState,
+    ).toBe("function");
+    expect(
+      typeof (
+        sqliteMemory as {
+          restoreRuntimeState?: unknown;
+        }
+      ).restoreRuntimeState,
+    ).toBe("function");
+
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+    const validation = await runRuntimeAdapterValidation({
+      repoRoot,
+      runtimeStateRoot,
+      scopeId: "workspace-dev",
+    });
+    const history = await readJson<{
+      byEndpointId: Record<string, Parameters<typeof createRuntimeObservationBundle>[0]["priorSamples"]>;
+    }>("testdata/router-runtime/observability-history.json");
+    const policy = await readJson<Parameters<typeof createRuntimeObservationBundle>[0]["capturePolicy"]>(
+      "testdata/router-runtime/observability-policy.json",
+    );
+    const bundle = createRuntimeObservationBundle({
+      decision: validation.decision,
+      routingDiagnostics: validation.routingDiagnostics,
+      retrievalReceipt: validation.retrievalReceipt,
+      contextEnvelope: validation.contextEnvelope,
+      execution: validation.execution,
+      priorSamples: history.byEndpointId[validation.decision.chosen_endpoint_id] ?? [],
+      maintenancePolicy: {
+        "redaction.level": "strict",
+        "retention.class": "standard",
+      },
+      capturePolicy: policy,
+    });
+
+    (
+      sqliteMemory as {
+        persistRuntimeObservationBundle(input: {
+          databasePath: string;
+          observation: ReturnType<typeof createRuntimeObservationBundle>;
+        }): void;
+      }
+    ).persistRuntimeObservationBundle({
+      databasePath: validation.databasePath,
+      observation: bundle,
+    });
+
+    const backupPath = path.join(runtimeStateRoot, "memory-backup.sqlite");
+    (
+      sqliteMemory as {
+        backupRuntimeState(input: { databasePath: string; backupPath: string }): { backupPath: string };
+      }
+    ).backupRuntimeState({
+      databasePath: validation.databasePath,
+      backupPath,
+    });
+
+    (
+      sqliteMemory as {
+        deleteRuntimeState(input: { databasePath: string }): void;
+      }
+    ).deleteRuntimeState({
+      databasePath: validation.databasePath,
+    });
+    await expect(readFile(validation.databasePath)).rejects.toThrow();
+
+    (
+      sqliteMemory as {
+        restoreRuntimeState(input: { databasePath: string; backupPath: string }): void;
+      }
+    ).restoreRuntimeState({
+      databasePath: validation.databasePath,
+      backupPath,
+    });
+
+    expect(
+      (
+        sqliteMemory as {
+          readRuntimeObservationBundle(input: {
+            databasePath: string;
+            requestId: string;
+          }): ReturnType<typeof createRuntimeObservationBundle> | null;
+        }
+      ).readRuntimeObservationBundle({
+        databasePath: validation.databasePath,
+        requestId: validation.decision.request_id,
+      }),
+    ).toMatchObject({
+      requestId: validation.decision.request_id,
+      endpointId: validation.decision.chosen_endpoint_id,
+    });
+  });
 });
 
 describe("runRuntimeStateValidation", () => {

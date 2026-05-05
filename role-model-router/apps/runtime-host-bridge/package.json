@@ -23,6 +23,6 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "test": "vitest run test/index.test.ts"
+    "test": "vitest run test/index.test.ts test/validate-operations.test.ts"
   }
 }

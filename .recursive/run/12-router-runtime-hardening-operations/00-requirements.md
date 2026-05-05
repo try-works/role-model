@@ -1,6 +1,8 @@
 Run: `/.recursive/run/12-router-runtime-hardening-operations/`
 Phase: `00 Requirements`
-Status: `DRAFT`
+Status: `LOCKED`
+LockedAt: `2026-05-05T11:43:29Z`
+LockHash: `b9eb385ec2691aec3982167db85b3368a3be95d755602c545fc7f0e082b42185`
 Workflow version: `recursive-mode-audit-v1`
 Inputs:
 - `C:\Users\erikb\OneDrive\##### DEV\role-model\requirements\role-model-router-runtime-roadmap.md`

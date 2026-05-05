@@ -26,6 +26,7 @@
     "runtime:validate-adapter": "corepack pnpm --filter @role-model-router/adapter-execution exec tsx src/cli.ts",
     "runtime:validate-host": "corepack pnpm --filter @role-model-router/runtime-host-bridge exec tsx src/validate-host.ts",
     "runtime:validate-observability": "corepack pnpm --filter @role-model-router/runtime-host-bridge exec tsx src/validate-host.ts",
+    "runtime:validate-operations": "corepack pnpm --filter @role-model-router/runtime-host-bridge exec tsx src/validate-operations.ts",
     "runtime:validate-registry": "corepack pnpm --filter @role-model-router/endpoint-registry exec tsx src/cli.ts",
     "runtime:validate-routing": "corepack pnpm --filter @role-model-router/protocol-routing exec tsx src/cli.ts",
     "runtime:validate-state": "corepack pnpm --filter @role-model-router/sqlite-memory exec tsx src/cli.ts",

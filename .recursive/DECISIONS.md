@@ -347,3 +347,34 @@
   - `logs_contains_bridge` remains `false` in the successful validator output because `/logs` does not currently include that literal phrase
   - full vendored `go test ./...` still fails on Windows in upstream `proxy/process_test.go` because `sleep` is not on `%PATH%`
   - the broader root `build` and `test` commands still fail on the inherited schema-tools/Biome generated-types path
+
+### Run `12-router-runtime-hardening-operations`
+
+- Run folder: `/.recursive/run/12-router-runtime-hardening-operations/`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `01.5-root-cause.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `03.5-code-review.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - repaired clean vendored host startup by replacing the hidden `proxy/ui_dist` dependency with a tracked fallback UI path under `/role-model-router/vendor/llama-swap/proxy/ui_stub/`
+  - extended `/role-model-router/packages/sqlite-memory/` with explicit runtime-data export, backup, delete, and restore helpers and added the repo-local `runtime:validate-operations` command under `/role-model-router/apps/runtime-host-bridge/`
+  - added `/docs/operations/01-router-runtime-hardening-playbook.md` and linked it from `/role-model-router/README.md` so vendor refresh, deployment/upgrade guidance, validation order, and SQLite drills are durable repo-owned operator docs
+- Why:
+  - to close the first router-runtime sequence with a reproducible clean-start baseline, explicit runtime-state maintenance drills, and durable operator guidance rather than a session-only repair
+- How:
+  - implemented strict RED/GREEN TDD across vendored Go fallback behavior, SQLite maintenance helpers, and the operations validator, then accepted a delegated Phase 3.5 review and revalidated the final hardening path with durable verify logs
+- What was not done:
+  - no run-13 MCP/tool-extension work, canonical schema redesign, live provider transport, true streaming transport, or broader UI productization was added here
+- Known issues / follow-ups:
+  - `runtime:validate-host` and `runtime:validate-observability` are now green on clean worktrees, but `logs_contains_bridge` still remains `false` in successful validator output because `/logs` does not currently include that literal phrase
+  - vendored `go test ./proxy` still fails on Windows in upstream `proxy/process_test.go` because `sleep` is not on `%PATH%`
+  - the broader root `build` and `test` commands still fail on the inherited schema-tools/Biome generated-types path

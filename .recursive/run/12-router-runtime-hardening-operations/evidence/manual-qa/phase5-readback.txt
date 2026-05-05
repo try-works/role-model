@@ -1,0 +1,6 @@
+Run 12 manual QA readback
+
+- runtime:validate-host now reads as a clean-startup proof instead of a timeout symptom.
+- runtime:validate-operations clearly shows scope isolation, maintenance drill outcomes, and replay/shadow alignment in one object.
+- the hardening playbook matches the shipped command surface and uses the same vocabulary as the validator output.
+- scope remained limited to hardening-and-operations work; no run-13 feature expansion leaked into the diff.

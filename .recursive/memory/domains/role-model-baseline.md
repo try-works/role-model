@@ -1,6 +1,6 @@
 Type: `domain`
 Status: `CURRENT`
-Scope: `Stable baseline ownership for the repo workspace, canonical protocol tree, shared packages, router family, fixtures, and validation surfaces introduced by run 00, tightened by runs 01-03, and extended through the single-host router-runtime baseline completed in runs 04-11.`
+Scope: `Stable baseline ownership for the repo workspace, canonical protocol tree, shared packages, router family, fixtures, and validation surfaces introduced by run 00, tightened by runs 01-03, and extended through the single-host router-runtime baseline completed in runs 04-12.`
 Owns-Paths:
 - `/README.md`
 - `/LICENSE`
@@ -32,6 +32,7 @@ Source-Runs:
  - `09-router-runtime-adapter-execution-plane`
  - `10-router-runtime-host-integration`
  - `11-router-runtime-observability-feedback`
+ - `12-router-runtime-hardening-operations`
 Validated-At-Commit: `working-tree`
 Last-Validated: `2026-05-05T19:30:51.752+08:00`
 Tags:
@@ -72,8 +73,11 @@ This repository now has a real product baseline rather than only recursive scaff
 - The current router-runtime baseline is single-host and local-machine scoped, not distributed or multi-host
 - The runtime stack now includes runtime-owned provider-account, SQLite memory, endpoint registry, context envelope, retrieval receipt, protocol routing, adapter execution, provider-family adapters, a managed TypeScript runtime host bridge, and a shared runtime observability layer
 - The live host path is a managed TypeScript bridge in `/role-model-router/apps/runtime-host-bridge/` over vendored `/role-model-router/vendor/llama-swap/`, with raw vendor surfaces preserved and structured role-model inspection routes added beside them
+- The vendored host now has a tracked fallback UI surface under `/role-model-router/vendor/llama-swap/proxy/ui_stub/`, so clean worktrees no longer require leftover generated `proxy/ui_dist` assets just to compile or start the local host
 - Structured inspection now includes `/api/role-model/requests`, `/api/role-model/requests/:id`, and `/api/role-model/endpoints/:endpointId/profile`, while raw `/logs`, `/logs/stream`, `/api/events`, `/api/metrics`, and `/api/captures/:id` remain vendor-owned operator surfaces
 - Runtime request observations, grouped diagnostics, capture-policy receipts, profile-feedback shaping, and deterministic OpenTelemetry GenAI export mapping are shared through `/role-model-router/packages/runtime-observability/`
+- Runtime-state maintenance is still SQLite-owned and now includes explicit export, backup, delete, and restore drills plus the stronger `runtime:validate-operations` command for end-to-end operator validation
+- Durable operator guidance for the single-host runtime baseline now lives under `/docs/operations/01-router-runtime-hardening-playbook.md`
 - Browser, edge, and native provider families are intentionally scaffold-grade in this baseline
 
 ## Validation Path
@@ -82,8 +86,8 @@ This repository now has a real product baseline rather than only recursive scaff
 - Root workspace scripts now use PATH-independent nested `corepack pnpm ...` invocations so the canonical shell-out entrypoints stay stable even when a child shell does not expose a global pnpm shim
 - GitHub Actions validates this repo from a clean checkout of tracked files only; local Biome parity work should prefer a clean export or tracked-file-targeted checks instead of repo-root sweeps that also traverse nested `.worktrees/`
 - On Windows, CRLF-only worktree churn can make local status noisier than the real Linux CI content diff; use `git diff` to identify the actual files that need formatter commits
-- The repo-local runtime validation floor is the staged command family `runtime:validate-state`, `runtime:validate-registry`, `runtime:validate-routing`, `runtime:validate-adapter`, `runtime:validate-host`, `runtime:validate-observability`, plus `smoke`
-- When validating runtime work, treat the focused runtime validators and package tests as the run-owned baseline; broader root `build` and `test` still reproduce the inherited schema-tools/Biome generated-types failure, and vendored full `go test ./...` on Windows still reproduces the upstream `sleep` PATH assumption
+- The repo-local runtime validation floor is the staged command family `runtime:validate-state`, `runtime:validate-registry`, `runtime:validate-routing`, `runtime:validate-adapter`, `runtime:validate-host`, `runtime:validate-observability`, `runtime:validate-operations`, plus `smoke`
+- When validating runtime work, treat the focused runtime validators and package tests as the run-owned baseline; broader root `build` and `test` still reproduce the inherited schema-tools/Biome generated-types failure, and vendored proxy/full Go tests on Windows still reproduce the upstream `sleep` PATH assumption
 
 ## Scope Boundary
 
