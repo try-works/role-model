@@ -504,6 +504,195 @@ describe("runtime-host-bridge", () => {
     expect(result.usage.outputTokens).toBeGreaterThan(0);
   });
 
+  test("creates a runtime backend that persists structured request and endpoint inspection state", async () => {
+    expect(
+      typeof (bridge as { createRuntimeBridgeBackend?: unknown }).createRuntimeBridgeBackend,
+    ).toBe("function");
+
+    const backend = await (
+      bridge as {
+        createRuntimeBridgeBackend: (options: {
+          repoRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+        }) => Promise<{
+          registry: EndpointRegistryResult;
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+          ) => Promise<{
+            model: string;
+            endpointId: string;
+            adapterFamily: string;
+            outputText: string;
+            finishReason: string;
+            usage: {
+              inputTokens: number;
+              outputTokens: number;
+            };
+          }>;
+          readRequestObservation?: (requestId: string) => Promise<unknown>;
+          readEndpointProfile?: (endpointId: string) => Promise<unknown>;
+        }>;
+      }
+    ).createRuntimeBridgeBackend({
+      repoRoot,
+      runtimeStateRoot: path.join(os.tmpdir(), "role-model-runtime-host-observation-tests"),
+      scopeId: "runtime-host-observation-tests",
+    });
+
+    expect(typeof backend.readRequestObservation).toBe("function");
+    expect(typeof backend.readEndpointProfile).toBe("function");
+
+    const requestId = "req-runtime-bridge-observation-001";
+    const result = await backend.executeChatCompletions(
+      {
+        model: "openai/gpt-4.1-mini-fast",
+        messages: [{ role: "user", content: "Summarize the chosen endpoint." }],
+      },
+      requestId,
+    );
+
+    await expect(backend.readRequestObservation?.(requestId)).resolves.toMatchObject({
+      requestId,
+      endpointId: result.endpointId,
+      capturePolicy: {
+        structuredInspectionAvailable: true,
+      },
+    });
+    await expect(backend.readEndpointProfile?.(result.endpointId)).resolves.toMatchObject({
+      endpointId: result.endpointId,
+      latestProfile: {
+        endpoint_id: result.endpointId,
+      },
+    });
+  });
+
+  test("serves structured request and endpoint inspection routes through the bridge server", async () => {
+    expect(
+      typeof (bridge as { createRuntimeBridgeBackend?: unknown }).createRuntimeBridgeBackend,
+    ).toBe("function");
+    expect(typeof (bridge as { startBridgeServer?: unknown }).startBridgeServer).toBe("function");
+
+    const backend = await (
+      bridge as {
+        createRuntimeBridgeBackend: (options: {
+          repoRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+        }) => Promise<{
+          registry: EndpointRegistryResult;
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+          ) => Promise<{
+            model: string;
+            endpointId: string;
+            adapterFamily: string;
+            outputText: string;
+            finishReason: string;
+            usage: {
+              inputTokens: number;
+              outputTokens: number;
+            };
+          }>;
+          listRecentRequestObservations?: () => Promise<unknown>;
+          readRequestObservation?: (requestId: string) => Promise<unknown>;
+          readEndpointProfile?: (endpointId: string) => Promise<unknown>;
+        }>;
+      }
+    ).createRuntimeBridgeBackend({
+      repoRoot,
+      runtimeStateRoot: path.join(os.tmpdir(), "role-model-runtime-host-route-tests"),
+      scopeId: "runtime-host-route-tests",
+    });
+
+    expect(typeof backend.listRecentRequestObservations).toBe("function");
+    expect(typeof backend.readRequestObservation).toBe("function");
+    expect(typeof backend.readEndpointProfile).toBe("function");
+
+    const server = await (
+      bridge as {
+        startBridgeServer: (options: {
+          host: string;
+          port: number;
+          registry: EndpointRegistryResult;
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+          ) => Promise<unknown>;
+          listRecentRequestObservations?: () => Promise<unknown>;
+          readRequestObservation?: (requestId: string) => Promise<unknown>;
+          readEndpointProfile?: (endpointId: string) => Promise<unknown>;
+        }) => Promise<{ port: number; close(): Promise<void> }>;
+      }
+    ).startBridgeServer({
+      host: "127.0.0.1",
+      port: 0,
+      registry: backend.registry,
+      executeChatCompletions: backend.executeChatCompletions,
+      listRecentRequestObservations: backend.listRecentRequestObservations,
+      readRequestObservation: backend.readRequestObservation,
+      readEndpointProfile: backend.readEndpointProfile,
+    });
+
+    try {
+      const requestId = "req-runtime-bridge-route-001";
+      const completionResponse = await fetch(`http://127.0.0.1:${server.port}/v1/chat/completions`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-request-id": requestId,
+        },
+        body: JSON.stringify({
+          model: "openai/gpt-4.1-mini-fast",
+          messages: [{ role: "user", content: "Summarize the chosen endpoint." }],
+        }),
+      });
+      expect(completionResponse.status).toBe(200);
+
+      const recentResponse = await fetch(`http://127.0.0.1:${server.port}/api/role-model/requests`);
+      expect(recentResponse.status).toBe(200);
+      expect(await recentResponse.json()).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            requestId,
+            endpointId: "openai.personal.primary.us-east-1.fast",
+          }),
+        ]),
+      );
+
+      const requestDetailResponse = await fetch(
+        `http://127.0.0.1:${server.port}/api/role-model/requests/${requestId}`,
+      );
+      expect(requestDetailResponse.status).toBe(200);
+      expect(await requestDetailResponse.json()).toEqual(
+        expect.objectContaining({
+          requestId,
+          endpointId: "openai.personal.primary.us-east-1.fast",
+          capturePolicy: expect.objectContaining({
+            structuredInspectionAvailable: true,
+          }),
+        }),
+      );
+
+      const endpointProfileResponse = await fetch(
+        `http://127.0.0.1:${server.port}/api/role-model/endpoints/openai.personal.primary.us-east-1.fast/profile`,
+      );
+      expect(endpointProfileResponse.status).toBe(200);
+      expect(await endpointProfileResponse.json()).toEqual(
+        expect.objectContaining({
+          endpointId: "openai.personal.primary.us-east-1.fast",
+          latestProfile: expect.objectContaining({
+            endpoint_id: "openai.personal.primary.us-east-1.fast",
+          }),
+        }),
+      );
+    } finally {
+      await server.close();
+    }
+  });
+
   test("resolves bridge server options from explicit values and defaults", () => {
     expect(typeof (bridge as { resolveBridgeServerOptions?: unknown }).resolveBridgeServerOptions).toBe(
       "function",

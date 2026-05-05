@@ -6,6 +6,8 @@
   "dependencies": {
     "@role-model-router/adapter-execution": "workspace:*",
     "@role-model-router/profile-aggregator": "workspace:*",
+    "@role-model-router/runtime-observability": "workspace:*",
+    "@role-model-router/sqlite-memory": "workspace:*",
     "@role-model-router/trace": "workspace:*",
     "@role-model-router/usage": "workspace:*"
   },

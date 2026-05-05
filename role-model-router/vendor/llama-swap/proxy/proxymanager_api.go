@@ -34,6 +34,20 @@ func addApiHandlers(pm *ProxyManager) {
 		apiGroup.GET("/metrics", pm.apiGetMetrics)
 		apiGroup.GET("/version", pm.apiGetVersion)
 		apiGroup.GET("/captures/:id", pm.apiGetCapture)
+		apiGroup.GET("/role-model/requests", pm.apiProxyRoleModelBridge)
+		apiGroup.GET("/role-model/requests/:id", pm.apiProxyRoleModelBridge)
+		apiGroup.GET("/role-model/endpoints/:id/profile", pm.apiProxyRoleModelBridge)
+	}
+}
+
+func (pm *ProxyManager) apiProxyRoleModelBridge(c *gin.Context) {
+	if pm.roleModelBridge == nil || !pm.roleModelBridge.Enabled() {
+		pm.sendErrorResponse(c, http.StatusNotFound, "role-model bridge is not configured")
+		return
+	}
+	if err := pm.roleModelBridge.ProxyRequest("", c.Writer, c.Request); err != nil {
+		pm.sendErrorResponse(c, http.StatusBadGateway, fmt.Sprintf("role-model bridge request failed: %s", err.Error()))
+		return
 	}
 }
 

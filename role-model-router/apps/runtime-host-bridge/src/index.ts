@@ -11,12 +11,24 @@ import { createAnthropicProviderAdapter } from "@role-model-router/provider-anth
 import { validateProviderAccounts } from "@role-model-router/provider-account";
 import { createOpenAIProviderAdapter } from "@role-model-router/provider-openai";
 import { createRetrievalReceipt } from "@role-model-router/retrieval-receipt";
+import type { ObservedPerformanceSample } from "@role-model-router/profile-aggregator";
+import {
+  createRuntimeObservationBundle,
+  type RuntimeCapturePolicy,
+  type RuntimeObservationBundle,
+} from "@role-model-router/runtime-observability";
 import {
   initializeSqliteMemory,
   persistContinuitySnapshot,
   persistProviderAccounts,
+  persistRuntimeObservationBundle,
   persistRetrievalReceipt,
+  listRecentRuntimeObservations,
   readConversationContinuity,
+  readLatestObservedProfile,
+  readObservedPerformanceSamples,
+  readRuntimeMaintenancePolicy,
+  readRuntimeObservationBundle,
 } from "@role-model-router/sqlite-memory";
 
 import {
@@ -111,6 +123,9 @@ export interface StartBridgeServerOptions {
     body: OpenAIChatCompletionsBody,
     requestId: string,
   ) => Promise<BridgeChatCompletionsExecutionResult>;
+  readonly listRecentRequestObservations?: () => Promise<readonly unknown[]>;
+  readonly readRequestObservation?: (requestId: string) => Promise<unknown>;
+  readonly readEndpointProfile?: (endpointId: string) => Promise<unknown>;
 }
 
 export interface RuntimeBridgeBackend {
@@ -119,6 +134,15 @@ export interface RuntimeBridgeBackend {
     body: OpenAIChatCompletionsBody,
     requestId: string,
   ) => Promise<BridgeChatCompletionsExecutionResult>;
+  listRecentRequestObservations(): Promise<
+    readonly ReturnType<typeof listRecentRuntimeObservations>[number][]
+  >;
+  readRequestObservation(requestId: string): Promise<RuntimeObservationBundle | null>;
+  readEndpointProfile(endpointId: string): Promise<{
+    endpointId: string;
+    latestProfile: ReturnType<typeof readLatestObservedProfile>;
+    recentSamples: readonly ObservedPerformanceSample[];
+  }>;
 }
 
 export interface CreateRuntimeBridgeBackendOptions {
@@ -364,6 +388,49 @@ function createRequestHandler(options: StartBridgeServerOptions) {
       return;
     }
 
+    if (request.method === "GET" && url.pathname === "/api/role-model/requests") {
+      if (!options.listRecentRequestObservations) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.listRecentRequestObservations());
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname.startsWith("/api/role-model/requests/")) {
+      if (!options.readRequestObservation) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      const requestId = decodeURIComponent(url.pathname.slice("/api/role-model/requests/".length));
+      const observation = await options.readRequestObservation(requestId);
+      if (!observation) {
+        writeJson(response, 404, { error: "runtime observation not found" });
+        return;
+      }
+      writeJson(response, 200, observation);
+      return;
+    }
+
+    if (
+      request.method === "GET" &&
+      url.pathname.startsWith("/api/role-model/endpoints/") &&
+      url.pathname.endsWith("/profile")
+    ) {
+      if (!options.readEndpointProfile) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      const endpointId = decodeURIComponent(
+        url.pathname.slice(
+          "/api/role-model/endpoints/".length,
+          url.pathname.length - "/profile".length,
+        ),
+      );
+      writeJson(response, 200, await options.readEndpointProfile(endpointId));
+      return;
+    }
+
     writeJson(response, 404, { error: "not found" });
   };
 }
@@ -458,6 +525,12 @@ export async function createRuntimeBridgeBackend(
   const captureFixtureMap = await readJson<CaptureFixtureMap>(
     path.join(options.repoRoot, "testdata", "router-runtime", "adapter-captures.json"),
   );
+  const observabilityHistory = await readJson<{
+    byEndpointId: Record<string, ObservedPerformanceSample[]>;
+  }>(path.join(options.repoRoot, "testdata", "router-runtime", "observability-history.json"));
+  const observabilityPolicy = await readJson<RuntimeCapturePolicy>(
+    path.join(options.repoRoot, "testdata", "router-runtime", "observability-policy.json"),
+  );
 
   const validation = validateProviderAccounts({
     catalog: normalizedCatalog,
@@ -547,6 +620,48 @@ export async function createRuntimeBridgeBackend(
         adapters: [createOpenAIProviderAdapter(), createAnthropicProviderAdapter()],
         captures,
       });
+      const providerAccount = validation.accounts.find(
+        (account) => account.providerAccountId === execution.target.providerAccountId,
+      );
+      const bundle = createRuntimeObservationBundle({
+        decision: routed.decision,
+        routingDiagnostics: routed.routingDiagnostics,
+        retrievalReceipt: {
+          receiptId: retrievalReceipt.receiptId,
+          summary: retrievalReceipt.summary,
+        },
+        contextEnvelope: {
+          conversationId: envelope.conversationId,
+          latestHandoffId: envelope.latestHandoff?.handoffId ?? null,
+          estimatedTokenCount: envelope.estimatedTokenCount,
+        },
+        execution,
+        priorSamples: [
+          ...(observabilityHistory.byEndpointId[routed.decision.chosen_endpoint_id] ?? []),
+          ...readObservedPerformanceSamples({
+            databasePath: initialization.databasePath,
+            endpointId: routed.decision.chosen_endpoint_id,
+          }),
+        ],
+        maintenancePolicy: readRuntimeMaintenancePolicy({
+          databasePath: initialization.databasePath,
+        }),
+        capturePolicy: observabilityPolicy,
+        ...(providerAccount
+          ? {
+              accountState: {
+                providerAccountId: providerAccount.providerAccountId,
+                status: providerAccount.status,
+                healthStatus: providerAccount.healthStatus,
+                rotationState: providerAccount.rotationState,
+              },
+            }
+          : {}),
+      });
+      persistRuntimeObservationBundle({
+        databasePath: initialization.databasePath,
+        observation: bundle,
+      });
 
       return {
         model: execution.target.modelId,
@@ -558,6 +673,36 @@ export async function createRuntimeBridgeBackend(
           inputTokens: execution.normalized.usage.inputTokens,
           outputTokens: execution.normalized.usage.outputTokens,
         },
+      };
+    },
+    async readRequestObservation(requestId: string): Promise<RuntimeObservationBundle | null> {
+      return readRuntimeObservationBundle({
+        databasePath: initialization.databasePath,
+        requestId,
+      }) as RuntimeObservationBundle | null;
+    },
+    async listRecentRequestObservations(): Promise<
+      readonly ReturnType<typeof listRecentRuntimeObservations>[number][]
+    > {
+      return listRecentRuntimeObservations({
+        databasePath: initialization.databasePath,
+      });
+    },
+    async readEndpointProfile(endpointId: string): Promise<{
+      endpointId: string;
+      latestProfile: ReturnType<typeof readLatestObservedProfile>;
+      recentSamples: readonly ObservedPerformanceSample[];
+    }> {
+      return {
+        endpointId,
+        latestProfile: readLatestObservedProfile({
+          databasePath: initialization.databasePath,
+          endpointId,
+        }),
+        recentSamples: readObservedPerformanceSamples({
+          databasePath: initialization.databasePath,
+          endpointId,
+        }),
       };
     },
   };

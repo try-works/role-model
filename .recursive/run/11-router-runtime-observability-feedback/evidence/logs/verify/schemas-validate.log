@@ -1,0 +1,6 @@
+
+> role-model@0.0.0 schemas:validate D:\DEV\role-model\.worktrees\11-router-runtime-observability-feedback
+> corepack pnpm --filter @role-model/schema-tools exec tsx src/validate-schemas.ts validate
+
+Validated 19 schema file(s).
+Validated 28 fixture file(s).

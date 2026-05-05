@@ -1,16 +1,40 @@
 import { spawn, spawnSync } from "node:child_process";
 import { mkdtemp, rm } from "node:fs/promises";
+import { createServer } from "node:net";
 import os from "node:os";
 import path from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
 
+import { createOpenTelemetryGenAiExport } from "@role-model-router/runtime-observability/otel";
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "..", "..", "..", "..");
 const vendorRoot = path.join(repoRoot, "role-model-router", "vendor", "llama-swap");
-const hostAddress = "127.0.0.1:18081";
-const hostBaseUrl = `http://${hostAddress}`;
+
+async function allocateLocalPort(): Promise<number> {
+  return await new Promise<number>((resolve, reject) => {
+    const server = createServer();
+    server.once("error", reject);
+    server.listen(0, "127.0.0.1", () => {
+      const address = server.address();
+      if (!address || typeof address === "string") {
+        server.close();
+        reject(new Error("Failed to allocate a local TCP port."));
+        return;
+      }
+      const { port } = address;
+      server.close((error) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        resolve(port);
+      });
+    });
+  });
+}
 
 async function waitForOk(url: string, timeoutMs: number): Promise<Response> {
   const deadline = Date.now() + timeoutMs;
@@ -32,6 +56,11 @@ async function main(): Promise<void> {
   const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-host-"));
   const stdoutChunks: string[] = [];
   const stderrChunks: string[] = [];
+  const requestId = "req-runtime-host-observability-001";
+  const hostPort = await allocateLocalPort();
+  const bridgePort = await allocateLocalPort();
+  const hostAddress = `127.0.0.1:${hostPort}`;
+  const hostBaseUrl = `http://${hostAddress}`;
 
   const hostProcess = spawn(
     "C:\\Program Files\\Go\\bin\\go.exe",
@@ -42,7 +71,7 @@ async function main(): Promise<void> {
         ...process.env,
         ROLE_MODEL_BRIDGE_REPO_ROOT: repoRoot,
         ROLE_MODEL_BRIDGE_RUNTIME_STATE_ROOT: runtimeStateRoot,
-        ROLE_MODEL_BRIDGE_PORT: "8091",
+        ROLE_MODEL_BRIDGE_PORT: String(bridgePort),
         ROLE_MODEL_BRIDGE_SCOPE_ID: "runtime-host-validation",
       },
       stdio: ["ignore", "pipe", "pipe"],
@@ -70,6 +99,7 @@ async function main(): Promise<void> {
       method: "POST",
       headers: {
         "content-type": "application/json",
+        "x-request-id": requestId,
       },
       body: JSON.stringify({
         model: "openai/gpt-4.1-mini-fast",
@@ -89,6 +119,63 @@ async function main(): Promise<void> {
       choices: Array<{ message: { content: string } }>;
       usage: { total_tokens: number };
     };
+
+    const recentRequestsResponse = await waitForOk(`${hostBaseUrl}/api/role-model/requests`, 10000);
+    const recentRequests = (await recentRequestsResponse.json()) as Array<{
+      requestId: string;
+      endpointId: string;
+    }>;
+    const recentRequest = recentRequests.find((entry) => entry.requestId === requestId);
+    if (!recentRequest) {
+      throw new Error(`Structured request list did not include ${requestId}.`);
+    }
+
+    const requestDetailResponse = await waitForOk(
+      `${hostBaseUrl}/api/role-model/requests/${requestId}`,
+      10000,
+    );
+    const requestDetail = (await requestDetailResponse.json()) as {
+      requestId: string;
+      endpointId: string;
+      capturePolicy: {
+        structuredInspectionAvailable: boolean;
+      };
+      trace: {
+        spans: Array<{ trace_id: string; span_id: string }>;
+      };
+      usageEvent: {
+        model_id: string;
+        tokens_in: number;
+        tokens_out: number;
+      };
+      cacheObservability: {
+        promptCacheUsed: boolean;
+      };
+    };
+    if (!requestDetail.capturePolicy.structuredInspectionAvailable) {
+      throw new Error("Structured request detail did not expose structured inspection availability.");
+    }
+
+    const endpointProfileResponse = await waitForOk(
+      `${hostBaseUrl}/api/role-model/endpoints/${encodeURIComponent(recentRequest.endpointId)}/profile`,
+      10000,
+    );
+    const endpointProfile = (await endpointProfileResponse.json()) as {
+      endpointId: string;
+      latestProfile: {
+        endpoint_id: string;
+        sample_size: number;
+      } | null;
+      recentSamples: Array<unknown>;
+    };
+    if (endpointProfile.endpointId !== recentRequest.endpointId) {
+      throw new Error("Endpoint profile route returned the wrong endpoint id.");
+    }
+    if (!endpointProfile.latestProfile || endpointProfile.latestProfile.sample_size < 1) {
+      throw new Error("Endpoint profile route did not expose a persisted observed-performance profile.");
+    }
+
+    const otelExport = createOpenTelemetryGenAiExport(requestDetail as never);
 
     const logsResponse = await waitForOk(`${hostBaseUrl}/logs`, 10000);
     const logs = await logsResponse.text();
@@ -120,8 +207,14 @@ async function main(): Promise<void> {
           host_base_url: hostBaseUrl,
           model_count: models.data.length,
           returned_model: completion.model,
+          request_id: requestId,
           output_text: completion.choices[0]?.message?.content ?? "",
           total_tokens: completion.usage.total_tokens,
+          structured_recent_count: recentRequests.length,
+          structured_endpoint_id: endpointProfile.endpointId,
+          structured_profile_sample_size: endpointProfile.latestProfile?.sample_size ?? 0,
+          otel_trace_id: otelExport.traceId,
+          otel_request_id: otelExport.attributes["gen_ai.request.id"],
           logs_contains_bridge: logs.includes("role-model bridge"),
           capture_id: captureMetric.id,
           capture_path: capture.req_path,

@@ -1,0 +1,91 @@
+
+> @role-model-router/runtime-observability@0.0.0 test D:\DEV\role-model\.worktrees\11-router-runtime-observability-feedback\role-model-router\packages\runtime-observability
+> vitest run
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/11-router-runtime-observability-feedback/role-model-router/packages/runtime-observability[39m
+
+(node:7012) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:39868) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [31mΓ¥»[39m test/index.test.ts [2m([22m[2m1 test[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 17[2mms[22m[39m
+[31m   [31m├ù[31m runtime-observability[2m > [22mcreates a redacted runtime observation bundle with diagnostics and profile updates[39m[32m 15[2mms[22m[39m
+[31m     ΓåÆ promise rejected "Error: Cannot find module 'D:\DEV\role-moΓÇª { code: 'ΓÇª' }" instead of resolving[39m
+ [31mΓ¥»[39m test/otel.test.ts [2m([22m[2m1 test[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 17[2mms[22m[39m
+[31m   [31m├ù[31m runtime-observability otel mapping[2m > [22mderives a deterministic OpenTelemetry export from canonical role-model artifacts[39m[32m 15[2mms[22m[39m
+[31m     ΓåÆ promise rejected "Error: Cannot find module 'D:\DEV\role-moΓÇª { code: 'ΓÇª' }" instead of resolving[39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 2 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/index.test.ts > runtime-observability > creates a redacted runtime observation bundle with diagnostics and profile updates
+AssertionError: promise rejected "Error: Cannot find module 'D:\DEV\role-moΓÇª { code: 'ΓÇª' }" instead of resolving
+ Γ¥» test/index.test.ts:22:30
+     20|   test("creates a redacted runtime observation bundle with diagnosticsΓÇª
+     21|     const moduleImport = import(pathToFileURL(path.join(__dirname, "..ΓÇª
+     22|     await expect(moduleImport).resolves.toHaveProperty("createRuntimeOΓÇª
+       |                              ^
+     23| 
+     24|     const runtimeStateRoot = await mkdtemp(
+
+Caused by: Error: Cannot find module 'D:\DEV\role-model\.worktrees\11-router-runtime-observability-feedback\role-model-router\packages\runtime-observability\src\index.js' imported from 'D:/DEV/role-model/.worktrees/11-router-runtime-observability-feedback/role-model-router/packages/runtime-observability/test/index.test.ts'
+ Γ¥» test/index.test.ts:22:5
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Serialized Error: { code: 'ERR_MODULE_NOT_FOUND' }
+Caused by: Error: Failed to load url D:/DEV/role-model/.worktrees/11-router-runtime-observability-feedback/role-model-router/packages/runtime-observability/src/index.js (resolved id: D:/DEV/role-model/.worktrees/11-router-runtime-observability-feedback/role-model-router/packages/runtime-observability/src/index.js). Does the file exist?
+ Γ¥» loadAndTransform ../../../node_modules/.pnpm/vite@7.3.2_@types+node@22.1_ffe4277cf87465bba1449374e033820f/node_modules/vite/dist/node/chunks/config.js:22663:33
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/2]ΓÄ»
+
+ FAIL  test/otel.test.ts > runtime-observability otel mapping > derives a deterministic OpenTelemetry export from canonical role-model artifacts
+AssertionError: promise rejected "Error: Cannot find module 'D:\DEV\role-moΓÇª { code: 'ΓÇª' }" instead of resolving
+ Γ¥» test/otel.test.ts:25:37
+     23|     );
+     24|     const otelModuleImport = import(pathToFileURL(path.join(__dirname,ΓÇª
+     25|     await expect(runtimeModuleImport).resolves.toHaveProperty("createRΓÇª
+       |                                     ^
+     26|     await expect(otelModuleImport).resolves.toHaveProperty("createOpenΓÇª
+     27| 
+
+Caused by: Error: Cannot find module 'D:\DEV\role-model\.worktrees\11-router-runtime-observability-feedback\role-model-router\packages\runtime-observability\src\index.js' imported from 'D:/DEV/role-model/.worktrees/11-router-runtime-observability-feedback/role-model-router/packages/runtime-observability/test/otel.test.ts'
+ Γ¥» test/otel.test.ts:25:5
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Serialized Error: { code: 'ERR_MODULE_NOT_FOUND' }
+Caused by: Error: Failed to load url D:/DEV/role-model/.worktrees/11-router-runtime-observability-feedback/role-model-router/packages/runtime-observability/src/index.js (resolved id: D:/DEV/role-model/.worktrees/11-router-runtime-observability-feedback/role-model-router/packages/runtime-observability/src/index.js). Does the file exist?
+ Γ¥» loadAndTransform ../../../node_modules/.pnpm/vite@7.3.2_@types+node@22.1_ffe4277cf87465bba1449374e033820f/node_modules/vite/dist/node/chunks/config.js:22663:33
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[2/2]ΓÄ»
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Unhandled Errors ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+Vitest caught 1 unhandled error during the test run.
+This might cause false positive tests. Resolve unhandled errors to make sure your tests are not affected.
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ» Unhandled Rejection ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: Cannot find module 'D:\DEV\role-model\.worktrees\11-router-runtime-observability-feedback\role-model-router\packages\runtime-observability\src\otel.js' imported from 'D:/DEV/role-model/.worktrees/11-router-runtime-observability-feedback/role-model-router/packages/runtime-observability/test/otel.test.ts'
+ Γ¥» VitestExecutor._fetchModule ../../../node_modules/.pnpm/vite-node@3.2.4_@types+node_78d9a783c7b9e169848cd575d836cb9b/node_modules/vite-node/dist/client.mjs:247:19
+ Γ¥» processTicksAndRejections node:internal/process/task_queues:105:5
+ Γ¥» VitestExecutor.directRequest ../../../node_modules/.pnpm/vite-node@3.2.4_@types+node_78d9a783c7b9e169848cd575d836cb9b/node_modules/vite-node/dist/client.mjs:268:44
+ Γ¥» VitestExecutor.cachedRequest ../../../node_modules/.pnpm/vite-node@3.2.4_@types+node_78d9a783c7b9e169848cd575d836cb9b/node_modules/vite-node/dist/client.mjs:189:11
+ Γ¥» VitestExecutor.dependencyRequest ../../../node_modules/.pnpm/vite-node@3.2.4_@types+node_78d9a783c7b9e169848cd575d836cb9b/node_modules/vite-node/dist/client.mjs:239:10
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Serialized Error: { code: 'ERR_MODULE_NOT_FOUND' }
+This error originated in "test/otel.test.ts" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
+Caused by: Error: Failed to load url D:/DEV/role-model/.worktrees/11-router-runtime-observability-feedback/role-model-router/packages/runtime-observability/src/otel.js (resolved id: D:/DEV/role-model/.worktrees/11-router-runtime-observability-feedback/role-model-router/packages/runtime-observability/src/otel.js). Does the file exist?
+ Γ¥» loadAndTransform ../../../node_modules/.pnpm/vite@7.3.2_@types+node@22.1_ffe4277cf87465bba1449374e033820f/node_modules/vite/dist/node/chunks/config.js:22663:33
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+
+[2m Test Files [22m [1m[31m2 failed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[31m2 failed[39m[22m[90m (2)[39m
+[2m     Errors [22m [1m[31m1 error[39m[22m
+[2m   Start at [22m 18:31:30
+[2m   Duration [22m 959ms[2m (transform 291ms, setup 0ms, collect 562ms, tests 33ms, environment 0ms, prepare 503ms)[22m
+
+D:\DEV\role-model\.worktrees\11-router-runtime-observability-feedback\role-model-router\packages\runtime-observability:
+ΓÇëERR_PNPM_RECURSIVE_RUN_FIRST_FAILΓÇë @role-model-router/runtime-observability@0.0.0 test: `vitest run`
+Exit status 1

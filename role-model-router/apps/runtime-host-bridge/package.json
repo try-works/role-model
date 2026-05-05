@@ -12,11 +12,13 @@
     "@role-model-router/catalog": "workspace:*",
     "@role-model-router/context-envelope": "workspace:*",
     "@role-model-router/endpoint-registry": "workspace:*",
+    "@role-model-router/profile-aggregator": "workspace:*",
     "@role-model-router/protocol-routing": "workspace:*",
     "@role-model-router/provider-account": "workspace:*",
     "@role-model-router/provider-anthropic": "workspace:*",
     "@role-model-router/provider-openai": "workspace:*",
     "@role-model-router/retrieval-receipt": "workspace:*",
+    "@role-model-router/runtime-observability": "workspace:*",
     "@role-model-router/sqlite-memory": "workspace:*"
   },
   "scripts": {

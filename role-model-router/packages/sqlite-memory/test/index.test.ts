@@ -7,8 +7,11 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 
 import { validateProviderAccounts } from "@role-model-router/provider-account";
+import { runRuntimeAdapterValidation } from "../../adapter-execution/src/cli.ts";
+import { createRuntimeObservationBundle } from "../../runtime-observability/src/index.ts";
 
 import { runRuntimeStateValidation } from "../src/cli.ts";
+import * as sqliteMemory from "../src/index.ts";
 import {
   initializeSqliteMemory,
   persistContinuitySnapshot,
@@ -269,6 +272,149 @@ describe("initializeSqliteMemory", () => {
         receiptSummary: "{\"selectedTurns\":2,\"selectedArtifacts\":1,\"estimatedTokens\":240}",
       },
     ]);
+  });
+
+  test("persists runtime observation bundles, profile snapshots, and maintenance-policy reads", async () => {
+    expect(
+      typeof (
+        sqliteMemory as {
+          persistRuntimeObservationBundle?: unknown;
+        }
+      ).persistRuntimeObservationBundle,
+    ).toBe("function");
+    expect(
+      typeof (
+        sqliteMemory as {
+          readRuntimeObservationBundle?: unknown;
+        }
+      ).readRuntimeObservationBundle,
+    ).toBe("function");
+    expect(
+      typeof (
+        sqliteMemory as {
+          readObservedPerformanceSamples?: unknown;
+        }
+      ).readObservedPerformanceSamples,
+    ).toBe("function");
+    expect(
+      typeof (
+        sqliteMemory as {
+          readLatestObservedProfile?: unknown;
+        }
+      ).readLatestObservedProfile,
+    ).toBe("function");
+    expect(
+      typeof (
+        sqliteMemory as {
+          readRuntimeMaintenancePolicy?: unknown;
+        }
+      ).readRuntimeMaintenancePolicy,
+    ).toBe("function");
+
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+    const validation = await runRuntimeAdapterValidation({
+      repoRoot,
+      runtimeStateRoot,
+      scopeId: "workspace-dev",
+    });
+    const history = await readJson<{
+      byEndpointId: Record<string, Parameters<typeof createRuntimeObservationBundle>[0]["priorSamples"]>;
+    }>("testdata/router-runtime/observability-history.json");
+    const policy = await readJson<Parameters<typeof createRuntimeObservationBundle>[0]["capturePolicy"]>(
+      "testdata/router-runtime/observability-policy.json",
+    );
+
+    const bundle = createRuntimeObservationBundle({
+      decision: validation.decision,
+      routingDiagnostics: validation.routingDiagnostics,
+      retrievalReceipt: validation.retrievalReceipt,
+      contextEnvelope: validation.contextEnvelope,
+      execution: validation.execution,
+      priorSamples: history.byEndpointId[validation.decision.chosen_endpoint_id] ?? [],
+      maintenancePolicy: {
+        "redaction.level": "strict",
+        "retention.class": "standard",
+      },
+      capturePolicy: policy,
+    });
+
+    (
+      sqliteMemory as {
+        persistRuntimeObservationBundle(input: {
+          databasePath: string;
+          observation: ReturnType<typeof createRuntimeObservationBundle>;
+        }): void;
+      }
+    ).persistRuntimeObservationBundle({
+      databasePath: validation.databasePath,
+      observation: bundle,
+    });
+
+    expect(
+      (
+        sqliteMemory as {
+          readRuntimeMaintenancePolicy(input: { databasePath: string }): Record<string, string>;
+        }
+      ).readRuntimeMaintenancePolicy({
+        databasePath: validation.databasePath,
+      }),
+    ).toEqual({
+      "backup.policy": "wal-copy-on-demand",
+      "deletion.policy": "explicit-export-delete",
+      "redaction.level": "strict",
+      "retention.class": "standard",
+    });
+    expect(
+      (
+        sqliteMemory as {
+          readRuntimeObservationBundle(input: {
+            databasePath: string;
+            requestId: string;
+          }): ReturnType<typeof createRuntimeObservationBundle> | null;
+        }
+      ).readRuntimeObservationBundle({
+        databasePath: validation.databasePath,
+        requestId: validation.decision.request_id,
+      }),
+    ).toMatchObject({
+      requestId: validation.decision.request_id,
+      routingDecisionId: validation.decision.routing_decision_id,
+      endpointId: validation.decision.chosen_endpoint_id,
+    });
+    expect(
+      (
+        sqliteMemory as {
+          readObservedPerformanceSamples(input: {
+            databasePath: string;
+            endpointId: string;
+          }): Array<{ request_id?: string; source_type: string }>;
+        }
+      ).readObservedPerformanceSamples({
+        databasePath: validation.databasePath,
+        endpointId: validation.decision.chosen_endpoint_id,
+      }),
+    ).toEqual([
+      expect.objectContaining({
+        request_id: validation.decision.request_id,
+        source_type: "live_request",
+      }),
+    ]);
+    expect(
+      (
+        sqliteMemory as {
+          readLatestObservedProfile(input: {
+            databasePath: string;
+            endpointId: string;
+          }): { endpoint_id: string; sample_size: number } | null;
+        }
+      ).readLatestObservedProfile({
+        databasePath: validation.databasePath,
+        endpointId: validation.decision.chosen_endpoint_id,
+      }),
+    ).toMatchObject({
+      endpoint_id: validation.decision.chosen_endpoint_id,
+      sample_size: 2,
+    });
   });
 });
 

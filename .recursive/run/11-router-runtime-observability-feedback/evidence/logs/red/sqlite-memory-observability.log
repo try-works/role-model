@@ -1,0 +1,46 @@
+
+> @role-model-router/sqlite-memory@0.0.0 test D:\DEV\role-model\.worktrees\11-router-runtime-observability-feedback\role-model-router\packages\sqlite-memory
+> vitest run test/index.test.ts
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/11-router-runtime-observability-feedback/role-model-router/packages/sqlite-memory[39m
+
+(node:19056) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [31mΓ¥»[39m test/index.test.ts [2m([22m[2m7 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[33m 345[2mms[22m[39m
+   [32mΓ£ô[39m initializeSqliteMemory[2m > [22mcreates the planned schema, WAL mode, and initial migration receipt under the runtime state root[32m 52[2mms[22m[39m
+   [32mΓ£ô[39m initializeSqliteMemory[2m > [22mpersists validated provider accounts by credential reference without storing raw secrets[32m 57[2mms[22m[39m
+   [32mΓ£ô[39m initializeSqliteMemory[2m > [22mrecords explicit maintenance defaults and idempotent migration behavior[32m 54[2mms[22m[39m
+   [32mΓ£ô[39m initializeSqliteMemory[2m > [22mpersists and reloads the continuity rows needed for bounded context assembly[32m 62[2mms[22m[39m
+   [32mΓ£ô[39m initializeSqliteMemory[2m > [22mpersists retrieval receipts for later routing diagnostics[32m 46[2mms[22m[39m
+[31m   [31m├ù[31m initializeSqliteMemory[2m > [22mpersists runtime observation bundles, profile snapshots, and maintenance-policy reads[39m[32m 13[2mms[22m[39m
+[31m     ΓåÆ expected 'undefined' to be 'function' // Object.is equality[39m
+   [32mΓ£ô[39m runRuntimeStateValidation[2m > [22mvalidates provider accounts and initializes SQLite through the local validation path[32m 59[2mms[22m[39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/index.test.ts > initializeSqliteMemory > persists runtime observation bundles, profile snapshots, and maintenance-policy reads
+AssertionError: expected 'undefined' to be 'function' // Object.is equality
+
+Expected: "function"
+Received: "undefined"
+
+ Γ¥» test/index.test.ts:284:7
+    282|         }
+    283|       ).persistRuntimeObservationBundle,
+    284|     ).toBe("function");
+       |       ^
+    285|     expect(
+    286|       typeof (
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m6 passed[39m[22m[90m (7)[39m
+[2m   Start at [22m 18:35:57
+[2m   Duration [22m 1.32s[2m (transform 230ms, setup 0ms, collect 289ms, tests 345ms, environment 0ms, prepare 166ms)[22m
+
+D:\DEV\role-model\.worktrees\11-router-runtime-observability-feedback\role-model-router\packages\sqlite-memory:
+ΓÇëERR_PNPM_RECURSIVE_RUN_FIRST_FAILΓÇë @role-model-router/sqlite-memory@0.0.0 test: `vitest run test/index.test.ts`
+Exit status 1

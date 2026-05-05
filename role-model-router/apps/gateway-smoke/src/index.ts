@@ -10,6 +10,11 @@ import {
   validateObservedPerformanceProfileConsistency,
 } from "@role-model-router/profile-aggregator";
 import {
+  createRuntimeObservationBundle,
+} from "@role-model-router/runtime-observability";
+import { createOpenTelemetryGenAiExport } from "@role-model-router/runtime-observability/otel";
+import { readRuntimeMaintenancePolicy } from "@role-model-router/sqlite-memory";
+import {
   readTraceArtifacts,
   type TraceEventRecord,
   type TraceSpanRecord,
@@ -92,6 +97,14 @@ async function main(): Promise<void> {
       cost_per_1k_tokens_est?: number;
     }
   >;
+  const observabilityHistory = JSON.parse(
+    await readFile(path.join(repoRoot, "testdata", "router-runtime", "observability-history.json"), "utf8"),
+  ) as {
+    byEndpointId: Record<string, Parameters<typeof createRuntimeObservationBundle>[0]["priorSamples"]>;
+  };
+  const observabilityPolicy = JSON.parse(
+    await readFile(path.join(repoRoot, "testdata", "router-runtime", "observability-policy.json"), "utf8"),
+  ) as Parameters<typeof createRuntimeObservationBundle>[0]["capturePolicy"];
   const chosenObserved = observedProfiles[decision.chosen_endpoint_id];
   if (!decision.chosen_endpoint_id) {
     throw new Error("Gateway smoke did not produce a routable endpoint.");
@@ -226,11 +239,14 @@ async function main(): Promise<void> {
       "observed-performance.json",
       "request-capture.json",
       "response-capture.json",
-      "normalized-response.json",
-      "adapter-diagnostics.json",
-      "trace-spans.json",
-      "trace-events.jsonl",
-      "usage-events.jsonl",
+        "normalized-response.json",
+        "adapter-diagnostics.json",
+        "request-observation.json",
+        "endpoint-profile-state.json",
+        "otel-export.json",
+        "trace-spans.json",
+        "trace-events.jsonl",
+        "usage-events.jsonl",
     ].map((name) => rm(path.join(outputDir, name), { force: true })),
   );
   await writeFile(
@@ -261,6 +277,34 @@ async function main(): Promise<void> {
   await writeFile(
     path.join(outputDir, "adapter-diagnostics.json"),
     `${JSON.stringify(validation.execution.diagnostics, null, 2)}\n`,
+    "utf8",
+  );
+  const observation = createRuntimeObservationBundle({
+    decision: validation.decision,
+    routingDiagnostics: validation.routingDiagnostics,
+    retrievalReceipt: validation.retrievalReceipt,
+    contextEnvelope: validation.contextEnvelope,
+    execution: validation.execution,
+    priorSamples: observabilityHistory.byEndpointId[decision.chosen_endpoint_id] ?? [],
+    maintenancePolicy: readRuntimeMaintenancePolicy({
+      databasePath: validation.databasePath,
+    }),
+    capturePolicy: observabilityPolicy,
+  });
+  const otelExport = createOpenTelemetryGenAiExport(observation);
+  await writeFile(
+    path.join(outputDir, "request-observation.json"),
+    `${JSON.stringify(observation, null, 2)}\n`,
+    "utf8",
+  );
+  await writeFile(
+    path.join(outputDir, "endpoint-profile-state.json"),
+    `${JSON.stringify(observation.inspection.endpoint, null, 2)}\n`,
+    "utf8",
+  );
+  await writeFile(
+    path.join(outputDir, "otel-export.json"),
+    `${JSON.stringify(otelExport, null, 2)}\n`,
     "utf8",
   );
   await writeTraceArtifacts(outputDir, spans, events);
@@ -309,6 +353,8 @@ async function main(): Promise<void> {
         router_decision_path: path.join(outputDir, "router-decision.json"),
         request_capture_path: path.join(outputDir, "request-capture.json"),
         response_capture_path: path.join(outputDir, "response-capture.json"),
+        request_observation_path: path.join(outputDir, "request-observation.json"),
+        otel_export_path: path.join(outputDir, "otel-export.json"),
         usage_summary: summarizeUsageEvents(writtenUsageEvents),
       },
       null,
