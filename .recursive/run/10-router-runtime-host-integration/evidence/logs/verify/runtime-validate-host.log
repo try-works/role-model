@@ -1,0 +1,18 @@
+
+> role-model@0.0.0 runtime:validate-host D:\DEV\role-model\.worktrees\10-router-runtime-host-integration
+> corepack pnpm --filter @role-model-router/runtime-host-bridge exec tsx src/validate-host.ts
+
+{
+  "host_base_url": "http://127.0.0.1:18081",
+  "model_count": 3,
+  "returned_model": "openai/gpt-4.1-mini-fast",
+  "output_text": "OpenAI summary",
+  "total_tokens": 56,
+  "logs_contains_bridge": false,
+  "capture_id": 0,
+  "capture_path": "/v1/chat/completions",
+  "request_capture_keys": [],
+  "response_capture_type": "string",
+  "stdout_tail": "TTP/1.1\" 200 2 \"node\" 585.1┬╡s\n[INFO] Request 127.0.0.1 \"GET /v1/models HTTP/1.1\" 200 380 \"node\" 16.072ms\n[INFO] Request 127.0.0.1 \"POST /v1/chat/completions HTTP/1.1\" 200 287 \"node\" 9.064ms\n[INFO] Request 127.0.0.1 \"GET /logs HTTP/1.1\" 200 230 \"node\" 0s\n[INFO] Request 127.0.0.1 \"GET /api/metrics HTTP/1.1\" 200 336 \"node\" 0s\n[INFO] Request 127.0.0.1 \"GET /api/captures/0 HTTP/1.1\" 200 1147 \"node\" 0s\n",
+  "stderr_tail": ""
+}

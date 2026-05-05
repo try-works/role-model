@@ -1,0 +1,9 @@
+[INFO] Request 192.0.2.1 "POST /v1/chat/completions HTTP/1.1" 400 70 "" 524.1┬╡s
+--- FAIL: TestProxyManager_RoleModelBridgeProxiesJSONRequests (0.00s)
+    rolemodel_bridge_test.go:46: expected status 200, got 400 with body could not find suitable inference handler for openai/gpt-4.1-mini-fast
+[INFO] Request 192.0.2.1 "GET /v1/models HTTP/1.1" 200 27 "" 0s
+--- FAIL: TestProxyManager_RoleModelBridgeProxiesModelList (0.00s)
+    rolemodel_bridge_test.go:82: expected bridged model list in response body, got {"data":[],"object":"list"}
+FAIL
+FAIL	github.com/mostlygeek/llama-swap/proxy	0.122s
+FAIL

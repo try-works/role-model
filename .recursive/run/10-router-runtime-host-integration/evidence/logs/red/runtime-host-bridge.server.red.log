@@ -1,0 +1,58 @@
+
+> @role-model-router/runtime-host-bridge@0.0.0 test D:\DEV\role-model\.worktrees\10-router-runtime-host-integration\role-model-router\apps\runtime-host-bridge
+> vitest run test/index.test.ts
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/10-router-runtime-host-integration/role-model-router/apps/runtime-host-bridge[39m
+
+ [31mΓ¥»[39m test/index.test.ts [2m([22m[2m4 tests[22m[2m | [22m[31m2 failed[39m[2m)[22m[32m 27[2mms[22m[39m
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22mcreates a stable model-list response grouped by model id[32m 16[2mms[22m[39m
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22mmaps a chat-completions request into role-model routing and execution inputs[32m 1[2mms[22m[39m
+[31m   [31m├ù[31m runtime-host-bridge[2m > [22mserves health and model-list endpoints[39m[32m 9[2mms[22m[39m
+[31m     ΓåÆ expected 'undefined' to be 'function' // Object.is equality[39m
+[31m   [31m├ù[31m runtime-host-bridge[2m > [22mserves chat-completions responses with role-model execution metadata[39m[32m 1[2mms[22m[39m
+[31m     ΓåÆ expected 'undefined' to be 'function' // Object.is equality[39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 2 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/index.test.ts > runtime-host-bridge > serves health and model-list endpoints
+AssertionError: expected 'undefined' to be 'function' // Object.is equality
+
+Expected: "function"
+Received: "undefined"
+
+ Γ¥» test/index.test.ts:231:82
+    229| 
+    230|   test("serves health and model-list endpoints", async () => {
+    231|     expect(typeof (bridge as { startBridgeServer?: unknown }).startBriΓÇª
+       |                                                                                  ^
+    232| 
+    233|     const server = await (
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/2]ΓÄ»
+
+ FAIL  test/index.test.ts > runtime-host-bridge > serves chat-completions responses with role-model execution metadata
+AssertionError: expected 'undefined' to be 'function' // Object.is equality
+
+Expected: "function"
+Received: "undefined"
+
+ Γ¥» test/index.test.ts:287:82
+    285| 
+    286|   test("serves chat-completions responses with role-model execution meΓÇª
+    287|     expect(typeof (bridge as { startBridgeServer?: unknown }).startBriΓÇª
+       |                                                                                  ^
+    288| 
+    289|     const server = await (
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[2/2]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m2 failed[39m[22m[2m | [22m[1m[32m2 passed[39m[22m[90m (4)[39m
+[2m   Start at [22m 16:07:27
+[2m   Duration [22m 658ms[2m (transform 79ms, setup 0ms, collect 72ms, tests 27ms, environment 0ms, prepare 195ms)[22m
+
+D:\DEV\role-model\.worktrees\10-router-runtime-host-integration\role-model-router\apps\runtime-host-bridge:
+ΓÇëERR_PNPM_RECURSIVE_RUN_FIRST_FAILΓÇë @role-model-router/runtime-host-bridge@0.0.0 test: `vitest run test/index.test.ts`
+Exit status 1

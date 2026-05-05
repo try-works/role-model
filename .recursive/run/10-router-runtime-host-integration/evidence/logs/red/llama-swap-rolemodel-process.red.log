@@ -1,0 +1,6 @@
+# github.com/mostlygeek/llama-swap [github.com/mostlygeek/llama-swap.test]
+.\rolemodel_bridge_process_test.go:14:13: undefined: resolveRoleModelBridgeProcessOptions
+.\rolemodel_bridge_process_test.go:33:14: undefined: roleModelBridgeProcessOptions
+.\rolemodel_bridge_process_test.go:41:9: undefined: buildRoleModelBridgeCommand
+FAIL	github.com/mostlygeek/llama-swap [build failed]
+FAIL

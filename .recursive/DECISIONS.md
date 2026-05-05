@@ -287,3 +287,33 @@
   - the shared-package and first-family split currently produces a workspace cycle warning between `adapter-execution` and `provider-anthropic`, though targeted install/build/test flows remain green
   - the broader root `build` and `test` commands still fail on the inherited schema-tools/Biome generated-types path
   - the local runtime-state and routing validation path still uses built-in `node:sqlite`, which works in the selected Node 24 environment but still emits the platform's experimental warning
+
+### Run `10-router-runtime-host-integration`
+
+- Run folder: `/.recursive/run/10-router-runtime-host-integration/`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `03.5-code-review.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - added `/role-model-router/apps/runtime-host-bridge/` as the managed TypeScript bridge that exposes `/healthz`, `/v1/models`, and `/v1/chat/completions` over the existing routed adapter-execution path
+  - vendored `llama-swap` under `/role-model-router/vendor/llama-swap/` as a nested Go module and added narrow bridge, process-management, and config seams so the vendor host owns lifecycle plus operator surfaces while role-model owns routing and execution semantics
+  - added the repo-local `runtime:validate-host` command and recorded the pinned `llama-swap` vendor baseline in `/role-model-router/packages/catalog/data/vendor-version-ledger.json`
+- Why:
+  - to establish the concrete request-serving host boundary and operator/debug surface required before later observability-feedback and hardening work
+- How:
+  - implemented strict RED/GREEN TDD across the bridge app and focused vendored Go seams, repaired two delegated-review findings, and validated the final host path locally while keeping inherited and upstream-relative red checks explicit
+- What was not done:
+  - no live provider HTTP transport, true streaming transport, final observability-feedback work, provider-agnostic tool execution, or MCP/tool-extension work was added here
+- Known issues / follow-ups:
+  - the bridge currently uses deterministic capture-backed provider responses rather than live provider HTTP transport
+  - full vendored `go test ./...` still fails on Windows in upstream `proxy/process_test.go` because `sleep` is not on `%PATH%`
+  - the broader root `build` and `test` commands still fail on the inherited schema-tools/Biome generated-types path

@@ -1,0 +1,16 @@
+
+> @role-model-router/runtime-host-bridge@0.0.0 test D:\DEV\role-model\.worktrees\10-router-runtime-host-integration\role-model-router\apps\runtime-host-bridge
+> vitest run test/index.test.ts
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/10-router-runtime-host-integration/role-model-router/apps/runtime-host-bridge[39m
+
+(node:13500) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [32mΓ£ô[39m test/index.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 184[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m5 passed[39m[22m[90m (5)[39m
+[2m   Start at [22m 16:12:16
+[2m   Duration [22m 1.24s[2m (transform 357ms, setup 0ms, collect 440ms, tests 184ms, environment 0ms, prepare 230ms)[22m
+
