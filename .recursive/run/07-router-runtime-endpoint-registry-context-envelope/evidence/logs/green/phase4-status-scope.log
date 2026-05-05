@@ -1,0 +1,45 @@
+ M .recursive/run/07-router-runtime-endpoint-registry-context-envelope/00-requirements.md
+ M .recursive/run/07-router-runtime-endpoint-registry-context-envelope/00-worktree.md
+ M package.json
+ M pnpm-lock.yaml
+ M role-model-router/packages/sqlite-memory/src/index.ts
+ M role-model-router/packages/sqlite-memory/test/index.test.ts
+?? .recursive/run/07-router-runtime-endpoint-registry-context-envelope/01-as-is.md
+?? .recursive/run/07-router-runtime-endpoint-registry-context-envelope/02-to-be-plan.md
+?? .recursive/run/07-router-runtime-endpoint-registry-context-envelope/evidence/logs/green/phase4-context-envelope-build.log
+?? .recursive/run/07-router-runtime-endpoint-registry-context-envelope/evidence/logs/green/phase4-endpoint-registry-build.log
+?? .recursive/run/07-router-runtime-endpoint-registry-context-envelope/evidence/logs/green/phase4-retrieval-receipt-build.log
+?? .recursive/run/07-router-runtime-endpoint-registry-context-envelope/evidence/logs/green/phase4-runtime-validate-registry.log
+?? .recursive/run/07-router-runtime-endpoint-registry-context-envelope/evidence/logs/green/phase4-schemas-validate.log
+?? .recursive/run/07-router-runtime-endpoint-registry-context-envelope/evidence/logs/green/phase4-smoke.log
+?? .recursive/run/07-router-runtime-endpoint-registry-context-envelope/evidence/logs/green/phase4-sqlite-memory-build.log
+?? .recursive/run/07-router-runtime-endpoint-registry-context-envelope/evidence/logs/green/run07-context-envelope-green.log
+?? .recursive/run/07-router-runtime-endpoint-registry-context-envelope/evidence/logs/green/run07-endpoint-registry-cli-green.log
+?? .recursive/run/07-router-runtime-endpoint-registry-context-envelope/evidence/logs/green/run07-endpoint-registry-green.log
+?? .recursive/run/07-router-runtime-endpoint-registry-context-envelope/evidence/logs/green/run07-retrieval-receipt-green.log
+?? .recursive/run/07-router-runtime-endpoint-registry-context-envelope/evidence/logs/green/run07-runtime-validate-registry.log
+?? .recursive/run/07-router-runtime-endpoint-registry-context-envelope/evidence/logs/green/run07-sqlite-memory-context-green.log
+?? .recursive/run/07-router-runtime-endpoint-registry-context-envelope/evidence/logs/green/run07-sqlite-memory-receipt-green.log
+?? .recursive/run/07-router-runtime-endpoint-registry-context-envelope/evidence/logs/red/phase4-build.log
+?? .recursive/run/07-router-runtime-endpoint-registry-context-envelope/evidence/logs/red/phase4-test.log
+?? .recursive/run/07-router-runtime-endpoint-registry-context-envelope/evidence/logs/red/run07-context-envelope-red.log
+?? .recursive/run/07-router-runtime-endpoint-registry-context-envelope/evidence/logs/red/run07-endpoint-registry-cli-red.log
+?? .recursive/run/07-router-runtime-endpoint-registry-context-envelope/evidence/logs/red/run07-endpoint-registry-red.log
+?? .recursive/run/07-router-runtime-endpoint-registry-context-envelope/evidence/logs/red/run07-retrieval-receipt-red.log
+?? .recursive/run/07-router-runtime-endpoint-registry-context-envelope/evidence/logs/red/run07-sqlite-memory-context-red.log
+?? .recursive/run/07-router-runtime-endpoint-registry-context-envelope/evidence/logs/red/run07-sqlite-memory-receipt-red.log
+?? role-model-router/packages/context-envelope/package.json
+?? role-model-router/packages/context-envelope/src/index.ts
+?? role-model-router/packages/context-envelope/test/index.test.ts
+?? role-model-router/packages/context-envelope/tsconfig.json
+?? role-model-router/packages/endpoint-registry/package.json
+?? role-model-router/packages/endpoint-registry/src/cli.ts
+?? role-model-router/packages/endpoint-registry/src/index.ts
+?? role-model-router/packages/endpoint-registry/test/index.test.ts
+?? role-model-router/packages/endpoint-registry/tsconfig.json
+?? role-model-router/packages/retrieval-receipt/package.json
+?? role-model-router/packages/retrieval-receipt/src/index.ts
+?? role-model-router/packages/retrieval-receipt/test/index.test.ts
+?? role-model-router/packages/retrieval-receipt/tsconfig.json
+?? testdata/router-runtime/context-envelope.json
+?? testdata/router-runtime/registry-sources.json

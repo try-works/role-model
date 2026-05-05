@@ -201,3 +201,31 @@
 - Known issues / follow-ups:
   - the SQLite runtime path currently uses built-in `node:sqlite`, which works in the selected Node 24 environment but still emits the platform's experimental warning
   - the broader root `build` and `test` commands still fail on the inherited schema-tools/Biome generated-types path rather than on the new provider-account or SQLite-memory packages
+
+### Run `07-router-runtime-endpoint-registry-context-envelope`
+
+- Run folder: `/.recursive/run/07-router-runtime-endpoint-registry-context-envelope/`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - added `/role-model-router/packages/endpoint-registry/` as the runtime-owned endpoint-instantiation and lifecycle/diagnostic layer built from catalog, provider-account, and pinned discovery inputs
+  - added `/role-model-router/packages/context-envelope/` plus `/role-model-router/packages/retrieval-receipt/` and extended `/role-model-router/packages/sqlite-memory/` so routed continuity can be assembled and summarized over the existing SQLite baseline
+  - added pinned runtime fixtures under `/testdata/router-runtime/` plus the repo-local `runtime:validate-registry` command for deterministic registry, envelope, and receipt validation
+- Why:
+  - to establish the runtime-owned endpoint registry, conversation continuity envelope, and retrieval receipt surfaces before widening into protocol-driven routing projection work
+- How:
+  - implemented strict RED/GREEN TDD across registry construction, SQLite continuity helpers, bounded envelope assembly, receipt generation, and the local validation CLI, then validated the new packages directly and confirmed the broader repo still shows only the inherited `packages/schema-tools` failure pattern
+- What was not done:
+  - no protocol-driven routing projection, configurable routing-model selection, adapter execution, or host integration was added here
+- Known issues / follow-ups:
+  - the local validation path currently uses built-in `node:sqlite`, which works in the selected Node 24 environment but still emits the platform's experimental warning
+  - the broader root `build` and `test` commands still fail on the inherited schema-tools/Biome generated-types path rather than on the new run-07 packages

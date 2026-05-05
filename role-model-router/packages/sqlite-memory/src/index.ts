@@ -123,6 +123,99 @@ export interface PersistProviderAccountsInput {
   readonly accounts: readonly ProviderAccountRecord[];
 }
 
+export interface SessionRecord {
+  readonly sessionId: string;
+  readonly workspaceScope: string;
+  readonly createdAtMs: number;
+  readonly updatedAtMs: number;
+}
+
+export interface ConversationRecord {
+  readonly conversationId: string;
+  readonly sessionId: string;
+  readonly createdAtMs: number;
+  readonly updatedAtMs: number;
+}
+
+export interface ConversationTurnRecord {
+  readonly turnId: string;
+  readonly conversationId: string;
+  readonly role: string;
+  readonly contentRef: string | null;
+  readonly createdAtMs: number;
+}
+
+export interface ContextArtifactRecord {
+  readonly artifactId: string;
+  readonly artifactKind: string;
+  readonly storageRef: string;
+  readonly createdAtMs: number;
+}
+
+export interface ArtifactLinkRecord {
+  readonly linkId: string;
+  readonly artifactId: string;
+  readonly conversationId: string | null;
+  readonly sessionId: string | null;
+  readonly createdAtMs: number;
+}
+
+export interface RoutingHandoffRecord {
+  readonly handoffId: string;
+  readonly conversationId: string | null;
+  readonly fromEndpointId: string | null;
+  readonly toEndpointId: string | null;
+  readonly createdAtMs: number;
+}
+
+export interface PersistContinuitySnapshotInput {
+  readonly databasePath: string;
+  readonly session: SessionRecord;
+  readonly conversation: ConversationRecord;
+  readonly turns: readonly ConversationTurnRecord[];
+  readonly artifacts: readonly ContextArtifactRecord[];
+  readonly artifactLinks: readonly ArtifactLinkRecord[];
+  readonly handoffs: readonly RoutingHandoffRecord[];
+}
+
+export interface LinkedContextArtifactRecord extends ContextArtifactRecord {
+  readonly linkId: string;
+  readonly conversationId: string | null;
+  readonly sessionId: string | null;
+  readonly linkedAtMs: number;
+}
+
+export interface ConversationContinuitySnapshot {
+  readonly session: SessionRecord;
+  readonly conversation: ConversationRecord;
+  readonly turns: readonly ConversationTurnRecord[];
+  readonly artifacts: readonly LinkedContextArtifactRecord[];
+  readonly handoffs: readonly RoutingHandoffRecord[];
+}
+
+export interface ReadConversationContinuityInput {
+  readonly databasePath: string;
+  readonly conversationId: string;
+}
+
+export interface PersistRetrievalReceiptInput {
+  readonly databasePath: string;
+  readonly retrievalReceiptId: string;
+  readonly conversationId: string | null;
+  readonly receiptSummary: string;
+}
+
+export interface ReadRetrievalReceiptsInput {
+  readonly databasePath: string;
+  readonly conversationId: string;
+}
+
+export interface RetrievalReceiptRecord {
+  readonly retrievalReceiptId: string;
+  readonly conversationId: string | null;
+  readonly receiptSummary: string;
+}
+
 function ensureNonEmpty(value: string, label: string): string {
   if (value.trim().length === 0) {
     throw new Error(`${label} must be a non-empty string`);
@@ -244,4 +337,215 @@ export function persistProviderAccounts(input: PersistProviderAccountsInput): vo
     );
   }
   database.close();
+}
+
+export function persistContinuitySnapshot(input: PersistContinuitySnapshotInput): void {
+  const database = new DatabaseSync(input.databasePath);
+  database
+    .prepare("INSERT OR REPLACE INTO sessions (session_id, workspace_scope, created_at_ms, updated_at_ms) VALUES (?, ?, ?, ?)")
+    .run(input.session.sessionId, input.session.workspaceScope, input.session.createdAtMs, input.session.updatedAtMs);
+  database
+    .prepare(
+      "INSERT OR REPLACE INTO conversations (conversation_id, session_id, created_at_ms, updated_at_ms) VALUES (?, ?, ?, ?)",
+    )
+    .run(
+      input.conversation.conversationId,
+      input.conversation.sessionId,
+      input.conversation.createdAtMs,
+      input.conversation.updatedAtMs,
+    );
+
+  const turnStatement = database.prepare(
+    "INSERT OR REPLACE INTO conversation_turns (turn_id, conversation_id, role, content_ref, created_at_ms) VALUES (?, ?, ?, ?, ?)",
+  );
+  for (const turn of input.turns) {
+    turnStatement.run(turn.turnId, turn.conversationId, turn.role, turn.contentRef, turn.createdAtMs);
+  }
+
+  const artifactStatement = database.prepare(
+    "INSERT OR REPLACE INTO context_artifacts (artifact_id, artifact_kind, storage_ref, created_at_ms) VALUES (?, ?, ?, ?)",
+  );
+  for (const artifact of input.artifacts) {
+    artifactStatement.run(artifact.artifactId, artifact.artifactKind, artifact.storageRef, artifact.createdAtMs);
+  }
+
+  const linkStatement = database.prepare(
+    "INSERT OR REPLACE INTO artifact_links (link_id, artifact_id, conversation_id, session_id, created_at_ms) VALUES (?, ?, ?, ?, ?)",
+  );
+  for (const link of input.artifactLinks) {
+    linkStatement.run(link.linkId, link.artifactId, link.conversationId, link.sessionId, link.createdAtMs);
+  }
+
+  const handoffStatement = database.prepare(
+    "INSERT OR REPLACE INTO routing_handoffs (handoff_id, conversation_id, from_endpoint_id, to_endpoint_id, created_at_ms) VALUES (?, ?, ?, ?, ?)",
+  );
+  for (const handoff of input.handoffs) {
+    handoffStatement.run(
+      handoff.handoffId,
+      handoff.conversationId,
+      handoff.fromEndpointId,
+      handoff.toEndpointId,
+      handoff.createdAtMs,
+    );
+  }
+
+  database.close();
+}
+
+export function readConversationContinuity(
+  input: ReadConversationContinuityInput,
+): ConversationContinuitySnapshot {
+  const database = new DatabaseSync(input.databasePath);
+  const conversation = database
+    .prepare(
+      "SELECT conversation_id, session_id, created_at_ms, updated_at_ms FROM conversations WHERE conversation_id = ?",
+    )
+    .get(input.conversationId) as
+    | {
+        conversation_id: string;
+        session_id: string;
+        created_at_ms: number;
+        updated_at_ms: number;
+      }
+    | undefined;
+
+  if (!conversation) {
+    database.close();
+    throw new Error(`Conversation ${input.conversationId} is not present in SQLite continuity state`);
+  }
+
+  const session = database
+    .prepare("SELECT session_id, workspace_scope, created_at_ms, updated_at_ms FROM sessions WHERE session_id = ?")
+    .get(conversation.session_id) as
+    | {
+        session_id: string;
+        workspace_scope: string;
+        created_at_ms: number;
+        updated_at_ms: number;
+      }
+    | undefined;
+
+  if (!session) {
+    database.close();
+    throw new Error(`Session ${conversation.session_id} is not present in SQLite continuity state`);
+  }
+
+  const turns = database
+    .prepare(
+      "SELECT turn_id, conversation_id, role, content_ref, created_at_ms FROM conversation_turns WHERE conversation_id = ? ORDER BY created_at_ms ASC, turn_id ASC",
+    )
+    .all(input.conversationId) as Array<{
+    turn_id: string;
+    conversation_id: string;
+    role: string;
+    content_ref: string | null;
+    created_at_ms: number;
+  }>;
+  const artifacts = database
+    .prepare(`
+      SELECT
+        context_artifacts.artifact_id,
+        context_artifacts.artifact_kind,
+        context_artifacts.storage_ref,
+        context_artifacts.created_at_ms,
+        artifact_links.link_id,
+        artifact_links.conversation_id,
+        artifact_links.session_id,
+        artifact_links.created_at_ms AS linked_at_ms
+      FROM artifact_links
+      INNER JOIN context_artifacts ON context_artifacts.artifact_id = artifact_links.artifact_id
+      WHERE artifact_links.conversation_id = ? OR artifact_links.session_id = ?
+      ORDER BY context_artifacts.created_at_ms ASC, context_artifacts.artifact_id ASC
+    `)
+    .all(input.conversationId, conversation.session_id) as Array<{
+    artifact_id: string;
+    artifact_kind: string;
+    storage_ref: string;
+    created_at_ms: number;
+    link_id: string;
+    conversation_id: string | null;
+    session_id: string | null;
+    linked_at_ms: number;
+  }>;
+  const handoffs = database
+    .prepare(
+      "SELECT handoff_id, conversation_id, from_endpoint_id, to_endpoint_id, created_at_ms FROM routing_handoffs WHERE conversation_id = ? ORDER BY created_at_ms ASC, handoff_id ASC",
+    )
+    .all(input.conversationId) as Array<{
+    handoff_id: string;
+    conversation_id: string | null;
+    from_endpoint_id: string | null;
+    to_endpoint_id: string | null;
+    created_at_ms: number;
+  }>;
+  database.close();
+
+  return {
+    session: {
+      sessionId: session.session_id,
+      workspaceScope: session.workspace_scope,
+      createdAtMs: session.created_at_ms,
+      updatedAtMs: session.updated_at_ms,
+    },
+    conversation: {
+      conversationId: conversation.conversation_id,
+      sessionId: conversation.session_id,
+      createdAtMs: conversation.created_at_ms,
+      updatedAtMs: conversation.updated_at_ms,
+    },
+    turns: turns.map((turn) => ({
+      turnId: turn.turn_id,
+      conversationId: turn.conversation_id,
+      role: turn.role,
+      contentRef: turn.content_ref,
+      createdAtMs: turn.created_at_ms,
+    })),
+    artifacts: artifacts.map((artifact) => ({
+      artifactId: artifact.artifact_id,
+      artifactKind: artifact.artifact_kind,
+      storageRef: artifact.storage_ref,
+      createdAtMs: artifact.created_at_ms,
+      linkId: artifact.link_id,
+      conversationId: artifact.conversation_id,
+      sessionId: artifact.session_id,
+      linkedAtMs: artifact.linked_at_ms,
+    })),
+    handoffs: handoffs.map((handoff) => ({
+      handoffId: handoff.handoff_id,
+      conversationId: handoff.conversation_id,
+      fromEndpointId: handoff.from_endpoint_id,
+      toEndpointId: handoff.to_endpoint_id,
+      createdAtMs: handoff.created_at_ms,
+    })),
+  };
+}
+
+export function persistRetrievalReceipt(input: PersistRetrievalReceiptInput): void {
+  const database = new DatabaseSync(input.databasePath);
+  database
+    .prepare(
+      "INSERT OR REPLACE INTO retrieval_receipts (retrieval_receipt_id, conversation_id, receipt_summary, created_at_ms) VALUES (?, ?, ?, ?)",
+    )
+    .run(input.retrievalReceiptId, input.conversationId, input.receiptSummary, Date.now());
+  database.close();
+}
+
+export function readRetrievalReceipts(input: ReadRetrievalReceiptsInput): readonly RetrievalReceiptRecord[] {
+  const database = new DatabaseSync(input.databasePath);
+  const rows = database
+    .prepare(
+      "SELECT retrieval_receipt_id, conversation_id, receipt_summary FROM retrieval_receipts WHERE conversation_id = ? ORDER BY retrieval_receipt_id ASC",
+    )
+    .all(input.conversationId) as Array<{
+    retrieval_receipt_id: string;
+    conversation_id: string | null;
+    receipt_summary: string;
+  }>;
+  database.close();
+
+  return rows.map((row) => ({
+    retrievalReceiptId: row.retrieval_receipt_id,
+    conversationId: row.conversation_id,
+    receiptSummary: row.receipt_summary,
+  }));
 }

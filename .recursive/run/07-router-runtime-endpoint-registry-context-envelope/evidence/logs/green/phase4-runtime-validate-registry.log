@@ -1,0 +1,48 @@
+
+> role-model@0.0.0 runtime:validate-registry D:\DEV\role-model\.worktrees\07-router-runtime-endpoint-registry-context-envelope
+> corepack pnpm --filter @role-model-router/endpoint-registry exec tsx src/cli.ts
+
+(node:39468) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+{
+  "databasePath": "C:\\Users\\erikb\\AppData\\Local\\Temp\\role-model-runtime-state\\local-validation\\memory\\memory.sqlite",
+  "accountsValidated": 2,
+  "registrySize": 3,
+  "lifecycleSummary": {
+    "active": 2,
+    "degraded": 1,
+    "offline": 0
+  },
+  "contextEnvelope": {
+    "conversationId": "conversation-main",
+    "selectedTurnIds": [
+      "turn-003",
+      "turn-004"
+    ],
+    "selectedArtifactIds": [
+      "artifact-summary"
+    ],
+    "latestHandoffId": "handoff-1",
+    "estimatedTokenCount": 240,
+    "diagnostics": [
+      {
+        "code": "TURN_LIMIT_REACHED",
+        "message": "Context envelope kept the 2 most recent turns and omitted 2 older turns."
+      },
+      {
+        "code": "TOKEN_BUDGET_REACHED",
+        "message": "Context envelope omitted 2 artifacts because the token budget was exhausted."
+      }
+    ]
+  },
+  "retrievalReceipt": {
+    "receiptId": "conversation-main-retrieval-receipt",
+    "summary": {
+      "selectedTurns": 2,
+      "selectedArtifacts": 1,
+      "omittedTurns": 2,
+      "omittedArtifacts": 2,
+      "estimatedTokens": 240
+    }
+  }
+}

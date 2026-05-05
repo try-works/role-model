@@ -1,6 +1,8 @@
 Run: `/.recursive/run/07-router-runtime-endpoint-registry-context-envelope/`
 Phase: `00 Requirements`
-Status: `DRAFT`
+Status: `LOCKED`
+LockedAt: `2026-05-05T03:27:33Z`
+LockHash: `afab9f10ee75c4306b4778fb85ba41c68260856eed09278e7861630399d692e9`
 Workflow version: `recursive-mode-audit-v1`
 Inputs:
 - `C:\Users\erikb\OneDrive\##### DEV\role-model\requirements\role-model-router-runtime-roadmap.md`

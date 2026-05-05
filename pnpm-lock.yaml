@@ -189,11 +189,38 @@ importers:
 
   role-model-router/packages/catalog: {}
 
+  role-model-router/packages/context-envelope:
+    dependencies:
+      '@role-model-router/sqlite-memory':
+        specifier: workspace:*
+        version: link:../sqlite-memory
+
   role-model-router/packages/core:
     dependencies:
       '@role-model/protocol-types':
         specifier: workspace:*
         version: link:../../../packages/protocol-types
+
+  role-model-router/packages/endpoint-registry:
+    dependencies:
+      '@role-model-router/catalog':
+        specifier: workspace:*
+        version: link:../catalog
+      '@role-model-router/context-envelope':
+        specifier: workspace:*
+        version: link:../context-envelope
+      '@role-model-router/core':
+        specifier: workspace:*
+        version: link:../core
+      '@role-model-router/provider-account':
+        specifier: workspace:*
+        version: link:../provider-account
+      '@role-model-router/retrieval-receipt':
+        specifier: workspace:*
+        version: link:../retrieval-receipt
+      '@role-model-router/sqlite-memory':
+        specifier: workspace:*
+        version: link:../sqlite-memory
 
   role-model-router/packages/openai-compat:
     dependencies:
@@ -230,6 +257,12 @@ importers:
       '@role-model-router/core':
         specifier: workspace:*
         version: link:../core
+
+  role-model-router/packages/retrieval-receipt:
+    dependencies:
+      '@role-model-router/context-envelope':
+        specifier: workspace:*
+        version: link:../context-envelope
 
   role-model-router/packages/roles: {}
 
