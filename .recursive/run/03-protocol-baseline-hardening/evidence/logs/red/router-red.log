@@ -1,0 +1,258 @@
+.                                        |  WARN  Unsupported engine: wanted: {"node":">=22 <23"} (current: {"node":"v24.11.0","pnpm":"10.6.5"})
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/03-protocol-baseline-hardening/packages/conformance[39m
+
+ [31m❯[39m src/router-fixture-conformance.test.ts [2m([22m[2m1 test[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 36[2mms[22m[39m
+[31m   [31m×[31m router fixture conformance[2m > [22mvalidates golden routing cases from fixture inputs against the hardened router decision contract[39m[32m 33[2mms[22m[39m
+[31m     → expected [ 'capability-missing.json', …(14) ] to deeply equal ArrayContaining{…}[39m
+ [31m❯[39m src/router-role-task-eligibility.test.ts [2m([22m[2m10 tests[22m[2m | [22m[31m5 failed[39m[2m)[22m[32m 69[2mms[22m[39m
+[31m   [31m×[31m routeRequest role/task eligibility[2m > [22mexcludes endpoints when the requested task is unsupported by the role and the role is not allowed for the task[39m[32m 34[2mms[22m[39m
+[31m     → expected [ 'TASK_NOT_SUPPORTED', …(1) ] to deeply equal ArrayContaining{…}[39m
+   [32m✓[39m routeRequest role/task eligibility[2m > [22mexcludes endpoints when the matching role binding is not active[32m 3[2mms[22m[39m
+[31m   [31m×[31m routeRequest role/task eligibility[2m > [22mexcludes endpoints when the matching role binding is disabled[39m[32m 4[2mms[22m[39m
+[31m     → expected [ 'ROLE_BINDING_INACTIVE' ] to deeply equal ArrayContaining{…}[39m
+   [32m✓[39m routeRequest role/task eligibility[2m > [22mexcludes endpoints missing required capabilities inherited from the requested role and task[32m 1[2mms[22m[39m
+[31m   [31m×[31m routeRequest role/task eligibility[2m > [22mexcludes endpoints exposing capabilities forbidden by the requested role[39m[32m 2[2mms[22m[39m
+[31m     → expected [ 'POLICY_DENY_ENDPOINT' ] to deeply equal ArrayContaining{…}[39m
+[31m   [31m×[31m routeRequest role/task eligibility[2m > [22mexcludes endpoints when binding-effective capabilities are narrower than the candidate declaration[39m[32m 4[2mms[22m[39m
+[31m     → expected [] to deeply equal ArrayContaining{…}[39m
+[31m   [31m×[31m routeRequest role/task eligibility[2m > [22mexcludes endpoints when binding-effective task types do not allow the requested task[39m[32m 2[2mms[22m[39m
+[31m     → expected [] to deeply equal ArrayContaining{…}[39m
+   [32m✓[39m routeRequest role/task eligibility[2m > [22mexcludes endpoints whose provider kind is denied by policy[32m 6[2mms[22m[39m
+   [32m✓[39m routeRequest role/task eligibility[2m > [22mexcludes endpoints whose endpoint id is denied by policy[32m 2[2mms[22m[39m
+   [32m✓[39m routeRequest role/task eligibility[2m > [22mexcludes endpoints not present in the policy allow list[32m 7[2mms[22m[39m
+ [31m❯[39m src/router-conformance.test.ts [2m([22m[2m15 tests[22m[2m | [22m[31m2 failed[39m[2m)[22m[32m 100[2mms[22m[39m
+   [32m✓[39m routeRequest[2m > [22mexcludes capability-missing candidates[32m 8[2mms[22m[39m
+   [32m✓[39m routeRequest[2m > [22mexcludes insufficient context candidates[32m 1[2mms[22m[39m
+   [32m✓[39m routeRequest[2m > [22mexcludes tool-unsupported candidates[32m 1[2mms[22m[39m
+   [32m✓[39m routeRequest[2m > [22mexcludes tool-unsupported candidates when tool_calling.supported is false[32m 1[2mms[22m[39m
+   [32m✓[39m routeRequest[2m > [22memits canonical eligibility entries with exclusions instead of legacy ineligible candidate lists[32m 2[2mms[22m[39m
+   [32m✓[39m routeRequest[2m > [22mapplies local preference for balanced ties[32m 2[2mms[22m[39m
+   [32m✓[39m routeRequest[2m > [22mapplies canonical remote compute preference during scoring[32m 1[2mms[22m[39m
+   [32m✓[39m routeRequest[2m > [22mprefers measured profile strength when available[32m 1[2mms[22m[39m
+   [32m✓[39m routeRequest[2m > [22mcan optimize for cost[32m 1[2mms[22m[39m
+   [32m✓[39m routeRequest[2m > [22maccepts canonical cost strategy inputs[32m 1[2mms[22m[39m
+   [32m✓[39m routeRequest[2m > [22muses balanced strategy weights so substantially lower cost can beat slightly higher quality[32m 1[2mms[22m[39m
+[31m   [31m×[31m routeRequest[2m > [22mapplies role and task preferred capabilities through preference scoring[39m[32m 27[2mms[22m[39m
+[31m     → expected [ 'BEST_TOTAL_SCORE', …(5) ] to deeply equal ArrayContaining{…}[39m
+[31m   [31m×[31m routeRequest[2m > [22memits full scored candidate diagnostics and stable public router identifiers[39m[32m 4[2mms[22m[39m
+[31m     → expected undefined to deeply equal Any<String>[39m
+   [32m✓[39m routeRequest[2m > [22mbreaks ties deterministically by endpoint id last[32m 43[2mms[22m[39m
+   [32m✓[39m routeRequest[2m > [22mtreats near-equal total scores as ties and breaks them by higher quality first[32m 1[2mms[22m[39m
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 8 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/router-conformance.test.ts > routeRequest > applies role and task preferred capabilities through preference scoring
+AssertionError: expected [ 'BEST_TOTAL_SCORE', …(5) ] to deeply equal ArrayContaining{…}
+
+- Expected
++ Received
+
+- ArrayContaining [
+-   "ROLE_POLICY_APPLIED",
+-   "TASK_POLICY_APPLIED",
++ [
++   "BEST_TOTAL_SCORE",
++   "DECLARED_PROFILE_USED",
++   "ROLE_PREFERENCE_APPLIED",
++   "TASK_REQUIREMENTS_SATISFIED",
++   "MEASURED_PROFILE_USED",
++   "FALLBACK_CHAIN_COMPUTED",
+  ]
+
+ ❯ src/router-conformance.test.ts:531:38
+    529| 
+    530|     expect(result.chosen_endpoint_id).toBe("zeta-local");
+    531|     expect(result.selection_reasons).toEqual(
+       |                                      ^
+    532|       expect.arrayContaining(["ROLE_POLICY_APPLIED", "TASK_POLICY_APPL…
+    533|     );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/8]⎯
+
+ FAIL  src/router-conformance.test.ts > routeRequest > emits full scored candidate diagnostics and stable public router identifiers
+AssertionError: expected undefined to deeply equal Any<String>
+
+- Expected: 
+Any<String>
+
++ Received: 
+undefined
+
+ ❯ src/router-conformance.test.ts:548:27
+    546|     };
+    547| 
+    548|     expect(result.app_id).toEqual(expect.any(String));
+       |                           ^
+    549|     expect(result.org_id ?? null).toSatisfy(
+    550|       (value: unknown) => value === null || typeof value === "string",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/8]⎯
+
+ FAIL  src/router-fixture-conformance.test.ts > router fixture conformance > validates golden routing cases from fixture inputs against the hardened router decision contract
+AssertionError: expected [ 'capability-missing.json', …(14) ] to deeply equal ArrayContaining{…}
+
+- Expected
++ Received
+
+- ArrayContaining [
++ [
+    "capability-missing.json",
+-   "insufficient-context.json",
+-   "tools-unsupported.json",
+-   "local-preference.json",
+-   "remote-preference.json",
+-   "measured-profile-prefers-observed.json",
+-   "cost-strategy-prefers-cheaper.json",
+-   "latency-strategy-prefers-faster.json",
+-   "quality-strategy-prefers-better-judged.json",
++   "cost-strategy-lower-cost-wins.json",
+    "endpoint-id-tie-break.json",
+-   "role-forbids-capability.json",
+-   "task-not-allowed-for-role.json",
++   "fallback-chain-ordering.json",
+    "inactive-role-binding.json",
+-   "binding-capability-restriction.json",
+-   "binding-task-restriction.json",
+-   "advisory-vs-hard-budget.json",
+-   "measured-profile-partial-coverage.json",
++   "insufficient-context.json",
++   "local-preference-near-tie.json",
++   "modality-unsupported.json",
++   "preferred-capability-selection.json",
++   "privacy-remote-deny.json",
++   "provider-kind-allow-list-basic.json",
++   "quality-strategy-measured-vs-declared.json",
++   "role-task-unsupported.json",
++   "tools-unsupported.json",
+    "unknown-metric-redistribution.json",
+  ]
+
+ ❯ src/router-fixture-conformance.test.ts:58:23
+     56|     const fileNames = (await readdir(fixtureDir)).filter((fileName) =>…
+     57|     expect(fileNames.length).toBeGreaterThan(0);
+     58|     expect(fileNames).toEqual(expect.arrayContaining([...requiredCaseF…
+       |                       ^
+     59| 
+     60|     const ajv = await createAjv(schemaDir);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/8]⎯
+
+ FAIL  src/router-role-task-eligibility.test.ts > routeRequest role/task eligibility > excludes endpoints when the requested task is unsupported by the role and the role is not allowed for the task
+AssertionError: expected [ 'TASK_NOT_SUPPORTED', …(1) ] to deeply equal ArrayContaining{…}
+
+- Expected
++ Received
+
+- ArrayContaining [
+-   "TASK_NOT_SUPPORTED_BY_ROLE",
++ [
++   "TASK_NOT_SUPPORTED",
+    "ROLE_NOT_ALLOWED",
+  ]
+
+ ❯ src/router-role-task-eligibility.test.ts:104:53
+    102| 
+    103|     expect(result.eligibility.filter((candidate) => !candidate.eligibl…
+    104|     expect(getExclusionCodes(result, "endpoint-1")).toEqual(
+       |                                                     ^
+    105|       expect.arrayContaining(["TASK_NOT_SUPPORTED_BY_ROLE", "ROLE_NOT_…
+    106|     );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/8]⎯
+
+ FAIL  src/router-role-task-eligibility.test.ts > routeRequest role/task eligibility > excludes endpoints when the matching role binding is disabled
+AssertionError: expected [ 'ROLE_BINDING_INACTIVE' ] to deeply equal ArrayContaining{…}
+
+- Expected
++ Received
+
+- ArrayContaining [
+-   "ROLE_BINDING_DISABLED",
++ [
++   "ROLE_BINDING_INACTIVE",
+  ]
+
+ ❯ src/router-role-task-eligibility.test.ts:290:53
+    288|     } as never);
+    289| 
+    290|     expect(getExclusionCodes(result, "endpoint-1")).toEqual(
+       |                                                     ^
+    291|       expect.arrayContaining(["ROLE_BINDING_DISABLED"]),
+    292|     );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/8]⎯
+
+ FAIL  src/router-role-task-eligibility.test.ts > routeRequest role/task eligibility > excludes endpoints exposing capabilities forbidden by the requested role
+AssertionError: expected [ 'POLICY_DENY_ENDPOINT' ] to deeply equal ArrayContaining{…}
+
+- Expected
++ Received
+
+- ArrayContaining [
+-   "FORBIDDEN_CAPABILITY_PRESENT",
++ [
++   "POLICY_DENY_ENDPOINT",
+  ]
+
+ ❯ src/router-role-task-eligibility.test.ts:455:53
+    453| 
+    454|     expect(result.eligibility.filter((candidate) => !candidate.eligibl…
+    455|     expect(getExclusionCodes(result, "endpoint-1")).toEqual(
+       |                                                     ^
+    456|       expect.arrayContaining(["FORBIDDEN_CAPABILITY_PRESENT"]),
+    457|     );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/8]⎯
+
+ FAIL  src/router-role-task-eligibility.test.ts > routeRequest role/task eligibility > excludes endpoints when binding-effective capabilities are narrower than the candidate declaration
+AssertionError: expected [] to deeply equal ArrayContaining{…}
+
+- Expected
++ Received
+
+- ArrayContaining [
+-   "ROLE_BINDING_CAPABILITY_MISSING",
+- ]
++ []
+
+ ❯ src/router-role-task-eligibility.test.ts:547:53
+    545|     } as never);
+    546| 
+    547|     expect(getExclusionCodes(result, "endpoint-1")).toEqual(
+       |                                                     ^
+    548|       expect.arrayContaining(["ROLE_BINDING_CAPABILITY_MISSING"]),
+    549|     );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/8]⎯
+
+ FAIL  src/router-role-task-eligibility.test.ts > routeRequest role/task eligibility > excludes endpoints when binding-effective task types do not allow the requested task
+AssertionError: expected [] to deeply equal ArrayContaining{…}
+
+- Expected
++ Received
+
+- ArrayContaining [
+-   "ROLE_BINDING_TASK_NOT_ALLOWED",
+- ]
++ []
+
+ ❯ src/router-role-task-eligibility.test.ts:638:53
+    636|     } as never);
+    637| 
+    638|     expect(getExclusionCodes(result, "endpoint-1")).toEqual(
+       |                                                     ^
+    639|       expect.arrayContaining(["ROLE_BINDING_TASK_NOT_ALLOWED"]),
+    640|     );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/8]⎯
+
+
+[2m Test Files [22m [1m[31m3 failed[39m[22m[90m (3)[39m
+[2m      Tests [22m [1m[31m8 failed[39m[22m[2m | [22m[1m[32m18 passed[39m[22m[90m (26)[39m
+[2m   Start at [22m 05:28:21
+[2m   Duration [22m 2.39s[2m (transform 1.05s, setup 0ms, collect 1.23s, tests 205ms, environment 2ms, prepare 2.43s)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\03-protocol-baseline-hardening\packages\conformance:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/router-fixture-conformance.test.ts src/router-conformance.test.ts src/router-role-task-eligibility.test.ts

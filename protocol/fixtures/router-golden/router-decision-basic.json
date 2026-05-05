@@ -1,6 +1,8 @@
 {
   "routing_decision_id": "decision-router-golden-001",
   "request_id": "request-router-golden-001",
+  "app_id": "router-golden",
+  "org_id": null,
   "policy_snapshot": {
     "policy_id": "router-golden-balanced",
     "strategy": "balanced",
@@ -25,20 +27,77 @@
       "latency_target_ms": 120,
       "latency_max_ms": 300,
       "throughput_target_tps": 30
-    }
+    },
+    "prefer_local": true,
+    "budget_mode": "advisory",
+    "tie_break_order": ["quality", "latency_ms", "reliability", "endpoint_id"]
   },
   "scored_candidates": [
     {
       "endpoint_id": "local-cli",
-      "score": 0.91
+      "total_score": 0.91,
+      "metric_breakdown": {
+        "quality": {
+          "value": 0.9,
+          "source": "measured",
+          "raw": {
+            "judge_score": 0.9
+          }
+        },
+        "latency": {
+          "value": 0.85,
+          "source": "measured",
+          "raw": {
+            "latency_ms_p50": 100,
+            "latency_ms_p95": 150,
+            "effective_latency_ms": 112.5
+          }
+        },
+        "throughput": {
+          "value": 0.8,
+          "source": "measured",
+          "raw": {
+            "tokens_per_sec": 40
+          }
+        },
+        "cost": {
+          "value": 1,
+          "source": "measured",
+          "raw": {
+            "cost_per_1k_tokens_est": 0,
+            "target_cost_per_request": 0.002
+          }
+        },
+        "reliability": {
+          "value": 1,
+          "source": "measured",
+          "raw": {
+            "failure_rate": 0
+          }
+        },
+        "preference": {
+          "value": 0.75,
+          "source": "declared",
+          "raw": {
+            "compute_preference": "local",
+            "compute_delta": 0.15
+          }
+        }
+      },
+      "tie_break": {
+        "quality": 0.9,
+        "latency_ms": 112.5,
+        "reliability": 1,
+        "endpoint_id": "local-cli"
+      }
     }
   ],
   "chosen_endpoint_id": "local-cli",
   "fallback_endpoint_ids": [],
-  "selection_reasons": ["BEST_TOTAL_SCORE"],
+  "selection_reasons": ["BEST_TOTAL_SCORE", "LOCAL_PREFERENCE_APPLIED"],
   "used_measured": true,
   "used_declared": true,
-  "scoring_version": "run01-fixture",
+  "scoring_version": "baseline-v2",
   "eligibility": [
     {
       "endpoint_id": "local-cli",

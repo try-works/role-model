@@ -529,7 +529,63 @@ describe("routeRequest", () => {
 
     expect(result.chosen_endpoint_id).toBe("zeta-local");
     expect(result.selection_reasons).toEqual(
-      expect.arrayContaining(["ROLE_PREFERENCE_APPLIED", "TASK_REQUIREMENTS_SATISFIED"]),
+      expect.arrayContaining(["ROLE_POLICY_APPLIED", "TASK_POLICY_APPLIED"]),
+    );
+  });
+
+  test("emits full scored candidate diagnostics and stable public router identifiers", () => {
+    const result = routeRequest({
+      request: {
+        ...baseRequest,
+        requestId: "req-router-shape-1",
+      },
+      candidates,
+    }) as ReturnType<typeof routeRequest> & {
+      app_id?: string;
+      org_id?: string | null;
+    };
+
+    expect(result.app_id).toEqual(expect.any(String));
+    expect(result.org_id ?? null).toSatisfy(
+      (value: unknown) => value === null || typeof value === "string",
+    );
+    expect(result.scored_candidates[0]).toEqual(
+      expect.objectContaining({
+        endpoint_id: expect.any(String),
+        total_score: expect.any(Number),
+        metric_breakdown: expect.objectContaining({
+          quality: expect.objectContaining({
+            value: expect.any(Number),
+            source: expect.any(String),
+          }),
+          latency: expect.objectContaining({
+            value: expect.any(Number),
+            source: expect.any(String),
+          }),
+          throughput: expect.objectContaining({
+            value: expect.any(Number),
+            source: expect.any(String),
+          }),
+          cost: expect.objectContaining({
+            value: expect.any(Number),
+            source: expect.any(String),
+          }),
+          reliability: expect.objectContaining({
+            value: expect.any(Number),
+            source: expect.any(String),
+          }),
+          preference: expect.objectContaining({
+            value: expect.any(Number),
+            source: expect.any(String),
+          }),
+        }),
+        tie_break: expect.objectContaining({
+          quality: expect.any(Number),
+          latency_ms: expect.any(Number),
+          reliability: expect.any(Number),
+          endpoint_id: expect.any(String),
+        }),
+      }),
     );
   });
 

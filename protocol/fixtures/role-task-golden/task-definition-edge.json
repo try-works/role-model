@@ -1,0 +1,10 @@
+{
+  "task_type": "json.schema_adherence",
+  "description": "Edge-case task fixture with multiple quality metrics.",
+  "required_inputs": ["prompt", "schema"],
+  "required_capabilities": ["json.schema_adherence"],
+  "preferred_capabilities": ["reasoning.multi_step", "tools.function_calling"],
+  "quality_metrics": ["accuracy", "schema_validity"],
+  "allowed_roles": ["coder.review", "developer"],
+  "default_benchmark_suites": ["bench-json-001"]
+}

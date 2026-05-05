@@ -1,0 +1,19 @@
+{
+  "endpoint_id": "endpoint-minimal",
+  "endpoint_version": "v1",
+  "measured_at_ms": 1712880000000,
+  "measurement_window": {
+    "started_at_ms": 1712879999000,
+    "ended_at_ms": 1712880000000
+  },
+  "sample_size": 1,
+  "sources": {
+    "benchmark_samples": 1,
+    "live_request_samples": 0
+  },
+  "latency_ms_p50": 120,
+  "latency_ms_p95": 120,
+  "failure_rate": 0,
+  "freshness_score": 1,
+  "confidence_score": 0.2
+}

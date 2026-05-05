@@ -1,0 +1,11 @@
+{
+  "event_id": "event-edge-001",
+  "trace_id": "trace-edge-001",
+  "request_id": "request-edge-001",
+  "routing_decision_id": "decision-edge-001",
+  "timestamp_ms": 1712880000005,
+  "event_type": "profile.updated",
+  "payload": {
+    "endpoint_id": "endpoint-edge"
+  }
+}

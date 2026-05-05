@@ -1,5 +1,7 @@
 export {
+  fixtureValidationManifest,
   generateProtocolTypes,
+  getFixtureValidationCounts,
   loadSchemas,
   validateFixtures,
   validateSchemas,

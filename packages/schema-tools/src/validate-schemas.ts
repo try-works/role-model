@@ -29,89 +29,243 @@ const biomeExecutable = path.join(
 
 type JsonSchema = Record<string, unknown>;
 type CanonicalJsonSchema = JsonSchema & { $id: string };
-type FixtureEntry = {
+export type FixtureFamily =
+  | "top-level"
+  | "router"
+  | "profile"
+  | "trace"
+  | "usage"
+  | "role-task";
+export type FixtureCategory = "example" | "basic" | "minimal" | "edge" | "invalid";
+export type FixtureExpectation = "valid" | "invalid";
+export type FixtureEntry = {
   filePath: string;
   schemaFile: string;
+  family: FixtureFamily;
+  category: FixtureCategory;
+  expectation: FixtureExpectation;
 };
-
-const topLevelFixtures = [
+export const fixtureValidationManifest = [
   {
     filePath: path.join(fixtureRoot, "example-endpoint-identity.json"),
     schemaFile: "endpoint-identity.schema.json",
+    family: "top-level",
+    category: "example",
+    expectation: "valid",
   },
   {
     filePath: path.join(fixtureRoot, "example-router-decision.json"),
     schemaFile: "router-decision.schema.json",
+    family: "top-level",
+    category: "example",
+    expectation: "valid",
   },
   {
     filePath: path.join(fixtureRoot, "example-usage-event.json"),
     schemaFile: "usage-event.schema.json",
+    family: "top-level",
+    category: "example",
+    expectation: "valid",
+  },
+  {
+    filePath: path.join(fixtureRoot, "router-golden", "router-decision-basic.json"),
+    schemaFile: "router-decision.schema.json",
+    family: "router",
+    category: "basic",
+    expectation: "valid",
+  },
+  {
+    filePath: path.join(fixtureRoot, "router-golden", "router-decision-minimal.json"),
+    schemaFile: "router-decision.schema.json",
+    family: "router",
+    category: "minimal",
+    expectation: "valid",
+  },
+  {
+    filePath: path.join(fixtureRoot, "router-golden", "router-decision-edge-empty-selection.json"),
+    schemaFile: "router-decision.schema.json",
+    family: "router",
+    category: "edge",
+    expectation: "valid",
+  },
+  {
+    filePath: path.join(fixtureRoot, "router-golden", "router-decision-invalid-missing-app-id.json"),
+    schemaFile: "router-decision.schema.json",
+    family: "router",
+    category: "invalid",
+    expectation: "invalid",
+  },
+  {
+    filePath: path.join(fixtureRoot, "profile-golden", "observed-performance-basic.json"),
+    schemaFile: "observed-performance-profile.schema.json",
+    family: "profile",
+    category: "basic",
+    expectation: "valid",
+  },
+  {
+    filePath: path.join(fixtureRoot, "profile-golden", "observed-performance-minimal.json"),
+    schemaFile: "observed-performance-profile.schema.json",
+    family: "profile",
+    category: "minimal",
+    expectation: "valid",
+  },
+  {
+    filePath: path.join(fixtureRoot, "profile-golden", "observed-performance-edge-error-rates.json"),
+    schemaFile: "observed-performance-profile.schema.json",
+    family: "profile",
+    category: "edge",
+    expectation: "valid",
+  },
+  {
+    filePath: path.join(
+      fixtureRoot,
+      "profile-golden",
+      "observed-performance-invalid-missing-endpoint-version.json",
+    ),
+    schemaFile: "observed-performance-profile.schema.json",
+    family: "profile",
+    category: "invalid",
+    expectation: "invalid",
+  },
+  {
+    filePath: path.join(fixtureRoot, "trace-golden", "trace-span-basic.json"),
+    schemaFile: "trace-span.schema.json",
+    family: "trace",
+    category: "basic",
+    expectation: "valid",
+  },
+  {
+    filePath: path.join(fixtureRoot, "trace-golden", "trace-event-basic.json"),
+    schemaFile: "trace-event.schema.json",
+    family: "trace",
+    category: "basic",
+    expectation: "valid",
+  },
+  {
+    filePath: path.join(fixtureRoot, "trace-golden", "trace-span-minimal.json"),
+    schemaFile: "trace-span.schema.json",
+    family: "trace",
+    category: "minimal",
+    expectation: "valid",
+  },
+  {
+    filePath: path.join(fixtureRoot, "trace-golden", "trace-event-edge-no-span.json"),
+    schemaFile: "trace-event.schema.json",
+    family: "trace",
+    category: "edge",
+    expectation: "valid",
+  },
+  {
+    filePath: path.join(fixtureRoot, "trace-golden", "trace-event-invalid-missing-request-id.json"),
+    schemaFile: "trace-event.schema.json",
+    family: "trace",
+    category: "invalid",
+    expectation: "invalid",
+  },
+  {
+    filePath: path.join(fixtureRoot, "usage-golden", "usage-event-basic.json"),
+    schemaFile: "usage-event.schema.json",
+    family: "usage",
+    category: "basic",
+    expectation: "valid",
+  },
+  {
+    filePath: path.join(fixtureRoot, "usage-golden", "usage-event-minimal.json"),
+    schemaFile: "usage-event.schema.json",
+    family: "usage",
+    category: "minimal",
+    expectation: "valid",
+  },
+  {
+    filePath: path.join(fixtureRoot, "usage-golden", "usage-event-edge-benchmark.json"),
+    schemaFile: "usage-event.schema.json",
+    family: "usage",
+    category: "edge",
+    expectation: "valid",
+  },
+  {
+    filePath: path.join(
+      fixtureRoot,
+      "usage-golden",
+      "usage-event-invalid-missing-routing-decision.json",
+    ),
+    schemaFile: "usage-event.schema.json",
+    family: "usage",
+    category: "invalid",
+    expectation: "invalid",
+  },
+  {
+    filePath: path.join(fixtureRoot, "role-task-golden", "role-definition-basic.json"),
+    schemaFile: "role-definition.schema.json",
+    family: "role-task",
+    category: "basic",
+    expectation: "valid",
+  },
+  {
+    filePath: path.join(fixtureRoot, "role-task-golden", "task-definition-basic.json"),
+    schemaFile: "task-definition.schema.json",
+    family: "role-task",
+    category: "basic",
+    expectation: "valid",
+  },
+  {
+    filePath: path.join(fixtureRoot, "role-task-golden", "task-execution-profile-basic.json"),
+    schemaFile: "task-execution-profile.schema.json",
+    family: "role-task",
+    category: "basic",
+    expectation: "valid",
+  },
+  {
+    filePath: path.join(fixtureRoot, "role-task-golden", "role-binding-basic.json"),
+    schemaFile: "role-binding.schema.json",
+    family: "role-task",
+    category: "basic",
+    expectation: "valid",
+  },
+  {
+    filePath: path.join(fixtureRoot, "role-task-golden", "role-definition-minimal.json"),
+    schemaFile: "role-definition.schema.json",
+    family: "role-task",
+    category: "minimal",
+    expectation: "valid",
+  },
+  {
+    filePath: path.join(fixtureRoot, "role-task-golden", "role-binding-minimal.json"),
+    schemaFile: "role-binding.schema.json",
+    family: "role-task",
+    category: "minimal",
+    expectation: "valid",
+  },
+  {
+    filePath: path.join(fixtureRoot, "role-task-golden", "task-definition-edge.json"),
+    schemaFile: "task-definition.schema.json",
+    family: "role-task",
+    category: "edge",
+    expectation: "valid",
+  },
+  {
+    filePath: path.join(fixtureRoot, "role-task-golden", "role-binding-invalid-status.json"),
+    schemaFile: "role-binding.schema.json",
+    family: "role-task",
+    category: "invalid",
+    expectation: "invalid",
   },
 ] as const satisfies readonly FixtureEntry[];
 
-const requiredFixtureGroups = [
-  {
-    directoryPath: path.join(fixtureRoot, "router-golden"),
-    fixtures: [
-      {
-        filePath: path.join(fixtureRoot, "router-golden", "router-decision-basic.json"),
-        schemaFile: "router-decision.schema.json",
-      },
-    ],
-  },
-  {
-    directoryPath: path.join(fixtureRoot, "profile-golden"),
-    fixtures: [
-      {
-        filePath: path.join(fixtureRoot, "profile-golden", "observed-performance-basic.json"),
-        schemaFile: "observed-performance-profile.schema.json",
-      },
-    ],
-  },
-  {
-    directoryPath: path.join(fixtureRoot, "trace-golden"),
-    fixtures: [
-      {
-        filePath: path.join(fixtureRoot, "trace-golden", "trace-span-basic.json"),
-        schemaFile: "trace-span.schema.json",
-      },
-      {
-        filePath: path.join(fixtureRoot, "trace-golden", "trace-event-basic.json"),
-        schemaFile: "trace-event.schema.json",
-      },
-    ],
-  },
-  {
-    directoryPath: path.join(fixtureRoot, "usage-golden"),
-    fixtures: [
-      {
-        filePath: path.join(fixtureRoot, "usage-golden", "usage-event-basic.json"),
-        schemaFile: "usage-event.schema.json",
-      },
-    ],
-  },
-  {
-    directoryPath: path.join(fixtureRoot, "role-task-golden"),
-    fixtures: [
-      {
-        filePath: path.join(fixtureRoot, "role-task-golden", "role-definition-basic.json"),
-        schemaFile: "role-definition.schema.json",
-      },
-      {
-        filePath: path.join(fixtureRoot, "role-task-golden", "task-definition-basic.json"),
-        schemaFile: "task-definition.schema.json",
-      },
-      {
-        filePath: path.join(fixtureRoot, "role-task-golden", "task-execution-profile-basic.json"),
-        schemaFile: "task-execution-profile.schema.json",
-      },
-      {
-        filePath: path.join(fixtureRoot, "role-task-golden", "role-binding-basic.json"),
-        schemaFile: "role-binding.schema.json",
-      },
-    ],
-  },
-] as const;
+export function getFixtureValidationCounts(): {
+  totalCount: number;
+  validCount: number;
+  invalidCount: number;
+} {
+  const validCount = fixtureValidationManifest.filter(
+    (fixture) => fixture.expectation === "valid",
+  ).length;
+  return {
+    totalCount: fixtureValidationManifest.length,
+    validCount,
+    invalidCount: fixtureValidationManifest.length - validCount,
+  };
+}
 
 function assertCanonicalSchemaId(fileName: string, schema: JsonSchema): CanonicalJsonSchema {
   const schemaId = schema.$id;
@@ -176,44 +330,36 @@ function assertFixtureValid(
   }
 }
 
+function assertFixtureInvalid(
+  validate: ((data: unknown) => boolean) & { errors?: unknown },
+  payload: unknown,
+  filePath: string,
+): void {
+  if (validate(payload)) {
+    throw new Error(`Fixture ${filePath} unexpectedly passed validation.`);
+  }
+}
+
 export async function validateFixtures(
   existing: Awaited<ReturnType<typeof createAjv>> | undefined = undefined,
 ): Promise<number> {
   const { ajv } = existing ?? (await createAjv());
-  let validatedCount = 0;
-
-  for (const fixture of topLevelFixtures) {
+  for (const fixture of fixtureValidationManifest) {
     const validate = ajv.getSchema(fixture.schemaFile);
     if (!validate) {
       throw new Error(`Schema ${fixture.schemaFile} is not available for fixture validation.`);
     }
 
     const payload = JSON.parse(await readFile(fixture.filePath, "utf8")) as unknown;
-    assertFixtureValid(validate, payload, fixture.filePath);
-    validatedCount += 1;
-  }
-
-  for (const group of requiredFixtureGroups) {
-    const fileNames = await readdir(group.directoryPath);
-    if (fileNames.length < group.fixtures.length) {
-      throw new Error(
-        `Fixture directory ${group.directoryPath} must contain at least ${group.fixtures.length} file(s).`,
-      );
-    }
-
-    for (const fixture of group.fixtures) {
-      const validate = ajv.getSchema(fixture.schemaFile);
-      if (!validate) {
-        throw new Error(`Schema ${fixture.schemaFile} is not available for fixture validation.`);
-      }
-
-      const payload = JSON.parse(await readFile(fixture.filePath, "utf8")) as unknown;
+    if (fixture.expectation === "valid") {
       assertFixtureValid(validate, payload, fixture.filePath);
-      validatedCount += 1;
+      continue;
     }
+
+    assertFixtureInvalid(validate, payload, fixture.filePath);
   }
 
-  return validatedCount;
+  return fixtureValidationManifest.length;
 }
 
 export async function validateSchemas(): Promise<void> {

@@ -114,6 +114,15 @@ importers:
       '@role-model-router/profile-aggregator':
         specifier: workspace:*
         version: link:../../role-model-router/packages/profile-aggregator
+      '@role-model-router/trace':
+        specifier: workspace:*
+        version: link:../../role-model-router/packages/trace
+      '@role-model-router/usage':
+        specifier: workspace:*
+        version: link:../../role-model-router/packages/usage
+      '@role-model/schema-tools':
+        specifier: workspace:*
+        version: link:../schema-tools
 
   packages/packaging: {}
 
@@ -178,7 +187,11 @@ importers:
 
   role-model-router/packages/bench-judge: {}
 
-  role-model-router/packages/core: {}
+  role-model-router/packages/core:
+    dependencies:
+      '@role-model/protocol-types':
+        specifier: workspace:*
+        version: link:../../../packages/protocol-types
 
   role-model-router/packages/openai-compat:
     dependencies:
@@ -186,7 +199,11 @@ importers:
         specifier: workspace:*
         version: link:../core
 
-  role-model-router/packages/profile-aggregator: {}
+  role-model-router/packages/profile-aggregator:
+    dependencies:
+      '@role-model/protocol-types':
+        specifier: workspace:*
+        version: link:../../../packages/protocol-types
 
   role-model-router/packages/provider-acp:
     dependencies:
@@ -212,9 +229,17 @@ importers:
 
   role-model-router/packages/tasks: {}
 
-  role-model-router/packages/trace: {}
+  role-model-router/packages/trace:
+    dependencies:
+      '@role-model/protocol-types':
+        specifier: workspace:*
+        version: link:../../../packages/protocol-types
 
-  role-model-router/packages/usage: {}
+  role-model-router/packages/usage:
+    dependencies:
+      '@role-model/protocol-types':
+        specifier: workspace:*
+        version: link:../../../packages/protocol-types
 
 packages:
 

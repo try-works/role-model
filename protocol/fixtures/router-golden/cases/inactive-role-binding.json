@@ -82,7 +82,7 @@
         "binding_id": "binding-1",
         "role_id": "developer",
         "endpoint_id": "endpoint-1",
-        "status": "candidate",
+        "status": "inactive",
         "policy_overrides": {},
         "effective_capabilities": ["code.edit"],
         "effective_task_types": ["code.edit"]
@@ -100,7 +100,7 @@
         "exclusions": [
           {
             "code": "ROLE_BINDING_INACTIVE",
-            "detail": "Endpoint role binding is not active."
+            "detail": "Endpoint role binding is inactive."
           }
         ]
       }

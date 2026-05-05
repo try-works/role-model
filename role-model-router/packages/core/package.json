@@ -7,6 +7,9 @@
     ".": "./src/index.ts"
   },
   "files": ["src", "dist"],
+  "dependencies": {
+    "@role-model/protocol-types": "workspace:*"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.json"
   }

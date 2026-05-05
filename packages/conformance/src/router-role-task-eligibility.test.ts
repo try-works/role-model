@@ -102,7 +102,7 @@ describe("routeRequest role/task eligibility", () => {
 
     expect(result.eligibility.filter((candidate) => !candidate.eligible)).toHaveLength(1);
     expect(getExclusionCodes(result, "endpoint-1")).toEqual(
-      expect.arrayContaining(["TASK_NOT_SUPPORTED", "ROLE_NOT_ALLOWED"]),
+      expect.arrayContaining(["TASK_NOT_SUPPORTED_BY_ROLE", "ROLE_NOT_ALLOWED"]),
     );
     expect(result.chosen_endpoint_id).toBe("");
     expect(result.fallback_endpoint_ids).toHaveLength(0);
@@ -186,7 +186,7 @@ describe("routeRequest role/task eligibility", () => {
           binding_id: "binding-1",
           role_id: "developer",
           endpoint_id: "endpoint-1",
-          status: "candidate",
+          status: "inactive",
           policy_overrides: {},
           effective_capabilities: ["code.edit"],
           effective_task_types: ["code.edit"],
@@ -199,6 +199,97 @@ describe("routeRequest role/task eligibility", () => {
       expect.arrayContaining(["ROLE_BINDING_INACTIVE"]),
     );
     expect(result.chosen_endpoint_id).toBe("");
+  });
+
+  test("excludes endpoints when the matching role binding is disabled", () => {
+    const result = routeRequest({
+      request: {
+        requestId: "req-role-binding-disabled-1",
+        requestedRoleId: "developer",
+        taskType: "code.edit",
+        requiredCapabilities: ["code.edit"],
+        preferredCapabilities: [],
+        requiredModalities: ["text"],
+        contextTokens: 2048,
+        needsTools: false,
+        strategy: "balanced",
+        preferLocal: false,
+      },
+      candidates: [
+        {
+          identity: {
+            endpoint_id: "endpoint-1",
+            endpoint_kind: "local-engine",
+            provider_kind: "provider-cli",
+            serving_source: "local-process",
+            model_id: "gpt-5.4",
+            package_id: "provider-cli",
+            variant_id: "default",
+            runtime_version: "1.0.0",
+            quantization: "none",
+            precision: "fp16",
+            host_class: "skill-router",
+            device_class: "workstation",
+            region: "local",
+            org_scope: "personal",
+          },
+          declared: {
+            endpoint_id: "endpoint-1",
+            capabilities: ["code.edit"],
+            modalities: ["text"],
+            max_context_tokens: 32768,
+            tool_calling: supportedToolCalling,
+            supports_embeddings: false,
+            platform_constraints: [],
+          },
+          status: "active",
+        },
+      ],
+      roleDefinitions: [
+        {
+          role_id: "developer",
+          name: "Developer",
+          description: "Code editing role",
+          role_kind: "assistant",
+          default_system_instructions: "Help with code edits.",
+          task_types_supported: ["code.edit"],
+          required_capabilities: [],
+          preferred_capabilities: [],
+          forbidden_capabilities: [],
+          tool_policy: { mode: "allowed" },
+          routing_policy_overrides: {},
+          output_contracts: [],
+          safety_policy_refs: [],
+        },
+      ],
+      taskDefinitions: [
+        {
+          task_type: "code.edit",
+          description: "Code editing task",
+          required_inputs: [],
+          required_capabilities: ["code.edit"],
+          preferred_capabilities: [],
+          quality_metrics: [],
+          allowed_roles: ["developer"],
+          default_benchmark_suites: [],
+        },
+      ],
+      roleBindings: [
+        {
+          binding_id: "binding-1",
+          role_id: "developer",
+          endpoint_id: "endpoint-1",
+          status: "disabled",
+          policy_overrides: {},
+          effective_capabilities: ["code.edit"],
+          effective_task_types: ["code.edit"],
+        },
+      ],
+    } as never);
+
+    expect(getExclusionCodes(result, "endpoint-1")).toEqual(
+      expect.arrayContaining(["ROLE_BINDING_DISABLED"]),
+    );
   });
 
   test("excludes endpoints missing required capabilities inherited from the requested role and task", () => {
@@ -362,9 +453,191 @@ describe("routeRequest role/task eligibility", () => {
 
     expect(result.eligibility.filter((candidate) => !candidate.eligible)).toHaveLength(1);
     expect(getExclusionCodes(result, "endpoint-1")).toEqual(
-      expect.arrayContaining(["POLICY_DENY_ENDPOINT"]),
+      expect.arrayContaining(["FORBIDDEN_CAPABILITY_PRESENT"]),
     );
     expect(result.chosen_endpoint_id).toBe("");
+  });
+
+  test("excludes endpoints when binding-effective capabilities are narrower than the candidate declaration", () => {
+    const result = routeRequest({
+      request: {
+        requestId: "req-binding-capability-restriction-1",
+        requestedRoleId: "developer",
+        taskType: "code.edit",
+        requiredCapabilities: ["code.edit", "tools.function_calling"],
+        preferredCapabilities: [],
+        requiredModalities: ["text"],
+        contextTokens: 2048,
+        needsTools: true,
+        strategy: "balanced",
+        preferLocal: false,
+      },
+      candidates: [
+        {
+          identity: {
+            endpoint_id: "endpoint-1",
+            endpoint_kind: "local-engine",
+            provider_kind: "provider-cli",
+            serving_source: "local-process",
+            model_id: "gpt-5.4",
+            package_id: "provider-cli",
+            variant_id: "default",
+            runtime_version: "1.0.0",
+            quantization: "none",
+            precision: "fp16",
+            host_class: "skill-router",
+            device_class: "workstation",
+            region: "local",
+            org_scope: "personal",
+          },
+          declared: {
+            endpoint_id: "endpoint-1",
+            capabilities: ["code.edit", "tools.function_calling"],
+            modalities: ["text"],
+            max_context_tokens: 32768,
+            tool_calling: supportedToolCalling,
+            supports_embeddings: false,
+            platform_constraints: [],
+          },
+          status: "active",
+        },
+      ],
+      roleDefinitions: [
+        {
+          role_id: "developer",
+          name: "Developer",
+          description: "Code editing role",
+          role_kind: "assistant",
+          default_system_instructions: "Help with code edits.",
+          task_types_supported: ["code.edit"],
+          required_capabilities: [],
+          preferred_capabilities: [],
+          forbidden_capabilities: [],
+          tool_policy: { mode: "allowed" },
+          routing_policy_overrides: {},
+          output_contracts: [],
+          safety_policy_refs: [],
+        },
+      ],
+      taskDefinitions: [
+        {
+          task_type: "code.edit",
+          description: "Code editing task",
+          required_inputs: [],
+          required_capabilities: ["code.edit"],
+          preferred_capabilities: [],
+          quality_metrics: [],
+          allowed_roles: ["developer"],
+          default_benchmark_suites: [],
+        },
+      ],
+      roleBindings: [
+        {
+          binding_id: "binding-1",
+          role_id: "developer",
+          endpoint_id: "endpoint-1",
+          status: "active",
+          policy_overrides: {},
+          effective_capabilities: ["code.edit"],
+          effective_task_types: ["code.edit"],
+        },
+      ],
+    } as never);
+
+    expect(getExclusionCodes(result, "endpoint-1")).toEqual(
+      expect.arrayContaining(["ROLE_BINDING_CAPABILITY_MISSING"]),
+    );
+  });
+
+  test("excludes endpoints when binding-effective task types do not allow the requested task", () => {
+    const result = routeRequest({
+      request: {
+        requestId: "req-binding-task-restriction-1",
+        requestedRoleId: "developer",
+        taskType: "code.edit",
+        requiredCapabilities: ["code.edit"],
+        preferredCapabilities: [],
+        requiredModalities: ["text"],
+        contextTokens: 2048,
+        needsTools: false,
+        strategy: "balanced",
+        preferLocal: false,
+      },
+      candidates: [
+        {
+          identity: {
+            endpoint_id: "endpoint-1",
+            endpoint_kind: "local-engine",
+            provider_kind: "provider-cli",
+            serving_source: "local-process",
+            model_id: "gpt-5.4",
+            package_id: "provider-cli",
+            variant_id: "default",
+            runtime_version: "1.0.0",
+            quantization: "none",
+            precision: "fp16",
+            host_class: "skill-router",
+            device_class: "workstation",
+            region: "local",
+            org_scope: "personal",
+          },
+          declared: {
+            endpoint_id: "endpoint-1",
+            capabilities: ["code.edit"],
+            modalities: ["text"],
+            max_context_tokens: 32768,
+            tool_calling: supportedToolCalling,
+            supports_embeddings: false,
+            platform_constraints: [],
+          },
+          status: "active",
+        },
+      ],
+      roleDefinitions: [
+        {
+          role_id: "developer",
+          name: "Developer",
+          description: "Code editing role",
+          role_kind: "assistant",
+          default_system_instructions: "Help with code edits.",
+          task_types_supported: ["code.edit"],
+          required_capabilities: [],
+          preferred_capabilities: [],
+          forbidden_capabilities: [],
+          tool_policy: { mode: "allowed" },
+          routing_policy_overrides: {},
+          output_contracts: [],
+          safety_policy_refs: [],
+        },
+      ],
+      taskDefinitions: [
+        {
+          task_type: "code.edit",
+          description: "Code editing task",
+          required_inputs: [],
+          required_capabilities: ["code.edit"],
+          preferred_capabilities: [],
+          quality_metrics: [],
+          allowed_roles: ["developer"],
+          default_benchmark_suites: [],
+        },
+      ],
+      roleBindings: [
+        {
+          binding_id: "binding-1",
+          role_id: "developer",
+          endpoint_id: "endpoint-1",
+          status: "active",
+          policy_overrides: {},
+          effective_capabilities: ["code.edit"],
+          effective_task_types: ["text.chat"],
+        },
+      ],
+    } as never);
+
+    expect(getExclusionCodes(result, "endpoint-1")).toEqual(
+      expect.arrayContaining(["ROLE_BINDING_TASK_NOT_ALLOWED"]),
+    );
   });
 
   test("excludes endpoints whose provider kind is denied by policy", () => {
