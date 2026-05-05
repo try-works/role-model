@@ -229,3 +229,32 @@
 - Known issues / follow-ups:
   - the local validation path currently uses built-in `node:sqlite`, which works in the selected Node 24 environment but still emits the platform's experimental warning
   - the broader root `build` and `test` commands still fail on the inherited schema-tools/Biome generated-types path rather than on the new run-07 packages
+
+### Run `08-router-runtime-protocol-routing`
+
+- Run folder: `/.recursive/run/08-router-runtime-protocol-routing/`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - added `/role-model-router/packages/protocol-routing/` as the runtime-owned projection and orchestration layer that composes registry, continuity, retrieval receipt, observed profiles, and advisory routing-model inputs into deterministic routing input plus diagnostics
+  - extended `/role-model-router/packages/core/` with explicit continuity-affinity, cache-affinity, and routing-model-rank signals while keeping the canonical router-decision shape stable
+  - added pinned runtime-routing fixtures under `/testdata/router-runtime/`, added `/packages/conformance/src/runtime-routing-conformance.test.ts`, and added the repo-local `runtime:validate-routing` command
+- Why:
+  - to establish the mandatory protocol-driven routing boundary and configurable routing-model guardrails before widening into adapter execution work
+- How:
+  - implemented strict RED/GREEN TDD across projection, signal scoring, orchestration, and validation slices, then validated the new package and targeted conformance/runtime paths directly while separating the remaining older unrelated failures
+- What was not done:
+  - no adapter execution, request-serving host integration, operator UI work, or router-decision schema redesign was added here
+- Known issues / follow-ups:
+  - `@role-model/conformance build` still fails on older `src/router-conformance.test.ts` typing debt rather than on the new run-08 file
+  - the broader root `build` and `test` commands still fail on the inherited schema-tools/Biome generated-types path
+  - the local validation path still uses built-in `node:sqlite`, which works in the selected Node 24 environment but still emits the platform's experimental warning

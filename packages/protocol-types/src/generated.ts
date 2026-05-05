@@ -22,9 +22,10 @@ export interface BenchmarkRun {
       latency_ms: number;
       success: boolean;
       judge_score?: number;
-    }[],
+    }[]
   ];
 }
+
 
 export interface BenchmarkSuite {
   suite_id: string;
@@ -46,9 +47,10 @@ export interface BenchmarkSuite {
       case_id: string;
       prompt_ref: string;
       expected_shape?: string;
-    }[],
+    }[]
   ];
 }
+
 
 export interface CapabilityTaxonomy {
   version: string;
@@ -65,9 +67,10 @@ export interface CapabilityTaxonomy {
       id: string;
       family: string;
       description: string;
-    }[],
+    }[]
   ];
 }
+
 
 export interface DeclaredCapabilityProfile {
   endpoint_id: string;
@@ -82,27 +85,28 @@ export interface DeclaredCapabilityProfile {
   max_context_tokens: number;
   tool_calling: {
     supported: boolean;
-    style: "openai" | "json" | "none";
+    style: 'openai' | 'json' | 'none';
   };
   supports_embeddings: boolean;
   platform_constraints?: string[];
 }
 
+
 export interface EndpointIdentity {
   endpoint_id: string;
-  endpoint_kind: "local_engine" | "remote_api" | "browser_engine" | "dispatch_adapter";
+  endpoint_kind: 'local_engine' | 'remote_api' | 'browser_engine' | 'dispatch_adapter';
   provider_kind:
-    | "acp"
-    | "mcp"
-    | "cli"
-    | "remote_openai_compat"
-    | "onnx"
-    | "mlx"
-    | "litertlm"
-    | "gguf"
-    | "webllm"
-    | "mediapipe_genai"
-    | "mediapipe_text";
+    | 'acp'
+    | 'mcp'
+    | 'cli'
+    | 'remote_openai_compat'
+    | 'onnx'
+    | 'mlx'
+    | 'litertlm'
+    | 'gguf'
+    | 'webllm'
+    | 'mediapipe_genai'
+    | 'mediapipe_text';
   serving_source: string;
   model_id: string;
   package_id?: string;
@@ -117,12 +121,23 @@ export interface EndpointIdentity {
   endpoint_version?: string;
 }
 
+
+export interface MetricEntry {
+  value: number;
+  source: 'measured' | 'declared' | 'default';
+  raw?: {
+    [k: string]: unknown;
+  };
+}
+
+
 export interface JudgeScore {
   judge_id: string;
   case_id: string;
   score: number;
   rationale: string;
 }
+
 
 export interface ModelPackManifest {
   pack_id: string;
@@ -138,9 +153,10 @@ export interface ModelPackManifest {
     ...{
       model_id: string;
       artifact_ref: string;
-    }[],
+    }[]
   ];
 }
+
 
 export interface ObservedPerformanceProfile {
   endpoint_id: string;
@@ -171,6 +187,7 @@ export interface ObservedPerformanceProfile {
   confidence_score: number;
 }
 
+
 export interface PackageManifest {
   package_id: string;
   version: string;
@@ -178,6 +195,7 @@ export interface PackageManifest {
   entrypoints: string[];
   capability_exports?: string[];
 }
+
 
 export interface PlanSpec {
   plan_id: string;
@@ -198,21 +216,23 @@ export interface PlanSpec {
       description: string;
       inputs?: string[];
       outputs?: string[];
-    }[],
+    }[]
   ];
 }
+
 
 export interface RoleBinding {
   binding_id: string;
   role_id: string;
   endpoint_id: string;
-  status: "active" | "inactive" | "disabled";
+  status: 'active' | 'inactive' | 'disabled';
   policy_overrides: {
     [k: string]: unknown;
   };
   effective_capabilities: string[];
   effective_task_types: string[];
 }
+
 
 export interface RoleDefinition {
   role_id: string;
@@ -225,7 +245,7 @@ export interface RoleDefinition {
   preferred_capabilities: string[];
   forbidden_capabilities: string[];
   tool_policy: {
-    mode: "disabled" | "limited" | "allowed";
+    mode: 'disabled' | 'limited' | 'allowed';
     allowed_tools?: string[];
   };
   routing_policy_overrides: {
@@ -234,6 +254,7 @@ export interface RoleDefinition {
   output_contracts: string[];
   safety_policy_refs: string[];
 }
+
 
 export interface RouterDecision {
   routing_decision_id: string;
@@ -246,25 +267,30 @@ export interface RouterDecision {
     eligible: boolean;
     exclusions: {
       code:
-        | "CAPABILITY_MISSING"
-        | "FORBIDDEN_CAPABILITY_PRESENT"
-        | "MODALITY_UNSUPPORTED"
-        | "CONTEXT_TOO_SMALL"
-        | "TOOLS_UNSUPPORTED"
-        | "ROLE_NOT_ALLOWED"
-        | "TASK_NOT_SUPPORTED_BY_ROLE"
-        | "ROLE_BINDING_INACTIVE"
-        | "ROLE_BINDING_DISABLED"
-        | "ROLE_BINDING_TASK_NOT_ALLOWED"
-        | "ROLE_BINDING_CAPABILITY_MISSING"
-        | "POLICY_DENY_ENDPOINT"
-        | "POLICY_DENY_REMOTE"
-        | "ENTITLEMENT_MISSING"
-        | "PACKAGE_NOT_INSTALLED"
-        | "VARIANT_INCOMPATIBLE"
-        | "PROVIDER_OFFLINE"
-        | "BUDGET_EXCEEDED"
-        | "REVOKED";
+        | 'CAPABILITY_MISSING'
+        | 'FORBIDDEN_CAPABILITY_PRESENT'
+        | 'MODALITY_UNSUPPORTED'
+        | 'CONTEXT_TOO_SMALL'
+        | 'TOOLS_UNSUPPORTED'
+        | 'ROLE_NOT_ALLOWED'
+        | 'TASK_NOT_SUPPORTED_BY_ROLE'
+        | 'ROLE_BINDING_INACTIVE'
+        | 'ROLE_BINDING_DISABLED'
+        | 'ROLE_BINDING_TASK_NOT_ALLOWED'
+        | 'ROLE_BINDING_CAPABILITY_MISSING'
+        | 'POLICY_DENY_ENDPOINT'
+        | 'POLICY_DENY_REMOTE'
+        | 'ACCOUNT_DISABLED'
+        | 'AUTH_UNAVAILABLE'
+        | 'ENTITLEMENT_MISSING'
+        | 'QUOTA_EXHAUSTED'
+        | 'REGION_DISALLOWED'
+        | 'DEPLOYMENT_CLASS_MISMATCH'
+        | 'PACKAGE_NOT_INSTALLED'
+        | 'VARIANT_INCOMPATIBLE'
+        | 'PROVIDER_OFFLINE'
+        | 'BUDGET_EXCEEDED'
+        | 'REVOKED';
       detail: string;
     }[];
   }[];
@@ -289,30 +315,34 @@ export interface RouterDecision {
   chosen_endpoint_id: string;
   fallback_endpoint_ids: string[];
   selection_reasons: (
-    | "BEST_TOTAL_SCORE"
-    | "MEASURED_PROFILE_USED"
-    | "DECLARED_PROFILE_USED"
-    | "DEFAULT_PROFILE_USED"
-    | "LOCAL_PREFERENCE_APPLIED"
-    | "REMOTE_PREFERENCE_APPLIED"
-    | "BUDGET_OPTIMIZATION"
-    | "LOW_LATENCY_TARGET_MET"
-    | "HIGH_QUALITY_TARGET_MET"
-    | "ROLE_POLICY_APPLIED"
-    | "TASK_POLICY_APPLIED"
-    | "FALLBACK_CHAIN_COMPUTED"
+    | 'BEST_TOTAL_SCORE'
+    | 'MEASURED_PROFILE_USED'
+    | 'DECLARED_PROFILE_USED'
+    | 'DEFAULT_PROFILE_USED'
+    | 'LOCAL_PREFERENCE_APPLIED'
+    | 'REMOTE_PREFERENCE_APPLIED'
+    | 'CONTINUITY_AFFINITY_APPLIED'
+    | 'CACHE_AFFINITY_APPLIED'
+    | 'ROUTING_MODEL_PREFERENCE_APPLIED'
+    | 'BUDGET_OPTIMIZATION'
+    | 'LOW_LATENCY_TARGET_MET'
+    | 'HIGH_QUALITY_TARGET_MET'
+    | 'ROLE_POLICY_APPLIED'
+    | 'TASK_POLICY_APPLIED'
+    | 'FALLBACK_CHAIN_COMPUTED'
   )[];
   used_measured: boolean;
   used_declared: boolean;
   scoring_version: string;
 }
 
+
 export interface RoutingPolicy {
   policy_id?: string;
-  strategy: "balanced" | "cost" | "latency" | "quality";
-  compute_preference: "auto" | "local" | "remote" | "hybrid";
+  strategy: 'balanced' | 'cost' | 'latency' | 'quality';
+  compute_preference: 'auto' | 'local' | 'remote' | 'hybrid';
   prefer_local?: boolean;
-  budget_mode?: "strict" | "advisory" | "disabled";
+  budget_mode?: 'strict' | 'advisory' | 'disabled';
   /**
    * @minItems 1
    */
@@ -340,6 +370,7 @@ export interface RoutingPolicy {
   };
 }
 
+
 export interface TaskDefinition {
   task_type: string;
   description: string;
@@ -351,6 +382,7 @@ export interface TaskDefinition {
   default_benchmark_suites: string[];
 }
 
+
 export interface TaskExecutionProfile {
   task_type: string;
   role_id: string;
@@ -358,6 +390,7 @@ export interface TaskExecutionProfile {
   preferred_capabilities: string[];
   routing_policy_patch: RoutingPolicy;
 }
+
 
 export interface TraceEvent {
   event_id: string;
@@ -367,16 +400,17 @@ export interface TraceEvent {
   routing_decision_id: string;
   timestamp_ms: number;
   event_type:
-    | "router.decision.created"
-    | "trace.span.opened"
-    | "trace.span.closed"
-    | "usage.event.created"
-    | "profile.sample.recorded"
-    | "profile.updated";
+    | 'router.decision.created'
+    | 'trace.span.opened'
+    | 'trace.span.closed'
+    | 'usage.event.created'
+    | 'profile.sample.recorded'
+    | 'profile.updated';
   payload: {
     [k: string]: unknown;
   };
 }
+
 
 export interface TraceSpan {
   trace_id: string;
@@ -385,24 +419,25 @@ export interface TraceSpan {
   request_id: string;
   routing_decision_id: string;
   span_type:
-    | "router.eligibility"
-    | "router.scoring"
-    | "router.selection"
-    | "provider.load"
-    | "provider.queue"
-    | "provider.prefill"
-    | "provider.decode"
-    | "tool.execution"
-    | "router.fallback"
-    | "router.retry"
-    | "request.failure";
+    | 'router.eligibility'
+    | 'router.scoring'
+    | 'router.selection'
+    | 'provider.load'
+    | 'provider.queue'
+    | 'provider.prefill'
+    | 'provider.decode'
+    | 'tool.execution'
+    | 'router.fallback'
+    | 'router.retry'
+    | 'request.failure';
   started_at_ms: number;
   ended_at_ms: number;
-  status: "ok" | "error" | "cancelled";
+  status: 'ok' | 'error' | 'cancelled';
   attributes?: {
     [k: string]: string | number | boolean;
   };
 }
+
 
 export interface UsageEvent {
   event_id: string;
@@ -421,5 +456,5 @@ export interface UsageEvent {
   cost_estimate?: number;
   currency?: string;
   error_class?: string;
-  sample_source?: "live_request" | "benchmark";
+  sample_source?: 'live_request' | 'benchmark';
 }

@@ -1,0 +1,34 @@
+
+> @role-model-router/protocol-routing@0.0.0 test D:\DEV\role-model\.worktrees\08-router-runtime-protocol-routing\role-model-router\packages\protocol-routing
+> vitest run test/index.test.ts
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/08-router-runtime-protocol-routing/role-model-router/packages/protocol-routing[39m
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Suites 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/index.test.ts [ test/index.test.ts ]
+Error: Cannot find module '../src/cli.js' imported from 'D:/DEV/role-model/.worktrees/08-router-runtime-protocol-routing/role-model-router/packages/protocol-routing/test/index.test.ts'
+ Γ¥» test/index.test.ts:7:1
+      5| 
+      6| import { projectRuntimeRouteInput, routeRuntimeRequest } from "../src/ΓÇª
+      7| import { runRuntimeRoutingValidation } from "../src/cli.js";
+       | ^
+      8| 
+      9| const __filename = fileURLToPath(import.meta.url);
+
+Caused by: Error: Failed to load url ../src/cli.js (resolved id: ../src/cli.js) in D:/DEV/role-model/.worktrees/08-router-runtime-protocol-routing/role-model-router/packages/protocol-routing/test/index.test.ts. Does the file exist?
+ Γ¥» loadAndTransform ../../../node_modules/.pnpm/vite@7.3.2_@types+node@22.1_ffe4277cf87465bba1449374e033820f/node_modules/vite/dist/node/chunks/config.js:22663:33
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [2mno tests[22m
+[2m   Start at [22m 12:29:56
+[2m   Duration [22m 859ms[2m (transform 135ms, setup 0ms, collect 0ms, tests 0ms, environment 0ms, prepare 171ms)[22m
+
+D:\DEV\role-model\.worktrees\08-router-runtime-protocol-routing\role-model-router\packages\protocol-routing:
+ΓÇëERR_PNPM_RECURSIVE_RUN_FIRST_FAILΓÇë @role-model-router/protocol-routing@0.0.0 test: `vitest run test/index.test.ts`
+Exit status 1

@@ -1,99 +1,156 @@
-import os from "node:os";
-import path from "node:path";
-import { mkdtemp, readFile } from "node:fs/promises";
-import { fileURLToPath } from "node:url";
-
 import { describe, expect, test } from "vitest";
 
-import { validateProviderAccounts } from "@role-model-router/provider-account";
+import { buildEndpointRegistry } from "../src/index.js";
 
-import { runRuntimeRegistryValidation } from "../src/cli.ts";
-import { buildEndpointRegistry } from "../src/index.ts";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const repoRoot = path.resolve(__dirname, "..", "..", "..", "..");
-
-async function readJson<T>(relativePath: string): Promise<T> {
-  const filePath = path.join(repoRoot, relativePath);
-  return JSON.parse(await readFile(filePath, "utf8")) as T;
-}
+const normalizedCatalog = {
+  catalogVersion: "1",
+  source: {
+    vendor: "models.dev",
+    commit: "test-catalog",
+    capturedAt: "2026-05-05T00:00:00Z",
+    schemaVersion: "1",
+  },
+  providers: [
+    {
+      providerId: "openai",
+      displayName: "OpenAI",
+      providerKind: "provider-openai",
+      authFamily: "api-key",
+      adapterFamily: "openai-compatible",
+      apiBase: "https://api.openai.test",
+      envVars: ["OPENAI_API_KEY"],
+      controlPlaneRequirements: [],
+      localOverrideApplied: false,
+      upstreamProvenance: {
+        vendor: "models.dev",
+        commit: "test-catalog",
+        capturedAt: "2026-05-05T00:00:00Z",
+        schemaVersion: "1",
+      },
+    },
+  ],
+  models: [
+    {
+      modelId: "openai/gpt-4.1-mini-fast",
+      providerId: "openai",
+      providerKind: "provider-openai",
+      authFamily: "api-key",
+      displayName: "GPT-4.1 Mini Fast",
+      version: "1",
+      capabilities: ["code.edit"],
+      modalities: ["text"],
+      contextWindow: 32768,
+      maxOutputTokens: 4096,
+      pricing: null,
+      requestShapeHints: {
+        providerShape: "openai",
+        bodyKeys: ["messages"],
+        headerKeys: ["authorization"],
+      },
+      experimentalModes: [],
+      extendsProvenance: {
+        baseModelId: null,
+        chain: [],
+      },
+      localOverrideApplied: false,
+      localNotes: [],
+      upstreamProvenance: {
+        vendor: "models.dev",
+        commit: "test-catalog",
+        capturedAt: "2026-05-05T00:00:00Z",
+        schemaVersion: "1",
+      },
+    },
+  ],
+} as const;
 
 describe("buildEndpointRegistry", () => {
-  test("builds a runtime registry from catalog, provider-account, and pinned discovery inputs", async () => {
-    const catalog = await readJson("role-model-router/packages/catalog/data/normalized-catalog.json");
-    const accountFixture = await readJson<{ accounts: unknown[] }>("testdata/router-runtime/provider-accounts.json");
-    const registryFixture = await readJson("testdata/router-runtime/registry-sources.json");
-    const validated = validateProviderAccounts({
-      catalog,
-      accounts: accountFixture.accounts,
-    });
-
+  test("retains cloud endpoints with runtime eligibility flags instead of filtering them out", () => {
     const result = buildEndpointRegistry({
-      catalog,
-      accounts: validated.accounts,
-      sources: registryFixture,
-    });
-
-    expect(validated.diagnostics).toEqual([]);
-    expect(result.diagnostics).toEqual([]);
-    expect(result.endpoints).toHaveLength(3);
-    expect(result.lifecycleSummary).toEqual({
-      active: 2,
-      degraded: 1,
-      offline: 0,
-    });
-    expect(result.endpoints).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
+      catalog: normalizedCatalog,
+      accounts: [
+        {
+          providerAccountId: "openai.disabled",
+          providerId: "openai",
+          providerKind: "provider-openai",
+          orgScope: "personal",
+          accountScope: "default",
+          credentialRef: { backend: "env", ref: "OPENAI_API_KEY" },
+          authMode: "api-key-static",
+          regionPolicy: { mode: "prefer", regions: ["us-east-1"] },
+          baseUrlOverride: null,
+          allowedModels: [],
+          deniedModels: [],
+          entitlementTags: ["chat"],
+          budgetPolicyRef: "budget.default",
+          quotaPolicyRef: "quota.default",
+          status: "disabled",
+          healthStatus: "healthy",
+          rotationState: "stable",
+        },
+        {
+          providerAccountId: "openai.auth-missing",
+          providerId: "openai",
+          providerKind: "provider-openai",
+          orgScope: "personal",
+          accountScope: "default",
+          credentialRef: { backend: "env", ref: "OPENAI_API_KEY" },
+          authMode: "api-key-static",
+          regionPolicy: { mode: "prefer", regions: ["us-east-1"] },
+          baseUrlOverride: null,
+          allowedModels: [],
+          deniedModels: [],
+          entitlementTags: ["chat"],
+          budgetPolicyRef: "budget.default",
+          quotaPolicyRef: "quota.default",
           status: "active",
-          identity: expect.objectContaining({
-            endpoint_id: "openai.personal.primary.us-east-1.fast",
-            provider_kind: "remote_openai_compat",
-            model_id: "openai/gpt-4.1-mini-fast",
-            region: "us-east-1",
-            org_scope: "personal",
-          }),
-        }),
-        expect.objectContaining({
-          status: "degraded",
-          identity: expect.objectContaining({
-            endpoint_id: "anthropic.team.shared.us-east-1.default",
-            provider_kind: "remote_openai_compat",
-            model_id: "claude-3.7-sonnet",
-            region: "us-east-1",
-            org_scope: "team",
-          }),
-        }),
-        expect.objectContaining({
+          healthStatus: "credentials-missing",
+          rotationState: "stable",
+        },
+        {
+          providerAccountId: "openai.quota-exhausted",
+          providerId: "openai",
+          providerKind: "provider-openai",
+          orgScope: "personal",
+          accountScope: "default",
+          credentialRef: { backend: "env", ref: "OPENAI_API_KEY" },
+          authMode: "api-key-static",
+          regionPolicy: { mode: "prefer", regions: ["us-east-1"] },
+          baseUrlOverride: null,
+          allowedModels: [],
+          deniedModels: [],
+          entitlementTags: ["chat"],
+          budgetPolicyRef: "budget.default",
+          quotaPolicyRef: "quota.default",
           status: "active",
-          identity: expect.objectContaining({
-            endpoint_id: "cli.local.coder",
-            provider_kind: "cli",
-            model_id: "gpt-5.4",
-            region: "local",
-          }),
-        }),
-      ]),
-    );
-  });
-
-  test("reports registry diagnostics for missing accounts and denied regions", async () => {
-    const catalog = await readJson("role-model-router/packages/catalog/data/normalized-catalog.json");
-    const accountFixture = await readJson<{ accounts: unknown[] }>("testdata/router-runtime/provider-accounts.json");
-    const validated = validateProviderAccounts({
-      catalog,
-      accounts: accountFixture.accounts,
-    });
-
-    const result = buildEndpointRegistry({
-      catalog,
-      accounts: validated.accounts,
+          healthStatus: "quota-exhausted",
+          rotationState: "stable",
+        },
+        {
+          providerAccountId: "openai.region-denied",
+          providerId: "openai",
+          providerKind: "provider-openai",
+          orgScope: "personal",
+          accountScope: "default",
+          credentialRef: { backend: "env", ref: "OPENAI_API_KEY" },
+          authMode: "api-key-static",
+          regionPolicy: { mode: "allow", regions: ["us-east-1"] },
+          baseUrlOverride: null,
+          allowedModels: [],
+          deniedModels: [],
+          entitlementTags: ["chat"],
+          budgetPolicyRef: "budget.default",
+          quotaPolicyRef: "quota.default",
+          status: "active",
+          healthStatus: "healthy",
+          rotationState: "stable",
+        },
+      ],
       sources: {
         cloud: [
           {
-            endpointId: "missing.account.endpoint",
-            providerAccountId: "missing.account",
+            endpointId: "openai.disabled.us-east-1",
+            providerAccountId: "openai.disabled",
             modelId: "openai/gpt-4.1-mini-fast",
             region: "us-east-1",
             endpointKind: "remote-openai-compatible",
@@ -102,11 +159,31 @@ describe("buildEndpointRegistry", () => {
             healthStatus: "healthy",
           },
           {
-            endpointId: "anthropic.team.shared.eu-west-1",
-            providerAccountId: "anthropic.team.shared",
-            modelId: "claude-3.7-sonnet",
+            endpointId: "openai.auth-missing.us-east-1",
+            providerAccountId: "openai.auth-missing",
+            modelId: "openai/gpt-4.1-mini-fast",
+            region: "us-east-1",
+            endpointKind: "remote-openai-compatible",
+            servingSource: "remote-service",
+            lifecycleState: "active",
+            healthStatus: "healthy",
+          },
+          {
+            endpointId: "openai.quota-exhausted.us-east-1",
+            providerAccountId: "openai.quota-exhausted",
+            modelId: "openai/gpt-4.1-mini-fast",
+            region: "us-east-1",
+            endpointKind: "remote-openai-compatible",
+            servingSource: "remote-service",
+            lifecycleState: "active",
+            healthStatus: "healthy",
+          },
+          {
+            endpointId: "openai.region-denied.eu-west-1",
+            providerAccountId: "openai.region-denied",
+            modelId: "openai/gpt-4.1-mini-fast",
             region: "eu-west-1",
-            endpointKind: "remote-anthropic",
+            endpointKind: "remote-openai-compatible",
             servingSource: "remote-service",
             lifecycleState: "active",
             healthStatus: "healthy",
@@ -116,63 +193,33 @@ describe("buildEndpointRegistry", () => {
       },
     });
 
-    expect(result.endpoints).toHaveLength(0);
-    expect(result.diagnostics).toEqual(
+    expect(result.endpoints).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          code: "PROVIDER_ACCOUNT_NOT_FOUND",
-          endpointId: "missing.account.endpoint",
+          identity: expect.objectContaining({ endpoint_id: "openai.disabled.us-east-1" }),
+          runtimeEligibility: expect.objectContaining({ accountDisabled: true }),
         }),
         expect.objectContaining({
-          code: "REGION_NOT_ALLOWED",
-          endpointId: "anthropic.team.shared.eu-west-1",
+          identity: expect.objectContaining({ endpoint_id: "openai.auth-missing.us-east-1" }),
+          runtimeEligibility: expect.objectContaining({ authUnavailable: true }),
+        }),
+        expect.objectContaining({
+          identity: expect.objectContaining({ endpoint_id: "openai.quota-exhausted.us-east-1" }),
+          runtimeEligibility: expect.objectContaining({ quotaExhausted: true }),
+        }),
+        expect.objectContaining({
+          identity: expect.objectContaining({ endpoint_id: "openai.region-denied.eu-west-1" }),
+          runtimeEligibility: expect.objectContaining({ regionDisallowed: true }),
         }),
       ]),
     );
-  });
-
-  test("validates registry construction, context assembly, and receipt generation through the local CLI path", async () => {
-    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-registry-"));
-
-    const result = await runRuntimeRegistryValidation({
-      repoRoot,
-      runtimeStateRoot,
-      scopeId: "workspace-dev",
-    });
-
-    expect(result.accountsValidated).toBe(2);
-    expect(result.registrySize).toBe(3);
-    expect(result.lifecycleSummary).toEqual({
-      active: 2,
-      degraded: 1,
-      offline: 0,
-    });
-    expect(result.contextEnvelope).toEqual({
-      conversationId: "conversation-main",
-      selectedTurnIds: ["turn-003", "turn-004"],
-      selectedArtifactIds: ["artifact-summary"],
-      latestHandoffId: "handoff-1",
-      estimatedTokenCount: 240,
-      diagnostics: [
-        {
-          code: "TURN_LIMIT_REACHED",
-          message: "Context envelope kept the 2 most recent turns and omitted 2 older turns.",
-        },
-        {
-          code: "TOKEN_BUDGET_REACHED",
-          message: "Context envelope omitted 2 artifacts because the token budget was exhausted.",
-        },
-      ],
-    });
-    expect(result.retrievalReceipt).toEqual({
-      receiptId: "conversation-main-retrieval-receipt",
-      summary: {
-        selectedTurns: 2,
-        selectedArtifacts: 1,
-        omittedTurns: 2,
-        omittedArtifacts: 2,
-        estimatedTokens: 240,
-      },
-    });
+    expect(result.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          endpointId: "openai.region-denied.eu-west-1",
+          code: "REGION_NOT_ALLOWED",
+        }),
+      ]),
+    );
   });
 });

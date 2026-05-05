@@ -6,6 +6,7 @@
   "dependencies": {
     "@role-model/schema-tools": "workspace:*",
     "@role-model-router/core": "workspace:*",
+    "@role-model-router/protocol-routing": "workspace:*",
     "@role-model-router/profile-aggregator": "workspace:*",
     "@role-model-router/trace": "workspace:*",
     "@role-model-router/usage": "workspace:*"

@@ -114,6 +114,9 @@ importers:
       '@role-model-router/profile-aggregator':
         specifier: workspace:*
         version: link:../../role-model-router/packages/profile-aggregator
+      '@role-model-router/protocol-routing':
+        specifier: workspace:*
+        version: link:../../role-model-router/packages/protocol-routing
       '@role-model-router/trace':
         specifier: workspace:*
         version: link:../../role-model-router/packages/trace
@@ -233,6 +236,30 @@ importers:
       '@role-model/protocol-types':
         specifier: workspace:*
         version: link:../../../packages/protocol-types
+
+  role-model-router/packages/protocol-routing:
+    dependencies:
+      '@role-model-router/catalog':
+        specifier: workspace:*
+        version: link:../catalog
+      '@role-model-router/context-envelope':
+        specifier: workspace:*
+        version: link:../context-envelope
+      '@role-model-router/core':
+        specifier: workspace:*
+        version: link:../core
+      '@role-model-router/endpoint-registry':
+        specifier: workspace:*
+        version: link:../endpoint-registry
+      '@role-model-router/provider-account':
+        specifier: workspace:*
+        version: link:../provider-account
+      '@role-model-router/retrieval-receipt':
+        specifier: workspace:*
+        version: link:../retrieval-receipt
+      '@role-model-router/sqlite-memory':
+        specifier: workspace:*
+        version: link:../sqlite-memory
 
   role-model-router/packages/provider-account:
     dependencies:

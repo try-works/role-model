@@ -1,0 +1,19 @@
+
+> @role-model-router/core@0.0.0 build D:\DEV\role-model\.worktrees\08-router-runtime-protocol-routing\role-model-router\packages\core
+> tsc -p tsconfig.json
+
+../../../packages/protocol-types/src/generated.ts(275,16): error TS2304: Cannot find name 'MetricEntry'.
+../../../packages/protocol-types/src/generated.ts(276,16): error TS2304: Cannot find name 'MetricEntry'.
+../../../packages/protocol-types/src/generated.ts(277,19): error TS2304: Cannot find name 'MetricEntry'.
+../../../packages/protocol-types/src/generated.ts(278,13): error TS2304: Cannot find name 'MetricEntry'.
+../../../packages/protocol-types/src/generated.ts(279,20): error TS2304: Cannot find name 'MetricEntry'.
+../../../packages/protocol-types/src/generated.ts(280,19): error TS2304: Cannot find name 'MetricEntry'.
+src/router.ts(696,9): error TS2322: Type '{ code: string; detail: string; }[]' is not assignable to type '{ code: "CAPABILITY_MISSING" | "FORBIDDEN_CAPABILITY_PRESENT" | "MODALITY_UNSUPPORTED" | "CONTEXT_TOO_SMALL" | "TOOLS_UNSUPPORTED" | "ROLE_NOT_ALLOWED" | "TASK_NOT_SUPPORTED_BY_ROLE" | ... 11 more ... | "REVOKED"; detail: string; }[]'.
+  Type '{ code: string; detail: string; }' is not assignable to type '{ code: "CAPABILITY_MISSING" | "FORBIDDEN_CAPABILITY_PRESENT" | "MODALITY_UNSUPPORTED" | "CONTEXT_TOO_SMALL" | "TOOLS_UNSUPPORTED" | "ROLE_NOT_ALLOWED" | "TASK_NOT_SUPPORTED_BY_ROLE" | ... 11 more ... | "REVOKED"; detail: string; }'.
+    Types of property 'code' are incompatible.
+      Type 'string' is not assignable to type '"CAPABILITY_MISSING" | "FORBIDDEN_CAPABILITY_PRESENT" | "MODALITY_UNSUPPORTED" | "CONTEXT_TOO_SMALL" | "TOOLS_UNSUPPORTED" | "ROLE_NOT_ALLOWED" | "TASK_NOT_SUPPORTED_BY_ROLE" | ... 11 more ... | "REVOKED"'.
+src/router.ts(875,5): error TS2322: Type 'string[]' is not assignable to type '("BEST_TOTAL_SCORE" | "MEASURED_PROFILE_USED" | "DECLARED_PROFILE_USED" | "DEFAULT_PROFILE_USED" | "LOCAL_PREFERENCE_APPLIED" | "REMOTE_PREFERENCE_APPLIED" | "BUDGET_OPTIMIZATION" | ... 4 more ... | "FALLBACK_CHAIN_COMPUTED")[]'.
+  Type 'string' is not assignable to type '"BEST_TOTAL_SCORE" | "MEASURED_PROFILE_USED" | "DECLARED_PROFILE_USED" | "DEFAULT_PROFILE_USED" | "LOCAL_PREFERENCE_APPLIED" | "REMOTE_PREFERENCE_APPLIED" | "BUDGET_OPTIMIZATION" | ... 4 more ... | "FALLBACK_CHAIN_COMPUTED"'.
+D:\DEV\role-model\.worktrees\08-router-runtime-protocol-routing\role-model-router\packages\core:
+ΓÇëERR_PNPM_RECURSIVE_RUN_FIRST_FAILΓÇë @role-model-router/core@0.0.0 build: `tsc -p tsconfig.json`
+Exit status 2

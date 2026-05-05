@@ -1,0 +1,9 @@
+
+> @role-model-router/protocol-routing@0.0.0 build D:\DEV\role-model\.worktrees\08-router-runtime-protocol-routing\role-model-router\packages\protocol-routing
+> tsc -p tsconfig.json
+
+../core/src/router.ts(855,9): error TS2322: Type 'string[]' is not assignable to type '("BEST_TOTAL_SCORE" | "MEASURED_PROFILE_USED" | "DECLARED_PROFILE_USED" | "DEFAULT_PROFILE_USED" | "LOCAL_PREFERENCE_APPLIED" | "REMOTE_PREFERENCE_APPLIED" | "BUDGET_OPTIMIZATION" | ... 4 more ... | "FALLBACK_CHAIN_COMPUTED")[]'.
+  Type 'string' is not assignable to type '"BEST_TOTAL_SCORE" | "MEASURED_PROFILE_USED" | "DECLARED_PROFILE_USED" | "DEFAULT_PROFILE_USED" | "LOCAL_PREFERENCE_APPLIED" | "REMOTE_PREFERENCE_APPLIED" | "BUDGET_OPTIMIZATION" | ... 4 more ... | "FALLBACK_CHAIN_COMPUTED"'.
+D:\DEV\role-model\.worktrees\08-router-runtime-protocol-routing\role-model-router\packages\protocol-routing:
+ΓÇëERR_PNPM_RECURSIVE_RUN_FIRST_FAILΓÇë @role-model-router/protocol-routing@0.0.0 build: `tsc -p tsconfig.json`
+Exit status 2

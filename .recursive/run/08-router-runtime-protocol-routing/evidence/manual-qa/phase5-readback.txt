@@ -1,0 +1,22 @@
+Run 08 manual QA readback
+
+1. Fixture sanity
+- Reviewed `testdata/router-runtime/routing-request.json`
+- Reviewed `testdata/router-runtime/routing-observed-profiles.json`
+- Reviewed `testdata/router-runtime/routing-role-task.json`
+- Reviewed `testdata/router-runtime/routing-model-guidance.json`
+- Result: fixtures clearly model one runtime request, measured local/cloud candidates, role/task/binding constraints, and explicit advisory routing-model input without live provider calls
+
+2. Projection boundary
+- Reviewed `role-model-router/packages/protocol-routing/src/index.ts`
+- Reviewed `role-model-router/packages/core/src/router.ts`
+- Result: protocol-routing composes registry, continuity, receipt, and observed inputs into router-core input; router-core still owns deterministic eligibility, scoring, and tie-break behavior
+
+3. Diagnostics and validation path
+- Reviewed `/.recursive/run/08-router-runtime-protocol-routing/evidence/logs/verify/runtime-validate-routing.final.log`
+- Result: local validation emits deterministic decision JSON, retrieval-receipt summary, context-envelope summary, and routing-model diagnostics with the expected `cli.local.coder` selection
+
+4. Scope boundary
+- Reviewed `/.recursive/run/08-router-runtime-protocol-routing/00-requirements.md`
+- Reviewed `/.recursive/run/08-router-runtime-protocol-routing/04-test-summary.md`
+- Result: run 08 stops at protocol-driven routing projection and diagnostics; adapter execution, host integration, and router-decision schema widening remain out of scope
