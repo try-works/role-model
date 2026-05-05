@@ -1,6 +1,8 @@
 Run: `/.recursive/run/06-router-runtime-provider-accounts-sqlite-memory/`
 Phase: `00 Requirements`
-Status: `DRAFT`
+Status: `LOCKED`
+LockedAt: `2026-05-05T02:55:08Z`
+LockHash: `91852d431c2d8a41b1b5075fc2c88d2899f012cbcc66a3afd03bbe0510f4a5a4`
 Workflow version: `recursive-mode-audit-v1`
 Inputs:
 - `C:\Users\erikb\OneDrive\##### DEV\role-model\requirements\role-model-router-runtime-roadmap.md`

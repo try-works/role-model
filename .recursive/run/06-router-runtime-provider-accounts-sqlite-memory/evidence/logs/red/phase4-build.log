@@ -1,0 +1,33 @@
+
+> role-model@0.0.0 build D:\DEV\role-model\.worktrees\06-router-runtime-provider-accounts-sqlite-memory
+> corepack pnpm run types:generate && corepack pnpm -r --if-present build
+
+
+> role-model@0.0.0 types:generate D:\DEV\role-model\.worktrees\06-router-runtime-provider-accounts-sqlite-memory
+> corepack pnpm --filter @role-model/schema-tools exec tsx src/validate-schemas.ts generate-types
+
+Generated types for benchmark-run.schema.json
+Generated types for benchmark-suite.schema.json
+Generated types for capability-taxonomy.schema.json
+Generated types for declared-capability-profile.schema.json
+Generated types for endpoint-identity.schema.json
+Generated types for judge-score.schema.json
+Generated types for model-pack-manifest.schema.json
+Generated types for observed-performance-profile.schema.json
+Generated types for package-manifest.schema.json
+Generated types for planspec.schema.json
+Generated types for role-binding.schema.json
+Generated types for role-definition.schema.json
+Generated types for router-decision.schema.json
+Generated types for routing-policy.schema.json
+Generated types for task-definition.schema.json
+Generated types for task-execution-profile.schema.json
+Generated types for trace-event.schema.json
+Generated types for trace-span.schema.json
+Generated types for usage-event.schema.json
+Formatted 0 files in 322┬╡s. No fixes applied.
+undefined
+D:\DEV\role-model\.worktrees\06-router-runtime-provider-accounts-sqlite-memory\packages\schema-tools:
+ΓÇëERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓÇë Command failed with exit code 1: tsx src/validate-schemas.ts generate-types
+ΓÇëELIFECYCLEΓÇë Command failed with exit code 1.
+ΓÇëELIFECYCLEΓÇë Command failed with exit code 1.

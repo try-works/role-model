@@ -1,0 +1,23 @@
+
+> role-model@0.0.0 smoke D:\DEV\role-model\.worktrees\06-router-runtime-provider-accounts-sqlite-memory
+> corepack pnpm --filter @role-model-router/gateway-smoke exec tsx src/index.ts
+
+{
+  "chosen_endpoint_id": "zeta-measured",
+  "router_decision_path": "D:\\DEV\\role-model\\.worktrees\\06-router-runtime-provider-accounts-sqlite-memory\\runtime-output\\gateway-smoke\\router-decision.json",
+  "config_export_path": "D:\\DEV\\role-model\\.worktrees\\06-router-runtime-provider-accounts-sqlite-memory\\runtime-output\\router-devtools\\config-export.json",
+  "usage_summary": {
+    "by_app_id": {
+      "unknown-app": 3
+    },
+    "by_endpoint_id": {
+      "zeta-measured": 3
+    },
+    "by_model_id": {
+      "gpt-5.4": 3
+    },
+    "by_provider_kind": {
+      "provider-mcp": 3
+    }
+  }
+}

@@ -1,0 +1,4 @@
+
+> @role-model-router/sqlite-memory@0.0.0 build D:\DEV\role-model\.worktrees\06-router-runtime-provider-accounts-sqlite-memory\role-model-router\packages\sqlite-memory
+> tsc -p tsconfig.json
+
