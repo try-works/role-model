@@ -1,0 +1,11 @@
+
+> role-model@0.0.0 runtime:validate-state D:\DEV\role-model\.worktrees\06-router-runtime-provider-accounts-sqlite-memory
+> corepack pnpm --filter @role-model-router/sqlite-memory exec tsx src/cli.ts
+
+{
+  "databasePath": "C:\\Users\\erikb\\AppData\\Local\\Temp\\role-model-runtime-state\\local-validation\\memory\\memory.sqlite",
+  "schemaVersion": 1,
+  "appliedMigrations": [],
+  "accountsValidated": 2,
+  "diagnostics": []
+}

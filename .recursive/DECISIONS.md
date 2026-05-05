@@ -173,3 +173,31 @@
 - Known issues / follow-ups:
   - `runtime-output/` is ignored by repo policy, so run `05` uses tracked copies under `/role-model-router/packages/catalog/data/` as the durable handoff path
   - the broader root `build` and `test` commands still fail on the inherited schema-tools/Biome generated-types path rather than on the new catalog package
+
+### Run `06-router-runtime-provider-accounts-sqlite-memory`
+
+- Run folder: `/.recursive/run/06-router-runtime-provider-accounts-sqlite-memory/`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - added `/role-model-router/packages/provider-account/` as the runtime-owned account/auth modeling layer with credential-reference parsing, auth-mode vocabulary, region/model policy fields, and validation against the tracked normalized catalog
+  - added `/role-model-router/packages/sqlite-memory/` with the SQLite-first runtime-state location contract, WAL initialization, explicit multi-table schema, migration receipts, maintenance defaults, and provider-account persistence
+  - added pinned provider-account fixtures under `/testdata/router-runtime/` plus the repo-local `runtime:validate-state` command for local account and SQLite initialization validation
+- Why:
+  - to establish explicit provider-account/auth modeling and the first authoritative local-memory persistence baseline before widening into endpoint registry, context-envelope assembly, and routing projection work
+- How:
+  - implemented strict RED/GREEN TDD across provider-account validation, SQLite-memory schema/persistence, and the local validation CLI, then validated the new packages directly and confirmed the broader repo still shows only the inherited `packages/schema-tools` failure pattern
+- What was not done:
+  - no endpoint registry, context-envelope assembly, routing, adapter execution, host integration, raw-secret storage, or secondary memory backend implementation was added here
+- Known issues / follow-ups:
+  - the SQLite runtime path currently uses built-in `node:sqlite`, which works in the selected Node 24 environment but still emits the platform's experimental warning
+  - the broader root `build` and `test` commands still fail on the inherited schema-tools/Biome generated-types path rather than on the new provider-account or SQLite-memory packages

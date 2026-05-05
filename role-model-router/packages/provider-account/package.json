@@ -1,0 +1,17 @@
+{
+  "name": "@role-model-router/provider-account",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": ["src", "dist"],
+  "dependencies": {
+    "@role-model-router/catalog": "workspace:*"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run test/index.test.ts"
+  }
+}

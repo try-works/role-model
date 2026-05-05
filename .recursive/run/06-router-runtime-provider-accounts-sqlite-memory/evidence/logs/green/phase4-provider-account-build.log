@@ -1,0 +1,4 @@
+
+> @role-model-router/provider-account@0.0.0 build D:\DEV\role-model\.worktrees\06-router-runtime-provider-accounts-sqlite-memory\role-model-router\packages\provider-account
+> tsc -p tsconfig.json
+

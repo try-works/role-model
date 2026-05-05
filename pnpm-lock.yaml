@@ -187,6 +187,8 @@ importers:
 
   role-model-router/packages/bench-judge: {}
 
+  role-model-router/packages/catalog: {}
+
   role-model-router/packages/core:
     dependencies:
       '@role-model/protocol-types':
@@ -204,6 +206,12 @@ importers:
       '@role-model/protocol-types':
         specifier: workspace:*
         version: link:../../../packages/protocol-types
+
+  role-model-router/packages/provider-account:
+    dependencies:
+      '@role-model-router/catalog':
+        specifier: workspace:*
+        version: link:../catalog
 
   role-model-router/packages/provider-acp:
     dependencies:
@@ -226,6 +234,15 @@ importers:
   role-model-router/packages/roles: {}
 
   role-model-router/packages/runtime-web: {}
+
+  role-model-router/packages/sqlite-memory:
+    dependencies:
+      '@role-model-router/catalog':
+        specifier: workspace:*
+        version: link:../catalog
+      '@role-model-router/provider-account':
+        specifier: workspace:*
+        version: link:../provider-account
 
   role-model-router/packages/tasks: {}
 

@@ -1,0 +1,33 @@
+ M .recursive/run/06-router-runtime-provider-accounts-sqlite-memory/00-requirements.md
+ M .recursive/run/06-router-runtime-provider-accounts-sqlite-memory/00-worktree.md
+ M package.json
+ M pnpm-lock.yaml
+?? .recursive/run/06-router-runtime-provider-accounts-sqlite-memory/01-as-is.md
+?? .recursive/run/06-router-runtime-provider-accounts-sqlite-memory/02-to-be-plan.md
+?? .recursive/run/06-router-runtime-provider-accounts-sqlite-memory/03-implementation-summary.md
+?? .recursive/run/06-router-runtime-provider-accounts-sqlite-memory/evidence/logs/green/phase4-diff-scope.log
+?? .recursive/run/06-router-runtime-provider-accounts-sqlite-memory/evidence/logs/green/phase4-provider-account-build.log
+?? .recursive/run/06-router-runtime-provider-accounts-sqlite-memory/evidence/logs/green/phase4-provider-account-test.log
+?? .recursive/run/06-router-runtime-provider-accounts-sqlite-memory/evidence/logs/green/phase4-runtime-validate-state.log
+?? .recursive/run/06-router-runtime-provider-accounts-sqlite-memory/evidence/logs/green/phase4-schemas-validate.log
+?? .recursive/run/06-router-runtime-provider-accounts-sqlite-memory/evidence/logs/green/phase4-smoke.log
+?? .recursive/run/06-router-runtime-provider-accounts-sqlite-memory/evidence/logs/green/phase4-sqlite-memory-build.log
+?? .recursive/run/06-router-runtime-provider-accounts-sqlite-memory/evidence/logs/green/phase4-sqlite-memory-test.log
+?? .recursive/run/06-router-runtime-provider-accounts-sqlite-memory/evidence/logs/green/run06-provider-account-green.log
+?? .recursive/run/06-router-runtime-provider-accounts-sqlite-memory/evidence/logs/green/run06-runtime-validate-state-green.log
+?? .recursive/run/06-router-runtime-provider-accounts-sqlite-memory/evidence/logs/green/run06-sqlite-memory-green.log
+?? .recursive/run/06-router-runtime-provider-accounts-sqlite-memory/evidence/logs/red/phase4-build.log
+?? .recursive/run/06-router-runtime-provider-accounts-sqlite-memory/evidence/logs/red/phase4-test.log
+?? .recursive/run/06-router-runtime-provider-accounts-sqlite-memory/evidence/logs/red/run06-provider-account-red.log
+?? .recursive/run/06-router-runtime-provider-accounts-sqlite-memory/evidence/logs/red/run06-runtime-validate-state-red.log
+?? .recursive/run/06-router-runtime-provider-accounts-sqlite-memory/evidence/logs/red/run06-sqlite-memory-red.log
+?? role-model-router/packages/provider-account/package.json
+?? role-model-router/packages/provider-account/src/index.ts
+?? role-model-router/packages/provider-account/test/index.test.ts
+?? role-model-router/packages/provider-account/tsconfig.json
+?? role-model-router/packages/sqlite-memory/package.json
+?? role-model-router/packages/sqlite-memory/src/cli.ts
+?? role-model-router/packages/sqlite-memory/src/index.ts
+?? role-model-router/packages/sqlite-memory/test/index.test.ts
+?? role-model-router/packages/sqlite-memory/tsconfig.json
+?? testdata/router-runtime/provider-accounts.json
