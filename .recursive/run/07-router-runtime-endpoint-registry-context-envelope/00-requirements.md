@@ -9,6 +9,7 @@ Inputs:
 - `/.recursive/DECISIONS.md`
 - `/.recursive/run/05-router-runtime-catalog-foundation/00-requirements.md`
 - `/.recursive/run/06-router-runtime-provider-accounts-sqlite-memory/00-requirements.md`
+- `/docs/architecture/06-router-runtime-architecture-lock.md`
 Outputs:
 - `/.recursive/run/07-router-runtime-endpoint-registry-context-envelope/00-requirements.md`
 Scope note: This document defines the stable requirement contract for the endpoint-registry and context-envelope run. It maps roadmap `Run 07 - Endpoint registry and context envelope` onto repo run `07-router-runtime-endpoint-registry-context-envelope`.
@@ -33,6 +34,7 @@ Acceptance criteria:
 - endpoint instantiation rules are in scope
 - the runtime endpoint registry is in scope
 - local and cloud discovery integration plus lifecycle state handling are part of the run rather than deferred to a later host-only phase
+- concrete endpoint metadata remains compatible with committed `endpoint_version`, scored-candidate explainability, and the run-03 artifact/linkage model
 
 ### `R2` Establish the identity and continuity model for routed conversations
 
@@ -75,7 +77,9 @@ Acceptance criteria:
 - Repo run `07-router-runtime-endpoint-registry-context-envelope` corresponds to roadmap `Run 07 - Endpoint registry and context envelope`.
 - This run must consume the earlier catalog and provider-account/SQLite outputs as prerequisites.
 - The run must reread `C:\Users\erikb\OneDrive\##### DEV\role-model\requirements\role-model-router-runtime-roadmap.md` before later implementation phases start.
+- The architecture lock doc is the repo-native source for endpoint-instantiation ownership and the protocol-driven projection boundary.
 - The resulting registry and context-envelope outputs must be usable by the protocol-driven routing run without a second identity-model redesign.
+- The registry and context-envelope layer must preserve the committed run-03 endpoint, artifact, and linkage vocabulary.
 
 ## Assumptions
 
@@ -97,6 +101,7 @@ Acceptance criteria:
 - Add the context-envelope and retrieval-receipt model.
 - Preserve the roadmap-local validation rule:
   - run the local discovery/registry path and context-envelope assembly path
+  - confirm candidate enumeration and context-envelope assembly still compose with the committed artifact/linkage model
   - read endpoint instantiation logs, registry diagnostics, and retrieval-receipt output
   - repair newly introduced candidate-enumeration or context-envelope failures before the run is considered complete
 

@@ -8,6 +8,7 @@ Inputs:
 - `/.recursive/STATE.md`
 - `/.recursive/DECISIONS.md`
 - `/.recursive/run/11-router-runtime-observability-feedback/00-requirements.md`
+- `/docs/architecture/06-router-runtime-architecture-lock.md`
 Outputs:
 - `/.recursive/run/12-router-runtime-hardening-operations/00-requirements.md`
 Scope note: This document defines the stable requirement contract for the hardening-and-operations run. It maps roadmap `Run 12 - Hardening and operations` onto repo run `12-router-runtime-hardening-operations`.
@@ -33,6 +34,7 @@ Acceptance criteria:
 - multi-tenant validation is in scope
 - rollback handling is in scope
 - replay and shadow-routing evaluation are in scope
+- hardening work preserves the committed root validation chain and self-validating smoke/artifact baseline while the assembled runtime is stressed
 
 ### `R2` Finalize the operator-facing operational guidance
 
@@ -78,6 +80,8 @@ Acceptance criteria:
 - This run must consume the earlier observability and feedback outputs as prerequisites.
 - The run must reread `C:\Users\erikb\OneDrive\##### DEV\role-model\requirements\role-model-router-runtime-roadmap.md` before later implementation phases start.
 - The run is the final default run in the first-milestone sequence and should prefer repair or explicit documentation over silent residual breakage before the deferred extension run.
+- The architecture lock doc is the repo-native source for the single-host scope, SQLite-first memory baseline, cache policy, and local-governance expectations that hardening must preserve.
+- Hardening may not weaken the committed run-03 protocol-grade artifact, fixture-validation, and smoke-validation guarantees.
 
 ## Assumptions
 
@@ -99,6 +103,7 @@ Acceptance criteria:
 - Add replay/shadow evaluation plus backup/restore and deletion/export drills for runtime data.
 - Preserve the roadmap-local validation rule:
   - run the strongest local end-to-end path available for the assembled runtime
+  - rerun the committed baseline validation floor when hardening changes touch protocol or validation surfaces
   - read host, adapter, SQLite, and control-plane logs for failure signatures
   - repair or explicitly document remaining local operational breakage before the run is considered complete
 

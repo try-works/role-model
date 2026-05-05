@@ -8,6 +8,7 @@ Inputs:
 - `/.recursive/STATE.md`
 - `/.recursive/DECISIONS.md`
 - `/.recursive/run/04-router-runtime-architecture-lock/00-requirements.md`
+- `/docs/architecture/06-router-runtime-architecture-lock.md`
 Outputs:
 - `/.recursive/run/05-router-runtime-catalog-foundation/00-requirements.md`
 Scope note: This document defines the stable requirement contract for the catalog-foundation run. It maps roadmap `Run 05 - Catalog foundation` onto repo run `05-router-runtime-catalog-foundation`.
@@ -32,6 +33,7 @@ Acceptance criteria:
 - the run covers a normalized catalog package or equivalent role-model-owned catalog surface
 - upstream snapshot loading and validation are in scope and are treated as first-class behavior rather than ad hoc imports
 - the normalized output preserves the upstream semantics the roadmap called out, including provider/model metadata, adapter hints, `extends` provenance, and `experimental.modes` where applicable
+- the normalized output includes enough capability and version semantics to feed the committed run-03 router-decision and observed-performance contracts without inventing a second protocol vocabulary
 
 ### `R2` Enrich catalog data with local runtime semantics
 
@@ -74,7 +76,9 @@ Acceptance criteria:
 - Repo run `05-router-runtime-catalog-foundation` corresponds to roadmap `Run 05 - Catalog foundation`.
 - This run must reread `C:\Users\erikb\OneDrive\##### DEV\role-model\requirements\role-model-router-runtime-roadmap.md` before later implementation phases start.
 - The run must consume the boundary decisions captured in `04-router-runtime-architecture-lock` rather than reopening them.
+- The new architecture lock doc is the repo-native source for provider taxonomy, vendor-version, and catalog-versus-account-versus-endpoint boundaries.
 - Vendor tracking must stay role-model-owned and must not depend on mutable conversational memory.
+- Catalog outputs must remain compatible with the committed run-03 protocol baseline, especially capability negotiation, version semantics, and the fixture-driven validation floor.
 
 ## Assumptions
 
@@ -96,6 +100,7 @@ Acceptance criteria:
 - Bootstrap the vendor version ledger for the catalog source.
 - Preserve the roadmap-local validation rule:
   - run the affected local catalog/smoke/dev path
+  - confirm the catalog changes do not break the committed fixture-driven schema and smoke validation floor
   - read normalization errors, schema validation output, and local logs
   - repair newly introduced catalog regressions before the run is considered complete
 

@@ -8,6 +8,7 @@ Inputs:
 - `/.recursive/STATE.md`
 - `/.recursive/DECISIONS.md`
 - `/.recursive/run/09-router-runtime-adapter-execution-plane/00-requirements.md`
+- `/docs/architecture/06-router-runtime-architecture-lock.md`
 Outputs:
 - `/.recursive/run/10-router-runtime-host-integration/00-requirements.md`
 Scope note: This document defines the stable requirement contract for the host-integration run. It maps roadmap `Run 10 - Host integration` onto repo run `10-router-runtime-host-integration`.
@@ -32,6 +33,7 @@ Acceptance criteria:
 - `llama-swap`-based or native host integration is in scope
 - the request-serving path is in scope
 - host integration remains downstream of protocol-driven routing and provider adapters rather than replacing them
+- the host-integrated path preserves a working equivalent of the committed self-validating smoke/artifact-validation baseline
 
 ### `R2` Add lifecycle, concurrency, and artifact-emission hooks at the host layer
 
@@ -74,7 +76,9 @@ Acceptance criteria:
 - Repo run `10-router-runtime-host-integration` corresponds to roadmap `Run 10 - Host integration`.
 - This run must consume the earlier adapter execution outputs as prerequisites.
 - The run must reread `C:\Users\erikb\OneDrive\##### DEV\role-model\requirements\role-model-router-runtime-roadmap.md` before later implementation phases start.
+- The architecture lock doc is the repo-native source for the single-host local-machine assumption and the `llama-swap` execution-plane boundary.
 - If `llama-swap` is used, it must remain an execution-plane host integration and not a replacement for protocol-governed routing logic.
+- Host integration must preserve the committed run-03 protocol-grade artifact semantics and log/debug surfaces.
 
 ## Assumptions
 
@@ -95,6 +99,7 @@ Acceptance criteria:
 - Add a local operator log/capture access path.
 - Preserve the roadmap-local validation rule:
   - run the host locally and exercise the changed request path
+  - confirm the host-integrated path still emits the committed protocol-grade artifacts and exposes logs needed to debug regressions
   - read host logs, stream logs, request captures, and local runtime errors
   - repair newly introduced host integration regressions before the run is considered complete
 

@@ -1,0 +1,5 @@
+Architecture-lock readback:
+- repo-native architecture lock doc covers frozen run-03 inputs, single-host scope, SQLite-first memory, cache policy, governance, OpenTelemetry, frontend/operator boundary, and deferred MCP/tool scope
+- run 06 consumes both docs/architecture/05-memory-model.md and docs/architecture/06-router-runtime-architecture-lock.md
+- run 13 consumes docs/architecture/06-router-runtime-architecture-lock.md and keeps MCP/tool work deferred
+- rg coverage check confirmed docs/architecture/06-router-runtime-architecture-lock.md is referenced by runs 05 through 13

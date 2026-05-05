@@ -117,3 +117,31 @@
 - Known issues / follow-ups:
   - unsupported-engine warnings still persist under `Node v24`
   - repo-wide CRLF/Biome drift remains an existing Windows hygiene issue and was intentionally not widened into this run
+
+### Run `04-router-runtime-architecture-lock`
+
+- Run folder: `/.recursive/run/04-router-runtime-architecture-lock/`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - added the repo-native router-runtime architecture lock at `/docs/architecture/06-router-runtime-architecture-lock.md`
+  - updated `/docs/architecture/05-memory-model.md` so the first runtime milestone is explicitly SQLite-first, same-host, and local-disk scoped while production implementation remains deferred
+  - aligned runs `05` through `13` so later router-runtime work consumes the repo-native architecture lock instead of relying only on roadmap prose
+- Why:
+  - to freeze the runtime ownership boundaries, vendor/frontend/operator split, cache/governance expectations, and deferred MCP/tool scope before widening into catalog, account, registry, routing, adapter, host, or observability implementation work
+- How:
+  - implemented a docs-and-requirements-only Phase 3, validated via recursive lint plus the root `schemas:validate` / `build` / `test` / `smoke` chain from the selected worktree, and recorded that the inherited schema-tools/Biome failure pattern remained unchanged
+- What was not done:
+  - no catalog ingestion, provider-account subsystem, endpoint registry, routing projection, adapter execution, host integration, observability productization, or MCP/tool implementation was added in this run
+- Known issues / follow-ups:
+  - the selected run-04 worktree still reproduces the inherited `schemas:validate` PASS / `build` FAIL / `test` FAIL / `smoke` PASS pattern because `packages/schema-tools` still hits the Biome `No files were processed in the specified paths` failure during generated-type formatting
+  - the new architecture lock is now the repo-native handoff source that later runs must consume directly

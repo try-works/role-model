@@ -8,6 +8,7 @@ Inputs:
 - `/.recursive/STATE.md`
 - `/.recursive/DECISIONS.md`
 - `/.recursive/run/12-router-runtime-hardening-operations/00-requirements.md`
+- `/docs/architecture/06-router-runtime-architecture-lock.md`
 Outputs:
 - `/.recursive/run/13-router-runtime-mcp-tools-extension/00-requirements.md`
 Scope note: This document defines the stable requirement contract for the deferred MCP-and-tools-extension run. It maps roadmap `Run 13 - MCP and tools extension` onto repo run `13-router-runtime-mcp-tools-extension`.
@@ -32,6 +33,7 @@ Acceptance criteria:
 - MCP connector integration is in scope
 - provider-agnostic tool registry and execution contracts are in scope
 - the extension remains additive relative to the already-hardened first-milestone runtime
+- the extension does not reopen or replace the committed router-decision, trace, usage, observed-performance, or smoke-harness contracts from run 03
 
 ### `R2` Normalize tool-call and MCP-aware execution semantics
 
@@ -75,6 +77,8 @@ Acceptance criteria:
 - This run is a deferred extension and is not part of the first complete runtime milestone.
 - The run must consume the outputs of `12-router-runtime-hardening-operations` rather than weakening earlier guarantees.
 - The run must reread `C:\Users\erikb\OneDrive\##### DEV\role-model\requirements\role-model-router-runtime-roadmap.md` before later implementation phases start.
+- The architecture lock doc is the repo-native source that explicitly defers MCP connector and provider-agnostic tool execution work into this run.
+- MCP/tool work must remain additive to the committed run-03 baseline rather than silently redefining canonical protocol artifacts.
 
 ## Assumptions
 
@@ -96,6 +100,7 @@ Acceptance criteria:
 - Add tool- and MCP-aware observability extensions.
 - Preserve the roadmap-local validation rule:
   - run a local tool-execution path against the runtime
+  - confirm the MCP/tool extension does not silently reopen or weaken the committed run-03 protocol baseline
   - read MCP, tool-call, adapter, and host logs
   - repair or explicitly document newly introduced MCP/tool regressions before the run is considered complete
 
