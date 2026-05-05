@@ -1,0 +1,33 @@
+name: UI Tests
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'ui-svelte/**'
+      - '.github/workflows/ui-tests.yml'
+
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - 'ui-svelte/**'
+      - '.github/workflows/ui-tests.yml'
+
+  workflow_dispatch:
+
+jobs:
+
+  run-tests:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '24'
+        cache: 'npm'
+        cache-dependency-path: ui-svelte/package-lock.json
+
+    - name: Run UI tests
+      run: make test-ui

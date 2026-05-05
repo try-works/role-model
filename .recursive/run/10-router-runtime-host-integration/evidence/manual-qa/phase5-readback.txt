@@ -1,0 +1,17 @@
+Run 10 manual QA readback
+
+1. Bridge API sanity check: PASS
+   - `/healthz`, `/v1/models`, and `/v1/chat/completions` are the only bridge-owned HTTP surfaces.
+   - Unsupported streaming now returns `invalid_request_error` instead of a misleading non-streaming completion body.
+
+2. Host/operator surface sanity check: PASS
+   - `runtime:validate-host` read back `/logs`, `/api/metrics`, and `/api/captures/:id`.
+   - Validation summary included `model_count: 3`, `returned_model: openai/gpt-4.1-mini-fast`, `output_text: OpenAI summary`, and `capture_path: /v1/chat/completions`.
+
+3. Managed lifecycle sanity check: PASS
+   - The vendored host is responsible for starting and stopping the bridge process.
+   - The final stop helper now reaps the command object cleanly after kill.
+
+4. Scope boundary sanity check: PASS
+   - Run 10 remains limited to host integration, operator surfaces, and local validation.
+   - Live provider HTTP transport, final observability-feedback work, and provider-agnostic tool execution remain out of scope.

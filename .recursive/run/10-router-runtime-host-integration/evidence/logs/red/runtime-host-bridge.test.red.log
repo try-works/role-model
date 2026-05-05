@@ -1,0 +1,56 @@
+
+> @role-model-router/runtime-host-bridge@0.0.0 test D:\DEV\role-model\.worktrees\10-router-runtime-host-integration\role-model-router\apps\runtime-host-bridge
+> vitest run test/index.test.ts
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/10-router-runtime-host-integration/role-model-router/apps/runtime-host-bridge[39m
+
+ [31mΓ¥»[39m test/index.test.ts [2m([22m[2m2 tests[22m[2m | [22m[31m2 failed[39m[2m)[22m[32m 13[2mms[22m[39m
+[31m   [31m├ù[31m runtime-host-bridge[2m > [22mcreates a stable model-list response grouped by model id[39m[32m 10[2mms[22m[39m
+[31m     ΓåÆ expected 'undefined' to be 'function' // Object.is equality[39m
+[31m   [31m├ù[31m runtime-host-bridge[2m > [22mmaps a chat-completions request into role-model routing and execution inputs[39m[32m 1[2mms[22m[39m
+[31m     ΓåÆ expected 'undefined' to be 'function' // Object.is equality[39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 2 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/index.test.ts > runtime-host-bridge > creates a stable model-list response grouped by model id
+AssertionError: expected 'undefined' to be 'function' // Object.is equality
+
+Expected: "function"
+Received: "undefined"
+
+ Γ¥» test/index.test.ts:92:94
+     90| describe("runtime-host-bridge", () => {
+     91|   test("creates a stable model-list response grouped by model id", () ΓÇª
+     92|     expect(typeof (bridge as { createModelListResponse?: unknown }).crΓÇª
+       |                                                                                              ^
+     93|       "function",
+     94|     );
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/2]ΓÄ»
+
+ FAIL  test/index.test.ts > runtime-host-bridge > maps a chat-completions request into role-model routing and execution inputs
+AssertionError: expected 'undefined' to be 'function' // Object.is equality
+
+Expected: "function"
+Received: "undefined"
+
+ Γ¥» test/index.test.ts:127:7
+    125|     expect(
+    126|       typeof (bridge as { mapChatCompletionsRequest?: unknown }).mapChΓÇª
+    127|     ).toBe("function");
+       |       ^
+    128| 
+    129|     const result = (
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[2/2]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m2 failed[39m[22m[90m (2)[39m
+[2m   Start at [22m 16:05:38
+[2m   Duration [22m 653ms[2m (transform 68ms, setup 0ms, collect 71ms, tests 13ms, environment 0ms, prepare 153ms)[22m
+
+D:\DEV\role-model\.worktrees\10-router-runtime-host-integration\role-model-router\apps\runtime-host-bridge:
+ΓÇëERR_PNPM_RECURSIVE_RUN_FIRST_FAILΓÇë @role-model-router/runtime-host-bridge@0.0.0 test: `vitest run test/index.test.ts`
+Exit status 1

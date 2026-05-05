@@ -1,0 +1,11 @@
+Command: `C:\Program Files\Go\bin\go.exe test . -run 'Test(KillRoleModelBridgeProcess_ReapsProcess|RoleModelBridgeProcessHelper)$'`
+Observed before fix:
+
+```text
+# github.com/mostlygeek/llama-swap [github.com/mostlygeek/llama-swap.test]
+.\rolemodel_bridge_process_test.go:91:12: undefined: stopRoleModelBridgeProcess
+.\rolemodel_bridge_process_test.go:111:59: undefined: exec
+.\rolemodel_bridge_process_test.go:114:9: undefined: exec
+FAIL    github.com/mostlygeek/llama-swap [build failed]
+FAIL
+```

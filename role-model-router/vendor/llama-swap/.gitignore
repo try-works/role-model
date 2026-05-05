@@ -1,0 +1,7 @@
+.aider*
+.env
+build/
+dist/
+.vscode
+.DS_Store
+.dev/

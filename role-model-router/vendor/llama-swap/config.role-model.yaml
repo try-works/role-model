@@ -1,0 +1,5 @@
+logLevel: info
+metricsMaxInMemory: 100
+captureBuffer: 5
+models: {}
+groups: {}
