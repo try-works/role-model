@@ -1,0 +1,14 @@
+{
+  "name": "@role-model-router/catalog",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": ["src", "dist", "data"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run test/index.test.ts"
+  }
+}

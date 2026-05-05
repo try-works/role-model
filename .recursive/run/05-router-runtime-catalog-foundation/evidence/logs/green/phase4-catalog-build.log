@@ -1,0 +1,4 @@
+
+> @role-model-router/catalog@0.0.0 build D:\DEV\role-model\.worktrees\05-router-runtime-catalog-foundation\role-model-router\packages\catalog
+> tsc -p tsconfig.json
+

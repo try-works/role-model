@@ -1,0 +1,31 @@
+ M .recursive/run/05-router-runtime-catalog-foundation/00-requirements.md
+ M .recursive/run/05-router-runtime-catalog-foundation/00-worktree.md
+ M package.json
+?? .recursive/run/05-router-runtime-catalog-foundation/01-as-is.md
+?? .recursive/run/05-router-runtime-catalog-foundation/02-to-be-plan.md
+?? .recursive/run/05-router-runtime-catalog-foundation/03-implementation-summary.md
+?? .recursive/run/05-router-runtime-catalog-foundation/evidence/logs/green/phase4-catalog-build.log
+?? .recursive/run/05-router-runtime-catalog-foundation/evidence/logs/green/phase4-catalog-export.log
+?? .recursive/run/05-router-runtime-catalog-foundation/evidence/logs/green/phase4-catalog-test.log
+?? .recursive/run/05-router-runtime-catalog-foundation/evidence/logs/green/phase4-diff-scope.log
+?? .recursive/run/05-router-runtime-catalog-foundation/evidence/logs/green/phase4-schemas-validate.log
+?? .recursive/run/05-router-runtime-catalog-foundation/evidence/logs/green/phase4-smoke.log
+?? .recursive/run/05-router-runtime-catalog-foundation/evidence/logs/green/phase4-status-scope.log
+?? .recursive/run/05-router-runtime-catalog-foundation/evidence/logs/green/run05-catalog-cli-green.log
+?? .recursive/run/05-router-runtime-catalog-foundation/evidence/logs/green/run05-catalog-export-green.log
+?? .recursive/run/05-router-runtime-catalog-foundation/evidence/logs/green/run05-catalog-package-green.log
+?? .recursive/run/05-router-runtime-catalog-foundation/evidence/logs/red/phase4-build.log
+?? .recursive/run/05-router-runtime-catalog-foundation/evidence/logs/red/phase4-test.log
+?? .recursive/run/05-router-runtime-catalog-foundation/evidence/logs/red/run05-catalog-cli-red.log
+?? .recursive/run/05-router-runtime-catalog-foundation/evidence/logs/red/run05-catalog-export-red.log
+?? .recursive/run/05-router-runtime-catalog-foundation/evidence/logs/red/run05-catalog-package-red.log
+?? .recursive/run/05-router-runtime-catalog-foundation/subagents/run05-phase1-as-is-audit.md
+?? role-model-router/packages/catalog/data/normalized-catalog.json
+?? role-model-router/packages/catalog/data/vendor-version-ledger.json
+?? role-model-router/packages/catalog/package.json
+?? role-model-router/packages/catalog/src/cli.ts
+?? role-model-router/packages/catalog/src/index.ts
+?? role-model-router/packages/catalog/test/index.test.ts
+?? role-model-router/packages/catalog/tsconfig.json
+?? testdata/catalog/models-dev-local-overrides.json
+?? testdata/catalog/models-dev-snapshot.json

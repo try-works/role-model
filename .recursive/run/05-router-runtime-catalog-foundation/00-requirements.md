@@ -1,6 +1,8 @@
 Run: `/.recursive/run/05-router-runtime-catalog-foundation/`
 Phase: `00 Requirements`
-Status: `DRAFT`
+Status: `LOCKED`
+LockedAt: `2026-05-05T01:58:42Z`
+LockHash: `bcd97404946ddd6adf0aebe8cde98dc6497f0a45f9d4db2552522bb5f3277f70`
 Workflow version: `recursive-mode-audit-v1`
 Inputs:
 - `C:\Users\erikb\OneDrive\##### DEV\role-model\requirements\role-model-router-runtime-roadmap.md`

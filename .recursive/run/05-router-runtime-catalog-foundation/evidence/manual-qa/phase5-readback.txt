@@ -1,0 +1,17 @@
+Run 05 manual QA readback
+
+1. Compared `testdata/catalog/models-dev-snapshot.json` + `testdata/catalog/models-dev-local-overrides.json`
+   against `role-model-router/packages/catalog/data/normalized-catalog.json` and
+   `role-model-router/packages/catalog/data/vendor-version-ledger.json`.
+   Result: tracked handoff artifacts preserve the pinned `models.dev` commit, inheritance, modes, and role-model-owned enrichment.
+
+2. Read `role-model-router/packages/catalog/src/index.ts` and `src/cli.ts`.
+   Result: catalog package stays inside normalized metadata, overrides, and export concerns only; no credentials,
+   provider accounts, concrete endpoints, or routing decisions are stored there.
+
+3. Read `package.json` and `04-test-summary.md`, then checked the Phase 4 logs.
+   Result: `catalog:export`, catalog build, and catalog test are green; root `build` and `test` still fail only on the
+   inherited `packages/schema-tools` Biome generated-types path.
+
+4. Read `.gitignore` and confirmed `runtime-output/` is ignored.
+   Result: tracked copies under `role-model-router/packages/catalog/data/` are necessary for a durable run-05 handoff.
