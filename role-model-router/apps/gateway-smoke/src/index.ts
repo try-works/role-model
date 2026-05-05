@@ -1,15 +1,18 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { createRequire } from "node:module";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { routeRequest } from "@role-model-router/core";
+import { runRuntimeAdapterValidation } from "@role-model-router/adapter-execution/cli";
 import {
   aggregateObservedPerformanceSamples,
   validateObservedPerformanceProfileConsistency,
 } from "@role-model-router/profile-aggregator";
 import {
   readTraceArtifacts,
+  type TraceEventRecord,
+  type TraceSpanRecord,
   validateTraceLinkage,
   writeTraceArtifacts,
 } from "@role-model-router/trace";
@@ -19,7 +22,6 @@ import {
   summarizeUsageEvents,
   validateUsageLinkage,
 } from "@role-model-router/usage";
-import { exportStableConfig } from "@role-model-router/router-devtools";
 
 const require = createRequire(import.meta.url);
 const __filename = fileURLToPath(import.meta.url);
@@ -70,23 +72,28 @@ function deriveEndpointVersion(candidate: {
 }
 
 async function main(): Promise<void> {
-  const fixturePath = path.join(
+  const validation = await runRuntimeAdapterValidation({
     repoRoot,
-    "protocol",
-    "fixtures",
-    "router-golden",
-    "cases",
-    "measured-profile-prefers-observed.json",
-  );
-  const fixture = JSON.parse(await readFile(fixturePath, "utf8")) as {
-    input: Parameters<typeof routeRequest>[0];
-  };
-
-  const decision = routeRequest(fixture.input);
-  const chosen = fixture.input.candidates.find(
-    (candidate) => candidate.identity.endpoint_id === decision.chosen_endpoint_id,
-  );
-  if (!chosen) {
+    runtimeStateRoot: path.join(os.tmpdir(), "role-model-runtime-adapter"),
+    scopeId: "gateway-smoke",
+  });
+  const decision = validation.decision;
+  const chosen = validation.execution.target.candidate;
+  const observedProfiles = JSON.parse(
+    await readFile(path.join(repoRoot, "testdata", "router-runtime", "routing-observed-profiles.json"), "utf8"),
+  ) as Record<
+    string,
+    {
+      endpoint_id: string;
+      judge_score?: number;
+      latency_ms_p50?: number;
+      latency_ms_p95?: number;
+      tokens_per_sec?: number;
+      cost_per_1k_tokens_est?: number;
+    }
+  >;
+  const chosenObserved = observedProfiles[decision.chosen_endpoint_id];
+  if (!decision.chosen_endpoint_id) {
     throw new Error("Gateway smoke did not produce a routable endpoint.");
   }
 
@@ -99,21 +106,32 @@ async function main(): Promise<void> {
         endpoint_version: endpointVersion,
         source_type: "benchmark",
         timestamp_ms: now - 250,
-        latency_ms: chosen.observed?.latency_ms_p50 ?? 120,
-        latency_ms_p95: chosen.observed?.latency_ms_p95 ?? 180,
-        tokens_per_sec: chosen.observed?.tokens_per_sec ?? 50,
-        cost_per_1k_tokens_est: chosen.observed?.cost_per_1k_tokens_est ?? 0.001,
-        judge_score: chosen.observed?.judge_score ?? chosen.observed?.quality_score ?? 0.8,
+        latency_ms: chosenObserved?.latency_ms_p50 ?? 120,
+        latency_ms_p95: chosenObserved?.latency_ms_p95 ?? 180,
+        tokens_per_sec: chosenObserved?.tokens_per_sec ?? 50,
+        cost_per_1k_tokens_est: chosenObserved?.cost_per_1k_tokens_est ?? 0.001,
+        judge_score: chosenObserved?.judge_score ?? 0.8,
       },
       {
         endpoint_id: chosen.identity.endpoint_id,
         endpoint_version: endpointVersion,
         source_type: "live_request",
         timestamp_ms: now - 25,
-        latency_ms: chosen.observed?.latency_ms_p50 ?? 110,
-        latency_ms_p95: chosen.observed?.latency_ms_p95 ?? 160,
-        tokens_per_sec: chosen.observed?.tokens_per_sec ?? 55,
-        cost_per_1k_tokens_est: chosen.observed?.cost_per_1k_tokens_est ?? 0.001,
+        latency_ms: validation.execution.normalized.latencyMs,
+        latency_ms_p95: validation.execution.normalized.latencyMs,
+        tokens_per_sec:
+          validation.execution.normalized.usage.outputTokens > 0 &&
+          validation.execution.normalized.latencyMs > 0
+            ? Math.round(
+                (validation.execution.normalized.usage.outputTokens /
+                  validation.execution.normalized.latencyMs) *
+                  1000,
+              )
+            : chosenObserved?.tokens_per_sec ?? 55,
+        cost_per_1k_tokens_est:
+          typeof validation.execution.usageEvent.cost_estimate === "number"
+            ? validation.execution.usageEvent.cost_estimate
+            : chosenObserved?.cost_per_1k_tokens_est ?? 0.001,
         failure: false,
         request_id: decision.request_id,
         routing_decision_id: decision.routing_decision_id,
@@ -125,13 +143,13 @@ async function main(): Promise<void> {
 
   const eligibleCount = decision.eligibility.filter((candidate) => candidate.eligible).length;
   const ineligibleCount = decision.eligibility.length - eligibleCount;
-  const spans = [
+  const routingSpans: TraceSpanRecord[] = [
     {
-      trace_id: "trace-gateway-smoke",
-      span_id: "span-router-eligibility",
+      trace_id: `trace-${decision.request_id}`,
+      span_id: `span-router-eligibility-${decision.request_id}`,
       request_id: decision.request_id,
       routing_decision_id: decision.routing_decision_id,
-      span_type: "router.eligibility",
+      span_type: "router.eligibility" as const,
       started_at_ms: now,
       ended_at_ms: now + 3,
       status: "ok" as const,
@@ -141,11 +159,11 @@ async function main(): Promise<void> {
       },
     },
     {
-      trace_id: "trace-gateway-smoke",
-      span_id: "span-router-scoring",
+      trace_id: `trace-${decision.request_id}`,
+      span_id: `span-router-scoring-${decision.request_id}`,
       request_id: decision.request_id,
       routing_decision_id: decision.routing_decision_id,
-      span_type: "router.scoring",
+      span_type: "router.scoring" as const,
       started_at_ms: now + 3,
       ended_at_ms: now + 7,
       status: "ok" as const,
@@ -154,82 +172,67 @@ async function main(): Promise<void> {
       },
     },
     {
-      trace_id: "trace-gateway-smoke",
-      span_id: "span-router-selection",
+      trace_id: `trace-${decision.request_id}`,
+      span_id: `span-router-selection-${decision.request_id}`,
       request_id: decision.request_id,
       routing_decision_id: decision.routing_decision_id,
-      span_type: "router.selection",
+      span_type: "router.selection" as const,
       started_at_ms: now + 7,
       ended_at_ms: now + 10,
       status: "ok" as const,
-      attributes: { chosen_endpoint_id: decision.chosen_endpoint_id },
+      attributes: {
+        chosen_endpoint_id: decision.chosen_endpoint_id,
+      },
     },
   ];
-  const events = [
+  const routingEvents: TraceEventRecord[] = [
     {
-      event_id: "event-eligibility",
-      trace_id: "trace-gateway-smoke",
-      span_id: "span-router-eligibility",
+      event_id: `event-router-eligibility-${decision.request_id}`,
+      trace_id: `trace-${decision.request_id}`,
+      span_id: routingSpans[0].span_id,
       request_id: decision.request_id,
       routing_decision_id: decision.routing_decision_id,
       timestamp_ms: now + 1,
       event_type: "trace.span.opened" as const,
       payload: {
-        span_id: "span-router-eligibility",
-        span_type: "router.eligibility",
         eligible_count: eligibleCount,
         ineligible_count: ineligibleCount,
       },
     },
     {
-      event_id: "event-scoring",
-      trace_id: "trace-gateway-smoke",
-      span_id: "span-router-scoring",
-      request_id: decision.request_id,
-      routing_decision_id: decision.routing_decision_id,
-      timestamp_ms: now + 5,
-      event_type: "trace.span.opened" as const,
-      payload: {
-        span_id: "span-router-scoring",
-        span_type: "router.scoring",
-        scored_candidate_count: decision.scored_candidates.length,
-      },
-    },
-    {
-      event_id: "event-selection",
-      trace_id: "trace-gateway-smoke",
-      span_id: "span-router-selection",
+      event_id: `event-router-selection-${decision.request_id}`,
+      trace_id: `trace-${decision.request_id}`,
+      span_id: routingSpans[2].span_id,
       request_id: decision.request_id,
       routing_decision_id: decision.routing_decision_id,
       timestamp_ms: now + 8,
       event_type: "router.decision.created" as const,
-      payload: { chosen_endpoint_id: decision.chosen_endpoint_id },
+      payload: {
+        chosen_endpoint_id: decision.chosen_endpoint_id,
+      },
     },
   ];
+  const spans = [...routingSpans, ...validation.execution.trace.spans];
+  const events = [...routingEvents, ...validation.execution.trace.events];
   validateTraceLinkage(spans, events);
-
-  const usageEvent = {
-    event_id: "usage-gateway-smoke",
-    timestamp_ms: now + 11,
-    app_id: decision.app_id,
-    org_id: decision.org_id ?? undefined,
-    request_id: decision.request_id,
-    routing_decision_id: decision.routing_decision_id,
-    endpoint_id: chosen.identity.endpoint_id,
-    model_id: chosen.identity.model_id,
-    package_id: chosen.identity.package_id,
-    provider_kind: chosen.identity.provider_kind,
-    tokens_in: 32,
-    tokens_out: 24,
-    latency_ms: chosen.observed?.latency_ms_p95 ?? 150,
-    cost_estimate: chosen.observed?.cost_per_1k_tokens_est ?? 0,
-    currency: "USD",
-    error_class: "none",
-  };
+  const usageEvent = validation.execution.usageEvent;
   validateUsageLinkage([usageEvent], decision);
 
   const outputDir = path.join(repoRoot, "runtime-output", "gateway-smoke");
   await mkdir(outputDir, { recursive: true });
+  await Promise.all(
+    [
+      "router-decision.json",
+      "observed-performance.json",
+      "request-capture.json",
+      "response-capture.json",
+      "normalized-response.json",
+      "adapter-diagnostics.json",
+      "trace-spans.json",
+      "trace-events.jsonl",
+      "usage-events.jsonl",
+    ].map((name) => rm(path.join(outputDir, name), { force: true })),
+  );
   await writeFile(
     path.join(outputDir, "router-decision.json"),
     `${JSON.stringify(decision, null, 2)}\n`,
@@ -238,6 +241,26 @@ async function main(): Promise<void> {
   await writeFile(
     path.join(outputDir, "observed-performance.json"),
     `${JSON.stringify(observedProfile, null, 2)}\n`,
+    "utf8",
+  );
+  await writeFile(
+    path.join(outputDir, "request-capture.json"),
+    `${JSON.stringify(validation.execution.requestCapture, null, 2)}\n`,
+    "utf8",
+  );
+  await writeFile(
+    path.join(outputDir, "response-capture.json"),
+    `${JSON.stringify(validation.execution.responseCapture, null, 2)}\n`,
+    "utf8",
+  );
+  await writeFile(
+    path.join(outputDir, "normalized-response.json"),
+    `${JSON.stringify(validation.execution.normalized, null, 2)}\n`,
+    "utf8",
+  );
+  await writeFile(
+    path.join(outputDir, "adapter-diagnostics.json"),
+    `${JSON.stringify(validation.execution.diagnostics, null, 2)}\n`,
     "utf8",
   );
   await writeTraceArtifacts(outputDir, spans, events);
@@ -278,13 +301,14 @@ async function main(): Promise<void> {
     assertValid(validators.usageEvent, event, "usage-event");
   }
 
-  const configPath = await exportStableConfig();
   console.log(
     JSON.stringify(
       {
         chosen_endpoint_id: decision.chosen_endpoint_id,
+        adapter_family: validation.execution.target.adapterFamily,
         router_decision_path: path.join(outputDir, "router-decision.json"),
-        config_export_path: configPath,
+        request_capture_path: path.join(outputDir, "request-capture.json"),
+        response_capture_path: path.join(outputDir, "response-capture.json"),
         usage_summary: summarizeUsageEvents(writtenUsageEvents),
       },
       null,

@@ -23,6 +23,7 @@
     "schemas:validate": "corepack pnpm --filter @role-model/schema-tools exec tsx src/validate-schemas.ts validate",
     "types:generate": "corepack pnpm --filter @role-model/schema-tools exec tsx src/validate-schemas.ts generate-types",
     "catalog:export": "corepack pnpm --filter @role-model-router/catalog exec tsx src/cli.ts",
+    "runtime:validate-adapter": "corepack pnpm --filter @role-model-router/adapter-execution exec tsx src/cli.ts",
     "runtime:validate-registry": "corepack pnpm --filter @role-model-router/endpoint-registry exec tsx src/cli.ts",
     "runtime:validate-routing": "corepack pnpm --filter @role-model-router/protocol-routing exec tsx src/cli.ts",
     "runtime:validate-state": "corepack pnpm --filter @role-model-router/sqlite-memory exec tsx src/cli.ts",

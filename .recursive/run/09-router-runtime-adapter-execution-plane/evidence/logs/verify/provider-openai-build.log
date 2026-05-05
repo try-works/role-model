@@ -1,0 +1,4 @@
+
+> @role-model-router/provider-openai@0.0.0 build D:\DEV\role-model\.worktrees\09-router-runtime-adapter-execution-plane\role-model-router\packages\provider-openai
+> tsc -p tsconfig.json
+

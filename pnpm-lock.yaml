@@ -146,24 +146,12 @@ importers:
 
   role-model-router/apps/gateway-smoke:
     dependencies:
-      '@role-model-router/core':
+      '@role-model-router/adapter-execution':
         specifier: workspace:*
-        version: link:../../packages/core
+        version: link:../../packages/adapter-execution
       '@role-model-router/profile-aggregator':
         specifier: workspace:*
         version: link:../../packages/profile-aggregator
-      '@role-model-router/provider-acp':
-        specifier: workspace:*
-        version: link:../../packages/provider-acp
-      '@role-model-router/provider-cli':
-        specifier: workspace:*
-        version: link:../../packages/provider-cli
-      '@role-model-router/provider-mcp':
-        specifier: workspace:*
-        version: link:../../packages/provider-mcp
-      '@role-model-router/router-devtools':
-        specifier: workspace:*
-        version: link:../router-devtools
       '@role-model-router/trace':
         specifier: workspace:*
         version: link:../../packages/trace
@@ -185,6 +173,45 @@ importers:
       '@role-model/packaging':
         specifier: workspace:*
         version: link:../../../packages/packaging
+
+  role-model-router/packages/adapter-execution:
+    dependencies:
+      '@role-model-router/catalog':
+        specifier: workspace:*
+        version: link:../catalog
+      '@role-model-router/context-envelope':
+        specifier: workspace:*
+        version: link:../context-envelope
+      '@role-model-router/endpoint-registry':
+        specifier: workspace:*
+        version: link:../endpoint-registry
+      '@role-model-router/profile-aggregator':
+        specifier: workspace:*
+        version: link:../profile-aggregator
+      '@role-model-router/protocol-routing':
+        specifier: workspace:*
+        version: link:../protocol-routing
+      '@role-model-router/provider-account':
+        specifier: workspace:*
+        version: link:../provider-account
+      '@role-model-router/provider-anthropic':
+        specifier: workspace:*
+        version: link:../provider-anthropic
+      '@role-model-router/provider-openai':
+        specifier: workspace:*
+        version: link:../provider-openai
+      '@role-model-router/retrieval-receipt':
+        specifier: workspace:*
+        version: link:../retrieval-receipt
+      '@role-model-router/sqlite-memory':
+        specifier: workspace:*
+        version: link:../sqlite-memory
+      '@role-model-router/trace':
+        specifier: workspace:*
+        version: link:../trace
+      '@role-model-router/usage':
+        specifier: workspace:*
+        version: link:../usage
 
   role-model-router/packages/bench-core: {}
 
@@ -273,6 +300,12 @@ importers:
         specifier: workspace:*
         version: link:../core
 
+  role-model-router/packages/provider-anthropic:
+    dependencies:
+      '@role-model-router/adapter-execution':
+        specifier: workspace:*
+        version: link:../adapter-execution
+
   role-model-router/packages/provider-cli:
     dependencies:
       '@role-model-router/core':
@@ -284,6 +317,12 @@ importers:
       '@role-model-router/core':
         specifier: workspace:*
         version: link:../core
+
+  role-model-router/packages/provider-openai:
+    dependencies:
+      '@role-model-router/adapter-execution':
+        specifier: workspace:*
+        version: link:../adapter-execution
 
   role-model-router/packages/retrieval-receipt:
     dependencies:

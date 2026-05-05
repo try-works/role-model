@@ -1,0 +1,8 @@
+Run 09 manual QA readback
+=========================
+
+- Shared adapter execution stays readable: shared package owns orchestration, provider packages own family shaping.
+- Smoke now emits the expected adapter artifacts: request capture, response capture, normalized response, diagnostics, traces, and usage.
+- Normalized response is easy to inspect by hand: chosen OpenAI endpoint, output text, tool call, stream counters, and prompt-cache summary are all visible.
+- Diagnostics stay explicit: OpenAI path reports prompt cache unavailable instead of silently pretending support.
+- Scope stayed intact: no live provider transport, host serving, or generic tool execution was added in this run.

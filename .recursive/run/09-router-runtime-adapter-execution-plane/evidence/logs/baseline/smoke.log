@@ -1,0 +1,23 @@
+
+> role-model@0.0.0 smoke D:\DEV\role-model\.worktrees\09-router-runtime-adapter-execution-plane
+> corepack pnpm --filter @role-model-router/gateway-smoke exec tsx src/index.ts
+
+{
+  "chosen_endpoint_id": "zeta-measured",
+  "router_decision_path": "D:\\DEV\\role-model\\.worktrees\\09-router-runtime-adapter-execution-plane\\runtime-output\\gateway-smoke\\router-decision.json",
+  "config_export_path": "D:\\DEV\\role-model\\.worktrees\\09-router-runtime-adapter-execution-plane\\runtime-output\\router-devtools\\config-export.json",
+  "usage_summary": {
+    "by_app_id": {
+      "unknown-app": 1
+    },
+    "by_endpoint_id": {
+      "zeta-measured": 1
+    },
+    "by_model_id": {
+      "gpt-5.4": 1
+    },
+    "by_provider_kind": {
+      "provider-mcp": 1
+    }
+  }
+}

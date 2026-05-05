@@ -258,3 +258,32 @@
   - `@role-model/conformance build` still fails on older `src/router-conformance.test.ts` typing debt rather than on the new run-08 file
   - the broader root `build` and `test` commands still fail on the inherited schema-tools/Biome generated-types path
   - the local validation path still uses built-in `node:sqlite`, which works in the selected Node 24 environment but still emits the platform's experimental warning
+
+### Run `09-router-runtime-adapter-execution-plane`
+
+- Run folder: `/.recursive/run/09-router-runtime-adapter-execution-plane/`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - added `/role-model-router/packages/adapter-execution/` as the shared runtime-owned execution plane that resolves routed targets, negotiates adapter capabilities, shapes canonical request/response captures, and emits normalized trace and usage outputs
+  - added `/role-model-router/packages/provider-openai/` and `/role-model-router/packages/provider-anthropic/` as the first concrete provider-family adapters with family-specific request builders and response normalizers
+  - added pinned runtime adapter fixtures under `/testdata/router-runtime/`, added the repo-local `runtime:validate-adapter` command, and upgraded `/role-model-router/apps/gateway-smoke/` to execute the routed adapter path and emit capture artifacts
+- Why:
+  - to establish the mandatory execution-plane boundary between protocol routing and later host/transport work without depending on live provider I/O
+- How:
+  - implemented strict RED/GREEN TDD across the shared execution contract, first-family adapters, fixture-backed validation CLI, and smoke integration, then validated the new packages directly while keeping the broader inherited workspace failures explicitly separated
+- What was not done:
+  - no live provider HTTP transport, request-serving host integration, provider-agnostic tool execution, or MCP/tool-extension work was added here
+- Known issues / follow-ups:
+  - the shared-package and first-family split currently produces a workspace cycle warning between `adapter-execution` and `provider-anthropic`, though targeted install/build/test flows remain green
+  - the broader root `build` and `test` commands still fail on the inherited schema-tools/Biome generated-types path
+  - the local runtime-state and routing validation path still uses built-in `node:sqlite`, which works in the selected Node 24 environment but still emits the platform's experimental warning

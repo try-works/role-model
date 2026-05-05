@@ -1,0 +1,49 @@
+{
+  "messages": [
+    {
+      "role": "system",
+      "content": "You explain routing outcomes."
+    },
+    {
+      "role": "user",
+      "content": "Summarize the chosen endpoint and why it was selected."
+    }
+  ],
+  "maxOutputTokens": 256,
+  "temperature": 0.2,
+  "stream": true,
+  "tools": [
+    {
+      "name": "lookupRegistry",
+      "description": "Look up endpoint details.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "endpointId": {
+            "type": "string"
+          }
+        },
+        "required": ["endpointId"]
+      }
+    }
+  ],
+  "structuredOutput": {
+    "name": "routing_summary",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "winner": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        }
+      },
+      "required": ["winner", "reason"]
+    }
+  },
+  "promptCache": {
+    "mode": "prefer",
+    "key": "conversation-main"
+  }
+}

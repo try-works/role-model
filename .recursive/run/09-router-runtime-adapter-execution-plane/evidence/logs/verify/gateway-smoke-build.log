@@ -1,0 +1,4 @@
+
+> @role-model-router/gateway-smoke@0.0.0 build D:\DEV\role-model\.worktrees\09-router-runtime-adapter-execution-plane\role-model-router\apps\gateway-smoke
+> tsc -p tsconfig.json
+

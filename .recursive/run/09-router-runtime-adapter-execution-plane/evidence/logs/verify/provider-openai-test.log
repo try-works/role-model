@@ -1,0 +1,14 @@
+
+> @role-model-router/provider-openai@0.0.0 test D:\DEV\role-model\.worktrees\09-router-runtime-adapter-execution-plane\role-model-router\packages\provider-openai
+> vitest run test/index.test.ts
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/09-router-runtime-adapter-execution-plane/role-model-router/packages/provider-openai[39m
+
+ [32mΓ£ô[39m test/index.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 6[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m   Start at [22m 13:57:44
+[2m   Duration [22m 670ms[2m (transform 78ms, setup 0ms, collect 83ms, tests 6ms, environment 0ms, prepare 151ms)[22m
+

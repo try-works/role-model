@@ -4,12 +4,8 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "@role-model-router/core": "workspace:*",
+    "@role-model-router/adapter-execution": "workspace:*",
     "@role-model-router/profile-aggregator": "workspace:*",
-    "@role-model-router/provider-acp": "workspace:*",
-    "@role-model-router/provider-cli": "workspace:*",
-    "@role-model-router/provider-mcp": "workspace:*",
-    "@role-model-router/router-devtools": "workspace:*",
     "@role-model-router/trace": "workspace:*",
     "@role-model-router/usage": "workspace:*"
   },

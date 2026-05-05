@@ -1,0 +1,26 @@
+{
+  "id": "resp_test_01",
+  "model": "openai/gpt-4.1-mini-fast",
+  "output": [
+    {
+      "type": "message",
+      "role": "assistant",
+      "content": [
+        {
+          "type": "output_text",
+          "text": "OpenAI summary"
+        }
+      ]
+    },
+    {
+      "type": "function_call",
+      "call_id": "call_1",
+      "name": "lookupRegistry",
+      "arguments": "{\"endpointId\":\"openai.personal.primary.us-east-1.fast\"}"
+    }
+  ],
+  "usage": {
+    "input_tokens": 32,
+    "output_tokens": 24
+  }
+}

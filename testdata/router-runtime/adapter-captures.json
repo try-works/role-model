@@ -1,0 +1,10 @@
+{
+  "byEndpointId": {
+    "openai.personal.primary.us-east-1.fast": {
+      "responseFixture": "adapter-openai-response.json"
+    },
+    "anthropic.team.shared.us-east-1.default": {
+      "responseFixture": "adapter-anthropic-response.json"
+    }
+  }
+}

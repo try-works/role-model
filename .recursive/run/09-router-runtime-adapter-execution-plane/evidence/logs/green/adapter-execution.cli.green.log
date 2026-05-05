@@ -1,0 +1,17 @@
+
+> @role-model-router/adapter-execution@0.0.0 test D:\DEV\role-model\.worktrees\09-router-runtime-adapter-execution-plane\role-model-router\packages\adapter-execution
+> vitest run
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/09-router-runtime-adapter-execution-plane/role-model-router/packages/adapter-execution[39m
+
+ [32mΓ£ô[39m test/index.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+(node:35908) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [32mΓ£ô[39m test/cli.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 71[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m2 passed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[32m3 passed[39m[22m[90m (3)[39m
+[2m   Start at [22m 13:56:11
+[2m   Duration [22m 893ms[2m (transform 254ms, setup 0ms, collect 351ms, tests 77ms, environment 0ms, prepare 415ms)[22m
+
