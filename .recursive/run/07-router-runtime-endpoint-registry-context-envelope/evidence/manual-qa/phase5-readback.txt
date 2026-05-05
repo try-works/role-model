@@ -1,0 +1,19 @@
+Run 07 manual QA readback
+=========================
+
+Inspected files:
+- role-model-router/packages/endpoint-registry/src/index.ts
+- role-model-router/packages/endpoint-registry/src/cli.ts
+- role-model-router/packages/context-envelope/src/index.ts
+- role-model-router/packages/retrieval-receipt/src/index.ts
+- role-model-router/packages/sqlite-memory/src/index.ts
+- testdata/router-runtime/registry-sources.json
+- testdata/router-runtime/context-envelope.json
+- .recursive/run/08-router-runtime-protocol-routing/00-requirements.md
+
+Readback notes:
+- registry construction stays limited to catalog/account/discovery synthesis plus lifecycle diagnostics
+- continuity assembly stays on the existing SQLite tables and uses deterministic token-budget selection
+- retrieval receipts summarize selected context with stable inclusion reasons and without routing decisions
+- runtime:validate-registry prints registry, envelope, and receipt diagnostics only
+- run 08 still owns protocol-driven routing projection, configurable routing-model logic, and adapter/host work

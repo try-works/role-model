@@ -1,0 +1,40 @@
+
+> @role-model-router/sqlite-memory@0.0.0 test D:\DEV\role-model\.worktrees\07-router-runtime-endpoint-registry-context-envelope\role-model-router\packages\sqlite-memory
+> vitest run test/index.test.ts
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/07-router-runtime-endpoint-registry-context-envelope/role-model-router/packages/sqlite-memory[39m
+
+(node:38776) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [31mΓ¥»[39m test/index.test.ts [2m([22m[2m5 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 226[2mms[22m[39m
+   [32mΓ£ô[39m initializeSqliteMemory[2m > [22mcreates the planned schema, WAL mode, and initial migration receipt under the runtime state root[32m 41[2mms[22m[39m
+   [32mΓ£ô[39m initializeSqliteMemory[2m > [22mpersists validated provider accounts by credential reference without storing raw secrets[32m 47[2mms[22m[39m
+   [32mΓ£ô[39m initializeSqliteMemory[2m > [22mrecords explicit maintenance defaults and idempotent migration behavior[32m 51[2mms[22m[39m
+[31m   [31m├ù[31m initializeSqliteMemory[2m > [22mpersists and reloads the continuity rows needed for bounded context assembly[39m[32m 41[2mms[22m[39m
+[31m     ΓåÆ (0 , persistContinuitySnapshot) is not a function[39m
+   [32mΓ£ô[39m runRuntimeStateValidation[2m > [22mvalidates provider accounts and initializes SQLite through the local validation path[32m 45[2mms[22m[39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/index.test.ts > initializeSqliteMemory > persists and reloads the continuity rows needed for bounded context assembly
+TypeError: (0 , persistContinuitySnapshot) is not a function
+ Γ¥» test/index.test.ts:206:5
+    204|     });
+    205| 
+    206|     persistContinuitySnapshot({
+       |     ^
+    207|       databasePath: initialized.databasePath,
+    208|       session: fixture.session,
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m4 passed[39m[22m[90m (5)[39m
+[2m   Start at [22m 11:40:21
+[2m   Duration [22m 905ms[2m (transform 95ms, setup 0ms, collect 102ms, tests 226ms, environment 0ms, prepare 196ms)[22m
+
+D:\DEV\role-model\.worktrees\07-router-runtime-endpoint-registry-context-envelope\role-model-router\packages\sqlite-memory:
+ΓÇëERR_PNPM_RECURSIVE_RUN_FIRST_FAILΓÇë @role-model-router/sqlite-memory@0.0.0 test: `vitest run test/index.test.ts`
+Exit status 1

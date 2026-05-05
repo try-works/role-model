@@ -9,7 +9,15 @@ import { describe, expect, test } from "vitest";
 import { validateProviderAccounts } from "@role-model-router/provider-account";
 
 import { runRuntimeStateValidation } from "../src/cli.ts";
-import { initializeSqliteMemory, persistProviderAccounts, resolveSqliteMemoryLocation } from "../src/index.ts";
+import {
+  initializeSqliteMemory,
+  persistContinuitySnapshot,
+  persistProviderAccounts,
+  persistRetrievalReceipt,
+  readConversationContinuity,
+  readRetrievalReceipts,
+  resolveSqliteMemoryLocation,
+} from "../src/index.ts";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -147,6 +155,120 @@ describe("initializeSqliteMemory", () => {
         { maintenance_key: "retention.class", maintenance_value: "standard" },
       ]),
     );
+  });
+
+  test("persists and reloads the continuity rows needed for bounded context assembly", async () => {
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+    const fixture = await readJson<{
+      session: {
+        sessionId: string;
+        workspaceScope: string;
+        createdAtMs: number;
+        updatedAtMs: number;
+      };
+      conversation: {
+        conversationId: string;
+        sessionId: string;
+        createdAtMs: number;
+        updatedAtMs: number;
+      };
+      turns: Array<{
+        turnId: string;
+        conversationId: string;
+        role: string;
+        contentRef: string;
+        createdAtMs: number;
+      }>;
+      artifacts: Array<{
+        artifactId: string;
+        artifactKind: string;
+        storageRef: string;
+        createdAtMs: number;
+      }>;
+      artifactLinks: Array<{
+        linkId: string;
+        artifactId: string;
+        conversationId: string | null;
+        sessionId: string | null;
+        createdAtMs: number;
+      }>;
+      handoffs: Array<{
+        handoffId: string;
+        conversationId: string | null;
+        fromEndpointId: string | null;
+        toEndpointId: string | null;
+        createdAtMs: number;
+      }>;
+    }>("testdata/router-runtime/context-envelope.json");
+    const initialized = initializeSqliteMemory({
+      runtimeStateRoot,
+      scopeId: "workspace-dev",
+    });
+
+    persistContinuitySnapshot({
+      databasePath: initialized.databasePath,
+      session: fixture.session,
+      conversation: fixture.conversation,
+      turns: fixture.turns,
+      artifacts: fixture.artifacts,
+      artifactLinks: fixture.artifactLinks,
+      handoffs: fixture.handoffs,
+    });
+
+    const continuity = readConversationContinuity({
+      databasePath: initialized.databasePath,
+      conversationId: fixture.conversation.conversationId,
+    });
+
+    expect(continuity.session).toEqual(fixture.session);
+    expect(continuity.conversation).toEqual(fixture.conversation);
+    expect(continuity.turns.map((turn) => turn.turnId)).toEqual(["turn-001", "turn-002", "turn-003", "turn-004"]);
+    expect(continuity.artifacts.map((artifact) => artifact.artifactId)).toEqual([
+      "artifact-stale",
+      "artifact-summary",
+      "artifact-policy",
+    ]);
+    expect(continuity.handoffs).toEqual([
+      {
+        handoffId: "handoff-1",
+        conversationId: "conversation-main",
+        fromEndpointId: "openai.personal.primary.us-east-1.fast",
+        toEndpointId: "anthropic.team.shared.us-east-1.default",
+        createdAtMs: 1700000003500,
+      },
+    ]);
+  });
+
+  test("persists retrieval receipts for later routing diagnostics", async () => {
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+    const initialized = initializeSqliteMemory({
+      runtimeStateRoot,
+      scopeId: "workspace-dev",
+    });
+
+    persistRetrievalReceipt({
+      databasePath: initialized.databasePath,
+      retrievalReceiptId: "conversation-main-retrieval-receipt",
+      conversationId: "conversation-main",
+      receiptSummary: JSON.stringify({
+        selectedTurns: 2,
+        selectedArtifacts: 1,
+        estimatedTokens: 240,
+      }),
+    });
+
+    expect(
+      readRetrievalReceipts({
+        databasePath: initialized.databasePath,
+        conversationId: "conversation-main",
+      }),
+    ).toEqual([
+      {
+        retrievalReceiptId: "conversation-main-retrieval-receipt",
+        conversationId: "conversation-main",
+        receiptSummary: "{\"selectedTurns\":2,\"selectedArtifacts\":1,\"estimatedTokens\":240}",
+      },
+    ]);
   });
 });
 

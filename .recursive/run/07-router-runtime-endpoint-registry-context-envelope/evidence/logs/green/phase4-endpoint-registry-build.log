@@ -1,0 +1,4 @@
+
+> @role-model-router/endpoint-registry@0.0.0 build D:\DEV\role-model\.worktrees\07-router-runtime-endpoint-registry-context-envelope\role-model-router\packages\endpoint-registry
+> tsc -p tsconfig.json
+
