@@ -1,0 +1,85 @@
+ok  	github.com/mostlygeek/llama-swap	1.415s
+?   	github.com/mostlygeek/llama-swap/cmd/misc/benchmark-chatcompletion	[no test files]
+?   	github.com/mostlygeek/llama-swap/cmd/misc/process-cmd-test	[no test files]
+?   	github.com/mostlygeek/llama-swap/cmd/simple-responder	[no test files]
+?   	github.com/mostlygeek/llama-swap/cmd/wol-proxy	[no test files]
+ok  	github.com/mostlygeek/llama-swap/event	1.037s
+[WARN] non-200 response, recording partial metrics: status=400, path=/test
+[WARN] metrics: empty body, recording minimal metrics
+[WARN] metrics: invalid JSON in response body path=/test, recording minimal metrics
+[WARN] error processing streaming response: no valid JSON data found in stream, path=/test, recording minimal metrics
+[WARN] metrics: empty body, recording minimal metrics
+[WARN] metrics: decompression failed: gzip: invalid header, path=/test, recording minimal metrics
+[WARN] capture 0 too large (380 bytes), skipping: item exceeds maximum cache size
+[WARN] peer beta-peer: model duplicate-model already mapped to another peer, skipping
+SUCCESS: The process with PID 12704 (child process of PID 35428) has been terminated.
+SUCCESS: The process with PID 35428 (child process of PID 5524) has been terminated.
+SUCCESS: The process with PID 43372 (child process of PID 20592) has been terminated.
+SUCCESS: The process with PID 20592 (child process of PID 5524) has been terminated.
+SUCCESS: The process with PID 37108 (child process of PID 6976) has been terminated.
+SUCCESS: The process with PID 6976 (child process of PID 5524) has been terminated.
+SUCCESS: The process with PID 13104 (child process of PID 20604) has been terminated.
+SUCCESS: The process with PID 20604 (child process of PID 5524) has been terminated.
+SUCCESS: The process with PID 41560 (child process of PID 27468) has been terminated.
+SUCCESS: The process with PID 27468 (child process of PID 5524) has been terminated.
+SUCCESS: The process with PID 22180 (child process of PID 17860) has been terminated.
+SUCCESS: The process with PID 17860 (child process of PID 5524) has been terminated.
+--- FAIL: TestProcess_ExitInterruptsHealthCheck (0.02s)
+    process_test.go:339: 
+        	Error Trace:	D:/DEV/role-model/.worktrees/11-router-runtime-observability-feedback/role-model-router/vendor/llama-swap/proxy/process_test.go:339
+        	Error:      	Not equal: 
+        	            	expected: "upstream command exited prematurely but successfully"
+        	            	actual  : "start() failed for command 'sleep 1': exec: \"sleep\": executable file not found in %PATH%"
+        	            	
+        	            	Diff:
+        	            	--- Expected
+        	            	+++ Actual
+        	            	@@ -1 +1 @@
+        	            	-upstream command exited prematurely but successfully
+        	            	+start() failed for command 'sleep 1': exec: "sleep": executable file not found in %PATH%
+        	Test:       	TestProcess_ExitInterruptsHealthCheck
+SUCCESS: The process with PID 29156 (child process of PID 40904) has been terminated.
+SUCCESS: The process with PID 40904 (child process of PID 5524) has been terminated.
+SUCCESS: The process with PID 13828 (child process of PID 30544) has been terminated.
+SUCCESS: The process with PID 30544 (child process of PID 5524) has been terminated.
+2026/05/05 18:57:32 httputil: ReverseProxy read error during body copy: read tcp 127.0.0.1:61054->127.0.0.1:12025: wsarecv: An existing connection was forcibly closed by the remote host.
+2026/05/05 18:57:32 suppressing panic for copyResponse error in test; copy error: read tcp 127.0.0.1:61054->127.0.0.1:12025: wsarecv: An existing connection was forcibly closed by the remote host.
+SUCCESS: The process with PID 34432 (child process of PID 41468) has been terminated.
+SUCCESS: The process with PID 41468 (child process of PID 5524) has been terminated.
+SUCCESS: The process with PID 23412 (child process of PID 30776) has been terminated.
+SUCCESS: The process with PID 30776 (child process of PID 5524) has been terminated.
+SUCCESS: The process with PID 38420 (child process of PID 42396) has been terminated.
+SUCCESS: The process with PID 42396 (child process of PID 5524) has been terminated.
+SUCCESS: The process with PID 29056 (child process of PID 36560) has been terminated.
+SUCCESS: The process with PID 36560 (child process of PID 5524) has been terminated.
+[WARN] <model5> ExitError >> exit status 1, exit code: 1
+SUCCESS: The process with PID 38012 (child process of PID 28632) has been terminated.
+SUCCESS: The process with PID 28632 (child process of PID 5524) has been terminated.
+[WARN] <model2> ExitError >> exit status 1, exit code: 1
+SUCCESS: The process with PID 42392 (child process of PID 38324) has been terminated.
+SUCCESS: The process with PID 38324 (child process of PID 5524) has been terminated.
+[WARN] <model1> ExitError >> exit status 1, exit code: 1
+SUCCESS: The process with PID 13252 (child process of PID 40052) has been terminated.
+SUCCESS: The process with PID 40052 (child process of PID 5524) has been terminated.
+[WARN] <model3> ExitError >> exit status 1, exit code: 1
+SUCCESS: The process with PID 26892 (child process of PID 23852) has been terminated.
+SUCCESS: The process with PID 23852 (child process of PID 5524) has been terminated.
+[WARN] <model4> ExitError >> exit status 1, exit code: 1
+SUCCESS: The process with PID 40824 (child process of PID 41552) has been terminated.
+SUCCESS: The process with PID 41552 (child process of PID 5524) has been terminated.
+[WARN] <model3> ExitError >> exit status 1, exit code: 1
+SUCCESS: The process with PID 40268 (child process of PID 13232) has been terminated.
+SUCCESS: The process with PID 13232 (child process of PID 5524) has been terminated.
+[WARN] <model4> ExitError >> exit status 1, exit code: 1
+[INFO] Request 192.0.2.1 "GET /logs/stream/matrix-model HTTP/1.1" 200 -1 "" 100.3555ms
+[INFO] Request 192.0.2.1 "POST /v1/chat/completions HTTP/1.1" 200 263 "" 994.7┬╡s
+[INFO] Request 192.0.2.1 "GET /v1/models HTTP/1.1" 200 159 "" 713.3┬╡s
+[INFO] Request 192.0.2.1 "GET /api/role-model/requests HTTP/1.1" 200 35 "" 812.6┬╡s
+[INFO] Request 192.0.2.1 "GET /api/role-model/requests/req-runtime-bridge-route-001 HTTP/1.1" 200 64 "" 316.2┬╡s
+[INFO] Request 192.0.2.1 "GET /api/role-model/endpoints/openai.personal.primary.us-east-1.fast/profile HTTP/1.1" 200 83 "" 0s
+FAIL
+FAIL	github.com/mostlygeek/llama-swap/proxy	37.218s
+ok  	github.com/mostlygeek/llama-swap/proxy/cache	0.647s
+ok  	github.com/mostlygeek/llama-swap/proxy/config	0.897s
+ok  	github.com/mostlygeek/llama-swap/proxy/configwatcher	1.398s
+FAIL

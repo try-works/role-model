@@ -1,6 +1,8 @@
 Run: `/.recursive/run/11-router-runtime-observability-feedback/`
 Phase: `00 Requirements`
-Status: `DRAFT`
+Status: `LOCKED`
+LockedAt: `2026-05-05T10:13:22Z`
+LockHash: `76f2061830b282112899a66c3f00f9d46f07d91fe9f0b6def706e6b16708b42c`
 Workflow version: `recursive-mode-audit-v1`
 Inputs:
 - `C:\Users\erikb\OneDrive\##### DEV\role-model\requirements\role-model-router-runtime-roadmap.md`

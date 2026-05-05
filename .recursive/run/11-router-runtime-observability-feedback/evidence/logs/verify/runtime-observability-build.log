@@ -1,0 +1,4 @@
+
+> @role-model-router/runtime-observability@0.0.0 build D:\DEV\role-model\.worktrees\11-router-runtime-observability-feedback\role-model-router\packages\runtime-observability
+> tsc -p tsconfig.json
+

@@ -1,0 +1,7 @@
+Run 11 manual QA readback
+========================
+
+- Structured request inspection is readable: the validator returns a single request with stable request, endpoint, trace, and OTEL linkage fields.
+- Profile inspection is readable: the validator reports `structured_profile_sample_size: 2`, and smoke emits matching request-observation and OTEL artifacts.
+- Raw capture remains vendor-owned and separate from the role-model-owned structured inspection layer.
+- Scope stayed narrow: no protocol-schema changes, no run-12 hardening work, and no MCP/tool-extension widening were introduced.

@@ -2,6 +2,8 @@ import path from "node:path";
 import { mkdirSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
 
+import type { ObservedPerformanceProfile } from "@role-model/protocol-types";
+import type { ObservedPerformanceSample } from "@role-model-router/profile-aggregator";
 import type { ProviderAccountRecord } from "@role-model-router/provider-account";
 
 const INITIAL_MIGRATION_ID = "run06-v1-initial-schema";
@@ -104,6 +106,29 @@ CREATE TABLE IF NOT EXISTS migration_receipts (
   schema_version INTEGER NOT NULL,
   applied_at_ms INTEGER NOT NULL,
   status TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS runtime_observations (
+  request_id TEXT PRIMARY KEY,
+  routing_decision_id TEXT NOT NULL,
+  endpoint_id TEXT NOT NULL,
+  conversation_id TEXT NOT NULL,
+  created_at_ms INTEGER NOT NULL,
+  observation_json TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS observed_performance_samples (
+  sample_id TEXT PRIMARY KEY,
+  endpoint_id TEXT NOT NULL,
+  request_id TEXT,
+  routing_decision_id TEXT,
+  source_type TEXT NOT NULL,
+  timestamp_ms INTEGER NOT NULL,
+  sample_json TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS observed_profile_snapshots (
+  snapshot_id TEXT PRIMARY KEY,
+  endpoint_id TEXT NOT NULL,
+  measured_at_ms INTEGER NOT NULL,
+  profile_json TEXT NOT NULL
 );
 `;
 
@@ -214,6 +239,56 @@ export interface RetrievalReceiptRecord {
   readonly retrievalReceiptId: string;
   readonly conversationId: string | null;
   readonly receiptSummary: string;
+}
+
+export interface PersistRuntimeObservationBundleInput {
+  readonly databasePath: string;
+  readonly observation: PersistedRuntimeObservationBundle;
+}
+
+export interface ReadRuntimeObservationBundleInput {
+  readonly databasePath: string;
+  readonly requestId: string;
+}
+
+export interface ReadObservedPerformanceSamplesInput {
+  readonly databasePath: string;
+  readonly endpointId: string;
+}
+
+export interface ReadLatestObservedProfileInput {
+  readonly databasePath: string;
+  readonly endpointId: string;
+}
+
+export interface ReadRuntimeMaintenancePolicyInput {
+  readonly databasePath: string;
+}
+
+export interface RuntimeObservationSummaryRecord {
+  readonly requestId: string;
+  readonly routingDecisionId: string;
+  readonly endpointId: string;
+  readonly createdAtMs: number;
+}
+
+export interface ListRecentRuntimeObservationsInput {
+  readonly databasePath: string;
+  readonly limit?: number;
+}
+
+export interface PersistedRuntimeObservationBundle {
+  readonly requestId: string;
+  readonly routingDecisionId: string;
+  readonly endpointId: string;
+  readonly conversationId: string;
+  readonly usageEvent: {
+    readonly timestamp_ms: number;
+  };
+  readonly observedPerformance: {
+    readonly sample: ObservedPerformanceSample;
+    readonly profile: ObservedPerformanceProfile;
+  };
 }
 
 function ensureNonEmpty(value: string, label: string): string {
@@ -547,5 +622,141 @@ export function readRetrievalReceipts(input: ReadRetrievalReceiptsInput): readon
     retrievalReceiptId: row.retrieval_receipt_id,
     conversationId: row.conversation_id,
     receiptSummary: row.receipt_summary,
+  }));
+}
+
+function sampleIdFor(sample: ObservedPerformanceSample): string {
+  return sample.request_id ?? `${sample.endpoint_id}:${sample.timestamp_ms}:${sample.source_type}`;
+}
+
+export function readRuntimeMaintenancePolicy(
+  input: ReadRuntimeMaintenancePolicyInput,
+): Readonly<Record<string, string>> {
+  const database = new DatabaseSync(input.databasePath);
+  const rows = database
+    .prepare(
+      "SELECT maintenance_key, maintenance_value FROM memory_maintenance ORDER BY maintenance_key ASC",
+    )
+    .all() as Array<{
+    maintenance_key: string;
+    maintenance_value: string;
+  }>;
+  database.close();
+
+  return Object.fromEntries(rows.map((row) => [row.maintenance_key, row.maintenance_value]));
+}
+
+export function persistRuntimeObservationBundle(input: PersistRuntimeObservationBundleInput): void {
+  const database = new DatabaseSync(input.databasePath);
+  const observation = input.observation;
+  database
+    .prepare(
+      "INSERT OR REPLACE INTO runtime_observations (request_id, routing_decision_id, endpoint_id, conversation_id, created_at_ms, observation_json) VALUES (?, ?, ?, ?, ?, ?)",
+    )
+    .run(
+      observation.requestId,
+      observation.routingDecisionId,
+      observation.endpointId,
+      observation.conversationId,
+      observation.usageEvent.timestamp_ms,
+      JSON.stringify(observation),
+    );
+  database
+    .prepare(
+      "INSERT OR REPLACE INTO observed_performance_samples (sample_id, endpoint_id, request_id, routing_decision_id, source_type, timestamp_ms, sample_json) VALUES (?, ?, ?, ?, ?, ?, ?)",
+    )
+    .run(
+      sampleIdFor(observation.observedPerformance.sample),
+      observation.endpointId,
+      observation.observedPerformance.sample.request_id ?? null,
+      observation.observedPerformance.sample.routing_decision_id ?? null,
+      observation.observedPerformance.sample.source_type,
+      observation.observedPerformance.sample.timestamp_ms,
+      JSON.stringify(observation.observedPerformance.sample),
+    );
+  database
+    .prepare(
+      "INSERT OR REPLACE INTO observed_profile_snapshots (snapshot_id, endpoint_id, measured_at_ms, profile_json) VALUES (?, ?, ?, ?)",
+    )
+    .run(
+      `${observation.endpointId}:${observation.observedPerformance.profile.measured_at_ms}`,
+      observation.endpointId,
+      observation.observedPerformance.profile.measured_at_ms,
+      JSON.stringify(observation.observedPerformance.profile),
+    );
+  database.close();
+}
+
+export function readRuntimeObservationBundle(
+  input: ReadRuntimeObservationBundleInput,
+): PersistedRuntimeObservationBundle | null {
+  const database = new DatabaseSync(input.databasePath);
+  const row = database
+    .prepare("SELECT observation_json FROM runtime_observations WHERE request_id = ?")
+    .get(input.requestId) as
+    | {
+        observation_json: string;
+      }
+    | undefined;
+  database.close();
+
+  return row ? (JSON.parse(row.observation_json) as PersistedRuntimeObservationBundle) : null;
+}
+
+export function readObservedPerformanceSamples(
+  input: ReadObservedPerformanceSamplesInput,
+): readonly ObservedPerformanceSample[] {
+  const database = new DatabaseSync(input.databasePath);
+  const rows = database
+    .prepare(
+      "SELECT sample_json FROM observed_performance_samples WHERE endpoint_id = ? ORDER BY timestamp_ms ASC, sample_id ASC",
+    )
+    .all(input.endpointId) as Array<{
+    sample_json: string;
+  }>;
+  database.close();
+
+  return rows.map((row) => JSON.parse(row.sample_json) as ObservedPerformanceSample);
+}
+
+export function readLatestObservedProfile(
+  input: ReadLatestObservedProfileInput,
+): ObservedPerformanceProfile | null {
+  const database = new DatabaseSync(input.databasePath);
+  const row = database
+    .prepare(
+      "SELECT profile_json FROM observed_profile_snapshots WHERE endpoint_id = ? ORDER BY measured_at_ms DESC, snapshot_id DESC LIMIT 1",
+    )
+    .get(input.endpointId) as
+    | {
+        profile_json: string;
+      }
+    | undefined;
+  database.close();
+
+  return row ? (JSON.parse(row.profile_json) as ObservedPerformanceProfile) : null;
+}
+
+export function listRecentRuntimeObservations(
+  input: ListRecentRuntimeObservationsInput,
+): readonly RuntimeObservationSummaryRecord[] {
+  const database = new DatabaseSync(input.databasePath);
+  const rows = database
+    .prepare(
+      "SELECT request_id, routing_decision_id, endpoint_id, created_at_ms FROM runtime_observations ORDER BY created_at_ms DESC, request_id DESC LIMIT ?",
+    )
+    .all(input.limit ?? 20) as Array<{
+    request_id: string;
+    routing_decision_id: string;
+    endpoint_id: string;
+    created_at_ms: number;
+  }>;
+  database.close();
+
+  return rows.map((row) => ({
+    requestId: row.request_id,
+    routingDecisionId: row.routing_decision_id,
+    endpointId: row.endpoint_id,
+    createdAtMs: row.created_at_ms,
   }));
 }

@@ -1,0 +1,6 @@
+[INFO] Request 192.0.2.1 "GET /api/role-model/requests HTTP/1.1" 404 0 "" 0s
+--- FAIL: TestProxyManager_RoleModelBridgeProxiesObservationAPI (0.00s)
+    rolemodel_bridge_test.go:111: expected status 200 for /api/role-model/requests, got 404 with body 
+FAIL
+FAIL	github.com/mostlygeek/llama-swap/proxy	0.131s
+FAIL

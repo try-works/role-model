@@ -317,3 +317,33 @@
   - the bridge currently uses deterministic capture-backed provider responses rather than live provider HTTP transport
   - full vendored `go test ./...` still fails on Windows in upstream `proxy/process_test.go` because `sleep` is not on `%PATH%`
   - the broader root `build` and `test` commands still fail on the inherited schema-tools/Biome generated-types path
+
+### Run `11-router-runtime-observability-feedback`
+
+- Run folder: `/.recursive/run/11-router-runtime-observability-feedback/`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `03.5-code-review.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - added `/role-model-router/packages/runtime-observability/` as the shared runtime-owned observation, diagnostics, profile-feedback, and OpenTelemetry export layer
+  - extended `/role-model-router/packages/sqlite-memory/` and `/role-model-router/apps/runtime-host-bridge/` so live bridged requests persist observations and profile snapshots and expose structured `/api/role-model/...` inspection reads
+  - added the repo-local `runtime:validate-observability` command and aligned `/role-model-router/apps/gateway-smoke/` to emit request-observation, endpoint-profile-state, and OTEL export artifacts
+- Why:
+  - to complete the first durable runtime feedback loop and operator inspection layer before later hardening and operations work
+- How:
+  - implemented strict RED/GREEN TDD across the shared TypeScript package, SQLite persistence, bridge and vendored route seams, and host-integrated validation, then refreshed delegated review after a cleanup-only package-layout repair
+- What was not done:
+  - no run-12 retention/export/delete drills, rollback playbooks, canonical schema redesign, live provider transport, true streaming transport, or MCP/tool-extension work was added here
+- Known issues / follow-ups:
+  - `logs_contains_bridge` remains `false` in the successful validator output because `/logs` does not currently include that literal phrase
+  - full vendored `go test ./...` still fails on Windows in upstream `proxy/process_test.go` because `sleep` is not on `%PATH%`
+  - the broader root `build` and `test` commands still fail on the inherited schema-tools/Biome generated-types path

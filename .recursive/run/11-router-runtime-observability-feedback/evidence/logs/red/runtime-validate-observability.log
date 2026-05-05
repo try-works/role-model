@@ -1,0 +1,3 @@
+ΓÇëERR_PNPM_NO_SCRIPTΓÇë Missing script: runtime:validate-observability
+
+Command "runtime:validate-observability" not found. Did you mean "pnpm run runtime:validate-registry"?

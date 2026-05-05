@@ -152,6 +152,12 @@ importers:
       '@role-model-router/profile-aggregator':
         specifier: workspace:*
         version: link:../../packages/profile-aggregator
+      '@role-model-router/runtime-observability':
+        specifier: workspace:*
+        version: link:../../packages/runtime-observability
+      '@role-model-router/sqlite-memory':
+        specifier: workspace:*
+        version: link:../../packages/sqlite-memory
       '@role-model-router/trace':
         specifier: workspace:*
         version: link:../../packages/trace
@@ -188,6 +194,9 @@ importers:
       '@role-model-router/endpoint-registry':
         specifier: workspace:*
         version: link:../../packages/endpoint-registry
+      '@role-model-router/profile-aggregator':
+        specifier: workspace:*
+        version: link:../../packages/profile-aggregator
       '@role-model-router/protocol-routing':
         specifier: workspace:*
         version: link:../../packages/protocol-routing
@@ -203,6 +212,9 @@ importers:
       '@role-model-router/retrieval-receipt':
         specifier: workspace:*
         version: link:../../packages/retrieval-receipt
+      '@role-model-router/runtime-observability':
+        specifier: workspace:*
+        version: link:../../packages/runtime-observability
       '@role-model-router/sqlite-memory':
         specifier: workspace:*
         version: link:../../packages/sqlite-memory
@@ -365,6 +377,24 @@ importers:
 
   role-model-router/packages/roles: {}
 
+  role-model-router/packages/runtime-observability:
+    dependencies:
+      '@role-model-router/adapter-execution':
+        specifier: workspace:*
+        version: link:../adapter-execution
+      '@role-model-router/profile-aggregator':
+        specifier: workspace:*
+        version: link:../profile-aggregator
+      '@role-model-router/trace':
+        specifier: workspace:*
+        version: link:../trace
+      '@role-model-router/usage':
+        specifier: workspace:*
+        version: link:../usage
+      '@role-model/protocol-types':
+        specifier: workspace:*
+        version: link:../../../packages/protocol-types
+
   role-model-router/packages/runtime-web: {}
 
   role-model-router/packages/sqlite-memory:
@@ -372,9 +402,15 @@ importers:
       '@role-model-router/catalog':
         specifier: workspace:*
         version: link:../catalog
+      '@role-model-router/profile-aggregator':
+        specifier: workspace:*
+        version: link:../profile-aggregator
       '@role-model-router/provider-account':
         specifier: workspace:*
         version: link:../provider-account
+      '@role-model/protocol-types':
+        specifier: workspace:*
+        version: link:../../../packages/protocol-types
 
   role-model-router/packages/tasks: {}
 

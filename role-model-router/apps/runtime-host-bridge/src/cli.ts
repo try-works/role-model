@@ -44,6 +44,9 @@ async function main(): Promise<void> {
     port: options.port,
     registry: backend.registry,
     executeChatCompletions: backend.executeChatCompletions,
+    listRecentRequestObservations: backend.listRecentRequestObservations,
+    readRequestObservation: backend.readRequestObservation,
+    readEndpointProfile: backend.readEndpointProfile,
   });
 
   console.log(

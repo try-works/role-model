@@ -82,3 +82,36 @@ func TestProxyManager_RoleModelBridgeProxiesModelList(t *testing.T) {
 		t.Fatalf("expected bridged model list in response body, got %s", rec.Body.String())
 	}
 }
+
+func TestProxyManager_RoleModelBridgeProxiesObservationAPI(t *testing.T) {
+	t.Setenv("ROLE_MODEL_BRIDGE_BASE_URL", "")
+	bridge := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"path":"` + r.URL.Path + `"}`))
+	}))
+	defer bridge.Close()
+	t.Setenv("ROLE_MODEL_BRIDGE_BASE_URL", bridge.URL)
+
+	pm := New(config.Config{
+		Models: map[string]config.ModelConfig{},
+		Groups: map[string]config.GroupConfig{},
+	})
+
+	for _, path := range []string{
+		"/api/role-model/requests",
+		"/api/role-model/requests/req-runtime-bridge-route-001",
+		"/api/role-model/endpoints/openai.personal.primary.us-east-1.fast/profile",
+	} {
+		req := httptest.NewRequest(http.MethodGet, path, nil)
+		rec := httptest.NewRecorder()
+
+		pm.ServeHTTP(rec, req)
+
+		if rec.Code != http.StatusOK {
+			t.Fatalf("expected status %d for %s, got %d with body %s", http.StatusOK, path, rec.Code, rec.Body.String())
+		}
+		if !strings.Contains(rec.Body.String(), path) {
+			t.Fatalf("expected bridged path %s in response body, got %s", path, rec.Body.String())
+		}
+	}
+}
