@@ -1,0 +1,44 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/12-router-runtime-hardening-operations/role-model-router/packages/sqlite-memory[39m
+
+(node:36544) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [31mΓ¥»[39m test/index.test.ts [2m([22m[2m9 tests[22m[2m | [22m[31m1 failed[39m[2m | [22m[33m8 skipped[39m[2m)[22m[32m 13[2mms[22m[39m
+   [2m[90mΓåô[39m[22m initializeSqliteMemory[2m > [22mcreates the planned schema, WAL mode, and initial migration receipt under the runtime state root
+   [2m[90mΓåô[39m[22m initializeSqliteMemory[2m > [22mpersists validated provider accounts by credential reference without storing raw secrets
+   [2m[90mΓåô[39m[22m initializeSqliteMemory[2m > [22mrecords explicit maintenance defaults and idempotent migration behavior
+   [2m[90mΓåô[39m[22m initializeSqliteMemory[2m > [22mpersists and reloads the continuity rows needed for bounded context assembly
+   [2m[90mΓåô[39m[22m initializeSqliteMemory[2m > [22mpersists retrieval receipts for later routing diagnostics
+   [2m[90mΓåô[39m[22m initializeSqliteMemory[2m > [22mpersists runtime observation bundles, profile snapshots, and maintenance-policy reads
+   [2m[90mΓåô[39m[22m initializeSqliteMemory[2m > [22mexports persisted runtime state for operator drills
+[31m   [31m├ù[31m initializeSqliteMemory[2m > [22mrestores runtime state from a backup after scoped deletion[39m[32m 11[2mms[22m[39m
+[31m     ΓåÆ expected 'undefined' to be 'function' // Object.is equality[39m
+   [2m[90mΓåô[39m[22m runRuntimeStateValidation[2m > [22mvalidates provider accounts and initializes SQLite through the local validation path
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/index.test.ts > initializeSqliteMemory > restores runtime state from a backup after scoped deletion
+AssertionError: expected 'undefined' to be 'function' // Object.is equality
+
+Expected: "function"
+Received: "undefined"
+
+ Γ¥» test/index.test.ts:518:7
+    516|         }
+    517|       ).backupRuntimeState,
+    518|     ).toBe("function");
+       |       ^
+    519|     expect(
+    520|       typeof (
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[33m8 skipped[39m[90m (9)[39m
+[2m   Start at [22m 20:11:00
+[2m   Duration [22m 924ms[2m (transform 239ms, setup 0ms, collect 290ms, tests 13ms, environment 0ms, prepare 248ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\12-router-runtime-hardening-operations\role-model-router\packages\sqlite-memory:
+ΓÇëERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓÇë Command failed with exit code 1: vitest run test/index.test.ts -t restores runtime state from a backup after scoped deletion

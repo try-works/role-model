@@ -1,0 +1,4 @@
+# github.com/mostlygeek/llama-swap/proxy
+FAIL	github.com/mostlygeek/llama-swap/proxy [setup failed]
+proxy\ui_embed.go:9:12: pattern ui_dist: no matching files found
+FAIL

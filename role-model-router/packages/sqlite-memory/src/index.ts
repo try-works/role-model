@@ -1,5 +1,5 @@
 import path from "node:path";
-import { mkdirSync } from "node:fs";
+import { copyFileSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
 
 import type { ObservedPerformanceProfile } from "@role-model/protocol-types";
@@ -263,6 +263,35 @@ export interface ReadLatestObservedProfileInput {
 
 export interface ReadRuntimeMaintenancePolicyInput {
   readonly databasePath: string;
+}
+
+export interface ExportRuntimeStateInput {
+  readonly databasePath: string;
+  readonly exportPath: string;
+}
+
+export interface ExportRuntimeStateResult {
+  readonly exportPath: string;
+  readonly observationCount: number;
+  readonly profileCount: number;
+}
+
+export interface BackupRuntimeStateInput {
+  readonly databasePath: string;
+  readonly backupPath: string;
+}
+
+export interface BackupRuntimeStateResult {
+  readonly backupPath: string;
+}
+
+export interface DeleteRuntimeStateInput {
+  readonly databasePath: string;
+}
+
+export interface RestoreRuntimeStateInput {
+  readonly databasePath: string;
+  readonly backupPath: string;
 }
 
 export interface RuntimeObservationSummaryRecord {
@@ -759,4 +788,97 @@ export function listRecentRuntimeObservations(
     endpointId: row.endpoint_id,
     createdAtMs: row.created_at_ms,
   }));
+}
+
+export function exportRuntimeState(input: ExportRuntimeStateInput): ExportRuntimeStateResult {
+  const database = new DatabaseSync(input.databasePath);
+  const observationRows = database
+    .prepare(
+      "SELECT observation_json FROM runtime_observations ORDER BY created_at_ms ASC, request_id ASC",
+    )
+    .all() as Array<{
+    observation_json: string;
+  }>;
+  const profileRows = database
+    .prepare(
+      "SELECT endpoint_id, profile_json FROM observed_profile_snapshots ORDER BY measured_at_ms DESC, snapshot_id DESC",
+    )
+    .all() as Array<{
+    endpoint_id: string;
+    profile_json: string;
+  }>;
+  database.close();
+
+  const observations = observationRows.map((row) => JSON.parse(row.observation_json) as PersistedRuntimeObservationBundle);
+  const latestProfilesByEndpoint = new Map<string, ObservedPerformanceProfile>();
+  for (const row of profileRows) {
+    if (!latestProfilesByEndpoint.has(row.endpoint_id)) {
+      latestProfilesByEndpoint.set(row.endpoint_id, JSON.parse(row.profile_json) as ObservedPerformanceProfile);
+    }
+  }
+
+  const observedProfiles = [...latestProfilesByEndpoint.entries()].map(([endpointId, latestProfile]) => ({
+    endpointId,
+    latestProfile,
+    recentSamples: readObservedPerformanceSamples({
+      databasePath: input.databasePath,
+      endpointId,
+    }),
+  }));
+
+  const exported = {
+    maintenancePolicy: readRuntimeMaintenancePolicy({
+      databasePath: input.databasePath,
+    }),
+    observations: observations.map((observation) => ({
+      requestId: observation.requestId,
+      endpointId: observation.endpointId,
+    })),
+    observationBundles: observations,
+    observedProfiles: observedProfiles.map((profile) => ({
+      endpointId: profile.endpointId,
+    })),
+    observedProfileDetails: observedProfiles,
+  };
+
+  mkdirSync(path.dirname(input.exportPath), { recursive: true });
+  writeFileSync(input.exportPath, `${JSON.stringify(exported, null, 2)}\n`, "utf8");
+
+  return {
+    exportPath: input.exportPath,
+    observationCount: observations.length,
+    profileCount: observedProfiles.length,
+  };
+}
+
+function runtimeStateSiblingPaths(databasePath: string): readonly string[] {
+  return [databasePath, `${databasePath}-wal`, `${databasePath}-shm`];
+}
+
+export function backupRuntimeState(input: BackupRuntimeStateInput): BackupRuntimeStateResult {
+  mkdirSync(path.dirname(input.backupPath), { recursive: true });
+  rmSync(input.backupPath, { force: true });
+
+  const database = new DatabaseSync(input.databasePath);
+  const escapedBackupPath = input.backupPath.replaceAll("'", "''");
+  database.exec(`VACUUM INTO '${escapedBackupPath}'`);
+  database.close();
+
+  return {
+    backupPath: input.backupPath,
+  };
+}
+
+export function deleteRuntimeState(input: DeleteRuntimeStateInput): void {
+  for (const filePath of runtimeStateSiblingPaths(input.databasePath)) {
+    rmSync(filePath, { force: true });
+  }
+}
+
+export function restoreRuntimeState(input: RestoreRuntimeStateInput): void {
+  mkdirSync(path.dirname(input.databasePath), { recursive: true });
+  deleteRuntimeState({
+    databasePath: input.databasePath,
+  });
+  copyFileSync(input.backupPath, input.databasePath);
 }

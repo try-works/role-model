@@ -449,8 +449,10 @@ func (pm *ProxyManager) setupGinEngine() {
 	})
 
 	pm.ginEngine.GET("/favicon.ico", func(c *gin.Context) {
-		if data, err := reactStaticFS.ReadFile("ui_dist/favicon.ico"); err == nil {
+		if data, err := readReactStaticFile("favicon.ico"); err == nil {
 			c.Data(http.StatusOK, "image/x-icon", data)
+		} else if os.IsNotExist(err) {
+			c.AbortWithStatus(http.StatusNotFound)
 		} else {
 			c.String(http.StatusInternalServerError, err.Error())
 		}

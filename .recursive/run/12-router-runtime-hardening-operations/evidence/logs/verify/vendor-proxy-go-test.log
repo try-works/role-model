@@ -1,0 +1,76 @@
+[WARN] non-200 response, recording partial metrics: status=400, path=/test
+[WARN] metrics: empty body, recording minimal metrics
+[WARN] metrics: invalid JSON in response body path=/test, recording minimal metrics
+[WARN] error processing streaming response: no valid JSON data found in stream, path=/test, recording minimal metrics
+[WARN] metrics: empty body, recording minimal metrics
+[WARN] metrics: decompression failed: gzip: invalid header, path=/test, recording minimal metrics
+[WARN] capture 0 too large (380 bytes), skipping: item exceeds maximum cache size
+[WARN] peer beta-peer: model duplicate-model already mapped to another peer, skipping
+SUCCESS: The process with PID 49244 (child process of PID 53224) has been terminated.
+SUCCESS: The process with PID 53224 (child process of PID 36252) has been terminated.
+SUCCESS: The process with PID 53800 (child process of PID 52460) has been terminated.
+SUCCESS: The process with PID 52460 (child process of PID 36252) has been terminated.
+SUCCESS: The process with PID 48568 (child process of PID 53456) has been terminated.
+SUCCESS: The process with PID 53456 (child process of PID 36252) has been terminated.
+SUCCESS: The process with PID 49952 (child process of PID 48976) has been terminated.
+SUCCESS: The process with PID 48976 (child process of PID 36252) has been terminated.
+SUCCESS: The process with PID 50828 (child process of PID 23316) has been terminated.
+SUCCESS: The process with PID 23316 (child process of PID 36252) has been terminated.
+SUCCESS: The process with PID 52024 (child process of PID 49944) has been terminated.
+SUCCESS: The process with PID 49944 (child process of PID 36252) has been terminated.
+--- FAIL: TestProcess_ExitInterruptsHealthCheck (0.01s)
+    process_test.go:339: 
+        	Error Trace:	D:/DEV/role-model/.worktrees/12-router-runtime-hardening-operations/role-model-router/vendor/llama-swap/proxy/process_test.go:339
+        	Error:      	Not equal: 
+        	            	expected: "upstream command exited prematurely but successfully"
+        	            	actual  : "start() failed for command 'sleep 1': exec: \"sleep\": executable file not found in %PATH%"
+        	            	
+        	            	Diff:
+        	            	--- Expected
+        	            	+++ Actual
+        	            	@@ -1 +1 @@
+        	            	-upstream command exited prematurely but successfully
+        	            	+start() failed for command 'sleep 1': exec: "sleep": executable file not found in %PATH%
+        	Test:       	TestProcess_ExitInterruptsHealthCheck
+SUCCESS: The process with PID 16952 (child process of PID 52184) has been terminated.
+SUCCESS: The process with PID 52184 (child process of PID 36252) has been terminated.
+SUCCESS: The process with PID 33712 (child process of PID 40160) has been terminated.
+SUCCESS: The process with PID 40160 (child process of PID 36252) has been terminated.
+2026/05/05 20:32:33 httputil: ReverseProxy read error during body copy: read tcp 127.0.0.1:52282->127.0.0.1:12025: wsarecv: An existing connection was forcibly closed by the remote host.
+2026/05/05 20:32:33 suppressing panic for copyResponse error in test; copy error: read tcp 127.0.0.1:52282->127.0.0.1:12025: wsarecv: An existing connection was forcibly closed by the remote host.
+SUCCESS: The process with PID 36484 (child process of PID 33480) has been terminated.
+SUCCESS: The process with PID 33480 (child process of PID 36252) has been terminated.
+SUCCESS: The process with PID 40256 (child process of PID 39248) has been terminated.
+SUCCESS: The process with PID 39248 (child process of PID 36252) has been terminated.
+SUCCESS: The process with PID 31952 (child process of PID 28252) has been terminated.
+SUCCESS: The process with PID 28252 (child process of PID 36252) has been terminated.
+SUCCESS: The process with PID 17432 (child process of PID 49880) has been terminated.
+SUCCESS: The process with PID 49880 (child process of PID 36252) has been terminated.
+[WARN] <model5> ExitError >> exit status 1, exit code: 1
+SUCCESS: The process with PID 29436 (child process of PID 41816) has been terminated.
+SUCCESS: The process with PID 41816 (child process of PID 36252) has been terminated.
+[WARN] <model2> ExitError >> exit status 1, exit code: 1
+SUCCESS: The process with PID 36108 (child process of PID 4892) has been terminated.
+SUCCESS: The process with PID 4892 (child process of PID 36252) has been terminated.
+[WARN] <model1> ExitError >> exit status 1, exit code: 1
+SUCCESS: The process with PID 49212 (child process of PID 18352) has been terminated.
+SUCCESS: The process with PID 18352 (child process of PID 36252) has been terminated.
+[WARN] <model3> ExitError >> exit status 1, exit code: 1
+SUCCESS: The process with PID 48992 (child process of PID 8928) has been terminated.
+SUCCESS: The process with PID 8928 (child process of PID 36252) has been terminated.
+[WARN] <model4> ExitError >> exit status 1, exit code: 1
+SUCCESS: The process with PID 48572 (child process of PID 49640) has been terminated.
+SUCCESS: The process with PID 49640 (child process of PID 36252) has been terminated.
+[WARN] <model3> ExitError >> exit status 1, exit code: 1
+SUCCESS: The process with PID 52616 (child process of PID 50960) has been terminated.
+SUCCESS: The process with PID 50960 (child process of PID 36252) has been terminated.
+[WARN] <model4> ExitError >> exit status 1, exit code: 1
+[INFO] Request 192.0.2.1 "GET /logs/stream/matrix-model HTTP/1.1" 200 -1 "" 100.473ms
+[INFO] Request 192.0.2.1 "POST /v1/chat/completions HTTP/1.1" 200 263 "" 0s
+[INFO] Request 192.0.2.1 "GET /v1/models HTTP/1.1" 200 159 "" 534.8┬╡s
+[INFO] Request 192.0.2.1 "GET /api/role-model/requests HTTP/1.1" 200 35 "" 0s
+[INFO] Request 192.0.2.1 "GET /api/role-model/requests/req-runtime-bridge-route-001 HTTP/1.1" 200 64 "" 1.0378ms
+[INFO] Request 192.0.2.1 "GET /api/role-model/endpoints/openai.personal.primary.us-east-1.fast/profile HTTP/1.1" 200 83 "" 0s
+FAIL
+FAIL	github.com/mostlygeek/llama-swap/proxy	39.372s
+FAIL

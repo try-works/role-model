@@ -1,0 +1,13 @@
+
+> @role-model-router/runtime-host-bridge@0.0.0 build D:\DEV\role-model\.worktrees\12-router-runtime-hardening-operations\role-model-router\apps\runtime-host-bridge
+> tsc -p tsconfig.json
+
+../../../packages/protocol-types/src/generated.ts(292,16): error TS2304: Cannot find name 'MetricEntry'.
+../../../packages/protocol-types/src/generated.ts(293,16): error TS2304: Cannot find name 'MetricEntry'.
+../../../packages/protocol-types/src/generated.ts(294,19): error TS2304: Cannot find name 'MetricEntry'.
+../../../packages/protocol-types/src/generated.ts(295,13): error TS2304: Cannot find name 'MetricEntry'.
+../../../packages/protocol-types/src/generated.ts(296,20): error TS2304: Cannot find name 'MetricEntry'.
+../../../packages/protocol-types/src/generated.ts(297,19): error TS2304: Cannot find name 'MetricEntry'.
+D:\DEV\role-model\.worktrees\12-router-runtime-hardening-operations\role-model-router\apps\runtime-host-bridge:
+ΓÇëERR_PNPM_RECURSIVE_RUN_FIRST_FAILΓÇë @role-model-router/runtime-host-bridge@0.0.0 build: `tsc -p tsconfig.json`
+Exit status 2
