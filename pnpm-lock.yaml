@@ -206,6 +206,9 @@ importers:
       '@role-model-router/provider-anthropic':
         specifier: workspace:*
         version: link:../../packages/provider-anthropic
+      '@role-model-router/provider-mcp':
+        specifier: workspace:*
+        version: link:../../packages/provider-mcp
       '@role-model-router/provider-openai':
         specifier: workspace:*
         version: link:../../packages/provider-openai
@@ -218,6 +221,9 @@ importers:
       '@role-model-router/sqlite-memory':
         specifier: workspace:*
         version: link:../../packages/sqlite-memory
+      '@role-model-router/tool-registry':
+        specifier: workspace:*
+        version: link:../../packages/tool-registry
 
   role-model-router/packages/adapter-execution:
     dependencies:
@@ -385,6 +391,9 @@ importers:
       '@role-model-router/profile-aggregator':
         specifier: workspace:*
         version: link:../profile-aggregator
+      '@role-model-router/tool-registry':
+        specifier: workspace:*
+        version: link:../tool-registry
       '@role-model-router/trace':
         specifier: workspace:*
         version: link:../trace
@@ -413,6 +422,8 @@ importers:
         version: link:../../../packages/protocol-types
 
   role-model-router/packages/tasks: {}
+
+  role-model-router/packages/tool-registry: {}
 
   role-model-router/packages/trace:
     dependencies:

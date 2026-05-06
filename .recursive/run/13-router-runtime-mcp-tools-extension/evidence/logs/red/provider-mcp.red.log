@@ -1,0 +1,34 @@
+
+> @role-model-router/provider-mcp@0.0.0 test D:\DEV\role-model\.worktrees\13-router-runtime-mcp-tools-extension\role-model-router\packages\provider-mcp
+> vitest run
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/13-router-runtime-mcp-tools-extension/role-model-router/packages/provider-mcp[39m
+
+ [31mΓ¥»[39m test/index.test.ts [2m([22m[2m1 test[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 6[2mms[22m[39m
+[31m   [31m├ù[31m provider-mcp[2m > [22mcreates runtime MCP connector definitions with declared tools[39m[32m 5[2mms[22m[39m
+[31m     ΓåÆ (0 , createMcpConnectorDefinitions) is not a function[39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/index.test.ts > provider-mcp > creates runtime MCP connector definitions with declared tools
+TypeError: (0 , createMcpConnectorDefinitions) is not a function
+ Γ¥» test/index.test.ts:7:24
+      5| describe("provider-mcp", () => {
+      6|   test("creates runtime MCP connector definitions with declared tools"ΓÇª
+      7|     const connectors = createMcpConnectorDefinitions([
+       |                        ^
+      8|       {
+      9|         connector_id: "mcp.local.registry",
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m   Start at [22m 21:19:15
+[2m   Duration [22m 632ms[2m (transform 62ms, setup 0ms, collect 53ms, tests 6ms, environment 0ms, prepare 224ms)[22m
+
+D:\DEV\role-model\.worktrees\13-router-runtime-mcp-tools-extension\role-model-router\packages\provider-mcp:
+ΓÇëERR_PNPM_RECURSIVE_RUN_FIRST_FAILΓÇë @role-model-router/provider-mcp@0.0.0 test: `vitest run`
+Exit status 1

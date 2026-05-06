@@ -4,7 +4,11 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": {
+      "types": "./src/index.ts",
+      "runtime": "./dist/index.js",
+      "default": "./src/index.ts"
+    }
   },
   "files": ["src", "dist", "data"],
   "scripts": {

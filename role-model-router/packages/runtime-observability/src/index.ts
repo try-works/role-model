@@ -4,6 +4,7 @@ import {
   aggregateObservedPerformanceSamples,
   type ObservedPerformanceSample,
 } from "@role-model-router/profile-aggregator";
+import type { ToolRegistryExecution } from "@role-model-router/tool-registry";
 
 export interface RuntimeRoutingDiagnostics {
   readonly retrievalReceiptId?: string;
@@ -79,6 +80,9 @@ export interface RuntimeObservationBundleInput {
   readonly maintenancePolicy?: Readonly<Record<string, string>>;
   readonly capturePolicy?: RuntimeCapturePolicy;
   readonly accountState?: RuntimeAccountState;
+  readonly tooling?: {
+    readonly executions: readonly ToolRegistryExecution[];
+  };
 }
 
 export interface RedactedCaptureBody {
@@ -119,6 +123,7 @@ export interface RuntimeObservationBundle {
     readonly execution: readonly RuntimeDiagnostic[];
     readonly authAccount: readonly RuntimeDiagnostic[];
     readonly memoryQuality: readonly RuntimeDiagnostic[];
+    readonly tooling: readonly RuntimeDiagnostic[];
     readonly operator: readonly RuntimeDiagnostic[];
   };
   readonly capturePolicy: RuntimeObservationCapturePolicyReceipt;
@@ -128,6 +133,16 @@ export interface RuntimeObservationBundle {
     readonly cacheReadTokens: number;
     readonly cacheWriteTokens: number;
     readonly routingCacheAffinity: boolean;
+  };
+  readonly tooling: {
+    readonly toolCalls: ReadonlyArray<{
+      readonly toolCallId: string;
+      readonly toolName: string;
+      readonly arguments: unknown;
+      readonly providerToolId?: string;
+    }>;
+    readonly executions: readonly ToolRegistryExecution[];
+    readonly diagnostics: readonly RuntimeDiagnostic[];
   };
   readonly inspection: {
     readonly request: {
@@ -281,6 +296,40 @@ function buildMemoryDiagnostics(input: RuntimeObservationBundleInput): RuntimeDi
   return diagnostics;
 }
 
+function buildToolingDiagnostics(input: RuntimeObservationBundleInput): RuntimeDiagnostic[] {
+  const diagnostics = (input.tooling?.executions ?? []).flatMap((execution) =>
+    execution.diagnostics.map<RuntimeDiagnostic>((diagnostic) => ({
+      code: diagnostic.code,
+      severity: execution.status === "failed" ? "error" : "warning",
+      message: diagnostic.message,
+    })),
+  );
+  if (input.execution.normalized.toolCalls.length > 0 && (input.tooling?.executions.length ?? 0) === 0) {
+    diagnostics.push({
+      code: "TOOL_EXECUTION_MISSING",
+      severity: "warning",
+      message: `Runtime observation captured ${input.execution.normalized.toolCalls.length} tool calls without execution receipts.`,
+    });
+  }
+  return diagnostics;
+}
+
+function buildTooling(
+  input: RuntimeObservationBundleInput,
+  diagnostics: readonly RuntimeDiagnostic[],
+): RuntimeObservationBundle["tooling"] {
+  return {
+    toolCalls: input.execution.normalized.toolCalls.map((toolCall, index) => ({
+      toolCallId: toolCall.providerToolId ?? `${toolCall.name}-${index + 1}`,
+      toolName: toolCall.name,
+      arguments: toolCall.arguments,
+      ...(toolCall.providerToolId ? { providerToolId: toolCall.providerToolId } : {}),
+    })),
+    executions: input.tooling?.executions ?? [],
+    diagnostics,
+  };
+}
+
 function buildCapturePolicyReceipt(
   maintenancePolicy: Readonly<Record<string, string>> | undefined,
   capturePolicy: RuntimeCapturePolicy | undefined,
@@ -389,8 +438,10 @@ export function createRuntimeObservationBundle(
     execution: buildExecutionDiagnostics(input),
     authAccount: buildAuthAccountDiagnostics(input.accountState),
     memoryQuality: buildMemoryDiagnostics(input),
+    tooling: buildToolingDiagnostics(input),
     operator: buildOperatorDiagnostics(capturePolicy),
   } as const;
+  const tooling = buildTooling(input, diagnostics.tooling);
 
   return {
     requestId: input.decision.request_id,
@@ -420,6 +471,7 @@ export function createRuntimeObservationBundle(
         input.execution.normalized.promptCache.requested &&
         Boolean(input.routingDiagnostics?.routingModel?.enabled),
     },
+    tooling,
     inspection: {
       request: {
         requestId: input.decision.request_id,

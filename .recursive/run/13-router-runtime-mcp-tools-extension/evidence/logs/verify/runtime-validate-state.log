@@ -1,0 +1,13 @@
+
+> role-model@0.0.0 runtime:validate-state D:\DEV\role-model\.worktrees\13-router-runtime-mcp-tools-extension
+> corepack pnpm --filter @role-model-router/sqlite-memory exec tsx src/cli.ts
+
+(node:35668) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+{
+  "databasePath": "C:\\Users\\erikb\\AppData\\Local\\Temp\\role-model-runtime-state\\local-validation\\memory\\memory.sqlite",
+  "schemaVersion": 1,
+  "appliedMigrations": [],
+  "accountsValidated": 2,
+  "diagnostics": []
+}

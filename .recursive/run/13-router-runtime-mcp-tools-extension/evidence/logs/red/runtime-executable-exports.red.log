@@ -1,0 +1,53 @@
+
+> @role-model-router/runtime-host-bridge@0.0.0 test D:\DEV\role-model\.worktrees\13-router-runtime-mcp-tools-extension\role-model-router\apps\runtime-host-bridge
+> vitest run test/index.test.ts test/executable.test.ts test/validate-operations.test.ts test/validate-tools.test.ts "--" "test/executable.test.ts"
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/13-router-runtime-mcp-tools-extension/role-model-router/apps/runtime-host-bridge[39m
+
+ [31mΓ¥»[39m test/executable.test.ts [2m([22m[2m1 test[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 22[2mms[22m[39m
+[31m   [31m├ù[31m runtime-host-bridge executable packaging[2m > [22mdeclares a runtime export condition for the built runtime dependency graph[39m[32m 21[2mms[22m[39m
+[31m     ΓåÆ expected './src/index.ts' to match object { runtime: './dist/index.js' }[39m
+(node:40936) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:24588) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:50496) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [32mΓ£ô[39m test/validate-tools.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 177[2mms[22m[39m
+ [32mΓ£ô[39m test/index.test.ts [2m([22m[2m10 tests[22m[2m)[22m[33m 436[2mms[22m[39m
+ [32mΓ£ô[39m test/validate-operations.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 438[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m runRuntimeOperationsValidation[2m > [22mvalidates isolated scopes and runtime-state maintenance drills [33m 436[2mms[22m[39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/executable.test.ts > runtime-host-bridge executable packaging > declares a runtime export condition for the built runtime dependency graph
+AssertionError: expected './src/index.ts' to match object { runtime: './dist/index.js' }
+
+- Expected: 
+{
+  "runtime": "./dist/index.js",
+}
+
++ Received: 
+"./src/index.ts"
+
+ Γ¥» test/executable.test.ts:88:39
+     86|     for (const entry of runtimeGraph) {
+     87|       const manifest = await readManifest(entry.relativePath);
+     88|       expect(manifest.exports?.["."]).toMatchObject({
+       |                                       ^
+     89|         runtime: "./dist/index.js",
+     90|       });
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m3 passed[39m[22m[90m (4)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m12 passed[39m[22m[90m (13)[39m
+[2m   Start at [22m 21:36:43
+[2m   Duration [22m 1.32s[2m (transform 532ms, setup 0ms, collect 1.06s, tests 1.07s, environment 1ms, prepare 766ms)[22m
+
+D:\DEV\role-model\.worktrees\13-router-runtime-mcp-tools-extension\role-model-router\apps\runtime-host-bridge:
+ΓÇëERR_PNPM_RECURSIVE_RUN_FIRST_FAILΓÇë @role-model-router/runtime-host-bridge@0.0.0 test: `vitest run test/index.test.ts test/executable.test.ts test/validate-operations.test.ts test/validate-tools.test.ts "--" "test/executable.test.ts"`
+Exit status 1

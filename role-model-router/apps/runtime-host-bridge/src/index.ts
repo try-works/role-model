@@ -8,6 +8,10 @@ import type { EndpointRegistryResult } from "@role-model-router/endpoint-registr
 import { buildEndpointRegistry, type RegistrySources } from "@role-model-router/endpoint-registry";
 import { routeRuntimeRequest, type RoutingModelSelection } from "@role-model-router/protocol-routing";
 import { createAnthropicProviderAdapter } from "@role-model-router/provider-anthropic";
+import {
+  createMcpConnectorDefinitions,
+  type DeclaredMcpConnectorConfig,
+} from "@role-model-router/provider-mcp";
 import { validateProviderAccounts } from "@role-model-router/provider-account";
 import { createOpenAIProviderAdapter } from "@role-model-router/provider-openai";
 import { createRetrievalReceipt } from "@role-model-router/retrieval-receipt";
@@ -17,6 +21,13 @@ import {
   type RuntimeCapturePolicy,
   type RuntimeObservationBundle,
 } from "@role-model-router/runtime-observability";
+import {
+  createToolRegistry,
+  executeToolCalls,
+  type ToolConnector,
+  type ToolRegistry,
+  type ToolRegistryExecution,
+} from "@role-model-router/tool-registry";
 import {
   initializeSqliteMemory,
   persistContinuitySnapshot,
@@ -109,9 +120,20 @@ export interface BridgeChatCompletionsExecutionResult {
   readonly adapterFamily: string;
   readonly outputText: string;
   readonly finishReason: string;
+  readonly toolCalls?: readonly BridgeToolCall[];
+  readonly toolExecutions?: readonly ToolRegistryExecution[];
   readonly usage: {
     readonly inputTokens: number;
     readonly outputTokens: number;
+  };
+}
+
+export interface BridgeToolCall {
+  readonly id: string;
+  readonly type: "function";
+  readonly function: {
+    readonly name: string;
+    readonly arguments: string;
   };
 }
 
@@ -318,9 +340,83 @@ async function loadResponseCaptures(
   return { byEndpointId };
 }
 
+async function loadMcpConnectorConfigs(repoRoot: string): Promise<DeclaredMcpConnectorConfig[]> {
+  return readJson<DeclaredMcpConnectorConfig[]>(
+    path.join(repoRoot, "testdata", "router-runtime", "mcp-connectors.json"),
+  );
+}
+
+function getObjectField(value: unknown, field: string): unknown {
+  if (!value || typeof value !== "object") {
+    return undefined;
+  }
+  return (value as Record<string, unknown>)[field];
+}
+
+function createConnectorTool(
+  registry: EndpointRegistryResult,
+  connectorId: string,
+  tool: {
+    readonly name: string;
+    readonly description?: string;
+    readonly inputSchema: Record<string, unknown>;
+  },
+): ToolConnector["tools"][number] {
+  return {
+    name: tool.name,
+    description: tool.description,
+    inputSchema: tool.inputSchema,
+    execute: async ({ arguments: toolArguments }) => {
+      switch (tool.name) {
+        case "lookupRegistry": {
+          const endpointId = getObjectField(toolArguments, "endpointId");
+          if (typeof endpointId !== "string") {
+            throw new Error(`Connector ${connectorId} received a non-string endpointId.`);
+          }
+          const endpoint = registry.endpoints.find(
+            (entry) => entry.identity.endpoint_id === endpointId,
+          );
+          return {
+            content: {
+              endpointId,
+              modelId: endpoint?.identity.model_id ?? null,
+              status: endpoint ? "active" : "missing",
+            },
+          };
+        }
+        default:
+          throw new Error(`Connector ${connectorId} does not implement tool ${tool.name}.`);
+      }
+    },
+  };
+}
+
+async function createRuntimeToolRegistry(
+  repoRoot: string,
+  registry: EndpointRegistryResult,
+): Promise<ToolRegistry> {
+  const definitions = createMcpConnectorDefinitions(await loadMcpConnectorConfigs(repoRoot));
+  const connectors: ToolConnector[] = definitions.map((definition) => ({
+    connectorId: definition.connectorId,
+    connectorKind: definition.connectorKind,
+    tools: definition.tools.map((tool) =>
+      createConnectorTool(registry, definition.connectorId, tool),
+    ),
+  }));
+  return createToolRegistry({
+    connectors,
+  });
+}
+
 function createChatCompletionsResponse(
   result: BridgeChatCompletionsExecutionResult,
 ): Record<string, unknown> {
+  const message = {
+    role: "assistant" as const,
+    content: result.outputText,
+    ...(result.toolCalls?.length ? { tool_calls: result.toolCalls } : {}),
+  };
+
   return {
     id: "chatcmpl-role-model",
     object: "chat.completion",
@@ -329,10 +425,7 @@ function createChatCompletionsResponse(
     choices: [
       {
         index: 0,
-        message: {
-          role: "assistant",
-          content: result.outputText,
-        },
+        message,
         finish_reason: result.finishReason,
       },
     ],
@@ -340,6 +433,28 @@ function createChatCompletionsResponse(
       prompt_tokens: result.usage.inputTokens,
       completion_tokens: result.usage.outputTokens,
       total_tokens: result.usage.inputTokens + result.usage.outputTokens,
+    },
+  };
+}
+
+function serializeToolCallArguments(value: unknown): string {
+  return typeof value === "string" ? value : JSON.stringify(value ?? null);
+}
+
+function toBridgeToolCall(
+  toolCall: {
+    readonly name: string;
+    readonly arguments: unknown;
+    readonly providerToolId?: string;
+  },
+  index: number,
+): BridgeToolCall {
+  return {
+    id: toolCall.providerToolId ?? `call_${index + 1}`,
+    type: "function",
+    function: {
+      name: toolCall.name,
+      arguments: serializeToolCallArguments(toolCall.arguments),
     },
   };
 }
@@ -591,6 +706,7 @@ export async function createRuntimeBridgeBackend(
   });
 
   const captures = await loadResponseCaptures(options.repoRoot, captureFixtureMap);
+  const toolRegistry = await createRuntimeToolRegistry(options.repoRoot, registry);
 
   return {
     registry,
@@ -620,6 +736,16 @@ export async function createRuntimeBridgeBackend(
         adapters: [createOpenAIProviderAdapter(), createAnthropicProviderAdapter()],
         captures,
       });
+      const toolExecutionResult =
+        execution.normalized.toolCalls.length > 0
+          ? await executeToolCalls(toolRegistry, {
+              requestId,
+              toolCalls: execution.normalized.toolCalls,
+            })
+          : {
+              executions: [],
+              diagnostics: [],
+            };
       const providerAccount = validation.accounts.find(
         (account) => account.providerAccountId === execution.target.providerAccountId,
       );
@@ -647,6 +773,9 @@ export async function createRuntimeBridgeBackend(
           databasePath: initialization.databasePath,
         }),
         capturePolicy: observabilityPolicy,
+        tooling: {
+          executions: toolExecutionResult.executions,
+        },
         ...(providerAccount
           ? {
               accountState: {
@@ -669,6 +798,18 @@ export async function createRuntimeBridgeBackend(
         adapterFamily: execution.target.adapterFamily,
         outputText: execution.normalized.outputText,
         finishReason: execution.normalized.finishReason,
+        ...(execution.normalized.toolCalls.length
+          ? {
+              toolCalls: execution.normalized.toolCalls.map((toolCall, index) =>
+                toBridgeToolCall(toolCall, index),
+              ),
+            }
+          : {}),
+        ...(toolExecutionResult.executions.length
+          ? {
+              toolExecutions: toolExecutionResult.executions,
+            }
+          : {}),
         usage: {
           inputTokens: execution.normalized.usage.inputTokens,
           outputTokens: execution.normalized.usage.outputTokens,

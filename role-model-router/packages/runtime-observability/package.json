@@ -4,14 +4,23 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts",
-    "./otel": "./src/otel.ts"
+    ".": {
+      "types": "./src/index.ts",
+      "runtime": "./dist/index.js",
+      "default": "./src/index.ts"
+    },
+    "./otel": {
+      "types": "./src/otel.ts",
+      "runtime": "./dist/otel.js",
+      "default": "./src/otel.ts"
+    }
   },
   "files": ["src", "dist"],
   "dependencies": {
     "@role-model/protocol-types": "workspace:*",
     "@role-model-router/adapter-execution": "workspace:*",
     "@role-model-router/profile-aggregator": "workspace:*",
+    "@role-model-router/tool-registry": "workspace:*",
     "@role-model-router/trace": "workspace:*",
     "@role-model-router/usage": "workspace:*"
   },

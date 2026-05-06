@@ -1,0 +1,4 @@
+
+> @role-model-router/adapter-execution@0.0.0 build D:\DEV\role-model\.worktrees\13-router-runtime-mcp-tools-extension\role-model-router\packages\adapter-execution
+> tsc -p tsconfig.json
+

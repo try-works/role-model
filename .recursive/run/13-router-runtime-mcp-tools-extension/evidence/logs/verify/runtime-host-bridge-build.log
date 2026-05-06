@@ -1,0 +1,4 @@
+
+> @role-model-router/runtime-host-bridge@0.0.0 build D:\DEV\role-model\.worktrees\13-router-runtime-mcp-tools-extension\role-model-router\apps\runtime-host-bridge
+> tsc -p tsconfig.json
+
