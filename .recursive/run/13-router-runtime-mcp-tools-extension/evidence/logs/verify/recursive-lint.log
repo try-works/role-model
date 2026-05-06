@@ -1,0 +1,20 @@
+Linting run: 13-router-runtime-mcp-tools-extension
+Path: D:\DEV\role-model\.worktrees\13-router-runtime-mcp-tools-extension\.recursive\run\13-router-runtime-mcp-tools-extension
+Workflow Profile: recursive-mode-audit-v1
+
+[FAIL] D:\DEV\role-model\.worktrees\13-router-runtime-mcp-tools-extension\.recursive\run\13-router-runtime-mcp-tools-extension\01.5-root-cause.md: Requirement Completion Status is missing in-scope requirements: R1, R2, R3, R4
+
+[WARN] Missing artifact (ok if not reached yet): D:\DEV\role-model\.worktrees\13-router-runtime-mcp-tools-extension\.recursive\run\13-router-runtime-mcp-tools-extension\03-implementation-summary.md
+[WARN] Missing artifact (ok if not reached yet): D:\DEV\role-model\.worktrees\13-router-runtime-mcp-tools-extension\.recursive\run\13-router-runtime-mcp-tools-extension\03.5-code-review.md
+[WARN] Missing artifact (ok if not reached yet): D:\DEV\role-model\.worktrees\13-router-runtime-mcp-tools-extension\.recursive\run\13-router-runtime-mcp-tools-extension\04-test-summary.md
+[WARN] Missing artifact (ok if not reached yet): D:\DEV\role-model\.worktrees\13-router-runtime-mcp-tools-extension\.recursive\run\13-router-runtime-mcp-tools-extension\05-manual-qa.md
+[WARN] Missing artifact (ok if not reached yet): D:\DEV\role-model\.worktrees\13-router-runtime-mcp-tools-extension\.recursive\run\13-router-runtime-mcp-tools-extension\06-decisions-update.md
+[WARN] Missing artifact (ok if not reached yet): D:\DEV\role-model\.worktrees\13-router-runtime-mcp-tools-extension\.recursive\run\13-router-runtime-mcp-tools-extension\07-state-update.md
+[WARN] Missing artifact (ok if not reached yet): D:\DEV\role-model\.worktrees\13-router-runtime-mcp-tools-extension\.recursive\run\13-router-runtime-mcp-tools-extension\08-memory-impact.md
+----
+
+Summary
+- FAIL: 1
+- WARN: 7
+
+[FAIL] Lint failed

@@ -1,0 +1,24 @@
+
+> @role-model-router/runtime-host-bridge@0.0.0 test D:\DEV\role-model\.worktrees\13-router-runtime-mcp-tools-extension\role-model-router\apps\runtime-host-bridge
+> vitest run test/index.test.ts test/executable.test.ts test/validate-operations.test.ts test/validate-tools.test.ts
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/13-router-runtime-mcp-tools-extension/role-model-router/apps/runtime-host-bridge[39m
+
+ [32mΓ£ô[39m test/executable.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 95[2mms[22m[39m
+(node:48760) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:33380) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:37448) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [32mΓ£ô[39m test/validate-tools.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 297[2mms[22m[39m
+ [32mΓ£ô[39m test/validate-operations.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 778[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m runRuntimeOperationsValidation[2m > [22mvalidates isolated scopes and runtime-state maintenance drills [33m 773[2mms[22m[39m
+ [32mΓ£ô[39m test/index.test.ts [2m([22m[2m10 tests[22m[2m)[22m[33m 1018[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m4 passed[39m[22m[90m (4)[39m
+[2m      Tests [22m [1m[32m13 passed[39m[22m[90m (13)[39m
+[2m   Start at [22m 21:09:39
+[2m   Duration [22m 4.68s[2m (transform 1.97s, setup 0ms, collect 3.65s, tests 2.19s, environment 8ms, prepare 4.79s)[22m
+

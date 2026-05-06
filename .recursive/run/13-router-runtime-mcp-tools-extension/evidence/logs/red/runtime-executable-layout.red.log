@@ -1,0 +1,49 @@
+
+> @role-model-router/runtime-host-bridge@0.0.0 test D:\DEV\role-model\.worktrees\13-router-runtime-mcp-tools-extension\role-model-router\apps\runtime-host-bridge
+> vitest run test/index.test.ts test/executable.test.ts test/validate-operations.test.ts test/validate-tools.test.ts "--" "test/executable.test.ts"
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/13-router-runtime-mcp-tools-extension/role-model-router/apps/runtime-host-bridge[39m
+
+ [31mΓ¥»[39m test/executable.test.ts [2m([22m[2m1 test[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 38[2mms[22m[39m
+[31m   [31m├ù[31m runtime-host-bridge executable packaging[2m > [22mdeclares a runtime export condition for the built runtime dependency graph[39m[32m 37[2mms[22m[39m
+[31m     ΓåÆ promise rejected "Error: ENOENT: no such file or directory,ΓÇª { ΓÇª(4) }" instead of resolving[39m
+(node:24600) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:8728) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:45160) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [32mΓ£ô[39m test/validate-tools.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 178[2mms[22m[39m
+ [32mΓ£ô[39m test/index.test.ts [2m([22m[2m10 tests[22m[2m)[22m[33m 448[2mms[22m[39m
+ [32mΓ£ô[39m test/validate-operations.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 455[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m runRuntimeOperationsValidation[2m > [22mvalidates isolated scopes and runtime-state maintenance drills [33m 454[2mms[22m[39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/executable.test.ts > runtime-host-bridge executable packaging > declares a runtime export condition for the built runtime dependency graph
+AssertionError: promise rejected "Error: ENOENT: no such file or directory,ΓÇª { ΓÇª(4) }" instead of resolving
+ Γ¥» test/executable.test.ts:94:7
+     92|       await expect(
+     93|         access(path.join(repoRoot, path.dirname(entry.relativePath), rΓÇª
+     94|       ).resolves.toBeUndefined();
+       |       ^
+     95|     }
+     96|   });
+
+Caused by: Error: ENOENT: no such file or directory, access 'D:\DEV\role-model\.worktrees\13-router-runtime-mcp-tools-extension\role-model-router\packages\tool-registry\dist\index.js'
+ Γ¥» test/executable.test.ts:92:7
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Serialized Error: { errno: -4058, code: 'ENOENT', syscall: 'access', path: 'D:\DEV\role-model\.worktrees\13-router-runtime-mcp-tools-extension\role-model-router\packages\tool-registry\dist\index.js' }
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m3 passed[39m[22m[90m (4)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m12 passed[39m[22m[90m (13)[39m
+[2m   Start at [22m 21:41:10
+[2m   Duration [22m 1.40s[2m (transform 547ms, setup 0ms, collect 1.04s, tests 1.12s, environment 1ms, prepare 919ms)[22m
+
+D:\DEV\role-model\.worktrees\13-router-runtime-mcp-tools-extension\role-model-router\apps\runtime-host-bridge:
+ΓÇëERR_PNPM_RECURSIVE_RUN_FIRST_FAILΓÇë @role-model-router/runtime-host-bridge@0.0.0 test: `vitest run test/index.test.ts test/executable.test.ts test/validate-operations.test.ts test/validate-tools.test.ts "--" "test/executable.test.ts"`
+Exit status 1

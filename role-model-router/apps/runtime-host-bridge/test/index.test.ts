@@ -375,6 +375,116 @@ describe("runtime-host-bridge", () => {
     }
   });
 
+  test("surfaces tool calls on chat-completions responses when the backend returns them", async () => {
+    expect(typeof (bridge as { startBridgeServer?: unknown }).startBridgeServer).toBe("function");
+
+    const server = await (
+      bridge as {
+        startBridgeServer: (options: {
+          host: string;
+          port: number;
+          registry: EndpointRegistryResult;
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+          ) => Promise<{
+            model: string;
+            endpointId: string;
+            adapterFamily: string;
+            outputText: string;
+            finishReason: string;
+            usage: {
+              inputTokens: number;
+              outputTokens: number;
+            };
+            toolCalls: Array<{
+              id: string;
+              type: "function";
+              function: {
+                name: string;
+                arguments: string;
+              };
+            }>;
+          }>;
+        }) => Promise<{ port: number; close(): Promise<void> }>;
+      }
+    ).startBridgeServer({
+      host: "127.0.0.1",
+      port: 0,
+      registry,
+      executeChatCompletions: async () => ({
+        model: "openai/gpt-4.1-mini-fast",
+        endpointId: "openai.personal.primary.us-east-1.fast",
+        adapterFamily: "ai-sdk-openai",
+        outputText: "",
+        finishReason: "tool_calls",
+        usage: {
+          inputTokens: 32,
+          outputTokens: 24,
+        },
+        toolCalls: [
+          {
+            id: "call_1",
+            type: "function",
+            function: {
+              name: "lookupRegistry",
+              arguments: "{\"endpointId\":\"openai.personal.primary.us-east-1.fast\"}",
+            },
+          },
+        ],
+      }),
+    });
+
+    try {
+      const response = await fetch(`http://127.0.0.1:${server.port}/v1/chat/completions`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "openai/gpt-4.1-mini-fast",
+          messages: [{ role: "user", content: "Use the registry tool." }],
+        }),
+      });
+
+      expect(response.status).toBe(200);
+      expect(await response.json()).toEqual({
+        id: "chatcmpl-role-model",
+        object: "chat.completion",
+        created: expect.any(Number),
+        model: "openai/gpt-4.1-mini-fast",
+        choices: [
+          {
+            index: 0,
+            message: {
+              role: "assistant",
+              content: "",
+              tool_calls: [
+                {
+                  id: "call_1",
+                  type: "function",
+                  function: {
+                    name: "lookupRegistry",
+                    arguments:
+                      "{\"endpointId\":\"openai.personal.primary.us-east-1.fast\"}",
+                  },
+                },
+              ],
+            },
+            finish_reason: "tool_calls",
+          },
+        ],
+        usage: {
+          prompt_tokens: 32,
+          completion_tokens: 24,
+          total_tokens: 56,
+        },
+      });
+    } finally {
+      await server.close();
+    }
+  });
+
   test("rejects streaming chat-completions requests until streaming transport is implemented", async () => {
     expect(typeof (bridge as { startBridgeServer?: unknown }).startBridgeServer).toBe("function");
 

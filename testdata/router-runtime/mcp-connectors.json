@@ -1,0 +1,24 @@
+[
+  {
+    "connector_id": "mcp.local.registry",
+    "endpoint_id": "mcp.remote.registry",
+    "model_id": "registry/tool-router",
+    "capabilities": ["text.chat", "tools.function_calling"],
+    "modalities": ["text"],
+    "tools": [
+      {
+        "name": "lookupRegistry",
+        "description": "Look up endpoint details.",
+        "input_schema": {
+          "type": "object",
+          "properties": {
+            "endpointId": {
+              "type": "string"
+            }
+          },
+          "required": ["endpointId"]
+        }
+      }
+    ]
+  }
+]

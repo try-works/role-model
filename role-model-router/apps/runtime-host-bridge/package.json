@@ -4,7 +4,11 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": {
+      "types": "./src/index.ts",
+      "runtime": "./dist/index.js",
+      "default": "./src/index.ts"
+    }
   },
   "files": ["src", "dist"],
   "dependencies": {
@@ -13,16 +17,18 @@
     "@role-model-router/context-envelope": "workspace:*",
     "@role-model-router/endpoint-registry": "workspace:*",
     "@role-model-router/profile-aggregator": "workspace:*",
+    "@role-model-router/provider-mcp": "workspace:*",
     "@role-model-router/protocol-routing": "workspace:*",
     "@role-model-router/provider-account": "workspace:*",
     "@role-model-router/provider-anthropic": "workspace:*",
     "@role-model-router/provider-openai": "workspace:*",
     "@role-model-router/retrieval-receipt": "workspace:*",
     "@role-model-router/runtime-observability": "workspace:*",
-    "@role-model-router/sqlite-memory": "workspace:*"
+    "@role-model-router/sqlite-memory": "workspace:*",
+    "@role-model-router/tool-registry": "workspace:*"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "test": "vitest run test/index.test.ts test/validate-operations.test.ts"
+    "test": "vitest run test/index.test.ts test/executable.test.ts test/validate-operations.test.ts test/validate-tools.test.ts"
   }
 }

@@ -1,6 +1,8 @@
 Run: `/.recursive/run/13-router-runtime-mcp-tools-extension/`
 Phase: `00 Requirements`
-Status: `DRAFT`
+Status: `LOCKED`
+LockedAt: `2026-05-05T13:01:20Z`
+LockHash: `14c3aa9668d6d5faf74bb7d5d17acbc561a708bef143ea2d5600b63d58becd9c`
 Workflow version: `recursive-mode-audit-v1`
 Inputs:
 - `C:\Users\erikb\OneDrive\##### DEV\role-model\requirements\role-model-router-runtime-roadmap.md`
