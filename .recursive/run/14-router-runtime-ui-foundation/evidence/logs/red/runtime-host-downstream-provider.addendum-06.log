@@ -1,0 +1,4 @@
+> @role-model-router/runtime-host-bridge@0.0.0 test
+FAIL  test/index.test.ts > runtime-host-bridge > serves downstream OpenAI-compatible provider metadata for consumer apps
+AssertionError: expected 404 to be 200 // Object.is equality
+  at test/index.test.ts:536:31

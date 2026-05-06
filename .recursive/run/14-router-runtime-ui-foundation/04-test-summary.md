@@ -1,0 +1,292 @@
+Run: `/.recursive/run/14-router-runtime-ui-foundation/`
+Phase: `04 Test Summary`
+Status: `LOCKED`
+LockedAt: `2026-05-05T22:18:11Z`
+LockHash: `179bb6becd419dd8ee1ead08018e3cf4b433c13faf09965d225c1c37e4d3f65a`
+Workflow version: `recursive-mode-audit-v1`
+Inputs:
+- `/.recursive/run/14-router-runtime-ui-foundation/00-requirements.md`
+- `/.recursive/run/14-router-runtime-ui-foundation/00-worktree.md`
+- `/.recursive/run/14-router-runtime-ui-foundation/02-to-be-plan.md`
+- `/.recursive/run/14-router-runtime-ui-foundation/03-implementation-summary.md`
+- `/.recursive/run/14-router-runtime-ui-foundation/03.5-code-review.md`
+Outputs:
+- `/.recursive/run/14-router-runtime-ui-foundation/04-test-summary.md`
+Scope note: This artifact records the post-implementation validation run for `14-router-runtime-ui-foundation`. The run validates the new repo-owned `runtime-ui` app, the Moonshot/Kimi provider-account control-plane foundation, the runtime-backed UI validator, and the preserved host/observability/operations/docs/smoke floor while keeping the inherited broader red baseline separate.
+
+## TODO
+
+- [x] Re-read the locked Phase 2 plan, implementation receipt, and code-review receipt
+- [x] Audit implementation scope before running validation
+- [x] Execute the selected validation chain and capture durable logs
+- [x] Document failures and diagnostics
+- [x] Verify the post-validation worktree scope
+- [x] Complete the audit sections and gates
+
+## Pre-Test Implementation Audit
+
+- Requirement alignment (`00-requirements.md`): `R1`-`R6` were implemented on the planned runtime-ui foundation, design-system/shared-surface layer, Moonshot/Kimi onboarding slice, operator route family, and runtime boundary surfaces.
+- Plan alignment (`02-to-be-plan.md`): the runtime-ui app, provider/account/endpoints/runtime-summary control-plane routes, provider presets, SQLite account upserts, and `runtime:validate-ui` all landed on the planned run-14 surfaces.
+- Mismatches found:
+  - [x] None
+  - [ ] Yes
+
+## Environment
+
+- OS: `Windows_NT`
+- Runtime versions: `Node v24.11.0`
+- Test framework versions: `Vitest 3.2.4`; runtime-ui production build via `Vite 7.3.2`
+- Base URL / server mode: local CLI-driven validation from the selected worktree
+
+## Execution Mode
+
+- **Mode:** Sequential
+- **Subagent Usage:**
+  - Validation commands: Main agent
+  - Result interpretation: Main agent
+- **Parallel execution time:** not measured; the final verify evidence was captured sequentially so the new UI/control-plane greens and the inherited root reds stay aligned with one receipt
+
+## Commands Executed (Exact)
+
+- `corepack pnpm --filter @role-model-router/catalog test`
+- `corepack pnpm --filter @role-model-router/catalog build`
+- `corepack pnpm --filter @role-model-router/provider-account test`
+- `corepack pnpm --filter @role-model-router/provider-account build`
+- `corepack pnpm --filter @role-model-router/sqlite-memory test`
+- `corepack pnpm --filter @role-model-router/sqlite-memory build`
+- `corepack pnpm --filter @role-model-router/runtime-host-bridge build`
+- `corepack pnpm --filter @role-model-router/runtime-host-bridge test`
+- `corepack pnpm --filter @role-model-router/runtime-ui test`
+- `corepack pnpm --filter @role-model-router/runtime-ui build`
+- `corepack pnpm run runtime:validate-ui`
+- `corepack pnpm run runtime:validate-host`
+- `corepack pnpm run runtime:validate-observability`
+- `corepack pnpm run runtime:validate-operations`
+- `corepack pnpm run schemas:validate`
+- `corepack pnpm run docs:build`
+- `corepack pnpm run smoke`
+- `corepack pnpm run build`
+- `corepack pnpm run test`
+
+## Results Summary
+
+- Total: `19` commands in the recorded Phase 4 chain
+- Passed: `17`
+- Failed: `2`
+- Skipped: `0`
+
+## Evidence and Artifacts
+
+Store and reference artifacts under:
+- `/.recursive/run/14-router-runtime-ui-foundation/evidence/`
+  - `evidence/logs/verify/catalog-test.log`
+  - `evidence/logs/verify/catalog-build.log`
+  - `evidence/logs/verify/provider-account-test.log`
+  - `evidence/logs/verify/provider-account-build.log`
+  - `evidence/logs/verify/sqlite-memory-test.log`
+  - `evidence/logs/verify/sqlite-memory-build.log`
+  - `evidence/logs/verify/runtime-host-bridge-build.log`
+  - `evidence/logs/verify/runtime-host-bridge-test.log`
+  - `evidence/logs/verify/runtime-ui-test.log`
+  - `evidence/logs/verify/runtime-ui-build.log`
+  - `evidence/logs/verify/runtime-validate-ui.log`
+  - `evidence/logs/verify/runtime-validate-host.log`
+  - `evidence/logs/verify/runtime-validate-observability.log`
+  - `evidence/logs/verify/runtime-validate-operations.log`
+  - `evidence/logs/verify/schemas-validate.log`
+  - `evidence/logs/verify/docs-build.log`
+  - `evidence/logs/verify/smoke.log`
+  - `evidence/logs/verify/build.log`
+  - `evidence/logs/verify/test.log`
+
+## Failures and Diagnostics (if any)
+
+- `corepack pnpm --filter @role-model-router/catalog test`: PASS; the Moonshot catalog slice test file passed all four tests. Evidence: `catalog-test.log`
+- `corepack pnpm --filter @role-model-router/catalog build`: PASS. Evidence: `catalog-build.log`
+- `corepack pnpm --filter @role-model-router/provider-account test`: PASS; the provider-account auth-mode compatibility test file passed all four tests. Evidence: `provider-account-test.log`
+- `corepack pnpm --filter @role-model-router/provider-account build`: PASS. Evidence: `provider-account-build.log`
+- `corepack pnpm --filter @role-model-router/sqlite-memory test`: PASS; the SQLite runtime-state test suite stayed green with the provider-account control-plane helpers included. Evidence: `sqlite-memory-test.log`
+- `corepack pnpm --filter @role-model-router/sqlite-memory build`: PASS. Evidence: `sqlite-memory-build.log`
+- `corepack pnpm --filter @role-model-router/runtime-host-bridge build`: PASS. Evidence: `runtime-host-bridge-build.log`
+- `corepack pnpm --filter @role-model-router/runtime-host-bridge test`: PASS; all three test files passed, including the new `validate-ui` coverage and the existing operations validator coverage, for `13` passing tests total. Evidence: `runtime-host-bridge-test.log`
+- `corepack pnpm --filter @role-model-router/runtime-ui test`: PASS; the new helper layer passed `6` tests across `runtime-api` and `view-models`. Evidence: `runtime-ui-test.log`
+- `corepack pnpm --filter @role-model-router/runtime-ui build`: PASS; the repo-owned runtime app produced the client SPA build and completed the TypeScript check. Evidence: `runtime-ui-build.log`
+- `corepack pnpm run runtime:validate-ui`: PASS and returned the new control-plane summary with `providerCount: 3`, `accountCount: 2`, `endpointCount: 3`, `moonshotVariantIds: ["moonshot-open-platform", "kimi-code"]`, and `accountListIncludesUpsert: true`. Evidence: `runtime-validate-ui.log`
+- `corepack pnpm run runtime:validate-host`: PASS and returned host-integrated validation JSON with `model_count: 3`, `returned_model: "openai/gpt-4.1-mini-fast"`, `structured_recent_count: 1`, `structured_profile_sample_size: 2`, `capture_path: /v1/chat/completions`, and successful `/logs`, `/api/metrics`, and `/api/captures/:id` readback. Evidence: `runtime-validate-host.log`
+- `corepack pnpm run runtime:validate-observability`: PASS and preserved the live host observation drill with request/profile/logs/metrics/capture readback plus stable OpenTelemetry request and trace identifiers. Evidence: `runtime-validate-observability.log`
+- `corepack pnpm run runtime:validate-operations`: PASS and returned the host-validation summary plus two isolated scopes, `distinctDatabasePaths: true`, `distinctScopeIds: true`, one exported observation/profile pair, `deletedDatabaseMissing: true`, and restored request-observation evidence. Evidence: `runtime-validate-operations.log`
+- `corepack pnpm run schemas:validate`: PASS; `19` schema files and `28` fixture files were validated. Evidence: `schemas-validate.log`
+- `corepack pnpm run docs:build`: PASS. Evidence: `docs-build.log`
+- `corepack pnpm run smoke`: PASS and preserved the gateway-smoke artifact output baseline for router decision, captures, observation, and OTEL export. Evidence: `smoke.log`
+- `corepack pnpm run build`: FAIL in `packages/schema-tools` during generated protocol type formatting; the failure still carries the inherited Biome signature `No files were processed in the specified paths` / `Biome formatting failed for generated protocol types with exit code 1.` Evidence: `build.log`
+- `corepack pnpm run test`: FAIL on the same inherited `packages/schema-tools` generated-types/Biome path, including `test/generate-protocol-types.test.ts`. Evidence: `test.log`
+
+## Flake/Rerun Notes
+
+- Rerun commands:
+  - replaced the first PowerShell log-capture attempt because it wrote incorrect `EXIT_CODE: 0` markers for failing external commands even when the log body clearly showed `build` and `test` failures
+  - replaced a second bulk-capture attempt after it stalled at `runtime:validate-host`
+  - re-captured `runtime:validate-host`, `runtime:validate-observability`, `runtime:validate-operations`, `schemas:validate`, `docs:build`, `smoke`, `build`, and `test` with a simpler per-command `pwsh -Command` wrapper that preserved exit codes correctly
+- Outcome:
+  - the final run-owned greens remained deterministic
+  - the corrected `build` and `test` logs now end with `EXIT_CODE: 1`, matching the inherited `packages/schema-tools` failure signature already visible in the log bodies
+  - post-validation cleanup restored `packages/protocol-types/src/generated.ts` and removed generated `role-model-router/apps/runtime-ui/build/` and `.react-router/` artifacts so the worktree stayed scoped to intentional run files
+- Deterministic or flaky: deterministic; the final green checks stayed green and the two red checks reproduced the same inherited root failure signature
+
+## Audit Context
+
+Audit Execution Mode: `self-audit`
+Subagent Availability: `available`
+Subagent Capability Probe: `Phase 4 validation remained controller-owned so the exact command chain, repaired log-capture behavior, and resulting evidence set stayed synchronized with the receipt`
+Delegation Decision Basis: `the important validation question was whether every run-owned runtime-ui and control-plane surface stayed green while the broader inherited root reds remained unchanged`
+Delegation Override Reason: `a delegated validation runner would not improve confidence beyond the captured logs and current worktree state, and the Phase 4 evidence required immediate harness repair during execution`
+Audit Inputs Provided:
+- `/.recursive/run/14-router-runtime-ui-foundation/00-requirements.md`
+- `/.recursive/run/14-router-runtime-ui-foundation/00-worktree.md`
+- `/.recursive/run/14-router-runtime-ui-foundation/02-to-be-plan.md`
+- `/.recursive/run/14-router-runtime-ui-foundation/03-implementation-summary.md`
+- `/.recursive/run/14-router-runtime-ui-foundation/03.5-code-review.md`
+- Changed files:
+  - `/package.json`
+  - `/pnpm-lock.yaml`
+  - `/role-model-router/apps/runtime-host-bridge/package.json`
+  - `/role-model-router/apps/runtime-host-bridge/src/cli.ts`
+  - `/role-model-router/apps/runtime-host-bridge/src/index.ts`
+  - `/role-model-router/apps/runtime-host-bridge/src/validate-ui.ts`
+  - `/role-model-router/apps/runtime-host-bridge/test/index.test.ts`
+  - `/role-model-router/apps/runtime-host-bridge/test/validate-ui.test.ts`
+  - `/role-model-router/apps/runtime-ui/app/app.css`
+  - `/role-model-router/apps/runtime-ui/app/components/app-shell.tsx`
+  - `/role-model-router/apps/runtime-ui/app/components/page-primitives.tsx`
+  - `/role-model-router/apps/runtime-ui/app/lib/cn.ts`
+  - `/role-model-router/apps/runtime-ui/app/lib/runtime-api.test.ts`
+  - `/role-model-router/apps/runtime-ui/app/lib/runtime-api.ts`
+  - `/role-model-router/apps/runtime-ui/app/lib/view-models.test.ts`
+  - `/role-model-router/apps/runtime-ui/app/lib/view-models.ts`
+  - `/role-model-router/apps/runtime-ui/app/root.tsx`
+  - `/role-model-router/apps/runtime-ui/app/routes.ts`
+  - `/role-model-router/apps/runtime-ui/app/routes/accounts.tsx`
+  - `/role-model-router/apps/runtime-ui/app/routes/app-layout.tsx`
+  - `/role-model-router/apps/runtime-ui/app/routes/dashboard.tsx`
+  - `/role-model-router/apps/runtime-ui/app/routes/endpoints.tsx`
+  - `/role-model-router/apps/runtime-ui/app/routes/index.tsx`
+  - `/role-model-router/apps/runtime-ui/app/routes/not-found.tsx`
+  - `/role-model-router/apps/runtime-ui/app/routes/providers.tsx`
+  - `/role-model-router/apps/runtime-ui/app/routes/request-detail.tsx`
+  - `/role-model-router/apps/runtime-ui/app/routes/requests.tsx`
+  - `/role-model-router/apps/runtime-ui/app/routes/runtime.tsx`
+  - `/role-model-router/apps/runtime-ui/app/routes/workbench.tsx`
+  - `/role-model-router/apps/runtime-ui/package.json`
+  - `/role-model-router/apps/runtime-ui/react-router.config.ts`
+  - `/role-model-router/apps/runtime-ui/tsconfig.json`
+  - `/role-model-router/apps/runtime-ui/vite.config.ts`
+  - `/role-model-router/packages/catalog/data/normalized-catalog.json`
+  - `/role-model-router/packages/catalog/src/index.ts`
+  - `/role-model-router/packages/catalog/test/index.test.ts`
+  - `/role-model-router/packages/provider-account/src/index.ts`
+  - `/role-model-router/packages/provider-account/test/index.test.ts`
+  - `/role-model-router/packages/sqlite-memory/src/index.ts`
+  - `/role-model-router/packages/sqlite-memory/test/index.test.ts`
+  - `/testdata/catalog/models-dev-local-overrides.json`
+  - `/testdata/catalog/models-dev-snapshot.json`
+  - `/testdata/router-runtime/provider-presets.json`
+
+## Effective Inputs Re-read
+
+- `/.recursive/run/14-router-runtime-ui-foundation/00-requirements.md`
+- `/.recursive/run/14-router-runtime-ui-foundation/02-to-be-plan.md`
+- `/.recursive/run/14-router-runtime-ui-foundation/03-implementation-summary.md`
+- `/.recursive/run/14-router-runtime-ui-foundation/03.5-code-review.md`
+
+## Earlier Phase Reconciliation
+
+- Requirements vs implementation: Phase 3 stayed inside the runtime-ui app, design-system/shared-surface layer, Moonshot/Kimi provider/account slice, first operator route family, and runtime-boundary validator scope.
+- Plan vs implementation: the planned provider-preset layer, SQLite upsert/list helpers, host control-plane endpoints, route family, and `runtime:validate-ui` all landed; Kimi Code remains intentionally backend-limited for the unfinished token lifecycle.
+- Baseline vs validation: the selected worktree now shows stronger run-specific validation (`catalog`, `provider-account`, `sqlite-memory`, `runtime-host-bridge`, `runtime-ui`, `runtime:validate-ui`, `runtime:validate-host`, `runtime:validate-observability`, `runtime:validate-operations`, `schemas:validate`, `docs:build`, and `smoke` PASS) while the broader root `build` and `test` still reproduce the inherited `packages/schema-tools` Biome/generated-types signature.
+
+## Prior Recursive Evidence Reviewed
+
+- `/.recursive/run/14-router-runtime-ui-foundation/03-implementation-summary.md`
+- `/.recursive/run/14-router-runtime-ui-foundation/03.5-code-review.md`
+- `/.recursive/run/14-router-runtime-ui-foundation/00-worktree.md`
+
+## Subagent Contribution Verification
+
+- Reviewed Action Records: `none`
+- Main-Agent Verification Performed:
+  - all Phase 4 verify logs listed above
+  - `/.recursive/run/14-router-runtime-ui-foundation/04-test-summary.md`
+- Acceptance Decision: `accepted`
+- Refresh Handling: `not applicable`
+
+## Worktree Diff Audit
+
+- Baseline type: `local commit`
+- Baseline reference: `85abf980096c931f09554ca203b66fa58bcb3cf4`
+- Comparison reference: `working-tree`
+- Normalized baseline: `85abf980096c931f09554ca203b66fa58bcb3cf4`
+- Normalized comparison: `working-tree`
+- Normalized diff command: `git diff --name-only 85abf980096c931f09554ca203b66fa58bcb3cf4`
+- Diff basis used: `git diff --name-only 85abf980096c931f09554ca203b66fa58bcb3cf4`
+- Supplemental scope command: `git status --short --untracked-files=all`
+- Base branch: `main`
+- Worktree branch: `recursive/14-router-runtime-ui-foundation`
+- Actual changed files reviewed: `/package.json`, `/pnpm-lock.yaml`, `/role-model-router/apps/runtime-host-bridge/package.json`, `/role-model-router/apps/runtime-host-bridge/src/cli.ts`, `/role-model-router/apps/runtime-host-bridge/src/index.ts`, `/role-model-router/apps/runtime-host-bridge/src/validate-ui.ts`, `/role-model-router/apps/runtime-host-bridge/test/index.test.ts`, `/role-model-router/apps/runtime-host-bridge/test/validate-ui.test.ts`, `/role-model-router/apps/runtime-ui/app/app.css`, `/role-model-router/apps/runtime-ui/app/components/app-shell.tsx`, `/role-model-router/apps/runtime-ui/app/components/page-primitives.tsx`, `/role-model-router/apps/runtime-ui/app/lib/cn.ts`, `/role-model-router/apps/runtime-ui/app/lib/runtime-api.test.ts`, `/role-model-router/apps/runtime-ui/app/lib/runtime-api.ts`, `/role-model-router/apps/runtime-ui/app/lib/view-models.test.ts`, `/role-model-router/apps/runtime-ui/app/lib/view-models.ts`, `/role-model-router/apps/runtime-ui/app/root.tsx`, `/role-model-router/apps/runtime-ui/app/routes.ts`, `/role-model-router/apps/runtime-ui/app/routes/accounts.tsx`, `/role-model-router/apps/runtime-ui/app/routes/app-layout.tsx`, `/role-model-router/apps/runtime-ui/app/routes/dashboard.tsx`, `/role-model-router/apps/runtime-ui/app/routes/endpoints.tsx`, `/role-model-router/apps/runtime-ui/app/routes/index.tsx`, `/role-model-router/apps/runtime-ui/app/routes/not-found.tsx`, `/role-model-router/apps/runtime-ui/app/routes/providers.tsx`, `/role-model-router/apps/runtime-ui/app/routes/request-detail.tsx`, `/role-model-router/apps/runtime-ui/app/routes/requests.tsx`, `/role-model-router/apps/runtime-ui/app/routes/runtime.tsx`, `/role-model-router/apps/runtime-ui/app/routes/workbench.tsx`, `/role-model-router/apps/runtime-ui/package.json`, `/role-model-router/apps/runtime-ui/react-router.config.ts`, `/role-model-router/apps/runtime-ui/tsconfig.json`, `/role-model-router/apps/runtime-ui/vite.config.ts`, `/role-model-router/packages/catalog/data/normalized-catalog.json`, `/role-model-router/packages/catalog/src/index.ts`, `/role-model-router/packages/catalog/test/index.test.ts`, `/role-model-router/packages/provider-account/src/index.ts`, `/role-model-router/packages/provider-account/test/index.test.ts`, `/role-model-router/packages/sqlite-memory/src/index.ts`, `/role-model-router/packages/sqlite-memory/test/index.test.ts`, `/testdata/catalog/models-dev-local-overrides.json`, `/testdata/catalog/models-dev-snapshot.json`, `/testdata/router-runtime/provider-presets.json`
+
+## Gaps Found
+
+- none in run-owned validation
+- inherited reds remain:
+  - root `build`
+  - root `test`
+
+## Repair Work Performed
+
+- Repaired the Phase 4 verify-log harness so failing external commands preserve their nonzero exit codes instead of appending success-shaped markers.
+- Re-ran `runtime:validate-host` and the late validation chain after the bulk wrapper stalled, then kept the final logs captured with the working per-command wrapper.
+- Restored `packages/protocol-types/src/generated.ts` and removed generated `role-model-router/apps/runtime-ui/build/` and `.react-router/` artifacts after validation so the worktree stayed diff-clean outside intentional run scope.
+
+## Requirement Completion Status
+
+- R1 | Status: verified | Changed Files: `/package.json`, `/pnpm-lock.yaml`, `/role-model-router/apps/runtime-ui/package.json`, `/role-model-router/apps/runtime-ui/react-router.config.ts`, `/role-model-router/apps/runtime-ui/tsconfig.json`, `/role-model-router/apps/runtime-ui/vite.config.ts`, `/role-model-router/apps/runtime-ui/app/root.tsx`, `/role-model-router/apps/runtime-ui/app/routes.ts`, `/role-model-router/apps/runtime-ui/app/routes/index.tsx`, `/role-model-router/apps/runtime-ui/app/routes/not-found.tsx`, `/role-model-router/apps/runtime-ui/app/routes/app-layout.tsx`, `/role-model-router/apps/runtime-ui/app/routes/dashboard.tsx`, `/role-model-router/apps/runtime-ui/app/routes/runtime.tsx`, `/role-model-router/apps/runtime-ui/app/routes/endpoints.tsx`, `/role-model-router/apps/runtime-ui/app/routes/requests.tsx`, `/role-model-router/apps/runtime-ui/app/routes/request-detail.tsx` | Implementation Evidence: `/.recursive/run/14-router-runtime-ui-foundation/03-implementation-summary.md`, `/role-model-router/apps/runtime-ui/package.json`, `/role-model-router/apps/runtime-ui/app/root.tsx`, `/role-model-router/apps/runtime-ui/app/routes.ts` | Verification Evidence: `/.recursive/run/14-router-runtime-ui-foundation/evidence/logs/verify/runtime-ui-build.log`, `/.recursive/run/14-router-runtime-ui-foundation/evidence/logs/verify/runtime-ui-test.log`, `/.recursive/run/14-router-runtime-ui-foundation/evidence/logs/verify/runtime-validate-ui.log` | Audit Note: the repo-owned runtime UI foundation, shell, and route scaffold build cleanly and stay backed by the runtime validator.
+- R2 | Status: verified | Changed Files: `/role-model-router/apps/runtime-ui/app/app.css`, `/role-model-router/apps/runtime-ui/app/components/app-shell.tsx`, `/role-model-router/apps/runtime-ui/app/components/page-primitives.tsx`, `/role-model-router/apps/runtime-ui/app/lib/cn.ts`, `/role-model-router/apps/runtime-ui/app/lib/view-models.ts`, `/role-model-router/apps/runtime-ui/app/lib/view-models.test.ts` | Implementation Evidence: `/.recursive/run/14-router-runtime-ui-foundation/03-implementation-summary.md`, `/role-model-router/apps/runtime-ui/app/app.css`, `/role-model-router/apps/runtime-ui/app/components/app-shell.tsx`, `/role-model-router/apps/runtime-ui/app/components/page-primitives.tsx`, `/role-model-router/apps/runtime-ui/app/lib/view-models.ts` | Verification Evidence: `/.recursive/run/14-router-runtime-ui-foundation/evidence/logs/verify/runtime-ui-test.log`, `/.recursive/run/14-router-runtime-ui-foundation/evidence/logs/verify/runtime-ui-build.log` | Audit Note: the shared token/surface layer compiles in the final app build and its route-facing view-model helpers stay green.
+- R3 | Status: verified | Changed Files: `/role-model-router/apps/runtime-host-bridge/package.json`, `/role-model-router/apps/runtime-host-bridge/src/cli.ts`, `/role-model-router/apps/runtime-host-bridge/src/index.ts`, `/role-model-router/apps/runtime-host-bridge/src/validate-ui.ts`, `/role-model-router/apps/runtime-host-bridge/test/index.test.ts`, `/role-model-router/apps/runtime-host-bridge/test/validate-ui.test.ts`, `/role-model-router/packages/catalog/data/normalized-catalog.json`, `/role-model-router/packages/catalog/src/index.ts`, `/role-model-router/packages/catalog/test/index.test.ts`, `/role-model-router/packages/provider-account/src/index.ts`, `/role-model-router/packages/provider-account/test/index.test.ts`, `/role-model-router/packages/sqlite-memory/src/index.ts`, `/role-model-router/packages/sqlite-memory/test/index.test.ts`, `/testdata/catalog/models-dev-local-overrides.json`, `/testdata/catalog/models-dev-snapshot.json`, `/testdata/router-runtime/provider-presets.json`, `/role-model-router/apps/runtime-ui/app/routes/providers.tsx`, `/role-model-router/apps/runtime-ui/app/routes/accounts.tsx` | Implementation Evidence: `/.recursive/run/14-router-runtime-ui-foundation/03-implementation-summary.md`, `/role-model-router/apps/runtime-host-bridge/src/index.ts`, `/testdata/router-runtime/provider-presets.json` | Verification Evidence: `/.recursive/run/14-router-runtime-ui-foundation/evidence/logs/verify/catalog-test.log`, `/.recursive/run/14-router-runtime-ui-foundation/evidence/logs/verify/catalog-build.log`, `/.recursive/run/14-router-runtime-ui-foundation/evidence/logs/verify/provider-account-test.log`, `/.recursive/run/14-router-runtime-ui-foundation/evidence/logs/verify/provider-account-build.log`, `/.recursive/run/14-router-runtime-ui-foundation/evidence/logs/verify/sqlite-memory-test.log`, `/.recursive/run/14-router-runtime-ui-foundation/evidence/logs/verify/sqlite-memory-build.log`, `/.recursive/run/14-router-runtime-ui-foundation/evidence/logs/verify/runtime-host-bridge-test.log`, `/.recursive/run/14-router-runtime-ui-foundation/evidence/logs/verify/runtime-validate-ui.log` | Audit Note: the Moonshot/Kimi-first provider slice, account upsert/list path, and onboarding metadata are verified from data layer through runtime-backed control-plane APIs.
+- R4 | Status: verified | Changed Files: `/role-model-router/apps/runtime-ui/app/lib/runtime-api.ts`, `/role-model-router/apps/runtime-ui/app/lib/runtime-api.test.ts`, `/role-model-router/apps/runtime-ui/app/routes/accounts.tsx`, `/role-model-router/apps/runtime-ui/app/routes/app-layout.tsx`, `/role-model-router/apps/runtime-ui/app/routes/dashboard.tsx`, `/role-model-router/apps/runtime-ui/app/routes/endpoints.tsx`, `/role-model-router/apps/runtime-ui/app/routes/providers.tsx`, `/role-model-router/apps/runtime-ui/app/routes/request-detail.tsx`, `/role-model-router/apps/runtime-ui/app/routes/requests.tsx`, `/role-model-router/apps/runtime-ui/app/routes/runtime.tsx`, `/role-model-router/apps/runtime-ui/app/routes/workbench.tsx` | Implementation Evidence: `/.recursive/run/14-router-runtime-ui-foundation/03-implementation-summary.md`, `/role-model-router/apps/runtime-ui/app/routes/dashboard.tsx`, `/role-model-router/apps/runtime-ui/app/routes/providers.tsx`, `/role-model-router/apps/runtime-ui/app/routes/accounts.tsx`, `/role-model-router/apps/runtime-ui/app/routes/workbench.tsx` | Verification Evidence: `/.recursive/run/14-router-runtime-ui-foundation/evidence/logs/verify/runtime-ui-test.log`, `/.recursive/run/14-router-runtime-ui-foundation/evidence/logs/verify/runtime-ui-build.log`, `/.recursive/run/14-router-runtime-ui-foundation/evidence/logs/verify/runtime-validate-host.log`, `/.recursive/run/14-router-runtime-ui-foundation/evidence/logs/verify/smoke.log` | Audit Note: the first operator route family, workbench path, and request-inspection surfaces stay wired to the live runtime host baseline.
+- R5 | Status: verified | Changed Files: `/role-model-router/apps/runtime-ui/app/app.css`, `/role-model-router/apps/runtime-ui/app/components/app-shell.tsx`, `/role-model-router/apps/runtime-ui/app/components/page-primitives.tsx`, `/role-model-router/apps/runtime-ui/app/lib/runtime-api.ts`, `/role-model-router/apps/runtime-ui/app/lib/runtime-api.test.ts`, `/role-model-router/apps/runtime-ui/app/lib/view-models.ts`, `/role-model-router/apps/runtime-ui/app/lib/view-models.test.ts`, `/role-model-router/apps/runtime-ui/app/root.tsx`, `/role-model-router/apps/runtime-ui/app/routes/index.tsx`, `/role-model-router/apps/runtime-ui/app/routes/not-found.tsx` | Implementation Evidence: `/.recursive/run/14-router-runtime-ui-foundation/03-implementation-summary.md`, `/role-model-router/apps/runtime-ui/app/app.css`, `/role-model-router/apps/runtime-ui/app/components/page-primitives.tsx`, `/role-model-router/apps/runtime-ui/app/root.tsx` | Verification Evidence: `/.recursive/run/14-router-runtime-ui-foundation/evidence/logs/verify/runtime-ui-test.log`, `/.recursive/run/14-router-runtime-ui-foundation/evidence/logs/verify/runtime-ui-build.log`, `/.recursive/run/14-router-runtime-ui-foundation/evidence/logs/verify/runtime-validate-ui.log` | Audit Note: the shared state primitives, shell stability, and route-backed loading/empty/error/not-found surfaces remain intact through the final app build and runtime-backed validator.
+- R6 | Status: verified | Changed Files: `/package.json`, `/pnpm-lock.yaml`, `/role-model-router/apps/runtime-host-bridge/package.json`, `/role-model-router/apps/runtime-host-bridge/src/cli.ts`, `/role-model-router/apps/runtime-host-bridge/src/index.ts`, `/role-model-router/apps/runtime-host-bridge/src/validate-ui.ts`, `/role-model-router/apps/runtime-host-bridge/test/index.test.ts`, `/role-model-router/apps/runtime-host-bridge/test/validate-ui.test.ts`, `/role-model-router/packages/catalog/src/index.ts`, `/role-model-router/packages/provider-account/src/index.ts`, `/role-model-router/packages/sqlite-memory/src/index.ts`, `/role-model-router/apps/runtime-ui/app/lib/runtime-api.ts`, `/role-model-router/apps/runtime-ui/app/routes/workbench.tsx` | Implementation Evidence: `/.recursive/run/14-router-runtime-ui-foundation/03-implementation-summary.md`, `/package.json`, `/role-model-router/apps/runtime-host-bridge/src/index.ts`, `/role-model-router/apps/runtime-host-bridge/src/validate-ui.ts` | Verification Evidence: `/.recursive/run/14-router-runtime-ui-foundation/evidence/logs/verify/runtime-validate-ui.log`, `/.recursive/run/14-router-runtime-ui-foundation/evidence/logs/verify/runtime-validate-host.log`, `/.recursive/run/14-router-runtime-ui-foundation/evidence/logs/verify/runtime-validate-observability.log`, `/.recursive/run/14-router-runtime-ui-foundation/evidence/logs/verify/runtime-validate-operations.log`, `/.recursive/run/14-router-runtime-ui-foundation/evidence/logs/verify/schemas-validate.log`, `/.recursive/run/14-router-runtime-ui-foundation/evidence/logs/verify/docs-build.log`, `/.recursive/run/14-router-runtime-ui-foundation/evidence/logs/verify/smoke.log`, `/.recursive/run/14-router-runtime-ui-foundation/evidence/logs/verify/build.log`, `/.recursive/run/14-router-runtime-ui-foundation/evidence/logs/verify/test.log` | Audit Note: the run keeps the UI/control-plane slice inside the locked runtime architecture and validation boundary, and the only remaining broader reds are inherited root failures rather than new regressions.
+
+## Audit Verdict
+
+- Audit summary: the run-14-owned validation chain is green, the verify evidence now records correct exit codes, and the remaining two failures match the inherited root `packages/schema-tools` Biome/generated-types signature rather than a new runtime-ui regression.
+- Follow-up required before lock: none
+Audit: PASS
+
+## Traceability
+
+- `R1` -> covered by the runtime-ui app scaffold, route shell, build/test logs, and runtime-backed UI validator named in `## Requirement Completion Status`.
+- `R2` -> covered by the token/shared-surface files plus the runtime-ui test/build logs named in `## Requirement Completion Status`.
+- `R3` -> covered by the catalog, provider-account, SQLite, host control-plane, and provider/account route files plus their focused verify logs named in `## Requirement Completion Status`.
+- `R4` -> covered by the runtime-ui route files, helper layer, host validator, and smoke path named in `## Requirement Completion Status`.
+- `R5` -> covered by the shared state/shell files plus the runtime-ui and runtime-backed validation logs named in `## Requirement Completion Status`.
+- `R6` -> covered by the runtime validators, schemas/docs/smoke checks, and explicit inherited root red evidence named in `## Requirement Completion Status`.
+
+## Coverage Gate
+
+- Effective inputs reviewed:
+  - `/.recursive/run/14-router-runtime-ui-foundation/03-implementation-summary.md`
+  - `/.recursive/run/14-router-runtime-ui-foundation/03.5-code-review.md`
+  - all verify logs listed above
+- Requirement coverage check:
+  - `R1`-`R6`: covered in `## Failures and Diagnostics`, `## Requirement Completion Status`, and `## Traceability`
+- Out-of-scope confirmation:
+  - no public/docs expansion, full Kimi OAuth token-lifecycle productization, vendored-host rewrite, or broader provider expansion was widened during validation
+
+Coverage: PASS
+
+## Approval Gate
+
+- [x] The run-owned runtime-ui and control-plane path is validated locally
+- [x] Remaining failures are explicitly inherited root baseline failures
+- [x] The final verify evidence was repaired so exit-code markers match the logged command outcomes
+
+Approval: PASS

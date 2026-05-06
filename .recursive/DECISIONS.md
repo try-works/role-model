@@ -382,11 +382,40 @@
 ### Run `13-router-runtime-mcp-tools-extension`
 
 - Run folder: `/.recursive/run/13-router-runtime-mcp-tools-extension/`
+ - Artifacts:
+   - `00-requirements.md`
+   - `00-worktree.md`
+   - `01-as-is.md`
+   - `01.5-root-cause.md`
+   - `02-to-be-plan.md`
+   - `03-implementation-summary.md`
+   - `03.5-code-review.md`
+   - `04-test-summary.md`
+   - `05-manual-qa.md`
+   - `06-decisions-update.md`
+   - `07-state-update.md`
+   - `08-memory-impact.md`
+ - What changed:
+   - added `/role-model-router/packages/tool-registry/` as the runtime-owned provider-agnostic tool registry with strict required-field validation, execution receipts, and failed-execution diagnostics
+   - extended `/role-model-router/packages/provider-mcp/` from discovery-only shaping into runtime MCP connector-definition input while keeping discovery/export responsibilities separate from execution
+   - extended `/role-model-router/apps/runtime-host-bridge/` and `/role-model-router/packages/runtime-observability/` so routed tool calls surface as OpenAI-compatible `tool_calls`, execute through the runtime registry, persist tooling receipts and diagnostics, and validate through the new root `runtime:validate-tools` command
+   - added `runtime: "./dist/index.js"` export conditions across the runtime dependency graph so compiled runtime verification works under plain Node instead of only `tsx`-backed source execution
+ - Why:
+   - to complete the deferred MCP-and-tools extension as an additive runtime layer without reopening the already-committed router, trace, usage, or single-host baseline contracts
+ - How:
+   - implemented strict RED/GREEN TDD across the new tool-registry and MCP connector seams, repaired the compiled-runtime export graph after a root-cause analysis, accepted delegated Phase 3.5 review, then repaired the one substantive review finding and revalidated the final path
+ - What was not done:
+   - no orchestration engine, multi-turn tool loop synthesis, external live MCP dependency, canonical protocol redesign, streaming transport, or run-14 UI work was widened into this run
+ - Known issues / follow-ups:
+   - the broader root `build` and `test` commands still fail on the inherited schema-tools/Biome generated-types path
+
+### Run `14-router-runtime-ui-foundation`
+
+- Run folder: `/.recursive/run/14-router-runtime-ui-foundation/`
 - Artifacts:
   - `00-requirements.md`
   - `00-worktree.md`
   - `01-as-is.md`
-  - `01.5-root-cause.md`
   - `02-to-be-plan.md`
   - `03-implementation-summary.md`
   - `03.5-code-review.md`
@@ -396,15 +425,16 @@
   - `07-state-update.md`
   - `08-memory-impact.md`
 - What changed:
-  - added `/role-model-router/packages/tool-registry/` as the runtime-owned provider-agnostic tool registry with strict required-field validation, execution receipts, and failed-execution diagnostics
-  - extended `/role-model-router/packages/provider-mcp/` from discovery-only shaping into runtime MCP connector-definition input while keeping discovery/export responsibilities separate from execution
-  - extended `/role-model-router/apps/runtime-host-bridge/` and `/role-model-router/packages/runtime-observability/` so routed tool calls surface as OpenAI-compatible `tool_calls`, execute through the runtime registry, persist tooling receipts and diagnostics, and validate through the new root `runtime:validate-tools` command
-  - added `runtime: "./dist/index.js"` export conditions across the runtime dependency graph so compiled runtime verification works under plain Node instead of only `tsx`-backed source execution
+  - added `/role-model-router/apps/runtime-ui/` as the first repo-owned runtime operator shell with the `/app`, `/app/providers`, `/app/accounts`, `/app/endpoints`, `/app/workbench`, `/app/requests`, `/app/requests/:requestId`, and `/app/runtime` route family
+  - extended `/role-model-router/apps/runtime-host-bridge/` plus `/role-model-router/packages/sqlite-memory/` with runtime summary, providers, accounts, account upsert, and endpoint-list control-plane seams plus the repo-local `runtime:validate-ui` command
+  - widened the normalized catalog and provider-account layer for the first Moonshot/Kimi provider slice, including role-model-owned provider presets, explicit supported auth modes, and an honest backend-limited Kimi device-OAuth surface
 - Why:
-  - to complete the deferred MCP-and-tools extension as an additive runtime layer without reopening the already-committed router, trace, usage, or single-host baseline contracts
+  - to establish the first repo-owned operator UI and provider/account onboarding flow on top of the existing single-host runtime baseline instead of continuing to rely only on vendored host surfaces
 - How:
-  - implemented strict RED/GREEN TDD across the new tool-registry and MCP connector seams, repaired the compiled-runtime export graph after a root-cause analysis, accepted delegated Phase 3.5 review, then repaired the one substantive review finding and revalidated the final path
+  - implemented strict RED/GREEN TDD across catalog, provider-account, SQLite, host-bridge, and runtime-ui helper slices, accepted delegated Phase 3.5 code review, captured a repaired Phase 4 validation matrix with accurate exit codes, and confirmed route-level browser QA against the live host bridge and UI dev server
 - What was not done:
-  - no orchestration engine, multi-turn tool loop synthesis, external live MCP dependency, canonical protocol redesign, streaming transport, or run-14 UI work was widened into this run
+  - no full Kimi device-OAuth token lifecycle productization, automatic endpoint materialization from account upserts, broader public/docs/catalog shell work, or run-13 MCP/tool-extension closeout was added here
 - Known issues / follow-ups:
+  - Kimi Code remains intentionally `backend-limited`; the UI exposes real OAuth metadata but does not claim durable token exchange/refresh is complete
+  - the endpoint registry remained on the current three-entry runtime baseline after the manual-QA Moonshot account upsert, so account save does not yet auto-materialize new endpoint rows in this run
   - the broader root `build` and `test` commands still fail on the inherited schema-tools/Biome generated-types path

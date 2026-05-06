@@ -11,12 +11,22 @@
       "authFamily": "api-key",
       "adapterFamily": "ai-sdk-anthropic",
       "controlPlaneRequirements": ["workspace.required"]
+    },
+    "moonshotai": {
+      "providerKind": "provider-openai",
+      "authFamily": "api-key",
+      "adapterFamily": "ai-sdk-openai-compatible",
+      "supportedAuthModes": ["api-key-static", "oauth2-device-code"],
+      "controlPlaneRequirements": ["workspace.required", "kimi-code.oauth.device"]
     }
   },
   "models": {
     "openai/gpt-4.1-mini-fast": {
       "capabilities": ["latency.optimized"],
       "localNotes": ["Derived from base model with a runtime-specific fast profile"]
+    },
+    "moonshotai/kimi-k2.5": {
+      "localNotes": ["Moonshot Open Platform catalog slice with Kimi Code OAuth onboarding support"]
     }
   }
 }

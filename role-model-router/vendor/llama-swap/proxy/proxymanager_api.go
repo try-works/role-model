@@ -37,6 +37,7 @@ func addApiHandlers(pm *ProxyManager) {
 		apiGroup.GET("/role-model/requests", pm.apiProxyRoleModelBridge)
 		apiGroup.GET("/role-model/requests/:id", pm.apiProxyRoleModelBridge)
 		apiGroup.GET("/role-model/endpoints/:id/profile", pm.apiProxyRoleModelBridge)
+		apiGroup.GET("/role-model/downstream/openai", pm.apiProxyRoleModelBridge)
 	}
 }
 

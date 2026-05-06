@@ -1,0 +1,114 @@
+
+### RUNNING corepack pnpm --filter @role-model-router/runtime-host-bridge exec vitest run test/index.test.ts
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/14-router-runtime-ui-foundation/role-model-router/apps/runtime-host-bridge[39m
+
+(node:48384) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [31mΓ¥»[39m test/index.test.ts [2m([22m[2m11 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[33m 507[2mms[22m[39m
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22mcreates a stable model-list response grouped by model id[32m 17[2mms[22m[39m
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22mmaps a chat-completions request into role-model routing and execution inputs[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22mserves health and model-list endpoints[32m 48[2mms[22m[39m
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22mserves runtime control-plane summary, provider, account, and endpoint routes[32m 35[2mms[22m[39m
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22mserves chat-completions responses with role-model execution metadata[32m 10[2mms[22m[39m
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22mrejects streaming chat-completions requests until streaming transport is implemented[32m 6[2mms[22m[39m
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22mcreates a runtime backend that executes chat-completions through the real routing and adapter path[32m 108[2mms[22m[39m
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22mcreates a runtime backend that persists structured request and endpoint inspection state[32m 82[2mms[22m[39m
+[31m   [31m├ù[31m runtime-host-bridge[2m > [22mcreates a runtime backend that exposes provider presets, runtime summary, and account upserts[39m[32m 103[2mms[22m[39m
+[31m     ΓåÆ expected [ ΓÇª(3) ] to deeply equal ArrayContaining{ΓÇª}[39m
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22mserves structured request and endpoint inspection routes through the bridge server[32m 94[2mms[22m[39m
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22mresolves bridge server options from explicit values and defaults[32m 0[2mms[22m[39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/index.test.ts > runtime-host-bridge > creates a runtime backend that exposes provider presets, runtime summary, and account upserts
+AssertionError: expected [ ΓÇª(3) ] to deeply equal ArrayContaining{ΓÇª}
+
+- Expected
++ Received
+
+- ArrayContaining [
+-   ObjectContaining {
+-     "providerId": "moonshotai",
+-     "variants": [
+-       ObjectContaining {
+-         "authMode": "api-key-static",
+-         "variantId": "moonshot-open-platform",
+-       },
+-       ObjectContaining {
+-         "authMode": "oauth2-device-code",
+-         "availability": "backend-limited",
+-         "oauth": ObjectContaining {
+-           "clientId": "17e5f671-d194-4dfb-9706-5516cb48c098",
+-           "oauthHost": "https://auth.kimi.com",
++ [
++   {
++     "adapterFamily": "ai-sdk-anthropic",
++     "apiBase": "https://api.anthropic.com/v1",
++     "authFamily": "api-key",
++     "controlPlaneRequirements": [
++       "workspace.required",
++     ],
++     "displayName": "Anthropic",
++     "envVars": [
++       "ANTHROPIC_API_KEY",
++     ],
++     "localOverrideApplied": true,
++     "providerId": "anthropic",
++     "providerKind": "provider-anthropic",
++     "supportedAuthModes": [],
+    },
+-         "variantId": "kimi-code",
++   {
++     "adapterFamily": "ai-sdk-openai",
++     "apiBase": "https://api.openai.com/v1",
++     "authFamily": "api-key",
++     "controlPlaneRequirements": [
++       "organization.optional",
++     ],
++     "displayName": "OpenAI",
++     "envVars": [
++       "OPENAI_API_KEY",
++     ],
++     "localOverrideApplied": true,
++     "providerId": "openai",
++     "providerKind": "provider-openai",
++     "supportedAuthModes": [],
+    },
++   {
++     "adapterFamily": "ai-sdk-openai-compatible",
++     "apiBase": "https://api.moonshot.ai/v1",
++     "authFamily": "api-key",
++     "controlPlaneRequirements": [
++       "workspace.required",
++       "kimi-code.oauth.device",
++     ],
++     "displayName": "Moonshot AI",
++     "envVars": [
++       "MOONSHOT_API_KEY",
++     ],
++     "localOverrideApplied": true,
++     "providerId": "moonshotai",
++     "providerKind": "provider-openai",
++     "supportedAuthModes": [
++       "api-key-static",
++       "oauth2-device-code",
+      ],
+    },
+  ]
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m10 passed[39m[22m[90m (11)[39m
+[2m   Start at [22m 05:12:49
+[2m   Duration [22m 1.35s[2m (transform 255ms, setup 0ms, collect 316ms, tests 507ms, environment 0ms, prepare 194ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\14-router-runtime-ui-foundation\role-model-router\apps\runtime-host-bridge:
+ΓÇëERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓÇë Command failed with exit code 1: vitest run test/index.test.ts
+
+EXPECTED FAIL (exit 1)
+

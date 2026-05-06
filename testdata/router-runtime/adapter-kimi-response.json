@@ -1,0 +1,19 @@
+{
+  "id": "resp_kimi_01",
+  "output": [
+    {
+      "type": "message",
+      "role": "assistant",
+      "content": [
+        {
+          "type": "output_text",
+          "text": "Kimi Code summary"
+        }
+      ]
+    }
+  ],
+  "usage": {
+    "input_tokens": 28,
+    "output_tokens": 18
+  }
+}

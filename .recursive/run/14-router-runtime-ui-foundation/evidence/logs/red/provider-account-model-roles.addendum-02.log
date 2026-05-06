@@ -1,0 +1,78 @@
+
+> @role-model-router/provider-account@0.0.0 test D:\DEV\role-model\.worktrees\14-router-runtime-ui-foundation\role-model-router\packages\provider-account
+> vitest run test/index.test.ts
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/14-router-runtime-ui-foundation/role-model-router/packages/provider-account[39m
+
+ [31mΓ¥»[39m test/index.test.ts [2m([22m[2m6 tests[22m[2m | [22m[31m2 failed[39m[2m)[22m[32m 66[2mms[22m[39m
+   [32mΓ£ô[39m SUPPORTED_AUTH_MODES[2m > [22mcovers the roadmap-required auth modes explicitly[32m 4[2mms[22m[39m
+   [32mΓ£ô[39m validateProviderAccounts[2m > [22mvalidates provider-account fixtures against catalog provider metadata without exposing raw secrets[32m 31[2mms[22m[39m
+   [32mΓ£ô[39m validateProviderAccounts[2m > [22mreports incompatible auth modes for api-key-only catalog providers[32m 3[2mms[22m[39m
+   [32mΓ£ô[39m validateProviderAccounts[2m > [22maccepts kimi device oauth when the provider explicitly supports it[32m 1[2mms[22m[39m
+[31m   [31m├ù[31m validateProviderAccounts[2m > [22maccepts model role assignments for allowed models and known runtime roles[39m[32m 21[2mms[22m[39m
+[31m     ΓåÆ expected { ΓÇª(17) } to match object { ΓÇª(2) }
+(20 matching properties omitted from actual)[39m
+[31m   [31m├ù[31m validateProviderAccounts[2m > [22mrejects model role assignments that target models outside the allowed model set[39m[32m 3[2mms[22m[39m
+[31m     ΓåÆ expected [ { ΓÇª(17) } ] to have a length of +0 but got 1[39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 2 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/index.test.ts > validateProviderAccounts > accepts model role assignments for allowed models and known runtime roles
+AssertionError: expected { ΓÇª(17) } to match object { ΓÇª(2) }
+(20 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "modelRoleBindings": [
+-     {
+-       "modelId": "moonshotai/kimi-k2.5",
+-       "roleIds": [
+-         "general.chat",
+-         "coder.patch",
+-       ],
+-     },
+-   ],
+    "providerAccountId": "moonshot.personal.primary",
+  }
+
+ Γ¥» test/index.test.ts:251:32
+    249| 
+    250|     expect(result.diagnostics).toEqual([]);
+    251|     expect(result.accounts[0]).toMatchObject({
+       |                                ^
+    252|       providerAccountId: "moonshot.personal.primary",
+    253|       modelRoleBindings: [
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/2]ΓÄ»
+
+ FAIL  test/index.test.ts > validateProviderAccounts > rejects model role assignments that target models outside the allowed model set
+AssertionError: expected [ { ΓÇª(17) } ] to have a length of +0 but got 1
+
+- Expected
++ Received
+
+- 0
++ 1
+
+ Γ¥» test/index.test.ts:330:29
+    328|     });
+    329| 
+    330|     expect(result.accounts).toHaveLength(0);
+       |                             ^
+    331|     expect(result.diagnostics).toContainEqual(
+    332|       expect.objectContaining({
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[2/2]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m2 failed[39m[22m[2m | [22m[1m[32m4 passed[39m[22m[90m (6)[39m
+[2m   Start at [22m 07:08:47
+[2m   Duration [22m 1.33s[2m (transform 223ms, setup 0ms, collect 240ms, tests 66ms, environment 1ms, prepare 442ms)[22m
+
+D:\DEV\role-model\.worktrees\14-router-runtime-ui-foundation\role-model-router\packages\provider-account:
+ΓÇëERR_PNPM_RECURSIVE_RUN_FIRST_FAILΓÇë @role-model-router/provider-account@0.0.0 test: `vitest run test/index.test.ts`
+Exit status 1

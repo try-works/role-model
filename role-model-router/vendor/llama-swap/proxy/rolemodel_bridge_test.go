@@ -101,6 +101,7 @@ func TestProxyManager_RoleModelBridgeProxiesObservationAPI(t *testing.T) {
 		"/api/role-model/requests",
 		"/api/role-model/requests/req-runtime-bridge-route-001",
 		"/api/role-model/endpoints/openai.personal.primary.us-east-1.fast/profile",
+		"/api/role-model/downstream/openai",
 	} {
 		req := httptest.NewRequest(http.MethodGet, path, nil)
 		rec := httptest.NewRecorder()

@@ -17,6 +17,7 @@
       "envVars": [
         "ANTHROPIC_API_KEY"
       ],
+      "supportedAuthModes": [],
       "controlPlaneRequirements": [
         "workspace.required"
       ],
@@ -38,8 +39,35 @@
       "envVars": [
         "OPENAI_API_KEY"
       ],
+      "supportedAuthModes": [],
       "controlPlaneRequirements": [
         "organization.optional"
+      ],
+      "localOverrideApplied": true,
+      "upstreamProvenance": {
+        "vendor": "models.dev",
+        "commit": "8f3c2d1",
+        "capturedAt": "2026-05-04T12:00:00Z",
+        "schemaVersion": "models.dev.v1"
+      }
+    },
+    {
+      "providerId": "moonshotai",
+      "displayName": "Moonshot AI",
+      "providerKind": "provider-openai",
+      "authFamily": "api-key",
+      "adapterFamily": "ai-sdk-openai-compatible",
+      "apiBase": "https://api.moonshot.ai/v1",
+      "envVars": [
+        "MOONSHOT_API_KEY"
+      ],
+      "supportedAuthModes": [
+        "api-key-static",
+        "oauth2-device-code"
+      ],
+      "controlPlaneRequirements": [
+        "workspace.required",
+        "kimi-code.oauth.device"
       ],
       "localOverrideApplied": true,
       "upstreamProvenance": {
@@ -195,6 +223,56 @@
       "localOverrideApplied": true,
       "localNotes": [
         "Derived from base model with a runtime-specific fast profile"
+      ],
+      "upstreamProvenance": {
+        "vendor": "models.dev",
+        "commit": "8f3c2d1",
+        "capturedAt": "2026-05-04T12:00:00Z",
+        "schemaVersion": "models.dev.v1"
+      }
+    },
+    {
+      "modelId": "moonshotai/kimi-k2.5",
+      "providerId": "moonshotai",
+      "providerKind": "provider-openai",
+      "authFamily": "api-key",
+      "displayName": "Kimi K2.5",
+      "version": "2026-04-01",
+      "capabilities": [
+        "text.chat",
+        "tools.function_calling",
+        "structured.output"
+      ],
+      "modalities": [
+        "text"
+      ],
+      "contextWindow": 262144,
+      "maxOutputTokens": 16384,
+      "pricing": null,
+      "requestShapeHints": {
+        "providerShape": "openai.chat.completions",
+        "bodyKeys": [
+          "temperature",
+          "max_tokens",
+          "tools"
+        ],
+        "headerKeys": [
+          "Authorization"
+        ]
+      },
+      "experimentalModes": [
+        {
+          "modeId": "reasoning.long-context",
+          "label": "Long context reasoning"
+        }
+      ],
+      "extendsProvenance": {
+        "baseModelId": null,
+        "chain": []
+      },
+      "localOverrideApplied": true,
+      "localNotes": [
+        "Moonshot Open Platform catalog slice with Kimi Code OAuth onboarding support"
       ],
       "upstreamProvenance": {
         "vendor": "models.dev",

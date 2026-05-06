@@ -1,0 +1,21 @@
+COMMAND: corepack pnpm run runtime:validate-ui
+
+
+> role-model@0.0.0 runtime:validate-ui D:\DEV\role-model\.worktrees\14-router-runtime-ui-foundation
+> corepack pnpm --filter @role-model-router/runtime-host-bridge exec tsx src/validate-ui.ts
+
+{
+  "providerCount": 3,
+  "accountCount": 2,
+  "endpointCount": 3,
+  "moonshotVariantIds": [
+    "moonshot-open-platform",
+    "kimi-code"
+  ],
+  "upsertedAccountId": "moonshot.personal.primary",
+  "accountListIncludesUpsert": true
+}
+(node:44436) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+EXIT_CODE: 0

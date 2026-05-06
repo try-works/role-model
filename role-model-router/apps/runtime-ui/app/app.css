@@ -1,0 +1,57 @@
+@import "tailwindcss";
+
+:root {
+  --rm-bg: #f3f0e8;
+  --rm-surface: rgba(250, 248, 243, 0.94);
+  --rm-surface-strong: #ffffff;
+  --rm-panel: #ece7dc;
+  --rm-fg: #161410;
+  --rm-secondary: rgba(22, 20, 16, 0.72);
+  --rm-muted: rgba(22, 20, 16, 0.52);
+  --rm-border: rgba(22, 20, 16, 0.1);
+  --rm-border-strong: rgba(22, 20, 16, 0.18);
+  --rm-accent: #b23c2a;
+  --rm-accent-subtle: rgba(178, 60, 42, 0.12);
+  --rm-radius-shell: 0px;
+  --rm-radius-panel: 0px;
+  --rm-radius-field: 0px;
+  --rm-shadow-card: 0 18px 40px rgba(22, 20, 16, 0.04);
+  --rm-shell-width: 1480px;
+}
+
+html {
+  scrollbar-gutter: stable;
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+  background:
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0)),
+    var(--rm-bg);
+  color: var(--rm-fg);
+  font-family: "IBM Plex Sans", "Hanken Grotesk", "Barlow", "Host Grotesk", "DM Sans", system-ui, sans-serif;
+}
+
+::selection {
+  background: var(--rm-accent-subtle);
+}
+
+code,
+pre,
+textarea,
+input[type="text"] {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}

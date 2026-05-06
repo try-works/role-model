@@ -56,6 +56,7 @@ export interface ProviderOverride {
   readonly providerKind?: string;
   readonly authFamily?: string;
   readonly adapterFamily?: string;
+  readonly supportedAuthModes?: readonly string[];
   readonly controlPlaneRequirements?: readonly string[];
 }
 
@@ -90,6 +91,7 @@ export interface NormalizedCatalogProvider {
   readonly adapterFamily: string;
   readonly apiBase: string;
   readonly envVars: readonly string[];
+  readonly supportedAuthModes: readonly string[];
   readonly controlPlaneRequirements: readonly string[];
   readonly localOverrideApplied: boolean;
   readonly upstreamProvenance: CatalogSnapshotSource;
@@ -252,6 +254,7 @@ export function normalizeCatalogSnapshot(
         adapterFamily: override?.adapterFamily ?? provider.adapterFamilyHint,
         apiBase: provider.apiBase,
         envVars: provider.envVars,
+        supportedAuthModes: override?.supportedAuthModes ?? [],
         controlPlaneRequirements: override?.controlPlaneRequirements ?? [],
         localOverrideApplied: Boolean(override),
         upstreamProvenance: snapshot.source,

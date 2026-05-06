@@ -1,0 +1,7 @@
+
+=== corepack pnpm --filter @role-model-router/runtime-host-bridge build ===
+
+> @role-model-router/runtime-host-bridge@0.0.0 build D:\DEV\role-model\.worktrees\14-router-runtime-ui-foundation\role-model-router\apps\runtime-host-bridge
+> tsc -p tsconfig.json
+
+EXIT_CODE=0

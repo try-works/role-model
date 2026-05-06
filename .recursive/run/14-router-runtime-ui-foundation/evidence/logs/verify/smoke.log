@@ -1,0 +1,33 @@
+COMMAND: corepack pnpm run smoke
+
+
+> role-model@0.0.0 smoke D:\DEV\role-model\.worktrees\14-router-runtime-ui-foundation
+> corepack pnpm --filter @role-model-router/gateway-smoke exec tsx src/index.ts
+
+(node:38984) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+{
+  "chosen_endpoint_id": "openai.personal.primary.us-east-1.fast",
+  "adapter_family": "ai-sdk-openai",
+  "router_decision_path": "D:\\DEV\\role-model\\.worktrees\\14-router-runtime-ui-foundation\\runtime-output\\gateway-smoke\\router-decision.json",
+  "request_capture_path": "D:\\DEV\\role-model\\.worktrees\\14-router-runtime-ui-foundation\\runtime-output\\gateway-smoke\\request-capture.json",
+  "response_capture_path": "D:\\DEV\\role-model\\.worktrees\\14-router-runtime-ui-foundation\\runtime-output\\gateway-smoke\\response-capture.json",
+  "request_observation_path": "D:\\DEV\\role-model\\.worktrees\\14-router-runtime-ui-foundation\\runtime-output\\gateway-smoke\\request-observation.json",
+  "otel_export_path": "D:\\DEV\\role-model\\.worktrees\\14-router-runtime-ui-foundation\\runtime-output\\gateway-smoke\\otel-export.json",
+  "usage_summary": {
+    "by_app_id": {
+      "app-runtime": 1
+    },
+    "by_endpoint_id": {
+      "openai.personal.primary.us-east-1.fast": 1
+    },
+    "by_model_id": {
+      "openai/gpt-4.1-mini-fast": 1
+    },
+    "by_provider_kind": {
+      "remote_openai_compat": 1
+    }
+  }
+}
+
+EXIT_CODE: 0

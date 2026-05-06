@@ -1,6 +1,6 @@
 Type: `domain`
 Status: `CURRENT`
-Scope: `Stable baseline ownership for the repo workspace, canonical protocol tree, shared packages, router family, fixtures, and validation surfaces introduced by run 00, tightened by runs 01-03, and extended through the single-host router-runtime baseline completed in runs 04-13.`
+Scope: `Stable baseline ownership for the repo workspace, canonical protocol tree, shared packages, router family, fixtures, validation surfaces, and the repo-owned runtime operator shell extended through the single-host router-runtime baseline completed in runs 04-14.`
 Owns-Paths:
 - `/README.md`
 - `/LICENSE`
@@ -34,6 +34,7 @@ Source-Runs:
 - `11-router-runtime-observability-feedback`
 - `12-router-runtime-hardening-operations`
 - `13-router-runtime-mcp-tools-extension`
+- `14-router-runtime-ui-foundation`
 Validated-At-Commit: `working-tree`
 Last-Validated: `2026-05-06T20:38:27.014+08:00`
 Tags:
@@ -82,6 +83,10 @@ This repository now has a real product baseline rather than only recursive scaff
 - The deterministic local runtime validation floor now includes `runtime:validate-tools`, which exercises one fixture-backed tool-execution path and confirms stored tool execution receipts through the existing observation model
 - The compiled runtime package graph now declares `runtime` export conditions so plain Node uses built `dist` entrypoints for executable verification instead of falling back to source-only TypeScript entrypoints
 - Durable operator guidance for the single-host runtime baseline now lives under `/docs/operations/01-router-runtime-hardening-playbook.md`
+- The repo now also owns a runtime operator shell under `/role-model-router/apps/runtime-ui/` with dashboard, provider onboarding, account registry, endpoint registry, workbench, request inspection, and runtime summary routes layered over the existing host bridge
+- The host bridge now exposes runtime summary, provider list, account list/upsert, and endpoint list control-plane routes, and the repo-local `runtime:validate-ui` command proves those operator surfaces against the live runtime baseline
+- The first repo-owned provider-onboarding slice is Moonshot/Kimi-first: Moonshot Open Platform is modeled as a ready API-key path, while Kimi Code remains intentionally backend-limited with real device-OAuth metadata visible in the UI and control plane
+- Provider-account writes remain credential-reference-only; the UI can upsert runtime accounts, but endpoint rows still remain controlled by the existing registry baseline rather than being auto-created by account-save side effects
 - Browser, edge, and native provider families are intentionally scaffold-grade in this baseline
 
 ## Validation Path
@@ -90,7 +95,7 @@ This repository now has a real product baseline rather than only recursive scaff
 - Root workspace scripts now use PATH-independent nested `corepack pnpm ...` invocations so the canonical shell-out entrypoints stay stable even when a child shell does not expose a global pnpm shim
 - GitHub Actions validates this repo from a clean checkout of tracked files only; local Biome parity work should prefer a clean export or tracked-file-targeted checks instead of repo-root sweeps that also traverse nested `.worktrees/`
 - On Windows, CRLF-only worktree churn can make local status noisier than the real Linux CI content diff; use `git diff` to identify the actual files that need formatter commits
-- The repo-local runtime validation floor is the staged command family `runtime:validate-state`, `runtime:validate-registry`, `runtime:validate-routing`, `runtime:validate-adapter`, `runtime:validate-host`, `runtime:validate-observability`, `runtime:validate-operations`, `runtime:validate-tools`, plus `smoke`
+- The repo-local runtime validation floor is the staged command family `runtime:validate-state`, `runtime:validate-registry`, `runtime:validate-routing`, `runtime:validate-adapter`, `runtime:validate-ui`, `runtime:validate-host`, `runtime:validate-observability`, `runtime:validate-operations`, `runtime:validate-tools`, plus `smoke`
 - When validating runtime work, treat the focused runtime validators and package tests as the run-owned baseline; broader root `build` and `test` still reproduce the inherited schema-tools/Biome generated-types failure, and vendored proxy/full Go tests on Windows still reproduce the upstream `sleep` PATH assumption
 
 ## Scope Boundary

@@ -1,0 +1,5 @@
+> @role-model-router/runtime-ui@ test
+FAIL  app/lib/runtime-api.test.ts > fetchDownstreamOpenAIProviderConfig > loads the downstream OpenAI-compatible provider contract for consumer apps
+TypeError: fetchDownstreamOpenAIProviderConfig is not a function
+FAIL  app/lib/view-models.test.ts > buildDownstreamProviderGuide > creates stable connection rows and examples for downstream OpenAI-compatible clients
+TypeError: buildDownstreamProviderGuide is not a function

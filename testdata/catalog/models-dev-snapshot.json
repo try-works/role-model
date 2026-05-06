@@ -21,6 +21,14 @@
       "apiBase": "https://api.anthropic.com/v1",
       "envVars": ["ANTHROPIC_API_KEY"],
       "adapterFamilyHint": "anthropic-messages"
+    },
+    {
+      "providerId": "moonshotai",
+      "displayName": "Moonshot AI",
+      "npmPackage": "@ai-sdk/openai-compatible",
+      "apiBase": "https://api.moonshot.ai/v1",
+      "envVars": ["MOONSHOT_API_KEY"],
+      "adapterFamilyHint": "ai-sdk-openai-compatible"
     }
   ],
   "models": [
@@ -83,6 +91,27 @@
         "headerKeys": ["anthropic-version"]
       },
       "experimentalModes": []
+    },
+    {
+      "modelId": "moonshotai/kimi-k2.5",
+      "providerId": "moonshotai",
+      "displayName": "Kimi K2.5",
+      "version": "2026-04-01",
+      "capabilities": ["text.chat", "tools.function_calling", "structured.output"],
+      "modalities": ["text"],
+      "contextWindow": 262144,
+      "maxOutputTokens": 16384,
+      "requestShapeHints": {
+        "providerShape": "openai.chat.completions",
+        "bodyKeys": ["temperature", "max_tokens", "tools"],
+        "headerKeys": ["Authorization"]
+      },
+      "experimentalModes": [
+        {
+          "modeId": "reasoning.long-context",
+          "label": "Long context reasoning"
+        }
+      ]
     }
   ]
 }

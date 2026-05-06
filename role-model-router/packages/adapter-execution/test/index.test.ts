@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 
 import {
   executeRoutedRequest,
+  executeLiveRoutedRequest,
   type ProviderAdapter,
   type RuntimeExecutionRequest,
 } from "../src/index.js";
@@ -567,5 +568,337 @@ describe("executeRoutedRequest", () => {
         },
       }),
     ).toThrow("No provider adapter is registered");
+  });
+
+  test("can execute through a live provider-request callback instead of fixture captures", async () => {
+    const adapters: ProviderAdapter[] = [
+      {
+        adapterFamily: "ai-sdk-openai-compatible",
+        negotiateCapabilities: () => ({
+          structuredOutputs: "unsupported",
+          toolCalling: {
+            supported: true,
+            extraction: "provider-native",
+          },
+          streaming: {
+            text: "message",
+            toolCalls: "message",
+            toolArguments: "message",
+          },
+          promptCaching: {
+            supported: false,
+            mode: "unsupported",
+          },
+          usage: {
+            inputTokens: true,
+            outputTokens: true,
+            cacheReadTokens: false,
+            cacheWriteTokens: false,
+          },
+        }),
+        buildRequest: ({ target, executionRequest: request }) => ({
+          providerFamily: target.adapterFamily,
+          endpointId: target.endpointId,
+          url: `${target.apiBase}/chat/completions`,
+          headers: {
+            authorization: "Bearer oauth/moonshotai/account",
+          },
+          body: {
+            model: target.modelId,
+            messages: request.messages,
+          },
+        }),
+        normalizeResponse: ({ requestCapture, responseCapture }) => ({
+          providerFamily: responseCapture.providerFamily,
+          requestCapture,
+          responseCapture,
+          outputText: String(
+            ((responseCapture.body as { choices?: Array<{ message?: { content?: string } }> }).choices ?? [])[0]
+              ?.message?.content ?? "",
+          ),
+          toolCalls: [],
+          finishReason: "stop",
+          structuredOutputMode: "none",
+          stream: {
+            requested: false,
+            textDeltas: 1,
+            toolCallDeltas: 0,
+            toolArgumentDeltas: 0,
+          },
+          promptCache: {
+            requested: false,
+            used: false,
+            readTokens: 0,
+            writeTokens: 0,
+          },
+          usage: {
+            inputTokens: 12,
+            outputTokens: 7,
+            cacheReadTokens: 0,
+            cacheWriteTokens: 0,
+          },
+          errorClass: null,
+          latencyMs: 45,
+          diagnostics: [],
+        }),
+      },
+    ];
+
+    const result = await executeLiveRoutedRequest({
+      routeResult: {
+        projected: {
+          routeInput: {
+            request: {
+              requestId: "req-kimi-live",
+              taskType: "text.chat",
+              requiredCapabilities: ["text.chat"],
+              preferredCapabilities: [],
+              requiredModalities: ["text"],
+              contextTokens: 16,
+              needsTools: false,
+              strategy: "balanced",
+              preferLocal: false,
+            },
+            candidates: [],
+            roleDefinitions: [],
+            taskDefinitions: [],
+            roleBindings: [],
+          },
+          routingDiagnostics: {
+            retrievalReceiptId: "receipt-kimi-live",
+            routingModel: {
+              enabled: false,
+              endpointId: null,
+              preferredEndpointIds: [],
+              ignoredEndpointIds: [],
+            },
+          },
+        },
+        decision: {
+          routing_decision_id: "decision-req-kimi-live",
+          request_id: "req-kimi-live",
+          app_id: "app-runtime",
+          org_id: "org-runtime",
+          chosen_endpoint_id: "moonshot.personal.kimi-code.global.kimi-k2.5",
+          eligible_count: 1,
+          ineligible_count: 0,
+          policy_snapshot: {
+            policy_id: "balanced-policy",
+            strategy: "balanced",
+            compute_preference: "auto",
+            prefer_local: false,
+            budget_mode: "strict",
+            tie_break_order: ["quality", "latency_ms", "reliability", "endpoint_id"],
+            required_capabilities: ["text.chat"],
+            required_modalities: ["text"],
+            require_tools: false,
+            deny_endpoints: [],
+            allow_endpoints: [],
+            deny_provider_kinds: [],
+            allow_provider_kinds: [],
+            budget: {
+              enabled: false,
+              currency: "USD",
+            },
+            privacy: {
+              allow_remote: true,
+            },
+            targets: {
+              latency_target_ms: 150,
+              latency_max_ms: 300,
+              throughput_target_tps: 40,
+            },
+          },
+          eligibility: [],
+          scored_candidates: [],
+          fallback_endpoints: [],
+          selection_reasons: ["highest_score"],
+          used_measured: false,
+          used_declared: true,
+          scoring_version: "router-v1",
+          tie_break: {
+            order: ["quality", "latency_ms", "reliability", "endpoint_id"],
+            compared: [],
+          },
+          metric_breakdown: {
+            quality: { weight: 1, chosen_score: 1 },
+          },
+        },
+        routingDiagnostics: {
+          retrievalReceiptId: "receipt-kimi-live",
+          routingModel: {
+            enabled: false,
+            endpointId: null,
+            preferredEndpointIds: [],
+            ignoredEndpointIds: [],
+          },
+        },
+      },
+      catalog: {
+        catalogVersion: "1",
+        source: {
+          vendor: "models.dev",
+          commit: "test-catalog",
+          capturedAt: "2026-05-05T00:00:00Z",
+          schemaVersion: "1",
+        },
+        providers: [
+          {
+            providerId: "moonshotai",
+            displayName: "Moonshot AI",
+            providerKind: "provider-openai",
+            authFamily: "api-key",
+            adapterFamily: "ai-sdk-openai-compatible",
+            apiBase: "https://api.kimi.test/coding/v1",
+            envVars: ["MOONSHOT_API_KEY"],
+            supportedAuthModes: ["oauth2-device-code"],
+            controlPlaneRequirements: [],
+            localOverrideApplied: false,
+            upstreamProvenance: {
+              vendor: "models.dev",
+              commit: "test-catalog",
+              capturedAt: "2026-05-05T00:00:00Z",
+              schemaVersion: "1",
+            },
+          },
+        ],
+        models: [
+          {
+            modelId: "moonshotai/kimi-k2.5",
+            providerId: "moonshotai",
+            providerKind: "provider-openai",
+            authFamily: "api-key",
+            displayName: "Kimi K2.5",
+            version: "1",
+            capabilities: ["text.chat"],
+            modalities: ["text"],
+            contextWindow: 32768,
+            maxOutputTokens: 4096,
+            pricing: null,
+            requestShapeHints: {
+              providerShape: "openai.chat.completions",
+              bodyKeys: ["messages", "max_tokens"],
+              headerKeys: ["Authorization"],
+            },
+            experimentalModes: [],
+            extendsProvenance: {
+              baseModelId: null,
+              chain: [],
+            },
+            localOverrideApplied: false,
+            localNotes: [],
+            upstreamProvenance: {
+              vendor: "models.dev",
+              commit: "test-catalog",
+              capturedAt: "2026-05-05T00:00:00Z",
+              schemaVersion: "1",
+            },
+          },
+        ],
+      },
+      accounts: [
+        {
+          providerAccountId: "moonshot.personal.kimi-code",
+          providerId: "moonshotai",
+          providerKind: "provider-openai",
+          orgScope: "personal",
+          accountScope: "workspace-default",
+          credentialRef: {
+            backend: "local-encrypted-file",
+            ref: "oauth/moonshotai/moonshot.personal.kimi-code",
+          },
+          authMode: "oauth2-device-code",
+          regionPolicy: {
+            mode: "prefer",
+            regions: ["global"],
+          },
+          baseUrlOverride: "https://api.kimi.test/coding/v1",
+          allowedModels: ["moonshotai/kimi-k2.5"],
+          deniedModels: [],
+          entitlementTags: ["chat"],
+          budgetPolicyRef: "budget.default",
+          quotaPolicyRef: "quota.default",
+          status: "active",
+          healthStatus: "healthy",
+          rotationState: "stable",
+        },
+      ],
+      registry: {
+        endpoints: [
+          {
+            identity: {
+              endpoint_id: "moonshot.personal.kimi-code.global.kimi-k2.5",
+              endpoint_kind: "remote_api",
+              provider_kind: "remote_openai_compat",
+              serving_source: "remote-service",
+              model_id: "moonshotai/kimi-k2.5",
+              runtime_version: "run14",
+              region: "global",
+              host_class: "server",
+              device_class: "server",
+              org_scope: "personal",
+            },
+            declared: {
+              endpoint_id: "moonshot.personal.kimi-code.global.kimi-k2.5",
+              capabilities: ["text.chat"],
+              modalities: ["text"],
+              max_context_tokens: 32768,
+              tool_calling: {
+                supported: true,
+                style: "openai",
+              },
+              supports_embeddings: false,
+              platform_constraints: [],
+            },
+            status: "active",
+          },
+        ],
+        diagnostics: [],
+        lifecycleSummary: {
+          active: 1,
+          degraded: 0,
+          offline: 0,
+        },
+      },
+      registrySources: {
+        cloud: [
+          {
+            endpointId: "moonshot.personal.kimi-code.global.kimi-k2.5",
+            providerAccountId: "moonshot.personal.kimi-code",
+            modelId: "moonshotai/kimi-k2.5",
+            region: "global",
+            endpointKind: "remote-openai-compatible",
+            servingSource: "remote-service",
+            lifecycleState: "active",
+            healthStatus: "healthy",
+          },
+        ],
+        local: [],
+      },
+      executionRequest: {
+        messages: [{ role: "user", content: "Say hi." }],
+      },
+      adapters,
+      executeProviderRequest: async ({ target, requestCapture }) => {
+        expect(target.adapterFamily).toBe("ai-sdk-openai-compatible");
+        expect(requestCapture.url).toBe("https://api.kimi.test/coding/v1/chat/completions");
+        return {
+          providerFamily: target.adapterFamily,
+          endpointId: target.endpointId,
+          statusCode: 200,
+          body: {
+            choices: [{ message: { content: "live kimi reply" }, finish_reason: "stop" }],
+            usage: {
+              prompt_tokens: 12,
+              completion_tokens: 7,
+            },
+          },
+        };
+      },
+    });
+
+    expect(result.target.adapterFamily).toBe("ai-sdk-openai-compatible");
+    expect(result.normalized.outputText).toBe("live kimi reply");
+    expect(result.responseCapture.statusCode).toBe(200);
   });
 });

@@ -1,0 +1,686 @@
+
+> role-model@0.0.0 runtime:validate-ui D:\DEV\role-model\.worktrees\14-router-runtime-ui-foundation
+> corepack pnpm --filter @role-model-router/runtime-host-bridge exec tsx src/validate-ui.ts
+
+(node:10128) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+{
+  "providerCount": 3,
+  "accountCount": 3,
+  "endpointCount": 4,
+  "moonshotVariantIds": [
+    "moonshot-open-platform",
+    "kimi-code"
+  ],
+  "availableRoleIds": [
+    "classifier",
+    "coder.patch",
+    "coder.review",
+    "developer",
+    "embedder",
+    "general.chat",
+    "language.detector",
+    "tool.agent"
+  ],
+  "upsertedAccountId": "moonshot.personal.primary",
+  "accountListIncludesUpsert": true,
+  "accountRoleBindingIncludesUpsert": true,
+  "activatedEndpointId": "moonshot.personal.primary.global.kimi-k2.5",
+  "endpointListIncludesActivation": true
+}
+
+> role-model@0.0.0 runtime:validate-host D:\DEV\role-model\.worktrees\14-router-runtime-ui-foundation
+> corepack pnpm --filter @role-model-router/runtime-host-bridge exec tsx src/validate-host.ts
+
+{
+  "host_base_url": "http://127.0.0.1:49730",
+  "model_count": 3,
+  "returned_model": "openai/gpt-4.1-mini-fast",
+  "request_id": "req-runtime-host-observability-001",
+  "output_text": "OpenAI summary",
+  "total_tokens": 56,
+  "structured_recent_count": 1,
+  "structured_endpoint_id": "openai.personal.primary.us-east-1.fast",
+  "structured_profile_sample_size": 2,
+  "otel_trace_id": "trace-req-runtime-host-observability-001",
+  "otel_request_id": "req-runtime-host-observability-001",
+  "logs_contains_bridge": false,
+  "capture_id": 0,
+  "capture_path": "/v1/chat/completions",
+  "request_capture_keys": [],
+  "response_capture_type": "string",
+  "stdout_tail": "ty-001 HTTP/1.1\" 200 11520 \"node\" 2.8794ms\n[INFO] Request 127.0.0.1 \"GET /api/role-model/endpoints/openai.personal.primary.us-east-1.fast/profile HTTP/1.1\" 200 996 \"node\" 5.1568ms\n[INFO] Request 127.0.0.1 \"GET /logs HTTP/1.1\" 200 578 \"node\" 0s\n[INFO] Request 127.0.0.1 \"GET /api/metrics HTTP/1.1\" 200 337 \"node\" 762.4┬╡s\n[INFO] Request 127.0.0.1 \"GET /api/captures/0 HTTP/1.1\" 200 1199 \"node\" 524.7┬╡s\n",
+  "stderr_tail": ""
+}
+
+> role-model@0.0.0 runtime:validate-operations D:\DEV\role-model\.worktrees\14-router-runtime-ui-foundation
+> corepack pnpm --filter @role-model-router/runtime-host-bridge exec tsx src/validate-operations.ts
+
+(node:25696) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+{
+  "hostValidation": {
+    "requestId": "req-runtime-host-observability-001",
+    "endpointId": "openai.personal.primary.us-east-1.fast",
+    "captureId": 0
+  },
+  "scopes": [
+    {
+      "scopeId": "operations-primary",
+      "databasePath": "C:\\Users\\erikb\\AppData\\Local\\Temp\\role-model-runtime-operations\\operations-primary\\memory\\memory.sqlite",
+      "requestId": "req-adapter-validation",
+      "endpointId": "openai.personal.primary.us-east-1.fast"
+    },
+    {
+      "scopeId": "operations-secondary",
+      "databasePath": "C:\\Users\\erikb\\AppData\\Local\\Temp\\role-model-runtime-operations\\operations-secondary\\memory\\memory.sqlite",
+      "requestId": "req-adapter-validation",
+      "endpointId": "openai.personal.primary.us-east-1.fast"
+    }
+  ],
+  "isolation": {
+    "distinctDatabasePaths": true,
+    "distinctScopeIds": true
+  },
+  "maintenance": {
+    "exportSummary": {
+      "exportPath": "C:\\Users\\erikb\\AppData\\Local\\Temp\\role-model-runtime-operations\\operations-primary\\ops\\runtime-export.json",
+      "observationCount": 1,
+      "profileCount": 1
+    },
+    "backupPath": "C:\\Users\\erikb\\AppData\\Local\\Temp\\role-model-runtime-operations\\operations-primary\\ops\\memory-backup.sqlite",
+    "deletedDatabaseMissing": true,
+    "restoredObservation": {
+      "requestId": "req-adapter-validation",
+      "routingDecisionId": "decision-req-adapter-validation",
+      "endpointId": "openai.personal.primary.us-east-1.fast",
+      "conversationId": "conversation-main",
+      "decision": {
+        "routing_decision_id": "decision-req-adapter-validation",
+        "request_id": "req-adapter-validation",
+        "app_id": "app-runtime",
+        "org_id": "org-runtime",
+        "policy_snapshot": {
+          "policy_id": "balanced-policy",
+          "strategy": "balanced",
+          "compute_preference": "auto",
+          "prefer_local": false,
+          "budget_mode": "strict",
+          "tie_break_order": [
+            "quality",
+            "latency_ms",
+            "reliability",
+            "endpoint_id"
+          ],
+          "required_capabilities": [
+            "text.chat"
+          ],
+          "required_modalities": [
+            "text"
+          ],
+          "require_tools": true,
+          "deny_endpoints": [],
+          "allow_endpoints": [
+            "openai.personal.primary.us-east-1.fast",
+            "anthropic.team.shared.us-east-1.default"
+          ],
+          "deny_provider_kinds": [],
+          "allow_provider_kinds": [],
+          "budget": {
+            "enabled": true,
+            "currency": "USD",
+            "max_cost_per_request": 0.01,
+            "target_cost_per_request": 0.01
+          },
+          "privacy": {
+            "allow_remote": true
+          },
+          "targets": {
+            "latency_target_ms": 150,
+            "latency_max_ms": 300,
+            "throughput_target_tps": 40
+          }
+        },
+        "eligibility": [
+          {
+            "endpoint_id": "openai.personal.primary.us-east-1.fast",
+            "eligible": true,
+            "exclusions": []
+          },
+          {
+            "endpoint_id": "anthropic.team.shared.us-east-1.default",
+            "eligible": true,
+            "exclusions": []
+          },
+          {
+            "endpoint_id": "cli.local.coder",
+            "eligible": false,
+            "exclusions": [
+              {
+                "code": "POLICY_DENY_ENDPOINT",
+                "detail": "Endpoint is denied by routing policy."
+              },
+              {
+                "code": "CAPABILITY_MISSING",
+                "detail": "Endpoint is missing a required capability."
+              }
+            ]
+          }
+        ],
+        "scored_candidates": [
+          {
+            "endpoint_id": "openai.personal.primary.us-east-1.fast",
+            "total_score": 0.7827425902464056,
+            "metric_breakdown": {
+              "quality": {
+                "value": 0.92,
+                "source": "measured",
+                "raw": {
+                  "judge_score": 0.92
+                }
+              },
+              "latency": {
+                "value": 0.5037129512320283,
+                "source": "measured",
+                "raw": {
+                  "latency_ms_p50": 100,
+                  "latency_ms_p95": 135,
+                  "effective_latency_ms": 108.75
+                }
+              },
+              "throughput": {
+                "value": 1,
+                "source": "measured",
+                "raw": {
+                  "tokens_per_sec": 85
+                }
+              },
+              "cost": {
+                "value": 0.6,
+                "source": "measured",
+                "raw": {
+                  "cost_per_1k_tokens_est": 0.004,
+                  "target_cost_per_request": 0.01
+                }
+              },
+              "reliability": {
+                "value": 0.99,
+                "source": "measured",
+                "raw": {
+                  "failure_rate": 0.01
+                }
+              },
+              "preference": {
+                "value": 0.75,
+                "source": "declared",
+                "raw": {
+                  "cache_affinity": true,
+                  "cache_affinity_delta": 0.1,
+                  "routing_model_rank": 0,
+                  "routing_model_rank_delta": 0.15
+                }
+              }
+            },
+            "tie_break": {
+              "quality": 0.92,
+              "latency_ms": 108.75,
+              "reliability": 0.99,
+              "endpoint_id": "openai.personal.primary.us-east-1.fast"
+            }
+          },
+          {
+            "endpoint_id": "anthropic.team.shared.us-east-1.default",
+            "total_score": 0.6977027510291008,
+            "metric_breakdown": {
+              "quality": {
+                "value": 0.86,
+                "source": "measured",
+                "raw": {
+                  "judge_score": 0.86
+                }
+              },
+              "latency": {
+                "value": 0.3960137551455044,
+                "source": "measured",
+                "raw": {
+                  "latency_ms_p50": 130,
+                  "latency_ms_p95": 175,
+                  "effective_latency_ms": 141.25
+                }
+              },
+              "throughput": {
+                "value": 1,
+                "source": "measured",
+                "raw": {
+                  "tokens_per_sec": 60
+                }
+              },
+              "cost": {
+                "value": 0.4,
+                "source": "measured",
+                "raw": {
+                  "cost_per_1k_tokens_est": 0.006,
+                  "target_cost_per_request": 0.01
+                }
+              },
+              "reliability": {
+                "value": 0.97,
+                "source": "measured",
+                "raw": {
+                  "failure_rate": 0.03
+                }
+              },
+              "preference": {
+                "value": 0.7,
+                "source": "declared",
+                "raw": {
+                  "continuity_affinity": true,
+                  "continuity_affinity_delta": 0.1,
+                  "cache_affinity": true,
+                  "cache_affinity_delta": 0.1
+                }
+              }
+            },
+            "tie_break": {
+              "quality": 0.86,
+              "latency_ms": 141.25,
+              "reliability": 0.97,
+              "endpoint_id": "anthropic.team.shared.us-east-1.default"
+            }
+          }
+        ],
+        "chosen_endpoint_id": "openai.personal.primary.us-east-1.fast",
+        "fallback_endpoint_ids": [
+          "anthropic.team.shared.us-east-1.default"
+        ],
+        "selection_reasons": [
+          "BEST_TOTAL_SCORE",
+          "DECLARED_PROFILE_USED",
+          "MEASURED_PROFILE_USED",
+          "CACHE_AFFINITY_APPLIED",
+          "ROUTING_MODEL_PREFERENCE_APPLIED",
+          "LOW_LATENCY_TARGET_MET",
+          "HIGH_QUALITY_TARGET_MET",
+          "FALLBACK_CHAIN_COMPUTED"
+        ],
+        "used_measured": true,
+        "used_declared": true,
+        "scoring_version": "baseline-v2"
+      },
+      "routingDiagnostics": {
+        "retrievalReceiptId": "conversation-main-retrieval-receipt",
+        "routingModel": {
+          "enabled": true,
+          "endpointId": "cli.local.coder",
+          "preferredEndpointIds": [
+            "openai.personal.primary.us-east-1.fast",
+            "cli.local.coder"
+          ],
+          "ignoredEndpointIds": [
+            "cli.local.coder"
+          ]
+        }
+      },
+      "retrievalReceipt": {
+        "receiptId": "conversation-main-retrieval-receipt",
+        "summary": {
+          "selectedTurns": 2,
+          "selectedArtifacts": 1,
+          "omittedTurns": 2,
+          "omittedArtifacts": 2,
+          "estimatedTokens": 240
+        }
+      },
+      "contextEnvelope": {
+        "conversationId": "conversation-main",
+        "latestHandoffId": "handoff-1",
+        "estimatedTokenCount": 240
+      },
+      "trace": {
+        "spans": [
+          {
+            "trace_id": "trace-req-adapter-validation",
+            "span_id": "span-provider-load-req-adapter-validation",
+            "request_id": "req-adapter-validation",
+            "routing_decision_id": "decision-req-adapter-validation",
+            "span_type": "provider.load",
+            "started_at_ms": 1778023023914,
+            "ended_at_ms": 1778023023919,
+            "status": "ok",
+            "attributes": {
+              "adapter_family": "ai-sdk-openai",
+              "endpoint_id": "openai.personal.primary.us-east-1.fast"
+            }
+          },
+          {
+            "trace_id": "trace-req-adapter-validation",
+            "span_id": "span-provider-decode-req-adapter-validation",
+            "parent_span_id": "span-provider-load-req-adapter-validation",
+            "request_id": "req-adapter-validation",
+            "routing_decision_id": "decision-req-adapter-validation",
+            "span_type": "provider.decode",
+            "started_at_ms": 1778023023919,
+            "ended_at_ms": 1778023024034,
+            "status": "ok",
+            "attributes": {
+              "endpoint_id": "openai.personal.primary.us-east-1.fast",
+              "text_delta_count": 1
+            }
+          }
+        ],
+        "events": [
+          {
+            "event_id": "event-provider-load-req-adapter-validation",
+            "trace_id": "trace-req-adapter-validation",
+            "span_id": "span-provider-load-req-adapter-validation",
+            "request_id": "req-adapter-validation",
+            "routing_decision_id": "decision-req-adapter-validation",
+            "timestamp_ms": 1778023023915,
+            "event_type": "trace.span.opened",
+            "payload": {
+              "adapter_family": "ai-sdk-openai",
+              "endpoint_id": "openai.personal.primary.us-east-1.fast"
+            }
+          },
+          {
+            "event_id": "event-usage-req-adapter-validation",
+            "trace_id": "trace-req-adapter-validation",
+            "span_id": "span-provider-decode-req-adapter-validation",
+            "request_id": "req-adapter-validation",
+            "routing_decision_id": "decision-req-adapter-validation",
+            "timestamp_ms": 1778023024034,
+            "event_type": "usage.event.created",
+            "payload": {
+              "input_tokens": 32,
+              "output_tokens": 24
+            }
+          }
+        ]
+      },
+      "usageEvent": {
+        "event_id": "usage-req-adapter-validation",
+        "timestamp_ms": 1778023023914,
+        "app_id": "app-runtime",
+        "org_id": "org-runtime",
+        "request_id": "req-adapter-validation",
+        "routing_decision_id": "decision-req-adapter-validation",
+        "endpoint_id": "openai.personal.primary.us-east-1.fast",
+        "model_id": "openai/gpt-4.1-mini-fast",
+        "package_id": "provider-openai",
+        "provider_kind": "remote_openai_compat",
+        "tokens_in": 32,
+        "tokens_out": 24,
+        "latency_ms": 120,
+        "cost_estimate": 0.004,
+        "currency": "USD",
+        "sample_source": "live_request"
+      },
+      "observedPerformance": {
+        "endpointVersion": "run07-registry-v1:default",
+        "sample": {
+          "endpoint_id": "openai.personal.primary.us-east-1.fast",
+          "endpoint_version": "run07-registry-v1:default",
+          "source_type": "live_request",
+          "timestamp_ms": 1778023023914,
+          "latency_ms": 120,
+          "latency_ms_p95": 120,
+          "tokens_per_sec": 200,
+          "cost_per_1k_tokens_est": 0.004,
+          "failure": false,
+          "request_id": "req-adapter-validation",
+          "routing_decision_id": "decision-req-adapter-validation"
+        },
+        "history": [
+          {
+            "endpoint_id": "openai.personal.primary.us-east-1.fast",
+            "endpoint_version": "run07-registry-v1:default",
+            "source_type": "benchmark",
+            "timestamp_ms": 1700000000100,
+            "latency_ms": 105,
+            "latency_ms_p95": 140,
+            "tokens_per_sec": 82,
+            "cost_per_1k_tokens_est": 0.004,
+            "judge_score": 0.91
+          },
+          {
+            "endpoint_id": "openai.personal.primary.us-east-1.fast",
+            "endpoint_version": "run07-registry-v1:default",
+            "source_type": "live_request",
+            "timestamp_ms": 1778023023914,
+            "latency_ms": 120,
+            "latency_ms_p95": 120,
+            "tokens_per_sec": 200,
+            "cost_per_1k_tokens_est": 0.004,
+            "failure": false,
+            "request_id": "req-adapter-validation",
+            "routing_decision_id": "decision-req-adapter-validation"
+          }
+        ],
+        "profile": {
+          "endpoint_id": "openai.personal.primary.us-east-1.fast",
+          "endpoint_version": "run07-registry-v1:default",
+          "measured_at_ms": 1778023023914,
+          "measurement_window": {
+            "started_at_ms": 1700000000100,
+            "ended_at_ms": 1778023023914
+          },
+          "sample_size": 2,
+          "sources": {
+            "live_request_samples": 1,
+            "benchmark_samples": 1
+          },
+          "latency_ms_p50": 112.5,
+          "latency_ms_p95": 139,
+          "failure_rate": 0,
+          "freshness_score": 1,
+          "confidence_score": 0.27941531270472214,
+          "judge_score": 0.91,
+          "quality_score": 0.91,
+          "tokens_per_sec": 141,
+          "cost_per_1k_tokens_est": 0.004,
+          "currency": "USD"
+        }
+      },
+      "diagnostics": {
+        "routing": [
+          {
+            "code": "ROUTING_MODEL_ENABLED",
+            "severity": "info",
+            "message": "Routing-model guidance remained enabled for request req-adapter-validation."
+          },
+          {
+            "code": "ROUTING_RETRIEVAL_RECEIPT_LINKED",
+            "severity": "info",
+            "message": "Routing diagnostics link request req-adapter-validation to retrieval receipt conversation-main-retrieval-receipt."
+          }
+        ],
+        "execution": [
+          {
+            "code": "PROMPT_CACHE_UNAVAILABLE",
+            "severity": "warning",
+            "message": "The selected provider family does not expose prompt-caching support for this adapter execution."
+          }
+        ],
+        "authAccount": [],
+        "memoryQuality": [
+          {
+            "code": "MEMORY_CONTEXT_OMITTED",
+            "severity": "warning",
+            "message": "Context assembly omitted 2 turns and 2 artifacts."
+          },
+          {
+            "code": "MEMORY_LATEST_HANDOFF_LINKED",
+            "severity": "info",
+            "message": "Context inspection preserves latest handoff handoff-1."
+          }
+        ],
+        "operator": [
+          {
+            "code": "OPERATOR_RAW_CAPTURE_AVAILABLE",
+            "severity": "info",
+            "message": "Raw operator captures remain available through the preserved host capture surface."
+          }
+        ]
+      },
+      "capturePolicy": {
+        "environment": "local-dev",
+        "redactionLevel": "strict",
+        "retentionClass": "standard",
+        "structuredInspectionMode": "redacted",
+        "rawCaptureAvailable": true,
+        "structuredInspectionAvailable": true,
+        "redactedFields": [
+          "request.headers.authorization"
+        ],
+        "suppressedFields": [
+          "request.body",
+          "response.body"
+        ]
+      },
+      "cacheObservability": {
+        "promptCacheRequested": true,
+        "promptCacheUsed": false,
+        "cacheReadTokens": 0,
+        "cacheWriteTokens": 0,
+        "routingCacheAffinity": true
+      },
+      "inspection": {
+        "request": {
+          "requestId": "req-adapter-validation",
+          "routingDecisionId": "decision-req-adapter-validation",
+          "requestCapture": {
+            "headers": {
+              "authorization": "[redacted]",
+              "OpenAI-Beta": "responses=v1"
+            },
+            "body": {
+              "suppressed": true,
+              "reason": "policy.rawCapture.requestBody.disabled"
+            }
+          },
+          "responseCapture": {
+            "statusCode": 200,
+            "body": {
+              "suppressed": true,
+              "reason": "policy.rawCapture.responseBody.disabled"
+            }
+          },
+          "diagnostics": {
+            "routing": [
+              {
+                "code": "ROUTING_MODEL_ENABLED",
+                "severity": "info",
+                "message": "Routing-model guidance remained enabled for request req-adapter-validation."
+              },
+              {
+                "code": "ROUTING_RETRIEVAL_RECEIPT_LINKED",
+                "severity": "info",
+                "message": "Routing diagnostics link request req-adapter-validation to retrieval receipt conversation-main-retrieval-receipt."
+              }
+            ],
+            "execution": [
+              {
+                "code": "PROMPT_CACHE_UNAVAILABLE",
+                "severity": "warning",
+                "message": "The selected provider family does not expose prompt-caching support for this adapter execution."
+              }
+            ],
+            "authAccount": [],
+            "memoryQuality": [
+              {
+                "code": "MEMORY_CONTEXT_OMITTED",
+                "severity": "warning",
+                "message": "Context assembly omitted 2 turns and 2 artifacts."
+              },
+              {
+                "code": "MEMORY_LATEST_HANDOFF_LINKED",
+                "severity": "info",
+                "message": "Context inspection preserves latest handoff handoff-1."
+              }
+            ],
+            "operator": [
+              {
+                "code": "OPERATOR_RAW_CAPTURE_AVAILABLE",
+                "severity": "info",
+                "message": "Raw operator captures remain available through the preserved host capture surface."
+              }
+            ]
+          },
+          "capturePolicy": {
+            "environment": "local-dev",
+            "redactionLevel": "strict",
+            "retentionClass": "standard",
+            "structuredInspectionMode": "redacted",
+            "rawCaptureAvailable": true,
+            "structuredInspectionAvailable": true,
+            "redactedFields": [
+              "request.headers.authorization"
+            ],
+            "suppressedFields": [
+              "request.body",
+              "response.body"
+            ]
+          }
+        },
+        "endpoint": {
+          "endpointId": "openai.personal.primary.us-east-1.fast",
+          "endpointVersion": "run07-registry-v1:default",
+          "latestProfile": {
+            "endpoint_id": "openai.personal.primary.us-east-1.fast",
+            "endpoint_version": "run07-registry-v1:default",
+            "measured_at_ms": 1778023023914,
+            "measurement_window": {
+              "started_at_ms": 1700000000100,
+              "ended_at_ms": 1778023023914
+            },
+            "sample_size": 2,
+            "sources": {
+              "live_request_samples": 1,
+              "benchmark_samples": 1
+            },
+            "latency_ms_p50": 112.5,
+            "latency_ms_p95": 139,
+            "failure_rate": 0,
+            "freshness_score": 1,
+            "confidence_score": 0.27941531270472214,
+            "judge_score": 0.91,
+            "quality_score": 0.91,
+            "tokens_per_sec": 141,
+            "cost_per_1k_tokens_est": 0.004,
+            "currency": "USD"
+          },
+          "recentSamples": [
+            {
+              "endpoint_id": "openai.personal.primary.us-east-1.fast",
+              "endpoint_version": "run07-registry-v1:default",
+              "source_type": "benchmark",
+              "timestamp_ms": 1700000000100,
+              "latency_ms": 105,
+              "latency_ms_p95": 140,
+              "tokens_per_sec": 82,
+              "cost_per_1k_tokens_est": 0.004,
+              "judge_score": 0.91
+            },
+            {
+              "endpoint_id": "openai.personal.primary.us-east-1.fast",
+              "endpoint_version": "run07-registry-v1:default",
+              "source_type": "live_request",
+              "timestamp_ms": 1778023023914,
+              "latency_ms": 120,
+              "latency_ms_p95": 120,
+              "tokens_per_sec": 200,
+              "cost_per_1k_tokens_est": 0.004,
+              "failure": false,
+              "request_id": "req-adapter-validation",
+              "routing_decision_id": "decision-req-adapter-validation"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "replayShadow": {
+    "replayedEndpointId": "openai.personal.primary.us-east-1.fast",
+    "matchesChosenEndpoint": true
+  }
+}

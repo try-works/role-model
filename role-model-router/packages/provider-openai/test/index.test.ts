@@ -7,6 +7,12 @@ import {
 } from "../src/index.js";
 
 describe("OpenAI provider adapter", () => {
+  test("can be created for the openai-compatible adapter family", () => {
+    const adapter = createOpenAIProviderAdapter("ai-sdk-openai-compatible");
+
+    expect(adapter.adapterFamily).toBe("ai-sdk-openai-compatible");
+  });
+
   test("builds an OpenAI responses request and normalizes text, usage, and tool calls", () => {
     const target = {
       endpointId: "openai.personal.primary.us-east-1.fast",
@@ -81,6 +87,8 @@ describe("OpenAI provider adapter", () => {
       capabilities,
     });
     const normalized = normalizeOpenAIResponse({
+      target,
+      executionRequest,
       requestCapture,
       responseCapture: {
         providerFamily: "ai-sdk-openai",
@@ -134,5 +142,90 @@ describe("OpenAI provider adapter", () => {
       cacheWriteTokens: 0,
     });
     expect(normalized.promptCache.used).toBe(false);
+  });
+
+  test("builds an OpenAI-compatible chat-completions request for Kimi and normalizes the reply", () => {
+    const target = {
+      endpointId: "moonshot.personal.kimi-code.global.kimi-k2.5",
+      modelId: "moonshotai/kimi-k2.5",
+      providerId: "moonshotai",
+      providerKind: "provider-openai",
+      providerAccountId: "moonshot.personal.kimi-code",
+      adapterFamily: "ai-sdk-openai-compatible",
+      authFamily: "api-key",
+      apiBase: "https://api.kimi.test/coding/v1",
+      requestShapeHints: {
+        providerShape: "openai.chat.completions",
+        bodyKeys: ["temperature", "max_tokens", "tools"],
+        headerKeys: ["Authorization"],
+      },
+      candidate: {
+        identity: {
+          endpoint_id: "moonshot.personal.kimi-code.global.kimi-k2.5",
+          provider_kind: "remote_openai_compat",
+        },
+      },
+      account: {
+        credentialRef: {
+          backend: "local-encrypted-file",
+          ref: "oauth/moonshotai/moonshot.personal.kimi-code",
+        },
+      },
+    };
+
+    const executionRequest = {
+      messages: [{ role: "user", content: "Reply with the word ok." }],
+      maxOutputTokens: 128,
+      temperature: 0.1,
+    };
+
+    const adapter = createOpenAIProviderAdapter("ai-sdk-openai-compatible");
+    const capabilities = adapter.negotiateCapabilities({ target, executionRequest });
+    const requestCapture = buildOpenAIRequest({
+      target,
+      executionRequest,
+      capabilities,
+    });
+    const normalized = normalizeOpenAIResponse({
+      target,
+      executionRequest,
+      requestCapture,
+      responseCapture: {
+        providerFamily: "ai-sdk-openai-compatible",
+        endpointId: target.endpointId,
+        statusCode: 200,
+        body: {
+          choices: [
+            {
+              finish_reason: "stop",
+              message: {
+                content: "ok",
+              },
+            },
+          ],
+          usage: {
+            prompt_tokens: 11,
+            completion_tokens: 4,
+          },
+        },
+      },
+      capabilities,
+    });
+
+    expect(requestCapture.url).toBe("https://api.kimi.test/coding/v1/chat/completions");
+    expect(requestCapture.body).toMatchObject({
+      model: "moonshotai/kimi-k2.5",
+      messages: [{ role: "user", content: "Reply with the word ok." }],
+      temperature: 0.1,
+      max_tokens: 128,
+    });
+    expect(normalized.outputText).toBe("ok");
+    expect(normalized.finishReason).toBe("stop");
+    expect(normalized.usage).toEqual({
+      inputTokens: 11,
+      outputTokens: 4,
+      cacheReadTokens: 0,
+      cacheWriteTokens: 0,
+    });
   });
 });

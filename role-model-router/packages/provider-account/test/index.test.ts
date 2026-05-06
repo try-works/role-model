@@ -107,4 +107,232 @@ describe("validateProviderAccounts", () => {
       }),
     );
   });
+
+  test("accepts kimi device oauth when the provider explicitly supports it", () => {
+    const result = validateProviderAccounts({
+      catalog: {
+        catalogVersion: "1",
+        source: {
+          vendor: "models.dev",
+          commit: "moonshot-run14",
+          capturedAt: "2026-05-05T00:00:00Z",
+          schemaVersion: "models.dev.v1",
+        },
+        providers: [
+          {
+            providerId: "moonshotai",
+            displayName: "Moonshot AI",
+            providerKind: "provider-openai",
+            authFamily: "api-key",
+            adapterFamily: "ai-sdk-openai-compatible",
+            apiBase: "https://api.moonshot.ai/v1",
+            envVars: ["MOONSHOT_API_KEY"],
+            controlPlaneRequirements: ["kimi-code.oauth.device"],
+            localOverrideApplied: true,
+            upstreamProvenance: {
+              vendor: "models.dev",
+              commit: "moonshot-run14",
+              capturedAt: "2026-05-05T00:00:00Z",
+              schemaVersion: "models.dev.v1",
+            },
+            supportedAuthModes: ["api-key-static", "oauth2-device-code"],
+          },
+        ],
+        models: [],
+      } as Parameters<typeof validateProviderAccounts>[0]["catalog"],
+      accounts: [
+        {
+          providerAccountId: "moonshot.personal.kimi-code",
+          providerId: "moonshotai",
+          providerKind: "provider-openai",
+          orgScope: "personal",
+          accountScope: "workspace-default",
+          credentialRef: {
+            backend: "local-encrypted-file",
+            ref: "oauth/kimi-code",
+          },
+          authMode: "oauth2-device-code",
+          regionPolicy: {
+            mode: "prefer",
+            regions: ["global"],
+          },
+          baseUrlOverride: "https://api.kimi.com/coding/v1",
+          allowedModels: ["moonshotai/kimi-k2.5"],
+          deniedModels: [],
+          entitlementTags: ["chat", "search"],
+          budgetPolicyRef: "budget.default",
+          quotaPolicyRef: "quota.default",
+          status: "disabled",
+          healthStatus: "credentials-missing",
+          rotationState: "not-required",
+        },
+      ],
+    });
+
+    expect(result.diagnostics).toEqual([]);
+    expect(result.accounts).toHaveLength(1);
+    expect(result.accounts[0]).toMatchObject({
+      providerAccountId: "moonshot.personal.kimi-code",
+      providerId: "moonshotai",
+      authMode: "oauth2-device-code",
+      baseUrlOverride: "https://api.kimi.com/coding/v1",
+    });
+  });
+
+  test("accepts model role assignments for allowed models and known runtime roles", () => {
+    const result = validateProviderAccounts({
+      catalog: {
+        catalogVersion: "1",
+        source: {
+          vendor: "models.dev",
+          commit: "moonshot-run14",
+          capturedAt: "2026-05-05T00:00:00Z",
+          schemaVersion: "models.dev.v1",
+        },
+        providers: [
+          {
+            providerId: "moonshotai",
+            displayName: "Moonshot AI",
+            providerKind: "provider-openai",
+            authFamily: "api-key",
+            adapterFamily: "ai-sdk-openai-compatible",
+            apiBase: "https://api.moonshot.ai/v1",
+            envVars: ["MOONSHOT_API_KEY"],
+            controlPlaneRequirements: ["kimi-code.oauth.device"],
+            localOverrideApplied: true,
+            upstreamProvenance: {
+              vendor: "models.dev",
+              commit: "moonshot-run14",
+              capturedAt: "2026-05-05T00:00:00Z",
+              schemaVersion: "models.dev.v1",
+            },
+            supportedAuthModes: ["api-key-static", "oauth2-device-code"],
+          },
+        ],
+        models: [],
+      } as Parameters<typeof validateProviderAccounts>[0]["catalog"],
+      allowedRoleIds: ["general.chat", "coder.patch"],
+      accounts: [
+        {
+          providerAccountId: "moonshot.personal.primary",
+          providerId: "moonshotai",
+          providerKind: "provider-openai",
+          orgScope: "personal",
+          accountScope: "workspace-default",
+          credentialRef: {
+            backend: "env",
+            ref: "MOONSHOT_API_KEY",
+          },
+          authMode: "api-key-static",
+          regionPolicy: {
+            mode: "prefer",
+            regions: ["global"],
+          },
+          baseUrlOverride: "https://api.moonshot.ai/v1",
+          allowedModels: ["moonshotai/kimi-k2.5", "moonshotai/kimi-k2-turbo-preview"],
+          modelRoleBindings: [
+            {
+              modelId: "moonshotai/kimi-k2.5",
+              roleIds: ["general.chat", "coder.patch"],
+            },
+          ],
+          deniedModels: [],
+          entitlementTags: ["chat"],
+          budgetPolicyRef: "budget.default",
+          quotaPolicyRef: "quota.default",
+          status: "active",
+          healthStatus: "healthy",
+          rotationState: "stable",
+        },
+      ],
+    });
+
+    expect(result.diagnostics).toEqual([]);
+    expect(result.accounts[0]).toMatchObject({
+      providerAccountId: "moonshot.personal.primary",
+      modelRoleBindings: [
+        {
+          modelId: "moonshotai/kimi-k2.5",
+          roleIds: ["general.chat", "coder.patch"],
+        },
+      ],
+    });
+  });
+
+  test("rejects model role assignments that target models outside the allowed model set", () => {
+    const result = validateProviderAccounts({
+      catalog: {
+        catalogVersion: "1",
+        source: {
+          vendor: "models.dev",
+          commit: "moonshot-run14",
+          capturedAt: "2026-05-05T00:00:00Z",
+          schemaVersion: "models.dev.v1",
+        },
+        providers: [
+          {
+            providerId: "moonshotai",
+            displayName: "Moonshot AI",
+            providerKind: "provider-openai",
+            authFamily: "api-key",
+            adapterFamily: "ai-sdk-openai-compatible",
+            apiBase: "https://api.moonshot.ai/v1",
+            envVars: ["MOONSHOT_API_KEY"],
+            controlPlaneRequirements: ["kimi-code.oauth.device"],
+            localOverrideApplied: true,
+            upstreamProvenance: {
+              vendor: "models.dev",
+              commit: "moonshot-run14",
+              capturedAt: "2026-05-05T00:00:00Z",
+              schemaVersion: "models.dev.v1",
+            },
+            supportedAuthModes: ["api-key-static"],
+          },
+        ],
+        models: [],
+      } as Parameters<typeof validateProviderAccounts>[0]["catalog"],
+      allowedRoleIds: ["general.chat"],
+      accounts: [
+        {
+          providerAccountId: "moonshot.personal.primary",
+          providerId: "moonshotai",
+          providerKind: "provider-openai",
+          orgScope: "personal",
+          accountScope: "workspace-default",
+          credentialRef: {
+            backend: "env",
+            ref: "MOONSHOT_API_KEY",
+          },
+          authMode: "api-key-static",
+          regionPolicy: {
+            mode: "prefer",
+            regions: ["global"],
+          },
+          baseUrlOverride: "https://api.moonshot.ai/v1",
+          allowedModels: ["moonshotai/kimi-k2.5"],
+          modelRoleBindings: [
+            {
+              modelId: "moonshotai/kimi-k2-turbo-preview",
+              roleIds: ["general.chat"],
+            },
+          ],
+          deniedModels: [],
+          entitlementTags: ["chat"],
+          budgetPolicyRef: "budget.default",
+          quotaPolicyRef: "quota.default",
+          status: "active",
+          healthStatus: "healthy",
+          rotationState: "stable",
+        },
+      ],
+    });
+
+    expect(result.accounts).toHaveLength(0);
+    expect(result.diagnostics).toContainEqual(
+      expect.objectContaining({
+        providerAccountId: "moonshot.personal.primary",
+        code: "MODEL_ROLE_MODEL_NOT_ALLOWED",
+      }),
+    );
+  });
 });
