@@ -212,7 +212,11 @@ export async function runRuntimeAdapterValidation(
     registry,
     registrySources,
     executionRequest,
-    adapters: [createOpenAIProviderAdapter(), createAnthropicProviderAdapter()],
+    adapters: [
+      createOpenAIProviderAdapter(),
+      createOpenAIProviderAdapter("ai-sdk-openai-compatible"),
+      createAnthropicProviderAdapter(),
+    ],
     captures: responseCaptures,
   });
 

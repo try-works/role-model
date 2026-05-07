@@ -128,6 +128,358 @@ describe("initializeSqliteMemory", () => {
     expect(columns.some((column) => column.name === "secret_value")).toBe(false);
   });
 
+  test("upserts and lists provider accounts for runtime control-plane reads", async () => {
+    expect(
+      typeof (
+        sqliteMemory as {
+          listProviderAccounts?: unknown;
+        }
+      ).listProviderAccounts,
+    ).toBe("function");
+    expect(
+      typeof (
+        sqliteMemory as {
+          upsertProviderAccount?: unknown;
+        }
+      ).upsertProviderAccount,
+    ).toBe("function");
+
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+    const initialized = initializeSqliteMemory({
+      runtimeStateRoot,
+      scopeId: "workspace-dev",
+    });
+
+    (
+      sqliteMemory as {
+        upsertProviderAccount: (value: {
+          databasePath: string;
+          account: {
+            providerAccountId: string;
+            providerId: string;
+            providerKind: string;
+            orgScope: string;
+            accountScope: string;
+            credentialRef: {
+              backend: string;
+              ref: string;
+             };
+             authMode: string;
+             regionPolicy: {
+               mode: string;
+               regions: string[];
+             };
+             baseUrlOverride?: string;
+             allowedModels: string[];
+             modelRoleBindings: Array<{
+               modelId: string;
+               roleIds: string[];
+             }>;
+             deniedModels: string[];
+             entitlementTags: string[];
+             budgetPolicyRef: string;
+             quotaPolicyRef: string;
+            status: string;
+            healthStatus: string;
+            rotationState: string;
+          };
+        }) => void;
+      }
+    ).upsertProviderAccount({
+      databasePath: initialized.databasePath,
+      account: {
+        providerAccountId: "moonshot.personal.primary",
+        providerId: "moonshotai",
+        providerKind: "provider-openai",
+        orgScope: "personal",
+        accountScope: "workspace-default",
+        credentialRef: {
+          backend: "env",
+          ref: "MOONSHOT_API_KEY",
+        },
+        authMode: "api-key-static",
+         regionPolicy: {
+           mode: "prefer",
+           regions: ["global"],
+         },
+         baseUrlOverride: "https://api.moonshot.ai/v1",
+         allowedModels: ["moonshotai/kimi-k2.5"],
+         modelRoleBindings: [
+           {
+             modelId: "moonshotai/kimi-k2.5",
+             roleIds: ["general.chat", "coder.patch"],
+           },
+         ],
+         deniedModels: [],
+         entitlementTags: ["chat"],
+         budgetPolicyRef: "budget.default",
+         quotaPolicyRef: "quota.default",
+        status: "active",
+        healthStatus: "healthy",
+        rotationState: "stable",
+      },
+    });
+
+    expect(
+      (
+        sqliteMemory as {
+           listProviderAccounts: (value: { databasePath: string }) => Array<{
+             providerAccountId: string;
+             providerId: string;
+             authMode: string;
+             baseUrlOverride?: string;
+             modelRoleBindings: Array<{
+               modelId: string;
+               roleIds: string[];
+             }>;
+           }>;
+         }
+       ).listProviderAccounts({
+         databasePath: initialized.databasePath,
+      }),
+    ).toEqual([
+        expect.objectContaining({
+          providerAccountId: "moonshot.personal.primary",
+          providerId: "moonshotai",
+          authMode: "api-key-static",
+          baseUrlOverride: "https://api.moonshot.ai/v1",
+          modelRoleBindings: [
+            {
+              modelId: "moonshotai/kimi-k2.5",
+              roleIds: ["general.chat", "coder.patch"],
+            },
+          ],
+        }),
+      ]);
+  });
+
+  test("persists runtime-managed endpoint activations for dynamic registry materialization", async () => {
+    expect(typeof (sqliteMemory as { listRuntimeEndpoints?: unknown }).listRuntimeEndpoints).toBe("function");
+    expect(typeof (sqliteMemory as { upsertRuntimeEndpoint?: unknown }).upsertRuntimeEndpoint).toBe("function");
+
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+    const initialized = initializeSqliteMemory({
+      runtimeStateRoot,
+      scopeId: "workspace-dev",
+    });
+
+    (
+      sqliteMemory as {
+        upsertRuntimeEndpoint: (value: {
+          databasePath: string;
+          endpoint: {
+            endpointId: string;
+            providerAccountId: string;
+            modelId: string;
+            region: string;
+            endpointKind: string;
+            servingSource: string;
+            lifecycleState: string;
+            healthStatus: string;
+          };
+        }) => void;
+      }
+    ).upsertRuntimeEndpoint({
+      databasePath: initialized.databasePath,
+      endpoint: {
+        endpointId: "moonshot.personal.primary.global.kimi-k2-5",
+        providerAccountId: "moonshot.personal.primary",
+        modelId: "moonshotai/kimi-k2.5",
+        region: "global",
+        endpointKind: "remote-openai-compatible",
+        servingSource: "remote-service",
+        lifecycleState: "active",
+        healthStatus: "healthy",
+      },
+    });
+
+    expect(
+      (
+        sqliteMemory as {
+          listRuntimeEndpoints: (value: { databasePath: string }) => Array<{
+            endpointId: string;
+            providerAccountId: string;
+            modelId: string;
+            region: string;
+          }>;
+        }
+      ).listRuntimeEndpoints({
+        databasePath: initialized.databasePath,
+      }),
+    ).toEqual([
+      expect.objectContaining({
+        endpointId: "moonshot.personal.primary.global.kimi-k2-5",
+        providerAccountId: "moonshot.personal.primary",
+        modelId: "moonshotai/kimi-k2.5",
+        region: "global",
+      }),
+    ]);
+  });
+
+  test("persists and reads the global controller assignment for the runtime control plane", async () => {
+    expect(
+      typeof (
+        sqliteMemory as {
+          readRuntimeControllerAssignment?: unknown;
+        }
+      ).readRuntimeControllerAssignment,
+    ).toBe("function");
+    expect(
+      typeof (
+        sqliteMemory as {
+          upsertRuntimeControllerAssignment?: unknown;
+        }
+      ).upsertRuntimeControllerAssignment,
+    ).toBe("function");
+
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+    const initialized = initializeSqliteMemory({
+      runtimeStateRoot,
+      scopeId: "workspace-dev",
+    });
+
+    (
+      sqliteMemory as {
+        upsertRuntimeControllerAssignment: (value: {
+          databasePath: string;
+          assignment: {
+            scope: string;
+            endpointId: string;
+            modelId: string;
+            sourceType: string;
+          };
+        }) => void;
+      }
+    ).upsertRuntimeControllerAssignment({
+      databasePath: initialized.databasePath,
+      assignment: {
+        scope: "global",
+        endpointId: "cli.local.coder",
+        modelId: "gpt-5.4",
+        sourceType: "local",
+      },
+    });
+
+    expect(
+      (
+        sqliteMemory as {
+          readRuntimeControllerAssignment: (value: {
+            databasePath: string;
+            scope: string;
+          }) => {
+            scope: string;
+            endpointId: string;
+            modelId: string;
+            sourceType: string;
+          } | null;
+        }
+      ).readRuntimeControllerAssignment({
+        databasePath: initialized.databasePath,
+        scope: "global",
+      }),
+    ).toEqual(
+      expect.objectContaining({
+        scope: "global",
+        endpointId: "cli.local.coder",
+        modelId: "gpt-5.4",
+        sourceType: "local",
+      }),
+    );
+  });
+
+  test("persists device-auth session state for runtime OAuth polling", async () => {
+    expect(
+      typeof (
+        sqliteMemory as {
+          readProviderDeviceAuthSession?: unknown;
+        }
+      ).readProviderDeviceAuthSession,
+    ).toBe("function");
+    expect(
+      typeof (
+        sqliteMemory as {
+          upsertProviderDeviceAuthSession?: unknown;
+        }
+      ).upsertProviderDeviceAuthSession,
+    ).toBe("function");
+
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+    const initialized = initializeSqliteMemory({
+      runtimeStateRoot,
+      scopeId: "workspace-dev",
+    });
+
+    (
+      sqliteMemory as {
+        upsertProviderDeviceAuthSession: (value: {
+          databasePath: string;
+          session: {
+            authRequestId: string;
+            providerAccountId: string;
+            providerId: string;
+            variantId: string;
+            credentialBackend: string;
+            credentialRef: string;
+            authMode: string;
+            verificationUri: string;
+            verificationUriComplete: string;
+            userCode: string;
+            deviceCode: string;
+            intervalSeconds: number;
+            status: string;
+            lastError: string | null;
+            expiresAtMs: number;
+          };
+        }) => void;
+      }
+    ).upsertProviderDeviceAuthSession({
+      databasePath: initialized.databasePath,
+      session: {
+        authRequestId: "auth-001",
+        providerAccountId: "moonshot.personal.kimi-code",
+        providerId: "moonshotai",
+        variantId: "kimi-code",
+        credentialBackend: "local-encrypted-file",
+        credentialRef: "oauth/moonshotai/moonshot.personal.kimi-code",
+        authMode: "oauth2-device-code",
+        verificationUri: "https://auth.kimi.com/device",
+        verificationUriComplete: "https://auth.kimi.com/device?user_code=ABCD-EFGH",
+        userCode: "ABCD-EFGH",
+        deviceCode: "device-001",
+        intervalSeconds: 5,
+        status: "pending",
+        lastError: null,
+        expiresAtMs: 1_762_000_000_000,
+      },
+    });
+
+    expect(
+      (
+        sqliteMemory as {
+          readProviderDeviceAuthSession: (value: {
+            databasePath: string;
+            authRequestId: string;
+          }) => {
+            authRequestId: string;
+            providerAccountId: string;
+            status: string;
+            userCode: string;
+          } | null;
+        }
+      ).readProviderDeviceAuthSession({
+        databasePath: initialized.databasePath,
+        authRequestId: "auth-001",
+      }),
+    ).toEqual(
+      expect.objectContaining({
+        authRequestId: "auth-001",
+        providerAccountId: "moonshot.personal.kimi-code",
+        status: "pending",
+        userCode: "ABCD-EFGH",
+      }),
+    );
+  });
+
   test("records explicit maintenance defaults and idempotent migration behavior", async () => {
     const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
 

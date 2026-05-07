@@ -1,0 +1,36 @@
+Run 14 Phase 5 manual QA was executed against a live run-14 worktree environment:
+- runtime host bridge: http://127.0.0.1:8191
+- runtime UI dev server: http://127.0.0.1:4273
+
+Observed routes:
+- /app
+- /app/providers
+- /app/accounts
+- /app/endpoints
+- /app/workbench
+- /app/requests
+- /app/requests/req-runtime-host-bridge
+- /app/runtime
+
+Observed outcomes:
+- operator shell remained stable across route transitions
+- providers page showed Moonshot Open Platform and Kimi Code as distinct variants
+- Kimi Code surfaced backend-limited OAuth metadata with real host/client/device/token values
+- accounts page upserted `moonshot.personal.primary` and displayed only credential-reference-safe fields
+- endpoints page remained on the current three-entry registry baseline after account upsert
+- workbench request returned `OpenAI summary`
+- requests page surfaced `req-runtime-host-bridge`
+- request detail page showed request artifact JSON plus linked endpoint profile and recent samples
+- runtime page preserved `/logs`, `/api/metrics`, `/ui`, and repo-owned runtime summary links
+
+Screenshots captured:
+- evidence/screenshots/dashboard.png
+- evidence/screenshots/providers.png
+- evidence/screenshots/accounts-before.png
+- evidence/screenshots/accounts-after.png
+- evidence/screenshots/endpoints.png
+- evidence/screenshots/workbench-before.png
+- evidence/screenshots/workbench-after.png
+- evidence/screenshots/requests.png
+- evidence/screenshots/request-detail.png
+- evidence/screenshots/runtime.png

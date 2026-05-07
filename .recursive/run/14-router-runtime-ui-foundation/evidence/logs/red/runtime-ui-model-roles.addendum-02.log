@@ -1,0 +1,62 @@
+
+> @role-model-router/runtime-ui@ test D:\DEV\role-model\.worktrees\14-router-runtime-ui-foundation\role-model-router\apps\runtime-ui
+> vitest run app/lib/runtime-api.test.ts app/lib/view-models.test.ts
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/14-router-runtime-ui-foundation/role-model-router/apps/runtime-ui[39m
+
+ [32mΓ£ô[39m app/lib/view-models.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 31[2mms[22m[39m
+ [31mΓ¥»[39m app/lib/runtime-api.test.ts [2m([22m[2m6 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 50[2mms[22m[39m
+[31m   [31m├ù[31m fetchRuntimeSnapshot[2m > [22mloads the operator shell data from the runtime control-plane endpoints[39m[32m 35[2mms[22m[39m
+[31m     ΓåÆ expected { summary: { ΓÇª(3) }, ΓÇª(5) } to deeply equal { summary: { ΓÇª(3) }, ΓÇª(6) }[39m
+   [32mΓ£ô[39m fetchRequestDetail[2m > [22mloads request detail and the linked endpoint profile for the inspector pane[32m 2[2mms[22m[39m
+   [32mΓ£ô[39m submitWorkbenchChat[2m > [22mposts a chat-completions payload to the runtime workbench path[32m 3[2mms[22m[39m
+   [32mΓ£ô[39m startRuntimeDeviceAuthorization[2m > [22mposts the selected provider account payload to the runtime device-auth start path[32m 4[2mms[22m[39m
+   [32mΓ£ô[39m pollRuntimeDeviceAuthorization[2m > [22mposts the auth request id to the runtime device-auth poll path[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m activateRuntimeEndpoint[2m > [22mposts endpoint activation payload to the runtime endpoints mutation path[32m 1[2mms[22m[39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  app/lib/runtime-api.test.ts > fetchRuntimeSnapshot > loads the operator shell data from the runtime control-plane endpoints
+AssertionError: expected { summary: { ΓÇª(3) }, ΓÇª(5) } to deeply equal { summary: { ΓÇª(3) }, ΓÇª(6) }
+
+- Expected
++ Received
+
+@@ -33,16 +33,10 @@
+    "requests": [
+      {
+        "requestId": "req-001",
+      },
+    ],
+-   "roles": [
+-     {
+-       "label": "General chat",
+-       "roleId": "general.chat",
+-     },
+-   ],
+    "summary": {
+      "accountCount": 2,
+      "endpointCount": 3,
+      "providerCount": 3,
+    },
+
+ Γ¥» app/lib/runtime-api.test.ts:59:5
+     57|     });
+     58| 
+     59|     await expect(fetchRuntimeSnapshot(fetcher)).resolves.toEqual({
+       |     ^
+     60|       summary: { providerCount: 3, accountCount: 2, endpointCount: 3 },
+     61|       providers: [{ providerId: "moonshotai" }],
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m1 passed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m8 passed[39m[22m[90m (9)[39m
+[2m   Start at [22m 07:08:49
+[2m   Duration [22m 1.02s[2m (transform 70ms, setup 0ms, collect 111ms, tests 81ms, environment 1ms, prepare 481ms)[22m
+
+D:\DEV\role-model\.worktrees\14-router-runtime-ui-foundation\role-model-router\apps\runtime-ui:
+ΓÇëERR_PNPM_RECURSIVE_RUN_FIRST_FAILΓÇë @role-model-router/runtime-ui@ test: `vitest run app/lib/runtime-api.test.ts app/lib/view-models.test.ts`
+Exit status 1

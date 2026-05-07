@@ -1,0 +1,39 @@
+
+> @role-model-router/provider-openai@0.0.0 test D:\DEV\role-model\.worktrees\14-router-runtime-ui-foundation\role-model-router\packages\provider-openai
+> vitest run test/index.test.ts
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/14-router-runtime-ui-foundation/role-model-router/packages/provider-openai[39m
+
+ [31mΓ¥»[39m test/index.test.ts [2m([22m[2m2 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 14[2mms[22m[39m
+[31m   [31m├ù[31m OpenAI provider adapter[2m > [22mcan be created for the openai-compatible adapter family[39m[32m 9[2mms[22m[39m
+[31m     ΓåÆ expected 'ai-sdk-openai' to be 'ai-sdk-openai-compatible' // Object.is equality[39m
+   [32mΓ£ô[39m OpenAI provider adapter[2m > [22mbuilds an OpenAI responses request and normalizes text, usage, and tool calls[32m 4[2mms[22m[39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/index.test.ts > OpenAI provider adapter > can be created for the openai-compatible adapter family
+AssertionError: expected 'ai-sdk-openai' to be 'ai-sdk-openai-compatible' // Object.is equality
+
+Expected: "ai-sdk-openai-compatible"
+Received: "ai-sdk-openai"
+
+ Γ¥» test/index.test.ts:13:35
+     11|     const adapter = createOpenAIProviderAdapter("ai-sdk-openai-compatiΓÇª
+     12| 
+     13|     expect(adapter.adapterFamily).toBe("ai-sdk-openai-compatible");
+       |                                   ^
+     14|   });
+     15| 
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m1 passed[39m[22m[90m (2)[39m
+[2m   Start at [22m 07:27:25
+[2m   Duration [22m 933ms[2m (transform 107ms, setup 0ms, collect 105ms, tests 14ms, environment 0ms, prepare 281ms)[22m
+
+D:\DEV\role-model\.worktrees\14-router-runtime-ui-foundation\role-model-router\packages\provider-openai:
+ΓÇëERR_PNPM_RECURSIVE_RUN_FIRST_FAILΓÇë @role-model-router/provider-openai@0.0.0 test: `vitest run test/index.test.ts`
+Exit status 1

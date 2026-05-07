@@ -1,0 +1,36 @@
+
+### RUNNING corepack pnpm --filter @role-model-router/runtime-ui exec vitest run app/lib/view-models.test.ts
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/14-router-runtime-ui-foundation/role-model-router/apps/runtime-ui[39m
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Suites 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  app/lib/view-models.test.ts [ app/lib/view-models.test.ts ]
+Error: Cannot find module './view-models' imported from 'D:/DEV/role-model/.worktrees/14-router-runtime-ui-foundation/role-model-router/apps/runtime-ui/app/lib/view-models.test.ts'
+ Γ¥» app/lib/view-models.test.ts:3:1
+      1| import { describe, expect, test } from "vitest";
+      2| 
+      3| import {
+       | ^
+      4|   buildProviderCards,
+      5|   buildWorkbenchModelOptions,
+
+Caused by: Error: Failed to load url ./view-models (resolved id: ./view-models) in D:/DEV/role-model/.worktrees/14-router-runtime-ui-foundation/role-model-router/apps/runtime-ui/app/lib/view-models.test.ts. Does the file exist?
+ Γ¥» loadAndTransform ../../../node_modules/.pnpm/vite@7.3.2_@types+node@22.1_ffe4277cf87465bba1449374e033820f/node_modules/vite/dist/node/chunks/config.js:22663:33
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [2mno tests[22m
+[2m   Start at [22m 05:18:42
+[2m   Duration [22m 669ms[2m (transform 27ms, setup 0ms, collect 0ms, tests 0ms, environment 0ms, prepare 240ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\14-router-runtime-ui-foundation\role-model-router\apps\runtime-ui:
+ΓÇëERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓÇë Command failed with exit code 1: vitest run app/lib/view-models.test.ts
+
+EXPECTED FAIL (exit 1)
+

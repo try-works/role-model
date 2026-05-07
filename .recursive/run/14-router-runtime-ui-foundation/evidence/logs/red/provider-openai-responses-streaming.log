@@ -1,0 +1,37 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/14-router-runtime-ui-foundation/role-model-router/packages/provider-openai[39m
+
+ [31mΓ¥»[39m test/index.test.ts [2m([22m[2m5 tests[22m[2m | [22m[31m1 failed[39m[2m | [22m[33m4 skipped[39m[2m)[22m[32m 22[2mms[22m[39m
+   [2m[90mΓåô[39m[22m OpenAI provider adapter[2m > [22mcan be created for the openai-compatible adapter family
+   [2m[90mΓåô[39m[22m OpenAI provider adapter[2m > [22mbuilds an OpenAI responses request and normalizes text, usage, and tool calls
+[31m   [31m├ù[31m OpenAI provider adapter[2m > [22mnormalizes a streamed OpenAI responses transcript into final text, tool calls, and usage[39m[32m 20[2mms[22m[39m
+[31m     ΓåÆ expected '' to be 'Ready now' // Object.is equality[39m
+   [2m[90mΓåô[39m[22m OpenAI provider adapter[2m > [22mbuilds an OpenAI-compatible chat-completions request for Kimi and normalizes the reply
+   [2m[90mΓåô[39m[22m OpenAI provider adapter[2m > [22mnormalizes an OpenAI-compatible chat-completions SSE transcript for Kimi streaming
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/index.test.ts > OpenAI provider adapter > normalizes a streamed OpenAI responses transcript into final text, tool calls, and usage
+AssertionError: expected '' to be 'Ready now' // Object.is equality
+
+- Expected
++ Received
+
+- Ready now
+
+ Γ¥» test/index.test.ts:223:35
+    221|     });
+    222| 
+    223|     expect(normalized.outputText).toBe("Ready now");
+       |                                   ^
+    224|     expect(normalized.toolCalls).toEqual([
+    225|       {
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[33m4 skipped[39m[90m (5)[39m
+[2m   Start at [22m 07:26:03
+[2m   Duration [22m 1.15s[2m (transform 323ms, setup 0ms, collect 379ms, tests 22ms, environment 0ms, prepare 293ms)[22m
+

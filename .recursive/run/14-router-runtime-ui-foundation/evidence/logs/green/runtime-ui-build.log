@@ -1,0 +1,50 @@
+
+### RUNNING corepack pnpm --filter @role-model-router/runtime-ui build
+
+
+> @role-model-router/runtime-ui@ build D:\DEV\role-model\.worktrees\14-router-runtime-ui-foundation\role-model-router\apps\runtime-ui
+> react-router build && tsc --noEmit
+
+[36mvite v7.3.2 [32mbuilding client environment for production...[36m[39m
+transforming...
+[32mΓ£ô[39m 1667 modules transformed.
+rendering chunks...
+computing gzip size...
+[2mbuild/client/[22m[32m.vite/manifest.json                 [39m[1m[2m  5.75 kB[22m[1m[22m[2m Γöé gzip:  0.83 kB[22m
+[2mbuild/client/[22m[35massets/root-BKHHb8GF.css            [39m[1m[2m 13.36 kB[22m[1m[22m[2m Γöé gzip:  3.53 kB[22m
+[2mbuild/client/[22m[36massets/index-D20G9Hkw.js            [39m[1m[2m  0.15 kB[22m[1m[22m[2m Γöé gzip:  0.15 kB[22m
+[2mbuild/client/[22m[36massets/not-found-B5_8W0Rr.js        [39m[1m[2m  0.71 kB[22m[1m[22m[2m Γöé gzip:  0.46 kB[22m
+[2mbuild/client/[22m[36massets/view-models-DnAWKsuV.js      [39m[1m[2m  0.81 kB[22m[1m[22m[2m Γöé gzip:  0.45 kB[22m
+[2mbuild/client/[22m[36massets/runtime-api-DjvUM6_Q.js      [39m[1m[2m  1.06 kB[22m[1m[22m[2m Γöé gzip:  0.48 kB[22m
+[2mbuild/client/[22m[36massets/request-detail-2sW6w7yv.js   [39m[1m[2m  1.38 kB[22m[1m[22m[2m Γöé gzip:  0.71 kB[22m
+[2mbuild/client/[22m[36massets/root-CS8GBdwK.js             [39m[1m[2m  1.39 kB[22m[1m[22m[2m Γöé gzip:  0.78 kB[22m
+[2mbuild/client/[22m[36massets/requests-B6sJFml1.js         [39m[1m[2m  1.48 kB[22m[1m[22m[2m Γöé gzip:  0.78 kB[22m
+[2mbuild/client/[22m[36massets/endpoints-C_V1L33t.js        [39m[1m[2m  1.85 kB[22m[1m[22m[2m Γöé gzip:  0.81 kB[22m
+[2mbuild/client/[22m[36massets/page-primitives-BeUOFipj.js  [39m[1m[2m  2.45 kB[22m[1m[22m[2m Γöé gzip:  0.77 kB[22m
+[2mbuild/client/[22m[36massets/runtime-BRQPdTYz.js          [39m[1m[2m  2.54 kB[22m[1m[22m[2m Γöé gzip:  0.95 kB[22m
+[2mbuild/client/[22m[36massets/dashboard-6oX03B6S.js        [39m[1m[2m  2.65 kB[22m[1m[22m[2m Γöé gzip:  1.14 kB[22m
+[2mbuild/client/[22m[36massets/workbench-OWSIWhkR.js        [39m[1m[2m  2.83 kB[22m[1m[22m[2m Γöé gzip:  1.29 kB[22m
+[2mbuild/client/[22m[36massets/providers-DhlsaT1_.js        [39m[1m[2m  3.01 kB[22m[1m[22m[2m Γöé gzip:  1.12 kB[22m
+[2mbuild/client/[22m[36massets/accounts-DNCV-8JA.js         [39m[1m[2m  5.62 kB[22m[1m[22m[2m Γöé gzip:  1.86 kB[22m
+[2mbuild/client/[22m[36massets/app-layout-Cc19dXun.js       [39m[1m[2m  8.37 kB[22m[1m[22m[2m Γöé gzip:  3.09 kB[22m
+[2mbuild/client/[22m[36massets/cn-B5V-leUE.js               [39m[1m[2m 26.34 kB[22m[1m[22m[2m Γöé gzip:  8.26 kB[22m
+[2mbuild/client/[22m[36massets/chunk-EVOBXE3Y-qI2278HY.js   [39m[1m[2m126.93 kB[22m[1m[22m[2m Γöé gzip: 42.69 kB[22m
+[2mbuild/client/[22m[36massets/entry.client-CgtZ94-i.js     [39m[1m[2m190.57 kB[22m[1m[22m[2m Γöé gzip: 60.05 kB[22m
+[32mΓ£ô built in 3.89s[39m
+[36mvite v7.3.2 [32mbuilding ssr environment for production...[36m[39m
+transforming...
+[32mΓ£ô[39m 8 modules transformed.
+rendering chunks...
+[2mbuild/server/[22m[32m.vite/manifest.json               [39m[1m[2m 0.23 kB[22m[1m[22m
+[2mbuild/server/[22m[35massets/server-build-BfsYW-u5.css  [39m[1m[2m29.12 kB[22m[1m[22m
+[2mbuild/server/[22m[36mindex.js                          [39m[1m[2m18.00 kB[22m[1m[22m
+
+[32mΓ£ô[39m 1 asset cleaned from React Router server build.
+[2mbuild\server\assets\server-build-BfsYW-u5.css[22m
+
+SPA Mode: Generated [1mbuild\client\index.html[22m
+Removing the server build in [32mD:\DEV\role-model\.worktrees\14-router-runtime-ui-foundation\role-model-router\apps\runtime-ui\build\server[39m due to ssr:false
+[32mΓ£ô built in 192ms[39m
+
+PASS
+

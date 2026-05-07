@@ -1,0 +1,17 @@
+[INFO] Starting managed role-model bridge on http://127.0.0.1:56511
+(node:43984) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+{
+  "status": "listening",
+  "host": "127.0.0.1",
+  "port": 56511
+}
+[INFO] Reloading Configuration
+[INFO] llama-swap listening on http://127.0.0.1:56510
+[INFO] Request 127.0.0.1 "GET /health HTTP/1.1" 200 2 "Mozilla/5.0 (Windows NT 10.0; Microsoft Windows 10.0.26200; en-US) PowerShell/7.6.0" 832┬╡s
+[INFO] Request 127.0.0.1 "GET /v1/models HTTP/1.1" 200 380 "Mozilla/5.0 (Windows NT 10.0; Microsoft Windows 10.0.26200; en-US) PowerShell/7.6.0" 1.5445ms
+[INFO] Request 127.0.0.1 "POST /v1/responses HTTP/1.1" 200 475 "Mozilla/5.0 (Windows NT 10.0; Microsoft Windows 10.0.26200; en-US) PowerShell/7.6.0" 36.8244ms
+[WARN] error processing streaming response: no valid JSON data found in stream, path=/v1/chat/completions, recording minimal metrics
+[INFO] Request 127.0.0.1 "POST /v1/chat/completions HTTP/1.1" 200 583 "" 21.6542ms
+[INFO] Request 127.0.0.1 "POST /v1/responses HTTP/1.1" 200 1046 "" 17.8061ms
+

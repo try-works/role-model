@@ -1,6 +1,8 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
-import { readFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
+import { randomUUID } from "node:crypto";
 
 import type { NormalizedCatalog } from "@role-model-router/catalog";
 import { assembleContextEnvelope } from "@role-model-router/context-envelope";
@@ -12,7 +14,7 @@ import {
   createMcpConnectorDefinitions,
   type DeclaredMcpConnectorConfig,
 } from "@role-model-router/provider-mcp";
-import { validateProviderAccounts } from "@role-model-router/provider-account";
+import { type ProviderAccountRecord, validateProviderAccounts } from "@role-model-router/provider-account";
 import { createOpenAIProviderAdapter } from "@role-model-router/provider-openai";
 import { createRetrievalReceipt } from "@role-model-router/retrieval-receipt";
 import type { ObservedPerformanceSample } from "@role-model-router/profile-aggregator";
@@ -30,6 +32,8 @@ import {
 } from "@role-model-router/tool-registry";
 import {
   initializeSqliteMemory,
+  listRuntimeEndpoints,
+  listProviderAccounts,
   persistContinuitySnapshot,
   persistProviderAccounts,
   persistRuntimeObservationBundle,
@@ -38,12 +42,20 @@ import {
   readConversationContinuity,
   readLatestObservedProfile,
   readObservedPerformanceSamples,
+  readProviderDeviceAuthSession,
   readRuntimeMaintenancePolicy,
+  readRuntimeControllerAssignment,
   readRuntimeObservationBundle,
+  upsertProviderDeviceAuthSession,
+  upsertProviderAccount as upsertSqliteProviderAccount,
+  upsertRuntimeControllerAssignment,
+  upsertRuntimeEndpoint as upsertSqliteRuntimeEndpoint,
 } from "@role-model-router/sqlite-memory";
 
 import {
-  executeRoutedRequest,
+  executeLiveRoutedRequest,
+  type ProviderRequestCapture,
+  type ResolvedExecutionTarget,
   type RuntimeExecutionRequest,
   type RuntimeResponseCaptureMap,
 } from "@role-model-router/adapter-execution";
@@ -71,6 +83,24 @@ interface OpenAIChatCompletionsBody {
   readonly temperature?: number;
 }
 
+interface OpenAIResponsesTool {
+  readonly type: string;
+  readonly name?: string;
+  readonly description?: string;
+  readonly parameters?: Record<string, unknown>;
+}
+
+type OpenAIResponsesInput = string | readonly OpenAIChatCompletionsMessage[];
+
+interface OpenAIResponsesBody {
+  readonly model: string;
+  readonly input: OpenAIResponsesInput;
+  readonly tools?: readonly OpenAIResponsesTool[];
+  readonly stream?: boolean;
+  readonly max_output_tokens?: number;
+  readonly temperature?: number;
+}
+
 export interface BridgeModelRecord {
   readonly id: string;
   readonly object: "model";
@@ -81,6 +111,39 @@ export interface BridgeModelRecord {
 export interface BridgeModelListResponse {
   readonly object: "list";
   readonly data: readonly BridgeModelRecord[];
+}
+
+export interface BridgeDownstreamOpenAIProviderConfig {
+  readonly kind: "openai-compatible";
+  readonly providerId: "role-model-runtime";
+  readonly displayName: "Role Model Runtime";
+  readonly baseUrl: string;
+  readonly endpoints: {
+    readonly health: string;
+    readonly models: string;
+    readonly chatCompletions: string;
+    readonly responses: string;
+  };
+  readonly authentication: {
+    readonly type: "bearer";
+    readonly headerName: "Authorization";
+    readonly required: false;
+    readonly placeholderToken: "role-model-local";
+    readonly note: string;
+  };
+  readonly models: readonly BridgeModelRecord[];
+  readonly setup: {
+    readonly recommendedModel: string | null;
+    readonly notes: readonly string[];
+  };
+}
+
+export interface BridgeControllerAssignment {
+  readonly scope: "global";
+  readonly endpointId: string;
+  readonly modelId: string;
+  readonly sourceType: "local" | "remote";
+  readonly updatedAtMs?: number;
 }
 
 export interface BridgeExecutionPlan {
@@ -128,6 +191,20 @@ export interface BridgeChatCompletionsExecutionResult {
   };
 }
 
+export interface BridgeResponsesExecutionResult {
+  readonly responseId: string;
+  readonly model: string;
+  readonly endpointId: string;
+  readonly adapterFamily: string;
+  readonly outputText: string;
+  readonly finishReason: string;
+  readonly toolCalls?: readonly BridgeToolCall[];
+  readonly usage: {
+    readonly inputTokens: number;
+    readonly outputTokens: number;
+  };
+}
+
 export interface BridgeToolCall {
   readonly id: string;
   readonly type: "function";
@@ -137,14 +214,45 @@ export interface BridgeToolCall {
   };
 }
 
+type BridgeStreamMetadata = {
+  readonly endpointId: string;
+  readonly adapterFamily: string;
+};
+type BridgeStreamWriter = (
+  chunk: Record<string, unknown>,
+  metadata?: BridgeStreamMetadata,
+) => void | Promise<void>;
+
 export interface StartBridgeServerOptions {
   readonly host: string;
   readonly port: number;
   readonly registry: EndpointRegistryResult;
+  readonly getRegistry?: () => EndpointRegistryResult;
   readonly executeChatCompletions: (
     body: OpenAIChatCompletionsBody,
     requestId: string,
+    streamWriter?: BridgeStreamWriter,
   ) => Promise<BridgeChatCompletionsExecutionResult>;
+  readonly executeResponses: (
+    body: OpenAIResponsesBody,
+    requestId: string,
+    streamWriter?: BridgeStreamWriter,
+  ) => Promise<BridgeResponsesExecutionResult>;
+  readonly readVersionInfo?: () => Promise<unknown>;
+  readonly listActivityMetrics?: () => Promise<unknown>;
+  readonly readActivityCapture?: (captureId: number) => Promise<unknown>;
+  readonly readLogs?: () => Promise<string>;
+  readonly readRuntimeSummary?: () => Promise<unknown>;
+  readonly listProviders?: () => Promise<readonly unknown[]>;
+  readonly listRoles?: () => Promise<readonly unknown[]>;
+  readonly listAccounts?: () => Promise<readonly unknown[]>;
+  readonly upsertProviderAccount?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly startProviderDeviceAuthorization?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly pollProviderDeviceAuthorization?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly activateEndpoint?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly listEndpoints?: () => Promise<readonly unknown[]>;
+  readonly readControllerAssignment?: () => Promise<BridgeControllerAssignment>;
+  readonly updateControllerAssignment?: (body: Record<string, unknown>) => Promise<BridgeControllerAssignment>;
   readonly listRecentRequestObservations?: () => Promise<readonly unknown[]>;
   readonly readRequestObservation?: (requestId: string) => Promise<unknown>;
   readonly readEndpointProfile?: (endpointId: string) => Promise<unknown>;
@@ -155,7 +263,65 @@ export interface RuntimeBridgeBackend {
   executeChatCompletions: (
     body: OpenAIChatCompletionsBody,
     requestId: string,
+    streamWriter?: BridgeStreamWriter,
   ) => Promise<BridgeChatCompletionsExecutionResult>;
+  executeResponses: (
+    body: OpenAIResponsesBody,
+    requestId: string,
+    streamWriter?: BridgeStreamWriter,
+  ) => Promise<BridgeResponsesExecutionResult>;
+  readRuntimeSummary(): Promise<{
+    lifecycleSummary: EndpointRegistryResult["lifecycleSummary"];
+    providerCount: number;
+    accountCount: number;
+    endpointCount: number;
+  }>;
+  listProviders(): Promise<
+    readonly {
+      providerId: string;
+      displayName: string;
+      providerKind: string;
+      authFamily: string;
+      adapterFamily: string;
+      apiBase: string;
+      envVars: readonly string[];
+      supportedAuthModes: readonly string[];
+      controlPlaneRequirements: readonly string[];
+      localOverrideApplied: boolean;
+      modelIds: readonly string[];
+      variants: readonly ProviderPresetVariant[];
+    }[]
+  >;
+  listRoles(): Promise<
+    readonly {
+      roleId: string;
+      label: string;
+      description: string;
+      taskTypes: readonly string[];
+    }[]
+  >;
+  listAccounts(): Promise<ReturnType<typeof listProviderAccounts>>;
+  upsertProviderAccount(account: Record<string, unknown>): Promise<ProviderAccountRecord>;
+  startProviderDeviceAuthorization(body: Record<string, unknown>): Promise<DeviceAuthorizationStartResult>;
+  pollProviderDeviceAuthorization(body: Record<string, unknown>): Promise<DeviceAuthorizationPollResult>;
+  activateEndpoint(body: Record<string, unknown>): Promise<Record<string, unknown>>;
+  readControllerAssignment(): Promise<BridgeControllerAssignment>;
+  updateControllerAssignment(body: Record<string, unknown>): Promise<BridgeControllerAssignment>;
+  listEndpoints(): Promise<
+    readonly {
+      endpointId: string;
+      modelId: string;
+      providerId: string | null;
+      endpointKind: string;
+      servingSource: string;
+      sourceType: "local" | "remote";
+      healthStatus: string;
+      capabilities: readonly string[];
+      toolCallingSupported: boolean;
+      toolCallingStyle: string;
+      status: string;
+    }[]
+  >;
   listRecentRequestObservations(): Promise<
     readonly ReturnType<typeof listRecentRuntimeObservations>[number][]
   >;
@@ -171,6 +337,7 @@ export interface CreateRuntimeBridgeBackendOptions {
   readonly repoRoot: string;
   readonly runtimeStateRoot: string;
   readonly scopeId: string;
+  readonly networkFetcher?: typeof fetch;
 }
 
 export interface BridgeServerOptions {
@@ -185,8 +352,239 @@ interface CaptureFixtureMap {
   readonly byEndpointId: Readonly<Record<string, { readonly responseFixture: string }>>;
 }
 
+interface ProviderPresetVariantOAuth {
+  readonly oauthHost: string;
+  readonly clientId: string;
+  readonly deviceAuthorizationEndpoint: string;
+  readonly tokenEndpoint: string;
+  readonly requiredHeaders: readonly string[];
+}
+
+interface ProviderPresetVariant {
+  readonly variantId: string;
+  readonly label: string;
+  readonly description: string;
+  readonly authMode: ProviderAccountRecord["authMode"];
+  readonly availability: "ready" | "backend-limited";
+  readonly baseUrl: string;
+  readonly modelIds: readonly string[];
+  readonly oauth?: ProviderPresetVariantOAuth;
+}
+
+interface ProviderPresetCatalog {
+  readonly providers: Readonly<
+    Record<
+      string,
+      {
+        readonly variants: readonly ProviderPresetVariant[];
+      }
+    >
+  >;
+}
+
+interface DeviceAuthorizationStartResult {
+  readonly authRequestId: string;
+  readonly providerAccountId: string;
+  readonly status: "pending";
+  readonly userCode: string;
+  readonly verificationUri: string;
+  readonly verificationUriComplete: string;
+  readonly intervalSeconds: number;
+  readonly expiresAtMs: number;
+}
+
+interface DeviceAuthorizationPollResult {
+  readonly authRequestId: string;
+  readonly providerAccountId: string;
+  readonly status: "pending" | "connected" | "expired" | "failed";
+  readonly retryAfterSeconds?: number;
+  readonly lastError?: string;
+}
+
+interface RuntimeRoleSummary {
+  readonly roleId: string;
+  readonly label: string;
+  readonly description: string;
+  readonly taskTypes: readonly string[];
+}
+
+const defaultRoles = [
+  { role_id: "general.chat", task_types_supported: ["text.chat"] },
+  { role_id: "coder.patch", task_types_supported: ["code.edit"] },
+  { role_id: "coder.review", task_types_supported: ["code.edit", "json.schema_adherence"] },
+  { role_id: "tool.agent", task_types_supported: ["tools.function_calling"] },
+  { role_id: "embedder", task_types_supported: ["embeddings.text"] },
+  { role_id: "classifier", task_types_supported: ["text.classification"] },
+  { role_id: "language.detector", task_types_supported: ["text.language_detection"] },
+] as const;
+
 function compareText(left: string, right: string): number {
   return left.localeCompare(right, "en");
+}
+
+function titleCaseWords(value: string): string {
+  return value
+    .split(/[._-]+/)
+    .filter((segment) => segment.length > 0)
+    .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
+    .join(" ");
+}
+
+function buildBuiltinRoleDescription(roleId: string): string {
+  switch (roleId) {
+    case "general.chat":
+      return "General-purpose chat, assistant, and conversational tasks.";
+    case "coder.patch":
+      return "Code editing and patch generation tasks.";
+    case "coder.review":
+      return "Code review and schema-adherence tasks.";
+    case "tool.agent":
+      return "Tool-calling and function-execution tasks.";
+    case "embedder":
+      return "Embedding generation tasks.";
+    case "classifier":
+      return "Classification and labeling tasks.";
+    case "language.detector":
+      return "Language-detection tasks.";
+    default:
+      return `${titleCaseWords(roleId)} tasks.`;
+  }
+}
+
+function createBuiltinRoleDefinition(
+  roleId: string,
+  taskTypes: readonly string[],
+): NonNullable<Parameters<typeof routeRuntimeRequest>[0]["roleDefinitions"]>[number] {
+  return {
+    role_id: roleId,
+    name: titleCaseWords(roleId),
+    description: buildBuiltinRoleDescription(roleId),
+    role_kind: "assistant",
+    default_system_instructions: `Operate as ${titleCaseWords(roleId)}.`,
+    task_types_supported: [...taskTypes],
+    required_capabilities: [],
+    preferred_capabilities: [],
+    forbidden_capabilities: [],
+    tool_policy: {
+      mode: "allowed",
+    },
+    routing_policy_overrides: {},
+    output_contracts: [],
+    safety_policy_refs: [],
+  };
+}
+
+function buildRuntimeRoleCatalog(
+  roleDefinitions: readonly NonNullable<Parameters<typeof routeRuntimeRequest>[0]["roleDefinitions"]>[number][] = [],
+): {
+  readonly roleDefinitions: readonly NonNullable<Parameters<typeof routeRuntimeRequest>[0]["roleDefinitions"]>[number][];
+  readonly roleSummaries: readonly RuntimeRoleSummary[];
+} {
+  const summaries = new Map<string, RuntimeRoleSummary>();
+  const definitions = new Map<string, NonNullable<Parameters<typeof routeRuntimeRequest>[0]["roleDefinitions"]>[number]>();
+
+  for (const role of roleDefinitions) {
+    definitions.set(role.role_id, role);
+    summaries.set(role.role_id, {
+      roleId: role.role_id,
+      label: role.name,
+      description: role.description,
+      taskTypes: role.task_types_supported,
+    });
+  }
+
+  for (const role of defaultRoles) {
+    if (!definitions.has(role.role_id)) {
+      definitions.set(role.role_id, createBuiltinRoleDefinition(role.role_id, role.task_types_supported));
+    }
+    if (!summaries.has(role.role_id)) {
+      summaries.set(role.role_id, {
+        roleId: role.role_id,
+        label: titleCaseWords(role.role_id),
+        description: buildBuiltinRoleDescription(role.role_id),
+        taskTypes: [...role.task_types_supported],
+      });
+    }
+  }
+
+  const byRoleId = [...summaries.values()].sort((left, right) => compareText(left.roleId, right.roleId));
+  return {
+    roleDefinitions: byRoleId.map((role) => definitions.get(role.roleId)!),
+    roleSummaries: byRoleId,
+  };
+}
+
+function buildRuntimeRoleBindings(
+  staticBindings: readonly NonNullable<Parameters<typeof routeRuntimeRequest>[0]["roleBindings"]>[number][],
+  runtimeEndpoints: readonly {
+    endpointId: string;
+    providerAccountId: string;
+    modelId: string;
+  }[],
+  accounts: readonly ProviderAccountRecord[],
+  registry: EndpointRegistryResult,
+  roleDefinitions: readonly NonNullable<Parameters<typeof routeRuntimeRequest>[0]["roleDefinitions"]>[number][],
+): readonly NonNullable<Parameters<typeof routeRuntimeRequest>[0]["roleBindings"]>[number][] {
+  const roleDefinitionsById = new Map(roleDefinitions.map((role) => [role.role_id, role]));
+  const capabilitiesByEndpointId = new Map(
+    registry.endpoints.map((endpoint) => [endpoint.identity.endpoint_id, [...endpoint.declared.capabilities]]),
+  );
+  const dynamicBindings = runtimeEndpoints.flatMap((endpoint) => {
+    const account = accounts.find((entry) => entry.providerAccountId === endpoint.providerAccountId);
+    if (!account) {
+      return [];
+    }
+    const modelBinding = account.modelRoleBindings?.find((entry) => entry.modelId === endpoint.modelId);
+    if (!modelBinding) {
+      return [];
+    }
+    const endpointCapabilities = capabilitiesByEndpointId.get(endpoint.endpointId) ?? [];
+    return modelBinding.roleIds.flatMap((roleId) => {
+      const roleDefinition = roleDefinitionsById.get(roleId);
+      if (!roleDefinition) {
+        return [];
+      }
+      return [
+        {
+          binding_id: `runtime.${sanitizeSegment(endpoint.endpointId)}.${sanitizeSegment(roleId)}`,
+          role_id: roleId,
+          endpoint_id: endpoint.endpointId,
+          status: "active" as const,
+          policy_overrides: {},
+          effective_capabilities: endpointCapabilities,
+          effective_task_types: [...roleDefinition.task_types_supported],
+        },
+      ];
+    });
+  });
+
+  return [...staticBindings, ...dynamicBindings];
+}
+
+function getModelRoleIds(account: ProviderAccountRecord, modelId: string): readonly string[] {
+  return (
+    account.modelRoleBindings?.find((entry) => entry.modelId === modelId)?.roleIds.slice().sort(compareText) ?? []
+  );
+}
+
+function getEndpointRoleIds(
+  endpointId: string,
+  runtimeEndpoints: readonly {
+    endpointId: string;
+    providerAccountId: string;
+    modelId: string;
+  }[],
+  accounts: readonly ProviderAccountRecord[],
+): readonly string[] {
+  const runtimeEndpoint = runtimeEndpoints.find((entry) => entry.endpointId === endpointId);
+  if (!runtimeEndpoint) {
+    return [];
+  }
+  const account = accounts.find((entry) => entry.providerAccountId === runtimeEndpoint.providerAccountId);
+  if (!account) {
+    return [];
+  }
+  return getModelRoleIds(account, runtimeEndpoint.modelId);
 }
 
 function estimateContextTokens(
@@ -213,6 +611,22 @@ function toToolDefinition(tool: OpenAIChatCompletionsTool): {
   };
 }
 
+function toResponsesToolDefinition(tool: OpenAIResponsesTool): {
+  readonly name: string;
+  readonly description?: string;
+  readonly inputSchema: Record<string, unknown>;
+} {
+  if (tool.type !== "function" || typeof tool.name !== "string" || !tool.parameters) {
+    throw new Error("Only OpenAI function tools are supported by the runtime host bridge.");
+  }
+
+  return {
+    name: tool.name,
+    description: tool.description,
+    inputSchema: tool.parameters,
+  };
+}
+
 function parseChatCompletionsBody(body: Record<string, unknown>): OpenAIChatCompletionsBody {
   if (typeof body.model !== "string") {
     throw new Error("chat-completions request must include a string model");
@@ -222,6 +636,38 @@ function parseChatCompletionsBody(body: Record<string, unknown>): OpenAIChatComp
   }
 
   return body as unknown as OpenAIChatCompletionsBody;
+}
+
+function toResponsesInputMessages(input: OpenAIResponsesInput): readonly OpenAIChatCompletionsMessage[] {
+  if (typeof input === "string") {
+    return [{ role: "user", content: input }];
+  }
+
+  return input.map((message) => {
+    if (
+      typeof message !== "object" ||
+      message === null ||
+      typeof message.role !== "string" ||
+      typeof message.content !== "string"
+    ) {
+      throw new Error("responses input messages must include string role and content fields");
+    }
+    return {
+      role: message.role,
+      content: message.content,
+    };
+  });
+}
+
+function parseResponsesBody(body: Record<string, unknown>): OpenAIResponsesBody {
+  if (typeof body.model !== "string") {
+    throw new Error("responses request must include a string model");
+  }
+  if (typeof body.input !== "string" && !Array.isArray(body.input)) {
+    throw new Error("responses request must include a string or message-array input");
+  }
+
+  return body as unknown as OpenAIResponsesBody;
 }
 
 export function createModelListResponse(
@@ -247,6 +693,77 @@ export function createModelListResponse(
   return {
     object: "list",
     data,
+  };
+}
+
+function readForwardedHeaderValue(value: string | string[] | undefined): string | undefined {
+  const rawValue = Array.isArray(value) ? value[0] : value;
+  if (typeof rawValue !== "string") {
+    return undefined;
+  }
+  const firstValue = rawValue
+    .split(",")
+    .map((entry) => entry.trim())
+    .find((entry) => entry.length > 0);
+  return firstValue && firstValue.length > 0 ? firstValue : undefined;
+}
+
+function appendForwardedPort(host: string, port: string | undefined): string {
+  if (!port || host.includes(":")) {
+    return host;
+  }
+  return `${host}:${port}`;
+}
+
+function resolveExternalBaseUrl(
+  request: IncomingMessage,
+  options: Pick<StartBridgeServerOptions, "host" | "port">,
+): string {
+  const forwardedProto = readForwardedHeaderValue(request.headers["x-forwarded-proto"]);
+  const forwardedHost = readForwardedHeaderValue(request.headers["x-forwarded-host"]);
+  const forwardedPort = readForwardedHeaderValue(request.headers["x-forwarded-port"]);
+  const requestHost = readForwardedHeaderValue(request.headers.host);
+  const fallbackHost = options.port > 0 ? `${options.host}:${options.port}` : options.host;
+  const host = forwardedHost
+    ? appendForwardedPort(forwardedHost, forwardedPort)
+    : appendForwardedPort(requestHost ?? fallbackHost, forwardedPort);
+  return `${forwardedProto ?? "http"}://${host}`;
+}
+
+export function createDownstreamOpenAIProviderConfig(
+  registry: EndpointRegistryResult,
+  baseUrl: string,
+): BridgeDownstreamOpenAIProviderConfig {
+  const models = createModelListResponse(registry).data;
+
+  return {
+    kind: "openai-compatible",
+    providerId: "role-model-runtime",
+    displayName: "Role Model Runtime",
+    baseUrl,
+    endpoints: {
+      health: `${baseUrl}/healthz`,
+      models: `${baseUrl}/v1/models`,
+      chatCompletions: `${baseUrl}/v1/chat/completions`,
+      responses: `${baseUrl}/v1/responses`,
+    },
+    authentication: {
+      type: "bearer",
+      headerName: "Authorization",
+      required: false,
+      placeholderToken: "role-model-local",
+      note:
+        "Inbound API-key validation is not enforced yet. If a downstream client requires a token field, use this placeholder bearer token.",
+    },
+    models,
+    setup: {
+      recommendedModel: models[0]?.id ?? null,
+      notes: [
+        "Configure downstream tooling as an OpenAI-compatible provider.",
+        "Use GET /v1/models to discover the current model ids.",
+        "Use POST /v1/chat/completions or POST /v1/responses for routed inference.",
+      ],
+    },
   };
 }
 
@@ -293,6 +810,50 @@ export function mapChatCompletionsRequest(
   };
 }
 
+export function mapResponsesRequest(
+  registry: EndpointRegistryResult,
+  body: OpenAIResponsesBody,
+  requestId: string,
+): BridgeExecutionPlan {
+  const allowEndpoints = registry.endpoints
+    .filter((endpoint) => endpoint.identity.model_id === body.model)
+    .map((endpoint) => endpoint.identity.endpoint_id)
+    .sort(compareText);
+
+  if (allowEndpoints.length === 0) {
+    throw new Error(`No registry endpoints are available for requested model ${body.model}.`);
+  }
+
+  const tools = body.tools?.map(toResponsesToolDefinition);
+  const messages = toResponsesInputMessages(body.input);
+
+  return {
+    routingRequest: {
+      requestId,
+      taskType: "text.chat",
+      requiredCapabilities: ["text.chat"],
+      preferredCapabilities: [],
+      requiredModalities: ["text"],
+      contextTokens: estimateContextTokens(messages, tools?.length ?? 0),
+      needsTools: Boolean(tools?.length),
+      strategy: "balanced",
+      preferLocal: false,
+      allowEndpoints,
+    },
+    executionRequest: {
+      messages,
+      ...(tools?.length ? { tools } : {}),
+      ...(typeof body.stream === "boolean" ? { stream: body.stream } : {}),
+      ...(typeof body.max_output_tokens === "number"
+        ? { maxOutputTokens: body.max_output_tokens }
+        : {}),
+      ...(typeof body.temperature === "number"
+        ? { temperature: body.temperature }
+        : {}),
+    },
+  };
+}
+
 function writeJson(
   response: ServerResponse,
   statusCode: number,
@@ -305,6 +866,17 @@ function writeJson(
     response.setHeader(key, value);
   }
   response.end(`${JSON.stringify(body)}\n`);
+}
+
+function writeText(
+  response: ServerResponse,
+  statusCode: number,
+  body: string,
+  contentType = "text/plain; charset=utf-8",
+): void {
+  response.statusCode = statusCode;
+  response.setHeader("content-type", contentType);
+  response.end(body);
 }
 
 async function readJsonBody(request: IncomingMessage): Promise<Record<string, unknown>> {
@@ -408,6 +980,450 @@ async function createRuntimeToolRegistry(
   });
 }
 
+function asObject(value: unknown, label: string): Record<string, unknown> {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    throw new Error(`${label} must be an object`);
+  }
+  return value as Record<string, unknown>;
+}
+
+function readRequiredString(record: Record<string, unknown>, key: string, label: string): string {
+  const value = record[key];
+  if (typeof value !== "string" || value.trim().length === 0) {
+    throw new Error(`${label}.${key} must be a non-empty string`);
+  }
+  return value;
+}
+
+function readOptionalString(record: Record<string, unknown>, key: string): string | undefined {
+  const value = record[key];
+  return typeof value === "string" && value.trim().length > 0 ? value : undefined;
+}
+
+function readStringArray(record: Record<string, unknown>, key: string): string[] | undefined {
+  const value = record[key];
+  if (value === undefined) {
+    return undefined;
+  }
+  if (!Array.isArray(value) || value.some((entry) => typeof entry !== "string")) {
+    throw new Error(`${key} must be an array of strings`);
+  }
+  return [...value];
+}
+
+function sanitizeSegment(value: string): string {
+  return value.replace(/[^a-zA-Z0-9.-]+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
+}
+
+function createCredentialRef(providerId: string, providerAccountId: string): string {
+  return `oauth/${sanitizeSegment(providerId)}/${sanitizeSegment(providerAccountId)}`;
+}
+
+function resolveCredentialFilePath(
+  runtimeStateRoot: string,
+  scopeId: string,
+  credentialRef: string,
+): string {
+  const safeSegments = credentialRef
+    .split(/[\\/]+/)
+    .filter((segment) => segment.length > 0 && segment !== "." && segment !== "..")
+    .map(sanitizeSegment);
+  return path.join(runtimeStateRoot, scopeId, "credentials", ...safeSegments) + ".json";
+}
+
+function createDeviceHeaders(deviceId: string): Record<string, string> {
+  return {
+    "User-Agent": "KimiCLI/1.41.0",
+    "X-Msh-Platform": "kimi_cli",
+    "X-Msh-Version": "1.41.0",
+    "X-Msh-Device-Name": os.hostname(),
+    "X-Msh-Device-Model": `${os.platform()} ${os.release()} ${os.arch()}`.trim(),
+    "X-Msh-Os-Version": os.release(),
+    "X-Msh-Device-Id": deviceId,
+  };
+}
+
+async function persistOauthTokenFile(
+  runtimeStateRoot: string,
+  scopeId: string,
+  credentialRef: string,
+  payload: Record<string, unknown>,
+): Promise<void> {
+  const filePath = resolveCredentialFilePath(runtimeStateRoot, scopeId, credentialRef);
+  await mkdir(path.dirname(filePath), { recursive: true });
+  await writeFile(filePath, JSON.stringify(payload, null, 2), "utf8");
+}
+
+async function readOauthTokenFile(
+  runtimeStateRoot: string,
+  scopeId: string,
+  credentialRef: string,
+): Promise<Record<string, unknown> | null> {
+  try {
+    const filePath = resolveCredentialFilePath(runtimeStateRoot, scopeId, credentialRef);
+    return JSON.parse(await readFile(filePath, "utf8")) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
+interface StoredOauthTokenPayload {
+  readonly access_token?: string;
+  readonly refresh_token?: string;
+  readonly expires_in?: number;
+  readonly scope?: string;
+  readonly token_type?: string;
+  readonly saved_at_ms?: number;
+}
+
+function readStoredAccessToken(payload: StoredOauthTokenPayload | null): string {
+  return typeof payload?.access_token === "string" ? payload.access_token.trim() : "";
+}
+
+function readStoredRefreshToken(payload: StoredOauthTokenPayload | null): string {
+  return typeof payload?.refresh_token === "string" ? payload.refresh_token.trim() : "";
+}
+
+function tokenNeedsRefresh(payload: StoredOauthTokenPayload | null): boolean {
+  if (!payload || typeof payload.saved_at_ms !== "number" || typeof payload.expires_in !== "number") {
+    return false;
+  }
+  return payload.saved_at_ms + payload.expires_in * 1000 <= Date.now() + 60_000;
+}
+
+function getOauthVariant(
+  providerPresets: ProviderPresetCatalog,
+  providerId: string,
+): ProviderPresetVariant & { oauth: ProviderPresetVariantOAuth } {
+  const variant = providerPresets.providers[providerId]?.variants.find(
+    (entry): entry is ProviderPresetVariant & { oauth: ProviderPresetVariantOAuth } =>
+      entry.authMode === "oauth2-device-code" && Boolean(entry.oauth),
+  );
+  if (!variant) {
+    throw new Error(`Provider ${providerId} does not expose an OAuth device-code variant.`);
+  }
+  return variant;
+}
+
+async function refreshOauthAccessToken(
+  runtimeStateRoot: string,
+  scopeId: string,
+  target: ResolvedExecutionTarget,
+  providerPresets: ProviderPresetCatalog,
+  networkFetcher: typeof fetch,
+  deviceId: string,
+): Promise<string> {
+  const credentialRef = target.account?.credentialRef;
+  if (!credentialRef || credentialRef.backend !== "local-encrypted-file") {
+    throw new Error(`Endpoint ${target.endpointId} does not support OAuth token refresh.`);
+  }
+
+  const existingPayload = (await readOauthTokenFile(
+    runtimeStateRoot,
+    scopeId,
+    credentialRef.ref,
+  )) as StoredOauthTokenPayload | null;
+  const refreshToken = readStoredRefreshToken(existingPayload);
+  if (refreshToken.length === 0) {
+    throw new Error(`Stored OAuth credential ${credentialRef.ref} does not contain a refresh token.`);
+  }
+
+  const variant = getOauthVariant(providerPresets, target.providerId);
+  const tokenResponse = await networkFetcher(variant.oauth.tokenEndpoint, {
+    method: "POST",
+    headers: createDeviceHeaders(deviceId),
+    body: new URLSearchParams({
+      client_id: variant.oauth.clientId,
+      grant_type: "refresh_token",
+      refresh_token: refreshToken,
+    }),
+  });
+  const rawBody = await tokenResponse.text();
+  const parsedBody = parseProviderResponseBody(rawBody);
+  if (!tokenResponse.ok || !parsedBody || typeof parsedBody !== "object") {
+    throw new Error(summarizeProviderError(tokenResponse.status, parsedBody));
+  }
+
+  const refreshedPayload = parsedBody as Record<string, unknown>;
+  if (typeof refreshedPayload.access_token !== "string" || refreshedPayload.access_token.trim().length === 0) {
+    throw new Error(`Refresh response for ${credentialRef.ref} did not include an access token.`);
+  }
+
+  await persistOauthTokenFile(runtimeStateRoot, scopeId, credentialRef.ref, {
+    providerId: target.providerId,
+    providerAccountId: target.providerAccountId,
+    access_token: refreshedPayload.access_token,
+    refresh_token:
+      typeof refreshedPayload.refresh_token === "string" && refreshedPayload.refresh_token.length > 0
+        ? refreshedPayload.refresh_token
+        : refreshToken,
+    expires_in: refreshedPayload.expires_in,
+    scope: refreshedPayload.scope,
+    token_type: refreshedPayload.token_type,
+    saved_at_ms: Date.now(),
+  });
+
+  return refreshedPayload.access_token.trim();
+}
+
+async function resolveCredentialValue(
+  runtimeStateRoot: string,
+  scopeId: string,
+  target: ResolvedExecutionTarget,
+  providerPresets?: ProviderPresetCatalog,
+  networkFetcher?: typeof fetch,
+  deviceId?: string,
+): Promise<string> {
+  const credentialRef = target.account?.credentialRef;
+  if (!credentialRef) {
+    throw new Error(`Endpoint ${target.endpointId} does not have a credential reference.`);
+  }
+
+  if (credentialRef.backend === "env") {
+    const value = process.env[credentialRef.ref];
+    if (typeof value === "string" && value.trim().length > 0) {
+      return value.trim();
+    }
+    throw new Error(`Environment credential ${credentialRef.ref} is not set.`);
+  }
+
+  if (credentialRef.backend === "local-encrypted-file") {
+    let tokenPayload = (await readOauthTokenFile(
+      runtimeStateRoot,
+      scopeId,
+      credentialRef.ref,
+    )) as StoredOauthTokenPayload | null;
+    if (
+      tokenNeedsRefresh(tokenPayload) &&
+      providerPresets &&
+      networkFetcher &&
+      typeof deviceId === "string"
+    ) {
+      const refreshedAccessToken = await refreshOauthAccessToken(
+        runtimeStateRoot,
+        scopeId,
+        target,
+        providerPresets,
+        networkFetcher,
+        deviceId,
+      );
+      return refreshedAccessToken;
+    }
+    const accessToken = readStoredAccessToken(tokenPayload);
+    if (accessToken.length > 0) {
+      return accessToken;
+    }
+    throw new Error(`Stored OAuth credential ${credentialRef.ref} does not contain an access token.`);
+  }
+
+  throw new Error(`Credential backend ${credentialRef.backend} is not supported for live execution.`);
+}
+
+function applyCredentialToHeaders(
+  headers: Record<string, string>,
+  credentialValue: string,
+): Record<string, string> {
+  const resolvedHeaders = { ...headers };
+  for (const [key, value] of Object.entries(resolvedHeaders)) {
+    const lowerKey = key.toLowerCase();
+    if (lowerKey === "authorization") {
+      resolvedHeaders[key] = value.trim().toLowerCase().startsWith("bearer ")
+        ? `Bearer ${credentialValue}`
+        : credentialValue;
+    }
+    if (lowerKey === "x-api-key") {
+      resolvedHeaders[key] = credentialValue;
+    }
+  }
+  return resolvedHeaders;
+}
+
+function parseProviderResponseBody(rawBody: string): unknown {
+  if (rawBody.length === 0) {
+    return {};
+  }
+  try {
+    return JSON.parse(rawBody) as unknown;
+  } catch {
+    return rawBody;
+  }
+}
+
+async function readProviderStreamTranscript(
+  response: Response,
+  streamWriter: BridgeStreamWriter,
+  metadata: BridgeStreamMetadata,
+): Promise<string> {
+  const reader = response.body?.getReader();
+  if (!reader) {
+    return await response.text();
+  }
+
+  const decoder = new TextDecoder();
+  let transcript = "";
+  let pending = "";
+
+  const flushBlocks = async (flushAll: boolean): Promise<void> => {
+    const parts = pending.split(/\r?\n\r?\n/);
+    const completeBlocks = flushAll ? parts : parts.slice(0, -1);
+    pending = flushAll ? "" : (parts.at(-1) ?? "");
+
+    for (const block of completeBlocks) {
+      const dataLines = block
+        .split(/\r?\n/)
+        .map((line) => line.trim())
+        .filter((line) => line.startsWith("data:"))
+        .map((line) => line.slice("data:".length).trim())
+        .filter((line) => line.length > 0);
+      if (dataLines.length === 0) {
+        continue;
+      }
+
+      const payloadText = dataLines.join("\n");
+      if (payloadText === "[DONE]") {
+        continue;
+      }
+
+      try {
+        await streamWriter(JSON.parse(payloadText) as Record<string, unknown>, metadata);
+      } catch {
+        continue;
+      }
+    }
+  };
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) {
+      const finalChunk = decoder.decode();
+      transcript += finalChunk;
+      pending += finalChunk;
+      await flushBlocks(true);
+      break;
+    }
+    const chunkText = decoder.decode(value, { stream: true });
+    transcript += chunkText;
+    pending += chunkText;
+    await flushBlocks(false);
+  }
+
+  return transcript;
+}
+
+async function replayProviderStreamTranscript(
+  transcript: string,
+  streamWriter: BridgeStreamWriter,
+  metadata: BridgeStreamMetadata,
+): Promise<void> {
+  for (const block of transcript.split(/\r?\n\r?\n/)) {
+    const dataLines = block
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter((line) => line.startsWith("data:"))
+      .map((line) => line.slice("data:".length).trim())
+      .filter((line) => line.length > 0);
+    if (dataLines.length === 0) {
+      continue;
+    }
+
+    const payloadText = dataLines.join("\n");
+    if (payloadText === "[DONE]") {
+      continue;
+    }
+
+    try {
+      await streamWriter(JSON.parse(payloadText) as Record<string, unknown>, metadata);
+    } catch {
+      continue;
+    }
+  }
+}
+
+function summarizeProviderError(status: number, body: unknown): string {
+  if (body && typeof body === "object") {
+    const record = body as Record<string, unknown>;
+    const nestedError = record.error;
+    if (nestedError && typeof nestedError === "object") {
+      const nestedRecord = nestedError as Record<string, unknown>;
+      if (typeof nestedRecord.message === "string" && nestedRecord.message.length > 0) {
+        return nestedRecord.message;
+      }
+      if (typeof nestedRecord.error_description === "string" && nestedRecord.error_description.length > 0) {
+        return nestedRecord.error_description;
+      }
+    }
+    if (typeof record.message === "string" && record.message.length > 0) {
+      return record.message;
+    }
+    if (typeof record.error_description === "string" && record.error_description.length > 0) {
+      return record.error_description;
+    }
+  }
+  return `Provider request failed with HTTP ${status}.`;
+}
+
+function shouldUseLiveProviderExecution(target: ResolvedExecutionTarget): boolean {
+  return (
+    target.adapterFamily === "ai-sdk-openai-compatible" &&
+    target.account?.credentialRef.backend === "local-encrypted-file"
+  );
+}
+
+function toModelSegment(modelId: string): string {
+  const lastSegment = modelId.includes("/") ? modelId.slice(modelId.lastIndexOf("/") + 1) : modelId;
+  return sanitizeSegment(lastSegment);
+}
+
+function createEndpointId(providerAccountId: string, region: string, modelId: string): string {
+  return `${providerAccountId}.${sanitizeSegment(region)}.${toModelSegment(modelId)}`;
+}
+
+function toSourceType(
+  endpointKind: "local_engine" | "remote_api" | "browser_engine" | "dispatch_adapter",
+): "local" | "remote" {
+  return endpointKind === "remote_api" ? "remote" : "local";
+}
+
+function toControllerAssignmentFromEndpoint(endpoint: EndpointRegistryResult["endpoints"][number]): BridgeControllerAssignment {
+  return {
+    scope: "global",
+    endpointId: endpoint.identity.endpoint_id,
+    modelId: endpoint.identity.model_id,
+    sourceType: toSourceType(endpoint.identity.endpoint_kind),
+  };
+}
+
+function mergeRegistrySources(
+  staticSources: RegistrySources,
+  runtimeEndpoints: readonly {
+    endpointId: string;
+    providerAccountId: string;
+    modelId: string;
+    region: string;
+    endpointKind: string;
+    servingSource: string;
+    lifecycleState: string;
+    healthStatus: string;
+  }[],
+): RegistrySources {
+  return {
+    cloud: [
+      ...staticSources.cloud,
+      ...runtimeEndpoints.map((endpoint) => ({
+        endpointId: endpoint.endpointId,
+        providerAccountId: endpoint.providerAccountId,
+        modelId: endpoint.modelId,
+        region: endpoint.region,
+        endpointKind: endpoint.endpointKind,
+        servingSource: endpoint.servingSource,
+        lifecycleState: endpoint.lifecycleState as RegistrySources["cloud"][number]["lifecycleState"],
+        healthStatus: endpoint.healthStatus,
+      })),
+    ],
+    local: [...staticSources.local],
+  };
+}
+
 function createChatCompletionsResponse(
   result: BridgeChatCompletionsExecutionResult,
 ): Record<string, unknown> {
@@ -437,6 +1453,57 @@ function createChatCompletionsResponse(
   };
 }
 
+function createResponsesOutput(
+  result: BridgeResponsesExecutionResult,
+): ReadonlyArray<Record<string, unknown>> {
+  const output: Record<string, unknown>[] = [
+    {
+      type: "message",
+      id: `msg_${result.responseId}`,
+      role: "assistant",
+      content:
+        result.outputText.length > 0
+          ? [
+              {
+                type: "output_text",
+                text: result.outputText,
+              },
+            ]
+          : [],
+    },
+  ];
+
+  for (const toolCall of result.toolCalls ?? []) {
+    output.push({
+      type: "function_call",
+      id: toolCall.id,
+      call_id: toolCall.id,
+      name: toolCall.function.name,
+      arguments: toolCall.function.arguments,
+    });
+  }
+
+  return output;
+}
+
+function createResponsesResponse(
+  result: BridgeResponsesExecutionResult,
+): Record<string, unknown> {
+  return {
+    id: result.responseId,
+    object: "response",
+    created_at: Math.floor(Date.now() / 1000),
+    status: result.finishReason === "stop" ? "completed" : "incomplete",
+    model: result.model,
+    output: createResponsesOutput(result),
+    usage: {
+      input_tokens: result.usage.inputTokens,
+      output_tokens: result.usage.outputTokens,
+      total_tokens: result.usage.inputTokens + result.usage.outputTokens,
+    },
+  };
+}
+
 function serializeToolCallArguments(value: unknown): string {
   return typeof value === "string" ? value : JSON.stringify(value ?? null);
 }
@@ -459,13 +1526,180 @@ function toBridgeToolCall(
   };
 }
 
-function createUnsupportedStreamingResponse(): Record<string, unknown> {
-  return {
-    error: {
-      message: "streaming chat completions are not yet supported by the runtime host bridge",
-      type: "invalid_request_error",
-    },
+function createChatCompletionsStreamChunks(
+  result: BridgeChatCompletionsExecutionResult,
+): ReadonlyArray<Record<string, unknown>> {
+  const created = Math.floor(Date.now() / 1000);
+  const baseChunk = {
+    id: "chatcmpl-role-model",
+    object: "chat.completion.chunk",
+    created,
+    model: result.model,
   };
+
+  return [
+    {
+      ...baseChunk,
+      choices: [
+        {
+          index: 0,
+          delta: {
+            role: "assistant",
+            ...(result.outputText.length > 0 ? { content: result.outputText } : {}),
+            ...(result.toolCalls?.length ? { tool_calls: result.toolCalls } : {}),
+          },
+          finish_reason: null,
+        },
+      ],
+    },
+    {
+      ...baseChunk,
+      choices: [
+        {
+          index: 0,
+          delta: {},
+          finish_reason: result.finishReason,
+        },
+      ],
+    },
+  ];
+}
+
+function createResponsesStreamChunks(
+  result: BridgeResponsesExecutionResult,
+): ReadonlyArray<Record<string, unknown>> {
+  const messageId = `msg_${result.responseId}`;
+  const createdAt = Math.floor(Date.now() / 1000);
+  const chunks: Record<string, unknown>[] = [
+    {
+      type: "response.created",
+      response: {
+        id: result.responseId,
+        created_at: createdAt,
+        model: result.model,
+      },
+    },
+    {
+      type: "response.output_item.added",
+      output_index: 0,
+      item: {
+        type: "message",
+        id: messageId,
+      },
+    },
+  ];
+
+  if (result.outputText.length > 0) {
+    chunks.push({
+      type: "response.output_text.delta",
+      item_id: messageId,
+      output_index: 0,
+      delta: result.outputText,
+    });
+  }
+
+  for (const [index, toolCall] of (result.toolCalls ?? []).entries()) {
+    const outputIndex = index + 1;
+    chunks.push({
+      type: "response.output_item.added",
+      output_index: outputIndex,
+      item: {
+        type: "function_call",
+        id: toolCall.id,
+        call_id: toolCall.id,
+        name: toolCall.function.name,
+        arguments: "",
+      },
+    });
+    chunks.push({
+      type: "response.function_call_arguments.delta",
+      item_id: toolCall.id,
+      output_index: outputIndex,
+      delta: toolCall.function.arguments,
+    });
+    chunks.push({
+      type: "response.output_item.done",
+      output_index: outputIndex,
+      item: {
+        type: "function_call",
+        id: toolCall.id,
+        call_id: toolCall.id,
+        name: toolCall.function.name,
+        arguments: toolCall.function.arguments,
+        status: "completed",
+      },
+    });
+  }
+
+  chunks.push({
+    type: result.finishReason === "stop" ? "response.completed" : "response.incomplete",
+    response: {
+      id: result.responseId,
+      usage: {
+        input_tokens: result.usage.inputTokens,
+        output_tokens: result.usage.outputTokens,
+      },
+      ...(result.finishReason === "stop"
+        ? {}
+        : {
+            incomplete_details: {
+              reason: result.finishReason,
+            },
+          }),
+    },
+  });
+
+  return chunks;
+}
+
+function parseStreamPayloads(rawTranscript: string): readonly Record<string, unknown>[] {
+  const payloads: Record<string, unknown>[] = [];
+  for (const block of rawTranscript.split(/\r?\n\r?\n/)) {
+    const dataLines = block
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter((line) => line.startsWith("data:"))
+      .map((line) => line.slice("data:".length).trim())
+      .filter((line) => line.length > 0 && line !== "[DONE]");
+    if (dataLines.length === 0) {
+      continue;
+    }
+    try {
+      payloads.push(JSON.parse(dataLines.join("\n")) as Record<string, unknown>);
+    } catch {
+      continue;
+    }
+  }
+  return payloads;
+}
+
+function extractResponseId(responseBody: unknown): string | undefined {
+  if (
+    typeof responseBody === "object" &&
+    responseBody !== null &&
+    "id" in responseBody &&
+    typeof responseBody.id === "string"
+  ) {
+    return responseBody.id;
+  }
+
+  if (typeof responseBody !== "string") {
+    return undefined;
+  }
+
+  for (const payload of parseStreamPayloads(responseBody)) {
+    if (
+      payload.type === "response.created" &&
+      typeof payload.response === "object" &&
+      payload.response !== null &&
+      "id" in payload.response &&
+      typeof payload.response.id === "string"
+    ) {
+      return payload.response.id;
+    }
+  }
+
+  return undefined;
 }
 
 function createRequestHandler(options: StartBridgeServerOptions) {
@@ -482,8 +1716,25 @@ function createRequestHandler(options: StartBridgeServerOptions) {
       return;
     }
 
+    if (request.method === "GET" && url.pathname === "/health") {
+      writeText(response, 200, "OK");
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/ui") {
+      writeText(
+        response,
+        200,
+        '<!doctype html><html><body><ul><li><a href="/logs">/logs</a></li><li><a href="/api/version">/api/version</a></li><li><a href="/api/metrics">/api/metrics</a></li></ul></body></html>',
+        "text/html; charset=utf-8",
+      );
+      return;
+    }
+
+    const registry = options.getRegistry?.() ?? options.registry;
+
     if (request.method === "GET" && url.pathname === "/v1/models") {
-      writeJson(response, 200, createModelListResponse(options.registry));
+      writeJson(response, 200, createModelListResponse(registry));
       return;
     }
 
@@ -492,7 +1743,51 @@ function createRequestHandler(options: StartBridgeServerOptions) {
       const body = await readJsonBody(request);
       const parsedBody = parseChatCompletionsBody(body);
       if (parsedBody.stream) {
-        writeJson(response, 400, createUnsupportedStreamingResponse());
+        let wroteStreamChunk = false;
+        const pendingChunks: string[] = [];
+        const streamWriter: BridgeStreamWriter = async (chunk, metadata) => {
+          const serializedChunk = `data: ${JSON.stringify(chunk)}\n\n`;
+          if (!wroteStreamChunk) {
+            if (!metadata) {
+              pendingChunks.push(serializedChunk);
+              return;
+            }
+            response.writeHead(200, {
+              "content-type": "text/event-stream; charset=utf-8",
+              "cache-control": "no-cache, no-transform",
+              connection: "keep-alive",
+              "x-role-model-endpoint-id": metadata.endpointId,
+              "x-role-model-adapter-family": metadata.adapterFamily,
+            });
+            wroteStreamChunk = true;
+            for (const pendingChunk of pendingChunks) {
+              response.write(pendingChunk);
+            }
+            pendingChunks.length = 0;
+          }
+          response.write(serializedChunk);
+        };
+        const result = await options.executeChatCompletions(parsedBody, requestId, streamWriter);
+        if (!wroteStreamChunk) {
+          response.writeHead(200, {
+            "content-type": "text/event-stream; charset=utf-8",
+            "cache-control": "no-cache, no-transform",
+            connection: "keep-alive",
+            "x-role-model-endpoint-id": result.endpointId,
+            "x-role-model-adapter-family": result.adapterFamily,
+          });
+          if (pendingChunks.length > 0) {
+            for (const pendingChunk of pendingChunks) {
+              response.write(pendingChunk);
+            }
+          } else {
+            for (const chunk of createChatCompletionsStreamChunks(result)) {
+              response.write(`data: ${JSON.stringify(chunk)}\n\n`);
+            }
+          }
+        }
+        response.write("data: [DONE]\n\n");
+        response.end();
         return;
       }
       const result = await options.executeChatCompletions(parsedBody, requestId);
@@ -500,6 +1795,258 @@ function createRequestHandler(options: StartBridgeServerOptions) {
         "x-role-model-endpoint-id": result.endpointId,
         "x-role-model-adapter-family": result.adapterFamily,
       });
+      return;
+    }
+
+    if (request.method === "POST" && url.pathname === "/v1/responses") {
+      const requestId = request.headers["x-request-id"]?.toString() ?? "req-runtime-host-bridge";
+      const body = await readJsonBody(request);
+      const parsedBody = parseResponsesBody(body);
+      if (parsedBody.stream) {
+        let wroteStreamChunk = false;
+        const pendingChunks: string[] = [];
+        const streamWriter: BridgeStreamWriter = async (chunk, metadata) => {
+          const serializedChunk = `data: ${JSON.stringify(chunk)}\n\n`;
+          if (!wroteStreamChunk) {
+            if (!metadata) {
+              pendingChunks.push(serializedChunk);
+              return;
+            }
+            response.writeHead(200, {
+              "content-type": "text/event-stream; charset=utf-8",
+              "cache-control": "no-cache, no-transform",
+              connection: "keep-alive",
+              "x-role-model-endpoint-id": metadata.endpointId,
+              "x-role-model-adapter-family": metadata.adapterFamily,
+            });
+            wroteStreamChunk = true;
+            for (const pendingChunk of pendingChunks) {
+              response.write(pendingChunk);
+            }
+            pendingChunks.length = 0;
+          }
+          response.write(serializedChunk);
+        };
+        const result = await options.executeResponses(parsedBody, requestId, streamWriter);
+        if (!wroteStreamChunk) {
+          response.writeHead(200, {
+            "content-type": "text/event-stream; charset=utf-8",
+            "cache-control": "no-cache, no-transform",
+            connection: "keep-alive",
+            "x-role-model-endpoint-id": result.endpointId,
+            "x-role-model-adapter-family": result.adapterFamily,
+          });
+          if (pendingChunks.length > 0) {
+            for (const pendingChunk of pendingChunks) {
+              response.write(pendingChunk);
+            }
+          } else {
+            for (const chunk of createResponsesStreamChunks(result)) {
+              response.write(`data: ${JSON.stringify(chunk)}\n\n`);
+            }
+          }
+        }
+        response.end();
+        return;
+      }
+      const result = await options.executeResponses(parsedBody, requestId);
+      writeJson(response, 200, createResponsesResponse(result), {
+        "x-role-model-endpoint-id": result.endpointId,
+        "x-role-model-adapter-family": result.adapterFamily,
+      });
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/role-model/runtime/summary") {
+      if (!options.readRuntimeSummary) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.readRuntimeSummary());
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/version") {
+      if (!options.readVersionInfo) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.readVersionInfo());
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/metrics") {
+      if (!options.listActivityMetrics) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.listActivityMetrics());
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname.startsWith("/api/captures/")) {
+      if (!options.readActivityCapture) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      const captureId = Number.parseInt(url.pathname.slice("/api/captures/".length), 10);
+      const capture = Number.isFinite(captureId)
+        ? await options.readActivityCapture(captureId)
+        : null;
+      if (!capture) {
+        writeJson(response, 404, { error: "capture not found" });
+        return;
+      }
+      writeJson(response, 200, capture);
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/logs") {
+      if (!options.readLogs) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeText(response, 200, await options.readLogs());
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/role-model/downstream/openai") {
+      writeJson(
+        response,
+        200,
+        createDownstreamOpenAIProviderConfig(
+          registry,
+          resolveExternalBaseUrl(request, {
+            host: options.host,
+            port: options.port,
+          }),
+        ),
+      );
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/role-model/providers") {
+      if (!options.listProviders) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.listProviders());
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/role-model/roles") {
+      if (!options.listRoles) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.listRoles());
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/role-model/accounts") {
+      if (!options.listAccounts) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.listAccounts());
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/role-model/controller") {
+      if (!options.readControllerAssignment) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.readControllerAssignment());
+      return;
+    }
+
+    if (request.method === "PATCH" && url.pathname === "/api/role-model/controller") {
+      if (!options.updateControllerAssignment) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+
+      try {
+        writeJson(response, 200, await options.updateControllerAssignment(await readJsonBody(request)));
+      } catch (error) {
+        writeJson(response, 400, {
+          error: error instanceof Error ? error.message : "controller assignment update failed",
+        });
+      }
+      return;
+    }
+
+    if (request.method === "POST" && url.pathname === "/api/role-model/accounts") {
+      if (!options.upsertProviderAccount) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+
+      try {
+        writeJson(response, 200, await options.upsertProviderAccount(await readJsonBody(request)));
+      } catch (error) {
+        writeJson(response, 400, {
+          error: error instanceof Error ? error.message : "provider account upsert failed",
+        });
+      }
+      return;
+    }
+
+    if (request.method === "POST" && url.pathname === "/api/role-model/accounts/device/start") {
+      if (!options.startProviderDeviceAuthorization) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+
+      try {
+        writeJson(response, 200, await options.startProviderDeviceAuthorization(await readJsonBody(request)));
+      } catch (error) {
+        writeJson(response, 400, {
+          error: error instanceof Error ? error.message : "provider device authorization start failed",
+        });
+      }
+      return;
+    }
+
+    if (request.method === "POST" && url.pathname === "/api/role-model/accounts/device/poll") {
+      if (!options.pollProviderDeviceAuthorization) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+
+      try {
+        writeJson(response, 200, await options.pollProviderDeviceAuthorization(await readJsonBody(request)));
+      } catch (error) {
+        writeJson(response, 400, {
+          error: error instanceof Error ? error.message : "provider device authorization poll failed",
+        });
+      }
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/role-model/endpoints") {
+      if (!options.listEndpoints) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.listEndpoints());
+      return;
+    }
+
+    if (request.method === "POST" && url.pathname === "/api/role-model/endpoints") {
+      if (!options.activateEndpoint) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+
+      try {
+        writeJson(response, 200, await options.activateEndpoint(await readJsonBody(request)));
+      } catch (error) {
+        writeJson(response, 400, {
+          error: error instanceof Error ? error.message : "endpoint activation failed",
+        });
+      }
       return;
     }
 
@@ -597,6 +2144,7 @@ export async function startBridgeServer(
 export async function createRuntimeBridgeBackend(
   options: CreateRuntimeBridgeBackendOptions,
 ): Promise<RuntimeBridgeBackend> {
+  const networkFetcher = options.networkFetcher ?? fetch;
   const normalizedCatalog = await readJson<NormalizedCatalog>(
     path.join(
       options.repoRoot,
@@ -634,6 +2182,8 @@ export async function createRuntimeBridgeBackend(
     taskDefinitions: Parameters<typeof routeRuntimeRequest>[0]["taskDefinitions"];
     roleBindings: Parameters<typeof routeRuntimeRequest>[0]["roleBindings"];
   }>(path.join(options.repoRoot, "testdata", "router-runtime", "adapter-role-task.json"));
+  const runtimeRoles = buildRuntimeRoleCatalog(roleTaskFixture.roleDefinitions ?? []);
+  const allowedRoleIds = runtimeRoles.roleSummaries.map((role) => role.roleId);
   const routingModel = await readJson<RoutingModelSelection>(
     path.join(options.repoRoot, "testdata", "router-runtime", "routing-model-guidance.json"),
   );
@@ -646,10 +2196,14 @@ export async function createRuntimeBridgeBackend(
   const observabilityPolicy = await readJson<RuntimeCapturePolicy>(
     path.join(options.repoRoot, "testdata", "router-runtime", "observability-policy.json"),
   );
+  const providerPresets = await readJson<ProviderPresetCatalog>(
+    path.join(options.repoRoot, "testdata", "router-runtime", "provider-presets.json"),
+  );
 
   const validation = validateProviderAccounts({
     catalog: normalizedCatalog,
     accounts: providerAccountsFixture.accounts,
+    allowedRoleIds,
   });
   if (validation.diagnostics.length > 0) {
     throw new Error("Provider-account validation failed for runtime host bridge.");
@@ -659,6 +2213,7 @@ export async function createRuntimeBridgeBackend(
     runtimeStateRoot: options.runtimeStateRoot,
     scopeId: options.scopeId,
   });
+  const deviceId = randomUUID();
 
   persistProviderAccounts({
     databasePath: initialization.databasePath,
@@ -674,14 +2229,30 @@ export async function createRuntimeBridgeBackend(
     handoffs: continuityFixture.handoffs,
   });
 
-  const registry = buildEndpointRegistry({
+  let currentAccounts = [...listProviderAccounts({ databasePath: initialization.databasePath })];
+  let runtimeEndpoints = [...listRuntimeEndpoints({ databasePath: initialization.databasePath })];
+  const getCurrentRegistrySources = (): RegistrySources =>
+    mergeRegistrySources(registrySources, runtimeEndpoints);
+  let currentRegistry = buildEndpointRegistry({
     catalog: normalizedCatalog,
-    accounts: validation.accounts,
-    sources: registrySources,
+    accounts: currentAccounts,
+    sources: getCurrentRegistrySources(),
   });
-  if (registry.diagnostics.length > 0) {
+  if (currentRegistry.diagnostics.length > 0) {
     throw new Error("Endpoint-registry validation failed for runtime host bridge.");
   }
+  const rebuildCurrentState = (): void => {
+    currentAccounts = [...listProviderAccounts({ databasePath: initialization.databasePath })];
+    runtimeEndpoints = [...listRuntimeEndpoints({ databasePath: initialization.databasePath })];
+    currentRegistry = buildEndpointRegistry({
+      catalog: normalizedCatalog,
+      accounts: currentAccounts,
+      sources: getCurrentRegistrySources(),
+    });
+    if (currentRegistry.diagnostics.length > 0) {
+      throw new Error("Endpoint-registry validation failed after runtime state update.");
+    }
+  };
 
   const continuity = readConversationContinuity({
     databasePath: initialization.databasePath,
@@ -706,91 +2277,242 @@ export async function createRuntimeBridgeBackend(
   });
 
   const captures = await loadResponseCaptures(options.repoRoot, captureFixtureMap);
-  const toolRegistry = await createRuntimeToolRegistry(options.repoRoot, registry);
+  const toolRegistry = await createRuntimeToolRegistry(options.repoRoot, currentRegistry);
+  const modelsById = new Map(normalizedCatalog.models.map((model) => [model.modelId, model]));
+  const getRegistryEndpoint = (endpointId: string): EndpointRegistryResult["endpoints"][number] | undefined =>
+    currentRegistry.endpoints.find((endpoint) => endpoint.identity.endpoint_id === endpointId);
+  const getDefaultControllerAssignment = (): BridgeControllerAssignment => {
+    const defaultEndpoint = getRegistryEndpoint(routingModel.endpointId);
+    if (!defaultEndpoint) {
+      throw new Error(`Routing controller endpoint ${routingModel.endpointId} is not present in the runtime registry.`);
+    }
+    return toControllerAssignmentFromEndpoint(defaultEndpoint);
+  };
+  const readPersistedControllerAssignment = () =>
+    readRuntimeControllerAssignment({
+      databasePath: initialization.databasePath,
+      scope: "global",
+    });
+  const executeBridgePlan = async (
+    plan: BridgeExecutionPlan,
+    requestId: string,
+    streamRequested: boolean | undefined,
+    streamWriter?: BridgeStreamWriter,
+  ) => {
+    let streamedChunkCount = 0;
+    const trackedStreamWriter: BridgeStreamWriter | undefined = streamWriter
+      ? async (chunk, metadata) => {
+          streamedChunkCount += 1;
+          await streamWriter(chunk, metadata);
+        }
+      : undefined;
+    const routed = routeRuntimeRequest({
+      request: plan.routingRequest,
+      registry: currentRegistry,
+      observedProfilesByEndpointId,
+      envelope,
+      retrievalReceipt,
+      roleDefinitions: runtimeRoles.roleDefinitions,
+      taskDefinitions: roleTaskFixture.taskDefinitions,
+      roleBindings: buildRuntimeRoleBindings(
+        roleTaskFixture.roleBindings ?? [],
+        runtimeEndpoints,
+        currentAccounts,
+        currentRegistry,
+        runtimeRoles.roleDefinitions,
+      ),
+      routingModel,
+    });
+    const execution = await executeLiveRoutedRequest({
+      routeResult: routed,
+      catalog: normalizedCatalog,
+      accounts: currentAccounts,
+      registry: currentRegistry,
+      registrySources: getCurrentRegistrySources(),
+      executionRequest: plan.executionRequest as RuntimeExecutionRequest,
+      adapters: [
+        createOpenAIProviderAdapter(),
+        createOpenAIProviderAdapter("ai-sdk-openai-compatible"),
+        createAnthropicProviderAdapter(),
+      ],
+      executeProviderRequest: async ({
+        target,
+        requestCapture,
+      }: {
+        target: ResolvedExecutionTarget;
+        requestCapture: ProviderRequestCapture;
+      }) => {
+        if (!shouldUseLiveProviderExecution(target)) {
+          const capture = captures.byEndpointId[target.endpointId];
+          if (!capture) {
+            throw new Error(`No response capture is configured for endpoint ${target.endpointId}.`);
+          }
+          return {
+            providerFamily: target.adapterFamily,
+            endpointId: target.endpointId,
+            statusCode: 200,
+            body: capture.body,
+          };
+        }
+
+        const credentialValue = await resolveCredentialValue(
+          options.runtimeStateRoot,
+          options.scopeId,
+          target,
+          providerPresets,
+          networkFetcher,
+          deviceId,
+        );
+        const performRequest = async (resolvedCredentialValue: string) =>
+          networkFetcher(requestCapture.url, {
+            method: "POST",
+            headers: {
+              "content-type": "application/json",
+              ...(shouldUseLiveProviderExecution(target) ? createDeviceHeaders(deviceId) : {}),
+              ...applyCredentialToHeaders(requestCapture.headers, resolvedCredentialValue),
+            },
+            body: JSON.stringify(requestCapture.body),
+          });
+        let response = await performRequest(credentialValue);
+        if (
+          (response.status === 401 || response.status === 403) &&
+          target.account?.credentialRef.backend === "local-encrypted-file"
+        ) {
+          const refreshedCredentialValue = await refreshOauthAccessToken(
+            options.runtimeStateRoot,
+            options.scopeId,
+            target,
+            providerPresets,
+            networkFetcher,
+            deviceId,
+          );
+          response = await performRequest(refreshedCredentialValue);
+        }
+        if (!response.ok) {
+          const rawBody = await response.text();
+          const parsedBody = parseProviderResponseBody(rawBody);
+          throw new Error(summarizeProviderError(response.status, parsedBody));
+        }
+        if (trackedStreamWriter && requestCapture.body.stream === true) {
+          const rawBody = await readProviderStreamTranscript(response, trackedStreamWriter, {
+            endpointId: target.endpointId,
+            adapterFamily: target.adapterFamily,
+          });
+          if (!rawBody.includes("data:")) {
+            return {
+              providerFamily: target.adapterFamily,
+              endpointId: target.endpointId,
+              statusCode: response.status,
+              body: parseProviderResponseBody(rawBody),
+            };
+          }
+          return {
+            providerFamily: target.adapterFamily,
+            endpointId: target.endpointId,
+            statusCode: response.status,
+            body: rawBody,
+          };
+        }
+        const rawBody = await response.text();
+        const parsedBody = parseProviderResponseBody(rawBody);
+        return {
+          providerFamily: target.adapterFamily,
+          endpointId: target.endpointId,
+          statusCode: response.status,
+          body: parsedBody,
+        };
+      },
+    });
+    if (
+      trackedStreamWriter &&
+      streamRequested === true &&
+      streamedChunkCount === 0 &&
+      typeof execution.responseCapture.body === "string" &&
+      execution.responseCapture.body.includes("data:")
+    ) {
+      await replayProviderStreamTranscript(execution.responseCapture.body, trackedStreamWriter, {
+        endpointId: execution.target.endpointId,
+        adapterFamily: execution.target.adapterFamily,
+      });
+    }
+    const toolExecutionResult =
+      execution.normalized.toolCalls.length > 0
+        ? await executeToolCalls(toolRegistry, {
+            requestId,
+            toolCalls: execution.normalized.toolCalls,
+          })
+        : {
+            executions: [],
+            diagnostics: [],
+          };
+    const providerAccount = currentAccounts.find(
+      (account) => account.providerAccountId === execution.target.providerAccountId,
+    );
+    const bundle = createRuntimeObservationBundle({
+      decision: routed.decision,
+      routingDiagnostics: routed.routingDiagnostics,
+      retrievalReceipt: {
+        receiptId: retrievalReceipt.receiptId,
+        summary: retrievalReceipt.summary,
+      },
+      contextEnvelope: {
+        conversationId: envelope.conversationId,
+        latestHandoffId: envelope.latestHandoff?.handoffId ?? null,
+        estimatedTokenCount: envelope.estimatedTokenCount,
+      },
+      execution,
+      priorSamples: [
+        ...(observabilityHistory.byEndpointId[routed.decision.chosen_endpoint_id] ?? []),
+        ...readObservedPerformanceSamples({
+          databasePath: initialization.databasePath,
+          endpointId: routed.decision.chosen_endpoint_id,
+        }),
+      ],
+      maintenancePolicy: readRuntimeMaintenancePolicy({
+        databasePath: initialization.databasePath,
+      }),
+      capturePolicy: observabilityPolicy,
+      tooling: {
+        executions: toolExecutionResult.executions,
+      },
+      ...(providerAccount
+        ? {
+            accountState: {
+              providerAccountId: providerAccount.providerAccountId,
+              status: providerAccount.status,
+              healthStatus: providerAccount.healthStatus,
+              rotationState: providerAccount.rotationState,
+            },
+          }
+        : {}),
+    });
+    persistRuntimeObservationBundle({
+      databasePath: initialization.databasePath,
+      observation: bundle,
+    });
+
+    return {
+      execution,
+      toolExecutionResult,
+    };
+  };
 
   return {
-    registry,
+    get registry(): EndpointRegistryResult {
+      return currentRegistry;
+    },
     async executeChatCompletions(
       body: OpenAIChatCompletionsBody,
       requestId: string,
+      streamWriter?: BridgeStreamWriter,
     ): Promise<BridgeChatCompletionsExecutionResult> {
-      const plan = mapChatCompletionsRequest(registry, body, requestId);
-      const routed = routeRuntimeRequest({
-        request: plan.routingRequest,
-        registry,
-        observedProfilesByEndpointId,
-        envelope,
-        retrievalReceipt,
-        roleDefinitions: roleTaskFixture.roleDefinitions,
-        taskDefinitions: roleTaskFixture.taskDefinitions,
-        roleBindings: roleTaskFixture.roleBindings,
-        routingModel,
-      });
-      const execution = executeRoutedRequest({
-        routeResult: routed,
-        catalog: normalizedCatalog,
-        accounts: validation.accounts,
-        registry,
-        registrySources,
-        executionRequest: plan.executionRequest as RuntimeExecutionRequest,
-        adapters: [createOpenAIProviderAdapter(), createAnthropicProviderAdapter()],
-        captures,
-      });
-      const toolExecutionResult =
-        execution.normalized.toolCalls.length > 0
-          ? await executeToolCalls(toolRegistry, {
-              requestId,
-              toolCalls: execution.normalized.toolCalls,
-            })
-          : {
-              executions: [],
-              diagnostics: [],
-            };
-      const providerAccount = validation.accounts.find(
-        (account) => account.providerAccountId === execution.target.providerAccountId,
+      const plan = mapChatCompletionsRequest(currentRegistry, body, requestId);
+      const { execution, toolExecutionResult } = await executeBridgePlan(
+        plan,
+        requestId,
+        body.stream,
+        streamWriter,
       );
-      const bundle = createRuntimeObservationBundle({
-        decision: routed.decision,
-        routingDiagnostics: routed.routingDiagnostics,
-        retrievalReceipt: {
-          receiptId: retrievalReceipt.receiptId,
-          summary: retrievalReceipt.summary,
-        },
-        contextEnvelope: {
-          conversationId: envelope.conversationId,
-          latestHandoffId: envelope.latestHandoff?.handoffId ?? null,
-          estimatedTokenCount: envelope.estimatedTokenCount,
-        },
-        execution,
-        priorSamples: [
-          ...(observabilityHistory.byEndpointId[routed.decision.chosen_endpoint_id] ?? []),
-          ...readObservedPerformanceSamples({
-            databasePath: initialization.databasePath,
-            endpointId: routed.decision.chosen_endpoint_id,
-          }),
-        ],
-        maintenancePolicy: readRuntimeMaintenancePolicy({
-          databasePath: initialization.databasePath,
-        }),
-        capturePolicy: observabilityPolicy,
-        tooling: {
-          executions: toolExecutionResult.executions,
-        },
-        ...(providerAccount
-          ? {
-              accountState: {
-                providerAccountId: providerAccount.providerAccountId,
-                status: providerAccount.status,
-                healthStatus: providerAccount.healthStatus,
-                rotationState: providerAccount.rotationState,
-              },
-            }
-          : {}),
-      });
-      persistRuntimeObservationBundle({
-        databasePath: initialization.databasePath,
-        observation: bundle,
-      });
 
       return {
         model: execution.target.modelId,
@@ -815,6 +2537,456 @@ export async function createRuntimeBridgeBackend(
           outputTokens: execution.normalized.usage.outputTokens,
         },
       };
+    },
+    async executeResponses(
+      body: OpenAIResponsesBody,
+      requestId: string,
+      streamWriter?: BridgeStreamWriter,
+    ): Promise<BridgeResponsesExecutionResult> {
+      const plan = mapResponsesRequest(currentRegistry, body, requestId);
+      const { execution } = await executeBridgePlan(plan, requestId, body.stream, streamWriter);
+
+      return {
+        responseId: extractResponseId(execution.responseCapture.body) ?? "resp-role-model",
+        model: execution.target.modelId,
+        endpointId: execution.target.endpointId,
+        adapterFamily: execution.target.adapterFamily,
+        outputText: execution.normalized.outputText,
+        finishReason: execution.normalized.finishReason,
+        ...(execution.normalized.toolCalls.length
+          ? {
+              toolCalls: execution.normalized.toolCalls.map((toolCall, index) =>
+                toBridgeToolCall(toolCall, index),
+              ),
+            }
+          : {}),
+        usage: {
+          inputTokens: execution.normalized.usage.inputTokens,
+          outputTokens: execution.normalized.usage.outputTokens,
+        },
+      };
+    },
+    async readRuntimeSummary(): Promise<{
+      lifecycleSummary: EndpointRegistryResult["lifecycleSummary"];
+      providerCount: number;
+      accountCount: number;
+      endpointCount: number;
+    }> {
+      return {
+        lifecycleSummary: currentRegistry.lifecycleSummary,
+        providerCount: normalizedCatalog.providers.length,
+        accountCount: currentAccounts.length,
+        endpointCount: currentRegistry.endpoints.length,
+      };
+    },
+    async listProviders(): Promise<
+      readonly {
+        providerId: string;
+        displayName: string;
+        providerKind: string;
+        authFamily: string;
+        adapterFamily: string;
+        apiBase: string;
+        envVars: readonly string[];
+        supportedAuthModes: readonly string[];
+        controlPlaneRequirements: readonly string[];
+        localOverrideApplied: boolean;
+        modelIds: readonly string[];
+        variants: readonly ProviderPresetVariant[];
+      }[]
+    > {
+      return normalizedCatalog.providers.map((provider) => ({
+        providerId: provider.providerId,
+        displayName: provider.displayName,
+        providerKind: provider.providerKind,
+        authFamily: provider.authFamily,
+        adapterFamily: provider.adapterFamily,
+        apiBase: provider.apiBase,
+        envVars: provider.envVars,
+        supportedAuthModes: provider.supportedAuthModes,
+        controlPlaneRequirements: provider.controlPlaneRequirements,
+        localOverrideApplied: provider.localOverrideApplied,
+        modelIds: normalizedCatalog.models
+          .filter((model) => model.providerId === provider.providerId)
+          .map((model) => model.modelId),
+        variants: providerPresets.providers[provider.providerId]?.variants ?? [],
+      }));
+    },
+    async listRoles(): Promise<
+      readonly {
+        roleId: string;
+        label: string;
+        description: string;
+        taskTypes: readonly string[];
+      }[]
+    > {
+      return runtimeRoles.roleSummaries;
+    },
+    async listAccounts(): Promise<ReturnType<typeof listProviderAccounts>> {
+      return listProviderAccounts({
+        databasePath: initialization.databasePath,
+      });
+    },
+    async upsertProviderAccount(account: Record<string, unknown>): Promise<ProviderAccountRecord> {
+      const validationResult = validateProviderAccounts({
+        catalog: normalizedCatalog,
+        allowedRoleIds,
+        accounts: [account],
+      });
+
+      if (validationResult.diagnostics.length > 0 || validationResult.accounts.length !== 1) {
+        const message =
+          validationResult.diagnostics[0]?.message ?? "Provider account upsert validation failed.";
+        throw new Error(message);
+      }
+
+      const [validatedAccount] = validationResult.accounts;
+      upsertSqliteProviderAccount({
+        databasePath: initialization.databasePath,
+        account: validatedAccount,
+      });
+      rebuildCurrentState();
+
+      return validatedAccount;
+    },
+    async startProviderDeviceAuthorization(body: Record<string, unknown>): Promise<DeviceAuthorizationStartResult> {
+      const providerAccountId = readRequiredString(body, "providerAccountId", "deviceAuthorization");
+      const providerId = readRequiredString(body, "providerId", "deviceAuthorization");
+      const variantId = readRequiredString(body, "variantId", "deviceAuthorization");
+      const provider = normalizedCatalog.providers.find((entry) => entry.providerId === providerId);
+      if (!provider) {
+        throw new Error(`Provider ${providerId} is not present in the normalized catalog.`);
+      }
+      const variant = providerPresets.providers[providerId]?.variants.find((entry) => entry.variantId === variantId);
+      if (!variant || variant.authMode !== "oauth2-device-code" || !variant.oauth) {
+        throw new Error(`Provider variant ${variantId} does not expose device OAuth.`);
+      }
+
+      const allowedModels =
+        readStringArray(body, "allowedModels") ??
+        (variant.modelIds.length > 0
+          ? [...variant.modelIds]
+          : normalizedCatalog.models
+              .filter((model) => model.providerId === providerId)
+              .map((model) => model.modelId));
+      if (allowedModels.length === 0) {
+        throw new Error(`Provider ${providerId} does not expose any selectable models.`);
+      }
+
+      const credentialRef = createCredentialRef(providerId, providerAccountId);
+      const validationResult = validateProviderAccounts({
+        catalog: normalizedCatalog,
+        allowedRoleIds,
+        accounts: [
+          {
+            providerAccountId,
+            providerId,
+            providerKind: readOptionalString(body, "providerKind") ?? provider.providerKind,
+            orgScope: readOptionalString(body, "orgScope") ?? "personal",
+            accountScope: readOptionalString(body, "accountScope") ?? "workspace-default",
+            credentialRef: {
+              backend: "local-encrypted-file",
+              ref: credentialRef,
+            },
+            authMode: variant.authMode,
+            regionPolicy: {
+              mode: "prefer",
+              regions: [readOptionalString(body, "region") ?? "global"],
+            },
+            baseUrlOverride: variant.baseUrl,
+            allowedModels,
+            modelRoleBindings: (() => {
+              const modelRoleBindings = body.modelRoleBindings;
+              return Array.isArray(modelRoleBindings) ? modelRoleBindings : [];
+            })(),
+            deniedModels: readStringArray(body, "deniedModels") ?? [],
+            entitlementTags: readStringArray(body, "entitlementTags") ?? ["chat"],
+            budgetPolicyRef: readOptionalString(body, "budgetPolicyRef") ?? "budget.default",
+            quotaPolicyRef: readOptionalString(body, "quotaPolicyRef") ?? "quota.default",
+            status: "disabled",
+            healthStatus: "credentials-missing",
+            rotationState: "in-progress",
+          },
+        ],
+      });
+
+      if (validationResult.diagnostics.length > 0 || validationResult.accounts.length !== 1) {
+        throw new Error(
+          validationResult.diagnostics[0]?.message ?? "Provider device-authorization validation failed.",
+        );
+      }
+
+      const deviceResponse = await networkFetcher(variant.oauth.deviceAuthorizationEndpoint, {
+        method: "POST",
+        headers: createDeviceHeaders(deviceId),
+        body: new URLSearchParams({
+          client_id: variant.oauth.clientId,
+        }),
+      });
+      const devicePayload = (await deviceResponse.json()) as Record<string, unknown>;
+      if (!deviceResponse.ok) {
+        throw new Error(
+          typeof devicePayload.error_description === "string"
+            ? devicePayload.error_description
+            : "Device authorization failed.",
+        );
+      }
+
+      const authRequestId = randomUUID();
+      upsertSqliteProviderAccount({
+        databasePath: initialization.databasePath,
+        account: validationResult.accounts[0],
+      });
+      upsertProviderDeviceAuthSession({
+        databasePath: initialization.databasePath,
+        session: {
+          authRequestId,
+          providerAccountId,
+          providerId,
+          variantId,
+          credentialBackend: "local-encrypted-file",
+          credentialRef,
+          authMode: variant.authMode,
+          verificationUri: String(devicePayload.verification_uri ?? ""),
+          verificationUriComplete: String(devicePayload.verification_uri_complete ?? ""),
+          userCode: String(devicePayload.user_code ?? ""),
+          deviceCode: String(devicePayload.device_code ?? ""),
+          intervalSeconds: Number(devicePayload.interval ?? 5),
+          status: "pending",
+          lastError: null,
+          expiresAtMs: Date.now() + Number(devicePayload.expires_in ?? 900) * 1000,
+        },
+      });
+      rebuildCurrentState();
+
+      return {
+        authRequestId,
+        providerAccountId,
+        status: "pending",
+        userCode: String(devicePayload.user_code ?? ""),
+        verificationUri: String(devicePayload.verification_uri ?? ""),
+        verificationUriComplete: String(devicePayload.verification_uri_complete ?? ""),
+        intervalSeconds: Number(devicePayload.interval ?? 5),
+        expiresAtMs: Date.now() + Number(devicePayload.expires_in ?? 900) * 1000,
+      };
+    },
+    async pollProviderDeviceAuthorization(body: Record<string, unknown>): Promise<DeviceAuthorizationPollResult> {
+      const authRequestId = readRequiredString(body, "authRequestId", "deviceAuthorization");
+      const session = readProviderDeviceAuthSession({
+        databasePath: initialization.databasePath,
+        authRequestId,
+      });
+      if (!session) {
+        throw new Error(`Device authorization request ${authRequestId} was not found.`);
+      }
+      const variant = providerPresets.providers[session.providerId]?.variants.find(
+        (entry) => entry.variantId === session.variantId,
+      );
+      if (!variant?.oauth) {
+        throw new Error(`Provider variant ${session.variantId} does not expose device OAuth.`);
+      }
+      if (Date.now() >= session.expiresAtMs) {
+        upsertProviderDeviceAuthSession({
+          databasePath: initialization.databasePath,
+          session: {
+            ...session,
+            status: "expired",
+            lastError: "Device code expired.",
+          },
+        });
+        return {
+          authRequestId,
+          providerAccountId: session.providerAccountId,
+          status: "expired",
+          lastError: "Device code expired.",
+        };
+      }
+
+      const tokenResponse = await networkFetcher(variant.oauth.tokenEndpoint, {
+        method: "POST",
+        headers: createDeviceHeaders(deviceId),
+        body: new URLSearchParams({
+          client_id: variant.oauth.clientId,
+          device_code: session.deviceCode,
+          grant_type: "urn:ietf:params:oauth:grant-type:device_code",
+        }),
+      });
+      const tokenPayload = (await tokenResponse.json()) as Record<string, unknown>;
+      if (tokenResponse.ok && typeof tokenPayload.access_token === "string") {
+        await persistOauthTokenFile(options.runtimeStateRoot, options.scopeId, session.credentialRef, {
+          providerId: session.providerId,
+          providerAccountId: session.providerAccountId,
+          access_token: tokenPayload.access_token,
+          refresh_token: tokenPayload.refresh_token,
+          expires_in: tokenPayload.expires_in,
+          scope: tokenPayload.scope,
+          token_type: tokenPayload.token_type,
+          saved_at_ms: Date.now(),
+        });
+        upsertProviderDeviceAuthSession({
+          databasePath: initialization.databasePath,
+          session: {
+            ...session,
+            status: "connected",
+            lastError: null,
+          },
+        });
+        const account = currentAccounts.find(
+          (entry) => entry.providerAccountId === session.providerAccountId,
+        );
+        if (account) {
+          upsertSqliteProviderAccount({
+            databasePath: initialization.databasePath,
+            account: {
+              ...account,
+              status: "active",
+              healthStatus: "healthy",
+              rotationState: "stable",
+            },
+          });
+          rebuildCurrentState();
+        }
+        return {
+          authRequestId,
+          providerAccountId: session.providerAccountId,
+          status: "connected",
+        };
+      }
+
+      const errorCode = typeof tokenPayload.error === "string" ? tokenPayload.error : "authorization_pending";
+      const errorDescription =
+        typeof tokenPayload.error_description === "string"
+          ? tokenPayload.error_description
+          : "Waiting for authorization.";
+      const mappedStatus =
+        errorCode === "expired_token"
+          ? "expired"
+          : errorCode === "authorization_pending" || errorCode === "slow_down"
+            ? "pending"
+            : "failed";
+      upsertProviderDeviceAuthSession({
+        databasePath: initialization.databasePath,
+        session: {
+          ...session,
+          status: mappedStatus,
+          lastError: errorDescription,
+        },
+      });
+      return {
+        authRequestId,
+        providerAccountId: session.providerAccountId,
+        status: mappedStatus,
+        ...(mappedStatus === "pending"
+          ? { retryAfterSeconds: errorCode === "slow_down" ? session.intervalSeconds + 5 : session.intervalSeconds }
+          : {}),
+        ...(mappedStatus === "pending" ? {} : { lastError: errorDescription }),
+      };
+    },
+    async activateEndpoint(body: Record<string, unknown>): Promise<Record<string, unknown>> {
+      const providerAccountId = readRequiredString(body, "providerAccountId", "activateEndpoint");
+      const modelId = readRequiredString(body, "modelId", "activateEndpoint");
+      const region = readOptionalString(body, "region") ?? "global";
+      const account = currentAccounts.find((entry) => entry.providerAccountId === providerAccountId);
+      if (!account) {
+        throw new Error(`Provider account ${providerAccountId} was not found.`);
+      }
+      if (account.status !== "active" || account.healthStatus !== "healthy") {
+        throw new Error(`Provider account ${providerAccountId} is not ready for endpoint activation.`);
+      }
+      if (account.allowedModels.length > 0 && !account.allowedModels.includes(modelId)) {
+        throw new Error(`Model ${modelId} is not enabled for provider account ${providerAccountId}.`);
+      }
+      const model = modelsById.get(modelId);
+      if (!model) {
+        throw new Error(`Model ${modelId} is not present in the normalized catalog.`);
+      }
+
+      const endpointId = readOptionalString(body, "endpointId") ?? createEndpointId(providerAccountId, region, modelId);
+      upsertSqliteRuntimeEndpoint({
+        databasePath: initialization.databasePath,
+        endpoint: {
+          endpointId,
+          providerAccountId,
+          modelId,
+          region,
+          endpointKind: readOptionalString(body, "endpointKind") ?? "remote-openai-compatible",
+          servingSource: readOptionalString(body, "servingSource") ?? "remote-service",
+          lifecycleState: "active",
+          healthStatus: "healthy",
+        },
+      });
+      rebuildCurrentState();
+      return {
+        endpointId,
+        providerAccountId,
+        providerId: account.providerId,
+        modelId: model.modelId,
+        roleIds: getModelRoleIds(account, model.modelId),
+        status: "active",
+      };
+    },
+    async readControllerAssignment(): Promise<BridgeControllerAssignment> {
+      const persisted = readPersistedControllerAssignment();
+      if (persisted) {
+        return {
+          scope: "global",
+          endpointId: persisted.endpointId,
+          modelId: persisted.modelId,
+          sourceType: persisted.sourceType === "remote" ? "remote" : "local",
+          updatedAtMs: persisted.updatedAtMs,
+        };
+      }
+      return getDefaultControllerAssignment();
+    },
+    async updateControllerAssignment(body: Record<string, unknown>): Promise<BridgeControllerAssignment> {
+      const endpointId = readRequiredString(body, "endpointId", "updateControllerAssignment");
+      const endpoint = getRegistryEndpoint(endpointId);
+      if (!endpoint) {
+        throw new Error(`Endpoint ${endpointId} is not present in the runtime registry.`);
+      }
+
+      const assignment = {
+        ...toControllerAssignmentFromEndpoint(endpoint),
+        updatedAtMs: Date.now(),
+      } satisfies BridgeControllerAssignment;
+      upsertRuntimeControllerAssignment({
+        databasePath: initialization.databasePath,
+        assignment,
+      });
+      return assignment;
+    },
+    async listEndpoints(): Promise<
+      readonly {
+        endpointId: string;
+        modelId: string;
+        providerId: string | null;
+        roleIds: readonly string[];
+        endpointKind: string;
+        servingSource: string;
+        sourceType: "local" | "remote";
+        healthStatus: string;
+        capabilities: readonly string[];
+        toolCallingSupported: boolean;
+        toolCallingStyle: string;
+        status: string;
+      }[]
+    > {
+      return currentRegistry.endpoints.map((endpoint) => ({
+        endpointId: endpoint.identity.endpoint_id,
+        modelId: endpoint.identity.model_id,
+        providerId: modelsById.get(endpoint.identity.model_id)?.providerId ?? null,
+        roleIds: getEndpointRoleIds(endpoint.identity.endpoint_id, runtimeEndpoints, currentAccounts),
+        endpointKind: endpoint.identity.endpoint_kind,
+        servingSource: endpoint.identity.serving_source,
+        sourceType: toSourceType(endpoint.identity.endpoint_kind),
+        healthStatus:
+          runtimeEndpoints.find((entry) => entry.endpointId === endpoint.identity.endpoint_id)?.healthStatus ??
+          (endpoint.deniedByPolicy ? "policy-blocked" : "healthy"),
+        capabilities: endpoint.declared.capabilities,
+        toolCallingSupported: endpoint.declared.tool_calling.supported,
+        toolCallingStyle: endpoint.declared.tool_calling.style,
+        status: endpoint.status,
+      }));
     },
     async readRequestObservation(requestId: string): Promise<RuntimeObservationBundle | null> {
       return readRuntimeObservationBundle({

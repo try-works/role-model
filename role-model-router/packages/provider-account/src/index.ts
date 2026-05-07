@@ -46,6 +46,11 @@ export interface RegionPolicy {
   readonly regions: readonly string[];
 }
 
+export interface ProviderAccountModelRoleBinding {
+  readonly modelId: string;
+  readonly roleIds: readonly string[];
+}
+
 export interface ProviderAccountRecord {
   readonly providerAccountId: string;
   readonly providerId: string;
@@ -57,6 +62,7 @@ export interface ProviderAccountRecord {
   readonly regionPolicy: RegionPolicy;
   readonly baseUrlOverride: string | null;
   readonly allowedModels: readonly string[];
+  readonly modelRoleBindings?: readonly ProviderAccountModelRoleBinding[];
   readonly deniedModels: readonly string[];
   readonly entitlementTags: readonly string[];
   readonly budgetPolicyRef: string;
@@ -76,6 +82,7 @@ export interface ProviderAccountDiagnostic {
 export interface ProviderAccountValidationInput {
   readonly catalog: NormalizedCatalog;
   readonly accounts: readonly unknown[];
+  readonly allowedRoleIds?: readonly string[];
 }
 
 export interface ProviderAccountValidationResult {
@@ -115,6 +122,25 @@ function readNullableString(record: Record<string, unknown>, key: string, label:
     throw new Error(`${label}.${key} must be a string or null`);
   }
   return value;
+}
+
+function readModelRoleBindings(record: Record<string, unknown>, label: string): ProviderAccountModelRoleBinding[] {
+  const value = record.modelRoleBindings;
+  if (value === undefined) {
+    return [];
+  }
+  if (!Array.isArray(value)) {
+    throw new Error(`${label}.modelRoleBindings must be an array`);
+  }
+
+  return value.map((entry, index) => {
+    const binding = asRecord(entry, `${label}.modelRoleBindings[${index}]`);
+    const roleIds = readStringArray(binding, "roleIds", `${label}.modelRoleBindings[${index}]`);
+    return {
+      modelId: readString(binding, "modelId", `${label}.modelRoleBindings[${index}]`),
+      roleIds,
+    };
+  });
 }
 
 function assertEnumValue<TValue extends string>(
@@ -174,6 +200,7 @@ function parseProviderAccount(value: unknown, index: number): ProviderAccountRec
     regionPolicy: parseRegionPolicy(record.regionPolicy, `accounts[${index}]`),
     baseUrlOverride: readNullableString(record, "baseUrlOverride", `accounts[${index}]`),
     allowedModels: readStringArray(record, "allowedModels", `accounts[${index}]`),
+    modelRoleBindings: readModelRoleBindings(record, `accounts[${index}]`),
     deniedModels: readStringArray(record, "deniedModels", `accounts[${index}]`),
     entitlementTags: readStringArray(record, "entitlementTags", `accounts[${index}]`),
     budgetPolicyRef: readString(record, "budgetPolicyRef", `accounts[${index}]`),
@@ -199,6 +226,21 @@ function parseProviderAccount(value: unknown, index: number): ProviderAccountRec
 function hasOverlap(left: readonly string[], right: readonly string[]): boolean {
   const rightValues = new Set(right);
   return left.some((value) => rightValues.has(value));
+}
+
+function isAuthModeCompatible(
+  provider: NormalizedCatalog["providers"][number],
+  authMode: AuthMode,
+): boolean {
+  if ((provider.supportedAuthModes?.length ?? 0) > 0) {
+    return provider.supportedAuthModes.includes(authMode);
+  }
+
+  if (provider.authFamily === "api-key") {
+    return API_KEY_AUTH_MODES.has(authMode);
+  }
+
+  return true;
 }
 
 export function validateProviderAccounts(
@@ -232,7 +274,7 @@ export function validateProviderAccounts(
       return;
     }
 
-    if (provider.authFamily === "api-key" && !API_KEY_AUTH_MODES.has(account.authMode)) {
+    if (!isAuthModeCompatible(provider, account.authMode)) {
       diagnostics.push({
         providerAccountId: account.providerAccountId,
         severity: "error",
@@ -250,6 +292,64 @@ export function validateProviderAccounts(
         message: "Allowed and denied model lists must not overlap.",
       });
       return;
+    }
+
+    const allowedModelSet = new Set(account.allowedModels);
+    const modelRoleBindings = account.modelRoleBindings ?? [];
+    const seenModelRoleBindings = new Set<string>();
+    const allowedRoleIds = input.allowedRoleIds ? new Set(input.allowedRoleIds) : null;
+
+    for (const binding of modelRoleBindings) {
+      if (!allowedModelSet.has(binding.modelId)) {
+        diagnostics.push({
+          providerAccountId: account.providerAccountId,
+          severity: "error",
+          code: "MODEL_ROLE_MODEL_NOT_ALLOWED",
+          message: `Model role binding ${binding.modelId} is not present in the account allowed model list.`,
+        });
+        return;
+      }
+
+      if (seenModelRoleBindings.has(binding.modelId)) {
+        diagnostics.push({
+          providerAccountId: account.providerAccountId,
+          severity: "error",
+          code: "MODEL_ROLE_MODEL_DUPLICATE",
+          message: `Model role bindings must not repeat the same model id (${binding.modelId}).`,
+        });
+        return;
+      }
+      seenModelRoleBindings.add(binding.modelId);
+
+      if (binding.roleIds.length === 0) {
+        diagnostics.push({
+          providerAccountId: account.providerAccountId,
+          severity: "error",
+          code: "MODEL_ROLE_EMPTY",
+          message: `Model role binding ${binding.modelId} must include at least one role id.`,
+        });
+        return;
+      }
+
+      if (new Set(binding.roleIds).size !== binding.roleIds.length) {
+        diagnostics.push({
+          providerAccountId: account.providerAccountId,
+          severity: "error",
+          code: "MODEL_ROLE_DUPLICATE",
+          message: `Model role binding ${binding.modelId} must not repeat role ids.`,
+        });
+        return;
+      }
+
+      if (allowedRoleIds && binding.roleIds.some((roleId) => !allowedRoleIds.has(roleId))) {
+        diagnostics.push({
+          providerAccountId: account.providerAccountId,
+          severity: "error",
+          code: "MODEL_ROLE_UNKNOWN",
+          message: `Model role binding ${binding.modelId} includes a role id that is not available in the runtime role catalog.`,
+        });
+        return;
+      }
     }
 
     accounts.push(account);

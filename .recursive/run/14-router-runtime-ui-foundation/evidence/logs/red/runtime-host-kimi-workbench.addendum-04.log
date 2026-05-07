@@ -1,0 +1,58 @@
+
+> @role-model-router/runtime-host-bridge@0.0.0 test D:\DEV\role-model\.worktrees\14-router-runtime-ui-foundation\role-model-router\apps\runtime-host-bridge
+> vitest run test/index.test.ts test/validate-operations.test.ts test/validate-ui.test.ts
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/14-router-runtime-ui-foundation/role-model-router/apps/runtime-host-bridge[39m
+
+(node:46336) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53992) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55388) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [32mΓ£ô[39m test/validate-ui.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 325[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m runRuntimeUiValidation[2m > [22mvalidates runtime summary, provider variants, account upserts, and endpoint activation [33m 323[2mms[22m[39m
+ [32mΓ£ô[39m test/validate-operations.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 470[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m runRuntimeOperationsValidation[2m > [22mvalidates isolated scopes and runtime-state maintenance drills [33m 468[2mms[22m[39m
+ [31mΓ¥»[39m test/index.test.ts [2m([22m[2m12 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[33m 847[2mms[22m[39m
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22mcreates a stable model-list response grouped by model id[32m 21[2mms[22m[39m
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22mmaps a chat-completions request into role-model routing and execution inputs[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22mserves health and model-list endpoints[32m 58[2mms[22m[39m
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22mserves runtime control-plane summary, provider, account, and endpoint routes[32m 36[2mms[22m[39m
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22mserves chat-completions responses with role-model execution metadata[32m 8[2mms[22m[39m
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22mrejects streaming chat-completions requests until streaming transport is implemented[32m 6[2mms[22m[39m
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22mcreates a runtime backend that executes chat-completions through the real routing and adapter path[32m 122[2mms[22m[39m
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22mcreates a runtime backend that persists structured request and endpoint inspection state[32m 119[2mms[22m[39m
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22mcreates a runtime backend that exposes provider presets, runtime summary, and account upserts[32m 186[2mms[22m[39m
+[31m   [31m├ù[31m runtime-host-bridge[2m > [22mexecutes chat-completions through an activated Kimi Code endpoint[39m[32m 190[2mms[22m[39m
+[31m     ΓåÆ No provider adapter is registered for ai-sdk-openai-compatible.[39m
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22mserves structured request and endpoint inspection routes through the bridge server[32m 96[2mms[22m[39m
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22mresolves bridge server options from explicit values and defaults[32m 0[2mms[22m[39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/index.test.ts > runtime-host-bridge > executes chat-completions through an activated Kimi Code endpoint
+Error: No provider adapter is registered for ai-sdk-openai-compatible.
+ Γ¥» resolveAdapter ../../packages/adapter-execution/src/index.ts:303:11
+    301|   const adapter = adapters.find((entry) => entry.adapterFamily === tarΓÇª
+    302|   if (!adapter) {
+    303|     throw new Error(`No provider adapter is registered for ${target.adΓÇª
+       |           ^
+    304|   }
+    305|   return adapter;
+ Γ¥» executeRoutedRequest ../../packages/adapter-execution/src/index.ts:459:19
+ Γ¥» Object.executeChatCompletions src/index.ts:1163:25
+ Γ¥» test/index.test.ts:1107:34
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m2 passed[39m[22m[90m (3)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m13 passed[39m[22m[90m (14)[39m
+[2m   Start at [22m 07:27:25
+[2m   Duration [22m 2.09s[2m (transform 661ms, setup 0ms, collect 1.18s, tests 1.64s, environment 1ms, prepare 1.25s)[22m
+
+D:\DEV\role-model\.worktrees\14-router-runtime-ui-foundation\role-model-router\apps\runtime-host-bridge:
+ΓÇëERR_PNPM_RECURSIVE_RUN_FIRST_FAILΓÇë @role-model-router/runtime-host-bridge@0.0.0 test: `vitest run test/index.test.ts test/validate-operations.test.ts test/validate-ui.test.ts`
+Exit status 1

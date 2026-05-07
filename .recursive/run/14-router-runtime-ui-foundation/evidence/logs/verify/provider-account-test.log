@@ -1,0 +1,18 @@
+COMMAND: corepack pnpm --filter @role-model-router/provider-account test
+
+
+> @role-model-router/provider-account@0.0.0 test D:\DEV\role-model\.worktrees\14-router-runtime-ui-foundation\role-model-router\packages\provider-account
+> vitest run test/index.test.ts
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/14-router-runtime-ui-foundation/role-model-router/packages/provider-account[39m
+
+ [32m✓[39m test/index.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m4 passed[39m[22m[90m (4)[39m
+[2m   Start at [22m 05:52:10
+[2m   Duration [22m 576ms[2m (transform 69ms, setup 0ms, collect 68ms, tests 11ms, environment 0ms, prepare 185ms)[22m
+
+
+EXIT_CODE: 0

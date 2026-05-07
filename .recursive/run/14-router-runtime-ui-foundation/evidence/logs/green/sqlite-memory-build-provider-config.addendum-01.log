@@ -1,0 +1,7 @@
+
+=== corepack pnpm --filter @role-model-router/sqlite-memory build ===
+
+> @role-model-router/sqlite-memory@0.0.0 build D:\DEV\role-model\.worktrees\14-router-runtime-ui-foundation\role-model-router\packages\sqlite-memory
+> tsc -p tsconfig.json
+
+EXIT_CODE=0

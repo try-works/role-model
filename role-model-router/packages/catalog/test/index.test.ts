@@ -66,6 +66,33 @@ describe("normalizeCatalogSnapshot", () => {
     expect(fastVariant).not.toHaveProperty("credentials");
     expect(fastVariant).not.toHaveProperty("endpointId");
   });
+
+  test("normalizes the first moonshot kimi provider slice with explicit auth-mode support", async () => {
+    const snapshot = await readJson("testdata/catalog/models-dev-snapshot.json");
+    const overrides = await readJson("testdata/catalog/models-dev-local-overrides.json");
+
+    const catalog = normalizeCatalogSnapshot(snapshot, overrides);
+    const moonshotProvider = catalog.providers.find((provider) => provider.providerId === "moonshotai");
+    const kimiModel = catalog.models.find((model) => model.modelId === "moonshotai/kimi-k2.5");
+
+    expect(moonshotProvider).toMatchObject({
+      providerId: "moonshotai",
+      displayName: "Moonshot AI",
+      providerKind: "provider-openai",
+      authFamily: "api-key",
+      adapterFamily: "ai-sdk-openai-compatible",
+      supportedAuthModes: ["api-key-static", "oauth2-device-code"],
+      apiBase: "https://api.moonshot.ai/v1",
+      localOverrideApplied: true,
+    });
+    expect(kimiModel).toMatchObject({
+      modelId: "moonshotai/kimi-k2.5",
+      providerId: "moonshotai",
+      providerKind: "provider-openai",
+      authFamily: "api-key",
+      displayName: "Kimi K2.5",
+    });
+  });
 });
 
 describe("exportCatalogArtifacts", () => {

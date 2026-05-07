@@ -1,0 +1,39 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/14-router-runtime-ui-foundation/role-model-router/packages/provider-openai[39m
+
+ [31mΓ¥»[39m test/index.test.ts [2m([22m[2m4 tests[22m[2m | [22m[31m1 failed[39m[2m | [22m[33m3 skipped[39m[2m)[22m[32m 12[2mms[22m[39m
+   [2m[90mΓåô[39m[22m OpenAI provider adapter[2m > [22mcan be created for the openai-compatible adapter family
+   [2m[90mΓåô[39m[22m OpenAI provider adapter[2m > [22mbuilds an OpenAI responses request and normalizes text, usage, and tool calls
+   [2m[90mΓåô[39m[22m OpenAI provider adapter[2m > [22mbuilds an OpenAI-compatible chat-completions request for Kimi and normalizes the reply
+[31m   [31m├ù[31m OpenAI provider adapter[2m > [22mnormalizes an OpenAI-compatible chat-completions SSE transcript for Kimi streaming[39m[32m 11[2mms[22m[39m
+[31m     ΓåÆ expected '' to be 'Ready' // Object.is equality[39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/index.test.ts > OpenAI provider adapter > normalizes an OpenAI-compatible chat-completions SSE transcript for Kimi streaming
+AssertionError: expected '' to be 'Ready' // Object.is equality
+
+- Expected
++ Received
+
+- Ready
+
+ Γ¥» test/index.test.ts:293:35
+    291|     });
+    292| 
+    293|     expect(normalized.outputText).toBe("Ready");
+       |                                   ^
+    294|     expect(normalized.finishReason).toBe("stop");
+    295|     expect(normalized.stream).toEqual({
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[33m3 skipped[39m[90m (4)[39m
+[2m   Start at [22m 06:51:53
+[2m   Duration [22m 765ms[2m (transform 102ms, setup 0ms, collect 116ms, tests 12ms, environment 0ms, prepare 254ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\14-router-runtime-ui-foundation\role-model-router\packages\provider-openai:
+ΓÇëERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓÇë Command failed with exit code 1: vitest run test/index.test.ts -t normalizes an OpenAI-compatible chat-completions SSE transcript for Kimi streaming

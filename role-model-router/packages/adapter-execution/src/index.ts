@@ -178,6 +178,18 @@ export interface ExecuteRoutedRequestInput {
   readonly captures: RuntimeResponseCaptureMap;
 }
 
+export interface ProviderRequestExecutionInput {
+  readonly target: ResolvedExecutionTarget;
+  readonly requestCapture: ProviderRequestCapture;
+}
+
+export interface ExecuteLiveRoutedRequestInput
+  extends Omit<ExecuteRoutedRequestInput, "captures"> {
+  readonly executeProviderRequest: (
+    input: ProviderRequestExecutionInput,
+  ) => Promise<ProviderResponseCapture>;
+}
+
 export interface RoutedExecutionResult {
   readonly target: ResolvedExecutionTarget;
   readonly capabilities: ProviderCapabilityMatrix;
@@ -321,6 +333,36 @@ function resolveResponseCapture(
   };
 }
 
+interface PreparedRoutedExecution {
+  readonly target: ResolvedExecutionTarget;
+  readonly adapter: ProviderAdapter;
+  readonly capabilities: ProviderCapabilityMatrix;
+  readonly requestCapture: ProviderRequestCapture;
+}
+
+function prepareRoutedExecution(
+  input: Omit<ExecuteRoutedRequestInput, "captures">,
+): PreparedRoutedExecution {
+  const target = resolveExecutionTarget(input);
+  const adapter = resolveAdapter(input.adapters, target);
+  const capabilities = adapter.negotiateCapabilities({
+    target,
+    executionRequest: input.executionRequest,
+  });
+  const requestCapture = adapter.buildRequest({
+    target,
+    executionRequest: input.executionRequest,
+    capabilities,
+  });
+
+  return {
+    target,
+    adapter,
+    capabilities,
+    requestCapture,
+  };
+}
+
 function buildDiagnostics(
   executionRequest: RuntimeExecutionRequest,
   capabilities: ProviderCapabilityMatrix,
@@ -455,18 +497,39 @@ function createUsageEvent(
 }
 
 export function executeRoutedRequest(input: ExecuteRoutedRequestInput): RoutedExecutionResult {
-  const target = resolveExecutionTarget(input);
-  const adapter = resolveAdapter(input.adapters, target);
-  const capabilities = adapter.negotiateCapabilities({
-    target,
-    executionRequest: input.executionRequest,
-  });
-  const requestCapture = adapter.buildRequest({
+  const { target, adapter, capabilities, requestCapture } = prepareRoutedExecution(input);
+  const responseCapture = resolveResponseCapture(input.captures, target);
+  const normalized = adapter.normalizeResponse({
     target,
     executionRequest: input.executionRequest,
     capabilities,
+    requestCapture,
+    responseCapture,
   });
-  const responseCapture = resolveResponseCapture(input.captures, target);
+  const diagnostics = buildDiagnostics(input.executionRequest, capabilities, normalized);
+  const trace = createTraceArtifacts(input.routeResult, target, normalized);
+  const usageEvent = createUsageEvent(input.routeResult, target, normalized);
+
+  return {
+    target,
+    capabilities,
+    requestCapture,
+    responseCapture,
+    normalized,
+    trace,
+    usageEvent,
+    diagnostics,
+  };
+}
+
+export async function executeLiveRoutedRequest(
+  input: ExecuteLiveRoutedRequestInput,
+): Promise<RoutedExecutionResult> {
+  const { target, adapter, capabilities, requestCapture } = prepareRoutedExecution(input);
+  const responseCapture = await input.executeProviderRequest({
+    target,
+    requestCapture,
+  });
   const normalized = adapter.normalizeResponse({
     target,
     executionRequest: input.executionRequest,

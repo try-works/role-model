@@ -29,6 +29,6 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "test": "vitest run test/index.test.ts test/executable.test.ts test/validate-operations.test.ts test/validate-tools.test.ts"
+    "test": "vitest run test/index.test.ts test/executable.test.ts test/validate-operations.test.ts test/validate-tools.test.ts test/validate-ui.test.ts"
   }
 }

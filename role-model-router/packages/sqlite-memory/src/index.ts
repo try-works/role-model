@@ -28,6 +28,7 @@ CREATE TABLE IF NOT EXISTS provider_accounts (
   region_policy_json TEXT NOT NULL,
   base_url_override TEXT,
   allowed_models_json TEXT NOT NULL,
+  model_role_bindings_json TEXT NOT NULL DEFAULT '[]',
   denied_models_json TEXT NOT NULL,
   entitlement_tags_json TEXT NOT NULL,
   budget_policy_ref TEXT NOT NULL,
@@ -130,6 +131,44 @@ CREATE TABLE IF NOT EXISTS observed_profile_snapshots (
   measured_at_ms INTEGER NOT NULL,
   profile_json TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS runtime_endpoints (
+  endpoint_id TEXT PRIMARY KEY,
+  provider_account_id TEXT NOT NULL,
+  model_id TEXT NOT NULL,
+  region TEXT NOT NULL,
+  endpoint_kind TEXT NOT NULL,
+  serving_source TEXT NOT NULL,
+  lifecycle_state TEXT NOT NULL,
+  health_status TEXT NOT NULL,
+  created_at_ms INTEGER NOT NULL,
+  updated_at_ms INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS provider_device_auth_sessions (
+  auth_request_id TEXT PRIMARY KEY,
+  provider_account_id TEXT NOT NULL,
+  provider_id TEXT NOT NULL,
+  variant_id TEXT NOT NULL,
+  credential_backend TEXT NOT NULL,
+  credential_ref TEXT NOT NULL,
+  auth_mode TEXT NOT NULL,
+  verification_uri TEXT NOT NULL,
+  verification_uri_complete TEXT NOT NULL,
+  user_code TEXT NOT NULL,
+  device_code TEXT NOT NULL,
+  interval_seconds INTEGER NOT NULL,
+  status TEXT NOT NULL,
+  last_error TEXT,
+  expires_at_ms INTEGER NOT NULL,
+  created_at_ms INTEGER NOT NULL,
+  updated_at_ms INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS runtime_controller_assignments (
+  scope TEXT PRIMARY KEY,
+  endpoint_id TEXT NOT NULL,
+  model_id TEXT NOT NULL,
+  source_type TEXT NOT NULL,
+  updated_at_ms INTEGER NOT NULL
+);
 `;
 
 export interface SqliteMemoryLocationInput {
@@ -146,6 +185,15 @@ export interface SqliteMemoryInitializationResult {
 export interface PersistProviderAccountsInput {
   readonly databasePath: string;
   readonly accounts: readonly ProviderAccountRecord[];
+}
+
+export interface UpsertProviderAccountInput {
+  readonly databasePath: string;
+  readonly account: ProviderAccountRecord;
+}
+
+export interface ListProviderAccountsInput {
+  readonly databasePath: string;
 }
 
 export interface SessionRecord {
@@ -265,6 +313,72 @@ export interface ReadRuntimeMaintenancePolicyInput {
   readonly databasePath: string;
 }
 
+export interface RuntimeEndpointRecord {
+  readonly endpointId: string;
+  readonly providerAccountId: string;
+  readonly modelId: string;
+  readonly region: string;
+  readonly endpointKind: string;
+  readonly servingSource: string;
+  readonly lifecycleState: string;
+  readonly healthStatus: string;
+}
+
+export interface UpsertRuntimeEndpointInput {
+  readonly databasePath: string;
+  readonly endpoint: RuntimeEndpointRecord;
+}
+
+export interface ListRuntimeEndpointsInput {
+  readonly databasePath: string;
+}
+
+export interface ProviderDeviceAuthSessionRecord {
+  readonly authRequestId: string;
+  readonly providerAccountId: string;
+  readonly providerId: string;
+  readonly variantId: string;
+  readonly credentialBackend: string;
+  readonly credentialRef: string;
+  readonly authMode: string;
+  readonly verificationUri: string;
+  readonly verificationUriComplete: string;
+  readonly userCode: string;
+  readonly deviceCode: string;
+  readonly intervalSeconds: number;
+  readonly status: string;
+  readonly lastError: string | null;
+  readonly expiresAtMs: number;
+}
+
+export interface UpsertProviderDeviceAuthSessionInput {
+  readonly databasePath: string;
+  readonly session: ProviderDeviceAuthSessionRecord;
+}
+
+export interface ReadProviderDeviceAuthSessionInput {
+  readonly databasePath: string;
+  readonly authRequestId: string;
+}
+
+export interface RuntimeControllerAssignmentRecord {
+  readonly scope: string;
+  readonly endpointId: string;
+  readonly modelId: string;
+  readonly sourceType: string;
+  readonly updatedAtMs?: number;
+}
+
+export interface UpsertRuntimeControllerAssignmentInput {
+  readonly databasePath: string;
+  readonly assignment: RuntimeControllerAssignmentRecord;
+}
+
+export interface ReadRuntimeControllerAssignmentInput {
+  readonly databasePath: string;
+  readonly scope: string;
+}
+
 export interface ExportRuntimeStateInput {
   readonly databasePath: string;
   readonly exportPath: string;
@@ -335,6 +449,16 @@ export function resolveSqliteMemoryLocation(input: SqliteMemoryLocationInput): s
 
 function initializeSchema(database: DatabaseSync): void {
   database.exec(SCHEMA_SQL);
+  const providerAccountColumns = new Set(
+    (
+      database.prepare("PRAGMA table_info(provider_accounts)").all() as Array<{
+        name: string;
+      }>
+    ).map((row) => row.name),
+  );
+  if (!providerAccountColumns.has("model_role_bindings_json")) {
+    database.exec("ALTER TABLE provider_accounts ADD COLUMN model_role_bindings_json TEXT NOT NULL DEFAULT '[]'");
+  }
 }
 
 function seedMaintenanceDefaults(database: DatabaseSync, nowMs: number): void {
@@ -344,6 +468,134 @@ function seedMaintenanceDefaults(database: DatabaseSync, nowMs: number): void {
   for (const entry of MAINTENANCE_DEFAULTS) {
     statement.run(entry.key, entry.value, nowMs);
   }
+}
+
+function mapProviderAccountRow(
+  row: {
+    provider_account_id: string;
+    provider_id: string;
+    provider_kind: string;
+    org_scope: string;
+    account_scope: string;
+    credential_backend: string;
+    credential_ref: string;
+    auth_mode: string;
+    region_policy_json: string;
+    base_url_override: string | null;
+    allowed_models_json: string;
+    model_role_bindings_json: string;
+    denied_models_json: string;
+    entitlement_tags_json: string;
+    budget_policy_ref: string;
+    quota_policy_ref: string;
+    status: string;
+    health_status: string;
+    rotation_state: string;
+  },
+): ProviderAccountRecord {
+  return {
+    providerAccountId: row.provider_account_id,
+    providerId: row.provider_id,
+    providerKind: row.provider_kind,
+    orgScope: row.org_scope,
+    accountScope: row.account_scope,
+    credentialRef: {
+      backend: row.credential_backend as ProviderAccountRecord["credentialRef"]["backend"],
+      ref: row.credential_ref,
+    },
+    authMode: row.auth_mode as ProviderAccountRecord["authMode"],
+    regionPolicy: JSON.parse(row.region_policy_json) as ProviderAccountRecord["regionPolicy"],
+    baseUrlOverride: row.base_url_override,
+    allowedModels: JSON.parse(row.allowed_models_json) as string[],
+    modelRoleBindings: JSON.parse(row.model_role_bindings_json) as ProviderAccountRecord["modelRoleBindings"],
+    deniedModels: JSON.parse(row.denied_models_json) as string[],
+    entitlementTags: JSON.parse(row.entitlement_tags_json) as string[],
+    budgetPolicyRef: row.budget_policy_ref,
+    quotaPolicyRef: row.quota_policy_ref,
+    status: row.status as ProviderAccountRecord["status"],
+    healthStatus: row.health_status as ProviderAccountRecord["healthStatus"],
+    rotationState: row.rotation_state as ProviderAccountRecord["rotationState"],
+  };
+}
+
+function mapRuntimeEndpointRow(
+  row: {
+    endpoint_id: string;
+    provider_account_id: string;
+    model_id: string;
+    region: string;
+    endpoint_kind: string;
+    serving_source: string;
+    lifecycle_state: string;
+    health_status: string;
+  },
+): RuntimeEndpointRecord {
+  return {
+    endpointId: row.endpoint_id,
+    providerAccountId: row.provider_account_id,
+    modelId: row.model_id,
+    region: row.region,
+    endpointKind: row.endpoint_kind,
+    servingSource: row.serving_source,
+    lifecycleState: row.lifecycle_state,
+    healthStatus: row.health_status,
+  };
+}
+
+function mapProviderDeviceAuthSessionRow(
+  row: {
+    auth_request_id: string;
+    provider_account_id: string;
+    provider_id: string;
+    variant_id: string;
+    credential_backend: string;
+    credential_ref: string;
+    auth_mode: string;
+    verification_uri: string;
+    verification_uri_complete: string;
+    user_code: string;
+    device_code: string;
+    interval_seconds: number;
+    status: string;
+    last_error: string | null;
+    expires_at_ms: number;
+  },
+): ProviderDeviceAuthSessionRecord {
+  return {
+    authRequestId: row.auth_request_id,
+    providerAccountId: row.provider_account_id,
+    providerId: row.provider_id,
+    variantId: row.variant_id,
+    credentialBackend: row.credential_backend,
+    credentialRef: row.credential_ref,
+    authMode: row.auth_mode,
+    verificationUri: row.verification_uri,
+    verificationUriComplete: row.verification_uri_complete,
+    userCode: row.user_code,
+    deviceCode: row.device_code,
+    intervalSeconds: row.interval_seconds,
+    status: row.status,
+    lastError: row.last_error,
+    expiresAtMs: row.expires_at_ms,
+  };
+}
+
+function mapRuntimeControllerAssignmentRow(
+  row: {
+    scope: string;
+    endpoint_id: string;
+    model_id: string;
+    source_type: string;
+    updated_at_ms: number;
+  },
+): RuntimeControllerAssignmentRecord {
+  return {
+    scope: row.scope,
+    endpointId: row.endpoint_id,
+    modelId: row.model_id,
+    sourceType: row.source_type,
+    updatedAtMs: row.updated_at_ms,
+  };
 }
 
 export function initializeSqliteMemory(
@@ -404,6 +656,7 @@ export function persistProviderAccounts(input: PersistProviderAccountsInput): vo
       region_policy_json,
       base_url_override,
       allowed_models_json,
+      model_role_bindings_json,
       denied_models_json,
       entitlement_tags_json,
       budget_policy_ref,
@@ -413,7 +666,7 @@ export function persistProviderAccounts(input: PersistProviderAccountsInput): vo
       rotation_state,
       created_at_ms,
       updated_at_ms
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
   for (const account of input.accounts) {
@@ -429,6 +682,7 @@ export function persistProviderAccounts(input: PersistProviderAccountsInput): vo
       JSON.stringify(account.regionPolicy),
       account.baseUrlOverride,
       JSON.stringify(account.allowedModels),
+      JSON.stringify(account.modelRoleBindings),
       JSON.stringify(account.deniedModels),
       JSON.stringify(account.entitlementTags),
       account.budgetPolicyRef,
@@ -441,6 +695,264 @@ export function persistProviderAccounts(input: PersistProviderAccountsInput): vo
     );
   }
   database.close();
+}
+
+export function upsertProviderAccount(input: UpsertProviderAccountInput): void {
+  persistProviderAccounts({
+    databasePath: input.databasePath,
+    accounts: [input.account],
+  });
+}
+
+export function listProviderAccounts(
+  input: ListProviderAccountsInput,
+): readonly ProviderAccountRecord[] {
+  const database = new DatabaseSync(input.databasePath);
+  const rows = database
+    .prepare(`
+      SELECT
+        provider_account_id,
+        provider_id,
+        provider_kind,
+        org_scope,
+        account_scope,
+        credential_backend,
+        credential_ref,
+        auth_mode,
+        region_policy_json,
+        base_url_override,
+        allowed_models_json,
+        model_role_bindings_json,
+        denied_models_json,
+        entitlement_tags_json,
+        budget_policy_ref,
+        quota_policy_ref,
+        status,
+        health_status,
+        rotation_state
+      FROM provider_accounts
+      ORDER BY provider_account_id ASC
+    `)
+    .all() as Array<{
+    provider_account_id: string;
+    provider_id: string;
+    provider_kind: string;
+    org_scope: string;
+    account_scope: string;
+    credential_backend: string;
+    credential_ref: string;
+    auth_mode: string;
+    region_policy_json: string;
+    base_url_override: string | null;
+    allowed_models_json: string;
+    model_role_bindings_json: string;
+    denied_models_json: string;
+    entitlement_tags_json: string;
+    budget_policy_ref: string;
+    quota_policy_ref: string;
+    status: string;
+    health_status: string;
+    rotation_state: string;
+  }>;
+  database.close();
+
+  return rows.map(mapProviderAccountRow);
+}
+
+export function upsertRuntimeEndpoint(input: UpsertRuntimeEndpointInput): void {
+  const database = new DatabaseSync(input.databasePath);
+  const nowMs = Date.now();
+  database.prepare(`
+    INSERT OR REPLACE INTO runtime_endpoints (
+      endpoint_id,
+      provider_account_id,
+      model_id,
+      region,
+      endpoint_kind,
+      serving_source,
+      lifecycle_state,
+      health_status,
+      created_at_ms,
+      updated_at_ms
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(
+    input.endpoint.endpointId,
+    input.endpoint.providerAccountId,
+    input.endpoint.modelId,
+    input.endpoint.region,
+    input.endpoint.endpointKind,
+    input.endpoint.servingSource,
+    input.endpoint.lifecycleState,
+    input.endpoint.healthStatus,
+    nowMs,
+    nowMs,
+  );
+  database.close();
+}
+
+export function listRuntimeEndpoints(
+  input: ListRuntimeEndpointsInput,
+): readonly RuntimeEndpointRecord[] {
+  const database = new DatabaseSync(input.databasePath);
+  const rows = database.prepare(`
+      SELECT
+        endpoint_id,
+        provider_account_id,
+        model_id,
+        region,
+        endpoint_kind,
+        serving_source,
+        lifecycle_state,
+        health_status
+      FROM runtime_endpoints
+      ORDER BY endpoint_id ASC
+    `)
+    .all() as Array<{
+      endpoint_id: string;
+      provider_account_id: string;
+      model_id: string;
+      region: string;
+      endpoint_kind: string;
+      serving_source: string;
+      lifecycle_state: string;
+      health_status: string;
+    }>;
+  database.close();
+
+  return rows.map(mapRuntimeEndpointRow);
+}
+
+export function upsertRuntimeControllerAssignment(input: UpsertRuntimeControllerAssignmentInput): void {
+  const database = new DatabaseSync(input.databasePath);
+  database
+    .prepare(
+      "INSERT OR REPLACE INTO runtime_controller_assignments (scope, endpoint_id, model_id, source_type, updated_at_ms) VALUES (?, ?, ?, ?, ?)",
+    )
+    .run(
+      input.assignment.scope,
+      input.assignment.endpointId,
+      input.assignment.modelId,
+      input.assignment.sourceType,
+      Date.now(),
+    );
+  database.close();
+}
+
+export function readRuntimeControllerAssignment(
+  input: ReadRuntimeControllerAssignmentInput,
+): RuntimeControllerAssignmentRecord | null {
+  const database = new DatabaseSync(input.databasePath);
+  const row = database
+    .prepare(
+      "SELECT scope, endpoint_id, model_id, source_type, updated_at_ms FROM runtime_controller_assignments WHERE scope = ?",
+    )
+    .get(input.scope) as
+    | {
+        scope: string;
+        endpoint_id: string;
+        model_id: string;
+        source_type: string;
+        updated_at_ms: number;
+      }
+    | undefined;
+  database.close();
+
+  return row ? mapRuntimeControllerAssignmentRow(row) : null;
+}
+
+export function upsertProviderDeviceAuthSession(
+  input: UpsertProviderDeviceAuthSessionInput,
+): void {
+  const database = new DatabaseSync(input.databasePath);
+  const nowMs = Date.now();
+  database.prepare(`
+    INSERT OR REPLACE INTO provider_device_auth_sessions (
+      auth_request_id,
+      provider_account_id,
+      provider_id,
+      variant_id,
+      credential_backend,
+      credential_ref,
+      auth_mode,
+      verification_uri,
+      verification_uri_complete,
+      user_code,
+      device_code,
+      interval_seconds,
+      status,
+      last_error,
+      expires_at_ms,
+      created_at_ms,
+      updated_at_ms
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(
+    input.session.authRequestId,
+    input.session.providerAccountId,
+    input.session.providerId,
+    input.session.variantId,
+    input.session.credentialBackend,
+    input.session.credentialRef,
+    input.session.authMode,
+    input.session.verificationUri,
+    input.session.verificationUriComplete,
+    input.session.userCode,
+    input.session.deviceCode,
+    input.session.intervalSeconds,
+    input.session.status,
+    input.session.lastError,
+    input.session.expiresAtMs,
+    nowMs,
+    nowMs,
+  );
+  database.close();
+}
+
+export function readProviderDeviceAuthSession(
+  input: ReadProviderDeviceAuthSessionInput,
+): ProviderDeviceAuthSessionRecord | null {
+  const database = new DatabaseSync(input.databasePath);
+  const row = database.prepare(`
+      SELECT
+        auth_request_id,
+        provider_account_id,
+        provider_id,
+        variant_id,
+        credential_backend,
+        credential_ref,
+        auth_mode,
+        verification_uri,
+        verification_uri_complete,
+        user_code,
+        device_code,
+        interval_seconds,
+        status,
+        last_error,
+        expires_at_ms
+      FROM provider_device_auth_sessions
+      WHERE auth_request_id = ?
+    `)
+    .get(input.authRequestId) as
+    | {
+        auth_request_id: string;
+        provider_account_id: string;
+        provider_id: string;
+        variant_id: string;
+        credential_backend: string;
+        credential_ref: string;
+        auth_mode: string;
+        verification_uri: string;
+        verification_uri_complete: string;
+        user_code: string;
+        device_code: string;
+        interval_seconds: number;
+        status: string;
+        last_error: string | null;
+        expires_at_ms: number;
+      }
+    | undefined;
+  database.close();
+
+  return row ? mapProviderDeviceAuthSessionRow(row) : null;
 }
 
 export function persistContinuitySnapshot(input: PersistContinuitySnapshotInput): void {
