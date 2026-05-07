@@ -1,6 +1,8 @@
 Run: `/.recursive/run/14-router-runtime-ui-foundation/`
 Phase: `03 Implementation Summary`
-Status: `DRAFT`
+Status: `LOCKED`
+LockedAt: `2026-05-07T11:35:22Z`
+LockHash: `7ad70eac75277b14bbd79c12a125d0561f654b5b0591f482c73443b4ab1593ab`
 Addendum: `04`
 Inputs:
 - `/.recursive/run/14-router-runtime-ui-foundation/addenda/01.5-root-cause.kimi-workbench-500.addendum-04.md`
@@ -8,6 +10,14 @@ Inputs:
 Outputs:
 - `/.recursive/run/14-router-runtime-ui-foundation/addenda/03-implementation-summary.kimi-workbench-500.addendum-04.md`
 Scope note: This addendum records the Kimi workbench 500 repair.
+
+## TODO
+
+- [x] Record the implementation delta without rewriting the locked Phase 3 receipt
+- [x] Name the concrete changed surfaces for the addendum slice
+- [x] Attach implementation evidence, scope decisions, and traceability for the repair
+- [x] Complete Coverage Gate checklist
+- [x] Complete Approval Gate checklist
 
 ## TDD Compliance Log
 
@@ -53,3 +63,20 @@ GREEN Evidence:
 ## Result
 
 Activated Moonshot/Kimi endpoints now resolve to a registered OpenAI-compatible adapter family and have a fixture-backed execution capture, so workbench chat requests complete successfully instead of failing at adapter/capture resolution.
+
+## Coverage Gate
+
+- [x] The implementation delta is recorded against the locked Phase 3 receipt
+- [x] Concrete changed files, evidence, or scope decisions are captured in the addendum body
+- [x] Traceability for the delivered slice is explicit
+
+Coverage: PASS
+
+## Approval Gate
+
+- [x] The implementation addendum names the concrete delivered slice
+- [x] Evidence and scope boundaries are explicit
+- [x] The addendum is ready to hand off to focused validation or later audited phases
+
+Approval: PASS
+

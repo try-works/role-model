@@ -1,12 +1,22 @@
 Run: `/.recursive/run/14-router-runtime-ui-foundation/`
 Phase: `03 Implementation Summary`
-Status: `DRAFT`
+Status: `LOCKED`
+LockedAt: `2026-05-07T11:35:22Z`
+LockHash: `460f05124a0b58613394032bb695f643f3f17b0c38931914217f631296759400`
 Addendum: `06`
 Inputs:
 - `/.recursive/run/14-router-runtime-ui-foundation/addenda/02-to-be-plan.downstream-provider-contract.addendum-06.md`
 Outputs:
 - `/.recursive/run/14-router-runtime-ui-foundation/addenda/03-implementation-summary.downstream-provider-contract.addendum-06.md`
 Scope note: This addendum records the downstream OpenAI-compatible provider contract implementation and the llama-swap exposure audit outcome for this slice.
+
+## TODO
+
+- [x] Record the implementation delta without rewriting the locked Phase 3 receipt
+- [x] Name the concrete changed surfaces for the addendum slice
+- [x] Attach implementation evidence, scope decisions, and traceability for the repair
+- [x] Complete Coverage Gate checklist
+- [x] Complete Approval Gate checklist
 
 ## TDD Compliance Log
 
@@ -69,3 +79,20 @@ GREEN Evidence:
 ## Result
 
 Run-14 now exposes a runtime-generated downstream OpenAI-compatible provider descriptor and surfaces it in the operator UI, so downstream consumers can configure role-model as a provider using a stable JSON contract instead of inferred endpoint knowledge.
+
+## Coverage Gate
+
+- [x] The implementation delta is recorded against the locked Phase 3 receipt
+- [x] Concrete changed files, evidence, or scope decisions are captured in the addendum body
+- [x] Traceability for the delivered slice is explicit
+
+Coverage: PASS
+
+## Approval Gate
+
+- [x] The implementation addendum names the concrete delivered slice
+- [x] Evidence and scope boundaries are explicit
+- [x] The addendum is ready to hand off to focused validation or later audited phases
+
+Approval: PASS
+

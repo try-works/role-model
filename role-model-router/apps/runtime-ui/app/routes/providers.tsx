@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { EmptyState, ErrorState, LoadingState, PageHeader, SectionCard, StatusPill } from "../components/page-primitives";
+import { EmptyState, ErrorState, FactCard, LoadingState, PageHeader, SectionCard, StatusPill } from "../components/page-primitives";
 import { mutedPanelClassName, primaryButtonClassName, raisedPanelClassName, secondaryButtonClassName } from "../lib/design-system";
 import { fetchRuntimeSnapshot, type RuntimeSnapshot } from "../lib/runtime-api";
 import { buildProviderCards } from "../lib/view-models";
@@ -23,6 +23,11 @@ export default function ProvidersRoute() {
   }
 
   const providerCards = buildProviderCards(snapshot.providers, snapshot.accounts);
+  const variantCount = snapshot.providers.reduce((total, provider) => total + (provider.variants?.length ?? 0), 0);
+  const readyVariantCount = snapshot.providers.reduce(
+    (total, provider) => total + (provider.variants?.filter((variant) => variant.availability === "ready").length ?? 0),
+    0,
+  );
 
   return (
     <div className="space-y-6">
@@ -31,6 +36,13 @@ export default function ProvidersRoute() {
           title="Provider onboarding"
           description="Catalog-backed provider surfaces now link directly into account setup, device OAuth, and endpoint activation instead of stopping at metadata."
         />
+
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <FactCard label="Providers" value={snapshot.providers.length} detail="Top-level provider families available for onboarding." emphasis />
+        <FactCard label="Variants" value={variantCount} detail="Concrete onboarding variants exposed by the provider catalog." />
+        <FactCard label="Ready variants" value={readyVariantCount} detail="Variants that are immediately usable from the current baseline." />
+        <FactCard label="Saved accounts" value={snapshot.accounts.length} detail="Persisted provider accounts already connected to the runtime." />
+      </div>
 
       {providerCards.length === 0 ? (
         <EmptyState label="No providers are currently available." />
@@ -44,17 +56,26 @@ export default function ProvidersRoute() {
                 title={provider.displayName}
                 description={`${provider.providerId} • ${provider.modelIds?.length ?? 0} model(s)`}
               >
-                <div className="space-y-4">
-                  <div className="flex flex-wrap gap-2">
-                    {(provider.supportedAuthModes ?? []).map((authMode) => (
-                      <StatusPill key={authMode} tone="neutral">
-                        {authMode}
-                      </StatusPill>
-                    ))}
+                <div className="grid grid-cols-12 gap-4">
+                  <div className="col-span-12 space-y-3 lg:col-span-4">
+                    <div className={`${mutedPanelClassName} p-4`}>
+                      <p className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]">Auth posture</p>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {(provider.supportedAuthModes ?? []).map((authMode) => (
+                          <StatusPill key={authMode} tone="neutral">
+                            {authMode}
+                          </StatusPill>
+                        ))}
+                      </div>
+                    </div>
+                    <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
+                      <p><span className="font-medium text-[var(--rm-fg)]">Accounts:</span> {card?.accountCount ?? 0}</p>
+                      <p className="mt-2"><span className="font-medium text-[var(--rm-fg)]">Model ids:</span> {provider.modelIds?.length ?? 0}</p>
+                    </div>
                   </div>
 
-                    <div className="space-y-3">
-                      {(provider.variants ?? []).map((variant) => (
+                  <div className="col-span-12 space-y-3 lg:col-span-8">
+                    {(provider.variants ?? []).map((variant) => (
                       <div key={variant.variantId} className={`${mutedPanelClassName} p-4`}>
                         <div className="flex flex-wrap items-center gap-2">
                           <h3 className="font-medium text-[var(--rm-fg)]">{variant.label}</h3>
@@ -78,13 +99,13 @@ export default function ProvidersRoute() {
                         <div className="mt-4 flex flex-wrap gap-3">
                           <a
                             className={primaryButtonClassName}
-                            href={`/app/accounts?providerId=${encodeURIComponent(provider.providerId)}&variantId=${encodeURIComponent(variant.variantId)}`}
+                            href={`/app/control/accounts?providerId=${encodeURIComponent(provider.providerId)}&variantId=${encodeURIComponent(variant.variantId)}`}
                           >
                             {variant.authMode === "oauth2-device-code" ? "Connect provider" : "Configure account"}
                           </a>
                           <a
                             className={secondaryButtonClassName}
-                            href="/app/endpoints"
+                            href="/app/control/endpoints"
                           >
                             Activate endpoint
                           </a>
@@ -92,10 +113,6 @@ export default function ProvidersRoute() {
                       </div>
                     ))}
                   </div>
-
-                  <p className="text-sm text-[var(--rm-secondary)]">
-                    Current accounts: <span className="font-medium text-[var(--rm-fg)]">{card?.accountCount ?? 0}</span>
-                  </p>
                 </div>
               </SectionCard>
             );

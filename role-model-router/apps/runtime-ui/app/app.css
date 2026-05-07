@@ -1,47 +1,62 @@
 @import "tailwindcss";
 
 :root {
-  --rm-bg: #f3f0e8;
-  --rm-surface: rgba(250, 248, 243, 0.94);
-  --rm-surface-strong: #ffffff;
-  --rm-panel: #ece7dc;
-  --rm-fg: #161410;
-  --rm-secondary: rgba(22, 20, 16, 0.72);
-  --rm-muted: rgba(22, 20, 16, 0.52);
-  --rm-border: rgba(22, 20, 16, 0.1);
-  --rm-border-strong: rgba(22, 20, 16, 0.18);
-  --rm-accent: #b23c2a;
-  --rm-accent-subtle: rgba(178, 60, 42, 0.12);
+  --rm-bg: #fafaf9;
+  --rm-surface: #f5f5f4;
+  --rm-surface-strong: #f5f5f4;
+  --rm-panel: #e7e5e4;
+  --rm-fg: #1c1917;
+  --rm-secondary: rgba(28, 25, 23, 0.70);
+  --rm-muted: rgba(28, 25, 23, 0.40);
+  --rm-border: #e7e5e4;
+  --rm-border-strong: #f5f5f4;
+  --rm-accent: #C8102E;
+  --rm-accent-muted: rgba(200, 16, 46, 0.60);
+  --rm-accent-subtle: rgba(200, 16, 46, 0.20);
+  --rm-accent-ghost: rgba(200, 16, 46, 0.10);
   --rm-radius-shell: 0px;
   --rm-radius-panel: 0px;
   --rm-radius-field: 0px;
-  --rm-shadow-card: 0 18px 40px rgba(22, 20, 16, 0.04);
+  --rm-shadow-card: 0 18px 40px rgba(28, 25, 23, 0.04);
   --rm-shell-width: 1480px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --rm-bg: #0c0a09;
+    --rm-surface: #1c1917;
+    --rm-surface-strong: #1c1917;
+    --rm-panel: #292524;
+    --rm-fg: #fafaf9;
+    --rm-secondary: rgba(250, 250, 249, 0.70);
+    --rm-muted: rgba(250, 250, 249, 0.40);
+    --rm-border: #292524;
+    --rm-border-strong: #1c1917;
+  }
 }
 
 html {
   scrollbar-gutter: stable;
-  color-scheme: light;
+  color-scheme: light dark;
+  background: var(--rm-bg);
 }
 
 body {
   margin: 0;
-  background:
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0)),
-    var(--rm-bg);
+  background: var(--rm-bg);
   color: var(--rm-fg);
   font-family: "IBM Plex Sans", "Hanken Grotesk", "Barlow", "Host Grotesk", "DM Sans", system-ui, sans-serif;
 }
 
 ::selection {
-  background: var(--rm-accent-subtle);
+  background: var(--rm-accent-ghost);
 }
 
 code,
 pre,
 textarea,
 input[type="text"] {
-  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-family: "IBM Plex Mono", "JetBrains Mono", ui-monospace, monospace;
 }
 
 a {

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 
-import { EmptyState, ErrorState, LoadingState, PageHeader, SectionCard, StatusPill } from "../components/page-primitives";
+import { EmptyState, ErrorState, FactCard, LoadingState, PageHeader, SectionCard, StatusPill } from "../components/page-primitives";
 import { fieldClassName, mutedPanelClassName, primaryButtonClassName } from "../lib/design-system";
 import { activateRuntimeEndpoint, fetchRuntimeSnapshot, type RuntimeSnapshot } from "../lib/runtime-api";
 
@@ -57,6 +57,11 @@ export default function EndpointsRoute() {
     return <LoadingState label="Loading endpoint registry…" />;
   }
 
+  const activeEndpointCount = snapshot.endpoints.filter((endpoint) => endpoint.status === "active").length;
+  const healthyAccountCount = snapshot.accounts.filter(
+    (account) => account.status === "active" && account.healthStatus === "healthy",
+  ).length;
+
   const onActivate = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!selectedAccount || !modelId) {
@@ -85,6 +90,13 @@ export default function EndpointsRoute() {
         title="Endpoint registry"
         description="Activate runtime-managed cloud endpoints from the accounts you configure, then verify they appear in the live registry immediately."
       />
+
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <FactCard label="Accounts ready" value={healthyAccountCount} detail="Accounts that are active and healthy enough to activate endpoints now." emphasis />
+        <FactCard label="Registry entries" value={snapshot.endpoints.length} detail="Current endpoint rows in the runtime-visible registry." />
+        <FactCard label="Active endpoints" value={activeEndpointCount} detail="Endpoints currently marked active in the control-plane summary." />
+        <FactCard label="Selected roles" value={selectedRoleIds.length} detail="Roles that will follow the current model choice into activation." />
+      </div>
 
       <div className="grid gap-4 xl:grid-cols-[0.95fr_1.05fr]">
         <SectionCard

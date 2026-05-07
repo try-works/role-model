@@ -1,16 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 
-import { CodeBlock, ErrorState, LoadingState, PageHeader, SectionCard } from "../components/page-primitives";
-import { fieldClassName, primaryButtonClassName } from "../lib/design-system";
+import { CodeBlock, EmptyState, ErrorState, FactCard, LoadingState, PageHeader, SectionCard, StatusPill } from "../components/page-primitives";
+import { fieldClassName, mutedPanelClassName, primaryButtonClassName } from "../lib/design-system";
 import { fetchRuntimeSnapshot, submitWorkbenchChat, type RuntimeSnapshot } from "../lib/runtime-api";
-import { buildWorkbenchModelOptions } from "../lib/view-models";
+import { buildWorkbenchModelOptions, summarizeWorkbenchResult } from "../lib/view-models";
 
 export default function WorkbenchRoute() {
   const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [model, setModel] = useState("openai/gpt-4.1-mini-fast");
   const [prompt, setPrompt] = useState("Summarize the chosen endpoint.");
-  const [result, setResult] = useState<string>("");
+  const [result, setResult] = useState<Record<string, unknown> | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -42,16 +42,7 @@ export default function WorkbenchRoute() {
         model,
         messages: [{ role: "user", content: prompt }],
       });
-      const content =
-        typeof response.choices === "object" &&
-        Array.isArray(response.choices) &&
-        response.choices[0] &&
-        typeof response.choices[0] === "object" &&
-        response.choices[0] &&
-        typeof (response.choices[0] as { message?: { content?: string } }).message?.content === "string"
-          ? (response.choices[0] as { message: { content: string } }).message.content
-          : JSON.stringify(response, null, 2);
-      setResult(content);
+      setResult(response);
     } catch (value) {
       setError(value instanceof Error ? value.message : "Workbench request failed.");
     } finally {
@@ -59,15 +50,24 @@ export default function WorkbenchRoute() {
     }
   };
 
+  const resultSummary = result ? summarizeWorkbenchResult(result) : null;
+  const toolCapableEndpoints = snapshot.endpoints.filter((endpoint) => endpoint.toolCallingSupported).length;
+
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Workbench"
-        title="Runtime workbench"
-        description="Compose a chat request against the live runtime host path using the repo-owned shell."
+        eyebrow="Studio"
+        title="Chat workspace"
+        description="Compose routed chat requests, then inspect assistant text, tool calls, execution receipts, and token usage without leaving the shell."
       />
 
-      <div className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <FactCard label="Models" value={snapshot.models.length} detail="Available model ids currently exposed through the runtime model listing." emphasis />
+        <FactCard label="Tool-capable endpoints" value={toolCapableEndpoints} detail="Endpoints currently able to surface tool-calling behavior in the workspace." />
+        <FactCard label="Selected model" value={model} detail="The active model binding for the next routed request." className="xl:col-span-2" />
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-[360px_minmax(0,1fr)]">
         <SectionCard title="Composer" description="This form posts directly to the runtime-host `/v1/chat/completions` route.">
           <form className="space-y-4" onSubmit={onSubmit}>
             <label className="grid gap-2 text-sm">
@@ -90,10 +90,84 @@ export default function WorkbenchRoute() {
           </form>
         </SectionCard>
 
-        <SectionCard title="Result" description="Response text or the raw JSON payload if the runtime returns an unexpected shape.">
-          <CodeBlock className="min-h-72 text-sm">
-            {result || "No result yet."}
-          </CodeBlock>
+        <SectionCard title="Result workspace" description="Tooling-aware response summary aligned with the runtime host payload.">
+          {!resultSummary ? (
+            <EmptyState label="No result yet." />
+          ) : (
+            <div className="space-y-4">
+              <div className={`${mutedPanelClassName} p-4`}>
+                <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">Assistant output</p>
+                <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-[var(--rm-fg)]">
+                  {resultSummary.outputText || "No assistant text was returned."}
+                </p>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className={`${mutedPanelClassName} p-4`}>
+                  <div className="flex items-center justify-between">
+                    <p className="font-medium text-[var(--rm-fg)]">Tool calls</p>
+                    <StatusPill tone={resultSummary.toolCalls.length > 0 ? "accent" : "neutral"}>
+                      {resultSummary.toolCalls.length}
+                    </StatusPill>
+                  </div>
+                  <div className="mt-3 space-y-3">
+                    {resultSummary.toolCalls.length === 0 ? (
+                      <p className="text-sm text-[var(--rm-secondary)]">No tool calls were surfaced for this response.</p>
+                    ) : (
+                      resultSummary.toolCalls.map((toolCall) => (
+                        <div key={toolCall.id ?? `${toolCall.name}-${toolCall.arguments}`} className={`${mutedPanelClassName} p-3`}>
+                          <p className="font-medium text-[var(--rm-fg)]">{toolCall.name}</p>
+                          <CodeBlock className="mt-3 text-xs">{toolCall.arguments}</CodeBlock>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+
+                <div className={`${mutedPanelClassName} p-4`}>
+                  <div className="flex items-center justify-between">
+                    <p className="font-medium text-[var(--rm-fg)]">Execution receipts</p>
+                    <StatusPill tone={resultSummary.toolExecutions.length > 0 ? "success" : "neutral"}>
+                      {resultSummary.toolExecutions.length}
+                    </StatusPill>
+                  </div>
+                  <div className="mt-3 space-y-3">
+                    {resultSummary.toolExecutions.length === 0 ? (
+                      <p className="text-sm text-[var(--rm-secondary)]">No runtime tool execution receipts were recorded.</p>
+                    ) : (
+                      resultSummary.toolExecutions.map((execution, index) => (
+                        <div key={`${execution.connectorId ?? "connector"}-${execution.toolName ?? index}`} className={`${mutedPanelClassName} p-3`}>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="font-medium text-[var(--rm-fg)]">{execution.toolName ?? "Unnamed tool"}</p>
+                            {execution.status ? (
+                              <StatusPill tone={execution.status === "success" ? "success" : "warning"}>
+                                {execution.status}
+                              </StatusPill>
+                            ) : null}
+                          </div>
+                          <p className="mt-2 text-sm text-[var(--rm-secondary)]">
+                            {execution.connectorId ?? "Unknown connector"}
+                            {typeof execution.durationMs === "number" ? ` • ${execution.durationMs} ms` : ""}
+                          </p>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid gap-3 md:grid-cols-2">
+                {resultSummary.usageRows.map((row) => (
+                  <div key={row.label} className={`${mutedPanelClassName} p-4`}>
+                    <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">{row.label}</p>
+                    <p className="mt-2 text-lg font-medium text-[var(--rm-fg)]">{row.value}</p>
+                  </div>
+                ))}
+              </div>
+
+              <CodeBlock className="min-h-72 text-sm">{resultSummary.rawPayload}</CodeBlock>
+            </div>
+          )}
         </SectionCard>
       </div>
     </div>

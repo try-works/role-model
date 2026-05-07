@@ -1,12 +1,22 @@
 Run: `/.recursive/run/14-router-runtime-ui-foundation/`
 Phase: `02 To-Be Plan`
-Status: `DRAFT`
+Status: `LOCKED`
+LockedAt: `2026-05-07T11:33:32Z`
+LockHash: `e5a9d1380badfe40482d23f21005dda67a2e7bc41e2d62b7df69e12efa67a82b`
 Addendum: `04`
 Inputs:
 - `/.recursive/run/14-router-runtime-ui-foundation/addenda/01.5-root-cause.kimi-workbench-500.addendum-04.md`
 Outputs:
 - `/.recursive/run/14-router-runtime-ui-foundation/addenda/02-to-be-plan.kimi-workbench-500.addendum-04.md`
 Scope note: This addendum plans the Kimi workbench 500 repair after the browser-open OAuth change.
+
+## TODO
+
+- [x] Record the scope expansion or repair without rewriting the locked base plan
+- [x] Map the required product or architecture changes into concrete implementation slices
+- [x] Capture sequencing, constraints, and focused validation expectations
+- [x] Complete Coverage Gate checklist
+- [x] Complete Approval Gate checklist
 
 ## Root Cause Reference
 
@@ -43,3 +53,20 @@ Workbench requests against activated Kimi Code endpoints should execute successf
 ## Traceability
 
 - R3 provider onboarding/runtime execution -> activated Kimi endpoints must be runnable from workbench
+
+## Coverage Gate
+
+- [x] Addendum scope is grounded in the locked base plan and effective inputs
+- [x] Concrete implementation slices or constraints are recorded in the addendum body
+- [x] Focused validation expectations or follow-on receipt obligations are captured
+
+Coverage: PASS
+
+## Approval Gate
+
+- [x] The plan addendum names the concrete repair or expansion scope
+- [x] Sequencing or dependency constraints are explicit where needed
+- [x] The addendum is ready to guide paired implementation and validation receipts
+
+Approval: PASS
+

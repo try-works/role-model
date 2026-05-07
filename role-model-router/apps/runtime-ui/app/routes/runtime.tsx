@@ -1,25 +1,28 @@
 import { useEffect, useState } from "react";
 
 import { ErrorState, LoadingState, PageHeader, SectionCard, StatusPill } from "../components/page-primitives";
-import { codeBlockClassName, mutedPanelClassName, secondaryButtonClassName } from "../lib/design-system";
+import { mutedPanelClassName, secondaryButtonClassName } from "../lib/design-system";
 import {
-  fetchDownstreamOpenAIProviderConfig,
+  fetchControllerAssignment,
   fetchRuntimeSnapshot,
-  type RuntimeDownstreamOpenAIProviderConfig,
+  fetchVersionInfo,
+  type RuntimeControllerAssignment,
   type RuntimeSnapshot,
+  type RuntimeVersionInfo,
 } from "../lib/runtime-api";
-import { buildDownstreamProviderGuide } from "../lib/view-models";
 
 export default function RuntimeRoute() {
   const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(null);
-  const [downstreamProvider, setDownstreamProvider] = useState<RuntimeDownstreamOpenAIProviderConfig | null>(null);
+  const [controller, setController] = useState<RuntimeControllerAssignment | null>(null);
+  const [version, setVersion] = useState<RuntimeVersionInfo | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    void Promise.all([fetchRuntimeSnapshot(), fetchDownstreamOpenAIProviderConfig()])
-      .then(([nextSnapshot, nextProvider]) => {
+    void Promise.all([fetchRuntimeSnapshot(), fetchControllerAssignment(), fetchVersionInfo()])
+      .then(([nextSnapshot, nextController, nextVersion]) => {
         setSnapshot(nextSnapshot);
-        setDownstreamProvider(nextProvider);
+        setController(nextController);
+        setVersion(nextVersion);
       })
       .catch((value: unknown) => setError(value instanceof Error ? value.message : "Could not load runtime summary."));
   }, []);
@@ -27,22 +30,21 @@ export default function RuntimeRoute() {
   if (error) {
     return <ErrorState label={error} />;
   }
-  if (!snapshot || !downstreamProvider) {
+  if (!snapshot || !controller || !version) {
     return <LoadingState label="Loading runtime summary…" />;
   }
-
-  const guide = buildDownstreamProviderGuide(downstreamProvider);
 
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Runtime"
-        title="Bridge and host summary"
-        description="Runtime summary counts plus preserved host-owned diagnostics that still live outside the repo-owned shell."
+        eyebrow="System"
+        title="Runtime topology"
+        description="Bridge lifecycle, controller posture, version facts, tooling-aware validation links, and preserved host boundaries in one system view."
         actions={
-          <a className={secondaryButtonClassName} href="/api/role-model/downstream/openai">
-            Downstream provider JSON
-          </a>
+          <>
+            <a className={secondaryButtonClassName} href="/api/role-model/runtime/summary">Runtime JSON</a>
+            <a className={secondaryButtonClassName} href="/api/role-model/controller">Controller JSON</a>
+          </>
         }
       />
 
@@ -51,6 +53,44 @@ export default function RuntimeRoute() {
           <StatusPill tone="success">Active {snapshot.summary.lifecycleSummary?.active ?? 0}</StatusPill>
           <StatusPill tone="warning">Degraded {snapshot.summary.lifecycleSummary?.degraded ?? 0}</StatusPill>
           <StatusPill tone="neutral">Offline {snapshot.summary.lifecycleSummary?.offline ?? 0}</StatusPill>
+        </div>
+      </SectionCard>
+
+      <SectionCard title="Controller posture" description="The controller remains an explicit runtime-owned assignment rather than an implicit default.">
+        <div className="grid gap-3 md:grid-cols-3">
+          <div className={`${mutedPanelClassName} p-4`}>
+            <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">Endpoint</p>
+            <p className="mt-2 break-all text-sm font-medium text-[var(--rm-fg)]">{controller.endpointId}</p>
+          </div>
+          <div className={`${mutedPanelClassName} p-4`}>
+            <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">Model</p>
+            <p className="mt-2 text-sm font-medium text-[var(--rm-fg)]">{controller.modelId}</p>
+          </div>
+          <div className={`${mutedPanelClassName} p-4`}>
+            <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">Source</p>
+            <div className="mt-2">
+              <StatusPill tone={controller.sourceType === "local" ? "accent" : "neutral"}>{controller.sourceType}</StatusPill>
+            </div>
+          </div>
+        </div>
+      </SectionCard>
+
+      <SectionCard title="Version and boundary facts" description="Version, provenance, and health-oriented references now live in the runtime page instead of a separate system route.">
+        <div className="grid gap-3 md:grid-cols-3">
+          <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
+            <p className="font-medium text-[var(--rm-fg)]">Vendor host version</p>
+            <p className="mt-2 text-base text-[var(--rm-fg)]">{version.version}</p>
+            <p className="mt-2 break-all">Commit {version.commit}</p>
+            <p className="mt-1">Built {version.build_date}</p>
+          </div>
+          <a className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`} href="/api/role-model/runtime/summary">
+            <span className="block font-medium text-[var(--rm-fg)]">/api/role-model/runtime/summary</span>
+            Repo-owned runtime topology and lifecycle summary
+          </a>
+          <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
+            <p className="font-medium text-[var(--rm-fg)]">Health posture</p>
+            <p className="mt-2">Use the lifecycle summary above as the primary shell health view; raw vendor health and provenance stay adjacent to this page rather than in a duplicate system route.</p>
+          </div>
         </div>
       </SectionCard>
 
@@ -64,62 +104,26 @@ export default function RuntimeRoute() {
             <span className="block font-medium text-[var(--rm-fg)]">/api/metrics</span>
             Vendor metrics and capture ids
           </a>
-          <a className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`} href="/ui">
-            <span className="block font-medium text-[var(--rm-fg)]">/ui</span>
-            Preserved vendored llama-swap operator UI
-          </a>
-          <a className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`} href="/api/role-model/runtime/summary">
-            <span className="block font-medium text-[var(--rm-fg)]">/api/role-model/runtime/summary</span>
-            Repo-owned structured runtime summary JSON
+          <a className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`} href="/health">
+            <span className="block font-medium text-[var(--rm-fg)]">/health</span>
+            Raw host health endpoint for route-local diagnostics
           </a>
         </div>
       </SectionCard>
 
-      <SectionCard
-        title="Use Role Model as a provider"
-        description="Downstream apps such as opencode can point at this runtime as an OpenAI-compatible provider using the contract published by the host bridge."
-        >
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {guide.connectionRows.map((row) => (
-            <div key={row.label} className={`${mutedPanelClassName} p-4`}>
-              <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">{row.label}</p>
-              <p className="mt-2 break-all font-mono text-sm text-[var(--rm-fg)]">{row.value}</p>
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-4 grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
-          <div className={`${mutedPanelClassName} p-4`}>
-            <p className="font-medium text-[var(--rm-fg)]">Downstream setup</p>
-            <ol className="mt-3 space-y-2 text-sm text-[var(--rm-secondary)]">
-              {guide.opencodeSteps.map((step) => (
-                <li key={step}>{step}</li>
-              ))}
-            </ol>
-            <p className="mt-4 text-sm text-[var(--rm-secondary)]">{downstreamProvider.authentication.note}</p>
+      <SectionCard title="Runtime contract notes" description="Tooling and MCP expectations that should remain visible from the system layer.">
+        <div className="grid gap-3 md:grid-cols-3">
+          <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
+            <p className="font-medium text-[var(--rm-fg)]">Tool execution</p>
+            <p className="mt-2">Runtime responses may emit `tool_calls`, and request inspection now preserves execution receipts beside captures and profile data.</p>
           </div>
-
-          <div className="space-y-4">
-            <div className={`${mutedPanelClassName} p-4`}>
-              <p className="font-medium text-[var(--rm-fg)]">Available models</p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {guide.availableModels.map((modelId) => (
-                  <StatusPill key={modelId} tone={modelId === downstreamProvider.setup.recommendedModel ? "accent" : "neutral"}>
-                    {modelId}
-                  </StatusPill>
-                ))}
-              </div>
-            </div>
-
-            <div className={`${mutedPanelClassName} p-4`}>
-              <p className="font-medium text-[var(--rm-fg)]">Example commands</p>
-              <pre className={`mt-3 ${codeBlockClassName}`}>
-                {guide.examples.modelsCurl}
-              </pre>
-              <pre className={`mt-3 ${codeBlockClassName}`}>
-                {guide.examples.chatCurl}
-              </pre>
-            </div>
+          <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
+            <p className="font-medium text-[var(--rm-fg)]">Validation floor</p>
+            <p className="mt-2">`runtime:validate-ui`, `runtime:validate-host`, and `runtime:validate-tools` stay the practical validation floor for this shell and bridge.</p>
+          </div>
+          <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
+            <p className="font-medium text-[var(--rm-fg)]">Integration boundary</p>
+            <p className="mt-2">Downstream OpenAI-compatible consumer setup and compatibility guidance now live under Integrations rather than being mixed into the core system page.</p>
           </div>
         </div>
       </SectionCard>

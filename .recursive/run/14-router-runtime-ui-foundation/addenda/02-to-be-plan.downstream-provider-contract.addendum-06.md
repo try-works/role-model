@@ -1,6 +1,8 @@
 Run: `/.recursive/run/14-router-runtime-ui-foundation/`
 Phase: `02 To-Be Plan`
-Status: `DRAFT`
+Status: `LOCKED`
+LockedAt: `2026-05-07T11:33:32Z`
+LockHash: `0b3f0bb4e649b5178f77e465c00cd4a7be565b5d5d1d853ba81d590233c80e2d`
 Addendum: `06`
 Inputs:
 - user request to audit vendored llama-swap vs role-model-router and expose a downstream-consumer provider surface
@@ -12,6 +14,14 @@ Inputs:
 Outputs:
 - `/.recursive/run/14-router-runtime-ui-foundation/addenda/02-to-be-plan.downstream-provider-contract.addendum-06.md`
 Scope note: This addendum records the audit conclusion and implementation plan for exposing role-model as a downstream OpenAI-compatible provider.
+
+## TODO
+
+- [x] Record the scope expansion or repair without rewriting the locked base plan
+- [x] Map the required product or architecture changes into concrete implementation slices
+- [x] Capture sequencing, constraints, and focused validation expectations
+- [x] Complete Coverage Gate checklist
+- [x] Complete Approval Gate checklist
 
 ## Audit Summary
 
@@ -62,3 +72,20 @@ An operator can open the runtime UI and copy a stable role-model provider contra
 - R3 runtime UI shell -> operators need a UI-visible downstream provider contract
 - R4 runtime host bridge -> downstream apps need a runtime-generated OpenAI-compatible configuration descriptor
 - Audit follow-up -> llama-swap capability gaps must be explicitly identified even when only one high-value slice is implemented now
+
+## Coverage Gate
+
+- [x] Addendum scope is grounded in the locked base plan and effective inputs
+- [x] Concrete implementation slices or constraints are recorded in the addendum body
+- [x] Focused validation expectations or follow-on receipt obligations are captured
+
+Coverage: PASS
+
+## Approval Gate
+
+- [x] The plan addendum names the concrete repair or expansion scope
+- [x] Sequencing or dependency constraints are explicit where needed
+- [x] The addendum is ready to guide paired implementation and validation receipts
+
+Approval: PASS
+

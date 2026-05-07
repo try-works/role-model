@@ -1,6 +1,8 @@
 Run: `/.recursive/run/14-router-runtime-ui-foundation/`
 Phase: `02 TO-BE PLAN`
-Status: `DRAFT`
+Status: `LOCKED`
+LockedAt: `2026-05-07T11:35:19Z`
+LockHash: `ac922fbb26862d3a0a684f755d63a303f920f0478fbdcb4d0a30d1f9bc3747e0`
 Workflow version: `recursive-mode-audit-v1`
 Inputs:
 - `/.recursive/run/14-router-runtime-ui-foundation/02-to-be-plan.md`
@@ -22,13 +24,13 @@ Scope note: This addendum records the post-closeout expansion required after liv
 
 ## TODO
 
-- [ ] Record the concrete gap between the locked run-14 plan and the currently shippable operator flow
-- [ ] Map each missing operator capability to a concrete backend/UI remediation slice
-- [ ] Preserve execution ordering and dependency notes for the repair
-- [ ] Capture the focused validation chain required for the extra scope
-- [ ] Refresh the paired Phase 3 and Phase 4 artifacts with addenda after implementation lands
-- [ ] Complete Coverage Gate checklist
-- [ ] Complete Approval Gate checklist
+- [x] Record the concrete gap between the locked run-14 plan and the currently shippable operator flow
+- [x] Map each missing operator capability to a concrete backend/UI remediation slice
+- [x] Preserve execution ordering and dependency notes for the repair
+- [x] Capture the focused validation chain required for the extra scope
+- [x] Refresh the paired Phase 3 and Phase 4 artifacts with addenda after implementation lands
+- [x] Complete Coverage Gate checklist
+- [x] Complete Approval Gate checklist
 
 ## Addendum Content
 

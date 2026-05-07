@@ -316,6 +316,77 @@ describe("initializeSqliteMemory", () => {
     ]);
   });
 
+  test("persists and reads the global controller assignment for the runtime control plane", async () => {
+    expect(
+      typeof (
+        sqliteMemory as {
+          readRuntimeControllerAssignment?: unknown;
+        }
+      ).readRuntimeControllerAssignment,
+    ).toBe("function");
+    expect(
+      typeof (
+        sqliteMemory as {
+          upsertRuntimeControllerAssignment?: unknown;
+        }
+      ).upsertRuntimeControllerAssignment,
+    ).toBe("function");
+
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+    const initialized = initializeSqliteMemory({
+      runtimeStateRoot,
+      scopeId: "workspace-dev",
+    });
+
+    (
+      sqliteMemory as {
+        upsertRuntimeControllerAssignment: (value: {
+          databasePath: string;
+          assignment: {
+            scope: string;
+            endpointId: string;
+            modelId: string;
+            sourceType: string;
+          };
+        }) => void;
+      }
+    ).upsertRuntimeControllerAssignment({
+      databasePath: initialized.databasePath,
+      assignment: {
+        scope: "global",
+        endpointId: "cli.local.coder",
+        modelId: "gpt-5.4",
+        sourceType: "local",
+      },
+    });
+
+    expect(
+      (
+        sqliteMemory as {
+          readRuntimeControllerAssignment: (value: {
+            databasePath: string;
+            scope: string;
+          }) => {
+            scope: string;
+            endpointId: string;
+            modelId: string;
+            sourceType: string;
+          } | null;
+        }
+      ).readRuntimeControllerAssignment({
+        databasePath: initialized.databasePath,
+        scope: "global",
+      }),
+    ).toEqual(
+      expect.objectContaining({
+        scope: "global",
+        endpointId: "cli.local.coder",
+        modelId: "gpt-5.4",
+        sourceType: "local",
+      }),
+    );
+  });
+
   test("persists device-auth session state for runtime OAuth polling", async () => {
     expect(
       typeof (

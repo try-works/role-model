@@ -1,6 +1,8 @@
 Run: `/.recursive/run/14-router-runtime-ui-foundation/`
 Phase: `03 Implementation Summary`
-Status: `DRAFT`
+Status: `LOCKED`
+LockedAt: `2026-05-07T11:35:22Z`
+LockHash: `6927b1608e3adcd9392d64c9680f7c0be5c174f15552c6e0a752bbcdbfe21cf9`
 Addendum: `03`
 Inputs:
 - `/.recursive/run/14-router-runtime-ui-foundation/addenda/01.5-root-cause.kimi-browser-oauth.addendum-03.md`
@@ -8,6 +10,14 @@ Inputs:
 Outputs:
 - `/.recursive/run/14-router-runtime-ui-foundation/addenda/03-implementation-summary.kimi-browser-oauth.addendum-03.md`
 Scope note: This addendum records the Kimi Code browser-open + auto-poll OAuth UX repair.
+
+## TODO
+
+- [x] Record the implementation delta without rewriting the locked Phase 3 receipt
+- [x] Name the concrete changed surfaces for the addendum slice
+- [x] Attach implementation evidence, scope decisions, and traceability for the repair
+- [x] Complete Coverage Gate checklist
+- [x] Complete Approval Gate checklist
 
 ## TDD Compliance Log
 
@@ -53,3 +63,20 @@ GREEN Evidence:
 ## Result
 
 The runtime UI now matches the upstream Kimi device-auth interaction more closely: the browser opens immediately, the UI keeps polling automatically, and the account binding completes through the existing device-token polling path instead of waiting for a nonexistent provider callback URL.
+
+## Coverage Gate
+
+- [x] The implementation delta is recorded against the locked Phase 3 receipt
+- [x] Concrete changed files, evidence, or scope decisions are captured in the addendum body
+- [x] Traceability for the delivered slice is explicit
+
+Coverage: PASS
+
+## Approval Gate
+
+- [x] The implementation addendum names the concrete delivered slice
+- [x] Evidence and scope boundaries are explicit
+- [x] The addendum is ready to hand off to focused validation or later audited phases
+
+Approval: PASS
+

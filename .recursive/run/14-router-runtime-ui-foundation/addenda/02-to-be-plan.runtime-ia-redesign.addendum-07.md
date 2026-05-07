@@ -1,6 +1,8 @@
 Run: `/.recursive/run/14-router-runtime-ui-foundation/`
 Phase: `02 To-Be Plan`
-Status: `DRAFT`
+Status: `LOCKED`
+LockedAt: `2026-05-07T11:35:20Z`
+LockHash: `721a81eb9f04c4c9925801a61707f0892426933714580db90d30dc2e1dc8bd5a`
 Addendum: `07`
 Inputs:
 - user request to audit vendored llama-swap surfaces, propose a new frontend hierarchy first, and continue with the canonical page spec
@@ -21,6 +23,14 @@ Inputs:
 Outputs:
 - `/.recursive/run/14-router-runtime-ui-foundation/addenda/02-to-be-plan.runtime-ia-redesign.addendum-07.md`
 Scope note: This addendum records the canonical information architecture, route tree, layout templates, data dependencies, and Swiss-style design contract for the next runtime frontend redesign slice. It does not implement the redesign; it defines the baseline the implementation must follow.
+
+## TODO
+
+- [x] Record the scope expansion or repair without rewriting the locked base plan
+- [x] Map the required product or architecture changes into concrete implementation slices
+- [x] Capture sequencing, constraints, and focused validation expectations
+- [x] Complete Coverage Gate checklist
+- [x] Complete Approval Gate checklist
 
 ## Why This Addendum Exists
 
@@ -614,3 +624,20 @@ Implementation should proceed in this order:
 - The resulting design uses the local Swiss-design rules for typography, spacing, geometry, and color hierarchy.
 - The resulting design uses the `ui-design-system` discipline for token layering and mobile-first templates.
 - The new frontend hierarchy exposes the major vendored llama-swap operator surfaces without flattening them into one undifferentiated nav list.
+
+## Coverage Gate
+
+- [x] Addendum scope is grounded in the locked base plan and effective inputs
+- [x] Concrete implementation slices or constraints are recorded in the addendum body
+- [x] Focused validation expectations or follow-on receipt obligations are captured
+
+Coverage: PASS
+
+## Approval Gate
+
+- [x] The plan addendum names the concrete repair or expansion scope
+- [x] Sequencing or dependency constraints are explicit where needed
+- [x] The addendum is ready to guide paired implementation and validation receipts
+
+Approval: PASS
+

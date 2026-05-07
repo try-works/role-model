@@ -1,12 +1,22 @@
 Run: `/.recursive/run/14-router-runtime-ui-foundation/`
 Phase: `02 To-Be Plan`
-Status: `DRAFT`
+Status: `LOCKED`
+LockedAt: `2026-05-07T11:33:32Z`
+LockHash: `09f0df2f43e6e9cddf7aa7eda6d484f832fdc8a04355b522aa4b116dd533051f`
 Addendum: `03`
 Inputs:
 - `/.recursive/run/14-router-runtime-ui-foundation/addenda/01.5-root-cause.kimi-browser-oauth.addendum-03.md`
 Outputs:
 - `/.recursive/run/14-router-runtime-ui-foundation/addenda/02-to-be-plan.kimi-browser-oauth.addendum-03.md`
 Scope note: This addendum plans the Kimi Code OAuth UX repair after run-14 closeout.
+
+## TODO
+
+- [x] Record the scope expansion or repair without rewriting the locked base plan
+- [x] Map the required product or architecture changes into concrete implementation slices
+- [x] Capture sequencing, constraints, and focused validation expectations
+- [x] Complete Coverage Gate checklist
+- [x] Complete Approval Gate checklist
 
 ## Root Cause Reference
 
@@ -48,3 +58,20 @@ Starting Kimi Code OAuth from `/app/accounts` should:
 ## Traceability
 
 - R3 provider onboarding -> Kimi Code browser-open + auto-poll repair
+
+## Coverage Gate
+
+- [x] Addendum scope is grounded in the locked base plan and effective inputs
+- [x] Concrete implementation slices or constraints are recorded in the addendum body
+- [x] Focused validation expectations or follow-on receipt obligations are captured
+
+Coverage: PASS
+
+## Approval Gate
+
+- [x] The plan addendum names the concrete repair or expansion scope
+- [x] Sequencing or dependency constraints are explicit where needed
+- [x] The addendum is ready to guide paired implementation and validation receipts
+
+Approval: PASS
+

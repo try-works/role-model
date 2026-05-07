@@ -162,6 +162,13 @@ CREATE TABLE IF NOT EXISTS provider_device_auth_sessions (
   created_at_ms INTEGER NOT NULL,
   updated_at_ms INTEGER NOT NULL
 );
+CREATE TABLE IF NOT EXISTS runtime_controller_assignments (
+  scope TEXT PRIMARY KEY,
+  endpoint_id TEXT NOT NULL,
+  model_id TEXT NOT NULL,
+  source_type TEXT NOT NULL,
+  updated_at_ms INTEGER NOT NULL
+);
 `;
 
 export interface SqliteMemoryLocationInput {
@@ -352,6 +359,24 @@ export interface UpsertProviderDeviceAuthSessionInput {
 export interface ReadProviderDeviceAuthSessionInput {
   readonly databasePath: string;
   readonly authRequestId: string;
+}
+
+export interface RuntimeControllerAssignmentRecord {
+  readonly scope: string;
+  readonly endpointId: string;
+  readonly modelId: string;
+  readonly sourceType: string;
+  readonly updatedAtMs?: number;
+}
+
+export interface UpsertRuntimeControllerAssignmentInput {
+  readonly databasePath: string;
+  readonly assignment: RuntimeControllerAssignmentRecord;
+}
+
+export interface ReadRuntimeControllerAssignmentInput {
+  readonly databasePath: string;
+  readonly scope: string;
 }
 
 export interface ExportRuntimeStateInput {
@@ -552,6 +577,24 @@ function mapProviderDeviceAuthSessionRow(
     status: row.status,
     lastError: row.last_error,
     expiresAtMs: row.expires_at_ms,
+  };
+}
+
+function mapRuntimeControllerAssignmentRow(
+  row: {
+    scope: string;
+    endpoint_id: string;
+    model_id: string;
+    source_type: string;
+    updated_at_ms: number;
+  },
+): RuntimeControllerAssignmentRecord {
+  return {
+    scope: row.scope,
+    endpointId: row.endpoint_id,
+    modelId: row.model_id,
+    sourceType: row.source_type,
+    updatedAtMs: row.updated_at_ms,
   };
 }
 
@@ -777,6 +820,44 @@ export function listRuntimeEndpoints(
   database.close();
 
   return rows.map(mapRuntimeEndpointRow);
+}
+
+export function upsertRuntimeControllerAssignment(input: UpsertRuntimeControllerAssignmentInput): void {
+  const database = new DatabaseSync(input.databasePath);
+  database
+    .prepare(
+      "INSERT OR REPLACE INTO runtime_controller_assignments (scope, endpoint_id, model_id, source_type, updated_at_ms) VALUES (?, ?, ?, ?, ?)",
+    )
+    .run(
+      input.assignment.scope,
+      input.assignment.endpointId,
+      input.assignment.modelId,
+      input.assignment.sourceType,
+      Date.now(),
+    );
+  database.close();
+}
+
+export function readRuntimeControllerAssignment(
+  input: ReadRuntimeControllerAssignmentInput,
+): RuntimeControllerAssignmentRecord | null {
+  const database = new DatabaseSync(input.databasePath);
+  const row = database
+    .prepare(
+      "SELECT scope, endpoint_id, model_id, source_type, updated_at_ms FROM runtime_controller_assignments WHERE scope = ?",
+    )
+    .get(input.scope) as
+    | {
+        scope: string;
+        endpoint_id: string;
+        model_id: string;
+        source_type: string;
+        updated_at_ms: number;
+      }
+    | undefined;
+  database.close();
+
+  return row ? mapRuntimeControllerAssignmentRow(row) : null;
 }
 
 export function upsertProviderDeviceAuthSession(

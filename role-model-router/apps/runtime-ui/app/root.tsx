@@ -13,7 +13,7 @@ export const links = () => [
   },
   {
     rel: "stylesheet",
-    href: "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap",
+    href: "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap",
   },
 ];
 
@@ -23,6 +23,9 @@ export function Layout({ children }: { children: ReactNode }) {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="color-scheme" content="light dark" />
+        <meta name="theme-color" content="#fafaf9" media="(prefers-color-scheme: light)" />
+        <meta name="theme-color" content="#0c0a09" media="(prefers-color-scheme: dark)" />
         <Meta />
         <Links />
       </head>
@@ -54,9 +57,9 @@ export function ErrorBoundary({ error }: { error: unknown }) {
 
   return (
     <div className="min-h-screen bg-[var(--rm-bg)] p-4">
-      <main className="mx-auto max-w-3xl rounded-none border border-rose-200 bg-white p-8 text-rose-700">
+      <main className="mx-auto max-w-3xl rounded-none border border-[var(--rm-accent)] bg-[var(--rm-surface)] p-8 text-[var(--rm-fg)]">
         <h1 className="text-2xl font-light">{message}</h1>
-        <p className="mt-3">{details}</p>
+        <p className="mt-3 text-[var(--rm-secondary)]">{details}</p>
       </main>
     </div>
   );

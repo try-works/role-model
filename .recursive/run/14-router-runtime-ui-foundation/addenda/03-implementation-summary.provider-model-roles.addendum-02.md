@@ -1,6 +1,8 @@
 Run: `/.recursive/run/14-router-runtime-ui-foundation/`
 Phase: `03 Implementation`
-Status: `DRAFT`
+Status: `LOCKED`
+LockedAt: `2026-05-07T11:35:23Z`
+LockHash: `c67eda73889928aeb1566225d151cc4529436e86444d5688f98530f35a48ca4d`
 Workflow version: `recursive-mode-audit-v1`
 Inputs:
 - `/.recursive/run/14-router-runtime-ui-foundation/03-implementation-summary.md`

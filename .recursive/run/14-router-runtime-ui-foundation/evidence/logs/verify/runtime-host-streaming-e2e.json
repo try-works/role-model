@@ -1,0 +1,22 @@
+{
+  "hostBaseUrl": "http://127.0.0.1:56510",
+  "runtimeStateRoot": "C:\\Users\\erikb\\AppData\\Local\\Temp\\role-model-runtime-host-e2e-4c777cba-8278-4403-9c54-772ec304d44a",
+  "modelsCount": 3,
+  "responsesJsonStatus": 200,
+  "responsesJsonModel": "openai/gpt-4.1-mini-fast",
+  "responsesJsonOutputTypes": [
+    "message",
+    "function_call"
+  ],
+  "chatStreamStatus": 200,
+  "chatStreamContentType": "text/event-stream; charset=utf-8",
+  "chatStreamEndpointId": "openai.personal.primary.us-east-1.fast",
+  "chatStreamHasDone": true,
+  "responsesStreamStatus": 200,
+  "responsesStreamContentType": "text/event-stream; charset=utf-8",
+  "responsesStreamEndpointId": "openai.personal.primary.us-east-1.fast",
+  "responsesStreamHasCreated": true,
+  "responsesStreamHasCompleted": true,
+  "responsesStreamSnippet": "data: {\"type\":\"response.created\",\"response\":{\"id\":\"resp_test_01\",\"created_at\":1778111414,\"model\":\"openai/gpt-4.1-mini-fast\"}}\n\ndata: {\"type\":\"response.output_item.added\",\"output_index\":0,\"item\":{\"type\":\"message\",\"id\":\"msg_resp_test_01\"}}\n\ndata: {\"type\":\"response.output_text.delta\",\"item_id\":\"msg_resp_test_01\",\"output_index\":0,\"delta\":\"OpenAI summary\"}\n\ndata: {\"type\":\"response.output_item.added\",\"o",
+  "chatStreamSnippet": "data: {\"id\":\"chatcmpl-role-model\",\"object\":\"chat.completion.chunk\",\"created\":1778111414,\"model\":\"openai/gpt-4.1-mini-fast\",\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"OpenAI summary\",\"tool_calls\":[{\"id\":\"call_1\",\"type\":\"function\",\"function\":{\"name\":\"lookupRegistry\",\"arguments\":\"{\\\"endpointId\\\":\\\"openai.personal.primary.us-east-1.fast\\\"}\"}}]},\"finish_reason\":null}]}\n\ndata: {\"id\":\"c"
+}

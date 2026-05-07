@@ -44,9 +44,11 @@ import {
   readObservedPerformanceSamples,
   readProviderDeviceAuthSession,
   readRuntimeMaintenancePolicy,
+  readRuntimeControllerAssignment,
   readRuntimeObservationBundle,
   upsertProviderDeviceAuthSession,
   upsertProviderAccount as upsertSqliteProviderAccount,
+  upsertRuntimeControllerAssignment,
   upsertRuntimeEndpoint as upsertSqliteRuntimeEndpoint,
 } from "@role-model-router/sqlite-memory";
 
@@ -81,6 +83,24 @@ interface OpenAIChatCompletionsBody {
   readonly temperature?: number;
 }
 
+interface OpenAIResponsesTool {
+  readonly type: string;
+  readonly name?: string;
+  readonly description?: string;
+  readonly parameters?: Record<string, unknown>;
+}
+
+type OpenAIResponsesInput = string | readonly OpenAIChatCompletionsMessage[];
+
+interface OpenAIResponsesBody {
+  readonly model: string;
+  readonly input: OpenAIResponsesInput;
+  readonly tools?: readonly OpenAIResponsesTool[];
+  readonly stream?: boolean;
+  readonly max_output_tokens?: number;
+  readonly temperature?: number;
+}
+
 export interface BridgeModelRecord {
   readonly id: string;
   readonly object: "model";
@@ -102,6 +122,7 @@ export interface BridgeDownstreamOpenAIProviderConfig {
     readonly health: string;
     readonly models: string;
     readonly chatCompletions: string;
+    readonly responses: string;
   };
   readonly authentication: {
     readonly type: "bearer";
@@ -115,6 +136,14 @@ export interface BridgeDownstreamOpenAIProviderConfig {
     readonly recommendedModel: string | null;
     readonly notes: readonly string[];
   };
+}
+
+export interface BridgeControllerAssignment {
+  readonly scope: "global";
+  readonly endpointId: string;
+  readonly modelId: string;
+  readonly sourceType: "local" | "remote";
+  readonly updatedAtMs?: number;
 }
 
 export interface BridgeExecutionPlan {
@@ -162,6 +191,20 @@ export interface BridgeChatCompletionsExecutionResult {
   };
 }
 
+export interface BridgeResponsesExecutionResult {
+  readonly responseId: string;
+  readonly model: string;
+  readonly endpointId: string;
+  readonly adapterFamily: string;
+  readonly outputText: string;
+  readonly finishReason: string;
+  readonly toolCalls?: readonly BridgeToolCall[];
+  readonly usage: {
+    readonly inputTokens: number;
+    readonly outputTokens: number;
+  };
+}
+
 export interface BridgeToolCall {
   readonly id: string;
   readonly type: "function";
@@ -171,6 +214,15 @@ export interface BridgeToolCall {
   };
 }
 
+type BridgeStreamMetadata = {
+  readonly endpointId: string;
+  readonly adapterFamily: string;
+};
+type BridgeStreamWriter = (
+  chunk: Record<string, unknown>,
+  metadata?: BridgeStreamMetadata,
+) => void | Promise<void>;
+
 export interface StartBridgeServerOptions {
   readonly host: string;
   readonly port: number;
@@ -179,7 +231,17 @@ export interface StartBridgeServerOptions {
   readonly executeChatCompletions: (
     body: OpenAIChatCompletionsBody,
     requestId: string,
+    streamWriter?: BridgeStreamWriter,
   ) => Promise<BridgeChatCompletionsExecutionResult>;
+  readonly executeResponses: (
+    body: OpenAIResponsesBody,
+    requestId: string,
+    streamWriter?: BridgeStreamWriter,
+  ) => Promise<BridgeResponsesExecutionResult>;
+  readonly readVersionInfo?: () => Promise<unknown>;
+  readonly listActivityMetrics?: () => Promise<unknown>;
+  readonly readActivityCapture?: (captureId: number) => Promise<unknown>;
+  readonly readLogs?: () => Promise<string>;
   readonly readRuntimeSummary?: () => Promise<unknown>;
   readonly listProviders?: () => Promise<readonly unknown[]>;
   readonly listRoles?: () => Promise<readonly unknown[]>;
@@ -189,6 +251,8 @@ export interface StartBridgeServerOptions {
   readonly pollProviderDeviceAuthorization?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly activateEndpoint?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly listEndpoints?: () => Promise<readonly unknown[]>;
+  readonly readControllerAssignment?: () => Promise<BridgeControllerAssignment>;
+  readonly updateControllerAssignment?: (body: Record<string, unknown>) => Promise<BridgeControllerAssignment>;
   readonly listRecentRequestObservations?: () => Promise<readonly unknown[]>;
   readonly readRequestObservation?: (requestId: string) => Promise<unknown>;
   readonly readEndpointProfile?: (endpointId: string) => Promise<unknown>;
@@ -199,7 +263,13 @@ export interface RuntimeBridgeBackend {
   executeChatCompletions: (
     body: OpenAIChatCompletionsBody,
     requestId: string,
+    streamWriter?: BridgeStreamWriter,
   ) => Promise<BridgeChatCompletionsExecutionResult>;
+  executeResponses: (
+    body: OpenAIResponsesBody,
+    requestId: string,
+    streamWriter?: BridgeStreamWriter,
+  ) => Promise<BridgeResponsesExecutionResult>;
   readRuntimeSummary(): Promise<{
     lifecycleSummary: EndpointRegistryResult["lifecycleSummary"];
     providerCount: number;
@@ -235,11 +305,20 @@ export interface RuntimeBridgeBackend {
   startProviderDeviceAuthorization(body: Record<string, unknown>): Promise<DeviceAuthorizationStartResult>;
   pollProviderDeviceAuthorization(body: Record<string, unknown>): Promise<DeviceAuthorizationPollResult>;
   activateEndpoint(body: Record<string, unknown>): Promise<Record<string, unknown>>;
+  readControllerAssignment(): Promise<BridgeControllerAssignment>;
+  updateControllerAssignment(body: Record<string, unknown>): Promise<BridgeControllerAssignment>;
   listEndpoints(): Promise<
     readonly {
       endpointId: string;
       modelId: string;
       providerId: string | null;
+      endpointKind: string;
+      servingSource: string;
+      sourceType: "local" | "remote";
+      healthStatus: string;
+      capabilities: readonly string[];
+      toolCallingSupported: boolean;
+      toolCallingStyle: string;
       status: string;
     }[]
   >;
@@ -532,6 +611,22 @@ function toToolDefinition(tool: OpenAIChatCompletionsTool): {
   };
 }
 
+function toResponsesToolDefinition(tool: OpenAIResponsesTool): {
+  readonly name: string;
+  readonly description?: string;
+  readonly inputSchema: Record<string, unknown>;
+} {
+  if (tool.type !== "function" || typeof tool.name !== "string" || !tool.parameters) {
+    throw new Error("Only OpenAI function tools are supported by the runtime host bridge.");
+  }
+
+  return {
+    name: tool.name,
+    description: tool.description,
+    inputSchema: tool.parameters,
+  };
+}
+
 function parseChatCompletionsBody(body: Record<string, unknown>): OpenAIChatCompletionsBody {
   if (typeof body.model !== "string") {
     throw new Error("chat-completions request must include a string model");
@@ -541,6 +636,38 @@ function parseChatCompletionsBody(body: Record<string, unknown>): OpenAIChatComp
   }
 
   return body as unknown as OpenAIChatCompletionsBody;
+}
+
+function toResponsesInputMessages(input: OpenAIResponsesInput): readonly OpenAIChatCompletionsMessage[] {
+  if (typeof input === "string") {
+    return [{ role: "user", content: input }];
+  }
+
+  return input.map((message) => {
+    if (
+      typeof message !== "object" ||
+      message === null ||
+      typeof message.role !== "string" ||
+      typeof message.content !== "string"
+    ) {
+      throw new Error("responses input messages must include string role and content fields");
+    }
+    return {
+      role: message.role,
+      content: message.content,
+    };
+  });
+}
+
+function parseResponsesBody(body: Record<string, unknown>): OpenAIResponsesBody {
+  if (typeof body.model !== "string") {
+    throw new Error("responses request must include a string model");
+  }
+  if (typeof body.input !== "string" && !Array.isArray(body.input)) {
+    throw new Error("responses request must include a string or message-array input");
+  }
+
+  return body as unknown as OpenAIResponsesBody;
 }
 
 export function createModelListResponse(
@@ -618,6 +745,7 @@ export function createDownstreamOpenAIProviderConfig(
       health: `${baseUrl}/healthz`,
       models: `${baseUrl}/v1/models`,
       chatCompletions: `${baseUrl}/v1/chat/completions`,
+      responses: `${baseUrl}/v1/responses`,
     },
     authentication: {
       type: "bearer",
@@ -633,7 +761,7 @@ export function createDownstreamOpenAIProviderConfig(
       notes: [
         "Configure downstream tooling as an OpenAI-compatible provider.",
         "Use GET /v1/models to discover the current model ids.",
-        "Use POST /v1/chat/completions for routed chat inference.",
+        "Use POST /v1/chat/completions or POST /v1/responses for routed inference.",
       ],
     },
   };
@@ -682,6 +810,50 @@ export function mapChatCompletionsRequest(
   };
 }
 
+export function mapResponsesRequest(
+  registry: EndpointRegistryResult,
+  body: OpenAIResponsesBody,
+  requestId: string,
+): BridgeExecutionPlan {
+  const allowEndpoints = registry.endpoints
+    .filter((endpoint) => endpoint.identity.model_id === body.model)
+    .map((endpoint) => endpoint.identity.endpoint_id)
+    .sort(compareText);
+
+  if (allowEndpoints.length === 0) {
+    throw new Error(`No registry endpoints are available for requested model ${body.model}.`);
+  }
+
+  const tools = body.tools?.map(toResponsesToolDefinition);
+  const messages = toResponsesInputMessages(body.input);
+
+  return {
+    routingRequest: {
+      requestId,
+      taskType: "text.chat",
+      requiredCapabilities: ["text.chat"],
+      preferredCapabilities: [],
+      requiredModalities: ["text"],
+      contextTokens: estimateContextTokens(messages, tools?.length ?? 0),
+      needsTools: Boolean(tools?.length),
+      strategy: "balanced",
+      preferLocal: false,
+      allowEndpoints,
+    },
+    executionRequest: {
+      messages,
+      ...(tools?.length ? { tools } : {}),
+      ...(typeof body.stream === "boolean" ? { stream: body.stream } : {}),
+      ...(typeof body.max_output_tokens === "number"
+        ? { maxOutputTokens: body.max_output_tokens }
+        : {}),
+      ...(typeof body.temperature === "number"
+        ? { temperature: body.temperature }
+        : {}),
+    },
+  };
+}
+
 function writeJson(
   response: ServerResponse,
   statusCode: number,
@@ -694,6 +866,17 @@ function writeJson(
     response.setHeader(key, value);
   }
   response.end(`${JSON.stringify(body)}\n`);
+}
+
+function writeText(
+  response: ServerResponse,
+  statusCode: number,
+  body: string,
+  contentType = "text/plain; charset=utf-8",
+): void {
+  response.statusCode = statusCode;
+  response.setHeader("content-type", contentType);
+  response.end(body);
 }
 
 async function readJsonBody(request: IncomingMessage): Promise<Record<string, unknown>> {
@@ -1066,6 +1249,96 @@ function parseProviderResponseBody(rawBody: string): unknown {
   }
 }
 
+async function readProviderStreamTranscript(
+  response: Response,
+  streamWriter: BridgeStreamWriter,
+  metadata: BridgeStreamMetadata,
+): Promise<string> {
+  const reader = response.body?.getReader();
+  if (!reader) {
+    return await response.text();
+  }
+
+  const decoder = new TextDecoder();
+  let transcript = "";
+  let pending = "";
+
+  const flushBlocks = async (flushAll: boolean): Promise<void> => {
+    const parts = pending.split(/\r?\n\r?\n/);
+    const completeBlocks = flushAll ? parts : parts.slice(0, -1);
+    pending = flushAll ? "" : (parts.at(-1) ?? "");
+
+    for (const block of completeBlocks) {
+      const dataLines = block
+        .split(/\r?\n/)
+        .map((line) => line.trim())
+        .filter((line) => line.startsWith("data:"))
+        .map((line) => line.slice("data:".length).trim())
+        .filter((line) => line.length > 0);
+      if (dataLines.length === 0) {
+        continue;
+      }
+
+      const payloadText = dataLines.join("\n");
+      if (payloadText === "[DONE]") {
+        continue;
+      }
+
+      try {
+        await streamWriter(JSON.parse(payloadText) as Record<string, unknown>, metadata);
+      } catch {
+        continue;
+      }
+    }
+  };
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) {
+      const finalChunk = decoder.decode();
+      transcript += finalChunk;
+      pending += finalChunk;
+      await flushBlocks(true);
+      break;
+    }
+    const chunkText = decoder.decode(value, { stream: true });
+    transcript += chunkText;
+    pending += chunkText;
+    await flushBlocks(false);
+  }
+
+  return transcript;
+}
+
+async function replayProviderStreamTranscript(
+  transcript: string,
+  streamWriter: BridgeStreamWriter,
+  metadata: BridgeStreamMetadata,
+): Promise<void> {
+  for (const block of transcript.split(/\r?\n\r?\n/)) {
+    const dataLines = block
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter((line) => line.startsWith("data:"))
+      .map((line) => line.slice("data:".length).trim())
+      .filter((line) => line.length > 0);
+    if (dataLines.length === 0) {
+      continue;
+    }
+
+    const payloadText = dataLines.join("\n");
+    if (payloadText === "[DONE]") {
+      continue;
+    }
+
+    try {
+      await streamWriter(JSON.parse(payloadText) as Record<string, unknown>, metadata);
+    } catch {
+      continue;
+    }
+  }
+}
+
 function summarizeProviderError(status: number, body: unknown): string {
   if (body && typeof body === "object") {
     const record = body as Record<string, unknown>;
@@ -1103,6 +1376,21 @@ function toModelSegment(modelId: string): string {
 
 function createEndpointId(providerAccountId: string, region: string, modelId: string): string {
   return `${providerAccountId}.${sanitizeSegment(region)}.${toModelSegment(modelId)}`;
+}
+
+function toSourceType(
+  endpointKind: "local_engine" | "remote_api" | "browser_engine" | "dispatch_adapter",
+): "local" | "remote" {
+  return endpointKind === "remote_api" ? "remote" : "local";
+}
+
+function toControllerAssignmentFromEndpoint(endpoint: EndpointRegistryResult["endpoints"][number]): BridgeControllerAssignment {
+  return {
+    scope: "global",
+    endpointId: endpoint.identity.endpoint_id,
+    modelId: endpoint.identity.model_id,
+    sourceType: toSourceType(endpoint.identity.endpoint_kind),
+  };
 }
 
 function mergeRegistrySources(
@@ -1165,6 +1453,57 @@ function createChatCompletionsResponse(
   };
 }
 
+function createResponsesOutput(
+  result: BridgeResponsesExecutionResult,
+): ReadonlyArray<Record<string, unknown>> {
+  const output: Record<string, unknown>[] = [
+    {
+      type: "message",
+      id: `msg_${result.responseId}`,
+      role: "assistant",
+      content:
+        result.outputText.length > 0
+          ? [
+              {
+                type: "output_text",
+                text: result.outputText,
+              },
+            ]
+          : [],
+    },
+  ];
+
+  for (const toolCall of result.toolCalls ?? []) {
+    output.push({
+      type: "function_call",
+      id: toolCall.id,
+      call_id: toolCall.id,
+      name: toolCall.function.name,
+      arguments: toolCall.function.arguments,
+    });
+  }
+
+  return output;
+}
+
+function createResponsesResponse(
+  result: BridgeResponsesExecutionResult,
+): Record<string, unknown> {
+  return {
+    id: result.responseId,
+    object: "response",
+    created_at: Math.floor(Date.now() / 1000),
+    status: result.finishReason === "stop" ? "completed" : "incomplete",
+    model: result.model,
+    output: createResponsesOutput(result),
+    usage: {
+      input_tokens: result.usage.inputTokens,
+      output_tokens: result.usage.outputTokens,
+      total_tokens: result.usage.inputTokens + result.usage.outputTokens,
+    },
+  };
+}
+
 function serializeToolCallArguments(value: unknown): string {
   return typeof value === "string" ? value : JSON.stringify(value ?? null);
 }
@@ -1187,13 +1526,180 @@ function toBridgeToolCall(
   };
 }
 
-function createUnsupportedStreamingResponse(): Record<string, unknown> {
-  return {
-    error: {
-      message: "streaming chat completions are not yet supported by the runtime host bridge",
-      type: "invalid_request_error",
-    },
+function createChatCompletionsStreamChunks(
+  result: BridgeChatCompletionsExecutionResult,
+): ReadonlyArray<Record<string, unknown>> {
+  const created = Math.floor(Date.now() / 1000);
+  const baseChunk = {
+    id: "chatcmpl-role-model",
+    object: "chat.completion.chunk",
+    created,
+    model: result.model,
   };
+
+  return [
+    {
+      ...baseChunk,
+      choices: [
+        {
+          index: 0,
+          delta: {
+            role: "assistant",
+            ...(result.outputText.length > 0 ? { content: result.outputText } : {}),
+            ...(result.toolCalls?.length ? { tool_calls: result.toolCalls } : {}),
+          },
+          finish_reason: null,
+        },
+      ],
+    },
+    {
+      ...baseChunk,
+      choices: [
+        {
+          index: 0,
+          delta: {},
+          finish_reason: result.finishReason,
+        },
+      ],
+    },
+  ];
+}
+
+function createResponsesStreamChunks(
+  result: BridgeResponsesExecutionResult,
+): ReadonlyArray<Record<string, unknown>> {
+  const messageId = `msg_${result.responseId}`;
+  const createdAt = Math.floor(Date.now() / 1000);
+  const chunks: Record<string, unknown>[] = [
+    {
+      type: "response.created",
+      response: {
+        id: result.responseId,
+        created_at: createdAt,
+        model: result.model,
+      },
+    },
+    {
+      type: "response.output_item.added",
+      output_index: 0,
+      item: {
+        type: "message",
+        id: messageId,
+      },
+    },
+  ];
+
+  if (result.outputText.length > 0) {
+    chunks.push({
+      type: "response.output_text.delta",
+      item_id: messageId,
+      output_index: 0,
+      delta: result.outputText,
+    });
+  }
+
+  for (const [index, toolCall] of (result.toolCalls ?? []).entries()) {
+    const outputIndex = index + 1;
+    chunks.push({
+      type: "response.output_item.added",
+      output_index: outputIndex,
+      item: {
+        type: "function_call",
+        id: toolCall.id,
+        call_id: toolCall.id,
+        name: toolCall.function.name,
+        arguments: "",
+      },
+    });
+    chunks.push({
+      type: "response.function_call_arguments.delta",
+      item_id: toolCall.id,
+      output_index: outputIndex,
+      delta: toolCall.function.arguments,
+    });
+    chunks.push({
+      type: "response.output_item.done",
+      output_index: outputIndex,
+      item: {
+        type: "function_call",
+        id: toolCall.id,
+        call_id: toolCall.id,
+        name: toolCall.function.name,
+        arguments: toolCall.function.arguments,
+        status: "completed",
+      },
+    });
+  }
+
+  chunks.push({
+    type: result.finishReason === "stop" ? "response.completed" : "response.incomplete",
+    response: {
+      id: result.responseId,
+      usage: {
+        input_tokens: result.usage.inputTokens,
+        output_tokens: result.usage.outputTokens,
+      },
+      ...(result.finishReason === "stop"
+        ? {}
+        : {
+            incomplete_details: {
+              reason: result.finishReason,
+            },
+          }),
+    },
+  });
+
+  return chunks;
+}
+
+function parseStreamPayloads(rawTranscript: string): readonly Record<string, unknown>[] {
+  const payloads: Record<string, unknown>[] = [];
+  for (const block of rawTranscript.split(/\r?\n\r?\n/)) {
+    const dataLines = block
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter((line) => line.startsWith("data:"))
+      .map((line) => line.slice("data:".length).trim())
+      .filter((line) => line.length > 0 && line !== "[DONE]");
+    if (dataLines.length === 0) {
+      continue;
+    }
+    try {
+      payloads.push(JSON.parse(dataLines.join("\n")) as Record<string, unknown>);
+    } catch {
+      continue;
+    }
+  }
+  return payloads;
+}
+
+function extractResponseId(responseBody: unknown): string | undefined {
+  if (
+    typeof responseBody === "object" &&
+    responseBody !== null &&
+    "id" in responseBody &&
+    typeof responseBody.id === "string"
+  ) {
+    return responseBody.id;
+  }
+
+  if (typeof responseBody !== "string") {
+    return undefined;
+  }
+
+  for (const payload of parseStreamPayloads(responseBody)) {
+    if (
+      payload.type === "response.created" &&
+      typeof payload.response === "object" &&
+      payload.response !== null &&
+      "id" in payload.response &&
+      typeof payload.response.id === "string"
+    ) {
+      return payload.response.id;
+    }
+  }
+
+  return undefined;
 }
 
 function createRequestHandler(options: StartBridgeServerOptions) {
@@ -1210,6 +1716,21 @@ function createRequestHandler(options: StartBridgeServerOptions) {
       return;
     }
 
+    if (request.method === "GET" && url.pathname === "/health") {
+      writeText(response, 200, "OK");
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/ui") {
+      writeText(
+        response,
+        200,
+        '<!doctype html><html><body><ul><li><a href="/logs">/logs</a></li><li><a href="/api/version">/api/version</a></li><li><a href="/api/metrics">/api/metrics</a></li></ul></body></html>',
+        "text/html; charset=utf-8",
+      );
+      return;
+    }
+
     const registry = options.getRegistry?.() ?? options.registry;
 
     if (request.method === "GET" && url.pathname === "/v1/models") {
@@ -1222,11 +1743,114 @@ function createRequestHandler(options: StartBridgeServerOptions) {
       const body = await readJsonBody(request);
       const parsedBody = parseChatCompletionsBody(body);
       if (parsedBody.stream) {
-        writeJson(response, 400, createUnsupportedStreamingResponse());
+        let wroteStreamChunk = false;
+        const pendingChunks: string[] = [];
+        const streamWriter: BridgeStreamWriter = async (chunk, metadata) => {
+          const serializedChunk = `data: ${JSON.stringify(chunk)}\n\n`;
+          if (!wroteStreamChunk) {
+            if (!metadata) {
+              pendingChunks.push(serializedChunk);
+              return;
+            }
+            response.writeHead(200, {
+              "content-type": "text/event-stream; charset=utf-8",
+              "cache-control": "no-cache, no-transform",
+              connection: "keep-alive",
+              "x-role-model-endpoint-id": metadata.endpointId,
+              "x-role-model-adapter-family": metadata.adapterFamily,
+            });
+            wroteStreamChunk = true;
+            for (const pendingChunk of pendingChunks) {
+              response.write(pendingChunk);
+            }
+            pendingChunks.length = 0;
+          }
+          response.write(serializedChunk);
+        };
+        const result = await options.executeChatCompletions(parsedBody, requestId, streamWriter);
+        if (!wroteStreamChunk) {
+          response.writeHead(200, {
+            "content-type": "text/event-stream; charset=utf-8",
+            "cache-control": "no-cache, no-transform",
+            connection: "keep-alive",
+            "x-role-model-endpoint-id": result.endpointId,
+            "x-role-model-adapter-family": result.adapterFamily,
+          });
+          if (pendingChunks.length > 0) {
+            for (const pendingChunk of pendingChunks) {
+              response.write(pendingChunk);
+            }
+          } else {
+            for (const chunk of createChatCompletionsStreamChunks(result)) {
+              response.write(`data: ${JSON.stringify(chunk)}\n\n`);
+            }
+          }
+        }
+        response.write("data: [DONE]\n\n");
+        response.end();
         return;
       }
       const result = await options.executeChatCompletions(parsedBody, requestId);
       writeJson(response, 200, createChatCompletionsResponse(result), {
+        "x-role-model-endpoint-id": result.endpointId,
+        "x-role-model-adapter-family": result.adapterFamily,
+      });
+      return;
+    }
+
+    if (request.method === "POST" && url.pathname === "/v1/responses") {
+      const requestId = request.headers["x-request-id"]?.toString() ?? "req-runtime-host-bridge";
+      const body = await readJsonBody(request);
+      const parsedBody = parseResponsesBody(body);
+      if (parsedBody.stream) {
+        let wroteStreamChunk = false;
+        const pendingChunks: string[] = [];
+        const streamWriter: BridgeStreamWriter = async (chunk, metadata) => {
+          const serializedChunk = `data: ${JSON.stringify(chunk)}\n\n`;
+          if (!wroteStreamChunk) {
+            if (!metadata) {
+              pendingChunks.push(serializedChunk);
+              return;
+            }
+            response.writeHead(200, {
+              "content-type": "text/event-stream; charset=utf-8",
+              "cache-control": "no-cache, no-transform",
+              connection: "keep-alive",
+              "x-role-model-endpoint-id": metadata.endpointId,
+              "x-role-model-adapter-family": metadata.adapterFamily,
+            });
+            wroteStreamChunk = true;
+            for (const pendingChunk of pendingChunks) {
+              response.write(pendingChunk);
+            }
+            pendingChunks.length = 0;
+          }
+          response.write(serializedChunk);
+        };
+        const result = await options.executeResponses(parsedBody, requestId, streamWriter);
+        if (!wroteStreamChunk) {
+          response.writeHead(200, {
+            "content-type": "text/event-stream; charset=utf-8",
+            "cache-control": "no-cache, no-transform",
+            connection: "keep-alive",
+            "x-role-model-endpoint-id": result.endpointId,
+            "x-role-model-adapter-family": result.adapterFamily,
+          });
+          if (pendingChunks.length > 0) {
+            for (const pendingChunk of pendingChunks) {
+              response.write(pendingChunk);
+            }
+          } else {
+            for (const chunk of createResponsesStreamChunks(result)) {
+              response.write(`data: ${JSON.stringify(chunk)}\n\n`);
+            }
+          }
+        }
+        response.end();
+        return;
+      }
+      const result = await options.executeResponses(parsedBody, requestId);
+      writeJson(response, 200, createResponsesResponse(result), {
         "x-role-model-endpoint-id": result.endpointId,
         "x-role-model-adapter-family": result.adapterFamily,
       });
@@ -1239,6 +1863,50 @@ function createRequestHandler(options: StartBridgeServerOptions) {
         return;
       }
       writeJson(response, 200, await options.readRuntimeSummary());
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/version") {
+      if (!options.readVersionInfo) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.readVersionInfo());
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/metrics") {
+      if (!options.listActivityMetrics) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.listActivityMetrics());
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname.startsWith("/api/captures/")) {
+      if (!options.readActivityCapture) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      const captureId = Number.parseInt(url.pathname.slice("/api/captures/".length), 10);
+      const capture = Number.isFinite(captureId)
+        ? await options.readActivityCapture(captureId)
+        : null;
+      if (!capture) {
+        writeJson(response, 404, { error: "capture not found" });
+        return;
+      }
+      writeJson(response, 200, capture);
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/logs") {
+      if (!options.readLogs) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeText(response, 200, await options.readLogs());
       return;
     }
 
@@ -1281,6 +1949,31 @@ function createRequestHandler(options: StartBridgeServerOptions) {
         return;
       }
       writeJson(response, 200, await options.listAccounts());
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/role-model/controller") {
+      if (!options.readControllerAssignment) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.readControllerAssignment());
+      return;
+    }
+
+    if (request.method === "PATCH" && url.pathname === "/api/role-model/controller") {
+      if (!options.updateControllerAssignment) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+
+      try {
+        writeJson(response, 200, await options.updateControllerAssignment(await readJsonBody(request)));
+      } catch (error) {
+        writeJson(response, 400, {
+          error: error instanceof Error ? error.message : "controller assignment update failed",
+        });
+      }
       return;
     }
 
@@ -1584,10 +2277,225 @@ export async function createRuntimeBridgeBackend(
   });
 
   const captures = await loadResponseCaptures(options.repoRoot, captureFixtureMap);
-  const toolRegistry = await createRuntimeToolRegistry(options.repoRoot, registry);
+  const toolRegistry = await createRuntimeToolRegistry(options.repoRoot, currentRegistry);
   const modelsById = new Map(normalizedCatalog.models.map((model) => [model.modelId, model]));
-  const toolRegistry = await createRuntimeToolRegistry(options.repoRoot, registry);
-  const modelsById = new Map(normalizedCatalog.models.map((model) => [model.modelId, model]));
+  const getRegistryEndpoint = (endpointId: string): EndpointRegistryResult["endpoints"][number] | undefined =>
+    currentRegistry.endpoints.find((endpoint) => endpoint.identity.endpoint_id === endpointId);
+  const getDefaultControllerAssignment = (): BridgeControllerAssignment => {
+    const defaultEndpoint = getRegistryEndpoint(routingModel.endpointId);
+    if (!defaultEndpoint) {
+      throw new Error(`Routing controller endpoint ${routingModel.endpointId} is not present in the runtime registry.`);
+    }
+    return toControllerAssignmentFromEndpoint(defaultEndpoint);
+  };
+  const readPersistedControllerAssignment = () =>
+    readRuntimeControllerAssignment({
+      databasePath: initialization.databasePath,
+      scope: "global",
+    });
+  const executeBridgePlan = async (
+    plan: BridgeExecutionPlan,
+    requestId: string,
+    streamRequested: boolean | undefined,
+    streamWriter?: BridgeStreamWriter,
+  ) => {
+    let streamedChunkCount = 0;
+    const trackedStreamWriter: BridgeStreamWriter | undefined = streamWriter
+      ? async (chunk, metadata) => {
+          streamedChunkCount += 1;
+          await streamWriter(chunk, metadata);
+        }
+      : undefined;
+    const routed = routeRuntimeRequest({
+      request: plan.routingRequest,
+      registry: currentRegistry,
+      observedProfilesByEndpointId,
+      envelope,
+      retrievalReceipt,
+      roleDefinitions: runtimeRoles.roleDefinitions,
+      taskDefinitions: roleTaskFixture.taskDefinitions,
+      roleBindings: buildRuntimeRoleBindings(
+        roleTaskFixture.roleBindings ?? [],
+        runtimeEndpoints,
+        currentAccounts,
+        currentRegistry,
+        runtimeRoles.roleDefinitions,
+      ),
+      routingModel,
+    });
+    const execution = await executeLiveRoutedRequest({
+      routeResult: routed,
+      catalog: normalizedCatalog,
+      accounts: currentAccounts,
+      registry: currentRegistry,
+      registrySources: getCurrentRegistrySources(),
+      executionRequest: plan.executionRequest as RuntimeExecutionRequest,
+      adapters: [
+        createOpenAIProviderAdapter(),
+        createOpenAIProviderAdapter("ai-sdk-openai-compatible"),
+        createAnthropicProviderAdapter(),
+      ],
+      executeProviderRequest: async ({
+        target,
+        requestCapture,
+      }: {
+        target: ResolvedExecutionTarget;
+        requestCapture: ProviderRequestCapture;
+      }) => {
+        if (!shouldUseLiveProviderExecution(target)) {
+          const capture = captures.byEndpointId[target.endpointId];
+          if (!capture) {
+            throw new Error(`No response capture is configured for endpoint ${target.endpointId}.`);
+          }
+          return {
+            providerFamily: target.adapterFamily,
+            endpointId: target.endpointId,
+            statusCode: 200,
+            body: capture.body,
+          };
+        }
+
+        const credentialValue = await resolveCredentialValue(
+          options.runtimeStateRoot,
+          options.scopeId,
+          target,
+          providerPresets,
+          networkFetcher,
+          deviceId,
+        );
+        const performRequest = async (resolvedCredentialValue: string) =>
+          networkFetcher(requestCapture.url, {
+            method: "POST",
+            headers: {
+              "content-type": "application/json",
+              ...(shouldUseLiveProviderExecution(target) ? createDeviceHeaders(deviceId) : {}),
+              ...applyCredentialToHeaders(requestCapture.headers, resolvedCredentialValue),
+            },
+            body: JSON.stringify(requestCapture.body),
+          });
+        let response = await performRequest(credentialValue);
+        if (
+          (response.status === 401 || response.status === 403) &&
+          target.account?.credentialRef.backend === "local-encrypted-file"
+        ) {
+          const refreshedCredentialValue = await refreshOauthAccessToken(
+            options.runtimeStateRoot,
+            options.scopeId,
+            target,
+            providerPresets,
+            networkFetcher,
+            deviceId,
+          );
+          response = await performRequest(refreshedCredentialValue);
+        }
+        if (!response.ok) {
+          const rawBody = await response.text();
+          const parsedBody = parseProviderResponseBody(rawBody);
+          throw new Error(summarizeProviderError(response.status, parsedBody));
+        }
+        if (trackedStreamWriter && requestCapture.body.stream === true) {
+          const rawBody = await readProviderStreamTranscript(response, trackedStreamWriter, {
+            endpointId: target.endpointId,
+            adapterFamily: target.adapterFamily,
+          });
+          if (!rawBody.includes("data:")) {
+            return {
+              providerFamily: target.adapterFamily,
+              endpointId: target.endpointId,
+              statusCode: response.status,
+              body: parseProviderResponseBody(rawBody),
+            };
+          }
+          return {
+            providerFamily: target.adapterFamily,
+            endpointId: target.endpointId,
+            statusCode: response.status,
+            body: rawBody,
+          };
+        }
+        const rawBody = await response.text();
+        const parsedBody = parseProviderResponseBody(rawBody);
+        return {
+          providerFamily: target.adapterFamily,
+          endpointId: target.endpointId,
+          statusCode: response.status,
+          body: parsedBody,
+        };
+      },
+    });
+    if (
+      trackedStreamWriter &&
+      streamRequested === true &&
+      streamedChunkCount === 0 &&
+      typeof execution.responseCapture.body === "string" &&
+      execution.responseCapture.body.includes("data:")
+    ) {
+      await replayProviderStreamTranscript(execution.responseCapture.body, trackedStreamWriter, {
+        endpointId: execution.target.endpointId,
+        adapterFamily: execution.target.adapterFamily,
+      });
+    }
+    const toolExecutionResult =
+      execution.normalized.toolCalls.length > 0
+        ? await executeToolCalls(toolRegistry, {
+            requestId,
+            toolCalls: execution.normalized.toolCalls,
+          })
+        : {
+            executions: [],
+            diagnostics: [],
+          };
+    const providerAccount = currentAccounts.find(
+      (account) => account.providerAccountId === execution.target.providerAccountId,
+    );
+    const bundle = createRuntimeObservationBundle({
+      decision: routed.decision,
+      routingDiagnostics: routed.routingDiagnostics,
+      retrievalReceipt: {
+        receiptId: retrievalReceipt.receiptId,
+        summary: retrievalReceipt.summary,
+      },
+      contextEnvelope: {
+        conversationId: envelope.conversationId,
+        latestHandoffId: envelope.latestHandoff?.handoffId ?? null,
+        estimatedTokenCount: envelope.estimatedTokenCount,
+      },
+      execution,
+      priorSamples: [
+        ...(observabilityHistory.byEndpointId[routed.decision.chosen_endpoint_id] ?? []),
+        ...readObservedPerformanceSamples({
+          databasePath: initialization.databasePath,
+          endpointId: routed.decision.chosen_endpoint_id,
+        }),
+      ],
+      maintenancePolicy: readRuntimeMaintenancePolicy({
+        databasePath: initialization.databasePath,
+      }),
+      capturePolicy: observabilityPolicy,
+      tooling: {
+        executions: toolExecutionResult.executions,
+      },
+      ...(providerAccount
+        ? {
+            accountState: {
+              providerAccountId: providerAccount.providerAccountId,
+              status: providerAccount.status,
+              healthStatus: providerAccount.healthStatus,
+              rotationState: providerAccount.rotationState,
+            },
+          }
+        : {}),
+    });
+    persistRuntimeObservationBundle({
+      databasePath: initialization.databasePath,
+      observation: bundle,
+    });
+
+    return {
+      execution,
+      toolExecutionResult,
+    };
+  };
 
   return {
     get registry(): EndpointRegistryResult {
@@ -1596,160 +2504,15 @@ export async function createRuntimeBridgeBackend(
     async executeChatCompletions(
       body: OpenAIChatCompletionsBody,
       requestId: string,
+      streamWriter?: BridgeStreamWriter,
     ): Promise<BridgeChatCompletionsExecutionResult> {
       const plan = mapChatCompletionsRequest(currentRegistry, body, requestId);
-      const routed = routeRuntimeRequest({
-        request: plan.routingRequest,
-        registry: currentRegistry,
-        observedProfilesByEndpointId,
-        envelope,
-        retrievalReceipt,
-        roleDefinitions: runtimeRoles.roleDefinitions,
-        taskDefinitions: roleTaskFixture.taskDefinitions,
-        roleBindings: buildRuntimeRoleBindings(
-          roleTaskFixture.roleBindings ?? [],
-          runtimeEndpoints,
-          currentAccounts,
-          currentRegistry,
-          runtimeRoles.roleDefinitions,
-        ),
-        routingModel,
-      });
-      const execution = await executeLiveRoutedRequest({
-        routeResult: routed,
-        catalog: normalizedCatalog,
-        accounts: currentAccounts,
-        registry: currentRegistry,
-        registrySources: getCurrentRegistrySources(),
-        executionRequest: plan.executionRequest as RuntimeExecutionRequest,
-        adapters: [
-          createOpenAIProviderAdapter(),
-          createOpenAIProviderAdapter("ai-sdk-openai-compatible"),
-          createAnthropicProviderAdapter(),
-        ],
-        executeProviderRequest: async ({
-          target,
-          requestCapture,
-        }: {
-          target: ResolvedExecutionTarget;
-          requestCapture: ProviderRequestCapture;
-        }) => {
-          if (!shouldUseLiveProviderExecution(target)) {
-            const capture = captures.byEndpointId[target.endpointId];
-            if (!capture) {
-              throw new Error(`No response capture is configured for endpoint ${target.endpointId}.`);
-            }
-            return {
-              providerFamily: target.adapterFamily,
-              endpointId: target.endpointId,
-              statusCode: 200,
-              body: capture.body,
-            };
-          }
-
-          const credentialValue = await resolveCredentialValue(
-            options.runtimeStateRoot,
-            options.scopeId,
-            target,
-            providerPresets,
-            networkFetcher,
-            deviceId,
-          );
-          const performRequest = async (resolvedCredentialValue: string) =>
-            networkFetcher(requestCapture.url, {
-              method: "POST",
-              headers: {
-                "content-type": "application/json",
-                ...(shouldUseLiveProviderExecution(target) ? createDeviceHeaders(deviceId) : {}),
-                ...applyCredentialToHeaders(requestCapture.headers, resolvedCredentialValue),
-              },
-              body: JSON.stringify(requestCapture.body),
-            });
-          let response = await performRequest(credentialValue);
-          let rawBody = await response.text();
-          let parsedBody = parseProviderResponseBody(rawBody);
-          if (
-            (response.status === 401 || response.status === 403) &&
-            target.account?.credentialRef.backend === "local-encrypted-file"
-          ) {
-            const refreshedCredentialValue = await refreshOauthAccessToken(
-              options.runtimeStateRoot,
-              options.scopeId,
-              target,
-              providerPresets,
-              networkFetcher,
-              deviceId,
-            );
-            response = await performRequest(refreshedCredentialValue);
-            rawBody = await response.text();
-            parsedBody = parseProviderResponseBody(rawBody);
-          }
-          if (!response.ok) {
-            throw new Error(summarizeProviderError(response.status, parsedBody));
-          }
-          return {
-            providerFamily: target.adapterFamily,
-            endpointId: target.endpointId,
-            statusCode: response.status,
-            body: parsedBody,
-          };
-        },
-      });
-      const toolExecutionResult =
-        execution.normalized.toolCalls.length > 0
-          ? await executeToolCalls(toolRegistry, {
-              requestId,
-              toolCalls: execution.normalized.toolCalls,
-            })
-          : {
-              executions: [],
-              diagnostics: [],
-            };
-      const providerAccount = currentAccounts.find(
-        (account) => account.providerAccountId === execution.target.providerAccountId,
+      const { execution, toolExecutionResult } = await executeBridgePlan(
+        plan,
+        requestId,
+        body.stream,
+        streamWriter,
       );
-      const bundle = createRuntimeObservationBundle({
-        decision: routed.decision,
-        routingDiagnostics: routed.routingDiagnostics,
-        retrievalReceipt: {
-          receiptId: retrievalReceipt.receiptId,
-          summary: retrievalReceipt.summary,
-        },
-        contextEnvelope: {
-          conversationId: envelope.conversationId,
-          latestHandoffId: envelope.latestHandoff?.handoffId ?? null,
-          estimatedTokenCount: envelope.estimatedTokenCount,
-        },
-        execution,
-        priorSamples: [
-          ...(observabilityHistory.byEndpointId[routed.decision.chosen_endpoint_id] ?? []),
-          ...readObservedPerformanceSamples({
-            databasePath: initialization.databasePath,
-            endpointId: routed.decision.chosen_endpoint_id,
-          }),
-        ],
-        maintenancePolicy: readRuntimeMaintenancePolicy({
-          databasePath: initialization.databasePath,
-        }),
-        capturePolicy: observabilityPolicy,
-        tooling: {
-          executions: toolExecutionResult.executions,
-        },
-        ...(providerAccount
-          ? {
-              accountState: {
-                providerAccountId: providerAccount.providerAccountId,
-                status: providerAccount.status,
-                healthStatus: providerAccount.healthStatus,
-                rotationState: providerAccount.rotationState,
-              },
-            }
-          : {}),
-      });
-      persistRuntimeObservationBundle({
-        databasePath: initialization.databasePath,
-        observation: bundle,
-      });
 
       return {
         model: execution.target.modelId,
@@ -1767,6 +2530,34 @@ export async function createRuntimeBridgeBackend(
         ...(toolExecutionResult.executions.length
           ? {
               toolExecutions: toolExecutionResult.executions,
+            }
+          : {}),
+        usage: {
+          inputTokens: execution.normalized.usage.inputTokens,
+          outputTokens: execution.normalized.usage.outputTokens,
+        },
+      };
+    },
+    async executeResponses(
+      body: OpenAIResponsesBody,
+      requestId: string,
+      streamWriter?: BridgeStreamWriter,
+    ): Promise<BridgeResponsesExecutionResult> {
+      const plan = mapResponsesRequest(currentRegistry, body, requestId);
+      const { execution } = await executeBridgePlan(plan, requestId, body.stream, streamWriter);
+
+      return {
+        responseId: extractResponseId(execution.responseCapture.body) ?? "resp-role-model",
+        model: execution.target.modelId,
+        endpointId: execution.target.endpointId,
+        adapterFamily: execution.target.adapterFamily,
+        outputText: execution.normalized.outputText,
+        finishReason: execution.normalized.finishReason,
+        ...(execution.normalized.toolCalls.length
+          ? {
+              toolCalls: execution.normalized.toolCalls.map((toolCall, index) =>
+                toBridgeToolCall(toolCall, index),
+              ),
             }
           : {}),
         usage: {
@@ -2134,12 +2925,49 @@ export async function createRuntimeBridgeBackend(
         status: "active",
       };
     },
+    async readControllerAssignment(): Promise<BridgeControllerAssignment> {
+      const persisted = readPersistedControllerAssignment();
+      if (persisted) {
+        return {
+          scope: "global",
+          endpointId: persisted.endpointId,
+          modelId: persisted.modelId,
+          sourceType: persisted.sourceType === "remote" ? "remote" : "local",
+          updatedAtMs: persisted.updatedAtMs,
+        };
+      }
+      return getDefaultControllerAssignment();
+    },
+    async updateControllerAssignment(body: Record<string, unknown>): Promise<BridgeControllerAssignment> {
+      const endpointId = readRequiredString(body, "endpointId", "updateControllerAssignment");
+      const endpoint = getRegistryEndpoint(endpointId);
+      if (!endpoint) {
+        throw new Error(`Endpoint ${endpointId} is not present in the runtime registry.`);
+      }
+
+      const assignment = {
+        ...toControllerAssignmentFromEndpoint(endpoint),
+        updatedAtMs: Date.now(),
+      } satisfies BridgeControllerAssignment;
+      upsertRuntimeControllerAssignment({
+        databasePath: initialization.databasePath,
+        assignment,
+      });
+      return assignment;
+    },
     async listEndpoints(): Promise<
       readonly {
         endpointId: string;
         modelId: string;
         providerId: string | null;
         roleIds: readonly string[];
+        endpointKind: string;
+        servingSource: string;
+        sourceType: "local" | "remote";
+        healthStatus: string;
+        capabilities: readonly string[];
+        toolCallingSupported: boolean;
+        toolCallingStyle: string;
         status: string;
       }[]
     > {
@@ -2148,6 +2976,15 @@ export async function createRuntimeBridgeBackend(
         modelId: endpoint.identity.model_id,
         providerId: modelsById.get(endpoint.identity.model_id)?.providerId ?? null,
         roleIds: getEndpointRoleIds(endpoint.identity.endpoint_id, runtimeEndpoints, currentAccounts),
+        endpointKind: endpoint.identity.endpoint_kind,
+        servingSource: endpoint.identity.serving_source,
+        sourceType: toSourceType(endpoint.identity.endpoint_kind),
+        healthStatus:
+          runtimeEndpoints.find((entry) => entry.endpointId === endpoint.identity.endpoint_id)?.healthStatus ??
+          (endpoint.deniedByPolicy ? "policy-blocked" : "healthy"),
+        capabilities: endpoint.declared.capabilities,
+        toolCallingSupported: endpoint.declared.tool_calling.supported,
+        toolCallingStyle: endpoint.declared.tool_calling.style,
         status: endpoint.status,
       }));
     },

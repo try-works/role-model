@@ -425,16 +425,17 @@
   - `07-state-update.md`
   - `08-memory-impact.md`
 - What changed:
-  - added `/role-model-router/apps/runtime-ui/` as the first repo-owned runtime operator shell with the `/app`, `/app/providers`, `/app/accounts`, `/app/endpoints`, `/app/workbench`, `/app/requests`, `/app/requests/:requestId`, and `/app/runtime` route family
-  - extended `/role-model-router/apps/runtime-host-bridge/` plus `/role-model-router/packages/sqlite-memory/` with runtime summary, providers, accounts, account upsert, and endpoint-list control-plane seams plus the repo-local `runtime:validate-ui` command
-  - widened the normalized catalog and provider-account layer for the first Moonshot/Kimi provider slice, including role-model-owned provider presets, explicit supported auth modes, and an honest backend-limited Kimi device-OAuth surface
+  - expanded `/role-model-router/apps/runtime-ui/` into a hierarchical runtime operator shell with `Overview`, `Studio`, `Control`, `Observe`, `Integrations`, and `System` sections, including controller/models surfaces, live activity/log drill-ins, vendor-backed studio workspaces, and upstream/downstream/system pages
+  - extended `/role-model-router/apps/runtime-host-bridge/` plus `/role-model-router/packages/sqlite-memory/` with runtime summary, providers, accounts, account upsert, endpoint-list, and controller/config seams plus the repo-local `runtime:validate-ui` command and the split host/bridge runtime topology used by the live shell
+  - widened the runtime/provider surface with Moonshot/Kimi onboarding, design-system/live-page alignment, and OpenAI-compatible downstream streaming for `/v1/chat/completions` and `/v1/responses`, including provider-openai transcript normalization and host-path E2E evidence through the bridged `/v1/*` surface
 - Why:
   - to establish the first repo-owned operator UI and provider/account onboarding flow on top of the existing single-host runtime baseline instead of continuing to rely only on vendored host surfaces
 - How:
-  - implemented strict RED/GREEN TDD across catalog, provider-account, SQLite, host-bridge, and runtime-ui helper slices, accepted delegated Phase 3.5 code review, captured a repaired Phase 4 validation matrix with accurate exit codes, and confirmed route-level browser QA against the live host bridge and UI dev server
+  - implemented strict RED/GREEN TDD across catalog, provider-account, SQLite, host-bridge, runtime-ui, design-system, and streaming slices; accepted delegated Phase 3.5 code review; captured focused validation greens plus live host-path streaming E2E; and confirmed route-level browser QA against the live host bridge and UI dev server
 - What was not done:
-  - no full Kimi device-OAuth token lifecycle productization, automatic endpoint materialization from account upserts, broader public/docs/catalog shell work, or run-13 MCP/tool-extension closeout was added here
+  - no full Kimi device-OAuth token lifecycle productization, automatic endpoint materialization from account upserts, broader public/docs/catalog shell work, or Kimi-specific `/v1/responses` routing promotion beyond its current chat-completions-shaped contract was added here
 - Known issues / follow-ups:
   - Kimi Code remains intentionally `backend-limited`; the UI exposes real OAuth metadata but does not claim durable token exchange/refresh is complete
+  - Kimi remains modeled on the current `openai.chat.completions` path, so the live `/v1/responses` streaming proof currently targets the OpenAI-shaped routed model path rather than `moonshotai/kimi-k2.5`
   - the endpoint registry remained on the current three-entry runtime baseline after the manual-QA Moonshot account upsert, so account save does not yet auto-materialize new endpoint rows in this run
   - the broader root `build` and `test` commands still fail on the inherited schema-tools/Biome generated-types path
