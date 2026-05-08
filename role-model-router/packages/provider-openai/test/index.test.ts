@@ -94,6 +94,10 @@ describe("OpenAI provider adapter", () => {
         providerFamily: "ai-sdk-openai",
         endpointId: target.endpointId,
         statusCode: 200,
+        vendorMetadata: {
+          vendorId: "litellm",
+          latencyMs: 87,
+        },
         body: {
           id: "resp_test_01",
           output: [
@@ -141,6 +145,7 @@ describe("OpenAI provider adapter", () => {
       cacheReadTokens: 0,
       cacheWriteTokens: 0,
     });
+    expect(normalized.latencyMs).toBe(87);
     expect(normalized.promptCache.used).toBe(false);
   });
 

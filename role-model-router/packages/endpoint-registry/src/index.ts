@@ -1,4 +1,8 @@
-import type { NormalizedCatalog, NormalizedCatalogModel } from "@role-model-router/catalog";
+import type {
+  NormalizedCatalog,
+  NormalizedCatalogModel,
+  RequestShapeHints,
+} from "@role-model-router/catalog";
 import type { ProviderAccountRecord } from "@role-model-router/provider-account";
 
 export type RegistryEndpointKind = "local_engine" | "remote_api" | "browser_engine" | "dispatch_adapter";
@@ -69,6 +73,7 @@ export interface CloudRegistrySource {
   readonly servingSource: string;
   readonly lifecycleState: EndpointCandidate["status"];
   readonly healthStatus: string;
+  readonly requestShapeHints?: RequestShapeHints | null;
 }
 
 export interface LocalRegistrySource {

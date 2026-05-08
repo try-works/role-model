@@ -1,0 +1,14 @@
+
+> @role-model-router/provider-litellm@0.0.0 test D:\DEV\role-model\.worktrees\15-unified-vendor-execution\role-model-router\packages\provider-litellm
+> vitest run test/index.test.ts
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/15-unified-vendor-execution/role-model-router/packages/provider-litellm[39m
+
+ [32mΓ£ô[39m test/index.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 5[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m   Start at [22m 21:18:15
+[2m   Duration [22m 699ms[2m (transform 110ms, setup 0ms, collect 130ms, tests 5ms, environment 0ms, prepare 160ms)[22m
+

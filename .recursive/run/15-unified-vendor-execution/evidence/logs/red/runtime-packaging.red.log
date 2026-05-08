@@ -1,0 +1,12 @@
+Command:
+corepack pnpm --filter @role-model-router/runtime-host-bridge exec vitest run test/executable.test.ts test/runtime-assets.test.ts
+
+Observed RED summary:
+- `test/runtime-assets.test.ts` failed because `../src/runtime-assets.js` did not exist.
+- `test/executable.test.ts` failed because the root manifest had no `runtime:package-sea` command.
+- `test/executable.test.ts` also exposed the earlier packaging assumption that runtime dependency `dist` outputs were missing on a fresh worktree.
+
+Representative failure output:
+- `Cannot find module '../src/runtime-assets.js' imported from .../test/runtime-assets.test.ts`
+- `expected { ... } to match object { 'runtime:package-sea': Any<String> }`
+- `ENOENT: no such file or directory, access '...\\role-model-router\\packages\\adapter-execution\\dist\\index.js'`

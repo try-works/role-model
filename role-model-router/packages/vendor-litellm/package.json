@@ -1,0 +1,23 @@
+{
+  "name": "@role-model-router/vendor-litellm",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "runtime": "./dist/index.js",
+      "default": "./src/index.ts"
+    }
+  },
+  "files": ["src", "dist"],
+  "dependencies": {
+    "@role-model-router/process-supervisor": "workspace:*",
+    "@role-model-router/vendor-abstraction": "workspace:*",
+    "yaml": "^2.8.1"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  }
+}

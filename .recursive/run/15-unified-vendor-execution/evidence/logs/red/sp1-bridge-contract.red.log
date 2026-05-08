@@ -1,0 +1,80 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/15-unified-vendor-execution/role-model-router/apps/runtime-host-bridge[39m
+
+(node:27964) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [31mΓ¥»[39m test/index.test.ts [2m([22m[2m17 tests[22m[2m | [22m[31m2 failed[39m[2m | [22m[33m15 skipped[39m[2m)[22m[33m 4156[2mms[22m[39m
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mcreates a stable model-list response grouped by model id
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mmaps a chat-completions request into role-model routing and execution inputs
+[31m   [31m├ù[31m runtime-host-bridge[2m > [22mserves health and model-list endpoints[39m[32m 56[2mms[22m[39m
+[31m     ΓåÆ expected { status: 'ok' } to deeply equal { status: 'healthy', ΓÇª(3) }[39m
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mserves preserved host observability and vendor-facing utility endpoints
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mserves runtime control-plane summary, provider, account, and endpoint routes
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mserves downstream OpenAI-compatible provider metadata for consumer apps
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mserves chat-completions responses with role-model execution metadata
+[31m   [31m├ù[31m runtime-host-bridge[2m > [22mserves OpenAI-compatible SSE events for streaming responses requests[39m[33m 4098[2mms[22m[39m
+[31m     ΓåÆ expected null to be 'decision-responses-stream-123' // Object.is equality[39m
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22msurfaces tool calls on chat-completions responses when the backend returns them
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mstreams provider deltas through the bridge as they arrive
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mcreates a runtime backend that executes chat-completions through the real routing and adapter path
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mcreates a runtime backend that persists structured request and endpoint inspection state
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mcreates a runtime backend that exposes provider presets, runtime summary, and account upserts
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mexecutes chat-completions through an activated Kimi Code endpoint
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mcreates a runtime backend that executes responses through the real routing and adapter path
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mserves structured request and endpoint inspection routes through the bridge server
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mresolves bridge server options from explicit values and defaults
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 2 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/index.test.ts > runtime-host-bridge > serves health and model-list endpoints
+AssertionError: expected { status: 'ok' } to deeply equal { status: 'healthy', ΓÇª(3) }
+
+- Expected
++ Received
+
+  {
+-   "executionMode": "decision_only",
+-   "inactiveVendors": [],
+-   "status": "healthy",
+-   "vendors": {},
++   "status": "ok",
+  }
+
+ Γ¥» test/index.test.ts:265:43
+    263|       const healthResponse = await fetch(`http://127.0.0.1:${server.poΓÇª
+    264|       expect(healthResponse.status).toBe(200);
+    265|       expect(await healthResponse.json()).toEqual({
+       |                                           ^
+    266|         status: "healthy",
+    267|         executionMode: "decision_only",
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/2]ΓÄ»
+
+ FAIL  test/index.test.ts > runtime-host-bridge > serves OpenAI-compatible SSE events for streaming responses requests
+AssertionError: expected null to be 'decision-responses-stream-123' // Object.is equality
+
+- Expected: 
+"decision-responses-stream-123"
+
++ Received: 
+null
+
+ Γ¥» test/index.test.ts:962:72
+    960|       );
+    961|       expect(response.headers.get("x-role-model-adapter-family")).toBeΓÇª
+    962|       expect(response.headers.get("x-role-model-routing-decision-id"))ΓÇª
+       |                                                                        ^
+    963|       expect(response.headers.get("x-role-model-cost-usd")).toBe("0.00ΓÇª
+    964| 
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[2/2]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m2 failed[39m[22m[2m | [22m[33m15 skipped[39m[90m (17)[39m
+[2m   Start at [22m 03:51:05
+[2m   Duration [22m 5.29s[2m (transform 376ms, setup 0ms, collect 538ms, tests 4.16s, environment 0ms, prepare 157ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\15-unified-vendor-execution\role-model-router\apps\runtime-host-bridge:
+ΓÇëERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓÇë Command failed with exit code 1: vitest run test/index.test.ts --testNamePattern serves health and model-list endpoints|serves OpenAI-compatible responses for chat completions requests|serves OpenAI-compatible SSE events for streaming responses requests|serves OpenAI-compatible SSE events for streaming chat completions requests

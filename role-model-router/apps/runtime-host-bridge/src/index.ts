@@ -10,12 +10,14 @@ import type { EndpointRegistryResult } from "@role-model-router/endpoint-registr
 import { buildEndpointRegistry, type RegistrySources } from "@role-model-router/endpoint-registry";
 import { routeRuntimeRequest, type RoutingModelSelection } from "@role-model-router/protocol-routing";
 import { createAnthropicProviderAdapter } from "@role-model-router/provider-anthropic";
+import { createLiteLLMProviderAdapter } from "@role-model-router/provider-litellm";
 import {
   createMcpConnectorDefinitions,
   type DeclaredMcpConnectorConfig,
 } from "@role-model-router/provider-mcp";
 import { type ProviderAccountRecord, validateProviderAccounts } from "@role-model-router/provider-account";
 import { createOpenAIProviderAdapter } from "@role-model-router/provider-openai";
+import { ProcessSupervisor } from "@role-model-router/process-supervisor";
 import { createRetrievalReceipt } from "@role-model-router/retrieval-receipt";
 import type { ObservedPerformanceSample } from "@role-model-router/profile-aggregator";
 import {
@@ -59,6 +61,17 @@ import {
   type RuntimeExecutionRequest,
   type RuntimeResponseCaptureMap,
 } from "@role-model-router/adapter-execution";
+import type { VendorRuntime, VendorRuntimeStatus } from "@role-model-router/vendor-abstraction";
+import { createVendorNotConfiguredError } from "@role-model-router/vendor-abstraction";
+import { startLlamaSwapVendor } from "@role-model-router/vendor-llama-swap";
+import { startLiteLLMVendor } from "@role-model-router/vendor-litellm";
+
+import {
+  parseUnifiedRuntimeConfigText,
+  type UnifiedRuntimeConfig,
+  type UnifiedRuntimeExecutionMode,
+} from "./unified-runtime-config.js";
+import { resolveLlamaSwapCommand } from "./runtime-assets.js";
 
 interface OpenAIChatCompletionsTool {
   readonly type: string;
@@ -181,6 +194,8 @@ export interface BridgeChatCompletionsExecutionResult {
   readonly model: string;
   readonly endpointId: string;
   readonly adapterFamily: string;
+  readonly routingDecisionId?: string;
+  readonly vendorId?: string;
   readonly outputText: string;
   readonly finishReason: string;
   readonly toolCalls?: readonly BridgeToolCall[];
@@ -189,6 +204,10 @@ export interface BridgeChatCompletionsExecutionResult {
     readonly inputTokens: number;
     readonly outputTokens: number;
   };
+  readonly vendorMetadata?: {
+    readonly costUsd?: number;
+    readonly cacheUsed?: boolean;
+  };
 }
 
 export interface BridgeResponsesExecutionResult {
@@ -196,12 +215,18 @@ export interface BridgeResponsesExecutionResult {
   readonly model: string;
   readonly endpointId: string;
   readonly adapterFamily: string;
+  readonly routingDecisionId?: string;
+  readonly vendorId?: string;
   readonly outputText: string;
   readonly finishReason: string;
   readonly toolCalls?: readonly BridgeToolCall[];
   readonly usage: {
     readonly inputTokens: number;
     readonly outputTokens: number;
+  };
+  readonly vendorMetadata?: {
+    readonly costUsd?: number;
+    readonly cacheUsed?: boolean;
   };
 }
 
@@ -217,6 +242,7 @@ export interface BridgeToolCall {
 type BridgeStreamMetadata = {
   readonly endpointId: string;
   readonly adapterFamily: string;
+  readonly routingDecisionId?: string;
 };
 type BridgeStreamWriter = (
   chunk: Record<string, unknown>,
@@ -243,6 +269,7 @@ export interface StartBridgeServerOptions {
   readonly readActivityCapture?: (captureId: number) => Promise<unknown>;
   readonly readLogs?: () => Promise<string>;
   readonly readRuntimeSummary?: () => Promise<unknown>;
+  readonly readHealthStatus?: () => Promise<unknown>;
   readonly listProviders?: () => Promise<readonly unknown[]>;
   readonly listRoles?: () => Promise<readonly unknown[]>;
   readonly listAccounts?: () => Promise<readonly unknown[]>;
@@ -275,6 +302,17 @@ export interface RuntimeBridgeBackend {
     providerCount: number;
     accountCount: number;
     endpointCount: number;
+    executionMode: UnifiedRuntimeExecutionMode;
+    unifiedConfig: {
+      enabled: boolean;
+      path: string | null;
+    };
+  }>;
+  readHealthStatus(): Promise<{
+    status: "healthy" | "degraded";
+    executionMode: UnifiedRuntimeExecutionMode;
+    vendors: Record<string, VendorRuntimeStatus>;
+    inactiveVendors: string[];
   }>;
   listProviders(): Promise<
     readonly {
@@ -329,14 +367,16 @@ export interface RuntimeBridgeBackend {
   readEndpointProfile(endpointId: string): Promise<{
     endpointId: string;
     latestProfile: ReturnType<typeof readLatestObservedProfile>;
-    recentSamples: readonly ObservedPerformanceSample[];
-  }>;
+      recentSamples: readonly ObservedPerformanceSample[];
+    }>;
+  shutdown(): Promise<void>;
 }
 
 export interface CreateRuntimeBridgeBackendOptions {
   readonly repoRoot: string;
   readonly runtimeStateRoot: string;
   readonly scopeId: string;
+  readonly unifiedRuntimeConfigPath?: string;
   readonly networkFetcher?: typeof fetch;
 }
 
@@ -346,6 +386,200 @@ export interface BridgeServerOptions {
   readonly repoRoot: string;
   readonly runtimeStateRoot: string;
   readonly scopeId: string;
+  readonly unifiedRuntimeConfigPath?: string;
+}
+
+class BridgeHttpError extends Error {
+  readonly statusCode: number;
+
+  readonly body: Record<string, unknown>;
+
+  constructor(statusCode: number, body: Record<string, unknown>) {
+    super(typeof body.error === "object" && body.error && "message" in body.error ? String(body.error.message) : "bridge request failed");
+    this.statusCode = statusCode;
+    this.body = body;
+  }
+}
+
+function slugify(value: string): string {
+  return value.replace(/[^a-zA-Z0-9]+/g, "-").replace(/^-+|-+$/g, "").toLowerCase();
+}
+
+function resolveEnvCredentialRef(value: string | null, fallbackName: string): ProviderAccountRecord["credentialRef"] {
+  if (!value) {
+    return {
+      backend: "env",
+      ref: fallbackName,
+    };
+  }
+  const envMatch = /^\$\{([A-Z0-9_]+)\}$/.exec(value.trim());
+  return {
+    backend: "env",
+    ref: envMatch?.[1] ?? value,
+  };
+}
+
+function createVendorError(vendorId: string, message: string): BridgeHttpError {
+  const normalized = createVendorNotConfiguredError(vendorId, message);
+  return new BridgeHttpError(503, {
+    error: {
+      message: normalized.rawMessage,
+      type: normalized.errorClass,
+      code: normalized.errorClass,
+    },
+  });
+}
+
+function createInactiveVendorStatus(vendorId: string): VendorRuntimeStatus {
+  return {
+    vendorId,
+    healthStatus: "inactive",
+  };
+}
+
+function summarizeHealthStatus(
+  vendors: Record<string, VendorRuntimeStatus>,
+): {
+  status: "healthy" | "degraded";
+  inactiveVendors: string[];
+} {
+  const vendorStatuses = Object.values(vendors);
+  const inactiveVendors = vendorStatuses
+    .filter((vendor) => vendor.healthStatus === "inactive")
+    .map((vendor) => vendor.vendorId);
+  const hasUnhealthyVendor = vendorStatuses.some(
+    (vendor) => vendor.healthStatus !== "healthy" && vendor.healthStatus !== "inactive",
+  );
+  return {
+    status: hasUnhealthyVendor ? "degraded" : "healthy",
+    inactiveVendors,
+  };
+}
+
+function formatCostUsd(costUsd: number | undefined): string | undefined {
+  if (typeof costUsd !== "number" || !Number.isFinite(costUsd)) {
+    return undefined;
+  }
+  return costUsd.toString();
+}
+
+function createExecutionHeaders(input: {
+  readonly endpointId: string;
+  readonly adapterFamily: string;
+  readonly routingDecisionId?: string;
+  readonly costUsd?: number;
+}): Record<string, string> {
+  return {
+    "x-role-model-endpoint-id": input.endpointId,
+    "x-role-model-adapter-family": input.adapterFamily,
+    ...(input.routingDecisionId ? { "x-role-model-routing-decision-id": input.routingDecisionId } : {}),
+    ...(formatCostUsd(input.costUsd) ? { "x-role-model-cost-usd": formatCostUsd(input.costUsd)! } : {}),
+  };
+}
+
+function createUnifiedLocalSources(config: UnifiedRuntimeConfig): RegistrySources["local"] {
+  return config.llamaSwap.models.map((model) => ({
+    endpointId: `llama-swap.local.${slugify(model.modelId)}`,
+    providerKind: "ai-sdk-openai-compatible",
+    providerId: "llama-swap",
+    modelId: model.modelId,
+    capabilities: ["text.chat", "tools.function_calling"],
+    modalities: ["text"],
+    endpointKind: "local-openai-compatible",
+    servingSource: "vendor-llama-swap",
+    lifecycleState: "active",
+    hostClass: "localhost",
+    deviceClass: "localhost",
+    region: "local",
+    orgScope: "runtime-config",
+  }));
+}
+
+function createUnifiedCloudSources(
+  config: UnifiedRuntimeConfig,
+): RegistrySources["cloud"] {
+  return config.liteLLM.providers.flatMap((provider) =>
+    provider.modelMappings.map((mapping) => ({
+      endpointId: `${provider.providerId}.litellm.global.${slugify(mapping.modelId)}`,
+      providerAccountId: `${provider.providerId}.litellm`,
+      modelId: mapping.modelId,
+      region: "global",
+      endpointKind: "remote-openai-compatible",
+      servingSource: "vendor-litellm",
+      lifecycleState: "active",
+      healthStatus: "healthy",
+      requestShapeHints: {
+        providerShape: "openai.chat.completions",
+        bodyKeys: ["messages", "max_tokens"],
+        headerKeys: ["authorization"],
+      },
+    })),
+  );
+}
+
+function createUnifiedProviderAccounts(
+  catalog: NormalizedCatalog,
+  config: UnifiedRuntimeConfig,
+  liteLLMBaseUrl: string | null,
+): ProviderAccountRecord[] {
+  if (!liteLLMBaseUrl) {
+    return [];
+  }
+  return config.liteLLM.providers.map((providerConfig) => {
+    const provider = catalog.providers.find((entry) => entry.providerId === providerConfig.providerId);
+    if (!provider) {
+      throw new Error(`Unified runtime provider ${providerConfig.providerId} is not present in the normalized catalog.`);
+    }
+    const authMode =
+      provider.supportedAuthModes.find((candidate) => candidate === "api-key-static") ??
+      provider.supportedAuthModes[0] ??
+      "api-key-static";
+    return {
+      providerAccountId: `${providerConfig.providerId}.litellm`,
+      providerId: provider.providerId,
+      providerKind: provider.providerKind,
+      orgScope: "runtime-config",
+      accountScope: "runtime-config",
+      credentialRef: resolveEnvCredentialRef(providerConfig.apiKeyRef, `${provider.providerId.toUpperCase()}_API_KEY`),
+      authMode: authMode as ProviderAccountRecord["authMode"],
+      regionPolicy: {
+        mode: "prefer",
+        regions: ["global"],
+      },
+      baseUrlOverride: liteLLMBaseUrl,
+      allowedModels: providerConfig.modelMappings.map((mapping) => mapping.modelId),
+      deniedModels: [],
+      entitlementTags: ["chat"],
+      budgetPolicyRef: "budget.runtime-config",
+      quotaPolicyRef: "quota.runtime-config",
+      status: "active",
+      healthStatus: "healthy",
+      rotationState: "stable",
+    };
+  });
+}
+
+function applyUnifiedLiteLLMAdapterFamilyOverrides(
+  catalog: NormalizedCatalog,
+  config: UnifiedRuntimeConfig | null,
+): NormalizedCatalog {
+  if (!config?.liteLLM.enabled) {
+    return catalog;
+  }
+
+  const providerIds = new Set(config.liteLLM.providers.map((provider) => provider.providerId));
+  if (providerIds.size === 0) {
+    return catalog;
+  }
+
+  return {
+    ...catalog,
+    providers: catalog.providers.map((provider) =>
+      providerIds.has(provider.providerId)
+        ? { ...provider, adapterFamily: "litellm-proxy" }
+        : provider,
+    ),
+  };
 }
 
 interface CaptureFixtureMap {
@@ -1712,7 +1946,18 @@ function createRequestHandler(options: StartBridgeServerOptions) {
     const url = new URL(request.url, `http://${options.host}`);
 
     if (request.method === "GET" && url.pathname === "/healthz") {
-      writeJson(response, 200, { status: "ok" });
+      writeJson(
+        response,
+        200,
+        options.readHealthStatus
+          ? await options.readHealthStatus()
+          : {
+              status: "healthy",
+              executionMode: "decision_only",
+              vendors: {},
+              inactiveVendors: [],
+            },
+      );
       return;
     }
 
@@ -1756,8 +2001,11 @@ function createRequestHandler(options: StartBridgeServerOptions) {
               "content-type": "text/event-stream; charset=utf-8",
               "cache-control": "no-cache, no-transform",
               connection: "keep-alive",
-              "x-role-model-endpoint-id": metadata.endpointId,
-              "x-role-model-adapter-family": metadata.adapterFamily,
+              ...createExecutionHeaders({
+                endpointId: metadata.endpointId,
+                adapterFamily: metadata.adapterFamily,
+                routingDecisionId: metadata.routingDecisionId,
+              }),
             });
             wroteStreamChunk = true;
             for (const pendingChunk of pendingChunks) {
@@ -1773,8 +2021,12 @@ function createRequestHandler(options: StartBridgeServerOptions) {
             "content-type": "text/event-stream; charset=utf-8",
             "cache-control": "no-cache, no-transform",
             connection: "keep-alive",
-            "x-role-model-endpoint-id": result.endpointId,
-            "x-role-model-adapter-family": result.adapterFamily,
+            ...createExecutionHeaders({
+              endpointId: result.endpointId,
+              adapterFamily: result.adapterFamily,
+              routingDecisionId: result.routingDecisionId,
+              costUsd: result.vendorMetadata?.costUsd,
+            }),
           });
           if (pendingChunks.length > 0) {
             for (const pendingChunk of pendingChunks) {
@@ -1791,10 +2043,12 @@ function createRequestHandler(options: StartBridgeServerOptions) {
         return;
       }
       const result = await options.executeChatCompletions(parsedBody, requestId);
-      writeJson(response, 200, createChatCompletionsResponse(result), {
-        "x-role-model-endpoint-id": result.endpointId,
-        "x-role-model-adapter-family": result.adapterFamily,
-      });
+      writeJson(response, 200, createChatCompletionsResponse(result), createExecutionHeaders({
+        endpointId: result.endpointId,
+        adapterFamily: result.adapterFamily,
+        routingDecisionId: result.routingDecisionId,
+        costUsd: result.vendorMetadata?.costUsd,
+      }));
       return;
     }
 
@@ -1816,8 +2070,11 @@ function createRequestHandler(options: StartBridgeServerOptions) {
               "content-type": "text/event-stream; charset=utf-8",
               "cache-control": "no-cache, no-transform",
               connection: "keep-alive",
-              "x-role-model-endpoint-id": metadata.endpointId,
-              "x-role-model-adapter-family": metadata.adapterFamily,
+              ...createExecutionHeaders({
+                endpointId: metadata.endpointId,
+                adapterFamily: metadata.adapterFamily,
+                routingDecisionId: metadata.routingDecisionId,
+              }),
             });
             wroteStreamChunk = true;
             for (const pendingChunk of pendingChunks) {
@@ -1833,8 +2090,12 @@ function createRequestHandler(options: StartBridgeServerOptions) {
             "content-type": "text/event-stream; charset=utf-8",
             "cache-control": "no-cache, no-transform",
             connection: "keep-alive",
-            "x-role-model-endpoint-id": result.endpointId,
-            "x-role-model-adapter-family": result.adapterFamily,
+            ...createExecutionHeaders({
+              endpointId: result.endpointId,
+              adapterFamily: result.adapterFamily,
+              routingDecisionId: result.routingDecisionId,
+              costUsd: result.vendorMetadata?.costUsd,
+            }),
           });
           if (pendingChunks.length > 0) {
             for (const pendingChunk of pendingChunks) {
@@ -1850,10 +2111,12 @@ function createRequestHandler(options: StartBridgeServerOptions) {
         return;
       }
       const result = await options.executeResponses(parsedBody, requestId);
-      writeJson(response, 200, createResponsesResponse(result), {
-        "x-role-model-endpoint-id": result.endpointId,
-        "x-role-model-adapter-family": result.adapterFamily,
-      });
+      writeJson(response, 200, createResponsesResponse(result), createExecutionHeaders({
+        endpointId: result.endpointId,
+        adapterFamily: result.adapterFamily,
+        routingDecisionId: result.routingDecisionId,
+        costUsd: result.vendorMetadata?.costUsd,
+      }));
       return;
     }
 
@@ -2117,6 +2380,10 @@ export async function startBridgeServer(
 ): Promise<BridgeServer> {
   const server = createServer((request, response) => {
     void createRequestHandler(options)(request, response).catch((error: unknown) => {
+      if (error instanceof BridgeHttpError) {
+        writeJson(response, error.statusCode, error.body);
+        return;
+      }
       writeJson(response, 500, {
         error:
           error instanceof Error ? error.message : "runtime host bridge request failed",
@@ -2145,15 +2412,22 @@ export async function createRuntimeBridgeBackend(
   options: CreateRuntimeBridgeBackendOptions,
 ): Promise<RuntimeBridgeBackend> {
   const networkFetcher = options.networkFetcher ?? fetch;
-  const normalizedCatalog = await readJson<NormalizedCatalog>(
-    path.join(
-      options.repoRoot,
-      "role-model-router",
-      "packages",
-      "catalog",
-      "data",
-      "normalized-catalog.json",
+  const unifiedRuntimeConfig = options.unifiedRuntimeConfigPath
+    ? parseUnifiedRuntimeConfigText(await readFile(options.unifiedRuntimeConfigPath, "utf8"))
+    : null;
+  const supervisor = unifiedRuntimeConfig ? new ProcessSupervisor() : null;
+  const normalizedCatalog = applyUnifiedLiteLLMAdapterFamilyOverrides(
+    await readJson<NormalizedCatalog>(
+      path.join(
+        options.repoRoot,
+        "role-model-router",
+        "packages",
+        "catalog",
+        "data",
+        "normalized-catalog.json",
+      ),
     ),
+    unifiedRuntimeConfig,
   );
   const providerAccountsFixture = await readJson<{ accounts: unknown[] }>(
     path.join(options.repoRoot, "testdata", "router-runtime", "provider-accounts.json"),
@@ -2199,10 +2473,67 @@ export async function createRuntimeBridgeBackend(
   const providerPresets = await readJson<ProviderPresetCatalog>(
     path.join(options.repoRoot, "testdata", "router-runtime", "provider-presets.json"),
   );
+  const resolvedLlamaSwapCommand =
+    unifiedRuntimeConfig?.llamaSwap.enabled && !unifiedRuntimeConfig.llamaSwap.process.command
+      ? await resolveLlamaSwapCommand({
+          repoRoot: options.repoRoot,
+          runtimeStateRoot: options.runtimeStateRoot,
+        })
+      : null;
 
+  const llamaSwapVendor =
+    unifiedRuntimeConfig?.llamaSwap.enabled && supervisor
+      ? await startLlamaSwapVendor({
+          repoRoot: options.repoRoot,
+          runtimeStateRoot: options.runtimeStateRoot,
+          supervisor,
+          config: {
+            models: unifiedRuntimeConfig.llamaSwap.models,
+            command: unifiedRuntimeConfig.llamaSwap.process.command ?? resolvedLlamaSwapCommand ?? undefined,
+            args: unifiedRuntimeConfig.llamaSwap.process.args,
+            env: unifiedRuntimeConfig.llamaSwap.process.env,
+            cwd: unifiedRuntimeConfig.llamaSwap.process.cwd ?? undefined,
+            startupTimeoutMs: unifiedRuntimeConfig.llamaSwap.process.startupTimeoutMs ?? undefined,
+          },
+        })
+      : null;
+  const liteLLMVendor =
+    unifiedRuntimeConfig?.liteLLM.enabled && supervisor
+      ? await startLiteLLMVendor({
+          runtimeStateRoot: options.runtimeStateRoot,
+          supervisor,
+          config: {
+            providers: unifiedRuntimeConfig.liteLLM.providers.map((provider) => ({
+              providerId: provider.providerId,
+              apiKeyRef: provider.apiKeyRef,
+              modelMappings: provider.modelMappings,
+            })),
+             command: unifiedRuntimeConfig.liteLLM.process.command ?? undefined,
+             args: unifiedRuntimeConfig.liteLLM.process.args,
+             env: unifiedRuntimeConfig.liteLLM.process.env,
+             cwd: unifiedRuntimeConfig.liteLLM.process.cwd ?? undefined,
+             startupTimeoutMs: unifiedRuntimeConfig.liteLLM.process.startupTimeoutMs ?? undefined,
+           },
+         })
+      : null;
+  const staticRegistrySources: RegistrySources =
+    unifiedRuntimeConfig !== null
+      ? {
+          cloud: createUnifiedCloudSources(unifiedRuntimeConfig),
+          local: createUnifiedLocalSources(unifiedRuntimeConfig),
+        }
+      : registrySources;
+  const unifiedAccounts =
+    unifiedRuntimeConfig !== null
+      ? createUnifiedProviderAccounts(
+          normalizedCatalog,
+          unifiedRuntimeConfig,
+          liteLLMVendor?.readStatus().baseUrl ?? null,
+        )
+      : [];
   const validation = validateProviderAccounts({
     catalog: normalizedCatalog,
-    accounts: providerAccountsFixture.accounts,
+    accounts: unifiedRuntimeConfig !== null ? unifiedAccounts : providerAccountsFixture.accounts,
     allowedRoleIds,
   });
   if (validation.diagnostics.length > 0) {
@@ -2232,7 +2563,7 @@ export async function createRuntimeBridgeBackend(
   let currentAccounts = [...listProviderAccounts({ databasePath: initialization.databasePath })];
   let runtimeEndpoints = [...listRuntimeEndpoints({ databasePath: initialization.databasePath })];
   const getCurrentRegistrySources = (): RegistrySources =>
-    mergeRegistrySources(registrySources, runtimeEndpoints);
+    mergeRegistrySources(staticRegistrySources, runtimeEndpoints);
   let currentRegistry = buildEndpointRegistry({
     catalog: normalizedCatalog,
     accounts: currentAccounts,
@@ -2279,14 +2610,22 @@ export async function createRuntimeBridgeBackend(
   const captures = await loadResponseCaptures(options.repoRoot, captureFixtureMap);
   const toolRegistry = await createRuntimeToolRegistry(options.repoRoot, currentRegistry);
   const modelsById = new Map(normalizedCatalog.models.map((model) => [model.modelId, model]));
+  const vendorRuntimes: Record<string, VendorRuntimeStatus> = {
+    "llama-swap": llamaSwapVendor?.readStatus() ?? createInactiveVendorStatus("llama-swap"),
+    litellm: liteLLMVendor?.readStatus() ?? createInactiveVendorStatus("litellm"),
+  };
   const getRegistryEndpoint = (endpointId: string): EndpointRegistryResult["endpoints"][number] | undefined =>
     currentRegistry.endpoints.find((endpoint) => endpoint.identity.endpoint_id === endpointId);
   const getDefaultControllerAssignment = (): BridgeControllerAssignment => {
     const defaultEndpoint = getRegistryEndpoint(routingModel.endpointId);
-    if (!defaultEndpoint) {
-      throw new Error(`Routing controller endpoint ${routingModel.endpointId} is not present in the runtime registry.`);
+    if (defaultEndpoint) {
+      return toControllerAssignmentFromEndpoint(defaultEndpoint);
     }
-    return toControllerAssignmentFromEndpoint(defaultEndpoint);
+    const fallbackEndpoint = currentRegistry.endpoints[0];
+    if (!fallbackEndpoint) {
+      throw new Error("No runtime endpoints are available for the runtime host bridge.");
+    }
+    return toControllerAssignmentFromEndpoint(fallbackEndpoint);
   };
   const readPersistedControllerAssignment = () =>
     readRuntimeControllerAssignment({
@@ -2323,6 +2662,7 @@ export async function createRuntimeBridgeBackend(
       ),
       routingModel,
     });
+    const routingDecisionId = routed.decision.routing_decision_id;
     const execution = await executeLiveRoutedRequest({
       routeResult: routed,
       catalog: normalizedCatalog,
@@ -2331,6 +2671,9 @@ export async function createRuntimeBridgeBackend(
       registrySources: getCurrentRegistrySources(),
       executionRequest: plan.executionRequest as RuntimeExecutionRequest,
       adapters: [
+        ...(unifiedRuntimeConfig?.liteLLM.enabled
+          ? [createLiteLLMProviderAdapter()]
+          : []),
         createOpenAIProviderAdapter(),
         createOpenAIProviderAdapter("ai-sdk-openai-compatible"),
         createAnthropicProviderAdapter(),
@@ -2338,10 +2681,74 @@ export async function createRuntimeBridgeBackend(
       executeProviderRequest: async ({
         target,
         requestCapture,
+        fallbackModelIds,
       }: {
         target: ResolvedExecutionTarget;
         requestCapture: ProviderRequestCapture;
+        fallbackModelIds?: readonly string[];
       }) => {
+        if (unifiedRuntimeConfig) {
+          if (target.providerAccountId === null) {
+            if (!llamaSwapVendor) {
+              throw createVendorError("llama-swap", "Configure llama_swap.models to enable local execution.");
+            }
+            const result = await llamaSwapVendor.execute({
+              providerFamily: requestCapture.providerFamily,
+              endpointId: requestCapture.endpointId,
+              url: requestCapture.url,
+              headers: requestCapture.headers,
+              body: requestCapture.body,
+            }, trackedStreamWriter && requestCapture.body.stream === true
+              ? {
+                  streamWriter: async (chunk) => {
+                    await trackedStreamWriter(chunk, {
+                      endpointId: target.endpointId,
+                      adapterFamily: target.adapterFamily,
+                      routingDecisionId,
+                    });
+                  },
+                }
+              : undefined);
+            return {
+              providerFamily: target.adapterFamily,
+              endpointId: target.endpointId,
+              statusCode: result.statusCode,
+              body: result.body,
+              vendorMetadata: result.metadata,
+            };
+          }
+          if (!liteLLMVendor) {
+            throw createVendorError("litellm", "Configure litellm_proxy.providers to enable remote execution.");
+          }
+          const result = await liteLLMVendor.execute({
+            providerFamily: requestCapture.providerFamily,
+            endpointId: requestCapture.endpointId,
+            url: requestCapture.url,
+            headers: requestCapture.headers,
+            body: requestCapture.body,
+          }, {
+            ...(trackedStreamWriter && requestCapture.body.stream === true
+              ? {
+                  streamWriter: async (chunk) => {
+                    await trackedStreamWriter(chunk, {
+                      endpointId: target.endpointId,
+                      adapterFamily: target.adapterFamily,
+                      routingDecisionId,
+                    });
+                  },
+                }
+              : {}),
+            ...(fallbackModelIds?.length ? { fallbackModelIds } : {}),
+          });
+          return {
+            providerFamily: target.adapterFamily,
+            endpointId: target.endpointId,
+            statusCode: result.statusCode,
+            body: result.body,
+            vendorMetadata: result.metadata,
+          };
+        }
+
         if (!shouldUseLiveProviderExecution(target)) {
           const capture = captures.byEndpointId[target.endpointId];
           if (!capture) {
@@ -2397,6 +2804,7 @@ export async function createRuntimeBridgeBackend(
           const rawBody = await readProviderStreamTranscript(response, trackedStreamWriter, {
             endpointId: target.endpointId,
             adapterFamily: target.adapterFamily,
+            routingDecisionId,
           });
           if (!rawBody.includes("data:")) {
             return {
@@ -2433,6 +2841,7 @@ export async function createRuntimeBridgeBackend(
       await replayProviderStreamTranscript(execution.responseCapture.body, trackedStreamWriter, {
         endpointId: execution.target.endpointId,
         adapterFamily: execution.target.adapterFamily,
+        routingDecisionId,
       });
     }
     const toolExecutionResult =
@@ -2492,6 +2901,7 @@ export async function createRuntimeBridgeBackend(
     });
 
     return {
+      routingDecisionId,
       execution,
       toolExecutionResult,
     };
@@ -2506,18 +2916,29 @@ export async function createRuntimeBridgeBackend(
       requestId: string,
       streamWriter?: BridgeStreamWriter,
     ): Promise<BridgeChatCompletionsExecutionResult> {
+      if (unifiedRuntimeConfig?.executionMode === "decision_only" && currentRegistry.endpoints.length === 0) {
+        throw createVendorError("runtime", "Configure llama_swap.models or litellm_proxy.providers to enable execution.");
+      }
       const plan = mapChatCompletionsRequest(currentRegistry, body, requestId);
-      const { execution, toolExecutionResult } = await executeBridgePlan(
+      const { execution, toolExecutionResult, routingDecisionId } = await executeBridgePlan(
         plan,
         requestId,
         body.stream,
         streamWriter,
       );
+      const costUsd =
+        execution.normalized.vendorMetadata?.costUsd ?? execution.responseCapture.vendorMetadata?.costUsd;
+      const cacheUsed =
+        execution.normalized.vendorMetadata?.cacheUsed ?? execution.responseCapture.vendorMetadata?.cacheUsed;
 
       return {
         model: execution.target.modelId,
         endpointId: execution.target.endpointId,
         adapterFamily: execution.target.adapterFamily,
+        routingDecisionId,
+        ...(execution.responseCapture.vendorMetadata?.vendorId ?? execution.normalized.vendorMetadata?.vendorId
+          ? { vendorId: execution.responseCapture.vendorMetadata?.vendorId ?? execution.normalized.vendorMetadata?.vendorId }
+          : {}),
         outputText: execution.normalized.outputText,
         finishReason: execution.normalized.finishReason,
         ...(execution.normalized.toolCalls.length
@@ -2536,6 +2957,14 @@ export async function createRuntimeBridgeBackend(
           inputTokens: execution.normalized.usage.inputTokens,
           outputTokens: execution.normalized.usage.outputTokens,
         },
+        ...(typeof costUsd === "number" || typeof cacheUsed === "boolean"
+          ? {
+              vendorMetadata: {
+                ...(typeof costUsd === "number" ? { costUsd } : {}),
+                ...(typeof cacheUsed === "boolean" ? { cacheUsed } : {}),
+              },
+            }
+          : {}),
       };
     },
     async executeResponses(
@@ -2543,14 +2972,25 @@ export async function createRuntimeBridgeBackend(
       requestId: string,
       streamWriter?: BridgeStreamWriter,
     ): Promise<BridgeResponsesExecutionResult> {
+      if (unifiedRuntimeConfig?.executionMode === "decision_only" && currentRegistry.endpoints.length === 0) {
+        throw createVendorError("runtime", "Configure llama_swap.models or litellm_proxy.providers to enable execution.");
+      }
       const plan = mapResponsesRequest(currentRegistry, body, requestId);
-      const { execution } = await executeBridgePlan(plan, requestId, body.stream, streamWriter);
+      const { execution, routingDecisionId } = await executeBridgePlan(plan, requestId, body.stream, streamWriter);
+      const costUsd =
+        execution.normalized.vendorMetadata?.costUsd ?? execution.responseCapture.vendorMetadata?.costUsd;
+      const cacheUsed =
+        execution.normalized.vendorMetadata?.cacheUsed ?? execution.responseCapture.vendorMetadata?.cacheUsed;
 
       return {
         responseId: extractResponseId(execution.responseCapture.body) ?? "resp-role-model",
         model: execution.target.modelId,
         endpointId: execution.target.endpointId,
         adapterFamily: execution.target.adapterFamily,
+        routingDecisionId,
+        ...(execution.responseCapture.vendorMetadata?.vendorId ?? execution.normalized.vendorMetadata?.vendorId
+          ? { vendorId: execution.responseCapture.vendorMetadata?.vendorId ?? execution.normalized.vendorMetadata?.vendorId }
+          : {}),
         outputText: execution.normalized.outputText,
         finishReason: execution.normalized.finishReason,
         ...(execution.normalized.toolCalls.length
@@ -2564,6 +3004,14 @@ export async function createRuntimeBridgeBackend(
           inputTokens: execution.normalized.usage.inputTokens,
           outputTokens: execution.normalized.usage.outputTokens,
         },
+        ...(typeof costUsd === "number" || typeof cacheUsed === "boolean"
+          ? {
+              vendorMetadata: {
+                ...(typeof costUsd === "number" ? { costUsd } : {}),
+                ...(typeof cacheUsed === "boolean" ? { cacheUsed } : {}),
+              },
+            }
+          : {}),
       };
     },
     async readRuntimeSummary(): Promise<{
@@ -2571,12 +3019,40 @@ export async function createRuntimeBridgeBackend(
       providerCount: number;
       accountCount: number;
       endpointCount: number;
+      executionMode: UnifiedRuntimeExecutionMode;
+      unifiedConfig: {
+        enabled: boolean;
+        path: string | null;
+      };
     }> {
       return {
         lifecycleSummary: currentRegistry.lifecycleSummary,
         providerCount: normalizedCatalog.providers.length,
         accountCount: currentAccounts.length,
         endpointCount: currentRegistry.endpoints.length,
+        executionMode: unifiedRuntimeConfig?.executionMode ?? "decision_only",
+        unifiedConfig: {
+          enabled: unifiedRuntimeConfig !== null,
+          path: options.unifiedRuntimeConfigPath ?? null,
+        },
+      };
+    },
+    async readHealthStatus(): Promise<{
+      status: "healthy" | "degraded";
+      executionMode: UnifiedRuntimeExecutionMode;
+      vendors: Record<string, VendorRuntimeStatus>;
+      inactiveVendors: string[];
+    }> {
+      const vendors = {
+        "llama-swap": llamaSwapVendor?.readStatus() ?? createInactiveVendorStatus("llama-swap"),
+        litellm: liteLLMVendor?.readStatus() ?? createInactiveVendorStatus("litellm"),
+      };
+      const summarized = summarizeHealthStatus(vendors);
+      return {
+        status: summarized.status,
+        executionMode: unifiedRuntimeConfig?.executionMode ?? "decision_only",
+        vendors,
+        inactiveVendors: summarized.inactiveVendors,
       };
     },
     async listProviders(): Promise<
@@ -3018,6 +3494,10 @@ export async function createRuntimeBridgeBackend(
         }),
       };
     },
+    async shutdown(): Promise<void> {
+      await Promise.all([llamaSwapVendor?.shutdown(), liteLLMVendor?.shutdown()]);
+      await supervisor?.shutdown();
+    },
   };
 }
 
@@ -3027,6 +3507,7 @@ export function resolveBridgeServerOptions(input: {
   repoRoot?: string;
   runtimeStateRoot?: string;
   scopeId?: string;
+  unifiedRuntimeConfigPath?: string;
 }): BridgeServerOptions {
   if (!input.repoRoot) {
     throw new Error("repoRoot is required for the runtime host bridge.");
@@ -3041,5 +3522,6 @@ export function resolveBridgeServerOptions(input: {
     repoRoot: input.repoRoot,
     runtimeStateRoot: input.runtimeStateRoot,
     scopeId: input.scopeId?.trim() || "runtime-host-bridge",
+    unifiedRuntimeConfigPath: input.unifiedRuntimeConfigPath?.trim() || undefined,
   };
 }

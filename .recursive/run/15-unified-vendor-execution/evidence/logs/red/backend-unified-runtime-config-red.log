@@ -1,0 +1,46 @@
+### corepack pnpm --filter @role-model-router/runtime-host-bridge exec vitest run test/backend-unified-runtime-config.test.ts
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/15-unified-vendor-execution/role-model-router/apps/runtime-host-bridge[39m
+
+(node:39468) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [31mΓ¥»[39m test/backend-unified-runtime-config.test.ts [2m([22m[2m1 test[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 143[2mms[22m[39m
+[31m   [31m├ù[31m runtime-host-bridge unified runtime backend[2m > [22msurfaces the derived execution mode in the runtime summary when a unified config file is provided[39m[32m 142[2mms[22m[39m
+[31m     ΓåÆ expected { lifecycleSummary: { ΓÇª(3) }, ΓÇª(3) } to deeply equal ObjectContaining{ΓÇª}[39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/backend-unified-runtime-config.test.ts > runtime-host-bridge unified runtime backend > surfaces the derived execution mode in the runtime summary when a unified config file is provided
+AssertionError: expected { lifecycleSummary: { ΓÇª(3) }, ΓÇª(3) } to deeply equal ObjectContaining{ΓÇª}
+
+- Expected
++ Received
+
+- ObjectContaining {
+-   "executionMode": "remote_only",
+-   "unifiedConfig": {
+-     "enabled": true,
+-     "path": "C:\\Users\\erikb\\AppData\\Local\\Temp\\role-model-run15-config-rrAVdG\\runtime-config.yaml",
++ {
++   "accountCount": 2,
++   "endpointCount": 3,
++   "lifecycleSummary": {
++     "active": 2,
++     "degraded": 1,
++     "offline": 0,
+    },
++   "providerCount": 3,
+  }
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m   Start at [22m 20:22:35
+[2m   Duration [22m 1.14s[2m (transform 321ms, setup 0ms, collect 391ms, tests 143ms, environment 0ms, prepare 249ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\15-unified-vendor-execution\role-model-router\apps\runtime-host-bridge:
+ΓÇëERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓÇë Command failed with exit code 1: vitest run test/backend-unified-runtime-config.test.ts

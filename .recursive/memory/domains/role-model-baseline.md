@@ -1,6 +1,6 @@
 Type: `domain`
 Status: `CURRENT`
-Scope: `Stable baseline ownership for the repo workspace, canonical protocol tree, shared packages, router family, fixtures, validation surfaces, and the repo-owned runtime operator shell extended through the single-host router-runtime baseline completed in runs 04-14.`
+Scope: `Stable baseline ownership for the repo workspace, canonical protocol tree, shared packages, router family, fixtures, validation surfaces, and the repo-owned runtime/operator baseline extended through unified vendor execution and SEA packaging in runs 04-15.`
 Owns-Paths:
 - `/README.md`
 - `/LICENSE`
@@ -35,8 +35,9 @@ Source-Runs:
 - `12-router-runtime-hardening-operations`
 - `13-router-runtime-mcp-tools-extension`
 - `14-router-runtime-ui-foundation`
+- `15-unified-vendor-execution`
 Validated-At-Commit: `working-tree`
-Last-Validated: `2026-05-06T20:38:27.014+08:00`
+Last-Validated: `2026-05-07T21:20:00.000+08:00`
 Tags:
 - `baseline`
 - `workspace`
@@ -87,6 +88,10 @@ This repository now has a real product baseline rather than only recursive scaff
 - The host bridge now exposes runtime summary, provider list, account list/upsert, endpoint list, and controller/config control-plane routes, and the repo-local `runtime:validate-ui` command proves those operator surfaces against the live runtime baseline
 - The first repo-owned provider-onboarding slice is Moonshot/Kimi-first: Moonshot Open Platform is modeled as a ready API-key path, while Kimi Code remains intentionally backend-limited with real device-OAuth metadata visible in the UI and control plane
 - The bridge and provider-openai stack now support OpenAI-compatible downstream streaming for routed `/v1/chat/completions` and `/v1/responses`; live host-path E2E is green, while Kimi remains on the current chat-completions-shaped contract
+- The runtime now also owns repo-local unified vendor execution through `/role-model-router/packages/process-supervisor/`, `/role-model-router/packages/vendor-abstraction/`, `/role-model-router/packages/vendor-llama-swap/`, `/role-model-router/packages/vendor-litellm/`, and `/role-model-router/packages/provider-litellm/`, while `/role-model-router/apps/runtime-host-bridge/` derives `decision_only`, `local_only`, `remote_only`, and `hybrid` execution modes from unified YAML config and reports unified remote execution as `litellm-proxy`
+- The unified-vendor baseline now includes shared `cacheStatus` metadata, routed fallback-model propagation into LiteLLM `fallbacks`, and additive vendor `healthCheck()` / `executeStream()` compatibility methods for managed llama-swap and LiteLLM vendors
+- The repo-owned validation floor now includes `runtime:validate-vendors`, which proves the decision-only/local-only/remote-only/hybrid execution matrix end to end with managed vendor processes, plus separate live-vendor and browser-backed closeout proof for the final local llama-swap and remote LiteLLM bridge paths
+- The runtime now has a first SEA packaging path through `/role-model-router/sea-config.json`, `/role-model-router/apps/runtime-host-bridge/src/package-sea.ts`, `runtime:package-sea`, `runtime:validate-packaging`, and `/.github/workflows/build-binaries.yml`; the packaged executable embeds platform-aware llama-swap assets and is validated by booting the SEA binary and exercising `/healthz` plus `/v1/models`
 - Provider-account writes remain credential-reference-only; the UI can upsert runtime accounts, but endpoint rows still remain controlled by the existing registry baseline rather than being auto-created by account-save side effects
 - Browser, edge, and native provider families are intentionally scaffold-grade in this baseline
 
@@ -96,7 +101,7 @@ This repository now has a real product baseline rather than only recursive scaff
 - Root workspace scripts now use PATH-independent nested `corepack pnpm ...` invocations so the canonical shell-out entrypoints stay stable even when a child shell does not expose a global pnpm shim
 - GitHub Actions validates this repo from a clean checkout of tracked files only; local Biome parity work should prefer a clean export or tracked-file-targeted checks instead of repo-root sweeps that also traverse nested `.worktrees/`
 - On Windows, CRLF-only worktree churn can make local status noisier than the real Linux CI content diff; use `git diff` to identify the actual files that need formatter commits
-- The repo-local runtime validation floor is the staged command family `runtime:validate-state`, `runtime:validate-registry`, `runtime:validate-routing`, `runtime:validate-adapter`, `runtime:validate-ui`, `runtime:validate-host`, `runtime:validate-observability`, `runtime:validate-operations`, `runtime:validate-tools`, plus `smoke`
+- The repo-local runtime validation floor is the staged command family `runtime:validate-state`, `runtime:validate-registry`, `runtime:validate-routing`, `runtime:validate-adapter`, `runtime:validate-ui`, `runtime:validate-host`, `runtime:validate-vendors`, `runtime:validate-packaging`, `runtime:validate-observability`, `runtime:validate-operations`, `runtime:validate-tools`, plus `smoke`
 - When validating runtime work, treat the focused runtime validators and package tests as the run-owned baseline; broader root `build` and `test` still reproduce the inherited schema-tools/Biome generated-types failure, and vendored proxy/full Go tests on Windows still reproduce the upstream `sleep` PATH assumption
 
 ## Scope Boundary

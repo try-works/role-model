@@ -1,0 +1,49 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/15-unified-vendor-execution/role-model-router/packages/vendor-llama-swap[39m
+
+ [31mΓ¥»[39m test/index.test.ts [2m([22m[2m7 tests[22m[2m | [22m[31m2 failed[39m[2m)[22m[33m 1664[2mms[22m[39m
+   [32mΓ£ô[39m vendor-llama-swap[2m > [22mrenders deterministic llama-swap config from the configured model inventory[32m 8[2mms[22m[39m
+   [32mΓ£ô[39m vendor-llama-swap[2m > [22mrenders real llama-swap launch settings for spawned upstream servers[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m vendor-llama-swap[2m > [22mcopies a repo-owned llama-swap binary into the role-model vendor cache[32m 16[2mms[22m[39m
+   [32mΓ£ô[39m vendor-llama-swap[2m > [22mdoes not export the bridge listen port into provisioned llama-swap process env[32m 28[2mms[22m[39m
+   [32mΓ£ô[39m vendor-llama-swap[2m > [22muses default llama-swap args when unified config does not provide any[32m 11[2mms[22m[39m
+[31m   [31m├ù[31m vendor-llama-swap[2m > [22mstarts a managed llama-swap vendor and executes local openai-compatible requests through it[39m[33m 755[2mms[22m[39m
+[31m     ΓåÆ vendor.healthCheck is not a function[39m
+[31m   [31m├ù[31m vendor-llama-swap[2m > [22mstreams chat-completions deltas through the managed llama-swap vendor[39m[33m 844[2mms[22m[39m
+[31m     ΓåÆ vendor.executeStream is not a function[39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 2 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/index.test.ts > vendor-llama-swap > starts a managed llama-swap vendor and executes local openai-compatible requests through it
+TypeError: vendor.healthCheck is not a function
+ Γ¥» test/index.test.ts:258:25
+    256|       },
+    257|     });
+    258|     expect(await vendor.healthCheck()).toEqual(
+       |                         ^
+    259|       expect.objectContaining({
+    260|         vendorId: "llama-swap",
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/2]ΓÄ»
+
+ FAIL  test/index.test.ts > vendor-llama-swap > streams chat-completions deltas through the managed llama-swap vendor
+TypeError: vendor.executeStream is not a function
+ Γ¥» test/index.test.ts:328:33
+    326|     });
+    327| 
+    328|     const result = await vendor.executeStream(
+       |                                 ^
+    329|       {
+    330|         providerFamily: "ai-sdk-openai-compatible",
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[2/2]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m2 failed[39m[22m[2m | [22m[1m[32m5 passed[39m[22m[90m (7)[39m
+[2m   Start at [22m 07:32:05
+[2m   Duration [22m 3.13s[2m (transform 173ms, setup 0ms, collect 245ms, tests 1.66s, environment 0ms, prepare 318ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\15-unified-vendor-execution\role-model-router\packages\vendor-llama-swap:
+ΓÇëERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓÇë Command failed with exit code 1: vitest run test/index.test.ts

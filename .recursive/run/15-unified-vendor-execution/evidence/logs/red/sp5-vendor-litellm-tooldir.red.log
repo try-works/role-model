@@ -1,0 +1,24 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/15-unified-vendor-execution/role-model-router/packages/vendor-litellm[39m
+
+ [31mΓ¥»[39m test/index.test.ts [2m([22m[2m9 tests[22m[2m | [22m[31m2 failed[39m[2m)[22m[33m 1567[2mms[22m[39m
+   [32mΓ£ô[39m vendor-litellm[2m > [22mrenders LiteLLM provider inventory into a deterministic config document[32m 9[2mms[22m[39m
+   [32mΓ£ô[39m vendor-litellm[2m > [22mrenders advanced litellm params needed for a real proxy-backed upstream[32m 1[2mms[22m[39m
+[31m   [31m├ù[31m vendor-litellm[2m > [22minstalls litellm into a role-model-owned uv tool directory[39m[32m 29[2mms[22m[39m
+[31m     ΓåÆ expected [ 'tool', 'install', ΓÇª(3) ] to deeply equal [ 'tool', 'install', 'litellm[proxy]' ][39m
+[31m   [31m├ù[31m vendor-litellm[2m > [22mprefers uv already on PATH before downloading another copy[39m[32m 13[2mms[22m[39m
+[31m     ΓåÆ expected [ 'tool', 'install', ΓÇª(3) ] to deeply equal [ 'tool', 'install', 'litellm[proxy]' ][39m
+   [32mΓ£ô[39m vendor-litellm[2m > [22muses default litellm args when unified config does not provide any[32m 39[2mms[22m[39m
+   [32mΓ£ô[39m vendor-litellm[2m > [22muses a longer default startup timeout for the real litellm proxy[32m 16[2mms[22m[39m
+   [32mΓ£ô[39m vendor-litellm[2m > [22mforces utf-8 python io for the real litellm proxy process[32m 13[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m vendor-litellm[2m > [22mstarts a managed LiteLLM vendor and captures cost plus cache metadata from responses [33m 780[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m vendor-litellm[2m > [22mstreams chat-completions deltas through the managed LiteLLM vendor [33m 664[2mms[22m[39m
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m2 failed[39m[22m[2m | [22m[1m[32m7 passed[39m[22m[90m (9)[39m
+[2m   Start at [22m 06:42:16
+[2m   Duration [22m 2.76s[2m (transform 215ms, setup 0ms, collect 337ms, tests 1.57s, environment 0ms, prepare 259ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\15-unified-vendor-execution\role-model-router\packages\vendor-litellm:
+ΓÇëERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓÇë Command failed with exit code 1: vitest run test/index.test.ts

@@ -1,0 +1,11 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/15-unified-vendor-execution/role-model-router/packages/process-supervisor[39m
+
+ [32mΓ£ô[39m test/index.test.ts [2m([22m[2m5 tests[22m[2m | [22m[33m4 skipped[39m[2m)[22m[33m 1503[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m process-supervisor[2m > [22mstops spawned child processes when a managed vendor shuts down on Windows [33m 1501[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m1 passed[39m[22m[2m | [22m[33m4 skipped[39m[90m (5)[39m
+[2m   Start at [22m 06:00:44
+[2m   Duration [22m 2.26s[2m (transform 108ms, setup 0ms, collect 107ms, tests 1.50s, environment 0ms, prepare 263ms)[22m
+

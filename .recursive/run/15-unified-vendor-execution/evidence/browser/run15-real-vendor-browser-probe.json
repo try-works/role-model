@@ -1,0 +1,172 @@
+result: {
+  "location": "http://127.0.0.1:8893/healthz",
+  "healthz": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json"
+    },
+    "body": {
+      "status": "healthy",
+      "executionMode": "hybrid",
+      "vendors": {
+        "llama-swap": {
+          "vendorId": "llama-swap",
+          "healthStatus": "healthy",
+          "baseUrl": "http://127.0.0.1:60869/v1",
+          "healthUrl": "http://127.0.0.1:60869/health",
+          "pid": 42836,
+          "configPath": "C:\\Users\\erikb\\.copilot\\session-state\\c404b58f-6ef5-45c3-81b8-28675b2af11d\\files\\run15-real-vendors\\browser-runtime-state\\run15-browser-verification-1778194190120\\vendors\\llama-swap\\config.role-model.generated.yaml",
+          "lastLatencyMs": 240
+        },
+        "litellm": {
+          "vendorId": "litellm",
+          "healthStatus": "healthy",
+          "baseUrl": "http://127.0.0.1:60872/v1",
+          "healthUrl": "http://127.0.0.1:60872/health/liveliness",
+          "pid": 61712,
+          "configPath": "C:\\Users\\erikb\\.copilot\\session-state\\c404b58f-6ef5-45c3-81b8-28675b2af11d\\files\\run15-real-vendors\\browser-runtime-state\\run15-browser-verification-1778194190120\\vendors\\litellm\\litellm.generated.yaml",
+          "lastLatencyMs": 11
+        }
+      },
+      "inactiveVendors": []
+    }
+  },
+  "models": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json"
+    },
+    "body": {
+      "object": "list",
+      "data": [
+        {
+          "id": "local/llama-3.1-8b-instruct",
+          "object": "model",
+          "owned_by": "role-model",
+          "endpoint_ids": [
+            "llama-swap.local.local-llama-3-1-8b-instruct"
+          ]
+        },
+        {
+          "id": "openai/gpt-4.1-mini-fast",
+          "object": "model",
+          "owned_by": "role-model",
+          "endpoint_ids": [
+            "openai.litellm.global.openai-gpt-4-1-mini-fast"
+          ]
+        }
+      ]
+    }
+  },
+  "localResponses": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-role-model-endpoint-id": "llama-swap.local.local-llama-3-1-8b-instruct",
+      "x-role-model-adapter-family": "ai-sdk-openai-compatible",
+      "x-role-model-routing-decision-id": "decision-req-runtime-host-bridge"
+    },
+    "body": {
+      "id": "resp-local",
+      "object": "response",
+      "created_at": 1778194856,
+      "status": "completed",
+      "model": "local/llama-3.1-8b-instruct",
+      "output": [
+        {
+          "type": "message",
+          "id": "msg_resp-local",
+          "role": "assistant",
+          "content": [
+            {
+              "type": "output_text",
+              "text": "local llama summary"
+            }
+          ]
+        }
+      ],
+      "usage": {
+        "input_tokens": 11,
+        "output_tokens": 4,
+        "total_tokens": 15
+      }
+    }
+  },
+  "remoteResponses": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-role-model-endpoint-id": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+      "x-role-model-adapter-family": "ai-sdk-openai",
+      "x-role-model-routing-decision-id": "decision-req-runtime-host-bridge",
+      "x-role-model-cost-usd": "0.0042"
+    },
+    "body": {
+      "id": "chat-remote",
+      "object": "response",
+      "created_at": 1778194856,
+      "status": "completed",
+      "model": "openai/gpt-4.1-mini-fast",
+      "output": [
+        {
+          "type": "message",
+          "id": "msg_chat-remote",
+          "role": "assistant",
+          "content": [
+            {
+              "type": "output_text",
+              "text": "remote litellm summary"
+            }
+          ]
+        }
+      ],
+      "usage": {
+        "input_tokens": 14,
+        "output_tokens": 5,
+        "total_tokens": 19
+      }
+    }
+  },
+  "remoteChatCompletions": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-role-model-endpoint-id": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+      "x-role-model-adapter-family": "ai-sdk-openai",
+      "x-role-model-routing-decision-id": "decision-req-runtime-host-bridge",
+      "x-role-model-cost-usd": "0.0042"
+    },
+    "body": {
+      "id": "chatcmpl-role-model",
+      "object": "chat.completion",
+      "created": 1778194856,
+      "model": "openai/gpt-4.1-mini-fast",
+      "choices": [
+        {
+          "index": 0,
+          "message": {
+            "role": "assistant",
+            "content": "remote litellm summary"
+          },
+          "finish_reason": "stop"
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 14,
+        "completion_tokens": 5,
+        "total_tokens": 19
+      }
+    }
+  },
+  "remoteChatCompletionsStream": {
+    "status": 200,
+    "headers": {
+      "content-type": "text/event-stream; charset=utf-8",
+      "x-role-model-endpoint-id": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+      "x-role-model-adapter-family": "ai-sdk-openai",
+      "x-role-model-routing-decision-id": "decision-req-runtime-host-bridge"
+    },
+    "done": true,
+    "transcriptPreview": "data: {\"id\":\"chat-remote\",\"created\":1778194856,\"model\":\"openai/gpt-4.1-mini-fast\",\"object\":\"chat.completion.chunk\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"remote \",\"role\":\"assistant\"}}]}\n\ndata: {\"id\":\"chat-remote\",\"created\":1778194856,\"model\":\"openai/gpt-4.1-mini-fast\",\"object\":\"chat.completion.chunk\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"litellm summary\"}}]}\n\ndata: {\"id\":\"chat-remote\",\"created\":1778194856,\"model\":\"openai/gpt-4.1-mini-fast\",\"object\":\"chat.completion.chunk\",\"choices\":[{\"finish_reason\":\"stop\",\"index\":0,\"delta\":{}}]}\n\ndata: [DONE]\n\n"
+  }
+}

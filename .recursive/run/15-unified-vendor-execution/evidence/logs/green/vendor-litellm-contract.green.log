@@ -1,0 +1,15 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/15-unified-vendor-execution/role-model-router/packages/vendor-litellm[39m
+
+ [32mΓ£ô[39m test/index.test.ts [2m([22m[2m12 tests[22m[2m)[22m[33m 3826[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m vendor-litellm[2m > [22mstarts a managed LiteLLM vendor and captures cost plus cache metadata from responses [33m 677[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m vendor-litellm[2m > [22mcaptures response cost from LiteLLM headers when the proxy strips hidden params [33m 753[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m vendor-litellm[2m > [22mcaptures cache status from LiteLLM headers when the proxy omits hidden cache markers [33m 692[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m vendor-litellm[2m > [22mforwards fallback model ids into the LiteLLM request body [33m 857[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m vendor-litellm[2m > [22mstreams chat-completions deltas through the managed LiteLLM vendor [33m 771[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m12 passed[39m[22m[90m (12)[39m
+[2m   Start at [22m 07:33:59
+[2m   Duration [22m 4.66s[2m (transform 151ms, setup 0ms, collect 231ms, tests 3.83s, environment 0ms, prepare 235ms)[22m
+

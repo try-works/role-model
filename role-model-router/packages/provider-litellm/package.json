@@ -1,0 +1,22 @@
+{
+  "name": "@role-model-router/provider-litellm",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "runtime": "./dist/index.js",
+      "default": "./src/index.ts"
+    }
+  },
+  "files": ["src", "dist"],
+  "dependencies": {
+    "@role-model-router/adapter-execution": "workspace:*",
+    "@role-model-router/provider-openai": "workspace:*"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run test/index.test.ts"
+  }
+}

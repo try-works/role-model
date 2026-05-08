@@ -1,0 +1,84 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/15-unified-vendor-execution/role-model-router/packages/vendor-litellm[39m
+
+ [31mΓ¥»[39m test/index.test.ts [2m([22m[2m12 tests[22m[2m | [22m[31m2 failed[39m[2m)[22m[33m 4704[2mms[22m[39m
+   [32mΓ£ô[39m vendor-litellm[2m > [22mrenders LiteLLM provider inventory into a deterministic config document[32m 14[2mms[22m[39m
+   [32mΓ£ô[39m vendor-litellm[2m > [22mrenders advanced litellm params needed for a real proxy-backed upstream[32m 2[2mms[22m[39m
+   [32mΓ£ô[39m vendor-litellm[2m > [22minstalls litellm into a role-model-owned uv tool directory[32m 23[2mms[22m[39m
+   [32mΓ£ô[39m vendor-litellm[2m > [22mprefers uv already on PATH before downloading another copy[32m 20[2mms[22m[39m
+   [32mΓ£ô[39m vendor-litellm[2m > [22muses default litellm args when unified config does not provide any[32m 45[2mms[22m[39m
+   [32mΓ£ô[39m vendor-litellm[2m > [22muses a longer default startup timeout for the real litellm proxy[32m 21[2mms[22m[39m
+   [32mΓ£ô[39m vendor-litellm[2m > [22mforces utf-8 python io for the real litellm proxy process[32m 18[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m vendor-litellm[2m > [22mstarts a managed LiteLLM vendor and captures cost plus cache metadata from responses [33m 1297[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m vendor-litellm[2m > [22mcaptures response cost from LiteLLM headers when the proxy strips hidden params [33m 853[2mms[22m[39m
+[31m   [31m├ù[31m vendor-litellm[2m > [22mcaptures cache status from LiteLLM headers when the proxy omits hidden cache markers[39m[33m 756[2mms[22m[39m
+[31m     ΓåÆ expected { vendorId: 'litellm', ΓÇª(2) } to deeply equal ObjectContaining{ΓÇª}[39m
+[31m   [31m├ù[31m vendor-litellm[2m > [22mforwards fallback model ids into the LiteLLM request body[39m[33m 839[2mms[22m[39m
+[31m     ΓåÆ expected { ΓÇª(2) } to deeply equal ObjectContaining{ΓÇª}[39m
+   [33m[2mΓ£ô[22m[39m vendor-litellm[2m > [22mstreams chat-completions deltas through the managed LiteLLM vendor [33m 813[2mms[22m[39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 2 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/index.test.ts > vendor-litellm > captures cache status from LiteLLM headers when the proxy omits hidden cache markers
+AssertionError: expected { vendorId: 'litellm', ΓÇª(2) } to deeply equal ObjectContaining{ΓÇª}
+
+- Expected
++ Received
+
+- ObjectContaining {
+-   "cacheStatus": "HIT",
+-   "latencyMs": Any<Number>,
++ {
++   "latencyMs": 3,
+    "resolvedModelId": "openai/gpt-4.1-mini-fast",
+    "vendorId": "litellm",
+  }
+
+ Γ¥» test/index.test.ts:493:29
+    491|     });
+    492| 
+    493|     expect(result.metadata).toEqual(
+       |                             ^
+    494|       expect.objectContaining({
+    495|         vendorId: "litellm",
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/2]ΓÄ»
+
+ FAIL  test/index.test.ts > vendor-litellm > forwards fallback model ids into the LiteLLM request body
+AssertionError: expected { ΓÇª(2) } to deeply equal ObjectContaining{ΓÇª}
+
+- Expected
++ Received
+
+- ObjectContaining {
+-   "fallbacks": [
+-     "openai/gpt-4.1-mini-slow",
++ {
++   "messages": [
++     {
++       "content": "Summarize the remote endpoint.",
++       "role": "user",
++     },
+    ],
+    "model": "openai/gpt-4.1-mini-fast",
+  }
+
+ Γ¥» test/index.test.ts:565:26
+    563|     }
+    564| 
+    565|     expect(receivedBody).toEqual(
+       |                          ^
+    566|       expect.objectContaining({
+    567|         model: "openai/gpt-4.1-mini-fast",
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[2/2]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m2 failed[39m[22m[2m | [22m[1m[32m10 passed[39m[22m[90m (12)[39m
+[2m   Start at [22m 07:27:38
+[2m   Duration [22m 7.44s[2m (transform 377ms, setup 0ms, collect 565ms, tests 4.70s, environment 0ms, prepare 413ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\15-unified-vendor-execution\role-model-router\packages\vendor-litellm:
+ΓÇëERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓÇë Command failed with exit code 1: vitest run test/index.test.ts

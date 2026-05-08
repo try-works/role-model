@@ -110,6 +110,10 @@ describe("executeRoutedRequest", () => {
             cacheReadTokens: 0,
             cacheWriteTokens: 0,
           },
+          vendorMetadata: {
+            vendorId: "litellm",
+            costUsd: 0.0042,
+          },
           errorClass: null,
           latencyMs: 120,
           diagnostics: [],
@@ -392,10 +396,292 @@ describe("executeRoutedRequest", () => {
     expect(result.requestCapture.url).toBe("https://api.openai.test/v1/responses");
     expect(result.normalized.outputText).toBe("OpenAI summary");
     expect(result.usageEvent.tokens_in).toBe(32);
+    expect(result.usageEvent.cost_actual).toBe(0.0042);
     expect(result.trace.spans.map((span) => span.span_type)).toEqual([
       "provider.load",
       "provider.decode",
     ]);
+  });
+
+  test("prefers cloud-source request shape hints over catalog defaults", () => {
+    const adapters: ProviderAdapter[] = [
+      {
+        adapterFamily: "ai-sdk-openai",
+        negotiateCapabilities: () => ({
+          structuredOutputs: "unsupported",
+          toolCalling: {
+            supported: false,
+            extraction: "none",
+          },
+          streaming: {
+            text: "buffered",
+            toolCalls: "none",
+            toolArguments: "none",
+          },
+          promptCaching: {
+            supported: false,
+            mode: "unsupported",
+          },
+          usage: {
+            inputTokens: true,
+            outputTokens: true,
+            cacheReadTokens: false,
+            cacheWriteTokens: false,
+          },
+        }),
+        buildRequest: ({ target }) => ({
+          providerFamily: "ai-sdk-openai",
+          endpointId: target.endpointId,
+          url:
+            target.requestShapeHints?.providerShape === "openai.chat.completions"
+              ? `${target.apiBase}/chat/completions`
+              : `${target.apiBase}/responses`,
+          headers: {},
+          body: {},
+        }),
+        normalizeResponse: ({ requestCapture, responseCapture }) => ({
+          providerFamily: "ai-sdk-openai",
+          requestCapture,
+          responseCapture,
+          outputText: "ok",
+          toolCalls: [],
+          finishReason: "stop",
+          structuredOutputMode: "none",
+          stream: {
+            requested: false,
+            textDeltas: 0,
+            toolCallDeltas: 0,
+            toolArgumentDeltas: 0,
+          },
+          promptCache: {
+            requested: false,
+            used: false,
+            readTokens: 0,
+            writeTokens: 0,
+          },
+          usage: {
+            inputTokens: 0,
+            outputTokens: 0,
+            cacheReadTokens: 0,
+            cacheWriteTokens: 0,
+          },
+          errorClass: null,
+          latencyMs: 1,
+          diagnostics: [],
+        }),
+      },
+    ];
+
+    const result = executeRoutedRequest({
+      routeResult: {
+        projected: {
+          routeInput: {
+            request: {
+              requestId: "req-litellm-hints",
+              taskType: "text.chat",
+              requiredCapabilities: ["text.chat"],
+              preferredCapabilities: [],
+              requiredModalities: ["text"],
+              contextTokens: 100,
+              needsTools: false,
+              strategy: "balanced",
+              maxCostUsd: 1,
+              metadata: {},
+            },
+            candidates: [],
+          },
+          policySnapshot: {
+            strategy: "balanced",
+            privacy: "standard",
+            maxCostUsd: 1,
+            maxLatencyMs: 1000,
+            preferredRegions: [],
+            cachePreference: "neutral",
+          },
+        },
+        decision: {
+          decision_id: "decision-litellm-hints",
+          trace_id: "trace-litellm-hints",
+          chosen_endpoint_id: "openai.litellm.global.openai-gpt-4-1-mini-fast",
+          fallback_endpoint_ids: [],
+          selection_reason: "best_match",
+          excluded_endpoints: [],
+          considered_endpoints: [],
+          policy_snapshot: {
+            strategy: "balanced",
+          },
+          scoring_version: "test",
+          used_measured: false,
+          used_declared: true,
+          explanation: "selected litellm-backed endpoint",
+        },
+      },
+      catalog: {
+        catalogVersion: "1",
+        source: {
+          vendor: "models.dev",
+          commit: "test-catalog",
+          capturedAt: "2026-05-05T00:00:00Z",
+          schemaVersion: "1",
+        },
+        providers: [
+          {
+            providerId: "openai",
+            displayName: "OpenAI",
+            providerKind: "provider-openai",
+            authFamily: "api-key",
+            adapterFamily: "ai-sdk-openai",
+            apiBase: "https://api.openai.test/v1",
+            envVars: ["OPENAI_API_KEY"],
+            supportedAuthModes: ["api-key-static"],
+            controlPlaneRequirements: [],
+            localOverrideApplied: false,
+            upstreamProvenance: {
+              vendor: "models.dev",
+              commit: "test-catalog",
+              capturedAt: "2026-05-05T00:00:00Z",
+              schemaVersion: "1",
+            },
+          },
+        ],
+        models: [
+          {
+            modelId: "openai/gpt-4.1-mini-fast",
+            providerId: "openai",
+            providerKind: "provider-openai",
+            authFamily: "api-key",
+            displayName: "GPT-4.1 Mini Fast",
+            version: "1",
+            capabilities: ["text.chat"],
+            modalities: ["text"],
+            contextWindow: 32768,
+            maxOutputTokens: 4096,
+            pricing: null,
+            requestShapeHints: {
+              providerShape: "openai.responses",
+              bodyKeys: ["input"],
+              headerKeys: ["OpenAI-Beta"],
+            },
+            experimentalModes: [],
+            extendsProvenance: {
+              baseModelId: null,
+              chain: [],
+            },
+            localOverrideApplied: false,
+            localNotes: [],
+            upstreamProvenance: {
+              vendor: "models.dev",
+              commit: "test-catalog",
+              capturedAt: "2026-05-05T00:00:00Z",
+              schemaVersion: "1",
+            },
+          },
+        ],
+      },
+      accounts: [
+        {
+          providerAccountId: "openai.litellm",
+          providerId: "openai",
+          providerKind: "provider-openai",
+          orgScope: "runtime-config",
+          accountScope: "runtime-config",
+          credentialRef: {
+            backend: "local-encrypted-file",
+            ref: "runtime/openai.litellm",
+          },
+          authMode: "api-key-static",
+          regionPolicy: {
+            mode: "prefer",
+            regions: ["global"],
+          },
+          baseUrlOverride: "http://127.0.0.1:4000/v1",
+          allowedModels: ["openai/gpt-4.1-mini-fast"],
+          deniedModels: [],
+          entitlementTags: ["chat"],
+          budgetPolicyRef: "budget.default",
+          quotaPolicyRef: "quota.default",
+          status: "active",
+          healthStatus: "healthy",
+          rotationState: "stable",
+        },
+      ],
+      registry: {
+        endpoints: [
+          {
+            identity: {
+              endpoint_id: "openai.litellm.global.openai-gpt-4-1-mini-fast",
+              endpoint_kind: "remote_api",
+              provider_kind: "remote_openai_compat",
+              serving_source: "vendor-litellm",
+              model_id: "openai/gpt-4.1-mini-fast",
+              runtime_version: "run15",
+              region: "global",
+              host_class: "server",
+              device_class: "server",
+              org_scope: "runtime-config",
+            },
+            declared: {
+              endpoint_id: "openai.litellm.global.openai-gpt-4-1-mini-fast",
+              capabilities: ["text.chat"],
+              modalities: ["text"],
+              max_context_tokens: 32768,
+              tool_calling: {
+                supported: true,
+                style: "openai",
+              },
+              supports_embeddings: false,
+              platform_constraints: [],
+            },
+            status: "active",
+          },
+        ],
+        diagnostics: [],
+        lifecycleSummary: {
+          active: 1,
+          degraded: 0,
+          offline: 0,
+        },
+      },
+      registrySources: {
+        cloud: [
+          {
+            endpointId: "openai.litellm.global.openai-gpt-4-1-mini-fast",
+            providerAccountId: "openai.litellm",
+            modelId: "openai/gpt-4.1-mini-fast",
+            region: "global",
+            endpointKind: "remote-openai-compatible",
+            servingSource: "vendor-litellm",
+            lifecycleState: "active",
+            healthStatus: "healthy",
+            requestShapeHints: {
+              providerShape: "openai.chat.completions",
+              bodyKeys: ["messages", "max_tokens"],
+              headerKeys: ["authorization"],
+            },
+          },
+        ],
+        local: [],
+      },
+      executionRequest: {
+        messages: [{ role: "user", content: "Say hello." }],
+        stream: false,
+      },
+      adapters,
+      captures: {
+        byEndpointId: {
+          "openai.litellm.global.openai-gpt-4-1-mini-fast": {
+            body: {},
+          },
+        },
+      },
+    });
+
+    expect(result.target.requestShapeHints).toEqual({
+      providerShape: "openai.chat.completions",
+      bodyKeys: ["messages", "max_tokens"],
+      headerKeys: ["authorization"],
+    });
+    expect(result.requestCapture.url).toBe("http://127.0.0.1:4000/v1/chat/completions");
   });
 
   test("fails when the chosen endpoint cannot be resolved to a supported provider adapter", () => {
@@ -899,6 +1185,413 @@ describe("executeRoutedRequest", () => {
 
     expect(result.target.adapterFamily).toBe("ai-sdk-openai-compatible");
     expect(result.normalized.outputText).toBe("live kimi reply");
+    expect(result.responseCapture.statusCode).toBe(200);
+  });
+
+  test("resolves fallback endpoint ids into fallback model ids for live provider execution", async () => {
+    const adapters: ProviderAdapter[] = [
+      {
+        adapterFamily: "ai-sdk-openai",
+        negotiateCapabilities: () => ({
+          structuredOutputs: "unsupported",
+          toolCalling: {
+            supported: true,
+            extraction: "provider-native",
+          },
+          streaming: {
+            text: "message",
+            toolCalls: "message",
+            toolArguments: "message",
+          },
+          promptCaching: {
+            supported: false,
+            mode: "unsupported",
+          },
+          usage: {
+            inputTokens: true,
+            outputTokens: true,
+            cacheReadTokens: false,
+            cacheWriteTokens: false,
+          },
+        }),
+        buildRequest: ({ target, executionRequest: request }) => ({
+          providerFamily: target.adapterFamily,
+          endpointId: target.endpointId,
+          url: `${target.apiBase}/chat/completions`,
+          headers: {
+            authorization: "Bearer runtime/openai",
+          },
+          body: {
+            model: target.modelId,
+            messages: request.messages,
+          },
+        }),
+        normalizeResponse: ({ requestCapture, responseCapture }) => ({
+          providerFamily: responseCapture.providerFamily,
+          requestCapture,
+          responseCapture,
+          outputText: "live litellm reply",
+          toolCalls: [],
+          finishReason: "stop",
+          structuredOutputMode: "none",
+          stream: {
+            requested: false,
+            textDeltas: 1,
+            toolCallDeltas: 0,
+            toolArgumentDeltas: 0,
+          },
+          promptCache: {
+            requested: false,
+            used: false,
+            readTokens: 0,
+            writeTokens: 0,
+          },
+          usage: {
+            inputTokens: 12,
+            outputTokens: 7,
+            cacheReadTokens: 0,
+            cacheWriteTokens: 0,
+          },
+          errorClass: null,
+          latencyMs: 45,
+          diagnostics: [],
+        }),
+      },
+    ];
+
+    const result = await executeLiveRoutedRequest({
+      routeResult: {
+        projected: {
+          routeInput: {
+            request: {
+              requestId: "req-litellm-live-fallbacks",
+              taskType: "text.chat",
+              requiredCapabilities: ["text.chat"],
+              preferredCapabilities: [],
+              requiredModalities: ["text"],
+              contextTokens: 16,
+              needsTools: false,
+              strategy: "balanced",
+              preferLocal: false,
+            },
+            candidates: [],
+            roleDefinitions: [],
+            taskDefinitions: [],
+            roleBindings: [],
+          },
+          routingDiagnostics: {
+            retrievalReceiptId: "receipt-litellm-live-fallbacks",
+            routingModel: {
+              enabled: false,
+              endpointId: null,
+              preferredEndpointIds: [],
+              ignoredEndpointIds: [],
+            },
+          },
+        },
+        decision: {
+          routing_decision_id: "decision-req-litellm-live-fallbacks",
+          request_id: "req-litellm-live-fallbacks",
+          app_id: "app-runtime",
+          org_id: "org-runtime",
+          chosen_endpoint_id: "openai.litellm.global.openai-gpt-4-1-mini-fast",
+          fallback_endpoint_ids: ["openai.litellm.global.openai-gpt-4-1-mini-slow"],
+          eligible_count: 2,
+          ineligible_count: 0,
+          policy_snapshot: {
+            policy_id: "balanced-policy",
+            strategy: "balanced",
+            compute_preference: "auto",
+            prefer_local: false,
+            budget_mode: "strict",
+            tie_break_order: ["quality", "latency_ms", "reliability", "endpoint_id"],
+            required_capabilities: ["text.chat"],
+            required_modalities: ["text"],
+            require_tools: false,
+            deny_endpoints: [],
+            allow_endpoints: [],
+            deny_provider_kinds: [],
+            allow_provider_kinds: [],
+            budget: {
+              enabled: false,
+              currency: "USD",
+            },
+            privacy: {
+              allow_remote: true,
+            },
+            targets: {
+              latency_target_ms: 150,
+              latency_max_ms: 300,
+              throughput_target_tps: 40,
+            },
+          },
+          eligibility: [],
+          scored_candidates: [],
+          selection_reasons: ["highest_score"],
+          used_measured: false,
+          used_declared: true,
+          scoring_version: "router-v1",
+          tie_break: {
+            order: ["quality", "latency_ms", "reliability", "endpoint_id"],
+            compared: [],
+          },
+          metric_breakdown: {
+            quality: { weight: 1, chosen_score: 1 },
+          },
+        },
+        routingDiagnostics: {
+          retrievalReceiptId: "receipt-litellm-live-fallbacks",
+          routingModel: {
+            enabled: false,
+            endpointId: null,
+            preferredEndpointIds: [],
+            ignoredEndpointIds: [],
+          },
+        },
+      },
+      catalog: {
+        catalogVersion: "1",
+        source: {
+          vendor: "models.dev",
+          commit: "test-catalog",
+          capturedAt: "2026-05-05T00:00:00Z",
+          schemaVersion: "1",
+        },
+        providers: [
+          {
+            providerId: "openai",
+            displayName: "OpenAI",
+            providerKind: "provider-openai",
+            authFamily: "api-key",
+            adapterFamily: "ai-sdk-openai",
+            apiBase: "https://api.openai.test/v1",
+            envVars: ["OPENAI_API_KEY"],
+            supportedAuthModes: ["api-key-static"],
+            controlPlaneRequirements: [],
+            localOverrideApplied: false,
+            upstreamProvenance: {
+              vendor: "models.dev",
+              commit: "test-catalog",
+              capturedAt: "2026-05-05T00:00:00Z",
+              schemaVersion: "1",
+            },
+          },
+        ],
+        models: [
+          {
+            modelId: "openai/gpt-4.1-mini-fast",
+            providerId: "openai",
+            providerKind: "provider-openai",
+            authFamily: "api-key",
+            displayName: "GPT-4.1 Mini Fast",
+            version: "1",
+            capabilities: ["text.chat"],
+            modalities: ["text"],
+            contextWindow: 32768,
+            maxOutputTokens: 4096,
+            pricing: null,
+            requestShapeHints: {
+              providerShape: "openai.chat.completions",
+              bodyKeys: ["messages", "max_tokens"],
+              headerKeys: ["Authorization"],
+            },
+            experimentalModes: [],
+            extendsProvenance: {
+              baseModelId: null,
+              chain: [],
+            },
+            localOverrideApplied: false,
+            localNotes: [],
+            upstreamProvenance: {
+              vendor: "models.dev",
+              commit: "test-catalog",
+              capturedAt: "2026-05-05T00:00:00Z",
+              schemaVersion: "1",
+            },
+          },
+          {
+            modelId: "openai/gpt-4.1-mini-slow",
+            providerId: "openai",
+            providerKind: "provider-openai",
+            authFamily: "api-key",
+            displayName: "GPT-4.1 Mini Slow",
+            version: "1",
+            capabilities: ["text.chat"],
+            modalities: ["text"],
+            contextWindow: 32768,
+            maxOutputTokens: 4096,
+            pricing: null,
+            requestShapeHints: {
+              providerShape: "openai.chat.completions",
+              bodyKeys: ["messages", "max_tokens"],
+              headerKeys: ["Authorization"],
+            },
+            experimentalModes: [],
+            extendsProvenance: {
+              baseModelId: null,
+              chain: [],
+            },
+            localOverrideApplied: false,
+            localNotes: [],
+            upstreamProvenance: {
+              vendor: "models.dev",
+              commit: "test-catalog",
+              capturedAt: "2026-05-05T00:00:00Z",
+              schemaVersion: "1",
+            },
+          },
+        ],
+      },
+      accounts: [
+        {
+          providerAccountId: "openai.litellm",
+          providerId: "openai",
+          providerKind: "provider-openai",
+          orgScope: "runtime-config",
+          accountScope: "runtime-config",
+          credentialRef: {
+            backend: "local-encrypted-file",
+            ref: "runtime/openai.litellm",
+          },
+          authMode: "api-key-static",
+          regionPolicy: {
+            mode: "prefer",
+            regions: ["global"],
+          },
+          baseUrlOverride: "http://127.0.0.1:4000/v1",
+          allowedModels: ["openai/gpt-4.1-mini-fast", "openai/gpt-4.1-mini-slow"],
+          deniedModels: [],
+          entitlementTags: ["chat"],
+          budgetPolicyRef: "budget.default",
+          quotaPolicyRef: "quota.default",
+          status: "active",
+          healthStatus: "healthy",
+          rotationState: "stable",
+        },
+      ],
+      registry: {
+        endpoints: [
+          {
+            identity: {
+              endpoint_id: "openai.litellm.global.openai-gpt-4-1-mini-fast",
+              endpoint_kind: "remote_api",
+              provider_kind: "remote_openai_compat",
+              serving_source: "vendor-litellm",
+              model_id: "openai/gpt-4.1-mini-fast",
+              runtime_version: "run15",
+              region: "global",
+              host_class: "server",
+              device_class: "server",
+              org_scope: "runtime-config",
+            },
+            declared: {
+              endpoint_id: "openai.litellm.global.openai-gpt-4-1-mini-fast",
+              capabilities: ["text.chat"],
+              modalities: ["text"],
+              max_context_tokens: 32768,
+              tool_calling: {
+                supported: true,
+                style: "openai",
+              },
+              supports_embeddings: false,
+              platform_constraints: [],
+            },
+            status: "active",
+          },
+          {
+            identity: {
+              endpoint_id: "openai.litellm.global.openai-gpt-4-1-mini-slow",
+              endpoint_kind: "remote_api",
+              provider_kind: "remote_openai_compat",
+              serving_source: "vendor-litellm",
+              model_id: "openai/gpt-4.1-mini-slow",
+              runtime_version: "run15",
+              region: "global",
+              host_class: "server",
+              device_class: "server",
+              org_scope: "runtime-config",
+            },
+            declared: {
+              endpoint_id: "openai.litellm.global.openai-gpt-4-1-mini-slow",
+              capabilities: ["text.chat"],
+              modalities: ["text"],
+              max_context_tokens: 32768,
+              tool_calling: {
+                supported: true,
+                style: "openai",
+              },
+              supports_embeddings: false,
+              platform_constraints: [],
+            },
+            status: "active",
+          },
+        ],
+        diagnostics: [],
+        lifecycleSummary: {
+          active: 2,
+          degraded: 0,
+          offline: 0,
+        },
+      },
+      registrySources: {
+        cloud: [
+          {
+            endpointId: "openai.litellm.global.openai-gpt-4-1-mini-fast",
+            providerAccountId: "openai.litellm",
+            modelId: "openai/gpt-4.1-mini-fast",
+            region: "global",
+            endpointKind: "remote-openai-compatible",
+            servingSource: "vendor-litellm",
+            lifecycleState: "active",
+            healthStatus: "healthy",
+            requestShapeHints: {
+              providerShape: "openai.chat.completions",
+              bodyKeys: ["messages", "max_tokens"],
+              headerKeys: ["authorization"],
+            },
+          },
+          {
+            endpointId: "openai.litellm.global.openai-gpt-4-1-mini-slow",
+            providerAccountId: "openai.litellm",
+            modelId: "openai/gpt-4.1-mini-slow",
+            region: "global",
+            endpointKind: "remote-openai-compatible",
+            servingSource: "vendor-litellm",
+            lifecycleState: "active",
+            healthStatus: "healthy",
+            requestShapeHints: {
+              providerShape: "openai.chat.completions",
+              bodyKeys: ["messages", "max_tokens"],
+              headerKeys: ["authorization"],
+            },
+          },
+        ],
+        local: [],
+      },
+      executionRequest: {
+        messages: [{ role: "user", content: "Say hi." }],
+      },
+      adapters,
+      executeProviderRequest: async ({ target, requestCapture, fallbackModelIds }) => {
+        expect(target.adapterFamily).toBe("ai-sdk-openai");
+        expect(requestCapture.url).toBe("http://127.0.0.1:4000/v1/chat/completions");
+        expect(fallbackModelIds).toEqual(["openai/gpt-4.1-mini-slow"]);
+        return {
+          providerFamily: target.adapterFamily,
+          endpointId: target.endpointId,
+          statusCode: 200,
+          body: {
+            choices: [{ message: { content: "live litellm reply" }, finish_reason: "stop" }],
+            usage: {
+              prompt_tokens: 12,
+              completion_tokens: 7,
+            },
+          },
+        };
+      },
+    });
+
+    expect(result.normalized.outputText).toBe("live litellm reply");
     expect(result.responseCapture.statusCode).toBe(200);
   });
 });

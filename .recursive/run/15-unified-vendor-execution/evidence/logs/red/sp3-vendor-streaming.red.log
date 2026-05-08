@@ -1,0 +1,372 @@
+# SP3 RED test run
+
+
+## @role-model-router/vendor-abstraction
+
+
+> @role-model-router/vendor-abstraction@0.0.0 test D:\DEV\role-model\.worktrees\15-unified-vendor-execution\role-model-router\packages\vendor-abstraction
+> vitest run
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/15-unified-vendor-execution/role-model-router/packages/vendor-abstraction[39m
+
+ [31mΓ¥»[39m test/index.test.ts [2m([22m[2m3 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 16[2mms[22m[39m
+   [32mΓ£ô[39m vendor-abstraction[2m > [22mnormalizes rate-limited vendor failures into retryable metadata[32m 3[2mms[22m[39m
+   [32mΓ£ô[39m vendor-abstraction[2m > [22mcreates a normalized vendor-not-configured error for inactive vendor modes[32m 0[2mms[22m[39m
+[31m   [31m├ù[31m vendor-abstraction[2m > [22mreads an SSE vendor transcript and forwards parsed payloads to the stream writer[39m[32m 10[2mms[22m[39m
+[31m     ΓåÆ (0 , readVendorStreamTranscript) is not a function[39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/index.test.ts > vendor-abstraction > reads an SSE vendor transcript and forwards parsed payloads to the stream writer
+TypeError: (0 , readVendorStreamTranscript) is not a function
+ Γ¥» test/index.test.ts:67:30
+     65|     );
+     66| 
+     67|     const transcript = await readVendorStreamTranscript(response, asynΓÇª
+       |                              ^
+     68|       payloads.push(payload);
+     69|     });
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m2 passed[39m[22m[90m (3)[39m
+[2m   Start at [22m 04:11:01
+[2m   Duration [22m 1.10s[2m (transform 108ms, setup 0ms, collect 119ms, tests 16ms, environment 0ms, prepare 250ms)[22m
+
+D:\DEV\role-model\.worktrees\15-unified-vendor-execution\role-model-router\packages\vendor-abstraction:
+ΓÇëERR_PNPM_RECURSIVE_RUN_FIRST_FAILΓÇë @role-model-router/vendor-abstraction@0.0.0 test: `vitest run`
+Exit status 1
+
+## @role-model-router/provider-openai
+
+
+> @role-model-router/provider-openai@0.0.0 test D:\DEV\role-model\.worktrees\15-unified-vendor-execution\role-model-router\packages\provider-openai
+> vitest run test/index.test.ts
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/15-unified-vendor-execution/role-model-router/packages/provider-openai[39m
+
+ [31mΓ¥»[39m test/index.test.ts [2m([22m[2m5 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 22[2mms[22m[39m
+   [32mΓ£ô[39m OpenAI provider adapter[2m > [22mcan be created for the openai-compatible adapter family[32m 2[2mms[22m[39m
+[31m   [31m├ù[31m OpenAI provider adapter[2m > [22mbuilds an OpenAI responses request and normalizes text, usage, and tool calls[39m[32m 14[2mms[22m[39m
+[31m     ΓåÆ expected 120 to be 87 // Object.is equality[39m
+   [32mΓ£ô[39m OpenAI provider adapter[2m > [22mnormalizes a streamed OpenAI responses transcript into final text, tool calls, and usage[32m 2[2mms[22m[39m
+   [32mΓ£ô[39m OpenAI provider adapter[2m > [22mbuilds an OpenAI-compatible chat-completions request for Kimi and normalizes the reply[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m OpenAI provider adapter[2m > [22mnormalizes an OpenAI-compatible chat-completions SSE transcript for Kimi streaming[32m 1[2mms[22m[39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/index.test.ts > OpenAI provider adapter > builds an OpenAI responses request and normalizes text, usage, and tool calls
+AssertionError: expected 120 to be 87 // Object.is equality
+
+- Expected
++ Received
+
+- 87
++ 120
+
+ Γ¥» test/index.test.ts:148:34
+    146|       cacheWriteTokens: 0,
+    147|     });
+    148|     expect(normalized.latencyMs).toBe(87);
+       |                                  ^
+    149|     expect(normalized.promptCache.used).toBe(false);
+    150|   });
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m4 passed[39m[22m[90m (5)[39m
+[2m   Start at [22m 04:11:05
+[2m   Duration [22m 961ms[2m (transform 176ms, setup 0ms, collect 185ms, tests 22ms, environment 0ms, prepare 276ms)[22m
+
+D:\DEV\role-model\.worktrees\15-unified-vendor-execution\role-model-router\packages\provider-openai:
+ΓÇëERR_PNPM_RECURSIVE_RUN_FIRST_FAILΓÇë @role-model-router/provider-openai@0.0.0 test: `vitest run test/index.test.ts`
+Exit status 1
+
+## @role-model-router/vendor-llama-swap
+
+
+> @role-model-router/vendor-llama-swap@0.0.0 test D:\DEV\role-model\.worktrees\15-unified-vendor-execution\role-model-router\packages\vendor-llama-swap
+> vitest run
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/15-unified-vendor-execution/role-model-router/packages/vendor-llama-swap[39m
+
+ [31mΓ¥»[39m test/index.test.ts [2m([22m[2m3 tests[22m[2m | [22m[31m2 failed[39m[2m)[22m[33m 1074[2mms[22m[39m
+   [32mΓ£ô[39m vendor-llama-swap[2m > [22mrenders deterministic llama-swap config from the configured model inventory[32m 7[2mms[22m[39m
+[31m   [31m├ù[31m vendor-llama-swap[2m > [22mstarts a managed llama-swap vendor and executes local openai-compatible requests through it[39m[33m 552[2mms[22m[39m
+[31m     ΓåÆ expected { vendorId: 'llama-swap', ΓÇª(5) } to deeply equal ObjectContaining{ΓÇª}[39m
+[31m   [31m├ù[31m vendor-llama-swap[2m > [22mstreams chat-completions deltas through the managed llama-swap vendor[39m[33m 514[2mms[22m[39m
+[31m     ΓåÆ expected [] to deeply equal [ ObjectContaining{ΓÇª}, ΓÇª(2) ][39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 2 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/index.test.ts > vendor-llama-swap > starts a managed llama-swap vendor and executes local openai-compatible requests through it
+AssertionError: expected { vendorId: 'llama-swap', ΓÇª(5) } to deeply equal ObjectContaining{ΓÇª}
+
+- Expected
++ Received
+
+- ObjectContaining {
++ {
++   "baseUrl": "http://127.0.0.1:59417/v1",
++   "configPath": "C:\\Users\\erikb\\AppData\\Local\\Temp\\role-model-llama-vendor-RbtT5y\\vendors\\llama-swap\\config.role-model.generated.yaml",
+    "healthStatus": "healthy",
+-   "lastLatencyMs": Any<Number>,
++   "healthUrl": "http://127.0.0.1:59417/health",
++   "pid": 49428,
+    "vendorId": "llama-swap",
+  }
+
+ Γ¥» test/index.test.ts:85:33
+     83|     });
+     84| 
+     85|     expect(vendor.readStatus()).toEqual(
+       |                                 ^
+     86|       expect.objectContaining({
+     87|         vendorId: "llama-swap",
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/2]ΓÄ»
+
+ FAIL  test/index.test.ts > vendor-llama-swap > streams chat-completions deltas through the managed llama-swap vendor
+AssertionError: expected [] to deeply equal [ ObjectContaining{ΓÇª}, ΓÇª(2) ]
+
+- Expected
++ Received
+
+- [
+-   ObjectContaining {
+-     "choices": [
+-       ObjectContaining {
+-         "delta": ObjectContaining {
+-           "content": "local ",
+-         },
+-       },
+-     ],
+-     "object": "chat.completion.chunk",
+-   },
+-   ObjectContaining {
+-     "choices": [
+-       ObjectContaining {
+-         "delta": ObjectContaining {
+-           "content": "llama summary",
+-         },
+-       },
+-     ],
+-     "object": "chat.completion.chunk",
+-   },
+-   ObjectContaining {
+-     "choices": [
+-       ObjectContaining {
+-         "finish_reason": "stop",
+-       },
+-     ],
+-     "object": "chat.completion.chunk",
+-   },
+- ]
++ []
+
+ Γ¥» test/index.test.ts:167:28
+    165|     );
+    166| 
+    167|     expect(streamedChunks).toEqual([
+       |                            ^
+    168|       expect.objectContaining({
+    169|         object: "chat.completion.chunk",
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[2/2]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m2 failed[39m[22m[2m | [22m[1m[32m1 passed[39m[22m[90m (3)[39m
+[2m   Start at [22m 04:11:08
+[2m   Duration [22m 1.82s[2m (transform 103ms, setup 0ms, collect 157ms, tests 1.07s, environment 0ms, prepare 223ms)[22m
+
+D:\DEV\role-model\.worktrees\15-unified-vendor-execution\role-model-router\packages\vendor-llama-swap:
+ΓÇëERR_PNPM_RECURSIVE_RUN_FIRST_FAILΓÇë @role-model-router/vendor-llama-swap@0.0.0 test: `vitest run`
+Exit status 1
+
+## @role-model-router/vendor-litellm
+
+
+> @role-model-router/vendor-litellm@0.0.0 test D:\DEV\role-model\.worktrees\15-unified-vendor-execution\role-model-router\packages\vendor-litellm
+> vitest run
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/15-unified-vendor-execution/role-model-router/packages/vendor-litellm[39m
+
+ [31mΓ¥»[39m test/index.test.ts [2m([22m[2m3 tests[22m[2m | [22m[31m2 failed[39m[2m)[22m[33m 1168[2mms[22m[39m
+   [32mΓ£ô[39m vendor-litellm[2m > [22mrenders LiteLLM provider inventory into a deterministic config document[32m 7[2mms[22m[39m
+[31m   [31m├ù[31m vendor-litellm[2m > [22mstarts a managed LiteLLM vendor and captures cost plus cache metadata from responses[39m[33m 568[2mms[22m[39m
+[31m     ΓåÆ expected { vendorId: 'litellm', ΓÇª(5) } to deeply equal ObjectContaining{ΓÇª}[39m
+[31m   [31m├ù[31m vendor-litellm[2m > [22mstreams chat-completions deltas through the managed LiteLLM vendor[39m[33m 592[2mms[22m[39m
+[31m     ΓåÆ expected [] to deeply equal [ ObjectContaining{ΓÇª}, ΓÇª(2) ][39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 2 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/index.test.ts > vendor-litellm > starts a managed LiteLLM vendor and captures cost plus cache metadata from responses
+AssertionError: expected { vendorId: 'litellm', ΓÇª(5) } to deeply equal ObjectContaining{ΓÇª}
+
+- Expected
++ Received
+
+- ObjectContaining {
++ {
++   "baseUrl": "http://127.0.0.1:63287/v1",
++   "configPath": "C:\\Users\\erikb\\AppData\\Local\\Temp\\role-model-litellm-vendor-fQhT1S\\vendors\\litellm\\litellm.generated.yaml",
+    "healthStatus": "healthy",
+-   "lastLatencyMs": Any<Number>,
++   "healthUrl": "http://127.0.0.1:63287/health/liveliness",
++   "pid": 42444,
+    "vendorId": "litellm",
+  }
+
+ Γ¥» test/index.test.ts:94:33
+     92|     });
+     93| 
+     94|     expect(vendor.readStatus()).toEqual(
+       |                                 ^
+     95|       expect.objectContaining({
+     96|         vendorId: "litellm",
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/2]ΓÄ»
+
+ FAIL  test/index.test.ts > vendor-litellm > streams chat-completions deltas through the managed LiteLLM vendor
+AssertionError: expected [] to deeply equal [ ObjectContaining{ΓÇª}, ΓÇª(2) ]
+
+- Expected
++ Received
+
+- [
+-   ObjectContaining {
+-     "choices": [
+-       ObjectContaining {
+-         "delta": ObjectContaining {
+-           "content": "remote ",
+-         },
+-       },
+-     ],
+-     "object": "chat.completion.chunk",
+-   },
+-   ObjectContaining {
+-     "choices": [
+-       ObjectContaining {
+-         "delta": ObjectContaining {
+-           "content": "litellm summary",
+-         },
+-       },
+-     ],
+-     "object": "chat.completion.chunk",
+-   },
+-   ObjectContaining {
+-     "choices": [
+-       ObjectContaining {
+-         "finish_reason": "stop",
+-       },
+-     ],
+-     "object": "chat.completion.chunk",
+-   },
+- ]
++ []
+
+ Γ¥» test/index.test.ts:174:28
+    172|     );
+    173| 
+    174|     expect(streamedChunks).toEqual([
+       |                            ^
+    175|       expect.objectContaining({
+    176|         object: "chat.completion.chunk",
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[2/2]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m2 failed[39m[22m[2m | [22m[1m[32m1 passed[39m[22m[90m (3)[39m
+[2m   Start at [22m 04:11:12
+[2m   Duration [22m 2.02s[2m (transform 96ms, setup 0ms, collect 172ms, tests 1.17s, environment 0ms, prepare 213ms)[22m
+
+D:\DEV\role-model\.worktrees\15-unified-vendor-execution\role-model-router\packages\vendor-litellm:
+ΓÇëERR_PNPM_RECURSIVE_RUN_FIRST_FAILΓÇë @role-model-router/vendor-litellm@0.0.0 test: `vitest run`
+Exit status 1
+
+## @role-model-router/runtime-host-bridge
+
+
+> @role-model-router/runtime-host-bridge@0.0.0 test D:\DEV\role-model\.worktrees\15-unified-vendor-execution\role-model-router\apps\runtime-host-bridge
+> vitest run test/index.test.ts test/backend-unified-runtime-config.test.ts test/executable.test.ts test/runtime-assets.test.ts test/unified-runtime-config.test.ts test/validate-operations.test.ts test/validate-tools.test.ts test/validate-ui.test.ts test/validate-vendors.test.ts
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/15-unified-vendor-execution/role-model-router/apps/runtime-host-bridge[39m
+
+ [32mΓ£ô[39m test/executable.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 41[2mms[22m[39m
+ [32mΓ£ô[39m test/runtime-assets.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 28[2mms[22m[39m
+ [32mΓ£ô[39m test/unified-runtime-config.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 28[2mms[22m[39m
+(node:47532) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:30648) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:63384) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:45252) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:36416) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:39408) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [32mΓ£ô[39m test/backend-unified-runtime-config.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 255[2mms[22m[39m
+ [32mΓ£ô[39m test/validate-tools.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 291[2mms[22m[39m
+ [32mΓ£ô[39m test/validate-ui.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 484[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m runRuntimeUiValidation[2m > [22mvalidates runtime summary, provider variants, account upserts, and endpoint activation [33m 481[2mms[22m[39m
+ [32mΓ£ô[39m test/validate-operations.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 661[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m runRuntimeOperationsValidation[2m > [22mvalidates isolated scopes and runtime-state maintenance drills [33m 659[2mms[22m[39m
+ [32mΓ£ô[39m test/index.test.ts [2m([22m[2m17 tests[22m[2m)[22m[33m 1137[2mms[22m[39m
+ [31mΓ¥»[39m test/validate-vendors.test.ts [2m([22m[2m1 test[22m[2m | [22m[31m1 failed[39m[2m)[22m[33m 3050[2mms[22m[39m
+[31m   [31m├ù[31m runRuntimeVendorValidation[2m > [22mexecutes decision-only, local-only, remote-only, and hybrid vendor modes end to end[39m[33m 3047[2mms[22m[39m
+[31m     ΓåÆ expected undefined to deeply equal { local: ObjectContaining{ΓÇª}, ΓÇª(1) }[39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/validate-vendors.test.ts > runRuntimeVendorValidation > executes decision-only, local-only, remote-only, and hybrid vendor modes end to end
+AssertionError: expected undefined to deeply equal { local: ObjectContaining{ΓÇª}, ΓÇª(1) }
+
+- Expected: 
+{
+  "local": ObjectContaining {
+    "chunkCount": 3,
+    "outputText": "local llama summary",
+    "vendorId": "llama-swap",
+  },
+  "remote": ObjectContaining {
+    "chunkCount": 3,
+    "outputText": "remote litellm summary",
+    "vendorId": "litellm",
+  },
+}
+
++ Received: 
+undefined
+
+ Γ¥» test/validate-vendors.test.ts:56:30
+     54|       }),
+     55|     );
+     56|     expect(result.streaming).toEqual({
+       |                              ^
+     57|       local: expect.objectContaining({
+     58|         vendorId: "llama-swap",
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m8 passed[39m[22m[90m (9)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m29 passed[39m[22m[90m (30)[39m
+[2m   Start at [22m 04:11:16
+[2m   Duration [22m 4.49s[2m (transform 1.50s, setup 0ms, collect 5.41s, tests 5.97s, environment 3ms, prepare 2.43s)[22m
+
+D:\DEV\role-model\.worktrees\15-unified-vendor-execution\role-model-router\apps\runtime-host-bridge:
+ΓÇëERR_PNPM_RECURSIVE_RUN_FIRST_FAILΓÇë @role-model-router/runtime-host-bridge@0.0.0 test: `vitest run test/index.test.ts test/backend-unified-runtime-config.test.ts test/executable.test.ts test/runtime-assets.test.ts test/unified-runtime-config.test.ts test/validate-operations.test.ts test/validate-tools.test.ts test/validate-ui.test.ts test/validate-vendors.test.ts`
+Exit status 1
