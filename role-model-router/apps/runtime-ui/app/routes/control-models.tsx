@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router";
 
 import { CodeBlock, EmptyState, ErrorState, FactCard, LoadingState, PageHeader, SectionCard, StatusPill } from "../components/page-primitives";
 import { mutedPanelClassName, secondaryButtonClassName } from "../lib/design-system";
@@ -13,6 +14,7 @@ import { buildConfiguredModelCards } from "../lib/view-models";
 export default function ControlModelsRoute() {
   const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(null);
   const [controller, setController] = useState<RuntimeControllerAssignment | null>(null);
+  const [controllerLoaded, setControllerLoaded] = useState(false);
   const [selectedModelId, setSelectedModelId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -21,6 +23,7 @@ export default function ControlModelsRoute() {
       .then(([nextSnapshot, nextController]) => {
         setSnapshot(nextSnapshot);
         setController(nextController);
+        setControllerLoaded(true);
       })
       .catch((value: unknown) => setError(value instanceof Error ? value.message : "Could not load configured models."));
   }, []);
@@ -58,7 +61,7 @@ export default function ControlModelsRoute() {
   if (error) {
     return <ErrorState label={error} />;
   }
-  if (!snapshot || !controller) {
+  if (!snapshot || !controllerLoaded) {
     return <LoadingState label="Loading configured model cards…" />;
   }
 
@@ -71,7 +74,7 @@ export default function ControlModelsRoute() {
         <PageHeader
           eyebrow="Control"
           title="Configured models"
-          description="Unified local and remote model cards with controller status, roles, capabilities, request metrics, and a shared settings modal."
+          description="Unified local and remote model cards with controller status, roles, capabilities, request metrics, and inspect-first drill-ins."
         />
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -80,6 +83,15 @@ export default function ControlModelsRoute() {
           <FactCard label="Tool-capable" value={toolCapableCount} detail="Models with at least one tool-calling capable endpoint." />
           <FactCard label="Observed requests" value={snapshot.requests.length} detail="Request count currently available to the inventory as runtime context." />
         </div>
+
+        {!controller ? (
+          <SectionCard
+            title="Controller pending"
+            description="The runtime-config editor can leave the system in a valid pre-activation state before any controller candidate exists."
+          >
+            <EmptyState label="Activate a local or remote endpoint, then assign it from Control > Controller." />
+          </SectionCard>
+        ) : null}
 
         <SectionCard title="Model inventory" description="Every configured model appears once, with local and remote endpoint state merged into a card-based registry.">
           {cards.length === 0 ? (
@@ -118,7 +130,7 @@ export default function ControlModelsRoute() {
 
                   <div className="mt-5">
                     <button className={secondaryButtonClassName} type="button" onClick={() => setSelectedModelId(card.modelId)}>
-                      Settings
+                      Inspect
                     </button>
                   </div>
                 </article>
@@ -133,7 +145,7 @@ export default function ControlModelsRoute() {
           <div className="mx-auto max-w-5xl rounded-none border border-[var(--rm-border)] bg-[var(--rm-surface)] p-6 shadow-[var(--rm-shadow-card)]">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
-                <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">Model settings</p>
+                <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">Model inspection</p>
                 <h2 className="mt-2 text-2xl font-light tracking-tight text-[var(--rm-fg)]">{selectedCard.displayName}</h2>
                 <p className="mt-2 break-all text-sm text-[var(--rm-secondary)]">{selectedCard.modelId}</p>
               </div>
@@ -196,6 +208,15 @@ export default function ControlModelsRoute() {
                   MCP-backed execution is reflected through runtime tool receipts when the selected endpoint supports tool calling.
                 </p>
               </div>
+            </div>
+
+            <div className="mt-4 flex flex-wrap gap-3">
+              <Link className={secondaryButtonClassName} to="/app/control/runtime-config">
+                Edit runtime config
+              </Link>
+              <Link className={secondaryButtonClassName} to="/app/control/accounts">
+                Review provider accounts
+              </Link>
             </div>
 
             <div className="mt-4">

@@ -1,0 +1,16 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/16-router-runtime-unified-telemetry-dashboard/role-model-router/packages/sqlite-memory[39m
+
+(node:67776) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [32mΓ£ô[39m test/index.test.ts [2m([22m[2m14 tests[22m[2m)[22m[33m 4875[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m initializeSqliteMemory[2m > [22mpersists runtime observation bundles, profile snapshots, and maintenance-policy reads [33m 826[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m initializeSqliteMemory[2m > [22mflattens persisted runtime observations into canonical telemetry summary, comparison, and request rows [33m 985[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m initializeSqliteMemory[2m > [22mexports persisted runtime state for operator drills [33m 617[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m initializeSqliteMemory[2m > [22mrestores runtime state from a backup after scoped deletion [33m 731[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m14 passed[39m[22m[90m (14)[39m
+[2m   Start at [22m 10:19:02
+[2m   Duration [22m 10.61s[2m (transform 3.12s, setup 0ms, collect 3.58s, tests 4.87s, environment 1ms, prepare 688ms)[22m
+

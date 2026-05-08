@@ -67,6 +67,20 @@ describe("runtime-observability", () => {
         requestId: validation.decision.request_id,
         routingDecisionId: validation.decision.routing_decision_id,
         endpointId: validation.decision.chosen_endpoint_id,
+        executionTelemetry: {
+          providerFamily: validation.execution.normalized.providerFamily,
+          finishReason: validation.execution.normalized.finishReason,
+          stream: {
+            requested: validation.execution.normalized.stream.requested,
+            textDeltas: validation.execution.normalized.stream.textDeltas,
+            toolCallDeltas: validation.execution.normalized.stream.toolCallDeltas,
+            toolArgumentDeltas: validation.execution.normalized.stream.toolArgumentDeltas,
+          },
+          streamSupport: validation.execution.capabilities.streaming,
+          promptCaching: validation.execution.capabilities.promptCaching,
+          usageSupport: validation.execution.capabilities.usage,
+          costProvenance: expect.stringMatching(/actual|estimated|unavailable/),
+        },
         observedPerformance: {
           sample: {
             source_type: "live_request",

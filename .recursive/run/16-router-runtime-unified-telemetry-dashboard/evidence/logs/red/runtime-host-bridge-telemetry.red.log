@@ -1,0 +1,91 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/16-router-runtime-unified-telemetry-dashboard/role-model-router/apps/runtime-host-bridge[39m
+
+(node:67304) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [31mΓ¥»[39m test/index.test.ts [2m([22m[2m19 tests[22m[2m | [22m[31m3 failed[39m[2m)[22m[33m 1122[2mms[22m[39m
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22mcreates a stable model-list response grouped by model id[32m 18[2mms[22m[39m
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22mmaps a chat-completions request into role-model routing and execution inputs[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22mserves health and model-list endpoints[32m 49[2mms[22m[39m
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22mserves preserved host observability and vendor-facing utility endpoints[32m 22[2mms[22m[39m
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22mserves runtime control-plane summary, provider, account, and endpoint routes[32m 32[2mms[22m[39m
+[31m   [31m├ù[31m runtime-host-bridge[2m > [22mserves canonical telemetry summary, comparison, and recent request routes[39m[32m 15[2mms[22m[39m
+[31m     ΓåÆ expected 404 to be 200 // Object.is equality[39m
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22mserves downstream OpenAI-compatible provider metadata for consumer apps[32m 6[2mms[22m[39m
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22mserves chat-completions responses with role-model execution metadata[32m 5[2mms[22m[39m
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22mserves OpenAI-compatible SSE events for streaming responses requests[32m 77[2mms[22m[39m
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22msurfaces tool calls on chat-completions responses when the backend returns them[32m 5[2mms[22m[39m
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22mstreams provider deltas through the bridge as they arrive[32m 73[2mms[22m[39m
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22mcreates a runtime backend that executes chat-completions through the real routing and adapter path[32m 139[2mms[22m[39m
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22mcreates a runtime backend that persists structured request and endpoint inspection state[32m 93[2mms[22m[39m
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22mcreates a runtime backend that exposes provider presets, runtime summary, and account upserts[32m 187[2mms[22m[39m
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22mexecutes chat-completions through an activated Kimi Code endpoint[32m 155[2mms[22m[39m
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22mcreates a runtime backend that executes responses through the real routing and adapter path[32m 79[2mms[22m[39m
+[31m   [31m├ù[31m runtime-host-bridge[2m > [22mserves structured request and endpoint inspection routes through the bridge server[39m[32m 66[2mms[22m[39m
+[31m     ΓåÆ expected 'undefined' to be 'function' // Object.is equality[39m
+[31m   [31m├ù[31m runtime-host-bridge[2m > [22mstreams canonical telemetry updates over SSE after new requests are persisted[39m[32m 99[2mms[22m[39m
+[31m     ΓåÆ expected 'undefined' to be 'function' // Object.is equality[39m
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22mresolves bridge server options from explicit values and defaults[32m 0[2mms[22m[39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 3 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/index.test.ts > runtime-host-bridge > serves canonical telemetry summary, comparison, and recent request routes
+AssertionError: expected 404 to be 200 // Object.is equality
+
+- Expected
++ Received
+
+- 200
++ 404
+
+ Γ¥» test/index.test.ts:737:38
+    735|     try {
+    736|       const summaryResponse = await fetch(`http://127.0.0.1:${server.pΓÇª
+    737|       expect(summaryResponse.status).toBe(200);
+       |                                      ^
+    738|       expect(await summaryResponse.json()).toEqual({
+    739|         requestCount: 2,
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/3]ΓÄ»
+
+ FAIL  test/index.test.ts > runtime-host-bridge > serves structured request and endpoint inspection routes through the bridge server
+AssertionError: expected 'undefined' to be 'function' // Object.is equality
+
+Expected: "function"
+Received: "undefined"
+
+ Γ¥» test/index.test.ts:2148:49
+    2146| 
+    2147|     expect(typeof backend.listRecentRequestObservations).toBe("functioΓÇª
+    2148|     expect(typeof backend.readTelemetrySummary).toBe("function");
+       |                                                 ^
+    2149|     expect(typeof backend.listTelemetryComparisonRows).toBe("function"ΓÇª
+    2150|     expect(typeof backend.listTelemetryRequests).toBe("function");
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[2/3]ΓÄ»
+
+ FAIL  test/index.test.ts > runtime-host-bridge > streams canonical telemetry updates over SSE after new requests are persisted
+AssertionError: expected 'undefined' to be 'function' // Object.is equality
+
+Expected: "function"
+Received: "undefined"
+
+ Γ¥» test/index.test.ts:2319:47
+    2317|     });
+    2318| 
+    2319|     expect(typeof backend.subscribeTelemetry).toBe("function");
+       |                                               ^
+    2320| 
+    2321|     const server = await (
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[3/3]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m3 failed[39m[22m[2m | [22m[1m[32m16 passed[39m[22m[90m (19)[39m
+[2m   Start at [22m 10:12:13
+[2m   Duration [22m 2.46s[2m (transform 483ms, setup 0ms, collect 686ms, tests 1.12s, environment 0ms, prepare 251ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\16-router-runtime-unified-telemetry-dashboard\role-model-router\apps\runtime-host-bridge:
+ΓÇëERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓÇë Command failed with exit code 1: vitest run test/index.test.ts

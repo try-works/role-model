@@ -12,6 +12,7 @@
   "tokens_in": 48,
   "tokens_out": 24,
   "latency_ms": 180,
+  "cost_actual": 0.0008,
   "cost_estimate": 0.001,
   "currency": "USD",
   "error_class": "none",

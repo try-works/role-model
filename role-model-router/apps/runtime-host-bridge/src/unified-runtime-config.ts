@@ -1,4 +1,4 @@
-import { parse } from "yaml";
+import { parse, stringify } from "yaml";
 
 export type UnifiedRuntimeExecutionMode =
   | "decision_only"
@@ -140,6 +140,31 @@ function parseProcessConfig(
   };
 }
 
+function readNonEmptyString(value: unknown): string | null {
+  return typeof value === "string" && value.trim().length > 0 ? value : null;
+}
+
+function readPositiveNumber(value: unknown): number | null {
+  return typeof value === "number" && Number.isFinite(value) && value > 0 ? value : null;
+}
+
+function readStringArray(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((entry): entry is string => typeof entry === "string") : [];
+}
+
+function readStringRecord(value: unknown): Record<string, string> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return {};
+  }
+  const normalized: Record<string, string> = {};
+  for (const [key, entry] of Object.entries(value)) {
+    if (typeof entry === "string") {
+      normalized[key] = entry;
+    }
+  }
+  return normalized;
+}
+
 function normalizeJSONValue(value: unknown): UnifiedRuntimeJSONValue | undefined {
   if (
     value === null ||
@@ -172,6 +197,206 @@ function isUnifiedRuntimeJSONObject(
   value: UnifiedRuntimeJSONValue | undefined,
 ): value is Readonly<Record<string, UnifiedRuntimeJSONValue>> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function normalizeProcessConfigInput(value: unknown): UnifiedRuntimeProcessConfig {
+  if (value === undefined || value === null) {
+    return {
+      command: null,
+      args: [],
+      env: {},
+      cwd: null,
+      startupTimeoutMs: null,
+    };
+  }
+  ensureObject(value, "Unified runtime process config must be an object.");
+  return {
+    command: readNonEmptyString(value.command),
+    args: readStringArray(value.args),
+    env: readStringRecord(value.env),
+    cwd: readNonEmptyString(value.cwd),
+    startupTimeoutMs: readPositiveNumber(
+      "startupTimeoutMs" in value ? value.startupTimeoutMs : value.startup_timeout_ms,
+    ),
+  };
+}
+
+function normalizeLlamaSwapModelInput(
+  value: unknown,
+  fallbackModelId?: string,
+): UnifiedRuntimeConfigModel | null {
+  ensureObject(value, "Unified llama-swap model config must be an object.");
+  const modelId = readNonEmptyString("modelId" in value ? value.modelId : value.model_id) ?? fallbackModelId ?? null;
+  const path = readNonEmptyString(value.path);
+  if (!modelId || !path) {
+    return null;
+  }
+  return {
+    modelId,
+    path,
+    contextWindow: readPositiveNumber(
+      "contextWindow" in value ? value.contextWindow : value.context_window,
+    ),
+    command: readNonEmptyString(value.command),
+    proxyBaseUrl: readNonEmptyString(
+      "proxyBaseUrl" in value ? value.proxyBaseUrl : value.proxy,
+    ),
+    checkEndpoint: readNonEmptyString(
+      "checkEndpoint" in value ? value.checkEndpoint : value.check_endpoint,
+    ),
+    useModelName: readNonEmptyString(
+      "useModelName" in value ? value.useModelName : value.use_model_name,
+    ),
+  };
+}
+
+function normalizeLlamaSwapInput(value: unknown): UnifiedRuntimeConfig["llamaSwap"] {
+  if (value === undefined || value === null) {
+    return {
+      enabled: false,
+      models: [],
+      process: normalizeProcessConfigInput(undefined),
+    };
+  }
+  ensureObject(value, "Unified llama-swap config must be an object.");
+
+  const rawModels = "models" in value ? value.models : undefined;
+  const models: UnifiedRuntimeConfigModel[] = [];
+
+  if (Array.isArray(rawModels)) {
+    for (const entry of rawModels) {
+      const normalized = normalizeLlamaSwapModelInput(entry);
+      if (normalized) {
+        models.push(normalized);
+      }
+    }
+  } else if (rawModels && typeof rawModels === "object") {
+    for (const [modelId, entry] of Object.entries(rawModels)) {
+      const normalized = normalizeLlamaSwapModelInput(entry, modelId);
+      if (normalized) {
+        models.push(normalized);
+      }
+    }
+  }
+
+  const processSource =
+    "process" in value && value.process && typeof value.process === "object" ? value.process : value;
+
+  return {
+    enabled: models.length > 0,
+    models,
+    process: normalizeProcessConfigInput(processSource),
+  };
+}
+
+function normalizeLiteLLMProviderMappingInput(
+  value: unknown,
+): UnifiedRuntimeConfigProviderMapping | null {
+  ensureObject(value, "Unified LiteLLM model mapping must be an object.");
+  const modelId =
+    readNonEmptyString("modelId" in value ? value.modelId : value.model_name) ??
+    readNonEmptyString("model_id" in value ? value.model_id : undefined);
+  const normalizedLiteLLMParams = normalizeJSONValue(
+    "litellmParams" in value ? value.litellmParams : value.litellm_params,
+  );
+  const litellmParams = isUnifiedRuntimeJSONObject(normalizedLiteLLMParams)
+    ? normalizedLiteLLMParams
+    : {};
+  const litellmModel =
+    readNonEmptyString("litellmModel" in value ? value.litellmModel : value.litellm_model) ??
+    (typeof litellmParams.model === "string" ? litellmParams.model : null) ??
+    modelId;
+  if (!modelId || !litellmModel) {
+    return null;
+  }
+  return {
+    modelId,
+    litellmModel,
+    litellmParams: {
+      ...litellmParams,
+      model: litellmModel,
+    },
+  };
+}
+
+function normalizeLiteLLMProviderInput(
+  value: unknown,
+  fallbackProviderId?: string,
+): UnifiedRuntimeConfigProvider | null {
+  ensureObject(value, "Unified LiteLLM provider config must be an object.");
+  const providerId =
+    readNonEmptyString("providerId" in value ? value.providerId : value.provider_id) ?? fallbackProviderId ?? null;
+  if (!providerId) {
+    return null;
+  }
+
+  const modelMappings: UnifiedRuntimeConfigProviderMapping[] = [];
+  const rawModelMappings =
+    "modelMappings" in value
+      ? value.modelMappings
+      : "model_mappings" in value
+        ? value.model_mappings
+        : "model_list" in value
+          ? value.model_list
+          : undefined;
+  if (Array.isArray(rawModelMappings)) {
+    for (const entry of rawModelMappings) {
+      const normalized = normalizeLiteLLMProviderMappingInput(entry);
+      if (normalized) {
+        modelMappings.push(normalized);
+      }
+    }
+  }
+
+  const explicitModelNames = readStringArray(
+    "modelNames" in value ? value.modelNames : "model_names" in value ? value.model_names : undefined,
+  );
+  const modelNames = explicitModelNames.length > 0 ? explicitModelNames : modelMappings.map((entry) => entry.modelId);
+
+  return {
+    providerId,
+    apiKeyRef: readNonEmptyString("apiKeyRef" in value ? value.apiKeyRef : value.api_key),
+    modelNames,
+    modelMappings,
+  };
+}
+
+function normalizeLiteLLMInput(value: unknown): UnifiedRuntimeConfig["liteLLM"] {
+  if (value === undefined || value === null) {
+    return {
+      enabled: false,
+      providers: [],
+      process: normalizeProcessConfigInput(undefined),
+    };
+  }
+  ensureObject(value, "Unified LiteLLM config must be an object.");
+
+  const rawProviders = "providers" in value ? value.providers : undefined;
+  const providers: UnifiedRuntimeConfigProvider[] = [];
+  if (Array.isArray(rawProviders)) {
+    for (const entry of rawProviders) {
+      const normalized = normalizeLiteLLMProviderInput(entry);
+      if (normalized) {
+        providers.push(normalized);
+      }
+    }
+  } else if (rawProviders && typeof rawProviders === "object") {
+    for (const [providerId, entry] of Object.entries(rawProviders)) {
+      const normalized = normalizeLiteLLMProviderInput(entry, providerId);
+      if (normalized) {
+        providers.push(normalized);
+      }
+    }
+  }
+
+  const processSource =
+    "process" in value && value.process && typeof value.process === "object" ? value.process : value;
+
+  return {
+    enabled: providers.length > 0,
+    providers,
+    process: normalizeProcessConfigInput(processSource),
+  };
 }
 
 function parseLlamaSwapModels(rawConfig: RawUnifiedRuntimeConfig): UnifiedRuntimeConfig["llamaSwap"] {
@@ -299,4 +524,132 @@ export function parseUnifiedRuntimeConfigText(text: string): UnifiedRuntimeConfi
     llamaSwap,
     liteLLM,
   };
+}
+
+export function normalizeUnifiedRuntimeConfigInput(input: unknown): UnifiedRuntimeConfig {
+  ensureObject(input, "Unified runtime config input must be an object.");
+  const routingStrategyInput =
+    "routing" in input &&
+    input.routing &&
+    typeof input.routing === "object" &&
+    !Array.isArray(input.routing) &&
+    "strategy" in input.routing
+      ? input.routing.strategy
+      : undefined;
+  const llamaSwap = normalizeLlamaSwapInput(
+    "llamaSwap" in input ? input.llamaSwap : "llama_swap" in input ? input.llama_swap : undefined,
+  );
+  const liteLLM = normalizeLiteLLMInput(
+    "liteLLM" in input ? input.liteLLM : "litellm_proxy" in input ? input.litellm_proxy : undefined,
+  );
+
+  return {
+    version: readNonEmptyString(input.version) ?? "1.0",
+    routingStrategy:
+      readNonEmptyString(
+        "routingStrategy" in input
+          ? input.routingStrategy
+          : routingStrategyInput,
+      ) ?? null,
+    executionMode: deriveUnifiedRuntimeExecutionMode({
+      llamaSwapEnabled: llamaSwap.enabled,
+      liteLLMEnabled: liteLLM.enabled,
+    }),
+    llamaSwap,
+    liteLLM,
+  };
+}
+
+function hasProcessConfig(config: UnifiedRuntimeProcessConfig): boolean {
+  return (
+    config.command !== null ||
+    config.args.length > 0 ||
+    Object.keys(config.env).length > 0 ||
+    config.cwd !== null ||
+    config.startupTimeoutMs !== null
+  );
+}
+
+function renderProcessConfig(config: UnifiedRuntimeProcessConfig): Record<string, unknown> {
+  const rendered: Record<string, unknown> = {};
+  if (config.command !== null) {
+    rendered.command = config.command;
+  }
+  if (config.args.length > 0) {
+    rendered.args = [...config.args];
+  }
+  if (Object.keys(config.env).length > 0) {
+    rendered.env = { ...config.env };
+  }
+  if (config.cwd !== null) {
+    rendered.cwd = config.cwd;
+  }
+  if (config.startupTimeoutMs !== null) {
+    rendered.startup_timeout_ms = config.startupTimeoutMs;
+  }
+  return rendered;
+}
+
+export function renderUnifiedRuntimeConfigText(config: UnifiedRuntimeConfig): string {
+  const document: Record<string, unknown> = {
+    version: config.version,
+  };
+
+  if (config.routingStrategy !== null) {
+    document.routing = {
+      strategy: config.routingStrategy,
+    };
+  }
+
+  const llamaSwapSection: Record<string, unknown> = renderProcessConfig(config.llamaSwap.process);
+  if (config.llamaSwap.models.length > 0) {
+    llamaSwapSection.models = Object.fromEntries(
+      config.llamaSwap.models.map((model) => [
+        model.modelId,
+        {
+          path: model.path,
+          ...(model.contextWindow !== null ? { context_window: model.contextWindow } : {}),
+          ...(model.command !== null ? { command: model.command } : {}),
+          ...(model.proxyBaseUrl !== null ? { proxy: model.proxyBaseUrl } : {}),
+          ...(model.checkEndpoint !== null ? { check_endpoint: model.checkEndpoint } : {}),
+          ...(model.useModelName !== null ? { use_model_name: model.useModelName } : {}),
+        },
+      ]),
+    );
+  }
+  if (config.llamaSwap.models.length > 0 || hasProcessConfig(config.llamaSwap.process)) {
+    document.llama_swap = llamaSwapSection;
+  }
+
+  const liteLLMSection: Record<string, unknown> = renderProcessConfig(config.liteLLM.process);
+  if (config.liteLLM.providers.length > 0) {
+    liteLLMSection.providers = Object.fromEntries(
+      config.liteLLM.providers.map((provider) => [
+        provider.providerId,
+        {
+          ...(provider.apiKeyRef !== null ? { api_key: provider.apiKeyRef } : {}),
+          model_list:
+            provider.modelMappings.length > 0
+              ? provider.modelMappings.map((mapping) => ({
+                  model_name: mapping.modelId,
+                  litellm_params: {
+                    ...mapping.litellmParams,
+                    model: mapping.litellmModel,
+                  },
+                }))
+              : provider.modelNames.map((modelName) => ({
+                  model_name: modelName,
+                  litellm_params: {
+                    model: modelName,
+                  },
+                })),
+        },
+      ]),
+    );
+  }
+  if (config.liteLLM.providers.length > 0 || hasProcessConfig(config.liteLLM.process)) {
+    document.litellm_proxy = liteLLMSection;
+  }
+
+  return `${stringify(document).trimEnd()}\n`;
 }

@@ -1,0 +1,143 @@
+viewport: 3825x2160
+page: 3825x2579
+scroll: (0, 0)
+Role Model Runtime
+Operator Shell
+A two-level operator shell for studio work, control-plane edits, observation, and integration references.
+[46]<a />
+	Overview
+[47]<a />
+	Studio
+[48]<a />
+	Control
+[49]<a />
+	Observe
+[50]<a />
+	Integrations
+[51]<a />
+	System
+Preserved host tools
+[126]<a />
+	/logs
+[128]<a />
+	/api/metrics
+Overview
+Unified telemetry
+A telemetry-first overview of local and remote runtime posture, comparison rows, controller state, and recent request flow.
+Section
+Overview
+Template
+summary-board
+Route
+/app
+Overview
+pages
+[52]<a />
+	Summary
+Overview
+Unified telemetry
+One structured local-plus-remote telemetry surface for the runtime summary, comparison rows, and freshest request activity.
+Requests
+2 local / 3 remote in the current telemetry window
+Failures
+5 successful requests recorded
+Latency
+3 ms
+2 ms average latency across structured telemetry
+Tokens
+87
+3 cached requests and $0.0126 actual cost recorded
+Endpoint comparison
+Canonical telemetry rows group local and remote request volume, latency, cache posture, and cost into one comparison rail.
+openai/gpt-4.1-mini-fast
+Remote
+healthy
+openai.litellm.global.openai-gpt-4-1-mini-fast
+3 requests
+3 ms p95 / 2 ms avg
+57 tokens
+$0.0126 actual
+litellm-proxy
+Cache hit on 3 requests
+0 failures / 3 successes
+No roles bound
+local/llama-3.1-8b-instruct
+Local
+healthy
+llama-swap.local.local-llama-3-1-8b-instruct
+2 requests
+2 ms p95 / 2 ms avg
+30 tokens
+$0.0000 est.
+ai-sdk-openai-compatible
+Caching unavailable
+0 failures / 2 successes
+No roles bound
+Latest requests
+The freshest structured request rows stay adjacent to the comparison board and refresh via SSE.
+req-run16-sse-remote
+openai.litellm.global.openai-gpt-4-1-mini-fast
+Remote
+200 ok
+2 ms
+19 tokens
+litellm-proxy
+stop
+Cache hit
+May 08, 01:25 PM
+*[397]<a />
+	Inspect
+req-run16-sse-local
+llama-swap.local.local-llama-3-1-8b-instruct
+Local
+200 ok
+2 ms
+15 tokens
+ai-sdk-openai-compatible
+stop
+Caching unavailable
+May 08, 01:25 PM
+*[371]<a />
+	Inspect
+req-runtime-host-bridge
+openai.litellm.global.openai-gpt-4-1-mini-fast
+Remote
+200 ok
+3 ms
+19 tokens
+litellm-proxy
+stop
+Cache hit
+May 08, 01:23 PM
+[341]<a />
+	Inspect
+req-runtime-vendor-hybrid-remote
+openai.litellm.global.openai-gpt-4-1-mini-fast
+Remote
+200 ok
+2 ms
+19 tokens
+litellm-proxy
+stop
+Cache hit
+May 08, 01:02 PM
+[37]<a />
+	Inspect
+req-runtime-vendor-hybrid-local
+llama-swap.local.local-llama-3-1-8b-instruct
+Local
+200 ok
+2 ms
+15 tokens
+ai-sdk-openai-compatible
+stop
+Caching unavailable
+May 08, 01:02 PM
+[40]<a />
+	Inspect
+Reading order
+Structured telemetry leads; preserved raw host tooling remains adjacent.
+Canonical first
+Overview now leads with structured role-model telemetry. Use Requests for the full ledger and request inspector.
+Raw adjacency
+Observe > Activity stays available for raw host metrics and captures when you need preserved llama-swap operator detail.

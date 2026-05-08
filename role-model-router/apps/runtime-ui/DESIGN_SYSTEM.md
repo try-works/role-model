@@ -73,6 +73,12 @@ This shell must not clone the vendored llama-swap UI. It should absorb the vendo
   - `--rm-border-strong`
   - `--rm-accent`
   - accent opacity variants
+  - telemetry semantic accents:
+    - `--rm-telemetry-local`
+    - `--rm-telemetry-remote`
+    - `--rm-telemetry-healthy`
+    - `--rm-telemetry-degraded`
+    - `--rm-telemetry-raw`
 - **Component tokens** sit above the semantic layer:
   - `--rm-shell-width`
   - `--rm-radius-*`
@@ -109,7 +115,7 @@ The runtime hierarchy remains:
 
 | Route | Status | Template | Purpose |
 | --- | --- | --- | --- |
-| `/app` | live | `summary-board` | Lead with runtime health, current controller assignment, request volume, active models, and major exceptions. |
+| `/app` | live | `summary-board` | Lead with canonical local/remote telemetry KPIs, comparison rows, current controller assignment, recent requests, and major exceptions. |
 | `/app/studio/chat` | live | `studio-workspace` | Routed chat workspace with assistant output, tool calls, execution receipts, usage, and raw payload inspection. |
 | `/app/studio/images` | live | `studio-workspace` | Image workspace with two first-slice request modes in one page: OpenAI-style generation over `/v1/images/generations` and SDAPI generation over `/sdapi/v1/txt2img`; editing and img2img stay backlog-visible rather than first-slice requirements. |
 | `/app/studio/audio` | live | `studio-workspace` | Unified audio workspace over `/v1/audio/speech`, `/v1/audio/voices`, and `/v1/audio/transcriptions` so voice discovery, speech generation, and transcript workflows remain one operator surface. |
@@ -117,12 +123,13 @@ The runtime hierarchy remains:
 | `/app/studio/advanced` | live | `studio-workspace` | Contract-and-request workspace for advanced families that stay under Studio: `/v1/responses`, `/v1/messages`, `/v1/messages/count_tokens`, `/v1/embeddings`, `/completion`, and `/infill`. |
 | `/app/control/providers` | live | `registry-detail` | Catalog-backed provider onboarding, capability review, and next-step routing into accounts and endpoints. |
 | `/app/control/accounts` | live | `registry-detail` | API-key and OAuth account management with operational state, not decorative onboarding chrome. |
+| `/app/control/runtime-config` | live | `registry-detail` | Repo-owned editor for the unified runtime contract covering local llama-swap models, remote LiteLLM providers, and process policy. |
 | `/app/control/endpoints` | live | `registry-detail` | Endpoint activation, registry diagnostics, and role binding review. |
-| `/app/control/controller` | live | `registry-detail` | Explicit controller assignment with candidate health, source type, role coverage, and tooling posture. |
-| `/app/control/models` | live | `model-inventory` | Unified local/remote model inventory with card-based summaries and a shared settings modal. |
-| `/app/observe/activity` | live | `ledger-inspector` | Native host activity ledger over `/api/metrics` with inline capture drill-ins from `/api/captures/:id` and adjacent access to `/api/events`. |
-| `/app/observe/requests` | live | `ledger-inspector` | Role-model request ledger and routing-level observability. |
-| `/app/observe/requests/:requestId` | live | `ledger-inspector` | Request artifact, endpoint profile, tooling receipts, captures, and diagnostics in one operator inspector. |
+| `/app/control/controller` | live | `registry-detail` | Explicit controller assignment with candidate health, source type, role coverage, tooling posture, and an honest empty state before any endpoint is activated. |
+| `/app/control/models` | live | `model-inventory` | Unified local/remote model inventory with inspect-only card drill-ins, explicit handoff to the runtime-config editor, and a non-error pre-activation state when no controller exists yet. |
+| `/app/observe/activity` | live | `ledger-inspector` | Preserved raw-host activity ledger over `/api/metrics` with inline capture drill-ins from `/api/captures/:id` and adjacent access to `/api/events`. |
+| `/app/observe/requests` | live | `ledger-inspector` | Canonical telemetry request ledger over `/api/role-model/telemetry/requests` with latency, token, cache, and source context. |
+| `/app/observe/requests/:requestId` | live | `ledger-inspector` | Telemetry-first request inspector with usage, cache, captures, endpoint profile, tooling receipts, and raw observation detail. |
 | `/app/observe/logs` | live | `dual-console` | Repo-owned log shell with preserved `/logs` history plus split proxy/upstream consoles over `/logs/stream/*`. |
 | `/app/integrations/downstream` | live | `contract-reference` | Downstream OpenAI-compatible contract, auth, model discovery, and tool-calling expectations. |
 | `/app/integrations/upstream` | live | `contract-reference` | Upstream passthrough reference with model-specific upstream target inventory, boundary guidance, and contextual raw `/upstream/*` escape hatches. |
@@ -137,11 +144,11 @@ Status note:
 
 | Template | Layout definition |
 | --- | --- |
-| `summary-board` | Two-tier dashboard: summary cards first, then a split between recent observations and configuration posture. |
+| `summary-board` | Two-tier dashboard: telemetry summary cards first, then a split between cross-vendor comparison and recent request/configuration posture. |
 | `studio-workspace` | Left composition rail, dominant result surface, and secondary inspection region for payload, captures, or contracts. |
 | `registry-detail` | Dense registry/editor split: compact editing or selection on one side, operational state ledger on the other. |
 | `model-inventory` | Mobile-first card grid with modal drill-in; cards are the default object representation, not rows. |
-| `ledger-inspector` | Dense sortable ledger plus adjacent inspector or drill-in drawer for captures, payloads, and profile context. |
+| `ledger-inspector` | Dense sortable ledger plus adjacent inspector or drill-in drawer for telemetry facts, captures, payloads, and profile context. |
 | `dual-console` | Two raw log consoles or stream panes with clear source labels and a small operator toolbar. |
 | `contract-reference` | Narrow reference column plus implementation contract panels and example payloads. |
 | `system-topology` | Layered operational summary: health and version first, then host/runtime policy panels and contextual host diagnostics. |
@@ -152,11 +159,11 @@ Temporary placeholder routes may render through `FutureSurface` only while a fut
 
 | Template | Implemented reading order |
 | --- | --- |
-| `summary-board` | `/app` leads with a top fact strip, then a dominant request ledger with a narrower runtime/provider readiness rail. |
+| `summary-board` | `/app` leads with telemetry KPI cards, then a dominant local-vs-remote comparison/readiness split with recent request context below. |
 | `studio-workspace` | `/app/studio/chat` uses a compact composer, dominant response stage, and adjacent usage/tooling/payload inspection. |
-| `registry-detail` | Provider, account, controller, and endpoint pages use fact strips before the registry rail + dossier/action split. |
-| `model-inventory` | `/app/control/models` uses fact strips before a responsive configured-model card grid and shared settings modal. |
-| `ledger-inspector` | Requests, request detail, and activity all use a dense ledger or inspection column paired with captures, profiles, or payload drill-ins. |
+| `registry-detail` | Provider, account, runtime-config, controller, and endpoint pages use fact strips before the registry rail + dossier/action split. |
+| `model-inventory` | `/app/control/models` uses fact strips before a responsive configured-model card grid and an inspect-only modal. |
+| `ledger-inspector` | Requests and request detail lead with telemetry facts while Activity remains the raw-host adjacency surface for metrics, captures, and payload drill-ins. |
 | `dual-console` | `/app/observe/logs` starts with combined history, then splits proxy and upstream consoles into mirrored panes. |
 | `contract-reference` | `/app/integrations/downstream` keeps connection facts in a narrow reference column and examples/compatibility in the larger contract pane. |
 | `system-topology` | `/app/system/runtime` layers lifecycle, controller posture, live version facts, preserved host links, and runtime contract notes. |
@@ -253,7 +260,9 @@ These belong inside existing role-model pages, not in a separate vendor-style se
 
 Placement rules:
 
-- **Control > Models** owns per-model policy and metadata.
+- **Control > Runtime Config** owns editable local/remote runtime policy and model/provider metadata.
+- **Control > Models** owns inspect-first model inventory and links back to editable surfaces.
+- **Control > Models** and **Control > Controller** must render honest pre-activation empty states when the runtime has zero configured endpoints.
 - **Control > Endpoints** owns endpoint/runtime readiness and bound execution surfaces.
 - **System > Runtime** owns global host policy and matrix summary.
 - **System > Peers** owns remote-peer config and upstream auth posture.
@@ -315,8 +324,8 @@ During the conversion window, some placeholder routes may still expose a context
   - high-level metrics
   - endpoint binding or peer source
   - controller state when applicable
-  - one settings action
-- The settings action opens a shared **model settings modal** rather than routing to a separate editing page.
+  - one inspect action
+- The inspect action opens a shared **model inspection modal** and links back to `Control > Runtime Config` rather than pretending inline edits are persisted here.
 - The modal sections are:
   1. overview
   2. roles

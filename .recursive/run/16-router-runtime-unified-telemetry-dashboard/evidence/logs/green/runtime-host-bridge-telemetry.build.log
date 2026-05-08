@@ -1,0 +1,9 @@
+
+> @role-model-router/runtime-host-bridge@0.0.0 build D:\DEV\role-model\.worktrees\16-router-runtime-unified-telemetry-dashboard\role-model-router\apps\runtime-host-bridge
+> tsc -p tsconfig.json
+
+src/index.ts(262,57): error TS1005: ',' expected.
+src/index.ts(273,64): error TS1005: ',' expected.
+D:\DEV\role-model\.worktrees\16-router-runtime-unified-telemetry-dashboard\role-model-router\apps\runtime-host-bridge:
+ΓÇëERR_PNPM_RECURSIVE_RUN_FIRST_FAILΓÇë @role-model-router/runtime-host-bridge@0.0.0 build: `tsc -p tsconfig.json`
+Exit status 2

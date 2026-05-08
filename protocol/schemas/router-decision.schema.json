@@ -151,6 +151,7 @@
   },
   "$defs": {
     "metricEntry": {
+      "title": "MetricEntry",
       "type": "object",
       "additionalProperties": false,
       "required": ["value", "source"],

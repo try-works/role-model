@@ -468,3 +468,34 @@
 - Known issues / follow-ups:
   - selected package build spot-checks still reproduce the inherited `packages/protocol-types/src/generated.ts` `MetricEntry` drift outside run-owned scope
   - the broader root `build` and `test` commands still fail on the inherited schema-tools/Biome generated-types path
+
+### Run `16-router-runtime-unified-telemetry-dashboard`
+
+- Run folder: `/.recursive/run/16-router-runtime-unified-telemetry-dashboard/`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `01.5-root-cause.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `03.5-code-review.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - widened the canonical runtime telemetry contract across `sqlite-memory`, `runtime-observability`, `runtime-host-bridge`, and `runtime-ui`, including mixed local-plus-remote summary, request-detail, ledger, and SSE refresh surfaces
+  - added repo-owned runtime-config read/write/apply routes plus truthful `Control > Runtime Config`, account or OAuth, endpoint activation, controller, and models UI flows
+  - repaired valid zero-endpoint `decision_only` behavior so controller reads return `200 null` and the repo-owned UI renders honest pending or unassigned states instead of 500 or loading traps
+  - repaired the run-owned schema and generator seams by preserving `UsageEvent.cost_actual` and emitting titled helper types for internal `$defs`, which moved the broader build past the old schema-tools blocker
+- Why:
+  - to close the run-16 telemetry dashboard requirements and the later audit-remediation and frontend-config addenda with truthful browser-backed proof rather than partial control-plane or fixture-only coverage
+- How:
+  - implemented strict RED/GREEN TDD across telemetry, runtime-config, zero-endpoint controller, and schema-tools slices; seeded a persistent hybrid runtime state; captured browser and API proof for desktop, mobile-width, dark theme, request detail, and SSE freshness; and completed a delegated code review with no significant issues found
+- What was not done:
+  - no remediation of the unrelated `provider-acp` or `provider-cli` endpoint-kind drift and no attempt to stabilize the broader workspace-level `process-supervisor` flake was widened into this run
+- Known issues / follow-ups:
+  - broader root `build` now fails only on the unrelated `provider-acp` / `provider-cli` `endpoint_kind` mismatch
+  - broader root `test` still fails on the workspace-level `process-supervisor` crash-callback case, while the isolated package rerun passes

@@ -434,11 +434,13 @@ describe("runtime-host-bridge", () => {
            upsertProviderAccount: (body: Record<string, unknown>) => Promise<unknown>;
            startProviderDeviceAuthorization: (body: Record<string, unknown>) => Promise<unknown>;
            pollProviderDeviceAuthorization: (body: Record<string, unknown>) => Promise<unknown>;
+           readRuntimeConfig: () => Promise<unknown>;
+           updateRuntimeConfig: (body: Record<string, unknown>) => Promise<unknown>;
            activateEndpoint: (body: Record<string, unknown>) => Promise<unknown>;
            readControllerAssignment: () => Promise<unknown>;
            updateControllerAssignment: (body: Record<string, unknown>) => Promise<unknown>;
            listEndpoints: () => Promise<unknown>;
-          }) => Promise<{ port: number; close(): Promise<void> }>;
+           }) => Promise<{ port: number; close(): Promise<void> }>;
         }
       ).startBridgeServer({
       host: "127.0.0.1",
@@ -493,11 +495,27 @@ describe("runtime-host-bridge", () => {
          providerAccountId: "moonshot.personal.kimi-code",
          status: "connected",
        }),
-       activateEndpoint: async () => ({
-         endpointId: "moonshot.personal.primary.global.kimi-k2.5",
-          providerAccountId: "moonshot.personal.primary",
-          modelId: "moonshotai/kimi-k2.5",
-          status: "active",
+       readRuntimeConfig: async () => ({
+         applied: true,
+         path: "D:\\runtime-config.yaml",
+         config: {
+           version: "1.0",
+           executionMode: "hybrid",
+         },
+       }),
+       updateRuntimeConfig: async (body) => ({
+         applied: true,
+         path: "D:\\runtime-config.yaml",
+         config: {
+           version: body.version,
+           executionMode: "hybrid",
+         },
+       }),
+        activateEndpoint: async () => ({
+          endpointId: "moonshot.personal.primary.global.kimi-k2.5",
+           providerAccountId: "moonshot.personal.primary",
+           modelId: "moonshotai/kimi-k2.5",
+           status: "active",
         }),
         readControllerAssignment: async () => ({
           scope: "global",
@@ -612,6 +630,36 @@ describe("runtime-host-bridge", () => {
           status: "connected",
         });
 
+        const runtimeConfigResponse = await fetch(`http://127.0.0.1:${server.port}/api/role-model/runtime/config`);
+        expect(runtimeConfigResponse.status).toBe(200);
+        expect(await runtimeConfigResponse.json()).toEqual({
+          applied: true,
+          path: "D:\\runtime-config.yaml",
+          config: {
+            version: "1.0",
+            executionMode: "hybrid",
+          },
+        });
+
+        const runtimeConfigUpdateResponse = await fetch(`http://127.0.0.1:${server.port}/api/role-model/runtime/config`, {
+          method: "PUT",
+          headers: {
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({
+            version: "1.1",
+          }),
+        });
+        expect(runtimeConfigUpdateResponse.status).toBe(200);
+        expect(await runtimeConfigUpdateResponse.json()).toEqual({
+          applied: true,
+          path: "D:\\runtime-config.yaml",
+          config: {
+            version: "1.1",
+            executionMode: "hybrid",
+          },
+        });
+
         const controllerResponse = await fetch(`http://127.0.0.1:${server.port}/api/role-model/controller`);
         expect(controllerResponse.status).toBe(200);
         expect(await controllerResponse.json()).toEqual({
@@ -664,6 +712,111 @@ describe("runtime-host-bridge", () => {
           endpointId: "moonshot.personal.primary.global.kimi-k2.5",
           providerId: "moonshotai",
           modelId: "moonshotai/kimi-k2.5",
+        },
+      ]);
+    } finally {
+      await server.close();
+    }
+  });
+
+  test("serves canonical telemetry summary, comparison, and recent request routes", async () => {
+    expect(typeof (bridge as { startBridgeServer?: unknown }).startBridgeServer).toBe("function");
+
+    const server = await (
+      bridge as {
+        startBridgeServer: (options: {
+          host: string;
+          port: number;
+          registry: EndpointRegistryResult;
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+          ) => Promise<unknown>;
+          executeResponses: (body: Record<string, unknown>, requestId: string) => Promise<unknown>;
+          readTelemetrySummary: () => Promise<unknown>;
+          listTelemetryComparisonRows: () => Promise<unknown>;
+          listTelemetryRequests: () => Promise<unknown>;
+        }) => Promise<{ port: number; close(): Promise<void> }>;
+      }
+    ).startBridgeServer({
+      host: "127.0.0.1",
+      port: 0,
+      registry,
+      executeChatCompletions: async () => {
+        throw new Error("not used");
+      },
+      executeResponses: async () => {
+        throw new Error("not used");
+      },
+      readTelemetrySummary: async () => ({
+        requestCount: 2,
+        successCount: 1,
+        failureCount: 1,
+        totalTokens: 200,
+      }),
+      listTelemetryComparisonRows: async () => [
+        {
+          endpointId: "llama-swap.local.local-mock-llama",
+          sourceType: "local",
+          requestCount: 1,
+        },
+        {
+          endpointId: "openai.personal.primary.us-east-1.fast",
+          sourceType: "remote",
+          requestCount: 1,
+        },
+      ],
+      listTelemetryRequests: async () => [
+        {
+          requestId: "req-telemetry-local-001",
+          sourceType: "local",
+          endpointId: "llama-swap.local.local-mock-llama",
+        },
+        {
+          requestId: "req-telemetry-remote-001",
+          sourceType: "remote",
+          endpointId: "openai.personal.primary.us-east-1.fast",
+        },
+      ],
+    });
+
+    try {
+      const summaryResponse = await fetch(`http://127.0.0.1:${server.port}/api/role-model/telemetry/summary`);
+      expect(summaryResponse.status).toBe(200);
+      expect(await summaryResponse.json()).toEqual({
+        requestCount: 2,
+        successCount: 1,
+        failureCount: 1,
+        totalTokens: 200,
+      });
+
+      const rowsResponse = await fetch(`http://127.0.0.1:${server.port}/api/role-model/telemetry/rows`);
+      expect(rowsResponse.status).toBe(200);
+      expect(await rowsResponse.json()).toEqual([
+        {
+          endpointId: "llama-swap.local.local-mock-llama",
+          sourceType: "local",
+          requestCount: 1,
+        },
+        {
+          endpointId: "openai.personal.primary.us-east-1.fast",
+          sourceType: "remote",
+          requestCount: 1,
+        },
+      ]);
+
+      const requestsResponse = await fetch(`http://127.0.0.1:${server.port}/api/role-model/telemetry/requests`);
+      expect(requestsResponse.status).toBe(200);
+      expect(await requestsResponse.json()).toEqual([
+        {
+          requestId: "req-telemetry-local-001",
+          sourceType: "local",
+          endpointId: "llama-swap.local.local-mock-llama",
+        },
+        {
+          requestId: "req-telemetry-remote-001",
+          sourceType: "remote",
+          endpointId: "openai.personal.primary.us-east-1.fast",
         },
       ]);
     } finally {
@@ -2026,6 +2179,9 @@ describe("runtime-host-bridge", () => {
             };
           }>;
           listRecentRequestObservations?: () => Promise<unknown>;
+          readTelemetrySummary?: () => Promise<unknown>;
+          listTelemetryComparisonRows?: () => Promise<unknown>;
+          listTelemetryRequests?: () => Promise<unknown>;
           readRequestObservation?: (requestId: string) => Promise<unknown>;
           readEndpointProfile?: (endpointId: string) => Promise<unknown>;
         }>;
@@ -2037,6 +2193,9 @@ describe("runtime-host-bridge", () => {
     });
 
     expect(typeof backend.listRecentRequestObservations).toBe("function");
+    expect(typeof backend.readTelemetrySummary).toBe("function");
+    expect(typeof backend.listTelemetryComparisonRows).toBe("function");
+    expect(typeof backend.listTelemetryRequests).toBe("function");
     expect(typeof backend.readRequestObservation).toBe("function");
     expect(typeof backend.readEndpointProfile).toBe("function");
 
@@ -2051,6 +2210,9 @@ describe("runtime-host-bridge", () => {
             requestId: string,
           ) => Promise<unknown>;
           listRecentRequestObservations?: () => Promise<unknown>;
+          readTelemetrySummary?: () => Promise<unknown>;
+          listTelemetryComparisonRows?: () => Promise<unknown>;
+          listTelemetryRequests?: () => Promise<unknown>;
           readRequestObservation?: (requestId: string) => Promise<unknown>;
           readEndpointProfile?: (endpointId: string) => Promise<unknown>;
         }) => Promise<{ port: number; close(): Promise<void> }>;
@@ -2060,6 +2222,10 @@ describe("runtime-host-bridge", () => {
       port: 0,
       registry: backend.registry,
       executeChatCompletions: backend.executeChatCompletions,
+      executeResponses: backend.executeResponses,
+      readTelemetrySummary: backend.readTelemetrySummary,
+      listTelemetryComparisonRows: backend.listTelemetryComparisonRows,
+      listTelemetryRequests: backend.listTelemetryRequests,
       listRecentRequestObservations: backend.listRecentRequestObservations,
       readRequestObservation: backend.readRequestObservation,
       readEndpointProfile: backend.readEndpointProfile,
@@ -2091,6 +2257,59 @@ describe("runtime-host-bridge", () => {
         ]),
       );
 
+      const telemetrySummaryResponse = await fetch(
+        `http://127.0.0.1:${server.port}/api/role-model/telemetry/summary`,
+      );
+      expect(telemetrySummaryResponse.status).toBe(200);
+      expect(await telemetrySummaryResponse.json()).toEqual(
+        expect.objectContaining({
+          requestCount: 1,
+          successCount: 1,
+          failureCount: 0,
+          sourceBreakdown: expect.objectContaining({
+            remote: expect.objectContaining({
+              requestCount: 1,
+            }),
+          }),
+        }),
+      );
+
+      const telemetryRowsResponse = await fetch(
+        `http://127.0.0.1:${server.port}/api/role-model/telemetry/rows`,
+      );
+      expect(telemetryRowsResponse.status).toBe(200);
+      expect(await telemetryRowsResponse.json()).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            endpointId: "openai.personal.primary.us-east-1.fast",
+            sourceType: "remote",
+            providerFamily: "ai-sdk-openai",
+            promptCacheSupported: false,
+            requestCount: 1,
+          }),
+        ]),
+      );
+
+      const telemetryRequestsResponse = await fetch(
+        `http://127.0.0.1:${server.port}/api/role-model/telemetry/requests`,
+      );
+      expect(telemetryRequestsResponse.status).toBe(200);
+      expect(await telemetryRequestsResponse.json()).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            requestId,
+            endpointId: "openai.personal.primary.us-east-1.fast",
+            sourceType: "remote",
+            providerFamily: "ai-sdk-openai",
+            finishReason: "stop",
+            promptCacheSupported: false,
+            streamTextDeltaCount: 1,
+            streamToolCallDeltaCount: 1,
+            streamToolArgumentDeltaCount: 1,
+          }),
+        ]),
+      );
+
       const requestDetailResponse = await fetch(
         `http://127.0.0.1:${server.port}/api/role-model/requests/${requestId}`,
       );
@@ -2099,6 +2318,7 @@ describe("runtime-host-bridge", () => {
         expect.objectContaining({
           requestId,
           endpointId: "openai.personal.primary.us-east-1.fast",
+          sourceType: "remote",
           capturePolicy: expect.objectContaining({
             structuredInspectionAvailable: true,
           }),
@@ -2118,6 +2338,112 @@ describe("runtime-host-bridge", () => {
         }),
       );
     } finally {
+      await server.close();
+    }
+  });
+
+  test("streams canonical telemetry updates over SSE after new requests are persisted", async () => {
+    expect(
+      typeof (bridge as { createRuntimeBridgeBackend?: unknown }).createRuntimeBridgeBackend,
+    ).toBe("function");
+    expect(typeof (bridge as { startBridgeServer?: unknown }).startBridgeServer).toBe("function");
+
+    const backend = await (
+      bridge as {
+        createRuntimeBridgeBackend: (options: {
+          repoRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+        }) => Promise<{
+          registry: EndpointRegistryResult;
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+          ) => Promise<unknown>;
+          executeResponses: (body: Record<string, unknown>, requestId: string) => Promise<unknown>;
+          readTelemetrySummary?: () => Promise<unknown>;
+          listTelemetryComparisonRows?: () => Promise<unknown>;
+          listTelemetryRequests?: () => Promise<unknown>;
+          subscribeTelemetry?: (listener: (event: unknown) => void) => () => void;
+        }>;
+      }
+    ).createRuntimeBridgeBackend({
+      repoRoot,
+      runtimeStateRoot: path.join(os.tmpdir(), `role-model-runtime-host-sse-tests-${Date.now()}`),
+      scopeId: `runtime-host-sse-tests-${Date.now()}`,
+    });
+
+    expect(typeof backend.subscribeTelemetry).toBe("function");
+
+    const server = await (
+      bridge as {
+        startBridgeServer: (options: {
+          host: string;
+          port: number;
+          registry: EndpointRegistryResult;
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+          ) => Promise<unknown>;
+          executeResponses: (body: Record<string, unknown>, requestId: string) => Promise<unknown>;
+          readTelemetrySummary?: () => Promise<unknown>;
+          listTelemetryComparisonRows?: () => Promise<unknown>;
+          listTelemetryRequests?: () => Promise<unknown>;
+          subscribeTelemetry?: (listener: (event: unknown) => void) => () => void;
+        }) => Promise<{ port: number; close(): Promise<void> }>;
+      }
+    ).startBridgeServer({
+      host: "127.0.0.1",
+      port: 0,
+      registry: backend.registry,
+      executeChatCompletions: backend.executeChatCompletions,
+      executeResponses: backend.executeResponses,
+      readTelemetrySummary: backend.readTelemetrySummary,
+      listTelemetryComparisonRows: backend.listTelemetryComparisonRows,
+      listTelemetryRequests: backend.listTelemetryRequests,
+      subscribeTelemetry: backend.subscribeTelemetry,
+    });
+
+    const abortController = new AbortController();
+
+    try {
+      const streamResponse = await fetch(`http://127.0.0.1:${server.port}/api/role-model/telemetry/stream`, {
+        signal: abortController.signal,
+      });
+      expect(streamResponse.status).toBe(200);
+      expect(streamResponse.headers.get("content-type")).toContain("text/event-stream");
+
+      const reader = streamResponse.body?.getReader();
+      expect(reader).toBeDefined();
+      const decoder = new TextDecoder();
+
+      await fetch(`http://127.0.0.1:${server.port}/v1/chat/completions`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-request-id": "req-runtime-bridge-sse-001",
+        },
+        body: JSON.stringify({
+          model: "openai/gpt-4.1-mini-fast",
+          messages: [{ role: "user", content: "Summarize the chosen endpoint." }],
+        }),
+      });
+
+      let transcript = "";
+      while (!transcript.includes("req-runtime-bridge-sse-001")) {
+        const chunk = await reader!.read();
+        transcript += decoder.decode(chunk.value ?? new Uint8Array(), { stream: !chunk.done });
+        if (chunk.done) {
+          break;
+        }
+      }
+
+      expect(transcript).toContain("event: telemetry.update");
+      expect(transcript).toContain('"requestId":"req-runtime-bridge-sse-001"');
+      expect(transcript).toContain('"sourceType":"remote"');
+    } finally {
+      abortController.abort();
+      await delay(10);
       await server.close();
     }
   });

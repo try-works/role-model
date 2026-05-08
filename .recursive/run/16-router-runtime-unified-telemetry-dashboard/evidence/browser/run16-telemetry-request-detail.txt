@@ -1,0 +1,761 @@
+result: ROLE MODEL RUNTIME
+
+Operator Shell
+
+A two-level operator shell for studio work, control-plane edits, observation, and integration references.
+
+Overview
+1
+Studio
+5
+Control
+5
+Observe
+3
+Integrations
+2
+System
+2
+
+PRESERVED HOST TOOLS
+
+/logs
+/api/metrics
+
+OBSERVE
+
+Telemetry request detail
+
+Canonical telemetry detail with usage, cache, capture, endpoint profile, and tooling receipts aligned in one inspector.
+
+SECTION
+
+Observe
+
+TEMPLATE
+
+ledger-inspector
+
+ROUTE
+
+/app/observe/requests/req-run16-browser-remote
+
+OBSERVE PAGES
+
+Activity
+Requests
+Logs
+
+OBSERVE
+
+req-run16-browser-remote
+
+Telemetry-first request inspection leads with usage, cache, and endpoint facts, while keeping raw captures and the full observation bundle available for debugging.
+
+ENDPOINT
+
+openai.litellm.global.openai-gpt-4-1-mini-fast
+
+Endpoint id currently associated with the captured request.
+
+SOURCE
+
+remote
+
+Canonical source family used by the telemetry ledger.
+
+PROVIDER FAMILY
+
+litellm-proxy
+
+Execution adapter family preserved in the canonical telemetry contract.
+
+LATENCY
+
+4 ms
+
+Observed request latency from the persisted usage event.
+
+TOKENS
+
+19
+
+Total token usage when the provider exposed prompt/completion accounting.
+
+COST
+
+$0.0042
+
+Actual USD cost from the execution receipt.
+
+CACHE
+
+hit
+
+Captured cache posture using explicit support semantics rather than zero-only inference.
+
+Telemetry summary
+
+Canonical request facts for source, usage, timings, and endpoint identity.
+
+PROVIDER
+remote_openai_compat
+MODEL
+openai/gpt-4.1-mini-fast
+FINISH REASON
+stop
+INPUT TOKENS
+14
+OUTPUT TOKENS
+5
+RESPONSE STATUS
+200
+RECORDED
+5/8/2026, 11:28:32 AM
+PROFILE MEASURED
+5/8/2026, 11:28:32 AM
+STREAM DELTAS
+1 text delta / 0 tool-call deltas / 0 tool-arg deltas
+Observed performance
+
+Request-level execution telemetry and profile-history posture stay adjacent to tooling and captures.
+
+RECENT SAMPLES
+1
+PROFILE FAILURE RATE
+0
+LATEST PROFILE ERROR CLASS
+n/a
+RECENT SAMPLE BUNDLE
+2 samples available
+
+Latest profile snapshot
+
+{
+  "endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+  "endpoint_version": "run07-registry-v1:custom-base-url",
+  "measured_at_ms": 1778210912011,
+  "measurement_window": {
+    "started_at_ms": 1778210628506,
+    "ended_at_ms": 1778210912011
+  },
+  "sample_size": 2,
+  "sources": {
+    "live_request_samples": 2,
+    "benchmark_samples": 0
+  },
+  "latency_ms_p50": 3.5,
+  "latency_ms_p95": 3.95,
+  "failure_rate": 0,
+  "freshness_score": 1,
+  "confidence_score": 0.27941531270472214,
+  "tokens_per_sec": 1458.5,
+  "cost_per_1k_tokens_est": 0.0042,
+  "currency": "USD"
+}
+Tooling
+
+Tool calls, execution receipts, and tooling diagnostics from persisted runtime observability.
+
+Tool calls
+
+0
+
+No tool calls were recorded for this request.
+
+Execution receipts
+
+0
+
+No runtime tool executions were persisted for this request.
+
+Captures and profile
+
+Preserved request/response captures plus the linked endpoint profile remain available as secondary debug surfaces.
+
+Request capture
+
+{
+  "headers": {
+    "authorization": "[redacted]"
+  },
+  "body": {
+    "suppressed": true,
+    "reason": "policy.rawCapture.requestBody.disabled"
+  }
+}
+
+Response capture
+
+{
+  "statusCode": 200,
+  "body": {
+    "suppressed": true,
+    "reason": "policy.rawCapture.responseBody.disabled"
+  }
+}
+
+Endpoint profile history
+
+{
+  "latestProfile": {
+    "endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+    "endpoint_version": "run07-registry-v1:custom-base-url",
+    "measured_at_ms": 1778210912011,
+    "measurement_window": {
+      "started_at_ms": 1778210628506,
+      "ended_at_ms": 1778210912011
+    },
+    "sample_size": 2,
+    "sources": {
+      "live_request_samples": 2,
+      "benchmark_samples": 0
+    },
+    "latency_ms_p50": 3.5,
+    "latency_ms_p95": 3.95,
+    "failure_rate": 0,
+    "freshness_score": 1,
+    "confidence_score": 0.27941531270472214,
+    "tokens_per_sec": 1458.5,
+    "cost_per_1k_tokens_est": 0.0042,
+    "currency": "USD"
+  },
+  "recentSamples": [
+    {
+      "endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+      "endpoint_version": "run07-registry-v1:custom-base-url",
+      "source_type": "live_request",
+      "timestamp_ms": 1778210912011,
+      "latency_ms": 4,
+      "latency_ms_p95": 4,
+      "tokens_per_sec": 1250,
+      "cost_per_1k_tokens_est": 0.0042,
+      "failure": false,
+      "request_id": "req-run16-browser-remote",
+      "routing_decision_id": "decision-req-run16-browser-remote"
+    }
+  ]
+}
+Raw observation bundle
+
+The full persisted request observation stays visible for low-level debugging and audit trails.
+
+{
+  "requestId": "req-run16-browser-remote",
+  "routingDecisionId": "decision-req-run16-browser-remote",
+  "endpointId": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+  "conversationId": "conversation-main",
+  "decision": {
+    "routing_decision_id": "decision-req-run16-browser-remote",
+    "request_id": "req-run16-browser-remote",
+    "app_id": "unknown-app",
+    "org_id": null,
+    "policy_snapshot": {
+      "policy_id": "balanced-policy",
+      "strategy": "balanced",
+      "compute_preference": "auto",
+      "prefer_local": false,
+      "budget_mode": "disabled",
+      "tie_break_order": [
+        "quality",
+        "latency_ms",
+        "reliability",
+        "endpoint_id"
+      ],
+      "required_capabilities": [
+        "text.chat"
+      ],
+      "required_modalities": [
+        "text"
+      ],
+      "require_tools": false,
+      "deny_endpoints": [],
+      "allow_endpoints": [
+        "openai.litellm.global.openai-gpt-4-1-mini-fast"
+      ],
+      "deny_provider_kinds": [],
+      "allow_provider_kinds": [],
+      "budget": {
+        "enabled": false,
+        "currency": "USD"
+      },
+      "privacy": {
+        "allow_remote": true
+      },
+      "targets": {
+        "latency_target_ms": 150,
+        "latency_max_ms": 300,
+        "throughput_target_tps": 40
+      }
+    },
+    "eligibility": [
+      {
+        "endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+        "eligible": true,
+        "exclusions": []
+      },
+      {
+        "endpoint_id": "llama-swap.local.local-llama-3-1-8b-instruct",
+        "eligible": false,
+        "exclusions": [
+          {
+            "code": "POLICY_DENY_ENDPOINT",
+            "detail": "Endpoint is denied by routing policy."
+          }
+        ]
+      }
+    ],
+    "scored_candidates": [
+      {
+        "endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+        "total_score": 0.6,
+        "metric_breakdown": {
+          "quality": {
+            "value": 0.5,
+            "source": "default"
+          },
+          "latency": {
+            "value": 0.5,
+            "source": "default"
+          },
+          "throughput": {
+            "value": 0.5,
+            "source": "default"
+          },
+          "cost": {
+            "value": 0.5,
+            "source": "default"
+          },
+          "reliability": {
+            "value": 0.7,
+            "source": "default"
+          },
+          "preference": {
+            "value": 0.6,
+            "source": "declared",
+            "raw": {
+              "cache_affinity": true,
+              "cache_affinity_delta": 0.1
+            }
+          }
+        },
+        "tie_break": {
+          "quality": 0.5,
+          "latency_ms": 250,
+          "reliability": 0.7,
+          "endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast"
+        }
+      }
+    ],
+    "chosen_endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+    "fallback_endpoint_ids": [],
+    "selection_reasons": [
+      "BEST_TOTAL_SCORE",
+      "DECLARED_PROFILE_USED",
+      "DEFAULT_PROFILE_USED",
+      "CACHE_AFFINITY_APPLIED"
+    ],
+    "used_measured": false,
+    "used_declared": true,
+    "scoring_version": "baseline-v2"
+  },
+  "routingDiagnostics": {
+    "retrievalReceiptId": "conversation-main-retrieval-receipt",
+    "routingModel": {
+      "enabled": true,
+      "endpointId": "cli.local.coder",
+      "preferredEndpointIds": [
+        "openai.personal.primary.us-east-1.fast",
+        "cli.local.coder"
+      ],
+      "ignoredEndpointIds": [
+        "openai.personal.primary.us-east-1.fast",
+        "cli.local.coder"
+      ]
+    }
+  },
+  "retrievalReceipt": {
+    "receiptId": "conversation-main-retrieval-receipt",
+    "summary": {
+      "selectedTurns": 2,
+      "selectedArtifacts": 1,
+      "omittedTurns": 2,
+      "omittedArtifacts": 2,
+      "estimatedTokens": 240
+    }
+  },
+  "contextEnvelope": {
+    "conversationId": "conversation-main",
+    "latestHandoffId": "handoff-1",
+    "estimatedTokenCount": 240
+  },
+  "trace": {
+    "spans": [
+      {
+        "trace_id": "trace-req-run16-browser-remote",
+        "span_id": "span-provider-load-req-run16-browser-remote",
+        "request_id": "req-run16-browser-remote",
+        "routing_decision_id": "decision-req-run16-browser-remote",
+        "span_type": "provider.load",
+        "started_at_ms": 1778210912011,
+        "ended_at_ms": 1778210912016,
+        "status": "ok",
+        "attributes": {
+          "adapter_family": "litellm-proxy",
+          "endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast"
+        }
+      },
+      {
+        "trace_id": "trace-req-run16-browser-remote",
+        "span_id": "span-provider-decode-req-run16-browser-remote",
+        "parent_span_id": "span-provider-load-req-run16-browser-remote",
+        "request_id": "req-run16-browser-remote",
+        "routing_decision_id": "decision-req-run16-browser-remote",
+        "span_type": "provider.decode",
+        "started_at_ms": 1778210912016,
+        "ended_at_ms": 1778210912021,
+        "status": "ok",
+        "attributes": {
+          "endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+          "text_delta_count": 1
+        }
+      }
+    ],
+    "events": [
+      {
+        "event_id": "event-provider-load-req-run16-browser-remote",
+        "trace_id": "trace-req-run16-browser-remote",
+        "span_id": "span-provider-load-req-run16-browser-remote",
+        "request_id": "req-run16-browser-remote",
+        "routing_decision_id": "decision-req-run16-browser-remote",
+        "timestamp_ms": 1778210912012,
+        "event_type": "trace.span.opened",
+        "payload": {
+          "adapter_family": "litellm-proxy",
+          "endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast"
+        }
+      },
+      {
+        "event_id": "event-usage-req-run16-browser-remote",
+        "trace_id": "trace-req-run16-browser-remote",
+        "span_id": "span-provider-decode-req-run16-browser-remote",
+        "request_id": "req-run16-browser-remote",
+        "routing_decision_id": "decision-req-run16-browser-remote",
+        "timestamp_ms": 1778210912021,
+        "event_type": "usage.event.created",
+        "payload": {
+          "input_tokens": 14,
+          "output_tokens": 5,
+          "cost_usd": 0.0042
+        }
+      }
+    ]
+  },
+  "usageEvent": {
+    "event_id": "usage-req-run16-browser-remote",
+    "timestamp_ms": 1778210912011,
+    "app_id": "unknown-app",
+    "request_id": "req-run16-browser-remote",
+    "routing_decision_id": "decision-req-run16-browser-remote",
+    "endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+    "model_id": "openai/gpt-4.1-mini-fast",
+    "package_id": "provider-openai",
+    "provider_kind": "remote_openai_compat",
+    "tokens_in": 14,
+    "tokens_out": 5,
+    "latency_ms": 4,
+    "cost_actual": 0.0042,
+    "cost_estimate": 0.0042,
+    "currency": "USD",
+    "sample_source": "live_request"
+  },
+  "observedPerformance": {
+    "endpointVersion": "run07-registry-v1:custom-base-url",
+    "sample": {
+      "endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+      "endpoint_version": "run07-registry-v1:custom-base-url",
+      "source_type": "live_request",
+      "timestamp_ms": 1778210912011,
+      "latency_ms": 4,
+      "latency_ms_p95": 4,
+      "tokens_per_sec": 1250,
+      "cost_per_1k_tokens_est": 0.0042,
+      "failure": false,
+      "request_id": "req-run16-browser-remote",
+      "routing_decision_id": "decision-req-run16-browser-remote"
+    },
+    "history": [
+      {
+        "endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "live_request",
+        "timestamp_ms": 1778210628506,
+        "latency_ms": 3,
+        "latency_ms_p95": 3,
+        "tokens_per_sec": 1667,
+        "cost_per_1k_tokens_est": 0.0042,
+        "failure": false,
+        "request_id": "req-run16-browser-remote",
+        "routing_decision_id": "decision-req-run16-browser-remote"
+      },
+      {
+        "endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "live_request",
+        "timestamp_ms": 1778210912011,
+        "latency_ms": 4,
+        "latency_ms_p95": 4,
+        "tokens_per_sec": 1250,
+        "cost_per_1k_tokens_est": 0.0042,
+        "failure": false,
+        "request_id": "req-run16-browser-remote",
+        "routing_decision_id": "decision-req-run16-browser-remote"
+      }
+    ],
+    "profile": {
+      "endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+      "endpoint_version": "run07-registry-v1:custom-base-url",
+      "measured_at_ms": 1778210912011,
+      "measurement_window": {
+        "started_at_ms": 1778210628506,
+        "ended_at_ms": 1778210912011
+      },
+      "sample_size": 2,
+      "sources": {
+        "live_request_samples": 2,
+        "benchmark_samples": 0
+      },
+      "latency_ms_p50": 3.5,
+      "latency_ms_p95": 3.95,
+      "failure_rate": 0,
+      "freshness_score": 1,
+      "confidence_score": 0.27941531270472214,
+      "tokens_per_sec": 1458.5,
+      "cost_per_1k_tokens_est": 0.0042,
+      "currency": "USD"
+    }
+  },
+  "diagnostics": {
+    "routing": [
+      {
+        "code": "ROUTING_MODEL_ENABLED",
+        "severity": "info",
+        "message": "Routing-model guidance remained enabled for request req-run16-browser-remote."
+      },
+      {
+        "code": "ROUTING_RETRIEVAL_RECEIPT_LINKED",
+        "severity": "info",
+        "message": "Routing diagnostics link request req-run16-browser-remote to retrieval receipt conversation-main-retrieval-receipt."
+      }
+    ],
+    "execution": [],
+    "authAccount": [],
+    "memoryQuality": [
+      {
+        "code": "MEMORY_CONTEXT_OMITTED",
+        "severity": "warning",
+        "message": "Context assembly omitted 2 turns and 2 artifacts."
+      },
+      {
+        "code": "MEMORY_LATEST_HANDOFF_LINKED",
+        "severity": "info",
+        "message": "Context inspection preserves latest handoff handoff-1."
+      }
+    ],
+    "tooling": [],
+    "operator": [
+      {
+        "code": "OPERATOR_RAW_CAPTURE_AVAILABLE",
+        "severity": "info",
+        "message": "Raw operator captures remain available through the preserved host capture surface."
+      }
+    ]
+  },
+  "capturePolicy": {
+    "environment": "local-dev",
+    "redactionLevel": "strict",
+    "retentionClass": "standard",
+    "structuredInspectionMode": "redacted",
+    "rawCaptureAvailable": true,
+    "structuredInspectionAvailable": true,
+    "redactedFields": [
+      "request.headers.authorization"
+    ],
+    "suppressedFields": [
+      "request.body",
+      "response.body"
+    ]
+  },
+  "executionTelemetry": {
+    "providerFamily": "litellm-proxy",
+    "finishReason": "stop",
+    "stream": {
+      "requested": false,
+      "textDeltas": 1,
+      "toolCallDeltas": 0,
+      "toolArgumentDeltas": 0
+    },
+    "streamSupport": {
+      "text": "delta",
+      "toolCalls": "delta",
+      "toolArguments": "delta"
+    },
+    "promptCaching": {
+      "supported": true,
+      "mode": "implicit"
+    },
+    "usageSupport": {
+      "inputTokens": true,
+      "outputTokens": true,
+      "cacheReadTokens": true,
+      "cacheWriteTokens": true
+    },
+    "costProvenance": "actual"
+  },
+  "cacheObservability": {
+    "promptCacheRequested": false,
+    "promptCacheUsed": true,
+    "cacheReadTokens": 0,
+    "cacheWriteTokens": 0,
+    "routingCacheAffinity": false
+  },
+  "tooling": {
+    "toolCalls": [],
+    "executions": [],
+    "diagnostics": []
+  },
+  "inspection": {
+    "request": {
+      "requestId": "req-run16-browser-remote",
+      "routingDecisionId": "decision-req-run16-browser-remote",
+      "requestCapture": {
+        "headers": {
+          "authorization": "[redacted]"
+        },
+        "body": {
+          "suppressed": true,
+          "reason": "policy.rawCapture.requestBody.disabled"
+        }
+      },
+      "responseCapture": {
+        "statusCode": 200,
+        "body": {
+          "suppressed": true,
+          "reason": "policy.rawCapture.responseBody.disabled"
+        }
+      },
+      "diagnostics": {
+        "routing": [
+          {
+            "code": "ROUTING_MODEL_ENABLED",
+            "severity": "info",
+            "message": "Routing-model guidance remained enabled for request req-run16-browser-remote."
+          },
+          {
+            "code": "ROUTING_RETRIEVAL_RECEIPT_LINKED",
+            "severity": "info",
+            "message": "Routing diagnostics link request req-run16-browser-remote to retrieval receipt conversation-main-retrieval-receipt."
+          }
+        ],
+        "execution": [],
+        "authAccount": [],
+        "memoryQuality": [
+          {
+            "code": "MEMORY_CONTEXT_OMITTED",
+            "severity": "warning",
+            "message": "Context assembly omitted 2 turns and 2 artifacts."
+          },
+          {
+            "code": "MEMORY_LATEST_HANDOFF_LINKED",
+            "severity": "info",
+            "message": "Context inspection preserves latest handoff handoff-1."
+          }
+        ],
+        "tooling": [],
+        "operator": [
+          {
+            "code": "OPERATOR_RAW_CAPTURE_AVAILABLE",
+            "severity": "info",
+            "message": "Raw operator captures remain available through the preserved host capture surface."
+          }
+        ]
+      },
+      "capturePolicy": {
+        "environment": "local-dev",
+        "redactionLevel": "strict",
+        "retentionClass": "standard",
+        "structuredInspectionMode": "redacted",
+        "rawCaptureAvailable": true,
+        "structuredInspectionAvailable": true,
+        "redactedFields": [
+          "request.headers.authorization"
+        ],
+        "suppressedFields": [
+          "request.body",
+          "response.body"
+        ]
+      }
+    },
+    "endpoint": {
+      "endpointId": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+      "endpointVersion": "run07-registry-v1:custom-base-url",
+      "latestProfile": {
+        "endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "measured_at_ms": 1778210912011,
+        "measurement_window": {
+          "started_at_ms": 1778210628506,
+          "ended_at_ms": 1778210912011
+        },
+        "sample_size": 2,
+        "sources": {
+          "live_request_samples": 2,
+          "benchmark_samples": 0
+        },
+        "latency_ms_p50": 3.5,
+        "latency_ms_p95": 3.95,
+        "failure_rate": 0,
+        "freshness_score": 1,
+        "confidence_score": 0.27941531270472214,
+        "tokens_per_sec": 1458.5,
+        "cost_per_1k_tokens_est": 0.0042,
+        "currency": "USD"
+      },
+      "recentSamples": [
+        {
+          "endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+          "endpoint_version": "run07-registry-v1:custom-base-url",
+          "source_type": "live_request",
+          "timestamp_ms": 1778210628506,
+          "latency_ms": 3,
+          "latency_ms_p95": 3,
+          "tokens_per_sec": 1667,
+          "cost_per_1k_tokens_est": 0.0042,
+          "failure": false,
+          "request_id": "req-run16-browser-remote",
+          "routing_decision_id": "decision-req-run16-browser-remote"
+        },
+        {
+          "endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+          "endpoint_version": "run07-registry-v1:custom-base-url",
+          "source_type": "live_request",
+          "timestamp_ms": 1778210912011,
+          "latency_ms": 4,
+          "latency_ms_p95": 4,
+          "tokens_per_sec": 1250,
+          "cost_per_1k_tokens_est": 0.0042,
+          "failure": false,
+          "request_id": "req-run16-browser-remote",
+          "routing_decision_id": "decision-req-run16-browser-remote"
+        }
+      ]
+    }
+  },
+  "sourceType": "remote",
+  "providerId": "openai",
+  "endpointKind": "remote_api",
+  "servingSource": "vendor-litellm",
+  "healthStatus": "healthy",
+  "status": "active",
+  "roleIds": []
+}

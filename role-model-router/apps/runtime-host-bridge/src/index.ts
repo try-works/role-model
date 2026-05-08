@@ -1,4 +1,5 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
+import { DatabaseSync } from "node:sqlite";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -36,6 +37,8 @@ import {
   initializeSqliteMemory,
   listRuntimeEndpoints,
   listProviderAccounts,
+  listRuntimeTelemetryComparisonRows,
+  listRuntimeTelemetryRecords,
   persistContinuitySnapshot,
   persistProviderAccounts,
   persistRuntimeObservationBundle,
@@ -48,6 +51,7 @@ import {
   readRuntimeMaintenancePolicy,
   readRuntimeControllerAssignment,
   readRuntimeObservationBundle,
+  readRuntimeTelemetrySummary,
   upsertProviderDeviceAuthSession,
   upsertProviderAccount as upsertSqliteProviderAccount,
   upsertRuntimeControllerAssignment,
@@ -67,7 +71,9 @@ import { startLlamaSwapVendor } from "@role-model-router/vendor-llama-swap";
 import { startLiteLLMVendor } from "@role-model-router/vendor-litellm";
 
 import {
+  normalizeUnifiedRuntimeConfigInput,
   parseUnifiedRuntimeConfigText,
+  renderUnifiedRuntimeConfigText,
   type UnifiedRuntimeConfig,
   type UnifiedRuntimeExecutionMode,
 } from "./unified-runtime-config.js";
@@ -249,6 +255,51 @@ type BridgeStreamWriter = (
   metadata?: BridgeStreamMetadata,
 ) => void | Promise<void>;
 
+export interface BridgeTelemetryQuery {
+  readonly windowMs?: number;
+  readonly limit?: number;
+  readonly endAtMs?: number;
+}
+
+export type BridgeTelemetryRequestRecord = ReturnType<typeof listRuntimeTelemetryRecords>[number] & {
+  readonly sourceType: "local" | "remote";
+  readonly providerId: string | null;
+  readonly endpointKind: string | null;
+  readonly servingSource: string | null;
+  readonly healthStatus: string;
+  readonly status: string;
+  readonly roleIds: readonly string[];
+};
+
+export type BridgeTelemetryEndpointMeta = Omit<
+  BridgeTelemetryRequestRecord,
+  keyof ReturnType<typeof listRuntimeTelemetryRecords>[number]
+>;
+
+export type BridgeTelemetryComparisonRow = ReturnType<typeof listRuntimeTelemetryComparisonRows>[number] & {
+  readonly sourceType: "local" | "remote";
+  readonly providerId: string | null;
+  readonly endpointKind: string | null;
+  readonly servingSource: string | null;
+  readonly healthStatus: string;
+  readonly status: string;
+  readonly roleIds: readonly string[];
+};
+
+export type BridgeTelemetrySummary = ReturnType<typeof readRuntimeTelemetrySummary> & {
+  readonly sourceBreakdown: {
+    readonly local: ReturnType<typeof readRuntimeTelemetrySummary>;
+    readonly remote: ReturnType<typeof readRuntimeTelemetrySummary>;
+  };
+};
+
+export interface RuntimeTelemetryStreamEvent {
+  readonly eventName: "telemetry.update";
+  readonly emittedAtMs: number;
+  readonly summary: BridgeTelemetrySummary;
+  readonly request: BridgeTelemetryRequestRecord;
+}
+
 export interface StartBridgeServerOptions {
   readonly host: string;
   readonly port: number;
@@ -276,11 +327,17 @@ export interface StartBridgeServerOptions {
   readonly upsertProviderAccount?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly startProviderDeviceAuthorization?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly pollProviderDeviceAuthorization?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly readRuntimeConfig?: () => Promise<unknown>;
+  readonly updateRuntimeConfig?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly activateEndpoint?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly listEndpoints?: () => Promise<readonly unknown[]>;
-  readonly readControllerAssignment?: () => Promise<BridgeControllerAssignment>;
+  readonly readControllerAssignment?: () => Promise<BridgeControllerAssignment | null>;
   readonly updateControllerAssignment?: (body: Record<string, unknown>) => Promise<BridgeControllerAssignment>;
   readonly listRecentRequestObservations?: () => Promise<readonly unknown[]>;
+  readonly readTelemetrySummary?: (query?: BridgeTelemetryQuery) => Promise<unknown>;
+  readonly listTelemetryComparisonRows?: (query?: BridgeTelemetryQuery) => Promise<readonly unknown[]>;
+  readonly listTelemetryRequests?: (query?: BridgeTelemetryQuery) => Promise<readonly unknown[]>;
+  readonly subscribeTelemetry?: (listener: (event: RuntimeTelemetryStreamEvent) => void) => () => void;
   readonly readRequestObservation?: (requestId: string) => Promise<unknown>;
   readonly readEndpointProfile?: (endpointId: string) => Promise<unknown>;
 }
@@ -342,8 +399,18 @@ export interface RuntimeBridgeBackend {
   upsertProviderAccount(account: Record<string, unknown>): Promise<ProviderAccountRecord>;
   startProviderDeviceAuthorization(body: Record<string, unknown>): Promise<DeviceAuthorizationStartResult>;
   pollProviderDeviceAuthorization(body: Record<string, unknown>): Promise<DeviceAuthorizationPollResult>;
+  readRuntimeConfig(): Promise<{
+    applied: boolean;
+    path: string | null;
+    config: UnifiedRuntimeConfig | null;
+  }>;
+  updateRuntimeConfig(body: Record<string, unknown>): Promise<{
+    applied: boolean;
+    path: string | null;
+    config: UnifiedRuntimeConfig | null;
+  }>;
   activateEndpoint(body: Record<string, unknown>): Promise<Record<string, unknown>>;
-  readControllerAssignment(): Promise<BridgeControllerAssignment>;
+  readControllerAssignment(): Promise<BridgeControllerAssignment | null>;
   updateControllerAssignment(body: Record<string, unknown>): Promise<BridgeControllerAssignment>;
   listEndpoints(): Promise<
     readonly {
@@ -363,7 +430,11 @@ export interface RuntimeBridgeBackend {
   listRecentRequestObservations(): Promise<
     readonly ReturnType<typeof listRecentRuntimeObservations>[number][]
   >;
-  readRequestObservation(requestId: string): Promise<RuntimeObservationBundle | null>;
+  readTelemetrySummary(query?: BridgeTelemetryQuery): Promise<BridgeTelemetrySummary>;
+  listTelemetryComparisonRows(query?: BridgeTelemetryQuery): Promise<readonly BridgeTelemetryComparisonRow[]>;
+  listTelemetryRequests(query?: BridgeTelemetryQuery): Promise<readonly BridgeTelemetryRequestRecord[]>;
+  subscribeTelemetry(listener: (event: RuntimeTelemetryStreamEvent) => void): () => void;
+  readRequestObservation(requestId: string): Promise<(RuntimeObservationBundle & BridgeTelemetryEndpointMeta) | null>;
   readEndpointProfile(endpointId: string): Promise<{
     endpointId: string;
     latestProfile: ReturnType<typeof readLatestObservedProfile>;
@@ -557,6 +628,18 @@ function createUnifiedProviderAccounts(
       rotationState: "stable",
     };
   });
+}
+
+function deleteRuntimeConfigProviderAccounts(databasePath: string): void {
+  const database = new DatabaseSync(databasePath);
+  try {
+    database.prepare("DELETE FROM provider_accounts WHERE org_scope = ? OR account_scope = ?").run(
+      "runtime-config",
+      "runtime-config",
+    );
+  } finally {
+    database.close();
+  }
 }
 
 function applyUnifiedLiteLLMAdapterFamilyOverrides(
@@ -1113,6 +1196,20 @@ function writeText(
   response.end(body);
 }
 
+function writeSseHeaders(response: ServerResponse): void {
+  response.statusCode = 200;
+  response.setHeader("content-type", "text/event-stream; charset=utf-8");
+  response.setHeader("cache-control", "no-cache, no-transform");
+  response.setHeader("connection", "keep-alive");
+  response.setHeader("x-accel-buffering", "no");
+  response.flushHeaders?.();
+}
+
+function writeSseEvent(response: ServerResponse, eventName: string, payload: unknown): void {
+  response.write(`event: ${eventName}\n`);
+  response.write(`data: ${JSON.stringify(payload)}\n\n`);
+}
+
 async function readJsonBody(request: IncomingMessage): Promise<Record<string, unknown>> {
   const chunks: Buffer[] = [];
   for await (const chunk of request) {
@@ -1124,6 +1221,32 @@ async function readJsonBody(request: IncomingMessage): Promise<Record<string, un
   }
 
   return JSON.parse(Buffer.concat(chunks).toString("utf8")) as Record<string, unknown>;
+}
+
+function readOptionalPositiveInteger(
+  params: URLSearchParams,
+  key: string,
+): number | undefined {
+  const rawValue = params.get(key);
+  if (!rawValue) {
+    return undefined;
+  }
+  const value = Number.parseInt(rawValue, 10);
+  if (!Number.isFinite(value) || value <= 0) {
+    throw new Error(`${key} must be a positive integer`);
+  }
+  return value;
+}
+
+function readTelemetryQuery(url: URL): BridgeTelemetryQuery {
+  const windowMs = readOptionalPositiveInteger(url.searchParams, "windowMs");
+  const limit = readOptionalPositiveInteger(url.searchParams, "limit");
+  const endAtMs = readOptionalPositiveInteger(url.searchParams, "endAtMs");
+  return {
+    ...(typeof windowMs === "number" ? { windowMs } : {}),
+    ...(typeof limit === "number" ? { limit } : {}),
+    ...(typeof endAtMs === "number" ? { endAtMs } : {}),
+  };
 }
 
 async function readJson<TValue>(filePath: string): Promise<TValue> {
@@ -1611,6 +1734,9 @@ function toModelSegment(modelId: string): string {
 function createEndpointId(providerAccountId: string, region: string, modelId: string): string {
   return `${providerAccountId}.${sanitizeSegment(region)}.${toModelSegment(modelId)}`;
 }
+
+const DEFAULT_TELEMETRY_WINDOW_MS = 24 * 60 * 60 * 1000;
+const DEFAULT_TELEMETRY_LIMIT = 50;
 
 function toSourceType(
   endpointKind: "local_engine" | "remote_api" | "browser_engine" | "dispatch_adapter",
@@ -2129,6 +2255,79 @@ function createRequestHandler(options: StartBridgeServerOptions) {
       return;
     }
 
+    if (request.method === "GET" && url.pathname === "/api/role-model/runtime/config") {
+      if (!options.readRuntimeConfig) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.readRuntimeConfig());
+      return;
+    }
+
+    if (request.method === "PUT" && url.pathname === "/api/role-model/runtime/config") {
+      if (!options.updateRuntimeConfig) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+
+      try {
+        writeJson(response, 200, await options.updateRuntimeConfig(await readJsonBody(request)));
+      } catch (error) {
+        writeJson(response, 400, {
+          error: error instanceof Error ? error.message : "runtime config update failed",
+        });
+      }
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/role-model/telemetry/summary") {
+      if (!options.readTelemetrySummary) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.readTelemetrySummary(readTelemetryQuery(url)));
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/role-model/telemetry/rows") {
+      if (!options.listTelemetryComparisonRows) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.listTelemetryComparisonRows(readTelemetryQuery(url)));
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/role-model/telemetry/requests") {
+      if (!options.listTelemetryRequests) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.listTelemetryRequests(readTelemetryQuery(url)));
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/role-model/telemetry/stream") {
+      if (!options.subscribeTelemetry) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeSseHeaders(response);
+      response.write(": connected\n\n");
+      const unsubscribe = options.subscribeTelemetry((event) => {
+        writeSseEvent(response, event.eventName, event);
+      });
+      const cleanup = () => {
+        unsubscribe();
+        if (!response.writableEnded) {
+          response.end();
+        }
+      };
+      request.once("close", cleanup);
+      response.once("close", cleanup);
+      return;
+    }
+
     if (request.method === "GET" && url.pathname === "/api/version") {
       if (!options.readVersionInfo) {
         writeJson(response, 404, { error: "not found" });
@@ -2412,27 +2611,24 @@ export async function createRuntimeBridgeBackend(
   options: CreateRuntimeBridgeBackendOptions,
 ): Promise<RuntimeBridgeBackend> {
   const networkFetcher = options.networkFetcher ?? fetch;
-  const unifiedRuntimeConfig = options.unifiedRuntimeConfigPath
+  const initialUnifiedRuntimeConfig = options.unifiedRuntimeConfigPath
     ? parseUnifiedRuntimeConfigText(await readFile(options.unifiedRuntimeConfigPath, "utf8"))
     : null;
-  const supervisor = unifiedRuntimeConfig ? new ProcessSupervisor() : null;
-  const normalizedCatalog = applyUnifiedLiteLLMAdapterFamilyOverrides(
-    await readJson<NormalizedCatalog>(
-      path.join(
-        options.repoRoot,
-        "role-model-router",
-        "packages",
-        "catalog",
-        "data",
-        "normalized-catalog.json",
-      ),
+  const supervisor = options.unifiedRuntimeConfigPath ? new ProcessSupervisor() : null;
+  const baseCatalog = await readJson<NormalizedCatalog>(
+    path.join(
+      options.repoRoot,
+      "role-model-router",
+      "packages",
+      "catalog",
+      "data",
+      "normalized-catalog.json",
     ),
-    unifiedRuntimeConfig,
   );
   const providerAccountsFixture = await readJson<{ accounts: unknown[] }>(
     path.join(options.repoRoot, "testdata", "router-runtime", "provider-accounts.json"),
   );
-  const registrySources = await readJson<RegistrySources>(
+  const registrySourcesFixture = await readJson<RegistrySources>(
     path.join(options.repoRoot, "testdata", "router-runtime", "registry-sources.json"),
   );
   const continuityFixture = await readJson<{
@@ -2473,83 +2669,12 @@ export async function createRuntimeBridgeBackend(
   const providerPresets = await readJson<ProviderPresetCatalog>(
     path.join(options.repoRoot, "testdata", "router-runtime", "provider-presets.json"),
   );
-  const resolvedLlamaSwapCommand =
-    unifiedRuntimeConfig?.llamaSwap.enabled && !unifiedRuntimeConfig.llamaSwap.process.command
-      ? await resolveLlamaSwapCommand({
-          repoRoot: options.repoRoot,
-          runtimeStateRoot: options.runtimeStateRoot,
-        })
-      : null;
-
-  const llamaSwapVendor =
-    unifiedRuntimeConfig?.llamaSwap.enabled && supervisor
-      ? await startLlamaSwapVendor({
-          repoRoot: options.repoRoot,
-          runtimeStateRoot: options.runtimeStateRoot,
-          supervisor,
-          config: {
-            models: unifiedRuntimeConfig.llamaSwap.models,
-            command: unifiedRuntimeConfig.llamaSwap.process.command ?? resolvedLlamaSwapCommand ?? undefined,
-            args: unifiedRuntimeConfig.llamaSwap.process.args,
-            env: unifiedRuntimeConfig.llamaSwap.process.env,
-            cwd: unifiedRuntimeConfig.llamaSwap.process.cwd ?? undefined,
-            startupTimeoutMs: unifiedRuntimeConfig.llamaSwap.process.startupTimeoutMs ?? undefined,
-          },
-        })
-      : null;
-  const liteLLMVendor =
-    unifiedRuntimeConfig?.liteLLM.enabled && supervisor
-      ? await startLiteLLMVendor({
-          runtimeStateRoot: options.runtimeStateRoot,
-          supervisor,
-          config: {
-            providers: unifiedRuntimeConfig.liteLLM.providers.map((provider) => ({
-              providerId: provider.providerId,
-              apiKeyRef: provider.apiKeyRef,
-              modelMappings: provider.modelMappings,
-            })),
-             command: unifiedRuntimeConfig.liteLLM.process.command ?? undefined,
-             args: unifiedRuntimeConfig.liteLLM.process.args,
-             env: unifiedRuntimeConfig.liteLLM.process.env,
-             cwd: unifiedRuntimeConfig.liteLLM.process.cwd ?? undefined,
-             startupTimeoutMs: unifiedRuntimeConfig.liteLLM.process.startupTimeoutMs ?? undefined,
-           },
-         })
-      : null;
-  const staticRegistrySources: RegistrySources =
-    unifiedRuntimeConfig !== null
-      ? {
-          cloud: createUnifiedCloudSources(unifiedRuntimeConfig),
-          local: createUnifiedLocalSources(unifiedRuntimeConfig),
-        }
-      : registrySources;
-  const unifiedAccounts =
-    unifiedRuntimeConfig !== null
-      ? createUnifiedProviderAccounts(
-          normalizedCatalog,
-          unifiedRuntimeConfig,
-          liteLLMVendor?.readStatus().baseUrl ?? null,
-        )
-      : [];
-  const validation = validateProviderAccounts({
-    catalog: normalizedCatalog,
-    accounts: unifiedRuntimeConfig !== null ? unifiedAccounts : providerAccountsFixture.accounts,
-    allowedRoleIds,
-  });
-  if (validation.diagnostics.length > 0) {
-    throw new Error("Provider-account validation failed for runtime host bridge.");
-  }
-
   const initialization = initializeSqliteMemory({
     runtimeStateRoot: options.runtimeStateRoot,
     scopeId: options.scopeId,
   });
   const deviceId = randomUUID();
 
-  persistProviderAccounts({
-    databasePath: initialization.databasePath,
-    accounts: validation.accounts,
-  });
   persistContinuitySnapshot({
     databasePath: initialization.databasePath,
     session: continuityFixture.session,
@@ -2560,23 +2685,28 @@ export async function createRuntimeBridgeBackend(
     handoffs: continuityFixture.handoffs,
   });
 
+  let currentUnifiedRuntimeConfig = initialUnifiedRuntimeConfig;
+  let currentNormalizedCatalog = applyUnifiedLiteLLMAdapterFamilyOverrides(baseCatalog, currentUnifiedRuntimeConfig);
+  let currentModelsById = new Map(currentNormalizedCatalog.models.map((model) => [model.modelId, model]));
+  let currentRegistrySources: RegistrySources =
+    currentUnifiedRuntimeConfig !== null
+      ? {
+          cloud: createUnifiedCloudSources(currentUnifiedRuntimeConfig),
+          local: createUnifiedLocalSources(currentUnifiedRuntimeConfig),
+        }
+      : registrySourcesFixture;
   let currentAccounts = [...listProviderAccounts({ databasePath: initialization.databasePath })];
   let runtimeEndpoints = [...listRuntimeEndpoints({ databasePath: initialization.databasePath })];
+  let currentRegistry!: EndpointRegistryResult;
+  let currentLlamaSwapVendor: VendorRuntime | null = null;
+  let currentLiteLLMVendor: VendorRuntime | null = null;
   const getCurrentRegistrySources = (): RegistrySources =>
-    mergeRegistrySources(staticRegistrySources, runtimeEndpoints);
-  let currentRegistry = buildEndpointRegistry({
-    catalog: normalizedCatalog,
-    accounts: currentAccounts,
-    sources: getCurrentRegistrySources(),
-  });
-  if (currentRegistry.diagnostics.length > 0) {
-    throw new Error("Endpoint-registry validation failed for runtime host bridge.");
-  }
+    mergeRegistrySources(currentRegistrySources, runtimeEndpoints);
   const rebuildCurrentState = (): void => {
     currentAccounts = [...listProviderAccounts({ databasePath: initialization.databasePath })];
     runtimeEndpoints = [...listRuntimeEndpoints({ databasePath: initialization.databasePath })];
     currentRegistry = buildEndpointRegistry({
-      catalog: normalizedCatalog,
+      catalog: currentNormalizedCatalog,
       accounts: currentAccounts,
       sources: getCurrentRegistrySources(),
     });
@@ -2584,6 +2714,107 @@ export async function createRuntimeBridgeBackend(
       throw new Error("Endpoint-registry validation failed after runtime state update.");
     }
   };
+  const applyUnifiedRuntimeConfigState = async (nextConfig: UnifiedRuntimeConfig | null): Promise<void> => {
+    const nextNormalizedCatalog = applyUnifiedLiteLLMAdapterFamilyOverrides(baseCatalog, nextConfig);
+    const resolvedLlamaSwapCommand =
+      nextConfig?.llamaSwap.enabled && !nextConfig.llamaSwap.process.command
+        ? await resolveLlamaSwapCommand({
+            repoRoot: options.repoRoot,
+            runtimeStateRoot: options.runtimeStateRoot,
+          })
+        : null;
+
+    await Promise.all([currentLlamaSwapVendor?.shutdown(), currentLiteLLMVendor?.shutdown()]);
+
+    const nextLlamaSwapVendor =
+      nextConfig?.llamaSwap.enabled && supervisor
+        ? await startLlamaSwapVendor({
+            repoRoot: options.repoRoot,
+            runtimeStateRoot: options.runtimeStateRoot,
+            supervisor,
+            config: {
+              models: nextConfig.llamaSwap.models,
+              command: nextConfig.llamaSwap.process.command ?? resolvedLlamaSwapCommand ?? undefined,
+              args: nextConfig.llamaSwap.process.args,
+              env: nextConfig.llamaSwap.process.env,
+              cwd: nextConfig.llamaSwap.process.cwd ?? undefined,
+              startupTimeoutMs: nextConfig.llamaSwap.process.startupTimeoutMs ?? undefined,
+            },
+          })
+        : null;
+    const nextLiteLLMVendor =
+      nextConfig?.liteLLM.enabled && supervisor
+        ? await startLiteLLMVendor({
+            runtimeStateRoot: options.runtimeStateRoot,
+            supervisor,
+            config: {
+              providers: nextConfig.liteLLM.providers.map((provider) => ({
+                providerId: provider.providerId,
+                apiKeyRef: provider.apiKeyRef,
+                modelMappings: provider.modelMappings,
+              })),
+              command: nextConfig.liteLLM.process.command ?? undefined,
+              args: nextConfig.liteLLM.process.args,
+              env: nextConfig.liteLLM.process.env,
+              cwd: nextConfig.liteLLM.process.cwd ?? undefined,
+              startupTimeoutMs: nextConfig.liteLLM.process.startupTimeoutMs ?? undefined,
+            },
+          })
+        : null;
+
+    if (nextConfig !== null) {
+      const validation = validateProviderAccounts({
+        catalog: nextNormalizedCatalog,
+        accounts: createUnifiedProviderAccounts(
+          nextNormalizedCatalog,
+          nextConfig,
+          nextLiteLLMVendor?.readStatus().baseUrl ?? null,
+        ),
+        allowedRoleIds,
+      });
+      if (validation.diagnostics.length > 0) {
+        await Promise.all([nextLlamaSwapVendor?.shutdown(), nextLiteLLMVendor?.shutdown()]);
+        throw new Error("Provider-account validation failed for runtime host bridge.");
+      }
+      deleteRuntimeConfigProviderAccounts(initialization.databasePath);
+      persistProviderAccounts({
+        databasePath: initialization.databasePath,
+        accounts: validation.accounts,
+      });
+    }
+
+    currentUnifiedRuntimeConfig = nextConfig;
+    currentNormalizedCatalog = nextNormalizedCatalog;
+    currentModelsById = new Map(currentNormalizedCatalog.models.map((model) => [model.modelId, model]));
+    currentRegistrySources =
+      nextConfig !== null
+        ? {
+            cloud: createUnifiedCloudSources(nextConfig),
+            local: createUnifiedLocalSources(nextConfig),
+          }
+        : registrySourcesFixture;
+    currentLlamaSwapVendor = nextLlamaSwapVendor;
+    currentLiteLLMVendor = nextLiteLLMVendor;
+    rebuildCurrentState();
+  };
+
+  if (currentUnifiedRuntimeConfig === null) {
+    const validation = validateProviderAccounts({
+      catalog: currentNormalizedCatalog,
+      accounts: providerAccountsFixture.accounts,
+      allowedRoleIds,
+    });
+    if (validation.diagnostics.length > 0) {
+      throw new Error("Provider-account validation failed for runtime host bridge.");
+    }
+    persistProviderAccounts({
+      databasePath: initialization.databasePath,
+      accounts: validation.accounts,
+    });
+    rebuildCurrentState();
+  } else {
+    await applyUnifiedRuntimeConfigState(currentUnifiedRuntimeConfig);
+  }
 
   const continuity = readConversationContinuity({
     databasePath: initialization.databasePath,
@@ -2608,22 +2839,130 @@ export async function createRuntimeBridgeBackend(
   });
 
   const captures = await loadResponseCaptures(options.repoRoot, captureFixtureMap);
-  const toolRegistry = await createRuntimeToolRegistry(options.repoRoot, currentRegistry);
-  const modelsById = new Map(normalizedCatalog.models.map((model) => [model.modelId, model]));
-  const vendorRuntimes: Record<string, VendorRuntimeStatus> = {
-    "llama-swap": llamaSwapVendor?.readStatus() ?? createInactiveVendorStatus("llama-swap"),
-    litellm: liteLLMVendor?.readStatus() ?? createInactiveVendorStatus("litellm"),
-  };
   const getRegistryEndpoint = (endpointId: string): EndpointRegistryResult["endpoints"][number] | undefined =>
     currentRegistry.endpoints.find((endpoint) => endpoint.identity.endpoint_id === endpointId);
-  const getDefaultControllerAssignment = (): BridgeControllerAssignment => {
+  const telemetryListeners = new Set<(event: RuntimeTelemetryStreamEvent) => void>();
+  const normalizeTelemetryQuery = (query?: BridgeTelemetryQuery): BridgeTelemetryQuery => ({
+    windowMs: query?.windowMs ?? DEFAULT_TELEMETRY_WINDOW_MS,
+    limit: query?.limit ?? DEFAULT_TELEMETRY_LIMIT,
+    ...(typeof query?.endAtMs === "number" ? { endAtMs: query.endAtMs } : {}),
+  });
+  const summarizeTelemetryRequestRecords = (
+    records: readonly BridgeTelemetryRequestRecord[],
+  ): ReturnType<typeof readRuntimeTelemetrySummary> => {
+    const latencies = records
+      .map((record) => record.latencyMs)
+      .filter((value): value is number => typeof value === "number")
+      .sort((left, right) => left - right);
+    const totalLatency = latencies.reduce((sum, value) => sum + value, 0);
+    const p95Index = latencies.length > 0 ? Math.max(0, Math.ceil(latencies.length * 0.95) - 1) : -1;
+    return {
+      requestCount: records.length,
+      successCount: records.filter((record) => record.errorClass === null).length,
+      failureCount: records.filter((record) => record.errorClass !== null).length,
+      totalInputTokens: records.reduce((sum, record) => sum + record.inputTokens, 0),
+      totalOutputTokens: records.reduce((sum, record) => sum + record.outputTokens, 0),
+      totalTokens: records.reduce((sum, record) => sum + record.totalTokens, 0),
+      cachedRequestCount: records.filter((record) => record.promptCacheUsed).length,
+      totalActualCostUsd: Number(
+        records.reduce((sum, record) => sum + (record.actualCostUsd ?? 0), 0).toFixed(6),
+      ),
+      totalEstimatedCostUsd: Number(
+        records.reduce((sum, record) => sum + (record.estimatedCostUsd ?? 0), 0).toFixed(6),
+      ),
+      averageLatencyMs: latencies.length > 0 ? Math.round(totalLatency / latencies.length) : null,
+      p95LatencyMs: p95Index >= 0 ? (latencies[p95Index] ?? null) : null,
+      lastSeenAtMs: records[0]?.createdAtMs ?? null,
+    };
+  };
+  const getTelemetryEndpointMeta = (
+    endpointId: string,
+  ): BridgeTelemetryEndpointMeta => {
+    const registryEndpoint = getRegistryEndpoint(endpointId);
+    const runtimeEndpoint = runtimeEndpoints.find((entry) => entry.endpointId === endpointId);
+    const runtimeAccount = runtimeEndpoint
+      ? currentAccounts.find((entry) => entry.providerAccountId === runtimeEndpoint.providerAccountId)
+      : undefined;
+    return {
+      sourceType: registryEndpoint ? toSourceType(registryEndpoint.identity.endpoint_kind) : "local",
+      providerId:
+        (registryEndpoint ? currentModelsById.get(registryEndpoint.identity.model_id)?.providerId : undefined) ??
+        runtimeAccount?.providerId ??
+        null,
+      endpointKind: registryEndpoint?.identity.endpoint_kind ?? runtimeEndpoint?.endpointKind ?? null,
+      servingSource: registryEndpoint?.identity.serving_source ?? runtimeEndpoint?.servingSource ?? null,
+      healthStatus:
+        runtimeEndpoint?.healthStatus ??
+        (registryEndpoint?.deniedByPolicy ? "policy-blocked" : registryEndpoint ? "healthy" : "unknown"),
+      status: registryEndpoint?.status ?? runtimeEndpoint?.lifecycleState ?? "unknown",
+      roleIds: getEndpointRoleIds(endpointId, runtimeEndpoints, currentAccounts),
+    };
+  };
+  const listTelemetryRequestRecords = (
+    query?: BridgeTelemetryQuery,
+  ): readonly BridgeTelemetryRequestRecord[] => {
+    const normalizedQuery = normalizeTelemetryQuery(query);
+    return listRuntimeTelemetryRecords({
+      databasePath: initialization.databasePath,
+      ...normalizedQuery,
+    }).map((record) => ({
+      ...record,
+      ...getTelemetryEndpointMeta(record.endpointId),
+    }));
+  };
+  const readTelemetrySummaryData = (query?: BridgeTelemetryQuery): BridgeTelemetrySummary => {
+    const normalizedQuery = normalizeTelemetryQuery(query);
+    const requestRecords = listTelemetryRequestRecords(normalizedQuery);
+    return {
+      ...readRuntimeTelemetrySummary({
+        databasePath: initialization.databasePath,
+        ...normalizedQuery,
+      }),
+      sourceBreakdown: {
+        local: summarizeTelemetryRequestRecords(
+          requestRecords.filter((record) => record.sourceType === "local"),
+        ),
+        remote: summarizeTelemetryRequestRecords(
+          requestRecords.filter((record) => record.sourceType === "remote"),
+        ),
+      },
+    };
+  };
+  const listTelemetryComparisonData = (
+    query?: BridgeTelemetryQuery,
+  ): readonly BridgeTelemetryComparisonRow[] => {
+    const normalizedQuery = normalizeTelemetryQuery(query);
+    return listRuntimeTelemetryComparisonRows({
+      databasePath: initialization.databasePath,
+      ...normalizedQuery,
+    }).map((row) => ({
+      ...row,
+      ...getTelemetryEndpointMeta(row.endpointId),
+    }));
+  };
+  const emitTelemetryUpdate = (requestId: string): void => {
+    const request = listTelemetryRequestRecords({ limit: 1 }).find((record) => record.requestId === requestId);
+    if (!request) {
+      return;
+    }
+    const event: RuntimeTelemetryStreamEvent = {
+      eventName: "telemetry.update",
+      emittedAtMs: Date.now(),
+      summary: readTelemetrySummaryData(),
+      request,
+    };
+    for (const listener of telemetryListeners) {
+      listener(event);
+    }
+  };
+  const getDefaultControllerAssignment = (): BridgeControllerAssignment | null => {
     const defaultEndpoint = getRegistryEndpoint(routingModel.endpointId);
     if (defaultEndpoint) {
       return toControllerAssignmentFromEndpoint(defaultEndpoint);
     }
     const fallbackEndpoint = currentRegistry.endpoints[0];
     if (!fallbackEndpoint) {
-      throw new Error("No runtime endpoints are available for the runtime host bridge.");
+      return null;
     }
     return toControllerAssignmentFromEndpoint(fallbackEndpoint);
   };
@@ -2665,13 +3004,13 @@ export async function createRuntimeBridgeBackend(
     const routingDecisionId = routed.decision.routing_decision_id;
     const execution = await executeLiveRoutedRequest({
       routeResult: routed,
-      catalog: normalizedCatalog,
+      catalog: currentNormalizedCatalog,
       accounts: currentAccounts,
       registry: currentRegistry,
       registrySources: getCurrentRegistrySources(),
       executionRequest: plan.executionRequest as RuntimeExecutionRequest,
       adapters: [
-        ...(unifiedRuntimeConfig?.liteLLM.enabled
+        ...(currentUnifiedRuntimeConfig?.liteLLM.enabled
           ? [createLiteLLMProviderAdapter()]
           : []),
         createOpenAIProviderAdapter(),
@@ -2687,12 +3026,12 @@ export async function createRuntimeBridgeBackend(
         requestCapture: ProviderRequestCapture;
         fallbackModelIds?: readonly string[];
       }) => {
-        if (unifiedRuntimeConfig) {
+        if (currentUnifiedRuntimeConfig) {
           if (target.providerAccountId === null) {
-            if (!llamaSwapVendor) {
+            if (!currentLlamaSwapVendor) {
               throw createVendorError("llama-swap", "Configure llama_swap.models to enable local execution.");
             }
-            const result = await llamaSwapVendor.execute({
+            const result = await currentLlamaSwapVendor.execute({
               providerFamily: requestCapture.providerFamily,
               endpointId: requestCapture.endpointId,
               url: requestCapture.url,
@@ -2717,10 +3056,10 @@ export async function createRuntimeBridgeBackend(
               vendorMetadata: result.metadata,
             };
           }
-          if (!liteLLMVendor) {
+          if (!currentLiteLLMVendor) {
             throw createVendorError("litellm", "Configure litellm_proxy.providers to enable remote execution.");
           }
-          const result = await liteLLMVendor.execute({
+          const result = await currentLiteLLMVendor.execute({
             providerFamily: requestCapture.providerFamily,
             endpointId: requestCapture.endpointId,
             url: requestCapture.url,
@@ -2846,7 +3185,7 @@ export async function createRuntimeBridgeBackend(
     }
     const toolExecutionResult =
       execution.normalized.toolCalls.length > 0
-        ? await executeToolCalls(toolRegistry, {
+        ? await executeToolCalls(await createRuntimeToolRegistry(options.repoRoot, currentRegistry), {
             requestId,
             toolCalls: execution.normalized.toolCalls,
           })
@@ -2899,6 +3238,7 @@ export async function createRuntimeBridgeBackend(
       databasePath: initialization.databasePath,
       observation: bundle,
     });
+    emitTelemetryUpdate(bundle.requestId);
 
     return {
       routingDecisionId,
@@ -2916,7 +3256,7 @@ export async function createRuntimeBridgeBackend(
       requestId: string,
       streamWriter?: BridgeStreamWriter,
     ): Promise<BridgeChatCompletionsExecutionResult> {
-      if (unifiedRuntimeConfig?.executionMode === "decision_only" && currentRegistry.endpoints.length === 0) {
+      if (currentUnifiedRuntimeConfig?.executionMode === "decision_only" && currentRegistry.endpoints.length === 0) {
         throw createVendorError("runtime", "Configure llama_swap.models or litellm_proxy.providers to enable execution.");
       }
       const plan = mapChatCompletionsRequest(currentRegistry, body, requestId);
@@ -2972,7 +3312,7 @@ export async function createRuntimeBridgeBackend(
       requestId: string,
       streamWriter?: BridgeStreamWriter,
     ): Promise<BridgeResponsesExecutionResult> {
-      if (unifiedRuntimeConfig?.executionMode === "decision_only" && currentRegistry.endpoints.length === 0) {
+      if (currentUnifiedRuntimeConfig?.executionMode === "decision_only" && currentRegistry.endpoints.length === 0) {
         throw createVendorError("runtime", "Configure llama_swap.models or litellm_proxy.providers to enable execution.");
       }
       const plan = mapResponsesRequest(currentRegistry, body, requestId);
@@ -3027,12 +3367,12 @@ export async function createRuntimeBridgeBackend(
     }> {
       return {
         lifecycleSummary: currentRegistry.lifecycleSummary,
-        providerCount: normalizedCatalog.providers.length,
+        providerCount: currentNormalizedCatalog.providers.length,
         accountCount: currentAccounts.length,
         endpointCount: currentRegistry.endpoints.length,
-        executionMode: unifiedRuntimeConfig?.executionMode ?? "decision_only",
+        executionMode: currentUnifiedRuntimeConfig?.executionMode ?? "decision_only",
         unifiedConfig: {
-          enabled: unifiedRuntimeConfig !== null,
+          enabled: currentUnifiedRuntimeConfig !== null,
           path: options.unifiedRuntimeConfigPath ?? null,
         },
       };
@@ -3044,15 +3384,58 @@ export async function createRuntimeBridgeBackend(
       inactiveVendors: string[];
     }> {
       const vendors = {
-        "llama-swap": llamaSwapVendor?.readStatus() ?? createInactiveVendorStatus("llama-swap"),
-        litellm: liteLLMVendor?.readStatus() ?? createInactiveVendorStatus("litellm"),
+        "llama-swap": currentLlamaSwapVendor?.readStatus() ?? createInactiveVendorStatus("llama-swap"),
+        litellm: currentLiteLLMVendor?.readStatus() ?? createInactiveVendorStatus("litellm"),
       };
       const summarized = summarizeHealthStatus(vendors);
       return {
         status: summarized.status,
-        executionMode: unifiedRuntimeConfig?.executionMode ?? "decision_only",
+        executionMode: currentUnifiedRuntimeConfig?.executionMode ?? "decision_only",
         vendors,
         inactiveVendors: summarized.inactiveVendors,
+      };
+    },
+    async readRuntimeConfig(): Promise<{
+      applied: boolean;
+      path: string | null;
+      config: UnifiedRuntimeConfig | null;
+    }> {
+      return {
+        applied: currentUnifiedRuntimeConfig !== null,
+        path: options.unifiedRuntimeConfigPath ?? null,
+        config: currentUnifiedRuntimeConfig,
+      };
+    },
+    async updateRuntimeConfig(body: Record<string, unknown>): Promise<{
+      applied: boolean;
+      path: string | null;
+      config: UnifiedRuntimeConfig | null;
+    }> {
+      if (!options.unifiedRuntimeConfigPath) {
+        throw new Error("Unified runtime config editing requires unifiedRuntimeConfigPath.");
+      }
+
+      const previousConfig = currentUnifiedRuntimeConfig;
+      const previousText = await readFile(options.unifiedRuntimeConfigPath, "utf8");
+      const nextConfig = normalizeUnifiedRuntimeConfigInput(body);
+      const nextText = renderUnifiedRuntimeConfigText(nextConfig);
+
+      await writeFile(options.unifiedRuntimeConfigPath, nextText, "utf8");
+
+      try {
+        await applyUnifiedRuntimeConfigState(nextConfig);
+      } catch (error) {
+        await writeFile(options.unifiedRuntimeConfigPath, previousText, "utf8");
+        if (previousConfig) {
+          await applyUnifiedRuntimeConfigState(previousConfig);
+        }
+        throw error;
+      }
+
+      return {
+        applied: true,
+        path: options.unifiedRuntimeConfigPath,
+        config: currentUnifiedRuntimeConfig,
       };
     },
     async listProviders(): Promise<
@@ -3071,7 +3454,7 @@ export async function createRuntimeBridgeBackend(
         variants: readonly ProviderPresetVariant[];
       }[]
     > {
-      return normalizedCatalog.providers.map((provider) => ({
+      return currentNormalizedCatalog.providers.map((provider) => ({
         providerId: provider.providerId,
         displayName: provider.displayName,
         providerKind: provider.providerKind,
@@ -3082,7 +3465,7 @@ export async function createRuntimeBridgeBackend(
         supportedAuthModes: provider.supportedAuthModes,
         controlPlaneRequirements: provider.controlPlaneRequirements,
         localOverrideApplied: provider.localOverrideApplied,
-        modelIds: normalizedCatalog.models
+        modelIds: currentNormalizedCatalog.models
           .filter((model) => model.providerId === provider.providerId)
           .map((model) => model.modelId),
         variants: providerPresets.providers[provider.providerId]?.variants ?? [],
@@ -3105,7 +3488,7 @@ export async function createRuntimeBridgeBackend(
     },
     async upsertProviderAccount(account: Record<string, unknown>): Promise<ProviderAccountRecord> {
       const validationResult = validateProviderAccounts({
-        catalog: normalizedCatalog,
+        catalog: currentNormalizedCatalog,
         allowedRoleIds,
         accounts: [account],
       });
@@ -3129,7 +3512,7 @@ export async function createRuntimeBridgeBackend(
       const providerAccountId = readRequiredString(body, "providerAccountId", "deviceAuthorization");
       const providerId = readRequiredString(body, "providerId", "deviceAuthorization");
       const variantId = readRequiredString(body, "variantId", "deviceAuthorization");
-      const provider = normalizedCatalog.providers.find((entry) => entry.providerId === providerId);
+      const provider = currentNormalizedCatalog.providers.find((entry) => entry.providerId === providerId);
       if (!provider) {
         throw new Error(`Provider ${providerId} is not present in the normalized catalog.`);
       }
@@ -3142,7 +3525,7 @@ export async function createRuntimeBridgeBackend(
         readStringArray(body, "allowedModels") ??
         (variant.modelIds.length > 0
           ? [...variant.modelIds]
-          : normalizedCatalog.models
+          : currentNormalizedCatalog.models
               .filter((model) => model.providerId === providerId)
               .map((model) => model.modelId));
       if (allowedModels.length === 0) {
@@ -3151,7 +3534,7 @@ export async function createRuntimeBridgeBackend(
 
       const credentialRef = createCredentialRef(providerId, providerAccountId);
       const validationResult = validateProviderAccounts({
-        catalog: normalizedCatalog,
+        catalog: currentNormalizedCatalog,
         allowedRoleIds,
         accounts: [
           {
@@ -3372,7 +3755,7 @@ export async function createRuntimeBridgeBackend(
       if (account.allowedModels.length > 0 && !account.allowedModels.includes(modelId)) {
         throw new Error(`Model ${modelId} is not enabled for provider account ${providerAccountId}.`);
       }
-      const model = modelsById.get(modelId);
+      const model = currentModelsById.get(modelId);
       if (!model) {
         throw new Error(`Model ${modelId} is not present in the normalized catalog.`);
       }
@@ -3401,7 +3784,7 @@ export async function createRuntimeBridgeBackend(
         status: "active",
       };
     },
-    async readControllerAssignment(): Promise<BridgeControllerAssignment> {
+    async readControllerAssignment(): Promise<BridgeControllerAssignment | null> {
       const persisted = readPersistedControllerAssignment();
       if (persisted) {
         return {
@@ -3450,7 +3833,7 @@ export async function createRuntimeBridgeBackend(
       return currentRegistry.endpoints.map((endpoint) => ({
         endpointId: endpoint.identity.endpoint_id,
         modelId: endpoint.identity.model_id,
-        providerId: modelsById.get(endpoint.identity.model_id)?.providerId ?? null,
+        providerId: currentModelsById.get(endpoint.identity.model_id)?.providerId ?? null,
         roleIds: getEndpointRoleIds(endpoint.identity.endpoint_id, runtimeEndpoints, currentAccounts),
         endpointKind: endpoint.identity.endpoint_kind,
         servingSource: endpoint.identity.serving_source,
@@ -3464,11 +3847,39 @@ export async function createRuntimeBridgeBackend(
         status: endpoint.status,
       }));
     },
-    async readRequestObservation(requestId: string): Promise<RuntimeObservationBundle | null> {
-      return readRuntimeObservationBundle({
+    async readTelemetrySummary(query?: BridgeTelemetryQuery): Promise<BridgeTelemetrySummary> {
+      return readTelemetrySummaryData(query);
+    },
+    async listTelemetryComparisonRows(
+      query?: BridgeTelemetryQuery,
+    ): Promise<readonly BridgeTelemetryComparisonRow[]> {
+      return listTelemetryComparisonData(query);
+    },
+    async listTelemetryRequests(
+      query?: BridgeTelemetryQuery,
+    ): Promise<readonly BridgeTelemetryRequestRecord[]> {
+      return listTelemetryRequestRecords(query);
+    },
+    subscribeTelemetry(listener: (event: RuntimeTelemetryStreamEvent) => void): () => void {
+      telemetryListeners.add(listener);
+      return () => {
+        telemetryListeners.delete(listener);
+      };
+    },
+    async readRequestObservation(
+      requestId: string,
+    ): Promise<(RuntimeObservationBundle & BridgeTelemetryEndpointMeta) | null> {
+      const observation = readRuntimeObservationBundle({
         databasePath: initialization.databasePath,
         requestId,
       }) as RuntimeObservationBundle | null;
+      if (!observation) {
+        return null;
+      }
+      return {
+        ...observation,
+        ...getTelemetryEndpointMeta(observation.endpointId),
+      };
     },
     async listRecentRequestObservations(): Promise<
       readonly ReturnType<typeof listRecentRuntimeObservations>[number][]
@@ -3495,7 +3906,7 @@ export async function createRuntimeBridgeBackend(
       };
     },
     async shutdown(): Promise<void> {
-      await Promise.all([llamaSwapVendor?.shutdown(), liteLLMVendor?.shutdown()]);
+      await Promise.all([currentLlamaSwapVendor?.shutdown(), currentLiteLLMVendor?.shutdown()]);
       await supervisor?.shutdown();
     },
   };

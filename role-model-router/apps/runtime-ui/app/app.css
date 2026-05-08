@@ -14,6 +14,11 @@
   --rm-accent-muted: rgba(200, 16, 46, 0.60);
   --rm-accent-subtle: rgba(200, 16, 46, 0.20);
   --rm-accent-ghost: rgba(200, 16, 46, 0.10);
+  --rm-telemetry-local: #1f2937;
+  --rm-telemetry-remote: #C8102E;
+  --rm-telemetry-healthy: #166534;
+  --rm-telemetry-degraded: #b45309;
+  --rm-telemetry-raw: #57534e;
   --rm-radius-shell: 0px;
   --rm-radius-panel: 0px;
   --rm-radius-field: 0px;
@@ -32,6 +37,11 @@
     --rm-muted: rgba(250, 250, 249, 0.40);
     --rm-border: #292524;
     --rm-border-strong: #1c1917;
+    --rm-telemetry-local: #d6d3d1;
+    --rm-telemetry-remote: #fb7185;
+    --rm-telemetry-healthy: #86efac;
+    --rm-telemetry-degraded: #fbbf24;
+    --rm-telemetry-raw: #a8a29e;
   }
 }
 

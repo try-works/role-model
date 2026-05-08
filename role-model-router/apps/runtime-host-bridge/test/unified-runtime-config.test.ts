@@ -1,6 +1,10 @@
 import { describe, expect, test } from "vitest";
 
-import { parseUnifiedRuntimeConfigText } from "../src/unified-runtime-config.js";
+import {
+  normalizeUnifiedRuntimeConfigInput,
+  parseUnifiedRuntimeConfigText,
+  renderUnifiedRuntimeConfigText,
+} from "../src/unified-runtime-config.js";
 
 describe("unified runtime config", () => {
   test("derives hybrid mode when both vendor sections are populated", () => {
@@ -157,5 +161,122 @@ litellm_proxy:
 
     expect(result.llamaSwap.process.startupTimeoutMs).toBeNull();
     expect(result.liteLLM.process.startupTimeoutMs).toBeNull();
+  });
+
+  test("normalizes object input and round-trips advanced vendor settings back to config text", () => {
+    const normalized = normalizeUnifiedRuntimeConfigInput({
+      version: "1.0",
+      routingStrategy: "latency-first",
+      llamaSwap: {
+        models: [
+          {
+            modelId: "local/mock-llama",
+            path: "./models/mock-llama.gguf",
+            contextWindow: 8192,
+            command: "node ./scripts/mock-llama-server.js --port ${PORT}",
+            proxyBaseUrl: "http://127.0.0.1:${PORT}/v1",
+            checkEndpoint: "/ready",
+            useModelName: "mock/llama-upstream",
+          },
+        ],
+        process: {
+          command: null,
+          args: [],
+          env: {
+            LLAMA_SWAP_MODE: "live-reload",
+          },
+          cwd: null,
+          startupTimeoutMs: 15000,
+        },
+      },
+      liteLLM: {
+        providers: [
+          {
+            providerId: "moonshotai",
+            apiKeyRef: "${MOONSHOT_API_KEY}",
+            modelNames: ["moonshotai/kimi-k2.5"],
+            modelMappings: [
+              {
+                modelId: "moonshotai/kimi-k2.5",
+                litellmModel: "moonshotai/kimi-k2.5",
+                litellmParams: {
+                  model: "moonshotai/kimi-k2.5",
+                  api_base: "https://api.moonshot.ai/v1",
+                  temperature: 0,
+                },
+              },
+            ],
+          },
+        ],
+        process: {
+          command: "litellm",
+          args: ["--debug"],
+          env: {
+            LITELLM_MODE: "live-reload",
+          },
+          cwd: null,
+          startupTimeoutMs: 30000,
+        },
+      },
+    });
+
+    expect(parseUnifiedRuntimeConfigText(renderUnifiedRuntimeConfigText(normalized))).toEqual({
+      version: "1.0",
+      routingStrategy: "latency-first",
+      executionMode: "hybrid",
+      llamaSwap: {
+        enabled: true,
+        models: [
+          {
+            modelId: "local/mock-llama",
+            path: "./models/mock-llama.gguf",
+            contextWindow: 8192,
+            command: "node ./scripts/mock-llama-server.js --port ${PORT}",
+            proxyBaseUrl: "http://127.0.0.1:${PORT}/v1",
+            checkEndpoint: "/ready",
+            useModelName: "mock/llama-upstream",
+          },
+        ],
+        process: {
+          command: null,
+          args: [],
+          env: {
+            LLAMA_SWAP_MODE: "live-reload",
+          },
+          cwd: null,
+          startupTimeoutMs: 15000,
+        },
+      },
+      liteLLM: {
+        enabled: true,
+        providers: [
+          {
+            providerId: "moonshotai",
+            apiKeyRef: "${MOONSHOT_API_KEY}",
+            modelNames: ["moonshotai/kimi-k2.5"],
+            modelMappings: [
+              {
+                modelId: "moonshotai/kimi-k2.5",
+                litellmModel: "moonshotai/kimi-k2.5",
+                litellmParams: {
+                  model: "moonshotai/kimi-k2.5",
+                  api_base: "https://api.moonshot.ai/v1",
+                  temperature: 0,
+                },
+              },
+            ],
+          },
+        ],
+        process: {
+          command: "litellm",
+          args: ["--debug"],
+          env: {
+            LITELLM_MODE: "live-reload",
+          },
+          cwd: null,
+          startupTimeoutMs: 30000,
+        },
+      },
+    });
   });
 });

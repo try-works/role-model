@@ -1,0 +1,56 @@
+
+> @role-model-router/runtime-ui@ build D:\DEV\role-model\.worktrees\16-router-runtime-unified-telemetry-dashboard\role-model-router\apps\runtime-ui
+> react-router build && tsc --noEmit
+
+[36mvite v7.3.2 [32mbuilding client environment for production...[36m[39m
+transforming...
+[32mΓ£ô[39m 1693 modules transformed.
+rendering chunks...
+computing gzip size...
+[2mbuild/client/[22m[32m.vite/manifest.json                         [39m[1m[2m 11.42 kB[22m[1m[22m[2m Γöé gzip:  1.24 kB[22m
+[2mbuild/client/[22m[35massets/root-DBt9uJoE.css                    [39m[1m[2m 23.90 kB[22m[1m[22m[2m Γöé gzip:  5.27 kB[22m
+[2mbuild/client/[22m[36massets/index-fSI7bfiY.js                    [39m[1m[2m  0.15 kB[22m[1m[22m[2m Γöé gzip:  0.15 kB[22m
+[2mbuild/client/[22m[36massets/not-found-BRERaRMo.js                [39m[1m[2m  0.72 kB[22m[1m[22m[2m Γöé gzip:  0.46 kB[22m
+[2mbuild/client/[22m[36massets/root-BFKTGj51.js                     [39m[1m[2m  1.70 kB[22m[1m[22m[2m Γöé gzip:  0.86 kB[22m
+[2mbuild/client/[22m[36massets/observe-logs-BwoDioab.js             [39m[1m[2m  2.61 kB[22m[1m[22m[2m Γöé gzip:  1.12 kB[22m
+[2mbuild/client/[22m[36massets/page-primitives-CahfuxiV.js          [39m[1m[2m  3.04 kB[22m[1m[22m[2m Γöé gzip:  0.99 kB[22m
+[2mbuild/client/[22m[36massets/control-runtime-config-CX5-AjvZ.js   [39m[1m[2m  3.25 kB[22m[1m[22m[2m Γöé gzip:  1.49 kB[22m
+[2mbuild/client/[22m[36massets/requests-D84yl8By.js                 [39m[1m[2m  3.61 kB[22m[1m[22m[2m Γöé gzip:  1.47 kB[22m
+[2mbuild/client/[22m[36massets/integrations-downstream-wrwWFqIZ.js  [39m[1m[2m  4.01 kB[22m[1m[22m[2m Γöé gzip:  1.44 kB[22m
+[2mbuild/client/[22m[36massets/runtime-api-DQncKqpu.js              [39m[1m[2m  4.33 kB[22m[1m[22m[2m Γöé gzip:  1.21 kB[22m
+[2mbuild/client/[22m[36massets/system-peers-eiAfJqFc.js             [39m[1m[2m  4.49 kB[22m[1m[22m[2m Γöé gzip:  1.77 kB[22m
+[2mbuild/client/[22m[36massets/providers-D1hjoDjq.js                [39m[1m[2m  4.54 kB[22m[1m[22m[2m Γöé gzip:  1.60 kB[22m
+[2mbuild/client/[22m[36massets/integrations-upstream-CBwK6EV_.js    [39m[1m[2m  4.55 kB[22m[1m[22m[2m Γöé gzip:  1.69 kB[22m
+[2mbuild/client/[22m[36massets/studio-advanced-lMKkS4AJ.js          [39m[1m[2m  4.78 kB[22m[1m[22m[2m Γöé gzip:  1.85 kB[22m
+[2mbuild/client/[22m[36massets/dashboard-BUjHlHkZ.js                [39m[1m[2m  4.83 kB[22m[1m[22m[2m Γöé gzip:  1.66 kB[22m
+[2mbuild/client/[22m[36massets/studio-rerank-C_Gmlibr.js            [39m[1m[2m  4.88 kB[22m[1m[22m[2m Γöé gzip:  1.95 kB[22m
+[2mbuild/client/[22m[36massets/app-layout-CxWvKkQp.js               [39m[1m[2m  5.07 kB[22m[1m[22m[2m Γöé gzip:  1.43 kB[22m
+[2mbuild/client/[22m[36massets/observe-activity-Dbd05eQt.js         [39m[1m[2m  5.29 kB[22m[1m[22m[2m Γöé gzip:  1.84 kB[22m
+[2mbuild/client/[22m[36massets/control-controller-6krUJ66v.js       [39m[1m[2m  5.41 kB[22m[1m[22m[2m Γöé gzip:  1.97 kB[22m
+[2mbuild/client/[22m[36massets/workbench-DWEvosWQ.js                [39m[1m[2m  5.49 kB[22m[1m[22m[2m Γöé gzip:  1.97 kB[22m
+[2mbuild/client/[22m[36massets/studio-images-D_tTlCw2.js            [39m[1m[2m  5.55 kB[22m[1m[22m[2m Γöé gzip:  2.02 kB[22m
+[2mbuild/client/[22m[36massets/endpoints-CjGU2Bmt.js                [39m[1m[2m  5.65 kB[22m[1m[22m[2m Γöé gzip:  1.95 kB[22m
+[2mbuild/client/[22m[36massets/runtime-DpvkJcUC.js                  [39m[1m[2m  6.14 kB[22m[1m[22m[2m Γöé gzip:  1.85 kB[22m
+[2mbuild/client/[22m[36massets/studio-audio-DpuMhvRs.js             [39m[1m[2m  6.77 kB[22m[1m[22m[2m Γöé gzip:  2.40 kB[22m
+[2mbuild/client/[22m[36massets/control-models-a22Dsnhl.js           [39m[1m[2m  7.77 kB[22m[1m[22m[2m Γöé gzip:  2.30 kB[22m
+[2mbuild/client/[22m[36massets/view-models-G785LAOr.js              [39m[1m[2m  8.23 kB[22m[1m[22m[2m Γöé gzip:  2.92 kB[22m
+[2mbuild/client/[22m[36massets/request-detail-d-MPjvRD.js           [39m[1m[2m  9.65 kB[22m[1m[22m[2m Γöé gzip:  3.18 kB[22m
+[2mbuild/client/[22m[36massets/accounts-CCW2J98M.js                 [39m[1m[2m 12.93 kB[22m[1m[22m[2m Γöé gzip:  3.95 kB[22m
+[2mbuild/client/[22m[36massets/design-system-1hIZLPzG.js            [39m[1m[2m 44.48 kB[22m[1m[22m[2m Γöé gzip: 14.58 kB[22m
+[2mbuild/client/[22m[36massets/chunk-EVOBXE3Y-Bpr6kgtK.js           [39m[1m[2m127.79 kB[22m[1m[22m[2m Γöé gzip: 43.05 kB[22m
+[2mbuild/client/[22m[36massets/entry.client-BBdlfaFT.js             [39m[1m[2m190.57 kB[22m[1m[22m[2m Γöé gzip: 60.05 kB[22m
+[32mΓ£ô built in 7.82s[39m
+[36mvite v7.3.2 [32mbuilding ssr environment for production...[36m[39m
+transforming...
+[32mΓ£ô[39m 9 modules transformed.
+rendering chunks...
+[2mbuild/server/[22m[32m.vite/manifest.json               [39m[1m[2m 0.23 kB[22m[1m[22m
+[2mbuild/server/[22m[35massets/server-build-DFmnIie6.css  [39m[1m[2m35.89 kB[22m[1m[22m
+[2mbuild/server/[22m[36mindex.js                          [39m[1m[2m30.63 kB[22m[1m[22m
+
+[32mΓ£ô[39m 1 asset cleaned from React Router server build.
+[2mbuild\server\assets\server-build-DFmnIie6.css[22m
+
+SPA Mode: Generated [1mbuild\client\index.html[22m
+Removing the server build in [32mD:\DEV\role-model\.worktrees\16-router-runtime-unified-telemetry-dashboard\role-model-router\apps\runtime-ui\build\server[39m due to ssr:false
+[32mΓ£ô built in 638ms[39m

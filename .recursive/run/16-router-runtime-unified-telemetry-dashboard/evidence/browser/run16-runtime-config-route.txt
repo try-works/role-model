@@ -1,0 +1,99 @@
+viewport: 3825x2160
+page: 3825x2456
+scroll: (0, 0)
+Role Model Runtime
+Operator Shell
+A two-level operator shell for studio work, control-plane edits, observation, and integration references.
+[360]<a />
+	Overview
+[361]<a />
+	Studio
+[362]<a />
+	Control
+[363]<a />
+	Observe
+[364]<a />
+	Integrations
+[365]<a />
+	System
+Preserved host tools
+[473]<a />
+	/logs
+[476]<a />
+	/api/metrics
+Control
+Runtime config
+Edit the unified runtime contract for local llama-swap models, remote LiteLLM providers, and process policy through one repo-owned route.
+Section
+Control
+Template
+registry-detail
+Route
+/app/control/runtime-config
+Control
+pages
+[366]<a />
+	Providers
+[367]<a />
+	Accounts
+[368]<a />
+	Runtime Config
+[369]<a />
+	Controller
+[370]<a />
+	Endpoints
+[371]<a />
+	Models
+Control
+Runtime config
+Edit the repo-owned unified runtime contract for local llama-swap models, remote LiteLLM providers, and process policy in one control-plane route.
+[372]<a />
+	Inspect models
+[590]<a />
+	Runtime config JSON
+Config path
+C:\Users\erikb\AppData\Local\Temp\role-model-run16-browser\runtime-config.yaml
+The active file backing this runtime-owned config editor.
+Execution mode
+decision_only
+Derived from the current local and remote config sections.
+Local models
+Configured llama-swap model entries.
+Remote mappings
+Configured LiteLLM provider-model mappings.
+Config editor
+Edit the canonical JSON payload directly, then save and apply it through the role-model runtime control plane.
+|SHADOW(open)||scroll element[355]<textarea /> (0.0 pages above, 0.7 pages below)
+[373]<button />
+	Save and apply
+[374]<button />
+	Reset editor
+Applied config snapshot
+Use this snapshot to confirm the current derived execution mode and the exact local-plus-remote runtime payload in force.
+{
+  "version": "1.1",
+  "routingStrategy": "latency-first",
+  "executionMode": "decision_only",
+  "llamaSwap": {
+    "enabled": false,
+    "models": [],
+    "process": {
+      "command": null,
+      "args": [],
+      "env": {},
+      "cwd": null,
+      "startupTimeoutMs": null
+    }
+  },
+  "liteLLM": {
+    "enabled": false,
+    "providers": [],
+    "process": {
+      "command": null,
+      "args": [],
+      "env": {},
+      "cwd": null,
+      "startupTimeoutMs": null
+    }
+  }
+}

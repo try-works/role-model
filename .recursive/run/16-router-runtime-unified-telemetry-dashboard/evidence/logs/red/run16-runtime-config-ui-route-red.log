@@ -1,0 +1,30 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/16-router-runtime-unified-telemetry-dashboard/role-model-router/apps/runtime-ui[39m
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Suites 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  app/lib/design-system.test.ts [ app/lib/design-system.test.ts ]
+Error: Cannot find module '../routes/control-runtime-config' imported from 'D:/DEV/role-model/.worktrees/16-router-runtime-unified-telemetry-dashboard/role-model-router/apps/runtime-ui/app/lib/design-system.test.ts'
+ Γ¥» app/lib/design-system.test.ts:13:1
+     11| import StudioImagesRoute from "../routes/studio-images";
+     12| import StudioRerankRoute from "../routes/studio-rerank";
+     13| import ControlRuntimeConfigRoute from "../routes/control-runtime-confiΓÇª
+       | ^
+     14| import SystemPeersRoute from "../routes/system-peers";
+     15| 
+
+Caused by: Error: Failed to load url ../routes/control-runtime-config (resolved id: ../routes/control-runtime-config) in D:/DEV/role-model/.worktrees/16-router-runtime-unified-telemetry-dashboard/role-model-router/apps/runtime-ui/app/lib/design-system.test.ts. Does the file exist?
+ Γ¥» loadAndTransform ../../../node_modules/.pnpm/vite@7.3.2_@types+node@22.1_f7dc1826a0f6bcfe28ab74fd91d23836/node_modules/vite/dist/node/chunks/config.js:22663:33
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [2mno tests[22m
+[2m   Start at [22m 12:13:13
+[2m   Duration [22m 1.20s[2m (transform 289ms, setup 0ms, collect 0ms, tests 0ms, environment 0ms, prepare 254ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\16-router-runtime-unified-telemetry-dashboard\role-model-router\apps\runtime-ui:
+ΓÇëERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓÇë Command failed with exit code 1: vitest run app\lib\design-system.test.ts

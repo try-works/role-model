@@ -1,0 +1,506 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/16-router-runtime-unified-telemetry-dashboard/role-model-router/apps/runtime-ui[39m
+
+ [31mΓ¥»[39m app/lib/design-system.test.ts [2m([22m[2m10 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 92[2mms[22m[39m
+   [32mΓ£ô[39m runtime design system[2m > [22mdefines navigation groups and layout templates for every runtime route[32m 3[2mms[22m[39m
+   [32mΓ£ô[39m runtime design system[2m > [22mkeeps the shell on restrained radii and explicit content widths[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m runtime design system[2m > [22mglobal shell chrome keeps legacy vendor ui out of the main runtime contract[32m 44[2mms[22m[39m
+   [32mΓ£ô[39m runtime design system[2m > [22mstudio implementation targets render repo-owned workspace sections instead of placeholder blueprints[32m 11[2mms[22m[39m
+   [32mΓ£ô[39m runtime design system[2m > [22mintegration and system implementation targets render live upstream and peer surfaces[32m 6[2mms[22m[39m
+   [32mΓ£ô[39m runtime design system[2m > [22mdesign system doc marks the converted pages as live routes[32m 0[2mms[22m[39m
+[31m   [31m├ù[31m runtime design system[2m > [22mcontrol routes tolerate an unassigned controller before endpoint activation[39m[32m 15[2mms[22m[39m
+[31m     ΓåÆ expected 'import { useEffect, useMemo, useStateΓÇª' not to contain 'if (!snapshot || !controller)'[39m
+   [32mΓ£ô[39m runtime design system[2m > [22mapplies the swiss stone palette, ibm plex typography, and dual-scheme browser contract in shared app chrome[32m 0[2mms[22m[39m
+   [32mΓ£ô[39m runtime design system[2m > [22mkeeps shared states on the stone plus single-accent palette[32m 0[2mms[22m[39m
+   [32mΓ£ô[39m runtime design system[2m > [22mcontrol runtime config is a first-class route and models stays inspect-only[32m 10[2mms[22m[39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  app/lib/design-system.test.ts > runtime design system > control routes tolerate an unassigned controller before endpoint activation
+AssertionError: expected 'import { useEffect, useMemo, useStateΓÇª' not to contain 'if (!snapshot || !controller)'
+
+- Expected
++ Received
+
+- if (!snapshot || !controller)
++ import { useEffect, useMemo, useState } from "react";
+
++ import { Link } from "react-router";
+
++ 
+
++ import { CodeBlock, EmptyState, ErrorState, FactCard, LoadingState, PageHeader, SectionCard, StatusPill } from "../components/page-primitives";
+
++ import { mutedPanelClassName, secondaryButtonClassName } from "../lib/design-system";
+
++ import {
+
++   fetchControllerAssignment,
+
++   fetchRuntimeSnapshot,
+
++   type RuntimeControllerAssignment,
+
++   type RuntimeSnapshot,
+
++ } from "../lib/runtime-api";
+
++ import { buildConfiguredModelCards } from "../lib/view-models";
+
++ 
+
++ export default function ControlModelsRoute() {
+
++   const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(null);
+
++   const [controller, setController] = useState<RuntimeControllerAssignment | null>(null);
+
++   const [selectedModelId, setSelectedModelId] = useState<string | null>(null);
+
++   const [error, setError] = useState<string | null>(null);
+
++ 
+
++   useEffect(() => {
+
++     void Promise.all([fetchRuntimeSnapshot(), fetchControllerAssignment()])
+
++       .then(([nextSnapshot, nextController]) => {
+
++         setSnapshot(nextSnapshot);
+
++         setController(nextController);
+
++       })
+
++       .catch((value: unknown) => setError(value instanceof Error ? value.message : "Could not load configured models."));
+
++   }, []);
+
++ 
+
++   const cards = useMemo(
+
++     () =>
+
++       snapshot
+
++         ? buildConfiguredModelCards({
+
++             models: snapshot.models,
+
++             endpoints: snapshot.endpoints,
+
++             accounts: snapshot.accounts,
+
++             requests: snapshot.requests,
+
++             controller,
+
++           })
+
++         : [],
+
++     [controller, snapshot],
+
++   );
+
++ 
+
++   const selectedCard = cards.find((card) => card.modelId === selectedModelId) ?? null;
+
++   const selectedEndpoints =
+
++     snapshot && selectedCard
+
++       ? snapshot.endpoints.filter((endpoint) => endpoint.modelId === selectedCard.modelId)
+
++       : [];
+
++   const selectedCapabilities = [
+
++     ...new Set(selectedEndpoints.flatMap((endpoint) => endpoint.capabilities ?? [])),
+
++   ].sort((left, right) => left.localeCompare(right, "en"));
+
++   const selectedToolStyles = [
+
++     ...new Set(
+
++       selectedEndpoints
+
++         .filter((endpoint) => endpoint.toolCallingSupported)
+
++         .map((endpoint) => endpoint.toolCallingStyle ?? "unknown"),
+
++     ),
+
++   ].sort((left, right) => left.localeCompare(right, "en"));
+
++ 
+
++   if (error) {
+
++     return <ErrorState label={error} />;
+
++   }
+
++   if (!snapshot || !controller) {
+
++     return <LoadingState label="Loading configured model cardsΓÇª" />;
+
++   }
+
++ 
+
++   const toolCapableCount = cards.filter((card) => card.toolCallingSupported).length;
+
++   const activeModelCount = cards.filter((card) => card.status === "active").length;
+
++ 
+
++   return (
+
++     <>
+
++       <div className="space-y-6">
+
++         <PageHeader
+
++           eyebrow="Control"
+
++           title="Configured models"
+
++           description="Unified local and remote model cards with controller status, roles, capabilities, request metrics, and inspect-first drill-ins."
+
++         />
+
++ 
+
++         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+
++           <FactCard label="Configured models" value={cards.length} detail="Every configured model appears once in the merged inventory." emphasis />
+
++           <FactCard label="Active models" value={activeModelCount} detail="Models whose endpoint summary currently resolves to active." />
+
++           <FactCard label="Tool-capable" value={toolCapableCount} detail="Models with at least one tool-calling capable endpoint." />
+
++           <FactCard label="Observed requests" value={snapshot.requests.length} detail="Request count currently available to the inventory as runtime context." />
+
++         </div>
+
++ 
+
++         <SectionCard title="Model inventory" description="Every configured model appears once, with local and remote endpoint state merged into a card-based registry.">
+
++           {cards.length === 0 ? (
+
++             <EmptyState label="No configured models are available yet." />
+
++           ) : (
+
++             <div className="grid gap-4 xl:grid-cols-2">
+
++               {cards.map((card) => (
+
++                 <article key={card.modelId} className="rounded-none border border-[var(--rm-border)] bg-[var(--rm-surface)] p-5">
+
++                   <div className="flex flex-wrap items-start justify-between gap-3">
+
++                     <div>
+
++                       <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">{card.sourceSummary}</p>
+
++                       <h3 className="mt-2 text-lg font-medium text-[var(--rm-fg)]">{card.displayName}</h3>
+
++                       <p className="mt-2 break-all text-sm text-[var(--rm-secondary)]">{card.modelId}</p>
+
++                     </div>
+
++                     <StatusPill tone={card.controllerState === "active" ? "accent" : card.status === "active" ? "success" : "warning"}>
+
++                       {card.controllerState === "active" ? "controller" : card.status}
+
++                     </StatusPill>
+
++                   </div>
+
++ 
+
++                   <div className="mt-4 flex flex-wrap gap-2">
+
++                     <StatusPill tone={card.toolCallingSupported ? "success" : "neutral"}>
+
++                       {card.toolCallingSupported ? "tool calling" : "no tool calling"}
+
++                     </StatusPill>
+
++                     <StatusPill tone={card.endpointCount > 0 ? "neutral" : "warning"}>
+
++                       {card.endpointCount} endpoint{card.endpointCount === 1 ? "" : "s"}
+
++                     </StatusPill>
+
++                     <StatusPill tone={card.requestCount > 0 ? "neutral" : "warning"}>
+
++                       {card.requestCount} request{card.requestCount === 1 ? "" : "s"}
+
++                     </StatusPill>
+
++                   </div>
+
++ 
+
++                   <div className="mt-4 grid gap-3 md:grid-cols-2 text-sm text-[var(--rm-secondary)]">
+
++                     <p><span className="font-medium text-[var(--rm-fg)]">Roles:</span> {card.roleIds.join(", ") || "None"}</p>
+
++                     <p><span className="font-medium text-[var(--rm-fg)]">Endpoints:</span> {card.endpointIds.join(", ") || "None"}</p>
+
++                   </div>
+
++ 
+
++                   <div className="mt-5">
+
++                     <button className={secondaryButtonClassName} type="button" onClick={() => setSelectedModelId(card.modelId)}>
+
++                       Inspect
+
++                     </button>
+
++                   </div>
+
++                 </article>
+
++               ))}
+
++             </div>
+
++           )}
+
++         </SectionCard>
+
++       </div>
+
++ 
+
++       {selectedCard ? (
+
++         <div className="fixed inset-0 z-50 overflow-y-auto bg-[var(--rm-accent-ghost)] p-4 backdrop-blur-[1px]">
+
++           <div className="mx-auto max-w-5xl rounded-none border border-[var(--rm-border)] bg-[var(--rm-surface)] p-6 shadow-[var(--rm-shadow-card)]">
+
++             <div className="flex flex-wrap items-start justify-between gap-4">
+
++               <div>
+
++                 <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">Model inspection</p>
+
++                 <h2 className="mt-2 text-2xl font-light tracking-tight text-[var(--rm-fg)]">{selectedCard.displayName}</h2>
+
++                 <p className="mt-2 break-all text-sm text-[var(--rm-secondary)]">{selectedCard.modelId}</p>
+
++               </div>
+
++               <button className={secondaryButtonClassName} type="button" onClick={() => setSelectedModelId(null)}>
+
++                 Close
+
++               </button>
+
++             </div>
+
++ 
+
++             <div className="mt-6 grid gap-4 xl:grid-cols-2">
+
++               <div className={`${mutedPanelClassName} p-4`}>
+
++                 <p className="font-medium text-[var(--rm-fg)]">Roles and controller</p>
+
++                 <div className="mt-3 flex flex-wrap gap-2">
+
++                   {selectedCard.roleIds.length === 0 ? (
+
++                     <StatusPill tone="warning">No roles</StatusPill>
+
++                   ) : (
+
++                     selectedCard.roleIds.map((roleId) => (
+
++                       <StatusPill key={roleId} tone="neutral">{roleId}</StatusPill>
+
++                     ))
+
++                   )}
+
++                   <StatusPill tone={selectedCard.controllerState === "active" ? "accent" : "neutral"}>
+
++                     {selectedCard.controllerState}
+
++                   </StatusPill>
+
++                 </div>
+
++               </div>
+
++ 
+
++               <div className={`${mutedPanelClassName} p-4`}>
+
++                 <p className="font-medium text-[var(--rm-fg)]">Capabilities</p>
+
++                 <div className="mt-3 flex flex-wrap gap-2">
+
++                   {selectedCapabilities.length === 0 ? (
+
++                     <StatusPill tone="warning">No declared capabilities</StatusPill>
+
++                   ) : (
+
++                     selectedCapabilities.map((capability) => (
+
++                       <StatusPill key={capability} tone="neutral">{capability}</StatusPill>
+
++                     ))
+
++                   )}
+
++                 </div>
+
++               </div>
+
++ 
+
++               <div className={`${mutedPanelClassName} p-4`}>
+
++                 <p className="font-medium text-[var(--rm-fg)]">Metrics</p>
+
++                 <div className="mt-3 grid gap-3 md:grid-cols-2 text-sm text-[var(--rm-secondary)]">
+
++                   <p><span className="font-medium text-[var(--rm-fg)]">Requests observed:</span> {selectedCard.requestCount}</p>
+
++                   <p><span className="font-medium text-[var(--rm-fg)]">Configured endpoints:</span> {selectedCard.endpointCount}</p>
+
++                   <p><span className="font-medium text-[var(--rm-fg)]">Source mix:</span> {selectedCard.sourceSummary}</p>
+
++                   <p><span className="font-medium text-[var(--rm-fg)]">Status:</span> {selectedCard.status}</p>
+
++                 </div>
+
++               </div>
+
++ 
+
++               <div className={`${mutedPanelClassName} p-4`}>
+
++                 <p className="font-medium text-[var(--rm-fg)]">Tooling / MCP</p>
+
++                 <div className="mt-3 flex flex-wrap gap-2">
+
++                   <StatusPill tone={selectedCard.toolCallingSupported ? "success" : "warning"}>
+
++                     {selectedCard.toolCallingSupported ? "tool calling enabled" : "tool calling unavailable"}
+
++                   </StatusPill>
+
++                   {selectedToolStyles.map((style) => (
+
++                     <StatusPill key={style} tone="neutral">{style}</StatusPill>
+
++                   ))}
+
++                 </div>
+
++                 <p className="mt-3 text-sm text-[var(--rm-secondary)]">
+
++                   MCP-backed execution is reflected through runtime tool receipts when the selected endpoint supports tool calling.
+
++                 </p>
+
++               </div>
+
++             </div>
+
++ 
+
++             <div className="mt-4 flex flex-wrap gap-3">
+
++               <Link className={secondaryButtonClassName} to="/app/control/runtime-config">
+
++                 Edit runtime config
+
++               </Link>
+
++               <Link className={secondaryButtonClassName} to="/app/control/accounts">
+
++                 Review provider accounts
+
++               </Link>
+
++             </div>
+
++ 
+
++             <div className="mt-4">
+
++               <p className="mb-2 font-medium text-[var(--rm-fg)]">Endpoint and model ids</p>
+
++               <CodeBlock>
+
++                 {JSON.stringify(
+
++                   {
+
++                     modelId: selectedCard.modelId,
+
++                     endpointIds: selectedCard.endpointIds,
+
++                     endpoints: selectedEndpoints,
+
++                   },
+
++                   null,
+
++                   2,
+
++                 )}
+
++               </CodeBlock>
+
++             </div>
+
++           </div>
+
++         </div>
+
++       ) : null}
+
++     </>
+
++   );
+
++ }
+
++
+
+ Γ¥» app/lib/design-system.test.ts:225:37
+    223| 
+    224|   test("control routes tolerate an unassigned controller before endpoiΓÇª
+    225|     expect(controlModelsSource).not.toContain("if (!snapshot || !contrΓÇª
+       |                                     ^
+    226|     expect(controlControllerSource).not.toContain("if (!snapshot || !cΓÇª
+    227|     expect(runtimeRouteSource).not.toContain("if (!snapshot || !controΓÇª
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m9 passed[39m[22m[90m (10)[39m
+[2m   Start at [22m 12:35:53
+[2m   Duration [22m 1.36s[2m (transform 303ms, setup 0ms, collect 544ms, tests 92ms, environment 0ms, prepare 237ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\16-router-runtime-unified-telemetry-dashboard\role-model-router\apps\runtime-ui:
+ΓÇëERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓÇë Command failed with exit code 1: vitest run app/lib/design-system.test.ts

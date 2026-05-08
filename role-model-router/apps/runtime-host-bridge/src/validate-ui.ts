@@ -12,12 +12,17 @@ export interface RuntimeUiValidationOptions {
   readonly repoRoot: string;
   readonly runtimeStateRoot: string;
   readonly scopeId: string;
+  readonly unifiedRuntimeConfigPath?: string;
 }
 
 export interface RuntimeUiValidationResult {
   readonly providerCount: number;
   readonly accountCount: number;
   readonly endpointCount: number;
+  readonly runtimeConfigPath: string | null;
+  readonly runtimeConfigInitialApplied: boolean;
+  readonly runtimeConfigUpdatedVersion: string | null;
+  readonly runtimeConfigUpdatedRoutingStrategy: string | null;
   readonly moonshotVariantIds: readonly string[];
   readonly availableRoleIds: readonly string[];
   readonly upsertedAccountId: string;
@@ -39,6 +44,12 @@ export async function runRuntimeUiValidation(
     executeChatCompletions: backend.executeChatCompletions,
     executeResponses: backend.executeResponses,
     readRuntimeSummary: backend.readRuntimeSummary,
+    readRuntimeConfig: backend.readRuntimeConfig,
+    updateRuntimeConfig: backend.updateRuntimeConfig,
+    readTelemetrySummary: backend.readTelemetrySummary,
+    listTelemetryComparisonRows: backend.listTelemetryComparisonRows,
+    listTelemetryRequests: backend.listTelemetryRequests,
+    subscribeTelemetry: backend.subscribeTelemetry,
     listProviders: backend.listProviders,
     listRoles: backend.listRoles,
     listAccounts: backend.listAccounts,
@@ -91,6 +102,74 @@ export async function runRuntimeUiValidation(
     const roles = (await rolesResponse.json()) as Array<{
       roleId: string;
     }>;
+    let runtimeConfigPath: string | null = null;
+    let runtimeConfigInitialApplied = false;
+    let runtimeConfigUpdatedVersion: string | null = null;
+    let runtimeConfigUpdatedRoutingStrategy: string | null = null;
+
+    if (options.unifiedRuntimeConfigPath) {
+      const runtimeConfigResponse = await fetch(`${baseUrl}/api/role-model/runtime/config`, {
+        headers: requestHeaders,
+      });
+      if (!runtimeConfigResponse.ok) {
+        throw new Error("Runtime UI validation could not read the runtime config.");
+      }
+
+      const runtimeConfigRecord = (await runtimeConfigResponse.json()) as {
+        applied: boolean;
+        path: string | null;
+        config: Record<string, unknown> | null;
+      };
+      runtimeConfigPath = runtimeConfigRecord.path;
+      runtimeConfigInitialApplied = runtimeConfigRecord.applied;
+
+      const runtimeConfigUpdateResponse = await fetch(`${baseUrl}/api/role-model/runtime/config`, {
+        method: "PUT",
+        headers: {
+          "content-type": "application/json",
+          connection: "close",
+        },
+        body: JSON.stringify({
+          ...(runtimeConfigRecord.config ?? {
+            version: "1.0",
+            llamaSwap: {
+              models: [],
+              process: {
+                command: null,
+                args: [],
+                env: {},
+                cwd: null,
+                startupTimeoutMs: null,
+              },
+            },
+            liteLLM: {
+              providers: [],
+              process: {
+                command: null,
+                args: [],
+                env: {},
+                cwd: null,
+                startupTimeoutMs: null,
+              },
+            },
+          }),
+          version: "1.1",
+          routingStrategy: "latency-first",
+        }),
+      });
+      if (!runtimeConfigUpdateResponse.ok) {
+        throw new Error(`Runtime UI validation runtime-config update failed with ${runtimeConfigUpdateResponse.status}.`);
+      }
+
+      const updatedRuntimeConfigRecord = (await runtimeConfigUpdateResponse.json()) as {
+        config?: {
+          version?: string;
+          routingStrategy?: string | null;
+        };
+      };
+      runtimeConfigUpdatedVersion = updatedRuntimeConfigRecord.config?.version ?? null;
+      runtimeConfigUpdatedRoutingStrategy = updatedRuntimeConfigRecord.config?.routingStrategy ?? null;
+    }
 
     const upsertedAccountId = "moonshot.personal.primary";
     const upsertResponse = await fetch(`${baseUrl}/api/role-model/accounts`, {
@@ -172,16 +251,31 @@ export async function runRuntimeUiValidation(
     if (!updatedEndpointsResponse.ok) {
       throw new Error("Runtime UI validation could not read the updated endpoint list.");
     }
+    const finalSummaryResponse = await fetch(`${baseUrl}/api/role-model/runtime/summary`, {
+      headers: requestHeaders,
+    });
+    if (!finalSummaryResponse.ok) {
+      throw new Error("Runtime UI validation could not read the updated runtime summary.");
+    }
     const updatedEndpoints = (await updatedEndpointsResponse.json()) as Array<{
       endpointId: string;
     }>;
+    const finalSummary = (await finalSummaryResponse.json()) as {
+      providerCount: number;
+      accountCount: number;
+      endpointCount: number;
+    };
 
     const moonshotProvider = providers.find((provider) => provider.providerId === "moonshotai");
 
     return {
-      providerCount: summary.providerCount,
-      accountCount: summary.accountCount,
-      endpointCount: summary.endpointCount,
+      providerCount: finalSummary.providerCount,
+      accountCount: finalSummary.accountCount,
+      endpointCount: finalSummary.endpointCount,
+      runtimeConfigPath,
+      runtimeConfigInitialApplied,
+      runtimeConfigUpdatedVersion,
+      runtimeConfigUpdatedRoutingStrategy,
       moonshotVariantIds: moonshotProvider?.variants?.map((variant) => variant.variantId) ?? [],
       availableRoleIds: roles.map((role) => role.roleId),
       upsertedAccountId,
