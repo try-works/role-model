@@ -1,0 +1,32 @@
+
+> role-model@0.0.0 schemas:validate D:\DEV\role-model\.worktrees\16-router-runtime-unified-telemetry-dashboard
+> corepack pnpm --filter @role-model/schema-tools exec tsx src/validate-schemas.ts validate
+
+Validated 19 schema file(s).
+D:\DEV\role-model\.worktrees\16-router-runtime-unified-telemetry-dashboard\packages\schema-tools\src\validate-schemas.ts:337
+    throw new Error(
+          ^
+
+Error: Fixture D:\DEV\role-model\.worktrees\16-router-runtime-unified-telemetry-dashboard\protocol\fixtures\example-usage-event.json failed validation:
+[
+  {
+    "instancePath": "",
+    "schemaPath": "#/additionalProperties",
+    "keyword": "additionalProperties",
+    "params": {
+      "additionalProperty": "cost_actual"
+    },
+    "message": "must NOT have additional properties"
+  }
+]
+    at assertFixtureValid (D:\DEV\role-model\.worktrees\16-router-runtime-unified-telemetry-dashboard\packages\schema-tools\src\validate-schemas.ts:337:11)
+    at validateFixtures (D:\DEV\role-model\.worktrees\16-router-runtime-unified-telemetry-dashboard\packages\schema-tools\src\validate-schemas.ts:365:7)
+    at async validateSchemas (D:\DEV\role-model\.worktrees\16-router-runtime-unified-telemetry-dashboard\packages\schema-tools\src\validate-schemas.ts:387:24)
+    at async main (D:\DEV\role-model\.worktrees\16-router-runtime-unified-telemetry-dashboard\packages\schema-tools\src\validate-schemas.ts:481:5)
+    at async <anonymous> (D:\DEV\role-model\.worktrees\16-router-runtime-unified-telemetry-dashboard\packages\schema-tools\src\validate-schemas.ts:494:3)
+
+Node.js v24.11.0
+undefined
+D:\DEV\role-model\.worktrees\16-router-runtime-unified-telemetry-dashboard\packages\schema-tools:
+ΓÇëERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓÇë Command failed with exit code 1: tsx src/validate-schemas.ts validate
+ΓÇëELIFECYCLEΓÇë Command failed with exit code 1.

@@ -30,4 +30,12 @@ describe("generateProtocolTypes", () => {
 
     expect(duplicates).toEqual([]);
   });
+
+  it("emits the router metricEntry helper instead of referencing an undefined MetricEntry symbol", async () => {
+    await generateProtocolTypes();
+
+    const generatedTypes = await readFile(generatedTypesPath, "utf8");
+
+    expect(generatedTypes).toContain("interface MetricEntry");
+  });
 });

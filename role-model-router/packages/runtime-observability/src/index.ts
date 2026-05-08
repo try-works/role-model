@@ -127,6 +127,20 @@ export interface RuntimeObservationBundle {
     readonly operator: readonly RuntimeDiagnostic[];
   };
   readonly capturePolicy: RuntimeObservationCapturePolicyReceipt;
+  readonly executionTelemetry: {
+    readonly providerFamily: string;
+    readonly finishReason: string;
+    readonly stream: {
+      readonly requested: boolean;
+      readonly textDeltas: number;
+      readonly toolCallDeltas: number;
+      readonly toolArgumentDeltas: number;
+    };
+    readonly streamSupport: RoutedExecutionResult["capabilities"]["streaming"];
+    readonly promptCaching: RoutedExecutionResult["capabilities"]["promptCaching"];
+    readonly usageSupport: RoutedExecutionResult["capabilities"]["usage"];
+    readonly costProvenance: "actual" | "estimated" | "unavailable";
+  };
   readonly cacheObservability: {
     readonly promptCacheRequested: boolean;
     readonly promptCacheUsed: boolean;
@@ -418,6 +432,18 @@ function buildOperatorDiagnostics(
   ];
 }
 
+function deriveCostProvenance(
+  usageEvent: RoutedExecutionResult["usageEvent"],
+): RuntimeObservationBundle["executionTelemetry"]["costProvenance"] {
+  if (typeof usageEvent.cost_actual === "number") {
+    return "actual";
+  }
+  if (typeof usageEvent.cost_estimate === "number") {
+    return "estimated";
+  }
+  return "unavailable";
+}
+
 export function createRuntimeObservationBundle(
   input: RuntimeObservationBundleInput,
 ): RuntimeObservationBundle {
@@ -462,6 +488,20 @@ export function createRuntimeObservationBundle(
     },
     diagnostics,
     capturePolicy,
+    executionTelemetry: {
+      providerFamily: input.execution.normalized.providerFamily,
+      finishReason: input.execution.normalized.finishReason,
+      stream: {
+        requested: input.execution.normalized.stream.requested,
+        textDeltas: input.execution.normalized.stream.textDeltas,
+        toolCallDeltas: input.execution.normalized.stream.toolCallDeltas,
+        toolArgumentDeltas: input.execution.normalized.stream.toolArgumentDeltas,
+      },
+      streamSupport: input.execution.capabilities.streaming,
+      promptCaching: input.execution.capabilities.promptCaching,
+      usageSupport: input.execution.capabilities.usage,
+      costProvenance: deriveCostProvenance(input.execution.usageEvent),
+    },
     cacheObservability: {
       promptCacheRequested: input.execution.normalized.promptCache.requested,
       promptCacheUsed: input.execution.normalized.promptCache.used,

@@ -458,7 +458,13 @@ async function startRuntimeForConfig(input: {
     executeChatCompletions: backend.executeChatCompletions,
     executeResponses: backend.executeResponses,
     readRuntimeSummary: backend.readRuntimeSummary,
+    readRuntimeConfig: backend.readRuntimeConfig,
+    updateRuntimeConfig: backend.updateRuntimeConfig,
     readHealthStatus: backend.readHealthStatus,
+    readTelemetrySummary: backend.readTelemetrySummary,
+    listTelemetryComparisonRows: backend.listTelemetryComparisonRows,
+    listTelemetryRequests: backend.listTelemetryRequests,
+    subscribeTelemetry: backend.subscribeTelemetry,
     listProviders: backend.listProviders,
     listRoles: backend.listRoles,
     listAccounts: backend.listAccounts,
@@ -531,6 +537,11 @@ export async function runRuntimeVendorValidation(options: {
     realVendorCoverage: boolean;
   };
   health: unknown;
+  telemetry: {
+    summary: Awaited<ReturnType<RuntimeBridgeBackend["readTelemetrySummary"]>>;
+    rows: Awaited<ReturnType<RuntimeBridgeBackend["listTelemetryComparisonRows"]>>;
+    requests: Awaited<ReturnType<RuntimeBridgeBackend["listTelemetryRequests"]>>;
+  };
 }> {
   const runtimeStateRoot =
     options.runtimeStateRoot ?? (await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-vendors-")));
@@ -640,6 +651,9 @@ export async function runRuntimeVendorValidation(options: {
             "req-runtime-vendor-hybrid-remote",
           );
           const healthResponse = await fetch(`${hybridRuntime.baseUrl}/healthz`);
+          const telemetrySummary = await hybridRuntime.backend.readTelemetrySummary();
+          const telemetryRows = await hybridRuntime.backend.listTelemetryComparisonRows();
+          const telemetryRequests = await hybridRuntime.backend.listTelemetryRequests({ limit: 10 });
           return {
             decisionOnly: {
               statusCode: decisionResponse.statusCode,
@@ -671,6 +685,11 @@ export async function runRuntimeVendorValidation(options: {
               ...plan.vendorHarness,
             },
             health: await healthResponse.json(),
+            telemetry: {
+              summary: telemetrySummary,
+              rows: telemetryRows,
+              requests: telemetryRequests,
+            },
           };
         } finally {
           await hybridRuntime.close();

@@ -1,0 +1,18 @@
+
+> @role-model-router/process-supervisor@0.0.0 test D:\DEV\role-model\.worktrees\16-router-runtime-unified-telemetry-dashboard\role-model-router\packages\process-supervisor
+> vitest run
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/16-router-runtime-unified-telemetry-dashboard/role-model-router/packages/process-supervisor[39m
+
+ [32mΓ£ô[39m test/index.test.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 4012[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m process-supervisor[2m > [22mstarts a vendor process, waits for health, and reports it as healthy [33m 714[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m process-supervisor[2m > [22mcaptures child logs and restarts an unexpectedly crashed vendor with backoff [33m 1174[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m process-supervisor[2m > [22mforces bounded shutdown when a vendor ignores the initial termination signal [33m 738[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m process-supervisor[2m > [22mstops spawned child processes when a managed vendor shuts down on Windows [33m 1255[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m5 passed[39m[22m[90m (5)[39m
+[2m   Start at [22m 13:38:16
+[2m   Duration [22m 4.72s[2m (transform 90ms, setup 0ms, collect 100ms, tests 4.01s, environment 0ms, prepare 228ms)[22m
+

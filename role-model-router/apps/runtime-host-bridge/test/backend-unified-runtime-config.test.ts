@@ -1,4 +1,4 @@
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -52,5 +52,134 @@ version: "1.0"
         },
       }),
     );
+
+    await backend.shutdown();
+  });
+
+  test("reads and updates unified runtime config through the backend", async () => {
+    const tempRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-run16-config-"));
+    tempRoots.push(tempRoot);
+    const runtimeStateRoot = path.join(tempRoot, "state");
+    const unifiedRuntimeConfigPath = path.join(tempRoot, "runtime-config.yaml");
+
+    await writeFile(
+      unifiedRuntimeConfigPath,
+      `
+version: "1.0"
+`,
+      "utf8",
+    );
+
+    const backend = await createRuntimeBridgeBackend({
+      repoRoot,
+      runtimeStateRoot,
+      scopeId: "runtime-host-unified-config-update",
+      unifiedRuntimeConfigPath,
+    });
+
+    await expect(backend.readRuntimeConfig()).resolves.toEqual(
+      expect.objectContaining({
+        applied: true,
+        path: unifiedRuntimeConfigPath,
+        config: expect.objectContaining({
+          executionMode: "decision_only",
+          llamaSwap: expect.objectContaining({
+            models: [],
+          }),
+          liteLLM: expect.objectContaining({
+            providers: [],
+          }),
+        }),
+      }),
+    );
+
+    await expect(
+      backend.updateRuntimeConfig({
+        version: "1.0",
+        routingStrategy: "latency-first",
+        llamaSwap: {
+          models: [],
+          process: {
+            command: null,
+            args: [],
+            env: {},
+            cwd: null,
+            startupTimeoutMs: null,
+          },
+        },
+        liteLLM: {
+          providers: [],
+          process: {
+            command: null,
+            args: [],
+            env: {},
+            cwd: null,
+            startupTimeoutMs: null,
+          },
+        },
+      }),
+    ).resolves.toEqual(
+      expect.objectContaining({
+        applied: true,
+        path: unifiedRuntimeConfigPath,
+        config: expect.objectContaining({
+          routingStrategy: "latency-first",
+          executionMode: "decision_only",
+          llamaSwap: expect.objectContaining({
+            models: [],
+          }),
+          liteLLM: expect.objectContaining({
+            providers: [],
+          }),
+        }),
+      }),
+    );
+
+    await expect(backend.readRuntimeSummary()).resolves.toEqual(
+      expect.objectContaining({
+        executionMode: "decision_only",
+        unifiedConfig: {
+          enabled: true,
+          path: unifiedRuntimeConfigPath,
+        },
+      }),
+    );
+
+    await expect(readFile(unifiedRuntimeConfigPath, "utf8")).resolves.toContain("latency-first");
+
+    await backend.shutdown();
+  });
+
+  test("returns no controller assignment when the unified config has no endpoints yet", async () => {
+    const tempRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-run16-empty-controller-"));
+    tempRoots.push(tempRoot);
+    const runtimeStateRoot = path.join(tempRoot, "state");
+    const unifiedRuntimeConfigPath = path.join(tempRoot, "runtime-config.yaml");
+
+    await writeFile(
+      unifiedRuntimeConfigPath,
+      `
+version: "1.0"
+`,
+      "utf8",
+    );
+
+    const backend = await createRuntimeBridgeBackend({
+      repoRoot,
+      runtimeStateRoot,
+      scopeId: "runtime-host-empty-controller",
+      unifiedRuntimeConfigPath,
+    });
+
+    await expect(backend.readRuntimeSummary()).resolves.toEqual(
+      expect.objectContaining({
+        endpointCount: 0,
+        executionMode: "decision_only",
+      }),
+    );
+
+    await expect(backend.readControllerAssignment()).resolves.toBeNull();
+
+    await backend.shutdown();
   });
 });

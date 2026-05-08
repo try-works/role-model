@@ -14,6 +14,59 @@ export interface RuntimeSummary {
   };
 }
 
+export interface RuntimeProcessConfig {
+  readonly command: string | null;
+  readonly args: readonly string[];
+  readonly env: Readonly<Record<string, string>>;
+  readonly cwd: string | null;
+  readonly startupTimeoutMs: number | null;
+}
+
+export interface RuntimeConfigModel {
+  readonly modelId: string;
+  readonly path: string;
+  readonly contextWindow?: number | null;
+  readonly command?: string | null;
+  readonly proxyBaseUrl?: string | null;
+  readonly checkEndpoint?: string | null;
+  readonly useModelName?: string | null;
+}
+
+export interface RuntimeConfigProviderMapping {
+  readonly modelId: string;
+  readonly litellmModel?: string;
+  readonly litellmParams?: Readonly<Record<string, unknown>>;
+}
+
+export interface RuntimeConfigProvider {
+  readonly providerId: string;
+  readonly apiKeyRef?: string | null;
+  readonly modelNames?: readonly string[];
+  readonly modelMappings: readonly RuntimeConfigProviderMapping[];
+}
+
+export interface RuntimeConfig {
+  readonly version: string;
+  readonly routingStrategy?: string | null;
+  readonly executionMode?: "decision_only" | "hybrid" | "local_only" | "remote_only";
+  readonly llamaSwap: {
+    readonly enabled?: boolean;
+    readonly models: readonly RuntimeConfigModel[];
+    readonly process: RuntimeProcessConfig;
+  };
+  readonly liteLLM: {
+    readonly enabled?: boolean;
+    readonly providers: readonly RuntimeConfigProvider[];
+    readonly process: RuntimeProcessConfig;
+  };
+}
+
+export interface RuntimeConfigRecord {
+  readonly applied: boolean;
+  readonly path: string | null;
+  readonly config: RuntimeConfig | null;
+}
+
 export interface ProviderVariant {
   readonly variantId: string;
   readonly label: string;
@@ -107,6 +160,107 @@ export interface RuntimeRequestListItem {
   readonly endpointId?: string;
   readonly createdAtMs?: number;
 }
+
+export interface RuntimeTelemetrySourceSummary {
+  readonly requestCount: number;
+  readonly successCount: number;
+  readonly failureCount: number;
+  readonly totalInputTokens: number;
+  readonly totalOutputTokens: number;
+  readonly totalTokens: number;
+  readonly cachedRequestCount: number;
+  readonly totalActualCostUsd: number;
+  readonly totalEstimatedCostUsd: number;
+  readonly averageLatencyMs: number | null;
+  readonly p95LatencyMs: number | null;
+  readonly lastSeenAtMs: number | null;
+}
+
+export interface RuntimeTelemetrySummary extends RuntimeTelemetrySourceSummary {
+  readonly sourceBreakdown: {
+    readonly local: RuntimeTelemetrySourceSummary;
+    readonly remote: RuntimeTelemetrySourceSummary;
+  };
+}
+
+export interface RuntimeTelemetryComparisonRow extends RuntimeTelemetrySourceSummary {
+  readonly endpointId: string;
+  readonly modelId: string | null;
+  readonly providerKind?: string | null;
+  readonly providerFamily?: string | null;
+  readonly promptCacheSupported?: boolean;
+  readonly sourceType: "local" | "remote";
+  readonly providerId?: string | null;
+  readonly endpointKind?: string | null;
+  readonly servingSource?: string | null;
+  readonly healthStatus?: string;
+  readonly status?: string;
+  readonly roleIds?: readonly string[];
+}
+
+export interface RuntimeTelemetryRequestRecord {
+  readonly requestId: string;
+  readonly routingDecisionId?: string;
+  readonly endpointId: string;
+  readonly conversationId?: string;
+  readonly createdAtMs: number;
+  readonly modelId?: string | null;
+  readonly providerKind?: string | null;
+  readonly providerFamily?: string | null;
+  readonly sourceType: "local" | "remote";
+  readonly providerId?: string | null;
+  readonly endpointKind?: string | null;
+  readonly servingSource?: string | null;
+  readonly healthStatus?: string;
+  readonly status?: string;
+  readonly roleIds?: readonly string[];
+  readonly inputTokens?: number;
+  readonly outputTokens?: number;
+  readonly totalTokens?: number;
+  readonly latencyMs?: number | null;
+  readonly errorClass?: string | null;
+  readonly statusCode?: number | null;
+  readonly finishReason?: string | null;
+  readonly promptCacheRequested?: boolean;
+  readonly promptCacheSupported?: boolean;
+  readonly promptCacheUsed?: boolean;
+  readonly cacheReadTokens?: number;
+  readonly cacheReadTokensSupported?: boolean;
+  readonly cacheWriteTokens?: number;
+  readonly cacheWriteTokensSupported?: boolean;
+  readonly streamTextDeltaCount?: number;
+  readonly streamTextSupported?: boolean;
+  readonly streamToolCallDeltaCount?: number;
+  readonly streamToolCallSupported?: boolean;
+  readonly streamToolArgumentDeltaCount?: number;
+  readonly streamToolArgumentSupported?: boolean;
+  readonly toolCallCount?: number;
+  readonly toolExecutionCount?: number;
+  readonly costProvenance?: "actual" | "estimated" | "unavailable";
+  readonly actualCostUsd?: number | null;
+  readonly estimatedCostUsd?: number | null;
+  readonly currency?: string | null;
+}
+
+export interface RuntimeTelemetryDashboard {
+  readonly summary: RuntimeTelemetrySummary;
+  readonly rows: readonly RuntimeTelemetryComparisonRow[];
+  readonly requests: readonly RuntimeTelemetryRequestRecord[];
+}
+
+export interface RuntimeTelemetryStreamEvent {
+  readonly eventName: "telemetry.update";
+  readonly emittedAtMs: number;
+  readonly summary?: RuntimeTelemetrySummary;
+  readonly request: RuntimeTelemetryRequestRecord;
+}
+
+export interface RuntimeEventSourceLike {
+  addEventListener(type: string, listener: (event: MessageEvent<string>) => void): void;
+  close(): void;
+}
+
+export type RuntimeEventSourceFactory = (url: string) => RuntimeEventSourceLike;
 
 export interface RuntimeModelRecord {
   readonly id: string;
@@ -332,6 +486,20 @@ async function postJson<TValue>(
   });
 }
 
+async function putJson<TValue>(
+  path: string,
+  payload: unknown,
+  fetcher: RuntimeFetcher,
+): Promise<TValue> {
+  return fetchJson<TValue>(path, fetcher, {
+    method: "PUT",
+    headers: {
+      "content-type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+}
+
 export async function fetchRuntimeSnapshot(
   fetcher: RuntimeFetcher = fetch,
 ): Promise<RuntimeSnapshot> {
@@ -356,6 +524,68 @@ export async function fetchRuntimeSnapshot(
   };
 }
 
+function buildTelemetryQueryString(input?: {
+  readonly limit?: number;
+  readonly windowMs?: number;
+  readonly endAtMs?: number;
+}): string {
+  const params = new URLSearchParams();
+  if (typeof input?.limit === "number") {
+    params.set("limit", String(input.limit));
+  }
+  if (typeof input?.windowMs === "number") {
+    params.set("windowMs", String(input.windowMs));
+  }
+  if (typeof input?.endAtMs === "number") {
+    params.set("endAtMs", String(input.endAtMs));
+  }
+  const query = params.toString();
+  return query.length > 0 ? `?${query}` : "";
+}
+
+export async function fetchTelemetryDashboard(
+  fetcher: RuntimeFetcher = fetch,
+): Promise<RuntimeTelemetryDashboard> {
+  const [summary, rows, requests] = await Promise.all([
+    fetchJson<RuntimeTelemetrySummary>("/api/role-model/telemetry/summary", fetcher),
+    fetchJson<RuntimeTelemetryComparisonRow[]>("/api/role-model/telemetry/rows", fetcher),
+    fetchJson<RuntimeTelemetryRequestRecord[]>("/api/role-model/telemetry/requests", fetcher),
+  ]);
+
+  return {
+    summary,
+    rows,
+    requests,
+  };
+}
+
+export async function fetchTelemetryRequests(
+  input: {
+    readonly limit?: number;
+    readonly windowMs?: number;
+    readonly endAtMs?: number;
+  } = {},
+  fetcher: RuntimeFetcher = fetch,
+): Promise<RuntimeTelemetryRequestRecord[]> {
+  return fetchJson<RuntimeTelemetryRequestRecord[]>(
+    `/api/role-model/telemetry/requests${buildTelemetryQueryString(input)}`,
+    fetcher,
+  );
+}
+
+export function subscribeTelemetryStream(
+  onEvent: (event: RuntimeTelemetryStreamEvent) => void,
+  createSource: RuntimeEventSourceFactory = (url) => new EventSource(url),
+): () => void {
+  const source = createSource("/api/role-model/telemetry/stream");
+  source.addEventListener("telemetry.update", (event) => {
+    onEvent(JSON.parse(event.data) as RuntimeTelemetryStreamEvent);
+  });
+  return () => {
+    source.close();
+  };
+}
+
 export async function fetchDownstreamOpenAIProviderConfig(
   fetcher: RuntimeFetcher = fetch,
 ): Promise<RuntimeDownstreamOpenAIProviderConfig> {
@@ -364,8 +594,21 @@ export async function fetchDownstreamOpenAIProviderConfig(
 
 export async function fetchControllerAssignment(
   fetcher: RuntimeFetcher = fetch,
-): Promise<RuntimeControllerAssignment> {
-  return fetchJson<RuntimeControllerAssignment>("/api/role-model/controller", fetcher);
+): Promise<RuntimeControllerAssignment | null> {
+  return fetchJson<RuntimeControllerAssignment | null>("/api/role-model/controller", fetcher);
+}
+
+export async function fetchRuntimeConfig(
+  fetcher: RuntimeFetcher = fetch,
+): Promise<RuntimeConfigRecord> {
+  return fetchJson<RuntimeConfigRecord>("/api/role-model/runtime/config", fetcher);
+}
+
+export async function updateRuntimeConfig(
+  payload: RuntimeConfig,
+  fetcher: RuntimeFetcher = fetch,
+): Promise<RuntimeConfigRecord> {
+  return putJson<RuntimeConfigRecord>("/api/role-model/runtime/config", payload, fetcher);
 }
 
 export async function updateControllerAssignment(

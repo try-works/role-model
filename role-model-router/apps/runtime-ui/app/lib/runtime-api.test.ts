@@ -5,13 +5,17 @@ import {
   fetchAudioVoices,
   fetchActivityCapture,
   fetchActivityMetrics,
+  fetchTelemetryDashboard,
+  fetchTelemetryRequests,
   fetchDownstreamOpenAIProviderConfig,
   fetchControllerAssignment,
   fetchRequestDetail,
+  fetchRuntimeConfig,
   fetchRuntimeSnapshot,
   fetchVersionInfo,
   fetchTextLogs,
   pollRuntimeDeviceAuthorization,
+  subscribeTelemetryStream,
   submitAdvancedRequest,
   submitAudioTranscription,
   submitImageGeneration,
@@ -20,6 +24,7 @@ import {
   submitSpeechGeneration,
   startRuntimeDeviceAuthorization,
   submitWorkbenchChat,
+  updateRuntimeConfig,
   updateControllerAssignment,
 } from "./runtime-api";
 
@@ -209,6 +214,198 @@ describe("fetchRequestDetail", () => {
   });
 });
 
+describe("telemetry APIs", () => {
+  test("loads the canonical telemetry dashboard reads from the role-model telemetry endpoints", async () => {
+    const fetcher = vi.fn(async (input: string | URL | Request) => {
+      const url = typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+
+      switch (url) {
+        case "/api/role-model/telemetry/summary":
+          return jsonResponse({
+            requestCount: 3,
+            successCount: 2,
+            failureCount: 1,
+            totalInputTokens: 96,
+            totalOutputTokens: 30,
+            totalTokens: 126,
+            cachedRequestCount: 1,
+            totalActualCostUsd: 0.0042,
+            totalEstimatedCostUsd: 0.0053,
+            averageLatencyMs: 420,
+            p95LatencyMs: 880,
+            lastSeenAtMs: 1_770_000_000_100,
+            sourceBreakdown: {
+              local: {
+                requestCount: 1,
+                successCount: 1,
+                failureCount: 0,
+                totalInputTokens: 32,
+                totalOutputTokens: 14,
+                totalTokens: 46,
+                cachedRequestCount: 0,
+                totalActualCostUsd: 0,
+                totalEstimatedCostUsd: 0.0011,
+                averageLatencyMs: 280,
+                p95LatencyMs: 280,
+                lastSeenAtMs: 1_770_000_000_000,
+              },
+              remote: {
+                requestCount: 2,
+                successCount: 1,
+                failureCount: 1,
+                totalInputTokens: 64,
+                totalOutputTokens: 16,
+                totalTokens: 80,
+                cachedRequestCount: 1,
+                totalActualCostUsd: 0.0042,
+                totalEstimatedCostUsd: 0.0042,
+                averageLatencyMs: 490,
+                p95LatencyMs: 880,
+                lastSeenAtMs: 1_770_000_000_100,
+              },
+            },
+          });
+        case "/api/role-model/telemetry/rows":
+          return jsonResponse([
+            {
+              endpointId: "llama-swap.local.local-mock-llama",
+              modelId: "local/mock-llama",
+              sourceType: "local",
+              providerFamily: "llama-swap",
+              promptCacheSupported: false,
+              requestCount: 1,
+            },
+            {
+              endpointId: "openai.personal.primary.us-east-1.fast",
+              modelId: "openai/gpt-4.1-mini-fast",
+              sourceType: "remote",
+              providerFamily: "ai-sdk-openai",
+              promptCacheSupported: true,
+              requestCount: 2,
+            },
+          ]);
+        case "/api/role-model/telemetry/requests":
+          return jsonResponse([
+            {
+              requestId: "req-002",
+              endpointId: "openai.personal.primary.us-east-1.fast",
+              sourceType: "remote",
+              providerFamily: "ai-sdk-openai",
+              finishReason: "stop",
+              promptCacheSupported: true,
+              streamTextDeltaCount: 4,
+            },
+          ]);
+        default:
+          throw new Error(`Unexpected request: ${url}`);
+      }
+    });
+
+    await expect(fetchTelemetryDashboard(fetcher)).resolves.toEqual({
+      summary: expect.objectContaining({
+        requestCount: 3,
+        sourceBreakdown: expect.objectContaining({
+          local: expect.objectContaining({ requestCount: 1 }),
+          remote: expect.objectContaining({ requestCount: 2 }),
+        }),
+      }),
+      rows: [
+          {
+            endpointId: "llama-swap.local.local-mock-llama",
+            modelId: "local/mock-llama",
+            sourceType: "local",
+            providerFamily: "llama-swap",
+            promptCacheSupported: false,
+            requestCount: 1,
+          },
+          {
+            endpointId: "openai.personal.primary.us-east-1.fast",
+            modelId: "openai/gpt-4.1-mini-fast",
+            sourceType: "remote",
+            providerFamily: "ai-sdk-openai",
+            promptCacheSupported: true,
+            requestCount: 2,
+          },
+        ],
+      requests: [
+          {
+            requestId: "req-002",
+            endpointId: "openai.personal.primary.us-east-1.fast",
+            sourceType: "remote",
+            providerFamily: "ai-sdk-openai",
+            finishReason: "stop",
+            promptCacheSupported: true,
+            streamTextDeltaCount: 4,
+          },
+        ],
+      });
+  });
+
+  test("loads telemetry request rows with limit parameters", async () => {
+    const fetcher = vi.fn(async (input: string | URL | Request) => {
+      const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+      expect(url).toContain("/api/role-model/telemetry/requests?limit=25");
+      return jsonResponse([
+        {
+          requestId: "req-001",
+          endpointId: "llama-swap.local.local-mock-llama",
+          sourceType: "local",
+        },
+      ]);
+    });
+
+    await expect(fetchTelemetryRequests({ limit: 25 }, fetcher)).resolves.toEqual([
+      {
+        requestId: "req-001",
+        endpointId: "llama-swap.local.local-mock-llama",
+        sourceType: "local",
+      },
+    ]);
+  });
+
+  test("subscribes to canonical telemetry SSE updates and closes the source on cleanup", () => {
+    let listener: (event: MessageEvent<string>) => void = () => {
+      throw new Error("telemetry listener was not registered");
+    };
+    const close = vi.fn();
+    const factory = vi.fn(() => ({
+      addEventListener(type: string, handler: (event: MessageEvent<string>) => void) {
+        expect(type).toBe("telemetry.update");
+        listener = handler;
+      },
+      close,
+    }));
+    const onEvent = vi.fn();
+
+    const dispose = subscribeTelemetryStream(onEvent, factory);
+
+    listener({
+      data: JSON.stringify({
+        eventName: "telemetry.update",
+        emittedAtMs: 1_770_000_000_100,
+        request: {
+          requestId: "req-telemetry-001",
+          sourceType: "remote",
+        },
+      }),
+    } as MessageEvent<string>);
+
+    expect(factory).toHaveBeenCalledWith("/api/role-model/telemetry/stream");
+    expect(onEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        eventName: "telemetry.update",
+        request: expect.objectContaining({
+          requestId: "req-telemetry-001",
+          sourceType: "remote",
+        }),
+      }),
+    );
+
+    dispose();
+    expect(close).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe("observe APIs", () => {
   test("loads vendor activity metrics for the observe activity page", async () => {
     const fetcher = vi.fn(async (input: string | URL | Request) => {
@@ -354,6 +551,17 @@ describe("controller assignment APIs", () => {
       sourceType: "local",
       status: "active",
     });
+  });
+
+  test("loads a null controller assignment when no controller is configured yet", async () => {
+    const fetcher = vi.fn(async (input: string | URL | Request) => {
+      const url = typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      expect(url).toBe("/api/role-model/controller");
+
+      return jsonResponse(null);
+    });
+
+    await expect(fetchControllerAssignment(fetcher)).resolves.toBeNull();
   });
 
   test("patches the selected controller candidate", async () => {
@@ -702,6 +910,116 @@ describe("activateRuntimeEndpoint", () => {
       providerAccountId: "moonshot.personal.primary",
       modelId: "moonshotai/kimi-k2.5",
       status: "active",
+    });
+  });
+});
+
+describe("fetchRuntimeConfig", () => {
+  test("loads the normalized unified runtime config from the runtime control plane", async () => {
+    const fetcher = vi.fn(async (input: string | URL | Request) => {
+      const url = typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      expect(url).toBe("/api/role-model/runtime/config");
+
+      return jsonResponse({
+        applied: true,
+        path: "D:\\runtime-config.yaml",
+        config: {
+          version: "1.0",
+          executionMode: "hybrid",
+          llamaSwap: {
+            enabled: true,
+            models: [{ modelId: "local/mock-llama", path: "./models/mock-llama.gguf" }],
+            process: { command: null, args: [], env: {}, cwd: null, startupTimeoutMs: null },
+          },
+          liteLLM: {
+            enabled: true,
+            providers: [{ providerId: "moonshotai", modelMappings: [{ modelId: "moonshotai/kimi-k2.5" }] }],
+            process: { command: null, args: [], env: {}, cwd: null, startupTimeoutMs: null },
+          },
+        },
+      });
+    });
+
+    await expect(fetchRuntimeConfig(fetcher)).resolves.toEqual({
+      applied: true,
+      path: "D:\\runtime-config.yaml",
+      config: {
+        version: "1.0",
+        executionMode: "hybrid",
+        llamaSwap: {
+          enabled: true,
+          models: [{ modelId: "local/mock-llama", path: "./models/mock-llama.gguf" }],
+          process: { command: null, args: [], env: {}, cwd: null, startupTimeoutMs: null },
+        },
+        liteLLM: {
+          enabled: true,
+          providers: [{ providerId: "moonshotai", modelMappings: [{ modelId: "moonshotai/kimi-k2.5" }] }],
+          process: { command: null, args: [], env: {}, cwd: null, startupTimeoutMs: null },
+        },
+      },
+    });
+  });
+});
+
+describe("updateRuntimeConfig", () => {
+  test("puts the normalized unified runtime config to the runtime control plane", async () => {
+    const fetcher = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+      const url = typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      expect(url).toBe("/api/role-model/runtime/config");
+      expect(init?.method).toBe("PUT");
+      expect(init?.headers).toEqual(
+        expect.objectContaining({
+          "content-type": "application/json",
+        }),
+      );
+      expect(init?.body).toBe(
+        JSON.stringify({
+          version: "1.0",
+          routingStrategy: "balanced",
+          llamaSwap: {
+            models: [{ modelId: "local/mock-llama", path: "./models/mock-llama-v2.gguf" }],
+            process: { command: null, args: [], env: {}, cwd: null, startupTimeoutMs: null },
+          },
+          liteLLM: {
+            providers: [{ providerId: "moonshotai", modelMappings: [{ modelId: "moonshotai/kimi-k2.5" }] }],
+            process: { command: null, args: [], env: {}, cwd: null, startupTimeoutMs: null },
+          },
+        }),
+      );
+
+      return jsonResponse({
+        applied: true,
+        path: "D:\\runtime-config.yaml",
+        config: {
+          version: "1.0",
+          executionMode: "hybrid",
+        },
+      });
+    });
+
+    await expect(
+      updateRuntimeConfig(
+        {
+          version: "1.0",
+          routingStrategy: "balanced",
+          llamaSwap: {
+            models: [{ modelId: "local/mock-llama", path: "./models/mock-llama-v2.gguf" }],
+            process: { command: null, args: [], env: {}, cwd: null, startupTimeoutMs: null },
+          },
+          liteLLM: {
+            providers: [{ providerId: "moonshotai", modelMappings: [{ modelId: "moonshotai/kimi-k2.5" }] }],
+            process: { command: null, args: [], env: {}, cwd: null, startupTimeoutMs: null },
+          },
+        },
+        fetcher,
+      ),
+    ).resolves.toEqual({
+      applied: true,
+      path: "D:\\runtime-config.yaml",
+      config: {
+        version: "1.0",
+        executionMode: "hybrid",
+      },
     });
   });
 });

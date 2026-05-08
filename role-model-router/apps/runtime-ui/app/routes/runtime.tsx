@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { ErrorState, LoadingState, PageHeader, SectionCard, StatusPill } from "../components/page-primitives";
+import { EmptyState, ErrorState, LoadingState, PageHeader, SectionCard, StatusPill } from "../components/page-primitives";
 import { mutedPanelClassName, secondaryButtonClassName } from "../lib/design-system";
 import {
   fetchControllerAssignment,
@@ -14,6 +14,7 @@ import {
 export default function RuntimeRoute() {
   const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(null);
   const [controller, setController] = useState<RuntimeControllerAssignment | null>(null);
+  const [controllerLoaded, setControllerLoaded] = useState(false);
   const [version, setVersion] = useState<RuntimeVersionInfo | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -22,6 +23,7 @@ export default function RuntimeRoute() {
       .then(([nextSnapshot, nextController, nextVersion]) => {
         setSnapshot(nextSnapshot);
         setController(nextController);
+        setControllerLoaded(true);
         setVersion(nextVersion);
       })
       .catch((value: unknown) => setError(value instanceof Error ? value.message : "Could not load runtime summary."));
@@ -30,7 +32,7 @@ export default function RuntimeRoute() {
   if (error) {
     return <ErrorState label={error} />;
   }
-  if (!snapshot || !controller || !version) {
+  if (!snapshot || !controllerLoaded || !version) {
     return <LoadingState label="Loading runtime summary…" />;
   }
 
@@ -57,22 +59,26 @@ export default function RuntimeRoute() {
       </SectionCard>
 
       <SectionCard title="Controller posture" description="The controller remains an explicit runtime-owned assignment rather than an implicit default.">
-        <div className="grid gap-3 md:grid-cols-3">
-          <div className={`${mutedPanelClassName} p-4`}>
-            <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">Endpoint</p>
-            <p className="mt-2 break-all text-sm font-medium text-[var(--rm-fg)]">{controller.endpointId}</p>
-          </div>
-          <div className={`${mutedPanelClassName} p-4`}>
-            <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">Model</p>
-            <p className="mt-2 text-sm font-medium text-[var(--rm-fg)]">{controller.modelId}</p>
-          </div>
-          <div className={`${mutedPanelClassName} p-4`}>
-            <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">Source</p>
-            <div className="mt-2">
-              <StatusPill tone={controller.sourceType === "local" ? "accent" : "neutral"}>{controller.sourceType}</StatusPill>
+        {controller ? (
+          <div className="grid gap-3 md:grid-cols-3">
+            <div className={`${mutedPanelClassName} p-4`}>
+              <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">Endpoint</p>
+              <p className="mt-2 break-all text-sm font-medium text-[var(--rm-fg)]">{controller.endpointId}</p>
+            </div>
+            <div className={`${mutedPanelClassName} p-4`}>
+              <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">Model</p>
+              <p className="mt-2 text-sm font-medium text-[var(--rm-fg)]">{controller.modelId}</p>
+            </div>
+            <div className={`${mutedPanelClassName} p-4`}>
+              <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">Source</p>
+              <div className="mt-2">
+                <StatusPill tone={controller.sourceType === "local" ? "accent" : "neutral"}>{controller.sourceType}</StatusPill>
+              </div>
             </div>
           </div>
-        </div>
+        ) : (
+          <EmptyState label="No controller assigned yet. Activate a local or remote endpoint before pinning a controller." />
+        )}
       </SectionCard>
 
       <SectionCard title="Version and boundary facts" description="Version, provenance, and health-oriented references now live in the runtime page instead of a separate system route.">

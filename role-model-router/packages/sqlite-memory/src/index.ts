@@ -131,6 +131,46 @@ CREATE TABLE IF NOT EXISTS observed_profile_snapshots (
   measured_at_ms INTEGER NOT NULL,
   profile_json TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS runtime_telemetry_records (
+  request_id TEXT PRIMARY KEY,
+  routing_decision_id TEXT NOT NULL,
+  endpoint_id TEXT NOT NULL,
+  conversation_id TEXT NOT NULL,
+  created_at_ms INTEGER NOT NULL,
+  model_id TEXT,
+  provider_kind TEXT,
+  provider_family TEXT,
+  input_tokens INTEGER NOT NULL,
+  output_tokens INTEGER NOT NULL,
+  total_tokens INTEGER NOT NULL,
+  latency_ms INTEGER,
+  error_class TEXT,
+  status_code INTEGER,
+  finish_reason TEXT,
+  prompt_cache_requested INTEGER NOT NULL,
+  prompt_cache_supported INTEGER NOT NULL DEFAULT 0,
+  prompt_cache_used INTEGER NOT NULL,
+  cache_read_tokens INTEGER NOT NULL,
+  cache_read_tokens_supported INTEGER NOT NULL DEFAULT 0,
+  cache_write_tokens INTEGER NOT NULL,
+  cache_write_tokens_supported INTEGER NOT NULL DEFAULT 0,
+  stream_text_delta_count INTEGER NOT NULL DEFAULT 0,
+  stream_text_supported INTEGER NOT NULL DEFAULT 0,
+  stream_tool_call_delta_count INTEGER NOT NULL DEFAULT 0,
+  stream_tool_call_supported INTEGER NOT NULL DEFAULT 0,
+  stream_tool_argument_delta_count INTEGER NOT NULL DEFAULT 0,
+  stream_tool_argument_supported INTEGER NOT NULL DEFAULT 0,
+  tool_call_count INTEGER NOT NULL,
+  tool_execution_count INTEGER NOT NULL,
+  cost_provenance TEXT NOT NULL DEFAULT 'unavailable',
+  actual_cost_usd REAL,
+  estimated_cost_usd REAL,
+  currency TEXT
+ );
+CREATE INDEX IF NOT EXISTS runtime_telemetry_records_created_at_idx
+  ON runtime_telemetry_records (created_at_ms DESC, request_id DESC);
+CREATE INDEX IF NOT EXISTS runtime_telemetry_records_endpoint_idx
+  ON runtime_telemetry_records (endpoint_id, created_at_ms DESC, request_id DESC);
 CREATE TABLE IF NOT EXISTS runtime_endpoints (
   endpoint_id TEXT PRIMARY KEY,
   provider_account_id TEXT NOT NULL,
@@ -420,6 +460,85 @@ export interface ListRecentRuntimeObservationsInput {
   readonly limit?: number;
 }
 
+export interface RuntimeTelemetryRecord {
+  readonly requestId: string;
+  readonly routingDecisionId: string;
+  readonly endpointId: string;
+  readonly conversationId: string;
+  readonly createdAtMs: number;
+  readonly modelId: string | null;
+  readonly providerKind: string | null;
+  readonly providerFamily: string | null;
+  readonly inputTokens: number;
+  readonly outputTokens: number;
+  readonly totalTokens: number;
+  readonly latencyMs: number | null;
+  readonly errorClass: string | null;
+  readonly statusCode: number | null;
+  readonly finishReason: string | null;
+  readonly promptCacheRequested: boolean;
+  readonly promptCacheSupported: boolean;
+  readonly promptCacheUsed: boolean;
+  readonly cacheReadTokens: number;
+  readonly cacheReadTokensSupported: boolean;
+  readonly cacheWriteTokens: number;
+  readonly cacheWriteTokensSupported: boolean;
+  readonly streamTextDeltaCount: number;
+  readonly streamTextSupported: boolean;
+  readonly streamToolCallDeltaCount: number;
+  readonly streamToolCallSupported: boolean;
+  readonly streamToolArgumentDeltaCount: number;
+  readonly streamToolArgumentSupported: boolean;
+  readonly toolCallCount: number;
+  readonly toolExecutionCount: number;
+  readonly costProvenance: "actual" | "estimated" | "unavailable";
+  readonly actualCostUsd: number | null;
+  readonly estimatedCostUsd: number | null;
+  readonly currency: string | null;
+}
+
+export interface RuntimeTelemetrySummary {
+  readonly requestCount: number;
+  readonly successCount: number;
+  readonly failureCount: number;
+  readonly totalInputTokens: number;
+  readonly totalOutputTokens: number;
+  readonly totalTokens: number;
+  readonly cachedRequestCount: number;
+  readonly totalActualCostUsd: number;
+  readonly totalEstimatedCostUsd: number;
+  readonly averageLatencyMs: number | null;
+  readonly p95LatencyMs: number | null;
+  readonly lastSeenAtMs: number | null;
+}
+
+export interface RuntimeTelemetryComparisonRow {
+  readonly endpointId: string;
+  readonly modelId: string | null;
+  readonly providerKind: string | null;
+  readonly providerFamily: string | null;
+  readonly promptCacheSupported: boolean;
+  readonly requestCount: number;
+  readonly successCount: number;
+  readonly failureCount: number;
+  readonly totalInputTokens: number;
+  readonly totalOutputTokens: number;
+  readonly totalTokens: number;
+  readonly cachedRequestCount: number;
+  readonly totalActualCostUsd: number;
+  readonly totalEstimatedCostUsd: number;
+  readonly averageLatencyMs: number | null;
+  readonly p95LatencyMs: number | null;
+  readonly lastSeenAtMs: number;
+}
+
+export interface RuntimeTelemetryQueryInput {
+  readonly databasePath: string;
+  readonly windowMs?: number;
+  readonly limit?: number;
+  readonly endAtMs?: number;
+}
+
 export interface PersistedRuntimeObservationBundle {
   readonly requestId: string;
   readonly routingDecisionId: string;
@@ -427,10 +546,61 @@ export interface PersistedRuntimeObservationBundle {
   readonly conversationId: string;
   readonly usageEvent: {
     readonly timestamp_ms: number;
+    readonly request_id?: string;
+    readonly routing_decision_id?: string;
+    readonly endpoint_id?: string;
+    readonly model_id?: string;
+    readonly provider_kind?: string;
+    readonly tokens_in?: number;
+    readonly tokens_out?: number;
+    readonly latency_ms?: number;
+    readonly cost_actual?: number;
+    readonly cost_estimate?: number;
+    readonly currency?: string;
+    readonly error_class?: string;
   };
   readonly observedPerformance: {
     readonly sample: ObservedPerformanceSample;
     readonly profile: ObservedPerformanceProfile;
+  };
+  readonly cacheObservability?: {
+    readonly promptCacheRequested?: boolean;
+    readonly promptCacheUsed?: boolean;
+    readonly cacheReadTokens?: number;
+    readonly cacheWriteTokens?: number;
+  };
+  readonly executionTelemetry?: {
+    readonly providerFamily?: string;
+    readonly finishReason?: string;
+    readonly stream?: {
+      readonly textDeltas?: number;
+      readonly toolCallDeltas?: number;
+      readonly toolArgumentDeltas?: number;
+    };
+    readonly streamSupport?: {
+      readonly text?: string;
+      readonly toolCalls?: string;
+      readonly toolArguments?: string;
+    };
+    readonly promptCaching?: {
+      readonly supported?: boolean;
+    };
+    readonly usageSupport?: {
+      readonly cacheReadTokens?: boolean;
+      readonly cacheWriteTokens?: boolean;
+    };
+    readonly costProvenance?: "actual" | "estimated" | "unavailable";
+  };
+  readonly tooling?: {
+    readonly toolCalls?: readonly unknown[];
+    readonly executions?: readonly unknown[];
+  };
+  readonly inspection?: {
+    readonly request?: {
+      readonly responseCapture?: {
+        readonly statusCode?: number;
+      };
+    };
   };
 }
 
@@ -458,6 +628,33 @@ function initializeSchema(database: DatabaseSync): void {
   );
   if (!providerAccountColumns.has("model_role_bindings_json")) {
     database.exec("ALTER TABLE provider_accounts ADD COLUMN model_role_bindings_json TEXT NOT NULL DEFAULT '[]'");
+  }
+  const runtimeTelemetryColumns = new Set(
+    (
+      database.prepare("PRAGMA table_info(runtime_telemetry_records)").all() as Array<{
+        name: string;
+      }>
+    ).map((row) => row.name),
+  );
+  const telemetryColumnDefinitions = [
+    "provider_family TEXT",
+    "finish_reason TEXT",
+    "prompt_cache_supported INTEGER NOT NULL DEFAULT 0",
+    "cache_read_tokens_supported INTEGER NOT NULL DEFAULT 0",
+    "cache_write_tokens_supported INTEGER NOT NULL DEFAULT 0",
+    "stream_text_delta_count INTEGER NOT NULL DEFAULT 0",
+    "stream_text_supported INTEGER NOT NULL DEFAULT 0",
+    "stream_tool_call_delta_count INTEGER NOT NULL DEFAULT 0",
+    "stream_tool_call_supported INTEGER NOT NULL DEFAULT 0",
+    "stream_tool_argument_delta_count INTEGER NOT NULL DEFAULT 0",
+    "stream_tool_argument_supported INTEGER NOT NULL DEFAULT 0",
+    "cost_provenance TEXT NOT NULL DEFAULT 'unavailable'",
+  ] as const;
+  for (const definition of telemetryColumnDefinitions) {
+    const [columnName] = definition.split(" ");
+    if (!runtimeTelemetryColumns.has(columnName)) {
+      database.exec(`ALTER TABLE runtime_telemetry_records ADD COLUMN ${definition}`);
+    }
   }
 }
 
@@ -1170,6 +1367,199 @@ function sampleIdFor(sample: ObservedPerformanceSample): string {
   return sample.request_id ?? `${sample.endpoint_id}:${sample.timestamp_ms}:${sample.source_type}`;
 }
 
+function roundMetric(value: number): number {
+  return Number(value.toFixed(6));
+}
+
+function percentile95(values: readonly number[]): number | null {
+  if (values.length === 0) {
+    return null;
+  }
+  const sorted = [...values].sort((left, right) => left - right);
+  return sorted[Math.max(0, Math.ceil(sorted.length * 0.95) - 1)] ?? null;
+}
+
+function mapRuntimeTelemetryRecord(
+  row: {
+    request_id: string;
+    routing_decision_id: string;
+    endpoint_id: string;
+    conversation_id: string;
+    created_at_ms: number;
+    model_id: string | null;
+    provider_kind: string | null;
+    provider_family: string | null;
+    input_tokens: number;
+    output_tokens: number;
+    total_tokens: number;
+    latency_ms: number | null;
+    error_class: string | null;
+    status_code: number | null;
+    finish_reason: string | null;
+    prompt_cache_requested: number;
+    prompt_cache_supported: number;
+    prompt_cache_used: number;
+    cache_read_tokens: number;
+    cache_read_tokens_supported: number;
+    cache_write_tokens: number;
+    cache_write_tokens_supported: number;
+    stream_text_delta_count: number;
+    stream_text_supported: number;
+    stream_tool_call_delta_count: number;
+    stream_tool_call_supported: number;
+    stream_tool_argument_delta_count: number;
+    stream_tool_argument_supported: number;
+    tool_call_count: number;
+    tool_execution_count: number;
+    cost_provenance: string;
+    actual_cost_usd: number | null;
+    estimated_cost_usd: number | null;
+    currency: string | null;
+  },
+): RuntimeTelemetryRecord {
+  return {
+    requestId: row.request_id,
+    routingDecisionId: row.routing_decision_id,
+    endpointId: row.endpoint_id,
+    conversationId: row.conversation_id,
+    createdAtMs: row.created_at_ms,
+    modelId: row.model_id,
+    providerKind: row.provider_kind,
+    providerFamily: row.provider_family,
+    inputTokens: row.input_tokens,
+    outputTokens: row.output_tokens,
+    totalTokens: row.total_tokens,
+    latencyMs: row.latency_ms,
+    errorClass: row.error_class,
+    statusCode: row.status_code,
+    finishReason: row.finish_reason,
+    promptCacheRequested: row.prompt_cache_requested === 1,
+    promptCacheSupported: row.prompt_cache_supported === 1,
+    promptCacheUsed: row.prompt_cache_used === 1,
+    cacheReadTokens: row.cache_read_tokens,
+    cacheReadTokensSupported: row.cache_read_tokens_supported === 1,
+    cacheWriteTokens: row.cache_write_tokens,
+    cacheWriteTokensSupported: row.cache_write_tokens_supported === 1,
+    streamTextDeltaCount: row.stream_text_delta_count,
+    streamTextSupported: row.stream_text_supported === 1,
+    streamToolCallDeltaCount: row.stream_tool_call_delta_count,
+    streamToolCallSupported: row.stream_tool_call_supported === 1,
+    streamToolArgumentDeltaCount: row.stream_tool_argument_delta_count,
+    streamToolArgumentSupported: row.stream_tool_argument_supported === 1,
+    toolCallCount: row.tool_call_count,
+    toolExecutionCount: row.tool_execution_count,
+    costProvenance: row.cost_provenance as RuntimeTelemetryRecord["costProvenance"],
+    actualCostUsd: row.actual_cost_usd,
+    estimatedCostUsd: row.estimated_cost_usd,
+    currency: row.currency,
+  };
+}
+
+function toRuntimeTelemetryRecord(observation: PersistedRuntimeObservationBundle): RuntimeTelemetryRecord {
+  const inputTokens = observation.usageEvent.tokens_in ?? 0;
+  const outputTokens = observation.usageEvent.tokens_out ?? 0;
+  const executionTelemetry = observation.executionTelemetry;
+  const streamSupport = executionTelemetry?.streamSupport;
+  return {
+    requestId: observation.requestId,
+    routingDecisionId: observation.routingDecisionId,
+    endpointId: observation.endpointId,
+    conversationId: observation.conversationId,
+    createdAtMs: observation.usageEvent.timestamp_ms,
+    modelId: observation.usageEvent.model_id ?? null,
+    providerKind: observation.usageEvent.provider_kind ?? null,
+    providerFamily: executionTelemetry?.providerFamily ?? null,
+    inputTokens,
+    outputTokens,
+    totalTokens: inputTokens + outputTokens,
+    latencyMs: observation.usageEvent.latency_ms ?? observation.observedPerformance.sample.latency_ms ?? null,
+    errorClass:
+      observation.usageEvent.error_class ?? observation.observedPerformance.sample.error_class ?? null,
+    statusCode: observation.inspection?.request?.responseCapture?.statusCode ?? null,
+    finishReason: executionTelemetry?.finishReason ?? null,
+    promptCacheRequested: observation.cacheObservability?.promptCacheRequested ?? false,
+    promptCacheSupported: executionTelemetry?.promptCaching?.supported ?? false,
+    promptCacheUsed: observation.cacheObservability?.promptCacheUsed ?? false,
+    cacheReadTokens: observation.cacheObservability?.cacheReadTokens ?? 0,
+    cacheReadTokensSupported: executionTelemetry?.usageSupport?.cacheReadTokens ?? false,
+    cacheWriteTokens: observation.cacheObservability?.cacheWriteTokens ?? 0,
+    cacheWriteTokensSupported: executionTelemetry?.usageSupport?.cacheWriteTokens ?? false,
+    streamTextDeltaCount: executionTelemetry?.stream?.textDeltas ?? 0,
+    streamTextSupported: streamSupport?.text !== "unsupported",
+    streamToolCallDeltaCount: executionTelemetry?.stream?.toolCallDeltas ?? 0,
+    streamToolCallSupported: streamSupport?.toolCalls !== "unsupported",
+    streamToolArgumentDeltaCount: executionTelemetry?.stream?.toolArgumentDeltas ?? 0,
+    streamToolArgumentSupported: streamSupport?.toolArguments !== "unsupported",
+    toolCallCount: observation.tooling?.toolCalls?.length ?? 0,
+    toolExecutionCount: observation.tooling?.executions?.length ?? 0,
+    costProvenance: executionTelemetry?.costProvenance ?? "unavailable",
+    actualCostUsd: observation.usageEvent.cost_actual ?? null,
+    estimatedCostUsd: observation.usageEvent.cost_estimate ?? null,
+    currency: observation.usageEvent.currency ?? null,
+  };
+}
+
+function listRuntimeTelemetryRecordsInternal(
+  database: DatabaseSync,
+  input: RuntimeTelemetryQueryInput,
+): readonly RuntimeTelemetryRecord[] {
+  const clauses: string[] = [];
+  const parameters: Array<number> = [];
+  const endAtMs = input.endAtMs ?? Date.now();
+  if (typeof input.windowMs === "number") {
+    clauses.push("created_at_ms >= ?");
+    parameters.push(endAtMs - input.windowMs);
+  }
+  clauses.push("created_at_ms <= ?");
+  parameters.push(endAtMs);
+
+  const limitClause = typeof input.limit === "number" ? " LIMIT ?" : "";
+  const rows = database
+    .prepare(
+      `SELECT request_id, routing_decision_id, endpoint_id, conversation_id, created_at_ms, model_id, provider_kind, provider_family, input_tokens, output_tokens, total_tokens, latency_ms, error_class, status_code, finish_reason, prompt_cache_requested, prompt_cache_supported, prompt_cache_used, cache_read_tokens, cache_read_tokens_supported, cache_write_tokens, cache_write_tokens_supported, stream_text_delta_count, stream_text_supported, stream_tool_call_delta_count, stream_tool_call_supported, stream_tool_argument_delta_count, stream_tool_argument_supported, tool_call_count, tool_execution_count, cost_provenance, actual_cost_usd, estimated_cost_usd, currency FROM runtime_telemetry_records WHERE ${clauses.join(
+        " AND ",
+      )} ORDER BY created_at_ms DESC, request_id DESC${limitClause}`,
+    )
+    .all(...parameters, ...(typeof input.limit === "number" ? [input.limit] : [])) as Array<{
+    request_id: string;
+    routing_decision_id: string;
+    endpoint_id: string;
+    conversation_id: string;
+    created_at_ms: number;
+    model_id: string | null;
+    provider_kind: string | null;
+    provider_family: string | null;
+    input_tokens: number;
+    output_tokens: number;
+    total_tokens: number;
+    latency_ms: number | null;
+    error_class: string | null;
+    status_code: number | null;
+    finish_reason: string | null;
+    prompt_cache_requested: number;
+    prompt_cache_supported: number;
+    prompt_cache_used: number;
+    cache_read_tokens: number;
+    cache_read_tokens_supported: number;
+    cache_write_tokens: number;
+    cache_write_tokens_supported: number;
+    stream_text_delta_count: number;
+    stream_text_supported: number;
+    stream_tool_call_delta_count: number;
+    stream_tool_call_supported: number;
+    stream_tool_argument_delta_count: number;
+    stream_tool_argument_supported: number;
+    tool_call_count: number;
+    tool_execution_count: number;
+    cost_provenance: string;
+    actual_cost_usd: number | null;
+    estimated_cost_usd: number | null;
+    currency: string | null;
+  }>;
+
+  return rows.map(mapRuntimeTelemetryRecord);
+}
+
 export function readRuntimeMaintenancePolicy(
   input: ReadRuntimeMaintenancePolicyInput,
 ): Readonly<Record<string, string>> {
@@ -1190,6 +1580,7 @@ export function readRuntimeMaintenancePolicy(
 export function persistRuntimeObservationBundle(input: PersistRuntimeObservationBundleInput): void {
   const database = new DatabaseSync(input.databasePath);
   const observation = input.observation;
+  const telemetryRecord = toRuntimeTelemetryRecord(observation);
   database
     .prepare(
       "INSERT OR REPLACE INTO runtime_observations (request_id, routing_decision_id, endpoint_id, conversation_id, created_at_ms, observation_json) VALUES (?, ?, ?, ?, ?, ?)",
@@ -1224,6 +1615,46 @@ export function persistRuntimeObservationBundle(input: PersistRuntimeObservation
       observation.endpointId,
       observation.observedPerformance.profile.measured_at_ms,
       JSON.stringify(observation.observedPerformance.profile),
+    );
+  database
+    .prepare(
+      "INSERT OR REPLACE INTO runtime_telemetry_records (request_id, routing_decision_id, endpoint_id, conversation_id, created_at_ms, model_id, provider_kind, provider_family, input_tokens, output_tokens, total_tokens, latency_ms, error_class, status_code, finish_reason, prompt_cache_requested, prompt_cache_supported, prompt_cache_used, cache_read_tokens, cache_read_tokens_supported, cache_write_tokens, cache_write_tokens_supported, stream_text_delta_count, stream_text_supported, stream_tool_call_delta_count, stream_tool_call_supported, stream_tool_argument_delta_count, stream_tool_argument_supported, tool_call_count, tool_execution_count, cost_provenance, actual_cost_usd, estimated_cost_usd, currency) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+    )
+    .run(
+      telemetryRecord.requestId,
+      telemetryRecord.routingDecisionId,
+      telemetryRecord.endpointId,
+      telemetryRecord.conversationId,
+      telemetryRecord.createdAtMs,
+      telemetryRecord.modelId,
+      telemetryRecord.providerKind,
+      telemetryRecord.providerFamily,
+      telemetryRecord.inputTokens,
+      telemetryRecord.outputTokens,
+      telemetryRecord.totalTokens,
+      telemetryRecord.latencyMs,
+      telemetryRecord.errorClass,
+      telemetryRecord.statusCode,
+      telemetryRecord.finishReason,
+      telemetryRecord.promptCacheRequested ? 1 : 0,
+      telemetryRecord.promptCacheSupported ? 1 : 0,
+      telemetryRecord.promptCacheUsed ? 1 : 0,
+      telemetryRecord.cacheReadTokens,
+      telemetryRecord.cacheReadTokensSupported ? 1 : 0,
+      telemetryRecord.cacheWriteTokens,
+      telemetryRecord.cacheWriteTokensSupported ? 1 : 0,
+      telemetryRecord.streamTextDeltaCount,
+      telemetryRecord.streamTextSupported ? 1 : 0,
+      telemetryRecord.streamToolCallDeltaCount,
+      telemetryRecord.streamToolCallSupported ? 1 : 0,
+      telemetryRecord.streamToolArgumentDeltaCount,
+      telemetryRecord.streamToolArgumentSupported ? 1 : 0,
+      telemetryRecord.toolCallCount,
+      telemetryRecord.toolExecutionCount,
+      telemetryRecord.costProvenance,
+      telemetryRecord.actualCostUsd,
+      telemetryRecord.estimatedCostUsd,
+      telemetryRecord.currency,
     );
   database.close();
 }
@@ -1300,6 +1731,151 @@ export function listRecentRuntimeObservations(
     endpointId: row.endpoint_id,
     createdAtMs: row.created_at_ms,
   }));
+}
+
+export function listRuntimeTelemetryRecords(
+  input: RuntimeTelemetryQueryInput,
+): readonly RuntimeTelemetryRecord[] {
+  const database = new DatabaseSync(input.databasePath);
+  const rows = listRuntimeTelemetryRecordsInternal(database, input);
+  database.close();
+  return rows;
+}
+
+export function readRuntimeTelemetrySummary(
+  input: RuntimeTelemetryQueryInput,
+): RuntimeTelemetrySummary {
+  const database = new DatabaseSync(input.databasePath);
+  const records = listRuntimeTelemetryRecordsInternal(database, input);
+  database.close();
+
+  const latencyValues = records
+    .map((record) => record.latencyMs)
+    .filter((value): value is number => typeof value === "number");
+  const totalLatency = latencyValues.reduce((sum, value) => sum + value, 0);
+
+  return {
+    requestCount: records.length,
+    successCount: records.filter((record) => record.errorClass === null).length,
+    failureCount: records.filter((record) => record.errorClass !== null).length,
+    totalInputTokens: records.reduce((sum, record) => sum + record.inputTokens, 0),
+    totalOutputTokens: records.reduce((sum, record) => sum + record.outputTokens, 0),
+    totalTokens: records.reduce((sum, record) => sum + record.totalTokens, 0),
+    cachedRequestCount: records.filter((record) => record.promptCacheUsed).length,
+    totalActualCostUsd: roundMetric(
+      records.reduce((sum, record) => sum + (record.actualCostUsd ?? 0), 0),
+    ),
+    totalEstimatedCostUsd: roundMetric(
+      records.reduce((sum, record) => sum + (record.estimatedCostUsd ?? 0), 0),
+    ),
+    averageLatencyMs: latencyValues.length > 0 ? Math.round(totalLatency / latencyValues.length) : null,
+    p95LatencyMs: percentile95(latencyValues),
+    lastSeenAtMs: records[0]?.createdAtMs ?? null,
+  };
+}
+
+export function listRuntimeTelemetryComparisonRows(
+  input: RuntimeTelemetryQueryInput,
+): readonly RuntimeTelemetryComparisonRow[] {
+  const database = new DatabaseSync(input.databasePath);
+  const records = listRuntimeTelemetryRecordsInternal(database, input);
+  database.close();
+
+  const grouped = new Map<
+    string,
+    {
+      endpointId: string;
+      modelId: string | null;
+      providerKind: string | null;
+      providerFamily: string | null;
+      promptCacheSupported: boolean;
+      requestCount: number;
+      successCount: number;
+      failureCount: number;
+      totalInputTokens: number;
+      totalOutputTokens: number;
+      totalTokens: number;
+      cachedRequestCount: number;
+      totalActualCostUsd: number;
+      totalEstimatedCostUsd: number;
+      latencies: number[];
+      lastSeenAtMs: number;
+    }
+  >();
+
+  for (const record of records) {
+    const key = `${record.endpointId}\u0000${record.modelId ?? ""}\u0000${record.providerKind ?? ""}`;
+    const existing =
+      grouped.get(key) ??
+        {
+          endpointId: record.endpointId,
+          modelId: record.modelId,
+          providerKind: record.providerKind,
+          providerFamily: record.providerFamily,
+          promptCacheSupported: record.promptCacheSupported,
+          requestCount: 0,
+          successCount: 0,
+          failureCount: 0,
+        totalInputTokens: 0,
+        totalOutputTokens: 0,
+        totalTokens: 0,
+        cachedRequestCount: 0,
+        totalActualCostUsd: 0,
+        totalEstimatedCostUsd: 0,
+        latencies: [],
+        lastSeenAtMs: record.createdAtMs,
+      };
+    existing.requestCount += 1;
+    existing.providerFamily ??= record.providerFamily;
+    existing.promptCacheSupported = existing.promptCacheSupported || record.promptCacheSupported;
+    existing.successCount += record.errorClass === null ? 1 : 0;
+    existing.failureCount += record.errorClass !== null ? 1 : 0;
+    existing.totalInputTokens += record.inputTokens;
+    existing.totalOutputTokens += record.outputTokens;
+    existing.totalTokens += record.totalTokens;
+    existing.cachedRequestCount += record.promptCacheUsed ? 1 : 0;
+    existing.totalActualCostUsd += record.actualCostUsd ?? 0;
+    existing.totalEstimatedCostUsd += record.estimatedCostUsd ?? 0;
+    if (typeof record.latencyMs === "number") {
+      existing.latencies.push(record.latencyMs);
+    }
+    if (record.createdAtMs > existing.lastSeenAtMs) {
+      existing.lastSeenAtMs = record.createdAtMs;
+    }
+    grouped.set(key, existing);
+  }
+
+  const rows = [...grouped.values()]
+    .map<RuntimeTelemetryComparisonRow>((entry) => ({
+      endpointId: entry.endpointId,
+      modelId: entry.modelId,
+      providerKind: entry.providerKind,
+      providerFamily: entry.providerFamily,
+      promptCacheSupported: entry.promptCacheSupported,
+      requestCount: entry.requestCount,
+      successCount: entry.successCount,
+      failureCount: entry.failureCount,
+      totalInputTokens: entry.totalInputTokens,
+      totalOutputTokens: entry.totalOutputTokens,
+      totalTokens: entry.totalTokens,
+      cachedRequestCount: entry.cachedRequestCount,
+      totalActualCostUsd: roundMetric(entry.totalActualCostUsd),
+      totalEstimatedCostUsd: roundMetric(entry.totalEstimatedCostUsd),
+      averageLatencyMs:
+        entry.latencies.length > 0
+          ? Math.round(entry.latencies.reduce((sum, value) => sum + value, 0) / entry.latencies.length)
+          : null,
+      p95LatencyMs: percentile95(entry.latencies),
+      lastSeenAtMs: entry.lastSeenAtMs,
+    }))
+    .sort(
+      (left, right) =>
+        right.lastSeenAtMs - left.lastSeenAtMs ||
+        right.requestCount - left.requestCount ||
+        left.endpointId.localeCompare(right.endpointId),
+    );
+
+  return rows.slice(0, input.limit ?? rows.length);
 }
 
 export function exportRuntimeState(input: ExportRuntimeStateInput): ExportRuntimeStateResult {

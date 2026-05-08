@@ -1,0 +1,11 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/16-router-runtime-unified-telemetry-dashboard/role-model-router/apps/runtime-ui[39m
+
+ [32mΓ£ô[39m app/lib/runtime-api.test.ts [2m([22m[2m26 tests[22m[2m)[22m[32m 56[2mms[22m[39m
+ [32mΓ£ô[39m app/lib/design-system.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 96[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m2 passed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[32m35 passed[39m[22m[90m (35)[39m
+[2m   Start at [22m 12:23:14
+[2m   Duration [22m 2.09s[2m (transform 522ms, setup 0ms, collect 925ms, tests 152ms, environment 1ms, prepare 622ms)[22m
+

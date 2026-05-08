@@ -1,0 +1,146 @@
+result: ROLE MODEL RUNTIME
+
+Operator Shell
+
+A two-level operator shell for studio work, control-plane edits, observation, and integration references.
+
+Overview
+1
+Studio
+5
+Control
+5
+Observe
+3
+Integrations
+2
+System
+2
+
+PRESERVED HOST TOOLS
+
+/logs
+/api/metrics
+
+OVERVIEW
+
+Unified telemetry
+
+A telemetry-first overview of local and remote runtime posture, comparison rows, controller state, and recent request flow.
+
+SECTION
+
+Overview
+
+TEMPLATE
+
+summary-board
+
+ROUTE
+
+/app
+
+OVERVIEW PAGES
+
+Summary
+
+OVERVIEW
+
+Unified telemetry
+
+One structured local-plus-remote telemetry surface for the runtime summary, comparison rows, and freshest request activity.
+
+REQUESTS
+
+2
+
+1 local / 1 remote in the current telemetry window
+
+FAILURES
+
+0
+
+2 successful requests recorded
+
+LATENCY
+
+7 ms
+
+6 ms average latency across structured telemetry
+
+TOKENS
+
+34
+
+1 cached request and $0.0042 actual cost recorded
+
+Endpoint comparison
+
+Canonical telemetry rows group local and remote request volume, latency, cache posture, and cost into one comparison rail.
+
+openai/gpt-4.1-mini-fast
+
+REMOTE
+HEALTHY
+
+openai.litellm.global.openai-gpt-4-1-mini-fast
+
+1 request � 4 ms p95 / 4 ms avg � 19 tokens � $0.0042 actual
+
+litellm-proxy � Cache hit on 1 request � 0 failures / 1 success
+
+No roles bound
+
+local/llama-3.1-8b-instruct
+
+LOCAL
+HEALTHY
+
+llama-swap.local.local-llama-3-1-8b-instruct
+
+1 request � 7 ms p95 / 7 ms avg � 15 tokens � $0.0000 est.
+
+ai-sdk-openai-compatible � Caching unavailable � 0 failures / 1 success
+
+No roles bound
+
+Latest requests
+
+The freshest structured request rows stay adjacent to the comparison board and refresh via SSE.
+
+req-run16-browser-remote
+
+openai.litellm.global.openai-gpt-4-1-mini-fast
+
+REMOTE
+
+200 ok � 4 ms � 19 tokens
+
+litellm-proxy � stop � Cache hit
+
+MAY 08, 11:28 AM
+Inspect
+
+req-run16-browser-local
+
+llama-swap.local.local-llama-3-1-8b-instruct
+
+LOCAL
+
+200 ok � 7 ms � 15 tokens
+
+ai-sdk-openai-compatible � stop � Caching unavailable
+
+MAY 08, 11:28 AM
+Inspect
+Reading order
+
+Structured telemetry leads; preserved raw host tooling remains adjacent.
+
+CANONICAL FIRST
+
+Overview now leads with structured role-model telemetry. Use Requests for the full ledger and request inspector.
+
+RAW ADJACENCY
+
+Observe > Activity stays available for raw host metrics and captures when you need preserved llama-swap operator detail.

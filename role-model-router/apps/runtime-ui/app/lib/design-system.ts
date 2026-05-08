@@ -61,10 +61,10 @@ const overviewSummaryRoute = createRoute({
   icon: LayoutDashboard,
   template: "summary-board",
   eyebrow: "Overview",
-  title: "Runtime summary",
-  description: "A high-signal overview of runtime posture, current controller state, and recent request activity.",
+  title: "Unified telemetry",
+  description: "A telemetry-first overview of local and remote runtime posture, comparison rows, controller state, and recent request flow.",
   noteTitle: "Summary board",
-  noteBody: "Lead with counts and attention items, then branch into Control, Observe, and Studio without duplicating detailed ledgers.",
+  noteBody: "Lead with cross-vendor telemetry KPIs and comparison rows, then branch into Control, Observe, and Studio without duplicating detailed ledgers.",
 });
 
 const studioChatRoute = createRoute({
@@ -165,6 +165,20 @@ const controlAccountsRoute = createRoute({
   noteBody: "Forms stay compact and ledger-like; account state and diagnostics remain visible beside the editor.",
 });
 
+const controlRuntimeConfigRoute = createRoute({
+  id: "control-runtime-config",
+  to: "/app/control/runtime-config",
+  label: "Runtime Config",
+  section: "Control",
+  icon: SlidersHorizontal,
+  template: "registry-detail",
+  eyebrow: "Control",
+  title: "Runtime config",
+  description: "Edit the unified runtime contract for local llama-swap models, remote LiteLLM providers, and process policy through one repo-owned route.",
+  noteTitle: "Registry detail",
+  noteBody: "Keep the editable config payload and the applied runtime snapshot adjacent so changes stay honest and inspectable.",
+});
+
 const controlControllerRoute = createRoute({
   id: "control-controller",
   to: "/app/control/controller",
@@ -202,9 +216,9 @@ const controlModelsRoute = createRoute({
   template: "model-inventory",
   eyebrow: "Control",
   title: "Configured models",
-  description: "Unified local and remote model inventory with cards, settings modal, controller state, and tooling posture.",
+  description: "Unified local and remote model inventory with inspect-only cards, controller state, and explicit links back to the editable runtime config surface.",
   noteTitle: "Model inventory",
-  noteBody: "Model cards replace flat rows so roles, health, endpoint binding, and MCP/tooling state can be read at a glance.",
+  noteBody: "Model cards stay observational unless a real persistence surface exists; editing belongs to Runtime Config or account onboarding.",
 });
 
 const observeActivityRoute = createRoute({
@@ -215,10 +229,10 @@ const observeActivityRoute = createRoute({
   icon: Activity,
   template: "ledger-inspector",
   eyebrow: "Observe",
-  title: "Activity and metrics",
-  description: "A compact operator ledger of host activity, request metrics, captures, tooling, and controller changes without splitting raw observability across duplicate pages.",
+  title: "Host activity and metrics",
+  description: "A preserved raw-host ledger for metrics, captures, tooling, and controller changes that stays adjacent to the canonical telemetry pages.",
   noteTitle: "Ledger inspector",
-  noteBody: "Keep metrics and capture drill-ins inside the activity ledger rather than breaking them into a second observation page.",
+  noteBody: "Keep metrics and capture drill-ins inside the raw-host activity ledger rather than duplicating them in the canonical telemetry pages.",
 });
 
 const observeRequestsRoute = createRoute({
@@ -229,10 +243,10 @@ const observeRequestsRoute = createRoute({
   icon: ListChecks,
   template: "ledger-inspector",
   eyebrow: "Observe",
-  title: "Request ledger",
-  description: "Structured runtime request observations with direct drill-in to captures, profiles, and tooling receipts.",
+  title: "Telemetry request ledger",
+  description: "Canonical runtime telemetry rows with direct drill-in to request captures, endpoint profile context, and tooling receipts.",
   noteTitle: "Ledger inspector",
-  noteBody: "Optimize for scanability: request id, endpoint, controller context, and tool activity should be immediately legible.",
+  noteBody: "Optimize for scanability: source type, latency, tokens, endpoint, and tool activity should be immediately legible.",
 });
 
 const observeRequestDetailRoute = createRoute({
@@ -243,10 +257,10 @@ const observeRequestDetailRoute = createRoute({
   icon: ListChecks,
   template: "ledger-inspector",
   eyebrow: "Observe",
-  title: "Request detail",
-  description: "Captured request observation, endpoint profile, and tooling receipts aligned in one inspector.",
+  title: "Telemetry request detail",
+  description: "Canonical telemetry detail with usage, cache, capture, endpoint profile, and tooling receipts aligned in one inspector.",
   noteTitle: "Ledger inspector",
-  noteBody: "Payloads and diagnostics stay side by side so routing and tool behavior can be audited together.",
+  noteBody: "Lead with telemetry facts, then keep payloads and diagnostics side by side so routing and tool behavior can be audited together.",
 });
 
 const observeLogsRoute = createRoute({
@@ -328,6 +342,7 @@ const runtimeRouteDefinitions = [
   studioAdvancedRoute,
   controlProvidersRoute,
   controlAccountsRoute,
+  controlRuntimeConfigRoute,
   controlControllerRoute,
   controlEndpointsRoute,
   controlModelsRoute,
@@ -360,12 +375,13 @@ export const runtimeNavigationSections: readonly RuntimeNavigationSection[] = [
   {
     title: "Control",
     icon: PanelsTopLeft,
-    items: [
-      controlProvidersRoute,
-      controlAccountsRoute,
-      controlControllerRoute,
-      controlEndpointsRoute,
-      controlModelsRoute,
+      items: [
+        controlProvidersRoute,
+        controlAccountsRoute,
+        controlRuntimeConfigRoute,
+        controlControllerRoute,
+        controlEndpointsRoute,
+        controlModelsRoute,
     ],
   },
   {
@@ -408,6 +424,11 @@ export const runtimeTheme = {
       accentMuted: "rgba(200, 16, 46, 0.60)",
       accentSubtle: "rgba(200, 16, 46, 0.20)",
       accentGhost: "rgba(200, 16, 46, 0.10)",
+      telemetryLocal: "#1f2937",
+      telemetryRemote: "#C8102E",
+      telemetryHealthy: "#166534",
+      telemetryDegraded: "#b45309",
+      telemetryRaw: "#57534e",
     },
     dark: {
       bg: "#0c0a09",
@@ -419,6 +440,11 @@ export const runtimeTheme = {
       muted: "rgba(250, 250, 249, 0.40)",
       border: "#292524",
       borderStrong: "#1c1917",
+      telemetryLocal: "#d6d3d1",
+      telemetryRemote: "#fb7185",
+      telemetryHealthy: "#86efac",
+      telemetryDegraded: "#fbbf24",
+      telemetryRaw: "#a8a29e",
     },
   },
 } as const;

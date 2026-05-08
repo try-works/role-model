@@ -1,0 +1,523 @@
+viewport: 3825x2160
+page: 3825x15149
+scroll: (0, 0)
+Role Model Runtime
+Operator Shell
+A two-level operator shell for studio work, control-plane edits, observation, and integration references.
+[97]<a />
+	Overview
+[98]<a />
+	Studio
+[99]<a />
+	Control
+[100]<a />
+	Observe
+[101]<a />
+	Integrations
+[102]<a />
+	System
+Preserved host tools
+[175]<a />
+	/logs
+[177]<a />
+	/api/metrics
+Observe
+Telemetry request detail
+Canonical telemetry detail with usage, cache, capture, endpoint profile, and tooling receipts aligned in one inspector.
+Section
+Observe
+Template
+ledger-inspector
+Route
+/app/observe/requests/req-run16-sse-local
+Observe
+pages
+[3]<a />
+	Activity
+[44]<a />
+	Requests
+[31]<a />
+	Logs
+Observe
+req-run16-sse-local
+Telemetry-first request inspection leads with usage, cache, and endpoint facts, while keeping raw captures and the full observation bundle available for debugging.
+Endpoint
+llama-swap.local.local-llama-3-1-8b-instruct
+Endpoint id currently associated with the captured request.
+Source
+local
+Canonical source family used by the telemetry ledger.
+Provider family
+ai-sdk-openai-compatible
+Execution adapter family preserved in the canonical telemetry contract.
+Latency
+2 ms
+Observed request latency from the persisted usage event.
+Tokens
+15
+Total token usage when the provider exposed prompt/completion accounting.
+Cost
+n/a
+Estimated USD cost from the persisted runtime usage event.
+Cache
+unavailable
+Captured cache posture using explicit support semantics rather than zero-only inference.
+Telemetry summary
+Canonical request facts for source, usage, timings, and endpoint identity.
+Provider
+remote_openai_compat
+Model
+local/llama-3.1-8b-instruct
+Finish reason
+stop
+Input tokens
+11
+Output tokens
+Response status
+200
+Recorded
+5/8/2026, 1:25:00 PM
+Profile measured
+5/8/2026, 1:25:00 PM
+Stream deltas
+1 text delta / 0 tool-call deltas / 0 tool-arg deltas
+Observed performance
+Request-level execution telemetry and profile-history posture stay adjacent to tooling and captures.
+Recent samples
+Profile failure rate
+Latest profile error class
+n/a
+Recent sample bundle
+2 samples available
+Latest profile snapshot
+{
+  "endpoint_id": "llama-swap.local.local-llama-3-1-8b-instruct",
+  "endpoint_version": "run07-registry-v1:default",
+  "measured_at_ms": 1778217900284,
+  "measurement_window": {
+    "started_at_ms": 1778216560513,
+    "ended_at_ms": 1778217900284
+  },
+  "sample_size": 2,
+  "sources": {
+    "live_request_samples": 2,
+    "benchmark_samples": 0
+  },
+  "latency_ms_p50": 2,
+  "latency_ms_p95": 2,
+  "failure_rate": 0,
+  "freshness_score": 1,
+  "confidence_score": 0.27941531270472214,
+  "tokens_per_sec": 2000
+}
+Tooling
+Tool calls, execution receipts, and tooling diagnostics from persisted runtime observability.
+Tool calls
+[332]<span />
+No tool calls were recorded for this request.
+Execution receipts
+[341]<span />
+No runtime tool executions were persisted for this request.
+Captures and profile
+Preserved request/response captures plus the linked endpoint profile remain available as secondary debug surfaces.
+Request capture
+|scroll element[359]<pre /> (horizontal 0%)
+	{
+  "headers": {
+    "authorization": "[redacted]",
+    "OpenAI-Beta": "responses=v1"
+  },
+  "body": {
+    "suppressed": true,
+    "reason": "policy.rawCapture.requestBody.disabled"
+  }
+}
+Response capture
+|scroll element[364]<pre /> (horizontal 0%)
+	{
+  "statusCode": 200,
+  "body": {
+    "suppressed": true,
+    "reason": "policy.rawCapture.responseBody.disabled"
+  }
+}
+Endpoint profile history
+{
+  "latestProfile": {
+    "endpoint_id": "llama-swap.local.local-llama-3-1-8b-instruct",
+    "endpoint_version": "run07-registry-v1:default",
+    "measured_at_ms": 1778217900284,
+    "measurement_window": {
+      "started_at_ms": 1778216560513,
+      "ended_at_ms": 1778217900284
+    },
+    "sample_size": 2,
+    "sources": {
+      "live_request_samples": 2,
+      "benchmark_samples": 0
+    },
+    "latency_ms_p50": 2,
+    "latency_ms_p95": 2,
+    "failure_rate": 0,
+    "freshness_score": 1,
+    "confidence_score": 0.27941531270472214,
+    "tokens_per_sec": 2000
+  },
+  "recentSamples": [
+    {
+      "endpoint_id": "llama-swap.local.local-llama-3-1-8b-instruct",
+      "endpoint_version": "run07-registry-v1:default",
+      "source_type": "live_request",
+      "timestamp_ms": 1778216560513,
+      "latency_ms": 2,
+      "latency_ms_p95": 2,
+      "tokens_per_sec": 2000,
+      "failure": false,
+      "request_id": "req-runtime-vendor-hybrid-local",
+      "routing_decision_id": "decision-req-runtime-vendor-hybrid-local"
+    },
+    {
+      "endpoint_id": "llama-swap.local.local-llama-3-1-8b-instruct",
+      "endpoint_version": "run07-registry-v1:default",
+      "source_type": "live_request",
+      "timestamp_ms": 1778217900284,
+      "latency_ms": 2,
+      "latency_ms_p95": 2,
+      "tokens_per_sec": 2000,
+      "failure": false,
+      "request_id": "req-run16-sse-local",
+      "routing_decision_id": "decision-req-run16-sse-local"
+    }
+  ]
+}
+Raw observation bundle
+The full persisted request observation stays visible for low-level debugging and audit trails.
+{
+  "requestId": "req-run16-sse-local",
+  "routingDecisionId": "decision-req-run16-sse-local",
+  "endpointId": "llama-swap.local.local-llama-3-1-8b-instruct",
+  "conversationId": "conversation-main",
+  "decision": {
+    "routing_decision_id": "decision-req-run16-sse-local",
+    "request_id": "req-run16-sse-local",
+    "app_id": "unknown-app",
+    "org_id": null,
+    "policy_snapshot": {
+      "policy_id": "balanced-policy",
+      "strategy": "balanced",
+      "compute_preference": "auto",
+      "prefer_local": false,
+      "budget_mode": "disabled",
+      "tie_break_order": [
+        "quality",
+        "latency_ms",
+        "reliability",
+        "endpoint_id"
+      ],
+      "required_capabilities": [
+        "text.chat"
+      ],
+      "required_modalities": [
+        "text"
+      ],
+      "require_tools": false,
+      "deny_endpoints": [],
+      "allow_endpoints": [
+        "llama-swap.local.local-llama-3-1-8b-instruct"
+      ],
+      "deny_provider_kinds": [],
+      "allow_provider_kinds": [],
+      "budget": {
+        "enabled": false,
+        "currency": "USD"
+      },
+      "privacy": {
+        "allow_remote": true
+      },
+      "targets": {
+        "latency_target_ms": 150,
+        "latency_max_ms": 300,
+        "throughput_target_tps": 40
+      }
+    },
+    "eligibility": [
+      {
+        "endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+        "eligible": false,
+        "exclusions": [
+          {
+            "code": "POLICY_DENY_ENDPOINT",
+            "detail": "Endpoint is denied by routing policy."
+          }
+        ]
+      },
+      {
+        "endpoint_id": "moonshot.personal.primary.global.kimi-k2.5",
+        "eligible": false,
+        "exclusions": [
+          {
+            "code": "POLICY_DENY_ENDPOINT",
+            "detail": "Endpoint is denied by routing policy."
+          }
+        ]
+      },
+      {
+        "endpoint_id": "llama-swap.local.local-llama-3-1-8b-instruct",
+        "eligible": true,
+        "exclusions": []
+      }
+    ],
+    "scored_candidates": [
+      {
+        "endpoint_id": "llama-swap.local.local-llama-3-1-8b-instruct",
+        "total_score": 0.6,
+        "metric_breakdown": {
+          "quality": {
+            "value": 0.5,
+            "source": "default"
+          },
+          "latency": {
+            "value": 0.5,
+            "source": "default"
+          },
+          "throughput": {
+            "value": 0.5,
+            "source": "default"
+          },
+          "cost": {
+            "value": 0.5,
+            "source": "default"
+          },
+          "reliability": {
+            "value": 0.7,
+            "source": "default"
+          },
+          "preference": {
+            "value": 0.6,
+            "source": "declared",
+            "raw": {
+              "cache_affinity": true,
+              "cache_affinity_delta": 0.1
+            }
+          }
+        },
+        "tie_break": {
+          "quality": 0.5,
+          "latency_ms": 250,
+          "reliability": 0.7,
+          "endpoint_id": "llama-swap.local.local-llama-3-1-8b-instruct"
+        }
+      }
+    ],
+    "chosen_endpoint_id": "llama-swap.local.local-llama-3-1-8b-instruct",
+    "fallback_endpoint_ids": [],
+    "selection_reasons": [
+      "BEST_TOTAL_SCORE",
+      "DECLARED_PROFILE_USED",
+      "DEFAULT_PROFILE_USED",
+      "CACHE_AFFINITY_APPLIED"
+    ],
+    "used_measured": false,
+    "used_declared": true,
+    "scoring_version": "baseline-v2"
+  },
+  "routingDiagnostics": {
+    "retrievalReceiptId": "conversation-main-retrieval-receipt",
+    "routingModel": {
+      "enabled": true,
+      "endpointId": "cli.local.coder",
+      "preferredEndpointIds": [
+        "openai.personal.primary.us-east-1.fast",
+        "cli.local.coder"
+      ],
+      "ignoredEndpointIds": [
+        "openai.personal.primary.us-east-1.fast",
+        "cli.local.coder"
+      ]
+    }
+  },
+  "retrievalReceipt": {
+    "receiptId": "conversation-main-retrieval-receipt",
+    "summary": {
+      "selectedTurns": 2,
+      "selectedArtifacts": 1,
+      "omittedTurns": 2,
+      "omittedArtifacts": 2,
+      "estimatedTokens": 240
+    }
+  },
+  "contextEnvelope": {
+    "conversationId": "conversation-main",
+    "latestHandoffId": "handoff-1",
+    "estimatedTokenCount": 240
+  },
+  "trace": {
+    "spans": [
+      {
+        "trace_id": "trace-req-run16-sse-local",
+        "span_id": "span-provider-load-req-run16-sse-local",
+        "request_id": "req-run16-sse-local",
+        "routing_decision_id": "decision-req-run16-sse-local",
+        "span_type": "provider.load",
+        "started_at_ms": 1778217900284,
+        "ended_at_ms": 1778217900289,
+        "status": "ok",
+        "attributes": {
+          "adapter_family": "ai-sdk-openai-compatible",
+          "endpoint_id": "llama-swap.local.local-llama-3-1-8b-instruct"
+        }
+      },
+      {
+        "trace_id": "trace-req-run16-sse-local",
+        "span_id": "span-provider-decode-req-run16-sse-local",
+        "parent_span_id": "span-provider-load-req-run16-sse-local",
+        "request_id": "req-run16-sse-local",
+        "routing_decision_id": "decision-req-run16-sse-local",
+        "span_type": "provider.decode",
+        "started_at_ms": 1778217900289,
+        "ended_at_ms": 1778217900294,
+        "status": "ok",
+        "attributes": {
+          "endpoint_id": "llama-swap.local.local-llama-3-1-8b-instruct",
+          "text_delta_count": 1
+        }
+      }
+    ],
+    "events": [
+      {
+        "event_id": "event-provider-load-req-run16-sse-local",
+        "trace_id": "trace-req-run16-sse-local",
+        "span_id": "span-provider-load-req-run16-sse-local",
+        "request_id": "req-run16-sse-local",
+        "routing_decision_id": "decision-req-run16-sse-local",
+        "timestamp_ms": 1778217900285,
+        "event_type": "trace.span.opened",
+        "payload": {
+          "adapter_family": "ai-sdk-openai-compatible",
+          "endpoint_id": "llama-swap.local.local-llama-3-1-8b-instruct"
+        }
+      },
+      {
+        "event_id": "event-usage-req-run16-sse-local",
+        "trace_id": "trace-req-run16-sse-local",
+        "span_id": "span-provider-decode-req-run16-sse-local",
+        "request_id": "req-run16-sse-local",
+        "routing_decision_id": "decision-req-run16-sse-local",
+        "timestamp_ms": 1778217900294,
+        "event_type": "usage.event.created",
+        "payload": {
+          "input_tokens": 11,
+          "output_tokens": 4
+        }
+      }
+    ]
+  },
+  "usageEvent": {
+    "event_id": "usage-req-run16-sse-local",
+    "timestamp_ms": 1778217900284,
+    "app_id": "unknown-app",
+    "request_id": "req-run16-sse-local",
+    "routing_decision_id": "decision-req-run16-sse-local",
+    "endpoint_id": "llama-swap.local.local-llama-3-1-8b-instruct",
+    "model_id": "local/llama-3.1-8b-instruct",
+    "package_id": "ai-sdk-openai-compatible",
+    "provider_kind": "remote_openai_compat",
+    "tokens_in": 11,
+    "tokens_out": 4,
+    "latency_ms": 2,
+    "sample_source": "live_request"
+  },
+  "observedPerformance": {
+    "endpointVersion": "run07-registry-v1:default",
+    "sample": {
+      "endpoint_id": "llama-swap.local.local-llama-3-1-8b-instruct",
+      "endpoint_version": "run07-registry-v1:default",
+      "source_type": "live_request",
+      "timestamp_ms": 1778217900284,
+      "latency_ms": 2,
+      "latency_ms_p95": 2,
+      "tokens_per_sec": 2000,
+      "failure": false,
+      "request_id": "req-run16-sse-local",
+      "routing_decision_id": "decision-req-run16-sse-local"
+    },
+    "history": [
+      {
+        "endpoint_id": "llama-swap.local.local-llama-3-1-8b-instruct",
+        "endpoint_version": "run07-registry-v1:default",
+        "source_type": "live_request",
+        "timestamp_ms": 1778216560513,
+        "latency_ms": 2,
+        "latency_ms_p95": 2,
+        "tokens_per_sec": 2000,
+        "failure": false,
+        "request_id": "req-runtime-vendor-hybrid-local",
+        "routing_decision_id": "decision-req-runtime-vendor-hybrid-local"
+      },
+      {
+        "endpoint_id": "llama-swap.local.local-llama-3-1-8b-instruct",
+        "endpoint_version": "run07-registry-v1:default",
+        "source_type": "live_request",
+        "timestamp_ms": 1778217900284,
+        "latency_ms": 2,
+        "latency_ms_p95": 2,
+        "tokens_per_sec": 2000,
+        "failure": false,
+        "request_id": "req-run16-sse-local",
+        "routing_decision_id": "decision-req-run16-sse-local"
+      }
+    ],
+    "profile": {
+      "endpoint_id": "llama-swap.local.local-llama-3-1-8b-instruct",
+      "endpoint_version": "run07-registry-v1:default",
+      "measured_at_ms": 1778217900284,
+      "measurement_window": {
+        "started_at_ms": 1778216560513,
+        "ended_at_ms": 1778217900284
+      },
+      "sample_size": 2,
+      "sources": {
+        "live_request_samples": 2,
+        "benchmark_samples": 0
+      },
+      "latency_ms_p50": 2,
+      "latency_ms_p95": 2,
+      "failure_rate": 0,
+      "freshness_score": 1,
+      "confidence_score": 0.27941531270472214,
+      "tokens_per_sec": 2000
+    }
+  },
+  "diagnostics": {
+    "routing": [
+      {
+        "code": "ROUTING_MODEL_ENABLED",
+        "severity": "info",
+        "message": "Routing-model guidance remained enabled for request req-run16-sse-local."
+      },
+      {
+        "code": "ROUTING_RETRIEVAL_RECEIPT_LINKED",
+        "severity": "info",
+        "message": "Routing diagnostics link request req-run16-sse-local to retrieval receipt conversation-main-retrieval-receipt."
+      }
+    ],
+    "execution": [],
+    "authAccount": [],
+    "memoryQuality": [
+      {
+        "code": "MEMORY_CONTEXT_OMITTED",
+        "severity": "warning",
+        "message": "Context assembly omitted 2 turns and 2 artifacts."
+      },
+      {
+        "code": "MEMORY_LATEST_HANDOFF_LINKED",
+        "severity": "info",
+        "message": "Context inspection preserves latest handoff handoff-1."
+      }
+    ],
+    "tooling": [],
+    "operator": [
+      {
+        "code": "OPERATOR_RAW_CAPTURE_AVAILABLE",
+        "severity": "info",
+        "message": "RaΓÇª

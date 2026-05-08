@@ -1,0 +1,32 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/16-router-runtime-unified-telemetry-dashboard/role-model-router/apps/runtime-host-bridge[39m
+
+(node:55048) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [31mΓ¥»[39m test/validate-ui.test.ts [2m([22m[2m1 test[22m[2m | [22m[31m1 failed[39m[2m)[22m[33m 360[2mms[22m[39m
+[31m   [31m├ù[31m runRuntimeUiValidation[2m > [22mvalidates runtime config reads and the main control-plane mutations[39m[33m 358[2mms[22m[39m
+[31m     ΓåÆ expected 0 to be greater than or equal to 2[39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/validate-ui.test.ts > runRuntimeUiValidation > validates runtime config reads and the main control-plane mutations
+AssertionError: expected 0 to be greater than or equal to 2
+ Γ¥» test/validate-ui.test.ts:41:33
+     39| 
+     40|     expect(result.providerCount).toBe(3);
+     41|     expect(result.accountCount).toBeGreaterThanOrEqual(2);
+       |                                 ^
+     42|     expect(result.endpointCount).toBeGreaterThanOrEqual(2);
+     43|     expect(result.runtimeConfigPath).toBe(unifiedRuntimeConfigPath);
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m   Start at [22m 12:16:00
+[2m   Duration [22m 2.11s[2m (transform 640ms, setup 0ms, collect 876ms, tests 360ms, environment 0ms, prepare 364ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\16-router-runtime-unified-telemetry-dashboard\role-model-router\apps\runtime-host-bridge:
+ΓÇëERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓÇë Command failed with exit code 1: vitest run test\validate-ui.test.ts

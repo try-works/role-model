@@ -1,0 +1,39 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/16-router-runtime-unified-telemetry-dashboard/role-model-router/apps/runtime-host-bridge[39m
+
+(node:29344) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [31mΓ¥»[39m test/backend-unified-runtime-config.test.ts [2m([22m[2m3 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[33m 773[2mms[22m[39m
+   [32mΓ£ô[39m runtime-host-bridge unified runtime backend[2m > [22msurfaces the derived execution mode in the runtime summary when a unified config file is provided[32m 216[2mms[22m[39m
+   [32mΓ£ô[39m runtime-host-bridge unified runtime backend[2m > [22mreads and updates unified runtime config through the backend[32m 293[2mms[22m[39m
+[31m   [31m├ù[31m runtime-host-bridge unified runtime backend[2m > [22mreturns no controller assignment when the unified config has no endpoints yet[39m[32m 261[2mms[22m[39m
+[31m     ΓåÆ promise rejected "Error: No runtime endpoints are availableΓÇª" instead of resolving[39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/backend-unified-runtime-config.test.ts > runtime-host-bridge unified runtime backend > returns no controller assignment when the unified config has no endpoints yet
+AssertionError: promise rejected "Error: No runtime endpoints are availableΓÇª" instead of resolving
+ Γ¥» test/backend-unified-runtime-config.test.ts:181:52
+    179|     );
+    180| 
+    181|     await expect(backend.readControllerAssignment()).resolves.toBeNullΓÇª
+       |                                                    ^
+    182| 
+    183|     await backend.shutdown();
+
+Caused by: Error: No runtime endpoints are available for the runtime host bridge.
+ Γ¥» getDefaultControllerAssignment src/index.ts:2965:13
+ Γ¥» Object.readControllerAssignment src/index.ts:3798:14
+ Γ¥» test/backend-unified-runtime-config.test.ts:181:26
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m2 passed[39m[22m[90m (3)[39m
+[2m   Start at [22m 12:35:18
+[2m   Duration [22m 2.13s[2m (transform 455ms, setup 0ms, collect 655ms, tests 773ms, environment 0ms, prepare 276ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\16-router-runtime-unified-telemetry-dashboard\role-model-router\apps\runtime-host-bridge:
+ΓÇëERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓÇë Command failed with exit code 1: vitest run test/backend-unified-runtime-config.test.ts

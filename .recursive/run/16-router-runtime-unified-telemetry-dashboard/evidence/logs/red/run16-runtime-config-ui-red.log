@@ -1,0 +1,68 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/16-router-runtime-unified-telemetry-dashboard/role-model-router/apps/runtime-ui[39m
+
+ [31mΓ¥»[39m app/lib/runtime-api.test.ts [2m([22m[2m26 tests[22m[2m | [22m[31m2 failed[39m[2m)[22m[32m 57[2mms[22m[39m
+   [32mΓ£ô[39m fetchRuntimeSnapshot[2m > [22mloads the operator shell data from the runtime control-plane endpoints[32m 12[2mms[22m[39m
+   [32mΓ£ô[39m fetchDownstreamOpenAIProviderConfig[2m > [22mloads the downstream OpenAI-compatible provider contract for consumer apps[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m fetchRequestDetail[2m > [22mloads request detail and the linked endpoint profile for the inspector pane[32m 2[2mms[22m[39m
+   [32mΓ£ô[39m telemetry APIs[2m > [22mloads the canonical telemetry dashboard reads from the role-model telemetry endpoints[32m 2[2mms[22m[39m
+   [32mΓ£ô[39m telemetry APIs[2m > [22mloads telemetry request rows with limit parameters[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m telemetry APIs[2m > [22msubscribes to canonical telemetry SSE updates and closes the source on cleanup[32m 4[2mms[22m[39m
+   [32mΓ£ô[39m observe APIs[2m > [22mloads vendor activity metrics for the observe activity page[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m observe APIs[2m > [22mloads a persisted request/response capture by id[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m observe APIs[2m > [22mreturns null when an activity capture is not found[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m observe APIs[2m > [22mloads raw log text for observe log consoles[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m observe APIs[2m > [22mloads vendor version info for the runtime system surface[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m controller assignment APIs[2m > [22mloads the current global controller assignment[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m controller assignment APIs[2m > [22mpatches the selected controller candidate[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m submitWorkbenchChat[2m > [22mposts a chat-completions payload to the runtime workbench path[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m studio vendor API helpers[2m > [22mposts an OpenAI image-generation request[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m studio vendor API helpers[2m > [22mposts an SDAPI txt2img request[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m studio vendor API helpers[2m > [22mloads available speech voices for a selected model[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m studio vendor API helpers[2m > [22mposts a speech-generation request and returns audio bytes as a blob[32m 2[2mms[22m[39m
+   [32mΓ£ô[39m studio vendor API helpers[2m > [22mposts a multipart transcription request[32m 2[2mms[22m[39m
+   [32mΓ£ô[39m studio vendor API helpers[2m > [22mposts a rerank request to the selected vendor path[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m studio vendor API helpers[2m > [22mposts a raw advanced API request to the selected endpoint family[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m startRuntimeDeviceAuthorization[2m > [22mposts the selected provider account payload to the runtime device-auth start path[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m pollRuntimeDeviceAuthorization[2m > [22mposts the auth request id to the runtime device-auth poll path[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m activateRuntimeEndpoint[2m > [22mposts endpoint activation payload to the runtime endpoints mutation path[32m 1[2mms[22m[39m
+[31m   [31m├ù[31m fetchRuntimeConfig[2m > [22mloads the normalized unified runtime config from the runtime control plane[39m[32m 13[2mms[22m[39m
+[31m     ΓåÆ (0 , fetchRuntimeConfig) is not a function[39m
+[31m   [31m├ù[31m updateRuntimeConfig[2m > [22mputs the normalized unified runtime config to the runtime control plane[39m[32m 1[2mms[22m[39m
+[31m     ΓåÆ (0 , updateRuntimeConfig) is not a function[39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 2 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  app/lib/runtime-api.test.ts > fetchRuntimeConfig > loads the normalized unified runtime config from the runtime control plane
+TypeError: (0 , fetchRuntimeConfig) is not a function
+ Γ¥» app/lib/runtime-api.test.ts:932:18
+    930|     });
+    931| 
+    932|     await expect(fetchRuntimeConfig(fetcher)).resolves.toEqual({
+       |                  ^
+    933|       applied: true,
+    934|       path: "D:\\runtime-config.yaml",
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/2]ΓÄ»
+
+ FAIL  app/lib/runtime-api.test.ts > updateRuntimeConfig > puts the normalized unified runtime config to the runtime control plane
+TypeError: (0 , updateRuntimeConfig) is not a function
+ Γ¥» app/lib/runtime-api.test.ts:990:7
+    988| 
+    989|     await expect(
+    990|       updateRuntimeConfig(
+       |       ^
+    991|         {
+    992|           version: "1.0",
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[2/2]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m2 failed[39m[22m[2m | [22m[1m[32m24 passed[39m[22m[90m (26)[39m
+[2m   Start at [22m 12:01:04
+[2m   Duration [22m 1.07s[2m (transform 73ms, setup 0ms, collect 91ms, tests 57ms, environment 0ms, prepare 246ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\16-router-runtime-unified-telemetry-dashboard\role-model-router\apps\runtime-ui:
+ΓÇëERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓÇë Command failed with exit code 1: vitest run app\lib\runtime-api.test.ts

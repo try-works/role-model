@@ -1,0 +1,128 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/16-router-runtime-unified-telemetry-dashboard/packages/schema-tools[39m
+
+[90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2mdoes not emit duplicate exported interfaces for externally referenced schemas
+[22m[39mGenerated types for benchmark-run.schema.json
+
+[90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2mdoes not emit duplicate exported interfaces for externally referenced schemas
+[22m[39mGenerated types for benchmark-suite.schema.json
+
+[90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2mdoes not emit duplicate exported interfaces for externally referenced schemas
+[22m[39mGenerated types for capability-taxonomy.schema.json
+
+[90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2mdoes not emit duplicate exported interfaces for externally referenced schemas
+[22m[39mGenerated types for declared-capability-profile.schema.json
+
+[90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2mdoes not emit duplicate exported interfaces for externally referenced schemas
+[22m[39mGenerated types for endpoint-identity.schema.json
+
+[90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2mdoes not emit duplicate exported interfaces for externally referenced schemas
+[22m[39mGenerated types for judge-score.schema.json
+
+[90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2mdoes not emit duplicate exported interfaces for externally referenced schemas
+[22m[39mGenerated types for model-pack-manifest.schema.json
+
+[90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2mdoes not emit duplicate exported interfaces for externally referenced schemas
+[22m[39mGenerated types for observed-performance-profile.schema.json
+
+[90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2mdoes not emit duplicate exported interfaces for externally referenced schemas
+[22m[39mGenerated types for package-manifest.schema.json
+
+[90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2mdoes not emit duplicate exported interfaces for externally referenced schemas
+[22m[39mGenerated types for planspec.schema.json
+
+[90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2mdoes not emit duplicate exported interfaces for externally referenced schemas
+[22m[39mGenerated types for role-binding.schema.json
+
+[90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2mdoes not emit duplicate exported interfaces for externally referenced schemas
+[22m[39mGenerated types for role-definition.schema.json
+
+[90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2mdoes not emit duplicate exported interfaces for externally referenced schemas
+[22m[39mGenerated types for router-decision.schema.json
+
+[90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2mdoes not emit duplicate exported interfaces for externally referenced schemas
+[22m[39mGenerated types for routing-policy.schema.json
+
+[90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2mdoes not emit duplicate exported interfaces for externally referenced schemas
+[22m[39mGenerated types for task-definition.schema.json
+
+[90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2mdoes not emit duplicate exported interfaces for externally referenced schemas
+[22m[39mGenerated types for task-execution-profile.schema.json
+
+[90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2mdoes not emit duplicate exported interfaces for externally referenced schemas
+[22m[39mGenerated types for trace-event.schema.json
+
+[90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2mdoes not emit duplicate exported interfaces for externally referenced schemas
+[22m[39mGenerated types for trace-span.schema.json
+
+[90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2mdoes not emit duplicate exported interfaces for externally referenced schemas
+[22m[39mGenerated types for usage-event.schema.json
+
+Formatted 1 file in 25ms. No fixes applied.
+[90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2memits the router metricEntry helper instead of referencing an undefined MetricEntry symbol
+[22m[39mGenerated types for benchmark-run.schema.json
+
+[90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2memits the router metricEntry helper instead of referencing an undefined MetricEntry symbol
+[22m[39mGenerated types for benchmark-suite.schema.json
+
+[90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2memits the router metricEntry helper instead of referencing an undefined MetricEntry symbol
+[22m[39mGenerated types for capability-taxonomy.schema.json
+
+[90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2memits the router metricEntry helper instead of referencing an undefined MetricEntry symbol
+[22m[39mGenerated types for declared-capability-profile.schema.json
+
+[90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2memits the router metricEntry helper instead of referencing an undefined MetricEntry symbol
+[22m[39mGenerated types for endpoint-identity.schema.json
+
+[90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2memits the router metricEntry helper instead of referencing an undefined MetricEntry symbol
+[22m[39mGenerated types for judge-score.schema.json
+
+[90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2memits the router metricEntry helper instead of referencing an undefined MetricEntry symbol
+[22m[39mGenerated types for model-pack-manifest.schema.json
+
+[90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2memits the router metricEntry helper instead of referencing an undefined MetricEntry symbol
+[22m[39mGenerated types for observed-performance-profile.schema.json
+
+[90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2memits the router metricEntry helper instead of referencing an undefined MetricEntry symbol
+[22m[39mGenerated types for package-manifest.schema.json
+
+[90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2memits the router metricEntry helper instead of referencing an undefined MetricEntry symbol
+[22m[39mGenerated types for planspec.schema.json
+
+[90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2memits the router metricEntry helper instead of referencing an undefined MetricEntry symbol
+[22m[39mGenerated types for role-binding.schema.json
+
+[90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2memits the router metricEntry helper instead of referencing an undefined MetricEntry symbol
+[22m[39mGenerated types for role-definition.schema.json
+
+[90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2memits the router metricEntry helper instead of referencing an undefined MetricEntry symbol
+[22m[39mGenerated types for router-decision.schema.json
+
+[90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2memits the router metricEntry helper instead of referencing an undefined MetricEntry symbol
+[22m[39mGenerated types for routing-policy.schema.json
+
+[90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2memits the router metricEntry helper instead of referencing an undefined MetricEntry symbol
+[22m[39mGenerated types for task-definition.schema.json
+
+[90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2memits the router metricEntry helper instead of referencing an undefined MetricEntry symbol
+[22m[39mGenerated types for task-execution-profile.schema.json
+
+[90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2memits the router metricEntry helper instead of referencing an undefined MetricEntry symbol
+[22m[39mGenerated types for trace-event.schema.json
+
+[90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2memits the router metricEntry helper instead of referencing an undefined MetricEntry symbol
+[22m[39mGenerated types for trace-span.schema.json
+
+[90mstdout[2m | test/generate-protocol-types.test.ts[2m > [22m[2mgenerateProtocolTypes[2m > [22m[2memits the router metricEntry helper instead of referencing an undefined MetricEntry symbol
+[22m[39mGenerated types for usage-event.schema.json
+
+Formatted 1 file in 37ms. Fixed 1 file.
+ [32mΓ£ô[39m test/generate-protocol-types.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 1156[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m generateProtocolTypes[2m > [22mdoes not emit duplicate exported interfaces for externally referenced schemas [33m 654[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m generateProtocolTypes[2m > [22memits the router metricEntry helper instead of referencing an undefined MetricEntry symbol [33m 497[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m2 passed[39m[22m[90m (2)[39m
+[2m   Start at [22m 12:54:11
+[2m   Duration [22m 2.88s[2m (transform 336ms, setup 0ms, collect 567ms, tests 1.16s, environment 1ms, prepare 383ms)[22m
+

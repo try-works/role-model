@@ -1,6 +1,6 @@
 Type: `domain`
 Status: `CURRENT`
-Scope: `Stable baseline ownership for the repo workspace, canonical protocol tree, shared packages, router family, fixtures, validation surfaces, and the repo-owned runtime/operator baseline extended through unified vendor execution and SEA packaging in runs 04-15.`
+Scope: `Stable baseline ownership for the repo workspace, canonical protocol tree, shared packages, router family, fixtures, validation surfaces, and the repo-owned runtime/operator baseline extended through unified vendor execution, telemetry dashboard remediation, and runtime-config control in runs 04-16.`
 Owns-Paths:
 - `/README.md`
 - `/LICENSE`
@@ -36,8 +36,9 @@ Source-Runs:
 - `13-router-runtime-mcp-tools-extension`
 - `14-router-runtime-ui-foundation`
 - `15-unified-vendor-execution`
+- `16-router-runtime-unified-telemetry-dashboard`
 Validated-At-Commit: `working-tree`
-Last-Validated: `2026-05-07T21:20:00.000+08:00`
+Last-Validated: `2026-05-08T13:37:51.7395149+08:00`
 Tags:
 - `baseline`
 - `workspace`
@@ -92,6 +93,9 @@ This repository now has a real product baseline rather than only recursive scaff
 - The unified-vendor baseline now includes shared `cacheStatus` metadata, routed fallback-model propagation into LiteLLM `fallbacks`, and additive vendor `healthCheck()` / `executeStream()` compatibility methods for managed llama-swap and LiteLLM vendors
 - The repo-owned validation floor now includes `runtime:validate-vendors`, which proves the decision-only/local-only/remote-only/hybrid execution matrix end to end with managed vendor processes, plus separate live-vendor and browser-backed closeout proof for the final local llama-swap and remote LiteLLM bridge paths
 - The runtime now has a first SEA packaging path through `/role-model-router/sea-config.json`, `/role-model-router/apps/runtime-host-bridge/src/package-sea.ts`, `runtime:package-sea`, `runtime:validate-packaging`, and `/.github/workflows/build-binaries.yml`; the packaged executable embeds platform-aware llama-swap assets and is validated by booting the SEA binary and exercising `/healthz` plus `/v1/models`
+- The runtime now also exposes a canonical unified telemetry baseline for mixed local and remote execution, including summary, ledger, request-detail, and `/api/role-model/telemetry/stream` SSE surfaces in `/role-model-router/apps/runtime-host-bridge/` and matching dashboard, requests, and request-detail consumers in `/role-model-router/apps/runtime-ui/`
+- The repo-owned control plane now includes mutable runtime-config read and write routes, `Control > Runtime Config`, live account save and Kimi device-OAuth state, endpoint activation, and honest zero-endpoint `decision_only` controller or models or runtime empty states instead of 500 or loading traps
+- The protocol generation path now preserves `UsageEvent.cost_actual` and emits titled helper types for internal `$defs` entries, so focused `types:generate`, `schemas:validate`, and `@role-model/schema-tools build` stay green in the current baseline
 - Provider-account writes remain credential-reference-only; the UI can upsert runtime accounts, but endpoint rows still remain controlled by the existing registry baseline rather than being auto-created by account-save side effects
 - Browser, edge, and native provider families are intentionally scaffold-grade in this baseline
 
@@ -102,7 +106,7 @@ This repository now has a real product baseline rather than only recursive scaff
 - GitHub Actions validates this repo from a clean checkout of tracked files only; local Biome parity work should prefer a clean export or tracked-file-targeted checks instead of repo-root sweeps that also traverse nested `.worktrees/`
 - On Windows, CRLF-only worktree churn can make local status noisier than the real Linux CI content diff; use `git diff` to identify the actual files that need formatter commits
 - The repo-local runtime validation floor is the staged command family `runtime:validate-state`, `runtime:validate-registry`, `runtime:validate-routing`, `runtime:validate-adapter`, `runtime:validate-ui`, `runtime:validate-host`, `runtime:validate-vendors`, `runtime:validate-packaging`, `runtime:validate-observability`, `runtime:validate-operations`, `runtime:validate-tools`, plus `smoke`
-- When validating runtime work, treat the focused runtime validators and package tests as the run-owned baseline; broader root `build` and `test` still reproduce the inherited schema-tools/Biome generated-types failure, and vendored proxy/full Go tests on Windows still reproduce the upstream `sleep` PATH assumption
+- When validating runtime work, treat the focused runtime validators and package tests as the run-owned baseline; broader root `build` now fails on the unrelated `provider-acp` / `provider-cli` `endpoint_kind` mismatch, broader root `test` can still fail on the workspace-level `process-supervisor` crash-callback case while the isolated package rerun passes, and vendored proxy or full Go tests on Windows still reproduce the upstream `sleep` PATH assumption
 
 ## Scope Boundary
 

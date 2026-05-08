@@ -1,0 +1,1221 @@
+
+> role-model@0.0.0 build D:\DEV\role-model\.worktrees\16-router-runtime-unified-telemetry-dashboard
+> corepack pnpm run types:generate && corepack pnpm -r --if-present build
+> role-model@0.0.0 types:generate D:\DEV\role-model\.worktrees\16-router-runtime-unified-telemetry-dashboard
+> corepack pnpm --filter @role-model/schema-tools exec tsx src/validate-schemas.ts generate-typesGenerated types for benchmark-run.schema.json
+Generated types for benchmark-suite.schema.json
+Generated types for capability-taxonomy.schema.json
+Generated types for declared-capability-profile.schema.json
+Generated types for endpoint-identity.schema.json
+Generated types for judge-score.schema.json
+Generated types for model-pack-manifest.schema.json
+Generated types for observed-performance-profile.schema.json
+Generated types for package-manifest.schema.json
+Generated types for planspec.schema.json
+Generated types for role-binding.schema.json
+Generated types for role-definition.schema.json
+Generated types for router-decision.schema.json
+Generated types for routing-policy.schema.json
+Generated types for task-definition.schema.json
+Generated types for task-execution-profile.schema.json
+Generated types for trace-event.schema.json
+Generated types for trace-span.schema.json
+Generated types for usage-event.schema.json
+Formatted 1 file in 18ms. Fixed 1 file.
+Scope: 41 of 42 workspace projects
+packages/packaging build$ tsc -p tsconfig.json
+└─ Running...
+packages/protocol-types build$ tsc -p tsconfig.json
+└─ Running...
+apps/docs-site build$ react-router build && npm run types:check && node ./scripts/materialize-search-index.mjs
+└─ Running...
+packages/schema-tools build$ tsc -p tsconfig.json
+└─ Running...
+└─ Done in 1.1spackages/store-contract build$ tsc -p tsconfig.json
+└─ Running...
+└─ Done in 1.1srole-model-router/apps/runtime-ui build$ react-router build && tsc --noEmit
+└─ Running...
+└─ Done in 1.8srole-model-router/packages/bench-core build$ tsc -p tsconfig.json
+└─ Running...
+└─ Done in 1.1srole-model-router/packages/bench-judge build$ tsc -p tsconfig.json
+└─ Running...
+└─ Done in 1.1srole-model-router/packages/catalog build$ tsc -p tsconfig.json
+└─ Running...
+│ [MDX] generated files in 4.09940000000006ms
+└─ Running...
+packages/schema-tools build$ tsc -p tsconfig.json
+└─ Done in 1.8s
+packages/store-contract build$ tsc -p tsconfig.json
+└─ Done in 1.1s
+role-model-router/apps/runtime-ui build$ react-router build && tsc --noEmit
+└─ Running...
+role-model-router/packages/bench-core build$ tsc -p tsconfig.json
+└─ Done in 1.1s
+role-model-router/packages/bench-judge build$ tsc -p tsconfig.json
+└─ Running...
+role-model-router/packages/catalog build$ tsc -p tsconfig.json
+└─ Running...
+│ [MDX] generated files in 2.0270000000000437ms
+└─ Running...
+packages/schema-tools build$ tsc -p tsconfig.json
+└─ Done in 1.8s
+packages/store-contract build$ tsc -p tsconfig.json
+└─ Done in 1.1s
+role-model-router/apps/runtime-ui build$ react-router build && tsc --noEmit
+└─ Running...
+role-model-router/packages/bench-core build$ tsc -p tsconfig.json
+└─ Done in 1.1s
+role-model-router/packages/bench-judge build$ tsc -p tsconfig.json
+└─ Running...
+role-model-router/packages/catalog build$ tsc -p tsconfig.json
+└─ Running...
+│ [MDX] generated files in 2.501499999999851ms
+└─ Running...
+packages/schema-tools build$ tsc -p tsconfig.json
+└─ Done in 1.8s
+packages/store-contract build$ tsc -p tsconfig.json
+└─ Done in 1.1s
+role-model-router/apps/runtime-ui build$ react-router build && tsc --noEmit
+└─ Running...
+role-model-router/packages/bench-core build$ tsc -p tsconfig.json
+└─ Done in 1.1s
+role-model-router/packages/bench-judge build$ tsc -p tsconfig.json
+└─ Running...
+role-model-router/packages/catalog build$ tsc -p tsconfig.json
+└─ Running...
+│ vite v8.0.10 building client environment for production...
+└─ Running...
+packages/schema-tools build$ tsc -p tsconfig.json
+└─ Done in 1.8s
+packages/store-contract build$ tsc -p tsconfig.json
+└─ Done in 1.1s
+role-model-router/apps/runtime-ui build$ react-router build && tsc --noEmit
+└─ Running...
+role-model-router/packages/bench-core build$ tsc -p tsconfig.json
+└─ Done in 1.1s
+role-model-router/packages/bench-judge build$ tsc -p tsconfig.json
+└─ Running...
+role-model-router/packages/catalog build$ tsc -p tsconfig.json
+└─ Running...
+└─ Done in 1s│ [MDX] generated files in 2.5427000000004227ms
+
+└─ Running...
+packages/schema-tools build$ tsc -p tsconfig.json
+└─ Done in 1.8s
+packages/store-contract build$ tsc -p tsconfig.json
+└─ Done in 1.1s
+role-model-router/apps/runtime-ui build$ react-router build && tsc --noEmit
+└─ Running...
+role-model-router/packages/bench-core build$ tsc -p tsconfig.json
+└─ Done in 1.1s
+role-model-router/packages/bench-judge build$ tsc -p tsconfig.json
+└─ Done in 1s
+role-model-router/packages/catalog build$ tsc -p tsconfig.json
+└─ Running...
+.../packages/process-supervisor build$ tsc -p tsconfig.json
+└─ Running...
+│ vite v7.3.2 building client environment for production...
+└─ Running...
+role-model-router/packages/bench-core build$ tsc -p tsconfig.json
+└─ Done in 1.1s
+role-model-router/packages/bench-judge build$ tsc -p tsconfig.json
+└─ Done in 1s
+role-model-router/packages/catalog build$ tsc -p tsconfig.json
+└─ Running...
+.../packages/process-supervisor build$ tsc -p tsconfig.json
+└─ Running...
+│ transforming...
+└─ Running...
+role-model-router/packages/bench-core build$ tsc -p tsconfig.json
+└─ Done in 1.1s
+role-model-router/packages/bench-judge build$ tsc -p tsconfig.json
+└─ Done in 1s
+role-model-router/packages/catalog build$ tsc -p tsconfig.json
+└─ Running...
+.../packages/process-supervisor build$ tsc -p tsconfig.json
+└─ Running...
+└─ Done in 1.5srole-model-router/packages/roles build$ tsc -p tsconfig.json
+└─ Running...
+└─ Done in 1.6srole-model-router/packages/runtime-web build$ tsc -p tsconfig.json
+└─ Running...
+└─ Done in 1.3srole-model-router/packages/tasks build$ tsc -p tsconfig.json
+└─ Running...
+└─ Done in 1.1srole-model-router/packages/tool-registry build$ tsc -p tsconfig.json
+└─ Running...
+└─ Done in 1.1s.../packages/vendor-abstraction build$ tsc -p tsconfig.json
+└─ Running...
+└─ Done in 1.3s│ transforming...✓ 2226 modules transformed.
+└─ Running...
+packages/schema-tools build$ tsc -p tsconfig.json
+└─ Done in 1.8s
+packages/store-contract build$ tsc -p tsconfig.json
+└─ Done in 1.1s
+role-model-router/apps/runtime-ui build$ react-router build && tsc --noEmit
+│ vite v7.3.2 building client environment for production...
+│ transforming...
+└─ Running...
+role-model-router/packages/bench-core build$ tsc -p tsconfig.json
+└─ Done in 1.1s
+role-model-router/packages/bench-judge build$ tsc -p tsconfig.json
+└─ Done in 1s
+role-model-router/packages/catalog build$ tsc -p tsconfig.json
+└─ Done in 1.5s
+.../packages/process-supervisor build$ tsc -p tsconfig.json
+└─ Done in 1.6s
+role-model-router/packages/roles build$ tsc -p tsconfig.json
+└─ Done in 1.3s
+role-model-router/packages/runtime-web build$ tsc -p tsconfig.json
+└─ Done in 1.1s
+role-model-router/packages/tasks build$ tsc -p tsconfig.json
+└─ Done in 1.1s
+role-model-router/packages/tool-registry build$ tsc -p tsconfig.json
+└─ Done in 1.3s
+.../packages/vendor-abstraction build$ tsc -p tsconfig.json
+└─ Running...
+│ rendering chunks...
+└─ Running...
+packages/schema-tools build$ tsc -p tsconfig.json
+└─ Done in 1.8s
+packages/store-contract build$ tsc -p tsconfig.json
+└─ Done in 1.1s
+role-model-router/apps/runtime-ui build$ react-router build && tsc --noEmit
+│ vite v7.3.2 building client environment for production...
+│ transforming...
+└─ Running...
+role-model-router/packages/bench-core build$ tsc -p tsconfig.json
+└─ Done in 1.1s
+role-model-router/packages/bench-judge build$ tsc -p tsconfig.json
+└─ Done in 1s
+role-model-router/packages/catalog build$ tsc -p tsconfig.json
+└─ Done in 1.5s
+.../packages/process-supervisor build$ tsc -p tsconfig.json
+└─ Done in 1.6s
+role-model-router/packages/roles build$ tsc -p tsconfig.json
+└─ Done in 1.3s
+role-model-router/packages/runtime-web build$ tsc -p tsconfig.json
+└─ Done in 1.1s
+role-model-router/packages/tasks build$ tsc -p tsconfig.json
+└─ Done in 1.1s
+role-model-router/packages/tool-registry build$ tsc -p tsconfig.json
+└─ Done in 1.3s
+.../packages/vendor-abstraction build$ tsc -p tsconfig.json
+└─ Running...
+│ computing gzip size...
+└─ Running...
+packages/schema-tools build$ tsc -p tsconfig.json
+└─ Done in 1.8s
+packages/store-contract build$ tsc -p tsconfig.json
+└─ Done in 1.1s
+role-model-router/apps/runtime-ui build$ react-router build && tsc --noEmit
+│ vite v7.3.2 building client environment for production...
+│ transforming...
+└─ Running...
+role-model-router/packages/bench-core build$ tsc -p tsconfig.json
+└─ Done in 1.1s
+role-model-router/packages/bench-judge build$ tsc -p tsconfig.json
+└─ Done in 1s
+role-model-router/packages/catalog build$ tsc -p tsconfig.json
+└─ Done in 1.5s
+.../packages/process-supervisor build$ tsc -p tsconfig.json
+└─ Done in 1.6s
+role-model-router/packages/roles build$ tsc -p tsconfig.json
+└─ Done in 1.3s
+role-model-router/packages/runtime-web build$ tsc -p tsconfig.json
+└─ Done in 1.1s
+role-model-router/packages/tasks build$ tsc -p tsconfig.json
+└─ Done in 1.1s
+role-model-router/packages/tool-registry build$ tsc -p tsconfig.json
+└─ Done in 1.3s
+.../packages/vendor-abstraction build$ tsc -p tsconfig.json
+└─ Running...
+│ build/client/.vite/manifest.json                                      20.28 kB │ gzip:  2.29 kB
+└─ Running...
+packages/schema-tools build$ tsc -p tsconfig.json
+└─ Done in 1.8s
+packages/store-contract build$ tsc -p tsconfig.json
+└─ Done in 1.1s
+role-model-router/apps/runtime-ui build$ react-router build && tsc --noEmit
+│ vite v7.3.2 building client environment for production...
+│ transforming...
+└─ Running...
+role-model-router/packages/bench-core build$ tsc -p tsconfig.json
+└─ Done in 1.1s
+role-model-router/packages/bench-judge build$ tsc -p tsconfig.json
+└─ Done in 1s
+role-model-router/packages/catalog build$ tsc -p tsconfig.json
+└─ Done in 1.5s
+.../packages/process-supervisor build$ tsc -p tsconfig.json
+└─ Done in 1.6s
+role-model-router/packages/roles build$ tsc -p tsconfig.json
+└─ Done in 1.3s
+role-model-router/packages/runtime-web build$ tsc -p tsconfig.json
+└─ Done in 1.1s
+role-model-router/packages/tasks build$ tsc -p tsconfig.json
+└─ Done in 1.1s
+role-model-router/packages/tool-registry build$ tsc -p tsconfig.json
+└─ Done in 1.3s
+.../packages/vendor-abstraction build$ tsc -p tsconfig.json
+└─ Running...
+[1 lines collapsed]                                                                                                     │ build/client/assets/root-CNvk1vRb.css                                 80.04 kB │ gzip: 13.34 kB
+└─ Running...                                                                                                           
+packages/schema-tools build$ tsc -p tsconfig.json
+└─ Done in 1.8s                                                                                                         
+packages/store-contract build$ tsc -p tsconfig.json
+└─ Done in 1.1s                                                                                                         
+role-model-router/apps/runtime-ui build$ react-router build && tsc --noEmit
+│ vite v7.3.2 building client environment for production...
+│ transforming...
+└─ Running...                                                                                                           
+role-model-router/packages/bench-core build$ tsc -p tsconfig.json
+└─ Done in 1.1s                                                                                                         
+role-model-router/packages/bench-judge build$ tsc -p tsconfig.json
+└─ Done in 1s                                                                                                           
+role-model-router/packages/catalog build$ tsc -p tsconfig.json
+└─ Done in 1.5s                                                                                                         
+.../packages/process-supervisor build$ tsc -p tsconfig.json
+└─ Done in 1.6s                                                                                                         
+role-model-router/packages/roles build$ tsc -p tsconfig.json
+└─ Done in 1.3s                                                                                                         
+role-model-router/packages/runtime-web build$ tsc -p tsconfig.json
+└─ Done in 1.1s                                                                                                         
+role-model-router/packages/tasks build$ tsc -p tsconfig.json
+└─ Done in 1.1s                                                                                                         
+role-model-router/packages/tool-registry build$ tsc -p tsconfig.json
+└─ Done in 1.3s                                                                                                         
+.../packages/vendor-abstraction build$ tsc -p tsconfig.json
+└─ Running...
+[22 lines collapsed]
+│ build/client/assets/search-default-CniwFL6d.js                         1.15 kB │ gzip:  0.63 kB                       
+│ build/client/assets/orama-cloud-D8Jh44Z0.js                            1.17 kB │ gzip:  0.60 kB                       
+│ build/client/assets/how-role-model-works-vIK2x3CF.js                   2.58 kB │ gzip:  0.88 kB                       
+│ build/client/assets/protocol-overview-6QiMdD83.js                      3.63 kB │ gzip:  0.94 kB                       
+│ build/client/assets/routing-overview-_K__E3i2.js                       3.78 kB │ gzip:  1.00 kB                       
+│ build/client/assets/quickstart-D8pGekGA.js                             4.01 kB │ gzip:  1.13 kB                       
+│ build/client/assets/observability-of-routing-BRHNBw1u.js               7.36 kB │ gzip:  1.68 kB
+│ build/client/assets/decision-semantics-iv-lQu3K.js                     8.98 kB │ gzip:  1.84 kB
+│ build/client/assets/protocol-lifecycle-s4E8b4Hf.js                     9.18 kB │ gzip:  2.06 kB
+│ build/client/assets/routing-outcomes-and-failure-modes-B945--d2.js     9.99 kB │ gzip:  1.90 kB46
+│ build/client/assets/canonical-schemas-reference-BkUf7ccN.js           18.29 kB │ gzip:  2.80 kB
+│ build/client/assets/introduction-Cl8s28yp.js                          18.42 kB │ gzip:  3.31 kB
+│ build/client/assets/core-vocabulary-BIjZvGen.js                       18.67 kB │ gzip:  3.19 kB
+│ build/client/assets/roles-and-tasks-C66QkWiL.js                       19.01 kB │ gzip:  3.22 kB
+│ build/client/assets/observed-performance-profiles-B7illwip.js         19.58 kB │ gzip:  3.26 kB
+│ build/client/assets/docs-DCukSLpY.js                                  20.16 kB │ gzip:  3.32 kB
+│ build/client/assets/endpoint-identity-DVIJ4YON.js                     22.29 kB │ gzip:  3.45 kB
+│ build/client/assets/root-m4k43gyp.js                                  24.91 kB │ gzip:  8.39 kB
+│ build/client/assets/docs-Db3uF-Rq.js                                  56.90 kB │ gzip: 19.36 kB
+│ build/client/assets/es2015-B692ofsD.js                                61.65 kB │ gzip: 21.10 kB60
+│ build/client/assets/entry.client-Ci5FUk0_.js                         183.20 kB │ gzip: 58.03 kB
+│ build/client/assets/search-TuTTkDqi.js                               227.67 kB │ gzip: 70.51 kB
+│ [PLUGIN_TIMINGS] Warning: Your build spent significant time in plugins. Here is a breakdown: kB
+│   - react-router:dot-server (39%)
+│   - react-router:virtual-modules (28%)
+│   - react-router:inject-hmr-runtime (13%)
+│   - react-router:hmr-runtime (6%)
+│ See https://rolldown.rs/options/checks#plugintimings for more details.
+│
+│ ✓ built in 4.75s1
+│ build/client/assets/search-TuTTkDqi.js                               227.67 kB │ gzip: 70.51 kB
+│ [PLUGIN_TIMINGS] Warning: Your build spent significant time in plugins. Here is a breakdown:
+│   - react-router:dot-server (39%)
+│   - react-router:virtual-modules (28%)
+│   - react-router:inject-hmr-runtime (13%)
+│   - react-router:hmr-runtime (6%)
+│ See https://rolldown.rs/options/checks#plugintimings for more details.
+│
+│ ✓ built in 4.75s
+│ [MDX] generated files in 2.234599999999773ms3
+│   - react-router:dot-server (39%)
+│   - react-router:virtual-modules (28%)
+│   - react-router:inject-hmr-runtime (13%)
+│   - react-router:hmr-runtime (6%)
+│ See https://rolldown.rs/options/checks#plugintimings for more details.
+│
+│ ✓ built in 4.75s
+│ [MDX] generated files in 2.234599999999773ms
+│ vite v8.0.10 building ssr environment for production...
+│ [MDX] generated files in 2.0398000000004686ms└─ Done in 1.2s
+4
+│   - react-router:virtual-modules (28%)
+│   - react-router:inject-hmr-runtime (13%)
+│   - react-router:hmr-runtime (6%)
+│ See https://rolldown.rs/options/checks#plugintimings for more details.
+│
+│ ✓ built in 4.75s
+│ [MDX] generated files in 2.234599999999773ms
+│ vite v8.0.10 building ssr environment for production...
+│ [MDX] generated files in 2.0398000000004686ms
+5
+│   - react-router:inject-hmr-runtime (13%)
+│   - react-router:hmr-runtime (6%)
+│ See https://rolldown.rs/options/checks#plugintimings for more details.
+│
+│ ✓ built in 4.75s
+│ [MDX] generated files in 2.234599999999773ms
+│ vite v8.0.10 building ssr environment for production...
+│ [MDX] generated files in 2.0398000000004686ms
+
+│ transforming...✓ 461 modules transformed.6
+│   - react-router:hmr-runtime (6%)
+│ See https://rolldown.rs/options/checks#plugintimings for more details.
+│
+│ ✓ built in 4.75s
+│ [MDX] generated files in 2.234599999999773ms
+│ vite v8.0.10 building ssr environment for production...
+│ [MDX] generated files in 2.0398000000004686ms
+
+│ transforming...✓ 461 modules transformed.
+│ rendering chunks...7
+│ See https://rolldown.rs/options/checks#plugintimings for more details.
+│
+│ ✓ built in 4.75s
+│ [MDX] generated files in 2.234599999999773ms
+│ vite v8.0.10 building ssr environment for production...
+│ [MDX] generated files in 2.0398000000004686ms
+
+│ transforming...✓ 461 modules transformed.
+│ rendering chunks...
+│ ✓ 1 asset cleaned from React Router server build.8
+│
+│ ✓ built in 4.75s
+│ [MDX] generated files in 2.234599999999773ms
+│ vite v8.0.10 building ssr environment for production...
+│ [MDX] generated files in 2.0398000000004686ms
+
+│ transforming...✓ 461 modules transformed.
+│ rendering chunks...
+│ ✓ 1 asset cleaned from React Router server build.
+│ build\server\assets\server-build-CNvk1vRb.css9
+│ ✓ built in 4.75s
+│ [MDX] generated files in 2.234599999999773ms
+│ vite v8.0.10 building ssr environment for production...
+│ [MDX] generated files in 2.0398000000004686ms
+
+│ transforming...✓ 461 modules transformed.
+│ rendering chunks...
+│ ✓ 1 asset cleaned from React Router server build.
+│ build\server\assets\server-build-CNvk1vRb.css
+│ Prerender (data): / -> build\client\_root.data70
+│ [MDX] generated files in 2.234599999999773ms
+│ vite v8.0.10 building ssr environment for production...
+│ [MDX] generated files in 2.0398000000004686ms
+
+│ transforming...✓ 461 modules transformed.
+│ rendering chunks...
+│ ✓ 1 asset cleaned from React Router server build.
+│ build\server\assets\server-build-CNvk1vRb.css
+│ Prerender (data): / -> build\client\_root.data
+│ Prerender (html): / -> build\client\index.html2
+│ [MDX] generated files in 2.0398000000004686ms
+
+│ transforming...✓ 461 modules transformed.
+│ rendering chunks...
+│ ✓ 1 asset cleaned from React Router server build.
+│ build\server\assets\server-build-CNvk1vRb.css
+│ Prerender (data): / -> build\client\_root.data
+│ Prerender (html): / -> build\client\index.html
+│ Prerender (data): /api/search -> build\client\api\search.data
+│ Prerender (resource): /api/search -> build\client\api\search4
+│ transforming...✓ 461 modules transformed.
+│ rendering chunks...
+│ ✓ 1 asset cleaned from React Router server build.
+│ build\server\assets\server-build-CNvk1vRb.css
+│ Prerender (data): / -> build\client\_root.data
+│ Prerender (html): / -> build\client\index.html
+│ Prerender (data): /api/search -> build\client\api\search.data
+│ Prerender (resource): /api/search -> build\client\api\search
+│ Prerender (data): /llms.txt -> build\client\llms.txt.data
+│ Prerender (resource): /llms.txt -> build\client\llms.txt7
+│ build\server\assets\server-build-CNvk1vRb.css
+│ Prerender (data): / -> build\client\_root.data
+│ Prerender (html): / -> build\client\index.html
+│ Prerender (data): /api/search -> build\client\api\search.data
+│ Prerender (resource): /api/search -> build\client\api\search
+│ Prerender (data): /llms.txt -> build\client\llms.txt.data
+│ Prerender (resource): /llms.txt -> build\client\llms.txt
+│ Prerender (data): /llms-full.txt -> build\client\llms-full.txt.data
+│ Prerender (resource): /llms-full.txt -> build\client\llms-full.txt
+│ Prerender (data): /core-vocabulary -> build\client\core-vocabulary.data80
+│ Prerender (data): /api/search -> build\client\api\search.data
+│ Prerender (resource): /api/search -> build\client\api\search
+│ Prerender (data): /llms.txt -> build\client\llms.txt.data
+│ Prerender (resource): /llms.txt -> build\client\llms.txt
+│ Prerender (data): /llms-full.txt -> build\client\llms-full.txt.data
+│ Prerender (resource): /llms-full.txt -> build\client\llms-full.txt
+│ Prerender (data): /core-vocabulary -> build\client\core-vocabulary.data
+│ Prerender (html): /core-vocabulary -> build\client\core-vocabulary\index.html
+│ Prerender (data): /llms.mdx/docs/core-vocabulary/content.md -> build\client\llms.mdx\docs\core-vocabulary\content.m…
+│ Prerender (resource): /llms.mdx/docs/core-vocabulary/content.md -> build\client\llms.mdx\docs\core-vocabulary\conte…1
+│ Prerender (resource): /api/search -> build\client\api\search
+│ Prerender (data): /llms.txt -> build\client\llms.txt.data
+│ Prerender (resource): /llms.txt -> build\client\llms.txt
+│ Prerender (data): /llms-full.txt -> build\client\llms-full.txt.data
+│ Prerender (resource): /llms-full.txt -> build\client\llms-full.txt
+│ Prerender (data): /core-vocabulary -> build\client\core-vocabulary.data
+│ Prerender (html): /core-vocabulary -> build\client\core-vocabulary\index.html
+│ Prerender (data): /llms.mdx/docs/core-vocabulary/content.md -> build\client\llms.mdx\docs\core-vocabulary\content.m…
+│ Prerender (resource): /llms.mdx/docs/core-vocabulary/content.md -> build\client\llms.mdx\docs\core-vocabulary\conte…
+│ Prerender (data): / -> build\client\_root.data5
+│ Prerender (resource): /llms-full.txt -> build\client\llms-full.txt
+│ Prerender (data): /core-vocabulary -> build\client\core-vocabulary.data
+│ Prerender (html): /core-vocabulary -> build\client\core-vocabulary\index.html
+│ Prerender (data): /llms.mdx/docs/core-vocabulary/content.md -> build\client\llms.mdx\docs\core-vocabulary\content.m…  
+│ Prerender (resource): /llms.mdx/docs/core-vocabulary/content.md -> build\client\llms.mdx\docs\core-vocabulary\conte…
+│ Prerender (data): / -> build\client\_root.data
+│ Prerender (html): / -> build\client\index.html
+│ Prerender (data): /llms.mdx/docs/content.md -> build\client\llms.mdx\docs\content.md.data
+│ Prerender (resource): /llms.mdx/docs/content.md -> build\client\llms.mdx\docs\content.md
+│ Prerender (data): /introduction -> build\client\introduction.data6
+│ Prerender (data): /core-vocabulary -> build\client\core-vocabulary.data
+│ Prerender (html): /core-vocabulary -> build\client\core-vocabulary\index.html
+│ Prerender (data): /llms.mdx/docs/core-vocabulary/content.md -> build\client\llms.mdx\docs\core-vocabulary\content.m…
+│ Prerender (resource): /llms.mdx/docs/core-vocabulary/content.md -> build\client\llms.mdx\docs\core-vocabulary\conte…
+│ Prerender (data): / -> build\client\_root.data
+│ Prerender (html): / -> build\client\index.html
+│ Prerender (data): /llms.mdx/docs/content.md -> build\client\llms.mdx\docs\content.md.data
+│ Prerender (resource): /llms.mdx/docs/content.md -> build\client\llms.mdx\docs\content.md
+│ Prerender (data): /introduction -> build\client\introduction.data
+│ Prerender (html): /introduction -> build\client\introduction\index.html9
+│ Prerender (resource): /llms.mdx/docs/core-vocabulary/content.md -> build\client\llms.mdx\docs\core-vocabulary\conte…
+│ Prerender (data): / -> build\client\_root.data
+│ Prerender (html): / -> build\client\index.html
+│ Prerender (data): /llms.mdx/docs/content.md -> build\client\llms.mdx\docs\content.md.data
+│ Prerender (resource): /llms.mdx/docs/content.md -> build\client\llms.mdx\docs\content.md
+│ Prerender (data): /introduction -> build\client\introduction.data
+│ Prerender (html): /introduction -> build\client\introduction\index.html
+│ Prerender (data): /llms.mdx/docs/introduction/content.md -> build\client\llms.mdx\docs\introduction\content.md.data   
+│ Prerender (resource): /llms.mdx/docs/introduction/content.md -> build\client\llms.mdx\docs\introduction\content.md    
+│ Prerender (data): /protocol-lifecycle -> build\client\protocol-lifecycle.data93
+│ Prerender (resource): /llms.mdx/docs/content.md -> build\client\llms.mdx\docs\content.md
+│ Prerender (data): /introduction -> build\client\introduction.data
+│ Prerender (html): /introduction -> build\client\introduction\index.html
+│ Prerender (data): /llms.mdx/docs/introduction/content.md -> build\client\llms.mdx\docs\introduction\content.md.data   
+│ Prerender (resource): /llms.mdx/docs/introduction/content.md -> build\client\llms.mdx\docs\introduction\content.md    
+│ Prerender (data): /protocol-lifecycle -> build\client\protocol-lifecycle.data
+│ Prerender (html): /protocol-lifecycle -> build\client\protocol-lifecycle\index.html
+│ Prerender (data): /llms.mdx/docs/protocol-lifecycle/content.md -> build\client\llms.mdx\docs\protocol-lifecycle\con…  
+│ Prerender (resource): /llms.mdx/docs/protocol-lifecycle/content.md -> build\client\llms.mdx\docs\protocol-lifecycle…  
+│ Prerender (data): /protocol-object-model -> build\client\protocol-object-model.data6
+│ Prerender (data): /llms.mdx/docs/introduction/content.md -> build\client\llms.mdx\docs\introduction\content.md.data   
+│ Prerender (resource): /llms.mdx/docs/introduction/content.md -> build\client\llms.mdx\docs\introduction\content.md    
+│ Prerender (data): /protocol-lifecycle -> build\client\protocol-lifecycle.data
+│ Prerender (html): /protocol-lifecycle -> build\client\protocol-lifecycle\index.html
+│ Prerender (data): /llms.mdx/docs/protocol-lifecycle/content.md -> build\client\llms.mdx\docs\protocol-lifecycle\con…  
+│ Prerender (resource): /llms.mdx/docs/protocol-lifecycle/content.md -> build\client\llms.mdx\docs\protocol-lifecycle…
+│ Prerender (data): /protocol-object-model -> build\client\protocol-object-model.data
+│ Prerender (html): /protocol-object-model -> build\client\protocol-object-model\index.html
+│ Prerender (data): /llms.mdx/docs/protocol-object-model/content.md -> build\client\llms.mdx\docs\protocol-object-mod…  
+│ Prerender (resource): /llms.mdx/docs/protocol-object-model/content.md -> build\client\llms.mdx\docs\protocol-object…8
+│ Prerender (data): /protocol-lifecycle -> build\client\protocol-lifecycle.data
+│ Prerender (html): /protocol-lifecycle -> build\client\protocol-lifecycle\index.html
+│ Prerender (data): /llms.mdx/docs/protocol-lifecycle/content.md -> build\client\llms.mdx\docs\protocol-lifecycle\con…
+│ Prerender (resource): /llms.mdx/docs/protocol-lifecycle/content.md -> build\client\llms.mdx\docs\protocol-lifecycle…
+│ Prerender (data): /protocol-object-model -> build\client\protocol-object-model.data
+│ Prerender (html): /protocol-object-model -> build\client\protocol-object-model\index.html
+│ Prerender (data): /llms.mdx/docs/protocol-object-model/content.md -> build\client\llms.mdx\docs\protocol-object-mod…
+│ Prerender (resource): /llms.mdx/docs/protocol-object-model/content.md -> build\client\llms.mdx\docs\protocol-object…
+│ Prerender (data): /quickstart -> build\client\quickstart.data
+│ Prerender (html): /quickstart -> build\client\quickstart\index.html[101 lines collapsed]
+│ Prerender (resource): /llms.mdx/docs/protocol-lifecycle/content.md -> build\client\llms.mdx\docs\protocol-lifecycle…
+│ Prerender (data): /protocol-object-model -> build\client\protocol-object-model.data
+│ Prerender (html): /protocol-object-model -> build\client\protocol-object-model\index.html
+│ Prerender (data): /llms.mdx/docs/protocol-object-model/content.md -> build\client\llms.mdx\docs\protocol-object-mod…  
+│ Prerender (resource): /llms.mdx/docs/protocol-object-model/content.md -> build\client\llms.mdx\docs\protocol-object…
+│ Prerender (data): /quickstart -> build\client\quickstart.data
+│ Prerender (html): /quickstart -> build\client\quickstart\index.html
+│ Prerender (data): /llms.mdx/docs/quickstart/content.md -> build\client\llms.mdx\docs\quickstart\content.md.data       
+│ Prerender (resource): /llms.mdx/docs/quickstart/content.md -> build\client\llms.mdx\docs\quickstart\content.md        
+│ Prerender (data): /routing/candidate-discovery -> build\client\routing\candidate-discovery.data5
+│ Prerender (resource): /llms.mdx/docs/protocol-object-model/content.md -> build\client\llms.mdx\docs\protocol-object…  
+│ Prerender (data): /quickstart -> build\client\quickstart.data
+│ Prerender (html): /quickstart -> build\client\quickstart\index.html
+│ Prerender (data): /llms.mdx/docs/quickstart/content.md -> build\client\llms.mdx\docs\quickstart\content.md.data       
+│ Prerender (resource): /llms.mdx/docs/quickstart/content.md -> build\client\llms.mdx\docs\quickstart\content.md        
+│ Prerender (data): /routing/candidate-discovery -> build\client\routing\candidate-discovery.data
+│ Prerender (html): /routing/candidate-discovery -> build\client\routing\candidate-discovery\index.html
+│ Prerender (data): /llms.mdx/docs/routing/candidate-discovery/content.md -> build\client\llms.mdx\docs\routing\candi…  
+│ Prerender (resource): /llms.mdx/docs/routing/candidate-discovery/content.md -> build\client\llms.mdx\docs\routing\c…  
+│ Prerender (data): /routing/comparison-and-tradeoffs -> build\client\routing\comparison-and-tradeoffs.data7
+│ Prerender (html): /quickstart -> build\client\quickstart\index.html
+│ Prerender (data): /llms.mdx/docs/quickstart/content.md -> build\client\llms.mdx\docs\quickstart\content.md.data
+│ Prerender (resource): /llms.mdx/docs/quickstart/content.md -> build\client\llms.mdx\docs\quickstart\content.md        
+│ Prerender (data): /routing/candidate-discovery -> build\client\routing\candidate-discovery.data
+│ Prerender (html): /routing/candidate-discovery -> build\client\routing\candidate-discovery\index.html
+│ Prerender (data): /llms.mdx/docs/routing/candidate-discovery/content.md -> build\client\llms.mdx\docs\routing\candi…
+│ Prerender (resource): /llms.mdx/docs/routing/candidate-discovery/content.md -> build\client\llms.mdx\docs\routing\c…
+│ Prerender (data): /routing/comparison-and-tradeoffs -> build\client\routing\comparison-and-tradeoffs.data
+│ Prerender (html): /routing/comparison-and-tradeoffs -> build\client\routing\comparison-and-tradeoffs\index.html       
+│ Prerender (data): /llms.mdx/docs/routing/comparison-and-tradeoffs/content.md -> build\client\llms.mdx\docs\routing\…9
+│ Prerender (resource): /llms.mdx/docs/quickstart/content.md -> build\client\llms.mdx\docs\quickstart\content.md        
+│ Prerender (data): /routing/candidate-discovery -> build\client\routing\candidate-discovery.data
+│ Prerender (html): /routing/candidate-discovery -> build\client\routing\candidate-discovery\index.html
+│ Prerender (data): /llms.mdx/docs/routing/candidate-discovery/content.md -> build\client\llms.mdx\docs\routing\candi…
+│ Prerender (resource): /llms.mdx/docs/routing/candidate-discovery/content.md -> build\client\llms.mdx\docs\routing\c…
+│ Prerender (data): /routing/comparison-and-tradeoffs -> build\client\routing\comparison-and-tradeoffs.data
+│ Prerender (html): /routing/comparison-and-tradeoffs -> build\client\routing\comparison-and-tradeoffs\index.html       
+│ Prerender (data): /llms.mdx/docs/routing/comparison-and-tradeoffs/content.md -> build\client\llms.mdx\docs\routing\…
+│ Prerender (resource): /llms.mdx/docs/routing/comparison-and-tradeoffs/content.md -> build\client\llms.mdx\docs\rout…
+│ Prerender (data): /routing/decision-semantics -> build\client\routing\decision-semantics.data13
+│ Prerender (resource): /llms.mdx/docs/routing/candidate-discovery/content.md -> build\client\llms.mdx\docs\routing\c…  
+│ Prerender (data): /routing/comparison-and-tradeoffs -> build\client\routing\comparison-and-tradeoffs.data
+│ Prerender (html): /routing/comparison-and-tradeoffs -> build\client\routing\comparison-and-tradeoffs\index.html       
+│ Prerender (data): /llms.mdx/docs/routing/comparison-and-tradeoffs/content.md -> build\client\llms.mdx\docs\routing\…  
+│ Prerender (resource): /llms.mdx/docs/routing/comparison-and-tradeoffs/content.md -> build\client\llms.mdx\docs\rout…  
+│ Prerender (data): /routing/decision-semantics -> build\client\routing\decision-semantics.data
+│ Prerender (html): /routing/decision-semantics -> build\client\routing\decision-semantics\index.html
+│ Prerender (data): /llms.mdx/docs/routing/decision-semantics/content.md -> build\client\llms.mdx\docs\routing\decisi…  
+│ Prerender (resource): /llms.mdx/docs/routing/decision-semantics/content.md -> build\client\llms.mdx\docs\routing\de…  
+│ Prerender (data): /routing/eligibility-and-rejection -> build\client\routing\eligibility-and-rejection.data7
+│ Prerender (resource): /llms.mdx/docs/routing/comparison-and-tradeoffs/content.md -> build\client\llms.mdx\docs\rout…  
+│ Prerender (data): /routing/decision-semantics -> build\client\routing\decision-semantics.data
+│ Prerender (html): /routing/decision-semantics -> build\client\routing\decision-semantics\index.html
+│ Prerender (data): /llms.mdx/docs/routing/decision-semantics/content.md -> build\client\llms.mdx\docs\routing\decisi…  
+│ Prerender (resource): /llms.mdx/docs/routing/decision-semantics/content.md -> build\client\llms.mdx\docs\routing\de…  
+│ Prerender (data): /routing/eligibility-and-rejection -> build\client\routing\eligibility-and-rejection.data
+│ Prerender (html): /routing/eligibility-and-rejection -> build\client\routing\eligibility-and-rejection\index.html     
+│ Prerender (data): /llms.mdx/docs/routing/eligibility-and-rejection/content.md -> build\client\llms.mdx\docs\routing…  
+│ Prerender (resource): /llms.mdx/docs/routing/eligibility-and-rejection/content.md -> build\client\llms.mdx\docs\rou…  
+│ Prerender (data): /routing/how-routing-works-end-to-end -> build\client\routing\how-routing-works-end-to-end.data     20
+│ Prerender (data): /llms.mdx/docs/routing/decision-semantics/content.md -> build\client\llms.mdx\docs\routing\decisi…  
+│ Prerender (resource): /llms.mdx/docs/routing/decision-semantics/content.md -> build\client\llms.mdx\docs\routing\de…
+│ Prerender (data): /routing/eligibility-and-rejection -> build\client\routing\eligibility-and-rejection.data
+│ Prerender (html): /routing/eligibility-and-rejection -> build\client\routing\eligibility-and-rejection\index.html     
+│ Prerender (data): /llms.mdx/docs/routing/eligibility-and-rejection/content.md -> build\client\llms.mdx\docs\routing…  
+│ Prerender (resource): /llms.mdx/docs/routing/eligibility-and-rejection/content.md -> build\client\llms.mdx\docs\rou…
+│ Prerender (data): /routing/how-routing-works-end-to-end -> build\client\routing\how-routing-works-end-to-end.data     
+│ Prerender (html): /routing/how-routing-works-end-to-end -> build\client\routing\how-routing-works-end-to-end\index.…  
+│ Prerender (data): /llms.mdx/docs/routing/how-routing-works-end-to-end/content.md -> build\client\llms.mdx\docs\rout…  
+│ Prerender (resource): /llms.mdx/docs/routing/how-routing-works-end-to-end/content.md -> build\client\llms.mdx\docs\…2
+│ Prerender (data): /routing/eligibility-and-rejection -> build\client\routing\eligibility-and-rejection.data
+│ Prerender (html): /routing/eligibility-and-rejection -> build\client\routing\eligibility-and-rejection\index.html     
+│ Prerender (data): /llms.mdx/docs/routing/eligibility-and-rejection/content.md -> build\client\llms.mdx\docs\routing…
+│ Prerender (resource): /llms.mdx/docs/routing/eligibility-and-rejection/content.md -> build\client\llms.mdx\docs\rou…
+│ Prerender (data): /routing/how-routing-works-end-to-end -> build\client\routing\how-routing-works-end-to-end.data     
+│ Prerender (html): /routing/how-routing-works-end-to-end -> build\client\routing\how-routing-works-end-to-end\index.…  
+│ Prerender (data): /llms.mdx/docs/routing/how-routing-works-end-to-end/content.md -> build\client\llms.mdx\docs\rout…
+│ Prerender (resource): /llms.mdx/docs/routing/how-routing-works-end-to-end/content.md -> build\client\llms.mdx\docs\…
+│ Prerender (data): /routing/observability-of-routing -> build\client\routing\observability-of-routing.data
+│ Prerender (html): /routing/observability-of-routing -> build\client\routing\observability-of-routing\index.html       5
+│ Prerender (resource): /llms.mdx/docs/routing/eligibility-and-rejection/content.md -> build\client\llms.mdx\docs\rou…
+│ Prerender (data): /routing/how-routing-works-end-to-end -> build\client\routing\how-routing-works-end-to-end.data     
+│ Prerender (html): /routing/how-routing-works-end-to-end -> build\client\routing\how-routing-works-end-to-end\index.…  
+│ Prerender (data): /llms.mdx/docs/routing/how-routing-works-end-to-end/content.md -> build\client\llms.mdx\docs\rout…  
+│ Prerender (resource): /llms.mdx/docs/routing/how-routing-works-end-to-end/content.md -> build\client\llms.mdx\docs\…
+│ Prerender (data): /routing/observability-of-routing -> build\client\routing\observability-of-routing.data
+│ Prerender (html): /routing/observability-of-routing -> build\client\routing\observability-of-routing\index.html       
+│ Prerender (data): /llms.mdx/docs/routing/observability-of-routing/content.md -> build\client\llms.mdx\docs\routing\…  
+│ Prerender (resource): /llms.mdx/docs/routing/observability-of-routing/content.md -> build\client\llms.mdx\docs\rout…
+│ Prerender (data): /routing/protocol-to-router-mapping -> build\client\routing\protocol-to-router-mapping.data9
+│ Prerender (resource): /llms.mdx/docs/routing/how-routing-works-end-to-end/content.md -> build\client\llms.mdx\docs\…  
+│ Prerender (data): /routing/observability-of-routing -> build\client\routing\observability-of-routing.data
+│ Prerender (html): /routing/observability-of-routing -> build\client\routing\observability-of-routing\index.html       
+│ Prerender (data): /llms.mdx/docs/routing/observability-of-routing/content.md -> build\client\llms.mdx\docs\routing\…  
+│ Prerender (resource): /llms.mdx/docs/routing/observability-of-routing/content.md -> build\client\llms.mdx\docs\rout…  
+│ Prerender (data): /routing/protocol-to-router-mapping -> build\client\routing\protocol-to-router-mapping.data
+│ Prerender (html): /routing/protocol-to-router-mapping -> build\client\routing\protocol-to-router-mapping\index.html   
+│ Prerender (data): /llms.mdx/docs/routing/protocol-to-router-mapping/content.md -> build\client\llms.mdx\docs\routin…  
+│ Prerender (resource): /llms.mdx/docs/routing/protocol-to-router-mapping/content.md -> build\client\llms.mdx\docs\ro…  
+│ Prerender (data): /routing/routing-outcomes-and-failure-modes -> build\client\routing\routing-outcomes-and-failure-…33
+│ Prerender (resource): /llms.mdx/docs/routing/observability-of-routing/content.md -> build\client\llms.mdx\docs\rout…  
+│ Prerender (data): /routing/protocol-to-router-mapping -> build\client\routing\protocol-to-router-mapping.data
+│ Prerender (html): /routing/protocol-to-router-mapping -> build\client\routing\protocol-to-router-mapping\index.html   
+│ Prerender (data): /llms.mdx/docs/routing/protocol-to-router-mapping/content.md -> build\client\llms.mdx\docs\routin…  
+│ Prerender (resource): /llms.mdx/docs/routing/protocol-to-router-mapping/content.md -> build\client\llms.mdx\docs\ro…  
+│ Prerender (data): /routing/routing-outcomes-and-failure-modes -> build\client\routing\routing-outcomes-and-failure-…
+│ Prerender (html): /routing/routing-outcomes-and-failure-modes -> build\client\routing\routing-outcomes-and-failure-…
+│ Prerender (data): /llms.mdx/docs/routing/routing-outcomes-and-failure-modes/content.md -> build\client\llms.mdx\doc…
+│ Prerender (resource): /llms.mdx/docs/routing/routing-outcomes-and-failure-modes/content.md -> build\client\llms.mdx…
+│ Prerender (data): /reference/canonical-schemas-reference -> build\client\reference\canonical-schemas-reference.data   6
+│ Prerender (data): /llms.mdx/docs/routing/protocol-to-router-mapping/content.md -> build\client\llms.mdx\docs\routin…  
+│ Prerender (resource): /llms.mdx/docs/routing/protocol-to-router-mapping/content.md -> build\client\llms.mdx\docs\ro…
+│ Prerender (data): /routing/routing-outcomes-and-failure-modes -> build\client\routing\routing-outcomes-and-failure-…
+│ Prerender (html): /routing/routing-outcomes-and-failure-modes -> build\client\routing\routing-outcomes-and-failure-…
+│ Prerender (data): /llms.mdx/docs/routing/routing-outcomes-and-failure-modes/content.md -> build\client\llms.mdx\doc…
+│ Prerender (resource): /llms.mdx/docs/routing/routing-outcomes-and-failure-modes/content.md -> build\client\llms.mdx…
+│ Prerender (data): /reference/canonical-schemas-reference -> build\client\reference\canonical-schemas-reference.data   
+│ Prerender (html): /reference/canonical-schemas-reference -> build\client\reference\canonical-schemas-reference\inde…  
+│ Prerender (data): /llms.mdx/docs/reference/canonical-schemas-reference/content.md -> build\client\llms.mdx\docs\ref…  
+│ Prerender (resource): /llms.mdx/docs/reference/canonical-schemas-reference/content.md -> build\client\llms.mdx\docs…7
+│ Prerender (resource): /llms.mdx/docs/routing/protocol-to-router-mapping/content.md -> build\client\llms.mdx\docs\ro…
+│ Prerender (data): /routing/routing-outcomes-and-failure-modes -> build\client\routing\routing-outcomes-and-failure-…
+│ Prerender (html): /routing/routing-outcomes-and-failure-modes -> build\client\routing\routing-outcomes-and-failure-…
+│ Prerender (data): /llms.mdx/docs/routing/routing-outcomes-and-failure-modes/content.md -> build\client\llms.mdx\doc…
+│ Prerender (resource): /llms.mdx/docs/routing/routing-outcomes-and-failure-modes/content.md -> build\client\llms.mdx…
+│ Prerender (data): /reference/canonical-schemas-reference -> build\client\reference\canonical-schemas-reference.data   
+│ Prerender (html): /reference/canonical-schemas-reference -> build\client\reference\canonical-schemas-reference\inde…
+│ Prerender (data): /llms.mdx/docs/reference/canonical-schemas-reference/content.md -> build\client\llms.mdx\docs\ref…
+│ Prerender (resource): /llms.mdx/docs/reference/canonical-schemas-reference/content.md -> build\client\llms.mdx\docs…
+│ Prerender (data): /reference/reason-codes-and-rejection-taxonomy -> build\client\reference\reason-codes-and-rejecti…41
+│ Prerender (resource): /llms.mdx/docs/routing/routing-outcomes-and-failure-modes/content.md -> build\client\llms.mdx…
+│ Prerender (data): /reference/canonical-schemas-reference -> build\client\reference\canonical-schemas-reference.data   
+│ Prerender (html): /reference/canonical-schemas-reference -> build\client\reference\canonical-schemas-reference\inde…  
+│ Prerender (data): /llms.mdx/docs/reference/canonical-schemas-reference/content.md -> build\client\llms.mdx\docs\ref…  
+│ Prerender (resource): /llms.mdx/docs/reference/canonical-schemas-reference/content.md -> build\client\llms.mdx\docs…  
+│ Prerender (data): /reference/reason-codes-and-rejection-taxonomy -> build\client\reference\reason-codes-and-rejecti…
+│ Prerender (html): /reference/reason-codes-and-rejection-taxonomy -> build\client\reference\reason-codes-and-rejecti…
+│ Prerender (data): /llms.mdx/docs/reference/reason-codes-and-rejection-taxonomy/content.md -> build\client\llms.mdx\…
+│ Prerender (resource): /llms.mdx/docs/reference/reason-codes-and-rejection-taxonomy/content.md -> build\client\llms.…
+│ Prerender (data): /protocol/capability-taxonomy -> build\client\protocol\capability-taxonomy.data4
+│ Prerender (data): /llms.mdx/docs/reference/canonical-schemas-reference/content.md -> build\client\llms.mdx\docs\ref…  
+│ Prerender (resource): /llms.mdx/docs/reference/canonical-schemas-reference/content.md -> build\client\llms.mdx\docs…
+│ Prerender (data): /reference/reason-codes-and-rejection-taxonomy -> build\client\reference\reason-codes-and-rejecti…
+│ Prerender (html): /reference/reason-codes-and-rejection-taxonomy -> build\client\reference\reason-codes-and-rejecti…
+│ Prerender (data): /llms.mdx/docs/reference/reason-codes-and-rejection-taxonomy/content.md -> build\client\llms.mdx\…
+│ Prerender (resource): /llms.mdx/docs/reference/reason-codes-and-rejection-taxonomy/content.md -> build\client\llms.…
+│ Prerender (data): /protocol/capability-taxonomy -> build\client\protocol\capability-taxonomy.data
+│ Prerender (html): /protocol/capability-taxonomy -> build\client\protocol\capability-taxonomy\index.html
+│ Prerender (data): /llms.mdx/docs/protocol/capability-taxonomy/content.md -> build\client\llms.mdx\docs\protocol\cap…  
+│ Prerender (resource): /llms.mdx/docs/protocol/capability-taxonomy/content.md -> build\client\llms.mdx\docs\protocol…6
+│ Prerender (data): /reference/reason-codes-and-rejection-taxonomy -> build\client\reference\reason-codes-and-rejecti…
+│ Prerender (html): /reference/reason-codes-and-rejection-taxonomy -> build\client\reference\reason-codes-and-rejecti…
+│ Prerender (data): /llms.mdx/docs/reference/reason-codes-and-rejection-taxonomy/content.md -> build\client\llms.mdx\…
+│ Prerender (resource): /llms.mdx/docs/reference/reason-codes-and-rejection-taxonomy/content.md -> build\client\llms.…
+│ Prerender (data): /protocol/capability-taxonomy -> build\client\protocol\capability-taxonomy.data
+│ Prerender (html): /protocol/capability-taxonomy -> build\client\protocol\capability-taxonomy\index.html
+│ Prerender (data): /llms.mdx/docs/protocol/capability-taxonomy/content.md -> build\client\llms.mdx\docs\protocol\cap…
+│ Prerender (resource): /llms.mdx/docs/protocol/capability-taxonomy/content.md -> build\client\llms.mdx\docs\protocol…
+│ Prerender (data): /protocol/declared-capability-profiles -> build\client\protocol\declared-capability-profiles.data   
+│ Prerender (html): /protocol/declared-capability-profiles -> build\client\protocol\declared-capability-profiles\inde…  9
+│ Prerender (resource): /llms.mdx/docs/reference/reason-codes-and-rejection-taxonomy/content.md -> build\client\llms.…
+│ Prerender (data): /protocol/capability-taxonomy -> build\client\protocol\capability-taxonomy.data
+│ Prerender (html): /protocol/capability-taxonomy -> build\client\protocol\capability-taxonomy\index.html
+│ Prerender (data): /llms.mdx/docs/protocol/capability-taxonomy/content.md -> build\client\llms.mdx\docs\protocol\cap…  
+│ Prerender (resource): /llms.mdx/docs/protocol/capability-taxonomy/content.md -> build\client\llms.mdx\docs\protocol…
+│ Prerender (data): /protocol/declared-capability-profiles -> build\client\protocol\declared-capability-profiles.data   
+│ Prerender (html): /protocol/declared-capability-profiles -> build\client\protocol\declared-capability-profiles\inde…  
+│ Prerender (data): /llms.mdx/docs/protocol/declared-capability-profiles/content.md -> build\client\llms.mdx\docs\pro…  
+│ Prerender (resource): /llms.mdx/docs/protocol/declared-capability-profiles/content.md -> build\client\llms.mdx\docs…
+│ Prerender (data): /protocol/endpoint-identity -> build\client\protocol\endpoint-identity.data53
+│ Prerender (resource): /llms.mdx/docs/protocol/capability-taxonomy/content.md -> build\client\llms.mdx\docs\protocol…  
+│ Prerender (data): /protocol/declared-capability-profiles -> build\client\protocol\declared-capability-profiles.data   
+│ Prerender (html): /protocol/declared-capability-profiles -> build\client\protocol\declared-capability-profiles\inde…  
+│ Prerender (data): /llms.mdx/docs/protocol/declared-capability-profiles/content.md -> build\client\llms.mdx\docs\pro…  
+│ Prerender (resource): /llms.mdx/docs/protocol/declared-capability-profiles/content.md -> build\client\llms.mdx\docs…  
+│ Prerender (data): /protocol/endpoint-identity -> build\client\protocol\endpoint-identity.data
+│ Prerender (html): /protocol/endpoint-identity -> build\client\protocol\endpoint-identity\index.html
+│ Prerender (data): /llms.mdx/docs/protocol/endpoint-identity/content.md -> build\client\llms.mdx\docs\protocol\endpo…  
+│ Prerender (resource): /llms.mdx/docs/protocol/endpoint-identity/content.md -> build\client\llms.mdx\docs\protocol\e…  
+│ Prerender (data): /protocol/observed-performance-profiles -> build\client\protocol\observed-performance-profiles.da…7
+│ Prerender (resource): /llms.mdx/docs/protocol/declared-capability-profiles/content.md -> build\client\llms.mdx\docs…  
+│ Prerender (data): /protocol/endpoint-identity -> build\client\protocol\endpoint-identity.data
+│ Prerender (html): /protocol/endpoint-identity -> build\client\protocol\endpoint-identity\index.html
+│ Prerender (data): /llms.mdx/docs/protocol/endpoint-identity/content.md -> build\client\llms.mdx\docs\protocol\endpo…  
+│ Prerender (resource): /llms.mdx/docs/protocol/endpoint-identity/content.md -> build\client\llms.mdx\docs\protocol\e…  
+│ Prerender (data): /protocol/observed-performance-profiles -> build\client\protocol\observed-performance-profiles.da…
+│ Prerender (html): /protocol/observed-performance-profiles -> build\client\protocol\observed-performance-profiles\in…
+│ Prerender (data): /llms.mdx/docs/protocol/observed-performance-profiles/content.md -> build\client\llms.mdx\docs\pr…
+│ Prerender (resource): /llms.mdx/docs/protocol/observed-performance-profiles/content.md -> build\client\llms.mdx\doc…
+│ Prerender (data): /protocol/roles-and-tasks -> build\client\protocol\roles-and-tasks.data61
+│ Prerender (resource): /llms.mdx/docs/protocol/endpoint-identity/content.md -> build\client\llms.mdx\docs\protocol\e…  
+│ Prerender (data): /protocol/observed-performance-profiles -> build\client\protocol\observed-performance-profiles.da…
+│ Prerender (html): /protocol/observed-performance-profiles -> build\client\protocol\observed-performance-profiles\in…
+│ Prerender (data): /llms.mdx/docs/protocol/observed-performance-profiles/content.md -> build\client\llms.mdx\docs\pr…
+│ Prerender (resource): /llms.mdx/docs/protocol/observed-performance-profiles/content.md -> build\client\llms.mdx\doc…
+│ Prerender (data): /protocol/roles-and-tasks -> build\client\protocol\roles-and-tasks.data
+│ Prerender (html): /protocol/roles-and-tasks -> build\client\protocol\roles-and-tasks\index.html
+│ Prerender (data): /llms.mdx/docs/protocol/roles-and-tasks/content.md -> build\client\llms.mdx\docs\protocol\roles-a…  
+│ Prerender (resource): /llms.mdx/docs/protocol/roles-and-tasks/content.md -> build\client\llms.mdx\docs\protocol\rol…  
+│ Prerender (data): /protocol/router-decision-artifact -> build\client\protocol\router-decision-artifact.data5
+│ Prerender (resource): /llms.mdx/docs/protocol/observed-performance-profiles/content.md -> build\client\llms.mdx\doc…
+│ Prerender (data): /protocol/roles-and-tasks -> build\client\protocol\roles-and-tasks.data
+│ Prerender (html): /protocol/roles-and-tasks -> build\client\protocol\roles-and-tasks\index.html
+│ Prerender (data): /llms.mdx/docs/protocol/roles-and-tasks/content.md -> build\client\llms.mdx\docs\protocol\roles-a…  
+│ Prerender (resource): /llms.mdx/docs/protocol/roles-and-tasks/content.md -> build\client\llms.mdx\docs\protocol\rol…  
+│ Prerender (data): /protocol/router-decision-artifact -> build\client\protocol\router-decision-artifact.data
+│ Prerender (html): /protocol/router-decision-artifact -> build\client\protocol\router-decision-artifact\index.html     
+│ Prerender (data): /llms.mdx/docs/protocol/router-decision-artifact/content.md -> build\client\llms.mdx\docs\protoco…  
+│ Prerender (resource): /llms.mdx/docs/protocol/router-decision-artifact/content.md -> build\client\llms.mdx\docs\pro…  
+│ Prerender (data): /protocol/routing-policy -> build\client\protocol\routing-policy.data8
+│ Prerender (data): /llms.mdx/docs/protocol/roles-and-tasks/content.md -> build\client\llms.mdx\docs\protocol\roles-a…  
+│ Prerender (resource): /llms.mdx/docs/protocol/roles-and-tasks/content.md -> build\client\llms.mdx\docs\protocol\rol…
+│ Prerender (data): /protocol/router-decision-artifact -> build\client\protocol\router-decision-artifact.data
+│ Prerender (html): /protocol/router-decision-artifact -> build\client\protocol\router-decision-artifact\index.html     
+│ Prerender (data): /llms.mdx/docs/protocol/router-decision-artifact/content.md -> build\client\llms.mdx\docs\protoco…  
+│ Prerender (resource): /llms.mdx/docs/protocol/router-decision-artifact/content.md -> build\client\llms.mdx\docs\pro…
+│ Prerender (data): /protocol/routing-policy -> build\client\protocol\routing-policy.data
+│ Prerender (html): /protocol/routing-policy -> build\client\protocol\routing-policy\index.html
+│ Prerender (data): /llms.mdx/docs/protocol/routing-policy/content.md -> build\client\llms.mdx\docs\protocol\routing-…  
+│ Prerender (resource): /llms.mdx/docs/protocol/routing-policy/content.md -> build\client\llms.mdx\docs\protocol\rout…70
+│ Prerender (data): /protocol/router-decision-artifact -> build\client\protocol\router-decision-artifact.data
+│ Prerender (html): /protocol/router-decision-artifact -> build\client\protocol\router-decision-artifact\index.html     
+│ Prerender (data): /llms.mdx/docs/protocol/router-decision-artifact/content.md -> build\client\llms.mdx\docs\protoco…
+│ Prerender (resource): /llms.mdx/docs/protocol/router-decision-artifact/content.md -> build\client\llms.mdx\docs\pro…
+│ Prerender (data): /protocol/routing-policy -> build\client\protocol\routing-policy.data
+│ Prerender (html): /protocol/routing-policy -> build\client\protocol\routing-policy\index.html
+│ Prerender (data): /llms.mdx/docs/protocol/routing-policy/content.md -> build\client\llms.mdx\docs\protocol\routing-…
+│ Prerender (resource): /llms.mdx/docs/protocol/routing-policy/content.md -> build\client\llms.mdx\docs\protocol\rout…
+│ Prerender (data): /protocol/trace-and-usage-artifacts -> build\client\protocol\trace-and-usage-artifacts.data
+│ Prerender (html): /protocol/trace-and-usage-artifacts -> build\client\protocol\trace-and-usage-artifacts\index.html   4
+│ Prerender (data): /protocol/routing-policy -> build\client\protocol\routing-policy.data
+│ Prerender (html): /protocol/routing-policy -> build\client\protocol\routing-policy\index.html
+│ Prerender (data): /llms.mdx/docs/protocol/routing-policy/content.md -> build\client\llms.mdx\docs\protocol\routing-…  
+│ Prerender (resource): /llms.mdx/docs/protocol/routing-policy/content.md -> build\client\llms.mdx\docs\protocol\rout…  
+│ Prerender (data): /protocol/trace-and-usage-artifacts -> build\client\protocol\trace-and-usage-artifacts.data
+│ Prerender (html): /protocol/trace-and-usage-artifacts -> build\client\protocol\trace-and-usage-artifacts\index.html   
+│ Prerender (data): /llms.mdx/docs/protocol/trace-and-usage-artifacts/content.md -> build\client\llms.mdx\docs\protoc…  
+│ Prerender (resource): /llms.mdx/docs/protocol/trace-and-usage-artifacts/content.md -> build\client\llms.mdx\docs\pr…  
+│ Prerender (data): /concepts/how-role-model-works -> build\client\concepts\how-role-model-works.data
+│ Prerender (html): /concepts/how-role-model-works -> build\client\concepts\how-role-model-works\index.html8
+│ Prerender (data): /protocol/trace-and-usage-artifacts -> build\client\protocol\trace-and-usage-artifacts.data
+│ Prerender (html): /protocol/trace-and-usage-artifacts -> build\client\protocol\trace-and-usage-artifacts\index.html   
+│ Prerender (data): /llms.mdx/docs/protocol/trace-and-usage-artifacts/content.md -> build\client\llms.mdx\docs\protoc…  
+│ Prerender (resource): /llms.mdx/docs/protocol/trace-and-usage-artifacts/content.md -> build\client\llms.mdx\docs\pr…  
+│ Prerender (data): /concepts/how-role-model-works -> build\client\concepts\how-role-model-works.data
+│ Prerender (html): /concepts/how-role-model-works -> build\client\concepts\how-role-model-works\index.html
+│ Prerender (data): /llms.mdx/docs/concepts/how-role-model-works/content.md -> build\client\llms.mdx\docs\concepts\ho…  
+│ Prerender (resource): /llms.mdx/docs/concepts/how-role-model-works/content.md -> build\client\llms.mdx\docs\concept…  
+│ Prerender (data): /concepts/protocol-overview -> build\client\concepts\protocol-overview.data
+│ Prerender (html): /concepts/protocol-overview -> build\client\concepts\protocol-overview\index.html82
+│ Prerender (data): /concepts/how-role-model-works -> build\client\concepts\how-role-model-works.data
+│ Prerender (html): /concepts/how-role-model-works -> build\client\concepts\how-role-model-works\index.html
+│ Prerender (data): /llms.mdx/docs/concepts/how-role-model-works/content.md -> build\client\llms.mdx\docs\concepts\ho…  
+│ Prerender (resource): /llms.mdx/docs/concepts/how-role-model-works/content.md -> build\client\llms.mdx\docs\concept…  
+│ Prerender (data): /concepts/protocol-overview -> build\client\concepts\protocol-overview.data
+│ Prerender (html): /concepts/protocol-overview -> build\client\concepts\protocol-overview\index.html
+│ Prerender (data): /llms.mdx/docs/concepts/protocol-overview/content.md -> build\client\llms.mdx\docs\concepts\proto…  
+│ Prerender (resource): /llms.mdx/docs/concepts/protocol-overview/content.md -> build\client\llms.mdx\docs\concepts\p…  
+│ Prerender (data): /concepts/routing-overview -> build\client\concepts\routing-overview.data
+│ Prerender (html): /concepts/routing-overview -> build\client\concepts\routing-overview\index.html6
+│ Prerender (data): /concepts/protocol-overview -> build\client\concepts\protocol-overview.data
+│ Prerender (html): /concepts/protocol-overview -> build\client\concepts\protocol-overview\index.html
+│ Prerender (data): /llms.mdx/docs/concepts/protocol-overview/content.md -> build\client\llms.mdx\docs\concepts\proto…  
+│ Prerender (resource): /llms.mdx/docs/concepts/protocol-overview/content.md -> build\client\llms.mdx\docs\concepts\p…  
+│ Prerender (data): /concepts/routing-overview -> build\client\concepts\routing-overview.data
+│ Prerender (html): /concepts/routing-overview -> build\client\concepts\routing-overview\index.html
+│ Prerender (data): /llms.mdx/docs/concepts/routing-overview/content.md -> build\client\llms.mdx\docs\concepts\routin…  
+│ Prerender (resource): /llms.mdx/docs/concepts/routing-overview/content.md -> build\client\llms.mdx\docs\concepts\ro…  
+│ Prerender (html): SPA Fallback -> build\client\__spa-fallback.html
+│ Removing the server build in D:\DEV\role-model\.worktrees\16-router-runtime-unified-telemetry-dashboard\apps\docs-s…  90
+│ Prerender (data): /concepts/routing-overview -> build\client\concepts\routing-overview.data
+│ Prerender (html): /concepts/routing-overview -> build\client\concepts\routing-overview\index.html
+│ Prerender (data): /llms.mdx/docs/concepts/routing-overview/content.md -> build\client\llms.mdx\docs\concepts\routin…  
+│ Prerender (resource): /llms.mdx/docs/concepts/routing-overview/content.md -> build\client\llms.mdx\docs\concepts\ro…  
+│ Prerender (html): SPA Fallback -> build\client\__spa-fallback.html
+│ Removing the server build in D:\DEV\role-model\.worktrees\16-router-runtime-unified-telemetry-dashboard\apps\docs-s…  
+│ computing gzip size...
+│ build/server/.vite/manifest.json                                      22.26 kB │ gzip:   2.56 kB
+│ build/server/assets/server-build-CNvk1vRb.css                         80.04 kB │ gzip:  13.34 kB
+│ build/server/assets/docs-Bl0T_FTc.js                                   0.19 kB │ gzip:   0.15 kB225
+│ build/server/assets/reason-codes-and-rejection-taxonomy-iTjSXrLS.js    0.22 kB │ gzip:   0.16 kB
+│ build/server/assets/remove-undefined-CTqT55E9-oIPVhBHb.js              0.59 kB │ gzip:   0.35 kB
+│ build/server/assets/fetch-DE5Nh-Qu.js                                  0.89 kB │ gzip:   0.51 kB
+│ build/server/assets/chunk-CYJPkc-J-IGWETYPM.js                         1.25 kB │ gzip:   0.65 kB
+│ build/server/assets/chunk-BGC-wIje.js                                  1.40 kB │ gzip:   0.66 kB
+│ build/server/assets/algolia-BXYYfEDP.js                                1.55 kB │ gzip:   0.78 kB
+│ build/server/assets/search-vJisGSBL.js                                 2.15 kB │ gzip:   0.94 kB
+│ build/server/assets/search-default-DK1IMkWK.js                         2.18 kB │ gzip:   0.90 kB
+│ build/server/assets/orama-cloud-legacy-aV4Y0o4r.js                     2.28 kB │ gzip:   0.91 kB
+│ build/server/assets/orama-cloud-CCxphydY.js                            2.33 kB │ gzip:   0.93 kB58
+│ build/server/assets/canonical-schemas-reference-CRfsN2V6.js           22.25 kB │ gzip:   3.13 kB
+│ build/server/assets/reason-codes-and-rejection-taxonomy-BZpiTwcX.js   22.27 kB │ gzip:   3.06 kB
+│ build/server/assets/roles-and-tasks-CrNNiOVe.js                       23.03 kB │ gzip:   3.53 kB
+│ build/server/assets/observed-performance-profiles-D0tdwPD7.js         23.75 kB │ gzip:   3.48 kB
+│ build/server/assets/docs-BxW1VF8q.js                                  23.92 kB │ gzip:   3.68 kB
+│ build/server/assets/endpoint-identity-D5sZp9UV.js                     27.39 kB │ gzip:   3.79 kB
+│ build/server/index.js                                                357.53 kB │ gzip:  85.91 kB
+│ build/server/assets/remark-DmD561_2.js                               383.60 kB │ gzip:  81.28 kB
+│ build/server/assets/search-BNUFOevQ.js                               509.64 kB │ gzip: 122.51 kB
+│ ✓ built in 2.16s│ ✓ 1693 modules transformed.
+└─ Running...
+role-model-router/packages/bench-core build$ tsc -p tsconfig.json
+└─ Done in 1.1s
+role-model-router/packages/bench-judge build$ tsc -p tsconfig.json
+└─ Done in 1s
+role-model-router/packages/catalog build$ tsc -p tsconfig.json
+└─ Done in 1.5s
+.../packages/process-supervisor build$ tsc -p tsconfig.json
+└─ Done in 1.6s
+role-model-router/packages/roles build$ tsc -p tsconfig.json
+└─ Done in 1.3s
+role-model-router/packages/runtime-web build$ tsc -p tsconfig.json
+└─ Done in 1.1s
+role-model-router/packages/tasks build$ tsc -p tsconfig.json
+└─ Done in 1.1s
+role-model-router/packages/tool-registry build$ tsc -p tsconfig.json
+└─ Done in 1.3s
+.../packages/vendor-abstraction build$ tsc -p tsconfig.json
+└─ Done in 1.2s
+│ rendering chunks...
+└─ Running...
+role-model-router/packages/bench-core build$ tsc -p tsconfig.json
+└─ Done in 1.1s
+role-model-router/packages/bench-judge build$ tsc -p tsconfig.json
+└─ Done in 1s
+role-model-router/packages/catalog build$ tsc -p tsconfig.json
+└─ Done in 1.5s
+.../packages/process-supervisor build$ tsc -p tsconfig.json
+└─ Done in 1.6s
+role-model-router/packages/roles build$ tsc -p tsconfig.json
+└─ Done in 1.3s
+role-model-router/packages/runtime-web build$ tsc -p tsconfig.json
+└─ Done in 1.1s
+role-model-router/packages/tasks build$ tsc -p tsconfig.json
+└─ Done in 1.1s
+role-model-router/packages/tool-registry build$ tsc -p tsconfig.json
+└─ Done in 1.3s
+.../packages/vendor-abstraction build$ tsc -p tsconfig.json
+└─ Done in 1.2s
+60
+│ build/server/assets/roles-and-tasks-CrNNiOVe.js                       23.03 kB │ gzip:   3.53 kB
+│ build/server/assets/observed-performance-profiles-D0tdwPD7.js         23.75 kB │ gzip:   3.48 kB
+│ build/server/assets/docs-BxW1VF8q.js                                  23.92 kB │ gzip:   3.68 kB
+│ build/server/assets/endpoint-identity-D5sZp9UV.js                     27.39 kB │ gzip:   3.79 kB
+│ build/server/index.js                                                357.53 kB │ gzip:  85.91 kB
+│ build/server/assets/remark-DmD561_2.js                               383.60 kB │ gzip:  81.28 kB
+│ build/server/assets/search-BNUFOevQ.js                               509.64 kB │ gzip: 122.51 kB
+│ ✓ built in 2.16s
+│ npm warn Unknown env config "recursive". This will stop working in the next major version of npm.
+│ npm warn Unknown env config "verify-deps-before-run". This will stop working in the next major version of npm.pm run types:check1
+│ build/server/assets/observed-performance-profiles-D0tdwPD7.js         23.75 kB │ gzip:   3.48 kB
+│ build/server/assets/docs-BxW1VF8q.js                                  23.92 kB │ gzip:   3.68 kB
+│ build/server/assets/endpoint-identity-D5sZp9UV.js                     27.39 kB │ gzip:   3.79 kB
+│ build/server/index.js                                                357.53 kB │ gzip:  85.91 kB
+│ build/server/assets/remark-DmD561_2.js                               383.60 kB │ gzip:  81.28 kB
+│ build/server/assets/search-BNUFOevQ.js                               509.64 kB │ gzip: 122.51 kB
+│ ✓ built in 2.16s
+│ npm warn Unknown env config "recursive". This will stop working in the next major version of npm.
+│ npm warn Unknown env config "verify-deps-before-run". This will stop working in the next major version of npm.
+│ > types:check2
+│ build/server/assets/docs-BxW1VF8q.js                                  23.92 kB │ gzip:   3.68 kB
+│ build/server/assets/endpoint-identity-D5sZp9UV.js                     27.39 kB │ gzip:   3.79 kB
+│ build/server/index.js                                                357.53 kB │ gzip:  85.91 kB
+│ build/server/assets/remark-DmD561_2.js                               383.60 kB │ gzip:  81.28 kB
+│ build/server/assets/search-BNUFOevQ.js                               509.64 kB │ gzip: 122.51 kB
+│ ✓ built in 2.16s
+│ npm warn Unknown env config "recursive". This will stop working in the next major version of npm.
+│ npm warn Unknown env config "verify-deps-before-run". This will stop working in the next major version of npm.
+│ > types:check
+│ > react-router typegen && fumadocs-mdx && tsc --noEmit│ computing gzip size...
+└─ Running...
+role-model-router/packages/bench-core build$ tsc -p tsconfig.json
+└─ Done in 1.1s
+role-model-router/packages/bench-judge build$ tsc -p tsconfig.json
+└─ Done in 1s
+role-model-router/packages/catalog build$ tsc -p tsconfig.json
+└─ Done in 1.5s
+.../packages/process-supervisor build$ tsc -p tsconfig.json
+└─ Done in 1.6s
+role-model-router/packages/roles build$ tsc -p tsconfig.json
+└─ Done in 1.3s
+role-model-router/packages/runtime-web build$ tsc -p tsconfig.json
+└─ Done in 1.1s
+role-model-router/packages/tasks build$ tsc -p tsconfig.json
+└─ Done in 1.1s
+role-model-router/packages/tool-registry build$ tsc -p tsconfig.json
+└─ Done in 1.3s
+.../packages/vendor-abstraction build$ tsc -p tsconfig.json
+└─ Done in 1.2s
+│ build/client/.vite/manifest.json 11.42 kB │ gzip:  1.24 kB
+└─ Running...
+role-model-router/packages/bench-core build$ tsc -p tsconfig.json
+└─ Done in 1.1s
+role-model-router/packages/bench-judge build$ tsc -p tsconfig.json
+└─ Done in 1s
+role-model-router/packages/catalog build$ tsc -p tsconfig.json
+└─ Done in 1.5s
+.../packages/process-supervisor build$ tsc -p tsconfig.json
+└─ Done in 1.6s
+role-model-router/packages/roles build$ tsc -p tsconfig.json
+└─ Done in 1.3s
+role-model-router/packages/runtime-web build$ tsc -p tsconfig.json
+└─ Done in 1.1s
+role-model-router/packages/tasks build$ tsc -p tsconfig.json
+└─ Done in 1.1s
+role-model-router/packages/tool-registry build$ tsc -p tsconfig.json
+└─ Done in 1.3s
+.../packages/vendor-abstraction build$ tsc -p tsconfig.json
+└─ Done in 1.2s
+│ build/client/assets/root-DBt9uJoE.css                     23.90 kB │ gzip:  5.27 kB
+└─ Running...                                                                                                           
+role-model-router/packages/bench-core build$ tsc -p tsconfig.json
+└─ Done in 1.1s                                                                                                         
+role-model-router/packages/bench-judge build$ tsc -p tsconfig.json
+└─ Done in 1s                                                                                                           
+role-model-router/packages/catalog build$ tsc -p tsconfig.json
+└─ Done in 1.5s                                                                                                         
+.../packages/process-supervisor build$ tsc -p tsconfig.json
+└─ Done in 1.6s                                                                                                         
+role-model-router/packages/roles build$ tsc -p tsconfig.json
+└─ Done in 1.3s                                                                                                         
+role-model-router/packages/runtime-web build$ tsc -p tsconfig.json
+└─ Done in 1.1s                                                                                                         
+role-model-router/packages/tasks build$ tsc -p tsconfig.json
+└─ Done in 1.1s                                                                                                         
+role-model-router/packages/tool-registry build$ tsc -p tsconfig.json
+└─ Done in 1.3s                                                                                                         
+.../packages/vendor-abstraction build$ tsc -p tsconfig.json
+└─ Done in 1.2s
+│ build/client/assets/index-fSI7bfiY.js                      0.15 kB │ gzip:  0.15 kB
+└─ Running...                                                                                                           
+role-model-router/packages/bench-core build$ tsc -p tsconfig.json
+└─ Done in 1.1s                                                                                                         
+role-model-router/packages/bench-judge build$ tsc -p tsconfig.json
+└─ Done in 1s                                                                                                           
+role-model-router/packages/catalog build$ tsc -p tsconfig.json
+└─ Done in 1.5s                                                                                                         
+.../packages/process-supervisor build$ tsc -p tsconfig.json
+└─ Done in 1.6s                                                                                                         
+role-model-router/packages/roles build$ tsc -p tsconfig.json
+└─ Done in 1.3s                                                                                                         
+role-model-router/packages/runtime-web build$ tsc -p tsconfig.json
+└─ Done in 1.1s                                                                                                         
+role-model-router/packages/tasks build$ tsc -p tsconfig.json
+└─ Done in 1.1s                                                                                                         
+role-model-router/packages/tool-registry build$ tsc -p tsconfig.json
+└─ Done in 1.3s                                                                                                         
+.../packages/vendor-abstraction build$ tsc -p tsconfig.json
+└─ Done in 1.2s
+│ build/client/assets/not-found-BRERaRMo.js                  0.72 kB │ gzip:  0.46 kB
+└─ Running...                                                                                                           
+role-model-router/packages/bench-core build$ tsc -p tsconfig.json
+└─ Done in 1.1s                                                                                                         
+role-model-router/packages/bench-judge build$ tsc -p tsconfig.json
+└─ Done in 1s                                                                                                           
+role-model-router/packages/catalog build$ tsc -p tsconfig.json
+└─ Done in 1.5s                                                                                                         
+.../packages/process-supervisor build$ tsc -p tsconfig.json
+└─ Done in 1.6s                                                                                                         
+role-model-router/packages/roles build$ tsc -p tsconfig.json
+└─ Done in 1.3s                                                                                                         
+role-model-router/packages/runtime-web build$ tsc -p tsconfig.json
+└─ Done in 1.1s                                                                                                         
+role-model-router/packages/tasks build$ tsc -p tsconfig.json
+└─ Done in 1.1s                                                                                                         
+role-model-router/packages/tool-registry build$ tsc -p tsconfig.json
+└─ Done in 1.3s                                                                                                         
+.../packages/vendor-abstraction build$ tsc -p tsconfig.json
+└─ Done in 1.2s
+│ build/client/assets/root-BFKTGj51.js                       1.70 kB │ gzip:  0.86 kB
+└─ Running...                                                                                                           
+role-model-router/packages/bench-core build$ tsc -p tsconfig.json
+└─ Done in 1.1s                                                                                                         
+role-model-router/packages/bench-judge build$ tsc -p tsconfig.json
+└─ Done in 1s                                                                                                           
+role-model-router/packages/catalog build$ tsc -p tsconfig.json
+└─ Done in 1.5s                                                                                                         
+.../packages/process-supervisor build$ tsc -p tsconfig.json
+└─ Done in 1.6s                                                                                                         
+role-model-router/packages/roles build$ tsc -p tsconfig.json
+└─ Done in 1.3s                                                                                                         
+role-model-router/packages/runtime-web build$ tsc -p tsconfig.json
+└─ Done in 1.1s                                                                                                         
+role-model-router/packages/tasks build$ tsc -p tsconfig.json
+└─ Done in 1.1s                                                                                                         
+role-model-router/packages/tool-registry build$ tsc -p tsconfig.json
+└─ Done in 1.3s                                                                                                         
+.../packages/vendor-abstraction build$ tsc -p tsconfig.json
+└─ Done in 1.2s
+[1 lines collapsed]                                                                                                     │ build/client/assets/observe-logs-BwoDioab.js               2.61 kB │ gzip:  1.12 kB
+└─ Running...                                                                                                           
+role-model-router/packages/bench-core build$ tsc -p tsconfig.json
+└─ Done in 1.1s                                                                                                         
+role-model-router/packages/bench-judge build$ tsc -p tsconfig.json
+└─ Done in 1s                                                                                                           
+role-model-router/packages/catalog build$ tsc -p tsconfig.json
+└─ Done in 1.5s                                                                                                         
+.../packages/process-supervisor build$ tsc -p tsconfig.json
+└─ Done in 1.6s                                                                                                         
+role-model-router/packages/roles build$ tsc -p tsconfig.json
+└─ Done in 1.3s                                                                                                         
+role-model-router/packages/runtime-web build$ tsc -p tsconfig.json
+└─ Done in 1.1s                                                                                                         
+role-model-router/packages/tasks build$ tsc -p tsconfig.json
+└─ Done in 1.1s                                                                                                         
+role-model-router/packages/tool-registry build$ tsc -p tsconfig.json
+└─ Done in 1.3s                                                                                                         
+.../packages/vendor-abstraction build$ tsc -p tsconfig.json
+└─ Done in 1.2s
+4
+│ computing gzip size...                                                                                                
+│ build/client/.vite/manifest.json                          11.42 kB │ gzip:  1.24 kB                                   
+│ build/client/assets/root-DBt9uJoE.css                     23.90 kB │ gzip:  5.27 kB
+│ build/client/assets/index-fSI7bfiY.js                      0.15 kB │ gzip:  0.15 kB
+│ build/client/assets/not-found-BRERaRMo.js                  0.72 kB │ gzip:  0.46 kB
+│ build/client/assets/root-BFKTGj51.js                       1.70 kB │ gzip:  0.86 kB
+│ build/client/assets/observe-logs-BwoDioab.js               2.61 kB │ gzip:  1.12 kB
+│ build/client/assets/page-primitives-CahfuxiV.js            3.04 kB │ gzip:  0.99 kB
+│ build/client/assets/control-runtime-config-CX5-AjvZ.js     3.25 kB │ gzip:  1.49 kB
+│ build/client/assets/requests-D84yl8By.js                   3.61 kB │ gzip:  1.47 kB[28 lines collapsed]
+│ build/client/assets/runtime-DpvkJcUC.js  6.14 kB │ gzip:  1.85 kB
+│ build/client/assets/studio-audio-DpuMhvRs.js  6.77 kB │ gzip:  2.40 kB
+│ build/client/assets/control-models-a22Dsnhl.js  7.77 kB │ gzip:  2.30 kB
+│ build/client/assets/view-models-G785LAOr.js  8.23 kB │ gzip:  2.92 kB
+│ build/client/assets/request-detail-d-MPjvRD.js  9.65 kB │ gzip:  3.18 kB
+│ build/client/assets/accounts-CCW2J98M.js 12.93 kB │ gzip:  3.95 kB
+│ build/client/assets/design-system-1hIZLPzG.js 44.48 kB │ gzip: 14.58 kB
+│ build/client/assets/chunk-EVOBXE3Y-Bpr6kgtK.js127.79 kB │ gzip: 43.05 kB
+│ build/client/assets/entry.client-BBdlfaFT.js190.57 kB │ gzip: 60.05 kB
+│ ✓ built in 7.39s9
+│ build/client/assets/studio-audio-DpuMhvRs.js  6.77 kB │ gzip:  2.40 kB
+│ build/client/assets/control-models-a22Dsnhl.js  7.77 kB │ gzip:  2.30 kB
+│ build/client/assets/view-models-G785LAOr.js  8.23 kB │ gzip:  2.92 kB
+│ build/client/assets/request-detail-d-MPjvRD.js  9.65 kB │ gzip:  3.18 kB
+│ build/client/assets/accounts-CCW2J98M.js 12.93 kB │ gzip:  3.95 kB
+│ build/client/assets/design-system-1hIZLPzG.js 44.48 kB │ gzip: 14.58 kB
+│ build/client/assets/chunk-EVOBXE3Y-Bpr6kgtK.js127.79 kB │ gzip: 43.05 kB
+│ build/client/assets/entry.client-BBdlfaFT.js190.57 kB │ gzip: 60.05 kB
+│ ✓ built in 7.39s
+│ vite v7.3.2 building ssr environment for production...30
+│ build/client/assets/control-models-a22Dsnhl.js  7.77 kB │ gzip:  2.30 kB
+│ build/client/assets/view-models-G785LAOr.js  8.23 kB │ gzip:  2.92 kB
+│ build/client/assets/request-detail-d-MPjvRD.js  9.65 kB │ gzip:  3.18 kB
+│ build/client/assets/accounts-CCW2J98M.js 12.93 kB │ gzip:  3.95 kB
+│ build/client/assets/design-system-1hIZLPzG.js 44.48 kB │ gzip: 14.58 kB
+│ build/client/assets/chunk-EVOBXE3Y-Bpr6kgtK.js127.79 kB │ gzip: 43.05 kB
+│ build/client/assets/entry.client-BBdlfaFT.js190.57 kB │ gzip: 60.05 kB
+│ ✓ built in 7.39s
+│ vite v7.3.2 building ssr environment for production...
+│ transforming...1
+│ build/client/assets/view-models-G785LAOr.js  8.23 kB │ gzip:  2.92 kB
+│ build/client/assets/request-detail-d-MPjvRD.js  9.65 kB │ gzip:  3.18 kB
+│ build/client/assets/accounts-CCW2J98M.js 12.93 kB │ gzip:  3.95 kB
+│ build/client/assets/design-system-1hIZLPzG.js 44.48 kB │ gzip: 14.58 kB
+│ build/client/assets/chunk-EVOBXE3Y-Bpr6kgtK.js127.79 kB │ gzip: 43.05 kB
+│ build/client/assets/entry.client-BBdlfaFT.js190.57 kB │ gzip: 60.05 kB
+│ ✓ built in 7.39s
+│ vite v7.3.2 building ssr environment for production...
+│ transforming...
+│ ✓ 9 modules transformed.5
+│ build/client/assets/chunk-EVOBXE3Y-Bpr6kgtK.js127.79 kB │ gzip: 43.05 kB
+│ build/client/assets/entry.client-BBdlfaFT.js190.57 kB │ gzip: 60.05 kB
+│ ✓ built in 7.39s
+│ vite v7.3.2 building ssr environment for production...
+│ transforming...
+│ ✓ 9 modules transformed.
+│ rendering chunks...
+│ build/server/.vite/manifest.json 0.23 kB
+│ build/server/assets/server-build-DFmnIie6.css  35.89 kB
+│ build/server/index.js30.63 kB7
+│ ✓ built in 7.39s
+│ vite v7.3.2 building ssr environment for production...
+│ transforming...
+│ ✓ 9 modules transformed.
+│ rendering chunks...
+│ build/server/.vite/manifest.json 0.23 kB
+│ build/server/assets/server-build-DFmnIie6.css  35.89 kB
+│ build/server/index.js30.63 kB
+│ ✓ 1 asset cleaned from React Router server build.
+│ build\server\assets\server-build-DFmnIie6.css8
+│ vite v7.3.2 building ssr environment for production...
+│ transforming...
+│ ✓ 9 modules transformed.
+│ rendering chunks...
+│ build/server/.vite/manifest.json 0.23 kB
+│ build/server/assets/server-build-DFmnIie6.css  35.89 kB
+│ build/server/index.js30.63 kB
+│ ✓ 1 asset cleaned from React Router server build.
+│ build\server\assets\server-build-DFmnIie6.css
+│ SPA Mode: Generated build\client\index.html40
+│ ✓ 9 modules transformed.
+│ rendering chunks...
+│ build/server/.vite/manifest.json 0.23 kB
+│ build/server/assets/server-build-DFmnIie6.css  35.89 kB
+│ build/server/index.js30.63 kB
+│ ✓ 1 asset cleaned from React Router server build.
+│ build\server\assets\server-build-DFmnIie6.css
+│ SPA Mode: Generated build\client\index.html
+│ Removing the server build in D:\DEV\role-model\.worktrees\16-router-runtime-unified-telemetry-dashboard\role-model-…  
+│ ✓ built in 302ms3
+│ build/server/assets/endpoint-identity-D5sZp9UV.js                     27.39 kB │ gzip:   3.79 kB
+│ build/server/index.js                                                357.53 kB │ gzip:  85.91 kB
+│ build/server/assets/remark-DmD561_2.js                               383.60 kB │ gzip:  81.28 kB
+│ build/server/assets/search-BNUFOevQ.js                               509.64 kB │ gzip: 122.51 kB
+│ ✓ built in 2.16s
+│ npm warn Unknown env config "recursive". This will stop working in the next major version of npm.
+│ npm warn Unknown env config "verify-deps-before-run". This will stop working in the next major version of npm.
+│ > types:check
+│ > react-router typegen && fumadocs-mdx && tsc --noEmit
+│ [MDX] generated files in 3.5893999999998414ms4
+│ build/server/index.js                                                357.53 kB │ gzip:  85.91 kB
+│ build/server/assets/remark-DmD561_2.js                               383.60 kB │ gzip:  81.28 kB
+│ build/server/assets/search-BNUFOevQ.js                               509.64 kB │ gzip: 122.51 kB
+│ ✓ built in 2.16s
+│ npm warn Unknown env config "recursive". This will stop working in the next major version of npm.
+│ npm warn Unknown env config "verify-deps-before-run". This will stop working in the next major version of npm.
+│ > types:check
+│ > react-router typegen && fumadocs-mdx && tsc --noEmit
+│ [MDX] generated files in 3.5893999999998414ms
+│ [MDX] generated files in 7.20799999999997ms└─ Done in 14.5s5
+│ build/server/assets/remark-DmD561_2.js                               383.60 kB │ gzip:  81.28 kB
+│ build/server/assets/search-BNUFOevQ.js                               509.64 kB │ gzip: 122.51 kB
+│ ✓ built in 2.16s
+│ npm warn Unknown env config "recursive". This will stop working in the next major version of npm.
+│ npm warn Unknown env config "verify-deps-before-run". This will stop working in the next major version of npm.
+│ > types:check
+│ > react-router typegen && fumadocs-mdx && tsc --noEmit
+│ [MDX] generated files in 3.5893999999998414ms
+│ [MDX] generated files in 7.20799999999997ms
+│ Materialized search index at D:\DEV\role-model\.worktrees\16-router-runtime-unified-telemetry-dashboard\apps\docs-s…└─ Done in 17.7srole-model-router/packages/core build$ tsc -p tsconfig.json
+└─ Running...
+.../packages/profile-aggregator build$ tsc -p tsconfig.json
+└─ Running...
+role-model-router/apps/bench-cli build$ tsc -p tsconfig.json
+└─ Running...
+.../packages/provider-account build$ tsc -p tsconfig.json
+└─ Running...
+└─ Done in 1.2srole-model-router/packages/trace build$ tsc -p tsconfig.json
+└─ Running...
+└─ Done in 1.3srole-model-router/packages/usage build$ tsc -p tsconfig.json
+└─ Running...
+└─ Done in 1.4s.../packages/vendor-litellm build$ tsc -p tsconfig.json
+└─ Running...
+└─ Done in 1.5s.../packages/vendor-llama-swap build$ tsc -p tsconfig.json
+└─ Running...
+└─ Done in 1.2s└─ Done in 1.2s└─ Done in 1.6s└─ Done in 1.5s
+role-model-router/packages/openai-compat build$ tsc -p tsconfig.json
+└─ Running...
+role-model-router/packages/provider-acp build$ tsc -p tsconfig.json
+└─ Running...
+role-model-router/packages/provider-cli build$ tsc -p tsconfig.json
+└─ Running...
+role-model-router/packages/provider-mcp build$ tsc -p tsconfig.json
+└─ Running...
+│ src/index.ts(11,3): error TS2322: Type '{ identity: { endpoint_id: string; endpoint_kind: "acp-endpoint"; provider_…
+└─ Running...
+role-model-router/packages/provider-cli build$ tsc -p tsconfig.json
+└─ Running...
+role-model-router/packages/provider-mcp build$ tsc -p tsconfig.json
+└─ Running...
+│   Type '{ identity: { endpoint_id: string; endpoint_kind: "acp-endpoint"; provider_kind: "provider-acp"; serving_so…
+└─ Running...
+role-model-router/packages/provider-cli build$ tsc -p tsconfig.json
+└─ Running...
+role-model-router/packages/provider-mcp build$ tsc -p tsconfig.json
+└─ Running...
+│     The types of 'identity.endpoint_kind' are incompatible between these types.
+└─ Running...                                                                                                           
+role-model-router/packages/provider-cli build$ tsc -p tsconfig.json
+└─ Running...                                                                                                           
+role-model-router/packages/provider-mcp build$ tsc -p tsconfig.json
+└─ Running...
+│       Type '"acp-endpoint"' is not assignable to type '"local_engine" | "remote_api" | "browser_engine" | "dispatch…
+└─ Running...                                                                                                           
+role-model-router/packages/provider-cli build$ tsc -p tsconfig.json
+└─ Running...                                                                                                           
+role-model-router/packages/provider-mcp build$ tsc -p tsconfig.json
+└─ Running...
+│ src/index.ts(10,3): error TS2322: Type '{ identity: { endpoint_id: string; endpoint_kind: "cli-agent"; provider_kin…
+└─ Running...                                                                                                           
+role-model-router/packages/provider-mcp build$ tsc -p tsconfig.json
+└─ Running...
+│   Type '{ identity: { endpoint_id: string; endpoint_kind: "cli-agent"; provider_kind: "provider-cli"; serving_sourc…
+└─ Running...                                                                                                           
+role-model-router/packages/provider-mcp build$ tsc -p tsconfig.json
+└─ Running...
+│     The types of 'identity.endpoint_kind' are incompatible between these types.
+└─ Running...                                                                                                           
+role-model-router/packages/provider-mcp build$ tsc -p tsconfig.json
+└─ Running...
+│       Type '"cli-agent"' is not assignable to type '"local_engine" | "remote_api" | "browser_engine" | "dispatch_ad…
+└─ Running...
+role-model-router/packages/provider-mcp build$ tsc -p tsconfig.json
+└─ Running...
+└─ Done in 1.4srole-model-router/packages/sqlite-memory build$ tsc -p tsconfig.json
+└─ Running...
+└─ Failed in 1.4s at D:\DEV\role-model\.worktrees\16-router-runtime-unified-telemetry-dashboard\role-model-router\packages\provider-acpD:\DEV\role-model\.worktrees\16-router-runtime-unified-telemetry-dashboard\role-model-router\packages\provider-acp:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @role-model-router/provider-acp@0.0.0 build: `tsc -p tsconfig.json`
+Exit status 2
+└─ Failed in 1.4s at D:\DEV\role-model\.worktrees\16-router-runtime-unified-telemetry-dashboard\role-model-router\packages\provider-cli
+└─ Done in 1.4s ELIFECYCLE  Command failed with exit code 2.
+:\Program Files\PowerShell\7\pwsh.exe___BEGIN___COMMAND_DONE_MARKER___2
+PS D:\DEV\role-model\.worktrees\16-router-runtime-unified-telemetry-dashboard>

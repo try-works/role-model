@@ -5,7 +5,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { Command } from "commander";
-import { compile } from "json-schema-to-typescript";
+import { compile, type JSONSchema } from "json-schema-to-typescript";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -27,8 +27,22 @@ const biomeExecutable = path.join(
   process.platform === "win32" ? "biome.CMD" : "biome",
 );
 
-type JsonSchema = Record<string, unknown>;
+type JsonSchema = Exclude<JSONSchema, boolean>;
 type CanonicalJsonSchema = JsonSchema & { $id: string };
+
+function isJsonObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isJsonSchema(value: unknown): value is JsonSchema {
+  return isJsonObject(value);
+}
+
+function getSchemaTitle(schema: unknown): string | null {
+  return isJsonObject(schema) && typeof schema.title === "string" && schema.title.trim().length > 0
+    ? schema.title
+    : null;
+}
 export type FixtureFamily =
   | "top-level"
   | "router"
@@ -385,17 +399,44 @@ export async function generateProtocolTypes(): Promise<void> {
     "// Do not edit by hand.",
     "",
   ];
+  const emittedTypeNames = new Set<string>();
 
   for (const { fileName, schema } of schemas) {
+    if (isJsonObject(schema.$defs)) {
+      for (const definition of Object.values(schema.$defs)) {
+        if (!isJsonSchema(definition)) {
+          continue;
+        }
+        const definitionTitle = getSchemaTitle(definition);
+        if (!definitionTitle || emittedTypeNames.has(definitionTitle)) {
+          continue;
+        }
+        blocks.push(
+          await compile(definition, definitionTitle, {
+            bannerComment: "",
+            cwd: schemaDir,
+            declareExternallyReferenced: false,
+            unreachableDefinitions: true,
+            style: { singleQuote: true },
+          }),
+        );
+        blocks.push("");
+        emittedTypeNames.add(definitionTitle);
+      }
+    }
+
+    const schemaTitle = String(schema.title);
     blocks.push(
-      await compile(schema, String(schema.title), {
+      await compile(schema, schemaTitle, {
         bannerComment: "",
         cwd: schemaDir,
         declareExternallyReferenced: false,
+        unreachableDefinitions: true,
         style: { singleQuote: true },
       }),
     );
     blocks.push("");
+    emittedTypeNames.add(schemaTitle);
     console.log(`Generated types for ${fileName}`);
   }
 
@@ -405,13 +446,14 @@ export async function generateProtocolTypes(): Promise<void> {
 
 async function formatGeneratedTypes(): Promise<void> {
   await new Promise<void>((resolve, reject) => {
+    const relativeOutputPath = path.relative(repoRoot, protocolTypesOutput);
     const command =
       process.platform === "win32"
         ? {
             file: "cmd.exe",
-            args: ["/c", biomeExecutable, "format", "--write", protocolTypesOutput],
+            args: ["/c", biomeExecutable, "format", "--write", relativeOutputPath],
           }
-        : { file: biomeExecutable, args: ["format", "--write", protocolTypesOutput] };
+        : { file: biomeExecutable, args: ["format", "--write", relativeOutputPath] };
     const child = spawn(command.file, command.args, {
       cwd: repoRoot,
       stdio: "inherit",

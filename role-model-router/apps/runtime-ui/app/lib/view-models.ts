@@ -8,6 +8,9 @@ import type {
   RuntimeProvider,
   RuntimeRequestListItem,
   RuntimeSummary,
+  RuntimeTelemetryComparisonRow,
+  RuntimeTelemetryRequestRecord,
+  RuntimeTelemetrySummary,
 } from "./runtime-api";
 
 function toTitleLabel(modelId: string): string {
@@ -63,6 +66,220 @@ export function summarizeRuntimeStats(
     { label: "Accounts", value: String(summary.accountCount) },
     { label: "Endpoints", value: String(summary.endpointCount) },
   ];
+}
+
+function formatCurrency(value: number | null | undefined, mode: "actual" | "estimate"): string {
+  if (typeof value !== "number" || value <= 0) {
+    return mode === "actual" ? "$0.0000 actual" : "$0.0000 est.";
+  }
+  return `$${value.toFixed(4)} ${mode === "actual" ? "actual" : "est."}`;
+}
+
+function formatSourceLabel(sourceType: "local" | "remote"): string {
+  return sourceType === "local" ? "Local" : "Remote";
+}
+
+function formatCountLabel(value: number, singular: string, plural = `${singular}s`): string {
+  return `${value} ${value === 1 ? singular : plural}`;
+}
+
+function summarizeCachePosture(input: {
+  readonly promptCacheSupported?: boolean;
+  readonly promptCacheRequested?: boolean;
+  readonly promptCacheUsed?: boolean;
+  readonly cachedRequestCount?: number;
+}): string {
+  if (!input.promptCacheSupported) {
+    return "Caching unavailable";
+  }
+  if (typeof input.cachedRequestCount === "number") {
+    return input.cachedRequestCount > 0
+      ? `Cache hit on ${formatCountLabel(input.cachedRequestCount, "request")}`
+      : "Cache ready, no hits";
+  }
+  if (input.promptCacheUsed) {
+    return "Cache hit";
+  }
+  if (input.promptCacheRequested) {
+    return "Cache miss";
+  }
+  return "Cache ready";
+}
+
+function summarizeStreamLabel(
+  row: Pick<
+    RuntimeTelemetryRequestRecord,
+    | "streamTextDeltaCount"
+    | "streamTextSupported"
+    | "streamToolCallDeltaCount"
+    | "streamToolCallSupported"
+    | "streamToolArgumentDeltaCount"
+    | "streamToolArgumentSupported"
+  >,
+): string {
+  const parts: string[] = [];
+  if (row.streamTextSupported && (row.streamTextDeltaCount ?? 0) > 0) {
+    parts.push(
+      `${row.streamTextDeltaCount} text${row.streamTextDeltaCount === 1 ? " delta" : " deltas"}`,
+    );
+  }
+  if (row.streamToolCallSupported && (row.streamToolCallDeltaCount ?? 0) > 0) {
+    parts.push(`${row.streamToolCallDeltaCount} tool`);
+  }
+  if (row.streamToolArgumentSupported && (row.streamToolArgumentDeltaCount ?? 0) > 0) {
+    parts.push(`${row.streamToolArgumentDeltaCount} args`);
+  }
+  if (parts.length > 0) {
+    return parts.join(" / ");
+  }
+  if (row.streamTextSupported || row.streamToolCallSupported || row.streamToolArgumentSupported) {
+    return "No stream deltas";
+  }
+  return "Streaming unavailable";
+}
+
+export function summarizeTelemetryStats(
+  summary: RuntimeTelemetrySummary,
+): Array<{ label: string; value: string; detail: string }> {
+  return [
+    {
+      label: "Requests",
+      value: String(summary.requestCount),
+      detail: `${summary.sourceBreakdown.local.requestCount} local / ${summary.sourceBreakdown.remote.requestCount} remote in the current telemetry window`,
+    },
+    {
+      label: "Failures",
+      value: String(summary.failureCount),
+      detail: `${summary.successCount} successful requests recorded`,
+    },
+    {
+      label: "Latency",
+      value: summary.p95LatencyMs !== null ? `${summary.p95LatencyMs} ms` : "n/a",
+      detail:
+        summary.averageLatencyMs !== null
+          ? `${summary.averageLatencyMs} ms average latency across structured telemetry`
+          : "Average latency not available yet",
+    },
+    {
+      label: "Tokens",
+      value: String(summary.totalTokens),
+      detail: `${summary.cachedRequestCount} cached request${summary.cachedRequestCount === 1 ? "" : "s"} and ${formatCurrency(summary.totalActualCostUsd, "actual")} cost recorded`,
+    },
+  ];
+}
+
+export function buildTelemetryComparisonCards(
+  rows: readonly RuntimeTelemetryComparisonRow[],
+): Array<{
+  endpointId: string;
+  modelId: string | null;
+  sourceLabel: string;
+  providerLabel: string;
+  cacheLabel: string;
+  reliabilityLabel: string;
+  requestCountLabel: string;
+  latencyLabel: string;
+  tokenLabel: string;
+  costLabel: string;
+  roleSummary: string;
+  statusLabel: string;
+}> {
+  return rows.map((row) => ({
+    endpointId: row.endpointId,
+    modelId: row.modelId,
+    sourceLabel: formatSourceLabel(row.sourceType),
+    providerLabel: row.providerFamily ?? row.providerKind ?? row.providerId ?? "unknown provider",
+    cacheLabel: summarizeCachePosture({
+      promptCacheSupported: row.promptCacheSupported,
+      cachedRequestCount: row.cachedRequestCount,
+    }),
+    reliabilityLabel: `${row.failureCount} failures / ${row.successCount} success${row.successCount === 1 ? "" : "es"}`,
+    requestCountLabel: `${row.requestCount} request${row.requestCount === 1 ? "" : "s"}`,
+    latencyLabel: `${row.p95LatencyMs ?? 0} ms p95 / ${row.averageLatencyMs ?? 0} ms avg`,
+    tokenLabel: `${row.totalTokens} tokens`,
+    costLabel:
+      row.totalActualCostUsd > 0
+        ? formatCurrency(row.totalActualCostUsd, "actual")
+        : formatCurrency(row.totalEstimatedCostUsd, "estimate"),
+    roleSummary: row.roleIds && row.roleIds.length > 0 ? row.roleIds.join(", ") : "No roles bound",
+    statusLabel: row.healthStatus ?? row.status ?? "unknown",
+  }));
+}
+
+export function buildTelemetryRequestRows(
+  rows: ReadonlyArray<
+    Pick<
+      RuntimeTelemetryRequestRecord,
+      | "requestId"
+      | "endpointId"
+      | "modelId"
+      | "sourceType"
+      | "createdAtMs"
+      | "latencyMs"
+      | "totalTokens"
+      | "actualCostUsd"
+      | "estimatedCostUsd"
+      | "errorClass"
+      | "statusCode"
+      | "providerFamily"
+      | "providerKind"
+      | "providerId"
+      | "finishReason"
+      | "promptCacheSupported"
+      | "promptCacheRequested"
+      | "promptCacheUsed"
+      | "streamTextDeltaCount"
+      | "streamTextSupported"
+      | "streamToolCallDeltaCount"
+      | "streamToolCallSupported"
+      | "streamToolArgumentDeltaCount"
+      | "streamToolArgumentSupported"
+    >
+  >,
+): Array<{
+  requestId: string;
+  endpointId: string;
+  modelId: string | null | undefined;
+  sourceLabel: string;
+  statusLabel: string;
+  providerFamilyLabel: string;
+  finishReasonLabel: string;
+  cacheLabel: string;
+  streamLabel: string;
+  latencyLabel: string;
+  tokenLabel: string;
+  costLabel: string;
+  createdAtLabel: string;
+}> {
+  return [...rows]
+    .sort((left, right) => right.createdAtMs - left.createdAtMs)
+    .map((row) => ({
+      requestId: row.requestId,
+      endpointId: row.endpointId,
+      modelId: row.modelId,
+      sourceLabel: formatSourceLabel(row.sourceType),
+      statusLabel: `${row.statusCode ?? 0} ${row.errorClass ?? "ok"}`,
+      providerFamilyLabel: row.providerFamily ?? row.providerKind ?? row.providerId ?? "unknown provider",
+      finishReasonLabel: row.finishReason ?? "unknown",
+      cacheLabel: summarizeCachePosture({
+        promptCacheSupported: row.promptCacheSupported,
+        promptCacheRequested: row.promptCacheRequested,
+        promptCacheUsed: row.promptCacheUsed,
+      }),
+      streamLabel: summarizeStreamLabel(row),
+      latencyLabel: row.latencyMs !== null && row.latencyMs !== undefined ? `${row.latencyMs} ms` : "n/a",
+      tokenLabel: `${row.totalTokens ?? 0} tokens`,
+      costLabel:
+        typeof row.actualCostUsd === "number" && row.actualCostUsd > 0
+          ? formatCurrency(row.actualCostUsd, "actual")
+          : formatCurrency(row.estimatedCostUsd, "estimate"),
+      createdAtLabel: new Date(row.createdAtMs).toLocaleString("en-US", {
+        month: "short",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+    }));
 }
 
 export function buildWorkbenchModelOptions(

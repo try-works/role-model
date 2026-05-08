@@ -769,6 +769,446 @@ describe("initializeSqliteMemory", () => {
     });
   });
 
+  test("flattens persisted runtime observations into canonical telemetry summary, comparison, and request rows", async () => {
+    expect(
+      typeof (
+        sqliteMemory as {
+          readRuntimeTelemetrySummary?: unknown;
+        }
+      ).readRuntimeTelemetrySummary,
+    ).toBe("function");
+    expect(
+      typeof (
+        sqliteMemory as {
+          listRuntimeTelemetryComparisonRows?: unknown;
+        }
+      ).listRuntimeTelemetryComparisonRows,
+    ).toBe("function");
+    expect(
+      typeof (
+        sqliteMemory as {
+          listRuntimeTelemetryRecords?: unknown;
+        }
+      ).listRuntimeTelemetryRecords,
+    ).toBe("function");
+
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+    const validation = await runRuntimeAdapterValidation({
+      repoRoot,
+      runtimeStateRoot,
+      scopeId: "workspace-dev",
+    });
+    const history = await readJson<{
+      byEndpointId: Record<string, Parameters<typeof createRuntimeObservationBundle>[0]["priorSamples"]>;
+    }>("testdata/router-runtime/observability-history.json");
+    const policy = await readJson<Parameters<typeof createRuntimeObservationBundle>[0]["capturePolicy"]>(
+      "testdata/router-runtime/observability-policy.json",
+    );
+
+    const baseBundle = createRuntimeObservationBundle({
+      decision: validation.decision,
+      routingDiagnostics: validation.routingDiagnostics,
+      retrievalReceipt: validation.retrievalReceipt,
+      contextEnvelope: validation.contextEnvelope,
+      execution: validation.execution,
+      priorSamples: history.byEndpointId[validation.decision.chosen_endpoint_id] ?? [],
+      maintenancePolicy: {
+        "redaction.level": "strict",
+        "retention.class": "standard",
+      },
+      capturePolicy: policy,
+    });
+
+    const remoteTimestampMs = Date.now() - 1_000;
+    const localTimestampMs = Date.now();
+
+    const remoteBundle = {
+      ...baseBundle,
+      requestId: "req-telemetry-remote-001",
+      routingDecisionId: "decision-telemetry-remote-001",
+      endpointId: "openai.personal.primary.us-east-1.fast",
+      usageEvent: {
+        ...baseBundle.usageEvent,
+        request_id: "req-telemetry-remote-001",
+        routing_decision_id: "decision-telemetry-remote-001",
+        endpoint_id: "openai.personal.primary.us-east-1.fast",
+        model_id: "openai/gpt-4.1-mini-fast",
+        provider_kind: "remote_openai_compat",
+        tokens_in: 120,
+        tokens_out: 48,
+        latency_ms: 840,
+        cost_actual: 0.0042,
+        cost_estimate: 0.0042,
+        currency: "USD",
+        error_class: undefined,
+        timestamp_ms: remoteTimestampMs,
+      },
+      observedPerformance: {
+        ...baseBundle.observedPerformance,
+        sample: {
+          ...baseBundle.observedPerformance.sample,
+          request_id: "req-telemetry-remote-001",
+          routing_decision_id: "decision-telemetry-remote-001",
+          endpoint_id: "openai.personal.primary.us-east-1.fast",
+          timestamp_ms: remoteTimestampMs,
+          latency_ms: 840,
+          latency_ms_p95: 840,
+          failure: false,
+          error_class: undefined,
+        },
+        profile: {
+          ...baseBundle.observedPerformance.profile,
+          endpoint_id: "openai.personal.primary.us-east-1.fast",
+          measured_at_ms: remoteTimestampMs,
+        },
+      },
+      cacheObservability: {
+        promptCacheRequested: true,
+        promptCacheUsed: true,
+        cacheReadTokens: 16,
+        cacheWriteTokens: 8,
+        routingCacheAffinity: true,
+      },
+      executionTelemetry: {
+        providerFamily: "ai-sdk-openai",
+        finishReason: "stop",
+        stream: {
+          requested: true,
+          textDeltas: 4,
+          toolCallDeltas: 1,
+          toolArgumentDeltas: 2,
+        },
+        streamSupport: {
+          text: "delta",
+          toolCalls: "delta",
+          toolArguments: "delta",
+        },
+        promptCaching: {
+          supported: true,
+          mode: "explicit",
+        },
+        usageSupport: {
+          inputTokens: true,
+          outputTokens: true,
+          cacheReadTokens: true,
+          cacheWriteTokens: true,
+        },
+        costProvenance: "actual",
+      },
+      tooling: {
+        ...baseBundle.tooling,
+        toolCalls: [
+          {
+            toolCallId: "tool-call-1",
+            toolName: "lookupRegistry",
+            arguments: {
+              endpointId: "openai.personal.primary.us-east-1.fast",
+            },
+          },
+        ],
+        executions: [],
+      },
+      inspection: {
+        ...baseBundle.inspection,
+        request: {
+          ...baseBundle.inspection.request,
+          requestId: "req-telemetry-remote-001",
+          routingDecisionId: "decision-telemetry-remote-001",
+          responseCapture: {
+            ...baseBundle.inspection.request.responseCapture,
+            statusCode: 200,
+          },
+        },
+        endpoint: {
+          ...baseBundle.inspection.endpoint,
+          endpointId: "openai.personal.primary.us-east-1.fast",
+          latestProfile: {
+            ...baseBundle.inspection.endpoint.latestProfile,
+            endpoint_id: "openai.personal.primary.us-east-1.fast",
+            measured_at_ms: remoteTimestampMs,
+          },
+        },
+      },
+    } as ReturnType<typeof createRuntimeObservationBundle>;
+
+    const localBundle = {
+      ...baseBundle,
+      requestId: "req-telemetry-local-001",
+      routingDecisionId: "decision-telemetry-local-001",
+      endpointId: "llama-swap.local.local-mock-llama",
+      usageEvent: {
+        ...baseBundle.usageEvent,
+        request_id: "req-telemetry-local-001",
+        routing_decision_id: "decision-telemetry-local-001",
+        endpoint_id: "llama-swap.local.local-mock-llama",
+        model_id: "local/mock-llama",
+        provider_kind: "local_openai_compat",
+        tokens_in: 32,
+        tokens_out: 0,
+        latency_ms: 1200,
+        cost_actual: undefined,
+        cost_estimate: 0.0011,
+        currency: "USD",
+        error_class: "upstream_timeout",
+        timestamp_ms: localTimestampMs,
+      },
+      observedPerformance: {
+        ...baseBundle.observedPerformance,
+        sample: {
+          ...baseBundle.observedPerformance.sample,
+          request_id: "req-telemetry-local-001",
+          routing_decision_id: "decision-telemetry-local-001",
+          endpoint_id: "llama-swap.local.local-mock-llama",
+          timestamp_ms: localTimestampMs,
+          latency_ms: 1200,
+          latency_ms_p95: 1200,
+          failure: true,
+          error_class: "upstream_timeout",
+        },
+        profile: {
+          ...baseBundle.observedPerformance.profile,
+          endpoint_id: "llama-swap.local.local-mock-llama",
+          measured_at_ms: localTimestampMs,
+        },
+      },
+      cacheObservability: {
+        promptCacheRequested: false,
+        promptCacheUsed: false,
+        cacheReadTokens: 0,
+        cacheWriteTokens: 0,
+        routingCacheAffinity: false,
+      },
+      executionTelemetry: {
+        providerFamily: "llama-swap",
+        finishReason: "error",
+        stream: {
+          requested: true,
+          textDeltas: 2,
+          toolCallDeltas: 0,
+          toolArgumentDeltas: 0,
+        },
+        streamSupport: {
+          text: "delta",
+          toolCalls: "unsupported",
+          toolArguments: "unsupported",
+        },
+        promptCaching: {
+          supported: false,
+          mode: "unsupported",
+        },
+        usageSupport: {
+          inputTokens: true,
+          outputTokens: true,
+          cacheReadTokens: false,
+          cacheWriteTokens: false,
+        },
+        costProvenance: "estimated",
+      },
+      tooling: {
+        ...baseBundle.tooling,
+        toolCalls: [],
+        executions: [],
+      },
+      inspection: {
+        ...baseBundle.inspection,
+        request: {
+          ...baseBundle.inspection.request,
+          requestId: "req-telemetry-local-001",
+          routingDecisionId: "decision-telemetry-local-001",
+          responseCapture: {
+            ...baseBundle.inspection.request.responseCapture,
+            statusCode: 504,
+          },
+        },
+        endpoint: {
+          ...baseBundle.inspection.endpoint,
+          endpointId: "llama-swap.local.local-mock-llama",
+          latestProfile: {
+            ...baseBundle.inspection.endpoint.latestProfile,
+            endpoint_id: "llama-swap.local.local-mock-llama",
+            measured_at_ms: localTimestampMs,
+          },
+        },
+      },
+    } as ReturnType<typeof createRuntimeObservationBundle>;
+
+    (
+      sqliteMemory as {
+        persistRuntimeObservationBundle(input: {
+          databasePath: string;
+          observation: ReturnType<typeof createRuntimeObservationBundle>;
+        }): void;
+      }
+    ).persistRuntimeObservationBundle({
+      databasePath: validation.databasePath,
+      observation: remoteBundle,
+    });
+    (
+      sqliteMemory as {
+        persistRuntimeObservationBundle(input: {
+          databasePath: string;
+          observation: ReturnType<typeof createRuntimeObservationBundle>;
+        }): void;
+      }
+    ).persistRuntimeObservationBundle({
+      databasePath: validation.databasePath,
+      observation: localBundle,
+    });
+
+    expect(
+      (
+        sqliteMemory as {
+          readRuntimeTelemetrySummary(input: {
+            databasePath: string;
+            windowMs?: number;
+          }): Record<string, number | null>;
+        }
+      ).readRuntimeTelemetrySummary({
+        databasePath: validation.databasePath,
+        windowMs: 60_000,
+      }),
+    ).toEqual(
+      expect.objectContaining({
+        requestCount: 2,
+        successCount: 1,
+        failureCount: 1,
+        totalInputTokens: 152,
+        totalOutputTokens: 48,
+        totalTokens: 200,
+        cachedRequestCount: 1,
+        totalActualCostUsd: 0.0042,
+        totalEstimatedCostUsd: 0.0053,
+        averageLatencyMs: 1020,
+        p95LatencyMs: 1200,
+        lastSeenAtMs: localTimestampMs,
+      }),
+    );
+    expect(
+      (
+        sqliteMemory as {
+          listRuntimeTelemetryComparisonRows(input: {
+            databasePath: string;
+            windowMs?: number;
+            limit?: number;
+          }): Array<Record<string, number | string | null>>;
+        }
+      ).listRuntimeTelemetryComparisonRows({
+        databasePath: validation.databasePath,
+        windowMs: 60_000,
+        limit: 10,
+      }),
+    ).toEqual([
+      expect.objectContaining({
+        endpointId: "llama-swap.local.local-mock-llama",
+        modelId: "local/mock-llama",
+        providerKind: "local_openai_compat",
+        providerFamily: "llama-swap",
+        promptCacheSupported: false,
+        requestCount: 1,
+        successCount: 0,
+        failureCount: 1,
+        averageLatencyMs: 1200,
+        p95LatencyMs: 1200,
+        totalTokens: 32,
+        cachedRequestCount: 0,
+        lastSeenAtMs: localTimestampMs,
+      }),
+      expect.objectContaining({
+        endpointId: "openai.personal.primary.us-east-1.fast",
+        modelId: "openai/gpt-4.1-mini-fast",
+        providerKind: "remote_openai_compat",
+        providerFamily: "ai-sdk-openai",
+        promptCacheSupported: true,
+        requestCount: 1,
+        successCount: 1,
+        failureCount: 0,
+        averageLatencyMs: 840,
+        p95LatencyMs: 840,
+        totalTokens: 168,
+        cachedRequestCount: 1,
+        lastSeenAtMs: remoteTimestampMs,
+      }),
+    ]);
+    expect(
+      (
+        sqliteMemory as {
+          listRuntimeTelemetryRecords(input: {
+            databasePath: string;
+            windowMs?: number;
+            limit?: number;
+          }): Array<Record<string, number | string | boolean | null>>;
+        }
+      ).listRuntimeTelemetryRecords({
+        databasePath: validation.databasePath,
+        windowMs: 60_000,
+        limit: 10,
+      }),
+    ).toEqual([
+      expect.objectContaining({
+        requestId: "req-telemetry-local-001",
+        endpointId: "llama-swap.local.local-mock-llama",
+        modelId: "local/mock-llama",
+        providerKind: "local_openai_compat",
+        latencyMs: 1200,
+        inputTokens: 32,
+        outputTokens: 0,
+        totalTokens: 32,
+        errorClass: "upstream_timeout",
+        statusCode: 504,
+        promptCacheRequested: false,
+        promptCacheUsed: false,
+        promptCacheSupported: false,
+        providerFamily: "llama-swap",
+        finishReason: "error",
+        cacheReadTokens: 0,
+        cacheWriteTokens: 0,
+        cacheReadTokensSupported: false,
+        cacheWriteTokensSupported: false,
+        streamTextDeltaCount: 2,
+        streamTextSupported: true,
+        streamToolCallDeltaCount: 0,
+        streamToolCallSupported: false,
+        streamToolArgumentDeltaCount: 0,
+        streamToolArgumentSupported: false,
+        toolCallCount: 0,
+        costProvenance: "estimated",
+        actualCostUsd: null,
+        estimatedCostUsd: 0.0011,
+      }),
+      expect.objectContaining({
+        requestId: "req-telemetry-remote-001",
+        endpointId: "openai.personal.primary.us-east-1.fast",
+        modelId: "openai/gpt-4.1-mini-fast",
+        providerKind: "remote_openai_compat",
+        latencyMs: 840,
+        inputTokens: 120,
+        outputTokens: 48,
+        totalTokens: 168,
+        errorClass: null,
+        statusCode: 200,
+        promptCacheRequested: true,
+        promptCacheUsed: true,
+        promptCacheSupported: true,
+        providerFamily: "ai-sdk-openai",
+        finishReason: "stop",
+        cacheReadTokens: 16,
+        cacheWriteTokens: 8,
+        cacheReadTokensSupported: true,
+        cacheWriteTokensSupported: true,
+        streamTextDeltaCount: 4,
+        streamTextSupported: true,
+        streamToolCallDeltaCount: 1,
+        streamToolCallSupported: true,
+        streamToolArgumentDeltaCount: 2,
+        streamToolArgumentSupported: true,
+        toolCallCount: 1,
+        costProvenance: "actual",
+        actualCostUsd: 0.0042,
+        estimatedCostUsd: 0.0042,
+      }),
+    ]);
+  });
+
   test("exports persisted runtime state for operator drills", async () => {
     expect(
       typeof (

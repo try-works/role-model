@@ -10,6 +10,7 @@ import StudioAdvancedRoute from "../routes/studio-advanced";
 import StudioAudioRoute from "../routes/studio-audio";
 import StudioImagesRoute from "../routes/studio-images";
 import StudioRerankRoute from "../routes/studio-rerank";
+import ControlRuntimeConfigRoute from "../routes/control-runtime-config";
 import SystemPeersRoute from "../routes/system-peers";
 
 function renderRoute(pathname: string, element: ReactElement): string {
@@ -22,8 +23,10 @@ function renderRoute(pathname: string, element: ReactElement): string {
 const appCss = readFileSync(new URL("../app.css", import.meta.url), "utf8");
 const appShellSource = readFileSync(new URL("../components/app-shell.tsx", import.meta.url), "utf8");
 const pagePrimitivesSource = readFileSync(new URL("../components/page-primitives.tsx", import.meta.url), "utf8");
+const controlControllerSource = readFileSync(new URL("../routes/control-controller.tsx", import.meta.url), "utf8");
 const controlModelsSource = readFileSync(new URL("../routes/control-models.tsx", import.meta.url), "utf8");
 const rootSource = readFileSync(new URL("../root.tsx", import.meta.url), "utf8");
+const runtimeRouteSource = readFileSync(new URL("../routes/runtime.tsx", import.meta.url), "utf8");
 const designSystemDocSource = readFileSync(new URL("../../DESIGN_SYSTEM.md", import.meta.url), "utf8");
 
 describe("runtime design system", () => {
@@ -53,6 +56,7 @@ describe("runtime design system", () => {
         routes: [
           "/app/control/providers",
           "/app/control/accounts",
+          "/app/control/runtime-config",
           "/app/control/controller",
           "/app/control/endpoints",
           "/app/control/models",
@@ -82,6 +86,12 @@ describe("runtime design system", () => {
       expect.objectContaining({
         id: "control-models",
         template: "model-inventory",
+      }),
+    );
+    expect(getRuntimeRouteDefinition("/app/control/runtime-config")).toEqual(
+      expect.objectContaining({
+        id: "control-runtime-config",
+        template: "registry-detail",
       }),
     );
     expect(getRuntimeRouteDefinition("/app/control/controller")).toEqual(
@@ -124,6 +134,11 @@ describe("runtime design system", () => {
       accentMuted: "rgba(200, 16, 46, 0.60)",
       accentSubtle: "rgba(200, 16, 46, 0.20)",
       accentGhost: "rgba(200, 16, 46, 0.10)",
+      telemetryLocal: "#1f2937",
+      telemetryRemote: "#C8102E",
+      telemetryHealthy: "#166534",
+      telemetryDegraded: "#b45309",
+      telemetryRaw: "#57534e",
     });
     expect(runtimeTheme.colors.dark).toEqual({
       bg: "#0c0a09",
@@ -135,6 +150,11 @@ describe("runtime design system", () => {
       muted: "rgba(250, 250, 249, 0.40)",
       border: "#292524",
       borderStrong: "#1c1917",
+      telemetryLocal: "#d6d3d1",
+      telemetryRemote: "#fb7185",
+      telemetryHealthy: "#86efac",
+      telemetryDegraded: "#fbbf24",
+      telemetryRaw: "#a8a29e",
     });
   });
 
@@ -190,6 +210,7 @@ describe("runtime design system", () => {
   });
 
   test("design system doc marks the converted pages as live routes", () => {
+    expect(designSystemDocSource).toContain("| `/app/control/runtime-config` | live | `registry-detail` |");
     expect(designSystemDocSource).toContain("| `/app/studio/images` | live | `studio-workspace` |");
     expect(designSystemDocSource).toContain("| `/app/studio/audio` | live | `studio-workspace` |");
     expect(designSystemDocSource).toContain("| `/app/studio/rerank` | live | `studio-workspace` |");
@@ -198,6 +219,15 @@ describe("runtime design system", () => {
     expect(designSystemDocSource).toContain("| `/app/system/peers` | live | `system-topology` |");
     expect(designSystemDocSource).not.toContain("| `/app/studio/images` | implementation target |");
     expect(designSystemDocSource).not.toContain("even if the repo-owned page implementation is still in progress");
+  });
+
+  test("control routes tolerate an unassigned controller before endpoint activation", () => {
+    expect(controlModelsSource).not.toContain("if (!snapshot || !controller)");
+    expect(controlControllerSource).not.toContain("if (!snapshot || !controller)");
+    expect(runtimeRouteSource).not.toContain("if (!snapshot || !controller || !version)");
+    expect(controlModelsSource).toContain("Controller pending");
+    expect(controlControllerSource).toContain("No controller is assigned yet");
+    expect(runtimeRouteSource).toContain("No controller assigned");
   });
 
   test("applies the swiss stone palette, ibm plex typography, and dual-scheme browser contract in shared app chrome", () => {
@@ -221,5 +251,17 @@ describe("runtime design system", () => {
     expect(controlModelsSource).not.toContain("bg-black");
     expect(rootSource).not.toContain("bg-white");
     expect(rootSource).not.toMatch(/rose-/);
+  });
+
+  test("control runtime config is a first-class route and models stays inspect-only", () => {
+    expect(renderRoute("/app/control/runtime-config", createElement(ControlRuntimeConfigRoute))).toContain(
+      "Runtime config",
+    );
+    expect(renderRoute("/app/control/runtime-config", createElement(ControlRuntimeConfigRoute))).toContain(
+      "Save and apply",
+    );
+    expect(controlModelsSource).toContain("Inspect");
+    expect(controlModelsSource).not.toContain(">Settings<");
+    expect(controlModelsSource).toContain("/app/control/runtime-config");
   });
 });

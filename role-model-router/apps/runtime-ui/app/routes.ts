@@ -11,6 +11,7 @@ export default [
     route("studio/advanced", "routes/studio-advanced.tsx"),
     route("control/providers", "routes/providers.tsx"),
     route("control/accounts", "routes/accounts.tsx"),
+    route("control/runtime-config", "routes/control-runtime-config.tsx"),
     route("control/controller", "routes/control-controller.tsx"),
     route("control/endpoints", "routes/endpoints.tsx"),
     route("control/models", "routes/control-models.tsx"),

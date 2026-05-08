@@ -1,0 +1,24 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/16-router-runtime-unified-telemetry-dashboard/role-model-router/apps/runtime-host-bridge[39m
+
+(node:55732) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:26224) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:72664) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [32mΓ£ô[39m test/unified-runtime-config.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 43[2mms[22m[39m
+ [32mΓ£ô[39m test/backend-unified-runtime-config.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 859[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m runtime-host-bridge unified runtime backend[2m > [22msurfaces the derived execution mode in the runtime summary when a unified config file is provided [33m 409[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m runtime-host-bridge unified runtime backend[2m > [22mreads and updates unified runtime config through the backend [33m 446[2mms[22m[39m
+ [32mΓ£ô[39m test/validate-ui.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 915[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m runRuntimeUiValidation[2m > [22mvalidates runtime config reads and the main control-plane mutations [33m 911[2mms[22m[39m
+ [32mΓ£ô[39m test/index.test.ts [2m([22m[2m19 tests[22m[2m)[22m[33m 6052[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m runtime-host-bridge[2m > [22mcreates a runtime backend that executes chat-completions through the real routing and adapter path [33m 303[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m runtime-host-bridge[2m > [22mstreams canonical telemetry updates over SSE after new requests are persisted [33m 4173[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m4 passed[39m[22m[90m (4)[39m
+[2m      Tests [22m [1m[32m28 passed[39m[22m[90m (28)[39m
+[2m   Start at [22m 12:23:12
+[2m   Duration [22m 7.80s[2m (transform 887ms, setup 0ms, collect 2.84s, tests 7.87s, environment 2ms, prepare 1.26s)[22m
+

@@ -87,6 +87,39 @@ describe("runRuntimeVendorValidation", () => {
       remote: "managed-node-mock",
       realVendorCoverage: false,
     });
+    expect(result.telemetry.summary).toEqual(
+      expect.objectContaining({
+        requestCount: 2,
+        sourceBreakdown: expect.objectContaining({
+          local: expect.objectContaining({ requestCount: 1 }),
+          remote: expect.objectContaining({ requestCount: 1 }),
+        }),
+      }),
+    );
+    expect(result.telemetry.rows).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceType: "local",
+          endpointId: "llama-swap.local.local-llama-3-1-8b-instruct",
+        }),
+        expect.objectContaining({
+          sourceType: "remote",
+          endpointId: "openai.litellm.global.openai-gpt-4-1-mini-fast",
+        }),
+      ]),
+    );
+    expect(result.telemetry.requests).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          requestId: "req-runtime-vendor-hybrid-local",
+          sourceType: "local",
+        }),
+        expect.objectContaining({
+          requestId: "req-runtime-vendor-hybrid-remote",
+          sourceType: "remote",
+        }),
+      ]),
+    );
     expect(result.health).toEqual(
       expect.objectContaining({
         status: "healthy",
@@ -102,7 +135,7 @@ describe("runRuntimeVendorValidation", () => {
         }),
       }),
     );
-  });
+  }, 15_000);
 
   test("plans a real-vendor harness with repo-owned mock upstreams", async () => {
     const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-vendor-plan-"));
