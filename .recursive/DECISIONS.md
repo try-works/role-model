@@ -439,3 +439,32 @@
   - Kimi remains modeled on the current `openai.chat.completions` path, so the live `/v1/responses` streaming proof currently targets the OpenAI-shaped routed model path rather than `moonshotai/kimi-k2.5`
   - the endpoint registry remained on the current three-entry runtime baseline after the manual-QA Moonshot account upsert, so account save does not yet auto-materialize new endpoint rows in this run
   - the broader root `build` and `test` commands still fail on the inherited schema-tools/Biome generated-types path
+
+### Run `15-unified-vendor-execution`
+
+- Run folder: `/.recursive/run/15-unified-vendor-execution/`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - added repo-owned unified vendor lifecycle packages for llama-swap, LiteLLM-compatible remote execution, and shared supervisor/vendor contracts
+  - extended `/role-model-router/apps/runtime-host-bridge/` with unified runtime config parsing, vendor startup/shutdown, vendor-aware dispatch and health reporting, plus end-to-end `runtime:validate-vendors`
+  - closed the external-parity seams by threading `cacheStatus` and routed fallback model IDs through the LiteLLM path, scoping unified remote execution to `litellm-proxy`, and exposing additive `healthCheck()` / `executeStream()` vendor-runtime compatibility methods
+  - added a first SEA packaging path with platform-aware llama-swap assets, `runtime:package-sea`, `runtime:validate-packaging`, and `.github/workflows/build-binaries.yml`
+- Why:
+  - to move the single-host runtime from fixture-seeded execution toward operator-owned local/remote vendor execution and packaged distribution without reopening the locked routing and observability baseline
+- How:
+  - implemented strict RED/GREEN TDD across foundation, vendor runtime, bridge dispatch, packaging, and parity-remediation slices; validated decision-only/local-only/remote-only/hybrid execution; re-proved live local and remote bridge execution with browser-backed evidence; and proved the packaged runtime by booting the SEA executable and exercising `/healthz` plus `/v1/models`
+- What was not done:
+  - no dynamic config reload, embedded LiteLLM distribution, or repo-wide schema-tools/Biome remediation was widened into this run
+- Known issues / follow-ups:
+  - selected package build spot-checks still reproduce the inherited `packages/protocol-types/src/generated.ts` `MetricEntry` drift outside run-owned scope
+  - the broader root `build` and `test` commands still fail on the inherited schema-tools/Biome generated-types path

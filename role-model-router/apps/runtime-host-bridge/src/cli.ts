@@ -24,6 +24,9 @@ async function main(): Promise<void> {
       "scope-id": {
         type: "string",
       },
+      "unified-runtime-config": {
+        type: "string",
+      },
     },
   });
 
@@ -33,11 +36,13 @@ async function main(): Promise<void> {
     repoRoot: args.values["repo-root"],
     runtimeStateRoot: args.values["runtime-state-root"],
     scopeId: args.values["scope-id"],
+    unifiedRuntimeConfigPath: args.values["unified-runtime-config"],
   });
   const backend = await createRuntimeBridgeBackend({
     repoRoot: options.repoRoot,
     runtimeStateRoot: options.runtimeStateRoot,
     scopeId: options.scopeId,
+    unifiedRuntimeConfigPath: options.unifiedRuntimeConfigPath,
   });
   const server = await startBridgeServer({
     host: options.host,
@@ -47,6 +52,7 @@ async function main(): Promise<void> {
     executeChatCompletions: backend.executeChatCompletions,
     executeResponses: backend.executeResponses,
     readRuntimeSummary: backend.readRuntimeSummary,
+    readHealthStatus: backend.readHealthStatus,
     listProviders: backend.listProviders,
     listRoles: backend.listRoles,
     listAccounts: backend.listAccounts,
@@ -76,6 +82,7 @@ async function main(): Promise<void> {
 
   const shutdown = async (): Promise<void> => {
     await server.close();
+    await backend.shutdown();
     process.exit(0);
   };
 

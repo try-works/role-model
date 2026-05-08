@@ -1,0 +1,13 @@
+{
+  "main": "./dist/sea/cli.cjs",
+  "output": "./dist/sea-prep.blob",
+  "disableExperimentalSEAWarning": true,
+  "useCodeCache": false,
+  "useSnapshot": false,
+  "assets": {
+    "vendor/llama-swap/linux-x64/llama-swap": "./vendor/llama-swap/dist-assets/linux-x64/llama-swap",
+    "vendor/llama-swap/darwin-x64/llama-swap": "./vendor/llama-swap/dist-assets/darwin-x64/llama-swap",
+    "vendor/llama-swap/darwin-arm64/llama-swap": "./vendor/llama-swap/dist-assets/darwin-arm64/llama-swap",
+    "vendor/llama-swap/win32-x64/llama-swap.exe": "./vendor/llama-swap/dist-assets/win32-x64/llama-swap.exe"
+  }
+}

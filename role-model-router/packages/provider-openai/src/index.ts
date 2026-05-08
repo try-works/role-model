@@ -84,6 +84,12 @@ function resolveProviderShape(
   return target.requestShapeHints?.providerShape ?? "openai.responses";
 }
 
+function readLatencyMs(input: {
+  readonly responseCapture: ProviderAdapterNormalizeContext["responseCapture"];
+}): number {
+  return input.responseCapture.vendorMetadata?.latencyMs ?? 120;
+}
+
 function readOpenAIStreamPayloads(rawTranscript: string): readonly string[] {
   if (!rawTranscript.includes("data:")) {
     return [];
@@ -653,8 +659,33 @@ export function normalizeOpenAIResponse(
         cacheWriteTokens: 0,
       },
       errorClass: null,
-      latencyMs: 120,
+      latencyMs: readLatencyMs(input),
       diagnostics: [],
+      ...(input.responseCapture.vendorMetadata
+        ? {
+            vendorMetadata: {
+              vendorId: input.responseCapture.vendorMetadata.vendorId,
+              ...(typeof input.responseCapture.vendorMetadata.latencyMs === "number"
+                ? { latencyMs: input.responseCapture.vendorMetadata.latencyMs }
+                : {}),
+              ...(typeof input.responseCapture.vendorMetadata.costUsd === "number"
+                ? { costUsd: input.responseCapture.vendorMetadata.costUsd }
+                : {}),
+              ...(typeof input.responseCapture.vendorMetadata.cacheStatus === "string"
+                ? { cacheStatus: input.responseCapture.vendorMetadata.cacheStatus }
+                : {}),
+              ...(typeof input.responseCapture.vendorMetadata.cacheUsed === "boolean"
+                ? { cacheUsed: input.responseCapture.vendorMetadata.cacheUsed }
+                : {}),
+              ...(typeof input.responseCapture.vendorMetadata.cacheReadTokens === "number"
+                ? { cacheReadTokens: input.responseCapture.vendorMetadata.cacheReadTokens }
+                : {}),
+              ...(typeof input.responseCapture.vendorMetadata.cacheWriteTokens === "number"
+                ? { cacheWriteTokens: input.responseCapture.vendorMetadata.cacheWriteTokens }
+                : {}),
+            },
+          }
+        : {}),
     };
   }
 
@@ -727,7 +758,32 @@ export function normalizeOpenAIResponse(
       cacheWriteTokens: 0,
     },
     errorClass: null,
-    latencyMs: 120,
+    latencyMs: readLatencyMs(input),
     diagnostics: [],
+    ...(input.responseCapture.vendorMetadata
+      ? {
+          vendorMetadata: {
+            vendorId: input.responseCapture.vendorMetadata.vendorId,
+            ...(typeof input.responseCapture.vendorMetadata.latencyMs === "number"
+              ? { latencyMs: input.responseCapture.vendorMetadata.latencyMs }
+              : {}),
+            ...(typeof input.responseCapture.vendorMetadata.costUsd === "number"
+              ? { costUsd: input.responseCapture.vendorMetadata.costUsd }
+              : {}),
+            ...(typeof input.responseCapture.vendorMetadata.cacheStatus === "string"
+              ? { cacheStatus: input.responseCapture.vendorMetadata.cacheStatus }
+              : {}),
+            ...(typeof input.responseCapture.vendorMetadata.cacheUsed === "boolean"
+              ? { cacheUsed: input.responseCapture.vendorMetadata.cacheUsed }
+              : {}),
+            ...(typeof input.responseCapture.vendorMetadata.cacheReadTokens === "number"
+              ? { cacheReadTokens: input.responseCapture.vendorMetadata.cacheReadTokens }
+              : {}),
+            ...(typeof input.responseCapture.vendorMetadata.cacheWriteTokens === "number"
+              ? { cacheWriteTokens: input.responseCapture.vendorMetadata.cacheWriteTokens }
+              : {}),
+          },
+        }
+      : {}),
   };
 }

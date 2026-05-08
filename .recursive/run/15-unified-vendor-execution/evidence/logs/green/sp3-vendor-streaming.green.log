@@ -1,0 +1,115 @@
+# SP3 GREEN test run
+
+
+## @role-model-router/vendor-abstraction
+
+
+> @role-model-router/vendor-abstraction@0.0.0 test D:\DEV\role-model\.worktrees\15-unified-vendor-execution\role-model-router\packages\vendor-abstraction
+> vitest run
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/15-unified-vendor-execution/role-model-router/packages/vendor-abstraction[39m
+
+ [32mΓ£ô[39m test/index.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m3 passed[39m[22m[90m (3)[39m
+[2m   Start at [22m 04:16:58
+[2m   Duration [22m 862ms[2m (transform 120ms, setup 0ms, collect 127ms, tests 13ms, environment 0ms, prepare 264ms)[22m
+
+
+## @role-model-router/provider-openai
+
+
+> @role-model-router/provider-openai@0.0.0 test D:\DEV\role-model\.worktrees\15-unified-vendor-execution\role-model-router\packages\provider-openai
+> vitest run test/index.test.ts
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/15-unified-vendor-execution/role-model-router/packages/provider-openai[39m
+
+ [32mΓ£ô[39m test/index.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m5 passed[39m[22m[90m (5)[39m
+[2m   Start at [22m 04:17:00
+[2m   Duration [22m 849ms[2m (transform 140ms, setup 0ms, collect 135ms, tests 10ms, environment 0ms, prepare 255ms)[22m
+
+
+## @role-model-router/vendor-llama-swap
+
+
+> @role-model-router/vendor-llama-swap@0.0.0 test D:\DEV\role-model\.worktrees\15-unified-vendor-execution\role-model-router\packages\vendor-llama-swap
+> vitest run
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/15-unified-vendor-execution/role-model-router/packages/vendor-llama-swap[39m
+
+ [32mΓ£ô[39m test/index.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 1222[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m vendor-llama-swap[2m > [22mstarts a managed llama-swap vendor and executes local openai-compatible requests through it [33m 605[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m vendor-llama-swap[2m > [22mstreams chat-completions deltas through the managed llama-swap vendor [33m 606[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m3 passed[39m[22m[90m (3)[39m
+[2m   Start at [22m 04:17:03
+[2m   Duration [22m 2.12s[2m (transform 126ms, setup 0ms, collect 205ms, tests 1.22s, environment 0ms, prepare 202ms)[22m
+
+
+## @role-model-router/vendor-litellm
+
+
+> @role-model-router/vendor-litellm@0.0.0 test D:\DEV\role-model\.worktrees\15-unified-vendor-execution\role-model-router\packages\vendor-litellm
+> vitest run
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/15-unified-vendor-execution/role-model-router/packages/vendor-litellm[39m
+
+ [32mΓ£ô[39m test/index.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 1274[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m vendor-litellm[2m > [22mstarts a managed LiteLLM vendor and captures cost plus cache metadata from responses [33m 653[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m vendor-litellm[2m > [22mstreams chat-completions deltas through the managed LiteLLM vendor [33m 611[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m3 passed[39m[22m[90m (3)[39m
+[2m   Start at [22m 04:17:06
+[2m   Duration [22m 2.16s[2m (transform 120ms, setup 0ms, collect 200ms, tests 1.27s, environment 0ms, prepare 217ms)[22m
+
+
+## @role-model-router/runtime-host-bridge
+
+
+> @role-model-router/runtime-host-bridge@0.0.0 test D:\DEV\role-model\.worktrees\15-unified-vendor-execution\role-model-router\apps\runtime-host-bridge
+> vitest run test/index.test.ts test/backend-unified-runtime-config.test.ts test/executable.test.ts test/runtime-assets.test.ts test/unified-runtime-config.test.ts test/validate-operations.test.ts test/validate-tools.test.ts test/validate-ui.test.ts test/validate-vendors.test.ts
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/15-unified-vendor-execution/role-model-router/apps/runtime-host-bridge[39m
+
+ [32mΓ£ô[39m test/executable.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 44[2mms[22m[39m
+ [32mΓ£ô[39m test/runtime-assets.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 38[2mms[22m[39m
+ [32mΓ£ô[39m test/unified-runtime-config.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 29[2mms[22m[39m
+(node:59160) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:13416) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:32416) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:47792) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:61784) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55080) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [32mΓ£ô[39m test/backend-unified-runtime-config.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 265[2mms[22m[39m
+ [32mΓ£ô[39m test/validate-tools.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 307[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m runRuntimeToolsValidation[2m > [22mexecutes runtime-owned MCP tool calls and persists their observation receipts [33m 305[2mms[22m[39m
+ [32mΓ£ô[39m test/validate-ui.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 457[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m runRuntimeUiValidation[2m > [22mvalidates runtime summary, provider variants, account upserts, and endpoint activation [33m 454[2mms[22m[39m
+ [32mΓ£ô[39m test/validate-operations.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 629[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m runRuntimeOperationsValidation[2m > [22mvalidates isolated scopes and runtime-state maintenance drills [33m 627[2mms[22m[39m
+ [32mΓ£ô[39m test/index.test.ts [2m([22m[2m17 tests[22m[2m)[22m[33m 1211[2mms[22m[39m
+ [32mΓ£ô[39m test/validate-vendors.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 3060[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m runRuntimeVendorValidation[2m > [22mexecutes decision-only, local-only, remote-only, and hybrid vendor modes end to end [33m 3059[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m9 passed[39m[22m[90m (9)[39m
+[2m      Tests [22m [1m[32m30 passed[39m[22m[90m (30)[39m
+[2m   Start at [22m 04:17:10
+[2m   Duration [22m 4.58s[2m (transform 1.63s, setup 0ms, collect 5.43s, tests 6.04s, environment 4ms, prepare 2.81s)[22m
+

@@ -1,0 +1,4 @@
+
+> role-model@0.0.0 runtime:validate-vendors D:\DEV\role-model\.worktrees\15-unified-vendor-execution
+> corepack pnpm --filter @role-model-router/runtime-host-bridge exec tsx src/validate-vendors.ts
+

@@ -1,0 +1,45 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/15-unified-vendor-execution/role-model-router/packages/adapter-execution[39m
+
+ [31mΓ¥»[39m test/index.test.ts [2m([22m[2m5 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 42[2mms[22m[39m
+   [32mΓ£ô[39m executeRoutedRequest[2m > [22mselects the OpenAI-family adapter and preserves routed execution context[32m 9[2mms[22m[39m
+   [32mΓ£ô[39m executeRoutedRequest[2m > [22mprefers cloud-source request shape hints over catalog defaults[32m 2[2mms[22m[39m
+   [32mΓ£ô[39m executeRoutedRequest[2m > [22mfails when the chosen endpoint cannot be resolved to a supported provider adapter[32m 2[2mms[22m[39m
+   [32mΓ£ô[39m executeRoutedRequest[2m > [22mcan execute through a live provider-request callback instead of fixture captures[32m 1[2mms[22m[39m
+[31m   [31m├ù[31m executeRoutedRequest[2m > [22mresolves fallback endpoint ids into fallback model ids for live provider execution[39m[32m 25[2mms[22m[39m
+[31m     ΓåÆ expected undefined to deeply equal [ 'openai/gpt-4.1-mini-slow' ][39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/index.test.ts > executeRoutedRequest > resolves fallback endpoint ids into fallback model ids for live provider execution
+AssertionError: expected undefined to deeply equal [ 'openai/gpt-4.1-mini-slow' ]
+
+- Expected: 
+[
+  "openai/gpt-4.1-mini-slow",
+]
+
++ Received: 
+undefined
+
+ Γ¥» Object.executeProviderRequest test/index.test.ts:1578:34
+    1576|         expect(target.adapterFamily).toBe("ai-sdk-openai");
+    1577|         expect(requestCapture.url).toBe("http://127.0.0.1:4000/v1/chatΓÇª
+    1578|         expect(fallbackModelIds).toEqual(["openai/gpt-4.1-mini-slow"]);
+       |                                  ^
+    1579|         return {
+    1580|           providerFamily: target.adapterFamily,
+ Γ¥» executeLiveRoutedRequest src/index.ts:557:39
+ Γ¥» test/index.test.ts:1262:26
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m4 passed[39m[22m[90m (5)[39m
+[2m   Start at [22m 07:27:38
+[2m   Duration [22m 2.54s[2m (transform 321ms, setup 0ms, collect 346ms, tests 42ms, environment 0ms, prepare 634ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\15-unified-vendor-execution\role-model-router\packages\adapter-execution:
+ΓÇëERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓÇë Command failed with exit code 1: vitest run test/index.test.ts

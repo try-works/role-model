@@ -1,0 +1,35 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/15-unified-vendor-execution/role-model-router/packages/vendor-llama-swap[39m
+
+ [32mΓ£ô[39m test/index.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 1003[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m vendor-llama-swap[2m > [22mstarts a managed llama-swap vendor and executes local openai-compatible requests through it [33m 470[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m vendor-llama-swap[2m > [22mstreams chat-completions deltas through the managed llama-swap vendor [33m 510[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m4 passed[39m[22m[90m (4)[39m
+[2m   Start at [22m 04:29:38
+[2m   Duration [22m 1.87s[2m (transform 110ms, setup 0ms, collect 179ms, tests 1.00s, environment 0ms, prepare 213ms)[22m
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/15-unified-vendor-execution/role-model-router/packages/vendor-litellm[39m
+
+ [32mΓ£ô[39m test/index.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 1008[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m vendor-litellm[2m > [22mstarts a managed LiteLLM vendor and captures cost plus cache metadata from responses [33m 518[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m vendor-litellm[2m > [22mstreams chat-completions deltas through the managed LiteLLM vendor [33m 470[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m4 passed[39m[22m[90m (4)[39m
+[2m   Start at [22m 04:29:41
+[2m   Duration [22m 1.73s[2m (transform 105ms, setup 0ms, collect 169ms, tests 1.01s, environment 0ms, prepare 181ms)[22m
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/15-unified-vendor-execution/role-model-router/apps/runtime-host-bridge[39m
+
+ [32mΓ£ô[39m test/executable.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 30[2mms[22m[39m
+ [32mΓ£ô[39m test/runtime-assets.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m2 passed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[32m6 passed[39m[22m[90m (6)[39m
+[2m   Start at [22m 04:29:44
+[2m   Duration [22m 763ms[2m (transform 157ms, setup 0ms, collect 254ms, tests 47ms, environment 0ms, prepare 382ms)[22m
+

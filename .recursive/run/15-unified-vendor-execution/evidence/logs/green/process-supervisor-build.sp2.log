@@ -1,0 +1,4 @@
+
+> @role-model-router/process-supervisor@0.0.0 build D:\DEV\role-model\.worktrees\15-unified-vendor-execution\role-model-router\packages\process-supervisor
+> tsc -p tsconfig.json
+

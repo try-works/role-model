@@ -1,0 +1,35 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/15-unified-vendor-execution/role-model-router/packages/process-supervisor[39m
+
+ [31mΓ¥»[39m test/index.test.ts [2m([22m[2m5 tests[22m[2m | [22m[31m1 failed[39m[2m | [22m[33m4 skipped[39m[2m)[22m[33m 1989[2mms[22m[39m
+   [2m[90mΓåô[39m[22m process-supervisor[2m > [22mstarts a vendor process, waits for health, and reports it as healthy
+   [2m[90mΓåô[39m[22m process-supervisor[2m > [22mtracks crash callbacks when a managed vendor exits unexpectedly
+   [2m[90mΓåô[39m[22m process-supervisor[2m > [22mcaptures child logs and restarts an unexpectedly crashed vendor with backoff
+   [2m[90mΓåô[39m[22m process-supervisor[2m > [22mforces bounded shutdown when a vendor ignores the initial termination signal
+[31m   [31m├ù[31m process-supervisor[2m > [22mstops spawned child processes when a managed vendor shuts down on Windows[39m[33m 1987[2mms[22m[39m
+[31m     ΓåÆ Timed out waiting for http://127.0.0.1:58406/healthz to stop responding.[39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/index.test.ts > process-supervisor > stops spawned child processes when a managed vendor shuts down on Windows
+Error: Timed out waiting for http://127.0.0.1:58406/healthz to stop responding.
+ Γ¥» waitForHttpDown test/index.test.ts:91:9
+     89|     await new Promise((resolve) => setTimeout(resolve, 25));
+     90|   }
+     91|   throw new Error(`Timed out waiting for ${url} to stop responding.`);
+       |         ^
+     92| }
+     93| 
+ Γ¥» test/index.test.ts:254:7
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[33m4 skipped[39m[90m (5)[39m
+[2m   Start at [22m 06:00:20
+[2m   Duration [22m 2.79s[2m (transform 87ms, setup 0ms, collect 112ms, tests 1.99s, environment 0ms, prepare 202ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\15-unified-vendor-execution\role-model-router\packages\process-supervisor:
+ΓÇëERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓÇë Command failed with exit code 1: vitest run test/index.test.ts -t stops spawned child processes when a managed vendor shuts down on Windows

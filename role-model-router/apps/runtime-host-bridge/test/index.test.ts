@@ -262,7 +262,12 @@ describe("runtime-host-bridge", () => {
     try {
       const healthResponse = await fetch(`http://127.0.0.1:${server.port}/healthz`);
       expect(healthResponse.status).toBe(200);
-      expect(await healthResponse.json()).toEqual({ status: "ok" });
+      expect(await healthResponse.json()).toEqual({
+        status: "healthy",
+        executionMode: "decision_only",
+        vendors: {},
+        inactiveVendors: [],
+      });
 
       const modelsResponse = await fetch(`http://127.0.0.1:${server.port}/v1/models`);
       expect(modelsResponse.status).toBe(200);
@@ -776,11 +781,15 @@ describe("runtime-host-bridge", () => {
         model: "openai/gpt-4.1-mini-fast",
         endpointId: "openai.personal.primary.us-east-1.fast",
         adapterFamily: "ai-sdk-openai",
+        routingDecisionId: "decision-chat-123",
         outputText: "Routed summary",
         finishReason: "stop",
         usage: {
           inputTokens: 32,
           outputTokens: 24,
+        },
+        vendorMetadata: {
+          costUsd: 0.0042,
         },
       }),
     });
@@ -802,6 +811,8 @@ describe("runtime-host-bridge", () => {
         "openai.personal.primary.us-east-1.fast",
       );
       expect(response.headers.get("x-role-model-adapter-family")).toBe("ai-sdk-openai");
+      expect(response.headers.get("x-role-model-routing-decision-id")).toBe("decision-chat-123");
+      expect(response.headers.get("x-role-model-cost-usd")).toBe("0.0042");
       expect(await response.json()).toEqual({
         id: "chatcmpl-role-model",
         object: "chat.completion",
@@ -853,11 +864,15 @@ describe("runtime-host-bridge", () => {
             model: string;
             endpointId: string;
             adapterFamily: string;
+            routingDecisionId?: string;
             outputText: string;
             finishReason: string;
             usage: {
               inputTokens: number;
               outputTokens: number;
+            };
+            vendorMetadata?: {
+              costUsd?: number;
             };
           }>;
         }) => Promise<{ port: number; close(): Promise<void> }>;
@@ -882,6 +897,7 @@ describe("runtime-host-bridge", () => {
         }, {
           endpointId: "openai.personal.primary.us-east-1.fast",
           adapterFamily: "ai-sdk-openai",
+          routingDecisionId: "decision-responses-stream-123",
         });
         await delay(25);
         await streamWriter?.({
@@ -891,6 +907,7 @@ describe("runtime-host-bridge", () => {
         }, {
           endpointId: "openai.personal.primary.us-east-1.fast",
           adapterFamily: "ai-sdk-openai",
+          routingDecisionId: "decision-responses-stream-123",
         });
         await delay(25);
         await streamWriter?.({
@@ -904,6 +921,7 @@ describe("runtime-host-bridge", () => {
         }, {
           endpointId: "openai.personal.primary.us-east-1.fast",
           adapterFamily: "ai-sdk-openai",
+          routingDecisionId: "decision-responses-stream-123",
         });
         executionCompleted = true;
         return {
@@ -911,11 +929,15 @@ describe("runtime-host-bridge", () => {
           model: "openai/gpt-4.1-mini-fast",
           endpointId: "openai.personal.primary.us-east-1.fast",
           adapterFamily: "ai-sdk-openai",
+          routingDecisionId: "decision-responses-stream-123",
           outputText: "Ready now",
           finishReason: "stop",
           usage: {
             inputTokens: 11,
             outputTokens: 4,
+          },
+          vendorMetadata: {
+            costUsd: 0.0042,
           },
         };
       },
@@ -940,6 +962,7 @@ describe("runtime-host-bridge", () => {
         "openai.personal.primary.us-east-1.fast",
       );
       expect(response.headers.get("x-role-model-adapter-family")).toBe("ai-sdk-openai");
+      expect(response.headers.get("x-role-model-routing-decision-id")).toBe("decision-responses-stream-123");
 
       const reader = response.body?.getReader();
       expect(reader).toBeDefined();
@@ -1159,6 +1182,7 @@ describe("runtime-host-bridge", () => {
         }, {
           endpointId: "openai.personal.primary.us-east-1.fast",
           adapterFamily: "ai-sdk-openai",
+          routingDecisionId: "decision-chat-stream-123",
         });
         await delay(25);
         await streamWriter?.({
@@ -1178,6 +1202,7 @@ describe("runtime-host-bridge", () => {
         }, {
           endpointId: "openai.personal.primary.us-east-1.fast",
           adapterFamily: "ai-sdk-openai",
+          routingDecisionId: "decision-chat-stream-123",
         });
         await delay(25);
         await streamWriter?.({
@@ -1195,17 +1220,22 @@ describe("runtime-host-bridge", () => {
         }, {
           endpointId: "openai.personal.primary.us-east-1.fast",
           adapterFamily: "ai-sdk-openai",
+          routingDecisionId: "decision-chat-stream-123",
         });
         executionCompleted = true;
         return {
           model: "openai/gpt-4.1-mini-fast",
           endpointId: "openai.personal.primary.us-east-1.fast",
           adapterFamily: "ai-sdk-openai",
+          routingDecisionId: "decision-chat-stream-123",
           outputText: "unexpected",
           finishReason: "stop",
           usage: {
             inputTokens: 1,
             outputTokens: 1,
+          },
+          vendorMetadata: {
+            costUsd: 0.0042,
           },
         };
       },
@@ -1230,6 +1260,7 @@ describe("runtime-host-bridge", () => {
         "openai.personal.primary.us-east-1.fast",
       );
       expect(response.headers.get("x-role-model-adapter-family")).toBe("ai-sdk-openai");
+      expect(response.headers.get("x-role-model-routing-decision-id")).toBe("decision-chat-stream-123");
 
       const reader = response.body?.getReader();
       expect(reader).toBeDefined();

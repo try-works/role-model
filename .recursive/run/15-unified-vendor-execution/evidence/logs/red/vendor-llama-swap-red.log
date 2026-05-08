@@ -1,0 +1,36 @@
+### corepack pnpm --filter @role-model-router/vendor-llama-swap test
+
+
+> @role-model-router/vendor-llama-swap@0.0.0 test D:\DEV\role-model\.worktrees\15-unified-vendor-execution\role-model-router\packages\vendor-llama-swap
+> vitest run
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/15-unified-vendor-execution/role-model-router/packages/vendor-llama-swap[39m
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Suites 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/index.test.ts [ test/index.test.ts ]
+Error: Cannot find package '@role-model-router/process-supervisor' imported from 'D:/DEV/role-model/.worktrees/15-unified-vendor-execution/role-model-router/packages/vendor-llama-swap/test/index.test.ts'
+ Γ¥» test/index.test.ts:7:1
+      5| import { afterEach, describe, expect, test } from "vitest";
+      6| 
+      7| import { ProcessSupervisor } from "@role-model-router/process-supervisΓÇª
+       | ^
+      8| 
+      9| import { renderLlamaSwapConfig, startLlamaSwapVendor } from "../src/inΓÇª
+
+Caused by: Error: Failed to load url @role-model-router/process-supervisor (resolved id: @role-model-router/process-supervisor) in D:/DEV/role-model/.worktrees/15-unified-vendor-execution/role-model-router/packages/vendor-llama-swap/test/index.test.ts. Does the file exist?
+ Γ¥» loadAndTransform ../../../node_modules/.pnpm/vite@7.3.2_@types+node@22.1_f7dc1826a0f6bcfe28ab74fd91d23836/node_modules/vite/dist/node/chunks/config.js:22663:33
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [2mno tests[22m
+[2m   Start at [22m 20:42:47
+[2m   Duration [22m 838ms[2m (transform 100ms, setup 0ms, collect 0ms, tests 0ms, environment 0ms, prepare 295ms)[22m
+
+D:\DEV\role-model\.worktrees\15-unified-vendor-execution\role-model-router\packages\vendor-llama-swap:
+ΓÇëERR_PNPM_RECURSIVE_RUN_FIRST_FAILΓÇë @role-model-router/vendor-llama-swap@0.0.0 test: `vitest run`
+Exit status 1

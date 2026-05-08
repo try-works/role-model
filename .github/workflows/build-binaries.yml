@@ -1,0 +1,60 @@
+name: build-binaries
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    tags:
+      - "v*"
+
+jobs:
+  build-runtime:
+    name: build ${{ matrix.target }}
+    runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-latest
+            target: linux-x64
+          - runner: macos-13
+            target: darwin-x64
+          - runner: macos-14
+            target: darwin-arm64
+          - runner: windows-latest
+            target: win32-x64
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.24.2"
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: corepack pnpm install --frozen-lockfile
+
+      - name: Package SEA runtime
+        run: corepack pnpm run runtime:package-sea
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: role-model-runtime-${{ matrix.target }}
+          path: role-model-router/dist/release/${{ matrix.target }}/
+
+      - name: Publish release artifacts
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: role-model-router/dist/release/${{ matrix.target }}/*

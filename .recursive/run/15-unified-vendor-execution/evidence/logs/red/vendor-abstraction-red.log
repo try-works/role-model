@@ -1,0 +1,37 @@
+
+### corepack pnpm --filter @role-model-router/vendor-abstraction test
+
+
+> @role-model-router/vendor-abstraction@0.0.0 test D:\DEV\role-model\.worktrees\15-unified-vendor-execution\role-model-router\packages\vendor-abstraction
+> vitest run
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/15-unified-vendor-execution/role-model-router/packages/vendor-abstraction[39m
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Suites 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/index.test.ts [ test/index.test.ts ]
+Error: Cannot find module '../src/index.js' imported from 'D:/DEV/role-model/.worktrees/15-unified-vendor-execution/role-model-router/packages/vendor-abstraction/test/index.test.ts'
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [2mno tests[22m
+[2m   Start at [22m 20:17:16
+[2m   Duration [22m 700ms[2m (transform 63ms, setup 0ms, collect 0ms, tests 0ms, environment 0ms, prepare 178ms)[22m
+
+ Γ¥» test/index.test.ts:3:1
+      1| import { describe, expect, test } from "vitest";
+      2| 
+      3| import {
+       | ^
+      4|   createVendorNotConfiguredError,
+      5|   normalizeVendorError,
+
+Caused by: Error: Failed to load url ../src/index.js (resolved id: ../src/index.js) in D:/DEV/role-model/.worktrees/15-unified-vendor-execution/role-model-router/packages/vendor-abstraction/test/index.test.ts. Does the file exist?
+ Γ¥» loadAndTransform ../../../node_modules/.pnpm/vite@7.3.2_@types+node@22.1_ffe4277cf87465bba1449374e033820f/node_modules/vite/dist/node/chunks/config.js:22663:33
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+D:\DEV\role-model\.worktrees\15-unified-vendor-execution\role-model-router\packages\vendor-abstraction:
+ΓÇëERR_PNPM_RECURSIVE_RUN_FIRST_FAILΓÇë @role-model-router/vendor-abstraction@0.0.0 test: `vitest run`
+Exit status 1

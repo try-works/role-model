@@ -1,0 +1,103 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/15-unified-vendor-execution/role-model-router/packages/vendor-litellm[39m
+
+ [31mΓ¥»[39m test/index.test.ts [2m([22m[2m12 tests[22m[2m | [22m[31m3 failed[39m[2m)[22m[33m 4095[2mms[22m[39m
+   [32mΓ£ô[39m vendor-litellm[2m > [22mrenders LiteLLM provider inventory into a deterministic config document[32m 8[2mms[22m[39m
+   [32mΓ£ô[39m vendor-litellm[2m > [22mrenders advanced litellm params needed for a real proxy-backed upstream[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m vendor-litellm[2m > [22minstalls litellm into a role-model-owned uv tool directory[32m 13[2mms[22m[39m
+   [32mΓ£ô[39m vendor-litellm[2m > [22mprefers uv already on PATH before downloading another copy[32m 11[2mms[22m[39m
+   [32mΓ£ô[39m vendor-litellm[2m > [22muses default litellm args when unified config does not provide any[32m 29[2mms[22m[39m
+   [32mΓ£ô[39m vendor-litellm[2m > [22muses a longer default startup timeout for the real litellm proxy[32m 15[2mms[22m[39m
+   [32mΓ£ô[39m vendor-litellm[2m > [22mforces utf-8 python io for the real litellm proxy process[32m 10[2mms[22m[39m
+[31m   [31m├ù[31m vendor-litellm[2m > [22mstarts a managed LiteLLM vendor and captures cost plus cache metadata from responses[39m[33m 806[2mms[22m[39m
+[31m     ΓåÆ vendor.healthCheck is not a function[39m
+   [33m[2mΓ£ô[22m[39m vendor-litellm[2m > [22mcaptures response cost from LiteLLM headers when the proxy strips hidden params [33m 831[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m vendor-litellm[2m > [22mcaptures cache status from LiteLLM headers when the proxy omits hidden cache markers [33m 868[2mms[22m[39m
+[31m   [31m├ù[31m vendor-litellm[2m > [22mforwards fallback model ids into the LiteLLM request body[39m[33m 764[2mms[22m[39m
+[31m     ΓåÆ vendor.executeStream is not a function[39m
+[31m   [31m├ù[31m vendor-litellm[2m > [22mstreams chat-completions deltas through the managed LiteLLM vendor[39m[33m 736[2mms[22m[39m
+[31m     ΓåÆ expected [] to deeply equal [ ObjectContaining{ΓÇª}, ΓÇª(2) ][39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 3 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/index.test.ts > vendor-litellm > starts a managed LiteLLM vendor and captures cost plus cache metadata from responses
+TypeError: vendor.healthCheck is not a function
+ Γ¥» test/index.test.ts:360:25
+    358|       },
+    359|     });
+    360|     expect(await vendor.healthCheck()).toEqual(
+       |                         ^
+    361|       expect.objectContaining({
+    362|         vendorId: "litellm",
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/3]ΓÄ»
+
+ FAIL  test/index.test.ts > vendor-litellm > forwards fallback model ids into the LiteLLM request body
+TypeError: vendor.executeStream is not a function
+ Γ¥» test/index.test.ts:548:33
+    546|     });
+    547| 
+    548|     const result = await vendor.executeStream(
+       |                                 ^
+    549|       {
+    550|         providerFamily: "ai-sdk-openai",
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[2/3]ΓÄ»
+
+ FAIL  test/index.test.ts > vendor-litellm > streams chat-completions deltas through the managed LiteLLM vendor
+AssertionError: expected [] to deeply equal [ ObjectContaining{ΓÇª}, ΓÇª(2) ]
+
+- Expected
++ Received
+
+- [
+-   ObjectContaining {
+-     "choices": [
+-       ObjectContaining {
+-         "delta": ObjectContaining {
+-           "content": "remote ",
+-         },
+-       },
+-     ],
+-     "object": "chat.completion.chunk",
+-   },
+-   ObjectContaining {
+-     "choices": [
+-       ObjectContaining {
+-         "delta": ObjectContaining {
+-           "content": "litellm summary",
+-         },
+-       },
+-     ],
+-     "object": "chat.completion.chunk",
+-   },
+-   ObjectContaining {
+-     "choices": [
+-       ObjectContaining {
+-         "finish_reason": "stop",
+-       },
+-     ],
+-     "object": "chat.completion.chunk",
+-   },
+- ]
++ []
+
+ Γ¥» test/index.test.ts:634:28
+    632|     );
+    633| 
+    634|     expect(streamedChunks).toEqual([
+       |                            ^
+    635|       expect.objectContaining({
+    636|         object: "chat.completion.chunk",
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[3/3]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m3 failed[39m[22m[2m | [22m[1m[32m9 passed[39m[22m[90m (12)[39m
+[2m   Start at [22m 07:32:05
+[2m   Duration [22m 5.47s[2m (transform 231ms, setup 0ms, collect 341ms, tests 4.09s, environment 0ms, prepare 517ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\15-unified-vendor-execution\role-model-router\packages\vendor-litellm:
+ΓÇëERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓÇë Command failed with exit code 1: vitest run test/index.test.ts

@@ -1,0 +1,3 @@
+undefined
+D:\DEV\role-model\.worktrees\15-unified-vendor-execution\role-model-router\apps\runtime-host-bridge:
+ΓÇëERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓÇë Command failed with exit code 3221225786: tsx --eval import('./src/validate-vendors.ts').then(async ({ runRuntimeVendorValidation }) => { const result = await runRuntimeVendorValidation({ repoRoot: 'D:\\DEV\\role-model\\.worktrees\\15-unified-vendor-execution' }); console.log(JSON.stringify(result, null, 2)); })

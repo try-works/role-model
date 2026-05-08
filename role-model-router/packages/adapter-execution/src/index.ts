@@ -81,6 +81,16 @@ export interface ProviderResponseCapture {
   readonly endpointId: string;
   readonly statusCode: number;
   readonly body: unknown;
+  readonly vendorMetadata?: {
+    readonly vendorId: string;
+    readonly resolvedModelId?: string;
+    readonly latencyMs?: number;
+    readonly costUsd?: number;
+    readonly cacheStatus?: string;
+    readonly cacheUsed?: boolean;
+    readonly cacheReadTokens?: number;
+    readonly cacheWriteTokens?: number;
+  };
 }
 
 export interface NormalizedToolCall {
@@ -118,6 +128,15 @@ export interface NormalizedProviderResponse {
   readonly errorClass: string | null;
   readonly latencyMs: number;
   readonly diagnostics: readonly AdapterDiagnostic[];
+  readonly vendorMetadata?: {
+    readonly vendorId?: string;
+    readonly latencyMs?: number;
+    readonly costUsd?: number;
+    readonly cacheStatus?: string;
+    readonly cacheUsed?: boolean;
+    readonly cacheReadTokens?: number;
+    readonly cacheWriteTokens?: number;
+  };
 }
 
 export interface AdapterDiagnostic {
@@ -181,6 +200,7 @@ export interface ExecuteRoutedRequestInput {
 export interface ProviderRequestExecutionInput {
   readonly target: ResolvedExecutionTarget;
   readonly requestCapture: ProviderRequestCapture;
+  readonly fallbackModelIds?: readonly string[];
 }
 
 export interface ExecuteLiveRoutedRequestInput
@@ -202,6 +222,34 @@ export interface RoutedExecutionResult {
   };
   readonly usageEvent: UsageEventRecord;
   readonly diagnostics: readonly AdapterDiagnostic[];
+}
+
+function resolveFallbackModelIds(
+  input: Pick<ExecuteLiveRoutedRequestInput, "routeResult" | "registrySources" | "registry">,
+): readonly string[] | undefined {
+  const fallbackEndpointIds = input.routeResult.decision.fallback_endpoint_ids;
+  if (!Array.isArray(fallbackEndpointIds) || fallbackEndpointIds.length === 0) {
+    return undefined;
+  }
+
+  return fallbackEndpointIds.map((endpointId) => {
+    const cloudSource = findCloudSource(input.registrySources, endpointId);
+    if (cloudSource) {
+      return cloudSource.modelId;
+    }
+
+    const localSource = findLocalSource(input.registrySources, endpointId);
+    if (localSource) {
+      return localSource.modelId;
+    }
+
+    const candidate = input.registry.endpoints.find((entry) => entry.identity.endpoint_id === endpointId);
+    if (candidate) {
+      return candidate.identity.model_id;
+    }
+
+    throw new Error(`Fallback endpoint ${endpointId} is not present in the registry sources.`);
+  });
 }
 
 function parseJsonArguments(value: unknown): unknown {
@@ -276,7 +324,7 @@ export function resolveExecutionTarget(input: Omit<ExecuteRoutedRequestInput, "e
       adapterFamily: provider.adapterFamily,
       authFamily: provider.authFamily,
       apiBase: account.baseUrlOverride ?? provider.apiBase,
-      requestShapeHints: model.requestShapeHints,
+      requestShapeHints: cloudSource.requestShapeHints ?? model.requestShapeHints,
       candidate,
       account,
       provider,
@@ -457,6 +505,9 @@ function createTraceArtifacts(
       payload: {
         input_tokens: normalized.usage.inputTokens,
         output_tokens: normalized.usage.outputTokens,
+        ...(typeof normalized.vendorMetadata?.costUsd === "number"
+          ? { cost_usd: normalized.vendorMetadata.costUsd }
+          : {}),
       },
     },
   ];
@@ -487,10 +538,18 @@ function createUsageEvent(
     tokens_in: normalized.usage.inputTokens,
     tokens_out: normalized.usage.outputTokens,
     latency_ms: normalized.latencyMs,
-    ...(typeof chosenProjectedCandidate?.observed?.cost_per_1k_tokens_est === "number"
-      ? { cost_estimate: chosenProjectedCandidate.observed.cost_per_1k_tokens_est }
+    ...(typeof normalized.vendorMetadata?.costUsd === "number"
+      ? { cost_actual: normalized.vendorMetadata.costUsd }
       : {}),
-    ...(chosenProjectedCandidate?.observed?.cost_per_1k_tokens_est ? { currency: "USD" } : {}),
+    ...(typeof normalized.vendorMetadata?.costUsd === "number"
+      ? { cost_estimate: normalized.vendorMetadata.costUsd }
+      : typeof chosenProjectedCandidate?.observed?.cost_per_1k_tokens_est === "number"
+        ? { cost_estimate: chosenProjectedCandidate.observed.cost_per_1k_tokens_est }
+        : {}),
+    ...(typeof normalized.vendorMetadata?.costUsd === "number" ||
+    chosenProjectedCandidate?.observed?.cost_per_1k_tokens_est
+      ? { currency: "USD" }
+      : {}),
     ...(normalized.errorClass ? { error_class: normalized.errorClass } : {}),
     sample_source: "live_request",
   };
@@ -526,9 +585,11 @@ export async function executeLiveRoutedRequest(
   input: ExecuteLiveRoutedRequestInput,
 ): Promise<RoutedExecutionResult> {
   const { target, adapter, capabilities, requestCapture } = prepareRoutedExecution(input);
+  const fallbackModelIds = resolveFallbackModelIds(input);
   const responseCapture = await input.executeProviderRequest({
     target,
     requestCapture,
+    ...(fallbackModelIds ? { fallbackModelIds } : {}),
   });
   const normalized = adapter.normalizeResponse({
     target,

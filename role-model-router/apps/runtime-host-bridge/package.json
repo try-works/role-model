@@ -21,14 +21,22 @@
     "@role-model-router/protocol-routing": "workspace:*",
     "@role-model-router/provider-account": "workspace:*",
     "@role-model-router/provider-anthropic": "workspace:*",
+    "@role-model-router/provider-litellm": "workspace:*",
     "@role-model-router/provider-openai": "workspace:*",
+    "@role-model-router/process-supervisor": "workspace:*",
     "@role-model-router/retrieval-receipt": "workspace:*",
     "@role-model-router/runtime-observability": "workspace:*",
     "@role-model-router/sqlite-memory": "workspace:*",
-    "@role-model-router/tool-registry": "workspace:*"
+    "@role-model-router/tool-registry": "workspace:*",
+    "@role-model-router/vendor-abstraction": "workspace:*",
+    "@role-model-router/vendor-llama-swap": "workspace:*",
+    "@role-model-router/vendor-litellm": "workspace:*",
+    "yaml": "^2.8.1"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "test": "vitest run test/index.test.ts test/executable.test.ts test/validate-operations.test.ts test/validate-tools.test.ts test/validate-ui.test.ts"
+    "test": "vitest run test/index.test.ts test/backend-unified-runtime-config.test.ts test/executable.test.ts test/runtime-assets.test.ts test/unified-runtime-config.test.ts test/validate-operations.test.ts test/validate-tools.test.ts test/validate-ui.test.ts test/validate-vendors.test.ts",
+    "package-sea": "tsx src/package-sea.ts",
+    "validate-packaging": "tsx src/validate-packaging.ts"
   }
 }

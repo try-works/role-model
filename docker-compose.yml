@@ -1,0 +1,20 @@
+services:
+  role-model-runtime:
+    image: ghcr.io/try-works/role-model-router:latest
+    restart: unless-stopped
+    command:
+      - start
+      - --config
+      - /config/role-model-router.yaml
+      - --runtime-state-root
+      - /runtime-state
+      - --host
+      - 0.0.0.0
+      - --port
+      - "4280"
+    ports:
+      - "4280:4280"
+    volumes:
+      - ./runtime/config:/config:ro
+      - ./runtime/state:/runtime-state
+      - ./models:/models

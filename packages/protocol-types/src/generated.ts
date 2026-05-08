@@ -122,15 +122,6 @@ export interface EndpointIdentity {
 }
 
 
-export interface MetricEntry {
-  value: number;
-  source: 'measured' | 'declared' | 'default';
-  raw?: {
-    [k: string]: unknown;
-  };
-}
-
-
 export interface JudgeScore {
   judge_id: string;
   case_id: string;
@@ -453,6 +444,7 @@ export interface UsageEvent {
   tokens_in: number;
   tokens_out: number;
   latency_ms: number;
+  cost_actual?: number;
   cost_estimate?: number;
   currency?: string;
   error_class?: string;

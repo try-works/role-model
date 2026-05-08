@@ -1,0 +1,144 @@
+import os from "node:os";
+import path from "node:path";
+import { mkdtemp, rm } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
+
+import { afterEach, describe, expect, test } from "vitest";
+
+import {
+  createRuntimeVendorValidationPlan,
+  runRuntimeVendorValidation,
+} from "../src/validate-vendors.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const repoRoot = path.resolve(__dirname, "..", "..", "..", "..");
+
+const tempRoots: string[] = [];
+
+afterEach(async () => {
+  await Promise.all(
+    tempRoots.splice(0).map(async (tempRoot) => {
+      await rm(tempRoot, { recursive: true, force: true });
+    }),
+  );
+});
+
+describe("runRuntimeVendorValidation", () => {
+  test("executes decision-only, local-only, remote-only, and hybrid vendor modes end to end", async () => {
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-vendors-"));
+    tempRoots.push(runtimeStateRoot);
+
+    const result = await runRuntimeVendorValidation({
+      repoRoot,
+      runtimeStateRoot,
+      scopeId: "runtime-vendor-validation",
+      harnessMode: "mock",
+    });
+
+    expect(result.decisionOnly).toEqual(
+      expect.objectContaining({
+        statusCode: 503,
+        errorClass: "VENDOR_NOT_CONFIGURED",
+      }),
+    );
+    expect(result.localOnly).toEqual(
+      expect.objectContaining({
+        executionMode: "local_only",
+        vendorId: "llama-swap",
+        outputText: "local llama summary",
+      }),
+    );
+    expect(result.remoteOnly).toEqual(
+      expect.objectContaining({
+        executionMode: "remote_only",
+        vendorId: "litellm",
+        outputText: "remote litellm summary",
+        costUsd: 0.0042,
+        responseHeaders: expect.objectContaining({
+          "x-role-model-endpoint-id": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+          "x-role-model-adapter-family": "litellm-proxy",
+          "x-role-model-routing-decision-id": "decision-req-runtime-vendor-remote",
+          "x-role-model-cost-usd": "0.0042",
+        }),
+      }),
+    );
+    expect(result.streaming).toEqual({
+      local: expect.objectContaining({
+        vendorId: "llama-swap",
+        outputText: "local llama summary",
+        chunkCount: 3,
+      }),
+      remote: expect.objectContaining({
+        vendorId: "litellm",
+        outputText: "remote litellm summary",
+        chunkCount: 3,
+      }),
+    });
+    expect(result.hybrid).toEqual(
+      expect.objectContaining({
+        executionMode: "hybrid",
+        localVendorId: "llama-swap",
+        remoteVendorId: "litellm",
+      }),
+    );
+    expect(result.vendorHarness).toEqual({
+      local: "managed-node-mock",
+      remote: "managed-node-mock",
+      realVendorCoverage: false,
+    });
+    expect(result.health).toEqual(
+      expect.objectContaining({
+        status: "healthy",
+        executionMode: "hybrid",
+        inactiveVendors: [],
+        vendors: expect.objectContaining({
+          "llama-swap": expect.objectContaining({
+            healthStatus: "healthy",
+          }),
+          litellm: expect.objectContaining({
+            healthStatus: "healthy",
+          }),
+        }),
+      }),
+    );
+  });
+
+  test("plans a real-vendor harness with repo-owned mock upstreams", async () => {
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-vendor-plan-"));
+    tempRoots.push(runtimeStateRoot);
+
+    const plan = await createRuntimeVendorValidationPlan({
+      runtimeStateRoot,
+      scopeId: "runtime-vendor-validation-plan",
+      harnessMode: "real",
+    });
+
+    expect(plan.vendorHarness).toEqual({
+      local: "real-llama-swap-mock-upstream",
+      remote: "real-litellm-mock-upstream",
+      realVendorCoverage: true,
+    });
+    expect(plan.localConfig.llama_swap.command).toBeUndefined();
+    expect(plan.localConfig.llama_swap.args).toBeUndefined();
+    expect(plan.localConfig.llama_swap.models[plan.localModelId]).toEqual(
+      expect.objectContaining({
+        command: expect.stringContaining("local-llama-upstream.cjs"),
+        check_endpoint: "/health",
+        use_model_name: "mock/llama-upstream",
+      }),
+    );
+    expect(plan.remoteConfig.litellm_proxy.command).toBeUndefined();
+    expect(plan.remoteConfig.litellm_proxy.args).toBeUndefined();
+    expect(plan.remoteUpstream).toEqual(
+      expect.objectContaining({
+        scriptPath: expect.stringContaining("remote-openai-upstream.cjs"),
+        apiBaseUrl: expect.stringMatching(/^http:\/\/127\.0\.0\.1:\d+\/v1$/),
+        healthUrl: expect.stringMatching(/^http:\/\/127\.0\.0\.1:\d+\/health\/liveliness$/),
+      }),
+    );
+    expect(
+      plan.remoteConfig.litellm_proxy.providers.openai.model_list[0].litellm_params.api_base,
+    ).toBe(plan.remoteUpstream?.apiBaseUrl);
+  });
+});
