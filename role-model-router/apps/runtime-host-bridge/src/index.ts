@@ -78,6 +78,11 @@ import {
   type UnifiedRuntimeExecutionMode,
 } from "./unified-runtime-config.js";
 import { resolveLlamaSwapCommand } from "./runtime-assets.js";
+import {
+  deriveLiteLLMProviders,
+  loadLiteLLMModelPrices,
+  type LiteLLMProviderInfo,
+} from "./litellm-catalog.js";
 
 interface OpenAIChatCompletionsTool {
   readonly type: string;
@@ -2695,6 +2700,8 @@ export async function createRuntimeBridgeBackend(
       "normalized-catalog.json",
     ),
   );
+  const liteLLMModelPrices = await loadLiteLLMModelPrices(options.repoRoot);
+  const liteLLMProviders = liteLLMModelPrices ? deriveLiteLLMProviders(liteLLMModelPrices) : [];
   const providerAccountsFixture = await readJson<{ accounts: unknown[] }>(
     path.join(options.repoRoot, "testdata", "router-runtime", "provider-accounts.json"),
   );
@@ -3437,7 +3444,12 @@ export async function createRuntimeBridgeBackend(
     }> {
       return {
         lifecycleSummary: currentRegistry.lifecycleSummary,
-        providerCount: currentNormalizedCatalog.providers.length,
+        providerCount:
+          currentNormalizedCatalog.providers.length +
+          liteLLMProviders.filter(
+            (provider) =>
+              !currentNormalizedCatalog.providers.some((p) => p.providerId === provider.providerId),
+          ).length,
         accountCount: currentAccounts.length,
         endpointCount: currentRegistry.endpoints.length,
         executionMode: currentUnifiedRuntimeConfig?.executionMode ?? "decision_only",
@@ -3524,30 +3536,50 @@ export async function createRuntimeBridgeBackend(
         variants: readonly ProviderPresetVariant[];
       }[]
     > {
-      return currentNormalizedCatalog.providers.map((provider) => {
-        const effectiveModelIds =
-          readUnifiedLiteLLMProviderModelIds(currentUnifiedRuntimeConfig, provider.providerId) ??
-          currentNormalizedCatalog.models
-            .filter((model) => model.providerId === provider.providerId)
-            .map((model) => model.modelId);
-        return {
-          providerId: provider.providerId,
-          displayName: provider.displayName,
-          providerKind: provider.providerKind,
-          authFamily: provider.authFamily,
-          adapterFamily: provider.adapterFamily,
-          apiBase: provider.apiBase,
-          envVars: provider.envVars,
-          supportedAuthModes: provider.supportedAuthModes,
-          controlPlaneRequirements: provider.controlPlaneRequirements,
-          localOverrideApplied: provider.localOverrideApplied,
-          modelIds: effectiveModelIds,
-          variants: (providerPresets.providers[provider.providerId]?.variants ?? []).map((variant) => ({
-            ...variant,
-            modelIds: effectiveModelIds.length > 0 ? effectiveModelIds : variant.modelIds,
+      const normalizedProviderIds = new Set(currentNormalizedCatalog.providers.map((p) => p.providerId));
+      const mergedProviders = [
+        ...currentNormalizedCatalog.providers.map((provider) => {
+          const effectiveModelIds =
+            readUnifiedLiteLLMProviderModelIds(currentUnifiedRuntimeConfig, provider.providerId) ??
+            currentNormalizedCatalog.models
+              .filter((model) => model.providerId === provider.providerId)
+              .map((model) => model.modelId);
+          return {
+            providerId: provider.providerId,
+            displayName: provider.displayName,
+            providerKind: provider.providerKind,
+            authFamily: provider.authFamily,
+            adapterFamily: provider.adapterFamily,
+            apiBase: provider.apiBase,
+            envVars: provider.envVars,
+            supportedAuthModes: provider.supportedAuthModes,
+            controlPlaneRequirements: provider.controlPlaneRequirements,
+            localOverrideApplied: provider.localOverrideApplied,
+            modelIds: effectiveModelIds,
+            variants: (providerPresets.providers[provider.providerId]?.variants ?? []).map((variant) => ({
+              ...variant,
+              modelIds: effectiveModelIds.length > 0 ? effectiveModelIds : variant.modelIds,
+            })),
+          };
+        }),
+        ...liteLLMProviders
+          .filter((provider) => !normalizedProviderIds.has(provider.providerId))
+          .map((provider) => ({
+            providerId: provider.providerId,
+            displayName: provider.displayName,
+            providerKind: provider.providerKind,
+            authFamily: provider.authFamily,
+            adapterFamily: provider.adapterFamily,
+            apiBase: provider.apiBase,
+            envVars: provider.envVars,
+            supportedAuthModes: [] as readonly string[],
+            controlPlaneRequirements: [] as readonly string[],
+            localOverrideApplied: false,
+            modelIds: [] as readonly string[],
+            variants: [] as readonly ProviderPresetVariant[],
           })),
-        };
-      });
+      ];
+      return mergedProviders.sort((left, right) => compareText(left.providerId, right.providerId));
     },
     async listRoles(): Promise<
       readonly {

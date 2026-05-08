@@ -1735,9 +1735,11 @@ describe("runtime-host-bridge", () => {
 
     await expect(backend.readRuntimeSummary?.()).resolves.toEqual(
       expect.objectContaining({
-        providerCount: 3,
+        providerCount: expect.any(Number),
       }),
     );
+    const summary = await backend.readRuntimeSummary?.();
+    expect(summary?.providerCount).toBeGreaterThan(3);
     await expect(backend.listProviders?.()).resolves.toEqual(
       expect.arrayContaining([
         expect.objectContaining({
