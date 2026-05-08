@@ -15,6 +15,45 @@ async function readJson<T>(relativePath: string): Promise<T> {
   return JSON.parse(await readFile(filePath, "utf8")) as T;
 }
 
+const ADDITIONAL_PROVIDERS = [
+  {
+    providerId: "openai",
+    displayName: "OpenAI",
+    providerKind: "provider-openai",
+    authFamily: "api-key",
+    adapterFamily: "ai-sdk-openai",
+    apiBase: "https://api.openai.com/v1",
+    envVars: ["OPENAI_API_KEY"],
+    supportedAuthModes: [],
+    controlPlaneRequirements: ["organization.optional"],
+    localOverrideApplied: true,
+    upstreamProvenance: {
+      vendor: "models.dev",
+      commit: "8f3c2d1",
+      capturedAt: "2026-05-04T12:00:00Z",
+      schemaVersion: "models.dev.v1",
+    },
+  },
+  {
+    providerId: "anthropic",
+    displayName: "Anthropic",
+    providerKind: "provider-anthropic",
+    authFamily: "api-key",
+    adapterFamily: "ai-sdk-anthropic",
+    apiBase: "https://api.anthropic.com/v1",
+    envVars: ["ANTHROPIC_API_KEY"],
+    supportedAuthModes: [],
+    controlPlaneRequirements: ["workspace.required"],
+    localOverrideApplied: true,
+    upstreamProvenance: {
+      vendor: "models.dev",
+      commit: "8f3c2d1",
+      capturedAt: "2026-05-04T12:00:00Z",
+      schemaVersion: "models.dev.v1",
+    },
+  },
+] as const;
+
 describe("SUPPORTED_AUTH_MODES", () => {
   test("covers the roadmap-required auth modes explicitly", () => {
     expect(SUPPORTED_AUTH_MODES).toEqual([
@@ -39,6 +78,7 @@ describe("validateProviderAccounts", () => {
 
     const result = validateProviderAccounts({
       catalog,
+      additionalProviders: ADDITIONAL_PROVIDERS,
       accounts: fixture.accounts,
     });
 
@@ -70,6 +110,7 @@ describe("validateProviderAccounts", () => {
 
     const result = validateProviderAccounts({
       catalog,
+      additionalProviders: ADDITIONAL_PROVIDERS,
       accounts: [
         {
           providerAccountId: "openai.bad.oauth",

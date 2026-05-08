@@ -195,6 +195,7 @@ export interface ExecuteRoutedRequestInput {
   readonly executionRequest: RuntimeExecutionRequest;
   readonly adapters: readonly ProviderAdapter[];
   readonly captures: RuntimeResponseCaptureMap;
+  readonly additionalProviders?: readonly NormalizedCatalogProvider[];
 }
 
 export interface ProviderRequestExecutionInput {
@@ -290,6 +291,11 @@ export function resolveExecutionTarget(input: Omit<ExecuteRoutedRequestInput, "e
     throw new Error(`Chosen endpoint ${endpointId} is not present in the registry result.`);
   }
 
+  const allProviders = new Map([
+    ...input.catalog.providers.map((p) => [p.providerId, p] as const),
+    ...(input.additionalProviders ?? []).map((p) => [p.providerId, p] as const),
+  ]);
+
   const cloudSource = findCloudSource(input.registrySources, endpointId);
   if (cloudSource) {
     const account = input.accounts.find(
@@ -300,12 +306,10 @@ export function resolveExecutionTarget(input: Omit<ExecuteRoutedRequestInput, "e
         `Provider account ${cloudSource.providerAccountId} is not present for chosen endpoint ${endpointId}.`,
       );
     }
-    const provider = input.catalog.providers.find(
-      (entry) => entry.providerId === account.providerId,
-    );
+    const provider = allProviders.get(account.providerId);
     if (!provider) {
       throw new Error(
-        `Provider ${account.providerId} is not present in the normalized catalog for chosen endpoint ${endpointId}.`,
+        `Provider ${account.providerId} is not present in the catalog or additional providers for chosen endpoint ${endpointId}.`,
       );
     }
     const model = input.catalog.models.find((entry) => entry.modelId === cloudSource.modelId);
