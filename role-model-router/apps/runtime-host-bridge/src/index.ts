@@ -595,6 +595,7 @@ function createUnifiedCloudSources(
 
 function createUnifiedProviderAccounts(
   catalog: NormalizedCatalog,
+  liteLLMProviderList: readonly LiteLLMProviderInfo[],
   config: UnifiedRuntimeConfig,
   liteLLMBaseUrl: string | null,
 ): ProviderAccountRecord[] {
@@ -602,13 +603,15 @@ function createUnifiedProviderAccounts(
     return [];
   }
   return config.liteLLM.providers.map((providerConfig) => {
-    const provider = catalog.providers.find((entry) => entry.providerId === providerConfig.providerId);
+    const provider =
+      catalog.providers.find((entry) => entry.providerId === providerConfig.providerId) ??
+      liteLLMProviderList.find((entry) => entry.providerId === providerConfig.providerId);
     if (!provider) {
-      throw new Error(`Unified runtime provider ${providerConfig.providerId} is not present in the normalized catalog.`);
+      throw new Error(`Unified runtime provider ${providerConfig.providerId} is not present in the catalog or LiteLLM provider list.`);
     }
     const authMode =
-      provider.supportedAuthModes.find((candidate) => candidate === "api-key-static") ??
-      provider.supportedAuthModes[0] ??
+      provider.supportedAuthModes?.find((candidate) => candidate === "api-key-static") ??
+      provider.supportedAuthModes?.[0] ??
       "api-key-static";
     return {
       providerAccountId: `${providerConfig.providerId}.litellm`,
@@ -2844,6 +2847,7 @@ export async function createRuntimeBridgeBackend(
         catalog: nextNormalizedCatalog,
         accounts: createUnifiedProviderAccounts(
           nextNormalizedCatalog,
+          liteLLMProviders,
           nextConfig,
           nextLiteLLMVendor?.readStatus().baseUrl ?? null,
         ),
@@ -3536,14 +3540,24 @@ export async function createRuntimeBridgeBackend(
         variants: readonly ProviderPresetVariant[];
       }[]
     > {
+      function resolveModelIds(providerId: string): readonly string[] {
+        const fromConfig = readUnifiedLiteLLMProviderModelIds(currentUnifiedRuntimeConfig, providerId);
+        if (fromConfig) {
+          return fromConfig;
+        }
+        const fromCatalog = currentNormalizedCatalog.models
+          .filter((model) => model.providerId === providerId)
+          .map((model) => model.modelId);
+        if (fromCatalog.length > 0) {
+          return fromCatalog;
+        }
+        return (providerPresets.providers[providerId]?.variants?.[0]?.modelIds ?? []);
+      }
+
       const normalizedProviderIds = new Set(currentNormalizedCatalog.providers.map((p) => p.providerId));
       const mergedProviders = [
         ...currentNormalizedCatalog.providers.map((provider) => {
-          const effectiveModelIds =
-            readUnifiedLiteLLMProviderModelIds(currentUnifiedRuntimeConfig, provider.providerId) ??
-            currentNormalizedCatalog.models
-              .filter((model) => model.providerId === provider.providerId)
-              .map((model) => model.modelId);
+          const effectiveModelIds = resolveModelIds(provider.providerId);
           return {
             providerId: provider.providerId,
             displayName: provider.displayName,
@@ -3564,20 +3578,26 @@ export async function createRuntimeBridgeBackend(
         }),
         ...liteLLMProviders
           .filter((provider) => !normalizedProviderIds.has(provider.providerId))
-          .map((provider) => ({
-            providerId: provider.providerId,
-            displayName: provider.displayName,
-            providerKind: provider.providerKind,
-            authFamily: provider.authFamily,
-            adapterFamily: provider.adapterFamily,
-            apiBase: provider.apiBase,
-            envVars: provider.envVars,
-            supportedAuthModes: [] as readonly string[],
-            controlPlaneRequirements: [] as readonly string[],
-            localOverrideApplied: false,
-            modelIds: [] as readonly string[],
-            variants: [] as readonly ProviderPresetVariant[],
-          })),
+          .map((provider) => {
+            const effectiveModelIds = resolveModelIds(provider.providerId);
+            return {
+              providerId: provider.providerId,
+              displayName: provider.displayName,
+              providerKind: provider.providerKind,
+              authFamily: provider.authFamily,
+              adapterFamily: provider.adapterFamily,
+              apiBase: provider.apiBase,
+              envVars: provider.envVars,
+              supportedAuthModes: [] as readonly string[],
+              controlPlaneRequirements: [] as readonly string[],
+              localOverrideApplied: false,
+              modelIds: effectiveModelIds,
+              variants: (providerPresets.providers[provider.providerId]?.variants ?? []).map((variant) => ({
+                ...variant,
+                modelIds: effectiveModelIds.length > 0 ? effectiveModelIds : variant.modelIds,
+              })) as readonly ProviderPresetVariant[],
+            };
+          }),
       ];
       return mergedProviders.sort((left, right) => compareText(left.providerId, right.providerId));
     },

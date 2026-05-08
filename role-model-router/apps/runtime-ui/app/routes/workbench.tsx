@@ -8,7 +8,7 @@ import { buildWorkbenchModelOptions, summarizeWorkbenchResult } from "../lib/vie
 export default function WorkbenchRoute() {
   const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [model, setModel] = useState("openai/gpt-4.1-mini-fast");
+  const [model, setModel] = useState("");
   const [prompt, setPrompt] = useState("Summarize the chosen endpoint.");
   const [result, setResult] = useState<Record<string, unknown> | null>(null);
   const [submitting, setSubmitting] = useState(false);
