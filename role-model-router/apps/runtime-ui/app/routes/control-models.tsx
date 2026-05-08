@@ -214,8 +214,8 @@ export default function ControlModelsRoute() {
               <Link className={secondaryButtonClassName} to="/app/control/runtime-config">
                 Edit runtime config
               </Link>
-              <Link className={secondaryButtonClassName} to="/app/control/accounts">
-                Review provider accounts
+              <Link className={secondaryButtonClassName} to="/app/control/providers">
+                Review providers
               </Link>
             </div>
 

@@ -24,7 +24,10 @@ const appCss = readFileSync(new URL("../app.css", import.meta.url), "utf8");
 const appShellSource = readFileSync(new URL("../components/app-shell.tsx", import.meta.url), "utf8");
 const pagePrimitivesSource = readFileSync(new URL("../components/page-primitives.tsx", import.meta.url), "utf8");
 const controlControllerSource = readFileSync(new URL("../routes/control-controller.tsx", import.meta.url), "utf8");
+const controlRuntimeConfigSource = readFileSync(new URL("../routes/control-runtime-config.tsx", import.meta.url), "utf8");
 const controlModelsSource = readFileSync(new URL("../routes/control-models.tsx", import.meta.url), "utf8");
+const endpointsRouteSource = readFileSync(new URL("../routes/endpoints.tsx", import.meta.url), "utf8");
+const providersRouteSource = readFileSync(new URL("../routes/providers.tsx", import.meta.url), "utf8");
 const rootSource = readFileSync(new URL("../root.tsx", import.meta.url), "utf8");
 const runtimeRouteSource = readFileSync(new URL("../routes/runtime.tsx", import.meta.url), "utf8");
 const designSystemDocSource = readFileSync(new URL("../../DESIGN_SYSTEM.md", import.meta.url), "utf8");
@@ -55,7 +58,6 @@ describe("runtime design system", () => {
         title: "Control",
         routes: [
           "/app/control/providers",
-          "/app/control/accounts",
           "/app/control/runtime-config",
           "/app/control/controller",
           "/app/control/endpoints",
@@ -211,6 +213,7 @@ describe("runtime design system", () => {
 
   test("design system doc marks the converted pages as live routes", () => {
     expect(designSystemDocSource).toContain("| `/app/control/runtime-config` | live | `registry-detail` |");
+    expect(designSystemDocSource).not.toContain("| `/app/control/accounts` |");
     expect(designSystemDocSource).toContain("| `/app/studio/images` | live | `studio-workspace` |");
     expect(designSystemDocSource).toContain("| `/app/studio/audio` | live | `studio-workspace` |");
     expect(designSystemDocSource).toContain("| `/app/studio/rerank` | live | `studio-workspace` |");
@@ -263,5 +266,15 @@ describe("runtime design system", () => {
     expect(controlModelsSource).toContain("Inspect");
     expect(controlModelsSource).not.toContain(">Settings<");
     expect(controlModelsSource).toContain("/app/control/runtime-config");
+  });
+
+  test("registry and system layouts avoid redundant KPI strips and placeholder note panels", () => {
+    expect(providersRouteSource).not.toContain("FactCard");
+    expect(endpointsRouteSource).not.toContain("FactCard");
+    expect(controlControllerSource).not.toContain("FactCard");
+    expect(controlRuntimeConfigSource).not.toContain("FactCard");
+    expect(runtimeRouteSource).not.toContain("Runtime contract notes");
+    expect(runtimeRouteSource).not.toContain("Health posture");
+    expect(designSystemDocSource).not.toContain("fact strips before the registry rail");
   });
 });

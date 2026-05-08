@@ -82,7 +82,7 @@ export default function RuntimeRoute() {
       </SectionCard>
 
       <SectionCard title="Version and boundary facts" description="Version, provenance, and health-oriented references now live in the runtime page instead of a separate system route.">
-        <div className="grid gap-3 md:grid-cols-3">
+        <div className="grid gap-3 md:grid-cols-2">
           <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
             <p className="font-medium text-[var(--rm-fg)]">Vendor host version</p>
             <p className="mt-2 text-base text-[var(--rm-fg)]">{version.version}</p>
@@ -93,10 +93,6 @@ export default function RuntimeRoute() {
             <span className="block font-medium text-[var(--rm-fg)]">/api/role-model/runtime/summary</span>
             Repo-owned runtime topology and lifecycle summary
           </a>
-          <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
-            <p className="font-medium text-[var(--rm-fg)]">Health posture</p>
-            <p className="mt-2">Use the lifecycle summary above as the primary shell health view; raw vendor health and provenance stay adjacent to this page rather than in a duplicate system route.</p>
-          </div>
         </div>
       </SectionCard>
 
@@ -117,22 +113,6 @@ export default function RuntimeRoute() {
         </div>
       </SectionCard>
 
-      <SectionCard title="Runtime contract notes" description="Tooling and MCP expectations that should remain visible from the system layer.">
-        <div className="grid gap-3 md:grid-cols-3">
-          <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
-            <p className="font-medium text-[var(--rm-fg)]">Tool execution</p>
-            <p className="mt-2">Runtime responses may emit `tool_calls`, and request inspection now preserves execution receipts beside captures and profile data.</p>
-          </div>
-          <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
-            <p className="font-medium text-[var(--rm-fg)]">Validation floor</p>
-            <p className="mt-2">`runtime:validate-ui`, `runtime:validate-host`, and `runtime:validate-tools` stay the practical validation floor for this shell and bridge.</p>
-          </div>
-          <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
-            <p className="font-medium text-[var(--rm-fg)]">Integration boundary</p>
-            <p className="mt-2">Downstream OpenAI-compatible consumer setup and compatibility guidance now live under Integrations rather than being mixed into the core system page.</p>
-          </div>
-        </div>
-      </SectionCard>
     </div>
   );
 }

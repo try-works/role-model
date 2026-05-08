@@ -26,3 +26,39 @@ export function getDeviceAuthorizationPollDelayMs(session: RuntimeDeviceAuthoriz
 
   return DEFAULT_POLL_DELAY_MS;
 }
+
+export async function syncConnectedDeviceAuthorizationEndpoints(input: {
+  readonly session: RuntimeDeviceAuthorization;
+  readonly selectedModels: readonly string[];
+  readonly activateEndpoint: (payload: {
+    providerAccountId: string;
+    modelId: string;
+    region: string;
+  }) => Promise<unknown>;
+  readonly region?: string;
+}): Promise<void> {
+  if (input.session.status !== "connected") {
+    return;
+  }
+
+  const providerAccountId = input.session.providerAccountId.trim();
+  if (providerAccountId.length === 0) {
+    return;
+  }
+
+  const selectedModels = [...new Set(input.selectedModels.map((value) => value.trim()).filter((value) => value.length > 0))];
+  if (selectedModels.length === 0) {
+    return;
+  }
+
+  const region = normalizeUrl(input.region) ?? "global";
+  await Promise.all(
+    selectedModels.map((modelId) =>
+      input.activateEndpoint({
+        providerAccountId,
+        modelId,
+        region,
+      }),
+    ),
+  );
+}

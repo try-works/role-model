@@ -2,8 +2,12 @@ import { describe, expect, test } from "vitest";
 
 import {
   buildActivitySummary,
+  buildAccountModelCatalogIds,
+  buildConfiguredProviderRows,
   buildConfiguredModelCards,
+  buildEndpointCatalogRows,
   buildDownstreamProviderGuide,
+  buildModelCatalogRows,
   buildProviderCards,
   buildTelemetryComparisonCards,
   buildTelemetryRequestRows,
@@ -180,6 +184,169 @@ describe("buildConfiguredModelCards", () => {
         toolCallingSupported: true,
         controllerState: "eligible",
       }),
+    ]);
+  });
+});
+
+describe("buildModelCatalogRows", () => {
+  test("turns the runtime model catalog into sorted rows with endpoint ids", () => {
+    expect(
+      buildModelCatalogRows([
+        {
+          id: "moonshotai/kimi-k2.6",
+          endpoint_ids: [
+            "moonshotai.litellm.global.moonshotai-kimi-k2-6",
+            "moonshotai.litellm.global.moonshotai-kimi-k2-6",
+          ],
+        },
+        {
+          id: "openai/gpt-4.1-mini-fast",
+          endpoint_ids: ["openai.litellm.global.openai-gpt-4-1-mini-fast"],
+        },
+      ]),
+    ).toEqual([
+      {
+        modelId: "moonshotai/kimi-k2.6",
+        displayName: "Kimi K2.6",
+        endpointCount: 1,
+        endpointIds: ["moonshotai.litellm.global.moonshotai-kimi-k2-6"],
+      },
+      {
+        modelId: "openai/gpt-4.1-mini-fast",
+        displayName: "GPT 4.1 Mini Fast",
+        endpointCount: 1,
+        endpointIds: ["openai.litellm.global.openai-gpt-4-1-mini-fast"],
+      },
+    ]);
+  });
+});
+
+describe("buildEndpointCatalogRows", () => {
+  test("turns the runtime endpoint registry into stable endpoint catalog rows", () => {
+    expect(
+      buildEndpointCatalogRows([
+        {
+          endpointId: "moonshotai.litellm.global.moonshotai-kimi-k2-6",
+          modelId: "moonshotai/kimi-k2.6",
+          providerId: "moonshotai",
+          sourceType: "remote",
+          servingSource: "vendor-litellm",
+          endpointKind: "remote_api",
+          status: "active",
+          healthStatus: "healthy",
+        },
+        {
+          endpointId: "llama-swap.local.local-mock-llama",
+          modelId: "local/mock-llama",
+          providerId: null,
+          sourceType: "local",
+          servingSource: "vendor-llama-swap",
+          endpointKind: "local_engine",
+          status: "active",
+          healthStatus: "healthy",
+        },
+      ]),
+    ).toEqual([
+      {
+        endpointId: "llama-swap.local.local-mock-llama",
+        modelId: "local/mock-llama",
+        providerLabel: "local/runtime",
+        sourceLabel: "Local",
+        servingSource: "vendor-llama-swap",
+        endpointKind: "local_engine",
+        status: "active",
+        healthStatus: "healthy",
+      },
+      {
+        endpointId: "moonshotai.litellm.global.moonshotai-kimi-k2-6",
+        modelId: "moonshotai/kimi-k2.6",
+        providerLabel: "moonshotai",
+        sourceLabel: "Remote",
+        servingSource: "vendor-litellm",
+        endpointKind: "remote_api",
+        status: "active",
+        healthStatus: "healthy",
+      },
+    ]);
+  });
+});
+
+describe("buildAccountModelCatalogIds", () => {
+  test("prefers provider catalog order while constraining to account-allowed models", () => {
+    expect(
+      buildAccountModelCatalogIds({
+        account: {
+          providerId: "moonshotai",
+          allowedModels: ["moonshotai/kimi-k2.5", "moonshotai/kimi-k2.6"],
+        },
+        providers: [
+          {
+            providerId: "moonshotai",
+            displayName: "Moonshot AI",
+            modelIds: ["moonshotai/kimi-k2.6", "moonshotai/kimi-k2.5"],
+          },
+        ],
+        models: [
+          {
+            id: "moonshotai/kimi-k2.5",
+          },
+          {
+            id: "moonshotai/kimi-k2.6",
+          },
+        ],
+      }),
+    ).toEqual(["moonshotai/kimi-k2.6", "moonshotai/kimi-k2.5"]);
+  });
+});
+
+describe("buildConfiguredProviderRows", () => {
+  test("summarizes configured providers and models from saved accounts plus live endpoints", () => {
+    expect(
+      buildConfiguredProviderRows({
+        accounts: [
+          {
+            providerAccountId: "moonshot.personal.primary",
+            providerId: "moonshotai",
+            authMode: "api-key-static",
+            healthStatus: "healthy",
+            status: "active",
+            allowedModels: ["moonshotai/kimi-k2.6", "moonshotai/kimi-k2.5"],
+          },
+          {
+            providerAccountId: "moonshot.personal.kimi-code",
+            providerId: "moonshotai",
+            authMode: "oauth2-device-code",
+            healthStatus: "healthy",
+            status: "active",
+            allowedModels: ["moonshotai/kimi-k2.6"],
+          },
+        ],
+        endpoints: [
+          {
+            endpointId: "moonshotai.litellm.global.moonshotai-kimi-k2-6",
+            providerId: "moonshotai",
+            modelId: "moonshotai/kimi-k2.6",
+            status: "active",
+          },
+          {
+            endpointId: "moonshotai.litellm.global.moonshotai-kimi-k2-5",
+            providerId: "moonshotai",
+            modelId: "moonshotai/kimi-k2.5",
+            status: "degraded",
+          },
+        ],
+      }),
+    ).toEqual([
+      {
+        providerId: "moonshotai",
+        accountIds: ["moonshot.personal.kimi-code", "moonshot.personal.primary"],
+        authModes: ["api-key-static", "oauth2-device-code"],
+        configuredModels: ["moonshotai/kimi-k2.5", "moonshotai/kimi-k2.6"],
+        endpointModels: ["moonshotai/kimi-k2.5", "moonshotai/kimi-k2.6"],
+        endpointCount: 2,
+        activeEndpointCount: 1,
+        healthStatuses: ["healthy"],
+      },
     ]);
   });
 });

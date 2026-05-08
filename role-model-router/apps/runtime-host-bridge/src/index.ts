@@ -5,7 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 
-import type { NormalizedCatalog } from "@role-model-router/catalog";
+import type { NormalizedCatalog, NormalizedCatalogModel } from "@role-model-router/catalog";
 import { assembleContextEnvelope } from "@role-model-router/context-envelope";
 import type { EndpointRegistryResult } from "@role-model-router/endpoint-registry";
 import { buildEndpointRegistry, type RegistrySources } from "@role-model-router/endpoint-registry";
@@ -642,6 +642,54 @@ function deleteRuntimeConfigProviderAccounts(databasePath: string): void {
   }
 }
 
+function readUnifiedLiteLLMProviderModelIds(
+  config: UnifiedRuntimeConfig | null,
+  providerId: string,
+): readonly string[] | null {
+  const provider = config?.liteLLM.providers.find((entry) => entry.providerId === providerId);
+  if (!provider) {
+    return null;
+  }
+  const modelIds = provider.modelMappings.map((mapping) => mapping.modelId);
+  return modelIds.length > 0 ? [...new Set(modelIds)] : null;
+}
+
+function readDefaultDisplayNameFromModelId(modelId: string): string {
+  const labelSource = modelId.split("/").at(-1) ?? modelId;
+  return labelSource
+    .split(/[-_]+/g)
+    .filter((segment) => segment.length > 0)
+    .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
+    .join(" ");
+}
+
+function synthesizeUnifiedLiteLLMModel(input: {
+  readonly modelId: string;
+  readonly providerId: string;
+  readonly catalog: NormalizedCatalog;
+}): NormalizedCatalogModel | null {
+  const provider = input.catalog.providers.find((entry) => entry.providerId === input.providerId);
+  const baseModel =
+    input.catalog.models.find((entry) => entry.modelId === input.modelId) ??
+    input.catalog.models.find((entry) => entry.providerId === input.providerId) ??
+    null;
+  if (!provider || !baseModel) {
+    return null;
+  }
+
+  return {
+    ...baseModel,
+    modelId: input.modelId,
+    providerId: input.providerId,
+    providerKind: provider.providerKind,
+    authFamily: provider.authFamily,
+    displayName: readDefaultDisplayNameFromModelId(input.modelId),
+    localOverrideApplied: true,
+    localNotes: [...baseModel.localNotes, "Synthesized from unified LiteLLM runtime config model mappings."],
+    upstreamProvenance: input.catalog.source,
+  };
+}
+
 function applyUnifiedLiteLLMAdapterFamilyOverrides(
   catalog: NormalizedCatalog,
   config: UnifiedRuntimeConfig | null,
@@ -662,6 +710,28 @@ function applyUnifiedLiteLLMAdapterFamilyOverrides(
         ? { ...provider, adapterFamily: "litellm-proxy" }
         : provider,
     ),
+    models: (() => {
+      const modelsById = new Map(catalog.models.map((model) => [model.modelId, model]));
+      const nextModels = [...catalog.models];
+      for (const provider of config.liteLLM.providers) {
+        for (const modelId of provider.modelMappings.map((mapping) => mapping.modelId)) {
+          if (modelsById.has(modelId)) {
+            continue;
+          }
+          const synthesizedModel = synthesizeUnifiedLiteLLMModel({
+            modelId,
+            providerId: provider.providerId,
+            catalog,
+          });
+          if (!synthesizedModel) {
+            continue;
+          }
+          modelsById.set(modelId, synthesizedModel);
+          nextModels.push(synthesizedModel);
+        }
+      }
+      return nextModels;
+    })(),
   };
 }
 
@@ -3454,22 +3524,30 @@ export async function createRuntimeBridgeBackend(
         variants: readonly ProviderPresetVariant[];
       }[]
     > {
-      return currentNormalizedCatalog.providers.map((provider) => ({
-        providerId: provider.providerId,
-        displayName: provider.displayName,
-        providerKind: provider.providerKind,
-        authFamily: provider.authFamily,
-        adapterFamily: provider.adapterFamily,
-        apiBase: provider.apiBase,
-        envVars: provider.envVars,
-        supportedAuthModes: provider.supportedAuthModes,
-        controlPlaneRequirements: provider.controlPlaneRequirements,
-        localOverrideApplied: provider.localOverrideApplied,
-        modelIds: currentNormalizedCatalog.models
-          .filter((model) => model.providerId === provider.providerId)
-          .map((model) => model.modelId),
-        variants: providerPresets.providers[provider.providerId]?.variants ?? [],
-      }));
+      return currentNormalizedCatalog.providers.map((provider) => {
+        const effectiveModelIds =
+          readUnifiedLiteLLMProviderModelIds(currentUnifiedRuntimeConfig, provider.providerId) ??
+          currentNormalizedCatalog.models
+            .filter((model) => model.providerId === provider.providerId)
+            .map((model) => model.modelId);
+        return {
+          providerId: provider.providerId,
+          displayName: provider.displayName,
+          providerKind: provider.providerKind,
+          authFamily: provider.authFamily,
+          adapterFamily: provider.adapterFamily,
+          apiBase: provider.apiBase,
+          envVars: provider.envVars,
+          supportedAuthModes: provider.supportedAuthModes,
+          controlPlaneRequirements: provider.controlPlaneRequirements,
+          localOverrideApplied: provider.localOverrideApplied,
+          modelIds: effectiveModelIds,
+          variants: (providerPresets.providers[provider.providerId]?.variants ?? []).map((variant) => ({
+            ...variant,
+            modelIds: effectiveModelIds.length > 0 ? effectiveModelIds : variant.modelIds,
+          })),
+        };
+      });
     },
     async listRoles(): Promise<
       readonly {
@@ -3521,10 +3599,12 @@ export async function createRuntimeBridgeBackend(
         throw new Error(`Provider variant ${variantId} does not expose device OAuth.`);
       }
 
+      const effectiveVariantModelIds =
+        readUnifiedLiteLLMProviderModelIds(currentUnifiedRuntimeConfig, providerId) ?? variant.modelIds;
       const allowedModels =
         readStringArray(body, "allowedModels") ??
-        (variant.modelIds.length > 0
-          ? [...variant.modelIds]
+        (effectiveVariantModelIds.length > 0
+          ? [...effectiveVariantModelIds]
           : currentNormalizedCatalog.models
               .filter((model) => model.providerId === providerId)
               .map((model) => model.modelId));

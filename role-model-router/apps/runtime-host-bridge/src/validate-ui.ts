@@ -306,12 +306,37 @@ if (process.argv[1] === __filename) {
   const repoRoot = path.resolve(__dirname, "..", "..", "..", "..");
   const runtimeStateRoot = path.join(os.tmpdir(), "role-model-runtime-ui-validation");
 
+  let unifiedRuntimeConfigPath: string | undefined;
+  const fs = await import("node:fs/promises");
+  try {
+    unifiedRuntimeConfigPath = path.join(runtimeStateRoot, "runtime-config.yaml");
+    await fs.mkdir(runtimeStateRoot, { recursive: true });
+    await fs.writeFile(
+      unifiedRuntimeConfigPath,
+      [
+        "version: 1.0",
+        "routing:",
+        "  strategy: balanced",
+        "llama_swap:",
+        "  models: {}",
+        "litellm_proxy:",
+        "  providers: {}",
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+  } catch {
+    // If temp config creation fails, fall back to running without it
+    unifiedRuntimeConfigPath = undefined;
+  }
+
   console.log(
     JSON.stringify(
       await runRuntimeUiValidation({
         repoRoot,
         runtimeStateRoot,
         scopeId: "runtime-ui-validation",
+        unifiedRuntimeConfigPath,
       }),
       null,
       2,

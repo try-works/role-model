@@ -35,9 +35,6 @@ type Pages = {
   "/app/control/providers": {
     params: {};
   };
-  "/app/control/accounts": {
-    params: {};
-  };
   "/app/control/runtime-config": {
     params: {};
   };
@@ -86,7 +83,7 @@ type Pages = {
 type RouteFiles = {
   "root.tsx": {
     id: "root";
-    page: "/" | "/app" | "/app/studio/chat" | "/app/studio/images" | "/app/studio/audio" | "/app/studio/rerank" | "/app/studio/advanced" | "/app/control/providers" | "/app/control/accounts" | "/app/control/runtime-config" | "/app/control/controller" | "/app/control/endpoints" | "/app/control/models" | "/app/observe/activity" | "/app/observe/requests" | "/app/observe/requests/:requestId" | "/app/observe/logs" | "/app/integrations/downstream" | "/app/integrations/upstream" | "/app/system/runtime" | "/app/system/peers" | "/*";
+    page: "/" | "/app" | "/app/studio/chat" | "/app/studio/images" | "/app/studio/audio" | "/app/studio/rerank" | "/app/studio/advanced" | "/app/control/providers" | "/app/control/runtime-config" | "/app/control/controller" | "/app/control/endpoints" | "/app/control/models" | "/app/observe/activity" | "/app/observe/requests" | "/app/observe/requests/:requestId" | "/app/observe/logs" | "/app/integrations/downstream" | "/app/integrations/upstream" | "/app/system/runtime" | "/app/system/peers" | "/*";
   };
   "routes/index.tsx": {
     id: "routes/index";
@@ -94,7 +91,7 @@ type RouteFiles = {
   };
   "routes/app-layout.tsx": {
     id: "routes/app-layout";
-    page: "/app" | "/app/studio/chat" | "/app/studio/images" | "/app/studio/audio" | "/app/studio/rerank" | "/app/studio/advanced" | "/app/control/providers" | "/app/control/accounts" | "/app/control/runtime-config" | "/app/control/controller" | "/app/control/endpoints" | "/app/control/models" | "/app/observe/activity" | "/app/observe/requests" | "/app/observe/requests/:requestId" | "/app/observe/logs" | "/app/integrations/downstream" | "/app/integrations/upstream" | "/app/system/runtime" | "/app/system/peers";
+    page: "/app" | "/app/studio/chat" | "/app/studio/images" | "/app/studio/audio" | "/app/studio/rerank" | "/app/studio/advanced" | "/app/control/providers" | "/app/control/runtime-config" | "/app/control/controller" | "/app/control/endpoints" | "/app/control/models" | "/app/observe/activity" | "/app/observe/requests" | "/app/observe/requests/:requestId" | "/app/observe/logs" | "/app/integrations/downstream" | "/app/integrations/upstream" | "/app/system/runtime" | "/app/system/peers";
   };
   "routes/dashboard.tsx": {
     id: "routes/dashboard";
@@ -123,10 +120,6 @@ type RouteFiles = {
   "routes/providers.tsx": {
     id: "routes/providers";
     page: "/app/control/providers";
-  };
-  "routes/accounts.tsx": {
-    id: "routes/accounts";
-    page: "/app/control/accounts";
   };
   "routes/control-runtime-config.tsx": {
     id: "routes/control-runtime-config";
@@ -193,7 +186,6 @@ type RouteModules = {
   "routes/studio-rerank": typeof import("./app/routes/studio-rerank.tsx");
   "routes/studio-advanced": typeof import("./app/routes/studio-advanced.tsx");
   "routes/providers": typeof import("./app/routes/providers.tsx");
-  "routes/accounts": typeof import("./app/routes/accounts.tsx");
   "routes/control-runtime-config": typeof import("./app/routes/control-runtime-config.tsx");
   "routes/control-controller": typeof import("./app/routes/control-controller.tsx");
   "routes/endpoints": typeof import("./app/routes/endpoints.tsx");

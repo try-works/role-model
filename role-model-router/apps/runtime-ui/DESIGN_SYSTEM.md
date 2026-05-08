@@ -121,10 +121,9 @@ The runtime hierarchy remains:
 | `/app/studio/audio` | live | `studio-workspace` | Unified audio workspace over `/v1/audio/speech`, `/v1/audio/voices`, and `/v1/audio/transcriptions` so voice discovery, speech generation, and transcript workflows remain one operator surface. |
 | `/app/studio/rerank` | live | `studio-workspace` | Ranked-input evaluation workspace over `/v1/rerank` and `/v1/reranking` with a compact request rail, ordered score ledger, and raw payload inspection. |
 | `/app/studio/advanced` | live | `studio-workspace` | Contract-and-request workspace for advanced families that stay under Studio: `/v1/responses`, `/v1/messages`, `/v1/messages/count_tokens`, `/v1/embeddings`, `/completion`, and `/infill`. |
-| `/app/control/providers` | live | `registry-detail` | Catalog-backed provider onboarding, capability review, and next-step routing into accounts and endpoints. |
-| `/app/control/accounts` | live | `registry-detail` | API-key and OAuth account management with operational state, not decorative onboarding chrome. |
+| `/app/control/providers` | live | `registry-detail` | Primary provider onboarding route for choosing a provider from the effective runtime catalog, choosing that provider's models, and completing either API-key or OAuth setup without leaving the page. |
 | `/app/control/runtime-config` | live | `registry-detail` | Repo-owned editor for the unified runtime contract covering local llama-swap models, remote LiteLLM providers, and process policy. |
-| `/app/control/endpoints` | live | `registry-detail` | Endpoint activation, registry diagnostics, and role binding review. |
+| `/app/control/endpoints` | live | `registry-detail` | Configured runtime registry for provider-model endpoint entries, health posture, and source visibility after provider onboarding. |
 | `/app/control/controller` | live | `registry-detail` | Explicit controller assignment with candidate health, source type, role coverage, tooling posture, and an honest empty state before any endpoint is activated. |
 | `/app/control/models` | live | `model-inventory` | Unified local/remote model inventory with inspect-only card drill-ins, explicit handoff to the runtime-config editor, and a non-error pre-activation state when no controller exists yet. |
 | `/app/observe/activity` | live | `ledger-inspector` | Preserved raw-host activity ledger over `/api/metrics` with inline capture drill-ins from `/api/captures/:id` and adjacent access to `/api/events`. |
@@ -161,12 +160,12 @@ Temporary placeholder routes may render through `FutureSurface` only while a fut
 | --- | --- |
 | `summary-board` | `/app` leads with telemetry KPI cards, then a dominant local-vs-remote comparison/readiness split with recent request context below. |
 | `studio-workspace` | `/app/studio/chat` uses a compact composer, dominant response stage, and adjacent usage/tooling/payload inspection. |
-| `registry-detail` | Provider, account, runtime-config, controller, and endpoint pages use fact strips before the registry rail + dossier/action split. |
+| `registry-detail` | Provider, runtime-config, controller, and endpoint pages keep the primary editor/ledger split and use summary chrome only when it changes the operator decision. |
 | `model-inventory` | `/app/control/models` uses fact strips before a responsive configured-model card grid and an inspect-only modal. |
 | `ledger-inspector` | Requests and request detail lead with telemetry facts while Activity remains the raw-host adjacency surface for metrics, captures, and payload drill-ins. |
 | `dual-console` | `/app/observe/logs` starts with combined history, then splits proxy and upstream consoles into mirrored panes. |
 | `contract-reference` | `/app/integrations/downstream` keeps connection facts in a narrow reference column and examples/compatibility in the larger contract pane. |
-| `system-topology` | `/app/system/runtime` layers lifecycle, controller posture, live version facts, preserved host links, and runtime contract notes. |
+| `system-topology` | `/app/system/runtime` layers lifecycle, controller posture, live version facts, and preserved host diagnostics without extra note-only panels. |
 
 ## Live route layouts
 
@@ -207,7 +206,7 @@ These routes are no longer vague placeholder ideas. Their layout contracts are i
 
 ### `System > Peers`
 
-- Fact strip or concise topology overview first
+- Concise topology overview first
 - Split between peer inventory and peer contract/policy detail
 - Real empty state when peers are absent
 

@@ -11,7 +11,6 @@ import {
   Logs,
   Mic,
   PanelsTopLeft,
-  Settings2,
   SlidersHorizontal,
   Speech,
   Telescope,
@@ -146,23 +145,9 @@ const controlProvidersRoute = createRoute({
   template: "registry-detail",
   eyebrow: "Control",
   title: "Provider onboarding",
-  description: "Catalog-backed provider surfaces route directly into account setup, endpoint activation, and capability review.",
+  description: "Choose a LiteLLM-backed provider, select the models available for that provider, and complete setup from one onboarding surface.",
   noteTitle: "Registry detail",
-  noteBody: "The left pane lists providers and variants; the right pane explains readiness, auth shape, and next steps.",
-});
-
-const controlAccountsRoute = createRoute({
-  id: "control-accounts",
-  to: "/app/control/accounts",
-  label: "Accounts",
-  section: "Control",
-  icon: Settings2,
-  template: "registry-detail",
-  eyebrow: "Control",
-  title: "Provider accounts",
-  description: "Save API-key accounts, run device OAuth, and bind models to roles without exposing secrets.",
-  noteTitle: "Registry detail",
-  noteBody: "Forms stay compact and ledger-like; account state and diagnostics remain visible beside the editor.",
+  noteBody: "Lead with provider selection and model availability; API-key and OAuth setup stay in the same workflow instead of splitting into a second page.",
 });
 
 const controlRuntimeConfigRoute = createRoute({
@@ -202,9 +187,9 @@ const controlEndpointsRoute = createRoute({
   template: "registry-detail",
   eyebrow: "Control",
   title: "Endpoint registry",
-  description: "Activate runtime-managed endpoints and verify status, source type, and role bindings in one place.",
+  description: "Review configured providers, models, and runtime endpoint status after onboarding without duplicating provider setup here.",
   noteTitle: "Registry detail",
-  noteBody: "Treat endpoint creation and endpoint status as adjacent parts of one registry workflow.",
+  noteBody: "Treat this page as the live configured registry for provider-model runtime entries, with health and source posture kept visible.",
 });
 
 const controlModelsRoute = createRoute({
@@ -341,7 +326,6 @@ const runtimeRouteDefinitions = [
   studioRerankRoute,
   studioAdvancedRoute,
   controlProvidersRoute,
-  controlAccountsRoute,
   controlRuntimeConfigRoute,
   controlControllerRoute,
   controlEndpointsRoute,
@@ -377,7 +361,6 @@ export const runtimeNavigationSections: readonly RuntimeNavigationSection[] = [
     icon: PanelsTopLeft,
       items: [
         controlProvidersRoute,
-        controlAccountsRoute,
         controlRuntimeConfigRoute,
         controlControllerRoute,
         controlEndpointsRoute,
@@ -484,9 +467,6 @@ export const listRowClassName =
 export function getRuntimeRouteDefinition(pathname: string): RuntimeRouteDefinition | undefined {
   if (pathname === "/app/providers") {
     return controlProvidersRoute;
-  }
-  if (pathname === "/app/accounts") {
-    return controlAccountsRoute;
   }
   if (pathname === "/app/workbench") {
     return studioChatRoute;

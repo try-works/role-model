@@ -1,8 +1,9 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 
 import {
   getDeviceAuthorizationPollDelayMs,
   resolveVerificationWindowUrl,
+  syncConnectedDeviceAuthorizationEndpoints,
   shouldAutoPollDeviceAuthorization,
 } from "./device-authorization";
 
@@ -83,5 +84,49 @@ describe("getDeviceAuthorizationPollDelayMs", () => {
         status: "pending",
       }),
     ).toBe(5000);
+  });
+});
+
+describe("syncConnectedDeviceAuthorizationEndpoints", () => {
+  test("activates each selected model once after device OAuth connects", async () => {
+    const activateEndpoint = vi.fn().mockResolvedValue(undefined);
+
+    await syncConnectedDeviceAuthorizationEndpoints({
+      session: {
+        authRequestId: "auth-001",
+        providerAccountId: "moonshot.personal.kimi-code",
+        status: "connected",
+      },
+      selectedModels: ["moonshotai/kimi-k2.5", "moonshotai/kimi-k2.5", "moonshotai/kimi-audio"],
+      activateEndpoint,
+    });
+
+    expect(activateEndpoint).toHaveBeenCalledTimes(2);
+    expect(activateEndpoint).toHaveBeenNthCalledWith(1, {
+      providerAccountId: "moonshot.personal.kimi-code",
+      modelId: "moonshotai/kimi-k2.5",
+      region: "global",
+    });
+    expect(activateEndpoint).toHaveBeenNthCalledWith(2, {
+      providerAccountId: "moonshot.personal.kimi-code",
+      modelId: "moonshotai/kimi-audio",
+      region: "global",
+    });
+  });
+
+  test("skips endpoint activation until the device-auth session is connected", async () => {
+    const activateEndpoint = vi.fn().mockResolvedValue(undefined);
+
+    await syncConnectedDeviceAuthorizationEndpoints({
+      session: {
+        authRequestId: "auth-001",
+        providerAccountId: "moonshot.personal.kimi-code",
+        status: "pending",
+      },
+      selectedModels: ["moonshotai/kimi-k2.5"],
+      activateEndpoint,
+    });
+
+    expect(activateEndpoint).not.toHaveBeenCalled();
   });
 });
