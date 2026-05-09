@@ -199,16 +199,16 @@ version: "1.0"
         '    - "-e"',
         `    - 'const http=require("node:http");const port=Number(process.env.PORT);const server=http.createServer((req,res)=>{if(req.url==="/health/liveliness"){res.statusCode=200;res.end("ok");return;}res.statusCode=404;res.end("missing");});server.listen(port,"127.0.0.1");const shutdown=()=>server.close(()=>process.exit(0));process.on("SIGTERM",shutdown);process.on("SIGINT",shutdown);'`,
         "  providers:",
-        "    moonshotai:",
+        "    moonshot:",
         '      api_key: "${MOONSHOT_API_KEY}"',
         "      model_list:",
-        '        - model_name: "moonshotai/kimi-k2.6"',
+        '        - model_name: "moonshot/kimi-k2.6"',
         "          litellm_params:",
-        '            model: "moonshotai/kimi-k2.6"',
+        '            model: "moonshot/kimi-k2.6"',
         '            api_base: "https://api.moonshot.ai/v1"',
-        '        - model_name: "moonshotai/kimi-k2.5"',
+        '        - model_name: "moonshot/kimi-k2.5"',
         "          litellm_params:",
-        '            model: "moonshotai/kimi-k2.5"',
+        '            model: "moonshot/kimi-k2.5"',
         '            api_base: "https://api.moonshot.ai/v1"',
         "",
       ].join("\n"),
@@ -225,16 +225,16 @@ version: "1.0"
     await expect(backend.listProviders()).resolves.toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          providerId: "moonshotai",
-          modelIds: ["moonshotai/kimi-k2.6", "moonshotai/kimi-k2.5"],
+          providerId: "moonshot",
+          modelIds: ["moonshot/kimi-k2.6", "moonshot/kimi-k2.5"],
           variants: expect.arrayContaining([
             expect.objectContaining({
               variantId: "moonshot-open-platform",
-              modelIds: ["moonshotai/kimi-k2.6", "moonshotai/kimi-k2.5"],
+              modelIds: ["moonshot/kimi-k2.6", "moonshot/kimi-k2.5"],
             }),
             expect.objectContaining({
               variantId: "kimi-code",
-              modelIds: ["moonshotai/kimi-k2.6", "moonshotai/kimi-k2.5"],
+              modelIds: ["moonshot/kimi-k2.6", "moonshot/kimi-k2.5"],
             }),
           ]),
         }),
@@ -244,12 +244,12 @@ version: "1.0"
     await expect(backend.listEndpoints()).resolves.toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          endpointId: "moonshotai.litellm.global.moonshotai-kimi-k2-6",
-          modelId: "moonshotai/kimi-k2.6",
+          endpointId: "moonshot.litellm.global.moonshot-kimi-k2-6",
+          modelId: "moonshot/kimi-k2.6",
         }),
         expect.objectContaining({
-          endpointId: "moonshotai.litellm.global.moonshotai-kimi-k2-5",
-          modelId: "moonshotai/kimi-k2.5",
+          endpointId: "moonshot.litellm.global.moonshot-kimi-k2-5",
+          modelId: "moonshot/kimi-k2.5",
         }),
       ]),
     );

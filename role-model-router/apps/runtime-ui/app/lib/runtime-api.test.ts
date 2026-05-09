@@ -46,14 +46,14 @@ describe("fetchRuntimeSnapshot", () => {
         case "/api/role-model/runtime/summary":
           return jsonResponse({ providerCount: 3, accountCount: 2, endpointCount: 3 });
         case "/api/role-model/providers":
-          return jsonResponse([{ providerId: "moonshotai" }]);
+          return jsonResponse([{ providerId: "moonshot" }]);
         case "/api/role-model/accounts":
           return jsonResponse([
             {
               providerAccountId: "moonshot.personal.primary",
               modelRoleBindings: [
                 {
-                  modelId: "moonshotai/kimi-k2.5",
+                  modelId: "moonshot/kimi-k2.5",
                   roleIds: ["general.chat"],
                 },
               ],
@@ -77,13 +77,13 @@ describe("fetchRuntimeSnapshot", () => {
 
     await expect(fetchRuntimeSnapshot(fetcher)).resolves.toEqual({
       summary: { providerCount: 3, accountCount: 2, endpointCount: 3 },
-      providers: [{ providerId: "moonshotai" }],
+      providers: [{ providerId: "moonshot" }],
       accounts: [
         {
           providerAccountId: "moonshot.personal.primary",
           modelRoleBindings: [
             {
-              modelId: "moonshotai/kimi-k2.5",
+              modelId: "moonshot/kimi-k2.5",
               roleIds: ["general.chat"],
             },
           ],
@@ -124,14 +124,14 @@ describe("fetchDownstreamOpenAIProviderConfig", () => {
         },
         models: [
           {
-            id: "moonshotai/kimi-k2.5",
+            id: "moonshot/kimi-k2.5",
             object: "model",
             owned_by: "role-model",
             endpoint_ids: ["moonshot.personal.primary.global.kimi-k2.5"],
           },
         ],
         setup: {
-          recommendedModel: "moonshotai/kimi-k2.5",
+          recommendedModel: "moonshot/kimi-k2.5",
           notes: [
             "Configure downstream tooling as an OpenAI-compatible provider.",
             "Use GET /v1/models to discover the current model ids.",
@@ -160,14 +160,14 @@ describe("fetchDownstreamOpenAIProviderConfig", () => {
       },
       models: [
         {
-          id: "moonshotai/kimi-k2.5",
+          id: "moonshot/kimi-k2.5",
           object: "model",
           owned_by: "role-model",
           endpoint_ids: ["moonshot.personal.primary.global.kimi-k2.5"],
         },
       ],
       setup: {
-        recommendedModel: "moonshotai/kimi-k2.5",
+        recommendedModel: "moonshot/kimi-k2.5",
         notes: [
           "Configure downstream tooling as an OpenAI-compatible provider.",
           "Use GET /v1/models to discover the current model ids.",
@@ -416,7 +416,7 @@ describe("observe APIs", () => {
         {
           id: 7,
           timestamp: "2026-05-07T04:00:00.000Z",
-          model: "moonshotai/kimi-k2.5",
+          model: "moonshot/kimi-k2.5",
           req_path: "/v1/chat/completions",
           resp_content_type: "application/json",
           resp_status_code: 200,
@@ -437,7 +437,7 @@ describe("observe APIs", () => {
       {
         id: 7,
         timestamp: "2026-05-07T04:00:00.000Z",
-        model: "moonshotai/kimi-k2.5",
+        model: "moonshot/kimi-k2.5",
         req_path: "/v1/chat/completions",
         resp_content_type: "application/json",
         resp_status_code: 200,
@@ -578,7 +578,7 @@ describe("controller assignment APIs", () => {
       return jsonResponse({
         scope: "global",
         endpointId: "moonshot.personal.primary.global.kimi-k2.5",
-        modelId: "moonshotai/kimi-k2.5",
+        modelId: "moonshot/kimi-k2.5",
         sourceType: "remote",
         status: "active",
       });
@@ -594,7 +594,7 @@ describe("controller assignment APIs", () => {
     ).resolves.toEqual({
       scope: "global",
       endpointId: "moonshot.personal.primary.global.kimi-k2.5",
-      modelId: "moonshotai/kimi-k2.5",
+      modelId: "moonshot/kimi-k2.5",
       sourceType: "remote",
       status: "active",
     });
@@ -696,11 +696,11 @@ describe("studio vendor API helpers", () => {
   test("loads available speech voices for a selected model", async () => {
     const fetcher = vi.fn(async (input: string | URL | Request) => {
       const url = typeof input === "string" ? input : input instanceof URL ? `${input.pathname}${input.search}` : input.url;
-      expect(url).toBe("/v1/audio/voices?model=moonshotai%2Fkimi-audio");
+      expect(url).toBe("/v1/audio/voices?model=moonshot%2Fkimi-audio");
       return jsonResponse([{ id: "alloy", name: "Alloy" }]);
     });
 
-    await expect(fetchAudioVoices("moonshotai/kimi-audio", fetcher)).resolves.toEqual([
+    await expect(fetchAudioVoices("moonshot/kimi-audio", fetcher)).resolves.toEqual([
       { id: "alloy", name: "Alloy" },
     ]);
   });
@@ -720,7 +720,7 @@ describe("studio vendor API helpers", () => {
 
     const blob = await submitSpeechGeneration(
       {
-        model: "moonshotai/kimi-audio",
+        model: "moonshot/kimi-audio",
         input: "Read this out loud.",
         voice: "alloy",
       },
@@ -743,7 +743,7 @@ describe("studio vendor API helpers", () => {
       submitAudioTranscription(
         {
           file,
-          model: "moonshotai/kimi-audio",
+          model: "moonshot/kimi-audio",
         },
         fetcher,
       ),
@@ -818,9 +818,9 @@ describe("startRuntimeDeviceAuthorization", () => {
       expect(init?.body).toBe(
         JSON.stringify({
           providerAccountId: "moonshot.personal.kimi-code",
-          providerId: "moonshotai",
+          providerId: "moonshot",
           variantId: "kimi-code",
-          allowedModels: ["moonshotai/kimi-k2.5"],
+          allowedModels: ["moonshot/kimi-k2.5"],
         }),
       );
 
@@ -836,9 +836,9 @@ describe("startRuntimeDeviceAuthorization", () => {
       startRuntimeDeviceAuthorization(
         {
           providerAccountId: "moonshot.personal.kimi-code",
-          providerId: "moonshotai",
+          providerId: "moonshot",
           variantId: "kimi-code",
-          allowedModels: ["moonshotai/kimi-k2.5"],
+          allowedModels: ["moonshot/kimi-k2.5"],
         },
         fetcher,
       ),
@@ -883,7 +883,7 @@ describe("activateRuntimeEndpoint", () => {
       expect(init?.body).toBe(
         JSON.stringify({
           providerAccountId: "moonshot.personal.primary",
-          modelId: "moonshotai/kimi-k2.5",
+          modelId: "moonshot/kimi-k2.5",
           region: "global",
         }),
       );
@@ -891,7 +891,7 @@ describe("activateRuntimeEndpoint", () => {
       return jsonResponse({
         endpointId: "moonshot.personal.primary.global.kimi-k2.5",
         providerAccountId: "moonshot.personal.primary",
-        modelId: "moonshotai/kimi-k2.5",
+        modelId: "moonshot/kimi-k2.5",
         status: "active",
       });
     });
@@ -900,7 +900,7 @@ describe("activateRuntimeEndpoint", () => {
       activateRuntimeEndpoint(
         {
           providerAccountId: "moonshot.personal.primary",
-          modelId: "moonshotai/kimi-k2.5",
+          modelId: "moonshot/kimi-k2.5",
           region: "global",
         },
         fetcher,
@@ -908,7 +908,7 @@ describe("activateRuntimeEndpoint", () => {
     ).resolves.toEqual({
       endpointId: "moonshot.personal.primary.global.kimi-k2.5",
       providerAccountId: "moonshot.personal.primary",
-      modelId: "moonshotai/kimi-k2.5",
+      modelId: "moonshot/kimi-k2.5",
       status: "active",
     });
   });
@@ -933,7 +933,7 @@ describe("fetchRuntimeConfig", () => {
           },
           liteLLM: {
             enabled: true,
-            providers: [{ providerId: "moonshotai", modelMappings: [{ modelId: "moonshotai/kimi-k2.5" }] }],
+            providers: [{ providerId: "moonshot", modelMappings: [{ modelId: "moonshot/kimi-k2.5" }] }],
             process: { command: null, args: [], env: {}, cwd: null, startupTimeoutMs: null },
           },
         },
@@ -953,7 +953,7 @@ describe("fetchRuntimeConfig", () => {
         },
         liteLLM: {
           enabled: true,
-          providers: [{ providerId: "moonshotai", modelMappings: [{ modelId: "moonshotai/kimi-k2.5" }] }],
+          providers: [{ providerId: "moonshot", modelMappings: [{ modelId: "moonshot/kimi-k2.5" }] }],
           process: { command: null, args: [], env: {}, cwd: null, startupTimeoutMs: null },
         },
       },
@@ -981,7 +981,7 @@ describe("updateRuntimeConfig", () => {
             process: { command: null, args: [], env: {}, cwd: null, startupTimeoutMs: null },
           },
           liteLLM: {
-            providers: [{ providerId: "moonshotai", modelMappings: [{ modelId: "moonshotai/kimi-k2.5" }] }],
+            providers: [{ providerId: "moonshot", modelMappings: [{ modelId: "moonshot/kimi-k2.5" }] }],
             process: { command: null, args: [], env: {}, cwd: null, startupTimeoutMs: null },
           },
         }),
@@ -1007,7 +1007,7 @@ describe("updateRuntimeConfig", () => {
             process: { command: null, args: [], env: {}, cwd: null, startupTimeoutMs: null },
           },
           liteLLM: {
-            providers: [{ providerId: "moonshotai", modelMappings: [{ modelId: "moonshotai/kimi-k2.5" }] }],
+            providers: [{ providerId: "moonshot", modelMappings: [{ modelId: "moonshot/kimi-k2.5" }] }],
             process: { command: null, args: [], env: {}, cwd: null, startupTimeoutMs: null },
           },
         },

@@ -192,15 +192,15 @@ litellm_proxy:
       liteLLM: {
         providers: [
           {
-            providerId: "moonshotai",
+            providerId: "moonshot",
             apiKeyRef: "${MOONSHOT_API_KEY}",
-            modelNames: ["moonshotai/kimi-k2.5"],
+            modelNames: ["moonshot/kimi-k2.5"],
             modelMappings: [
               {
-                modelId: "moonshotai/kimi-k2.5",
-                litellmModel: "moonshotai/kimi-k2.5",
+                modelId: "moonshot/kimi-k2.5",
+                litellmModel: "moonshot/kimi-k2.5",
                 litellmParams: {
-                  model: "moonshotai/kimi-k2.5",
+                  model: "moonshot/kimi-k2.5",
                   api_base: "https://api.moonshot.ai/v1",
                   temperature: 0,
                 },
@@ -251,15 +251,15 @@ litellm_proxy:
         enabled: true,
         providers: [
           {
-            providerId: "moonshotai",
+            providerId: "moonshot",
             apiKeyRef: "${MOONSHOT_API_KEY}",
-            modelNames: ["moonshotai/kimi-k2.5"],
+            modelNames: ["moonshot/kimi-k2.5"],
             modelMappings: [
               {
-                modelId: "moonshotai/kimi-k2.5",
-                litellmModel: "moonshotai/kimi-k2.5",
+                modelId: "moonshot/kimi-k2.5",
+                litellmModel: "moonshot/kimi-k2.5",
                 litellmParams: {
-                  model: "moonshotai/kimi-k2.5",
+                  model: "moonshot/kimi-k2.5",
                   api_base: "https://api.moonshot.ai/v1",
                   temperature: 0,
                 },

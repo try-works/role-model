@@ -32,7 +32,7 @@ import {
 import {
   deriveLiteLLMProviders,
   loadLiteLLMModelPrices,
-} from "../../../apps/runtime-host-bridge/src/litellm-catalog.js";
+} from "../../../apps/runtime-host-bridge/dist/litellm-catalog.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

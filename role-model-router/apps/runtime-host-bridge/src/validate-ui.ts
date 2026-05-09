@@ -180,7 +180,7 @@ export async function runRuntimeUiValidation(
       },
       body: JSON.stringify({
         providerAccountId: upsertedAccountId,
-        providerId: "moonshotai",
+        providerId: "moonshot",
         providerKind: "provider-openai",
         orgScope: "personal",
         accountScope: "workspace-default",
@@ -194,10 +194,10 @@ export async function runRuntimeUiValidation(
           regions: ["global"],
         },
         baseUrlOverride: "https://api.moonshot.ai/v1",
-        allowedModels: ["moonshotai/kimi-k2.5"],
+        allowedModels: ["moonshot/kimi-k2.5"],
         modelRoleBindings: [
           {
-            modelId: "moonshotai/kimi-k2.5",
+            modelId: "moonshot/kimi-k2.5",
             roleIds: ["general.chat"],
           },
         ],
@@ -237,7 +237,7 @@ export async function runRuntimeUiValidation(
       },
       body: JSON.stringify({
         providerAccountId: upsertedAccountId,
-        modelId: "moonshotai/kimi-k2.5",
+        modelId: "moonshot/kimi-k2.5",
         region: "global",
       }),
     });
@@ -266,7 +266,7 @@ export async function runRuntimeUiValidation(
       endpointCount: number;
     };
 
-    const moonshotProvider = providers.find((provider) => provider.providerId === "moonshotai");
+    const moonshotProvider = providers.find((provider) => provider.providerId === "moonshot");
 
     return {
       providerCount: finalSummary.providerCount,
@@ -287,7 +287,7 @@ export async function runRuntimeUiValidation(
           account.providerAccountId === upsertedAccountId &&
           account.modelRoleBindings?.some(
             (binding) =>
-              binding.modelId === "moonshotai/kimi-k2.5" &&
+              binding.modelId === "moonshot/kimi-k2.5" &&
               binding.roleIds.includes("general.chat"),
           ),
       ),

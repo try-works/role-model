@@ -84,63 +84,6 @@ import {
   type LiteLLMProviderInfo,
 } from "./litellm-catalog.js";
 
-const CURATED_PROVIDERS: LiteLLMProviderInfo[] = [
-  {
-    providerId: "openai",
-    displayName: "OpenAI",
-    providerKind: "provider-openai",
-    authFamily: "api-key",
-    adapterFamily: "ai-sdk-openai",
-    apiBase: "https://api.openai.com/v1",
-    envVars: ["OPENAI_API_KEY"],
-    supportedAuthModes: [],
-    controlPlaneRequirements: ["organization.optional"],
-    localOverrideApplied: true,
-    upstreamProvenance: {
-      vendor: "models.dev",
-      commit: "8f3c2d1",
-      capturedAt: "2026-05-04T12:00:00Z",
-      schemaVersion: "models.dev.v1",
-    },
-  },
-  {
-    providerId: "anthropic",
-    displayName: "Anthropic",
-    providerKind: "provider-anthropic",
-    authFamily: "api-key",
-    adapterFamily: "ai-sdk-anthropic",
-    apiBase: "https://api.anthropic.com/v1",
-    envVars: ["ANTHROPIC_API_KEY"],
-    supportedAuthModes: [],
-    controlPlaneRequirements: ["workspace.required"],
-    localOverrideApplied: true,
-    upstreamProvenance: {
-      vendor: "models.dev",
-      commit: "8f3c2d1",
-      capturedAt: "2026-05-04T12:00:00Z",
-      schemaVersion: "models.dev.v1",
-    },
-  },
-  {
-    providerId: "moonshotai",
-    displayName: "Moonshot AI",
-    providerKind: "provider-openai",
-    authFamily: "api-key",
-    adapterFamily: "ai-sdk-openai-compatible",
-    apiBase: "https://api.moonshot.ai/v1",
-    envVars: ["MOONSHOT_API_KEY"],
-    supportedAuthModes: ["api-key-static", "oauth2-device-code"],
-    controlPlaneRequirements: ["workspace.required", "kimi-code.oauth.device"],
-    localOverrideApplied: true,
-    upstreamProvenance: {
-      vendor: "models.dev",
-      commit: "8f3c2d1",
-      capturedAt: "2026-05-04T12:00:00Z",
-      schemaVersion: "models.dev.v1",
-    },
-  },
-];
-
 interface OpenAIChatCompletionsTool {
   readonly type: string;
   readonly function?: {
@@ -2766,14 +2709,7 @@ export async function createRuntimeBridgeBackend(
     ),
   );
   const liteLLMModelPrices = await loadLiteLLMModelPrices(options.repoRoot);
-  let liteLLMProviders = liteLLMModelPrices
-    ? [
-        ...CURATED_PROVIDERS,
-        ...deriveLiteLLMProviders(liteLLMModelPrices).filter(
-          (p) => !CURATED_PROVIDERS.some((c) => c.providerId === p.providerId),
-        ),
-      ]
-    : [...CURATED_PROVIDERS];
+  let liteLLMProviders = liteLLMModelPrices ? deriveLiteLLMProviders(liteLLMModelPrices) : [];
   const providerAccountsFixture = await readJson<{ accounts: unknown[] }>(
     path.join(options.repoRoot, "testdata", "router-runtime", "provider-accounts.json"),
   );
@@ -2860,7 +2796,7 @@ export async function createRuntimeBridgeBackend(
       sources: getCurrentRegistrySources(),
     });
     if (currentRegistry.diagnostics.length > 0) {
-      throw new Error("Endpoint-registry validation failed after runtime state update.");
+      throw new Error(`Endpoint-registry validation failed after runtime state update: ${JSON.stringify(currentRegistry.diagnostics)}`);
     }
   };
   const applyUnifiedRuntimeConfigState = async (nextConfig: UnifiedRuntimeConfig | null): Promise<void> => {

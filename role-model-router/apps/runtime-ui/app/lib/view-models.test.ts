@@ -23,7 +23,7 @@ describe("buildProviderCards", () => {
       buildProviderCards(
         [
           {
-            providerId: "moonshotai",
+            providerId: "moonshot",
             displayName: "Moonshot AI",
             variants: [
               {
@@ -44,13 +44,13 @@ describe("buildProviderCards", () => {
         [
           {
             providerAccountId: "moonshot.personal.primary",
-            providerId: "moonshotai",
+            providerId: "moonshot",
           },
         ],
       ),
     ).toEqual([
       {
-        providerId: "moonshotai",
+        providerId: "moonshot",
         title: "Moonshot AI",
         accountCount: 1,
         variants: [
@@ -92,12 +92,12 @@ describe("buildWorkbenchModelOptions", () => {
   test("sorts and deduplicates model options for the workbench composer", () => {
     expect(
       buildWorkbenchModelOptions([
-        { id: "moonshotai/kimi-k2.5", endpoint_ids: ["moonshot.personal.primary.global.kimi-k2.5"] },
+        { id: "moonshot/kimi-k2.5", endpoint_ids: ["moonshot.personal.primary.global.kimi-k2.5"] },
         { id: "openai/gpt-4.1-mini-fast", endpoint_ids: ["openai.personal.primary.us-east-1.fast"] },
-        { id: "moonshotai/kimi-k2.5", endpoint_ids: ["moonshot.personal.primary.global.kimi-k2.5"] },
+        { id: "moonshot/kimi-k2.5", endpoint_ids: ["moonshot.personal.primary.global.kimi-k2.5"] },
       ]),
     ).toEqual([
-      { label: "Kimi K2.5", value: "moonshotai/kimi-k2.5" },
+      { label: "Kimi K2.5", value: "moonshot/kimi-k2.5" },
       { label: "GPT 4.1 Mini Fast", value: "openai/gpt-4.1-mini-fast" },
     ]);
   });
@@ -109,7 +109,7 @@ describe("buildConfiguredModelCards", () => {
       buildConfiguredModelCards({
         models: [
           {
-            id: "moonshotai/kimi-k2.5",
+            id: "moonshot/kimi-k2.5",
             endpoint_ids: ["moonshot.personal.primary.global.kimi-k2.5"],
           },
           {
@@ -120,8 +120,8 @@ describe("buildConfiguredModelCards", () => {
         endpoints: [
           {
             endpointId: "moonshot.personal.primary.global.kimi-k2.5",
-            modelId: "moonshotai/kimi-k2.5",
-            providerId: "moonshotai",
+            modelId: "moonshot/kimi-k2.5",
+            providerId: "moonshot",
             roleIds: ["general.chat"],
             status: "active",
             servingSource: "remote-service",
@@ -140,10 +140,10 @@ describe("buildConfiguredModelCards", () => {
         accounts: [
           {
             providerAccountId: "moonshot.personal.primary",
-            providerId: "moonshotai",
+            providerId: "moonshot",
             modelRoleBindings: [
               {
-                modelId: "moonshotai/kimi-k2.5",
+                modelId: "moonshot/kimi-k2.5",
                 roleIds: ["general.chat"],
               },
             ],
@@ -174,7 +174,7 @@ describe("buildConfiguredModelCards", () => {
         controllerState: "active",
       }),
       expect.objectContaining({
-        modelId: "moonshotai/kimi-k2.5",
+        modelId: "moonshot/kimi-k2.5",
         displayName: "Kimi K2.5",
         sourceSummary: "remote",
         endpointCount: 1,
@@ -193,10 +193,10 @@ describe("buildModelCatalogRows", () => {
     expect(
       buildModelCatalogRows([
         {
-          id: "moonshotai/kimi-k2.6",
+          id: "moonshot/kimi-k2.6",
           endpoint_ids: [
-            "moonshotai.litellm.global.moonshotai-kimi-k2-6",
-            "moonshotai.litellm.global.moonshotai-kimi-k2-6",
+            "moonshot.litellm.global.moonshot-kimi-k2-6",
+            "moonshot.litellm.global.moonshot-kimi-k2-6",
           ],
         },
         {
@@ -206,10 +206,10 @@ describe("buildModelCatalogRows", () => {
       ]),
     ).toEqual([
       {
-        modelId: "moonshotai/kimi-k2.6",
+        modelId: "moonshot/kimi-k2.6",
         displayName: "Kimi K2.6",
         endpointCount: 1,
-        endpointIds: ["moonshotai.litellm.global.moonshotai-kimi-k2-6"],
+        endpointIds: ["moonshot.litellm.global.moonshot-kimi-k2-6"],
       },
       {
         modelId: "openai/gpt-4.1-mini-fast",
@@ -226,9 +226,9 @@ describe("buildEndpointCatalogRows", () => {
     expect(
       buildEndpointCatalogRows([
         {
-          endpointId: "moonshotai.litellm.global.moonshotai-kimi-k2-6",
-          modelId: "moonshotai/kimi-k2.6",
-          providerId: "moonshotai",
+          endpointId: "moonshot.litellm.global.moonshot-kimi-k2-6",
+          modelId: "moonshot/kimi-k2.6",
+          providerId: "moonshot",
           sourceType: "remote",
           servingSource: "vendor-litellm",
           endpointKind: "remote_api",
@@ -258,9 +258,9 @@ describe("buildEndpointCatalogRows", () => {
         healthStatus: "healthy",
       },
       {
-        endpointId: "moonshotai.litellm.global.moonshotai-kimi-k2-6",
-        modelId: "moonshotai/kimi-k2.6",
-        providerLabel: "moonshotai",
+        endpointId: "moonshot.litellm.global.moonshot-kimi-k2-6",
+        modelId: "moonshot/kimi-k2.6",
+        providerLabel: "moonshot",
         sourceLabel: "Remote",
         servingSource: "vendor-litellm",
         endpointKind: "remote_api",
@@ -276,26 +276,26 @@ describe("buildAccountModelCatalogIds", () => {
     expect(
       buildAccountModelCatalogIds({
         account: {
-          providerId: "moonshotai",
-          allowedModels: ["moonshotai/kimi-k2.5", "moonshotai/kimi-k2.6"],
+          providerId: "moonshot",
+          allowedModels: ["moonshot/kimi-k2.5", "moonshot/kimi-k2.6"],
         },
         providers: [
           {
-            providerId: "moonshotai",
+            providerId: "moonshot",
             displayName: "Moonshot AI",
-            modelIds: ["moonshotai/kimi-k2.6", "moonshotai/kimi-k2.5"],
+            modelIds: ["moonshot/kimi-k2.6", "moonshot/kimi-k2.5"],
           },
         ],
         models: [
           {
-            id: "moonshotai/kimi-k2.5",
+            id: "moonshot/kimi-k2.5",
           },
           {
-            id: "moonshotai/kimi-k2.6",
+            id: "moonshot/kimi-k2.6",
           },
         ],
       }),
-    ).toEqual(["moonshotai/kimi-k2.6", "moonshotai/kimi-k2.5"]);
+    ).toEqual(["moonshot/kimi-k2.6", "moonshot/kimi-k2.5"]);
   });
 });
 
@@ -306,43 +306,43 @@ describe("buildConfiguredProviderRows", () => {
         accounts: [
           {
             providerAccountId: "moonshot.personal.primary",
-            providerId: "moonshotai",
+            providerId: "moonshot",
             authMode: "api-key-static",
             healthStatus: "healthy",
             status: "active",
-            allowedModels: ["moonshotai/kimi-k2.6", "moonshotai/kimi-k2.5"],
+            allowedModels: ["moonshot/kimi-k2.6", "moonshot/kimi-k2.5"],
           },
           {
             providerAccountId: "moonshot.personal.kimi-code",
-            providerId: "moonshotai",
+            providerId: "moonshot",
             authMode: "oauth2-device-code",
             healthStatus: "healthy",
             status: "active",
-            allowedModels: ["moonshotai/kimi-k2.6"],
+            allowedModels: ["moonshot/kimi-k2.6"],
           },
         ],
         endpoints: [
           {
-            endpointId: "moonshotai.litellm.global.moonshotai-kimi-k2-6",
-            providerId: "moonshotai",
-            modelId: "moonshotai/kimi-k2.6",
+            endpointId: "moonshot.litellm.global.moonshot-kimi-k2-6",
+            providerId: "moonshot",
+            modelId: "moonshot/kimi-k2.6",
             status: "active",
           },
           {
-            endpointId: "moonshotai.litellm.global.moonshotai-kimi-k2-5",
-            providerId: "moonshotai",
-            modelId: "moonshotai/kimi-k2.5",
+            endpointId: "moonshot.litellm.global.moonshot-kimi-k2-5",
+            providerId: "moonshot",
+            modelId: "moonshot/kimi-k2.5",
             status: "degraded",
           },
         ],
       }),
     ).toEqual([
       {
-        providerId: "moonshotai",
+        providerId: "moonshot",
         accountIds: ["moonshot.personal.kimi-code", "moonshot.personal.primary"],
         authModes: ["api-key-static", "oauth2-device-code"],
-        configuredModels: ["moonshotai/kimi-k2.5", "moonshotai/kimi-k2.6"],
-        endpointModels: ["moonshotai/kimi-k2.5", "moonshotai/kimi-k2.6"],
+        configuredModels: ["moonshot/kimi-k2.5", "moonshot/kimi-k2.6"],
+        endpointModels: ["moonshot/kimi-k2.5", "moonshot/kimi-k2.6"],
         endpointCount: 2,
         activeEndpointCount: 1,
         healthStatuses: ["healthy"],
@@ -355,7 +355,7 @@ describe("summarizeWorkbenchResult", () => {
   test("extracts text, tool calls, tool executions, and usage for the studio inspector", () => {
     expect(
       summarizeWorkbenchResult({
-        model: "moonshotai/kimi-k2.5",
+        model: "moonshot/kimi-k2.5",
         endpointId: "moonshot.personal.primary.global.kimi-k2.5",
         outputText: "Registry lookup complete.",
         toolCalls: [
@@ -426,14 +426,14 @@ describe("buildDownstreamProviderGuide", () => {
         },
         models: [
           {
-            id: "moonshotai/kimi-k2.5",
+            id: "moonshot/kimi-k2.5",
           },
           {
             id: "openai/gpt-4.1-mini-fast",
           },
         ],
         setup: {
-          recommendedModel: "moonshotai/kimi-k2.5",
+          recommendedModel: "moonshot/kimi-k2.5",
           notes: [
             "Configure downstream tooling as an OpenAI-compatible provider.",
             "Use GET /v1/models to discover the current model ids.",
@@ -449,7 +449,7 @@ describe("buildDownstreamProviderGuide", () => {
         { label: "Chat endpoint", value: "http://127.0.0.1:8091/v1/chat/completions" },
         { label: "Auth header", value: "Authorization: Bearer role-model-local" },
       ],
-      availableModels: ["moonshotai/kimi-k2.5", "openai/gpt-4.1-mini-fast"],
+      availableModels: ["moonshot/kimi-k2.5", "openai/gpt-4.1-mini-fast"],
       opencodeSteps: [
         "Choose an OpenAI-compatible provider entry in the downstream client.",
         "Set the base URL to http://127.0.0.1:8091.",
@@ -459,7 +459,7 @@ describe("buildDownstreamProviderGuide", () => {
       examples: {
         modelsCurl: "curl http://127.0.0.1:8091/v1/models",
         chatCurl:
-          "curl http://127.0.0.1:8091/v1/chat/completions -H \"content-type: application/json\" -H \"Authorization: Bearer role-model-local\" -d '{\"model\":\"moonshotai/kimi-k2.5\",\"messages\":[{\"role\":\"user\",\"content\":\"Reply with ok.\"}]}'",
+          "curl http://127.0.0.1:8091/v1/chat/completions -H \"content-type: application/json\" -H \"Authorization: Bearer role-model-local\" -d '{\"model\":\"moonshot/kimi-k2.5\",\"messages\":[{\"role\":\"user\",\"content\":\"Reply with ok.\"}]}'",
       },
     });
   });
@@ -472,7 +472,7 @@ describe("buildActivitySummary", () => {
         {
           id: 7,
           timestamp: "2026-05-07T04:00:00.000Z",
-          model: "moonshotai/kimi-k2.5",
+          model: "moonshot/kimi-k2.5",
           req_path: "/v1/chat/completions",
           resp_content_type: "application/json",
           resp_status_code: 200,
@@ -522,7 +522,7 @@ describe("buildActivitySummary", () => {
         }),
         expect.objectContaining({
           id: 7,
-          model: "moonshotai/kimi-k2.5",
+          model: "moonshot/kimi-k2.5",
           path: "/v1/chat/completions",
           status: "200",
           durationLabel: "840 ms",

@@ -456,7 +456,7 @@ describe("runtime-host-bridge", () => {
       }),
       listProviders: async () => [
         {
-          providerId: "moonshotai",
+          providerId: "moonshot",
           displayName: "Moonshot AI",
           supportedAuthModes: ["api-key-static", "oauth2-device-code"],
         },
@@ -470,11 +470,11 @@ describe("runtime-host-bridge", () => {
       listAccounts: async () => [
         {
           providerAccountId: "moonshot.personal.primary",
-          providerId: "moonshotai",
+          providerId: "moonshot",
           authMode: "api-key-static",
           modelRoleBindings: [
             {
-              modelId: "moonshotai/kimi-k2.5",
+              modelId: "moonshot/kimi-k2.5",
               roleIds: ["general.chat"],
             },
           ],
@@ -514,7 +514,7 @@ describe("runtime-host-bridge", () => {
         activateEndpoint: async () => ({
           endpointId: "moonshot.personal.primary.global.kimi-k2.5",
            providerAccountId: "moonshot.personal.primary",
-           modelId: "moonshotai/kimi-k2.5",
+           modelId: "moonshot/kimi-k2.5",
            status: "active",
         }),
         readControllerAssignment: async () => ({
@@ -526,14 +526,14 @@ describe("runtime-host-bridge", () => {
         updateControllerAssignment: async (body) => ({
           scope: "global",
           endpointId: body.endpointId,
-          modelId: "moonshotai/kimi-k2.5",
+          modelId: "moonshot/kimi-k2.5",
           sourceType: "remote",
         }),
         listEndpoints: async () => [
           {
             endpointId: "moonshot.personal.primary.global.kimi-k2.5",
-            providerId: "moonshotai",
-            modelId: "moonshotai/kimi-k2.5",
+            providerId: "moonshot",
+            modelId: "moonshot/kimi-k2.5",
         },
       ],
     });
@@ -551,7 +551,7 @@ describe("runtime-host-bridge", () => {
       expect(providersResponse.status).toBe(200);
       expect(await providersResponse.json()).toEqual([
         {
-          providerId: "moonshotai",
+          providerId: "moonshot",
           displayName: "Moonshot AI",
           supportedAuthModes: ["api-key-static", "oauth2-device-code"],
         },
@@ -562,11 +562,11 @@ describe("runtime-host-bridge", () => {
        expect(await accountsResponse.json()).toEqual([
          {
            providerAccountId: "moonshot.personal.primary",
-           providerId: "moonshotai",
+           providerId: "moonshot",
            authMode: "api-key-static",
            modelRoleBindings: [
              {
-               modelId: "moonshotai/kimi-k2.5",
+               modelId: "moonshot/kimi-k2.5",
                roleIds: ["general.chat"],
              },
            ],
@@ -682,7 +682,7 @@ describe("runtime-host-bridge", () => {
         expect(await updateControllerResponse.json()).toEqual({
           scope: "global",
           endpointId: "moonshot.personal.primary.global.kimi-k2.5",
-          modelId: "moonshotai/kimi-k2.5",
+          modelId: "moonshot/kimi-k2.5",
           sourceType: "remote",
         });
 
@@ -693,7 +693,7 @@ describe("runtime-host-bridge", () => {
          },
          body: JSON.stringify({
            providerAccountId: "moonshot.personal.primary",
-           modelId: "moonshotai/kimi-k2.5",
+           modelId: "moonshot/kimi-k2.5",
            region: "global",
          }),
        });
@@ -701,7 +701,7 @@ describe("runtime-host-bridge", () => {
        expect(await activateResponse.json()).toEqual({
          endpointId: "moonshot.personal.primary.global.kimi-k2.5",
          providerAccountId: "moonshot.personal.primary",
-         modelId: "moonshotai/kimi-k2.5",
+         modelId: "moonshot/kimi-k2.5",
          status: "active",
        });
 
@@ -710,8 +710,8 @@ describe("runtime-host-bridge", () => {
       expect(await endpointsResponse.json()).toEqual([
         {
           endpointId: "moonshot.personal.primary.global.kimi-k2.5",
-          providerId: "moonshotai",
-          modelId: "moonshotai/kimi-k2.5",
+          providerId: "moonshot",
+          modelId: "moonshot/kimi-k2.5",
         },
       ]);
     } finally {
@@ -1686,7 +1686,7 @@ describe("runtime-host-bridge", () => {
             }),
           );
           expect(JSON.parse(String(init?.body))).toMatchObject({
-            model: "moonshotai/kimi-k2.5",
+            model: "moonshot/kimi-k2.5",
             messages: [{ role: "user", content: "Summarize the chosen endpoint." }],
             stream: true,
           });
@@ -1696,17 +1696,17 @@ describe("runtime-host-bridge", () => {
               start(controller) {
                 controller.enqueue(
                   encoder.encode(
-                    'data: {"id":"chatcmpl-kimi","object":"chat.completion.chunk","created":1,"model":"moonshotai/kimi-k2.5","choices":[{"index":0,"delta":{"role":"assistant","content":"live "},"finish_reason":null}]}\n\n',
+                    'data: {"id":"chatcmpl-kimi","object":"chat.completion.chunk","created":1,"model":"moonshot/kimi-k2.5","choices":[{"index":0,"delta":{"role":"assistant","content":"live "},"finish_reason":null}]}\n\n',
                   ),
                 );
                 controller.enqueue(
                   encoder.encode(
-                    'data: {"id":"chatcmpl-kimi","object":"chat.completion.chunk","created":1,"model":"moonshotai/kimi-k2.5","choices":[{"index":0,"delta":{"content":"kimi endpoint summary"},"finish_reason":null}]}\n\n',
+                    'data: {"id":"chatcmpl-kimi","object":"chat.completion.chunk","created":1,"model":"moonshot/kimi-k2.5","choices":[{"index":0,"delta":{"content":"kimi endpoint summary"},"finish_reason":null}]}\n\n',
                   ),
                 );
                 controller.enqueue(
                   encoder.encode(
-                    'data: {"id":"chatcmpl-kimi","object":"chat.completion.chunk","created":1,"model":"moonshotai/kimi-k2.5","choices":[{"index":0,"delta":{},"finish_reason":"stop"}],"usage":{"prompt_tokens":19,"completion_tokens":6}}\n\n',
+                    'data: {"id":"chatcmpl-kimi","object":"chat.completion.chunk","created":1,"model":"moonshot/kimi-k2.5","choices":[{"index":0,"delta":{},"finish_reason":"stop"}],"usage":{"prompt_tokens":19,"completion_tokens":6}}\n\n',
                   ),
                 );
                 controller.enqueue(encoder.encode("data: [DONE]\n\n"));
@@ -1743,7 +1743,7 @@ describe("runtime-host-bridge", () => {
     await expect(backend.listProviders?.()).resolves.toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          providerId: "moonshotai",
+          providerId: "moonshot",
           variants: [
             expect.objectContaining({
               variantId: "moonshot-open-platform",
@@ -1773,7 +1773,7 @@ describe("runtime-host-bridge", () => {
     await expect(
       backend.upsertProviderAccount?.({
         providerAccountId: "moonshot.personal.primary",
-        providerId: "moonshotai",
+        providerId: "moonshot",
         providerKind: "provider-openai",
         orgScope: "personal",
         accountScope: "workspace-default",
@@ -1787,10 +1787,10 @@ describe("runtime-host-bridge", () => {
           regions: ["global"],
         },
         baseUrlOverride: "https://api.moonshot.ai/v1",
-        allowedModels: ["moonshotai/kimi-k2.5"],
+        allowedModels: ["moonshot/kimi-k2.5"],
         modelRoleBindings: [
           {
-            modelId: "moonshotai/kimi-k2.5",
+            modelId: "moonshot/kimi-k2.5",
             roleIds: ["general.chat", "coder.patch"],
           },
         ],
@@ -1805,7 +1805,7 @@ describe("runtime-host-bridge", () => {
     ).resolves.toEqual(
       expect.objectContaining({
         providerAccountId: "moonshot.personal.primary",
-        providerId: "moonshotai",
+        providerId: "moonshot",
       }),
     );
 
@@ -1813,10 +1813,10 @@ describe("runtime-host-bridge", () => {
       expect.arrayContaining([
         expect.objectContaining({
           providerAccountId: "moonshot.personal.primary",
-          providerId: "moonshotai",
+          providerId: "moonshot",
           modelRoleBindings: [
             {
-              modelId: "moonshotai/kimi-k2.5",
+              modelId: "moonshot/kimi-k2.5",
               roleIds: ["general.chat", "coder.patch"],
             },
           ],
@@ -1826,12 +1826,12 @@ describe("runtime-host-bridge", () => {
 
     const pending = await backend.startProviderDeviceAuthorization?.({
       providerAccountId: "moonshot.personal.kimi-code",
-      providerId: "moonshotai",
+      providerId: "moonshot",
       providerKind: "provider-openai",
       variantId: "kimi-code",
       orgScope: "personal",
       accountScope: "workspace-default",
-      allowedModels: ["moonshotai/kimi-k2.5"],
+      allowedModels: ["moonshot/kimi-k2.5"],
       deniedModels: [],
       entitlementTags: ["chat"],
       budgetPolicyRef: "budget.default",
@@ -1868,14 +1868,14 @@ describe("runtime-host-bridge", () => {
     await expect(
       backend.activateEndpoint?.({
         providerAccountId: "moonshot.personal.kimi-code",
-        modelId: "moonshotai/kimi-k2.5",
+        modelId: "moonshot/kimi-k2.5",
         region: "global",
       }),
     ).resolves.toEqual(
       expect.objectContaining({
         endpointId: "moonshot.personal.kimi-code.global.kimi-k2.5",
         providerAccountId: "moonshot.personal.kimi-code",
-        modelId: "moonshotai/kimi-k2.5",
+        modelId: "moonshot/kimi-k2.5",
       }),
     );
 
@@ -1883,7 +1883,7 @@ describe("runtime-host-bridge", () => {
       expect.arrayContaining([
         expect.objectContaining({
           endpointId: "moonshot.personal.kimi-code.global.kimi-k2.5",
-          modelId: "moonshotai/kimi-k2.5",
+          modelId: "moonshot/kimi-k2.5",
         }),
       ]),
     );
@@ -1903,7 +1903,7 @@ describe("runtime-host-bridge", () => {
       expect.objectContaining({
         scope: "global",
         endpointId: "moonshot.personal.kimi-code.global.kimi-k2.5",
-        modelId: "moonshotai/kimi-k2.5",
+        modelId: "moonshot/kimi-k2.5",
         sourceType: "remote",
       }),
     );
@@ -1984,7 +1984,7 @@ describe("runtime-host-bridge", () => {
             }),
           );
           expect(JSON.parse(String(init?.body))).toMatchObject({
-            model: "moonshotai/kimi-k2.5",
+            model: "moonshot/kimi-k2.5",
             messages: [{ role: "user", content: "Summarize the chosen endpoint." }],
             stream: true,
           });
@@ -1994,17 +1994,17 @@ describe("runtime-host-bridge", () => {
               start(controller) {
                 controller.enqueue(
                   encoder.encode(
-                    'data: {"id":"chatcmpl-kimi","object":"chat.completion.chunk","created":1,"model":"moonshotai/kimi-k2.5","choices":[{"index":0,"delta":{"role":"assistant","content":"live "},"finish_reason":null}]}\n\n',
+                    'data: {"id":"chatcmpl-kimi","object":"chat.completion.chunk","created":1,"model":"moonshot/kimi-k2.5","choices":[{"index":0,"delta":{"role":"assistant","content":"live "},"finish_reason":null}]}\n\n',
                   ),
                 );
                 controller.enqueue(
                   encoder.encode(
-                    'data: {"id":"chatcmpl-kimi","object":"chat.completion.chunk","created":1,"model":"moonshotai/kimi-k2.5","choices":[{"index":0,"delta":{"content":"kimi endpoint summary"},"finish_reason":null}]}\n\n',
+                    'data: {"id":"chatcmpl-kimi","object":"chat.completion.chunk","created":1,"model":"moonshot/kimi-k2.5","choices":[{"index":0,"delta":{"content":"kimi endpoint summary"},"finish_reason":null}]}\n\n',
                   ),
                 );
                 controller.enqueue(
                   encoder.encode(
-                    'data: {"id":"chatcmpl-kimi","object":"chat.completion.chunk","created":1,"model":"moonshotai/kimi-k2.5","choices":[{"index":0,"delta":{},"finish_reason":"stop"}],"usage":{"prompt_tokens":19,"completion_tokens":6}}\n\n',
+                    'data: {"id":"chatcmpl-kimi","object":"chat.completion.chunk","created":1,"model":"moonshot/kimi-k2.5","choices":[{"index":0,"delta":{},"finish_reason":"stop"}],"usage":{"prompt_tokens":19,"completion_tokens":6}}\n\n',
                   ),
                 );
                 controller.enqueue(encoder.encode("data: [DONE]\n\n"));
@@ -2021,12 +2021,12 @@ describe("runtime-host-bridge", () => {
 
     const pending = await backend.startProviderDeviceAuthorization?.({
       providerAccountId: "moonshot.personal.kimi-code",
-      providerId: "moonshotai",
+      providerId: "moonshot",
       providerKind: "provider-openai",
       variantId: "kimi-code",
       orgScope: "personal",
       accountScope: "workspace-default",
-      allowedModels: ["moonshotai/kimi-k2.5"],
+      allowedModels: ["moonshot/kimi-k2.5"],
       deniedModels: [],
       entitlementTags: ["chat"],
       budgetPolicyRef: "budget.default",
@@ -2037,13 +2037,13 @@ describe("runtime-host-bridge", () => {
     });
     await backend.activateEndpoint?.({
       providerAccountId: "moonshot.personal.kimi-code",
-      modelId: "moonshotai/kimi-k2.5",
+      modelId: "moonshot/kimi-k2.5",
       region: "global",
     });
 
     const result = await backend.executeChatCompletions(
       {
-        model: "moonshotai/kimi-k2.5",
+        model: "moonshot/kimi-k2.5",
         stream: true,
         messages: [{ role: "user", content: "Summarize the chosen endpoint." }],
       },
@@ -2084,7 +2084,7 @@ describe("runtime-host-bridge", () => {
         ],
       }),
     ]);
-    expect(result.model).toBe("moonshotai/kimi-k2.5");
+    expect(result.model).toBe("moonshot/kimi-k2.5");
     expect(result.endpointId).toBe("moonshot.personal.kimi-code.global.kimi-k2.5");
     expect(result.adapterFamily).toBe("ai-sdk-openai-compatible");
     expect(result.outputText).toBe("live kimi endpoint summary");

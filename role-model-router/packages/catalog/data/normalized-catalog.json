@@ -161,8 +161,8 @@
       }
     },
     {
-      "modelId": "moonshotai/kimi-k2.5",
-      "providerId": "moonshotai",
+      "modelId": "moonshot/kimi-k2.5",
+      "providerId": "moonshot",
       "providerKind": "provider-openai",
       "authFamily": "api-key",
       "displayName": "Kimi K2.5",

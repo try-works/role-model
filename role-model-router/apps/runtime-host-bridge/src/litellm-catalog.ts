@@ -9,6 +9,15 @@ export interface LiteLLMProviderInfo {
   readonly adapterFamily: string;
   readonly apiBase: string;
   readonly envVars: readonly string[];
+  readonly supportedAuthModes: readonly string[];
+  readonly controlPlaneRequirements: readonly string[];
+  readonly localOverrideApplied: boolean;
+  readonly upstreamProvenance: {
+    readonly vendor: string;
+    readonly commit: string;
+    readonly capturedAt: string;
+    readonly schemaVersion: string;
+  };
 }
 
 const KNOWN_PROVIDER_OVERRIDES: Readonly<Record<string, Partial<LiteLLMProviderInfo>>> = {
@@ -26,12 +35,14 @@ const KNOWN_PROVIDER_OVERRIDES: Readonly<Record<string, Partial<LiteLLMProviderI
     apiBase: "https://api.anthropic.com/v1",
     envVars: ["ANTHROPIC_API_KEY"],
   },
-  moonshotai: {
+  moonshot: {
     displayName: "Moonshot AI",
     providerKind: "provider-openai",
     adapterFamily: "ai-sdk-openai-compatible",
     apiBase: "https://api.moonshot.ai/v1",
     envVars: ["MOONSHOT_API_KEY"],
+    supportedAuthModes: ["api-key-static", "oauth2-device-code"],
+    controlPlaneRequirements: ["workspace.required", "kimi-code.oauth.device"],
   },
   gemini: {
     displayName: "Google Gemini",
@@ -201,6 +212,15 @@ function inferProviderInfo(providerId: string): LiteLLMProviderInfo {
     adapterFamily: override?.adapterFamily ?? "ai-sdk-openai-compatible",
     apiBase: override?.apiBase ?? "",
     envVars: override?.envVars ?? [`${providerId.toUpperCase().replace(/[^A-Z0-9]/g, "_")}_API_KEY`],
+    supportedAuthModes: override?.supportedAuthModes ?? [],
+    controlPlaneRequirements: override?.controlPlaneRequirements ?? [],
+    localOverrideApplied: Boolean(override),
+    upstreamProvenance: {
+      vendor: "litellm",
+      commit: "runtime-derived",
+      capturedAt: new Date().toISOString(),
+      schemaVersion: "litellm.v1",
+    },
   };
 }
 

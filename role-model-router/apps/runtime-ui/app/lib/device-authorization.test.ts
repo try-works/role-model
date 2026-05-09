@@ -97,19 +97,19 @@ describe("syncConnectedDeviceAuthorizationEndpoints", () => {
         providerAccountId: "moonshot.personal.kimi-code",
         status: "connected",
       },
-      selectedModels: ["moonshotai/kimi-k2.5", "moonshotai/kimi-k2.5", "moonshotai/kimi-audio"],
+      selectedModels: ["moonshot/kimi-k2.5", "moonshot/kimi-k2.5", "moonshot/kimi-audio"],
       activateEndpoint,
     });
 
     expect(activateEndpoint).toHaveBeenCalledTimes(2);
     expect(activateEndpoint).toHaveBeenNthCalledWith(1, {
       providerAccountId: "moonshot.personal.kimi-code",
-      modelId: "moonshotai/kimi-k2.5",
+      modelId: "moonshot/kimi-k2.5",
       region: "global",
     });
     expect(activateEndpoint).toHaveBeenNthCalledWith(2, {
       providerAccountId: "moonshot.personal.kimi-code",
-      modelId: "moonshotai/kimi-audio",
+      modelId: "moonshot/kimi-audio",
       region: "global",
     });
   });
@@ -123,7 +123,7 @@ describe("syncConnectedDeviceAuthorizationEndpoints", () => {
         providerAccountId: "moonshot.personal.kimi-code",
         status: "pending",
       },
-      selectedModels: ["moonshotai/kimi-k2.5"],
+      selectedModels: ["moonshot/kimi-k2.5"],
       activateEndpoint,
     });
 

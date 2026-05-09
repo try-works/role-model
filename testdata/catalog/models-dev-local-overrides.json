@@ -12,7 +12,7 @@
       "adapterFamily": "ai-sdk-anthropic",
       "controlPlaneRequirements": ["workspace.required"]
     },
-    "moonshotai": {
+    "moonshot": {
       "providerKind": "provider-openai",
       "authFamily": "api-key",
       "adapterFamily": "ai-sdk-openai-compatible",
@@ -25,7 +25,7 @@
       "capabilities": ["latency.optimized"],
       "localNotes": ["Derived from base model with a runtime-specific fast profile"]
     },
-    "moonshotai/kimi-k2.5": {
+    "moonshot/kimi-k2.5": {
       "localNotes": ["Moonshot Open Platform catalog slice with Kimi Code OAuth onboarding support"]
     }
   }
