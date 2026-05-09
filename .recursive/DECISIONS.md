@@ -469,6 +469,42 @@
   - selected package build spot-checks still reproduce the inherited `packages/protocol-types/src/generated.ts` `MetricEntry` drift outside run-owned scope
   - the broader root `build` and `test` commands still fail on the inherited schema-tools/Biome generated-types path
 
+### Run `18-local-llama-swap-runtime`
+
+- Run folder: `/.recursive/run/18-local-llama-swap-runtime/`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+  - `addenda/03-implementation.addendum.md`
+  - `addenda/04-audit-report.md`
+- What changed:
+  - Added new "Local" sidebar section to the runtime UI with Models, Swap History, and Policy pages
+  - Added bridge API endpoints for local runtime state (`GET /api/role-model/local/models`, `/local/swap`, `/local/policy` plus load/unload POSTs and policy PUT)
+  - Implemented full page components with Swiss design system compliance (zero-radius cards, stone palette, IBM Plex Mono, accent red)
+  - Fixed local API route ordering to prevent SPA fallback interception
+  - Fixed `design-system.test.ts` to expect 6 navigation sections instead of 5
+- Why:
+  - To expose llama-swap's dynamic model-swapping functionality through the role-model runtime UI instead of requiring users to use the vendored llama-swap UI directly
+- How:
+  - Implemented in 6 ordered sub-phases (SP1–SP6) with build validation after each phase
+  - Used pragmatic TDD with browser verification per sub-phase
+  - Fixed route ordering issue discovered during browser verification (local API routes must precede static file serving)
+- What was not done:
+  - Matrix solver UI (OOS1), peer passthrough (OOS2), model-level overrides (OOS3), real-time log streaming (OOS4)
+  - Real llama-swap proxy integration — backend methods are stubs returning empty defaults
+- Known issues / follow-ups:
+  - Backend methods are stubs; a future run must wire them to actual llama-swap runtime calls (`GET /running`, `POST /api/models/unload`, etc.)
+  - Swap events are not persisted to SQLite; future run must add `llama_swap_events` table
+  - No memory domain docs exist for `apps/runtime-ui/app/routes/*` or `apps/runtime-host-bridge/src/index.ts`
+
 ### Run `16-router-runtime-unified-telemetry-dashboard`
 
 - Run folder: `/.recursive/run/16-router-runtime-unified-telemetry-dashboard/`
