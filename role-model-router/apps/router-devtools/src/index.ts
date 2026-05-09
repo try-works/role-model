@@ -17,20 +17,20 @@ export async function exportStableConfig(): Promise<string> {
     acp: Array<{
       endpoint_id: string;
       model_id: string;
-      capabilities: string[];
-      modalities: string[];
+      capabilities: [string, ...string[]];
+      modalities: [string, ...string[]];
     }>;
     cli: Array<{
       endpoint_id: string;
       model_id: string;
-      capabilities: string[];
-      modalities: string[];
+      capabilities: [string, ...string[]];
+      modalities: [string, ...string[]];
     }>;
     mcp: Array<{
       endpoint_id: string;
       model_id: string;
-      capabilities: string[];
-      modalities: string[];
+      capabilities: [string, ...string[]];
+      modalities: [string, ...string[]];
     }>;
   };
   const endpoints = [

@@ -83,6 +83,7 @@ export interface ProviderAccountValidationInput {
   readonly catalog: NormalizedCatalog;
   readonly accounts: readonly unknown[];
   readonly allowedRoleIds?: readonly string[];
+  readonly additionalProviders?: readonly NormalizedCatalog["providers"][number][];
 }
 
 export interface ProviderAccountValidationResult {
@@ -246,7 +247,10 @@ function isAuthModeCompatible(
 export function validateProviderAccounts(
   input: ProviderAccountValidationInput,
 ): ProviderAccountValidationResult {
-  const providersById = new Map(input.catalog.providers.map((provider) => [provider.providerId, provider]));
+  const providersById = new Map([
+    ...input.catalog.providers.map((provider) => [provider.providerId, provider] as const),
+    ...(input.additionalProviders ?? []).map((provider) => [provider.providerId, provider] as const),
+  ]);
   const diagnostics: ProviderAccountDiagnostic[] = [];
   const accounts: ProviderAccountRecord[] = [];
 

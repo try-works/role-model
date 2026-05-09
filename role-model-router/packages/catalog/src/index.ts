@@ -331,3 +331,10 @@ export async function exportCatalogArtifacts(
 }
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+
+export {
+  deriveLiteLLMProviders,
+  extractLiteLLMProviderIds,
+  loadLiteLLMModelPrices,
+  type LiteLLMProviderInfo,
+} from "./litellm-catalog.js";

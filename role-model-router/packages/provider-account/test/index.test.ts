@@ -15,6 +15,45 @@ async function readJson<T>(relativePath: string): Promise<T> {
   return JSON.parse(await readFile(filePath, "utf8")) as T;
 }
 
+const ADDITIONAL_PROVIDERS = [
+  {
+    providerId: "openai",
+    displayName: "OpenAI",
+    providerKind: "provider-openai",
+    authFamily: "api-key",
+    adapterFamily: "ai-sdk-openai",
+    apiBase: "https://api.openai.com/v1",
+    envVars: ["OPENAI_API_KEY"],
+    supportedAuthModes: [],
+    controlPlaneRequirements: ["organization.optional"],
+    localOverrideApplied: true,
+    upstreamProvenance: {
+      vendor: "models.dev",
+      commit: "8f3c2d1",
+      capturedAt: "2026-05-04T12:00:00Z",
+      schemaVersion: "models.dev.v1",
+    },
+  },
+  {
+    providerId: "anthropic",
+    displayName: "Anthropic",
+    providerKind: "provider-anthropic",
+    authFamily: "api-key",
+    adapterFamily: "ai-sdk-anthropic",
+    apiBase: "https://api.anthropic.com/v1",
+    envVars: ["ANTHROPIC_API_KEY"],
+    supportedAuthModes: [],
+    controlPlaneRequirements: ["workspace.required"],
+    localOverrideApplied: true,
+    upstreamProvenance: {
+      vendor: "models.dev",
+      commit: "8f3c2d1",
+      capturedAt: "2026-05-04T12:00:00Z",
+      schemaVersion: "models.dev.v1",
+    },
+  },
+] as const;
+
 describe("SUPPORTED_AUTH_MODES", () => {
   test("covers the roadmap-required auth modes explicitly", () => {
     expect(SUPPORTED_AUTH_MODES).toEqual([
@@ -39,6 +78,7 @@ describe("validateProviderAccounts", () => {
 
     const result = validateProviderAccounts({
       catalog,
+      additionalProviders: ADDITIONAL_PROVIDERS,
       accounts: fixture.accounts,
     });
 
@@ -70,6 +110,7 @@ describe("validateProviderAccounts", () => {
 
     const result = validateProviderAccounts({
       catalog,
+      additionalProviders: ADDITIONAL_PROVIDERS,
       accounts: [
         {
           providerAccountId: "openai.bad.oauth",
@@ -120,7 +161,7 @@ describe("validateProviderAccounts", () => {
         },
         providers: [
           {
-            providerId: "moonshotai",
+            providerId: "moonshot",
             displayName: "Moonshot AI",
             providerKind: "provider-openai",
             authFamily: "api-key",
@@ -143,7 +184,7 @@ describe("validateProviderAccounts", () => {
       accounts: [
         {
           providerAccountId: "moonshot.personal.kimi-code",
-          providerId: "moonshotai",
+          providerId: "moonshot",
           providerKind: "provider-openai",
           orgScope: "personal",
           accountScope: "workspace-default",
@@ -157,7 +198,7 @@ describe("validateProviderAccounts", () => {
             regions: ["global"],
           },
           baseUrlOverride: "https://api.kimi.com/coding/v1",
-          allowedModels: ["moonshotai/kimi-k2.5"],
+          allowedModels: ["moonshot/kimi-k2.5"],
           deniedModels: [],
           entitlementTags: ["chat", "search"],
           budgetPolicyRef: "budget.default",
@@ -173,7 +214,7 @@ describe("validateProviderAccounts", () => {
     expect(result.accounts).toHaveLength(1);
     expect(result.accounts[0]).toMatchObject({
       providerAccountId: "moonshot.personal.kimi-code",
-      providerId: "moonshotai",
+      providerId: "moonshot",
       authMode: "oauth2-device-code",
       baseUrlOverride: "https://api.kimi.com/coding/v1",
     });
@@ -191,7 +232,7 @@ describe("validateProviderAccounts", () => {
         },
         providers: [
           {
-            providerId: "moonshotai",
+            providerId: "moonshot",
             displayName: "Moonshot AI",
             providerKind: "provider-openai",
             authFamily: "api-key",
@@ -215,7 +256,7 @@ describe("validateProviderAccounts", () => {
       accounts: [
         {
           providerAccountId: "moonshot.personal.primary",
-          providerId: "moonshotai",
+          providerId: "moonshot",
           providerKind: "provider-openai",
           orgScope: "personal",
           accountScope: "workspace-default",
@@ -229,10 +270,10 @@ describe("validateProviderAccounts", () => {
             regions: ["global"],
           },
           baseUrlOverride: "https://api.moonshot.ai/v1",
-          allowedModels: ["moonshotai/kimi-k2.5", "moonshotai/kimi-k2-turbo-preview"],
+          allowedModels: ["moonshot/kimi-k2.5", "moonshot/kimi-k2-turbo-preview"],
           modelRoleBindings: [
             {
-              modelId: "moonshotai/kimi-k2.5",
+              modelId: "moonshot/kimi-k2.5",
               roleIds: ["general.chat", "coder.patch"],
             },
           ],
@@ -252,7 +293,7 @@ describe("validateProviderAccounts", () => {
       providerAccountId: "moonshot.personal.primary",
       modelRoleBindings: [
         {
-          modelId: "moonshotai/kimi-k2.5",
+          modelId: "moonshot/kimi-k2.5",
           roleIds: ["general.chat", "coder.patch"],
         },
       ],
@@ -271,7 +312,7 @@ describe("validateProviderAccounts", () => {
         },
         providers: [
           {
-            providerId: "moonshotai",
+            providerId: "moonshot",
             displayName: "Moonshot AI",
             providerKind: "provider-openai",
             authFamily: "api-key",
@@ -295,7 +336,7 @@ describe("validateProviderAccounts", () => {
       accounts: [
         {
           providerAccountId: "moonshot.personal.primary",
-          providerId: "moonshotai",
+          providerId: "moonshot",
           providerKind: "provider-openai",
           orgScope: "personal",
           accountScope: "workspace-default",
@@ -309,10 +350,10 @@ describe("validateProviderAccounts", () => {
             regions: ["global"],
           },
           baseUrlOverride: "https://api.moonshot.ai/v1",
-          allowedModels: ["moonshotai/kimi-k2.5"],
+          allowedModels: ["moonshot/kimi-k2.5"],
           modelRoleBindings: [
             {
-              modelId: "moonshotai/kimi-k2-turbo-preview",
+              modelId: "moonshot/kimi-k2-turbo-preview",
               roleIds: ["general.chat"],
             },
           ],

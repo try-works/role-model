@@ -253,8 +253,8 @@ describe("OpenAI provider adapter", () => {
   test("builds an OpenAI-compatible chat-completions request for Kimi and normalizes the reply", () => {
     const target = {
       endpointId: "moonshot.personal.kimi-code.global.kimi-k2.5",
-      modelId: "moonshotai/kimi-k2.5",
-      providerId: "moonshotai",
+      modelId: "moonshot/kimi-k2.5",
+      providerId: "moonshot",
       providerKind: "provider-openai",
       providerAccountId: "moonshot.personal.kimi-code",
       adapterFamily: "ai-sdk-openai-compatible",
@@ -274,7 +274,7 @@ describe("OpenAI provider adapter", () => {
       account: {
         credentialRef: {
           backend: "local-encrypted-file",
-          ref: "oauth/moonshotai/moonshot.personal.kimi-code",
+          ref: "oauth/moonshot/moonshot.personal.kimi-code",
         },
       },
     };
@@ -320,7 +320,7 @@ describe("OpenAI provider adapter", () => {
 
     expect(requestCapture.url).toBe("https://api.kimi.test/coding/v1/chat/completions");
     expect(requestCapture.body).toMatchObject({
-      model: "moonshotai/kimi-k2.5",
+      model: "moonshot/kimi-k2.5",
       messages: [{ role: "user", content: "Reply with the word ok." }],
       temperature: 0.1,
       max_tokens: 128,
@@ -338,8 +338,8 @@ describe("OpenAI provider adapter", () => {
   test("normalizes an OpenAI-compatible chat-completions SSE transcript for Kimi streaming", () => {
     const target = {
       endpointId: "moonshot.personal.kimi-code.global.kimi-k2.5",
-      modelId: "moonshotai/kimi-k2.5",
-      providerId: "moonshotai",
+      modelId: "moonshot/kimi-k2.5",
+      providerId: "moonshot",
       providerKind: "provider-openai",
       providerAccountId: "moonshot.personal.kimi-code",
       adapterFamily: "ai-sdk-openai-compatible",
@@ -359,7 +359,7 @@ describe("OpenAI provider adapter", () => {
       account: {
         credentialRef: {
           backend: "local-encrypted-file",
-          ref: "oauth/moonshotai/moonshot.personal.kimi-code",
+          ref: "oauth/moonshot/moonshot.personal.kimi-code",
         },
       },
     };
@@ -387,9 +387,9 @@ describe("OpenAI provider adapter", () => {
         endpointId: target.endpointId,
         statusCode: 200,
         body: [
-          'data: {"id":"chatcmpl-kimi-1","object":"chat.completion.chunk","created":1,"model":"moonshotai/kimi-k2.5","choices":[{"index":0,"delta":{"role":"assistant"},"finish_reason":null}]}',
-          'data: {"id":"chatcmpl-kimi-1","object":"chat.completion.chunk","created":1,"model":"moonshotai/kimi-k2.5","choices":[{"index":0,"delta":{"content":"Ready"},"finish_reason":null}]}',
-          'data: {"id":"chatcmpl-kimi-1","object":"chat.completion.chunk","created":1,"model":"moonshotai/kimi-k2.5","choices":[{"index":0,"delta":{},"finish_reason":"stop"}]}',
+          'data: {"id":"chatcmpl-kimi-1","object":"chat.completion.chunk","created":1,"model":"moonshot/kimi-k2.5","choices":[{"index":0,"delta":{"role":"assistant"},"finish_reason":null}]}',
+          'data: {"id":"chatcmpl-kimi-1","object":"chat.completion.chunk","created":1,"model":"moonshot/kimi-k2.5","choices":[{"index":0,"delta":{"content":"Ready"},"finish_reason":null}]}',
+          'data: {"id":"chatcmpl-kimi-1","object":"chat.completion.chunk","created":1,"model":"moonshot/kimi-k2.5","choices":[{"index":0,"delta":{},"finish_reason":"stop"}]}',
           "data: [DONE]",
         ].join("\n\n"),
       },

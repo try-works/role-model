@@ -189,7 +189,7 @@ describe("initializeSqliteMemory", () => {
       databasePath: initialized.databasePath,
       account: {
         providerAccountId: "moonshot.personal.primary",
-        providerId: "moonshotai",
+        providerId: "moonshot",
         providerKind: "provider-openai",
         orgScope: "personal",
         accountScope: "workspace-default",
@@ -203,10 +203,10 @@ describe("initializeSqliteMemory", () => {
            regions: ["global"],
          },
          baseUrlOverride: "https://api.moonshot.ai/v1",
-         allowedModels: ["moonshotai/kimi-k2.5"],
+         allowedModels: ["moonshot/kimi-k2.5"],
          modelRoleBindings: [
            {
-             modelId: "moonshotai/kimi-k2.5",
+             modelId: "moonshot/kimi-k2.5",
              roleIds: ["general.chat", "coder.patch"],
            },
          ],
@@ -240,12 +240,12 @@ describe("initializeSqliteMemory", () => {
     ).toEqual([
         expect.objectContaining({
           providerAccountId: "moonshot.personal.primary",
-          providerId: "moonshotai",
+          providerId: "moonshot",
           authMode: "api-key-static",
           baseUrlOverride: "https://api.moonshot.ai/v1",
           modelRoleBindings: [
             {
-              modelId: "moonshotai/kimi-k2.5",
+              modelId: "moonshot/kimi-k2.5",
               roleIds: ["general.chat", "coder.patch"],
             },
           ],
@@ -284,7 +284,7 @@ describe("initializeSqliteMemory", () => {
       endpoint: {
         endpointId: "moonshot.personal.primary.global.kimi-k2-5",
         providerAccountId: "moonshot.personal.primary",
-        modelId: "moonshotai/kimi-k2.5",
+        modelId: "moonshot/kimi-k2.5",
         region: "global",
         endpointKind: "remote-openai-compatible",
         servingSource: "remote-service",
@@ -310,7 +310,7 @@ describe("initializeSqliteMemory", () => {
       expect.objectContaining({
         endpointId: "moonshot.personal.primary.global.kimi-k2-5",
         providerAccountId: "moonshot.personal.primary",
-        modelId: "moonshotai/kimi-k2.5",
+        modelId: "moonshot/kimi-k2.5",
         region: "global",
       }),
     ]);
@@ -437,10 +437,10 @@ describe("initializeSqliteMemory", () => {
       session: {
         authRequestId: "auth-001",
         providerAccountId: "moonshot.personal.kimi-code",
-        providerId: "moonshotai",
+        providerId: "moonshot",
         variantId: "kimi-code",
         credentialBackend: "local-encrypted-file",
-        credentialRef: "oauth/moonshotai/moonshot.personal.kimi-code",
+        credentialRef: "oauth/moonshot/moonshot.personal.kimi-code",
         authMode: "oauth2-device-code",
         verificationUri: "https://auth.kimi.com/device",
         verificationUriComplete: "https://auth.kimi.com/device?user_code=ABCD-EFGH",

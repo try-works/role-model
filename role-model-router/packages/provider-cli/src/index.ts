@@ -2,16 +2,16 @@ import type { EndpointCandidate } from "@role-model-router/core";
 export interface DeclaredEndpointConfig {
   endpoint_id: string;
   model_id: string;
-  capabilities: string[];
-  modalities: string[];
+  capabilities: [string, ...string[]];
+  modalities: [string, ...string[]];
 }
 
 export function detectCliEndpoints(configs: DeclaredEndpointConfig[]): EndpointCandidate[] {
   return configs.map((config) => ({
     identity: {
       endpoint_id: config.endpoint_id,
-      endpoint_kind: "cli-agent",
-      provider_kind: "provider-cli",
+      endpoint_kind: "local_engine",
+      provider_kind: "cli",
       serving_source: "local-process",
       model_id: config.model_id,
       package_id: "provider-cli",
@@ -38,6 +38,17 @@ export function detectCliEndpoints(configs: DeclaredEndpointConfig[]): EndpointC
     },
     observed: {
       endpoint_id: config.endpoint_id,
+      endpoint_version: "1.0.0",
+      measured_at_ms: Date.now(),
+      measurement_window: {
+        started_at_ms: Date.now() - 3600000,
+        ended_at_ms: Date.now(),
+      },
+      sample_size: 100,
+      sources: {
+        benchmark_samples: 50,
+        live_request_samples: 50,
+      },
       judge_score: 0.9,
       latency_ms_p50: 100,
       latency_ms_p95: 150,

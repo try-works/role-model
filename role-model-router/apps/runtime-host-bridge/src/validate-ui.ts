@@ -180,7 +180,7 @@ export async function runRuntimeUiValidation(
       },
       body: JSON.stringify({
         providerAccountId: upsertedAccountId,
-        providerId: "moonshotai",
+        providerId: "moonshot",
         providerKind: "provider-openai",
         orgScope: "personal",
         accountScope: "workspace-default",
@@ -194,10 +194,10 @@ export async function runRuntimeUiValidation(
           regions: ["global"],
         },
         baseUrlOverride: "https://api.moonshot.ai/v1",
-        allowedModels: ["moonshotai/kimi-k2.5"],
+        allowedModels: ["moonshot/kimi-k2.5"],
         modelRoleBindings: [
           {
-            modelId: "moonshotai/kimi-k2.5",
+            modelId: "moonshot/kimi-k2.5",
             roleIds: ["general.chat"],
           },
         ],
@@ -237,7 +237,7 @@ export async function runRuntimeUiValidation(
       },
       body: JSON.stringify({
         providerAccountId: upsertedAccountId,
-        modelId: "moonshotai/kimi-k2.5",
+        modelId: "moonshot/kimi-k2.5",
         region: "global",
       }),
     });
@@ -266,7 +266,7 @@ export async function runRuntimeUiValidation(
       endpointCount: number;
     };
 
-    const moonshotProvider = providers.find((provider) => provider.providerId === "moonshotai");
+    const moonshotProvider = providers.find((provider) => provider.providerId === "moonshot");
 
     return {
       providerCount: finalSummary.providerCount,
@@ -287,7 +287,7 @@ export async function runRuntimeUiValidation(
           account.providerAccountId === upsertedAccountId &&
           account.modelRoleBindings?.some(
             (binding) =>
-              binding.modelId === "moonshotai/kimi-k2.5" &&
+              binding.modelId === "moonshot/kimi-k2.5" &&
               binding.roleIds.includes("general.chat"),
           ),
       ),
@@ -306,12 +306,37 @@ if (process.argv[1] === __filename) {
   const repoRoot = path.resolve(__dirname, "..", "..", "..", "..");
   const runtimeStateRoot = path.join(os.tmpdir(), "role-model-runtime-ui-validation");
 
+  let unifiedRuntimeConfigPath: string | undefined;
+  const fs = await import("node:fs/promises");
+  try {
+    unifiedRuntimeConfigPath = path.join(runtimeStateRoot, "runtime-config.yaml");
+    await fs.mkdir(runtimeStateRoot, { recursive: true });
+    await fs.writeFile(
+      unifiedRuntimeConfigPath,
+      [
+        "version: 1.0",
+        "routing:",
+        "  strategy: balanced",
+        "llama_swap:",
+        "  models: {}",
+        "litellm_proxy:",
+        "  providers: {}",
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+  } catch {
+    // If temp config creation fails, fall back to running without it
+    unifiedRuntimeConfigPath = undefined;
+  }
+
   console.log(
     JSON.stringify(
       await runRuntimeUiValidation({
         repoRoot,
         runtimeStateRoot,
         scopeId: "runtime-ui-validation",
+        unifiedRuntimeConfigPath,
       }),
       null,
       2,

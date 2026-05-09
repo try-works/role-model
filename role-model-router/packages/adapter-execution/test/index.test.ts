@@ -887,7 +887,7 @@ describe("executeRoutedRequest", () => {
           endpointId: target.endpointId,
           url: `${target.apiBase}/chat/completions`,
           headers: {
-            authorization: "Bearer oauth/moonshotai/account",
+            authorization: "Bearer oauth/moonshot/account",
           },
           body: {
             model: target.modelId,
@@ -1030,7 +1030,7 @@ describe("executeRoutedRequest", () => {
         },
         providers: [
           {
-            providerId: "moonshotai",
+            providerId: "moonshot",
             displayName: "Moonshot AI",
             providerKind: "provider-openai",
             authFamily: "api-key",
@@ -1050,8 +1050,8 @@ describe("executeRoutedRequest", () => {
         ],
         models: [
           {
-            modelId: "moonshotai/kimi-k2.5",
-            providerId: "moonshotai",
+            modelId: "moonshot/kimi-k2.5",
+            providerId: "moonshot",
             providerKind: "provider-openai",
             authFamily: "api-key",
             displayName: "Kimi K2.5",
@@ -1085,13 +1085,13 @@ describe("executeRoutedRequest", () => {
       accounts: [
         {
           providerAccountId: "moonshot.personal.kimi-code",
-          providerId: "moonshotai",
+          providerId: "moonshot",
           providerKind: "provider-openai",
           orgScope: "personal",
           accountScope: "workspace-default",
           credentialRef: {
             backend: "local-encrypted-file",
-            ref: "oauth/moonshotai/moonshot.personal.kimi-code",
+            ref: "oauth/moonshot/moonshot.personal.kimi-code",
           },
           authMode: "oauth2-device-code",
           regionPolicy: {
@@ -1099,7 +1099,7 @@ describe("executeRoutedRequest", () => {
             regions: ["global"],
           },
           baseUrlOverride: "https://api.kimi.test/coding/v1",
-          allowedModels: ["moonshotai/kimi-k2.5"],
+          allowedModels: ["moonshot/kimi-k2.5"],
           deniedModels: [],
           entitlementTags: ["chat"],
           budgetPolicyRef: "budget.default",
@@ -1117,7 +1117,7 @@ describe("executeRoutedRequest", () => {
               endpoint_kind: "remote_api",
               provider_kind: "remote_openai_compat",
               serving_source: "remote-service",
-              model_id: "moonshotai/kimi-k2.5",
+              model_id: "moonshot/kimi-k2.5",
               runtime_version: "run14",
               region: "global",
               host_class: "server",
@@ -1151,7 +1151,7 @@ describe("executeRoutedRequest", () => {
           {
             endpointId: "moonshot.personal.kimi-code.global.kimi-k2.5",
             providerAccountId: "moonshot.personal.kimi-code",
-            modelId: "moonshotai/kimi-k2.5",
+            modelId: "moonshot/kimi-k2.5",
             region: "global",
             endpointKind: "remote-openai-compatible",
             servingSource: "remote-service",

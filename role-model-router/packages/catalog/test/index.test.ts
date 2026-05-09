@@ -72,11 +72,11 @@ describe("normalizeCatalogSnapshot", () => {
     const overrides = await readJson("testdata/catalog/models-dev-local-overrides.json");
 
     const catalog = normalizeCatalogSnapshot(snapshot, overrides);
-    const moonshotProvider = catalog.providers.find((provider) => provider.providerId === "moonshotai");
-    const kimiModel = catalog.models.find((model) => model.modelId === "moonshotai/kimi-k2.5");
+    const moonshotProvider = catalog.providers.find((provider) => provider.providerId === "moonshot");
+    const kimiModel = catalog.models.find((model) => model.modelId === "moonshot/kimi-k2.5");
 
     expect(moonshotProvider).toMatchObject({
-      providerId: "moonshotai",
+      providerId: "moonshot",
       displayName: "Moonshot AI",
       providerKind: "provider-openai",
       authFamily: "api-key",
@@ -86,8 +86,8 @@ describe("normalizeCatalogSnapshot", () => {
       localOverrideApplied: true,
     });
     expect(kimiModel).toMatchObject({
-      modelId: "moonshotai/kimi-k2.5",
-      providerId: "moonshotai",
+      modelId: "moonshot/kimi-k2.5",
+      providerId: "moonshot",
       providerKind: "provider-openai",
       authFamily: "api-key",
       displayName: "Kimi K2.5",

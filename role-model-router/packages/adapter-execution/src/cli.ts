@@ -29,6 +29,10 @@ import {
   type RuntimeExecutionRequest,
   type RoutedExecutionResult,
 } from "./index.js";
+import {
+  deriveLiteLLMProviders,
+  loadLiteLLMModelPrices,
+} from "@role-model-router/catalog";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -134,8 +138,12 @@ export async function runRuntimeAdapterValidation(
     path.join(options.repoRoot, "testdata", "router-runtime", "adapter-captures.json"),
   );
 
+  const liteLLMModelPrices = await loadLiteLLMModelPrices(options.repoRoot);
+  const liteLLMProviders = liteLLMModelPrices ? deriveLiteLLMProviders(liteLLMModelPrices) : [];
+
   const validation = validateProviderAccounts({
     catalog: normalizedCatalog,
+    additionalProviders: liteLLMProviders,
     accounts: providerAccountsFixture.accounts,
   });
   if (validation.diagnostics.length > 0) {
@@ -208,6 +216,7 @@ export async function runRuntimeAdapterValidation(
   const execution = executeRoutedRequest({
     routeResult: routed,
     catalog: normalizedCatalog,
+    additionalProviders: liteLLMProviders,
     accounts: validation.accounts,
     registry,
     registrySources,

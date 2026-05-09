@@ -23,7 +23,7 @@
       "adapterFamilyHint": "anthropic-messages"
     },
     {
-      "providerId": "moonshotai",
+      "providerId": "moonshot",
       "displayName": "Moonshot AI",
       "npmPackage": "@ai-sdk/openai-compatible",
       "apiBase": "https://api.moonshot.ai/v1",
@@ -93,8 +93,8 @@
       "experimentalModes": []
     },
     {
-      "modelId": "moonshotai/kimi-k2.5",
-      "providerId": "moonshotai",
+      "modelId": "moonshot/kimi-k2.5",
+      "providerId": "moonshot",
       "displayName": "Kimi K2.5",
       "version": "2026-04-01",
       "capabilities": ["text.chat", "tools.function_calling", "structured.output"],

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 
-import { EmptyState, ErrorState, FactCard, LoadingState, PageHeader, SectionCard, StatusPill } from "../components/page-primitives";
+import { EmptyState, ErrorState, LoadingState, PageHeader, SectionCard, StatusPill } from "../components/page-primitives";
 import { mutedPanelClassName, primaryButtonClassName } from "../lib/design-system";
 import {
   fetchControllerAssignment,
@@ -65,9 +65,6 @@ export default function ControlControllerRoute() {
     return <LoadingState label="Loading controller surface…" />;
   }
 
-  const healthyCandidateCount = candidates.filter((endpoint) => endpoint.healthStatus === "healthy").length;
-  const toolingCandidateCount = candidates.filter((endpoint) => endpoint.toolCallingSupported).length;
-
   return (
     <div className="space-y-6">
       <PageHeader
@@ -75,18 +72,6 @@ export default function ControlControllerRoute() {
         title="Routing controller"
         description="Choose the explicit endpoint/model pair that adjudicates routed requests, with local and remote candidates shown in one list."
       />
-
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <FactCard
-          label="Current source"
-          value={controller?.sourceType ?? "unassigned"}
-          detail="The explicit runtime-owned controller assignment stays visible at the top of the page."
-          emphasis
-        />
-        <FactCard label="Candidates" value={candidates.length} detail="Every endpoint remains eligible for controller review here." />
-        <FactCard label="Healthy" value={healthyCandidateCount} detail="Candidates whose current health posture is already marked healthy." />
-        <FactCard label="Tool-capable" value={toolingCandidateCount} detail="Candidates that can participate in tool-calling controller work." />
-      </div>
 
       <SectionCard title="Current assignment" description="The controller is persisted in the runtime control plane and can be changed without editing fixtures.">
         {controller ? (
@@ -111,7 +96,10 @@ export default function ControlControllerRoute() {
         )}
       </SectionCard>
 
-      <SectionCard title="Controller candidates" description="Candidates show source type, health, role coverage, and tooling posture before you promote them.">
+      <SectionCard
+        title="Controller candidates"
+        description={`Candidates show source type, health, role coverage, and tooling posture before you promote them. ${candidates.length} endpoints are currently available for review.`}
+      >
         {candidates.length === 0 ? (
           <EmptyState label="No endpoints are available yet. Configure runtime config or activate a provider endpoint to continue." />
         ) : (

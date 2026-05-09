@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 
-import { CodeBlock, ErrorState, FactCard, LoadingState, PageHeader, SectionCard } from "../components/page-primitives";
+import { CodeBlock, ErrorState, LoadingState, PageHeader, SectionCard } from "../components/page-primitives";
 import { fieldClassName, primaryButtonClassName, secondaryButtonClassName } from "../lib/design-system";
 import {
   fetchRuntimeConfig,
@@ -63,11 +63,7 @@ export default function ControlRuntimeConfigRoute() {
 
   const currentConfig = configRecord?.config ?? createDefaultRuntimeConfig();
   const remoteMappingCount = useMemo(
-    () =>
-      currentConfig.liteLLM.providers.reduce(
-        (count, provider) => count + provider.modelMappings.length,
-        0,
-      ),
+    () => currentConfig.liteLLM.providers.reduce((count, provider) => count + provider.modelMappings.length, 0),
     [currentConfig],
   );
 
@@ -106,18 +102,11 @@ export default function ControlRuntimeConfigRoute() {
         }
       />
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <FactCard label="Config path" value={configRecord?.path ?? "Not configured"} detail="The active file backing this runtime-owned config editor." emphasis />
-        <FactCard label="Execution mode" value={currentConfig.executionMode ?? "pending"} detail="Derived from the current local and remote config sections." />
-        <FactCard label="Local models" value={currentConfig.llamaSwap.models.length} detail="Configured llama-swap model entries." />
-        <FactCard label="Remote mappings" value={remoteMappingCount} detail="Configured LiteLLM provider-model mappings." />
-      </div>
-
       {error ? <ErrorState label={error} /> : null}
 
       <SectionCard
         title="Config editor"
-        description="Edit the canonical JSON payload directly, then save and apply it through the role-model runtime control plane."
+        description={`Edit the canonical JSON payload directly, then save and apply it through the role-model runtime control plane. Current scope: ${currentConfig.llamaSwap.models.length} local models, ${remoteMappingCount} remote mappings, execution mode ${currentConfig.executionMode ?? "pending"}.`}
       >
         <div className="space-y-4">
           {!configRecord ? <LoadingState label="Loading runtime config…" /> : null}
@@ -150,7 +139,7 @@ export default function ControlRuntimeConfigRoute() {
 
       <SectionCard
         title="Applied config snapshot"
-        description="Use this snapshot to confirm the current derived execution mode and the exact local-plus-remote runtime payload in force."
+        description={`Use this snapshot to confirm the active config file (${configRecord?.path ?? "not configured"}) and the exact local-plus-remote runtime payload in force.`}
       >
         <CodeBlock>{JSON.stringify(configRecord?.config ?? createDefaultRuntimeConfig(), null, 2)}</CodeBlock>
       </SectionCard>

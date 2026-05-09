@@ -31,6 +31,14 @@ function toTitleLabel(modelId: string): string {
     .join(" ");
 }
 
+function uniqueStrings(values: readonly (string | null | undefined)[]): string[] {
+  return [...new Set(values.filter((value): value is string => typeof value === "string" && value.length > 0))];
+}
+
+function sortLexical(left: string, right: string): number {
+  return left.localeCompare(right, "en");
+}
+
 export function buildProviderCards(
   providers: readonly RuntimeProvider[],
   accounts: readonly RuntimeAccount[],
@@ -293,6 +301,122 @@ export function buildWorkbenchModelOptions(
       label: toTitleLabel(modelId),
       value: modelId,
     }));
+}
+
+export function buildModelCatalogRows(
+  models: ReadonlyArray<
+    Pick<RuntimeModelRecord, "id"> & Partial<Pick<RuntimeModelRecord, "endpoint_ids">>
+  >,
+): Array<{
+  modelId: string;
+  displayName: string;
+  endpointCount: number;
+  endpointIds: string[];
+}> {
+  return models
+    .map((model) => {
+      const endpointIds = uniqueStrings(model.endpoint_ids ?? []).sort(sortLexical);
+      return {
+        modelId: model.id,
+        displayName: toTitleLabel(model.id),
+        endpointCount: endpointIds.length,
+        endpointIds,
+      };
+    })
+    .sort((left, right) => sortLexical(left.modelId, right.modelId));
+}
+
+export function buildEndpointCatalogRows(
+  endpoints: readonly RuntimeEndpoint[],
+): Array<{
+  endpointId: string;
+  modelId: string;
+  providerLabel: string;
+  sourceLabel: string;
+  servingSource: string;
+  endpointKind: string;
+  status: string;
+  healthStatus: string;
+}> {
+  return [...endpoints]
+    .map((endpoint) => ({
+      endpointId: endpoint.endpointId,
+      modelId: endpoint.modelId,
+      providerLabel: endpoint.providerId ?? "local/runtime",
+      sourceLabel: formatSourceLabel(
+        endpoint.sourceType ??
+          (endpoint.servingSource?.toLowerCase().includes("local") ? "local" : "remote"),
+      ),
+      servingSource: endpoint.servingSource ?? "unknown",
+      endpointKind: endpoint.endpointKind ?? "unknown",
+      status: endpoint.status ?? "unknown",
+      healthStatus: endpoint.healthStatus ?? "unknown",
+    }))
+    .sort((left, right) => sortLexical(left.endpointId, right.endpointId));
+}
+
+export function buildAccountModelCatalogIds(input: {
+  readonly account: Pick<RuntimeAccount, "providerId" | "allowedModels"> | null | undefined;
+  readonly providers: readonly RuntimeProvider[];
+  readonly models: ReadonlyArray<Pick<RuntimeModelRecord, "id">>;
+}): string[] {
+  const account = input.account;
+  if (!account) {
+    return [];
+  }
+
+  const providerCatalogIds = uniqueStrings(
+    input.providers.find((provider) => provider.providerId === account.providerId)?.modelIds ?? [],
+  );
+  const modelCatalogIds = uniqueStrings(input.models.map((model) => model.id));
+  const providerScopedCatalogIds =
+    providerCatalogIds.length > 0
+      ? providerCatalogIds
+      : modelCatalogIds.filter((modelId) => modelId.startsWith(`${account.providerId}/`));
+
+  if (account.allowedModels && account.allowedModels.length > 0) {
+    const allowedIds = uniqueStrings(account.allowedModels);
+    return [
+      ...providerScopedCatalogIds.filter((modelId) => allowedIds.includes(modelId)),
+      ...allowedIds.filter((modelId) => !providerScopedCatalogIds.includes(modelId)),
+    ];
+  }
+
+  return providerScopedCatalogIds;
+}
+
+export function buildConfiguredProviderRows(input: {
+  readonly accounts: readonly RuntimeAccount[];
+  readonly endpoints: readonly RuntimeEndpoint[];
+}): Array<{
+  providerId: string;
+  accountIds: string[];
+  authModes: string[];
+  configuredModels: string[];
+  endpointModels: string[];
+  endpointCount: number;
+  activeEndpointCount: number;
+  healthStatuses: string[];
+}> {
+  const providerIds = uniqueStrings([
+    ...input.accounts.map((account) => account.providerId),
+    ...input.endpoints.map((endpoint) => endpoint.providerId),
+  ]).sort(sortLexical);
+
+  return providerIds.map((providerId) => {
+    const providerAccounts = input.accounts.filter((account) => account.providerId === providerId);
+    const providerEndpoints = input.endpoints.filter((endpoint) => endpoint.providerId === providerId);
+    return {
+      providerId,
+      accountIds: uniqueStrings(providerAccounts.map((account) => account.providerAccountId)).sort(sortLexical),
+      authModes: uniqueStrings(providerAccounts.map((account) => account.authMode)).sort(sortLexical),
+      configuredModels: uniqueStrings(providerAccounts.flatMap((account) => account.allowedModels ?? [])).sort(sortLexical),
+      endpointModels: uniqueStrings(providerEndpoints.map((endpoint) => endpoint.modelId)).sort(sortLexical),
+      endpointCount: providerEndpoints.length,
+      activeEndpointCount: providerEndpoints.filter((endpoint) => endpoint.status === "active").length,
+      healthStatuses: uniqueStrings(providerAccounts.map((account) => account.healthStatus)).sort(sortLexical),
+    };
+  });
 }
 
 export function buildDownstreamProviderGuide(

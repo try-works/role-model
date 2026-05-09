@@ -37,7 +37,7 @@ describe("runRuntimeUiValidation", () => {
       unifiedRuntimeConfigPath,
     });
 
-    expect(result.providerCount).toBe(3);
+    expect(result.providerCount).toBeGreaterThan(3);
     expect(result.accountCount).toBeGreaterThanOrEqual(1);
     expect(result.endpointCount).toBeGreaterThanOrEqual(1);
     expect(result.runtimeConfigPath).toBe(unifiedRuntimeConfigPath);

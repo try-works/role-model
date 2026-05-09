@@ -182,4 +182,78 @@ version: "1.0"
 
     await backend.shutdown();
   });
+
+  test("surfaces LiteLLM-backed Moonshot models and endpoints from unified runtime config", async () => {
+    const tempRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-run16-litellm-models-"));
+    tempRoots.push(tempRoot);
+    const runtimeStateRoot = path.join(tempRoot, "state");
+    const unifiedRuntimeConfigPath = path.join(tempRoot, "runtime-config.yaml");
+
+    await writeFile(
+      unifiedRuntimeConfigPath,
+      [
+        'version: "1.0"',
+        "litellm_proxy:",
+        '  command: "node"',
+        "  args:",
+        '    - "-e"',
+        `    - 'const http=require("node:http");const port=Number(process.env.PORT);const server=http.createServer((req,res)=>{if(req.url==="/health/liveliness"){res.statusCode=200;res.end("ok");return;}res.statusCode=404;res.end("missing");});server.listen(port,"127.0.0.1");const shutdown=()=>server.close(()=>process.exit(0));process.on("SIGTERM",shutdown);process.on("SIGINT",shutdown);'`,
+        "  providers:",
+        "    moonshot:",
+        '      api_key: "${MOONSHOT_API_KEY}"',
+        "      model_list:",
+        '        - model_name: "moonshot/kimi-k2.6"',
+        "          litellm_params:",
+        '            model: "moonshot/kimi-k2.6"',
+        '            api_base: "https://api.moonshot.ai/v1"',
+        '        - model_name: "moonshot/kimi-k2.5"',
+        "          litellm_params:",
+        '            model: "moonshot/kimi-k2.5"',
+        '            api_base: "https://api.moonshot.ai/v1"',
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+
+    const backend = await createRuntimeBridgeBackend({
+      repoRoot,
+      runtimeStateRoot,
+      scopeId: "runtime-host-unified-litellm-models",
+      unifiedRuntimeConfigPath,
+    });
+
+    await expect(backend.listProviders()).resolves.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          providerId: "moonshot",
+          modelIds: ["moonshot/kimi-k2.6", "moonshot/kimi-k2.5"],
+          variants: expect.arrayContaining([
+            expect.objectContaining({
+              variantId: "moonshot-open-platform",
+              modelIds: ["moonshot/kimi-k2.6", "moonshot/kimi-k2.5"],
+            }),
+            expect.objectContaining({
+              variantId: "kimi-code",
+              modelIds: ["moonshot/kimi-k2.6", "moonshot/kimi-k2.5"],
+            }),
+          ]),
+        }),
+      ]),
+    );
+
+    await expect(backend.listEndpoints()).resolves.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          endpointId: "moonshot.litellm.global.moonshot-kimi-k2-6",
+          modelId: "moonshot/kimi-k2.6",
+        }),
+        expect.objectContaining({
+          endpointId: "moonshot.litellm.global.moonshot-kimi-k2-5",
+          modelId: "moonshot/kimi-k2.5",
+        }),
+      ]),
+    );
+
+    await backend.shutdown();
+  });
 });

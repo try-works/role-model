@@ -6,78 +6,7 @@
     "capturedAt": "2026-05-04T12:00:00Z",
     "schemaVersion": "models.dev.v1"
   },
-  "providers": [
-    {
-      "providerId": "anthropic",
-      "displayName": "Anthropic",
-      "providerKind": "provider-anthropic",
-      "authFamily": "api-key",
-      "adapterFamily": "ai-sdk-anthropic",
-      "apiBase": "https://api.anthropic.com/v1",
-      "envVars": [
-        "ANTHROPIC_API_KEY"
-      ],
-      "supportedAuthModes": [],
-      "controlPlaneRequirements": [
-        "workspace.required"
-      ],
-      "localOverrideApplied": true,
-      "upstreamProvenance": {
-        "vendor": "models.dev",
-        "commit": "8f3c2d1",
-        "capturedAt": "2026-05-04T12:00:00Z",
-        "schemaVersion": "models.dev.v1"
-      }
-    },
-    {
-      "providerId": "openai",
-      "displayName": "OpenAI",
-      "providerKind": "provider-openai",
-      "authFamily": "api-key",
-      "adapterFamily": "ai-sdk-openai",
-      "apiBase": "https://api.openai.com/v1",
-      "envVars": [
-        "OPENAI_API_KEY"
-      ],
-      "supportedAuthModes": [],
-      "controlPlaneRequirements": [
-        "organization.optional"
-      ],
-      "localOverrideApplied": true,
-      "upstreamProvenance": {
-        "vendor": "models.dev",
-        "commit": "8f3c2d1",
-        "capturedAt": "2026-05-04T12:00:00Z",
-        "schemaVersion": "models.dev.v1"
-      }
-    },
-    {
-      "providerId": "moonshotai",
-      "displayName": "Moonshot AI",
-      "providerKind": "provider-openai",
-      "authFamily": "api-key",
-      "adapterFamily": "ai-sdk-openai-compatible",
-      "apiBase": "https://api.moonshot.ai/v1",
-      "envVars": [
-        "MOONSHOT_API_KEY"
-      ],
-      "supportedAuthModes": [
-        "api-key-static",
-        "oauth2-device-code"
-      ],
-      "controlPlaneRequirements": [
-        "workspace.required",
-        "kimi-code.oauth.device"
-      ],
-      "localOverrideApplied": true,
-      "upstreamProvenance": {
-        "vendor": "models.dev",
-        "commit": "8f3c2d1",
-        "capturedAt": "2026-05-04T12:00:00Z",
-        "schemaVersion": "models.dev.v1"
-      }
-    }
-  ],
+  "providers": [],
   "models": [
     {
       "modelId": "claude-3.7-sonnet",
@@ -232,8 +161,8 @@
       }
     },
     {
-      "modelId": "moonshotai/kimi-k2.5",
-      "providerId": "moonshotai",
+      "modelId": "moonshot/kimi-k2.5",
+      "providerId": "moonshot",
       "providerKind": "provider-openai",
       "authFamily": "api-key",
       "displayName": "Kimi K2.5",

@@ -3,16 +3,16 @@ import type { EndpointCandidate } from "@role-model-router/core";
 export interface DeclaredEndpointConfig {
   endpoint_id: string;
   model_id: string;
-  capabilities: string[];
-  modalities: string[];
+  capabilities: [string, ...string[]];
+  modalities: [string, ...string[]];
 }
 
 export function detectAcpEndpoints(configs: DeclaredEndpointConfig[]): EndpointCandidate[] {
   return configs.map((config) => ({
     identity: {
       endpoint_id: config.endpoint_id,
-      endpoint_kind: "acp-endpoint",
-      provider_kind: "provider-acp",
+      endpoint_kind: "local_engine",
+      provider_kind: "acp",
       serving_source: "remote-service",
       model_id: config.model_id,
       package_id: "provider-acp",
