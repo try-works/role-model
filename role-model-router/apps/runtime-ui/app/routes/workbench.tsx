@@ -7,7 +7,8 @@ import { buildWorkbenchModelOptions, summarizeWorkbenchResult } from "../lib/vie
 
 export default function WorkbenchRoute() {
   const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [model, setModel] = useState("");
   const [prompt, setPrompt] = useState("Summarize the chosen endpoint.");
   const [result, setResult] = useState<Record<string, unknown> | null>(null);
@@ -21,13 +22,13 @@ export default function WorkbenchRoute() {
           setModel(data.models[0].id);
         }
       })
-      .catch((value: unknown) => setError(value instanceof Error ? value.message : "Could not load workbench."));
+      .catch((value: unknown) => setLoadError(value instanceof Error ? value.message : "Could not load workbench."));
   }, []);
 
   const modelOptions = useMemo(() => buildWorkbenchModelOptions(snapshot?.models ?? []), [snapshot?.models]);
 
-  if (error) {
-    return <ErrorState label={error} />;
+  if (loadError) {
+    return <ErrorState label={loadError} />;
   }
   if (!snapshot) {
     return <LoadingState label="Loading workbench…" />;
@@ -36,7 +37,8 @@ export default function WorkbenchRoute() {
   const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setSubmitting(true);
-    setError(null);
+    setSubmitError(null);
+    setResult(null);
     try {
       const response = await submitWorkbenchChat({
         model,
@@ -44,7 +46,7 @@ export default function WorkbenchRoute() {
       });
       setResult(response);
     } catch (value) {
-      setError(value instanceof Error ? value.message : "Workbench request failed.");
+      setSubmitError(value instanceof Error ? value.message : "Workbench request failed.");
     } finally {
       setSubmitting(false);
     }
@@ -91,7 +93,12 @@ export default function WorkbenchRoute() {
         </SectionCard>
 
         <SectionCard title="Result workspace" description="Tooling-aware response summary aligned with the runtime host payload.">
-          {!resultSummary ? (
+          {submitError ? (
+            <div className={`${mutedPanelClassName} border-l-4 border-red-500 p-4`}>
+              <p className="text-xs font-normal uppercase tracking-[0.2em] text-red-500">Request failed</p>
+              <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-[var(--rm-fg)]">{submitError}</p>
+            </div>
+          ) : !resultSummary ? (
             <EmptyState label="No result yet." />
           ) : (
             <div className="space-y-4">
