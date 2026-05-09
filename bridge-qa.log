@@ -1,0 +1,22 @@
+(node:16732) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+[QA] Starting Role Model Runtime Bridge...
+[QA] repoRoot: D:\DEV\role-model\.worktrees\18-local-llama-swap-runtime
+[QA] runtimeStateRoot: C:\Users\erikb\AppData\Local\Temp\role-model-runtime-qa
+[QA] scopeId: runtime-qa
+[QA] Clearing stale runtime state...
+[QA] Stale runtime state cleared.
+[QA] Bridge server running at http://127.0.0.1:3456
+[QA] API docs:
+  GET http://127.0.0.1:3456/api/role-model/runtime/summary
+  GET http://127.0.0.1:3456/api/role-model/providers
+  GET http://127.0.0.1:3456/api/role-model/accounts
+  GET http://127.0.0.1:3456/api/role-model/endpoints
+  GET http://127.0.0.1:3456/api/role-model/roles
+  GET http://127.0.0.1:3456/api/role-model/runtime/config
+  GET http://127.0.0.1:3456/api/role-model/local/models
+  GET http://127.0.0.1:3456/api/role-model/local/policy
+  GET http://127.0.0.1:3456/api/role-model/local/swap
+  GET http://127.0.0.1:3456/v1/models
+  POST http://127.0.0.1:3456/v1/chat/completions
+[QA] Press Ctrl+C to stop
