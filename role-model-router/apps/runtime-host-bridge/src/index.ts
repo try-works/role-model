@@ -2807,29 +2807,6 @@ function createRequestHandler(options: StartBridgeServerOptions) {
       return;
     }
 
-    if (options.staticRoot && request.method === "GET") {
-      const filePath = path.join(options.staticRoot, url.pathname === "/" ? "index.html" : url.pathname);
-      const resolvedPath = existsSync(filePath) ? filePath : path.join(options.staticRoot, "index.html");
-      if (existsSync(resolvedPath)) {
-        const ext = path.extname(resolvedPath).toLowerCase();
-        const contentType =
-          ext === ".html" ? "text/html; charset=utf-8" :
-          ext === ".js" ? "application/javascript; charset=utf-8" :
-          ext === ".css" ? "text/css; charset=utf-8" :
-          ext === ".json" ? "application/json; charset=utf-8" :
-          ext === ".png" ? "image/png" :
-          ext === ".jpg" || ext === ".jpeg" ? "image/jpeg" :
-          ext === ".svg" ? "image/svg+xml" :
-          ext === ".woff2" ? "font/woff2" :
-          ext === ".woff" ? "font/woff" :
-          "application/octet-stream";
-        const data = readFileSync(resolvedPath);
-        response.writeHead(200, { "content-type": contentType, "content-length": data.length });
-        response.end(data);
-        return;
-      }
-    }
-
     if (request.method === "GET" && url.pathname === "/api/role-model/local/models") {
       if (!options.listLocalModels) {
         writeJson(response, 404, { error: "not found" });
@@ -2893,6 +2870,29 @@ function createRequestHandler(options: StartBridgeServerOptions) {
       }
       writeJson(response, 200, await options.listSwapHistory());
       return;
+    }
+
+    if (options.staticRoot && request.method === "GET") {
+      const filePath = path.join(options.staticRoot, url.pathname === "/" ? "index.html" : url.pathname);
+      const resolvedPath = existsSync(filePath) ? filePath : path.join(options.staticRoot, "index.html");
+      if (existsSync(resolvedPath)) {
+        const ext = path.extname(resolvedPath).toLowerCase();
+        const contentType =
+          ext === ".html" ? "text/html; charset=utf-8" :
+          ext === ".js" ? "application/javascript; charset=utf-8" :
+          ext === ".css" ? "text/css; charset=utf-8" :
+          ext === ".json" ? "application/json; charset=utf-8" :
+          ext === ".png" ? "image/png" :
+          ext === ".jpg" || ext === ".jpeg" ? "image/jpeg" :
+          ext === ".svg" ? "image/svg+xml" :
+          ext === ".woff2" ? "font/woff2" :
+          ext === ".woff" ? "font/woff" :
+          "application/octet-stream";
+        const data = readFileSync(resolvedPath);
+        response.writeHead(200, { "content-type": contentType, "content-length": data.length });
+        response.end(data);
+        return;
+      }
     }
 
     writeJson(response, 404, { error: "not found" });
