@@ -55,6 +55,10 @@ describe("runtime design system", () => {
         ],
       },
       {
+        title: "Local",
+        routes: ["/app/local/models", "/app/local/swap", "/app/local/policy"],
+      },
+      {
         title: "Control",
         routes: [
           "/app/control/providers",
