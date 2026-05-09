@@ -433,10 +433,14 @@ export function buildDownstreamProviderGuide(
   const recommendedModel = provider.setup.recommendedModel ?? provider.models[0]?.id ?? "model-id";
   const placeholderToken = provider.authentication.placeholderToken;
 
+  const baseUrlWithV1 = provider.baseUrl.endsWith("/v1") ? provider.baseUrl : `${provider.baseUrl}/v1`;
+  const baseUrlWithoutV1 = provider.baseUrl.endsWith("/v1") ? provider.baseUrl.slice(0, -3) : provider.baseUrl;
+
   return {
     connectionRows: [
       { label: "Provider type", value: "OpenAI-compatible" },
-      { label: "Base URL", value: provider.baseUrl },
+      { label: "Base URL (standard)", value: baseUrlWithoutV1 },
+      { label: "Base URL (/v1 suffix)", value: baseUrlWithV1 },
       { label: "Models endpoint", value: provider.endpoints.models },
       { label: "Chat endpoint", value: provider.endpoints.chatCompletions },
       { label: "Auth header", value: `${provider.authentication.headerName}: Bearer ${placeholderToken}` },
@@ -444,7 +448,7 @@ export function buildDownstreamProviderGuide(
     availableModels: provider.models.map((model) => model.id),
     opencodeSteps: [
       "Choose an OpenAI-compatible provider entry in the downstream client.",
-      `Set the base URL to ${provider.baseUrl}.`,
+      `Set the base URL to ${baseUrlWithoutV1} (most clients) or ${baseUrlWithV1} (clients that expect /v1 in the base URL).`,
       `If the client requires an API key, use ${placeholderToken} as the bearer token.`,
       `Select a model returned by ${provider.endpoints.models}.`,
     ],
