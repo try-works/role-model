@@ -445,6 +445,7 @@ async function startRuntimeForConfig(input: {
   await writeFile(configPath, stringify(input.config), "utf8");
 
   const backend = await createRuntimeBridgeBackend({
+    fixtureRoot: path.join(input.repoRoot, "testdata", "router-runtime"),
     repoRoot: input.repoRoot,
     runtimeStateRoot: input.runtimeStateRoot,
     scopeId: input.scopeId,

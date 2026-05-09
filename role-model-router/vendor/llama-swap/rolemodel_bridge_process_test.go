@@ -41,6 +41,7 @@ func TestBuildRoleModelBridgeCommand_UsesWorkspaceCli(t *testing.T) {
 		Host:             "127.0.0.1",
 		Port:             9191,
 		ScopeID:          "run10-validation",
+		FixtureRoot:      "",
 	}
 
 	cmd := buildRoleModelBridgeCommand(options)

@@ -80,6 +80,7 @@ import {
 import { resolveLlamaSwapCommand } from "./runtime-assets.js";
 import {
   deriveLiteLLMProviders,
+  extractLiteLLMModelIds,
   loadLiteLLMModelPrices,
   type LiteLLMProviderInfo,
 } from "@role-model-router/catalog";
@@ -454,6 +455,7 @@ export interface CreateRuntimeBridgeBackendOptions {
   readonly scopeId: string;
   readonly unifiedRuntimeConfigPath?: string;
   readonly networkFetcher?: typeof fetch;
+  readonly fixtureRoot?: string;
 }
 
 export interface BridgeServerOptions {
@@ -2778,6 +2780,7 @@ export async function createRuntimeBridgeBackend(
   options: CreateRuntimeBridgeBackendOptions,
 ): Promise<RuntimeBridgeBackend> {
   const networkFetcher = options.networkFetcher ?? fetch;
+  const fixtureRoot = options.fixtureRoot ?? path.join(options.repoRoot, "testdata", "router-runtime", "fixtures");
   const initialUnifiedRuntimeConfig = options.unifiedRuntimeConfigPath
     ? parseUnifiedRuntimeConfigText(await readFile(options.unifiedRuntimeConfigPath, "utf8"))
     : null;
@@ -2795,10 +2798,10 @@ export async function createRuntimeBridgeBackend(
   const liteLLMModelPrices = await loadLiteLLMModelPrices(options.repoRoot);
   let liteLLMProviders = liteLLMModelPrices ? deriveLiteLLMProviders(liteLLMModelPrices) : [];
   const providerAccountsFixture = await readJson<{ accounts: ProviderAccountRecord[] }>(
-    path.join(options.repoRoot, "testdata", "router-runtime", "provider-accounts.json"),
+    path.join(fixtureRoot, "provider-accounts.json"),
   );
   const registrySourcesFixture = await readJson<RegistrySources>(
-    path.join(options.repoRoot, "testdata", "router-runtime", "registry-sources.json"),
+    path.join(fixtureRoot, "registry-sources.json"),
   );
   const continuityFixture = await readJson<{
     session: Parameters<typeof persistContinuitySnapshot>[0]["session"];
@@ -2812,31 +2815,31 @@ export async function createRuntimeBridgeBackend(
       maxArtifacts: number;
       tokenBudget: number;
     };
-  }>(path.join(options.repoRoot, "testdata", "router-runtime", "context-envelope.json"));
+  }>(path.join(fixtureRoot, "context-envelope.json"));
   const observedProfilesByEndpointId = await readJson<
     Parameters<typeof routeRuntimeRequest>[0]["observedProfilesByEndpointId"]
-  >(path.join(options.repoRoot, "testdata", "router-runtime", "routing-observed-profiles.json"));
+  >(path.join(fixtureRoot, "routing-observed-profiles.json"));
   const roleTaskFixture = await readJson<{
     roleDefinitions: Parameters<typeof routeRuntimeRequest>[0]["roleDefinitions"];
     taskDefinitions: Parameters<typeof routeRuntimeRequest>[0]["taskDefinitions"];
     roleBindings: Parameters<typeof routeRuntimeRequest>[0]["roleBindings"];
-  }>(path.join(options.repoRoot, "testdata", "router-runtime", "adapter-role-task.json"));
+  }>(path.join(fixtureRoot, "adapter-role-task.json"));
   const runtimeRoles = buildRuntimeRoleCatalog(roleTaskFixture.roleDefinitions ?? []);
   const allowedRoleIds = runtimeRoles.roleSummaries.map((role) => role.roleId);
   const routingModel = await readJson<RoutingModelSelection>(
-    path.join(options.repoRoot, "testdata", "router-runtime", "routing-model-guidance.json"),
+    path.join(fixtureRoot, "routing-model-guidance.json"),
   );
   const captureFixtureMap = await readJson<CaptureFixtureMap>(
-    path.join(options.repoRoot, "testdata", "router-runtime", "adapter-captures.json"),
+    path.join(fixtureRoot, "adapter-captures.json"),
   );
   const observabilityHistory = await readJson<{
     byEndpointId: Record<string, ObservedPerformanceSample[]>;
-  }>(path.join(options.repoRoot, "testdata", "router-runtime", "observability-history.json"));
+  }>(path.join(fixtureRoot, "observability-history.json"));
   const observabilityPolicy = await readJson<RuntimeCapturePolicy>(
-    path.join(options.repoRoot, "testdata", "router-runtime", "observability-policy.json"),
+    path.join(fixtureRoot, "observability-policy.json"),
   );
   const providerPresets = await readJson<ProviderPresetCatalog>(
-    path.join(options.repoRoot, "testdata", "router-runtime", "provider-presets.json"),
+    path.join(fixtureRoot, "provider-presets.json"),
   );
   const initialization = initializeSqliteMemory({
     runtimeStateRoot: options.runtimeStateRoot,
@@ -3658,6 +3661,12 @@ export async function createRuntimeBridgeBackend(
           .map((model) => model.modelId);
         if (fromCatalog.length > 0) {
           return fromCatalog;
+        }
+        const fromLiteLLM = liteLLMModelPrices
+          ? extractLiteLLMModelIds(liteLLMModelPrices, providerId)
+          : [];
+        if (fromLiteLLM.length > 0) {
+          return fromLiteLLM;
         }
         return (providerPresets.providers[providerId]?.variants?.[0]?.modelIds ?? []);
       }

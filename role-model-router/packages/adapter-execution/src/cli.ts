@@ -41,6 +41,7 @@ export interface RuntimeAdapterValidationOptions {
   readonly repoRoot: string;
   readonly runtimeStateRoot: string;
   readonly scopeId: string;
+  readonly fixtureRoot?: string;
 }
 
 export interface RuntimeAdapterValidationResult {
@@ -95,14 +96,15 @@ async function loadResponseCaptures(
 export async function runRuntimeAdapterValidation(
   options: RuntimeAdapterValidationOptions,
 ): Promise<RuntimeAdapterValidationResult> {
+  const fixtureRoot = options.fixtureRoot ?? path.join(options.repoRoot, "testdata", "router-runtime");
   let normalizedCatalog = await readJson<NormalizedCatalog>(
     path.join(options.repoRoot, "role-model-router", "packages", "catalog", "data", "normalized-catalog.json"),
   );
   const providerAccountsFixture = await readJson<{ accounts: unknown[] }>(
-    path.join(options.repoRoot, "testdata", "router-runtime", "provider-accounts.json"),
+    path.join(fixtureRoot, "provider-accounts.json"),
   );
   const registrySources = await readJson<RegistrySources>(
-    path.join(options.repoRoot, "testdata", "router-runtime", "registry-sources.json"),
+    path.join(fixtureRoot, "registry-sources.json"),
   );
   const continuityFixture = await readJson<{
     session: Parameters<typeof persistContinuitySnapshot>[0]["session"];
@@ -116,26 +118,26 @@ export async function runRuntimeAdapterValidation(
       maxArtifacts: number;
       tokenBudget: number;
     };
-  }>(path.join(options.repoRoot, "testdata", "router-runtime", "context-envelope.json"));
+  }>(path.join(fixtureRoot, "context-envelope.json"));
   const routingRequest = await readJson<Parameters<typeof routeRuntimeRequest>[0]["request"]>(
-    path.join(options.repoRoot, "testdata", "router-runtime", "adapter-routing-request.json"),
+    path.join(fixtureRoot, "adapter-routing-request.json"),
   );
   const observedProfilesByEndpointId = await readJson<
     Parameters<typeof routeRuntimeRequest>[0]["observedProfilesByEndpointId"]
-  >(path.join(options.repoRoot, "testdata", "router-runtime", "routing-observed-profiles.json"));
+  >(path.join(fixtureRoot, "routing-observed-profiles.json"));
   const roleTaskFixture = await readJson<{
     roleDefinitions: Parameters<typeof routeRuntimeRequest>[0]["roleDefinitions"];
     taskDefinitions: Parameters<typeof routeRuntimeRequest>[0]["taskDefinitions"];
     roleBindings: Parameters<typeof routeRuntimeRequest>[0]["roleBindings"];
-  }>(path.join(options.repoRoot, "testdata", "router-runtime", "adapter-role-task.json"));
+  }>(path.join(fixtureRoot, "adapter-role-task.json"));
   const routingModel = await readJson<RoutingModelSelection>(
-    path.join(options.repoRoot, "testdata", "router-runtime", "routing-model-guidance.json"),
+    path.join(fixtureRoot, "routing-model-guidance.json"),
   );
   const executionRequest = await readJson<RuntimeExecutionRequest>(
-    path.join(options.repoRoot, "testdata", "router-runtime", "adapter-request.json"),
+    path.join(fixtureRoot, "adapter-request.json"),
   );
   const captureFixtureMap = await readJson<CaptureFixtureMap>(
-    path.join(options.repoRoot, "testdata", "router-runtime", "adapter-captures.json"),
+    path.join(fixtureRoot, "adapter-captures.json"),
   );
 
   const liteLLMModelPrices = await loadLiteLLMModelPrices(options.repoRoot);
@@ -143,6 +145,9 @@ export async function runRuntimeAdapterValidation(
 
   const fixtureModelIds = new Set<string>();
   for (const source of registrySources.cloud) {
+    fixtureModelIds.add(source.modelId);
+  }
+  for (const source of registrySources.local) {
     fixtureModelIds.add(source.modelId);
   }
   for (const account of providerAccountsFixture.accounts as { allowedModels?: string[]; deniedModels?: string[] }[]) {

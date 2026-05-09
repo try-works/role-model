@@ -18,6 +18,7 @@ type roleModelBridgeProcessOptions struct {
 	Host             string
 	Port             int
 	ScopeID          string
+	FixtureRoot      string
 }
 
 func (o *roleModelBridgeProcessOptions) BaseURL() string {
@@ -49,19 +50,20 @@ func resolveRoleModelBridgeProcessOptions() *roleModelBridgeProcessOptions {
 		scopeID = "runtime-host-bridge"
 	}
 
+	fixtureRoot := strings.TrimSpace(os.Getenv("ROLE_MODEL_BRIDGE_FIXTURE_ROOT"))
+
 	return &roleModelBridgeProcessOptions{
 		RepoRoot:         repoRoot,
 		RuntimeStateRoot: runtimeStateRoot,
 		Host:             host,
 		Port:             port,
 		ScopeID:          scopeID,
+		FixtureRoot:      fixtureRoot,
 	}
 }
 
 func buildRoleModelBridgeCommand(options *roleModelBridgeProcessOptions) *exec.Cmd {
-	return exec.Command(
-		"corepack",
-		"pnpm",
+	args := []string{
 		"--dir",
 		options.RepoRoot,
 		"--filter",
@@ -79,7 +81,12 @@ func buildRoleModelBridgeCommand(options *roleModelBridgeProcessOptions) *exec.C
 		options.RuntimeStateRoot,
 		"--scope-id",
 		options.ScopeID,
-	)
+	}
+	if options.FixtureRoot != "" {
+		args = append(args, "--fixture-root", options.FixtureRoot)
+	}
+	allArgs := append([]string{"pnpm"}, args...)
+	return exec.Command("corepack", allArgs...)
 }
 
 type roleModelBridgeProcess struct {

@@ -1528,6 +1528,7 @@ describe("runtime-host-bridge", () => {
       }
     ).createRuntimeBridgeBackend({
       repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
       runtimeStateRoot: path.join(os.tmpdir(), "role-model-runtime-host-bridge-tests"),
       scopeId: "runtime-host-bridge-tests",
     });
@@ -1587,6 +1588,7 @@ describe("runtime-host-bridge", () => {
       }
     ).createRuntimeBridgeBackend({
       repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
       runtimeStateRoot: path.join(os.tmpdir(), "role-model-runtime-host-observation-tests"),
       scopeId: "runtime-host-observation-tests",
     });
@@ -1647,6 +1649,7 @@ describe("runtime-host-bridge", () => {
       }
     ).createRuntimeBridgeBackend({
       repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
       runtimeStateRoot: path.join(os.tmpdir(), controlPlaneTestId),
       scopeId: controlPlaneTestId,
       networkFetcher: async (input, init) => {
@@ -1945,6 +1948,7 @@ describe("runtime-host-bridge", () => {
       }
     ).createRuntimeBridgeBackend({
       repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
       runtimeStateRoot: path.join(os.tmpdir(), "role-model-runtime-host-kimi-execution-tests"),
       scopeId: "runtime-host-kimi-execution-tests",
       networkFetcher: async (input, init) => {
@@ -2130,6 +2134,7 @@ describe("runtime-host-bridge", () => {
       }
     ).createRuntimeBridgeBackend({
       repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
       runtimeStateRoot: path.join(os.tmpdir(), "role-model-runtime-host-responses-tests"),
       scopeId: "runtime-host-responses-tests",
     });
@@ -2190,6 +2195,7 @@ describe("runtime-host-bridge", () => {
       }
     ).createRuntimeBridgeBackend({
       repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
       runtimeStateRoot: path.join(os.tmpdir(), "role-model-runtime-host-route-tests"),
       scopeId: "runtime-host-route-tests",
     });
@@ -2371,6 +2377,7 @@ describe("runtime-host-bridge", () => {
       }
     ).createRuntimeBridgeBackend({
       repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
       runtimeStateRoot: path.join(os.tmpdir(), `role-model-runtime-host-sse-tests-${Date.now()}`),
       scopeId: `runtime-host-sse-tests-${Date.now()}`,
     });

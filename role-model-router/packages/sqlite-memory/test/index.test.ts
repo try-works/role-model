@@ -77,9 +77,47 @@ describe("initializeSqliteMemory", () => {
   test("persists validated provider accounts by credential reference without storing raw secrets", async () => {
     const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
     const catalog = await readJson("role-model-router/packages/catalog/data/normalized-catalog.json");
-    const fixture = await readJson<{ accounts: unknown[] }>("testdata/router-runtime/provider-accounts.json");
+    const fixture = await readJson<{ accounts: unknown[] }>("testdata/router-runtime/fixtures/provider-accounts.json");
     const validated = validateProviderAccounts({
       catalog,
+      additionalProviders: [
+        {
+          providerId: "openai",
+          displayName: "OpenAI",
+          providerKind: "provider-openai",
+          authFamily: "api-key",
+          adapterFamily: "ai-sdk-openai",
+          apiBase: "https://api.openai.com/v1",
+          envVars: ["OPENAI_API_KEY"],
+          supportedAuthModes: [],
+          controlPlaneRequirements: [],
+          localOverrideApplied: true,
+          upstreamProvenance: {
+            vendor: "models.dev",
+            commit: "test",
+            capturedAt: "2026-05-01T00:00:00Z",
+            schemaVersion: "models.dev.v1",
+          },
+        },
+        {
+          providerId: "anthropic",
+          displayName: "Anthropic",
+          providerKind: "provider-anthropic",
+          authFamily: "api-key",
+          adapterFamily: "ai-sdk-anthropic",
+          apiBase: "https://api.anthropic.com/v1",
+          envVars: ["ANTHROPIC_API_KEY"],
+          supportedAuthModes: [],
+          controlPlaneRequirements: [],
+          localOverrideApplied: true,
+          upstreamProvenance: {
+            vendor: "models.dev",
+            commit: "test",
+            capturedAt: "2026-05-01T00:00:00Z",
+            schemaVersion: "models.dev.v1",
+          },
+        },
+      ],
       accounts: fixture.accounts,
     });
 
@@ -554,7 +592,7 @@ describe("initializeSqliteMemory", () => {
         toEndpointId: string | null;
         createdAtMs: number;
       }>;
-    }>("testdata/router-runtime/context-envelope.json");
+    }>("testdata/router-runtime/fixtures/context-envelope.json");
     const initialized = initializeSqliteMemory({
       runtimeStateRoot,
       scopeId: "workspace-dev",
@@ -666,14 +704,15 @@ describe("initializeSqliteMemory", () => {
     const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
     const validation = await runRuntimeAdapterValidation({
       repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
       runtimeStateRoot,
       scopeId: "workspace-dev",
     });
     const history = await readJson<{
       byEndpointId: Record<string, Parameters<typeof createRuntimeObservationBundle>[0]["priorSamples"]>;
-    }>("testdata/router-runtime/observability-history.json");
+    }>("testdata/router-runtime/fixtures/observability-history.json");
     const policy = await readJson<Parameters<typeof createRuntimeObservationBundle>[0]["capturePolicy"]>(
-      "testdata/router-runtime/observability-policy.json",
+      "testdata/router-runtime/fixtures/observability-policy.json",
     );
 
     const bundle = createRuntimeObservationBundle({
@@ -795,14 +834,15 @@ describe("initializeSqliteMemory", () => {
     const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
     const validation = await runRuntimeAdapterValidation({
       repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
       runtimeStateRoot,
       scopeId: "workspace-dev",
     });
     const history = await readJson<{
       byEndpointId: Record<string, Parameters<typeof createRuntimeObservationBundle>[0]["priorSamples"]>;
-    }>("testdata/router-runtime/observability-history.json");
+    }>("testdata/router-runtime/fixtures/observability-history.json");
     const policy = await readJson<Parameters<typeof createRuntimeObservationBundle>[0]["capturePolicy"]>(
-      "testdata/router-runtime/observability-policy.json",
+      "testdata/router-runtime/fixtures/observability-policy.json",
     );
 
     const baseBundle = createRuntimeObservationBundle({
@@ -1221,14 +1261,15 @@ describe("initializeSqliteMemory", () => {
     const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
     const validation = await runRuntimeAdapterValidation({
       repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
       runtimeStateRoot,
       scopeId: "workspace-dev",
     });
     const history = await readJson<{
       byEndpointId: Record<string, Parameters<typeof createRuntimeObservationBundle>[0]["priorSamples"]>;
-    }>("testdata/router-runtime/observability-history.json");
+    }>("testdata/router-runtime/fixtures/observability-history.json");
     const policy = await readJson<Parameters<typeof createRuntimeObservationBundle>[0]["capturePolicy"]>(
-      "testdata/router-runtime/observability-policy.json",
+      "testdata/router-runtime/fixtures/observability-policy.json",
     );
     const bundle = createRuntimeObservationBundle({
       decision: validation.decision,
@@ -1326,14 +1367,15 @@ describe("initializeSqliteMemory", () => {
     const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
     const validation = await runRuntimeAdapterValidation({
       repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
       runtimeStateRoot,
       scopeId: "workspace-dev",
     });
     const history = await readJson<{
       byEndpointId: Record<string, Parameters<typeof createRuntimeObservationBundle>[0]["priorSamples"]>;
-    }>("testdata/router-runtime/observability-history.json");
+    }>("testdata/router-runtime/fixtures/observability-history.json");
     const policy = await readJson<Parameters<typeof createRuntimeObservationBundle>[0]["capturePolicy"]>(
-      "testdata/router-runtime/observability-policy.json",
+      "testdata/router-runtime/fixtures/observability-policy.json",
     );
     const bundle = createRuntimeObservationBundle({
       decision: validation.decision,
@@ -1414,6 +1456,7 @@ describe("runRuntimeStateValidation", () => {
 
     const result = await runRuntimeStateValidation({
       repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
       runtimeStateRoot,
       scopeId: "workspace-dev",
     });

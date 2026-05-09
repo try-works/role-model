@@ -24,6 +24,7 @@ export interface RuntimeRegistryValidationOptions {
   readonly repoRoot: string;
   readonly runtimeStateRoot: string;
   readonly scopeId: string;
+  readonly fixtureRoot?: string;
 }
 
 export interface RuntimeRegistryValidationResult {
@@ -69,14 +70,15 @@ function formatDiagnostics(diagnostics: readonly { readonly code: string; readon
 export async function runRuntimeRegistryValidation(
   options: RuntimeRegistryValidationOptions,
 ): Promise<RuntimeRegistryValidationResult> {
+  const fixtureRoot = options.fixtureRoot ?? path.join(options.repoRoot, "testdata", "router-runtime");
   const normalizedCatalog = await readJson<NormalizedCatalog>(
     path.join(options.repoRoot, "role-model-router", "packages", "catalog", "data", "normalized-catalog.json"),
   );
   const providerAccountsFixture = await readJson<{ accounts: unknown[] }>(
-    path.join(options.repoRoot, "testdata", "router-runtime", "provider-accounts.json"),
+    path.join(fixtureRoot, "provider-accounts.json"),
   );
   const registrySources = await readJson<RegistrySources>(
-    path.join(options.repoRoot, "testdata", "router-runtime", "registry-sources.json"),
+    path.join(fixtureRoot, "registry-sources.json"),
   );
   const continuityFixture = await readJson<{
     session: Parameters<typeof persistContinuitySnapshot>[0]["session"];
@@ -90,7 +92,7 @@ export async function runRuntimeRegistryValidation(
       maxArtifacts: number;
       tokenBudget: number;
     };
-  }>(path.join(options.repoRoot, "testdata", "router-runtime", "context-envelope.json"));
+  }>(path.join(fixtureRoot, "context-envelope.json"));
 
   const validation = validateProviderAccounts({
     catalog: normalizedCatalog,

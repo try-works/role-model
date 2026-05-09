@@ -1,3 +1,4 @@
+import path from "node:path";
 import { parseArgs } from "node:util";
 
 import {
@@ -27,6 +28,9 @@ async function main(): Promise<void> {
       "unified-runtime-config": {
         type: "string",
       },
+      "fixture-root": {
+        type: "string",
+      },
     },
   });
 
@@ -39,6 +43,8 @@ async function main(): Promise<void> {
     unifiedRuntimeConfigPath: args.values["unified-runtime-config"],
   });
   const backend = await createRuntimeBridgeBackend({
+    fixtureRoot:
+      args.values["fixture-root"] ?? path.join(options.repoRoot, "testdata", "router-runtime"),
     repoRoot: options.repoRoot,
     runtimeStateRoot: options.runtimeStateRoot,
     scopeId: options.scopeId,

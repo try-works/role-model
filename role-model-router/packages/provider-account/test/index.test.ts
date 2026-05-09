@@ -74,7 +74,7 @@ describe("SUPPORTED_AUTH_MODES", () => {
 describe("validateProviderAccounts", () => {
   test("validates provider-account fixtures against catalog provider metadata without exposing raw secrets", async () => {
     const catalog = await readJson("role-model-router/packages/catalog/data/normalized-catalog.json");
-    const fixture = await readJson<{ accounts: unknown[] }>("testdata/router-runtime/provider-accounts.json");
+    const fixture = await readJson<{ accounts: unknown[] }>("testdata/router-runtime/fixtures/provider-accounts.json");
 
     const result = validateProviderAccounts({
       catalog,

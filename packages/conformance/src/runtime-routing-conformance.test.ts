@@ -170,6 +170,7 @@ describe("runtime routing conformance", () => {
 
     const result = await runRuntimeRoutingValidation({
       repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
       runtimeStateRoot: path.join(repoRoot, "runtime-output", "conformance-routing"),
       scopeId: "conformance-validation",
     });

@@ -79,6 +79,7 @@ function deriveEndpointVersion(candidate: {
 async function main(): Promise<void> {
   const validation = await runRuntimeAdapterValidation({
     repoRoot,
+    fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
     runtimeStateRoot: path.join(os.tmpdir(), "role-model-runtime-adapter"),
     scopeId: "gateway-smoke",
   });

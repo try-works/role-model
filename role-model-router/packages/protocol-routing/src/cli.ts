@@ -4,6 +4,10 @@ import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 
 import type { NormalizedCatalog } from "@role-model-router/catalog";
+import {
+  deriveLiteLLMProviders,
+  loadLiteLLMModelPrices,
+} from "@role-model-router/catalog";
 import { assembleContextEnvelope } from "@role-model-router/context-envelope";
 import { buildEndpointRegistry, type RegistrySources } from "@role-model-router/endpoint-registry";
 import { validateProviderAccounts } from "@role-model-router/provider-account";
@@ -28,6 +32,7 @@ export interface RuntimeRoutingValidationOptions {
   readonly repoRoot: string;
   readonly runtimeStateRoot: string;
   readonly scopeId: string;
+  readonly fixtureRoot?: string;
 }
 
 export interface RuntimeRoutingValidationResult {
@@ -59,14 +64,15 @@ async function readJson<TValue>(filePath: string): Promise<TValue> {
 export async function runRuntimeRoutingValidation(
   options: RuntimeRoutingValidationOptions,
 ): Promise<RuntimeRoutingValidationResult> {
+  const fixtureRoot = options.fixtureRoot ?? path.join(options.repoRoot, "testdata", "router-runtime");
   const normalizedCatalog = await readJson<NormalizedCatalog>(
     path.join(options.repoRoot, "role-model-router", "packages", "catalog", "data", "normalized-catalog.json"),
   );
   const providerAccountsFixture = await readJson<{ accounts: unknown[] }>(
-    path.join(options.repoRoot, "testdata", "router-runtime", "provider-accounts.json"),
+    path.join(fixtureRoot, "provider-accounts.json"),
   );
   const registrySources = await readJson<RegistrySources>(
-    path.join(options.repoRoot, "testdata", "router-runtime", "registry-sources.json"),
+    path.join(fixtureRoot, "registry-sources.json"),
   );
   const continuityFixture = await readJson<{
     session: Parameters<typeof persistContinuitySnapshot>[0]["session"];
@@ -80,24 +86,72 @@ export async function runRuntimeRoutingValidation(
       maxArtifacts: number;
       tokenBudget: number;
     };
-  }>(path.join(options.repoRoot, "testdata", "router-runtime", "context-envelope.json"));
+  }>(path.join(fixtureRoot, "context-envelope.json"));
   const routingRequest = await readJson<Parameters<typeof routeRuntimeRequest>[0]["request"]>(
-    path.join(options.repoRoot, "testdata", "router-runtime", "routing-request.json"),
+    path.join(fixtureRoot, "routing-request.json"),
   );
   const observedProfilesByEndpointId = await readJson<
     Parameters<typeof routeRuntimeRequest>[0]["observedProfilesByEndpointId"]
-  >(path.join(options.repoRoot, "testdata", "router-runtime", "routing-observed-profiles.json"));
+  >(path.join(fixtureRoot, "routing-observed-profiles.json"));
   const roleTaskFixture = await readJson<{
     roleDefinitions: Parameters<typeof routeRuntimeRequest>[0]["roleDefinitions"];
     taskDefinitions: Parameters<typeof routeRuntimeRequest>[0]["taskDefinitions"];
     roleBindings: Parameters<typeof routeRuntimeRequest>[0]["roleBindings"];
-  }>(path.join(options.repoRoot, "testdata", "router-runtime", "routing-role-task.json"));
+  }>(path.join(fixtureRoot, "routing-role-task.json"));
   const routingModel = await readJson<RoutingModelSelection>(
-    path.join(options.repoRoot, "testdata", "router-runtime", "routing-model-guidance.json"),
+    path.join(fixtureRoot, "routing-model-guidance.json"),
   );
 
+  const liteLLMModelPrices = await loadLiteLLMModelPrices(options.repoRoot);
+  const liteLLMProviders = liteLLMModelPrices ? deriveLiteLLMProviders(liteLLMModelPrices) : [];
+
+  const fixtureModelIds = new Set<string>();
+  for (const source of registrySources.cloud) {
+    fixtureModelIds.add(source.modelId);
+  }
+  for (const source of registrySources.local) {
+    fixtureModelIds.add(source.modelId);
+  }
+  for (const account of providerAccountsFixture.accounts as { allowedModels?: string[]; deniedModels?: string[] }[]) {
+    for (const modelId of account.allowedModels ?? []) {
+      fixtureModelIds.add(modelId);
+    }
+    for (const modelId of account.deniedModels ?? []) {
+      fixtureModelIds.add(modelId);
+    }
+  }
+  const mutableModels = [...normalizedCatalog.models];
+  const existingModelIds = new Set(mutableModels.map((model) => model.modelId));
+  for (const modelId of fixtureModelIds) {
+    if (existingModelIds.has(modelId)) {
+      continue;
+    }
+    const providerId = modelId.includes("/") ? modelId.split("/")[0] : "unknown";
+    mutableModels.push({
+      modelId,
+      providerId,
+      providerKind: "provider-openai",
+      authFamily: "api-key",
+      displayName: modelId.split("/").pop() ?? modelId,
+      version: "unversioned",
+      capabilities: ["text.chat", "tools.function_calling"],
+      modalities: ["text"],
+      contextWindow: 32768,
+      maxOutputTokens: 4096,
+      pricing: null,
+      requestShapeHints: null,
+      experimentalModes: [],
+      extendsProvenance: { baseModelId: null, chain: [] },
+      localOverrideApplied: true,
+      localNotes: ["Synthesized from fixture-referenced model ID."],
+      upstreamProvenance: normalizedCatalog.source,
+    });
+  }
+  const normalizedCatalogWithModels = { ...normalizedCatalog, models: mutableModels };
+
   const validation = validateProviderAccounts({
-    catalog: normalizedCatalog,
+    catalog: normalizedCatalogWithModels,
+    additionalProviders: liteLLMProviders,
     accounts: providerAccountsFixture.accounts,
   });
   if (validation.diagnostics.length > 0) {
@@ -124,7 +178,7 @@ export async function runRuntimeRoutingValidation(
   });
 
   const registry = buildEndpointRegistry({
-    catalog: normalizedCatalog,
+    catalog: normalizedCatalogWithModels,
     accounts: validation.accounts,
     sources: registrySources,
   });

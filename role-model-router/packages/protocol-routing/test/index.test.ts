@@ -673,6 +673,7 @@ describe("runRuntimeRoutingValidation", () => {
     const repoRoot = path.resolve(__dirname, "..", "..", "..", "..");
     const result = await runRuntimeRoutingValidation({
       repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
       runtimeStateRoot: path.join(repoRoot, "runtime-output", "protocol-routing-test"),
       scopeId: "local-validation",
     });

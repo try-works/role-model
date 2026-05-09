@@ -94,6 +94,7 @@ export async function runRuntimeHostValidation(): Promise<RuntimeHostValidationR
         ROLE_MODEL_BRIDGE_RUNTIME_STATE_ROOT: runtimeStateRoot,
         ROLE_MODEL_BRIDGE_PORT: String(bridgePort),
         ROLE_MODEL_BRIDGE_SCOPE_ID: "runtime-host-validation",
+        ROLE_MODEL_BRIDGE_FIXTURE_ROOT: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
       },
       stdio: ["ignore", "pipe", "pipe"],
     },

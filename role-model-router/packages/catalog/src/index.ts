@@ -334,6 +334,7 @@ import path from "node:path";
 
 export {
   deriveLiteLLMProviders,
+  extractLiteLLMModelIds,
   extractLiteLLMProviderIds,
   loadLiteLLMModelPrices,
   type LiteLLMProviderInfo,

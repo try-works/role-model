@@ -31,6 +31,7 @@ describe("runtime-observability", () => {
       };
       const validation = await runRuntimeAdapterValidation({
         repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
         runtimeStateRoot,
         scopeId: "runtime-observability-test",
       });

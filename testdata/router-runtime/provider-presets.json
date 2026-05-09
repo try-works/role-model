@@ -8,8 +8,7 @@
           "description": "API-key onboarding for the Moonshot Open Platform endpoint family.",
           "authMode": "api-key-static",
           "availability": "ready",
-          "baseUrl": "https://api.moonshot.ai/v1",
-          "modelIds": ["moonshot/kimi-k2.5"]
+          "baseUrl": "https://api.moonshot.ai/v1"
         },
         {
           "variantId": "kimi-code",
@@ -18,7 +17,6 @@
           "authMode": "oauth2-device-code",
           "availability": "backend-limited",
           "baseUrl": "https://api.kimi.com/coding/v1",
-          "modelIds": ["moonshot/kimi-k2.5"],
           "oauth": {
             "oauthHost": "https://auth.kimi.com",
             "clientId": "17e5f671-d194-4dfb-9706-5516cb48c098",

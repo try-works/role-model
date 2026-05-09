@@ -251,6 +251,33 @@ export function deriveLiteLLMProviders(modelPrices: unknown): readonly LiteLLMPr
   return providerIds.map(inferProviderInfo);
 }
 
+export function extractLiteLLMModelIds(modelPrices: unknown, providerId: string): readonly string[] {
+  if (!modelPrices || typeof modelPrices !== "object") {
+    return [];
+  }
+
+  const modelIds = new Set<string>();
+
+  for (const [key, entry] of Object.entries(modelPrices)) {
+    if (key === "sample_spec") {
+      continue;
+    }
+    if (!entry || typeof entry !== "object") {
+      continue;
+    }
+    const provider = (entry as Record<string, unknown>).litellm_provider;
+    if (typeof provider !== "string" || provider.length === 0) {
+      continue;
+    }
+    // Match by litellm_provider or by key prefix (e.g. "moonshot/kimi-k2.5")
+    if (provider === providerId || key.startsWith(`${providerId}/`)) {
+      modelIds.add(key);
+    }
+  }
+
+  return [...modelIds].sort();
+}
+
 export async function loadLiteLLMModelPrices(repoRoot: string): Promise<unknown> {
   const liteLLMPath = path.join(repoRoot, "role-model-router", "vendor", "litellm");
   const candidates = [

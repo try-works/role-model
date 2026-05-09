@@ -14,6 +14,7 @@ describe("runRuntimeAdapterValidation", () => {
     const repoRoot = path.resolve(__dirname, "..", "..", "..", "..");
     const result = await runRuntimeAdapterValidation({
       repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
       runtimeStateRoot: path.join(os.tmpdir(), "role-model-runtime-adapter"),
       scopeId: "vitest-validation",
     });

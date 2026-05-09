@@ -1,0 +1,18 @@
+{
+  "requestId": "req-adapter-validation",
+  "appId": "app-runtime",
+  "orgId": "org-runtime",
+  "taskType": "text.chat",
+  "requiredCapabilities": ["text.chat"],
+  "preferredCapabilities": [],
+  "requiredModalities": ["text"],
+  "contextTokens": 180,
+  "needsTools": true,
+  "strategy": "balanced",
+  "preferLocal": false,
+  "allowEndpoints": [
+    "openai.personal.primary.us-east-1.fast",
+    "anthropic.team.shared.us-east-1.default"
+  ],
+  "budgetLimit": 0.01
+}

@@ -4,6 +4,10 @@ import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 
 import type { NormalizedCatalog } from "@role-model-router/catalog";
+import {
+  deriveLiteLLMProviders,
+  loadLiteLLMModelPrices,
+} from "@role-model-router/catalog";
 import { validateProviderAccounts, type ProviderAccountDiagnostic } from "@role-model-router/provider-account";
 
 import { initializeSqliteMemory, persistProviderAccounts } from "./index.js";
@@ -15,6 +19,7 @@ export interface RuntimeStateValidationOptions {
   readonly repoRoot: string;
   readonly runtimeStateRoot: string;
   readonly scopeId: string;
+  readonly fixtureRoot?: string;
 }
 
 export interface RuntimeStateValidationResult {
@@ -36,15 +41,20 @@ function formatDiagnostics(diagnostics: readonly ProviderAccountDiagnostic[]): s
 export async function runRuntimeStateValidation(
   options: RuntimeStateValidationOptions,
 ): Promise<RuntimeStateValidationResult> {
+  const fixtureRoot = options.fixtureRoot ?? path.join(options.repoRoot, "testdata", "router-runtime");
   const normalizedCatalog = await readJson<NormalizedCatalog>(
     path.join(options.repoRoot, "role-model-router", "packages", "catalog", "data", "normalized-catalog.json"),
   );
   const providerAccountsFixture = await readJson<{ accounts: unknown[] }>(
-    path.join(options.repoRoot, "testdata", "router-runtime", "provider-accounts.json"),
+    path.join(fixtureRoot, "provider-accounts.json"),
   );
+
+  const liteLLMModelPrices = await loadLiteLLMModelPrices(options.repoRoot);
+  const liteLLMProviders = liteLLMModelPrices ? deriveLiteLLMProviders(liteLLMModelPrices) : [];
 
   const validation = validateProviderAccounts({
     catalog: normalizedCatalog,
+    additionalProviders: liteLLMProviders,
     accounts: providerAccountsFixture.accounts,
   });
 
