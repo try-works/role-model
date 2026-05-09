@@ -505,6 +505,35 @@
   - Swap events are not persisted to SQLite; future run must add `llama_swap_events` table
   - No memory domain docs exist for `apps/runtime-ui/app/routes/*` or `apps/runtime-host-bridge/src/index.ts`
 
+### Run `19-local-llama-swap-proxy`
+
+- Run folder: `/.recursive/run/19-local-llama-swap-proxy/`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - Extended `VendorRuntime` interface with optional `getRunningModels`, `unloadModel`, `getLogs`
+  - Implemented proxy methods in `vendor-llama-swap` for `GET /running`, `POST /api/models/unload`, `GET /logs`
+  - Wired bridge backend methods to real llama-swap proxy calls (replacing Run 18 stubs)
+- Why:
+  - To close the Run 18 stub limitation by wiring local runtime API endpoints to actual llama-swap process management
+- How:
+  - Implemented in 3 ordered sub-phases (SP1–SP3) with type-check validation after each phase
+- What was not done:
+  - SQLite swap event persistence (deferred)
+  - Policy read/write to llama-swap config (deferred)
+  - Matrix solver UI (OOS)
+  - Model-level overrides (OOS)
+  - Real-time log streaming UI (deferred)
+
 ### Run `16-router-runtime-unified-telemetry-dashboard`
 
 - Run folder: `/.recursive/run/16-router-runtime-unified-telemetry-dashboard/`
