@@ -836,3 +836,65 @@ export async function submitAdvancedRequest(
 ): Promise<Record<string, unknown>> {
   return postJson<Record<string, unknown>>(path, payload, fetcher);
 }
+
+// ─── Local Runtime APIs ──────────────────────────────────────────────
+
+export async function fetchLocalModels(
+  fetcher: RuntimeFetcher = fetch,
+): Promise<readonly { modelId: string; loadedAt: string; engine: string }[]> {
+  return fetchJson<readonly { modelId: string; loadedAt: string; engine: string }[]>(
+    "/api/role-model/local/models",
+    fetcher,
+  );
+}
+
+export async function loadLocalModel(
+  modelId: string,
+  fetcher: RuntimeFetcher = fetch,
+): Promise<{ success: boolean }> {
+  return postJson<{ success: boolean }>(
+    `/api/role-model/local/models/${encodeURIComponent(modelId)}/load`,
+    {},
+    fetcher,
+  );
+}
+
+export async function unloadLocalModel(
+  modelId?: string,
+  fetcher: RuntimeFetcher = fetch,
+): Promise<{ success: boolean }> {
+  if (modelId) {
+    return postJson<{ success: boolean }>(
+      `/api/role-model/local/models/${encodeURIComponent(modelId)}/unload`,
+      {},
+      fetcher,
+    );
+  }
+  return postJson<{ success: boolean }>(
+    "/api/role-model/local/models/unload",
+    {},
+    fetcher,
+  );
+}
+
+export async function fetchLocalPolicy(
+  fetcher: RuntimeFetcher = fetch,
+): Promise<Record<string, unknown>> {
+  return fetchJson<Record<string, unknown>>("/api/role-model/local/policy", fetcher);
+}
+
+export async function updateLocalPolicy(
+  body: Record<string, unknown>,
+  fetcher: RuntimeFetcher = fetch,
+): Promise<Record<string, unknown>> {
+  return putJson<Record<string, unknown>>("/api/role-model/local/policy", body, fetcher);
+}
+
+export async function fetchSwapHistory(
+  fetcher: RuntimeFetcher = fetch,
+): Promise<readonly { timestamp: string; oldModel: string | null; newModel: string; reason: string }[]> {
+  return fetchJson<readonly { timestamp: string; oldModel: string | null; newModel: string; reason: string }[]>(
+    "/api/role-model/local/swap",
+    fetcher,
+  );
+}

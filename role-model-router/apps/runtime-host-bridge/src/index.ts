@@ -348,6 +348,12 @@ export interface StartBridgeServerOptions {
   readonly readRequestObservation?: (requestId: string) => Promise<unknown>;
   readonly readEndpointProfile?: (endpointId: string) => Promise<unknown>;
   readonly staticRoot?: string;
+  readonly listLocalModels?: () => Promise<readonly { modelId: string; loadedAt: string; engine: string }[]>;
+  readonly loadLocalModel?: (modelId: string) => Promise<{ success: boolean }>;
+  readonly unloadLocalModel?: (modelId?: string) => Promise<{ success: boolean }>;
+  readonly readLocalPolicy?: () => Promise<Record<string, unknown>>;
+  readonly updateLocalPolicy?: (body: Record<string, unknown>) => Promise<Record<string, unknown>>;
+  readonly listSwapHistory?: () => Promise<readonly { timestamp: string; oldModel: string | null; newModel: string; reason: string }[]>;
 }
 
 export interface RuntimeBridgeBackend {
@@ -448,6 +454,12 @@ export interface RuntimeBridgeBackend {
     latestProfile: ReturnType<typeof readLatestObservedProfile>;
       recentSamples: readonly ObservedPerformanceSample[];
     }>;
+  listLocalModels(): Promise<readonly { modelId: string; loadedAt: string; engine: string }[]>;
+  loadLocalModel(modelId: string): Promise<{ success: boolean }>;
+  unloadLocalModel(modelId?: string): Promise<{ success: boolean }>;
+  readLocalPolicy(): Promise<Record<string, unknown>>;
+  updateLocalPolicy(body: Record<string, unknown>): Promise<Record<string, unknown>>;
+  listSwapHistory(): Promise<readonly { timestamp: string; oldModel: string | null; newModel: string; reason: string }[]>;
   shutdown(): Promise<void>;
 }
 
@@ -2818,6 +2830,71 @@ function createRequestHandler(options: StartBridgeServerOptions) {
       }
     }
 
+    if (request.method === "GET" && url.pathname === "/api/role-model/local/models") {
+      if (!options.listLocalModels) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.listLocalModels());
+      return;
+    }
+
+    if (request.method === "POST" && url.pathname.startsWith("/api/role-model/local/models/") && url.pathname.endsWith("/load")) {
+      if (!options.loadLocalModel) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      const modelId = decodeURIComponent(url.pathname.slice("/api/role-model/local/models/".length, -"/load".length));
+      writeJson(response, 200, await options.loadLocalModel(modelId));
+      return;
+    }
+
+    if (request.method === "POST" && url.pathname.startsWith("/api/role-model/local/models/") && url.pathname.endsWith("/unload")) {
+      if (!options.unloadLocalModel) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      const modelId = decodeURIComponent(url.pathname.slice("/api/role-model/local/models/".length, -"/unload".length));
+      writeJson(response, 200, await options.unloadLocalModel(modelId));
+      return;
+    }
+
+    if (request.method === "POST" && url.pathname === "/api/role-model/local/models/unload") {
+      if (!options.unloadLocalModel) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.unloadLocalModel());
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/role-model/local/policy") {
+      if (!options.readLocalPolicy) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.readLocalPolicy());
+      return;
+    }
+
+    if (request.method === "PUT" && url.pathname === "/api/role-model/local/policy") {
+      if (!options.updateLocalPolicy) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.updateLocalPolicy(await readJsonBody(request)));
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/role-model/local/swap") {
+      if (!options.listSwapHistory) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.listSwapHistory());
+      return;
+    }
+
     writeJson(response, 404, { error: "not found" });
   };
 }
@@ -4444,6 +4521,24 @@ export async function createRuntimeBridgeBackend(
           endpointId,
         }),
       };
+    },
+    async listLocalModels(): Promise<readonly { modelId: string; loadedAt: string; engine: string }[]> {
+      return [];
+    },
+    async loadLocalModel(modelId: string): Promise<{ success: boolean }> {
+      return { success: true };
+    },
+    async unloadLocalModel(modelId?: string): Promise<{ success: boolean }> {
+      return { success: true };
+    },
+    async readLocalPolicy(): Promise<Record<string, unknown>> {
+      return {};
+    },
+    async updateLocalPolicy(body: Record<string, unknown>): Promise<Record<string, unknown>> {
+      return body;
+    },
+    async listSwapHistory(): Promise<readonly { timestamp: string; oldModel: string | null; newModel: string; reason: string }[]> {
+      return [];
     },
     async shutdown(): Promise<void> {
       await Promise.all([currentLlamaSwapVendor?.shutdown(), currentLiteLLMVendor?.shutdown()]);

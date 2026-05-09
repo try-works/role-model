@@ -107,6 +107,7 @@ The runtime hierarchy remains:
 | Overview | Runtime-wide posture and attention items | `/app` |
 | Studio | Request composition and multimodal API workspaces | `/app/studio/*` |
 | Control | Provider, account, endpoint, controller, and model configuration | `/app/control/*` |
+| Local | Local inference runtime: loaded models, swap history, and host policy | `/app/local/*` |
 | Observe | Request ledgers, raw host activity, logs, metrics, and captures | `/app/observe/*` |
 | Integrations | Downstream contracts, upstream passthrough, and compatibility references | `/app/integrations/*` |
 | System | Host/runtime topology, peer inventory, version, auth, and policy posture | `/app/system/*` |
@@ -125,6 +126,9 @@ The runtime hierarchy remains:
 | `/app/control/runtime-config` | live | `registry-detail` | Repo-owned editor for the unified runtime contract covering local llama-swap models, remote LiteLLM providers, and process policy. |
 | `/app/control/endpoints` | live | `registry-detail` | Configured runtime registry for provider-model endpoint entries, health posture, and source visibility after provider onboarding. |
 | `/app/control/controller` | live | `registry-detail` | Explicit controller assignment with candidate health, source type, role coverage, tooling posture, and an honest empty state before any endpoint is activated. |
+| `/app/local/models` | live | `registry-detail` | Local inference runtime state: currently loaded models, engine type, uptime, manual load/unload controls, and empty-state when no models are in memory. |
+| `/app/local/swap` | live | `ledger-inspector` | Swap event ledger: chronological log of model swaps with timestamp, old/new model, and reason (request-driven or manual). |
+| `/app/local/policy` | live | `registry-detail` | Local host policy: TTL configuration, auto-unload toggle, startPort, logLevel, and capture buffer settings. |
 | `/app/control/models` | live | `model-inventory` | Unified local/remote model inventory with inspect-only card drill-ins, explicit handoff to the runtime-config editor, and a non-error pre-activation state when no controller exists yet. |
 | `/app/observe/activity` | live | `ledger-inspector` | Preserved raw-host activity ledger over `/api/metrics` with inline capture drill-ins from `/api/captures/:id` and adjacent access to `/api/events`. |
 | `/app/observe/requests` | live | `ledger-inspector` | Canonical telemetry request ledger over `/api/role-model/telemetry/requests` with latency, token, cache, and source context. |
@@ -204,6 +208,26 @@ These routes are no longer vague placeholder ideas. Their layout contracts are i
 - Larger model/upstream target inventory pane
 - Raw passthrough links stay contextual rather than global shell chrome
 
+### `Local > Models`
+
+- Loaded model cards first: model ID, engine type, uptime, status
+- Load/unload actions per card
+- Global "Unload All" action
+- Model selector + "Load" control
+- Empty state when no models are in memory
+
+### `Local > Swap`
+
+- Chronological event ledger
+- Filter by model ID
+- Event detail: timestamp, old model, new model, reason
+
+### `Local > Policy`
+
+- Policy form: TTL, auto-unload toggle
+- Read-only fields: startPort, logLevel
+- Current values summary
+
 ### `System > Peers`
 
 - Concise topology overview first
@@ -218,7 +242,11 @@ The vendored llama-swap audit changes how the placeholder pages should be interp
 
 These are first-class runtime pages because they are part of the main operator loop:
 
-1. **Studio multimodal workspaces**
+1. **Local runtime state**
+   - models (loaded state, load/unload controls)
+   - swap history (event ledger)
+   - policy (TTL, auto-unload, host controls)
+2. **Studio multimodal workspaces**
    - images
    - audio
    - rerank

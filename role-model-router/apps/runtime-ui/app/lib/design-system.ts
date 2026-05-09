@@ -136,6 +136,48 @@ const studioAdvancedRoute = createRoute({
   noteBody: "Use this page as a family selector plus request/response workspace, not a miscellaneous dumping ground.",
 });
 
+const localModelsRoute = createRoute({
+  id: "local-models",
+  to: "/app/local/models",
+  label: "Models",
+  section: "Local",
+  icon: Cpu,
+  template: "registry-detail",
+  eyebrow: "Local",
+  title: "Loaded models",
+  description: "Currently loaded local inference models and manual load/unload controls.",
+  noteTitle: "Registry detail",
+  noteBody: "Lead with loaded model cards; load/unload actions stay visible and contextual.",
+});
+
+const localSwapRoute = createRoute({
+  id: "local-swap",
+  to: "/app/local/swap",
+  label: "Swap history",
+  section: "Local",
+  icon: Activity,
+  template: "ledger-inspector",
+  eyebrow: "Local",
+  title: "Swap history",
+  description: "Chronological log of model swap events.",
+  noteTitle: "Ledger inspector",
+  noteBody: "Event list primary, event detail secondary; filter by model ID.",
+});
+
+const localPolicyRoute = createRoute({
+  id: "local-policy",
+  to: "/app/local/policy",
+  label: "Policy",
+  section: "Local",
+  icon: SlidersHorizontal,
+  template: "registry-detail",
+  eyebrow: "Local",
+  title: "Host policy",
+  description: "Local inference runtime policy: TTL, auto-unload, and resource limits.",
+  noteTitle: "Registry detail",
+  noteBody: "Editable policy form with read-only host awareness fields.",
+});
+
 const controlProvidersRoute = createRoute({
   id: "control-providers",
   to: "/app/control/providers",
@@ -325,6 +367,9 @@ const runtimeRouteDefinitions = [
   studioAudioRoute,
   studioRerankRoute,
   studioAdvancedRoute,
+  localModelsRoute,
+  localSwapRoute,
+  localPolicyRoute,
   controlProvidersRoute,
   controlRuntimeConfigRoute,
   controlControllerRoute,
@@ -355,6 +400,11 @@ export const runtimeNavigationSections: readonly RuntimeNavigationSection[] = [
       studioRerankRoute,
       studioAdvancedRoute,
     ],
+  },
+  {
+    title: "Local",
+    icon: Cpu,
+    items: [localModelsRoute, localSwapRoute, localPolicyRoute],
   },
   {
     title: "Control",

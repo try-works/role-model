@@ -64,6 +64,12 @@ const server = await startBridgeServer({
   listRecentRequestObservations: backend.listRecentRequestObservations,
   readRequestObservation: backend.readRequestObservation,
   readEndpointProfile: backend.readEndpointProfile,
+  listLocalModels: backend.listLocalModels,
+  loadLocalModel: backend.loadLocalModel,
+  unloadLocalModel: backend.unloadLocalModel,
+  readLocalPolicy: backend.readLocalPolicy,
+  updateLocalPolicy: backend.updateLocalPolicy,
+  listSwapHistory: backend.listSwapHistory,
 });
 
 const baseUrl = `http://127.0.0.1:${server.port}`;
@@ -75,6 +81,9 @@ console.log(`  GET ${baseUrl}/api/role-model/accounts`);
 console.log(`  GET ${baseUrl}/api/role-model/endpoints`);
 console.log(`  GET ${baseUrl}/api/role-model/roles`);
 console.log(`  GET ${baseUrl}/api/role-model/runtime/config`);
+console.log(`  GET ${baseUrl}/api/role-model/local/models`);
+console.log(`  GET ${baseUrl}/api/role-model/local/policy`);
+console.log(`  GET ${baseUrl}/api/role-model/local/swap`);
 console.log(`  GET ${baseUrl}/v1/models`);
 console.log(`  POST ${baseUrl}/v1/chat/completions`);
 console.log(`[QA] Press Ctrl+C to stop`);
