@@ -3859,7 +3859,7 @@ export async function createRuntimeBridgeBackend(
               variants: [...liteLLMApiKeyVariants, ...liteLLMOAuthVariants, ...presetVariants] as readonly ProviderPresetVariant[],
             };
           }),
-        ...(localModelIds.length > 0 && !normalizedProviderIds.has("llama-swap") && !liteLLMProviderIds.has("llama-swap")
+        ...(!normalizedProviderIds.has("llama-swap") && !liteLLMProviderIds.has("llama-swap")
           ? [
               {
                 providerId: "llama-swap",
