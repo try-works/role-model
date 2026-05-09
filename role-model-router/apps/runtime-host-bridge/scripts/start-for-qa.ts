@@ -1,3 +1,4 @@
+import { rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -15,6 +16,15 @@ console.log("[QA] Starting Role Model Runtime Bridge...");
 console.log(`[QA] repoRoot: ${repoRoot}`);
 console.log(`[QA] runtimeStateRoot: ${runtimeStateRoot}`);
 console.log(`[QA] scopeId: ${scopeId}`);
+
+// Clear any stale SQLite state from previous runs to ensure clean startup
+console.log("[QA] Clearing stale runtime state...");
+try {
+  await rm(runtimeStateRoot, { recursive: true, force: true });
+  console.log("[QA] Stale runtime state cleared.");
+} catch {
+  // Directory may not exist; that's fine
+}
 
 const backend = await createRuntimeBridgeBackend({
     fixtureRoot: path.join(repoRoot, "testdata", "router-runtime"),
