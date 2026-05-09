@@ -444,7 +444,8 @@ describe("buildDownstreamProviderGuide", () => {
     ).toEqual({
       connectionRows: [
         { label: "Provider type", value: "OpenAI-compatible" },
-        { label: "Base URL", value: "http://127.0.0.1:8091" },
+        { label: "Base URL (standard)", value: "http://127.0.0.1:8091" },
+        { label: "Base URL (/v1 suffix)", value: "http://127.0.0.1:8091/v1" },
         { label: "Models endpoint", value: "http://127.0.0.1:8091/v1/models" },
         { label: "Chat endpoint", value: "http://127.0.0.1:8091/v1/chat/completions" },
         { label: "Auth header", value: "Authorization: Bearer role-model-local" },
@@ -452,7 +453,7 @@ describe("buildDownstreamProviderGuide", () => {
       availableModels: ["moonshot/kimi-k2.5", "openai/gpt-4.1-mini-fast"],
       opencodeSteps: [
         "Choose an OpenAI-compatible provider entry in the downstream client.",
-        "Set the base URL to http://127.0.0.1:8091.",
+        "Set the base URL to http://127.0.0.1:8091 (most clients) or http://127.0.0.1:8091/v1 (clients that expect /v1 in the base URL).",
         "If the client requires an API key, use role-model-local as the bearer token.",
         "Select a model returned by http://127.0.0.1:8091/v1/models.",
       ],
