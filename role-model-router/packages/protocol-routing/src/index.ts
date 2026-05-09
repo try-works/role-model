@@ -95,7 +95,7 @@ export function projectRuntimeRouteInput(
   const candidateIds = new Set(input.registry.endpoints.map((candidate) => candidate.identity.endpoint_id));
   const deniedEndpointIds = new Set(input.request.denyEndpoints ?? []);
   const allowEndpoints = input.request.allowEndpoints ?? [];
-  const ignoredEndpointIds = input.routingModel
+  const ignoredEndpointIds = input.routingModel?.preferredEndpointIds
     ? input.routingModel.preferredEndpointIds.filter(
         (endpointId) =>
           !candidateIds.has(endpointId) ||

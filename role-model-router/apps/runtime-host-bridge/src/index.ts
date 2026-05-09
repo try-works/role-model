@@ -1581,8 +1581,9 @@ function createDeviceHeaders(
   deviceId: string,
   requiredHeaders: readonly string[] = [],
 ): Record<string, string> {
+  const isKimi = requiredHeaders.includes("X-Msh-Platform");
   const headers: Record<string, string> = {
-    "User-Agent": "Role-Model-Runtime/1.0",
+    "User-Agent": isKimi ? "KimiCLI/1.41.0" : "Role-Model-Runtime/1.0",
   };
   if (requiredHeaders.includes("X-Msh-Platform")) {
     headers["X-Msh-Platform"] = "kimi_cli";
@@ -2325,72 +2326,81 @@ function createRequestHandler(options: StartBridgeServerOptions) {
     }
 
     if (request.method === "POST" && url.pathname === "/v1/chat/completions") {
-      const requestId = request.headers["x-request-id"]?.toString() ?? "req-runtime-host-bridge";
-      const body = await readJsonBody(request);
-      const parsedBody = parseChatCompletionsBody(body);
-      if (parsedBody.stream) {
-        let wroteStreamChunk = false;
-        const pendingChunks: string[] = [];
-        const streamWriter: BridgeStreamWriter = async (chunk, metadata) => {
-          const serializedChunk = `data: ${JSON.stringify(chunk)}\n\n`;
-          if (!wroteStreamChunk) {
-            if (!metadata) {
-              pendingChunks.push(serializedChunk);
-              return;
+      try {
+        const requestId = request.headers["x-request-id"]?.toString() ?? "req-runtime-host-bridge";
+        const body = await readJsonBody(request);
+        const parsedBody = parseChatCompletionsBody(body);
+        if (parsedBody.stream) {
+          let wroteStreamChunk = false;
+          const pendingChunks: string[] = [];
+          const streamWriter: BridgeStreamWriter = async (chunk, metadata) => {
+            const serializedChunk = `data: ${JSON.stringify(chunk)}\n\n`;
+            if (!wroteStreamChunk) {
+              if (!metadata) {
+                pendingChunks.push(serializedChunk);
+                return;
+              }
+              response.writeHead(200, {
+                "content-type": "text/event-stream; charset=utf-8",
+                "cache-control": "no-cache, no-transform",
+                connection: "keep-alive",
+                ...createExecutionHeaders({
+                  endpointId: metadata.endpointId,
+                  adapterFamily: metadata.adapterFamily,
+                  routingDecisionId: metadata.routingDecisionId,
+                }),
+              });
+              wroteStreamChunk = true;
+              for (const pendingChunk of pendingChunks) {
+                response.write(pendingChunk);
+              }
+              pendingChunks.length = 0;
             }
+            response.write(serializedChunk);
+          };
+          const result = await options.executeChatCompletions(parsedBody, requestId, streamWriter);
+          if (!wroteStreamChunk) {
             response.writeHead(200, {
               "content-type": "text/event-stream; charset=utf-8",
               "cache-control": "no-cache, no-transform",
               connection: "keep-alive",
               ...createExecutionHeaders({
-                endpointId: metadata.endpointId,
-                adapterFamily: metadata.adapterFamily,
-                routingDecisionId: metadata.routingDecisionId,
+                endpointId: result.endpointId,
+                adapterFamily: result.adapterFamily,
+                routingDecisionId: result.routingDecisionId,
+                costUsd: result.vendorMetadata?.costUsd,
               }),
             });
-            wroteStreamChunk = true;
-            for (const pendingChunk of pendingChunks) {
-              response.write(pendingChunk);
-            }
-            pendingChunks.length = 0;
-          }
-          response.write(serializedChunk);
-        };
-        const result = await options.executeChatCompletions(parsedBody, requestId, streamWriter);
-        if (!wroteStreamChunk) {
-          response.writeHead(200, {
-            "content-type": "text/event-stream; charset=utf-8",
-            "cache-control": "no-cache, no-transform",
-            connection: "keep-alive",
-            ...createExecutionHeaders({
-              endpointId: result.endpointId,
-              adapterFamily: result.adapterFamily,
-              routingDecisionId: result.routingDecisionId,
-              costUsd: result.vendorMetadata?.costUsd,
-            }),
-          });
-          if (pendingChunks.length > 0) {
-            for (const pendingChunk of pendingChunks) {
-              response.write(pendingChunk);
-            }
-          } else {
-            for (const chunk of createChatCompletionsStreamChunks(result)) {
-              response.write(`data: ${JSON.stringify(chunk)}\n\n`);
+            if (pendingChunks.length > 0) {
+              for (const pendingChunk of pendingChunks) {
+                response.write(pendingChunk);
+              }
+            } else {
+              for (const chunk of createChatCompletionsStreamChunks(result)) {
+                response.write(`data: ${JSON.stringify(chunk)}\n\n`);
+              }
             }
           }
+          response.write("data: [DONE]\n\n");
+          response.end();
+          return;
         }
-        response.write("data: [DONE]\n\n");
-        response.end();
+        const result = await options.executeChatCompletions(parsedBody, requestId);
+        writeJson(response, 200, createChatCompletionsResponse(result), createExecutionHeaders({
+          endpointId: result.endpointId,
+          adapterFamily: result.adapterFamily,
+          routingDecisionId: result.routingDecisionId,
+          costUsd: result.vendorMetadata?.costUsd,
+        }));
+        return;
+      } catch (error) {
+        if (error instanceof BridgeHttpError) {
+          throw error;
+        }
+        const message = error instanceof Error ? error.message : "chat completions request failed";
+        writeJson(response, 400, { error: message });
         return;
       }
-      const result = await options.executeChatCompletions(parsedBody, requestId);
-      writeJson(response, 200, createChatCompletionsResponse(result), createExecutionHeaders({
-        endpointId: result.endpointId,
-        adapterFamily: result.adapterFamily,
-        routingDecisionId: result.routingDecisionId,
-        costUsd: result.vendorMetadata?.costUsd,
-      }));
-      return;
     }
 
     if (request.method === "POST" && url.pathname === "/v1/responses") {
@@ -3350,12 +3360,19 @@ export async function createRuntimeBridgeBackend(
           deviceId,
           rebuildCurrentState,
         );
+        const oauthVariant = (() => {
+          const preset = providerPresets.providers[target.providerId ?? ""];
+          if (!preset || !target.account) return null;
+          return preset.variants.find((v) => v.authMode === target.account!.authMode && v.oauth);
+        })();
         const performRequest = async (resolvedCredentialValue: string) =>
           networkFetcher(requestCapture.url, {
             method: "POST",
             headers: {
               "content-type": "application/json",
-              ...(shouldUseLiveProviderExecution(target) ? createDeviceHeaders(deviceId) : {}),
+              ...(shouldUseLiveProviderExecution(target)
+                ? createDeviceHeaders(deviceId, oauthVariant?.oauth?.requiredHeaders)
+                : {}),
               ...applyCredentialToHeaders(requestCapture.headers, resolvedCredentialValue),
             },
             body: JSON.stringify(requestCapture.body),

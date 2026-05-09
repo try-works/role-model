@@ -108,7 +108,7 @@ export default function ProvidersRoute() {
   const [providerId, setProviderId] = useState("");
   const [variantId, setVariantId] = useState("");
   const [credentialRef, setCredentialRef] = useState("");
-  const [selectedModels, setSelectedModels] = useState<string[]>([]);
+  const [selectedModel, setSelectedModel] = useState<string>("");
   const [selectedModelRoles, setSelectedModelRoles] = useState<ModelRoleSelection>({});
   const [oauthState, setOauthState] = useState<RuntimeDeviceAuthorization | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -139,8 +139,8 @@ export default function ProvidersRoute() {
       setVariantId(nextVariantId);
       setProviderAccountId(defaultProviderAccountId(nextProvider.providerId, nextVariantId));
       setCredentialRef(defaultCredentialRef(nextProvider));
-      setSelectedModels(nextModels);
-      setSelectedModelRoles(buildModelRoleSelection(nextModels));
+      setSelectedModel("");
+      setSelectedModelRoles({});
       setOauthState(null);
     },
     [],
@@ -179,11 +179,11 @@ export default function ProvidersRoute() {
     async (session: RuntimeDeviceAuthorization) => {
       await syncConnectedDeviceAuthorizationEndpoints({
         session,
-        selectedModels,
+        selectedModels: selectedModel ? [selectedModel] : [],
         activateEndpoint: activateRuntimeEndpoint,
       });
     },
-    [selectedModels],
+    [selectedModel],
   );
 
   useEffect(() => {
@@ -252,16 +252,11 @@ export default function ProvidersRoute() {
     applyProviderSelection(snapshot, selectedProvider?.providerId ?? providerId, nextVariantId);
   };
 
-  const toggleModel = (modelId: string) => {
-    setSelectedModels((current) => {
-      const nextModels = current.includes(modelId)
-        ? current.filter((entry) => entry !== modelId)
-        : [...current, modelId];
-      setSelectedModelRoles((currentSelection) =>
-        buildModelRoleSelection(nextModels, buildModelRoleBindings(Object.keys(currentSelection), currentSelection)),
-      );
-      return nextModels;
-    });
+  const onModelSelect = (modelId: string) => {
+    setSelectedModel(modelId);
+    setSelectedModelRoles((current) =>
+      modelId ? { [modelId]: current[modelId] ?? [] } : {},
+    );
   };
 
   const toggleModelRole = (modelId: string, roleId: string) => {
@@ -304,8 +299,8 @@ export default function ProvidersRoute() {
         regions: ["global"],
       },
       baseUrlOverride: selectedVariant.baseUrl ?? selectedProvider.apiBase,
-      allowedModels: selectedModels,
-      modelRoleBindings: buildModelRoleBindings(selectedModels, selectedModelRoles),
+      allowedModels: selectedModel ? [selectedModel] : [],
+      modelRoleBindings: buildModelRoleBindings(selectedModel ? [selectedModel] : [], selectedModelRoles),
       deniedModels: [],
       entitlementTags: ["chat"],
       budgetPolicyRef: "budget.default",
@@ -336,15 +331,11 @@ export default function ProvidersRoute() {
     try {
       await upsertRuntimeAccount(buildProviderPayload());
       if (selectedVariant.authMode === "api-key-static") {
-        await Promise.all(
-          [...new Set(selectedModels)].map((modelId) =>
-            activateRuntimeEndpoint({
-              providerAccountId,
-              modelId,
-              region: "global",
-            }),
-          ),
-        );
+        await activateRuntimeEndpoint({
+          providerAccountId,
+          modelId: selectedModel,
+          region: "global",
+        });
       }
       await load();
     } catch (value) {
@@ -366,8 +357,8 @@ export default function ProvidersRoute() {
         providerId: selectedProvider.providerId,
         providerKind: selectedProvider.providerKind,
         variantId: selectedVariant.variantId,
-        allowedModels: selectedModels,
-        modelRoleBindings: buildModelRoleBindings(selectedModels, selectedModelRoles),
+        allowedModels: selectedModel ? [selectedModel] : [],
+        modelRoleBindings: buildModelRoleBindings(selectedModel ? [selectedModel] : [], selectedModelRoles),
         deniedModels: [],
         entitlementTags: ["chat"],
         budgetPolicyRef: "budget.default",
@@ -637,56 +628,50 @@ export default function ProvidersRoute() {
               </div>
             )}
 
-            <div className="space-y-2 text-sm">
-              <p className="font-medium text-[var(--rm-fg)]">Available models for this provider</p>
-              <div className={`${mutedPanelClassName} space-y-2 p-4`}>
-                {availableModels.length === 0 ? (
-                  <p className="text-[var(--rm-secondary)]">No models are currently available for the selected provider.</p>
-                ) : (
-                  availableModels.map((modelId) => (
-                    <label key={modelId} className="flex items-center gap-3">
-                      <input
-                        checked={selectedModels.includes(modelId)}
-                        type="checkbox"
-                        onChange={() => toggleModel(modelId)}
-                      />
-                      <span className="text-[var(--rm-secondary)]">{modelId}</span>
-                    </label>
-                  ))
-                )}
-              </div>
-            </div>
+            <label className="grid gap-2 text-sm">
+              <span className="font-medium text-[var(--rm-fg)]">Model</span>
+              <select
+                className={inputClass}
+                value={selectedModel}
+                onChange={(event) => onModelSelect(event.target.value)}
+              >
+                <option value="">Select a model…</option>
+                {availableModels.map((modelId) => (
+                  <option key={modelId} value={modelId}>
+                    {modelId}
+                  </option>
+                ))}
+              </select>
+            </label>
 
-            {selectedModels.length > 0 ? (
+            {selectedModel !== "" ? (
               <div className="space-y-3 text-sm">
                 <div>
                   <p className="font-medium text-[var(--rm-fg)]">Model roles</p>
                   <p className="text-[var(--rm-secondary)]">
-                    Assign runtime roles to each enabled model so the resulting endpoint registry preserves operator intent.
+                    Assign runtime roles to the selected model so the resulting endpoint registry preserves operator intent.
                   </p>
                 </div>
                 <div className={`${mutedPanelClassName} space-y-3 p-4`}>
-                  {selectedModels.map((modelId) => (
-                    <div key={modelId} className={`${raisedPanelClassName} space-y-2 p-3`}>
-                      <p className="font-medium text-[var(--rm-fg)]">{modelId}</p>
-                      {availableRoles.length > 0 ? (
-                        <div className="flex flex-wrap gap-3">
-                          {availableRoles.map((role) => (
-                            <label key={`${modelId}:${role.roleId}`} className="flex items-center gap-2 rounded-none border border-[var(--rm-border)] px-3 py-1.5">
-                              <input
-                                checked={(selectedModelRoles[modelId] ?? []).includes(role.roleId)}
-                                type="checkbox"
-                                onChange={() => toggleModelRole(modelId, role.roleId)}
-                              />
-                              <span className="text-[var(--rm-secondary)]">{role.label}</span>
-                            </label>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-[var(--rm-secondary)]">No runtime roles are available from the host bridge yet.</p>
-                      )}
-                    </div>
-                  ))}
+                  <div className={`${raisedPanelClassName} space-y-2 p-3`}>
+                    <p className="font-medium text-[var(--rm-fg)]">{selectedModel}</p>
+                    {availableRoles.length > 0 ? (
+                      <div className="flex flex-wrap gap-3">
+                        {availableRoles.map((role) => (
+                          <label key={`${selectedModel}:${role.roleId}`} className="flex items-center gap-2 rounded-none border border-[var(--rm-border)] px-3 py-1.5">
+                            <input
+                              checked={(selectedModelRoles[selectedModel] ?? []).includes(role.roleId)}
+                              type="checkbox"
+                              onChange={() => toggleModelRole(selectedModel, role.roleId)}
+                            />
+                            <span className="text-[var(--rm-secondary)]">{role.label}</span>
+                          </label>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-[var(--rm-secondary)]">No runtime roles are available from the host bridge yet.</p>
+                    )}
+                  </div>
                 </div>
               </div>
             ) : null}
@@ -727,7 +712,7 @@ export default function ProvidersRoute() {
               {selectedProvider?.providerId !== "llama-swap" ? (
                 <button
                   className={buttonClass}
-                  disabled={submitting || !selectedProvider || !selectedVariant || selectedModels.length === 0}
+                  disabled={submitting || !selectedProvider || !selectedVariant || selectedModel === ""}
                   type="submit"
                 >
                   {submitting ? "Saving…" : "Save provider"}
@@ -738,7 +723,7 @@ export default function ProvidersRoute() {
                 <>
                   <button
                     className={secondaryButtonClassName}
-                    disabled={authorizing || selectedModels.length === 0}
+                    disabled={authorizing || selectedModel === ""}
                     type="button"
                     onClick={() => void onStartDeviceAuthorization()}
                   >

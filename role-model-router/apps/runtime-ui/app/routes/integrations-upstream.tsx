@@ -16,7 +16,7 @@ export default function IntegrationsUpstreamRoute() {
   }, []);
 
   const providerCards = useMemo(
-    () => (snapshot ? buildProviderCards(snapshot.providers, snapshot.accounts) : []),
+    () => (snapshot ? buildProviderCards(snapshot.providers, snapshot.accounts).filter((p) => p.accountCount > 0) : []),
     [snapshot],
   );
 

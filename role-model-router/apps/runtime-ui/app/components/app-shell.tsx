@@ -33,11 +33,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div className="mx-auto grid min-h-screen max-w-[var(--rm-shell-width)] gap-5 px-4 py-4 lg:grid-cols-[220px_minmax(0,1fr)]">
         <aside className={`${cardClassName} p-5 lg:sticky lg:top-4 lg:h-[calc(100vh-2rem)]`}>
           <div className="border-b border-[var(--rm-border)] pb-5">
-            <p className="text-xs font-normal uppercase tracking-[0.24em] text-[var(--rm-muted)]">Role Model Runtime</p>
-            <h1 className="mt-2 text-2xl font-light tracking-tight">Operator Shell</h1>
-            <p className="mt-3 text-sm leading-6 text-[var(--rm-secondary)]">
-              A two-level operator shell for studio work, control-plane edits, observation, and integration references.
-            </p>
+            <h1 className="text-2xl font-medium tracking-tight">role-model</h1>
           </div>
           <div className="mt-5 space-y-5">
             {runtimeNavigationSections.map((section) => (
@@ -58,13 +54,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               </div>
             ))}
           </div>
-          <div className="mt-6 border-t border-[var(--rm-border)] pt-4">
-            <p className="text-xs font-normal uppercase tracking-[0.22em] text-[var(--rm-muted)]">Preserved host tools</p>
-            <ul className="mt-3 space-y-2 text-sm text-[var(--rm-secondary)]">
-              <li><a className="underline-offset-4 hover:text-[var(--rm-fg)] hover:underline" href="/logs">/logs</a></li>
-              <li><a className="underline-offset-4 hover:text-[var(--rm-fg)] hover:underline" href="/api/metrics">/api/metrics</a></li>
-            </ul>
-          </div>
+
         </aside>
 
         <div className="min-w-0 space-y-5">
@@ -78,20 +68,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <p className="mt-3 max-w-[60ch] text-sm leading-6 text-[var(--rm-secondary)]">
                 {route?.description ?? "Runtime, provider onboarding, endpoint visibility, and request inspection in one shell."}
               </p>
-              <div className="mt-5 grid gap-3 md:grid-cols-3">
-                <div className="rounded-none border border-[var(--rm-border)] bg-[var(--rm-panel)] px-3 py-3">
-                  <p className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]">Section</p>
-                  <p className="mt-2 text-sm text-[var(--rm-fg)]">{route?.section ?? "Overview"}</p>
-                </div>
-                <div className="rounded-none border border-[var(--rm-border)] bg-[var(--rm-panel)] px-3 py-3">
-                  <p className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]">Template</p>
-                  <p className="mt-2 text-sm text-[var(--rm-fg)]">{route?.template ?? "summary-board"}</p>
-                </div>
-                <div className="rounded-none border border-[var(--rm-border)] bg-[var(--rm-panel)] px-3 py-3">
-                  <p className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]">Route</p>
-                  <p className="mt-2 break-all font-mono text-sm text-[var(--rm-fg)]">{location.pathname}</p>
-                </div>
-              </div>
+
             </div>
             <div className="mt-5 border-t border-[var(--rm-border)] pt-4">
               <p className="text-xs font-normal uppercase tracking-[0.22em] text-[var(--rm-muted)]">

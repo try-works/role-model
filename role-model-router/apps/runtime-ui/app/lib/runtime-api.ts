@@ -436,6 +436,27 @@ export interface WorkbenchChatInput {
   }[];
 }
 
+async function extractErrorMessage(response: Response, path: string): Promise<string> {
+  const status = response.status;
+  try {
+    const body = await response.json();
+    const detail =
+      typeof body.error === "string"
+        ? body.error
+        : typeof body.error?.message === "string"
+          ? body.error.message
+          : JSON.stringify(body);
+    return `Request to ${path} failed with ${status}: ${detail}`;
+  } catch {
+    try {
+      const text = await response.text();
+      return `Request to ${path} failed with ${status}: ${text || "No details"}`;
+    } catch {
+      return `Request to ${path} failed with ${status}`;
+    }
+  }
+}
+
 async function fetchJson<TValue>(
   path: string,
   fetcher: RuntimeFetcher,
@@ -443,7 +464,7 @@ async function fetchJson<TValue>(
 ): Promise<TValue> {
   const response = await fetcher(path, init);
   if (!response.ok) {
-    throw new Error(`Request to ${path} failed with ${response.status}`);
+    throw new Error(await extractErrorMessage(response.clone(), path));
   }
   return (await response.json()) as TValue;
 }
@@ -455,7 +476,7 @@ async function fetchText(
 ): Promise<string> {
   const response = await fetcher(path, init);
   if (!response.ok) {
-    throw new Error(`Request to ${path} failed with ${response.status}`);
+    throw new Error(await extractErrorMessage(response.clone(), path));
   }
   return response.text();
 }
@@ -467,7 +488,7 @@ async function fetchBlob(
 ): Promise<Blob> {
   const response = await fetcher(path, init);
   if (!response.ok) {
-    throw new Error(`Request to ${path} failed with ${response.status}`);
+    throw new Error(await extractErrorMessage(response.clone(), path));
   }
   return response.blob();
 }
@@ -664,7 +685,7 @@ export async function fetchActivityCapture(
     return null;
   }
   if (!response.ok) {
-    throw new Error(`Request to /api/captures/${id} failed with ${response.status}`);
+    throw new Error(await extractErrorMessage(response.clone(), `/api/captures/${id}`));
   }
   return (await response.json()) as RuntimeActivityCapture;
 }
