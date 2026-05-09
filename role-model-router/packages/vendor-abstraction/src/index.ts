@@ -74,6 +74,9 @@ export interface VendorRuntime {
   readStatus(): VendorRuntimeStatus;
   healthCheck(): Promise<VendorRuntimeStatus>;
   shutdown(): Promise<void>;
+  getRunningModels?(): Promise<readonly { modelId: string; loadedAt: string; engine: string }[]>;
+  unloadModel?(modelId?: string): Promise<{ success: boolean; error?: string }>;
+  getLogs?(noHistory?: boolean): Promise<string>;
 }
 
 export function parseVendorStreamPayloads(transcript: string): readonly Record<string, unknown>[] {

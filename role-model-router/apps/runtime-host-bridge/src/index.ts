@@ -4523,13 +4523,34 @@ export async function createRuntimeBridgeBackend(
       };
     },
     async listLocalModels(): Promise<readonly { modelId: string; loadedAt: string; engine: string }[]> {
-      return [];
+      if (!currentLlamaSwapVendor?.getRunningModels) {
+        return [];
+      }
+      return currentLlamaSwapVendor.getRunningModels();
     },
     async loadLocalModel(modelId: string): Promise<{ success: boolean }> {
-      return { success: true };
+      if (!currentLlamaSwapVendor) {
+        return { success: false };
+      }
+      try {
+        await currentLlamaSwapVendor.execute({
+          providerFamily: "local",
+          endpointId: "llama-swap.local",
+          url: "local://runtime/v1/chat/completions",
+          headers: { "content-type": "application/json" },
+          body: { model: modelId, messages: [{ role: "user", content: "hello" }] },
+        });
+        return { success: true };
+      } catch {
+        return { success: false };
+      }
     },
     async unloadLocalModel(modelId?: string): Promise<{ success: boolean }> {
-      return { success: true };
+      if (!currentLlamaSwapVendor?.unloadModel) {
+        return { success: false };
+      }
+      const result = await currentLlamaSwapVendor.unloadModel(modelId);
+      return { success: result.success };
     },
     async readLocalPolicy(): Promise<Record<string, unknown>> {
       return {};

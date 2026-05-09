@@ -430,6 +430,65 @@ export async function startLlamaSwapVendor(
     };
   };
 
+  const proxyBaseUrl = `http://127.0.0.1:${port}`;
+
+  async function getRunningModels(): Promise<readonly { modelId: string; loadedAt: string; engine: string }[]> {
+    try {
+      const response = await fetch(`${proxyBaseUrl}/running`);
+      if (!response.ok) {
+        return [];
+      }
+      const data = (await response.json()) as { models?: Record<string, { pid?: number; cmd?: string }> };
+      if (!data.models || typeof data.models !== "object") {
+        return [];
+      }
+      return Object.entries(data.models).map(([modelId, info]) => ({
+        modelId,
+        loadedAt: new Date().toISOString(),
+        engine: typeof info.cmd === "string" && info.cmd.includes("llama-server")
+          ? "llama.cpp"
+          : typeof info.cmd === "string" && info.cmd.includes("vllm")
+            ? "vLLM"
+            : typeof info.cmd === "string" && info.cmd.includes("tabby")
+              ? "TabbyAPI"
+              : typeof info.cmd === "string" && info.cmd.includes("stable-diffusion")
+                ? "stable-diffusion.cpp"
+                : "unknown",
+      }));
+    } catch {
+      return [];
+    }
+  }
+
+  async function unloadModel(modelId?: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const url = modelId
+        ? `${proxyBaseUrl}/api/models/unload/${encodeURIComponent(modelId)}`
+        : `${proxyBaseUrl}/api/models/unload`;
+      const response = await fetch(url, { method: "POST" });
+      if (response.ok) {
+        return { success: true };
+      }
+      const text = await response.text();
+      return { success: false, error: `HTTP ${response.status}: ${text}` };
+    } catch (err) {
+      return { success: false, error: err instanceof Error ? err.message : String(err) };
+    }
+  }
+
+  async function getLogs(noHistory?: boolean): Promise<string> {
+    try {
+      const url = noHistory ? `${proxyBaseUrl}/logs/stream?no-history` : `${proxyBaseUrl}/logs`;
+      const response = await fetch(url);
+      if (!response.ok) {
+        return "";
+      }
+      return await response.text();
+    } catch {
+      return "";
+    }
+  }
+
   return {
     execute,
     async executeStream(
@@ -451,5 +510,8 @@ export async function startLlamaSwapVendor(
     async shutdown(): Promise<void> {
       await options.supervisor.stopVendor(vendorId);
     },
+    getRunningModels,
+    unloadModel,
+    getLogs,
   };
 }
