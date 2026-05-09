@@ -14,7 +14,7 @@ export const SUPPORTED_AUTH_MODES = [
 ] as const;
 
 const API_KEY_AUTH_MODES = new Set<AuthMode>(["api-key-static", "api-key-rotating-ref"]);
-const CREDENTIAL_REFERENCE_BACKENDS = ["env", "local-keychain", "local-encrypted-file", "cloud-secret"] as const;
+const CREDENTIAL_REFERENCE_BACKENDS = ["env", "local-keychain", "local-file", "local-encrypted-file", "cloud-secret"] as const;
 const ACCOUNT_STATUSES = ["active", "disabled", "revoked"] as const;
 const HEALTH_STATUSES = [
   "healthy",

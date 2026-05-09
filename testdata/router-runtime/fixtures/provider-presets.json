@@ -20,7 +20,6 @@
           "baseUrl": "https://api.kimi.com/coding/v1",
           "modelIds": ["moonshot/kimi-k2.5"],
           "oauth": {
-            "oauthHost": "https://auth.kimi.com",
             "clientId": "17e5f671-d194-4dfb-9706-5516cb48c098",
             "deviceAuthorizationEndpoint": "https://auth.kimi.com/api/oauth/device_authorization",
             "tokenEndpoint": "https://auth.kimi.com/api/oauth/token",

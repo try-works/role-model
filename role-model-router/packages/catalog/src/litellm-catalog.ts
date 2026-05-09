@@ -1,6 +1,15 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
+export interface LiteLLMProviderOAuth {
+  readonly oauthHost: string;
+  readonly clientId: string;
+  readonly deviceAuthorizationEndpoint: string;
+  readonly tokenEndpoint: string;
+  readonly requiredHeaders: readonly string[];
+  readonly scope?: string;
+}
+
 export interface LiteLLMProviderInfo {
   readonly providerId: string;
   readonly displayName: string;
@@ -18,6 +27,7 @@ export interface LiteLLMProviderInfo {
     readonly capturedAt: string;
     readonly schemaVersion: string;
   };
+  readonly oauth?: LiteLLMProviderOAuth;
 }
 
 const KNOWN_PROVIDER_OVERRIDES: Readonly<Record<string, Partial<LiteLLMProviderInfo>>> = {
@@ -43,6 +53,20 @@ const KNOWN_PROVIDER_OVERRIDES: Readonly<Record<string, Partial<LiteLLMProviderI
     envVars: ["MOONSHOT_API_KEY"],
     supportedAuthModes: ["api-key-static", "oauth2-device-code"],
     controlPlaneRequirements: ["workspace.required", "kimi-code.oauth.device"],
+    oauth: {
+      oauthHost: "https://auth.kimi.com",
+      clientId: "17e5f671-d194-4dfb-9706-5516cb48c098",
+      deviceAuthorizationEndpoint: "https://auth.kimi.com/api/oauth/device_authorization",
+      tokenEndpoint: "https://auth.kimi.com/api/oauth/token",
+      requiredHeaders: [
+        "X-Msh-Platform",
+        "X-Msh-Version",
+        "X-Msh-Device-Name",
+        "X-Msh-Device-Model",
+        "X-Msh-Os-Version",
+        "X-Msh-Device-Id",
+      ],
+    },
   },
   gemini: {
     displayName: "Google Gemini",
@@ -215,6 +239,7 @@ function inferProviderInfo(providerId: string): LiteLLMProviderInfo {
     supportedAuthModes: override?.supportedAuthModes ?? [],
     controlPlaneRequirements: override?.controlPlaneRequirements ?? [],
     localOverrideApplied: Boolean(override),
+    oauth: override?.oauth,
     upstreamProvenance: {
       vendor: "litellm",
       commit: "runtime-derived",

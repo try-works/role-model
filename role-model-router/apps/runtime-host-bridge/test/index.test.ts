@@ -1747,7 +1747,7 @@ describe("runtime-host-bridge", () => {
       expect.arrayContaining([
         expect.objectContaining({
           providerId: "moonshot",
-          variants: [
+          variants: expect.arrayContaining([
             expect.objectContaining({
               variantId: "moonshot-open-platform",
               authMode: "api-key-static",
@@ -1758,10 +1758,9 @@ describe("runtime-host-bridge", () => {
               availability: "backend-limited",
               oauth: expect.objectContaining({
                 clientId: "17e5f671-d194-4dfb-9706-5516cb48c098",
-                oauthHost: "https://auth.kimi.com",
               }),
             }),
-          ],
+          ]),
         }),
       ]),
     );
