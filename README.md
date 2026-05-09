@@ -61,6 +61,81 @@ Today this repository is a **real baseline**, not only a design sketch:
 - the smoke path and emitted artifacts are implemented
 - some future host/runtime families are still architecture-stage rather than production-ready
 
+## Building
+
+### Prerequisites
+
+- **Node.js 24** (required for `node:sqlite` and SEA support)
+- **pnpm 10.x** (via `corepack enable`)
+- **Go 1.24+** (for llama-swap vendor binary and Windows launcher)
+
+```bash
+corepack enable
+corepack pnpm install
+```
+
+### Development build
+
+Run the bridge and UI in development mode (separate processes):
+
+```bash
+# Terminal 1: bridge server
+cd role-model-router/apps/runtime-host-bridge
+corepack pnpm exec tsx scripts/start-for-qa.ts
+
+# Terminal 2: UI dev server
+cd role-model-router/apps/runtime-ui
+corepack pnpm exec react-router dev --port 5173 --host 127.0.0.1
+```
+
+Then open `http://127.0.0.1:5173` in your browser.
+
+### Production build (all platforms)
+
+Build the UI and package the SEA runtime:
+
+```bash
+# Build UI static files
+corepack pnpm --filter @role-model-router/runtime-ui run build
+
+# Package the bridge as a single executable
+corepack pnpm run runtime:package-sea
+```
+
+Output: `role-model-router/dist/release/<platform-arch>/role-model-runtime`
+
+### Windows desktop launcher
+
+Build a complete Windows package with dedicated browser window:
+
+```bash
+# 1. Build UI
+corepack pnpm --filter @role-model-router/runtime-ui run build
+
+# 2. Package bridge SEA runtime
+corepack pnpm run runtime:package-sea
+
+# 3. Build Go launcher
+cd role-model-router/apps/launcher
+go build -o ../../dist/release/win32-x64/role-model-launcher.exe main.go
+
+# 4. Bundle UI files
+cp -r ../runtime-ui/build/client ../../dist/release/win32-x64/
+```
+
+Then double-click `role-model-launcher.exe` in `dist/release/win32-x64/`. It will:
+- Start the bridge server on port 3456
+- Open Microsoft Edge in app mode (dedicated window)
+- Serve the UI directly from the bridge (no separate dev server)
+
+### Platform-specific notes
+
+| Platform | Binary | Launcher | Notes |
+| --- | --- | --- | --- |
+| Windows | `role-model-runtime.exe` | `role-model-launcher.exe` | Edge app mode for dedicated window |
+| macOS | `role-model-runtime` | `open` command | Uses default browser |
+| Linux | `role-model-runtime` | `xdg-open` | Uses default browser |
+
 ## Quick start
 
 This repository expects **Node.js 24** and **pnpm 10.x**.
