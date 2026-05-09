@@ -1,6 +1,6 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import { DatabaseSync } from "node:sqlite";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -347,6 +347,7 @@ export interface StartBridgeServerOptions {
   readonly subscribeTelemetry?: (listener: (event: RuntimeTelemetryStreamEvent) => void) => () => void;
   readonly readRequestObservation?: (requestId: string) => Promise<unknown>;
   readonly readEndpointProfile?: (endpointId: string) => Promise<unknown>;
+  readonly staticRoot?: string;
 }
 
 export interface RuntimeBridgeBackend {
@@ -2792,6 +2793,29 @@ function createRequestHandler(options: StartBridgeServerOptions) {
       );
       writeJson(response, 200, await options.readEndpointProfile(endpointId));
       return;
+    }
+
+    if (options.staticRoot && request.method === "GET") {
+      const filePath = path.join(options.staticRoot, url.pathname === "/" ? "index.html" : url.pathname);
+      const resolvedPath = existsSync(filePath) ? filePath : path.join(options.staticRoot, "index.html");
+      if (existsSync(resolvedPath)) {
+        const ext = path.extname(resolvedPath).toLowerCase();
+        const contentType =
+          ext === ".html" ? "text/html; charset=utf-8" :
+          ext === ".js" ? "application/javascript; charset=utf-8" :
+          ext === ".css" ? "text/css; charset=utf-8" :
+          ext === ".json" ? "application/json; charset=utf-8" :
+          ext === ".png" ? "image/png" :
+          ext === ".jpg" || ext === ".jpeg" ? "image/jpeg" :
+          ext === ".svg" ? "image/svg+xml" :
+          ext === ".woff2" ? "font/woff2" :
+          ext === ".woff" ? "font/woff" :
+          "application/octet-stream";
+        const data = readFileSync(resolvedPath);
+        response.writeHead(200, { "content-type": contentType, "content-length": data.length });
+        response.end(data);
+        return;
+      }
     }
 
     writeJson(response, 404, { error: "not found" });

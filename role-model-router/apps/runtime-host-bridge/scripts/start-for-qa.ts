@@ -26,6 +26,7 @@ const backend = await createRuntimeBridgeBackend({
 const server = await startBridgeServer({
   host: "127.0.0.1",
   port: 3456,
+  staticRoot: path.join(repoRoot, "role-model-router", "apps", "runtime-ui", "build", "client"),
   registry: backend.registry,
   getRegistry: () => backend.registry,
   executeChatCompletions: backend.executeChatCompletions,
