@@ -78,6 +78,12 @@ async function main(): Promise<void> {
     listRecentRequestObservations: backend.listRecentRequestObservations,
     readRequestObservation: backend.readRequestObservation,
     readEndpointProfile: backend.readEndpointProfile,
+    listLocalModels: backend.listLocalModels,
+    loadLocalModel: backend.loadLocalModel,
+    unloadLocalModel: backend.unloadLocalModel,
+    readLocalPolicy: backend.readLocalPolicy,
+    updateLocalPolicy: backend.updateLocalPolicy,
+    listSwapHistory: backend.listSwapHistory,
   });
 
   console.log(
