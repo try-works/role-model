@@ -499,10 +499,10 @@ export default function ProvidersRoute() {
               <input className={inputClass} value={providerAccountId} onChange={(event) => setProviderAccountId(event.target.value)} />
             </label>
 
-            {selectedProvider?.providerId === "llama-swap" ? (
+            {selectedProvider?.providerKind === "local-engine" ? (
               <div className="space-y-4">
                 <div className={`${mutedPanelClassName} p-4 text-sm`}>
-                  <p className="font-medium text-[var(--rm-fg)]">Local llama-swap models</p>
+                  <p className="font-medium text-[var(--rm-fg)]">Local {selectedProvider?.displayName} models</p>
                   <p className="mt-1 text-[var(--rm-secondary)]">
                     Add, edit, or remove locally hosted models. Each model needs a unique model id and a path (GGUF file or model identifier).
                   </p>
@@ -709,7 +709,7 @@ export default function ProvidersRoute() {
             ) : null}
 
             <div className="flex flex-wrap gap-3">
-              {selectedProvider?.providerId !== "llama-swap" ? (
+              {selectedProvider?.providerKind !== "local-engine" ? (
                 <button
                   className={buttonClass}
                   disabled={submitting || !selectedProvider || !selectedVariant || selectedModel === ""}
