@@ -44,7 +44,9 @@ describe("runRuntimeUiValidation", () => {
     expect(result.runtimeConfigInitialApplied).toBe(true);
     expect(result.runtimeConfigUpdatedVersion).toBe("1.1");
     expect(result.runtimeConfigUpdatedRoutingStrategy).toBe("latency-first");
-    expect(result.moonshotVariantIds).toEqual(["moonshot-open-platform", "kimi-code"]);
+    expect(result.moonshotVariantIds).toEqual(
+      expect.arrayContaining(["moonshot-open-platform", "kimi-code", "moonshot-api-key", "moonshot-oauth"]),
+    );
     expect(result.availableRoleIds).toEqual(expect.arrayContaining(["general.chat"]));
     expect(result.upsertedAccountId).toBe("moonshot.personal.primary");
     expect(result.accountListIncludesUpsert).toBe(true);

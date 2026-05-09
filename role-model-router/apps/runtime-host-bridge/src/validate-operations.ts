@@ -65,11 +65,13 @@ async function prepareObservedScope(input: {
   readonly repoRoot: string;
   readonly runtimeStateRoot: string;
   readonly scopeId: string;
+  readonly fixtureRoot?: string;
 }) {
   const validation = await runRuntimeAdapterValidation({
     repoRoot: input.repoRoot,
     runtimeStateRoot: input.runtimeStateRoot,
     scopeId: input.scopeId,
+    fixtureRoot: input.fixtureRoot,
   });
   const history = await readJson<{
     byEndpointId: Record<string, Parameters<typeof createRuntimeObservationBundle>[0]["priorSamples"]>;
@@ -120,15 +122,18 @@ export async function runRuntimeOperationsValidation(
   ];
   const hostValidation = await (options.hostValidation ?? runDefaultHostValidation)();
 
+  const fixtureRoot = path.join(options.repoRoot, "testdata", "router-runtime", "fixtures");
   const primary = await prepareObservedScope({
     repoRoot: options.repoRoot,
     runtimeStateRoot: options.runtimeStateRoot,
     scopeId: primaryScopeId,
+    fixtureRoot,
   });
   const secondary = await prepareObservedScope({
     repoRoot: options.repoRoot,
     runtimeStateRoot: options.runtimeStateRoot,
     scopeId: secondaryScopeId,
+    fixtureRoot,
   });
 
   const exportPath = path.join(options.runtimeStateRoot, primaryScopeId, "ops", "runtime-export.json");
@@ -162,6 +167,7 @@ export async function runRuntimeOperationsValidation(
     repoRoot: options.repoRoot,
     runtimeStateRoot: options.runtimeStateRoot,
     scopeId: "operations-shadow",
+    fixtureRoot,
   });
 
   return {
