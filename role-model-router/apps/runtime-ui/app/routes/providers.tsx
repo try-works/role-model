@@ -24,10 +24,15 @@ import {
 } from "../lib/device-authorization";
 import {
   activateRuntimeEndpoint,
+  fetchRuntimeConfig,
   fetchRuntimeSnapshot,
   pollRuntimeDeviceAuthorization,
   startRuntimeDeviceAuthorization,
+  updateRuntimeConfig,
   upsertRuntimeAccount,
+  type RuntimeConfig,
+  type RuntimeConfigModel,
+  type RuntimeConfigRecord,
   type RuntimeDeviceAuthorization,
   type RuntimeProvider,
   type RuntimeSnapshot,
@@ -109,6 +114,9 @@ export default function ProvidersRoute() {
   const [submitting, setSubmitting] = useState(false);
   const [authorizing, setAuthorizing] = useState(false);
   const [polling, setPolling] = useState(false);
+  const [configRecord, setConfigRecord] = useState<RuntimeConfigRecord | null>(null);
+  const [localModels, setLocalModels] = useState<RuntimeConfigModel[]>([]);
+  const [savingLocalModels, setSavingLocalModels] = useState(false);
 
   const applyProviderSelection = useCallback(
     (nextSnapshot: RuntimeSnapshot, requestedProviderId?: string | null, requestedVariantId?: string | null) => {
@@ -140,8 +148,13 @@ export default function ProvidersRoute() {
 
   const load = useCallback(async () => {
     try {
-      const nextSnapshot = await fetchRuntimeSnapshot();
+      const [nextSnapshot, nextConfigRecord] = await Promise.all([
+        fetchRuntimeSnapshot(),
+        fetchRuntimeConfig(),
+      ]);
       setSnapshot(nextSnapshot);
+      setConfigRecord(nextConfigRecord);
+      setLocalModels(nextConfigRecord.config?.llamaSwap.models.map((model) => ({ ...model })) ?? []);
       setError(null);
 
       if (!initializedRef.current) {
@@ -395,6 +408,65 @@ export default function ProvidersRoute() {
     }
   };
 
+  const addLocalModel = () => {
+    setLocalModels((current) => [
+      ...current,
+      {
+        modelId: "",
+        path: "",
+        contextWindow: null,
+        command: null,
+        proxyBaseUrl: null,
+        checkEndpoint: null,
+        useModelName: null,
+      },
+    ]);
+  };
+
+  const updateLocalModel = (index: number, field: keyof RuntimeConfigModel, value: string | number | null) => {
+    setLocalModels((current) =>
+      current.map((model, i) =>
+        i === index
+          ? {
+              ...model,
+              [field]: value,
+            }
+          : model,
+      ),
+    );
+  };
+
+  const removeLocalModel = (index: number) => {
+    setLocalModels((current) => current.filter((_, i) => i !== index));
+  };
+
+  const onSaveLocalModels = async () => {
+    if (!configRecord?.config) {
+      setError("Runtime config is not loaded yet.");
+      return;
+    }
+    setSavingLocalModels(true);
+    setError(null);
+    try {
+      const validatedModels = localModels.filter((model) => model.modelId.trim().length > 0 && model.path.trim().length > 0);
+      const nextConfig: RuntimeConfig = {
+        ...configRecord.config,
+        llamaSwap: {
+          ...configRecord.config.llamaSwap,
+          models: validatedModels,
+        },
+      };
+      const result = await updateRuntimeConfig(nextConfig);
+      setConfigRecord(result);
+      setLocalModels(result.config?.llamaSwap.models.map((model) => ({ ...model })) ?? []);
+      await load();
+    } catch (value) {
+      setError(value instanceof Error ? value.message : "Could not save local models.");
+    } finally {
+      setSavingLocalModels(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -437,14 +509,119 @@ export default function ProvidersRoute() {
             </label>
 
             {selectedProvider?.providerId === "llama-swap" ? (
-              <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
-                <p className="font-medium text-[var(--rm-fg)]">Local llama-swap configuration</p>
-                <p className="mt-2">
-                  Local models are configured through the Runtime Config page. Add or remove models there, then return to activate them.
-                </p>
-                <Link className="mt-2 inline-block text-[var(--rm-accent)] underline" to="/app/control/runtime-config">
-                  Open Runtime Config
-                </Link>
+              <div className="space-y-4">
+                <div className={`${mutedPanelClassName} p-4 text-sm`}>
+                  <p className="font-medium text-[var(--rm-fg)]">Local llama-swap models</p>
+                  <p className="mt-1 text-[var(--rm-secondary)]">
+                    Add, edit, or remove locally hosted models. Each model needs a unique model id and a path (GGUF file or model identifier).
+                  </p>
+                </div>
+
+                {localModels.length === 0 ? (
+                  <p className="text-sm text-[var(--rm-secondary)]">No local models configured yet.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {localModels.map((model, index) => (
+                      <div key={index} className={`${raisedPanelClassName} space-y-3 p-4 text-sm`}>
+                        <div className="flex items-center justify-between">
+                          <p className="font-medium text-[var(--rm-fg)]">Model {index + 1}</p>
+                          <button
+                            className="text-[var(--rm-danger)] hover:underline"
+                            type="button"
+                            onClick={() => removeLocalModel(index)}
+                          >
+                            Remove
+                          </button>
+                        </div>
+                        <div className="grid gap-3 md:grid-cols-2">
+                          <label className="grid gap-1">
+                            <span className="text-[var(--rm-secondary)]">Model ID</span>
+                            <input
+                              className={inputClass}
+                              value={model.modelId}
+                              onChange={(event) => updateLocalModel(index, "modelId", event.target.value)}
+                              placeholder="local/llama-3.3-70b"
+                            />
+                          </label>
+                          <label className="grid gap-1">
+                            <span className="text-[var(--rm-secondary)]">Path</span>
+                            <input
+                              className={inputClass}
+                              value={model.path}
+                              onChange={(event) => updateLocalModel(index, "path", event.target.value)}
+                              placeholder="/path/to/model.gguf"
+                            />
+                          </label>
+                          <label className="grid gap-1">
+                            <span className="text-[var(--rm-secondary)]">Context window</span>
+                            <input
+                              className={inputClass}
+                              type="number"
+                              value={model.contextWindow ?? ""}
+                              onChange={(event) =>
+                                updateLocalModel(index, "contextWindow", event.target.value ? Number(event.target.value) : null)
+                              }
+                              placeholder="128000"
+                            />
+                          </label>
+                          <label className="grid gap-1">
+                            <span className="text-[var(--rm-secondary)]">Command override</span>
+                            <input
+                              className={inputClass}
+                              value={model.command ?? ""}
+                              onChange={(event) => updateLocalModel(index, "command", event.target.value || null)}
+                              placeholder="Optional"
+                            />
+                          </label>
+                          <label className="grid gap-1">
+                            <span className="text-[var(--rm-secondary)]">Proxy base URL</span>
+                            <input
+                              className={inputClass}
+                              value={model.proxyBaseUrl ?? ""}
+                              onChange={(event) => updateLocalModel(index, "proxyBaseUrl", event.target.value || null)}
+                              placeholder="Optional"
+                            />
+                          </label>
+                          <label className="grid gap-1">
+                            <span className="text-[var(--rm-secondary)]">Check endpoint</span>
+                            <input
+                              className={inputClass}
+                              value={model.checkEndpoint ?? ""}
+                              onChange={(event) => updateLocalModel(index, "checkEndpoint", event.target.value || null)}
+                              placeholder="Optional"
+                            />
+                          </label>
+                          <label className="grid gap-1 md:col-span-2">
+                            <span className="text-[var(--rm-secondary)]">Use model name</span>
+                            <input
+                              className={inputClass}
+                              value={model.useModelName ?? ""}
+                              onChange={(event) => updateLocalModel(index, "useModelName", event.target.value || null)}
+                              placeholder="Optional — mapped name for the local engine"
+                            />
+                          </label>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div className="flex flex-wrap gap-3">
+                  <button className={secondaryButtonClassName} type="button" onClick={addLocalModel}>
+                    Add model
+                  </button>
+                  <button
+                    className={buttonClass}
+                    disabled={savingLocalModels}
+                    type="button"
+                    onClick={() => void onSaveLocalModels()}
+                  >
+                    {savingLocalModels ? "Saving…" : "Update local models"}
+                  </button>
+                  <Link className={secondaryButtonClassName} to="/app/control/runtime-config">
+                    Advanced process config
+                  </Link>
+                </div>
               </div>
             ) : selectedVariant?.authMode === "api-key-static" ? (
               <label className="grid gap-2 text-sm">
@@ -560,12 +737,6 @@ export default function ProvidersRoute() {
                 </button>
               ) : null}
 
-              {selectedProvider?.providerId === "llama-swap" ? (
-                <Link className={buttonClass} to="/app/control/runtime-config">
-                  Configure in Runtime Config
-                </Link>
-              ) : null}
-
               {selectedVariant?.authMode === "oauth2-device-code" ? (
                 <>
                   <button
@@ -628,62 +799,92 @@ export default function ProvidersRoute() {
               </div>
             ) : null}
 
-            {snapshot.accounts.length === 0 ? (
+            {snapshot.accounts.length === 0 && snapshot.endpoints.filter((e) => e.providerId === "llama-swap").length === 0 ? (
               <EmptyState label="No providers are configured yet. Save one from the setup form to populate the runtime registry." />
             ) : (
-              snapshot.accounts.map((account) => (
-                <div key={account.providerAccountId} className={`${mutedPanelClassName} p-4`}>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="font-medium text-[var(--rm-fg)]">{account.providerAccountId}</h3>
-                    <StatusPill tone="neutral">{account.providerId}</StatusPill>
-                    {account.healthStatus ? (
-                      <StatusPill tone={account.healthStatus === "healthy" ? "success" : "warning"}>
-                        {account.healthStatus}
-                      </StatusPill>
+              <>
+                {snapshot.accounts.map((account) => (
+                  <div key={account.providerAccountId} className={`${mutedPanelClassName} p-4`}>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="font-medium text-[var(--rm-fg)]">{account.providerAccountId}</h3>
+                      <StatusPill tone="neutral">{account.providerId}</StatusPill>
+                      {account.healthStatus ? (
+                        <StatusPill tone={account.healthStatus === "healthy" ? "success" : "warning"}>
+                          {account.healthStatus}
+                        </StatusPill>
+                      ) : null}
+                    </div>
+                    <div className="mt-3 grid gap-1 text-sm text-[var(--rm-secondary)]">
+                      <p>
+                        <span className="font-medium text-[var(--rm-fg)]">Connection method:</span> {account.authMode}
+                      </p>
+                      <p>
+                        <span className="font-medium text-[var(--rm-fg)]">Credential ref:</span>{" "}
+                        {account.credentialRef ? `${account.credentialRef.backend}:${account.credentialRef.ref}` : "Not set"}
+                      </p>
+                      <p>
+                        <span className="font-medium text-[var(--rm-fg)]">Base URL:</span>{" "}
+                        {account.baseUrlOverride ?? "Provider default"}
+                      </p>
+                      <p>
+                        <span className="font-medium text-[var(--rm-fg)]">Status:</span> {account.status ?? "unknown"}
+                      </p>
+                    </div>
+                    {account.allowedModels?.length ? (
+                      <div className="mt-3 space-y-3">
+                        {account.allowedModels.map((modelId) => {
+                          const roleIds =
+                            account.modelRoleBindings?.find((binding) => binding.modelId === modelId)?.roleIds ?? [];
+                          return (
+                            <div key={modelId} className={`${raisedPanelClassName} p-3`}>
+                              <div className="flex flex-wrap items-center gap-2">
+                                <StatusPill tone="accent">{modelId}</StatusPill>
+                                {roleIds.length > 0 ? (
+                                  roleIds.map((roleId) => (
+                                    <StatusPill key={`${modelId}:${roleId}`} tone="neutral">
+                                      {roleId}
+                                    </StatusPill>
+                                  ))
+                                ) : (
+                                  <span className="text-sm text-[var(--rm-secondary)]">No roles assigned</span>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
                     ) : null}
                   </div>
-                  <div className="mt-3 grid gap-1 text-sm text-[var(--rm-secondary)]">
-                    <p>
-                      <span className="font-medium text-[var(--rm-fg)]">Connection method:</span> {account.authMode}
-                    </p>
-                    <p>
-                      <span className="font-medium text-[var(--rm-fg)]">Credential ref:</span>{" "}
-                      {account.credentialRef ? `${account.credentialRef.backend}:${account.credentialRef.ref}` : "Not set"}
-                    </p>
-                    <p>
-                      <span className="font-medium text-[var(--rm-fg)]">Base URL:</span>{" "}
-                      {account.baseUrlOverride ?? "Provider default"}
-                    </p>
-                    <p>
-                      <span className="font-medium text-[var(--rm-fg)]">Status:</span> {account.status ?? "unknown"}
-                    </p>
-                  </div>
-                  {account.allowedModels?.length ? (
-                    <div className="mt-3 space-y-3">
-                      {account.allowedModels.map((modelId) => {
-                        const roleIds =
-                          account.modelRoleBindings?.find((binding) => binding.modelId === modelId)?.roleIds ?? [];
-                        return (
-                          <div key={modelId} className={`${raisedPanelClassName} p-3`}>
-                            <div className="flex flex-wrap items-center gap-2">
-                              <StatusPill tone="accent">{modelId}</StatusPill>
-                              {roleIds.length > 0 ? (
-                                roleIds.map((roleId) => (
-                                  <StatusPill key={`${modelId}:${roleId}`} tone="neutral">
-                                    {roleId}
-                                  </StatusPill>
-                                ))
-                              ) : (
-                                <span className="text-sm text-[var(--rm-secondary)]">No roles assigned</span>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })}
+                ))}
+                {snapshot.endpoints
+                  .filter((endpoint) => endpoint.providerId === "llama-swap")
+                  .map((endpoint) => (
+                    <div key={endpoint.endpointId} className={`${mutedPanelClassName} p-4`}>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="font-medium text-[var(--rm-fg)]">{endpoint.endpointId}</h3>
+                        <StatusPill tone="neutral">llama-swap</StatusPill>
+                        <StatusPill tone={endpoint.healthStatus === "healthy" ? "success" : "warning"}>
+                          {endpoint.healthStatus ?? "unknown"}
+                        </StatusPill>
+                      </div>
+                      <div className="mt-3 grid gap-1 text-sm text-[var(--rm-secondary)]">
+                        <p>
+                          <span className="font-medium text-[var(--rm-fg)]">Model:</span> {endpoint.modelId}
+                        </p>
+                        <p>
+                          <span className="font-medium text-[var(--rm-fg)]">Source:</span>{" "}
+                          {endpoint.sourceType ?? "local"} / {endpoint.endpointKind ?? "local-engine"}
+                        </p>
+                        <p>
+                          <span className="font-medium text-[var(--rm-fg)]">Serving source:</span> {endpoint.servingSource ?? "vendor-llama-swap"}
+                        </p>
+                        <p>
+                          <span className="font-medium text-[var(--rm-fg)]">Status:</span> {endpoint.status ?? "unknown"}
+                        </p>
+                      </div>
                     </div>
-                  ) : null}
-                </div>
-              ))
+                  ))}
+              </>
             )}
           </div>
         </SectionCard>
