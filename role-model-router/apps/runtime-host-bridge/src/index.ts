@@ -2278,8 +2278,22 @@ function extractResponseId(responseBody: unknown): string | undefined {
   return undefined;
 }
 
+function setCorsHeaders(response: ServerResponse): void {
+  response.setHeader("Access-Control-Allow-Origin", "*");
+  response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  response.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Request-ID");
+}
+
 function createRequestHandler(options: StartBridgeServerOptions) {
   return async (request: IncomingMessage, response: ServerResponse): Promise<void> => {
+    setCorsHeaders(response);
+
+    if (request.method === "OPTIONS") {
+      response.statusCode = 204;
+      response.end();
+      return;
+    }
+
     if (!request.url) {
       writeJson(response, 400, { error: "missing request URL" });
       return;
