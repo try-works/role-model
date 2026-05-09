@@ -21,21 +21,5 @@
       "healthStatus": "healthy"
     }
   ],
-  "local": [
-    {
-      "endpointId": "cli.local.coder",
-      "providerKind": "provider-cli",
-      "providerId": "local-cli",
-      "modelId": "gpt-5.4",
-      "capabilities": ["code.edit", "reasoning.multi_step", "tools.function_calling"],
-      "modalities": ["text"],
-      "endpointKind": "cli-agent",
-      "servingSource": "local-process",
-      "lifecycleState": "active",
-      "hostClass": "developer-workstation",
-      "deviceClass": "developer-workstation",
-      "region": "local",
-      "orgScope": "personal"
-    }
-  ]
+  "local": []
 }

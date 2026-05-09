@@ -436,7 +436,17 @@ export default function ProvidersRoute() {
               <input className={inputClass} value={providerAccountId} onChange={(event) => setProviderAccountId(event.target.value)} />
             </label>
 
-            {selectedVariant?.authMode === "api-key-static" ? (
+            {selectedProvider?.providerId === "llama-swap" ? (
+              <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
+                <p className="font-medium text-[var(--rm-fg)]">Local llama-swap configuration</p>
+                <p className="mt-2">
+                  Local models are configured through the Runtime Config page. Add or remove models there, then return to activate them.
+                </p>
+                <Link className="mt-2 inline-block text-[var(--rm-accent)] underline" to="/app/control/runtime-config">
+                  Open Runtime Config
+                </Link>
+              </div>
+            ) : selectedVariant?.authMode === "api-key-static" ? (
               <label className="grid gap-2 text-sm">
                 <span className="font-medium text-[var(--rm-fg)]">Credential reference</span>
                 <input className={inputClass} value={credentialRef} onChange={(event) => setCredentialRef(event.target.value)} />
@@ -540,13 +550,21 @@ export default function ProvidersRoute() {
             ) : null}
 
             <div className="flex flex-wrap gap-3">
-              <button
-                className={buttonClass}
-                disabled={submitting || !selectedProvider || !selectedVariant || selectedModels.length === 0}
-                type="submit"
-              >
-                {submitting ? "Saving…" : "Save provider"}
-              </button>
+              {selectedProvider?.providerId !== "llama-swap" ? (
+                <button
+                  className={buttonClass}
+                  disabled={submitting || !selectedProvider || !selectedVariant || selectedModels.length === 0}
+                  type="submit"
+                >
+                  {submitting ? "Saving…" : "Save provider"}
+                </button>
+              ) : null}
+
+              {selectedProvider?.providerId === "llama-swap" ? (
+                <Link className={buttonClass} to="/app/control/runtime-config">
+                  Configure in Runtime Config
+                </Link>
+              ) : null}
 
               {selectedVariant?.authMode === "oauth2-device-code" ? (
                 <>
