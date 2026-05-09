@@ -295,7 +295,7 @@ export default function ProvidersRoute() {
               ref: credentialRef,
             }
           : {
-              backend: "local-encrypted-file",
+              backend: "local-file",
               ref: `oauth/${selectedProvider.providerId}/${providerAccountId}`,
             },
       authMode: selectedVariant.authMode,
@@ -713,9 +713,6 @@ export default function ProvidersRoute() {
                   <div className={`mt-3 ${raisedPanelClassName} p-3`}>
                     <p className="font-medium text-[var(--rm-fg)]">OAuth metadata</p>
                     <p className="mt-2">
-                      <span className="font-medium text-[var(--rm-fg)]">OAuth host:</span> {selectedVariant.oauth.oauthHost}
-                    </p>
-                    <p>
                       <span className="font-medium text-[var(--rm-fg)]">Client id:</span> {selectedVariant.oauth.clientId}
                     </p>
                     <p>

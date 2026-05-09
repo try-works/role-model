@@ -76,11 +76,11 @@ export interface ProviderVariant {
   readonly baseUrl?: string;
   readonly modelIds?: readonly string[];
   readonly oauth?: {
-    readonly oauthHost: string;
     readonly clientId: string;
     readonly deviceAuthorizationEndpoint: string;
     readonly tokenEndpoint: string;
     readonly requiredHeaders: readonly string[];
+    readonly scope?: string;
   };
 }
 

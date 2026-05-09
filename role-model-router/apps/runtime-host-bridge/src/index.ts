@@ -1,5 +1,6 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import { DatabaseSync } from "node:sqlite";
+import { readFileSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -600,6 +601,8 @@ function createUnifiedProviderAccounts(
   liteLLMProviderList: readonly LiteLLMProviderInfo[],
   config: UnifiedRuntimeConfig,
   liteLLMBaseUrl: string | null,
+  runtimeStateRoot: string,
+  scopeId: string,
 ): ProviderAccountRecord[] {
   if (!liteLLMBaseUrl) {
     return [];
@@ -611,17 +614,39 @@ function createUnifiedProviderAccounts(
     if (!provider) {
       throw new Error(`Unified runtime provider ${providerConfig.providerId} is not present in the catalog or LiteLLM provider list.`);
     }
-    const authMode =
-      provider.supportedAuthModes?.find((candidate) => candidate === "api-key-static") ??
-      provider.supportedAuthModes?.[0] ??
-      "api-key-static";
+
+    // Check for existing OAuth token file (R5)
+    const oauthTokenPath = path.join(runtimeStateRoot, scopeId, "credentials", "oauth", provider.providerId, `${provider.providerId}.litellm.json`);
+    let hasOauthToken = false;
+    try {
+      const tokenContent = readFileSync(oauthTokenPath, "utf8");
+      const tokenPayload = JSON.parse(tokenContent) as Record<string, unknown>;
+      hasOauthToken = typeof tokenPayload.access_token === "string" && tokenPayload.access_token.length > 0;
+    } catch {
+      // Token file does not exist or is invalid
+    }
+
+    const supportsOAuth = provider.supportedAuthModes?.includes("oauth2-device-code") ?? false;
+    const authMode = hasOauthToken && supportsOAuth
+      ? "oauth2-device-code"
+      : (provider.supportedAuthModes?.find((candidate) => candidate === "api-key-static") ??
+         provider.supportedAuthModes?.[0] ??
+         "api-key-static");
+
+    const credentialRef = hasOauthToken && supportsOAuth
+      ? {
+          backend: "local-file" as const,
+          ref: `oauth/${provider.providerId}/${provider.providerId}.litellm`,
+        }
+      : resolveEnvCredentialRef(providerConfig.apiKeyRef, `${provider.providerId.toUpperCase()}_API_KEY`);
+
     return {
       providerAccountId: `${providerConfig.providerId}.litellm`,
       providerId: provider.providerId,
       providerKind: provider.providerKind,
       orgScope: "runtime-config",
       accountScope: "runtime-config",
-      credentialRef: resolveEnvCredentialRef(providerConfig.apiKeyRef, `${provider.providerId.toUpperCase()}_API_KEY`),
+      credentialRef,
       authMode: authMode as ProviderAccountRecord["authMode"],
       regionPolicy: {
         mode: "prefer",
@@ -834,11 +859,11 @@ interface CaptureFixtureMap {
 }
 
 interface ProviderPresetVariantOAuth {
-  readonly oauthHost: string;
   readonly clientId: string;
   readonly deviceAuthorizationEndpoint: string;
   readonly tokenEndpoint: string;
   readonly requiredHeaders: readonly string[];
+  readonly scope?: string;
 }
 
 interface ProviderPresetVariant {
@@ -1552,16 +1577,32 @@ function resolveCredentialFilePath(
   return path.join(runtimeStateRoot, scopeId, "credentials", ...safeSegments) + ".json";
 }
 
-function createDeviceHeaders(deviceId: string): Record<string, string> {
-  return {
-    "User-Agent": "KimiCLI/1.41.0",
-    "X-Msh-Platform": "kimi_cli",
-    "X-Msh-Version": "1.41.0",
-    "X-Msh-Device-Name": os.hostname(),
-    "X-Msh-Device-Model": `${os.platform()} ${os.release()} ${os.arch()}`.trim(),
-    "X-Msh-Os-Version": os.release(),
-    "X-Msh-Device-Id": deviceId,
+function createDeviceHeaders(
+  deviceId: string,
+  requiredHeaders: readonly string[] = [],
+): Record<string, string> {
+  const headers: Record<string, string> = {
+    "User-Agent": "Role-Model-Runtime/1.0",
   };
+  if (requiredHeaders.includes("X-Msh-Platform")) {
+    headers["X-Msh-Platform"] = "kimi_cli";
+  }
+  if (requiredHeaders.includes("X-Msh-Version")) {
+    headers["X-Msh-Version"] = "1.41.0";
+  }
+  if (requiredHeaders.includes("X-Msh-Device-Name")) {
+    headers["X-Msh-Device-Name"] = os.hostname();
+  }
+  if (requiredHeaders.includes("X-Msh-Device-Model")) {
+    headers["X-Msh-Device-Model"] = `${os.platform()} ${os.release()} ${os.arch()}`.trim();
+  }
+  if (requiredHeaders.includes("X-Msh-Os-Version")) {
+    headers["X-Msh-Os-Version"] = os.release();
+  }
+  if (requiredHeaders.includes("X-Msh-Device-Id")) {
+    headers["X-Msh-Device-Id"] = deviceId;
+  }
+  return headers;
 }
 
 async function persistOauthTokenFile(
@@ -1633,9 +1674,10 @@ async function refreshOauthAccessToken(
   providerPresets: ProviderPresetCatalog,
   networkFetcher: typeof fetch,
   deviceId: string,
+  onRefreshed?: () => void,
 ): Promise<string> {
   const credentialRef = target.account?.credentialRef;
-  if (!credentialRef || credentialRef.backend !== "local-encrypted-file") {
+  if (!credentialRef || (credentialRef.backend !== "local-file" && credentialRef.backend !== "local-encrypted-file")) {
     throw new Error(`Endpoint ${target.endpointId} does not support OAuth token refresh.`);
   }
 
@@ -1652,7 +1694,7 @@ async function refreshOauthAccessToken(
   const variant = getOauthVariant(providerPresets, target.providerId);
   const tokenResponse = await networkFetcher(variant.oauth.tokenEndpoint, {
     method: "POST",
-    headers: createDeviceHeaders(deviceId),
+    headers: createDeviceHeaders(deviceId, variant.oauth.requiredHeaders),
     body: new URLSearchParams({
       client_id: variant.oauth.clientId,
       grant_type: "refresh_token",
@@ -1684,6 +1726,8 @@ async function refreshOauthAccessToken(
     saved_at_ms: Date.now(),
   });
 
+  onRefreshed?.();
+
   return refreshedPayload.access_token.trim();
 }
 
@@ -1694,6 +1738,7 @@ async function resolveCredentialValue(
   providerPresets?: ProviderPresetCatalog,
   networkFetcher?: typeof fetch,
   deviceId?: string,
+  onRefreshed?: () => void,
 ): Promise<string> {
   const credentialRef = target.account?.credentialRef;
   if (!credentialRef) {
@@ -1708,7 +1753,7 @@ async function resolveCredentialValue(
     throw new Error(`Environment credential ${credentialRef.ref} is not set.`);
   }
 
-  if (credentialRef.backend === "local-encrypted-file") {
+  if (credentialRef.backend === "local-file" || credentialRef.backend === "local-encrypted-file") {
     let tokenPayload = (await readOauthTokenFile(
       runtimeStateRoot,
       scopeId,
@@ -1727,6 +1772,7 @@ async function resolveCredentialValue(
         providerPresets,
         networkFetcher,
         deviceId,
+        onRefreshed,
       );
       return refreshedAccessToken;
     }
@@ -1886,7 +1932,7 @@ function summarizeProviderError(status: number, body: unknown): string {
 function shouldUseLiveProviderExecution(target: ResolvedExecutionTarget): boolean {
   return (
     target.adapterFamily === "ai-sdk-openai-compatible" &&
-    target.account?.credentialRef.backend === "local-encrypted-file"
+    (target.account?.credentialRef.backend === "local-file" || target.account?.credentialRef.backend === "local-encrypted-file")
   );
 }
 
@@ -2953,6 +2999,8 @@ export async function createRuntimeBridgeBackend(
           liteLLMProviders,
           nextConfig,
           nextLiteLLMVendor?.readStatus().baseUrl ?? null,
+          options.runtimeStateRoot,
+          options.scopeId,
         ),
         allowedRoleIds,
       });
@@ -3300,6 +3348,7 @@ export async function createRuntimeBridgeBackend(
           providerPresets,
           networkFetcher,
           deviceId,
+          rebuildCurrentState,
         );
         const performRequest = async (resolvedCredentialValue: string) =>
           networkFetcher(requestCapture.url, {
@@ -3314,7 +3363,7 @@ export async function createRuntimeBridgeBackend(
         let response = await performRequest(credentialValue);
         if (
           (response.status === 401 || response.status === 403) &&
-          target.account?.credentialRef.backend === "local-encrypted-file"
+          (target.account?.credentialRef.backend === "local-file" || target.account?.credentialRef.backend === "local-encrypted-file")
         ) {
           const refreshedCredentialValue = await refreshOauthAccessToken(
             options.runtimeStateRoot,
@@ -3323,6 +3372,7 @@ export async function createRuntimeBridgeBackend(
             providerPresets,
             networkFetcher,
             deviceId,
+            rebuildCurrentState,
           );
           response = await performRequest(refreshedCredentialValue);
         }
@@ -3677,6 +3727,32 @@ export async function createRuntimeBridgeBackend(
       const mergedProviders = [
         ...currentNormalizedCatalog.providers.map((provider) => {
           const effectiveModelIds = resolveModelIds(provider.providerId);
+          const presetVariants = (providerPresets.providers[provider.providerId]?.variants ?? []).map((variant) => ({
+            ...variant,
+            modelIds: effectiveModelIds.length > 0 ? effectiveModelIds : variant.modelIds,
+          }));
+          // Merge OAuth variant from LiteLLM metadata when present
+          const liteLLMProvider = liteLLMProviders.find((p) => p.providerId === provider.providerId);
+          const liteLLMOAuthVariant: ProviderPresetVariant[] = liteLLMProvider?.oauth
+            ? [
+                {
+                  variantId: `${provider.providerId}-oauth`,
+                  label: `${provider.displayName} OAuth`,
+                  description: `OAuth device-code authentication for ${provider.displayName}.`,
+                  authMode: "oauth2-device-code",
+                  availability: "ready" as const,
+                  baseUrl: provider.apiBase,
+                  modelIds: effectiveModelIds,
+                  oauth: {
+                    clientId: liteLLMProvider.oauth.clientId,
+                    deviceAuthorizationEndpoint: liteLLMProvider.oauth.deviceAuthorizationEndpoint,
+                    tokenEndpoint: liteLLMProvider.oauth.tokenEndpoint,
+                    requiredHeaders: [...liteLLMProvider.oauth.requiredHeaders],
+                    ...(liteLLMProvider.oauth.scope ? { scope: liteLLMProvider.oauth.scope } : {}),
+                  },
+                },
+              ]
+            : [];
           return {
             providerId: provider.providerId,
             displayName: provider.displayName,
@@ -3689,16 +3765,54 @@ export async function createRuntimeBridgeBackend(
             controlPlaneRequirements: provider.controlPlaneRequirements,
             localOverrideApplied: provider.localOverrideApplied,
             modelIds: effectiveModelIds,
-            variants: (providerPresets.providers[provider.providerId]?.variants ?? []).map((variant) => ({
-              ...variant,
-              modelIds: effectiveModelIds.length > 0 ? effectiveModelIds : variant.modelIds,
-            })),
+            variants: [...presetVariants, ...liteLLMOAuthVariant] as readonly ProviderPresetVariant[],
           };
         }),
         ...liteLLMProviders
           .filter((provider) => !normalizedProviderIds.has(provider.providerId))
           .map((provider) => {
             const effectiveModelIds = resolveModelIds(provider.providerId);
+            const presetVariants = (providerPresets.providers[provider.providerId]?.variants ?? []).map((variant) => ({
+              ...variant,
+              modelIds: effectiveModelIds.length > 0 ? effectiveModelIds : variant.modelIds,
+            }));
+            // Generate OAuth variant from LiteLLM metadata when OAuth config is present
+            const liteLLMOAuthVariants: ProviderPresetVariant[] = provider.oauth
+              ? [
+                  {
+                    variantId: `${provider.providerId}-oauth`,
+                    label: `${provider.displayName} OAuth`,
+                    description: `OAuth device-code authentication for ${provider.displayName}.`,
+                    authMode: "oauth2-device-code",
+                    availability: "ready" as const,
+                    baseUrl: provider.apiBase,
+                    modelIds: effectiveModelIds,
+                    oauth: {
+                      clientId: provider.oauth.clientId,
+                      deviceAuthorizationEndpoint: provider.oauth.deviceAuthorizationEndpoint,
+                      tokenEndpoint: provider.oauth.tokenEndpoint,
+                      requiredHeaders: [...provider.oauth.requiredHeaders],
+                      ...(provider.oauth.scope ? { scope: provider.oauth.scope } : {}),
+                    },
+                  },
+                ]
+              : [];
+            // Generate API-key variant when supported
+            const liteLLMApiKeyVariants: ProviderPresetVariant[] =
+              provider.supportedAuthModes.includes("api-key-static") ||
+              provider.supportedAuthModes.length === 0
+                ? [
+                    {
+                      variantId: `${provider.providerId}-api-key`,
+                      label: `${provider.displayName} API Key`,
+                      description: `API-key authentication for ${provider.displayName}.`,
+                      authMode: "api-key-static",
+                      availability: "ready" as const,
+                      baseUrl: provider.apiBase,
+                      modelIds: effectiveModelIds,
+                    },
+                  ]
+                : [];
             return {
               providerId: provider.providerId,
               displayName: provider.displayName,
@@ -3707,14 +3821,11 @@ export async function createRuntimeBridgeBackend(
               adapterFamily: provider.adapterFamily,
               apiBase: provider.apiBase,
               envVars: provider.envVars,
-              supportedAuthModes: [] as readonly string[],
-              controlPlaneRequirements: [] as readonly string[],
-              localOverrideApplied: false,
+              supportedAuthModes: provider.supportedAuthModes,
+              controlPlaneRequirements: provider.controlPlaneRequirements,
+              localOverrideApplied: provider.localOverrideApplied,
               modelIds: effectiveModelIds,
-              variants: (providerPresets.providers[provider.providerId]?.variants ?? []).map((variant) => ({
-                ...variant,
-                modelIds: effectiveModelIds.length > 0 ? effectiveModelIds : variant.modelIds,
-              })) as readonly ProviderPresetVariant[],
+              variants: [...liteLLMApiKeyVariants, ...liteLLMOAuthVariants, ...presetVariants] as readonly ProviderPresetVariant[],
             };
           }),
         ...(localModelIds.length > 0 && !normalizedProviderIds.has("llama-swap") && !liteLLMProviderIds.has("llama-swap")
@@ -3827,7 +3938,7 @@ export async function createRuntimeBridgeBackend(
             orgScope: readOptionalString(body, "orgScope") ?? "personal",
             accountScope: readOptionalString(body, "accountScope") ?? "workspace-default",
             credentialRef: {
-              backend: "local-encrypted-file",
+              backend: "local-file",
               ref: credentialRef,
             },
             authMode: variant.authMode,
@@ -3858,12 +3969,16 @@ export async function createRuntimeBridgeBackend(
         );
       }
 
+      const deviceAuthParams = new URLSearchParams({
+        client_id: variant.oauth.clientId,
+      });
+      if (variant.oauth.scope) {
+        deviceAuthParams.set("scope", variant.oauth.scope);
+      }
       const deviceResponse = await networkFetcher(variant.oauth.deviceAuthorizationEndpoint, {
         method: "POST",
-        headers: createDeviceHeaders(deviceId),
-        body: new URLSearchParams({
-          client_id: variant.oauth.clientId,
-        }),
+        headers: createDeviceHeaders(deviceId, variant.oauth.requiredHeaders),
+        body: deviceAuthParams,
       });
       const devicePayload = (await deviceResponse.json()) as Record<string, unknown>;
       if (!deviceResponse.ok) {
@@ -3886,7 +4001,7 @@ export async function createRuntimeBridgeBackend(
           providerAccountId,
           providerId,
           variantId,
-          credentialBackend: "local-encrypted-file",
+          credentialBackend: "local-file",
           credentialRef,
           authMode: variant.authMode,
           verificationUri: String(devicePayload.verification_uri ?? ""),
@@ -3946,7 +4061,7 @@ export async function createRuntimeBridgeBackend(
 
       const tokenResponse = await networkFetcher(variant.oauth.tokenEndpoint, {
         method: "POST",
-        headers: createDeviceHeaders(deviceId),
+        headers: createDeviceHeaders(deviceId, variant.oauth.requiredHeaders),
         body: new URLSearchParams({
           client_id: variant.oauth.clientId,
           device_code: session.deviceCode,
