@@ -82,7 +82,7 @@ import {
   deriveLiteLLMProviders,
   loadLiteLLMModelPrices,
   type LiteLLMProviderInfo,
-} from "./litellm-catalog.js";
+} from "@role-model-router/catalog";
 
 interface OpenAIChatCompletionsTool {
   readonly type: string;
@@ -650,6 +650,15 @@ function deleteRuntimeConfigProviderAccounts(databasePath: string): void {
   }
 }
 
+function clearRuntimeEndpoints(databasePath: string): void {
+  const database = new DatabaseSync(databasePath);
+  try {
+    database.prepare("DELETE FROM runtime_endpoints").run();
+  } finally {
+    database.close();
+  }
+}
+
 function readUnifiedLiteLLMProviderModelIds(
   config: UnifiedRuntimeConfig | null,
   providerId: string,
@@ -671,6 +680,28 @@ function readDefaultDisplayNameFromModelId(modelId: string): string {
     .join(" ");
 }
 
+function createFallbackModelTemplate(catalog: NormalizedCatalog): NormalizedCatalogModel {
+  return {
+    modelId: "fallback",
+    providerId: "fallback",
+    providerKind: "provider-openai",
+    authFamily: "api-key",
+    displayName: "Fallback Model",
+    version: "unversioned",
+    capabilities: ["text.chat", "tools.function_calling"],
+    modalities: ["text"],
+    contextWindow: 32768,
+    maxOutputTokens: 4096,
+    pricing: null,
+    requestShapeHints: null,
+    experimentalModes: [],
+    extendsProvenance: { baseModelId: null, chain: [] },
+    localOverrideApplied: true,
+    localNotes: ["Fallback template for models not present in static catalog."],
+    upstreamProvenance: catalog.source,
+  };
+}
+
 function synthesizeUnifiedLiteLLMModel(input: {
   readonly modelId: string;
   readonly providerId: string;
@@ -680,13 +711,13 @@ function synthesizeUnifiedLiteLLMModel(input: {
   const provider =
     input.catalog.providers.find((entry) => entry.providerId === input.providerId) ??
     input.additionalProviders?.find((entry) => entry.providerId === input.providerId);
+  if (!provider) {
+    return null;
+  }
   const baseModel =
     input.catalog.models.find((entry) => entry.modelId === input.modelId) ??
     input.catalog.models.find((entry) => entry.providerId === input.providerId) ??
-    null;
-  if (!provider || !baseModel) {
-    return null;
-  }
+    createFallbackModelTemplate(input.catalog);
 
   return {
     ...baseModel,
@@ -745,6 +776,54 @@ function applyUnifiedLiteLLMAdapterFamilyOverrides(
       }
       return nextModels;
     })(),
+  };
+}
+
+function synthesizeFixtureModelsForCatalog(
+  catalog: NormalizedCatalog,
+  accounts: readonly ProviderAccountRecord[],
+  sources: RegistrySources,
+): NormalizedCatalog {
+  const fixtureModelIds = new Set<string>();
+  for (const source of sources.cloud) {
+    fixtureModelIds.add(source.modelId);
+  }
+  for (const account of accounts) {
+    for (const modelId of account.allowedModels) {
+      fixtureModelIds.add(modelId);
+    }
+    for (const modelId of account.deniedModels) {
+      fixtureModelIds.add(modelId);
+    }
+  }
+
+  const existingModelIds = new Set(catalog.models.map((model) => model.modelId));
+  const modelsToAdd: NormalizedCatalogModel[] = [];
+
+  for (const modelId of fixtureModelIds) {
+    if (existingModelIds.has(modelId)) {
+      continue;
+    }
+    const providerId = modelId.includes("/") ? modelId.split("/")[0] : "unknown";
+    const fallbackTemplate = createFallbackModelTemplate(catalog);
+    modelsToAdd.push({
+      ...fallbackTemplate,
+      modelId,
+      providerId,
+      displayName: readDefaultDisplayNameFromModelId(modelId),
+      localOverrideApplied: true,
+      localNotes: ["Synthesized from fixture-referenced model ID."],
+      upstreamProvenance: catalog.source,
+    });
+  }
+
+  if (modelsToAdd.length === 0) {
+    return catalog;
+  }
+
+  return {
+    ...catalog,
+    models: [...catalog.models, ...modelsToAdd],
   };
 }
 
@@ -1861,6 +1940,11 @@ function mergeRegistrySources(
         servingSource: endpoint.servingSource,
         lifecycleState: endpoint.lifecycleState as RegistrySources["cloud"][number]["lifecycleState"],
         healthStatus: endpoint.healthStatus,
+        requestShapeHints: {
+          providerShape: "openai.chat.completions" as const,
+          bodyKeys: ["messages", "max_tokens"] as [string, ...string[]],
+          headerKeys: ["authorization"] as [string, ...string[]],
+        },
       })),
     ],
     local: [...staticSources.local],
@@ -2710,7 +2794,7 @@ export async function createRuntimeBridgeBackend(
   );
   const liteLLMModelPrices = await loadLiteLLMModelPrices(options.repoRoot);
   let liteLLMProviders = liteLLMModelPrices ? deriveLiteLLMProviders(liteLLMModelPrices) : [];
-  const providerAccountsFixture = await readJson<{ accounts: unknown[] }>(
+  const providerAccountsFixture = await readJson<{ accounts: ProviderAccountRecord[] }>(
     path.join(options.repoRoot, "testdata", "router-runtime", "provider-accounts.json"),
   );
   const registrySourcesFixture = await readJson<RegistrySources>(
@@ -2758,6 +2842,7 @@ export async function createRuntimeBridgeBackend(
     runtimeStateRoot: options.runtimeStateRoot,
     scopeId: options.scopeId,
   });
+  clearRuntimeEndpoints(initialization.databasePath);
   const deviceId = randomUUID();
 
   persistContinuitySnapshot({
@@ -2771,7 +2856,12 @@ export async function createRuntimeBridgeBackend(
   });
 
   let currentUnifiedRuntimeConfig = initialUnifiedRuntimeConfig;
-  let currentNormalizedCatalog = applyUnifiedLiteLLMAdapterFamilyOverrides(baseCatalog, currentUnifiedRuntimeConfig, liteLLMProviders);
+  const catalogWithFixtureModels = synthesizeFixtureModelsForCatalog(
+    baseCatalog,
+    providerAccountsFixture.accounts,
+    registrySourcesFixture,
+  );
+  let currentNormalizedCatalog = applyUnifiedLiteLLMAdapterFamilyOverrides(catalogWithFixtureModels, currentUnifiedRuntimeConfig, liteLLMProviders);
   let currentModelsById = new Map(currentNormalizedCatalog.models.map((model) => [model.modelId, model]));
   let currentRegistrySources: RegistrySources =
     currentUnifiedRuntimeConfig !== null
@@ -2796,11 +2886,15 @@ export async function createRuntimeBridgeBackend(
       sources: getCurrentRegistrySources(),
     });
     if (currentRegistry.diagnostics.length > 0) {
-      throw new Error(`Endpoint-registry validation failed after runtime state update: ${JSON.stringify(currentRegistry.diagnostics)}`);
+      throw new Error("Endpoint-registry validation failed after runtime state update.");
     }
   };
   const applyUnifiedRuntimeConfigState = async (nextConfig: UnifiedRuntimeConfig | null): Promise<void> => {
-    const nextNormalizedCatalog = applyUnifiedLiteLLMAdapterFamilyOverrides(baseCatalog, nextConfig, liteLLMProviders);
+    const nextNormalizedCatalog = applyUnifiedLiteLLMAdapterFamilyOverrides(
+      synthesizeFixtureModelsForCatalog(baseCatalog, providerAccountsFixture.accounts, registrySourcesFixture),
+      nextConfig,
+      liteLLMProviders,
+    );
     const resolvedLlamaSwapCommand =
       nextConfig?.llamaSwap.enabled && !nextConfig.llamaSwap.process.command
         ? await resolveLlamaSwapCommand({
@@ -3569,6 +3663,8 @@ export async function createRuntimeBridgeBackend(
       }
 
       const normalizedProviderIds = new Set(currentNormalizedCatalog.providers.map((p) => p.providerId));
+      const liteLLMProviderIds = new Set(liteLLMProviders.map((p) => p.providerId));
+      const localModelIds = currentUnifiedRuntimeConfig?.llamaSwap.models.map((m) => m.modelId) ?? [];
       const mergedProviders = [
         ...currentNormalizedCatalog.providers.map((provider) => {
           const effectiveModelIds = resolveModelIds(provider.providerId);
@@ -3612,6 +3708,34 @@ export async function createRuntimeBridgeBackend(
               })) as readonly ProviderPresetVariant[],
             };
           }),
+        ...(localModelIds.length > 0 && !normalizedProviderIds.has("llama-swap") && !liteLLMProviderIds.has("llama-swap")
+          ? [
+              {
+                providerId: "llama-swap",
+                displayName: "Local (llama-swap)",
+                providerKind: "provider-openai",
+                authFamily: "api-key",
+                adapterFamily: "ai-sdk-openai-compatible",
+                apiBase: "http://localhost:8080",
+                envVars: [] as readonly string[],
+                supportedAuthModes: [] as readonly string[],
+                controlPlaneRequirements: [] as readonly string[],
+                localOverrideApplied: true,
+                modelIds: localModelIds,
+                variants: [
+                  {
+                    variantId: "local-default",
+                    label: "Local llama-swap",
+                    description: "Locally hosted models via llama-swap.",
+                    authMode: "api-key-static" as const,
+                    availability: "ready" as const,
+                    baseUrl: "http://localhost:8080",
+                    modelIds: localModelIds,
+                  },
+                ] as readonly ProviderPresetVariant[],
+              },
+            ]
+          : []),
       ];
       return mergedProviders.sort((left, right) => compareText(left.providerId, right.providerId));
     },
@@ -3905,9 +4029,24 @@ export async function createRuntimeBridgeBackend(
       if (account.allowedModels.length > 0 && !account.allowedModels.includes(modelId)) {
         throw new Error(`Model ${modelId} is not enabled for provider account ${providerAccountId}.`);
       }
-      const model = currentModelsById.get(modelId);
+      let model = currentModelsById.get(modelId);
       if (!model) {
-        throw new Error(`Model ${modelId} is not present in the normalized catalog.`);
+        const providerId = modelId.includes("/") ? modelId.split("/")[0] : account.providerId;
+        const fallbackTemplate = createFallbackModelTemplate(currentNormalizedCatalog);
+        model = {
+          ...fallbackTemplate,
+          modelId,
+          providerId,
+          displayName: readDefaultDisplayNameFromModelId(modelId),
+          localOverrideApplied: true,
+          localNotes: ["Synthesized on-demand during endpoint activation."],
+          upstreamProvenance: currentNormalizedCatalog.source,
+        };
+        currentNormalizedCatalog = {
+          ...currentNormalizedCatalog,
+          models: [...currentNormalizedCatalog.models, model],
+        };
+        currentModelsById.set(modelId, model);
       }
 
       const endpointId = readOptionalString(body, "endpointId") ?? createEndpointId(providerAccountId, region, modelId);

@@ -1890,9 +1890,9 @@ describe("runtime-host-bridge", () => {
 
     await expect(backend.readControllerAssignment?.()).resolves.toEqual({
       scope: "global",
-      endpointId: "cli.local.coder",
-      modelId: "gpt-5.4",
-      sourceType: "local",
+      endpointId: "openai.personal.primary.us-east-1.fast",
+      modelId: "openai/gpt-4.1-mini-fast",
+      sourceType: "remote",
     });
 
     await expect(

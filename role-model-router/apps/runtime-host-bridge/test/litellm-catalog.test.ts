@@ -3,8 +3,9 @@ import { describe, expect, test } from "vitest";
 import {
   deriveLiteLLMProviders,
   extractLiteLLMProviderIds,
+  loadLiteLLMModelPrices,
   type LiteLLMProviderInfo,
-} from "../src/litellm-catalog.js";
+} from "@role-model-router/catalog";
 
 describe("litellm-catalog", () => {
   test("extracts provider ids from LiteLLM model prices", () => {
@@ -73,7 +74,7 @@ describe("litellm-catalog", () => {
   });
 
   test("loads real LiteLLM model prices from testdata", async () => {
-    const { loadLiteLLMModelPrices } = await import("../src/litellm-catalog.js");
+    // loadLiteLLMModelPrices already imported statically above
     const repoRoot = process.cwd().replace(/\\role-model-router[\\/]apps[\\/]runtime-host-bridge$/, "");
 
     const modelPrices = await loadLiteLLMModelPrices(repoRoot);

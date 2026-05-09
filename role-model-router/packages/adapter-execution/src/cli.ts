@@ -32,7 +32,7 @@ import {
 import {
   deriveLiteLLMProviders,
   loadLiteLLMModelPrices,
-} from "../../../apps/runtime-host-bridge/dist/litellm-catalog.js";
+} from "@role-model-router/catalog";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -95,7 +95,7 @@ async function loadResponseCaptures(
 export async function runRuntimeAdapterValidation(
   options: RuntimeAdapterValidationOptions,
 ): Promise<RuntimeAdapterValidationResult> {
-  const normalizedCatalog = await readJson<NormalizedCatalog>(
+  let normalizedCatalog = await readJson<NormalizedCatalog>(
     path.join(options.repoRoot, "role-model-router", "packages", "catalog", "data", "normalized-catalog.json"),
   );
   const providerAccountsFixture = await readJson<{ accounts: unknown[] }>(
@@ -140,6 +140,47 @@ export async function runRuntimeAdapterValidation(
 
   const liteLLMModelPrices = await loadLiteLLMModelPrices(options.repoRoot);
   const liteLLMProviders = liteLLMModelPrices ? deriveLiteLLMProviders(liteLLMModelPrices) : [];
+
+  const fixtureModelIds = new Set<string>();
+  for (const source of registrySources.cloud) {
+    fixtureModelIds.add(source.modelId);
+  }
+  for (const account of providerAccountsFixture.accounts as { allowedModels?: string[]; deniedModels?: string[] }[]) {
+    for (const modelId of account.allowedModels ?? []) {
+      fixtureModelIds.add(modelId);
+    }
+    for (const modelId of account.deniedModels ?? []) {
+      fixtureModelIds.add(modelId);
+    }
+  }
+  const mutableModels = [...normalizedCatalog.models];
+  const existingModelIds = new Set(mutableModels.map((model) => model.modelId));
+  for (const modelId of fixtureModelIds) {
+    if (existingModelIds.has(modelId)) {
+      continue;
+    }
+    const providerId = modelId.includes("/") ? modelId.split("/")[0] : "unknown";
+    mutableModels.push({
+      modelId,
+      providerId,
+      providerKind: "provider-openai",
+      authFamily: "api-key",
+      displayName: modelId.split("/").pop() ?? modelId,
+      version: "unversioned",
+      capabilities: ["text.chat", "tools.function_calling"],
+      modalities: ["text"],
+      contextWindow: 32768,
+      maxOutputTokens: 4096,
+      pricing: null,
+      requestShapeHints: null,
+      experimentalModes: [],
+      extendsProvenance: { baseModelId: null, chain: [] },
+      localOverrideApplied: true,
+      localNotes: ["Synthesized from fixture-referenced model ID."],
+      upstreamProvenance: normalizedCatalog.source,
+    });
+  }
+  normalizedCatalog = { ...normalizedCatalog, models: mutableModels };
 
   const validation = validateProviderAccounts({
     catalog: normalizedCatalog,
