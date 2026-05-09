@@ -44,8 +44,18 @@ jobs:
       - name: Install dependencies
         run: corepack pnpm install --frozen-lockfile
 
+      - name: Build UI
+        run: corepack pnpm --filter @role-model-router/runtime-ui run build
+
       - name: Package SEA runtime
         run: corepack pnpm run runtime:package-sea
+
+      - name: Build Windows launcher
+        if: matrix.target == 'win32-x64'
+        run: |
+          go build -o role-model-router/dist/release/win32-x64/role-model-launcher.exe ./role-model-router/apps/launcher/main.go
+          cp -r role-model-router/apps/runtime-ui/build/client role-model-router/dist/release/win32-x64/
+        shell: bash
 
       - name: Upload workflow artifact
         uses: actions/upload-artifact@v4
