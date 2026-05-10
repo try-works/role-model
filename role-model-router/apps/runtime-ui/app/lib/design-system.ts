@@ -7,13 +7,16 @@ import {
   GitBranch,
   Image,
   LayoutDashboard,
+  LayoutGrid,
   ListChecks,
   Logs,
   Mic,
+  Network,
   PanelsTopLeft,
   SlidersHorizontal,
   Speech,
   Telescope,
+  Terminal,
   Waypoints,
   type LucideIcon,
 } from "lucide-react";
@@ -176,6 +179,48 @@ const localPolicyRoute = createRoute({
   description: "Local inference runtime policy: TTL, auto-unload, and resource limits.",
   noteTitle: "Registry detail",
   noteBody: "Editable policy form with read-only host awareness fields.",
+});
+
+const localLogsRoute = createRoute({
+  id: "local-logs",
+  to: "/app/local/logs",
+  label: "Logs",
+  section: "Local",
+  icon: Terminal,
+  template: "dual-console",
+  eyebrow: "Local",
+  title: "Log streaming",
+  description: "Real-time log stream from the local llama-swap runtime.",
+  noteTitle: "Dual console",
+  noteBody: "Split proxy and upstream consoles with source toggle and auto-scroll.",
+});
+
+const localMatrixRoute = createRoute({
+  id: "local-matrix",
+  to: "/app/local/matrix",
+  label: "Matrix",
+  section: "Local",
+  icon: LayoutGrid,
+  template: "matrix-grid",
+  eyebrow: "Local",
+  title: "Model matrix",
+  description: "Concurrent model grid showing loaded state, engine, and resource usage.",
+  noteTitle: "Matrix grid",
+  noteBody: "Status-first cells with resource metrics; add/remove controls.",
+});
+
+const localPeersRoute = createRoute({
+  id: "local-peers",
+  to: "/app/local/peers",
+  label: "Peers",
+  section: "Local",
+  icon: Network,
+  template: "registry-detail",
+  eyebrow: "Local",
+  title: "Peer instances",
+  description: "Peer llama-swap instance inventory and management.",
+  noteTitle: "Registry detail",
+  noteBody: "Peer list with health and model availability; add/remove controls.",
 });
 
 const controlProvidersRoute = createRoute({
@@ -370,6 +415,9 @@ const runtimeRouteDefinitions = [
   localModelsRoute,
   localSwapRoute,
   localPolicyRoute,
+  localLogsRoute,
+  localMatrixRoute,
+  localPeersRoute,
   controlProvidersRoute,
   controlRuntimeConfigRoute,
   controlControllerRoute,
@@ -404,7 +452,7 @@ export const runtimeNavigationSections: readonly RuntimeNavigationSection[] = [
   {
     title: "Local",
     icon: Cpu,
-    items: [localModelsRoute, localSwapRoute, localPolicyRoute],
+    items: [localModelsRoute, localSwapRoute, localPolicyRoute, localLogsRoute, localMatrixRoute, localPeersRoute],
   },
   {
     title: "Control",

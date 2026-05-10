@@ -898,3 +898,9 @@ export async function fetchSwapHistory(
     fetcher,
   );
 }
+
+export async function fetchLocalLogs(
+  fetcher: RuntimeFetcher = fetch,
+): Promise<{ logs: string }> {
+  return fetchJson<{ logs: string }>("/api/role-model/local/logs", fetcher);
+}

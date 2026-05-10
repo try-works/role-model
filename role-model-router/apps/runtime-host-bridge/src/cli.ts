@@ -84,6 +84,7 @@ async function main(): Promise<void> {
     readLocalPolicy: backend.readLocalPolicy,
     updateLocalPolicy: backend.updateLocalPolicy,
     listSwapHistory: backend.listSwapHistory,
+    getLocalLogs: backend.getLocalLogs,
   });
 
   console.log(

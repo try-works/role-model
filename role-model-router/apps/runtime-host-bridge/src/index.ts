@@ -356,6 +356,7 @@ export interface StartBridgeServerOptions {
   readonly readLocalPolicy?: () => Promise<Record<string, unknown>>;
   readonly updateLocalPolicy?: (body: Record<string, unknown>) => Promise<Record<string, unknown>>;
   readonly listSwapHistory?: () => Promise<readonly { timestamp: string; oldModel: string | null; newModel: string; reason: string }[]>;
+  readonly getLocalLogs?: () => Promise<{ logs: string }>;
 }
 
 export interface RuntimeBridgeBackend {
@@ -462,6 +463,7 @@ export interface RuntimeBridgeBackend {
   readLocalPolicy(): Promise<Record<string, unknown>>;
   updateLocalPolicy(body: Record<string, unknown>): Promise<Record<string, unknown>>;
   listSwapHistory(): Promise<readonly { timestamp: string; oldModel: string | null; newModel: string; reason: string }[]>;
+  getLocalLogs(): Promise<{ logs: string }>;
   shutdown(): Promise<void>;
 }
 
@@ -2874,6 +2876,15 @@ function createRequestHandler(options: StartBridgeServerOptions) {
       return;
     }
 
+    if (request.method === "GET" && url.pathname === "/api/role-model/local/logs") {
+      if (!options.getLocalLogs) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.getLocalLogs());
+      return;
+    }
+
     if (options.staticRoot && request.method === "GET") {
       const filePath = path.join(options.staticRoot, url.pathname === "/" ? "index.html" : url.pathname);
       const resolvedPath = existsSync(filePath) ? filePath : path.join(options.staticRoot, "index.html");
@@ -4603,6 +4614,23 @@ export async function createRuntimeBridgeBackend(
         }));
       } catch {
         return [];
+      }
+    },
+    async getLocalLogs(): Promise<{ logs: string }> {
+      const status = currentLlamaSwapVendor?.readStatus();
+      const baseUrl = status?.baseUrl;
+      if (!baseUrl) {
+        return { logs: "" };
+      }
+      try {
+        const response = await fetch(`${baseUrl}/logs`);
+        if (!response.ok) {
+          return { logs: "" };
+        }
+        const text = await response.text();
+        return { logs: text };
+      } catch {
+        return { logs: "" };
       }
     },
     async shutdown(): Promise<void> {

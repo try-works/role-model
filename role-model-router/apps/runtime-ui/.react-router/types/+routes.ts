@@ -41,6 +41,15 @@ type Pages = {
   "/app/local/policy": {
     params: {};
   };
+  "/app/local/logs": {
+    params: {};
+  };
+  "/app/local/matrix": {
+    params: {};
+  };
+  "/app/local/peers": {
+    params: {};
+  };
   "/app/control/providers": {
     params: {};
   };
@@ -92,7 +101,7 @@ type Pages = {
 type RouteFiles = {
   "root.tsx": {
     id: "root";
-    page: "/" | "/app" | "/app/studio/chat" | "/app/studio/images" | "/app/studio/audio" | "/app/studio/rerank" | "/app/studio/advanced" | "/app/local/models" | "/app/local/swap" | "/app/local/policy" | "/app/control/providers" | "/app/control/runtime-config" | "/app/control/controller" | "/app/control/endpoints" | "/app/control/models" | "/app/observe/activity" | "/app/observe/requests" | "/app/observe/requests/:requestId" | "/app/observe/logs" | "/app/integrations/downstream" | "/app/integrations/upstream" | "/app/system/runtime" | "/app/system/peers" | "/*";
+    page: "/" | "/app" | "/app/studio/chat" | "/app/studio/images" | "/app/studio/audio" | "/app/studio/rerank" | "/app/studio/advanced" | "/app/local/models" | "/app/local/swap" | "/app/local/policy" | "/app/local/logs" | "/app/local/matrix" | "/app/local/peers" | "/app/control/providers" | "/app/control/runtime-config" | "/app/control/controller" | "/app/control/endpoints" | "/app/control/models" | "/app/observe/activity" | "/app/observe/requests" | "/app/observe/requests/:requestId" | "/app/observe/logs" | "/app/integrations/downstream" | "/app/integrations/upstream" | "/app/system/runtime" | "/app/system/peers" | "/*";
   };
   "routes/index.tsx": {
     id: "routes/index";
@@ -100,7 +109,7 @@ type RouteFiles = {
   };
   "routes/app-layout.tsx": {
     id: "routes/app-layout";
-    page: "/app" | "/app/studio/chat" | "/app/studio/images" | "/app/studio/audio" | "/app/studio/rerank" | "/app/studio/advanced" | "/app/local/models" | "/app/local/swap" | "/app/local/policy" | "/app/control/providers" | "/app/control/runtime-config" | "/app/control/controller" | "/app/control/endpoints" | "/app/control/models" | "/app/observe/activity" | "/app/observe/requests" | "/app/observe/requests/:requestId" | "/app/observe/logs" | "/app/integrations/downstream" | "/app/integrations/upstream" | "/app/system/runtime" | "/app/system/peers";
+    page: "/app" | "/app/studio/chat" | "/app/studio/images" | "/app/studio/audio" | "/app/studio/rerank" | "/app/studio/advanced" | "/app/local/models" | "/app/local/swap" | "/app/local/policy" | "/app/local/logs" | "/app/local/matrix" | "/app/local/peers" | "/app/control/providers" | "/app/control/runtime-config" | "/app/control/controller" | "/app/control/endpoints" | "/app/control/models" | "/app/observe/activity" | "/app/observe/requests" | "/app/observe/requests/:requestId" | "/app/observe/logs" | "/app/integrations/downstream" | "/app/integrations/upstream" | "/app/system/runtime" | "/app/system/peers";
   };
   "routes/dashboard.tsx": {
     id: "routes/dashboard";
@@ -137,6 +146,18 @@ type RouteFiles = {
   "routes/local-policy.tsx": {
     id: "routes/local-policy";
     page: "/app/local/policy";
+  };
+  "routes/local-logs.tsx": {
+    id: "routes/local-logs";
+    page: "/app/local/logs";
+  };
+  "routes/local-matrix.tsx": {
+    id: "routes/local-matrix";
+    page: "/app/local/matrix";
+  };
+  "routes/local-peers.tsx": {
+    id: "routes/local-peers";
+    page: "/app/local/peers";
   };
   "routes/providers.tsx": {
     id: "routes/providers";
@@ -209,6 +230,9 @@ type RouteModules = {
   "routes/local-models": typeof import("./app/routes/local-models.tsx");
   "routes/local-swap": typeof import("./app/routes/local-swap.tsx");
   "routes/local-policy": typeof import("./app/routes/local-policy.tsx");
+  "routes/local-logs": typeof import("./app/routes/local-logs.tsx");
+  "routes/local-matrix": typeof import("./app/routes/local-matrix.tsx");
+  "routes/local-peers": typeof import("./app/routes/local-peers.tsx");
   "routes/providers": typeof import("./app/routes/providers.tsx");
   "routes/control-runtime-config": typeof import("./app/routes/control-runtime-config.tsx");
   "routes/control-controller": typeof import("./app/routes/control-controller.tsx");
