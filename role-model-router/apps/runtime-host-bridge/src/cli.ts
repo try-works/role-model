@@ -87,6 +87,9 @@ async function main(): Promise<void> {
     getLocalLogs: backend.getLocalLogs,
     readModelOverrides: backend.readModelOverrides,
     updateModelOverrides: backend.updateModelOverrides,
+    readPeers: backend.readPeers,
+    updatePeers: backend.updatePeers,
+    checkPeerHealth: backend.checkPeerHealth,
   });
 
   console.log(

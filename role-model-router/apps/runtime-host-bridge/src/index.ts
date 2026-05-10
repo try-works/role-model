@@ -359,6 +359,9 @@ export interface StartBridgeServerOptions {
   readonly getLocalLogs?: () => Promise<{ logs: string }>;
   readonly readModelOverrides?: () => Promise<Record<string, { ttl?: number; contextWindow?: number; concurrencyLimit?: number }>>;
   readonly updateModelOverrides?: (body: Record<string, { ttl?: number; contextWindow?: number; concurrencyLimit?: number }>) => Promise<Record<string, { ttl?: number; contextWindow?: number; concurrencyLimit?: number }>>;
+  readonly readPeers?: () => Promise<readonly { id: string; url: string; authToken?: string }[]>;
+  readonly updatePeers?: (body: readonly { id: string; url: string; authToken?: string }[]) => Promise<readonly { id: string; url: string; authToken?: string }[]>;
+  readonly checkPeerHealth?: (url: string) => Promise<{ healthy: boolean }>;
 }
 
 export interface RuntimeBridgeBackend {
@@ -468,6 +471,9 @@ export interface RuntimeBridgeBackend {
   getLocalLogs(): Promise<{ logs: string }>;
   readModelOverrides(): Promise<Record<string, { ttl?: number; contextWindow?: number; concurrencyLimit?: number }>>;
   updateModelOverrides(body: Record<string, { ttl?: number; contextWindow?: number; concurrencyLimit?: number }>): Promise<Record<string, { ttl?: number; contextWindow?: number; concurrencyLimit?: number }>>;
+  readPeers(): Promise<readonly { id: string; url: string; authToken?: string }[]>;
+  updatePeers(body: readonly { id: string; url: string; authToken?: string }[]): Promise<readonly { id: string; url: string; authToken?: string }[]>;
+  checkPeerHealth(url: string): Promise<{ healthy: boolean }>;
   shutdown(): Promise<void>;
 }
 
@@ -2907,6 +2913,43 @@ function createRequestHandler(options: StartBridgeServerOptions) {
       return;
     }
 
+    if (request.method === "GET" && url.pathname === "/api/role-model/local/peers") {
+      if (!options.readPeers) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.readPeers());
+      return;
+    }
+
+    if (request.method === "PUT" && url.pathname === "/api/role-model/local/peers") {
+      if (!options.updatePeers) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      const body = await readJsonBody(request);
+      if (!Array.isArray(body)) {
+        writeJson(response, 400, { error: "expected array" });
+        return;
+      }
+      writeJson(response, 200, await options.updatePeers(body as readonly { id: string; url: string; authToken?: string }[]));
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/role-model/local/peers/health") {
+      if (!options.checkPeerHealth) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      const peerUrl = url.searchParams.get("url");
+      if (!peerUrl) {
+        writeJson(response, 400, { error: "missing url query param" });
+        return;
+      }
+      writeJson(response, 200, await options.checkPeerHealth(peerUrl));
+      return;
+    }
+
     if (options.staticRoot && request.method === "GET") {
       const filePath = path.join(options.staticRoot, url.pathname === "/" ? "index.html" : url.pathname);
       const resolvedPath = existsSync(filePath) ? filePath : path.join(options.staticRoot, "index.html");
@@ -4680,6 +4723,36 @@ export async function createRuntimeBridgeBackend(
       const overridesPath = path.join(options.runtimeStateRoot, "model-overrides.json");
       await writeFile(overridesPath, JSON.stringify(body, null, 2));
       return body;
+    },
+    async readPeers(): Promise<readonly { id: string; url: string; authToken?: string }[]> {
+      const peersPath = path.join(options.runtimeStateRoot, "peers.json");
+      try {
+        if (existsSync(peersPath)) {
+          return JSON.parse(await readFile(peersPath, "utf8")) as readonly {
+            id: string;
+            url: string;
+            authToken?: string;
+          }[];
+        }
+      } catch {
+        // Fall through to empty
+      }
+      return [];
+    },
+    async updatePeers(
+      body: readonly { id: string; url: string; authToken?: string }[],
+    ): Promise<readonly { id: string; url: string; authToken?: string }[]> {
+      const peersPath = path.join(options.runtimeStateRoot, "peers.json");
+      await writeFile(peersPath, JSON.stringify(body, null, 2));
+      return body;
+    },
+    async checkPeerHealth(url: string): Promise<{ healthy: boolean }> {
+      try {
+        const response = await fetch(`${url}/healthz`, { signal: AbortSignal.timeout(5000) });
+        return { healthy: response.ok };
+      } catch {
+        return { healthy: false };
+      }
     },
     async shutdown(): Promise<void> {
       clearInterval(autoSwapInterval);

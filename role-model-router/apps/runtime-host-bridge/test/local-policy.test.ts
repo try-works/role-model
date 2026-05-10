@@ -305,3 +305,121 @@ describe("model overrides", () => {
     expect(readBack).toEqual(body);
   });
 });
+
+describe("peer configuration", () => {
+  let tempDir: string;
+
+  beforeEach(() => {
+    tempDir = mkdtempSync(join(tmpdir(), "role-model-test-"));
+  });
+
+  afterEach(() => {
+    rmSync(tempDir, { recursive: true, force: true });
+  });
+
+  test("readPeers returns empty array when file does not exist", async () => {
+    const backend = await (
+      bridge as {
+        createRuntimeBridgeBackend: (options: {
+          repoRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+          registry: EndpointRegistryResult;
+          providerPresetsPath: string;
+        }) => Promise<{ readPeers(): Promise<readonly unknown[]> }>;
+      }
+    ).createRuntimeBridgeBackend({
+      repoRoot,
+      runtimeStateRoot: tempDir,
+      scopeId: "test-peers",
+      registry,
+      providerPresetsPath: "testdata/router-runtime/fixtures/provider-presets.json",
+    });
+
+    const peers = await backend.readPeers();
+    expect(peers).toEqual([]);
+  });
+
+  test("updatePeers writes to file", async () => {
+    const backend = await (
+      bridge as {
+        createRuntimeBridgeBackend: (options: {
+          repoRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+          registry: EndpointRegistryResult;
+          providerPresetsPath: string;
+        }) => Promise<{
+          readPeers(): Promise<readonly unknown[]>;
+          updatePeers(body: readonly unknown[]): Promise<readonly unknown[]>;
+        }>;
+      }
+    ).createRuntimeBridgeBackend({
+      repoRoot,
+      runtimeStateRoot: tempDir,
+      scopeId: "test-peers",
+      registry,
+      providerPresetsPath: "testdata/router-runtime/fixtures/provider-presets.json",
+    });
+
+    const body = [{ id: "peer-1", url: "http://192.168.1.100:8080", authToken: "token-1" }];
+    const updated = await backend.updatePeers(body);
+    expect(updated).toEqual(body);
+
+    const peersPath = join(tempDir, "peers.json");
+    expect(existsSync(peersPath)).toBe(true);
+    const persisted = JSON.parse(readFileSync(peersPath, "utf8")) as unknown[];
+    expect(persisted).toEqual(body);
+  });
+
+  test("readPeers reads persisted file", async () => {
+    const backend = await (
+      bridge as {
+        createRuntimeBridgeBackend: (options: {
+          repoRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+          registry: EndpointRegistryResult;
+          providerPresetsPath: string;
+        }) => Promise<{
+          readPeers(): Promise<readonly unknown[]>;
+          updatePeers(body: readonly unknown[]): Promise<readonly unknown[]>;
+        }>;
+      }
+    ).createRuntimeBridgeBackend({
+      repoRoot,
+      runtimeStateRoot: tempDir,
+      scopeId: "test-peers",
+      registry,
+      providerPresetsPath: "testdata/router-runtime/fixtures/provider-presets.json",
+    });
+
+    const body = [{ id: "peer-1", url: "http://192.168.1.100:8080" }];
+    await backend.updatePeers(body);
+    const readBack = await backend.readPeers();
+    expect(readBack).toEqual(body);
+  });
+
+  test("checkPeerHealth returns false for unreachable url", async () => {
+    const backend = await (
+      bridge as {
+        createRuntimeBridgeBackend: (options: {
+          repoRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+          registry: EndpointRegistryResult;
+          providerPresetsPath: string;
+        }) => Promise<{ checkPeerHealth(url: string): Promise<{ healthy: boolean }> }>;
+      }
+    ).createRuntimeBridgeBackend({
+      repoRoot,
+      runtimeStateRoot: tempDir,
+      scopeId: "test-peers",
+      registry,
+      providerPresetsPath: "testdata/router-runtime/fixtures/provider-presets.json",
+    });
+
+    const result = await backend.checkPeerHealth("http://localhost:59999/healthz");
+    expect(result.healthy).toBe(false);
+  });
+});

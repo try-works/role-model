@@ -1006,3 +1006,29 @@ export async function updateModelOverrides(
   return putJson<Record<string, ModelOverride>>("/api/role-model/local/overrides", body, fetcher);
 }
 
+
+export interface PeerConfig {
+  id: string;
+  url: string;
+  authToken?: string;
+}
+
+export async function fetchPeers(
+  fetcher: typeof fetch = fetch,
+): Promise<readonly PeerConfig[]> {
+  return fetchJson<readonly PeerConfig[]>("/api/role-model/local/peers", fetcher);
+}
+
+export async function updatePeers(
+  body: readonly PeerConfig[],
+  fetcher: typeof fetch = fetch,
+): Promise<readonly PeerConfig[]> {
+  return putJson<readonly PeerConfig[]>("/api/role-model/local/peers", body as unknown as Record<string, unknown>, fetcher);
+}
+
+export async function checkPeerHealth(
+  url: string,
+  fetcher: typeof fetch = fetch,
+): Promise<{ healthy: boolean }> {
+  return fetchJson<{ healthy: boolean }>(`/api/role-model/local/peers/health?url=${encodeURIComponent(url)}`, fetcher);
+}
