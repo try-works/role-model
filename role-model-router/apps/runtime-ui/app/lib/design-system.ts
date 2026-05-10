@@ -29,6 +29,7 @@ export type RuntimeLayoutTemplate =
   | "ledger-inspector"
   | "dual-console"
   | "contract-reference"
+  | "matrix-grid"
   | "system-topology";
 
 export interface RuntimeRouteDefinition {
