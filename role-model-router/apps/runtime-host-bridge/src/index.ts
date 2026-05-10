@@ -3656,7 +3656,10 @@ export async function createRuntimeBridgeBackend(
     };
   };
 
-  return {
+  let lastDetectedModel: string | null = null;
+  let autoSwapInterval: ReturnType<typeof setInterval>;
+
+  const backend = {
     get registry(): EndpointRegistryResult {
       return currentRegistry;
     },
@@ -4679,10 +4682,32 @@ export async function createRuntimeBridgeBackend(
       return body;
     },
     async shutdown(): Promise<void> {
+      clearInterval(autoSwapInterval);
       await Promise.all([currentLlamaSwapVendor?.shutdown(), currentLiteLLMVendor?.shutdown()]);
       await supervisor?.shutdown();
     },
   };
+
+  autoSwapInterval = setInterval(async () => {
+    try {
+      const models = await backend.listLocalModels();
+      const currentModel = models[0]?.modelId ?? null;
+      if (currentModel !== lastDetectedModel) {
+        insertSwapEvent({
+          databasePath: initialization.databasePath,
+          timestamp: new Date().toISOString(),
+          oldModelId: lastDetectedModel,
+          newModelId: currentModel,
+          reason: "auto-detected",
+        });
+        lastDetectedModel = currentModel;
+      }
+    } catch {
+      // Silently ignore polling errors
+    }
+  }, 5000);
+
+  return backend;
 }
 
 export function resolveBridgeServerOptions(input: {
