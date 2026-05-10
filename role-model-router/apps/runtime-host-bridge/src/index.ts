@@ -357,6 +357,8 @@ export interface StartBridgeServerOptions {
   readonly updateLocalPolicy?: (body: Record<string, unknown>) => Promise<Record<string, unknown>>;
   readonly listSwapHistory?: () => Promise<readonly { timestamp: string; oldModel: string | null; newModel: string; reason: string }[]>;
   readonly getLocalLogs?: () => Promise<{ logs: string }>;
+  readonly readModelOverrides?: () => Promise<Record<string, { ttl?: number; contextWindow?: number; concurrencyLimit?: number }>>;
+  readonly updateModelOverrides?: (body: Record<string, { ttl?: number; contextWindow?: number; concurrencyLimit?: number }>) => Promise<Record<string, { ttl?: number; contextWindow?: number; concurrencyLimit?: number }>>;
 }
 
 export interface RuntimeBridgeBackend {
@@ -464,6 +466,8 @@ export interface RuntimeBridgeBackend {
   updateLocalPolicy(body: Record<string, unknown>): Promise<Record<string, unknown>>;
   listSwapHistory(): Promise<readonly { timestamp: string; oldModel: string | null; newModel: string; reason: string }[]>;
   getLocalLogs(): Promise<{ logs: string }>;
+  readModelOverrides(): Promise<Record<string, { ttl?: number; contextWindow?: number; concurrencyLimit?: number }>>;
+  updateModelOverrides(body: Record<string, { ttl?: number; contextWindow?: number; concurrencyLimit?: number }>): Promise<Record<string, { ttl?: number; contextWindow?: number; concurrencyLimit?: number }>>;
   shutdown(): Promise<void>;
 }
 
@@ -2885,6 +2889,24 @@ function createRequestHandler(options: StartBridgeServerOptions) {
       return;
     }
 
+    if (request.method === "GET" && url.pathname === "/api/role-model/local/overrides") {
+      if (!options.readModelOverrides) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.readModelOverrides());
+      return;
+    }
+
+    if (request.method === "PUT" && url.pathname === "/api/role-model/local/overrides") {
+      if (!options.updateModelOverrides) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.updateModelOverrides(await readJsonBody(request)));
+      return;
+    }
+
     if (options.staticRoot && request.method === "GET") {
       const filePath = path.join(options.staticRoot, url.pathname === "/" ? "index.html" : url.pathname);
       const resolvedPath = existsSync(filePath) ? filePath : path.join(options.staticRoot, "index.html");
@@ -4632,6 +4654,29 @@ export async function createRuntimeBridgeBackend(
       } catch {
         return { logs: "" };
       }
+    },
+    async readModelOverrides(): Promise<
+      Record<string, { ttl?: number; contextWindow?: number; concurrencyLimit?: number }>
+    > {
+      const overridesPath = path.join(options.runtimeStateRoot, "model-overrides.json");
+      try {
+        if (existsSync(overridesPath)) {
+          return JSON.parse(await readFile(overridesPath, "utf8")) as Record<
+            string,
+            { ttl?: number; contextWindow?: number; concurrencyLimit?: number }
+          >;
+        }
+      } catch {
+        // Fall through to empty
+      }
+      return {};
+    },
+    async updateModelOverrides(
+      body: Record<string, { ttl?: number; contextWindow?: number; concurrencyLimit?: number }>,
+    ): Promise<Record<string, { ttl?: number; contextWindow?: number; concurrencyLimit?: number }>> {
+      const overridesPath = path.join(options.runtimeStateRoot, "model-overrides.json");
+      await writeFile(overridesPath, JSON.stringify(body, null, 2));
+      return body;
     },
     async shutdown(): Promise<void> {
       await Promise.all([currentLlamaSwapVendor?.shutdown(), currentLiteLLMVendor?.shutdown()]);

@@ -203,3 +203,105 @@ describe("local swap history", () => {
     expect(history).toEqual([]);
   });
 });
+
+describe("model overrides", () => {
+  let tempDir: string;
+
+  beforeEach(() => {
+    tempDir = mkdtempSync(join(tmpdir(), "role-model-test-"));
+  });
+
+  afterEach(() => {
+    rmSync(tempDir, { recursive: true, force: true });
+  });
+
+  test("readModelOverrides returns empty object when file does not exist", async () => {
+    const backend = await (
+      bridge as {
+        createRuntimeBridgeBackend: (options: {
+          repoRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+          registry: EndpointRegistryResult;
+          providerPresetsPath: string;
+        }) => Promise<{ readModelOverrides(): Promise<Record<string, unknown>> }>;
+      }
+    ).createRuntimeBridgeBackend({
+      repoRoot,
+      runtimeStateRoot: tempDir,
+      scopeId: "test-model-overrides",
+      registry,
+      providerPresetsPath: "testdata/router-runtime/fixtures/provider-presets.json",
+    });
+
+    const overrides = await backend.readModelOverrides();
+    expect(overrides).toEqual({});
+  });
+
+  test("updateModelOverrides writes to file", async () => {
+    const backend = await (
+      bridge as {
+        createRuntimeBridgeBackend: (options: {
+          repoRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+          registry: EndpointRegistryResult;
+          providerPresetsPath: string;
+        }) => Promise<{
+          readModelOverrides(): Promise<Record<string, unknown>>;
+          updateModelOverrides(body: Record<string, unknown>): Promise<Record<string, unknown>>;
+        }>;
+      }
+    ).createRuntimeBridgeBackend({
+      repoRoot,
+      runtimeStateRoot: tempDir,
+      scopeId: "test-model-overrides",
+      registry,
+      providerPresetsPath: "testdata/router-runtime/fixtures/provider-presets.json",
+    });
+
+    const body = {
+      "llama-3-8b": { ttl: 600, contextWindow: 8192, concurrencyLimit: 2 },
+      "mistral-7b": { ttl: 900, contextWindow: 32768 },
+    };
+
+    const updated = await backend.updateModelOverrides(body);
+    expect(updated).toEqual(body);
+
+    const overridesPath = join(tempDir, "model-overrides.json");
+    expect(existsSync(overridesPath)).toBe(true);
+    const persisted = JSON.parse(readFileSync(overridesPath, "utf8")) as Record<string, unknown>;
+    expect(persisted).toEqual(body);
+  });
+
+  test("readModelOverrides reads persisted file", async () => {
+    const backend = await (
+      bridge as {
+        createRuntimeBridgeBackend: (options: {
+          repoRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+          registry: EndpointRegistryResult;
+          providerPresetsPath: string;
+        }) => Promise<{
+          readModelOverrides(): Promise<Record<string, unknown>>;
+          updateModelOverrides(body: Record<string, unknown>): Promise<Record<string, unknown>>;
+        }>;
+      }
+    ).createRuntimeBridgeBackend({
+      repoRoot,
+      runtimeStateRoot: tempDir,
+      scopeId: "test-model-overrides",
+      registry,
+      providerPresetsPath: "testdata/router-runtime/fixtures/provider-presets.json",
+    });
+
+    const body = {
+      "llama-3-8b": { ttl: 600, contextWindow: 8192, concurrencyLimit: 2 },
+    };
+
+    await backend.updateModelOverrides(body);
+    const readBack = await backend.readModelOverrides();
+    expect(readBack).toEqual(body);
+  });
+});
