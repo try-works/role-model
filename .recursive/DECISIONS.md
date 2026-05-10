@@ -564,3 +564,39 @@
 - Known issues / follow-ups:
   - broader root `build` now fails only on the unrelated `provider-acp` / `provider-cli` `endpoint_kind` mismatch
   - broader root `test` still fails on the workspace-level `process-supervisor` crash-callback case, while the isolated package rerun passes
+
+### Run `20-local-llama-swap-completion`
+
+- Run folder: `/.recursive/run/20-local-llama-swap-completion/`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - Implemented file-backed policy persistence (local-policy.json) with default policy (ttl: 300, maxConcurrency: 1, autoUnload: true)
+  - Added SQLite llama_swap_events table and wired swap event insertions to loadLocalModel/unloadLocalModel
+  - Removed dead getLogs code from VendorRuntime interface and vendor-llama-swap
+  - Documented loadedAt fabrication in vendor-llama-swap
+  - Updated DESIGN_SYSTEM.md with new routes/templates; ui-design-system skill audit: 0 blockers
+  - Created 3 new Local UI pages: Logs (dual-console), Matrix (matrix-grid), Peers (registry-detail)
+  - Added bridge proxy endpoint for logs (GET /api/role-model/local/logs)
+  - Browser verification: screenshots captured for all 6 Local pages
+- Why:
+  - To close all deferred implementations from Runs 18 and 19 and elevate previously out-of-scope Local features
+- How:
+  - Implemented in 5 sub-phases (SP1-SP5) with TDD and browser verification
+  - All validations green: runtime:validate-host, runtime:validate-vendors, runtime:validate-ui, schemas:validate, smoke
+  - 46/46 bridge tests, 61/61 UI tests pass
+- What was not done:
+  - R7 (Model-level overrides UI): backend persistence and frontend controls deferred to future run
+  - R2.5 (Auto-detected swap events): deferred to future run
+- Known issues / follow-ups:
+  - Model-level overrides require model-overrides.json persistence and override application logic
+  - Peer passthrough backend proxy not yet implemented (UI is stub with form)

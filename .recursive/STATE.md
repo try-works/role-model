@@ -92,3 +92,17 @@
 - All validation commands green on main: `runtime:validate-ui`, `runtime:validate-host`, `runtime:validate-vendors`, `schemas:validate`, `smoke`
 - All test suites green: runtime-host-bridge (40), provider-account (6), adapter-execution (5), protocol-routing (4), runtime-observability (2), catalog (4), conformance (2), runtime-ui (61)
 - Run 18 (Local llama-swap Runtime) merged to main at `98b7d17`: SP1–SP6 completed — new "Local" sidebar section with Models, Swap History, and Policy pages; bridge API endpoints for local runtime state (`/api/role-model/local/models`, `/swap`, `/policy`); full page implementations with Swiss design system; browser verification with screenshots; all validations green
+- Run 19 (Local llama-swap Proxy) merged to main at `15597d2` via GitHub PR #5: wired local runtime methods to llama-swap proxy — `getRunningModels`, `unloadModel`, `getLogs` (later removed in Run 20); 40/40 bridge tests, 61/61 UI tests; all validations green
+- Run 20 (Local llama-swap Completion) completed in worktree branch `recursive/20-local-llama-swap-completion`:
+  - R1: File-backed policy persistence (`local-policy.json`) with defaults (`ttl: 300`, `maxConcurrency: 1`, `autoUnload: true`)
+  - R2: SQLite-backed swap history (`llama_swap_events` table) with events wired to load/unload
+  - R3: Removed dead `getLogs` from `VendorRuntime` interface and `vendor-llama-swap`
+  - R4: Documented `loadedAt` fabrication in `vendor-llama-swap`
+  - R5: Updated `DESIGN_SYSTEM.md` with new routes/templates; `ui-design-system` skill audit: 0 blockers
+  - R6: Created `/app/local/logs` page with auto-refresh, line count, empty state
+  - R8: Created `/app/local/matrix` page with loaded model grid
+  - R9: Created `/app/local/peers` page with inventory and add-peer form
+  - R10: Browser verification — screenshots captured for all 6 Local pages
+  - 46/46 bridge tests (40 existing + 6 new local-policy tests), 61/61 UI tests
+  - All validations green: `runtime:validate-host`, `runtime:validate-vendors`, `runtime:validate-ui`, `schemas:validate`, `smoke`
+  - Deferred: R7 (Model-level overrides UI), R2.5 (Auto-detected swap events)
