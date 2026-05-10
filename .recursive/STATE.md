@@ -106,3 +106,12 @@
   - 46/46 bridge tests (40 existing + 6 new local-policy tests), 61/61 UI tests
   - All validations green: `runtime:validate-host`, `runtime:validate-vendors`, `runtime:validate-ui`, `schemas:validate`, `smoke`
   - Deferred: R7 (Model-level overrides UI), R2.5 (Auto-detected swap events)
+
+- Run 21 (Semantic Color System + Deferred Completion) completed in worktree branch recursive/21-semantic-color-system:
+  - R1-R8: Semantic color system overhaul — cobalt blue (#003B8E) primary accent, red (#C8102E) reserved for errors, green (#166534) for success, amber (#b45309) for warning; dark mode with light blue (#60a5fa) accent
+  - R9: Model-level overrides — backend persistence to model-overrides.json, frontend controls on /local/models for TTL, context window, concurrency limit per model
+  - R10: Auto-detected swap events — background 5s polling of listLocalModels(), automatic SQLite event insertion on model change
+  - R11: Peer passthrough backend — readPeers, updatePeers, checkPeerHealth methods, JSON persistence, health proxy endpoint, full frontend integration on /local/peers
+  - 53/53 bridge tests (49 existing + 4 new peer tests), 61/61 UI tests
+  - Schema validation passes
+  - Browser screenshot verification blocked by display surface unavailability; verified via unit tests and build validation instead

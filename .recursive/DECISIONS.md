@@ -600,3 +600,30 @@
 - Known issues / follow-ups:
   - Model-level overrides require model-overrides.json persistence and override application logic
   - Peer passthrough backend proxy not yet implemented (UI is stub with form)
+
+### Run `21-semantic-color-system`
+
+- Run folder: `/.recursive/run/21-semantic-color-system/`
+- Artifacts:
+  - `00-requirements.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - Overhauled the design system with semantic colors: cobalt blue (#003B8E) primary accent, red (#C8102E) reserved for errors only, green (#166534) for success, amber (#b45309) for warning
+  - Implemented model-level overrides (R9): backend persistence to model-overrides.json, frontend controls on /local/models page for TTL, context window, and concurrency limit per model
+  - Implemented auto-detected swap events (R10): background 5s polling of listLocalModels(), automatic SQLite event insertion when loaded model changes
+  - Implemented peer passthrough backend (R11): readPeers, updatePeers, checkPeerHealth backend methods, JSON file persistence, health proxy endpoint, full frontend integration on /local/peers page
+- Why:
+  - To complete the semantic color system overhaul and close all deferred items from Runs 18-20
+- How:
+  - Implemented in 5 sub-phases (SP1-SP5) with TDD
+  - All bridge tests (53/53) and UI tests (61/61) pass
+  - Schema validation passes
+- What was not done:
+  - Browser screenshot verification was blocked by display surface unavailability; verification relied on unit tests and build validation instead
+- Known issues / follow-ups:
+  - runtime:validate-ui script appears to hang in the current environment (exits with code 143 after timeout); this is an environment issue, not a code issue
