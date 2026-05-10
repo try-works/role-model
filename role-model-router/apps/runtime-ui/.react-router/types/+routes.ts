@@ -32,6 +32,15 @@ type Pages = {
   "/app/studio/advanced": {
     params: {};
   };
+  "/app/local/models": {
+    params: {};
+  };
+  "/app/local/swap": {
+    params: {};
+  };
+  "/app/local/policy": {
+    params: {};
+  };
   "/app/control/providers": {
     params: {};
   };
@@ -83,7 +92,7 @@ type Pages = {
 type RouteFiles = {
   "root.tsx": {
     id: "root";
-    page: "/" | "/app" | "/app/studio/chat" | "/app/studio/images" | "/app/studio/audio" | "/app/studio/rerank" | "/app/studio/advanced" | "/app/control/providers" | "/app/control/runtime-config" | "/app/control/controller" | "/app/control/endpoints" | "/app/control/models" | "/app/observe/activity" | "/app/observe/requests" | "/app/observe/requests/:requestId" | "/app/observe/logs" | "/app/integrations/downstream" | "/app/integrations/upstream" | "/app/system/runtime" | "/app/system/peers" | "/*";
+    page: "/" | "/app" | "/app/studio/chat" | "/app/studio/images" | "/app/studio/audio" | "/app/studio/rerank" | "/app/studio/advanced" | "/app/local/models" | "/app/local/swap" | "/app/local/policy" | "/app/control/providers" | "/app/control/runtime-config" | "/app/control/controller" | "/app/control/endpoints" | "/app/control/models" | "/app/observe/activity" | "/app/observe/requests" | "/app/observe/requests/:requestId" | "/app/observe/logs" | "/app/integrations/downstream" | "/app/integrations/upstream" | "/app/system/runtime" | "/app/system/peers" | "/*";
   };
   "routes/index.tsx": {
     id: "routes/index";
@@ -91,7 +100,7 @@ type RouteFiles = {
   };
   "routes/app-layout.tsx": {
     id: "routes/app-layout";
-    page: "/app" | "/app/studio/chat" | "/app/studio/images" | "/app/studio/audio" | "/app/studio/rerank" | "/app/studio/advanced" | "/app/control/providers" | "/app/control/runtime-config" | "/app/control/controller" | "/app/control/endpoints" | "/app/control/models" | "/app/observe/activity" | "/app/observe/requests" | "/app/observe/requests/:requestId" | "/app/observe/logs" | "/app/integrations/downstream" | "/app/integrations/upstream" | "/app/system/runtime" | "/app/system/peers";
+    page: "/app" | "/app/studio/chat" | "/app/studio/images" | "/app/studio/audio" | "/app/studio/rerank" | "/app/studio/advanced" | "/app/local/models" | "/app/local/swap" | "/app/local/policy" | "/app/control/providers" | "/app/control/runtime-config" | "/app/control/controller" | "/app/control/endpoints" | "/app/control/models" | "/app/observe/activity" | "/app/observe/requests" | "/app/observe/requests/:requestId" | "/app/observe/logs" | "/app/integrations/downstream" | "/app/integrations/upstream" | "/app/system/runtime" | "/app/system/peers";
   };
   "routes/dashboard.tsx": {
     id: "routes/dashboard";
@@ -116,6 +125,18 @@ type RouteFiles = {
   "routes/studio-advanced.tsx": {
     id: "routes/studio-advanced";
     page: "/app/studio/advanced";
+  };
+  "routes/local-models.tsx": {
+    id: "routes/local-models";
+    page: "/app/local/models";
+  };
+  "routes/local-swap.tsx": {
+    id: "routes/local-swap";
+    page: "/app/local/swap";
+  };
+  "routes/local-policy.tsx": {
+    id: "routes/local-policy";
+    page: "/app/local/policy";
   };
   "routes/providers.tsx": {
     id: "routes/providers";
@@ -185,6 +206,9 @@ type RouteModules = {
   "routes/studio-audio": typeof import("./app/routes/studio-audio.tsx");
   "routes/studio-rerank": typeof import("./app/routes/studio-rerank.tsx");
   "routes/studio-advanced": typeof import("./app/routes/studio-advanced.tsx");
+  "routes/local-models": typeof import("./app/routes/local-models.tsx");
+  "routes/local-swap": typeof import("./app/routes/local-swap.tsx");
+  "routes/local-policy": typeof import("./app/routes/local-policy.tsx");
   "routes/providers": typeof import("./app/routes/providers.tsx");
   "routes/control-runtime-config": typeof import("./app/routes/control-runtime-config.tsx");
   "routes/control-controller": typeof import("./app/routes/control-controller.tsx");

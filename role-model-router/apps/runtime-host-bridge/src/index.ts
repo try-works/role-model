@@ -57,6 +57,8 @@ import {
   upsertProviderAccount as upsertSqliteProviderAccount,
   upsertRuntimeControllerAssignment,
   upsertRuntimeEndpoint as upsertSqliteRuntimeEndpoint,
+  insertSwapEvent,
+  listSwapEvents,
 } from "@role-model-router/sqlite-memory";
 
 import {
@@ -4540,6 +4542,13 @@ export async function createRuntimeBridgeBackend(
           headers: { "content-type": "application/json" },
           body: { model: modelId, messages: [{ role: "user", content: "hello" }] },
         });
+        insertSwapEvent({
+          databasePath: initialization.databasePath,
+          timestamp: new Date().toISOString(),
+          oldModelId: null,
+          newModelId: modelId,
+          reason: "manual-load",
+        });
         return { success: true };
       } catch {
         return { success: false };
@@ -4550,16 +4559,51 @@ export async function createRuntimeBridgeBackend(
         return { success: false };
       }
       const result = await currentLlamaSwapVendor.unloadModel(modelId);
+      if (result.success) {
+        insertSwapEvent({
+          databasePath: initialization.databasePath,
+          timestamp: new Date().toISOString(),
+          oldModelId: modelId ?? null,
+          newModelId: null,
+          reason: "manual-unload",
+        });
+      }
       return { success: result.success };
     },
     async readLocalPolicy(): Promise<Record<string, unknown>> {
-      return {};
+      const policyPath = path.join(options.runtimeStateRoot, "local-policy.json");
+      try {
+        if (existsSync(policyPath)) {
+          return JSON.parse(await readFile(policyPath, "utf8")) as Record<string, unknown>;
+        }
+      } catch {
+        // Fall through to defaults
+      }
+      return {
+        ttl: 300,
+        maxConcurrency: 1,
+        autoUnload: true,
+      };
     },
     async updateLocalPolicy(body: Record<string, unknown>): Promise<Record<string, unknown>> {
-      return body;
+      const policyPath = path.join(options.runtimeStateRoot, "local-policy.json");
+      const existing = await this.readLocalPolicy();
+      const merged = { ...existing, ...body };
+      await writeFile(policyPath, JSON.stringify(merged, null, 2));
+      return merged;
     },
     async listSwapHistory(): Promise<readonly { timestamp: string; oldModel: string | null; newModel: string; reason: string }[]> {
-      return [];
+      try {
+        const events = listSwapEvents({ databasePath: initialization.databasePath });
+        return events.map((event) => ({
+          timestamp: event.timestamp,
+          oldModel: event.oldModelId,
+          newModel: event.newModelId,
+          reason: event.reason,
+        }));
+      } catch {
+        return [];
+      }
     },
     async shutdown(): Promise<void> {
       await Promise.all([currentLlamaSwapVendor?.shutdown(), currentLiteLLMVendor?.shutdown()]);

@@ -1,6 +1,7 @@
 import path from "node:path";
 import { copyFileSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
+import { randomUUID } from "node:crypto";
 
 import type { ObservedPerformanceProfile } from "@role-model/protocol-types";
 import type { ObservedPerformanceSample } from "@role-model-router/profile-aggregator";
@@ -209,6 +210,15 @@ CREATE TABLE IF NOT EXISTS runtime_controller_assignments (
   source_type TEXT NOT NULL,
   updated_at_ms INTEGER NOT NULL
 );
+CREATE TABLE IF NOT EXISTS llama_swap_events (
+  event_id TEXT PRIMARY KEY,
+  timestamp TEXT NOT NULL,
+  old_model_id TEXT,
+  new_model_id TEXT,
+  reason TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS llama_swap_events_timestamp_idx
+  ON llama_swap_events (timestamp DESC);
 `;
 
 export interface SqliteMemoryLocationInput {
@@ -1969,4 +1979,61 @@ export function restoreRuntimeState(input: RestoreRuntimeStateInput): void {
     databasePath: input.databasePath,
   });
   copyFileSync(input.backupPath, input.databasePath);
+}
+
+export interface InsertSwapEventInput {
+  readonly databasePath: string;
+  readonly timestamp: string;
+  readonly oldModelId: string | null;
+  readonly newModelId: string | null;
+  readonly reason: string;
+}
+
+export interface SwapEventRecord {
+  readonly eventId: string;
+  readonly timestamp: string;
+  readonly oldModelId: string | null;
+  readonly newModelId: string | null;
+  readonly reason: string;
+}
+
+export function insertSwapEvent(input: InsertSwapEventInput): void {
+  const database = new DatabaseSync(input.databasePath);
+  database.prepare(
+    "INSERT INTO llama_swap_events (event_id, timestamp, old_model_id, new_model_id, reason) VALUES (?, ?, ?, ?, ?)"
+  ).run(
+    randomUUID(),
+    input.timestamp,
+    input.oldModelId,
+    input.newModelId,
+    input.reason,
+  );
+  database.close();
+}
+
+export function listSwapEvents(
+  input: { readonly databasePath: string; readonly limit?: number },
+): readonly SwapEventRecord[] {
+  const database = new DatabaseSync(input.databasePath);
+  const limitClause = typeof input.limit === "number" ? " LIMIT ?" : "";
+  const rows = database
+    .prepare(
+      `SELECT event_id, timestamp, old_model_id, new_model_id, reason FROM llama_swap_events ORDER BY timestamp DESC${limitClause}`
+    )
+    .all(...(typeof input.limit === "number" ? [input.limit] : [])) as Array<{
+      event_id: string;
+      timestamp: string;
+      old_model_id: string | null;
+      new_model_id: string | null;
+      reason: string;
+    }>;
+  database.close();
+
+  return rows.map((row) => ({
+    eventId: row.event_id,
+    timestamp: row.timestamp,
+    oldModelId: row.old_model_id,
+    newModelId: row.new_model_id,
+    reason: row.reason,
+  }));
 }
