@@ -309,6 +309,29 @@ observed_data:
         observedData?: {
           enabled: boolean;
           aggregation: { minSamples: number };
+          difficultyLearning: {
+            cacheTtlMs: number;
+            invalidation: {
+              maxContextTokensDelta: number;
+              maxHistoryTurnDelta: number;
+              maxToolCountDelta: number;
+              maxInstructionConstraintDelta: number;
+              maxDecompositionKeywordDelta: number;
+              reclassifyOnCodeOrSchemaChange: boolean;
+            };
+            override: {
+              minSamples: number;
+              maxFailureRate: number;
+              minQualityScore: number;
+              minTokensPerSec: number;
+            };
+            recommendation: {
+              minSamples: number;
+              maxFailureRate: number;
+              minQualityScore: number;
+              minTokensPerSec: number;
+            };
+          };
           metricHalflives: {
             qualityMs: number;
             latencyMs: number;
@@ -324,10 +347,33 @@ observed_data:
           };
         };
       }).observedData,
-    ).toEqual({
+    ).toMatchObject({
       enabled: true,
       aggregation: {
         minSamples: 3,
+      },
+      difficultyLearning: {
+        cacheTtlMs: 900000,
+        invalidation: {
+          maxContextTokensDelta: 800,
+          maxHistoryTurnDelta: 2,
+          maxToolCountDelta: 1,
+          maxInstructionConstraintDelta: 3,
+          maxDecompositionKeywordDelta: 2,
+          reclassifyOnCodeOrSchemaChange: true,
+        },
+        override: {
+          minSamples: 3,
+          maxFailureRate: 0.35,
+          minQualityScore: 0.7,
+          minTokensPerSec: 18,
+        },
+        recommendation: {
+          minSamples: 4,
+          maxFailureRate: 0.2,
+          minQualityScore: 0.8,
+          minTokensPerSec: 22,
+        },
       },
       metricHalflives: {
         qualityMs: 900000,
@@ -384,6 +430,134 @@ observed_data:
     penalty_factor: 1.5
 `),
     ).toThrow(/observed_data\.throughput_sla/i);
+  });
+
+  test("parses difficulty-learning policy and round-trips it back to config text", () => {
+    const result = parseUnifiedRuntimeConfigText(`
+version: "1.0"
+observed_data:
+  difficulty_learning:
+    cache_ttl_ms: 900000
+    invalidation:
+      max_context_tokens_delta: 800
+      max_history_turn_delta: 2
+      max_tool_count_delta: 1
+      max_instruction_constraint_delta: 3
+      max_decomposition_keyword_delta: 2
+      reclassify_on_code_or_schema_change: true
+    override:
+      min_samples: 3
+      max_failure_rate: 0.35
+      min_quality_score: 0.7
+      min_tokens_per_sec: 18
+    recommendation:
+      min_samples: 4
+      max_failure_rate: 0.2
+      min_quality_score: 0.8
+      min_tokens_per_sec: 22
+`);
+
+    expect(
+      (result as unknown as {
+        observedData?: {
+          difficultyLearning?: {
+            cacheTtlMs: number;
+            invalidation: {
+              maxContextTokensDelta: number;
+              maxHistoryTurnDelta: number;
+              maxToolCountDelta: number;
+              maxInstructionConstraintDelta: number;
+              maxDecompositionKeywordDelta: number;
+              reclassifyOnCodeOrSchemaChange: boolean;
+            };
+            override: {
+              minSamples: number;
+              maxFailureRate: number;
+              minQualityScore: number;
+              minTokensPerSec: number;
+            };
+            recommendation: {
+              minSamples: number;
+              maxFailureRate: number;
+              minQualityScore: number;
+              minTokensPerSec: number;
+            };
+          };
+        };
+      }).observedData?.difficultyLearning,
+    ).toEqual({
+      cacheTtlMs: 900000,
+      invalidation: {
+        maxContextTokensDelta: 800,
+        maxHistoryTurnDelta: 2,
+        maxToolCountDelta: 1,
+        maxInstructionConstraintDelta: 3,
+        maxDecompositionKeywordDelta: 2,
+        reclassifyOnCodeOrSchemaChange: true,
+      },
+      override: {
+        minSamples: 3,
+        maxFailureRate: 0.35,
+        minQualityScore: 0.7,
+        minTokensPerSec: 18,
+      },
+      recommendation: {
+        minSamples: 4,
+        maxFailureRate: 0.2,
+        minQualityScore: 0.8,
+        minTokensPerSec: 22,
+      },
+    });
+
+    expect(
+      renderUnifiedRuntimeConfigText(
+        normalizeUnifiedRuntimeConfigInput({
+          version: "1.0",
+          observedData: {
+            enabled: true,
+            aggregation: {
+              minSamples: 2,
+            },
+            metricHalflives: {
+              qualityMs: 900000,
+              latencyMs: 300000,
+              throughputMs: 120000,
+              reliabilityMs: 600000,
+              costMs: 1800000,
+            },
+            throughputSla: {
+              enabled: true,
+              minTokensPerSec: 24,
+              penaltyTimeoutMs: 600000,
+              penaltyFactor: 0,
+            },
+            difficultyLearning: {
+              cacheTtlMs: 900000,
+              invalidation: {
+                maxContextTokensDelta: 800,
+                maxHistoryTurnDelta: 2,
+                maxToolCountDelta: 1,
+                maxInstructionConstraintDelta: 3,
+                maxDecompositionKeywordDelta: 2,
+                reclassifyOnCodeOrSchemaChange: true,
+              },
+              override: {
+                minSamples: 3,
+                maxFailureRate: 0.35,
+                minQualityScore: 0.7,
+                minTokensPerSec: 18,
+              },
+              recommendation: {
+                minSamples: 4,
+                maxFailureRate: 0.2,
+                minQualityScore: 0.8,
+                minTokensPerSec: 22,
+              },
+            },
+          },
+        }) as unknown as Parameters<typeof renderUnifiedRuntimeConfigText>[0],
+      ),
+    ).toContain("difficulty_learning:");
   });
 
   test("parses model-alias policy and round-trips it back to config text", () => {

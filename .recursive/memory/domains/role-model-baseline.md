@@ -1,6 +1,6 @@
 Type: `domain`
 Status: `CURRENT`
-Scope: `Stable baseline ownership for the repo workspace, canonical protocol tree, shared packages, router family, fixtures, validation surfaces, and the repo-owned runtime/operator baseline extended through the alias-pool routing baseline in run 25.`
+Scope: `Stable baseline ownership for the repo workspace, canonical protocol tree, shared packages, router family, fixtures, validation surfaces, and the repo-owned runtime/operator baseline extended through the stateful difficulty-learning baseline in run 27.`
 Owns-Paths:
 - `/README.md`
 - `/LICENSE`
@@ -41,8 +41,10 @@ Source-Runs:
 - `23-router-runtime-live-observed-feedback`
 - `24-router-runtime-recency-bias-throughput-sla`
 - `25-router-runtime-model-alias-pool`
+- `26-router-runtime-difficulty-guided-routing`
+- `27-router-runtime-difficulty-learning-cache`
 Validated-At-Commit: `working-tree`
-Last-Validated: `2026-05-11T20:30:00+08:00`
+Last-Validated: `2026-05-11T15:13:00Z`
 Tags:
 - `baseline`
 - `workspace`
@@ -117,6 +119,10 @@ This repository now has a real product baseline rather than only recursive scaff
 - `/role-model-router/apps/runtime-host-bridge/src/index.ts` now executes configured classifier-backed difficulty assignment with deterministic fallback, maps difficulty to live routing strategy behavior before final selection, and applies mixed local-and-remote `maxDifficulty` gating on difficulty-mode alias requests
 - Runtime request observations and validator proof now also expose durable `routingDiagnostics.difficultyRouting` metadata, including assigned difficulty, selected strategy, fallback status or reason, rubric-signal summaries, and excluded endpoint ids
 - The repo-owned validation floor now also proves mixed local-plus-remote difficulty routing through focused bridge tests, `runtime:validate-vendors`, and agent-operated readback of easy-path cost routing plus hard-path quality routing and local-endpoint exclusion; medium-path live QA remains automated-evidence-only under the current binary mock classifier
+- The runtime now also owns an explicit `observed_data.difficulty_learning` contract in `/role-model-router/apps/runtime-host-bridge/src/unified-runtime-config.ts`, including conversation-cache invalidation controls plus advisory-recommendation and observed-override thresholds
+- `/role-model-router/packages/sqlite-memory/` and `/role-model-router/apps/runtime-host-bridge/` now persist conversation difficulty cache entries, segmented easy/medium/hard observed profiles, advisory `maxDifficulty` recommendation payloads, observed override explanations, and selected-bucket observed-profile diagnostics across both local and remote endpoints
+- `/role-model-router/apps/runtime-host-bridge/src/index.ts` now reuses cached conversation difficulty when invalidation rules allow, deterministically reclassifies when the conversation changes materially, and can use observed per-bucket performance to override configured `maxDifficulty` ceilings without mutating operator config
+- The repo-owned validation floor now also proves bucketed endpoint-profile readback, deterministic cache reuse and invalidation, observed override above configured ceilings, and bucket-selected routing through focused bridge tests, `runtime:validate-host`, `runtime:validate-vendors`, and agent-operated readback of live runtime surfaces
 
 ## Validation Path
 

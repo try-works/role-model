@@ -1,6 +1,8 @@
 Run: `/.recursive/run/27-router-runtime-difficulty-learning-cache/`
 Phase: `00 Requirements`
-Status: `DRAFT`
+Status: `LOCKED`
+LockedAt: `2026-05-11T13:53:34Z`
+LockHash: `ab96ab7fb74a2f82a0ee37c6bffde08cf001cdf9c06cdad24ee24ecaf766bc13`
 Workflow version: `recursive-mode-audit-v1`
 Inputs:
 - `/docs/architecture/07-router-runtime-routing-strategy-lock.md`

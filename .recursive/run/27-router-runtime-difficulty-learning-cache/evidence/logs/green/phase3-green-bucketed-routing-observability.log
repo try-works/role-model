@@ -1,0 +1,19 @@
+
+> @role-model-router/runtime-observability@0.0.0 test D:\DEV\role-model\.worktrees\27-router-runtime-difficulty-learning-cache\role-model-router\packages\runtime-observability
+> vitest run
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/27-router-runtime-difficulty-learning-cache/role-model-router/packages/runtime-observability[39m
+
+(node:106100) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:70768) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [32mΓ£ô[39m test/otel.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 258[2mms[22m[39m
+ [32mΓ£ô[39m test/index.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 443[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m2 passed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[32m3 passed[39m[22m[90m (3)[39m
+[2m   Start at [22m 22:45:04
+[2m   Duration [22m 2.15s[2m (transform 729ms, setup 0ms, collect 1.12s, tests 701ms, environment 1ms, prepare 1.05s)[22m
+

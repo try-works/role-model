@@ -1,0 +1,48 @@
+
+> @role-model-router/runtime-observability@0.0.0 test D:\DEV\role-model\.worktrees\27-router-runtime-difficulty-learning-cache\role-model-router\packages\runtime-observability
+> vitest run
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/27-router-runtime-difficulty-learning-cache/role-model-router/packages/runtime-observability[39m
+
+(node:39928) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:17756) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [32mΓ£ô[39m test/otel.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 328[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m runtime-observability otel mapping[2m > [22mderives a deterministic OpenTelemetry export from canonical role-model artifacts [33m 325[2mms[22m[39m
+ [31mΓ¥»[39m test/index.test.ts [2m([22m[2m2 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[33m 551[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m runtime-observability[2m > [22mcreates a redacted runtime observation bundle with diagnostics and profile updates [33m 338[2mms[22m[39m
+[31m   [31m├ù[31m runtime-observability[2m > [22mtags live-request samples with the classified difficulty bucket when difficulty routing is present[39m[32m 210[2mms[22m[39m
+[31m     ΓåÆ expected undefined to be 'hard' // Object.is equality[39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/index.test.ts > runtime-observability > tags live-request samples with the classified difficulty bucket when difficulty routing is present
+AssertionError: expected undefined to be 'hard' // Object.is equality
+
+- Expected: 
+"hard"
+
++ Received: 
+undefined
+
+ Γ¥» test/index.test.ts:233:67
+    231|       });
+    232| 
+    233|       expect(bundle.observedPerformance.sample.difficulty_bucket).toBeΓÇª
+       |                                                                   ^
+    234|     } finally {
+    235|       await rm(runtimeStateRoot, { recursive: true, force: true });
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m1 passed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m2 passed[39m[22m[90m (3)[39m
+[2m   Start at [22m 22:10:29
+[2m   Duration [22m 2.91s[2m (transform 976ms, setup 0ms, collect 1.35s, tests 878ms, environment 1ms, prepare 1.67s)[22m
+
+D:\DEV\role-model\.worktrees\27-router-runtime-difficulty-learning-cache\role-model-router\packages\runtime-observability:
+ΓÇëERR_PNPM_RECURSIVE_RUN_FIRST_FAILΓÇë @role-model-router/runtime-observability@0.0.0 test: `vitest run`
+Exit status 1

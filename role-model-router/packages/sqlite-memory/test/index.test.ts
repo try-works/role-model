@@ -808,6 +808,362 @@ describe("initializeSqliteMemory", () => {
     });
   });
 
+  test("stores and reads conversation-level difficulty classification cache entries", async () => {
+    expect(
+      typeof (
+        sqliteMemory as {
+          upsertDifficultyClassificationCache?: unknown;
+        }
+      ).upsertDifficultyClassificationCache,
+    ).toBe("function");
+    expect(
+      typeof (
+        sqliteMemory as {
+          readDifficultyClassificationCache?: unknown;
+        }
+      ).readDifficultyClassificationCache,
+    ).toBe("function");
+
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+    const initialized = initializeSqliteMemory({
+      runtimeStateRoot,
+      scopeId: "workspace-dev-difficulty-cache",
+    });
+
+    (
+      sqliteMemory as {
+        upsertDifficultyClassificationCache(input: {
+          databasePath: string;
+          cache: {
+            conversationId: string;
+            difficulty: "easy" | "medium" | "hard";
+            fallbackApplied: boolean;
+            fallbackReason?: string;
+            cachedAtMs: number;
+            expiresAtMs: number;
+            rubricSignals: {
+              contextTokens: number;
+              toolCount: number;
+              historyTurnCount: number;
+              instructionConstraintCount: number;
+              decompositionKeywordCount: number;
+              codeOrSchemaBurden: boolean;
+            };
+          };
+        }): void;
+      }
+    ).upsertDifficultyClassificationCache({
+      databasePath: initialized.databasePath,
+      cache: {
+        conversationId: "conversation-cache-001",
+        difficulty: "medium",
+        fallbackApplied: false,
+        cachedAtMs: 1000,
+        expiresAtMs: 2000,
+        rubricSignals: {
+          contextTokens: 640,
+          toolCount: 1,
+          historyTurnCount: 2,
+          instructionConstraintCount: 3,
+          decompositionKeywordCount: 1,
+          codeOrSchemaBurden: false,
+        },
+      },
+    });
+
+    expect(
+      (
+        sqliteMemory as {
+          readDifficultyClassificationCache(input: {
+            databasePath: string;
+            conversationId: string;
+          }): {
+            conversationId: string;
+            difficulty: "easy" | "medium" | "hard";
+            fallbackApplied: boolean;
+            fallbackReason?: string;
+            cachedAtMs: number;
+            expiresAtMs: number;
+            rubricSignals: {
+              contextTokens: number;
+              toolCount: number;
+              historyTurnCount: number;
+              instructionConstraintCount: number;
+              decompositionKeywordCount: number;
+              codeOrSchemaBurden: boolean;
+            };
+          } | null;
+        }
+      ).readDifficultyClassificationCache({
+        databasePath: initialized.databasePath,
+        conversationId: "conversation-cache-001",
+      }),
+    ).toEqual({
+      conversationId: "conversation-cache-001",
+      difficulty: "medium",
+      fallbackApplied: false,
+      cachedAtMs: 1000,
+      expiresAtMs: 2000,
+      rubricSignals: {
+        contextTokens: 640,
+        toolCount: 1,
+        historyTurnCount: 2,
+        instructionConstraintCount: 3,
+        decompositionKeywordCount: 1,
+        codeOrSchemaBurden: false,
+      },
+    });
+  });
+
+  test("persists and reads segmented observed samples and profiles by difficulty bucket", async () => {
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+    const validation = await runRuntimeAdapterValidation({
+      repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      runtimeStateRoot,
+      scopeId: "workspace-dev-difficulty-profiles",
+    });
+    const policy = await readJson<Parameters<typeof createRuntimeObservationBundle>[0]["capturePolicy"]>(
+      "testdata/router-runtime/fixtures/observability-policy.json",
+    );
+
+    const bundle = createRuntimeObservationBundle({
+      decision: validation.decision,
+      routingDiagnostics: {
+        ...validation.routingDiagnostics,
+        difficultyRouting: {
+          difficulty: "hard",
+          strategy: "quality",
+          fallbackApplied: false,
+          rubricSignals: {
+            contextTokens: 2048,
+            toolCount: 2,
+            historyTurnCount: 3,
+            instructionConstraintCount: 4,
+            decompositionKeywordCount: 2,
+            codeOrSchemaBurden: true,
+          },
+        },
+      },
+      retrievalReceipt: validation.retrievalReceipt,
+      contextEnvelope: validation.contextEnvelope,
+      execution: validation.execution,
+      priorSamples: [],
+      maintenancePolicy: {
+        "redaction.level": "strict",
+        "retention.class": "standard",
+      },
+      capturePolicy: policy,
+    });
+
+    (
+      sqliteMemory as {
+        persistRuntimeObservationBundle(input: {
+          databasePath: string;
+          observation: ReturnType<typeof createRuntimeObservationBundle>;
+        }): void;
+      }
+    ).persistRuntimeObservationBundle({
+      databasePath: validation.databasePath,
+      observation: bundle,
+    });
+
+    expect(
+      (
+        sqliteMemory as {
+          readObservedPerformanceSamples(input: {
+            databasePath: string;
+            endpointId: string;
+            difficultyBucket?: "easy" | "medium" | "hard";
+          }): Array<{ request_id?: string; source_type: string; difficulty_bucket?: string }>;
+        }
+      ).readObservedPerformanceSamples({
+        databasePath: validation.databasePath,
+        endpointId: validation.decision.chosen_endpoint_id,
+        difficultyBucket: "hard",
+      }),
+    ).toEqual([
+      expect.objectContaining({
+        request_id: validation.decision.request_id,
+        source_type: "live_request",
+        difficulty_bucket: "hard",
+      }),
+    ]);
+    expect(
+      (
+        sqliteMemory as {
+          readLatestObservedProfile(input: {
+            databasePath: string;
+            endpointId: string;
+            difficultyBucket?: "easy" | "medium" | "hard";
+          }): { endpoint_id: string; sample_size: number } | null;
+        }
+      ).readLatestObservedProfile({
+        databasePath: validation.databasePath,
+        endpointId: validation.decision.chosen_endpoint_id,
+        difficultyBucket: "hard",
+      }),
+    ).toMatchObject({
+      endpoint_id: validation.decision.chosen_endpoint_id,
+      sample_size: 1,
+    });
+  });
+
+  test("derives an advisory max-difficulty recommendation from bucketed observed profiles", async () => {
+    expect(
+      typeof (
+        sqliteMemory as {
+          readAdvisoryMaxDifficultyRecommendation?: unknown;
+        }
+      ).readAdvisoryMaxDifficultyRecommendation,
+    ).toBe("function");
+
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+    const initialized = initializeSqliteMemory({
+      runtimeStateRoot,
+      scopeId: "workspace-dev-advisory-difficulty",
+    });
+    const database = new DatabaseSync(initialized.databasePath);
+    const endpointId = "openai.personal.primary.us-east-1.fast";
+    const baseProfile = {
+      endpoint_id: endpointId,
+      endpoint_version: "run27-test-v1",
+      measurement_window: {
+        started_at_ms: 1_000,
+        ended_at_ms: 2_000,
+      },
+      freshness_score: 0.98,
+      confidence_score: 0.96,
+      latency_ms_p50: 420,
+      latency_ms_p95: 700,
+      sources: {
+        live_request_samples: 4,
+        benchmark_samples: 0,
+      },
+      currency: "USD",
+    };
+
+    const insertProfile = database.prepare(
+      "INSERT INTO observed_profile_snapshots_by_difficulty (snapshot_id, endpoint_id, difficulty_bucket, measured_at_ms, profile_json) VALUES (?, ?, ?, ?, ?)",
+    );
+    insertProfile.run(
+      "snapshot-easy",
+      endpointId,
+      "easy",
+      10_000,
+      JSON.stringify({
+        ...baseProfile,
+        measured_at_ms: 10_000,
+        sample_size: 5,
+        failure_rate: 0.02,
+        quality_score: 0.96,
+        tokens_per_sec: 36,
+        cost_per_1k_tokens_est: 0.8,
+      }),
+    );
+    insertProfile.run(
+      "snapshot-medium",
+      endpointId,
+      "medium",
+      11_000,
+      JSON.stringify({
+        ...baseProfile,
+        measured_at_ms: 11_000,
+        sample_size: 4,
+        failure_rate: 0.12,
+        quality_score: 0.84,
+        tokens_per_sec: 25,
+        cost_per_1k_tokens_est: 1.1,
+      }),
+    );
+    insertProfile.run(
+      "snapshot-hard",
+      endpointId,
+      "hard",
+      12_000,
+      JSON.stringify({
+        ...baseProfile,
+        measured_at_ms: 12_000,
+        sample_size: 4,
+        failure_rate: 0.29,
+        quality_score: 0.82,
+        tokens_per_sec: 29,
+        cost_per_1k_tokens_est: 1.7,
+      }),
+    );
+    database.close();
+
+    expect(
+      (
+        sqliteMemory as {
+          readAdvisoryMaxDifficultyRecommendation(input: {
+            databasePath: string;
+            endpointId: string;
+            thresholds: {
+              minSamples: number;
+              maxFailureRate: number;
+              minQualityScore: number;
+              minTokensPerSec: number;
+            };
+          }): {
+            recommendedMaxDifficulty: "easy" | "medium" | "hard" | null;
+            evaluations: Record<
+              "easy" | "medium" | "hard",
+              {
+                eligible: boolean;
+                rejectionReasons: readonly string[];
+                profile: { sample_size: number; failure_rate: number } | null;
+              }
+            >;
+          };
+        }
+      ).readAdvisoryMaxDifficultyRecommendation({
+        databasePath: initialized.databasePath,
+        endpointId,
+        thresholds: {
+          minSamples: 4,
+          maxFailureRate: 0.2,
+          minQualityScore: 0.8,
+          minTokensPerSec: 22,
+        },
+      }),
+    ).toEqual({
+      recommendedMaxDifficulty: "medium",
+      thresholds: {
+        minSamples: 4,
+        maxFailureRate: 0.2,
+        minQualityScore: 0.8,
+        minTokensPerSec: 22,
+      },
+      evaluations: {
+        easy: {
+          eligible: true,
+          rejectionReasons: [],
+          profile: expect.objectContaining({
+            sample_size: 5,
+            failure_rate: 0.02,
+          }),
+        },
+        medium: {
+          eligible: true,
+          rejectionReasons: [],
+          profile: expect.objectContaining({
+            sample_size: 4,
+            failure_rate: 0.12,
+          }),
+        },
+        hard: {
+          eligible: false,
+          rejectionReasons: ["max-failure-rate"],
+          profile: expect.objectContaining({
+            sample_size: 4,
+            failure_rate: 0.29,
+          }),
+        },
+      },
+    });
+  });
+
   test("reads the latest observed profiles for a set of endpoint ids", async () => {
     expect(
       typeof (

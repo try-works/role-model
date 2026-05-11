@@ -18,8 +18,13 @@ export interface RuntimeRoutingDiagnostics {
     readonly difficulty: "easy" | "medium" | "hard";
     readonly strategy: string;
     readonly fallbackApplied: boolean;
+    readonly cacheHit?: boolean;
+    readonly cacheInvalidated?: boolean;
+    readonly cacheInvalidationReasons?: readonly string[];
     readonly fallbackReason?: string;
     readonly excludedEndpointIds?: readonly string[];
+    readonly overrideAppliedEndpointIds?: readonly string[];
+    readonly overrideRecommendedMaxDifficultyByEndpointId?: Record<string, "easy" | "medium" | "hard">;
     readonly rubricSignals: {
       readonly contextTokens: number;
       readonly toolCount: number;
@@ -34,6 +39,8 @@ export interface RuntimeRoutingDiagnostics {
     readonly source: "runtime-state" | "none";
     readonly readMode: "per-request";
     readonly measuredAtMs?: number;
+    readonly difficultyBucket?: "easy" | "medium" | "hard";
+    readonly bucketOverrideApplied?: boolean;
   };
   readonly effectiveMetrics?: {
     readonly quality?: {
@@ -270,6 +277,9 @@ function buildObservedPerformanceSample(
     endpoint_id: input.decision.chosen_endpoint_id,
     endpoint_version: endpointVersion,
     source_type: "live_request",
+    ...(input.routingDiagnostics?.difficultyRouting?.difficulty
+      ? { difficulty_bucket: input.routingDiagnostics.difficultyRouting.difficulty }
+      : {}),
     timestamp_ms: input.execution.usageEvent.timestamp_ms,
     latency_ms: input.execution.normalized.latencyMs,
     latency_ms_p95: input.execution.normalized.latencyMs,

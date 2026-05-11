@@ -765,3 +765,31 @@
 - Known issues / follow-ups:
   - the repo-owned mock classifier used for local readback and validator QA currently emits `easy` or `hard` only, so medium-path live QA remains automated-evidence-only until a richer mock or real classifier-backed harness lands
   - later runs still need difficulty-segmented observed learning, controller guidance, hybrid arbitration, and final integrated runtime verification on top of this difficulty-routing baseline
+
+### Run `27-router-runtime-difficulty-learning-cache`
+
+- Run folder: `/.recursive/run/27-router-runtime-difficulty-learning-cache/`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - the unified runtime config now owns a durable `observed_data.difficulty_learning` contract with explicit cache invalidation, advisory recommendation thresholds, and observed override thresholds
+  - bridge and SQLite runtime state now persist conversation difficulty cache entries, segmented easy/medium/hard observed profiles, advisory `maxDifficulty` recommendation payloads, observed override explanations, and selected-bucket observed-profile diagnostics
+  - mixed local-plus-remote validation and agent-operated readback now prove bucketed endpoint-profile inspection, deterministic cache reuse and invalidation, observed override of configured ceilings, and bucket-selected routing outcomes
+- Why:
+  - to make the run-26 difficulty-routing baseline stateful and self-tuning without silently mutating operator config before later controller-guided routing, hybrid policy, and final integration runs build on the same learning semantics
+- How:
+  - implemented with strict RED/GREEN TDD across config, SQLite-memory, bridge, runtime-observability, and validator slices, validated the locked Phase 3 slice through `schemas:validate`, `sqlite-memory` tests, `runtime-observability` tests, `protocol-routing` tests, `runtime-host-bridge` tests, `runtime:validate-host`, and `runtime:validate-vendors`, and completed agent-operated readback QA over live bucket, cache, override, and route-selection surfaces
+- What was not done:
+  - no controller-guided routing or judging, broader hybrid arbitration policy, automatic config mutation from recommendations, or runtime UI implementation shipped in this run
+- Known issues / follow-ups:
+  - advisory recommendations remain explicit but will continue to report `recommendedMaxDifficulty = null` until enough per-bucket samples accumulate to clear the configured `minSamples` threshold
+  - later runs still need controller-guided routing and judging, richer hybrid policy arbitration, operator UI surfaces, and final integrated runtime verification on top of this stateful learning baseline

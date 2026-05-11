@@ -4,11 +4,15 @@ import { DatabaseSync } from "node:sqlite";
 import { randomUUID } from "node:crypto";
 
 import type { ObservedPerformanceProfile } from "@role-model/protocol-types";
-import type { ObservedPerformanceSample } from "@role-model-router/profile-aggregator";
+import {
+  aggregateObservedPerformanceSamples,
+  type ObservedPerformanceSample,
+} from "@role-model-router/profile-aggregator";
 import type { ProviderAccountRecord } from "@role-model-router/provider-account";
 
 const INITIAL_MIGRATION_ID = "run06-v1-initial-schema";
 const CURRENT_SCHEMA_VERSION = 1;
+const DIFFICULTY_BUCKETS = ["easy", "medium", "hard"] as const;
 const MAINTENANCE_DEFAULTS = [
   { key: "backup.policy", value: "wal-copy-on-demand" },
   { key: "deletion.policy", value: "explicit-export-delete" },
@@ -129,6 +133,28 @@ CREATE TABLE IF NOT EXISTS observed_performance_samples (
 CREATE TABLE IF NOT EXISTS observed_profile_snapshots (
   snapshot_id TEXT PRIMARY KEY,
   endpoint_id TEXT NOT NULL,
+  measured_at_ms INTEGER NOT NULL,
+  profile_json TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS difficulty_classification_cache (
+  conversation_id TEXT PRIMARY KEY,
+  cache_json TEXT NOT NULL,
+  updated_at_ms INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS observed_performance_samples_by_difficulty (
+  sample_id TEXT PRIMARY KEY,
+  endpoint_id TEXT NOT NULL,
+  difficulty_bucket TEXT NOT NULL,
+  request_id TEXT,
+  routing_decision_id TEXT,
+  source_type TEXT NOT NULL,
+  timestamp_ms INTEGER NOT NULL,
+  sample_json TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS observed_profile_snapshots_by_difficulty (
+  snapshot_id TEXT PRIMARY KEY,
+  endpoint_id TEXT NOT NULL,
+  difficulty_bucket TEXT NOT NULL,
   measured_at_ms INTEGER NOT NULL,
   profile_json TEXT NOT NULL
 );
@@ -362,16 +388,78 @@ export interface ReadRuntimeObservationBundleInput {
 export interface ReadObservedPerformanceSamplesInput {
   readonly databasePath: string;
   readonly endpointId: string;
+  readonly difficultyBucket?: "easy" | "medium" | "hard";
 }
 
 export interface ReadLatestObservedProfileInput {
   readonly databasePath: string;
   readonly endpointId: string;
+  readonly difficultyBucket?: "easy" | "medium" | "hard";
 }
 
 export interface ReadLatestObservedProfilesByEndpointIdsInput {
   readonly databasePath: string;
   readonly endpointIds: readonly string[];
+  readonly difficultyBucket?: "easy" | "medium" | "hard";
+}
+
+export interface AdvisoryMaxDifficultyThresholds {
+  readonly minSamples: number;
+  readonly maxFailureRate: number;
+  readonly minQualityScore: number;
+  readonly minTokensPerSec: number;
+}
+
+export type AdvisoryMaxDifficultyRejectionReason =
+  | "no-profile"
+  | "min-samples"
+  | "max-failure-rate"
+  | "min-quality-score"
+  | "min-tokens-per-sec";
+
+export interface AdvisoryMaxDifficultyEvaluation {
+  readonly eligible: boolean;
+  readonly rejectionReasons: readonly AdvisoryMaxDifficultyRejectionReason[];
+  readonly profile: ObservedPerformanceProfile | null;
+}
+
+export interface ReadAdvisoryMaxDifficultyRecommendationInput {
+  readonly databasePath: string;
+  readonly endpointId: string;
+  readonly thresholds: AdvisoryMaxDifficultyThresholds;
+}
+
+export interface AdvisoryMaxDifficultyRecommendation {
+  readonly recommendedMaxDifficulty: "easy" | "medium" | "hard" | null;
+  readonly thresholds: AdvisoryMaxDifficultyThresholds;
+  readonly evaluations: Record<"easy" | "medium" | "hard", AdvisoryMaxDifficultyEvaluation>;
+}
+
+export interface DifficultyClassificationCacheRecord {
+  readonly conversationId: string;
+  readonly difficulty: "easy" | "medium" | "hard";
+  readonly fallbackApplied: boolean;
+  readonly fallbackReason?: string;
+  readonly cachedAtMs: number;
+  readonly expiresAtMs: number;
+  readonly rubricSignals: {
+    readonly contextTokens: number;
+    readonly toolCount: number;
+    readonly historyTurnCount: number;
+    readonly instructionConstraintCount: number;
+    readonly decompositionKeywordCount: number;
+    readonly codeOrSchemaBurden: boolean;
+  };
+}
+
+export interface UpsertDifficultyClassificationCacheInput {
+  readonly databasePath: string;
+  readonly cache: DifficultyClassificationCacheRecord;
+}
+
+export interface ReadDifficultyClassificationCacheInput {
+  readonly databasePath: string;
+  readonly conversationId: string;
 }
 
 export interface ReadRuntimeMaintenancePolicyInput {
@@ -1438,6 +1526,10 @@ function sampleIdFor(sample: ObservedPerformanceSample): string {
   return sample.request_id ?? `${sample.endpoint_id}:${sample.timestamp_ms}:${sample.source_type}`;
 }
 
+function segmentedSampleIdFor(sample: ObservedPerformanceSample): string {
+  return `${sampleIdFor(sample)}:${sample.difficulty_bucket ?? "unknown"}`;
+}
+
 function roundMetric(value: number): number {
   return Number(value.toFixed(6));
 }
@@ -1738,6 +1830,45 @@ export function persistRuntimeObservationBundle(input: PersistRuntimeObservation
       observation.observedPerformance.sample.timestamp_ms,
       JSON.stringify(observation.observedPerformance.sample),
     );
+  if (observation.observedPerformance.sample.difficulty_bucket) {
+    const difficultyBucket = observation.observedPerformance.sample.difficulty_bucket;
+    database
+      .prepare(
+        "INSERT OR REPLACE INTO observed_performance_samples_by_difficulty (sample_id, endpoint_id, difficulty_bucket, request_id, routing_decision_id, source_type, timestamp_ms, sample_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      )
+      .run(
+        segmentedSampleIdFor(observation.observedPerformance.sample),
+        observation.endpointId,
+        difficultyBucket,
+        observation.observedPerformance.sample.request_id ?? null,
+        observation.observedPerformance.sample.routing_decision_id ?? null,
+        observation.observedPerformance.sample.source_type,
+        observation.observedPerformance.sample.timestamp_ms,
+        JSON.stringify(observation.observedPerformance.sample),
+      );
+    const priorBucketRows = database
+      .prepare(
+        "SELECT sample_json FROM observed_performance_samples_by_difficulty WHERE endpoint_id = ? AND difficulty_bucket = ? ORDER BY timestamp_ms ASC, sample_id ASC",
+      )
+      .all(observation.endpointId, difficultyBucket) as Array<{
+      sample_json: string;
+    }>;
+    const bucketSamples = priorBucketRows.map((row) => JSON.parse(row.sample_json) as ObservedPerformanceSample);
+    const bucketProfile = aggregateObservedPerformanceSamples(bucketSamples, {
+      nowMs: observation.observedPerformance.sample.timestamp_ms,
+    });
+    database
+      .prepare(
+        "INSERT OR REPLACE INTO observed_profile_snapshots_by_difficulty (snapshot_id, endpoint_id, difficulty_bucket, measured_at_ms, profile_json) VALUES (?, ?, ?, ?, ?)",
+      )
+      .run(
+        `${observation.endpointId}:${difficultyBucket}:${bucketProfile.measured_at_ms}`,
+        observation.endpointId,
+        difficultyBucket,
+        bucketProfile.measured_at_ms,
+        JSON.stringify(bucketProfile),
+      );
+  }
   database
     .prepare(
       "INSERT OR REPLACE INTO observed_profile_snapshots (snapshot_id, endpoint_id, measured_at_ms, profile_json) VALUES (?, ?, ?, ?)",
@@ -1811,11 +1942,17 @@ export function readObservedPerformanceSamples(
   input: ReadObservedPerformanceSamplesInput,
 ): readonly ObservedPerformanceSample[] {
   const database = new DatabaseSync(input.databasePath);
-  const rows = database
-    .prepare(
-      "SELECT sample_json FROM observed_performance_samples WHERE endpoint_id = ? ORDER BY timestamp_ms ASC, sample_id ASC",
-    )
-    .all(input.endpointId) as Array<{
+  const rows = (input.difficultyBucket
+    ? database
+        .prepare(
+          "SELECT sample_json FROM observed_performance_samples_by_difficulty WHERE endpoint_id = ? AND difficulty_bucket = ? ORDER BY timestamp_ms ASC, sample_id ASC",
+        )
+        .all(input.endpointId, input.difficultyBucket)
+    : database
+        .prepare(
+          "SELECT sample_json FROM observed_performance_samples WHERE endpoint_id = ? ORDER BY timestamp_ms ASC, sample_id ASC",
+        )
+        .all(input.endpointId)) as Array<{
     sample_json: string;
   }>;
   database.close();
@@ -1827,11 +1964,17 @@ export function readLatestObservedProfile(
   input: ReadLatestObservedProfileInput,
 ): ObservedPerformanceProfile | null {
   const database = new DatabaseSync(input.databasePath);
-  const row = database
-    .prepare(
-      "SELECT profile_json FROM observed_profile_snapshots WHERE endpoint_id = ? ORDER BY measured_at_ms DESC, snapshot_id DESC LIMIT 1",
-    )
-    .get(input.endpointId) as
+  const row = (input.difficultyBucket
+    ? database
+        .prepare(
+          "SELECT profile_json FROM observed_profile_snapshots_by_difficulty WHERE endpoint_id = ? AND difficulty_bucket = ? ORDER BY measured_at_ms DESC, snapshot_id DESC LIMIT 1",
+        )
+        .get(input.endpointId, input.difficultyBucket)
+    : database
+        .prepare(
+          "SELECT profile_json FROM observed_profile_snapshots WHERE endpoint_id = ? ORDER BY measured_at_ms DESC, snapshot_id DESC LIMIT 1",
+        )
+        .get(input.endpointId)) as
     | {
         profile_json: string;
       }
@@ -1850,11 +1993,17 @@ export function readLatestObservedProfilesByEndpointIds(
 
   const database = new DatabaseSync(input.databasePath);
   const placeholders = input.endpointIds.map(() => "?").join(", ");
-  const rows = database
-    .prepare(
-      `SELECT endpoint_id, profile_json FROM observed_profile_snapshots WHERE endpoint_id IN (${placeholders}) ORDER BY measured_at_ms DESC, snapshot_id DESC`,
-    )
-    .all(...input.endpointIds) as Array<{
+  const rows = (input.difficultyBucket
+    ? database
+        .prepare(
+          `SELECT endpoint_id, profile_json FROM observed_profile_snapshots_by_difficulty WHERE endpoint_id IN (${placeholders}) AND difficulty_bucket = ? ORDER BY measured_at_ms DESC, snapshot_id DESC`,
+        )
+        .all(...input.endpointIds, input.difficultyBucket)
+    : database
+        .prepare(
+          `SELECT endpoint_id, profile_json FROM observed_profile_snapshots WHERE endpoint_id IN (${placeholders}) ORDER BY measured_at_ms DESC, snapshot_id DESC`,
+        )
+        .all(...input.endpointIds)) as Array<{
     endpoint_id: string;
     profile_json: string;
   }>;
@@ -1867,6 +2016,98 @@ export function readLatestObservedProfilesByEndpointIds(
     }
   }
   return latestProfilesByEndpointId;
+}
+
+function evaluateAdvisoryMaxDifficultyProfile(
+  profile: ObservedPerformanceProfile | null,
+  thresholds: AdvisoryMaxDifficultyThresholds,
+): AdvisoryMaxDifficultyEvaluation {
+  if (!profile) {
+    return {
+      eligible: false,
+      rejectionReasons: ["no-profile"],
+      profile: null,
+    };
+  }
+
+  const rejectionReasons: AdvisoryMaxDifficultyRejectionReason[] = [];
+  if (profile.sample_size < thresholds.minSamples) {
+    rejectionReasons.push("min-samples");
+  }
+  if (profile.failure_rate > thresholds.maxFailureRate) {
+    rejectionReasons.push("max-failure-rate");
+  }
+  if (
+    typeof profile.quality_score === "number" &&
+    profile.quality_score < thresholds.minQualityScore
+  ) {
+    rejectionReasons.push("min-quality-score");
+  }
+  if (
+    typeof profile.tokens_per_sec === "number" &&
+    profile.tokens_per_sec < thresholds.minTokensPerSec
+  ) {
+    rejectionReasons.push("min-tokens-per-sec");
+  }
+
+  return {
+    eligible: rejectionReasons.length === 0,
+    rejectionReasons,
+    profile,
+  };
+}
+
+export function readAdvisoryMaxDifficultyRecommendation(
+  input: ReadAdvisoryMaxDifficultyRecommendationInput,
+): AdvisoryMaxDifficultyRecommendation {
+  const evaluations = Object.fromEntries(
+    DIFFICULTY_BUCKETS.map((difficultyBucket) => {
+      const profile = readLatestObservedProfile({
+        databasePath: input.databasePath,
+        endpointId: input.endpointId,
+        difficultyBucket,
+      });
+      return [difficultyBucket, evaluateAdvisoryMaxDifficultyProfile(profile, input.thresholds)];
+    }),
+  ) as AdvisoryMaxDifficultyRecommendation["evaluations"];
+
+  let recommendedMaxDifficulty: AdvisoryMaxDifficultyRecommendation["recommendedMaxDifficulty"] = null;
+  for (const difficultyBucket of DIFFICULTY_BUCKETS) {
+    if (evaluations[difficultyBucket].eligible) {
+      recommendedMaxDifficulty = difficultyBucket;
+    }
+  }
+
+  return {
+    recommendedMaxDifficulty,
+    thresholds: input.thresholds,
+    evaluations,
+  };
+}
+
+export function upsertDifficultyClassificationCache(input: UpsertDifficultyClassificationCacheInput): void {
+  const database = new DatabaseSync(input.databasePath);
+  database
+    .prepare(
+      "INSERT OR REPLACE INTO difficulty_classification_cache (conversation_id, cache_json, updated_at_ms) VALUES (?, ?, ?)",
+    )
+    .run(input.cache.conversationId, JSON.stringify(input.cache), input.cache.cachedAtMs);
+  database.close();
+}
+
+export function readDifficultyClassificationCache(
+  input: ReadDifficultyClassificationCacheInput,
+): DifficultyClassificationCacheRecord | null {
+  const database = new DatabaseSync(input.databasePath);
+  const row = database
+    .prepare("SELECT cache_json FROM difficulty_classification_cache WHERE conversation_id = ?")
+    .get(input.conversationId) as
+    | {
+        cache_json: string;
+      }
+    | undefined;
+  database.close();
+  return row ? (JSON.parse(row.cache_json) as DifficultyClassificationCacheRecord) : null;
 }
 
 export function listRecentRuntimeObservations(

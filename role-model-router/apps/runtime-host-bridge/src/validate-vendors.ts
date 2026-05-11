@@ -603,6 +603,7 @@ export async function runRuntimeVendorValidation(options: {
     hardVendorId: string | undefined;
     easyObservation: Awaited<ReturnType<RuntimeBridgeBackend["readRequestObservation"]>>;
     hardObservation: Awaited<ReturnType<RuntimeBridgeBackend["readRequestObservation"]>>;
+    repeatObservation: Awaited<ReturnType<RuntimeBridgeBackend["readRequestObservation"]>>;
   };
   aliasHybrid: {
     vendorId: string | undefined;
@@ -778,6 +779,71 @@ export async function runRuntimeVendorValidation(options: {
             },
             "req-runtime-vendor-hybrid-difficulty-hard",
           );
+          const hybridRepeatRuntime = await startRuntimeForConfig({
+            repoRoot: options.repoRoot,
+            runtimeStateRoot,
+            scopeId: `${scopePrefix}-hybrid-repeat`,
+            config: {
+              ...plan.hybridConfig,
+              observed_data: {
+                difficulty_learning: {
+                  invalidation: {
+                    max_context_tokens_delta: 4000,
+                    max_history_turn_delta: 4,
+                    max_tool_count_delta: 2,
+                    max_instruction_constraint_delta: 8,
+                    max_decomposition_keyword_delta: 8,
+                    reclassify_on_code_or_schema_change: false,
+                  },
+                },
+              },
+            },
+          });
+          let hybridDifficultyRepeatObservation: Awaited<
+            ReturnType<RuntimeBridgeBackend["readRequestObservation"]>
+          > | null = null;
+          try {
+            await hybridRepeatRuntime.backend.executeResponses(
+              {
+                model: plan.difficultyAliasModelId,
+                input:
+                  "Analyze this code-edit workflow, apply multiple constraints, verify the final contract end to end, and decompose the work before producing the answer.",
+                tools: [
+                  {
+                    type: "function",
+                    name: "readSchema",
+                    description: "Read the current schema before editing.",
+                    parameters: {
+                      type: "object",
+                      properties: {},
+                    },
+                  },
+                  {
+                    type: "function",
+                    name: "runTests",
+                    description: "Run the relevant verification suite after the change.",
+                    parameters: {
+                      type: "object",
+                      properties: {},
+                    },
+                  },
+                ],
+              },
+              "req-runtime-vendor-hybrid-repeat-seed-hard",
+            );
+            await hybridRepeatRuntime.backend.executeResponses(
+              {
+                model: plan.difficultyAliasModelId,
+                input: "Say hello in one sentence.",
+              },
+              "req-runtime-vendor-hybrid-difficulty-repeat",
+            );
+            hybridDifficultyRepeatObservation = await hybridRepeatRuntime.backend.readRequestObservation(
+              "req-runtime-vendor-hybrid-difficulty-repeat",
+            );
+          } finally {
+            await hybridRepeatRuntime.close();
+          }
           const healthResponse = await fetch(`${hybridRuntime.baseUrl}/healthz`);
           const telemetrySummary = await hybridRuntime.backend.readTelemetrySummary();
           const telemetryRows = await hybridRuntime.backend.listTelemetryComparisonRows();
@@ -831,6 +897,7 @@ export async function runRuntimeVendorValidation(options: {
               hardVendorId: hybridDifficultyHard.vendorId,
               easyObservation: hybridDifficultyEasyObservation,
               hardObservation: hybridDifficultyHardObservation,
+              repeatObservation: hybridDifficultyRepeatObservation,
             },
             aliasHybrid: {
               vendorId: hybridAlias.vendorId,

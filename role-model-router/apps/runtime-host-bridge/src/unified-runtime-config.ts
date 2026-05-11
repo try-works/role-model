@@ -71,6 +71,29 @@ export interface UnifiedRuntimeObservedDataConfig {
   readonly aggregation: {
     readonly minSamples: number;
   };
+  readonly difficultyLearning: {
+    readonly cacheTtlMs: number;
+    readonly invalidation: {
+      readonly maxContextTokensDelta: number;
+      readonly maxHistoryTurnDelta: number;
+      readonly maxToolCountDelta: number;
+      readonly maxInstructionConstraintDelta: number;
+      readonly maxDecompositionKeywordDelta: number;
+      readonly reclassifyOnCodeOrSchemaChange: boolean;
+    };
+    readonly override: {
+      readonly minSamples: number;
+      readonly maxFailureRate: number;
+      readonly minQualityScore: number;
+      readonly minTokensPerSec: number;
+    };
+    readonly recommendation: {
+      readonly minSamples: number;
+      readonly maxFailureRate: number;
+      readonly minQualityScore: number;
+      readonly minTokensPerSec: number;
+    };
+  };
   readonly metricHalflives: {
     readonly qualityMs: number;
     readonly latencyMs: number;
@@ -90,6 +113,29 @@ export const DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG: UnifiedRuntimeObserve
   enabled: true,
   aggregation: {
     minSamples: 2,
+  },
+  difficultyLearning: {
+    cacheTtlMs: 15 * 60_000,
+    invalidation: {
+      maxContextTokensDelta: 800,
+      maxHistoryTurnDelta: 2,
+      maxToolCountDelta: 1,
+      maxInstructionConstraintDelta: 3,
+      maxDecompositionKeywordDelta: 2,
+      reclassifyOnCodeOrSchemaChange: true,
+    },
+    override: {
+      minSamples: 3,
+      maxFailureRate: 0.35,
+      minQualityScore: 0.7,
+      minTokensPerSec: 18,
+    },
+    recommendation: {
+      minSamples: 4,
+      maxFailureRate: 0.2,
+      minQualityScore: 0.8,
+      minTokensPerSec: 22,
+    },
   },
   metricHalflives: {
     qualityMs: 15 * 60_000,
@@ -177,6 +223,29 @@ interface RawUnifiedRuntimeConfig {
     readonly enabled?: boolean;
     readonly aggregation?: {
       readonly min_samples?: number;
+    };
+    readonly difficulty_learning?: {
+      readonly cache_ttl_ms?: number;
+      readonly invalidation?: {
+        readonly max_context_tokens_delta?: number;
+        readonly max_history_turn_delta?: number;
+        readonly max_tool_count_delta?: number;
+        readonly max_instruction_constraint_delta?: number;
+        readonly max_decomposition_keyword_delta?: number;
+        readonly reclassify_on_code_or_schema_change?: boolean;
+      };
+      readonly override?: {
+        readonly min_samples?: number;
+        readonly max_failure_rate?: number;
+        readonly min_quality_score?: number;
+        readonly min_tokens_per_sec?: number;
+      };
+      readonly recommendation?: {
+        readonly min_samples?: number;
+        readonly max_failure_rate?: number;
+        readonly min_quality_score?: number;
+        readonly min_tokens_per_sec?: number;
+      };
     };
     readonly metric_halflives?: {
       readonly quality_ms?: number;
@@ -701,8 +770,50 @@ function normalizeObservedDataInput(
       : "throughput_sla" in value
         ? value.throughput_sla
         : undefined;
+  const difficultyLearningSource =
+    "difficultyLearning" in value
+      ? value.difficultyLearning
+      : "difficulty_learning" in value
+        ? value.difficulty_learning
+        : undefined;
   if (throughputSlaSource !== undefined) {
     ensureObject(throughputSlaSource, `${prefix}.throughput_sla must be an object.`);
+  }
+  if (difficultyLearningSource !== undefined) {
+    ensureObject(difficultyLearningSource, `${prefix}.difficulty_learning must be an object.`);
+  }
+  const invalidationSource =
+    difficultyLearningSource &&
+    typeof difficultyLearningSource === "object" &&
+    "invalidation" in difficultyLearningSource &&
+    difficultyLearningSource.invalidation &&
+    typeof difficultyLearningSource.invalidation === "object"
+      ? difficultyLearningSource.invalidation
+      : undefined;
+  if (invalidationSource !== undefined) {
+    ensureObject(invalidationSource, `${prefix}.difficulty_learning.invalidation must be an object.`);
+  }
+  const overrideSource =
+    difficultyLearningSource &&
+    typeof difficultyLearningSource === "object" &&
+    "override" in difficultyLearningSource &&
+    difficultyLearningSource.override &&
+    typeof difficultyLearningSource.override === "object"
+      ? difficultyLearningSource.override
+      : undefined;
+  if (overrideSource !== undefined) {
+    ensureObject(overrideSource, `${prefix}.difficulty_learning.override must be an object.`);
+  }
+  const recommendationSource =
+    difficultyLearningSource &&
+    typeof difficultyLearningSource === "object" &&
+    "recommendation" in difficultyLearningSource &&
+    difficultyLearningSource.recommendation &&
+    typeof difficultyLearningSource.recommendation === "object"
+      ? difficultyLearningSource.recommendation
+      : undefined;
+  if (recommendationSource !== undefined) {
+    ensureObject(recommendationSource, `${prefix}.difficulty_learning.recommendation must be an object.`);
   }
 
   return {
@@ -717,6 +828,149 @@ function normalizeObservedDataInput(
         `${prefix}.aggregation.min_samples`,
         DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG.aggregation.minSamples,
       ),
+    },
+    difficultyLearning: {
+      cacheTtlMs: readRequiredPositiveNumber(
+        difficultyLearningSource && "cacheTtlMs" in difficultyLearningSource
+          ? difficultyLearningSource.cacheTtlMs
+          : difficultyLearningSource && "cache_ttl_ms" in difficultyLearningSource
+            ? difficultyLearningSource.cache_ttl_ms
+            : undefined,
+        `${prefix}.difficulty_learning.cache_ttl_ms`,
+        DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG.difficultyLearning.cacheTtlMs,
+      ),
+      invalidation: {
+        maxContextTokensDelta: readRequiredPositiveNumber(
+          invalidationSource && "maxContextTokensDelta" in invalidationSource
+            ? invalidationSource.maxContextTokensDelta
+            : invalidationSource && "max_context_tokens_delta" in invalidationSource
+              ? invalidationSource.max_context_tokens_delta
+              : undefined,
+          `${prefix}.difficulty_learning.invalidation.max_context_tokens_delta`,
+          DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG.difficultyLearning.invalidation.maxContextTokensDelta,
+        ),
+        maxHistoryTurnDelta: readRequiredPositiveNumber(
+          invalidationSource && "maxHistoryTurnDelta" in invalidationSource
+            ? invalidationSource.maxHistoryTurnDelta
+            : invalidationSource && "max_history_turn_delta" in invalidationSource
+              ? invalidationSource.max_history_turn_delta
+              : undefined,
+          `${prefix}.difficulty_learning.invalidation.max_history_turn_delta`,
+          DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG.difficultyLearning.invalidation.maxHistoryTurnDelta,
+        ),
+        maxToolCountDelta: readRequiredPositiveNumber(
+          invalidationSource && "maxToolCountDelta" in invalidationSource
+            ? invalidationSource.maxToolCountDelta
+            : invalidationSource && "max_tool_count_delta" in invalidationSource
+              ? invalidationSource.max_tool_count_delta
+              : undefined,
+          `${prefix}.difficulty_learning.invalidation.max_tool_count_delta`,
+          DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG.difficultyLearning.invalidation.maxToolCountDelta,
+        ),
+        maxInstructionConstraintDelta: readRequiredPositiveNumber(
+          invalidationSource && "maxInstructionConstraintDelta" in invalidationSource
+            ? invalidationSource.maxInstructionConstraintDelta
+            : invalidationSource && "max_instruction_constraint_delta" in invalidationSource
+              ? invalidationSource.max_instruction_constraint_delta
+              : undefined,
+          `${prefix}.difficulty_learning.invalidation.max_instruction_constraint_delta`,
+          DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG.difficultyLearning.invalidation.maxInstructionConstraintDelta,
+        ),
+        maxDecompositionKeywordDelta: readRequiredPositiveNumber(
+          invalidationSource && "maxDecompositionKeywordDelta" in invalidationSource
+            ? invalidationSource.maxDecompositionKeywordDelta
+            : invalidationSource && "max_decomposition_keyword_delta" in invalidationSource
+              ? invalidationSource.max_decomposition_keyword_delta
+              : undefined,
+          `${prefix}.difficulty_learning.invalidation.max_decomposition_keyword_delta`,
+          DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG.difficultyLearning.invalidation.maxDecompositionKeywordDelta,
+        ),
+        reclassifyOnCodeOrSchemaChange:
+          readBoolean(
+            invalidationSource && "reclassifyOnCodeOrSchemaChange" in invalidationSource
+              ? invalidationSource.reclassifyOnCodeOrSchemaChange
+              : invalidationSource && "reclassify_on_code_or_schema_change" in invalidationSource
+                ? invalidationSource.reclassify_on_code_or_schema_change
+                : undefined,
+          ) ??
+          DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG.difficultyLearning.invalidation.reclassifyOnCodeOrSchemaChange,
+      },
+      override: {
+        minSamples: readRequiredPositiveNumber(
+          overrideSource && "minSamples" in overrideSource
+            ? overrideSource.minSamples
+            : overrideSource && "min_samples" in overrideSource
+              ? overrideSource.min_samples
+              : undefined,
+          `${prefix}.difficulty_learning.override.min_samples`,
+          DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG.difficultyLearning.override.minSamples,
+        ),
+        maxFailureRate: readPenaltyFactor(
+          overrideSource && "maxFailureRate" in overrideSource
+            ? overrideSource.maxFailureRate
+            : overrideSource && "max_failure_rate" in overrideSource
+              ? overrideSource.max_failure_rate
+              : undefined,
+          `${prefix}.difficulty_learning.override.max_failure_rate`,
+          DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG.difficultyLearning.override.maxFailureRate,
+        ),
+        minQualityScore: readPenaltyFactor(
+          overrideSource && "minQualityScore" in overrideSource
+            ? overrideSource.minQualityScore
+            : overrideSource && "min_quality_score" in overrideSource
+              ? overrideSource.min_quality_score
+              : undefined,
+          `${prefix}.difficulty_learning.override.min_quality_score`,
+          DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG.difficultyLearning.override.minQualityScore,
+        ),
+        minTokensPerSec: readRequiredPositiveNumber(
+          overrideSource && "minTokensPerSec" in overrideSource
+            ? overrideSource.minTokensPerSec
+            : overrideSource && "min_tokens_per_sec" in overrideSource
+              ? overrideSource.min_tokens_per_sec
+              : undefined,
+          `${prefix}.difficulty_learning.override.min_tokens_per_sec`,
+          DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG.difficultyLearning.override.minTokensPerSec,
+        ),
+      },
+      recommendation: {
+        minSamples: readRequiredPositiveNumber(
+          recommendationSource && "minSamples" in recommendationSource
+            ? recommendationSource.minSamples
+            : recommendationSource && "min_samples" in recommendationSource
+              ? recommendationSource.min_samples
+              : undefined,
+          `${prefix}.difficulty_learning.recommendation.min_samples`,
+          DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG.difficultyLearning.recommendation.minSamples,
+        ),
+        maxFailureRate: readPenaltyFactor(
+          recommendationSource && "maxFailureRate" in recommendationSource
+            ? recommendationSource.maxFailureRate
+            : recommendationSource && "max_failure_rate" in recommendationSource
+              ? recommendationSource.max_failure_rate
+              : undefined,
+          `${prefix}.difficulty_learning.recommendation.max_failure_rate`,
+          DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG.difficultyLearning.recommendation.maxFailureRate,
+        ),
+        minQualityScore: readPenaltyFactor(
+          recommendationSource && "minQualityScore" in recommendationSource
+            ? recommendationSource.minQualityScore
+            : recommendationSource && "min_quality_score" in recommendationSource
+              ? recommendationSource.min_quality_score
+              : undefined,
+          `${prefix}.difficulty_learning.recommendation.min_quality_score`,
+          DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG.difficultyLearning.recommendation.minQualityScore,
+        ),
+        minTokensPerSec: readRequiredPositiveNumber(
+          recommendationSource && "minTokensPerSec" in recommendationSource
+            ? recommendationSource.minTokensPerSec
+            : recommendationSource && "min_tokens_per_sec" in recommendationSource
+              ? recommendationSource.min_tokens_per_sec
+              : undefined,
+          `${prefix}.difficulty_learning.recommendation.min_tokens_per_sec`,
+          DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG.difficultyLearning.recommendation.minTokensPerSec,
+        ),
+      },
     },
     metricHalflives: {
       qualityMs: readRequiredPositiveNumber(
@@ -1048,6 +1302,32 @@ export function renderUnifiedRuntimeConfigText(config: UnifiedRuntimeConfig): st
       enabled: config.observedData.enabled,
       aggregation: {
         min_samples: config.observedData.aggregation.minSamples,
+      },
+      difficulty_learning: {
+        cache_ttl_ms: config.observedData.difficultyLearning.cacheTtlMs,
+        invalidation: {
+          max_context_tokens_delta: config.observedData.difficultyLearning.invalidation.maxContextTokensDelta,
+          max_history_turn_delta: config.observedData.difficultyLearning.invalidation.maxHistoryTurnDelta,
+          max_tool_count_delta: config.observedData.difficultyLearning.invalidation.maxToolCountDelta,
+          max_instruction_constraint_delta:
+            config.observedData.difficultyLearning.invalidation.maxInstructionConstraintDelta,
+          max_decomposition_keyword_delta:
+            config.observedData.difficultyLearning.invalidation.maxDecompositionKeywordDelta,
+          reclassify_on_code_or_schema_change:
+            config.observedData.difficultyLearning.invalidation.reclassifyOnCodeOrSchemaChange,
+        },
+        override: {
+          min_samples: config.observedData.difficultyLearning.override.minSamples,
+          max_failure_rate: config.observedData.difficultyLearning.override.maxFailureRate,
+          min_quality_score: config.observedData.difficultyLearning.override.minQualityScore,
+          min_tokens_per_sec: config.observedData.difficultyLearning.override.minTokensPerSec,
+        },
+        recommendation: {
+          min_samples: config.observedData.difficultyLearning.recommendation.minSamples,
+          max_failure_rate: config.observedData.difficultyLearning.recommendation.maxFailureRate,
+          min_quality_score: config.observedData.difficultyLearning.recommendation.minQualityScore,
+          min_tokens_per_sec: config.observedData.difficultyLearning.recommendation.minTokensPerSec,
+        },
       },
       metric_halflives: {
         quality_ms: config.observedData.metricHalflives.qualityMs,

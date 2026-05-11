@@ -47,16 +47,19 @@ import {
   persistRuntimeObservationBundle,
   persistRetrievalReceipt,
   listRecentRuntimeObservations,
+  readAdvisoryMaxDifficultyRecommendation,
   readConversationContinuity,
   readLatestObservedProfile,
   readLatestObservedProfilesByEndpointIds,
   readObservedPerformanceSamples,
   readObservedThroughputPenaltyState,
   readProviderDeviceAuthSession,
+  readDifficultyClassificationCache,
   readRuntimeMaintenancePolicy,
   readRuntimeControllerAssignment,
   readRuntimeObservationBundle,
   readRuntimeTelemetrySummary,
+  upsertDifficultyClassificationCache,
   upsertObservedThroughputPenaltyState,
   upsertProviderDeviceAuthSession,
   upsertProviderAccount as upsertSqliteProviderAccount,
@@ -213,9 +216,15 @@ export interface BridgeExecutionPlan {
 interface BridgeDifficultyRoutingContext {
   readonly difficultyClassifier?: UnifiedRuntimeDifficultyClassifierConfig;
   readonly endpointMaxDifficultyByEndpointId?: Readonly<Record<string, UnifiedRuntimeDifficultyBucket>>;
+  readonly overrideRecommendedMaxDifficultyByEndpointId?: Readonly<
+    Record<string, UnifiedRuntimeDifficultyBucket>
+  >;
   readonly resolvedClassification?: {
     readonly difficulty: UnifiedRuntimeDifficultyBucket;
     readonly fallbackApplied: boolean;
+    readonly cacheHit?: boolean;
+    readonly cacheInvalidated?: boolean;
+    readonly cacheInvalidationReasons?: readonly string[];
     readonly fallbackReason?: string;
     readonly rubricSignals: DifficultyRoutingSignals;
   };
@@ -334,6 +343,56 @@ function createDifficultyFallbackResult(input: {
   };
 }
 
+function getDifficultyCacheInvalidationReasons(input: {
+  readonly cachedSignals: DifficultyRoutingSignals;
+  readonly currentSignals: DifficultyRoutingSignals;
+  readonly invalidation: ReturnType<typeof resolveUnifiedRuntimeObservedDataConfig>["difficultyLearning"]["invalidation"];
+}): readonly string[] {
+  const reasons: string[] = [];
+  if (
+    input.invalidation.reclassifyOnCodeOrSchemaChange &&
+    input.cachedSignals.codeOrSchemaBurden !== input.currentSignals.codeOrSchemaBurden
+  ) {
+    reasons.push("code-or-schema-change");
+  }
+  if (
+    Math.abs(input.cachedSignals.contextTokens - input.currentSignals.contextTokens) >
+    input.invalidation.maxContextTokensDelta
+  ) {
+    reasons.push("context-tokens-delta");
+  }
+  if (
+    Math.abs(input.cachedSignals.historyTurnCount - input.currentSignals.historyTurnCount) >
+    input.invalidation.maxHistoryTurnDelta
+  ) {
+    reasons.push("history-turn-delta");
+  }
+  if (Math.abs(input.cachedSignals.toolCount - input.currentSignals.toolCount) > input.invalidation.maxToolCountDelta) {
+    reasons.push("tool-count-delta");
+  }
+  if (
+    Math.abs(input.cachedSignals.instructionConstraintCount - input.currentSignals.instructionConstraintCount) >
+    input.invalidation.maxInstructionConstraintDelta
+  ) {
+    reasons.push("instruction-constraint-delta");
+  }
+  if (
+    Math.abs(input.cachedSignals.decompositionKeywordCount - input.currentSignals.decompositionKeywordCount) >
+    input.invalidation.maxDecompositionKeywordDelta
+  ) {
+    reasons.push("decomposition-keyword-delta");
+  }
+  return reasons;
+}
+
+function canReuseDifficultyClassification(input: {
+  readonly cachedSignals: DifficultyRoutingSignals;
+  readonly currentSignals: DifficultyRoutingSignals;
+  readonly invalidation: ReturnType<typeof resolveUnifiedRuntimeObservedDataConfig>["difficultyLearning"]["invalidation"];
+}): boolean {
+  return getDifficultyCacheInvalidationReasons(input).length === 0;
+}
+
 function parseDifficultyBucket(value: unknown): UnifiedRuntimeDifficultyBucket | null {
   if (typeof value !== "string") {
     return null;
@@ -409,16 +468,35 @@ function filterEndpointsByDifficulty(input: {
   readonly allowEndpoints: readonly string[];
   readonly difficulty: UnifiedRuntimeDifficultyBucket;
   readonly endpointMaxDifficultyByEndpointId?: Readonly<Record<string, UnifiedRuntimeDifficultyBucket>>;
+  readonly overrideRecommendedMaxDifficultyByEndpointId?: Readonly<
+    Record<string, UnifiedRuntimeDifficultyBucket>
+  >;
 }): {
   readonly allowEndpoints: readonly string[];
   readonly excludedEndpointIds: readonly string[];
+  readonly overrideAppliedEndpointIds: readonly string[];
+  readonly overrideRecommendedMaxDifficultyByEndpointId: Readonly<
+    Record<string, UnifiedRuntimeDifficultyBucket>
+  >;
 } {
   const nextAllowed: string[] = [];
   const excludedEndpointIds: string[] = [];
+  const overrideAppliedEndpointIds: string[] = [];
+  const overrideRecommendedMaxDifficultyByEndpointId: Record<string, UnifiedRuntimeDifficultyBucket> = {};
   for (const endpointId of input.allowEndpoints) {
     const maxDifficulty = input.endpointMaxDifficultyByEndpointId?.[endpointId] ?? "hard";
     if (DIFFICULTY_BUCKET_ORDER[maxDifficulty] >= DIFFICULTY_BUCKET_ORDER[input.difficulty]) {
       nextAllowed.push(endpointId);
+      continue;
+    }
+    const overrideMaxDifficulty = input.overrideRecommendedMaxDifficultyByEndpointId?.[endpointId];
+    if (
+      overrideMaxDifficulty &&
+      DIFFICULTY_BUCKET_ORDER[overrideMaxDifficulty] >= DIFFICULTY_BUCKET_ORDER[input.difficulty]
+    ) {
+      nextAllowed.push(endpointId);
+      overrideAppliedEndpointIds.push(endpointId);
+      overrideRecommendedMaxDifficultyByEndpointId[endpointId] = overrideMaxDifficulty;
       continue;
     }
     excludedEndpointIds.push(endpointId);
@@ -426,7 +504,32 @@ function filterEndpointsByDifficulty(input: {
   return {
     allowEndpoints: nextAllowed,
     excludedEndpointIds,
+    overrideAppliedEndpointIds,
+    overrideRecommendedMaxDifficultyByEndpointId,
   };
+}
+
+function readObservedOverrideMaxDifficultyByEndpointId(input: {
+  readonly databasePath: string;
+  readonly endpointIds: readonly string[];
+  readonly observedDataConfig: ReturnType<typeof resolveUnifiedRuntimeObservedDataConfig>;
+}): Record<string, UnifiedRuntimeDifficultyBucket> {
+  if (!input.observedDataConfig.enabled) {
+    return {};
+  }
+
+  const recommendations: Record<string, UnifiedRuntimeDifficultyBucket> = {};
+  for (const endpointId of input.endpointIds) {
+    const recommendation = readAdvisoryMaxDifficultyRecommendation({
+      databasePath: input.databasePath,
+      endpointId,
+      thresholds: input.observedDataConfig.difficultyLearning.override,
+    });
+    if (recommendation.recommendedMaxDifficulty) {
+      recommendations[endpointId] = recommendation.recommendedMaxDifficulty;
+    }
+  }
+  return recommendations;
 }
 
 function maybeApplyDifficultyRouting(input: {
@@ -471,6 +574,8 @@ function maybeApplyDifficultyRouting(input: {
     allowEndpoints: input.allowEndpoints,
     difficulty: classified.difficulty,
     endpointMaxDifficultyByEndpointId: input.difficultyContext?.endpointMaxDifficultyByEndpointId,
+    overrideRecommendedMaxDifficultyByEndpointId:
+      input.difficultyContext?.overrideRecommendedMaxDifficultyByEndpointId,
   });
 
   return {
@@ -482,8 +587,22 @@ function maybeApplyDifficultyRouting(input: {
         difficulty: classified.difficulty,
         strategy,
         fallbackApplied: classified.fallbackApplied,
+        ...(classified.cacheHit ? { cacheHit: true } : {}),
+        ...(classified.cacheInvalidated ? { cacheInvalidated: true } : {}),
+        ...(classified.cacheInvalidationReasons?.length
+          ? { cacheInvalidationReasons: classified.cacheInvalidationReasons }
+          : {}),
         ...(classified.fallbackReason ? { fallbackReason: classified.fallbackReason } : {}),
         ...(gated.excludedEndpointIds.length > 0 ? { excludedEndpointIds: gated.excludedEndpointIds } : {}),
+        ...(gated.overrideAppliedEndpointIds.length
+          ? { overrideAppliedEndpointIds: gated.overrideAppliedEndpointIds }
+          : {}),
+        ...(Object.keys(gated.overrideRecommendedMaxDifficultyByEndpointId).length
+          ? {
+              overrideRecommendedMaxDifficultyByEndpointId:
+                gated.overrideRecommendedMaxDifficultyByEndpointId,
+            }
+          : {}),
         rubricSignals: classified.rubricSignals,
       },
     },
@@ -837,6 +956,7 @@ function readObservedProfilesForRouting(input: {
   readonly databasePath: string;
   readonly registry: EndpointRegistryResult;
   readonly observedDataConfig: ReturnType<typeof resolveUnifiedRuntimeObservedDataConfig>;
+  readonly difficultyBucket?: UnifiedRuntimeDifficultyBucket;
   readonly routingTimeMs: number;
 }): {
   readonly observedProfilesByEndpointId: Parameters<typeof routeRuntimeRequest>[0]["observedProfilesByEndpointId"];
@@ -849,10 +969,23 @@ function readObservedProfilesForRouting(input: {
   >;
 } {
   const endpointIds = [...new Set(input.registry.endpoints.map((endpoint) => endpoint.identity.endpoint_id))];
-  const latestProfilesByEndpointId = readLatestObservedProfilesByEndpointIds({
+  const endpointWideProfilesByEndpointId = readLatestObservedProfilesByEndpointIds({
     databasePath: input.databasePath,
     endpointIds,
   });
+  const difficultyBucketProfilesByEndpointId = input.difficultyBucket
+    ? readLatestObservedProfilesByEndpointIds({
+        databasePath: input.databasePath,
+        endpointIds,
+        difficultyBucket: input.difficultyBucket,
+      })
+    : {};
+  const latestProfilesByEndpointId = input.difficultyBucket
+    ? {
+        ...endpointWideProfilesByEndpointId,
+        ...difficultyBucketProfilesByEndpointId,
+      }
+    : endpointWideProfilesByEndpointId;
   const throughputPenaltyStateByEndpointId: NonNullable<
     Parameters<typeof routeRuntimeRequest>[0]["throughputPenaltyStateByEndpointId"]
   > = {};
@@ -864,6 +997,15 @@ function readObservedProfilesForRouting(input: {
         source: "runtime-state" as const,
         readMode: "per-request" as const,
         measuredAtMs: profile.measured_at_ms,
+        ...(input.difficultyBucket ? { difficultyBucket: input.difficultyBucket } : {}),
+        ...(input.difficultyBucket
+          ? {
+              bucketOverrideApplied: Object.prototype.hasOwnProperty.call(
+                difficultyBucketProfilesByEndpointId,
+                endpointId,
+              ),
+            }
+          : {}),
       },
     ]),
   );
@@ -3986,6 +4128,7 @@ export async function createRuntimeBridgeBackend(
       databasePath: initialization.databasePath,
       registry: currentRegistry,
       observedDataConfig,
+      difficultyBucket: plan.routingDiagnostics?.difficultyRouting?.difficulty,
       routingTimeMs,
     });
     let streamedChunkCount = 0;
@@ -4298,28 +4441,85 @@ export async function createRuntimeBridgeBackend(
       return undefined;
     }
 
+    const observedDataConfig = resolveUnifiedRuntimeObservedDataConfig(currentUnifiedRuntimeConfig);
+    const cachePolicy = observedDataConfig.difficultyLearning;
+    const conversationId = envelope.conversationId;
     const signals = summarizeDifficultySignals({
       messages: input.messages,
       contextTokens: input.contextTokens,
       toolCount: input.toolCount,
     });
-    if (signals.historyTurnCount === 0) {
-      return createDifficultyFallbackResult({
-        signals,
-        classifier: currentUnifiedRuntimeConfig?.difficultyClassifier,
-        reason: "missing-request-content",
+    const nowMs = Date.now();
+    const cachedClassification = readDifficultyClassificationCache({
+      databasePath: initialization.databasePath,
+      conversationId,
+    });
+    const cacheInvalidationReasons = cachedClassification
+      ? [
+          ...(cachedClassification.expiresAtMs < nowMs ? (["expired"] as const) : []),
+          ...getDifficultyCacheInvalidationReasons({
+            cachedSignals: cachedClassification.rubricSignals,
+            currentSignals: signals,
+            invalidation: cachePolicy.invalidation,
+          }),
+        ]
+      : [];
+    if (
+      cachedClassification &&
+      cacheInvalidationReasons.length === 0
+    ) {
+      return {
+        difficulty: cachedClassification.difficulty,
+        fallbackApplied: cachedClassification.fallbackApplied,
+        ...(cachedClassification.fallbackReason ? { fallbackReason: cachedClassification.fallbackReason } : {}),
+        cacheHit: true,
+        rubricSignals: signals,
+      };
+    }
+    const persistResolvedClassification = (
+      classification: NonNullable<BridgeDifficultyRoutingContext["resolvedClassification"]>,
+    ): NonNullable<BridgeDifficultyRoutingContext["resolvedClassification"]> => {
+      upsertDifficultyClassificationCache({
+        databasePath: initialization.databasePath,
+        cache: {
+          conversationId,
+          difficulty: classification.difficulty,
+          fallbackApplied: classification.fallbackApplied,
+          ...(classification.fallbackReason ? { fallbackReason: classification.fallbackReason } : {}),
+          cachedAtMs: nowMs,
+          expiresAtMs: nowMs + cachePolicy.cacheTtlMs,
+          rubricSignals: signals,
+        },
       });
+      return {
+        ...classification,
+        ...(cacheInvalidationReasons.length
+          ? {
+              cacheInvalidated: true,
+              cacheInvalidationReasons,
+            }
+          : {}),
+      };
+    };
+    if (signals.historyTurnCount === 0) {
+      return persistResolvedClassification(
+        createDifficultyFallbackResult({
+          signals,
+          classifier: currentUnifiedRuntimeConfig?.difficultyClassifier,
+          reason: "missing-request-content",
+        }),
+      );
     }
 
     const classifier = currentUnifiedRuntimeConfig?.difficultyClassifier;
     if (!classifier?.enabled) {
-      return {
+      return persistResolvedClassification({
         ...classifyDifficultyFromSignals({
           signals,
           classifier,
         }),
         rubricSignals: signals,
-      };
+      });
     }
 
     const classifierAllowEndpoints = currentRegistry.endpoints
@@ -4332,11 +4532,13 @@ export async function createRuntimeBridgeBackend(
       .sort(compareText);
 
     if (classifierAllowEndpoints.length === 0) {
-      return createDifficultyFallbackResult({
-        signals,
-        classifier,
-        reason: "classifier-endpoint-unavailable",
-      });
+      return persistResolvedClassification(
+        createDifficultyFallbackResult({
+          signals,
+          classifier,
+          reason: "classifier-endpoint-unavailable",
+        }),
+      );
     }
 
     const classifierPlan: BridgeExecutionPlan = {
@@ -4377,25 +4579,29 @@ export async function createRuntimeBridgeBackend(
       ]);
       const difficulty = parseClassifierDifficultyOutput(classifierExecution.execution.normalized.outputText);
       if (!difficulty) {
-        return createDifficultyFallbackResult({
-          signals,
-          classifier,
-          reason: "invalid-classifier-output",
-        });
+        return persistResolvedClassification(
+          createDifficultyFallbackResult({
+            signals,
+            classifier,
+            reason: "invalid-classifier-output",
+          }),
+        );
       }
-      return {
+      return persistResolvedClassification({
         difficulty,
         fallbackApplied: false,
         rubricSignals: signals,
-      };
-    } catch (error) {
-      return createDifficultyFallbackResult({
-        signals,
-        classifier,
-        reason: error instanceof Error && error.message === "classifier-timeout"
-          ? "classifier-timeout"
-          : "classifier-execution-failed",
       });
+    } catch (error) {
+      return persistResolvedClassification(
+        createDifficultyFallbackResult({
+          signals,
+          classifier,
+          reason: error instanceof Error && error.message === "classifier-timeout"
+            ? "classifier-timeout"
+            : "classifier-execution-failed",
+        }),
+      );
     }
   };
 
@@ -4429,6 +4635,16 @@ export async function createRuntimeBridgeBackend(
         {
           difficultyClassifier: currentUnifiedRuntimeConfig?.difficultyClassifier,
           endpointMaxDifficultyByEndpointId: buildEndpointMaxDifficultyByEndpointId(currentUnifiedRuntimeConfig),
+          ...(resolvedDifficultyClassification
+            ? {
+                overrideRecommendedMaxDifficultyByEndpointId:
+                  readObservedOverrideMaxDifficultyByEndpointId({
+                    databasePath: initialization.databasePath,
+                    endpointIds: currentRegistry.endpoints.map((endpoint) => endpoint.identity.endpoint_id),
+                    observedDataConfig: resolveUnifiedRuntimeObservedDataConfig(currentUnifiedRuntimeConfig),
+                  }),
+              }
+            : {}),
           ...(resolvedDifficultyClassification
             ? { resolvedClassification: resolvedDifficultyClassification }
             : {}),
@@ -4505,6 +4721,16 @@ export async function createRuntimeBridgeBackend(
         {
           difficultyClassifier: currentUnifiedRuntimeConfig?.difficultyClassifier,
           endpointMaxDifficultyByEndpointId: buildEndpointMaxDifficultyByEndpointId(currentUnifiedRuntimeConfig),
+          ...(resolvedDifficultyClassification
+            ? {
+                overrideRecommendedMaxDifficultyByEndpointId:
+                  readObservedOverrideMaxDifficultyByEndpointId({
+                    databasePath: initialization.databasePath,
+                    endpointIds: currentRegistry.endpoints.map((endpoint) => endpoint.identity.endpoint_id),
+                    observedDataConfig: resolveUnifiedRuntimeObservedDataConfig(currentUnifiedRuntimeConfig),
+                  }),
+              }
+            : {}),
           ...(resolvedDifficultyClassification
             ? { resolvedClassification: resolvedDifficultyClassification }
             : {}),
@@ -5329,7 +5555,21 @@ export async function createRuntimeBridgeBackend(
       endpointId: string;
       latestProfile: ReturnType<typeof readLatestObservedProfile>;
       recentSamples: readonly ObservedPerformanceSample[];
+      difficultyProfiles: Record<UnifiedRuntimeDifficultyBucket, ReturnType<typeof readLatestObservedProfile>>;
+      advisoryMaxDifficultyRecommendation: ReturnType<typeof readAdvisoryMaxDifficultyRecommendation>;
     }> {
+      const observedDataConfig = resolveUnifiedRuntimeObservedDataConfig(currentUnifiedRuntimeConfig);
+      const difficultyProfiles = Object.fromEntries(
+        (["easy", "medium", "hard"] as const).map((difficultyBucket) => [
+          difficultyBucket,
+          readLatestObservedProfile({
+            databasePath: initialization.databasePath,
+            endpointId,
+            difficultyBucket,
+          }),
+        ]),
+      ) as Record<UnifiedRuntimeDifficultyBucket, ReturnType<typeof readLatestObservedProfile>>;
+
       return {
         endpointId,
         latestProfile: readLatestObservedProfile({
@@ -5339,6 +5579,12 @@ export async function createRuntimeBridgeBackend(
         recentSamples: readObservedPerformanceSamples({
           databasePath: initialization.databasePath,
           endpointId,
+        }),
+        difficultyProfiles,
+        advisoryMaxDifficultyRecommendation: readAdvisoryMaxDifficultyRecommendation({
+          databasePath: initialization.databasePath,
+          endpointId,
+          thresholds: observedDataConfig.difficultyLearning.recommendation,
         }),
       };
     },

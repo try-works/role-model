@@ -2,11 +2,13 @@ import { describe, expect, test } from "vitest";
 import os from "node:os";
 import path from "node:path";
 import { mkdtemp, writeFile } from "node:fs/promises";
+import { DatabaseSync } from "node:sqlite";
 import { setTimeout as delay } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
 import { stringify } from "yaml";
 
 import type { EndpointRegistryResult } from "@role-model-router/endpoint-registry";
+import { resolveSqliteMemoryLocation } from "@role-model-router/sqlite-memory";
 
 import * as bridge from "../src/index.js";
 
@@ -104,6 +106,10 @@ function createAliasRemoteVendorScript(): string {
 function createDifficultyClassifierVendorScript(mode: "valid-hard" | "slow-hard"): string {
   const responseDelayMs = mode === "slow-hard" ? 50 : 0;
   return `const http=require("node:http");const port=Number(process.env.PORT??process.argv[2]);const server=http.createServer((req,res)=>{if(req.url==="/health/liveliness"){res.statusCode=200;res.end("ok");return;}if(req.url==="/v1/chat/completions"){let body="";req.on("data",chunk=>body+=chunk);req.on("end",()=>{const parsed=JSON.parse(body||"{}");const joinedMessages=JSON.stringify(parsed.messages??[]);const isClassifier=joinedMessages.includes("ROLE_MODEL_DIFFICULTY_CLASSIFIER");const respond=()=>{res.setHeader("content-type","application/json");res.end(JSON.stringify({id:"chat-difficulty-remote",object:"chat.completion",choices:[{index:0,message:{role:"assistant",content:isClassifier?JSON.stringify({difficulty:\"hard\"}):"alias remote summary"},finish_reason:"stop"}],usage:{prompt_tokens:12,completion_tokens:4,total_tokens:16},_hidden_params:{response_cost:0.0012,cache_hit:false}}));};if(${responseDelayMs}>0){setTimeout(respond,${responseDelayMs});return;}respond();});return;}res.statusCode=404;res.end("missing");});server.listen(port,"127.0.0.1");const shutdown=()=>server.close(()=>process.exit(0));process.on("SIGTERM",shutdown);process.on("SIGINT",shutdown);`;
+}
+
+function createSequencedDifficultyClassifierVendorScript(): string {
+  return `const http=require("node:http");let classifierCalls=0;const port=Number(process.env.PORT??process.argv[2]);const server=http.createServer((req,res)=>{if(req.url==="/health/liveliness"){res.statusCode=200;res.end("ok");return;}if(req.url==="/v1/chat/completions"){let body="";req.on("data",chunk=>body+=chunk);req.on("end",()=>{const parsed=JSON.parse(body||"{}");const joinedMessages=JSON.stringify(parsed.messages??[]);const isClassifier=joinedMessages.includes("ROLE_MODEL_DIFFICULTY_CLASSIFIER");if(isClassifier){classifierCalls+=1;}const difficulty=isClassifier?(classifierCalls===1?"hard":"easy"):null;res.setHeader("content-type","application/json");res.end(JSON.stringify({id:"chat-difficulty-sequenced",object:"chat.completion",choices:[{index:0,message:{role:"assistant",content:isClassifier?JSON.stringify({difficulty}):"alias remote summary"},finish_reason:"stop"}],usage:{prompt_tokens:12,completion_tokens:4,total_tokens:16},_hidden_params:{response_cost:0.0012,cache_hit:false}}));});return;}res.statusCode=404;res.end("missing");});server.listen(port,"127.0.0.1");const shutdown=()=>server.close(()=>process.exit(0));process.on("SIGTERM",shutdown);process.on("SIGINT",shutdown);`;
 }
 
 describe("runtime-host-bridge", () => {
@@ -2405,6 +2411,408 @@ describe("runtime-host-bridge", () => {
     });
   });
 
+  test("allows an observed max-difficulty override when bucketed performance supports a harder request", async () => {
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-host-difficulty-override-tests-"));
+    const unifiedRuntimeConfigPath = path.join(runtimeStateRoot, "runtime-config.yaml");
+    await writeFile(
+      unifiedRuntimeConfigPath,
+      stringify({
+        version: "1.0",
+        observed_data: {
+          difficulty_learning: {
+            override: {
+              min_samples: 4,
+              max_failure_rate: 0.2,
+              min_quality_score: 0.8,
+              min_tokens_per_sec: 22,
+            },
+          },
+        },
+        difficulty_classifier: {
+          enabled: true,
+          rubric_version: "v1",
+          source_type: "remote",
+          model_id: "openai/gpt-4.1-mini-fast",
+          timeout_ms: 1500,
+          fallback_difficulty: "easy",
+        },
+        model_aliases: {
+          "gpt-5.4": {
+            mode: "difficulty",
+            model_ids: ["openai/gpt-4.1-mini-fast"],
+          },
+        },
+        litellm_proxy: {
+          command: "node",
+          args: ["-e", createDifficultyClassifierVendorScript("valid-hard")],
+          providers: {
+            openai: {
+              api_key: "${OPENAI_API_KEY}",
+              model_list: [
+                {
+                  model_name: "openai/gpt-4.1-mini-fast",
+                  max_difficulty: "easy",
+                  litellm_params: {
+                    model: "openai/gpt-4.1-mini",
+                  },
+                },
+              ],
+            },
+          },
+        },
+      }),
+      "utf8",
+    );
+
+    const scopeId = "runtime-host-difficulty-override-tests";
+    const backend = await (
+      bridge as {
+        createRuntimeBridgeBackend: (options: {
+          repoRoot: string;
+          fixtureRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+          unifiedRuntimeConfigPath: string;
+        }) => Promise<{
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+          ) => Promise<{
+            endpointId: string;
+          }>;
+          readRequestObservation: (requestId: string) => Promise<unknown>;
+        }>;
+      }
+    ).createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      runtimeStateRoot,
+      scopeId,
+      unifiedRuntimeConfigPath,
+    });
+
+    const databasePath = resolveSqliteMemoryLocation({
+      runtimeStateRoot,
+      scopeId,
+    });
+    const database = new DatabaseSync(databasePath);
+    database
+      .prepare(
+        "INSERT INTO observed_profile_snapshots_by_difficulty (snapshot_id, endpoint_id, difficulty_bucket, measured_at_ms, profile_json) VALUES (?, ?, ?, ?, ?)",
+      )
+      .run(
+        "override-hard-profile",
+        "openai.litellm.global.openai-gpt-4-1-mini-fast",
+        "hard",
+        10_000,
+        JSON.stringify({
+          endpoint_id: "openai.litellm.global.openai-gpt-4-1-mini-fast",
+          endpoint_version: "run27-override-v1",
+          measured_at_ms: 10_000,
+          measurement_window: {
+            started_at_ms: 1_000,
+            ended_at_ms: 2_000,
+          },
+          sample_size: 4,
+          sources: {
+            live_request_samples: 4,
+            benchmark_samples: 0,
+          },
+          latency_ms_p50: 410,
+          latency_ms_p95: 690,
+          failure_rate: 0.08,
+          freshness_score: 0.97,
+          confidence_score: 0.95,
+          quality_score: 0.84,
+          tokens_per_sec: 25,
+          cost_per_1k_tokens_est: 1.1,
+          currency: "USD",
+        }),
+      );
+    database.close();
+
+    const requestId = "req-runtime-bridge-difficulty-override-001";
+    await expect(
+      backend.executeChatCompletions(
+        {
+          model: "gpt-5.4",
+          messages: [
+            { role: "system", content: "Preserve strict schema compatibility." },
+            {
+              role: "user",
+              content:
+                "Analyze this code-edit workflow, apply multiple constraints, use the available tools, and verify the final contract end to end.",
+            },
+            { role: "assistant", content: "I will inspect the schema and update the implementation carefully." },
+            {
+              role: "user",
+              content:
+                "Now finish the refactor, update the tests, and validate the final output against the schema.",
+            },
+          ],
+          tools: [
+            {
+              type: "function",
+              function: {
+                name: "readSchema",
+                parameters: { type: "object", properties: {} },
+              },
+            },
+            {
+              type: "function",
+              function: {
+                name: "runTests",
+                parameters: { type: "object", properties: {} },
+              },
+            },
+          ],
+        },
+        requestId,
+      ),
+    ).resolves.toMatchObject({
+      endpointId: "openai.litellm.global.openai-gpt-4-1-mini-fast",
+    });
+
+    await expect(backend.readRequestObservation(requestId)).resolves.toMatchObject({
+      requestId,
+      routingDiagnostics: {
+        difficultyRouting: expect.objectContaining({
+          difficulty: "hard",
+          strategy: "quality",
+          fallbackApplied: false,
+          overrideAppliedEndpointIds: ["openai.litellm.global.openai-gpt-4-1-mini-fast"],
+          overrideRecommendedMaxDifficultyByEndpointId: {
+            "openai.litellm.global.openai-gpt-4-1-mini-fast": "hard",
+          },
+        }),
+      },
+    });
+  });
+
+  test("routes hard requests using bucketed observed profiles and records the selected difficulty bucket", async () => {
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-host-difficulty-bucket-tests-"));
+    const unifiedRuntimeConfigPath = path.join(runtimeStateRoot, "runtime-config.yaml");
+    await writeFile(
+      unifiedRuntimeConfigPath,
+      stringify({
+        version: "1.0",
+        difficulty_classifier: {
+          enabled: true,
+          rubric_version: "v1",
+          source_type: "remote",
+          model_id: "openai/gpt-4.1-mini-fast",
+          timeout_ms: 1500,
+          fallback_difficulty: "easy",
+        },
+        model_aliases: {
+          "gpt-5.4": {
+            mode: "difficulty",
+            model_ids: ["openai/gpt-4.1-mini-fast", "claude-3.7-sonnet"],
+          },
+        },
+        litellm_proxy: {
+          command: "node",
+          args: ["-e", createDifficultyClassifierVendorScript("valid-hard")],
+          providers: {
+            openai: {
+              api_key: "${OPENAI_API_KEY}",
+              model_list: [
+                {
+                  model_name: "openai/gpt-4.1-mini-fast",
+                  max_difficulty: "hard",
+                  litellm_params: {
+                    model: "openai/gpt-4.1-mini",
+                  },
+                },
+              ],
+            },
+            anthropic: {
+              api_key: "${ANTHROPIC_API_KEY}",
+              model_list: [
+                {
+                  model_name: "claude-3.7-sonnet",
+                  max_difficulty: "hard",
+                  litellm_params: {
+                    model: "anthropic/claude-3.7-sonnet",
+                  },
+                },
+              ],
+            },
+          },
+        },
+      }),
+      "utf8",
+    );
+
+    const scopeId = "runtime-host-difficulty-bucket-tests";
+    const backend = await (
+      bridge as {
+        createRuntimeBridgeBackend: (options: {
+          repoRoot: string;
+          fixtureRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+          unifiedRuntimeConfigPath: string;
+        }) => Promise<{
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+          ) => Promise<{
+            endpointId: string;
+          }>;
+          readRequestObservation: (requestId: string) => Promise<unknown>;
+        }>;
+      }
+    ).createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      runtimeStateRoot,
+      scopeId,
+      unifiedRuntimeConfigPath,
+    });
+
+    const databasePath = resolveSqliteMemoryLocation({
+      runtimeStateRoot,
+      scopeId,
+    });
+    const database = new DatabaseSync(databasePath);
+    const insertProfile = database.prepare(
+      "INSERT INTO observed_profile_snapshots (snapshot_id, endpoint_id, measured_at_ms, profile_json) VALUES (?, ?, ?, ?)",
+    );
+    const insertBucketedProfile = database.prepare(
+      "INSERT INTO observed_profile_snapshots_by_difficulty (snapshot_id, endpoint_id, difficulty_bucket, measured_at_ms, profile_json) VALUES (?, ?, ?, ?, ?)",
+    );
+    const buildProfile = (
+      endpointId: string,
+      measuredAtMs: number,
+      qualityScore: number,
+      failureRate: number,
+      tokensPerSec: number,
+      latencyMsP50: number,
+      latencyMsP95: number,
+    ) => ({
+      endpoint_id: endpointId,
+      endpoint_version: "run27-bucket-v1",
+      measured_at_ms: measuredAtMs,
+      measurement_window: {
+        started_at_ms: measuredAtMs - 1_000,
+        ended_at_ms: measuredAtMs,
+      },
+      sample_size: 5,
+      sources: {
+        live_request_samples: 5,
+        benchmark_samples: 0,
+      },
+      latency_ms_p50: latencyMsP50,
+      latency_ms_p95: latencyMsP95,
+      failure_rate: failureRate,
+      freshness_score: 0.97,
+      confidence_score: 0.95,
+      quality_score: qualityScore,
+      tokens_per_sec: tokensPerSec,
+      cost_per_1k_tokens_est: 1,
+      currency: "USD",
+    });
+
+    insertProfile.run(
+      "bucket-endpoint-openai",
+      "openai.litellm.global.openai-gpt-4-1-mini-fast",
+      10_000,
+      JSON.stringify(
+        buildProfile("openai.litellm.global.openai-gpt-4-1-mini-fast", 10_000, 0.96, 0.02, 36, 180, 280),
+      ),
+    );
+    insertProfile.run(
+      "bucket-endpoint-anthropic",
+      "anthropic.litellm.global.claude-3-7-sonnet",
+      10_100,
+      JSON.stringify(
+        buildProfile("anthropic.litellm.global.claude-3-7-sonnet", 10_100, 0.42, 0.05, 12, 700, 980),
+      ),
+    );
+    insertBucketedProfile.run(
+      "bucket-hard-openai",
+      "openai.litellm.global.openai-gpt-4-1-mini-fast",
+      "hard",
+      11_000,
+      JSON.stringify(
+        buildProfile("openai.litellm.global.openai-gpt-4-1-mini-fast", 11_000, 0.28, 0.24, 9, 880, 1_120),
+      ),
+    );
+    insertBucketedProfile.run(
+      "bucket-hard-anthropic",
+      "anthropic.litellm.global.claude-3-7-sonnet",
+      "hard",
+      11_100,
+      JSON.stringify(
+        buildProfile("anthropic.litellm.global.claude-3-7-sonnet", 11_100, 0.97, 0.01, 27, 260, 390),
+      ),
+    );
+    database.close();
+
+    const requestId = "req-runtime-bridge-difficulty-bucket-001";
+    await expect(
+      backend.executeChatCompletions(
+        {
+          model: "gpt-5.4",
+          messages: [
+            { role: "system", content: "Preserve strict schema compatibility." },
+            {
+              role: "user",
+              content:
+                "Analyze this code-edit workflow, apply multiple constraints, use the available tools, and verify the final contract end to end.",
+            },
+            { role: "assistant", content: "I will inspect the schema and update the implementation carefully." },
+            {
+              role: "user",
+              content:
+                "Now finish the refactor, update the tests, and validate the final output against the schema.",
+            },
+          ],
+          tools: [
+            {
+              type: "function",
+              function: {
+                name: "readSchema",
+                parameters: { type: "object", properties: {} },
+              },
+            },
+            {
+              type: "function",
+              function: {
+                name: "runTests",
+                parameters: { type: "object", properties: {} },
+              },
+            },
+          ],
+        },
+        requestId,
+      ),
+    ).resolves.toMatchObject({
+      endpointId: "anthropic.litellm.global.claude-3-7-sonnet",
+    });
+
+    await expect(backend.readRequestObservation(requestId)).resolves.toMatchObject({
+      requestId,
+      endpointId: "anthropic.litellm.global.claude-3-7-sonnet",
+      routingDiagnostics: {
+        difficultyRouting: expect.objectContaining({
+          difficulty: "hard",
+          strategy: "quality",
+          fallbackApplied: false,
+        }),
+        observedProfile: {
+          endpointId: "anthropic.litellm.global.claude-3-7-sonnet",
+          source: "runtime-state",
+          readMode: "per-request",
+          difficultyBucket: "hard",
+          bucketOverrideApplied: true,
+          measuredAtMs: 11_100,
+        },
+      },
+    });
+  });
+
   test("uses the configured remote classifier result for difficulty-mode runtime-backed chat requests", async () => {
     const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-host-difficulty-classifier-tests-"));
     const unifiedRuntimeConfigPath = path.join(runtimeStateRoot, "runtime-config.yaml");
@@ -2581,6 +2989,283 @@ describe("runtime-host-bridge", () => {
           strategy: "balanced",
           fallbackApplied: true,
           fallbackReason: "classifier-timeout",
+        }),
+      },
+    });
+  });
+
+  test("reuses cached difficulty classification for repeated requests in the same conversation when invalidation thresholds are not exceeded", async () => {
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-host-difficulty-cache-tests-"));
+    const unifiedRuntimeConfigPath = path.join(runtimeStateRoot, "runtime-config.yaml");
+    await writeFile(
+      unifiedRuntimeConfigPath,
+      stringify({
+        version: "1.0",
+        observed_data: {
+          difficulty_learning: {
+            invalidation: {
+              max_context_tokens_delta: 4000,
+              max_history_turn_delta: 4,
+              max_tool_count_delta: 2,
+              max_instruction_constraint_delta: 8,
+              max_decomposition_keyword_delta: 8,
+              reclassify_on_code_or_schema_change: false,
+            },
+          },
+        },
+        difficulty_classifier: {
+          enabled: true,
+          rubric_version: "v1",
+          source_type: "remote",
+          model_id: "openai/gpt-4.1-mini-fast",
+          timeout_ms: 1500,
+          fallback_difficulty: "easy",
+        },
+        model_aliases: {
+          "gpt-5.4": {
+            mode: "difficulty",
+            model_ids: ["openai/gpt-4.1-mini-fast"],
+          },
+        },
+        litellm_proxy: {
+          command: "node",
+          args: ["-e", createSequencedDifficultyClassifierVendorScript()],
+          providers: {
+            openai: {
+              api_key: "${OPENAI_API_KEY}",
+              model_list: [
+                {
+                  model_name: "openai/gpt-4.1-mini-fast",
+                  max_difficulty: "hard",
+                  litellm_params: {
+                    model: "openai/gpt-4.1-mini",
+                  },
+                },
+              ],
+            },
+          },
+        },
+      }),
+      "utf8",
+    );
+
+    const backend = await (
+      bridge as {
+        createRuntimeBridgeBackend: (options: {
+          repoRoot: string;
+          fixtureRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+          unifiedRuntimeConfigPath: string;
+        }) => Promise<{
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+          ) => Promise<{
+            endpointId: string;
+          }>;
+          readRequestObservation: (requestId: string) => Promise<unknown>;
+        }>;
+      }
+    ).createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      runtimeStateRoot,
+      scopeId: "runtime-host-difficulty-cache-tests",
+      unifiedRuntimeConfigPath,
+    });
+
+    const firstRequestId = "req-runtime-bridge-difficulty-cache-001";
+    await backend.executeChatCompletions(
+      {
+        model: "gpt-5.4",
+        messages: [
+          {
+            role: "user",
+            content: "Read the schema, use both tools, then refactor the implementation carefully.",
+          },
+        ],
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "readSchema",
+              parameters: { type: "object", properties: {} },
+            },
+          },
+          {
+            type: "function",
+            function: {
+              name: "runTests",
+              parameters: { type: "object", properties: {} },
+            },
+          },
+        ],
+      },
+      firstRequestId,
+    );
+
+    await expect(backend.readRequestObservation(firstRequestId)).resolves.toMatchObject({
+      requestId: firstRequestId,
+      routingDiagnostics: {
+        difficultyRouting: expect.objectContaining({
+          difficulty: "hard",
+          strategy: "quality",
+          fallbackApplied: false,
+        }),
+      },
+    });
+
+    const secondRequestId = "req-runtime-bridge-difficulty-cache-002";
+    await backend.executeChatCompletions(
+      {
+        model: "gpt-5.4",
+        messages: [{ role: "user", content: "Summarize the answer in one sentence." }],
+      },
+      secondRequestId,
+    );
+
+    await expect(backend.readRequestObservation(secondRequestId)).resolves.toMatchObject({
+      requestId: secondRequestId,
+      routingDiagnostics: {
+        difficultyRouting: expect.objectContaining({
+          difficulty: "hard",
+          strategy: "quality",
+          fallbackApplied: false,
+          cacheHit: true,
+        }),
+      },
+    });
+  });
+
+  test("reports cache invalidation reasons before reclassifying a repeated request", async () => {
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-host-difficulty-invalidation-tests-"));
+    const unifiedRuntimeConfigPath = path.join(runtimeStateRoot, "runtime-config.yaml");
+    await writeFile(
+      unifiedRuntimeConfigPath,
+      stringify({
+        version: "1.0",
+        observed_data: {
+          difficulty_learning: {
+            invalidation: {
+              max_context_tokens_delta: 4000,
+              max_history_turn_delta: 4,
+              max_tool_count_delta: 2,
+              max_instruction_constraint_delta: 8,
+              max_decomposition_keyword_delta: 8,
+              reclassify_on_code_or_schema_change: true,
+            },
+          },
+        },
+        difficulty_classifier: {
+          enabled: true,
+          rubric_version: "v1",
+          source_type: "remote",
+          model_id: "openai/gpt-4.1-mini-fast",
+          timeout_ms: 1500,
+          fallback_difficulty: "easy",
+        },
+        model_aliases: {
+          "gpt-5.4": {
+            mode: "difficulty",
+            model_ids: ["openai/gpt-4.1-mini-fast"],
+          },
+        },
+        litellm_proxy: {
+          command: "node",
+          args: ["-e", createSequencedDifficultyClassifierVendorScript()],
+          providers: {
+            openai: {
+              api_key: "${OPENAI_API_KEY}",
+              model_list: [
+                {
+                  model_name: "openai/gpt-4.1-mini-fast",
+                  max_difficulty: "hard",
+                  litellm_params: {
+                    model: "openai/gpt-4.1-mini",
+                  },
+                },
+              ],
+            },
+          },
+        },
+      }),
+      "utf8",
+    );
+
+    const backend = await (
+      bridge as {
+        createRuntimeBridgeBackend: (options: {
+          repoRoot: string;
+          fixtureRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+          unifiedRuntimeConfigPath: string;
+        }) => Promise<{
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+          ) => Promise<{
+            endpointId: string;
+          }>;
+          readRequestObservation: (requestId: string) => Promise<unknown>;
+        }>;
+      }
+    ).createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      runtimeStateRoot,
+      scopeId: "runtime-host-difficulty-invalidation-tests",
+      unifiedRuntimeConfigPath,
+    });
+
+    await backend.executeChatCompletions(
+      {
+        model: "gpt-5.4",
+        messages: [
+          {
+            role: "user",
+            content: "Read the schema, use both tools, then refactor the implementation carefully.",
+          },
+        ],
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "readSchema",
+              parameters: { type: "object", properties: {} },
+            },
+          },
+          {
+            type: "function",
+            function: {
+              name: "runTests",
+              parameters: { type: "object", properties: {} },
+            },
+          },
+        ],
+      },
+      "req-runtime-bridge-difficulty-invalidation-001",
+    );
+
+    const requestId = "req-runtime-bridge-difficulty-invalidation-002";
+    await backend.executeChatCompletions(
+      {
+        model: "gpt-5.4",
+        messages: [{ role: "user", content: "Summarize the answer in one sentence." }],
+      },
+      requestId,
+    );
+
+    await expect(backend.readRequestObservation(requestId)).resolves.toMatchObject({
+      requestId,
+      routingDiagnostics: {
+        difficultyRouting: expect.objectContaining({
+          difficulty: "easy",
+          strategy: "cost",
+          fallbackApplied: false,
+          cacheInvalidated: true,
+          cacheInvalidationReasons: expect.arrayContaining(["code-or-schema-change"]),
         }),
       },
     });
@@ -3313,6 +3998,136 @@ describe("runtime-host-bridge", () => {
     } finally {
       await server.close();
     }
+  });
+
+  test("reads bucketed endpoint profiles with an advisory max-difficulty recommendation", async () => {
+    expect(
+      typeof (bridge as { createRuntimeBridgeBackend?: unknown }).createRuntimeBridgeBackend,
+    ).toBe("function");
+
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-host-difficulty-"));
+    const scopeId = "runtime-host-difficulty-profile-tests";
+    const backend = await (
+      bridge as {
+        createRuntimeBridgeBackend: (options: {
+          repoRoot: string;
+          fixtureRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+        }) => Promise<{
+          readEndpointProfile?: (endpointId: string) => Promise<unknown>;
+        }>;
+      }
+    ).createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      runtimeStateRoot,
+      scopeId,
+    });
+
+    expect(typeof backend.readEndpointProfile).toBe("function");
+
+    const endpointId = "openai.personal.primary.us-east-1.fast";
+    const databasePath = resolveSqliteMemoryLocation({
+      runtimeStateRoot,
+      scopeId,
+    });
+    const database = new DatabaseSync(databasePath);
+    const insertProfile = database.prepare(
+      "INSERT INTO observed_profile_snapshots_by_difficulty (snapshot_id, endpoint_id, difficulty_bucket, measured_at_ms, profile_json) VALUES (?, ?, ?, ?, ?)",
+    );
+    const baseProfile = {
+      endpoint_id: endpointId,
+      endpoint_version: "run27-bridge-test-v1",
+      measurement_window: {
+        started_at_ms: 1_000,
+        ended_at_ms: 2_000,
+      },
+      freshness_score: 0.97,
+      confidence_score: 0.95,
+      latency_ms_p50: 420,
+      latency_ms_p95: 710,
+      sources: {
+        live_request_samples: 4,
+        benchmark_samples: 0,
+      },
+      currency: "USD",
+    };
+
+    insertProfile.run(
+      "bridge-snapshot-easy",
+      endpointId,
+      "easy",
+      10_000,
+      JSON.stringify({
+        ...baseProfile,
+        measured_at_ms: 10_000,
+        sample_size: 5,
+        failure_rate: 0.03,
+        quality_score: 0.93,
+        tokens_per_sec: 34,
+        cost_per_1k_tokens_est: 0.9,
+      }),
+    );
+    insertProfile.run(
+      "bridge-snapshot-medium",
+      endpointId,
+      "medium",
+      11_000,
+      JSON.stringify({
+        ...baseProfile,
+        measured_at_ms: 11_000,
+        sample_size: 4,
+        failure_rate: 0.14,
+        quality_score: 0.84,
+        tokens_per_sec: 24,
+        cost_per_1k_tokens_est: 1.1,
+      }),
+    );
+    insertProfile.run(
+      "bridge-snapshot-hard",
+      endpointId,
+      "hard",
+      12_000,
+      JSON.stringify({
+        ...baseProfile,
+        measured_at_ms: 12_000,
+        sample_size: 4,
+        failure_rate: 0.28,
+        quality_score: 0.83,
+        tokens_per_sec: 27,
+        cost_per_1k_tokens_est: 1.6,
+      }),
+    );
+    database.close();
+
+    const profile = await backend.readEndpointProfile?.(endpointId);
+
+    expect(profile).toEqual(
+      expect.objectContaining({
+        endpointId,
+        difficultyProfiles: expect.objectContaining({
+          easy: expect.objectContaining({
+            sample_size: 5,
+          }),
+          medium: expect.objectContaining({
+            sample_size: 4,
+          }),
+          hard: expect.objectContaining({
+            sample_size: 4,
+          }),
+        }),
+        advisoryMaxDifficultyRecommendation: expect.objectContaining({
+          recommendedMaxDifficulty: "medium",
+          evaluations: expect.objectContaining({
+            hard: expect.objectContaining({
+              eligible: false,
+              rejectionReasons: ["max-failure-rate"],
+            }),
+          }),
+        }),
+      }),
+    );
   });
 
   test("streams canonical telemetry updates over SSE after new requests are persisted", async () => {
