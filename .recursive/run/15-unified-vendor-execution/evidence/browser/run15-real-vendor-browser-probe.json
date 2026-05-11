@@ -43,17 +43,13 @@
           "id": "local/llama-3.1-8b-instruct",
           "object": "model",
           "owned_by": "role-model",
-          "endpoint_ids": [
-            "llama-swap.local.local-llama-3-1-8b-instruct"
-          ]
+          "endpoint_ids": ["llama-swap.local.local-llama-3-1-8b-instruct"]
         },
         {
           "id": "openai/gpt-4.1-mini-fast",
           "object": "model",
           "owned_by": "role-model",
-          "endpoint_ids": [
-            "openai.litellm.global.openai-gpt-4-1-mini-fast"
-          ]
+          "endpoint_ids": ["openai.litellm.global.openai-gpt-4-1-mini-fast"]
         }
       ]
     }

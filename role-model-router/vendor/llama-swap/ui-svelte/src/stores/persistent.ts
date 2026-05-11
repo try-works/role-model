@@ -1,4 +1,4 @@
-import { writable, type Writable } from "svelte/store";
+import { type Writable, writable } from "svelte/store";
 
 export function persistentStore<T>(key: string, initialValue: T): Writable<T> {
   // Get initial value from localStorage or use default

@@ -1,12 +1,12 @@
 import { writable } from "svelte/store";
 import type {
-  Model,
-  ActivityLogEntry,
-  VersionInfo,
-  LogData,
   APIEventEnvelope,
-  ReqRespCapture,
+  ActivityLogEntry,
   InFlightStats,
+  LogData,
+  Model,
+  ReqRespCapture,
+  VersionInfo,
 } from "../lib/types";
 import { connectionState } from "./theme";
 
@@ -108,7 +108,7 @@ export function enableAPIEvents(enabled: boolean): void {
     apiEventSource.onerror = () => {
       apiEventSource?.close();
       retryCount++;
-      const delay = Math.min(initialDelay * Math.pow(2, retryCount - 1), 5000);
+      const delay = Math.min(initialDelay * 2 ** (retryCount - 1), 5000);
       connectionState.set("disconnected");
       setTimeout(connect, delay);
     };
@@ -149,7 +149,7 @@ export async function listModels(): Promise<Model[]> {
 
 export async function unloadAllModels(): Promise<void> {
   try {
-    const response = await fetch(`/api/models/unload`, {
+    const response = await fetch("/api/models/unload", {
       method: "POST",
     });
     if (!response.ok) {

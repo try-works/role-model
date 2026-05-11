@@ -1,32 +1,32 @@
 <script lang="ts">
-  import { persistentStore } from "../stores/persistent";
-  import ChatInterface from "../components/playground/ChatInterface.svelte";
-  import ImageInterface from "../components/playground/ImageInterface.svelte";
-  import AudioInterface from "../components/playground/AudioInterface.svelte";
-  import SpeechInterface from "../components/playground/SpeechInterface.svelte";
-  import RerankInterface from "../components/playground/RerankInterface.svelte";
+import AudioInterface from "../components/playground/AudioInterface.svelte";
+import ChatInterface from "../components/playground/ChatInterface.svelte";
+import ImageInterface from "../components/playground/ImageInterface.svelte";
+import RerankInterface from "../components/playground/RerankInterface.svelte";
+import SpeechInterface from "../components/playground/SpeechInterface.svelte";
+import { persistentStore } from "../stores/persistent";
 
-  type Tab = "chat" | "images" | "speech" | "audio" | "rerank";
+type Tab = "chat" | "images" | "speech" | "audio" | "rerank";
 
-  const selectedTabStore = persistentStore<Tab>("playground-selected-tab", "chat");
-  let mobileMenuOpen = $state(false);
+const selectedTabStore = persistentStore<Tab>("playground-selected-tab", "chat");
+let mobileMenuOpen = $state(false);
 
-  const tabs: { id: Tab; label: string }[] = [
-    { id: "chat", label: "Chat" },
-    { id: "images", label: "Images" },
-    { id: "speech", label: "Speech" },
-    { id: "audio", label: "Transcription" },
-    { id: "rerank", label: "Rerank" },
-  ];
+const tabs: { id: Tab; label: string }[] = [
+  { id: "chat", label: "Chat" },
+  { id: "images", label: "Images" },
+  { id: "speech", label: "Speech" },
+  { id: "audio", label: "Transcription" },
+  { id: "rerank", label: "Rerank" },
+];
 
-  function selectTab(tab: Tab) {
-    selectedTabStore.set(tab);
-    mobileMenuOpen = false;
-  }
+function selectTab(tab: Tab) {
+  selectedTabStore.set(tab);
+  mobileMenuOpen = false;
+}
 
-  function getTabLabel(tabId: Tab): string {
-    return tabs.find(t => t.id === tabId)?.label || "";
-  }
+function getTabLabel(tabId: Tab): string {
+  return tabs.find((t) => t.id === tabId)?.label || "";
+}
 </script>
 
 <div class="card h-full flex flex-col">
