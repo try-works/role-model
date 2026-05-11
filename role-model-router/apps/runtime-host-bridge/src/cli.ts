@@ -78,6 +78,18 @@ async function main(): Promise<void> {
     listRecentRequestObservations: backend.listRecentRequestObservations,
     readRequestObservation: backend.readRequestObservation,
     readEndpointProfile: backend.readEndpointProfile,
+    listLocalModels: backend.listLocalModels,
+    loadLocalModel: backend.loadLocalModel,
+    unloadLocalModel: backend.unloadLocalModel,
+    readLocalPolicy: backend.readLocalPolicy,
+    updateLocalPolicy: backend.updateLocalPolicy,
+    listSwapHistory: backend.listSwapHistory,
+    getLocalLogs: backend.getLocalLogs,
+    readModelOverrides: backend.readModelOverrides,
+    updateModelOverrides: backend.updateModelOverrides,
+    readPeers: backend.readPeers,
+    updatePeers: backend.updatePeers,
+    checkPeerHealth: backend.checkPeerHealth,
   });
 
   console.log(

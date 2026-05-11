@@ -107,7 +107,7 @@ The runtime hierarchy remains:
 | Overview | Runtime-wide posture and attention items | `/app` |
 | Studio | Request composition and multimodal API workspaces | `/app/studio/*` |
 | Control | Provider, account, endpoint, controller, and model configuration | `/app/control/*` |
-| Local | Local inference runtime: loaded models, swap history, and host policy | `/app/local/*` |
+| Local | Local inference runtime: loaded models, swap history, host policy, log streaming, matrix solver, and peer management | `/app/local/*` |
 | Observe | Request ledgers, raw host activity, logs, metrics, and captures | `/app/observe/*` |
 | Integrations | Downstream contracts, upstream passthrough, and compatibility references | `/app/integrations/*` |
 | System | Host/runtime topology, peer inventory, version, auth, and policy posture | `/app/system/*` |
@@ -123,12 +123,16 @@ The runtime hierarchy remains:
 | `/app/studio/rerank` | live | `studio-workspace` | Ranked-input evaluation workspace over `/v1/rerank` and `/v1/reranking` with a compact request rail, ordered score ledger, and raw payload inspection. |
 | `/app/studio/advanced` | live | `studio-workspace` | Contract-and-request workspace for advanced families that stay under Studio: `/v1/responses`, `/v1/messages`, `/v1/messages/count_tokens`, `/v1/embeddings`, `/completion`, and `/infill`. |
 | `/app/control/providers` | live | `registry-detail` | Primary provider onboarding route for choosing a provider from the effective runtime catalog, choosing that provider's models, and completing either API-key or OAuth setup without leaving the page. |
+| `/app/control/routing-strategy` | live | `registry-detail` | Structured routing-strategy posture for execution mode, controller state, and handoff into advanced config plus request verification. |
 | `/app/control/runtime-config` | live | `registry-detail` | Repo-owned editor for the unified runtime contract covering local llama-swap models, remote LiteLLM providers, and process policy. |
 | `/app/control/endpoints` | live | `registry-detail` | Configured runtime registry for provider-model endpoint entries, health posture, and source visibility after provider onboarding. |
 | `/app/control/controller` | live | `registry-detail` | Explicit controller assignment with candidate health, source type, role coverage, tooling posture, and an honest empty state before any endpoint is activated. |
 | `/app/local/models` | live | `registry-detail` | Local inference runtime state: currently loaded models, engine type, uptime, manual load/unload controls, and empty-state when no models are in memory. |
 | `/app/local/swap` | live | `ledger-inspector` | Swap event ledger: chronological log of model swaps with timestamp, old/new model, and reason (request-driven or manual). |
 | `/app/local/policy` | live | `registry-detail` | Local host policy: TTL configuration, auto-unload toggle, startPort, logLevel, and capture buffer settings. |
+| `/app/local/logs` | target | `dual-console` | Real-time log streaming from llama-swap: live `/logs/stream` feed, historical `/logs` buffer, proxy/upstream source toggle, auto-scroll. |
+| `/app/local/matrix` | target | `matrix-grid` | Concurrent model matrix: grid of loaded models with engine, memory, uptime; color-coded status; add/remove controls. |
+| `/app/local/peers` | target | `registry-detail` | Peer llama-swap instance management: peer inventory, health, model availability, add/remove peer controls. |
 | `/app/control/models` | live | `model-inventory` | Unified local/remote model inventory with inspect-only card drill-ins, explicit handoff to the runtime-config editor, and a non-error pre-activation state when no controller exists yet. |
 | `/app/observe/activity` | live | `ledger-inspector` | Preserved raw-host activity ledger over `/api/metrics` with inline capture drill-ins from `/api/captures/:id` and adjacent access to `/api/events`. |
 | `/app/observe/requests` | live | `ledger-inspector` | Canonical telemetry request ledger over `/api/role-model/telemetry/requests` with latency, token, cache, and source context. |
@@ -154,6 +158,7 @@ Status note:
 | `ledger-inspector` | Dense sortable ledger plus adjacent inspector or drill-in drawer for telemetry facts, captures, payloads, and profile context. |
 | `dual-console` | Two raw log consoles or stream panes with clear source labels and a small operator toolbar. |
 | `contract-reference` | Narrow reference column plus implementation contract panels and example payloads. |
+| `matrix-grid` | Dense grid of concurrent operational cells: status-first, then resource metrics, with add/remove controls and honest empty state. |
 | `system-topology` | Layered operational summary: health and version first, then host/runtime policy panels and contextual host diagnostics. |
 
 Temporary placeholder routes may render through `FutureSurface` only while a future route is being converted. That scaffold is a short-lived bridge, not the long-term design contract.
@@ -167,9 +172,10 @@ Temporary placeholder routes may render through `FutureSurface` only while a fut
 | `registry-detail` | Provider, runtime-config, controller, and endpoint pages keep the primary editor/ledger split and use summary chrome only when it changes the operator decision. |
 | `model-inventory` | `/app/control/models` uses fact strips before a responsive configured-model card grid and an inspect-only modal. |
 | `ledger-inspector` | Requests and request detail lead with telemetry facts while Activity remains the raw-host adjacency surface for metrics, captures, and payload drill-ins. |
-| `dual-console` | `/app/observe/logs` starts with combined history, then splits proxy and upstream consoles into mirrored panes. |
+| `dual-console` | `/app/observe/logs` and `/app/local/logs` start with combined history, then split proxy and upstream consoles into mirrored panes. |
 | `contract-reference` | `/app/integrations/downstream` keeps connection facts in a narrow reference column and examples/compatibility in the larger contract pane. |
 | `system-topology` | `/app/system/runtime` layers lifecycle, controller posture, live version facts, and preserved host diagnostics without extra note-only panels. |
+| `matrix-grid` | `/app/local/matrix` shows a dense status-first grid of concurrently loaded models with resource metrics and add/remove controls. |
 
 ## Live route layouts
 
@@ -214,6 +220,8 @@ These routes are no longer vague placeholder ideas. Their layout contracts are i
 - Load/unload actions per card
 - Global "Unload All" action
 - Model selector + "Load" control
+- **Per-model override panel** (collapsed by default): TTL, context window, concurrency limit
+- Overrides visually distinct via subtle border or muted panel
 - Empty state when no models are in memory
 
 ### `Local > Swap`
@@ -227,6 +235,30 @@ These routes are no longer vague placeholder ideas. Their layout contracts are i
 - Policy form: TTL, auto-unload toggle
 - Read-only fields: startPort, logLevel
 - Current values summary
+
+### `Local > Logs`
+
+- Split proxy/upstream console panes
+- Live stream from `/logs/stream` (SSE or polling)
+- Historical buffer from `/logs`
+- Source toggle, auto-scroll toggle, clear/filter controls
+- Empty state when llama-swap is not running
+
+### `Local > Matrix`
+
+- Grid of loaded models (from `GET /running`)
+- Each cell: model ID, engine, memory, uptime
+- Status: healthy (stone), loading (accent muted), error (accent full)
+- Add/remove model controls
+- Empty state when no models loaded
+
+### `Local > Peers`
+
+- Peer inventory list
+- Peer health and model availability
+- Add peer form (URL, auth token)
+- Remove peer control
+- Empty state when no peers configured
 
 ### `System > Peers`
 
@@ -243,9 +275,12 @@ The vendored llama-swap audit changes how the placeholder pages should be interp
 These are first-class runtime pages because they are part of the main operator loop:
 
 1. **Local runtime state**
-   - models (loaded state, load/unload controls)
+   - models (loaded state, load/unload controls, per-model overrides)
    - swap history (event ledger)
    - policy (TTL, auto-unload, host controls)
+   - logs (real-time streaming from `/logs/stream` and `/logs`)
+   - matrix (concurrent loaded model grid)
+   - peers (peer instance inventory and management)
 2. **Studio multimodal workspaces**
    - images
    - audio

@@ -1,0 +1,39 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/30-router-runtime-strategy-convergence-e2e/role-model-router/apps/runtime-host-bridge[39m
+
+(node:72268) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [31mΓ¥»[39m test/validate-ui.test.ts [2m([22m[2m1 test[22m[2m | [22m[31m1 failed[39m[2m)[22m[33m 527[2mms[22m[39m
+[31m   [31m├ù[31m runRuntimeUiValidation[2m > [22mvalidates runtime config reads and the main control-plane mutations[39m[33m 526[2mms[22m[39m
+[31m     ΓåÆ expected undefined to be 'req-runtime-ui-routing-001' // Object.is equality[39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/validate-ui.test.ts > runRuntimeUiValidation > validates runtime config reads and the main control-plane mutations
+AssertionError: expected undefined to be 'req-runtime-ui-routing-001' // Object.is equality
+
+- Expected: 
+"req-runtime-ui-routing-001"
+
++ Received: 
+undefined
+
+ Γ¥» test/validate-ui.test.ts:56:36
+     54|     expect(result.activatedEndpointId).toBe("moonshot.personal.primaryΓÇª
+     55|     expect(result.endpointListIncludesActivation).toBe(true);
+     56|     expect(result.routedRequestId).toBe("req-runtime-ui-routing-001");
+       |                                    ^
+     57|     expect(result.telemetryListIncludesRoutedRequest).toBe(true);
+     58|     expect(result.routedRequestRoutingDecisionId).toEqual(expect.any(SΓÇª
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m   Start at [22m 04:15:46
+[2m   Duration [22m 1.91s[2m (transform 527ms, setup 0ms, collect 746ms, tests 527ms, environment 0ms, prepare 244ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\30-router-runtime-strategy-convergence-e2e\role-model-router\apps\runtime-host-bridge:
+ΓÇëERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓÇë Command failed with exit code 1: vitest run test/validate-ui.test.ts

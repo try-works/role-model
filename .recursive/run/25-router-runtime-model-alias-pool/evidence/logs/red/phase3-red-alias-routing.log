@@ -1,0 +1,126 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/25-router-runtime-model-alias-pool/role-model-router/apps/runtime-host-bridge[39m
+
+(node:78080) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [31mΓ¥»[39m test/index.test.ts [2m([22m[2m26 tests[22m[2m | [22m[31m4 failed[39m[2m | [22m[33m19 skipped[39m[2m)[22m[32m 276[2mms[22m[39m
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mcreates a stable model-list response grouped by model id
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22mcreates alias entries in the model-list response alongside real models[32m 18[2mms[22m[39m
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mmaps a chat-completions request into role-model routing and execution inputs
+[31m   [31m├ù[31m runtime-host-bridge[2m > [22mmaps an alias chat-completions request into a pooled endpoint allow-list and alias diagnostics[39m[32m 20[2mms[22m[39m
+[31m     ΓåÆ No registry endpoints are available for requested model gpt-5.4.[39m
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22mkeeps exact-model routing unchanged when aliases are configured[32m 1[2mms[22m[39m
+[31m   [31m├ù[31m runtime-host-bridge[2m > [22mmaps an alias responses request into a pooled endpoint allow-list and alias diagnostics[39m[32m 1[2mms[22m[39m
+[31m     ΓåÆ No registry endpoints are available for requested model gpt-5.4.[39m
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22mprefers a configured alias in downstream OpenAI provider config[32m 1[2mms[22m[39m
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mserves health and model-list endpoints
+[31m   [31m├ù[31m runtime-host-bridge[2m > [22mserves alias entries in model-list and downstream provider config from runtime config[39m[32m 57[2mms[22m[39m
+[31m     ΓåÆ expected { object: 'list', ΓÇª(1) } to deeply equal { object: 'list', ΓÇª(1) }[39m
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mserves preserved host observability and vendor-facing utility endpoints
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mserves runtime control-plane summary, provider, account, and endpoint routes
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mserves canonical telemetry summary, comparison, and recent request routes
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mserves downstream OpenAI-compatible provider metadata for consumer apps
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mserves chat-completions responses with role-model execution metadata
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mserves OpenAI-compatible SSE events for streaming responses requests
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22msurfaces tool calls on chat-completions responses when the backend returns them
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mstreams provider deltas through the bridge as they arrive
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mcreates a runtime backend that executes chat-completions through the real routing and adapter path
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mcreates a runtime backend that persists structured request and endpoint inspection state
+[31m   [31m├ù[31m runtime-host-bridge[2m > [22mpersists alias-resolution diagnostics for runtime-backed chat requests[39m[32m 176[2mms[22m[39m
+[31m     ΓåÆ Configure llama_swap.models or litellm_proxy.providers to enable execution.[39m
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mcreates a runtime backend that exposes provider presets, runtime summary, and account upserts
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mexecutes chat-completions through an activated Kimi Code endpoint
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mcreates a runtime backend that executes responses through the real routing and adapter path
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mserves structured request and endpoint inspection routes through the bridge server
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mstreams canonical telemetry updates over SSE after new requests are persisted
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mresolves bridge server options from explicit values and defaults
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 4 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/index.test.ts > runtime-host-bridge > maps an alias chat-completions request into a pooled endpoint allow-list and alias diagnostics
+Error: No registry endpoints are available for requested model gpt-5.4.
+ Γ¥» Module.mapChatCompletionsRequest src/index.ts:1484:11
+    1482| 
+    1483|   if (allowEndpoints.length === 0) {
+    1484|     throw new Error(`No registry endpoints are available for requestedΓÇª
+       |           ^
+    1485|   }
+    1486| 
+ Γ¥» test/index.test.ts:314:7
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/4]ΓÄ»
+
+ FAIL  test/index.test.ts > runtime-host-bridge > maps an alias responses request into a pooled endpoint allow-list and alias diagnostics
+Error: No registry endpoints are available for requested model gpt-5.4.
+ Γ¥» Module.mapResponsesRequest src/index.ts:1527:11
+    1525| 
+    1526|   if (allowEndpoints.length === 0) {
+    1527|     throw new Error(`No registry endpoints are available for requestedΓÇª
+       |           ^
+    1528|   }
+    1529| 
+ Γ¥» test/index.test.ts:415:7
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[2/4]ΓÄ»
+
+ FAIL  test/index.test.ts > runtime-host-bridge > serves alias entries in model-list and downstream provider config from runtime config
+AssertionError: expected { object: 'list', ΓÇª(1) } to deeply equal { object: 'list', ΓÇª(1) }
+
+- Expected
++ Received
+
+@@ -8,20 +8,10 @@
+        "object": "model",
+        "owned_by": "role-model",
+      },
+      {
+        "endpoint_ids": [
+-         "anthropic.team.shared.us-east-1.default",
+-         "openai.personal.primary.us-east-1.fast",
+-         "openai.personal.secondary.us-west-2.fast",
+-       ],
+-       "id": "gpt-5.4",
+-       "object": "model",
+-       "owned_by": "role-model",
+-     },
+-     {
+-       "endpoint_ids": [
+          "openai.personal.primary.us-east-1.fast",
+          "openai.personal.secondary.us-west-2.fast",
+        ],
+        "id": "openai/gpt-4.1-mini-fast",
+        "object": "model",
+
+ Γ¥» test/index.test.ts:583:43
+    581|       const modelsResponse = await fetch(`http://127.0.0.1:${server.poΓÇª
+    582|       expect(modelsResponse.status).toBe(200);
+    583|       expect(await modelsResponse.json()).toEqual({
+       |                                           ^
+    584|         object: "list",
+    585|         data: [
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[3/4]ΓÄ»
+
+ FAIL  test/index.test.ts > runtime-host-bridge > persists alias-resolution diagnostics for runtime-backed chat requests
+Error: Configure llama_swap.models or litellm_proxy.providers to enable execution.
+ Γ¥» createVendorError src/index.ts:536:10
+    534| function createVendorError(vendorId: string, message: string): BridgeHΓÇª
+    535|   const normalized = createVendorNotConfiguredError(vendorId, message);
+    536|   return new BridgeHttpError(503, {
+       |          ^
+    537|     error: {
+    538|       message: normalized.rawMessage,
+ Γ¥» Object.executeChatCompletions src/index.ts:3905:15
+ Γ¥» test/index.test.ts:2049:19
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[4/4]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m4 failed[39m[22m[2m | [22m[1m[32m3 passed[39m[22m[2m | [22m[33m19 skipped[39m[90m (26)[39m
+[2m   Start at [22m 20:09:42
+[2m   Duration [22m 1.60s[2m (transform 501ms, setup 0ms, collect 677ms, tests 276ms, environment 0ms, prepare 239ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\25-router-runtime-model-alias-pool\role-model-router\apps\runtime-host-bridge:
+ΓÇëERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓÇë Command failed with exit code 1: vitest run test/index.test.ts -t alias

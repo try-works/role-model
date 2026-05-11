@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { PageHeader, SectionCard, StatusPill, EmptyState, LoadingState, ErrorState } from "../components/page-primitives";
-import { mutedPanelClassName, primaryButtonClassName, secondaryButtonClassName } from "../lib/design-system";
-import { fetchLocalModels, loadLocalModel, unloadLocalModel } from "../lib/runtime-api";
+import { mutedPanelClassName, primaryButtonClassName, secondaryButtonClassName, fieldClassName } from "../lib/design-system";
+import { fetchLocalModels, loadLocalModel, unloadLocalModel, fetchModelOverrides, updateModelOverrides, type ModelOverride } from "../lib/runtime-api";
 
 interface LocalModel {
   modelId: string;
@@ -15,6 +15,13 @@ export default function LocalModelsRoute() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actioning, setActioning] = useState<Record<string, boolean>>({});
+
+  const [overrides, setOverrides] = useState<Record<string, ModelOverride>>({});
+  const [overrideLoading, setOverrideLoading] = useState(true);
+  const [overrideError, setOverrideError] = useState<string | null>(null);
+  const [editingOverrides, setEditingOverrides] = useState<Record<string, ModelOverride>>({});
+  const [savingOverrides, setSavingOverrides] = useState(false);
+  const [newModelId, setNewModelId] = useState("");
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -29,9 +36,24 @@ export default function LocalModelsRoute() {
     }
   }, []);
 
+  const refreshOverrides = useCallback(async () => {
+    setOverrideLoading(true);
+    setOverrideError(null);
+    try {
+      const data = await fetchModelOverrides();
+      setOverrides({ ...data });
+      setEditingOverrides({ ...data });
+    } catch (err) {
+      setOverrideError(err instanceof Error ? err.message : "Failed to load model overrides");
+    } finally {
+      setOverrideLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     refresh();
-  }, [refresh]);
+    refreshOverrides();
+  }, [refresh, refreshOverrides]);
 
   const handleLoad = async (modelId: string) => {
     setActioning((prev) => ({ ...prev, [modelId]: true }));
@@ -154,6 +176,167 @@ export default function LocalModelsRoute() {
             className={secondaryButtonClassName}
           >
             {actioning["__all__"] ? "Unloading…" : "Unload all models"}
+          </button>
+        </div>
+      </SectionCard>
+
+      <SectionCard title="Model overrides" description="Per-model runtime parameter overrides (TTL, context window, concurrency).">
+        {overrideError ? <ErrorState label={overrideError} /> : null}
+
+        {overrideLoading && Object.keys(overrides).length === 0 ? (
+          <LoadingState label="Loading model overrides…" />
+        ) : Object.keys(overrides).length === 0 && Object.keys(editingOverrides).length === 0 ? (
+          <EmptyState label="No model overrides configured. Add an override below." />
+        ) : (
+          <div className="space-y-3">
+            {(Object.keys(editingOverrides).length > 0 ? Object.keys(editingOverrides) : Object.keys(overrides)).map((modelId) => (
+              <div key={modelId} className={`${mutedPanelClassName} p-4`}>
+                <div className="mb-3">
+                  <p className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]">
+                    Model ID
+                  </p>
+                  <p className="mt-1 break-words font-mono text-sm font-medium text-[var(--rm-fg)]">
+                    {modelId}
+                  </p>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <div>
+                    <label className="mb-1 block text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]">
+                      TTL (seconds)
+                    </label>
+                    <input
+                      type="number"
+                      value={editingOverrides[modelId]?.ttl ?? ""}
+                      onChange={(e) =>
+                        setEditingOverrides((prev) => ({
+                          ...prev,
+                          [modelId]: { ...prev[modelId], ttl: e.target.value ? Number(e.target.value) : undefined },
+                        }))
+                      }
+                      placeholder="Default"
+                      className={fieldClassName}
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]">
+                      Context window
+                    </label>
+                    <input
+                      type="number"
+                      value={editingOverrides[modelId]?.contextWindow ?? ""}
+                      onChange={(e) =>
+                        setEditingOverrides((prev) => ({
+                          ...prev,
+                          [modelId]: { ...prev[modelId], contextWindow: e.target.value ? Number(e.target.value) : undefined },
+                        }))
+                      }
+                      placeholder="Default"
+                      className={fieldClassName}
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]">
+                      Concurrency limit
+                    </label>
+                    <input
+                      type="number"
+                      value={editingOverrides[modelId]?.concurrencyLimit ?? ""}
+                      onChange={(e) =>
+                        setEditingOverrides((prev) => ({
+                          ...prev,
+                          [modelId]: { ...prev[modelId], concurrencyLimit: e.target.value ? Number(e.target.value) : undefined },
+                        }))
+                      }
+                      placeholder="Default"
+                      className={fieldClassName}
+                    />
+                  </div>
+                </div>
+                <div className="mt-3 flex gap-2">
+                  <button
+                    onClick={async () => {
+                      setSavingOverrides(true);
+                      try {
+                        const next = { ...overrides };
+                        if (editingOverrides[modelId]) {
+                          next[modelId] = editingOverrides[modelId];
+                        }
+                        await updateModelOverrides(next);
+                        setOverrides(next);
+                        setEditingOverrides((prev) => {
+                          const copy = { ...prev };
+                          delete copy[modelId];
+                          return copy;
+                        });
+                      } catch (err) {
+                        setOverrideError(err instanceof Error ? err.message : "Failed to save override");
+                      } finally {
+                        setSavingOverrides(false);
+                      }
+                    }}
+                    disabled={savingOverrides}
+                    className={primaryButtonClassName}
+                  >
+                    Save
+                  </button>
+                  <button
+                    onClick={() =>
+                      setEditingOverrides((prev) => {
+                        const copy = { ...prev };
+                        delete copy[modelId];
+                        return copy;
+                      })
+                    }
+                    className={secondaryButtonClassName}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={async () => {
+                      setSavingOverrides(true);
+                      try {
+                        const next = { ...overrides };
+                        delete next[modelId];
+                        await updateModelOverrides(next);
+                        setOverrides(next);
+                      } catch (err) {
+                        setOverrideError(err instanceof Error ? err.message : "Failed to delete override");
+                      } finally {
+                        setSavingOverrides(false);
+                      }
+                    }}
+                    disabled={savingOverrides}
+                    className={`${secondaryButtonClassName} ml-auto`}
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="mt-4 flex gap-2">
+          <input
+            type="text"
+            value={newModelId}
+            onChange={(e) => setNewModelId(e.target.value)}
+            placeholder="Enter model ID to add override…"
+            className={fieldClassName}
+          />
+          <button
+            onClick={() => {
+              if (!newModelId.trim()) return;
+              setEditingOverrides((prev) => ({
+                ...prev,
+                [newModelId.trim()]: { ttl: undefined, contextWindow: undefined, concurrencyLimit: undefined },
+              }));
+              setNewModelId("");
+            }}
+            disabled={!newModelId.trim()}
+            className={primaryButtonClassName}
+          >
+            Add override
           </button>
         </div>
       </SectionCard>

@@ -1,10 +1,14 @@
 import { describe, expect, test } from "vitest";
 import os from "node:os";
 import path from "node:path";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { DatabaseSync } from "node:sqlite";
 import { setTimeout as delay } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
+import { stringify } from "yaml";
 
 import type { EndpointRegistryResult } from "@role-model-router/endpoint-registry";
+import { resolveSqliteMemoryLocation } from "@role-model-router/sqlite-memory";
 
 import * as bridge from "../src/index.js";
 
@@ -95,6 +99,27 @@ const registry: EndpointRegistryResult = {
   },
 };
 
+function createAliasRemoteVendorScript(): string {
+  return `const http=require("node:http");const port=Number(process.env.PORT??process.argv[2]);const server=http.createServer((req,res)=>{if(req.url==="/health/liveliness"){res.statusCode=200;res.end("ok");return;}if(req.url==="/v1/chat/completions"){let body="";req.on("data",chunk=>body+=chunk);req.on("end",()=>{const parsed=JSON.parse(body||"{}");const joinedMessages=JSON.stringify(parsed.messages??[]);const isClassifier=joinedMessages.includes("ROLE_MODEL_DIFFICULTY_CLASSIFIER");const classifierResponse=joinedMessages.includes('\"toolCount\": 2')||joinedMessages.includes('\"codeOrSchemaBurden\": true')?JSON.stringify({difficulty:\"hard\"}):JSON.stringify({difficulty:\"easy\"});res.setHeader("content-type","application/json");res.end(JSON.stringify({id:"chat-alias-remote",object:"chat.completion",choices:[{index:0,message:{role:"assistant",content:isClassifier?classifierResponse:"alias remote summary"},finish_reason:"stop"}],usage:{prompt_tokens:12,completion_tokens:4,total_tokens:16},_hidden_params:{response_cost:0.0012,cache_hit:false}}));});return;}res.statusCode=404;res.end("missing");});server.listen(port,"127.0.0.1");const shutdown=()=>server.close(()=>process.exit(0));process.on("SIGTERM",shutdown);process.on("SIGINT",shutdown);`;
+}
+
+function createDifficultyClassifierVendorScript(mode: "valid-hard" | "slow-hard"): string {
+  const responseDelayMs = mode === "slow-hard" ? 50 : 0;
+  return `const http=require("node:http");const port=Number(process.env.PORT??process.argv[2]);const server=http.createServer((req,res)=>{if(req.url==="/health/liveliness"){res.statusCode=200;res.end("ok");return;}if(req.url==="/v1/chat/completions"){let body="";req.on("data",chunk=>body+=chunk);req.on("end",()=>{const parsed=JSON.parse(body||"{}");const joinedMessages=JSON.stringify(parsed.messages??[]);const isClassifier=joinedMessages.includes("ROLE_MODEL_DIFFICULTY_CLASSIFIER");const respond=()=>{res.setHeader("content-type","application/json");res.end(JSON.stringify({id:"chat-difficulty-remote",object:"chat.completion",choices:[{index:0,message:{role:"assistant",content:isClassifier?JSON.stringify({difficulty:\"hard\"}):"alias remote summary"},finish_reason:"stop"}],usage:{prompt_tokens:12,completion_tokens:4,total_tokens:16},_hidden_params:{response_cost:0.0012,cache_hit:false}}));};if(${responseDelayMs}>0){setTimeout(respond,${responseDelayMs});return;}respond();});return;}res.statusCode=404;res.end("missing");});server.listen(port,"127.0.0.1");const shutdown=()=>server.close(()=>process.exit(0));process.on("SIGTERM",shutdown);process.on("SIGINT",shutdown);`;
+}
+
+function createControllerVendorScript(): string {
+  return `const http=require("node:http");const port=Number(process.env.PORT??process.argv[2]);const server=http.createServer((req,res)=>{if(req.url==="/health/liveliness"){res.statusCode=200;res.end("ok");return;}if(req.url==="/v1/chat/completions"){let body="";req.on("data",chunk=>body+=chunk);req.on("end",()=>{const parsed=JSON.parse(body||"{}");const joinedMessages=JSON.stringify(parsed.messages??[]);const isController=joinedMessages.includes("ROLE_MODEL_ROUTING_CONTROLLER");res.setHeader("content-type","application/json");res.end(JSON.stringify({id:"chat-controller-remote",object:"chat.completion",choices:[{index:0,message:{role:"assistant",content:isController?JSON.stringify({strategy:\"quality\",preferLocal:true}):"alias remote summary"},finish_reason:"stop"}],usage:{prompt_tokens:12,completion_tokens:4,total_tokens:16},_hidden_params:{response_cost:0.0012,cache_hit:false}}));});return;}res.statusCode=404;res.end("missing");});server.listen(port,"127.0.0.1");const shutdown=()=>server.close(()=>process.exit(0));process.on("SIGTERM",shutdown);process.on("SIGINT",shutdown);`;
+}
+
+function createHybridArbitrationVendorScript(): string {
+  return `const http=require("node:http");const port=Number(process.env.PORT??process.argv[2]);const server=http.createServer((req,res)=>{if(req.url==="/health/liveliness"){res.statusCode=200;res.end("ok");return;}if(req.url==="/v1/chat/completions"){let body="";req.on("data",chunk=>body+=chunk);req.on("end",()=>{const parsed=JSON.parse(body||"{}");const joinedMessages=JSON.stringify(parsed.messages??[]);const isClassifier=joinedMessages.includes("ROLE_MODEL_DIFFICULTY_CLASSIFIER");const isController=joinedMessages.includes("ROLE_MODEL_ROUTING_CONTROLLER");const content=isController?JSON.stringify({strategy:"quality",preferLocal:true}):(isClassifier?JSON.stringify({difficulty:"easy"}):"hybrid alias remote summary");res.setHeader("content-type","application/json");res.end(JSON.stringify({id:"chat-hybrid-remote",object:"chat.completion",choices:[{index:0,message:{role:"assistant",content},finish_reason:"stop"}],usage:{prompt_tokens:12,completion_tokens:4,total_tokens:16},_hidden_params:{response_cost:0.0012,cache_hit:false}}));});return;}res.statusCode=404;res.end("missing");});server.listen(port,"127.0.0.1");const shutdown=()=>server.close(()=>process.exit(0));process.on("SIGTERM",shutdown);process.on("SIGINT",shutdown);`;
+}
+
+function createSequencedDifficultyClassifierVendorScript(): string {
+  return `const http=require("node:http");let classifierCalls=0;const port=Number(process.env.PORT??process.argv[2]);const server=http.createServer((req,res)=>{if(req.url==="/health/liveliness"){res.statusCode=200;res.end("ok");return;}if(req.url==="/v1/chat/completions"){let body="";req.on("data",chunk=>body+=chunk);req.on("end",()=>{const parsed=JSON.parse(body||"{}");const joinedMessages=JSON.stringify(parsed.messages??[]);const isClassifier=joinedMessages.includes("ROLE_MODEL_DIFFICULTY_CLASSIFIER");if(isClassifier){classifierCalls+=1;}const difficulty=isClassifier?(classifierCalls===1?"hard":"easy"):null;res.setHeader("content-type","application/json");res.end(JSON.stringify({id:"chat-difficulty-sequenced",object:"chat.completion",choices:[{index:0,message:{role:"assistant",content:isClassifier?JSON.stringify({difficulty}):"alias remote summary"},finish_reason:"stop"}],usage:{prompt_tokens:12,completion_tokens:4,total_tokens:16},_hidden_params:{response_cost:0.0012,cache_hit:false}}));});return;}res.statusCode=404;res.end("missing");});server.listen(port,"127.0.0.1");const shutdown=()=>server.close(()=>process.exit(0));process.on("SIGTERM",shutdown);process.on("SIGINT",shutdown);`;
+}
+
 describe("runtime-host-bridge", () => {
   test("creates a stable model-list response grouped by model id", () => {
     expect(typeof (bridge as { createModelListResponse?: unknown }).createModelListResponse).toBe(
@@ -115,6 +140,56 @@ describe("runtime-host-bridge", () => {
           object: "model",
           owned_by: "role-model",
           endpoint_ids: ["anthropic.team.shared.us-east-1.default"],
+        },
+        {
+          id: "openai/gpt-4.1-mini-fast",
+          object: "model",
+          owned_by: "role-model",
+          endpoint_ids: [
+            "openai.personal.primary.us-east-1.fast",
+            "openai.personal.secondary.us-west-2.fast",
+          ],
+        },
+      ],
+    });
+  });
+
+  test("creates alias entries in the model-list response alongside real models", () => {
+    const result = (
+      bridge as {
+        createModelListResponse: (
+          value: EndpointRegistryResult,
+          modelAliases?: readonly {
+            aliasId: string;
+            modelIds: readonly string[];
+          }[],
+        ) => unknown;
+      }
+    ).createModelListResponse(registry, [
+      {
+        aliasId: "gpt-5.4",
+        modelIds: ["claude-3.7-sonnet", "openai/gpt-4.1-mini-fast"],
+      },
+    ]);
+
+    expect(result).toEqual({
+      object: "list",
+      data: [
+        {
+          id: "claude-3.7-sonnet",
+          object: "model",
+          owned_by: "role-model",
+          endpoint_ids: ["anthropic.team.shared.us-east-1.default"],
+        },
+        {
+          id: "gpt-5.4",
+          object: "model",
+          owned_by: "role-model",
+          endpoint_ids: [
+            "anthropic.team.shared.us-east-1.default",
+            "openai.personal.primary.us-east-1.fast",
+            "openai.personal.secondary.us-west-2.fast",
+          ],
         },
         {
           id: "openai/gpt-4.1-mini-fast",
@@ -235,6 +310,896 @@ describe("runtime-host-bridge", () => {
     });
   });
 
+  test("maps an alias chat-completions request into a pooled endpoint allow-list and alias diagnostics", () => {
+    const result = (
+      bridge as {
+        mapChatCompletionsRequest: (
+          value: EndpointRegistryResult,
+          body: Record<string, unknown>,
+          requestId: string,
+          modelAliases?: readonly {
+            aliasId: string;
+            modelIds: readonly string[];
+          }[],
+        ) => {
+          routingRequest: {
+            allowEndpoints: readonly string[];
+          };
+          routingDiagnostics?: {
+            aliasResolution?: {
+              requestedModel: string;
+              aliasId: string;
+              resolvedModelIds: readonly string[];
+              allowEndpoints: readonly string[];
+            };
+          };
+        };
+      }
+    ).mapChatCompletionsRequest(
+      registry,
+      {
+        model: "gpt-5.4",
+        messages: [{ role: "user", content: "Route to the alias pool." }],
+      },
+      "req-host-alias-chat-001",
+      [
+        {
+          aliasId: "gpt-5.4",
+          modelIds: ["claude-3.7-sonnet", "openai/gpt-4.1-mini-fast"],
+        },
+      ],
+    );
+
+    expect(result.routingRequest.allowEndpoints).toEqual([
+      "anthropic.team.shared.us-east-1.default",
+      "openai.personal.primary.us-east-1.fast",
+      "openai.personal.secondary.us-west-2.fast",
+    ]);
+    expect(result.routingDiagnostics).toEqual({
+      aliasResolution: {
+        requestedModel: "gpt-5.4",
+        aliasId: "gpt-5.4",
+        resolvedModelIds: ["claude-3.7-sonnet", "openai/gpt-4.1-mini-fast"],
+        allowEndpoints: [
+          "anthropic.team.shared.us-east-1.default",
+          "openai.personal.primary.us-east-1.fast",
+          "openai.personal.secondary.us-west-2.fast",
+        ],
+      },
+    });
+  });
+
+  test("keeps exact-model routing unchanged when aliases are configured", () => {
+    const result = (
+      bridge as {
+        mapChatCompletionsRequest: (
+          value: EndpointRegistryResult,
+          body: Record<string, unknown>,
+          requestId: string,
+          modelAliases?: readonly {
+            aliasId: string;
+            modelIds: readonly string[];
+          }[],
+        ) => {
+          routingRequest: {
+            allowEndpoints: readonly string[];
+          };
+          routingDiagnostics?: {
+            aliasResolution?: unknown;
+          };
+        };
+      }
+    ).mapChatCompletionsRequest(
+      registry,
+      {
+        model: "openai/gpt-4.1-mini-fast",
+        messages: [{ role: "user", content: "Keep exact-model routing." }],
+      },
+      "req-host-exact-model-001",
+      [
+        {
+          aliasId: "gpt-5.4",
+          modelIds: ["claude-3.7-sonnet", "openai/gpt-4.1-mini-fast"],
+        },
+      ],
+    );
+
+    expect(result.routingRequest.allowEndpoints).toEqual([
+      "openai.personal.primary.us-east-1.fast",
+      "openai.personal.secondary.us-west-2.fast",
+    ]);
+    expect(result.routingDiagnostics?.aliasResolution).toBeUndefined();
+  });
+
+  test("maps validated controller guidance into an intelligent alias routing plan", () => {
+    const result = (
+      bridge as {
+        mapChatCompletionsRequest: (
+          value: EndpointRegistryResult,
+          body: Record<string, unknown>,
+          requestId: string,
+          modelAliases?: readonly {
+            aliasId: string;
+            mode?: "basic" | "difficulty" | "intelligent" | "hybrid" | null;
+            modelIds: readonly string[];
+          }[],
+          difficultyContext?: unknown,
+          controllerContext?: {
+            active?: boolean;
+            resolvedGuidance?: {
+              requestedRoleId?: string;
+              taskType?: string;
+              requiredCapabilities?: readonly string[];
+              preferredCapabilities?: readonly string[];
+              strategy?: "balanced" | "cost" | "quality";
+              preferLocal?: boolean;
+              preferredEndpointIds?: readonly string[];
+            };
+          },
+        ) => {
+          routingRequest: {
+            requestedRoleId?: string;
+            taskType: string;
+            requiredCapabilities: readonly string[];
+            preferredCapabilities: readonly string[];
+            strategy: string;
+            preferLocal: boolean;
+            allowEndpoints: readonly string[];
+          };
+          routingModel?: {
+            endpointId: string;
+            preferredEndpointIds: readonly string[];
+          };
+          routingDiagnostics?: {
+            controllerRouting?: {
+              active: boolean;
+              acceptedDirectives?: {
+                requestedRoleId?: string;
+                taskType?: string;
+                requiredCapabilities?: readonly string[];
+                preferredCapabilities?: readonly string[];
+                strategy?: string;
+                preferLocal?: boolean;
+                preferredEndpointIds?: readonly string[];
+              };
+            };
+          };
+        };
+      }
+    ).mapChatCompletionsRequest(
+      registry,
+      {
+        model: "gpt-5.4",
+        messages: [{ role: "user", content: "Prepare a patch and preserve the schema contract." }],
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "lookupRegistry",
+              parameters: { type: "object", properties: {} },
+            },
+          },
+        ],
+      },
+      "req-host-intelligent-chat-001",
+      [
+        {
+          aliasId: "gpt-5.4",
+          mode: "intelligent",
+          modelIds: ["claude-3.7-sonnet", "openai/gpt-4.1-mini-fast"],
+        },
+      ],
+      undefined,
+      {
+        active: true,
+        resolvedGuidance: {
+          requestedRoleId: "coder.patch",
+          taskType: "code.edit",
+          requiredCapabilities: ["code.edit", "tools.function_calling"],
+          preferredCapabilities: ["reasoning.multi_step"],
+          strategy: "quality",
+          preferLocal: true,
+          preferredEndpointIds: [
+            "anthropic.team.shared.us-east-1.default",
+            "openai.personal.primary.us-east-1.fast",
+          ],
+        },
+      },
+    );
+
+    expect(result.routingRequest).toMatchObject({
+      requestedRoleId: "coder.patch",
+      taskType: "code.edit",
+      requiredCapabilities: ["code.edit", "tools.function_calling"],
+      preferredCapabilities: ["reasoning.multi_step"],
+      strategy: "quality",
+      preferLocal: true,
+      allowEndpoints: [
+        "anthropic.team.shared.us-east-1.default",
+        "openai.personal.primary.us-east-1.fast",
+        "openai.personal.secondary.us-west-2.fast",
+      ],
+    });
+    expect(result.routingModel).toEqual({
+      endpointId: "anthropic.team.shared.us-east-1.default",
+      preferredEndpointIds: [
+        "anthropic.team.shared.us-east-1.default",
+        "openai.personal.primary.us-east-1.fast",
+      ],
+    });
+    expect(result.routingDiagnostics?.controllerRouting).toEqual({
+      active: true,
+      acceptedDirectives: {
+        requestedRoleId: "coder.patch",
+        taskType: "code.edit",
+        requiredCapabilities: ["code.edit", "tools.function_calling"],
+        preferredCapabilities: ["reasoning.multi_step"],
+        strategy: "quality",
+        preferLocal: true,
+        preferredEndpointIds: [
+          "anthropic.team.shared.us-east-1.default",
+          "openai.personal.primary.us-east-1.fast",
+        ],
+      },
+    });
+  });
+
+  test("uses a baseline override to bypass intelligent alias controller routing", () => {
+    const result = (
+      bridge as {
+        mapChatCompletionsRequest: (
+          value: EndpointRegistryResult,
+          body: Record<string, unknown>,
+          requestId: string,
+          modelAliases?: readonly {
+            aliasId: string;
+            mode?: "basic" | "difficulty" | "intelligent" | "hybrid" | null;
+            modelIds: readonly string[];
+          }[],
+          difficultyContext?: unknown,
+          controllerContext?: {
+            active?: boolean;
+            resolvedGuidance?: {
+              requestedRoleId?: string;
+              taskType?: string;
+              requiredCapabilities?: readonly string[];
+              preferredCapabilities?: readonly string[];
+              strategy?: "balanced" | "cost" | "quality";
+              preferLocal?: boolean;
+              preferredEndpointIds?: readonly string[];
+            };
+          },
+          requestOptions?: {
+            routingModeOverride?: "baseline" | "difficulty" | "controller" | "hybrid";
+          },
+        ) => {
+          routingRequest: {
+            taskType: string;
+            requiredCapabilities: readonly string[];
+            preferredCapabilities: readonly string[];
+            strategy: string;
+            preferLocal: boolean;
+            allowEndpoints: readonly string[];
+          };
+          routingModel?: {
+            endpointId: string;
+            preferredEndpointIds: readonly string[];
+          };
+          routingDiagnostics?: {
+            aliasResolution?: {
+              requestedModel: string;
+              aliasId: string;
+              resolvedModelIds: readonly string[];
+              allowEndpoints: readonly string[];
+            };
+            controllerRouting?: unknown;
+          };
+        };
+      }
+    ).mapChatCompletionsRequest(
+      registry,
+      {
+        model: "gpt-5.4",
+        messages: [{ role: "user", content: "Prepare a patch and preserve the schema contract." }],
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "lookupRegistry",
+              parameters: { type: "object", properties: {} },
+            },
+          },
+        ],
+      },
+      "req-host-intelligent-chat-override-001",
+      [
+        {
+          aliasId: "gpt-5.4",
+          mode: "intelligent",
+          modelIds: ["claude-3.7-sonnet", "openai/gpt-4.1-mini-fast"],
+        },
+      ],
+      undefined,
+      {
+        active: true,
+        resolvedGuidance: {
+          requestedRoleId: "coder.patch",
+          taskType: "code.edit",
+          requiredCapabilities: ["code.edit", "tools.function_calling"],
+          preferredCapabilities: ["reasoning.multi_step"],
+          strategy: "quality",
+          preferLocal: true,
+          preferredEndpointIds: [
+            "anthropic.team.shared.us-east-1.default",
+            "openai.personal.primary.us-east-1.fast",
+          ],
+        },
+      },
+      {
+        routingModeOverride: "baseline",
+      },
+    );
+
+    expect(result.routingRequest).toMatchObject({
+      taskType: "text.chat",
+      requiredCapabilities: ["text.chat"],
+      preferredCapabilities: [],
+      strategy: "balanced",
+      preferLocal: false,
+      allowEndpoints: [
+        "anthropic.team.shared.us-east-1.default",
+        "openai.personal.primary.us-east-1.fast",
+        "openai.personal.secondary.us-west-2.fast",
+      ],
+    });
+    expect(result.routingModel).toBeUndefined();
+    expect(result.routingDiagnostics).toEqual({
+      aliasResolution: {
+        requestedModel: "gpt-5.4",
+        aliasId: "gpt-5.4",
+        resolvedModelIds: ["claude-3.7-sonnet", "openai/gpt-4.1-mini-fast"],
+        allowEndpoints: [
+          "anthropic.team.shared.us-east-1.default",
+          "openai.personal.primary.us-east-1.fast",
+          "openai.personal.secondary.us-west-2.fast",
+        ],
+      },
+    });
+  });
+
+  test("records explicit hybrid arbitration when controller guidance alters the difficulty plan", () => {
+    const result = (
+      bridge as {
+        mapChatCompletionsRequest: (
+          value: EndpointRegistryResult,
+          body: Record<string, unknown>,
+          requestId: string,
+          modelAliases?: readonly {
+            aliasId: string;
+            mode?: "basic" | "difficulty" | "intelligent" | "hybrid" | null;
+            modelIds: readonly string[];
+          }[],
+          difficultyContext?: {
+            resolvedClassification?: {
+              difficulty: "easy" | "medium" | "hard";
+              fallbackApplied: boolean;
+              rubricSignals: {
+                contextTokens: number;
+                toolCount: number;
+                historyTurnCount: number;
+                instructionConstraintCount: number;
+                decompositionKeywordCount: number;
+                codeOrSchemaBurden: boolean;
+              };
+            };
+            endpointMaxDifficultyByEndpointId?: Record<string, "easy" | "medium" | "hard">;
+          },
+          controllerContext?: {
+            active?: boolean;
+            resolvedGuidance?: {
+              strategy?: "balanced" | "cost" | "quality";
+              preferLocal?: boolean;
+              preferredEndpointIds?: readonly string[];
+            };
+          },
+        ) => {
+          routingRequest: {
+            strategy: string;
+            preferLocal: boolean;
+            allowEndpoints: readonly string[];
+          };
+          routingDiagnostics?: {
+            routingMode?: {
+              source: string;
+              aliasMode?: string;
+              effectiveMode: string;
+            };
+            difficultyRouting?: {
+              difficulty: string;
+              strategy: string;
+            };
+            controllerRouting?: {
+              active: boolean;
+              acceptedDirectives?: {
+                strategy?: string;
+                preferLocal?: boolean;
+              };
+            };
+            hybridArbitration?: {
+              active: boolean;
+              difficultyStrategy: string;
+              finalStrategy: string;
+              controllerChangedPlan: boolean;
+              dominantSignal: string;
+            };
+          };
+        };
+      }
+    ).mapChatCompletionsRequest(
+      registry,
+      {
+        model: "gpt-5.4-hybrid",
+        messages: [{ role: "user", content: "Choose the best path for a short coding request." }],
+      },
+      "req-host-hybrid-chat-001",
+      [
+        {
+          aliasId: "gpt-5.4-hybrid",
+          mode: "hybrid",
+          modelIds: ["claude-3.7-sonnet", "openai/gpt-4.1-mini-fast"],
+        },
+      ],
+      {
+        resolvedClassification: {
+          difficulty: "easy",
+          fallbackApplied: false,
+          rubricSignals: {
+            contextTokens: 32,
+            toolCount: 0,
+            historyTurnCount: 1,
+            instructionConstraintCount: 0,
+            decompositionKeywordCount: 0,
+            codeOrSchemaBurden: false,
+          },
+        },
+        endpointMaxDifficultyByEndpointId: {
+          "anthropic.team.shared.us-east-1.default": "hard",
+          "openai.personal.primary.us-east-1.fast": "medium",
+          "openai.personal.secondary.us-west-2.fast": "easy",
+        },
+      },
+      {
+        active: true,
+        resolvedGuidance: {
+          strategy: "quality",
+          preferLocal: true,
+        },
+      },
+    );
+
+    expect(result.routingRequest).toMatchObject({
+      strategy: "quality",
+      preferLocal: true,
+      allowEndpoints: [
+        "anthropic.team.shared.us-east-1.default",
+        "openai.personal.primary.us-east-1.fast",
+        "openai.personal.secondary.us-west-2.fast",
+      ],
+    });
+    expect(result.routingDiagnostics).toMatchObject({
+      routingMode: {
+        source: "alias-default",
+        aliasMode: "hybrid",
+        effectiveMode: "hybrid",
+      },
+      difficultyRouting: {
+        difficulty: "easy",
+        strategy: "cost",
+      },
+      controllerRouting: {
+        active: true,
+        acceptedDirectives: {
+          strategy: "quality",
+          preferLocal: true,
+        },
+      },
+      hybridArbitration: {
+        active: true,
+        difficultyStrategy: "cost",
+        finalStrategy: "quality",
+        controllerChangedPlan: true,
+        dominantSignal: "controller",
+      },
+    });
+  });
+
+  test("maps a difficulty-mode alias chat request into a gated allow-list and difficulty diagnostics", () => {
+    const result = (
+      bridge as {
+        mapChatCompletionsRequest: (
+          value: EndpointRegistryResult,
+          body: Record<string, unknown>,
+          requestId: string,
+          modelAliases?: readonly {
+            aliasId: string;
+            mode?: "basic" | "difficulty" | "intelligent" | "hybrid" | null;
+            modelIds: readonly string[];
+          }[],
+          difficultyContext?: {
+            endpointMaxDifficultyByEndpointId?: Record<
+              string,
+              "easy" | "medium" | "hard"
+            >;
+          },
+        ) => {
+          routingRequest: {
+            allowEndpoints: readonly string[];
+            strategy: string;
+          };
+          routingDiagnostics?: {
+            difficultyRouting?: {
+              difficulty: "easy" | "medium" | "hard";
+              strategy: string;
+              fallbackApplied: boolean;
+              excludedEndpointIds: readonly string[];
+              rubricSignals: {
+                toolCount: number;
+                historyTurnCount: number;
+              };
+            };
+          };
+        };
+      }
+    ).mapChatCompletionsRequest(
+      registry,
+      {
+        model: "gpt-5.4",
+        messages: [
+          { role: "system", content: "You are handling a strict schema-constrained migration." },
+          {
+            role: "user",
+            content:
+              "Analyze this large code-edit request, preserve backwards compatibility, satisfy multiple constraints, and produce a step-by-step plan with schema checks and test updates.",
+          },
+          {
+            role: "assistant",
+            content: "I will inspect the schema, update the implementation, and verify the output.",
+          },
+          {
+            role: "user",
+            content:
+              "Now finish the refactor, update the contract, and use the available tools to validate the change across the full workflow.",
+          },
+        ],
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "readSchema",
+              parameters: { type: "object", properties: {} },
+            },
+          },
+          {
+            type: "function",
+            function: {
+              name: "runTests",
+              parameters: { type: "object", properties: {} },
+            },
+          },
+        ],
+      },
+      "req-host-difficulty-chat-001",
+      [
+        {
+          aliasId: "gpt-5.4",
+          mode: "difficulty",
+          modelIds: ["claude-3.7-sonnet", "openai/gpt-4.1-mini-fast"],
+        },
+      ],
+      {
+        endpointMaxDifficultyByEndpointId: {
+          "anthropic.team.shared.us-east-1.default": "hard",
+          "openai.personal.primary.us-east-1.fast": "medium",
+          "openai.personal.secondary.us-west-2.fast": "easy",
+        },
+      },
+    );
+
+    expect(result.routingRequest.strategy).toBe("quality");
+    expect(result.routingRequest.allowEndpoints).toEqual([
+      "anthropic.team.shared.us-east-1.default",
+    ]);
+    expect(result.routingDiagnostics?.difficultyRouting).toEqual({
+      difficulty: "hard",
+      strategy: "quality",
+      fallbackApplied: false,
+      excludedEndpointIds: [
+        "openai.personal.primary.us-east-1.fast",
+        "openai.personal.secondary.us-west-2.fast",
+      ],
+      rubricSignals: expect.objectContaining({
+        toolCount: 2,
+        historyTurnCount: 4,
+      }),
+    });
+  });
+
+  test("uses a baseline override to bypass difficulty alias gating", () => {
+    const result = (
+      bridge as {
+        mapChatCompletionsRequest: (
+          value: EndpointRegistryResult,
+          body: Record<string, unknown>,
+          requestId: string,
+          modelAliases?: readonly {
+            aliasId: string;
+            mode?: "basic" | "difficulty" | "intelligent" | "hybrid" | null;
+            modelIds: readonly string[];
+          }[],
+          difficultyContext?: {
+            endpointMaxDifficultyByEndpointId?: Record<
+              string,
+              "easy" | "medium" | "hard"
+            >;
+          },
+          controllerContext?: unknown,
+          requestOptions?: {
+            routingModeOverride?: "baseline" | "difficulty" | "controller" | "hybrid";
+          },
+        ) => {
+          routingRequest: {
+            allowEndpoints: readonly string[];
+            strategy: string;
+          };
+          routingDiagnostics?: {
+            aliasResolution?: {
+              requestedModel: string;
+              aliasId: string;
+              resolvedModelIds: readonly string[];
+              allowEndpoints: readonly string[];
+            };
+            difficultyRouting?: unknown;
+          };
+        };
+      }
+    ).mapChatCompletionsRequest(
+      registry,
+      {
+        model: "gpt-5.4",
+        messages: [
+          { role: "system", content: "You are handling a strict schema-constrained migration." },
+          {
+            role: "user",
+            content:
+              "Analyze this large code-edit request, preserve backwards compatibility, satisfy multiple constraints, and produce a step-by-step plan with schema checks and test updates.",
+          },
+          {
+            role: "assistant",
+            content: "I will inspect the schema, update the implementation, and verify the output.",
+          },
+          {
+            role: "user",
+            content:
+              "Now finish the refactor, update the contract, and use the available tools to validate the change across the full workflow.",
+          },
+        ],
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "readSchema",
+              parameters: { type: "object", properties: {} },
+            },
+          },
+          {
+            type: "function",
+            function: {
+              name: "runTests",
+              parameters: { type: "object", properties: {} },
+            },
+          },
+        ],
+      },
+      "req-host-difficulty-chat-override-001",
+      [
+        {
+          aliasId: "gpt-5.4",
+          mode: "difficulty",
+          modelIds: ["claude-3.7-sonnet", "openai/gpt-4.1-mini-fast"],
+        },
+      ],
+      {
+        endpointMaxDifficultyByEndpointId: {
+          "anthropic.team.shared.us-east-1.default": "hard",
+          "openai.personal.primary.us-east-1.fast": "medium",
+          "openai.personal.secondary.us-west-2.fast": "easy",
+        },
+      },
+      undefined,
+      {
+        routingModeOverride: "baseline",
+      },
+    );
+
+    expect(result.routingRequest.strategy).toBe("balanced");
+    expect(result.routingRequest.allowEndpoints).toEqual([
+      "anthropic.team.shared.us-east-1.default",
+      "openai.personal.primary.us-east-1.fast",
+      "openai.personal.secondary.us-west-2.fast",
+    ]);
+    expect(result.routingDiagnostics).toEqual({
+      aliasResolution: {
+        requestedModel: "gpt-5.4",
+        aliasId: "gpt-5.4",
+        resolvedModelIds: ["claude-3.7-sonnet", "openai/gpt-4.1-mini-fast"],
+        allowEndpoints: [
+          "anthropic.team.shared.us-east-1.default",
+          "openai.personal.primary.us-east-1.fast",
+          "openai.personal.secondary.us-west-2.fast",
+        ],
+      },
+    });
+  });
+
+  test("maps an alias responses request into a pooled endpoint allow-list and alias diagnostics", () => {
+    const result = (
+      bridge as {
+        mapResponsesRequest: (
+          value: EndpointRegistryResult,
+          body: Record<string, unknown>,
+          requestId: string,
+          modelAliases?: readonly {
+            aliasId: string;
+            modelIds: readonly string[];
+          }[],
+        ) => {
+          routingRequest: {
+            allowEndpoints: readonly string[];
+          };
+          routingDiagnostics?: {
+            aliasResolution?: {
+              requestedModel: string;
+              aliasId: string;
+              resolvedModelIds: readonly string[];
+              allowEndpoints: readonly string[];
+            };
+          };
+        };
+      }
+    ).mapResponsesRequest(
+      registry,
+      {
+        model: "gpt-5.4",
+        input: "Route this through the alias pool.",
+      },
+      "req-host-alias-response-001",
+      [
+        {
+          aliasId: "gpt-5.4",
+          modelIds: ["claude-3.7-sonnet", "openai/gpt-4.1-mini-fast"],
+        },
+      ],
+    );
+
+    expect(result.routingRequest.allowEndpoints).toEqual([
+      "anthropic.team.shared.us-east-1.default",
+      "openai.personal.primary.us-east-1.fast",
+      "openai.personal.secondary.us-west-2.fast",
+    ]);
+    expect(result.routingDiagnostics).toEqual({
+      aliasResolution: {
+        requestedModel: "gpt-5.4",
+        aliasId: "gpt-5.4",
+        resolvedModelIds: ["claude-3.7-sonnet", "openai/gpt-4.1-mini-fast"],
+        allowEndpoints: [
+          "anthropic.team.shared.us-east-1.default",
+          "openai.personal.primary.us-east-1.fast",
+          "openai.personal.secondary.us-west-2.fast",
+        ],
+      },
+    });
+  });
+
+  test("maps a difficulty-mode responses request into an easy strategy and keeps eligible endpoints", () => {
+    const result = (
+      bridge as {
+        mapResponsesRequest: (
+          value: EndpointRegistryResult,
+          body: Record<string, unknown>,
+          requestId: string,
+          modelAliases?: readonly {
+            aliasId: string;
+            mode?: "basic" | "difficulty" | "intelligent" | "hybrid" | null;
+            modelIds: readonly string[];
+          }[],
+          difficultyContext?: {
+            endpointMaxDifficultyByEndpointId?: Record<
+              string,
+              "easy" | "medium" | "hard"
+            >;
+          },
+        ) => {
+          routingRequest: {
+            allowEndpoints: readonly string[];
+            strategy: string;
+          };
+          routingDiagnostics?: {
+            difficultyRouting?: {
+              difficulty: "easy" | "medium" | "hard";
+              strategy: string;
+              fallbackApplied: boolean;
+            };
+          };
+        };
+      }
+    ).mapResponsesRequest(
+      registry,
+      {
+        model: "gpt-5.4",
+        input: "Say hello in one sentence.",
+      },
+      "req-host-difficulty-response-001",
+      [
+        {
+          aliasId: "gpt-5.4",
+          mode: "difficulty",
+          modelIds: ["claude-3.7-sonnet", "openai/gpt-4.1-mini-fast"],
+        },
+      ],
+      {
+        endpointMaxDifficultyByEndpointId: {
+          "anthropic.team.shared.us-east-1.default": "hard",
+          "openai.personal.primary.us-east-1.fast": "medium",
+          "openai.personal.secondary.us-west-2.fast": "easy",
+        },
+      },
+    );
+
+    expect(result.routingRequest.strategy).toBe("cost");
+    expect(result.routingRequest.allowEndpoints).toEqual([
+      "anthropic.team.shared.us-east-1.default",
+      "openai.personal.primary.us-east-1.fast",
+      "openai.personal.secondary.us-west-2.fast",
+    ]);
+    expect(result.routingDiagnostics?.difficultyRouting).toEqual(
+      expect.objectContaining({
+        difficulty: "easy",
+        strategy: "cost",
+        fallbackApplied: false,
+      }),
+    );
+  });
+
+  test("prefers a configured alias in downstream OpenAI provider config", () => {
+    const result = (
+      bridge as {
+        createDownstreamOpenAIProviderConfig: (
+          value: EndpointRegistryResult,
+          baseUrl: string,
+          modelAliases?: readonly {
+            aliasId: string;
+            modelIds: readonly string[];
+          }[],
+        ) => {
+          models: readonly { id: string }[];
+          setup: { recommendedModel: string | null };
+        };
+      }
+    ).createDownstreamOpenAIProviderConfig(registry, "http://127.0.0.1:4010", [
+      {
+        aliasId: "gpt-5.4",
+        modelIds: ["claude-3.7-sonnet", "openai/gpt-4.1-mini-fast"],
+      },
+    ]);
+
+    expect(result.models.map((entry) => entry.id)).toEqual([
+      "claude-3.7-sonnet",
+      "gpt-5.4",
+      "openai/gpt-4.1-mini-fast",
+    ]);
+    expect(result.setup.recommendedModel).toBe("gpt-5.4");
+  });
+
   test("serves health and model-list endpoints", async () => {
     expect(typeof (bridge as { startBridgeServer?: unknown }).startBridgeServer).toBe("function");
 
@@ -291,6 +1256,99 @@ describe("runtime-host-bridge", () => {
           },
         ],
       });
+    } finally {
+      await server.close();
+    }
+  });
+
+  test("serves alias entries in model-list and downstream provider config from runtime config", async () => {
+    const server = await (
+      bridge as {
+        startBridgeServer: (options: {
+          host: string;
+          port: number;
+          registry: EndpointRegistryResult;
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+          ) => Promise<unknown>;
+          readRuntimeConfig: () => Promise<{
+            config: {
+              modelAliases: readonly {
+                aliasId: string;
+                modelIds: readonly string[];
+              }[];
+            };
+          }>;
+        }) => Promise<{ port: number; close(): Promise<void> }>;
+      }
+    ).startBridgeServer({
+      host: "127.0.0.1",
+      port: 0,
+      registry,
+      executeChatCompletions: async () => {
+        throw new Error("not used");
+      },
+      readRuntimeConfig: async () => ({
+        config: {
+          modelAliases: [
+            {
+              aliasId: "gpt-5.4",
+              modelIds: ["claude-3.7-sonnet", "openai/gpt-4.1-mini-fast"],
+            },
+          ],
+        },
+      }),
+    });
+
+    try {
+      const modelsResponse = await fetch(`http://127.0.0.1:${server.port}/v1/models`);
+      expect(modelsResponse.status).toBe(200);
+      expect(await modelsResponse.json()).toEqual({
+        object: "list",
+        data: [
+          {
+            id: "claude-3.7-sonnet",
+            object: "model",
+            owned_by: "role-model",
+            endpoint_ids: ["anthropic.team.shared.us-east-1.default"],
+          },
+          {
+            id: "gpt-5.4",
+            object: "model",
+            owned_by: "role-model",
+            endpoint_ids: [
+              "anthropic.team.shared.us-east-1.default",
+              "openai.personal.primary.us-east-1.fast",
+              "openai.personal.secondary.us-west-2.fast",
+            ],
+          },
+          {
+            id: "openai/gpt-4.1-mini-fast",
+            object: "model",
+            owned_by: "role-model",
+            endpoint_ids: [
+              "openai.personal.primary.us-east-1.fast",
+              "openai.personal.secondary.us-west-2.fast",
+            ],
+          },
+        ],
+      });
+
+      const providerResponse = await fetch(`http://127.0.0.1:${server.port}/api/role-model/downstream/openai`);
+      expect(providerResponse.status).toBe(200);
+      await expect(providerResponse.json()).resolves.toEqual(
+        expect.objectContaining({
+          models: [
+            expect.objectContaining({ id: "claude-3.7-sonnet" }),
+            expect.objectContaining({ id: "gpt-5.4" }),
+            expect.objectContaining({ id: "openai/gpt-4.1-mini-fast" }),
+          ],
+          setup: expect.objectContaining({
+            recommendedModel: "gpt-5.4",
+          }),
+        }),
+      );
     } finally {
       await server.close();
     }
@@ -1496,6 +2554,159 @@ describe("runtime-host-bridge", () => {
     }
   });
 
+  test("forwards x-role-model-routing-mode to chat-completions execution", async () => {
+    expect(typeof (bridge as { startBridgeServer?: unknown }).startBridgeServer).toBe("function");
+
+    let requestOptions:
+      | {
+          routingModeOverride?: string;
+        }
+      | undefined;
+
+    const server = await (
+      bridge as {
+        startBridgeServer: (options: {
+          host: string;
+          port: number;
+          registry: EndpointRegistryResult;
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+            streamWriter?: (chunk: Record<string, unknown>) => void | Promise<void>,
+            requestOptions?: {
+              routingModeOverride?: string;
+            },
+          ) => Promise<{
+            model: string;
+            endpointId: string;
+            adapterFamily: string;
+            outputText: string;
+            finishReason: string;
+            usage: {
+              inputTokens: number;
+              outputTokens: number;
+            };
+          }>;
+        }) => Promise<{ port: number; close(): Promise<void> }>;
+      }
+    ).startBridgeServer({
+      host: "127.0.0.1",
+      port: 0,
+      registry,
+      executeChatCompletions: async (_body, _requestId, _streamWriter, value) => {
+        requestOptions = value;
+        return {
+          model: "openai/gpt-4.1-mini-fast",
+          endpointId: "openai.personal.primary.us-east-1.fast",
+          adapterFamily: "ai-sdk-openai",
+          routingDecisionId: "decision-chat-routing-mode-123",
+          outputText: "ok",
+          finishReason: "stop",
+          usage: {
+            inputTokens: 1,
+            outputTokens: 1,
+          },
+        };
+      },
+    });
+
+    try {
+      const response = await fetch(`http://127.0.0.1:${server.port}/v1/chat/completions`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-role-model-routing-mode": "baseline",
+        },
+        body: JSON.stringify({
+          model: "openai/gpt-4.1-mini-fast",
+          messages: [{ role: "user", content: "Respect the override." }],
+        }),
+      });
+
+      expect(response.status).toBe(200);
+      expect(requestOptions).toEqual({
+        routingModeOverride: "baseline",
+      });
+    } finally {
+      await server.close();
+    }
+  });
+
+  test("rejects an invalid x-role-model-routing-mode header", async () => {
+    expect(typeof (bridge as { startBridgeServer?: unknown }).startBridgeServer).toBe("function");
+
+    let executionCalls = 0;
+    const server = await (
+      bridge as {
+        startBridgeServer: (options: {
+          host: string;
+          port: number;
+          registry: EndpointRegistryResult;
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+            streamWriter?: (chunk: Record<string, unknown>) => void | Promise<void>,
+            requestOptions?: {
+              routingModeOverride?: string;
+            },
+          ) => Promise<{
+            model: string;
+            endpointId: string;
+            adapterFamily: string;
+            outputText: string;
+            finishReason: string;
+            usage: {
+              inputTokens: number;
+              outputTokens: number;
+            };
+          }>;
+        }) => Promise<{ port: number; close(): Promise<void> }>;
+      }
+    ).startBridgeServer({
+      host: "127.0.0.1",
+      port: 0,
+      registry,
+      executeChatCompletions: async () => {
+        executionCalls += 1;
+        return {
+          model: "openai/gpt-4.1-mini-fast",
+          endpointId: "openai.personal.primary.us-east-1.fast",
+          adapterFamily: "ai-sdk-openai",
+          routingDecisionId: "decision-chat-routing-mode-invalid",
+          outputText: "unexpected",
+          finishReason: "stop",
+          usage: {
+            inputTokens: 1,
+            outputTokens: 1,
+          },
+        };
+      },
+    });
+
+    try {
+      const response = await fetch(`http://127.0.0.1:${server.port}/v1/chat/completions`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-role-model-routing-mode": "bogus",
+        },
+        body: JSON.stringify({
+          model: "openai/gpt-4.1-mini-fast",
+          messages: [{ role: "user", content: "Reject invalid overrides." }],
+        }),
+      });
+
+      expect(response.status).toBe(400);
+      await expect(response.json()).resolves.toEqual({
+        error:
+          "Invalid x-role-model-routing-mode header value \"bogus\". Expected one of: baseline, difficulty, controller, hybrid.",
+      });
+      expect(executionCalls).toBe(0);
+    } finally {
+      await server.close();
+    }
+  });
+
   test("creates a runtime backend that executes chat-completions through the real routing and adapter path", async () => {
     expect(
       typeof (bridge as { createRuntimeBridgeBackend?: unknown }).createRuntimeBridgeBackend,
@@ -1596,17 +2807,17 @@ describe("runtime-host-bridge", () => {
     expect(typeof backend.readRequestObservation).toBe("function");
     expect(typeof backend.readEndpointProfile).toBe("function");
 
-    const requestId = "req-runtime-bridge-observation-001";
+    const firstRequestId = "req-runtime-bridge-observation-001";
     const result = await backend.executeChatCompletions(
       {
         model: "openai/gpt-4.1-mini-fast",
         messages: [{ role: "user", content: "Summarize the chosen endpoint." }],
       },
-      requestId,
+      firstRequestId,
     );
 
-    await expect(backend.readRequestObservation?.(requestId)).resolves.toMatchObject({
-      requestId,
+    await expect(backend.readRequestObservation?.(firstRequestId)).resolves.toMatchObject({
+      requestId: firstRequestId,
       endpointId: result.endpointId,
       capturePolicy: {
         structuredInspectionAvailable: true,
@@ -1616,6 +2827,1401 @@ describe("runtime-host-bridge", () => {
       endpointId: result.endpointId,
       latestProfile: {
         endpoint_id: result.endpointId,
+      },
+    });
+
+    const secondRequestId = "req-runtime-bridge-observation-002";
+    await backend.executeChatCompletions(
+      {
+        model: "openai/gpt-4.1-mini-fast",
+        messages: [{ role: "user", content: "Summarize the chosen endpoint again." }],
+      },
+      secondRequestId,
+    );
+
+    await expect(backend.readRequestObservation?.(secondRequestId)).resolves.toMatchObject({
+      requestId: secondRequestId,
+      endpointId: result.endpointId,
+      routingDiagnostics: {
+        observedProfile: {
+          endpointId: result.endpointId,
+          source: "runtime-state",
+          readMode: "per-request",
+          measuredAtMs: expect.any(Number),
+        },
+        effectiveMetrics: {
+          quality: expect.objectContaining({
+            value: expect.any(Number),
+            source: "measured",
+            measuredAtMs: expect.any(Number),
+            freshnessWeight: expect.any(Number),
+          }),
+          latency: expect.objectContaining({
+            value: expect.any(Number),
+            source: "measured",
+            measuredAtMs: expect.any(Number),
+            freshnessWeight: expect.any(Number),
+          }),
+          throughput: expect.objectContaining({
+            value: expect.any(Number),
+            source: "measured",
+            measuredAtMs: expect.any(Number),
+            freshnessWeight: expect.any(Number),
+          }),
+        },
+        throughputPenalty: {
+          endpointId: result.endpointId,
+          active: false,
+        },
+      },
+    });
+  });
+
+  test("persists routing-mode override and rewrite-skipped diagnostics for exact-model runtime-backed chat requests", async () => {
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-host-routing-mode-tests-"));
+
+    try {
+      const backend = await (
+        bridge as {
+          createRuntimeBridgeBackend: (options: {
+            repoRoot: string;
+            runtimeStateRoot: string;
+            scopeId: string;
+          }) => Promise<{
+            executeChatCompletions: (
+              body: Record<string, unknown>,
+              requestId: string,
+              streamWriter?: (chunk: Record<string, unknown>) => void | Promise<void>,
+              requestOptions?: {
+                routingModeOverride?: string;
+              },
+            ) => Promise<{
+              endpointId: string;
+            }>;
+            readRequestObservation: (requestId: string) => Promise<unknown>;
+          }>;
+        }
+      ).createRuntimeBridgeBackend({
+        repoRoot,
+        fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+        runtimeStateRoot,
+        scopeId: "runtime-host-routing-mode-tests",
+      });
+
+      const requestId = "req-runtime-bridge-routing-mode-001";
+      await backend.executeChatCompletions(
+        {
+          model: "openai/gpt-4.1-mini-fast",
+          messages: [{ role: "user", content: "Keep the exact-model route and record the rewrite receipt." }],
+        },
+        requestId,
+        undefined,
+        {
+          routingModeOverride: "baseline",
+        },
+      );
+
+      await expect(backend.readRequestObservation(requestId)).resolves.toMatchObject({
+        requestId,
+        routingDiagnostics: {
+          routingMode: {
+            source: "request-override",
+            requestedOverride: "baseline",
+            effectiveMode: "baseline",
+          },
+          rewrite: {
+            requestedModel: "openai/gpt-4.1-mini-fast",
+            downstreamModelId: "openai/gpt-4.1-mini-fast",
+            applied: false,
+            reason: "requested-model-matches-downstream",
+          },
+        },
+      });
+    } finally {
+      await rm(runtimeStateRoot, { recursive: true, force: true });
+    }
+  });
+
+  test("persists alias-resolution diagnostics for runtime-backed chat requests", async () => {
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-host-alias-tests-"));
+    const unifiedRuntimeConfigPath = path.join(runtimeStateRoot, "runtime-config.yaml");
+    await writeFile(
+      unifiedRuntimeConfigPath,
+      stringify({
+        version: "1.0",
+        routing: {
+          strategy: "balanced",
+        },
+        model_aliases: {
+          "gpt-5.4": {
+            model_ids: ["openai/gpt-4.1-mini-fast"],
+          },
+        },
+        litellm_proxy: {
+          command: "node",
+          args: ["-e", createDifficultyClassifierVendorScript("valid-hard")],
+          providers: {
+            openai: {
+              api_key: "${OPENAI_API_KEY}",
+              model_list: [
+                {
+                  model_name: "openai/gpt-4.1-mini-fast",
+                  litellm_params: {
+                    model: "openai/gpt-4.1-mini",
+                  },
+                },
+              ],
+            },
+          },
+        },
+      }),
+      "utf8",
+    );
+
+    const backend = await (
+      bridge as {
+        createRuntimeBridgeBackend: (options: {
+          repoRoot: string;
+          fixtureRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+          unifiedRuntimeConfigPath: string;
+        }) => Promise<{
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+          ) => Promise<{
+            endpointId: string;
+          }>;
+          readRequestObservation: (requestId: string) => Promise<unknown>;
+        }>;
+      }
+    ).createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      runtimeStateRoot,
+      scopeId: "runtime-host-alias-tests",
+      unifiedRuntimeConfigPath,
+    });
+
+    const requestId = "req-runtime-bridge-alias-001";
+    await backend.executeChatCompletions(
+      {
+        model: "gpt-5.4",
+        messages: [{ role: "user", content: "Route through the alias pool." }],
+      },
+      requestId,
+    );
+
+    await expect(backend.readRequestObservation(requestId)).resolves.toMatchObject({
+      requestId,
+      routingDiagnostics: {
+        aliasResolution: {
+          requestedModel: "gpt-5.4",
+          aliasId: "gpt-5.4",
+          resolvedModelIds: ["openai/gpt-4.1-mini-fast"],
+          allowEndpoints: ["openai.litellm.global.openai-gpt-4-1-mini-fast"],
+        },
+      },
+    });
+  });
+
+  test("persists difficulty-routing diagnostics for runtime-backed chat requests", async () => {
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-host-difficulty-tests-"));
+    const unifiedRuntimeConfigPath = path.join(runtimeStateRoot, "runtime-config.yaml");
+    await writeFile(
+      unifiedRuntimeConfigPath,
+      stringify({
+        version: "1.0",
+        difficulty_classifier: {
+          enabled: true,
+          rubric_version: "v1",
+          source_type: "remote",
+          model_id: "openai/gpt-4.1-mini-fast",
+          timeout_ms: 1500,
+          fallback_difficulty: "hard",
+        },
+        model_aliases: {
+          "gpt-5.4": {
+            mode: "difficulty",
+            model_ids: ["openai/gpt-4.1-mini-fast"],
+          },
+        },
+        litellm_proxy: {
+          command: "node",
+          args: ["-e", createDifficultyClassifierVendorScript("valid-hard")],
+          providers: {
+            openai: {
+              api_key: "${OPENAI_API_KEY}",
+              model_list: [
+                {
+                  model_name: "openai/gpt-4.1-mini-fast",
+                  max_difficulty: "hard",
+                  litellm_params: {
+                    model: "openai/gpt-4.1-mini",
+                  },
+                },
+              ],
+            },
+          },
+        },
+      }),
+      "utf8",
+    );
+
+    const backend = await (
+      bridge as {
+        createRuntimeBridgeBackend: (options: {
+          repoRoot: string;
+          fixtureRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+          unifiedRuntimeConfigPath: string;
+        }) => Promise<{
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+          ) => Promise<{
+            endpointId: string;
+          }>;
+          readRequestObservation: (requestId: string) => Promise<unknown>;
+        }>;
+      }
+    ).createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      runtimeStateRoot,
+      scopeId: "runtime-host-difficulty-tests",
+      unifiedRuntimeConfigPath,
+    });
+
+    const requestId = "req-runtime-bridge-difficulty-001";
+    await backend.executeChatCompletions(
+      {
+        model: "gpt-5.4",
+        messages: [
+          { role: "system", content: "Preserve strict schema compatibility." },
+          {
+            role: "user",
+            content:
+              "Analyze this code-edit workflow, apply multiple constraints, use the available tools, and verify the final contract end to end.",
+          },
+          { role: "assistant", content: "I will inspect the schema and update the implementation carefully." },
+          {
+            role: "user",
+            content:
+              "Now finish the refactor, update the tests, and validate the final output against the schema.",
+          },
+        ],
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "readSchema",
+              parameters: { type: "object", properties: {} },
+            },
+          },
+          {
+            type: "function",
+            function: {
+              name: "runTests",
+              parameters: { type: "object", properties: {} },
+            },
+          },
+        ],
+      },
+      requestId,
+    );
+
+    await expect(backend.readRequestObservation(requestId)).resolves.toMatchObject({
+      requestId,
+      routingDiagnostics: {
+        aliasResolution: {
+          requestedModel: "gpt-5.4",
+          aliasId: "gpt-5.4",
+          resolvedModelIds: ["openai/gpt-4.1-mini-fast"],
+          allowEndpoints: ["openai.litellm.global.openai-gpt-4-1-mini-fast"],
+        },
+        difficultyRouting: expect.objectContaining({
+          difficulty: "hard",
+          strategy: "quality",
+          fallbackApplied: false,
+          rubricSignals: expect.objectContaining({
+            toolCount: 2,
+            historyTurnCount: 4,
+            codeOrSchemaBurden: true,
+          }),
+        }),
+      },
+    });
+  });
+
+  test("allows an observed max-difficulty override when bucketed performance supports a harder request", async () => {
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-host-difficulty-override-tests-"));
+    const unifiedRuntimeConfigPath = path.join(runtimeStateRoot, "runtime-config.yaml");
+    await writeFile(
+      unifiedRuntimeConfigPath,
+      stringify({
+        version: "1.0",
+        observed_data: {
+          difficulty_learning: {
+            override: {
+              min_samples: 4,
+              max_failure_rate: 0.2,
+              min_quality_score: 0.8,
+              min_tokens_per_sec: 22,
+            },
+          },
+        },
+        difficulty_classifier: {
+          enabled: true,
+          rubric_version: "v1",
+          source_type: "remote",
+          model_id: "openai/gpt-4.1-mini-fast",
+          timeout_ms: 1500,
+          fallback_difficulty: "easy",
+        },
+        model_aliases: {
+          "gpt-5.4": {
+            mode: "difficulty",
+            model_ids: ["openai/gpt-4.1-mini-fast"],
+          },
+        },
+        litellm_proxy: {
+          command: "node",
+          args: ["-e", createDifficultyClassifierVendorScript("valid-hard")],
+          providers: {
+            openai: {
+              api_key: "${OPENAI_API_KEY}",
+              model_list: [
+                {
+                  model_name: "openai/gpt-4.1-mini-fast",
+                  max_difficulty: "easy",
+                  litellm_params: {
+                    model: "openai/gpt-4.1-mini",
+                  },
+                },
+              ],
+            },
+          },
+        },
+      }),
+      "utf8",
+    );
+
+    const scopeId = "runtime-host-difficulty-override-tests";
+    const backend = await (
+      bridge as {
+        createRuntimeBridgeBackend: (options: {
+          repoRoot: string;
+          fixtureRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+          unifiedRuntimeConfigPath: string;
+        }) => Promise<{
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+          ) => Promise<{
+            endpointId: string;
+          }>;
+          readRequestObservation: (requestId: string) => Promise<unknown>;
+        }>;
+      }
+    ).createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      runtimeStateRoot,
+      scopeId,
+      unifiedRuntimeConfigPath,
+    });
+
+    const databasePath = resolveSqliteMemoryLocation({
+      runtimeStateRoot,
+      scopeId,
+    });
+    const database = new DatabaseSync(databasePath);
+    database
+      .prepare(
+        "INSERT INTO observed_profile_snapshots_by_difficulty (snapshot_id, endpoint_id, difficulty_bucket, measured_at_ms, profile_json) VALUES (?, ?, ?, ?, ?)",
+      )
+      .run(
+        "override-hard-profile",
+        "openai.litellm.global.openai-gpt-4-1-mini-fast",
+        "hard",
+        10_000,
+        JSON.stringify({
+          endpoint_id: "openai.litellm.global.openai-gpt-4-1-mini-fast",
+          endpoint_version: "run27-override-v1",
+          measured_at_ms: 10_000,
+          measurement_window: {
+            started_at_ms: 1_000,
+            ended_at_ms: 2_000,
+          },
+          sample_size: 4,
+          sources: {
+            live_request_samples: 4,
+            benchmark_samples: 0,
+          },
+          latency_ms_p50: 410,
+          latency_ms_p95: 690,
+          failure_rate: 0.08,
+          freshness_score: 0.97,
+          confidence_score: 0.95,
+          quality_score: 0.84,
+          tokens_per_sec: 25,
+          cost_per_1k_tokens_est: 1.1,
+          currency: "USD",
+        }),
+      );
+    database.close();
+
+    const requestId = "req-runtime-bridge-difficulty-override-001";
+    await expect(
+      backend.executeChatCompletions(
+        {
+          model: "gpt-5.4",
+          messages: [
+            { role: "system", content: "Preserve strict schema compatibility." },
+            {
+              role: "user",
+              content:
+                "Analyze this code-edit workflow, apply multiple constraints, use the available tools, and verify the final contract end to end.",
+            },
+            { role: "assistant", content: "I will inspect the schema and update the implementation carefully." },
+            {
+              role: "user",
+              content:
+                "Now finish the refactor, update the tests, and validate the final output against the schema.",
+            },
+          ],
+          tools: [
+            {
+              type: "function",
+              function: {
+                name: "readSchema",
+                parameters: { type: "object", properties: {} },
+              },
+            },
+            {
+              type: "function",
+              function: {
+                name: "runTests",
+                parameters: { type: "object", properties: {} },
+              },
+            },
+          ],
+        },
+        requestId,
+      ),
+    ).resolves.toMatchObject({
+      endpointId: "openai.litellm.global.openai-gpt-4-1-mini-fast",
+    });
+
+    await expect(backend.readRequestObservation(requestId)).resolves.toMatchObject({
+      requestId,
+      routingDiagnostics: {
+        difficultyRouting: expect.objectContaining({
+          difficulty: "hard",
+          strategy: "quality",
+          fallbackApplied: false,
+          overrideAppliedEndpointIds: ["openai.litellm.global.openai-gpt-4-1-mini-fast"],
+          overrideRecommendedMaxDifficultyByEndpointId: {
+            "openai.litellm.global.openai-gpt-4-1-mini-fast": "hard",
+          },
+        }),
+      },
+    });
+  });
+
+  test("routes hard requests using bucketed observed profiles and records the selected difficulty bucket", async () => {
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-host-difficulty-bucket-tests-"));
+    const unifiedRuntimeConfigPath = path.join(runtimeStateRoot, "runtime-config.yaml");
+    await writeFile(
+      unifiedRuntimeConfigPath,
+      stringify({
+        version: "1.0",
+        difficulty_classifier: {
+          enabled: true,
+          rubric_version: "v1",
+          source_type: "remote",
+          model_id: "openai/gpt-4.1-mini-fast",
+          timeout_ms: 1500,
+          fallback_difficulty: "easy",
+        },
+        model_aliases: {
+          "gpt-5.4": {
+            mode: "difficulty",
+            model_ids: ["openai/gpt-4.1-mini-fast", "claude-3.7-sonnet"],
+          },
+        },
+        litellm_proxy: {
+          command: "node",
+          args: ["-e", createDifficultyClassifierVendorScript("valid-hard")],
+          providers: {
+            openai: {
+              api_key: "${OPENAI_API_KEY}",
+              model_list: [
+                {
+                  model_name: "openai/gpt-4.1-mini-fast",
+                  max_difficulty: "hard",
+                  litellm_params: {
+                    model: "openai/gpt-4.1-mini",
+                  },
+                },
+              ],
+            },
+            anthropic: {
+              api_key: "${ANTHROPIC_API_KEY}",
+              model_list: [
+                {
+                  model_name: "claude-3.7-sonnet",
+                  max_difficulty: "hard",
+                  litellm_params: {
+                    model: "anthropic/claude-3.7-sonnet",
+                  },
+                },
+              ],
+            },
+          },
+        },
+      }),
+      "utf8",
+    );
+
+    const scopeId = "runtime-host-difficulty-bucket-tests";
+    const backend = await (
+      bridge as {
+        createRuntimeBridgeBackend: (options: {
+          repoRoot: string;
+          fixtureRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+          unifiedRuntimeConfigPath: string;
+        }) => Promise<{
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+          ) => Promise<{
+            endpointId: string;
+          }>;
+          readRequestObservation: (requestId: string) => Promise<unknown>;
+        }>;
+      }
+    ).createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      runtimeStateRoot,
+      scopeId,
+      unifiedRuntimeConfigPath,
+    });
+
+    const databasePath = resolveSqliteMemoryLocation({
+      runtimeStateRoot,
+      scopeId,
+    });
+    const database = new DatabaseSync(databasePath);
+    const insertProfile = database.prepare(
+      "INSERT INTO observed_profile_snapshots (snapshot_id, endpoint_id, measured_at_ms, profile_json) VALUES (?, ?, ?, ?)",
+    );
+    const insertBucketedProfile = database.prepare(
+      "INSERT INTO observed_profile_snapshots_by_difficulty (snapshot_id, endpoint_id, difficulty_bucket, measured_at_ms, profile_json) VALUES (?, ?, ?, ?, ?)",
+    );
+    const buildProfile = (
+      endpointId: string,
+      measuredAtMs: number,
+      qualityScore: number,
+      failureRate: number,
+      tokensPerSec: number,
+      latencyMsP50: number,
+      latencyMsP95: number,
+    ) => ({
+      endpoint_id: endpointId,
+      endpoint_version: "run27-bucket-v1",
+      measured_at_ms: measuredAtMs,
+      measurement_window: {
+        started_at_ms: measuredAtMs - 1_000,
+        ended_at_ms: measuredAtMs,
+      },
+      sample_size: 5,
+      sources: {
+        live_request_samples: 5,
+        benchmark_samples: 0,
+      },
+      latency_ms_p50: latencyMsP50,
+      latency_ms_p95: latencyMsP95,
+      failure_rate: failureRate,
+      freshness_score: 0.97,
+      confidence_score: 0.95,
+      quality_score: qualityScore,
+      tokens_per_sec: tokensPerSec,
+      cost_per_1k_tokens_est: 1,
+      currency: "USD",
+    });
+
+    insertProfile.run(
+      "bucket-endpoint-openai",
+      "openai.litellm.global.openai-gpt-4-1-mini-fast",
+      10_000,
+      JSON.stringify(
+        buildProfile("openai.litellm.global.openai-gpt-4-1-mini-fast", 10_000, 0.96, 0.02, 36, 180, 280),
+      ),
+    );
+    insertProfile.run(
+      "bucket-endpoint-anthropic",
+      "anthropic.litellm.global.claude-3-7-sonnet",
+      10_100,
+      JSON.stringify(
+        buildProfile("anthropic.litellm.global.claude-3-7-sonnet", 10_100, 0.42, 0.05, 12, 700, 980),
+      ),
+    );
+    insertBucketedProfile.run(
+      "bucket-hard-openai",
+      "openai.litellm.global.openai-gpt-4-1-mini-fast",
+      "hard",
+      11_000,
+      JSON.stringify(
+        buildProfile("openai.litellm.global.openai-gpt-4-1-mini-fast", 11_000, 0.28, 0.24, 9, 880, 1_120),
+      ),
+    );
+    insertBucketedProfile.run(
+      "bucket-hard-anthropic",
+      "anthropic.litellm.global.claude-3-7-sonnet",
+      "hard",
+      11_100,
+      JSON.stringify(
+        buildProfile("anthropic.litellm.global.claude-3-7-sonnet", 11_100, 0.97, 0.01, 27, 260, 390),
+      ),
+    );
+    database.close();
+
+    const requestId = "req-runtime-bridge-difficulty-bucket-001";
+    await expect(
+      backend.executeChatCompletions(
+        {
+          model: "gpt-5.4",
+          messages: [
+            { role: "system", content: "Preserve strict schema compatibility." },
+            {
+              role: "user",
+              content:
+                "Analyze this code-edit workflow, apply multiple constraints, use the available tools, and verify the final contract end to end.",
+            },
+            { role: "assistant", content: "I will inspect the schema and update the implementation carefully." },
+            {
+              role: "user",
+              content:
+                "Now finish the refactor, update the tests, and validate the final output against the schema.",
+            },
+          ],
+          tools: [
+            {
+              type: "function",
+              function: {
+                name: "readSchema",
+                parameters: { type: "object", properties: {} },
+              },
+            },
+            {
+              type: "function",
+              function: {
+                name: "runTests",
+                parameters: { type: "object", properties: {} },
+              },
+            },
+          ],
+        },
+        requestId,
+      ),
+    ).resolves.toMatchObject({
+      endpointId: "anthropic.litellm.global.claude-3-7-sonnet",
+    });
+
+    await expect(backend.readRequestObservation(requestId)).resolves.toMatchObject({
+      requestId,
+      endpointId: "anthropic.litellm.global.claude-3-7-sonnet",
+      routingDiagnostics: {
+        difficultyRouting: expect.objectContaining({
+          difficulty: "hard",
+          strategy: "quality",
+          fallbackApplied: false,
+        }),
+        observedProfile: {
+          endpointId: "anthropic.litellm.global.claude-3-7-sonnet",
+          source: "runtime-state",
+          readMode: "per-request",
+          difficultyBucket: "hard",
+          bucketOverrideApplied: true,
+          measuredAtMs: 11_100,
+        },
+      },
+    });
+  });
+
+  test("uses the configured remote classifier result for difficulty-mode runtime-backed chat requests", async () => {
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-host-difficulty-classifier-tests-"));
+    const unifiedRuntimeConfigPath = path.join(runtimeStateRoot, "runtime-config.yaml");
+    await writeFile(
+      unifiedRuntimeConfigPath,
+      stringify({
+        version: "1.0",
+        difficulty_classifier: {
+          enabled: true,
+          rubric_version: "v1",
+          source_type: "remote",
+          model_id: "openai/gpt-4.1-mini-fast",
+          timeout_ms: 1500,
+          fallback_difficulty: "easy",
+        },
+        model_aliases: {
+          "gpt-5.4": {
+            mode: "difficulty",
+            model_ids: ["openai/gpt-4.1-mini-fast"],
+          },
+        },
+        litellm_proxy: {
+          command: "node",
+          args: ["-e", createDifficultyClassifierVendorScript("valid-hard")],
+          providers: {
+            openai: {
+              api_key: "${OPENAI_API_KEY}",
+              model_list: [
+                {
+                  model_name: "openai/gpt-4.1-mini-fast",
+                  max_difficulty: "hard",
+                  litellm_params: {
+                    model: "openai/gpt-4.1-mini",
+                  },
+                },
+              ],
+            },
+          },
+        },
+      }),
+      "utf8",
+    );
+
+    const backend = await (
+      bridge as {
+        createRuntimeBridgeBackend: (options: {
+          repoRoot: string;
+          fixtureRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+          unifiedRuntimeConfigPath: string;
+        }) => Promise<{
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+          ) => Promise<{
+            endpointId: string;
+          }>;
+          readRequestObservation: (requestId: string) => Promise<unknown>;
+        }>;
+      }
+    ).createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      runtimeStateRoot,
+      scopeId: "runtime-host-difficulty-classifier-tests",
+      unifiedRuntimeConfigPath,
+    });
+
+    const requestId = "req-runtime-bridge-difficulty-classifier-001";
+    await backend.executeChatCompletions(
+      {
+        model: "gpt-5.4",
+        messages: [{ role: "user", content: "Say hello in one short sentence." }],
+      },
+      requestId,
+    );
+
+    await expect(backend.readRequestObservation(requestId)).resolves.toMatchObject({
+      requestId,
+      routingDiagnostics: {
+        difficultyRouting: expect.objectContaining({
+          difficulty: "hard",
+          strategy: "quality",
+          fallbackApplied: false,
+        }),
+      },
+    });
+  });
+
+  test("uses the configured remote controller result for intelligent runtime-backed chat requests", async () => {
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-host-controller-tests-"));
+    const unifiedRuntimeConfigPath = path.join(runtimeStateRoot, "runtime-config.yaml");
+    await writeFile(
+      unifiedRuntimeConfigPath,
+      stringify({
+        version: "1.0",
+        controller: {
+          enabled: true,
+          source_type: "remote",
+          model_id: "openai/gpt-4.1-mini-fast",
+          timeout_ms: 1500,
+        },
+        model_aliases: {
+          "gpt-5.4": {
+            mode: "intelligent",
+            model_ids: ["openai/gpt-4.1-mini-fast"],
+          },
+        },
+        litellm_proxy: {
+          command: "node",
+          args: ["-e", createControllerVendorScript()],
+          providers: {
+            openai: {
+              api_key: "${OPENAI_API_KEY}",
+              model_list: [
+                {
+                  model_name: "openai/gpt-4.1-mini-fast",
+                  max_difficulty: "hard",
+                  litellm_params: {
+                    model: "openai/gpt-4.1-mini",
+                  },
+                },
+              ],
+            },
+          },
+        },
+      }),
+      "utf8",
+    );
+
+    const backend = await (
+      bridge as {
+        createRuntimeBridgeBackend: (options: {
+          repoRoot: string;
+          fixtureRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+          unifiedRuntimeConfigPath: string;
+        }) => Promise<{
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+          ) => Promise<{
+            endpointId: string;
+          }>;
+          readRequestObservation: (requestId: string) => Promise<unknown>;
+        }>;
+      }
+    ).createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      runtimeStateRoot,
+      scopeId: "runtime-host-controller-tests",
+      unifiedRuntimeConfigPath,
+    });
+
+    const requestId = "req-runtime-bridge-controller-001";
+    await backend.executeChatCompletions(
+      {
+        model: "gpt-5.4",
+        messages: [{ role: "user", content: "Prepare a patch plan and preserve the existing contract." }],
+      },
+      requestId,
+    );
+
+    await expect(backend.readRequestObservation(requestId)).resolves.toMatchObject({
+      requestId,
+      routingDiagnostics: {
+        controllerRouting: {
+          active: true,
+          acceptedDirectives: {
+            strategy: "quality",
+            preferLocal: true,
+          },
+        },
+      },
+    });
+  });
+
+  test("persists alias-default hybrid arbitration and rewrite-applied diagnostics for runtime-backed chat requests", async () => {
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-host-hybrid-tests-"));
+    const unifiedRuntimeConfigPath = path.join(runtimeStateRoot, "runtime-config.yaml");
+    await writeFile(
+      unifiedRuntimeConfigPath,
+      stringify({
+        version: "1.0",
+        difficulty_classifier: {
+          enabled: true,
+          rubric_version: "v1",
+          source_type: "remote",
+          model_id: "openai/gpt-4.1-mini-fast",
+          timeout_ms: 1500,
+          fallback_difficulty: "easy",
+        },
+        controller: {
+          enabled: true,
+          source_type: "remote",
+          model_id: "openai/gpt-4.1-mini-fast",
+          timeout_ms: 1500,
+        },
+        model_aliases: {
+          "gpt-5.4-hybrid": {
+            mode: "hybrid",
+            model_ids: ["openai/gpt-4.1-mini-fast"],
+          },
+        },
+        litellm_proxy: {
+          command: "node",
+          args: ["-e", createHybridArbitrationVendorScript()],
+          providers: {
+            openai: {
+              api_key: "${OPENAI_API_KEY}",
+              model_list: [
+                {
+                  model_name: "openai/gpt-4.1-mini-fast",
+                  max_difficulty: "hard",
+                  litellm_params: {
+                    model: "openai/gpt-4.1-mini",
+                  },
+                },
+              ],
+            },
+          },
+        },
+      }),
+      "utf8",
+    );
+
+    const backend = await (
+      bridge as {
+        createRuntimeBridgeBackend: (options: {
+          repoRoot: string;
+          fixtureRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+          unifiedRuntimeConfigPath: string;
+        }) => Promise<{
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+          ) => Promise<{
+            endpointId: string;
+          }>;
+          readRequestObservation: (requestId: string) => Promise<unknown>;
+        }>;
+      }
+    ).createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      runtimeStateRoot,
+      scopeId: "runtime-host-hybrid-tests",
+      unifiedRuntimeConfigPath,
+    });
+
+    const requestId = "req-runtime-bridge-hybrid-001";
+    await backend.executeChatCompletions(
+      {
+        model: "gpt-5.4-hybrid",
+        messages: [{ role: "user", content: "Choose the best path for a short coding request." }],
+      },
+      requestId,
+    );
+
+    await expect(backend.readRequestObservation(requestId)).resolves.toMatchObject({
+      requestId,
+      routingDiagnostics: {
+        routingMode: {
+          source: "alias-default",
+          aliasMode: "hybrid",
+          effectiveMode: "hybrid",
+        },
+        difficultyRouting: {
+          difficulty: "easy",
+          strategy: "cost",
+        },
+        controllerRouting: {
+          active: true,
+          acceptedDirectives: {
+            strategy: "quality",
+            preferLocal: true,
+          },
+        },
+        hybridArbitration: {
+          active: true,
+          difficultyStrategy: "cost",
+          finalStrategy: "quality",
+          controllerChangedPlan: true,
+          dominantSignal: "controller",
+        },
+        rewrite: {
+          requestedModel: "gpt-5.4-hybrid",
+          downstreamModelId: "openai/gpt-4.1-mini-fast",
+          applied: true,
+          reason: "requested-model-rewritten-for-selected-endpoint",
+        },
+      },
+    });
+  });
+
+  test("falls back deterministically when the configured classifier times out", async () => {
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-host-difficulty-timeout-tests-"));
+    const unifiedRuntimeConfigPath = path.join(runtimeStateRoot, "runtime-config.yaml");
+    await writeFile(
+      unifiedRuntimeConfigPath,
+      stringify({
+        version: "1.0",
+        difficulty_classifier: {
+          enabled: true,
+          rubric_version: "v1",
+          source_type: "remote",
+          model_id: "openai/gpt-4.1-mini-fast",
+          timeout_ms: 1,
+          fallback_difficulty: "medium",
+        },
+        model_aliases: {
+          "gpt-5.4": {
+            mode: "difficulty",
+            model_ids: ["openai/gpt-4.1-mini-fast"],
+          },
+        },
+        litellm_proxy: {
+          command: "node",
+          args: ["-e", createDifficultyClassifierVendorScript("slow-hard")],
+          providers: {
+            openai: {
+              api_key: "${OPENAI_API_KEY}",
+              model_list: [
+                {
+                  model_name: "openai/gpt-4.1-mini-fast",
+                  max_difficulty: "hard",
+                  litellm_params: {
+                    model: "openai/gpt-4.1-mini",
+                  },
+                },
+              ],
+            },
+          },
+        },
+      }),
+      "utf8",
+    );
+
+    const backend = await (
+      bridge as {
+        createRuntimeBridgeBackend: (options: {
+          repoRoot: string;
+          fixtureRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+          unifiedRuntimeConfigPath: string;
+        }) => Promise<{
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+          ) => Promise<{
+            endpointId: string;
+          }>;
+          readRequestObservation: (requestId: string) => Promise<unknown>;
+        }>;
+      }
+    ).createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      runtimeStateRoot,
+      scopeId: "runtime-host-difficulty-timeout-tests",
+      unifiedRuntimeConfigPath,
+    });
+
+    const requestId = "req-runtime-bridge-difficulty-timeout-001";
+    await backend.executeChatCompletions(
+      {
+        model: "gpt-5.4",
+        messages: [{ role: "user", content: "Say hello in one short sentence." }],
+      },
+      requestId,
+    );
+
+    await expect(backend.readRequestObservation(requestId)).resolves.toMatchObject({
+      requestId,
+      routingDiagnostics: {
+        difficultyRouting: expect.objectContaining({
+          difficulty: "medium",
+          strategy: "balanced",
+          fallbackApplied: true,
+          fallbackReason: "classifier-timeout",
+        }),
+      },
+    });
+  });
+
+  test("reuses cached difficulty classification for repeated requests in the same conversation when invalidation thresholds are not exceeded", async () => {
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-host-difficulty-cache-tests-"));
+    const unifiedRuntimeConfigPath = path.join(runtimeStateRoot, "runtime-config.yaml");
+    await writeFile(
+      unifiedRuntimeConfigPath,
+      stringify({
+        version: "1.0",
+        observed_data: {
+          difficulty_learning: {
+            invalidation: {
+              max_context_tokens_delta: 4000,
+              max_history_turn_delta: 4,
+              max_tool_count_delta: 2,
+              max_instruction_constraint_delta: 8,
+              max_decomposition_keyword_delta: 8,
+              reclassify_on_code_or_schema_change: false,
+            },
+          },
+        },
+        difficulty_classifier: {
+          enabled: true,
+          rubric_version: "v1",
+          source_type: "remote",
+          model_id: "openai/gpt-4.1-mini-fast",
+          timeout_ms: 1500,
+          fallback_difficulty: "easy",
+        },
+        model_aliases: {
+          "gpt-5.4": {
+            mode: "difficulty",
+            model_ids: ["openai/gpt-4.1-mini-fast"],
+          },
+        },
+        litellm_proxy: {
+          command: "node",
+          args: ["-e", createSequencedDifficultyClassifierVendorScript()],
+          providers: {
+            openai: {
+              api_key: "${OPENAI_API_KEY}",
+              model_list: [
+                {
+                  model_name: "openai/gpt-4.1-mini-fast",
+                  max_difficulty: "hard",
+                  litellm_params: {
+                    model: "openai/gpt-4.1-mini",
+                  },
+                },
+              ],
+            },
+          },
+        },
+      }),
+      "utf8",
+    );
+
+    const backend = await (
+      bridge as {
+        createRuntimeBridgeBackend: (options: {
+          repoRoot: string;
+          fixtureRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+          unifiedRuntimeConfigPath: string;
+        }) => Promise<{
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+          ) => Promise<{
+            endpointId: string;
+          }>;
+          readRequestObservation: (requestId: string) => Promise<unknown>;
+        }>;
+      }
+    ).createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      runtimeStateRoot,
+      scopeId: "runtime-host-difficulty-cache-tests",
+      unifiedRuntimeConfigPath,
+    });
+
+    const firstRequestId = "req-runtime-bridge-difficulty-cache-001";
+    await backend.executeChatCompletions(
+      {
+        model: "gpt-5.4",
+        messages: [
+          {
+            role: "user",
+            content: "Read the schema, use both tools, then refactor the implementation carefully.",
+          },
+        ],
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "readSchema",
+              parameters: { type: "object", properties: {} },
+            },
+          },
+          {
+            type: "function",
+            function: {
+              name: "runTests",
+              parameters: { type: "object", properties: {} },
+            },
+          },
+        ],
+      },
+      firstRequestId,
+    );
+
+    await expect(backend.readRequestObservation(firstRequestId)).resolves.toMatchObject({
+      requestId: firstRequestId,
+      routingDiagnostics: {
+        difficultyRouting: expect.objectContaining({
+          difficulty: "hard",
+          strategy: "quality",
+          fallbackApplied: false,
+        }),
+      },
+    });
+
+    const secondRequestId = "req-runtime-bridge-difficulty-cache-002";
+    await backend.executeChatCompletions(
+      {
+        model: "gpt-5.4",
+        messages: [{ role: "user", content: "Summarize the answer in one sentence." }],
+      },
+      secondRequestId,
+    );
+
+    await expect(backend.readRequestObservation(secondRequestId)).resolves.toMatchObject({
+      requestId: secondRequestId,
+      routingDiagnostics: {
+        difficultyRouting: expect.objectContaining({
+          difficulty: "hard",
+          strategy: "quality",
+          fallbackApplied: false,
+          cacheHit: true,
+        }),
+      },
+    });
+  });
+
+  test("reports cache invalidation reasons before reclassifying a repeated request", async () => {
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-host-difficulty-invalidation-tests-"));
+    const unifiedRuntimeConfigPath = path.join(runtimeStateRoot, "runtime-config.yaml");
+    await writeFile(
+      unifiedRuntimeConfigPath,
+      stringify({
+        version: "1.0",
+        observed_data: {
+          difficulty_learning: {
+            invalidation: {
+              max_context_tokens_delta: 4000,
+              max_history_turn_delta: 4,
+              max_tool_count_delta: 2,
+              max_instruction_constraint_delta: 8,
+              max_decomposition_keyword_delta: 8,
+              reclassify_on_code_or_schema_change: true,
+            },
+          },
+        },
+        difficulty_classifier: {
+          enabled: true,
+          rubric_version: "v1",
+          source_type: "remote",
+          model_id: "openai/gpt-4.1-mini-fast",
+          timeout_ms: 1500,
+          fallback_difficulty: "easy",
+        },
+        model_aliases: {
+          "gpt-5.4": {
+            mode: "difficulty",
+            model_ids: ["openai/gpt-4.1-mini-fast"],
+          },
+        },
+        litellm_proxy: {
+          command: "node",
+          args: ["-e", createSequencedDifficultyClassifierVendorScript()],
+          providers: {
+            openai: {
+              api_key: "${OPENAI_API_KEY}",
+              model_list: [
+                {
+                  model_name: "openai/gpt-4.1-mini-fast",
+                  max_difficulty: "hard",
+                  litellm_params: {
+                    model: "openai/gpt-4.1-mini",
+                  },
+                },
+              ],
+            },
+          },
+        },
+      }),
+      "utf8",
+    );
+
+    const backend = await (
+      bridge as {
+        createRuntimeBridgeBackend: (options: {
+          repoRoot: string;
+          fixtureRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+          unifiedRuntimeConfigPath: string;
+        }) => Promise<{
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+          ) => Promise<{
+            endpointId: string;
+          }>;
+          readRequestObservation: (requestId: string) => Promise<unknown>;
+        }>;
+      }
+    ).createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      runtimeStateRoot,
+      scopeId: "runtime-host-difficulty-invalidation-tests",
+      unifiedRuntimeConfigPath,
+    });
+
+    await backend.executeChatCompletions(
+      {
+        model: "gpt-5.4",
+        messages: [
+          {
+            role: "user",
+            content: "Read the schema, use both tools, then refactor the implementation carefully.",
+          },
+        ],
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "readSchema",
+              parameters: { type: "object", properties: {} },
+            },
+          },
+          {
+            type: "function",
+            function: {
+              name: "runTests",
+              parameters: { type: "object", properties: {} },
+            },
+          },
+        ],
+      },
+      "req-runtime-bridge-difficulty-invalidation-001",
+    );
+
+    const requestId = "req-runtime-bridge-difficulty-invalidation-002";
+    await backend.executeChatCompletions(
+      {
+        model: "gpt-5.4",
+        messages: [{ role: "user", content: "Summarize the answer in one sentence." }],
+      },
+      requestId,
+    );
+
+    await expect(backend.readRequestObservation(requestId)).resolves.toMatchObject({
+      requestId,
+      routingDiagnostics: {
+        difficultyRouting: expect.objectContaining({
+          difficulty: "easy",
+          strategy: "cost",
+          fallbackApplied: false,
+          cacheInvalidated: true,
+          cacheInvalidationReasons: expect.arrayContaining(["code-or-schema-change"]),
+        }),
       },
     });
   });
@@ -2347,6 +4953,136 @@ describe("runtime-host-bridge", () => {
     } finally {
       await server.close();
     }
+  });
+
+  test("reads bucketed endpoint profiles with an advisory max-difficulty recommendation", async () => {
+    expect(
+      typeof (bridge as { createRuntimeBridgeBackend?: unknown }).createRuntimeBridgeBackend,
+    ).toBe("function");
+
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-host-difficulty-"));
+    const scopeId = "runtime-host-difficulty-profile-tests";
+    const backend = await (
+      bridge as {
+        createRuntimeBridgeBackend: (options: {
+          repoRoot: string;
+          fixtureRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+        }) => Promise<{
+          readEndpointProfile?: (endpointId: string) => Promise<unknown>;
+        }>;
+      }
+    ).createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      runtimeStateRoot,
+      scopeId,
+    });
+
+    expect(typeof backend.readEndpointProfile).toBe("function");
+
+    const endpointId = "openai.personal.primary.us-east-1.fast";
+    const databasePath = resolveSqliteMemoryLocation({
+      runtimeStateRoot,
+      scopeId,
+    });
+    const database = new DatabaseSync(databasePath);
+    const insertProfile = database.prepare(
+      "INSERT INTO observed_profile_snapshots_by_difficulty (snapshot_id, endpoint_id, difficulty_bucket, measured_at_ms, profile_json) VALUES (?, ?, ?, ?, ?)",
+    );
+    const baseProfile = {
+      endpoint_id: endpointId,
+      endpoint_version: "run27-bridge-test-v1",
+      measurement_window: {
+        started_at_ms: 1_000,
+        ended_at_ms: 2_000,
+      },
+      freshness_score: 0.97,
+      confidence_score: 0.95,
+      latency_ms_p50: 420,
+      latency_ms_p95: 710,
+      sources: {
+        live_request_samples: 4,
+        benchmark_samples: 0,
+      },
+      currency: "USD",
+    };
+
+    insertProfile.run(
+      "bridge-snapshot-easy",
+      endpointId,
+      "easy",
+      10_000,
+      JSON.stringify({
+        ...baseProfile,
+        measured_at_ms: 10_000,
+        sample_size: 5,
+        failure_rate: 0.03,
+        quality_score: 0.93,
+        tokens_per_sec: 34,
+        cost_per_1k_tokens_est: 0.9,
+      }),
+    );
+    insertProfile.run(
+      "bridge-snapshot-medium",
+      endpointId,
+      "medium",
+      11_000,
+      JSON.stringify({
+        ...baseProfile,
+        measured_at_ms: 11_000,
+        sample_size: 4,
+        failure_rate: 0.14,
+        quality_score: 0.84,
+        tokens_per_sec: 24,
+        cost_per_1k_tokens_est: 1.1,
+      }),
+    );
+    insertProfile.run(
+      "bridge-snapshot-hard",
+      endpointId,
+      "hard",
+      12_000,
+      JSON.stringify({
+        ...baseProfile,
+        measured_at_ms: 12_000,
+        sample_size: 4,
+        failure_rate: 0.28,
+        quality_score: 0.83,
+        tokens_per_sec: 27,
+        cost_per_1k_tokens_est: 1.6,
+      }),
+    );
+    database.close();
+
+    const profile = await backend.readEndpointProfile?.(endpointId);
+
+    expect(profile).toEqual(
+      expect.objectContaining({
+        endpointId,
+        difficultyProfiles: expect.objectContaining({
+          easy: expect.objectContaining({
+            sample_size: 5,
+          }),
+          medium: expect.objectContaining({
+            sample_size: 4,
+          }),
+          hard: expect.objectContaining({
+            sample_size: 4,
+          }),
+        }),
+        advisoryMaxDifficultyRecommendation: expect.objectContaining({
+          recommendedMaxDifficulty: "medium",
+          evaluations: expect.objectContaining({
+            hard: expect.objectContaining({
+              eligible: false,
+              rejectionReasons: ["max-failure-rate"],
+            }),
+          }),
+        }),
+      }),
+    );
   });
 
   test("streams canonical telemetry updates over SSE after new requests are persisted", async () => {

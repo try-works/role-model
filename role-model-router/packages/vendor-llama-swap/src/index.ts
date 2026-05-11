@@ -444,6 +444,9 @@ export async function startLlamaSwapVendor(
       }
       return Object.entries(data.models).map(([modelId, info]) => ({
         modelId,
+        // Note: loadedAt is fabricated because llama-swap /running does not expose
+        // process start times. This is a known limitation — we use "now" as an
+        // approximation for when the model was loaded into memory.
         loadedAt: new Date().toISOString(),
         engine: typeof info.cmd === "string" && info.cmd.includes("llama-server")
           ? "llama.cpp"
@@ -476,19 +479,6 @@ export async function startLlamaSwapVendor(
     }
   }
 
-  async function getLogs(noHistory?: boolean): Promise<string> {
-    try {
-      const url = noHistory ? `${proxyBaseUrl}/logs/stream?no-history` : `${proxyBaseUrl}/logs`;
-      const response = await fetch(url);
-      if (!response.ok) {
-        return "";
-      }
-      return await response.text();
-    } catch {
-      return "";
-    }
-  }
-
   return {
     execute,
     async executeStream(
@@ -512,6 +502,5 @@ export async function startLlamaSwapVendor(
     },
     getRunningModels,
     unloadModel,
-    getLogs,
   };
 }

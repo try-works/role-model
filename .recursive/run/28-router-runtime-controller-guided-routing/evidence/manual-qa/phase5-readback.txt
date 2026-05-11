@@ -1,0 +1,71 @@
+{
+  "intelligent": {
+    "vendorId": "litellm",
+    "endpointId": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+    "controllerRouting": {
+      "active": true,
+      "acceptedDirectives": {
+        "strategy": "quality",
+        "preferredEndpointIds": [
+          "openai.litellm.global.openai-gpt-4-1-mini-fast"
+        ]
+      }
+    },
+    "aliasResolution": {
+      "requestedModel": "gpt-5.4-intelligent",
+      "aliasId": "gpt-5.4-intelligent",
+      "resolvedModelIds": [
+        "local/llama-3.1-8b-instruct",
+        "openai/gpt-4.1-mini-fast"
+      ],
+      "allowEndpoints": [
+        "llama-swap.local.local-llama-3-1-8b-instruct",
+        "openai.litellm.global.openai-gpt-4-1-mini-fast"
+      ]
+    }
+  },
+  "fallback": {
+    "vendorId": "litellm",
+    "endpointId": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+    "controllerRouting": {
+      "active": true,
+      "fallbackApplied": true,
+      "fallbackReason": "invalid-controller-output"
+    },
+    "aliasResolution": {
+      "requestedModel": "gpt-5.4-intelligent",
+      "aliasId": "gpt-5.4-intelligent",
+      "resolvedModelIds": [
+        "local/llama-3.1-8b-instruct",
+        "openai/gpt-4.1-mini-fast"
+      ],
+      "allowEndpoints": [
+        "llama-swap.local.local-llama-3-1-8b-instruct",
+        "openai.litellm.global.openai-gpt-4-1-mini-fast"
+      ]
+    }
+  },
+  "basicAlias": {
+    "vendorId": "litellm",
+    "endpointId": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+    "controllerRouting": null,
+    "aliasResolution": {
+      "requestedModel": "gpt-5.4",
+      "aliasId": "gpt-5.4",
+      "resolvedModelIds": [
+        "local/llama-3.1-8b-instruct",
+        "openai/gpt-4.1-mini-fast"
+      ],
+      "allowEndpoints": [
+        "llama-swap.local.local-llama-3-1-8b-instruct",
+        "openai.litellm.global.openai-gpt-4-1-mini-fast"
+      ]
+    }
+  },
+  "exactModel": {
+    "vendorId": "litellm",
+    "endpointId": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+    "controllerRouting": null,
+    "aliasResolution": null
+  }
+}

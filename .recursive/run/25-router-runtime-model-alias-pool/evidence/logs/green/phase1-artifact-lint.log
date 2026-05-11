@@ -1,0 +1,20 @@
+Linting run: 25-router-runtime-model-alias-pool
+Path: D:\DEV\role-model\.worktrees\25-router-runtime-model-alias-pool\.recursive\run\25-router-runtime-model-alias-pool
+Workflow Profile: recursive-mode-audit-v1
+
+[WARN] Missing artifact (ok if not reached yet): D:\DEV\role-model\.worktrees\25-router-runtime-model-alias-pool\.recursive\run\25-router-runtime-model-alias-pool\01.5-root-cause.md
+[WARN] Missing artifact (ok if not reached yet): D:\DEV\role-model\.worktrees\25-router-runtime-model-alias-pool\.recursive\run\25-router-runtime-model-alias-pool\02-to-be-plan.md
+[WARN] Missing artifact (ok if not reached yet): D:\DEV\role-model\.worktrees\25-router-runtime-model-alias-pool\.recursive\run\25-router-runtime-model-alias-pool\03-implementation-summary.md
+[WARN] Missing artifact (ok if not reached yet): D:\DEV\role-model\.worktrees\25-router-runtime-model-alias-pool\.recursive\run\25-router-runtime-model-alias-pool\03.5-code-review.md
+[WARN] Missing artifact (ok if not reached yet): D:\DEV\role-model\.worktrees\25-router-runtime-model-alias-pool\.recursive\run\25-router-runtime-model-alias-pool\04-test-summary.md
+[WARN] Missing artifact (ok if not reached yet): D:\DEV\role-model\.worktrees\25-router-runtime-model-alias-pool\.recursive\run\25-router-runtime-model-alias-pool\05-manual-qa.md
+[WARN] Missing artifact (ok if not reached yet): D:\DEV\role-model\.worktrees\25-router-runtime-model-alias-pool\.recursive\run\25-router-runtime-model-alias-pool\06-decisions-update.md
+[WARN] Missing artifact (ok if not reached yet): D:\DEV\role-model\.worktrees\25-router-runtime-model-alias-pool\.recursive\run\25-router-runtime-model-alias-pool\07-state-update.md
+[WARN] Missing artifact (ok if not reached yet): D:\DEV\role-model\.worktrees\25-router-runtime-model-alias-pool\.recursive\run\25-router-runtime-model-alias-pool\08-memory-impact.md
+----
+
+Summary
+- FAIL: 0
+- WARN: 9
+
+[OK] Lint passed

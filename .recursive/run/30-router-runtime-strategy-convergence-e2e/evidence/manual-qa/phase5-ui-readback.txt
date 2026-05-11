@@ -1,0 +1,58 @@
+Run 30 Phase 5 UI readback
+Mode: agent-operated source-and-receipt review
+
+1. Control > Routing strategy posture
+- Source: role-model-router/apps/runtime-ui/app/routes/control-routing-strategy.tsx
+- Observed route title: "Routing strategy"
+- Observed actions: links to "/app/control/runtime-config" and "/app/studio/chat"
+- Observed operator handoff links: Advanced config, Controller, Workbench, Requests
+- Observed reading-order copy confirms this page is the structured strategy entry point and sends operators to workbench plus request verification
+
+2. Studio > Chat routing-mode control
+- Source: role-model-router/apps/runtime-ui/app/routes/workbench.tsx
+- Observed label: "Routing mode"
+- Observed options:
+  - Alias default (use configured strategy)
+  - Baseline
+  - Difficulty
+  - Controller
+  - Hybrid
+- Observed request handoff copy: "Requested mode: <mode>. Verify the persisted routing receipt in Telemetry ledger after the request completes."
+- Supporting API seam: role-model-router/apps/runtime-ui/app/lib/runtime-api.ts forwards routingModeOverride as x-role-model-routing-mode and strips it from the request body
+
+3. Observe > Requests scan-speed receipts
+- Source: role-model-router/apps/runtime-ui/app/routes/requests.tsx
+- Observed ledger row addition: "Routing decision • {request.routingDecisionLabel}"
+- Observed reading-order copy now tells operators to move into Request detail for receipts, captures, diagnostics, and profile data
+
+4. Observe > Request detail primary routing receipts
+- Source: role-model-router/apps/runtime-ui/app/routes/request-detail.tsx
+- Observed primary section title: "Routing receipts"
+- Observed summarized receipt fields:
+  - Effective mode
+  - Mode source
+  - Requested override
+  - Alias mode
+  - Rewrite
+  - Rewrite reason
+  - Difficulty bucket
+  - Difficulty strategy
+  - Controller active
+  - Controller strategy
+  - Controller task type
+  - Hybrid dominant signal
+  - Hybrid final strategy
+  - Rubric signals
+- Observed secondary section title: "Routing diagnostics bundle"
+
+5. Validator-backed routed-request readback
+- Source: .recursive/run/30-router-runtime-strategy-convergence-e2e/evidence/logs/green/phase3-green-runtime-validate-ui.log
+- Observed routed request proof:
+  - routedRequestId = "req-runtime-ui-routing-001"
+  - telemetryListIncludesRoutedRequest = true
+  - routedRequestRoutingDecisionId = "route-runtime-ui-routing-001"
+  - routedRequestEffectiveMode = "baseline"
+  - routedRequestRewriteReason = "requested-model-matches-downstream"
+
+Result
+- The runtime UI now has an explicit routing-strategy posture route, a workbench routing-mode control, request-ledger routing decision readback, request-detail routing receipts, and validator-backed confirmation that the persisted receipt surfaces expose baseline routing-mode plus rewrite metadata.

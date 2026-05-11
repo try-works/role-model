@@ -1,6 +1,7 @@
 import type { ContextEnvelopeResult } from "@role-model-router/context-envelope";
 import type {
   EndpointCandidate as CoreEndpointCandidate,
+  ObservedDataConfigRecord,
   ObservedPerformanceProfileRecord,
   RoleBindingRecord,
   RoleDefinitionRecord,
@@ -8,6 +9,7 @@ import type {
   RouterDecisionRecord,
   RoutingRequest,
   TaskDefinitionRecord,
+  ThroughputPenaltyStateRecord,
 } from "@role-model-router/core";
 import { routeRequest } from "@role-model-router/core";
 import type {
@@ -25,6 +27,9 @@ export interface ProjectRuntimeRouteInputInput {
   request: RoutingRequest;
   registry: EndpointRegistryResult;
   observedProfilesByEndpointId: Record<string, ObservedPerformanceProfileRecord>;
+  observedDataConfig?: ObservedDataConfigRecord;
+  throughputPenaltyStateByEndpointId?: Record<string, ThroughputPenaltyStateRecord>;
+  routingTimeMs?: number;
   envelope: ContextEnvelopeResult;
   retrievalReceipt: RetrievalReceipt;
   roleDefinitions: readonly RoleDefinitionRecord[];
@@ -111,6 +116,9 @@ export function projectRuntimeRouteInput(
       roleDefinitions: input.roleDefinitions,
       taskDefinitions: input.taskDefinitions,
       roleBindings: input.roleBindings,
+      observedDataConfig: input.observedDataConfig,
+      throughputPenaltyStateByEndpointId: input.throughputPenaltyStateByEndpointId,
+      routingTimeMs: input.routingTimeMs,
     },
     routingDiagnostics: {
       retrievalReceiptId: input.retrievalReceipt.receiptId,

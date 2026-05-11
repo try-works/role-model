@@ -1,0 +1,13 @@
+Linting run: 22-router-runtime-routing-strategy-lock
+Path: D:\DEV\role-model\.worktrees\22-router-runtime-routing-strategy-lock\.recursive\run\22-router-runtime-routing-strategy-lock
+Workflow Profile: recursive-mode-audit-v1
+
+[WARN] Missing artifact (ok if not reached yet): D:\DEV\role-model\.worktrees\22-router-runtime-routing-strategy-lock\.recursive\run\22-router-runtime-routing-strategy-lock\01.5-root-cause.md
+[WARN] Missing artifact (ok if not reached yet): D:\DEV\role-model\.worktrees\22-router-runtime-routing-strategy-lock\.recursive\run\22-router-runtime-routing-strategy-lock\03.5-code-review.md
+----
+
+Summary
+- FAIL: 0
+- WARN: 2
+
+[OK] Lint passed

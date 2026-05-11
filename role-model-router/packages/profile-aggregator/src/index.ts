@@ -14,6 +14,7 @@ export interface ObservedPerformanceSample {
   endpoint_id: string;
   endpoint_version: string;
   source_type: "benchmark" | "live_request";
+  difficulty_bucket?: "easy" | "medium" | "hard";
   timestamp_ms: number;
   latency_ms: number;
   latency_ms_p95?: number;

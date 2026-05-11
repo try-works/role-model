@@ -1,0 +1,12 @@
+ M .recursive/run/25-router-runtime-model-alias-pool/00-requirements.md
+ M .recursive/run/25-router-runtime-model-alias-pool/00-worktree.md
+ M role-model-router/apps/runtime-host-bridge/src/index.ts
+ M role-model-router/apps/runtime-host-bridge/src/unified-runtime-config.ts
+ M role-model-router/apps/runtime-host-bridge/src/validate-vendors.ts
+ M role-model-router/apps/runtime-host-bridge/test/index.test.ts
+ M role-model-router/apps/runtime-host-bridge/test/unified-runtime-config.test.ts
+ M role-model-router/apps/runtime-host-bridge/test/validate-vendors.test.ts
+ M role-model-router/packages/runtime-observability/src/index.ts
+?? .recursive/run/25-router-runtime-model-alias-pool/01-as-is.md
+?? .recursive/run/25-router-runtime-model-alias-pool/02-to-be-plan.md
+?? .recursive/run/25-router-runtime-model-alias-pool/evidence/

@@ -7,13 +7,16 @@ import {
   GitBranch,
   Image,
   LayoutDashboard,
+  LayoutGrid,
   ListChecks,
   Logs,
   Mic,
+  Network,
   PanelsTopLeft,
   SlidersHorizontal,
   Speech,
   Telescope,
+  Terminal,
   Waypoints,
   type LucideIcon,
 } from "lucide-react";
@@ -26,6 +29,7 @@ export type RuntimeLayoutTemplate =
   | "ledger-inspector"
   | "dual-console"
   | "contract-reference"
+  | "matrix-grid"
   | "system-topology";
 
 export interface RuntimeRouteDefinition {
@@ -178,6 +182,48 @@ const localPolicyRoute = createRoute({
   noteBody: "Editable policy form with read-only host awareness fields.",
 });
 
+const localLogsRoute = createRoute({
+  id: "local-logs",
+  to: "/app/local/logs",
+  label: "Logs",
+  section: "Local",
+  icon: Terminal,
+  template: "dual-console",
+  eyebrow: "Local",
+  title: "Log streaming",
+  description: "Real-time log stream from the local llama-swap runtime.",
+  noteTitle: "Dual console",
+  noteBody: "Split proxy and upstream consoles with source toggle and auto-scroll.",
+});
+
+const localMatrixRoute = createRoute({
+  id: "local-matrix",
+  to: "/app/local/matrix",
+  label: "Matrix",
+  section: "Local",
+  icon: LayoutGrid,
+  template: "matrix-grid",
+  eyebrow: "Local",
+  title: "Model matrix",
+  description: "Concurrent model grid showing loaded state, engine, and resource usage.",
+  noteTitle: "Matrix grid",
+  noteBody: "Status-first cells with resource metrics; add/remove controls.",
+});
+
+const localPeersRoute = createRoute({
+  id: "local-peers",
+  to: "/app/local/peers",
+  label: "Peers",
+  section: "Local",
+  icon: Network,
+  template: "registry-detail",
+  eyebrow: "Local",
+  title: "Peer instances",
+  description: "Peer llama-swap instance inventory and management.",
+  noteTitle: "Registry detail",
+  noteBody: "Peer list with health and model availability; add/remove controls.",
+});
+
 const controlProvidersRoute = createRoute({
   id: "control-providers",
   to: "/app/control/providers",
@@ -190,6 +236,20 @@ const controlProvidersRoute = createRoute({
   description: "Choose a LiteLLM-backed provider, select the models available for that provider, and complete setup from one onboarding surface.",
   noteTitle: "Registry detail",
   noteBody: "Lead with provider selection and model availability; API-key and OAuth setup stay in the same workflow instead of splitting into a second page.",
+});
+
+const controlRoutingStrategyRoute = createRoute({
+  id: "control-routing-strategy",
+  to: "/app/control/routing-strategy",
+  label: "Routing Strategy",
+  section: "Control",
+  icon: GitBranch,
+  template: "registry-detail",
+  eyebrow: "Control",
+  title: "Routing strategy",
+  description: "Structured routing-strategy posture for execution mode, controller state, and operator handoff into advanced config and request verification.",
+  noteTitle: "Registry detail",
+  noteBody: "Lead with the current strategy posture and links into advanced config, controller, workbench, and request inspection instead of hiding strategy under raw JSON alone.",
 });
 
 const controlRuntimeConfigRoute = createRoute({
@@ -370,7 +430,11 @@ const runtimeRouteDefinitions = [
   localModelsRoute,
   localSwapRoute,
   localPolicyRoute,
+  localLogsRoute,
+  localMatrixRoute,
+  localPeersRoute,
   controlProvidersRoute,
+  controlRoutingStrategyRoute,
   controlRuntimeConfigRoute,
   controlControllerRoute,
   controlEndpointsRoute,
@@ -404,13 +468,14 @@ export const runtimeNavigationSections: readonly RuntimeNavigationSection[] = [
   {
     title: "Local",
     icon: Cpu,
-    items: [localModelsRoute, localSwapRoute, localPolicyRoute],
+    items: [localModelsRoute, localSwapRoute, localPolicyRoute, localLogsRoute, localMatrixRoute, localPeersRoute],
   },
   {
     title: "Control",
     icon: PanelsTopLeft,
       items: [
         controlProvidersRoute,
+        controlRoutingStrategyRoute,
         controlRuntimeConfigRoute,
         controlControllerRoute,
         controlEndpointsRoute,
@@ -453,12 +518,21 @@ export const runtimeTheme = {
       muted: "rgba(28, 25, 23, 0.40)",
       border: "#e7e5e4",
       borderStrong: "#f5f5f4",
-      accent: "#C8102E",
-      accentMuted: "rgba(200, 16, 46, 0.60)",
-      accentSubtle: "rgba(200, 16, 46, 0.20)",
-      accentGhost: "rgba(200, 16, 46, 0.10)",
+      accent: "#003B8E",
+      accentMuted: "rgba(0, 59, 142, 0.60)",
+      accentSubtle: "rgba(0, 59, 142, 0.20)",
+      accentGhost: "rgba(0, 59, 142, 0.10)",
+      error: "#C8102E",
+      errorMuted: "rgba(200, 16, 46, 0.60)",
+      errorSubtle: "rgba(200, 16, 46, 0.20)",
+      errorGhost: "rgba(200, 16, 46, 0.10)",
+      success: "#166534",
+      successMuted: "rgba(22, 101, 52, 0.60)",
+      successSubtle: "rgba(22, 101, 52, 0.20)",
+      warning: "#b45309",
+      warningMuted: "rgba(180, 83, 9, 0.60)",
       telemetryLocal: "#1f2937",
-      telemetryRemote: "#C8102E",
+      telemetryRemote: "#003B8E",
       telemetryHealthy: "#166534",
       telemetryDegraded: "#b45309",
       telemetryRaw: "#57534e",
@@ -473,8 +547,21 @@ export const runtimeTheme = {
       muted: "rgba(250, 250, 249, 0.40)",
       border: "#292524",
       borderStrong: "#1c1917",
+      accent: "#60a5fa",
+      accentMuted: "rgba(96, 165, 250, 0.60)",
+      accentSubtle: "rgba(96, 165, 250, 0.20)",
+      accentGhost: "rgba(96, 165, 250, 0.10)",
+      error: "#fb7185",
+      errorMuted: "rgba(251, 113, 133, 0.60)",
+      errorSubtle: "rgba(251, 113, 133, 0.20)",
+      errorGhost: "rgba(251, 113, 133, 0.10)",
+      success: "#86efac",
+      successMuted: "rgba(134, 239, 172, 0.60)",
+      successSubtle: "rgba(134, 239, 172, 0.20)",
+      warning: "#fbbf24",
+      warningMuted: "rgba(251, 191, 36, 0.60)",
       telemetryLocal: "#d6d3d1",
-      telemetryRemote: "#fb7185",
+      telemetryRemote: "#60a5fa",
       telemetryHealthy: "#86efac",
       telemetryDegraded: "#fbbf24",
       telemetryRaw: "#a8a29e",

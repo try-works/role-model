@@ -35,7 +35,7 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "test": "vitest run test/index.test.ts test/backend-unified-runtime-config.test.ts test/executable.test.ts test/runtime-assets.test.ts test/unified-runtime-config.test.ts test/validate-operations.test.ts test/validate-tools.test.ts test/validate-ui.test.ts test/validate-vendors.test.ts",
+    "test": "vitest run test/index.test.ts test/backend-unified-runtime-config.test.ts test/executable.test.ts test/runtime-assets.test.ts test/unified-runtime-config.test.ts test/validate-operations.test.ts test/validate-tools.test.ts test/validate-ui.test.ts test/validate-vendors.test.ts test/local-policy.test.ts",
     "package-sea": "tsx src/package-sea.ts",
     "validate-packaging": "tsx src/validate-packaging.ts"
   }

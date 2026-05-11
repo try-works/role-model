@@ -1,0 +1,64 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/28-router-runtime-controller-guided-routing/role-model-router/apps/runtime-host-bridge[39m
+
+ [31mΓ¥»[39m test/unified-runtime-config.test.ts [2m([22m[2m14 tests[22m[2m | [22m[31m1 failed[39m[2m | [22m[33m13 skipped[39m[2m)[22m[32m 25[2mms[22m[39m
+   [2m[90mΓåô[39m[22m unified runtime config[2m > [22mderives hybrid mode when both vendor sections are populated
+   [2m[90mΓåô[39m[22m unified runtime config[2m > [22mderives decision-only mode when no vendor sections are active
+   [2m[90mΓåô[39m[22m unified runtime config[2m > [22mderives remote-only mode when only the LiteLLM section is populated
+   [2m[90mΓåô[39m[22m unified runtime config[2m > [22mpreserves advanced real-vendor settings for llama-swap and litellm
+   [2m[90mΓåô[39m[22m unified runtime config[2m > [22mleaves process startup timeouts unset unless the unified config specifies them
+   [2m[90mΓåô[39m[22m unified runtime config[2m > [22mnormalizes object input and round-trips advanced vendor settings back to config text
+   [2m[90mΓåô[39m[22m unified runtime config[2m > [22mparses observed-data policy and round-trips it back to config text
+   [2m[90mΓåô[39m[22m unified runtime config[2m > [22mrejects invalid observed-data throughput SLA policy values
+   [2m[90mΓåô[39m[22m unified runtime config[2m > [22mparses difficulty-learning policy and round-trips it back to config text
+   [2m[90mΓåô[39m[22m unified runtime config[2m > [22mparses model-alias policy and round-trips it back to config text
+   [2m[90mΓåô[39m[22m unified runtime config[2m > [22mrejects invalid model-alias definitions
+   [2m[90mΓåô[39m[22m unified runtime config[2m > [22mparses difficulty-classifier policy, alias difficulty mode, and max-difficulty settings
+[31m   [31m├ù[31m unified runtime config[2m > [22mparses and renders controller config for intelligent aliases[39m[32m 24[2mms[22m[39m
+[31m     ΓåÆ expected { version: '1.0', ΓÇª(5) } to match object { controller: { ΓÇª(5) }, ΓÇª(1) }
+(11 matching properties omitted from actual)[39m
+   [2m[90mΓåô[39m[22m unified runtime config[2m > [22mrejects invalid difficulty-classifier and max-difficulty settings
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/unified-runtime-config.test.ts > unified runtime config > parses and renders controller config for intelligent aliases
+AssertionError: expected { version: '1.0', ΓÇª(5) } to match object { controller: { ΓÇª(5) }, ΓÇª(1) }
+(11 matching properties omitted from actual)
+
+- Expected
++ Received
+
+@@ -1,13 +1,6 @@
+  {
+-   "controller": {
+-     "enabled": true,
+-     "endpointId": "moonshot.personal.primary.global.kimi-k2.5",
+-     "modelId": "moonshot/kimi-k2.5",
+-     "sourceType": "remote",
+-     "timeoutMs": 1200,
+-   },
+    "modelAliases": [
+      {
+        "aliasId": "gpt-5.4",
+        "mode": "intelligent",
+        "modelIds": [
+
+ Γ¥» test/unified-runtime-config.test.ts:820:7
+    818|         }[];
+    819|       },
+    820|     ).toMatchObject({
+       |       ^
+    821|       controller: {
+    822|         enabled: true,
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[33m13 skipped[39m[90m (14)[39m
+[2m   Start at [22m 23:28:39
+[2m   Duration [22m 848ms[2m (transform 145ms, setup 0ms, collect 208ms, tests 25ms, environment 1ms, prepare 252ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\28-router-runtime-controller-guided-routing\role-model-router\apps\runtime-host-bridge:
+ΓÇëERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓÇë Command failed with exit code 1: vitest run test/unified-runtime-config.test.ts -t parses and renders controller config for intelligent aliases

@@ -99,9 +99,9 @@ export function StatusPill({
     tone === "accent"
       ? "border-[color:var(--rm-accent-muted)] bg-[var(--rm-accent-ghost)] text-[var(--rm-accent)]"
       : tone === "warning"
-        ? "border-[var(--rm-accent)] bg-[var(--rm-accent-subtle)] text-[var(--rm-accent)]"
+        ? "border-[var(--rm-warning)] bg-[var(--rm-warning-muted)] text-[var(--rm-warning)]"
         : tone === "success"
-          ? "border-[color:var(--rm-accent-subtle)] bg-[var(--rm-accent-ghost)] text-[var(--rm-fg)]"
+          ? "border-[var(--rm-success)] bg-[var(--rm-success-subtle)] text-[var(--rm-success)]"
           : "border-[var(--rm-border)] bg-[var(--rm-bg)] text-[var(--rm-secondary)]";
 
   return (
@@ -120,7 +120,7 @@ export function EmptyState({ label }: { label: string }) {
 }
 
 export function ErrorState({ label }: { label: string }) {
-  return <p className="rounded-none border border-[var(--rm-accent)] bg-[var(--rm-accent-ghost)] p-6 text-sm text-[var(--rm-accent)]">{label}</p>;
+  return <p className="rounded-none border border-[var(--rm-error)] bg-[var(--rm-error-ghost)] p-6 text-sm text-[var(--rm-error)]">{label}</p>;
 }
 
 export function CodeBlock({ children, className }: { children: ReactNode; className?: string }) {

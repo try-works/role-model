@@ -5,6 +5,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
+import { setTimeout as delay } from "node:timers/promises";
 
 import type { NormalizedCatalog, NormalizedCatalogModel } from "@role-model-router/catalog";
 import { assembleContextEnvelope } from "@role-model-router/context-envelope";
@@ -26,6 +27,8 @@ import {
   createRuntimeObservationBundle,
   type RuntimeCapturePolicy,
   type RuntimeObservationBundle,
+  type RuntimeRoutingDiagnostics,
+  type RuntimeRoutingMode,
 } from "@role-model-router/runtime-observability";
 import {
   createToolRegistry,
@@ -45,18 +48,26 @@ import {
   persistRuntimeObservationBundle,
   persistRetrievalReceipt,
   listRecentRuntimeObservations,
+  readAdvisoryMaxDifficultyRecommendation,
   readConversationContinuity,
   readLatestObservedProfile,
+  readLatestObservedProfilesByEndpointIds,
   readObservedPerformanceSamples,
+  readObservedThroughputPenaltyState,
   readProviderDeviceAuthSession,
+  readDifficultyClassificationCache,
   readRuntimeMaintenancePolicy,
   readRuntimeControllerAssignment,
   readRuntimeObservationBundle,
   readRuntimeTelemetrySummary,
+  upsertDifficultyClassificationCache,
+  upsertObservedThroughputPenaltyState,
   upsertProviderDeviceAuthSession,
   upsertProviderAccount as upsertSqliteProviderAccount,
   upsertRuntimeControllerAssignment,
   upsertRuntimeEndpoint as upsertSqliteRuntimeEndpoint,
+  insertSwapEvent,
+  listSwapEvents,
 } from "@role-model-router/sqlite-memory";
 
 import {
@@ -75,7 +86,11 @@ import {
   normalizeUnifiedRuntimeConfigInput,
   parseUnifiedRuntimeConfigText,
   renderUnifiedRuntimeConfigText,
+  resolveUnifiedRuntimeObservedDataConfig,
+  type UnifiedRuntimeModelAliasConfig,
   type UnifiedRuntimeConfig,
+  type UnifiedRuntimeDifficultyBucket,
+  type UnifiedRuntimeDifficultyClassifierConfig,
   type UnifiedRuntimeExecutionMode,
 } from "./unified-runtime-config.js";
 import { resolveLlamaSwapCommand } from "./runtime-assets.js";
@@ -173,18 +188,7 @@ export interface BridgeControllerAssignment {
 }
 
 export interface BridgeExecutionPlan {
-  readonly routingRequest: {
-    readonly requestId: string;
-    readonly taskType: "text.chat";
-    readonly requiredCapabilities: readonly ["text.chat"];
-    readonly preferredCapabilities: readonly [];
-    readonly requiredModalities: readonly ["text"];
-    readonly contextTokens: number;
-    readonly needsTools: boolean;
-    readonly strategy: "balanced";
-    readonly preferLocal: false;
-    readonly allowEndpoints: readonly string[];
-  };
+  readonly routingRequest: Parameters<typeof routeRuntimeRequest>[0]["request"];
   readonly executionRequest: {
     readonly messages: readonly OpenAIChatCompletionsMessage[];
     readonly tools?: readonly {
@@ -194,7 +198,630 @@ export interface BridgeExecutionPlan {
     }[];
     readonly stream?: boolean;
     readonly maxOutputTokens?: number;
-    readonly temperature?: number;
+      readonly temperature?: number;
+    };
+  readonly routingModel?: RoutingModelSelection;
+  readonly routingDiagnostics?: Pick<
+    RuntimeRoutingDiagnostics,
+    "aliasResolution" | "difficultyRouting" | "controllerRouting" | "hybridArbitration" | "routingMode"
+  >;
+}
+
+interface BridgeDifficultyRoutingContext {
+  readonly difficultyClassifier?: UnifiedRuntimeDifficultyClassifierConfig;
+  readonly endpointMaxDifficultyByEndpointId?: Readonly<Record<string, UnifiedRuntimeDifficultyBucket>>;
+  readonly overrideRecommendedMaxDifficultyByEndpointId?: Readonly<
+    Record<string, UnifiedRuntimeDifficultyBucket>
+  >;
+  readonly resolvedClassification?: {
+    readonly difficulty: UnifiedRuntimeDifficultyBucket;
+    readonly fallbackApplied: boolean;
+    readonly cacheHit?: boolean;
+    readonly cacheInvalidated?: boolean;
+    readonly cacheInvalidationReasons?: readonly string[];
+    readonly fallbackReason?: string;
+    readonly rubricSignals: DifficultyRoutingSignals;
+  };
+}
+
+interface BridgeControllerRoutingContext {
+  readonly active: boolean;
+  readonly resolvedGuidance?: NonNullable<RuntimeRoutingDiagnostics["controllerRouting"]>["acceptedDirectives"];
+  readonly fallbackApplied?: boolean;
+  readonly fallbackReason?: string;
+}
+
+type DifficultyRoutingSignals = RuntimeRoutingDiagnostics["difficultyRouting"]["rubricSignals"];
+
+const DIFFICULTY_BUCKET_ORDER: Record<UnifiedRuntimeDifficultyBucket, number> = {
+  easy: 0,
+  medium: 1,
+  hard: 2,
+};
+
+function countMatches(value: string, pattern: RegExp): number {
+  return value.match(pattern)?.length ?? 0;
+}
+
+function summarizeDifficultySignals(input: {
+  readonly messages: readonly OpenAIChatCompletionsMessage[];
+  readonly contextTokens: number;
+  readonly toolCount: number;
+}): DifficultyRoutingSignals {
+  const combined = input.messages.map((message) => message.content).join("\n");
+  const instructionConstraintCount = countMatches(
+    combined.toLowerCase(),
+    /\b(must|should|need to|required|preserve|verify|strict|do not|don't|never|without|constraint|compatible)\b/g,
+  );
+  const decompositionKeywordCount = countMatches(
+    combined.toLowerCase(),
+    /\b(analyze|compare|iterate|plan|step|decompose|refactor|workflow|multi-step|across)\b/g,
+  );
+  return {
+    contextTokens: input.contextTokens,
+    toolCount: input.toolCount,
+    historyTurnCount: input.messages.length,
+    instructionConstraintCount,
+    decompositionKeywordCount,
+    codeOrSchemaBurden: /\b(code|diff|patch|refactor|schema|contract|validation|test)\b/i.test(combined),
+  };
+}
+
+function classifyDifficultyFromSignals(input: {
+  readonly signals: DifficultyRoutingSignals;
+  readonly classifier?: UnifiedRuntimeDifficultyClassifierConfig;
+}): {
+  readonly difficulty: UnifiedRuntimeDifficultyBucket;
+  readonly fallbackApplied: boolean;
+  readonly fallbackReason?: string;
+} {
+  if (input.signals.historyTurnCount === 0) {
+    return {
+      difficulty: input.classifier?.fallbackDifficulty ?? "hard",
+      fallbackApplied: true,
+      fallbackReason: "missing-request-content",
+    };
+  }
+
+  let score = 0;
+  if (input.signals.contextTokens >= 2000) {
+    score += 3;
+  } else if (input.signals.contextTokens >= 600) {
+    score += 1;
+  }
+  if (input.signals.toolCount >= 2) {
+    score += 3;
+  } else if (input.signals.toolCount === 1) {
+    score += 1;
+  }
+  if (input.signals.historyTurnCount >= 4) {
+    score += 2;
+  } else if (input.signals.historyTurnCount >= 2) {
+    score += 1;
+  }
+  if (input.signals.instructionConstraintCount >= 5) {
+    score += 2;
+  } else if (input.signals.instructionConstraintCount >= 2) {
+    score += 1;
+  }
+  if (input.signals.decompositionKeywordCount >= 3) {
+    score += 2;
+  } else if (input.signals.decompositionKeywordCount >= 1) {
+    score += 1;
+  }
+  if (input.signals.codeOrSchemaBurden) {
+    score += 2;
+  }
+
+  if (score >= 7) {
+    return {
+      difficulty: "hard",
+      fallbackApplied: false,
+    };
+  }
+  if (score >= 3) {
+    return {
+      difficulty: "medium",
+      fallbackApplied: false,
+    };
+  }
+  return {
+    difficulty: "easy",
+    fallbackApplied: false,
+  };
+}
+
+function createDifficultyFallbackResult(input: {
+  readonly signals: DifficultyRoutingSignals;
+  readonly classifier?: UnifiedRuntimeDifficultyClassifierConfig;
+  readonly reason: string;
+}): NonNullable<BridgeDifficultyRoutingContext["resolvedClassification"]> {
+  return {
+    difficulty: input.classifier?.fallbackDifficulty ?? "hard",
+    fallbackApplied: true,
+    fallbackReason: input.reason,
+    rubricSignals: input.signals,
+  };
+}
+
+function getDifficultyCacheInvalidationReasons(input: {
+  readonly cachedSignals: DifficultyRoutingSignals;
+  readonly currentSignals: DifficultyRoutingSignals;
+  readonly invalidation: ReturnType<typeof resolveUnifiedRuntimeObservedDataConfig>["difficultyLearning"]["invalidation"];
+}): readonly string[] {
+  const reasons: string[] = [];
+  if (
+    input.invalidation.reclassifyOnCodeOrSchemaChange &&
+    input.cachedSignals.codeOrSchemaBurden !== input.currentSignals.codeOrSchemaBurden
+  ) {
+    reasons.push("code-or-schema-change");
+  }
+  if (
+    Math.abs(input.cachedSignals.contextTokens - input.currentSignals.contextTokens) >
+    input.invalidation.maxContextTokensDelta
+  ) {
+    reasons.push("context-tokens-delta");
+  }
+  if (
+    Math.abs(input.cachedSignals.historyTurnCount - input.currentSignals.historyTurnCount) >
+    input.invalidation.maxHistoryTurnDelta
+  ) {
+    reasons.push("history-turn-delta");
+  }
+  if (Math.abs(input.cachedSignals.toolCount - input.currentSignals.toolCount) > input.invalidation.maxToolCountDelta) {
+    reasons.push("tool-count-delta");
+  }
+  if (
+    Math.abs(input.cachedSignals.instructionConstraintCount - input.currentSignals.instructionConstraintCount) >
+    input.invalidation.maxInstructionConstraintDelta
+  ) {
+    reasons.push("instruction-constraint-delta");
+  }
+  if (
+    Math.abs(input.cachedSignals.decompositionKeywordCount - input.currentSignals.decompositionKeywordCount) >
+    input.invalidation.maxDecompositionKeywordDelta
+  ) {
+    reasons.push("decomposition-keyword-delta");
+  }
+  return reasons;
+}
+
+function canReuseDifficultyClassification(input: {
+  readonly cachedSignals: DifficultyRoutingSignals;
+  readonly currentSignals: DifficultyRoutingSignals;
+  readonly invalidation: ReturnType<typeof resolveUnifiedRuntimeObservedDataConfig>["difficultyLearning"]["invalidation"];
+}): boolean {
+  return getDifficultyCacheInvalidationReasons(input).length === 0;
+}
+
+function parseDifficultyBucket(value: unknown): UnifiedRuntimeDifficultyBucket | null {
+  if (typeof value !== "string") {
+    return null;
+  }
+  switch (value.trim().toLowerCase()) {
+    case "easy":
+    case "medium":
+    case "hard":
+      return value.trim().toLowerCase() as UnifiedRuntimeDifficultyBucket;
+    default:
+      return null;
+  }
+}
+
+function parseClassifierDifficultyOutput(text: string): UnifiedRuntimeDifficultyBucket | null {
+  const trimmed = text.trim();
+  const direct = parseDifficultyBucket(trimmed);
+  if (direct) {
+    return direct;
+  }
+
+  const fenced = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/i)?.[1] ?? trimmed;
+  try {
+    const parsed = JSON.parse(fenced) as { difficulty?: unknown };
+    const fromJson = parseDifficultyBucket(parsed?.difficulty);
+    if (fromJson) {
+      return fromJson;
+    }
+  } catch {
+    // Fall through to heuristic extraction.
+  }
+
+  const matched = fenced.match(/\b(easy|medium|hard)\b/i)?.[1];
+  return parseDifficultyBucket(matched);
+}
+
+function buildDifficultyClassifierMessages(input: {
+  readonly messages: readonly OpenAIChatCompletionsMessage[];
+  readonly signals: DifficultyRoutingSignals;
+}): readonly OpenAIChatCompletionsMessage[] {
+  return [
+    {
+      role: "system",
+      content:
+        'ROLE_MODEL_DIFFICULTY_CLASSIFIER\nReturn only compact JSON in the form {"difficulty":"easy|medium|hard"} using the supplied rubric signals.',
+    },
+    {
+      role: "user",
+      content: JSON.stringify(
+        {
+          rubricSignals: input.signals,
+          messages: input.messages,
+        },
+        null,
+        2,
+      ),
+    },
+  ];
+}
+
+function buildControllerRoutingMessages(input: {
+  readonly requestedModel: string;
+  readonly messages: readonly OpenAIChatCompletionsMessage[];
+  readonly toolCount: number;
+  readonly candidateEndpointIds: readonly string[];
+}): readonly OpenAIChatCompletionsMessage[] {
+  return [
+    {
+      role: "system",
+      content:
+        "ROLE_MODEL_ROUTING_CONTROLLER\nReturn only compact JSON. Optional fields: requestedRoleId, taskType, requiredCapabilities, preferredCapabilities, strategy, preferLocal, preferredEndpointIds.",
+    },
+    {
+      role: "user",
+      content: JSON.stringify(
+        {
+          requestedModel: input.requestedModel,
+          toolCount: input.toolCount,
+          candidateEndpointIds: input.candidateEndpointIds,
+          messages: input.messages,
+        },
+        null,
+        2,
+      ),
+    },
+  ];
+}
+
+function readControllerStringArray(value: unknown): readonly string[] | undefined {
+  if (!Array.isArray(value)) {
+    return undefined;
+  }
+  const normalized = value
+    .filter((entry): entry is string => typeof entry === "string")
+    .map((entry) => entry.trim())
+    .filter((entry) => entry.length > 0);
+  return normalized.length > 0 ? [...new Set(normalized)] : undefined;
+}
+
+function parseControllerRoutingOutput(
+  text: string,
+): NonNullable<RuntimeRoutingDiagnostics["controllerRouting"]>["acceptedDirectives"] | null {
+  const trimmed = text.trim();
+  const jsonSource = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/i)?.[1] ?? trimmed;
+  try {
+    const parsed = JSON.parse(jsonSource) as Record<string, unknown>;
+    const requestedRoleId = typeof parsed.requestedRoleId === "string" ? parsed.requestedRoleId.trim() : "";
+    const taskType = typeof parsed.taskType === "string" ? parsed.taskType.trim() : "";
+    const strategy =
+      parsed.strategy === "balanced" || parsed.strategy === "cost" || parsed.strategy === "quality"
+        ? parsed.strategy
+        : undefined;
+    const acceptedDirectives: NonNullable<RuntimeRoutingDiagnostics["controllerRouting"]>["acceptedDirectives"] = {
+      ...(requestedRoleId.length ? { requestedRoleId } : {}),
+      ...(taskType.length ? { taskType } : {}),
+      ...(readControllerStringArray(parsed.requiredCapabilities)
+        ? { requiredCapabilities: readControllerStringArray(parsed.requiredCapabilities) }
+        : {}),
+      ...(readControllerStringArray(parsed.preferredCapabilities)
+        ? { preferredCapabilities: readControllerStringArray(parsed.preferredCapabilities) }
+        : {}),
+      ...(strategy ? { strategy } : {}),
+      ...(typeof parsed.preferLocal === "boolean" ? { preferLocal: parsed.preferLocal } : {}),
+      ...(readControllerStringArray(parsed.preferredEndpointIds)
+        ? { preferredEndpointIds: readControllerStringArray(parsed.preferredEndpointIds) }
+        : {}),
+    };
+    return Object.keys(acceptedDirectives).length > 0 ? acceptedDirectives : null;
+  } catch {
+    return null;
+  }
+}
+
+function toDifficultyStrategy(difficulty: UnifiedRuntimeDifficultyBucket): "balanced" | "cost" | "quality" {
+  switch (difficulty) {
+    case "easy":
+      return "cost";
+    case "hard":
+      return "quality";
+    default:
+      return "balanced";
+  }
+}
+
+function filterEndpointsByDifficulty(input: {
+  readonly allowEndpoints: readonly string[];
+  readonly difficulty: UnifiedRuntimeDifficultyBucket;
+  readonly endpointMaxDifficultyByEndpointId?: Readonly<Record<string, UnifiedRuntimeDifficultyBucket>>;
+  readonly overrideRecommendedMaxDifficultyByEndpointId?: Readonly<
+    Record<string, UnifiedRuntimeDifficultyBucket>
+  >;
+}): {
+  readonly allowEndpoints: readonly string[];
+  readonly excludedEndpointIds: readonly string[];
+  readonly overrideAppliedEndpointIds: readonly string[];
+  readonly overrideRecommendedMaxDifficultyByEndpointId: Readonly<
+    Record<string, UnifiedRuntimeDifficultyBucket>
+  >;
+} {
+  const nextAllowed: string[] = [];
+  const excludedEndpointIds: string[] = [];
+  const overrideAppliedEndpointIds: string[] = [];
+  const overrideRecommendedMaxDifficultyByEndpointId: Record<string, UnifiedRuntimeDifficultyBucket> = {};
+  for (const endpointId of input.allowEndpoints) {
+    const maxDifficulty = input.endpointMaxDifficultyByEndpointId?.[endpointId] ?? "hard";
+    if (DIFFICULTY_BUCKET_ORDER[maxDifficulty] >= DIFFICULTY_BUCKET_ORDER[input.difficulty]) {
+      nextAllowed.push(endpointId);
+      continue;
+    }
+    const overrideMaxDifficulty = input.overrideRecommendedMaxDifficultyByEndpointId?.[endpointId];
+    if (
+      overrideMaxDifficulty &&
+      DIFFICULTY_BUCKET_ORDER[overrideMaxDifficulty] >= DIFFICULTY_BUCKET_ORDER[input.difficulty]
+    ) {
+      nextAllowed.push(endpointId);
+      overrideAppliedEndpointIds.push(endpointId);
+      overrideRecommendedMaxDifficultyByEndpointId[endpointId] = overrideMaxDifficulty;
+      continue;
+    }
+    excludedEndpointIds.push(endpointId);
+  }
+  return {
+    allowEndpoints: nextAllowed,
+    excludedEndpointIds,
+    overrideAppliedEndpointIds,
+    overrideRecommendedMaxDifficultyByEndpointId,
+  };
+}
+
+function readObservedOverrideMaxDifficultyByEndpointId(input: {
+  readonly databasePath: string;
+  readonly endpointIds: readonly string[];
+  readonly observedDataConfig: ReturnType<typeof resolveUnifiedRuntimeObservedDataConfig>;
+}): Record<string, UnifiedRuntimeDifficultyBucket> {
+  if (!input.observedDataConfig.enabled) {
+    return {};
+  }
+
+  const recommendations: Record<string, UnifiedRuntimeDifficultyBucket> = {};
+  for (const endpointId of input.endpointIds) {
+    const recommendation = readAdvisoryMaxDifficultyRecommendation({
+      databasePath: input.databasePath,
+      endpointId,
+      thresholds: input.observedDataConfig.difficultyLearning.override,
+    });
+    if (recommendation.recommendedMaxDifficulty) {
+      recommendations[endpointId] = recommendation.recommendedMaxDifficulty;
+    }
+  }
+  return recommendations;
+}
+
+function maybeApplyDifficultyRouting(input: {
+  readonly effectiveRoutingMode: RuntimeRoutingMode;
+  readonly requestedModel: string;
+  readonly modelAliases: readonly UnifiedRuntimeModelAliasConfig[];
+  readonly messages: readonly OpenAIChatCompletionsMessage[];
+  readonly contextTokens: number;
+  readonly toolCount: number;
+  readonly allowEndpoints: readonly string[];
+  readonly routingDiagnostics?: Pick<RuntimeRoutingDiagnostics, "aliasResolution" | "routingMode">;
+  readonly difficultyContext?: BridgeDifficultyRoutingContext;
+}): {
+  readonly allowEndpoints: readonly string[];
+  readonly strategy: "balanced" | "cost" | "quality";
+  readonly routingDiagnostics?: Pick<RuntimeRoutingDiagnostics, "aliasResolution" | "routingMode" | "difficultyRouting">;
+} {
+  if (!shouldApplyDifficultyRouting(input.effectiveRoutingMode)) {
+    return {
+      allowEndpoints: input.allowEndpoints,
+      strategy: "balanced",
+      routingDiagnostics: input.routingDiagnostics,
+    };
+  }
+
+  const signals = summarizeDifficultySignals({
+    messages: input.messages,
+    contextTokens: input.contextTokens,
+    toolCount: input.toolCount,
+  });
+  const classified =
+    input.difficultyContext?.resolvedClassification ??
+    {
+      ...classifyDifficultyFromSignals({
+        signals,
+        classifier: input.difficultyContext?.difficultyClassifier,
+      }),
+      rubricSignals: signals,
+    };
+  const strategy = toDifficultyStrategy(classified.difficulty);
+  const gated = filterEndpointsByDifficulty({
+    allowEndpoints: input.allowEndpoints,
+    difficulty: classified.difficulty,
+    endpointMaxDifficultyByEndpointId: input.difficultyContext?.endpointMaxDifficultyByEndpointId,
+    overrideRecommendedMaxDifficultyByEndpointId:
+      input.difficultyContext?.overrideRecommendedMaxDifficultyByEndpointId,
+  });
+
+  return {
+    allowEndpoints: gated.allowEndpoints,
+    strategy,
+    routingDiagnostics: {
+      ...input.routingDiagnostics,
+      difficultyRouting: {
+        difficulty: classified.difficulty,
+        strategy,
+        fallbackApplied: classified.fallbackApplied,
+        ...(classified.cacheHit ? { cacheHit: true } : {}),
+        ...(classified.cacheInvalidated ? { cacheInvalidated: true } : {}),
+        ...(classified.cacheInvalidationReasons?.length
+          ? { cacheInvalidationReasons: classified.cacheInvalidationReasons }
+          : {}),
+        ...(classified.fallbackReason ? { fallbackReason: classified.fallbackReason } : {}),
+        ...(gated.excludedEndpointIds.length > 0 ? { excludedEndpointIds: gated.excludedEndpointIds } : {}),
+        ...(gated.overrideAppliedEndpointIds.length
+          ? { overrideAppliedEndpointIds: gated.overrideAppliedEndpointIds }
+          : {}),
+        ...(Object.keys(gated.overrideRecommendedMaxDifficultyByEndpointId).length
+          ? {
+              overrideRecommendedMaxDifficultyByEndpointId:
+                gated.overrideRecommendedMaxDifficultyByEndpointId,
+            }
+          : {}),
+        rubricSignals: classified.rubricSignals,
+      },
+    },
+  };
+}
+
+function mergeCapabilityList(
+  base: readonly string[],
+  extra: readonly string[] | undefined,
+): readonly string[] {
+  const merged = [...base];
+  for (const value of extra ?? []) {
+    if (!merged.includes(value)) {
+      merged.push(value);
+    }
+  }
+  return merged;
+}
+
+function collectPreferredEndpointIds(
+  allowEndpoints: readonly string[],
+  preferredEndpointIds: readonly string[] | undefined,
+): readonly string[] {
+  const allowSet = new Set(allowEndpoints);
+  const filtered: string[] = [];
+  for (const endpointId of preferredEndpointIds ?? []) {
+    if (allowSet.has(endpointId) && !filtered.includes(endpointId)) {
+      filtered.push(endpointId);
+    }
+  }
+  return filtered;
+}
+
+function maybeApplyControllerRouting(input: {
+  readonly effectiveRoutingMode: RuntimeRoutingMode;
+  readonly requestedModel: string;
+  readonly modelAliases: readonly UnifiedRuntimeModelAliasConfig[];
+  readonly routingRequest: Parameters<typeof routeRuntimeRequest>[0]["request"];
+  readonly routingDiagnostics?: Pick<RuntimeRoutingDiagnostics, "aliasResolution" | "routingMode" | "difficultyRouting">;
+  readonly controllerContext?: BridgeControllerRoutingContext;
+}): {
+  readonly routingRequest: Parameters<typeof routeRuntimeRequest>[0]["request"];
+  readonly routingModel?: RoutingModelSelection;
+  readonly routingDiagnostics?: Pick<
+    RuntimeRoutingDiagnostics,
+    "aliasResolution" | "routingMode" | "difficultyRouting" | "controllerRouting" | "hybridArbitration"
+  >;
+} {
+  if (!shouldApplyControllerRouting(input.effectiveRoutingMode)) {
+    return {
+      routingRequest: input.routingRequest,
+      routingDiagnostics: input.routingDiagnostics,
+    };
+  }
+  const guidance = input.controllerContext?.resolvedGuidance;
+  if (!input.controllerContext?.active) {
+    return {
+      routingRequest: input.routingRequest,
+      routingDiagnostics: input.routingDiagnostics,
+    };
+  }
+  if (!guidance) {
+    const hybridArbitration = summarizeHybridArbitration({
+      effectiveRoutingMode: input.effectiveRoutingMode,
+      routingRequest: input.routingRequest,
+      controllerContext: input.controllerContext,
+      preferredEndpointIds: [],
+      finalStrategy: input.routingRequest.strategy,
+    });
+    return {
+      routingRequest: input.routingRequest,
+      routingDiagnostics: {
+        ...input.routingDiagnostics,
+        controllerRouting: {
+          active: true,
+          ...(input.controllerContext.fallbackApplied ? { fallbackApplied: true } : {}),
+          ...(input.controllerContext.fallbackReason
+            ? { fallbackReason: input.controllerContext.fallbackReason }
+            : {}),
+        },
+        ...(hybridArbitration ? { hybridArbitration } : {}),
+      },
+    };
+  }
+
+  const preferredEndpointIds = collectPreferredEndpointIds(
+    input.routingRequest.allowEndpoints,
+    guidance.preferredEndpointIds,
+  );
+  const requiredCapabilities =
+    guidance.taskType && guidance.taskType !== input.routingRequest.taskType
+      ? (guidance.requiredCapabilities ?? input.routingRequest.requiredCapabilities)
+      : mergeCapabilityList(input.routingRequest.requiredCapabilities, guidance.requiredCapabilities);
+  const finalStrategy = guidance.strategy ?? input.routingRequest.strategy;
+  const hybridArbitration = summarizeHybridArbitration({
+    effectiveRoutingMode: input.effectiveRoutingMode,
+    routingRequest: input.routingRequest,
+    controllerContext: input.controllerContext,
+    guidance,
+    preferredEndpointIds,
+    finalStrategy,
+  });
+
+  return {
+    routingRequest: {
+      ...input.routingRequest,
+      ...(guidance.requestedRoleId ? { requestedRoleId: guidance.requestedRoleId } : {}),
+      ...(guidance.taskType ? { taskType: guidance.taskType } : {}),
+      requiredCapabilities,
+      preferredCapabilities: guidance.preferredCapabilities ?? input.routingRequest.preferredCapabilities,
+      ...(guidance.strategy ? { strategy: guidance.strategy } : {}),
+      ...(typeof guidance.preferLocal === "boolean" ? { preferLocal: guidance.preferLocal } : {}),
+    },
+    ...(preferredEndpointIds.length
+      ? {
+          routingModel: {
+            endpointId: preferredEndpointIds[0],
+            preferredEndpointIds,
+          },
+        }
+      : {}),
+    routingDiagnostics: {
+      ...input.routingDiagnostics,
+      controllerRouting: {
+        active: true,
+        ...(input.controllerContext.fallbackApplied ? { fallbackApplied: true } : {}),
+        ...(input.controllerContext.fallbackReason
+          ? { fallbackReason: input.controllerContext.fallbackReason }
+          : {}),
+        acceptedDirectives: {
+          ...(guidance.requestedRoleId ? { requestedRoleId: guidance.requestedRoleId } : {}),
+          ...(guidance.taskType ? { taskType: guidance.taskType } : {}),
+          ...(guidance.requiredCapabilities?.length
+            ? { requiredCapabilities: guidance.requiredCapabilities }
+            : {}),
+          ...(guidance.preferredCapabilities?.length
+            ? { preferredCapabilities: guidance.preferredCapabilities }
+            : {}),
+          ...(guidance.strategy ? { strategy: guidance.strategy } : {}),
+          ...(typeof guidance.preferLocal === "boolean" ? { preferLocal: guidance.preferLocal } : {}),
+          ...(preferredEndpointIds.length ? { preferredEndpointIds } : {}),
+        },
+      },
+      ...(hybridArbitration ? { hybridArbitration } : {}),
+    },
   };
 }
 
@@ -316,11 +943,13 @@ export interface StartBridgeServerOptions {
     body: OpenAIChatCompletionsBody,
     requestId: string,
     streamWriter?: BridgeStreamWriter,
+    requestOptions?: BridgeExecutionRequestOptions,
   ) => Promise<BridgeChatCompletionsExecutionResult>;
   readonly executeResponses: (
     body: OpenAIResponsesBody,
     requestId: string,
     streamWriter?: BridgeStreamWriter,
+    requestOptions?: BridgeExecutionRequestOptions,
   ) => Promise<BridgeResponsesExecutionResult>;
   readonly readVersionInfo?: () => Promise<unknown>;
   readonly listActivityMetrics?: () => Promise<unknown>;
@@ -354,6 +983,12 @@ export interface StartBridgeServerOptions {
   readonly readLocalPolicy?: () => Promise<Record<string, unknown>>;
   readonly updateLocalPolicy?: (body: Record<string, unknown>) => Promise<Record<string, unknown>>;
   readonly listSwapHistory?: () => Promise<readonly { timestamp: string; oldModel: string | null; newModel: string; reason: string }[]>;
+  readonly getLocalLogs?: () => Promise<{ logs: string }>;
+  readonly readModelOverrides?: () => Promise<Record<string, { ttl?: number; contextWindow?: number; concurrencyLimit?: number }>>;
+  readonly updateModelOverrides?: (body: Record<string, { ttl?: number; contextWindow?: number; concurrencyLimit?: number }>) => Promise<Record<string, { ttl?: number; contextWindow?: number; concurrencyLimit?: number }>>;
+  readonly readPeers?: () => Promise<readonly { id: string; url: string; authToken?: string }[]>;
+  readonly updatePeers?: (body: readonly { id: string; url: string; authToken?: string }[]) => Promise<readonly { id: string; url: string; authToken?: string }[]>;
+  readonly checkPeerHealth?: (url: string) => Promise<{ healthy: boolean }>;
 }
 
 export interface RuntimeBridgeBackend {
@@ -362,11 +997,13 @@ export interface RuntimeBridgeBackend {
     body: OpenAIChatCompletionsBody,
     requestId: string,
     streamWriter?: BridgeStreamWriter,
+    requestOptions?: BridgeExecutionRequestOptions,
   ) => Promise<BridgeChatCompletionsExecutionResult>;
   executeResponses: (
     body: OpenAIResponsesBody,
     requestId: string,
     streamWriter?: BridgeStreamWriter,
+    requestOptions?: BridgeExecutionRequestOptions,
   ) => Promise<BridgeResponsesExecutionResult>;
   readRuntimeSummary(): Promise<{
     lifecycleSummary: EndpointRegistryResult["lifecycleSummary"];
@@ -460,6 +1097,12 @@ export interface RuntimeBridgeBackend {
   readLocalPolicy(): Promise<Record<string, unknown>>;
   updateLocalPolicy(body: Record<string, unknown>): Promise<Record<string, unknown>>;
   listSwapHistory(): Promise<readonly { timestamp: string; oldModel: string | null; newModel: string; reason: string }[]>;
+  getLocalLogs(): Promise<{ logs: string }>;
+  readModelOverrides(): Promise<Record<string, { ttl?: number; contextWindow?: number; concurrencyLimit?: number }>>;
+  updateModelOverrides(body: Record<string, { ttl?: number; contextWindow?: number; concurrencyLimit?: number }>): Promise<Record<string, { ttl?: number; contextWindow?: number; concurrencyLimit?: number }>>;
+  readPeers(): Promise<readonly { id: string; url: string; authToken?: string }[]>;
+  updatePeers(body: readonly { id: string; url: string; authToken?: string }[]): Promise<readonly { id: string; url: string; authToken?: string }[]>;
+  checkPeerHealth(url: string): Promise<{ healthy: boolean }>;
   shutdown(): Promise<void>;
 }
 
@@ -479,6 +1122,10 @@ export interface BridgeServerOptions {
   readonly runtimeStateRoot: string;
   readonly scopeId: string;
   readonly unifiedRuntimeConfigPath?: string;
+}
+
+export interface BridgeExecutionRequestOptions {
+  readonly routingModeOverride?: RuntimeRoutingMode;
 }
 
 class BridgeHttpError extends Error {
@@ -522,10 +1169,232 @@ function createVendorError(vendorId: string, message: string): BridgeHttpError {
   });
 }
 
+const VALID_RUNTIME_ROUTING_MODES = ["baseline", "difficulty", "controller", "hybrid"] as const;
+
+function parseRuntimeRoutingModeOverride(value: string): RuntimeRoutingMode {
+  if ((VALID_RUNTIME_ROUTING_MODES as readonly string[]).includes(value)) {
+    return value as RuntimeRoutingMode;
+  }
+  throw new BridgeHttpError(400, {
+    error: `Invalid x-role-model-routing-mode header value "${value}". Expected one of: baseline, difficulty, controller, hybrid.`,
+  });
+}
+
+function readBridgeExecutionRequestOptions(request: IncomingMessage): BridgeExecutionRequestOptions | undefined {
+  const routingModeOverrideHeader = request.headers["x-role-model-routing-mode"]?.toString().trim();
+  if (!routingModeOverrideHeader) {
+    return undefined;
+  }
+  return {
+    routingModeOverride: parseRuntimeRoutingModeOverride(routingModeOverrideHeader),
+  };
+}
+
+function summarizeRequestRoutingModeDiagnostics(
+  requestOptions?: BridgeExecutionRequestOptions,
+): RuntimeRoutingDiagnostics["routingMode"] | undefined {
+  if (!requestOptions?.routingModeOverride) {
+    return undefined;
+  }
+  return {
+    source: "request-override",
+    requestedOverride: requestOptions.routingModeOverride,
+    effectiveMode: requestOptions.routingModeOverride,
+  };
+}
+
+function summarizeRewriteDiagnostics(input: {
+  readonly requestedModel: string;
+  readonly downstreamModelId: string;
+}): RuntimeRoutingDiagnostics["rewrite"] {
+  return {
+    requestedModel: input.requestedModel,
+    downstreamModelId: input.downstreamModelId,
+    applied: input.requestedModel !== input.downstreamModelId,
+    reason:
+      input.requestedModel === input.downstreamModelId
+        ? "requested-model-matches-downstream"
+        : "requested-model-rewritten-for-selected-endpoint",
+  };
+}
+
 function createInactiveVendorStatus(vendorId: string): VendorRuntimeStatus {
   return {
     vendorId,
     healthStatus: "inactive",
+  };
+}
+
+function readObservedProfilesForRouting(input: {
+  readonly databasePath: string;
+  readonly registry: EndpointRegistryResult;
+  readonly observedDataConfig: ReturnType<typeof resolveUnifiedRuntimeObservedDataConfig>;
+  readonly difficultyBucket?: UnifiedRuntimeDifficultyBucket;
+  readonly routingTimeMs: number;
+}): {
+  readonly observedProfilesByEndpointId: Parameters<typeof routeRuntimeRequest>[0]["observedProfilesByEndpointId"];
+  readonly throughputPenaltyStateByEndpointId: NonNullable<
+    Parameters<typeof routeRuntimeRequest>[0]["throughputPenaltyStateByEndpointId"]
+  >;
+  readonly diagnosticsByEndpointId: Record<
+    string,
+    NonNullable<RuntimeRoutingDiagnostics["observedProfile"]>
+  >;
+} {
+  const endpointIds = [...new Set(input.registry.endpoints.map((endpoint) => endpoint.identity.endpoint_id))];
+  const endpointWideProfilesByEndpointId = readLatestObservedProfilesByEndpointIds({
+    databasePath: input.databasePath,
+    endpointIds,
+  });
+  const difficultyBucketProfilesByEndpointId = input.difficultyBucket
+    ? readLatestObservedProfilesByEndpointIds({
+        databasePath: input.databasePath,
+        endpointIds,
+        difficultyBucket: input.difficultyBucket,
+      })
+    : {};
+  const latestProfilesByEndpointId = input.difficultyBucket
+    ? {
+        ...endpointWideProfilesByEndpointId,
+        ...difficultyBucketProfilesByEndpointId,
+      }
+    : endpointWideProfilesByEndpointId;
+  const throughputPenaltyStateByEndpointId: NonNullable<
+    Parameters<typeof routeRuntimeRequest>[0]["throughputPenaltyStateByEndpointId"]
+  > = {};
+  const diagnosticsByEndpointId = Object.fromEntries(
+    Object.entries(latestProfilesByEndpointId).map(([endpointId, profile]) => [
+      endpointId,
+      {
+        endpointId,
+        source: "runtime-state" as const,
+        readMode: "per-request" as const,
+        measuredAtMs: profile.measured_at_ms,
+        ...(input.difficultyBucket ? { difficultyBucket: input.difficultyBucket } : {}),
+        ...(input.difficultyBucket
+          ? {
+              bucketOverrideApplied: Object.prototype.hasOwnProperty.call(
+                difficultyBucketProfilesByEndpointId,
+                endpointId,
+              ),
+            }
+          : {}),
+      },
+    ]),
+  );
+
+  if (input.observedDataConfig.enabled && input.observedDataConfig.throughputSla.enabled) {
+    for (const [endpointId, profile] of Object.entries(latestProfilesByEndpointId)) {
+      const existingPenaltyState = readObservedThroughputPenaltyState({
+        databasePath: input.databasePath,
+        endpointId,
+        nowMs: input.routingTimeMs,
+      });
+      if (
+        typeof profile.tokens_per_sec === "number" &&
+        profile.tokens_per_sec < input.observedDataConfig.throughputSla.minTokensPerSec
+      ) {
+        const penaltyState = {
+          endpointId,
+          lastObservedTokensPerSec: profile.tokens_per_sec,
+          minTokensPerSec: input.observedDataConfig.throughputSla.minTokensPerSec,
+          penaltyFactor: input.observedDataConfig.throughputSla.penaltyFactor,
+          activatedAtMs: profile.measured_at_ms,
+          expiresAtMs: profile.measured_at_ms + input.observedDataConfig.throughputSla.penaltyTimeoutMs,
+          lastObservationMeasuredAtMs: profile.measured_at_ms,
+        };
+        upsertObservedThroughputPenaltyState({
+          databasePath: input.databasePath,
+          penaltyState,
+        });
+        throughputPenaltyStateByEndpointId[endpointId] = penaltyState;
+        continue;
+      }
+      if (existingPenaltyState) {
+        throughputPenaltyStateByEndpointId[endpointId] = existingPenaltyState;
+      }
+    }
+  }
+
+  return {
+    observedProfilesByEndpointId:
+      latestProfilesByEndpointId as Parameters<typeof routeRuntimeRequest>[0]["observedProfilesByEndpointId"],
+    throughputPenaltyStateByEndpointId,
+    diagnosticsByEndpointId,
+  };
+}
+
+function summarizeEffectiveMetricsFromDecision(
+  decision: ReturnType<typeof routeRuntimeRequest>["decision"],
+): RuntimeRoutingDiagnostics["effectiveMetrics"] | undefined {
+  const chosen = decision.scored_candidates.find(
+    (candidate) => candidate.endpoint_id === decision.chosen_endpoint_id,
+  );
+  if (!chosen) {
+    return undefined;
+  }
+
+  const metricBreakdown = chosen.metric_breakdown as Record<
+    string,
+    {
+      value?: number;
+      source?: string;
+      raw?: Record<string, unknown>;
+    }
+  >;
+  const summarizeMetric = (metricName: string) => {
+    const metric = metricBreakdown[metricName];
+    if (!metric || typeof metric.value !== "number" || typeof metric.source !== "string") {
+      return undefined;
+    }
+    return {
+      value: metric.value,
+      source: metric.source,
+      measuredAtMs: typeof metric.raw?.measured_at_ms === "number" ? metric.raw.measured_at_ms : undefined,
+      freshnessWeight:
+        typeof metric.raw?.freshness_weight === "number" ? metric.raw.freshness_weight : undefined,
+    };
+  };
+
+  return {
+    quality: summarizeMetric("quality"),
+    latency: summarizeMetric("latency"),
+    throughput: summarizeMetric("throughput"),
+    reliability: summarizeMetric("reliability"),
+    cost: summarizeMetric("cost"),
+  };
+}
+
+function summarizeThroughputPenaltyFromDecision(
+  decision: ReturnType<typeof routeRuntimeRequest>["decision"],
+): RuntimeRoutingDiagnostics["throughputPenalty"] | undefined {
+  const chosen = decision.scored_candidates.find(
+    (candidate) => candidate.endpoint_id === decision.chosen_endpoint_id,
+  );
+  if (!chosen) {
+    return undefined;
+  }
+
+  const throughputMetric = (chosen.metric_breakdown as Record<string, { raw?: Record<string, unknown> }>).throughput;
+  const penalty = throughputMetric?.raw?.throughput_penalty as Record<string, unknown> | undefined;
+  if (!penalty) {
+    return {
+      endpointId: decision.chosen_endpoint_id,
+      active: false,
+    };
+  }
+
+  return {
+    endpointId: decision.chosen_endpoint_id,
+    active: true,
+    penaltyFactor: typeof penalty.penalty_factor === "number" ? penalty.penalty_factor : undefined,
+    activatedAtMs: typeof penalty.activated_at_ms === "number" ? penalty.activated_at_ms : undefined,
+    expiresAtMs: typeof penalty.expires_at_ms === "number" ? penalty.expires_at_ms : undefined,
+    minTokensPerSec: typeof penalty.min_tokens_per_sec === "number" ? penalty.min_tokens_per_sec : undefined,
+    lastObservedTokensPerSec:
+      typeof penalty.last_observed_tokens_per_sec === "number"
+        ? penalty.last_observed_tokens_per_sec
+        : undefined,
   };
 }
 
@@ -607,6 +1476,31 @@ function createUnifiedCloudSources(
       },
     })),
   );
+}
+
+function buildEndpointMaxDifficultyByEndpointId(
+  config: UnifiedRuntimeConfig | null,
+): Readonly<Record<string, UnifiedRuntimeDifficultyBucket>> {
+  if (!config) {
+    return {};
+  }
+
+  const limits: Record<string, UnifiedRuntimeDifficultyBucket> = {};
+  for (const model of config.llamaSwap.models) {
+    if (!model.maxDifficulty) {
+      continue;
+    }
+    limits[`llama-swap.local.${slugify(model.modelId)}`] = model.maxDifficulty;
+  }
+  for (const provider of config.liteLLM.providers) {
+    for (const mapping of provider.modelMappings) {
+      if (!mapping.maxDifficulty) {
+        continue;
+      }
+      limits[`${provider.providerId}.litellm.global.${slugify(mapping.modelId)}`] = mapping.maxDifficulty;
+    }
+  }
+  return limits;
 }
 
 function createUnifiedProviderAccounts(
@@ -1191,6 +2085,7 @@ function parseResponsesBody(body: Record<string, unknown>): OpenAIResponsesBody 
 
 export function createModelListResponse(
   registry: EndpointRegistryResult,
+  modelAliases: readonly UnifiedRuntimeModelAliasConfig[] = [],
 ): BridgeModelListResponse {
   const byModelId = new Map<string, string[]>();
 
@@ -1198,6 +2093,17 @@ export function createModelListResponse(
     const current = byModelId.get(endpoint.identity.model_id) ?? [];
     current.push(endpoint.identity.endpoint_id);
     byModelId.set(endpoint.identity.model_id, current);
+  }
+
+  for (const alias of modelAliases) {
+    const endpointIds = registry.endpoints
+      .filter((endpoint) => alias.modelIds.includes(endpoint.identity.model_id))
+      .map((endpoint) => endpoint.identity.endpoint_id)
+      .sort(compareText);
+    if (endpointIds.length === 0) {
+      continue;
+    }
+    byModelId.set(alias.aliasId, endpointIds);
   }
 
   const data = [...byModelId.entries()]
@@ -1213,6 +2119,70 @@ export function createModelListResponse(
     object: "list",
     data,
   };
+}
+
+function collectAllowedEndpointIds(
+  registry: EndpointRegistryResult,
+  modelIds: readonly string[],
+): readonly string[] {
+  return [...new Set(
+    registry.endpoints
+      .filter((endpoint) => modelIds.includes(endpoint.identity.model_id))
+      .map((endpoint) => endpoint.identity.endpoint_id),
+  )].sort(compareText);
+}
+
+function resolveRequestedModelPool(
+  registry: EndpointRegistryResult,
+  requestedModel: string,
+  modelAliases: readonly UnifiedRuntimeModelAliasConfig[] = [],
+): {
+  readonly allowEndpoints: readonly string[];
+  readonly routingDiagnostics?: Pick<RuntimeRoutingDiagnostics, "aliasResolution">;
+} {
+  const alias = modelAliases.find((entry) => entry.aliasId === requestedModel);
+  if (!alias) {
+    return {
+      allowEndpoints: collectAllowedEndpointIds(registry, [requestedModel]),
+    };
+  }
+
+  const allowEndpoints = collectAllowedEndpointIds(registry, alias.modelIds);
+  return {
+    allowEndpoints,
+    routingDiagnostics: {
+      aliasResolution: {
+        requestedModel,
+        aliasId: alias.aliasId,
+        resolvedModelIds: [...alias.modelIds],
+        allowEndpoints,
+      },
+    },
+  };
+}
+
+function resolveRequestedModelAlias(
+  requestedModel: string,
+  modelAliases: readonly UnifiedRuntimeModelAliasConfig[] = [],
+): UnifiedRuntimeModelAliasConfig | undefined {
+  return modelAliases.find((entry) => entry.aliasId === requestedModel);
+}
+
+async function resolveConfiguredModelAliases(
+  readRuntimeConfig: StartBridgeServerOptions["readRuntimeConfig"],
+): Promise<readonly UnifiedRuntimeModelAliasConfig[]> {
+  if (!readRuntimeConfig) {
+    return [];
+  }
+  const runtimeConfig = await readRuntimeConfig();
+  if (!runtimeConfig || typeof runtimeConfig !== "object" || Array.isArray(runtimeConfig) || !("config" in runtimeConfig)) {
+    return [];
+  }
+  const configValue = runtimeConfig.config;
+  if (!configValue || typeof configValue !== "object" || Array.isArray(configValue)) {
+    return [];
+  }
+  return normalizeUnifiedRuntimeConfigInput(configValue).modelAliases ?? [];
 }
 
 function readForwardedHeaderValue(value: string | string[] | undefined): string | undefined {
@@ -1252,8 +2222,10 @@ function resolveExternalBaseUrl(
 export function createDownstreamOpenAIProviderConfig(
   registry: EndpointRegistryResult,
   baseUrl: string,
+  modelAliases: readonly UnifiedRuntimeModelAliasConfig[] = [],
 ): BridgeDownstreamOpenAIProviderConfig {
-  const models = createModelListResponse(registry).data;
+  const models = createModelListResponse(registry, modelAliases).data;
+  const recommendedModel = modelAliases[0]?.aliasId ?? models[0]?.id ?? null;
 
   return {
     kind: "openai-compatible",
@@ -1276,7 +2248,7 @@ export function createDownstreamOpenAIProviderConfig(
     },
     models,
     setup: {
-      recommendedModel: models[0]?.id ?? null,
+      recommendedModel,
       notes: [
         "Configure downstream tooling as an OpenAI-compatible provider.",
         "Use GET /v1/models to discover the current model ids.",
@@ -1286,35 +2258,167 @@ export function createDownstreamOpenAIProviderConfig(
   };
 }
 
+function toAliasRoutingMode(aliasMode: UnifiedRuntimeModelAliasConfig["mode"] | null | undefined): RuntimeRoutingMode {
+  switch (aliasMode) {
+    case "difficulty":
+      return "difficulty";
+    case "intelligent":
+      return "controller";
+    case "hybrid":
+      return "hybrid";
+    default:
+      return "baseline";
+  }
+}
+
+function summarizeAliasDefaultRoutingModeDiagnostics(input: {
+  readonly requestedModel: string;
+  readonly modelAliases: readonly UnifiedRuntimeModelAliasConfig[];
+  readonly effectiveRoutingMode: RuntimeRoutingMode;
+  readonly requestOptions?: BridgeExecutionRequestOptions;
+}): RuntimeRoutingDiagnostics["routingMode"] | undefined {
+  if (input.requestOptions?.routingModeOverride || input.effectiveRoutingMode === "baseline") {
+    return undefined;
+  }
+  const alias = resolveRequestedModelAlias(input.requestedModel, input.modelAliases);
+  if (!alias) {
+    return undefined;
+  }
+  return {
+    source: "alias-default",
+    aliasMode: toAliasRoutingMode(alias.mode),
+    effectiveMode: input.effectiveRoutingMode,
+  };
+}
+
+function resolveEffectiveRoutingMode(input: {
+  readonly requestedModel: string;
+  readonly modelAliases: readonly UnifiedRuntimeModelAliasConfig[];
+  readonly requestOptions?: BridgeExecutionRequestOptions;
+}): RuntimeRoutingMode {
+  if (input.requestOptions?.routingModeOverride) {
+    return input.requestOptions.routingModeOverride;
+  }
+  const alias = resolveRequestedModelAlias(input.requestedModel, input.modelAliases);
+  return toAliasRoutingMode(alias?.mode);
+}
+
+function shouldApplyDifficultyRouting(effectiveRoutingMode: RuntimeRoutingMode): boolean {
+  return effectiveRoutingMode === "difficulty" || effectiveRoutingMode === "hybrid";
+}
+
+function shouldApplyControllerRouting(effectiveRoutingMode: RuntimeRoutingMode): boolean {
+  return effectiveRoutingMode === "controller" || effectiveRoutingMode === "hybrid";
+}
+
+function summarizeHybridArbitration(input: {
+  readonly effectiveRoutingMode: RuntimeRoutingMode;
+  readonly routingRequest: Parameters<typeof routeRuntimeRequest>[0]["request"];
+  readonly controllerContext?: BridgeControllerRoutingContext;
+  readonly guidance?: NonNullable<BridgeControllerRoutingContext["resolvedGuidance"]>;
+  readonly preferredEndpointIds: readonly string[];
+  readonly finalStrategy: "balanced" | "cost" | "quality";
+}): RuntimeRoutingDiagnostics["hybridArbitration"] | undefined {
+  if (input.effectiveRoutingMode !== "hybrid") {
+    return undefined;
+  }
+  const controllerChangedPlan =
+    !input.controllerContext?.active || !input.guidance
+      ? false
+      : Boolean(
+          input.guidance.strategy && input.guidance.strategy !== input.routingRequest.strategy ||
+          typeof input.guidance.preferLocal === "boolean" &&
+            input.guidance.preferLocal !== input.routingRequest.preferLocal ||
+          input.preferredEndpointIds.length > 0 ||
+          input.guidance.requestedRoleId ||
+          input.guidance.taskType ||
+          (input.guidance.requiredCapabilities?.length ?? 0) > 0 ||
+          (input.guidance.preferredCapabilities?.length ?? 0) > 0
+        );
+  const dominantSignal =
+    !input.controllerContext?.active || !input.guidance
+      ? "difficulty"
+      : controllerChangedPlan
+        ? "controller"
+        : "aligned";
+  return {
+    active: true,
+    difficultyStrategy: input.routingRequest.strategy,
+    finalStrategy: input.finalStrategy,
+    controllerChangedPlan,
+    dominantSignal,
+    ...(input.preferredEndpointIds.length ? { preferredEndpointIds: input.preferredEndpointIds } : {}),
+  };
+}
+
 export function mapChatCompletionsRequest(
   registry: EndpointRegistryResult,
   body: OpenAIChatCompletionsBody,
   requestId: string,
+  modelAliases: readonly UnifiedRuntimeModelAliasConfig[] = [],
+  difficultyContext?: BridgeDifficultyRoutingContext,
+  controllerContext?: BridgeControllerRoutingContext,
+  requestOptions?: BridgeExecutionRequestOptions,
 ): BridgeExecutionPlan {
-  const allowEndpoints = registry.endpoints
-    .filter((endpoint) => endpoint.identity.model_id === body.model)
-    .map((endpoint) => endpoint.identity.endpoint_id)
-    .sort(compareText);
+  const contextTokens = estimateContextTokens(body.messages, body.tools?.length ?? 0);
+  const { allowEndpoints, routingDiagnostics } = resolveRequestedModelPool(registry, body.model, modelAliases);
+  const effectiveRoutingMode = resolveEffectiveRoutingMode({
+    requestedModel: body.model,
+    modelAliases,
+    requestOptions,
+  });
+  const aliasDefaultRoutingMode = summarizeAliasDefaultRoutingModeDiagnostics({
+    requestedModel: body.model,
+    modelAliases,
+    effectiveRoutingMode,
+    requestOptions,
+  });
+  const baseRoutingDiagnostics = aliasDefaultRoutingMode
+    ? {
+        ...routingDiagnostics,
+        routingMode: aliasDefaultRoutingMode,
+      }
+    : routingDiagnostics;
+  const difficultyRouting = maybeApplyDifficultyRouting({
+    effectiveRoutingMode,
+    requestedModel: body.model,
+    modelAliases,
+    messages: body.messages,
+    contextTokens,
+    toolCount: body.tools?.length ?? 0,
+    allowEndpoints,
+    routingDiagnostics: baseRoutingDiagnostics,
+    difficultyContext,
+  });
 
-  if (allowEndpoints.length === 0) {
+  if (difficultyRouting.allowEndpoints.length === 0) {
     throw new Error(`No registry endpoints are available for requested model ${body.model}.`);
   }
 
   const tools = body.tools?.map(toToolDefinition);
 
-  return {
+  const controllerRouting = maybeApplyControllerRouting({
+    effectiveRoutingMode,
+    requestedModel: body.model,
+    modelAliases,
     routingRequest: {
       requestId,
       taskType: "text.chat",
       requiredCapabilities: ["text.chat"],
       preferredCapabilities: [],
       requiredModalities: ["text"],
-      contextTokens: estimateContextTokens(body.messages, tools?.length ?? 0),
+      contextTokens,
       needsTools: Boolean(tools?.length),
-      strategy: "balanced",
+      strategy: difficultyRouting.strategy,
       preferLocal: false,
-      allowEndpoints,
+      allowEndpoints: difficultyRouting.allowEndpoints,
     },
+    routingDiagnostics: difficultyRouting.routingDiagnostics,
+    controllerContext,
+  });
+
+  return {
+    routingRequest: controllerRouting.routingRequest,
     executionRequest: {
       messages: body.messages,
       ...(tools?.length ? { tools } : {}),
@@ -1326,6 +2430,8 @@ export function mapChatCompletionsRequest(
         ? { temperature: body.temperature }
         : {}),
     },
+    ...(controllerRouting.routingModel ? { routingModel: controllerRouting.routingModel } : {}),
+    ...(controllerRouting.routingDiagnostics ? { routingDiagnostics: controllerRouting.routingDiagnostics } : {}),
   };
 }
 
@@ -1333,32 +2439,71 @@ export function mapResponsesRequest(
   registry: EndpointRegistryResult,
   body: OpenAIResponsesBody,
   requestId: string,
+  modelAliases: readonly UnifiedRuntimeModelAliasConfig[] = [],
+  difficultyContext?: BridgeDifficultyRoutingContext,
+  controllerContext?: BridgeControllerRoutingContext,
+  requestOptions?: BridgeExecutionRequestOptions,
 ): BridgeExecutionPlan {
-  const allowEndpoints = registry.endpoints
-    .filter((endpoint) => endpoint.identity.model_id === body.model)
-    .map((endpoint) => endpoint.identity.endpoint_id)
-    .sort(compareText);
+  const messages = toResponsesInputMessages(body.input);
+  const contextTokens = estimateContextTokens(messages, body.tools?.length ?? 0);
+  const { allowEndpoints, routingDiagnostics } = resolveRequestedModelPool(registry, body.model, modelAliases);
+  const effectiveRoutingMode = resolveEffectiveRoutingMode({
+    requestedModel: body.model,
+    modelAliases,
+    requestOptions,
+  });
+  const aliasDefaultRoutingMode = summarizeAliasDefaultRoutingModeDiagnostics({
+    requestedModel: body.model,
+    modelAliases,
+    effectiveRoutingMode,
+    requestOptions,
+  });
+  const baseRoutingDiagnostics = aliasDefaultRoutingMode
+    ? {
+        ...routingDiagnostics,
+        routingMode: aliasDefaultRoutingMode,
+      }
+    : routingDiagnostics;
+  const difficultyRouting = maybeApplyDifficultyRouting({
+    effectiveRoutingMode,
+    requestedModel: body.model,
+    modelAliases,
+    messages,
+    contextTokens,
+    toolCount: body.tools?.length ?? 0,
+    allowEndpoints,
+    routingDiagnostics: baseRoutingDiagnostics,
+    difficultyContext,
+  });
 
-  if (allowEndpoints.length === 0) {
+  if (difficultyRouting.allowEndpoints.length === 0) {
     throw new Error(`No registry endpoints are available for requested model ${body.model}.`);
   }
 
   const tools = body.tools?.map(toResponsesToolDefinition);
-  const messages = toResponsesInputMessages(body.input);
 
-  return {
+  const controllerRouting = maybeApplyControllerRouting({
+    effectiveRoutingMode,
+    requestedModel: body.model,
+    modelAliases,
     routingRequest: {
       requestId,
       taskType: "text.chat",
       requiredCapabilities: ["text.chat"],
       preferredCapabilities: [],
       requiredModalities: ["text"],
-      contextTokens: estimateContextTokens(messages, tools?.length ?? 0),
+      contextTokens,
       needsTools: Boolean(tools?.length),
-      strategy: "balanced",
+      strategy: difficultyRouting.strategy,
       preferLocal: false,
-      allowEndpoints,
+      allowEndpoints: difficultyRouting.allowEndpoints,
     },
+    routingDiagnostics: difficultyRouting.routingDiagnostics,
+    controllerContext,
+  });
+
+  return {
+    routingRequest: controllerRouting.routingRequest,
     executionRequest: {
       messages,
       ...(tools?.length ? { tools } : {}),
@@ -1370,6 +2515,8 @@ export function mapResponsesRequest(
         ? { temperature: body.temperature }
         : {}),
     },
+    ...(controllerRouting.routingModel ? { routingModel: controllerRouting.routingModel } : {}),
+    ...(controllerRouting.routingDiagnostics ? { routingDiagnostics: controllerRouting.routingDiagnostics } : {}),
   };
 }
 
@@ -2294,7 +3441,10 @@ function extractResponseId(responseBody: unknown): string | undefined {
 function setCorsHeaders(response: ServerResponse): void {
   response.setHeader("Access-Control-Allow-Origin", "*");
   response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-  response.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Request-ID");
+  response.setHeader(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Authorization, X-Request-ID, X-Role-Model-Routing-Mode",
+  );
 }
 
 function createRequestHandler(options: StartBridgeServerOptions) {
@@ -2348,13 +3498,15 @@ function createRequestHandler(options: StartBridgeServerOptions) {
     const registry = options.getRegistry?.() ?? options.registry;
 
     if (request.method === "GET" && url.pathname === "/v1/models") {
-      writeJson(response, 200, createModelListResponse(registry));
+      const modelAliases = await resolveConfiguredModelAliases(options.readRuntimeConfig);
+      writeJson(response, 200, createModelListResponse(registry, modelAliases));
       return;
     }
 
     if (request.method === "POST" && url.pathname === "/v1/chat/completions") {
       try {
         const requestId = request.headers["x-request-id"]?.toString() ?? "req-runtime-host-bridge";
+        const requestOptions = readBridgeExecutionRequestOptions(request);
         const body = await readJsonBody(request);
         const parsedBody = parseChatCompletionsBody(body);
         if (parsedBody.stream) {
@@ -2385,7 +3537,7 @@ function createRequestHandler(options: StartBridgeServerOptions) {
             }
             response.write(serializedChunk);
           };
-          const result = await options.executeChatCompletions(parsedBody, requestId, streamWriter);
+          const result = await options.executeChatCompletions(parsedBody, requestId, streamWriter, requestOptions);
           if (!wroteStreamChunk) {
             response.writeHead(200, {
               "content-type": "text/event-stream; charset=utf-8",
@@ -2412,7 +3564,7 @@ function createRequestHandler(options: StartBridgeServerOptions) {
           response.end();
           return;
         }
-        const result = await options.executeChatCompletions(parsedBody, requestId);
+        const result = await options.executeChatCompletions(parsedBody, requestId, undefined, requestOptions);
         writeJson(response, 200, createChatCompletionsResponse(result), createExecutionHeaders({
           endpointId: result.endpointId,
           adapterFamily: result.adapterFamily,
@@ -2432,6 +3584,7 @@ function createRequestHandler(options: StartBridgeServerOptions) {
 
     if (request.method === "POST" && url.pathname === "/v1/responses") {
       const requestId = request.headers["x-request-id"]?.toString() ?? "req-runtime-host-bridge";
+      const requestOptions = readBridgeExecutionRequestOptions(request);
       const body = await readJsonBody(request);
       const parsedBody = parseResponsesBody(body);
       if (parsedBody.stream) {
@@ -2462,7 +3615,7 @@ function createRequestHandler(options: StartBridgeServerOptions) {
           }
           response.write(serializedChunk);
         };
-        const result = await options.executeResponses(parsedBody, requestId, streamWriter);
+        const result = await options.executeResponses(parsedBody, requestId, streamWriter, requestOptions);
         if (!wroteStreamChunk) {
           response.writeHead(200, {
             "content-type": "text/event-stream; charset=utf-8",
@@ -2488,7 +3641,7 @@ function createRequestHandler(options: StartBridgeServerOptions) {
         response.end();
         return;
       }
-      const result = await options.executeResponses(parsedBody, requestId);
+      const result = await options.executeResponses(parsedBody, requestId, undefined, requestOptions);
       writeJson(response, 200, createResponsesResponse(result), createExecutionHeaders({
         endpointId: result.endpointId,
         adapterFamily: result.adapterFamily,
@@ -2625,6 +3778,7 @@ function createRequestHandler(options: StartBridgeServerOptions) {
     }
 
     if (request.method === "GET" && url.pathname === "/api/role-model/downstream/openai") {
+      const modelAliases = await resolveConfiguredModelAliases(options.readRuntimeConfig);
       writeJson(
         response,
         200,
@@ -2634,6 +3788,7 @@ function createRequestHandler(options: StartBridgeServerOptions) {
             host: options.host,
             port: options.port,
           }),
+          modelAliases,
         ),
       );
       return;
@@ -2872,6 +4027,70 @@ function createRequestHandler(options: StartBridgeServerOptions) {
       return;
     }
 
+    if (request.method === "GET" && url.pathname === "/api/role-model/local/logs") {
+      if (!options.getLocalLogs) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.getLocalLogs());
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/role-model/local/overrides") {
+      if (!options.readModelOverrides) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.readModelOverrides());
+      return;
+    }
+
+    if (request.method === "PUT" && url.pathname === "/api/role-model/local/overrides") {
+      if (!options.updateModelOverrides) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.updateModelOverrides(await readJsonBody(request)));
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/role-model/local/peers") {
+      if (!options.readPeers) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.readPeers());
+      return;
+    }
+
+    if (request.method === "PUT" && url.pathname === "/api/role-model/local/peers") {
+      if (!options.updatePeers) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      const body = await readJsonBody(request);
+      if (!Array.isArray(body)) {
+        writeJson(response, 400, { error: "expected array" });
+        return;
+      }
+      writeJson(response, 200, await options.updatePeers(body as readonly { id: string; url: string; authToken?: string }[]));
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/role-model/local/peers/health") {
+      if (!options.checkPeerHealth) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      const peerUrl = url.searchParams.get("url");
+      if (!peerUrl) {
+        writeJson(response, 400, { error: "missing url query param" });
+        return;
+      }
+      writeJson(response, 200, await options.checkPeerHealth(peerUrl));
+      return;
+    }
+
     if (options.staticRoot && request.method === "GET") {
       const filePath = path.join(options.staticRoot, url.pathname === "/" ? "index.html" : url.pathname);
       const resolvedPath = existsSync(filePath) ? filePath : path.join(options.staticRoot, "index.html");
@@ -2987,9 +4206,6 @@ export async function createRuntimeBridgeBackend(
       tokenBudget: number;
     };
   }>(path.join(fixtureRoot, "context-envelope.json"));
-  const observedProfilesByEndpointId = await readJson<
-    Parameters<typeof routeRuntimeRequest>[0]["observedProfilesByEndpointId"]
-  >(path.join(fixtureRoot, "routing-observed-profiles.json"));
   const roleTaskFixture = await readJson<{
     roleDefinitions: Parameters<typeof routeRuntimeRequest>[0]["roleDefinitions"];
     taskDefinitions: Parameters<typeof routeRuntimeRequest>[0]["taskDefinitions"];
@@ -3340,7 +4556,21 @@ export async function createRuntimeBridgeBackend(
     requestId: string,
     streamRequested: boolean | undefined,
     streamWriter?: BridgeStreamWriter,
+    executionOptions?: {
+      readonly persistObservation?: boolean;
+      readonly requestOptions?: BridgeExecutionRequestOptions;
+      readonly requestedModel?: string;
+    },
   ) => {
+    const observedDataConfig = resolveUnifiedRuntimeObservedDataConfig(currentUnifiedRuntimeConfig);
+    const routingTimeMs = Date.now();
+    const runtimeObservedProfiles = readObservedProfilesForRouting({
+      databasePath: initialization.databasePath,
+      registry: currentRegistry,
+      observedDataConfig,
+      difficultyBucket: plan.routingDiagnostics?.difficultyRouting?.difficulty,
+      routingTimeMs,
+    });
     let streamedChunkCount = 0;
     const trackedStreamWriter: BridgeStreamWriter | undefined = streamWriter
       ? async (chunk, metadata) => {
@@ -3351,7 +4581,10 @@ export async function createRuntimeBridgeBackend(
     const routed = routeRuntimeRequest({
       request: plan.routingRequest,
       registry: currentRegistry,
-      observedProfilesByEndpointId,
+      observedProfilesByEndpointId: runtimeObservedProfiles.observedProfilesByEndpointId,
+      observedDataConfig,
+      throughputPenaltyStateByEndpointId: runtimeObservedProfiles.throughputPenaltyStateByEndpointId,
+      routingTimeMs,
       envelope,
       retrievalReceipt,
       roleDefinitions: runtimeRoles.roleDefinitions,
@@ -3363,7 +4596,7 @@ export async function createRuntimeBridgeBackend(
         currentRegistry,
         runtimeRoles.roleDefinitions,
       ),
-      routingModel,
+      routingModel: plan.routingModel ?? routingModel,
     });
     const routingDecisionId = routed.decision.routing_decision_id;
     const execution = await executeLiveRoutedRequest({
@@ -3570,49 +4803,73 @@ export async function createRuntimeBridgeBackend(
     const providerAccount = currentAccounts.find(
       (account) => account.providerAccountId === execution.target.providerAccountId,
     );
-    const bundle = createRuntimeObservationBundle({
-      decision: routed.decision,
-      routingDiagnostics: routed.routingDiagnostics,
-      retrievalReceipt: {
-        receiptId: retrievalReceipt.receiptId,
-        summary: retrievalReceipt.summary,
-      },
-      contextEnvelope: {
-        conversationId: envelope.conversationId,
-        latestHandoffId: envelope.latestHandoff?.handoffId ?? null,
-        estimatedTokenCount: envelope.estimatedTokenCount,
-      },
-      execution,
-      priorSamples: [
-        ...(observabilityHistory.byEndpointId[routed.decision.chosen_endpoint_id] ?? []),
-        ...readObservedPerformanceSamples({
+    const observedProfileDiagnostic =
+      runtimeObservedProfiles.diagnosticsByEndpointId[routed.decision.chosen_endpoint_id] ??
+      ({
+        endpointId: routed.decision.chosen_endpoint_id,
+        source: "none",
+        readMode: "per-request",
+      } as const);
+    if (executionOptions?.persistObservation !== false) {
+      const requestRoutingMode = summarizeRequestRoutingModeDiagnostics(executionOptions?.requestOptions);
+      const rewriteDiagnostics = executionOptions?.requestedModel
+        ? summarizeRewriteDiagnostics({
+            requestedModel: executionOptions.requestedModel,
+            downstreamModelId: execution.target.modelId,
+          })
+        : undefined;
+      const bundle = createRuntimeObservationBundle({
+        decision: routed.decision,
+        routingDiagnostics: {
+          ...routed.routingDiagnostics,
+          ...plan.routingDiagnostics,
+          ...(requestRoutingMode ? { routingMode: requestRoutingMode } : {}),
+          ...(rewriteDiagnostics ? { rewrite: rewriteDiagnostics } : {}),
+          observedProfile: observedProfileDiagnostic,
+          effectiveMetrics: summarizeEffectiveMetricsFromDecision(routed.decision),
+          throughputPenalty: summarizeThroughputPenaltyFromDecision(routed.decision),
+        },
+        retrievalReceipt: {
+          receiptId: retrievalReceipt.receiptId,
+          summary: retrievalReceipt.summary,
+        },
+        contextEnvelope: {
+          conversationId: envelope.conversationId,
+          latestHandoffId: envelope.latestHandoff?.handoffId ?? null,
+          estimatedTokenCount: envelope.estimatedTokenCount,
+        },
+        execution,
+        priorSamples: [
+          ...(observabilityHistory.byEndpointId[routed.decision.chosen_endpoint_id] ?? []),
+          ...readObservedPerformanceSamples({
+            databasePath: initialization.databasePath,
+            endpointId: routed.decision.chosen_endpoint_id,
+          }),
+        ],
+        maintenancePolicy: readRuntimeMaintenancePolicy({
           databasePath: initialization.databasePath,
-          endpointId: routed.decision.chosen_endpoint_id,
         }),
-      ],
-      maintenancePolicy: readRuntimeMaintenancePolicy({
+        capturePolicy: observabilityPolicy,
+        tooling: {
+          executions: toolExecutionResult.executions,
+        },
+        ...(providerAccount
+          ? {
+              accountState: {
+                providerAccountId: providerAccount.providerAccountId,
+                status: providerAccount.status,
+                healthStatus: providerAccount.healthStatus,
+                rotationState: providerAccount.rotationState,
+              },
+            }
+          : {}),
+      });
+      persistRuntimeObservationBundle({
         databasePath: initialization.databasePath,
-      }),
-      capturePolicy: observabilityPolicy,
-      tooling: {
-        executions: toolExecutionResult.executions,
-      },
-      ...(providerAccount
-        ? {
-            accountState: {
-              providerAccountId: providerAccount.providerAccountId,
-              status: providerAccount.status,
-              healthStatus: providerAccount.healthStatus,
-              rotationState: providerAccount.rotationState,
-            },
-          }
-        : {}),
-    });
-    persistRuntimeObservationBundle({
-      databasePath: initialization.databasePath,
-      observation: bundle,
-    });
-    emitTelemetryUpdate(bundle.requestId);
+        observation: bundle,
+      });
+      emitTelemetryUpdate(bundle.requestId);
+    }
 
     return {
       routingDecisionId,
@@ -3621,7 +4878,299 @@ export async function createRuntimeBridgeBackend(
     };
   };
 
-  return {
+  const resolveDifficultyClassification = async (input: {
+    readonly requestId: string;
+    readonly requestedModel: string;
+    readonly messages: readonly OpenAIChatCompletionsMessage[];
+    readonly contextTokens: number;
+    readonly toolCount: number;
+    readonly requestOptions?: BridgeExecutionRequestOptions;
+  }): Promise<NonNullable<BridgeDifficultyRoutingContext["resolvedClassification"]> | undefined> => {
+    const modelAliases = currentUnifiedRuntimeConfig?.modelAliases ?? [];
+    const effectiveRoutingMode = resolveEffectiveRoutingMode({
+      requestedModel: input.requestedModel,
+      modelAliases,
+      requestOptions: input.requestOptions,
+    });
+    if (!shouldApplyDifficultyRouting(effectiveRoutingMode)) {
+      return undefined;
+    }
+
+    const observedDataConfig = resolveUnifiedRuntimeObservedDataConfig(currentUnifiedRuntimeConfig);
+    const cachePolicy = observedDataConfig.difficultyLearning;
+    const conversationId = envelope.conversationId;
+    const signals = summarizeDifficultySignals({
+      messages: input.messages,
+      contextTokens: input.contextTokens,
+      toolCount: input.toolCount,
+    });
+    const nowMs = Date.now();
+    const cachedClassification = readDifficultyClassificationCache({
+      databasePath: initialization.databasePath,
+      conversationId,
+    });
+    const cacheInvalidationReasons = cachedClassification
+      ? [
+          ...(cachedClassification.expiresAtMs < nowMs ? (["expired"] as const) : []),
+          ...getDifficultyCacheInvalidationReasons({
+            cachedSignals: cachedClassification.rubricSignals,
+            currentSignals: signals,
+            invalidation: cachePolicy.invalidation,
+          }),
+        ]
+      : [];
+    if (
+      cachedClassification &&
+      cacheInvalidationReasons.length === 0
+    ) {
+      return {
+        difficulty: cachedClassification.difficulty,
+        fallbackApplied: cachedClassification.fallbackApplied,
+        ...(cachedClassification.fallbackReason ? { fallbackReason: cachedClassification.fallbackReason } : {}),
+        cacheHit: true,
+        rubricSignals: signals,
+      };
+    }
+    const persistResolvedClassification = (
+      classification: NonNullable<BridgeDifficultyRoutingContext["resolvedClassification"]>,
+    ): NonNullable<BridgeDifficultyRoutingContext["resolvedClassification"]> => {
+      upsertDifficultyClassificationCache({
+        databasePath: initialization.databasePath,
+        cache: {
+          conversationId,
+          difficulty: classification.difficulty,
+          fallbackApplied: classification.fallbackApplied,
+          ...(classification.fallbackReason ? { fallbackReason: classification.fallbackReason } : {}),
+          cachedAtMs: nowMs,
+          expiresAtMs: nowMs + cachePolicy.cacheTtlMs,
+          rubricSignals: signals,
+        },
+      });
+      return {
+        ...classification,
+        ...(cacheInvalidationReasons.length
+          ? {
+              cacheInvalidated: true,
+              cacheInvalidationReasons,
+            }
+          : {}),
+      };
+    };
+    if (signals.historyTurnCount === 0) {
+      return persistResolvedClassification(
+        createDifficultyFallbackResult({
+          signals,
+          classifier: currentUnifiedRuntimeConfig?.difficultyClassifier,
+          reason: "missing-request-content",
+        }),
+      );
+    }
+
+    const classifier = currentUnifiedRuntimeConfig?.difficultyClassifier;
+    if (!classifier?.enabled) {
+      return persistResolvedClassification({
+        ...classifyDifficultyFromSignals({
+          signals,
+          classifier,
+        }),
+        rubricSignals: signals,
+      });
+    }
+
+    const classifierAllowEndpoints = currentRegistry.endpoints
+      .filter(
+        (endpoint) =>
+          endpoint.identity.model_id === classifier.modelId &&
+          toSourceType(endpoint.identity.endpoint_kind) === classifier.sourceType,
+      )
+      .map((endpoint) => endpoint.identity.endpoint_id)
+      .sort(compareText);
+
+    if (classifierAllowEndpoints.length === 0) {
+      return persistResolvedClassification(
+        createDifficultyFallbackResult({
+          signals,
+          classifier,
+          reason: "classifier-endpoint-unavailable",
+        }),
+      );
+    }
+
+    const classifierPlan: BridgeExecutionPlan = {
+      routingRequest: {
+        requestId: `${input.requestId}:difficulty-classifier`,
+        taskType: "text.chat",
+        requiredCapabilities: ["text.chat"],
+        preferredCapabilities: [],
+        requiredModalities: ["text"],
+        contextTokens: estimateContextTokens(buildDifficultyClassifierMessages({ messages: input.messages, signals }), 0),
+        needsTools: false,
+        strategy: "balanced",
+        preferLocal: false,
+        allowEndpoints: classifierAllowEndpoints,
+      },
+      executionRequest: {
+        messages: buildDifficultyClassifierMessages({
+          messages: input.messages,
+          signals,
+        }),
+        temperature: 0,
+        maxOutputTokens: 32,
+      },
+    };
+
+    try {
+      const classifierExecution = await Promise.race([
+        executeBridgePlan(
+          classifierPlan,
+          `${input.requestId}:difficulty-classifier`,
+          false,
+          undefined,
+          { persistObservation: false },
+        ),
+        delay(Math.max(1, classifier.timeoutMs)).then(() => {
+          throw new Error("classifier-timeout");
+        }),
+      ]);
+      const difficulty = parseClassifierDifficultyOutput(classifierExecution.execution.normalized.outputText);
+      if (!difficulty) {
+        return persistResolvedClassification(
+          createDifficultyFallbackResult({
+            signals,
+            classifier,
+            reason: "invalid-classifier-output",
+          }),
+        );
+      }
+      return persistResolvedClassification({
+        difficulty,
+        fallbackApplied: false,
+        rubricSignals: signals,
+      });
+    } catch (error) {
+      return persistResolvedClassification(
+        createDifficultyFallbackResult({
+          signals,
+          classifier,
+          reason: error instanceof Error && error.message === "classifier-timeout"
+            ? "classifier-timeout"
+            : "classifier-execution-failed",
+        }),
+      );
+    }
+  };
+
+  const resolveControllerGuidance = async (input: {
+    readonly requestId: string;
+    readonly requestedModel: string;
+    readonly messages: readonly OpenAIChatCompletionsMessage[];
+    readonly toolCount: number;
+    readonly requestOptions?: BridgeExecutionRequestOptions;
+  }): Promise<BridgeControllerRoutingContext | undefined> => {
+    const modelAliases = currentUnifiedRuntimeConfig?.modelAliases ?? [];
+    const effectiveRoutingMode = resolveEffectiveRoutingMode({
+      requestedModel: input.requestedModel,
+      modelAliases,
+      requestOptions: input.requestOptions,
+    });
+    if (!shouldApplyControllerRouting(effectiveRoutingMode)) {
+      return undefined;
+    }
+
+    const controller = currentUnifiedRuntimeConfig?.controller;
+    if (!controller?.enabled) {
+      return undefined;
+    }
+
+    const controllerAllowEndpoints = currentRegistry.endpoints
+      .filter(
+        (endpoint) =>
+          endpoint.identity.model_id === controller.modelId &&
+          toSourceType(endpoint.identity.endpoint_kind) === controller.sourceType,
+      )
+      .map((endpoint) => endpoint.identity.endpoint_id)
+      .sort(compareText);
+
+    if (controllerAllowEndpoints.length === 0) {
+      return {
+        active: true,
+        fallbackApplied: true,
+        fallbackReason: "controller-endpoint-unavailable",
+      };
+    }
+
+    const candidateEndpointIds = resolveRequestedModelPool(
+      currentRegistry,
+      input.requestedModel,
+      modelAliases,
+    ).allowEndpoints;
+    const controllerMessages = buildControllerRoutingMessages({
+      requestedModel: input.requestedModel,
+      messages: input.messages,
+      toolCount: input.toolCount,
+      candidateEndpointIds,
+    });
+    const controllerPlan: BridgeExecutionPlan = {
+      routingRequest: {
+        requestId: `${input.requestId}:controller`,
+        taskType: "text.chat",
+        requiredCapabilities: ["text.chat"],
+        preferredCapabilities: [],
+        requiredModalities: ["text"],
+        contextTokens: estimateContextTokens(controllerMessages, 0),
+        needsTools: false,
+        strategy: "balanced",
+        preferLocal: false,
+        allowEndpoints: controllerAllowEndpoints,
+      },
+      executionRequest: {
+        messages: controllerMessages,
+        temperature: 0,
+        maxOutputTokens: 256,
+      },
+    };
+
+    try {
+      const controllerExecution = await Promise.race([
+        executeBridgePlan(
+          controllerPlan,
+          `${input.requestId}:controller`,
+          false,
+          undefined,
+          { persistObservation: false },
+        ),
+        delay(Math.max(1, controller.timeoutMs)).then(() => {
+          throw new Error("controller-timeout");
+        }),
+      ]);
+      const guidance = parseControllerRoutingOutput(controllerExecution.execution.normalized.outputText);
+      if (!guidance) {
+        return {
+          active: true,
+          fallbackApplied: true,
+          fallbackReason: "invalid-controller-output",
+        };
+      }
+      return {
+        active: true,
+        resolvedGuidance: guidance,
+      };
+    } catch (error) {
+      return {
+        active: true,
+        fallbackApplied: true,
+        fallbackReason:
+          error instanceof Error && error.message === "controller-timeout"
+            ? "controller-timeout"
+            : "controller-execution-failed",
+      };
+    }
+  };
+
+  let lastDetectedModel: string | null = null;
+  let autoSwapInterval: ReturnType<typeof setInterval>;
+
+  const backend = {
     get registry(): EndpointRegistryResult {
       return currentRegistry;
     },
@@ -3629,16 +5178,60 @@ export async function createRuntimeBridgeBackend(
       body: OpenAIChatCompletionsBody,
       requestId: string,
       streamWriter?: BridgeStreamWriter,
+      requestOptions?: BridgeExecutionRequestOptions,
     ): Promise<BridgeChatCompletionsExecutionResult> {
       if (currentUnifiedRuntimeConfig?.executionMode === "decision_only" && currentRegistry.endpoints.length === 0) {
         throw createVendorError("runtime", "Configure llama_swap.models or litellm_proxy.providers to enable execution.");
       }
-      const plan = mapChatCompletionsRequest(currentRegistry, body, requestId);
+      const resolvedDifficultyClassification = await resolveDifficultyClassification({
+        requestId,
+        requestedModel: body.model,
+        messages: body.messages,
+        contextTokens: estimateContextTokens(body.messages, body.tools?.length ?? 0),
+        toolCount: body.tools?.length ?? 0,
+        requestOptions,
+      });
+      const resolvedControllerGuidance = await resolveControllerGuidance({
+        requestId,
+        requestedModel: body.model,
+        messages: body.messages,
+        toolCount: body.tools?.length ?? 0,
+        requestOptions,
+      });
+      const plan = mapChatCompletionsRequest(
+        currentRegistry,
+        body,
+        requestId,
+        currentUnifiedRuntimeConfig?.modelAliases ?? [],
+        {
+          difficultyClassifier: currentUnifiedRuntimeConfig?.difficultyClassifier,
+          endpointMaxDifficultyByEndpointId: buildEndpointMaxDifficultyByEndpointId(currentUnifiedRuntimeConfig),
+          ...(resolvedDifficultyClassification
+            ? {
+                overrideRecommendedMaxDifficultyByEndpointId:
+                  readObservedOverrideMaxDifficultyByEndpointId({
+                    databasePath: initialization.databasePath,
+                    endpointIds: currentRegistry.endpoints.map((endpoint) => endpoint.identity.endpoint_id),
+                    observedDataConfig: resolveUnifiedRuntimeObservedDataConfig(currentUnifiedRuntimeConfig),
+                  }),
+              }
+            : {}),
+          ...(resolvedDifficultyClassification
+            ? { resolvedClassification: resolvedDifficultyClassification }
+            : {}),
+        },
+        resolvedControllerGuidance,
+        requestOptions,
+      );
       const { execution, toolExecutionResult, routingDecisionId } = await executeBridgePlan(
         plan,
         requestId,
         body.stream,
         streamWriter,
+        {
+          requestOptions,
+          requestedModel: body.model,
+        },
       );
       const costUsd =
         execution.normalized.vendorMetadata?.costUsd ?? execution.responseCapture.vendorMetadata?.costUsd;
@@ -3685,12 +5278,56 @@ export async function createRuntimeBridgeBackend(
       body: OpenAIResponsesBody,
       requestId: string,
       streamWriter?: BridgeStreamWriter,
+      requestOptions?: BridgeExecutionRequestOptions,
     ): Promise<BridgeResponsesExecutionResult> {
       if (currentUnifiedRuntimeConfig?.executionMode === "decision_only" && currentRegistry.endpoints.length === 0) {
         throw createVendorError("runtime", "Configure llama_swap.models or litellm_proxy.providers to enable execution.");
       }
-      const plan = mapResponsesRequest(currentRegistry, body, requestId);
-      const { execution, routingDecisionId } = await executeBridgePlan(plan, requestId, body.stream, streamWriter);
+      const responseMessages = toResponsesInputMessages(body.input);
+      const resolvedDifficultyClassification = await resolveDifficultyClassification({
+        requestId,
+        requestedModel: body.model,
+        messages: responseMessages,
+        contextTokens: estimateContextTokens(responseMessages, body.tools?.length ?? 0),
+        toolCount: body.tools?.length ?? 0,
+        requestOptions,
+      });
+      const resolvedControllerGuidance = await resolveControllerGuidance({
+        requestId,
+        requestedModel: body.model,
+        messages: responseMessages,
+        toolCount: body.tools?.length ?? 0,
+        requestOptions,
+      });
+      const plan = mapResponsesRequest(
+        currentRegistry,
+        body,
+        requestId,
+        currentUnifiedRuntimeConfig?.modelAliases ?? [],
+        {
+          difficultyClassifier: currentUnifiedRuntimeConfig?.difficultyClassifier,
+          endpointMaxDifficultyByEndpointId: buildEndpointMaxDifficultyByEndpointId(currentUnifiedRuntimeConfig),
+          ...(resolvedDifficultyClassification
+            ? {
+                overrideRecommendedMaxDifficultyByEndpointId:
+                  readObservedOverrideMaxDifficultyByEndpointId({
+                    databasePath: initialization.databasePath,
+                    endpointIds: currentRegistry.endpoints.map((endpoint) => endpoint.identity.endpoint_id),
+                    observedDataConfig: resolveUnifiedRuntimeObservedDataConfig(currentUnifiedRuntimeConfig),
+                  }),
+              }
+            : {}),
+          ...(resolvedDifficultyClassification
+            ? { resolvedClassification: resolvedDifficultyClassification }
+            : {}),
+        },
+        resolvedControllerGuidance,
+        requestOptions,
+      );
+      const { execution, routingDecisionId } = await executeBridgePlan(plan, requestId, body.stream, streamWriter, {
+        requestOptions,
+        requestedModel: body.model,
+      });
       const costUsd =
         execution.normalized.vendorMetadata?.costUsd ?? execution.responseCapture.vendorMetadata?.costUsd;
       const cacheUsed =
@@ -4509,7 +6146,21 @@ export async function createRuntimeBridgeBackend(
       endpointId: string;
       latestProfile: ReturnType<typeof readLatestObservedProfile>;
       recentSamples: readonly ObservedPerformanceSample[];
+      difficultyProfiles: Record<UnifiedRuntimeDifficultyBucket, ReturnType<typeof readLatestObservedProfile>>;
+      advisoryMaxDifficultyRecommendation: ReturnType<typeof readAdvisoryMaxDifficultyRecommendation>;
     }> {
+      const observedDataConfig = resolveUnifiedRuntimeObservedDataConfig(currentUnifiedRuntimeConfig);
+      const difficultyProfiles = Object.fromEntries(
+        (["easy", "medium", "hard"] as const).map((difficultyBucket) => [
+          difficultyBucket,
+          readLatestObservedProfile({
+            databasePath: initialization.databasePath,
+            endpointId,
+            difficultyBucket,
+          }),
+        ]),
+      ) as Record<UnifiedRuntimeDifficultyBucket, ReturnType<typeof readLatestObservedProfile>>;
+
       return {
         endpointId,
         latestProfile: readLatestObservedProfile({
@@ -4519,6 +6170,12 @@ export async function createRuntimeBridgeBackend(
         recentSamples: readObservedPerformanceSamples({
           databasePath: initialization.databasePath,
           endpointId,
+        }),
+        difficultyProfiles,
+        advisoryMaxDifficultyRecommendation: readAdvisoryMaxDifficultyRecommendation({
+          databasePath: initialization.databasePath,
+          endpointId,
+          thresholds: observedDataConfig.difficultyLearning.recommendation,
         }),
       };
     },
@@ -4540,6 +6197,13 @@ export async function createRuntimeBridgeBackend(
           headers: { "content-type": "application/json" },
           body: { model: modelId, messages: [{ role: "user", content: "hello" }] },
         });
+        insertSwapEvent({
+          databasePath: initialization.databasePath,
+          timestamp: new Date().toISOString(),
+          oldModelId: null,
+          newModelId: modelId,
+          reason: "manual-load",
+        });
         return { success: true };
       } catch {
         return { success: false };
@@ -4550,22 +6214,149 @@ export async function createRuntimeBridgeBackend(
         return { success: false };
       }
       const result = await currentLlamaSwapVendor.unloadModel(modelId);
+      if (result.success) {
+        insertSwapEvent({
+          databasePath: initialization.databasePath,
+          timestamp: new Date().toISOString(),
+          oldModelId: modelId ?? null,
+          newModelId: null,
+          reason: "manual-unload",
+        });
+      }
       return { success: result.success };
     },
     async readLocalPolicy(): Promise<Record<string, unknown>> {
-      return {};
+      const policyPath = path.join(options.runtimeStateRoot, "local-policy.json");
+      try {
+        if (existsSync(policyPath)) {
+          return JSON.parse(await readFile(policyPath, "utf8")) as Record<string, unknown>;
+        }
+      } catch {
+        // Fall through to defaults
+      }
+      return {
+        ttl: 300,
+        maxConcurrency: 1,
+        autoUnload: true,
+      };
     },
     async updateLocalPolicy(body: Record<string, unknown>): Promise<Record<string, unknown>> {
-      return body;
+      const policyPath = path.join(options.runtimeStateRoot, "local-policy.json");
+      const existing = await this.readLocalPolicy();
+      const merged = { ...existing, ...body };
+      await writeFile(policyPath, JSON.stringify(merged, null, 2));
+      return merged;
     },
     async listSwapHistory(): Promise<readonly { timestamp: string; oldModel: string | null; newModel: string; reason: string }[]> {
+      try {
+        const events = listSwapEvents({ databasePath: initialization.databasePath });
+        return events.map((event) => ({
+          timestamp: event.timestamp,
+          oldModel: event.oldModelId,
+          newModel: event.newModelId,
+          reason: event.reason,
+        }));
+      } catch {
+        return [];
+      }
+    },
+    async getLocalLogs(): Promise<{ logs: string }> {
+      const status = currentLlamaSwapVendor?.readStatus();
+      const baseUrl = status?.baseUrl;
+      if (!baseUrl) {
+        return { logs: "" };
+      }
+      try {
+        const response = await fetch(`${baseUrl}/logs`);
+        if (!response.ok) {
+          return { logs: "" };
+        }
+        const text = await response.text();
+        return { logs: text };
+      } catch {
+        return { logs: "" };
+      }
+    },
+    async readModelOverrides(): Promise<
+      Record<string, { ttl?: number; contextWindow?: number; concurrencyLimit?: number }>
+    > {
+      const overridesPath = path.join(options.runtimeStateRoot, "model-overrides.json");
+      try {
+        if (existsSync(overridesPath)) {
+          return JSON.parse(await readFile(overridesPath, "utf8")) as Record<
+            string,
+            { ttl?: number; contextWindow?: number; concurrencyLimit?: number }
+          >;
+        }
+      } catch {
+        // Fall through to empty
+      }
+      return {};
+    },
+    async updateModelOverrides(
+      body: Record<string, { ttl?: number; contextWindow?: number; concurrencyLimit?: number }>,
+    ): Promise<Record<string, { ttl?: number; contextWindow?: number; concurrencyLimit?: number }>> {
+      const overridesPath = path.join(options.runtimeStateRoot, "model-overrides.json");
+      await writeFile(overridesPath, JSON.stringify(body, null, 2));
+      return body;
+    },
+    async readPeers(): Promise<readonly { id: string; url: string; authToken?: string }[]> {
+      const peersPath = path.join(options.runtimeStateRoot, "peers.json");
+      try {
+        if (existsSync(peersPath)) {
+          return JSON.parse(await readFile(peersPath, "utf8")) as readonly {
+            id: string;
+            url: string;
+            authToken?: string;
+          }[];
+        }
+      } catch {
+        // Fall through to empty
+      }
       return [];
     },
+    async updatePeers(
+      body: readonly { id: string; url: string; authToken?: string }[],
+    ): Promise<readonly { id: string; url: string; authToken?: string }[]> {
+      const peersPath = path.join(options.runtimeStateRoot, "peers.json");
+      await writeFile(peersPath, JSON.stringify(body, null, 2));
+      return body;
+    },
+    async checkPeerHealth(url: string): Promise<{ healthy: boolean }> {
+      try {
+        const response = await fetch(`${url}/healthz`, { signal: AbortSignal.timeout(5000) });
+        return { healthy: response.ok };
+      } catch {
+        return { healthy: false };
+      }
+    },
     async shutdown(): Promise<void> {
+      clearInterval(autoSwapInterval);
       await Promise.all([currentLlamaSwapVendor?.shutdown(), currentLiteLLMVendor?.shutdown()]);
       await supervisor?.shutdown();
     },
   };
+
+  autoSwapInterval = setInterval(async () => {
+    try {
+      const models = await backend.listLocalModels();
+      const currentModel = models[0]?.modelId ?? null;
+      if (currentModel !== lastDetectedModel) {
+        insertSwapEvent({
+          databasePath: initialization.databasePath,
+          timestamp: new Date().toISOString(),
+          oldModelId: lastDetectedModel,
+          newModelId: currentModel,
+          reason: "auto-detected",
+        });
+        lastDetectedModel = currentModel;
+      }
+    } catch {
+      // Silently ignore polling errors
+    }
+  }, 5000);
+
+  return backend;
 }
 
 export function resolveBridgeServerOptions(input: {

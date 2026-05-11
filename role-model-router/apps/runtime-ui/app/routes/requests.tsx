@@ -79,6 +79,7 @@ export default function RequestsRoute() {
                   <div>
                     <p className="font-medium text-[var(--rm-fg)]">{request.requestId}</p>
                     <p className="text-sm text-[var(--rm-secondary)]">{request.endpointId}</p>
+                    <p className="mt-2 text-sm text-[var(--rm-secondary)]">Routing decision • {request.routingDecisionLabel}</p>
                     <p className="mt-2 text-sm text-[var(--rm-secondary)]">
                       {request.sourceLabel} • {request.statusLabel} • {request.latencyLabel} • {request.tokenLabel} • {request.costLabel}
                     </p>
@@ -99,7 +100,7 @@ export default function RequestsRoute() {
           <div className="space-y-3">
             <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
               <p className="font-medium text-[var(--rm-fg)]">Reading order</p>
-              <p className="mt-2">Scan source type, status, latency, tokens, and endpoint links here, then move into Request detail for captures, diagnostics, and profile data.</p>
+              <p className="mt-2">Scan routing decision, source type, status, latency, tokens, and endpoint links here, then move into Request detail for receipts, captures, diagnostics, and profile data.</p>
             </div>
             <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
               <p className="font-medium text-[var(--rm-fg)]">Adjacent surfaces</p>

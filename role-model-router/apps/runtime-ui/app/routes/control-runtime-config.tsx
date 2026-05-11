@@ -92,6 +92,9 @@ export default function ControlRuntimeConfigRoute() {
         description="Edit the repo-owned unified runtime contract for local llama-swap models, remote LiteLLM providers, and process policy in one control-plane route."
         actions={
           <>
+            <Link className={secondaryButtonClassName} to="/app/control/routing-strategy">
+              Routing strategy
+            </Link>
             <Link className={secondaryButtonClassName} to="/app/control/models">
               Inspect models
             </Link>

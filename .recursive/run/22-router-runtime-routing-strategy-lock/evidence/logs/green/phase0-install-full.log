@@ -1,0 +1,34 @@
+Scope: all 42 workspace projects
+(node:51236) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+ΓÇëWARNΓÇë There are cyclic workspace dependencies: D:\DEV\role-model\.worktrees\22-router-runtime-routing-strategy-lock\role-model-router\packages\adapter-execution, D:\DEV\role-model\.worktrees\22-router-runtime-routing-strategy-lock\role-model-router\packages\provider-anthropic
+Lockfile is up to date, resolution step is skipped
+Progress: resolved 1, reused 0, downloaded 0, added 0
+Packages: +518
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Progress: resolved 518, reused 476, downloaded 0, added 0
+Progress: resolved 518, reused 510, downloaded 0, added 71
+Progress: resolved 518, reused 512, downloaded 0, added 213
+Progress: resolved 518, reused 512, downloaded 0, added 368
+Progress: resolved 518, reused 512, downloaded 0, added 455
+Progress: resolved 518, reused 512, downloaded 0, added 514
+Progress: resolved 518, reused 512, downloaded 0, added 516
+Progress: resolved 518, reused 512, downloaded 0, added 517
+Progress: resolved 518, reused 512, downloaded 0, added 518, done
+
+devDependencies:
++ @biomejs/biome 1.9.4
++ @types/node 22.19.17
++ ajv 8.18.0
++ ajv-formats 3.0.1
++ commander 13.1.0
++ esbuild 0.25.12
++ json-schema-to-typescript 15.0.4
++ postject 1.0.0-alpha.6
++ tsx 4.21.0
++ typescript 5.9.3
++ vitest 3.2.4
+
+Γò¡ Warning ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓò«Γöé                                                                              ΓöéΓöé   Ignored build scripts: @biomejs/biome, esbuild, sharp, workerd.            ΓöéΓöé   Run "pnpm approve-builds" to pick which dependencies should be allowed     ΓöéΓöé   to run scripts.                                                            ΓöéΓöé                                                                              ΓöéΓò░ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓò»
+
+Done in 9.2s using pnpm v10.6.5

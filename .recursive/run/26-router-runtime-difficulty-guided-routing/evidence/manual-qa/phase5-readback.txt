@@ -1,0 +1,73 @@
+{
+  "qaMode": "agent-operated",
+  "baseUrl": "http://127.0.0.1:54038",
+  "discoveredModels": [
+    "gpt-5.4",
+    "gpt-5.4-difficulty",
+    "local/llama-3.1-8b-instruct",
+    "openai/gpt-4.1-mini-fast"
+  ],
+  "easy": {
+    "statusCode": 200,
+    "aliasResolution": {
+      "requestedModel": "gpt-5.4-difficulty",
+      "aliasId": "gpt-5.4-difficulty",
+      "resolvedModelIds": [
+        "local/llama-3.1-8b-instruct",
+        "openai/gpt-4.1-mini-fast"
+      ],
+      "allowEndpoints": [
+        "llama-swap.local.local-llama-3-1-8b-instruct",
+        "openai.litellm.global.openai-gpt-4-1-mini-fast"
+      ]
+    },
+    "difficultyRouting": {
+      "difficulty": "easy",
+      "strategy": "cost",
+      "fallbackApplied": false,
+      "rubricSignals": {
+        "contextTokens": 9,
+        "toolCount": 0,
+        "historyTurnCount": 1,
+        "instructionConstraintCount": 0,
+        "decompositionKeywordCount": 0,
+        "codeOrSchemaBurden": false
+      }
+    }
+  },
+  "hard": {
+    "statusCode": 200,
+    "aliasResolution": {
+      "requestedModel": "gpt-5.4-difficulty",
+      "aliasId": "gpt-5.4-difficulty",
+      "resolvedModelIds": [
+        "local/llama-3.1-8b-instruct",
+        "openai/gpt-4.1-mini-fast"
+      ],
+      "allowEndpoints": [
+        "llama-swap.local.local-llama-3-1-8b-instruct",
+        "openai.litellm.global.openai-gpt-4-1-mini-fast"
+      ]
+    },
+    "difficultyRouting": {
+      "difficulty": "hard",
+      "strategy": "quality",
+      "fallbackApplied": false,
+      "excludedEndpointIds": [
+        "llama-swap.local.local-llama-3-1-8b-instruct"
+      ],
+      "rubricSignals": {
+        "contextTokens": 42,
+        "toolCount": 2,
+        "historyTurnCount": 1,
+        "instructionConstraintCount": 1,
+        "decompositionKeywordCount": 3,
+        "codeOrSchemaBurden": true
+      }
+    }
+  },
+  "notes": [
+    "The repo-owned mock classifier used for agent-operated QA emits easy or hard classifications only.",
+    "Medium-path behavior remains covered by the locked Phase 3 and Phase 4 automated evidence."
+  ]
+}

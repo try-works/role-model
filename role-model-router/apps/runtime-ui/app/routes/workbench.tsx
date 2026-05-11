@@ -1,15 +1,36 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router";
 
 import { CodeBlock, EmptyState, ErrorState, FactCard, LoadingState, PageHeader, SectionCard, StatusPill } from "../components/page-primitives";
 import { fieldClassName, mutedPanelClassName, primaryButtonClassName } from "../lib/design-system";
-import { fetchRuntimeSnapshot, submitWorkbenchChat, type RuntimeSnapshot } from "../lib/runtime-api";
+import { fetchRuntimeSnapshot, submitWorkbenchChat, type RuntimeSnapshot, type WorkbenchChatInput } from "../lib/runtime-api";
 import { buildWorkbenchModelOptions, summarizeWorkbenchResult } from "../lib/view-models";
+
+const routingModeOptions: Array<{
+  label: string;
+  value: "" | NonNullable<WorkbenchChatInput["routingModeOverride"]>;
+}> = [
+  { label: "Alias default (use configured strategy)", value: "" },
+  { label: "Baseline", value: "baseline" },
+  { label: "Difficulty", value: "difficulty" },
+  { label: "Controller", value: "controller" },
+  { label: "Hybrid", value: "hybrid" },
+];
+
+function formatRoutingModeLabel(value: "" | NonNullable<WorkbenchChatInput["routingModeOverride"]>): string {
+  if (!value) {
+    return "Alias default";
+  }
+
+  return value.slice(0, 1).toUpperCase() + value.slice(1);
+}
 
 export default function WorkbenchRoute() {
   const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [model, setModel] = useState("");
+  const [routingModeOverride, setRoutingModeOverride] = useState<"" | NonNullable<WorkbenchChatInput["routingModeOverride"]>>("");
   const [prompt, setPrompt] = useState("Summarize the chosen endpoint.");
   const [result, setResult] = useState<Record<string, unknown> | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -43,6 +64,7 @@ export default function WorkbenchRoute() {
       const response = await submitWorkbenchChat({
         model,
         messages: [{ role: "user", content: prompt }],
+        routingModeOverride: routingModeOverride || undefined,
       });
       setResult(response);
     } catch (value) {
@@ -54,6 +76,7 @@ export default function WorkbenchRoute() {
 
   const resultSummary = result ? summarizeWorkbenchResult(result) : null;
   const toolCapableEndpoints = snapshot.endpoints.filter((endpoint) => endpoint.toolCallingSupported).length;
+  const routingModeLabel = formatRoutingModeLabel(routingModeOverride);
 
   return (
     <div className="space-y-6">
@@ -66,7 +89,8 @@ export default function WorkbenchRoute() {
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <FactCard label="Models" value={snapshot.models.length} detail="Available model ids currently exposed through the runtime model listing." emphasis />
         <FactCard label="Tool-capable endpoints" value={toolCapableEndpoints} detail="Endpoints currently able to surface tool-calling behavior in the workspace." />
-        <FactCard label="Selected model" value={model} detail="The active model binding for the next routed request." className="xl:col-span-2" />
+        <FactCard label="Selected model" value={model} detail="The active model binding for the next routed request." />
+        <FactCard label="Routing mode" value={routingModeLabel} detail="Optional per-request override that the runtime host forwards as a routing-mode header." />
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[360px_minmax(0,1fr)]">
@@ -80,11 +104,21 @@ export default function WorkbenchRoute() {
                     {option.label}
                   </option>
                 ))}
-              </select>
-            </label>
-            <label className="grid gap-2 text-sm">
-              <span className="font-medium text-[var(--rm-fg)]">Prompt</span>
-              <textarea className={`${fieldClassName} min-h-40`} value={prompt} onChange={(event) => setPrompt(event.target.value)} />
+               </select>
+             </label>
+             <label className="grid gap-2 text-sm">
+               <span className="font-medium text-[var(--rm-fg)]">Routing mode</span>
+               <select className={fieldClassName} value={routingModeOverride} onChange={(event) => setRoutingModeOverride(event.target.value as "" | NonNullable<WorkbenchChatInput["routingModeOverride"]>)}>
+                 {routingModeOptions.map((option) => (
+                   <option key={option.label} value={option.value}>
+                     {option.label}
+                   </option>
+                 ))}
+               </select>
+             </label>
+             <label className="grid gap-2 text-sm">
+               <span className="font-medium text-[var(--rm-fg)]">Prompt</span>
+               <textarea className={`${fieldClassName} min-h-40`} value={prompt} onChange={(event) => setPrompt(event.target.value)} />
             </label>
             <button className={primaryButtonClassName} disabled={submitting} type="submit">
               {submitting ? "Running…" : "Run request"}
@@ -102,6 +136,17 @@ export default function WorkbenchRoute() {
             <EmptyState label="No result yet." />
           ) : (
             <div className="space-y-4">
+              <div className={`${mutedPanelClassName} p-4`}>
+                <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">Routing receipt handoff</p>
+                <p className="mt-3 text-sm leading-6 text-[var(--rm-fg)]">
+                  Requested mode: <span className="font-medium">{routingModeLabel}</span>. Verify the persisted routing receipt in{" "}
+                  <Link className="font-medium text-[var(--rm-accent)]" to="/app/observe/requests">
+                    Telemetry ledger
+                  </Link>
+                  {" "}after the request completes.
+                </p>
+              </div>
+
               <div className={`${mutedPanelClassName} p-4`}>
                 <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">Assistant output</p>
                 <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-[var(--rm-fg)]">

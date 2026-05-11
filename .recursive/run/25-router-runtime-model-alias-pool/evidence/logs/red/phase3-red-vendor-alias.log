@@ -1,0 +1,58 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/25-router-runtime-model-alias-pool/role-model-router/apps/runtime-host-bridge[39m
+
+(node:73544) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [31mΓ¥»[39m test/validate-vendors.test.ts [2m([22m[2m2 tests[22m[2m | [22m[31m1 failed[39m[2m | [22m[33m1 skipped[39m[2m)[22m[33m 3092[2mms[22m[39m
+[31m   [31m├ù[31m runRuntimeVendorValidation[2m > [22mexecutes decision-only, local-only, remote-only, and hybrid vendor modes end to end[39m[33m 3091[2mms[22m[39m
+[31m     ΓåÆ expected undefined to deeply equal ObjectContaining{ΓÇª}[39m
+   [2m[90mΓåô[39m[22m runRuntimeVendorValidation[2m > [22mplans a real-vendor harness with repo-owned mock upstreams
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/validate-vendors.test.ts > runRuntimeVendorValidation > executes decision-only, local-only, remote-only, and hybrid vendor modes end to end
+AssertionError: expected undefined to deeply equal ObjectContaining{ΓÇª}
+
+- Expected: 
+ObjectContaining {
+  "observation": ObjectContaining {
+    "routingDiagnostics": ObjectContaining {
+      "aliasResolution": {
+        "aliasId": "gpt-5.4",
+        "allowEndpoints": [
+          "llama-swap.local.local-llama-3-1-8b-instruct",
+          "openai.litellm.global.openai-gpt-4-1-mini-fast",
+        ],
+        "requestedModel": "gpt-5.4",
+        "resolvedModelIds": [
+          "local/llama-3.1-8b-instruct",
+          "openai/gpt-4.1-mini-fast",
+        ],
+      },
+    },
+  },
+  "vendorId": StringMatching /^(llama-swap|litellm)$/,
+}
+
++ Received: 
+undefined
+
+ Γ¥» test/validate-vendors.test.ts:85:32
+     83|       }),
+     84|     );
+     85|     expect(result.aliasHybrid).toEqual(
+       |                                ^
+     86|       expect.objectContaining({
+     87|         vendorId: expect.stringMatching(/^(llama-swap|litellm)$/),
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[33m1 skipped[39m[90m (2)[39m
+[2m   Start at [22m 20:12:44
+[2m   Duration [22m 4.34s[2m (transform 475ms, setup 0ms, collect 650ms, tests 3.09s, environment 0ms, prepare 225ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\25-router-runtime-model-alias-pool\role-model-router\apps\runtime-host-bridge:
+ΓÇëERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓÇë Command failed with exit code 1: vitest run test/validate-vendors.test.ts -t executes decision-only

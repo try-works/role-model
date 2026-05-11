@@ -6,8 +6,119 @@ import {
 } from "@role-model-router/profile-aggregator";
 import type { ToolRegistryExecution } from "@role-model-router/tool-registry";
 
+export type RuntimeRoutingMode = "baseline" | "difficulty" | "controller" | "hybrid";
+
 export interface RuntimeRoutingDiagnostics {
   readonly retrievalReceiptId?: string;
+  readonly aliasResolution?: {
+    readonly requestedModel: string;
+    readonly aliasId: string;
+    readonly resolvedModelIds: readonly string[];
+    readonly allowEndpoints: readonly string[];
+  };
+  readonly difficultyRouting?: {
+    readonly difficulty: "easy" | "medium" | "hard";
+    readonly strategy: string;
+    readonly fallbackApplied: boolean;
+    readonly cacheHit?: boolean;
+    readonly cacheInvalidated?: boolean;
+    readonly cacheInvalidationReasons?: readonly string[];
+    readonly fallbackReason?: string;
+    readonly excludedEndpointIds?: readonly string[];
+    readonly overrideAppliedEndpointIds?: readonly string[];
+    readonly overrideRecommendedMaxDifficultyByEndpointId?: Record<string, "easy" | "medium" | "hard">;
+    readonly rubricSignals: {
+      readonly contextTokens: number;
+      readonly toolCount: number;
+      readonly historyTurnCount: number;
+      readonly instructionConstraintCount: number;
+      readonly decompositionKeywordCount: number;
+      readonly codeOrSchemaBurden: boolean;
+    };
+  };
+  readonly controllerRouting?: {
+    readonly active: boolean;
+    readonly fallbackApplied?: boolean;
+    readonly fallbackReason?: string;
+    readonly acceptedDirectives?: {
+      readonly requestedRoleId?: string;
+      readonly taskType?: string;
+      readonly requiredCapabilities?: readonly string[];
+      readonly preferredCapabilities?: readonly string[];
+      readonly strategy?: string;
+      readonly preferLocal?: boolean;
+      readonly preferredEndpointIds?: readonly string[];
+    };
+  };
+  readonly hybridArbitration?: {
+    readonly active: boolean;
+    readonly difficultyStrategy: "balanced" | "cost" | "quality";
+    readonly finalStrategy: "balanced" | "cost" | "quality";
+    readonly controllerChangedPlan: boolean;
+    readonly dominantSignal: "difficulty" | "controller" | "aligned";
+    readonly preferredEndpointIds?: readonly string[];
+  };
+  readonly routingMode?: {
+    readonly source: "request-override" | "alias-default";
+    readonly requestedOverride?: RuntimeRoutingMode;
+    readonly aliasMode?: RuntimeRoutingMode;
+    readonly effectiveMode: RuntimeRoutingMode;
+  };
+  readonly rewrite?: {
+    readonly requestedModel: string;
+    readonly downstreamModelId: string;
+    readonly applied: boolean;
+    readonly reason: "requested-model-matches-downstream" | "requested-model-rewritten-for-selected-endpoint";
+  };
+  readonly observedProfile?: {
+    readonly endpointId: string;
+    readonly source: "runtime-state" | "none";
+    readonly readMode: "per-request";
+    readonly measuredAtMs?: number;
+    readonly difficultyBucket?: "easy" | "medium" | "hard";
+    readonly bucketOverrideApplied?: boolean;
+  };
+  readonly effectiveMetrics?: {
+    readonly quality?: {
+      readonly value: number;
+      readonly source: string;
+      readonly measuredAtMs?: number;
+      readonly freshnessWeight?: number;
+    };
+    readonly latency?: {
+      readonly value: number;
+      readonly source: string;
+      readonly measuredAtMs?: number;
+      readonly freshnessWeight?: number;
+    };
+    readonly throughput?: {
+      readonly value: number;
+      readonly source: string;
+      readonly measuredAtMs?: number;
+      readonly freshnessWeight?: number;
+    };
+    readonly reliability?: {
+      readonly value: number;
+      readonly source: string;
+      readonly measuredAtMs?: number;
+      readonly freshnessWeight?: number;
+    };
+    readonly cost?: {
+      readonly value: number;
+      readonly source: string;
+      readonly measuredAtMs?: number;
+      readonly freshnessWeight?: number;
+    };
+  };
+  readonly throughputPenalty?: {
+    readonly endpointId: string;
+    readonly active: boolean;
+    readonly penaltyFactor?: number;
+    readonly activatedAtMs?: number;
+    readonly expiresAtMs?: number;
+    readonly minTokensPerSec?: number;
+    readonly lastObservedTokensPerSec?: number;
+  };
   readonly routingModel?: {
     readonly enabled: boolean;
     readonly endpointId?: string | null;
@@ -202,6 +313,9 @@ function buildObservedPerformanceSample(
     endpoint_id: input.decision.chosen_endpoint_id,
     endpoint_version: endpointVersion,
     source_type: "live_request",
+    ...(input.routingDiagnostics?.difficultyRouting?.difficulty
+      ? { difficulty_bucket: input.routingDiagnostics.difficultyRouting.difficulty }
+      : {}),
     timestamp_ms: input.execution.usageEvent.timestamp_ms,
     latency_ms: input.execution.normalized.latencyMs,
     latency_ms_p95: input.execution.normalized.latencyMs,

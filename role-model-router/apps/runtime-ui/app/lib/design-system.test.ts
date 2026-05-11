@@ -28,8 +28,11 @@ const controlRuntimeConfigSource = readFileSync(new URL("../routes/control-runti
 const controlModelsSource = readFileSync(new URL("../routes/control-models.tsx", import.meta.url), "utf8");
 const endpointsRouteSource = readFileSync(new URL("../routes/endpoints.tsx", import.meta.url), "utf8");
 const providersRouteSource = readFileSync(new URL("../routes/providers.tsx", import.meta.url), "utf8");
+const requestsRouteSource = readFileSync(new URL("../routes/requests.tsx", import.meta.url), "utf8");
 const rootSource = readFileSync(new URL("../root.tsx", import.meta.url), "utf8");
 const runtimeRouteSource = readFileSync(new URL("../routes/runtime.tsx", import.meta.url), "utf8");
+const requestDetailRouteSource = readFileSync(new URL("../routes/request-detail.tsx", import.meta.url), "utf8");
+const workbenchRouteSource = readFileSync(new URL("../routes/workbench.tsx", import.meta.url), "utf8");
 const designSystemDocSource = readFileSync(new URL("../../DESIGN_SYSTEM.md", import.meta.url), "utf8");
 
 describe("runtime design system", () => {
@@ -56,12 +59,20 @@ describe("runtime design system", () => {
       },
       {
         title: "Local",
-        routes: ["/app/local/models", "/app/local/swap", "/app/local/policy"],
+        routes: [
+          "/app/local/models",
+          "/app/local/swap",
+          "/app/local/policy",
+          "/app/local/logs",
+          "/app/local/matrix",
+          "/app/local/peers",
+        ],
       },
       {
         title: "Control",
         routes: [
           "/app/control/providers",
+          "/app/control/routing-strategy",
           "/app/control/runtime-config",
           "/app/control/controller",
           "/app/control/endpoints",
@@ -97,6 +108,12 @@ describe("runtime design system", () => {
     expect(getRuntimeRouteDefinition("/app/control/runtime-config")).toEqual(
       expect.objectContaining({
         id: "control-runtime-config",
+        template: "registry-detail",
+      }),
+    );
+    expect(getRuntimeRouteDefinition("/app/control/routing-strategy")).toEqual(
+      expect.objectContaining({
+        id: "control-routing-strategy",
         template: "registry-detail",
       }),
     );
@@ -136,15 +153,24 @@ describe("runtime design system", () => {
       muted: "rgba(28, 25, 23, 0.40)",
       border: "#e7e5e4",
       borderStrong: "#f5f5f4",
-      accent: "#C8102E",
-      accentMuted: "rgba(200, 16, 46, 0.60)",
-      accentSubtle: "rgba(200, 16, 46, 0.20)",
-      accentGhost: "rgba(200, 16, 46, 0.10)",
+      accent: "#003B8E",
+      accentMuted: "rgba(0, 59, 142, 0.60)",
+      accentSubtle: "rgba(0, 59, 142, 0.20)",
+      accentGhost: "rgba(0, 59, 142, 0.10)",
       telemetryLocal: "#1f2937",
-      telemetryRemote: "#C8102E",
+      telemetryRemote: "#003B8E",
       telemetryHealthy: "#166534",
       telemetryDegraded: "#b45309",
       telemetryRaw: "#57534e",
+      error: "#C8102E",
+      errorMuted: "rgba(200, 16, 46, 0.60)",
+      errorSubtle: "rgba(200, 16, 46, 0.20)",
+      errorGhost: "rgba(200, 16, 46, 0.10)",
+      success: "#166534",
+      successMuted: "rgba(22, 101, 52, 0.60)",
+      successSubtle: "rgba(22, 101, 52, 0.20)",
+      warning: "#b45309",
+      warningMuted: "rgba(180, 83, 9, 0.60)",
     });
     expect(runtimeTheme.colors.dark).toEqual({
       bg: "#0c0a09",
@@ -157,10 +183,23 @@ describe("runtime design system", () => {
       border: "#292524",
       borderStrong: "#1c1917",
       telemetryLocal: "#d6d3d1",
-      telemetryRemote: "#fb7185",
+      telemetryRemote: "#60a5fa",
       telemetryHealthy: "#86efac",
       telemetryDegraded: "#fbbf24",
       telemetryRaw: "#a8a29e",
+      accent: "#60a5fa",
+      accentMuted: "rgba(96, 165, 250, 0.60)",
+      accentSubtle: "rgba(96, 165, 250, 0.20)",
+      accentGhost: "rgba(96, 165, 250, 0.10)",
+      error: "#fb7185",
+      errorMuted: "rgba(251, 113, 133, 0.60)",
+      errorSubtle: "rgba(251, 113, 133, 0.20)",
+      errorGhost: "rgba(251, 113, 133, 0.10)",
+      success: "#86efac",
+      successMuted: "rgba(134, 239, 172, 0.60)",
+      successSubtle: "rgba(134, 239, 172, 0.20)",
+      warning: "#fbbf24",
+      warningMuted: "rgba(251, 191, 36, 0.60)",
     });
   });
 
@@ -216,6 +255,7 @@ describe("runtime design system", () => {
   });
 
   test("design system doc marks the converted pages as live routes", () => {
+    expect(designSystemDocSource).toContain("| `/app/control/routing-strategy` | live | `registry-detail` |");
     expect(designSystemDocSource).toContain("| `/app/control/runtime-config` | live | `registry-detail` |");
     expect(designSystemDocSource).not.toContain("| `/app/control/accounts` |");
     expect(designSystemDocSource).toContain("| `/app/studio/images` | live | `studio-workspace` |");
@@ -245,7 +285,7 @@ describe("runtime design system", () => {
     expect(appCss).toContain("--rm-fg: #1c1917;");
     expect(appCss).toContain("--rm-secondary: rgba(28, 25, 23, 0.70);");
     expect(appCss).toContain("--rm-muted: rgba(28, 25, 23, 0.40);");
-    expect(appCss).toContain("--rm-accent: #C8102E;");
+    expect(appCss).toContain("--rm-accent: #003B8E;");
     expect(appCss).toContain('"IBM Plex Mono"');
     expect(appCss).toContain("@media (prefers-color-scheme: dark)");
     expect(appCss).toContain("color-scheme: light dark;");
@@ -280,5 +320,13 @@ describe("runtime design system", () => {
     expect(runtimeRouteSource).not.toContain("Runtime contract notes");
     expect(runtimeRouteSource).not.toContain("Health posture");
     expect(designSystemDocSource).not.toContain("fact strips before the registry rail");
+  });
+
+  test("workbench and observe routes expose routing controls and receipts in repo-owned UI surfaces", () => {
+    expect(workbenchRouteSource).toContain("Routing mode");
+    expect(workbenchRouteSource).toContain("routingModeOverride");
+    expect(requestsRouteSource).toContain("routingDecisionLabel");
+    expect(requestDetailRouteSource).toContain("Routing receipts");
+    expect(requestDetailRouteSource).toContain("hybridArbitration");
   });
 });

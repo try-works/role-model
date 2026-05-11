@@ -106,6 +106,14 @@ export default function RequestDetailRoute() {
   const observedSample = asRecord(observedPerformance.sample) ?? {};
   const cacheObservability = asRecord(request.cacheObservability) ?? {};
   const tooling = asRecord(request.tooling) ?? {};
+  const routingDiagnostics = asRecord(request.routingDiagnostics) ?? {};
+  const routingMode = asRecord(routingDiagnostics.routingMode) ?? {};
+  const rewrite = asRecord(routingDiagnostics.rewrite) ?? {};
+  const difficultyRouting = asRecord(routingDiagnostics.difficultyRouting) ?? {};
+  const difficultySignals = asRecord(difficultyRouting.rubricSignals) ?? {};
+  const controllerRouting = asRecord(routingDiagnostics.controllerRouting) ?? {};
+  const acceptedDirectives = asRecord(controllerRouting.acceptedDirectives) ?? {};
+  const hybridArbitration = asRecord(routingDiagnostics.hybridArbitration) ?? {};
   const inspection = asRecord(request.inspection) ?? {};
   const inspectionRequest = asRecord(inspection.request) ?? {};
   const inspectionEndpoint = asRecord(inspection.endpoint) ?? {};
@@ -189,6 +197,37 @@ export default function RequestDetailRoute() {
   const recentEndpointSamples = Array.isArray(inspectionEndpoint.recentSamples)
     ? inspectionEndpoint.recentSamples
     : recentSamples;
+  const routingModeSummary = pickString(routingMode, "effectiveMode");
+  const routingModeSource = pickString(routingMode, "source");
+  const routingRequestedOverride = pickString(routingMode, "requestedOverride");
+  const routingAliasMode = pickString(routingMode, "aliasMode");
+  const rewriteSummary =
+    pickString(rewrite, "requestedModel") && pickString(rewrite, "downstreamModelId")
+      ? `${pickString(rewrite, "requestedModel")} -> ${pickString(rewrite, "downstreamModelId")}`
+      : null;
+  const rewriteReason = pickString(rewrite, "reason");
+  const difficultyBucket = pickString(difficultyRouting, "difficulty");
+  const difficultyStrategy = pickString(difficultyRouting, "strategy");
+  const controllerActive = pickBoolean(controllerRouting, "active");
+  const controllerStrategy = pickString(acceptedDirectives, "strategy");
+  const controllerTaskType = pickString(acceptedDirectives, "taskType");
+  const hybridSignal = pickString(hybridArbitration, "dominantSignal");
+  const hybridStrategy = pickString(hybridArbitration, "finalStrategy");
+  const rubricSignalSummary = [
+    pickNumber(difficultySignals, "contextTokens"),
+    pickNumber(difficultySignals, "toolCount"),
+    pickNumber(difficultySignals, "historyTurnCount"),
+    pickNumber(difficultySignals, "instructionConstraintCount"),
+    pickNumber(difficultySignals, "decompositionKeywordCount"),
+  ].some((value) => value !== null)
+    ? [
+        `context ${pickNumber(difficultySignals, "contextTokens") ?? 0}`,
+        `tools ${pickNumber(difficultySignals, "toolCount") ?? 0}`,
+        `history ${pickNumber(difficultySignals, "historyTurnCount") ?? 0}`,
+        `constraints ${pickNumber(difficultySignals, "instructionConstraintCount") ?? 0}`,
+        `decomposition ${pickNumber(difficultySignals, "decompositionKeywordCount") ?? 0}`,
+      ].join(" • ")
+    : null;
 
   return (
     <div className="space-y-6">
@@ -252,6 +291,38 @@ export default function RequestDetailRoute() {
             <p className="mb-2 font-medium text-[var(--rm-fg)]">Latest profile snapshot</p>
             <CodeBlock>{JSON.stringify(latestProfile, null, 2)}</CodeBlock>
           </div>
+        </SectionCard>
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-[0.85fr_1.15fr]">
+        <SectionCard title="Routing receipts" description="First-class routing observations show the exact mode, rewrite posture, and arbitration details that shaped endpoint selection.">
+          <dl className="grid gap-x-6 gap-y-3 text-sm md:grid-cols-2">
+            {[
+              ["Effective mode", routingModeSummary],
+              ["Mode source", routingModeSource],
+              ["Requested override", routingRequestedOverride],
+              ["Alias mode", routingAliasMode],
+              ["Rewrite", rewriteSummary],
+              ["Rewrite reason", rewriteReason],
+              ["Difficulty bucket", difficultyBucket],
+              ["Difficulty strategy", difficultyStrategy],
+              ["Controller active", controllerActive === null ? null : String(controllerActive)],
+              ["Controller strategy", controllerStrategy],
+              ["Controller task type", controllerTaskType],
+              ["Hybrid dominant signal", hybridSignal],
+              ["Hybrid final strategy", hybridStrategy],
+              ["Rubric signals", rubricSignalSummary],
+            ].map(([label, value]) => (
+              <div key={label} className="border-b border-[var(--rm-border)] pb-3">
+                <dt className="text-xs uppercase tracking-[0.24em] text-[var(--rm-muted)]">{label}</dt>
+                <dd className="mt-1 font-medium text-[var(--rm-fg)]">{renderMetricValue(value)}</dd>
+              </div>
+            ))}
+          </dl>
+        </SectionCard>
+
+        <SectionCard title="Routing diagnostics bundle" description="Keep the raw routingDiagnostics receipt adjacent to the normalized summary for deeper arbitration and rewrite debugging.">
+          <CodeBlock>{JSON.stringify({ routingDiagnostics, hybridArbitration }, null, 2)}</CodeBlock>
         </SectionCard>
       </div>
 

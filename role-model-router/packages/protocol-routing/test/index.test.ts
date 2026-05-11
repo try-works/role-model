@@ -666,6 +666,328 @@ describe("routeRuntimeRequest", () => {
       "openai.personal.primary.us-east-1.fast",
     ]);
   });
+
+  test("prefers fresher latency observations when adaptive observed-data scoring is enabled", () => {
+    const result = routeRuntimeRequest({
+      request: {
+        requestId: "req-runtime-adaptive-latency-1",
+        taskType: "code.edit",
+        requiredCapabilities: ["code.edit"],
+        preferredCapabilities: [],
+        requiredModalities: ["text"],
+        contextTokens: 180,
+        needsTools: false,
+        strategy: "latency",
+        preferLocal: false,
+      },
+      registry: {
+        endpoints: [
+          {
+            identity: {
+              endpoint_id: "remote.stale.fast",
+              endpoint_kind: "remote_api",
+              provider_kind: "remote_openai_compat",
+              serving_source: "remote-service",
+              model_id: "openai/gpt-4.1-mini-fast",
+              runtime_version: "run24-registry-v1",
+              region: "us-east-1",
+              host_class: "server",
+              device_class: "server",
+              org_scope: "personal",
+            },
+            declared: {
+              endpoint_id: "remote.stale.fast",
+              capabilities: ["code.edit"],
+              modalities: ["text"],
+              max_context_tokens: 32768,
+              tool_calling: {
+                supported: false,
+                style: "none",
+              },
+              supports_embeddings: false,
+              platform_constraints: [],
+            },
+            status: "active",
+          },
+          {
+            identity: {
+              endpoint_id: "local.fresh.steady",
+              endpoint_kind: "local_engine",
+              provider_kind: "cli",
+              serving_source: "local-process",
+              model_id: "gpt-5.4",
+              runtime_version: "run24-registry-v1",
+              region: "local",
+              host_class: "developer-workstation",
+              device_class: "developer-workstation",
+              org_scope: "personal",
+            },
+            declared: {
+              endpoint_id: "local.fresh.steady",
+              capabilities: ["code.edit"],
+              modalities: ["text"],
+              max_context_tokens: 32768,
+              tool_calling: {
+                supported: false,
+                style: "none",
+              },
+              supports_embeddings: false,
+              platform_constraints: [],
+            },
+            status: "active",
+          },
+        ],
+        diagnostics: [],
+        lifecycleSummary: {
+          active: 2,
+          degraded: 0,
+          offline: 0,
+        },
+      },
+      observedProfilesByEndpointId: {
+        "remote.stale.fast": {
+          endpoint_id: "remote.stale.fast",
+          measured_at_ms: 1_000,
+          judge_score: 0.8,
+          latency_ms_p50: 20,
+          latency_ms_p95: 30,
+          tokens_per_sec: 50,
+          cold_start_ms: 10,
+          failure_rate: 0.01,
+          cost_per_1k_tokens_est: 0.002,
+          freshness_score: 0.95,
+          confidence_score: 0.9,
+        },
+        "local.fresh.steady": {
+          endpoint_id: "local.fresh.steady",
+          measured_at_ms: 999_000,
+          judge_score: 0.8,
+          latency_ms_p50: 70,
+          latency_ms_p95: 90,
+          tokens_per_sec: 50,
+          cold_start_ms: 10,
+          failure_rate: 0.01,
+          cost_per_1k_tokens_est: 0.002,
+          freshness_score: 0.95,
+          confidence_score: 0.9,
+        },
+      },
+      envelope: {
+        sessionId: "session-alpha",
+        conversationId: "conversation-main",
+        selectedTurns: [],
+        selectedArtifacts: [],
+        latestHandoff: null,
+        estimatedTokenCount: 0,
+        diagnostics: [],
+      },
+      retrievalReceipt: {
+        receiptId: "conversation-main-retrieval-receipt",
+        conversationId: "conversation-main",
+        summary: {
+          selectedTurns: 0,
+          selectedArtifacts: 0,
+          omittedTurns: 0,
+          omittedArtifacts: 0,
+          estimatedTokens: 0,
+        },
+        entries: [],
+      },
+      roleDefinitions: [],
+      taskDefinitions: [],
+      roleBindings: [],
+      observedDataConfig: {
+        enabled: true,
+        aggregation: { minSamples: 1 },
+        metricHalflives: {
+          qualityMs: 900_000,
+          latencyMs: 30_000,
+          throughputMs: 120_000,
+          reliabilityMs: 600_000,
+          costMs: 1_800_000,
+        },
+        throughputSla: {
+          enabled: true,
+          minTokensPerSec: 24,
+          penaltyTimeoutMs: 600_000,
+          penaltyFactor: 0,
+        },
+      },
+      routingTimeMs: 1_000_000,
+    } as Parameters<typeof routeRuntimeRequest>[0]);
+
+    expect(result.decision.chosen_endpoint_id).toBe("local.fresh.steady");
+  });
+
+  test("excludes endpoints under an active throughput penalty when the penalty factor is zero", () => {
+    const result = routeRuntimeRequest({
+      request: {
+        requestId: "req-runtime-throughput-penalty-1",
+        taskType: "code.edit",
+        requiredCapabilities: ["code.edit"],
+        preferredCapabilities: [],
+        requiredModalities: ["text"],
+        contextTokens: 180,
+        needsTools: false,
+        strategy: "balanced",
+        preferLocal: false,
+      },
+      registry: {
+        endpoints: [
+          {
+            identity: {
+              endpoint_id: "remote.penalized.fast",
+              endpoint_kind: "remote_api",
+              provider_kind: "remote_openai_compat",
+              serving_source: "remote-service",
+              model_id: "openai/gpt-4.1-mini-fast",
+              runtime_version: "run24-registry-v1",
+              region: "us-east-1",
+              host_class: "server",
+              device_class: "server",
+              org_scope: "personal",
+            },
+            declared: {
+              endpoint_id: "remote.penalized.fast",
+              capabilities: ["code.edit"],
+              modalities: ["text"],
+              max_context_tokens: 32768,
+              tool_calling: {
+                supported: false,
+                style: "none",
+              },
+              supports_embeddings: false,
+              platform_constraints: [],
+            },
+            status: "active",
+          },
+          {
+            identity: {
+              endpoint_id: "local.steady.fallback",
+              endpoint_kind: "local_engine",
+              provider_kind: "cli",
+              serving_source: "local-process",
+              model_id: "gpt-5.4",
+              runtime_version: "run24-registry-v1",
+              region: "local",
+              host_class: "developer-workstation",
+              device_class: "developer-workstation",
+              org_scope: "personal",
+            },
+            declared: {
+              endpoint_id: "local.steady.fallback",
+              capabilities: ["code.edit"],
+              modalities: ["text"],
+              max_context_tokens: 32768,
+              tool_calling: {
+                supported: false,
+                style: "none",
+              },
+              supports_embeddings: false,
+              platform_constraints: [],
+            },
+            status: "active",
+          },
+        ],
+        diagnostics: [],
+        lifecycleSummary: {
+          active: 2,
+          degraded: 0,
+          offline: 0,
+        },
+      },
+      observedProfilesByEndpointId: {
+        "remote.penalized.fast": {
+          endpoint_id: "remote.penalized.fast",
+          measured_at_ms: 990_000,
+          judge_score: 0.92,
+          latency_ms_p50: 40,
+          latency_ms_p95: 55,
+          tokens_per_sec: 12,
+          cold_start_ms: 12,
+          failure_rate: 0.01,
+          cost_per_1k_tokens_est: 0.002,
+          freshness_score: 0.95,
+          confidence_score: 0.92,
+        },
+        "local.steady.fallback": {
+          endpoint_id: "local.steady.fallback",
+          measured_at_ms: 990_000,
+          judge_score: 0.8,
+          latency_ms_p50: 80,
+          latency_ms_p95: 100,
+          tokens_per_sec: 30,
+          cold_start_ms: 15,
+          failure_rate: 0.01,
+          cost_per_1k_tokens_est: 0,
+          freshness_score: 0.95,
+          confidence_score: 0.92,
+        },
+      },
+      envelope: {
+        sessionId: "session-alpha",
+        conversationId: "conversation-main",
+        selectedTurns: [],
+        selectedArtifacts: [],
+        latestHandoff: null,
+        estimatedTokenCount: 0,
+        diagnostics: [],
+      },
+      retrievalReceipt: {
+        receiptId: "conversation-main-retrieval-receipt",
+        conversationId: "conversation-main",
+        summary: {
+          selectedTurns: 0,
+          selectedArtifacts: 0,
+          omittedTurns: 0,
+          omittedArtifacts: 0,
+          estimatedTokens: 0,
+        },
+        entries: [],
+      },
+      roleDefinitions: [],
+      taskDefinitions: [],
+      roleBindings: [],
+      observedDataConfig: {
+        enabled: true,
+        aggregation: { minSamples: 1 },
+        metricHalflives: {
+          qualityMs: 900_000,
+          latencyMs: 300_000,
+          throughputMs: 120_000,
+          reliabilityMs: 600_000,
+          costMs: 1_800_000,
+        },
+        throughputSla: {
+          enabled: true,
+          minTokensPerSec: 24,
+          penaltyTimeoutMs: 600_000,
+          penaltyFactor: 0,
+        },
+      },
+      throughputPenaltyStateByEndpointId: {
+        "remote.penalized.fast": {
+          endpointId: "remote.penalized.fast",
+          lastObservedTokensPerSec: 12,
+          minTokensPerSec: 24,
+          penaltyFactor: 0,
+          activatedAtMs: 990_000,
+          expiresAtMs: 1_590_000,
+          lastObservationMeasuredAtMs: 990_000,
+        },
+      },
+      routingTimeMs: 1_000_000,
+    } as Parameters<typeof routeRuntimeRequest>[0]);
+
+    expect(result.decision.chosen_endpoint_id).toBe("local.steady.fallback");
+    expect(
+      result.decision.eligibility.find((entry) => entry.endpoint_id === "remote.penalized.fast"),
+    ).toEqual(
+      expect.objectContaining({
+        eligible: false,
+      }),
+    );
+  });
 });
 
 describe("runRuntimeRoutingValidation", () => {
@@ -681,7 +1003,6 @@ describe("runRuntimeRoutingValidation", () => {
     expect(result.decision.chosen_endpoint_id).toBe("cli.local.coder");
     expect(result.routingDiagnostics.routingModel.preferredEndpointIds).toEqual([
       "openai.personal.primary.us-east-1.fast",
-      "cli.local.coder",
     ]);
     expect(result.retrievalReceipt.receiptId).toBe("conversation-main-retrieval-receipt");
     expect(result.contextEnvelope.latestHandoffId).toBe("handoff-1");

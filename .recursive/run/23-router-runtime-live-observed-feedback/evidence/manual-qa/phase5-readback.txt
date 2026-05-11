@@ -1,0 +1,35 @@
+Phase 5 agent-operated readback notes
+====================================
+
+1. Exact-model request observation readback
+   - Source reviewed: role-model-router/apps/runtime-host-bridge/test/index.test.ts:1635-1639
+   - Observed proof:
+     - the second persisted request observation requires routingDiagnostics.observedProfile.endpointId to match the chosen endpoint
+     - the same observation requires source = "runtime-state"
+     - the same observation requires readMode = "per-request"
+     - measuredAtMs is required and numeric
+
+2. Endpoint profile refresh sanity check
+   - Source reviewed: .recursive/run/23-router-runtime-live-observed-feedback/evidence/logs/green/phase4-runtime-validate-host.log:12-15
+   - Observed proof:
+     - structured_recent_count = 1
+     - structured_endpoint_id = openai.personal.primary.us-east-1.fast
+     - structured_profile_sample_size = 2
+   - Interpretation:
+     - the runtime inspection surface can read back a recent endpoint profile after execution
+
+3. Local-plus-remote feedback-loop readback
+   - Source reviewed: role-model-router/apps/runtime-host-bridge/test/validate-vendors.test.ts:170-203
+   - Observed proof:
+     - local observation requires routingDiagnostics.observedProfile.source = "runtime-state"
+     - local observation requires readMode = "per-request"
+     - remote observation requires routingDiagnostics.observedProfile.source = "runtime-state"
+     - remote observation requires readMode = "per-request"
+     - local latestProfile endpoint_id = llama-swap.local.local-llama-3-1-8b-instruct
+     - remote latestProfile endpoint_id = openai.litellm.global.openai-gpt-4-1-mini-fast
+
+Conclusion
+----------
+
+- The operator-visible readback surfaces make the runtime-owned feedback source explicit for exact-model routing.
+- The same readback contract is exercised for both local and remote endpoints.

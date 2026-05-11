@@ -1,0 +1,129 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/29-router-runtime-request-rewriter-hybrid-mode/role-model-router/apps/runtime-host-bridge[39m
+
+(node:97364) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [31mΓ¥»[39m test/validate-vendors.test.ts [2m([22m[2m2 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[33m 5084[2mms[22m[39m
+[31m   [31m├ù[31m runRuntimeVendorValidation[2m > [22mexecutes decision-only, local-only, remote-only, and hybrid vendor modes end to end[39m[33m 5076[2mms[22m[39m
+[31m     ΓåÆ expected undefined to match object { baseline: { ΓÇª(2) }, ΓÇª(3) }[39m
+   [32mΓ£ô[39m runRuntimeVendorValidation[2m > [22mplans a real-vendor harness with repo-owned mock upstreams[32m 7[2mms[22m[39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/validate-vendors.test.ts > runRuntimeVendorValidation > executes decision-only, local-only, remote-only, and hybrid vendor modes end to end
+AssertionError: expected undefined to match object { baseline: { ΓÇª(2) }, ΓÇª(3) }
+
+- Expected: 
+{
+  "baseline": {
+    "observation": {
+      "routingDiagnostics": {
+        "rewrite": {
+          "applied": true,
+          "requestedModel": "gpt-5.4",
+        },
+        "routingMode": {
+          "effectiveMode": "baseline",
+          "requestedOverride": "baseline",
+          "source": "request-override",
+        },
+      },
+    },
+    "vendorId": StringMatching /^(llama-swap|litellm)$/,
+  },
+  "controller": {
+    "observation": {
+      "routingDiagnostics": {
+        "controllerRouting": {
+          "acceptedDirectives": {
+            "preferredEndpointIds": [
+              "openai.litellm.global.openai-gpt-4-1-mini-fast",
+            ],
+            "strategy": "quality",
+          },
+          "active": true,
+        },
+        "routingMode": {
+          "effectiveMode": "controller",
+          "requestedOverride": "controller",
+          "source": "request-override",
+        },
+      },
+    },
+    "vendorId": "litellm",
+  },
+  "difficulty": {
+    "observation": {
+      "routingDiagnostics": {
+        "difficultyRouting": {
+          "difficulty": "easy",
+          "strategy": "cost",
+        },
+        "routingMode": {
+          "effectiveMode": "difficulty",
+          "requestedOverride": "difficulty",
+          "source": "request-override",
+        },
+      },
+    },
+    "vendorId": StringMatching /^(llama-swap|litellm)$/,
+  },
+  "hybrid": {
+    "observation": {
+      "routingDiagnostics": {
+        "controllerRouting": {
+          "acceptedDirectives": {
+            "preferredEndpointIds": [
+              "openai.litellm.global.openai-gpt-4-1-mini-fast",
+            ],
+            "strategy": "quality",
+          },
+          "active": true,
+        },
+        "difficultyRouting": {
+          "difficulty": "easy",
+          "strategy": "cost",
+        },
+        "hybridArbitration": {
+          "active": true,
+          "controllerChangedPlan": true,
+          "dominantSignal": "controller",
+          "finalStrategy": "quality",
+        },
+        "rewrite": {
+          "applied": true,
+          "requestedModel": "gpt-5.4",
+        },
+        "routingMode": {
+          "effectiveMode": "hybrid",
+          "requestedOverride": "hybrid",
+          "source": "request-override",
+        },
+      },
+    },
+    "vendorId": "litellm",
+  },
+}
+
++ Received: 
+undefined
+
+ Γ¥» test/validate-vendors.test.ts:194:7
+    192|         }
+    193|       ).modeMatrix,
+    194|     ).toMatchObject({
+       |       ^
+    195|       baseline: {
+    196|         vendorId: expect.stringMatching(/^(llama-swap|litellm)$/),
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m1 passed[39m[22m[90m (2)[39m
+[2m   Start at [22m 03:07:59
+[2m   Duration [22m 6.27s[2m (transform 478ms, setup 0ms, collect 655ms, tests 5.08s, environment 0ms, prepare 216ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\29-router-runtime-request-rewriter-hybrid-mode\role-model-router\apps\runtime-host-bridge:
+ΓÇëERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓÇë Command failed with exit code 1: vitest run test/validate-vendors.test.ts

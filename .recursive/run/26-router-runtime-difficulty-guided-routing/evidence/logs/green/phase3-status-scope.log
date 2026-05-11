@@ -1,0 +1,11 @@
+ M .recursive/run/26-router-runtime-difficulty-guided-routing/00-worktree.md
+ M role-model-router/apps/runtime-host-bridge/src/index.ts
+ M role-model-router/apps/runtime-host-bridge/src/unified-runtime-config.ts
+ M role-model-router/apps/runtime-host-bridge/src/validate-vendors.ts
+ M role-model-router/apps/runtime-host-bridge/test/index.test.ts
+ M role-model-router/apps/runtime-host-bridge/test/unified-runtime-config.test.ts
+ M role-model-router/apps/runtime-host-bridge/test/validate-vendors.test.ts
+ M role-model-router/packages/runtime-observability/src/index.ts
+?? .recursive/run/26-router-runtime-difficulty-guided-routing/01-as-is.md
+?? .recursive/run/26-router-runtime-difficulty-guided-routing/02-to-be-plan.md
+?? .recursive/run/26-router-runtime-difficulty-guided-routing/evidence/
