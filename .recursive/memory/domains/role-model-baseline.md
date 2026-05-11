@@ -1,6 +1,6 @@
 Type: `domain`
 Status: `CURRENT`
-Scope: `Stable baseline ownership for the repo workspace, canonical protocol tree, shared packages, router family, fixtures, validation surfaces, and the repo-owned runtime/operator baseline extended through the routing-strategy control-plane lock in run 22.`
+Scope: `Stable baseline ownership for the repo workspace, canonical protocol tree, shared packages, router family, fixtures, validation surfaces, and the repo-owned runtime/operator baseline extended through the live observed-feedback routing baseline in run 23.`
 Owns-Paths:
 - `/README.md`
 - `/LICENSE`
@@ -38,8 +38,9 @@ Source-Runs:
 - `15-unified-vendor-execution`
 - `16-router-runtime-unified-telemetry-dashboard`
 - `22-router-runtime-routing-strategy-lock`
+- `23-router-runtime-live-observed-feedback`
 Validated-At-Commit: `working-tree`
-Last-Validated: `2026-05-11T18:23:45+08:00`
+Last-Validated: `2026-05-11T19:11:00+08:00`
 Tags:
 - `baseline`
 - `workspace`
@@ -101,6 +102,9 @@ This repository now has a real product baseline rather than only recursive scaff
 - Browser, edge, and native provider families are intentionally scaffold-grade in this baseline
 - `/docs/architecture/07-router-runtime-routing-strategy-lock.md` now freezes the repo-owned routing-strategy handoff for alias-based local-plus-remote routing, including mode vocabulary, config ownership, the easy/medium/hard rubric, compatibility policy, rollout mapping for runs `23` through `30`, and the later-run verification discipline
 - The downstream routing-strategy run contracts under `/.recursive/run/23-.../` through `/.recursive/run/30-.../` now consume the repo-owned strategy lock directly instead of only the external proposal path
+- The bridge now reads latest observed profiles from SQLite runtime state on each request instead of routing from the startup fixture-only `routing-observed-profiles.json` map
+- Runtime request observations now expose `routingDiagnostics.observedProfile` with source, `per-request` read mode, and measured-at metadata so operators can confirm which persisted profile influenced a route
+- The repo-owned validation floor for this routing-feedback baseline now includes focused bridge tests plus `runtime:validate-host` and `runtime:validate-vendors`, including local-and-remote feedback-loop readback visibility
 
 ## Validation Path
 

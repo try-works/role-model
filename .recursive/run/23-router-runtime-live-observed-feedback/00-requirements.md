@@ -1,6 +1,8 @@
 Run: `/.recursive/run/23-router-runtime-live-observed-feedback/`
 Phase: `00 Requirements`
-Status: `DRAFT`
+Status: `LOCKED`
+LockedAt: `2026-05-11T10:38:10Z`
+LockHash: `e5d985bb65d664955518db113eebad35ca4ce31f6333023af826c664f54e9bd8`
 Workflow version: `recursive-mode-audit-v1`
 Inputs:
 - `/docs/architecture/07-router-runtime-routing-strategy-lock.md`

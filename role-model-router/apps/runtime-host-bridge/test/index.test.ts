@@ -1596,17 +1596,17 @@ describe("runtime-host-bridge", () => {
     expect(typeof backend.readRequestObservation).toBe("function");
     expect(typeof backend.readEndpointProfile).toBe("function");
 
-    const requestId = "req-runtime-bridge-observation-001";
+    const firstRequestId = "req-runtime-bridge-observation-001";
     const result = await backend.executeChatCompletions(
       {
         model: "openai/gpt-4.1-mini-fast",
         messages: [{ role: "user", content: "Summarize the chosen endpoint." }],
       },
-      requestId,
+      firstRequestId,
     );
 
-    await expect(backend.readRequestObservation?.(requestId)).resolves.toMatchObject({
-      requestId,
+    await expect(backend.readRequestObservation?.(firstRequestId)).resolves.toMatchObject({
+      requestId: firstRequestId,
       endpointId: result.endpointId,
       capturePolicy: {
         structuredInspectionAvailable: true,
@@ -1616,6 +1616,28 @@ describe("runtime-host-bridge", () => {
       endpointId: result.endpointId,
       latestProfile: {
         endpoint_id: result.endpointId,
+      },
+    });
+
+    const secondRequestId = "req-runtime-bridge-observation-002";
+    await backend.executeChatCompletions(
+      {
+        model: "openai/gpt-4.1-mini-fast",
+        messages: [{ role: "user", content: "Summarize the chosen endpoint again." }],
+      },
+      secondRequestId,
+    );
+
+    await expect(backend.readRequestObservation?.(secondRequestId)).resolves.toMatchObject({
+      requestId: secondRequestId,
+      endpointId: result.endpointId,
+      routingDiagnostics: {
+        observedProfile: {
+          endpointId: result.endpointId,
+          source: "runtime-state",
+          readMode: "per-request",
+          measuredAtMs: expect.any(Number),
+        },
       },
     });
   });

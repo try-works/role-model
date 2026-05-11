@@ -654,3 +654,30 @@
   - no runtime execution, routing, controller, difficulty, hybrid, or UI behavior changed in this run
 - Known issues / follow-ups:
   - the actual runtime implementation starts in run `23-router-runtime-live-observed-feedback`
+
+### Run `23-router-runtime-live-observed-feedback`
+
+- Run folder: `/.recursive/run/23-router-runtime-live-observed-feedback/`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - live routing now reads latest observed profiles from runtime-owned SQLite state on each request instead of relying on the startup fixture-only observed-profile map
+  - request observations now expose `routingDiagnostics.observedProfile` with source, `per-request` read mode, and measured-at metadata
+  - runtime-level validation now reads back local and remote request observations plus endpoint profiles to prove the feedback loop end to end
+- Why:
+  - to make persisted live observations the actual routing input before later recency, alias, difficulty, and controller runs build on the same baseline
+- How:
+  - implemented with strict RED/GREEN TDD, validated the locked Phase 3 slice through focused SQLite and bridge tests plus `schemas:validate`, `runtime:validate-host`, and `runtime:validate-vendors`, and completed agent-operated readback QA over the operator-visible feedback surfaces
+- What was not done:
+  - no alias routing, recency weighting, difficulty segmentation, controller inference, or hybrid arbitration shipped in this run
+- Known issues / follow-ups:
+  - later runs still need recency weighting, alias pools, difficulty-aware routing, controller guidance, and hybrid arbitration on top of the runtime-owned feedback baseline

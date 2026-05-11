@@ -543,6 +543,14 @@ export async function runRuntimeVendorValidation(options: {
     rows: Awaited<ReturnType<RuntimeBridgeBackend["listTelemetryComparisonRows"]>>;
     requests: Awaited<ReturnType<RuntimeBridgeBackend["listTelemetryRequests"]>>;
   };
+  observations: {
+    local: Awaited<ReturnType<RuntimeBridgeBackend["readRequestObservation"]>>;
+    remote: Awaited<ReturnType<RuntimeBridgeBackend["readRequestObservation"]>>;
+  };
+  observedProfiles: {
+    local: Awaited<ReturnType<RuntimeBridgeBackend["readEndpointProfile"]>>;
+    remote: Awaited<ReturnType<RuntimeBridgeBackend["readEndpointProfile"]>>;
+  };
 }> {
   const runtimeStateRoot =
     options.runtimeStateRoot ?? (await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-vendors-")));
@@ -655,6 +663,14 @@ export async function runRuntimeVendorValidation(options: {
           const telemetrySummary = await hybridRuntime.backend.readTelemetrySummary();
           const telemetryRows = await hybridRuntime.backend.listTelemetryComparisonRows();
           const telemetryRequests = await hybridRuntime.backend.listTelemetryRequests({ limit: 10 });
+          const localObservation = await localRuntime.backend.readRequestObservation(
+            "req-runtime-vendor-local-direct",
+          );
+          const remoteObservation = await remoteRuntime.backend.readRequestObservation(
+            "req-runtime-vendor-remote-direct",
+          );
+          const localObservedProfile = await localRuntime.backend.readEndpointProfile(localDirect.endpointId);
+          const remoteObservedProfile = await remoteRuntime.backend.readEndpointProfile(remoteDirect.endpointId);
           return {
             decisionOnly: {
               statusCode: decisionResponse.statusCode,
@@ -690,6 +706,14 @@ export async function runRuntimeVendorValidation(options: {
               summary: telemetrySummary,
               rows: telemetryRows,
               requests: telemetryRequests,
+            },
+            observations: {
+              local: localObservation,
+              remote: remoteObservation,
+            },
+            observedProfiles: {
+              local: localObservedProfile,
+              remote: remoteObservedProfile,
             },
           };
         } finally {

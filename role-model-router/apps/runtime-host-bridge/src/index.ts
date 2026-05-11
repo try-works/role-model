@@ -26,6 +26,7 @@ import {
   createRuntimeObservationBundle,
   type RuntimeCapturePolicy,
   type RuntimeObservationBundle,
+  type RuntimeRoutingDiagnostics,
 } from "@role-model-router/runtime-observability";
 import {
   createToolRegistry,
@@ -47,6 +48,7 @@ import {
   listRecentRuntimeObservations,
   readConversationContinuity,
   readLatestObservedProfile,
+  readLatestObservedProfilesByEndpointIds,
   readObservedPerformanceSamples,
   readProviderDeviceAuthSession,
   readRuntimeMaintenancePolicy,
@@ -540,6 +542,40 @@ function createInactiveVendorStatus(vendorId: string): VendorRuntimeStatus {
   return {
     vendorId,
     healthStatus: "inactive",
+  };
+}
+
+function readObservedProfilesForRouting(input: {
+  readonly databasePath: string;
+  readonly registry: EndpointRegistryResult;
+}): {
+  readonly observedProfilesByEndpointId: Parameters<typeof routeRuntimeRequest>[0]["observedProfilesByEndpointId"];
+  readonly diagnosticsByEndpointId: Record<
+    string,
+    NonNullable<RuntimeRoutingDiagnostics["observedProfile"]>
+  >;
+} {
+  const endpointIds = [...new Set(input.registry.endpoints.map((endpoint) => endpoint.identity.endpoint_id))];
+  const latestProfilesByEndpointId = readLatestObservedProfilesByEndpointIds({
+    databasePath: input.databasePath,
+    endpointIds,
+  });
+  const diagnosticsByEndpointId = Object.fromEntries(
+    Object.entries(latestProfilesByEndpointId).map(([endpointId, profile]) => [
+      endpointId,
+      {
+        endpointId,
+        source: "runtime-state" as const,
+        readMode: "per-request" as const,
+        measuredAtMs: profile.measured_at_ms,
+      },
+    ]),
+  );
+
+  return {
+    observedProfilesByEndpointId:
+      latestProfilesByEndpointId as Parameters<typeof routeRuntimeRequest>[0]["observedProfilesByEndpointId"],
+    diagnosticsByEndpointId,
   };
 }
 
@@ -3065,9 +3101,6 @@ export async function createRuntimeBridgeBackend(
       tokenBudget: number;
     };
   }>(path.join(fixtureRoot, "context-envelope.json"));
-  const observedProfilesByEndpointId = await readJson<
-    Parameters<typeof routeRuntimeRequest>[0]["observedProfilesByEndpointId"]
-  >(path.join(fixtureRoot, "routing-observed-profiles.json"));
   const roleTaskFixture = await readJson<{
     roleDefinitions: Parameters<typeof routeRuntimeRequest>[0]["roleDefinitions"];
     taskDefinitions: Parameters<typeof routeRuntimeRequest>[0]["taskDefinitions"];
@@ -3419,6 +3452,10 @@ export async function createRuntimeBridgeBackend(
     streamRequested: boolean | undefined,
     streamWriter?: BridgeStreamWriter,
   ) => {
+    const runtimeObservedProfiles = readObservedProfilesForRouting({
+      databasePath: initialization.databasePath,
+      registry: currentRegistry,
+    });
     let streamedChunkCount = 0;
     const trackedStreamWriter: BridgeStreamWriter | undefined = streamWriter
       ? async (chunk, metadata) => {
@@ -3429,7 +3466,7 @@ export async function createRuntimeBridgeBackend(
     const routed = routeRuntimeRequest({
       request: plan.routingRequest,
       registry: currentRegistry,
-      observedProfilesByEndpointId,
+      observedProfilesByEndpointId: runtimeObservedProfiles.observedProfilesByEndpointId,
       envelope,
       retrievalReceipt,
       roleDefinitions: runtimeRoles.roleDefinitions,
@@ -3648,9 +3685,19 @@ export async function createRuntimeBridgeBackend(
     const providerAccount = currentAccounts.find(
       (account) => account.providerAccountId === execution.target.providerAccountId,
     );
+    const observedProfileDiagnostic =
+      runtimeObservedProfiles.diagnosticsByEndpointId[routed.decision.chosen_endpoint_id] ??
+      ({
+        endpointId: routed.decision.chosen_endpoint_id,
+        source: "none",
+        readMode: "per-request",
+      } as const);
     const bundle = createRuntimeObservationBundle({
       decision: routed.decision,
-      routingDiagnostics: routed.routingDiagnostics,
+      routingDiagnostics: {
+        ...routed.routingDiagnostics,
+        observedProfile: observedProfileDiagnostic,
+      },
       retrievalReceipt: {
         receiptId: retrievalReceipt.receiptId,
         summary: retrievalReceipt.summary,

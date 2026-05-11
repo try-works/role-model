@@ -808,6 +808,74 @@ describe("initializeSqliteMemory", () => {
     });
   });
 
+  test("reads the latest observed profiles for a set of endpoint ids", async () => {
+    expect(
+      typeof (
+        sqliteMemory as {
+          readLatestObservedProfilesByEndpointIds?: unknown;
+        }
+      ).readLatestObservedProfilesByEndpointIds,
+    ).toBe("function");
+
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+    const validation = await runRuntimeAdapterValidation({
+      repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      runtimeStateRoot,
+      scopeId: "workspace-dev-latest-profiles",
+    });
+    const history = await readJson<{
+      byEndpointId: Record<string, Parameters<typeof createRuntimeObservationBundle>[0]["priorSamples"]>;
+    }>("testdata/router-runtime/fixtures/observability-history.json");
+    const policy = await readJson<Parameters<typeof createRuntimeObservationBundle>[0]["capturePolicy"]>(
+      "testdata/router-runtime/fixtures/observability-policy.json",
+    );
+
+    const bundle = createRuntimeObservationBundle({
+      decision: validation.decision,
+      routingDiagnostics: validation.routingDiagnostics,
+      retrievalReceipt: validation.retrievalReceipt,
+      contextEnvelope: validation.contextEnvelope,
+      execution: validation.execution,
+      priorSamples: history.byEndpointId[validation.decision.chosen_endpoint_id] ?? [],
+      maintenancePolicy: {
+        "redaction.level": "strict",
+        "retention.class": "standard",
+      },
+      capturePolicy: policy,
+    });
+
+    (
+      sqliteMemory as {
+        persistRuntimeObservationBundle(input: {
+          databasePath: string;
+          observation: ReturnType<typeof createRuntimeObservationBundle>;
+        }): void;
+      }
+    ).persistRuntimeObservationBundle({
+      databasePath: validation.databasePath,
+      observation: bundle,
+    });
+
+    expect(
+      (
+        sqliteMemory as {
+          readLatestObservedProfilesByEndpointIds(input: {
+            databasePath: string;
+            endpointIds: readonly string[];
+          }): Record<string, { endpoint_id: string }>;
+        }
+      ).readLatestObservedProfilesByEndpointIds({
+        databasePath: validation.databasePath,
+        endpointIds: [validation.decision.chosen_endpoint_id, "missing-endpoint"],
+      }),
+    ).toEqual({
+      [validation.decision.chosen_endpoint_id]: expect.objectContaining({
+        endpoint_id: validation.decision.chosen_endpoint_id,
+      }),
+    });
+  });
+
   test("flattens persisted runtime observations into canonical telemetry summary, comparison, and request rows", async () => {
     expect(
       typeof (

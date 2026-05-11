@@ -359,6 +359,11 @@ export interface ReadLatestObservedProfileInput {
   readonly endpointId: string;
 }
 
+export interface ReadLatestObservedProfilesByEndpointIdsInput {
+  readonly databasePath: string;
+  readonly endpointIds: readonly string[];
+}
+
 export interface ReadRuntimeMaintenancePolicyInput {
   readonly databasePath: string;
 }
@@ -1717,6 +1722,34 @@ export function readLatestObservedProfile(
   database.close();
 
   return row ? (JSON.parse(row.profile_json) as ObservedPerformanceProfile) : null;
+}
+
+export function readLatestObservedProfilesByEndpointIds(
+  input: ReadLatestObservedProfilesByEndpointIdsInput,
+): Record<string, ObservedPerformanceProfile> {
+  if (input.endpointIds.length === 0) {
+    return {};
+  }
+
+  const database = new DatabaseSync(input.databasePath);
+  const placeholders = input.endpointIds.map(() => "?").join(", ");
+  const rows = database
+    .prepare(
+      `SELECT endpoint_id, profile_json FROM observed_profile_snapshots WHERE endpoint_id IN (${placeholders}) ORDER BY measured_at_ms DESC, snapshot_id DESC`,
+    )
+    .all(...input.endpointIds) as Array<{
+    endpoint_id: string;
+    profile_json: string;
+  }>;
+  database.close();
+
+  const latestProfilesByEndpointId: Record<string, ObservedPerformanceProfile> = {};
+  for (const row of rows) {
+    if (!(row.endpoint_id in latestProfilesByEndpointId)) {
+      latestProfilesByEndpointId[row.endpoint_id] = JSON.parse(row.profile_json) as ObservedPerformanceProfile;
+    }
+  }
+  return latestProfilesByEndpointId;
 }
 
 export function listRecentRuntimeObservations(

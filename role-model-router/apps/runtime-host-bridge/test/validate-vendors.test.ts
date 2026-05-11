@@ -135,6 +135,72 @@ describe("runRuntimeVendorValidation", () => {
         }),
       }),
     );
+    const feedbackResult = result as typeof result & {
+      observations?: {
+        local?: {
+          routingDiagnostics?: {
+            observedProfile?: {
+              source?: string;
+              readMode?: string;
+            };
+          };
+        };
+        remote?: {
+          routingDiagnostics?: {
+            observedProfile?: {
+              source?: string;
+              readMode?: string;
+            };
+          };
+        };
+      };
+      observedProfiles?: {
+        local?: {
+          latestProfile?: {
+            endpoint_id?: string;
+          };
+        };
+        remote?: {
+          latestProfile?: {
+            endpoint_id?: string;
+          };
+        };
+      };
+    };
+    expect(feedbackResult.observations?.local).toEqual(
+      expect.objectContaining({
+        routingDiagnostics: expect.objectContaining({
+          observedProfile: expect.objectContaining({
+            source: "runtime-state",
+            readMode: "per-request",
+          }),
+        }),
+      }),
+    );
+    expect(feedbackResult.observations?.remote).toEqual(
+      expect.objectContaining({
+        routingDiagnostics: expect.objectContaining({
+          observedProfile: expect.objectContaining({
+            source: "runtime-state",
+            readMode: "per-request",
+          }),
+        }),
+      }),
+    );
+    expect(feedbackResult.observedProfiles?.local).toEqual(
+      expect.objectContaining({
+        latestProfile: expect.objectContaining({
+          endpoint_id: "llama-swap.local.local-llama-3-1-8b-instruct",
+        }),
+      }),
+    );
+    expect(feedbackResult.observedProfiles?.remote).toEqual(
+      expect.objectContaining({
+        latestProfile: expect.objectContaining({
+          endpoint_id: "openai.litellm.global.openai-gpt-4-1-mini-fast",
+        }),
+      }),
+    );
   }, 15_000);
 
   test("plans a real-vendor harness with repo-owned mock upstreams", async () => {

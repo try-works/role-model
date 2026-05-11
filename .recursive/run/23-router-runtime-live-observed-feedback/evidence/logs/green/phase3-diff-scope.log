@@ -1,0 +1,10 @@
+.agents/skills/recursive-mode/scripts/__pycache__/lint-recursive-run.cpython-314.pyc
+.recursive/run/23-router-runtime-live-observed-feedback/00-requirements.md
+.recursive/run/23-router-runtime-live-observed-feedback/00-worktree.md
+role-model-router/apps/runtime-host-bridge/src/index.ts
+role-model-router/apps/runtime-host-bridge/src/validate-vendors.ts
+role-model-router/apps/runtime-host-bridge/test/index.test.ts
+role-model-router/apps/runtime-host-bridge/test/validate-vendors.test.ts
+role-model-router/packages/runtime-observability/src/index.ts
+role-model-router/packages/sqlite-memory/src/index.ts
+role-model-router/packages/sqlite-memory/test/index.test.ts
