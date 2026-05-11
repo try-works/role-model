@@ -13,6 +13,7 @@
     }
   },
   "files": {
+    "maxSize": 2000000,
     "ignore": [
       "**/.react-router/**",
       "**/.source/**",
