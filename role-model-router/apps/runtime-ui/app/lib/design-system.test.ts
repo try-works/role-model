@@ -346,9 +346,9 @@ describe("runtime design system", () => {
     expect(appCss).toContain("--rm-surface-strong: #f5f5f4;");
     expect(appCss).toContain("--rm-panel: #e7e5e4;");
     expect(appCss).toContain("--rm-fg: #1c1917;");
-    expect(appCss).toContain("--rm-secondary: rgba(28, 25, 23, 0.70);");
-    expect(appCss).toContain("--rm-muted: rgba(28, 25, 23, 0.40);");
-    expect(appCss).toContain("--rm-accent: #003B8E;");
+    expect(appCss).toContain("--rm-secondary: rgba(28, 25, 23, 0.7);");
+    expect(appCss).toContain("--rm-muted: rgba(28, 25, 23, 0.4);");
+    expect(appCss).toContain("--rm-accent: #003b8e;");
     expect(appCss).toContain('"IBM Plex Mono"');
     expect(appCss).toContain("@media (prefers-color-scheme: dark)");
     expect(appCss).toContain("color-scheme: light dark;");
