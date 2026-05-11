@@ -1,0 +1,920 @@
+{
+  "baseUrl": "http://127.0.0.1:50854",
+  "aliasDefault": {
+    "endpointId": "llama-swap.local.local-llama-3-1-8b-instruct",
+    "vendorId": "llama-swap",
+    "observation": {
+      "requestId": "req-run29-phase5-alias-default",
+      "endpointId": "llama-swap.local.local-llama-3-1-8b-instruct",
+      "routingDiagnostics": {
+        "retrievalReceiptId": "conversation-main-retrieval-receipt",
+        "routingModel": {
+          "enabled": true,
+          "endpointId": "openai.personal.primary.us-east-1.fast",
+          "preferredEndpointIds": [
+            "openai.personal.primary.us-east-1.fast"
+          ],
+          "ignoredEndpointIds": [
+            "openai.personal.primary.us-east-1.fast"
+          ]
+        },
+        "aliasResolution": {
+          "requestedModel": "gpt-5.4",
+          "aliasId": "gpt-5.4",
+          "resolvedModelIds": [
+            "local/llama-3.1-8b-instruct",
+            "openai/gpt-4.1-mini-fast"
+          ],
+          "allowEndpoints": [
+            "llama-swap.local.local-llama-3-1-8b-instruct",
+            "openai.litellm.global.openai-gpt-4-1-mini-fast"
+          ]
+        },
+        "rewrite": {
+          "requestedModel": "gpt-5.4",
+          "downstreamModelId": "local/llama-3.1-8b-instruct",
+          "applied": true,
+          "reason": "requested-model-rewritten-for-selected-endpoint"
+        },
+        "observedProfile": {
+          "endpointId": "llama-swap.local.local-llama-3-1-8b-instruct",
+          "source": "none",
+          "readMode": "per-request"
+        },
+        "effectiveMetrics": {
+          "quality": {
+            "value": 0.5,
+            "source": "default"
+          },
+          "latency": {
+            "value": 0.5,
+            "source": "default"
+          },
+          "throughput": {
+            "value": 0.5,
+            "source": "default"
+          },
+          "reliability": {
+            "value": 0.7,
+            "source": "default"
+          },
+          "cost": {
+            "value": 0.5,
+            "source": "default"
+          }
+        },
+        "throughputPenalty": {
+          "endpointId": "llama-swap.local.local-llama-3-1-8b-instruct",
+          "active": false
+        }
+      }
+    }
+  },
+  "modeMatrix": {
+    "baseline": {
+      "endpointId": "llama-swap.local.local-llama-3-1-8b-instruct",
+      "vendorId": "llama-swap",
+      "observation": {
+        "requestId": "req-run29-phase5-baseline",
+        "endpointId": "llama-swap.local.local-llama-3-1-8b-instruct",
+        "routingDiagnostics": {
+          "retrievalReceiptId": "conversation-main-retrieval-receipt",
+          "routingModel": {
+            "enabled": true,
+            "endpointId": "openai.personal.primary.us-east-1.fast",
+            "preferredEndpointIds": [
+              "openai.personal.primary.us-east-1.fast"
+            ],
+            "ignoredEndpointIds": [
+              "openai.personal.primary.us-east-1.fast"
+            ]
+          },
+          "aliasResolution": {
+            "requestedModel": "gpt-5.4",
+            "aliasId": "gpt-5.4",
+            "resolvedModelIds": [
+              "local/llama-3.1-8b-instruct",
+              "openai/gpt-4.1-mini-fast"
+            ],
+            "allowEndpoints": [
+              "llama-swap.local.local-llama-3-1-8b-instruct",
+              "openai.litellm.global.openai-gpt-4-1-mini-fast"
+            ]
+          },
+          "routingMode": {
+            "source": "request-override",
+            "requestedOverride": "baseline",
+            "effectiveMode": "baseline"
+          },
+          "rewrite": {
+            "requestedModel": "gpt-5.4",
+            "downstreamModelId": "local/llama-3.1-8b-instruct",
+            "applied": true,
+            "reason": "requested-model-rewritten-for-selected-endpoint"
+          },
+          "observedProfile": {
+            "endpointId": "llama-swap.local.local-llama-3-1-8b-instruct",
+            "source": "runtime-state",
+            "readMode": "per-request",
+            "measuredAtMs": 1778527862014
+          },
+          "effectiveMetrics": {
+            "quality": {
+              "value": 0.5,
+              "source": "default"
+            },
+            "latency": {
+              "value": 0.9642654413325753,
+              "source": "measured",
+              "measuredAtMs": 1778527862014,
+              "freshnessWeight": 0.9999260670339167
+            },
+            "throughput": {
+              "value": 0.999907588916786,
+              "source": "measured",
+              "measuredAtMs": 1778527862014,
+              "freshnessWeight": 0.999815177833572
+            },
+            "reliability": {
+              "value": 0.9999889098501018,
+              "source": "measured",
+              "measuredAtMs": 1778527862014,
+              "freshnessWeight": 0.9999630328336727
+            },
+            "cost": {
+              "value": 0.5,
+              "source": "default"
+            }
+          },
+          "throughputPenalty": {
+            "endpointId": "llama-swap.local.local-llama-3-1-8b-instruct",
+            "active": false
+          }
+        }
+      }
+    },
+    "difficulty": {
+      "endpointId": "llama-swap.local.local-llama-3-1-8b-instruct",
+      "vendorId": "llama-swap",
+      "observation": {
+        "requestId": "req-run29-phase5-difficulty",
+        "endpointId": "llama-swap.local.local-llama-3-1-8b-instruct",
+        "routingDiagnostics": {
+          "retrievalReceiptId": "conversation-main-retrieval-receipt",
+          "routingModel": {
+            "enabled": true,
+            "endpointId": "openai.personal.primary.us-east-1.fast",
+            "preferredEndpointIds": [
+              "openai.personal.primary.us-east-1.fast"
+            ],
+            "ignoredEndpointIds": [
+              "openai.personal.primary.us-east-1.fast"
+            ]
+          },
+          "aliasResolution": {
+            "requestedModel": "gpt-5.4",
+            "aliasId": "gpt-5.4",
+            "resolvedModelIds": [
+              "local/llama-3.1-8b-instruct",
+              "openai/gpt-4.1-mini-fast"
+            ],
+            "allowEndpoints": [
+              "llama-swap.local.local-llama-3-1-8b-instruct",
+              "openai.litellm.global.openai-gpt-4-1-mini-fast"
+            ]
+          },
+          "difficultyRouting": {
+            "difficulty": "easy",
+            "strategy": "cost",
+            "fallbackApplied": false,
+            "rubricSignals": {
+              "contextTokens": 16,
+              "toolCount": 0,
+              "historyTurnCount": 1,
+              "instructionConstraintCount": 0,
+              "decompositionKeywordCount": 0,
+              "codeOrSchemaBurden": false
+            }
+          },
+          "routingMode": {
+            "source": "request-override",
+            "requestedOverride": "difficulty",
+            "effectiveMode": "difficulty"
+          },
+          "rewrite": {
+            "requestedModel": "gpt-5.4",
+            "downstreamModelId": "local/llama-3.1-8b-instruct",
+            "applied": true,
+            "reason": "requested-model-rewritten-for-selected-endpoint"
+          },
+          "observedProfile": {
+            "endpointId": "llama-swap.local.local-llama-3-1-8b-instruct",
+            "source": "runtime-state",
+            "readMode": "per-request",
+            "measuredAtMs": 1778527862053,
+            "difficultyBucket": "easy",
+            "bucketOverrideApplied": false
+          },
+          "effectiveMetrics": {
+            "quality": {
+              "value": 0.5,
+              "source": "default"
+            },
+            "latency": {
+              "value": 0.9733234210780459,
+              "source": "measured",
+              "measuredAtMs": 1778527862053,
+              "freshnessWeight": 0.9998613801725043
+            },
+            "throughput": {
+              "value": 0.9998267432297047,
+              "source": "measured",
+              "measuredAtMs": 1778527862053,
+              "freshnessWeight": 0.9996534864594093
+            },
+            "reliability": {
+              "value": 0.9999792063052461,
+              "source": "measured",
+              "measuredAtMs": 1778527862053,
+              "freshnessWeight": 0.9999306876841536
+            },
+            "cost": {
+              "value": 0.5,
+              "source": "default"
+            }
+          },
+          "throughputPenalty": {
+            "endpointId": "llama-swap.local.local-llama-3-1-8b-instruct",
+            "active": false
+          }
+        }
+      }
+    },
+    "controller": {
+      "endpointId": "llama-swap.local.local-llama-3-1-8b-instruct",
+      "vendorId": "llama-swap",
+      "observation": {
+        "requestId": "req-run29-phase5-controller",
+        "endpointId": "llama-swap.local.local-llama-3-1-8b-instruct",
+        "routingDiagnostics": {
+          "retrievalReceiptId": "conversation-main-retrieval-receipt",
+          "routingModel": {
+            "enabled": true,
+            "endpointId": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+            "preferredEndpointIds": [
+              "openai.litellm.global.openai-gpt-4-1-mini-fast"
+            ],
+            "ignoredEndpointIds": []
+          },
+          "aliasResolution": {
+            "requestedModel": "gpt-5.4",
+            "aliasId": "gpt-5.4",
+            "resolvedModelIds": [
+              "local/llama-3.1-8b-instruct",
+              "openai/gpt-4.1-mini-fast"
+            ],
+            "allowEndpoints": [
+              "llama-swap.local.local-llama-3-1-8b-instruct",
+              "openai.litellm.global.openai-gpt-4-1-mini-fast"
+            ]
+          },
+          "controllerRouting": {
+            "active": true,
+            "acceptedDirectives": {
+              "strategy": "quality",
+              "preferredEndpointIds": [
+                "openai.litellm.global.openai-gpt-4-1-mini-fast"
+              ]
+            }
+          },
+          "routingMode": {
+            "source": "request-override",
+            "requestedOverride": "controller",
+            "effectiveMode": "controller"
+          },
+          "rewrite": {
+            "requestedModel": "gpt-5.4",
+            "downstreamModelId": "local/llama-3.1-8b-instruct",
+            "applied": true,
+            "reason": "requested-model-rewritten-for-selected-endpoint"
+          },
+          "observedProfile": {
+            "endpointId": "llama-swap.local.local-llama-3-1-8b-instruct",
+            "source": "runtime-state",
+            "readMode": "per-request",
+            "measuredAtMs": 1778527862122
+          },
+          "effectiveMetrics": {
+            "quality": {
+              "value": 0.5,
+              "source": "default"
+            },
+            "latency": {
+              "value": 0.9825332012286789,
+              "source": "measured",
+              "measuredAtMs": 1778527862122,
+              "freshnessWeight": 0.9999237567168052
+            },
+            "throughput": {
+              "value": 0.9999047013456607,
+              "source": "measured",
+              "measuredAtMs": 1778527862122,
+              "freshnessWeight": 0.9998094026913213
+            },
+            "reliability": {
+              "value": 0.9999885632895236,
+              "source": "measured",
+              "measuredAtMs": 1778527862122,
+              "freshnessWeight": 0.9999618776317452
+            },
+            "cost": {
+              "value": 0.5,
+              "source": "default"
+            }
+          },
+          "throughputPenalty": {
+            "endpointId": "llama-swap.local.local-llama-3-1-8b-instruct",
+            "active": false
+          }
+        }
+      }
+    },
+    "hybrid": {
+      "endpointId": "llama-swap.local.local-llama-3-1-8b-instruct",
+      "vendorId": "llama-swap",
+      "observation": {
+        "requestId": "req-run29-phase5-hybrid",
+        "endpointId": "llama-swap.local.local-llama-3-1-8b-instruct",
+        "routingDiagnostics": {
+          "retrievalReceiptId": "conversation-main-retrieval-receipt",
+          "routingModel": {
+            "enabled": true,
+            "endpointId": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+            "preferredEndpointIds": [
+              "openai.litellm.global.openai-gpt-4-1-mini-fast"
+            ],
+            "ignoredEndpointIds": []
+          },
+          "aliasResolution": {
+            "requestedModel": "gpt-5.4",
+            "aliasId": "gpt-5.4",
+            "resolvedModelIds": [
+              "local/llama-3.1-8b-instruct",
+              "openai/gpt-4.1-mini-fast"
+            ],
+            "allowEndpoints": [
+              "llama-swap.local.local-llama-3-1-8b-instruct",
+              "openai.litellm.global.openai-gpt-4-1-mini-fast"
+            ]
+          },
+          "difficultyRouting": {
+            "difficulty": "easy",
+            "strategy": "cost",
+            "fallbackApplied": false,
+            "cacheHit": true,
+            "rubricSignals": {
+              "contextTokens": 16,
+              "toolCount": 0,
+              "historyTurnCount": 1,
+              "instructionConstraintCount": 0,
+              "decompositionKeywordCount": 0,
+              "codeOrSchemaBurden": false
+            }
+          },
+          "controllerRouting": {
+            "active": true,
+            "acceptedDirectives": {
+              "strategy": "quality",
+              "preferredEndpointIds": [
+                "openai.litellm.global.openai-gpt-4-1-mini-fast"
+              ]
+            }
+          },
+          "hybridArbitration": {
+            "active": true,
+            "difficultyStrategy": "cost",
+            "finalStrategy": "quality",
+            "controllerChangedPlan": true,
+            "dominantSignal": "controller",
+            "preferredEndpointIds": [
+              "openai.litellm.global.openai-gpt-4-1-mini-fast"
+            ]
+          },
+          "routingMode": {
+            "source": "request-override",
+            "requestedOverride": "hybrid",
+            "effectiveMode": "hybrid"
+          },
+          "rewrite": {
+            "requestedModel": "gpt-5.4",
+            "downstreamModelId": "local/llama-3.1-8b-instruct",
+            "applied": true,
+            "reason": "requested-model-rewritten-for-selected-endpoint"
+          },
+          "observedProfile": {
+            "endpointId": "llama-swap.local.local-llama-3-1-8b-instruct",
+            "source": "runtime-state",
+            "readMode": "per-request",
+            "measuredAtMs": 1778527862122,
+            "difficultyBucket": "easy",
+            "bucketOverrideApplied": true
+          },
+          "effectiveMetrics": {
+            "quality": {
+              "value": 0.5,
+              "source": "default"
+            },
+            "latency": {
+              "value": 0.9878478563674569,
+              "source": "measured",
+              "measuredAtMs": 1778527862122,
+              "freshnessWeight": 0.9998036275824291
+            },
+            "throughput": {
+              "value": 0.9997545706288467,
+              "source": "measured",
+              "measuredAtMs": 1778527862122,
+              "freshnessWeight": 0.9995091412576932
+            },
+            "reliability": {
+              "value": 0.9999705426911426,
+              "source": "measured",
+              "measuredAtMs": 1778527862122,
+              "freshnessWeight": 0.9999018089704754
+            },
+            "cost": {
+              "value": 0.5,
+              "source": "default"
+            }
+          },
+          "throughputPenalty": {
+            "endpointId": "llama-swap.local.local-llama-3-1-8b-instruct",
+            "active": false
+          }
+        }
+      }
+    }
+  },
+  "intelligentModeMatrix": {
+    "baseline": {
+      "endpointId": "llama-swap.local.local-llama-3-1-8b-instruct",
+      "vendorId": "llama-swap",
+      "observation": {
+        "requestId": "req-run29-phase5-intelligent-baseline",
+        "endpointId": "llama-swap.local.local-llama-3-1-8b-instruct",
+        "routingDiagnostics": {
+          "retrievalReceiptId": "conversation-main-retrieval-receipt",
+          "routingModel": {
+            "enabled": true,
+            "endpointId": "openai.personal.primary.us-east-1.fast",
+            "preferredEndpointIds": [
+              "openai.personal.primary.us-east-1.fast"
+            ],
+            "ignoredEndpointIds": [
+              "openai.personal.primary.us-east-1.fast"
+            ]
+          },
+          "aliasResolution": {
+            "requestedModel": "gpt-5.4-intelligent",
+            "aliasId": "gpt-5.4-intelligent",
+            "resolvedModelIds": [
+              "local/llama-3.1-8b-instruct",
+              "openai/gpt-4.1-mini-fast"
+            ],
+            "allowEndpoints": [
+              "llama-swap.local.local-llama-3-1-8b-instruct",
+              "openai.litellm.global.openai-gpt-4-1-mini-fast"
+            ]
+          },
+          "routingMode": {
+            "source": "request-override",
+            "requestedOverride": "baseline",
+            "effectiveMode": "baseline"
+          },
+          "rewrite": {
+            "requestedModel": "gpt-5.4-intelligent",
+            "downstreamModelId": "local/llama-3.1-8b-instruct",
+            "applied": true,
+            "reason": "requested-model-rewritten-for-selected-endpoint"
+          },
+          "observedProfile": {
+            "endpointId": "llama-swap.local.local-llama-3-1-8b-instruct",
+            "source": "runtime-state",
+            "readMode": "per-request",
+            "measuredAtMs": 1778527862215
+          },
+          "effectiveMetrics": {
+            "quality": {
+              "value": 0.5,
+              "source": "default"
+            },
+            "latency": {
+              "value": 0.9831364811929185,
+              "source": "measured",
+              "measuredAtMs": 1778527862215,
+              "freshnessWeight": 0.9999399290486833
+            },
+            "throughput": {
+              "value": 0.999924914693807,
+              "source": "measured",
+              "measuredAtMs": 1778527862215,
+              "freshnessWeight": 0.999849829387614
+            },
+            "reliability": {
+              "value": 0.9999909892219789,
+              "source": "measured",
+              "measuredAtMs": 1778527862215,
+              "freshnessWeight": 0.9999699640732632
+            },
+            "cost": {
+              "value": 0.5,
+              "source": "default"
+            }
+          },
+          "throughputPenalty": {
+            "endpointId": "llama-swap.local.local-llama-3-1-8b-instruct",
+            "active": false
+          }
+        }
+      }
+    },
+    "difficulty": {
+      "endpointId": "llama-swap.local.local-llama-3-1-8b-instruct",
+      "vendorId": "llama-swap",
+      "observation": {
+        "requestId": "req-run29-phase5-intelligent-difficulty",
+        "endpointId": "llama-swap.local.local-llama-3-1-8b-instruct",
+        "routingDiagnostics": {
+          "retrievalReceiptId": "conversation-main-retrieval-receipt",
+          "routingModel": {
+            "enabled": true,
+            "endpointId": "openai.personal.primary.us-east-1.fast",
+            "preferredEndpointIds": [
+              "openai.personal.primary.us-east-1.fast"
+            ],
+            "ignoredEndpointIds": [
+              "openai.personal.primary.us-east-1.fast"
+            ]
+          },
+          "aliasResolution": {
+            "requestedModel": "gpt-5.4-intelligent",
+            "aliasId": "gpt-5.4-intelligent",
+            "resolvedModelIds": [
+              "local/llama-3.1-8b-instruct",
+              "openai/gpt-4.1-mini-fast"
+            ],
+            "allowEndpoints": [
+              "llama-swap.local.local-llama-3-1-8b-instruct",
+              "openai.litellm.global.openai-gpt-4-1-mini-fast"
+            ]
+          },
+          "difficultyRouting": {
+            "difficulty": "easy",
+            "strategy": "cost",
+            "fallbackApplied": false,
+            "cacheHit": true,
+            "rubricSignals": {
+              "contextTokens": 16,
+              "toolCount": 0,
+              "historyTurnCount": 1,
+              "instructionConstraintCount": 0,
+              "decompositionKeywordCount": 0,
+              "codeOrSchemaBurden": false
+            }
+          },
+          "routingMode": {
+            "source": "request-override",
+            "requestedOverride": "difficulty",
+            "effectiveMode": "difficulty"
+          },
+          "rewrite": {
+            "requestedModel": "gpt-5.4-intelligent",
+            "downstreamModelId": "local/llama-3.1-8b-instruct",
+            "applied": true,
+            "reason": "requested-model-rewritten-for-selected-endpoint"
+          },
+          "observedProfile": {
+            "endpointId": "llama-swap.local.local-llama-3-1-8b-instruct",
+            "source": "runtime-state",
+            "readMode": "per-request",
+            "measuredAtMs": 1778527862215,
+            "difficultyBucket": "easy",
+            "bucketOverrideApplied": true
+          },
+          "effectiveMetrics": {
+            "quality": {
+              "value": 0.5,
+              "source": "default"
+            },
+            "latency": {
+              "value": 0.9901912602701918,
+              "source": "measured",
+              "measuredAtMs": 1778527862215,
+              "freshnessWeight": 0.999845209111021
+            },
+            "throughput": {
+              "value": 0.9998065338509023,
+              "source": "measured",
+              "measuredAtMs": 1778527862215,
+              "freshnessWeight": 0.9996130677018047
+            },
+            "reliability": {
+              "value": 0.9999767804680754,
+              "source": "measured",
+              "measuredAtMs": 1778527862215,
+              "freshnessWeight": 0.9999226015602513
+            },
+            "cost": {
+              "value": 0.5,
+              "source": "default"
+            }
+          },
+          "throughputPenalty": {
+            "endpointId": "llama-swap.local.local-llama-3-1-8b-instruct",
+            "active": false
+          }
+        }
+      }
+    },
+    "controller": {
+      "endpointId": "llama-swap.local.local-llama-3-1-8b-instruct",
+      "vendorId": "llama-swap",
+      "observation": {
+        "requestId": "req-run29-phase5-intelligent-controller",
+        "endpointId": "llama-swap.local.local-llama-3-1-8b-instruct",
+        "routingDiagnostics": {
+          "retrievalReceiptId": "conversation-main-retrieval-receipt",
+          "routingModel": {
+            "enabled": true,
+            "endpointId": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+            "preferredEndpointIds": [
+              "openai.litellm.global.openai-gpt-4-1-mini-fast"
+            ],
+            "ignoredEndpointIds": []
+          },
+          "aliasResolution": {
+            "requestedModel": "gpt-5.4-intelligent",
+            "aliasId": "gpt-5.4-intelligent",
+            "resolvedModelIds": [
+              "local/llama-3.1-8b-instruct",
+              "openai/gpt-4.1-mini-fast"
+            ],
+            "allowEndpoints": [
+              "llama-swap.local.local-llama-3-1-8b-instruct",
+              "openai.litellm.global.openai-gpt-4-1-mini-fast"
+            ]
+          },
+          "controllerRouting": {
+            "active": true,
+            "acceptedDirectives": {
+              "strategy": "quality",
+              "preferredEndpointIds": [
+                "openai.litellm.global.openai-gpt-4-1-mini-fast"
+              ]
+            }
+          },
+          "routingMode": {
+            "source": "request-override",
+            "requestedOverride": "controller",
+            "effectiveMode": "controller"
+          },
+          "rewrite": {
+            "requestedModel": "gpt-5.4-intelligent",
+            "downstreamModelId": "local/llama-3.1-8b-instruct",
+            "applied": true,
+            "reason": "requested-model-rewritten-for-selected-endpoint"
+          },
+          "observedProfile": {
+            "endpointId": "llama-swap.local.local-llama-3-1-8b-instruct",
+            "source": "runtime-state",
+            "readMode": "per-request",
+            "measuredAtMs": 1778527862290
+          },
+          "effectiveMetrics": {
+            "quality": {
+              "value": 0.5,
+              "source": "default"
+            },
+            "latency": {
+              "value": 0.9837267584489446,
+              "source": "measured",
+              "measuredAtMs": 1778527862290,
+              "freshnessWeight": 0.9999283773563662
+            },
+            "throughput": {
+              "value": 0.9999104765045908,
+              "source": "measured",
+              "measuredAtMs": 1778527862290,
+              "freshnessWeight": 0.9998209530091814
+            },
+            "reliability": {
+              "value": 0.9999892564110804,
+              "source": "measured",
+              "measuredAtMs": 1778527862290,
+              "freshnessWeight": 0.9999641880369348
+            },
+            "cost": {
+              "value": 0.5,
+              "source": "default"
+            }
+          },
+          "throughputPenalty": {
+            "endpointId": "llama-swap.local.local-llama-3-1-8b-instruct",
+            "active": false
+          }
+        }
+      }
+    },
+    "hybrid": {
+      "endpointId": "llama-swap.local.local-llama-3-1-8b-instruct",
+      "vendorId": "llama-swap",
+      "observation": {
+        "requestId": "req-run29-phase5-intelligent-hybrid",
+        "endpointId": "llama-swap.local.local-llama-3-1-8b-instruct",
+        "routingDiagnostics": {
+          "retrievalReceiptId": "conversation-main-retrieval-receipt",
+          "routingModel": {
+            "enabled": true,
+            "endpointId": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+            "preferredEndpointIds": [
+              "openai.litellm.global.openai-gpt-4-1-mini-fast"
+            ],
+            "ignoredEndpointIds": []
+          },
+          "aliasResolution": {
+            "requestedModel": "gpt-5.4-intelligent",
+            "aliasId": "gpt-5.4-intelligent",
+            "resolvedModelIds": [
+              "local/llama-3.1-8b-instruct",
+              "openai/gpt-4.1-mini-fast"
+            ],
+            "allowEndpoints": [
+              "llama-swap.local.local-llama-3-1-8b-instruct",
+              "openai.litellm.global.openai-gpt-4-1-mini-fast"
+            ]
+          },
+          "difficultyRouting": {
+            "difficulty": "easy",
+            "strategy": "cost",
+            "fallbackApplied": false,
+            "cacheHit": true,
+            "rubricSignals": {
+              "contextTokens": 16,
+              "toolCount": 0,
+              "historyTurnCount": 1,
+              "instructionConstraintCount": 0,
+              "decompositionKeywordCount": 0,
+              "codeOrSchemaBurden": false
+            }
+          },
+          "controllerRouting": {
+            "active": true,
+            "acceptedDirectives": {
+              "strategy": "quality",
+              "preferredEndpointIds": [
+                "openai.litellm.global.openai-gpt-4-1-mini-fast"
+              ]
+            }
+          },
+          "hybridArbitration": {
+            "active": true,
+            "difficultyStrategy": "cost",
+            "finalStrategy": "quality",
+            "controllerChangedPlan": true,
+            "dominantSignal": "controller",
+            "preferredEndpointIds": [
+              "openai.litellm.global.openai-gpt-4-1-mini-fast"
+            ]
+          },
+          "routingMode": {
+            "source": "request-override",
+            "requestedOverride": "hybrid",
+            "effectiveMode": "hybrid"
+          },
+          "rewrite": {
+            "requestedModel": "gpt-5.4-intelligent",
+            "downstreamModelId": "local/llama-3.1-8b-instruct",
+            "applied": true,
+            "reason": "requested-model-rewritten-for-selected-endpoint"
+          },
+          "observedProfile": {
+            "endpointId": "llama-swap.local.local-llama-3-1-8b-instruct",
+            "source": "runtime-state",
+            "readMode": "per-request",
+            "measuredAtMs": 1778527862290,
+            "difficultyBucket": "easy",
+            "bucketOverrideApplied": true
+          },
+          "effectiveMetrics": {
+            "quality": {
+              "value": 0.5,
+              "source": "default"
+            },
+            "latency": {
+              "value": 0.9878580009839175,
+              "source": "measured",
+              "measuredAtMs": 1778527862290,
+              "freshnessWeight": 0.9998244181305591
+            },
+            "throughput": {
+              "value": 0.9997805515645339,
+              "source": "measured",
+              "measuredAtMs": 1778527862290,
+              "freshnessWeight": 0.999561103129068
+            },
+            "reliability": {
+              "value": 0.9999736615633952,
+              "source": "measured",
+              "measuredAtMs": 1778527862290,
+              "freshnessWeight": 0.9999122052113171
+            },
+            "cost": {
+              "value": 0.5,
+              "source": "default"
+            }
+          },
+          "throughputPenalty": {
+            "endpointId": "llama-swap.local.local-llama-3-1-8b-instruct",
+            "active": false
+          }
+        }
+      }
+    }
+  },
+  "exactModel": {
+    "endpointId": "llama-swap.local.local-llama-3-1-8b-instruct",
+    "vendorId": "llama-swap",
+    "observation": {
+      "requestId": "req-run29-phase5-exact-model",
+      "endpointId": "llama-swap.local.local-llama-3-1-8b-instruct",
+      "routingDiagnostics": {
+        "retrievalReceiptId": "conversation-main-retrieval-receipt",
+        "routingModel": {
+          "enabled": true,
+          "endpointId": "openai.personal.primary.us-east-1.fast",
+          "preferredEndpointIds": [
+            "openai.personal.primary.us-east-1.fast"
+          ],
+          "ignoredEndpointIds": [
+            "openai.personal.primary.us-east-1.fast"
+          ]
+        },
+        "routingMode": {
+          "source": "request-override",
+          "requestedOverride": "baseline",
+          "effectiveMode": "baseline"
+        },
+        "rewrite": {
+          "requestedModel": "local/llama-3.1-8b-instruct",
+          "downstreamModelId": "local/llama-3.1-8b-instruct",
+          "applied": false,
+          "reason": "requested-model-matches-downstream"
+        },
+        "observedProfile": {
+          "endpointId": "llama-swap.local.local-llama-3-1-8b-instruct",
+          "source": "runtime-state",
+          "readMode": "per-request",
+          "measuredAtMs": 1778527862373
+        },
+        "effectiveMetrics": {
+          "quality": {
+            "value": 0.5,
+            "source": "default"
+          },
+          "latency": {
+            "value": 0.9888130157277792,
+            "source": "measured",
+            "measuredAtMs": 1778527862373,
+            "freshnessWeight": 0.9999399290486833
+          },
+          "throughput": {
+            "value": 0.999924914693807,
+            "source": "measured",
+            "measuredAtMs": 1778527862373,
+            "freshnessWeight": 0.999849829387614
+          },
+          "reliability": {
+            "value": 0.9999909892219789,
+            "source": "measured",
+            "measuredAtMs": 1778527862373,
+            "freshnessWeight": 0.9999699640732632
+          },
+          "cost": {
+            "value": 0.5,
+            "source": "default"
+          }
+        },
+        "throughputPenalty": {
+          "endpointId": "llama-swap.local.local-llama-3-1-8b-instruct",
+          "active": false
+        }
+      }
+    }
+  },
+  "invalidOverride": {
+    "status": 400,
+    "body": {
+      "error": "Invalid x-role-model-routing-mode header value \"unsupported-mode\". Expected one of: baseline, difficulty, controller, hybrid."
+    }
+  }
+}

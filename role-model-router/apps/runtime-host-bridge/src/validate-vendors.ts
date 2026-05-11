@@ -628,6 +628,24 @@ export async function runRuntimeVendorValidation(options: {
     localVendorId: string | undefined;
     remoteVendorId: string | undefined;
   };
+  modeMatrix: {
+    baseline: {
+      vendorId: string | undefined;
+      observation: Awaited<ReturnType<RuntimeBridgeBackend["readRequestObservation"]>>;
+    };
+    difficulty: {
+      vendorId: string | undefined;
+      observation: Awaited<ReturnType<RuntimeBridgeBackend["readRequestObservation"]>>;
+    };
+    controller: {
+      vendorId: string | undefined;
+      observation: Awaited<ReturnType<RuntimeBridgeBackend["readRequestObservation"]>>;
+    };
+    hybrid: {
+      vendorId: string | undefined;
+      observation: Awaited<ReturnType<RuntimeBridgeBackend["readRequestObservation"]>>;
+    };
+  };
   difficultyHybrid: {
     easyVendorId: string | undefined;
     hardVendorId: string | undefined;
@@ -784,6 +802,51 @@ export async function runRuntimeVendorValidation(options: {
             },
             "req-runtime-vendor-hybrid-alias",
           );
+          const modeMatrixPrompt = "Prefer the strongest remote endpoint for this request.";
+          const modeMatrixBaseline = await hybridRuntime.backend.executeResponses(
+            {
+              model: plan.aliasModelId,
+              input: modeMatrixPrompt,
+            },
+            "req-runtime-vendor-mode-baseline",
+            undefined,
+            {
+              routingModeOverride: "baseline",
+            },
+          );
+          const modeMatrixDifficulty = await hybridRuntime.backend.executeResponses(
+            {
+              model: plan.aliasModelId,
+              input: modeMatrixPrompt,
+            },
+            "req-runtime-vendor-mode-difficulty",
+            undefined,
+            {
+              routingModeOverride: "difficulty",
+            },
+          );
+          const modeMatrixController = await hybridRuntime.backend.executeResponses(
+            {
+              model: plan.aliasModelId,
+              input: modeMatrixPrompt,
+            },
+            "req-runtime-vendor-mode-controller",
+            undefined,
+            {
+              routingModeOverride: "controller",
+            },
+          );
+          const modeMatrixHybrid = await hybridRuntime.backend.executeResponses(
+            {
+              model: plan.aliasModelId,
+              input: modeMatrixPrompt,
+            },
+            "req-runtime-vendor-mode-hybrid",
+            undefined,
+            {
+              routingModeOverride: "hybrid",
+            },
+          );
           const hybridIntelligent = await hybridRuntime.backend.executeResponses(
             {
               model: plan.intelligentAliasModelId,
@@ -901,7 +964,7 @@ export async function runRuntimeVendorValidation(options: {
           const healthResponse = await fetch(`${hybridRuntime.baseUrl}/healthz`);
           const telemetrySummary = await hybridRuntime.backend.readTelemetrySummary();
           const telemetryRows = await hybridRuntime.backend.listTelemetryComparisonRows();
-          const telemetryRequests = await hybridRuntime.backend.listTelemetryRequests({ limit: 10 });
+          const telemetryRequests = await hybridRuntime.backend.listTelemetryRequests({ limit: 20 });
           const localObservation = await localRuntime.backend.readRequestObservation(
             "req-runtime-vendor-local-direct",
           );
@@ -910,6 +973,18 @@ export async function runRuntimeVendorValidation(options: {
           );
           const hybridAliasObservation = await hybridRuntime.backend.readRequestObservation(
             "req-runtime-vendor-hybrid-alias",
+          );
+          const modeMatrixBaselineObservation = await hybridRuntime.backend.readRequestObservation(
+            "req-runtime-vendor-mode-baseline",
+          );
+          const modeMatrixDifficultyObservation = await hybridRuntime.backend.readRequestObservation(
+            "req-runtime-vendor-mode-difficulty",
+          );
+          const modeMatrixControllerObservation = await hybridRuntime.backend.readRequestObservation(
+            "req-runtime-vendor-mode-controller",
+          );
+          const modeMatrixHybridObservation = await hybridRuntime.backend.readRequestObservation(
+            "req-runtime-vendor-mode-hybrid",
           );
           const hybridIntelligentObservation = await hybridRuntime.backend.readRequestObservation(
             "req-runtime-vendor-hybrid-intelligent",
@@ -951,6 +1026,24 @@ export async function runRuntimeVendorValidation(options: {
               executionMode: (await hybridRuntime.backend.readRuntimeSummary()).executionMode,
               localVendorId: hybridLocal.vendorId,
               remoteVendorId: hybridRemote.vendorId,
+            },
+            modeMatrix: {
+              baseline: {
+                vendorId: modeMatrixBaseline.vendorId,
+                observation: modeMatrixBaselineObservation,
+              },
+              difficulty: {
+                vendorId: modeMatrixDifficulty.vendorId,
+                observation: modeMatrixDifficultyObservation,
+              },
+              controller: {
+                vendorId: modeMatrixController.vendorId,
+                observation: modeMatrixControllerObservation,
+              },
+              hybrid: {
+                vendorId: modeMatrixHybrid.vendorId,
+                observation: modeMatrixHybridObservation,
+              },
             },
             difficultyHybrid: {
               easyVendorId: hybridDifficultyEasy.vendorId,

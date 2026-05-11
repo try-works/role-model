@@ -1,0 +1,13 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/29-router-runtime-request-rewriter-hybrid-mode/role-model-router/apps/runtime-host-bridge[39m
+
+(node:97056) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [32mΓ£ô[39m test/index.test.ts [2m([22m[2m45 tests[22m[2m | [22m[33m43 skipped[39m[2m)[22m[33m 383[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m runtime-host-bridge[2m > [22mpersists alias-default hybrid arbitration and rewrite-applied diagnostics for runtime-backed chat requests [33m 364[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m2 passed[39m[22m[2m | [22m[33m43 skipped[39m[90m (45)[39m
+[2m   Start at [22m 03:07:06
+[2m   Duration [22m 1.67s[2m (transform 547ms, setup 0ms, collect 746ms, tests 383ms, environment 0ms, prepare 222ms)[22m
+

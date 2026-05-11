@@ -822,3 +822,31 @@
   - the current live mixed-pool proof uses strategy-level controller guidance and endpoint preference rather than richer role-task rewriting, which remains owned by later runs
   - the legacy global controller-assignment API still exists as an operator surface but remains intentionally distinct from request-time controller inference
   - later runs still need request rewriting, hybrid arbitration, UI surfaces, and final end-to-end runtime integration on top of this controller-guided baseline
+
+### Run `29-router-runtime-request-rewriter-hybrid-mode`
+
+- Run folder: `/.recursive/run/29-router-runtime-request-rewriter-hybrid-mode/`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - the bridge now accepts per-request routing-mode overrides for `baseline`, `difficulty`, `controller`, and `hybrid`, rejects invalid values deterministically, and records whether the effective mode came from a request override or alias default
+  - the bridge now records explicit rewrite receipts and hybrid-arbitration receipts, including rewrite-applied versus rewrite-skipped outcomes, downstream model ids, hybrid strategy changes, and controller-dominant planning signals
+  - runtime observations, same-pool validator proof, and agent-operated readback now expose durable `routingDiagnostics.routingMode`, `routingDiagnostics.rewrite`, and `routingDiagnostics.hybridArbitration` metadata across mixed local-plus-remote endpoint pools while preserving exact-model additive compatibility
+- Why:
+  - to complete the backend routing-strategy surface before run 30 performs proposal-wide runtime convergence, UI work, and final end-to-end verification on top of the same local-plus-remote routing contract
+- How:
+  - implemented with strict RED/GREEN TDD across bridge ingress, planning, runtime-observability diagnostics, and mixed-vendor validator slices, then validated through `runtime-host-bridge` tests, `runtime-observability` tests, `protocol-routing` tests, `runtime:validate-vendors`, `runtime:validate-host`, `schemas:validate`, and agent-operated readback QA
+- What was not done:
+  - no proposal-wide convergence audit, integrated runtime UI implementation, or final end-to-end strategy closeout shipped in this run
+- Known issues / follow-ups:
+  - the legacy global controller-assignment API still exists as an operator surface but remains intentionally distinct from per-request override and hybrid-routing behavior
+  - later runs still need final integrated runtime convergence, UI surfaces, and proposal-wide verification on top of the now-complete backend routing surface

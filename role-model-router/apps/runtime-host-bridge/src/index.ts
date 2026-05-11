@@ -28,6 +28,7 @@ import {
   type RuntimeCapturePolicy,
   type RuntimeObservationBundle,
   type RuntimeRoutingDiagnostics,
+  type RuntimeRoutingMode,
 } from "@role-model-router/runtime-observability";
 import {
   createToolRegistry,
@@ -202,7 +203,7 @@ export interface BridgeExecutionPlan {
   readonly routingModel?: RoutingModelSelection;
   readonly routingDiagnostics?: Pick<
     RuntimeRoutingDiagnostics,
-    "aliasResolution" | "difficultyRouting" | "controllerRouting"
+    "aliasResolution" | "difficultyRouting" | "controllerRouting" | "hybridArbitration" | "routingMode"
   >;
 }
 
@@ -606,21 +607,21 @@ function readObservedOverrideMaxDifficultyByEndpointId(input: {
 }
 
 function maybeApplyDifficultyRouting(input: {
+  readonly effectiveRoutingMode: RuntimeRoutingMode;
   readonly requestedModel: string;
   readonly modelAliases: readonly UnifiedRuntimeModelAliasConfig[];
   readonly messages: readonly OpenAIChatCompletionsMessage[];
   readonly contextTokens: number;
   readonly toolCount: number;
   readonly allowEndpoints: readonly string[];
-  readonly routingDiagnostics?: Pick<RuntimeRoutingDiagnostics, "aliasResolution">;
+  readonly routingDiagnostics?: Pick<RuntimeRoutingDiagnostics, "aliasResolution" | "routingMode">;
   readonly difficultyContext?: BridgeDifficultyRoutingContext;
 }): {
   readonly allowEndpoints: readonly string[];
   readonly strategy: "balanced" | "cost" | "quality";
-  readonly routingDiagnostics?: Pick<RuntimeRoutingDiagnostics, "aliasResolution" | "difficultyRouting">;
+  readonly routingDiagnostics?: Pick<RuntimeRoutingDiagnostics, "aliasResolution" | "routingMode" | "difficultyRouting">;
 } {
-  const alias = input.modelAliases.find((entry) => entry.aliasId === input.requestedModel);
-  if (!alias || alias.mode !== "difficulty") {
+  if (!shouldApplyDifficultyRouting(input.effectiveRoutingMode)) {
     return {
       allowEndpoints: input.allowEndpoints,
       strategy: "balanced",
@@ -710,21 +711,21 @@ function collectPreferredEndpointIds(
 }
 
 function maybeApplyControllerRouting(input: {
+  readonly effectiveRoutingMode: RuntimeRoutingMode;
   readonly requestedModel: string;
   readonly modelAliases: readonly UnifiedRuntimeModelAliasConfig[];
   readonly routingRequest: Parameters<typeof routeRuntimeRequest>[0]["request"];
-  readonly routingDiagnostics?: Pick<RuntimeRoutingDiagnostics, "aliasResolution" | "difficultyRouting">;
+  readonly routingDiagnostics?: Pick<RuntimeRoutingDiagnostics, "aliasResolution" | "routingMode" | "difficultyRouting">;
   readonly controllerContext?: BridgeControllerRoutingContext;
 }): {
   readonly routingRequest: Parameters<typeof routeRuntimeRequest>[0]["request"];
   readonly routingModel?: RoutingModelSelection;
   readonly routingDiagnostics?: Pick<
     RuntimeRoutingDiagnostics,
-    "aliasResolution" | "difficultyRouting" | "controllerRouting"
+    "aliasResolution" | "routingMode" | "difficultyRouting" | "controllerRouting" | "hybridArbitration"
   >;
 } {
-  const alias = input.modelAliases.find((entry) => entry.aliasId === input.requestedModel);
-  if (!alias || alias.mode !== "intelligent") {
+  if (!shouldApplyControllerRouting(input.effectiveRoutingMode)) {
     return {
       routingRequest: input.routingRequest,
       routingDiagnostics: input.routingDiagnostics,
@@ -738,6 +739,13 @@ function maybeApplyControllerRouting(input: {
     };
   }
   if (!guidance) {
+    const hybridArbitration = summarizeHybridArbitration({
+      effectiveRoutingMode: input.effectiveRoutingMode,
+      routingRequest: input.routingRequest,
+      controllerContext: input.controllerContext,
+      preferredEndpointIds: [],
+      finalStrategy: input.routingRequest.strategy,
+    });
     return {
       routingRequest: input.routingRequest,
       routingDiagnostics: {
@@ -749,6 +757,7 @@ function maybeApplyControllerRouting(input: {
             ? { fallbackReason: input.controllerContext.fallbackReason }
             : {}),
         },
+        ...(hybridArbitration ? { hybridArbitration } : {}),
       },
     };
   }
@@ -761,6 +770,15 @@ function maybeApplyControllerRouting(input: {
     guidance.taskType && guidance.taskType !== input.routingRequest.taskType
       ? (guidance.requiredCapabilities ?? input.routingRequest.requiredCapabilities)
       : mergeCapabilityList(input.routingRequest.requiredCapabilities, guidance.requiredCapabilities);
+  const finalStrategy = guidance.strategy ?? input.routingRequest.strategy;
+  const hybridArbitration = summarizeHybridArbitration({
+    effectiveRoutingMode: input.effectiveRoutingMode,
+    routingRequest: input.routingRequest,
+    controllerContext: input.controllerContext,
+    guidance,
+    preferredEndpointIds,
+    finalStrategy,
+  });
 
   return {
     routingRequest: {
@@ -802,6 +820,7 @@ function maybeApplyControllerRouting(input: {
           ...(preferredEndpointIds.length ? { preferredEndpointIds } : {}),
         },
       },
+      ...(hybridArbitration ? { hybridArbitration } : {}),
     },
   };
 }
@@ -924,11 +943,13 @@ export interface StartBridgeServerOptions {
     body: OpenAIChatCompletionsBody,
     requestId: string,
     streamWriter?: BridgeStreamWriter,
+    requestOptions?: BridgeExecutionRequestOptions,
   ) => Promise<BridgeChatCompletionsExecutionResult>;
   readonly executeResponses: (
     body: OpenAIResponsesBody,
     requestId: string,
     streamWriter?: BridgeStreamWriter,
+    requestOptions?: BridgeExecutionRequestOptions,
   ) => Promise<BridgeResponsesExecutionResult>;
   readonly readVersionInfo?: () => Promise<unknown>;
   readonly listActivityMetrics?: () => Promise<unknown>;
@@ -976,11 +997,13 @@ export interface RuntimeBridgeBackend {
     body: OpenAIChatCompletionsBody,
     requestId: string,
     streamWriter?: BridgeStreamWriter,
+    requestOptions?: BridgeExecutionRequestOptions,
   ) => Promise<BridgeChatCompletionsExecutionResult>;
   executeResponses: (
     body: OpenAIResponsesBody,
     requestId: string,
     streamWriter?: BridgeStreamWriter,
+    requestOptions?: BridgeExecutionRequestOptions,
   ) => Promise<BridgeResponsesExecutionResult>;
   readRuntimeSummary(): Promise<{
     lifecycleSummary: EndpointRegistryResult["lifecycleSummary"];
@@ -1101,6 +1124,10 @@ export interface BridgeServerOptions {
   readonly unifiedRuntimeConfigPath?: string;
 }
 
+export interface BridgeExecutionRequestOptions {
+  readonly routingModeOverride?: RuntimeRoutingMode;
+}
+
 class BridgeHttpError extends Error {
   readonly statusCode: number;
 
@@ -1140,6 +1167,55 @@ function createVendorError(vendorId: string, message: string): BridgeHttpError {
       code: normalized.errorClass,
     },
   });
+}
+
+const VALID_RUNTIME_ROUTING_MODES = ["baseline", "difficulty", "controller", "hybrid"] as const;
+
+function parseRuntimeRoutingModeOverride(value: string): RuntimeRoutingMode {
+  if ((VALID_RUNTIME_ROUTING_MODES as readonly string[]).includes(value)) {
+    return value as RuntimeRoutingMode;
+  }
+  throw new BridgeHttpError(400, {
+    error: `Invalid x-role-model-routing-mode header value "${value}". Expected one of: baseline, difficulty, controller, hybrid.`,
+  });
+}
+
+function readBridgeExecutionRequestOptions(request: IncomingMessage): BridgeExecutionRequestOptions | undefined {
+  const routingModeOverrideHeader = request.headers["x-role-model-routing-mode"]?.toString().trim();
+  if (!routingModeOverrideHeader) {
+    return undefined;
+  }
+  return {
+    routingModeOverride: parseRuntimeRoutingModeOverride(routingModeOverrideHeader),
+  };
+}
+
+function summarizeRequestRoutingModeDiagnostics(
+  requestOptions?: BridgeExecutionRequestOptions,
+): RuntimeRoutingDiagnostics["routingMode"] | undefined {
+  if (!requestOptions?.routingModeOverride) {
+    return undefined;
+  }
+  return {
+    source: "request-override",
+    requestedOverride: requestOptions.routingModeOverride,
+    effectiveMode: requestOptions.routingModeOverride,
+  };
+}
+
+function summarizeRewriteDiagnostics(input: {
+  readonly requestedModel: string;
+  readonly downstreamModelId: string;
+}): RuntimeRoutingDiagnostics["rewrite"] {
+  return {
+    requestedModel: input.requestedModel,
+    downstreamModelId: input.downstreamModelId,
+    applied: input.requestedModel !== input.downstreamModelId,
+    reason:
+      input.requestedModel === input.downstreamModelId
+        ? "requested-model-matches-downstream"
+        : "requested-model-rewritten-for-selected-endpoint",
+  };
 }
 
 function createInactiveVendorStatus(vendorId: string): VendorRuntimeStatus {
@@ -2085,6 +2161,13 @@ function resolveRequestedModelPool(
   };
 }
 
+function resolveRequestedModelAlias(
+  requestedModel: string,
+  modelAliases: readonly UnifiedRuntimeModelAliasConfig[] = [],
+): UnifiedRuntimeModelAliasConfig | undefined {
+  return modelAliases.find((entry) => entry.aliasId === requestedModel);
+}
+
 async function resolveConfiguredModelAliases(
   readRuntimeConfig: StartBridgeServerOptions["readRuntimeConfig"],
 ): Promise<readonly UnifiedRuntimeModelAliasConfig[]> {
@@ -2175,6 +2258,99 @@ export function createDownstreamOpenAIProviderConfig(
   };
 }
 
+function toAliasRoutingMode(aliasMode: UnifiedRuntimeModelAliasConfig["mode"] | null | undefined): RuntimeRoutingMode {
+  switch (aliasMode) {
+    case "difficulty":
+      return "difficulty";
+    case "intelligent":
+      return "controller";
+    case "hybrid":
+      return "hybrid";
+    default:
+      return "baseline";
+  }
+}
+
+function summarizeAliasDefaultRoutingModeDiagnostics(input: {
+  readonly requestedModel: string;
+  readonly modelAliases: readonly UnifiedRuntimeModelAliasConfig[];
+  readonly effectiveRoutingMode: RuntimeRoutingMode;
+  readonly requestOptions?: BridgeExecutionRequestOptions;
+}): RuntimeRoutingDiagnostics["routingMode"] | undefined {
+  if (input.requestOptions?.routingModeOverride || input.effectiveRoutingMode === "baseline") {
+    return undefined;
+  }
+  const alias = resolveRequestedModelAlias(input.requestedModel, input.modelAliases);
+  if (!alias) {
+    return undefined;
+  }
+  return {
+    source: "alias-default",
+    aliasMode: toAliasRoutingMode(alias.mode),
+    effectiveMode: input.effectiveRoutingMode,
+  };
+}
+
+function resolveEffectiveRoutingMode(input: {
+  readonly requestedModel: string;
+  readonly modelAliases: readonly UnifiedRuntimeModelAliasConfig[];
+  readonly requestOptions?: BridgeExecutionRequestOptions;
+}): RuntimeRoutingMode {
+  if (input.requestOptions?.routingModeOverride) {
+    return input.requestOptions.routingModeOverride;
+  }
+  const alias = resolveRequestedModelAlias(input.requestedModel, input.modelAliases);
+  return toAliasRoutingMode(alias?.mode);
+}
+
+function shouldApplyDifficultyRouting(effectiveRoutingMode: RuntimeRoutingMode): boolean {
+  return effectiveRoutingMode === "difficulty" || effectiveRoutingMode === "hybrid";
+}
+
+function shouldApplyControllerRouting(effectiveRoutingMode: RuntimeRoutingMode): boolean {
+  return effectiveRoutingMode === "controller" || effectiveRoutingMode === "hybrid";
+}
+
+function summarizeHybridArbitration(input: {
+  readonly effectiveRoutingMode: RuntimeRoutingMode;
+  readonly routingRequest: Parameters<typeof routeRuntimeRequest>[0]["request"];
+  readonly controllerContext?: BridgeControllerRoutingContext;
+  readonly guidance?: NonNullable<BridgeControllerRoutingContext["resolvedGuidance"]>;
+  readonly preferredEndpointIds: readonly string[];
+  readonly finalStrategy: "balanced" | "cost" | "quality";
+}): RuntimeRoutingDiagnostics["hybridArbitration"] | undefined {
+  if (input.effectiveRoutingMode !== "hybrid") {
+    return undefined;
+  }
+  const controllerChangedPlan =
+    !input.controllerContext?.active || !input.guidance
+      ? false
+      : Boolean(
+          input.guidance.strategy && input.guidance.strategy !== input.routingRequest.strategy ||
+          typeof input.guidance.preferLocal === "boolean" &&
+            input.guidance.preferLocal !== input.routingRequest.preferLocal ||
+          input.preferredEndpointIds.length > 0 ||
+          input.guidance.requestedRoleId ||
+          input.guidance.taskType ||
+          (input.guidance.requiredCapabilities?.length ?? 0) > 0 ||
+          (input.guidance.preferredCapabilities?.length ?? 0) > 0
+        );
+  const dominantSignal =
+    !input.controllerContext?.active || !input.guidance
+      ? "difficulty"
+      : controllerChangedPlan
+        ? "controller"
+        : "aligned";
+  return {
+    active: true,
+    difficultyStrategy: input.routingRequest.strategy,
+    finalStrategy: input.finalStrategy,
+    controllerChangedPlan,
+    dominantSignal,
+    ...(input.preferredEndpointIds.length ? { preferredEndpointIds: input.preferredEndpointIds } : {}),
+  };
+}
+
 export function mapChatCompletionsRequest(
   registry: EndpointRegistryResult,
   body: OpenAIChatCompletionsBody,
@@ -2182,17 +2358,36 @@ export function mapChatCompletionsRequest(
   modelAliases: readonly UnifiedRuntimeModelAliasConfig[] = [],
   difficultyContext?: BridgeDifficultyRoutingContext,
   controllerContext?: BridgeControllerRoutingContext,
+  requestOptions?: BridgeExecutionRequestOptions,
 ): BridgeExecutionPlan {
   const contextTokens = estimateContextTokens(body.messages, body.tools?.length ?? 0);
   const { allowEndpoints, routingDiagnostics } = resolveRequestedModelPool(registry, body.model, modelAliases);
+  const effectiveRoutingMode = resolveEffectiveRoutingMode({
+    requestedModel: body.model,
+    modelAliases,
+    requestOptions,
+  });
+  const aliasDefaultRoutingMode = summarizeAliasDefaultRoutingModeDiagnostics({
+    requestedModel: body.model,
+    modelAliases,
+    effectiveRoutingMode,
+    requestOptions,
+  });
+  const baseRoutingDiagnostics = aliasDefaultRoutingMode
+    ? {
+        ...routingDiagnostics,
+        routingMode: aliasDefaultRoutingMode,
+      }
+    : routingDiagnostics;
   const difficultyRouting = maybeApplyDifficultyRouting({
+    effectiveRoutingMode,
     requestedModel: body.model,
     modelAliases,
     messages: body.messages,
     contextTokens,
     toolCount: body.tools?.length ?? 0,
     allowEndpoints,
-    routingDiagnostics,
+    routingDiagnostics: baseRoutingDiagnostics,
     difficultyContext,
   });
 
@@ -2203,6 +2398,7 @@ export function mapChatCompletionsRequest(
   const tools = body.tools?.map(toToolDefinition);
 
   const controllerRouting = maybeApplyControllerRouting({
+    effectiveRoutingMode,
     requestedModel: body.model,
     modelAliases,
     routingRequest: {
@@ -2246,18 +2442,37 @@ export function mapResponsesRequest(
   modelAliases: readonly UnifiedRuntimeModelAliasConfig[] = [],
   difficultyContext?: BridgeDifficultyRoutingContext,
   controllerContext?: BridgeControllerRoutingContext,
+  requestOptions?: BridgeExecutionRequestOptions,
 ): BridgeExecutionPlan {
   const messages = toResponsesInputMessages(body.input);
   const contextTokens = estimateContextTokens(messages, body.tools?.length ?? 0);
   const { allowEndpoints, routingDiagnostics } = resolveRequestedModelPool(registry, body.model, modelAliases);
+  const effectiveRoutingMode = resolveEffectiveRoutingMode({
+    requestedModel: body.model,
+    modelAliases,
+    requestOptions,
+  });
+  const aliasDefaultRoutingMode = summarizeAliasDefaultRoutingModeDiagnostics({
+    requestedModel: body.model,
+    modelAliases,
+    effectiveRoutingMode,
+    requestOptions,
+  });
+  const baseRoutingDiagnostics = aliasDefaultRoutingMode
+    ? {
+        ...routingDiagnostics,
+        routingMode: aliasDefaultRoutingMode,
+      }
+    : routingDiagnostics;
   const difficultyRouting = maybeApplyDifficultyRouting({
+    effectiveRoutingMode,
     requestedModel: body.model,
     modelAliases,
     messages,
     contextTokens,
     toolCount: body.tools?.length ?? 0,
     allowEndpoints,
-    routingDiagnostics,
+    routingDiagnostics: baseRoutingDiagnostics,
     difficultyContext,
   });
 
@@ -2268,6 +2483,7 @@ export function mapResponsesRequest(
   const tools = body.tools?.map(toResponsesToolDefinition);
 
   const controllerRouting = maybeApplyControllerRouting({
+    effectiveRoutingMode,
     requestedModel: body.model,
     modelAliases,
     routingRequest: {
@@ -3225,7 +3441,10 @@ function extractResponseId(responseBody: unknown): string | undefined {
 function setCorsHeaders(response: ServerResponse): void {
   response.setHeader("Access-Control-Allow-Origin", "*");
   response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-  response.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Request-ID");
+  response.setHeader(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Authorization, X-Request-ID, X-Role-Model-Routing-Mode",
+  );
 }
 
 function createRequestHandler(options: StartBridgeServerOptions) {
@@ -3287,6 +3506,7 @@ function createRequestHandler(options: StartBridgeServerOptions) {
     if (request.method === "POST" && url.pathname === "/v1/chat/completions") {
       try {
         const requestId = request.headers["x-request-id"]?.toString() ?? "req-runtime-host-bridge";
+        const requestOptions = readBridgeExecutionRequestOptions(request);
         const body = await readJsonBody(request);
         const parsedBody = parseChatCompletionsBody(body);
         if (parsedBody.stream) {
@@ -3317,7 +3537,7 @@ function createRequestHandler(options: StartBridgeServerOptions) {
             }
             response.write(serializedChunk);
           };
-          const result = await options.executeChatCompletions(parsedBody, requestId, streamWriter);
+          const result = await options.executeChatCompletions(parsedBody, requestId, streamWriter, requestOptions);
           if (!wroteStreamChunk) {
             response.writeHead(200, {
               "content-type": "text/event-stream; charset=utf-8",
@@ -3344,7 +3564,7 @@ function createRequestHandler(options: StartBridgeServerOptions) {
           response.end();
           return;
         }
-        const result = await options.executeChatCompletions(parsedBody, requestId);
+        const result = await options.executeChatCompletions(parsedBody, requestId, undefined, requestOptions);
         writeJson(response, 200, createChatCompletionsResponse(result), createExecutionHeaders({
           endpointId: result.endpointId,
           adapterFamily: result.adapterFamily,
@@ -3364,6 +3584,7 @@ function createRequestHandler(options: StartBridgeServerOptions) {
 
     if (request.method === "POST" && url.pathname === "/v1/responses") {
       const requestId = request.headers["x-request-id"]?.toString() ?? "req-runtime-host-bridge";
+      const requestOptions = readBridgeExecutionRequestOptions(request);
       const body = await readJsonBody(request);
       const parsedBody = parseResponsesBody(body);
       if (parsedBody.stream) {
@@ -3394,7 +3615,7 @@ function createRequestHandler(options: StartBridgeServerOptions) {
           }
           response.write(serializedChunk);
         };
-        const result = await options.executeResponses(parsedBody, requestId, streamWriter);
+        const result = await options.executeResponses(parsedBody, requestId, streamWriter, requestOptions);
         if (!wroteStreamChunk) {
           response.writeHead(200, {
             "content-type": "text/event-stream; charset=utf-8",
@@ -3420,7 +3641,7 @@ function createRequestHandler(options: StartBridgeServerOptions) {
         response.end();
         return;
       }
-      const result = await options.executeResponses(parsedBody, requestId);
+      const result = await options.executeResponses(parsedBody, requestId, undefined, requestOptions);
       writeJson(response, 200, createResponsesResponse(result), createExecutionHeaders({
         endpointId: result.endpointId,
         adapterFamily: result.adapterFamily,
@@ -4337,6 +4558,8 @@ export async function createRuntimeBridgeBackend(
     streamWriter?: BridgeStreamWriter,
     executionOptions?: {
       readonly persistObservation?: boolean;
+      readonly requestOptions?: BridgeExecutionRequestOptions;
+      readonly requestedModel?: string;
     },
   ) => {
     const observedDataConfig = resolveUnifiedRuntimeObservedDataConfig(currentUnifiedRuntimeConfig);
@@ -4588,11 +4811,20 @@ export async function createRuntimeBridgeBackend(
         readMode: "per-request",
       } as const);
     if (executionOptions?.persistObservation !== false) {
+      const requestRoutingMode = summarizeRequestRoutingModeDiagnostics(executionOptions?.requestOptions);
+      const rewriteDiagnostics = executionOptions?.requestedModel
+        ? summarizeRewriteDiagnostics({
+            requestedModel: executionOptions.requestedModel,
+            downstreamModelId: execution.target.modelId,
+          })
+        : undefined;
       const bundle = createRuntimeObservationBundle({
         decision: routed.decision,
         routingDiagnostics: {
           ...routed.routingDiagnostics,
           ...plan.routingDiagnostics,
+          ...(requestRoutingMode ? { routingMode: requestRoutingMode } : {}),
+          ...(rewriteDiagnostics ? { rewrite: rewriteDiagnostics } : {}),
           observedProfile: observedProfileDiagnostic,
           effectiveMetrics: summarizeEffectiveMetricsFromDecision(routed.decision),
           throughputPenalty: summarizeThroughputPenaltyFromDecision(routed.decision),
@@ -4652,9 +4884,15 @@ export async function createRuntimeBridgeBackend(
     readonly messages: readonly OpenAIChatCompletionsMessage[];
     readonly contextTokens: number;
     readonly toolCount: number;
+    readonly requestOptions?: BridgeExecutionRequestOptions;
   }): Promise<NonNullable<BridgeDifficultyRoutingContext["resolvedClassification"]> | undefined> => {
-    const alias = currentUnifiedRuntimeConfig?.modelAliases?.find((entry) => entry.aliasId === input.requestedModel);
-    if (!alias || alias.mode !== "difficulty") {
+    const modelAliases = currentUnifiedRuntimeConfig?.modelAliases ?? [];
+    const effectiveRoutingMode = resolveEffectiveRoutingMode({
+      requestedModel: input.requestedModel,
+      modelAliases,
+      requestOptions: input.requestOptions,
+    });
+    if (!shouldApplyDifficultyRouting(effectiveRoutingMode)) {
       return undefined;
     }
 
@@ -4827,9 +5065,15 @@ export async function createRuntimeBridgeBackend(
     readonly requestedModel: string;
     readonly messages: readonly OpenAIChatCompletionsMessage[];
     readonly toolCount: number;
+    readonly requestOptions?: BridgeExecutionRequestOptions;
   }): Promise<BridgeControllerRoutingContext | undefined> => {
-    const alias = currentUnifiedRuntimeConfig?.modelAliases?.find((entry) => entry.aliasId === input.requestedModel);
-    if (!alias || alias.mode !== "intelligent") {
+    const modelAliases = currentUnifiedRuntimeConfig?.modelAliases ?? [];
+    const effectiveRoutingMode = resolveEffectiveRoutingMode({
+      requestedModel: input.requestedModel,
+      modelAliases,
+      requestOptions: input.requestOptions,
+    });
+    if (!shouldApplyControllerRouting(effectiveRoutingMode)) {
       return undefined;
     }
 
@@ -4855,7 +5099,11 @@ export async function createRuntimeBridgeBackend(
       };
     }
 
-    const candidateEndpointIds = collectAllowedEndpointIds(currentRegistry, alias.modelIds);
+    const candidateEndpointIds = resolveRequestedModelPool(
+      currentRegistry,
+      input.requestedModel,
+      modelAliases,
+    ).allowEndpoints;
     const controllerMessages = buildControllerRoutingMessages({
       requestedModel: input.requestedModel,
       messages: input.messages,
@@ -4930,6 +5178,7 @@ export async function createRuntimeBridgeBackend(
       body: OpenAIChatCompletionsBody,
       requestId: string,
       streamWriter?: BridgeStreamWriter,
+      requestOptions?: BridgeExecutionRequestOptions,
     ): Promise<BridgeChatCompletionsExecutionResult> {
       if (currentUnifiedRuntimeConfig?.executionMode === "decision_only" && currentRegistry.endpoints.length === 0) {
         throw createVendorError("runtime", "Configure llama_swap.models or litellm_proxy.providers to enable execution.");
@@ -4940,12 +5189,14 @@ export async function createRuntimeBridgeBackend(
         messages: body.messages,
         contextTokens: estimateContextTokens(body.messages, body.tools?.length ?? 0),
         toolCount: body.tools?.length ?? 0,
+        requestOptions,
       });
       const resolvedControllerGuidance = await resolveControllerGuidance({
         requestId,
         requestedModel: body.model,
         messages: body.messages,
         toolCount: body.tools?.length ?? 0,
+        requestOptions,
       });
       const plan = mapChatCompletionsRequest(
         currentRegistry,
@@ -4970,12 +5221,17 @@ export async function createRuntimeBridgeBackend(
             : {}),
         },
         resolvedControllerGuidance,
+        requestOptions,
       );
       const { execution, toolExecutionResult, routingDecisionId } = await executeBridgePlan(
         plan,
         requestId,
         body.stream,
         streamWriter,
+        {
+          requestOptions,
+          requestedModel: body.model,
+        },
       );
       const costUsd =
         execution.normalized.vendorMetadata?.costUsd ?? execution.responseCapture.vendorMetadata?.costUsd;
@@ -5022,6 +5278,7 @@ export async function createRuntimeBridgeBackend(
       body: OpenAIResponsesBody,
       requestId: string,
       streamWriter?: BridgeStreamWriter,
+      requestOptions?: BridgeExecutionRequestOptions,
     ): Promise<BridgeResponsesExecutionResult> {
       if (currentUnifiedRuntimeConfig?.executionMode === "decision_only" && currentRegistry.endpoints.length === 0) {
         throw createVendorError("runtime", "Configure llama_swap.models or litellm_proxy.providers to enable execution.");
@@ -5033,12 +5290,14 @@ export async function createRuntimeBridgeBackend(
         messages: responseMessages,
         contextTokens: estimateContextTokens(responseMessages, body.tools?.length ?? 0),
         toolCount: body.tools?.length ?? 0,
+        requestOptions,
       });
       const resolvedControllerGuidance = await resolveControllerGuidance({
         requestId,
         requestedModel: body.model,
         messages: responseMessages,
         toolCount: body.tools?.length ?? 0,
+        requestOptions,
       });
       const plan = mapResponsesRequest(
         currentRegistry,
@@ -5063,8 +5322,12 @@ export async function createRuntimeBridgeBackend(
             : {}),
         },
         resolvedControllerGuidance,
+        requestOptions,
       );
-      const { execution, routingDecisionId } = await executeBridgePlan(plan, requestId, body.stream, streamWriter);
+      const { execution, routingDecisionId } = await executeBridgePlan(plan, requestId, body.stream, streamWriter, {
+        requestOptions,
+        requestedModel: body.model,
+      });
       const costUsd =
         execution.normalized.vendorMetadata?.costUsd ?? execution.responseCapture.vendorMetadata?.costUsd;
       const cacheUsed =

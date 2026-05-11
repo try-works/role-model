@@ -6,6 +6,8 @@ import {
 } from "@role-model-router/profile-aggregator";
 import type { ToolRegistryExecution } from "@role-model-router/tool-registry";
 
+export type RuntimeRoutingMode = "baseline" | "difficulty" | "controller" | "hybrid";
+
 export interface RuntimeRoutingDiagnostics {
   readonly retrievalReceiptId?: string;
   readonly aliasResolution?: {
@@ -47,6 +49,26 @@ export interface RuntimeRoutingDiagnostics {
       readonly preferLocal?: boolean;
       readonly preferredEndpointIds?: readonly string[];
     };
+  };
+  readonly hybridArbitration?: {
+    readonly active: boolean;
+    readonly difficultyStrategy: "balanced" | "cost" | "quality";
+    readonly finalStrategy: "balanced" | "cost" | "quality";
+    readonly controllerChangedPlan: boolean;
+    readonly dominantSignal: "difficulty" | "controller" | "aligned";
+    readonly preferredEndpointIds?: readonly string[];
+  };
+  readonly routingMode?: {
+    readonly source: "request-override" | "alias-default";
+    readonly requestedOverride?: RuntimeRoutingMode;
+    readonly aliasMode?: RuntimeRoutingMode;
+    readonly effectiveMode: RuntimeRoutingMode;
+  };
+  readonly rewrite?: {
+    readonly requestedModel: string;
+    readonly downstreamModelId: string;
+    readonly applied: boolean;
+    readonly reason: "requested-model-matches-downstream" | "requested-model-rewritten-for-selected-endpoint";
   };
   readonly observedProfile?: {
     readonly endpointId: string;

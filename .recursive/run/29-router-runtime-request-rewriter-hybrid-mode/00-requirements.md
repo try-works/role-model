@@ -1,6 +1,8 @@
 Run: `/.recursive/run/29-router-runtime-request-rewriter-hybrid-mode/`
 Phase: `00 Requirements`
-Status: `DRAFT`
+Status: `LOCKED`
+LockedAt: `2026-05-11T16:22:26Z`
+LockHash: `01c6c5e26356655e4f5af4f1cbd734a0d4315a440fae09a1b3cd304b78aa1862`
 Workflow version: `recursive-mode-audit-v1`
 Inputs:
 - `/docs/architecture/07-router-runtime-routing-strategy-lock.md`

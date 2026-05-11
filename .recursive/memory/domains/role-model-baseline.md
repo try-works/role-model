@@ -1,6 +1,6 @@
 Type: `domain`
 Status: `CURRENT`
-Scope: `Stable baseline ownership for the repo workspace, canonical protocol tree, shared packages, router family, fixtures, validation surfaces, and the repo-owned runtime/operator baseline extended through the controller-guided routing baseline in run 28.`
+Scope: `Stable baseline ownership for the repo workspace, canonical protocol tree, shared packages, router family, fixtures, validation surfaces, and the repo-owned runtime/operator baseline extended through the request-rewrite and hybrid-routing baseline in run 29.`
 Owns-Paths:
 - `/README.md`
 - `/LICENSE`
@@ -44,8 +44,9 @@ Source-Runs:
 - `26-router-runtime-difficulty-guided-routing`
 - `27-router-runtime-difficulty-learning-cache`
 - `28-router-runtime-controller-guided-routing`
+- `29-router-runtime-request-rewriter-hybrid-mode`
 Validated-At-Commit: `working-tree`
-Last-Validated: `2026-05-11T16:14:06Z`
+Last-Validated: `2026-05-11T19:32:50Z`
 Tags:
 - `baseline`
 - `workspace`
@@ -128,6 +129,9 @@ This repository now has a real product baseline rather than only recursive scaff
 - `/role-model-router/apps/runtime-host-bridge/src/index.ts` now executes request-time controller inference for intelligent aliases on both chat-completions and responses paths, validates structured controller directives, merges accepted guidance into existing `RoutingRequest` fields plus `routingModel.preferredEndpointIds`, and fails closed on invalid controller output
 - Runtime request observations and mixed-vendor validator proof now also expose durable `routingDiagnostics.controllerRouting` metadata with controller-active state, accepted directives, and explicit fallback reasons across mixed local-plus-remote runtime surfaces
 - The repo-owned validation floor now also proves mixed local-plus-remote controller steering, invalid-controller-output fallback, controller-inactive alias behavior, and exact-model backward compatibility through focused bridge tests, `runtime:validate-vendors`, and agent-operated readback
+- The runtime now also owns per-request routing-mode overrides for `baseline`, `difficulty`, `controller`, and `hybrid`, with deterministic invalid-value rejection and durable receipts that distinguish request overrides from alias-default routing modes
+- `/role-model-router/apps/runtime-host-bridge/src/index.ts` and `/role-model-router/packages/runtime-observability/src/index.ts` now persist durable `routingDiagnostics.rewrite` and `routingDiagnostics.hybridArbitration` metadata, including rewrite-applied versus rewrite-skipped outcomes, downstream model ids, hybrid strategy changes, controller dominance, and preferred endpoint guidance
+- The repo-owned validation floor now also proves same-pool override-mode execution, exact-model rewrite-skipped compatibility, explicit invalid-override `400` ingress failure, and mixed local-plus-remote readback of override, rewrite, and hybrid-arbitration diagnostics through focused bridge tests, `runtime:validate-vendors`, `runtime:validate-host`, and agent-operated QA
 
 ## Validation Path
 

@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import os from "node:os";
 import path from "node:path";
-import { mkdtemp, writeFile } from "node:fs/promises";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { DatabaseSync } from "node:sqlite";
 import { setTimeout as delay } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
@@ -110,6 +110,10 @@ function createDifficultyClassifierVendorScript(mode: "valid-hard" | "slow-hard"
 
 function createControllerVendorScript(): string {
   return `const http=require("node:http");const port=Number(process.env.PORT??process.argv[2]);const server=http.createServer((req,res)=>{if(req.url==="/health/liveliness"){res.statusCode=200;res.end("ok");return;}if(req.url==="/v1/chat/completions"){let body="";req.on("data",chunk=>body+=chunk);req.on("end",()=>{const parsed=JSON.parse(body||"{}");const joinedMessages=JSON.stringify(parsed.messages??[]);const isController=joinedMessages.includes("ROLE_MODEL_ROUTING_CONTROLLER");res.setHeader("content-type","application/json");res.end(JSON.stringify({id:"chat-controller-remote",object:"chat.completion",choices:[{index:0,message:{role:"assistant",content:isController?JSON.stringify({strategy:\"quality\",preferLocal:true}):"alias remote summary"},finish_reason:"stop"}],usage:{prompt_tokens:12,completion_tokens:4,total_tokens:16},_hidden_params:{response_cost:0.0012,cache_hit:false}}));});return;}res.statusCode=404;res.end("missing");});server.listen(port,"127.0.0.1");const shutdown=()=>server.close(()=>process.exit(0));process.on("SIGTERM",shutdown);process.on("SIGINT",shutdown);`;
+}
+
+function createHybridArbitrationVendorScript(): string {
+  return `const http=require("node:http");const port=Number(process.env.PORT??process.argv[2]);const server=http.createServer((req,res)=>{if(req.url==="/health/liveliness"){res.statusCode=200;res.end("ok");return;}if(req.url==="/v1/chat/completions"){let body="";req.on("data",chunk=>body+=chunk);req.on("end",()=>{const parsed=JSON.parse(body||"{}");const joinedMessages=JSON.stringify(parsed.messages??[]);const isClassifier=joinedMessages.includes("ROLE_MODEL_DIFFICULTY_CLASSIFIER");const isController=joinedMessages.includes("ROLE_MODEL_ROUTING_CONTROLLER");const content=isController?JSON.stringify({strategy:"quality",preferLocal:true}):(isClassifier?JSON.stringify({difficulty:"easy"}):"hybrid alias remote summary");res.setHeader("content-type","application/json");res.end(JSON.stringify({id:"chat-hybrid-remote",object:"chat.completion",choices:[{index:0,message:{role:"assistant",content},finish_reason:"stop"}],usage:{prompt_tokens:12,completion_tokens:4,total_tokens:16},_hidden_params:{response_cost:0.0012,cache_hit:false}}));});return;}res.statusCode=404;res.end("missing");});server.listen(port,"127.0.0.1");const shutdown=()=>server.close(()=>process.exit(0));process.on("SIGTERM",shutdown);process.on("SIGINT",shutdown);`;
 }
 
 function createSequencedDifficultyClassifierVendorScript(): string {
@@ -540,6 +544,275 @@ describe("runtime-host-bridge", () => {
     });
   });
 
+  test("uses a baseline override to bypass intelligent alias controller routing", () => {
+    const result = (
+      bridge as {
+        mapChatCompletionsRequest: (
+          value: EndpointRegistryResult,
+          body: Record<string, unknown>,
+          requestId: string,
+          modelAliases?: readonly {
+            aliasId: string;
+            mode?: "basic" | "difficulty" | "intelligent" | "hybrid" | null;
+            modelIds: readonly string[];
+          }[],
+          difficultyContext?: unknown,
+          controllerContext?: {
+            active?: boolean;
+            resolvedGuidance?: {
+              requestedRoleId?: string;
+              taskType?: string;
+              requiredCapabilities?: readonly string[];
+              preferredCapabilities?: readonly string[];
+              strategy?: "balanced" | "cost" | "quality";
+              preferLocal?: boolean;
+              preferredEndpointIds?: readonly string[];
+            };
+          },
+          requestOptions?: {
+            routingModeOverride?: "baseline" | "difficulty" | "controller" | "hybrid";
+          },
+        ) => {
+          routingRequest: {
+            taskType: string;
+            requiredCapabilities: readonly string[];
+            preferredCapabilities: readonly string[];
+            strategy: string;
+            preferLocal: boolean;
+            allowEndpoints: readonly string[];
+          };
+          routingModel?: {
+            endpointId: string;
+            preferredEndpointIds: readonly string[];
+          };
+          routingDiagnostics?: {
+            aliasResolution?: {
+              requestedModel: string;
+              aliasId: string;
+              resolvedModelIds: readonly string[];
+              allowEndpoints: readonly string[];
+            };
+            controllerRouting?: unknown;
+          };
+        };
+      }
+    ).mapChatCompletionsRequest(
+      registry,
+      {
+        model: "gpt-5.4",
+        messages: [{ role: "user", content: "Prepare a patch and preserve the schema contract." }],
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "lookupRegistry",
+              parameters: { type: "object", properties: {} },
+            },
+          },
+        ],
+      },
+      "req-host-intelligent-chat-override-001",
+      [
+        {
+          aliasId: "gpt-5.4",
+          mode: "intelligent",
+          modelIds: ["claude-3.7-sonnet", "openai/gpt-4.1-mini-fast"],
+        },
+      ],
+      undefined,
+      {
+        active: true,
+        resolvedGuidance: {
+          requestedRoleId: "coder.patch",
+          taskType: "code.edit",
+          requiredCapabilities: ["code.edit", "tools.function_calling"],
+          preferredCapabilities: ["reasoning.multi_step"],
+          strategy: "quality",
+          preferLocal: true,
+          preferredEndpointIds: [
+            "anthropic.team.shared.us-east-1.default",
+            "openai.personal.primary.us-east-1.fast",
+          ],
+        },
+      },
+      {
+        routingModeOverride: "baseline",
+      },
+    );
+
+    expect(result.routingRequest).toMatchObject({
+      taskType: "text.chat",
+      requiredCapabilities: ["text.chat"],
+      preferredCapabilities: [],
+      strategy: "balanced",
+      preferLocal: false,
+      allowEndpoints: [
+        "anthropic.team.shared.us-east-1.default",
+        "openai.personal.primary.us-east-1.fast",
+        "openai.personal.secondary.us-west-2.fast",
+      ],
+    });
+    expect(result.routingModel).toBeUndefined();
+    expect(result.routingDiagnostics).toEqual({
+      aliasResolution: {
+        requestedModel: "gpt-5.4",
+        aliasId: "gpt-5.4",
+        resolvedModelIds: ["claude-3.7-sonnet", "openai/gpt-4.1-mini-fast"],
+        allowEndpoints: [
+          "anthropic.team.shared.us-east-1.default",
+          "openai.personal.primary.us-east-1.fast",
+          "openai.personal.secondary.us-west-2.fast",
+        ],
+      },
+    });
+  });
+
+  test("records explicit hybrid arbitration when controller guidance alters the difficulty plan", () => {
+    const result = (
+      bridge as {
+        mapChatCompletionsRequest: (
+          value: EndpointRegistryResult,
+          body: Record<string, unknown>,
+          requestId: string,
+          modelAliases?: readonly {
+            aliasId: string;
+            mode?: "basic" | "difficulty" | "intelligent" | "hybrid" | null;
+            modelIds: readonly string[];
+          }[],
+          difficultyContext?: {
+            resolvedClassification?: {
+              difficulty: "easy" | "medium" | "hard";
+              fallbackApplied: boolean;
+              rubricSignals: {
+                contextTokens: number;
+                toolCount: number;
+                historyTurnCount: number;
+                instructionConstraintCount: number;
+                decompositionKeywordCount: number;
+                codeOrSchemaBurden: boolean;
+              };
+            };
+            endpointMaxDifficultyByEndpointId?: Record<string, "easy" | "medium" | "hard">;
+          },
+          controllerContext?: {
+            active?: boolean;
+            resolvedGuidance?: {
+              strategy?: "balanced" | "cost" | "quality";
+              preferLocal?: boolean;
+              preferredEndpointIds?: readonly string[];
+            };
+          },
+        ) => {
+          routingRequest: {
+            strategy: string;
+            preferLocal: boolean;
+            allowEndpoints: readonly string[];
+          };
+          routingDiagnostics?: {
+            routingMode?: {
+              source: string;
+              aliasMode?: string;
+              effectiveMode: string;
+            };
+            difficultyRouting?: {
+              difficulty: string;
+              strategy: string;
+            };
+            controllerRouting?: {
+              active: boolean;
+              acceptedDirectives?: {
+                strategy?: string;
+                preferLocal?: boolean;
+              };
+            };
+            hybridArbitration?: {
+              active: boolean;
+              difficultyStrategy: string;
+              finalStrategy: string;
+              controllerChangedPlan: boolean;
+              dominantSignal: string;
+            };
+          };
+        };
+      }
+    ).mapChatCompletionsRequest(
+      registry,
+      {
+        model: "gpt-5.4-hybrid",
+        messages: [{ role: "user", content: "Choose the best path for a short coding request." }],
+      },
+      "req-host-hybrid-chat-001",
+      [
+        {
+          aliasId: "gpt-5.4-hybrid",
+          mode: "hybrid",
+          modelIds: ["claude-3.7-sonnet", "openai/gpt-4.1-mini-fast"],
+        },
+      ],
+      {
+        resolvedClassification: {
+          difficulty: "easy",
+          fallbackApplied: false,
+          rubricSignals: {
+            contextTokens: 32,
+            toolCount: 0,
+            historyTurnCount: 1,
+            instructionConstraintCount: 0,
+            decompositionKeywordCount: 0,
+            codeOrSchemaBurden: false,
+          },
+        },
+        endpointMaxDifficultyByEndpointId: {
+          "anthropic.team.shared.us-east-1.default": "hard",
+          "openai.personal.primary.us-east-1.fast": "medium",
+          "openai.personal.secondary.us-west-2.fast": "easy",
+        },
+      },
+      {
+        active: true,
+        resolvedGuidance: {
+          strategy: "quality",
+          preferLocal: true,
+        },
+      },
+    );
+
+    expect(result.routingRequest).toMatchObject({
+      strategy: "quality",
+      preferLocal: true,
+      allowEndpoints: [
+        "anthropic.team.shared.us-east-1.default",
+        "openai.personal.primary.us-east-1.fast",
+        "openai.personal.secondary.us-west-2.fast",
+      ],
+    });
+    expect(result.routingDiagnostics).toMatchObject({
+      routingMode: {
+        source: "alias-default",
+        aliasMode: "hybrid",
+        effectiveMode: "hybrid",
+      },
+      difficultyRouting: {
+        difficulty: "easy",
+        strategy: "cost",
+      },
+      controllerRouting: {
+        active: true,
+        acceptedDirectives: {
+          strategy: "quality",
+          preferLocal: true,
+        },
+      },
+      hybridArbitration: {
+        active: true,
+        difficultyStrategy: "cost",
+        finalStrategy: "quality",
+        controllerChangedPlan: true,
+        dominantSignal: "controller",
+      },
+    });
+  });
+
   test("maps a difficulty-mode alias chat request into a gated allow-list and difficulty diagnostics", () => {
     const result = (
       bridge as {
@@ -648,6 +921,123 @@ describe("runtime-host-bridge", () => {
         toolCount: 2,
         historyTurnCount: 4,
       }),
+    });
+  });
+
+  test("uses a baseline override to bypass difficulty alias gating", () => {
+    const result = (
+      bridge as {
+        mapChatCompletionsRequest: (
+          value: EndpointRegistryResult,
+          body: Record<string, unknown>,
+          requestId: string,
+          modelAliases?: readonly {
+            aliasId: string;
+            mode?: "basic" | "difficulty" | "intelligent" | "hybrid" | null;
+            modelIds: readonly string[];
+          }[],
+          difficultyContext?: {
+            endpointMaxDifficultyByEndpointId?: Record<
+              string,
+              "easy" | "medium" | "hard"
+            >;
+          },
+          controllerContext?: unknown,
+          requestOptions?: {
+            routingModeOverride?: "baseline" | "difficulty" | "controller" | "hybrid";
+          },
+        ) => {
+          routingRequest: {
+            allowEndpoints: readonly string[];
+            strategy: string;
+          };
+          routingDiagnostics?: {
+            aliasResolution?: {
+              requestedModel: string;
+              aliasId: string;
+              resolvedModelIds: readonly string[];
+              allowEndpoints: readonly string[];
+            };
+            difficultyRouting?: unknown;
+          };
+        };
+      }
+    ).mapChatCompletionsRequest(
+      registry,
+      {
+        model: "gpt-5.4",
+        messages: [
+          { role: "system", content: "You are handling a strict schema-constrained migration." },
+          {
+            role: "user",
+            content:
+              "Analyze this large code-edit request, preserve backwards compatibility, satisfy multiple constraints, and produce a step-by-step plan with schema checks and test updates.",
+          },
+          {
+            role: "assistant",
+            content: "I will inspect the schema, update the implementation, and verify the output.",
+          },
+          {
+            role: "user",
+            content:
+              "Now finish the refactor, update the contract, and use the available tools to validate the change across the full workflow.",
+          },
+        ],
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "readSchema",
+              parameters: { type: "object", properties: {} },
+            },
+          },
+          {
+            type: "function",
+            function: {
+              name: "runTests",
+              parameters: { type: "object", properties: {} },
+            },
+          },
+        ],
+      },
+      "req-host-difficulty-chat-override-001",
+      [
+        {
+          aliasId: "gpt-5.4",
+          mode: "difficulty",
+          modelIds: ["claude-3.7-sonnet", "openai/gpt-4.1-mini-fast"],
+        },
+      ],
+      {
+        endpointMaxDifficultyByEndpointId: {
+          "anthropic.team.shared.us-east-1.default": "hard",
+          "openai.personal.primary.us-east-1.fast": "medium",
+          "openai.personal.secondary.us-west-2.fast": "easy",
+        },
+      },
+      undefined,
+      {
+        routingModeOverride: "baseline",
+      },
+    );
+
+    expect(result.routingRequest.strategy).toBe("balanced");
+    expect(result.routingRequest.allowEndpoints).toEqual([
+      "anthropic.team.shared.us-east-1.default",
+      "openai.personal.primary.us-east-1.fast",
+      "openai.personal.secondary.us-west-2.fast",
+    ]);
+    expect(result.routingDiagnostics).toEqual({
+      aliasResolution: {
+        requestedModel: "gpt-5.4",
+        aliasId: "gpt-5.4",
+        resolvedModelIds: ["claude-3.7-sonnet", "openai/gpt-4.1-mini-fast"],
+        allowEndpoints: [
+          "anthropic.team.shared.us-east-1.default",
+          "openai.personal.primary.us-east-1.fast",
+          "openai.personal.secondary.us-west-2.fast",
+        ],
+      },
     });
   });
 
@@ -2164,6 +2554,159 @@ describe("runtime-host-bridge", () => {
     }
   });
 
+  test("forwards x-role-model-routing-mode to chat-completions execution", async () => {
+    expect(typeof (bridge as { startBridgeServer?: unknown }).startBridgeServer).toBe("function");
+
+    let requestOptions:
+      | {
+          routingModeOverride?: string;
+        }
+      | undefined;
+
+    const server = await (
+      bridge as {
+        startBridgeServer: (options: {
+          host: string;
+          port: number;
+          registry: EndpointRegistryResult;
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+            streamWriter?: (chunk: Record<string, unknown>) => void | Promise<void>,
+            requestOptions?: {
+              routingModeOverride?: string;
+            },
+          ) => Promise<{
+            model: string;
+            endpointId: string;
+            adapterFamily: string;
+            outputText: string;
+            finishReason: string;
+            usage: {
+              inputTokens: number;
+              outputTokens: number;
+            };
+          }>;
+        }) => Promise<{ port: number; close(): Promise<void> }>;
+      }
+    ).startBridgeServer({
+      host: "127.0.0.1",
+      port: 0,
+      registry,
+      executeChatCompletions: async (_body, _requestId, _streamWriter, value) => {
+        requestOptions = value;
+        return {
+          model: "openai/gpt-4.1-mini-fast",
+          endpointId: "openai.personal.primary.us-east-1.fast",
+          adapterFamily: "ai-sdk-openai",
+          routingDecisionId: "decision-chat-routing-mode-123",
+          outputText: "ok",
+          finishReason: "stop",
+          usage: {
+            inputTokens: 1,
+            outputTokens: 1,
+          },
+        };
+      },
+    });
+
+    try {
+      const response = await fetch(`http://127.0.0.1:${server.port}/v1/chat/completions`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-role-model-routing-mode": "baseline",
+        },
+        body: JSON.stringify({
+          model: "openai/gpt-4.1-mini-fast",
+          messages: [{ role: "user", content: "Respect the override." }],
+        }),
+      });
+
+      expect(response.status).toBe(200);
+      expect(requestOptions).toEqual({
+        routingModeOverride: "baseline",
+      });
+    } finally {
+      await server.close();
+    }
+  });
+
+  test("rejects an invalid x-role-model-routing-mode header", async () => {
+    expect(typeof (bridge as { startBridgeServer?: unknown }).startBridgeServer).toBe("function");
+
+    let executionCalls = 0;
+    const server = await (
+      bridge as {
+        startBridgeServer: (options: {
+          host: string;
+          port: number;
+          registry: EndpointRegistryResult;
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+            streamWriter?: (chunk: Record<string, unknown>) => void | Promise<void>,
+            requestOptions?: {
+              routingModeOverride?: string;
+            },
+          ) => Promise<{
+            model: string;
+            endpointId: string;
+            adapterFamily: string;
+            outputText: string;
+            finishReason: string;
+            usage: {
+              inputTokens: number;
+              outputTokens: number;
+            };
+          }>;
+        }) => Promise<{ port: number; close(): Promise<void> }>;
+      }
+    ).startBridgeServer({
+      host: "127.0.0.1",
+      port: 0,
+      registry,
+      executeChatCompletions: async () => {
+        executionCalls += 1;
+        return {
+          model: "openai/gpt-4.1-mini-fast",
+          endpointId: "openai.personal.primary.us-east-1.fast",
+          adapterFamily: "ai-sdk-openai",
+          routingDecisionId: "decision-chat-routing-mode-invalid",
+          outputText: "unexpected",
+          finishReason: "stop",
+          usage: {
+            inputTokens: 1,
+            outputTokens: 1,
+          },
+        };
+      },
+    });
+
+    try {
+      const response = await fetch(`http://127.0.0.1:${server.port}/v1/chat/completions`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-role-model-routing-mode": "bogus",
+        },
+        body: JSON.stringify({
+          model: "openai/gpt-4.1-mini-fast",
+          messages: [{ role: "user", content: "Reject invalid overrides." }],
+        }),
+      });
+
+      expect(response.status).toBe(400);
+      await expect(response.json()).resolves.toEqual({
+        error:
+          "Invalid x-role-model-routing-mode header value \"bogus\". Expected one of: baseline, difficulty, controller, hybrid.",
+      });
+      expect(executionCalls).toBe(0);
+    } finally {
+      await server.close();
+    }
+  });
+
   test("creates a runtime backend that executes chat-completions through the real routing and adapter path", async () => {
     expect(
       typeof (bridge as { createRuntimeBridgeBackend?: unknown }).createRuntimeBridgeBackend,
@@ -2332,6 +2875,71 @@ describe("runtime-host-bridge", () => {
         },
       },
     });
+  });
+
+  test("persists routing-mode override and rewrite-skipped diagnostics for exact-model runtime-backed chat requests", async () => {
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-host-routing-mode-tests-"));
+
+    try {
+      const backend = await (
+        bridge as {
+          createRuntimeBridgeBackend: (options: {
+            repoRoot: string;
+            runtimeStateRoot: string;
+            scopeId: string;
+          }) => Promise<{
+            executeChatCompletions: (
+              body: Record<string, unknown>,
+              requestId: string,
+              streamWriter?: (chunk: Record<string, unknown>) => void | Promise<void>,
+              requestOptions?: {
+                routingModeOverride?: string;
+              },
+            ) => Promise<{
+              endpointId: string;
+            }>;
+            readRequestObservation: (requestId: string) => Promise<unknown>;
+          }>;
+        }
+      ).createRuntimeBridgeBackend({
+        repoRoot,
+        fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+        runtimeStateRoot,
+        scopeId: "runtime-host-routing-mode-tests",
+      });
+
+      const requestId = "req-runtime-bridge-routing-mode-001";
+      await backend.executeChatCompletions(
+        {
+          model: "openai/gpt-4.1-mini-fast",
+          messages: [{ role: "user", content: "Keep the exact-model route and record the rewrite receipt." }],
+        },
+        requestId,
+        undefined,
+        {
+          routingModeOverride: "baseline",
+        },
+      );
+
+      await expect(backend.readRequestObservation(requestId)).resolves.toMatchObject({
+        requestId,
+        routingDiagnostics: {
+          routingMode: {
+            source: "request-override",
+            requestedOverride: "baseline",
+            effectiveMode: "baseline",
+          },
+          rewrite: {
+            requestedModel: "openai/gpt-4.1-mini-fast",
+            downstreamModelId: "openai/gpt-4.1-mini-fast",
+            applied: false,
+            reason: "requested-model-matches-downstream",
+          },
+        },
+      });
+    } finally {
+      await rm(runtimeStateRoot, { recursive: true, force: true });
+    }
   });
 
   test("persists alias-resolution diagnostics for runtime-backed chat requests", async () => {
@@ -3125,6 +3733,126 @@ describe("runtime-host-bridge", () => {
             strategy: "quality",
             preferLocal: true,
           },
+        },
+      },
+    });
+  });
+
+  test("persists alias-default hybrid arbitration and rewrite-applied diagnostics for runtime-backed chat requests", async () => {
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-host-hybrid-tests-"));
+    const unifiedRuntimeConfigPath = path.join(runtimeStateRoot, "runtime-config.yaml");
+    await writeFile(
+      unifiedRuntimeConfigPath,
+      stringify({
+        version: "1.0",
+        difficulty_classifier: {
+          enabled: true,
+          rubric_version: "v1",
+          source_type: "remote",
+          model_id: "openai/gpt-4.1-mini-fast",
+          timeout_ms: 1500,
+          fallback_difficulty: "easy",
+        },
+        controller: {
+          enabled: true,
+          source_type: "remote",
+          model_id: "openai/gpt-4.1-mini-fast",
+          timeout_ms: 1500,
+        },
+        model_aliases: {
+          "gpt-5.4-hybrid": {
+            mode: "hybrid",
+            model_ids: ["openai/gpt-4.1-mini-fast"],
+          },
+        },
+        litellm_proxy: {
+          command: "node",
+          args: ["-e", createHybridArbitrationVendorScript()],
+          providers: {
+            openai: {
+              api_key: "${OPENAI_API_KEY}",
+              model_list: [
+                {
+                  model_name: "openai/gpt-4.1-mini-fast",
+                  max_difficulty: "hard",
+                  litellm_params: {
+                    model: "openai/gpt-4.1-mini",
+                  },
+                },
+              ],
+            },
+          },
+        },
+      }),
+      "utf8",
+    );
+
+    const backend = await (
+      bridge as {
+        createRuntimeBridgeBackend: (options: {
+          repoRoot: string;
+          fixtureRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+          unifiedRuntimeConfigPath: string;
+        }) => Promise<{
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+          ) => Promise<{
+            endpointId: string;
+          }>;
+          readRequestObservation: (requestId: string) => Promise<unknown>;
+        }>;
+      }
+    ).createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      runtimeStateRoot,
+      scopeId: "runtime-host-hybrid-tests",
+      unifiedRuntimeConfigPath,
+    });
+
+    const requestId = "req-runtime-bridge-hybrid-001";
+    await backend.executeChatCompletions(
+      {
+        model: "gpt-5.4-hybrid",
+        messages: [{ role: "user", content: "Choose the best path for a short coding request." }],
+      },
+      requestId,
+    );
+
+    await expect(backend.readRequestObservation(requestId)).resolves.toMatchObject({
+      requestId,
+      routingDiagnostics: {
+        routingMode: {
+          source: "alias-default",
+          aliasMode: "hybrid",
+          effectiveMode: "hybrid",
+        },
+        difficultyRouting: {
+          difficulty: "easy",
+          strategy: "cost",
+        },
+        controllerRouting: {
+          active: true,
+          acceptedDirectives: {
+            strategy: "quality",
+            preferLocal: true,
+          },
+        },
+        hybridArbitration: {
+          active: true,
+          difficultyStrategy: "cost",
+          finalStrategy: "quality",
+          controllerChangedPlan: true,
+          dominantSignal: "controller",
+        },
+        rewrite: {
+          requestedModel: "gpt-5.4-hybrid",
+          downstreamModelId: "openai/gpt-4.1-mini-fast",
+          applied: true,
+          reason: "requested-model-rewritten-for-selected-endpoint",
         },
       },
     });

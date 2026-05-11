@@ -103,6 +103,183 @@ describe("runRuntimeVendorValidation", () => {
     expect(
       (
         result as typeof result & {
+          modeMatrix?: {
+            baseline?: {
+              vendorId?: string;
+              observation?: {
+                routingDiagnostics?: {
+                  routingMode?: {
+                    source?: string;
+                    requestedOverride?: string;
+                    effectiveMode?: string;
+                  };
+                  rewrite?: {
+                    applied?: boolean;
+                    requestedModel?: string;
+                  };
+                };
+              };
+            };
+            difficulty?: {
+              vendorId?: string;
+              observation?: {
+                routingDiagnostics?: {
+                  routingMode?: {
+                    source?: string;
+                    requestedOverride?: string;
+                    effectiveMode?: string;
+                  };
+                  difficultyRouting?: {
+                    difficulty?: string;
+                    strategy?: string;
+                  };
+                };
+              };
+            };
+            controller?: {
+              vendorId?: string;
+              observation?: {
+                routingDiagnostics?: {
+                  routingMode?: {
+                    source?: string;
+                    requestedOverride?: string;
+                    effectiveMode?: string;
+                  };
+                  controllerRouting?: {
+                    active?: boolean;
+                    acceptedDirectives?: {
+                      strategy?: string;
+                      preferredEndpointIds?: readonly string[];
+                    };
+                  };
+                };
+              };
+            };
+            hybrid?: {
+              vendorId?: string;
+              observation?: {
+                routingDiagnostics?: {
+                  routingMode?: {
+                    source?: string;
+                    requestedOverride?: string;
+                    effectiveMode?: string;
+                  };
+                  difficultyRouting?: {
+                    difficulty?: string;
+                    strategy?: string;
+                  };
+                  controllerRouting?: {
+                    active?: boolean;
+                    acceptedDirectives?: {
+                      strategy?: string;
+                      preferredEndpointIds?: readonly string[];
+                    };
+                  };
+                  hybridArbitration?: {
+                    active?: boolean;
+                    dominantSignal?: string;
+                    controllerChangedPlan?: boolean;
+                    finalStrategy?: string;
+                  };
+                  rewrite?: {
+                    applied?: boolean;
+                    requestedModel?: string;
+                  };
+                };
+              };
+            };
+          };
+        }
+      ).modeMatrix,
+    ).toMatchObject({
+      baseline: {
+        vendorId: expect.stringMatching(/^(llama-swap|litellm)$/),
+        observation: {
+          routingDiagnostics: {
+            routingMode: {
+              source: "request-override",
+              requestedOverride: "baseline",
+              effectiveMode: "baseline",
+            },
+            rewrite: {
+              applied: true,
+              requestedModel: "gpt-5.4",
+            },
+          },
+        },
+      },
+      difficulty: {
+        vendorId: expect.stringMatching(/^(llama-swap|litellm)$/),
+        observation: {
+          routingDiagnostics: {
+            routingMode: {
+              source: "request-override",
+              requestedOverride: "difficulty",
+              effectiveMode: "difficulty",
+            },
+            difficultyRouting: {
+              difficulty: "easy",
+              strategy: "cost",
+            },
+          },
+        },
+      },
+      controller: {
+        vendorId: "litellm",
+        observation: {
+          routingDiagnostics: {
+            routingMode: {
+              source: "request-override",
+              requestedOverride: "controller",
+              effectiveMode: "controller",
+            },
+            controllerRouting: {
+              active: true,
+              acceptedDirectives: {
+                strategy: "quality",
+                preferredEndpointIds: ["openai.litellm.global.openai-gpt-4-1-mini-fast"],
+              },
+            },
+          },
+        },
+      },
+      hybrid: {
+        vendorId: "litellm",
+        observation: {
+          routingDiagnostics: {
+            routingMode: {
+              source: "request-override",
+              requestedOverride: "hybrid",
+              effectiveMode: "hybrid",
+            },
+            difficultyRouting: {
+              difficulty: "easy",
+              strategy: "cost",
+            },
+            controllerRouting: {
+              active: true,
+              acceptedDirectives: {
+                strategy: "quality",
+                preferredEndpointIds: ["openai.litellm.global.openai-gpt-4-1-mini-fast"],
+              },
+            },
+            hybridArbitration: {
+              active: true,
+              dominantSignal: "controller",
+              controllerChangedPlan: true,
+              finalStrategy: "quality",
+            },
+            rewrite: {
+              applied: true,
+              requestedModel: "gpt-5.4",
+            },
+          },
+        },
+      },
+    });
+    expect(
+      (
+        result as typeof result & {
           intelligentHybrid?: {
             vendorId?: string;
             observation?: {
@@ -283,10 +460,10 @@ describe("runRuntimeVendorValidation", () => {
     });
     expect(result.telemetry.summary).toEqual(
       expect.objectContaining({
-        requestCount: 7,
+        requestCount: 11,
         sourceBreakdown: expect.objectContaining({
           local: expect.objectContaining({ requestCount: 1 }),
-          remote: expect.objectContaining({ requestCount: 6 }),
+          remote: expect.objectContaining({ requestCount: 10 }),
         }),
       }),
     );
@@ -330,6 +507,22 @@ describe("runRuntimeVendorValidation", () => {
         }),
         expect.objectContaining({
           requestId: "req-runtime-vendor-hybrid-controller-fallback",
+          sourceType: "remote",
+        }),
+        expect.objectContaining({
+          requestId: "req-runtime-vendor-mode-baseline",
+          sourceType: "remote",
+        }),
+        expect.objectContaining({
+          requestId: "req-runtime-vendor-mode-difficulty",
+          sourceType: "remote",
+        }),
+        expect.objectContaining({
+          requestId: "req-runtime-vendor-mode-controller",
+          sourceType: "remote",
+        }),
+        expect.objectContaining({
+          requestId: "req-runtime-vendor-mode-hybrid",
           sourceType: "remote",
         }),
       ]),
