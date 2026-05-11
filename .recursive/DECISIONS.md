@@ -627,3 +627,30 @@
   - Browser screenshot verification was blocked by display surface unavailability; verification relied on unit tests and build validation instead
 - Known issues / follow-ups:
   - runtime:validate-ui script appears to hang in the current environment (exits with code 143 after timeout); this is an environment issue, not a code issue
+
+### Run `22-router-runtime-routing-strategy-lock`
+
+- Run folder: `/.recursive/run/22-router-runtime-routing-strategy-lock/`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - added `/docs/architecture/07-router-runtime-routing-strategy-lock.md` as the repo-owned routing-strategy handoff for alias routing, mode vocabulary, config ownership, difficulty rubric, compatibility policy, and rollout mapping
+  - aligned runs `23` through `30` so their requirement docs now consume the repo-owned handoff
+  - captured the routing-strategy verification discipline as a durable repo contract before implementation begins in run `23`
+- Why:
+  - to import the external strategy proposal into repo-owned control-plane artifacts before the routing-runtime implementation sequence starts
+- How:
+  - implemented a docs-only control-plane run with pragmatic TDD evidence, validated the existing runtime baseline through `schemas:validate`, `runtime:validate-ui`, `runtime:validate-host`, and `smoke`, and performed agent-operated readback QA over the new handoff and downstream run contracts
+- What was not done:
+  - no runtime execution, routing, controller, difficulty, hybrid, or UI behavior changed in this run
+- Known issues / follow-ups:
+  - the actual runtime implementation starts in run `23-router-runtime-live-observed-feedback`

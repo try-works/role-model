@@ -1,6 +1,6 @@
 Type: `domain`
 Status: `CURRENT`
-Scope: `Stable baseline ownership for the repo workspace, canonical protocol tree, shared packages, router family, fixtures, validation surfaces, and the repo-owned runtime/operator baseline extended through unified vendor execution, telemetry dashboard remediation, and runtime-config control in runs 04-16.`
+Scope: `Stable baseline ownership for the repo workspace, canonical protocol tree, shared packages, router family, fixtures, validation surfaces, and the repo-owned runtime/operator baseline extended through the routing-strategy control-plane lock in run 22.`
 Owns-Paths:
 - `/README.md`
 - `/LICENSE`
@@ -37,8 +37,9 @@ Source-Runs:
 - `14-router-runtime-ui-foundation`
 - `15-unified-vendor-execution`
 - `16-router-runtime-unified-telemetry-dashboard`
+- `22-router-runtime-routing-strategy-lock`
 Validated-At-Commit: `working-tree`
-Last-Validated: `2026-05-08T13:37:51.7395149+08:00`
+Last-Validated: `2026-05-11T18:23:45+08:00`
 Tags:
 - `baseline`
 - `workspace`
@@ -98,6 +99,8 @@ This repository now has a real product baseline rather than only recursive scaff
 - The protocol generation path now preserves `UsageEvent.cost_actual` and emits titled helper types for internal `$defs` entries, so focused `types:generate`, `schemas:validate`, and `@role-model/schema-tools build` stay green in the current baseline
 - Provider-account writes remain credential-reference-only; the UI can upsert runtime accounts, but endpoint rows still remain controlled by the existing registry baseline rather than being auto-created by account-save side effects
 - Browser, edge, and native provider families are intentionally scaffold-grade in this baseline
+- `/docs/architecture/07-router-runtime-routing-strategy-lock.md` now freezes the repo-owned routing-strategy handoff for alias-based local-plus-remote routing, including mode vocabulary, config ownership, the easy/medium/hard rubric, compatibility policy, rollout mapping for runs `23` through `30`, and the later-run verification discipline
+- The downstream routing-strategy run contracts under `/.recursive/run/23-.../` through `/.recursive/run/30-.../` now consume the repo-owned strategy lock directly instead of only the external proposal path
 
 ## Validation Path
 
