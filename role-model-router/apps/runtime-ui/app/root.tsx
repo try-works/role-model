@@ -1,5 +1,12 @@
-import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
 import type { ReactNode } from "react";
+import {
+  Links,
+  Meta,
+  Outlet,
+  Scripts,
+  ScrollRestoration,
+  isRouteErrorResponse,
+} from "react-router";
 
 import "./app.css";
 import NotFoundRoute from "./routes/not-found";
@@ -43,7 +50,7 @@ export default function App() {
 }
 
 export function ErrorBoundary({ error }: { error: unknown }) {
-  let message = "Something went wrong.";
+  const message = "Something went wrong.";
   let details = "The runtime UI could not render this route.";
 
   if (isRouteErrorResponse(error)) {

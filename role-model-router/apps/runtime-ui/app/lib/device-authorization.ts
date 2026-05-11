@@ -15,12 +15,18 @@ export function resolveVerificationWindowUrl(session: RuntimeDeviceAuthorization
   return normalizeUrl(session.verificationUriComplete) ?? normalizeUrl(session.verificationUri);
 }
 
-export function shouldAutoPollDeviceAuthorization(session: RuntimeDeviceAuthorization | null): boolean {
+export function shouldAutoPollDeviceAuthorization(
+  session: RuntimeDeviceAuthorization | null,
+): boolean {
   return Boolean(session?.authRequestId) && session?.status === "pending";
 }
 
 export function getDeviceAuthorizationPollDelayMs(session: RuntimeDeviceAuthorization): number {
-  if (typeof session.intervalSeconds === "number" && Number.isFinite(session.intervalSeconds) && session.intervalSeconds > 0) {
+  if (
+    typeof session.intervalSeconds === "number" &&
+    Number.isFinite(session.intervalSeconds) &&
+    session.intervalSeconds > 0
+  ) {
     return session.intervalSeconds * 1_000;
   }
 
@@ -46,7 +52,11 @@ export async function syncConnectedDeviceAuthorizationEndpoints(input: {
     return;
   }
 
-  const selectedModels = [...new Set(input.selectedModels.map((value) => value.trim()).filter((value) => value.length > 0))];
+  const selectedModels = [
+    ...new Set(
+      input.selectedModels.map((value) => value.trim()).filter((value) => value.length > 0),
+    ),
+  ];
   if (selectedModels.length === 0) {
     return;
   }

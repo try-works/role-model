@@ -3,8 +3,8 @@ import { describe, expect, test, vi } from "vitest";
 import {
   getDeviceAuthorizationPollDelayMs,
   resolveVerificationWindowUrl,
-  syncConnectedDeviceAuthorizationEndpoints,
   shouldAutoPollDeviceAuthorization,
+  syncConnectedDeviceAuthorizationEndpoints,
 } from "./device-authorization";
 
 describe("resolveVerificationWindowUrl", () => {

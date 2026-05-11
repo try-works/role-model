@@ -1,0 +1,29 @@
+role-model-router\apps\runtime-ui\app\routes\control-controller.tsx:36:3 lint/correctness/useExhaustiveDependencies ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù This hook does not specify all of its dependencies: load
+  
+    34 Γöé       .catch((value: unknown) => setError(value instanceof Error ? value.message : "Could not load controller state."));
+    35 Γöé 
+  > 36 Γöé   useEffect(() => {
+       Γöé   ^^^^^^^^^
+    37 Γöé     void load();
+    38 Γöé   }, []);
+  
+  i This dependency is not specified in the hook dependency list.
+  
+    36 Γöé   useEffect(() => {
+  > 37 Γöé     void load();
+       Γöé          ^^^^
+    38 Γöé   }, []);
+    39 Γöé 
+  
+  i Either include it or remove the dependency array
+  
+
+Checked 10 files in 73ms. Fixed 10 files.
+Found 1 error.
+check ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Some errors were emitted while running checks.
+  
+
