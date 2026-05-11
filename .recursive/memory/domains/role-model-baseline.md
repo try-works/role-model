@@ -113,6 +113,10 @@ This repository now has a real product baseline rather than only recursive scaff
 - The runtime now also owns a `model_aliases` contract in `/role-model-router/apps/runtime-host-bridge/src/unified-runtime-config.ts`, and bridge discovery surfaces expose configured alias ids beside real model ids
 - Alias requests now expand into pooled real endpoint candidates in `/role-model-router/apps/runtime-host-bridge/src/index.ts` before the existing routing stack runs, while exact-model requests remain additive and unchanged
 - Runtime request observations and validator proof now also expose durable `routingDiagnostics.aliasResolution` metadata, including one hybrid local-plus-remote alias pool readback
+- The runtime now also owns a difficulty-routing contract in `/role-model-router/apps/runtime-host-bridge/src/unified-runtime-config.ts`, including the shared easy-medium-hard rubric family, `difficulty_classifier`, alias mode `difficulty`, and per-source `maxDifficulty`
+- `/role-model-router/apps/runtime-host-bridge/src/index.ts` now executes configured classifier-backed difficulty assignment with deterministic fallback, maps difficulty to live routing strategy behavior before final selection, and applies mixed local-and-remote `maxDifficulty` gating on difficulty-mode alias requests
+- Runtime request observations and validator proof now also expose durable `routingDiagnostics.difficultyRouting` metadata, including assigned difficulty, selected strategy, fallback status or reason, rubric-signal summaries, and excluded endpoint ids
+- The repo-owned validation floor now also proves mixed local-plus-remote difficulty routing through focused bridge tests, `runtime:validate-vendors`, and agent-operated readback of easy-path cost routing plus hard-path quality routing and local-endpoint exclusion; medium-path live QA remains automated-evidence-only under the current binary mock classifier
 
 ## Validation Path
 

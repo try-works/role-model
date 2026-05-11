@@ -1,0 +1,24 @@
+
+> role-model@0.0.0 runtime:validate-host D:\DEV\role-model\.worktrees\26-router-runtime-difficulty-guided-routing
+> corepack pnpm --filter @role-model-router/runtime-host-bridge exec tsx src/validate-host.ts
+
+{
+  "host_base_url": "http://127.0.0.1:51281",
+  "model_count": 3,
+  "returned_model": "openai/gpt-4.1-mini-fast",
+  "request_id": "req-runtime-host-observability-001",
+  "output_text": "OpenAI summary",
+  "total_tokens": 56,
+  "structured_recent_count": 1,
+  "structured_endpoint_id": "openai.personal.primary.us-east-1.fast",
+  "structured_profile_sample_size": 2,
+  "otel_trace_id": "trace-req-runtime-host-observability-001",
+  "otel_request_id": "req-runtime-host-observability-001",
+  "logs_contains_bridge": false,
+  "capture_id": 0,
+  "capture_path": "/v1/chat/completions",
+  "request_capture_keys": [],
+  "response_capture_type": "string",
+  "stdout_tail": "observability-001 HTTP/1.1\" 200 12591 \"node\" 3.9377ms\n[INFO] Request 127.0.0.1 \"GET /api/role-model/endpoints/openai.personal.primary.us-east-1.fast/profile HTTP/1.1\" 200 965 \"node\" 5.857ms\n[INFO] Request 127.0.0.1 \"GET /logs HTTP/1.1\" 200 576 \"node\" 0s\n[INFO] Request 127.0.0.1 \"GET /api/metrics HTTP/1.1\" 200 337 \"node\" 0s\n[INFO] Request 127.0.0.1 \"GET /api/captures/0 HTTP/1.1\" 200 1666 \"node\" 0s\n",
+  "stderr_tail": ""
+}

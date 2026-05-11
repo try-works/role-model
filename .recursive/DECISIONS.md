@@ -737,3 +737,31 @@
   - no difficulty classification, controller-guided routing, hybrid arbitration policy, or runtime UI implementation shipped in this run
 - Known issues / follow-ups:
   - alias pools are currently static config-driven mappings; later runs still need difficulty segmentation, controller guidance, hybrid arbitration, and final integrated runtime verification on top of this alias-routing baseline
+
+### Run `26-router-runtime-difficulty-guided-routing`
+
+- Run folder: `/.recursive/run/26-router-runtime-difficulty-guided-routing/`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - the unified runtime config now owns an explicit difficulty-routing contract, including the shared rubric family, `difficulty_classifier`, alias mode `difficulty`, and per-source `maxDifficulty`
+  - bridge request planning now executes a configured classifier with deterministic fallback, maps difficulty to live routing strategy behavior, and persists durable `difficultyRouting` diagnostics with rubric-signal summaries
+  - mixed local-plus-remote runtime validation and agent-operated readback now prove difficulty alias discovery, easy-path cost routing, hard-path quality routing, and live hard-request exclusion of underpowered local endpoints
+- Why:
+  - to make the alias-pool baseline content-aware so the runtime can route across both local and remote endpoints by request difficulty before later cache, controller, and hybrid policy runs build on the same contract
+- How:
+  - implemented with strict RED/GREEN TDD across config, bridge, runtime-observability, and validator slices, validated the locked Phase 3 slice through `schemas:validate`, `protocol-routing` tests, `runtime-host-bridge` tests, `runtime:validate-host`, and `runtime:validate-vendors`, and completed agent-operated readback QA over live difficulty-alias request observations
+- What was not done:
+  - no difficulty-learning cache, controller-guided classification or judging, hybrid arbitration policy, or runtime UI implementation shipped in this run
+- Known issues / follow-ups:
+  - the repo-owned mock classifier used for local readback and validator QA currently emits `easy` or `hard` only, so medium-path live QA remains automated-evidence-only until a richer mock or real classifier-backed harness lands
+  - later runs still need difficulty-segmented observed learning, controller guidance, hybrid arbitration, and final integrated runtime verification on top of this difficulty-routing baseline

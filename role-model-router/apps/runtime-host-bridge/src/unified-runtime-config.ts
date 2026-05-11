@@ -6,6 +6,9 @@ export type UnifiedRuntimeExecutionMode =
   | "local_only"
   | "remote_only";
 
+export type UnifiedRuntimeDifficultyBucket = "easy" | "medium" | "hard";
+export type UnifiedRuntimeAliasRoutingMode = "basic" | "difficulty" | "intelligent" | "hybrid";
+
 export interface UnifiedRuntimeConfigModel {
   readonly modelId: string;
   readonly path: string;
@@ -14,6 +17,7 @@ export interface UnifiedRuntimeConfigModel {
   readonly proxyBaseUrl: string | null;
   readonly checkEndpoint: string | null;
   readonly useModelName: string | null;
+  readonly maxDifficulty?: UnifiedRuntimeDifficultyBucket | null;
 }
 
 export type UnifiedRuntimeJSONValue =
@@ -28,6 +32,7 @@ export interface UnifiedRuntimeConfigProviderMapping {
   readonly modelId: string;
   readonly litellmModel: string;
   readonly litellmParams: Readonly<Record<string, UnifiedRuntimeJSONValue>>;
+  readonly maxDifficulty?: UnifiedRuntimeDifficultyBucket | null;
 }
 
 export interface UnifiedRuntimeProcessConfig {
@@ -47,7 +52,18 @@ export interface UnifiedRuntimeConfigProvider {
 
 export interface UnifiedRuntimeModelAliasConfig {
   readonly aliasId: string;
+  readonly mode?: UnifiedRuntimeAliasRoutingMode | null;
   readonly modelIds: readonly string[];
+}
+
+export interface UnifiedRuntimeDifficultyClassifierConfig {
+  readonly enabled: boolean;
+  readonly rubricVersion: string;
+  readonly sourceType: "local" | "remote";
+  readonly endpointId: string | null;
+  readonly modelId: string | null;
+  readonly timeoutMs: number;
+  readonly fallbackDifficulty: UnifiedRuntimeDifficultyBucket;
 }
 
 export interface UnifiedRuntimeObservedDataConfig {
@@ -101,6 +117,7 @@ export interface UnifiedRuntimeConfig {
   readonly routingStrategy: string | null;
   readonly executionMode: UnifiedRuntimeExecutionMode;
   readonly observedData?: UnifiedRuntimeObservedDataConfig;
+  readonly difficultyClassifier?: UnifiedRuntimeDifficultyClassifierConfig;
   readonly modelAliases?: readonly UnifiedRuntimeModelAliasConfig[];
   readonly llamaSwap: {
     readonly enabled: boolean;
@@ -121,12 +138,14 @@ interface RawLlamaSwapModel {
   readonly proxy?: string;
   readonly check_endpoint?: string;
   readonly use_model_name?: string;
+  readonly max_difficulty?: string;
 }
 
 interface RawLiteLLMProvider {
   readonly api_key?: string;
   readonly model_list?: ReadonlyArray<{
     readonly model_name?: string;
+    readonly max_difficulty?: string;
     readonly litellm_params?: Readonly<Record<string, unknown>>;
   }>;
 }
@@ -136,10 +155,20 @@ interface RawUnifiedRuntimeConfig {
   readonly routing?: {
     readonly strategy?: string;
   };
+  readonly difficulty_classifier?: {
+    readonly enabled?: boolean;
+    readonly rubric_version?: string;
+    readonly source_type?: string;
+    readonly endpoint_id?: string;
+    readonly model_id?: string;
+    readonly timeout_ms?: number;
+    readonly fallback_difficulty?: string;
+  };
   readonly model_aliases?: Readonly<
     Record<
       string,
       {
+        readonly mode?: string;
         readonly model_ids?: readonly string[];
       }
     >
@@ -230,6 +259,39 @@ function readPositiveNumber(value: unknown): number | null {
 
 function readBoolean(value: unknown): boolean | undefined {
   return typeof value === "boolean" ? value : undefined;
+}
+
+function readDifficultyBucket(
+  value: unknown,
+  path: string,
+): UnifiedRuntimeDifficultyBucket | null {
+  if (value === undefined || value === null || value === "") {
+    return null;
+  }
+  if (value === "easy" || value === "medium" || value === "hard") {
+    return value;
+  }
+  throw new Error(`${path} must be easy, medium, or hard.`);
+}
+
+function readAliasRoutingMode(
+  value: unknown,
+  path: string,
+): UnifiedRuntimeAliasRoutingMode | null {
+  if (value === undefined || value === null || value === "") {
+    return null;
+  }
+  if (value === "basic" || value === "difficulty" || value === "intelligent" || value === "hybrid") {
+    return value;
+  }
+  throw new Error(`${path} must be basic, difficulty, intelligent, or hybrid.`);
+}
+
+function readClassifierSourceType(value: unknown, path: string): "local" | "remote" {
+  if (value === "local" || value === "remote") {
+    return value;
+  }
+  throw new Error(`${path} must be local or remote.`);
 }
 
 function readRequiredPositiveNumber(value: unknown, path: string, fallback: number): number {
@@ -351,6 +413,10 @@ function normalizeLlamaSwapModelInput(
     useModelName: readNonEmptyString(
       "useModelName" in value ? value.useModelName : value.use_model_name,
     ),
+    maxDifficulty: readDifficultyBucket(
+      "maxDifficulty" in value ? value.maxDifficulty : "max_difficulty" in value ? value.max_difficulty : undefined,
+      `llamaSwap.models.${modelId}.maxDifficulty`,
+    ),
   };
 }
 
@@ -420,6 +486,10 @@ function normalizeLiteLLMProviderMappingInput(
       ...litellmParams,
       model: litellmModel,
     },
+    maxDifficulty: readDifficultyBucket(
+      "maxDifficulty" in value ? value.maxDifficulty : "max_difficulty" in value ? value.max_difficulty : undefined,
+      `liteLLM.modelMappings.${modelId}.maxDifficulty`,
+    ),
   };
 }
 
@@ -522,6 +592,10 @@ function normalizeModelAliasInput(
   }
   return {
     aliasId,
+    mode: readAliasRoutingMode(
+      "mode" in value ? value.mode : undefined,
+      `${prefix}.${aliasId}.mode`,
+    ),
     modelIds,
   };
 }
@@ -551,6 +625,49 @@ function normalizeModelAliasesInput(
     }
   }
   return aliases;
+}
+
+const DEFAULT_UNIFIED_RUNTIME_DIFFICULTY_CLASSIFIER_CONFIG: UnifiedRuntimeDifficultyClassifierConfig = {
+  enabled: true,
+  rubricVersion: "v1",
+  sourceType: "remote",
+  endpointId: null,
+  modelId: null,
+  timeoutMs: 1500,
+  fallbackDifficulty: "hard",
+};
+
+function normalizeDifficultyClassifierInput(
+  value: unknown,
+  prefix: string,
+): UnifiedRuntimeDifficultyClassifierConfig {
+  ensureObject(value, `${prefix} must be an object.`);
+  return {
+    enabled: readBoolean(value.enabled) ?? DEFAULT_UNIFIED_RUNTIME_DIFFICULTY_CLASSIFIER_CONFIG.enabled,
+    rubricVersion:
+      readNonEmptyString("rubricVersion" in value ? value.rubricVersion : "rubric_version" in value ? value.rubric_version : undefined) ??
+      DEFAULT_UNIFIED_RUNTIME_DIFFICULTY_CLASSIFIER_CONFIG.rubricVersion,
+    sourceType: readClassifierSourceType(
+      "sourceType" in value ? value.sourceType : "source_type" in value ? value.source_type : DEFAULT_UNIFIED_RUNTIME_DIFFICULTY_CLASSIFIER_CONFIG.sourceType,
+      `${prefix}.source_type`,
+    ),
+    endpointId: readNonEmptyString("endpointId" in value ? value.endpointId : "endpoint_id" in value ? value.endpoint_id : undefined),
+    modelId: readNonEmptyString("modelId" in value ? value.modelId : "model_id" in value ? value.model_id : undefined),
+    timeoutMs: readRequiredPositiveNumber(
+      "timeoutMs" in value ? value.timeoutMs : "timeout_ms" in value ? value.timeout_ms : undefined,
+      `${prefix}.timeout_ms`,
+      DEFAULT_UNIFIED_RUNTIME_DIFFICULTY_CLASSIFIER_CONFIG.timeoutMs,
+    ),
+    fallbackDifficulty:
+      readDifficultyBucket(
+        "fallbackDifficulty" in value
+          ? value.fallbackDifficulty
+          : "fallback_difficulty" in value
+            ? value.fallback_difficulty
+            : DEFAULT_UNIFIED_RUNTIME_DIFFICULTY_CLASSIFIER_CONFIG.fallbackDifficulty,
+        `${prefix}.fallback_difficulty`,
+      ) ?? DEFAULT_UNIFIED_RUNTIME_DIFFICULTY_CLASSIFIER_CONFIG.fallbackDifficulty,
+  };
 }
 
 function normalizeObservedDataInput(
@@ -704,6 +821,10 @@ function parseLlamaSwapModels(rawConfig: RawUnifiedRuntimeConfig): UnifiedRuntim
         typeof config.use_model_name === "string" && config.use_model_name.trim().length > 0
           ? config.use_model_name
           : null,
+      maxDifficulty: readDifficultyBucket(
+        config.max_difficulty,
+        `llama_swap.models.${modelId}.max_difficulty`,
+      ),
     };
   });
 
@@ -748,6 +869,10 @@ function parseLiteLLMProviders(rawConfig: RawUnifiedRuntimeConfig): UnifiedRunti
           ...litellmParams,
           model: litellmModel,
         },
+        maxDifficulty: readDifficultyBucket(
+          "max_difficulty" in entry ? entry.max_difficulty : undefined,
+          `litellm_proxy.providers.${providerId}.model_list.${modelId}.max_difficulty`,
+        ),
       });
     }
 
@@ -805,6 +930,9 @@ export function parseUnifiedRuntimeConfigText(text: string): UnifiedRuntimeConfi
       llamaSwapEnabled: llamaSwap.enabled,
       liteLLMEnabled: liteLLM.enabled,
     }),
+    ...(rawConfig.difficulty_classifier
+      ? { difficultyClassifier: normalizeDifficultyClassifierInput(rawConfig.difficulty_classifier, "difficulty_classifier") }
+      : {}),
     ...(rawConfig.model_aliases ? { modelAliases: normalizeModelAliasesInput(rawConfig.model_aliases, "model_aliases") } : {}),
     ...(rawConfig.observed_data ? { observedData: normalizeObservedDataInput(rawConfig.observed_data, "observed_data") } : {}),
     llamaSwap,
@@ -830,6 +958,12 @@ export function normalizeUnifiedRuntimeConfigInput(input: unknown): UnifiedRunti
   );
   const observedDataSource =
     "observedData" in input ? input.observedData : "observed_data" in input ? input.observed_data : undefined;
+  const difficultyClassifierSource =
+    "difficultyClassifier" in input
+      ? input.difficultyClassifier
+      : "difficulty_classifier" in input
+        ? input.difficulty_classifier
+        : undefined;
   const modelAliasesSource =
     "modelAliases" in input ? input.modelAliases : "model_aliases" in input ? input.model_aliases : undefined;
 
@@ -845,6 +979,14 @@ export function normalizeUnifiedRuntimeConfigInput(input: unknown): UnifiedRunti
       llamaSwapEnabled: llamaSwap.enabled,
       liteLLMEnabled: liteLLM.enabled,
     }),
+    ...(difficultyClassifierSource !== undefined
+      ? {
+          difficultyClassifier: normalizeDifficultyClassifierInput(
+            difficultyClassifierSource,
+            "difficultyClassifier",
+          ),
+        }
+      : {}),
     ...(modelAliasesSource !== undefined
       ? {
           modelAliases: normalizeModelAliasesInput(modelAliasesSource),
@@ -923,11 +1065,24 @@ export function renderUnifiedRuntimeConfigText(config: UnifiedRuntimeConfig): st
     };
   }
 
+  if (config.difficultyClassifier) {
+    document.difficulty_classifier = {
+      enabled: config.difficultyClassifier.enabled,
+      rubric_version: config.difficultyClassifier.rubricVersion,
+      source_type: config.difficultyClassifier.sourceType,
+      ...(config.difficultyClassifier.endpointId !== null ? { endpoint_id: config.difficultyClassifier.endpointId } : {}),
+      ...(config.difficultyClassifier.modelId !== null ? { model_id: config.difficultyClassifier.modelId } : {}),
+      timeout_ms: config.difficultyClassifier.timeoutMs,
+      fallback_difficulty: config.difficultyClassifier.fallbackDifficulty,
+    };
+  }
+
   if (config.modelAliases && config.modelAliases.length > 0) {
     document.model_aliases = Object.fromEntries(
       config.modelAliases.map((alias) => [
         alias.aliasId,
         {
+          ...(alias.mode !== null ? { mode: alias.mode } : {}),
           model_ids: [...alias.modelIds],
         },
       ]),
@@ -946,6 +1101,7 @@ export function renderUnifiedRuntimeConfigText(config: UnifiedRuntimeConfig): st
           ...(model.proxyBaseUrl !== null ? { proxy: model.proxyBaseUrl } : {}),
           ...(model.checkEndpoint !== null ? { check_endpoint: model.checkEndpoint } : {}),
           ...(model.useModelName !== null ? { use_model_name: model.useModelName } : {}),
+          ...(model.maxDifficulty !== null ? { max_difficulty: model.maxDifficulty } : {}),
         },
       ]),
     );
@@ -965,6 +1121,7 @@ export function renderUnifiedRuntimeConfigText(config: UnifiedRuntimeConfig): st
             provider.modelMappings.length > 0
               ? provider.modelMappings.map((mapping) => ({
                   model_name: mapping.modelId,
+                  ...(mapping.maxDifficulty !== null ? { max_difficulty: mapping.maxDifficulty } : {}),
                   litellm_params: {
                     ...mapping.litellmParams,
                     model: mapping.litellmModel,

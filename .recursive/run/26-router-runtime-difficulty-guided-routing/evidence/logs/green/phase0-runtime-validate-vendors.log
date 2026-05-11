@@ -1,0 +1,6 @@
+
+> role-model@0.0.0 runtime:validate-vendors D:\DEV\role-model\.worktrees\26-router-runtime-difficulty-guided-routing
+> corepack pnpm --filter @role-model-router/runtime-host-bridge exec tsx src/validate-vendors.ts
+
+(node:95360) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)

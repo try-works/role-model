@@ -18,11 +18,14 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 function createLocalVendorScript(): string {
-  return `const http=require("node:http");const port=Number(process.env.PORT??process.argv[2]);const server=http.createServer((req,res)=>{if(req.url==="/health"){res.statusCode=200;res.end("ok");return;}if(req.url==="/v1/responses"){let body="";req.on("data",chunk=>body+=chunk);req.on("end",()=>{const parsed=JSON.parse(body||"{}");if(parsed.stream){res.writeHead(200,{"content-type":"text/event-stream; charset=utf-8"});res.write('data: {"type":"response.created","response":{"id":"resp-local","created_at":1,"model":"local/llama-3.1-8b-instruct"}}'+"\\n\\n");setTimeout(()=>{res.write('data: {"type":"response.output_text.delta","item_id":"msg_1","delta":"local llama summary"}'+"\\n\\n");setTimeout(()=>{res.end('data: {"type":"response.completed","response":{"usage":{"input_tokens":11,"output_tokens":4}}}'+"\\n\\n"+'data: [DONE]'+"\\n\\n");},10);},10);return;}res.setHeader("content-type","application/json");res.end(JSON.stringify({id:"resp-local",output:[{type:"message",role:"assistant",content:[{type:"output_text",text:"local llama summary"}]}],usage:{input_tokens:11,output_tokens:4}}));});return;}if(req.url==="/v1/chat/completions"){let body="";req.on("data",chunk=>body+=chunk);req.on("end",()=>{const parsed=JSON.parse(body||"{}");if(parsed.stream){res.writeHead(200,{"content-type":"text/event-stream; charset=utf-8"});res.write('data: {"id":"chat-local","object":"chat.completion.chunk","created":1,"model":"local/llama-3.1-8b-instruct","choices":[{"index":0,"delta":{"role":"assistant","content":"local "},"finish_reason":null}]}'+"\\n\\n");setTimeout(()=>{res.write('data: {"id":"chat-local","object":"chat.completion.chunk","created":1,"model":"local/llama-3.1-8b-instruct","choices":[{"index":0,"delta":{"content":"llama summary"},"finish_reason":null}]}'+"\\n\\n");setTimeout(()=>{res.end('data: {"id":"chat-local","object":"chat.completion.chunk","created":1,"model":"local/llama-3.1-8b-instruct","choices":[{"index":0,"delta":{},"finish_reason":"stop"}],"usage":{"prompt_tokens":11,"completion_tokens":4}}'+"\\n\\n"+'data: [DONE]'+"\\n\\n");},10);},10);return;}res.setHeader("content-type","application/json");res.end(JSON.stringify({id:"chat-local",object:"chat.completion",choices:[{index:0,message:{role:"assistant",content:"local llama summary"},finish_reason:"stop"}],usage:{prompt_tokens:11,completion_tokens:4,total_tokens:15}}));});return;}res.statusCode=404;res.end("missing");});server.listen(port,"127.0.0.1");const shutdown=()=>server.close(()=>process.exit(0));process.on("SIGTERM",shutdown);process.on("SIGINT",shutdown);`;
+  return `const http=require("node:http");const port=Number(process.env.PORT??process.argv[2]);const server=http.createServer((req,res)=>{if(req.url==="/health"){res.statusCode=200;res.end("ok");return;}if(req.url==="/v1/responses"){let body="";req.on("data",chunk=>body+=chunk);req.on("end",()=>{const parsed=JSON.parse(body||"{}");const joinedInput=typeof parsed.input==="string"?parsed.input:JSON.stringify(parsed.input??"");const isClassifier=joinedInput.includes("ROLE_MODEL_DIFFICULTY_CLASSIFIER");const isHardPrompt=joinedInput.includes("Analyze this code-edit workflow")||joinedInput.includes('\"toolCount\":2')||joinedInput.includes('\"toolCount\": 2')||joinedInput.includes('\"codeOrSchemaBurden\":true')||joinedInput.includes('\"codeOrSchemaBurden\": true');const classifierResponse=isHardPrompt?JSON.stringify({difficulty:"hard"}):JSON.stringify({difficulty:"easy"});if(parsed.stream){res.writeHead(200,{"content-type":"text/event-stream; charset=utf-8"});res.write('data: {"type":"response.created","response":{"id":"resp-local","created_at":1,"model":"local/llama-3.1-8b-instruct"}}'+"\\n\\n");setTimeout(()=>{res.write('data: {"type":"response.output_text.delta","item_id":"msg_1","delta":'+JSON.stringify(isClassifier?classifierResponse:"local llama summary")+'}'+"\\n\\n");setTimeout(()=>{res.end('data: {"type":"response.completed","response":{"usage":{"input_tokens":11,"output_tokens":4}},"_hidden_params":{"response_cost":0.0005,"cache_hit":false}}'+"\\n\\n"+'data: [DONE]'+"\\n\\n");},10);},10);return;}res.setHeader("content-type","application/json");res.end(JSON.stringify({id:"resp-local",output:[{type:"message",role:"assistant",content:[{type:"output_text",text:isClassifier?classifierResponse:"local llama summary"}]}],usage:{input_tokens:11,output_tokens:4},_hidden_params:{response_cost:0.0005,cache_hit:false}}));});return;}if(req.url==="/v1/chat/completions"){let body="";req.on("data",chunk=>body+=chunk);req.on("end",()=>{const parsed=JSON.parse(body||"{}");const joinedMessages=JSON.stringify(parsed.messages??[]);const isClassifier=joinedMessages.includes("ROLE_MODEL_DIFFICULTY_CLASSIFIER");const isHardPrompt=joinedMessages.includes("Analyze this code-edit workflow")||joinedMessages.includes('\"toolCount\":2')||joinedMessages.includes('\"toolCount\": 2')||joinedMessages.includes('\"codeOrSchemaBurden\":true')||joinedMessages.includes('\"codeOrSchemaBurden\": true');const classifierResponse=isHardPrompt?JSON.stringify({difficulty:"hard"}):JSON.stringify({difficulty:"easy"});if(parsed.stream){res.writeHead(200,{"content-type":"text/event-stream; charset=utf-8"});res.write('data: {"id":"chat-local","object":"chat.completion.chunk","created":1,"model":"local/llama-3.1-8b-instruct","choices":[{"index":0,"delta":{"role":"assistant","content":"local "},"finish_reason":null}]}'+"\\n\\n");setTimeout(()=>{res.write('data: {"id":"chat-local","object":"chat.completion.chunk","created":1,"model":"local/llama-3.1-8b-instruct","choices":[{"index":0,"delta":{"content":"llama summary"},"finish_reason":null}]}'+"\\n\\n");setTimeout(()=>{res.end('data: {"id":"chat-local","object":"chat.completion.chunk","created":1,"model":"local/llama-3.1-8b-instruct","choices":[{"index":0,"delta":{},"finish_reason":"stop"}],"usage":{"prompt_tokens":11,"completion_tokens":4},"_hidden_params":{"response_cost":0.0005,"cache_hit":false}}'+"\\n\\n"+'data: [DONE]'+"\\n\\n");},10);},10);return;}res.setHeader("content-type","application/json");res.end(JSON.stringify({id:"chat-local",object:"chat.completion",choices:[{index:0,message:{role:"assistant",content:isClassifier?classifierResponse:"local llama summary"},finish_reason:"stop"}],usage:{prompt_tokens":11,completion_tokens":4,total_tokens:15},_hidden_params:{response_cost:0.0005,cache_hit:false}}));});return;}res.statusCode=404;res.end("missing");});server.listen(port,"127.0.0.1");const shutdown=()=>server.close(()=>process.exit(0));process.on("SIGTERM",shutdown);process.on("SIGINT",shutdown);`;
 }
 
+function createSimpleLocalVendorScript(): string {
+  return `const http=require("node:http");const port=Number(process.env.PORT??process.argv[2]);const server=http.createServer((req,res)=>{if(req.url==="/health"){res.statusCode=200;res.end("ok");return;}if(req.url==="/v1/responses"){let body="";req.on("data",chunk=>body+=chunk);req.on("end",()=>{const parsed=JSON.parse(body||"{}");if(parsed.stream){res.writeHead(200,{"content-type":"text/event-stream; charset=utf-8"});res.write('data: {"type":"response.created","response":{"id":"resp-local","created_at":1,"model":"local/llama-3.1-8b-instruct"}}'+"\\n\\n");setTimeout(()=>{res.write('data: {"type":"response.output_text.delta","item_id":"msg_1","delta":"local llama summary"}'+"\\n\\n");setTimeout(()=>{res.end('data: {"type":"response.completed","response":{"usage":{"input_tokens":11,"output_tokens":4}},"_hidden_params":{"response_cost":0.0005,"cache_hit":false}}'+"\\n\\n"+'data: [DONE]'+"\\n\\n");},10);},10);return;}res.setHeader("content-type","application/json");res.end(JSON.stringify({id:"resp-local",output:[{type:"message",role:"assistant",content:[{type:"output_text",text:"local llama summary"}]}],usage:{input_tokens:11,output_tokens:4},_hidden_params:{response_cost:0.0005,cache_hit:false}}));});return;}if(req.url==="/v1/chat/completions"){let body="";req.on("data",chunk=>body+=chunk);req.on("end",()=>{const parsed=JSON.parse(body||"{}");if(parsed.stream){res.writeHead(200,{"content-type":"text/event-stream; charset=utf-8"});res.write('data: {"id":"chat-local","object":"chat.completion.chunk","created":1,"model":"local/llama-3.1-8b-instruct","choices":[{"index":0,"delta":{"role":"assistant","content":"local "},"finish_reason":null}]}'+"\\n\\n");setTimeout(()=>{res.write('data: {"id":"chat-local","object":"chat.completion.chunk","created":1,"model":"local/llama-3.1-8b-instruct","choices":[{"index":0,"delta":{"content":"llama summary"},"finish_reason":null}]}'+"\\n\\n");setTimeout(()=>{res.end('data: {"id":"chat-local","object":"chat.completion.chunk","created":1,"model":"local/llama-3.1-8b-instruct","choices":[{"index":0,"delta":{},"finish_reason":"stop"}],"usage":{"prompt_tokens":11,"completion_tokens":4},"_hidden_params":{"response_cost":0.0005,"cache_hit":false}}'+"\\n\\n"+'data: [DONE]'+"\\n\\n");},10);},10);return;}res.setHeader("content-type","application/json");res.end(JSON.stringify({id:"chat-local",object:"chat.completion",choices:[{index:0,message:{role:"assistant",content:"local llama summary"},finish_reason:"stop"}],usage:{prompt_tokens:11,completion_tokens:4,total_tokens:15},_hidden_params:{response_cost:0.0005,cache_hit:false}}));});return;}res.statusCode=404;res.end("missing");});server.listen(port,"127.0.0.1");const shutdown=()=>server.close(()=>process.exit(0));process.on("SIGTERM",shutdown);process.on("SIGINT",shutdown);`;
+}
 function createRemoteVendorScript(): string {
-  return `const http=require("node:http");const port=Number(process.env.PORT??process.argv[2]);const server=http.createServer((req,res)=>{if(req.url==="/health/liveliness"){res.statusCode=200;res.end("ok");return;}if(req.url==="/v1/responses"){let body="";req.on("data",chunk=>body+=chunk);req.on("end",()=>{const parsed=JSON.parse(body||"{}");if(parsed.stream){res.writeHead(200,{"content-type":"text/event-stream; charset=utf-8"});res.write('data: {"type":"response.created","response":{"id":"resp-remote","created_at":1,"model":"openai/gpt-4.1-mini-fast"}}'+"\\n\\n");setTimeout(()=>{res.write('data: {"type":"response.output_text.delta","item_id":"msg_1","delta":"remote litellm summary"}'+"\\n\\n");setTimeout(()=>{res.end('data: {"type":"response.completed","response":{"usage":{"input_tokens":14,"output_tokens":5}},"_hidden_params":{"response_cost":0.0042,"cache_hit":true}}'+"\\n\\n"+'data: [DONE]'+"\\n\\n");},10);},10);return;}res.setHeader("content-type","application/json");res.end(JSON.stringify({id:"resp-remote",output:[{type:"message",role:"assistant",content:[{type:"output_text",text:"remote litellm summary"}]}],usage:{input_tokens:14,output_tokens:5,prompt_tokens_details:{cached_tokens:9}},_hidden_params:{response_cost:0.0042,cache_hit:true}}));});return;}if(req.url==="/v1/chat/completions"){let body="";req.on("data",chunk=>body+=chunk);req.on("end",()=>{const parsed=JSON.parse(body||"{}");if(parsed.stream){res.writeHead(200,{"content-type":"text/event-stream; charset=utf-8"});res.write('data: {"id":"chat-remote","object":"chat.completion.chunk","created":1,"model":"openai/gpt-4.1-mini-fast","choices":[{"index":0,"delta":{"role":"assistant","content":"remote "},"finish_reason":null}]}'+"\\n\\n");setTimeout(()=>{res.write('data: {"id":"chat-remote","object":"chat.completion.chunk","created":1,"model":"openai/gpt-4.1-mini-fast","choices":[{"index":0,"delta":{"content":"litellm summary"},"finish_reason":null}]}'+"\\n\\n");setTimeout(()=>{res.end('data: {"id":"chat-remote","object":"chat.completion.chunk","created":1,"model":"openai/gpt-4.1-mini-fast","choices":[{"index":0,"delta":{},"finish_reason":"stop"}],"usage":{"prompt_tokens":14,"completion_tokens":5},"_hidden_params":{"response_cost":0.0042,"cache_hit":true}}'+"\\n\\n"+'data: [DONE]'+"\\n\\n");},10);},10);return;}res.setHeader("content-type","application/json");res.end(JSON.stringify({id:"chat-remote",object:"chat.completion",choices:[{index:0,message:{role:"assistant",content:"remote litellm summary"},finish_reason:"stop"}],usage:{prompt_tokens:14,completion_tokens:5,total_tokens:19},_hidden_params:{response_cost:0.0042,cache_hit:true}}));});return;}res.statusCode=404;res.end("missing");});server.listen(port,"127.0.0.1");const shutdown=()=>server.close(()=>process.exit(0));process.on("SIGTERM",shutdown);process.on("SIGINT",shutdown);`;
+  return `const http=require("node:http");const port=Number(process.env.PORT??process.argv[2]);const server=http.createServer((req,res)=>{if(req.url==="/health/liveliness"){res.statusCode=200;res.end("ok");return;}if(req.url==="/v1/responses"){let body="";req.on("data",chunk=>body+=chunk);req.on("end",()=>{const parsed=JSON.parse(body||"{}");const joinedInput=typeof parsed.input==="string"?parsed.input:JSON.stringify(parsed.input??"");const isClassifier=joinedInput.includes("ROLE_MODEL_DIFFICULTY_CLASSIFIER");const isHardPrompt=joinedInput.includes("Analyze this code-edit workflow")||joinedInput.includes('\"toolCount\":2')||joinedInput.includes('\"toolCount\": 2')||joinedInput.includes('\"codeOrSchemaBurden\":true')||joinedInput.includes('\"codeOrSchemaBurden\": true');const classifierResponse=isHardPrompt?JSON.stringify({difficulty:"hard"}):JSON.stringify({difficulty:"easy"});if(parsed.stream){res.writeHead(200,{"content-type":"text/event-stream; charset=utf-8"});res.write('data: {"type":"response.created","response":{"id":"resp-remote","created_at":1,"model":"openai/gpt-4.1-mini-fast"}}'+"\\n\\n");setTimeout(()=>{res.write('data: {"type":"response.output_text.delta","item_id":"msg_1","delta":'+JSON.stringify(isClassifier?classifierResponse:"remote litellm summary")+'}'+"\\n\\n");setTimeout(()=>{res.end('data: {"type":"response.completed","response":{"usage":{"input_tokens":14,"output_tokens":5}},"_hidden_params":{"response_cost":0.0042,"cache_hit":true}}'+"\\n\\n"+'data: [DONE]'+"\\n\\n");},10);},10);return;}res.setHeader("content-type","application/json");res.end(JSON.stringify({id:"resp-remote",output:[{type:"message",role:"assistant",content:[{type:"output_text",text:isClassifier?classifierResponse:"remote litellm summary"}]}],usage:{input_tokens:14,output_tokens:5,prompt_tokens_details:{cached_tokens:9}},_hidden_params:{response_cost:0.0042,cache_hit:true}}));});return;}if(req.url==="/v1/chat/completions"){let body="";req.on("data",chunk=>body+=chunk);req.on("end",()=>{const parsed=JSON.parse(body||"{}");const joinedMessages=JSON.stringify(parsed.messages??[]);const isClassifier=joinedMessages.includes("ROLE_MODEL_DIFFICULTY_CLASSIFIER");const isHardPrompt=joinedMessages.includes("Analyze this code-edit workflow")||joinedMessages.includes('\"toolCount\":2')||joinedMessages.includes('\"toolCount\": 2')||joinedMessages.includes('\"codeOrSchemaBurden\":true')||joinedMessages.includes('\"codeOrSchemaBurden\": true');const classifierResponse=isHardPrompt?JSON.stringify({difficulty:"hard"}):JSON.stringify({difficulty:"easy"});if(parsed.stream){res.writeHead(200,{"content-type":"text/event-stream; charset=utf-8"});res.write('data: {"id":"chat-remote","object":"chat.completion.chunk","created":1,"model":"openai/gpt-4.1-mini-fast","choices":[{"index":0,"delta":{"role":"assistant","content":"remote "},"finish_reason":null}]}'+"\\n\\n");setTimeout(()=>{res.write('data: {"id":"chat-remote","object":"chat.completion.chunk","created":1,"model":"openai/gpt-4.1-mini-fast","choices":[{"index":0,"delta":{"content":"litellm summary"},"finish_reason":null}]}'+"\\n\\n");setTimeout(()=>{res.end('data: {"id":"chat-remote","object":"chat.completion.chunk","created":1,"model":"openai/gpt-4.1-mini-fast","choices":[{"index":0,"delta":{},"finish_reason":"stop"}],"usage":{"prompt_tokens":14,"completion_tokens":5},"_hidden_params":{"response_cost":0.0042,"cache_hit":true}}'+"\\n\\n"+'data: [DONE]'+"\\n\\n");},10);},10);return;}res.setHeader("content-type","application/json");res.end(JSON.stringify({id:"chat-remote",object:"chat.completion",choices:[{index:0,message:{role:"assistant",content:isClassifier?classifierResponse:"remote litellm summary"},finish_reason:"stop"}],usage:{prompt_tokens:14,completion_tokens:5,total_tokens:19},_hidden_params:{response_cost:0.0042,cache_hit:true}}));});return;}res.statusCode=404;res.end("missing");});server.listen(port,"127.0.0.1");const shutdown=()=>server.close(()=>process.exit(0));process.on("SIGTERM",shutdown);process.on("SIGINT",shutdown);`;
 }
 
 async function postResponses(
@@ -87,6 +90,7 @@ type LlamaSwapValidationModelConfig = {
   readonly command?: string;
   readonly check_endpoint?: string;
   readonly use_model_name?: string;
+  readonly max_difficulty?: "easy" | "medium" | "hard";
 };
 
 type LlamaSwapValidationConfig = {
@@ -103,6 +107,7 @@ type LiteLLMValidationConfig = {
       readonly api_key: string;
       readonly model_list: ReadonlyArray<{
         readonly model_name: string;
+        readonly max_difficulty?: "easy" | "medium" | "hard";
         readonly litellm_params: {
           readonly model: string;
           readonly api_base?: string;
@@ -120,9 +125,18 @@ type RuntimeValidationConfig = {
   readonly model_aliases?: Record<
     string,
     {
+      readonly mode?: "basic" | "difficulty" | "intelligent" | "hybrid";
       readonly model_ids: readonly string[];
     }
   >;
+  readonly difficulty_classifier?: {
+    readonly enabled: boolean;
+    readonly rubric_version: string;
+    readonly source_type: "local" | "remote";
+    readonly model_id: string;
+    readonly timeout_ms: number;
+    readonly fallback_difficulty: "easy" | "medium" | "hard";
+  };
   readonly llama_swap?: LlamaSwapValidationConfig;
   readonly litellm_proxy?: LiteLLMValidationConfig;
 };
@@ -135,6 +149,7 @@ type RuntimeVendorHarnessSummary = {
 
 export type RuntimeVendorValidationPlan = {
   readonly aliasModelId: string;
+  readonly difficultyAliasModelId: string;
   readonly localModelId: string;
   readonly remoteModelId: string;
   readonly decisionConfig: RuntimeValidationConfig;
@@ -171,10 +186,11 @@ function createMockLocalConfig(localModelId: string): RuntimeValidationConfig & 
     ...createDecisionConfig(),
     llama_swap: {
       command: "node",
-      args: ["-e", createLocalVendorScript()],
+      args: ["-e", createSimpleLocalVendorScript()],
       models: {
         [localModelId]: {
           path: "./models/llama-3.1-8b-instruct-q4.gguf",
+          max_difficulty: "easy",
         },
       },
     },
@@ -195,6 +211,7 @@ function createMockRemoteConfig(remoteModelId: string): RuntimeValidationConfig 
           model_list: [
             {
               model_name: remoteModelId,
+              max_difficulty: "hard",
               litellm_params: {
                 model: "openai/gpt-4.1-mini",
               },
@@ -256,6 +273,7 @@ function createRealLocalConfig(input: {
           command: `${quotedNodePath} ${quotedScriptPath} \${PORT}`,
           check_endpoint: "/health",
           use_model_name: "mock/llama-upstream",
+          max_difficulty: "easy",
         },
       },
     },
@@ -275,6 +293,7 @@ function createRealRemoteConfig(input: {
           model_list: [
             {
               model_name: input.remoteModelId,
+              max_difficulty: "hard",
               litellm_params: {
                 model: "openai/gpt-4.1-mini",
                 api_base: input.remoteUpstreamApiBaseUrl,
@@ -295,28 +314,42 @@ export async function createRuntimeVendorValidationPlan(options: {
   const scopePrefix = options.scopeId ?? "runtime-vendor-validation";
   const harnessMode = options.harnessMode ?? "real";
   const aliasModelId = "gpt-5.4";
+  const difficultyAliasModelId = "gpt-5.4-difficulty";
   const localModelId = "local/llama-3.1-8b-instruct";
   const remoteModelId = "openai/gpt-4.1-mini-fast";
 
   if (harnessMode === "mock") {
     const localConfig = createMockLocalConfig(localModelId);
     const remoteConfig = createMockRemoteConfig(remoteModelId);
-    return {
-      aliasModelId,
-      localModelId,
-      remoteModelId,
-      decisionConfig: createDecisionConfig(),
+      return {
+        aliasModelId,
+        difficultyAliasModelId,
+        localModelId,
+        remoteModelId,
+        decisionConfig: createDecisionConfig(),
       localConfig,
       remoteConfig,
-      hybridConfig: {
-        ...createDecisionConfig(),
-        model_aliases: {
-          [aliasModelId]: {
-            model_ids: [localModelId, remoteModelId],
+        hybridConfig: {
+          ...createDecisionConfig(),
+          difficulty_classifier: {
+            enabled: true,
+            rubric_version: "v1",
+            source_type: "remote",
+            model_id: remoteModelId,
+            timeout_ms: 1500,
+            fallback_difficulty: "medium",
           },
-        },
-        llama_swap: localConfig.llama_swap,
-        litellm_proxy: remoteConfig.litellm_proxy,
+          model_aliases: {
+            [aliasModelId]: {
+              model_ids: [localModelId, remoteModelId],
+            },
+            [difficultyAliasModelId]: {
+              mode: "difficulty",
+              model_ids: [localModelId, remoteModelId],
+            },
+          },
+          llama_swap: localConfig.llama_swap,
+          litellm_proxy: remoteConfig.litellm_proxy,
       },
       vendorHarness: {
         local: "managed-node-mock",
@@ -331,7 +364,7 @@ export async function createRuntimeVendorValidationPlan(options: {
     runtimeStateRoot: options.runtimeStateRoot,
     scopeId: scopePrefix,
     fileName: "local-llama-upstream.cjs",
-    contents: createLocalVendorScript(),
+    contents: createSimpleLocalVendorScript(),
   });
   const remoteUpstreamScriptPath = await writeVendorValidationSupportScript({
     runtimeStateRoot: options.runtimeStateRoot,
@@ -353,6 +386,7 @@ export async function createRuntimeVendorValidationPlan(options: {
 
   return {
     aliasModelId,
+    difficultyAliasModelId,
     localModelId,
     remoteModelId,
     decisionConfig: createDecisionConfig(),
@@ -360,8 +394,20 @@ export async function createRuntimeVendorValidationPlan(options: {
     remoteConfig,
     hybridConfig: {
       ...createDecisionConfig(),
+      difficulty_classifier: {
+        enabled: true,
+        rubric_version: "v1",
+        source_type: "remote",
+        model_id: remoteModelId,
+        timeout_ms: 1500,
+        fallback_difficulty: "medium",
+      },
       model_aliases: {
         [aliasModelId]: {
+          model_ids: [localModelId, remoteModelId],
+        },
+        [difficultyAliasModelId]: {
+          mode: "difficulty",
           model_ids: [localModelId, remoteModelId],
         },
       },
@@ -552,6 +598,12 @@ export async function runRuntimeVendorValidation(options: {
     localVendorId: string | undefined;
     remoteVendorId: string | undefined;
   };
+  difficultyHybrid: {
+    easyVendorId: string | undefined;
+    hardVendorId: string | undefined;
+    easyObservation: Awaited<ReturnType<RuntimeBridgeBackend["readRequestObservation"]>>;
+    hardObservation: Awaited<ReturnType<RuntimeBridgeBackend["readRequestObservation"]>>;
+  };
   aliasHybrid: {
     vendorId: string | undefined;
     outputText: string;
@@ -691,6 +743,41 @@ export async function runRuntimeVendorValidation(options: {
             },
             "req-runtime-vendor-hybrid-alias",
           );
+          const hybridDifficultyEasy = await hybridRuntime.backend.executeResponses(
+            {
+              model: plan.difficultyAliasModelId,
+              input: "Say hello in one sentence.",
+            },
+            "req-runtime-vendor-hybrid-difficulty-easy",
+          );
+          const hybridDifficultyHard = await hybridRuntime.backend.executeResponses(
+            {
+              model: plan.difficultyAliasModelId,
+              input:
+                "Analyze this code-edit workflow, apply multiple constraints, verify the final contract end to end, and decompose the work before producing the answer.",
+              tools: [
+                {
+                  type: "function",
+                  name: "readSchema",
+                  description: "Read the current schema before editing.",
+                  parameters: {
+                    type: "object",
+                    properties: {},
+                  },
+                },
+                {
+                  type: "function",
+                  name: "runTests",
+                  description: "Run the relevant verification suite after the change.",
+                  parameters: {
+                    type: "object",
+                    properties: {},
+                  },
+                },
+              ],
+            },
+            "req-runtime-vendor-hybrid-difficulty-hard",
+          );
           const healthResponse = await fetch(`${hybridRuntime.baseUrl}/healthz`);
           const telemetrySummary = await hybridRuntime.backend.readTelemetrySummary();
           const telemetryRows = await hybridRuntime.backend.listTelemetryComparisonRows();
@@ -703,6 +790,12 @@ export async function runRuntimeVendorValidation(options: {
           );
           const hybridAliasObservation = await hybridRuntime.backend.readRequestObservation(
             "req-runtime-vendor-hybrid-alias",
+          );
+          const hybridDifficultyEasyObservation = await hybridRuntime.backend.readRequestObservation(
+            "req-runtime-vendor-hybrid-difficulty-easy",
+          );
+          const hybridDifficultyHardObservation = await hybridRuntime.backend.readRequestObservation(
+            "req-runtime-vendor-hybrid-difficulty-hard",
           );
           const localObservedProfile = await localRuntime.backend.readEndpointProfile(localDirect.endpointId);
           const remoteObservedProfile = await remoteRuntime.backend.readEndpointProfile(remoteDirect.endpointId);
@@ -732,6 +825,12 @@ export async function runRuntimeVendorValidation(options: {
               executionMode: (await hybridRuntime.backend.readRuntimeSummary()).executionMode,
               localVendorId: hybridLocal.vendorId,
               remoteVendorId: hybridRemote.vendorId,
+            },
+            difficultyHybrid: {
+              easyVendorId: hybridDifficultyEasy.vendorId,
+              hardVendorId: hybridDifficultyHard.vendorId,
+              easyObservation: hybridDifficultyEasyObservation,
+              hardObservation: hybridDifficultyHardObservation,
             },
             aliasHybrid: {
               vendorId: hybridAlias.vendorId,

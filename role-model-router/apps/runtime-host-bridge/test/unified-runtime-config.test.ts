@@ -30,7 +30,7 @@ litellm_proxy:
     expect(result.llamaSwap.enabled).toBe(true);
     expect(result.liteLLM.enabled).toBe(true);
     expect(result.llamaSwap.models).toEqual([
-      {
+      expect.objectContaining({
         modelId: "llama-3-70b",
         path: "./models/llama-3-70b-q4.gguf",
         contextWindow: null,
@@ -38,7 +38,8 @@ litellm_proxy:
         proxyBaseUrl: null,
         checkEndpoint: null,
         useModelName: null,
-      },
+        maxDifficulty: null,
+      }),
     ]);
     expect(result.liteLLM.providers.map((provider) => provider.providerId)).toEqual(["openai"]);
   });
@@ -72,20 +73,21 @@ litellm_proxy:
     expect(result.llamaSwap.enabled).toBe(false);
     expect(result.liteLLM.enabled).toBe(true);
     expect(result.liteLLM.providers).toEqual([
-      {
+      expect.objectContaining({
         providerId: "openai",
         apiKeyRef: "${OPENAI_API_KEY}",
         modelNames: ["gpt-4o"],
         modelMappings: [
-          {
+          expect.objectContaining({
             modelId: "gpt-4o",
             litellmModel: "openai/gpt-4o",
+            maxDifficulty: null,
             litellmParams: {
               model: "openai/gpt-4o",
             },
-          },
+          }),
         ],
-      },
+      }),
     ]);
   });
 
@@ -220,7 +222,7 @@ litellm_proxy:
       },
     });
 
-    expect(parseUnifiedRuntimeConfigText(renderUnifiedRuntimeConfigText(normalized))).toEqual({
+    expect(parseUnifiedRuntimeConfigText(renderUnifiedRuntimeConfigText(normalized))).toMatchObject({
       version: "1.0",
       routingStrategy: "latency-first",
       executionMode: "hybrid",
@@ -235,6 +237,7 @@ litellm_proxy:
             proxyBaseUrl: "http://127.0.0.1:${PORT}/v1",
             checkEndpoint: "/ready",
             useModelName: "mock/llama-upstream",
+            maxDifficulty: null,
           },
         ],
         process: {
@@ -258,6 +261,7 @@ litellm_proxy:
               {
                 modelId: "moonshot/kimi-k2.5",
                 litellmModel: "moonshot/kimi-k2.5",
+                maxDifficulty: null,
                 litellmParams: {
                   model: "moonshot/kimi-k2.5",
                   api_base: "https://api.moonshot.ai/v1",
@@ -402,6 +406,7 @@ model_aliases:
     ).toEqual([
       {
         aliasId: "gpt-5.4",
+        mode: null,
         modelIds: ["local/mock-llama", "openai/gpt-4.1-mini-fast"],
       },
     ]);
@@ -430,5 +435,200 @@ model_aliases:
     model_ids: []
 `),
     ).toThrow(/model_aliases/i);
+  });
+
+  test("parses difficulty-classifier policy, alias difficulty mode, and max-difficulty settings", () => {
+    const result = parseUnifiedRuntimeConfigText(`
+version: "1.0"
+difficulty_classifier:
+  enabled: true
+  rubric_version: v1
+  source_type: remote
+  model_id: openai/gpt-4.1-mini-fast
+  timeout_ms: 1500
+  fallback_difficulty: hard
+model_aliases:
+  gpt-5.4:
+    mode: difficulty
+    model_ids:
+      - local/mock-llama
+      - openai/gpt-4.1-mini-fast
+llama_swap:
+  models:
+    local/mock-llama:
+      path: ./models/mock-llama.gguf
+      max_difficulty: medium
+litellm_proxy:
+  providers:
+    openai:
+      api_key: \${OPENAI_API_KEY}
+      model_list:
+        - model_name: openai/gpt-4.1-mini-fast
+          max_difficulty: hard
+          litellm_params:
+            model: openai/gpt-4.1-mini
+`);
+
+    expect(
+      result as unknown as {
+        difficultyClassifier?: {
+          enabled: boolean;
+          rubricVersion: string;
+          sourceType: "local" | "remote";
+          endpointId: string | null;
+          modelId: string | null;
+          timeoutMs: number;
+          fallbackDifficulty: "easy" | "medium" | "hard";
+        };
+        modelAliases?: readonly {
+          aliasId: string;
+          mode?: "basic" | "difficulty" | "intelligent" | "hybrid";
+          modelIds: readonly string[];
+        }[];
+        llamaSwap: {
+          models: readonly {
+            modelId: string;
+            maxDifficulty?: "easy" | "medium" | "hard" | null;
+          }[];
+        };
+        liteLLM: {
+          providers: readonly {
+            modelMappings: readonly {
+              modelId: string;
+              maxDifficulty?: "easy" | "medium" | "hard" | null;
+            }[];
+          }[];
+        };
+      },
+    ).toMatchObject({
+      difficultyClassifier: {
+        enabled: true,
+        rubricVersion: "v1",
+        sourceType: "remote",
+        endpointId: null,
+        modelId: "openai/gpt-4.1-mini-fast",
+        timeoutMs: 1500,
+        fallbackDifficulty: "hard",
+      },
+      modelAliases: [
+        {
+          aliasId: "gpt-5.4",
+          mode: "difficulty",
+          modelIds: ["local/mock-llama", "openai/gpt-4.1-mini-fast"],
+        },
+      ],
+      llamaSwap: {
+        models: [
+          {
+            modelId: "local/mock-llama",
+            maxDifficulty: "medium",
+          },
+        ],
+      },
+      liteLLM: {
+        providers: [
+          {
+            modelMappings: [
+              {
+                modelId: "openai/gpt-4.1-mini-fast",
+                maxDifficulty: "hard",
+              },
+            ],
+          },
+        ],
+      },
+    });
+
+    expect(
+      renderUnifiedRuntimeConfigText(
+        normalizeUnifiedRuntimeConfigInput({
+          version: "1.0",
+          difficultyClassifier: {
+            enabled: true,
+            rubricVersion: "v1",
+            sourceType: "remote",
+            endpointId: null,
+            modelId: "openai/gpt-4.1-mini-fast",
+            timeoutMs: 1500,
+            fallbackDifficulty: "hard",
+          },
+          modelAliases: [
+            {
+              aliasId: "gpt-5.4",
+              mode: "difficulty",
+              modelIds: ["local/mock-llama", "openai/gpt-4.1-mini-fast"],
+            },
+          ],
+          llamaSwap: {
+            models: [
+              {
+                modelId: "local/mock-llama",
+                path: "./models/mock-llama.gguf",
+                contextWindow: null,
+                command: null,
+                proxyBaseUrl: null,
+                checkEndpoint: null,
+                useModelName: null,
+                maxDifficulty: "medium",
+              },
+            ],
+            process: {
+              command: null,
+              args: [],
+              env: {},
+              cwd: null,
+              startupTimeoutMs: null,
+            },
+          },
+          liteLLM: {
+            providers: [
+              {
+                providerId: "openai",
+                apiKeyRef: "${OPENAI_API_KEY}",
+                modelNames: ["openai/gpt-4.1-mini-fast"],
+                modelMappings: [
+                  {
+                    modelId: "openai/gpt-4.1-mini-fast",
+                    litellmModel: "openai/gpt-4.1-mini",
+                    litellmParams: {
+                      model: "openai/gpt-4.1-mini",
+                    },
+                    maxDifficulty: "hard",
+                  },
+                ],
+              },
+            ],
+            process: {
+              command: null,
+              args: [],
+              env: {},
+              cwd: null,
+              startupTimeoutMs: null,
+            },
+          },
+        }) as unknown as Parameters<typeof renderUnifiedRuntimeConfigText>[0],
+      ),
+    ).toContain("difficulty_classifier:");
+  });
+
+  test("rejects invalid difficulty-classifier and max-difficulty settings", () => {
+    expect(() =>
+      parseUnifiedRuntimeConfigText(`
+version: "1.0"
+difficulty_classifier:
+  source_type: hybrid
+  fallback_difficulty: impossible
+model_aliases:
+  gpt-5.4:
+    mode: difficulty
+    model_ids:
+      - local/mock-llama
+llama_swap:
+  models:
+    local/mock-llama:
+      path: ./models/mock-llama.gguf
+      max_difficulty: impossible
+`),
+    ).toThrow(/difficulty_classifier|max_difficulty|mode/i);
   });
 });

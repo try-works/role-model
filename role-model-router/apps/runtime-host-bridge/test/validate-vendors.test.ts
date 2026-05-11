@@ -100,6 +100,71 @@ describe("runRuntimeVendorValidation", () => {
         }),
       }),
     );
+    expect(
+      result as typeof result & {
+        difficultyHybrid?: {
+          easyVendorId?: string;
+          hardVendorId?: string;
+          easyObservation?: {
+            routingDiagnostics?: {
+              difficultyRouting?: {
+                difficulty?: string;
+                strategy?: string;
+              };
+            };
+          };
+          hardObservation?: {
+            routingDiagnostics?: {
+              difficultyRouting?: {
+                difficulty?: string;
+                strategy?: string;
+                excludedEndpointIds?: readonly string[];
+              };
+            };
+          };
+        };
+      },
+    ).toEqual(
+      expect.objectContaining({
+        difficultyHybrid: expect.objectContaining({
+          easyVendorId: expect.stringMatching(/^(llama-swap|litellm)$/),
+          hardVendorId: "litellm",
+          easyObservation: expect.objectContaining({
+            routingDiagnostics: expect.objectContaining({
+              aliasResolution: expect.objectContaining({
+                requestedModel: "gpt-5.4-difficulty",
+                aliasId: "gpt-5.4-difficulty",
+                allowEndpoints: [
+                  "llama-swap.local.local-llama-3-1-8b-instruct",
+                  "openai.litellm.global.openai-gpt-4-1-mini-fast",
+                ],
+              }),
+              difficultyRouting: expect.objectContaining({
+                difficulty: "easy",
+                strategy: "cost",
+              }),
+            }),
+          }),
+          hardObservation: expect.objectContaining({
+            routingDiagnostics: expect.objectContaining({
+              aliasResolution: expect.objectContaining({
+                requestedModel: "gpt-5.4-difficulty",
+                aliasId: "gpt-5.4-difficulty",
+                allowEndpoints: [
+                  "llama-swap.local.local-llama-3-1-8b-instruct",
+                  "openai.litellm.global.openai-gpt-4-1-mini-fast",
+                ],
+              }),
+              difficultyRouting: expect.objectContaining({
+                difficulty: "hard",
+                strategy: "quality",
+                excludedEndpointIds: ["llama-swap.local.local-llama-3-1-8b-instruct"],
+              }),
+            }),
+          }),
+        }),
+      }),
+    );
     expect(result.vendorHarness).toEqual({
       local: "managed-node-mock",
       remote: "managed-node-mock",
@@ -107,10 +172,10 @@ describe("runRuntimeVendorValidation", () => {
     });
     expect(result.telemetry.summary).toEqual(
       expect.objectContaining({
-        requestCount: 3,
+        requestCount: 5,
         sourceBreakdown: expect.objectContaining({
           local: expect.objectContaining({ requestCount: 1 }),
-          remote: expect.objectContaining({ requestCount: 2 }),
+          remote: expect.objectContaining({ requestCount: 4 }),
         }),
       }),
     );
@@ -138,6 +203,14 @@ describe("runRuntimeVendorValidation", () => {
         }),
         expect.objectContaining({
           requestId: "req-runtime-vendor-hybrid-alias",
+          sourceType: "remote",
+        }),
+        expect.objectContaining({
+          requestId: "req-runtime-vendor-hybrid-difficulty-easy",
+          sourceType: "remote",
+        }),
+        expect.objectContaining({
+          requestId: "req-runtime-vendor-hybrid-difficulty-hard",
           sourceType: "remote",
         }),
       ]),

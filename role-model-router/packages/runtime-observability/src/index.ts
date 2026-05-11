@@ -14,6 +14,21 @@ export interface RuntimeRoutingDiagnostics {
     readonly resolvedModelIds: readonly string[];
     readonly allowEndpoints: readonly string[];
   };
+  readonly difficultyRouting?: {
+    readonly difficulty: "easy" | "medium" | "hard";
+    readonly strategy: string;
+    readonly fallbackApplied: boolean;
+    readonly fallbackReason?: string;
+    readonly excludedEndpointIds?: readonly string[];
+    readonly rubricSignals: {
+      readonly contextTokens: number;
+      readonly toolCount: number;
+      readonly historyTurnCount: number;
+      readonly instructionConstraintCount: number;
+      readonly decompositionKeywordCount: number;
+      readonly codeOrSchemaBurden: boolean;
+    };
+  };
   readonly observedProfile?: {
     readonly endpointId: string;
     readonly source: "runtime-state" | "none";

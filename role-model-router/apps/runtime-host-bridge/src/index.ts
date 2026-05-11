@@ -5,6 +5,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
+import { setTimeout as delay } from "node:timers/promises";
 
 import type { NormalizedCatalog, NormalizedCatalogModel } from "@role-model-router/catalog";
 import { assembleContextEnvelope } from "@role-model-router/context-envelope";
@@ -84,6 +85,8 @@ import {
   resolveUnifiedRuntimeObservedDataConfig,
   type UnifiedRuntimeModelAliasConfig,
   type UnifiedRuntimeConfig,
+  type UnifiedRuntimeDifficultyBucket,
+  type UnifiedRuntimeDifficultyClassifierConfig,
   type UnifiedRuntimeExecutionMode,
 } from "./unified-runtime-config.js";
 import { resolveLlamaSwapCommand } from "./runtime-assets.js";
@@ -189,7 +192,7 @@ export interface BridgeExecutionPlan {
     readonly requiredModalities: readonly ["text"];
     readonly contextTokens: number;
     readonly needsTools: boolean;
-    readonly strategy: "balanced";
+    readonly strategy: "balanced" | "cost" | "quality";
     readonly preferLocal: false;
     readonly allowEndpoints: readonly string[];
   };
@@ -204,7 +207,287 @@ export interface BridgeExecutionPlan {
     readonly maxOutputTokens?: number;
     readonly temperature?: number;
   };
+  readonly routingDiagnostics?: Pick<RuntimeRoutingDiagnostics, "aliasResolution" | "difficultyRouting">;
+}
+
+interface BridgeDifficultyRoutingContext {
+  readonly difficultyClassifier?: UnifiedRuntimeDifficultyClassifierConfig;
+  readonly endpointMaxDifficultyByEndpointId?: Readonly<Record<string, UnifiedRuntimeDifficultyBucket>>;
+  readonly resolvedClassification?: {
+    readonly difficulty: UnifiedRuntimeDifficultyBucket;
+    readonly fallbackApplied: boolean;
+    readonly fallbackReason?: string;
+    readonly rubricSignals: DifficultyRoutingSignals;
+  };
+}
+
+type DifficultyRoutingSignals = RuntimeRoutingDiagnostics["difficultyRouting"]["rubricSignals"];
+
+const DIFFICULTY_BUCKET_ORDER: Record<UnifiedRuntimeDifficultyBucket, number> = {
+  easy: 0,
+  medium: 1,
+  hard: 2,
+};
+
+function countMatches(value: string, pattern: RegExp): number {
+  return value.match(pattern)?.length ?? 0;
+}
+
+function summarizeDifficultySignals(input: {
+  readonly messages: readonly OpenAIChatCompletionsMessage[];
+  readonly contextTokens: number;
+  readonly toolCount: number;
+}): DifficultyRoutingSignals {
+  const combined = input.messages.map((message) => message.content).join("\n");
+  const instructionConstraintCount = countMatches(
+    combined.toLowerCase(),
+    /\b(must|should|need to|required|preserve|verify|strict|do not|don't|never|without|constraint|compatible)\b/g,
+  );
+  const decompositionKeywordCount = countMatches(
+    combined.toLowerCase(),
+    /\b(analyze|compare|iterate|plan|step|decompose|refactor|workflow|multi-step|across)\b/g,
+  );
+  return {
+    contextTokens: input.contextTokens,
+    toolCount: input.toolCount,
+    historyTurnCount: input.messages.length,
+    instructionConstraintCount,
+    decompositionKeywordCount,
+    codeOrSchemaBurden: /\b(code|diff|patch|refactor|schema|contract|validation|test)\b/i.test(combined),
+  };
+}
+
+function classifyDifficultyFromSignals(input: {
+  readonly signals: DifficultyRoutingSignals;
+  readonly classifier?: UnifiedRuntimeDifficultyClassifierConfig;
+}): {
+  readonly difficulty: UnifiedRuntimeDifficultyBucket;
+  readonly fallbackApplied: boolean;
+  readonly fallbackReason?: string;
+} {
+  if (input.signals.historyTurnCount === 0) {
+    return {
+      difficulty: input.classifier?.fallbackDifficulty ?? "hard",
+      fallbackApplied: true,
+      fallbackReason: "missing-request-content",
+    };
+  }
+
+  let score = 0;
+  if (input.signals.contextTokens >= 2000) {
+    score += 3;
+  } else if (input.signals.contextTokens >= 600) {
+    score += 1;
+  }
+  if (input.signals.toolCount >= 2) {
+    score += 3;
+  } else if (input.signals.toolCount === 1) {
+    score += 1;
+  }
+  if (input.signals.historyTurnCount >= 4) {
+    score += 2;
+  } else if (input.signals.historyTurnCount >= 2) {
+    score += 1;
+  }
+  if (input.signals.instructionConstraintCount >= 5) {
+    score += 2;
+  } else if (input.signals.instructionConstraintCount >= 2) {
+    score += 1;
+  }
+  if (input.signals.decompositionKeywordCount >= 3) {
+    score += 2;
+  } else if (input.signals.decompositionKeywordCount >= 1) {
+    score += 1;
+  }
+  if (input.signals.codeOrSchemaBurden) {
+    score += 2;
+  }
+
+  if (score >= 7) {
+    return {
+      difficulty: "hard",
+      fallbackApplied: false,
+    };
+  }
+  if (score >= 3) {
+    return {
+      difficulty: "medium",
+      fallbackApplied: false,
+    };
+  }
+  return {
+    difficulty: "easy",
+    fallbackApplied: false,
+  };
+}
+
+function createDifficultyFallbackResult(input: {
+  readonly signals: DifficultyRoutingSignals;
+  readonly classifier?: UnifiedRuntimeDifficultyClassifierConfig;
+  readonly reason: string;
+}): NonNullable<BridgeDifficultyRoutingContext["resolvedClassification"]> {
+  return {
+    difficulty: input.classifier?.fallbackDifficulty ?? "hard",
+    fallbackApplied: true,
+    fallbackReason: input.reason,
+    rubricSignals: input.signals,
+  };
+}
+
+function parseDifficultyBucket(value: unknown): UnifiedRuntimeDifficultyBucket | null {
+  if (typeof value !== "string") {
+    return null;
+  }
+  switch (value.trim().toLowerCase()) {
+    case "easy":
+    case "medium":
+    case "hard":
+      return value.trim().toLowerCase() as UnifiedRuntimeDifficultyBucket;
+    default:
+      return null;
+  }
+}
+
+function parseClassifierDifficultyOutput(text: string): UnifiedRuntimeDifficultyBucket | null {
+  const trimmed = text.trim();
+  const direct = parseDifficultyBucket(trimmed);
+  if (direct) {
+    return direct;
+  }
+
+  const fenced = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/i)?.[1] ?? trimmed;
+  try {
+    const parsed = JSON.parse(fenced) as { difficulty?: unknown };
+    const fromJson = parseDifficultyBucket(parsed?.difficulty);
+    if (fromJson) {
+      return fromJson;
+    }
+  } catch {
+    // Fall through to heuristic extraction.
+  }
+
+  const matched = fenced.match(/\b(easy|medium|hard)\b/i)?.[1];
+  return parseDifficultyBucket(matched);
+}
+
+function buildDifficultyClassifierMessages(input: {
+  readonly messages: readonly OpenAIChatCompletionsMessage[];
+  readonly signals: DifficultyRoutingSignals;
+}): readonly OpenAIChatCompletionsMessage[] {
+  return [
+    {
+      role: "system",
+      content:
+        'ROLE_MODEL_DIFFICULTY_CLASSIFIER\nReturn only compact JSON in the form {"difficulty":"easy|medium|hard"} using the supplied rubric signals.',
+    },
+    {
+      role: "user",
+      content: JSON.stringify(
+        {
+          rubricSignals: input.signals,
+          messages: input.messages,
+        },
+        null,
+        2,
+      ),
+    },
+  ];
+}
+
+function toDifficultyStrategy(difficulty: UnifiedRuntimeDifficultyBucket): "balanced" | "cost" | "quality" {
+  switch (difficulty) {
+    case "easy":
+      return "cost";
+    case "hard":
+      return "quality";
+    default:
+      return "balanced";
+  }
+}
+
+function filterEndpointsByDifficulty(input: {
+  readonly allowEndpoints: readonly string[];
+  readonly difficulty: UnifiedRuntimeDifficultyBucket;
+  readonly endpointMaxDifficultyByEndpointId?: Readonly<Record<string, UnifiedRuntimeDifficultyBucket>>;
+}): {
+  readonly allowEndpoints: readonly string[];
+  readonly excludedEndpointIds: readonly string[];
+} {
+  const nextAllowed: string[] = [];
+  const excludedEndpointIds: string[] = [];
+  for (const endpointId of input.allowEndpoints) {
+    const maxDifficulty = input.endpointMaxDifficultyByEndpointId?.[endpointId] ?? "hard";
+    if (DIFFICULTY_BUCKET_ORDER[maxDifficulty] >= DIFFICULTY_BUCKET_ORDER[input.difficulty]) {
+      nextAllowed.push(endpointId);
+      continue;
+    }
+    excludedEndpointIds.push(endpointId);
+  }
+  return {
+    allowEndpoints: nextAllowed,
+    excludedEndpointIds,
+  };
+}
+
+function maybeApplyDifficultyRouting(input: {
+  readonly requestedModel: string;
+  readonly modelAliases: readonly UnifiedRuntimeModelAliasConfig[];
+  readonly messages: readonly OpenAIChatCompletionsMessage[];
+  readonly contextTokens: number;
+  readonly toolCount: number;
+  readonly allowEndpoints: readonly string[];
   readonly routingDiagnostics?: Pick<RuntimeRoutingDiagnostics, "aliasResolution">;
+  readonly difficultyContext?: BridgeDifficultyRoutingContext;
+}): {
+  readonly allowEndpoints: readonly string[];
+  readonly strategy: "balanced" | "cost" | "quality";
+  readonly routingDiagnostics?: Pick<RuntimeRoutingDiagnostics, "aliasResolution" | "difficultyRouting">;
+} {
+  const alias = input.modelAliases.find((entry) => entry.aliasId === input.requestedModel);
+  if (!alias || alias.mode !== "difficulty") {
+    return {
+      allowEndpoints: input.allowEndpoints,
+      strategy: "balanced",
+      routingDiagnostics: input.routingDiagnostics,
+    };
+  }
+
+  const signals = summarizeDifficultySignals({
+    messages: input.messages,
+    contextTokens: input.contextTokens,
+    toolCount: input.toolCount,
+  });
+  const classified =
+    input.difficultyContext?.resolvedClassification ??
+    {
+      ...classifyDifficultyFromSignals({
+        signals,
+        classifier: input.difficultyContext?.difficultyClassifier,
+      }),
+      rubricSignals: signals,
+    };
+  const strategy = toDifficultyStrategy(classified.difficulty);
+  const gated = filterEndpointsByDifficulty({
+    allowEndpoints: input.allowEndpoints,
+    difficulty: classified.difficulty,
+    endpointMaxDifficultyByEndpointId: input.difficultyContext?.endpointMaxDifficultyByEndpointId,
+  });
+
+  return {
+    allowEndpoints: gated.allowEndpoints,
+    strategy,
+    routingDiagnostics: {
+      ...input.routingDiagnostics,
+      difficultyRouting: {
+        difficulty: classified.difficulty,
+        strategy,
+        fallbackApplied: classified.fallbackApplied,
+        ...(classified.fallbackReason ? { fallbackReason: classified.fallbackReason } : {}),
+        ...(gated.excludedEndpointIds.length > 0 ? { excludedEndpointIds: gated.excludedEndpointIds } : {}),
+        rubricSignals: classified.rubricSignals,
+      },
+    },
+  };
 }
 
 export interface BridgeServer {
@@ -778,6 +1061,31 @@ function createUnifiedCloudSources(
       },
     })),
   );
+}
+
+function buildEndpointMaxDifficultyByEndpointId(
+  config: UnifiedRuntimeConfig | null,
+): Readonly<Record<string, UnifiedRuntimeDifficultyBucket>> {
+  if (!config) {
+    return {};
+  }
+
+  const limits: Record<string, UnifiedRuntimeDifficultyBucket> = {};
+  for (const model of config.llamaSwap.models) {
+    if (!model.maxDifficulty) {
+      continue;
+    }
+    limits[`llama-swap.local.${slugify(model.modelId)}`] = model.maxDifficulty;
+  }
+  for (const provider of config.liteLLM.providers) {
+    for (const mapping of provider.modelMappings) {
+      if (!mapping.maxDifficulty) {
+        continue;
+      }
+      limits[`${provider.providerId}.litellm.global.${slugify(mapping.modelId)}`] = mapping.maxDifficulty;
+    }
+  }
+  return limits;
 }
 
 function createUnifiedProviderAccounts(
@@ -1533,10 +1841,22 @@ export function mapChatCompletionsRequest(
   body: OpenAIChatCompletionsBody,
   requestId: string,
   modelAliases: readonly UnifiedRuntimeModelAliasConfig[] = [],
+  difficultyContext?: BridgeDifficultyRoutingContext,
 ): BridgeExecutionPlan {
+  const contextTokens = estimateContextTokens(body.messages, body.tools?.length ?? 0);
   const { allowEndpoints, routingDiagnostics } = resolveRequestedModelPool(registry, body.model, modelAliases);
+  const difficultyRouting = maybeApplyDifficultyRouting({
+    requestedModel: body.model,
+    modelAliases,
+    messages: body.messages,
+    contextTokens,
+    toolCount: body.tools?.length ?? 0,
+    allowEndpoints,
+    routingDiagnostics,
+    difficultyContext,
+  });
 
-  if (allowEndpoints.length === 0) {
+  if (difficultyRouting.allowEndpoints.length === 0) {
     throw new Error(`No registry endpoints are available for requested model ${body.model}.`);
   }
 
@@ -1549,11 +1869,11 @@ export function mapChatCompletionsRequest(
       requiredCapabilities: ["text.chat"],
       preferredCapabilities: [],
       requiredModalities: ["text"],
-      contextTokens: estimateContextTokens(body.messages, tools?.length ?? 0),
+      contextTokens,
       needsTools: Boolean(tools?.length),
-      strategy: "balanced",
+      strategy: difficultyRouting.strategy,
       preferLocal: false,
-      allowEndpoints,
+      allowEndpoints: difficultyRouting.allowEndpoints,
     },
     executionRequest: {
       messages: body.messages,
@@ -1566,7 +1886,7 @@ export function mapChatCompletionsRequest(
         ? { temperature: body.temperature }
         : {}),
     },
-    ...(routingDiagnostics ? { routingDiagnostics } : {}),
+    ...(difficultyRouting.routingDiagnostics ? { routingDiagnostics: difficultyRouting.routingDiagnostics } : {}),
   };
 }
 
@@ -1575,15 +1895,27 @@ export function mapResponsesRequest(
   body: OpenAIResponsesBody,
   requestId: string,
   modelAliases: readonly UnifiedRuntimeModelAliasConfig[] = [],
+  difficultyContext?: BridgeDifficultyRoutingContext,
 ): BridgeExecutionPlan {
+  const messages = toResponsesInputMessages(body.input);
+  const contextTokens = estimateContextTokens(messages, body.tools?.length ?? 0);
   const { allowEndpoints, routingDiagnostics } = resolveRequestedModelPool(registry, body.model, modelAliases);
+  const difficultyRouting = maybeApplyDifficultyRouting({
+    requestedModel: body.model,
+    modelAliases,
+    messages,
+    contextTokens,
+    toolCount: body.tools?.length ?? 0,
+    allowEndpoints,
+    routingDiagnostics,
+    difficultyContext,
+  });
 
-  if (allowEndpoints.length === 0) {
+  if (difficultyRouting.allowEndpoints.length === 0) {
     throw new Error(`No registry endpoints are available for requested model ${body.model}.`);
   }
 
   const tools = body.tools?.map(toResponsesToolDefinition);
-  const messages = toResponsesInputMessages(body.input);
 
   return {
     routingRequest: {
@@ -1592,11 +1924,11 @@ export function mapResponsesRequest(
       requiredCapabilities: ["text.chat"],
       preferredCapabilities: [],
       requiredModalities: ["text"],
-      contextTokens: estimateContextTokens(messages, tools?.length ?? 0),
+      contextTokens,
       needsTools: Boolean(tools?.length),
-      strategy: "balanced",
+      strategy: difficultyRouting.strategy,
       preferLocal: false,
-      allowEndpoints,
+      allowEndpoints: difficultyRouting.allowEndpoints,
     },
     executionRequest: {
       messages,
@@ -1609,7 +1941,7 @@ export function mapResponsesRequest(
         ? { temperature: body.temperature }
         : {}),
     },
-    ...(routingDiagnostics ? { routingDiagnostics } : {}),
+    ...(difficultyRouting.routingDiagnostics ? { routingDiagnostics: difficultyRouting.routingDiagnostics } : {}),
   };
 }
 
@@ -3644,6 +3976,9 @@ export async function createRuntimeBridgeBackend(
     requestId: string,
     streamRequested: boolean | undefined,
     streamWriter?: BridgeStreamWriter,
+    executionOptions?: {
+      readonly persistObservation?: boolean;
+    },
   ) => {
     const observedDataConfig = resolveUnifiedRuntimeObservedDataConfig(currentUnifiedRuntimeConfig);
     const routingTimeMs = Date.now();
@@ -3892,61 +4227,176 @@ export async function createRuntimeBridgeBackend(
         source: "none",
         readMode: "per-request",
       } as const);
-    const bundle = createRuntimeObservationBundle({
-      decision: routed.decision,
-      routingDiagnostics: {
-        ...routed.routingDiagnostics,
-        ...plan.routingDiagnostics,
-        observedProfile: observedProfileDiagnostic,
-        effectiveMetrics: summarizeEffectiveMetricsFromDecision(routed.decision),
-        throughputPenalty: summarizeThroughputPenaltyFromDecision(routed.decision),
-      },
-      retrievalReceipt: {
-        receiptId: retrievalReceipt.receiptId,
-        summary: retrievalReceipt.summary,
-      },
-      contextEnvelope: {
-        conversationId: envelope.conversationId,
-        latestHandoffId: envelope.latestHandoff?.handoffId ?? null,
-        estimatedTokenCount: envelope.estimatedTokenCount,
-      },
-      execution,
-      priorSamples: [
-        ...(observabilityHistory.byEndpointId[routed.decision.chosen_endpoint_id] ?? []),
-        ...readObservedPerformanceSamples({
+    if (executionOptions?.persistObservation !== false) {
+      const bundle = createRuntimeObservationBundle({
+        decision: routed.decision,
+        routingDiagnostics: {
+          ...routed.routingDiagnostics,
+          ...plan.routingDiagnostics,
+          observedProfile: observedProfileDiagnostic,
+          effectiveMetrics: summarizeEffectiveMetricsFromDecision(routed.decision),
+          throughputPenalty: summarizeThroughputPenaltyFromDecision(routed.decision),
+        },
+        retrievalReceipt: {
+          receiptId: retrievalReceipt.receiptId,
+          summary: retrievalReceipt.summary,
+        },
+        contextEnvelope: {
+          conversationId: envelope.conversationId,
+          latestHandoffId: envelope.latestHandoff?.handoffId ?? null,
+          estimatedTokenCount: envelope.estimatedTokenCount,
+        },
+        execution,
+        priorSamples: [
+          ...(observabilityHistory.byEndpointId[routed.decision.chosen_endpoint_id] ?? []),
+          ...readObservedPerformanceSamples({
+            databasePath: initialization.databasePath,
+            endpointId: routed.decision.chosen_endpoint_id,
+          }),
+        ],
+        maintenancePolicy: readRuntimeMaintenancePolicy({
           databasePath: initialization.databasePath,
-          endpointId: routed.decision.chosen_endpoint_id,
         }),
-      ],
-      maintenancePolicy: readRuntimeMaintenancePolicy({
+        capturePolicy: observabilityPolicy,
+        tooling: {
+          executions: toolExecutionResult.executions,
+        },
+        ...(providerAccount
+          ? {
+              accountState: {
+                providerAccountId: providerAccount.providerAccountId,
+                status: providerAccount.status,
+                healthStatus: providerAccount.healthStatus,
+                rotationState: providerAccount.rotationState,
+              },
+            }
+          : {}),
+      });
+      persistRuntimeObservationBundle({
         databasePath: initialization.databasePath,
-      }),
-      capturePolicy: observabilityPolicy,
-      tooling: {
-        executions: toolExecutionResult.executions,
-      },
-      ...(providerAccount
-        ? {
-            accountState: {
-              providerAccountId: providerAccount.providerAccountId,
-              status: providerAccount.status,
-              healthStatus: providerAccount.healthStatus,
-              rotationState: providerAccount.rotationState,
-            },
-          }
-        : {}),
-    });
-    persistRuntimeObservationBundle({
-      databasePath: initialization.databasePath,
-      observation: bundle,
-    });
-    emitTelemetryUpdate(bundle.requestId);
+        observation: bundle,
+      });
+      emitTelemetryUpdate(bundle.requestId);
+    }
 
     return {
       routingDecisionId,
       execution,
       toolExecutionResult,
     };
+  };
+
+  const resolveDifficultyClassification = async (input: {
+    readonly requestId: string;
+    readonly requestedModel: string;
+    readonly messages: readonly OpenAIChatCompletionsMessage[];
+    readonly contextTokens: number;
+    readonly toolCount: number;
+  }): Promise<NonNullable<BridgeDifficultyRoutingContext["resolvedClassification"]> | undefined> => {
+    const alias = currentUnifiedRuntimeConfig?.modelAliases?.find((entry) => entry.aliasId === input.requestedModel);
+    if (!alias || alias.mode !== "difficulty") {
+      return undefined;
+    }
+
+    const signals = summarizeDifficultySignals({
+      messages: input.messages,
+      contextTokens: input.contextTokens,
+      toolCount: input.toolCount,
+    });
+    if (signals.historyTurnCount === 0) {
+      return createDifficultyFallbackResult({
+        signals,
+        classifier: currentUnifiedRuntimeConfig?.difficultyClassifier,
+        reason: "missing-request-content",
+      });
+    }
+
+    const classifier = currentUnifiedRuntimeConfig?.difficultyClassifier;
+    if (!classifier?.enabled) {
+      return {
+        ...classifyDifficultyFromSignals({
+          signals,
+          classifier,
+        }),
+        rubricSignals: signals,
+      };
+    }
+
+    const classifierAllowEndpoints = currentRegistry.endpoints
+      .filter(
+        (endpoint) =>
+          endpoint.identity.model_id === classifier.modelId &&
+          toSourceType(endpoint.identity.endpoint_kind) === classifier.sourceType,
+      )
+      .map((endpoint) => endpoint.identity.endpoint_id)
+      .sort(compareText);
+
+    if (classifierAllowEndpoints.length === 0) {
+      return createDifficultyFallbackResult({
+        signals,
+        classifier,
+        reason: "classifier-endpoint-unavailable",
+      });
+    }
+
+    const classifierPlan: BridgeExecutionPlan = {
+      routingRequest: {
+        requestId: `${input.requestId}:difficulty-classifier`,
+        taskType: "text.chat",
+        requiredCapabilities: ["text.chat"],
+        preferredCapabilities: [],
+        requiredModalities: ["text"],
+        contextTokens: estimateContextTokens(buildDifficultyClassifierMessages({ messages: input.messages, signals }), 0),
+        needsTools: false,
+        strategy: "balanced",
+        preferLocal: false,
+        allowEndpoints: classifierAllowEndpoints,
+      },
+      executionRequest: {
+        messages: buildDifficultyClassifierMessages({
+          messages: input.messages,
+          signals,
+        }),
+        temperature: 0,
+        maxOutputTokens: 32,
+      },
+    };
+
+    try {
+      const classifierExecution = await Promise.race([
+        executeBridgePlan(
+          classifierPlan,
+          `${input.requestId}:difficulty-classifier`,
+          false,
+          undefined,
+          { persistObservation: false },
+        ),
+        delay(Math.max(1, classifier.timeoutMs)).then(() => {
+          throw new Error("classifier-timeout");
+        }),
+      ]);
+      const difficulty = parseClassifierDifficultyOutput(classifierExecution.execution.normalized.outputText);
+      if (!difficulty) {
+        return createDifficultyFallbackResult({
+          signals,
+          classifier,
+          reason: "invalid-classifier-output",
+        });
+      }
+      return {
+        difficulty,
+        fallbackApplied: false,
+        rubricSignals: signals,
+      };
+    } catch (error) {
+      return createDifficultyFallbackResult({
+        signals,
+        classifier,
+        reason: error instanceof Error && error.message === "classifier-timeout"
+          ? "classifier-timeout"
+          : "classifier-execution-failed",
+      });
+    }
   };
 
   let lastDetectedModel: string | null = null;
@@ -3964,11 +4414,25 @@ export async function createRuntimeBridgeBackend(
       if (currentUnifiedRuntimeConfig?.executionMode === "decision_only" && currentRegistry.endpoints.length === 0) {
         throw createVendorError("runtime", "Configure llama_swap.models or litellm_proxy.providers to enable execution.");
       }
+      const resolvedDifficultyClassification = await resolveDifficultyClassification({
+        requestId,
+        requestedModel: body.model,
+        messages: body.messages,
+        contextTokens: estimateContextTokens(body.messages, body.tools?.length ?? 0),
+        toolCount: body.tools?.length ?? 0,
+      });
       const plan = mapChatCompletionsRequest(
         currentRegistry,
         body,
         requestId,
         currentUnifiedRuntimeConfig?.modelAliases ?? [],
+        {
+          difficultyClassifier: currentUnifiedRuntimeConfig?.difficultyClassifier,
+          endpointMaxDifficultyByEndpointId: buildEndpointMaxDifficultyByEndpointId(currentUnifiedRuntimeConfig),
+          ...(resolvedDifficultyClassification
+            ? { resolvedClassification: resolvedDifficultyClassification }
+            : {}),
+        },
       );
       const { execution, toolExecutionResult, routingDecisionId } = await executeBridgePlan(
         plan,
@@ -4025,11 +4489,26 @@ export async function createRuntimeBridgeBackend(
       if (currentUnifiedRuntimeConfig?.executionMode === "decision_only" && currentRegistry.endpoints.length === 0) {
         throw createVendorError("runtime", "Configure llama_swap.models or litellm_proxy.providers to enable execution.");
       }
+      const responseMessages = toResponsesInputMessages(body.input);
+      const resolvedDifficultyClassification = await resolveDifficultyClassification({
+        requestId,
+        requestedModel: body.model,
+        messages: responseMessages,
+        contextTokens: estimateContextTokens(responseMessages, body.tools?.length ?? 0),
+        toolCount: body.tools?.length ?? 0,
+      });
       const plan = mapResponsesRequest(
         currentRegistry,
         body,
         requestId,
         currentUnifiedRuntimeConfig?.modelAliases ?? [],
+        {
+          difficultyClassifier: currentUnifiedRuntimeConfig?.difficultyClassifier,
+          endpointMaxDifficultyByEndpointId: buildEndpointMaxDifficultyByEndpointId(currentUnifiedRuntimeConfig),
+          ...(resolvedDifficultyClassification
+            ? { resolvedClassification: resolvedDifficultyClassification }
+            : {}),
+        },
       );
       const { execution, routingDecisionId } = await executeBridgePlan(plan, requestId, body.stream, streamWriter);
       const costUsd =
