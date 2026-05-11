@@ -1,6 +1,6 @@
+import { mkdtemp, readFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { mkdtemp, readFile } from "node:fs/promises";
 import { DatabaseSync } from "node:sqlite";
 import { fileURLToPath } from "node:url";
 
@@ -40,7 +40,9 @@ describe("initializeSqliteMemory", () => {
       scopeId: "workspace-dev",
     });
 
-    expect(resolveSqliteMemoryLocation({ runtimeStateRoot, scopeId: "workspace-dev" })).toBe(result.databasePath);
+    expect(resolveSqliteMemoryLocation({ runtimeStateRoot, scopeId: "workspace-dev" })).toBe(
+      result.databasePath,
+    );
     expect(result.databasePath).toContain(path.join("workspace-dev", "memory", "memory.sqlite"));
     expect(result.appliedMigrations).toEqual(["run06-v1-initial-schema"]);
 
@@ -76,8 +78,12 @@ describe("initializeSqliteMemory", () => {
 
   test("persists validated provider accounts by credential reference without storing raw secrets", async () => {
     const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
-    const catalog = await readJson("role-model-router/packages/catalog/data/normalized-catalog.json");
-    const fixture = await readJson<{ accounts: unknown[] }>("testdata/router-runtime/fixtures/provider-accounts.json");
+    const catalog = await readJson(
+      "role-model-router/packages/catalog/data/normalized-catalog.json",
+    );
+    const fixture = await readJson<{ accounts: unknown[] }>(
+      "testdata/router-runtime/fixtures/provider-accounts.json",
+    );
     const validated = validateProviderAccounts({
       catalog,
       additionalProviders: [
@@ -145,7 +151,9 @@ describe("initializeSqliteMemory", () => {
       credential_backend: string;
       credential_ref: string;
     }>;
-    const columns = database.prepare("PRAGMA table_info(provider_accounts)").all() as Array<{ name: string }>;
+    const columns = database.prepare("PRAGMA table_info(provider_accounts)").all() as Array<{
+      name: string;
+    }>;
 
     expect(rows).toEqual([
       {
@@ -201,22 +209,22 @@ describe("initializeSqliteMemory", () => {
             credentialRef: {
               backend: string;
               ref: string;
-             };
-             authMode: string;
-             regionPolicy: {
-               mode: string;
-               regions: string[];
-             };
-             baseUrlOverride?: string;
-             allowedModels: string[];
-             modelRoleBindings: Array<{
-               modelId: string;
-               roleIds: string[];
-             }>;
-             deniedModels: string[];
-             entitlementTags: string[];
-             budgetPolicyRef: string;
-             quotaPolicyRef: string;
+            };
+            authMode: string;
+            regionPolicy: {
+              mode: string;
+              regions: string[];
+            };
+            baseUrlOverride?: string;
+            allowedModels: string[];
+            modelRoleBindings: Array<{
+              modelId: string;
+              roleIds: string[];
+            }>;
+            deniedModels: string[];
+            entitlementTags: string[];
+            budgetPolicyRef: string;
+            quotaPolicyRef: string;
             status: string;
             healthStatus: string;
             rotationState: string;
@@ -236,22 +244,22 @@ describe("initializeSqliteMemory", () => {
           ref: "MOONSHOT_API_KEY",
         },
         authMode: "api-key-static",
-         regionPolicy: {
-           mode: "prefer",
-           regions: ["global"],
-         },
-         baseUrlOverride: "https://api.moonshot.ai/v1",
-         allowedModels: ["moonshot/kimi-k2.5"],
-         modelRoleBindings: [
-           {
-             modelId: "moonshot/kimi-k2.5",
-             roleIds: ["general.chat", "coder.patch"],
-           },
-         ],
-         deniedModels: [],
-         entitlementTags: ["chat"],
-         budgetPolicyRef: "budget.default",
-         quotaPolicyRef: "quota.default",
+        regionPolicy: {
+          mode: "prefer",
+          regions: ["global"],
+        },
+        baseUrlOverride: "https://api.moonshot.ai/v1",
+        allowedModels: ["moonshot/kimi-k2.5"],
+        modelRoleBindings: [
+          {
+            modelId: "moonshot/kimi-k2.5",
+            roleIds: ["general.chat", "coder.patch"],
+          },
+        ],
+        deniedModels: [],
+        entitlementTags: ["chat"],
+        budgetPolicyRef: "budget.default",
+        quotaPolicyRef: "quota.default",
         status: "active",
         healthStatus: "healthy",
         rotationState: "stable",
@@ -261,39 +269,43 @@ describe("initializeSqliteMemory", () => {
     expect(
       (
         sqliteMemory as {
-           listProviderAccounts: (value: { databasePath: string }) => Array<{
-             providerAccountId: string;
-             providerId: string;
-             authMode: string;
-             baseUrlOverride?: string;
-             modelRoleBindings: Array<{
-               modelId: string;
-               roleIds: string[];
-             }>;
-           }>;
-         }
-       ).listProviderAccounts({
-         databasePath: initialized.databasePath,
+          listProviderAccounts: (value: { databasePath: string }) => Array<{
+            providerAccountId: string;
+            providerId: string;
+            authMode: string;
+            baseUrlOverride?: string;
+            modelRoleBindings: Array<{
+              modelId: string;
+              roleIds: string[];
+            }>;
+          }>;
+        }
+      ).listProviderAccounts({
+        databasePath: initialized.databasePath,
       }),
     ).toEqual([
-        expect.objectContaining({
-          providerAccountId: "moonshot.personal.primary",
-          providerId: "moonshot",
-          authMode: "api-key-static",
-          baseUrlOverride: "https://api.moonshot.ai/v1",
-          modelRoleBindings: [
-            {
-              modelId: "moonshot/kimi-k2.5",
-              roleIds: ["general.chat", "coder.patch"],
-            },
-          ],
-        }),
-      ]);
+      expect.objectContaining({
+        providerAccountId: "moonshot.personal.primary",
+        providerId: "moonshot",
+        authMode: "api-key-static",
+        baseUrlOverride: "https://api.moonshot.ai/v1",
+        modelRoleBindings: [
+          {
+            modelId: "moonshot/kimi-k2.5",
+            roleIds: ["general.chat", "coder.patch"],
+          },
+        ],
+      }),
+    ]);
   });
 
   test("persists runtime-managed endpoint activations for dynamic registry materialization", async () => {
-    expect(typeof (sqliteMemory as { listRuntimeEndpoints?: unknown }).listRuntimeEndpoints).toBe("function");
-    expect(typeof (sqliteMemory as { upsertRuntimeEndpoint?: unknown }).upsertRuntimeEndpoint).toBe("function");
+    expect(typeof (sqliteMemory as { listRuntimeEndpoints?: unknown }).listRuntimeEndpoints).toBe(
+      "function",
+    );
+    expect(typeof (sqliteMemory as { upsertRuntimeEndpoint?: unknown }).upsertRuntimeEndpoint).toBe(
+      "function",
+    );
 
     const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
     const initialized = initializeSqliteMemory({
@@ -532,7 +544,9 @@ describe("initializeSqliteMemory", () => {
 
     const database = new DatabaseSync(first.databasePath);
     const maintenanceRows = database
-      .prepare("SELECT maintenance_key, maintenance_value FROM memory_maintenance ORDER BY maintenance_key")
+      .prepare(
+        "SELECT maintenance_key, maintenance_value FROM memory_maintenance ORDER BY maintenance_key",
+      )
       .all() as Array<{
       maintenance_key: string;
       maintenance_value: string;
@@ -615,7 +629,12 @@ describe("initializeSqliteMemory", () => {
 
     expect(continuity.session).toEqual(fixture.session);
     expect(continuity.conversation).toEqual(fixture.conversation);
-    expect(continuity.turns.map((turn) => turn.turnId)).toEqual(["turn-001", "turn-002", "turn-003", "turn-004"]);
+    expect(continuity.turns.map((turn) => turn.turnId)).toEqual([
+      "turn-001",
+      "turn-002",
+      "turn-003",
+      "turn-004",
+    ]);
     expect(continuity.artifacts.map((artifact) => artifact.artifactId)).toEqual([
       "artifact-stale",
       "artifact-summary",
@@ -659,7 +678,7 @@ describe("initializeSqliteMemory", () => {
       {
         retrievalReceiptId: "conversation-main-retrieval-receipt",
         conversationId: "conversation-main",
-        receiptSummary: "{\"selectedTurns\":2,\"selectedArtifacts\":1,\"estimatedTokens\":240}",
+        receiptSummary: '{"selectedTurns":2,"selectedArtifacts":1,"estimatedTokens":240}',
       },
     ]);
   });
@@ -709,11 +728,14 @@ describe("initializeSqliteMemory", () => {
       scopeId: "workspace-dev",
     });
     const history = await readJson<{
-      byEndpointId: Record<string, Parameters<typeof createRuntimeObservationBundle>[0]["priorSamples"]>;
+      byEndpointId: Record<
+        string,
+        Parameters<typeof createRuntimeObservationBundle>[0]["priorSamples"]
+      >;
     }>("testdata/router-runtime/fixtures/observability-history.json");
-    const policy = await readJson<Parameters<typeof createRuntimeObservationBundle>[0]["capturePolicy"]>(
-      "testdata/router-runtime/fixtures/observability-policy.json",
-    );
+    const policy = await readJson<
+      Parameters<typeof createRuntimeObservationBundle>[0]["capturePolicy"]
+    >("testdata/router-runtime/fixtures/observability-policy.json");
 
     const bundle = createRuntimeObservationBundle({
       decision: validation.decision,
@@ -923,9 +945,9 @@ describe("initializeSqliteMemory", () => {
       runtimeStateRoot,
       scopeId: "workspace-dev-difficulty-profiles",
     });
-    const policy = await readJson<Parameters<typeof createRuntimeObservationBundle>[0]["capturePolicy"]>(
-      "testdata/router-runtime/fixtures/observability-policy.json",
-    );
+    const policy = await readJson<
+      Parameters<typeof createRuntimeObservationBundle>[0]["capturePolicy"]
+    >("testdata/router-runtime/fixtures/observability-policy.json");
 
     const bundle = createRuntimeObservationBundle({
       decision: validation.decision,
@@ -1181,11 +1203,14 @@ describe("initializeSqliteMemory", () => {
       scopeId: "workspace-dev-latest-profiles",
     });
     const history = await readJson<{
-      byEndpointId: Record<string, Parameters<typeof createRuntimeObservationBundle>[0]["priorSamples"]>;
+      byEndpointId: Record<
+        string,
+        Parameters<typeof createRuntimeObservationBundle>[0]["priorSamples"]
+      >;
     }>("testdata/router-runtime/fixtures/observability-history.json");
-    const policy = await readJson<Parameters<typeof createRuntimeObservationBundle>[0]["capturePolicy"]>(
-      "testdata/router-runtime/fixtures/observability-policy.json",
-    );
+    const policy = await readJson<
+      Parameters<typeof createRuntimeObservationBundle>[0]["capturePolicy"]
+    >("testdata/router-runtime/fixtures/observability-policy.json");
 
     const bundle = createRuntimeObservationBundle({
       decision: validation.decision,
@@ -1263,11 +1288,14 @@ describe("initializeSqliteMemory", () => {
       scopeId: "workspace-dev",
     });
     const history = await readJson<{
-      byEndpointId: Record<string, Parameters<typeof createRuntimeObservationBundle>[0]["priorSamples"]>;
+      byEndpointId: Record<
+        string,
+        Parameters<typeof createRuntimeObservationBundle>[0]["priorSamples"]
+      >;
     }>("testdata/router-runtime/fixtures/observability-history.json");
-    const policy = await readJson<Parameters<typeof createRuntimeObservationBundle>[0]["capturePolicy"]>(
-      "testdata/router-runtime/fixtures/observability-policy.json",
-    );
+    const policy = await readJson<
+      Parameters<typeof createRuntimeObservationBundle>[0]["capturePolicy"]
+    >("testdata/router-runtime/fixtures/observability-policy.json");
 
     const baseBundle = createRuntimeObservationBundle({
       decision: validation.decision,
@@ -1690,11 +1718,14 @@ describe("initializeSqliteMemory", () => {
       scopeId: "workspace-dev",
     });
     const history = await readJson<{
-      byEndpointId: Record<string, Parameters<typeof createRuntimeObservationBundle>[0]["priorSamples"]>;
+      byEndpointId: Record<
+        string,
+        Parameters<typeof createRuntimeObservationBundle>[0]["priorSamples"]
+      >;
     }>("testdata/router-runtime/fixtures/observability-history.json");
-    const policy = await readJson<Parameters<typeof createRuntimeObservationBundle>[0]["capturePolicy"]>(
-      "testdata/router-runtime/fixtures/observability-policy.json",
-    );
+    const policy = await readJson<
+      Parameters<typeof createRuntimeObservationBundle>[0]["capturePolicy"]
+    >("testdata/router-runtime/fixtures/observability-policy.json");
     const bundle = createRuntimeObservationBundle({
       decision: validation.decision,
       routingDiagnostics: validation.routingDiagnostics,
@@ -1796,11 +1827,14 @@ describe("initializeSqliteMemory", () => {
       scopeId: "workspace-dev",
     });
     const history = await readJson<{
-      byEndpointId: Record<string, Parameters<typeof createRuntimeObservationBundle>[0]["priorSamples"]>;
+      byEndpointId: Record<
+        string,
+        Parameters<typeof createRuntimeObservationBundle>[0]["priorSamples"]
+      >;
     }>("testdata/router-runtime/fixtures/observability-history.json");
-    const policy = await readJson<Parameters<typeof createRuntimeObservationBundle>[0]["capturePolicy"]>(
-      "testdata/router-runtime/fixtures/observability-policy.json",
-    );
+    const policy = await readJson<
+      Parameters<typeof createRuntimeObservationBundle>[0]["capturePolicy"]
+    >("testdata/router-runtime/fixtures/observability-policy.json");
     const bundle = createRuntimeObservationBundle({
       decision: validation.decision,
       routingDiagnostics: validation.routingDiagnostics,
@@ -1830,7 +1864,9 @@ describe("initializeSqliteMemory", () => {
     const backupPath = path.join(runtimeStateRoot, "memory-backup.sqlite");
     (
       sqliteMemory as {
-        backupRuntimeState(input: { databasePath: string; backupPath: string }): { backupPath: string };
+        backupRuntimeState(input: { databasePath: string; backupPath: string }): {
+          backupPath: string;
+        };
       }
     ).backupRuntimeState({
       databasePath: validation.databasePath,

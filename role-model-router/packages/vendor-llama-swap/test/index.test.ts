@@ -5,9 +5,9 @@ import path from "node:path";
 import { afterEach, describe, expect, test } from "vitest";
 
 import {
-  ProcessSupervisor,
   type ManagedVendor,
   type ManagedVendorStatus,
+  ProcessSupervisor,
   type StartVendorOptions,
 } from "@role-model-router/process-supervisor";
 
@@ -76,7 +76,9 @@ describe("vendor-llama-swap", () => {
 
     expect(rendered).toContain("models:");
     expect(rendered).toContain("local/llama-3.1-8b-instruct:");
-    expect(rendered).toContain("cmd: llama-server --port ${PORT} --model ./models/llama-3.1-8b-instruct-q4.gguf");
+    expect(rendered).toContain(
+      "cmd: llama-server --port ${PORT} --model ./models/llama-3.1-8b-instruct-q4.gguf",
+    );
     expect(rendered).toContain("./models/llama-3.1-8b-instruct-q4.gguf");
   });
 

@@ -1,15 +1,12 @@
+import { readFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 
 import type { NormalizedCatalog } from "@role-model-router/catalog";
-import {
-  deriveLiteLLMProviders,
-  loadLiteLLMModelPrices,
-} from "@role-model-router/catalog";
+import { deriveLiteLLMProviders, loadLiteLLMModelPrices } from "@role-model-router/catalog";
 import { assembleContextEnvelope } from "@role-model-router/context-envelope";
-import { buildEndpointRegistry, type RegistrySources } from "@role-model-router/endpoint-registry";
+import { type RegistrySources, buildEndpointRegistry } from "@role-model-router/endpoint-registry";
 import { validateProviderAccounts } from "@role-model-router/provider-account";
 import { createRetrievalReceipt } from "@role-model-router/retrieval-receipt";
 import {
@@ -20,10 +17,7 @@ import {
   readConversationContinuity,
 } from "@role-model-router/sqlite-memory";
 
-import {
-  routeRuntimeRequest,
-  type RoutingModelSelection,
-} from "./index.js";
+import { type RoutingModelSelection, routeRuntimeRequest } from "./index.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -64,9 +58,17 @@ async function readJson<TValue>(filePath: string): Promise<TValue> {
 export async function runRuntimeRoutingValidation(
   options: RuntimeRoutingValidationOptions,
 ): Promise<RuntimeRoutingValidationResult> {
-  const fixtureRoot = options.fixtureRoot ?? path.join(options.repoRoot, "testdata", "router-runtime");
+  const fixtureRoot =
+    options.fixtureRoot ?? path.join(options.repoRoot, "testdata", "router-runtime");
   const normalizedCatalog = await readJson<NormalizedCatalog>(
-    path.join(options.repoRoot, "role-model-router", "packages", "catalog", "data", "normalized-catalog.json"),
+    path.join(
+      options.repoRoot,
+      "role-model-router",
+      "packages",
+      "catalog",
+      "data",
+      "normalized-catalog.json",
+    ),
   );
   const providerAccountsFixture = await readJson<{ accounts: unknown[] }>(
     path.join(fixtureRoot, "provider-accounts.json"),
@@ -112,7 +114,10 @@ export async function runRuntimeRoutingValidation(
   for (const source of registrySources.local) {
     fixtureModelIds.add(source.modelId);
   }
-  for (const account of providerAccountsFixture.accounts as { allowedModels?: string[]; deniedModels?: string[] }[]) {
+  for (const account of providerAccountsFixture.accounts as {
+    allowedModels?: string[];
+    deniedModels?: string[];
+  }[]) {
     for (const modelId of account.allowedModels ?? []) {
       fixtureModelIds.add(modelId);
     }

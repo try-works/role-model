@@ -1,145 +1,147 @@
 <script lang="ts">
-  import { models } from "../../stores/api";
-  import { persistentStore } from "../../stores/persistent";
-  import { transcribeAudio } from "../../lib/audioApi";
-  import { playgroundStores } from "../../stores/playgroundActivity";
-  import ModelSelector from "./ModelSelector.svelte";
+import { transcribeAudio } from "../../lib/audioApi";
+import { models } from "../../stores/api";
+import { persistentStore } from "../../stores/persistent";
+import { playgroundStores } from "../../stores/playgroundActivity";
+import ModelSelector from "./ModelSelector.svelte";
 
-  const selectedModelStore = persistentStore<string>("playground-audio-model", "");
+const selectedModelStore = persistentStore<string>("playground-audio-model", "");
 
-  let selectedFile = $state<File | null>(null);
-  let isTranscribing = $state(false);
-  let transcriptionResult = $state<string | null>(null);
-  let error = $state<string | null>(null);
-  let abortController = $state<AbortController | null>(null);
-  let isDragging = $state(false);
-  let fileInput = $state<HTMLInputElement | null>(null);
-  let copied = $state(false);
+let selectedFile = $state<File | null>(null);
+let isTranscribing = $state(false);
+let transcriptionResult = $state<string | null>(null);
+let error = $state<string | null>(null);
+let abortController = $state<AbortController | null>(null);
+let isDragging = $state(false);
+const fileInput = $state<HTMLInputElement | null>(null);
+let copied = $state(false);
 
-  const ACCEPTED_FORMATS = ['.mp3', '.wav', '.ogg'];
-  const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB
+const ACCEPTED_FORMATS = [".mp3", ".wav", ".ogg"];
+const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB
 
-  let hasModels = $derived($models.some((m) => !m.unlisted));
+const hasModels = $derived($models.some((m) => !m.unlisted));
 
-  let canTranscribe = $derived(selectedFile !== null && $selectedModelStore !== "" && !isTranscribing);
+const canTranscribe = $derived(
+  selectedFile !== null && $selectedModelStore !== "" && !isTranscribing,
+);
 
-  $effect(() => {
-    playgroundStores.audioTranscribing.set(isTranscribing);
-  });
+$effect(() => {
+  playgroundStores.audioTranscribing.set(isTranscribing);
+});
 
-  function validateFile(file: File): { valid: boolean; error?: string } {
-    const ext = '.' + file.name.split('.').pop()?.toLowerCase();
+function validateFile(file: File): { valid: boolean; error?: string } {
+  const ext = `.${file.name.split(".").pop()?.toLowerCase()}`;
 
-    if (!ACCEPTED_FORMATS.includes(ext)) {
-      return { valid: false, error: 'Invalid file type. Accepted: MP3, WAV, OGG' };
-    }
-
-    if (file.size > MAX_FILE_SIZE) {
-      return { valid: false, error: 'File too large. Maximum: 25MB' };
-    }
-
-    return { valid: true };
+  if (!ACCEPTED_FORMATS.includes(ext)) {
+    return { valid: false, error: "Invalid file type. Accepted: MP3, WAV, OGG" };
   }
 
-  function handleFileSelect(event: Event) {
-    const target = event.target as HTMLInputElement;
-    const file = target.files?.[0];
-    if (file) {
-      const validation = validateFile(file);
-      if (validation.valid) {
-        selectedFile = file;
-        error = null;
-        transcriptionResult = null;
-      } else {
-        error = validation.error || "Invalid file";
-        selectedFile = null;
-      }
-    }
+  if (file.size > MAX_FILE_SIZE) {
+    return { valid: false, error: "File too large. Maximum: 25MB" };
   }
 
-  function handleDragOver(event: DragEvent) {
-    event.preventDefault();
-    isDragging = true;
-  }
+  return { valid: true };
+}
 
-  function handleDragLeave() {
-    isDragging = false;
-  }
-
-  function handleDrop(event: DragEvent) {
-    event.preventDefault();
-    isDragging = false;
-
-    const file = event.dataTransfer?.files[0];
-    if (file) {
-      const validation = validateFile(file);
-      if (validation.valid) {
-        selectedFile = file;
-        error = null;
-        transcriptionResult = null;
-      } else {
-        error = validation.error || "Invalid file";
-        selectedFile = null;
-      }
+function handleFileSelect(event: Event) {
+  const target = event.target as HTMLInputElement;
+  const file = target.files?.[0];
+  if (file) {
+    const validation = validateFile(file);
+    if (validation.valid) {
+      selectedFile = file;
+      error = null;
+      transcriptionResult = null;
+    } else {
+      error = validation.error || "Invalid file";
+      selectedFile = null;
     }
   }
+}
 
-  async function transcribe() {
-    if (!selectedFile || !$selectedModelStore || isTranscribing) return;
+function handleDragOver(event: DragEvent) {
+  event.preventDefault();
+  isDragging = true;
+}
 
-    isTranscribing = true;
-    error = null;
-    transcriptionResult = null;
-    abortController = new AbortController();
+function handleDragLeave() {
+  isDragging = false;
+}
 
-    try {
-      const response = await transcribeAudio(
-        $selectedModelStore,
-        selectedFile,
-        abortController.signal
-      );
+function handleDrop(event: DragEvent) {
+  event.preventDefault();
+  isDragging = false;
 
-      transcriptionResult = response.text;
-    } catch (err) {
-      if (err instanceof Error && err.name === "AbortError") {
-        // User cancelled
-      } else {
-        error = err instanceof Error ? err.message : "An error occurred";
-      }
-    } finally {
-      isTranscribing = false;
-      abortController = null;
+  const file = event.dataTransfer?.files[0];
+  if (file) {
+    const validation = validateFile(file);
+    if (validation.valid) {
+      selectedFile = file;
+      error = null;
+      transcriptionResult = null;
+    } else {
+      error = validation.error || "Invalid file";
+      selectedFile = null;
     }
   }
+}
 
-  function cancelTranscription() {
-    abortController?.abort();
-  }
+async function transcribe() {
+  if (!selectedFile || !$selectedModelStore || isTranscribing) return;
 
-  function clearAll() {
-    selectedFile = null;
-    transcriptionResult = null;
-    error = null;
-    if (fileInput) {
-      fileInput.value = '';
+  isTranscribing = true;
+  error = null;
+  transcriptionResult = null;
+  abortController = new AbortController();
+
+  try {
+    const response = await transcribeAudio(
+      $selectedModelStore,
+      selectedFile,
+      abortController.signal,
+    );
+
+    transcriptionResult = response.text;
+  } catch (err) {
+    if (err instanceof Error && err.name === "AbortError") {
+      // User cancelled
+    } else {
+      error = err instanceof Error ? err.message : "An error occurred";
     }
+  } finally {
+    isTranscribing = false;
+    abortController = null;
   }
+}
 
-  function copyToClipboard() {
-    if (transcriptionResult) {
-      navigator.clipboard.writeText(transcriptionResult);
-      copied = true;
-      setTimeout(() => {
-        copied = false;
-      }, 2000);
-    }
-  }
+function cancelTranscription() {
+  abortController?.abort();
+}
 
-  function formatFileSize(bytes: number): string {
-    if (bytes < 1024) return bytes + ' B';
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+function clearAll() {
+  selectedFile = null;
+  transcriptionResult = null;
+  error = null;
+  if (fileInput) {
+    fileInput.value = "";
   }
+}
+
+function copyToClipboard() {
+  if (transcriptionResult) {
+    navigator.clipboard.writeText(transcriptionResult);
+    copied = true;
+    setTimeout(() => {
+      copied = false;
+    }, 2000);
+  }
+}
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
 </script>
 
 <div class="flex flex-col h-full">

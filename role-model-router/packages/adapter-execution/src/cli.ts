@@ -1,17 +1,19 @@
+import { readFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 
 import type { NormalizedCatalog } from "@role-model-router/catalog";
 import { assembleContextEnvelope } from "@role-model-router/context-envelope";
-import { buildEndpointRegistry, type RegistrySources } from "@role-model-router/endpoint-registry";
-import { createAnthropicProviderAdapter } from "@role-model-router/provider-anthropic";
-import { validateProviderAccounts } from "@role-model-router/provider-account";
-import { createOpenAIProviderAdapter } from "@role-model-router/provider-openai";
+import { type RegistrySources, buildEndpointRegistry } from "@role-model-router/endpoint-registry";
 import {
-  createRetrievalReceipt,
-} from "@role-model-router/retrieval-receipt";
+  type RoutingModelSelection,
+  routeRuntimeRequest,
+} from "@role-model-router/protocol-routing";
+import { validateProviderAccounts } from "@role-model-router/provider-account";
+import { createAnthropicProviderAdapter } from "@role-model-router/provider-anthropic";
+import { createOpenAIProviderAdapter } from "@role-model-router/provider-openai";
+import { createRetrievalReceipt } from "@role-model-router/retrieval-receipt";
 import {
   initializeSqliteMemory,
   persistContinuitySnapshot,
@@ -19,20 +21,13 @@ import {
   persistRetrievalReceipt,
   readConversationContinuity,
 } from "@role-model-router/sqlite-memory";
-import {
-  routeRuntimeRequest,
-  type RoutingModelSelection,
-} from "@role-model-router/protocol-routing";
 
+import { deriveLiteLLMProviders, loadLiteLLMModelPrices } from "@role-model-router/catalog";
 import {
-  executeRoutedRequest,
-  type RuntimeExecutionRequest,
   type RoutedExecutionResult,
+  type RuntimeExecutionRequest,
+  executeRoutedRequest,
 } from "./index.js";
-import {
-  deriveLiteLLMProviders,
-  loadLiteLLMModelPrices,
-} from "@role-model-router/catalog";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -96,9 +91,17 @@ async function loadResponseCaptures(
 export async function runRuntimeAdapterValidation(
   options: RuntimeAdapterValidationOptions,
 ): Promise<RuntimeAdapterValidationResult> {
-  const fixtureRoot = options.fixtureRoot ?? path.join(options.repoRoot, "testdata", "router-runtime");
+  const fixtureRoot =
+    options.fixtureRoot ?? path.join(options.repoRoot, "testdata", "router-runtime");
   let normalizedCatalog = await readJson<NormalizedCatalog>(
-    path.join(options.repoRoot, "role-model-router", "packages", "catalog", "data", "normalized-catalog.json"),
+    path.join(
+      options.repoRoot,
+      "role-model-router",
+      "packages",
+      "catalog",
+      "data",
+      "normalized-catalog.json",
+    ),
   );
   const providerAccountsFixture = await readJson<{ accounts: unknown[] }>(
     path.join(fixtureRoot, "provider-accounts.json"),
@@ -150,7 +153,10 @@ export async function runRuntimeAdapterValidation(
   for (const source of registrySources.local) {
     fixtureModelIds.add(source.modelId);
   }
-  for (const account of providerAccountsFixture.accounts as { allowedModels?: string[]; deniedModels?: string[] }[]) {
+  for (const account of providerAccountsFixture.accounts as {
+    allowedModels?: string[];
+    deniedModels?: string[];
+  }[]) {
     for (const modelId of account.allowedModels ?? []) {
       fixtureModelIds.add(modelId);
     }

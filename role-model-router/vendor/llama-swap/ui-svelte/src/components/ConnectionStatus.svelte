@@ -1,22 +1,21 @@
 <script lang="ts">
-  import { connectionState } from "../stores/theme";
-  import { versionInfo } from "../stores/api";
+import { versionInfo } from "../stores/api";
+import { connectionState } from "../stores/theme";
 
-  let eventStatusColor = $derived.by(() => {
-    switch ($connectionState) {
-      case "connected":
-        return "bg-emerald-500";
-      case "connecting":
-        return "bg-amber-500";
-      case "disconnected":
-      default:
-        return "bg-red-500";
-    }
-  });
+const eventStatusColor = $derived.by(() => {
+  switch ($connectionState) {
+    case "connected":
+      return "bg-emerald-500";
+    case "connecting":
+      return "bg-amber-500";
+    default:
+      return "bg-red-500";
+  }
+});
 
-  let tooltipText = $derived(
-    `Event Stream: ${$connectionState ?? "unknown"}\nAPI Version: ${$versionInfo?.version ?? "unknown"}\nCommit Hash: ${$versionInfo?.commit?.substring(0, 7) ?? "unknown"}\nBuild Date: ${$versionInfo?.build_date ?? "unknown"}`
-  );
+const tooltipText = $derived(
+  `Event Stream: ${$connectionState ?? "unknown"}\nAPI Version: ${$versionInfo?.version ?? "unknown"}\nCommit Hash: ${$versionInfo?.commit?.substring(0, 7) ?? "unknown"}\nBuild Date: ${$versionInfo?.build_date ?? "unknown"}`,
+);
 </script>
 
 <div class="flex items-center" title={tooltipText}>

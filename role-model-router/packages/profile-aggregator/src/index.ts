@@ -72,8 +72,7 @@ function sampleFailed(sample: ObservedPerformanceSample): boolean {
 export function validateObservedPerformanceProfileConsistency(
   profile: ObservedPerformanceProfile,
 ): void {
-  const sourceCount =
-    profile.sources.benchmark_samples + profile.sources.live_request_samples;
+  const sourceCount = profile.sources.benchmark_samples + profile.sources.live_request_samples;
   if (profile.sample_size < sourceCount) {
     throw new Error(
       `ObservedPerformanceProfile sample_size ${profile.sample_size} is smaller than source sample count ${sourceCount}.`,

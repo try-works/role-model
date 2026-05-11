@@ -1,8 +1,24 @@
 import { useEffect, useMemo, useState } from "react";
 
-import { CodeBlock, EmptyState, ErrorState, FactCard, LoadingState, PageHeader, SectionCard } from "../components/page-primitives";
-import { fieldClassName, primaryButtonClassName, secondaryButtonClassName } from "../lib/design-system";
-import { fetchRuntimeSnapshot, submitAdvancedRequest, type RuntimeSnapshot } from "../lib/runtime-api";
+import {
+  CodeBlock,
+  EmptyState,
+  ErrorState,
+  FactCard,
+  LoadingState,
+  PageHeader,
+  SectionCard,
+} from "../components/page-primitives";
+import {
+  fieldClassName,
+  primaryButtonClassName,
+  secondaryButtonClassName,
+} from "../lib/design-system";
+import {
+  type RuntimeSnapshot,
+  fetchRuntimeSnapshot,
+  submitAdvancedRequest,
+} from "../lib/runtime-api";
 import { buildWorkbenchModelOptions } from "../lib/view-models";
 
 const advancedFamilies = [
@@ -93,7 +109,11 @@ export default function StudioAdvancedRoute() {
         const defaultModel = value.models[0]?.id || "";
         setModel((current) => current || defaultModel);
       })
-      .catch((value: unknown) => setError(value instanceof Error ? value.message : "Could not load advanced workspace context."));
+      .catch((value: unknown) =>
+        setError(
+          value instanceof Error ? value.message : "Could not load advanced workspace context.",
+        ),
+      );
   }, []);
 
   useEffect(() => {
@@ -101,8 +121,12 @@ export default function StudioAdvancedRoute() {
     setPayloadText(JSON.stringify(buildDefaultPayload(path, defaultModel), null, 2));
   }, [model, path, snapshot?.models]);
 
-  const modelOptions = useMemo(() => buildWorkbenchModelOptions(snapshot?.models ?? []), [snapshot?.models]);
-  const selectedFamily = advancedFamilies.find((entry) => entry.path === path) ?? advancedFamilies[0];
+  const modelOptions = useMemo(
+    () => buildWorkbenchModelOptions(snapshot?.models ?? []),
+    [snapshot?.models],
+  );
+  const selectedFamily =
+    advancedFamilies.find((entry) => entry.path === path) ?? advancedFamilies[0];
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -133,22 +157,42 @@ export default function StudioAdvancedRoute() {
       />
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        <FactCard label="Endpoint families" value={advancedFamilies.length} detail="Only advanced families with real runtime backing belong here." emphasis />
-        <FactCard label="Selected family" value={selectedFamily.label} detail={selectedFamily.description} />
-        <FactCard label="Available models" value={snapshot?.models.length ?? 0} detail="The same runtime model listing feeds the advanced request templates." />
+        <FactCard
+          label="Endpoint families"
+          value={advancedFamilies.length}
+          detail="Only advanced families with real runtime backing belong here."
+          emphasis
+        />
+        <FactCard
+          label="Selected family"
+          value={selectedFamily.label}
+          detail={selectedFamily.description}
+        />
+        <FactCard
+          label="Available models"
+          value={snapshot?.models.length ?? 0}
+          detail="The same runtime model listing feeds the advanced request templates."
+        />
       </div>
 
       {error ? <ErrorState label={error} /> : null}
 
       <div className="grid gap-4 xl:grid-cols-[360px_minmax(0,1fr)]">
-        <SectionCard title="Endpoint family" description="Choose the contract family first, then edit the request template for that endpoint.">
+        <SectionCard
+          title="Endpoint family"
+          description="Choose the contract family first, then edit the request template for that endpoint."
+        >
           {!snapshot ? (
             <LoadingState label="Loading advanced request context…" />
           ) : (
             <form className="space-y-4" onSubmit={onSubmit}>
               <label className="grid gap-2 text-sm">
                 <span className="font-medium text-[var(--rm-fg)]">Family</span>
-                <select className={fieldClassName} value={path} onChange={(event) => setPath(event.target.value as AdvancedPath)}>
+                <select
+                  className={fieldClassName}
+                  value={path}
+                  onChange={(event) => setPath(event.target.value as AdvancedPath)}
+                >
                   {advancedFamilies.map((family) => (
                     <option key={family.path} value={family.path}>
                       {family.label}
@@ -158,7 +202,11 @@ export default function StudioAdvancedRoute() {
               </label>
               <label className="grid gap-2 text-sm">
                 <span className="font-medium text-[var(--rm-fg)]">Model</span>
-                <select className={fieldClassName} value={model} onChange={(event) => setModel(event.target.value)}>
+                <select
+                  className={fieldClassName}
+                  value={model}
+                  onChange={(event) => setModel(event.target.value)}
+                >
                   {modelOptions.map((option) => (
                     <option key={option.value} value={option.value}>
                       {option.label}
@@ -168,7 +216,11 @@ export default function StudioAdvancedRoute() {
               </label>
               <label className="grid gap-2 text-sm">
                 <span className="font-medium text-[var(--rm-fg)]">JSON payload</span>
-                <textarea className={`${fieldClassName} min-h-72 font-mono`} value={payloadText} onChange={(event) => setPayloadText(event.target.value)} />
+                <textarea
+                  className={`${fieldClassName} min-h-72 font-mono`}
+                  value={payloadText}
+                  onChange={(event) => setPayloadText(event.target.value)}
+                />
               </label>
               <button className={primaryButtonClassName} disabled={submitting} type="submit">
                 {submitting ? "Running…" : "Submit advanced request"}
@@ -178,12 +230,26 @@ export default function StudioAdvancedRoute() {
         </SectionCard>
 
         <div className="space-y-4">
-          <SectionCard title="Response workspace" description="The dominant stage belongs to the response payload, not to explanatory placeholder copy.">
-            <CodeBlock className="min-h-72 text-sm">{responsePayload ?? "{\n  \"status\": \"No advanced request yet\"\n}"}</CodeBlock>
+          <SectionCard
+            title="Response workspace"
+            description="The dominant stage belongs to the response payload, not to explanatory placeholder copy."
+          >
+            <CodeBlock className="min-h-72 text-sm">
+              {responsePayload ?? '{\n  "status": "No advanced request yet"\n}'}
+            </CodeBlock>
           </SectionCard>
 
-          <SectionCard title="Request template" description="Keep one live example for the selected family adjacent to the response workspace.">
-            <CodeBlock className="min-h-52 text-sm">{JSON.stringify(buildDefaultPayload(path, model || snapshot?.models[0]?.id || ""), null, 2)}</CodeBlock>
+          <SectionCard
+            title="Request template"
+            description="Keep one live example for the selected family adjacent to the response workspace."
+          >
+            <CodeBlock className="min-h-52 text-sm">
+              {JSON.stringify(
+                buildDefaultPayload(path, model || snapshot?.models[0]?.id || ""),
+                null,
+                2,
+              )}
+            </CodeBlock>
           </SectionCard>
         </div>
       </div>

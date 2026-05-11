@@ -1,7 +1,18 @@
 import { useCallback, useEffect, useState } from "react";
 
-import { PageHeader, SectionCard, EmptyState, LoadingState, ErrorState } from "../components/page-primitives";
-import { fieldClassName, primaryButtonClassName, secondaryButtonClassName, mutedPanelClassName } from "../lib/design-system";
+import {
+  EmptyState,
+  ErrorState,
+  LoadingState,
+  PageHeader,
+  SectionCard,
+} from "../components/page-primitives";
+import {
+  fieldClassName,
+  mutedPanelClassName,
+  primaryButtonClassName,
+  secondaryButtonClassName,
+} from "../lib/design-system";
 import { fetchLocalPolicy, updateLocalPolicy } from "../lib/runtime-api";
 
 export default function LocalPolicyRoute() {
@@ -53,6 +64,8 @@ export default function LocalPolicyRoute() {
     setDraft((prev) => ({ ...prev, [key]: value }));
   };
 
+  const ttlFieldId = "local-policy-ttl";
+  const maxConcurrencyFieldId = "local-policy-max-concurrency";
   const ttl = typeof draft.ttl === "number" ? draft.ttl : 300;
   const autoUnload = typeof draft.autoUnload === "boolean" ? draft.autoUnload : true;
   const maxConcurrency = typeof draft.maxConcurrency === "number" ? draft.maxConcurrency : 1;
@@ -67,21 +80,28 @@ export default function LocalPolicyRoute() {
 
       {error ? <ErrorState label={error} /> : null}
 
-      <SectionCard title="Policy configuration" description="Edit runtime behavior for local model loading and unloading.">
+      <SectionCard
+        title="Policy configuration"
+        description="Edit runtime behavior for local model loading and unloading."
+      >
         {loading ? (
           <LoadingState label="Loading policy…" />
         ) : (
           <div className="space-y-6">
             <div className="grid gap-6 md:grid-cols-2">
               <div className="space-y-2">
-                <label className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]">
+                <label
+                  htmlFor={ttlFieldId}
+                  className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]"
+                >
                   TTL (seconds)
                 </label>
                 <input
+                  id={ttlFieldId}
                   type="number"
                   min={0}
                   value={ttl}
-                  onChange={(e) => setField("ttl", parseInt(e.target.value, 10) || 0)}
+                  onChange={(e) => setField("ttl", Number.parseInt(e.target.value, 10) || 0)}
                   className={fieldClassName}
                 />
                 <p className="text-xs text-[var(--rm-muted)]">
@@ -90,14 +110,20 @@ export default function LocalPolicyRoute() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]">
+                <label
+                  htmlFor={maxConcurrencyFieldId}
+                  className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]"
+                >
                   Max concurrency
                 </label>
                 <input
+                  id={maxConcurrencyFieldId}
                   type="number"
                   min={1}
                   value={maxConcurrency}
-                  onChange={(e) => setField("maxConcurrency", parseInt(e.target.value, 10) || 1)}
+                  onChange={(e) =>
+                    setField("maxConcurrency", Number.parseInt(e.target.value, 10) || 1)
+                  }
                   className={fieldClassName}
                 />
                 <p className="text-xs text-[var(--rm-muted)]">
@@ -123,6 +149,7 @@ export default function LocalPolicyRoute() {
 
             <div className="flex gap-3 pt-2">
               <button
+                type="button"
                 onClick={handleSave}
                 disabled={saving}
                 className={primaryButtonClassName}
@@ -130,6 +157,7 @@ export default function LocalPolicyRoute() {
                 {saving ? "Saving…" : "Save policy"}
               </button>
               <button
+                type="button"
                 onClick={handleReset}
                 disabled={saving}
                 className={secondaryButtonClassName}
@@ -147,7 +175,9 @@ export default function LocalPolicyRoute() {
         ) : Object.keys(policy).length === 0 ? (
           <EmptyState label="No policy configured. Save a policy to see it here." />
         ) : (
-          <pre className={`${mutedPanelClassName} overflow-x-auto p-4 text-xs leading-6 text-[var(--rm-secondary)]`}>
+          <pre
+            className={`${mutedPanelClassName} overflow-x-auto p-4 text-xs leading-6 text-[var(--rm-secondary)]`}
+          >
             {JSON.stringify(policy, null, 2)}
           </pre>
         )}

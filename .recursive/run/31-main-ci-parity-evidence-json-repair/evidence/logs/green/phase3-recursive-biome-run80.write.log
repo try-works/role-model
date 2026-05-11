@@ -1,0 +1,156 @@
+role-model-router\apps\runtime-ui\app\routes\local-logs.tsx:50:11 lint/a11y/useButtonType ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    48 Γöé       <SectionCard title="Live logs" description="Buffered log output from the local inference runtime.">
+    49 Γöé         <div className="mb-4 flex items-center gap-4">
+  > 50 Γöé           <button onClick={refresh} disabled={loading} className={secondaryButtonClassName}>
+       Γöé           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    51 Γöé             {loading ? "RefreshingΓÇª" : "Refresh"}
+    52 Γöé           </button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+role-model-router\apps\runtime-ui\app\routes\local-logs.tsx:73:25 lint/suspicious/noArrayIndexKey ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Avoid using the index of an array as key property in an element.
+  
+    71 Γöé           <pre className={`${mutedPanelClassName} h-96 overflow-auto p-4 text-xs leading-5 font-mono text-[var(--rm-secondary)]`}>
+    72 Γöé             {logLines.map((line, i) => (
+  > 73 Γöé               <div key={i} className="whitespace-pre-wrap break-all">{line}</div>
+       Γöé                         ^
+    74 Γöé             ))}
+    75 Γöé           </pre>
+  
+  i This is the source of the key value.
+  
+    70 Γöé         ) : (
+    71 Γöé           <pre className={`${mutedPanelClassName} h-96 overflow-auto p-4 text-xs leading-5 font-mono text-[var(--rm-secondary)]`}>
+  > 72 Γöé             {logLines.map((line, i) => (
+       Γöé                                  ^
+    73 Γöé               <div key={i} className="whitespace-pre-wrap break-all">{line}</div>
+    74 Γöé             ))}
+  
+  i The order of the items may change, and this also affects performances and component state.
+  
+  i Check the React documentation. 
+  
+
+role-model-router\apps\runtime-ui\app\routes\local-peers.tsx:169:13 lint/a11y/noLabelWithoutControl ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù A form label must be associated with an input.
+  
+    167 Γöé         <div className="space-y-4">
+    168 Γöé           <div className="space-y-2">
+  > 169 Γöé             <label className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]">
+        Γöé             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 170 Γöé               Peer URL
+  > 171 Γöé             </label>
+        Γöé             ^^^^^^^^
+    172 Γöé             <input
+    173 Γöé               type="url"
+  
+  i Consider adding a `for` or `htmlFor` attribute to the label element or moving the input element to inside the label element.
+  
+
+role-model-router\apps\runtime-ui\app\routes\local-peers.tsx:181:13 lint/a11y/noLabelWithoutControl ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù A form label must be associated with an input.
+  
+    179 Γöé           </div>
+    180 Γöé           <div className="space-y-2">
+  > 181 Γöé             <label className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]">
+        Γöé             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 182 Γöé               Auth token (optional)
+  > 183 Γöé             </label>
+        Γöé             ^^^^^^^^
+    184 Γöé             <input
+    185 Γöé               type="password"
+  
+  i Consider adding a `for` or `htmlFor` attribute to the label element or moving the input element to inside the label element.
+  
+
+role-model-router\apps\runtime-ui\app\routes\local-peers.tsx:105:11 lint/a11y/useButtonType ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    103 Γöé         description="Peer llama-swap instance inventory and management."
+    104 Γöé         actions={
+  > 105 Γöé           <button onClick={refresh} disabled={loading} className={secondaryButtonClassName}>
+        Γöé           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    106 Γöé             {loading ? "RefreshingΓÇª" : "Refresh"}
+    107 Γöé           </button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+role-model-router\apps\runtime-ui\app\routes\local-peers.tsx:145:19 lint/a11y/useButtonType ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    143 Γöé                 </div>
+    144 Γöé                 <div className="flex gap-2">
+  > 145 Γöé                   <button
+        Γöé                   ^^^^^^^
+  > 146 Γöé                     onClick={() => handleCheckHealth(peer)}
+  > 147 Γöé                     disabled={checkingHealth[peer.id]}
+  > 148 Γöé                     className={secondaryButtonClassName}
+  > 149 Γöé                   >
+        Γöé                   ^
+    150 Γöé                     {checkingHealth[peer.id] ? "CheckingΓÇª" : "Check health"}
+    151 Γöé                   </button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+role-model-router\apps\runtime-ui\app\routes\local-peers.tsx:152:19 lint/a11y/useButtonType ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    150 Γöé                     {checkingHealth[peer.id] ? "CheckingΓÇª" : "Check health"}
+    151 Γöé                   </button>
+  > 152 Γöé                   <button
+        Γöé                   ^^^^^^^
+  > 153 Γöé                     onClick={() => handleRemove(peer.id)}
+  > 154 Γöé                     disabled={saving}
+  > 155 Γöé                     className={`${secondaryButtonClassName} text-[var(--rm-error)]`}
+  > 156 Γöé                   >
+        Γöé                   ^
+    157 Γöé                     Remove
+    158 Γöé                   </button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+role-model-router\apps\runtime-ui\app\routes\local-peers.tsx:192:11 lint/a11y/useButtonType ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    190 Γöé             />
+    191 Γöé           </div>
+  > 192 Γöé           <button onClick={handleAdd} disabled={!newUrl.trim() || saving} className={primaryButtonClassName}>
+        Γöé           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    193 Γöé             {saving ? "SavingΓÇª" : "Add peer"}
+    194 Γöé           </button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+Checked 8 files in 21ms. Fixed 8 files.
+Found 8 errors.
+check ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Some errors were emitted while running checks.
+  
+

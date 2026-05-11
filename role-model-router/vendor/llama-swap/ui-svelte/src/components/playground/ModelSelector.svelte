@@ -1,17 +1,23 @@
 <script lang="ts">
-  import { models } from "../../stores/api";
-  import { groupModels } from "../../lib/modelUtils";
+import { groupModels } from "../../lib/modelUtils";
+import { models } from "../../stores/api";
 
-  interface Props {
-    value: string;
-    placeholder?: string;
-    disabled?: boolean;
-  }
+interface Props {
+  value: string;
+  placeholder?: string;
+  disabled?: boolean;
+}
 
-  let { value = $bindable(), placeholder = "Select a model...", disabled = false }: Props = $props();
+const {
+  value = $bindable(),
+  placeholder = "Select a model...",
+  disabled = false,
+}: Props = $props();
 
-  let grouped = $derived(groupModels($models));
-  let hasModels = $derived(grouped.local.length > 0 || Object.keys(grouped.peersByProvider).length > 0);
+const grouped = $derived(groupModels($models));
+const hasModels = $derived(
+  grouped.local.length > 0 || Object.keys(grouped.peersByProvider).length > 0,
+);
 </script>
 
 {#if hasModels}

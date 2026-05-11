@@ -14,7 +14,13 @@ export const SUPPORTED_AUTH_MODES = [
 ] as const;
 
 const API_KEY_AUTH_MODES = new Set<AuthMode>(["api-key-static", "api-key-rotating-ref"]);
-const CREDENTIAL_REFERENCE_BACKENDS = ["env", "local-keychain", "local-file", "local-encrypted-file", "cloud-secret"] as const;
+const CREDENTIAL_REFERENCE_BACKENDS = [
+  "env",
+  "local-keychain",
+  "local-file",
+  "local-encrypted-file",
+  "cloud-secret",
+] as const;
 const ACCOUNT_STATUSES = ["active", "disabled", "revoked"] as const;
 const HEALTH_STATUSES = [
   "healthy",
@@ -114,7 +120,11 @@ function readStringArray(record: Record<string, unknown>, key: string, label: st
   return [...value];
 }
 
-function readNullableString(record: Record<string, unknown>, key: string, label: string): string | null {
+function readNullableString(
+  record: Record<string, unknown>,
+  key: string,
+  label: string,
+): string | null {
   const value = record[key];
   if (value === null || value === undefined) {
     return null;
@@ -125,7 +135,10 @@ function readNullableString(record: Record<string, unknown>, key: string, label:
   return value;
 }
 
-function readModelRoleBindings(record: Record<string, unknown>, label: string): ProviderAccountModelRoleBinding[] {
+function readModelRoleBindings(
+  record: Record<string, unknown>,
+  label: string,
+): ProviderAccountModelRoleBinding[] {
   const value = record.modelRoleBindings;
   if (value === undefined) {
     return [];
@@ -249,7 +262,9 @@ export function validateProviderAccounts(
 ): ProviderAccountValidationResult {
   const providersById = new Map([
     ...input.catalog.providers.map((provider) => [provider.providerId, provider] as const),
-    ...(input.additionalProviders ?? []).map((provider) => [provider.providerId, provider] as const),
+    ...(input.additionalProviders ?? []).map(
+      (provider) => [provider.providerId, provider] as const,
+    ),
   ]);
   const diagnostics: ProviderAccountDiagnostic[] = [];
   const accounts: ProviderAccountRecord[] = [];

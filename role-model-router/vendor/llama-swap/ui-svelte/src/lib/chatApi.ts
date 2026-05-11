@@ -1,4 +1,4 @@
-import type { ChatMessage, ChatCompletionRequest } from "./types";
+import type { ChatCompletionRequest, ChatMessage } from "./types";
 
 export interface StreamChunk {
   content: string;
@@ -40,7 +40,7 @@ export async function* streamChatCompletion(
   model: string,
   messages: ChatMessage[],
   signal?: AbortSignal,
-  options?: ChatOptions
+  options?: ChatOptions,
 ): AsyncGenerator<StreamChunk> {
   const request: ChatCompletionRequest = {
     model,

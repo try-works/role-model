@@ -1,4 +1,4 @@
-import { spawn, spawnSync, type ChildProcess } from "node:child_process";
+import { type ChildProcess, spawn, spawnSync } from "node:child_process";
 
 export type VendorHealthStatus = "starting" | "healthy" | "stopped" | "crashed";
 
@@ -76,7 +76,11 @@ function cloneStatus(status: ManagedVendorStatus): ManagedVendorStatus {
   };
 }
 
-function appendLog(record: ManagedVendorRecord, source: "stdout" | "stderr" | "supervisor", chunk: string): void {
+function appendLog(
+  record: ManagedVendorRecord,
+  source: "stdout" | "stderr" | "supervisor",
+  chunk: string,
+): void {
   const lines = chunk
     .split(/\r?\n/)
     .map((line) => line.trimEnd())
@@ -129,7 +133,9 @@ async function waitForHealth(record: ManagedVendorRecord): Promise<void> {
     await sleep(50);
   }
 
-  throw new Error(`Managed vendor ${record.options.vendorId} did not become healthy before startup timed out.`);
+  throw new Error(
+    `Managed vendor ${record.options.vendorId} did not become healthy before startup timed out.`,
+  );
 }
 
 function beginChildLifecycle(record: ManagedVendorRecord, child: ChildProcess): void {
@@ -218,7 +224,9 @@ export class ProcessSupervisor {
 
   isVendorRunning(vendorId: string): boolean {
     const record = this.managedVendors.get(vendorId);
-    return Boolean(record?.child && record.child.exitCode === null && record.status.healthStatus === "healthy");
+    return Boolean(
+      record?.child && record.child.exitCode === null && record.status.healthStatus === "healthy",
+    );
   }
 
   getVendorStatus(vendorId: string): ManagedVendorStatus | undefined {
@@ -242,25 +250,23 @@ export class ProcessSupervisor {
       }
     }
 
-    const record: ManagedVendorRecord =
-      existing ??
-      {
-        child: null,
-        stopping: false,
-        stopDeferred: null,
-        resolveStop: null,
-        restartPromise: null,
-        options,
-        status: {
-          vendorId: options.vendorId,
-          pid: -1,
-          port: inferPort(options),
-          healthStatus: "starting",
-          startTime: new Date().toISOString(),
-          restartCount: 0,
-          logs: [],
-        },
-      };
+    const record: ManagedVendorRecord = existing ?? {
+      child: null,
+      stopping: false,
+      stopDeferred: null,
+      resolveStop: null,
+      restartPromise: null,
+      options,
+      status: {
+        vendorId: options.vendorId,
+        pid: -1,
+        port: inferPort(options),
+        healthStatus: "starting",
+        startTime: new Date().toISOString(),
+        restartCount: 0,
+        logs: [],
+      },
+    };
 
     record.stopping = false;
     this.managedVendors.set(options.vendorId, record);
@@ -315,7 +321,10 @@ export class ProcessSupervisor {
     }
   }
 
-  private async handleUnexpectedExit(record: ManagedVendorRecord, exitCode: number | null): Promise<void> {
+  private async handleUnexpectedExit(
+    record: ManagedVendorRecord,
+    exitCode: number | null,
+  ): Promise<void> {
     record.status = {
       ...record.status,
       healthStatus: record.stopping ? "stopped" : "crashed",

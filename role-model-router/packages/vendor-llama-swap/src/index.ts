@@ -1,11 +1,11 @@
 import { execFile as execFileCallback } from "node:child_process";
+import { access, chmod, copyFile, mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
-import { access, chmod, copyFile, mkdir, writeFile } from "node:fs/promises";
 
 import { stringify } from "yaml";
 
-import { ProcessSupervisor } from "@role-model-router/process-supervisor";
+import type { ProcessSupervisor } from "@role-model-router/process-supervisor";
 import type {
   VendorExecutionOptions,
   VendorExecutionRequest,
@@ -125,7 +125,9 @@ export function renderLlamaSwapConfig(input: {
         "${PORT}",
         "--model",
         model.path,
-        ...(typeof model.contextWindow === "number" ? ["--ctx-size", String(model.contextWindow)] : []),
+        ...(typeof model.contextWindow === "number"
+          ? ["--ctx-size", String(model.contextWindow)]
+          : []),
       ].join(" ");
 
       return [
@@ -432,13 +434,17 @@ export async function startLlamaSwapVendor(
 
   const proxyBaseUrl = `http://127.0.0.1:${port}`;
 
-  async function getRunningModels(): Promise<readonly { modelId: string; loadedAt: string; engine: string }[]> {
+  async function getRunningModels(): Promise<
+    readonly { modelId: string; loadedAt: string; engine: string }[]
+  > {
     try {
       const response = await fetch(`${proxyBaseUrl}/running`);
       if (!response.ok) {
         return [];
       }
-      const data = (await response.json()) as { models?: Record<string, { pid?: number; cmd?: string }> };
+      const data = (await response.json()) as {
+        models?: Record<string, { pid?: number; cmd?: string }>;
+      };
       if (!data.models || typeof data.models !== "object") {
         return [];
       }
@@ -448,15 +454,16 @@ export async function startLlamaSwapVendor(
         // process start times. This is a known limitation — we use "now" as an
         // approximation for when the model was loaded into memory.
         loadedAt: new Date().toISOString(),
-        engine: typeof info.cmd === "string" && info.cmd.includes("llama-server")
-          ? "llama.cpp"
-          : typeof info.cmd === "string" && info.cmd.includes("vllm")
-            ? "vLLM"
-            : typeof info.cmd === "string" && info.cmd.includes("tabby")
-              ? "TabbyAPI"
-              : typeof info.cmd === "string" && info.cmd.includes("stable-diffusion")
-                ? "stable-diffusion.cpp"
-                : "unknown",
+        engine:
+          typeof info.cmd === "string" && info.cmd.includes("llama-server")
+            ? "llama.cpp"
+            : typeof info.cmd === "string" && info.cmd.includes("vllm")
+              ? "vLLM"
+              : typeof info.cmd === "string" && info.cmd.includes("tabby")
+                ? "TabbyAPI"
+                : typeof info.cmd === "string" && info.cmd.includes("stable-diffusion")
+                  ? "stable-diffusion.cpp"
+                  : "unknown",
       }));
     } catch {
       return [];

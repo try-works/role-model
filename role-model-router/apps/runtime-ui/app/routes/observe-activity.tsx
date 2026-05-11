@@ -10,14 +10,18 @@ import {
   SectionCard,
   StatusPill,
 } from "../components/page-primitives";
-import { listRowClassName, mutedPanelClassName, secondaryButtonClassName } from "../lib/design-system";
-import { buildActivitySummary } from "../lib/view-models";
 import {
-  fetchActivityCapture,
-  fetchActivityMetrics,
+  listRowClassName,
+  mutedPanelClassName,
+  secondaryButtonClassName,
+} from "../lib/design-system";
+import {
   type RuntimeActivityCapture,
   type RuntimeActivityLogEntry,
+  fetchActivityCapture,
+  fetchActivityMetrics,
 } from "../lib/runtime-api";
+import { buildActivitySummary } from "../lib/view-models";
 
 function decodeCaptureBody(encoded: string): string {
   try {
@@ -39,11 +43,13 @@ export default function ObserveActivityRoute() {
     void fetchActivityMetrics()
       .then((value) => {
         setMetrics(value);
-        setSelectedCaptureId((current) =>
-          current ?? value.find((entry) => entry.has_capture)?.id ?? null,
+        setSelectedCaptureId(
+          (current) => current ?? value.find((entry) => entry.has_capture)?.id ?? null,
         );
       })
-      .catch((value: unknown) => setError(value instanceof Error ? value.message : "Could not load activity metrics."));
+      .catch((value: unknown) =>
+        setError(value instanceof Error ? value.message : "Could not load activity metrics."),
+      );
   }, []);
 
   useEffect(() => {
@@ -64,7 +70,9 @@ export default function ObserveActivityRoute() {
         }
       })
       .catch((value: unknown) =>
-        setCaptureError(value instanceof Error ? value.message : `Could not load capture ${selectedCaptureId}.`),
+        setCaptureError(
+          value instanceof Error ? value.message : `Could not load capture ${selectedCaptureId}.`,
+        ),
       )
       .finally(() => setCaptureLoading(false));
   }, [selectedCaptureId]);
@@ -98,7 +106,13 @@ export default function ObserveActivityRoute() {
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {summary.facts.map((fact) => (
-          <FactCard key={fact.label} label={fact.label} value={fact.value} detail={fact.detail} emphasis={fact.label === "Entries"} />
+          <FactCard
+            key={fact.label}
+            label={fact.label}
+            value={fact.value}
+            detail={fact.detail}
+            emphasis={fact.label === "Entries"}
+          />
         ))}
       </div>
 
@@ -117,7 +131,9 @@ export default function ObserveActivityRoute() {
                   <div className="space-y-2">
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="font-medium text-[var(--rm-fg)]">{row.model}</p>
-                      <StatusPill tone={Number(row.status) >= 400 ? "warning" : "success"}>{row.status}</StatusPill>
+                      <StatusPill tone={Number(row.status) >= 400 ? "warning" : "success"}>
+                        {row.status}
+                      </StatusPill>
                     </div>
                     <p className="text-sm text-[var(--rm-secondary)]">{row.path}</p>
                     <div className="flex flex-wrap gap-x-4 gap-y-2 text-xs uppercase tracking-[0.16em] text-[var(--rm-muted)]">
@@ -129,7 +145,9 @@ export default function ObserveActivityRoute() {
                     </div>
                   </div>
                   <div className="flex flex-col items-start gap-2 md:items-end">
-                    <p className="text-xs uppercase tracking-[0.16em] text-[var(--rm-muted)]">{new Date(row.timestamp).toLocaleString()}</p>
+                    <p className="text-xs uppercase tracking-[0.16em] text-[var(--rm-muted)]">
+                      {new Date(row.timestamp).toLocaleString()}
+                    </p>
                     {row.hasCapture ? (
                       <button
                         className="text-sm font-medium text-[var(--rm-accent)]"
@@ -156,7 +174,10 @@ export default function ObserveActivityRoute() {
           <div className="space-y-3">
             <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
               <p className="font-medium text-[var(--rm-fg)]">Reading order</p>
-              <p className="mt-2">Use the ledger to spot failing paths or suspicious latencies, then move into captures only for the entries that need raw payload inspection.</p>
+              <p className="mt-2">
+                Use the ledger to spot failing paths or suspicious latencies, then move into
+                captures only for the entries that need raw payload inspection.
+              </p>
             </div>
             {selectedCaptureId === null ? (
               <EmptyState label="Choose a ledger row with a capture to inspect raw request and response bodies." />
@@ -173,19 +194,27 @@ export default function ObserveActivityRoute() {
                   <p className="mt-2">Capture {selectedCapture.id}</p>
                 </div>
                 <div>
-                  <p className="mb-2 text-xs font-medium uppercase tracking-[0.18em] text-[var(--rm-muted)]">Request headers</p>
+                  <p className="mb-2 text-xs font-medium uppercase tracking-[0.18em] text-[var(--rm-muted)]">
+                    Request headers
+                  </p>
                   <CodeBlock>{JSON.stringify(selectedCapture.req_headers, null, 2)}</CodeBlock>
                 </div>
                 <div>
-                  <p className="mb-2 text-xs font-medium uppercase tracking-[0.18em] text-[var(--rm-muted)]">Request body</p>
+                  <p className="mb-2 text-xs font-medium uppercase tracking-[0.18em] text-[var(--rm-muted)]">
+                    Request body
+                  </p>
                   <CodeBlock>{decodeCaptureBody(selectedCapture.req_body) || "(empty)"}</CodeBlock>
                 </div>
                 <div>
-                  <p className="mb-2 text-xs font-medium uppercase tracking-[0.18em] text-[var(--rm-muted)]">Response headers</p>
+                  <p className="mb-2 text-xs font-medium uppercase tracking-[0.18em] text-[var(--rm-muted)]">
+                    Response headers
+                  </p>
                   <CodeBlock>{JSON.stringify(selectedCapture.resp_headers, null, 2)}</CodeBlock>
                 </div>
                 <div>
-                  <p className="mb-2 text-xs font-medium uppercase tracking-[0.18em] text-[var(--rm-muted)]">Response body</p>
+                  <p className="mb-2 text-xs font-medium uppercase tracking-[0.18em] text-[var(--rm-muted)]">
+                    Response body
+                  </p>
                   <CodeBlock>{decodeCaptureBody(selectedCapture.resp_body) || "(empty)"}</CodeBlock>
                 </div>
               </>

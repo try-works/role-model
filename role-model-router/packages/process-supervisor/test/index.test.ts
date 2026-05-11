@@ -1,7 +1,7 @@
 import { spawnSync } from "node:child_process";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { createServer } from "node:http";
 import { createServer as createNetServer } from "node:net";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
@@ -45,10 +45,7 @@ afterEach(async () => {
   );
 });
 
-async function waitFor(
-  predicate: () => boolean,
-  timeoutMs = 5000,
-): Promise<void> {
+async function waitFor(predicate: () => boolean, timeoutMs = 5000): Promise<void> {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
     if (predicate()) {
@@ -217,49 +214,55 @@ describe("process-supervisor", () => {
     expect(supervisor.getVendorStatus("stubborn")).toBeUndefined();
   });
 
-  windowsOnly("stops spawned child processes when a managed vendor shuts down on Windows", async () => {
-    const port = await allocatePort();
-    const childPort = await allocatePort();
-    const supervisor = new ProcessSupervisor();
-    supervisors.push(supervisor);
-    const tempRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-supervisor-tree-"));
-    tempRoots.push(tempRoot);
-    const childPidPath = path.join(tempRoot, "child.pid");
-    const childHealthUrl = `http://127.0.0.1:${childPort}/healthz`;
+  windowsOnly(
+    "stops spawned child processes when a managed vendor shuts down on Windows",
+    async () => {
+      const port = await allocatePort();
+      const childPort = await allocatePort();
+      const supervisor = new ProcessSupervisor();
+      supervisors.push(supervisor);
+      const tempRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-supervisor-tree-"));
+      tempRoots.push(tempRoot);
+      const childPidPath = path.join(tempRoot, "child.pid");
+      const childHealthUrl = `http://127.0.0.1:${childPort}/healthz`;
 
-    const childScript =
-      'const http=require("node:http");const server=http.createServer((req,res)=>{if(req.url==="/healthz"){res.statusCode=200;res.end("ok");return;}res.statusCode=404;res.end("missing");});server.listen(Number(process.env.PORT),"127.0.0.1");const shutdown=()=>server.close(()=>process.exit(0));process.on("SIGTERM",shutdown);process.on("SIGINT",shutdown);setInterval(()=>{},1000);';
-    const parentScript = `const { spawn } = require("node:child_process");const { writeFileSync } = require("node:fs");const http=require("node:http");const child=spawn(process.execPath,["-e",${JSON.stringify(childScript)}],{env:{...process.env,PORT:process.env.CHILD_PORT},stdio:"ignore",detached:true});child.unref();writeFileSync(process.env.CHILD_PID_FILE,String(child.pid ?? ""));const server=http.createServer((req,res)=>{if(req.url==="/healthz"){res.statusCode=200;res.end("ok");return;}res.statusCode=404;res.end("missing");});server.listen(Number(process.env.PORT),"127.0.0.1");const shutdown=()=>server.close(()=>process.exit(0));process.on("SIGTERM",shutdown);process.on("SIGINT",shutdown);setInterval(()=>{},1000);`;
+      const childScript =
+        'const http=require("node:http");const server=http.createServer((req,res)=>{if(req.url==="/healthz"){res.statusCode=200;res.end("ok");return;}res.statusCode=404;res.end("missing");});server.listen(Number(process.env.PORT),"127.0.0.1");const shutdown=()=>server.close(()=>process.exit(0));process.on("SIGTERM",shutdown);process.on("SIGINT",shutdown);setInterval(()=>{},1000);';
+      const parentScript = `const { spawn } = require("node:child_process");const { writeFileSync } = require("node:fs");const http=require("node:http");const child=spawn(process.execPath,["-e",${JSON.stringify(childScript)}],{env:{...process.env,PORT:process.env.CHILD_PORT},stdio:"ignore",detached:true});child.unref();writeFileSync(process.env.CHILD_PID_FILE,String(child.pid ?? ""));const server=http.createServer((req,res)=>{if(req.url==="/healthz"){res.statusCode=200;res.end("ok");return;}res.statusCode=404;res.end("missing");});server.listen(Number(process.env.PORT),"127.0.0.1");const shutdown=()=>server.close(()=>process.exit(0));process.on("SIGTERM",shutdown);process.on("SIGINT",shutdown);setInterval(()=>{},1000);`;
 
-    try {
-      await supervisor.startVendor({
-        vendorId: "tree-parent",
-        command: process.execPath,
-        args: ["-e", parentScript],
-        env: {
-          PORT: String(port),
-          CHILD_PORT: String(childPort),
-          CHILD_PID_FILE: childPidPath,
-        },
-        healthCheckUrl: `http://127.0.0.1:${port}/healthz`,
-        startupTimeoutMs: 5000,
-        shutdownTimeoutMs: 250,
-        required: true,
-      });
-
-      await waitForHttpOk(childHealthUrl);
-
-      await supervisor.stopVendor("tree-parent");
-
-      await waitForHttpDown(childHealthUrl);
-    } finally {
-      const childPid = Number.parseInt((await readFile(childPidPath, "utf8").catch(() => "")).trim(), 10);
-      if (Number.isFinite(childPid) && childPid > 0) {
-        spawnSync("taskkill", ["/PID", String(childPid), "/T", "/F"], {
-          stdio: "ignore",
-          windowsHide: true,
+      try {
+        await supervisor.startVendor({
+          vendorId: "tree-parent",
+          command: process.execPath,
+          args: ["-e", parentScript],
+          env: {
+            PORT: String(port),
+            CHILD_PORT: String(childPort),
+            CHILD_PID_FILE: childPidPath,
+          },
+          healthCheckUrl: `http://127.0.0.1:${port}/healthz`,
+          startupTimeoutMs: 5000,
+          shutdownTimeoutMs: 250,
+          required: true,
         });
+
+        await waitForHttpOk(childHealthUrl);
+
+        await supervisor.stopVendor("tree-parent");
+
+        await waitForHttpDown(childHealthUrl);
+      } finally {
+        const childPid = Number.parseInt(
+          (await readFile(childPidPath, "utf8").catch(() => "")).trim(),
+          10,
+        );
+        if (Number.isFinite(childPid) && childPid > 0) {
+          spawnSync("taskkill", ["/PID", String(childPid), "/T", "/F"], {
+            stdio: "ignore",
+            windowsHide: true,
+          });
+        }
       }
-    }
-  });
+    },
+  );
 });

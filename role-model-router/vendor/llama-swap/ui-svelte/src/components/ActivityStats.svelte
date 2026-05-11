@@ -1,38 +1,42 @@
 <script lang="ts">
-  import { inFlightRequests, metrics } from "../stores/api";
-  import { persistentStore } from "../stores/persistent";
-  import { calculateHistogramData } from "../lib/histogram";
-  import TokenHistogram from "./TokenHistogram.svelte";
+import { calculateHistogramData } from "../lib/histogram";
+import { inFlightRequests, metrics } from "../stores/api";
+import { persistentStore } from "../stores/persistent";
+import TokenHistogram from "./TokenHistogram.svelte";
 
-  const nf = new Intl.NumberFormat();
-  const histogramCollapsed = persistentStore<boolean>("activity-histogram-collapsed", false);
+const nf = new Intl.NumberFormat();
+const histogramCollapsed = persistentStore<boolean>("activity-histogram-collapsed", false);
 
-  let stats = $derived.by(() => {
-    const totalRequests = $metrics.length;
-    const totalInputTokens = $metrics.reduce((sum, m) => sum + m.tokens.input_tokens, 0);
-    const totalOutputTokens = $metrics.reduce((sum, m) => sum + m.tokens.output_tokens, 0);
-    const totalCacheTokens = $metrics.reduce((sum, m) => sum + m.tokens.cache_tokens, 0);
+const stats = $derived.by(() => {
+  const totalRequests = $metrics.length;
+  const totalInputTokens = $metrics.reduce((sum, m) => sum + m.tokens.input_tokens, 0);
+  const totalOutputTokens = $metrics.reduce((sum, m) => sum + m.tokens.output_tokens, 0);
+  const totalCacheTokens = $metrics.reduce((sum, m) => sum + m.tokens.cache_tokens, 0);
 
-    const promptPerSecond = $metrics.filter((m) => m.tokens.prompt_per_second > 0).map((m) => m.tokens.prompt_per_second);
+  const promptPerSecond = $metrics
+    .filter((m) => m.tokens.prompt_per_second > 0)
+    .map((m) => m.tokens.prompt_per_second);
 
-    const tokensPerSecond = $metrics.filter((m) => m.tokens.tokens_per_second > 0).map((m) => m.tokens.tokens_per_second);
+  const tokensPerSecond = $metrics
+    .filter((m) => m.tokens.tokens_per_second > 0)
+    .map((m) => m.tokens.tokens_per_second);
 
-    const promptHistogramData =
-      promptPerSecond.length > 0 ? calculateHistogramData(promptPerSecond) : null;
+  const promptHistogramData =
+    promptPerSecond.length > 0 ? calculateHistogramData(promptPerSecond) : null;
 
-    const genHistogramData =
-      tokensPerSecond.length > 0 ? calculateHistogramData(tokensPerSecond) : null;
+  const genHistogramData =
+    tokensPerSecond.length > 0 ? calculateHistogramData(tokensPerSecond) : null;
 
-    return {
-      totalRequests,
-      totalInputTokens,
-      totalOutputTokens,
-      totalCacheTokens,
-      inFlightRequests: $inFlightRequests,
-      promptHistogramData,
-      genHistogramData,
-    };
-  });
+  return {
+    totalRequests,
+    totalInputTokens,
+    totalOutputTokens,
+    totalCacheTokens,
+    inFlightRequests: $inFlightRequests,
+    promptHistogramData,
+    genHistogramData,
+  };
+});
 </script>
 
 <div class="card relative p-3">
