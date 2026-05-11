@@ -9,11 +9,14 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "..", "..", "..");
 const execFileAsync = promisify(execFile);
+const shellExecutable = process.platform === "win32" ? "cmd.exe" : "sh";
+const shellArguments = (command: string) =>
+  process.platform === "win32" ? ["/c", command] : ["-lc", command];
 
 async function runCoreBuild() {
   const command = "corepack pnpm run build";
 
-  return execFileAsync("cmd.exe", ["/c", command], {
+  return execFileAsync(shellExecutable, shellArguments(command), {
     cwd: path.join(repoRoot, "role-model-router", "packages", "core"),
     windowsHide: true,
   });
@@ -22,5 +25,5 @@ async function runCoreBuild() {
 describe("run31 core build regression for run81", () => {
   it("requires @role-model-router/core to build cleanly under repository config", async () => {
     await runCoreBuild();
-  });
+  }, 30_000);
 });
