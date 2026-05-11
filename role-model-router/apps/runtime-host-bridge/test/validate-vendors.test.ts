@@ -1,6 +1,6 @@
+import { mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { mkdtemp, rm } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 
 import { afterEach, describe, expect, test } from "vitest";
@@ -667,7 +667,9 @@ describe("runRuntimeVendorValidation", () => {
   }, 15_000);
 
   test("plans a real-vendor harness with repo-owned mock upstreams", async () => {
-    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-vendor-plan-"));
+    const runtimeStateRoot = await mkdtemp(
+      path.join(os.tmpdir(), "role-model-runtime-vendor-plan-"),
+    );
     tempRoots.push(runtimeStateRoot);
 
     const plan = await createRuntimeVendorValidationPlan({

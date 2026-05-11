@@ -1,0 +1,1802 @@
+role-model-router/apps/runtime-host-bridge/test/validate-tools.test.ts organizeImports ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Import statements could be sorted:
+  
+     1    Γöé - import┬╖os┬╖from┬╖"node:os";ΓÉì
+     2    Γöé - import┬╖path┬╖from┬╖"node:path";ΓÉì
+     3    Γöé - import┬╖{┬╖mkdtemp┬╖}┬╖from┬╖"node:fs/promises";ΓÉì
+        1 Γöé + import┬╖{┬╖mkdtemp┬╖}┬╖from┬╖"node:fs/promises";ΓÉì
+        2 Γöé + import┬╖os┬╖from┬╖"node:os";ΓÉì
+        3 Γöé + import┬╖path┬╖from┬╖"node:path";ΓÉì
+     4  4 Γöé   import { fileURLToPath } from "node:url";ΓÉì
+     5  5 Γöé   ΓÉì
+  
+
+role-model-router/apps/runtime-host-bridge/test/validate-operations.test.ts organizeImports ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Import statements could be sorted:
+  
+     1    Γöé - import┬╖os┬╖from┬╖"node:os";ΓÉì
+     2    Γöé - import┬╖path┬╖from┬╖"node:path";ΓÉì
+     3    Γöé - import┬╖{┬╖mkdtemp┬╖}┬╖from┬╖"node:fs/promises";ΓÉì
+        1 Γöé + import┬╖{┬╖mkdtemp┬╖}┬╖from┬╖"node:fs/promises";ΓÉì
+        2 Γöé + import┬╖os┬╖from┬╖"node:os";ΓÉì
+        3 Γöé + import┬╖path┬╖from┬╖"node:path";ΓÉì
+     4  4 Γöé   import { fileURLToPath } from "node:url";ΓÉì
+     5  5 Γöé   ΓÉì
+  
+
+role-model-router/apps/runtime-host-bridge/test/runtime-assets.test.ts organizeImports ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Import statements could be sorted:
+  
+      1     Γöé - import┬╖path┬╖from┬╖"node:path";ΓÉì
+          1 Γöé + import┬╖{┬╖mkdir,┬╖mkdtemp,┬╖readFile,┬╖writeFile┬╖}┬╖from┬╖"node:fs/promises";ΓÉì
+      2   2 Γöé   import os from "node:os";ΓÉì
+      3     Γöé - import┬╖{┬╖mkdtemp,┬╖mkdir,┬╖readFile,┬╖writeFile┬╖}┬╖from┬╖"node:fs/promises";ΓÉì
+          3 Γöé + import┬╖path┬╖from┬╖"node:path";ΓÉì
+      4   4 Γöé   ΓÉì
+      5   5 Γöé   import { describe, expect, test } from "vitest";ΓÉì
+  
+
+role-model-router/apps/runtime-host-bridge/test/validate-ui.test.ts organizeImports ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Import statements could be sorted:
+  
+     1    Γöé - import┬╖os┬╖from┬╖"node:os";ΓÉì
+     2    Γöé - import┬╖path┬╖from┬╖"node:path";ΓÉì
+     3    Γöé - import┬╖{┬╖mkdtemp,┬╖writeFile┬╖}┬╖from┬╖"node:fs/promises";ΓÉì
+        1 Γöé + import┬╖{┬╖mkdtemp,┬╖writeFile┬╖}┬╖from┬╖"node:fs/promises";ΓÉì
+        2 Γöé + import┬╖os┬╖from┬╖"node:os";ΓÉì
+        3 Γöé + import┬╖path┬╖from┬╖"node:path";ΓÉì
+     4  4 Γöé   import { fileURLToPath } from "node:url";ΓÉì
+     5  5 Γöé   ΓÉì
+  
+
+role-model-router/apps/runtime-host-bridge/test/validate-tools.test.ts format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+     1    Γöé - import┬╖os┬╖from┬╖"node:os";ΓÉì
+     2    Γöé - import┬╖path┬╖from┬╖"node:path";ΓÉì
+     3    Γöé - import┬╖{┬╖mkdtemp┬╖}┬╖from┬╖"node:fs/promises";ΓÉì
+     4    Γöé - import┬╖{┬╖fileURLToPath┬╖}┬╖from┬╖"node:url";ΓÉì
+     5    Γöé - ΓÉì
+     6    Γöé - import┬╖{┬╖describe,┬╖expect,┬╖test┬╖}┬╖from┬╖"vitest";ΓÉì
+     7    Γöé - ΓÉì
+     8    Γöé - import┬╖{┬╖runRuntimeToolsValidation┬╖}┬╖from┬╖"../src/validate-tools.js";ΓÉì
+     9    Γöé - ΓÉì
+    10    Γöé - const┬╖__filename┬╖=┬╖fileURLToPath(import.meta.url);ΓÉì
+    11    Γöé - const┬╖__dirname┬╖=┬╖path.dirname(__filename);ΓÉì
+    12    Γöé - const┬╖repoRoot┬╖=┬╖path.resolve(__dirname,┬╖"..",┬╖"..",┬╖"..",┬╖"..");ΓÉì
+    13    Γöé - ΓÉì
+    14    Γöé - describe("runRuntimeToolsValidation",┬╖()┬╖=>┬╖{ΓÉì
+    15    Γöé - ┬╖┬╖test("executes┬╖runtime-owned┬╖MCP┬╖tool┬╖calls┬╖and┬╖persists┬╖their┬╖observation┬╖receipts",┬╖async┬╖()┬╖=>┬╖{ΓÉì
+    16    Γöé - ┬╖┬╖┬╖┬╖const┬╖runtimeStateRoot┬╖=┬╖await┬╖mkdtemp(path.join(os.tmpdir(),┬╖"role-model-runtime-tools-"));ΓÉì
+    17    Γöé - ΓÉì
+    18    Γöé - ┬╖┬╖┬╖┬╖const┬╖result┬╖=┬╖await┬╖runRuntimeToolsValidation({ΓÉì
+    19    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖repoRoot,ΓÉì
+    20    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖runtimeStateRoot,ΓÉì
+    21    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖scopeId:┬╖"runtime-tools-validation",ΓÉì
+    22    Γöé - ┬╖┬╖┬╖┬╖});ΓÉì
+    23    Γöé - ΓÉì
+    24    Γöé - ┬╖┬╖┬╖┬╖expect(result.endpointId).toBe("openai.personal.primary.us-east-1.fast");ΓÉì
+    25    Γöé - ┬╖┬╖┬╖┬╖expect(result.toolCalls).toEqual([ΓÉì
+    26    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖{ΓÉì
+    27    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖id:┬╖"call_1",ΓÉì
+    28    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖type:┬╖"function",ΓÉì
+    29    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖function:┬╖{ΓÉì
+    30    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖name:┬╖"lookupRegistry",ΓÉì
+    31    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖arguments:┬╖"{\"endpointId\":\"openai.personal.primary.us-east-1.fast\"}",ΓÉì
+    32    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖},ΓÉì
+    33    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖},ΓÉì
+    34    Γöé - ┬╖┬╖┬╖┬╖]);ΓÉì
+    35    Γöé - ┬╖┬╖┬╖┬╖expect(result.toolExecutions).toEqual([ΓÉì
+    36    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖{ΓÉì
+    37    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖toolCallId:┬╖"call_1",ΓÉì
+    38    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖toolName:┬╖"lookupRegistry",ΓÉì
+    39    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖connectorId:┬╖"mcp.local.registry",ΓÉì
+    40    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖connectorKind:┬╖"mcp",ΓÉì
+    41    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖status:┬╖"succeeded",ΓÉì
+    42    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖output:┬╖{ΓÉì
+    43    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖endpointId:┬╖"openai.personal.primary.us-east-1.fast",ΓÉì
+    44    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖modelId:┬╖"openai/gpt-4.1-mini-fast",ΓÉì
+    45    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖status:┬╖"active",ΓÉì
+    46    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖},ΓÉì
+    47    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖diagnostics:┬╖[],ΓÉì
+    48    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖},ΓÉì
+    49    Γöé - ┬╖┬╖┬╖┬╖]);ΓÉì
+    50    Γöé - ┬╖┬╖┬╖┬╖expect(result.observation).toMatchObject({ΓÉì
+    51    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖requestId:┬╖result.requestId,ΓÉì
+    52    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖endpointId:┬╖result.endpointId,ΓÉì
+    53    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖tooling:┬╖{ΓÉì
+    54    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖toolCalls:┬╖[ΓÉì
+    55    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{ΓÉì
+    56    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖toolCallId:┬╖"call_1",ΓÉì
+    57    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖toolName:┬╖"lookupRegistry",ΓÉì
+    58    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖},ΓÉì
+    59    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖],ΓÉì
+    60    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖executions:┬╖[ΓÉì
+    61    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{ΓÉì
+    62    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖toolCallId:┬╖"call_1",ΓÉì
+    63    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖connectorId:┬╖"mcp.local.registry",ΓÉì
+    64    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖status:┬╖"succeeded",ΓÉì
+    65    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖},ΓÉì
+    66    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖],ΓÉì
+    67    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖},ΓÉì
+    68    Γöé - ┬╖┬╖┬╖┬╖});ΓÉì
+    69    Γöé - ┬╖┬╖});ΓÉì
+    70    Γöé - });ΓÉì
+        1 Γöé + import┬╖os┬╖from┬╖"node:os";
+        2 Γöé + import┬╖path┬╖from┬╖"node:path";
+        3 Γöé + import┬╖{┬╖mkdtemp┬╖}┬╖from┬╖"node:fs/promises";
+        4 Γöé + import┬╖{┬╖fileURLToPath┬╖}┬╖from┬╖"node:url";
+        5 Γöé + 
+        6 Γöé + import┬╖{┬╖describe,┬╖expect,┬╖test┬╖}┬╖from┬╖"vitest";
+        7 Γöé + 
+        8 Γöé + import┬╖{┬╖runRuntimeToolsValidation┬╖}┬╖from┬╖"../src/validate-tools.js";
+        9 Γöé + 
+       10 Γöé + const┬╖__filename┬╖=┬╖fileURLToPath(import.meta.url);
+       11 Γöé + const┬╖__dirname┬╖=┬╖path.dirname(__filename);
+       12 Γöé + const┬╖repoRoot┬╖=┬╖path.resolve(__dirname,┬╖"..",┬╖"..",┬╖"..",┬╖"..");
+       13 Γöé + 
+       14 Γöé + describe("runRuntimeToolsValidation",┬╖()┬╖=>┬╖{
+       15 Γöé + ┬╖┬╖test("executes┬╖runtime-owned┬╖MCP┬╖tool┬╖calls┬╖and┬╖persists┬╖their┬╖observation┬╖receipts",┬╖async┬╖()┬╖=>┬╖{
+       16 Γöé + ┬╖┬╖┬╖┬╖const┬╖runtimeStateRoot┬╖=┬╖await┬╖mkdtemp(path.join(os.tmpdir(),┬╖"role-model-runtime-tools-"));
+       17 Γöé + 
+       18 Γöé + ┬╖┬╖┬╖┬╖const┬╖result┬╖=┬╖await┬╖runRuntimeToolsValidation({
+       19 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖repoRoot,
+       20 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖runtimeStateRoot,
+       21 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖scopeId:┬╖"runtime-tools-validation",
+       22 Γöé + ┬╖┬╖┬╖┬╖});
+       23 Γöé + 
+       24 Γöé + ┬╖┬╖┬╖┬╖expect(result.endpointId).toBe("openai.personal.primary.us-east-1.fast");
+       25 Γöé + ┬╖┬╖┬╖┬╖expect(result.toolCalls).toEqual([
+       26 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖{
+       27 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖id:┬╖"call_1",
+       28 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖type:┬╖"function",
+       29 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖function:┬╖{
+       30 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖name:┬╖"lookupRegistry",
+       31 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖arguments:┬╖'{"endpointId":"openai.personal.primary.us-east-1.fast"}',
+       32 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖},
+       33 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖},
+       34 Γöé + ┬╖┬╖┬╖┬╖]);
+       35 Γöé + ┬╖┬╖┬╖┬╖expect(result.toolExecutions).toEqual([
+       36 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖{
+       37 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖toolCallId:┬╖"call_1",
+       38 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖toolName:┬╖"lookupRegistry",
+       39 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖connectorId:┬╖"mcp.local.registry",
+       40 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖connectorKind:┬╖"mcp",
+       41 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖status:┬╖"succeeded",
+       42 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖output:┬╖{
+       43 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖endpointId:┬╖"openai.personal.primary.us-east-1.fast",
+       44 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖modelId:┬╖"openai/gpt-4.1-mini-fast",
+       45 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖status:┬╖"active",
+       46 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖},
+       47 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖diagnostics:┬╖[],
+       48 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖},
+       49 Γöé + ┬╖┬╖┬╖┬╖]);
+       50 Γöé + ┬╖┬╖┬╖┬╖expect(result.observation).toMatchObject({
+       51 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖requestId:┬╖result.requestId,
+       52 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖endpointId:┬╖result.endpointId,
+       53 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖tooling:┬╖{
+       54 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖toolCalls:┬╖[
+       55 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{
+       56 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖toolCallId:┬╖"call_1",
+       57 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖toolName:┬╖"lookupRegistry",
+       58 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖},
+       59 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖],
+       60 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖executions:┬╖[
+       61 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{
+       62 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖toolCallId:┬╖"call_1",
+       63 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖connectorId:┬╖"mcp.local.registry",
+       64 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖status:┬╖"succeeded",
+       65 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖},
+       66 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖],
+       67 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖},
+       68 Γöé + ┬╖┬╖┬╖┬╖});
+       69 Γöé + ┬╖┬╖});
+       70 Γöé + });
+    71 71 Γöé   
+  
+
+role-model-router/apps/runtime-host-bridge/test/executable.test.ts organizeImports ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Import statements could be sorted:
+  
+      1     Γöé - import┬╖path┬╖from┬╖"node:path";ΓÉì
+      2     Γöé - import┬╖{┬╖access,┬╖readFile┬╖}┬╖from┬╖"node:fs/promises";ΓÉì
+      3     Γöé - import┬╖{┬╖fileURLToPath┬╖}┬╖from┬╖"node:url";ΓÉì
+          1 Γöé + import┬╖{┬╖access,┬╖readFile┬╖}┬╖from┬╖"node:fs/promises";ΓÉì
+          2 Γöé + import┬╖path┬╖from┬╖"node:path";ΓÉì
+          3 Γöé + import┬╖{┬╖fileURLToPath┬╖}┬╖from┬╖"node:url";ΓÉì
+      4   4 Γöé   ΓÉì
+      5   5 Γöé   import { describe, expect, test } from "vitest";ΓÉì
+  
+
+role-model-router/apps/runtime-host-bridge/test/validate-operations.test.ts format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+     1    Γöé - import┬╖os┬╖from┬╖"node:os";ΓÉì
+     2    Γöé - import┬╖path┬╖from┬╖"node:path";ΓÉì
+     3    Γöé - import┬╖{┬╖mkdtemp┬╖}┬╖from┬╖"node:fs/promises";ΓÉì
+     4    Γöé - import┬╖{┬╖fileURLToPath┬╖}┬╖from┬╖"node:url";ΓÉì
+     5    Γöé - ΓÉì
+     6    Γöé - import┬╖{┬╖describe,┬╖expect,┬╖test┬╖}┬╖from┬╖"vitest";ΓÉì
+     7    Γöé - ΓÉì
+     8    Γöé - import┬╖{┬╖runRuntimeOperationsValidation┬╖}┬╖from┬╖"../src/validate-operations.js";ΓÉì
+     9    Γöé - ΓÉì
+    10    Γöé - const┬╖__filename┬╖=┬╖fileURLToPath(import.meta.url);ΓÉì
+    11    Γöé - const┬╖__dirname┬╖=┬╖path.dirname(__filename);ΓÉì
+    12    Γöé - const┬╖repoRoot┬╖=┬╖path.resolve(__dirname,┬╖"..",┬╖"..",┬╖"..",┬╖"..");ΓÉì
+    13    Γöé - ΓÉì
+    14    Γöé - describe("runRuntimeOperationsValidation",┬╖()┬╖=>┬╖{ΓÉì
+    15    Γöé - ┬╖┬╖test("validates┬╖isolated┬╖scopes┬╖and┬╖runtime-state┬╖maintenance┬╖drills",┬╖async┬╖()┬╖=>┬╖{ΓÉì
+    16    Γöé - ┬╖┬╖┬╖┬╖const┬╖runtimeStateRoot┬╖=┬╖await┬╖mkdtemp(path.join(os.tmpdir(),┬╖"role-model-runtime-ops-"));ΓÉì
+    17    Γöé - ΓÉì
+    18    Γöé - ┬╖┬╖┬╖┬╖const┬╖result┬╖=┬╖await┬╖runRuntimeOperationsValidation({ΓÉì
+    19    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖repoRoot,ΓÉì
+    20    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖runtimeStateRoot,ΓÉì
+    21    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖hostValidation:┬╖async┬╖()┬╖=>┬╖({ΓÉì
+    22    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖requestId:┬╖"req-runtime-host-observability-001",ΓÉì
+    23    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖endpointId:┬╖"openai.personal.primary.us-east-1.fast",ΓÉì
+    24    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖captureId:┬╖0,ΓÉì
+    25    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖}),ΓÉì
+    26    Γöé - ┬╖┬╖┬╖┬╖});ΓÉì
+    27    Γöé - ΓÉì
+    28    Γöé - ┬╖┬╖┬╖┬╖expect(result.hostValidation).toEqual({ΓÉì
+    29    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖requestId:┬╖"req-runtime-host-observability-001",ΓÉì
+    30    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖endpointId:┬╖"openai.personal.primary.us-east-1.fast",ΓÉì
+    31    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖captureId:┬╖0,ΓÉì
+    32    Γöé - ┬╖┬╖┬╖┬╖});ΓÉì
+    33    Γöé - ┬╖┬╖┬╖┬╖expect(result.isolation.distinctDatabasePaths).toBe(true);ΓÉì
+    34    Γöé - ┬╖┬╖┬╖┬╖expect(result.isolation.distinctScopeIds).toBe(true);ΓÉì
+    35    Γöé - ┬╖┬╖┬╖┬╖expect(result.scopes.map((scope)┬╖=>┬╖scope.scopeId)).toEqual([ΓÉì
+    36    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"operations-primary",ΓÉì
+    37    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"operations-secondary",ΓÉì
+    38    Γöé - ┬╖┬╖┬╖┬╖]);ΓÉì
+    39    Γöé - ┬╖┬╖┬╖┬╖expect(result.maintenance.exportSummary.observationCount).toBe(1);ΓÉì
+    40    Γöé - ┬╖┬╖┬╖┬╖expect(result.maintenance.exportSummary.profileCount).toBe(1);ΓÉì
+    41    Γöé - ┬╖┬╖┬╖┬╖expect(result.maintenance.deletedDatabaseMissing).toBe(true);ΓÉì
+    42    Γöé - ┬╖┬╖┬╖┬╖expect(result.maintenance.restoredObservation).toMatchObject({ΓÉì
+    43    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖requestId:┬╖result.scopes[0]?.requestId,ΓÉì
+    44    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖endpointId:┬╖result.scopes[0]?.endpointId,ΓÉì
+    45    Γöé - ┬╖┬╖┬╖┬╖});ΓÉì
+    46    Γöé - ┬╖┬╖┬╖┬╖expect(result.replayShadow.matchesChosenEndpoint).toBe(true);ΓÉì
+    47    Γöé - ┬╖┬╖┬╖┬╖expect(result.replayShadow.replayedEndpointId).toBe(result.scopes[0]?.endpointId);ΓÉì
+    48    Γöé - ┬╖┬╖});ΓÉì
+    49    Γöé - });ΓÉì
+        1 Γöé + import┬╖os┬╖from┬╖"node:os";
+        2 Γöé + import┬╖path┬╖from┬╖"node:path";
+        3 Γöé + import┬╖{┬╖mkdtemp┬╖}┬╖from┬╖"node:fs/promises";
+        4 Γöé + import┬╖{┬╖fileURLToPath┬╖}┬╖from┬╖"node:url";
+        5 Γöé + 
+        6 Γöé + import┬╖{┬╖describe,┬╖expect,┬╖test┬╖}┬╖from┬╖"vitest";
+        7 Γöé + 
+        8 Γöé + import┬╖{┬╖runRuntimeOperationsValidation┬╖}┬╖from┬╖"../src/validate-operations.js";
+        9 Γöé + 
+       10 Γöé + const┬╖__filename┬╖=┬╖fileURLToPath(import.meta.url);
+       11 Γöé + const┬╖__dirname┬╖=┬╖path.dirname(__filename);
+       12 Γöé + const┬╖repoRoot┬╖=┬╖path.resolve(__dirname,┬╖"..",┬╖"..",┬╖"..",┬╖"..");
+       13 Γöé + 
+       14 Γöé + describe("runRuntimeOperationsValidation",┬╖()┬╖=>┬╖{
+       15 Γöé + ┬╖┬╖test("validates┬╖isolated┬╖scopes┬╖and┬╖runtime-state┬╖maintenance┬╖drills",┬╖async┬╖()┬╖=>┬╖{
+       16 Γöé + ┬╖┬╖┬╖┬╖const┬╖runtimeStateRoot┬╖=┬╖await┬╖mkdtemp(path.join(os.tmpdir(),┬╖"role-model-runtime-ops-"));
+       17 Γöé + 
+       18 Γöé + ┬╖┬╖┬╖┬╖const┬╖result┬╖=┬╖await┬╖runRuntimeOperationsValidation({
+       19 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖repoRoot,
+       20 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖runtimeStateRoot,
+       21 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖hostValidation:┬╖async┬╖()┬╖=>┬╖({
+       22 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖requestId:┬╖"req-runtime-host-observability-001",
+       23 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖endpointId:┬╖"openai.personal.primary.us-east-1.fast",
+       24 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖captureId:┬╖0,
+       25 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖}),
+       26 Γöé + ┬╖┬╖┬╖┬╖});
+       27 Γöé + 
+       28 Γöé + ┬╖┬╖┬╖┬╖expect(result.hostValidation).toEqual({
+       29 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖requestId:┬╖"req-runtime-host-observability-001",
+       30 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖endpointId:┬╖"openai.personal.primary.us-east-1.fast",
+       31 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖captureId:┬╖0,
+       32 Γöé + ┬╖┬╖┬╖┬╖});
+       33 Γöé + ┬╖┬╖┬╖┬╖expect(result.isolation.distinctDatabasePaths).toBe(true);
+       34 Γöé + ┬╖┬╖┬╖┬╖expect(result.isolation.distinctScopeIds).toBe(true);
+       35 Γöé + ┬╖┬╖┬╖┬╖expect(result.scopes.map((scope)┬╖=>┬╖scope.scopeId)).toEqual([
+       36 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"operations-primary",
+       37 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"operations-secondary",
+       38 Γöé + ┬╖┬╖┬╖┬╖]);
+       39 Γöé + ┬╖┬╖┬╖┬╖expect(result.maintenance.exportSummary.observationCount).toBe(1);
+       40 Γöé + ┬╖┬╖┬╖┬╖expect(result.maintenance.exportSummary.profileCount).toBe(1);
+       41 Γöé + ┬╖┬╖┬╖┬╖expect(result.maintenance.deletedDatabaseMissing).toBe(true);
+       42 Γöé + ┬╖┬╖┬╖┬╖expect(result.maintenance.restoredObservation).toMatchObject({
+       43 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖requestId:┬╖result.scopes[0]?.requestId,
+       44 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖endpointId:┬╖result.scopes[0]?.endpointId,
+       45 Γöé + ┬╖┬╖┬╖┬╖});
+       46 Γöé + ┬╖┬╖┬╖┬╖expect(result.replayShadow.matchesChosenEndpoint).toBe(true);
+       47 Γöé + ┬╖┬╖┬╖┬╖expect(result.replayShadow.replayedEndpointId).toBe(result.scopes[0]?.endpointId);
+       48 Γöé + ┬╖┬╖});
+       49 Γöé + });
+    50 50 Γöé   
+  
+
+role-model-router/apps/runtime-host-bridge/test/runtime-assets.test.ts format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+      1     Γöé - import┬╖path┬╖from┬╖"node:path";ΓÉì
+      2     Γöé - import┬╖os┬╖from┬╖"node:os";ΓÉì
+      3     Γöé - import┬╖{┬╖mkdtemp,┬╖mkdir,┬╖readFile,┬╖writeFile┬╖}┬╖from┬╖"node:fs/promises";ΓÉì
+      4     Γöé - ΓÉì
+      5     Γöé - import┬╖{┬╖describe,┬╖expect,┬╖test┬╖}┬╖from┬╖"vitest";ΓÉì
+      6     Γöé - ΓÉì
+      7     Γöé - import┬╖{┬╖readLlamaSwapAssetDefinition,┬╖resolveLlamaSwapCommand┬╖}┬╖from┬╖"../src/runtime-assets.js";ΓÉì
+      8     Γöé - ΓÉì
+      9     Γöé - describe("runtime┬╖asset┬╖packaging",┬╖()┬╖=>┬╖{ΓÉì
+     10     Γöé - ┬╖┬╖test("maps┬╖the┬╖supported┬╖release┬╖platforms┬╖to┬╖deterministic┬╖llama-swap┬╖asset┬╖keys",┬╖()┬╖=>┬╖{ΓÉì
+     11     Γöé - ┬╖┬╖┬╖┬╖expect(readLlamaSwapAssetDefinition("linux",┬╖"x64")).toEqual({ΓÉì
+     12     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖assetKey:┬╖"vendor/llama-swap/linux-x64/llama-swap",ΓÉì
+     13     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖executableName:┬╖"llama-swap",ΓÉì
+     14     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖relativeAssetPath:┬╖path.join(ΓÉì
+     15     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"vendor",ΓÉì
+     16     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"llama-swap",ΓÉì
+     17     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"dist-assets",ΓÉì
+     18     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"linux-x64",ΓÉì
+     19     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"llama-swap",ΓÉì
+     20     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖),ΓÉì
+     21     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖releaseArchiveName:┬╖"llama-swap_{VERSION}_linux_amd64.tar.gz",ΓÉì
+     22     Γöé - ┬╖┬╖┬╖┬╖});ΓÉì
+     23     Γöé - ┬╖┬╖┬╖┬╖expect(readLlamaSwapAssetDefinition("darwin",┬╖"arm64")).toEqual({ΓÉì
+     24     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖assetKey:┬╖"vendor/llama-swap/darwin-arm64/llama-swap",ΓÉì
+     25     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖executableName:┬╖"llama-swap",ΓÉì
+     26     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖relativeAssetPath:┬╖path.join(ΓÉì
+     27     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"vendor",ΓÉì
+     28     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"llama-swap",ΓÉì
+     29     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"dist-assets",ΓÉì
+     30     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"darwin-arm64",ΓÉì
+     31     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"llama-swap",ΓÉì
+     32     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖),ΓÉì
+     33     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖releaseArchiveName:┬╖"llama-swap_{VERSION}_darwin_arm64.tar.gz",ΓÉì
+     34     Γöé - ┬╖┬╖┬╖┬╖});ΓÉì
+     35     Γöé - ┬╖┬╖┬╖┬╖expect(readLlamaSwapAssetDefinition("win32",┬╖"x64")).toEqual({ΓÉì
+     36     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖assetKey:┬╖"vendor/llama-swap/win32-x64/llama-swap.exe",ΓÉì
+     37     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖executableName:┬╖"llama-swap.exe",ΓÉì
+     38     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖relativeAssetPath:┬╖path.join(ΓÉì
+     39     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"vendor",ΓÉì
+     40     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"llama-swap",ΓÉì
+     41     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"dist-assets",ΓÉì
+     42     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"win32-x64",ΓÉì
+     43     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"llama-swap.exe",ΓÉì
+     44     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖),ΓÉì
+     45     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖releaseArchiveName:┬╖"llama-swap_{VERSION}_windows_amd64.zip",ΓÉì
+     46     Γöé - ┬╖┬╖┬╖┬╖});ΓÉì
+     47     Γöé - ┬╖┬╖┬╖┬╖expect(readLlamaSwapAssetDefinition("linux",┬╖"arm64")).toBeNull();ΓÉì
+     48     Γöé - ┬╖┬╖});ΓÉì
+     49     Γöé - ΓÉì
+     50     Γöé - ┬╖┬╖test("resolves┬╖a┬╖staged┬╖filesystem┬╖asset┬╖when┬╖SEA┬╖embedding┬╖is┬╖not┬╖active",┬╖async┬╖()┬╖=>┬╖{ΓÉì
+     51     Γöé - ┬╖┬╖┬╖┬╖const┬╖tempRoot┬╖=┬╖await┬╖mkdtemp(path.join(os.tmpdir(),┬╖"role-model-runtime-assets-"));ΓÉì
+     52     Γöé - ┬╖┬╖┬╖┬╖const┬╖repoRoot┬╖=┬╖path.join(tempRoot,┬╖"repo");ΓÉì
+     53     Γöé - ┬╖┬╖┬╖┬╖const┬╖runtimeStateRoot┬╖=┬╖path.join(tempRoot,┬╖"runtime");ΓÉì
+     54     Γöé - ┬╖┬╖┬╖┬╖const┬╖assetPath┬╖=┬╖path.join(ΓÉì
+     55     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖repoRoot,ΓÉì
+     56     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"role-model-router",ΓÉì
+     57     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"vendor",ΓÉì
+     58     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"llama-swap",ΓÉì
+     59     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"dist-assets",ΓÉì
+     60     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"win32-x64",ΓÉì
+     61     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"llama-swap.exe",ΓÉì
+     62     Γöé - ┬╖┬╖┬╖┬╖);ΓÉì
+     63     Γöé - ┬╖┬╖┬╖┬╖await┬╖mkdir(path.dirname(assetPath),┬╖{┬╖recursive:┬╖true┬╖});ΓÉì
+     64     Γöé - ┬╖┬╖┬╖┬╖await┬╖writeFile(assetPath,┬╖"stub-binary",┬╖"utf8");ΓÉì
+     65     Γöé - ΓÉì
+     66     Γöé - ┬╖┬╖┬╖┬╖await┬╖expect(ΓÉì
+     67     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖resolveLlamaSwapCommand({ΓÉì
+     68     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖repoRoot,ΓÉì
+     69     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖runtimeStateRoot,ΓÉì
+     70     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖platform:┬╖"win32",ΓÉì
+     71     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖arch:┬╖"x64",ΓÉì
+     72     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖}),ΓÉì
+     73     Γöé - ┬╖┬╖┬╖┬╖).resolves.toBe(assetPath);ΓÉì
+     74     Γöé - ┬╖┬╖});ΓÉì
+     75     Γöé - ΓÉì
+     76     Γöé - ┬╖┬╖test("extracts┬╖an┬╖embedded┬╖SEA┬╖asset┬╖into┬╖the┬╖runtime┬╖state┬╖root",┬╖async┬╖()┬╖=>┬╖{ΓÉì
+     77     Γöé - ┬╖┬╖┬╖┬╖const┬╖tempRoot┬╖=┬╖await┬╖mkdtemp(path.join(os.tmpdir(),┬╖"role-model-runtime-assets-"));ΓÉì
+     78     Γöé - ┬╖┬╖┬╖┬╖const┬╖extractedPath┬╖=┬╖await┬╖resolveLlamaSwapCommand({ΓÉì
+     79     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖repoRoot:┬╖path.join(tempRoot,┬╖"repo"),ΓÉì
+     80     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖runtimeStateRoot:┬╖path.join(tempRoot,┬╖"runtime"),ΓÉì
+     81     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖platform:┬╖"linux",ΓÉì
+     82     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖arch:┬╖"x64",ΓÉì
+     83     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖assetReader:┬╖{ΓÉì
+     84     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖isSea:┬╖true,ΓÉì
+     85     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖getRawAsset(assetKey)┬╖{ΓÉì
+     86     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖if┬╖(assetKey┬╖!==┬╖"vendor/llama-swap/linux-x64/llama-swap")┬╖{ΓÉì
+     87     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖throw┬╖new┬╖Error(`Unexpected┬╖asset┬╖key:┬╖${assetKey}`);ΓÉì
+     88     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖}ΓÉì
+     89     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖return┬╖Buffer.from("sea-asset");ΓÉì
+     90     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖},ΓÉì
+     91     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖},ΓÉì
+     92     Γöé - ┬╖┬╖┬╖┬╖});ΓÉì
+     93     Γöé - ΓÉì
+     94     Γöé - ┬╖┬╖┬╖┬╖expect(extractedPath).toBe(ΓÉì
+     95     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖path.join(ΓÉì
+     96     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖tempRoot,ΓÉì
+     97     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"runtime",ΓÉì
+     98     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"sea-assets",ΓÉì
+     99     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"vendor",ΓÉì
+    100     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"llama-swap",ΓÉì
+    101     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"dist-assets",ΓÉì
+    102     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"linux-x64",ΓÉì
+    103     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"llama-swap",ΓÉì
+    104     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖),ΓÉì
+    105     Γöé - ┬╖┬╖┬╖┬╖);ΓÉì
+    106     Γöé - ┬╖┬╖┬╖┬╖await┬╖expect(readFile(extractedPath┬╖??┬╖"",┬╖"utf8")).resolves.toBe("sea-asset");ΓÉì
+    107     Γöé - ┬╖┬╖});ΓÉì
+    108     Γöé - });ΓÉì
+          1 Γöé + import┬╖path┬╖from┬╖"node:path";
+          2 Γöé + import┬╖os┬╖from┬╖"node:os";
+          3 Γöé + import┬╖{┬╖mkdtemp,┬╖mkdir,┬╖readFile,┬╖writeFile┬╖}┬╖from┬╖"node:fs/promises";
+          4 Γöé + 
+          5 Γöé + import┬╖{┬╖describe,┬╖expect,┬╖test┬╖}┬╖from┬╖"vitest";
+          6 Γöé + 
+          7 Γöé + import┬╖{┬╖readLlamaSwapAssetDefinition,┬╖resolveLlamaSwapCommand┬╖}┬╖from┬╖"../src/runtime-assets.js";
+          8 Γöé + 
+          9 Γöé + describe("runtime┬╖asset┬╖packaging",┬╖()┬╖=>┬╖{
+         10 Γöé + ┬╖┬╖test("maps┬╖the┬╖supported┬╖release┬╖platforms┬╖to┬╖deterministic┬╖llama-swap┬╖asset┬╖keys",┬╖()┬╖=>┬╖{
+         11 Γöé + ┬╖┬╖┬╖┬╖expect(readLlamaSwapAssetDefinition("linux",┬╖"x64")).toEqual({
+         12 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖assetKey:┬╖"vendor/llama-swap/linux-x64/llama-swap",
+         13 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖executableName:┬╖"llama-swap",
+         14 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖relativeAssetPath:┬╖path.join(
+         15 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"vendor",
+         16 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"llama-swap",
+         17 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"dist-assets",
+         18 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"linux-x64",
+         19 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"llama-swap",
+         20 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖),
+         21 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖releaseArchiveName:┬╖"llama-swap_{VERSION}_linux_amd64.tar.gz",
+         22 Γöé + ┬╖┬╖┬╖┬╖});
+         23 Γöé + ┬╖┬╖┬╖┬╖expect(readLlamaSwapAssetDefinition("darwin",┬╖"arm64")).toEqual({
+         24 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖assetKey:┬╖"vendor/llama-swap/darwin-arm64/llama-swap",
+         25 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖executableName:┬╖"llama-swap",
+         26 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖relativeAssetPath:┬╖path.join(
+         27 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"vendor",
+         28 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"llama-swap",
+         29 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"dist-assets",
+         30 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"darwin-arm64",
+         31 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"llama-swap",
+         32 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖),
+         33 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖releaseArchiveName:┬╖"llama-swap_{VERSION}_darwin_arm64.tar.gz",
+         34 Γöé + ┬╖┬╖┬╖┬╖});
+         35 Γöé + ┬╖┬╖┬╖┬╖expect(readLlamaSwapAssetDefinition("win32",┬╖"x64")).toEqual({
+         36 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖assetKey:┬╖"vendor/llama-swap/win32-x64/llama-swap.exe",
+         37 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖executableName:┬╖"llama-swap.exe",
+         38 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖relativeAssetPath:┬╖path.join(
+         39 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"vendor",
+         40 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"llama-swap",
+         41 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"dist-assets",
+         42 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"win32-x64",
+  67 more lines truncated
+  
+
+role-model-router/apps/runtime-host-bridge/test/litellm-catalog.test.ts organizeImports ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Import statements could be sorted:
+  
+     2  2 Γöé   ΓÉì
+     3  3 Γöé   import {ΓÉì
+     4    Γöé - ┬╖┬╖deriveLiteLLMProviders,ΓÉì
+        4 Γöé + ┬╖┬╖type┬╖LiteLLMProviderInfo,ΓÉì
+        5 Γöé + ┬╖┬╖deriveLiteLLMProviders,ΓÉì
+     5  6 Γöé     extractLiteLLMProviderIds,ΓÉì
+     6    Γöé - ┬╖┬╖loadLiteLLMModelPrices,ΓÉì
+     7    Γöé - ┬╖┬╖type┬╖LiteLLMProviderInfo,ΓÉì
+        7 Γöé + ┬╖┬╖loadLiteLLMModelPrices,ΓÉì
+     8  8 Γöé   } from "@role-model-router/catalog";ΓÉì
+     9  9 Γöé   ΓÉì
+  
+
+role-model-router/apps/runtime-host-bridge/test/validate-ui.test.ts format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+     1    Γöé - import┬╖os┬╖from┬╖"node:os";ΓÉì
+     2    Γöé - import┬╖path┬╖from┬╖"node:path";ΓÉì
+     3    Γöé - import┬╖{┬╖mkdtemp,┬╖writeFile┬╖}┬╖from┬╖"node:fs/promises";ΓÉì
+     4    Γöé - import┬╖{┬╖fileURLToPath┬╖}┬╖from┬╖"node:url";ΓÉì
+     5    Γöé - ΓÉì
+     6    Γöé - import┬╖{┬╖describe,┬╖expect,┬╖test┬╖}┬╖from┬╖"vitest";ΓÉì
+     7    Γöé - ΓÉì
+     8    Γöé - import┬╖{┬╖runRuntimeUiValidation┬╖}┬╖from┬╖"../src/validate-ui.js";ΓÉì
+     9    Γöé - ΓÉì
+    10    Γöé - const┬╖__filename┬╖=┬╖fileURLToPath(import.meta.url);ΓÉì
+    11    Γöé - const┬╖__dirname┬╖=┬╖path.dirname(__filename);ΓÉì
+    12    Γöé - const┬╖repoRoot┬╖=┬╖path.resolve(__dirname,┬╖"..",┬╖"..",┬╖"..",┬╖"..");ΓÉì
+    13    Γöé - ΓÉì
+    14    Γöé - describe("runRuntimeUiValidation",┬╖()┬╖=>┬╖{ΓÉì
+    15    Γöé - ┬╖┬╖test("validates┬╖runtime┬╖config┬╖reads┬╖and┬╖the┬╖main┬╖control-plane┬╖mutations",┬╖async┬╖()┬╖=>┬╖{ΓÉì
+    16    Γöé - ┬╖┬╖┬╖┬╖const┬╖runtimeStateRoot┬╖=┬╖await┬╖mkdtemp(path.join(os.tmpdir(),┬╖"role-model-runtime-ui-"));ΓÉì
+    17    Γöé - ┬╖┬╖┬╖┬╖const┬╖unifiedRuntimeConfigPath┬╖=┬╖path.join(runtimeStateRoot,┬╖"runtime-config.yaml");ΓÉì
+    18    Γöé - ┬╖┬╖┬╖┬╖await┬╖writeFile(ΓÉì
+    19    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖unifiedRuntimeConfigPath,ΓÉì
+    20    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖[ΓÉì
+    21    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"version:┬╖1.0",ΓÉì
+    22    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"routing:",ΓÉì
+    23    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"┬╖┬╖strategy:┬╖balanced",ΓÉì
+    24    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"llama_swap:",ΓÉì
+    25    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"┬╖┬╖models:┬╖{}",ΓÉì
+    26    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"litellm_proxy:",ΓÉì
+    27    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"┬╖┬╖providers:┬╖{}",ΓÉì
+    28    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"",ΓÉì
+    29    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖].join("\n"),ΓÉì
+    30    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"utf8",ΓÉì
+    31    Γöé - ┬╖┬╖┬╖┬╖);ΓÉì
+    32    Γöé - ΓÉì
+    33    Γöé - ┬╖┬╖┬╖┬╖const┬╖result┬╖=┬╖await┬╖runRuntimeUiValidation({ΓÉì
+    34    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖repoRoot,ΓÉì
+    35    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖runtimeStateRoot,ΓÉì
+    36    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖scopeId:┬╖"runtime-ui-validation",ΓÉì
+    37    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖unifiedRuntimeConfigPath,ΓÉì
+    38    Γöé - ┬╖┬╖┬╖┬╖});ΓÉì
+    39    Γöé - ΓÉì
+    40    Γöé - ┬╖┬╖┬╖┬╖expect(result.providerCount).toBeGreaterThan(3);ΓÉì
+    41    Γöé - ┬╖┬╖┬╖┬╖expect(result.accountCount).toBeGreaterThanOrEqual(1);ΓÉì
+    42    Γöé - ┬╖┬╖┬╖┬╖expect(result.endpointCount).toBeGreaterThanOrEqual(1);ΓÉì
+    43    Γöé - ┬╖┬╖┬╖┬╖expect(result.runtimeConfigPath).toBe(unifiedRuntimeConfigPath);ΓÉì
+    44    Γöé - ┬╖┬╖┬╖┬╖expect(result.runtimeConfigInitialApplied).toBe(true);ΓÉì
+    45    Γöé - ┬╖┬╖┬╖┬╖expect(result.runtimeConfigUpdatedVersion).toBe("1.1");ΓÉì
+    46    Γöé - ┬╖┬╖┬╖┬╖expect(result.runtimeConfigUpdatedRoutingStrategy).toBe("latency-first");ΓÉì
+    47    Γöé - ┬╖┬╖┬╖┬╖expect(result.moonshotVariantIds).toEqual(ΓÉì
+    48    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖expect.arrayContaining(["moonshot-open-platform",┬╖"kimi-code",┬╖"moonshot-api-key",┬╖"moonshot-oauth"]),ΓÉì
+    49    Γöé - ┬╖┬╖┬╖┬╖);ΓÉì
+    50    Γöé - ┬╖┬╖┬╖┬╖expect(result.availableRoleIds).toEqual(expect.arrayContaining(["general.chat"]));ΓÉì
+    51    Γöé - ┬╖┬╖┬╖┬╖expect(result.upsertedAccountId).toBe("moonshot.personal.primary");ΓÉì
+    52    Γöé - ┬╖┬╖┬╖┬╖expect(result.accountListIncludesUpsert).toBe(true);ΓÉì
+    53    Γöé - ┬╖┬╖┬╖┬╖expect(result.accountRoleBindingIncludesUpsert).toBe(true);ΓÉì
+    54    Γöé - ┬╖┬╖┬╖┬╖expect(result.activatedEndpointId).toBe("moonshot.personal.primary.global.kimi-k2.5");ΓÉì
+    55    Γöé - ┬╖┬╖┬╖┬╖expect(result.endpointListIncludesActivation).toBe(true);ΓÉì
+    56    Γöé - ┬╖┬╖┬╖┬╖expect(result.routedRequestId).toBe("req-runtime-ui-routing-001");ΓÉì
+    57    Γöé - ┬╖┬╖┬╖┬╖expect(result.telemetryListIncludesRoutedRequest).toBe(true);ΓÉì
+    58    Γöé - ┬╖┬╖┬╖┬╖expect(result.routedRequestRoutingDecisionId).toEqual(expect.any(String));ΓÉì
+    59    Γöé - ┬╖┬╖┬╖┬╖expect(result.routedRequestEffectiveMode).toBe("baseline");ΓÉì
+    60    Γöé - ┬╖┬╖┬╖┬╖expect(result.routedRequestRewriteReason).toBe("requested-model-matches-downstream");ΓÉì
+    61    Γöé - ┬╖┬╖},┬╖60_000);ΓÉì
+    62    Γöé - });ΓÉì
+        1 Γöé + import┬╖os┬╖from┬╖"node:os";
+        2 Γöé + import┬╖path┬╖from┬╖"node:path";
+        3 Γöé + import┬╖{┬╖mkdtemp,┬╖writeFile┬╖}┬╖from┬╖"node:fs/promises";
+        4 Γöé + import┬╖{┬╖fileURLToPath┬╖}┬╖from┬╖"node:url";
+        5 Γöé + 
+        6 Γöé + import┬╖{┬╖describe,┬╖expect,┬╖test┬╖}┬╖from┬╖"vitest";
+        7 Γöé + 
+        8 Γöé + import┬╖{┬╖runRuntimeUiValidation┬╖}┬╖from┬╖"../src/validate-ui.js";
+        9 Γöé + 
+       10 Γöé + const┬╖__filename┬╖=┬╖fileURLToPath(import.meta.url);
+       11 Γöé + const┬╖__dirname┬╖=┬╖path.dirname(__filename);
+       12 Γöé + const┬╖repoRoot┬╖=┬╖path.resolve(__dirname,┬╖"..",┬╖"..",┬╖"..",┬╖"..");
+       13 Γöé + 
+       14 Γöé + describe("runRuntimeUiValidation",┬╖()┬╖=>┬╖{
+       15 Γöé + ┬╖┬╖test("validates┬╖runtime┬╖config┬╖reads┬╖and┬╖the┬╖main┬╖control-plane┬╖mutations",┬╖async┬╖()┬╖=>┬╖{
+       16 Γöé + ┬╖┬╖┬╖┬╖const┬╖runtimeStateRoot┬╖=┬╖await┬╖mkdtemp(path.join(os.tmpdir(),┬╖"role-model-runtime-ui-"));
+       17 Γöé + ┬╖┬╖┬╖┬╖const┬╖unifiedRuntimeConfigPath┬╖=┬╖path.join(runtimeStateRoot,┬╖"runtime-config.yaml");
+       18 Γöé + ┬╖┬╖┬╖┬╖await┬╖writeFile(
+       19 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖unifiedRuntimeConfigPath,
+       20 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖[
+       21 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"version:┬╖1.0",
+       22 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"routing:",
+       23 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"┬╖┬╖strategy:┬╖balanced",
+       24 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"llama_swap:",
+       25 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"┬╖┬╖models:┬╖{}",
+       26 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"litellm_proxy:",
+       27 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"┬╖┬╖providers:┬╖{}",
+       28 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"",
+       29 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖].join("\n"),
+       30 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"utf8",
+       31 Γöé + ┬╖┬╖┬╖┬╖);
+       32 Γöé + 
+       33 Γöé + ┬╖┬╖┬╖┬╖const┬╖result┬╖=┬╖await┬╖runRuntimeUiValidation({
+       34 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖repoRoot,
+       35 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖runtimeStateRoot,
+       36 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖scopeId:┬╖"runtime-ui-validation",
+       37 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖unifiedRuntimeConfigPath,
+       38 Γöé + ┬╖┬╖┬╖┬╖});
+       39 Γöé + 
+       40 Γöé + ┬╖┬╖┬╖┬╖expect(result.providerCount).toBeGreaterThan(3);
+       41 Γöé + ┬╖┬╖┬╖┬╖expect(result.accountCount).toBeGreaterThanOrEqual(1);
+       42 Γöé + ┬╖┬╖┬╖┬╖expect(result.endpointCount).toBeGreaterThanOrEqual(1);
+       43 Γöé + ┬╖┬╖┬╖┬╖expect(result.runtimeConfigPath).toBe(unifiedRuntimeConfigPath);
+       44 Γöé + ┬╖┬╖┬╖┬╖expect(result.runtimeConfigInitialApplied).toBe(true);
+       45 Γöé + ┬╖┬╖┬╖┬╖expect(result.runtimeConfigUpdatedVersion).toBe("1.1");
+       46 Γöé + ┬╖┬╖┬╖┬╖expect(result.runtimeConfigUpdatedRoutingStrategy).toBe("latency-first");
+       47 Γöé + ┬╖┬╖┬╖┬╖expect(result.moonshotVariantIds).toEqual(
+       48 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖expect.arrayContaining([
+       49 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"moonshot-open-platform",
+       50 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"kimi-code",
+       51 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"moonshot-api-key",
+       52 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"moonshot-oauth",
+       53 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖]),
+       54 Γöé + ┬╖┬╖┬╖┬╖);
+       55 Γöé + ┬╖┬╖┬╖┬╖expect(result.availableRoleIds).toEqual(expect.arrayContaining(["general.chat"]));
+       56 Γöé + ┬╖┬╖┬╖┬╖expect(result.upsertedAccountId).toBe("moonshot.personal.primary");
+       57 Γöé + ┬╖┬╖┬╖┬╖expect(result.accountListIncludesUpsert).toBe(true);
+       58 Γöé + ┬╖┬╖┬╖┬╖expect(result.accountRoleBindingIncludesUpsert).toBe(true);
+       59 Γöé + ┬╖┬╖┬╖┬╖expect(result.activatedEndpointId).toBe("moonshot.personal.primary.global.kimi-k2.5");
+       60 Γöé + ┬╖┬╖┬╖┬╖expect(result.endpointListIncludesActivation).toBe(true);
+       61 Γöé + ┬╖┬╖┬╖┬╖expect(result.routedRequestId).toBe("req-runtime-ui-routing-001");
+       62 Γöé + ┬╖┬╖┬╖┬╖expect(result.telemetryListIncludesRoutedRequest).toBe(true);
+       63 Γöé + ┬╖┬╖┬╖┬╖expect(result.routedRequestRoutingDecisionId).toEqual(expect.any(String));
+       64 Γöé + ┬╖┬╖┬╖┬╖expect(result.routedRequestEffectiveMode).toBe("baseline");
+       65 Γöé + ┬╖┬╖┬╖┬╖expect(result.routedRequestRewriteReason).toBe("requested-model-matches-downstream");
+       66 Γöé + ┬╖┬╖},┬╖60_000);
+       67 Γöé + });
+    63 68 Γöé   
+  
+
+role-model-router/apps/runtime-ui/app/components/app-shell.tsx format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+     1     Γöé - import┬╖type┬╖{┬╖ReactNode┬╖}┬╖from┬╖"react";ΓÉì
+     2     Γöé - import┬╖{┬╖NavLink,┬╖useLocation┬╖}┬╖from┬╖"react-router";ΓÉì
+     3     Γöé - ΓÉì
+     4     Γöé - import┬╖{┬╖cn┬╖}┬╖from┬╖"../lib/cn";ΓÉì
+     5     Γöé - import┬╖{┬╖cardClassName,┬╖getRuntimeRouteDefinition,┬╖runtimeNavigationSections┬╖}┬╖from┬╖"../lib/design-system";ΓÉì
+     6     Γöé - ΓÉì
+     7     Γöé - function┬╖primarySectionLinkClass(isActive:┬╖boolean):┬╖string┬╖{ΓÉì
+     8     Γöé - ┬╖┬╖return┬╖cn(ΓÉì
+     9     Γöé - ┬╖┬╖┬╖┬╖"flex┬╖min-h-[52px]┬╖items-center┬╖justify-between┬╖gap-3┬╖rounded-none┬╖border┬╖px-4┬╖py-3┬╖text-sm┬╖transition-colors",ΓÉì
+    10     Γöé - ┬╖┬╖┬╖┬╖isActiveΓÉì
+    11     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖?┬╖"border-[var(--rm-border-strong)]┬╖bg-[var(--rm-surface-strong)]┬╖text-[var(--rm-fg)]"ΓÉì
+    12     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖:┬╖"border-transparent┬╖text-[var(--rm-secondary)]┬╖hover:border-[var(--rm-border)]┬╖hover:bg-[var(--rm-panel)]┬╖hover:text-[var(--rm-fg)]",ΓÉì
+    13     Γöé - ┬╖┬╖);ΓÉì
+    14     Γöé - }ΓÉì
+    15     Γöé - ΓÉì
+    16     Γöé - function┬╖secondaryNavLinkClass(isActive:┬╖boolean):┬╖string┬╖{ΓÉì
+    17     Γöé - ┬╖┬╖return┬╖cn(ΓÉì
+    18     Γöé - ┬╖┬╖┬╖┬╖"inline-flex┬╖min-h-[44px]┬╖items-center┬╖gap-2┬╖rounded-none┬╖border┬╖px-3┬╖py-2┬╖text-sm┬╖transition-colors",ΓÉì
+    19     Γöé - ┬╖┬╖┬╖┬╖isActiveΓÉì
+    20     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖?┬╖"border-[var(--rm-border-strong)]┬╖bg-[var(--rm-surface-strong)]┬╖text-[var(--rm-fg)]"ΓÉì
+    21     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖:┬╖"border-[var(--rm-border)]┬╖bg-[var(--rm-panel)]┬╖text-[var(--rm-secondary)]┬╖hover:border-[var(--rm-border-strong)]┬╖hover:text-[var(--rm-fg)]",ΓÉì
+    22     Γöé - ┬╖┬╖);ΓÉì
+    23     Γöé - }ΓÉì
+    24     Γöé - ΓÉì
+    25     Γöé - export┬╖function┬╖AppShell({┬╖children┬╖}:┬╖{┬╖children:┬╖ReactNode┬╖})┬╖{ΓÉì
+    26     Γöé - ┬╖┬╖const┬╖location┬╖=┬╖useLocation();ΓÉì
+    27     Γöé - ┬╖┬╖const┬╖route┬╖=┬╖getRuntimeRouteDefinition(location.pathname)┬╖??┬╖getRuntimeRouteDefinition("/app");ΓÉì
+    28     Γöé - ┬╖┬╖const┬╖activeSection┬╖=ΓÉì
+    29     Γöé - ┬╖┬╖┬╖┬╖runtimeNavigationSections.find((section)┬╖=>┬╖section.title┬╖===┬╖route?.section)┬╖??┬╖runtimeNavigationSections[0];ΓÉì
+    30     Γöé - ΓÉì
+    31     Γöé - ┬╖┬╖return┬╖(ΓÉì
+    32     Γöé - ┬╖┬╖┬╖┬╖<div┬╖className="min-h-screen┬╖bg-[var(--rm-bg)]┬╖text-[var(--rm-fg)]">ΓÉì
+    33     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="mx-auto┬╖grid┬╖min-h-screen┬╖max-w-[var(--rm-shell-width)]┬╖gap-5┬╖px-4┬╖py-4┬╖lg:grid-cols-[220px_minmax(0,1fr)]">ΓÉì
+    34     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<aside┬╖className={`${cardClassName}┬╖p-5┬╖lg:sticky┬╖lg:top-4┬╖lg:h-[calc(100vh-2rem)]`}>ΓÉì
+    35     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="border-b┬╖border-[var(--rm-border)]┬╖pb-5">ΓÉì
+    36     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<h1┬╖className="text-2xl┬╖font-medium┬╖tracking-tight">role-model</h1>ΓÉì
+    37     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+    38     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="mt-5┬╖space-y-5">ΓÉì
+    39     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{runtimeNavigationSections.map((section)┬╖=>┬╖(ΓÉì
+    40     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖key={section.title}>ΓÉì
+    41     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<NavLinkΓÉì
+    42     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖to={section.items[0]?.to┬╖??┬╖"/app"}ΓÉì
+    43     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖end={section.title┬╖===┬╖"Overview"}ΓÉì
+    44     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖className={()┬╖=>┬╖primarySectionLinkClass(route?.section┬╖===┬╖section.title)}ΓÉì
+    45     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖>ΓÉì
+    46     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<span┬╖className="flex┬╖items-center┬╖gap-3">ΓÉì
+    47     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<section.icon┬╖size={16}┬╖/>ΓÉì
+    48     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<span>{section.title}</span>ΓÉì
+    49     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</span>ΓÉì
+    50     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<span┬╖className="text-xs┬╖uppercase┬╖tracking-[0.18em]┬╖text-[var(--rm-muted)]">ΓÉì
+    51     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{section.items.length}ΓÉì
+    52     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</span>ΓÉì
+    53     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</NavLink>ΓÉì
+    54     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+    55     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖))}ΓÉì
+    56     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+    57     Γöé - ΓÉì
+    58     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</aside>ΓÉì
+    59     Γöé - ΓÉì
+    60     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="min-w-0┬╖space-y-5">ΓÉì
+    61     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<header┬╖className={`${cardClassName}┬╖px-5┬╖py-5`}>ΓÉì
+    62     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div>ΓÉì
+    63     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="h-px┬╖w-10┬╖bg-[var(--rm-accent)]"┬╖/>ΓÉì
+    64     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<p┬╖className="text-xs┬╖font-normal┬╖uppercase┬╖tracking-[0.24em]┬╖text-[var(--rm-muted)]">ΓÉì
+    65     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{route?.section┬╖??┬╖"Overview"}ΓÉì
+    66     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</p>ΓÉì
+    67     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<h2┬╖className="mt-3┬╖text-3xl┬╖font-light┬╖tracking-tight">{route?.title┬╖??┬╖"Runtime┬╖overview"}</h2>ΓÉì
+    68     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<p┬╖className="mt-3┬╖max-w-[60ch]┬╖text-sm┬╖leading-6┬╖text-[var(--rm-secondary)]">ΓÉì
+    69     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{route?.description┬╖??┬╖"Runtime,┬╖provider┬╖onboarding,┬╖endpoint┬╖visibility,┬╖and┬╖request┬╖inspection┬╖in┬╖one┬╖shell."}ΓÉì
+    70     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</p>ΓÉì
+    71     Γöé - ΓÉì
+    72     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+    73     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="mt-5┬╖border-t┬╖border-[var(--rm-border)]┬╖pt-4">ΓÉì
+    74     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<p┬╖className="text-xs┬╖font-normal┬╖uppercase┬╖tracking-[0.22em]┬╖text-[var(--rm-muted)]">ΓÉì
+    75     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{activeSection.title}┬╖pagesΓÉì
+    76     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</p>ΓÉì
+    77     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<nav┬╖className="mt-3┬╖flex┬╖flex-wrap┬╖gap-2">ΓÉì
+    78     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{activeSection.items.map((item)┬╖=>┬╖(ΓÉì
+    79     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<NavLinkΓÉì
+    80     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖key={item.to}ΓÉì
+    81     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖to={item.to}ΓÉì
+    82     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖end={item.to┬╖===┬╖"/app"}ΓÉì
+    83     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖className={({┬╖isActive┬╖})┬╖=>┬╖secondaryNavLinkClass(isActive)}ΓÉì
+    84     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖>ΓÉì
+    85     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<item.icon┬╖size={14}┬╖/>ΓÉì
+    86     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<span>{item.label}</span>ΓÉì
+    87     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</NavLink>ΓÉì
+    88     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖))}ΓÉì
+    89     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</nav>ΓÉì
+    90     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+    91     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</header>ΓÉì
+    92     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<main┬╖className="space-y-6">{children}</main>ΓÉì
+    93     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+    94     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+    95     Γöé - ┬╖┬╖┬╖┬╖</div>ΓÉì
+    96     Γöé - ┬╖┬╖);ΓÉì
+    97     Γöé - }ΓÉì
+         1 Γöé + import┬╖type┬╖{┬╖ReactNode┬╖}┬╖from┬╖"react";
+         2 Γöé + import┬╖{┬╖NavLink,┬╖useLocation┬╖}┬╖from┬╖"react-router";
+         3 Γöé + 
+         4 Γöé + import┬╖{┬╖cn┬╖}┬╖from┬╖"../lib/cn";
+         5 Γöé + import┬╖{
+         6 Γöé + ┬╖┬╖cardClassName,
+         7 Γöé + ┬╖┬╖getRuntimeRouteDefinition,
+         8 Γöé + ┬╖┬╖runtimeNavigationSections,
+         9 Γöé + }┬╖from┬╖"../lib/design-system";
+        10 Γöé + 
+        11 Γöé + function┬╖primarySectionLinkClass(isActive:┬╖boolean):┬╖string┬╖{
+        12 Γöé + ┬╖┬╖return┬╖cn(
+        13 Γöé + ┬╖┬╖┬╖┬╖"flex┬╖min-h-[52px]┬╖items-center┬╖justify-between┬╖gap-3┬╖rounded-none┬╖border┬╖px-4┬╖py-3┬╖text-sm┬╖transition-colors",
+        14 Γöé + ┬╖┬╖┬╖┬╖isActive
+        15 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖?┬╖"border-[var(--rm-border-strong)]┬╖bg-[var(--rm-surface-strong)]┬╖text-[var(--rm-fg)]"
+        16 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖:┬╖"border-transparent┬╖text-[var(--rm-secondary)]┬╖hover:border-[var(--rm-border)]┬╖hover:bg-[var(--rm-panel)]┬╖hover:text-[var(--rm-fg)]",
+        17 Γöé + ┬╖┬╖);
+        18 Γöé + }
+        19 Γöé + 
+        20 Γöé + function┬╖secondaryNavLinkClass(isActive:┬╖boolean):┬╖string┬╖{
+        21 Γöé + ┬╖┬╖return┬╖cn(
+        22 Γöé + ┬╖┬╖┬╖┬╖"inline-flex┬╖min-h-[44px]┬╖items-center┬╖gap-2┬╖rounded-none┬╖border┬╖px-3┬╖py-2┬╖text-sm┬╖transition-colors",
+        23 Γöé + ┬╖┬╖┬╖┬╖isActive
+        24 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖?┬╖"border-[var(--rm-border-strong)]┬╖bg-[var(--rm-surface-strong)]┬╖text-[var(--rm-fg)]"
+        25 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖:┬╖"border-[var(--rm-border)]┬╖bg-[var(--rm-panel)]┬╖text-[var(--rm-secondary)]┬╖hover:border-[var(--rm-border-strong)]┬╖hover:text-[var(--rm-fg)]",
+        26 Γöé + ┬╖┬╖);
+        27 Γöé + }
+        28 Γöé + 
+        29 Γöé + export┬╖function┬╖AppShell({┬╖children┬╖}:┬╖{┬╖children:┬╖ReactNode┬╖})┬╖{
+        30 Γöé + ┬╖┬╖const┬╖location┬╖=┬╖useLocation();
+        31 Γöé + ┬╖┬╖const┬╖route┬╖=┬╖getRuntimeRouteDefinition(location.pathname)┬╖??┬╖getRuntimeRouteDefinition("/app");
+        32 Γöé + ┬╖┬╖const┬╖activeSection┬╖=
+        33 Γöé + ┬╖┬╖┬╖┬╖runtimeNavigationSections.find((section)┬╖=>┬╖section.title┬╖===┬╖route?.section)┬╖??
+        34 Γöé + ┬╖┬╖┬╖┬╖runtimeNavigationSections[0];
+        35 Γöé + 
+        36 Γöé + ┬╖┬╖return┬╖(
+        37 Γöé + ┬╖┬╖┬╖┬╖<div┬╖className="min-h-screen┬╖bg-[var(--rm-bg)]┬╖text-[var(--rm-fg)]">
+        38 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="mx-auto┬╖grid┬╖min-h-screen┬╖max-w-[var(--rm-shell-width)]┬╖gap-5┬╖px-4┬╖py-4┬╖lg:grid-cols-[220px_minmax(0,1fr)]">
+        39 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<aside┬╖className={`${cardClassName}┬╖p-5┬╖lg:sticky┬╖lg:top-4┬╖lg:h-[calc(100vh-2rem)]`}>
+        40 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="border-b┬╖border-[var(--rm-border)]┬╖pb-5">
+        41 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<h1┬╖className="text-2xl┬╖font-medium┬╖tracking-tight">role-model</h1>
+        42 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>
+        43 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="mt-5┬╖space-y-5">
+        44 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{runtimeNavigationSections.map((section)┬╖=>┬╖(
+        45 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖key={section.title}>
+        46 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<NavLink
+        47 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖to={section.items[0]?.to┬╖??┬╖"/app"}
+        48 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖end={section.title┬╖===┬╖"Overview"}
+        49 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖className={()┬╖=>┬╖primarySectionLinkClass(route?.section┬╖===┬╖section.title)}
+        50 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖>
+        51 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<span┬╖className="flex┬╖items-center┬╖gap-3">
+        52 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<section.icon┬╖size={16}┬╖/>
+        53 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<span>{section.title}</span>
+  51 more lines truncated
+  
+
+role-model-router/apps/runtime-host-bridge/test/litellm-catalog.test.ts format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+     1    Γöé - import┬╖{┬╖describe,┬╖expect,┬╖test┬╖}┬╖from┬╖"vitest";ΓÉì
+     2    Γöé - ΓÉì
+     3    Γöé - import┬╖{ΓÉì
+     4    Γöé - ┬╖┬╖deriveLiteLLMProviders,ΓÉì
+     5    Γöé - ┬╖┬╖extractLiteLLMProviderIds,ΓÉì
+     6    Γöé - ┬╖┬╖loadLiteLLMModelPrices,ΓÉì
+     7    Γöé - ┬╖┬╖type┬╖LiteLLMProviderInfo,ΓÉì
+     8    Γöé - }┬╖from┬╖"@role-model-router/catalog";ΓÉì
+     9    Γöé - ΓÉì
+    10    Γöé - describe("litellm-catalog",┬╖()┬╖=>┬╖{ΓÉì
+    11    Γöé - ┬╖┬╖test("extracts┬╖provider┬╖ids┬╖from┬╖LiteLLM┬╖model┬╖prices",┬╖()┬╖=>┬╖{ΓÉì
+    12    Γöé - ┬╖┬╖┬╖┬╖const┬╖modelPrices┬╖=┬╖{ΓÉì
+    13    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖sample_spec:┬╖{┬╖litellm_provider:┬╖"openai"┬╖},ΓÉì
+    14    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"gpt-4":┬╖{┬╖litellm_provider:┬╖"openai",┬╖max_tokens:┬╖8192┬╖},ΓÉì
+    15    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"claude-3":┬╖{┬╖litellm_provider:┬╖"anthropic",┬╖max_tokens:┬╖200000┬╖},ΓÉì
+    16    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"kimi-k2.5":┬╖{┬╖litellm_provider:┬╖"moonshot",┬╖max_tokens:┬╖262144┬╖},ΓÉì
+    17    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"unknown-model":┬╖{┬╖max_tokens:┬╖1000┬╖},ΓÉì
+    18    Γöé - ┬╖┬╖┬╖┬╖};ΓÉì
+    19    Γöé - ΓÉì
+    20    Γöé - ┬╖┬╖┬╖┬╖const┬╖providerIds┬╖=┬╖extractLiteLLMProviderIds(modelPrices);ΓÉì
+    21    Γöé - ΓÉì
+    22    Γöé - ┬╖┬╖┬╖┬╖expect(providerIds).toContain("openai");ΓÉì
+    23    Γöé - ┬╖┬╖┬╖┬╖expect(providerIds).toContain("anthropic");ΓÉì
+    24    Γöé - ┬╖┬╖┬╖┬╖expect(providerIds).toContain("moonshot");ΓÉì
+    25    Γöé - ┬╖┬╖┬╖┬╖expect(providerIds).not.toContain("sample_spec");ΓÉì
+    26    Γöé - ┬╖┬╖┬╖┬╖expect(providerIds).not.toContain("unknown-model");ΓÉì
+    27    Γöé - ┬╖┬╖┬╖┬╖expect(providerIds).toHaveLength(3);ΓÉì
+    28    Γöé - ┬╖┬╖});ΓÉì
+    29    Γöé - ΓÉì
+    30    Γöé - ┬╖┬╖test("returns┬╖empty┬╖array┬╖for┬╖invalid┬╖input",┬╖()┬╖=>┬╖{ΓÉì
+    31    Γöé - ┬╖┬╖┬╖┬╖expect(extractLiteLLMProviderIds(null)).toEqual([]);ΓÉì
+    32    Γöé - ┬╖┬╖┬╖┬╖expect(extractLiteLLMProviderIds(undefined)).toEqual([]);ΓÉì
+    33    Γöé - ┬╖┬╖┬╖┬╖expect(extractLiteLLMProviderIds("string")).toEqual([]);ΓÉì
+    34    Γöé - ┬╖┬╖┬╖┬╖expect(extractLiteLLMProviderIds(123)).toEqual([]);ΓÉì
+    35    Γöé - ┬╖┬╖});ΓÉì
+    36    Γöé - ΓÉì
+    37    Γöé - ┬╖┬╖test("derives┬╖provider┬╖info┬╖with┬╖known┬╖overrides",┬╖()┬╖=>┬╖{ΓÉì
+    38    Γöé - ┬╖┬╖┬╖┬╖const┬╖modelPrices┬╖=┬╖{ΓÉì
+    39    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"gpt-4":┬╖{┬╖litellm_provider:┬╖"openai"┬╖},ΓÉì
+    40    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"claude-3":┬╖{┬╖litellm_provider:┬╖"anthropic"┬╖},ΓÉì
+    41    Γöé - ┬╖┬╖┬╖┬╖};ΓÉì
+    42    Γöé - ΓÉì
+    43    Γöé - ┬╖┬╖┬╖┬╖const┬╖providers┬╖=┬╖deriveLiteLLMProviders(modelPrices);ΓÉì
+    44    Γöé - ΓÉì
+    45    Γöé - ┬╖┬╖┬╖┬╖const┬╖openai┬╖=┬╖providers.find((p)┬╖=>┬╖p.providerId┬╖===┬╖"openai");ΓÉì
+    46    Γöé - ┬╖┬╖┬╖┬╖expect(openai).toBeDefined();ΓÉì
+    47    Γöé - ┬╖┬╖┬╖┬╖expect(openai?.displayName).toBe("OpenAI");ΓÉì
+    48    Γöé - ┬╖┬╖┬╖┬╖expect(openai?.providerKind).toBe("provider-openai");ΓÉì
+    49    Γöé - ┬╖┬╖┬╖┬╖expect(openai?.adapterFamily).toBe("ai-sdk-openai");ΓÉì
+    50    Γöé - ┬╖┬╖┬╖┬╖expect(openai?.apiBase).toBe("https://api.openai.com/v1");ΓÉì
+    51    Γöé - ┬╖┬╖┬╖┬╖expect(openai?.envVars).toContain("OPENAI_API_KEY");ΓÉì
+    52    Γöé - ΓÉì
+    53    Γöé - ┬╖┬╖┬╖┬╖const┬╖anthropic┬╖=┬╖providers.find((p)┬╖=>┬╖p.providerId┬╖===┬╖"anthropic");ΓÉì
+    54    Γöé - ┬╖┬╖┬╖┬╖expect(anthropic).toBeDefined();ΓÉì
+    55    Γöé - ┬╖┬╖┬╖┬╖expect(anthropic?.displayName).toBe("Anthropic");ΓÉì
+    56    Γöé - ┬╖┬╖┬╖┬╖expect(anthropic?.providerKind).toBe("provider-anthropic");ΓÉì
+    57    Γöé - ┬╖┬╖});ΓÉì
+    58    Γöé - ΓÉì
+    59    Γöé - ┬╖┬╖test("derives┬╖provider┬╖info┬╖with┬╖inferred┬╖defaults┬╖for┬╖unknown┬╖providers",┬╖()┬╖=>┬╖{ΓÉì
+    60    Γöé - ┬╖┬╖┬╖┬╖const┬╖modelPrices┬╖=┬╖{ΓÉì
+    61    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"custom-model":┬╖{┬╖litellm_provider:┬╖"acme_ai"┬╖},ΓÉì
+    62    Γöé - ┬╖┬╖┬╖┬╖};ΓÉì
+    63    Γöé - ΓÉì
+    64    Γöé - ┬╖┬╖┬╖┬╖const┬╖providers┬╖=┬╖deriveLiteLLMProviders(modelPrices);ΓÉì
+    65    Γöé - ΓÉì
+    66    Γöé - ┬╖┬╖┬╖┬╖expect(providers).toHaveLength(1);ΓÉì
+    67    Γöé - ┬╖┬╖┬╖┬╖const┬╖acme┬╖=┬╖providers[0];ΓÉì
+    68    Γöé - ┬╖┬╖┬╖┬╖expect(acme.providerId).toBe("acme_ai");ΓÉì
+    69    Γöé - ┬╖┬╖┬╖┬╖expect(acme.displayName).toBe("Acme┬╖Ai");ΓÉì
+    70    Γöé - ┬╖┬╖┬╖┬╖expect(acme.providerKind).toBe("provider-openai");ΓÉì
+    71    Γöé - ┬╖┬╖┬╖┬╖expect(acme.authFamily).toBe("api-key");ΓÉì
+    72    Γöé - ┬╖┬╖┬╖┬╖expect(acme.adapterFamily).toBe("ai-sdk-openai-compatible");ΓÉì
+    73    Γöé - ┬╖┬╖┬╖┬╖expect(acme.envVars).toEqual(["ACME_AI_API_KEY"]);ΓÉì
+    74    Γöé - ┬╖┬╖});ΓÉì
+    75    Γöé - ΓÉì
+    76    Γöé - ┬╖┬╖test("loads┬╖real┬╖LiteLLM┬╖model┬╖prices┬╖from┬╖testdata",┬╖async┬╖()┬╖=>┬╖{ΓÉì
+    77    Γöé - ┬╖┬╖┬╖┬╖//┬╖loadLiteLLMModelPrices┬╖already┬╖imported┬╖statically┬╖aboveΓÉì
+    78    Γöé - ┬╖┬╖┬╖┬╖const┬╖repoRoot┬╖=┬╖process.cwd().replace(/\\role-model-router[\\/]apps[\\/]runtime-host-bridge$/,┬╖"");ΓÉì
+    79    Γöé - ΓÉì
+    80    Γöé - ┬╖┬╖┬╖┬╖const┬╖modelPrices┬╖=┬╖await┬╖loadLiteLLMModelPrices(repoRoot);ΓÉì
+    81    Γöé - ΓÉì
+    82    Γöé - ┬╖┬╖┬╖┬╖expect(modelPrices).not.toBeNull();ΓÉì
+    83    Γöé - ┬╖┬╖┬╖┬╖if┬╖(modelPrices)┬╖{ΓÉì
+    84    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖const┬╖providerIds┬╖=┬╖extractLiteLLMProviderIds(modelPrices);ΓÉì
+    85    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖expect(providerIds.length).toBeGreaterThan(10);ΓÉì
+    86    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖expect(providerIds).toContain("openai");ΓÉì
+    87    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖expect(providerIds).toContain("anthropic");ΓÉì
+    88    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖expect(providerIds).toContain("bedrock");ΓÉì
+    89    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖expect(providerIds).toContain("mistral");ΓÉì
+    90    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖expect(providerIds).toContain("groq");ΓÉì
+    91    Γöé - ┬╖┬╖┬╖┬╖}ΓÉì
+    92    Γöé - ┬╖┬╖});ΓÉì
+    93    Γöé - });ΓÉì
+        1 Γöé + import┬╖{┬╖describe,┬╖expect,┬╖test┬╖}┬╖from┬╖"vitest";
+        2 Γöé + 
+        3 Γöé + import┬╖{
+        4 Γöé + ┬╖┬╖deriveLiteLLMProviders,
+        5 Γöé + ┬╖┬╖extractLiteLLMProviderIds,
+        6 Γöé + ┬╖┬╖loadLiteLLMModelPrices,
+        7 Γöé + ┬╖┬╖type┬╖LiteLLMProviderInfo,
+        8 Γöé + }┬╖from┬╖"@role-model-router/catalog";
+        9 Γöé + 
+       10 Γöé + describe("litellm-catalog",┬╖()┬╖=>┬╖{
+       11 Γöé + ┬╖┬╖test("extracts┬╖provider┬╖ids┬╖from┬╖LiteLLM┬╖model┬╖prices",┬╖()┬╖=>┬╖{
+       12 Γöé + ┬╖┬╖┬╖┬╖const┬╖modelPrices┬╖=┬╖{
+       13 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖sample_spec:┬╖{┬╖litellm_provider:┬╖"openai"┬╖},
+       14 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"gpt-4":┬╖{┬╖litellm_provider:┬╖"openai",┬╖max_tokens:┬╖8192┬╖},
+       15 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"claude-3":┬╖{┬╖litellm_provider:┬╖"anthropic",┬╖max_tokens:┬╖200000┬╖},
+       16 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"kimi-k2.5":┬╖{┬╖litellm_provider:┬╖"moonshot",┬╖max_tokens:┬╖262144┬╖},
+       17 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"unknown-model":┬╖{┬╖max_tokens:┬╖1000┬╖},
+       18 Γöé + ┬╖┬╖┬╖┬╖};
+       19 Γöé + 
+       20 Γöé + ┬╖┬╖┬╖┬╖const┬╖providerIds┬╖=┬╖extractLiteLLMProviderIds(modelPrices);
+       21 Γöé + 
+       22 Γöé + ┬╖┬╖┬╖┬╖expect(providerIds).toContain("openai");
+       23 Γöé + ┬╖┬╖┬╖┬╖expect(providerIds).toContain("anthropic");
+       24 Γöé + ┬╖┬╖┬╖┬╖expect(providerIds).toContain("moonshot");
+       25 Γöé + ┬╖┬╖┬╖┬╖expect(providerIds).not.toContain("sample_spec");
+       26 Γöé + ┬╖┬╖┬╖┬╖expect(providerIds).not.toContain("unknown-model");
+       27 Γöé + ┬╖┬╖┬╖┬╖expect(providerIds).toHaveLength(3);
+       28 Γöé + ┬╖┬╖});
+       29 Γöé + 
+       30 Γöé + ┬╖┬╖test("returns┬╖empty┬╖array┬╖for┬╖invalid┬╖input",┬╖()┬╖=>┬╖{
+       31 Γöé + ┬╖┬╖┬╖┬╖expect(extractLiteLLMProviderIds(null)).toEqual([]);
+       32 Γöé + ┬╖┬╖┬╖┬╖expect(extractLiteLLMProviderIds(undefined)).toEqual([]);
+       33 Γöé + ┬╖┬╖┬╖┬╖expect(extractLiteLLMProviderIds("string")).toEqual([]);
+       34 Γöé + ┬╖┬╖┬╖┬╖expect(extractLiteLLMProviderIds(123)).toEqual([]);
+       35 Γöé + ┬╖┬╖});
+       36 Γöé + 
+       37 Γöé + ┬╖┬╖test("derives┬╖provider┬╖info┬╖with┬╖known┬╖overrides",┬╖()┬╖=>┬╖{
+       38 Γöé + ┬╖┬╖┬╖┬╖const┬╖modelPrices┬╖=┬╖{
+       39 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"gpt-4":┬╖{┬╖litellm_provider:┬╖"openai"┬╖},
+       40 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"claude-3":┬╖{┬╖litellm_provider:┬╖"anthropic"┬╖},
+       41 Γöé + ┬╖┬╖┬╖┬╖};
+       42 Γöé + 
+       43 Γöé + ┬╖┬╖┬╖┬╖const┬╖providers┬╖=┬╖deriveLiteLLMProviders(modelPrices);
+       44 Γöé + 
+       45 Γöé + ┬╖┬╖┬╖┬╖const┬╖openai┬╖=┬╖providers.find((p)┬╖=>┬╖p.providerId┬╖===┬╖"openai");
+       46 Γöé + ┬╖┬╖┬╖┬╖expect(openai).toBeDefined();
+       47 Γöé + ┬╖┬╖┬╖┬╖expect(openai?.displayName).toBe("OpenAI");
+       48 Γöé + ┬╖┬╖┬╖┬╖expect(openai?.providerKind).toBe("provider-openai");
+       49 Γöé + ┬╖┬╖┬╖┬╖expect(openai?.adapterFamily).toBe("ai-sdk-openai");
+       50 Γöé + ┬╖┬╖┬╖┬╖expect(openai?.apiBase).toBe("https://api.openai.com/v1");
+       51 Γöé + ┬╖┬╖┬╖┬╖expect(openai?.envVars).toContain("OPENAI_API_KEY");
+       52 Γöé + 
+       53 Γöé + ┬╖┬╖┬╖┬╖const┬╖anthropic┬╖=┬╖providers.find((p)┬╖=>┬╖p.providerId┬╖===┬╖"anthropic");
+       54 Γöé + ┬╖┬╖┬╖┬╖expect(anthropic).toBeDefined();
+       55 Γöé + ┬╖┬╖┬╖┬╖expect(anthropic?.displayName).toBe("Anthropic");
+       56 Γöé + ┬╖┬╖┬╖┬╖expect(anthropic?.providerKind).toBe("provider-anthropic");
+       57 Γöé + ┬╖┬╖});
+  39 more lines truncated
+  
+
+role-model-router/apps/runtime-ui/app/app.css format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+      1     Γöé - @import┬╖"tailwindcss";ΓÉì
+      2     Γöé - ΓÉì
+      3     Γöé - :root┬╖{ΓÉì
+      4     Γöé - ┬╖┬╖--rm-bg:┬╖#fafaf9;ΓÉì
+      5     Γöé - ┬╖┬╖--rm-surface:┬╖#f5f5f4;ΓÉì
+      6     Γöé - ┬╖┬╖--rm-surface-strong:┬╖#f5f5f4;ΓÉì
+      7     Γöé - ┬╖┬╖--rm-panel:┬╖#e7e5e4;ΓÉì
+      8     Γöé - ┬╖┬╖--rm-fg:┬╖#1c1917;ΓÉì
+      9     Γöé - ┬╖┬╖--rm-secondary:┬╖rgba(28,┬╖25,┬╖23,┬╖0.70);ΓÉì
+     10     Γöé - ┬╖┬╖--rm-muted:┬╖rgba(28,┬╖25,┬╖23,┬╖0.40);ΓÉì
+     11     Γöé - ┬╖┬╖--rm-border:┬╖#e7e5e4;ΓÉì
+     12     Γöé - ┬╖┬╖--rm-border-strong:┬╖#f5f5f4;ΓÉì
+     13     Γöé - ┬╖┬╖--rm-accent:┬╖#003B8E;ΓÉì
+     14     Γöé - ┬╖┬╖--rm-accent-muted:┬╖rgba(0,┬╖59,┬╖142,┬╖0.60);ΓÉì
+     15     Γöé - ┬╖┬╖--rm-accent-subtle:┬╖rgba(0,┬╖59,┬╖142,┬╖0.20);ΓÉì
+     16     Γöé - ┬╖┬╖--rm-accent-ghost:┬╖rgba(0,┬╖59,┬╖142,┬╖0.10);ΓÉì
+     17     Γöé - ┬╖┬╖--rm-error:┬╖#C8102E;ΓÉì
+     18     Γöé - ┬╖┬╖--rm-error-muted:┬╖rgba(200,┬╖16,┬╖46,┬╖0.60);ΓÉì
+     19     Γöé - ┬╖┬╖--rm-error-subtle:┬╖rgba(200,┬╖16,┬╖46,┬╖0.20);ΓÉì
+     20     Γöé - ┬╖┬╖--rm-error-ghost:┬╖rgba(200,┬╖16,┬╖46,┬╖0.10);ΓÉì
+     21     Γöé - ┬╖┬╖--rm-success:┬╖#166534;ΓÉì
+     22     Γöé - ┬╖┬╖--rm-success-muted:┬╖rgba(22,┬╖101,┬╖52,┬╖0.60);ΓÉì
+     23     Γöé - ┬╖┬╖--rm-success-subtle:┬╖rgba(22,┬╖101,┬╖52,┬╖0.20);ΓÉì
+     24     Γöé - ┬╖┬╖--rm-warning:┬╖#b45309;ΓÉì
+     25     Γöé - ┬╖┬╖--rm-warning-muted:┬╖rgba(180,┬╖83,┬╖9,┬╖0.60);ΓÉì
+     26     Γöé - ┬╖┬╖--rm-telemetry-local:┬╖#1f2937;ΓÉì
+     27     Γöé - ┬╖┬╖--rm-telemetry-remote:┬╖#003B8E;ΓÉì
+     28     Γöé - ┬╖┬╖--rm-telemetry-healthy:┬╖#166534;ΓÉì
+     29     Γöé - ┬╖┬╖--rm-telemetry-degraded:┬╖#b45309;ΓÉì
+     30     Γöé - ┬╖┬╖--rm-telemetry-raw:┬╖#57534e;ΓÉì
+     31     Γöé - ┬╖┬╖--rm-radius-shell:┬╖0px;ΓÉì
+     32     Γöé - ┬╖┬╖--rm-radius-panel:┬╖0px;ΓÉì
+     33     Γöé - ┬╖┬╖--rm-radius-field:┬╖0px;ΓÉì
+     34     Γöé - ┬╖┬╖--rm-shadow-card:┬╖0┬╖18px┬╖40px┬╖rgba(28,┬╖25,┬╖23,┬╖0.04);ΓÉì
+     35     Γöé - ┬╖┬╖--rm-shell-width:┬╖1480px;ΓÉì
+     36     Γöé - }ΓÉì
+     37     Γöé - ΓÉì
+     38     Γöé - @media┬╖(prefers-color-scheme:┬╖dark)┬╖{ΓÉì
+     39     Γöé - ┬╖┬╖:root┬╖{ΓÉì
+     40     Γöé - ┬╖┬╖┬╖┬╖--rm-bg:┬╖#0c0a09;ΓÉì
+     41     Γöé - ┬╖┬╖┬╖┬╖--rm-surface:┬╖#1c1917;ΓÉì
+     42     Γöé - ┬╖┬╖┬╖┬╖--rm-surface-strong:┬╖#1c1917;ΓÉì
+     43     Γöé - ┬╖┬╖┬╖┬╖--rm-panel:┬╖#292524;ΓÉì
+     44     Γöé - ┬╖┬╖┬╖┬╖--rm-fg:┬╖#fafaf9;ΓÉì
+     45     Γöé - ┬╖┬╖┬╖┬╖--rm-secondary:┬╖rgba(250,┬╖250,┬╖249,┬╖0.70);ΓÉì
+     46     Γöé - ┬╖┬╖┬╖┬╖--rm-muted:┬╖rgba(250,┬╖250,┬╖249,┬╖0.40);ΓÉì
+     47     Γöé - ┬╖┬╖┬╖┬╖--rm-border:┬╖#292524;ΓÉì
+     48     Γöé - ┬╖┬╖┬╖┬╖--rm-border-strong:┬╖#1c1917;ΓÉì
+     49     Γöé - ┬╖┬╖┬╖┬╖--rm-telemetry-local:┬╖#d6d3d1;ΓÉì
+     50     Γöé - ┬╖┬╖┬╖┬╖--rm-telemetry-remote:┬╖#60a5fa;ΓÉì
+     51     Γöé - ┬╖┬╖┬╖┬╖--rm-telemetry-healthy:┬╖#86efac;ΓÉì
+     52     Γöé - ┬╖┬╖┬╖┬╖--rm-telemetry-degraded:┬╖#fbbf24;ΓÉì
+     53     Γöé - ┬╖┬╖┬╖┬╖--rm-telemetry-raw:┬╖#a8a29e;ΓÉì
+     54     Γöé - ┬╖┬╖┬╖┬╖--rm-accent:┬╖#60a5fa;ΓÉì
+     55     Γöé - ┬╖┬╖┬╖┬╖--rm-accent-muted:┬╖rgba(96,┬╖165,┬╖250,┬╖0.60);ΓÉì
+     56     Γöé - ┬╖┬╖┬╖┬╖--rm-accent-subtle:┬╖rgba(96,┬╖165,┬╖250,┬╖0.20);ΓÉì
+     57     Γöé - ┬╖┬╖┬╖┬╖--rm-accent-ghost:┬╖rgba(96,┬╖165,┬╖250,┬╖0.10);ΓÉì
+     58     Γöé - ┬╖┬╖┬╖┬╖--rm-error:┬╖#fb7185;ΓÉì
+     59     Γöé - ┬╖┬╖┬╖┬╖--rm-error-muted:┬╖rgba(251,┬╖113,┬╖133,┬╖0.60);ΓÉì
+     60     Γöé - ┬╖┬╖┬╖┬╖--rm-error-subtle:┬╖rgba(251,┬╖113,┬╖133,┬╖0.20);ΓÉì
+     61     Γöé - ┬╖┬╖┬╖┬╖--rm-error-ghost:┬╖rgba(251,┬╖113,┬╖133,┬╖0.10);ΓÉì
+     62     Γöé - ┬╖┬╖┬╖┬╖--rm-success:┬╖#86efac;ΓÉì
+     63     Γöé - ┬╖┬╖┬╖┬╖--rm-success-muted:┬╖rgba(134,┬╖239,┬╖172,┬╖0.60);ΓÉì
+     64     Γöé - ┬╖┬╖┬╖┬╖--rm-success-subtle:┬╖rgba(134,┬╖239,┬╖172,┬╖0.20);ΓÉì
+     65     Γöé - ┬╖┬╖┬╖┬╖--rm-warning:┬╖#fbbf24;ΓÉì
+     66     Γöé - ┬╖┬╖┬╖┬╖--rm-warning-muted:┬╖rgba(251,┬╖191,┬╖36,┬╖0.60);ΓÉì
+     67     Γöé - ┬╖┬╖}ΓÉì
+     68     Γöé - }ΓÉì
+     69     Γöé - ΓÉì
+     70     Γöé - html┬╖{ΓÉì
+     71     Γöé - ┬╖┬╖scrollbar-gutter:┬╖stable;ΓÉì
+     72     Γöé - ┬╖┬╖color-scheme:┬╖light┬╖dark;ΓÉì
+     73     Γöé - ┬╖┬╖background:┬╖var(--rm-bg);ΓÉì
+     74     Γöé - }ΓÉì
+     75     Γöé - ΓÉì
+     76     Γöé - body┬╖{ΓÉì
+     77     Γöé - ┬╖┬╖margin:┬╖0;ΓÉì
+     78     Γöé - ┬╖┬╖background:┬╖var(--rm-bg);ΓÉì
+     79     Γöé - ┬╖┬╖color:┬╖var(--rm-fg);ΓÉì
+     80     Γöé - ┬╖┬╖font-family:┬╖"IBM┬╖Plex┬╖Sans",┬╖"Hanken┬╖Grotesk",┬╖"Barlow",┬╖"Host┬╖Grotesk",┬╖"DM┬╖Sans",┬╖system-ui,┬╖sans-serif;ΓÉì
+     81     Γöé - }ΓÉì
+     82     Γöé - ΓÉì
+     83     Γöé - ::selection┬╖{ΓÉì
+     84     Γöé - ┬╖┬╖background:┬╖var(--rm-accent-ghost);ΓÉì
+     85     Γöé - }ΓÉì
+     86     Γöé - ΓÉì
+     87     Γöé - code,ΓÉì
+     88     Γöé - pre,ΓÉì
+     89     Γöé - textarea,ΓÉì
+     90     Γöé - input[type="text"]┬╖{ΓÉì
+     91     Γöé - ┬╖┬╖font-family:┬╖"IBM┬╖Plex┬╖Mono",┬╖"JetBrains┬╖Mono",┬╖ui-monospace,┬╖monospace;ΓÉì
+     92     Γöé - }ΓÉì
+     93     Γöé - ΓÉì
+     94     Γöé - a┬╖{ΓÉì
+     95     Γöé - ┬╖┬╖color:┬╖inherit;ΓÉì
+     96     Γöé - ┬╖┬╖text-decoration:┬╖none;ΓÉì
+     97     Γöé - }ΓÉì
+     98     Γöé - ΓÉì
+     99     Γöé - button,ΓÉì
+    100     Γöé - input,ΓÉì
+    101     Γöé - select,ΓÉì
+    102     Γöé - textarea┬╖{ΓÉì
+    103     Γöé - ┬╖┬╖font:┬╖inherit;ΓÉì
+    104     Γöé - }ΓÉì
+          1 Γöé + @import┬╖"tailwindcss";
+          2 Γöé + 
+          3 Γöé + :root┬╖{
+          4 Γöé + ┬╖┬╖--rm-bg:┬╖#fafaf9;
+          5 Γöé + ┬╖┬╖--rm-surface:┬╖#f5f5f4;
+          6 Γöé + ┬╖┬╖--rm-surface-strong:┬╖#f5f5f4;
+          7 Γöé + ┬╖┬╖--rm-panel:┬╖#e7e5e4;
+          8 Γöé + ┬╖┬╖--rm-fg:┬╖#1c1917;
+          9 Γöé + ┬╖┬╖--rm-secondary:┬╖rgba(28,┬╖25,┬╖23,┬╖0.7);
+         10 Γöé + ┬╖┬╖--rm-muted:┬╖rgba(28,┬╖25,┬╖23,┬╖0.4);
+         11 Γöé + ┬╖┬╖--rm-border:┬╖#e7e5e4;
+         12 Γöé + ┬╖┬╖--rm-border-strong:┬╖#f5f5f4;
+         13 Γöé + ┬╖┬╖--rm-accent:┬╖#003b8e;
+         14 Γöé + ┬╖┬╖--rm-accent-muted:┬╖rgba(0,┬╖59,┬╖142,┬╖0.6);
+         15 Γöé + ┬╖┬╖--rm-accent-subtle:┬╖rgba(0,┬╖59,┬╖142,┬╖0.2);
+         16 Γöé + ┬╖┬╖--rm-accent-ghost:┬╖rgba(0,┬╖59,┬╖142,┬╖0.1);
+         17 Γöé + ┬╖┬╖--rm-error:┬╖#c8102e;
+         18 Γöé + ┬╖┬╖--rm-error-muted:┬╖rgba(200,┬╖16,┬╖46,┬╖0.6);
+         19 Γöé + ┬╖┬╖--rm-error-subtle:┬╖rgba(200,┬╖16,┬╖46,┬╖0.2);
+         20 Γöé + ┬╖┬╖--rm-error-ghost:┬╖rgba(200,┬╖16,┬╖46,┬╖0.1);
+         21 Γöé + ┬╖┬╖--rm-success:┬╖#166534;
+         22 Γöé + ┬╖┬╖--rm-success-muted:┬╖rgba(22,┬╖101,┬╖52,┬╖0.6);
+         23 Γöé + ┬╖┬╖--rm-success-subtle:┬╖rgba(22,┬╖101,┬╖52,┬╖0.2);
+         24 Γöé + ┬╖┬╖--rm-warning:┬╖#b45309;
+         25 Γöé + ┬╖┬╖--rm-warning-muted:┬╖rgba(180,┬╖83,┬╖9,┬╖0.6);
+         26 Γöé + ┬╖┬╖--rm-telemetry-local:┬╖#1f2937;
+         27 Γöé + ┬╖┬╖--rm-telemetry-remote:┬╖#003b8e;
+         28 Γöé + ┬╖┬╖--rm-telemetry-healthy:┬╖#166534;
+         29 Γöé + ┬╖┬╖--rm-telemetry-degraded:┬╖#b45309;
+         30 Γöé + ┬╖┬╖--rm-telemetry-raw:┬╖#57534e;
+         31 Γöé + ┬╖┬╖--rm-radius-shell:┬╖0px;
+         32 Γöé + ┬╖┬╖--rm-radius-panel:┬╖0px;
+         33 Γöé + ┬╖┬╖--rm-radius-field:┬╖0px;
+         34 Γöé + ┬╖┬╖--rm-shadow-card:┬╖0┬╖18px┬╖40px┬╖rgba(28,┬╖25,┬╖23,┬╖0.04);
+         35 Γöé + ┬╖┬╖--rm-shell-width:┬╖1480px;
+         36 Γöé + }
+         37 Γöé + 
+         38 Γöé + @media┬╖(prefers-color-scheme:┬╖dark)┬╖{
+         39 Γöé + ┬╖┬╖:root┬╖{
+         40 Γöé + ┬╖┬╖┬╖┬╖--rm-bg:┬╖#0c0a09;
+         41 Γöé + ┬╖┬╖┬╖┬╖--rm-surface:┬╖#1c1917;
+         42 Γöé + ┬╖┬╖┬╖┬╖--rm-surface-strong:┬╖#1c1917;
+         43 Γöé + ┬╖┬╖┬╖┬╖--rm-panel:┬╖#292524;
+         44 Γöé + ┬╖┬╖┬╖┬╖--rm-fg:┬╖#fafaf9;
+         45 Γöé + ┬╖┬╖┬╖┬╖--rm-secondary:┬╖rgba(250,┬╖250,┬╖249,┬╖0.7);
+         46 Γöé + ┬╖┬╖┬╖┬╖--rm-muted:┬╖rgba(250,┬╖250,┬╖249,┬╖0.4);
+  60 more lines truncated
+  
+
+role-model-router/apps/runtime-host-bridge/test/executable.test.ts format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+      1     Γöé - import┬╖path┬╖from┬╖"node:path";ΓÉì
+      2     Γöé - import┬╖{┬╖access,┬╖readFile┬╖}┬╖from┬╖"node:fs/promises";ΓÉì
+      3     Γöé - import┬╖{┬╖fileURLToPath┬╖}┬╖from┬╖"node:url";ΓÉì
+      4     Γöé - ΓÉì
+      5     Γöé - import┬╖{┬╖describe,┬╖expect,┬╖test┬╖}┬╖from┬╖"vitest";ΓÉì
+      6     Γöé - ΓÉì
+      7     Γöé - const┬╖__filename┬╖=┬╖fileURLToPath(import.meta.url);ΓÉì
+      8     Γöé - const┬╖__dirname┬╖=┬╖path.dirname(__filename);ΓÉì
+      9     Γöé - const┬╖repoRoot┬╖=┬╖path.resolve(__dirname,┬╖"..",┬╖"..",┬╖"..",┬╖"..");ΓÉì
+     10     Γöé - ΓÉì
+     11     Γöé - interface┬╖PackageManifest┬╖{ΓÉì
+     12     Γöé - ┬╖┬╖readonly┬╖name?:┬╖string;ΓÉì
+     13     Γöé - ┬╖┬╖readonly┬╖dependencies?:┬╖Readonly<Record<string,┬╖string>>;ΓÉì
+     14     Γöé - ┬╖┬╖readonly┬╖devDependencies?:┬╖Readonly<Record<string,┬╖string>>;ΓÉì
+     15     Γöé - ┬╖┬╖readonly┬╖exports?:┬╖Record<string,┬╖unknown>;ΓÉì
+     16     Γöé - ┬╖┬╖readonly┬╖scripts?:┬╖Readonly<Record<string,┬╖string>>;ΓÉì
+     17     Γöé - }ΓÉì
+     18     Γöé - ΓÉì
+     19     Γöé - async┬╖function┬╖readManifest(relativePath:┬╖string):┬╖Promise<PackageManifest>┬╖{ΓÉì
+     20     Γöé - ┬╖┬╖const┬╖filePath┬╖=┬╖path.join(repoRoot,┬╖relativePath);ΓÉì
+     21     Γöé - ┬╖┬╖return┬╖JSON.parse(await┬╖readFile(filePath,┬╖"utf8"))┬╖as┬╖PackageManifest;ΓÉì
+     22     Γöé - }ΓÉì
+     23     Γöé - ΓÉì
+     24     Γöé - async┬╖function┬╖collectRuntimeDependencyGraph():┬╖Promise<ΓÉì
+     25     Γöé - ┬╖┬╖Array<{┬╖name:┬╖string;┬╖relativePath:┬╖string┬╖}>ΓÉì
+     26     Γöé - >┬╖{ΓÉì
+     27     Γöé - ┬╖┬╖const┬╖manifests┬╖=┬╖new┬╖Map<string,┬╖{┬╖relativePath:┬╖string;┬╖manifest:┬╖PackageManifest┬╖}>();ΓÉì
+     28     Γöé - ┬╖┬╖const┬╖manifestPaths┬╖=┬╖[ΓÉì
+     29     Γöé - ┬╖┬╖┬╖┬╖"packages/protocol-types/package.json",ΓÉì
+     30     Γöé - ┬╖┬╖┬╖┬╖"role-model-router/apps/runtime-host-bridge/package.json",ΓÉì
+     31     Γöé - ┬╖┬╖┬╖┬╖"role-model-router/packages/adapter-execution/package.json",ΓÉì
+     32     Γöé - ┬╖┬╖┬╖┬╖"role-model-router/packages/catalog/package.json",ΓÉì
+     33     Γöé - ┬╖┬╖┬╖┬╖"role-model-router/packages/context-envelope/package.json",ΓÉì
+     34     Γöé - ┬╖┬╖┬╖┬╖"role-model-router/packages/core/package.json",ΓÉì
+     35     Γöé - ┬╖┬╖┬╖┬╖"role-model-router/packages/endpoint-registry/package.json",ΓÉì
+     36     Γöé - ┬╖┬╖┬╖┬╖"role-model-router/packages/profile-aggregator/package.json",ΓÉì
+     37     Γöé - ┬╖┬╖┬╖┬╖"role-model-router/packages/process-supervisor/package.json",ΓÉì
+     38     Γöé - ┬╖┬╖┬╖┬╖"role-model-router/packages/protocol-routing/package.json",ΓÉì
+     39     Γöé - ┬╖┬╖┬╖┬╖"role-model-router/packages/provider-account/package.json",ΓÉì
+     40     Γöé - ┬╖┬╖┬╖┬╖"role-model-router/packages/provider-anthropic/package.json",ΓÉì
+     41     Γöé - ┬╖┬╖┬╖┬╖"role-model-router/packages/provider-litellm/package.json",ΓÉì
+     42     Γöé - ┬╖┬╖┬╖┬╖"role-model-router/packages/provider-mcp/package.json",ΓÉì
+     43     Γöé - ┬╖┬╖┬╖┬╖"role-model-router/packages/provider-openai/package.json",ΓÉì
+     44     Γöé - ┬╖┬╖┬╖┬╖"role-model-router/packages/retrieval-receipt/package.json",ΓÉì
+     45     Γöé - ┬╖┬╖┬╖┬╖"role-model-router/packages/runtime-observability/package.json",ΓÉì
+     46     Γöé - ┬╖┬╖┬╖┬╖"role-model-router/packages/sqlite-memory/package.json",ΓÉì
+     47     Γöé - ┬╖┬╖┬╖┬╖"role-model-router/packages/tool-registry/package.json",ΓÉì
+     48     Γöé - ┬╖┬╖┬╖┬╖"role-model-router/packages/trace/package.json",ΓÉì
+     49     Γöé - ┬╖┬╖┬╖┬╖"role-model-router/packages/usage/package.json",ΓÉì
+     50     Γöé - ┬╖┬╖┬╖┬╖"role-model-router/packages/vendor-abstraction/package.json",ΓÉì
+     51     Γöé - ┬╖┬╖┬╖┬╖"role-model-router/packages/vendor-llama-swap/package.json",ΓÉì
+     52     Γöé - ┬╖┬╖┬╖┬╖"role-model-router/packages/vendor-litellm/package.json",ΓÉì
+     53     Γöé - ┬╖┬╖]┬╖as┬╖const;ΓÉì
+     54     Γöé - ΓÉì
+     55     Γöé - ┬╖┬╖for┬╖(const┬╖relativePath┬╖of┬╖manifestPaths)┬╖{ΓÉì
+     56     Γöé - ┬╖┬╖┬╖┬╖const┬╖manifest┬╖=┬╖await┬╖readManifest(relativePath);ΓÉì
+     57     Γöé - ┬╖┬╖┬╖┬╖if┬╖(manifest.name)┬╖{ΓÉì
+     58     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖manifests.set(manifest.name,┬╖{┬╖relativePath,┬╖manifest┬╖});ΓÉì
+     59     Γöé - ┬╖┬╖┬╖┬╖}ΓÉì
+     60     Γöé - ┬╖┬╖}ΓÉì
+     61     Γöé - ΓÉì
+     62     Γöé - ┬╖┬╖const┬╖visited┬╖=┬╖new┬╖Set<string>();ΓÉì
+     63     Γöé - ┬╖┬╖const┬╖ordered:┬╖Array<{┬╖name:┬╖string;┬╖relativePath:┬╖string┬╖}>┬╖=┬╖[];ΓÉì
+     64     Γöé - ΓÉì
+     65     Γöé - ┬╖┬╖function┬╖visit(name:┬╖string):┬╖void┬╖{ΓÉì
+     66     Γöé - ┬╖┬╖┬╖┬╖if┬╖(visited.has(name))┬╖{ΓÉì
+     67     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖return;ΓÉì
+     68     Γöé - ┬╖┬╖┬╖┬╖}ΓÉì
+     69     Γöé - ┬╖┬╖┬╖┬╖visited.add(name);ΓÉì
+     70     Γöé - ┬╖┬╖┬╖┬╖const┬╖entry┬╖=┬╖manifests.get(name);ΓÉì
+     71     Γöé - ┬╖┬╖┬╖┬╖if┬╖(!entry)┬╖{ΓÉì
+     72     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖return;ΓÉì
+     73     Γöé - ┬╖┬╖┬╖┬╖}ΓÉì
+     74     Γöé - ┬╖┬╖┬╖┬╖ordered.push({┬╖name,┬╖relativePath:┬╖entry.relativePath┬╖});ΓÉì
+     75     Γöé - ┬╖┬╖┬╖┬╖const┬╖dependencies┬╖=┬╖{ΓÉì
+     76     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖...entry.manifest.dependencies,ΓÉì
+     77     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖...entry.manifest.devDependencies,ΓÉì
+     78     Γöé - ┬╖┬╖┬╖┬╖};ΓÉì
+     79     Γöé - ┬╖┬╖┬╖┬╖for┬╖(const┬╖dependencyName┬╖of┬╖Object.keys(dependencies))┬╖{ΓÉì
+     80     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖if┬╖(ΓÉì
+     81     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖dependencyName.startsWith("@role-model-router/")┬╖||ΓÉì
+     82     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖dependencyName┬╖===┬╖"@role-model/protocol-types"ΓÉì
+     83     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖)┬╖{ΓÉì
+     84     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖visit(dependencyName);ΓÉì
+     85     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖}ΓÉì
+     86     Γöé - ┬╖┬╖┬╖┬╖}ΓÉì
+     87     Γöé - ┬╖┬╖}ΓÉì
+     88     Γöé - ΓÉì
+     89     Γöé - ┬╖┬╖visit("@role-model-router/runtime-host-bridge");ΓÉì
+     90     Γöé - ┬╖┬╖return┬╖ordered;ΓÉì
+     91     Γöé - }ΓÉì
+     92     Γöé - ΓÉì
+     93     Γöé - describe("runtime-host-bridge┬╖executable┬╖packaging",┬╖()┬╖=>┬╖{ΓÉì
+     94     Γöé - ┬╖┬╖test("declares┬╖a┬╖runtime┬╖export┬╖condition┬╖for┬╖the┬╖built┬╖runtime┬╖dependency┬╖graph",┬╖async┬╖()┬╖=>┬╖{ΓÉì
+     95     Γöé - ┬╖┬╖┬╖┬╖const┬╖runtimeGraph┬╖=┬╖await┬╖collectRuntimeDependencyGraph();ΓÉì
+     96     Γöé - ΓÉì
+     97     Γöé - ┬╖┬╖┬╖┬╖for┬╖(const┬╖entry┬╖of┬╖runtimeGraph)┬╖{ΓÉì
+     98     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖const┬╖manifest┬╖=┬╖await┬╖readManifest(entry.relativePath);ΓÉì
+     99     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖const┬╖rootExport┬╖=┬╖manifest.exports?.["."]┬╖as┬╖{┬╖runtime?:┬╖string┬╖}┬╖|┬╖undefined;ΓÉì
+    100     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖expect(rootExport).toMatchObject({ΓÉì
+    101     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖runtime:┬╖"./dist/index.js",ΓÉì
+    102     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖});ΓÉì
+    103     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖expect(manifest.scripts).toMatchObject({ΓÉì
+    104     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖build:┬╖expect.any(String),ΓÉì
+    105     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖});ΓÉì
+    106     Γöé - ┬╖┬╖┬╖┬╖}ΓÉì
+    107     Γöé - ┬╖┬╖});ΓÉì
+    108     Γöé - ΓÉì
+    109     Γöé - ┬╖┬╖test("declares┬╖a┬╖SEA┬╖config┬╖and┬╖packaging┬╖command┬╖for┬╖platform-specific┬╖llama-swap┬╖assets",┬╖async┬╖()┬╖=>┬╖{ΓÉì
+    110     Γöé - ┬╖┬╖┬╖┬╖const┬╖rootManifest┬╖=┬╖await┬╖readManifest("package.json");ΓÉì
+    111     Γöé - ┬╖┬╖┬╖┬╖expect(rootManifest.scripts).toMatchObject({ΓÉì
+    112     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"runtime:package-sea":┬╖expect.any(String),ΓÉì
+    113     Γöé - ┬╖┬╖┬╖┬╖});ΓÉì
+    114     Γöé - ΓÉì
+    115     Γöé - ┬╖┬╖┬╖┬╖const┬╖seaConfigPath┬╖=┬╖path.join(repoRoot,┬╖"role-model-router",┬╖"sea-config.json");ΓÉì
+    116     Γöé - ┬╖┬╖┬╖┬╖const┬╖seaConfig┬╖=┬╖JSON.parse(await┬╖readFile(seaConfigPath,┬╖"utf8"))┬╖as┬╖{ΓÉì
+    117     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖readonly┬╖main?:┬╖string;ΓÉì
+    118     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖readonly┬╖output?:┬╖string;ΓÉì
+    119     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖readonly┬╖assets?:┬╖Record<string,┬╖string>;ΓÉì
+    120     Γöé - ┬╖┬╖┬╖┬╖};ΓÉì
+    121     Γöé - ΓÉì
+    122     Γöé - ┬╖┬╖┬╖┬╖expect(seaConfig).toMatchObject({ΓÉì
+    123     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖main:┬╖"./dist/sea/cli.cjs",ΓÉì
+    124     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖output:┬╖"./dist/sea-prep.blob",ΓÉì
+    125     Γöé - ┬╖┬╖┬╖┬╖});ΓÉì
+    126     Γöé - ┬╖┬╖┬╖┬╖expect(seaConfig.assets).toMatchObject({ΓÉì
+    127     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"vendor/llama-swap/linux-x64/llama-swap":ΓÉì
+    128     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"./vendor/llama-swap/dist-assets/linux-x64/llama-swap",ΓÉì
+    129     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"vendor/llama-swap/darwin-x64/llama-swap":ΓÉì
+    130     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"./vendor/llama-swap/dist-assets/darwin-x64/llama-swap",ΓÉì
+    131     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"vendor/llama-swap/darwin-arm64/llama-swap":ΓÉì
+    132     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"./vendor/llama-swap/dist-assets/darwin-arm64/llama-swap",ΓÉì
+    133     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"vendor/llama-swap/win32-x64/llama-swap.exe":ΓÉì
+    134     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"./vendor/llama-swap/dist-assets/win32-x64/llama-swap.exe",ΓÉì
+    135     Γöé - ┬╖┬╖┬╖┬╖});ΓÉì
+    136     Γöé - ┬╖┬╖});ΓÉì
+    137     Γöé - ΓÉì
+    138     Γöé - ┬╖┬╖test("ships┬╖install┬╖and┬╖compose┬╖artifacts┬╖for┬╖packaged┬╖runtime┬╖distribution",┬╖async┬╖()┬╖=>┬╖{ΓÉì
+    139     Γöé - ┬╖┬╖┬╖┬╖const┬╖installScriptPath┬╖=┬╖path.join(repoRoot,┬╖"scripts",┬╖"install.sh");ΓÉì
+    140     Γöé - ┬╖┬╖┬╖┬╖const┬╖composePath┬╖=┬╖path.join(repoRoot,┬╖"docker-compose.yml");ΓÉì
+    141     Γöé - ΓÉì
+    142     Γöé - ┬╖┬╖┬╖┬╖await┬╖expect(access(installScriptPath)).resolves.toBeUndefined();ΓÉì
+    143     Γöé - ┬╖┬╖┬╖┬╖await┬╖expect(access(composePath)).resolves.toBeUndefined();ΓÉì
+    144     Γöé - ┬╖┬╖});ΓÉì
+    145     Γöé - });ΓÉì
+          1 Γöé + import┬╖path┬╖from┬╖"node:path";
+          2 Γöé + import┬╖{┬╖access,┬╖readFile┬╖}┬╖from┬╖"node:fs/promises";
+          3 Γöé + import┬╖{┬╖fileURLToPath┬╖}┬╖from┬╖"node:url";
+          4 Γöé + 
+          5 Γöé + import┬╖{┬╖describe,┬╖expect,┬╖test┬╖}┬╖from┬╖"vitest";
+  141 more lines truncated
+  
+
+role-model-router/apps/runtime-host-bridge/test/local-policy.test.ts organizeImports ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Import statements could be sorted:
+  
+      1     Γöé - import┬╖{┬╖describe,┬╖test,┬╖expect,┬╖beforeEach,┬╖afterEach┬╖}┬╖from┬╖"vitest";ΓÉì
+      2     Γöé - import┬╖{┬╖mkdtempSync,┬╖rmSync,┬╖existsSync,┬╖readFileSync┬╖}┬╖from┬╖"node:fs";ΓÉì
+          1 Γöé + import┬╖{┬╖existsSync,┬╖mkdtempSync,┬╖readFileSync,┬╖rmSync┬╖}┬╖from┬╖"node:fs";ΓÉì
+      3   2 Γöé   import { tmpdir } from "node:os";ΓÉì
+      4   3 Γöé   import path, { join } from "node:path";ΓÉì
+      5   4 Γöé   import { fileURLToPath } from "node:url";ΓÉì
+      6   5 Γöé   import type { EndpointRegistryResult } from "@role-model-router/endpoint-registry";ΓÉì
+          6 Γöé + import┬╖{┬╖afterEach,┬╖beforeEach,┬╖describe,┬╖expect,┬╖test┬╖}┬╖from┬╖"vitest";ΓÉì
+      7   7 Γöé   ΓÉì
+      8   8 Γöé   import * as bridge from "../src/index.js";ΓÉì
+  
+
+role-model-router/apps/runtime-host-bridge/test/validate-vendors.test.ts organizeImports ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Import statements could be sorted:
+  
+      1     Γöé - import┬╖os┬╖from┬╖"node:os";ΓÉì
+      2     Γöé - import┬╖path┬╖from┬╖"node:path";ΓÉì
+      3     Γöé - import┬╖{┬╖mkdtemp,┬╖rm┬╖}┬╖from┬╖"node:fs/promises";ΓÉì
+          1 Γöé + import┬╖{┬╖mkdtemp,┬╖rm┬╖}┬╖from┬╖"node:fs/promises";ΓÉì
+          2 Γöé + import┬╖os┬╖from┬╖"node:os";ΓÉì
+          3 Γöé + import┬╖path┬╖from┬╖"node:path";ΓÉì
+      4   4 Γöé   import { fileURLToPath } from "node:url";ΓÉì
+      5   5 Γöé   ΓÉì
+  
+
+role-model-router/apps/runtime-host-bridge/test/local-policy.test.ts format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+      1     Γöé - import┬╖{┬╖describe,┬╖test,┬╖expect,┬╖beforeEach,┬╖afterEach┬╖}┬╖from┬╖"vitest";ΓÉì
+      2     Γöé - import┬╖{┬╖mkdtempSync,┬╖rmSync,┬╖existsSync,┬╖readFileSync┬╖}┬╖from┬╖"node:fs";ΓÉì
+      3     Γöé - import┬╖{┬╖tmpdir┬╖}┬╖from┬╖"node:os";ΓÉì
+      4     Γöé - import┬╖path,┬╖{┬╖join┬╖}┬╖from┬╖"node:path";ΓÉì
+      5     Γöé - import┬╖{┬╖fileURLToPath┬╖}┬╖from┬╖"node:url";ΓÉì
+      6     Γöé - import┬╖type┬╖{┬╖EndpointRegistryResult┬╖}┬╖from┬╖"@role-model-router/endpoint-registry";ΓÉì
+      7     Γöé - ΓÉì
+      8     Γöé - import┬╖*┬╖as┬╖bridge┬╖from┬╖"../src/index.js";ΓÉì
+      9     Γöé - ΓÉì
+     10     Γöé - const┬╖__filename┬╖=┬╖fileURLToPath(import.meta.url);ΓÉì
+     11     Γöé - const┬╖__dirname┬╖=┬╖path.dirname(__filename);ΓÉì
+     12     Γöé - const┬╖repoRoot┬╖=┬╖path.resolve(__dirname,┬╖"..",┬╖"..",┬╖"..",┬╖"..");ΓÉì
+     13     Γöé - ΓÉì
+     14     Γöé - const┬╖registry:┬╖EndpointRegistryResult┬╖=┬╖{ΓÉì
+     15     Γöé - ┬╖┬╖endpoints:┬╖[],ΓÉì
+     16     Γöé - };ΓÉì
+     17     Γöé - ΓÉì
+     18     Γöé - describe("local┬╖policy┬╖persistence",┬╖()┬╖=>┬╖{ΓÉì
+     19     Γöé - ┬╖┬╖let┬╖tempDir:┬╖string;ΓÉì
+     20     Γöé - ΓÉì
+     21     Γöé - ┬╖┬╖beforeEach(()┬╖=>┬╖{ΓÉì
+     22     Γöé - ┬╖┬╖┬╖┬╖tempDir┬╖=┬╖mkdtempSync(join(tmpdir(),┬╖"role-model-test-"));ΓÉì
+     23     Γöé - ┬╖┬╖});ΓÉì
+     24     Γöé - ΓÉì
+     25     Γöé - ┬╖┬╖afterEach(()┬╖=>┬╖{ΓÉì
+     26     Γöé - ┬╖┬╖┬╖┬╖rmSync(tempDir,┬╖{┬╖recursive:┬╖true,┬╖force:┬╖true┬╖});ΓÉì
+     27     Γöé - ┬╖┬╖});ΓÉì
+     28     Γöé - ΓÉì
+     29     Γöé - ┬╖┬╖test("readLocalPolicy┬╖returns┬╖defaults┬╖when┬╖file┬╖does┬╖not┬╖exist",┬╖async┬╖()┬╖=>┬╖{ΓÉì
+     30     Γöé - ┬╖┬╖┬╖┬╖const┬╖backend┬╖=┬╖await┬╖(ΓÉì
+     31     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖bridge┬╖as┬╖{ΓÉì
+     32     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖createRuntimeBridgeBackend:┬╖(options:┬╖{ΓÉì
+     33     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖repoRoot:┬╖string;ΓÉì
+     34     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖runtimeStateRoot:┬╖string;ΓÉì
+     35     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖scopeId:┬╖string;ΓÉì
+     36     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖registry:┬╖EndpointRegistryResult;ΓÉì
+     37     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖providerPresetsPath:┬╖string;ΓÉì
+     38     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖})┬╖=>┬╖Promise<{┬╖readLocalPolicy():┬╖Promise<Record<string,┬╖unknown>>┬╖}>;ΓÉì
+     39     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖}ΓÉì
+     40     Γöé - ┬╖┬╖┬╖┬╖).createRuntimeBridgeBackend({ΓÉì
+     41     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖repoRoot,ΓÉì
+     42     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖runtimeStateRoot:┬╖tempDir,ΓÉì
+     43     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖scopeId:┬╖"test-local-policy",ΓÉì
+     44     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖registry,ΓÉì
+     45     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖providerPresetsPath:┬╖"testdata/router-runtime/fixtures/provider-presets.json",ΓÉì
+     46     Γöé - ┬╖┬╖┬╖┬╖});ΓÉì
+     47     Γöé - ΓÉì
+     48     Γöé - ┬╖┬╖┬╖┬╖const┬╖policy┬╖=┬╖await┬╖backend.readLocalPolicy();ΓÉì
+     49     Γöé - ┬╖┬╖┬╖┬╖expect(policy).toEqual({ΓÉì
+     50     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖ttl:┬╖300,ΓÉì
+     51     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖maxConcurrency:┬╖1,ΓÉì
+     52     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖autoUnload:┬╖true,ΓÉì
+     53     Γöé - ┬╖┬╖┬╖┬╖});ΓÉì
+     54     Γöé - ┬╖┬╖});ΓÉì
+     55     Γöé - ΓÉì
+     56     Γöé - ┬╖┬╖test("updateLocalPolicy┬╖writes┬╖merged┬╖policy┬╖to┬╖file",┬╖async┬╖()┬╖=>┬╖{ΓÉì
+     57     Γöé - ┬╖┬╖┬╖┬╖const┬╖backend┬╖=┬╖await┬╖(ΓÉì
+     58     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖bridge┬╖as┬╖{ΓÉì
+     59     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖createRuntimeBridgeBackend:┬╖(options:┬╖{ΓÉì
+     60     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖repoRoot:┬╖string;ΓÉì
+     61     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖runtimeStateRoot:┬╖string;ΓÉì
+     62     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖scopeId:┬╖string;ΓÉì
+     63     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖registry:┬╖EndpointRegistryResult;ΓÉì
+     64     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖providerPresetsPath:┬╖string;ΓÉì
+     65     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖})┬╖=>┬╖Promise<{ΓÉì
+     66     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖readLocalPolicy():┬╖Promise<Record<string,┬╖unknown>>;ΓÉì
+     67     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖updateLocalPolicy(body:┬╖Record<string,┬╖unknown>):┬╖Promise<Record<string,┬╖unknown>>;ΓÉì
+     68     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖}>;ΓÉì
+     69     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖}ΓÉì
+     70     Γöé - ┬╖┬╖┬╖┬╖).createRuntimeBridgeBackend({ΓÉì
+     71     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖repoRoot,ΓÉì
+     72     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖runtimeStateRoot:┬╖tempDir,ΓÉì
+     73     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖scopeId:┬╖"test-local-policy",ΓÉì
+     74     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖registry,ΓÉì
+     75     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖providerPresetsPath:┬╖"testdata/router-runtime/fixtures/provider-presets.json",ΓÉì
+     76     Γöé - ┬╖┬╖┬╖┬╖});ΓÉì
+     77     Γöé - ΓÉì
+     78     Γöé - ┬╖┬╖┬╖┬╖const┬╖updated┬╖=┬╖await┬╖backend.updateLocalPolicy({┬╖ttl:┬╖600┬╖});ΓÉì
+     79     Γöé - ┬╖┬╖┬╖┬╖expect(updated.ttl).toBe(600);ΓÉì
+     80     Γöé - ┬╖┬╖┬╖┬╖expect(updated.maxConcurrency).toBe(1);ΓÉì
+     81     Γöé - ┬╖┬╖┬╖┬╖expect(updated.autoUnload).toBe(true);ΓÉì
+     82     Γöé - ΓÉì
+     83     Γöé - ┬╖┬╖┬╖┬╖const┬╖policyPath┬╖=┬╖join(tempDir,┬╖"local-policy.json");ΓÉì
+     84     Γöé - ┬╖┬╖┬╖┬╖expect(existsSync(policyPath)).toBe(true);ΓÉì
+     85     Γöé - ┬╖┬╖┬╖┬╖const┬╖persisted┬╖=┬╖JSON.parse(readFileSync(policyPath,┬╖"utf8"))┬╖as┬╖Record<string,┬╖unknown>;ΓÉì
+     86     Γöé - ┬╖┬╖┬╖┬╖expect(persisted.ttl).toBe(600);ΓÉì
+     87     Γöé - ┬╖┬╖┬╖┬╖expect(persisted.maxConcurrency).toBe(1);ΓÉì
+     88     Γöé - ┬╖┬╖┬╖┬╖expect(persisted.autoUnload).toBe(true);ΓÉì
+     89     Γöé - ┬╖┬╖});ΓÉì
+     90     Γöé - ΓÉì
+     91     Γöé - ┬╖┬╖test("readLocalPolicy┬╖reads┬╖persisted┬╖file",┬╖async┬╖()┬╖=>┬╖{ΓÉì
+     92     Γöé - ┬╖┬╖┬╖┬╖const┬╖backend┬╖=┬╖await┬╖(ΓÉì
+     93     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖bridge┬╖as┬╖{ΓÉì
+     94     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖createRuntimeBridgeBackend:┬╖(options:┬╖{ΓÉì
+     95     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖repoRoot:┬╖string;ΓÉì
+     96     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖runtimeStateRoot:┬╖string;ΓÉì
+     97     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖scopeId:┬╖string;ΓÉì
+     98     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖registry:┬╖EndpointRegistryResult;ΓÉì
+     99     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖providerPresetsPath:┬╖string;ΓÉì
+    100     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖})┬╖=>┬╖Promise<{ΓÉì
+    101     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖readLocalPolicy():┬╖Promise<Record<string,┬╖unknown>>;ΓÉì
+    102     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖updateLocalPolicy(body:┬╖Record<string,┬╖unknown>):┬╖Promise<Record<string,┬╖unknown>>;ΓÉì
+    103     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖}>;ΓÉì
+    104     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖}ΓÉì
+    105     Γöé - ┬╖┬╖┬╖┬╖).createRuntimeBridgeBackend({ΓÉì
+    106     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖repoRoot,ΓÉì
+    107     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖runtimeStateRoot:┬╖tempDir,ΓÉì
+    108     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖scopeId:┬╖"test-local-policy",ΓÉì
+    109     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖registry,ΓÉì
+    110     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖providerPresetsPath:┬╖"testdata/router-runtime/fixtures/provider-presets.json",ΓÉì
+    111     Γöé - ┬╖┬╖┬╖┬╖});ΓÉì
+    112     Γöé - ΓÉì
+    113     Γöé - ┬╖┬╖┬╖┬╖await┬╖backend.updateLocalPolicy({┬╖maxConcurrency:┬╖4┬╖});ΓÉì
+    114     Γöé - ┬╖┬╖┬╖┬╖const┬╖readBack┬╖=┬╖await┬╖backend.readLocalPolicy();ΓÉì
+    115     Γöé - ┬╖┬╖┬╖┬╖expect(readBack.maxConcurrency).toBe(4);ΓÉì
+    116     Γöé - ┬╖┬╖});ΓÉì
+    117     Γöé - ΓÉì
+    118     Γöé - ┬╖┬╖test("updateLocalPolicy┬╖merges┬╖with┬╖existing┬╖policy",┬╖async┬╖()┬╖=>┬╖{ΓÉì
+    119     Γöé - ┬╖┬╖┬╖┬╖const┬╖backend┬╖=┬╖await┬╖(ΓÉì
+    120     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖bridge┬╖as┬╖{ΓÉì
+    121     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖createRuntimeBridgeBackend:┬╖(options:┬╖{ΓÉì
+    122     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖repoRoot:┬╖string;ΓÉì
+    123     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖runtimeStateRoot:┬╖string;ΓÉì
+    124     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖scopeId:┬╖string;ΓÉì
+    125     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖registry:┬╖EndpointRegistryResult;ΓÉì
+    126     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖providerPresetsPath:┬╖string;ΓÉì
+    127     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖})┬╖=>┬╖Promise<{ΓÉì
+    128     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖readLocalPolicy():┬╖Promise<Record<string,┬╖unknown>>;ΓÉì
+    129     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖updateLocalPolicy(body:┬╖Record<string,┬╖unknown>):┬╖Promise<Record<string,┬╖unknown>>;ΓÉì
+    130     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖}>;ΓÉì
+    131     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖}ΓÉì
+    132     Γöé - ┬╖┬╖┬╖┬╖).createRuntimeBridgeBackend({ΓÉì
+    133     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖repoRoot,ΓÉì
+    134     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖runtimeStateRoot:┬╖tempDir,ΓÉì
+    135     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖scopeId:┬╖"test-local-policy",ΓÉì
+    136     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖registry,ΓÉì
+    137     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖providerPresetsPath:┬╖"testdata/router-runtime/fixtures/provider-presets.json",ΓÉì
+    138     Γöé - ┬╖┬╖┬╖┬╖});ΓÉì
+    139     Γöé - ΓÉì
+    140     Γöé - ┬╖┬╖┬╖┬╖await┬╖backend.updateLocalPolicy({┬╖ttl:┬╖600┬╖});ΓÉì
+    141     Γöé - ┬╖┬╖┬╖┬╖const┬╖merged┬╖=┬╖await┬╖backend.updateLocalPolicy({┬╖autoUnload:┬╖false┬╖});ΓÉì
+    142     Γöé - ┬╖┬╖┬╖┬╖expect(merged.ttl).toBe(600);ΓÉì
+    143     Γöé - ┬╖┬╖┬╖┬╖expect(merged.autoUnload).toBe(false);ΓÉì
+    144     Γöé - ┬╖┬╖});ΓÉì
+    145     Γöé - });ΓÉì
+    146     Γöé - ΓÉì
+    147     Γöé - describe("local┬╖swap┬╖history",┬╖()┬╖=>┬╖{ΓÉì
+    148     Γöé - ┬╖┬╖let┬╖tempDir:┬╖string;ΓÉì
+    149     Γöé - ΓÉì
+    150     Γöé - ┬╖┬╖beforeEach(()┬╖=>┬╖{ΓÉì
+  708 more lines truncated
+  
+
+role-model-router/apps/runtime-host-bridge/test/validate-vendors.test.ts format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+      1     Γöé - import┬╖os┬╖from┬╖"node:os";ΓÉì
+      2     Γöé - import┬╖path┬╖from┬╖"node:path";ΓÉì
+      3     Γöé - import┬╖{┬╖mkdtemp,┬╖rm┬╖}┬╖from┬╖"node:fs/promises";ΓÉì
+      4     Γöé - import┬╖{┬╖fileURLToPath┬╖}┬╖from┬╖"node:url";ΓÉì
+      5     Γöé - ΓÉì
+      6     Γöé - import┬╖{┬╖afterEach,┬╖describe,┬╖expect,┬╖test┬╖}┬╖from┬╖"vitest";ΓÉì
+      7     Γöé - ΓÉì
+      8     Γöé - import┬╖{ΓÉì
+      9     Γöé - ┬╖┬╖createRuntimeVendorValidationPlan,ΓÉì
+     10     Γöé - ┬╖┬╖runRuntimeVendorValidation,ΓÉì
+     11     Γöé - }┬╖from┬╖"../src/validate-vendors.js";ΓÉì
+     12     Γöé - ΓÉì
+     13     Γöé - const┬╖__filename┬╖=┬╖fileURLToPath(import.meta.url);ΓÉì
+     14     Γöé - const┬╖__dirname┬╖=┬╖path.dirname(__filename);ΓÉì
+     15     Γöé - const┬╖repoRoot┬╖=┬╖path.resolve(__dirname,┬╖"..",┬╖"..",┬╖"..",┬╖"..");ΓÉì
+     16     Γöé - ΓÉì
+     17     Γöé - const┬╖tempRoots:┬╖string[]┬╖=┬╖[];ΓÉì
+     18     Γöé - ΓÉì
+     19     Γöé - afterEach(async┬╖()┬╖=>┬╖{ΓÉì
+     20     Γöé - ┬╖┬╖await┬╖Promise.all(ΓÉì
+     21     Γöé - ┬╖┬╖┬╖┬╖tempRoots.splice(0).map(async┬╖(tempRoot)┬╖=>┬╖{ΓÉì
+     22     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖await┬╖rm(tempRoot,┬╖{┬╖recursive:┬╖true,┬╖force:┬╖true┬╖});ΓÉì
+     23     Γöé - ┬╖┬╖┬╖┬╖}),ΓÉì
+     24     Γöé - ┬╖┬╖);ΓÉì
+     25     Γöé - });ΓÉì
+     26     Γöé - ΓÉì
+     27     Γöé - describe("runRuntimeVendorValidation",┬╖()┬╖=>┬╖{ΓÉì
+     28     Γöé - ┬╖┬╖test("executes┬╖decision-only,┬╖local-only,┬╖remote-only,┬╖and┬╖hybrid┬╖vendor┬╖modes┬╖end┬╖to┬╖end",┬╖async┬╖()┬╖=>┬╖{ΓÉì
+     29     Γöé - ┬╖┬╖┬╖┬╖const┬╖runtimeStateRoot┬╖=┬╖await┬╖mkdtemp(path.join(os.tmpdir(),┬╖"role-model-runtime-vendors-"));ΓÉì
+     30     Γöé - ┬╖┬╖┬╖┬╖tempRoots.push(runtimeStateRoot);ΓÉì
+     31     Γöé - ΓÉì
+     32     Γöé - ┬╖┬╖┬╖┬╖const┬╖result┬╖=┬╖await┬╖runRuntimeVendorValidation({ΓÉì
+     33     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖repoRoot,ΓÉì
+     34     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖runtimeStateRoot,ΓÉì
+     35     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖scopeId:┬╖"runtime-vendor-validation",ΓÉì
+     36     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖harnessMode:┬╖"mock",ΓÉì
+     37     Γöé - ┬╖┬╖┬╖┬╖});ΓÉì
+     38     Γöé - ΓÉì
+     39     Γöé - ┬╖┬╖┬╖┬╖expect(result.decisionOnly).toEqual(ΓÉì
+     40     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖expect.objectContaining({ΓÉì
+     41     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖statusCode:┬╖503,ΓÉì
+     42     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖errorClass:┬╖"VENDOR_NOT_CONFIGURED",ΓÉì
+     43     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖}),ΓÉì
+     44     Γöé - ┬╖┬╖┬╖┬╖);ΓÉì
+     45     Γöé - ┬╖┬╖┬╖┬╖expect(result.localOnly).toEqual(ΓÉì
+     46     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖expect.objectContaining({ΓÉì
+     47     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖executionMode:┬╖"local_only",ΓÉì
+     48     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖vendorId:┬╖"llama-swap",ΓÉì
+     49     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖outputText:┬╖"local┬╖llama┬╖summary",ΓÉì
+     50     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖}),ΓÉì
+     51     Γöé - ┬╖┬╖┬╖┬╖);ΓÉì
+     52     Γöé - ┬╖┬╖┬╖┬╖expect(result.remoteOnly).toEqual(ΓÉì
+     53     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖expect.objectContaining({ΓÉì
+     54     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖executionMode:┬╖"remote_only",ΓÉì
+     55     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖vendorId:┬╖"litellm",ΓÉì
+     56     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖outputText:┬╖"remote┬╖litellm┬╖summary",ΓÉì
+     57     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖costUsd:┬╖0.0042,ΓÉì
+     58     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖responseHeaders:┬╖expect.objectContaining({ΓÉì
+     59     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"x-role-model-endpoint-id":┬╖"openai.litellm.global.openai-gpt-4-1-mini-fast",ΓÉì
+     60     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"x-role-model-adapter-family":┬╖"litellm-proxy",ΓÉì
+     61     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"x-role-model-routing-decision-id":┬╖"decision-req-runtime-vendor-remote",ΓÉì
+     62     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"x-role-model-cost-usd":┬╖"0.0042",ΓÉì
+     63     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖}),ΓÉì
+     64     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖}),ΓÉì
+     65     Γöé - ┬╖┬╖┬╖┬╖);ΓÉì
+     66     Γöé - ┬╖┬╖┬╖┬╖expect(result.streaming).toEqual({ΓÉì
+     67     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖local:┬╖expect.objectContaining({ΓÉì
+     68     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖vendorId:┬╖"llama-swap",ΓÉì
+     69     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖outputText:┬╖"local┬╖llama┬╖summary",ΓÉì
+     70     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖chunkCount:┬╖3,ΓÉì
+     71     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖}),ΓÉì
+     72     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖remote:┬╖expect.objectContaining({ΓÉì
+     73     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖vendorId:┬╖"litellm",ΓÉì
+     74     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖outputText:┬╖"remote┬╖litellm┬╖summary",ΓÉì
+     75     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖chunkCount:┬╖3,ΓÉì
+     76     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖}),ΓÉì
+     77     Γöé - ┬╖┬╖┬╖┬╖});ΓÉì
+     78     Γöé - ┬╖┬╖┬╖┬╖expect(result.hybrid).toEqual(ΓÉì
+     79     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖expect.objectContaining({ΓÉì
+     80     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖executionMode:┬╖"hybrid",ΓÉì
+     81     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖localVendorId:┬╖"llama-swap",ΓÉì
+     82     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖remoteVendorId:┬╖"litellm",ΓÉì
+     83     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖}),ΓÉì
+     84     Γöé - ┬╖┬╖┬╖┬╖);ΓÉì
+     85     Γöé - ┬╖┬╖┬╖┬╖expect(result.aliasHybrid).toEqual(ΓÉì
+     86     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖expect.objectContaining({ΓÉì
+     87     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖vendorId:┬╖expect.stringMatching(/^(llama-swap|litellm)$/),ΓÉì
+     88     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖observation:┬╖expect.objectContaining({ΓÉì
+     89     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖routingDiagnostics:┬╖expect.objectContaining({ΓÉì
+     90     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖aliasResolution:┬╖{ΓÉì
+     91     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖requestedModel:┬╖"gpt-5.4",ΓÉì
+     92     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖aliasId:┬╖"gpt-5.4",ΓÉì
+     93     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖resolvedModelIds:┬╖["local/llama-3.1-8b-instruct",┬╖"openai/gpt-4.1-mini-fast"],ΓÉì
+     94     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖allowEndpoints:┬╖[ΓÉì
+     95     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"llama-swap.local.local-llama-3-1-8b-instruct",ΓÉì
+     96     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"openai.litellm.global.openai-gpt-4-1-mini-fast",ΓÉì
+     97     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖],ΓÉì
+     98     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖},ΓÉì
+     99     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖}),ΓÉì
+    100     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖}),ΓÉì
+    101     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖}),ΓÉì
+    102     Γöé - ┬╖┬╖┬╖┬╖);ΓÉì
+    103     Γöé - ┬╖┬╖┬╖┬╖expect(ΓÉì
+    104     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖(ΓÉì
+    105     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖result┬╖as┬╖typeof┬╖result┬╖&┬╖{ΓÉì
+    106     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖modeMatrix?:┬╖{ΓÉì
+    107     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖baseline?:┬╖{ΓÉì
+    108     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖vendorId?:┬╖string;ΓÉì
+    109     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖observation?:┬╖{ΓÉì
+    110     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖routingDiagnostics?:┬╖{ΓÉì
+    111     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖routingMode?:┬╖{ΓÉì
+    112     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖source?:┬╖string;ΓÉì
+    113     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖requestedOverride?:┬╖string;ΓÉì
+    114     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖effectiveMode?:┬╖string;ΓÉì
+    115     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖};ΓÉì
+    116     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖rewrite?:┬╖{ΓÉì
+    117     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖applied?:┬╖boolean;ΓÉì
+    118     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖requestedModel?:┬╖string;ΓÉì
+    119     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖};ΓÉì
+    120     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖};ΓÉì
+    121     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖};ΓÉì
+    122     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖};ΓÉì
+    123     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖difficulty?:┬╖{ΓÉì
+    124     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖vendorId?:┬╖string;ΓÉì
+    125     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖observation?:┬╖{ΓÉì
+    126     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖routingDiagnostics?:┬╖{ΓÉì
+    127     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖routingMode?:┬╖{ΓÉì
+    128     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖source?:┬╖string;ΓÉì
+    129     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖requestedOverride?:┬╖string;ΓÉì
+    130     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖effectiveMode?:┬╖string;ΓÉì
+    131     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖};ΓÉì
+    132     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖difficultyRouting?:┬╖{ΓÉì
+    133     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖difficulty?:┬╖string;ΓÉì
+    134     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖strategy?:┬╖string;ΓÉì
+    135     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖};ΓÉì
+    136     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖};ΓÉì
+    137     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖};ΓÉì
+    138     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖};ΓÉì
+    139     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖controller?:┬╖{ΓÉì
+    140     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖vendorId?:┬╖string;ΓÉì
+    141     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖observation?:┬╖{ΓÉì
+    142     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖routingDiagnostics?:┬╖{ΓÉì
+    143     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖routingMode?:┬╖{ΓÉì
+    144     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖source?:┬╖string;ΓÉì
+    145     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖requestedOverride?:┬╖string;ΓÉì
+    146     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖effectiveMode?:┬╖string;ΓÉì
+    147     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖};ΓÉì
+    148     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖controllerRouting?:┬╖{ΓÉì
+    149     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖active?:┬╖boolean;ΓÉì
+    150     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖acceptedDirectives?:┬╖{ΓÉì
+  1265 more lines truncated
+  
+
+role-model-router/apps/runtime-host-bridge/src/validate-vendors.ts organizeImports ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Import statements could be sorted:
+  
+       1      Γöé - import┬╖path┬╖from┬╖"node:path";ΓÉì
+       2      Γöé - import┬╖os┬╖from┬╖"node:os";ΓÉì
+       3      Γöé - import┬╖{┬╖spawn,┬╖spawnSync,┬╖type┬╖ChildProcess┬╖}┬╖from┬╖"node:child_process";ΓÉì
+       4      Γöé - import┬╖{┬╖mkdtemp,┬╖mkdir,┬╖rm,┬╖writeFile┬╖}┬╖from┬╖"node:fs/promises";ΓÉì
+            1 Γöé + import┬╖{┬╖type┬╖ChildProcess,┬╖spawn,┬╖spawnSync┬╖}┬╖from┬╖"node:child_process";ΓÉì
+            2 Γöé + import┬╖{┬╖mkdir,┬╖mkdtemp,┬╖rm,┬╖writeFile┬╖}┬╖from┬╖"node:fs/promises";ΓÉì
+       5    3 Γöé   import { createServer } from "node:net";ΓÉì
+       6      Γöé - import┬╖{┬╖setTimeout┬╖as┬╖delay┬╖}┬╖from┬╖"node:timers/promises";ΓÉì
+            4 Γöé + import┬╖os┬╖from┬╖"node:os";ΓÉì
+            5 Γöé + import┬╖path┬╖from┬╖"node:path";ΓÉì
+            6 Γöé + import┬╖{┬╖setTimeout┬╖as┬╖delay┬╖}┬╖from┬╖"node:timers/promises";ΓÉì
+       7    7 Γöé   import { fileURLToPath } from "node:url";ΓÉì
+       8    8 Γöé   ΓÉì
+    ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖ Γöé 
+      10   10 Γöé   ΓÉì
+      11   11 Γöé   import {ΓÉì
+      12      Γöé - ┬╖┬╖createRuntimeBridgeBackend,ΓÉì
+      13      Γöé - ┬╖┬╖startBridgeServer,ΓÉì
+      14      Γöé - ┬╖┬╖type┬╖RuntimeBridgeBackend,ΓÉì
+           12 Γöé + ┬╖┬╖type┬╖RuntimeBridgeBackend,ΓÉì
+           13 Γöé + ┬╖┬╖createRuntimeBridgeBackend,ΓÉì
+           14 Γöé + ┬╖┬╖startBridgeServer,ΓÉì
+      15   15 Γöé   } from "./index.js";ΓÉì
+      16   16 Γöé   ΓÉì
+  
+
+role-model-router/apps/runtime-host-bridge/src/validate-ui.ts format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+      1     Γöé - import┬╖{┬╖readFile┬╖}┬╖from┬╖"node:fs/promises";ΓÉì
+      2     Γöé - import┬╖os┬╖from┬╖"node:os";ΓÉì
+      3     Γöé - import┬╖path┬╖from┬╖"node:path";ΓÉì
+      4     Γöé - import┬╖{┬╖setTimeout┬╖as┬╖delay┬╖}┬╖from┬╖"node:timers/promises";ΓÉì
+      5     Γöé - import┬╖{┬╖fileURLToPath┬╖}┬╖from┬╖"node:url";ΓÉì
+      6     Γöé - ΓÉì
+      7     Γöé - import┬╖{┬╖runRuntimeAdapterValidation┬╖}┬╖from┬╖"@role-model-router/adapter-execution/cli";ΓÉì
+      8     Γöé - import┬╖{┬╖createRuntimeObservationBundle┬╖}┬╖from┬╖"@role-model-router/runtime-observability";ΓÉì
+      9     Γöé - import┬╖{┬╖persistRuntimeObservationBundle,┬╖resolveSqliteMemoryLocation┬╖}┬╖from┬╖"@role-model-router/sqlite-memory";ΓÉì
+     10     Γöé - ΓÉì
+     11     Γöé - import┬╖{┬╖createRuntimeBridgeBackend,┬╖startBridgeServer┬╖}┬╖from┬╖"./index.js";ΓÉì
+     12     Γöé - ΓÉì
+     13     Γöé - const┬╖__filename┬╖=┬╖fileURLToPath(import.meta.url);ΓÉì
+     14     Γöé - const┬╖__dirname┬╖=┬╖path.dirname(__filename);ΓÉì
+     15     Γöé - ΓÉì
+     16     Γöé - async┬╖function┬╖readJson<T>(filePath:┬╖string):┬╖Promise<T>┬╖{ΓÉì
+     17     Γöé - ┬╖┬╖return┬╖JSON.parse(await┬╖readFile(filePath,┬╖"utf8"))┬╖as┬╖T;ΓÉì
+     18     Γöé - }ΓÉì
+     19     Γöé - ΓÉì
+     20     Γöé - export┬╖interface┬╖RuntimeUiValidationOptions┬╖{ΓÉì
+     21     Γöé - ┬╖┬╖readonly┬╖repoRoot:┬╖string;ΓÉì
+     22     Γöé - ┬╖┬╖readonly┬╖runtimeStateRoot:┬╖string;ΓÉì
+     23     Γöé - ┬╖┬╖readonly┬╖scopeId:┬╖string;ΓÉì
+     24     Γöé - ┬╖┬╖readonly┬╖unifiedRuntimeConfigPath?:┬╖string;ΓÉì
+     25     Γöé - }ΓÉì
+     26     Γöé - ΓÉì
+     27     Γöé - export┬╖interface┬╖RuntimeUiValidationResult┬╖{ΓÉì
+     28     Γöé - ┬╖┬╖readonly┬╖providerCount:┬╖number;ΓÉì
+     29     Γöé - ┬╖┬╖readonly┬╖accountCount:┬╖number;ΓÉì
+     30     Γöé - ┬╖┬╖readonly┬╖endpointCount:┬╖number;ΓÉì
+     31     Γöé - ┬╖┬╖readonly┬╖runtimeConfigPath:┬╖string┬╖|┬╖null;ΓÉì
+     32     Γöé - ┬╖┬╖readonly┬╖runtimeConfigInitialApplied:┬╖boolean;ΓÉì
+     33     Γöé - ┬╖┬╖readonly┬╖runtimeConfigUpdatedVersion:┬╖string┬╖|┬╖null;ΓÉì
+     34     Γöé - ┬╖┬╖readonly┬╖runtimeConfigUpdatedRoutingStrategy:┬╖string┬╖|┬╖null;ΓÉì
+     35     Γöé - ┬╖┬╖readonly┬╖moonshotVariantIds:┬╖readonly┬╖string[];ΓÉì
+     36     Γöé - ┬╖┬╖readonly┬╖availableRoleIds:┬╖readonly┬╖string[];ΓÉì
+     37     Γöé - ┬╖┬╖readonly┬╖upsertedAccountId:┬╖string;ΓÉì
+     38     Γöé - ┬╖┬╖readonly┬╖accountListIncludesUpsert:┬╖boolean;ΓÉì
+     39     Γöé - ┬╖┬╖readonly┬╖accountRoleBindingIncludesUpsert:┬╖boolean;ΓÉì
+     40     Γöé - ┬╖┬╖readonly┬╖activatedEndpointId:┬╖string;ΓÉì
+     41     Γöé - ┬╖┬╖readonly┬╖endpointListIncludesActivation:┬╖boolean;ΓÉì
+     42     Γöé - ┬╖┬╖readonly┬╖routedRequestId:┬╖string;ΓÉì
+     43     Γöé - ┬╖┬╖readonly┬╖telemetryListIncludesRoutedRequest:┬╖boolean;ΓÉì
+     44     Γöé - ┬╖┬╖readonly┬╖routedRequestRoutingDecisionId:┬╖string┬╖|┬╖null;ΓÉì
+     45     Γöé - ┬╖┬╖readonly┬╖routedRequestEffectiveMode:┬╖string┬╖|┬╖null;ΓÉì
+     46     Γöé - ┬╖┬╖readonly┬╖routedRequestRewriteReason:┬╖string┬╖|┬╖null;ΓÉì
+     47     Γöé - }ΓÉì
+     48     Γöé - ΓÉì
+     49     Γöé - export┬╖async┬╖function┬╖runRuntimeUiValidation(ΓÉì
+     50     Γöé - ┬╖┬╖options:┬╖RuntimeUiValidationOptions,ΓÉì
+     51     Γöé - ):┬╖Promise<RuntimeUiValidationResult>┬╖{ΓÉì
+     52     Γöé - ┬╖┬╖const┬╖backend┬╖=┬╖await┬╖createRuntimeBridgeBackend(options);ΓÉì
+     53     Γöé - ┬╖┬╖const┬╖server┬╖=┬╖await┬╖startBridgeServer({ΓÉì
+     54     Γöé - ┬╖┬╖┬╖┬╖host:┬╖"127.0.0.1",ΓÉì
+     55     Γöé - ┬╖┬╖┬╖┬╖port:┬╖0,ΓÉì
+     56     Γöé - ┬╖┬╖┬╖┬╖registry:┬╖backend.registry,ΓÉì
+     57     Γöé - ┬╖┬╖┬╖┬╖getRegistry:┬╖()┬╖=>┬╖backend.registry,ΓÉì
+     58     Γöé - ┬╖┬╖┬╖┬╖executeChatCompletions:┬╖backend.executeChatCompletions,ΓÉì
+     59     Γöé - ┬╖┬╖┬╖┬╖executeResponses:┬╖backend.executeResponses,ΓÉì
+     60     Γöé - ┬╖┬╖┬╖┬╖readRuntimeSummary:┬╖backend.readRuntimeSummary,ΓÉì
+     61     Γöé - ┬╖┬╖┬╖┬╖readRuntimeConfig:┬╖backend.readRuntimeConfig,ΓÉì
+     62     Γöé - ┬╖┬╖┬╖┬╖updateRuntimeConfig:┬╖backend.updateRuntimeConfig,ΓÉì
+     63     Γöé - ┬╖┬╖┬╖┬╖readTelemetrySummary:┬╖backend.readTelemetrySummary,ΓÉì
+     64     Γöé - ┬╖┬╖┬╖┬╖listTelemetryComparisonRows:┬╖backend.listTelemetryComparisonRows,ΓÉì
+     65     Γöé - ┬╖┬╖┬╖┬╖listTelemetryRequests:┬╖backend.listTelemetryRequests,ΓÉì
+     66     Γöé - ┬╖┬╖┬╖┬╖subscribeTelemetry:┬╖backend.subscribeTelemetry,ΓÉì
+     67     Γöé - ┬╖┬╖┬╖┬╖listProviders:┬╖backend.listProviders,ΓÉì
+     68     Γöé - ┬╖┬╖┬╖┬╖listRoles:┬╖backend.listRoles,ΓÉì
+     69     Γöé - ┬╖┬╖┬╖┬╖listAccounts:┬╖backend.listAccounts,ΓÉì
+     70     Γöé - ┬╖┬╖┬╖┬╖upsertProviderAccount:┬╖backend.upsertProviderAccount,ΓÉì
+     71     Γöé - ┬╖┬╖┬╖┬╖startProviderDeviceAuthorization:┬╖backend.startProviderDeviceAuthorization,ΓÉì
+     72     Γöé - ┬╖┬╖┬╖┬╖pollProviderDeviceAuthorization:┬╖backend.pollProviderDeviceAuthorization,ΓÉì
+     73     Γöé - ┬╖┬╖┬╖┬╖activateEndpoint:┬╖backend.activateEndpoint,ΓÉì
+     74     Γöé - ┬╖┬╖┬╖┬╖readControllerAssignment:┬╖backend.readControllerAssignment,ΓÉì
+     75     Γöé - ┬╖┬╖┬╖┬╖updateControllerAssignment:┬╖backend.updateControllerAssignment,ΓÉì
+     76     Γöé - ┬╖┬╖┬╖┬╖listEndpoints:┬╖backend.listEndpoints,ΓÉì
+     77     Γöé - ┬╖┬╖┬╖┬╖listRecentRequestObservations:┬╖backend.listRecentRequestObservations,ΓÉì
+     78     Γöé - ┬╖┬╖┬╖┬╖readRequestObservation:┬╖backend.readRequestObservation,ΓÉì
+     79     Γöé - ┬╖┬╖┬╖┬╖readEndpointProfile:┬╖backend.readEndpointProfile,ΓÉì
+     80     Γöé - ┬╖┬╖});ΓÉì
+     81     Γöé - ΓÉì
+     82     Γöé - ┬╖┬╖try┬╖{ΓÉì
+     83     Γöé - ┬╖┬╖┬╖┬╖const┬╖baseUrl┬╖=┬╖`http://127.0.0.1:${server.port}`;ΓÉì
+     84     Γöé - ┬╖┬╖┬╖┬╖const┬╖requestHeaders┬╖=┬╖{ΓÉì
+     85     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖connection:┬╖"close",ΓÉì
+     86     Γöé - ┬╖┬╖┬╖┬╖};ΓÉì
+     87     Γöé - ┬╖┬╖┬╖┬╖const┬╖summaryResponse┬╖=┬╖await┬╖fetch(`${baseUrl}/api/role-model/runtime/summary`,┬╖{ΓÉì
+     88     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖headers:┬╖requestHeaders,ΓÉì
+     89     Γöé - ┬╖┬╖┬╖┬╖});ΓÉì
+     90     Γöé - ┬╖┬╖┬╖┬╖const┬╖providersResponse┬╖=┬╖await┬╖fetch(`${baseUrl}/api/role-model/providers`,┬╖{ΓÉì
+     91     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖headers:┬╖requestHeaders,ΓÉì
+     92     Γöé - ┬╖┬╖┬╖┬╖});ΓÉì
+     93     Γöé - ┬╖┬╖┬╖┬╖const┬╖accountsResponse┬╖=┬╖await┬╖fetch(`${baseUrl}/api/role-model/accounts`,┬╖{ΓÉì
+     94     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖headers:┬╖requestHeaders,ΓÉì
+     95     Γöé - ┬╖┬╖┬╖┬╖});ΓÉì
+     96     Γöé - ┬╖┬╖┬╖┬╖const┬╖rolesResponse┬╖=┬╖await┬╖fetch(`${baseUrl}/api/role-model/roles`,┬╖{ΓÉì
+     97     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖headers:┬╖requestHeaders,ΓÉì
+     98     Γöé - ┬╖┬╖┬╖┬╖});ΓÉì
+     99     Γöé - ┬╖┬╖┬╖┬╖const┬╖endpointsResponse┬╖=┬╖await┬╖fetch(`${baseUrl}/api/role-model/endpoints`,┬╖{ΓÉì
+    100     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖headers:┬╖requestHeaders,ΓÉì
+    101     Γöé - ┬╖┬╖┬╖┬╖});ΓÉì
+    102     Γöé - ΓÉì
+    103     Γöé - ┬╖┬╖┬╖┬╖if┬╖(!summaryResponse.ok┬╖||┬╖!providersResponse.ok┬╖||┬╖!accountsResponse.ok┬╖||┬╖!rolesResponse.ok┬╖||┬╖!endpointsResponse.ok)┬╖{ΓÉì
+    104     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖throw┬╖new┬╖Error("Runtime┬╖UI┬╖validation┬╖could┬╖not┬╖read┬╖the┬╖control-plane┬╖routes.");ΓÉì
+    105     Γöé - ┬╖┬╖┬╖┬╖}ΓÉì
+    106     Γöé - ΓÉì
+    107     Γöé - ┬╖┬╖┬╖┬╖const┬╖summary┬╖=┬╖(await┬╖summaryResponse.json())┬╖as┬╖{ΓÉì
+    108     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖providerCount:┬╖number;ΓÉì
+    109     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖accountCount:┬╖number;ΓÉì
+    110     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖endpointCount:┬╖number;ΓÉì
+    111     Γöé - ┬╖┬╖┬╖┬╖};ΓÉì
+    112     Γöé - ┬╖┬╖┬╖┬╖const┬╖providers┬╖=┬╖(await┬╖providersResponse.json())┬╖as┬╖Array<{ΓÉì
+    113     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖providerId:┬╖string;ΓÉì
+    114     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖variants?:┬╖Array<{┬╖variantId:┬╖string┬╖}>;ΓÉì
+    115     Γöé - ┬╖┬╖┬╖┬╖}>;ΓÉì
+    116     Γöé - ┬╖┬╖┬╖┬╖const┬╖roles┬╖=┬╖(await┬╖rolesResponse.json())┬╖as┬╖Array<{ΓÉì
+    117     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖roleId:┬╖string;ΓÉì
+    118     Γöé - ┬╖┬╖┬╖┬╖}>;ΓÉì
+    119     Γöé - ┬╖┬╖┬╖┬╖let┬╖runtimeConfigPath:┬╖string┬╖|┬╖null┬╖=┬╖null;ΓÉì
+    120     Γöé - ┬╖┬╖┬╖┬╖let┬╖runtimeConfigInitialApplied┬╖=┬╖false;ΓÉì
+    121     Γöé - ┬╖┬╖┬╖┬╖let┬╖runtimeConfigUpdatedVersion:┬╖string┬╖|┬╖null┬╖=┬╖null;ΓÉì
+    122     Γöé - ┬╖┬╖┬╖┬╖let┬╖runtimeConfigUpdatedRoutingStrategy:┬╖string┬╖|┬╖null┬╖=┬╖null;ΓÉì
+    123     Γöé - ΓÉì
+    124     Γöé - ┬╖┬╖┬╖┬╖if┬╖(options.unifiedRuntimeConfigPath)┬╖{ΓÉì
+    125     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖const┬╖runtimeConfigResponse┬╖=┬╖await┬╖fetch(`${baseUrl}/api/role-model/runtime/config`,┬╖{ΓÉì
+    126     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖headers:┬╖requestHeaders,ΓÉì
+    127     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖});ΓÉì
+    128     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖if┬╖(!runtimeConfigResponse.ok)┬╖{ΓÉì
+    129     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖throw┬╖new┬╖Error("Runtime┬╖UI┬╖validation┬╖could┬╖not┬╖read┬╖the┬╖runtime┬╖config.");ΓÉì
+    130     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖}ΓÉì
+    131     Γöé - ΓÉì
+    132     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖const┬╖runtimeConfigRecord┬╖=┬╖(await┬╖runtimeConfigResponse.json())┬╖as┬╖{ΓÉì
+    133     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖applied:┬╖boolean;ΓÉì
+    134     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖path:┬╖string┬╖|┬╖null;ΓÉì
+    135     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖config:┬╖Record<string,┬╖unknown>┬╖|┬╖null;ΓÉì
+    136     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖};ΓÉì
+    137     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖runtimeConfigPath┬╖=┬╖runtimeConfigRecord.path;ΓÉì
+    138     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖runtimeConfigInitialApplied┬╖=┬╖runtimeConfigRecord.applied;ΓÉì
+    139     Γöé - ΓÉì
+    140     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖const┬╖runtimeConfigUpdateResponse┬╖=┬╖await┬╖fetch(`${baseUrl}/api/role-model/runtime/config`,┬╖{ΓÉì
+    141     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖method:┬╖"PUT",ΓÉì
+    142     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖headers:┬╖{ΓÉì
+    143     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"content-type":┬╖"application/json",ΓÉì
+    144     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖connection:┬╖"close",ΓÉì
+    145     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖},ΓÉì
+    146     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖body:┬╖JSON.stringify({ΓÉì
+    147     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖...(runtimeConfigRecord.config┬╖??┬╖{ΓÉì
+    148     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖version:┬╖"1.0",ΓÉì
+    149     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖llamaSwap:┬╖{ΓÉì
+    150     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖models:┬╖[],ΓÉì
+  776 more lines truncated
+  
+
+Skipped 10 suggested fixes.
+If you wish to apply the suggested (unsafe) fixes, use the command biome check --fix --unsafe
+
+The number of diagnostics exceeds the number allowed by Biome.
+Diagnostics not shown: 9.
+Checked 14 files in 117ms. No fixes applied.
+Found 29 errors.
+check ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Some errors were emitted while running checks.
+  
+

@@ -1,5 +1,5 @@
-import path from "node:path";
 import { access, readFile } from "node:fs/promises";
+import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { describe, expect, test } from "vitest";

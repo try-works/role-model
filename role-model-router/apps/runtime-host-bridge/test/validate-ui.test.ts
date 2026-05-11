@@ -1,6 +1,6 @@
+import { mkdtemp, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { mkdtemp, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 
 import { describe, expect, test } from "vitest";
@@ -45,7 +45,12 @@ describe("runRuntimeUiValidation", () => {
     expect(result.runtimeConfigUpdatedVersion).toBe("1.1");
     expect(result.runtimeConfigUpdatedRoutingStrategy).toBe("latency-first");
     expect(result.moonshotVariantIds).toEqual(
-      expect.arrayContaining(["moonshot-open-platform", "kimi-code", "moonshot-api-key", "moonshot-oauth"]),
+      expect.arrayContaining([
+        "moonshot-open-platform",
+        "kimi-code",
+        "moonshot-api-key",
+        "moonshot-oauth",
+      ]),
     );
     expect(result.availableRoleIds).toEqual(expect.arrayContaining(["general.chat"]));
     expect(result.upsertedAccountId).toBe("moonshot.personal.primary");

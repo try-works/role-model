@@ -6,25 +6,25 @@
   --rm-surface-strong: #f5f5f4;
   --rm-panel: #e7e5e4;
   --rm-fg: #1c1917;
-  --rm-secondary: rgba(28, 25, 23, 0.70);
-  --rm-muted: rgba(28, 25, 23, 0.40);
+  --rm-secondary: rgba(28, 25, 23, 0.7);
+  --rm-muted: rgba(28, 25, 23, 0.4);
   --rm-border: #e7e5e4;
   --rm-border-strong: #f5f5f4;
-  --rm-accent: #003B8E;
-  --rm-accent-muted: rgba(0, 59, 142, 0.60);
-  --rm-accent-subtle: rgba(0, 59, 142, 0.20);
-  --rm-accent-ghost: rgba(0, 59, 142, 0.10);
-  --rm-error: #C8102E;
-  --rm-error-muted: rgba(200, 16, 46, 0.60);
-  --rm-error-subtle: rgba(200, 16, 46, 0.20);
-  --rm-error-ghost: rgba(200, 16, 46, 0.10);
+  --rm-accent: #003b8e;
+  --rm-accent-muted: rgba(0, 59, 142, 0.6);
+  --rm-accent-subtle: rgba(0, 59, 142, 0.2);
+  --rm-accent-ghost: rgba(0, 59, 142, 0.1);
+  --rm-error: #c8102e;
+  --rm-error-muted: rgba(200, 16, 46, 0.6);
+  --rm-error-subtle: rgba(200, 16, 46, 0.2);
+  --rm-error-ghost: rgba(200, 16, 46, 0.1);
   --rm-success: #166534;
-  --rm-success-muted: rgba(22, 101, 52, 0.60);
-  --rm-success-subtle: rgba(22, 101, 52, 0.20);
+  --rm-success-muted: rgba(22, 101, 52, 0.6);
+  --rm-success-subtle: rgba(22, 101, 52, 0.2);
   --rm-warning: #b45309;
-  --rm-warning-muted: rgba(180, 83, 9, 0.60);
+  --rm-warning-muted: rgba(180, 83, 9, 0.6);
   --rm-telemetry-local: #1f2937;
-  --rm-telemetry-remote: #003B8E;
+  --rm-telemetry-remote: #003b8e;
   --rm-telemetry-healthy: #166534;
   --rm-telemetry-degraded: #b45309;
   --rm-telemetry-raw: #57534e;
@@ -42,8 +42,8 @@
     --rm-surface-strong: #1c1917;
     --rm-panel: #292524;
     --rm-fg: #fafaf9;
-    --rm-secondary: rgba(250, 250, 249, 0.70);
-    --rm-muted: rgba(250, 250, 249, 0.40);
+    --rm-secondary: rgba(250, 250, 249, 0.7);
+    --rm-muted: rgba(250, 250, 249, 0.4);
     --rm-border: #292524;
     --rm-border-strong: #1c1917;
     --rm-telemetry-local: #d6d3d1;
@@ -52,18 +52,18 @@
     --rm-telemetry-degraded: #fbbf24;
     --rm-telemetry-raw: #a8a29e;
     --rm-accent: #60a5fa;
-    --rm-accent-muted: rgba(96, 165, 250, 0.60);
-    --rm-accent-subtle: rgba(96, 165, 250, 0.20);
-    --rm-accent-ghost: rgba(96, 165, 250, 0.10);
+    --rm-accent-muted: rgba(96, 165, 250, 0.6);
+    --rm-accent-subtle: rgba(96, 165, 250, 0.2);
+    --rm-accent-ghost: rgba(96, 165, 250, 0.1);
     --rm-error: #fb7185;
-    --rm-error-muted: rgba(251, 113, 133, 0.60);
-    --rm-error-subtle: rgba(251, 113, 133, 0.20);
-    --rm-error-ghost: rgba(251, 113, 133, 0.10);
+    --rm-error-muted: rgba(251, 113, 133, 0.6);
+    --rm-error-subtle: rgba(251, 113, 133, 0.2);
+    --rm-error-ghost: rgba(251, 113, 133, 0.1);
     --rm-success: #86efac;
-    --rm-success-muted: rgba(134, 239, 172, 0.60);
-    --rm-success-subtle: rgba(134, 239, 172, 0.20);
+    --rm-success-muted: rgba(134, 239, 172, 0.6);
+    --rm-success-subtle: rgba(134, 239, 172, 0.2);
     --rm-warning: #fbbf24;
-    --rm-warning-muted: rgba(251, 191, 36, 0.60);
+    --rm-warning-muted: rgba(251, 191, 36, 0.6);
   }
 }
 
@@ -77,7 +77,8 @@ body {
   margin: 0;
   background: var(--rm-bg);
   color: var(--rm-fg);
-  font-family: "IBM Plex Sans", "Hanken Grotesk", "Barlow", "Host Grotesk", "DM Sans", system-ui, sans-serif;
+  font-family: "IBM Plex Sans", "Hanken Grotesk", "Barlow", "Host Grotesk", "DM Sans", system-ui,
+    sans-serif;
 }
 
 ::selection {
