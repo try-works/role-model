@@ -709,3 +709,31 @@
   - no alias routing, difficulty classification, controller-guided scoring, hybrid arbitration, or runtime UI implementation shipped in this run
 - Known issues / follow-ups:
   - later runs still need alias pools, easy-medium-hard difficulty routing, controller guidance, hybrid arbitration, and final integrated runtime verification on top of the new adaptive observed-data baseline
+
+### Run `25-router-runtime-model-alias-pool`
+
+- Run folder: `/.recursive/run/25-router-runtime-model-alias-pool/`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - the unified runtime config now owns a `model_aliases` contract that normalizes to `modelAliases` and round-trips through the runtime config surface
+  - bridge model discovery and downstream OpenAI-compatible provider guidance now expose configured alias ids alongside real model ids
+  - alias requests now expand to pooled real endpoint candidates before existing routing, while exact-model requests stay on the existing direct lookup path
+  - persisted request observations and runtime vendor validation now expose durable `aliasResolution` diagnostics, including one hybrid local-plus-remote alias pool proof
+- Why:
+  - to let operators and downstream clients route through stable alias ids that can span both local and remote models before later difficulty, controller, and hybrid policy runs build on the same baseline
+- How:
+  - implemented with strict RED/GREEN TDD across config, bridge, runtime-observability, and validator slices, validated the locked Phase 3 slice through `schemas:validate`, `protocol-routing` tests, `runtime-host-bridge` tests, `runtime:validate-host`, and `runtime:validate-vendors`, and completed agent-operated readback QA over live runtime alias surfaces
+- What was not done:
+  - no difficulty classification, controller-guided routing, hybrid arbitration policy, or runtime UI implementation shipped in this run
+- Known issues / follow-ups:
+  - alias pools are currently static config-driven mappings; later runs still need difficulty segmentation, controller guidance, hybrid arbitration, and final integrated runtime verification on top of this alias-routing baseline

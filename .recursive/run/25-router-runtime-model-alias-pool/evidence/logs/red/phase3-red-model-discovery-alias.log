@@ -1,0 +1,101 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/25-router-runtime-model-alias-pool/role-model-router/apps/runtime-host-bridge[39m
+
+(node:31036) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [31mΓ¥»[39m test/index.test.ts [2m([22m[2m21 tests[22m[2m | [22m[31m2 failed[39m[2m | [22m[33m19 skipped[39m[2m)[22m[32m 36[2mms[22m[39m
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mcreates a stable model-list response grouped by model id
+[31m   [31m├ù[31m runtime-host-bridge[2m > [22mcreates alias entries in the model-list response alongside real models[39m[32m 32[2mms[22m[39m
+[31m     ΓåÆ expected { object: 'list', ΓÇª(1) } to deeply equal { object: 'list', ΓÇª(1) }[39m
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mmaps a chat-completions request into role-model routing and execution inputs
+[31m   [31m├ù[31m runtime-host-bridge[2m > [22mprefers a configured alias in downstream OpenAI provider config[39m[32m 1[2mms[22m[39m
+[31m     ΓåÆ expected [ 'claude-3.7-sonnet', ΓÇª(1) ] to deeply equal [ Array(3) ][39m
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mserves health and model-list endpoints
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mserves preserved host observability and vendor-facing utility endpoints
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mserves runtime control-plane summary, provider, account, and endpoint routes
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mserves canonical telemetry summary, comparison, and recent request routes
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mserves downstream OpenAI-compatible provider metadata for consumer apps
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mserves chat-completions responses with role-model execution metadata
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mserves OpenAI-compatible SSE events for streaming responses requests
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22msurfaces tool calls on chat-completions responses when the backend returns them
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mstreams provider deltas through the bridge as they arrive
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mcreates a runtime backend that executes chat-completions through the real routing and adapter path
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mcreates a runtime backend that persists structured request and endpoint inspection state
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mcreates a runtime backend that exposes provider presets, runtime summary, and account upserts
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mexecutes chat-completions through an activated Kimi Code endpoint
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mcreates a runtime backend that executes responses through the real routing and adapter path
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mserves structured request and endpoint inspection routes through the bridge server
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mstreams canonical telemetry updates over SSE after new requests are persisted
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mresolves bridge server options from explicit values and defaults
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 2 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/index.test.ts > runtime-host-bridge > creates alias entries in the model-list response alongside real models
+AssertionError: expected { object: 'list', ΓÇª(1) } to deeply equal { object: 'list', ΓÇª(1) }
+
+- Expected
++ Received
+
+@@ -8,20 +8,10 @@
+        "object": "model",
+        "owned_by": "role-model",
+      },
+      {
+        "endpoint_ids": [
+-         "anthropic.team.shared.us-east-1.default",
+-         "openai.personal.primary.us-east-1.fast",
+-         "openai.personal.secondary.us-west-2.fast",
+-       ],
+-       "id": "gpt-5.4",
+-       "object": "model",
+-       "owned_by": "role-model",
+-     },
+-     {
+-       "endpoint_ids": [
+          "openai.personal.primary.us-east-1.fast",
+          "openai.personal.secondary.us-west-2.fast",
+        ],
+        "id": "openai/gpt-4.1-mini-fast",
+        "object": "model",
+
+ Γ¥» test/index.test.ts:150:20
+
+    148|     ]);
+    149| 
+    150|     expect(result).toEqual({
+       |                    ^
+    151|       object: "list",
+    152|       data: [
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m2 failed[39m[22m[2m | [22m[33m19 skipped[39m[90m (21)[39m
+[2m   Start at [22m 20:05:39
+[2m   Duration [22m 1.41s[2m (transform 547ms, setup 0ms, collect 748ms, tests 36ms, environment 0ms, prepare 253ms)[22m
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/2]ΓÄ»
+
+ FAIL  test/index.test.ts > runtime-host-bridge > prefers a configured alias in downstream OpenAI provider config
+AssertionError: expected [ 'claude-3.7-sonnet', ΓÇª(1) ] to deeply equal [ Array(3) ]
+
+- Expected
++ Received
+
+  [
+    "claude-3.7-sonnet",
+-   "gpt-5.4",
+    "openai/gpt-4.1-mini-fast",
+  ]
+
+ Γ¥» test/index.test.ts:310:52
+    308|     ]);
+    309| 
+    310|     expect(result.models.map((entry) => entry.id)).toEqual([
+       |                                                    ^
+    311|       "claude-3.7-sonnet",
+    312|       "gpt-5.4",
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[2/2]ΓÄ»
+
+undefined
+D:\DEV\role-model\.worktrees\25-router-runtime-model-alias-pool\role-model-router\apps\runtime-host-bridge:
+ΓÇëERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓÇë Command failed with exit code 1: vitest run test/index.test.ts -t alias

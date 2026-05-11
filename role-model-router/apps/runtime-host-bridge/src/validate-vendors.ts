@@ -117,6 +117,12 @@ type RuntimeValidationConfig = {
   readonly routing: {
     readonly strategy: "balanced";
   };
+  readonly model_aliases?: Record<
+    string,
+    {
+      readonly model_ids: readonly string[];
+    }
+  >;
   readonly llama_swap?: LlamaSwapValidationConfig;
   readonly litellm_proxy?: LiteLLMValidationConfig;
 };
@@ -128,6 +134,7 @@ type RuntimeVendorHarnessSummary = {
 };
 
 export type RuntimeVendorValidationPlan = {
+  readonly aliasModelId: string;
   readonly localModelId: string;
   readonly remoteModelId: string;
   readonly decisionConfig: RuntimeValidationConfig;
@@ -287,6 +294,7 @@ export async function createRuntimeVendorValidationPlan(options: {
 }): Promise<RuntimeVendorValidationPlan> {
   const scopePrefix = options.scopeId ?? "runtime-vendor-validation";
   const harnessMode = options.harnessMode ?? "real";
+  const aliasModelId = "gpt-5.4";
   const localModelId = "local/llama-3.1-8b-instruct";
   const remoteModelId = "openai/gpt-4.1-mini-fast";
 
@@ -294,6 +302,7 @@ export async function createRuntimeVendorValidationPlan(options: {
     const localConfig = createMockLocalConfig(localModelId);
     const remoteConfig = createMockRemoteConfig(remoteModelId);
     return {
+      aliasModelId,
       localModelId,
       remoteModelId,
       decisionConfig: createDecisionConfig(),
@@ -301,6 +310,11 @@ export async function createRuntimeVendorValidationPlan(options: {
       remoteConfig,
       hybridConfig: {
         ...createDecisionConfig(),
+        model_aliases: {
+          [aliasModelId]: {
+            model_ids: [localModelId, remoteModelId],
+          },
+        },
         llama_swap: localConfig.llama_swap,
         litellm_proxy: remoteConfig.litellm_proxy,
       },
@@ -338,6 +352,7 @@ export async function createRuntimeVendorValidationPlan(options: {
   });
 
   return {
+    aliasModelId,
     localModelId,
     remoteModelId,
     decisionConfig: createDecisionConfig(),
@@ -345,6 +360,11 @@ export async function createRuntimeVendorValidationPlan(options: {
     remoteConfig,
     hybridConfig: {
       ...createDecisionConfig(),
+      model_aliases: {
+        [aliasModelId]: {
+          model_ids: [localModelId, remoteModelId],
+        },
+      },
       llama_swap: localConfig.llama_swap,
       litellm_proxy: remoteConfig.litellm_proxy,
     },
@@ -532,6 +552,11 @@ export async function runRuntimeVendorValidation(options: {
     localVendorId: string | undefined;
     remoteVendorId: string | undefined;
   };
+  aliasHybrid: {
+    vendorId: string | undefined;
+    outputText: string;
+    observation: Awaited<ReturnType<RuntimeBridgeBackend["readRequestObservation"]>>;
+  };
   vendorHarness: {
     local: "managed-node-mock" | "real-llama-swap-mock-upstream";
     remote: "managed-node-mock" | "real-litellm-mock-upstream";
@@ -659,6 +684,13 @@ export async function runRuntimeVendorValidation(options: {
             },
             "req-runtime-vendor-hybrid-remote",
           );
+          const hybridAlias = await hybridRuntime.backend.executeResponses(
+            {
+              model: plan.aliasModelId,
+              input: "Summarize the chosen endpoint.",
+            },
+            "req-runtime-vendor-hybrid-alias",
+          );
           const healthResponse = await fetch(`${hybridRuntime.baseUrl}/healthz`);
           const telemetrySummary = await hybridRuntime.backend.readTelemetrySummary();
           const telemetryRows = await hybridRuntime.backend.listTelemetryComparisonRows();
@@ -668,6 +700,9 @@ export async function runRuntimeVendorValidation(options: {
           );
           const remoteObservation = await remoteRuntime.backend.readRequestObservation(
             "req-runtime-vendor-remote-direct",
+          );
+          const hybridAliasObservation = await hybridRuntime.backend.readRequestObservation(
+            "req-runtime-vendor-hybrid-alias",
           );
           const localObservedProfile = await localRuntime.backend.readEndpointProfile(localDirect.endpointId);
           const remoteObservedProfile = await remoteRuntime.backend.readEndpointProfile(remoteDirect.endpointId);
@@ -697,6 +732,11 @@ export async function runRuntimeVendorValidation(options: {
               executionMode: (await hybridRuntime.backend.readRuntimeSummary()).executionMode,
               localVendorId: hybridLocal.vendorId,
               remoteVendorId: hybridRemote.vendorId,
+            },
+            aliasHybrid: {
+              vendorId: hybridAlias.vendorId,
+              outputText: hybridAlias.outputText,
+              observation: hybridAliasObservation,
             },
             vendorHarness: {
               ...plan.vendorHarness,

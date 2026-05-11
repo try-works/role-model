@@ -1,6 +1,6 @@
 Type: `domain`
 Status: `CURRENT`
-Scope: `Stable baseline ownership for the repo workspace, canonical protocol tree, shared packages, router family, fixtures, validation surfaces, and the repo-owned runtime/operator baseline extended through the adaptive observed-data routing baseline in run 24.`
+Scope: `Stable baseline ownership for the repo workspace, canonical protocol tree, shared packages, router family, fixtures, validation surfaces, and the repo-owned runtime/operator baseline extended through the alias-pool routing baseline in run 25.`
 Owns-Paths:
 - `/README.md`
 - `/LICENSE`
@@ -40,8 +40,9 @@ Source-Runs:
 - `22-router-runtime-routing-strategy-lock`
 - `23-router-runtime-live-observed-feedback`
 - `24-router-runtime-recency-bias-throughput-sla`
+- `25-router-runtime-model-alias-pool`
 Validated-At-Commit: `working-tree`
-Last-Validated: `2026-05-11T19:11:00+08:00`
+Last-Validated: `2026-05-11T20:30:00+08:00`
 Tags:
 - `baseline`
 - `workspace`
@@ -109,6 +110,9 @@ This repository now has a real product baseline rather than only recursive scaff
 - The runtime now also owns an explicit `observedData` policy contract in `/role-model-router/apps/runtime-host-bridge/src/unified-runtime-config.ts`, including metric-halflife tuning and throughput-SLA configuration with shared local-plus-remote semantics
 - Adaptive routing now uses freshness-decayed effective metrics plus SQLite-backed throughput-penalty state to change real route outcomes in `/role-model-router/packages/core/`, `/role-model-router/packages/protocol-routing/`, and `/role-model-router/apps/runtime-host-bridge/`
 - Runtime request observations and validator proof now also expose `routingDiagnostics.effectiveMetrics` and `routingDiagnostics.throughputPenalty`, so operators can see the adaptive metric values, freshness weighting, and current penalty state behind a routing decision
+- The runtime now also owns a `model_aliases` contract in `/role-model-router/apps/runtime-host-bridge/src/unified-runtime-config.ts`, and bridge discovery surfaces expose configured alias ids beside real model ids
+- Alias requests now expand into pooled real endpoint candidates in `/role-model-router/apps/runtime-host-bridge/src/index.ts` before the existing routing stack runs, while exact-model requests remain additive and unchanged
+- Runtime request observations and validator proof now also expose durable `routingDiagnostics.aliasResolution` metadata, including one hybrid local-plus-remote alias pool readback
 
 ## Validation Path
 

@@ -1,8 +1,10 @@
 import { describe, expect, test } from "vitest";
 import os from "node:os";
 import path from "node:path";
+import { mkdtemp, writeFile } from "node:fs/promises";
 import { setTimeout as delay } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
+import { stringify } from "yaml";
 
 import type { EndpointRegistryResult } from "@role-model-router/endpoint-registry";
 
@@ -95,6 +97,10 @@ const registry: EndpointRegistryResult = {
   },
 };
 
+function createAliasRemoteVendorScript(): string {
+  return `const http=require("node:http");const port=Number(process.env.PORT??process.argv[2]);const server=http.createServer((req,res)=>{if(req.url==="/health/liveliness"){res.statusCode=200;res.end("ok");return;}if(req.url==="/v1/chat/completions"){let body="";req.on("data",chunk=>body+=chunk);req.on("end",()=>{res.setHeader("content-type","application/json");res.end(JSON.stringify({id:"chat-alias-remote",object:"chat.completion",choices:[{index:0,message:{role:"assistant",content:"alias remote summary"},finish_reason:"stop"}],usage:{prompt_tokens:12,completion_tokens:4,total_tokens:16},_hidden_params:{response_cost:0.0012,cache_hit:false}}));});return;}res.statusCode=404;res.end("missing");});server.listen(port,"127.0.0.1");const shutdown=()=>server.close(()=>process.exit(0));process.on("SIGTERM",shutdown);process.on("SIGINT",shutdown);`;
+}
+
 describe("runtime-host-bridge", () => {
   test("creates a stable model-list response grouped by model id", () => {
     expect(typeof (bridge as { createModelListResponse?: unknown }).createModelListResponse).toBe(
@@ -115,6 +121,56 @@ describe("runtime-host-bridge", () => {
           object: "model",
           owned_by: "role-model",
           endpoint_ids: ["anthropic.team.shared.us-east-1.default"],
+        },
+        {
+          id: "openai/gpt-4.1-mini-fast",
+          object: "model",
+          owned_by: "role-model",
+          endpoint_ids: [
+            "openai.personal.primary.us-east-1.fast",
+            "openai.personal.secondary.us-west-2.fast",
+          ],
+        },
+      ],
+    });
+  });
+
+  test("creates alias entries in the model-list response alongside real models", () => {
+    const result = (
+      bridge as {
+        createModelListResponse: (
+          value: EndpointRegistryResult,
+          modelAliases?: readonly {
+            aliasId: string;
+            modelIds: readonly string[];
+          }[],
+        ) => unknown;
+      }
+    ).createModelListResponse(registry, [
+      {
+        aliasId: "gpt-5.4",
+        modelIds: ["claude-3.7-sonnet", "openai/gpt-4.1-mini-fast"],
+      },
+    ]);
+
+    expect(result).toEqual({
+      object: "list",
+      data: [
+        {
+          id: "claude-3.7-sonnet",
+          object: "model",
+          owned_by: "role-model",
+          endpoint_ids: ["anthropic.team.shared.us-east-1.default"],
+        },
+        {
+          id: "gpt-5.4",
+          object: "model",
+          owned_by: "role-model",
+          endpoint_ids: [
+            "anthropic.team.shared.us-east-1.default",
+            "openai.personal.primary.us-east-1.fast",
+            "openai.personal.secondary.us-west-2.fast",
+          ],
         },
         {
           id: "openai/gpt-4.1-mini-fast",
@@ -235,6 +291,196 @@ describe("runtime-host-bridge", () => {
     });
   });
 
+  test("maps an alias chat-completions request into a pooled endpoint allow-list and alias diagnostics", () => {
+    const result = (
+      bridge as {
+        mapChatCompletionsRequest: (
+          value: EndpointRegistryResult,
+          body: Record<string, unknown>,
+          requestId: string,
+          modelAliases?: readonly {
+            aliasId: string;
+            modelIds: readonly string[];
+          }[],
+        ) => {
+          routingRequest: {
+            allowEndpoints: readonly string[];
+          };
+          routingDiagnostics?: {
+            aliasResolution?: {
+              requestedModel: string;
+              aliasId: string;
+              resolvedModelIds: readonly string[];
+              allowEndpoints: readonly string[];
+            };
+          };
+        };
+      }
+    ).mapChatCompletionsRequest(
+      registry,
+      {
+        model: "gpt-5.4",
+        messages: [{ role: "user", content: "Route to the alias pool." }],
+      },
+      "req-host-alias-chat-001",
+      [
+        {
+          aliasId: "gpt-5.4",
+          modelIds: ["claude-3.7-sonnet", "openai/gpt-4.1-mini-fast"],
+        },
+      ],
+    );
+
+    expect(result.routingRequest.allowEndpoints).toEqual([
+      "anthropic.team.shared.us-east-1.default",
+      "openai.personal.primary.us-east-1.fast",
+      "openai.personal.secondary.us-west-2.fast",
+    ]);
+    expect(result.routingDiagnostics).toEqual({
+      aliasResolution: {
+        requestedModel: "gpt-5.4",
+        aliasId: "gpt-5.4",
+        resolvedModelIds: ["claude-3.7-sonnet", "openai/gpt-4.1-mini-fast"],
+        allowEndpoints: [
+          "anthropic.team.shared.us-east-1.default",
+          "openai.personal.primary.us-east-1.fast",
+          "openai.personal.secondary.us-west-2.fast",
+        ],
+      },
+    });
+  });
+
+  test("keeps exact-model routing unchanged when aliases are configured", () => {
+    const result = (
+      bridge as {
+        mapChatCompletionsRequest: (
+          value: EndpointRegistryResult,
+          body: Record<string, unknown>,
+          requestId: string,
+          modelAliases?: readonly {
+            aliasId: string;
+            modelIds: readonly string[];
+          }[],
+        ) => {
+          routingRequest: {
+            allowEndpoints: readonly string[];
+          };
+          routingDiagnostics?: {
+            aliasResolution?: unknown;
+          };
+        };
+      }
+    ).mapChatCompletionsRequest(
+      registry,
+      {
+        model: "openai/gpt-4.1-mini-fast",
+        messages: [{ role: "user", content: "Keep exact-model routing." }],
+      },
+      "req-host-exact-model-001",
+      [
+        {
+          aliasId: "gpt-5.4",
+          modelIds: ["claude-3.7-sonnet", "openai/gpt-4.1-mini-fast"],
+        },
+      ],
+    );
+
+    expect(result.routingRequest.allowEndpoints).toEqual([
+      "openai.personal.primary.us-east-1.fast",
+      "openai.personal.secondary.us-west-2.fast",
+    ]);
+    expect(result.routingDiagnostics?.aliasResolution).toBeUndefined();
+  });
+
+  test("maps an alias responses request into a pooled endpoint allow-list and alias diagnostics", () => {
+    const result = (
+      bridge as {
+        mapResponsesRequest: (
+          value: EndpointRegistryResult,
+          body: Record<string, unknown>,
+          requestId: string,
+          modelAliases?: readonly {
+            aliasId: string;
+            modelIds: readonly string[];
+          }[],
+        ) => {
+          routingRequest: {
+            allowEndpoints: readonly string[];
+          };
+          routingDiagnostics?: {
+            aliasResolution?: {
+              requestedModel: string;
+              aliasId: string;
+              resolvedModelIds: readonly string[];
+              allowEndpoints: readonly string[];
+            };
+          };
+        };
+      }
+    ).mapResponsesRequest(
+      registry,
+      {
+        model: "gpt-5.4",
+        input: "Route this through the alias pool.",
+      },
+      "req-host-alias-response-001",
+      [
+        {
+          aliasId: "gpt-5.4",
+          modelIds: ["claude-3.7-sonnet", "openai/gpt-4.1-mini-fast"],
+        },
+      ],
+    );
+
+    expect(result.routingRequest.allowEndpoints).toEqual([
+      "anthropic.team.shared.us-east-1.default",
+      "openai.personal.primary.us-east-1.fast",
+      "openai.personal.secondary.us-west-2.fast",
+    ]);
+    expect(result.routingDiagnostics).toEqual({
+      aliasResolution: {
+        requestedModel: "gpt-5.4",
+        aliasId: "gpt-5.4",
+        resolvedModelIds: ["claude-3.7-sonnet", "openai/gpt-4.1-mini-fast"],
+        allowEndpoints: [
+          "anthropic.team.shared.us-east-1.default",
+          "openai.personal.primary.us-east-1.fast",
+          "openai.personal.secondary.us-west-2.fast",
+        ],
+      },
+    });
+  });
+
+  test("prefers a configured alias in downstream OpenAI provider config", () => {
+    const result = (
+      bridge as {
+        createDownstreamOpenAIProviderConfig: (
+          value: EndpointRegistryResult,
+          baseUrl: string,
+          modelAliases?: readonly {
+            aliasId: string;
+            modelIds: readonly string[];
+          }[],
+        ) => {
+          models: readonly { id: string }[];
+          setup: { recommendedModel: string | null };
+        };
+      }
+    ).createDownstreamOpenAIProviderConfig(registry, "http://127.0.0.1:4010", [
+      {
+        aliasId: "gpt-5.4",
+        modelIds: ["claude-3.7-sonnet", "openai/gpt-4.1-mini-fast"],
+      },
+    ]);
+
+    expect(result.models.map((entry) => entry.id)).toEqual([
+      "claude-3.7-sonnet",
+      "gpt-5.4",
+      "openai/gpt-4.1-mini-fast",
+    ]);
+    expect(result.setup.recommendedModel).toBe("gpt-5.4");
+  });
+
   test("serves health and model-list endpoints", async () => {
     expect(typeof (bridge as { startBridgeServer?: unknown }).startBridgeServer).toBe("function");
 
@@ -291,6 +537,99 @@ describe("runtime-host-bridge", () => {
           },
         ],
       });
+    } finally {
+      await server.close();
+    }
+  });
+
+  test("serves alias entries in model-list and downstream provider config from runtime config", async () => {
+    const server = await (
+      bridge as {
+        startBridgeServer: (options: {
+          host: string;
+          port: number;
+          registry: EndpointRegistryResult;
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+          ) => Promise<unknown>;
+          readRuntimeConfig: () => Promise<{
+            config: {
+              modelAliases: readonly {
+                aliasId: string;
+                modelIds: readonly string[];
+              }[];
+            };
+          }>;
+        }) => Promise<{ port: number; close(): Promise<void> }>;
+      }
+    ).startBridgeServer({
+      host: "127.0.0.1",
+      port: 0,
+      registry,
+      executeChatCompletions: async () => {
+        throw new Error("not used");
+      },
+      readRuntimeConfig: async () => ({
+        config: {
+          modelAliases: [
+            {
+              aliasId: "gpt-5.4",
+              modelIds: ["claude-3.7-sonnet", "openai/gpt-4.1-mini-fast"],
+            },
+          ],
+        },
+      }),
+    });
+
+    try {
+      const modelsResponse = await fetch(`http://127.0.0.1:${server.port}/v1/models`);
+      expect(modelsResponse.status).toBe(200);
+      expect(await modelsResponse.json()).toEqual({
+        object: "list",
+        data: [
+          {
+            id: "claude-3.7-sonnet",
+            object: "model",
+            owned_by: "role-model",
+            endpoint_ids: ["anthropic.team.shared.us-east-1.default"],
+          },
+          {
+            id: "gpt-5.4",
+            object: "model",
+            owned_by: "role-model",
+            endpoint_ids: [
+              "anthropic.team.shared.us-east-1.default",
+              "openai.personal.primary.us-east-1.fast",
+              "openai.personal.secondary.us-west-2.fast",
+            ],
+          },
+          {
+            id: "openai/gpt-4.1-mini-fast",
+            object: "model",
+            owned_by: "role-model",
+            endpoint_ids: [
+              "openai.personal.primary.us-east-1.fast",
+              "openai.personal.secondary.us-west-2.fast",
+            ],
+          },
+        ],
+      });
+
+      const providerResponse = await fetch(`http://127.0.0.1:${server.port}/api/role-model/downstream/openai`);
+      expect(providerResponse.status).toBe(200);
+      await expect(providerResponse.json()).resolves.toEqual(
+        expect.objectContaining({
+          models: [
+            expect.objectContaining({ id: "claude-3.7-sonnet" }),
+            expect.objectContaining({ id: "gpt-5.4" }),
+            expect.objectContaining({ id: "openai/gpt-4.1-mini-fast" }),
+          ],
+          setup: expect.objectContaining({
+            recommendedModel: "gpt-5.4",
+          }),
+        }),
+      );
     } finally {
       await server.close();
     }
@@ -1661,6 +2000,90 @@ describe("runtime-host-bridge", () => {
         throughputPenalty: {
           endpointId: result.endpointId,
           active: false,
+        },
+      },
+    });
+  });
+
+  test("persists alias-resolution diagnostics for runtime-backed chat requests", async () => {
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-host-alias-tests-"));
+    const unifiedRuntimeConfigPath = path.join(runtimeStateRoot, "runtime-config.yaml");
+    await writeFile(
+      unifiedRuntimeConfigPath,
+      stringify({
+        version: "1.0",
+        routing: {
+          strategy: "balanced",
+        },
+        model_aliases: {
+          "gpt-5.4": {
+            model_ids: ["openai/gpt-4.1-mini-fast"],
+          },
+        },
+        litellm_proxy: {
+          command: "node",
+          args: ["-e", createAliasRemoteVendorScript()],
+          providers: {
+            openai: {
+              api_key: "${OPENAI_API_KEY}",
+              model_list: [
+                {
+                  model_name: "openai/gpt-4.1-mini-fast",
+                  litellm_params: {
+                    model: "openai/gpt-4.1-mini",
+                  },
+                },
+              ],
+            },
+          },
+        },
+      }),
+      "utf8",
+    );
+
+    const backend = await (
+      bridge as {
+        createRuntimeBridgeBackend: (options: {
+          repoRoot: string;
+          fixtureRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+          unifiedRuntimeConfigPath: string;
+        }) => Promise<{
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+          ) => Promise<{
+            endpointId: string;
+          }>;
+          readRequestObservation: (requestId: string) => Promise<unknown>;
+        }>;
+      }
+    ).createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      runtimeStateRoot,
+      scopeId: "runtime-host-alias-tests",
+      unifiedRuntimeConfigPath,
+    });
+
+    const requestId = "req-runtime-bridge-alias-001";
+    await backend.executeChatCompletions(
+      {
+        model: "gpt-5.4",
+        messages: [{ role: "user", content: "Route through the alias pool." }],
+      },
+      requestId,
+    );
+
+    await expect(backend.readRequestObservation(requestId)).resolves.toMatchObject({
+      requestId,
+      routingDiagnostics: {
+        aliasResolution: {
+          requestedModel: "gpt-5.4",
+          aliasId: "gpt-5.4",
+          resolvedModelIds: ["openai/gpt-4.1-mini-fast"],
+          allowEndpoints: ["openai.litellm.global.openai-gpt-4-1-mini-fast"],
         },
       },
     });

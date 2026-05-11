@@ -45,6 +45,11 @@ export interface UnifiedRuntimeConfigProvider {
   readonly modelMappings: readonly UnifiedRuntimeConfigProviderMapping[];
 }
 
+export interface UnifiedRuntimeModelAliasConfig {
+  readonly aliasId: string;
+  readonly modelIds: readonly string[];
+}
+
 export interface UnifiedRuntimeObservedDataConfig {
   readonly enabled: boolean;
   readonly aggregation: {
@@ -96,6 +101,7 @@ export interface UnifiedRuntimeConfig {
   readonly routingStrategy: string | null;
   readonly executionMode: UnifiedRuntimeExecutionMode;
   readonly observedData?: UnifiedRuntimeObservedDataConfig;
+  readonly modelAliases?: readonly UnifiedRuntimeModelAliasConfig[];
   readonly llamaSwap: {
     readonly enabled: boolean;
     readonly models: readonly UnifiedRuntimeConfigModel[];
@@ -130,6 +136,14 @@ interface RawUnifiedRuntimeConfig {
   readonly routing?: {
     readonly strategy?: string;
   };
+  readonly model_aliases?: Readonly<
+    Record<
+      string,
+      {
+        readonly model_ids?: readonly string[];
+      }
+    >
+  >;
   readonly observed_data?: {
     readonly enabled?: boolean;
     readonly aggregation?: {
@@ -489,6 +503,56 @@ function normalizeLiteLLMInput(value: unknown): UnifiedRuntimeConfig["liteLLM"] 
   };
 }
 
+function normalizeModelAliasInput(
+  value: unknown,
+  fallbackAliasId?: string,
+  prefix = "modelAliases",
+): UnifiedRuntimeModelAliasConfig | null {
+  ensureObject(value, `${prefix} must be an object.`);
+  const aliasId =
+    readNonEmptyString("aliasId" in value ? value.aliasId : value.alias_id) ?? fallbackAliasId ?? null;
+  if (!aliasId) {
+    throw new Error(`${prefix}.alias_id is required.`);
+  }
+  const modelIds = readStringArray("modelIds" in value ? value.modelIds : "model_ids" in value ? value.model_ids : undefined)
+    .map((entry) => entry.trim())
+    .filter((entry) => entry.length > 0);
+  if (modelIds.length === 0) {
+    throw new Error(`${prefix}.${aliasId}.model_ids must include at least one model id.`);
+  }
+  return {
+    aliasId,
+    modelIds,
+  };
+}
+
+function normalizeModelAliasesInput(
+  value: unknown,
+  prefix = "modelAliases",
+): readonly UnifiedRuntimeModelAliasConfig[] {
+  if (value === undefined || value === null) {
+    return [];
+  }
+  const aliases: UnifiedRuntimeModelAliasConfig[] = [];
+  if (Array.isArray(value)) {
+    for (const entry of value) {
+      const normalized = normalizeModelAliasInput(entry, undefined, prefix);
+      if (normalized) {
+        aliases.push(normalized);
+      }
+    }
+    return aliases;
+  }
+  ensureObject(value, `${prefix} must be an object.`);
+  for (const [aliasId, entry] of Object.entries(value)) {
+    const normalized = normalizeModelAliasInput(entry, aliasId, prefix);
+    if (normalized) {
+      aliases.push(normalized);
+    }
+  }
+  return aliases;
+}
+
 function normalizeObservedDataInput(
   value: unknown,
   prefix: string,
@@ -741,6 +805,7 @@ export function parseUnifiedRuntimeConfigText(text: string): UnifiedRuntimeConfi
       llamaSwapEnabled: llamaSwap.enabled,
       liteLLMEnabled: liteLLM.enabled,
     }),
+    ...(rawConfig.model_aliases ? { modelAliases: normalizeModelAliasesInput(rawConfig.model_aliases, "model_aliases") } : {}),
     ...(rawConfig.observed_data ? { observedData: normalizeObservedDataInput(rawConfig.observed_data, "observed_data") } : {}),
     llamaSwap,
     liteLLM,
@@ -765,6 +830,8 @@ export function normalizeUnifiedRuntimeConfigInput(input: unknown): UnifiedRunti
   );
   const observedDataSource =
     "observedData" in input ? input.observedData : "observed_data" in input ? input.observed_data : undefined;
+  const modelAliasesSource =
+    "modelAliases" in input ? input.modelAliases : "model_aliases" in input ? input.model_aliases : undefined;
 
   return {
     version: readNonEmptyString(input.version) ?? "1.0",
@@ -778,6 +845,11 @@ export function normalizeUnifiedRuntimeConfigInput(input: unknown): UnifiedRunti
       llamaSwapEnabled: llamaSwap.enabled,
       liteLLMEnabled: liteLLM.enabled,
     }),
+    ...(modelAliasesSource !== undefined
+      ? {
+          modelAliases: normalizeModelAliasesInput(modelAliasesSource),
+        }
+      : {}),
     ...(observedDataSource !== undefined
       ? {
           observedData: normalizeObservedDataInput(observedDataSource, "observedData"),
@@ -849,6 +921,17 @@ export function renderUnifiedRuntimeConfigText(config: UnifiedRuntimeConfig): st
         penalty_factor: config.observedData.throughputSla.penaltyFactor,
       },
     };
+  }
+
+  if (config.modelAliases && config.modelAliases.length > 0) {
+    document.model_aliases = Object.fromEntries(
+      config.modelAliases.map((alias) => [
+        alias.aliasId,
+        {
+          model_ids: [...alias.modelIds],
+        },
+      ]),
+    );
   }
 
   const llamaSwapSection: Record<string, unknown> = renderProcessConfig(config.llamaSwap.process);

@@ -82,6 +82,7 @@ import {
   parseUnifiedRuntimeConfigText,
   renderUnifiedRuntimeConfigText,
   resolveUnifiedRuntimeObservedDataConfig,
+  type UnifiedRuntimeModelAliasConfig,
   type UnifiedRuntimeConfig,
   type UnifiedRuntimeExecutionMode,
 } from "./unified-runtime-config.js";
@@ -203,6 +204,7 @@ export interface BridgeExecutionPlan {
     readonly maxOutputTokens?: number;
     readonly temperature?: number;
   };
+  readonly routingDiagnostics?: Pick<RuntimeRoutingDiagnostics, "aliasResolution">;
 }
 
 export interface BridgeServer {
@@ -1360,6 +1362,7 @@ function parseResponsesBody(body: Record<string, unknown>): OpenAIResponsesBody 
 
 export function createModelListResponse(
   registry: EndpointRegistryResult,
+  modelAliases: readonly UnifiedRuntimeModelAliasConfig[] = [],
 ): BridgeModelListResponse {
   const byModelId = new Map<string, string[]>();
 
@@ -1367,6 +1370,17 @@ export function createModelListResponse(
     const current = byModelId.get(endpoint.identity.model_id) ?? [];
     current.push(endpoint.identity.endpoint_id);
     byModelId.set(endpoint.identity.model_id, current);
+  }
+
+  for (const alias of modelAliases) {
+    const endpointIds = registry.endpoints
+      .filter((endpoint) => alias.modelIds.includes(endpoint.identity.model_id))
+      .map((endpoint) => endpoint.identity.endpoint_id)
+      .sort(compareText);
+    if (endpointIds.length === 0) {
+      continue;
+    }
+    byModelId.set(alias.aliasId, endpointIds);
   }
 
   const data = [...byModelId.entries()]
@@ -1382,6 +1396,63 @@ export function createModelListResponse(
     object: "list",
     data,
   };
+}
+
+function collectAllowedEndpointIds(
+  registry: EndpointRegistryResult,
+  modelIds: readonly string[],
+): readonly string[] {
+  return [...new Set(
+    registry.endpoints
+      .filter((endpoint) => modelIds.includes(endpoint.identity.model_id))
+      .map((endpoint) => endpoint.identity.endpoint_id),
+  )].sort(compareText);
+}
+
+function resolveRequestedModelPool(
+  registry: EndpointRegistryResult,
+  requestedModel: string,
+  modelAliases: readonly UnifiedRuntimeModelAliasConfig[] = [],
+): {
+  readonly allowEndpoints: readonly string[];
+  readonly routingDiagnostics?: Pick<RuntimeRoutingDiagnostics, "aliasResolution">;
+} {
+  const alias = modelAliases.find((entry) => entry.aliasId === requestedModel);
+  if (!alias) {
+    return {
+      allowEndpoints: collectAllowedEndpointIds(registry, [requestedModel]),
+    };
+  }
+
+  const allowEndpoints = collectAllowedEndpointIds(registry, alias.modelIds);
+  return {
+    allowEndpoints,
+    routingDiagnostics: {
+      aliasResolution: {
+        requestedModel,
+        aliasId: alias.aliasId,
+        resolvedModelIds: [...alias.modelIds],
+        allowEndpoints,
+      },
+    },
+  };
+}
+
+async function resolveConfiguredModelAliases(
+  readRuntimeConfig: StartBridgeServerOptions["readRuntimeConfig"],
+): Promise<readonly UnifiedRuntimeModelAliasConfig[]> {
+  if (!readRuntimeConfig) {
+    return [];
+  }
+  const runtimeConfig = await readRuntimeConfig();
+  if (!runtimeConfig || typeof runtimeConfig !== "object" || Array.isArray(runtimeConfig) || !("config" in runtimeConfig)) {
+    return [];
+  }
+  const configValue = runtimeConfig.config;
+  if (!configValue || typeof configValue !== "object" || Array.isArray(configValue)) {
+    return [];
+  }
+  return normalizeUnifiedRuntimeConfigInput(configValue).modelAliases ?? [];
 }
 
 function readForwardedHeaderValue(value: string | string[] | undefined): string | undefined {
@@ -1421,8 +1492,10 @@ function resolveExternalBaseUrl(
 export function createDownstreamOpenAIProviderConfig(
   registry: EndpointRegistryResult,
   baseUrl: string,
+  modelAliases: readonly UnifiedRuntimeModelAliasConfig[] = [],
 ): BridgeDownstreamOpenAIProviderConfig {
-  const models = createModelListResponse(registry).data;
+  const models = createModelListResponse(registry, modelAliases).data;
+  const recommendedModel = modelAliases[0]?.aliasId ?? models[0]?.id ?? null;
 
   return {
     kind: "openai-compatible",
@@ -1445,7 +1518,7 @@ export function createDownstreamOpenAIProviderConfig(
     },
     models,
     setup: {
-      recommendedModel: models[0]?.id ?? null,
+      recommendedModel,
       notes: [
         "Configure downstream tooling as an OpenAI-compatible provider.",
         "Use GET /v1/models to discover the current model ids.",
@@ -1459,11 +1532,9 @@ export function mapChatCompletionsRequest(
   registry: EndpointRegistryResult,
   body: OpenAIChatCompletionsBody,
   requestId: string,
+  modelAliases: readonly UnifiedRuntimeModelAliasConfig[] = [],
 ): BridgeExecutionPlan {
-  const allowEndpoints = registry.endpoints
-    .filter((endpoint) => endpoint.identity.model_id === body.model)
-    .map((endpoint) => endpoint.identity.endpoint_id)
-    .sort(compareText);
+  const { allowEndpoints, routingDiagnostics } = resolveRequestedModelPool(registry, body.model, modelAliases);
 
   if (allowEndpoints.length === 0) {
     throw new Error(`No registry endpoints are available for requested model ${body.model}.`);
@@ -1495,6 +1566,7 @@ export function mapChatCompletionsRequest(
         ? { temperature: body.temperature }
         : {}),
     },
+    ...(routingDiagnostics ? { routingDiagnostics } : {}),
   };
 }
 
@@ -1502,11 +1574,9 @@ export function mapResponsesRequest(
   registry: EndpointRegistryResult,
   body: OpenAIResponsesBody,
   requestId: string,
+  modelAliases: readonly UnifiedRuntimeModelAliasConfig[] = [],
 ): BridgeExecutionPlan {
-  const allowEndpoints = registry.endpoints
-    .filter((endpoint) => endpoint.identity.model_id === body.model)
-    .map((endpoint) => endpoint.identity.endpoint_id)
-    .sort(compareText);
+  const { allowEndpoints, routingDiagnostics } = resolveRequestedModelPool(registry, body.model, modelAliases);
 
   if (allowEndpoints.length === 0) {
     throw new Error(`No registry endpoints are available for requested model ${body.model}.`);
@@ -1539,6 +1609,7 @@ export function mapResponsesRequest(
         ? { temperature: body.temperature }
         : {}),
     },
+    ...(routingDiagnostics ? { routingDiagnostics } : {}),
   };
 }
 
@@ -2517,7 +2588,8 @@ function createRequestHandler(options: StartBridgeServerOptions) {
     const registry = options.getRegistry?.() ?? options.registry;
 
     if (request.method === "GET" && url.pathname === "/v1/models") {
-      writeJson(response, 200, createModelListResponse(registry));
+      const modelAliases = await resolveConfiguredModelAliases(options.readRuntimeConfig);
+      writeJson(response, 200, createModelListResponse(registry, modelAliases));
       return;
     }
 
@@ -2794,6 +2866,7 @@ function createRequestHandler(options: StartBridgeServerOptions) {
     }
 
     if (request.method === "GET" && url.pathname === "/api/role-model/downstream/openai") {
+      const modelAliases = await resolveConfiguredModelAliases(options.readRuntimeConfig);
       writeJson(
         response,
         200,
@@ -2803,6 +2876,7 @@ function createRequestHandler(options: StartBridgeServerOptions) {
             host: options.host,
             port: options.port,
           }),
+          modelAliases,
         ),
       );
       return;
@@ -3822,6 +3896,7 @@ export async function createRuntimeBridgeBackend(
       decision: routed.decision,
       routingDiagnostics: {
         ...routed.routingDiagnostics,
+        ...plan.routingDiagnostics,
         observedProfile: observedProfileDiagnostic,
         effectiveMetrics: summarizeEffectiveMetricsFromDecision(routed.decision),
         throughputPenalty: summarizeThroughputPenaltyFromDecision(routed.decision),
@@ -3889,7 +3964,12 @@ export async function createRuntimeBridgeBackend(
       if (currentUnifiedRuntimeConfig?.executionMode === "decision_only" && currentRegistry.endpoints.length === 0) {
         throw createVendorError("runtime", "Configure llama_swap.models or litellm_proxy.providers to enable execution.");
       }
-      const plan = mapChatCompletionsRequest(currentRegistry, body, requestId);
+      const plan = mapChatCompletionsRequest(
+        currentRegistry,
+        body,
+        requestId,
+        currentUnifiedRuntimeConfig?.modelAliases ?? [],
+      );
       const { execution, toolExecutionResult, routingDecisionId } = await executeBridgePlan(
         plan,
         requestId,
@@ -3945,7 +4025,12 @@ export async function createRuntimeBridgeBackend(
       if (currentUnifiedRuntimeConfig?.executionMode === "decision_only" && currentRegistry.endpoints.length === 0) {
         throw createVendorError("runtime", "Configure llama_swap.models or litellm_proxy.providers to enable execution.");
       }
-      const plan = mapResponsesRequest(currentRegistry, body, requestId);
+      const plan = mapResponsesRequest(
+        currentRegistry,
+        body,
+        requestId,
+        currentUnifiedRuntimeConfig?.modelAliases ?? [],
+      );
       const { execution, routingDecisionId } = await executeBridgePlan(plan, requestId, body.stream, streamWriter);
       const costUsd =
         execution.normalized.vendorMetadata?.costUsd ?? execution.responseCapture.vendorMetadata?.costUsd;

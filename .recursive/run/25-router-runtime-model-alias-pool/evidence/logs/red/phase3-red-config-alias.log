@@ -1,0 +1,74 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/25-router-runtime-model-alias-pool/role-model-router/apps/runtime-host-bridge[39m
+
+ [31mΓ¥»[39m test/unified-runtime-config.test.ts [2m([22m[2m10 tests[22m[2m | [22m[31m2 failed[39m[2m | [22m[33m8 skipped[39m[2m)[22m[32m 24[2mms[22m[39m
+   [2m[90mΓåô[39m[22m unified runtime config[2m > [22mderives hybrid mode when both vendor sections are populated
+   [2m[90mΓåô[39m[22m unified runtime config[2m > [22mderives decision-only mode when no vendor sections are active
+   [2m[90mΓåô[39m[22m unified runtime config[2m > [22mderives remote-only mode when only the LiteLLM section is populated
+   [2m[90mΓåô[39m[22m unified runtime config[2m > [22mpreserves advanced real-vendor settings for llama-swap and litellm
+   [2m[90mΓåô[39m[22m unified runtime config[2m > [22mleaves process startup timeouts unset unless the unified config specifies them
+   [2m[90mΓåô[39m[22m unified runtime config[2m > [22mnormalizes object input and round-trips advanced vendor settings back to config text
+   [2m[90mΓåô[39m[22m unified runtime config[2m > [22mparses observed-data policy and round-trips it back to config text
+   [2m[90mΓåô[39m[22m unified runtime config[2m > [22mrejects invalid observed-data throughput SLA policy values
+[31m   [31m├ù[31m unified runtime config[2m > [22mparses model-alias policy and round-trips it back to config text[39m[32m 18[2mms[22m[39m
+[31m     ΓåÆ expected undefined to deeply equal [ { aliasId: 'gpt-5.4', ΓÇª(1) } ][39m
+[31m   [31m├ù[31m unified runtime config[2m > [22mrejects invalid model-alias definitions[39m[32m 5[2mms[22m[39m
+[31m     ΓåÆ expected [Function] to throw an error[39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 2 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/unified-runtime-config.test.ts > unified runtime config > parses model-alias policy and round-trips it back to config text
+AssertionError: expected undefined to deeply equal [ { aliasId: 'gpt-5.4', ΓÇª(1) } ]
+
+- Expected: 
+[
+  {
+    "aliasId": "gpt-5.4",
+    "modelIds": [
+      "local/mock-llama",
+      "openai/gpt-4.1-mini-fast",
+    ],
+  },
+]
+
++ Received: 
+undefined
+
+ Γ¥» test/unified-runtime-config.test.ts:402:7
+    400|         }[];
+    401|       }).modelAliases,
+    402|     ).toEqual([
+       |       ^
+    403|       {
+    404|         aliasId: "gpt-5.4",
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/2]ΓÄ»
+
+ FAIL  test/unified-runtime-config.test.ts > unified runtime config > rejects invalid model-alias definitions
+AssertionError: expected [Function] to throw an error
+
+- Expected: 
+null
+
++ Received: 
+undefined
+
+ Γ¥» test/unified-runtime-config.test.ts:432:7
+    430|     model_ids: []
+    431| `),
+    432|     ).toThrow(/model_aliases/i);
+       |       ^
+    433|   });
+    434| });
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[2/2]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m2 failed[39m[22m[2m | [22m[33m8 skipped[39m[90m (10)[39m
+[2m   Start at [22m 20:05:23
+[2m   Duration [22m 989ms[2m (transform 133ms, setup 0ms, collect 229ms, tests 24ms, environment 0ms, prepare 306ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\25-router-runtime-model-alias-pool\role-model-router\apps\runtime-host-bridge:
+ΓÇëERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓÇë Command failed with exit code 1: vitest run test/unified-runtime-config.test.ts -t model-alias

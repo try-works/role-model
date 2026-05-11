@@ -381,4 +381,54 @@ observed_data:
 `),
     ).toThrow(/observed_data\.throughput_sla/i);
   });
+
+  test("parses model-alias policy and round-trips it back to config text", () => {
+    const result = parseUnifiedRuntimeConfigText(`
+version: "1.0"
+model_aliases:
+  gpt-5.4:
+    model_ids:
+      - local/mock-llama
+      - openai/gpt-4.1-mini-fast
+`);
+
+    expect(
+      (result as unknown as {
+        modelAliases?: readonly {
+          aliasId: string;
+          modelIds: readonly string[];
+        }[];
+      }).modelAliases,
+    ).toEqual([
+      {
+        aliasId: "gpt-5.4",
+        modelIds: ["local/mock-llama", "openai/gpt-4.1-mini-fast"],
+      },
+    ]);
+
+    expect(
+      renderUnifiedRuntimeConfigText(
+        normalizeUnifiedRuntimeConfigInput({
+          version: "1.0",
+          modelAliases: [
+            {
+              aliasId: "gpt-5.4",
+              modelIds: ["local/mock-llama", "openai/gpt-4.1-mini-fast"],
+            },
+          ],
+        }) as unknown as Parameters<typeof renderUnifiedRuntimeConfigText>[0],
+      ),
+    ).toContain("model_aliases:");
+  });
+
+  test("rejects invalid model-alias definitions", () => {
+    expect(() =>
+      parseUnifiedRuntimeConfigText(`
+version: "1.0"
+model_aliases:
+  gpt-5.4:
+    model_ids: []
+`),
+    ).toThrow(/model_aliases/i);
+  });
 });

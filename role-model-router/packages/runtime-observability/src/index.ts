@@ -8,6 +8,12 @@ import type { ToolRegistryExecution } from "@role-model-router/tool-registry";
 
 export interface RuntimeRoutingDiagnostics {
   readonly retrievalReceiptId?: string;
+  readonly aliasResolution?: {
+    readonly requestedModel: string;
+    readonly aliasId: string;
+    readonly resolvedModelIds: readonly string[];
+    readonly allowEndpoints: readonly string[];
+  };
   readonly observedProfile?: {
     readonly endpointId: string;
     readonly source: "runtime-state" | "none";

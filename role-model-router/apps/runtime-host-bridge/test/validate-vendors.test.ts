@@ -82,6 +82,24 @@ describe("runRuntimeVendorValidation", () => {
         remoteVendorId: "litellm",
       }),
     );
+    expect(result.aliasHybrid).toEqual(
+      expect.objectContaining({
+        vendorId: expect.stringMatching(/^(llama-swap|litellm)$/),
+        observation: expect.objectContaining({
+          routingDiagnostics: expect.objectContaining({
+            aliasResolution: {
+              requestedModel: "gpt-5.4",
+              aliasId: "gpt-5.4",
+              resolvedModelIds: ["local/llama-3.1-8b-instruct", "openai/gpt-4.1-mini-fast"],
+              allowEndpoints: [
+                "llama-swap.local.local-llama-3-1-8b-instruct",
+                "openai.litellm.global.openai-gpt-4-1-mini-fast",
+              ],
+            },
+          }),
+        }),
+      }),
+    );
     expect(result.vendorHarness).toEqual({
       local: "managed-node-mock",
       remote: "managed-node-mock",
@@ -89,10 +107,10 @@ describe("runRuntimeVendorValidation", () => {
     });
     expect(result.telemetry.summary).toEqual(
       expect.objectContaining({
-        requestCount: 2,
+        requestCount: 3,
         sourceBreakdown: expect.objectContaining({
           local: expect.objectContaining({ requestCount: 1 }),
-          remote: expect.objectContaining({ requestCount: 1 }),
+          remote: expect.objectContaining({ requestCount: 2 }),
         }),
       }),
     );
@@ -116,6 +134,10 @@ describe("runRuntimeVendorValidation", () => {
         }),
         expect.objectContaining({
           requestId: "req-runtime-vendor-hybrid-remote",
+          sourceType: "remote",
+        }),
+        expect.objectContaining({
+          requestId: "req-runtime-vendor-hybrid-alias",
           sourceType: "remote",
         }),
       ]),

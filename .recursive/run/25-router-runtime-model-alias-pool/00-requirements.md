@@ -1,6 +1,8 @@
 Run: `/.recursive/run/25-router-runtime-model-alias-pool/`
 Phase: `00 Requirements`
-Status: `DRAFT`
+Status: `LOCKED`
+LockedAt: `2026-05-11T11:48:48Z`
+LockHash: `f320d20495e8e442f0961741c5429d9c29112cdd8c38fbc3a577948b2f64bb6c`
 Workflow version: `recursive-mode-audit-v1`
 Inputs:
 - `/docs/architecture/07-router-runtime-routing-strategy-lock.md`
