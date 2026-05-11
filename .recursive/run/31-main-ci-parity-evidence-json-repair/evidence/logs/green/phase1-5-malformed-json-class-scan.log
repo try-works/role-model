@@ -1,0 +1,9 @@
+Command: scan tracked recursive JSON files for malformed shell-failure markers
+
+Pattern: ^undefined$
+D:\DEV\role-model\.worktrees\31-main-ci-parity-evidence-json-repair\.recursive\run\15-unified-vendor-execution\evidence\logs\green\sp5-real-vendor-validation.json:1:undefined
+MATCH_COUNT=1
+
+Pattern: ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL
+D:\DEV\role-model\.worktrees\31-main-ci-parity-evidence-json-repair\.recursive\run\15-unified-vendor-execution\evidence\logs\green\sp5-real-vendor-validation.json:3:ΓÇëERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓÇë Command failed with exit code 3221225786: tsx --eval import('./src/validate-vendors.ts').then(async ({ runRuntimeVendorValidation }) => { const result = await runRuntimeVendorValidation({ repoRoot: 'D:\\DEV\\role-model\\.worktrees\\15-unified-vendor-execution' }); console.log(JSON.stringify(result, null, 2)); })
+MATCH_COUNT=1

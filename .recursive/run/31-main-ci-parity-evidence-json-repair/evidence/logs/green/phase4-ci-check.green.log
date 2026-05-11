@@ -1,0 +1,862 @@
+
+> role-model@0.0.0 ci:check D:\DEV\role-model\.worktrees\31-main-ci-parity-evidence-json-repair
+> corepack pnpm run lint && corepack pnpm run schemas:validate && corepack pnpm run build && corepack pnpm run test && corepack pnpm run test:rust && corepack pnpm run smoke
+
+
+> role-model@0.0.0 lint D:\DEV\role-model\.worktrees\31-main-ci-parity-evidence-json-repair
+> biome check . && corepack pnpm run lint:rust
+
+.\packages\store-contract\package.json format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+     1    Γöé - {ΓÉì
+     2    Γöé - ┬╖┬╖"name":┬╖"@role-model/store-contract",ΓÉì
+     3    Γöé - ┬╖┬╖"version":┬╖"0.0.0",ΓÉì
+     4    Γöé - ┬╖┬╖"private":┬╖true,ΓÉì
+     5    Γöé - ┬╖┬╖"type":┬╖"module",ΓÉì
+     6    Γöé - ┬╖┬╖"exports":┬╖{ΓÉì
+     7    Γöé - ┬╖┬╖┬╖┬╖".":┬╖"./src/index.ts"ΓÉì
+     8    Γöé - ┬╖┬╖},ΓÉì
+     9    Γöé - ┬╖┬╖"files":┬╖["src",┬╖"dist"],ΓÉì
+    10    Γöé - ┬╖┬╖"scripts":┬╖{ΓÉì
+    11    Γöé - ┬╖┬╖┬╖┬╖"build":┬╖"tsc┬╖-p┬╖tsconfig.json"ΓÉì
+    12    Γöé - ┬╖┬╖}ΓÉì
+    13    Γöé - }ΓÉì
+        1 Γöé + {
+        2 Γöé + ┬╖┬╖"name":┬╖"@role-model/store-contract",
+        3 Γöé + ┬╖┬╖"version":┬╖"0.0.0",
+        4 Γöé + ┬╖┬╖"private":┬╖true,
+        5 Γöé + ┬╖┬╖"type":┬╖"module",
+        6 Γöé + ┬╖┬╖"exports":┬╖{
+        7 Γöé + ┬╖┬╖┬╖┬╖".":┬╖"./src/index.ts"
+        8 Γöé + ┬╖┬╖},
+        9 Γöé + ┬╖┬╖"files":┬╖["src",┬╖"dist"],
+       10 Γöé + ┬╖┬╖"scripts":┬╖{
+       11 Γöé + ┬╖┬╖┬╖┬╖"build":┬╖"tsc┬╖-p┬╖tsconfig.json"
+       12 Γöé + ┬╖┬╖}
+       13 Γöé + }
+    14 14 Γöé   
+  
+
+.\packages\protocol-types\package.json format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+     1    Γöé - {ΓÉì
+     2    Γöé - ┬╖┬╖"name":┬╖"@role-model/protocol-types",ΓÉì
+     3    Γöé - ┬╖┬╖"version":┬╖"0.0.0",ΓÉì
+     4    Γöé - ┬╖┬╖"private":┬╖true,ΓÉì
+     5    Γöé - ┬╖┬╖"type":┬╖"module",ΓÉì
+     6    Γöé - ┬╖┬╖"exports":┬╖{ΓÉì
+     7    Γöé - ┬╖┬╖┬╖┬╖".":┬╖{ΓÉì
+     8    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"types":┬╖"./src/index.ts",ΓÉì
+     9    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"runtime":┬╖"./dist/index.js",ΓÉì
+    10    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"default":┬╖"./src/index.ts"ΓÉì
+    11    Γöé - ┬╖┬╖┬╖┬╖}ΓÉì
+    12    Γöé - ┬╖┬╖},ΓÉì
+    13    Γöé - ┬╖┬╖"files":┬╖["src",┬╖"dist"],ΓÉì
+    14    Γöé - ┬╖┬╖"scripts":┬╖{ΓÉì
+    15    Γöé - ┬╖┬╖┬╖┬╖"build":┬╖"tsc┬╖-p┬╖tsconfig.json"ΓÉì
+    16    Γöé - ┬╖┬╖}ΓÉì
+    17    Γöé - }ΓÉì
+        1 Γöé + {
+        2 Γöé + ┬╖┬╖"name":┬╖"@role-model/protocol-types",
+        3 Γöé + ┬╖┬╖"version":┬╖"0.0.0",
+        4 Γöé + ┬╖┬╖"private":┬╖true,
+        5 Γöé + ┬╖┬╖"type":┬╖"module",
+        6 Γöé + ┬╖┬╖"exports":┬╖{
+        7 Γöé + ┬╖┬╖┬╖┬╖".":┬╖{
+        8 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"types":┬╖"./src/index.ts",
+        9 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"runtime":┬╖"./dist/index.js",
+       10 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"default":┬╖"./src/index.ts"
+       11 Γöé + ┬╖┬╖┬╖┬╖}
+       12 Γöé + ┬╖┬╖},
+       13 Γöé + ┬╖┬╖"files":┬╖["src",┬╖"dist"],
+       14 Γöé + ┬╖┬╖"scripts":┬╖{
+       15 Γöé + ┬╖┬╖┬╖┬╖"build":┬╖"tsc┬╖-p┬╖tsconfig.json"
+       16 Γöé + ┬╖┬╖}
+       17 Γöé + }
+    18 18 Γöé   
+  
+
+.\packages\schema-tools\tsconfig.json format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+    1   Γöé - {ΓÉì
+    2   Γöé - ┬╖┬╖"extends":┬╖"../../tsconfig.base.json",ΓÉì
+    3   Γöé - ┬╖┬╖"compilerOptions":┬╖{ΓÉì
+    4   Γöé - ┬╖┬╖┬╖┬╖"rootDir":┬╖"src",ΓÉì
+    5   Γöé - ┬╖┬╖┬╖┬╖"outDir":┬╖"dist"ΓÉì
+    6   Γöé - ┬╖┬╖},ΓÉì
+    7   Γöé - ┬╖┬╖"include":┬╖["src/**/*.ts"]ΓÉì
+    8   Γöé - }ΓÉì
+      1 Γöé + {
+      2 Γöé + ┬╖┬╖"extends":┬╖"../../tsconfig.base.json",
+      3 Γöé + ┬╖┬╖"compilerOptions":┬╖{
+      4 Γöé + ┬╖┬╖┬╖┬╖"rootDir":┬╖"src",
+      5 Γöé + ┬╖┬╖┬╖┬╖"outDir":┬╖"dist"
+      6 Γöé + ┬╖┬╖},
+      7 Γöé + ┬╖┬╖"include":┬╖["src/**/*.ts"]
+      8 Γöé + }
+    9 9 Γöé   
+  
+
+.\packages\store-contract\tsconfig.json format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+    1   Γöé - {ΓÉì
+    2   Γöé - ┬╖┬╖"extends":┬╖"../../tsconfig.base.json",ΓÉì
+    3   Γöé - ┬╖┬╖"compilerOptions":┬╖{ΓÉì
+    4   Γöé - ┬╖┬╖┬╖┬╖"rootDir":┬╖"src",ΓÉì
+    5   Γöé - ┬╖┬╖┬╖┬╖"outDir":┬╖"dist"ΓÉì
+    6   Γöé - ┬╖┬╖},ΓÉì
+    7   Γöé - ┬╖┬╖"include":┬╖["src/**/*.ts"]ΓÉì
+    8   Γöé - }ΓÉì
+      1 Γöé + {
+      2 Γöé + ┬╖┬╖"extends":┬╖"../../tsconfig.base.json",
+      3 Γöé + ┬╖┬╖"compilerOptions":┬╖{
+      4 Γöé + ┬╖┬╖┬╖┬╖"rootDir":┬╖"src",
+      5 Γöé + ┬╖┬╖┬╖┬╖"outDir":┬╖"dist"
+      6 Γöé + ┬╖┬╖},
+      7 Γöé + ┬╖┬╖"include":┬╖["src/**/*.ts"]
+      8 Γöé + }
+    9 9 Γöé   
+  
+
+.\packages\conformance\package.json format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+     1    Γöé - {ΓÉì
+     2    Γöé - ┬╖┬╖"name":┬╖"@role-model/conformance",ΓÉì
+     3    Γöé - ┬╖┬╖"version":┬╖"0.0.0",ΓÉì
+     4    Γöé - ┬╖┬╖"private":┬╖true,ΓÉì
+     5    Γöé - ┬╖┬╖"type":┬╖"module",ΓÉì
+     6    Γöé - ┬╖┬╖"dependencies":┬╖{ΓÉì
+     7    Γöé - ┬╖┬╖┬╖┬╖"@role-model/schema-tools":┬╖"workspace:*",ΓÉì
+     8    Γöé - ┬╖┬╖┬╖┬╖"@role-model-router/core":┬╖"workspace:*",ΓÉì
+     9    Γöé - ┬╖┬╖┬╖┬╖"@role-model-router/protocol-routing":┬╖"workspace:*",ΓÉì
+    10    Γöé - ┬╖┬╖┬╖┬╖"@role-model-router/profile-aggregator":┬╖"workspace:*",ΓÉì
+    11    Γöé - ┬╖┬╖┬╖┬╖"@role-model-router/trace":┬╖"workspace:*",ΓÉì
+    12    Γöé - ┬╖┬╖┬╖┬╖"@role-model-router/usage":┬╖"workspace:*"ΓÉì
+    13    Γöé - ┬╖┬╖},ΓÉì
+    14    Γöé - ┬╖┬╖"scripts":┬╖{ΓÉì
+    15    Γöé - ┬╖┬╖┬╖┬╖"build":┬╖"tsc┬╖-p┬╖tsconfig.json",ΓÉì
+    16    Γöé - ┬╖┬╖┬╖┬╖"test":┬╖"vitest┬╖run"ΓÉì
+    17    Γöé - ┬╖┬╖}ΓÉì
+    18    Γöé - }ΓÉì
+        1 Γöé + {
+        2 Γöé + ┬╖┬╖"name":┬╖"@role-model/conformance",
+        3 Γöé + ┬╖┬╖"version":┬╖"0.0.0",
+        4 Γöé + ┬╖┬╖"private":┬╖true,
+        5 Γöé + ┬╖┬╖"type":┬╖"module",
+        6 Γöé + ┬╖┬╖"dependencies":┬╖{
+        7 Γöé + ┬╖┬╖┬╖┬╖"@role-model/schema-tools":┬╖"workspace:*",
+        8 Γöé + ┬╖┬╖┬╖┬╖"@role-model-router/core":┬╖"workspace:*",
+        9 Γöé + ┬╖┬╖┬╖┬╖"@role-model-router/protocol-routing":┬╖"workspace:*",
+       10 Γöé + ┬╖┬╖┬╖┬╖"@role-model-router/profile-aggregator":┬╖"workspace:*",
+       11 Γöé + ┬╖┬╖┬╖┬╖"@role-model-router/trace":┬╖"workspace:*",
+       12 Γöé + ┬╖┬╖┬╖┬╖"@role-model-router/usage":┬╖"workspace:*"
+       13 Γöé + ┬╖┬╖},
+       14 Γöé + ┬╖┬╖"scripts":┬╖{
+       15 Γöé + ┬╖┬╖┬╖┬╖"build":┬╖"tsc┬╖-p┬╖tsconfig.json",
+       16 Γöé + ┬╖┬╖┬╖┬╖"test":┬╖"vitest┬╖run"
+       17 Γöé + ┬╖┬╖}
+       18 Γöé + }
+    19 19 Γöé   
+  
+
+.\packages\protocol-types\tsconfig.json format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+    1   Γöé - {ΓÉì
+    2   Γöé - ┬╖┬╖"extends":┬╖"../../tsconfig.base.json",ΓÉì
+    3   Γöé - ┬╖┬╖"compilerOptions":┬╖{ΓÉì
+    4   Γöé - ┬╖┬╖┬╖┬╖"rootDir":┬╖"src",ΓÉì
+    5   Γöé - ┬╖┬╖┬╖┬╖"outDir":┬╖"dist"ΓÉì
+    6   Γöé - ┬╖┬╖},ΓÉì
+    7   Γöé - ┬╖┬╖"include":┬╖["src/**/*.ts"]ΓÉì
+    8   Γöé - }ΓÉì
+      1 Γöé + {
+      2 Γöé + ┬╖┬╖"extends":┬╖"../../tsconfig.base.json",
+      3 Γöé + ┬╖┬╖"compilerOptions":┬╖{
+      4 Γöé + ┬╖┬╖┬╖┬╖"rootDir":┬╖"src",
+      5 Γöé + ┬╖┬╖┬╖┬╖"outDir":┬╖"dist"
+      6 Γöé + ┬╖┬╖},
+      7 Γöé + ┬╖┬╖"include":┬╖["src/**/*.ts"]
+      8 Γöé + }
+    9 9 Γöé   
+  
+
+.\role-model-router\apps\bench-cli\package.json format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+     1    Γöé - {ΓÉì
+     2    Γöé - ┬╖┬╖"name":┬╖"@role-model-router/bench-cli",ΓÉì
+     3    Γöé - ┬╖┬╖"version":┬╖"0.0.0",ΓÉì
+     4    Γöé - ┬╖┬╖"private":┬╖true,ΓÉì
+     5    Γöé - ┬╖┬╖"type":┬╖"module",ΓÉì
+     6    Γöé - ┬╖┬╖"dependencies":┬╖{ΓÉì
+     7    Γöé - ┬╖┬╖┬╖┬╖"@role-model-router/bench-core":┬╖"workspace:*",ΓÉì
+     8    Γöé - ┬╖┬╖┬╖┬╖"@role-model-router/bench-judge":┬╖"workspace:*"ΓÉì
+     9    Γöé - ┬╖┬╖},ΓÉì
+    10    Γöé - ┬╖┬╖"scripts":┬╖{ΓÉì
+    11    Γöé - ┬╖┬╖┬╖┬╖"build":┬╖"tsc┬╖-p┬╖tsconfig.json"ΓÉì
+    12    Γöé - ┬╖┬╖}ΓÉì
+    13    Γöé - }ΓÉì
+        1 Γöé + {
+        2 Γöé + ┬╖┬╖"name":┬╖"@role-model-router/bench-cli",
+        3 Γöé + ┬╖┬╖"version":┬╖"0.0.0",
+        4 Γöé + ┬╖┬╖"private":┬╖true,
+        5 Γöé + ┬╖┬╖"type":┬╖"module",
+        6 Γöé + ┬╖┬╖"dependencies":┬╖{
+        7 Γöé + ┬╖┬╖┬╖┬╖"@role-model-router/bench-core":┬╖"workspace:*",
+        8 Γöé + ┬╖┬╖┬╖┬╖"@role-model-router/bench-judge":┬╖"workspace:*"
+        9 Γöé + ┬╖┬╖},
+       10 Γöé + ┬╖┬╖"scripts":┬╖{
+       11 Γöé + ┬╖┬╖┬╖┬╖"build":┬╖"tsc┬╖-p┬╖tsconfig.json"
+       12 Γöé + ┬╖┬╖}
+       13 Γöé + }
+    14 14 Γöé   
+  
+
+.\packages\packaging\package.json format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+     1    Γöé - {ΓÉì
+     2    Γöé - ┬╖┬╖"name":┬╖"@role-model/packaging",ΓÉì
+     3    Γöé - ┬╖┬╖"version":┬╖"0.0.0",ΓÉì
+     4    Γöé - ┬╖┬╖"private":┬╖true,ΓÉì
+     5    Γöé - ┬╖┬╖"type":┬╖"module",ΓÉì
+     6    Γöé - ┬╖┬╖"exports":┬╖{ΓÉì
+     7    Γöé - ┬╖┬╖┬╖┬╖".":┬╖"./src/index.ts"ΓÉì
+     8    Γöé - ┬╖┬╖},ΓÉì
+     9    Γöé - ┬╖┬╖"files":┬╖["src",┬╖"dist"],ΓÉì
+    10    Γöé - ┬╖┬╖"scripts":┬╖{ΓÉì
+    11    Γöé - ┬╖┬╖┬╖┬╖"build":┬╖"tsc┬╖-p┬╖tsconfig.json"ΓÉì
+    12    Γöé - ┬╖┬╖}ΓÉì
+    13    Γöé - }ΓÉì
+        1 Γöé + {
+        2 Γöé + ┬╖┬╖"name":┬╖"@role-model/packaging",
+        3 Γöé + ┬╖┬╖"version":┬╖"0.0.0",
+        4 Γöé + ┬╖┬╖"private":┬╖true,
+        5 Γöé + ┬╖┬╖"type":┬╖"module",
+        6 Γöé + ┬╖┬╖"exports":┬╖{
+        7 Γöé + ┬╖┬╖┬╖┬╖".":┬╖"./src/index.ts"
+        8 Γöé + ┬╖┬╖},
+        9 Γöé + ┬╖┬╖"files":┬╖["src",┬╖"dist"],
+       10 Γöé + ┬╖┬╖"scripts":┬╖{
+       11 Γöé + ┬╖┬╖┬╖┬╖"build":┬╖"tsc┬╖-p┬╖tsconfig.json"
+       12 Γöé + ┬╖┬╖}
+       13 Γöé + }
+    14 14 Γöé   
+  
+
+.\packages\schema-tools\package.json format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+     1    Γöé - {ΓÉì
+     2    Γöé - ┬╖┬╖"name":┬╖"@role-model/schema-tools",ΓÉì
+     3    Γöé - ┬╖┬╖"version":┬╖"0.0.0",ΓÉì
+     4    Γöé - ┬╖┬╖"private":┬╖true,ΓÉì
+     5    Γöé - ┬╖┬╖"type":┬╖"module",ΓÉì
+     6    Γöé - ┬╖┬╖"exports":┬╖{ΓÉì
+     7    Γöé - ┬╖┬╖┬╖┬╖".":┬╖"./src/index.ts"ΓÉì
+     8    Γöé - ┬╖┬╖},ΓÉì
+     9    Γöé - ┬╖┬╖"files":┬╖["src",┬╖"dist"],ΓÉì
+    10    Γöé - ┬╖┬╖"scripts":┬╖{ΓÉì
+    11    Γöé - ┬╖┬╖┬╖┬╖"build":┬╖"tsc┬╖-p┬╖tsconfig.json",ΓÉì
+    12    Γöé - ┬╖┬╖┬╖┬╖"test":┬╖"vitest┬╖run"ΓÉì
+    13    Γöé - ┬╖┬╖}ΓÉì
+    14    Γöé - }ΓÉì
+        1 Γöé + {
+        2 Γöé + ┬╖┬╖"name":┬╖"@role-model/schema-tools",
+        3 Γöé + ┬╖┬╖"version":┬╖"0.0.0",
+        4 Γöé + ┬╖┬╖"private":┬╖true,
+        5 Γöé + ┬╖┬╖"type":┬╖"module",
+        6 Γöé + ┬╖┬╖"exports":┬╖{
+        7 Γöé + ┬╖┬╖┬╖┬╖".":┬╖"./src/index.ts"
+        8 Γöé + ┬╖┬╖},
+        9 Γöé + ┬╖┬╖"files":┬╖["src",┬╖"dist"],
+       10 Γöé + ┬╖┬╖"scripts":┬╖{
+       11 Γöé + ┬╖┬╖┬╖┬╖"build":┬╖"tsc┬╖-p┬╖tsconfig.json",
+       12 Γöé + ┬╖┬╖┬╖┬╖"test":┬╖"vitest┬╖run"
+       13 Γöé + ┬╖┬╖}
+       14 Γöé + }
+    15 15 Γöé   
+  
+
+.\packages\conformance\tsconfig.json format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+     1    Γöé - {ΓÉì
+     2    Γöé - ┬╖┬╖"extends":┬╖"../../tsconfig.base.json",ΓÉì
+     3    Γöé - ┬╖┬╖"compilerOptions":┬╖{ΓÉì
+     4    Γöé - ┬╖┬╖┬╖┬╖"rootDir":┬╖"src",ΓÉì
+     5    Γöé - ┬╖┬╖┬╖┬╖"outDir":┬╖"dist"ΓÉì
+     6    Γöé - ┬╖┬╖},ΓÉì
+     7    Γöé - ┬╖┬╖"include":┬╖["src/**/*.ts"],ΓÉì
+     8    Γöé - ┬╖┬╖"exclude":┬╖["src/**/*.test.ts"]ΓÉì
+     9    Γöé - }ΓÉì
+        1 Γöé + {
+        2 Γöé + ┬╖┬╖"extends":┬╖"../../tsconfig.base.json",
+        3 Γöé + ┬╖┬╖"compilerOptions":┬╖{
+        4 Γöé + ┬╖┬╖┬╖┬╖"rootDir":┬╖"src",
+        5 Γöé + ┬╖┬╖┬╖┬╖"outDir":┬╖"dist"
+        6 Γöé + ┬╖┬╖},
+        7 Γöé + ┬╖┬╖"include":┬╖["src/**/*.ts"],
+        8 Γöé + ┬╖┬╖"exclude":┬╖["src/**/*.test.ts"]
+        9 Γöé + }
+    10 10 Γöé   
+  
+
+.\tsconfig.base.json format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+     1    Γöé - {ΓÉì
+     2    Γöé - ┬╖┬╖"compilerOptions":┬╖{ΓÉì
+     3    Γöé - ┬╖┬╖┬╖┬╖"target":┬╖"ES2022",ΓÉì
+     4    Γöé - ┬╖┬╖┬╖┬╖"module":┬╖"NodeNext",ΓÉì
+     5    Γöé - ┬╖┬╖┬╖┬╖"moduleResolution":┬╖"NodeNext",ΓÉì
+     6    Γöé - ┬╖┬╖┬╖┬╖"lib":┬╖["ES2022"],ΓÉì
+     7    Γöé - ┬╖┬╖┬╖┬╖"strict":┬╖true,ΓÉì
+     8    Γöé - ┬╖┬╖┬╖┬╖"declaration":┬╖true,ΓÉì
+     9    Γöé - ┬╖┬╖┬╖┬╖"sourceMap":┬╖true,ΓÉì
+    10    Γöé - ┬╖┬╖┬╖┬╖"esModuleInterop":┬╖true,ΓÉì
+    11    Γöé - ┬╖┬╖┬╖┬╖"resolveJsonModule":┬╖true,ΓÉì
+    12    Γöé - ┬╖┬╖┬╖┬╖"skipLibCheck":┬╖true,ΓÉì
+    13    Γöé - ┬╖┬╖┬╖┬╖"forceConsistentCasingInFileNames":┬╖true,ΓÉì
+    14    Γöé - ┬╖┬╖┬╖┬╖"isolatedModules":┬╖true,ΓÉì
+    15    Γöé - ┬╖┬╖┬╖┬╖"verbatimModuleSyntax":┬╖true,ΓÉì
+    16    Γöé - ┬╖┬╖┬╖┬╖"types":┬╖["node"]ΓÉì
+    17    Γöé - ┬╖┬╖}ΓÉì
+    18    Γöé - }ΓÉì
+        1 Γöé + {
+        2 Γöé + ┬╖┬╖"compilerOptions":┬╖{
+        3 Γöé + ┬╖┬╖┬╖┬╖"target":┬╖"ES2022",
+        4 Γöé + ┬╖┬╖┬╖┬╖"module":┬╖"NodeNext",
+        5 Γöé + ┬╖┬╖┬╖┬╖"moduleResolution":┬╖"NodeNext",
+        6 Γöé + ┬╖┬╖┬╖┬╖"lib":┬╖["ES2022"],
+        7 Γöé + ┬╖┬╖┬╖┬╖"strict":┬╖true,
+        8 Γöé + ┬╖┬╖┬╖┬╖"declaration":┬╖true,
+        9 Γöé + ┬╖┬╖┬╖┬╖"sourceMap":┬╖true,
+       10 Γöé + ┬╖┬╖┬╖┬╖"esModuleInterop":┬╖true,
+       11 Γöé + ┬╖┬╖┬╖┬╖"resolveJsonModule":┬╖true,
+       12 Γöé + ┬╖┬╖┬╖┬╖"skipLibCheck":┬╖true,
+       13 Γöé + ┬╖┬╖┬╖┬╖"forceConsistentCasingInFileNames":┬╖true,
+       14 Γöé + ┬╖┬╖┬╖┬╖"isolatedModules":┬╖true,
+       15 Γöé + ┬╖┬╖┬╖┬╖"verbatimModuleSyntax":┬╖true,
+       16 Γöé + ┬╖┬╖┬╖┬╖"types":┬╖["node"]
+       17 Γöé + ┬╖┬╖}
+       18 Γöé + }
+    19 19 Γöé   
+  
+
+.\packages\packaging\tsconfig.json format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+    1   Γöé - {ΓÉì
+    2   Γöé - ┬╖┬╖"extends":┬╖"../../tsconfig.base.json",ΓÉì
+    3   Γöé - ┬╖┬╖"compilerOptions":┬╖{ΓÉì
+    4   Γöé - ┬╖┬╖┬╖┬╖"rootDir":┬╖"src",ΓÉì
+    5   Γöé - ┬╖┬╖┬╖┬╖"outDir":┬╖"dist"ΓÉì
+    6   Γöé - ┬╖┬╖},ΓÉì
+    7   Γöé - ┬╖┬╖"include":┬╖["src/**/*.ts"]ΓÉì
+    8   Γöé - }ΓÉì
+      1 Γöé + {
+      2 Γöé + ┬╖┬╖"extends":┬╖"../../tsconfig.base.json",
+      3 Γöé + ┬╖┬╖"compilerOptions":┬╖{
+      4 Γöé + ┬╖┬╖┬╖┬╖"rootDir":┬╖"src",
+      5 Γöé + ┬╖┬╖┬╖┬╖"outDir":┬╖"dist"
+      6 Γöé + ┬╖┬╖},
+      7 Γöé + ┬╖┬╖"include":┬╖["src/**/*.ts"]
+      8 Γöé + }
+    9 9 Γöé   
+  
+
+.\apps\docs-site\tsconfig.json format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+     1    Γöé - {ΓÉì
+     2    Γöé - ┬╖┬╖"include":┬╖["**/*",┬╖"**/.server/**/*",┬╖"**/.client/**/*",┬╖".react-router/types/**/*"],ΓÉì
+     3    Γöé - ┬╖┬╖"compilerOptions":┬╖{ΓÉì
+     4    Γöé - ┬╖┬╖┬╖┬╖"lib":┬╖["DOM",┬╖"DOM.Iterable",┬╖"ES2022"],ΓÉì
+     5    Γöé - ┬╖┬╖┬╖┬╖"types":┬╖["node",┬╖"vite/client"],ΓÉì
+     6    Γöé - ┬╖┬╖┬╖┬╖"target":┬╖"esnext",ΓÉì
+     7    Γöé - ┬╖┬╖┬╖┬╖"module":┬╖"esnext",ΓÉì
+     8    Γöé - ┬╖┬╖┬╖┬╖"moduleResolution":┬╖"bundler",ΓÉì
+     9    Γöé - ┬╖┬╖┬╖┬╖"jsx":┬╖"react-jsx",ΓÉì
+    10    Γöé - ┬╖┬╖┬╖┬╖"rootDirs":┬╖[".",┬╖"./.react-router/types"],ΓÉì
+    11    Γöé - ┬╖┬╖┬╖┬╖"paths":┬╖{ΓÉì
+    12    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"@/*":┬╖["./app/*"],ΓÉì
+    13    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"collections/*":┬╖["./.source/*"]ΓÉì
+    14    Γöé - ┬╖┬╖┬╖┬╖},ΓÉì
+    15    Γöé - ┬╖┬╖┬╖┬╖"esModuleInterop":┬╖true,ΓÉì
+    16    Γöé - ┬╖┬╖┬╖┬╖"verbatimModuleSyntax":┬╖true,ΓÉì
+    17    Γöé - ┬╖┬╖┬╖┬╖"noEmit":┬╖true,ΓÉì
+    18    Γöé - ┬╖┬╖┬╖┬╖"resolveJsonModule":┬╖true,ΓÉì
+    19    Γöé - ┬╖┬╖┬╖┬╖"skipLibCheck":┬╖true,ΓÉì
+    20    Γöé - ┬╖┬╖┬╖┬╖"strict":┬╖trueΓÉì
+    21    Γöé - ┬╖┬╖}ΓÉì
+    22    Γöé - }ΓÉì
+        1 Γöé + {
+        2 Γöé + ┬╖┬╖"include":┬╖["**/*",┬╖"**/.server/**/*",┬╖"**/.client/**/*",┬╖".react-router/types/**/*"],
+        3 Γöé + ┬╖┬╖"compilerOptions":┬╖{
+        4 Γöé + ┬╖┬╖┬╖┬╖"lib":┬╖["DOM",┬╖"DOM.Iterable",┬╖"ES2022"],
+        5 Γöé + ┬╖┬╖┬╖┬╖"types":┬╖["node",┬╖"vite/client"],
+        6 Γöé + ┬╖┬╖┬╖┬╖"target":┬╖"esnext",
+        7 Γöé + ┬╖┬╖┬╖┬╖"module":┬╖"esnext",
+        8 Γöé + ┬╖┬╖┬╖┬╖"moduleResolution":┬╖"bundler",
+        9 Γöé + ┬╖┬╖┬╖┬╖"jsx":┬╖"react-jsx",
+       10 Γöé + ┬╖┬╖┬╖┬╖"rootDirs":┬╖[".",┬╖"./.react-router/types"],
+       11 Γöé + ┬╖┬╖┬╖┬╖"paths":┬╖{
+       12 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"@/*":┬╖["./app/*"],
+       13 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"collections/*":┬╖["./.source/*"]
+       14 Γöé + ┬╖┬╖┬╖┬╖},
+       15 Γöé + ┬╖┬╖┬╖┬╖"esModuleInterop":┬╖true,
+       16 Γöé + ┬╖┬╖┬╖┬╖"verbatimModuleSyntax":┬╖true,
+       17 Γöé + ┬╖┬╖┬╖┬╖"noEmit":┬╖true,
+       18 Γöé + ┬╖┬╖┬╖┬╖"resolveJsonModule":┬╖true,
+       19 Γöé + ┬╖┬╖┬╖┬╖"skipLibCheck":┬╖true,
+       20 Γöé + ┬╖┬╖┬╖┬╖"strict":┬╖true
+       21 Γöé + ┬╖┬╖}
+       22 Γöé + }
+    23 23 Γöé   
+  
+
+.\biome.json format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+     1    Γöé - {ΓÉì
+     2    Γöé - ┬╖┬╖"$schema":┬╖"https://biomejs.dev/schemas/1.9.4/schema.json",ΓÉì
+     3    Γöé - ┬╖┬╖"formatter":┬╖{ΓÉì
+     4    Γöé - ┬╖┬╖┬╖┬╖"enabled":┬╖true,ΓÉì
+     5    Γöé - ┬╖┬╖┬╖┬╖"indentStyle":┬╖"space",ΓÉì
+     6    Γöé - ┬╖┬╖┬╖┬╖"indentWidth":┬╖2,ΓÉì
+     7    Γöé - ┬╖┬╖┬╖┬╖"lineWidth":┬╖100ΓÉì
+     8    Γöé - ┬╖┬╖},ΓÉì
+     9    Γöé - ┬╖┬╖"linter":┬╖{ΓÉì
+    10    Γöé - ┬╖┬╖┬╖┬╖"enabled":┬╖true,ΓÉì
+    11    Γöé - ┬╖┬╖┬╖┬╖"rules":┬╖{ΓÉì
+    12    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"recommended":┬╖trueΓÉì
+    13    Γöé - ┬╖┬╖┬╖┬╖}ΓÉì
+    14    Γöé - ┬╖┬╖},ΓÉì
+    15    Γöé - ┬╖┬╖"files":┬╖{ΓÉì
+    16    Γöé - ┬╖┬╖┬╖┬╖"ignore":┬╖[ΓÉì
+    17    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"**/.react-router/**",ΓÉì
+    18    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"**/.source/**",ΓÉì
+    19    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"**/.worktrees/**",ΓÉì
+    20    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"**/build/**",ΓÉì
+    21    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"**/dist/**",ΓÉì
+    22    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"**/target/**",ΓÉì
+    23    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"**/runtime-output/**"ΓÉì
+    24    Γöé - ┬╖┬╖┬╖┬╖]ΓÉì
+    25    Γöé - ┬╖┬╖}ΓÉì
+    26    Γöé - }ΓÉì
+        1 Γöé + {
+        2 Γöé + ┬╖┬╖"$schema":┬╖"https://biomejs.dev/schemas/1.9.4/schema.json",
+        3 Γöé + ┬╖┬╖"formatter":┬╖{
+        4 Γöé + ┬╖┬╖┬╖┬╖"enabled":┬╖true,
+        5 Γöé + ┬╖┬╖┬╖┬╖"indentStyle":┬╖"space",
+        6 Γöé + ┬╖┬╖┬╖┬╖"indentWidth":┬╖2,
+        7 Γöé + ┬╖┬╖┬╖┬╖"lineWidth":┬╖100
+        8 Γöé + ┬╖┬╖},
+        9 Γöé + ┬╖┬╖"linter":┬╖{
+       10 Γöé + ┬╖┬╖┬╖┬╖"enabled":┬╖true,
+       11 Γöé + ┬╖┬╖┬╖┬╖"rules":┬╖{
+       12 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"recommended":┬╖true
+       13 Γöé + ┬╖┬╖┬╖┬╖}
+       14 Γöé + ┬╖┬╖},
+       15 Γöé + ┬╖┬╖"files":┬╖{
+       16 Γöé + ┬╖┬╖┬╖┬╖"ignore":┬╖[
+       17 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"**/.react-router/**",
+       18 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"**/.source/**",
+       19 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"**/.worktrees/**",
+       20 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"**/build/**",
+       21 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"**/dist/**",
+       22 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"**/target/**",
+       23 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"**/runtime-output/**"
+       24 Γöé + ┬╖┬╖┬╖┬╖]
+       25 Γöé + ┬╖┬╖}
+       26 Γöé + }
+    27 27 Γöé   
+  
+
+.\apps\docs-site\package.json format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+     1    Γöé - {ΓÉì
+     2    Γöé - ┬╖┬╖"name":┬╖"@role-model/docs-site",ΓÉì
+     3    Γöé - ┬╖┬╖"private":┬╖true,ΓÉì
+     4    Γöé - ┬╖┬╖"type":┬╖"module",ΓÉì
+     5    Γöé - ┬╖┬╖"x-upstream-template":┬╖{ΓÉì
+     6    Γöé - ┬╖┬╖┬╖┬╖"repo":┬╖"fuma-nama/fumadocs",ΓÉì
+     7    Γöé - ┬╖┬╖┬╖┬╖"path":┬╖"examples/react-router-spa",ΓÉì
+     8    Γöé - ┬╖┬╖┬╖┬╖"ref":┬╖"1e6725185d249803e078a54809a0317bbfc09b08",ΓÉì
+     9    Γöé - ┬╖┬╖┬╖┬╖"managedPaths":┬╖[ΓÉì
+    10    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖".gitignore",ΓÉì
+    11    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"app/app.css",ΓÉì
+    12    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"app/components",ΓÉì
+    13    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"app/lib/cn.ts",ΓÉì
+    14    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"app/lib/layout.shared.tsx",ΓÉì
+    15    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"app/lib/source.ts",ΓÉì
+    16    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"app/llms",ΓÉì
+    17    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"app/root.tsx",ΓÉì
+    18    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"app/routes/search.ts",ΓÉì
+    19    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"public",ΓÉì
+    20    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"serve.json",ΓÉì
+    21    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"source.config.ts",ΓÉì
+    22    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"tsconfig.json",ΓÉì
+    23    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"vite.config.ts"ΓÉì
+    24    Γöé - ┬╖┬╖┬╖┬╖]ΓÉì
+    25    Γöé - ┬╖┬╖},ΓÉì
+    26    Γöé - ┬╖┬╖"scripts":┬╖{ΓÉì
+    27    Γöé - ┬╖┬╖┬╖┬╖"build":┬╖"react-router┬╖build┬╖&&┬╖npm┬╖run┬╖types:check┬╖&&┬╖node┬╖./scripts/materialize-search-index.mjs",ΓÉì
+    28    Γöé - ┬╖┬╖┬╖┬╖"dev":┬╖"react-router┬╖dev",ΓÉì
+    29    Γöé - ┬╖┬╖┬╖┬╖"pages:create":┬╖"wrangler┬╖pages┬╖project┬╖create┬╖role-model-dev┬╖--production-branch┬╖main┬╖--compatibility-date┬╖2026-05-04",ΓÉì
+    30    Γöé - ┬╖┬╖┬╖┬╖"pages:dev":┬╖"npm┬╖run┬╖build┬╖&&┬╖wrangler┬╖pages┬╖dev┬╖./build/client",ΓÉì
+    31    Γöé - ┬╖┬╖┬╖┬╖"pages:deploy":┬╖"npm┬╖run┬╖build┬╖&&┬╖wrangler┬╖pages┬╖deploy┬╖./build/client┬╖--project-name┬╖role-model-dev",ΓÉì
+    32    Γöé - ┬╖┬╖┬╖┬╖"start":┬╖"serve┬╖./build/client┬╖--config┬╖./serve.json",ΓÉì
+    33    Γöé - ┬╖┬╖┬╖┬╖"types:check":┬╖"react-router┬╖typegen┬╖&&┬╖fumadocs-mdx┬╖&&┬╖tsc┬╖--noEmit",ΓÉì
+    34    Γöé - ┬╖┬╖┬╖┬╖"upstream:sync":┬╖"node┬╖./scripts/upstream-sync.mjs┬╖--write",ΓÉì
+    35    Γöé - ┬╖┬╖┬╖┬╖"upstream:sync:latest":┬╖"node┬╖./scripts/upstream-sync.mjs┬╖--write┬╖--ref┬╖main"ΓÉì
+    36    Γöé - ┬╖┬╖},ΓÉì
+    37    Γöé - ┬╖┬╖"dependencies":┬╖{ΓÉì
+    38    Γöé - ┬╖┬╖┬╖┬╖"@orama/orama":┬╖"^3.1.18",ΓÉì
+    39    Γöé - ┬╖┬╖┬╖┬╖"@react-router/node":┬╖"^7.14.2",ΓÉì
+    40    Γöé - ┬╖┬╖┬╖┬╖"fumadocs-core":┬╖"^16.8.7",ΓÉì
+    41    Γöé - ┬╖┬╖┬╖┬╖"fumadocs-mdx":┬╖"^14.3.2",ΓÉì
+    42    Γöé - ┬╖┬╖┬╖┬╖"fumadocs-ui":┬╖"^16.8.7",ΓÉì
+    43    Γöé - ┬╖┬╖┬╖┬╖"isbot":┬╖"^5.1.39",ΓÉì
+    44    Γöé - ┬╖┬╖┬╖┬╖"lucide-react":┬╖"^1.14.0",ΓÉì
+    45    Γöé - ┬╖┬╖┬╖┬╖"react":┬╖"^19.2.5",ΓÉì
+    46    Γöé - ┬╖┬╖┬╖┬╖"react-dom":┬╖"^19.2.5",ΓÉì
+    47    Γöé - ┬╖┬╖┬╖┬╖"react-router":┬╖"^7.14.2",ΓÉì
+    48    Γöé - ┬╖┬╖┬╖┬╖"tailwind-merge":┬╖"^3.5.0"ΓÉì
+    49    Γöé - ┬╖┬╖},ΓÉì
+    50    Γöé - ┬╖┬╖"devDependencies":┬╖{ΓÉì
+    51    Γöé - ┬╖┬╖┬╖┬╖"@react-router/dev":┬╖"^7.14.2",ΓÉì
+    52    Γöé - ┬╖┬╖┬╖┬╖"@tailwindcss/vite":┬╖"^4.2.4",ΓÉì
+    53    Γöé - ┬╖┬╖┬╖┬╖"@types/mdx":┬╖"^2.0.13",ΓÉì
+    54    Γöé - ┬╖┬╖┬╖┬╖"@types/node":┬╖"^25.6.0",ΓÉì
+    55    Γöé - ┬╖┬╖┬╖┬╖"@types/react":┬╖"^19.2.14",ΓÉì
+    56    Γöé - ┬╖┬╖┬╖┬╖"@types/react-dom":┬╖"^19.2.3",ΓÉì
+    57    Γöé - ┬╖┬╖┬╖┬╖"serve":┬╖"^14.2.6",ΓÉì
+    58    Γöé - ┬╖┬╖┬╖┬╖"tailwindcss":┬╖"^4.2.4",ΓÉì
+    59    Γöé - ┬╖┬╖┬╖┬╖"typescript":┬╖"^6.0.3",ΓÉì
+    60    Γöé - ┬╖┬╖┬╖┬╖"vite":┬╖"^8.0.10",ΓÉì
+    61    Γöé - ┬╖┬╖┬╖┬╖"wrangler":┬╖"^4.87.0"ΓÉì
+    62    Γöé - ┬╖┬╖}ΓÉì
+    63    Γöé - }ΓÉì
+        1 Γöé + {
+        2 Γöé + ┬╖┬╖"name":┬╖"@role-model/docs-site",
+        3 Γöé + ┬╖┬╖"private":┬╖true,
+        4 Γöé + ┬╖┬╖"type":┬╖"module",
+        5 Γöé + ┬╖┬╖"x-upstream-template":┬╖{
+        6 Γöé + ┬╖┬╖┬╖┬╖"repo":┬╖"fuma-nama/fumadocs",
+        7 Γöé + ┬╖┬╖┬╖┬╖"path":┬╖"examples/react-router-spa",
+        8 Γöé + ┬╖┬╖┬╖┬╖"ref":┬╖"1e6725185d249803e078a54809a0317bbfc09b08",
+        9 Γöé + ┬╖┬╖┬╖┬╖"managedPaths":┬╖[
+       10 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖".gitignore",
+       11 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"app/app.css",
+       12 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"app/components",
+       13 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"app/lib/cn.ts",
+       14 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"app/lib/layout.shared.tsx",
+       15 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"app/lib/source.ts",
+       16 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"app/llms",
+       17 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"app/root.tsx",
+       18 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"app/routes/search.ts",
+       19 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"public",
+       20 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"serve.json",
+       21 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"source.config.ts",
+       22 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"tsconfig.json",
+       23 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"vite.config.ts"
+       24 Γöé + ┬╖┬╖┬╖┬╖]
+       25 Γöé + ┬╖┬╖},
+       26 Γöé + ┬╖┬╖"scripts":┬╖{
+       27 Γöé + ┬╖┬╖┬╖┬╖"build":┬╖"react-router┬╖build┬╖&&┬╖npm┬╖run┬╖types:check┬╖&&┬╖node┬╖./scripts/materialize-search-index.mjs",
+       28 Γöé + ┬╖┬╖┬╖┬╖"dev":┬╖"react-router┬╖dev",
+       29 Γöé + ┬╖┬╖┬╖┬╖"pages:create":┬╖"wrangler┬╖pages┬╖project┬╖create┬╖role-model-dev┬╖--production-branch┬╖main┬╖--compatibility-date┬╖2026-05-04",
+       30 Γöé + ┬╖┬╖┬╖┬╖"pages:dev":┬╖"npm┬╖run┬╖build┬╖&&┬╖wrangler┬╖pages┬╖dev┬╖./build/client",
+       31 Γöé + ┬╖┬╖┬╖┬╖"pages:deploy":┬╖"npm┬╖run┬╖build┬╖&&┬╖wrangler┬╖pages┬╖deploy┬╖./build/client┬╖--project-name┬╖role-model-dev",
+       32 Γöé + ┬╖┬╖┬╖┬╖"start":┬╖"serve┬╖./build/client┬╖--config┬╖./serve.json",
+       33 Γöé + ┬╖┬╖┬╖┬╖"types:check":┬╖"react-router┬╖typegen┬╖&&┬╖fumadocs-mdx┬╖&&┬╖tsc┬╖--noEmit",
+       34 Γöé + ┬╖┬╖┬╖┬╖"upstream:sync":┬╖"node┬╖./scripts/upstream-sync.mjs┬╖--write",
+       35 Γöé + ┬╖┬╖┬╖┬╖"upstream:sync:latest":┬╖"node┬╖./scripts/upstream-sync.mjs┬╖--write┬╖--ref┬╖main"
+       36 Γöé + ┬╖┬╖},
+       37 Γöé + ┬╖┬╖"dependencies":┬╖{
+       38 Γöé + ┬╖┬╖┬╖┬╖"@orama/orama":┬╖"^3.1.18",
+       39 Γöé + ┬╖┬╖┬╖┬╖"@react-router/node":┬╖"^7.14.2",
+       40 Γöé + ┬╖┬╖┬╖┬╖"fumadocs-core":┬╖"^16.8.7",
+       41 Γöé + ┬╖┬╖┬╖┬╖"fumadocs-mdx":┬╖"^14.3.2",
+       42 Γöé + ┬╖┬╖┬╖┬╖"fumadocs-ui":┬╖"^16.8.7",
+       43 Γöé + ┬╖┬╖┬╖┬╖"isbot":┬╖"^5.1.39",
+       44 Γöé + ┬╖┬╖┬╖┬╖"lucide-react":┬╖"^1.14.0",
+       45 Γöé + ┬╖┬╖┬╖┬╖"react":┬╖"^19.2.5",
+       46 Γöé + ┬╖┬╖┬╖┬╖"react-dom":┬╖"^19.2.5",
+       47 Γöé + ┬╖┬╖┬╖┬╖"react-router":┬╖"^7.14.2",
+       48 Γöé + ┬╖┬╖┬╖┬╖"tailwind-merge":┬╖"^3.5.0"
+       49 Γöé + ┬╖┬╖},
+       50 Γöé + ┬╖┬╖"devDependencies":┬╖{
+       51 Γöé + ┬╖┬╖┬╖┬╖"@react-router/dev":┬╖"^7.14.2",
+       52 Γöé + ┬╖┬╖┬╖┬╖"@tailwindcss/vite":┬╖"^4.2.4",
+       53 Γöé + ┬╖┬╖┬╖┬╖"@types/mdx":┬╖"^2.0.13",
+       54 Γöé + ┬╖┬╖┬╖┬╖"@types/node":┬╖"^25.6.0",
+       55 Γöé + ┬╖┬╖┬╖┬╖"@types/react":┬╖"^19.2.14",
+       56 Γöé + ┬╖┬╖┬╖┬╖"@types/react-dom":┬╖"^19.2.3",
+       57 Γöé + ┬╖┬╖┬╖┬╖"serve":┬╖"^14.2.6",
+       58 Γöé + ┬╖┬╖┬╖┬╖"tailwindcss":┬╖"^4.2.4",
+       59 Γöé + ┬╖┬╖┬╖┬╖"typescript":┬╖"^6.0.3",
+       60 Γöé + ┬╖┬╖┬╖┬╖"vite":┬╖"^8.0.10",
+       61 Γöé + ┬╖┬╖┬╖┬╖"wrangler":┬╖"^4.87.0"
+       62 Γöé + ┬╖┬╖}
+       63 Γöé + }
+    64 64 Γöé   
+  
+
+.\package.json format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+     1    Γöé - {ΓÉì
+     2    Γöé - ┬╖┬╖"name":┬╖"role-model",ΓÉì
+     3    Γöé - ┬╖┬╖"private":┬╖true,ΓÉì
+     4    Γöé - ┬╖┬╖"version":┬╖"0.0.0",ΓÉì
+     5    Γöé - ┬╖┬╖"description":┬╖"Stable┬╖baseline┬╖for┬╖the┬╖role-model┬╖protocol┬╖and┬╖role-model-router┬╖family.",ΓÉì
+     6    Γöé - ┬╖┬╖"license":┬╖"Apache-2.0",ΓÉì
+     7    Γöé - ┬╖┬╖"type":┬╖"module",ΓÉì
+     8    Γöé - ┬╖┬╖"packageManager":┬╖"pnpm@10.6.5",ΓÉì
+     9    Γöé - ┬╖┬╖"engines":┬╖{ΓÉì
+    10    Γöé - ┬╖┬╖┬╖┬╖"node":┬╖">=24┬╖<25"ΓÉì
+    11    Γöé - ┬╖┬╖},ΓÉì
+    12    Γöé - ┬╖┬╖"scripts":┬╖{ΓÉì
+    13    Γöé - ┬╖┬╖┬╖┬╖"docs:dev":┬╖"corepack┬╖pnpm┬╖--filter┬╖@role-model/docs-site┬╖dev",ΓÉì
+    14    Γöé - ┬╖┬╖┬╖┬╖"docs:build":┬╖"corepack┬╖pnpm┬╖--filter┬╖@role-model/docs-site┬╖build",ΓÉì
+    15    Γöé - ┬╖┬╖┬╖┬╖"docs:preview":┬╖"corepack┬╖pnpm┬╖--filter┬╖@role-model/docs-site┬╖pages:dev",ΓÉì
+    16    Γöé - ┬╖┬╖┬╖┬╖"docs:pages:create":┬╖"corepack┬╖pnpm┬╖--filter┬╖@role-model/docs-site┬╖pages:create",ΓÉì
+    17    Γöé - ┬╖┬╖┬╖┬╖"docs:deploy":┬╖"corepack┬╖pnpm┬╖--filter┬╖@role-model/docs-site┬╖pages:deploy",ΓÉì
+    18    Γöé - ┬╖┬╖┬╖┬╖"docs:upstream-sync":┬╖"corepack┬╖pnpm┬╖--filter┬╖@role-model/docs-site┬╖upstream:sync",ΓÉì
+    19    Γöé - ┬╖┬╖┬╖┬╖"docs:upstream-sync:latest":┬╖"corepack┬╖pnpm┬╖--filter┬╖@role-model/docs-site┬╖upstream:sync:latest",ΓÉì
+    20    Γöé - ┬╖┬╖┬╖┬╖"lint":┬╖"biome┬╖check┬╖.┬╖&&┬╖corepack┬╖pnpm┬╖run┬╖lint:rust",ΓÉì
+    21    Γöé - ┬╖┬╖┬╖┬╖"format":┬╖"biome┬╖format┬╖--write┬╖.",ΓÉì
+    22    Γöé - ┬╖┬╖┬╖┬╖"lint:rust":┬╖"cargo┬╖fmt┬╖--manifest-path┬╖role-model-router/rust/Cargo.toml┬╖--all┬╖--check┬╖&&┬╖cargo┬╖clippy┬╖--manifest-path┬╖role-model-router/rust/Cargo.toml┬╖--workspace┬╖--all-targets┬╖--┬╖-D┬╖warnings",ΓÉì
+    23    Γöé - ┬╖┬╖┬╖┬╖"schemas:validate":┬╖"corepack┬╖pnpm┬╖--filter┬╖@role-model/schema-tools┬╖exec┬╖tsx┬╖src/validate-schemas.ts┬╖validate",ΓÉì
+    24    Γöé - ┬╖┬╖┬╖┬╖"types:generate":┬╖"corepack┬╖pnpm┬╖--filter┬╖@role-model/schema-tools┬╖exec┬╖tsx┬╖src/validate-schemas.ts┬╖generate-types",ΓÉì
+    25    Γöé - ┬╖┬╖┬╖┬╖"catalog:export":┬╖"corepack┬╖pnpm┬╖--filter┬╖@role-model-router/catalog┬╖exec┬╖tsx┬╖src/cli.ts",ΓÉì
+    26    Γöé - ┬╖┬╖┬╖┬╖"runtime:validate-adapter":┬╖"corepack┬╖pnpm┬╖--filter┬╖@role-model-router/adapter-execution┬╖exec┬╖tsx┬╖src/cli.ts",ΓÉì
+    27    Γöé - ┬╖┬╖┬╖┬╖"runtime:validate-host":┬╖"corepack┬╖pnpm┬╖--filter┬╖@role-model-router/runtime-host-bridge┬╖exec┬╖tsx┬╖src/validate-host.ts",ΓÉì
+    28    Γöé - ┬╖┬╖┬╖┬╖"runtime:package-sea":┬╖"corepack┬╖pnpm┬╖--filter┬╖@role-model-router/runtime-host-bridge...┬╖build┬╖&&┬╖corepack┬╖pnpm┬╖--filter┬╖@role-model-router/runtime-host-bridge┬╖run┬╖package-sea",ΓÉì
+    29    Γöé - ┬╖┬╖┬╖┬╖"runtime:validate-packaging":┬╖"corepack┬╖pnpm┬╖run┬╖runtime:package-sea┬╖&&┬╖corepack┬╖pnpm┬╖--filter┬╖@role-model-router/runtime-host-bridge┬╖run┬╖validate-packaging",ΓÉì
+    30    Γöé - ┬╖┬╖┬╖┬╖"runtime:validate-vendors":┬╖"corepack┬╖pnpm┬╖--filter┬╖@role-model-router/runtime-host-bridge┬╖exec┬╖tsx┬╖src/validate-vendors.ts",ΓÉì
+    31    Γöé - ┬╖┬╖┬╖┬╖"runtime:validate-ui":┬╖"corepack┬╖pnpm┬╖--filter┬╖@role-model-router/runtime-host-bridge┬╖exec┬╖tsx┬╖src/validate-ui.ts",ΓÉì
+    32    Γöé - ┬╖┬╖┬╖┬╖"runtime:validate-observability":┬╖"corepack┬╖pnpm┬╖--filter┬╖@role-model-router/runtime-host-bridge┬╖exec┬╖tsx┬╖src/validate-host.ts",ΓÉì
+    33    Γöé - ┬╖┬╖┬╖┬╖"runtime:validate-operations":┬╖"corepack┬╖pnpm┬╖--filter┬╖@role-model-router/runtime-host-bridge┬╖exec┬╖tsx┬╖src/validate-operations.ts",ΓÉì
+    34    Γöé - ┬╖┬╖┬╖┬╖"runtime:validate-tools":┬╖"corepack┬╖pnpm┬╖--filter┬╖@role-model-router/runtime-host-bridge┬╖exec┬╖tsx┬╖src/validate-tools.ts",ΓÉì
+    35    Γöé - ┬╖┬╖┬╖┬╖"runtime:validate-registry":┬╖"corepack┬╖pnpm┬╖--filter┬╖@role-model-router/endpoint-registry┬╖exec┬╖tsx┬╖src/cli.ts",ΓÉì
+    36    Γöé - ┬╖┬╖┬╖┬╖"runtime:validate-routing":┬╖"corepack┬╖pnpm┬╖--filter┬╖@role-model-router/protocol-routing┬╖exec┬╖tsx┬╖src/cli.ts",ΓÉì
+    37    Γöé - ┬╖┬╖┬╖┬╖"runtime:validate-state":┬╖"corepack┬╖pnpm┬╖--filter┬╖@role-model-router/sqlite-memory┬╖exec┬╖tsx┬╖src/cli.ts",ΓÉì
+    38    Γöé - ┬╖┬╖┬╖┬╖"build":┬╖"corepack┬╖pnpm┬╖run┬╖types:generate┬╖&&┬╖corepack┬╖pnpm┬╖-r┬╖--if-present┬╖build",ΓÉì
+    39    Γöé - ┬╖┬╖┬╖┬╖"test":┬╖"corepack┬╖pnpm┬╖-r┬╖--if-present┬╖test",ΓÉì
+    40    Γöé - ┬╖┬╖┬╖┬╖"test:rust":┬╖"cargo┬╖test┬╖--manifest-path┬╖role-model-router/rust/Cargo.toml┬╖--workspace",ΓÉì
+    41    Γöé - ┬╖┬╖┬╖┬╖"smoke":┬╖"corepack┬╖pnpm┬╖--filter┬╖@role-model-router/gateway-smoke┬╖exec┬╖tsx┬╖src/index.ts",ΓÉì
+    42    Γöé - ┬╖┬╖┬╖┬╖"ci:check":┬╖"corepack┬╖pnpm┬╖run┬╖lint┬╖&&┬╖corepack┬╖pnpm┬╖run┬╖schemas:validate┬╖&&┬╖corepack┬╖pnpm┬╖run┬╖build┬╖&&┬╖corepack┬╖pnpm┬╖run┬╖test┬╖&&┬╖corepack┬╖pnpm┬╖run┬╖test:rust┬╖&&┬╖corepack┬╖pnpm┬╖run┬╖smoke"ΓÉì
+    43    Γöé - ┬╖┬╖},ΓÉì
+    44    Γöé - ┬╖┬╖"devDependencies":┬╖{ΓÉì
+    45    Γöé - ┬╖┬╖┬╖┬╖"@biomejs/biome":┬╖"^1.9.4",ΓÉì
+    46    Γöé - ┬╖┬╖┬╖┬╖"@types/node":┬╖"^22.15.3",ΓÉì
+    47    Γöé - ┬╖┬╖┬╖┬╖"ajv":┬╖"^8.17.1",ΓÉì
+    48    Γöé - ┬╖┬╖┬╖┬╖"ajv-formats":┬╖"^3.0.1",ΓÉì
+    49    Γöé - ┬╖┬╖┬╖┬╖"commander":┬╖"^13.1.0",ΓÉì
+    50    Γöé - ┬╖┬╖┬╖┬╖"esbuild":┬╖"^0.25.4",ΓÉì
+    51    Γöé - ┬╖┬╖┬╖┬╖"json-schema-to-typescript":┬╖"^15.0.4",ΓÉì
+    52    Γöé - ┬╖┬╖┬╖┬╖"postject":┬╖"^1.0.0-alpha.6",ΓÉì
+    53    Γöé - ┬╖┬╖┬╖┬╖"tsx":┬╖"^4.19.4",ΓÉì
+    54    Γöé - ┬╖┬╖┬╖┬╖"typescript":┬╖"^5.8.3",ΓÉì
+    55    Γöé - ┬╖┬╖┬╖┬╖"vitest":┬╖"^3.1.2"ΓÉì
+    56    Γöé - ┬╖┬╖}ΓÉì
+    57    Γöé - }ΓÉì
+        1 Γöé + {
+        2 Γöé + ┬╖┬╖"name":┬╖"role-model",
+        3 Γöé + ┬╖┬╖"private":┬╖true,
+        4 Γöé + ┬╖┬╖"version":┬╖"0.0.0",
+        5 Γöé + ┬╖┬╖"description":┬╖"Stable┬╖baseline┬╖for┬╖the┬╖role-model┬╖protocol┬╖and┬╖role-model-router┬╖family.",
+        6 Γöé + ┬╖┬╖"license":┬╖"Apache-2.0",
+        7 Γöé + ┬╖┬╖"type":┬╖"module",
+        8 Γöé + ┬╖┬╖"packageManager":┬╖"pnpm@10.6.5",
+        9 Γöé + ┬╖┬╖"engines":┬╖{
+       10 Γöé + ┬╖┬╖┬╖┬╖"node":┬╖">=24┬╖<25"
+       11 Γöé + ┬╖┬╖},
+       12 Γöé + ┬╖┬╖"scripts":┬╖{
+       13 Γöé + ┬╖┬╖┬╖┬╖"docs:dev":┬╖"corepack┬╖pnpm┬╖--filter┬╖@role-model/docs-site┬╖dev",
+       14 Γöé + ┬╖┬╖┬╖┬╖"docs:build":┬╖"corepack┬╖pnpm┬╖--filter┬╖@role-model/docs-site┬╖build",
+       15 Γöé + ┬╖┬╖┬╖┬╖"docs:preview":┬╖"corepack┬╖pnpm┬╖--filter┬╖@role-model/docs-site┬╖pages:dev",
+       16 Γöé + ┬╖┬╖┬╖┬╖"docs:pages:create":┬╖"corepack┬╖pnpm┬╖--filter┬╖@role-model/docs-site┬╖pages:create",
+       17 Γöé + ┬╖┬╖┬╖┬╖"docs:deploy":┬╖"corepack┬╖pnpm┬╖--filter┬╖@role-model/docs-site┬╖pages:deploy",
+       18 Γöé + ┬╖┬╖┬╖┬╖"docs:upstream-sync":┬╖"corepack┬╖pnpm┬╖--filter┬╖@role-model/docs-site┬╖upstream:sync",
+       19 Γöé + ┬╖┬╖┬╖┬╖"docs:upstream-sync:latest":┬╖"corepack┬╖pnpm┬╖--filter┬╖@role-model/docs-site┬╖upstream:sync:latest",
+       20 Γöé + ┬╖┬╖┬╖┬╖"lint":┬╖"biome┬╖check┬╖.┬╖&&┬╖corepack┬╖pnpm┬╖run┬╖lint:rust",
+       21 Γöé + ┬╖┬╖┬╖┬╖"format":┬╖"biome┬╖format┬╖--write┬╖.",
+       22 Γöé + ┬╖┬╖┬╖┬╖"lint:rust":┬╖"cargo┬╖fmt┬╖--manifest-path┬╖role-model-router/rust/Cargo.toml┬╖--all┬╖--check┬╖&&┬╖cargo┬╖clippy┬╖--manifest-path┬╖role-model-router/rust/Cargo.toml┬╖--workspace┬╖--all-targets┬╖--┬╖-D┬╖warnings",
+       23 Γöé + ┬╖┬╖┬╖┬╖"schemas:validate":┬╖"corepack┬╖pnpm┬╖--filter┬╖@role-model/schema-tools┬╖exec┬╖tsx┬╖src/validate-schemas.ts┬╖validate",
+       24 Γöé + ┬╖┬╖┬╖┬╖"types:generate":┬╖"corepack┬╖pnpm┬╖--filter┬╖@role-model/schema-tools┬╖exec┬╖tsx┬╖src/validate-schemas.ts┬╖generate-types",
+       25 Γöé + ┬╖┬╖┬╖┬╖"catalog:export":┬╖"corepack┬╖pnpm┬╖--filter┬╖@role-model-router/catalog┬╖exec┬╖tsx┬╖src/cli.ts",
+       26 Γöé + ┬╖┬╖┬╖┬╖"runtime:validate-adapter":┬╖"corepack┬╖pnpm┬╖--filter┬╖@role-model-router/adapter-execution┬╖exec┬╖tsx┬╖src/cli.ts",
+       27 Γöé + ┬╖┬╖┬╖┬╖"runtime:validate-host":┬╖"corepack┬╖pnpm┬╖--filter┬╖@role-model-router/runtime-host-bridge┬╖exec┬╖tsx┬╖src/validate-host.ts",
+       28 Γöé + ┬╖┬╖┬╖┬╖"runtime:package-sea":┬╖"corepack┬╖pnpm┬╖--filter┬╖@role-model-router/runtime-host-bridge...┬╖build┬╖&&┬╖corepack┬╖pnpm┬╖--filter┬╖@role-model-router/runtime-host-bridge┬╖run┬╖package-sea",
+       29 Γöé + ┬╖┬╖┬╖┬╖"runtime:validate-packaging":┬╖"corepack┬╖pnpm┬╖run┬╖runtime:package-sea┬╖&&┬╖corepack┬╖pnpm┬╖--filter┬╖@role-model-router/runtime-host-bridge┬╖run┬╖validate-packaging",
+       30 Γöé + ┬╖┬╖┬╖┬╖"runtime:validate-vendors":┬╖"corepack┬╖pnpm┬╖--filter┬╖@role-model-router/runtime-host-bridge┬╖exec┬╖tsx┬╖src/validate-vendors.ts",
+       31 Γöé + ┬╖┬╖┬╖┬╖"runtime:validate-ui":┬╖"corepack┬╖pnpm┬╖--filter┬╖@role-model-router/runtime-host-bridge┬╖exec┬╖tsx┬╖src/validate-ui.ts",
+       32 Γöé + ┬╖┬╖┬╖┬╖"runtime:validate-observability":┬╖"corepack┬╖pnpm┬╖--filter┬╖@role-model-router/runtime-host-bridge┬╖exec┬╖tsx┬╖src/validate-host.ts",
+       33 Γöé + ┬╖┬╖┬╖┬╖"runtime:validate-operations":┬╖"corepack┬╖pnpm┬╖--filter┬╖@role-model-router/runtime-host-bridge┬╖exec┬╖tsx┬╖src/validate-operations.ts",
+       34 Γöé + ┬╖┬╖┬╖┬╖"runtime:validate-tools":┬╖"corepack┬╖pnpm┬╖--filter┬╖@role-model-router/runtime-host-bridge┬╖exec┬╖tsx┬╖src/validate-tools.ts",
+       35 Γöé + ┬╖┬╖┬╖┬╖"runtime:validate-registry":┬╖"corepack┬╖pnpm┬╖--filter┬╖@role-model-router/endpoint-registry┬╖exec┬╖tsx┬╖src/cli.ts",
+       36 Γöé + ┬╖┬╖┬╖┬╖"runtime:validate-routing":┬╖"corepack┬╖pnpm┬╖--filter┬╖@role-model-router/protocol-routing┬╖exec┬╖tsx┬╖src/cli.ts",
+       37 Γöé + ┬╖┬╖┬╖┬╖"runtime:validate-state":┬╖"corepack┬╖pnpm┬╖--filter┬╖@role-model-router/sqlite-memory┬╖exec┬╖tsx┬╖src/cli.ts",
+       38 Γöé + ┬╖┬╖┬╖┬╖"build":┬╖"corepack┬╖pnpm┬╖run┬╖types:generate┬╖&&┬╖corepack┬╖pnpm┬╖-r┬╖--if-present┬╖build",
+       39 Γöé + ┬╖┬╖┬╖┬╖"test":┬╖"corepack┬╖pnpm┬╖-r┬╖--if-present┬╖test",
+       40 Γöé + ┬╖┬╖┬╖┬╖"test:rust":┬╖"cargo┬╖test┬╖--manifest-path┬╖role-model-router/rust/Cargo.toml┬╖--workspace",
+       41 Γöé + ┬╖┬╖┬╖┬╖"smoke":┬╖"corepack┬╖pnpm┬╖--filter┬╖@role-model-router/gateway-smoke┬╖exec┬╖tsx┬╖src/index.ts",
+       42 Γöé + ┬╖┬╖┬╖┬╖"ci:check":┬╖"corepack┬╖pnpm┬╖run┬╖lint┬╖&&┬╖corepack┬╖pnpm┬╖run┬╖schemas:validate┬╖&&┬╖corepack┬╖pnpm┬╖run┬╖build┬╖&&┬╖corepack┬╖pnpm┬╖run┬╖test┬╖&&┬╖corepack┬╖pnpm┬╖run┬╖test:rust┬╖&&┬╖corepack┬╖pnpm┬╖run┬╖smoke"
+       43 Γöé + ┬╖┬╖},
+       44 Γöé + ┬╖┬╖"devDependencies":┬╖{
+       45 Γöé + ┬╖┬╖┬╖┬╖"@biomejs/biome":┬╖"^1.9.4",
+       46 Γöé + ┬╖┬╖┬╖┬╖"@types/node":┬╖"^22.15.3",
+       47 Γöé + ┬╖┬╖┬╖┬╖"ajv":┬╖"^8.17.1",
+       48 Γöé + ┬╖┬╖┬╖┬╖"ajv-formats":┬╖"^3.0.1",
+       49 Γöé + ┬╖┬╖┬╖┬╖"commander":┬╖"^13.1.0",
+       50 Γöé + ┬╖┬╖┬╖┬╖"esbuild":┬╖"^0.25.4",
+       51 Γöé + ┬╖┬╖┬╖┬╖"json-schema-to-typescript":┬╖"^15.0.4",
+       52 Γöé + ┬╖┬╖┬╖┬╖"postject":┬╖"^1.0.0-alpha.6",
+       53 Γöé + ┬╖┬╖┬╖┬╖"tsx":┬╖"^4.19.4",
+       54 Γöé + ┬╖┬╖┬╖┬╖"typescript":┬╖"^5.8.3",
+       55 Γöé + ┬╖┬╖┬╖┬╖"vitest":┬╖"^3.1.2"
+       56 Γöé + ┬╖┬╖}
+       57 Γöé + }
+    58 58 Γöé   
+  
+
+.\role-model-router\apps\gateway-smoke\tsconfig.json format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+    1   Γöé - {ΓÉì
+    2   Γöé - ┬╖┬╖"extends":┬╖"../../../tsconfig.base.json",ΓÉì
+    3   Γöé - ┬╖┬╖"compilerOptions":┬╖{ΓÉì
+    4   Γöé - ┬╖┬╖┬╖┬╖"rootDir":┬╖"src",ΓÉì
+    5   Γöé - ┬╖┬╖┬╖┬╖"outDir":┬╖"dist"ΓÉì
+    6   Γöé - ┬╖┬╖},ΓÉì
+    7   Γöé - ┬╖┬╖"include":┬╖["src/**/*.ts"]ΓÉì
+    8   Γöé - }ΓÉì
+      1 Γöé + {
+      2 Γöé + ┬╖┬╖"extends":┬╖"../../../tsconfig.base.json",
+      3 Γöé + ┬╖┬╖"compilerOptions":┬╖{
+      4 Γöé + ┬╖┬╖┬╖┬╖"rootDir":┬╖"src",
+      5 Γöé + ┬╖┬╖┬╖┬╖"outDir":┬╖"dist"
+      6 Γöé + ┬╖┬╖},
+      7 Γöé + ┬╖┬╖"include":┬╖["src/**/*.ts"]
+      8 Γöé + }
+    9 9 Γöé   
+  
+
+.\testdata\traces\sample-trace.json format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+     1    Γöé - {ΓÉì
+     2    Γöé - ┬╖┬╖"trace_id":┬╖"sample-trace",ΓÉì
+     3    Γöé - ┬╖┬╖"events":┬╖[ΓÉì
+     4    Γöé - ┬╖┬╖┬╖┬╖{ΓÉì
+     5    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"event_id":┬╖"trace-event-1",ΓÉì
+     6    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"event_type":┬╖"router.selection",ΓÉì
+     7    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"message":┬╖"Sample┬╖trace┬╖for┬╖documentation"ΓÉì
+     8    Γöé - ┬╖┬╖┬╖┬╖}ΓÉì
+     9    Γöé - ┬╖┬╖]ΓÉì
+    10    Γöé - }ΓÉì
+        1 Γöé + {
+        2 Γöé + ┬╖┬╖"trace_id":┬╖"sample-trace",
+        3 Γöé + ┬╖┬╖"events":┬╖[
+        4 Γöé + ┬╖┬╖┬╖┬╖{
+        5 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"event_id":┬╖"trace-event-1",
+        6 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"event_type":┬╖"router.selection",
+        7 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"message":┬╖"Sample┬╖trace┬╖for┬╖documentation"
+        8 Γöé + ┬╖┬╖┬╖┬╖}
+        9 Γöé + ┬╖┬╖]
+       10 Γöé + }
+    11 11 Γöé   
+  
+
+.\role-model-router\apps\bench-cli\tsconfig.json format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+    1   Γöé - {ΓÉì
+    2   Γöé - ┬╖┬╖"extends":┬╖"../../../tsconfig.base.json",ΓÉì
+    3   Γöé - ┬╖┬╖"compilerOptions":┬╖{ΓÉì
+    4   Γöé - ┬╖┬╖┬╖┬╖"rootDir":┬╖"src",ΓÉì
+    5   Γöé - ┬╖┬╖┬╖┬╖"outDir":┬╖"dist"ΓÉì
+    6   Γöé - ┬╖┬╖},ΓÉì
+    7   Γöé - ┬╖┬╖"include":┬╖["src/**/*.ts"]ΓÉì
+    8   Γöé - }ΓÉì
+      1 Γöé + {
+      2 Γöé + ┬╖┬╖"extends":┬╖"../../../tsconfig.base.json",
+      3 Γöé + ┬╖┬╖"compilerOptions":┬╖{
+      4 Γöé + ┬╖┬╖┬╖┬╖"rootDir":┬╖"src",
+      5 Γöé + ┬╖┬╖┬╖┬╖"outDir":┬╖"dist"
+      6 Γöé + ┬╖┬╖},
+      7 Γöé + ┬╖┬╖"include":┬╖["src/**/*.ts"]
+      8 Γöé + }
+    9 9 Γöé   
+  
+
+.\role-model-router\apps\runtime-host-bridge\tsconfig.json format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+     1    Γöé - {ΓÉì
+     2    Γöé - ┬╖┬╖"extends":┬╖"../../../tsconfig.base.json",ΓÉì
+     3    Γöé - ┬╖┬╖"compilerOptions":┬╖{ΓÉì
+     4    Γöé - ┬╖┬╖┬╖┬╖"rootDir":┬╖"src",ΓÉì
+     5    Γöé - ┬╖┬╖┬╖┬╖"outDir":┬╖"dist"ΓÉì
+     6    Γöé - ┬╖┬╖},ΓÉì
+     7    Γöé - ┬╖┬╖"include":┬╖["src/**/*.ts"],ΓÉì
+     8    Γöé - ┬╖┬╖"exclude":┬╖["test/**/*.ts"]ΓÉì
+     9    Γöé - }ΓÉì
+        1 Γöé + {
+        2 Γöé + ┬╖┬╖"extends":┬╖"../../../tsconfig.base.json",
+        3 Γöé + ┬╖┬╖"compilerOptions":┬╖{
+        4 Γöé + ┬╖┬╖┬╖┬╖"rootDir":┬╖"src",
+        5 Γöé + ┬╖┬╖┬╖┬╖"outDir":┬╖"dist"
+        6 Γöé + ┬╖┬╖},
+        7 Γöé + ┬╖┬╖"include":┬╖["src/**/*.ts"],
+        8 Γöé + ┬╖┬╖"exclude":┬╖["test/**/*.ts"]
+        9 Γöé + }
+    10 10 Γöé   
+  
+
+Skipped 95 suggested fixes.
+If you wish to apply the suggested (unsafe) fixes, use the command biome check --fix --unsafe
+
+The number of diagnostics exceeds the number allowed by Biome.
+Diagnostics not shown: 722.
+Checked 453 files in 442ms. No fixes applied.
+Found 720 errors.
+check ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Some errors were emitted while running checks.
+  
+
+ΓÇëELIFECYCLEΓÇë Command failed with exit code 1.
+ΓÇëELIFECYCLEΓÇë Command failed with exit code 1.

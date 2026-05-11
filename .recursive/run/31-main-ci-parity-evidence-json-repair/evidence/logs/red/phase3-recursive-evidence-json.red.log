@@ -1,0 +1,48 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/31-main-ci-parity-evidence-json-repair/packages/schema-tools[39m
+
+ [31mΓ¥»[39m test/recursive-evidence-json.test.ts [2m([22m[2m1 test[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 90[2mms[22m[39m
+[31m   [31m├ù[31m tracked recursive JSON evidence[2m > [22mrequires tracked recursive JSON files to contain parseable JSON payloads[39m[32m 88[2mms[22m[39m
+[31m     ΓåÆ expected [ { ΓÇª(2) }, { ΓÇª(2) } ] to deeply equal [][39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/recursive-evidence-json.test.ts > tracked recursive JSON evidence > requires tracked recursive JSON files to contain parseable JSON payloads
+AssertionError: expected [ { ΓÇª(2) }, { ΓÇª(2) } ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   {
++     "error": "Unexpected token 'r', \"result: {
+\"... is not valid JSON",
++     "filePath": ".recursive/run/15-unified-vendor-execution/evidence/browser/run15-real-vendor-browser-probe.json",
++   },
++   {
++     "error": "Unexpected token 'u', \"undefined
+\"... is not valid JSON",
++     "filePath": ".recursive/run/15-unified-vendor-execution/evidence/logs/green/sp5-real-vendor-validation.json",
++   },
++ ]
+
+ Γ¥» test/recursive-evidence-json.test.ts:45:27
+     43|     }
+     44| 
+     45|     expect(parseFailures).toEqual([]);
+       |                           ^
+     46|   });
+     47| });
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m   Start at [22m 05:15:15
+[2m   Duration [22m 837ms[2m (transform 64ms, setup 0ms, collect 60ms, tests 90ms, environment 0ms, prepare 180ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\31-main-ci-parity-evidence-json-repair\packages\schema-tools:
+ΓÇëERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓÇë Command failed with exit code 1: vitest run test/recursive-evidence-json.test.ts
