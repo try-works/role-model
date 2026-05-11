@@ -22,9 +22,9 @@ describe("exportStableConfig", () => {
       "mcp.remote.embedder",
     ]);
     expect(artifact.endpoints.map((endpoint) => endpoint.providerKind).sort()).toEqual([
-      "provider-acp",
-      "provider-cli",
-      "provider-mcp",
+      "acp",
+      "cli",
+      "mcp",
     ]);
   });
 });
