@@ -1,0 +1,21 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/31-main-ci-parity-evidence-json-repair/packages/schema-tools[39m
+
+ [31mΓ¥»[39m test/recursive-core-run81-typecheck.test.ts [2m([22m[2m1 test[22m[2m | [22m[31m1 failed[39m[2m)[22m[33m 2405[2mms[22m[39m
+[31m   [31m├ù[31m run31 core build regression for run81[2m > [22mrequires @role-model-router/core to build cleanly under repository config[39m[33m 2403[2mms[22m[39m
+[31m     ΓåÆ Command failed: cmd.exe /c corepack pnpm run build
+[39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/recursive-core-run81-typecheck.test.ts > run31 core build regression for run81 > requires @role-model-router/core to build cleanly under repository config
+Error: Command failed: cmd.exe /c corepack pnpm run build
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m   Start at [22m 07:35:53
+[2m   Duration [22m 3.13s[2m (transform 91ms, setup 0ms, collect 61ms, tests 2.40s, environment 0ms, prepare 262ms)[22m
+

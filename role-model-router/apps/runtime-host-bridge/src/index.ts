@@ -245,7 +245,20 @@ interface BridgeControllerRoutingContext {
   readonly fallbackReason?: string;
 }
 
-type DifficultyRoutingSignals = RuntimeRoutingDiagnostics["difficultyRouting"]["rubricSignals"];
+type DifficultyRoutingSignals = NonNullable<
+  RuntimeRoutingDiagnostics["difficultyRouting"]
+>["rubricSignals"];
+type BridgeRoutingStrategy = Parameters<typeof routeRuntimeRequest>[0]["request"]["strategy"];
+
+const BRIDGE_ROUTING_STRATEGIES = new Set<BridgeRoutingStrategy>([
+  "balanced",
+  "latency",
+  "quality",
+  "cost",
+  "low-latency",
+  "high-quality",
+  "low-cost",
+]);
 
 const DIFFICULTY_BUCKET_ORDER: Record<UnifiedRuntimeDifficultyBucket, number> = {
   easy: 0,
@@ -255,6 +268,10 @@ const DIFFICULTY_BUCKET_ORDER: Record<UnifiedRuntimeDifficultyBucket, number> = 
 
 function countMatches(value: string, pattern: RegExp): number {
   return value.match(pattern)?.length ?? 0;
+}
+
+function isBridgeRoutingStrategy(value: string): value is BridgeRoutingStrategy {
+  return BRIDGE_ROUTING_STRATEGIES.has(value as BridgeRoutingStrategy);
 }
 
 function summarizeDifficultySignals(input: {
@@ -737,10 +754,10 @@ function mergeCapabilityList(
 }
 
 function collectPreferredEndpointIds(
-  allowEndpoints: readonly string[],
+  allowEndpoints: readonly string[] | undefined,
   preferredEndpointIds: readonly string[] | undefined,
 ): readonly string[] {
-  const allowSet = new Set(allowEndpoints);
+  const allowSet = new Set(allowEndpoints ?? []);
   const filtered: string[] = [];
   for (const endpointId of preferredEndpointIds ?? []) {
     if (allowSet.has(endpointId) && !filtered.includes(endpointId)) {
@@ -809,6 +826,8 @@ function maybeApplyControllerRouting(input: {
     };
   }
 
+  const guidanceStrategy =
+    guidance.strategy && isBridgeRoutingStrategy(guidance.strategy) ? guidance.strategy : undefined;
   const preferredEndpointIds = collectPreferredEndpointIds(
     input.routingRequest.allowEndpoints,
     guidance.preferredEndpointIds,
@@ -820,7 +839,7 @@ function maybeApplyControllerRouting(input: {
           input.routingRequest.requiredCapabilities,
           guidance.requiredCapabilities,
         );
-  const finalStrategy = guidance.strategy ?? input.routingRequest.strategy;
+  const finalStrategy = guidanceStrategy ?? input.routingRequest.strategy;
   const hybridArbitration = summarizeHybridArbitration({
     effectiveRoutingMode: input.effectiveRoutingMode,
     routingRequest: input.routingRequest,
@@ -838,7 +857,7 @@ function maybeApplyControllerRouting(input: {
       requiredCapabilities,
       preferredCapabilities:
         guidance.preferredCapabilities ?? input.routingRequest.preferredCapabilities,
-      ...(guidance.strategy ? { strategy: guidance.strategy } : {}),
+      ...(guidanceStrategy ? { strategy: guidanceStrategy } : {}),
       ...(typeof guidance.preferLocal === "boolean" ? { preferLocal: guidance.preferLocal } : {}),
     },
     ...(preferredEndpointIds.length
@@ -1048,7 +1067,12 @@ export interface StartBridgeServerOptions {
   readonly readLocalPolicy?: () => Promise<Record<string, unknown>>;
   readonly updateLocalPolicy?: (body: Record<string, unknown>) => Promise<Record<string, unknown>>;
   readonly listSwapHistory?: () => Promise<
-    readonly { timestamp: string; oldModel: string | null; newModel: string; reason: string }[]
+    readonly {
+      timestamp: string;
+      oldModel: string | null;
+      newModel: string | null;
+      reason: string;
+    }[]
   >;
   readonly getLocalLogs?: () => Promise<{ logs: string }>;
   readonly readModelOverrides?: () => Promise<
@@ -1180,7 +1204,12 @@ export interface RuntimeBridgeBackend {
   readLocalPolicy(): Promise<Record<string, unknown>>;
   updateLocalPolicy(body: Record<string, unknown>): Promise<Record<string, unknown>>;
   listSwapHistory(): Promise<
-    readonly { timestamp: string; oldModel: string | null; newModel: string; reason: string }[]
+    readonly {
+      timestamp: string;
+      oldModel: string | null;
+      newModel: string | null;
+      reason: string;
+    }[]
   >;
   getLocalLogs(): Promise<{ logs: string }>;
   readModelOverrides(): Promise<
@@ -2493,7 +2522,7 @@ function summarizeHybridArbitration(input: {
   readonly controllerContext?: BridgeControllerRoutingContext;
   readonly guidance?: NonNullable<BridgeControllerRoutingContext["resolvedGuidance"]>;
   readonly preferredEndpointIds: readonly string[];
-  readonly finalStrategy: "balanced" | "cost" | "quality";
+  readonly finalStrategy: BridgeRoutingStrategy;
 }): RuntimeRoutingDiagnostics["hybridArbitration"] | undefined {
   if (input.effectiveRoutingMode !== "hybrid") {
     return undefined;
@@ -2754,6 +2783,39 @@ async function readJsonBody(request: IncomingMessage): Promise<Record<string, un
   }
 
   return JSON.parse(Buffer.concat(chunks).toString("utf8")) as Record<string, unknown>;
+}
+
+function parseModelOverridesBody(
+  input: Record<string, unknown>,
+): Record<string, { ttl?: number; contextWindow?: number; concurrencyLimit?: number }> {
+  const parsed: Record<
+    string,
+    { ttl?: number; contextWindow?: number; concurrencyLimit?: number }
+  > = {};
+
+  for (const [modelId, rawOverride] of Object.entries(input)) {
+    if (!rawOverride || typeof rawOverride !== "object" || Array.isArray(rawOverride)) {
+      throw new Error(`invalid model override for "${modelId}"`);
+    }
+
+    const overrideRecord = rawOverride as Record<string, unknown>;
+    const parsedOverride: { ttl?: number; contextWindow?: number; concurrencyLimit?: number } = {};
+
+    for (const field of ["ttl", "contextWindow", "concurrencyLimit"] as const) {
+      const value = overrideRecord[field];
+      if (typeof value === "undefined") {
+        continue;
+      }
+      if (typeof value !== "number") {
+        throw new Error(`invalid ${field} override for "${modelId}"`);
+      }
+      parsedOverride[field] = value;
+    }
+
+    parsed[modelId] = parsedOverride;
+  }
+
+  return parsed;
 }
 
 function readOptionalPositiveInteger(params: URLSearchParams, key: string): number | undefined {
@@ -4306,7 +4368,11 @@ function createRequestHandler(options: StartBridgeServerOptions) {
         writeJson(response, 404, { error: "not found" });
         return;
       }
-      writeJson(response, 200, await options.updateModelOverrides(await readJsonBody(request)));
+      writeJson(
+        response,
+        200,
+        await options.updateModelOverrides(parseModelOverridesBody(await readJsonBody(request))),
+      );
       return;
     }
 
@@ -6690,7 +6756,12 @@ export async function createRuntimeBridgeBackend(
       return merged;
     },
     async listSwapHistory(): Promise<
-      readonly { timestamp: string; oldModel: string | null; newModel: string; reason: string }[]
+      readonly {
+        timestamp: string;
+        oldModel: string | null;
+        newModel: string | null;
+        reason: string;
+      }[]
     > {
       try {
         const events = listSwapEvents({ databasePath: initialization.databasePath });

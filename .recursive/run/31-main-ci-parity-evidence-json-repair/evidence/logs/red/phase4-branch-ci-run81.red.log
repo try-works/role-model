@@ -1,0 +1,400 @@
+2026-05-11T23:33:36.4796491Z Formatted 1 file in 2ms. Fixed 1 file.
+2026-05-11T23:33:36.8189526Z .                                        |  WARN  Unsupported engine: wanted: {"node":">=24 <25"} (current: {"node":"v22.22.2","pnpm":"10.6.5"})
+2026-05-11T23:33:36.8377556Z Scope: 41 of 42 workspace projects
+2026-05-11T23:33:36.8407049Z apps/docs-site build$ react-router build && npm run types:check && node ./scripts/materialize-search-index.mjs
+2026-05-11T23:33:36.8414316Z packages/packaging build$ tsc -p tsconfig.json
+2026-05-11T23:33:36.8419175Z packages/protocol-types build$ tsc -p tsconfig.json
+2026-05-11T23:33:36.8424866Z packages/schema-tools build$ tsc -p tsconfig.json
+2026-05-11T23:33:38.6923922Z packages/protocol-types build: Done
+2026-05-11T23:33:38.6945607Z packages/store-contract build$ tsc -p tsconfig.json
+2026-05-11T23:33:38.7471036Z packages/packaging build: Done
+2026-05-11T23:33:38.7478527Z role-model-router/apps/runtime-ui build$ react-router build && tsc --noEmit
+2026-05-11T23:33:39.0813517Z apps/docs-site build: [MDX] generated files in 3.320161999999982ms
+2026-05-11T23:33:39.2433695Z apps/docs-site build: [MDX] generated files in 4.108236999999917ms
+2026-05-11T23:33:39.4353564Z apps/docs-site build: [MDX] generated files in 1.745604000000185ms
+2026-05-11T23:33:39.4423886Z apps/docs-site build: [36mvite v8.0.10 [32mbuilding client environment for production...[36m[39m
+2026-05-11T23:33:39.5344177Z apps/docs-site build: [MDX] generated files in 6.634544999999889ms
+2026-05-11T23:33:39.5509964Z apps/docs-site build: [2K
+2026-05-11T23:33:39.9743474Z packages/schema-tools build: Done
+2026-05-11T23:33:39.9744918Z role-model-router/packages/bench-core build$ tsc -p tsconfig.json
+2026-05-11T23:33:40.5172490Z packages/store-contract build: Done
+2026-05-11T23:33:40.5203292Z role-model-router/packages/bench-judge build$ tsc -p tsconfig.json
+2026-05-11T23:33:40.9824504Z role-model-router/apps/runtime-ui build: [36mvite v7.3.2 [32mbuilding client environment for production...[36m[39m
+2026-05-11T23:33:41.1403476Z role-model-router/apps/runtime-ui build: transforming...
+2026-05-11T23:33:41.9734068Z role-model-router/packages/bench-core build: Done
+2026-05-11T23:33:41.9763304Z role-model-router/packages/catalog build$ tsc -p tsconfig.json
+2026-05-11T23:33:42.7873397Z role-model-router/packages/bench-judge build: Done
+2026-05-11T23:33:42.7881952Z .../packages/process-supervisor build$ tsc -p tsconfig.json
+2026-05-11T23:33:44.6741509Z role-model-router/packages/catalog build: Done
+2026-05-11T23:33:44.6783241Z role-model-router/packages/roles build$ tsc -p tsconfig.json
+2026-05-11T23:33:45.2634294Z .../packages/process-supervisor build: Done
+2026-05-11T23:33:45.2701486Z role-model-router/packages/runtime-web build$ tsc -p tsconfig.json
+2026-05-11T23:33:46.5054853Z apps/docs-site build: transforming...✓ 2226 modules transformed.
+2026-05-11T23:33:46.6042334Z role-model-router/packages/roles build: Done
+2026-05-11T23:33:46.6067967Z role-model-router/packages/tasks build$ tsc -p tsconfig.json
+2026-05-11T23:33:46.7203459Z apps/docs-site build: rendering chunks...
+2026-05-11T23:33:47.0110744Z apps/docs-site build: computing gzip size...
+2026-05-11T23:33:47.0359370Z apps/docs-site build: build/client/.vite/manifest.json                                      21.66 kB │ gzip:  2.42 kB
+2026-05-11T23:33:47.0367256Z apps/docs-site build: build/client/assets/root-CNvk1vRb.css                                 80.04 kB │ gzip: 13.34 kB
+2026-05-11T23:33:47.0393639Z apps/docs-site build: build/client/assets/full-ZUGm99_m.js                                   0.00 kB │ gzip:  0.02 kB
+2026-05-11T23:33:47.0441725Z apps/docs-site build: build/client/assets/index-BeW4qblQ.js                                  0.00 kB │ gzip:  0.02 kB
+2026-05-11T23:33:47.0460955Z apps/docs-site build: build/client/assets/mdx-BNRw8oVt.js                                    0.00 kB │ gzip:  0.02 kB
+2026-05-11T23:33:47.0463303Z apps/docs-site build: build/client/assets/search-CSZo5aTn.js                                 0.00 kB │ gzip:  0.02 kB
+2026-05-11T23:33:47.0465275Z apps/docs-site build: build/client/assets/remove-undefined-CTqT55E9-D1EZpcjj.js              0.20 kB │ gzip:  0.16 kB
+2026-05-11T23:33:47.0467243Z apps/docs-site build: build/client/assets/jsx-runtime-B37CQREX.js                            0.42 kB │ gzip:  0.29 kB
+2026-05-11T23:33:47.0469047Z apps/docs-site build: build/client/assets/fetch-WaWviaBU.js                                  0.44 kB │ gzip:  0.29 kB
+2026-05-11T23:33:47.0471379Z apps/docs-site build: build/client/assets/chunk-bqFK08oC.js                                  0.69 kB │ gzip:  0.42 kB
+2026-05-11T23:33:47.0474108Z apps/docs-site build: build/client/assets/algolia-CEABBa-l.js                                0.77 kB │ gzip:  0.49 kB
+2026-05-11T23:33:47.0476207Z apps/docs-site build: build/client/assets/search-CAkNAVov.js                                 0.99 kB │ gzip:  0.53 kB
+2026-05-11T23:33:47.0478476Z apps/docs-site build: build/client/assets/orama-cloud-legacy-Lax-4TNb.js                     1.11 kB │ gzip:  0.58 kB
+2026-05-11T23:33:47.0480197Z apps/docs-site build: build/client/assets/search-default-CniwFL6d.js                         1.15 kB │ gzip:  0.63 kB
+2026-05-11T23:33:47.0494737Z apps/docs-site build: build/client/assets/orama-cloud-D8Jh44Z0.js                            1.17 kB │ gzip:  0.60 kB
+2026-05-11T23:33:47.0496689Z apps/docs-site build: build/client/assets/how-role-model-works-vIK2x3CF.js                   2.58 kB │ gzip:  0.88 kB
+2026-05-11T23:33:47.0498588Z apps/docs-site build: build/client/assets/protocol-overview-MIrt8KqS.js                      3.62 kB │ gzip:  0.94 kB
+2026-05-11T23:33:47.0500397Z apps/docs-site build: build/client/assets/routing-overview-_K__E3i2.js                       3.78 kB │ gzip:  1.00 kB
+2026-05-11T23:33:47.0502435Z apps/docs-site build: build/client/assets/quickstart-C-vFZjWZ.js                             4.00 kB │ gzip:  1.13 kB
+2026-05-11T23:33:47.0504349Z apps/docs-site build: build/client/assets/observability-of-routing-CGLK3ORy.js               7.35 kB │ gzip:  1.68 kB
+2026-05-11T23:33:47.0506249Z apps/docs-site build: build/client/assets/decision-semantics-Jt99wR3a.js                     8.96 kB │ gzip:  1.84 kB
+2026-05-11T23:33:47.0508209Z apps/docs-site build: build/client/assets/protocol-lifecycle-B6hSiXeY.js                     9.15 kB │ gzip:  2.05 kB
+2026-05-11T23:33:47.0510609Z apps/docs-site build: build/client/assets/routing-outcomes-and-failure-modes-D7k8QUEX.js     9.97 kB │ gzip:  1.90 kB
+2026-05-11T23:33:47.0512771Z apps/docs-site build: build/client/assets/candidate-discovery-DOmqQ0eG.js                   10.97 kB │ gzip:  2.12 kB
+2026-05-11T23:33:47.0514575Z apps/docs-site build: build/client/assets/mixedbread-yDRvifgx.js                            11.95 kB │ gzip:  5.37 kB
+2026-05-11T23:33:47.0516344Z apps/docs-site build: build/client/assets/preload-helper-CzZtDwiq.js                        12.18 kB │ gzip:  4.43 kB
+2026-05-11T23:33:47.0518187Z apps/docs-site build: build/client/assets/trace-and-usage-artifacts-DWFOke8A.js             12.52 kB │ gzip:  2.17 kB
+2026-05-11T23:33:47.0520045Z apps/docs-site build: build/client/assets/capability-taxonomy-CX4ob0rO.js                   12.65 kB │ gzip:  2.33 kB
+2026-05-11T23:33:47.0521889Z apps/docs-site build: build/client/assets/router-decision-artifact-B1IzEqdU.js              13.37 kB │ gzip:  2.41 kB
+2026-05-11T23:33:47.0523953Z apps/docs-site build: build/client/assets/routing-policy-Bo3e-84d.js                        13.51 kB │ gzip:  2.50 kB
+2026-05-11T23:33:47.0525758Z apps/docs-site build: build/client/assets/declared-capability-profiles-RLsxsZXD.js          13.60 kB │ gzip:  2.43 kB
+2026-05-11T23:33:47.0527628Z apps/docs-site build: build/client/assets/protocol-to-router-mapping-CGQ0ojhu.js            14.09 kB │ gzip:  2.62 kB
+2026-05-11T23:33:47.0529503Z apps/docs-site build: build/client/assets/eligibility-and-rejection-DLDP6Z24.js             15.53 kB │ gzip:  2.56 kB
+2026-05-11T23:33:47.0531409Z apps/docs-site build: build/client/assets/comparison-and-tradeoffs-BzaZKwBc.js              16.29 kB │ gzip:  2.88 kB
+2026-05-11T23:33:47.0533622Z apps/docs-site build: build/client/assets/how-routing-works-end-to-end-Dt7fYeXa.js          16.65 kB │ gzip:  3.09 kB
+2026-05-11T23:33:47.0535505Z apps/docs-site build: build/client/assets/protocol-object-model-FzXL9ilR.js                 17.59 kB │ gzip:  3.09 kB
+2026-05-11T23:33:47.0538509Z apps/docs-site build: build/client/assets/reason-codes-and-rejection-taxonomy-D2tIlufk.js   18.10 kB │ gzip:  2.72 kB
+2026-05-11T23:33:47.0540417Z apps/docs-site build: build/client/assets/canonical-schemas-reference-BkUf7ccN.js           18.29 kB │ gzip:  2.80 kB
+2026-05-11T23:33:47.0546065Z apps/docs-site build: build/client/assets/introduction-BEnEE9J3.js                          18.39 kB │ gzip:  3.30 kB
+2026-05-11T23:33:47.0547954Z apps/docs-site build: build/client/assets/core-vocabulary-xId8WjrX.js                       18.62 kB │ gzip:  3.17 kB
+2026-05-11T23:33:47.0550239Z apps/docs-site build: build/client/assets/roles-and-tasks-BIUDylXo.js                       18.96 kB │ gzip:  3.22 kB
+2026-05-11T23:33:47.0552337Z apps/docs-site build: build/client/assets/observed-performance-profiles-Dsvn8Uq-.js         19.57 kB │ gzip:  3.26 kB
+2026-05-11T23:33:47.0554174Z apps/docs-site build: build/client/assets/docs-CPPywO1I.js                                  20.13 kB │ gzip:  3.32 kB
+2026-05-11T23:33:47.0555878Z apps/docs-site build: build/client/assets/endpoint-identity-CHMBxR6O.js                     22.26 kB │ gzip:  3.45 kB
+2026-05-11T23:33:47.0557629Z apps/docs-site build: build/client/assets/root-m4k43gyp.js                                  24.91 kB │ gzip:  8.39 kB
+2026-05-11T23:33:47.0559262Z apps/docs-site build: build/client/assets/docs-DtVMePSM.js                                  56.90 kB │ gzip: 19.36 kB
+2026-05-11T23:33:47.0560886Z apps/docs-site build: build/client/assets/es2015-B692ofsD.js                                61.65 kB │ gzip: 21.10 kB
+2026-05-11T23:33:47.0562755Z apps/docs-site build: build/client/assets/orama-static-Cl0tyjMZ.js                          62.73 kB │ gzip: 21.59 kB
+2026-05-11T23:33:47.0564419Z apps/docs-site build: build/client/assets/dist-D-xxxXck.js                                  82.94 kB │ gzip: 27.42 kB
+2026-05-11T23:33:47.0566121Z apps/docs-site build: build/client/assets/remark-CW-4A0sf.js                                89.89 kB │ gzip: 25.74 kB
+2026-05-11T23:33:47.0568132Z apps/docs-site build: build/client/assets/chunk-EVOBXE3Y-BVHgNXQf.js                       118.01 kB │ gzip: 38.59 kB
+2026-05-11T23:33:47.0569856Z apps/docs-site build: build/client/assets/entry.client-Ci5FUk0_.js                         183.20 kB │ gzip: 58.03 kB
+2026-05-11T23:33:47.0571543Z apps/docs-site build: build/client/assets/search-TuTTkDqi.js                               227.67 kB │ gzip: 70.51 kB
+2026-05-11T23:33:47.0572880Z apps/docs-site build: [32m✓ built in 7.53s[39m
+2026-05-11T23:33:47.1868112Z apps/docs-site build: [MDX] generated files in 1.3539860000000772ms
+2026-05-11T23:33:47.1922627Z apps/docs-site build: [36mvite v8.0.10 [32mbuilding ssr environment for production...[36m[39m
+2026-05-11T23:33:47.2126000Z apps/docs-site build: [MDX] generated files in 2.6407149999995454ms
+2026-05-11T23:33:47.2331797Z apps/docs-site build: [2K
+2026-05-11T23:33:47.2555366Z role-model-router/packages/runtime-web build: Done
+2026-05-11T23:33:47.2568287Z role-model-router/packages/tool-registry build$ tsc -p tsconfig.json
+2026-05-11T23:33:48.2113464Z role-model-router/packages/tasks build: Done
+2026-05-11T23:33:48.2137240Z .../packages/vendor-abstraction build$ tsc -p tsconfig.json
+2026-05-11T23:33:49.1133519Z role-model-router/packages/tool-registry build: Done
+2026-05-11T23:33:49.1708501Z apps/docs-site build: transforming...✓ 461 modules transformed.
+2026-05-11T23:33:49.2623030Z apps/docs-site build: rendering chunks...
+2026-05-11T23:33:49.3494113Z apps/docs-site build: [32m✓[39m 1 asset cleaned from React Router server build.
+2026-05-11T23:33:49.3532582Z apps/docs-site build: [2mbuild/server/assets/server-build-CNvk1vRb.css[22m
+2026-05-11T23:33:49.7040227Z .../packages/vendor-abstraction build: Done
+2026-05-11T23:33:49.7446813Z apps/docs-site build: Prerender (data): / -> [1mbuild/client/_root.data[22m
+2026-05-11T23:33:49.8404071Z apps/docs-site build: Prerender (html): / -> [1mbuild/client/index.html[22m
+2026-05-11T23:33:49.8553837Z apps/docs-site build: Prerender (data): /api/search -> [1mbuild/client/api/search.data[22m
+2026-05-11T23:33:49.8612583Z apps/docs-site build: Prerender (resource): /api/search -> [1mbuild/client/api/search[22m
+2026-05-11T23:33:49.8639508Z apps/docs-site build: Prerender (data): /llms.txt -> [1mbuild/client/llms.txt.data[22m
+2026-05-11T23:33:49.8651904Z apps/docs-site build: Prerender (resource): /llms.txt -> [1mbuild/client/llms.txt[22m
+2026-05-11T23:33:49.8783355Z apps/docs-site build: Prerender (data): /llms-full.txt -> [1mbuild/client/llms-full.txt.data[22m
+2026-05-11T23:33:49.8810833Z apps/docs-site build: Prerender (resource): /llms-full.txt -> [1mbuild/client/llms-full.txt[22m
+2026-05-11T23:33:49.8883766Z apps/docs-site build: Prerender (data): /core-vocabulary -> [1mbuild/client/core-vocabulary.data[22m
+2026-05-11T23:33:49.9134070Z apps/docs-site build: Prerender (html): /core-vocabulary -> [1mbuild/client/core-vocabulary/index.html[22m
+2026-05-11T23:33:49.9179727Z apps/docs-site build: Prerender (data): /llms.mdx/docs/core-vocabulary/content.md -> [1mbuild/client/llms.mdx/docs/core-vocabulary/content.md.data[22m
+2026-05-11T23:33:49.9192559Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/core-vocabulary/content.md -> [1mbuild/client/llms.mdx/docs/core-vocabulary/content.md[22m
+2026-05-11T23:33:49.9217731Z apps/docs-site build: Prerender (data): / -> [1mbuild/client/_root.data[22m
+2026-05-11T23:33:49.9437070Z apps/docs-site build: Prerender (html): / -> [1mbuild/client/index.html[22m
+2026-05-11T23:33:49.9457436Z apps/docs-site build: Prerender (data): /llms.mdx/docs/content.md -> [1mbuild/client/llms.mdx/docs/content.md.data[22m
+2026-05-11T23:33:49.9478356Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/content.md -> [1mbuild/client/llms.mdx/docs/content.md[22m
+2026-05-11T23:33:49.9599758Z apps/docs-site build: Prerender (data): /introduction -> [1mbuild/client/introduction.data[22m
+2026-05-11T23:33:49.9944270Z apps/docs-site build: Prerender (html): /introduction -> [1mbuild/client/introduction/index.html[22m
+2026-05-11T23:33:49.9966748Z apps/docs-site build: Prerender (data): /llms.mdx/docs/introduction/content.md -> [1mbuild/client/llms.mdx/docs/introduction/content.md.data[22m
+2026-05-11T23:33:50.0006375Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/introduction/content.md -> [1mbuild/client/llms.mdx/docs/introduction/content.md[22m
+2026-05-11T23:33:50.0025640Z apps/docs-site build: Prerender (data): /protocol-lifecycle -> [1mbuild/client/protocol-lifecycle.data[22m
+2026-05-11T23:33:50.0216915Z apps/docs-site build: Prerender (html): /protocol-lifecycle -> [1mbuild/client/protocol-lifecycle/index.html[22m
+2026-05-11T23:33:50.0233473Z apps/docs-site build: Prerender (data): /llms.mdx/docs/protocol-lifecycle/content.md -> [1mbuild/client/llms.mdx/docs/protocol-lifecycle/content.md.data[22m
+2026-05-11T23:33:50.0245613Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/protocol-lifecycle/content.md -> [1mbuild/client/llms.mdx/docs/protocol-lifecycle/content.md[22m
+2026-05-11T23:33:50.0273938Z apps/docs-site build: Prerender (data): /protocol-object-model -> [1mbuild/client/protocol-object-model.data[22m
+2026-05-11T23:33:50.0491235Z apps/docs-site build: Prerender (html): /protocol-object-model -> [1mbuild/client/protocol-object-model/index.html[22m
+2026-05-11T23:33:50.0498916Z apps/docs-site build: Prerender (data): /llms.mdx/docs/protocol-object-model/content.md -> [1mbuild/client/llms.mdx/docs/protocol-object-model/content.md.data[22m
+2026-05-11T23:33:50.0539209Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/protocol-object-model/content.md -> [1mbuild/client/llms.mdx/docs/protocol-object-model/content.md[22m
+2026-05-11T23:33:50.0585713Z apps/docs-site build: Prerender (data): /quickstart -> [1mbuild/client/quickstart.data[22m
+2026-05-11T23:33:50.0774103Z apps/docs-site build: Prerender (html): /quickstart -> [1mbuild/client/quickstart/index.html[22m
+2026-05-11T23:33:50.0830779Z apps/docs-site build: Prerender (data): /llms.mdx/docs/quickstart/content.md -> [1mbuild/client/llms.mdx/docs/quickstart/content.md.data[22m
+2026-05-11T23:33:50.0851334Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/quickstart/content.md -> [1mbuild/client/llms.mdx/docs/quickstart/content.md[22m
+2026-05-11T23:33:50.0933842Z apps/docs-site build: Prerender (data): /routing/candidate-discovery -> [1mbuild/client/routing/candidate-discovery.data[22m
+2026-05-11T23:33:50.1140122Z apps/docs-site build: Prerender (html): /routing/candidate-discovery -> [1mbuild/client/routing/candidate-discovery/index.html[22m
+2026-05-11T23:33:50.1175691Z apps/docs-site build: Prerender (data): /llms.mdx/docs/routing/candidate-discovery/content.md -> [1mbuild/client/llms.mdx/docs/routing/candidate-discovery/content.md.data[22m
+2026-05-11T23:33:50.1186327Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/routing/candidate-discovery/content.md -> [1mbuild/client/llms.mdx/docs/routing/candidate-discovery/content.md[22m
+2026-05-11T23:33:50.1215909Z apps/docs-site build: Prerender (data): /routing/comparison-and-tradeoffs -> [1mbuild/client/routing/comparison-and-tradeoffs.data[22m
+2026-05-11T23:33:50.1335218Z apps/docs-site build: Prerender (html): /routing/comparison-and-tradeoffs -> [1mbuild/client/routing/comparison-and-tradeoffs/index.html[22m
+2026-05-11T23:33:50.1370325Z apps/docs-site build: Prerender (data): /llms.mdx/docs/routing/comparison-and-tradeoffs/content.md -> [1mbuild/client/llms.mdx/docs/routing/comparison-and-tradeoffs/content.md.data[22m
+2026-05-11T23:33:50.1379615Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/routing/comparison-and-tradeoffs/content.md -> [1mbuild/client/llms.mdx/docs/routing/comparison-and-tradeoffs/content.md[22m
+2026-05-11T23:33:50.1433766Z apps/docs-site build: Prerender (data): /routing/decision-semantics -> [1mbuild/client/routing/decision-semantics.data[22m
+2026-05-11T23:33:50.1583819Z apps/docs-site build: Prerender (html): /routing/decision-semantics -> [1mbuild/client/routing/decision-semantics/index.html[22m
+2026-05-11T23:33:50.1604813Z apps/docs-site build: Prerender (data): /llms.mdx/docs/routing/decision-semantics/content.md -> [1mbuild/client/llms.mdx/docs/routing/decision-semantics/content.md.data[22m
+2026-05-11T23:33:50.1607666Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/routing/decision-semantics/content.md -> [1mbuild/client/llms.mdx/docs/routing/decision-semantics/content.md[22m
+2026-05-11T23:33:50.1804152Z apps/docs-site build: Prerender (data): /routing/eligibility-and-rejection -> [1mbuild/client/routing/eligibility-and-rejection.data[22m
+2026-05-11T23:33:50.1893249Z apps/docs-site build: Prerender (html): /routing/eligibility-and-rejection -> [1mbuild/client/routing/eligibility-and-rejection/index.html[22m
+2026-05-11T23:33:50.1910874Z apps/docs-site build: Prerender (data): /llms.mdx/docs/routing/eligibility-and-rejection/content.md -> [1mbuild/client/llms.mdx/docs/routing/eligibility-and-rejection/content.md.data[22m
+2026-05-11T23:33:50.1930166Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/routing/eligibility-and-rejection/content.md -> [1mbuild/client/llms.mdx/docs/routing/eligibility-and-rejection/content.md[22m
+2026-05-11T23:33:50.1951261Z apps/docs-site build: Prerender (data): /routing/how-routing-works-end-to-end -> [1mbuild/client/routing/how-routing-works-end-to-end.data[22m
+2026-05-11T23:33:50.2087581Z apps/docs-site build: Prerender (html): /routing/how-routing-works-end-to-end -> [1mbuild/client/routing/how-routing-works-end-to-end/index.html[22m
+2026-05-11T23:33:50.2101911Z apps/docs-site build: Prerender (data): /llms.mdx/docs/routing/how-routing-works-end-to-end/content.md -> [1mbuild/client/llms.mdx/docs/routing/how-routing-works-end-to-end/content.md.data[22m
+2026-05-11T23:33:50.2111744Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/routing/how-routing-works-end-to-end/content.md -> [1mbuild/client/llms.mdx/docs/routing/how-routing-works-end-to-end/content.md[22m
+2026-05-11T23:33:50.2133622Z apps/docs-site build: Prerender (data): /routing/observability-of-routing -> [1mbuild/client/routing/observability-of-routing.data[22m
+2026-05-11T23:33:50.2220398Z apps/docs-site build: Prerender (html): /routing/observability-of-routing -> [1mbuild/client/routing/observability-of-routing/index.html[22m
+2026-05-11T23:33:50.2265595Z apps/docs-site build: Prerender (data): /llms.mdx/docs/routing/observability-of-routing/content.md -> [1mbuild/client/llms.mdx/docs/routing/observability-of-routing/content.md.data[22m
+2026-05-11T23:33:50.2279079Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/routing/observability-of-routing/content.md -> [1mbuild/client/llms.mdx/docs/routing/observability-of-routing/content.md[22m
+2026-05-11T23:33:50.2295812Z apps/docs-site build: Prerender (data): /routing/protocol-to-router-mapping -> [1mbuild/client/routing/protocol-to-router-mapping.data[22m
+2026-05-11T23:33:50.2397094Z apps/docs-site build: Prerender (html): /routing/protocol-to-router-mapping -> [1mbuild/client/routing/protocol-to-router-mapping/index.html[22m
+2026-05-11T23:33:50.2411649Z apps/docs-site build: Prerender (data): /llms.mdx/docs/routing/protocol-to-router-mapping/content.md -> [1mbuild/client/llms.mdx/docs/routing/protocol-to-router-mapping/content.md.data[22m
+2026-05-11T23:33:50.2422265Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/routing/protocol-to-router-mapping/content.md -> [1mbuild/client/llms.mdx/docs/routing/protocol-to-router-mapping/content.md[22m
+2026-05-11T23:33:50.2445046Z apps/docs-site build: Prerender (data): /routing/routing-outcomes-and-failure-modes -> [1mbuild/client/routing/routing-outcomes-and-failure-modes.data[22m
+2026-05-11T23:33:50.2556956Z apps/docs-site build: Prerender (html): /routing/routing-outcomes-and-failure-modes -> [1mbuild/client/routing/routing-outcomes-and-failure-modes/index.html[22m
+2026-05-11T23:33:50.2570804Z apps/docs-site build: Prerender (data): /llms.mdx/docs/routing/routing-outcomes-and-failure-modes/content.md -> [1mbuild/client/llms.mdx/docs/routing/routing-outcomes-and-failure-modes/content.md.data[22m
+2026-05-11T23:33:50.2580072Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/routing/routing-outcomes-and-failure-modes/content.md -> [1mbuild/client/llms.mdx/docs/routing/routing-outcomes-and-failure-modes/content.md[22m
+2026-05-11T23:33:50.2601785Z apps/docs-site build: Prerender (data): /reference/canonical-schemas-reference -> [1mbuild/client/reference/canonical-schemas-reference.data[22m
+2026-05-11T23:33:50.2931169Z apps/docs-site build: Prerender (html): /reference/canonical-schemas-reference -> [1mbuild/client/reference/canonical-schemas-reference/index.html[22m
+2026-05-11T23:33:50.2947900Z apps/docs-site build: Prerender (data): /llms.mdx/docs/reference/canonical-schemas-reference/content.md -> [1mbuild/client/llms.mdx/docs/reference/canonical-schemas-reference/content.md.data[22m
+2026-05-11T23:33:50.2959121Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/reference/canonical-schemas-reference/content.md -> [1mbuild/client/llms.mdx/docs/reference/canonical-schemas-reference/content.md[22m
+2026-05-11T23:33:50.3000453Z apps/docs-site build: Prerender (data): /reference/reason-codes-and-rejection-taxonomy -> [1mbuild/client/reference/reason-codes-and-rejection-taxonomy.data[22m
+2026-05-11T23:33:50.3069659Z apps/docs-site build: Prerender (html): /reference/reason-codes-and-rejection-taxonomy -> [1mbuild/client/reference/reason-codes-and-rejection-taxonomy/index.html[22m
+2026-05-11T23:33:50.3084020Z apps/docs-site build: Prerender (data): /llms.mdx/docs/reference/reason-codes-and-rejection-taxonomy/content.md -> [1mbuild/client/llms.mdx/docs/reference/reason-codes-and-rejection-taxonomy/content.md.data[22m
+2026-05-11T23:33:50.3093480Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/reference/reason-codes-and-rejection-taxonomy/content.md -> [1mbuild/client/llms.mdx/docs/reference/reason-codes-and-rejection-taxonomy/content.md[22m
+2026-05-11T23:33:50.3129727Z apps/docs-site build: Prerender (data): /protocol/capability-taxonomy -> [1mbuild/client/protocol/capability-taxonomy.data[22m
+2026-05-11T23:33:50.3281186Z apps/docs-site build: Prerender (html): /protocol/capability-taxonomy -> [1mbuild/client/protocol/capability-taxonomy/index.html[22m
+2026-05-11T23:33:50.3303786Z apps/docs-site build: Prerender (data): /llms.mdx/docs/protocol/capability-taxonomy/content.md -> [1mbuild/client/llms.mdx/docs/protocol/capability-taxonomy/content.md.data[22m
+2026-05-11T23:33:50.3310193Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/protocol/capability-taxonomy/content.md -> [1mbuild/client/llms.mdx/docs/protocol/capability-taxonomy/content.md[22m
+2026-05-11T23:33:50.3367045Z apps/docs-site build: Prerender (data): /protocol/declared-capability-profiles -> [1mbuild/client/protocol/declared-capability-profiles.data[22m
+2026-05-11T23:33:50.3444834Z apps/docs-site build: Prerender (html): /protocol/declared-capability-profiles -> [1mbuild/client/protocol/declared-capability-profiles/index.html[22m
+2026-05-11T23:33:50.3461041Z apps/docs-site build: Prerender (data): /llms.mdx/docs/protocol/declared-capability-profiles/content.md -> [1mbuild/client/llms.mdx/docs/protocol/declared-capability-profiles/content.md.data[22m
+2026-05-11T23:33:50.3469956Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/protocol/declared-capability-profiles/content.md -> [1mbuild/client/llms.mdx/docs/protocol/declared-capability-profiles/content.md[22m
+2026-05-11T23:33:50.3491523Z apps/docs-site build: Prerender (data): /protocol/endpoint-identity -> [1mbuild/client/protocol/endpoint-identity.data[22m
+2026-05-11T23:33:50.3605783Z apps/docs-site build: Prerender (html): /protocol/endpoint-identity -> [1mbuild/client/protocol/endpoint-identity/index.html[22m
+2026-05-11T23:33:50.3626204Z apps/docs-site build: Prerender (data): /llms.mdx/docs/protocol/endpoint-identity/content.md -> [1mbuild/client/llms.mdx/docs/protocol/endpoint-identity/content.md.data[22m
+2026-05-11T23:33:50.3651496Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/protocol/endpoint-identity/content.md -> [1mbuild/client/llms.mdx/docs/protocol/endpoint-identity/content.md[22m
+2026-05-11T23:33:50.3685360Z apps/docs-site build: Prerender (data): /protocol/observed-performance-profiles -> [1mbuild/client/protocol/observed-performance-profiles.data[22m
+2026-05-11T23:33:50.3785895Z apps/docs-site build: Prerender (html): /protocol/observed-performance-profiles -> [1mbuild/client/protocol/observed-performance-profiles/index.html[22m
+2026-05-11T23:33:50.3801069Z apps/docs-site build: Prerender (data): /llms.mdx/docs/protocol/observed-performance-profiles/content.md -> [1mbuild/client/llms.mdx/docs/protocol/observed-performance-profiles/content.md.data[22m
+2026-05-11T23:33:50.3810847Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/protocol/observed-performance-profiles/content.md -> [1mbuild/client/llms.mdx/docs/protocol/observed-performance-profiles/content.md[22m
+2026-05-11T23:33:50.3845899Z apps/docs-site build: Prerender (data): /protocol/roles-and-tasks -> [1mbuild/client/protocol/roles-and-tasks.data[22m
+2026-05-11T23:33:50.4030772Z apps/docs-site build: Prerender (html): /protocol/roles-and-tasks -> [1mbuild/client/protocol/roles-and-tasks/index.html[22m
+2026-05-11T23:33:50.4047921Z apps/docs-site build: Prerender (data): /llms.mdx/docs/protocol/roles-and-tasks/content.md -> [1mbuild/client/llms.mdx/docs/protocol/roles-and-tasks/content.md.data[22m
+2026-05-11T23:33:50.4056692Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/protocol/roles-and-tasks/content.md -> [1mbuild/client/llms.mdx/docs/protocol/roles-and-tasks/content.md[22m
+2026-05-11T23:33:50.4081194Z apps/docs-site build: Prerender (data): /protocol/router-decision-artifact -> [1mbuild/client/protocol/router-decision-artifact.data[22m
+2026-05-11T23:33:50.4173097Z apps/docs-site build: Prerender (html): /protocol/router-decision-artifact -> [1mbuild/client/protocol/router-decision-artifact/index.html[22m
+2026-05-11T23:33:50.4187691Z apps/docs-site build: Prerender (data): /llms.mdx/docs/protocol/router-decision-artifact/content.md -> [1mbuild/client/llms.mdx/docs/protocol/router-decision-artifact/content.md.data[22m
+2026-05-11T23:33:50.4206420Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/protocol/router-decision-artifact/content.md -> [1mbuild/client/llms.mdx/docs/protocol/router-decision-artifact/content.md[22m
+2026-05-11T23:33:50.4293273Z apps/docs-site build: Prerender (data): /protocol/routing-policy -> [1mbuild/client/protocol/routing-policy.data[22m
+2026-05-11T23:33:50.4357754Z apps/docs-site build: Prerender (html): /protocol/routing-policy -> [1mbuild/client/protocol/routing-policy/index.html[22m
+2026-05-11T23:33:50.4372489Z apps/docs-site build: Prerender (data): /llms.mdx/docs/protocol/routing-policy/content.md -> [1mbuild/client/llms.mdx/docs/protocol/routing-policy/content.md.data[22m
+2026-05-11T23:33:50.4380970Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/protocol/routing-policy/content.md -> [1mbuild/client/llms.mdx/docs/protocol/routing-policy/content.md[22m
+2026-05-11T23:33:50.4404696Z apps/docs-site build: Prerender (data): /protocol/trace-and-usage-artifacts -> [1mbuild/client/protocol/trace-and-usage-artifacts.data[22m
+2026-05-11T23:33:50.4521329Z apps/docs-site build: Prerender (html): /protocol/trace-and-usage-artifacts -> [1mbuild/client/protocol/trace-and-usage-artifacts/index.html[22m
+2026-05-11T23:33:50.4532758Z apps/docs-site build: Prerender (data): /llms.mdx/docs/protocol/trace-and-usage-artifacts/content.md -> [1mbuild/client/llms.mdx/docs/protocol/trace-and-usage-artifacts/content.md.data[22m
+2026-05-11T23:33:50.4541850Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/protocol/trace-and-usage-artifacts/content.md -> [1mbuild/client/llms.mdx/docs/protocol/trace-and-usage-artifacts/content.md[22m
+2026-05-11T23:33:50.4568242Z apps/docs-site build: Prerender (data): /concepts/how-role-model-works -> [1mbuild/client/concepts/how-role-model-works.data[22m
+2026-05-11T23:33:50.4652316Z apps/docs-site build: Prerender (html): /concepts/how-role-model-works -> [1mbuild/client/concepts/how-role-model-works/index.html[22m
+2026-05-11T23:33:50.4666848Z apps/docs-site build: Prerender (data): /llms.mdx/docs/concepts/how-role-model-works/content.md -> [1mbuild/client/llms.mdx/docs/concepts/how-role-model-works/content.md.data[22m
+2026-05-11T23:33:50.4675494Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/concepts/how-role-model-works/content.md -> [1mbuild/client/llms.mdx/docs/concepts/how-role-model-works/content.md[22m
+2026-05-11T23:33:50.4702342Z apps/docs-site build: Prerender (data): /concepts/protocol-overview -> [1mbuild/client/concepts/protocol-overview.data[22m
+2026-05-11T23:33:50.4815741Z apps/docs-site build: Prerender (html): /concepts/protocol-overview -> [1mbuild/client/concepts/protocol-overview/index.html[22m
+2026-05-11T23:33:50.4832213Z apps/docs-site build: Prerender (data): /llms.mdx/docs/concepts/protocol-overview/content.md -> [1mbuild/client/llms.mdx/docs/concepts/protocol-overview/content.md.data[22m
+2026-05-11T23:33:50.4843000Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/concepts/protocol-overview/content.md -> [1mbuild/client/llms.mdx/docs/concepts/protocol-overview/content.md[22m
+2026-05-11T23:33:50.4867559Z apps/docs-site build: Prerender (data): /concepts/routing-overview -> [1mbuild/client/concepts/routing-overview.data[22m
+2026-05-11T23:33:50.4938560Z apps/docs-site build: Prerender (html): /concepts/routing-overview -> [1mbuild/client/concepts/routing-overview/index.html[22m
+2026-05-11T23:33:50.4950405Z apps/docs-site build: Prerender (data): /llms.mdx/docs/concepts/routing-overview/content.md -> [1mbuild/client/llms.mdx/docs/concepts/routing-overview/content.md.data[22m
+2026-05-11T23:33:50.4958501Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/concepts/routing-overview/content.md -> [1mbuild/client/llms.mdx/docs/concepts/routing-overview/content.md[22m
+2026-05-11T23:33:50.5027729Z apps/docs-site build: Prerender (html): SPA Fallback -> [1mbuild/client/__spa-fallback.html[22m
+2026-05-11T23:33:50.5031190Z apps/docs-site build: Removing the server build in [32m/home/runner/work/role-model/role-model/apps/docs-site/build/server[39m due to ssr:false
+2026-05-11T23:33:50.5114317Z apps/docs-site build: computing gzip size...
+2026-05-11T23:33:50.5270586Z apps/docs-site build: build/server/.vite/manifest.json                                      23.52 kB │ gzip:   2.63 kB
+2026-05-11T23:33:50.5272893Z apps/docs-site build: build/server/assets/server-build-CNvk1vRb.css                         80.04 kB │ gzip:  13.34 kB
+2026-05-11T23:33:50.5274563Z apps/docs-site build: build/server/assets/docs-u_AIokcY.js                                   0.19 kB │ gzip:   0.15 kB
+2026-05-11T23:33:50.5276202Z apps/docs-site build: build/server/assets/quickstart-ZpYKn0lM.js                             0.20 kB │ gzip:   0.15 kB
+2026-05-11T23:33:50.5277802Z apps/docs-site build: build/server/assets/introduction-e49RQG9v.js                           0.20 kB │ gzip:   0.15 kB
+2026-05-11T23:33:50.5279448Z apps/docs-site build: build/server/assets/routing-policy-Coae60pL.js                         0.20 kB │ gzip:   0.15 kB
+2026-05-11T23:33:50.5281072Z apps/docs-site build: build/server/assets/core-vocabulary-BJSQ0DQj.js                        0.20 kB │ gzip:   0.15 kB
+2026-05-11T23:33:50.5282840Z apps/docs-site build: build/server/assets/roles-and-tasks-NcyKfvSk.js                        0.20 kB │ gzip:   0.15 kB
+2026-05-11T23:33:50.5284616Z apps/docs-site build: build/server/assets/routing-overview-shrGu5Yn.js                       0.21 kB │ gzip:   0.15 kB
+2026-05-11T23:33:50.5286392Z apps/docs-site build: build/server/assets/endpoint-identity-D87yUvCT.js                      0.21 kB │ gzip:   0.16 kB
+2026-05-11T23:33:50.5288200Z apps/docs-site build: build/server/assets/protocol-overview-Cjz9oOWz.js                      0.21 kB │ gzip:   0.15 kB
+2026-05-11T23:33:50.5289901Z apps/docs-site build: build/server/assets/decision-semantics-DPy68mUn.js                     0.21 kB │ gzip:   0.15 kB
+2026-05-11T23:33:50.5291858Z apps/docs-site build: build/server/assets/protocol-lifecycle-BApVI6Pm.js                     0.21 kB │ gzip:   0.15 kB
+2026-05-11T23:33:50.5293775Z apps/docs-site build: build/server/assets/candidate-discovery-Cb0rr4cc.js                    0.21 kB │ gzip:   0.16 kB
+2026-05-11T23:33:50.5295504Z apps/docs-site build: build/server/assets/capability-taxonomy-Co-VAusv.js                    0.21 kB │ gzip:   0.16 kB
+2026-05-11T23:33:50.5297159Z apps/docs-site build: build/server/assets/how-role-model-works-ByD-aQZH.js                   0.21 kB │ gzip:   0.16 kB
+2026-05-11T23:33:50.5298932Z apps/docs-site build: build/server/assets/protocol-object-model-Buy-UYlf.js                  0.21 kB │ gzip:   0.16 kB
+2026-05-11T23:33:50.5300607Z apps/docs-site build: build/server/assets/comparison-and-tradeoffs-Bjabk2in.js               0.21 kB │ gzip:   0.16 kB
+2026-05-11T23:33:50.5302567Z apps/docs-site build: build/server/assets/observability-of-routing-DELrzndx.js               0.21 kB │ gzip:   0.16 kB
+2026-05-11T23:33:50.5304310Z apps/docs-site build: build/server/assets/router-decision-artifact-NWA0jxDT.js               0.21 kB │ gzip:   0.16 kB
+2026-05-11T23:33:50.5305974Z apps/docs-site build: build/server/assets/eligibility-and-rejection-DPosWjvo.js              0.21 kB │ gzip:   0.16 kB
+2026-05-11T23:33:50.5307638Z apps/docs-site build: build/server/assets/trace-and-usage-artifacts-C_nQOcQO.js              0.21 kB │ gzip:   0.16 kB
+2026-05-11T23:33:50.5309507Z apps/docs-site build: build/server/assets/protocol-to-router-mapping-nVRBSJ4n.js             0.22 kB │ gzip:   0.16 kB
+2026-05-11T23:33:50.5311231Z apps/docs-site build: build/server/assets/canonical-schemas-reference-BPAg1O-r.js            0.22 kB │ gzip:   0.16 kB
+2026-05-11T23:33:50.5313092Z apps/docs-site build: build/server/assets/declared-capability-profiles-Bmkpoamq.js           0.22 kB │ gzip:   0.16 kB
+2026-05-11T23:33:50.5314813Z apps/docs-site build: build/server/assets/how-routing-works-end-to-end-DFetmHhy.js           0.22 kB │ gzip:   0.16 kB
+2026-05-11T23:33:50.5316405Z apps/docs-site build: build/server/assets/observed-performance-profiles-C2DYUgFC.js          0.22 kB │ gzip:   0.16 kB
+2026-05-11T23:33:50.5317882Z apps/docs-site build: build/server/assets/routing-outcomes-and-failure-modes-CszCNpK2.js     0.22 kB │ gzip:   0.16 kB
+2026-05-11T23:33:50.5319351Z apps/docs-site build: build/server/assets/reason-codes-and-rejection-taxonomy-iTjSXrLS.js    0.22 kB │ gzip:   0.16 kB
+2026-05-11T23:33:50.5321091Z apps/docs-site build: build/server/assets/remove-undefined-CTqT55E9-D6pQYMtV.js              0.65 kB │ gzip:   0.39 kB
+2026-05-11T23:33:50.5322881Z apps/docs-site build: build/server/assets/fetch-Cf9_zva6.js                                  0.95 kB │ gzip:   0.55 kB
+2026-05-11T23:33:50.5324531Z apps/docs-site build: build/server/assets/chunk-CYJPkc-J-BYULT6qJ.js                         1.31 kB │ gzip:   0.69 kB
+2026-05-11T23:33:50.5326118Z apps/docs-site build: build/server/assets/chunk-BGC-wIje.js                                  1.40 kB │ gzip:   0.66 kB
+2026-05-11T23:33:50.5327791Z apps/docs-site build: build/server/assets/algolia-BOVS-bzh.js                                1.61 kB │ gzip:   0.82 kB
+2026-05-11T23:33:50.5329297Z apps/docs-site build: build/server/assets/search-BmF91JMH.js                                 2.21 kB │ gzip:   0.98 kB
+2026-05-11T23:33:50.5330851Z apps/docs-site build: build/server/assets/search-default-cZg7hx7d.js                         2.24 kB │ gzip:   0.94 kB
+2026-05-11T23:33:50.5332697Z apps/docs-site build: build/server/assets/orama-cloud-legacy-HwZkL36b.js                     2.34 kB │ gzip:   0.95 kB
+2026-05-11T23:33:50.5334309Z apps/docs-site build: build/server/assets/orama-cloud-Dz6yLMz4.js                            2.39 kB │ gzip:   0.96 kB
+2026-05-11T23:33:50.5335872Z apps/docs-site build: build/server/assets/how-role-model-works-D4ZXnk5n.js                   3.74 kB │ gzip:   1.18 kB
+2026-05-11T23:33:50.5337767Z apps/docs-site build: build/server/assets/orama-static-xdjoSPzf.js                           4.02 kB │ gzip:   1.60 kB
+2026-05-11T23:33:50.5339500Z apps/docs-site build: build/server/assets/protocol-overview-BdGa6jBe.js                      4.94 kB │ gzip:   1.22 kB
+2026-05-11T23:33:50.5341203Z apps/docs-site build: build/server/assets/routing-overview-Bz9lJSXJ.js                       5.06 kB │ gzip:   1.28 kB
+2026-05-11T23:33:50.5343004Z apps/docs-site build: build/server/assets/quickstart-DwlRzssL.js                             5.36 kB │ gzip:   1.43 kB
+2026-05-11T23:33:50.5344694Z apps/docs-site build: build/server/assets/observability-of-routing-DFZFoGce.js               9.40 kB │ gzip:   1.99 kB
+2026-05-11T23:33:50.5346462Z apps/docs-site build: build/server/assets/decision-semantics-DjTCyjOb.js                    10.97 kB │ gzip:   2.10 kB
+2026-05-11T23:33:50.5348092Z apps/docs-site build: build/server/assets/protocol-lifecycle-CbuVWGW0.js                    11.26 kB │ gzip:   2.33 kB
+2026-05-11T23:33:50.5349874Z apps/docs-site build: build/server/assets/routing-outcomes-and-failure-modes-JXVThot5.js    12.21 kB │ gzip:   2.16 kB
+2026-05-11T23:33:50.5351549Z apps/docs-site build: build/server/assets/candidate-discovery-DoEIb4Eu.js                   13.32 kB │ gzip:   2.38 kB
+2026-05-11T23:33:50.5353566Z apps/docs-site build: build/server/assets/mixedbread-wQbxvKE2.js                            15.29 kB │ gzip:   6.30 kB
+2026-05-11T23:33:50.5355328Z apps/docs-site build: build/server/assets/capability-taxonomy-r7PbBnD_.js                   15.48 kB │ gzip:   2.58 kB
+2026-05-11T23:33:50.5357227Z apps/docs-site build: build/server/assets/trace-and-usage-artifacts-Cz05j7tS.js             15.70 kB │ gzip:   2.48 kB
+2026-05-11T23:33:50.5359121Z apps/docs-site build: build/server/assets/router-decision-artifact-RwfmvYS9.js              16.49 kB │ gzip:   2.67 kB
+2026-05-11T23:33:50.5360995Z apps/docs-site build: build/server/assets/declared-capability-profiles-BOr0ybZi.js          16.52 kB │ gzip:   2.72 kB
+2026-05-11T23:33:50.5362996Z apps/docs-site build: build/server/assets/protocol-to-router-mapping-qDDceuS_.js            16.70 kB │ gzip:   2.83 kB
+2026-05-11T23:33:50.5364719Z apps/docs-site build: build/server/assets/routing-policy-C7Aur-QT.js                        16.86 kB │ gzip:   2.70 kB
+2026-05-11T23:33:50.5366551Z apps/docs-site build: build/server/assets/eligibility-and-rejection-DtOQwo_Z.js             18.43 kB │ gzip:   2.82 kB
+2026-05-11T23:33:50.5368452Z apps/docs-site build: build/server/assets/how-routing-works-end-to-end-CMo5mD8g.js          20.31 kB │ gzip:   3.40 kB
+2026-05-11T23:33:50.5370861Z apps/docs-site build: build/server/assets/comparison-and-tradeoffs-DQtUE2a9.js              20.84 kB │ gzip:   3.18 kB
+2026-05-11T23:33:50.5372947Z apps/docs-site build: build/server/assets/protocol-object-model-DxSHatn7.js                 21.39 kB │ gzip:   3.46 kB
+2026-05-11T23:33:50.5374988Z apps/docs-site build: build/server/assets/core-vocabulary-CJo3I-Yl.js                       21.63 kB │ gzip:   3.46 kB
+2026-05-11T23:33:50.5376863Z apps/docs-site build: build/server/assets/introduction-CHxOoBvC.js                          21.82 kB │ gzip:   3.68 kB
+2026-05-11T23:33:50.5378744Z apps/docs-site build: build/server/assets/canonical-schemas-reference-CRfsN2V6.js           22.25 kB │ gzip:   3.13 kB
+2026-05-11T23:33:50.5380552Z apps/docs-site build: build/server/assets/reason-codes-and-rejection-taxonomy-BZpiTwcX.js   22.27 kB │ gzip:   3.06 kB
+2026-05-11T23:33:50.5382470Z apps/docs-site build: build/server/assets/roles-and-tasks-DWuA5J9c.js                       22.98 kB │ gzip:   3.53 kB
+2026-05-11T23:33:50.5384236Z apps/docs-site build: build/server/assets/observed-performance-profiles-BvyQro8h.js         23.74 kB │ gzip:   3.48 kB
+2026-05-11T23:33:50.5385911Z apps/docs-site build: build/server/assets/docs-rdE6uIkq.js                                  23.89 kB │ gzip:   3.68 kB
+2026-05-11T23:33:50.5387530Z apps/docs-site build: build/server/assets/endpoint-identity-CKNQYUrD.js                     27.36 kB │ gzip:   3.79 kB
+2026-05-11T23:33:50.5389635Z apps/docs-site build: build/server/index.js                                                361.70 kB │ gzip:  86.16 kB
+2026-05-11T23:33:50.5391230Z apps/docs-site build: build/server/assets/remark-DmD561_2.js                               383.60 kB │ gzip:  81.28 kB
+2026-05-11T23:33:50.5393188Z apps/docs-site build: build/server/assets/search-BJdvAY5F.js                               510.57 kB │ gzip: 122.47 kB
+2026-05-11T23:33:50.5394516Z apps/docs-site build: [32m✓ built in 3.34s[39m
+2026-05-11T23:33:50.5395984Z apps/docs-site build: [33m[33m[PLUGIN_TIMINGS] Warning:[0m Your build spent significant time in plugins. Here is a breakdown:
+2026-05-11T23:33:50.5397242Z apps/docs-site build:   - react-router:virtual-modules (34%)
+2026-05-11T23:33:50.5398116Z apps/docs-site build:   - react-router:dot-server (25%)
+2026-05-11T23:33:50.5398905Z apps/docs-site build:   - fumadocs-mdx (17%)
+2026-05-11T23:33:50.5399737Z apps/docs-site build:   - react-router:inject-hmr-runtime (6%)
+2026-05-11T23:33:50.5400604Z apps/docs-site build:   - react-router:hmr-runtime (4%)
+2026-05-11T23:33:50.5401674Z apps/docs-site build: See https://rolldown.rs/options/checks#plugintimings for more details.
+2026-05-11T23:33:50.5402945Z apps/docs-site build: [39m
+2026-05-11T23:33:50.6565514Z role-model-router/apps/runtime-ui build: [32m✓[39m 1705 modules transformed.
+2026-05-11T23:33:50.7107738Z apps/docs-site build: > types:check
+2026-05-11T23:33:50.7109116Z apps/docs-site build: > react-router typegen && fumadocs-mdx && tsc --noEmit
+2026-05-11T23:33:50.8464196Z role-model-router/apps/runtime-ui build: rendering chunks...
+2026-05-11T23:33:50.9773526Z role-model-router/apps/runtime-ui build: computing gzip size...
+2026-05-11T23:33:50.9955604Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[32m.vite/manifest.json                          [39m[1m[2m 14.10 kB[22m[1m[22m[2m │ gzip:  1.43 kB[22m
+2026-05-11T23:33:50.9958890Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[35mroot-S6aYm8Rj.css                     [39m[1m[2m 28.09 kB[22m[1m[22m[2m │ gzip:  5.92 kB[22m
+2026-05-11T23:33:50.9963626Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mindex-fSI7bfiY.js                     [39m[1m[2m  0.15 kB[22m[1m[22m[2m │ gzip:  0.15 kB[22m
+2026-05-11T23:33:50.9966412Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mnot-found-B94xHKCp.js                 [39m[1m[2m  0.72 kB[22m[1m[22m[2m │ gzip:  0.47 kB[22m
+2026-05-11T23:33:50.9977342Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mroot-CNbhsBOV.js                      [39m[1m[2m  1.70 kB[22m[1m[22m[2m │ gzip:  0.86 kB[22m
+2026-05-11T23:33:50.9980023Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mlocal-matrix-BMRL8QCB.js              [39m[1m[2m  1.71 kB[22m[1m[22m[2m │ gzip:  0.87 kB[22m
+2026-05-11T23:33:50.9982890Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mlocal-logs-D7l4-RvS.js                [39m[1m[2m  2.07 kB[22m[1m[22m[2m │ gzip:  1.09 kB[22m
+2026-05-11T23:33:50.9985542Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mlocal-swap-BAAP5M8M.js                [39m[1m[2m  2.09 kB[22m[1m[22m[2m │ gzip:  0.96 kB[22m
+2026-05-11T23:33:50.9987896Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mobserve-logs-CMOLNsGp.js              [39m[1m[2m  2.61 kB[22m[1m[22m[2m │ gzip:  1.12 kB[22m
+2026-05-11T23:33:50.9989895Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mcontrol-runtime-config-BmTlc5M2.js    [39m[1m[2m  2.90 kB[22m[1m[22m[2m │ gzip:  1.38 kB[22m
+2026-05-11T23:33:50.9992163Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mpage-primitives-WYte_EGO.js           [39m[1m[2m  3.03 kB[22m[1m[22m[2m │ gzip:  1.01 kB[22m
+2026-05-11T23:33:50.9994546Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mapp-layout-CF_huvMU.js                [39m[1m[2m  3.09 kB[22m[1m[22m[2m │ gzip:  1.12 kB[22m
+2026-05-11T23:33:50.9996281Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mlocal-policy-DBarT_wZ.js              [39m[1m[2m  3.41 kB[22m[1m[22m[2m │ gzip:  1.41 kB[22m
+2026-05-11T23:33:50.9997891Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mrequests-D_IEIrz9.js                  [39m[1m[2m  3.76 kB[22m[1m[22m[2m │ gzip:  1.51 kB[22m
+2026-05-11T23:33:50.9999191Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mlocal-peers-u-6if9zV.js               [39m[1m[2m  3.79 kB[22m[1m[22m[2m │ gzip:  1.52 kB[22m
+2026-05-11T23:33:51.0000535Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mintegrations-downstream-D-ut24FZ.js   [39m[1m[2m  4.01 kB[22m[1m[22m[2m │ gzip:  1.44 kB[22m
+2026-05-11T23:33:51.0001887Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mcontrol-routing-strategy-BeqVQuOz.js  [39m[1m[2m  4.43 kB[22m[1m[22m[2m │ gzip:  1.59 kB[22m
+2026-05-11T23:33:51.0004276Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36msystem-peers-pBQtUq7y.js              [39m[1m[2m  4.49 kB[22m[1m[22m[2m │ gzip:  1.77 kB[22m
+2026-05-11T23:33:51.0005578Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mruntime-BsePeKnM.js                   [39m[1m[2m  4.51 kB[22m[1m[22m[2m │ gzip:  1.48 kB[22m
+2026-05-11T23:33:51.0006866Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mintegrations-upstream-CFpjz4Vo.js     [39m[1m[2m  4.59 kB[22m[1m[22m[2m │ gzip:  1.70 kB[22m
+2026-05-11T23:33:51.0008188Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mcontrol-controller-BA9kmsWa.js        [39m[1m[2m  4.74 kB[22m[1m[22m[2m │ gzip:  1.75 kB[22m
+2026-05-11T23:33:51.0009850Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mstudio-advanced-C3GbjzGc.js           [39m[1m[2m  4.78 kB[22m[1m[22m[2m │ gzip:  1.85 kB[22m
+2026-05-11T23:33:51.0011122Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mendpoints-DRmurohT.js                 [39m[1m[2m  4.80 kB[22m[1m[22m[2m │ gzip:  1.38 kB[22m
+2026-05-11T23:33:51.0012817Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mdashboard-owau3H_4.js                 [39m[1m[2m  4.84 kB[22m[1m[22m[2m │ gzip:  1.66 kB[22m
+2026-05-11T23:33:51.0014096Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mstudio-rerank-DeVLfem-.js             [39m[1m[2m  4.88 kB[22m[1m[22m[2m │ gzip:  1.95 kB[22m
+2026-05-11T23:33:51.0015614Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mobserve-activity-hn5wAp1T.js          [39m[1m[2m  5.29 kB[22m[1m[22m[2m │ gzip:  1.84 kB[22m
+2026-05-11T23:33:51.0017637Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mstudio-images-D3dm_n9g.js             [39m[1m[2m  5.55 kB[22m[1m[22m[2m │ gzip:  2.02 kB[22m
+2026-05-11T23:33:51.0018913Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mruntime-api-DfxNdJXE.js               [39m[1m[2m  5.84 kB[22m[1m[22m[2m │ gzip:  1.54 kB[22m
+2026-05-11T23:33:51.0020457Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mlocal-models-DlWyhw1P.js              [39m[1m[2m  6.87 kB[22m[1m[22m[2m │ gzip:  2.01 kB[22m
+2026-05-11T23:33:51.0021889Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mstudio-audio-_betO70I.js              [39m[1m[2m  7.04 kB[22m[1m[22m[2m │ gzip:  2.49 kB[22m
+2026-05-11T23:33:51.0023576Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mworkbench-BzZqWAJc.js                 [39m[1m[2m  7.07 kB[22m[1m[22m[2m │ gzip:  2.34 kB[22m
+2026-05-11T23:33:51.0024855Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mcontrol-models-6KX7S3A2.js            [39m[1m[2m  7.77 kB[22m[1m[22m[2m │ gzip:  2.30 kB[22m
+2026-05-11T23:33:51.0026120Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mview-models-DWOgtQ6Y.js               [39m[1m[2m  9.98 kB[22m[1m[22m[2m │ gzip:  3.40 kB[22m
+2026-05-11T23:33:51.0027404Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mrequest-detail-BisXJRa9.js            [39m[1m[2m 11.89 kB[22m[1m[22m[2m │ gzip:  3.84 kB[22m
+2026-05-11T23:33:51.0028654Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mproviders-DgggWnqL.js                 [39m[1m[2m 19.41 kB[22m[1m[22m[2m │ gzip:  5.33 kB[22m
+2026-05-11T23:33:51.0029917Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mdesign-system-D0ypZMOU.js             [39m[1m[2m 47.28 kB[22m[1m[22m[2m │ gzip: 15.26 kB[22m
+2026-05-11T23:33:51.0031210Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mchunk-EVOBXE3Y-Bpr6kgtK.js            [39m[1m[2m127.79 kB[22m[1m[22m[2m │ gzip: 43.05 kB[22m
+2026-05-11T23:33:51.0032587Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mentry.client-BBdlfaFT.js              [39m[1m[2m190.57 kB[22m[1m[22m[2m │ gzip: 60.05 kB[22m
+2026-05-11T23:33:51.0033445Z role-model-router/apps/runtime-ui build: [32m✓ built in 9.94s[39m
+2026-05-11T23:33:51.0484452Z role-model-router/apps/runtime-ui build: [36mvite v7.3.2 [32mbuilding ssr environment for production...[36m[39m
+2026-05-11T23:33:51.0541902Z role-model-router/apps/runtime-ui build: transforming...
+2026-05-11T23:33:51.2560390Z role-model-router/apps/runtime-ui build: [32m✓[39m 9 modules transformed.
+2026-05-11T23:33:51.2797431Z role-model-router/apps/runtime-ui build: rendering chunks...
+2026-05-11T23:33:51.2815169Z role-model-router/apps/runtime-ui build: [2mbuild/server/[22m[32m.vite/manifest.json               [39m[1m[2m 0.23 kB[22m[1m[22m
+2026-05-11T23:33:51.2818724Z role-model-router/apps/runtime-ui build: [2mbuild/server/[22m[2massets/[22m[35mserver-build-DemcTuOC.css  [39m[1m[2m39.02 kB[22m[1m[22m
+2026-05-11T23:33:51.2826658Z role-model-router/apps/runtime-ui build: [2mbuild/server/[22m[36mindex.js                          [39m[1m[2m36.09 kB[22m[1m[22m
+2026-05-11T23:33:51.2835807Z role-model-router/apps/runtime-ui build: [32m✓[39m 1 asset cleaned from React Router server build.
+2026-05-11T23:33:51.2837573Z role-model-router/apps/runtime-ui build: [2mbuild/server/assets/server-build-DemcTuOC.css[22m
+2026-05-11T23:33:51.3702908Z role-model-router/apps/runtime-ui build: SPA Mode: Generated [1mbuild/client/index.html[22m
+2026-05-11T23:33:51.3711428Z role-model-router/apps/runtime-ui build: Removing the server build in [32m/home/runner/work/role-model/role-model/role-model-router/apps/runtime-ui/build/server[39m due to ssr:false
+2026-05-11T23:33:51.3713794Z role-model-router/apps/runtime-ui build: [32m✓ built in 318ms[39m
+2026-05-11T23:33:52.0694780Z apps/docs-site build: [MDX] generated files in 2.3135379999998804ms
+2026-05-11T23:33:52.5885945Z apps/docs-site build: [MDX] generated files in 4.038152000000025ms
+2026-05-11T23:33:56.5590969Z apps/docs-site build: Materialized search index at /home/runner/work/role-model/role-model/apps/docs-site/build/client/api/search.json
+2026-05-11T23:33:56.5641857Z apps/docs-site build: Done
+2026-05-11T23:33:56.8155585Z role-model-router/apps/runtime-ui build: Done
+2026-05-11T23:33:56.8160898Z role-model-router/apps/bench-cli build$ tsc -p tsconfig.json
+2026-05-11T23:33:56.8163747Z role-model-router/packages/core build$ tsc -p tsconfig.json
+2026-05-11T23:33:56.8166240Z .../packages/profile-aggregator build$ tsc -p tsconfig.json
+2026-05-11T23:33:56.8167408Z .../packages/provider-account build$ tsc -p tsconfig.json
+2026-05-11T23:33:58.7443619Z role-model-router/apps/bench-cli build: Done
+2026-05-11T23:33:58.7464559Z role-model-router/packages/trace build$ tsc -p tsconfig.json
+2026-05-11T23:33:58.9697454Z .../packages/provider-account build: Done
+2026-05-11T23:33:58.9731541Z role-model-router/packages/usage build$ tsc -p tsconfig.json
+2026-05-11T23:33:59.0529868Z .../packages/profile-aggregator build: Done
+2026-05-11T23:33:59.0563339Z .../packages/vendor-litellm build$ tsc -p tsconfig.json
+2026-05-11T23:33:59.1345920Z ##[error]role-model-router/packages/core build: src/router.ts(131,60): error TS2537: Type 'Record<string, ThroughputPenaltyStateRecord> | undefined' has no matching index signature for type 'string'.
+2026-05-11T23:33:59.1560364Z role-model-router/packages/core build: Failed
+2026-05-11T23:33:59.2125878Z /home/runner/work/role-model/role-model/role-model-router/packages/core:
+2026-05-11T23:33:59.2183877Z  ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @role-model-router/core@0.0.0 build: `tsc -p tsconfig.json`
+2026-05-11T23:33:59.2209984Z Exit status 2
+2026-05-11T23:33:59.2211110Z .../packages/vendor-llama-swap build$ tsc -p tsconfig.json
+2026-05-11T23:33:59.2966992Z  ELIFECYCLE  Command failed with exit code 2.
+2026-05-11T23:33:59.3326387Z  ELIFECYCLE  Command failed with exit code 2.
+2026-05-11T23:33:59.3537322Z ##[error]Process completed with exit code 2.
+2026-05-11T23:33:59.3596978Z Post job cleanup.
+2026-05-11T23:33:59.5047862Z Pruning is unnecessary.
+2026-05-11T23:33:59.5186276Z Post job cleanup.
+2026-05-11T23:33:59.6172227Z [command]/usr/bin/git version
+2026-05-11T23:33:59.6209078Z git version 2.53.0
+2026-05-11T23:33:59.6252274Z Temporarily overriding HOME='/home/runner/work/_temp/4454375a-7be5-400e-b858-7b506e80c231' before making global git config changes
+2026-05-11T23:33:59.6253632Z Adding repository directory to the temporary git global config as a safe directory
+2026-05-11T23:33:59.6266709Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/role-model/role-model
+2026-05-11T23:33:59.6307085Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-05-11T23:33:59.6343268Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-05-11T23:33:59.6586374Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-05-11T23:33:59.6609273Z http.https://github.com/.extraheader
+2026-05-11T23:33:59.6620965Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-05-11T23:33:59.6652697Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-05-11T23:33:59.6888071Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-05-11T23:33:59.6919817Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-05-11T23:33:59.7274921Z Cleaning up orphan processes
+2026-05-11T23:33:59.7634541Z ##[warning]Node.js 20 actions are deprecated. The following actions are running on Node.js 20 and may not work as expected: actions/checkout@v4, actions/setup-node@v4, pnpm/action-setup@v4. Actions will be forced to run with Node.js 24 by default starting June 2nd, 2026. Node.js 20 will be removed from the runner on September 16th, 2026. Please check if updated versions of these actions are available that support Node.js 24. To opt into Node.js 24 now, set the FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true environment variable on the runner or in your workflow file. Once Node.js 24 becomes the default, you can temporarily opt out by setting ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

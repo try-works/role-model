@@ -55,8 +55,8 @@ export interface RuntimeRoutingDiagnostics {
   };
   readonly hybridArbitration?: {
     readonly active: boolean;
-    readonly difficultyStrategy: "balanced" | "cost" | "quality";
-    readonly finalStrategy: "balanced" | "cost" | "quality";
+    readonly difficultyStrategy: string;
+    readonly finalStrategy: string;
     readonly controllerChangedPlan: boolean;
     readonly dominantSignal: "difficulty" | "controller" | "aligned";
     readonly preferredEndpointIds?: readonly string[];

@@ -9,6 +9,7 @@ import type {
   RoutingPolicyStrategy,
   ScoredCandidate,
   TaskDefinitionRecord,
+  ThroughputPenaltyStateRecord,
 } from "./types.js";
 
 function isLocalCandidate(candidate: EndpointCandidate): boolean {
@@ -128,7 +129,7 @@ function decayToNeutral(
 function getActiveThroughputPenaltyState(
   input: RouteRequestInput,
   candidate: EndpointCandidate,
-): RouteRequestInput["throughputPenaltyStateByEndpointId"][string] | undefined {
+): ThroughputPenaltyStateRecord | undefined {
   const state = input.throughputPenaltyStateByEndpointId?.[candidate.identity.endpoint_id];
   if (!input.observedDataConfig?.throughputSla.enabled || !state) {
     return undefined;
