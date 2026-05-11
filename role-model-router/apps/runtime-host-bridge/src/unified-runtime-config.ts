@@ -1,10 +1,6 @@
 import { parse, stringify } from "yaml";
 
-export type UnifiedRuntimeExecutionMode =
-  | "decision_only"
-  | "hybrid"
-  | "local_only"
-  | "remote_only";
+export type UnifiedRuntimeExecutionMode = "decision_only" | "hybrid" | "local_only" | "remote_only";
 
 export type UnifiedRuntimeDifficultyBucket = "easy" | "medium" | "hard";
 export type UnifiedRuntimeAliasRoutingMode = "basic" | "difficulty" | "intelligent" | "hybrid";
@@ -323,8 +319,11 @@ function parseProcessConfig(
     }
   }
   return {
-    command: typeof value?.command === "string" && value.command.trim().length > 0 ? value.command : null,
-    args: Array.isArray(value?.args) ? value.args.filter((entry): entry is string => typeof entry === "string") : [],
+    command:
+      typeof value?.command === "string" && value.command.trim().length > 0 ? value.command : null,
+    args: Array.isArray(value?.args)
+      ? value.args.filter((entry): entry is string => typeof entry === "string")
+      : [],
     env,
     cwd: typeof value?.cwd === "string" && value.cwd.trim().length > 0 ? value.cwd : null,
     startupTimeoutMs:
@@ -346,10 +345,7 @@ function readBoolean(value: unknown): boolean | undefined {
   return typeof value === "boolean" ? value : undefined;
 }
 
-function readDifficultyBucket(
-  value: unknown,
-  path: string,
-): UnifiedRuntimeDifficultyBucket | null {
+function readDifficultyBucket(value: unknown, path: string): UnifiedRuntimeDifficultyBucket | null {
   if (value === undefined || value === null || value === "") {
     return null;
   }
@@ -359,14 +355,16 @@ function readDifficultyBucket(
   throw new Error(`${path} must be easy, medium, or hard.`);
 }
 
-function readAliasRoutingMode(
-  value: unknown,
-  path: string,
-): UnifiedRuntimeAliasRoutingMode | null {
+function readAliasRoutingMode(value: unknown, path: string): UnifiedRuntimeAliasRoutingMode | null {
   if (value === undefined || value === null || value === "") {
     return null;
   }
-  if (value === "basic" || value === "difficulty" || value === "intelligent" || value === "hybrid") {
+  if (
+    value === "basic" ||
+    value === "difficulty" ||
+    value === "intelligent" ||
+    value === "hybrid"
+  ) {
     return value;
   }
   throw new Error(`${path} must be basic, difficulty, intelligent, or hybrid.`);
@@ -400,7 +398,9 @@ function readPenaltyFactor(value: unknown, path: string, fallback: number): numb
 }
 
 function readStringArray(value: unknown): string[] {
-  return Array.isArray(value) ? value.filter((entry): entry is string => typeof entry === "string") : [];
+  return Array.isArray(value)
+    ? value.filter((entry): entry is string => typeof entry === "string")
+    : [];
 }
 
 function readStringRecord(value: unknown): Record<string, string> {
@@ -477,7 +477,10 @@ function normalizeLlamaSwapModelInput(
   fallbackModelId?: string,
 ): UnifiedRuntimeConfigModel | null {
   ensureObject(value, "Unified llama-swap model config must be an object.");
-  const modelId = readNonEmptyString("modelId" in value ? value.modelId : value.model_id) ?? fallbackModelId ?? null;
+  const modelId =
+    readNonEmptyString("modelId" in value ? value.modelId : value.model_id) ??
+    fallbackModelId ??
+    null;
   const path = readNonEmptyString(value.path);
   if (!modelId || !path) {
     return null;
@@ -489,9 +492,7 @@ function normalizeLlamaSwapModelInput(
       "contextWindow" in value ? value.contextWindow : value.context_window,
     ),
     command: readNonEmptyString(value.command),
-    proxyBaseUrl: readNonEmptyString(
-      "proxyBaseUrl" in value ? value.proxyBaseUrl : value.proxy,
-    ),
+    proxyBaseUrl: readNonEmptyString("proxyBaseUrl" in value ? value.proxyBaseUrl : value.proxy),
     checkEndpoint: readNonEmptyString(
       "checkEndpoint" in value ? value.checkEndpoint : value.check_endpoint,
     ),
@@ -499,7 +500,11 @@ function normalizeLlamaSwapModelInput(
       "useModelName" in value ? value.useModelName : value.use_model_name,
     ),
     maxDifficulty: readDifficultyBucket(
-      "maxDifficulty" in value ? value.maxDifficulty : "max_difficulty" in value ? value.max_difficulty : undefined,
+      "maxDifficulty" in value
+        ? value.maxDifficulty
+        : "max_difficulty" in value
+          ? value.max_difficulty
+          : undefined,
       `llamaSwap.models.${modelId}.maxDifficulty`,
     ),
   };
@@ -535,7 +540,9 @@ function normalizeLlamaSwapInput(value: unknown): UnifiedRuntimeConfig["llamaSwa
   }
 
   const processSource =
-    "process" in value && value.process && typeof value.process === "object" ? value.process : value;
+    "process" in value && value.process && typeof value.process === "object"
+      ? value.process
+      : value;
 
   return {
     enabled: models.length > 0,
@@ -572,7 +579,11 @@ function normalizeLiteLLMProviderMappingInput(
       model: litellmModel,
     },
     maxDifficulty: readDifficultyBucket(
-      "maxDifficulty" in value ? value.maxDifficulty : "max_difficulty" in value ? value.max_difficulty : undefined,
+      "maxDifficulty" in value
+        ? value.maxDifficulty
+        : "max_difficulty" in value
+          ? value.max_difficulty
+          : undefined,
       `liteLLM.modelMappings.${modelId}.maxDifficulty`,
     ),
   };
@@ -584,7 +595,9 @@ function normalizeLiteLLMProviderInput(
 ): UnifiedRuntimeConfigProvider | null {
   ensureObject(value, "Unified LiteLLM provider config must be an object.");
   const providerId =
-    readNonEmptyString("providerId" in value ? value.providerId : value.provider_id) ?? fallbackProviderId ?? null;
+    readNonEmptyString("providerId" in value ? value.providerId : value.provider_id) ??
+    fallbackProviderId ??
+    null;
   if (!providerId) {
     return null;
   }
@@ -608,9 +621,16 @@ function normalizeLiteLLMProviderInput(
   }
 
   const explicitModelNames = readStringArray(
-    "modelNames" in value ? value.modelNames : "model_names" in value ? value.model_names : undefined,
+    "modelNames" in value
+      ? value.modelNames
+      : "model_names" in value
+        ? value.model_names
+        : undefined,
   );
-  const modelNames = explicitModelNames.length > 0 ? explicitModelNames : modelMappings.map((entry) => entry.modelId);
+  const modelNames =
+    explicitModelNames.length > 0
+      ? explicitModelNames
+      : modelMappings.map((entry) => entry.modelId);
 
   return {
     providerId,
@@ -649,7 +669,9 @@ function normalizeLiteLLMInput(value: unknown): UnifiedRuntimeConfig["liteLLM"] 
   }
 
   const processSource =
-    "process" in value && value.process && typeof value.process === "object" ? value.process : value;
+    "process" in value && value.process && typeof value.process === "object"
+      ? value.process
+      : value;
 
   return {
     enabled: providers.length > 0,
@@ -665,11 +687,15 @@ function normalizeModelAliasInput(
 ): UnifiedRuntimeModelAliasConfig | null {
   ensureObject(value, `${prefix} must be an object.`);
   const aliasId =
-    readNonEmptyString("aliasId" in value ? value.aliasId : value.alias_id) ?? fallbackAliasId ?? null;
+    readNonEmptyString("aliasId" in value ? value.aliasId : value.alias_id) ??
+    fallbackAliasId ??
+    null;
   if (!aliasId) {
     throw new Error(`${prefix}.alias_id is required.`);
   }
-  const modelIds = readStringArray("modelIds" in value ? value.modelIds : "model_ids" in value ? value.model_ids : undefined)
+  const modelIds = readStringArray(
+    "modelIds" in value ? value.modelIds : "model_ids" in value ? value.model_ids : undefined,
+  )
     .map((entry) => entry.trim())
     .filter((entry) => entry.length > 0);
   if (modelIds.length === 0) {
@@ -712,15 +738,16 @@ function normalizeModelAliasesInput(
   return aliases;
 }
 
-const DEFAULT_UNIFIED_RUNTIME_DIFFICULTY_CLASSIFIER_CONFIG: UnifiedRuntimeDifficultyClassifierConfig = {
-  enabled: true,
-  rubricVersion: "v1",
-  sourceType: "remote",
-  endpointId: null,
-  modelId: null,
-  timeoutMs: 1500,
-  fallbackDifficulty: "hard",
-};
+const DEFAULT_UNIFIED_RUNTIME_DIFFICULTY_CLASSIFIER_CONFIG: UnifiedRuntimeDifficultyClassifierConfig =
+  {
+    enabled: true,
+    rubricVersion: "v1",
+    sourceType: "remote",
+    endpointId: null,
+    modelId: null,
+    timeoutMs: 1500,
+    fallbackDifficulty: "hard",
+  };
 
 const DEFAULT_UNIFIED_RUNTIME_CONTROLLER_CONFIG: UnifiedRuntimeControllerConfig = {
   enabled: true,
@@ -736,16 +763,34 @@ function normalizeDifficultyClassifierInput(
 ): UnifiedRuntimeDifficultyClassifierConfig {
   ensureObject(value, `${prefix} must be an object.`);
   return {
-    enabled: readBoolean(value.enabled) ?? DEFAULT_UNIFIED_RUNTIME_DIFFICULTY_CLASSIFIER_CONFIG.enabled,
+    enabled:
+      readBoolean(value.enabled) ?? DEFAULT_UNIFIED_RUNTIME_DIFFICULTY_CLASSIFIER_CONFIG.enabled,
     rubricVersion:
-      readNonEmptyString("rubricVersion" in value ? value.rubricVersion : "rubric_version" in value ? value.rubric_version : undefined) ??
-      DEFAULT_UNIFIED_RUNTIME_DIFFICULTY_CLASSIFIER_CONFIG.rubricVersion,
+      readNonEmptyString(
+        "rubricVersion" in value
+          ? value.rubricVersion
+          : "rubric_version" in value
+            ? value.rubric_version
+            : undefined,
+      ) ?? DEFAULT_UNIFIED_RUNTIME_DIFFICULTY_CLASSIFIER_CONFIG.rubricVersion,
     sourceType: readClassifierSourceType(
-      "sourceType" in value ? value.sourceType : "source_type" in value ? value.source_type : DEFAULT_UNIFIED_RUNTIME_DIFFICULTY_CLASSIFIER_CONFIG.sourceType,
+      "sourceType" in value
+        ? value.sourceType
+        : "source_type" in value
+          ? value.source_type
+          : DEFAULT_UNIFIED_RUNTIME_DIFFICULTY_CLASSIFIER_CONFIG.sourceType,
       `${prefix}.source_type`,
     ),
-    endpointId: readNonEmptyString("endpointId" in value ? value.endpointId : "endpoint_id" in value ? value.endpoint_id : undefined),
-    modelId: readNonEmptyString("modelId" in value ? value.modelId : "model_id" in value ? value.model_id : undefined),
+    endpointId: readNonEmptyString(
+      "endpointId" in value
+        ? value.endpointId
+        : "endpoint_id" in value
+          ? value.endpoint_id
+          : undefined,
+    ),
+    modelId: readNonEmptyString(
+      "modelId" in value ? value.modelId : "model_id" in value ? value.model_id : undefined,
+    ),
     timeoutMs: readRequiredPositiveNumber(
       "timeoutMs" in value ? value.timeoutMs : "timeout_ms" in value ? value.timeout_ms : undefined,
       `${prefix}.timeout_ms`,
@@ -763,19 +808,28 @@ function normalizeDifficultyClassifierInput(
   };
 }
 
-function normalizeControllerInput(
-  value: unknown,
-  prefix: string,
-): UnifiedRuntimeControllerConfig {
+function normalizeControllerInput(value: unknown, prefix: string): UnifiedRuntimeControllerConfig {
   ensureObject(value, `${prefix} must be an object.`);
   return {
     enabled: readBoolean(value.enabled) ?? DEFAULT_UNIFIED_RUNTIME_CONTROLLER_CONFIG.enabled,
     sourceType: readClassifierSourceType(
-      "sourceType" in value ? value.sourceType : "source_type" in value ? value.source_type : DEFAULT_UNIFIED_RUNTIME_CONTROLLER_CONFIG.sourceType,
+      "sourceType" in value
+        ? value.sourceType
+        : "source_type" in value
+          ? value.source_type
+          : DEFAULT_UNIFIED_RUNTIME_CONTROLLER_CONFIG.sourceType,
       `${prefix}.source_type`,
     ),
-    endpointId: readNonEmptyString("endpointId" in value ? value.endpointId : "endpoint_id" in value ? value.endpoint_id : undefined),
-    modelId: readNonEmptyString("modelId" in value ? value.modelId : "model_id" in value ? value.model_id : undefined),
+    endpointId: readNonEmptyString(
+      "endpointId" in value
+        ? value.endpointId
+        : "endpoint_id" in value
+          ? value.endpoint_id
+          : undefined,
+    ),
+    modelId: readNonEmptyString(
+      "modelId" in value ? value.modelId : "model_id" in value ? value.model_id : undefined,
+    ),
     timeoutMs: readRequiredPositiveNumber(
       "timeoutMs" in value ? value.timeoutMs : "timeout_ms" in value ? value.timeout_ms : undefined,
       `${prefix}.timeout_ms`,
@@ -836,7 +890,10 @@ function normalizeObservedDataInput(
       ? difficultyLearningSource.invalidation
       : undefined;
   if (invalidationSource !== undefined) {
-    ensureObject(invalidationSource, `${prefix}.difficulty_learning.invalidation must be an object.`);
+    ensureObject(
+      invalidationSource,
+      `${prefix}.difficulty_learning.invalidation must be an object.`,
+    );
   }
   const overrideSource =
     difficultyLearningSource &&
@@ -858,7 +915,10 @@ function normalizeObservedDataInput(
       ? difficultyLearningSource.recommendation
       : undefined;
   if (recommendationSource !== undefined) {
-    ensureObject(recommendationSource, `${prefix}.difficulty_learning.recommendation must be an object.`);
+    ensureObject(
+      recommendationSource,
+      `${prefix}.difficulty_learning.recommendation must be an object.`,
+    );
   }
 
   return {
@@ -892,7 +952,8 @@ function normalizeObservedDataInput(
               ? invalidationSource.max_context_tokens_delta
               : undefined,
           `${prefix}.difficulty_learning.invalidation.max_context_tokens_delta`,
-          DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG.difficultyLearning.invalidation.maxContextTokensDelta,
+          DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG.difficultyLearning.invalidation
+            .maxContextTokensDelta,
         ),
         maxHistoryTurnDelta: readRequiredPositiveNumber(
           invalidationSource && "maxHistoryTurnDelta" in invalidationSource
@@ -901,7 +962,8 @@ function normalizeObservedDataInput(
               ? invalidationSource.max_history_turn_delta
               : undefined,
           `${prefix}.difficulty_learning.invalidation.max_history_turn_delta`,
-          DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG.difficultyLearning.invalidation.maxHistoryTurnDelta,
+          DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG.difficultyLearning.invalidation
+            .maxHistoryTurnDelta,
         ),
         maxToolCountDelta: readRequiredPositiveNumber(
           invalidationSource && "maxToolCountDelta" in invalidationSource
@@ -910,7 +972,8 @@ function normalizeObservedDataInput(
               ? invalidationSource.max_tool_count_delta
               : undefined,
           `${prefix}.difficulty_learning.invalidation.max_tool_count_delta`,
-          DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG.difficultyLearning.invalidation.maxToolCountDelta,
+          DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG.difficultyLearning.invalidation
+            .maxToolCountDelta,
         ),
         maxInstructionConstraintDelta: readRequiredPositiveNumber(
           invalidationSource && "maxInstructionConstraintDelta" in invalidationSource
@@ -919,7 +982,8 @@ function normalizeObservedDataInput(
               ? invalidationSource.max_instruction_constraint_delta
               : undefined,
           `${prefix}.difficulty_learning.invalidation.max_instruction_constraint_delta`,
-          DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG.difficultyLearning.invalidation.maxInstructionConstraintDelta,
+          DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG.difficultyLearning.invalidation
+            .maxInstructionConstraintDelta,
         ),
         maxDecompositionKeywordDelta: readRequiredPositiveNumber(
           invalidationSource && "maxDecompositionKeywordDelta" in invalidationSource
@@ -928,7 +992,8 @@ function normalizeObservedDataInput(
               ? invalidationSource.max_decomposition_keyword_delta
               : undefined,
           `${prefix}.difficulty_learning.invalidation.max_decomposition_keyword_delta`,
-          DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG.difficultyLearning.invalidation.maxDecompositionKeywordDelta,
+          DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG.difficultyLearning.invalidation
+            .maxDecompositionKeywordDelta,
         ),
         reclassifyOnCodeOrSchemaChange:
           readBoolean(
@@ -938,7 +1003,8 @@ function normalizeObservedDataInput(
                 ? invalidationSource.reclassify_on_code_or_schema_change
                 : undefined,
           ) ??
-          DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG.difficultyLearning.invalidation.reclassifyOnCodeOrSchemaChange,
+          DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG.difficultyLearning.invalidation
+            .reclassifyOnCodeOrSchemaChange,
       },
       override: {
         minSamples: readRequiredPositiveNumber(
@@ -995,7 +1061,8 @@ function normalizeObservedDataInput(
               ? recommendationSource.max_failure_rate
               : undefined,
           `${prefix}.difficulty_learning.recommendation.max_failure_rate`,
-          DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG.difficultyLearning.recommendation.maxFailureRate,
+          DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG.difficultyLearning.recommendation
+            .maxFailureRate,
         ),
         minQualityScore: readPenaltyFactor(
           recommendationSource && "minQualityScore" in recommendationSource
@@ -1004,7 +1071,8 @@ function normalizeObservedDataInput(
               ? recommendationSource.min_quality_score
               : undefined,
           `${prefix}.difficulty_learning.recommendation.min_quality_score`,
-          DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG.difficultyLearning.recommendation.minQualityScore,
+          DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG.difficultyLearning.recommendation
+            .minQualityScore,
         ),
         minTokensPerSec: readRequiredPositiveNumber(
           recommendationSource && "minTokensPerSec" in recommendationSource
@@ -1013,7 +1081,8 @@ function normalizeObservedDataInput(
               ? recommendationSource.min_tokens_per_sec
               : undefined,
           `${prefix}.difficulty_learning.recommendation.min_tokens_per_sec`,
-          DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG.difficultyLearning.recommendation.minTokensPerSec,
+          DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG.difficultyLearning.recommendation
+            .minTokensPerSec,
         ),
       },
     },
@@ -1066,8 +1135,11 @@ function normalizeObservedDataInput(
     },
     throughputSla: {
       enabled:
-        readBoolean(throughputSlaSource && "enabled" in throughputSlaSource ? throughputSlaSource.enabled : undefined) ??
-        DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG.throughputSla.enabled,
+        readBoolean(
+          throughputSlaSource && "enabled" in throughputSlaSource
+            ? throughputSlaSource.enabled
+            : undefined,
+        ) ?? DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG.throughputSla.enabled,
       minTokensPerSec: readRequiredPositiveNumber(
         throughputSlaSource && "minTokensPerSec" in throughputSlaSource
           ? throughputSlaSource.minTokensPerSec
@@ -1099,7 +1171,9 @@ function normalizeObservedDataInput(
   };
 }
 
-function parseLlamaSwapModels(rawConfig: RawUnifiedRuntimeConfig): UnifiedRuntimeConfig["llamaSwap"] {
+function parseLlamaSwapModels(
+  rawConfig: RawUnifiedRuntimeConfig,
+): UnifiedRuntimeConfig["llamaSwap"] {
   const models = rawConfig.llama_swap?.models ?? {};
   const normalizedModels = Object.entries(models).map(([modelId, config]) => {
     ensureObject(config, `llama_swap.models.${modelId} must be an object.`);
@@ -1110,8 +1184,12 @@ function parseLlamaSwapModels(rawConfig: RawUnifiedRuntimeConfig): UnifiedRuntim
       modelId,
       path: config.path,
       contextWindow: typeof config.context_window === "number" ? config.context_window : null,
-      command: typeof config.command === "string" && config.command.trim().length > 0 ? config.command : null,
-      proxyBaseUrl: typeof config.proxy === "string" && config.proxy.trim().length > 0 ? config.proxy : null,
+      command:
+        typeof config.command === "string" && config.command.trim().length > 0
+          ? config.command
+          : null,
+      proxyBaseUrl:
+        typeof config.proxy === "string" && config.proxy.trim().length > 0 ? config.proxy : null,
       checkEndpoint:
         typeof config.check_endpoint === "string" && config.check_endpoint.trim().length > 0
           ? config.check_endpoint
@@ -1134,7 +1212,9 @@ function parseLlamaSwapModels(rawConfig: RawUnifiedRuntimeConfig): UnifiedRuntim
   };
 }
 
-function parseLiteLLMProviders(rawConfig: RawUnifiedRuntimeConfig): UnifiedRuntimeConfig["liteLLM"] {
+function parseLiteLLMProviders(
+  rawConfig: RawUnifiedRuntimeConfig,
+): UnifiedRuntimeConfig["liteLLM"] {
   const providers = rawConfig.litellm_proxy?.providers ?? {};
   const normalizedProviders = Object.entries(providers).map(([providerId, config]) => {
     ensureObject(config, `litellm_proxy.providers.${providerId} must be an object.`);
@@ -1145,7 +1225,8 @@ function parseLiteLLMProviders(rawConfig: RawUnifiedRuntimeConfig): UnifiedRunti
       if (!entry || typeof entry !== "object") {
         continue;
       }
-      const modelId = "model_name" in entry && typeof entry.model_name === "string" ? entry.model_name : null;
+      const modelId =
+        "model_name" in entry && typeof entry.model_name === "string" ? entry.model_name : null;
       const rawLiteLLMParams =
         "litellm_params" in entry &&
         entry.litellm_params &&
@@ -1156,7 +1237,7 @@ function parseLiteLLMProviders(rawConfig: RawUnifiedRuntimeConfig): UnifiedRunti
       const litellmParams = isUnifiedRuntimeJSONObject(normalizedLiteLLMParams)
         ? normalizedLiteLLMParams
         : {};
-      const rawLitellmModel = litellmParams["model"];
+      const rawLitellmModel = litellmParams.model;
       const litellmModel = typeof rawLitellmModel === "string" ? rawLitellmModel : modelId;
       if (!modelId || !litellmModel) {
         continue;
@@ -1179,7 +1260,11 @@ function parseLiteLLMProviders(rawConfig: RawUnifiedRuntimeConfig): UnifiedRunti
       providerId,
       apiKeyRef: typeof config.api_key === "string" ? config.api_key : null,
       modelNames: modelList
-        .map((entry) => (entry && typeof entry === "object" && "model_name" in entry ? entry.model_name : undefined))
+        .map((entry) =>
+          entry && typeof entry === "object" && "model_name" in entry
+            ? entry.model_name
+            : undefined,
+        )
         .filter((entry): entry is string => typeof entry === "string" && entry.trim().length > 0),
       modelMappings,
     };
@@ -1222,19 +1307,31 @@ export function parseUnifiedRuntimeConfigText(text: string): UnifiedRuntimeConfi
         ? rawConfig.version
         : "1.0",
     routingStrategy:
-      typeof rawConfig.routing?.strategy === "string" && rawConfig.routing.strategy.trim().length > 0
+      typeof rawConfig.routing?.strategy === "string" &&
+      rawConfig.routing.strategy.trim().length > 0
         ? rawConfig.routing.strategy
         : null,
     executionMode: deriveUnifiedRuntimeExecutionMode({
       llamaSwapEnabled: llamaSwap.enabled,
       liteLLMEnabled: liteLLM.enabled,
     }),
-    ...(rawConfig.controller ? { controller: normalizeControllerInput(rawConfig.controller, "controller") } : {}),
-    ...(rawConfig.difficulty_classifier
-      ? { difficultyClassifier: normalizeDifficultyClassifierInput(rawConfig.difficulty_classifier, "difficulty_classifier") }
+    ...(rawConfig.controller
+      ? { controller: normalizeControllerInput(rawConfig.controller, "controller") }
       : {}),
-    ...(rawConfig.model_aliases ? { modelAliases: normalizeModelAliasesInput(rawConfig.model_aliases, "model_aliases") } : {}),
-    ...(rawConfig.observed_data ? { observedData: normalizeObservedDataInput(rawConfig.observed_data, "observed_data") } : {}),
+    ...(rawConfig.difficulty_classifier
+      ? {
+          difficultyClassifier: normalizeDifficultyClassifierInput(
+            rawConfig.difficulty_classifier,
+            "difficulty_classifier",
+          ),
+        }
+      : {}),
+    ...(rawConfig.model_aliases
+      ? { modelAliases: normalizeModelAliasesInput(rawConfig.model_aliases, "model_aliases") }
+      : {}),
+    ...(rawConfig.observed_data
+      ? { observedData: normalizeObservedDataInput(rawConfig.observed_data, "observed_data") }
+      : {}),
     llamaSwap,
     liteLLM,
   };
@@ -1257,9 +1354,12 @@ export function normalizeUnifiedRuntimeConfigInput(input: unknown): UnifiedRunti
     "liteLLM" in input ? input.liteLLM : "litellm_proxy" in input ? input.litellm_proxy : undefined,
   );
   const observedDataSource =
-    "observedData" in input ? input.observedData : "observed_data" in input ? input.observed_data : undefined;
-  const controllerSource =
-    "controller" in input ? input.controller : undefined;
+    "observedData" in input
+      ? input.observedData
+      : "observed_data" in input
+        ? input.observed_data
+        : undefined;
+  const controllerSource = "controller" in input ? input.controller : undefined;
   const difficultyClassifierSource =
     "difficultyClassifier" in input
       ? input.difficultyClassifier
@@ -1267,15 +1367,17 @@ export function normalizeUnifiedRuntimeConfigInput(input: unknown): UnifiedRunti
         ? input.difficulty_classifier
         : undefined;
   const modelAliasesSource =
-    "modelAliases" in input ? input.modelAliases : "model_aliases" in input ? input.model_aliases : undefined;
+    "modelAliases" in input
+      ? input.modelAliases
+      : "model_aliases" in input
+        ? input.model_aliases
+        : undefined;
 
   return {
     version: readNonEmptyString(input.version) ?? "1.0",
     routingStrategy:
       readNonEmptyString(
-        "routingStrategy" in input
-          ? input.routingStrategy
-          : routingStrategyInput,
+        "routingStrategy" in input ? input.routingStrategy : routingStrategyInput,
       ) ?? null,
     executionMode: deriveUnifiedRuntimeExecutionMode({
       llamaSwapEnabled: llamaSwap.enabled,
@@ -1359,9 +1461,12 @@ export function renderUnifiedRuntimeConfigText(config: UnifiedRuntimeConfig): st
       difficulty_learning: {
         cache_ttl_ms: config.observedData.difficultyLearning.cacheTtlMs,
         invalidation: {
-          max_context_tokens_delta: config.observedData.difficultyLearning.invalidation.maxContextTokensDelta,
-          max_history_turn_delta: config.observedData.difficultyLearning.invalidation.maxHistoryTurnDelta,
-          max_tool_count_delta: config.observedData.difficultyLearning.invalidation.maxToolCountDelta,
+          max_context_tokens_delta:
+            config.observedData.difficultyLearning.invalidation.maxContextTokensDelta,
+          max_history_turn_delta:
+            config.observedData.difficultyLearning.invalidation.maxHistoryTurnDelta,
+          max_tool_count_delta:
+            config.observedData.difficultyLearning.invalidation.maxToolCountDelta,
           max_instruction_constraint_delta:
             config.observedData.difficultyLearning.invalidation.maxInstructionConstraintDelta,
           max_decomposition_keyword_delta:
@@ -1403,8 +1508,12 @@ export function renderUnifiedRuntimeConfigText(config: UnifiedRuntimeConfig): st
       enabled: config.difficultyClassifier.enabled,
       rubric_version: config.difficultyClassifier.rubricVersion,
       source_type: config.difficultyClassifier.sourceType,
-      ...(config.difficultyClassifier.endpointId !== null ? { endpoint_id: config.difficultyClassifier.endpointId } : {}),
-      ...(config.difficultyClassifier.modelId !== null ? { model_id: config.difficultyClassifier.modelId } : {}),
+      ...(config.difficultyClassifier.endpointId !== null
+        ? { endpoint_id: config.difficultyClassifier.endpointId }
+        : {}),
+      ...(config.difficultyClassifier.modelId !== null
+        ? { model_id: config.difficultyClassifier.modelId }
+        : {}),
       timeout_ms: config.difficultyClassifier.timeoutMs,
       fallback_difficulty: config.difficultyClassifier.fallbackDifficulty,
     };
@@ -1414,7 +1523,9 @@ export function renderUnifiedRuntimeConfigText(config: UnifiedRuntimeConfig): st
     document.controller = {
       enabled: config.controller.enabled,
       source_type: config.controller.sourceType,
-      ...(config.controller.endpointId !== null ? { endpoint_id: config.controller.endpointId } : {}),
+      ...(config.controller.endpointId !== null
+        ? { endpoint_id: config.controller.endpointId }
+        : {}),
       ...(config.controller.modelId !== null ? { model_id: config.controller.modelId } : {}),
       timeout_ms: config.controller.timeoutMs,
     };
@@ -1464,7 +1575,9 @@ export function renderUnifiedRuntimeConfigText(config: UnifiedRuntimeConfig): st
             provider.modelMappings.length > 0
               ? provider.modelMappings.map((mapping) => ({
                   model_name: mapping.modelId,
-                  ...(mapping.maxDifficulty !== null ? { max_difficulty: mapping.maxDifficulty } : {}),
+                  ...(mapping.maxDifficulty !== null
+                    ? { max_difficulty: mapping.maxDifficulty }
+                    : {}),
                   litellm_params: {
                     ...mapping.litellmParams,
                     model: mapping.litellmModel,

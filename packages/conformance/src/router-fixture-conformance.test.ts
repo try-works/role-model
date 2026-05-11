@@ -74,7 +74,9 @@ describe("router fixture conformance", () => {
 
       assertValid(validateRouterDecision, result, fileName);
       expect(result.app_id, fixture.name).toEqual(expect.any(String));
-      expect(result.org_id, fixture.name).toSatisfy((value: unknown) => value === null || typeof value === "string");
+      expect(result.org_id, fixture.name).toSatisfy(
+        (value: unknown) => value === null || typeof value === "string",
+      );
 
       expect(result.chosen_endpoint_id, fixture.name).toBe(fixture.expected.chosen_endpoint_id);
       expect(result.fallback_endpoint_ids, fixture.name).toEqual(

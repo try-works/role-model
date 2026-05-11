@@ -211,7 +211,9 @@ function inferProviderInfo(providerId: string): LiteLLMProviderInfo {
     authFamily: override?.authFamily ?? "api-key",
     adapterFamily: override?.adapterFamily ?? "ai-sdk-openai-compatible",
     apiBase: override?.apiBase ?? "",
-    envVars: override?.envVars ?? [`${providerId.toUpperCase().replace(/[^A-Z0-9]/g, "_")}_API_KEY`],
+    envVars: override?.envVars ?? [
+      `${providerId.toUpperCase().replace(/[^A-Z0-9]/g, "_")}_API_KEY`,
+    ],
     supportedAuthModes: override?.supportedAuthModes ?? [],
     controlPlaneRequirements: override?.controlPlaneRequirements ?? [],
     localOverrideApplied: Boolean(override),
@@ -256,7 +258,14 @@ export async function loadLiteLLMModelPrices(repoRoot: string): Promise<unknown>
   const candidates = [
     path.join(liteLLMPath, "model_prices_and_context_window.json"),
     path.join(repoRoot, "testdata", "catalog", "litellm-model-prices.json"),
-    path.join(repoRoot, "role-model-router", "packages", "vendor-litellm", "data", "model-prices.json"),
+    path.join(
+      repoRoot,
+      "role-model-router",
+      "packages",
+      "vendor-litellm",
+      "data",
+      "model-prices.json",
+    ),
   ];
 
   for (const candidate of candidates) {

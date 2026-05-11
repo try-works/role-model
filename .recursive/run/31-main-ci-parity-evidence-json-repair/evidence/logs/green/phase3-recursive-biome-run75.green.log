@@ -1,0 +1,11 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/31-main-ci-parity-evidence-json-repair/packages/schema-tools[39m
+
+ [32mΓ£ô[39m test/recursive-biome-run75.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 604[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m run31 bounded Biome regression for run75[2m > [22mrequires the run75 Biome blocker set to pass under repository config [33m 602[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m   Start at [22m 06:14:28
+[2m   Duration [22m 1.26s[2m (transform 64ms, setup 0ms, collect 56ms, tests 604ms, environment 0ms, prepare 240ms)[22m
+

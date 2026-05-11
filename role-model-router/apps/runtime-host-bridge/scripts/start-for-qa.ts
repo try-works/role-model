@@ -27,7 +27,7 @@ try {
 }
 
 const backend = await createRuntimeBridgeBackend({
-    fixtureRoot: path.join(repoRoot, "testdata", "router-runtime"),
+  fixtureRoot: path.join(repoRoot, "testdata", "router-runtime"),
   repoRoot,
   runtimeStateRoot,
   scopeId,
@@ -74,7 +74,7 @@ const server = await startBridgeServer({
 
 const baseUrl = `http://127.0.0.1:${server.port}`;
 console.log(`[QA] Bridge server running at ${baseUrl}`);
-console.log(`[QA] API docs:`);
+console.log("[QA] API docs:");
 console.log(`  GET ${baseUrl}/api/role-model/runtime/summary`);
 console.log(`  GET ${baseUrl}/api/role-model/providers`);
 console.log(`  GET ${baseUrl}/api/role-model/accounts`);
@@ -86,7 +86,7 @@ console.log(`  GET ${baseUrl}/api/role-model/local/policy`);
 console.log(`  GET ${baseUrl}/api/role-model/local/swap`);
 console.log(`  GET ${baseUrl}/v1/models`);
 console.log(`  POST ${baseUrl}/v1/chat/completions`);
-console.log(`[QA] Press Ctrl+C to stop`);
+console.log("[QA] Press Ctrl+C to stop");
 
 process.on("SIGINT", async () => {
   console.log("\n[QA] Shutting down...");

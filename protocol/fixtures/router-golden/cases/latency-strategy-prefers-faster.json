@@ -103,11 +103,7 @@
   "expected": {
     "chosen_endpoint_id": "fast-endpoint",
     "fallback_endpoint_ids": ["slow-endpoint"],
-    "selection_reasons": [
-      "BEST_TOTAL_SCORE",
-      "LOW_LATENCY_TARGET_MET",
-      "FALLBACK_CHAIN_COMPUTED"
-    ],
+    "selection_reasons": ["BEST_TOTAL_SCORE", "LOW_LATENCY_TARGET_MET", "FALLBACK_CHAIN_COMPUTED"],
     "eligibility": []
   }
 }

@@ -6,9 +6,9 @@ import type { RuntimeObservationBundle } from "@role-model-router/runtime-observ
 import type { ToolRegistryExecution } from "@role-model-router/tool-registry";
 
 import {
-  createRuntimeBridgeBackend,
-  type BridgeToolCall,
   type BridgeChatCompletionsExecutionResult,
+  type BridgeToolCall,
+  createRuntimeBridgeBackend,
 } from "./index.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -93,7 +93,10 @@ export async function runRuntimeToolsValidation(
     createToolValidationRequest(),
     requestId,
   )) as BridgeChatCompletionsExecutionResult;
-  const observation = requireObservation(await backend.readRequestObservation(requestId), requestId);
+  const observation = requireObservation(
+    await backend.readRequestObservation(requestId),
+    requestId,
+  );
 
   return {
     requestId,

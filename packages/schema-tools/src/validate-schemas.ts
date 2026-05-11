@@ -5,7 +5,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { Command } from "commander";
-import { compile, type JSONSchema } from "json-schema-to-typescript";
+import { type JSONSchema, compile } from "json-schema-to-typescript";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -43,13 +43,7 @@ function getSchemaTitle(schema: unknown): string | null {
     ? schema.title
     : null;
 }
-export type FixtureFamily =
-  | "top-level"
-  | "router"
-  | "profile"
-  | "trace"
-  | "usage"
-  | "role-task";
+export type FixtureFamily = "top-level" | "router" | "profile" | "trace" | "usage" | "role-task";
 export type FixtureCategory = "example" | "basic" | "minimal" | "edge" | "invalid";
 export type FixtureExpectation = "valid" | "invalid";
 export type FixtureEntry = {
@@ -103,7 +97,11 @@ export const fixtureValidationManifest = [
     expectation: "valid",
   },
   {
-    filePath: path.join(fixtureRoot, "router-golden", "router-decision-invalid-missing-app-id.json"),
+    filePath: path.join(
+      fixtureRoot,
+      "router-golden",
+      "router-decision-invalid-missing-app-id.json",
+    ),
     schemaFile: "router-decision.schema.json",
     family: "router",
     category: "invalid",
@@ -124,7 +122,11 @@ export const fixtureValidationManifest = [
     expectation: "valid",
   },
   {
-    filePath: path.join(fixtureRoot, "profile-golden", "observed-performance-edge-error-rates.json"),
+    filePath: path.join(
+      fixtureRoot,
+      "profile-golden",
+      "observed-performance-edge-error-rates.json",
+    ),
     schemaFile: "observed-performance-profile.schema.json",
     family: "profile",
     category: "edge",
