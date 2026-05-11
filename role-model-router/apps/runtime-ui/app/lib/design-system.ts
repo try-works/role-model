@@ -238,6 +238,20 @@ const controlProvidersRoute = createRoute({
   noteBody: "Lead with provider selection and model availability; API-key and OAuth setup stay in the same workflow instead of splitting into a second page.",
 });
 
+const controlRoutingStrategyRoute = createRoute({
+  id: "control-routing-strategy",
+  to: "/app/control/routing-strategy",
+  label: "Routing Strategy",
+  section: "Control",
+  icon: GitBranch,
+  template: "registry-detail",
+  eyebrow: "Control",
+  title: "Routing strategy",
+  description: "Structured routing-strategy posture for execution mode, controller state, and operator handoff into advanced config and request verification.",
+  noteTitle: "Registry detail",
+  noteBody: "Lead with the current strategy posture and links into advanced config, controller, workbench, and request inspection instead of hiding strategy under raw JSON alone.",
+});
+
 const controlRuntimeConfigRoute = createRoute({
   id: "control-runtime-config",
   to: "/app/control/runtime-config",
@@ -420,6 +434,7 @@ const runtimeRouteDefinitions = [
   localMatrixRoute,
   localPeersRoute,
   controlProvidersRoute,
+  controlRoutingStrategyRoute,
   controlRuntimeConfigRoute,
   controlControllerRoute,
   controlEndpointsRoute,
@@ -460,6 +475,7 @@ export const runtimeNavigationSections: readonly RuntimeNavigationSection[] = [
     icon: PanelsTopLeft,
       items: [
         controlProvidersRoute,
+        controlRoutingStrategyRoute,
         controlRuntimeConfigRoute,
         controlControllerRoute,
         controlEndpointsRoute,

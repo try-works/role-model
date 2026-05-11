@@ -1,0 +1,41 @@
+
+> role-model@0.0.0 runtime:validate-ui D:\DEV\role-model\.worktrees\30-router-runtime-strategy-convergence-e2e
+> corepack pnpm --filter @role-model-router/runtime-host-bridge exec tsx src/validate-ui.ts
+
+(node:20436) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+{
+  "providerCount": 108,
+  "accountCount": 1,
+  "endpointCount": 1,
+  "runtimeConfigPath": "C:\\Users\\erikb\\AppData\\Local\\Temp\\role-model-runtime-ui-validation\\runtime-config.yaml",
+  "runtimeConfigInitialApplied": true,
+  "runtimeConfigUpdatedVersion": "1.1",
+  "runtimeConfigUpdatedRoutingStrategy": "latency-first",
+  "moonshotVariantIds": [
+    "moonshot-api-key",
+    "moonshot-oauth",
+    "moonshot-open-platform",
+    "kimi-code"
+  ],
+  "availableRoleIds": [
+    "classifier",
+    "coder.patch",
+    "coder.review",
+    "developer",
+    "embedder",
+    "general.chat",
+    "language.detector",
+    "tool.agent"
+  ],
+  "upsertedAccountId": "moonshot.personal.primary",
+  "accountListIncludesUpsert": true,
+  "accountRoleBindingIncludesUpsert": true,
+  "activatedEndpointId": "moonshot.personal.primary.global.kimi-k2.5",
+  "endpointListIncludesActivation": true,
+  "routedRequestId": "req-runtime-ui-routing-001",
+  "telemetryListIncludesRoutedRequest": true,
+  "routedRequestRoutingDecisionId": "route-runtime-ui-routing-001",
+  "routedRequestEffectiveMode": "baseline",
+  "routedRequestRewriteReason": "requested-model-matches-downstream"
+}

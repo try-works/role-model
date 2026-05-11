@@ -219,6 +219,7 @@ export function buildTelemetryRequestRows(
     Pick<
       RuntimeTelemetryRequestRecord,
       | "requestId"
+      | "routingDecisionId"
       | "endpointId"
       | "modelId"
       | "sourceType"
@@ -246,6 +247,7 @@ export function buildTelemetryRequestRows(
   >,
 ): Array<{
   requestId: string;
+  routingDecisionLabel: string;
   endpointId: string;
   modelId: string | null | undefined;
   sourceLabel: string;
@@ -263,6 +265,7 @@ export function buildTelemetryRequestRows(
     .sort((left, right) => right.createdAtMs - left.createdAtMs)
     .map((row) => ({
       requestId: row.requestId,
+      routingDecisionLabel: row.routingDecisionId ?? "n/a",
       endpointId: row.endpointId,
       modelId: row.modelId,
       sourceLabel: formatSourceLabel(row.sourceType),

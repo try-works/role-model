@@ -53,5 +53,10 @@ describe("runRuntimeUiValidation", () => {
     expect(result.accountRoleBindingIncludesUpsert).toBe(true);
     expect(result.activatedEndpointId).toBe("moonshot.personal.primary.global.kimi-k2.5");
     expect(result.endpointListIncludesActivation).toBe(true);
-  });
+    expect(result.routedRequestId).toBe("req-runtime-ui-routing-001");
+    expect(result.telemetryListIncludesRoutedRequest).toBe(true);
+    expect(result.routedRequestRoutingDecisionId).toEqual(expect.any(String));
+    expect(result.routedRequestEffectiveMode).toBe("baseline");
+    expect(result.routedRequestRewriteReason).toBe("requested-model-matches-downstream");
+  }, 60_000);
 });

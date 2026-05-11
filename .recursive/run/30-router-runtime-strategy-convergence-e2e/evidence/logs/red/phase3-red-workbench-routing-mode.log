@@ -1,0 +1,74 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/30-router-runtime-strategy-convergence-e2e/role-model-router/apps/runtime-ui[39m
+
+ [31mΓ¥»[39m app/lib/runtime-api.test.ts [2m([22m[2m28 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 53[2mms[22m[39m
+   [32mΓ£ô[39m fetchRuntimeSnapshot[2m > [22mloads the operator shell data from the runtime control-plane endpoints[32m 9[2mms[22m[39m
+   [32mΓ£ô[39m fetchDownstreamOpenAIProviderConfig[2m > [22mloads the downstream OpenAI-compatible provider contract for consumer apps[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m fetchRequestDetail[2m > [22mloads request detail and the linked endpoint profile for the inspector pane[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m telemetry APIs[2m > [22mloads the canonical telemetry dashboard reads from the role-model telemetry endpoints[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m telemetry APIs[2m > [22mloads telemetry request rows with limit parameters[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m telemetry APIs[2m > [22msubscribes to canonical telemetry SSE updates and closes the source on cleanup[32m 3[2mms[22m[39m
+   [32mΓ£ô[39m observe APIs[2m > [22mloads vendor activity metrics for the observe activity page[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m observe APIs[2m > [22mloads a persisted request/response capture by id[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m observe APIs[2m > [22mreturns null when an activity capture is not found[32m 0[2mms[22m[39m
+   [32mΓ£ô[39m observe APIs[2m > [22mloads raw log text for observe log consoles[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m observe APIs[2m > [22mloads vendor version info for the runtime system surface[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m controller assignment APIs[2m > [22mloads the current global controller assignment[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m controller assignment APIs[2m > [22mloads a null controller assignment when no controller is configured yet[32m 0[2mms[22m[39m
+   [32mΓ£ô[39m controller assignment APIs[2m > [22mpatches the selected controller candidate[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m submitWorkbenchChat[2m > [22mposts a chat-completions payload to the runtime workbench path[32m 1[2mms[22m[39m
+[31m   [31m├ù[31m submitWorkbenchChat[2m > [22msends routing-mode override as a header instead of leaking it into the OpenAI-compatible body[39m[32m 15[2mms[22m[39m
+[31m     ΓåÆ promise rejected "AssertionError: expected { 'content-type'ΓÇª { ΓÇª(4) }" instead of resolving[39m
+   [32mΓ£ô[39m studio vendor API helpers[2m > [22mposts an OpenAI image-generation request[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m studio vendor API helpers[2m > [22mposts an SDAPI txt2img request[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m studio vendor API helpers[2m > [22mloads available speech voices for a selected model[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m studio vendor API helpers[2m > [22mposts a speech-generation request and returns audio bytes as a blob[32m 2[2mms[22m[39m
+   [32mΓ£ô[39m studio vendor API helpers[2m > [22mposts a multipart transcription request[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m studio vendor API helpers[2m > [22mposts a rerank request to the selected vendor path[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m studio vendor API helpers[2m > [22mposts a raw advanced API request to the selected endpoint family[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m startRuntimeDeviceAuthorization[2m > [22mposts the selected provider account payload to the runtime device-auth start path[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m pollRuntimeDeviceAuthorization[2m > [22mposts the auth request id to the runtime device-auth poll path[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m activateRuntimeEndpoint[2m > [22mposts endpoint activation payload to the runtime endpoints mutation path[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m fetchRuntimeConfig[2m > [22mloads the normalized unified runtime config from the runtime control plane[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m updateRuntimeConfig[2m > [22mputs the normalized unified runtime config to the runtime control plane[32m 3[2mms[22m[39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  app/lib/runtime-api.test.ts > submitWorkbenchChat > sends routing-mode override as a header instead of leaking it into the OpenAI-compatible body
+AssertionError: promise rejected "AssertionError: expected { 'content-type'ΓÇª { ΓÇª(4) }" instead of resolving
+ Γ¥» app/lib/runtime-api.test.ts:669:55
+    667|     };
+    668| 
+    669|     await expect(submitWorkbenchChat(payload, fetcher)).resolves.toEquΓÇª
+       |                                                       ^
+    670|       choices: [{ message: { content: "Handled." } }],
+    671|     });
+
+Caused by: AssertionError: expected { 'content-type': 'application/json' } to deeply equal ObjectContaining{ΓÇª}
+
+- Expected
++ Received
+
+- ObjectContaining {
++ {
+    "content-type": "application/json",
+-   "x-role-model-routing-mode": "hybrid",
+  }
+
+ Γ¥» app/lib/runtime-api.test.ts:645:29
+ Γ¥» fetchJson app/lib/runtime-api.ts:507:26
+ Γ¥» postJson app/lib/runtime-api.ts:546:10
+ Γ¥» submitWorkbenchChat app/lib/runtime-api.ts:828:10
+ Γ¥» app/lib/runtime-api.test.ts:669:18
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m27 passed[39m[22m[90m (28)[39m
+[2m   Start at [22m 04:09:56
+[2m   Duration [22m 765ms[2m (transform 64ms, setup 0ms, collect 78ms, tests 53ms, environment 0ms, prepare 207ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\30-router-runtime-strategy-convergence-e2e\role-model-router\apps\runtime-ui:
+ΓÇëERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓÇë Command failed with exit code 1: vitest run app/lib/runtime-api.test.ts

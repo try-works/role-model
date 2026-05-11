@@ -850,3 +850,32 @@
 - Known issues / follow-ups:
   - the legacy global controller-assignment API still exists as an operator surface but remains intentionally distinct from per-request override and hybrid-routing behavior
   - later runs still need final integrated runtime convergence, UI surfaces, and proposal-wide verification on top of the now-complete backend routing surface
+
+### Run `30-router-runtime-strategy-convergence-e2e`
+
+- Run folder: `/.recursive/run/30-router-runtime-strategy-convergence-e2e/`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - the repo-owned runtime UI now exposes a first-class `Control > Routing strategy` surface instead of treating routing strategy as raw runtime-config JSON only
+  - the workbench now exposes alias-default plus explicit `baseline`, `difficulty`, `controller`, and `hybrid` override control, while request ledger and request detail now surface routing decision ids plus routing-mode, rewrite, difficulty, controller, hybrid, and rubric-signal receipts ahead of raw bundles
+  - `runtime:validate-ui` now includes deterministic routed-request proof for the same operator-facing telemetry and request-detail receipt surfaces that the runtime UI depends on
+- Why:
+  - to close the final proposal-convergence gap on top of the already-complete run-29 backend routing surface by making routing strategy operable and inspectable from the shipped runtime shell
+- How:
+  - implemented with strict RED/GREEN TDD across design-system route contracts, the workbench override API seam, request-ledger view models, route-level receipt surfaces, and the runtime UI validator, then validated through the runtime-ui suite, focused runtime-host-bridge validator coverage, `runtime:validate-ui`, `runtime:validate-host`, `runtime:validate-vendors`, `schemas:validate`, and agent-operated UI readback
+- What was not done:
+  - no new routing strategies beyond the locked baseline, difficulty, controller, and hybrid modes were introduced
+  - no separate browser automation harness was added; the run stayed on the repo-owned runtime UI and validator stack
+- Known issues / follow-ups:
+  - persisted routing receipts remain owned by request-observation surfaces, so the workbench result panel still hands operators to the telemetry ledger or request detail for durable receipt verification rather than embedding synthetic response-body copies
+  - the advanced raw runtime-config editor remains intentionally available as an escape hatch beside the new structured routing-strategy surface

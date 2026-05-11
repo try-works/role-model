@@ -28,8 +28,11 @@ const controlRuntimeConfigSource = readFileSync(new URL("../routes/control-runti
 const controlModelsSource = readFileSync(new URL("../routes/control-models.tsx", import.meta.url), "utf8");
 const endpointsRouteSource = readFileSync(new URL("../routes/endpoints.tsx", import.meta.url), "utf8");
 const providersRouteSource = readFileSync(new URL("../routes/providers.tsx", import.meta.url), "utf8");
+const requestsRouteSource = readFileSync(new URL("../routes/requests.tsx", import.meta.url), "utf8");
 const rootSource = readFileSync(new URL("../root.tsx", import.meta.url), "utf8");
 const runtimeRouteSource = readFileSync(new URL("../routes/runtime.tsx", import.meta.url), "utf8");
+const requestDetailRouteSource = readFileSync(new URL("../routes/request-detail.tsx", import.meta.url), "utf8");
+const workbenchRouteSource = readFileSync(new URL("../routes/workbench.tsx", import.meta.url), "utf8");
 const designSystemDocSource = readFileSync(new URL("../../DESIGN_SYSTEM.md", import.meta.url), "utf8");
 
 describe("runtime design system", () => {
@@ -69,6 +72,7 @@ describe("runtime design system", () => {
         title: "Control",
         routes: [
           "/app/control/providers",
+          "/app/control/routing-strategy",
           "/app/control/runtime-config",
           "/app/control/controller",
           "/app/control/endpoints",
@@ -104,6 +108,12 @@ describe("runtime design system", () => {
     expect(getRuntimeRouteDefinition("/app/control/runtime-config")).toEqual(
       expect.objectContaining({
         id: "control-runtime-config",
+        template: "registry-detail",
+      }),
+    );
+    expect(getRuntimeRouteDefinition("/app/control/routing-strategy")).toEqual(
+      expect.objectContaining({
+        id: "control-routing-strategy",
         template: "registry-detail",
       }),
     );
@@ -245,6 +255,7 @@ describe("runtime design system", () => {
   });
 
   test("design system doc marks the converted pages as live routes", () => {
+    expect(designSystemDocSource).toContain("| `/app/control/routing-strategy` | live | `registry-detail` |");
     expect(designSystemDocSource).toContain("| `/app/control/runtime-config` | live | `registry-detail` |");
     expect(designSystemDocSource).not.toContain("| `/app/control/accounts` |");
     expect(designSystemDocSource).toContain("| `/app/studio/images` | live | `studio-workspace` |");
@@ -309,5 +320,13 @@ describe("runtime design system", () => {
     expect(runtimeRouteSource).not.toContain("Runtime contract notes");
     expect(runtimeRouteSource).not.toContain("Health posture");
     expect(designSystemDocSource).not.toContain("fact strips before the registry rail");
+  });
+
+  test("workbench and observe routes expose routing controls and receipts in repo-owned UI surfaces", () => {
+    expect(workbenchRouteSource).toContain("Routing mode");
+    expect(workbenchRouteSource).toContain("routingModeOverride");
+    expect(requestsRouteSource).toContain("routingDecisionLabel");
+    expect(requestDetailRouteSource).toContain("Routing receipts");
+    expect(requestDetailRouteSource).toContain("hybridArbitration");
   });
 });

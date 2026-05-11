@@ -636,6 +636,40 @@ describe("submitWorkbenchChat", () => {
       choices: [{ message: { content: "Done." } }],
     });
   });
+
+  test("sends routing-mode override as a header instead of leaking it into the OpenAI-compatible body", async () => {
+    const fetcher = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+      const url = typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      expect(url).toBe("/v1/chat/completions");
+      expect(init?.method).toBe("POST");
+      expect(init?.headers).toEqual(
+        expect.objectContaining({
+          "content-type": "application/json",
+          "x-role-model-routing-mode": "hybrid",
+        }),
+      );
+      expect(init?.body).toBe(
+        JSON.stringify({
+          model: "gpt-5.4",
+          messages: [{ role: "user", content: "Route this through the hybrid path." }],
+        }),
+      );
+
+      return jsonResponse({
+        choices: [{ message: { content: "Handled." } }],
+      });
+    });
+
+    const payload: import("./runtime-api").WorkbenchChatInput & { routingModeOverride: "hybrid" } = {
+      model: "gpt-5.4",
+      messages: [{ role: "user", content: "Route this through the hybrid path." }],
+      routingModeOverride: "hybrid",
+    };
+
+    await expect(submitWorkbenchChat(payload, fetcher)).resolves.toEqual({
+      choices: [{ message: { content: "Handled." } }],
+    });
+  });
 });
 
 describe("studio vendor API helpers", () => {

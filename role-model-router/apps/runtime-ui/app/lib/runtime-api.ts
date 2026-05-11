@@ -474,6 +474,7 @@ export interface WorkbenchChatInput {
     readonly role: string;
     readonly content: string;
   }[];
+  readonly routingModeOverride?: "baseline" | "difficulty" | "controller" | "hybrid";
 }
 
 
@@ -825,7 +826,15 @@ export async function submitWorkbenchChat(
   payload: WorkbenchChatInput,
   fetcher: RuntimeFetcher = fetch,
 ): Promise<Record<string, unknown>> {
-  return postJson<Record<string, unknown>>("/v1/chat/completions", payload, fetcher);
+  const { routingModeOverride, ...body } = payload;
+  return fetchJson<Record<string, unknown>>("/v1/chat/completions", fetcher, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      ...(routingModeOverride ? { "x-role-model-routing-mode": routingModeOverride } : {}),
+    },
+    body: JSON.stringify(body),
+  });
 }
 
 

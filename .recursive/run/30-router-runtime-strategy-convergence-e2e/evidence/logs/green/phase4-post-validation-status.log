@@ -1,0 +1,54 @@
+ M .recursive/run/30-router-runtime-strategy-convergence-e2e/00-requirements.md
+ M .recursive/run/30-router-runtime-strategy-convergence-e2e/00-worktree.md
+ M role-model-router/apps/runtime-host-bridge/src/validate-ui.ts
+ M role-model-router/apps/runtime-host-bridge/test/validate-ui.test.ts
+ M role-model-router/apps/runtime-ui/.react-router/types/+future.ts
+ M role-model-router/apps/runtime-ui/.react-router/types/+routes.ts
+ M role-model-router/apps/runtime-ui/.react-router/types/+server-build.d.ts
+ M role-model-router/apps/runtime-ui/.react-router/types/app/+types/root.ts
+ M role-model-router/apps/runtime-ui/.react-router/types/app/routes/+types/app-layout.ts
+ M role-model-router/apps/runtime-ui/.react-router/types/app/routes/+types/control-controller.ts
+ M role-model-router/apps/runtime-ui/.react-router/types/app/routes/+types/control-models.ts
+ M role-model-router/apps/runtime-ui/.react-router/types/app/routes/+types/control-runtime-config.ts
+ M role-model-router/apps/runtime-ui/.react-router/types/app/routes/+types/dashboard.ts
+ M role-model-router/apps/runtime-ui/.react-router/types/app/routes/+types/endpoints.ts
+ M role-model-router/apps/runtime-ui/.react-router/types/app/routes/+types/index.ts
+ M role-model-router/apps/runtime-ui/.react-router/types/app/routes/+types/integrations-downstream.ts
+ M role-model-router/apps/runtime-ui/.react-router/types/app/routes/+types/integrations-upstream.ts
+ M role-model-router/apps/runtime-ui/.react-router/types/app/routes/+types/local-logs.ts
+ M role-model-router/apps/runtime-ui/.react-router/types/app/routes/+types/local-matrix.ts
+ M role-model-router/apps/runtime-ui/.react-router/types/app/routes/+types/local-models.ts
+ M role-model-router/apps/runtime-ui/.react-router/types/app/routes/+types/local-peers.ts
+ M role-model-router/apps/runtime-ui/.react-router/types/app/routes/+types/local-policy.ts
+ M role-model-router/apps/runtime-ui/.react-router/types/app/routes/+types/local-swap.ts
+ M role-model-router/apps/runtime-ui/.react-router/types/app/routes/+types/not-found.ts
+ M role-model-router/apps/runtime-ui/.react-router/types/app/routes/+types/observe-activity.ts
+ M role-model-router/apps/runtime-ui/.react-router/types/app/routes/+types/observe-logs.ts
+ M role-model-router/apps/runtime-ui/.react-router/types/app/routes/+types/providers.ts
+ M role-model-router/apps/runtime-ui/.react-router/types/app/routes/+types/request-detail.ts
+ M role-model-router/apps/runtime-ui/.react-router/types/app/routes/+types/requests.ts
+ M role-model-router/apps/runtime-ui/.react-router/types/app/routes/+types/runtime.ts
+ M role-model-router/apps/runtime-ui/.react-router/types/app/routes/+types/studio-advanced.ts
+ M role-model-router/apps/runtime-ui/.react-router/types/app/routes/+types/studio-audio.ts
+ M role-model-router/apps/runtime-ui/.react-router/types/app/routes/+types/studio-images.ts
+ M role-model-router/apps/runtime-ui/.react-router/types/app/routes/+types/studio-rerank.ts
+ M role-model-router/apps/runtime-ui/.react-router/types/app/routes/+types/system-peers.ts
+ M role-model-router/apps/runtime-ui/.react-router/types/app/routes/+types/workbench.ts
+ M role-model-router/apps/runtime-ui/DESIGN_SYSTEM.md
+ M role-model-router/apps/runtime-ui/app/lib/design-system.test.ts
+ M role-model-router/apps/runtime-ui/app/lib/design-system.ts
+ M role-model-router/apps/runtime-ui/app/lib/runtime-api.test.ts
+ M role-model-router/apps/runtime-ui/app/lib/runtime-api.ts
+ M role-model-router/apps/runtime-ui/app/lib/view-models.test.ts
+ M role-model-router/apps/runtime-ui/app/lib/view-models.ts
+ M role-model-router/apps/runtime-ui/app/routes.ts
+ M role-model-router/apps/runtime-ui/app/routes/control-runtime-config.tsx
+ M role-model-router/apps/runtime-ui/app/routes/request-detail.tsx
+ M role-model-router/apps/runtime-ui/app/routes/requests.tsx
+ M role-model-router/apps/runtime-ui/app/routes/workbench.tsx
+?? .recursive/run/30-router-runtime-strategy-convergence-e2e/01-as-is.md
+?? .recursive/run/30-router-runtime-strategy-convergence-e2e/02-to-be-plan.md
+?? .recursive/run/30-router-runtime-strategy-convergence-e2e/03-implementation-summary.md
+?? .recursive/run/30-router-runtime-strategy-convergence-e2e/evidence/
+?? role-model-router/apps/runtime-ui/.react-router/types/app/routes/+types/control-routing-strategy.ts
+?? role-model-router/apps/runtime-ui/app/routes/control-routing-strategy.tsx

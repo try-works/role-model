@@ -1,9 +1,11 @@
 Run: `/.recursive/run/30-router-runtime-strategy-convergence-e2e/`
 Phase: `00 Requirements`
-Status: `DRAFT`
+Status: `LOCKED`
+LockedAt: `2026-05-11T19:39:13Z`
+LockHash: `59e5c87800cc95f0de7b1e90470535471d9c8317cfda00dc37c3b8db8289dd2c`
 Workflow version: `recursive-mode-audit-v1`
 Inputs:
-- `/docs/architecture/07-router-runtime-routing-strategy-lock.md`
+- `C:\Users\erikb\OneDrive\##### DEV\role-model\strategy\routing-strategy-proposals.md`
 - `/.recursive/run/22-router-runtime-routing-strategy-lock/00-requirements.md`
 - `/.recursive/run/23-router-runtime-live-observed-feedback/00-requirements.md`
 - `/.recursive/run/24-router-runtime-recency-bias-throughput-sla/00-requirements.md`

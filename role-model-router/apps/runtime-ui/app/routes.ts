@@ -16,6 +16,7 @@ export default [
     route("local/matrix", "routes/local-matrix.tsx"),
     route("local/peers", "routes/local-peers.tsx"),
     route("control/providers", "routes/providers.tsx"),
+    route("control/routing-strategy", "routes/control-routing-strategy.tsx"),
     route("control/runtime-config", "routes/control-runtime-config.tsx"),
     route("control/controller", "routes/control-controller.tsx"),
     route("control/endpoints", "routes/endpoints.tsx"),

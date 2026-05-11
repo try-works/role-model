@@ -1,0 +1,412 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/30-router-runtime-strategy-convergence-e2e/role-model-router/apps/runtime-ui[39m
+
+ [31mΓ¥»[39m app/lib/design-system.test.ts [2m([22m[2m12 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 87[2mms[22m[39m
+   [32mΓ£ô[39m runtime design system[2m > [22mdefines navigation groups and layout templates for every runtime route[32m 3[2mms[22m[39m
+   [32mΓ£ô[39m runtime design system[2m > [22mkeeps the shell on restrained radii and explicit content widths[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m runtime design system[2m > [22mglobal shell chrome keeps legacy vendor ui out of the main runtime contract[32m 46[2mms[22m[39m
+   [32mΓ£ô[39m runtime design system[2m > [22mstudio implementation targets render repo-owned workspace sections instead of placeholder blueprints[32m 11[2mms[22m[39m
+   [32mΓ£ô[39m runtime design system[2m > [22mintegration and system implementation targets render live upstream and peer surfaces[32m 5[2mms[22m[39m
+   [32mΓ£ô[39m runtime design system[2m > [22mdesign system doc marks the converted pages as live routes[32m 0[2mms[22m[39m
+   [32mΓ£ô[39m runtime design system[2m > [22mcontrol routes tolerate an unassigned controller before endpoint activation[32m 0[2mms[22m[39m
+   [32mΓ£ô[39m runtime design system[2m > [22mapplies the swiss stone palette, ibm plex typography, and dual-scheme browser contract in shared app chrome[32m 0[2mms[22m[39m
+   [32mΓ£ô[39m runtime design system[2m > [22mkeeps shared states on the stone plus single-accent palette[32m 0[2mms[22m[39m
+   [32mΓ£ô[39m runtime design system[2m > [22mcontrol runtime config is a first-class route and models stays inspect-only[32m 7[2mms[22m[39m
+   [32mΓ£ô[39m runtime design system[2m > [22mregistry and system layouts avoid redundant KPI strips and placeholder note panels[32m 0[2mms[22m[39m
+[31m   [31m├ù[31m runtime design system[2m > [22mworkbench and observe routes expose routing controls and receipts in repo-owned UI surfaces[39m[32m 11[2mms[22m[39m
+[31m     ΓåÆ expected 'import { useEffect, useMemo, useStateΓÇª' to contain 'Routing mode'[39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  app/lib/design-system.test.ts > runtime design system > workbench and observe routes expose routing controls and receipts in repo-owned UI surfaces
+AssertionError: expected 'import { useEffect, useMemo, useStateΓÇª' to contain 'Routing mode'
+
+- Expected
++ Received
+
+- Routing mode
++ import { useEffect, useMemo, useState } from "react";
+
++ 
+
++ import { CodeBlock, EmptyState, ErrorState, FactCard, LoadingState, PageHeader, SectionCard, StatusPill } from "../components/page-primitives";
+
++ import { fieldClassName, mutedPanelClassName, primaryButtonClassName } from "../lib/design-system";
+
++ import { fetchRuntimeSnapshot, submitWorkbenchChat, type RuntimeSnapshot } from "../lib/runtime-api";
+
++ import { buildWorkbenchModelOptions, summarizeWorkbenchResult } from "../lib/view-models";
+
++ 
+
++ export default function WorkbenchRoute() {
+
++   const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(null);
+
++   const [loadError, setLoadError] = useState<string | null>(null);
+
++   const [submitError, setSubmitError] = useState<string | null>(null);
+
++   const [model, setModel] = useState("");
+
++   const [prompt, setPrompt] = useState("Summarize the chosen endpoint.");
+
++   const [result, setResult] = useState<Record<string, unknown> | null>(null);
+
++   const [submitting, setSubmitting] = useState(false);
+
++ 
+
++   useEffect(() => {
+
++     void fetchRuntimeSnapshot()
+
++       .then((data) => {
+
++         setSnapshot(data);
+
++         if (data.models[0]?.id) {
+
++           setModel(data.models[0].id);
+
++         }
+
++       })
+
++       .catch((value: unknown) => setLoadError(value instanceof Error ? value.message : "Could not load workbench."));
+
++   }, []);
+
++ 
+
++   const modelOptions = useMemo(() => buildWorkbenchModelOptions(snapshot?.models ?? []), [snapshot?.models]);
+
++ 
+
++   if (loadError) {
+
++     return <ErrorState label={loadError} />;
+
++   }
+
++   if (!snapshot) {
+
++     return <LoadingState label="Loading workbenchΓÇª" />;
+
++   }
+
++ 
+
++   const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+
++     event.preventDefault();
+
++     setSubmitting(true);
+
++     setSubmitError(null);
+
++     setResult(null);
+
++     try {
+
++       const response = await submitWorkbenchChat({
+
++         model,
+
++         messages: [{ role: "user", content: prompt }],
+
++       });
+
++       setResult(response);
+
++     } catch (value) {
+
++       setSubmitError(value instanceof Error ? value.message : "Workbench request failed.");
+
++     } finally {
+
++       setSubmitting(false);
+
++     }
+
++   };
+
++ 
+
++   const resultSummary = result ? summarizeWorkbenchResult(result) : null;
+
++   const toolCapableEndpoints = snapshot.endpoints.filter((endpoint) => endpoint.toolCallingSupported).length;
+
++ 
+
++   return (
+
++     <div className="space-y-6">
+
++       <PageHeader
+
++         eyebrow="Studio"
+
++         title="Chat workspace"
+
++         description="Compose routed chat requests, then inspect assistant text, tool calls, execution receipts, and token usage without leaving the shell."
+
++       />
+
++ 
+
++       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+
++         <FactCard label="Models" value={snapshot.models.length} detail="Available model ids currently exposed through the runtime model listing." emphasis />
+
++         <FactCard label="Tool-capable endpoints" value={toolCapableEndpoints} detail="Endpoints currently able to surface tool-calling behavior in the workspace." />
+
++         <FactCard label="Selected model" value={model} detail="The active model binding for the next routed request." className="xl:col-span-2" />
+
++       </div>
+
++ 
+
++       <div className="grid gap-4 xl:grid-cols-[360px_minmax(0,1fr)]">
+
++         <SectionCard title="Composer" description="This form posts directly to the runtime-host `/v1/chat/completions` route.">
+
++           <form className="space-y-4" onSubmit={onSubmit}>
+
++             <label className="grid gap-2 text-sm">
+
++               <span className="font-medium text-[var(--rm-fg)]">Model</span>
+
++               <select className={fieldClassName} value={model} onChange={(event) => setModel(event.target.value)}>
+
++                 {modelOptions.map((option) => (
+
++                   <option key={option.value} value={option.value}>
+
++                     {option.label}
+
++                   </option>
+
++                 ))}
+
++               </select>
+
++             </label>
+
++             <label className="grid gap-2 text-sm">
+
++               <span className="font-medium text-[var(--rm-fg)]">Prompt</span>
+
++               <textarea className={`${fieldClassName} min-h-40`} value={prompt} onChange={(event) => setPrompt(event.target.value)} />
+
++             </label>
+
++             <button className={primaryButtonClassName} disabled={submitting} type="submit">
+
++               {submitting ? "RunningΓÇª" : "Run request"}
+
++             </button>
+
++           </form>
+
++         </SectionCard>
+
++ 
+
++         <SectionCard title="Result workspace" description="Tooling-aware response summary aligned with the runtime host payload.">
+
++           {submitError ? (
+
++             <div className={`${mutedPanelClassName} border-l-4 border-red-500 p-4`}>
+
++               <p className="text-xs font-normal uppercase tracking-[0.2em] text-red-500">Request failed</p>
+
++               <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-[var(--rm-fg)]">{submitError}</p>
+
++             </div>
+
++           ) : !resultSummary ? (
+
++             <EmptyState label="No result yet." />
+
++           ) : (
+
++             <div className="space-y-4">
+
++               <div className={`${mutedPanelClassName} p-4`}>
+
++                 <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">Assistant output</p>
+
++                 <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-[var(--rm-fg)]">
+
++                   {resultSummary.outputText || "No assistant text was returned."}
+
++                 </p>
+
++               </div>
+
++ 
+
++               <div className="grid gap-4 md:grid-cols-2">
+
++                 <div className={`${mutedPanelClassName} p-4`}>
+
++                   <div className="flex items-center justify-between">
+
++                     <p className="font-medium text-[var(--rm-fg)]">Tool calls</p>
+
++                     <StatusPill tone={resultSummary.toolCalls.length > 0 ? "accent" : "neutral"}>
+
++                       {resultSummary.toolCalls.length}
+
++                     </StatusPill>
+
++                   </div>
+
++                   <div className="mt-3 space-y-3">
+
++                     {resultSummary.toolCalls.length === 0 ? (
+
++                       <p className="text-sm text-[var(--rm-secondary)]">No tool calls were surfaced for this response.</p>
+
++                     ) : (
+
++                       resultSummary.toolCalls.map((toolCall) => (
+
++                         <div key={toolCall.id ?? `${toolCall.name}-${toolCall.arguments}`} className={`${mutedPanelClassName} p-3`}>
+
++                           <p className="font-medium text-[var(--rm-fg)]">{toolCall.name}</p>
+
++                           <CodeBlock className="mt-3 text-xs">{toolCall.arguments}</CodeBlock>
+
++                         </div>
+
++                       ))
+
++                     )}
+
++                   </div>
+
++                 </div>
+
++ 
+
++                 <div className={`${mutedPanelClassName} p-4`}>
+
++                   <div className="flex items-center justify-between">
+
++                     <p className="font-medium text-[var(--rm-fg)]">Execution receipts</p>
+
++                     <StatusPill tone={resultSummary.toolExecutions.length > 0 ? "success" : "neutral"}>
+
++                       {resultSummary.toolExecutions.length}
+
++                     </StatusPill>
+
++                   </div>
+
++                   <div className="mt-3 space-y-3">
+
++                     {resultSummary.toolExecutions.length === 0 ? (
+
++                       <p className="text-sm text-[var(--rm-secondary)]">No runtime tool execution receipts were recorded.</p>
+
++                     ) : (
+
++                       resultSummary.toolExecutions.map((execution, index) => (
+
++                         <div key={`${execution.connectorId ?? "connector"}-${execution.toolName ?? index}`} className={`${mutedPanelClassName} p-3`}>
+
++                           <div className="flex flex-wrap items-center gap-2">
+
++                             <p className="font-medium text-[var(--rm-fg)]">{execution.toolName ?? "Unnamed tool"}</p>
+
++                             {execution.status ? (
+
++                               <StatusPill tone={execution.status === "success" ? "success" : "warning"}>
+
++                                 {execution.status}
+
++                               </StatusPill>
+
++                             ) : null}
+
++                           </div>
+
++                           <p className="mt-2 text-sm text-[var(--rm-secondary)]">
+
++                             {execution.connectorId ?? "Unknown connector"}
+
++                             {typeof execution.durationMs === "number" ? ` ΓÇó ${execution.durationMs} ms` : ""}
+
++                           </p>
+
++                         </div>
+
++                       ))
+
++                     )}
+
++                   </div>
+
++                 </div>
+
++               </div>
+
++ 
+
++               <div className="grid gap-3 md:grid-cols-2">
+
++                 {resultSummary.usageRows.map((row) => (
+
++                   <div key={row.label} className={`${mutedPanelClassName} p-4`}>
+
++                     <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">{row.label}</p>
+
++                     <p className="mt-2 text-lg font-medium text-[var(--rm-fg)]">{row.value}</p>
+
++                   </div>
+
++                 ))}
+
++               </div>
+
++ 
+
++               <CodeBlock className="min-h-72 text-sm">{resultSummary.rawPayload}</CodeBlock>
+
++             </div>
+
++           )}
+
++         </SectionCard>
+
++       </div>
+
++     </div>
+
++   );
+
++ }
+
++
+
+ Γ¥» app/lib/design-system.test.ts:326:34
+    324| 
+    325|   test("workbench and observe routes expose routing controls and receiΓÇª
+    326|     expect(workbenchRouteSource).toContain("Routing mode");
+       |                                  ^
+    327|     expect(workbenchRouteSource).toContain("routingModeOverride");
+    328|     expect(requestsRouteSource).toContain("routingDecisionLabel");
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m11 passed[39m[22m[90m (12)[39m
+[2m   Start at [22m 04:12:35
+[2m   Duration [22m 1.46s[2m (transform 342ms, setup 0ms, collect 583ms, tests 87ms, environment 0ms, prepare 322ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\30-router-runtime-strategy-convergence-e2e\role-model-router\apps\runtime-ui:
+ΓÇëERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓÇë Command failed with exit code 1: vitest run app/lib/design-system.test.ts

@@ -663,6 +663,7 @@ describe("telemetry view models", () => {
         },
         {
           requestId: "req-002",
+          routingDecisionId: "route-002",
           endpointId: "openai.personal.primary.us-east-1.fast",
           modelId: "openai/gpt-4.1-mini-fast",
           sourceType: "remote",
@@ -689,6 +690,7 @@ describe("telemetry view models", () => {
     ).toEqual([
       expect.objectContaining({
         requestId: "req-002",
+        routingDecisionLabel: "route-002",
         sourceLabel: "Remote",
         statusLabel: "504 upstream_timeout",
         providerFamilyLabel: "ai-sdk-openai",

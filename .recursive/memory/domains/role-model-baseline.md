@@ -1,6 +1,6 @@
 Type: `domain`
 Status: `CURRENT`
-Scope: `Stable baseline ownership for the repo workspace, canonical protocol tree, shared packages, router family, fixtures, validation surfaces, and the repo-owned runtime/operator baseline extended through the request-rewrite and hybrid-routing baseline in run 29.`
+Scope: `Stable baseline ownership for the repo workspace, canonical protocol tree, shared packages, router family, fixtures, validation surfaces, and the repo-owned runtime/operator baseline extended through the routing-strategy UI convergence baseline in run 30.`
 Owns-Paths:
 - `/README.md`
 - `/LICENSE`
@@ -45,8 +45,9 @@ Source-Runs:
 - `27-router-runtime-difficulty-learning-cache`
 - `28-router-runtime-controller-guided-routing`
 - `29-router-runtime-request-rewriter-hybrid-mode`
+- `30-router-runtime-strategy-convergence-e2e`
 Validated-At-Commit: `working-tree`
-Last-Validated: `2026-05-11T19:32:50Z`
+Last-Validated: `2026-05-11T20:34:37Z`
 Tags:
 - `baseline`
 - `workspace`
@@ -132,6 +133,8 @@ This repository now has a real product baseline rather than only recursive scaff
 - The runtime now also owns per-request routing-mode overrides for `baseline`, `difficulty`, `controller`, and `hybrid`, with deterministic invalid-value rejection and durable receipts that distinguish request overrides from alias-default routing modes
 - `/role-model-router/apps/runtime-host-bridge/src/index.ts` and `/role-model-router/packages/runtime-observability/src/index.ts` now persist durable `routingDiagnostics.rewrite` and `routingDiagnostics.hybridArbitration` metadata, including rewrite-applied versus rewrite-skipped outcomes, downstream model ids, hybrid strategy changes, controller dominance, and preferred endpoint guidance
 - The repo-owned validation floor now also proves same-pool override-mode execution, exact-model rewrite-skipped compatibility, explicit invalid-override `400` ingress failure, and mixed local-plus-remote readback of override, rewrite, and hybrid-arbitration diagnostics through focused bridge tests, `runtime:validate-vendors`, `runtime:validate-host`, and agent-operated QA
+- The repo-owned runtime UI now also has a first-class routing-strategy operator baseline: `Control > Routing strategy`, workbench routing-mode override control, request-ledger routing decision readback, request-detail routing receipts, and a preserved advanced raw-config or raw-observation escape-hatch path all ship together in `/role-model-router/apps/runtime-ui/`
+- The runtime UI validation floor now also includes deterministic routed-request receipt proof in `runtime:validate-ui`, confirming that shipped telemetry-list and request-detail APIs expose persisted `routingDecisionId`, effective routing mode, and rewrite reason for the operator shell
 
 ## Validation Path
 
