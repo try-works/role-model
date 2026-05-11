@@ -34,6 +34,20 @@ export interface RuntimeRoutingDiagnostics {
       readonly codeOrSchemaBurden: boolean;
     };
   };
+  readonly controllerRouting?: {
+    readonly active: boolean;
+    readonly fallbackApplied?: boolean;
+    readonly fallbackReason?: string;
+    readonly acceptedDirectives?: {
+      readonly requestedRoleId?: string;
+      readonly taskType?: string;
+      readonly requiredCapabilities?: readonly string[];
+      readonly preferredCapabilities?: readonly string[];
+      readonly strategy?: string;
+      readonly preferLocal?: boolean;
+      readonly preferredEndpointIds?: readonly string[];
+    };
+  };
   readonly observedProfile?: {
     readonly endpointId: string;
     readonly source: "runtime-state" | "none";

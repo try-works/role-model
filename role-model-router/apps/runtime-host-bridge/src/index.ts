@@ -187,18 +187,7 @@ export interface BridgeControllerAssignment {
 }
 
 export interface BridgeExecutionPlan {
-  readonly routingRequest: {
-    readonly requestId: string;
-    readonly taskType: "text.chat";
-    readonly requiredCapabilities: readonly ["text.chat"];
-    readonly preferredCapabilities: readonly [];
-    readonly requiredModalities: readonly ["text"];
-    readonly contextTokens: number;
-    readonly needsTools: boolean;
-    readonly strategy: "balanced" | "cost" | "quality";
-    readonly preferLocal: false;
-    readonly allowEndpoints: readonly string[];
-  };
+  readonly routingRequest: Parameters<typeof routeRuntimeRequest>[0]["request"];
   readonly executionRequest: {
     readonly messages: readonly OpenAIChatCompletionsMessage[];
     readonly tools?: readonly {
@@ -208,9 +197,13 @@ export interface BridgeExecutionPlan {
     }[];
     readonly stream?: boolean;
     readonly maxOutputTokens?: number;
-    readonly temperature?: number;
-  };
-  readonly routingDiagnostics?: Pick<RuntimeRoutingDiagnostics, "aliasResolution" | "difficultyRouting">;
+      readonly temperature?: number;
+    };
+  readonly routingModel?: RoutingModelSelection;
+  readonly routingDiagnostics?: Pick<
+    RuntimeRoutingDiagnostics,
+    "aliasResolution" | "difficultyRouting" | "controllerRouting"
+  >;
 }
 
 interface BridgeDifficultyRoutingContext {
@@ -228,6 +221,13 @@ interface BridgeDifficultyRoutingContext {
     readonly fallbackReason?: string;
     readonly rubricSignals: DifficultyRoutingSignals;
   };
+}
+
+interface BridgeControllerRoutingContext {
+  readonly active: boolean;
+  readonly resolvedGuidance?: NonNullable<RuntimeRoutingDiagnostics["controllerRouting"]>["acceptedDirectives"];
+  readonly fallbackApplied?: boolean;
+  readonly fallbackReason?: string;
 }
 
 type DifficultyRoutingSignals = RuntimeRoutingDiagnostics["difficultyRouting"]["rubricSignals"];
@@ -453,6 +453,79 @@ function buildDifficultyClassifierMessages(input: {
   ];
 }
 
+function buildControllerRoutingMessages(input: {
+  readonly requestedModel: string;
+  readonly messages: readonly OpenAIChatCompletionsMessage[];
+  readonly toolCount: number;
+  readonly candidateEndpointIds: readonly string[];
+}): readonly OpenAIChatCompletionsMessage[] {
+  return [
+    {
+      role: "system",
+      content:
+        "ROLE_MODEL_ROUTING_CONTROLLER\nReturn only compact JSON. Optional fields: requestedRoleId, taskType, requiredCapabilities, preferredCapabilities, strategy, preferLocal, preferredEndpointIds.",
+    },
+    {
+      role: "user",
+      content: JSON.stringify(
+        {
+          requestedModel: input.requestedModel,
+          toolCount: input.toolCount,
+          candidateEndpointIds: input.candidateEndpointIds,
+          messages: input.messages,
+        },
+        null,
+        2,
+      ),
+    },
+  ];
+}
+
+function readControllerStringArray(value: unknown): readonly string[] | undefined {
+  if (!Array.isArray(value)) {
+    return undefined;
+  }
+  const normalized = value
+    .filter((entry): entry is string => typeof entry === "string")
+    .map((entry) => entry.trim())
+    .filter((entry) => entry.length > 0);
+  return normalized.length > 0 ? [...new Set(normalized)] : undefined;
+}
+
+function parseControllerRoutingOutput(
+  text: string,
+): NonNullable<RuntimeRoutingDiagnostics["controllerRouting"]>["acceptedDirectives"] | null {
+  const trimmed = text.trim();
+  const jsonSource = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/i)?.[1] ?? trimmed;
+  try {
+    const parsed = JSON.parse(jsonSource) as Record<string, unknown>;
+    const requestedRoleId = typeof parsed.requestedRoleId === "string" ? parsed.requestedRoleId.trim() : "";
+    const taskType = typeof parsed.taskType === "string" ? parsed.taskType.trim() : "";
+    const strategy =
+      parsed.strategy === "balanced" || parsed.strategy === "cost" || parsed.strategy === "quality"
+        ? parsed.strategy
+        : undefined;
+    const acceptedDirectives: NonNullable<RuntimeRoutingDiagnostics["controllerRouting"]>["acceptedDirectives"] = {
+      ...(requestedRoleId.length ? { requestedRoleId } : {}),
+      ...(taskType.length ? { taskType } : {}),
+      ...(readControllerStringArray(parsed.requiredCapabilities)
+        ? { requiredCapabilities: readControllerStringArray(parsed.requiredCapabilities) }
+        : {}),
+      ...(readControllerStringArray(parsed.preferredCapabilities)
+        ? { preferredCapabilities: readControllerStringArray(parsed.preferredCapabilities) }
+        : {}),
+      ...(strategy ? { strategy } : {}),
+      ...(typeof parsed.preferLocal === "boolean" ? { preferLocal: parsed.preferLocal } : {}),
+      ...(readControllerStringArray(parsed.preferredEndpointIds)
+        ? { preferredEndpointIds: readControllerStringArray(parsed.preferredEndpointIds) }
+        : {}),
+    };
+    return Object.keys(acceptedDirectives).length > 0 ? acceptedDirectives : null;
+  } catch {
+    return null;
+  }
+}
+
 function toDifficultyStrategy(difficulty: UnifiedRuntimeDifficultyBucket): "balanced" | "cost" | "quality" {
   switch (difficulty) {
     case "easy":
@@ -604,6 +677,130 @@ function maybeApplyDifficultyRouting(input: {
             }
           : {}),
         rubricSignals: classified.rubricSignals,
+      },
+    },
+  };
+}
+
+function mergeCapabilityList(
+  base: readonly string[],
+  extra: readonly string[] | undefined,
+): readonly string[] {
+  const merged = [...base];
+  for (const value of extra ?? []) {
+    if (!merged.includes(value)) {
+      merged.push(value);
+    }
+  }
+  return merged;
+}
+
+function collectPreferredEndpointIds(
+  allowEndpoints: readonly string[],
+  preferredEndpointIds: readonly string[] | undefined,
+): readonly string[] {
+  const allowSet = new Set(allowEndpoints);
+  const filtered: string[] = [];
+  for (const endpointId of preferredEndpointIds ?? []) {
+    if (allowSet.has(endpointId) && !filtered.includes(endpointId)) {
+      filtered.push(endpointId);
+    }
+  }
+  return filtered;
+}
+
+function maybeApplyControllerRouting(input: {
+  readonly requestedModel: string;
+  readonly modelAliases: readonly UnifiedRuntimeModelAliasConfig[];
+  readonly routingRequest: Parameters<typeof routeRuntimeRequest>[0]["request"];
+  readonly routingDiagnostics?: Pick<RuntimeRoutingDiagnostics, "aliasResolution" | "difficultyRouting">;
+  readonly controllerContext?: BridgeControllerRoutingContext;
+}): {
+  readonly routingRequest: Parameters<typeof routeRuntimeRequest>[0]["request"];
+  readonly routingModel?: RoutingModelSelection;
+  readonly routingDiagnostics?: Pick<
+    RuntimeRoutingDiagnostics,
+    "aliasResolution" | "difficultyRouting" | "controllerRouting"
+  >;
+} {
+  const alias = input.modelAliases.find((entry) => entry.aliasId === input.requestedModel);
+  if (!alias || alias.mode !== "intelligent") {
+    return {
+      routingRequest: input.routingRequest,
+      routingDiagnostics: input.routingDiagnostics,
+    };
+  }
+  const guidance = input.controllerContext?.resolvedGuidance;
+  if (!input.controllerContext?.active) {
+    return {
+      routingRequest: input.routingRequest,
+      routingDiagnostics: input.routingDiagnostics,
+    };
+  }
+  if (!guidance) {
+    return {
+      routingRequest: input.routingRequest,
+      routingDiagnostics: {
+        ...input.routingDiagnostics,
+        controllerRouting: {
+          active: true,
+          ...(input.controllerContext.fallbackApplied ? { fallbackApplied: true } : {}),
+          ...(input.controllerContext.fallbackReason
+            ? { fallbackReason: input.controllerContext.fallbackReason }
+            : {}),
+        },
+      },
+    };
+  }
+
+  const preferredEndpointIds = collectPreferredEndpointIds(
+    input.routingRequest.allowEndpoints,
+    guidance.preferredEndpointIds,
+  );
+  const requiredCapabilities =
+    guidance.taskType && guidance.taskType !== input.routingRequest.taskType
+      ? (guidance.requiredCapabilities ?? input.routingRequest.requiredCapabilities)
+      : mergeCapabilityList(input.routingRequest.requiredCapabilities, guidance.requiredCapabilities);
+
+  return {
+    routingRequest: {
+      ...input.routingRequest,
+      ...(guidance.requestedRoleId ? { requestedRoleId: guidance.requestedRoleId } : {}),
+      ...(guidance.taskType ? { taskType: guidance.taskType } : {}),
+      requiredCapabilities,
+      preferredCapabilities: guidance.preferredCapabilities ?? input.routingRequest.preferredCapabilities,
+      ...(guidance.strategy ? { strategy: guidance.strategy } : {}),
+      ...(typeof guidance.preferLocal === "boolean" ? { preferLocal: guidance.preferLocal } : {}),
+    },
+    ...(preferredEndpointIds.length
+      ? {
+          routingModel: {
+            endpointId: preferredEndpointIds[0],
+            preferredEndpointIds,
+          },
+        }
+      : {}),
+    routingDiagnostics: {
+      ...input.routingDiagnostics,
+      controllerRouting: {
+        active: true,
+        ...(input.controllerContext.fallbackApplied ? { fallbackApplied: true } : {}),
+        ...(input.controllerContext.fallbackReason
+          ? { fallbackReason: input.controllerContext.fallbackReason }
+          : {}),
+        acceptedDirectives: {
+          ...(guidance.requestedRoleId ? { requestedRoleId: guidance.requestedRoleId } : {}),
+          ...(guidance.taskType ? { taskType: guidance.taskType } : {}),
+          ...(guidance.requiredCapabilities?.length
+            ? { requiredCapabilities: guidance.requiredCapabilities }
+            : {}),
+          ...(guidance.preferredCapabilities?.length
+            ? { preferredCapabilities: guidance.preferredCapabilities }
+            : {}),
+          ...(guidance.strategy ? { strategy: guidance.strategy } : {}),
+          ...(typeof guidance.preferLocal === "boolean" ? { preferLocal: guidance.preferLocal } : {}),
+          ...(preferredEndpointIds.length ? { preferredEndpointIds } : {}),
+        },
       },
     },
   };
@@ -1984,6 +2181,7 @@ export function mapChatCompletionsRequest(
   requestId: string,
   modelAliases: readonly UnifiedRuntimeModelAliasConfig[] = [],
   difficultyContext?: BridgeDifficultyRoutingContext,
+  controllerContext?: BridgeControllerRoutingContext,
 ): BridgeExecutionPlan {
   const contextTokens = estimateContextTokens(body.messages, body.tools?.length ?? 0);
   const { allowEndpoints, routingDiagnostics } = resolveRequestedModelPool(registry, body.model, modelAliases);
@@ -2004,7 +2202,9 @@ export function mapChatCompletionsRequest(
 
   const tools = body.tools?.map(toToolDefinition);
 
-  return {
+  const controllerRouting = maybeApplyControllerRouting({
+    requestedModel: body.model,
+    modelAliases,
     routingRequest: {
       requestId,
       taskType: "text.chat",
@@ -2017,6 +2217,12 @@ export function mapChatCompletionsRequest(
       preferLocal: false,
       allowEndpoints: difficultyRouting.allowEndpoints,
     },
+    routingDiagnostics: difficultyRouting.routingDiagnostics,
+    controllerContext,
+  });
+
+  return {
+    routingRequest: controllerRouting.routingRequest,
     executionRequest: {
       messages: body.messages,
       ...(tools?.length ? { tools } : {}),
@@ -2028,7 +2234,8 @@ export function mapChatCompletionsRequest(
         ? { temperature: body.temperature }
         : {}),
     },
-    ...(difficultyRouting.routingDiagnostics ? { routingDiagnostics: difficultyRouting.routingDiagnostics } : {}),
+    ...(controllerRouting.routingModel ? { routingModel: controllerRouting.routingModel } : {}),
+    ...(controllerRouting.routingDiagnostics ? { routingDiagnostics: controllerRouting.routingDiagnostics } : {}),
   };
 }
 
@@ -2038,6 +2245,7 @@ export function mapResponsesRequest(
   requestId: string,
   modelAliases: readonly UnifiedRuntimeModelAliasConfig[] = [],
   difficultyContext?: BridgeDifficultyRoutingContext,
+  controllerContext?: BridgeControllerRoutingContext,
 ): BridgeExecutionPlan {
   const messages = toResponsesInputMessages(body.input);
   const contextTokens = estimateContextTokens(messages, body.tools?.length ?? 0);
@@ -2059,7 +2267,9 @@ export function mapResponsesRequest(
 
   const tools = body.tools?.map(toResponsesToolDefinition);
 
-  return {
+  const controllerRouting = maybeApplyControllerRouting({
+    requestedModel: body.model,
+    modelAliases,
     routingRequest: {
       requestId,
       taskType: "text.chat",
@@ -2072,6 +2282,12 @@ export function mapResponsesRequest(
       preferLocal: false,
       allowEndpoints: difficultyRouting.allowEndpoints,
     },
+    routingDiagnostics: difficultyRouting.routingDiagnostics,
+    controllerContext,
+  });
+
+  return {
+    routingRequest: controllerRouting.routingRequest,
     executionRequest: {
       messages,
       ...(tools?.length ? { tools } : {}),
@@ -2083,7 +2299,8 @@ export function mapResponsesRequest(
         ? { temperature: body.temperature }
         : {}),
     },
-    ...(difficultyRouting.routingDiagnostics ? { routingDiagnostics: difficultyRouting.routingDiagnostics } : {}),
+    ...(controllerRouting.routingModel ? { routingModel: controllerRouting.routingModel } : {}),
+    ...(controllerRouting.routingDiagnostics ? { routingDiagnostics: controllerRouting.routingDiagnostics } : {}),
   };
 }
 
@@ -4156,7 +4373,7 @@ export async function createRuntimeBridgeBackend(
         currentRegistry,
         runtimeRoles.roleDefinitions,
       ),
-      routingModel,
+      routingModel: plan.routingModel ?? routingModel,
     });
     const routingDecisionId = routed.decision.routing_decision_id;
     const execution = await executeLiveRoutedRequest({
@@ -4605,6 +4822,103 @@ export async function createRuntimeBridgeBackend(
     }
   };
 
+  const resolveControllerGuidance = async (input: {
+    readonly requestId: string;
+    readonly requestedModel: string;
+    readonly messages: readonly OpenAIChatCompletionsMessage[];
+    readonly toolCount: number;
+  }): Promise<BridgeControllerRoutingContext | undefined> => {
+    const alias = currentUnifiedRuntimeConfig?.modelAliases?.find((entry) => entry.aliasId === input.requestedModel);
+    if (!alias || alias.mode !== "intelligent") {
+      return undefined;
+    }
+
+    const controller = currentUnifiedRuntimeConfig?.controller;
+    if (!controller?.enabled) {
+      return undefined;
+    }
+
+    const controllerAllowEndpoints = currentRegistry.endpoints
+      .filter(
+        (endpoint) =>
+          endpoint.identity.model_id === controller.modelId &&
+          toSourceType(endpoint.identity.endpoint_kind) === controller.sourceType,
+      )
+      .map((endpoint) => endpoint.identity.endpoint_id)
+      .sort(compareText);
+
+    if (controllerAllowEndpoints.length === 0) {
+      return {
+        active: true,
+        fallbackApplied: true,
+        fallbackReason: "controller-endpoint-unavailable",
+      };
+    }
+
+    const candidateEndpointIds = collectAllowedEndpointIds(currentRegistry, alias.modelIds);
+    const controllerMessages = buildControllerRoutingMessages({
+      requestedModel: input.requestedModel,
+      messages: input.messages,
+      toolCount: input.toolCount,
+      candidateEndpointIds,
+    });
+    const controllerPlan: BridgeExecutionPlan = {
+      routingRequest: {
+        requestId: `${input.requestId}:controller`,
+        taskType: "text.chat",
+        requiredCapabilities: ["text.chat"],
+        preferredCapabilities: [],
+        requiredModalities: ["text"],
+        contextTokens: estimateContextTokens(controllerMessages, 0),
+        needsTools: false,
+        strategy: "balanced",
+        preferLocal: false,
+        allowEndpoints: controllerAllowEndpoints,
+      },
+      executionRequest: {
+        messages: controllerMessages,
+        temperature: 0,
+        maxOutputTokens: 256,
+      },
+    };
+
+    try {
+      const controllerExecution = await Promise.race([
+        executeBridgePlan(
+          controllerPlan,
+          `${input.requestId}:controller`,
+          false,
+          undefined,
+          { persistObservation: false },
+        ),
+        delay(Math.max(1, controller.timeoutMs)).then(() => {
+          throw new Error("controller-timeout");
+        }),
+      ]);
+      const guidance = parseControllerRoutingOutput(controllerExecution.execution.normalized.outputText);
+      if (!guidance) {
+        return {
+          active: true,
+          fallbackApplied: true,
+          fallbackReason: "invalid-controller-output",
+        };
+      }
+      return {
+        active: true,
+        resolvedGuidance: guidance,
+      };
+    } catch (error) {
+      return {
+        active: true,
+        fallbackApplied: true,
+        fallbackReason:
+          error instanceof Error && error.message === "controller-timeout"
+            ? "controller-timeout"
+            : "controller-execution-failed",
+      };
+    }
+  };
+
   let lastDetectedModel: string | null = null;
   let autoSwapInterval: ReturnType<typeof setInterval>;
 
@@ -4625,6 +4939,12 @@ export async function createRuntimeBridgeBackend(
         requestedModel: body.model,
         messages: body.messages,
         contextTokens: estimateContextTokens(body.messages, body.tools?.length ?? 0),
+        toolCount: body.tools?.length ?? 0,
+      });
+      const resolvedControllerGuidance = await resolveControllerGuidance({
+        requestId,
+        requestedModel: body.model,
+        messages: body.messages,
         toolCount: body.tools?.length ?? 0,
       });
       const plan = mapChatCompletionsRequest(
@@ -4649,6 +4969,7 @@ export async function createRuntimeBridgeBackend(
             ? { resolvedClassification: resolvedDifficultyClassification }
             : {}),
         },
+        resolvedControllerGuidance,
       );
       const { execution, toolExecutionResult, routingDecisionId } = await executeBridgePlan(
         plan,
@@ -4713,6 +5034,12 @@ export async function createRuntimeBridgeBackend(
         contextTokens: estimateContextTokens(responseMessages, body.tools?.length ?? 0),
         toolCount: body.tools?.length ?? 0,
       });
+      const resolvedControllerGuidance = await resolveControllerGuidance({
+        requestId,
+        requestedModel: body.model,
+        messages: responseMessages,
+        toolCount: body.tools?.length ?? 0,
+      });
       const plan = mapResponsesRequest(
         currentRegistry,
         body,
@@ -4735,6 +5062,7 @@ export async function createRuntimeBridgeBackend(
             ? { resolvedClassification: resolvedDifficultyClassification }
             : {}),
         },
+        resolvedControllerGuidance,
       );
       const { execution, routingDecisionId } = await executeBridgePlan(plan, requestId, body.stream, streamWriter);
       const costUsd =

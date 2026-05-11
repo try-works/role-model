@@ -785,6 +785,98 @@ litellm_proxy:
     ).toContain("difficulty_classifier:");
   });
 
+  test("parses and renders controller config for intelligent aliases", () => {
+    const result = parseUnifiedRuntimeConfigText(`
+version: "1.0"
+controller:
+  enabled: true
+  source_type: remote
+  endpoint_id: moonshot.personal.primary.global.kimi-k2.5
+  model_id: moonshot/kimi-k2.5
+  timeout_ms: 1200
+model_aliases:
+  gpt-5.4:
+    mode: intelligent
+    model_ids:
+      - local/mock-llama
+      - moonshot/kimi-k2.5
+`);
+
+    expect(
+      result as unknown as {
+        controller?: {
+          enabled: boolean;
+          sourceType: "local" | "remote";
+          endpointId: string | null;
+          modelId: string | null;
+          timeoutMs: number;
+        };
+        modelAliases?: readonly {
+          aliasId: string;
+          mode?: "basic" | "difficulty" | "intelligent" | "hybrid";
+          modelIds: readonly string[];
+        }[];
+      },
+    ).toMatchObject({
+      controller: {
+        enabled: true,
+        sourceType: "remote",
+        endpointId: "moonshot.personal.primary.global.kimi-k2.5",
+        modelId: "moonshot/kimi-k2.5",
+        timeoutMs: 1200,
+      },
+      modelAliases: [
+        {
+          aliasId: "gpt-5.4",
+          mode: "intelligent",
+          modelIds: ["local/mock-llama", "moonshot/kimi-k2.5"],
+        },
+      ],
+    });
+
+    expect(
+      renderUnifiedRuntimeConfigText(
+        normalizeUnifiedRuntimeConfigInput({
+          version: "1.0",
+          controller: {
+            enabled: true,
+            sourceType: "remote",
+            endpointId: "moonshot.personal.primary.global.kimi-k2.5",
+            modelId: "moonshot/kimi-k2.5",
+            timeoutMs: 1200,
+          },
+          modelAliases: [
+            {
+              aliasId: "gpt-5.4",
+              mode: "intelligent",
+              modelIds: ["local/mock-llama", "moonshot/kimi-k2.5"],
+            },
+          ],
+          llamaSwap: {
+            models: [],
+            process: {
+              command: null,
+              args: [],
+              env: {},
+              cwd: null,
+              startupTimeoutMs: null,
+            },
+          },
+          liteLLM: {
+            providers: [],
+            process: {
+              command: null,
+              args: [],
+              env: {},
+              cwd: null,
+              startupTimeoutMs: null,
+            },
+          },
+        } as never),
+      ),
+    ).toContain("controller:");
+  });
+
   test("rejects invalid difficulty-classifier and max-difficulty settings", () => {
     expect(() =>
       parseUnifiedRuntimeConfigText(`

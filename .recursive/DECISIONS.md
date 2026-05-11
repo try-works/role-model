@@ -793,3 +793,32 @@
 - Known issues / follow-ups:
   - advisory recommendations remain explicit but will continue to report `recommendedMaxDifficulty = null` until enough per-bucket samples accumulate to clear the configured `minSamples` threshold
   - later runs still need controller-guided routing and judging, richer hybrid policy arbitration, operator UI surfaces, and final integrated runtime verification on top of this stateful learning baseline
+
+### Run `28-router-runtime-controller-guided-routing`
+
+- Run folder: `/.recursive/run/28-router-runtime-controller-guided-routing/`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - the unified runtime config now owns an explicit `controller` contract with source-type targeting, model or endpoint selection, and bounded timeout behavior
+  - the bridge now executes request-time controller inference for intelligent aliases, validates structured routing directives, merges accepted guidance into live routing requests and `routingModel` preference, and fails closed on invalid controller output
+  - runtime observations, validator proof, and agent-operated readback now distinguish controller-active steering, explicit fallback, alias-only behavior, and exact-model compatibility across mixed local-plus-remote runtime surfaces
+- Why:
+  - to implement the strategy-B controller-guided routing slice before later request rewriting, broader hybrid arbitration, UI expansion, and final runtime convergence work build on the same routing contract
+- How:
+  - implemented with strict RED/GREEN TDD across unified config, bridge plan merge, live controller execution, runtime-observability diagnostics, and mixed-vendor validator slices, then validated through `runtime-host-bridge` tests, `runtime-observability` tests, `protocol-routing` tests, `runtime:validate-vendors`, `runtime:validate-host`, `schemas:validate`, and agent-operated readback QA
+- What was not done:
+  - no request rewriting, broader hybrid arbitration policy, UI implementation, or final integrated runtime convergence shipped in this run
+- Known issues / follow-ups:
+  - the current live mixed-pool proof uses strategy-level controller guidance and endpoint preference rather than richer role-task rewriting, which remains owned by later runs
+  - the legacy global controller-assignment API still exists as an operator surface but remains intentionally distinct from request-time controller inference
+  - later runs still need request rewriting, hybrid arbitration, UI surfaces, and final end-to-end runtime integration on top of this controller-guided baseline

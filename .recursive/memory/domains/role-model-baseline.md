@@ -1,6 +1,6 @@
 Type: `domain`
 Status: `CURRENT`
-Scope: `Stable baseline ownership for the repo workspace, canonical protocol tree, shared packages, router family, fixtures, validation surfaces, and the repo-owned runtime/operator baseline extended through the stateful difficulty-learning baseline in run 27.`
+Scope: `Stable baseline ownership for the repo workspace, canonical protocol tree, shared packages, router family, fixtures, validation surfaces, and the repo-owned runtime/operator baseline extended through the controller-guided routing baseline in run 28.`
 Owns-Paths:
 - `/README.md`
 - `/LICENSE`
@@ -43,8 +43,9 @@ Source-Runs:
 - `25-router-runtime-model-alias-pool`
 - `26-router-runtime-difficulty-guided-routing`
 - `27-router-runtime-difficulty-learning-cache`
+- `28-router-runtime-controller-guided-routing`
 Validated-At-Commit: `working-tree`
-Last-Validated: `2026-05-11T15:13:00Z`
+Last-Validated: `2026-05-11T16:14:06Z`
 Tags:
 - `baseline`
 - `workspace`
@@ -123,6 +124,10 @@ This repository now has a real product baseline rather than only recursive scaff
 - `/role-model-router/packages/sqlite-memory/` and `/role-model-router/apps/runtime-host-bridge/` now persist conversation difficulty cache entries, segmented easy/medium/hard observed profiles, advisory `maxDifficulty` recommendation payloads, observed override explanations, and selected-bucket observed-profile diagnostics across both local and remote endpoints
 - `/role-model-router/apps/runtime-host-bridge/src/index.ts` now reuses cached conversation difficulty when invalidation rules allow, deterministically reclassifies when the conversation changes materially, and can use observed per-bucket performance to override configured `maxDifficulty` ceilings without mutating operator config
 - The repo-owned validation floor now also proves bucketed endpoint-profile readback, deterministic cache reuse and invalidation, observed override above configured ceilings, and bucket-selected routing through focused bridge tests, `runtime:validate-host`, `runtime:validate-vendors`, and agent-operated readback of live runtime surfaces
+- The runtime now also owns an explicit `controller` contract in `/role-model-router/apps/runtime-host-bridge/src/unified-runtime-config.ts`, including source-type targeting, controller model or endpoint selection, and bounded timeout behavior for request-time guidance
+- `/role-model-router/apps/runtime-host-bridge/src/index.ts` now executes request-time controller inference for intelligent aliases on both chat-completions and responses paths, validates structured controller directives, merges accepted guidance into existing `RoutingRequest` fields plus `routingModel.preferredEndpointIds`, and fails closed on invalid controller output
+- Runtime request observations and mixed-vendor validator proof now also expose durable `routingDiagnostics.controllerRouting` metadata with controller-active state, accepted directives, and explicit fallback reasons across mixed local-plus-remote runtime surfaces
+- The repo-owned validation floor now also proves mixed local-plus-remote controller steering, invalid-controller-output fallback, controller-inactive alias behavior, and exact-model backward compatibility through focused bridge tests, `runtime:validate-vendors`, and agent-operated readback
 
 ## Validation Path
 

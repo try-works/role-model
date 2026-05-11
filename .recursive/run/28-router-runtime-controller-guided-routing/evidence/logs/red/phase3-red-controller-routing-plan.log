@@ -1,0 +1,98 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/28-router-runtime-controller-guided-routing/role-model-router/apps/runtime-host-bridge[39m
+
+(node:17916) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [31mΓ¥»[39m test/index.test.ts [2m([22m[2m37 tests[22m[2m | [22m[31m1 failed[39m[2m | [22m[33m36 skipped[39m[2m)[22m[32m 39[2mms[22m[39m
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mcreates a stable model-list response grouped by model id
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mcreates alias entries in the model-list response alongside real models
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mmaps a chat-completions request into role-model routing and execution inputs
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mmaps an alias chat-completions request into a pooled endpoint allow-list and alias diagnostics
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mkeeps exact-model routing unchanged when aliases are configured
+[31m   [31m├ù[31m runtime-host-bridge[2m > [22mmaps validated controller guidance into an intelligent alias routing plan[39m[32m 38[2mms[22m[39m
+[31m     ΓåÆ expected { ΓÇª(10) } to match object { Object (requestedRoleId, taskType, ...) }
+(4 matching properties omitted from actual)[39m
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mmaps a difficulty-mode alias chat request into a gated allow-list and difficulty diagnostics
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mmaps an alias responses request into a pooled endpoint allow-list and alias diagnostics
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mmaps a difficulty-mode responses request into an easy strategy and keeps eligible endpoints
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mprefers a configured alias in downstream OpenAI provider config
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mserves health and model-list endpoints
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mserves alias entries in model-list and downstream provider config from runtime config
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mserves preserved host observability and vendor-facing utility endpoints
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mserves runtime control-plane summary, provider, account, and endpoint routes
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mserves canonical telemetry summary, comparison, and recent request routes
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mserves downstream OpenAI-compatible provider metadata for consumer apps
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mserves chat-completions responses with role-model execution metadata
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mserves OpenAI-compatible SSE events for streaming responses requests
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22msurfaces tool calls on chat-completions responses when the backend returns them
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mstreams provider deltas through the bridge as they arrive
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mcreates a runtime backend that executes chat-completions through the real routing and adapter path
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mcreates a runtime backend that persists structured request and endpoint inspection state
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mpersists alias-resolution diagnostics for runtime-backed chat requests
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mpersists difficulty-routing diagnostics for runtime-backed chat requests
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mallows an observed max-difficulty override when bucketed performance supports a harder request
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mroutes hard requests using bucketed observed profiles and records the selected difficulty bucket
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22muses the configured remote classifier result for difficulty-mode runtime-backed chat requests
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mfalls back deterministically when the configured classifier times out
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mreuses cached difficulty classification for repeated requests in the same conversation when invalidation thresholds are not exceeded
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mreports cache invalidation reasons before reclassifying a repeated request
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mcreates a runtime backend that exposes provider presets, runtime summary, and account upserts
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mexecutes chat-completions through an activated Kimi Code endpoint
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mcreates a runtime backend that executes responses through the real routing and adapter path
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mserves structured request and endpoint inspection routes through the bridge server
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mreads bucketed endpoint profiles with an advisory max-difficulty recommendation
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mstreams canonical telemetry updates over SSE after new requests are persisted
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mresolves bridge server options from explicit values and defaults
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/index.test.ts > runtime-host-bridge > maps validated controller guidance into an intelligent alias routing plan
+AssertionError: expected { ΓÇª(10) } to match object { Object (requestedRoleId, taskType, ...) }
+(4 matching properties omitted from actual)
+
+- Expected
++ Received
+
+@@ -2,18 +2,13 @@
+    "allowEndpoints": [
+      "anthropic.team.shared.us-east-1.default",
+      "openai.personal.primary.us-east-1.fast",
+      "openai.personal.secondary.us-west-2.fast",
+    ],
+-   "preferLocal": true,
+-   "preferredCapabilities": [
+-     "reasoning.multi_step",
+-   ],
+-   "requestedRoleId": "coder.patch",
++   "preferLocal": false,
++   "preferredCapabilities": [],
+    "requiredCapabilities": [
+      "text.chat",
+-     "code.edit",
+-     "tools.function_calling",
+    ],
+-   "strategy": "quality",
+-   "taskType": "code.edit",
++   "strategy": "balanced",
++   "taskType": "text.chat",
+  }
+
+ Γ¥» test/index.test.ts:500:35
+    498|     );
+    499| 
+    500|     expect(result.routingRequest).toMatchObject({
+       |                                   ^
+    501|       requestedRoleId: "coder.patch",
+    502|       taskType: "code.edit",
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[33m36 skipped[39m[90m (37)[39m
+[2m   Start at [22m 23:30:47
+[2m   Duration [22m 1.48s[2m (transform 553ms, setup 0ms, collect 765ms, tests 39ms, environment 0ms, prepare 259ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\28-router-runtime-controller-guided-routing\role-model-router\apps\runtime-host-bridge:
+ΓÇëERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓÇë Command failed with exit code 1: vitest run test/index.test.ts -t maps validated controller guidance into an intelligent alias routing plan

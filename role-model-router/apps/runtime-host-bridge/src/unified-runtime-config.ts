@@ -66,6 +66,14 @@ export interface UnifiedRuntimeDifficultyClassifierConfig {
   readonly fallbackDifficulty: UnifiedRuntimeDifficultyBucket;
 }
 
+export interface UnifiedRuntimeControllerConfig {
+  readonly enabled: boolean;
+  readonly sourceType: "local" | "remote";
+  readonly endpointId: string | null;
+  readonly modelId: string | null;
+  readonly timeoutMs: number;
+}
+
 export interface UnifiedRuntimeObservedDataConfig {
   readonly enabled: boolean;
   readonly aggregation: {
@@ -164,6 +172,7 @@ export interface UnifiedRuntimeConfig {
   readonly executionMode: UnifiedRuntimeExecutionMode;
   readonly observedData?: UnifiedRuntimeObservedDataConfig;
   readonly difficultyClassifier?: UnifiedRuntimeDifficultyClassifierConfig;
+  readonly controller?: UnifiedRuntimeControllerConfig;
   readonly modelAliases?: readonly UnifiedRuntimeModelAliasConfig[];
   readonly llamaSwap: {
     readonly enabled: boolean;
@@ -200,6 +209,13 @@ interface RawUnifiedRuntimeConfig {
   readonly version?: string;
   readonly routing?: {
     readonly strategy?: string;
+  };
+  readonly controller?: {
+    readonly enabled?: boolean;
+    readonly source_type?: string;
+    readonly endpoint_id?: string;
+    readonly model_id?: string;
+    readonly timeout_ms?: number;
   };
   readonly difficulty_classifier?: {
     readonly enabled?: boolean;
@@ -706,6 +722,14 @@ const DEFAULT_UNIFIED_RUNTIME_DIFFICULTY_CLASSIFIER_CONFIG: UnifiedRuntimeDiffic
   fallbackDifficulty: "hard",
 };
 
+const DEFAULT_UNIFIED_RUNTIME_CONTROLLER_CONFIG: UnifiedRuntimeControllerConfig = {
+  enabled: true,
+  sourceType: "remote",
+  endpointId: null,
+  modelId: null,
+  timeoutMs: 1500,
+};
+
 function normalizeDifficultyClassifierInput(
   value: unknown,
   prefix: string,
@@ -736,6 +760,27 @@ function normalizeDifficultyClassifierInput(
             : DEFAULT_UNIFIED_RUNTIME_DIFFICULTY_CLASSIFIER_CONFIG.fallbackDifficulty,
         `${prefix}.fallback_difficulty`,
       ) ?? DEFAULT_UNIFIED_RUNTIME_DIFFICULTY_CLASSIFIER_CONFIG.fallbackDifficulty,
+  };
+}
+
+function normalizeControllerInput(
+  value: unknown,
+  prefix: string,
+): UnifiedRuntimeControllerConfig {
+  ensureObject(value, `${prefix} must be an object.`);
+  return {
+    enabled: readBoolean(value.enabled) ?? DEFAULT_UNIFIED_RUNTIME_CONTROLLER_CONFIG.enabled,
+    sourceType: readClassifierSourceType(
+      "sourceType" in value ? value.sourceType : "source_type" in value ? value.source_type : DEFAULT_UNIFIED_RUNTIME_CONTROLLER_CONFIG.sourceType,
+      `${prefix}.source_type`,
+    ),
+    endpointId: readNonEmptyString("endpointId" in value ? value.endpointId : "endpoint_id" in value ? value.endpoint_id : undefined),
+    modelId: readNonEmptyString("modelId" in value ? value.modelId : "model_id" in value ? value.model_id : undefined),
+    timeoutMs: readRequiredPositiveNumber(
+      "timeoutMs" in value ? value.timeoutMs : "timeout_ms" in value ? value.timeout_ms : undefined,
+      `${prefix}.timeout_ms`,
+      DEFAULT_UNIFIED_RUNTIME_CONTROLLER_CONFIG.timeoutMs,
+    ),
   };
 }
 
@@ -1184,6 +1229,7 @@ export function parseUnifiedRuntimeConfigText(text: string): UnifiedRuntimeConfi
       llamaSwapEnabled: llamaSwap.enabled,
       liteLLMEnabled: liteLLM.enabled,
     }),
+    ...(rawConfig.controller ? { controller: normalizeControllerInput(rawConfig.controller, "controller") } : {}),
     ...(rawConfig.difficulty_classifier
       ? { difficultyClassifier: normalizeDifficultyClassifierInput(rawConfig.difficulty_classifier, "difficulty_classifier") }
       : {}),
@@ -1212,6 +1258,8 @@ export function normalizeUnifiedRuntimeConfigInput(input: unknown): UnifiedRunti
   );
   const observedDataSource =
     "observedData" in input ? input.observedData : "observed_data" in input ? input.observed_data : undefined;
+  const controllerSource =
+    "controller" in input ? input.controller : undefined;
   const difficultyClassifierSource =
     "difficultyClassifier" in input
       ? input.difficultyClassifier
@@ -1233,6 +1281,11 @@ export function normalizeUnifiedRuntimeConfigInput(input: unknown): UnifiedRunti
       llamaSwapEnabled: llamaSwap.enabled,
       liteLLMEnabled: liteLLM.enabled,
     }),
+    ...(controllerSource !== undefined
+      ? {
+          controller: normalizeControllerInput(controllerSource, "controller"),
+        }
+      : {}),
     ...(difficultyClassifierSource !== undefined
       ? {
           difficultyClassifier: normalizeDifficultyClassifierInput(
@@ -1354,6 +1407,16 @@ export function renderUnifiedRuntimeConfigText(config: UnifiedRuntimeConfig): st
       ...(config.difficultyClassifier.modelId !== null ? { model_id: config.difficultyClassifier.modelId } : {}),
       timeout_ms: config.difficultyClassifier.timeoutMs,
       fallback_difficulty: config.difficultyClassifier.fallbackDifficulty,
+    };
+  }
+
+  if (config.controller) {
+    document.controller = {
+      enabled: config.controller.enabled,
+      source_type: config.controller.sourceType,
+      ...(config.controller.endpointId !== null ? { endpoint_id: config.controller.endpointId } : {}),
+      ...(config.controller.modelId !== null ? { model_id: config.controller.modelId } : {}),
+      timeout_ms: config.controller.timeoutMs,
     };
   }
 

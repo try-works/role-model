@@ -103,6 +103,101 @@ describe("runRuntimeVendorValidation", () => {
     expect(
       (
         result as typeof result & {
+          intelligentHybrid?: {
+            vendorId?: string;
+            observation?: {
+              routingDiagnostics?: {
+                aliasResolution?: {
+                  requestedModel?: string;
+                  aliasId?: string;
+                  allowEndpoints?: readonly string[];
+                };
+                controllerRouting?: {
+                  active?: boolean;
+                  acceptedDirectives?: {
+                    strategy?: string;
+                    preferredEndpointIds?: readonly string[];
+                  };
+                };
+              };
+            };
+          };
+          controllerFallback?: {
+            vendorId?: string;
+            observation?: {
+              routingDiagnostics?: {
+                controllerRouting?: {
+                  active?: boolean;
+                  fallbackApplied?: boolean;
+                  fallbackReason?: string;
+                };
+              };
+            };
+          };
+        }
+      ).intelligentHybrid,
+    ).toMatchObject({
+      vendorId: "litellm",
+      observation: {
+        routingDiagnostics: {
+          aliasResolution: {
+            requestedModel: "gpt-5.4-intelligent",
+            aliasId: "gpt-5.4-intelligent",
+            allowEndpoints: [
+              "llama-swap.local.local-llama-3-1-8b-instruct",
+              "openai.litellm.global.openai-gpt-4-1-mini-fast",
+            ],
+          },
+          controllerRouting: {
+            active: true,
+            acceptedDirectives: {
+              strategy: "quality",
+              preferredEndpointIds: ["openai.litellm.global.openai-gpt-4-1-mini-fast"],
+            },
+          },
+        },
+      },
+    });
+    expect(
+      (
+        result as typeof result & {
+          controllerFallback?: {
+            vendorId?: string;
+            observation?: {
+              routingDiagnostics?: {
+                aliasResolution?: {
+                  requestedModel?: string;
+                  aliasId?: string;
+                };
+                controllerRouting?: {
+                  active?: boolean;
+                  fallbackApplied?: boolean;
+                  fallbackReason?: string;
+                };
+              };
+            };
+          };
+        }
+      ).controllerFallback,
+    ).toMatchObject({
+      vendorId: expect.stringMatching(/^(llama-swap|litellm)$/),
+      observation: {
+        routingDiagnostics: {
+          aliasResolution: {
+            requestedModel: "gpt-5.4-intelligent",
+            aliasId: "gpt-5.4-intelligent",
+          },
+          controllerRouting: {
+            active: true,
+            fallbackApplied: true,
+            fallbackReason: "invalid-controller-output",
+          },
+        },
+      },
+    });
+    expect(
+      (
+        result as typeof result & {
           difficultyHybrid?: {
             easyVendorId?: string;
             hardVendorId?: string;
@@ -188,10 +283,10 @@ describe("runRuntimeVendorValidation", () => {
     });
     expect(result.telemetry.summary).toEqual(
       expect.objectContaining({
-        requestCount: 5,
+        requestCount: 7,
         sourceBreakdown: expect.objectContaining({
           local: expect.objectContaining({ requestCount: 1 }),
-          remote: expect.objectContaining({ requestCount: 4 }),
+          remote: expect.objectContaining({ requestCount: 6 }),
         }),
       }),
     );
@@ -227,6 +322,14 @@ describe("runRuntimeVendorValidation", () => {
         }),
         expect.objectContaining({
           requestId: "req-runtime-vendor-hybrid-difficulty-hard",
+          sourceType: "remote",
+        }),
+        expect.objectContaining({
+          requestId: "req-runtime-vendor-hybrid-intelligent",
+          sourceType: "remote",
+        }),
+        expect.objectContaining({
+          requestId: "req-runtime-vendor-hybrid-controller-fallback",
           sourceType: "remote",
         }),
       ]),
