@@ -1,10 +1,26 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
 
-import { EmptyState, ErrorState, FactCard, LoadingState, PageHeader, SectionCard, StatusPill } from "../components/page-primitives";
+import {
+  EmptyState,
+  ErrorState,
+  FactCard,
+  LoadingState,
+  PageHeader,
+  SectionCard,
+  StatusPill,
+} from "../components/page-primitives";
 import { listRowClassName, mutedPanelClassName } from "../lib/design-system";
-import { fetchTelemetryDashboard, subscribeTelemetryStream, type RuntimeTelemetryDashboard } from "../lib/runtime-api";
-import { buildTelemetryComparisonCards, buildTelemetryRequestRows, summarizeTelemetryStats } from "../lib/view-models";
+import {
+  type RuntimeTelemetryDashboard,
+  fetchTelemetryDashboard,
+  subscribeTelemetryStream,
+} from "../lib/runtime-api";
+import {
+  buildTelemetryComparisonCards,
+  buildTelemetryRequestRows,
+  summarizeTelemetryStats,
+} from "../lib/view-models";
 
 export default function DashboardRoute() {
   const [dashboard, setDashboard] = useState<RuntimeTelemetryDashboard | null>(null);
@@ -82,15 +98,26 @@ export default function DashboardRoute() {
                 <div key={row.endpointId} className={`${listRowClassName} md:items-center`}>
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="font-medium text-[var(--rm-fg)]">{row.modelId ?? row.endpointId}</p>
-                      <StatusPill tone={row.sourceLabel === "Remote" ? "accent" : "neutral"}>{row.sourceLabel}</StatusPill>
-                      <StatusPill tone={row.statusLabel === "healthy" || row.statusLabel === "active" ? "success" : "warning"}>
+                      <p className="font-medium text-[var(--rm-fg)]">
+                        {row.modelId ?? row.endpointId}
+                      </p>
+                      <StatusPill tone={row.sourceLabel === "Remote" ? "accent" : "neutral"}>
+                        {row.sourceLabel}
+                      </StatusPill>
+                      <StatusPill
+                        tone={
+                          row.statusLabel === "healthy" || row.statusLabel === "active"
+                            ? "success"
+                            : "warning"
+                        }
+                      >
                         {row.statusLabel}
                       </StatusPill>
                     </div>
                     <p className="text-sm text-[var(--rm-secondary)]">{row.endpointId}</p>
                     <p className="mt-2 text-sm text-[var(--rm-secondary)]">
-                      {row.requestCountLabel} • {row.latencyLabel} • {row.tokenLabel} • {row.costLabel}
+                      {row.requestCountLabel} • {row.latencyLabel} • {row.tokenLabel} •{" "}
+                      {row.costLabel}
                     </p>
                     <p className="mt-1 text-sm text-[var(--rm-secondary)]">
                       {row.providerLabel} • {row.cacheLabel} • {row.reliabilityLabel}
@@ -104,7 +131,10 @@ export default function DashboardRoute() {
         </SectionCard>
 
         <div className="col-span-12 space-y-4 xl:col-span-4">
-          <SectionCard title="Latest requests" description="The freshest structured request rows stay adjacent to the comparison board and refresh via SSE.">
+          <SectionCard
+            title="Latest requests"
+            description="The freshest structured request rows stay adjacent to the comparison board and refresh via SSE."
+          >
             <div className="space-y-3">
               {requestRows.slice(0, 5).map((request) => (
                 <div key={request.requestId} className={`${mutedPanelClassName} p-4`}>
@@ -116,18 +146,22 @@ export default function DashboardRoute() {
                     <StatusPill tone={request.sourceLabel === "Remote" ? "accent" : "neutral"}>
                       {request.sourceLabel}
                     </StatusPill>
-                   </div>
-                   <p className="mt-3 text-sm text-[var(--rm-secondary)]">
-                     {request.statusLabel} • {request.latencyLabel} • {request.tokenLabel}
-                   </p>
-                   <p className="mt-1 text-sm text-[var(--rm-secondary)]">
-                     {request.providerFamilyLabel} • {request.finishReasonLabel} • {request.cacheLabel}
-                   </p>
-                   <div className="mt-3 flex items-center justify-between gap-3">
-                     <span className="text-xs uppercase tracking-[0.24em] text-[var(--rm-muted)]">
-                       {request.createdAtLabel}
+                  </div>
+                  <p className="mt-3 text-sm text-[var(--rm-secondary)]">
+                    {request.statusLabel} • {request.latencyLabel} • {request.tokenLabel}
+                  </p>
+                  <p className="mt-1 text-sm text-[var(--rm-secondary)]">
+                    {request.providerFamilyLabel} • {request.finishReasonLabel} •{" "}
+                    {request.cacheLabel}
+                  </p>
+                  <div className="mt-3 flex items-center justify-between gap-3">
+                    <span className="text-xs uppercase tracking-[0.24em] text-[var(--rm-muted)]">
+                      {request.createdAtLabel}
                     </span>
-                    <Link className="text-sm font-medium text-[var(--rm-accent)]" to={`/app/observe/requests/${request.requestId}`}>
+                    <Link
+                      className="text-sm font-medium text-[var(--rm-accent)]"
+                      to={`/app/observe/requests/${request.requestId}`}
+                    >
                       Inspect
                     </Link>
                   </div>
@@ -136,18 +170,27 @@ export default function DashboardRoute() {
             </div>
           </SectionCard>
 
-          <SectionCard title="Reading order" description="Structured telemetry leads; preserved raw host tooling remains adjacent.">
+          <SectionCard
+            title="Reading order"
+            description="Structured telemetry leads; preserved raw host tooling remains adjacent."
+          >
             <div className="space-y-3">
               <div className={`${mutedPanelClassName} p-4`}>
-                <p className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]">Canonical first</p>
+                <p className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]">
+                  Canonical first
+                </p>
                 <p className="mt-3 max-w-[28ch] text-sm leading-6 text-[var(--rm-secondary)]">
-                  Overview now leads with structured role-model telemetry. Use Requests for the full ledger and request inspector.
+                  Overview now leads with structured role-model telemetry. Use Requests for the full
+                  ledger and request inspector.
                 </p>
               </div>
               <div className={`${mutedPanelClassName} p-4`}>
-                <p className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]">Raw adjacency</p>
+                <p className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]">
+                  Raw adjacency
+                </p>
                 <p className="mt-3 max-w-[28ch] text-sm leading-6 text-[var(--rm-secondary)]">
-                  Observe &gt; Activity stays available for raw host metrics and captures when you need preserved llama-swap operator detail.
+                  Observe &gt; Activity stays available for raw host metrics and captures when you
+                  need preserved llama-swap operator detail.
                 </p>
               </div>
             </div>
