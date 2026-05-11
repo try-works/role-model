@@ -681,3 +681,31 @@
   - no alias routing, recency weighting, difficulty segmentation, controller inference, or hybrid arbitration shipped in this run
 - Known issues / follow-ups:
   - later runs still need recency weighting, alias pools, difficulty-aware routing, controller guidance, and hybrid arbitration on top of the runtime-owned feedback baseline
+
+### Run `24-router-runtime-recency-bias-throughput-sla`
+
+- Run folder: `/.recursive/run/24-router-runtime-recency-bias-throughput-sla/`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - the runtime now owns an explicit `observedData` config contract with defaults and validation for recency weighting and throughput-SLA policy
+  - adaptive routing now decays measured quality, latency, throughput, reliability, and cost toward neutral defaults as observations age
+  - active throughput-SLA penalties now persist in SQLite runtime state and can either exclude or discount endpoints during routing
+  - request observations and runtime validation now expose effective metrics plus throughput-penalty diagnostics for both local and remote endpoint paths
+- Why:
+  - to turn the run-23 live observed-feedback baseline into real adaptive route selection before later alias, difficulty, controller, and hybrid routing runs build on the same state
+- How:
+  - implemented with strict RED/GREEN TDD across config, SQLite, protocol-routing, and bridge diagnostics slices, validated the locked Phase 3 slice through `schemas:validate`, focused package tests, `runtime-host-bridge` tests, `runtime:validate-host`, and `runtime:validate-vendors`, and completed agent-operated readback QA over adaptive diagnostics and penalty-driven route outcomes
+- What was not done:
+  - no alias routing, difficulty classification, controller-guided scoring, hybrid arbitration, or runtime UI implementation shipped in this run
+- Known issues / follow-ups:
+  - later runs still need alias pools, easy-medium-hard difficulty routing, controller guidance, hybrid arbitration, and final integrated runtime verification on top of the new adaptive observed-data baseline

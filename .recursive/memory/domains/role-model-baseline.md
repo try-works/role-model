@@ -1,6 +1,6 @@
 Type: `domain`
 Status: `CURRENT`
-Scope: `Stable baseline ownership for the repo workspace, canonical protocol tree, shared packages, router family, fixtures, validation surfaces, and the repo-owned runtime/operator baseline extended through the live observed-feedback routing baseline in run 23.`
+Scope: `Stable baseline ownership for the repo workspace, canonical protocol tree, shared packages, router family, fixtures, validation surfaces, and the repo-owned runtime/operator baseline extended through the adaptive observed-data routing baseline in run 24.`
 Owns-Paths:
 - `/README.md`
 - `/LICENSE`
@@ -39,6 +39,7 @@ Source-Runs:
 - `16-router-runtime-unified-telemetry-dashboard`
 - `22-router-runtime-routing-strategy-lock`
 - `23-router-runtime-live-observed-feedback`
+- `24-router-runtime-recency-bias-throughput-sla`
 Validated-At-Commit: `working-tree`
 Last-Validated: `2026-05-11T19:11:00+08:00`
 Tags:
@@ -105,6 +106,9 @@ This repository now has a real product baseline rather than only recursive scaff
 - The bridge now reads latest observed profiles from SQLite runtime state on each request instead of routing from the startup fixture-only `routing-observed-profiles.json` map
 - Runtime request observations now expose `routingDiagnostics.observedProfile` with source, `per-request` read mode, and measured-at metadata so operators can confirm which persisted profile influenced a route
 - The repo-owned validation floor for this routing-feedback baseline now includes focused bridge tests plus `runtime:validate-host` and `runtime:validate-vendors`, including local-and-remote feedback-loop readback visibility
+- The runtime now also owns an explicit `observedData` policy contract in `/role-model-router/apps/runtime-host-bridge/src/unified-runtime-config.ts`, including metric-halflife tuning and throughput-SLA configuration with shared local-plus-remote semantics
+- Adaptive routing now uses freshness-decayed effective metrics plus SQLite-backed throughput-penalty state to change real route outcomes in `/role-model-router/packages/core/`, `/role-model-router/packages/protocol-routing/`, and `/role-model-router/apps/runtime-host-bridge/`
+- Runtime request observations and validator proof now also expose `routingDiagnostics.effectiveMetrics` and `routingDiagnostics.throughputPenalty`, so operators can see the adaptive metric values, freshness weighting, and current penalty state behind a routing decision
 
 ## Validation Path
 

@@ -1,6 +1,8 @@
 Run: `/.recursive/run/24-router-runtime-recency-bias-throughput-sla/`
 Phase: `00 Requirements`
-Status: `DRAFT`
+Status: `LOCKED`
+LockedAt: `2026-05-11T11:46:33Z`
+LockHash: `3562069a9fad2b8f2e9daabae204f9b410e6ad9b031cf17509dd59420ba0f2b0`
 Workflow version: `recursive-mode-audit-v1`
 Inputs:
 - `/docs/architecture/07-router-runtime-routing-strategy-lock.md`

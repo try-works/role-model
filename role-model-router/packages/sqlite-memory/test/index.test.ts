@@ -1516,6 +1516,106 @@ describe("initializeSqliteMemory", () => {
       endpointId: validation.decision.chosen_endpoint_id,
     });
   });
+
+  test("persists throughput penalty state and expires it after the penalty window", async () => {
+    expect(
+      typeof (
+        sqliteMemory as {
+          upsertObservedThroughputPenaltyState?: unknown;
+        }
+      ).upsertObservedThroughputPenaltyState,
+    ).toBe("function");
+    expect(
+      typeof (
+        sqliteMemory as {
+          readObservedThroughputPenaltyState?: unknown;
+        }
+      ).readObservedThroughputPenaltyState,
+    ).toBe("function");
+
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+    const initialized = initializeSqliteMemory({
+      runtimeStateRoot,
+      scopeId: "workspace-dev",
+    });
+
+    (
+      sqliteMemory as {
+        upsertObservedThroughputPenaltyState: (value: {
+          databasePath: string;
+          penaltyState: {
+            endpointId: string;
+            lastObservedTokensPerSec: number;
+            minTokensPerSec: number;
+            penaltyFactor: number;
+            activatedAtMs: number;
+            expiresAtMs: number;
+            lastObservationMeasuredAtMs: number;
+          };
+        }) => void;
+      }
+    ).upsertObservedThroughputPenaltyState({
+      databasePath: initialized.databasePath,
+      penaltyState: {
+        endpointId: "openai.litellm.global.openai-gpt-4-1-mini-fast",
+        lastObservedTokensPerSec: 12,
+        minTokensPerSec: 24,
+        penaltyFactor: 0,
+        activatedAtMs: 1_762_000_100_000,
+        expiresAtMs: 1_762_000_700_000,
+        lastObservationMeasuredAtMs: 1_762_000_095_000,
+      },
+    });
+
+    expect(
+      (
+        sqliteMemory as {
+          readObservedThroughputPenaltyState: (value: {
+            databasePath: string;
+            endpointId: string;
+            nowMs: number;
+          }) => {
+            endpointId: string;
+            lastObservedTokensPerSec: number;
+            minTokensPerSec: number;
+            penaltyFactor: number;
+            activatedAtMs: number;
+            expiresAtMs: number;
+            lastObservationMeasuredAtMs: number;
+          } | null;
+        }
+      ).readObservedThroughputPenaltyState({
+        databasePath: initialized.databasePath,
+        endpointId: "openai.litellm.global.openai-gpt-4-1-mini-fast",
+        nowMs: 1_762_000_650_000,
+      }),
+    ).toEqual(
+      expect.objectContaining({
+        endpointId: "openai.litellm.global.openai-gpt-4-1-mini-fast",
+        lastObservedTokensPerSec: 12,
+        minTokensPerSec: 24,
+        penaltyFactor: 0,
+        activatedAtMs: 1_762_000_100_000,
+        expiresAtMs: 1_762_000_700_000,
+      }),
+    );
+
+    expect(
+      (
+        sqliteMemory as {
+          readObservedThroughputPenaltyState: (value: {
+            databasePath: string;
+            endpointId: string;
+            nowMs: number;
+          }) => unknown | null;
+        }
+      ).readObservedThroughputPenaltyState({
+        databasePath: initialized.databasePath,
+        endpointId: "openai.litellm.global.openai-gpt-4-1-mini-fast",
+        nowMs: 1_762_000_700_001,
+      }),
+    ).toBeNull();
+  });
 });
 
 describe("runRuntimeStateValidation", () => {

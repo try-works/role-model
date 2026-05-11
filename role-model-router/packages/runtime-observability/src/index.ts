@@ -14,6 +14,47 @@ export interface RuntimeRoutingDiagnostics {
     readonly readMode: "per-request";
     readonly measuredAtMs?: number;
   };
+  readonly effectiveMetrics?: {
+    readonly quality?: {
+      readonly value: number;
+      readonly source: string;
+      readonly measuredAtMs?: number;
+      readonly freshnessWeight?: number;
+    };
+    readonly latency?: {
+      readonly value: number;
+      readonly source: string;
+      readonly measuredAtMs?: number;
+      readonly freshnessWeight?: number;
+    };
+    readonly throughput?: {
+      readonly value: number;
+      readonly source: string;
+      readonly measuredAtMs?: number;
+      readonly freshnessWeight?: number;
+    };
+    readonly reliability?: {
+      readonly value: number;
+      readonly source: string;
+      readonly measuredAtMs?: number;
+      readonly freshnessWeight?: number;
+    };
+    readonly cost?: {
+      readonly value: number;
+      readonly source: string;
+      readonly measuredAtMs?: number;
+      readonly freshnessWeight?: number;
+    };
+  };
+  readonly throughputPenalty?: {
+    readonly endpointId: string;
+    readonly active: boolean;
+    readonly penaltyFactor?: number;
+    readonly activatedAtMs?: number;
+    readonly expiresAtMs?: number;
+    readonly minTokensPerSec?: number;
+    readonly lastObservedTokensPerSec?: number;
+  };
   readonly routingModel?: {
     readonly enabled: boolean;
     readonly endpointId?: string | null;

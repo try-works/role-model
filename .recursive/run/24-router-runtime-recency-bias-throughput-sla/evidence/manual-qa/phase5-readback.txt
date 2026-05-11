@@ -1,0 +1,50 @@
+Run 24 Phase 5 Manual QA Readback
+
+Scope:
+- adaptive observed-data diagnostics on persisted request observations
+- local-plus-remote parity for effective metrics and throughput-penalty readback
+- route-outcome proof that an actively penalized endpoint is excluded when penaltyFactor = 0
+
+Findings:
+
+1. Persisted request-observation diagnostics are operator-visible and explicit.
+   - Source: `role-model-router/apps/runtime-host-bridge/test/index.test.ts:1631-1665`
+   - Readback requires:
+     - `routingDiagnostics.observedProfile.source = "runtime-state"`
+     - `routingDiagnostics.observedProfile.readMode = "per-request"`
+     - `routingDiagnostics.effectiveMetrics.quality|latency|throughput`
+     - `routingDiagnostics.throughputPenalty.endpointId = result.endpointId`
+     - `routingDiagnostics.throughputPenalty.active = false`
+   - QA result: PASS
+
+2. Local and remote endpoint paths expose the same adaptive readback contract.
+   - Source: `role-model-router/apps/runtime-host-bridge/test/validate-vendors.test.ts:198-244`
+   - Readback requires for both `observations.local` and `observations.remote`:
+     - `routingDiagnostics.observedProfile.source = "runtime-state"`
+     - `routingDiagnostics.observedProfile.readMode = "per-request"`
+     - `routingDiagnostics.effectiveMetrics.latency.value` plus `freshnessWeight`
+     - `routingDiagnostics.effectiveMetrics.throughput.value` plus `freshnessWeight`
+     - `routingDiagnostics.throughputPenalty.active = false`
+   - QA result: PASS
+
+3. Adaptive scoring changes the route outcome when an active throughput penalty is present.
+   - Source: `role-model-router/packages/protocol-routing/test/index.test.ts:822-990`
+   - Scenario reviewed:
+     - remote endpoint `remote.penalized.fast` has stronger raw latency but only `12` tokens/sec
+     - observed-data config sets `minTokensPerSec = 24` and `penaltyFactor = 0`
+     - active penalty window exists for `remote.penalized.fast`
+   - Expected result confirmed:
+     - chosen endpoint becomes `local.steady.fallback`
+     - penalized remote endpoint is marked `eligible: false`
+   - QA result: PASS
+
+4. Runtime host validation still exposes recent endpoint-profile inspection after live execution.
+   - Source: `/.recursive/run/24-router-runtime-recency-bias-throughput-sla/evidence/logs/green/phase4-runtime-validate-host.log:5-24`
+   - Readback confirms:
+     - `structured_recent_count = 1`
+     - `structured_endpoint_id = "openai.personal.primary.us-east-1.fast"`
+     - `structured_profile_sample_size = 2`
+   - QA result: PASS
+
+Issues found:
+- none

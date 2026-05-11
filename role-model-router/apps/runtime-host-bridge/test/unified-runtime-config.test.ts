@@ -279,4 +279,106 @@ litellm_proxy:
       },
     });
   });
+
+  test("parses observed-data policy and round-trips it back to config text", () => {
+    const result = parseUnifiedRuntimeConfigText(`
+version: "1.0"
+observed_data:
+  enabled: true
+  aggregation:
+    min_samples: 3
+  metric_halflives:
+    quality_ms: 900000
+    latency_ms: 300000
+    throughput_ms: 120000
+    reliability_ms: 600000
+    cost_ms: 1800000
+  throughput_sla:
+    enabled: true
+    min_tokens_per_sec: 24
+    penalty_timeout_ms: 600000
+    penalty_factor: 0
+`);
+
+    expect(
+      (result as unknown as {
+        observedData?: {
+          enabled: boolean;
+          aggregation: { minSamples: number };
+          metricHalflives: {
+            qualityMs: number;
+            latencyMs: number;
+            throughputMs: number;
+            reliabilityMs: number;
+            costMs: number;
+          };
+          throughputSla: {
+            enabled: boolean;
+            minTokensPerSec: number;
+            penaltyTimeoutMs: number;
+            penaltyFactor: number;
+          };
+        };
+      }).observedData,
+    ).toEqual({
+      enabled: true,
+      aggregation: {
+        minSamples: 3,
+      },
+      metricHalflives: {
+        qualityMs: 900000,
+        latencyMs: 300000,
+        throughputMs: 120000,
+        reliabilityMs: 600000,
+        costMs: 1800000,
+      },
+      throughputSla: {
+        enabled: true,
+        minTokensPerSec: 24,
+        penaltyTimeoutMs: 600000,
+        penaltyFactor: 0,
+      },
+    });
+
+    expect(
+      renderUnifiedRuntimeConfigText(
+        normalizeUnifiedRuntimeConfigInput({
+          version: "1.0",
+          observedData: {
+            enabled: true,
+            aggregation: {
+              minSamples: 3,
+            },
+            metricHalflives: {
+              qualityMs: 900000,
+              latencyMs: 300000,
+              throughputMs: 120000,
+              reliabilityMs: 600000,
+              costMs: 1800000,
+            },
+            throughputSla: {
+              enabled: true,
+              minTokensPerSec: 24,
+              penaltyTimeoutMs: 600000,
+              penaltyFactor: 0,
+            },
+          },
+        }) as unknown as Parameters<typeof renderUnifiedRuntimeConfigText>[0],
+      ),
+    ).toContain("observed_data:");
+  });
+
+  test("rejects invalid observed-data throughput SLA policy values", () => {
+    expect(() =>
+      parseUnifiedRuntimeConfigText(`
+version: "1.0"
+observed_data:
+  throughput_sla:
+    enabled: true
+    min_tokens_per_sec: 0
+    penalty_timeout_ms: -1
+    penalty_factor: 1.5
+`),
+    ).toThrow(/observed_data\.throughput_sla/i);
+  });
 });

@@ -1638,6 +1638,30 @@ describe("runtime-host-bridge", () => {
           readMode: "per-request",
           measuredAtMs: expect.any(Number),
         },
+        effectiveMetrics: {
+          quality: expect.objectContaining({
+            value: expect.any(Number),
+            source: "measured",
+            measuredAtMs: expect.any(Number),
+            freshnessWeight: expect.any(Number),
+          }),
+          latency: expect.objectContaining({
+            value: expect.any(Number),
+            source: "measured",
+            measuredAtMs: expect.any(Number),
+            freshnessWeight: expect.any(Number),
+          }),
+          throughput: expect.objectContaining({
+            value: expect.any(Number),
+            source: "measured",
+            measuredAtMs: expect.any(Number),
+            freshnessWeight: expect.any(Number),
+          }),
+        },
+        throughputPenalty: {
+          endpointId: result.endpointId,
+          active: false,
+        },
       },
     });
   });

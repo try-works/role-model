@@ -50,11 +50,13 @@ import {
   readLatestObservedProfile,
   readLatestObservedProfilesByEndpointIds,
   readObservedPerformanceSamples,
+  readObservedThroughputPenaltyState,
   readProviderDeviceAuthSession,
   readRuntimeMaintenancePolicy,
   readRuntimeControllerAssignment,
   readRuntimeObservationBundle,
   readRuntimeTelemetrySummary,
+  upsertObservedThroughputPenaltyState,
   upsertProviderDeviceAuthSession,
   upsertProviderAccount as upsertSqliteProviderAccount,
   upsertRuntimeControllerAssignment,
@@ -79,6 +81,7 @@ import {
   normalizeUnifiedRuntimeConfigInput,
   parseUnifiedRuntimeConfigText,
   renderUnifiedRuntimeConfigText,
+  resolveUnifiedRuntimeObservedDataConfig,
   type UnifiedRuntimeConfig,
   type UnifiedRuntimeExecutionMode,
 } from "./unified-runtime-config.js";
@@ -548,8 +551,13 @@ function createInactiveVendorStatus(vendorId: string): VendorRuntimeStatus {
 function readObservedProfilesForRouting(input: {
   readonly databasePath: string;
   readonly registry: EndpointRegistryResult;
+  readonly observedDataConfig: ReturnType<typeof resolveUnifiedRuntimeObservedDataConfig>;
+  readonly routingTimeMs: number;
 }): {
   readonly observedProfilesByEndpointId: Parameters<typeof routeRuntimeRequest>[0]["observedProfilesByEndpointId"];
+  readonly throughputPenaltyStateByEndpointId: NonNullable<
+    Parameters<typeof routeRuntimeRequest>[0]["throughputPenaltyStateByEndpointId"]
+  >;
   readonly diagnosticsByEndpointId: Record<
     string,
     NonNullable<RuntimeRoutingDiagnostics["observedProfile"]>
@@ -560,6 +568,9 @@ function readObservedProfilesForRouting(input: {
     databasePath: input.databasePath,
     endpointIds,
   });
+  const throughputPenaltyStateByEndpointId: NonNullable<
+    Parameters<typeof routeRuntimeRequest>[0]["throughputPenaltyStateByEndpointId"]
+  > = {};
   const diagnosticsByEndpointId = Object.fromEntries(
     Object.entries(latestProfilesByEndpointId).map(([endpointId, profile]) => [
       endpointId,
@@ -572,10 +583,118 @@ function readObservedProfilesForRouting(input: {
     ]),
   );
 
+  if (input.observedDataConfig.enabled && input.observedDataConfig.throughputSla.enabled) {
+    for (const [endpointId, profile] of Object.entries(latestProfilesByEndpointId)) {
+      const existingPenaltyState = readObservedThroughputPenaltyState({
+        databasePath: input.databasePath,
+        endpointId,
+        nowMs: input.routingTimeMs,
+      });
+      if (
+        typeof profile.tokens_per_sec === "number" &&
+        profile.tokens_per_sec < input.observedDataConfig.throughputSla.minTokensPerSec
+      ) {
+        const penaltyState = {
+          endpointId,
+          lastObservedTokensPerSec: profile.tokens_per_sec,
+          minTokensPerSec: input.observedDataConfig.throughputSla.minTokensPerSec,
+          penaltyFactor: input.observedDataConfig.throughputSla.penaltyFactor,
+          activatedAtMs: profile.measured_at_ms,
+          expiresAtMs: profile.measured_at_ms + input.observedDataConfig.throughputSla.penaltyTimeoutMs,
+          lastObservationMeasuredAtMs: profile.measured_at_ms,
+        };
+        upsertObservedThroughputPenaltyState({
+          databasePath: input.databasePath,
+          penaltyState,
+        });
+        throughputPenaltyStateByEndpointId[endpointId] = penaltyState;
+        continue;
+      }
+      if (existingPenaltyState) {
+        throughputPenaltyStateByEndpointId[endpointId] = existingPenaltyState;
+      }
+    }
+  }
+
   return {
     observedProfilesByEndpointId:
       latestProfilesByEndpointId as Parameters<typeof routeRuntimeRequest>[0]["observedProfilesByEndpointId"],
+    throughputPenaltyStateByEndpointId,
     diagnosticsByEndpointId,
+  };
+}
+
+function summarizeEffectiveMetricsFromDecision(
+  decision: ReturnType<typeof routeRuntimeRequest>["decision"],
+): RuntimeRoutingDiagnostics["effectiveMetrics"] | undefined {
+  const chosen = decision.scored_candidates.find(
+    (candidate) => candidate.endpoint_id === decision.chosen_endpoint_id,
+  );
+  if (!chosen) {
+    return undefined;
+  }
+
+  const metricBreakdown = chosen.metric_breakdown as Record<
+    string,
+    {
+      value?: number;
+      source?: string;
+      raw?: Record<string, unknown>;
+    }
+  >;
+  const summarizeMetric = (metricName: string) => {
+    const metric = metricBreakdown[metricName];
+    if (!metric || typeof metric.value !== "number" || typeof metric.source !== "string") {
+      return undefined;
+    }
+    return {
+      value: metric.value,
+      source: metric.source,
+      measuredAtMs: typeof metric.raw?.measured_at_ms === "number" ? metric.raw.measured_at_ms : undefined,
+      freshnessWeight:
+        typeof metric.raw?.freshness_weight === "number" ? metric.raw.freshness_weight : undefined,
+    };
+  };
+
+  return {
+    quality: summarizeMetric("quality"),
+    latency: summarizeMetric("latency"),
+    throughput: summarizeMetric("throughput"),
+    reliability: summarizeMetric("reliability"),
+    cost: summarizeMetric("cost"),
+  };
+}
+
+function summarizeThroughputPenaltyFromDecision(
+  decision: ReturnType<typeof routeRuntimeRequest>["decision"],
+): RuntimeRoutingDiagnostics["throughputPenalty"] | undefined {
+  const chosen = decision.scored_candidates.find(
+    (candidate) => candidate.endpoint_id === decision.chosen_endpoint_id,
+  );
+  if (!chosen) {
+    return undefined;
+  }
+
+  const throughputMetric = (chosen.metric_breakdown as Record<string, { raw?: Record<string, unknown> }>).throughput;
+  const penalty = throughputMetric?.raw?.throughput_penalty as Record<string, unknown> | undefined;
+  if (!penalty) {
+    return {
+      endpointId: decision.chosen_endpoint_id,
+      active: false,
+    };
+  }
+
+  return {
+    endpointId: decision.chosen_endpoint_id,
+    active: true,
+    penaltyFactor: typeof penalty.penalty_factor === "number" ? penalty.penalty_factor : undefined,
+    activatedAtMs: typeof penalty.activated_at_ms === "number" ? penalty.activated_at_ms : undefined,
+    expiresAtMs: typeof penalty.expires_at_ms === "number" ? penalty.expires_at_ms : undefined,
+    minTokensPerSec: typeof penalty.min_tokens_per_sec === "number" ? penalty.min_tokens_per_sec : undefined,
+    lastObservedTokensPerSec:
+      typeof penalty.last_observed_tokens_per_sec === "number"
+        ? penalty.last_observed_tokens_per_sec
+        : undefined,
   };
 }
 
@@ -3452,9 +3571,13 @@ export async function createRuntimeBridgeBackend(
     streamRequested: boolean | undefined,
     streamWriter?: BridgeStreamWriter,
   ) => {
+    const observedDataConfig = resolveUnifiedRuntimeObservedDataConfig(currentUnifiedRuntimeConfig);
+    const routingTimeMs = Date.now();
     const runtimeObservedProfiles = readObservedProfilesForRouting({
       databasePath: initialization.databasePath,
       registry: currentRegistry,
+      observedDataConfig,
+      routingTimeMs,
     });
     let streamedChunkCount = 0;
     const trackedStreamWriter: BridgeStreamWriter | undefined = streamWriter
@@ -3467,6 +3590,9 @@ export async function createRuntimeBridgeBackend(
       request: plan.routingRequest,
       registry: currentRegistry,
       observedProfilesByEndpointId: runtimeObservedProfiles.observedProfilesByEndpointId,
+      observedDataConfig,
+      throughputPenaltyStateByEndpointId: runtimeObservedProfiles.throughputPenaltyStateByEndpointId,
+      routingTimeMs,
       envelope,
       retrievalReceipt,
       roleDefinitions: runtimeRoles.roleDefinitions,
@@ -3697,6 +3823,8 @@ export async function createRuntimeBridgeBackend(
       routingDiagnostics: {
         ...routed.routingDiagnostics,
         observedProfile: observedProfileDiagnostic,
+        effectiveMetrics: summarizeEffectiveMetricsFromDecision(routed.decision),
+        throughputPenalty: summarizeThroughputPenaltyFromDecision(routed.decision),
       },
       retrievalReceipt: {
         receiptId: retrievalReceipt.receiptId,

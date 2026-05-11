@@ -45,10 +45,57 @@ export interface UnifiedRuntimeConfigProvider {
   readonly modelMappings: readonly UnifiedRuntimeConfigProviderMapping[];
 }
 
+export interface UnifiedRuntimeObservedDataConfig {
+  readonly enabled: boolean;
+  readonly aggregation: {
+    readonly minSamples: number;
+  };
+  readonly metricHalflives: {
+    readonly qualityMs: number;
+    readonly latencyMs: number;
+    readonly throughputMs: number;
+    readonly reliabilityMs: number;
+    readonly costMs: number;
+  };
+  readonly throughputSla: {
+    readonly enabled: boolean;
+    readonly minTokensPerSec: number;
+    readonly penaltyTimeoutMs: number;
+    readonly penaltyFactor: number;
+  };
+}
+
+export const DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG: UnifiedRuntimeObservedDataConfig = {
+  enabled: true,
+  aggregation: {
+    minSamples: 2,
+  },
+  metricHalflives: {
+    qualityMs: 15 * 60_000,
+    latencyMs: 5 * 60_000,
+    throughputMs: 2 * 60_000,
+    reliabilityMs: 10 * 60_000,
+    costMs: 30 * 60_000,
+  },
+  throughputSla: {
+    enabled: true,
+    minTokensPerSec: 24,
+    penaltyTimeoutMs: 10 * 60_000,
+    penaltyFactor: 0,
+  },
+};
+
+export function resolveUnifiedRuntimeObservedDataConfig(
+  config: Pick<UnifiedRuntimeConfig, "observedData"> | null | undefined,
+): UnifiedRuntimeObservedDataConfig {
+  return config?.observedData ?? DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG;
+}
+
 export interface UnifiedRuntimeConfig {
   readonly version: string;
   readonly routingStrategy: string | null;
   readonly executionMode: UnifiedRuntimeExecutionMode;
+  readonly observedData?: UnifiedRuntimeObservedDataConfig;
   readonly llamaSwap: {
     readonly enabled: boolean;
     readonly models: readonly UnifiedRuntimeConfigModel[];
@@ -82,6 +129,25 @@ interface RawUnifiedRuntimeConfig {
   readonly version?: string;
   readonly routing?: {
     readonly strategy?: string;
+  };
+  readonly observed_data?: {
+    readonly enabled?: boolean;
+    readonly aggregation?: {
+      readonly min_samples?: number;
+    };
+    readonly metric_halflives?: {
+      readonly quality_ms?: number;
+      readonly latency_ms?: number;
+      readonly throughput_ms?: number;
+      readonly reliability_ms?: number;
+      readonly cost_ms?: number;
+    };
+    readonly throughput_sla?: {
+      readonly enabled?: boolean;
+      readonly min_tokens_per_sec?: number;
+      readonly penalty_timeout_ms?: number;
+      readonly penalty_factor?: number;
+    };
   };
   readonly llama_swap?: {
     readonly models?: Readonly<Record<string, RawLlamaSwapModel>>;
@@ -146,6 +212,30 @@ function readNonEmptyString(value: unknown): string | null {
 
 function readPositiveNumber(value: unknown): number | null {
   return typeof value === "number" && Number.isFinite(value) && value > 0 ? value : null;
+}
+
+function readBoolean(value: unknown): boolean | undefined {
+  return typeof value === "boolean" ? value : undefined;
+}
+
+function readRequiredPositiveNumber(value: unknown, path: string, fallback: number): number {
+  if (value === undefined || value === null) {
+    return fallback;
+  }
+  if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) {
+    throw new Error(`${path} must be a positive number.`);
+  }
+  return value;
+}
+
+function readPenaltyFactor(value: unknown, path: string, fallback: number): number {
+  if (value === undefined || value === null) {
+    return fallback;
+  }
+  if (typeof value !== "number" || !Number.isFinite(value) || value < 0 || value > 1) {
+    throw new Error(`${path} must be between 0 and 1 inclusive.`);
+  }
+  return value;
 }
 
 function readStringArray(value: unknown): string[] {
@@ -399,6 +489,136 @@ function normalizeLiteLLMInput(value: unknown): UnifiedRuntimeConfig["liteLLM"] 
   };
 }
 
+function normalizeObservedDataInput(
+  value: unknown,
+  prefix: string,
+): UnifiedRuntimeObservedDataConfig {
+  if (value === undefined || value === null) {
+    return DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG;
+  }
+  ensureObject(value, `${prefix} must be an object.`);
+
+  const aggregationSource =
+    "aggregation" in value && value.aggregation && typeof value.aggregation === "object"
+      ? value.aggregation
+      : undefined;
+  if (aggregationSource !== undefined) {
+    ensureObject(aggregationSource, `${prefix}.aggregation must be an object.`);
+  }
+  const metricHalflivesSource =
+    "metricHalflives" in value
+      ? value.metricHalflives
+      : "metric_halflives" in value
+        ? value.metric_halflives
+        : undefined;
+  if (metricHalflivesSource !== undefined) {
+    ensureObject(metricHalflivesSource, `${prefix}.metric_halflives must be an object.`);
+  }
+  const throughputSlaSource =
+    "throughputSla" in value
+      ? value.throughputSla
+      : "throughput_sla" in value
+        ? value.throughput_sla
+        : undefined;
+  if (throughputSlaSource !== undefined) {
+    ensureObject(throughputSlaSource, `${prefix}.throughput_sla must be an object.`);
+  }
+
+  return {
+    enabled: readBoolean(value.enabled) ?? DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG.enabled,
+    aggregation: {
+      minSamples: readRequiredPositiveNumber(
+        aggregationSource && "minSamples" in aggregationSource
+          ? aggregationSource.minSamples
+          : aggregationSource && "min_samples" in aggregationSource
+            ? aggregationSource.min_samples
+            : undefined,
+        `${prefix}.aggregation.min_samples`,
+        DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG.aggregation.minSamples,
+      ),
+    },
+    metricHalflives: {
+      qualityMs: readRequiredPositiveNumber(
+        metricHalflivesSource && "qualityMs" in metricHalflivesSource
+          ? metricHalflivesSource.qualityMs
+          : metricHalflivesSource && "quality_ms" in metricHalflivesSource
+            ? metricHalflivesSource.quality_ms
+            : undefined,
+        `${prefix}.metric_halflives.quality_ms`,
+        DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG.metricHalflives.qualityMs,
+      ),
+      latencyMs: readRequiredPositiveNumber(
+        metricHalflivesSource && "latencyMs" in metricHalflivesSource
+          ? metricHalflivesSource.latencyMs
+          : metricHalflivesSource && "latency_ms" in metricHalflivesSource
+            ? metricHalflivesSource.latency_ms
+            : undefined,
+        `${prefix}.metric_halflives.latency_ms`,
+        DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG.metricHalflives.latencyMs,
+      ),
+      throughputMs: readRequiredPositiveNumber(
+        metricHalflivesSource && "throughputMs" in metricHalflivesSource
+          ? metricHalflivesSource.throughputMs
+          : metricHalflivesSource && "throughput_ms" in metricHalflivesSource
+            ? metricHalflivesSource.throughput_ms
+            : undefined,
+        `${prefix}.metric_halflives.throughput_ms`,
+        DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG.metricHalflives.throughputMs,
+      ),
+      reliabilityMs: readRequiredPositiveNumber(
+        metricHalflivesSource && "reliabilityMs" in metricHalflivesSource
+          ? metricHalflivesSource.reliabilityMs
+          : metricHalflivesSource && "reliability_ms" in metricHalflivesSource
+            ? metricHalflivesSource.reliability_ms
+            : undefined,
+        `${prefix}.metric_halflives.reliability_ms`,
+        DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG.metricHalflives.reliabilityMs,
+      ),
+      costMs: readRequiredPositiveNumber(
+        metricHalflivesSource && "costMs" in metricHalflivesSource
+          ? metricHalflivesSource.costMs
+          : metricHalflivesSource && "cost_ms" in metricHalflivesSource
+            ? metricHalflivesSource.cost_ms
+            : undefined,
+        `${prefix}.metric_halflives.cost_ms`,
+        DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG.metricHalflives.costMs,
+      ),
+    },
+    throughputSla: {
+      enabled:
+        readBoolean(throughputSlaSource && "enabled" in throughputSlaSource ? throughputSlaSource.enabled : undefined) ??
+        DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG.throughputSla.enabled,
+      minTokensPerSec: readRequiredPositiveNumber(
+        throughputSlaSource && "minTokensPerSec" in throughputSlaSource
+          ? throughputSlaSource.minTokensPerSec
+          : throughputSlaSource && "min_tokens_per_sec" in throughputSlaSource
+            ? throughputSlaSource.min_tokens_per_sec
+            : undefined,
+        `${prefix}.throughput_sla.min_tokens_per_sec`,
+        DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG.throughputSla.minTokensPerSec,
+      ),
+      penaltyTimeoutMs: readRequiredPositiveNumber(
+        throughputSlaSource && "penaltyTimeoutMs" in throughputSlaSource
+          ? throughputSlaSource.penaltyTimeoutMs
+          : throughputSlaSource && "penalty_timeout_ms" in throughputSlaSource
+            ? throughputSlaSource.penalty_timeout_ms
+            : undefined,
+        `${prefix}.throughput_sla.penalty_timeout_ms`,
+        DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG.throughputSla.penaltyTimeoutMs,
+      ),
+      penaltyFactor: readPenaltyFactor(
+        throughputSlaSource && "penaltyFactor" in throughputSlaSource
+          ? throughputSlaSource.penaltyFactor
+          : throughputSlaSource && "penalty_factor" in throughputSlaSource
+            ? throughputSlaSource.penalty_factor
+            : undefined,
+        `${prefix}.throughput_sla.penalty_factor`,
+        DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG.throughputSla.penaltyFactor,
+      ),
+    },
+  };
+}
+
 function parseLlamaSwapModels(rawConfig: RawUnifiedRuntimeConfig): UnifiedRuntimeConfig["llamaSwap"] {
   const models = rawConfig.llama_swap?.models ?? {};
   const normalizedModels = Object.entries(models).map(([modelId, config]) => {
@@ -521,6 +741,7 @@ export function parseUnifiedRuntimeConfigText(text: string): UnifiedRuntimeConfi
       llamaSwapEnabled: llamaSwap.enabled,
       liteLLMEnabled: liteLLM.enabled,
     }),
+    ...(rawConfig.observed_data ? { observedData: normalizeObservedDataInput(rawConfig.observed_data, "observed_data") } : {}),
     llamaSwap,
     liteLLM,
   };
@@ -542,6 +763,8 @@ export function normalizeUnifiedRuntimeConfigInput(input: unknown): UnifiedRunti
   const liteLLM = normalizeLiteLLMInput(
     "liteLLM" in input ? input.liteLLM : "litellm_proxy" in input ? input.litellm_proxy : undefined,
   );
+  const observedDataSource =
+    "observedData" in input ? input.observedData : "observed_data" in input ? input.observed_data : undefined;
 
   return {
     version: readNonEmptyString(input.version) ?? "1.0",
@@ -555,6 +778,11 @@ export function normalizeUnifiedRuntimeConfigInput(input: unknown): UnifiedRunti
       llamaSwapEnabled: llamaSwap.enabled,
       liteLLMEnabled: liteLLM.enabled,
     }),
+    ...(observedDataSource !== undefined
+      ? {
+          observedData: normalizeObservedDataInput(observedDataSource, "observedData"),
+        }
+      : {}),
     llamaSwap,
     liteLLM,
   };
@@ -598,6 +826,28 @@ export function renderUnifiedRuntimeConfigText(config: UnifiedRuntimeConfig): st
   if (config.routingStrategy !== null) {
     document.routing = {
       strategy: config.routingStrategy,
+    };
+  }
+
+  if (config.observedData) {
+    document.observed_data = {
+      enabled: config.observedData.enabled,
+      aggregation: {
+        min_samples: config.observedData.aggregation.minSamples,
+      },
+      metric_halflives: {
+        quality_ms: config.observedData.metricHalflives.qualityMs,
+        latency_ms: config.observedData.metricHalflives.latencyMs,
+        throughput_ms: config.observedData.metricHalflives.throughputMs,
+        reliability_ms: config.observedData.metricHalflives.reliabilityMs,
+        cost_ms: config.observedData.metricHalflives.costMs,
+      },
+      throughput_sla: {
+        enabled: config.observedData.throughputSla.enabled,
+        min_tokens_per_sec: config.observedData.throughputSla.minTokensPerSec,
+        penalty_timeout_ms: config.observedData.throughputSla.penaltyTimeoutMs,
+        penalty_factor: config.observedData.throughputSla.penaltyFactor,
+      },
     };
   }
 

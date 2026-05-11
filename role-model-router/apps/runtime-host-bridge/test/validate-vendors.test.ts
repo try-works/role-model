@@ -143,6 +143,20 @@ describe("runRuntimeVendorValidation", () => {
               source?: string;
               readMode?: string;
             };
+            effectiveMetrics?: {
+              latency?: {
+                value?: number;
+                freshnessWeight?: number;
+              };
+              throughput?: {
+                value?: number;
+                freshnessWeight?: number;
+              };
+            };
+            throughputPenalty?: {
+              endpointId?: string;
+              active?: boolean;
+            };
           };
         };
         remote?: {
@@ -150,6 +164,20 @@ describe("runRuntimeVendorValidation", () => {
             observedProfile?: {
               source?: string;
               readMode?: string;
+            };
+            effectiveMetrics?: {
+              latency?: {
+                value?: number;
+                freshnessWeight?: number;
+              };
+              throughput?: {
+                value?: number;
+                freshnessWeight?: number;
+              };
+            };
+            throughputPenalty?: {
+              endpointId?: string;
+              active?: boolean;
             };
           };
         };
@@ -174,6 +202,20 @@ describe("runRuntimeVendorValidation", () => {
             source: "runtime-state",
             readMode: "per-request",
           }),
+          effectiveMetrics: expect.objectContaining({
+            latency: expect.objectContaining({
+              value: expect.any(Number),
+              freshnessWeight: expect.any(Number),
+            }),
+            throughput: expect.objectContaining({
+              value: expect.any(Number),
+              freshnessWeight: expect.any(Number),
+            }),
+          }),
+          throughputPenalty: expect.objectContaining({
+            endpointId: "llama-swap.local.local-llama-3-1-8b-instruct",
+            active: false,
+          }),
         }),
       }),
     );
@@ -183,6 +225,20 @@ describe("runRuntimeVendorValidation", () => {
           observedProfile: expect.objectContaining({
             source: "runtime-state",
             readMode: "per-request",
+          }),
+          effectiveMetrics: expect.objectContaining({
+            latency: expect.objectContaining({
+              value: expect.any(Number),
+              freshnessWeight: expect.any(Number),
+            }),
+            throughput: expect.objectContaining({
+              value: expect.any(Number),
+              freshnessWeight: expect.any(Number),
+            }),
+          }),
+          throughputPenalty: expect.objectContaining({
+            endpointId: "openai.litellm.global.openai-gpt-4-1-mini-fast",
+            active: false,
           }),
         }),
       }),

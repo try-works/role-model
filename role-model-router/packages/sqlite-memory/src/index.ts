@@ -132,6 +132,16 @@ CREATE TABLE IF NOT EXISTS observed_profile_snapshots (
   measured_at_ms INTEGER NOT NULL,
   profile_json TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS observed_throughput_penalties (
+  endpoint_id TEXT PRIMARY KEY,
+  last_observed_tokens_per_sec REAL NOT NULL,
+  min_tokens_per_sec REAL NOT NULL,
+  penalty_factor REAL NOT NULL,
+  activated_at_ms INTEGER NOT NULL,
+  expires_at_ms INTEGER NOT NULL,
+  last_observation_measured_at_ms INTEGER NOT NULL,
+  updated_at_ms INTEGER NOT NULL
+);
 CREATE TABLE IF NOT EXISTS runtime_telemetry_records (
   request_id TEXT PRIMARY KEY,
   routing_decision_id TEXT NOT NULL,
@@ -366,6 +376,28 @@ export interface ReadLatestObservedProfilesByEndpointIdsInput {
 
 export interface ReadRuntimeMaintenancePolicyInput {
   readonly databasePath: string;
+}
+
+export interface ObservedThroughputPenaltyStateRecord {
+  readonly endpointId: string;
+  readonly lastObservedTokensPerSec: number;
+  readonly minTokensPerSec: number;
+  readonly penaltyFactor: number;
+  readonly activatedAtMs: number;
+  readonly expiresAtMs: number;
+  readonly lastObservationMeasuredAtMs: number;
+  readonly updatedAtMs?: number;
+}
+
+export interface UpsertObservedThroughputPenaltyStateInput {
+  readonly databasePath: string;
+  readonly penaltyState: Omit<ObservedThroughputPenaltyStateRecord, "updatedAtMs">;
+}
+
+export interface ReadObservedThroughputPenaltyStateInput {
+  readonly databasePath: string;
+  readonly endpointId: string;
+  readonly nowMs: number;
 }
 
 export interface RuntimeEndpointRecord {
@@ -806,6 +838,30 @@ function mapRuntimeControllerAssignmentRow(
     endpointId: row.endpoint_id,
     modelId: row.model_id,
     sourceType: row.source_type,
+    updatedAtMs: row.updated_at_ms,
+  };
+}
+
+function mapObservedThroughputPenaltyStateRow(
+  row: {
+    endpoint_id: string;
+    last_observed_tokens_per_sec: number;
+    min_tokens_per_sec: number;
+    penalty_factor: number;
+    activated_at_ms: number;
+    expires_at_ms: number;
+    last_observation_measured_at_ms: number;
+    updated_at_ms: number;
+  },
+): ObservedThroughputPenaltyStateRecord {
+  return {
+    endpointId: row.endpoint_id,
+    lastObservedTokensPerSec: row.last_observed_tokens_per_sec,
+    minTokensPerSec: row.min_tokens_per_sec,
+    penaltyFactor: row.penalty_factor,
+    activatedAtMs: row.activated_at_ms,
+    expiresAtMs: row.expires_at_ms,
+    lastObservationMeasuredAtMs: row.last_observation_measured_at_ms,
     updatedAtMs: row.updated_at_ms,
   };
 }
@@ -1590,6 +1646,67 @@ export function readRuntimeMaintenancePolicy(
   database.close();
 
   return Object.fromEntries(rows.map((row) => [row.maintenance_key, row.maintenance_value]));
+}
+
+export function upsertObservedThroughputPenaltyState(
+  input: UpsertObservedThroughputPenaltyStateInput,
+): void {
+  const database = new DatabaseSync(input.databasePath);
+  const updatedAtMs = Date.now();
+  database
+    .prepare(
+      `INSERT OR REPLACE INTO observed_throughput_penalties (
+        endpoint_id,
+        last_observed_tokens_per_sec,
+        min_tokens_per_sec,
+        penalty_factor,
+        activated_at_ms,
+        expires_at_ms,
+        last_observation_measured_at_ms,
+        updated_at_ms
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    )
+    .run(
+      input.penaltyState.endpointId,
+      input.penaltyState.lastObservedTokensPerSec,
+      input.penaltyState.minTokensPerSec,
+      input.penaltyState.penaltyFactor,
+      input.penaltyState.activatedAtMs,
+      input.penaltyState.expiresAtMs,
+      input.penaltyState.lastObservationMeasuredAtMs,
+      updatedAtMs,
+    );
+  database.close();
+}
+
+export function readObservedThroughputPenaltyState(
+  input: ReadObservedThroughputPenaltyStateInput,
+): ObservedThroughputPenaltyStateRecord | null {
+  const database = new DatabaseSync(input.databasePath);
+  const row = database
+    .prepare(
+      `SELECT endpoint_id, last_observed_tokens_per_sec, min_tokens_per_sec, penalty_factor, activated_at_ms, expires_at_ms, last_observation_measured_at_ms, updated_at_ms
+       FROM observed_throughput_penalties
+       WHERE endpoint_id = ?`,
+    )
+    .get(input.endpointId) as
+    | {
+        endpoint_id: string;
+        last_observed_tokens_per_sec: number;
+        min_tokens_per_sec: number;
+        penalty_factor: number;
+        activated_at_ms: number;
+        expires_at_ms: number;
+        last_observation_measured_at_ms: number;
+        updated_at_ms: number;
+      }
+    | undefined;
+  database.close();
+
+  if (!row || row.expires_at_ms < input.nowMs) {
+    return null;
+  }
+  return mapObservedThroughputPenaltyStateRow(row);
 }
 
 export function persistRuntimeObservationBundle(input: PersistRuntimeObservationBundleInput): void {

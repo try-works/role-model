@@ -98,6 +98,39 @@ type CandidateScoreResult = ScoredCandidate & {
   usedDeclared: boolean;
 };
 
+function getFreshnessWeight(input: RouteRequestInput, candidate: EndpointCandidate, halflifeMs: number): number {
+  const measuredAtMs = candidate.observed?.measured_at_ms;
+  if (!input.observedDataConfig?.enabled || typeof measuredAtMs !== "number") {
+    return 1;
+  }
+  if (typeof input.routingTimeMs !== "number") {
+    return 1;
+  }
+  const ageMs = Math.max(0, input.routingTimeMs - measuredAtMs);
+  if (ageMs === 0) {
+    return 1;
+  }
+  return Math.exp((-Math.LN2 * ageMs) / halflifeMs);
+}
+
+function decayToNeutral(observedValue: number, neutralValue: number, freshnessWeight: number): number {
+  return neutralValue + freshnessWeight * (observedValue - neutralValue);
+}
+
+function getActiveThroughputPenaltyState(
+  input: RouteRequestInput,
+  candidate: EndpointCandidate,
+): RouteRequestInput["throughputPenaltyStateByEndpointId"][string] | undefined {
+  const state = input.throughputPenaltyStateByEndpointId?.[candidate.identity.endpoint_id];
+  if (!input.observedDataConfig?.throughputSla.enabled || !state) {
+    return undefined;
+  }
+  if (typeof input.routingTimeMs === "number" && state.expiresAtMs < input.routingTimeMs) {
+    return undefined;
+  }
+  return state;
+}
+
 function getRequestedRoleAndTask(input: RouteRequestInput): {
   requestedRole: RoleDefinitionRecord | undefined;
   requestedTask: TaskDefinitionRecord | undefined;
@@ -293,20 +326,50 @@ function getEffectiveLatency(candidate: EndpointCandidate): number {
   return 250;
 }
 
-function getQualityMetric(candidate: EndpointCandidate): MetricEntry {
+function getQualityMetric(candidate: EndpointCandidate, input: RouteRequestInput): MetricEntry {
   if (typeof candidate.observed?.judge_score === "number") {
+    const freshnessWeight = getFreshnessWeight(
+      input,
+      candidate,
+      input.observedDataConfig?.metricHalflives.qualityMs ?? 1,
+    );
+    const observedValue = clamp(candidate.observed.judge_score);
+    const value = input.observedDataConfig?.enabled
+      ? decayToNeutral(observedValue, FRESHNESS_NEUTRAL, freshnessWeight)
+      : observedValue;
     return {
-      value: clamp(candidate.observed.judge_score),
+      value,
       source: "measured",
-      raw: { judge_score: candidate.observed.judge_score },
+      raw: {
+        judge_score: candidate.observed.judge_score,
+        measured_at_ms: candidate.observed.measured_at_ms,
+        freshness_weight: freshnessWeight,
+        neutral_value: FRESHNESS_NEUTRAL,
+        effective_value: value,
+      },
     };
   }
 
   if (typeof candidate.observed?.quality_score === "number") {
+    const freshnessWeight = getFreshnessWeight(
+      input,
+      candidate,
+      input.observedDataConfig?.metricHalflives.qualityMs ?? 1,
+    );
+    const observedValue = clamp(candidate.observed.quality_score);
+    const value = input.observedDataConfig?.enabled
+      ? decayToNeutral(observedValue, FRESHNESS_NEUTRAL, freshnessWeight)
+      : observedValue;
     return {
-      value: clamp(candidate.observed.quality_score),
+      value,
       source: "measured",
-      raw: { quality_score: candidate.observed.quality_score },
+      raw: {
+        quality_score: candidate.observed.quality_score,
+        measured_at_ms: candidate.observed.measured_at_ms,
+        freshness_weight: freshnessWeight,
+        neutral_value: FRESHNESS_NEUTRAL,
+        effective_value: value,
+      },
     };
   }
 
@@ -316,7 +379,11 @@ function getQualityMetric(candidate: EndpointCandidate): MetricEntry {
   };
 }
 
-function getLatencyMetric(candidate: EndpointCandidate, policySnapshot: RoutingPolicySnapshot): MetricEntry {
+function getLatencyMetric(
+  candidate: EndpointCandidate,
+  policySnapshot: RoutingPolicySnapshot,
+  input: RouteRequestInput,
+): MetricEntry {
   if (
     typeof candidate.observed?.latency_ms_p50 !== "number" ||
     typeof candidate.observed?.latency_ms_p95 !== "number"
@@ -332,14 +399,28 @@ function getLatencyMetric(candidate: EndpointCandidate, policySnapshot: RoutingP
     1 -
     Math.log1p(effectiveLatencyMs / policySnapshot.targets.latency_target_ms) /
       Math.log1p(policySnapshot.targets.latency_max_ms / policySnapshot.targets.latency_target_ms);
+  const observedValue = clamp(normalized);
+  const freshnessWeight = getFreshnessWeight(
+    input,
+    candidate,
+    input.observedDataConfig?.metricHalflives.latencyMs ?? 1,
+  );
+  const value = input.observedDataConfig?.enabled
+    ? decayToNeutral(observedValue, FRESHNESS_NEUTRAL, freshnessWeight)
+    : observedValue;
 
   return {
-    value: clamp(normalized),
+    value,
     source: "measured",
     raw: {
       latency_ms_p50: candidate.observed.latency_ms_p50,
       latency_ms_p95: candidate.observed.latency_ms_p95,
       effective_latency_ms: effectiveLatencyMs,
+      measured_at_ms: candidate.observed.measured_at_ms,
+      freshness_weight: freshnessWeight,
+      neutral_value: FRESHNESS_NEUTRAL,
+      observed_value: observedValue,
+      effective_value: value,
     },
   };
 }
@@ -347,6 +428,7 @@ function getLatencyMetric(candidate: EndpointCandidate, policySnapshot: RoutingP
 function getThroughputMetric(
   candidate: EndpointCandidate,
   policySnapshot: RoutingPolicySnapshot,
+  input: RouteRequestInput,
 ): MetricEntry {
   if (typeof candidate.observed?.tokens_per_sec !== "number") {
     return {
@@ -358,14 +440,50 @@ function getThroughputMetric(
   const normalized =
     Math.log1p(candidate.observed.tokens_per_sec) /
     Math.log1p(policySnapshot.targets.throughput_target_tps);
+  const observedValue = clamp(normalized);
+  const freshnessWeight = getFreshnessWeight(
+    input,
+    candidate,
+    input.observedDataConfig?.metricHalflives.throughputMs ?? 1,
+  );
+  const decayedValue = input.observedDataConfig?.enabled
+    ? decayToNeutral(observedValue, FRESHNESS_NEUTRAL, freshnessWeight)
+    : observedValue;
+  const activePenaltyState = getActiveThroughputPenaltyState(input, candidate);
+  const value =
+    activePenaltyState && activePenaltyState.penaltyFactor > 0
+      ? clamp(decayedValue * activePenaltyState.penaltyFactor)
+      : decayedValue;
   return {
-    value: clamp(normalized),
+    value,
     source: "measured",
-    raw: { tokens_per_sec: candidate.observed.tokens_per_sec },
+    raw: {
+      tokens_per_sec: candidate.observed.tokens_per_sec,
+      measured_at_ms: candidate.observed.measured_at_ms,
+      freshness_weight: freshnessWeight,
+      neutral_value: FRESHNESS_NEUTRAL,
+      observed_value: observedValue,
+      effective_value: value,
+      ...(activePenaltyState
+        ? {
+            throughput_penalty: {
+              penalty_factor: activePenaltyState.penaltyFactor,
+              activated_at_ms: activePenaltyState.activatedAtMs,
+              expires_at_ms: activePenaltyState.expiresAtMs,
+              min_tokens_per_sec: activePenaltyState.minTokensPerSec,
+              last_observed_tokens_per_sec: activePenaltyState.lastObservedTokensPerSec,
+            },
+          }
+        : {}),
+    },
   };
 }
 
-function getCostMetric(candidate: EndpointCandidate, policySnapshot: RoutingPolicySnapshot): MetricEntry {
+function getCostMetric(
+  candidate: EndpointCandidate,
+  policySnapshot: RoutingPolicySnapshot,
+  input: RouteRequestInput,
+): MetricEntry {
   if (typeof candidate.observed?.cost_per_1k_tokens_est !== "number") {
     return {
       value: 0.5,
@@ -374,17 +492,31 @@ function getCostMetric(candidate: EndpointCandidate, policySnapshot: RoutingPoli
   }
 
   const targetCost = policySnapshot.budget.target_cost_per_request ?? DEFAULT_COST_TARGET;
+  const observedValue = clamp(1 - candidate.observed.cost_per_1k_tokens_est / targetCost);
+  const freshnessWeight = getFreshnessWeight(
+    input,
+    candidate,
+    input.observedDataConfig?.metricHalflives.costMs ?? 1,
+  );
+  const value = input.observedDataConfig?.enabled
+    ? decayToNeutral(observedValue, FRESHNESS_NEUTRAL, freshnessWeight)
+    : observedValue;
   return {
-    value: clamp(1 - candidate.observed.cost_per_1k_tokens_est / targetCost),
+    value,
     source: "measured",
     raw: {
       cost_per_1k_tokens_est: candidate.observed.cost_per_1k_tokens_est,
       target_cost_per_request: targetCost,
+      measured_at_ms: candidate.observed.measured_at_ms,
+      freshness_weight: freshnessWeight,
+      neutral_value: FRESHNESS_NEUTRAL,
+      observed_value: observedValue,
+      effective_value: value,
     },
   };
 }
 
-function getReliabilityMetric(candidate: EndpointCandidate): MetricEntry {
+function getReliabilityMetric(candidate: EndpointCandidate, input: RouteRequestInput): MetricEntry {
   if (typeof candidate.observed?.failure_rate !== "number") {
     return {
       value: RELIABILITY_NEUTRAL,
@@ -392,10 +524,26 @@ function getReliabilityMetric(candidate: EndpointCandidate): MetricEntry {
     };
   }
 
+  const observedValue = clamp(1 - candidate.observed.failure_rate);
+  const freshnessWeight = getFreshnessWeight(
+    input,
+    candidate,
+    input.observedDataConfig?.metricHalflives.reliabilityMs ?? 1,
+  );
+  const value = input.observedDataConfig?.enabled
+    ? decayToNeutral(observedValue, RELIABILITY_NEUTRAL, freshnessWeight)
+    : observedValue;
   return {
-    value: clamp(1 - candidate.observed.failure_rate),
+    value,
     source: "measured",
-    raw: { failure_rate: candidate.observed.failure_rate },
+    raw: {
+      failure_rate: candidate.observed.failure_rate,
+      measured_at_ms: candidate.observed.measured_at_ms,
+      freshness_weight: freshnessWeight,
+      neutral_value: RELIABILITY_NEUTRAL,
+      observed_value: observedValue,
+      effective_value: value,
+    },
   };
 }
 
@@ -493,11 +641,11 @@ function getCandidateMetricScores(
   rolePolicyApplied: boolean,
 ): CandidateMetricScores {
   return {
-    quality: getQualityMetric(candidate),
-    latency: getLatencyMetric(candidate, policySnapshot),
-    throughput: getThroughputMetric(candidate, policySnapshot),
-    cost: getCostMetric(candidate, policySnapshot),
-    reliability: getReliabilityMetric(candidate),
+    quality: getQualityMetric(candidate, input),
+    latency: getLatencyMetric(candidate, policySnapshot, input),
+    throughput: getThroughputMetric(candidate, policySnapshot, input),
+    cost: getCostMetric(candidate, policySnapshot, input),
+    reliability: getReliabilityMetric(candidate, input),
     preference: getPreferenceMetric(candidate, input, policySnapshot, rolePolicyApplied),
   };
 }
@@ -718,6 +866,12 @@ function evaluateEligibility(
       candidate.observed.cost_per_1k_tokens_est > policySnapshot.budget.max_cost_per_request
     ) {
       reasons.push("BUDGET_EXCEEDED");
+    }
+    if (
+      getActiveThroughputPenaltyState(input, candidate)?.penaltyFactor === 0 &&
+      input.observedDataConfig?.throughputSla.enabled
+    ) {
+      reasons.push("POLICY_DENY_ENDPOINT");
     }
 
     if (reasons.length > 0) {

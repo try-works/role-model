@@ -1,0 +1,28 @@
+Linting run: 24-router-runtime-recency-bias-throughput-sla
+Path: D:\DEV\role-model\.worktrees\24-router-runtime-recency-bias-throughput-sla\.recursive\run\24-router-runtime-recency-bias-throughput-sla
+Workflow Profile: recursive-mode-audit-v1
+
+[WARN] Missing artifact (ok if not reached yet): D:\DEV\role-model\.worktrees\24-router-runtime-recency-bias-throughput-sla\.recursive\run\24-router-runtime-recency-bias-throughput-sla\01.5-root-cause.md
+[WARN] Missing artifact (ok if not reached yet): D:\DEV\role-model\.worktrees\24-router-runtime-recency-bias-throughput-sla\.recursive\run\24-router-runtime-recency-bias-throughput-sla\03.5-code-review.md
+[WARN] D:\DEV\role-model\.worktrees\24-router-runtime-recency-bias-throughput-sla\.recursive\run\24-router-runtime-recency-bias-throughput-sla\04-test-summary.md: Evidence subfolder(s) missing under D:\DEV\role-model\.worktrees\24-router-runtime-recency-bias-throughput-sla\.recursive\run\24-router-runtime-recency-bias-throughput-sla\evidence: screenshots, perf, traces
+Remediation (copy/paste):
+  mkdir -p "D:\DEV\role-model\.worktrees\24-router-runtime-recency-bias-throughput-sla\.recursive\run\24-router-runtime-recency-bias-throughput-sla\evidence\screenshots"
+  mkdir -p "D:\DEV\role-model\.worktrees\24-router-runtime-recency-bias-throughput-sla\.recursive\run\24-router-runtime-recency-bias-throughput-sla\evidence\perf"
+  mkdir -p "D:\DEV\role-model\.worktrees\24-router-runtime-recency-bias-throughput-sla\.recursive\run\24-router-runtime-recency-bias-throughput-sla\evidence\traces"
+
+[WARN] D:\DEV\role-model\.worktrees\24-router-runtime-recency-bias-throughput-sla\.recursive\run\24-router-runtime-recency-bias-throughput-sla\05-manual-qa.md: Evidence subfolder(s) missing under D:\DEV\role-model\.worktrees\24-router-runtime-recency-bias-throughput-sla\.recursive\run\24-router-runtime-recency-bias-throughput-sla\evidence: screenshots, perf, traces
+Remediation (copy/paste):
+  mkdir -p "D:\DEV\role-model\.worktrees\24-router-runtime-recency-bias-throughput-sla\.recursive\run\24-router-runtime-recency-bias-throughput-sla\evidence\screenshots"
+  mkdir -p "D:\DEV\role-model\.worktrees\24-router-runtime-recency-bias-throughput-sla\.recursive\run\24-router-runtime-recency-bias-throughput-sla\evidence\perf"
+  mkdir -p "D:\DEV\role-model\.worktrees\24-router-runtime-recency-bias-throughput-sla\.recursive\run\24-router-runtime-recency-bias-throughput-sla\evidence\traces"
+
+[WARN] Missing artifact (ok if not reached yet): D:\DEV\role-model\.worktrees\24-router-runtime-recency-bias-throughput-sla\.recursive\run\24-router-runtime-recency-bias-throughput-sla\06-decisions-update.md
+[WARN] Missing artifact (ok if not reached yet): D:\DEV\role-model\.worktrees\24-router-runtime-recency-bias-throughput-sla\.recursive\run\24-router-runtime-recency-bias-throughput-sla\07-state-update.md
+[WARN] Missing artifact (ok if not reached yet): D:\DEV\role-model\.worktrees\24-router-runtime-recency-bias-throughput-sla\.recursive\run\24-router-runtime-recency-bias-throughput-sla\08-memory-impact.md
+----
+
+Summary
+- FAIL: 0
+- WARN: 7
+
+[OK] Lint passed
