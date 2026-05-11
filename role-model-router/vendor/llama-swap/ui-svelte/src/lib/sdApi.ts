@@ -1,8 +1,8 @@
-import type { SdApiTxt2ImgRequest, SdApiResponse, SdApiLora } from "./types";
+import type { SdApiLora, SdApiResponse, SdApiTxt2ImgRequest } from "./types";
 
 export async function generateSdImage(
   request: SdApiTxt2ImgRequest,
-  signal?: AbortSignal
+  signal?: AbortSignal,
 ): Promise<SdApiResponse> {
   const response = await fetch("/sdapi/v1/txt2img", {
     method: "POST",
@@ -21,14 +21,8 @@ export async function generateSdImage(
   return response.json();
 }
 
-export async function fetchSdLoras(
-  model: string,
-  signal?: AbortSignal
-): Promise<SdApiLora[]> {
-  const response = await fetch(
-    `/sdapi/v1/loras?model=${encodeURIComponent(model)}`,
-    { signal }
-  );
+export async function fetchSdLoras(model: string, signal?: AbortSignal): Promise<SdApiLora[]> {
+  const response = await fetch(`/sdapi/v1/loras?model=${encodeURIComponent(model)}`, { signal });
 
   if (!response.ok) {
     const errorText = await response.text();

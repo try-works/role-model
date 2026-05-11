@@ -14,7 +14,7 @@ export async function rerank(
   model: string,
   query: string,
   documents: string[],
-  signal: AbortSignal
+  signal: AbortSignal,
 ): Promise<RerankResponse> {
   const response = await fetch("/v1/rerank", {
     method: "POST",

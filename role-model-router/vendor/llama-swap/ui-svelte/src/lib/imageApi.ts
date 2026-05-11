@@ -4,7 +4,7 @@ export async function generateImage(
   model: string,
   prompt: string,
   size: string,
-  signal?: AbortSignal
+  signal?: AbortSignal,
 ): Promise<ImageGenerationResponse> {
   const request: ImageGenerationRequest = {
     model,
