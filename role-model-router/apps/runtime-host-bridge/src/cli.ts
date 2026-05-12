@@ -5,9 +5,121 @@ import {
   createRuntimeBridgeBackend,
   resolveBridgeServerOptions,
   startBridgeServer,
+  type RuntimeBridgeBackend,
+  type StartBridgeServerOptions,
 } from "./index.js";
 
-async function main(): Promise<void> {
+type CliBackend = Pick<
+  RuntimeBridgeBackend,
+  | "registry"
+  | "executeChatCompletions"
+  | "executeResponses"
+  | "readRuntimeSummary"
+  | "readRuntimeConfig"
+  | "updateRuntimeConfig"
+  | "readHealthStatus"
+  | "readTelemetrySummary"
+  | "listTelemetryComparisonRows"
+  | "listTelemetryRequests"
+  | "subscribeTelemetry"
+  | "listProviders"
+  | "listRoles"
+  | "listAccounts"
+  | "upsertProviderAccount"
+  | "startProviderDeviceAuthorization"
+  | "pollProviderDeviceAuthorization"
+  | "activateEndpoint"
+  | "readControllerAssignment"
+  | "updateControllerAssignment"
+  | "readRouterSummary"
+  | "readRouterConfig"
+  | "listRouterCandidates"
+  | "listRouterDecisions"
+  | "readRouterDecision"
+  | "listEndpoints"
+  | "listRecentRequestObservations"
+  | "readRequestObservation"
+  | "readEndpointProfile"
+  | "listLocalModels"
+  | "loadLocalModel"
+  | "unloadLocalModel"
+  | "readLocalPolicy"
+  | "updateLocalPolicy"
+  | "listSwapHistory"
+  | "getLocalLogs"
+  | "readModelOverrides"
+  | "updateModelOverrides"
+  | "readPeers"
+  | "updatePeers"
+  | "checkPeerHealth"
+  | "shutdown"
+>;
+
+export function resolveCliFixtureRoot(repoRoot: string, fixtureRoot?: string): string {
+  return fixtureRoot?.trim() || path.join(repoRoot, "testdata", "router-runtime", "fixtures");
+}
+
+export function createCliServerOptions(
+  options: {
+    host: string;
+    port: number;
+    staticRoot?: string;
+  },
+  backend: CliBackend,
+): StartBridgeServerOptions {
+  return {
+    host: options.host,
+    port: options.port,
+    staticRoot: options.staticRoot,
+    registry: backend.registry,
+    getRegistry: () => backend.registry,
+    executeChatCompletions: backend.executeChatCompletions,
+    executeResponses: backend.executeResponses,
+    readVersionInfo: async () => ({ version: "0.0.0-standalone", build: "standalone" }),
+    listActivityMetrics: async () => [],
+    readLogs: async () => "No standalone runtime logs are currently exposed.",
+    readRuntimeSummary: backend.readRuntimeSummary,
+    readRuntimeConfig: backend.readRuntimeConfig,
+    updateRuntimeConfig: backend.updateRuntimeConfig,
+    readHealthStatus: backend.readHealthStatus,
+    readTelemetrySummary: backend.readTelemetrySummary,
+    listTelemetryComparisonRows: backend.listTelemetryComparisonRows,
+    listTelemetryRequests: backend.listTelemetryRequests,
+    subscribeTelemetry: backend.subscribeTelemetry,
+    listProviders: backend.listProviders,
+    listRoles: backend.listRoles,
+    listAccounts: backend.listAccounts,
+    upsertProviderAccount: backend.upsertProviderAccount,
+    startProviderDeviceAuthorization: backend.startProviderDeviceAuthorization,
+    pollProviderDeviceAuthorization: backend.pollProviderDeviceAuthorization,
+    activateEndpoint: backend.activateEndpoint,
+    readControllerAssignment: backend.readControllerAssignment,
+    updateControllerAssignment: backend.updateControllerAssignment,
+    readRouterSummary: backend.readRouterSummary,
+    readRouterConfig: backend.readRouterConfig,
+    listRouterCandidates: backend.listRouterCandidates,
+    listRouterDecisions: backend.listRouterDecisions,
+    readRouterDecision: backend.readRouterDecision,
+    listEndpoints: backend.listEndpoints,
+    listRecentRequestObservations: backend.listRecentRequestObservations,
+    readRequestObservation: backend.readRequestObservation,
+    readEndpointProfile: backend.readEndpointProfile,
+    listLocalModels: backend.listLocalModels,
+    loadLocalModel: backend.loadLocalModel,
+    unloadLocalModel: backend.unloadLocalModel,
+    readLocalPolicy: backend.readLocalPolicy,
+    updateLocalPolicy: backend.updateLocalPolicy,
+    listSwapHistory: backend.listSwapHistory,
+    getLocalLogs: backend.getLocalLogs,
+    readModelOverrides: backend.readModelOverrides,
+    updateModelOverrides: backend.updateModelOverrides,
+    readPeers: backend.readPeers,
+    updatePeers: backend.updatePeers,
+    checkPeerHealth: backend.checkPeerHealth,
+  };
+}
+
+export async function main(): Promise<void> {
   const args = parseArgs({
     options: {
       host: {
@@ -31,6 +143,9 @@ async function main(): Promise<void> {
       "fixture-root": {
         type: "string",
       },
+      "static-root": {
+        type: "string",
+      },
     },
   });
 
@@ -43,54 +158,22 @@ async function main(): Promise<void> {
     unifiedRuntimeConfigPath: args.values["unified-runtime-config"],
   });
   const backend = await createRuntimeBridgeBackend({
-    fixtureRoot:
-      args.values["fixture-root"] ?? path.join(options.repoRoot, "testdata", "router-runtime"),
+    fixtureRoot: resolveCliFixtureRoot(options.repoRoot, args.values["fixture-root"]),
     repoRoot: options.repoRoot,
     runtimeStateRoot: options.runtimeStateRoot,
     scopeId: options.scopeId,
     unifiedRuntimeConfigPath: options.unifiedRuntimeConfigPath,
   });
-  const server = await startBridgeServer({
-    host: options.host,
-    port: options.port,
-    registry: backend.registry,
-    getRegistry: () => backend.registry,
-    executeChatCompletions: backend.executeChatCompletions,
-    executeResponses: backend.executeResponses,
-    readRuntimeSummary: backend.readRuntimeSummary,
-    readRuntimeConfig: backend.readRuntimeConfig,
-    updateRuntimeConfig: backend.updateRuntimeConfig,
-    readHealthStatus: backend.readHealthStatus,
-    readTelemetrySummary: backend.readTelemetrySummary,
-    listTelemetryComparisonRows: backend.listTelemetryComparisonRows,
-    listTelemetryRequests: backend.listTelemetryRequests,
-    subscribeTelemetry: backend.subscribeTelemetry,
-    listProviders: backend.listProviders,
-    listRoles: backend.listRoles,
-    listAccounts: backend.listAccounts,
-    upsertProviderAccount: backend.upsertProviderAccount,
-    startProviderDeviceAuthorization: backend.startProviderDeviceAuthorization,
-    pollProviderDeviceAuthorization: backend.pollProviderDeviceAuthorization,
-    activateEndpoint: backend.activateEndpoint,
-    readControllerAssignment: backend.readControllerAssignment,
-    updateControllerAssignment: backend.updateControllerAssignment,
-    listEndpoints: backend.listEndpoints,
-    listRecentRequestObservations: backend.listRecentRequestObservations,
-    readRequestObservation: backend.readRequestObservation,
-    readEndpointProfile: backend.readEndpointProfile,
-    listLocalModels: backend.listLocalModels,
-    loadLocalModel: backend.loadLocalModel,
-    unloadLocalModel: backend.unloadLocalModel,
-    readLocalPolicy: backend.readLocalPolicy,
-    updateLocalPolicy: backend.updateLocalPolicy,
-    listSwapHistory: backend.listSwapHistory,
-    getLocalLogs: backend.getLocalLogs,
-    readModelOverrides: backend.readModelOverrides,
-    updateModelOverrides: backend.updateModelOverrides,
-    readPeers: backend.readPeers,
-    updatePeers: backend.updatePeers,
-    checkPeerHealth: backend.checkPeerHealth,
-  });
+  const server = await startBridgeServer(
+    createCliServerOptions(
+      {
+        host: options.host,
+        port: options.port,
+        staticRoot: args.values["static-root"]?.trim() || undefined,
+      },
+      backend,
+    ),
+  );
 
   console.log(
     JSON.stringify(
@@ -117,5 +200,3 @@ async function main(): Promise<void> {
     void shutdown();
   });
 }
-
-void main();

@@ -51,7 +51,7 @@ function createToolValidationRequest(): {
   ];
 } {
   return {
-    model: "openai/gpt-4.1-mini-fast",
+    model: "moonshot/kimi-k2.5",
     messages: [{ role: "user", content: "Use the registry tool." }],
     tools: [
       {

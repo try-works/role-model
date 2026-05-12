@@ -1,21 +1,21 @@
 {
   "cloud": [
     {
-      "endpointId": "openai.personal.primary.us-east-1.fast",
-      "providerAccountId": "openai.personal.primary",
-      "modelId": "openai/gpt-4.1-mini-fast",
-      "region": "us-east-1",
+      "endpointId": "moonshot.personal.primary.global.kimi-k2.5",
+      "providerAccountId": "moonshot.personal.primary",
+      "modelId": "moonshot/kimi-k2.5",
+      "region": "global",
       "endpointKind": "remote-openai-compatible",
       "servingSource": "remote-service",
       "lifecycleState": "active",
       "healthStatus": "healthy"
     },
     {
-      "endpointId": "anthropic.team.shared.us-east-1.default",
-      "providerAccountId": "anthropic.team.shared",
-      "modelId": "claude-3.7-sonnet",
-      "region": "us-east-1",
-      "endpointKind": "remote-anthropic",
+      "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.5",
+      "providerAccountId": "moonshot.personal.kimi-code",
+      "modelId": "moonshot/kimi-k2.5",
+      "region": "global",
+      "endpointKind": "remote-openai-compatible",
       "servingSource": "remote-service",
       "lifecycleState": "degraded",
       "healthStatus": "healthy"

@@ -11,8 +11,8 @@
     "freshness_score": 0.94,
     "confidence_score": 0.93
   },
-  "openai.personal.primary.us-east-1.fast": {
-    "endpoint_id": "openai.personal.primary.us-east-1.fast",
+  "moonshot.personal.primary.global.kimi-k2.5": {
+    "endpoint_id": "moonshot.personal.primary.global.kimi-k2.5",
     "judge_score": 0.92,
     "latency_ms_p50": 100,
     "latency_ms_p95": 135,
@@ -23,15 +23,15 @@
     "freshness_score": 0.92,
     "confidence_score": 0.91
   },
-  "anthropic.team.shared.us-east-1.default": {
-    "endpoint_id": "anthropic.team.shared.us-east-1.default",
+  "moonshot.personal.kimi-code.global.kimi-k2.5": {
+    "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.5",
     "judge_score": 0.86,
     "latency_ms_p50": 130,
     "latency_ms_p95": 175,
     "tokens_per_sec": 60,
     "cold_start_ms": 35,
     "failure_rate": 0.03,
-    "cost_per_1k_tokens_est": 0.006,
+    "cost_per_1k_tokens_est": 0.004,
     "freshness_score": 0.9,
     "confidence_score": 0.89
   }

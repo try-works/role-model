@@ -1,6 +1,6 @@
 {
-  "endpointId": "openai.personal.primary.us-east-1.fast",
+  "endpointId": "moonshot.personal.primary.global.kimi-k2.5",
   "preferredEndpointIds": [
-    "openai.personal.primary.us-east-1.fast"
+    "moonshot.personal.primary.global.kimi-k2.5"
   ]
 }

@@ -1,22 +1,22 @@
 {
   "accounts": [
     {
-      "providerAccountId": "openai.personal.primary",
-      "providerId": "openai",
-      "providerKind": "provider-openai",
+      "providerAccountId": "moonshot.personal.primary",
+      "providerId": "moonshot",
+      "providerKind": "provider-moonshot",
       "orgScope": "personal",
       "accountScope": "workspace-default",
       "credentialRef": {
         "backend": "env",
-        "ref": "OPENAI_API_KEY"
+        "ref": "MOONSHOT_API_KEY"
       },
       "authMode": "api-key-static",
       "regionPolicy": {
         "mode": "prefer",
-        "regions": ["us-east-1", "us-west-2"]
+        "regions": ["global"]
       },
       "baseUrlOverride": null,
-      "allowedModels": ["openai/gpt-4.1-mini-fast"],
+      "allowedModels": ["moonshot/kimi-k2.5"],
       "deniedModels": [],
       "entitlementTags": ["chat", "reasoning"],
       "budgetPolicyRef": "budget.default",
@@ -26,29 +26,29 @@
       "rotationState": "stable"
     },
     {
-      "providerAccountId": "anthropic.team.shared",
-      "providerId": "anthropic",
-      "providerKind": "provider-anthropic",
-      "orgScope": "team",
-      "accountScope": "workspace-shared",
+      "providerAccountId": "moonshot.personal.kimi-code",
+      "providerId": "moonshot",
+      "providerKind": "provider-moonshot",
+      "orgScope": "personal",
+      "accountScope": "workspace-kimi-code",
       "credentialRef": {
         "backend": "local-keychain",
-        "ref": "anthropic/team/shared"
+        "ref": "moonshot/personal/kimi-code"
       },
       "authMode": "api-key-rotating-ref",
       "regionPolicy": {
         "mode": "allow",
-        "regions": ["us-east-1"]
+        "regions": ["global"]
       },
       "baseUrlOverride": null,
-      "allowedModels": ["anthropic/claude-3.7-sonnet"],
+      "allowedModels": ["moonshot/kimi-k2.5"],
       "deniedModels": [],
       "entitlementTags": ["chat"],
-      "budgetPolicyRef": "budget.team",
-      "quotaPolicyRef": "quota.team",
+      "budgetPolicyRef": "budget.default",
+      "quotaPolicyRef": "quota.default",
       "status": "active",
       "healthStatus": "healthy",
-      "rotationState": "due"
+      "rotationState": "stable"
     }
   ]
 }

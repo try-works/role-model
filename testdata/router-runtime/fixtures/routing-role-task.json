@@ -41,9 +41,9 @@
       "effective_task_types": ["code.edit"]
     },
     {
-      "binding_id": "binding-openai",
+      "binding_id": "binding-moonshot",
       "role_id": "developer",
-      "endpoint_id": "openai.personal.primary.us-east-1.fast",
+      "endpoint_id": "moonshot.personal.primary.global.kimi-k2.5",
       "status": "active",
       "policy_overrides": {},
       "effective_capabilities": ["code.edit"],

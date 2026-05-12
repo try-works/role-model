@@ -21,14 +21,14 @@ describe("runRuntimeToolsValidation", () => {
       scopeId: "runtime-tools-validation",
     });
 
-    expect(result.endpointId).toBe("openai.personal.primary.us-east-1.fast");
+    expect(result.endpointId).toBe("moonshot.personal.primary.global.kimi-k2.5");
     expect(result.toolCalls).toEqual([
       {
         id: "call_1",
         type: "function",
         function: {
           name: "lookupRegistry",
-          arguments: "{\"endpointId\":\"openai.personal.primary.us-east-1.fast\"}",
+          arguments: "{\"endpointId\":\"moonshot.personal.primary.global.kimi-k2.5\"}",
         },
       },
     ]);
@@ -40,8 +40,8 @@ describe("runRuntimeToolsValidation", () => {
         connectorKind: "mcp",
         status: "succeeded",
         output: {
-          endpointId: "openai.personal.primary.us-east-1.fast",
-          modelId: "openai/gpt-4.1-mini-fast",
+          endpointId: "moonshot.personal.primary.global.kimi-k2.5",
+          modelId: "moonshot/kimi-k2.5",
           status: "active",
         },
         diagnostics: [],

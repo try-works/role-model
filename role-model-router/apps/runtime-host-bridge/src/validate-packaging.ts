@@ -58,12 +58,13 @@ export async function runRuntimePackagingValidation(): Promise<{
   const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-sea-"));
   const port = await allocateLocalPort();
   const packaged = await packageSeaRuntime();
+  const packagedRepoRoot = path.dirname(packaged.outputPath);
 
   const child = spawn(
     packaged.outputPath,
     [
       "--repo-root",
-      repoRoot,
+      packagedRepoRoot,
       "--runtime-state-root",
       runtimeStateRoot,
       "--scope-id",
@@ -72,9 +73,11 @@ export async function runRuntimePackagingValidation(): Promise<{
       "127.0.0.1",
       "--port",
       String(port),
+      "--static-root",
+      path.join(packagedRepoRoot, "build", "client"),
     ],
     {
-      cwd: repoRoot,
+      cwd: packagedRepoRoot,
       stdio: ["ignore", "pipe", "pipe"],
     },
   );

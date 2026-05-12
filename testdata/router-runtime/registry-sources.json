@@ -1,4 +1,25 @@
 {
-  "cloud": [],
+  "cloud": [
+    {
+      "endpointId": "moonshot.personal.primary.global.kimi-k2.5",
+      "providerAccountId": "moonshot.personal.primary",
+      "modelId": "moonshot/kimi-k2.5",
+      "region": "global",
+      "endpointKind": "remote-openai-compatible",
+      "servingSource": "remote-service",
+      "lifecycleState": "active",
+      "healthStatus": "healthy"
+    },
+    {
+      "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.5",
+      "providerAccountId": "moonshot.personal.kimi-code",
+      "modelId": "moonshot/kimi-k2.5",
+      "region": "global",
+      "endpointKind": "remote-openai-compatible",
+      "servingSource": "remote-service",
+      "lifecycleState": "degraded",
+      "healthStatus": "healthy"
+    }
+  ],
   "local": []
 }

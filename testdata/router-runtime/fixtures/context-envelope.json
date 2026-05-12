@@ -88,8 +88,8 @@
     {
       "handoffId": "handoff-1",
       "conversationId": "conversation-main",
-      "fromEndpointId": "openai.personal.primary.us-east-1.fast",
-      "toEndpointId": "anthropic.team.shared.us-east-1.default",
+      "fromEndpointId": "moonshot.personal.primary.global.kimi-k2.5",
+      "toEndpointId": "moonshot.personal.kimi-code.global.kimi-k2.5",
       "createdAtMs": 1700000003500
     }
   ],

@@ -11,8 +11,8 @@
   "strategy": "balanced",
   "preferLocal": false,
   "allowEndpoints": [
-    "openai.personal.primary.us-east-1.fast",
-    "anthropic.team.shared.us-east-1.default"
+    "moonshot.personal.primary.global.kimi-k2.5",
+    "moonshot.personal.kimi-code.global.kimi-k2.5"
   ],
   "budgetLimit": 0.01
 }

@@ -231,7 +231,7 @@ interface BridgeControllerRoutingContext {
   readonly fallbackReason?: string;
 }
 
-type DifficultyRoutingSignals = RuntimeRoutingDiagnostics["difficultyRouting"]["rubricSignals"];
+type DifficultyRoutingSignals = NonNullable<RuntimeRoutingDiagnostics["difficultyRouting"]>["rubricSignals"];
 
 const DIFFICULTY_BUCKET_ORDER: Record<UnifiedRuntimeDifficultyBucket, number> = {
   easy: 0,
@@ -538,6 +538,21 @@ function toDifficultyStrategy(difficulty: UnifiedRuntimeDifficultyBucket): "bala
   }
 }
 
+function toHybridSummaryStrategy(
+  strategy: string,
+): "balanced" | "cost" | "quality" {
+  switch (strategy) {
+    case "cost":
+    case "low-cost":
+      return "cost";
+    case "quality":
+    case "high-quality":
+      return "quality";
+    default:
+      return "balanced";
+  }
+}
+
 function filterEndpointsByDifficulty(input: {
   readonly allowEndpoints: readonly string[];
   readonly difficulty: UnifiedRuntimeDifficultyBucket;
@@ -744,7 +759,7 @@ function maybeApplyControllerRouting(input: {
       routingRequest: input.routingRequest,
       controllerContext: input.controllerContext,
       preferredEndpointIds: [],
-      finalStrategy: input.routingRequest.strategy,
+      finalStrategy: toHybridSummaryStrategy(input.routingRequest.strategy),
     });
     return {
       routingRequest: input.routingRequest,
@@ -763,14 +778,19 @@ function maybeApplyControllerRouting(input: {
   }
 
   const preferredEndpointIds = collectPreferredEndpointIds(
-    input.routingRequest.allowEndpoints,
+    input.routingRequest.allowEndpoints ?? [],
     guidance.preferredEndpointIds,
   );
   const requiredCapabilities =
     guidance.taskType && guidance.taskType !== input.routingRequest.taskType
       ? (guidance.requiredCapabilities ?? input.routingRequest.requiredCapabilities)
       : mergeCapabilityList(input.routingRequest.requiredCapabilities, guidance.requiredCapabilities);
-  const finalStrategy = guidance.strategy ?? input.routingRequest.strategy;
+  const finalStrategy = guidance.strategy
+    ? toHybridSummaryStrategy(guidance.strategy)
+    : toHybridSummaryStrategy(input.routingRequest.strategy);
+  const normalizedGuidanceStrategy = guidance.strategy
+    ? toHybridSummaryStrategy(guidance.strategy)
+    : undefined;
   const hybridArbitration = summarizeHybridArbitration({
     effectiveRoutingMode: input.effectiveRoutingMode,
     routingRequest: input.routingRequest,
@@ -787,7 +807,7 @@ function maybeApplyControllerRouting(input: {
       ...(guidance.taskType ? { taskType: guidance.taskType } : {}),
       requiredCapabilities,
       preferredCapabilities: guidance.preferredCapabilities ?? input.routingRequest.preferredCapabilities,
-      ...(guidance.strategy ? { strategy: guidance.strategy } : {}),
+      ...(normalizedGuidanceStrategy ? { strategy: normalizedGuidanceStrategy } : {}),
       ...(typeof guidance.preferLocal === "boolean" ? { preferLocal: guidance.preferLocal } : {}),
     },
     ...(preferredEndpointIds.length
@@ -969,6 +989,11 @@ export interface StartBridgeServerOptions {
   readonly listEndpoints?: () => Promise<readonly unknown[]>;
   readonly readControllerAssignment?: () => Promise<BridgeControllerAssignment | null>;
   readonly updateControllerAssignment?: (body: Record<string, unknown>) => Promise<BridgeControllerAssignment>;
+  readonly readRouterSummary?: () => Promise<unknown>;
+  readonly readRouterConfig?: () => Promise<unknown>;
+  readonly listRouterCandidates?: () => Promise<readonly unknown[]>;
+  readonly listRouterDecisions?: () => Promise<readonly unknown[]>;
+  readonly readRouterDecision?: (requestId: string) => Promise<unknown>;
   readonly listRecentRequestObservations?: () => Promise<readonly unknown[]>;
   readonly readTelemetrySummary?: (query?: BridgeTelemetryQuery) => Promise<unknown>;
   readonly listTelemetryComparisonRows?: (query?: BridgeTelemetryQuery) => Promise<readonly unknown[]>;
@@ -982,7 +1007,7 @@ export interface StartBridgeServerOptions {
   readonly unloadLocalModel?: (modelId?: string) => Promise<{ success: boolean }>;
   readonly readLocalPolicy?: () => Promise<Record<string, unknown>>;
   readonly updateLocalPolicy?: (body: Record<string, unknown>) => Promise<Record<string, unknown>>;
-  readonly listSwapHistory?: () => Promise<readonly { timestamp: string; oldModel: string | null; newModel: string; reason: string }[]>;
+  readonly listSwapHistory?: () => Promise<readonly { timestamp: string; oldModel: string | null; newModel: string | null; reason: string }[]>;
   readonly getLocalLogs?: () => Promise<{ logs: string }>;
   readonly readModelOverrides?: () => Promise<Record<string, { ttl?: number; contextWindow?: number; concurrencyLimit?: number }>>;
   readonly updateModelOverrides?: (body: Record<string, { ttl?: number; contextWindow?: number; concurrencyLimit?: number }>) => Promise<Record<string, { ttl?: number; contextWindow?: number; concurrencyLimit?: number }>>;
@@ -1063,6 +1088,11 @@ export interface RuntimeBridgeBackend {
   activateEndpoint(body: Record<string, unknown>): Promise<Record<string, unknown>>;
   readControllerAssignment(): Promise<BridgeControllerAssignment | null>;
   updateControllerAssignment(body: Record<string, unknown>): Promise<BridgeControllerAssignment>;
+  readRouterSummary(): Promise<unknown>;
+  readRouterConfig(): Promise<unknown>;
+  listRouterCandidates(): Promise<readonly unknown[]>;
+  listRouterDecisions(): Promise<readonly unknown[]>;
+  readRouterDecision(requestId: string): Promise<unknown>;
   listEndpoints(): Promise<
     readonly {
       endpointId: string;
@@ -1096,7 +1126,7 @@ export interface RuntimeBridgeBackend {
   unloadLocalModel(modelId?: string): Promise<{ success: boolean }>;
   readLocalPolicy(): Promise<Record<string, unknown>>;
   updateLocalPolicy(body: Record<string, unknown>): Promise<Record<string, unknown>>;
-  listSwapHistory(): Promise<readonly { timestamp: string; oldModel: string | null; newModel: string; reason: string }[]>;
+  listSwapHistory(): Promise<readonly { timestamp: string; oldModel: string | null; newModel: string | null; reason: string }[]>;
   getLocalLogs(): Promise<{ logs: string }>;
   readModelOverrides(): Promise<Record<string, { ttl?: number; contextWindow?: number; concurrencyLimit?: number }>>;
   updateModelOverrides(body: Record<string, { ttl?: number; contextWindow?: number; concurrencyLimit?: number }>): Promise<Record<string, { ttl?: number; contextWindow?: number; concurrencyLimit?: number }>>;
@@ -2343,7 +2373,7 @@ function summarizeHybridArbitration(input: {
         : "aligned";
   return {
     active: true,
-    difficultyStrategy: input.routingRequest.strategy,
+    difficultyStrategy: toHybridSummaryStrategy(input.routingRequest.strategy),
     finalStrategy: input.finalStrategy,
     controllerChangedPlan,
     dominantSignal,
@@ -3846,6 +3876,57 @@ function createRequestHandler(options: StartBridgeServerOptions) {
       return;
     }
 
+    if (request.method === "GET" && url.pathname === "/api/role-model/router/summary") {
+      if (!options.readRouterSummary) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.readRouterSummary());
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/role-model/router/config") {
+      if (!options.readRouterConfig) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.readRouterConfig());
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/role-model/router/candidates") {
+      if (!options.listRouterCandidates) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.listRouterCandidates());
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/role-model/router/decisions") {
+      if (!options.listRouterDecisions) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.listRouterDecisions());
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname.startsWith("/api/role-model/router/decisions/")) {
+      if (!options.readRouterDecision) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      const requestId = decodeURIComponent(url.pathname.slice("/api/role-model/router/decisions/".length));
+      const detail = await options.readRouterDecision(requestId);
+      if (!detail) {
+        writeJson(response, 404, { error: "request not found" });
+        return;
+      }
+      writeJson(response, 200, detail);
+      return;
+    }
+
     if (request.method === "POST" && url.pathname === "/api/role-model/accounts") {
       if (!options.upsertProviderAccount) {
         writeJson(response, 404, { error: "not found" });
@@ -4050,7 +4131,16 @@ function createRequestHandler(options: StartBridgeServerOptions) {
         writeJson(response, 404, { error: "not found" });
         return;
       }
-      writeJson(response, 200, await options.updateModelOverrides(await readJsonBody(request)));
+      writeJson(
+        response,
+        200,
+        await options.updateModelOverrides(
+          await readJsonBody(request) as Record<
+            string,
+            { ttl?: number; contextWindow?: number; concurrencyLimit?: number }
+          >,
+        ),
+      );
       return;
     }
 
@@ -4551,6 +4641,185 @@ export async function createRuntimeBridgeBackend(
       databasePath: initialization.databasePath,
       scope: "global",
     });
+  const asObjectRecord = (value: unknown): Record<string, unknown> | null =>
+    typeof value === "object" && value !== null ? (value as Record<string, unknown>) : null;
+  const asStringValue = (value: unknown): string | null =>
+    typeof value === "string" && value.length > 0 ? value : null;
+  const getCurrentControllerAssignment = (): BridgeControllerAssignment | null => {
+    const persisted = readPersistedControllerAssignment();
+    if (persisted) {
+      return {
+        ...persisted,
+        scope: "global",
+        sourceType: persisted.sourceType === "remote" ? "remote" : "local",
+      };
+    }
+    return getDefaultControllerAssignment();
+  };
+  const getRouterGuidance = () => ({
+    endpointId: routingModel.endpointId,
+    preferredEndpointIds: [...routingModel.preferredEndpointIds],
+    ignoredEndpointIds: currentRegistry.endpoints
+      .map((endpoint) => endpoint.identity.endpoint_id)
+      .filter((endpointId) => !routingModel.preferredEndpointIds.includes(endpointId)),
+  });
+  const readEndpointProfileData = (endpointId: string) => {
+    const observedDataConfig = resolveUnifiedRuntimeObservedDataConfig(currentUnifiedRuntimeConfig);
+    const difficultyProfiles = Object.fromEntries(
+      (["easy", "medium", "hard"] as const).map((difficultyBucket) => [
+        difficultyBucket,
+        readLatestObservedProfile({
+          databasePath: initialization.databasePath,
+          endpointId,
+          difficultyBucket,
+        }),
+      ]),
+    ) as Record<UnifiedRuntimeDifficultyBucket, ReturnType<typeof readLatestObservedProfile>>;
+
+    return {
+      endpointId,
+      latestProfile: readLatestObservedProfile({
+        databasePath: initialization.databasePath,
+        endpointId,
+      }),
+      recentSamples: readObservedPerformanceSamples({
+        databasePath: initialization.databasePath,
+        endpointId,
+      }),
+      difficultyProfiles,
+      advisoryMaxDifficultyRecommendation: readAdvisoryMaxDifficultyRecommendation({
+        databasePath: initialization.databasePath,
+        endpointId,
+        thresholds: observedDataConfig.difficultyLearning.recommendation,
+      }),
+    };
+  };
+  const readRouterSummaryData = () => ({
+    strategy: currentUnifiedRuntimeConfig?.routingStrategy ?? null,
+    executionMode: currentUnifiedRuntimeConfig?.executionMode ?? "decision_only",
+    controller: getCurrentControllerAssignment(),
+    guidance: getRouterGuidance(),
+    configuredCandidateCount: currentRegistry.endpoints.length,
+    recentDecisionCount: listTelemetryRequestRecords({ limit: DEFAULT_TELEMETRY_LIMIT }).length,
+  });
+  const readRouterConfigData = () => ({
+    persisted: {
+      strategy: currentUnifiedRuntimeConfig?.routingStrategy ?? null,
+      executionMode: currentUnifiedRuntimeConfig?.executionMode ?? "decision_only",
+    },
+    controller: getCurrentControllerAssignment(),
+    guidance: getRouterGuidance(),
+    sources: {
+      runtimeConfigPath: options.unifiedRuntimeConfigPath ?? null,
+      routingModel: "fixture",
+      policyInputs: "fixture+runtime",
+    },
+    policySources: {
+      roles: runtimeRoles.roleDefinitions,
+      tasks: roleTaskFixture.taskDefinitions,
+      roleBindings: buildRuntimeRoleBindings(
+        roleTaskFixture.roleBindings ?? [],
+        runtimeEndpoints,
+        currentAccounts,
+        currentRegistry,
+        runtimeRoles.roleDefinitions,
+      ),
+    },
+  });
+  const listRouterCandidateData = () => {
+    const controller = getCurrentControllerAssignment();
+    const guidance = getRouterGuidance();
+    return currentRegistry.endpoints.map((endpoint) => {
+      const endpointId = endpoint.identity.endpoint_id;
+      const profile = readEndpointProfileData(endpointId);
+      return {
+        endpointId,
+        modelId: endpoint.identity.model_id,
+        providerId: currentModelsById.get(endpoint.identity.model_id)?.providerId ?? null,
+        sourceType: toSourceType(endpoint.identity.endpoint_kind),
+        endpointKind: endpoint.identity.endpoint_kind,
+        servingSource: endpoint.identity.serving_source,
+        region: endpoint.identity.region,
+        status: endpoint.status,
+        healthStatus:
+          runtimeEndpoints.find((entry) => entry.endpointId === endpointId)?.healthStatus ??
+          (endpoint.deniedByPolicy ? "policy-blocked" : "healthy"),
+        roleBindings: getEndpointRoleIds(endpointId, runtimeEndpoints, currentAccounts),
+        capabilities: endpoint.declared.capabilities,
+        toolCallingSupported: endpoint.declared.tool_calling.supported,
+        toolCallingStyle: endpoint.declared.tool_calling.style,
+        controllerEligible: controller?.endpointId === endpointId,
+        preferred: guidance.preferredEndpointIds.includes(endpointId),
+        ignored: guidance.ignoredEndpointIds.includes(endpointId),
+        latestProfile: profile.latestProfile,
+        recentSamples: profile.recentSamples,
+        difficultyProfiles: profile.difficultyProfiles,
+        advisoryMaxDifficultyRecommendation: profile.advisoryMaxDifficultyRecommendation,
+      };
+    });
+  };
+  const listRouterDecisionData = () =>
+    listTelemetryRequestRecords({ limit: DEFAULT_TELEMETRY_LIMIT }).map((record) => {
+      const observation = readRuntimeObservationBundle({
+        databasePath: initialization.databasePath,
+        requestId: record.requestId,
+      }) as Record<string, unknown> | null;
+      const routingDiagnostics = asObjectRecord(observation?.routingDiagnostics);
+      const routingMode = asObjectRecord(routingDiagnostics?.routingMode);
+      return {
+        requestId: record.requestId,
+        routingDecisionId: record.routingDecisionId ?? null,
+        selectedEndpointId: record.endpointId,
+        selectedModelId: record.modelId ?? null,
+        strategyLabel:
+          asStringValue(routingMode?.effectiveMode) ??
+          currentUnifiedRuntimeConfig?.routingStrategy ??
+          null,
+        decidedAtMs: record.createdAtMs,
+        sourceType: record.sourceType,
+        providerId: record.providerId ?? null,
+        finishReason: record.finishReason ?? null,
+      };
+    });
+  const readRouterDecisionData = (requestId: string) => {
+    const observation = readRuntimeObservationBundle({
+      databasePath: initialization.databasePath,
+      requestId,
+    }) as (RuntimeObservationBundle & BridgeTelemetryEndpointMeta) | null;
+    if (!observation) {
+      return null;
+    }
+    const routingDiagnostics = asObjectRecord(observation.routingDiagnostics);
+    const routingMode = asObjectRecord(routingDiagnostics?.routingMode);
+    const decision = asObjectRecord(observation.decision);
+    const requestRecord = listTelemetryRequestRecords({ limit: DEFAULT_TELEMETRY_LIMIT }).find(
+      (record) => record.requestId === requestId,
+    );
+    return {
+      requestId,
+      routingDecisionId:
+        requestRecord?.routingDecisionId ?? asStringValue(decision?.routing_decision_id) ?? null,
+      selectedEndpointId: observation.endpointId,
+      selectedModelId: requestRecord?.modelId ?? null,
+      fallbackEndpointIds: Array.isArray(decision?.fallback_endpoint_ids)
+        ? decision.fallback_endpoint_ids
+        : [],
+      strategyLabel:
+        asStringValue(routingMode?.effectiveMode) ??
+        currentUnifiedRuntimeConfig?.routingStrategy ??
+        null,
+      decision,
+      routingDiagnostics: observation.routingDiagnostics ?? null,
+      retrievalReceipt: observation.retrievalReceipt ?? null,
+      contextEnvelope: observation.contextEnvelope ?? null,
+      request: {
+        ...observation,
+        ...getTelemetryEndpointMeta(observation.endpointId),
+      },
+      endpointProfile: readEndpointProfileData(observation.endpointId),
+      observeRequestPath: `/app/observe/requests/${requestId}`,
+    };
+  };
   const executeBridgePlan = async (
     plan: BridgeExecutionPlan,
     requestId: string,
@@ -6101,6 +6370,21 @@ export async function createRuntimeBridgeBackend(
         status: endpoint.status,
       }));
     },
+    async readRouterSummary(): Promise<unknown> {
+      return readRouterSummaryData();
+    },
+    async readRouterConfig(): Promise<unknown> {
+      return readRouterConfigData();
+    },
+    async listRouterCandidates(): Promise<readonly unknown[]> {
+      return listRouterCandidateData();
+    },
+    async listRouterDecisions(): Promise<readonly unknown[]> {
+      return listRouterDecisionData();
+    },
+    async readRouterDecision(requestId: string): Promise<unknown> {
+      return readRouterDecisionData(requestId);
+    },
     async readTelemetrySummary(query?: BridgeTelemetryQuery): Promise<BridgeTelemetrySummary> {
       return readTelemetrySummaryData(query);
     },
@@ -6149,35 +6433,7 @@ export async function createRuntimeBridgeBackend(
       difficultyProfiles: Record<UnifiedRuntimeDifficultyBucket, ReturnType<typeof readLatestObservedProfile>>;
       advisoryMaxDifficultyRecommendation: ReturnType<typeof readAdvisoryMaxDifficultyRecommendation>;
     }> {
-      const observedDataConfig = resolveUnifiedRuntimeObservedDataConfig(currentUnifiedRuntimeConfig);
-      const difficultyProfiles = Object.fromEntries(
-        (["easy", "medium", "hard"] as const).map((difficultyBucket) => [
-          difficultyBucket,
-          readLatestObservedProfile({
-            databasePath: initialization.databasePath,
-            endpointId,
-            difficultyBucket,
-          }),
-        ]),
-      ) as Record<UnifiedRuntimeDifficultyBucket, ReturnType<typeof readLatestObservedProfile>>;
-
-      return {
-        endpointId,
-        latestProfile: readLatestObservedProfile({
-          databasePath: initialization.databasePath,
-          endpointId,
-        }),
-        recentSamples: readObservedPerformanceSamples({
-          databasePath: initialization.databasePath,
-          endpointId,
-        }),
-        difficultyProfiles,
-        advisoryMaxDifficultyRecommendation: readAdvisoryMaxDifficultyRecommendation({
-          databasePath: initialization.databasePath,
-          endpointId,
-          thresholds: observedDataConfig.difficultyLearning.recommendation,
-        }),
-      };
+      return readEndpointProfileData(endpointId);
     },
     async listLocalModels(): Promise<readonly { modelId: string; loadedAt: string; engine: string }[]> {
       if (!currentLlamaSwapVendor?.getRunningModels) {
@@ -6247,7 +6503,7 @@ export async function createRuntimeBridgeBackend(
       await writeFile(policyPath, JSON.stringify(merged, null, 2));
       return merged;
     },
-    async listSwapHistory(): Promise<readonly { timestamp: string; oldModel: string | null; newModel: string; reason: string }[]> {
+    async listSwapHistory(): Promise<readonly { timestamp: string; oldModel: string | null; newModel: string | null; reason: string }[]> {
       try {
         const events = listSwapEvents({ databasePath: initialization.databasePath });
         return events.map((event) => ({

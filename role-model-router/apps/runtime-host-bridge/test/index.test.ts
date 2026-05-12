@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+﻿import { describe, expect, test } from "vitest";
 import os from "node:os";
 import path from "node:path";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
@@ -11,6 +11,8 @@ import type { EndpointRegistryResult } from "@role-model-router/endpoint-registr
 import { resolveSqliteMemoryLocation } from "@role-model-router/sqlite-memory";
 
 import * as bridge from "../src/index.js";
+import * as cli from "../src/cli.js";
+import { createQaFixtureRoot, createQaServerOptions } from "../scripts/start-for-qa.ts";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -20,16 +22,16 @@ const registry: EndpointRegistryResult = {
   endpoints: [
     {
       identity: {
-        endpoint_id: "openai.personal.primary.us-east-1.fast",
+        endpoint_id: "moonshot.personal.primary.global.kimi-k2.5",
         endpoint_kind: "remote_api",
         provider_kind: "remote_openai_compat",
         serving_source: "remote-service",
-        model_id: "openai/gpt-4.1-mini-fast",
+        model_id: "moonshot/kimi-k2.5",
         runtime_version: "run07-registry-v1",
-        region: "us-east-1",
+        region: "global",
       },
       declared: {
-        endpoint_id: "openai.personal.primary.us-east-1.fast",
+        endpoint_id: "moonshot.personal.primary.global.kimi-k2.5",
         capabilities: ["text.chat", "tools.function_calling"],
         modalities: ["text"],
         max_context_tokens: 128000,
@@ -44,16 +46,16 @@ const registry: EndpointRegistryResult = {
     },
     {
       identity: {
-        endpoint_id: "openai.personal.secondary.us-west-2.fast",
+        endpoint_id: "moonshot.personal.kimi-code.global.kimi-k2.5",
         endpoint_kind: "remote_api",
         provider_kind: "remote_openai_compat",
         serving_source: "remote-service",
-        model_id: "openai/gpt-4.1-mini-fast",
+        model_id: "moonshot/kimi-k2.5",
         runtime_version: "run07-registry-v1",
-        region: "us-west-2",
+        region: "global",
       },
       declared: {
-        endpoint_id: "openai.personal.secondary.us-west-2.fast",
+        endpoint_id: "moonshot.personal.kimi-code.global.kimi-k2.5",
         capabilities: ["text.chat"],
         modalities: ["text"],
         max_context_tokens: 128000,
@@ -66,34 +68,10 @@ const registry: EndpointRegistryResult = {
       },
       status: "degraded",
     },
-    {
-      identity: {
-        endpoint_id: "anthropic.team.shared.us-east-1.default",
-        endpoint_kind: "remote_api",
-        provider_kind: "remote_openai_compat",
-        serving_source: "remote-service",
-        model_id: "claude-3.7-sonnet",
-        runtime_version: "run07-registry-v1",
-        region: "us-east-1",
-      },
-      declared: {
-        endpoint_id: "anthropic.team.shared.us-east-1.default",
-        capabilities: ["text.chat", "tools.function_calling"],
-        modalities: ["text"],
-        max_context_tokens: 200000,
-        tool_calling: {
-          supported: true,
-          style: "json",
-        },
-        supports_embeddings: false,
-        platform_constraints: [],
-      },
-      status: "active",
-    },
   ],
   diagnostics: [],
   lifecycleSummary: {
-    active: 2,
+    active: 1,
     degraded: 1,
     offline: 0,
   },
@@ -136,18 +114,12 @@ describe("runtime-host-bridge", () => {
       object: "list",
       data: [
         {
-          id: "claude-3.7-sonnet",
-          object: "model",
-          owned_by: "role-model",
-          endpoint_ids: ["anthropic.team.shared.us-east-1.default"],
-        },
-        {
-          id: "openai/gpt-4.1-mini-fast",
+          id: "moonshot/kimi-k2.5",
           object: "model",
           owned_by: "role-model",
           endpoint_ids: [
-            "openai.personal.primary.us-east-1.fast",
-            "openai.personal.secondary.us-west-2.fast",
+            "moonshot.personal.kimi-code.global.kimi-k2.5",
+            "moonshot.personal.primary.global.kimi-k2.5",
           ],
         },
       ],
@@ -168,7 +140,7 @@ describe("runtime-host-bridge", () => {
     ).createModelListResponse(registry, [
       {
         aliasId: "gpt-5.4",
-        modelIds: ["claude-3.7-sonnet", "openai/gpt-4.1-mini-fast"],
+        modelIds: ["moonshot/kimi-k2.5"],
       },
     ]);
 
@@ -176,32 +148,212 @@ describe("runtime-host-bridge", () => {
       object: "list",
       data: [
         {
-          id: "claude-3.7-sonnet",
-          object: "model",
-          owned_by: "role-model",
-          endpoint_ids: ["anthropic.team.shared.us-east-1.default"],
-        },
-        {
           id: "gpt-5.4",
           object: "model",
           owned_by: "role-model",
           endpoint_ids: [
-            "anthropic.team.shared.us-east-1.default",
-            "openai.personal.primary.us-east-1.fast",
-            "openai.personal.secondary.us-west-2.fast",
+            "moonshot.personal.kimi-code.global.kimi-k2.5",
+            "moonshot.personal.primary.global.kimi-k2.5",
           ],
         },
         {
-          id: "openai/gpt-4.1-mini-fast",
+          id: "moonshot/kimi-k2.5",
           object: "model",
           owned_by: "role-model",
           endpoint_ids: [
-            "openai.personal.primary.us-east-1.fast",
-            "openai.personal.secondary.us-west-2.fast",
+            "moonshot.personal.kimi-code.global.kimi-k2.5",
+            "moonshot.personal.primary.global.kimi-k2.5",
           ],
         },
       ],
     });
+  });
+
+  test("builds QA bootstrap options with router surfaces and complete fixtures", () => {
+    const readRouterSummary = async () => ({ section: "router-summary" });
+    const readRouterConfig = async () => ({ section: "router-config" });
+    const listRouterCandidates = async () => [{ candidateId: "cand-1" }];
+    const listRouterDecisions = async () => [{ requestId: "req-1" }];
+    const readRouterDecision = async (requestId: string) => ({ requestId });
+
+    const backend = {
+      registry,
+      executeChatCompletions: async () => {
+        throw new Error("unused");
+      },
+      executeResponses: async () => {
+        throw new Error("unused");
+      },
+      readRuntimeSummary: async () => ({ lifecycleSummary: registry.lifecycleSummary }),
+      readRuntimeConfig: async () => ({ applied: false, path: null, config: null }),
+      updateRuntimeConfig: async () => ({ applied: false, path: null, config: null }),
+      readTelemetrySummary: async () => ({ totalRequests: 0 }),
+      listTelemetryComparisonRows: async () => [],
+      listTelemetryRequests: async () => [],
+      subscribeTelemetry: () => () => undefined,
+      listProviders: async () => [],
+      listRoles: async () => [],
+      listAccounts: async () => [],
+      upsertProviderAccount: async () => ({ providerAccountId: "acct-1" }),
+      startProviderDeviceAuthorization: async () => ({ status: "pending" }),
+      pollProviderDeviceAuthorization: async () => ({ status: "pending" }),
+      activateEndpoint: async () => ({ success: true }),
+      readControllerAssignment: async () => null,
+      updateControllerAssignment: async () => ({
+        scope: "global" as const,
+        endpointId: "moonshot.personal.primary.global.kimi-k2.5",
+        modelId: "moonshot/kimi-k2.5",
+        sourceType: "remote" as const,
+      }),
+      readRouterSummary,
+      readRouterConfig,
+      listRouterCandidates,
+      listRouterDecisions,
+      readRouterDecision,
+      listEndpoints: async () => [],
+      listRecentRequestObservations: async () => [],
+      readRequestObservation: async () => ({ requestId: "req-1" }),
+      readEndpointProfile: async () => ({ endpointId: "moonshot.personal.primary.global.kimi-k2.5" }),
+      listLocalModels: async () => [],
+      loadLocalModel: async () => ({ success: true }),
+      unloadLocalModel: async () => ({ success: true }),
+      readLocalPolicy: async () => ({}),
+      updateLocalPolicy: async () => ({}),
+      listSwapHistory: async () => [],
+      shutdown: async () => undefined,
+    } as Parameters<typeof createQaServerOptions>[1];
+
+    expect(createQaFixtureRoot(repoRoot)).toBe(
+      path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+    );
+
+    const options = createQaServerOptions(repoRoot, backend);
+
+    expect(options.staticRoot).toBe(
+      path.join(repoRoot, "role-model-router", "apps", "runtime-ui", "build", "client"),
+    );
+    expect(options.readRouterSummary).toBe(readRouterSummary);
+    expect(options.readRouterConfig).toBe(readRouterConfig);
+    expect(options.listRouterCandidates).toBe(listRouterCandidates);
+    expect(options.listRouterDecisions).toBe(listRouterDecisions);
+    expect(options.readRouterDecision).toBe(readRouterDecision);
+  });
+
+  test("builds packaged CLI options with static UI, router surfaces, and fixture-root defaults", () => {
+    const readRouterSummary = async () => ({ section: "router-summary" });
+    const readRouterConfig = async () => ({ section: "router-config" });
+    const listRouterCandidates = async () => [{ candidateId: "cand-1" }];
+    const listRouterDecisions = async () => [{ requestId: "req-1" }];
+    const readRouterDecision = async (requestId: string) => ({ requestId });
+
+    const backend = {
+      registry,
+      executeChatCompletions: async () => {
+        throw new Error("unused");
+      },
+      executeResponses: async () => {
+        throw new Error("unused");
+      },
+      readRuntimeSummary: async () => ({ lifecycleSummary: registry.lifecycleSummary }),
+      readRuntimeConfig: async () => ({ applied: false, path: null, config: null }),
+      updateRuntimeConfig: async () => ({ applied: false, path: null, config: null }),
+      readHealthStatus: async () => ({ status: "healthy" }),
+      readTelemetrySummary: async () => ({ totalRequests: 0 }),
+      listTelemetryComparisonRows: async () => [],
+      listTelemetryRequests: async () => [],
+      subscribeTelemetry: () => () => undefined,
+      listProviders: async () => [],
+      listRoles: async () => [],
+      listAccounts: async () => [],
+      upsertProviderAccount: async () => ({ providerAccountId: "acct-1" }),
+      startProviderDeviceAuthorization: async () => ({ status: "pending" }),
+      pollProviderDeviceAuthorization: async () => ({ status: "pending" }),
+      activateEndpoint: async () => ({ success: true }),
+      readControllerAssignment: async () => null,
+      updateControllerAssignment: async () => ({
+        scope: "global" as const,
+        endpointId: "moonshot.personal.primary.global.kimi-k2.5",
+        modelId: "moonshot/kimi-k2.5",
+        sourceType: "remote" as const,
+      }),
+      readRouterSummary,
+      readRouterConfig,
+      listRouterCandidates,
+      listRouterDecisions,
+      readRouterDecision,
+      listEndpoints: async () => [],
+      listRecentRequestObservations: async () => [],
+      readRequestObservation: async () => ({ requestId: "req-1" }),
+      readEndpointProfile: async () => ({ endpointId: "moonshot.personal.primary.global.kimi-k2.5" }),
+      listLocalModels: async () => [],
+      loadLocalModel: async () => ({ success: true }),
+      unloadLocalModel: async () => ({ success: true }),
+      readLocalPolicy: async () => ({}),
+      updateLocalPolicy: async () => ({}),
+      listSwapHistory: async () => [],
+      getLocalLogs: async () => "logs",
+      readModelOverrides: async () => ({}),
+      updateModelOverrides: async () => ({}),
+      readPeers: async () => [],
+      updatePeers: async () => [],
+      checkPeerHealth: async () => ({ ok: true }),
+      shutdown: async () => undefined,
+    };
+
+    expect(typeof (cli as { resolveCliFixtureRoot?: unknown }).resolveCliFixtureRoot).toBe("function");
+    expect(typeof (cli as { createCliServerOptions?: unknown }).createCliServerOptions).toBe("function");
+
+    const fixtureRoot = (
+      cli as {
+        resolveCliFixtureRoot: (repoRoot: string, fixtureRoot?: string) => string;
+      }
+    ).resolveCliFixtureRoot(repoRoot);
+    expect(fixtureRoot).toBe(path.join(repoRoot, "testdata", "router-runtime", "fixtures"));
+
+    const staticRoot = path.join(repoRoot, "role-model-router", "apps", "runtime-ui", "build", "client");
+    const options = (
+      cli as {
+        createCliServerOptions: (
+          options: { host: string; port: number; staticRoot: string },
+          backend: typeof backend,
+        ) => {
+          staticRoot?: string;
+          readRouterSummary?: unknown;
+          readRouterConfig?: unknown;
+          listRouterCandidates?: unknown;
+          listRouterDecisions?: unknown;
+          readRouterDecision?: unknown;
+          listLocalModels?: unknown;
+          getLocalLogs?: unknown;
+          readModelOverrides?: unknown;
+          updateModelOverrides?: unknown;
+          readPeers?: unknown;
+          updatePeers?: unknown;
+          checkPeerHealth?: unknown;
+        };
+      }
+    ).createCliServerOptions(
+      {
+        host: "127.0.0.1",
+        port: 3456,
+        staticRoot,
+      },
+      backend,
+    );
+
+    expect(options.staticRoot).toBe(staticRoot);
+    expect(options.readRouterSummary).toBe(readRouterSummary);
+    expect(options.readRouterConfig).toBe(readRouterConfig);
+    expect(options.listRouterCandidates).toBe(listRouterCandidates);
+    expect(options.listRouterDecisions).toBe(listRouterDecisions);
+    expect(options.readRouterDecision).toBe(readRouterDecision);
+    expect(options.listLocalModels).toBe(backend.listLocalModels);
+    expect(options.getLocalLogs).toBe(backend.getLocalLogs);
+    expect(options.readModelOverrides).toBe(backend.readModelOverrides);
+    expect(options.updateModelOverrides).toBe(backend.updateModelOverrides);
+    expect(options.readPeers).toBe(backend.readPeers);
+    expect(options.updatePeers).toBe(backend.updatePeers);
+    expect(options.checkPeerHealth).toBe(backend.checkPeerHealth);
   });
 
   test("maps a chat-completions request into role-model routing and execution inputs", () => {
@@ -237,7 +389,7 @@ describe("runtime-host-bridge", () => {
     ).mapChatCompletionsRequest(
       registry,
       {
-        model: "openai/gpt-4.1-mini-fast",
+        model: "moonshot/kimi-k2.5",
         messages: [
           { role: "system", content: "Be concise." },
           { role: "user", content: "Summarize the routing result." },
@@ -279,8 +431,8 @@ describe("runtime-host-bridge", () => {
         strategy: "balanced",
         preferLocal: false,
         allowEndpoints: [
-          "openai.personal.primary.us-east-1.fast",
-          "openai.personal.secondary.us-west-2.fast",
+          "moonshot.personal.kimi-code.global.kimi-k2.5",
+          "moonshot.personal.primary.global.kimi-k2.5",
         ],
       },
       executionRequest: {
@@ -345,25 +497,23 @@ describe("runtime-host-bridge", () => {
       [
         {
           aliasId: "gpt-5.4",
-          modelIds: ["claude-3.7-sonnet", "openai/gpt-4.1-mini-fast"],
+          modelIds: ["moonshot/kimi-k2.5"],
         },
       ],
     );
 
     expect(result.routingRequest.allowEndpoints).toEqual([
-      "anthropic.team.shared.us-east-1.default",
-      "openai.personal.primary.us-east-1.fast",
-      "openai.personal.secondary.us-west-2.fast",
+      "moonshot.personal.kimi-code.global.kimi-k2.5",
+      "moonshot.personal.primary.global.kimi-k2.5",
     ]);
     expect(result.routingDiagnostics).toEqual({
       aliasResolution: {
         requestedModel: "gpt-5.4",
         aliasId: "gpt-5.4",
-        resolvedModelIds: ["claude-3.7-sonnet", "openai/gpt-4.1-mini-fast"],
+        resolvedModelIds: ["moonshot/kimi-k2.5"],
         allowEndpoints: [
-          "anthropic.team.shared.us-east-1.default",
-          "openai.personal.primary.us-east-1.fast",
-          "openai.personal.secondary.us-west-2.fast",
+          "moonshot.personal.kimi-code.global.kimi-k2.5",
+          "moonshot.personal.primary.global.kimi-k2.5",
         ],
       },
     });
@@ -392,21 +542,21 @@ describe("runtime-host-bridge", () => {
     ).mapChatCompletionsRequest(
       registry,
       {
-        model: "openai/gpt-4.1-mini-fast",
+        model: "moonshot/kimi-k2.5",
         messages: [{ role: "user", content: "Keep exact-model routing." }],
       },
       "req-host-exact-model-001",
       [
         {
           aliasId: "gpt-5.4",
-          modelIds: ["claude-3.7-sonnet", "openai/gpt-4.1-mini-fast"],
+          modelIds: ["moonshot/kimi-k2.5"],
         },
       ],
     );
 
     expect(result.routingRequest.allowEndpoints).toEqual([
-      "openai.personal.primary.us-east-1.fast",
-      "openai.personal.secondary.us-west-2.fast",
+      "moonshot.personal.kimi-code.global.kimi-k2.5",
+      "moonshot.personal.primary.global.kimi-k2.5",
     ]);
     expect(result.routingDiagnostics?.aliasResolution).toBeUndefined();
   });
@@ -486,7 +636,7 @@ describe("runtime-host-bridge", () => {
         {
           aliasId: "gpt-5.4",
           mode: "intelligent",
-          modelIds: ["claude-3.7-sonnet", "openai/gpt-4.1-mini-fast"],
+          modelIds: ["moonshot/kimi-k2.5"],
         },
       ],
       undefined,
@@ -500,8 +650,8 @@ describe("runtime-host-bridge", () => {
           strategy: "quality",
           preferLocal: true,
           preferredEndpointIds: [
-            "anthropic.team.shared.us-east-1.default",
-            "openai.personal.primary.us-east-1.fast",
+            "moonshot.personal.kimi-code.global.kimi-k2.5",
+            "moonshot.personal.primary.global.kimi-k2.5",
           ],
         },
       },
@@ -515,16 +665,15 @@ describe("runtime-host-bridge", () => {
       strategy: "quality",
       preferLocal: true,
       allowEndpoints: [
-        "anthropic.team.shared.us-east-1.default",
-        "openai.personal.primary.us-east-1.fast",
-        "openai.personal.secondary.us-west-2.fast",
+        "moonshot.personal.kimi-code.global.kimi-k2.5",
+        "moonshot.personal.primary.global.kimi-k2.5",
       ],
     });
     expect(result.routingModel).toEqual({
-      endpointId: "anthropic.team.shared.us-east-1.default",
+      endpointId: "moonshot.personal.kimi-code.global.kimi-k2.5",
       preferredEndpointIds: [
-        "anthropic.team.shared.us-east-1.default",
-        "openai.personal.primary.us-east-1.fast",
+        "moonshot.personal.kimi-code.global.kimi-k2.5",
+        "moonshot.personal.primary.global.kimi-k2.5",
       ],
     });
     expect(result.routingDiagnostics?.controllerRouting).toEqual({
@@ -537,8 +686,8 @@ describe("runtime-host-bridge", () => {
         strategy: "quality",
         preferLocal: true,
         preferredEndpointIds: [
-          "anthropic.team.shared.us-east-1.default",
-          "openai.personal.primary.us-east-1.fast",
+          "moonshot.personal.kimi-code.global.kimi-k2.5",
+          "moonshot.personal.primary.global.kimi-k2.5",
         ],
       },
     });
@@ -616,7 +765,7 @@ describe("runtime-host-bridge", () => {
         {
           aliasId: "gpt-5.4",
           mode: "intelligent",
-          modelIds: ["claude-3.7-sonnet", "openai/gpt-4.1-mini-fast"],
+          modelIds: ["moonshot/kimi-k2.5"],
         },
       ],
       undefined,
@@ -630,8 +779,8 @@ describe("runtime-host-bridge", () => {
           strategy: "quality",
           preferLocal: true,
           preferredEndpointIds: [
-            "anthropic.team.shared.us-east-1.default",
-            "openai.personal.primary.us-east-1.fast",
+            "moonshot.personal.kimi-code.global.kimi-k2.5",
+            "moonshot.personal.primary.global.kimi-k2.5",
           ],
         },
       },
@@ -647,9 +796,8 @@ describe("runtime-host-bridge", () => {
       strategy: "balanced",
       preferLocal: false,
       allowEndpoints: [
-        "anthropic.team.shared.us-east-1.default",
-        "openai.personal.primary.us-east-1.fast",
-        "openai.personal.secondary.us-west-2.fast",
+        "moonshot.personal.kimi-code.global.kimi-k2.5",
+        "moonshot.personal.primary.global.kimi-k2.5",
       ],
     });
     expect(result.routingModel).toBeUndefined();
@@ -657,11 +805,10 @@ describe("runtime-host-bridge", () => {
       aliasResolution: {
         requestedModel: "gpt-5.4",
         aliasId: "gpt-5.4",
-        resolvedModelIds: ["claude-3.7-sonnet", "openai/gpt-4.1-mini-fast"],
+        resolvedModelIds: ["moonshot/kimi-k2.5"],
         allowEndpoints: [
-          "anthropic.team.shared.us-east-1.default",
-          "openai.personal.primary.us-east-1.fast",
-          "openai.personal.secondary.us-west-2.fast",
+          "moonshot.personal.kimi-code.global.kimi-k2.5",
+          "moonshot.personal.primary.global.kimi-k2.5",
         ],
       },
     });
@@ -746,7 +893,7 @@ describe("runtime-host-bridge", () => {
         {
           aliasId: "gpt-5.4-hybrid",
           mode: "hybrid",
-          modelIds: ["claude-3.7-sonnet", "openai/gpt-4.1-mini-fast"],
+          modelIds: ["moonshot/kimi-k2.5"],
         },
       ],
       {
@@ -763,9 +910,8 @@ describe("runtime-host-bridge", () => {
           },
         },
         endpointMaxDifficultyByEndpointId: {
-          "anthropic.team.shared.us-east-1.default": "hard",
-          "openai.personal.primary.us-east-1.fast": "medium",
-          "openai.personal.secondary.us-west-2.fast": "easy",
+          "moonshot.personal.primary.global.kimi-k2.5": "hard",
+          "moonshot.personal.kimi-code.global.kimi-k2.5": "easy",
         },
       },
       {
@@ -781,9 +927,8 @@ describe("runtime-host-bridge", () => {
       strategy: "quality",
       preferLocal: true,
       allowEndpoints: [
-        "anthropic.team.shared.us-east-1.default",
-        "openai.personal.primary.us-east-1.fast",
-        "openai.personal.secondary.us-west-2.fast",
+        "moonshot.personal.kimi-code.global.kimi-k2.5",
+        "moonshot.personal.primary.global.kimi-k2.5",
       ],
     });
     expect(result.routingDiagnostics).toMatchObject({
@@ -893,29 +1038,27 @@ describe("runtime-host-bridge", () => {
         {
           aliasId: "gpt-5.4",
           mode: "difficulty",
-          modelIds: ["claude-3.7-sonnet", "openai/gpt-4.1-mini-fast"],
+          modelIds: ["moonshot/kimi-k2.5"],
         },
       ],
       {
         endpointMaxDifficultyByEndpointId: {
-          "anthropic.team.shared.us-east-1.default": "hard",
-          "openai.personal.primary.us-east-1.fast": "medium",
-          "openai.personal.secondary.us-west-2.fast": "easy",
+          "moonshot.personal.primary.global.kimi-k2.5": "hard",
+          "moonshot.personal.kimi-code.global.kimi-k2.5": "easy",
         },
       },
     );
 
     expect(result.routingRequest.strategy).toBe("quality");
     expect(result.routingRequest.allowEndpoints).toEqual([
-      "anthropic.team.shared.us-east-1.default",
+      "moonshot.personal.primary.global.kimi-k2.5",
     ]);
     expect(result.routingDiagnostics?.difficultyRouting).toEqual({
       difficulty: "hard",
       strategy: "quality",
       fallbackApplied: false,
       excludedEndpointIds: [
-        "openai.personal.primary.us-east-1.fast",
-        "openai.personal.secondary.us-west-2.fast",
+        "moonshot.personal.kimi-code.global.kimi-k2.5",
       ],
       rubricSignals: expect.objectContaining({
         toolCount: 2,
@@ -1005,14 +1148,13 @@ describe("runtime-host-bridge", () => {
         {
           aliasId: "gpt-5.4",
           mode: "difficulty",
-          modelIds: ["claude-3.7-sonnet", "openai/gpt-4.1-mini-fast"],
+          modelIds: ["moonshot/kimi-k2.5"],
         },
       ],
       {
         endpointMaxDifficultyByEndpointId: {
-          "anthropic.team.shared.us-east-1.default": "hard",
-          "openai.personal.primary.us-east-1.fast": "medium",
-          "openai.personal.secondary.us-west-2.fast": "easy",
+          "moonshot.personal.primary.global.kimi-k2.5": "hard",
+          "moonshot.personal.kimi-code.global.kimi-k2.5": "easy",
         },
       },
       undefined,
@@ -1023,19 +1165,17 @@ describe("runtime-host-bridge", () => {
 
     expect(result.routingRequest.strategy).toBe("balanced");
     expect(result.routingRequest.allowEndpoints).toEqual([
-      "anthropic.team.shared.us-east-1.default",
-      "openai.personal.primary.us-east-1.fast",
-      "openai.personal.secondary.us-west-2.fast",
+      "moonshot.personal.kimi-code.global.kimi-k2.5",
+      "moonshot.personal.primary.global.kimi-k2.5",
     ]);
     expect(result.routingDiagnostics).toEqual({
       aliasResolution: {
         requestedModel: "gpt-5.4",
         aliasId: "gpt-5.4",
-        resolvedModelIds: ["claude-3.7-sonnet", "openai/gpt-4.1-mini-fast"],
+        resolvedModelIds: ["moonshot/kimi-k2.5"],
         allowEndpoints: [
-          "anthropic.team.shared.us-east-1.default",
-          "openai.personal.primary.us-east-1.fast",
-          "openai.personal.secondary.us-west-2.fast",
+          "moonshot.personal.kimi-code.global.kimi-k2.5",
+          "moonshot.personal.primary.global.kimi-k2.5",
         ],
       },
     });
@@ -1076,25 +1216,23 @@ describe("runtime-host-bridge", () => {
       [
         {
           aliasId: "gpt-5.4",
-          modelIds: ["claude-3.7-sonnet", "openai/gpt-4.1-mini-fast"],
+          modelIds: ["moonshot/kimi-k2.5"],
         },
       ],
     );
 
     expect(result.routingRequest.allowEndpoints).toEqual([
-      "anthropic.team.shared.us-east-1.default",
-      "openai.personal.primary.us-east-1.fast",
-      "openai.personal.secondary.us-west-2.fast",
+      "moonshot.personal.kimi-code.global.kimi-k2.5",
+      "moonshot.personal.primary.global.kimi-k2.5",
     ]);
     expect(result.routingDiagnostics).toEqual({
       aliasResolution: {
         requestedModel: "gpt-5.4",
         aliasId: "gpt-5.4",
-        resolvedModelIds: ["claude-3.7-sonnet", "openai/gpt-4.1-mini-fast"],
+        resolvedModelIds: ["moonshot/kimi-k2.5"],
         allowEndpoints: [
-          "anthropic.team.shared.us-east-1.default",
-          "openai.personal.primary.us-east-1.fast",
-          "openai.personal.secondary.us-west-2.fast",
+          "moonshot.personal.kimi-code.global.kimi-k2.5",
+          "moonshot.personal.primary.global.kimi-k2.5",
         ],
       },
     });
@@ -1143,23 +1281,21 @@ describe("runtime-host-bridge", () => {
         {
           aliasId: "gpt-5.4",
           mode: "difficulty",
-          modelIds: ["claude-3.7-sonnet", "openai/gpt-4.1-mini-fast"],
+          modelIds: ["moonshot/kimi-k2.5"],
         },
       ],
       {
         endpointMaxDifficultyByEndpointId: {
-          "anthropic.team.shared.us-east-1.default": "hard",
-          "openai.personal.primary.us-east-1.fast": "medium",
-          "openai.personal.secondary.us-west-2.fast": "easy",
+          "moonshot.personal.primary.global.kimi-k2.5": "hard",
+          "moonshot.personal.kimi-code.global.kimi-k2.5": "easy",
         },
       },
     );
 
     expect(result.routingRequest.strategy).toBe("cost");
     expect(result.routingRequest.allowEndpoints).toEqual([
-      "anthropic.team.shared.us-east-1.default",
-      "openai.personal.primary.us-east-1.fast",
-      "openai.personal.secondary.us-west-2.fast",
+      "moonshot.personal.kimi-code.global.kimi-k2.5",
+      "moonshot.personal.primary.global.kimi-k2.5",
     ]);
     expect(result.routingDiagnostics?.difficultyRouting).toEqual(
       expect.objectContaining({
@@ -1188,14 +1324,13 @@ describe("runtime-host-bridge", () => {
     ).createDownstreamOpenAIProviderConfig(registry, "http://127.0.0.1:4010", [
       {
         aliasId: "gpt-5.4",
-        modelIds: ["claude-3.7-sonnet", "openai/gpt-4.1-mini-fast"],
+        modelIds: ["moonshot/kimi-k2.5"],
       },
     ]);
 
     expect(result.models.map((entry) => entry.id)).toEqual([
-      "claude-3.7-sonnet",
       "gpt-5.4",
-      "openai/gpt-4.1-mini-fast",
+      "moonshot/kimi-k2.5",
     ]);
     expect(result.setup.recommendedModel).toBe("gpt-5.4");
   });
@@ -1240,18 +1375,12 @@ describe("runtime-host-bridge", () => {
         object: "list",
         data: [
           {
-            id: "claude-3.7-sonnet",
-            object: "model",
-            owned_by: "role-model",
-            endpoint_ids: ["anthropic.team.shared.us-east-1.default"],
-          },
-          {
-            id: "openai/gpt-4.1-mini-fast",
+            id: "moonshot/kimi-k2.5",
             object: "model",
             owned_by: "role-model",
             endpoint_ids: [
-              "openai.personal.primary.us-east-1.fast",
-              "openai.personal.secondary.us-west-2.fast",
+              "moonshot.personal.kimi-code.global.kimi-k2.5",
+              "moonshot.personal.primary.global.kimi-k2.5",
             ],
           },
         ],
@@ -1294,7 +1423,7 @@ describe("runtime-host-bridge", () => {
           modelAliases: [
             {
               aliasId: "gpt-5.4",
-              modelIds: ["claude-3.7-sonnet", "openai/gpt-4.1-mini-fast"],
+              modelIds: ["moonshot/kimi-k2.5"],
             },
           ],
         },
@@ -1308,28 +1437,21 @@ describe("runtime-host-bridge", () => {
         object: "list",
         data: [
           {
-            id: "claude-3.7-sonnet",
-            object: "model",
-            owned_by: "role-model",
-            endpoint_ids: ["anthropic.team.shared.us-east-1.default"],
-          },
-          {
             id: "gpt-5.4",
             object: "model",
             owned_by: "role-model",
             endpoint_ids: [
-              "anthropic.team.shared.us-east-1.default",
-              "openai.personal.primary.us-east-1.fast",
-              "openai.personal.secondary.us-west-2.fast",
+              "moonshot.personal.kimi-code.global.kimi-k2.5",
+              "moonshot.personal.primary.global.kimi-k2.5",
             ],
           },
           {
-            id: "openai/gpt-4.1-mini-fast",
+            id: "moonshot/kimi-k2.5",
             object: "model",
             owned_by: "role-model",
             endpoint_ids: [
-              "openai.personal.primary.us-east-1.fast",
-              "openai.personal.secondary.us-west-2.fast",
+              "moonshot.personal.kimi-code.global.kimi-k2.5",
+              "moonshot.personal.primary.global.kimi-k2.5",
             ],
           },
         ],
@@ -1340,9 +1462,8 @@ describe("runtime-host-bridge", () => {
       await expect(providerResponse.json()).resolves.toEqual(
         expect.objectContaining({
           models: [
-            expect.objectContaining({ id: "claude-3.7-sonnet" }),
             expect.objectContaining({ id: "gpt-5.4" }),
-            expect.objectContaining({ id: "openai/gpt-4.1-mini-fast" }),
+            expect.objectContaining({ id: "moonshot/kimi-k2.5" }),
           ],
           setup: expect.objectContaining({
             recommendedModel: "gpt-5.4",
@@ -1389,7 +1510,7 @@ describe("runtime-host-bridge", () => {
         {
           id: 7,
           timestamp: "2026-05-07T05:00:00.000Z",
-          model: "openai/gpt-4.1-mini-fast",
+          model: "moonshot/kimi-k2.5",
           req_path: "/v1/chat/completions",
           resp_content_type: "application/json",
           resp_status_code: 200,
@@ -1436,7 +1557,7 @@ describe("runtime-host-bridge", () => {
       expect(await metricsResponse.json()).toEqual([
         expect.objectContaining({
           id: 7,
-          model: "openai/gpt-4.1-mini-fast",
+          model: "moonshot/kimi-k2.5",
           has_capture: true,
         }),
       ]);
@@ -1494,11 +1615,16 @@ describe("runtime-host-bridge", () => {
            pollProviderDeviceAuthorization: (body: Record<string, unknown>) => Promise<unknown>;
            readRuntimeConfig: () => Promise<unknown>;
            updateRuntimeConfig: (body: Record<string, unknown>) => Promise<unknown>;
-           activateEndpoint: (body: Record<string, unknown>) => Promise<unknown>;
-           readControllerAssignment: () => Promise<unknown>;
-           updateControllerAssignment: (body: Record<string, unknown>) => Promise<unknown>;
-           listEndpoints: () => Promise<unknown>;
-           }) => Promise<{ port: number; close(): Promise<void> }>;
+            activateEndpoint: (body: Record<string, unknown>) => Promise<unknown>;
+            readControllerAssignment: () => Promise<unknown>;
+            updateControllerAssignment: (body: Record<string, unknown>) => Promise<unknown>;
+            listEndpoints: () => Promise<unknown>;
+            readRouterSummary: () => Promise<unknown>;
+            readRouterConfig: () => Promise<unknown>;
+            listRouterCandidates: () => Promise<unknown>;
+            listRouterDecisions: () => Promise<unknown>;
+            readRouterDecision: (requestId: string) => Promise<unknown>;
+            }) => Promise<{ port: number; close(): Promise<void> }>;
         }
       ).startBridgeServer({
       host: "127.0.0.1",
@@ -1587,14 +1713,97 @@ describe("runtime-host-bridge", () => {
           modelId: "moonshot/kimi-k2.5",
           sourceType: "remote",
         }),
-        listEndpoints: async () => [
-          {
-            endpointId: "moonshot.personal.primary.global.kimi-k2.5",
-            providerId: "moonshot",
-            modelId: "moonshot/kimi-k2.5",
-        },
-      ],
-    });
+         listEndpoints: async () => [
+           {
+             endpointId: "moonshot.personal.primary.global.kimi-k2.5",
+             providerId: "moonshot",
+             modelId: "moonshot/kimi-k2.5",
+           },
+         ],
+         readRouterSummary: async () => ({
+           strategy: "balanced",
+           executionMode: "hybrid",
+           controller: {
+             endpointId: "cli.local.coder",
+             modelId: "gpt-5.4",
+             sourceType: "local",
+           },
+           configuredCandidateCount: 2,
+           recentDecisionCount: 3,
+         }),
+         readRouterConfig: async () => ({
+           persisted: {
+             strategy: "balanced",
+             executionMode: "hybrid",
+           },
+           controller: {
+             endpointId: "cli.local.coder",
+             modelId: "gpt-5.4",
+             sourceType: "local",
+           },
+           guidance: {
+             preferredEndpointIds: ["cli.local.coder"],
+             ignoredEndpointIds: ["moonshot.personal.kimi-code.global.kimi-k2.5"],
+           },
+           policySources: {
+             roles: [
+               {
+                 roleId: "general.chat",
+                 taskTypes: ["general.chat"],
+                 routingPolicyOverrides: {
+                   computePreference: "balanced",
+                 },
+               },
+             ],
+             tasks: [
+               {
+                 taskType: "general.chat",
+                 label: "General chat",
+                 routingTarget: "balanced",
+               },
+             ],
+           },
+         }),
+         listRouterCandidates: async () => [
+           {
+             endpointId: "cli.local.coder",
+             modelId: "gpt-5.4",
+             providerId: "local",
+             sourceType: "local",
+             endpointKind: "local_process",
+             servingSource: "local",
+             healthStatus: "healthy",
+             controllerEligible: true,
+             roleBindings: ["general.chat"],
+             toolCallingSupported: true,
+           },
+         ],
+         listRouterDecisions: async () => [
+           {
+             requestId: "req-router-001",
+             routingDecisionId: "route-001",
+             selectedEndpointId: "cli.local.coder",
+             selectedModelId: "gpt-5.4",
+             strategyLabel: "balanced",
+           },
+         ],
+         readRouterDecision: async (requestId) => ({
+           requestId,
+           routingDecisionId: "route-001",
+           selectedEndpointId: "cli.local.coder",
+           selectedModelId: "gpt-5.4",
+           fallbackEndpointIds: ["moonshot.personal.primary.global.kimi-k2.5"],
+           strategyLabel: "balanced",
+           scoredCandidates: [
+             {
+               endpointId: "cli.local.coder",
+               totalScore: 0.98,
+               metricProvenance: "measured",
+             },
+           ],
+           observeRequestPath: `/app/observe/requests/${requestId}`,
+         }),
+       });
 
     try {
       const summaryResponse = await fetch(`http://127.0.0.1:${server.port}/api/role-model/runtime/summary`);
@@ -1765,13 +1974,113 @@ describe("runtime-host-bridge", () => {
 
        const endpointsResponse = await fetch(`http://127.0.0.1:${server.port}/api/role-model/endpoints`);
        expect(endpointsResponse.status).toBe(200);
-      expect(await endpointsResponse.json()).toEqual([
-        {
-          endpointId: "moonshot.personal.primary.global.kimi-k2.5",
-          providerId: "moonshot",
-          modelId: "moonshot/kimi-k2.5",
-        },
-      ]);
+        expect(await endpointsResponse.json()).toEqual([
+          {
+            endpointId: "moonshot.personal.primary.global.kimi-k2.5",
+            providerId: "moonshot",
+            modelId: "moonshot/kimi-k2.5",
+          },
+        ]);
+
+        const routerSummaryResponse = await fetch(`http://127.0.0.1:${server.port}/api/role-model/router/summary`);
+        expect(routerSummaryResponse.status).toBe(200);
+        expect(await routerSummaryResponse.json()).toEqual({
+          strategy: "balanced",
+          executionMode: "hybrid",
+          controller: {
+            endpointId: "cli.local.coder",
+            modelId: "gpt-5.4",
+            sourceType: "local",
+          },
+          configuredCandidateCount: 2,
+          recentDecisionCount: 3,
+        });
+
+        const routerConfigResponse = await fetch(`http://127.0.0.1:${server.port}/api/role-model/router/config`);
+        expect(routerConfigResponse.status).toBe(200);
+        expect(await routerConfigResponse.json()).toEqual({
+          persisted: {
+            strategy: "balanced",
+            executionMode: "hybrid",
+          },
+          controller: {
+            endpointId: "cli.local.coder",
+            modelId: "gpt-5.4",
+            sourceType: "local",
+          },
+          guidance: {
+            preferredEndpointIds: ["cli.local.coder"],
+            ignoredEndpointIds: ["moonshot.personal.kimi-code.global.kimi-k2.5"],
+          },
+          policySources: {
+            roles: [
+              {
+                roleId: "general.chat",
+                taskTypes: ["general.chat"],
+                routingPolicyOverrides: {
+                  computePreference: "balanced",
+                },
+              },
+            ],
+            tasks: [
+              {
+                taskType: "general.chat",
+                label: "General chat",
+                routingTarget: "balanced",
+              },
+            ],
+          },
+        });
+
+        const routerCandidatesResponse = await fetch(`http://127.0.0.1:${server.port}/api/role-model/router/candidates`);
+        expect(routerCandidatesResponse.status).toBe(200);
+        expect(await routerCandidatesResponse.json()).toEqual([
+          {
+            endpointId: "cli.local.coder",
+            modelId: "gpt-5.4",
+            providerId: "local",
+            sourceType: "local",
+            endpointKind: "local_process",
+            servingSource: "local",
+            healthStatus: "healthy",
+            controllerEligible: true,
+            roleBindings: ["general.chat"],
+            toolCallingSupported: true,
+          },
+        ]);
+
+        const routerDecisionsResponse = await fetch(`http://127.0.0.1:${server.port}/api/role-model/router/decisions`);
+        expect(routerDecisionsResponse.status).toBe(200);
+        expect(await routerDecisionsResponse.json()).toEqual([
+          {
+            requestId: "req-router-001",
+            routingDecisionId: "route-001",
+            selectedEndpointId: "cli.local.coder",
+            selectedModelId: "gpt-5.4",
+            strategyLabel: "balanced",
+          },
+        ]);
+
+        const routerDecisionDetailResponse = await fetch(
+          `http://127.0.0.1:${server.port}/api/role-model/router/decisions/req-router-001`,
+        );
+        expect(routerDecisionDetailResponse.status).toBe(200);
+        expect(await routerDecisionDetailResponse.json()).toEqual({
+          requestId: "req-router-001",
+          routingDecisionId: "route-001",
+          selectedEndpointId: "cli.local.coder",
+          selectedModelId: "gpt-5.4",
+          fallbackEndpointIds: ["moonshot.personal.primary.global.kimi-k2.5"],
+          strategyLabel: "balanced",
+          scoredCandidates: [
+            {
+              endpointId: "cli.local.coder",
+              totalScore: 0.98,
+              metricProvenance: "measured",
+            },
+          ],
+          observeRequestPath: "/app/observe/requests/req-router-001",
+        });
     } finally {
       await server.close();
     }
@@ -1819,7 +2128,7 @@ describe("runtime-host-bridge", () => {
           requestCount: 1,
         },
         {
-          endpointId: "openai.personal.primary.us-east-1.fast",
+          endpointId: "moonshot.personal.primary.global.kimi-k2.5",
           sourceType: "remote",
           requestCount: 1,
         },
@@ -1833,7 +2142,7 @@ describe("runtime-host-bridge", () => {
         {
           requestId: "req-telemetry-remote-001",
           sourceType: "remote",
-          endpointId: "openai.personal.primary.us-east-1.fast",
+          endpointId: "moonshot.personal.primary.global.kimi-k2.5",
         },
       ],
     });
@@ -1857,7 +2166,7 @@ describe("runtime-host-bridge", () => {
           requestCount: 1,
         },
         {
-          endpointId: "openai.personal.primary.us-east-1.fast",
+          endpointId: "moonshot.personal.primary.global.kimi-k2.5",
           sourceType: "remote",
           requestCount: 1,
         },
@@ -1874,7 +2183,7 @@ describe("runtime-host-bridge", () => {
         {
           requestId: "req-telemetry-remote-001",
           sourceType: "remote",
-          endpointId: "openai.personal.primary.us-east-1.fast",
+          endpointId: "moonshot.personal.primary.global.kimi-k2.5",
         },
       ]);
     } finally {
@@ -1929,23 +2238,17 @@ describe("runtime-host-bridge", () => {
         },
         models: [
           {
-            id: "claude-3.7-sonnet",
-            object: "model",
-            owned_by: "role-model",
-            endpoint_ids: ["anthropic.team.shared.us-east-1.default"],
-          },
-          {
-            id: "openai/gpt-4.1-mini-fast",
+            id: "moonshot/kimi-k2.5",
             object: "model",
             owned_by: "role-model",
             endpoint_ids: [
-              "openai.personal.primary.us-east-1.fast",
-              "openai.personal.secondary.us-west-2.fast",
+              "moonshot.personal.kimi-code.global.kimi-k2.5",
+              "moonshot.personal.primary.global.kimi-k2.5",
             ],
           },
         ],
         setup: {
-          recommendedModel: "claude-3.7-sonnet",
+          recommendedModel: "moonshot/kimi-k2.5",
           notes: [
             "Configure downstream tooling as an OpenAI-compatible provider.",
             "Use GET /v1/models to discover the current model ids.",
@@ -1989,8 +2292,8 @@ describe("runtime-host-bridge", () => {
       port: 0,
       registry,
       executeChatCompletions: async () => ({
-        model: "openai/gpt-4.1-mini-fast",
-        endpointId: "openai.personal.primary.us-east-1.fast",
+        model: "moonshot/kimi-k2.5",
+        endpointId: "moonshot.personal.primary.global.kimi-k2.5",
         adapterFamily: "ai-sdk-openai",
         routingDecisionId: "decision-chat-123",
         outputText: "Routed summary",
@@ -2012,14 +2315,14 @@ describe("runtime-host-bridge", () => {
           "content-type": "application/json",
         },
         body: JSON.stringify({
-          model: "openai/gpt-4.1-mini-fast",
+          model: "moonshot/kimi-k2.5",
           messages: [{ role: "user", content: "Summarize the routing result." }],
         }),
       });
 
       expect(response.status).toBe(200);
       expect(response.headers.get("x-role-model-endpoint-id")).toBe(
-        "openai.personal.primary.us-east-1.fast",
+        "moonshot.personal.primary.global.kimi-k2.5",
       );
       expect(response.headers.get("x-role-model-adapter-family")).toBe("ai-sdk-openai");
       expect(response.headers.get("x-role-model-routing-decision-id")).toBe("decision-chat-123");
@@ -2028,7 +2331,7 @@ describe("runtime-host-bridge", () => {
         id: "chatcmpl-role-model",
         object: "chat.completion",
         created: expect.any(Number),
-        model: "openai/gpt-4.1-mini-fast",
+        model: "moonshot/kimi-k2.5",
         choices: [
           {
             index: 0,
@@ -2103,10 +2406,10 @@ describe("runtime-host-bridge", () => {
           response: {
             id: "resp_123",
             created_at: 1,
-            model: "openai/gpt-4.1-mini-fast",
+            model: "moonshot/kimi-k2.5",
           },
         }, {
-          endpointId: "openai.personal.primary.us-east-1.fast",
+          endpointId: "moonshot.personal.primary.global.kimi-k2.5",
           adapterFamily: "ai-sdk-openai",
           routingDecisionId: "decision-responses-stream-123",
         });
@@ -2116,7 +2419,7 @@ describe("runtime-host-bridge", () => {
           item_id: "msg_1",
           delta: "Ready now",
         }, {
-          endpointId: "openai.personal.primary.us-east-1.fast",
+          endpointId: "moonshot.personal.primary.global.kimi-k2.5",
           adapterFamily: "ai-sdk-openai",
           routingDecisionId: "decision-responses-stream-123",
         });
@@ -2130,15 +2433,15 @@ describe("runtime-host-bridge", () => {
             },
           },
         }, {
-          endpointId: "openai.personal.primary.us-east-1.fast",
+          endpointId: "moonshot.personal.primary.global.kimi-k2.5",
           adapterFamily: "ai-sdk-openai",
           routingDecisionId: "decision-responses-stream-123",
         });
         executionCompleted = true;
         return {
           responseId: "resp_123",
-          model: "openai/gpt-4.1-mini-fast",
-          endpointId: "openai.personal.primary.us-east-1.fast",
+          model: "moonshot/kimi-k2.5",
+          endpointId: "moonshot.personal.primary.global.kimi-k2.5",
           adapterFamily: "ai-sdk-openai",
           routingDecisionId: "decision-responses-stream-123",
           outputText: "Ready now",
@@ -2161,7 +2464,7 @@ describe("runtime-host-bridge", () => {
           "content-type": "application/json",
         },
         body: JSON.stringify({
-          model: "openai/gpt-4.1-mini-fast",
+          model: "moonshot/kimi-k2.5",
           stream: true,
           input: "Reply with Ready now.",
         }),
@@ -2170,7 +2473,7 @@ describe("runtime-host-bridge", () => {
       expect(response.status).toBe(200);
       expect(response.headers.get("content-type")).toContain("text/event-stream");
       expect(response.headers.get("x-role-model-endpoint-id")).toBe(
-        "openai.personal.primary.us-east-1.fast",
+        "moonshot.personal.primary.global.kimi-k2.5",
       );
       expect(response.headers.get("x-role-model-adapter-family")).toBe("ai-sdk-openai");
       expect(response.headers.get("x-role-model-routing-decision-id")).toBe("decision-responses-stream-123");
@@ -2206,7 +2509,7 @@ describe("runtime-host-bridge", () => {
           response: {
             id: "resp_123",
             created_at: 1,
-            model: "openai/gpt-4.1-mini-fast",
+            model: "moonshot/kimi-k2.5",
           },
         },
         {
@@ -2268,8 +2571,8 @@ describe("runtime-host-bridge", () => {
       port: 0,
       registry,
       executeChatCompletions: async () => ({
-        model: "openai/gpt-4.1-mini-fast",
-        endpointId: "openai.personal.primary.us-east-1.fast",
+        model: "moonshot/kimi-k2.5",
+        endpointId: "moonshot.personal.primary.global.kimi-k2.5",
         adapterFamily: "ai-sdk-openai",
         outputText: "",
         finishReason: "tool_calls",
@@ -2283,7 +2586,7 @@ describe("runtime-host-bridge", () => {
             type: "function",
             function: {
               name: "lookupRegistry",
-              arguments: "{\"endpointId\":\"openai.personal.primary.us-east-1.fast\"}",
+              arguments: "{\"endpointId\":\"moonshot.personal.primary.global.kimi-k2.5\"}",
             },
           },
         ],
@@ -2297,7 +2600,7 @@ describe("runtime-host-bridge", () => {
           "content-type": "application/json",
         },
         body: JSON.stringify({
-          model: "openai/gpt-4.1-mini-fast",
+          model: "moonshot/kimi-k2.5",
           messages: [{ role: "user", content: "Use the registry tool." }],
         }),
       });
@@ -2307,7 +2610,7 @@ describe("runtime-host-bridge", () => {
         id: "chatcmpl-role-model",
         object: "chat.completion",
         created: expect.any(Number),
-        model: "openai/gpt-4.1-mini-fast",
+        model: "moonshot/kimi-k2.5",
         choices: [
           {
             index: 0,
@@ -2321,7 +2624,7 @@ describe("runtime-host-bridge", () => {
                   function: {
                     name: "lookupRegistry",
                     arguments:
-                      "{\"endpointId\":\"openai.personal.primary.us-east-1.fast\"}",
+                      "{\"endpointId\":\"moonshot.personal.primary.global.kimi-k2.5\"}",
                   },
                 },
               ],
@@ -2379,7 +2682,7 @@ describe("runtime-host-bridge", () => {
           id: "chatcmpl-role-model",
           object: "chat.completion.chunk",
           created: 1,
-          model: "openai/gpt-4.1-mini-fast",
+          model: "moonshot/kimi-k2.5",
           choices: [
             {
               index: 0,
@@ -2391,7 +2694,7 @@ describe("runtime-host-bridge", () => {
             },
           ],
         }, {
-          endpointId: "openai.personal.primary.us-east-1.fast",
+          endpointId: "moonshot.personal.primary.global.kimi-k2.5",
           adapterFamily: "ai-sdk-openai",
           routingDecisionId: "decision-chat-stream-123",
         });
@@ -2400,7 +2703,7 @@ describe("runtime-host-bridge", () => {
           id: "chatcmpl-role-model",
           object: "chat.completion.chunk",
           created: 1,
-          model: "openai/gpt-4.1-mini-fast",
+          model: "moonshot/kimi-k2.5",
           choices: [
             {
               index: 0,
@@ -2411,7 +2714,7 @@ describe("runtime-host-bridge", () => {
             },
           ],
         }, {
-          endpointId: "openai.personal.primary.us-east-1.fast",
+          endpointId: "moonshot.personal.primary.global.kimi-k2.5",
           adapterFamily: "ai-sdk-openai",
           routingDecisionId: "decision-chat-stream-123",
         });
@@ -2420,7 +2723,7 @@ describe("runtime-host-bridge", () => {
           id: "chatcmpl-role-model",
           object: "chat.completion.chunk",
           created: 1,
-          model: "openai/gpt-4.1-mini-fast",
+          model: "moonshot/kimi-k2.5",
           choices: [
             {
               index: 0,
@@ -2429,14 +2732,14 @@ describe("runtime-host-bridge", () => {
             },
           ],
         }, {
-          endpointId: "openai.personal.primary.us-east-1.fast",
+          endpointId: "moonshot.personal.primary.global.kimi-k2.5",
           adapterFamily: "ai-sdk-openai",
           routingDecisionId: "decision-chat-stream-123",
         });
         executionCompleted = true;
         return {
-          model: "openai/gpt-4.1-mini-fast",
-          endpointId: "openai.personal.primary.us-east-1.fast",
+          model: "moonshot/kimi-k2.5",
+          endpointId: "moonshot.personal.primary.global.kimi-k2.5",
           adapterFamily: "ai-sdk-openai",
           routingDecisionId: "decision-chat-stream-123",
           outputText: "unexpected",
@@ -2459,7 +2762,7 @@ describe("runtime-host-bridge", () => {
           "content-type": "application/json",
         },
         body: JSON.stringify({
-          model: "openai/gpt-4.1-mini-fast",
+          model: "moonshot/kimi-k2.5",
           stream: true,
           messages: [{ role: "user", content: "Stream this." }],
         }),
@@ -2468,7 +2771,7 @@ describe("runtime-host-bridge", () => {
       expect(response.status).toBe(200);
       expect(response.headers.get("content-type")).toContain("text/event-stream");
       expect(response.headers.get("x-role-model-endpoint-id")).toBe(
-        "openai.personal.primary.us-east-1.fast",
+        "moonshot.personal.primary.global.kimi-k2.5",
       );
       expect(response.headers.get("x-role-model-adapter-family")).toBe("ai-sdk-openai");
       expect(response.headers.get("x-role-model-routing-decision-id")).toBe("decision-chat-stream-123");
@@ -2507,7 +2810,7 @@ describe("runtime-host-bridge", () => {
       expect(payloads[0]).toEqual(
         expect.objectContaining({
           object: "chat.completion.chunk",
-          model: "openai/gpt-4.1-mini-fast",
+          model: "moonshot/kimi-k2.5",
           choices: [
             {
               index: 0,
@@ -2523,7 +2826,7 @@ describe("runtime-host-bridge", () => {
       expect(payloads[1]).toEqual(
         expect.objectContaining({
           object: "chat.completion.chunk",
-          model: "openai/gpt-4.1-mini-fast",
+          model: "moonshot/kimi-k2.5",
           choices: [
             {
               index: 0,
@@ -2538,7 +2841,7 @@ describe("runtime-host-bridge", () => {
       expect(payloads[2]).toEqual(
         expect.objectContaining({
           object: "chat.completion.chunk",
-          model: "openai/gpt-4.1-mini-fast",
+          model: "moonshot/kimi-k2.5",
           choices: [
             {
               index: 0,
@@ -2596,8 +2899,8 @@ describe("runtime-host-bridge", () => {
       executeChatCompletions: async (_body, _requestId, _streamWriter, value) => {
         requestOptions = value;
         return {
-          model: "openai/gpt-4.1-mini-fast",
-          endpointId: "openai.personal.primary.us-east-1.fast",
+          model: "moonshot/kimi-k2.5",
+          endpointId: "moonshot.personal.primary.global.kimi-k2.5",
           adapterFamily: "ai-sdk-openai",
           routingDecisionId: "decision-chat-routing-mode-123",
           outputText: "ok",
@@ -2618,7 +2921,7 @@ describe("runtime-host-bridge", () => {
           "x-role-model-routing-mode": "baseline",
         },
         body: JSON.stringify({
-          model: "openai/gpt-4.1-mini-fast",
+          model: "moonshot/kimi-k2.5",
           messages: [{ role: "user", content: "Respect the override." }],
         }),
       });
@@ -2669,8 +2972,8 @@ describe("runtime-host-bridge", () => {
       executeChatCompletions: async () => {
         executionCalls += 1;
         return {
-          model: "openai/gpt-4.1-mini-fast",
-          endpointId: "openai.personal.primary.us-east-1.fast",
+          model: "moonshot/kimi-k2.5",
+          endpointId: "moonshot.personal.primary.global.kimi-k2.5",
           adapterFamily: "ai-sdk-openai",
           routingDecisionId: "decision-chat-routing-mode-invalid",
           outputText: "unexpected",
@@ -2691,7 +2994,7 @@ describe("runtime-host-bridge", () => {
           "x-role-model-routing-mode": "bogus",
         },
         body: JSON.stringify({
-          model: "openai/gpt-4.1-mini-fast",
+          model: "moonshot/kimi-k2.5",
           messages: [{ role: "user", content: "Reject invalid overrides." }],
         }),
       });
@@ -2748,7 +3051,7 @@ describe("runtime-host-bridge", () => {
 
     const result = await backend.executeChatCompletions(
       {
-        model: "openai/gpt-4.1-mini-fast",
+        model: "moonshot/kimi-k2.5",
         messages: [
           { role: "system", content: "Be concise." },
           { role: "user", content: "Summarize the chosen endpoint." },
@@ -2757,8 +3060,8 @@ describe("runtime-host-bridge", () => {
       "req-runtime-bridge-001",
     );
 
-    expect(result.model).toBe("openai/gpt-4.1-mini-fast");
-    expect(result.endpointId).toBe("openai.personal.primary.us-east-1.fast");
+    expect(result.model).toBe("moonshot/kimi-k2.5");
+    expect(result.endpointId).toBe("moonshot.personal.primary.global.kimi-k2.5");
     expect(result.adapterFamily).toBe("ai-sdk-openai");
     expect(result.outputText.length).toBeGreaterThan(0);
     expect(result.usage.inputTokens).toBeGreaterThan(0);
@@ -2810,7 +3113,7 @@ describe("runtime-host-bridge", () => {
     const firstRequestId = "req-runtime-bridge-observation-001";
     const result = await backend.executeChatCompletions(
       {
-        model: "openai/gpt-4.1-mini-fast",
+        model: "moonshot/kimi-k2.5",
         messages: [{ role: "user", content: "Summarize the chosen endpoint." }],
       },
       firstRequestId,
@@ -2833,7 +3136,7 @@ describe("runtime-host-bridge", () => {
     const secondRequestId = "req-runtime-bridge-observation-002";
     await backend.executeChatCompletions(
       {
-        model: "openai/gpt-4.1-mini-fast",
+        model: "moonshot/kimi-k2.5",
         messages: [{ role: "user", content: "Summarize the chosen endpoint again." }],
       },
       secondRequestId,
@@ -2911,7 +3214,7 @@ describe("runtime-host-bridge", () => {
       const requestId = "req-runtime-bridge-routing-mode-001";
       await backend.executeChatCompletions(
         {
-          model: "openai/gpt-4.1-mini-fast",
+          model: "moonshot/kimi-k2.5",
           messages: [{ role: "user", content: "Keep the exact-model route and record the rewrite receipt." }],
         },
         requestId,
@@ -2930,13 +3233,115 @@ describe("runtime-host-bridge", () => {
             effectiveMode: "baseline",
           },
           rewrite: {
-            requestedModel: "openai/gpt-4.1-mini-fast",
-            downstreamModelId: "openai/gpt-4.1-mini-fast",
+            requestedModel: "moonshot/kimi-k2.5",
+            downstreamModelId: "moonshot/kimi-k2.5",
             applied: false,
             reason: "requested-model-matches-downstream",
           },
         },
       });
+    } finally {
+      await rm(runtimeStateRoot, { recursive: true, force: true });
+    }
+  });
+
+  test("does not seed placeholder Anthropic/OpenAI accounts, endpoints, models, or router guidance in the default runtime bootstrap", async () => {
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-host-default-fixture-tests-"));
+
+    try {
+      const backend = await (
+        bridge as {
+          createRuntimeBridgeBackend: (options: {
+            repoRoot: string;
+            fixtureRoot: string;
+            runtimeStateRoot: string;
+            scopeId: string;
+          }) => Promise<{
+            registry: EndpointRegistryResult;
+            listAccounts: () => Promise<
+              readonly {
+                providerAccountId: string;
+              }[]
+            >;
+            listEndpoints: () => Promise<
+              readonly {
+                endpointId: string;
+              }[]
+            >;
+            readRouterSummary: () => Promise<{
+              controller?: {
+                endpointId?: string | null;
+              } | null;
+              guidance?: {
+                endpointId?: string | null;
+                preferredEndpointIds?: readonly string[];
+                ignoredEndpointIds?: readonly string[];
+              } | null;
+            }>;
+            readRouterConfig: () => Promise<{
+              controller?: {
+                endpointId?: string | null;
+              } | null;
+              guidance?: {
+                endpointId?: string | null;
+                preferredEndpointIds?: readonly string[];
+                ignoredEndpointIds?: readonly string[];
+              } | null;
+              policySources?: {
+                roleBindings?: readonly {
+                  endpoint_id: string;
+                }[];
+              };
+            }>;
+          }>;
+          createModelListResponse: (value: EndpointRegistryResult) => {
+            data: readonly {
+              id: string;
+            }[];
+          };
+        }
+      ).createRuntimeBridgeBackend({
+        repoRoot,
+        fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+        runtimeStateRoot,
+        scopeId: "runtime-host-default-fixture-tests",
+      });
+
+      const accounts = await backend.listAccounts();
+      const endpoints = await backend.listEndpoints();
+      const models = (
+        bridge as {
+          createModelListResponse: (value: EndpointRegistryResult) => { data: readonly { id: string }[] };
+        }
+      ).createModelListResponse(backend.registry);
+      const routerSummary = await backend.readRouterSummary();
+      const routerConfig = await backend.readRouterConfig();
+
+      expect(accounts.map((account) => account.providerAccountId)).not.toEqual(
+        expect.arrayContaining(["openai.personal.primary", "anthropic.team.shared"]),
+      );
+      expect(endpoints.map((endpoint) => endpoint.endpointId)).not.toEqual(
+        expect.arrayContaining([
+          "openai.personal.primary.us-east-1.fast",
+          "anthropic.team.shared.us-east-1.default",
+        ]),
+      );
+      expect(models.data.map((model) => model.id)).not.toEqual(
+        expect.arrayContaining(["openai/gpt-4.1-mini-fast", "claude-3.7-sonnet"]),
+      );
+      expect(routerSummary.controller?.endpointId ?? "").not.toMatch(/openai|anthropic/);
+      expect(routerSummary.guidance?.endpointId ?? "").not.toMatch(/openai|anthropic/);
+      expect(routerSummary.guidance?.preferredEndpointIds ?? []).not.toEqual(
+        expect.arrayContaining(["openai.personal.primary.us-east-1.fast"]),
+      );
+      expect(routerSummary.guidance?.ignoredEndpointIds ?? []).not.toEqual(
+        expect.arrayContaining(["anthropic.team.shared.us-east-1.default"]),
+      );
+      expect(routerConfig.controller?.endpointId ?? "").not.toMatch(/openai|anthropic/);
+      expect(routerConfig.guidance?.endpointId ?? "").not.toMatch(/openai|anthropic/);
+      expect((routerConfig.policySources?.roleBindings ?? []).map((binding) => binding.endpoint_id)).not.toEqual(
+        expect.arrayContaining(["openai.personal.primary.us-east-1.fast"]),
+      );
     } finally {
       await rm(runtimeStateRoot, { recursive: true, force: true });
     }
@@ -4498,8 +4903,8 @@ describe("runtime-host-bridge", () => {
 
     await expect(backend.readControllerAssignment?.()).resolves.toEqual({
       scope: "global",
-      endpointId: "openai.personal.primary.us-east-1.fast",
-      modelId: "openai/gpt-4.1-mini-fast",
+      endpointId: "moonshot.personal.primary.global.kimi-k2.5",
+      modelId: "moonshot/kimi-k2.5",
       sourceType: "remote",
     });
 
@@ -4746,15 +5151,15 @@ describe("runtime-host-bridge", () => {
 
     const result = await backend.executeResponses(
       {
-        model: "openai/gpt-4.1-mini-fast",
+        model: "moonshot/kimi-k2.5",
         input: "Summarize the chosen endpoint.",
       },
       "req-runtime-bridge-responses-001",
     );
 
     expect(result.responseId).toBe("resp_test_01");
-    expect(result.model).toBe("openai/gpt-4.1-mini-fast");
-    expect(result.endpointId).toBe("openai.personal.primary.us-east-1.fast");
+    expect(result.model).toBe("moonshot/kimi-k2.5");
+    expect(result.endpointId).toBe("moonshot.personal.primary.global.kimi-k2.5");
     expect(result.adapterFamily).toBe("ai-sdk-openai");
     expect(result.outputText).toBe("OpenAI summary");
     expect(result.finishReason).toBe("stop");
@@ -4853,7 +5258,7 @@ describe("runtime-host-bridge", () => {
           "x-request-id": requestId,
         },
         body: JSON.stringify({
-          model: "openai/gpt-4.1-mini-fast",
+          model: "moonshot/kimi-k2.5",
           messages: [{ role: "user", content: "Summarize the chosen endpoint." }],
         }),
       });
@@ -4865,7 +5270,7 @@ describe("runtime-host-bridge", () => {
         expect.arrayContaining([
           expect.objectContaining({
             requestId,
-            endpointId: "openai.personal.primary.us-east-1.fast",
+            endpointId: "moonshot.personal.primary.global.kimi-k2.5",
           }),
         ]),
       );
@@ -4894,7 +5299,7 @@ describe("runtime-host-bridge", () => {
       expect(await telemetryRowsResponse.json()).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            endpointId: "openai.personal.primary.us-east-1.fast",
+            endpointId: "moonshot.personal.primary.global.kimi-k2.5",
             sourceType: "remote",
             providerFamily: "ai-sdk-openai",
             promptCacheSupported: false,
@@ -4911,7 +5316,7 @@ describe("runtime-host-bridge", () => {
         expect.arrayContaining([
           expect.objectContaining({
             requestId,
-            endpointId: "openai.personal.primary.us-east-1.fast",
+            endpointId: "moonshot.personal.primary.global.kimi-k2.5",
             sourceType: "remote",
             providerFamily: "ai-sdk-openai",
             finishReason: "stop",
@@ -4930,7 +5335,7 @@ describe("runtime-host-bridge", () => {
       expect(await requestDetailResponse.json()).toEqual(
         expect.objectContaining({
           requestId,
-          endpointId: "openai.personal.primary.us-east-1.fast",
+          endpointId: "moonshot.personal.primary.global.kimi-k2.5",
           sourceType: "remote",
           capturePolicy: expect.objectContaining({
             structuredInspectionAvailable: true,
@@ -4939,14 +5344,14 @@ describe("runtime-host-bridge", () => {
       );
 
       const endpointProfileResponse = await fetch(
-        `http://127.0.0.1:${server.port}/api/role-model/endpoints/openai.personal.primary.us-east-1.fast/profile`,
+        `http://127.0.0.1:${server.port}/api/role-model/endpoints/moonshot.personal.primary.global.kimi-k2.5/profile`,
       );
       expect(endpointProfileResponse.status).toBe(200);
       expect(await endpointProfileResponse.json()).toEqual(
         expect.objectContaining({
-          endpointId: "openai.personal.primary.us-east-1.fast",
+          endpointId: "moonshot.personal.primary.global.kimi-k2.5",
           latestProfile: expect.objectContaining({
-            endpoint_id: "openai.personal.primary.us-east-1.fast",
+            endpoint_id: "moonshot.personal.primary.global.kimi-k2.5",
           }),
         }),
       );
@@ -4982,7 +5387,7 @@ describe("runtime-host-bridge", () => {
 
     expect(typeof backend.readEndpointProfile).toBe("function");
 
-    const endpointId = "openai.personal.primary.us-east-1.fast";
+    const endpointId = "moonshot.personal.primary.global.kimi-k2.5";
     const databasePath = resolveSqliteMemoryLocation({
       runtimeStateRoot,
       scopeId,
@@ -5168,7 +5573,7 @@ describe("runtime-host-bridge", () => {
           "x-request-id": "req-runtime-bridge-sse-001",
         },
         body: JSON.stringify({
-          model: "openai/gpt-4.1-mini-fast",
+          model: "moonshot/kimi-k2.5",
           messages: [{ role: "user", content: "Summarize the chosen endpoint." }],
         }),
       });
