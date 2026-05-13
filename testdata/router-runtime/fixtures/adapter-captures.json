@@ -1,7 +1,1 @@
-{
-  "byEndpointId": {
-    "test.capture.chat-v1": {
-      "responseFixture": "adapter-openai-response.json"
-    }
-  }
-}
+{"byEndpointId":{}}

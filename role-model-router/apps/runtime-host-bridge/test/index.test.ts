@@ -1,4 +1,4 @@
-﻿import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vitest";
 import os from "node:os";
 import path from "node:path";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
@@ -17,6 +17,7 @@ import { createQaFixtureRoot, createQaServerOptions } from "../scripts/start-for
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "..", "..", "..", "..");
+const testFixtureRoot = path.join(__dirname, "fixtures");
 
 const registry: EndpointRegistryResult = {
   endpoints: [
@@ -3042,7 +3043,7 @@ describe("runtime-host-bridge", () => {
       }
     ).createRuntimeBridgeBackend({
       repoRoot,
-      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      fixtureRoot: testFixtureRoot,
       runtimeStateRoot: path.join(os.tmpdir(), "role-model-runtime-host-bridge-tests"),
       scopeId: "runtime-host-bridge-tests",
     });
@@ -3102,7 +3103,7 @@ describe("runtime-host-bridge", () => {
       }
     ).createRuntimeBridgeBackend({
       repoRoot,
-      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      fixtureRoot: testFixtureRoot,
       runtimeStateRoot: path.join(os.tmpdir(), "role-model-runtime-host-observation-tests"),
       scopeId: "runtime-host-observation-tests",
     });
@@ -3206,7 +3207,7 @@ describe("runtime-host-bridge", () => {
         }
       ).createRuntimeBridgeBackend({
         repoRoot,
-        fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+        fixtureRoot: testFixtureRoot,
         runtimeStateRoot,
         scopeId: "runtime-host-routing-mode-tests",
       });
@@ -3302,7 +3303,7 @@ describe("runtime-host-bridge", () => {
         }
       ).createRuntimeBridgeBackend({
         repoRoot,
-        fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+        fixtureRoot: testFixtureRoot,
         runtimeStateRoot,
         scopeId: "runtime-host-default-fixture-tests",
       });
@@ -3403,7 +3404,7 @@ describe("runtime-host-bridge", () => {
       }
     ).createRuntimeBridgeBackend({
       repoRoot,
-      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      fixtureRoot: testFixtureRoot,
       runtimeStateRoot,
       scopeId: "runtime-host-alias-tests",
       unifiedRuntimeConfigPath,
@@ -3494,7 +3495,7 @@ describe("runtime-host-bridge", () => {
       }
     ).createRuntimeBridgeBackend({
       repoRoot,
-      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      fixtureRoot: testFixtureRoot,
       runtimeStateRoot,
       scopeId: "runtime-host-difficulty-tests",
       unifiedRuntimeConfigPath,
@@ -3635,7 +3636,7 @@ describe("runtime-host-bridge", () => {
       }
     ).createRuntimeBridgeBackend({
       repoRoot,
-      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      fixtureRoot: testFixtureRoot,
       runtimeStateRoot,
       scopeId,
       unifiedRuntimeConfigPath,
@@ -3815,7 +3816,7 @@ describe("runtime-host-bridge", () => {
       }
     ).createRuntimeBridgeBackend({
       repoRoot,
-      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      fixtureRoot: testFixtureRoot,
       runtimeStateRoot,
       scopeId,
       unifiedRuntimeConfigPath,
@@ -4026,7 +4027,7 @@ describe("runtime-host-bridge", () => {
       }
     ).createRuntimeBridgeBackend({
       repoRoot,
-      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      fixtureRoot: testFixtureRoot,
       runtimeStateRoot,
       scopeId: "runtime-host-difficulty-classifier-tests",
       unifiedRuntimeConfigPath,
@@ -4114,7 +4115,7 @@ describe("runtime-host-bridge", () => {
       }
     ).createRuntimeBridgeBackend({
       repoRoot,
-      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      fixtureRoot: testFixtureRoot,
       runtimeStateRoot,
       scopeId: "runtime-host-controller-tests",
       unifiedRuntimeConfigPath,
@@ -4212,7 +4213,7 @@ describe("runtime-host-bridge", () => {
       }
     ).createRuntimeBridgeBackend({
       repoRoot,
-      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      fixtureRoot: testFixtureRoot,
       runtimeStateRoot,
       scopeId: "runtime-host-hybrid-tests",
       unifiedRuntimeConfigPath,
@@ -4326,7 +4327,7 @@ describe("runtime-host-bridge", () => {
       }
     ).createRuntimeBridgeBackend({
       repoRoot,
-      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      fixtureRoot: testFixtureRoot,
       runtimeStateRoot,
       scopeId: "runtime-host-difficulty-timeout-tests",
       unifiedRuntimeConfigPath,
@@ -4429,7 +4430,7 @@ describe("runtime-host-bridge", () => {
       }
     ).createRuntimeBridgeBackend({
       repoRoot,
-      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      fixtureRoot: testFixtureRoot,
       runtimeStateRoot,
       scopeId: "runtime-host-difficulty-cache-tests",
       unifiedRuntimeConfigPath,
@@ -4573,7 +4574,7 @@ describe("runtime-host-bridge", () => {
       }
     ).createRuntimeBridgeBackend({
       repoRoot,
-      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      fixtureRoot: testFixtureRoot,
       runtimeStateRoot,
       scopeId: "runtime-host-difficulty-invalidation-tests",
       unifiedRuntimeConfigPath,
@@ -4660,7 +4661,7 @@ describe("runtime-host-bridge", () => {
       }
     ).createRuntimeBridgeBackend({
       repoRoot,
-      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      fixtureRoot: testFixtureRoot,
       runtimeStateRoot: path.join(os.tmpdir(), controlPlaneTestId),
       scopeId: controlPlaneTestId,
       networkFetcher: async (input, init) => {
@@ -4958,7 +4959,7 @@ describe("runtime-host-bridge", () => {
       }
     ).createRuntimeBridgeBackend({
       repoRoot,
-      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      fixtureRoot: testFixtureRoot,
       runtimeStateRoot: path.join(os.tmpdir(), "role-model-runtime-host-kimi-execution-tests"),
       scopeId: "runtime-host-kimi-execution-tests",
       networkFetcher: async (input, init) => {
@@ -5144,7 +5145,7 @@ describe("runtime-host-bridge", () => {
       }
     ).createRuntimeBridgeBackend({
       repoRoot,
-      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      fixtureRoot: testFixtureRoot,
       runtimeStateRoot: path.join(os.tmpdir(), "role-model-runtime-host-responses-tests"),
       scopeId: "runtime-host-responses-tests",
     });
@@ -5205,7 +5206,7 @@ describe("runtime-host-bridge", () => {
       }
     ).createRuntimeBridgeBackend({
       repoRoot,
-      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      fixtureRoot: testFixtureRoot,
       runtimeStateRoot: path.join(os.tmpdir(), "role-model-runtime-host-route-tests"),
       scopeId: "runtime-host-route-tests",
     });
@@ -5380,7 +5381,7 @@ describe("runtime-host-bridge", () => {
       }
     ).createRuntimeBridgeBackend({
       repoRoot,
-      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      fixtureRoot: testFixtureRoot,
       runtimeStateRoot,
       scopeId,
     });
@@ -5517,7 +5518,7 @@ describe("runtime-host-bridge", () => {
       }
     ).createRuntimeBridgeBackend({
       repoRoot,
-      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      fixtureRoot: testFixtureRoot,
       runtimeStateRoot: path.join(os.tmpdir(), `role-model-runtime-host-sse-tests-${Date.now()}`),
       scopeId: `runtime-host-sse-tests-${Date.now()}`,
     });

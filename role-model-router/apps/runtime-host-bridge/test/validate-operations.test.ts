@@ -10,6 +10,7 @@ import { runRuntimeOperationsValidation } from "../src/validate-operations.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "..", "..", "..", "..");
+const testFixtureRoot = path.join(__dirname, "fixtures");
 
 describe("runRuntimeOperationsValidation", () => {
   test("validates isolated scopes and runtime-state maintenance drills", async () => {
@@ -17,6 +18,7 @@ describe("runRuntimeOperationsValidation", () => {
 
     const result = await runRuntimeOperationsValidation({
       repoRoot,
+      fixtureRoot: testFixtureRoot,
       runtimeStateRoot,
       hostValidation: async () => ({
         requestId: "req-runtime-host-observability-001",

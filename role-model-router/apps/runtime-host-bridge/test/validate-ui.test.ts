@@ -10,6 +10,7 @@ import { runRuntimeUiValidation } from "../src/validate-ui.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "..", "..", "..", "..");
+const testFixtureRoot = path.join(__dirname, "fixtures");
 
 describe("runRuntimeUiValidation", () => {
   test("validates runtime config reads and the main control-plane mutations", async () => {
@@ -32,6 +33,7 @@ describe("runRuntimeUiValidation", () => {
 
     const result = await runRuntimeUiValidation({
       repoRoot,
+      fixtureRoot: testFixtureRoot,
       runtimeStateRoot,
       scopeId: "runtime-ui-validation",
       unifiedRuntimeConfigPath,

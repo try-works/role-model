@@ -31,6 +31,7 @@ export interface RuntimeOperationsValidationOptions {
   readonly runtimeStateRoot: string;
   readonly scopeIds?: readonly [string, string];
   readonly hostValidation?: () => Promise<RuntimeOperationsHostValidationSummary>;
+  readonly fixtureRoot?: string;
 }
 
 export interface RuntimeOperationsValidationResult {
@@ -122,7 +123,7 @@ export async function runRuntimeOperationsValidation(
   ];
   const hostValidation = await (options.hostValidation ?? runDefaultHostValidation)();
 
-  const fixtureRoot = path.join(options.repoRoot, "testdata", "router-runtime", "fixtures");
+  const fixtureRoot = options.fixtureRoot ?? path.join(options.repoRoot, "testdata", "router-runtime", "fixtures");
   const primary = await prepareObservedScope({
     repoRoot: options.repoRoot,
     runtimeStateRoot: options.runtimeStateRoot,

@@ -22,6 +22,7 @@ export interface RuntimeUiValidationOptions {
   readonly runtimeStateRoot: string;
   readonly scopeId: string;
   readonly unifiedRuntimeConfigPath?: string;
+  readonly fixtureRoot?: string;
 }
 
 export interface RuntimeUiValidationResult {
@@ -281,7 +282,7 @@ export async function runRuntimeUiValidation(
     };
 
     const moonshotProvider = providers.find((provider) => provider.providerId === "moonshot");
-    const fixtureRoot = path.join(options.repoRoot, "testdata", "router-runtime", "fixtures");
+    const fixtureRoot = options.fixtureRoot ?? path.join(options.repoRoot, "testdata", "router-runtime", "fixtures");
     const history = await readJson<{
       byEndpointId: Record<string, Parameters<typeof createRuntimeObservationBundle>[0]["priorSamples"]>;
     }>(path.join(options.repoRoot, "testdata", "router-runtime", "observability-history.json"));
