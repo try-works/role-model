@@ -3051,7 +3051,7 @@ describe("runtime-host-bridge", () => {
 
     const result = await backend.executeChatCompletions(
       {
-        model: "moonshot/kimi-k2.5",
+        model: "deepseek/chat-capture-v1",
         messages: [
           { role: "system", content: "Be concise." },
           { role: "user", content: "Summarize the chosen endpoint." },
@@ -3060,9 +3060,9 @@ describe("runtime-host-bridge", () => {
       "req-runtime-bridge-001",
     );
 
-    expect(result.model).toBe("moonshot/kimi-k2.5");
-    expect(result.endpointId).toBe("moonshot.personal.primary.global.kimi-k2.5");
-    expect(result.adapterFamily).toBe("ai-sdk-openai");
+    expect(result.model).toBe("deepseek/chat-capture-v1");
+    expect(result.endpointId).toBe("test.capture.chat-v1");
+    expect(result.adapterFamily).toBe("ai-sdk-openai-compatible");
     expect(result.outputText.length).toBeGreaterThan(0);
     expect(result.usage.inputTokens).toBeGreaterThan(0);
     expect(result.usage.outputTokens).toBeGreaterThan(0);
@@ -3113,7 +3113,7 @@ describe("runtime-host-bridge", () => {
     const firstRequestId = "req-runtime-bridge-observation-001";
     const result = await backend.executeChatCompletions(
       {
-        model: "moonshot/kimi-k2.5",
+        model: "deepseek/chat-capture-v1",
         messages: [{ role: "user", content: "Summarize the chosen endpoint." }],
       },
       firstRequestId,
@@ -3136,7 +3136,7 @@ describe("runtime-host-bridge", () => {
     const secondRequestId = "req-runtime-bridge-observation-002";
     await backend.executeChatCompletions(
       {
-        model: "moonshot/kimi-k2.5",
+        model: "deepseek/chat-capture-v1",
         messages: [{ role: "user", content: "Summarize the chosen endpoint again." }],
       },
       secondRequestId,
@@ -3214,7 +3214,7 @@ describe("runtime-host-bridge", () => {
       const requestId = "req-runtime-bridge-routing-mode-001";
       await backend.executeChatCompletions(
         {
-          model: "moonshot/kimi-k2.5",
+          model: "deepseek/chat-capture-v1",
           messages: [{ role: "user", content: "Keep the exact-model route and record the rewrite receipt." }],
         },
         requestId,
@@ -3233,8 +3233,8 @@ describe("runtime-host-bridge", () => {
             effectiveMode: "baseline",
           },
           rewrite: {
-            requestedModel: "moonshot/kimi-k2.5",
-            downstreamModelId: "moonshot/kimi-k2.5",
+            requestedModel: "deepseek/chat-capture-v1",
+            downstreamModelId: "deepseek/chat-capture-v1",
             applied: false,
             reason: "requested-model-matches-downstream",
           },
@@ -4903,8 +4903,8 @@ describe("runtime-host-bridge", () => {
 
     await expect(backend.readControllerAssignment?.()).resolves.toEqual({
       scope: "global",
-      endpointId: "moonshot.personal.primary.global.kimi-k2.5",
-      modelId: "moonshot/kimi-k2.5",
+      endpointId: "test.capture.chat-v1",
+      modelId: "deepseek/chat-capture-v1",
       sourceType: "remote",
     });
 
@@ -5151,16 +5151,16 @@ describe("runtime-host-bridge", () => {
 
     const result = await backend.executeResponses(
       {
-        model: "moonshot/kimi-k2.5",
+        model: "deepseek/chat-capture-v1",
         input: "Summarize the chosen endpoint.",
       },
       "req-runtime-bridge-responses-001",
     );
 
     expect(result.responseId).toBe("resp_test_01");
-    expect(result.model).toBe("moonshot/kimi-k2.5");
-    expect(result.endpointId).toBe("moonshot.personal.primary.global.kimi-k2.5");
-    expect(result.adapterFamily).toBe("ai-sdk-openai");
+    expect(result.model).toBe("deepseek/chat-capture-v1");
+    expect(result.endpointId).toBe("test.capture.chat-v1");
+    expect(result.adapterFamily).toBe("ai-sdk-openai-compatible");
     expect(result.outputText).toBe("OpenAI summary");
     expect(result.finishReason).toBe("stop");
     expect(result.usage.inputTokens).toBe(32);
@@ -5258,7 +5258,7 @@ describe("runtime-host-bridge", () => {
           "x-request-id": requestId,
         },
         body: JSON.stringify({
-          model: "moonshot/kimi-k2.5",
+          model: "deepseek/chat-capture-v1",
           messages: [{ role: "user", content: "Summarize the chosen endpoint." }],
         }),
       });
@@ -5270,7 +5270,7 @@ describe("runtime-host-bridge", () => {
         expect.arrayContaining([
           expect.objectContaining({
             requestId,
-            endpointId: "moonshot.personal.primary.global.kimi-k2.5",
+            endpointId: "test.capture.chat-v1",
           }),
         ]),
       );
@@ -5299,9 +5299,9 @@ describe("runtime-host-bridge", () => {
       expect(await telemetryRowsResponse.json()).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            endpointId: "moonshot.personal.primary.global.kimi-k2.5",
+            endpointId: "test.capture.chat-v1",
             sourceType: "remote",
-            providerFamily: "ai-sdk-openai",
+            providerFamily: "ai-sdk-openai-compatible",
             promptCacheSupported: false,
             requestCount: 1,
           }),
@@ -5316,9 +5316,9 @@ describe("runtime-host-bridge", () => {
         expect.arrayContaining([
           expect.objectContaining({
             requestId,
-            endpointId: "moonshot.personal.primary.global.kimi-k2.5",
+            endpointId: "test.capture.chat-v1",
             sourceType: "remote",
-            providerFamily: "ai-sdk-openai",
+            providerFamily: "ai-sdk-openai-compatible",
             finishReason: "stop",
             promptCacheSupported: false,
             streamTextDeltaCount: 1,
@@ -5335,7 +5335,7 @@ describe("runtime-host-bridge", () => {
       expect(await requestDetailResponse.json()).toEqual(
         expect.objectContaining({
           requestId,
-          endpointId: "moonshot.personal.primary.global.kimi-k2.5",
+          endpointId: "test.capture.chat-v1",
           sourceType: "remote",
           capturePolicy: expect.objectContaining({
             structuredInspectionAvailable: true,
@@ -5344,14 +5344,14 @@ describe("runtime-host-bridge", () => {
       );
 
       const endpointProfileResponse = await fetch(
-        `http://127.0.0.1:${server.port}/api/role-model/endpoints/moonshot.personal.primary.global.kimi-k2.5/profile`,
+        `http://127.0.0.1:${server.port}/api/role-model/endpoints/test.capture.chat-v1/profile`,
       );
       expect(endpointProfileResponse.status).toBe(200);
       expect(await endpointProfileResponse.json()).toEqual(
         expect.objectContaining({
-          endpointId: "moonshot.personal.primary.global.kimi-k2.5",
+          endpointId: "test.capture.chat-v1",
           latestProfile: expect.objectContaining({
-            endpoint_id: "moonshot.personal.primary.global.kimi-k2.5",
+            endpoint_id: "test.capture.chat-v1",
           }),
         }),
       );
@@ -5573,7 +5573,7 @@ describe("runtime-host-bridge", () => {
           "x-request-id": "req-runtime-bridge-sse-001",
         },
         body: JSON.stringify({
-          model: "moonshot/kimi-k2.5",
+          model: "deepseek/chat-capture-v1",
           messages: [{ role: "user", content: "Summarize the chosen endpoint." }],
         }),
       });

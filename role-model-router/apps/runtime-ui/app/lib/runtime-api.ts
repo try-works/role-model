@@ -461,6 +461,93 @@ export interface RuntimeRequestDetail {
 }
 
 
+export interface RouterSummary {
+  readonly strategy: string | null;
+  readonly executionMode: "decision_only" | "hybrid" | "local_only" | "remote_only";
+  readonly controller: RuntimeControllerAssignment | null;
+  readonly configuredCandidateCount: number;
+  readonly recentDecisionCount: number;
+  readonly guidance?: {
+    readonly endpointId?: string | null;
+    readonly preferredEndpointIds?: readonly string[];
+    readonly ignoredEndpointIds?: readonly string[];
+  };
+}
+
+
+export interface RouterConfig {
+  readonly persisted: {
+    readonly strategy: string | null;
+    readonly executionMode: "decision_only" | "hybrid" | "local_only" | "remote_only";
+  };
+  readonly controller: RuntimeControllerAssignment | null;
+  readonly guidance: {
+    readonly endpointId?: string | null;
+    readonly preferredEndpointIds: readonly string[];
+    readonly ignoredEndpointIds: readonly string[];
+  };
+  readonly sources?: Record<string, unknown>;
+  readonly policySources: {
+    readonly roles: readonly Record<string, unknown>[];
+    readonly tasks: readonly Record<string, unknown>[];
+    readonly roleBindings?: readonly Record<string, unknown>[];
+  };
+}
+
+
+export interface RouterCandidate {
+  readonly endpointId: string;
+  readonly modelId: string;
+  readonly providerId: string | null;
+  readonly sourceType: "local" | "remote";
+  readonly endpointKind?: string;
+  readonly servingSource?: string;
+  readonly healthStatus?: string;
+  readonly status?: string;
+  readonly controllerEligible?: boolean;
+  readonly preferred?: boolean;
+  readonly ignored?: boolean;
+  readonly roleBindings?: readonly string[];
+  readonly capabilities?: readonly string[];
+  readonly toolCallingSupported?: boolean;
+  readonly toolCallingStyle?: string;
+  readonly latestProfile?: Record<string, unknown> | null;
+  readonly recentSamples?: readonly unknown[];
+  readonly difficultyProfiles?: Record<string, unknown>;
+  readonly advisoryMaxDifficultyRecommendation?: Record<string, unknown> | null;
+}
+
+
+export interface RouterDecisionListItem {
+  readonly requestId: string;
+  readonly routingDecisionId: string | null;
+  readonly selectedEndpointId: string;
+  readonly selectedModelId: string | null;
+  readonly strategyLabel: string | null;
+  readonly decidedAtMs?: number;
+  readonly sourceType?: "local" | "remote";
+  readonly providerId?: string | null;
+  readonly finishReason?: string | null;
+}
+
+
+export interface RouterDecisionDetail {
+  readonly requestId: string;
+  readonly routingDecisionId: string | null;
+  readonly selectedEndpointId: string;
+  readonly selectedModelId: string | null;
+  readonly fallbackEndpointIds: readonly string[];
+  readonly strategyLabel: string | null;
+  readonly decision?: Record<string, unknown> | null;
+  readonly routingDiagnostics?: Record<string, unknown> | null;
+  readonly retrievalReceipt?: Record<string, unknown> | null;
+  readonly contextEnvelope?: Record<string, unknown> | null;
+  readonly request: RuntimeRequestDetail;
+  readonly endpointProfile: RuntimeEndpointProfile | null;
+  readonly observeRequestPath: string;
+}
+
+
 export interface RuntimeEndpointProfile {
   readonly endpointId: string;
   readonly latestProfile: Record<string, unknown> | null;
@@ -726,6 +813,42 @@ export async function fetchRequestDetail(
     request,
     endpointProfile,
   };
+}
+
+
+export async function fetchRouterSummary(
+  fetcher: RuntimeFetcher = fetch,
+): Promise<RouterSummary> {
+  return fetchJson<RouterSummary>("/api/role-model/router/summary", fetcher);
+}
+
+
+export async function fetchRouterConfig(
+  fetcher: RuntimeFetcher = fetch,
+): Promise<RouterConfig> {
+  return fetchJson<RouterConfig>("/api/role-model/router/config", fetcher);
+}
+
+
+export async function fetchRouterCandidates(
+  fetcher: RuntimeFetcher = fetch,
+): Promise<RouterCandidate[]> {
+  return fetchJson<RouterCandidate[]>("/api/role-model/router/candidates", fetcher);
+}
+
+
+export async function fetchRouterDecisions(
+  fetcher: RuntimeFetcher = fetch,
+): Promise<RouterDecisionListItem[]> {
+  return fetchJson<RouterDecisionListItem[]>("/api/role-model/router/decisions", fetcher);
+}
+
+
+export async function fetchRouterDecisionDetail(
+  requestId: string,
+  fetcher: RuntimeFetcher = fetch,
+): Promise<RouterDecisionDetail> {
+  return fetchJson<RouterDecisionDetail>(`/api/role-model/router/decisions/${encodeURIComponent(requestId)}`, fetcher);
 }
 
 

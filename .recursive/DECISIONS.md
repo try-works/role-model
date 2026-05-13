@@ -878,4 +878,34 @@
   - no separate browser automation harness was added; the run stayed on the repo-owned runtime UI and validator stack
 - Known issues / follow-ups:
   - persisted routing receipts remain owned by request-observation surfaces, so the workbench result panel still hands operators to the telemetry ledger or request detail for durable receipt verification rather than embedding synthetic response-body copies
+
+### Run `32-router-runtime-routing-operator-surface`
+
+- Run folder: `/.recursive/run/32-router-runtime-routing-operator-surface/`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `03.5-code-review.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - the runtime UI now exposes a first-class `Router` section with overview, config, candidates, decisions, and request-keyed decision-detail pages
+  - the runtime host bridge now exposes a structured `/api/role-model/router/*` family and the frontend consumes it through typed runtime API helpers instead of scraping raw request bundles inline
+  - the live-QA bootstrap now uses the complete fixture bundle and forwards the Router readers into `startBridgeServer`, and the Router detail page now ignores stale async completions after rapid navigation
+- Why:
+  - to close the remaining operator-visibility gap left after run 30 by making routing configuration, candidate posture, and per-request decisions legible in the shipped runtime UI rather than scattering them across Control, Observe, and raw JSON
+- How:
+  - implemented with design-system-first RED/GREEN updates, backend Router API TDD, frontend runtime API and page TDD, focused package validation, a code-review hardening pass, and live browser-backed runtime QA against a seeded routed request
+- What was not done:
+  - no new routing strategies beyond the already locked runtime-routing program were introduced
+  - no broad repo-wide formatter or baseline hygiene remediation was widened into this run
+- Known issues / follow-ups:
+  - root `ci:check` still reproduces the inherited Phase 0 formatter-drift failure in `biome check .`
+  - the runtime-ui package test script may need future runner hardening on this Windows environment because the default multi-worker Vitest invocation can OOM during teardown even when the suites themselves pass
   - the advanced raw runtime-config editor remains intentionally available as an escape hatch beside the new structured routing-strategy surface

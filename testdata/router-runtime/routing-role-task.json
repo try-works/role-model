@@ -40,14 +40,5 @@
       "effective_capabilities": ["code.edit", "reasoning.multi_step"],
       "effective_task_types": ["code.edit"]
     },
-    {
-      "binding_id": "binding-moonshot",
-      "role_id": "developer",
-      "endpoint_id": "moonshot.personal.primary.global.kimi-k2.5",
-      "status": "active",
-      "policy_overrides": {},
-      "effective_capabilities": ["code.edit"],
-      "effective_task_types": ["code.edit"]
-    }
   ]
 }

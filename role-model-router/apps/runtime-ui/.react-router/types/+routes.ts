@@ -68,6 +68,23 @@ type Pages = {
   "/app/control/models": {
     params: {};
   };
+  "/app/router": {
+    params: {};
+  };
+  "/app/router/config": {
+    params: {};
+  };
+  "/app/router/candidates": {
+    params: {};
+  };
+  "/app/router/decisions": {
+    params: {};
+  };
+  "/app/router/decisions/:requestId": {
+    params: {
+      "requestId": string;
+    };
+  };
   "/app/observe/activity": {
     params: {};
   };
@@ -104,7 +121,7 @@ type Pages = {
 type RouteFiles = {
   "root.tsx": {
     id: "root";
-    page: "/" | "/app" | "/app/studio/chat" | "/app/studio/images" | "/app/studio/audio" | "/app/studio/rerank" | "/app/studio/advanced" | "/app/local/models" | "/app/local/swap" | "/app/local/policy" | "/app/local/logs" | "/app/local/matrix" | "/app/local/peers" | "/app/control/providers" | "/app/control/routing-strategy" | "/app/control/runtime-config" | "/app/control/controller" | "/app/control/endpoints" | "/app/control/models" | "/app/observe/activity" | "/app/observe/requests" | "/app/observe/requests/:requestId" | "/app/observe/logs" | "/app/integrations/downstream" | "/app/integrations/upstream" | "/app/system/runtime" | "/app/system/peers" | "/*";
+    page: "/" | "/app" | "/app/studio/chat" | "/app/studio/images" | "/app/studio/audio" | "/app/studio/rerank" | "/app/studio/advanced" | "/app/local/models" | "/app/local/swap" | "/app/local/policy" | "/app/local/logs" | "/app/local/matrix" | "/app/local/peers" | "/app/control/providers" | "/app/control/routing-strategy" | "/app/control/runtime-config" | "/app/control/controller" | "/app/control/endpoints" | "/app/control/models" | "/app/router" | "/app/router/config" | "/app/router/candidates" | "/app/router/decisions" | "/app/router/decisions/:requestId" | "/app/observe/activity" | "/app/observe/requests" | "/app/observe/requests/:requestId" | "/app/observe/logs" | "/app/integrations/downstream" | "/app/integrations/upstream" | "/app/system/runtime" | "/app/system/peers" | "/*";
   };
   "routes/index.tsx": {
     id: "routes/index";
@@ -112,7 +129,7 @@ type RouteFiles = {
   };
   "routes/app-layout.tsx": {
     id: "routes/app-layout";
-    page: "/app" | "/app/studio/chat" | "/app/studio/images" | "/app/studio/audio" | "/app/studio/rerank" | "/app/studio/advanced" | "/app/local/models" | "/app/local/swap" | "/app/local/policy" | "/app/local/logs" | "/app/local/matrix" | "/app/local/peers" | "/app/control/providers" | "/app/control/routing-strategy" | "/app/control/runtime-config" | "/app/control/controller" | "/app/control/endpoints" | "/app/control/models" | "/app/observe/activity" | "/app/observe/requests" | "/app/observe/requests/:requestId" | "/app/observe/logs" | "/app/integrations/downstream" | "/app/integrations/upstream" | "/app/system/runtime" | "/app/system/peers";
+    page: "/app" | "/app/studio/chat" | "/app/studio/images" | "/app/studio/audio" | "/app/studio/rerank" | "/app/studio/advanced" | "/app/local/models" | "/app/local/swap" | "/app/local/policy" | "/app/local/logs" | "/app/local/matrix" | "/app/local/peers" | "/app/control/providers" | "/app/control/routing-strategy" | "/app/control/runtime-config" | "/app/control/controller" | "/app/control/endpoints" | "/app/control/models" | "/app/router" | "/app/router/config" | "/app/router/candidates" | "/app/router/decisions" | "/app/router/decisions/:requestId" | "/app/observe/activity" | "/app/observe/requests" | "/app/observe/requests/:requestId" | "/app/observe/logs" | "/app/integrations/downstream" | "/app/integrations/upstream" | "/app/system/runtime" | "/app/system/peers";
   };
   "routes/dashboard.tsx": {
     id: "routes/dashboard";
@@ -186,6 +203,26 @@ type RouteFiles = {
     id: "routes/control-models";
     page: "/app/control/models";
   };
+  "routes/router.tsx": {
+    id: "routes/router";
+    page: "/app/router";
+  };
+  "routes/router-config.tsx": {
+    id: "routes/router-config";
+    page: "/app/router/config";
+  };
+  "routes/router-candidates.tsx": {
+    id: "routes/router-candidates";
+    page: "/app/router/candidates";
+  };
+  "routes/router-decisions.tsx": {
+    id: "routes/router-decisions";
+    page: "/app/router/decisions";
+  };
+  "routes/router-decision-detail.tsx": {
+    id: "routes/router-decision-detail";
+    page: "/app/router/decisions/:requestId";
+  };
   "routes/observe-activity.tsx": {
     id: "routes/observe-activity";
     page: "/app/observe/activity";
@@ -246,6 +283,11 @@ type RouteModules = {
   "routes/control-controller": typeof import("./app/routes/control-controller.tsx");
   "routes/endpoints": typeof import("./app/routes/endpoints.tsx");
   "routes/control-models": typeof import("./app/routes/control-models.tsx");
+  "routes/router": typeof import("./app/routes/router.tsx");
+  "routes/router-config": typeof import("./app/routes/router-config.tsx");
+  "routes/router-candidates": typeof import("./app/routes/router-candidates.tsx");
+  "routes/router-decisions": typeof import("./app/routes/router-decisions.tsx");
+  "routes/router-decision-detail": typeof import("./app/routes/router-decision-detail.tsx");
   "routes/observe-activity": typeof import("./app/routes/observe-activity.tsx");
   "routes/requests": typeof import("./app/routes/requests.tsx");
   "routes/request-detail": typeof import("./app/routes/request-detail.tsx");

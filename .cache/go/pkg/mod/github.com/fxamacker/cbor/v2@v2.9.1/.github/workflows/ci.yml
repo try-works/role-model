@@ -1,0 +1,59 @@
+# GitHub Actions - CI for Go to build & test.
+# https://github.com/fxamacker/cbor/workflows/ci.yml
+# See ci-go-cover.yml for coverage and safer-golangci-lint.yml for linting.
+name: ci
+
+# Revoke default permissions.
+permissions: {}
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches:
+      - 'main'
+      - 'master'
+      - 'release**'   # Match both 'release-v2.3.4' and 'release/*'.
+      - 'feature/**'
+      - 'v**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  # Test on various OS with default Go version. 
+  tests:
+    name: test ${{matrix.os}} go-${{ matrix.go-version }}
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read    
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-latest, windows-latest]
+        go-version: ['1.20', 1.21, 1.22, 1.23, 1.24, 1.25]
+    steps:
+    - name: Install Go
+      uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
+      with:
+        go-version: ${{ matrix.go-version }}
+        check-latest: true
+        
+    - name: Checkout code
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      with:
+        fetch-depth: 1
+
+    - name: Print Go version
+      run: go version
+
+    - name: Get dependencies
+      run: go get -v -t -d ./...
+      
+    - name: Build project
+      run: go build ./...
+      
+    - name: Run tests
+      run: |
+        go version
+        go test -race -v ./...

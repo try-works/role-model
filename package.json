@@ -25,7 +25,7 @@
     "catalog:export": "corepack pnpm --filter @role-model-router/catalog exec tsx src/cli.ts",
     "runtime:validate-adapter": "corepack pnpm --filter @role-model-router/adapter-execution exec tsx src/cli.ts",
     "runtime:validate-host": "corepack pnpm --filter @role-model-router/runtime-host-bridge exec tsx src/validate-host.ts",
-    "runtime:package-sea": "corepack pnpm --filter @role-model-router/runtime-host-bridge... build && corepack pnpm --filter @role-model-router/runtime-host-bridge run package-sea",
+    "runtime:package-sea": "corepack pnpm --filter @role-model-router/runtime-ui build && corepack pnpm --filter @role-model-router/runtime-host-bridge... build && corepack pnpm --filter @role-model-router/runtime-host-bridge run package-sea",
     "runtime:validate-packaging": "corepack pnpm run runtime:package-sea && corepack pnpm --filter @role-model-router/runtime-host-bridge run validate-packaging",
     "runtime:validate-vendors": "corepack pnpm --filter @role-model-router/runtime-host-bridge exec tsx src/validate-vendors.ts",
     "runtime:validate-ui": "corepack pnpm --filter @role-model-router/runtime-host-bridge exec tsx src/validate-ui.ts",

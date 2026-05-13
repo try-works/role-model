@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router";
+import { Link, useLocation } from "react-router";
 
 import { CodeBlock, EmptyState, ErrorState, FactCard, LoadingState, PageHeader, SectionCard, StatusPill } from "../components/page-primitives";
 import { fieldClassName, mutedPanelClassName, primaryButtonClassName } from "../lib/design-system";
@@ -25,12 +25,34 @@ function formatRoutingModeLabel(value: "" | NonNullable<WorkbenchChatInput["rout
   return value.slice(0, 1).toUpperCase() + value.slice(1);
 }
 
+function readLocationRoutingModeOverride(
+  value: unknown,
+): "" | NonNullable<WorkbenchChatInput["routingModeOverride"]> {
+  if (
+    value === "baseline" ||
+    value === "difficulty" ||
+    value === "controller" ||
+    value === "hybrid"
+  ) {
+    return value;
+  }
+
+  return "";
+}
+
 export default function WorkbenchRoute() {
+  const location = useLocation();
+  const locationRoutingModeOverride = readLocationRoutingModeOverride(
+    typeof location.state === "object" && location.state !== null
+      ? (location.state as { routingModeOverride?: unknown }).routingModeOverride
+      : undefined,
+  );
   const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [model, setModel] = useState("");
-  const [routingModeOverride, setRoutingModeOverride] = useState<"" | NonNullable<WorkbenchChatInput["routingModeOverride"]>>("");
+  const [routingModeOverride, setRoutingModeOverride] =
+    useState<"" | NonNullable<WorkbenchChatInput["routingModeOverride"]>>(locationRoutingModeOverride);
   const [prompt, setPrompt] = useState("Summarize the chosen endpoint.");
   const [result, setResult] = useState<Record<string, unknown> | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -45,6 +67,12 @@ export default function WorkbenchRoute() {
       })
       .catch((value: unknown) => setLoadError(value instanceof Error ? value.message : "Could not load workbench."));
   }, []);
+
+  useEffect(() => {
+    if (locationRoutingModeOverride) {
+      setRoutingModeOverride(locationRoutingModeOverride);
+    }
+  }, [locationRoutingModeOverride]);
 
   const modelOptions = useMemo(() => buildWorkbenchModelOptions(snapshot?.models ?? []), [snapshot?.models]);
 

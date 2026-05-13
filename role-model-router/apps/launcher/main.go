@@ -5,10 +5,32 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"os/signal"
 	"path/filepath"
 	"runtime"
+	"syscall"
 	"time"
 )
+
+func resolveRuntimeStateRoot(packageDir string) string {
+	cacheDir, err := os.UserCacheDir()
+	if err == nil && cacheDir != "" {
+		return filepath.Join(cacheDir, "Role Model Runtime")
+	}
+
+	return filepath.Join(packageDir, "runtime-state")
+}
+
+func buildRuntimeArgs(packageDir string, runtimeStateRoot string) []string {
+	return []string{
+		"--repo-root", packageDir,
+		"--runtime-state-root", runtimeStateRoot,
+		"--scope-id", "standalone-runtime",
+		"--host", "127.0.0.1",
+		"--port", "3456",
+		"--static-root", filepath.Join(packageDir, "build", "client"),
+	}
+}
 
 func main() {
 	// Determine the directory where the launcher executable is located
@@ -28,7 +50,11 @@ func main() {
 	}
 
 	// Path to the UI static files
-	staticRoot := filepath.Join(exeDir, "build", "client")
+	runtimeStateRoot := resolveRuntimeStateRoot(exeDir)
+	if err := os.MkdirAll(runtimeStateRoot, 0o755); err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to create runtime state directory: %v\n", err)
+		os.Exit(1)
+	}
 
 	// Check if bridge binary exists
 	if _, err := os.Stat(bridgeBinary); os.IsNotExist(err) {
@@ -38,7 +64,7 @@ func main() {
 
 	// Start the bridge server
 	fmt.Println("Starting Role Model Runtime...")
-	cmd := exec.Command(bridgeBinary, "--static-root", staticRoot)
+	cmd := exec.Command(bridgeBinary, buildRuntimeArgs(exeDir, runtimeStateRoot)...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Dir = exeDir
@@ -47,6 +73,16 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Failed to start bridge: %v\n", err)
 		os.Exit(1)
 	}
+
+	signalChannel := make(chan os.Signal, 1)
+	signal.Notify(signalChannel, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-signalChannel
+		if cmd.Process != nil {
+			_ = cmd.Process.Kill()
+		}
+		os.Exit(0)
+	}()
 
 	// Wait for the server to be ready
 	fmt.Println("Waiting for server to be ready...")

@@ -10,9 +10,6 @@
   "needsTools": true,
   "strategy": "balanced",
   "preferLocal": false,
-  "allowEndpoints": [
-    "moonshot.personal.primary.global.kimi-k2.5",
-    "moonshot.personal.kimi-code.global.kimi-k2.5"
-  ],
+  "allowEndpoints": [],
   "budgetLimit": 0.01
 }

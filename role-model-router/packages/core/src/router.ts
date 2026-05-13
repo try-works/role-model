@@ -120,7 +120,7 @@ function decayToNeutral(observedValue: number, neutralValue: number, freshnessWe
 function getActiveThroughputPenaltyState(
   input: RouteRequestInput,
   candidate: EndpointCandidate,
-): RouteRequestInput["throughputPenaltyStateByEndpointId"][string] | undefined {
+): NonNullable<RouteRequestInput["throughputPenaltyStateByEndpointId"]>[string] | undefined {
   const state = input.throughputPenaltyStateByEndpointId?.[candidate.identity.endpoint_id];
   if (!input.observedDataConfig?.throughputSla.enabled || !state) {
     return undefined;

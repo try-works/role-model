@@ -30,20 +30,5 @@
       "default_benchmark_suites": []
     }
   ],
-  "roleBindings": [
-    {
-      "binding_id": "binding-moonshot",
-      "role_id": "developer",
-      "endpoint_id": "moonshot.personal.primary.global.kimi-k2.5",
-      "status": "active",
-      "policy_overrides": {},
-      "effective_capabilities": [
-        "code.edit",
-        "reasoning.multi_step",
-        "tools.function_calling",
-        "structured.output"
-      ],
-      "effective_task_types": ["code.edit"]
-    }
-  ]
+  "roleBindings": []
 }

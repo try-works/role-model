@@ -1,29 +1,16 @@
 {
   "byEndpointId": {
-    "moonshot.personal.primary.global.kimi-k2.5": [
+    "test.capture.chat-v1": [
       {
-        "endpoint_id": "moonshot.personal.primary.global.kimi-k2.5",
+        "endpoint_id": "test.capture.chat-v1",
         "endpoint_version": "run07-registry-v1:default",
         "source_type": "benchmark",
-        "timestamp_ms": 1700000000100,
-        "latency_ms": 105,
-        "latency_ms_p95": 140,
-        "tokens_per_sec": 82,
-        "cost_per_1k_tokens_est": 0.004,
-        "judge_score": 0.91
-      }
-    ],
-    "moonshot.personal.kimi-code.global.kimi-k2.5": [
-      {
-        "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.5",
-        "endpoint_version": "run07-registry-v1:default",
-        "source_type": "benchmark",
-        "timestamp_ms": 1700000000200,
-        "latency_ms": 132,
-        "latency_ms_p95": 176,
-        "tokens_per_sec": 58,
-        "cost_per_1k_tokens_est": 0.004,
-        "judge_score": 0.86
+        "timestamp_ms": 1748000000000,
+        "latency_ms": 120,
+        "latency_ms_p95": 250,
+        "tokens_per_sec": 45,
+        "judge_score": 0.87,
+        "cost_per_1k_tokens_est": 0.0003
       }
     ]
   }

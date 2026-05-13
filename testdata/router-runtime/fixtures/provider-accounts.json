@@ -1,47 +1,22 @@
 {
   "accounts": [
     {
-      "providerAccountId": "moonshot.personal.primary",
-      "providerId": "moonshot",
-      "providerKind": "provider-moonshot",
+      "providerAccountId": "deepseek.capture.account",
+      "providerId": "deepseek",
+      "providerKind": "provider-openai",
       "orgScope": "personal",
       "accountScope": "workspace-default",
       "credentialRef": {
         "backend": "env",
-        "ref": "MOONSHOT_API_KEY"
+        "ref": "DEEPSEEK_API_KEY"
       },
       "authMode": "api-key-static",
-      "regionPolicy": {
-        "mode": "prefer",
-        "regions": ["global"]
-      },
-      "baseUrlOverride": null,
-      "allowedModels": ["moonshot/kimi-k2.5"],
-      "deniedModels": [],
-      "entitlementTags": ["chat", "reasoning"],
-      "budgetPolicyRef": "budget.default",
-      "quotaPolicyRef": "quota.default",
-      "status": "active",
-      "healthStatus": "healthy",
-      "rotationState": "stable"
-    },
-    {
-      "providerAccountId": "moonshot.personal.kimi-code",
-      "providerId": "moonshot",
-      "providerKind": "provider-moonshot",
-      "orgScope": "personal",
-      "accountScope": "workspace-kimi-code",
-      "credentialRef": {
-        "backend": "local-keychain",
-        "ref": "moonshot/personal/kimi-code"
-      },
-      "authMode": "api-key-rotating-ref",
       "regionPolicy": {
         "mode": "allow",
         "regions": ["global"]
       },
       "baseUrlOverride": null,
-      "allowedModels": ["moonshot/kimi-k2.5"],
+      "allowedModels": ["deepseek/chat-capture-v1"],
       "deniedModels": [],
       "entitlementTags": ["chat"],
       "budgetPolicyRef": "budget.default",

@@ -84,15 +84,7 @@
       "createdAtMs": 1700000002500
     }
   ],
-  "handoffs": [
-    {
-      "handoffId": "handoff-1",
-      "conversationId": "conversation-main",
-      "fromEndpointId": "moonshot.personal.primary.global.kimi-k2.5",
-      "toEndpointId": "moonshot.personal.kimi-code.global.kimi-k2.5",
-      "createdAtMs": 1700000003500
-    }
-  ],
+  "handoffs": [],
   "selection": {
     "maxTurns": 2,
     "maxArtifacts": 2,

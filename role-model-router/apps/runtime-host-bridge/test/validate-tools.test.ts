@@ -21,14 +21,14 @@ describe("runRuntimeToolsValidation", () => {
       scopeId: "runtime-tools-validation",
     });
 
-    expect(result.endpointId).toBe("moonshot.personal.primary.global.kimi-k2.5");
+    expect(result.endpointId).toBe("test.capture.tool-v1");
     expect(result.toolCalls).toEqual([
       {
         id: "call_1",
         type: "function",
         function: {
           name: "lookupRegistry",
-          arguments: "{\"endpointId\":\"moonshot.personal.primary.global.kimi-k2.5\"}",
+          arguments: "{\"endpointId\":\"test.capture.tool-v1\"}",
         },
       },
     ]);
@@ -40,8 +40,8 @@ describe("runRuntimeToolsValidation", () => {
         connectorKind: "mcp",
         status: "succeeded",
         output: {
-          endpointId: "moonshot.personal.primary.global.kimi-k2.5",
-          modelId: "moonshot/kimi-k2.5",
+          endpointId: "test.capture.tool-v1",
+          modelId: "deepseek/tool-call-capture-v1",
           status: "active",
         },
         diagnostics: [],

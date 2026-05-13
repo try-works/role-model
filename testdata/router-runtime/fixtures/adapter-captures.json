@@ -1,10 +1,7 @@
 {
   "byEndpointId": {
-    "moonshot.personal.primary.global.kimi-k2.5": {
-      "responseFixture": "adapter-kimi-response.json"
-    },
-    "moonshot.personal.kimi-code.global.kimi-k2.5": {
-      "responseFixture": "adapter-kimi-response.json"
+    "test.capture.chat-v1": {
+      "responseFixture": "adapter-openai-response.json"
     }
   }
 }

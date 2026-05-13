@@ -20,14 +20,14 @@ describe("runRuntimeOperationsValidation", () => {
       runtimeStateRoot,
       hostValidation: async () => ({
         requestId: "req-runtime-host-observability-001",
-        endpointId: "moonshot.personal.primary.global.kimi-k2.5",
+        endpointId: "test.capture.tool-v1",
         captureId: 0,
       }),
     });
 
     expect(result.hostValidation).toEqual({
       requestId: "req-runtime-host-observability-001",
-      endpointId: "moonshot.personal.primary.global.kimi-k2.5",
+      endpointId: "test.capture.tool-v1",
       captureId: 0,
     });
     expect(result.isolation.distinctDatabasePaths).toBe(true);

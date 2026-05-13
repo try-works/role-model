@@ -143,3 +143,12 @@
   - 53/53 bridge tests (49 existing + 4 new peer tests), 61/61 UI tests
   - Schema validation passes
   - Browser screenshot verification blocked by display surface unavailability; verified via unit tests and build validation instead
+
+- Run 32 (Router Runtime Routing Operator Surface) completed in worktree branch `recursive/32-router-runtime-routing-operator-surface`:
+  - Added a first-class `Router` section and route family to the runtime shell, covering overview, config, candidates, decisions, and request-keyed decision detail
+  - Added structured `/api/role-model/router/*` backend surfaces plus typed frontend client fetchers so Router pages no longer scrape raw request bundles inline
+  - Added unified local-plus-remote candidate inventory, routing provenance/config visibility, explainable decision ledger/detail, and explicit Observe handoff
+  - Fixed the QA launcher so live runtime/browser proof uses the complete `testdata/router-runtime/fixtures` bundle and exposes the Router APIs during QA startup
+  - Fixed a Router decision-detail race where stale async responses could overwrite the active request after fast navigation
+  - Focused validation green: `runtime-host-bridge` test/build, `runtime-ui` build, `runtime-ui` suite set in single-worker mode; live browser QA proved Router overview/config/candidates/decisions/detail and Observe cross-link against seeded request `req-run32-router-003`
+  - Root `ci:check` still reproduces the inherited Phase 0 formatter-drift failure signature in `biome check .`
