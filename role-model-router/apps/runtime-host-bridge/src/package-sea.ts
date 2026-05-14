@@ -199,6 +199,7 @@ async function stageStandaloneReleaseFiles(releaseDir: string): Promise<void> {
   for (const copySpec of listStandaloneReleaseCopies()) {
     const sourcePath = path.join(repoRoot, copySpec.sourceRelativePath);
     const destinationPath = path.join(releaseDir, copySpec.destinationRelativePath);
+    await rm(destinationPath, { recursive: true, force: true });
     await mkdir(path.dirname(destinationPath), { recursive: true });
     await cp(sourcePath, destinationPath, { recursive: true, force: true });
   }
