@@ -441,6 +441,7 @@ if (process.argv[1] === __filename) {
     JSON.stringify(
       await runRuntimeUiValidation({
         repoRoot,
+        fixtureRoot: path.join(__dirname, "..", "test", "fixtures"),
         runtimeStateRoot,
         scopeId: "runtime-ui-validation",
         unifiedRuntimeConfigPath,
