@@ -4468,19 +4468,21 @@ export async function createRuntimeBridgeBackend(
   };
 
   if (currentUnifiedRuntimeConfig === null) {
-    const validation = validateProviderAccounts({
-      catalog: currentNormalizedCatalog,
-      additionalProviders: liteLLMProviders,
-      accounts: providerAccountsFixture.accounts,
-      allowedRoleIds,
-    });
-    if (validation.diagnostics.length > 0) {
-      throw new Error("Provider-account validation failed for runtime host bridge.");
+    if (providerAccountsFixture.accounts.length > 0) {
+      const validation = validateProviderAccounts({
+        catalog: currentNormalizedCatalog,
+        additionalProviders: liteLLMProviders,
+        accounts: providerAccountsFixture.accounts,
+        allowedRoleIds,
+      });
+      if (validation.diagnostics.length > 0) {
+        throw new Error("Provider-account validation failed for runtime host bridge.");
+      }
+      persistProviderAccounts({
+        databasePath: initialization.databasePath,
+        accounts: validation.accounts,
+      });
     }
-    persistProviderAccounts({
-      databasePath: initialization.databasePath,
-      accounts: validation.accounts,
-    });
     rebuildCurrentState();
   } else {
     await applyUnifiedRuntimeConfigState(currentUnifiedRuntimeConfig);
