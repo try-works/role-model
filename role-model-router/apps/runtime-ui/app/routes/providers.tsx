@@ -111,6 +111,7 @@ export default function ProvidersRoute() {
   const [selectedModel, setSelectedModel] = useState<string>("");
   const [selectedModelRoles, setSelectedModelRoles] = useState<ModelRoleSelection>({});
   const [oauthState, setOauthState] = useState<RuntimeDeviceAuthorization | null>(null);
+  const [oauthConnected, setOauthConnected] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [authorizing, setAuthorizing] = useState(false);
   const [polling, setPolling] = useState(false);
@@ -142,6 +143,7 @@ export default function ProvidersRoute() {
       setSelectedModel("");
       setSelectedModelRoles({});
       setOauthState(null);
+      setOauthConnected(false);
     },
     [],
   );
@@ -205,8 +207,9 @@ export default function ProvidersRoute() {
             await syncConnectedEndpoints(result);
             await load();
             if (result.status === "connected") {
-              window.setTimeout(() => setOauthState(null), 2000);
-            }
+                setOauthConnected(true);
+                window.setTimeout(() => setOauthState(null), 2000);
+              }
           }
         })
         .catch((value) => setError(value instanceof Error ? value.message : "Could not refresh provider authorization."))
@@ -309,15 +312,15 @@ export default function ProvidersRoute() {
       budgetPolicyRef: "budget.default",
       quotaPolicyRef: "quota.default",
       status:
-        selectedVariant.authMode === "api-key-static" || oauthState?.status === "connected" ? "active" : "disabled",
+        selectedVariant.authMode === "api-key-static" || oauthConnected ? "active" : "disabled",
       healthStatus:
-        selectedVariant.authMode === "api-key-static" || oauthState?.status === "connected"
+        selectedVariant.authMode === "api-key-static" || oauthConnected
           ? "healthy"
           : "credentials-missing",
       rotationState:
         selectedVariant.authMode === "api-key-static"
           ? "stable"
-          : oauthState?.status === "connected"
+          : oauthConnected
             ? "stable"
             : "in-progress",
     };
@@ -333,7 +336,7 @@ export default function ProvidersRoute() {
     setError(null);
     try {
       await upsertRuntimeAccount(buildProviderPayload());
-      if (selectedVariant.authMode === "api-key-static") {
+      if (selectedVariant.authMode === "api-key-static" || oauthConnected) {
         await activateRuntimeEndpoint({
           providerAccountId,
           modelId: selectedModel,
@@ -396,6 +399,7 @@ export default function ProvidersRoute() {
       await syncConnectedEndpoints(result);
       await load();
       if (result.status === "connected") {
+        setOauthConnected(true);
         window.setTimeout(() => setOauthState(null), 2000);
       }
     } catch (value) {
