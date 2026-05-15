@@ -4976,11 +4976,39 @@ export async function createRuntimeBridgeBackend(
           if (!currentLiteLLMVendor) {
             throw createVendorError("litellm", "Configure litellm_proxy.providers to enable remote execution.");
           }
+          const liteLLMRequestHeaders = await (async () => {
+            const backend = target.account?.credentialRef.backend;
+            if (backend !== "local-file" && backend !== "local-encrypted-file") {
+              return requestCapture.headers;
+            }
+            const credentialValue = await resolveCredentialValue(
+              options.runtimeStateRoot,
+              options.scopeId,
+              target,
+              providerPresets,
+              liteLLMProviders,
+              networkFetcher,
+              deviceId,
+              rebuildCurrentState,
+            );
+            const oauthVariantForHeaders = (() => {
+              if (!target.account || target.account.authMode !== "oauth2-device-code") return null;
+              try {
+                return getOauthVariant(providerPresets, liteLLMProviders, target.providerId ?? "");
+              } catch {
+                return null;
+              }
+            })();
+            return {
+              ...createDeviceHeaders(deviceId, oauthVariantForHeaders?.oauth?.requiredHeaders),
+              ...applyCredentialToHeaders(requestCapture.headers, credentialValue),
+            };
+          })();
           const result = await currentLiteLLMVendor.execute({
             providerFamily: requestCapture.providerFamily,
             endpointId: requestCapture.endpointId,
             url: requestCapture.url,
-            headers: requestCapture.headers,
+            headers: liteLLMRequestHeaders,
             body: requestCapture.body,
           }, {
             ...(trackedStreamWriter && requestCapture.body.stream === true
