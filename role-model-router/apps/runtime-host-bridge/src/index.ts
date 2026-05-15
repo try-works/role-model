@@ -4943,6 +4943,14 @@ export async function createRuntimeBridgeBackend(
         requestCapture: ProviderRequestCapture;
         fallbackModelIds?: readonly string[];
       }) => {
+        // File-backed credentials (OAuth, locally-saved API keys) always need direct HTTP execution
+        // so that OAuth tokens are correctly resolved and X-Msh-* device headers are applied.
+        // In the unified config path, LiteLLM providers get adapterFamily "litellm-proxy", so
+        // shouldUseLiveProviderExecution would return false for them — this flag bypasses that check.
+        const useDirectExecution =
+          target.account?.credentialRef.backend === "local-file" ||
+          target.account?.credentialRef.backend === "local-encrypted-file";
+
         if (currentUnifiedRuntimeConfig) {
           if (target.providerAccountId === null) {
             if (!currentLlamaSwapVendor) {
@@ -4973,13 +4981,6 @@ export async function createRuntimeBridgeBackend(
               vendorMetadata: result.metadata,
             };
           }
-          // File-backed credentials (OAuth, locally-saved API keys) need direct HTTP execution
-          // so that OAuth tokens are correctly resolved and X-Msh-* device headers are applied.
-          // LiteLLM has its own configured api_key and does not forward these custom headers,
-          // so bypassing it is required for these accounts.
-          const useDirectExecution =
-            target.account?.credentialRef.backend === "local-file" ||
-            target.account?.credentialRef.backend === "local-encrypted-file";
           if (!useDirectExecution) {
             if (!currentLiteLLMVendor) {
               throw createVendorError("litellm", "Configure litellm_proxy.providers to enable remote execution.");
@@ -5015,7 +5016,7 @@ export async function createRuntimeBridgeBackend(
           // Fall through to direct HTTP execution for file-backed credential accounts.
         }
 
-        if (!shouldUseLiveProviderExecution(target)) {
+        if (!useDirectExecution && !shouldUseLiveProviderExecution(target)) {
           const capture = captures.byEndpointId[target.endpointId];
           if (!capture) {
             throw new Error(`No response capture is configured for endpoint ${target.endpointId}.`);
@@ -5051,7 +5052,7 @@ export async function createRuntimeBridgeBackend(
             method: "POST",
             headers: {
               "content-type": "application/json",
-              ...(shouldUseLiveProviderExecution(target)
+              ...(useDirectExecution
                 ? createDeviceHeaders(deviceId, oauthVariant?.oauth?.requiredHeaders)
                 : {}),
               ...applyCredentialToHeaders(requestCapture.headers, resolvedCredentialValue),
