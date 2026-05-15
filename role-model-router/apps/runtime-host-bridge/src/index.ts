@@ -4973,64 +4973,46 @@ export async function createRuntimeBridgeBackend(
               vendorMetadata: result.metadata,
             };
           }
-          if (!currentLiteLLMVendor) {
-            throw createVendorError("litellm", "Configure litellm_proxy.providers to enable remote execution.");
-          }
-          const liteLLMRequestHeaders = await (async () => {
-            const backend = target.account?.credentialRef.backend;
-            if (backend !== "local-file" && backend !== "local-encrypted-file") {
-              return requestCapture.headers;
+          // File-backed credentials (OAuth, locally-saved API keys) need direct HTTP execution
+          // so that OAuth tokens are correctly resolved and X-Msh-* device headers are applied.
+          // LiteLLM has its own configured api_key and does not forward these custom headers,
+          // so bypassing it is required for these accounts.
+          const useDirectExecution =
+            target.account?.credentialRef.backend === "local-file" ||
+            target.account?.credentialRef.backend === "local-encrypted-file";
+          if (!useDirectExecution) {
+            if (!currentLiteLLMVendor) {
+              throw createVendorError("litellm", "Configure litellm_proxy.providers to enable remote execution.");
             }
-            const credentialValue = await resolveCredentialValue(
-              options.runtimeStateRoot,
-              options.scopeId,
-              target,
-              providerPresets,
-              liteLLMProviders,
-              networkFetcher,
-              deviceId,
-              rebuildCurrentState,
-            );
-            const oauthVariantForHeaders = (() => {
-              if (!target.account || target.account.authMode !== "oauth2-device-code") return null;
-              try {
-                return getOauthVariant(providerPresets, liteLLMProviders, target.providerId ?? "");
-              } catch {
-                return null;
-              }
-            })();
+            const result = await currentLiteLLMVendor.execute({
+              providerFamily: requestCapture.providerFamily,
+              endpointId: requestCapture.endpointId,
+              url: requestCapture.url,
+              headers: requestCapture.headers,
+              body: requestCapture.body,
+            }, {
+              ...(trackedStreamWriter && requestCapture.body.stream === true
+                ? {
+                    streamWriter: async (chunk) => {
+                      await trackedStreamWriter(chunk, {
+                        endpointId: target.endpointId,
+                        adapterFamily: target.adapterFamily,
+                        routingDecisionId,
+                      });
+                    },
+                  }
+                : {}),
+              ...(fallbackModelIds?.length ? { fallbackModelIds } : {}),
+            });
             return {
-              ...createDeviceHeaders(deviceId, oauthVariantForHeaders?.oauth?.requiredHeaders),
-              ...applyCredentialToHeaders(requestCapture.headers, credentialValue),
+              providerFamily: target.adapterFamily,
+              endpointId: target.endpointId,
+              statusCode: result.statusCode,
+              body: result.body,
+              vendorMetadata: result.metadata,
             };
-          })();
-          const result = await currentLiteLLMVendor.execute({
-            providerFamily: requestCapture.providerFamily,
-            endpointId: requestCapture.endpointId,
-            url: requestCapture.url,
-            headers: liteLLMRequestHeaders,
-            body: requestCapture.body,
-          }, {
-            ...(trackedStreamWriter && requestCapture.body.stream === true
-              ? {
-                  streamWriter: async (chunk) => {
-                    await trackedStreamWriter(chunk, {
-                      endpointId: target.endpointId,
-                      adapterFamily: target.adapterFamily,
-                      routingDecisionId,
-                    });
-                  },
-                }
-              : {}),
-            ...(fallbackModelIds?.length ? { fallbackModelIds } : {}),
-          });
-          return {
-            providerFamily: target.adapterFamily,
-            endpointId: target.endpointId,
-            statusCode: result.statusCode,
-            body: result.body,
-            vendorMetadata: result.metadata,
-          };
+          }
+          // Fall through to direct HTTP execution for file-backed credential accounts.
         }
 
         if (!shouldUseLiveProviderExecution(target)) {
