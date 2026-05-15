@@ -2844,61 +2844,9 @@ function tokenNeedsRefresh(payload: StoredOauthTokenPayload | null): boolean {
   return payload.saved_at_ms + payload.expires_in * 1000 <= Date.now() + 60_000;
 }
 
-function buildBuiltInProviderPresets(): ProviderPresetCatalog {
-  return {
-    providers: {
-      moonshot: {
-        variants: [
-          {
-            variantId: "moonshot-open-platform",
-            label: "Moonshot Open Platform",
-            description: "API-key onboarding for the Moonshot Open Platform endpoint family.",
-            authMode: "api-key-static",
-            availability: "ready",
-            baseUrl: "https://api.moonshot.ai/v1",
-            modelIds: ["moonshot/kimi-k2.5"],
-          },
-          {
-            variantId: "kimi-code",
-            label: "Kimi Code",
-            description: "Device OAuth onboarding for the Kimi Code runtime path.",
-            authMode: "oauth2-device-code",
-            availability: "backend-limited",
-            baseUrl: "https://api.kimi.com/coding/v1",
-            modelIds: ["moonshot/kimi-k2.5"],
-            oauth: {
-              clientId: "17e5f671-d194-4dfb-9706-5516cb48c098",
-              deviceAuthorizationEndpoint: "https://auth.kimi.com/api/oauth/device_authorization",
-              tokenEndpoint: "https://auth.kimi.com/api/oauth/token",
-              requiredHeaders: [
-                "X-Msh-Device-Id",
-                "X-Msh-Platform",
-                "X-Msh-Version",
-                "X-Msh-Device-Name",
-                "X-Msh-Device-Model",
-                "X-Msh-Os-Version",
-              ],
-            },
-          },
-        ],
-      },
-    },
-  };
-}
-
-function mergeProviderPresets(
-  base: ProviderPresetCatalog,
-  override: ProviderPresetCatalog,
-): ProviderPresetCatalog {
-  const providers: Record<string, { variants: readonly ProviderPresetVariant[] }> = { ...base.providers };
-  for (const [providerId, config] of Object.entries(override.providers)) {
-    providers[providerId] = config;
-  }
-  return { providers };
-}
-
 function resolveOAuthVariant(
   providerPresets: ProviderPresetCatalog,
+  liteLLMProviders: readonly { providerId: string; displayName: string; apiBase: string; oauth?: { clientId: string; deviceAuthorizationEndpoint: string; tokenEndpoint: string; requiredHeaders: readonly string[]; scope?: string } | null }[],
   providerId: string,
   variantId: string,
 ): (ProviderPresetVariant & { oauth: ProviderPresetVariantOAuth }) | undefined {
@@ -2908,29 +2856,49 @@ function resolveOAuthVariant(
       entry.variantId === variantId && entry.authMode === "oauth2-device-code" && Boolean(entry.oauth),
   );
   if (fromPresets) return fromPresets;
-  // When UI sends the generic "{providerId}-oauth" alias (e.g. from a LiteLLM-generated variant),
-  // fall back to the first OAuth preset variant for this provider so the flow still works.
+  // Fall back to LiteLLM provider OAuth config (handles "{providerId}-oauth" alias from UI)
   if (variantId === `${providerId}-oauth`) {
-    return providerPresets.providers[providerId]?.variants.find(
-      (entry): entry is ProviderPresetVariant & { oauth: ProviderPresetVariantOAuth } =>
-        entry.authMode === "oauth2-device-code" && Boolean(entry.oauth),
-    );
+    const liteLLMProvider = liteLLMProviders.find((p) => p.providerId === providerId);
+    if (liteLLMProvider?.oauth) {
+      return {
+        variantId,
+        label: `${liteLLMProvider.displayName} OAuth`,
+        description: `OAuth device-code authentication for ${liteLLMProvider.displayName}.`,
+        authMode: "oauth2-device-code",
+        availability: "ready" as const,
+        baseUrl: liteLLMProvider.apiBase,
+        modelIds: [],
+        oauth: liteLLMProvider.oauth,
+      };
+    }
   }
   return undefined;
 }
 
 function getOauthVariant(
   providerPresets: ProviderPresetCatalog,
+  liteLLMProviders: readonly { providerId: string; displayName: string; apiBase: string; oauth?: { clientId: string; deviceAuthorizationEndpoint: string; tokenEndpoint: string; requiredHeaders: readonly string[]; scope?: string } | null }[],
   providerId: string,
 ): ProviderPresetVariant & { oauth: ProviderPresetVariantOAuth } {
-  const variant = providerPresets.providers[providerId]?.variants.find(
+  const fromPresets = providerPresets.providers[providerId]?.variants.find(
     (entry): entry is ProviderPresetVariant & { oauth: ProviderPresetVariantOAuth } =>
       entry.authMode === "oauth2-device-code" && Boolean(entry.oauth),
   );
-  if (!variant) {
-    throw new Error(`Provider ${providerId} does not expose an OAuth device-code variant.`);
+  if (fromPresets) return fromPresets;
+  const liteLLMProvider = liteLLMProviders.find((p) => p.providerId === providerId);
+  if (liteLLMProvider?.oauth) {
+    return {
+      variantId: `${providerId}-oauth`,
+      label: `${liteLLMProvider.displayName} OAuth`,
+      description: `OAuth device-code authentication for ${liteLLMProvider.displayName}.`,
+      authMode: "oauth2-device-code",
+      availability: "ready" as const,
+      baseUrl: liteLLMProvider.apiBase,
+      modelIds: [],
+      oauth: liteLLMProvider.oauth,
+    };
   }
-  return variant;
+  throw new Error(`Provider ${providerId} does not expose an OAuth device-code variant.`);
 }
 
 async function refreshOauthAccessToken(
@@ -2938,6 +2906,7 @@ async function refreshOauthAccessToken(
   scopeId: string,
   target: ResolvedExecutionTarget,
   providerPresets: ProviderPresetCatalog,
+  liteLLMProviders: readonly { providerId: string; displayName: string; apiBase: string; oauth?: { clientId: string; deviceAuthorizationEndpoint: string; tokenEndpoint: string; requiredHeaders: readonly string[]; scope?: string } | null }[],
   networkFetcher: typeof fetch,
   deviceId: string,
   onRefreshed?: () => void,
@@ -2957,7 +2926,7 @@ async function refreshOauthAccessToken(
     throw new Error(`Stored OAuth credential ${credentialRef.ref} does not contain a refresh token.`);
   }
 
-  const variant = getOauthVariant(providerPresets, target.providerId);
+  const variant = getOauthVariant(providerPresets, liteLLMProviders, target.providerId);
   const tokenResponse = await networkFetcher(variant.oauth.tokenEndpoint, {
     method: "POST",
     headers: createDeviceHeaders(deviceId, variant.oauth.requiredHeaders),
@@ -3002,6 +2971,7 @@ async function resolveCredentialValue(
   scopeId: string,
   target: ResolvedExecutionTarget,
   providerPresets?: ProviderPresetCatalog,
+  liteLLMProviders?: readonly { providerId: string; displayName: string; apiBase: string; oauth?: { clientId: string; deviceAuthorizationEndpoint: string; tokenEndpoint: string; requiredHeaders: readonly string[]; scope?: string } | null }[],
   networkFetcher?: typeof fetch,
   deviceId?: string,
   onRefreshed?: () => void,
@@ -3028,6 +2998,7 @@ async function resolveCredentialValue(
     if (
       tokenNeedsRefresh(tokenPayload) &&
       providerPresets &&
+      liteLLMProviders &&
       networkFetcher &&
       typeof deviceId === "string"
     ) {
@@ -3036,6 +3007,7 @@ async function resolveCredentialValue(
         scopeId,
         target,
         providerPresets,
+        liteLLMProviders,
         networkFetcher,
         deviceId,
         onRefreshed,
@@ -3196,9 +3168,10 @@ function summarizeProviderError(status: number, body: unknown): string {
 }
 
 function shouldUseLiveProviderExecution(target: ResolvedExecutionTarget): boolean {
+  const backend = target.account?.credentialRef.backend;
   return (
     target.adapterFamily === "ai-sdk-openai-compatible" &&
-    (target.account?.credentialRef.backend === "local-file" || target.account?.credentialRef.backend === "local-encrypted-file")
+    (backend === "local-file" || backend === "local-encrypted-file")
   );
 }
 
@@ -4390,10 +4363,9 @@ export async function createRuntimeBridgeBackend(
   const observabilityPolicy = await readJson<RuntimeCapturePolicy>(
     path.join(fixtureRoot, "observability-policy.json"),
   );
-  const fixturePresets = await readJson<ProviderPresetCatalog>(
+  const providerPresets = await readJson<ProviderPresetCatalog>(
     path.join(fixtureRoot, "provider-presets.json"),
   );
-  const providerPresets = mergeProviderPresets(buildBuiltInProviderPresets(), fixturePresets);
   const initialization = initializeSqliteMemory({
     runtimeStateRoot: options.runtimeStateRoot,
     scopeId: options.scopeId,
@@ -5051,14 +5023,18 @@ export async function createRuntimeBridgeBackend(
           options.scopeId,
           target,
           providerPresets,
+          liteLLMProviders,
           networkFetcher,
           deviceId,
           rebuildCurrentState,
         );
         const oauthVariant = (() => {
-          const preset = providerPresets.providers[target.providerId ?? ""];
-          if (!preset || !target.account) return null;
-          return preset.variants.find((v) => v.authMode === target.account!.authMode && v.oauth);
+          if (!target.account || target.account.authMode !== "oauth2-device-code") return null;
+          try {
+            return getOauthVariant(providerPresets, liteLLMProviders, target.providerId ?? "");
+          } catch {
+            return null;
+          }
         })();
         const performRequest = async (resolvedCredentialValue: string) =>
           networkFetcher(requestCapture.url, {
@@ -5082,6 +5058,7 @@ export async function createRuntimeBridgeBackend(
             options.scopeId,
             target,
             providerPresets,
+            liteLLMProviders,
             networkFetcher,
             deviceId,
             rebuildCurrentState,
@@ -6095,7 +6072,7 @@ export async function createRuntimeBridgeBackend(
       if (!provider) {
         throw new Error(`Provider ${providerId} is not present in the normalized catalog or LiteLLM provider list.`);
       }
-      const variant = resolveOAuthVariant(providerPresets, providerId, variantId);
+      const variant = resolveOAuthVariant(providerPresets, liteLLMProviders, providerId, variantId);
       if (!variant) {
         throw new Error(`Provider variant ${variantId} does not expose device OAuth.`);
       }
@@ -6224,7 +6201,7 @@ export async function createRuntimeBridgeBackend(
       if (!session) {
         throw new Error(`Device authorization request ${authRequestId} was not found.`);
       }
-      const variant = resolveOAuthVariant(providerPresets, session.providerId, session.variantId);
+      const variant = resolveOAuthVariant(providerPresets, liteLLMProviders, session.providerId, session.variantId);
       if (!variant?.oauth) {
         throw new Error(`Provider variant ${session.variantId} does not expose device OAuth.`);
       }

@@ -204,6 +204,9 @@ export default function ProvidersRoute() {
           if (result.status !== "pending") {
             await syncConnectedEndpoints(result);
             await load();
+            if (result.status === "connected") {
+              window.setTimeout(() => setOauthState(null), 2000);
+            }
           }
         })
         .catch((value) => setError(value instanceof Error ? value.message : "Could not refresh provider authorization."))
@@ -392,6 +395,9 @@ export default function ProvidersRoute() {
       setOauthState((current) => (current ? { ...current, ...result } : result));
       await syncConnectedEndpoints(result);
       await load();
+      if (result.status === "connected") {
+        window.setTimeout(() => setOauthState(null), 2000);
+      }
     } catch (value) {
       setError(value instanceof Error ? value.message : "Could not refresh provider authorization.");
     } finally {

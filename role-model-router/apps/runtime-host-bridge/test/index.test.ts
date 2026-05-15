@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import os from "node:os";
 import path from "node:path";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
 import { DatabaseSync } from "node:sqlite";
 import { setTimeout as delay } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
@@ -5595,6 +5595,307 @@ describe("runtime-host-bridge", () => {
       abortController.abort();
       await delay(10);
       await server.close();
+    }
+  });
+
+  test("executes chat-completions through a LiteLLM-derived moonshot-oauth endpoint with X-Msh headers", async () => {
+    // This test exercises the PRODUCTION path where provider-presets.json is empty
+    // and OAuth config comes entirely from KNOWN_PROVIDER_OVERRIDES in litellm-catalog.ts.
+    expect(
+      typeof (bridge as { createRuntimeBridgeBackend?: unknown }).createRuntimeBridgeBackend,
+    ).toBe("function");
+
+    const capturedRequestHeaders: Record<string, string>[] = [];
+    const streamedChunks: Record<string, unknown>[] = [];
+    const backend = await (
+      bridge as {
+        createRuntimeBridgeBackend: (options: {
+          repoRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+          networkFetcher?: typeof fetch;
+        }) => Promise<{
+          registry: EndpointRegistryResult;
+          listProviders?: () => Promise<unknown>;
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+            streamWriter?: (chunk: Record<string, unknown>) => void | Promise<void>,
+          ) => Promise<{
+            model: string;
+            endpointId: string;
+            adapterFamily: string;
+            outputText: string;
+            finishReason: string;
+            usage: { inputTokens: number; outputTokens: number };
+          }>;
+          startProviderDeviceAuthorization?: (body: Record<string, unknown>) => Promise<unknown>;
+          pollProviderDeviceAuthorization?: (body: Record<string, unknown>) => Promise<unknown>;
+          activateEndpoint?: (body: Record<string, unknown>) => Promise<unknown>;
+        }>;
+      }
+    ).createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: testFixtureRoot,
+      runtimeStateRoot: path.join(os.tmpdir(), "role-model-litellm-oauth-tests"),
+      scopeId: "runtime-litellm-oauth-tests",
+      networkFetcher: async (input, init) => {
+        const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+        if (url === "https://auth.kimi.com/api/oauth/device_authorization") {
+          return new Response(
+            JSON.stringify({
+              user_code: "LITELLM-TEST",
+              device_code: "device-litellm-001",
+              verification_uri: "https://www.kimi.com/code/authorize_device",
+              verification_uri_complete: "https://www.kimi.com/code/authorize_device?user_code=LITELLM-TEST",
+              expires_in: 900,
+              interval: 5,
+            }),
+            { status: 200, headers: { "content-type": "application/json" } },
+          );
+        }
+        if (url === "https://auth.kimi.com/api/oauth/token") {
+          return new Response(
+            JSON.stringify({
+              access_token: "litellm-access-token-001",
+              refresh_token: "litellm-refresh-001",
+              expires_in: 3600,
+              token_type: "Bearer",
+            }),
+            { status: 200, headers: { "content-type": "application/json" } },
+          );
+        }
+        if (url === "https://api.moonshot.ai/v1/chat/completions") {
+          capturedRequestHeaders.push({ ...(init?.headers as Record<string, string>) });
+          const encoder = new TextEncoder();
+          return new Response(
+            new ReadableStream({
+              start(controller) {
+                controller.enqueue(
+                  encoder.encode(
+                    'data: {"id":"chatcmpl-litellm","object":"chat.completion.chunk","created":1,"model":"moonshot/kimi-k2.5","choices":[{"index":0,"delta":{"role":"assistant","content":"moonshot "},"finish_reason":null}]}\n\n',
+                  ),
+                );
+                controller.enqueue(
+                  encoder.encode(
+                    'data: {"id":"chatcmpl-litellm","object":"chat.completion.chunk","created":1,"model":"moonshot/kimi-k2.5","choices":[{"index":0,"delta":{"content":"oauth works"},"finish_reason":null}]}\n\n',
+                  ),
+                );
+                controller.enqueue(
+                  encoder.encode(
+                    'data: {"id":"chatcmpl-litellm","object":"chat.completion.chunk","created":1,"model":"moonshot/kimi-k2.5","choices":[{"index":0,"delta":{},"finish_reason":"stop"}],"usage":{"prompt_tokens":10,"completion_tokens":3}}\n\n',
+                  ),
+                );
+                controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+                controller.close();
+              },
+            }),
+            { status: 200, headers: { "content-type": "text/event-stream; charset=utf-8" } },
+          );
+        }
+        throw new Error(`Unexpected network request: ${url}`);
+      },
+    });
+
+    // Verify moonshot-oauth variant is exposed via LiteLLM (no preset required)
+    const providers = (await backend.listProviders?.()) as Array<{ providerId: string; variants: Array<{ variantId: string; authMode: string; oauth?: { clientId: string } }> }>;
+    const moonshotProvider = providers.find((p) => p.providerId === "moonshot");
+    expect(moonshotProvider).toBeDefined();
+    const oauthVariant = moonshotProvider?.variants.find((v) => v.variantId === "moonshot-oauth");
+    expect(oauthVariant).toBeDefined();
+    expect(oauthVariant?.authMode).toBe("oauth2-device-code");
+    expect(oauthVariant?.oauth?.clientId).toBe("17e5f671-d194-4dfb-9706-5516cb48c098");
+
+    // Full OAuth device-code flow using the LiteLLM-derived variant
+    const pending = await backend.startProviderDeviceAuthorization?.({
+      providerAccountId: "moonshot.personal.moonshot-oauth",
+      providerId: "moonshot",
+      variantId: "moonshot-oauth",
+      orgScope: "personal",
+      accountScope: "workspace-default",
+      allowedModels: ["moonshot/kimi-k2.5"],
+      deniedModels: [],
+      entitlementTags: ["chat"],
+    });
+    expect(pending).toEqual(
+      expect.objectContaining({
+        status: "pending",
+        userCode: "LITELLM-TEST",
+      }),
+    );
+
+    const connected = await backend.pollProviderDeviceAuthorization?.({
+      authRequestId: (pending as { authRequestId: string }).authRequestId,
+    });
+    expect(connected).toEqual(expect.objectContaining({ status: "connected" }));
+
+    await backend.activateEndpoint?.({
+      providerAccountId: "moonshot.personal.moonshot-oauth",
+      modelId: "moonshot/kimi-k2.5",
+      region: "global",
+    });
+
+    // Execute chat — must reach https://api.moonshot.ai/v1/chat/completions with Bearer token + X-Msh-* headers
+    const result = await backend.executeChatCompletions(
+      {
+        model: "moonshot/kimi-k2.5",
+        stream: true,
+        messages: [{ role: "user", content: "Test LiteLLM OAuth." }],
+      },
+      "req-litellm-oauth-001",
+      async (chunk) => {
+        streamedChunks.push(chunk);
+      },
+    );
+
+    expect(result.outputText).toBe("moonshot oauth works");
+    expect(result.endpointId).toBe("moonshot.personal.moonshot-oauth.global.kimi-k2.5");
+
+    // Verify the outgoing request to Moonshot carried the OAuth Bearer token
+    expect(capturedRequestHeaders.length).toBeGreaterThan(0);
+    expect(capturedRequestHeaders[0]).toEqual(
+      expect.objectContaining({
+        authorization: "Bearer litellm-access-token-001",
+      }),
+    );
+    // Verify Kimi-specific headers are present (from LiteLLM OAuth requiredHeaders)
+    expect(capturedRequestHeaders[0]).toEqual(
+      expect.objectContaining({
+        "X-Msh-Platform": "kimi_cli",
+        "X-Msh-Version": expect.any(String),
+        "X-Msh-Device-Name": expect.any(String),
+        "X-Msh-Device-Id": expect.any(String),
+      }),
+    );
+  });
+
+  test("executes chat-completions through an api-key-static provider via environment credential", async () => {
+    expect(
+      typeof (bridge as { createRuntimeBridgeBackend?: unknown }).createRuntimeBridgeBackend,
+    ).toBe("function");
+
+    // Write the API key as a local-file credential so the live execution path is triggered.
+    // The credential file mimics an OAuth token file but holds the API key as access_token.
+    const runtimeStateRoot = path.join(os.tmpdir(), "role-model-apikey-tests");
+    const scopeId = "runtime-apikey-tests";
+    const credentialDir = path.join(runtimeStateRoot, scopeId, "credentials", "oauth", "moonshot");
+    const credentialFile = path.join(credentialDir, "moonshot.personal.apikey.json");
+    await mkdir(credentialDir, { recursive: true });
+    await writeFile(credentialFile, JSON.stringify({ access_token: "sk-test-moonshot-api-key-001" }), "utf8");
+
+    const capturedAuthHeaders: string[] = [];
+    try {
+      const backend = await (
+        bridge as {
+          createRuntimeBridgeBackend: (options: {
+            repoRoot: string;
+            runtimeStateRoot: string;
+            scopeId: string;
+            networkFetcher?: typeof fetch;
+          }) => Promise<{
+            registry: EndpointRegistryResult;
+            executeChatCompletions: (
+              body: Record<string, unknown>,
+              requestId: string,
+              streamWriter?: (chunk: Record<string, unknown>) => void | Promise<void>,
+            ) => Promise<{
+              model: string;
+              endpointId: string;
+              outputText: string;
+              finishReason: string;
+              usage: { inputTokens: number; outputTokens: number };
+            }>;
+            upsertProviderAccount?: (body: Record<string, unknown>) => Promise<unknown>;
+            activateEndpoint?: (body: Record<string, unknown>) => Promise<unknown>;
+          }>;
+        }
+      ).createRuntimeBridgeBackend({
+        repoRoot,
+        fixtureRoot: testFixtureRoot,
+        runtimeStateRoot,
+        scopeId,
+        networkFetcher: async (input, init) => {
+          const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+          if (url === "https://api.moonshot.ai/v1/chat/completions") {
+            const authHeader = (init?.headers as Record<string, string>)?.authorization ?? "";
+            capturedAuthHeaders.push(authHeader);
+            const encoder = new TextEncoder();
+            return new Response(
+              new ReadableStream({
+                start(controller) {
+                  controller.enqueue(
+                    encoder.encode(
+                      'data: {"id":"chatcmpl-apikey","object":"chat.completion.chunk","created":1,"model":"moonshot/kimi-k2.5","choices":[{"index":0,"delta":{"role":"assistant","content":"api-key "},"finish_reason":null}]}\n\n',
+                    ),
+                  );
+                  controller.enqueue(
+                    encoder.encode(
+                      'data: {"id":"chatcmpl-apikey","object":"chat.completion.chunk","created":1,"model":"moonshot/kimi-k2.5","choices":[{"index":0,"delta":{"content":"auth works"},"finish_reason":null}]}\n\n',
+                    ),
+                  );
+                  controller.enqueue(
+                    encoder.encode(
+                      'data: {"id":"chatcmpl-apikey","object":"chat.completion.chunk","created":1,"model":"moonshot/kimi-k2.5","choices":[{"index":0,"delta":{},"finish_reason":"stop"}],"usage":{"prompt_tokens":8,"completion_tokens":4}}\n\n',
+                    ),
+                  );
+                  controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+                  controller.close();
+                },
+              }),
+              { status: 200, headers: { "content-type": "text/event-stream; charset=utf-8" } },
+            );
+          }
+          throw new Error(`Unexpected network request: ${url}`);
+        },
+      });
+
+      // Upsert API-key account using local-file credential (triggers live execution path)
+      await backend.upsertProviderAccount?.({
+        providerAccountId: "moonshot.personal.apikey",
+        providerId: "moonshot",
+        providerKind: "provider-openai",
+        orgScope: "personal",
+        accountScope: "workspace-default",
+        credentialRef: {
+          backend: "local-file",
+          ref: "oauth/moonshot/moonshot.personal.apikey",
+        },
+        authMode: "api-key-static",
+        regionPolicy: { mode: "prefer", regions: ["global"] },
+        baseUrlOverride: "https://api.moonshot.ai/v1",
+        allowedModels: ["moonshot/kimi-k2.5"],
+        modelRoleBindings: [{ modelId: "moonshot/kimi-k2.5", roleIds: ["general.chat"] }],
+        deniedModels: [],
+        entitlementTags: ["chat"],
+        budgetPolicyRef: "budget.default",
+        quotaPolicyRef: "quota.default",
+        status: "active",
+        healthStatus: "healthy",
+        rotationState: "stable",
+      });
+
+      await backend.activateEndpoint?.({
+        providerAccountId: "moonshot.personal.apikey",
+        modelId: "moonshot/kimi-k2.5",
+        region: "global",
+      });
+
+      const result = await backend.executeChatCompletions(
+        {
+          model: "moonshot/kimi-k2.5",
+          stream: true,
+          messages: [{ role: "user", content: "Test API key auth." }],
+        },
+        "req-apikey-001",
+      );
+
+      expect(result.outputText).toBe("api-key auth works");
+      expect(result.endpointId).toMatch(/moonshot\.personal\.apikey/);
+      expect(capturedAuthHeaders.length).toBeGreaterThan(0);
+      // resolveCredentialValue reads access_token from the local-file; applyCredentialToHeaders prefixes Bearer
+      expect(capturedAuthHeaders[0]).toBe("Bearer sk-test-moonshot-api-key-001");
+    } finally {
+      await rm(credentialFile, { force: true });
     }
   });
 

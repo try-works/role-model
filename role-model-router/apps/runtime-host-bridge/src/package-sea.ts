@@ -4,7 +4,7 @@ import { chmod, copyFile, cp, mkdir, readFile, rm, writeFile } from "node:fs/pro
 import os from "node:os";
 import path from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { gzipSync } from "node:zlib";
 
 import { build as buildBundle } from "esbuild";
@@ -397,7 +397,7 @@ export async function packageSeaRuntime(): Promise<{
   };
 }
 
-if (import.meta.url === `file://${__filename.replace(/\\/g, "/")}`) {
+if (import.meta.url === pathToFileURL(__filename).href) {
   const result = await packageSeaRuntime();
   console.log(JSON.stringify(result, null, 2));
 }
