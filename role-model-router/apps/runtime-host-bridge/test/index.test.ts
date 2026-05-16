@@ -6982,4 +6982,40 @@ describe("runtime-host-bridge", () => {
       staticRoot: "D:\\DEV\\role-model\\role-model-router\\apps\\runtime-ui\\build\\client",
     });
   });
+
+  test("resolves packaged bridge server options from POSIX executable path defaults", () => {
+    const result = (
+      bridge as {
+        resolveBridgeServerOptions: (value: {
+          host?: string;
+          port?: string;
+          repoRoot?: string;
+          runtimeStateRoot?: string;
+          scopeId?: string;
+          executablePath?: string;
+          localAppData?: string;
+        }) => {
+          host: string;
+          port: number;
+          repoRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+          staticRoot: string;
+        };
+      }
+    ).resolveBridgeServerOptions({
+      executablePath:
+        "/home/tester/role-model/role-model-router/dist/release/linux-x64/role-model-runtime",
+      localAppData: "/home/tester/.local/share",
+    });
+
+    expect(result).toEqual({
+      host: "127.0.0.1",
+      port: 8091,
+      repoRoot: "/home/tester/role-model",
+      runtimeStateRoot: "/home/tester/.local/share/Role Model Runtime/state",
+      scopeId: "runtime-host-bridge",
+      staticRoot: "/home/tester/role-model/role-model-router/apps/runtime-ui/build/client",
+    });
+  });
 });

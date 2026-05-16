@@ -8247,6 +8247,37 @@ export async function createRuntimeBridgeBackend(
   return backend;
 }
 
+function usesWindowsPathDialect(value: string | undefined): boolean {
+  const normalized = value?.trim();
+  return normalized ? /^[A-Za-z]:\\/u.test(normalized) || normalized.includes("\\") : false;
+}
+
+function usesPosixPathDialect(value: string | undefined): boolean {
+  const normalized = value?.trim();
+  return normalized ? normalized.startsWith("/") : false;
+}
+
+function resolveBridgePathApi(input: {
+  executablePath?: string;
+  repoRoot?: string;
+  runtimeStateRoot?: string;
+  localAppData?: string;
+}) {
+  const explicitValues = [
+    input.executablePath,
+    input.repoRoot,
+    input.runtimeStateRoot,
+    input.localAppData,
+  ];
+  if (explicitValues.some((value) => usesWindowsPathDialect(value))) {
+    return path.win32;
+  }
+  if (explicitValues.some((value) => usesPosixPathDialect(value))) {
+    return path.posix;
+  }
+  return usesWindowsPathDialect(process.env.LOCALAPPDATA) ? path.win32 : path.posix;
+}
+
 export function resolveBridgeServerOptions(input: {
   host?: string;
   port?: string;
@@ -8257,20 +8288,21 @@ export function resolveBridgeServerOptions(input: {
   localAppData?: string;
   unifiedRuntimeConfigPath?: string;
 }): BridgeServerOptions {
+  const bridgePath = resolveBridgePathApi(input);
   const inferredRepoRoot = input.executablePath
     ? (() => {
-        const executableDir = path.dirname(path.resolve(input.executablePath));
-        const releaseDir = path.dirname(executableDir);
-        const distDir = path.dirname(releaseDir);
-        const routerRoot = path.dirname(distDir);
+        const executableDir = bridgePath.dirname(bridgePath.resolve(input.executablePath));
+        const releaseDir = bridgePath.dirname(executableDir);
+        const distDir = bridgePath.dirname(releaseDir);
+        const routerRoot = bridgePath.dirname(distDir);
         if (
-          path.basename(releaseDir) !== "release" ||
-          path.basename(distDir) !== "dist" ||
-          path.basename(routerRoot) !== "role-model-router"
+          bridgePath.basename(releaseDir) !== "release" ||
+          bridgePath.basename(distDir) !== "dist" ||
+          bridgePath.basename(routerRoot) !== "role-model-router"
         ) {
           return undefined;
         }
-        return path.dirname(routerRoot);
+        return bridgePath.dirname(routerRoot);
       })()
     : undefined;
   const repoRoot = input.repoRoot?.trim() || inferredRepoRoot;
@@ -8279,7 +8311,7 @@ export function resolveBridgeServerOptions(input: {
   }
   const runtimeStateRoot =
     input.runtimeStateRoot?.trim() ||
-    path.join(
+    bridgePath.join(
       input.localAppData?.trim() || process.env.LOCALAPPDATA || os.tmpdir(),
       "Role Model Runtime",
       "state",
@@ -8291,7 +8323,14 @@ export function resolveBridgeServerOptions(input: {
     repoRoot,
     runtimeStateRoot,
     scopeId: input.scopeId?.trim() || "runtime-host-bridge",
-    staticRoot: path.join(repoRoot, "role-model-router", "apps", "runtime-ui", "build", "client"),
+    staticRoot: bridgePath.join(
+      repoRoot,
+      "role-model-router",
+      "apps",
+      "runtime-ui",
+      "build",
+      "client",
+    ),
     unifiedRuntimeConfigPath: input.unifiedRuntimeConfigPath?.trim() || undefined,
   };
 }
