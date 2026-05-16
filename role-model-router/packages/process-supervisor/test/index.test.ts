@@ -137,6 +137,10 @@ describe("process-supervisor", () => {
       }),
     ).rejects.toThrow(/crashy/i);
 
+    await waitFor(() =>
+      crashes.some((crash) => crash.vendorId === "crashy" && crash.exitCode === 7),
+    );
+
     expect(crashes).toEqual(
       expect.arrayContaining([
         {

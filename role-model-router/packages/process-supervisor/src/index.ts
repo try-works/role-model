@@ -43,6 +43,7 @@ interface ManagedVendorRecord {
   child: ChildProcess | null;
   status: ManagedVendorStatus;
   stopping: boolean;
+  startupPending: boolean;
   stopDeferred: Promise<void> | null;
   resolveStop: (() => void) | null;
   restartPromise: Promise<void> | null;
@@ -140,6 +141,7 @@ async function waitForHealth(record: ManagedVendorRecord): Promise<void> {
 
 function beginChildLifecycle(record: ManagedVendorRecord, child: ChildProcess): void {
   record.child = child;
+  record.startupPending = true;
   record.stopDeferred = new Promise<void>((resolve) => {
     record.resolveStop = resolve;
   });
@@ -256,6 +258,7 @@ export class ProcessSupervisor {
       stopDeferred: null,
       resolveStop: null,
       restartPromise: null,
+      startupPending: false,
       options,
       status: {
         vendorId: options.vendorId,
@@ -278,6 +281,7 @@ export class ProcessSupervisor {
 
     try {
       await waitForHealth(record);
+      record.startupPending = false;
       return this.createManagedVendor(options.vendorId, record);
     } catch (error) {
       record.stopping = true;
@@ -325,6 +329,8 @@ export class ProcessSupervisor {
     record: ManagedVendorRecord,
     exitCode: number | null,
   ): Promise<void> {
+    const startupPending = record.startupPending;
+    record.startupPending = false;
     record.status = {
       ...record.status,
       healthStatus: record.stopping ? "stopped" : "crashed",
@@ -332,12 +338,16 @@ export class ProcessSupervisor {
     };
     record.resolveStop?.();
 
-    if (record.stopping) {
+    if (record.stopping && !startupPending) {
       return;
     }
 
     for (const listener of this.crashListeners) {
       listener(record.options.vendorId, exitCode);
+    }
+
+    if (startupPending) {
+      return;
     }
 
     if (!record.restartPromise) {
@@ -379,6 +389,7 @@ export class ProcessSupervisor {
         void this.handleUnexpectedExit(record, exitCode);
       });
       await waitForHealth(record);
+      record.startupPending = false;
     } catch (error) {
       appendLog(
         record,
