@@ -40,5 +40,14 @@
       "effective_capabilities": ["code.edit", "reasoning.multi_step"],
       "effective_task_types": ["code.edit"]
     },
+    {
+      "binding_id": "binding-openai",
+      "role_id": "developer",
+      "endpoint_id": "openai.personal.primary.us-east-1.fast",
+      "status": "active",
+      "policy_overrides": {},
+      "effective_capabilities": ["code.edit"],
+      "effective_task_types": ["code.edit"]
+    }
   ]
 }
