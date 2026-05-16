@@ -6944,6 +6944,45 @@ describe("runtime-host-bridge", () => {
       runtimeStateRoot: "C:\\runtime-state",
       scopeId: "runtime-host-bridge",
       staticRoot: path.join(repoRoot, "role-model-router", "apps", "runtime-ui", "build", "client"),
+      unifiedRuntimeConfigPath: undefined,
+    });
+  });
+
+  test("keeps repoRoot-derived static paths stable when runtimeStateRoot uses a different path dialect", () => {
+    const result = (
+      bridge as {
+        resolveBridgeServerOptions: (value: {
+          host?: string;
+          port?: string;
+          repoRoot?: string;
+          runtimeStateRoot?: string;
+          scopeId?: string;
+          executablePath?: string;
+          localAppData?: string;
+        }) => {
+          host: string;
+          port: number;
+          repoRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+          staticRoot: string;
+        };
+      }
+    ).resolveBridgeServerOptions({
+      repoRoot: "/home/runner/work/role-model/role-model",
+      runtimeStateRoot: "C:\\runtime-state",
+      port: "9191",
+    });
+
+    expect(result).toEqual({
+      host: "127.0.0.1",
+      port: 9191,
+      repoRoot: "/home/runner/work/role-model/role-model",
+      runtimeStateRoot: "C:\\runtime-state",
+      scopeId: "runtime-host-bridge",
+      staticRoot:
+        "/home/runner/work/role-model/role-model/role-model-router/apps/runtime-ui/build/client",
+      unifiedRuntimeConfigPath: undefined,
     });
   });
 
@@ -6980,6 +7019,7 @@ describe("runtime-host-bridge", () => {
       runtimeStateRoot: "C:\\Users\\tester\\AppData\\Local\\Role Model Runtime\\state",
       scopeId: "runtime-host-bridge",
       staticRoot: "D:\\DEV\\role-model\\role-model-router\\apps\\runtime-ui\\build\\client",
+      unifiedRuntimeConfigPath: undefined,
     });
   });
 
@@ -7016,6 +7056,7 @@ describe("runtime-host-bridge", () => {
       runtimeStateRoot: "/home/tester/.local/share/Role Model Runtime/state",
       scopeId: "runtime-host-bridge",
       staticRoot: "/home/tester/role-model/role-model-router/apps/runtime-ui/build/client",
+      unifiedRuntimeConfigPath: undefined,
     });
   });
 });
