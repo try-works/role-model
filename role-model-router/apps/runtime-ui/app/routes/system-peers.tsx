@@ -1,8 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 
-import { EmptyState, ErrorState, FactCard, LoadingState, PageHeader, SectionCard, StatusPill } from "../components/page-primitives";
+import {
+  EmptyState,
+  ErrorState,
+  FactCard,
+  LoadingState,
+  PageHeader,
+  SectionCard,
+  StatusPill,
+} from "../components/page-primitives";
 import { mutedPanelClassName, secondaryButtonClassName } from "../lib/design-system";
-import { fetchRuntimeSnapshot, type RuntimeSnapshot } from "../lib/runtime-api";
+import { type RuntimeSnapshot, fetchRuntimeSnapshot } from "../lib/runtime-api";
 
 export default function SystemPeersRoute() {
   const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(null);
@@ -11,7 +19,9 @@ export default function SystemPeersRoute() {
   useEffect(() => {
     void fetchRuntimeSnapshot()
       .then(setSnapshot)
-      .catch((value: unknown) => setError(value instanceof Error ? value.message : "Could not load peer topology details."));
+      .catch((value: unknown) =>
+        setError(value instanceof Error ? value.message : "Could not load peer topology details."),
+      );
   }, []);
 
   const peerGroups = useMemo(() => {
@@ -46,15 +56,31 @@ export default function SystemPeersRoute() {
       />
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        <FactCard label="Configured peers" value={peerGroups.length} detail="Peer groups observed in the current runtime model list." emphasis />
-        <FactCard label="Peer models" value={peerModelCount} detail="Models currently attributed to a peer source in the runtime listing." />
-        <FactCard label="Runtime models" value={snapshot?.models.length ?? 0} detail="Total runtime-visible model count used as context for peer posture." />
+        <FactCard
+          label="Configured peers"
+          value={peerGroups.length}
+          detail="Peer groups observed in the current runtime model list."
+          emphasis
+        />
+        <FactCard
+          label="Peer models"
+          value={peerModelCount}
+          detail="Models currently attributed to a peer source in the runtime listing."
+        />
+        <FactCard
+          label="Runtime models"
+          value={snapshot?.models.length ?? 0}
+          detail="Total runtime-visible model count used as context for peer posture."
+        />
       </div>
 
       {error ? <ErrorState label={error} /> : null}
 
       <div className="grid gap-4 xl:grid-cols-[0.95fr_1.05fr]">
-        <SectionCard title="Peer inventory" description="Inventory first: show explicit peer-backed model groups when they exist, otherwise keep the empty state explicit.">
+        <SectionCard
+          title="Peer inventory"
+          description="Inventory first: show explicit peer-backed model groups when they exist, otherwise keep the empty state explicit."
+        >
           {!snapshot ? (
             <LoadingState label="Loading peer inventory…" />
           ) : peerGroups.length === 0 ? (
@@ -65,7 +91,9 @@ export default function SystemPeersRoute() {
                 <div key={group.peerId} className={`${mutedPanelClassName} p-4`}>
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <p className="font-medium text-[var(--rm-fg)]">{group.peerId}</p>
-                    <StatusPill tone="accent">{group.modelIds.length} model{group.modelIds.length === 1 ? "" : "s"}</StatusPill>
+                    <StatusPill tone="accent">
+                      {group.modelIds.length} model{group.modelIds.length === 1 ? "" : "s"}
+                    </StatusPill>
                   </div>
                   <div className="mt-3 flex flex-wrap gap-2">
                     {group.modelIds.map((modelId) => (
@@ -80,7 +108,10 @@ export default function SystemPeersRoute() {
           )}
         </SectionCard>
 
-        <SectionCard title="Peer contract fields" description="These fields come from the vendored host contract and define how a peer is wired into the runtime boundary.">
+        <SectionCard
+          title="Peer contract fields"
+          description="These fields come from the vendored host contract and define how a peer is wired into the runtime boundary."
+        >
           <div className="grid gap-3 md:grid-cols-2">
             {[
               ["proxy", "Base URL to proxy peer requests through."],
@@ -89,7 +120,10 @@ export default function SystemPeersRoute() {
               ["filters", "Peer-local request filters or strip rules."],
               ["timeouts", "Proxy timeout settings applied to peer traffic."],
             ].map(([label, detail]) => (
-              <div key={label} className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
+              <div
+                key={label}
+                className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}
+              >
                 <p className="font-medium text-[var(--rm-fg)]">{label}</p>
                 <p className="mt-2">{detail}</p>
               </div>
@@ -98,19 +132,31 @@ export default function SystemPeersRoute() {
         </SectionCard>
       </div>
 
-      <SectionCard title="Runtime policy boundary" description="Peer topology should stay explicit without duplicating the broader runtime health surface.">
+      <SectionCard
+        title="Runtime policy boundary"
+        description="Peer topology should stay explicit without duplicating the broader runtime health surface."
+      >
         <div className="grid gap-4 md:grid-cols-3">
           <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
             <p className="font-medium text-[var(--rm-fg)]">Groups and matrix</p>
-            <p className="mt-2">Peer posture belongs beside group and matrix policy notes so operators can reason about eviction, exclusivity, and remote sourcing together.</p>
+            <p className="mt-2">
+              Peer posture belongs beside group and matrix policy notes so operators can reason
+              about eviction, exclusivity, and remote sourcing together.
+            </p>
           </div>
           <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
             <p className="font-medium text-[var(--rm-fg)]">Empty-state rule</p>
-            <p className="mt-2">When the host has no peers configured, the page still stays live by showing the explicit empty inventory plus the supported peer contract fields.</p>
+            <p className="mt-2">
+              When the host has no peers configured, the page still stays live by showing the
+              explicit empty inventory plus the supported peer contract fields.
+            </p>
           </div>
           <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
             <p className="font-medium text-[var(--rm-fg)]">Raw diagnostics</p>
-            <p className="mt-2">Route-local diagnostics belong on Runtime and Observe; this page stays focused on topology and contract posture.</p>
+            <p className="mt-2">
+              Route-local diagnostics belong on Runtime and Observe; this page stays focused on
+              topology and contract posture.
+            </p>
           </div>
         </div>
       </SectionCard>

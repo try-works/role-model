@@ -93,23 +93,44 @@ export async function runRuntimePackagingValidation(): Promise<{
     stderrChunks.push(chunk);
   });
 
+  let validationResult:
+    | {
+        readonly packagedExecutable: string;
+        readonly healthStatus: string;
+        readonly modelCount: number;
+      }
+    | undefined;
+  let validationError: unknown;
+
   try {
     const health = await waitForOk(`http://127.0.0.1:${port}/healthz`, 20000);
     const healthJson = (await health.json()) as { status: string };
     const models = await waitForOk(`http://127.0.0.1:${port}/v1/models`, 10000);
     const modelJson = (await models.json()) as { data: unknown[] };
-    return {
+    validationResult = {
       packagedExecutable: packaged.outputPath,
       healthStatus: healthJson.status,
       modelCount: modelJson.data.length,
     };
+  } catch (error) {
+    validationError = error;
   } finally {
     child.kill("SIGTERM");
     await rm(runtimeStateRoot, { recursive: true, force: true });
-    if (stderrChunks.join("").trim().length > 0 && !child.killed) {
-      throw new Error(stderrChunks.join(""));
-    }
   }
+
+  const stderrOutput = stderrChunks.join("").trim();
+  if (validationError) {
+    throw validationError;
+  }
+  if (stderrOutput.length > 0 && !child.killed) {
+    throw new Error(stderrOutput);
+  }
+  if (!validationResult) {
+    throw new Error("Runtime packaging validation did not produce a result.");
+  }
+
+  return validationResult;
 }
 
 const result = await runRuntimePackagingValidation();

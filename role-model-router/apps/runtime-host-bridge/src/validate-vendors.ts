@@ -1,17 +1,17 @@
-import path from "node:path";
-import os from "node:os";
-import { spawn, spawnSync, type ChildProcess } from "node:child_process";
-import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
+import { type ChildProcess, spawn, spawnSync } from "node:child_process";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { createServer } from "node:net";
+import os from "node:os";
+import path from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
 
 import { stringify } from "yaml";
 
 import {
+  type RuntimeBridgeBackend,
   createRuntimeBridgeBackend,
   startBridgeServer,
-  type RuntimeBridgeBackend,
 } from "./index.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -160,21 +160,23 @@ export type RuntimeVendorValidationPlan = {
   readonly localModelId: string;
   readonly remoteModelId: string;
   readonly decisionConfig: RuntimeValidationConfig;
-  readonly localConfig: RuntimeValidationConfig & { readonly llama_swap: LlamaSwapValidationConfig };
-  readonly remoteConfig: RuntimeValidationConfig & { readonly litellm_proxy: LiteLLMValidationConfig };
+  readonly localConfig: RuntimeValidationConfig & {
+    readonly llama_swap: LlamaSwapValidationConfig;
+  };
+  readonly remoteConfig: RuntimeValidationConfig & {
+    readonly litellm_proxy: LiteLLMValidationConfig;
+  };
   readonly hybridConfig: RuntimeValidationConfig & {
     readonly llama_swap: LlamaSwapValidationConfig;
     readonly litellm_proxy: LiteLLMValidationConfig;
   };
   readonly vendorHarness: RuntimeVendorHarnessSummary;
-  readonly remoteUpstream:
-    | {
-        readonly port: number;
-        readonly scriptPath: string;
-        readonly apiBaseUrl: string;
-        readonly healthUrl: string;
-      }
-    | null;
+  readonly remoteUpstream: {
+    readonly port: number;
+    readonly scriptPath: string;
+    readonly apiBaseUrl: string;
+    readonly healthUrl: string;
+  } | null;
 };
 
 function createDecisionConfig(): RuntimeValidationConfig {
@@ -329,46 +331,46 @@ export async function createRuntimeVendorValidationPlan(options: {
   if (harnessMode === "mock") {
     const localConfig = createMockLocalConfig(localModelId);
     const remoteConfig = createMockRemoteConfig(remoteModelId);
-      return {
-        aliasModelId,
-        difficultyAliasModelId,
-        intelligentAliasModelId,
-        localModelId,
-        remoteModelId,
-        decisionConfig: createDecisionConfig(),
+    return {
+      aliasModelId,
+      difficultyAliasModelId,
+      intelligentAliasModelId,
+      localModelId,
+      remoteModelId,
+      decisionConfig: createDecisionConfig(),
       localConfig,
       remoteConfig,
-        hybridConfig: {
-          ...createDecisionConfig(),
-           difficulty_classifier: {
-             enabled: true,
-             rubric_version: "v1",
-             source_type: "remote",
-             model_id: remoteModelId,
-             timeout_ms: 1500,
-             fallback_difficulty: "medium",
-           },
-           controller: {
-             enabled: true,
-             source_type: "remote",
-             model_id: remoteModelId,
-             timeout_ms: 1500,
-           },
-           model_aliases: {
-             [aliasModelId]: {
-               model_ids: [localModelId, remoteModelId],
-             },
-             [difficultyAliasModelId]: {
-               mode: "difficulty",
-               model_ids: [localModelId, remoteModelId],
-             },
-             [intelligentAliasModelId]: {
-               mode: "intelligent",
-               model_ids: [localModelId, remoteModelId],
-             },
-           },
-          llama_swap: localConfig.llama_swap,
-          litellm_proxy: remoteConfig.litellm_proxy,
+      hybridConfig: {
+        ...createDecisionConfig(),
+        difficulty_classifier: {
+          enabled: true,
+          rubric_version: "v1",
+          source_type: "remote",
+          model_id: remoteModelId,
+          timeout_ms: 1500,
+          fallback_difficulty: "medium",
+        },
+        controller: {
+          enabled: true,
+          source_type: "remote",
+          model_id: remoteModelId,
+          timeout_ms: 1500,
+        },
+        model_aliases: {
+          [aliasModelId]: {
+            model_ids: [localModelId, remoteModelId],
+          },
+          [difficultyAliasModelId]: {
+            mode: "difficulty",
+            model_ids: [localModelId, remoteModelId],
+          },
+          [intelligentAliasModelId]: {
+            mode: "intelligent",
+            model_ids: [localModelId, remoteModelId],
+          },
+        },
+        llama_swap: localConfig.llama_swap,
+        litellm_proxy: remoteConfig.litellm_proxy,
       },
       vendorHarness: {
         local: "managed-node-mock",
@@ -689,7 +691,8 @@ export async function runRuntimeVendorValidation(options: {
   };
 }> {
   const runtimeStateRoot =
-    options.runtimeStateRoot ?? (await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-vendors-")));
+    options.runtimeStateRoot ??
+    (await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-vendors-")));
   const scopePrefix = options.scopeId ?? "runtime-vendor-validation";
   const plan = await createRuntimeVendorValidationPlan({
     runtimeStateRoot,
@@ -713,214 +716,163 @@ export async function runRuntimeVendorValidation(options: {
             healthUrl: plan.remoteUpstream.healthUrl,
           });
     try {
-    const decisionResponse = await postResponses(
-      decisionRuntime.baseUrl,
-      plan.remoteModelId,
-      "req-runtime-vendor-decision",
-    );
-    const decisionBody = decisionResponse.body as {
-      error?: {
-        type?: string;
+      const decisionResponse = await postResponses(
+        decisionRuntime.baseUrl,
+        plan.remoteModelId,
+        "req-runtime-vendor-decision",
+      );
+      const decisionBody = decisionResponse.body as {
+        error?: {
+          type?: string;
+        };
       };
-    };
 
-    const localRuntime = await startRuntimeForConfig({
-      repoRoot: options.repoRoot,
-      runtimeStateRoot,
-      scopeId: `${scopePrefix}-local`,
-      config: plan.localConfig,
-    });
-    try {
-      const localResponse = await postResponses(
-        localRuntime.baseUrl,
-        plan.localModelId,
-        "req-runtime-vendor-local",
-      );
-      const localStreaming = await collectStreamedResponse(
-        localRuntime.backend,
-        plan.localModelId,
-        "req-runtime-vendor-local-stream",
-      );
-      const localDirect = await localRuntime.backend.executeResponses(
-        {
-          model: plan.localModelId,
-          input: "Summarize the chosen endpoint.",
-        },
-        "req-runtime-vendor-local-direct",
-      );
-
-      const remoteRuntime = await startRuntimeForConfig({
+      const localRuntime = await startRuntimeForConfig({
         repoRoot: options.repoRoot,
         runtimeStateRoot,
-        scopeId: `${scopePrefix}-remote`,
-        config: plan.remoteConfig,
+        scopeId: `${scopePrefix}-local`,
+        config: plan.localConfig,
       });
       try {
-        const remoteResponse = await postResponses(
-          remoteRuntime.baseUrl,
-          plan.remoteModelId,
-          "req-runtime-vendor-remote",
+        const localResponse = await postResponses(
+          localRuntime.baseUrl,
+          plan.localModelId,
+          "req-runtime-vendor-local",
         );
-        const remoteStreaming = await collectStreamedResponse(
-          remoteRuntime.backend,
-          plan.remoteModelId,
-          "req-runtime-vendor-remote-stream",
+        const localStreaming = await collectStreamedResponse(
+          localRuntime.backend,
+          plan.localModelId,
+          "req-runtime-vendor-local-stream",
         );
-        const remoteDirect = await remoteRuntime.backend.executeResponses(
+        const localDirect = await localRuntime.backend.executeResponses(
           {
-            model: plan.remoteModelId,
+            model: plan.localModelId,
             input: "Summarize the chosen endpoint.",
           },
-          "req-runtime-vendor-remote-direct",
+          "req-runtime-vendor-local-direct",
         );
 
-        const hybridRuntime = await startRuntimeForConfig({
+        const remoteRuntime = await startRuntimeForConfig({
           repoRoot: options.repoRoot,
           runtimeStateRoot,
-          scopeId: `${scopePrefix}-hybrid`,
-          config: plan.hybridConfig,
+          scopeId: `${scopePrefix}-remote`,
+          config: plan.remoteConfig,
         });
         try {
-          const hybridLocal = await hybridRuntime.backend.executeResponses(
-            {
-              model: plan.localModelId,
-              input: "Summarize the chosen endpoint.",
-            },
-            "req-runtime-vendor-hybrid-local",
+          const remoteResponse = await postResponses(
+            remoteRuntime.baseUrl,
+            plan.remoteModelId,
+            "req-runtime-vendor-remote",
           );
-          const hybridRemote = await hybridRuntime.backend.executeResponses(
+          const remoteStreaming = await collectStreamedResponse(
+            remoteRuntime.backend,
+            plan.remoteModelId,
+            "req-runtime-vendor-remote-stream",
+          );
+          const remoteDirect = await remoteRuntime.backend.executeResponses(
             {
               model: plan.remoteModelId,
               input: "Summarize the chosen endpoint.",
             },
-            "req-runtime-vendor-hybrid-remote",
+            "req-runtime-vendor-remote-direct",
           );
-          const hybridAlias = await hybridRuntime.backend.executeResponses(
-            {
-              model: plan.aliasModelId,
-              input: "Summarize the chosen endpoint.",
-            },
-            "req-runtime-vendor-hybrid-alias",
-          );
-          const modeMatrixPrompt = "Prefer the strongest remote endpoint for this request.";
-          const modeMatrixBaseline = await hybridRuntime.backend.executeResponses(
-            {
-              model: plan.aliasModelId,
-              input: modeMatrixPrompt,
-            },
-            "req-runtime-vendor-mode-baseline",
-            undefined,
-            {
-              routingModeOverride: "baseline",
-            },
-          );
-          const modeMatrixDifficulty = await hybridRuntime.backend.executeResponses(
-            {
-              model: plan.aliasModelId,
-              input: modeMatrixPrompt,
-            },
-            "req-runtime-vendor-mode-difficulty",
-            undefined,
-            {
-              routingModeOverride: "difficulty",
-            },
-          );
-          const modeMatrixController = await hybridRuntime.backend.executeResponses(
-            {
-              model: plan.aliasModelId,
-              input: modeMatrixPrompt,
-            },
-            "req-runtime-vendor-mode-controller",
-            undefined,
-            {
-              routingModeOverride: "controller",
-            },
-          );
-          const modeMatrixHybrid = await hybridRuntime.backend.executeResponses(
-            {
-              model: plan.aliasModelId,
-              input: modeMatrixPrompt,
-            },
-            "req-runtime-vendor-mode-hybrid",
-            undefined,
-            {
-              routingModeOverride: "hybrid",
-            },
-          );
-          const hybridIntelligent = await hybridRuntime.backend.executeResponses(
-            {
-              model: plan.intelligentAliasModelId,
-              input: "Prefer the strongest remote endpoint for this request.",
-            },
-            "req-runtime-vendor-hybrid-intelligent",
-          );
-          const hybridControllerFallback = await hybridRuntime.backend.executeResponses(
-            {
-              model: plan.intelligentAliasModelId,
-              input: "invalid-controller-fallback: preserve the baseline alias route when controller output is invalid.",
-            },
-            "req-runtime-vendor-hybrid-controller-fallback",
-          );
-          const hybridDifficultyEasy = await hybridRuntime.backend.executeResponses(
-            {
-              model: plan.difficultyAliasModelId,
-              input: "Say hello in one sentence.",
-            },
-            "req-runtime-vendor-hybrid-difficulty-easy",
-          );
-          const hybridDifficultyHard = await hybridRuntime.backend.executeResponses(
-            {
-              model: plan.difficultyAliasModelId,
-              input:
-                "Analyze this code-edit workflow, apply multiple constraints, verify the final contract end to end, and decompose the work before producing the answer.",
-              tools: [
-                {
-                  type: "function",
-                  name: "readSchema",
-                  description: "Read the current schema before editing.",
-                  parameters: {
-                    type: "object",
-                    properties: {},
-                  },
-                },
-                {
-                  type: "function",
-                  name: "runTests",
-                  description: "Run the relevant verification suite after the change.",
-                  parameters: {
-                    type: "object",
-                    properties: {},
-                  },
-                },
-              ],
-            },
-            "req-runtime-vendor-hybrid-difficulty-hard",
-          );
-          const hybridRepeatRuntime = await startRuntimeForConfig({
+
+          const hybridRuntime = await startRuntimeForConfig({
             repoRoot: options.repoRoot,
             runtimeStateRoot,
-            scopeId: `${scopePrefix}-hybrid-repeat`,
-            config: {
-              ...plan.hybridConfig,
-              observed_data: {
-                difficulty_learning: {
-                  invalidation: {
-                    max_context_tokens_delta: 4000,
-                    max_history_turn_delta: 4,
-                    max_tool_count_delta: 2,
-                    max_instruction_constraint_delta: 8,
-                    max_decomposition_keyword_delta: 8,
-                    reclassify_on_code_or_schema_change: false,
-                  },
-                },
-              },
-            },
+            scopeId: `${scopePrefix}-hybrid`,
+            config: plan.hybridConfig,
           });
-          let hybridDifficultyRepeatObservation: Awaited<
-            ReturnType<RuntimeBridgeBackend["readRequestObservation"]>
-          > | null = null;
           try {
-            await hybridRepeatRuntime.backend.executeResponses(
+            const hybridLocal = await hybridRuntime.backend.executeResponses(
+              {
+                model: plan.localModelId,
+                input: "Summarize the chosen endpoint.",
+              },
+              "req-runtime-vendor-hybrid-local",
+            );
+            const hybridRemote = await hybridRuntime.backend.executeResponses(
+              {
+                model: plan.remoteModelId,
+                input: "Summarize the chosen endpoint.",
+              },
+              "req-runtime-vendor-hybrid-remote",
+            );
+            const hybridAlias = await hybridRuntime.backend.executeResponses(
+              {
+                model: plan.aliasModelId,
+                input: "Summarize the chosen endpoint.",
+              },
+              "req-runtime-vendor-hybrid-alias",
+            );
+            const modeMatrixPrompt = "Prefer the strongest remote endpoint for this request.";
+            const modeMatrixBaseline = await hybridRuntime.backend.executeResponses(
+              {
+                model: plan.aliasModelId,
+                input: modeMatrixPrompt,
+              },
+              "req-runtime-vendor-mode-baseline",
+              undefined,
+              {
+                routingModeOverride: "baseline",
+              },
+            );
+            const modeMatrixDifficulty = await hybridRuntime.backend.executeResponses(
+              {
+                model: plan.aliasModelId,
+                input: modeMatrixPrompt,
+              },
+              "req-runtime-vendor-mode-difficulty",
+              undefined,
+              {
+                routingModeOverride: "difficulty",
+              },
+            );
+            const modeMatrixController = await hybridRuntime.backend.executeResponses(
+              {
+                model: plan.aliasModelId,
+                input: modeMatrixPrompt,
+              },
+              "req-runtime-vendor-mode-controller",
+              undefined,
+              {
+                routingModeOverride: "controller",
+              },
+            );
+            const modeMatrixHybrid = await hybridRuntime.backend.executeResponses(
+              {
+                model: plan.aliasModelId,
+                input: modeMatrixPrompt,
+              },
+              "req-runtime-vendor-mode-hybrid",
+              undefined,
+              {
+                routingModeOverride: "hybrid",
+              },
+            );
+            const hybridIntelligent = await hybridRuntime.backend.executeResponses(
+              {
+                model: plan.intelligentAliasModelId,
+                input: "Prefer the strongest remote endpoint for this request.",
+              },
+              "req-runtime-vendor-hybrid-intelligent",
+            );
+            const hybridControllerFallback = await hybridRuntime.backend.executeResponses(
+              {
+                model: plan.intelligentAliasModelId,
+                input:
+                  "invalid-controller-fallback: preserve the baseline alias route when controller output is invalid.",
+              },
+              "req-runtime-vendor-hybrid-controller-fallback",
+            );
+            const hybridDifficultyEasy = await hybridRuntime.backend.executeResponses(
+              {
+                model: plan.difficultyAliasModelId,
+                input: "Say hello in one sentence.",
+              },
+              "req-runtime-vendor-hybrid-difficulty-easy",
+            );
+            const hybridDifficultyHard = await hybridRuntime.backend.executeResponses(
               {
                 model: plan.difficultyAliasModelId,
                 input:
@@ -946,154 +898,219 @@ export async function runRuntimeVendorValidation(options: {
                   },
                 ],
               },
-              "req-runtime-vendor-hybrid-repeat-seed-hard",
+              "req-runtime-vendor-hybrid-difficulty-hard",
             );
-            await hybridRepeatRuntime.backend.executeResponses(
-              {
-                model: plan.difficultyAliasModelId,
-                input: "Say hello in one sentence.",
+            const hybridRepeatRuntime = await startRuntimeForConfig({
+              repoRoot: options.repoRoot,
+              runtimeStateRoot,
+              scopeId: `${scopePrefix}-hybrid-repeat`,
+              config: {
+                ...plan.hybridConfig,
+                observed_data: {
+                  difficulty_learning: {
+                    invalidation: {
+                      max_context_tokens_delta: 4000,
+                      max_history_turn_delta: 4,
+                      max_tool_count_delta: 2,
+                      max_instruction_constraint_delta: 8,
+                      max_decomposition_keyword_delta: 8,
+                      reclassify_on_code_or_schema_change: false,
+                    },
+                  },
+                },
               },
-              "req-runtime-vendor-hybrid-difficulty-repeat",
+            });
+            let hybridDifficultyRepeatObservation: Awaited<
+              ReturnType<RuntimeBridgeBackend["readRequestObservation"]>
+            > | null = null;
+            try {
+              await hybridRepeatRuntime.backend.executeResponses(
+                {
+                  model: plan.difficultyAliasModelId,
+                  input:
+                    "Analyze this code-edit workflow, apply multiple constraints, verify the final contract end to end, and decompose the work before producing the answer.",
+                  tools: [
+                    {
+                      type: "function",
+                      name: "readSchema",
+                      description: "Read the current schema before editing.",
+                      parameters: {
+                        type: "object",
+                        properties: {},
+                      },
+                    },
+                    {
+                      type: "function",
+                      name: "runTests",
+                      description: "Run the relevant verification suite after the change.",
+                      parameters: {
+                        type: "object",
+                        properties: {},
+                      },
+                    },
+                  ],
+                },
+                "req-runtime-vendor-hybrid-repeat-seed-hard",
+              );
+              await hybridRepeatRuntime.backend.executeResponses(
+                {
+                  model: plan.difficultyAliasModelId,
+                  input: "Say hello in one sentence.",
+                },
+                "req-runtime-vendor-hybrid-difficulty-repeat",
+              );
+              hybridDifficultyRepeatObservation =
+                await hybridRepeatRuntime.backend.readRequestObservation(
+                  "req-runtime-vendor-hybrid-difficulty-repeat",
+                );
+            } finally {
+              await hybridRepeatRuntime.close();
+            }
+            const healthResponse = await fetch(`${hybridRuntime.baseUrl}/healthz`);
+            const telemetrySummary = await hybridRuntime.backend.readTelemetrySummary();
+            const telemetryRows = await hybridRuntime.backend.listTelemetryComparisonRows();
+            const telemetryRequests = await hybridRuntime.backend.listTelemetryRequests({
+              limit: 20,
+            });
+            const localObservation = await localRuntime.backend.readRequestObservation(
+              "req-runtime-vendor-local-direct",
             );
-            hybridDifficultyRepeatObservation = await hybridRepeatRuntime.backend.readRequestObservation(
-              "req-runtime-vendor-hybrid-difficulty-repeat",
+            const remoteObservation = await remoteRuntime.backend.readRequestObservation(
+              "req-runtime-vendor-remote-direct",
             );
-          } finally {
-            await hybridRepeatRuntime.close();
-          }
-          const healthResponse = await fetch(`${hybridRuntime.baseUrl}/healthz`);
-          const telemetrySummary = await hybridRuntime.backend.readTelemetrySummary();
-          const telemetryRows = await hybridRuntime.backend.listTelemetryComparisonRows();
-          const telemetryRequests = await hybridRuntime.backend.listTelemetryRequests({ limit: 20 });
-          const localObservation = await localRuntime.backend.readRequestObservation(
-            "req-runtime-vendor-local-direct",
-          );
-          const remoteObservation = await remoteRuntime.backend.readRequestObservation(
-            "req-runtime-vendor-remote-direct",
-          );
-          const hybridAliasObservation = await hybridRuntime.backend.readRequestObservation(
-            "req-runtime-vendor-hybrid-alias",
-          );
-          const modeMatrixBaselineObservation = await hybridRuntime.backend.readRequestObservation(
-            "req-runtime-vendor-mode-baseline",
-          );
-          const modeMatrixDifficultyObservation = await hybridRuntime.backend.readRequestObservation(
-            "req-runtime-vendor-mode-difficulty",
-          );
-          const modeMatrixControllerObservation = await hybridRuntime.backend.readRequestObservation(
-            "req-runtime-vendor-mode-controller",
-          );
-          const modeMatrixHybridObservation = await hybridRuntime.backend.readRequestObservation(
-            "req-runtime-vendor-mode-hybrid",
-          );
-          const hybridIntelligentObservation = await hybridRuntime.backend.readRequestObservation(
-            "req-runtime-vendor-hybrid-intelligent",
-          );
-          const hybridControllerFallbackObservation = await hybridRuntime.backend.readRequestObservation(
-            "req-runtime-vendor-hybrid-controller-fallback",
-          );
-          const hybridDifficultyEasyObservation = await hybridRuntime.backend.readRequestObservation(
-            "req-runtime-vendor-hybrid-difficulty-easy",
-          );
-          const hybridDifficultyHardObservation = await hybridRuntime.backend.readRequestObservation(
-            "req-runtime-vendor-hybrid-difficulty-hard",
-          );
-          const localObservedProfile = await localRuntime.backend.readEndpointProfile(localDirect.endpointId);
-          const remoteObservedProfile = await remoteRuntime.backend.readEndpointProfile(remoteDirect.endpointId);
-          return {
-            decisionOnly: {
-              statusCode: decisionResponse.statusCode,
-              errorClass: decisionBody.error?.type ?? "UNKNOWN",
-            },
-            localOnly: {
-              executionMode: (await localRuntime.backend.readRuntimeSummary()).executionMode,
-              vendorId: localDirect.vendorId,
-              outputText: localDirect.outputText,
-              responseHeaders: localResponse.headers,
-            },
-            remoteOnly: {
-              executionMode: (await remoteRuntime.backend.readRuntimeSummary()).executionMode,
-              vendorId: remoteDirect.vendorId,
-              outputText: remoteDirect.outputText,
-              costUsd: remoteDirect.vendorMetadata?.costUsd,
-              responseHeaders: remoteResponse.headers,
-            },
-            streaming: {
-              local: localStreaming,
-              remote: remoteStreaming,
-            },
-            hybrid: {
-              executionMode: (await hybridRuntime.backend.readRuntimeSummary()).executionMode,
-              localVendorId: hybridLocal.vendorId,
-              remoteVendorId: hybridRemote.vendorId,
-            },
-            modeMatrix: {
-              baseline: {
-                vendorId: modeMatrixBaseline.vendorId,
-                observation: modeMatrixBaselineObservation,
+            const hybridAliasObservation = await hybridRuntime.backend.readRequestObservation(
+              "req-runtime-vendor-hybrid-alias",
+            );
+            const modeMatrixBaselineObservation =
+              await hybridRuntime.backend.readRequestObservation(
+                "req-runtime-vendor-mode-baseline",
+              );
+            const modeMatrixDifficultyObservation =
+              await hybridRuntime.backend.readRequestObservation(
+                "req-runtime-vendor-mode-difficulty",
+              );
+            const modeMatrixControllerObservation =
+              await hybridRuntime.backend.readRequestObservation(
+                "req-runtime-vendor-mode-controller",
+              );
+            const modeMatrixHybridObservation = await hybridRuntime.backend.readRequestObservation(
+              "req-runtime-vendor-mode-hybrid",
+            );
+            const hybridIntelligentObservation = await hybridRuntime.backend.readRequestObservation(
+              "req-runtime-vendor-hybrid-intelligent",
+            );
+            const hybridControllerFallbackObservation =
+              await hybridRuntime.backend.readRequestObservation(
+                "req-runtime-vendor-hybrid-controller-fallback",
+              );
+            const hybridDifficultyEasyObservation =
+              await hybridRuntime.backend.readRequestObservation(
+                "req-runtime-vendor-hybrid-difficulty-easy",
+              );
+            const hybridDifficultyHardObservation =
+              await hybridRuntime.backend.readRequestObservation(
+                "req-runtime-vendor-hybrid-difficulty-hard",
+              );
+            const localObservedProfile = await localRuntime.backend.readEndpointProfile(
+              localDirect.endpointId,
+            );
+            const remoteObservedProfile = await remoteRuntime.backend.readEndpointProfile(
+              remoteDirect.endpointId,
+            );
+            return {
+              decisionOnly: {
+                statusCode: decisionResponse.statusCode,
+                errorClass: decisionBody.error?.type ?? "UNKNOWN",
               },
-              difficulty: {
-                vendorId: modeMatrixDifficulty.vendorId,
-                observation: modeMatrixDifficultyObservation,
+              localOnly: {
+                executionMode: (await localRuntime.backend.readRuntimeSummary()).executionMode,
+                vendorId: localDirect.vendorId,
+                outputText: localDirect.outputText,
+                responseHeaders: localResponse.headers,
               },
-              controller: {
-                vendorId: modeMatrixController.vendorId,
-                observation: modeMatrixControllerObservation,
+              remoteOnly: {
+                executionMode: (await remoteRuntime.backend.readRuntimeSummary()).executionMode,
+                vendorId: remoteDirect.vendorId,
+                outputText: remoteDirect.outputText,
+                costUsd: remoteDirect.vendorMetadata?.costUsd,
+                responseHeaders: remoteResponse.headers,
+              },
+              streaming: {
+                local: localStreaming,
+                remote: remoteStreaming,
               },
               hybrid: {
-                vendorId: modeMatrixHybrid.vendorId,
-                observation: modeMatrixHybridObservation,
+                executionMode: (await hybridRuntime.backend.readRuntimeSummary()).executionMode,
+                localVendorId: hybridLocal.vendorId,
+                remoteVendorId: hybridRemote.vendorId,
               },
-            },
-            difficultyHybrid: {
-              easyVendorId: hybridDifficultyEasy.vendorId,
-              hardVendorId: hybridDifficultyHard.vendorId,
-              easyObservation: hybridDifficultyEasyObservation,
-              hardObservation: hybridDifficultyHardObservation,
-              repeatObservation: hybridDifficultyRepeatObservation,
-            },
-            intelligentHybrid: {
-              vendorId: hybridIntelligent.vendorId,
-              outputText: hybridIntelligent.outputText,
-              observation: hybridIntelligentObservation,
-            },
-            controllerFallback: {
-              vendorId: hybridControllerFallback.vendorId,
-              outputText: hybridControllerFallback.outputText,
-              observation: hybridControllerFallbackObservation,
-            },
-            aliasHybrid: {
-              vendorId: hybridAlias.vendorId,
-              outputText: hybridAlias.outputText,
-              observation: hybridAliasObservation,
-            },
-            vendorHarness: {
-              ...plan.vendorHarness,
-            },
-            health: await healthResponse.json(),
-            telemetry: {
-              summary: telemetrySummary,
-              rows: telemetryRows,
-              requests: telemetryRequests,
-            },
-            observations: {
-              local: localObservation,
-              remote: remoteObservation,
-            },
-            observedProfiles: {
-              local: localObservedProfile,
-              remote: remoteObservedProfile,
-            },
-          };
+              modeMatrix: {
+                baseline: {
+                  vendorId: modeMatrixBaseline.vendorId,
+                  observation: modeMatrixBaselineObservation,
+                },
+                difficulty: {
+                  vendorId: modeMatrixDifficulty.vendorId,
+                  observation: modeMatrixDifficultyObservation,
+                },
+                controller: {
+                  vendorId: modeMatrixController.vendorId,
+                  observation: modeMatrixControllerObservation,
+                },
+                hybrid: {
+                  vendorId: modeMatrixHybrid.vendorId,
+                  observation: modeMatrixHybridObservation,
+                },
+              },
+              difficultyHybrid: {
+                easyVendorId: hybridDifficultyEasy.vendorId,
+                hardVendorId: hybridDifficultyHard.vendorId,
+                easyObservation: hybridDifficultyEasyObservation,
+                hardObservation: hybridDifficultyHardObservation,
+                repeatObservation: hybridDifficultyRepeatObservation,
+              },
+              intelligentHybrid: {
+                vendorId: hybridIntelligent.vendorId,
+                outputText: hybridIntelligent.outputText,
+                observation: hybridIntelligentObservation,
+              },
+              controllerFallback: {
+                vendorId: hybridControllerFallback.vendorId,
+                outputText: hybridControllerFallback.outputText,
+                observation: hybridControllerFallbackObservation,
+              },
+              aliasHybrid: {
+                vendorId: hybridAlias.vendorId,
+                outputText: hybridAlias.outputText,
+                observation: hybridAliasObservation,
+              },
+              vendorHarness: {
+                ...plan.vendorHarness,
+              },
+              health: await healthResponse.json(),
+              telemetry: {
+                summary: telemetrySummary,
+                rows: telemetryRows,
+                requests: telemetryRequests,
+              },
+              observations: {
+                local: localObservation,
+                remote: remoteObservation,
+              },
+              observedProfiles: {
+                local: localObservedProfile,
+                remote: remoteObservedProfile,
+              },
+            };
+          } finally {
+            await hybridRuntime.close();
+          }
         } finally {
-          await hybridRuntime.close();
+          await remoteRuntime.close();
         }
       } finally {
-        await remoteRuntime.close();
+        await localRuntime.close();
       }
-    } finally {
-      await localRuntime.close();
-    }
     } finally {
       await remoteUpstream?.close();
     }

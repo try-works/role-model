@@ -2,11 +2,11 @@ import path from "node:path";
 import { parseArgs } from "node:util";
 
 import {
+  type RuntimeBridgeBackend,
+  type StartBridgeServerOptions,
   createRuntimeBridgeBackend,
   resolveBridgeServerOptions,
   startBridgeServer,
-  type RuntimeBridgeBackend,
-  type StartBridgeServerOptions,
 } from "./index.js";
 
 type CliBackend = Pick<

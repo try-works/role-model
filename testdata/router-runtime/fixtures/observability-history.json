@@ -1,1 +1,30 @@
-{"byEndpointId":{}}
+{
+  "byEndpointId": {
+    "openai.personal.primary.us-east-1.fast": [
+      {
+        "endpoint_id": "openai.personal.primary.us-east-1.fast",
+        "endpoint_version": "run07-registry-v1:default",
+        "source_type": "benchmark",
+        "timestamp_ms": 1700000000100,
+        "latency_ms": 105,
+        "latency_ms_p95": 140,
+        "tokens_per_sec": 82,
+        "cost_per_1k_tokens_est": 0.004,
+        "judge_score": 0.91
+      }
+    ],
+    "anthropic.team.shared.us-east-1.default": [
+      {
+        "endpoint_id": "anthropic.team.shared.us-east-1.default",
+        "endpoint_version": "run07-registry-v1:default",
+        "source_type": "benchmark",
+        "timestamp_ms": 1700000000200,
+        "latency_ms": 132,
+        "latency_ms_p95": 176,
+        "tokens_per_sec": 58,
+        "cost_per_1k_tokens_est": 0.006,
+        "judge_score": 0.86
+      }
+    ]
+  }
+}

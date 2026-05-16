@@ -1,8 +1,18 @@
 import { useCallback, useEffect, useState } from "react";
 
-import { PageHeader, SectionCard, EmptyState, LoadingState, ErrorState } from "../components/page-primitives";
-import { fieldClassName, primaryButtonClassName, secondaryButtonClassName } from "../lib/design-system";
-import { fetchPeers, updatePeers, checkPeerHealth } from "../lib/runtime-api";
+import {
+  EmptyState,
+  ErrorState,
+  LoadingState,
+  PageHeader,
+  SectionCard,
+} from "../components/page-primitives";
+import {
+  fieldClassName,
+  primaryButtonClassName,
+  secondaryButtonClassName,
+} from "../lib/design-system";
+import { checkPeerHealth, fetchPeers, updatePeers } from "../lib/runtime-api";
 
 interface PeerConfig {
   id: string;
@@ -102,7 +112,12 @@ export default function LocalPeersRoute() {
         title="Peer instances"
         description="Peer llama-swap instance inventory and management."
         actions={
-          <button onClick={refresh} disabled={loading} className={secondaryButtonClassName}>
+          <button
+            type="button"
+            onClick={refresh}
+            disabled={loading}
+            className={secondaryButtonClassName}
+          >
             {loading ? "Refreshing…" : "Refresh"}
           </button>
         }
@@ -143,6 +158,7 @@ export default function LocalPeersRoute() {
                 </div>
                 <div className="flex gap-2">
                   <button
+                    type="button"
                     onClick={() => handleCheckHealth(peer)}
                     disabled={checkingHealth[peer.id]}
                     className={secondaryButtonClassName}
@@ -150,6 +166,7 @@ export default function LocalPeersRoute() {
                     {checkingHealth[peer.id] ? "Checking…" : "Check health"}
                   </button>
                   <button
+                    type="button"
                     onClick={() => handleRemove(peer.id)}
                     disabled={saving}
                     className={`${secondaryButtonClassName} text-[var(--rm-error)]`}
@@ -166,10 +183,14 @@ export default function LocalPeersRoute() {
       <SectionCard title="Add peer" description="Register a new peer llama-swap instance.">
         <div className="space-y-4">
           <div className="space-y-2">
-            <label className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]">
+            <label
+              htmlFor="peer-url"
+              className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]"
+            >
               Peer URL
             </label>
             <input
+              id="peer-url"
               type="url"
               value={newUrl}
               onChange={(e) => setNewUrl(e.target.value)}
@@ -178,10 +199,14 @@ export default function LocalPeersRoute() {
             />
           </div>
           <div className="space-y-2">
-            <label className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]">
+            <label
+              htmlFor="peer-auth-token"
+              className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]"
+            >
               Auth token (optional)
             </label>
             <input
+              id="peer-auth-token"
               type="password"
               value={newToken}
               onChange={(e) => setNewToken(e.target.value)}
@@ -189,7 +214,12 @@ export default function LocalPeersRoute() {
               className={fieldClassName}
             />
           </div>
-          <button onClick={handleAdd} disabled={!newUrl.trim() || saving} className={primaryButtonClassName}>
+          <button
+            type="button"
+            onClick={handleAdd}
+            disabled={!newUrl.trim() || saving}
+            className={primaryButtonClassName}
+          >
             {saving ? "Saving…" : "Add peer"}
           </button>
         </div>

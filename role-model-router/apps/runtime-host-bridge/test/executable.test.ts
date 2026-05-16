@@ -1,5 +1,5 @@
-import path from "node:path";
 import { access, readFile } from "node:fs/promises";
+import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { describe, expect, test } from "vitest";
@@ -113,13 +113,22 @@ describe("runtime-host-bridge executable packaging", () => {
       "runtime:package-sea": expect.any(String),
     });
 
-    expect(typeof (packageSea as { resolveBuildTarget?: unknown }).resolveBuildTarget).toBe("function");
-    expect(typeof (packageSea as { createSeaConfigForTarget?: unknown }).createSeaConfigForTarget).toBe("function");
-    expect(typeof (packageSea as { listStandaloneReleaseCopies?: unknown }).listStandaloneReleaseCopies).toBe("function");
+    expect(typeof (packageSea as { resolveBuildTarget?: unknown }).resolveBuildTarget).toBe(
+      "function",
+    );
+    expect(
+      typeof (packageSea as { createSeaConfigForTarget?: unknown }).createSeaConfigForTarget,
+    ).toBe("function");
+    expect(
+      typeof (packageSea as { listStandaloneReleaseCopies?: unknown }).listStandaloneReleaseCopies,
+    ).toBe("function");
 
     const target = (
       packageSea as {
-        resolveBuildTarget: (platform: NodeJS.Platform, arch: string) => {
+        resolveBuildTarget: (
+          platform: NodeJS.Platform,
+          arch: string,
+        ) => {
           platform: NodeJS.Platform;
           arch: string;
           executableName: string;
@@ -132,6 +141,9 @@ describe("runtime-host-bridge executable packaging", () => {
       arch: "x64",
       executableName: "llama-swap.exe",
     });
+    if (!target) {
+      throw new Error("Expected win32 x64 build target to be available.");
+    }
 
     const seaConfig = (
       packageSea as {
@@ -148,7 +160,7 @@ describe("runtime-host-bridge executable packaging", () => {
           assets: Record<string, string>;
         };
       }
-    ).createSeaConfigForTarget(target!);
+    ).createSeaConfigForTarget(target);
 
     expect(seaConfig).toEqual({
       main: "./dist/sea/cli.cjs",
@@ -187,7 +199,8 @@ describe("runtime-host-bridge executable packaging", () => {
         },
         {
           sourceRelativePath: "role-model-router/packages/catalog/data/normalized-catalog.json",
-          destinationRelativePath: "role-model-router/packages/catalog/data/normalized-catalog.json",
+          destinationRelativePath:
+            "role-model-router/packages/catalog/data/normalized-catalog.json",
         },
       ]),
     );

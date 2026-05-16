@@ -1,29 +1,29 @@
 <script lang="ts">
-  import type { HistogramData } from "../lib/types";
+import type { HistogramData } from "../lib/types";
 
-  let {
-    data,
-    unit = "tokens/sec",
-    colorClass = "text-blue-500 dark:text-blue-400",
-  }: {
-    data: HistogramData;
-    unit?: string;
-    colorClass?: string;
-  } = $props();
+const {
+  data,
+  unit = "tokens/sec",
+  colorClass = "text-blue-500 dark:text-blue-400",
+}: {
+  data: HistogramData;
+  unit?: string;
+  colorClass?: string;
+} = $props();
 
-  const height = 250;
-  const padding = { top: 30, right: 20, bottom: 40, left: 75 };
-  const viewBoxWidth = 1200;
-  const chartWidth = viewBoxWidth - padding.left - padding.right;
-  const chartHeight = height - padding.top - padding.bottom;
+const height = 250;
+const padding = { top: 30, right: 20, bottom: 40, left: 75 };
+const viewBoxWidth = 1200;
+const chartWidth = viewBoxWidth - padding.left - padding.right;
+const chartHeight = height - padding.top - padding.bottom;
 
-  let maxCount = $derived(Math.max(...data.bins));
-  let barWidth = $derived(chartWidth / data.bins.length);
-  let range = $derived(data.max - data.min);
+const maxCount = $derived(Math.max(...data.bins));
+const barWidth = $derived(chartWidth / data.bins.length);
+const range = $derived(data.max - data.min);
 
-  function getXPosition(value: number): number {
-    return padding.left + ((value - data.min) / range) * chartWidth;
-  }
+function getXPosition(value: number): number {
+  return padding.left + ((value - data.min) / range) * chartWidth;
+}
 </script>
 
 <div class="mt-2 w-full">

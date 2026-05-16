@@ -1,111 +1,111 @@
-import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
-import { DatabaseSync } from "node:sqlite";
+import { randomUUID } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { type IncomingMessage, type Server, type ServerResponse, createServer } from "node:http";
 import os from "node:os";
 import path from "node:path";
-import { randomUUID } from "node:crypto";
+import { DatabaseSync } from "node:sqlite";
 import { setTimeout as delay } from "node:timers/promises";
 
 import type { NormalizedCatalog, NormalizedCatalogModel } from "@role-model-router/catalog";
 import { assembleContextEnvelope } from "@role-model-router/context-envelope";
 import type { EndpointRegistryResult } from "@role-model-router/endpoint-registry";
-import { buildEndpointRegistry, type RegistrySources } from "@role-model-router/endpoint-registry";
+import { type RegistrySources, buildEndpointRegistry } from "@role-model-router/endpoint-registry";
+import { ProcessSupervisor } from "@role-model-router/process-supervisor";
+import type { ObservedPerformanceSample } from "@role-model-router/profile-aggregator";
 import {
-  routeRuntimeRequest,
   type RoutingModelSelection,
+  routeRuntimeRequest,
 } from "@role-model-router/protocol-routing";
-import { createAnthropicProviderAdapter } from "@role-model-router/provider-anthropic";
-import { createLiteLLMProviderAdapter } from "@role-model-router/provider-litellm";
-import {
-  createMcpConnectorDefinitions,
-  type DeclaredMcpConnectorConfig,
-} from "@role-model-router/provider-mcp";
 import {
   type ProviderAccountRecord,
   validateProviderAccounts,
 } from "@role-model-router/provider-account";
-import { createOpenAIProviderAdapter } from "@role-model-router/provider-openai";
-import { ProcessSupervisor } from "@role-model-router/process-supervisor";
-import { createRetrievalReceipt } from "@role-model-router/retrieval-receipt";
-import type { ObservedPerformanceSample } from "@role-model-router/profile-aggregator";
+import { createAnthropicProviderAdapter } from "@role-model-router/provider-anthropic";
+import { createLiteLLMProviderAdapter } from "@role-model-router/provider-litellm";
 import {
-  createRuntimeObservationBundle,
+  type DeclaredMcpConnectorConfig,
+  createMcpConnectorDefinitions,
+} from "@role-model-router/provider-mcp";
+import { createOpenAIProviderAdapter } from "@role-model-router/provider-openai";
+import { createRetrievalReceipt } from "@role-model-router/retrieval-receipt";
+import {
   type RuntimeCapturePolicy,
   type RuntimeObservationBundle,
   type RuntimeRoutingDiagnostics,
   type RuntimeRoutingMode,
+  createRuntimeObservationBundle,
 } from "@role-model-router/runtime-observability";
 import {
-  createToolRegistry,
-  executeToolCalls,
-  type ToolConnector,
-  type ToolRegistry,
-  type ToolRegistryExecution,
-} from "@role-model-router/tool-registry";
-import {
   initializeSqliteMemory,
-  listRuntimeEndpoints,
+  insertSwapEvent,
   listProviderAccounts,
+  listRecentRuntimeObservations,
+  listRuntimeEndpoints,
   listRuntimeTelemetryComparisonRows,
   listRuntimeTelemetryRecords,
+  listSwapEvents,
   persistContinuitySnapshot,
   persistProviderAccounts,
-  persistRuntimeObservationBundle,
   persistRetrievalReceipt,
-  listRecentRuntimeObservations,
+  persistRuntimeObservationBundle,
   readAdvisoryMaxDifficultyRecommendation,
   readConversationContinuity,
+  readDifficultyClassificationCache,
   readLatestObservedProfile,
   readLatestObservedProfilesByEndpointIds,
   readObservedPerformanceSamples,
   readObservedThroughputPenaltyState,
   readProviderDeviceAuthSession,
-  readDifficultyClassificationCache,
-  readRuntimeMaintenancePolicy,
   readRuntimeControllerAssignment,
+  readRuntimeMaintenancePolicy,
   readRuntimeObservationBundle,
   readRuntimeTelemetrySummary,
   upsertDifficultyClassificationCache,
   upsertObservedThroughputPenaltyState,
   upsertProviderDeviceAuthSession,
-  upsertProviderAccount as upsertSqliteProviderAccount,
   upsertRuntimeControllerAssignment,
+  upsertProviderAccount as upsertSqliteProviderAccount,
   upsertRuntimeEndpoint as upsertSqliteRuntimeEndpoint,
-  insertSwapEvent,
-  listSwapEvents,
 } from "@role-model-router/sqlite-memory";
+import {
+  type ToolConnector,
+  type ToolRegistry,
+  type ToolRegistryExecution,
+  createToolRegistry,
+  executeToolCalls,
+} from "@role-model-router/tool-registry";
 
 import {
-  executeLiveRoutedRequest,
   type ProviderRequestCapture,
   type ResolvedExecutionTarget,
   type RuntimeExecutionRequest,
   type RuntimeResponseCaptureMap,
+  executeLiveRoutedRequest,
 } from "@role-model-router/adapter-execution";
 import type { VendorRuntime, VendorRuntimeStatus } from "@role-model-router/vendor-abstraction";
 import { createVendorNotConfiguredError } from "@role-model-router/vendor-abstraction";
-import { startLlamaSwapVendor } from "@role-model-router/vendor-llama-swap";
 import { startLiteLLMVendor } from "@role-model-router/vendor-litellm";
+import { startLlamaSwapVendor } from "@role-model-router/vendor-llama-swap";
 
 import {
-  normalizeUnifiedRuntimeConfigInput,
-  parseUnifiedRuntimeConfigText,
-  renderUnifiedRuntimeConfigText,
-  resolveUnifiedRuntimeObservedDataConfig,
-  type UnifiedRuntimeModelAliasConfig,
+  type LiteLLMProviderInfo,
+  deriveLiteLLMProviders,
+  extractLiteLLMModelIds,
+  loadLiteLLMModelPrices,
+} from "@role-model-router/catalog";
+import { resolveLlamaSwapCommand } from "./runtime-assets.js";
+import {
   type UnifiedRuntimeConfig,
   type UnifiedRuntimeDifficultyBucket,
   type UnifiedRuntimeDifficultyClassifierConfig,
   type UnifiedRuntimeExecutionMode,
+  type UnifiedRuntimeModelAliasConfig,
+  normalizeUnifiedRuntimeConfigInput,
+  parseUnifiedRuntimeConfigText,
+  renderUnifiedRuntimeConfigText,
+  resolveUnifiedRuntimeObservedDataConfig,
 } from "./unified-runtime-config.js";
-import { resolveLlamaSwapCommand } from "./runtime-assets.js";
-import {
-  deriveLiteLLMProviders,
-  extractLiteLLMModelIds,
-  loadLiteLLMModelPrices,
-  type LiteLLMProviderInfo,
-} from "@role-model-router/catalog";
 
 interface OpenAIChatCompletionsTool {
   readonly type: string;
@@ -248,6 +248,17 @@ interface BridgeControllerRoutingContext {
 type DifficultyRoutingSignals = NonNullable<
   RuntimeRoutingDiagnostics["difficultyRouting"]
 >["rubricSignals"];
+type BridgeRoutingStrategy = Parameters<typeof routeRuntimeRequest>[0]["request"]["strategy"];
+
+const BRIDGE_ROUTING_STRATEGIES = new Set<BridgeRoutingStrategy>([
+  "balanced",
+  "latency",
+  "quality",
+  "cost",
+  "low-latency",
+  "high-quality",
+  "low-cost",
+]);
 
 const DIFFICULTY_BUCKET_ORDER: Record<UnifiedRuntimeDifficultyBucket, number> = {
   easy: 0,
@@ -257,6 +268,10 @@ const DIFFICULTY_BUCKET_ORDER: Record<UnifiedRuntimeDifficultyBucket, number> = 
 
 function countMatches(value: string, pattern: RegExp): number {
   return value.match(pattern)?.length ?? 0;
+}
+
+function isBridgeRoutingStrategy(value: string): value is BridgeRoutingStrategy {
+  return BRIDGE_ROUTING_STRATEGIES.has(value as BridgeRoutingStrategy);
 }
 
 function summarizeDifficultySignals(input: {
@@ -752,10 +767,10 @@ function mergeCapabilityList(
 }
 
 function collectPreferredEndpointIds(
-  allowEndpoints: readonly string[],
+  allowEndpoints: readonly string[] | undefined,
   preferredEndpointIds: readonly string[] | undefined,
 ): readonly string[] {
-  const allowSet = new Set(allowEndpoints);
+  const allowSet = new Set(allowEndpoints ?? []);
   const filtered: string[] = [];
   for (const endpointId of preferredEndpointIds ?? []) {
     if (allowSet.has(endpointId) && !filtered.includes(endpointId)) {
@@ -824,6 +839,8 @@ function maybeApplyControllerRouting(input: {
     };
   }
 
+  const guidanceStrategy =
+    guidance.strategy && isBridgeRoutingStrategy(guidance.strategy) ? guidance.strategy : undefined;
   const preferredEndpointIds = collectPreferredEndpointIds(
     input.routingRequest.allowEndpoints ?? [],
     guidance.preferredEndpointIds,
@@ -835,12 +852,7 @@ function maybeApplyControllerRouting(input: {
           input.routingRequest.requiredCapabilities,
           guidance.requiredCapabilities,
         );
-  const finalStrategy = guidance.strategy
-    ? toHybridSummaryStrategy(guidance.strategy)
-    : toHybridSummaryStrategy(input.routingRequest.strategy);
-  const normalizedGuidanceStrategy = guidance.strategy
-    ? toHybridSummaryStrategy(guidance.strategy)
-    : undefined;
+  const finalStrategy = guidanceStrategy ?? input.routingRequest.strategy;
   const hybridArbitration = summarizeHybridArbitration({
     effectiveRoutingMode: input.effectiveRoutingMode,
     routingRequest: input.routingRequest,
@@ -858,7 +870,7 @@ function maybeApplyControllerRouting(input: {
       requiredCapabilities,
       preferredCapabilities:
         guidance.preferredCapabilities ?? input.routingRequest.preferredCapabilities,
-      ...(normalizedGuidanceStrategy ? { strategy: normalizedGuidanceStrategy } : {}),
+      ...(guidanceStrategy ? { strategy: guidanceStrategy } : {}),
       ...(typeof guidance.preferLocal === "boolean" ? { preferLocal: guidance.preferLocal } : {}),
     },
     ...(preferredEndpointIds.length
@@ -1587,15 +1599,14 @@ function createExecutionHeaders(input: {
   readonly routingDecisionId?: string;
   readonly costUsd?: number;
 }): Record<string, string> {
+  const formattedCostUsd = formatCostUsd(input.costUsd);
   return {
     "x-role-model-endpoint-id": input.endpointId,
     "x-role-model-adapter-family": input.adapterFamily,
     ...(input.routingDecisionId
       ? { "x-role-model-routing-decision-id": input.routingDecisionId }
       : {}),
-    ...(formatCostUsd(input.costUsd)
-      ? { "x-role-model-cost-usd": formatCostUsd(input.costUsd)! }
-      : {}),
+    ...(formattedCostUsd ? { "x-role-model-cost-usd": formattedCostUsd } : {}),
   };
 }
 
@@ -2110,8 +2121,15 @@ function buildRuntimeRoleCatalog(
   const byRoleId = [...summaries.values()].sort((left, right) =>
     compareText(left.roleId, right.roleId),
   );
+  const orderedRoleDefinitions = byRoleId.map((role) => {
+    const definition = definitions.get(role.roleId);
+    if (!definition) {
+      throw new Error(`Missing role definition for ${role.roleId}.`);
+    }
+    return definition;
+  });
   return {
-    roleDefinitions: byRoleId.map((role) => definitions.get(role.roleId)!),
+    roleDefinitions: orderedRoleDefinitions,
     roleSummaries: byRoleId,
   };
 }
@@ -2549,7 +2567,7 @@ function summarizeHybridArbitration(input: {
   readonly controllerContext?: BridgeControllerRoutingContext;
   readonly guidance?: NonNullable<BridgeControllerRoutingContext["resolvedGuidance"]>;
   readonly preferredEndpointIds: readonly string[];
-  readonly finalStrategy: "balanced" | "cost" | "quality";
+  readonly finalStrategy: BridgeRoutingStrategy;
 }): RuntimeRoutingDiagnostics["hybridArbitration"] | undefined {
   if (input.effectiveRoutingMode !== "hybrid") {
     return undefined;
@@ -2822,6 +2840,38 @@ async function readJsonBody(request: IncomingMessage): Promise<Record<string, un
   return JSON.parse(Buffer.concat(chunks).toString("utf8")) as Record<string, unknown>;
 }
 
+function parseModelOverridesBody(
+  input: Record<string, unknown>,
+): Record<string, { ttl?: number; contextWindow?: number; concurrencyLimit?: number }> {
+  const parsed: Record<
+    string,
+    { ttl?: number; contextWindow?: number; concurrencyLimit?: number }
+  > = {};
+
+  for (const [modelId, rawOverride] of Object.entries(input)) {
+    if (!rawOverride || typeof rawOverride !== "object" || Array.isArray(rawOverride)) {
+      throw new Error(`invalid model override for "${modelId}"`);
+    }
+
+    const overrideRecord = rawOverride as Record<string, unknown>;
+    const parsedOverride: { ttl?: number; contextWindow?: number; concurrencyLimit?: number } = {};
+
+    for (const field of ["ttl", "contextWindow", "concurrencyLimit"] as const) {
+      const value = overrideRecord[field];
+      if (typeof value === "undefined") {
+        continue;
+      }
+      if (typeof value !== "number") {
+        throw new Error(`invalid ${field} override for "${modelId}"`);
+      }
+      parsedOverride[field] = value;
+    }
+
+    parsed[modelId] = parsedOverride;
+  }
+
+  return parsed;
+}
 function readOptionalPositiveInteger(params: URLSearchParams, key: string): number | undefined {
   const rawValue = params.get(key);
   if (!rawValue) {
@@ -2984,7 +3034,7 @@ function resolveCredentialFilePath(
     .split(/[\\/]+/)
     .filter((segment) => segment.length > 0 && segment !== "." && segment !== "..")
     .map(sanitizeSegment);
-  return path.join(runtimeStateRoot, scopeId, "credentials", ...safeSegments) + ".json";
+  return `${path.join(runtimeStateRoot, scopeId, "credentials", ...safeSegments)}.json`;
 }
 
 function createDeviceHeaders(
@@ -3271,7 +3321,7 @@ async function resolveCredentialValue(
   }
 
   if (credentialRef.backend === "local-file" || credentialRef.backend === "local-encrypted-file") {
-    let tokenPayload = (await readOauthTokenFile(
+    const tokenPayload = (await readOauthTokenFile(
       runtimeStateRoot,
       scopeId,
       credentialRef.ref,
@@ -3376,9 +3426,7 @@ async function readProviderStreamTranscript(
 
       try {
         await streamWriter(JSON.parse(payloadText) as Record<string, unknown>, metadata);
-      } catch {
-        continue;
-      }
+      } catch {}
     }
   };
 
@@ -3423,9 +3471,7 @@ async function replayProviderStreamTranscript(
 
     try {
       await streamWriter(JSON.parse(payloadText) as Record<string, unknown>, metadata);
-    } catch {
-      continue;
-    }
+    } catch {}
   }
 }
 
@@ -3769,9 +3815,7 @@ function parseStreamPayloads(rawTranscript: string): readonly Record<string, unk
     }
     try {
       payloads.push(JSON.parse(dataLines.join("\n")) as Record<string, unknown>);
-    } catch {
-      continue;
-    }
+    } catch {}
   }
   return payloads;
 }
@@ -4529,12 +4573,7 @@ function createRequestHandler(options: StartBridgeServerOptions) {
       writeJson(
         response,
         200,
-        await options.updateModelOverrides(
-          (await readJsonBody(request)) as Record<
-            string,
-            { ttl?: number; contextWindow?: number; concurrencyLimit?: number }
-          >,
-        ),
+        await options.updateModelOverrides(parseModelOverridesBody(await readJsonBody(request))),
       );
       return;
     }
@@ -5056,7 +5095,7 @@ export async function createRuntimeBridgeBackend(
     }));
   };
   const emitTelemetryUpdate = (requestId: string): void => {
-    const request = listTelemetryRequestRecords({ limit: 1 }).find(
+    const request = listTelemetryRequestRecords({ limit: DEFAULT_TELEMETRY_LIMIT }).find(
       (record) => record.requestId === requestId,
     );
     if (!request) {
@@ -5924,8 +5963,6 @@ export async function createRuntimeBridgeBackend(
   };
 
   let lastDetectedModel: string | null = null;
-  let autoSwapInterval: ReturnType<typeof setInterval>;
-
   const backend = {
     get registry(): EndpointRegistryResult {
       return currentRegistry;
@@ -7206,7 +7243,7 @@ export async function createRuntimeBridgeBackend(
     },
   };
 
-  autoSwapInterval = setInterval(async () => {
+  const autoSwapInterval = setInterval(async () => {
     try {
       const models = await backend.listLocalModels();
       const currentModel = models[0]?.modelId ?? null;

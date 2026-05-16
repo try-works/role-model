@@ -1,84 +1,98 @@
 <script lang="ts">
-  import { persistentStore } from "../stores/persistent";
+import { persistentStore } from "../stores/persistent";
 
-  interface Props {
-    id: string;
-    title: string;
-    logData: string;
-  }
+interface Props {
+  id: string;
+  title: string;
+  logData: string;
+}
 
-  let { id, title, logData }: Props = $props();
+const { id, title, logData }: Props = $props();
 
-  let filterRegex = $state("");
+let filterRegex = $state("");
 
-  // Create persistent stores for this panel (id is intentionally captured at init time)
-  // svelte-ignore state_referenced_locally
-  const fontSizeStore = persistentStore<"xxs" | "xs" | "small" | "normal">(`logPanel-${id}-fontSize`, "normal");
-  // svelte-ignore state_referenced_locally
-  const wrapTextStore = persistentStore<boolean>(`logPanel-${id}-wrapText`, false);
-  // svelte-ignore state_referenced_locally
-  const showFilterStore = persistentStore<boolean>(`logPanel-${id}-showFilter`, false);
+// Create persistent stores for this panel (id is intentionally captured at init time)
+// svelte-ignore state_referenced_locally
+const fontSizeStore = persistentStore<"xxs" | "xs" | "small" | "normal">(
+  `logPanel-${id}-fontSize`,
+  "normal",
+);
+// svelte-ignore state_referenced_locally
+const wrapTextStore = persistentStore<boolean>(`logPanel-${id}-wrapText`, false);
+// svelte-ignore state_referenced_locally
+const showFilterStore = persistentStore<boolean>(`logPanel-${id}-showFilter`, false);
 
-  let textWrapClass = $derived($wrapTextStore ? "whitespace-pre-wrap" : "whitespace-pre");
+const textWrapClass = $derived($wrapTextStore ? "whitespace-pre-wrap" : "whitespace-pre");
 
-  function toggleFontSize(): void {
-    fontSizeStore.update((prev) => {
-      switch (prev) {
-        case "xxs": return "xs";
-        case "xs": return "small";
-        case "small": return "normal";
-        case "normal": return "xxs";
-      }
-    });
-  }
-
-  function toggleWrapText(): void {
-    wrapTextStore.update((prev) => !prev);
-  }
-
-  function toggleFilter(): void {
-    if ($showFilterStore) {
-      showFilterStore.set(false);
-      filterRegex = "";
-    } else {
-      showFilterStore.set(true);
-    }
-  }
-
-  let fontSizeClass = $derived.by(() => {
-    switch ($fontSizeStore) {
-      case "xxs": return "text-[0.5rem]";
-      case "xs": return "text-[0.75rem]";
-      case "small": return "text-[0.875rem]";
-      case "normal": return "text-base";
+function toggleFontSize(): void {
+  fontSizeStore.update((prev) => {
+    switch (prev) {
+      case "xxs":
+        return "xs";
+      case "xs":
+        return "small";
+      case "small":
+        return "normal";
+      case "normal":
+        return "xxs";
     }
   });
+}
 
-  let filteredLogs = $derived.by(() => {
-    if (!filterRegex) return logData;
-    try {
-      const regex = new RegExp(filterRegex, "i");
-      return logData.split("\n").filter((line) => regex.test(line)).join("\n");
-    } catch {
-      return logData;
-    }
-  });
+function toggleWrapText(): void {
+  wrapTextStore.update((prev) => !prev);
+}
 
-  let preElement: HTMLPreElement;
-  let userScrolledUp = $state(false);
-
-  function handleScroll() {
-    if (!preElement) return;
-    const { scrollTop, scrollHeight, clientHeight } = preElement;
-    userScrolledUp = scrollHeight - scrollTop - clientHeight > 40;
+function toggleFilter(): void {
+  if ($showFilterStore) {
+    showFilterStore.set(false);
+    filterRegex = "";
+  } else {
+    showFilterStore.set(true);
   }
+}
 
-  // Auto scroll to bottom when logs change, unless user has scrolled up
-  $effect(() => {
-    if (preElement && filteredLogs && !userScrolledUp) {
-      preElement.scrollTop = preElement.scrollHeight;
-    }
-  });
+const fontSizeClass = $derived.by(() => {
+  switch ($fontSizeStore) {
+    case "xxs":
+      return "text-[0.5rem]";
+    case "xs":
+      return "text-[0.75rem]";
+    case "small":
+      return "text-[0.875rem]";
+    case "normal":
+      return "text-base";
+  }
+});
+
+const filteredLogs = $derived.by(() => {
+  if (!filterRegex) return logData;
+  try {
+    const regex = new RegExp(filterRegex, "i");
+    return logData
+      .split("\n")
+      .filter((line) => regex.test(line))
+      .join("\n");
+  } catch {
+    return logData;
+  }
+});
+
+let preElement: HTMLPreElement;
+let userScrolledUp = $state(false);
+
+function handleScroll() {
+  if (!preElement) return;
+  const { scrollTop, scrollHeight, clientHeight } = preElement;
+  userScrolledUp = scrollHeight - scrollTop - clientHeight > 40;
+}
+
+// Auto scroll to bottom when logs change, unless user has scrolled up
+$effect(() => {
+  if (preElement && filteredLogs && !userScrolledUp) {
+    preElement.scrollTop = preElement.scrollHeight;
+  }
+});
 </script>
 
 <div class="rounded-lg overflow-hidden flex flex-col bg-gray-950/5 dark:bg-white/10 h-full w-full p-1">

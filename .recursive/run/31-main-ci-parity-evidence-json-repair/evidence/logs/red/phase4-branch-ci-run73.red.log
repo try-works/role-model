@@ -1,0 +1,22 @@
+2026-05-11T21:26:20.6718023Z > biome check . && corepack pnpm run lint:rust
+2026-05-11T21:26:21.3317183Z ./testdata/router-runtime/routing-model-guidance.json format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-05-11T21:26:21.3326038Z ./testdata/router-runtime/fixtures/routing-model-guidance.json format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-05-11T21:26:21.3334569Z ./.recursive/run/14-router-runtime-ui-foundation/evidence/logs/verify/runtime-host-streaming-e2e.json format ━━━━━━━━━━
+2026-05-11T21:26:21.3345081Z ./.recursive/run/15-unified-vendor-execution/evidence/browser/run15-real-vendor-browser-probe.json format ━━━━━━━━━━
+2026-05-11T21:26:21.3368719Z ./testdata/catalog/litellm-model-prices.json organizeImports ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-05-11T21:26:21.3379999Z ./testdata/catalog/litellm-model-prices.json format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-05-11T21:26:21.3385759Z ./apps/docs-site/app/components/docs-header.tsx format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-05-11T21:26:21.3427171Z ./role-model-router/vendor/llama-swap/ui-svelte/vite.config.ts organizeImports ━━━━━━━━━━━━━━━━━━━━━
+2026-05-11T21:26:21.3435503Z ./role-model-router/vendor/llama-swap/ui-svelte/src/stores/theme.ts organizeImports ━━━━━━━━━━━━━━━━
+2026-05-11T21:26:21.3443463Z ./role-model-router/vendor/llama-swap/ui-svelte/src/stores/theme.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-05-11T21:26:21.3460682Z ./role-model-router/vendor/llama-swap/ui-svelte/src/stores/playgroundActivity.ts organizeImports ━━━━━━━━━━
+2026-05-11T21:26:21.3541969Z ./role-model-router/vendor/llama-swap/ui-svelte/src/stores/playgroundActivity.ts format ━━━━━━━━━━━━
+2026-05-11T21:26:21.3546654Z ./.agents/skills/ui-design-system/scripts/tests/coverage-ui.json format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-05-11T21:26:21.5192005Z ./role-model-router/vendor/llama-swap/ui-svelte/src/stores/persistent.ts organizeImports ━━━━━━━━━━━
+2026-05-11T21:26:21.5196405Z ./role-model-router/vendor/llama-swap/ui-svelte/src/stores/api.ts:152:34 lint/style/noUnusedTemplateLiteral  FIXABLE  ━━━━━━━━━━
+2026-05-11T21:26:21.5203770Z ./role-model-router/vendor/llama-swap/ui-svelte/src/stores/api.ts:111:45 lint/style/useExponentiationOperator  FIXABLE  ━━━━━━━━━━
+2026-05-11T21:26:21.5211639Z ./role-model-router/vendor/llama-swap/ui-svelte/src/stores/api.ts organizeImports ━━━━━━━━━━━━━━━━━━
+2026-05-11T21:26:21.5217765Z ./role-model-router/vendor/llama-swap/ui-svelte/src/routes/Playground.svelte organizeImports ━━━━━━━━━━
+2026-05-11T21:26:21.5230079Z Found 412 errors.
+2026-05-11T21:26:21.5230448Z  ELIFECYCLE  Command failed with exit code 1.
+2026-05-11T21:26:21.5567593Z  ELIFECYCLE  Command failed with exit code 1.

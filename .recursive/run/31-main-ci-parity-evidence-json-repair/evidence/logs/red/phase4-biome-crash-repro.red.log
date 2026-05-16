@@ -1,0 +1,396 @@
+role-model-router/vendor/llama-swap/ui-svelte/src/routes/LogViewer.svelte:12:3 lint/style/useConst  FIXABLE  ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù This let declares a variable that is only assigned once.
+  
+    10 Γöé   const viewModeStore = persistentStore<ViewMode>("logviewer-view-mode", "panels");
+    11 Γöé 
+  > 12 Γöé   let direction = $derived<"horizontal" | "vertical">(
+       Γöé   ^^^
+    13 Γöé     $screenWidth === "xs" || $screenWidth === "sm" ? "vertical" : "horizontal",
+    14 Γöé   );
+  
+  i 'direction' is never reassigned.
+  
+     8 Γöé   type ViewMode = "proxy" | "upstream" | "panels";
+     9 Γöé 
+  > 10 Γöé   const viewModeStore = persistentStore<ViewMode>("logviewer-view-mode", "panels");
+       Γöé                                                                          ^^^^^^^^^
+    11 Γöé 
+    12 Γöé   let direction = $derived<"horizontal" | "vertical">(
+  
+  i Safe fix: Use const instead.
+  
+     9  9 Γöé     const viewModeStore = persistentStore<ViewMode>("logviewer-view-mode", "panels");ΓÉì
+    10 10 Γöé   ΓÉì
+    11    Γöé - ┬╖┬╖let┬╖direction┬╖=┬╖$derived<"horizontal"┬╖|┬╖"vertical">(ΓÉì
+       11 Γöé + ┬╖┬╖const┬╖direction┬╖=┬╖$derived<"horizontal"┬╖|┬╖"vertical">(ΓÉì
+    12 12 Γöé       $screenWidth === "xs" || $screenWidth === "sm" ? "vertical" : "horizontal",ΓÉì
+    13 13 Γöé     );ΓÉì
+  
+
+role-model-router/vendor/llama-swap/ui-svelte/src/routes/Models.svelte:8:3 lint/style/useConst  FIXABLE  ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù This let declares a variable that is only assigned once.
+  
+     6 Γöé   import ResizablePanels from "../components/ResizablePanels.svelte";
+     7 Γöé 
+   > 8 Γöé   let direction = $derived<"horizontal" | "vertical">($isNarrow ? "vertical" : "horizontal");
+       Γöé   ^^^
+     9 Γöé </script>
+    10 Γöé 
+  
+  i 'direction' is never reassigned.
+  
+    4 Γöé   import ModelsPanel from "../components/ModelsPanel.svelte";
+    5 Γöé   import LogPanel from "../components/LogPanel.svelte";
+  > 6 Γöé   import ResizablePanels from "../components/ResizablePanels.svelte";
+      Γöé                                                            ^^^^^^^^^
+    7 Γöé 
+    8 Γöé   let direction = $derived<"horizontal" | "vertical">($isNarrow ? "vertical" : "horizontal");
+  
+  i Safe fix: Use const instead.
+  
+    5 5 Γöé     import ResizablePanels from "../components/ResizablePanels.svelte";ΓÉì
+    6 6 Γöé   ΓÉì
+    7   Γöé - ┬╖┬╖let┬╖direction┬╖=┬╖$derived<"horizontal"┬╖|┬╖"vertical">($isNarrow┬╖?┬╖"vertical"┬╖:┬╖"horizontal");ΓÉì
+      7 Γöé + ┬╖┬╖const┬╖direction┬╖=┬╖$derived<"horizontal"┬╖|┬╖"vertical">($isNarrow┬╖?┬╖"vertical"┬╖:┬╖"horizontal");ΓÉì
+    8 8 Γöé   
+  
+
+role-model-router/vendor/llama-swap/ui-svelte/src/routes/Models.svelte organizeImports ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Import statements could be sorted:
+  
+     1  1 Γöé   <script lang="ts">ΓÉì
+     2    Γöé - ┬╖┬╖import┬╖{┬╖isNarrow┬╖}┬╖from┬╖"../stores/theme";ΓÉì
+     3    Γöé - ┬╖┬╖import┬╖{┬╖upstreamLogs┬╖}┬╖from┬╖"../stores/api";ΓÉì
+     4    Γöé - ┬╖┬╖import┬╖ModelsPanel┬╖from┬╖"../components/ModelsPanel.svelte";ΓÉì
+     5    Γöé - ┬╖┬╖import┬╖LogPanel┬╖from┬╖"../components/LogPanel.svelte";ΓÉì
+     6    Γöé - ┬╖┬╖import┬╖ResizablePanels┬╖from┬╖"../components/ResizablePanels.svelte";ΓÉì
+        2 Γöé + ┬╖┬╖import┬╖LogPanel┬╖from┬╖"../components/LogPanel.svelte";ΓÉì
+        3 Γöé + ┬╖┬╖import┬╖ModelsPanel┬╖from┬╖"../components/ModelsPanel.svelte";ΓÉì
+        4 Γöé + ┬╖┬╖import┬╖ResizablePanels┬╖from┬╖"../components/ResizablePanels.svelte";ΓÉì
+        5 Γöé + ┬╖┬╖import┬╖{┬╖upstreamLogs┬╖}┬╖from┬╖"../stores/api";ΓÉì
+        6 Γöé + ┬╖┬╖import┬╖{┬╖isNarrow┬╖}┬╖from┬╖"../stores/theme";ΓÉì
+     7  7 Γöé   ΓÉì
+     8  8 Γöé     let direction = $derived<"horizontal" | "vertical">($isNarrow ? "vertical" : "horizontal");ΓÉì
+  
+
+role-model-router/vendor/llama-swap/ui-svelte/src/routes/LogViewer.svelte organizeImports ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Import statements could be sorted:
+  
+     1  1 Γöé   <script lang="ts">ΓÉì
+     2    Γöé - ┬╖┬╖import┬╖{┬╖proxyLogs,┬╖upstreamLogs┬╖}┬╖from┬╖"../stores/api";ΓÉì
+     3    Γöé - ┬╖┬╖import┬╖{┬╖screenWidth┬╖}┬╖from┬╖"../stores/theme";ΓÉì
+     4    Γöé - ┬╖┬╖import┬╖{┬╖persistentStore┬╖}┬╖from┬╖"../stores/persistent";ΓÉì
+     5    Γöé - ┬╖┬╖import┬╖LogPanel┬╖from┬╖"../components/LogPanel.svelte";ΓÉì
+     6    Γöé - ┬╖┬╖import┬╖ResizablePanels┬╖from┬╖"../components/ResizablePanels.svelte";ΓÉì
+        2 Γöé + ┬╖┬╖import┬╖LogPanel┬╖from┬╖"../components/LogPanel.svelte";ΓÉì
+        3 Γöé + ┬╖┬╖import┬╖ResizablePanels┬╖from┬╖"../components/ResizablePanels.svelte";ΓÉì
+        4 Γöé + ┬╖┬╖import┬╖{┬╖proxyLogs,┬╖upstreamLogs┬╖}┬╖from┬╖"../stores/api";ΓÉì
+        5 Γöé + ┬╖┬╖import┬╖{┬╖persistentStore┬╖}┬╖from┬╖"../stores/persistent";ΓÉì
+        6 Γöé + ┬╖┬╖import┬╖{┬╖screenWidth┬╖}┬╖from┬╖"../stores/theme";ΓÉì
+     7  7 Γöé   ΓÉì
+     8  8 Γöé     type ViewMode = "proxy" | "upstream" | "panels";ΓÉì
+  
+
+role-model-router/vendor/llama-swap/ui-svelte/src/routes/Models.svelte format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+     1  1 Γöé   <script lang="ts">ΓÉì
+     2    Γöé - ┬╖┬╖import┬╖{┬╖isNarrow┬╖}┬╖from┬╖"../stores/theme";ΓÉì
+     3    Γöé - ┬╖┬╖import┬╖{┬╖upstreamLogs┬╖}┬╖from┬╖"../stores/api";ΓÉì
+     4    Γöé - ┬╖┬╖import┬╖ModelsPanel┬╖from┬╖"../components/ModelsPanel.svelte";ΓÉì
+     5    Γöé - ┬╖┬╖import┬╖LogPanel┬╖from┬╖"../components/LogPanel.svelte";ΓÉì
+     6    Γöé - ┬╖┬╖import┬╖ResizablePanels┬╖from┬╖"../components/ResizablePanels.svelte";ΓÉì
+     7    Γöé - ΓÉì
+     8    Γöé - ┬╖┬╖let┬╖direction┬╖=┬╖$derived<"horizontal"┬╖|┬╖"vertical">($isNarrow┬╖?┬╖"vertical"┬╖:┬╖"horizontal");ΓÉì
+        2 Γöé + import┬╖{┬╖isNarrow┬╖}┬╖from┬╖"../stores/theme";
+        3 Γöé + import┬╖{┬╖upstreamLogs┬╖}┬╖from┬╖"../stores/api";
+        4 Γöé + import┬╖ModelsPanel┬╖from┬╖"../components/ModelsPanel.svelte";
+        5 Γöé + import┬╖LogPanel┬╖from┬╖"../components/LogPanel.svelte";
+        6 Γöé + import┬╖ResizablePanels┬╖from┬╖"../components/ResizablePanels.svelte";
+        7 Γöé + 
+        8 Γöé + let┬╖direction┬╖=┬╖$derived<"horizontal"┬╖|┬╖"vertical">($isNarrow┬╖?┬╖"vertical"┬╖:┬╖"horizontal");
+     9  9 Γöé   </script>ΓÉì
+    10 10 Γöé   ΓÉì
+  
+
+role-model-router/vendor/llama-swap/ui-svelte/src/routes/LogViewer.svelte format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+     1  1 Γöé   <script lang="ts">ΓÉì
+     2    Γöé - ┬╖┬╖import┬╖{┬╖proxyLogs,┬╖upstreamLogs┬╖}┬╖from┬╖"../stores/api";ΓÉì
+     3    Γöé - ┬╖┬╖import┬╖{┬╖screenWidth┬╖}┬╖from┬╖"../stores/theme";ΓÉì
+     4    Γöé - ┬╖┬╖import┬╖{┬╖persistentStore┬╖}┬╖from┬╖"../stores/persistent";ΓÉì
+     5    Γöé - ┬╖┬╖import┬╖LogPanel┬╖from┬╖"../components/LogPanel.svelte";ΓÉì
+     6    Γöé - ┬╖┬╖import┬╖ResizablePanels┬╖from┬╖"../components/ResizablePanels.svelte";ΓÉì
+     7    Γöé - ΓÉì
+     8    Γöé - ┬╖┬╖type┬╖ViewMode┬╖=┬╖"proxy"┬╖|┬╖"upstream"┬╖|┬╖"panels";ΓÉì
+     9    Γöé - ΓÉì
+    10    Γöé - ┬╖┬╖const┬╖viewModeStore┬╖=┬╖persistentStore<ViewMode>("logviewer-view-mode",┬╖"panels");ΓÉì
+    11    Γöé - ΓÉì
+    12    Γöé - ┬╖┬╖let┬╖direction┬╖=┬╖$derived<"horizontal"┬╖|┬╖"vertical">(ΓÉì
+    13    Γöé - ┬╖┬╖┬╖┬╖$screenWidth┬╖===┬╖"xs"┬╖||┬╖$screenWidth┬╖===┬╖"sm"┬╖?┬╖"vertical"┬╖:┬╖"horizontal",ΓÉì
+    14    Γöé - ┬╖┬╖);ΓÉì
+        2 Γöé + import┬╖{┬╖proxyLogs,┬╖upstreamLogs┬╖}┬╖from┬╖"../stores/api";
+        3 Γöé + import┬╖{┬╖screenWidth┬╖}┬╖from┬╖"../stores/theme";
+        4 Γöé + import┬╖{┬╖persistentStore┬╖}┬╖from┬╖"../stores/persistent";
+        5 Γöé + import┬╖LogPanel┬╖from┬╖"../components/LogPanel.svelte";
+        6 Γöé + import┬╖ResizablePanels┬╖from┬╖"../components/ResizablePanels.svelte";
+        7 Γöé + 
+        8 Γöé + type┬╖ViewMode┬╖=┬╖"proxy"┬╖|┬╖"upstream"┬╖|┬╖"panels";
+        9 Γöé + 
+       10 Γöé + const┬╖viewModeStore┬╖=┬╖persistentStore<ViewMode>("logviewer-view-mode",┬╖"panels");
+       11 Γöé + 
+       12 Γöé + let┬╖direction┬╖=┬╖$derived<"horizontal"┬╖|┬╖"vertical">(
+       13 Γöé + ┬╖┬╖$screenWidth┬╖===┬╖"xs"┬╖||┬╖$screenWidth┬╖===┬╖"sm"┬╖?┬╖"vertical"┬╖:┬╖"horizontal",
+       14 Γöé + );
+    15 15 Γöé   </script>ΓÉì
+    16 16 Γöé   ΓÉì
+  
+
+packages/conformance/src/protocol-fixture-conformance.test.ts format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+     1    Γöé - import┬╖{┬╖execFile┬╖}┬╖from┬╖"node:child_process";ΓÉì
+     2    Γöé - import┬╖path┬╖from┬╖"node:path";ΓÉì
+     3    Γöé - import┬╖{┬╖fileURLToPath┬╖}┬╖from┬╖"node:url";ΓÉì
+     4    Γöé - import┬╖{┬╖promisify┬╖}┬╖from┬╖"node:util";ΓÉì
+     5    Γöé - ΓÉì
+     6    Γöé - import┬╖{┬╖fixtureValidationManifest,┬╖getFixtureValidationCounts,┬╖validateFixtures┬╖}┬╖from┬╖"@role-model/schema-tools";ΓÉì
+     7    Γöé - import┬╖{┬╖describe,┬╖test┬╖}┬╖from┬╖"vitest";ΓÉì
+     8    Γöé - ΓÉì
+     9    Γöé - const┬╖__filename┬╖=┬╖fileURLToPath(import.meta.url);ΓÉì
+    10    Γöé - const┬╖__dirname┬╖=┬╖path.dirname(__filename);ΓÉì
+    11    Γöé - const┬╖repoRoot┬╖=┬╖path.resolve(__dirname,┬╖"..",┬╖"..",┬╖"..");ΓÉì
+    12    Γöé - const┬╖execFileAsync┬╖=┬╖promisify(execFile);ΓÉì
+    13    Γöé - ΓÉì
+    14    Γöé - describe("run01┬╖protocol┬╖fixture┬╖conformance",┬╖()┬╖=>┬╖{ΓÉì
+    15    Γöé - ┬╖┬╖test("schema-tools┬╖validate┬╖the┬╖expanded┬╖valid┬╖and┬╖invalid┬╖fixture┬╖manifest",┬╖async┬╖()┬╖=>┬╖{ΓÉì
+    16    Γöé - ┬╖┬╖┬╖┬╖const┬╖counts┬╖=┬╖getFixtureValidationCounts();ΓÉì
+    17    Γöé - ┬╖┬╖┬╖┬╖const┬╖requiredFamilies┬╖=┬╖["router",┬╖"profile",┬╖"trace",┬╖"usage",┬╖"role-task"]┬╖as┬╖const;ΓÉì
+    18    Γöé - ┬╖┬╖┬╖┬╖const┬╖requiredCategories┬╖=┬╖["basic",┬╖"minimal",┬╖"edge",┬╖"invalid"]┬╖as┬╖const;ΓÉì
+    19    Γöé - ΓÉì
+    20    Γöé - ┬╖┬╖┬╖┬╖for┬╖(const┬╖family┬╖of┬╖requiredFamilies)┬╖{ΓÉì
+    21    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖for┬╖(const┬╖category┬╖of┬╖requiredCategories)┬╖{ΓÉì
+    22    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖const┬╖matchingFixtures┬╖=┬╖fixtureValidationManifest.filter(ΓÉì
+    23    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖(fixture)┬╖=>┬╖fixture.family┬╖===┬╖family┬╖&&┬╖fixture.category┬╖===┬╖category,ΓÉì
+    24    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖);ΓÉì
+    25    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖if┬╖(matchingFixtures.length┬╖===┬╖0)┬╖{ΓÉì
+    26    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖throw┬╖new┬╖Error(`Fixture┬╖manifest┬╖is┬╖missing┬╖${family}/${category}┬╖coverage.`);ΓÉì
+    27    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖}ΓÉì
+    28    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖}ΓÉì
+    29    Γöé - ┬╖┬╖┬╖┬╖}ΓÉì
+    30    Γöé - ΓÉì
+    31    Γöé - ┬╖┬╖┬╖┬╖if┬╖(counts.invalidCount┬╖===┬╖0)┬╖{ΓÉì
+    32    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖throw┬╖new┬╖Error("Fixture┬╖manifest┬╖must┬╖include┬╖invalid┬╖fixtures.");ΓÉì
+    33    Γöé - ┬╖┬╖┬╖┬╖}ΓÉì
+    34    Γöé - ΓÉì
+    35    Γöé - ┬╖┬╖┬╖┬╖const┬╖validatedCount┬╖=┬╖await┬╖validateFixtures();ΓÉì
+    36    Γöé - ┬╖┬╖┬╖┬╖if┬╖(validatedCount┬╖!==┬╖counts.totalCount)┬╖{ΓÉì
+    37    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖throw┬╖new┬╖Error(ΓÉì
+    38    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖`validateFixtures┬╖returned┬╖${validatedCount},┬╖expected┬╖${counts.totalCount}.`,ΓÉì
+    39    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖);ΓÉì
+    40    Γöé - ┬╖┬╖┬╖┬╖}ΓÉì
+    41    Γöé - ┬╖┬╖});ΓÉì
+    42    Γöé - ΓÉì
+    43    Γöé - ┬╖┬╖test("schemas:validate┬╖reports┬╖fixture┬╖validation┬╖as┬╖part┬╖of┬╖the┬╖canonical┬╖schema-tool┬╖path",┬╖async┬╖()┬╖=>┬╖{ΓÉì
+    44    Γöé - ┬╖┬╖┬╖┬╖const┬╖command┬╖=ΓÉì
+    45    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖process.platform┬╖===┬╖"win32"ΓÉì
+    46    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖?┬╖{ΓÉì
+    47    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖file:┬╖"cmd.exe",ΓÉì
+    48    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖args:┬╖["/c",┬╖"corepack┬╖pnpm┬╖run┬╖schemas:validate"],ΓÉì
+    49    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖}ΓÉì
+    50    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖:┬╖{ΓÉì
+    51    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖file:┬╖"sh",ΓÉì
+    52    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖args:┬╖["-lc",┬╖"corepack┬╖pnpm┬╖run┬╖schemas:validate"],ΓÉì
+    53    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖};ΓÉì
+    54    Γöé - ΓÉì
+    55    Γöé - ┬╖┬╖┬╖┬╖const┬╖result┬╖=┬╖await┬╖execFileAsync(command.file,┬╖command.args,┬╖{ΓÉì
+    56    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖cwd:┬╖repoRoot,ΓÉì
+    57    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖windowsHide:┬╖true,ΓÉì
+    58    Γöé - ┬╖┬╖┬╖┬╖});ΓÉì
+    59    Γöé - ┬╖┬╖┬╖┬╖const┬╖output┬╖=┬╖`${result.stdout}\n${result.stderr}`;ΓÉì
+    60    Γöé - ┬╖┬╖┬╖┬╖const┬╖counts┬╖=┬╖getFixtureValidationCounts();ΓÉì
+    61    Γöé - ΓÉì
+    62    Γöé - ┬╖┬╖┬╖┬╖if┬╖(!new┬╖RegExp(`Validated┬╖${counts.totalCount}┬╖fixture┬╖file\\(s\\)\\.`,"u").test(output))┬╖{ΓÉì
+    63    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖throw┬╖new┬╖Error(output);ΓÉì
+    64    Γöé - ┬╖┬╖┬╖┬╖}ΓÉì
+    65    Γöé - ┬╖┬╖},┬╖60_000);ΓÉì
+    66    Γöé - });ΓÉì
+        1 Γöé + import┬╖{┬╖execFile┬╖}┬╖from┬╖"node:child_process";
+        2 Γöé + import┬╖path┬╖from┬╖"node:path";
+        3 Γöé + import┬╖{┬╖fileURLToPath┬╖}┬╖from┬╖"node:url";
+        4 Γöé + import┬╖{┬╖promisify┬╖}┬╖from┬╖"node:util";
+        5 Γöé + 
+        6 Γöé + import┬╖{
+        7 Γöé + ┬╖┬╖fixtureValidationManifest,
+        8 Γöé + ┬╖┬╖getFixtureValidationCounts,
+        9 Γöé + ┬╖┬╖validateFixtures,
+       10 Γöé + }┬╖from┬╖"@role-model/schema-tools";
+       11 Γöé + import┬╖{┬╖describe,┬╖test┬╖}┬╖from┬╖"vitest";
+       12 Γöé + 
+       13 Γöé + const┬╖__filename┬╖=┬╖fileURLToPath(import.meta.url);
+       14 Γöé + const┬╖__dirname┬╖=┬╖path.dirname(__filename);
+       15 Γöé + const┬╖repoRoot┬╖=┬╖path.resolve(__dirname,┬╖"..",┬╖"..",┬╖"..");
+       16 Γöé + const┬╖execFileAsync┬╖=┬╖promisify(execFile);
+       17 Γöé + 
+       18 Γöé + describe("run01┬╖protocol┬╖fixture┬╖conformance",┬╖()┬╖=>┬╖{
+       19 Γöé + ┬╖┬╖test("schema-tools┬╖validate┬╖the┬╖expanded┬╖valid┬╖and┬╖invalid┬╖fixture┬╖manifest",┬╖async┬╖()┬╖=>┬╖{
+       20 Γöé + ┬╖┬╖┬╖┬╖const┬╖counts┬╖=┬╖getFixtureValidationCounts();
+       21 Γöé + ┬╖┬╖┬╖┬╖const┬╖requiredFamilies┬╖=┬╖["router",┬╖"profile",┬╖"trace",┬╖"usage",┬╖"role-task"]┬╖as┬╖const;
+       22 Γöé + ┬╖┬╖┬╖┬╖const┬╖requiredCategories┬╖=┬╖["basic",┬╖"minimal",┬╖"edge",┬╖"invalid"]┬╖as┬╖const;
+       23 Γöé + 
+       24 Γöé + ┬╖┬╖┬╖┬╖for┬╖(const┬╖family┬╖of┬╖requiredFamilies)┬╖{
+       25 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖for┬╖(const┬╖category┬╖of┬╖requiredCategories)┬╖{
+       26 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖const┬╖matchingFixtures┬╖=┬╖fixtureValidationManifest.filter(
+       27 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖(fixture)┬╖=>┬╖fixture.family┬╖===┬╖family┬╖&&┬╖fixture.category┬╖===┬╖category,
+       28 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖);
+       29 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖if┬╖(matchingFixtures.length┬╖===┬╖0)┬╖{
+       30 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖throw┬╖new┬╖Error(`Fixture┬╖manifest┬╖is┬╖missing┬╖${family}/${category}┬╖coverage.`);
+       31 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖}
+       32 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖}
+       33 Γöé + ┬╖┬╖┬╖┬╖}
+       34 Γöé + 
+       35 Γöé + ┬╖┬╖┬╖┬╖if┬╖(counts.invalidCount┬╖===┬╖0)┬╖{
+       36 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖throw┬╖new┬╖Error("Fixture┬╖manifest┬╖must┬╖include┬╖invalid┬╖fixtures.");
+       37 Γöé + ┬╖┬╖┬╖┬╖}
+       38 Γöé + 
+       39 Γöé + ┬╖┬╖┬╖┬╖const┬╖validatedCount┬╖=┬╖await┬╖validateFixtures();
+       40 Γöé + ┬╖┬╖┬╖┬╖if┬╖(validatedCount┬╖!==┬╖counts.totalCount)┬╖{
+       41 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖throw┬╖new┬╖Error(
+       42 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖`validateFixtures┬╖returned┬╖${validatedCount},┬╖expected┬╖${counts.totalCount}.`,
+       43 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖);
+       44 Γöé + ┬╖┬╖┬╖┬╖}
+       45 Γöé + ┬╖┬╖});
+       46 Γöé + 
+       47 Γöé + ┬╖┬╖test("schemas:validate┬╖reports┬╖fixture┬╖validation┬╖as┬╖part┬╖of┬╖the┬╖canonical┬╖schema-tool┬╖path",┬╖async┬╖()┬╖=>┬╖{
+       48 Γöé + ┬╖┬╖┬╖┬╖const┬╖command┬╖=
+       49 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖process.platform┬╖===┬╖"win32"
+       50 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖?┬╖{
+       51 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖file:┬╖"cmd.exe",
+       52 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖args:┬╖["/c",┬╖"corepack┬╖pnpm┬╖run┬╖schemas:validate"],
+       53 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖}
+       54 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖:┬╖{
+       55 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖file:┬╖"sh",
+       56 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖args:┬╖["-lc",┬╖"corepack┬╖pnpm┬╖run┬╖schemas:validate"],
+       57 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖};
+       58 Γöé + 
+       59 Γöé + ┬╖┬╖┬╖┬╖const┬╖result┬╖=┬╖await┬╖execFileAsync(command.file,┬╖command.args,┬╖{
+       60 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖cwd:┬╖repoRoot,
+       61 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖windowsHide:┬╖true,
+       62 Γöé + ┬╖┬╖┬╖┬╖});
+       63 Γöé + ┬╖┬╖┬╖┬╖const┬╖output┬╖=┬╖`${result.stdout}\n${result.stderr}`;
+       64 Γöé + ┬╖┬╖┬╖┬╖const┬╖counts┬╖=┬╖getFixtureValidationCounts();
+       65 Γöé + 
+       66 Γöé + ┬╖┬╖┬╖┬╖if┬╖(!new┬╖RegExp(`Validated┬╖${counts.totalCount}┬╖fixture┬╖file\\(s\\)\\.`,┬╖"u").test(output))┬╖{
+       67 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖throw┬╖new┬╖Error(output);
+       68 Γöé + ┬╖┬╖┬╖┬╖}
+       69 Γöé + ┬╖┬╖},┬╖60_000);
+       70 Γöé + });
+    67 71 Γöé   
+  
+
+role-model-router/vendor/llama-swap/ui-svelte/src/routes/Activity.svelte:88:36 lint/style/useTemplate  FIXABLE  ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Template literals are preferred over string concatenation.
+  
+    87 Γöé   function formatSpeed(speed: number): string {
+  > 88 Γöé     return speed < 0 ? "unknown" : speed.toFixed(2) + " t/s";
+       Γöé                                    ^^^^^^^^^^^^^^^^^^^^^^^^^
+    89 Γöé   }
+    90 Γöé 
+  
+  i Unsafe fix: Use a template literal.
+  
+     85  85 Γöé   ΓÉì
+     86  86 Γöé     function formatSpeed(speed: number): string {ΓÉì
+     87     Γöé - ┬╖┬╖┬╖┬╖return┬╖speed┬╖<┬╖0┬╖?┬╖"unknown"┬╖:┬╖speed.toFixed(2)┬╖+┬╖"┬╖t/s";ΓÉì
+         87 Γöé + ┬╖┬╖┬╖┬╖return┬╖speed┬╖<┬╖0┬╖?┬╖"unknown"┬╖:┬╖`${speed.toFixed(2)}┬╖t/s`;ΓÉì
+     88  88 Γöé     }ΓÉì
+     89  89 Γöé   ΓÉì
+  
+
+role-model-router/vendor/llama-swap/ui-svelte/src/routes/Activity.svelte:92:12 lint/style/useTemplate  FIXABLE  ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Template literals are preferred over string concatenation.
+  
+    91 Γöé   function formatDuration(ms: number): string {
+  > 92 Γöé     return (ms / 1000).toFixed(2) + "s";
+       Γöé            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    93 Γöé   }
+    94 Γöé 
+  
+  i Unsafe fix: Use a template literal.
+  
+     89  89 Γöé   ΓÉì
+     90  90 Γöé     function formatDuration(ms: number): string {ΓÉì
+     91     Γöé - ┬╖┬╖┬╖┬╖return┬╖(ms┬╖/┬╖1000).toFixed(2)┬╖+┬╖"s";ΓÉì
+         91 Γöé + ┬╖┬╖┬╖┬╖return┬╖`${(ms┬╖/┬╖1000).toFixed(2)}s`;ΓÉì
+     92  92 Γöé     }ΓÉì
+     93  93 Γöé   ΓÉì
+  
+
+role-model-router/vendor/llama-swap/ui-svelte/src/routes/Activity.svelte:55:3 lint/style/useConst  FIXABLE  ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù This let declares a variable that is only assigned once.
+  
+    54 Γöé   let columnsMenuOpen = $state(false);
+  > 55 Γöé   let dropdownContainer: HTMLDivElement | null = null;
+       Γöé   ^^^
+    56 Γöé 
+    57 Γöé   onMount(() => {
+  
+  i 'dropdownContainer' is never reassigned.
+  
+    52 Γöé   );
+    53 Γöé 
+  > 54 Γöé   let columnsMenuOpen = $state(false);
+       Γöé                           ^^^^^^^^^^^^
+  > 55 Γöé   let dropdownContainer: HTMLDivElement | null = null;
+       Γöé   ^
+    56 Γöé 
+    57 Γöé   onMount(() => {
+  
+  i Safe fix: Use const instead.
+  
+     52  52 Γöé   ΓÉì
+     53  53 Γöé     let columnsMenuOpen = $state(false);ΓÉì
+     54     Γöé - ┬╖┬╖let┬╖dropdownContainer:┬╖HTMLDivElement┬╖|┬╖null┬╖=┬╖null;ΓÉì
+         54 Γöé + ┬╖┬╖const┬╖dropdownContainer:┬╖HTMLDivElement┬╖|┬╖null┬╖=┬╖null;ΓÉì
+     55  55 Γöé   ΓÉì
+     56  56 Γöé     onMount(() => {ΓÉì
+  
+
+role-model-router/vendor/llama-swap/ui-svelte/src/routes/Activity.svelte:122:3 lint/style/useConst  FIXABLE  ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù This let declares a variable that is only assigned once.
+  
+    120 Γöé   }
+    121 Γöé 
+  > 122 Γöé   let sortedMetrics = $derived([...$metrics].sort((a, b) => b.id - a.id));
+        Γöé   ^^^
+    123 Γöé 
+    124 Γöé   let selectedCapture = $state<ReqRespCapture | null>(null);
+  
+  i 'sortedMetrics' is never reassigned.
+  
+    117 Γöé     }
+    118 Γöé 
+  > 119 Γöé     return "a while ago";
+        Γöé                     ^^^^^
+  > 120 Γöé   }
+  > 121 Γöé 
+        Γöé Biome encountered an unexpected error
+
+This is a bug in Biome, not an error in your code, and we would appreciate it if you could report it to https://github.com/biomejs/biome/issues/ along with the following information to help us fixing the issue:
+
+Source Location: crates\biome_diagnostics\src\display\frame.rs:240:57
+Thread Name: main
+Message: byte index 1 is out of bounds of ``
+

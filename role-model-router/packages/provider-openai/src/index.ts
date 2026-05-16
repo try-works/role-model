@@ -8,9 +8,7 @@ import type {
 } from "@role-model-router/adapter-execution";
 import { normalizeToolCallArguments } from "@role-model-router/adapter-execution";
 
-export function createOpenAIProviderAdapter(
-  adapterFamily = "ai-sdk-openai",
-): ProviderAdapter {
+export function createOpenAIProviderAdapter(adapterFamily = "ai-sdk-openai"): ProviderAdapter {
   return {
     adapterFamily,
     negotiateCapabilities: ({ executionRequest }) =>
@@ -78,9 +76,7 @@ function toOpenAIChatTools(
   }));
 }
 
-function resolveProviderShape(
-  target: ProviderAdapterExecutionContext["target"],
-): string {
+function resolveProviderShape(target: ProviderAdapterExecutionContext["target"]): string {
   return target.requestShapeHints?.providerShape ?? "openai.responses";
 }
 
@@ -117,36 +113,32 @@ function readOpenAIStreamPayloads(rawTranscript: string): readonly string[] {
   return payloads;
 }
 
-function parseOpenAIChatCompletionsStreamTranscript(
-  rawTranscript: string,
-):
-  | {
-      readonly body: {
-        readonly choices: Array<{
-          readonly finish_reason: string;
-          readonly message: {
-            readonly content: string;
-            readonly tool_calls: Array<{
-              readonly id?: string;
-              readonly function: {
-                readonly name?: string;
-                readonly arguments: string;
-              };
-            }>;
+function parseOpenAIChatCompletionsStreamTranscript(rawTranscript: string): {
+  readonly body: {
+    readonly choices: Array<{
+      readonly finish_reason: string;
+      readonly message: {
+        readonly content: string;
+        readonly tool_calls: Array<{
+          readonly id?: string;
+          readonly function: {
+            readonly name?: string;
+            readonly arguments: string;
           };
         }>;
-        readonly usage?: {
-          readonly prompt_tokens?: number;
-          readonly completion_tokens?: number;
-        };
       };
-      readonly streamStats: {
-        readonly textDeltas: number;
-        readonly toolCallDeltas: number;
-        readonly toolArgumentDeltas: number;
-      };
-    }
-  | null {
+    }>;
+    readonly usage?: {
+      readonly prompt_tokens?: number;
+      readonly completion_tokens?: number;
+    };
+  };
+  readonly streamStats: {
+    readonly textDeltas: number;
+    readonly toolCallDeltas: number;
+    readonly toolArgumentDeltas: number;
+  };
+} | null {
   if (!rawTranscript.includes("data:")) {
     return null;
   }
@@ -231,7 +223,10 @@ function parseOpenAIChatCompletionsStreamTranscript(
         existing.id = toolCallDelta.id;
       }
 
-      if (typeof toolCallDelta.function?.name === "string" && toolCallDelta.function.name.length > 0) {
+      if (
+        typeof toolCallDelta.function?.name === "string" &&
+        toolCallDelta.function.name.length > 0
+      ) {
         existing.function.name = `${existing.function.name ?? ""}${toolCallDelta.function.name}`;
       }
 
@@ -270,33 +265,29 @@ function parseOpenAIChatCompletionsStreamTranscript(
   };
 }
 
-function parseOpenAIResponsesStreamTranscript(
-  rawTranscript: string,
-):
-  | {
-      readonly body: {
-        readonly id?: string;
-        readonly output: Array<{
-          readonly type: string;
-          readonly role?: string;
-          readonly content?: Array<{ readonly type: string; readonly text: string }>;
-          readonly call_id?: string;
-          readonly name?: string;
-          readonly arguments?: string;
-        }>;
-        readonly usage?: {
-          readonly input_tokens?: number;
-          readonly output_tokens?: number;
-        };
-      };
-      readonly finishReason: string;
-      readonly streamStats: {
-        readonly textDeltas: number;
-        readonly toolCallDeltas: number;
-        readonly toolArgumentDeltas: number;
-      };
-    }
-  | null {
+function parseOpenAIResponsesStreamTranscript(rawTranscript: string): {
+  readonly body: {
+    readonly id?: string;
+    readonly output: Array<{
+      readonly type: string;
+      readonly role?: string;
+      readonly content?: Array<{ readonly type: string; readonly text: string }>;
+      readonly call_id?: string;
+      readonly name?: string;
+      readonly arguments?: string;
+    }>;
+    readonly usage?: {
+      readonly input_tokens?: number;
+      readonly output_tokens?: number;
+    };
+  };
+  readonly finishReason: string;
+  readonly streamStats: {
+    readonly textDeltas: number;
+    readonly toolCallDeltas: number;
+    readonly toolArgumentDeltas: number;
+  };
+} | null {
   if (!rawTranscript.includes("data:")) {
     return null;
   }
@@ -370,7 +361,8 @@ function parseOpenAIResponsesStreamTranscript(
     if (payload.type === "response.output_item.added") {
       if (payload.item?.type === "message" && typeof payload.item.id === "string") {
         messageItems.set(payload.item.id, {
-          outputIndex: typeof payload.output_index === "number" ? payload.output_index : messageItems.size,
+          outputIndex:
+            typeof payload.output_index === "number" ? payload.output_index : messageItems.size,
           text: "",
         });
         continue;
@@ -378,7 +370,8 @@ function parseOpenAIResponsesStreamTranscript(
       if (payload.item?.type === "function_call" && typeof payload.item.id === "string") {
         toolCallDeltas += 1;
         toolCalls.set(payload.item.id, {
-          outputIndex: typeof payload.output_index === "number" ? payload.output_index : toolCalls.size,
+          outputIndex:
+            typeof payload.output_index === "number" ? payload.output_index : toolCalls.size,
           callId: payload.item.call_id,
           name: payload.item.name,
           arguments: typeof payload.item.arguments === "string" ? payload.item.arguments : "",
@@ -408,7 +401,8 @@ function parseOpenAIResponsesStreamTranscript(
         continue;
       }
       const existing = toolCalls.get(payload.item_id) ?? {
-        outputIndex: typeof payload.output_index === "number" ? payload.output_index : toolCalls.size,
+        outputIndex:
+          typeof payload.output_index === "number" ? payload.output_index : toolCalls.size,
         callId: undefined,
         name: undefined,
         arguments: "",
@@ -424,7 +418,8 @@ function parseOpenAIResponsesStreamTranscript(
     if (payload.type === "response.output_item.done") {
       if (payload.item?.type === "function_call" && typeof payload.item.id === "string") {
         const existing = toolCalls.get(payload.item.id) ?? {
-          outputIndex: typeof payload.output_index === "number" ? payload.output_index : toolCalls.size,
+          outputIndex:
+            typeof payload.output_index === "number" ? payload.output_index : toolCalls.size,
           callId: undefined,
           name: undefined,
           arguments: "",
@@ -640,7 +635,8 @@ export function normalizeOpenAIResponse(
       stream: {
         requested: Boolean(
           input.executionRequest?.stream ??
-            ((input.requestCapture.body.stream as boolean | undefined) ?? false),
+            (input.requestCapture.body.stream as boolean | undefined) ??
+            false,
         ),
         textDeltas: streamedBody?.streamStats.textDeltas ?? (outputText ? 1 : 0),
         toolCallDeltas: streamedBody?.streamStats.toolCallDeltas ?? toolCalls.length,
@@ -732,14 +728,14 @@ export function normalizeOpenAIResponse(
     toolCalls,
     finishReason: streamedBody?.finishReason ?? "stop",
     structuredOutputMode:
-      input.capabilities.structuredOutputs === "native" &&
-      "text" in input.requestCapture.body
+      input.capabilities.structuredOutputs === "native" && "text" in input.requestCapture.body
         ? "native"
         : "none",
     stream: {
       requested: Boolean(
         input.executionRequest?.stream ??
-          ((input.requestCapture.body.stream as boolean | undefined) ?? false),
+          (input.requestCapture.body.stream as boolean | undefined) ??
+          false,
       ),
       textDeltas: streamedBody?.streamStats.textDeltas ?? (outputText ? 1 : 0),
       toolCallDeltas: streamedBody?.streamStats.toolCallDeltas ?? toolCalls.length,

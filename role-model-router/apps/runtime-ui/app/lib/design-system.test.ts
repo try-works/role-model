@@ -1,22 +1,27 @@
 import { readFileSync } from "node:fs";
-import { createElement, type ReactElement } from "react";
+import { type ReactElement, createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { RouterProvider, createMemoryRouter } from "react-router";
 import { describe, expect, test } from "vitest";
 
-import { getRuntimeRouteDefinition, runtimeNavigationSections, runtimeTheme, shellQuickLinks } from "./design-system";
-import IntegrationsUpstreamRoute from "../routes/integrations-upstream";
-import StudioAdvancedRoute from "../routes/studio-advanced";
-import StudioAudioRoute from "../routes/studio-audio";
-import StudioImagesRoute from "../routes/studio-images";
-import StudioRerankRoute from "../routes/studio-rerank";
 import ControlRuntimeConfigRoute from "../routes/control-runtime-config";
+import IntegrationsUpstreamRoute from "../routes/integrations-upstream";
+import RouterOverviewRoute from "../routes/router";
 import RouterCandidatesRoute from "../routes/router-candidates";
 import RouterConfigRoute from "../routes/router-config";
 import RouterDecisionDetailRoute from "../routes/router-decision-detail";
 import RouterDecisionsRoute from "../routes/router-decisions";
-import RouterOverviewRoute from "../routes/router";
+import StudioAdvancedRoute from "../routes/studio-advanced";
+import StudioAudioRoute from "../routes/studio-audio";
+import StudioImagesRoute from "../routes/studio-images";
+import StudioRerankRoute from "../routes/studio-rerank";
 import SystemPeersRoute from "../routes/system-peers";
+import {
+  getRuntimeRouteDefinition,
+  runtimeNavigationSections,
+  runtimeTheme,
+  shellQuickLinks,
+} from "./design-system";
 
 function renderRoute(pathname: string, element: ReactElement): string {
   const router = createMemoryRouter([{ path: pathname, element }], {
@@ -26,24 +31,69 @@ function renderRoute(pathname: string, element: ReactElement): string {
 }
 
 const appCss = readFileSync(new URL("../app.css", import.meta.url), "utf8");
-const appShellSource = readFileSync(new URL("../components/app-shell.tsx", import.meta.url), "utf8");
-const pagePrimitivesSource = readFileSync(new URL("../components/page-primitives.tsx", import.meta.url), "utf8");
-const controlControllerSource = readFileSync(new URL("../routes/control-controller.tsx", import.meta.url), "utf8");
-const controlRuntimeConfigSource = readFileSync(new URL("../routes/control-runtime-config.tsx", import.meta.url), "utf8");
-const controlModelsSource = readFileSync(new URL("../routes/control-models.tsx", import.meta.url), "utf8");
-const endpointsRouteSource = readFileSync(new URL("../routes/endpoints.tsx", import.meta.url), "utf8");
-const providersRouteSource = readFileSync(new URL("../routes/providers.tsx", import.meta.url), "utf8");
-const requestsRouteSource = readFileSync(new URL("../routes/requests.tsx", import.meta.url), "utf8");
+const appShellSource = readFileSync(
+  new URL("../components/app-shell.tsx", import.meta.url),
+  "utf8",
+);
+const pagePrimitivesSource = readFileSync(
+  new URL("../components/page-primitives.tsx", import.meta.url),
+  "utf8",
+);
+const controlControllerSource = readFileSync(
+  new URL("../routes/control-controller.tsx", import.meta.url),
+  "utf8",
+);
+const controlRuntimeConfigSource = readFileSync(
+  new URL("../routes/control-runtime-config.tsx", import.meta.url),
+  "utf8",
+);
+const controlModelsSource = readFileSync(
+  new URL("../routes/control-models.tsx", import.meta.url),
+  "utf8",
+);
+const endpointsRouteSource = readFileSync(
+  new URL("../routes/endpoints.tsx", import.meta.url),
+  "utf8",
+);
+const providersRouteSource = readFileSync(
+  new URL("../routes/providers.tsx", import.meta.url),
+  "utf8",
+);
+const requestsRouteSource = readFileSync(
+  new URL("../routes/requests.tsx", import.meta.url),
+  "utf8",
+);
 const rootSource = readFileSync(new URL("../root.tsx", import.meta.url), "utf8");
 const runtimeRouteSource = readFileSync(new URL("../routes/runtime.tsx", import.meta.url), "utf8");
-const requestDetailRouteSource = readFileSync(new URL("../routes/request-detail.tsx", import.meta.url), "utf8");
-const routerCandidatesRouteSource = readFileSync(new URL("../routes/router-candidates.tsx", import.meta.url), "utf8");
-const routerConfigRouteSource = readFileSync(new URL("../routes/router-config.tsx", import.meta.url), "utf8");
-const routerDecisionDetailRouteSource = readFileSync(new URL("../routes/router-decision-detail.tsx", import.meta.url), "utf8");
-const routerDecisionsRouteSource = readFileSync(new URL("../routes/router-decisions.tsx", import.meta.url), "utf8");
+const requestDetailRouteSource = readFileSync(
+  new URL("../routes/request-detail.tsx", import.meta.url),
+  "utf8",
+);
+const routerCandidatesRouteSource = readFileSync(
+  new URL("../routes/router-candidates.tsx", import.meta.url),
+  "utf8",
+);
+const routerConfigRouteSource = readFileSync(
+  new URL("../routes/router-config.tsx", import.meta.url),
+  "utf8",
+);
+const routerDecisionDetailRouteSource = readFileSync(
+  new URL("../routes/router-decision-detail.tsx", import.meta.url),
+  "utf8",
+);
+const routerDecisionsRouteSource = readFileSync(
+  new URL("../routes/router-decisions.tsx", import.meta.url),
+  "utf8",
+);
 const routerRouteSource = readFileSync(new URL("../routes/router.tsx", import.meta.url), "utf8");
-const workbenchRouteSource = readFileSync(new URL("../routes/workbench.tsx", import.meta.url), "utf8");
-const designSystemDocSource = readFileSync(new URL("../../DESIGN_SYSTEM.md", import.meta.url), "utf8");
+const workbenchRouteSource = readFileSync(
+  new URL("../routes/workbench.tsx", import.meta.url),
+  "utf8",
+);
+const designSystemDocSource = readFileSync(
+  new URL("../../DESIGN_SYSTEM.md", import.meta.url),
+  "utf8",
+);
 
 describe("runtime design system", () => {
   test("defines navigation groups and layout templates for every runtime route", () => {
@@ -237,12 +287,24 @@ describe("runtime design system", () => {
   test("global shell chrome keeps legacy vendor ui out of the main runtime contract", () => {
     expect(shellQuickLinks.map((link) => link.href)).not.toContain("/ui");
     expect(appShellSource).not.toContain('href="/ui"');
-    expect(renderRoute("/app/studio/images", createElement(StudioImagesRoute))).not.toContain("Open preserved UI");
-    expect(renderRoute("/app/studio/audio", createElement(StudioAudioRoute))).not.toContain("Open preserved UI");
-    expect(renderRoute("/app/studio/rerank", createElement(StudioRerankRoute))).not.toContain("Open preserved UI");
-    expect(renderRoute("/app/studio/advanced", createElement(StudioAdvancedRoute))).not.toContain("Open preserved UI");
-    expect(renderRoute("/app/integrations/upstream", createElement(IntegrationsUpstreamRoute))).not.toContain("Open preserved UI");
-    expect(renderRoute("/app/system/peers", createElement(SystemPeersRoute))).not.toContain("Open raw health");
+    expect(renderRoute("/app/studio/images", createElement(StudioImagesRoute))).not.toContain(
+      "Open preserved UI",
+    );
+    expect(renderRoute("/app/studio/audio", createElement(StudioAudioRoute))).not.toContain(
+      "Open preserved UI",
+    );
+    expect(renderRoute("/app/studio/rerank", createElement(StudioRerankRoute))).not.toContain(
+      "Open preserved UI",
+    );
+    expect(renderRoute("/app/studio/advanced", createElement(StudioAdvancedRoute))).not.toContain(
+      "Open preserved UI",
+    );
+    expect(
+      renderRoute("/app/integrations/upstream", createElement(IntegrationsUpstreamRoute)),
+    ).not.toContain("Open preserved UI");
+    expect(renderRoute("/app/system/peers", createElement(SystemPeersRoute))).not.toContain(
+      "Open raw health",
+    );
   });
 
   test("studio implementation targets render repo-owned workspace sections instead of placeholder blueprints", () => {
@@ -272,7 +334,10 @@ describe("runtime design system", () => {
   });
 
   test("integration and system implementation targets render live upstream and peer surfaces", () => {
-    const upstreamMarkup = renderRoute("/app/integrations/upstream", createElement(IntegrationsUpstreamRoute));
+    const upstreamMarkup = renderRoute(
+      "/app/integrations/upstream",
+      createElement(IntegrationsUpstreamRoute),
+    );
     expect(upstreamMarkup).toContain("Upstream target inventory");
     expect(upstreamMarkup).toContain("Provider accounts in scope");
     expect(upstreamMarkup).toContain("/upstream/");
@@ -286,13 +351,24 @@ describe("runtime design system", () => {
   });
 
   test("router implementation targets render repo-owned routing explanation surfaces", () => {
-    expect(renderRoute("/app/router", createElement(RouterOverviewRoute))).toContain("Routing overview");
-    expect(renderRoute("/app/router/config", createElement(RouterConfigRoute))).toContain("Routing config");
-    expect(renderRoute("/app/router/candidates", createElement(RouterCandidatesRoute))).toContain("Candidate inventory");
-    expect(renderRoute("/app/router/decisions", createElement(RouterDecisionsRoute))).toContain("Routing decisions");
-    expect(renderRoute("/app/router/decisions/req-runtime-bridge-route-001", createElement(RouterDecisionDetailRoute))).toContain(
-      "Routing decision detail",
+    expect(renderRoute("/app/router", createElement(RouterOverviewRoute))).toContain(
+      "Routing overview",
     );
+    expect(renderRoute("/app/router/config", createElement(RouterConfigRoute))).toContain(
+      "Routing config",
+    );
+    expect(renderRoute("/app/router/candidates", createElement(RouterCandidatesRoute))).toContain(
+      "Candidate inventory",
+    );
+    expect(renderRoute("/app/router/decisions", createElement(RouterDecisionsRoute))).toContain(
+      "Routing decisions",
+    );
+    expect(
+      renderRoute(
+        "/app/router/decisions/req-runtime-bridge-route-001",
+        createElement(RouterDecisionDetailRoute),
+      ),
+    ).toContain("Routing decision detail");
   });
 
   test("router routes preserve empty-state and observe-link affordances", () => {
@@ -311,28 +387,46 @@ describe("runtime design system", () => {
     expect(routerConfigRouteSource).toContain("Open workbench with strategy");
     expect(routerConfigRouteSource).toContain("routingModeOverride");
     expect(workbenchRouteSource).toContain("useLocation");
-    expect(runtimeNavigationSections.find((section) => section.title === "Router")?.items.map((item) => item.id)).not.toContain(
-      "router-decision-detail",
-    );
+    expect(
+      runtimeNavigationSections
+        .find((section) => section.title === "Router")
+        ?.items.map((item) => item.id),
+    ).not.toContain("router-decision-detail");
   });
 
   test("design system doc marks the converted pages as live routes", () => {
-    expect(designSystemDocSource).toContain("| `/app/control/routing-strategy` | live | `registry-detail` |");
-    expect(designSystemDocSource).toContain("| `/app/control/runtime-config` | live | `registry-detail` |");
+    expect(designSystemDocSource).toContain(
+      "| `/app/control/routing-strategy` | live | `registry-detail` |",
+    );
+    expect(designSystemDocSource).toContain(
+      "| `/app/control/runtime-config` | live | `registry-detail` |",
+    );
     expect(designSystemDocSource).toContain("| `/app/router` | live | `registry-detail` |");
     expect(designSystemDocSource).toContain("| `/app/router/config` | live | `registry-detail` |");
-    expect(designSystemDocSource).toContain("| `/app/router/candidates` | live | `ledger-inspector` |");
-    expect(designSystemDocSource).toContain("| `/app/router/decisions` | live | `ledger-inspector` |");
-    expect(designSystemDocSource).toContain("| `/app/router/decisions/:requestId` | live | `ledger-inspector` |");
+    expect(designSystemDocSource).toContain(
+      "| `/app/router/candidates` | live | `ledger-inspector` |",
+    );
+    expect(designSystemDocSource).toContain(
+      "| `/app/router/decisions` | live | `ledger-inspector` |",
+    );
+    expect(designSystemDocSource).toContain(
+      "| `/app/router/decisions/:requestId` | live | `ledger-inspector` |",
+    );
     expect(designSystemDocSource).not.toContain("| `/app/control/accounts` |");
     expect(designSystemDocSource).toContain("| `/app/studio/images` | live | `studio-workspace` |");
     expect(designSystemDocSource).toContain("| `/app/studio/audio` | live | `studio-workspace` |");
     expect(designSystemDocSource).toContain("| `/app/studio/rerank` | live | `studio-workspace` |");
-    expect(designSystemDocSource).toContain("| `/app/studio/advanced` | live | `studio-workspace` |");
-    expect(designSystemDocSource).toContain("| `/app/integrations/upstream` | live | `contract-reference` |");
+    expect(designSystemDocSource).toContain(
+      "| `/app/studio/advanced` | live | `studio-workspace` |",
+    );
+    expect(designSystemDocSource).toContain(
+      "| `/app/integrations/upstream` | live | `contract-reference` |",
+    );
     expect(designSystemDocSource).toContain("| `/app/system/peers` | live | `system-topology` |");
     expect(designSystemDocSource).not.toContain("| `/app/studio/images` | implementation target |");
-    expect(designSystemDocSource).not.toContain("even if the repo-owned page implementation is still in progress");
+    expect(designSystemDocSource).not.toContain(
+      "even if the repo-owned page implementation is still in progress",
+    );
   });
 
   test("control routes tolerate an unassigned controller before endpoint activation", () => {
@@ -350,9 +444,9 @@ describe("runtime design system", () => {
     expect(appCss).toContain("--rm-surface-strong: #f5f5f4;");
     expect(appCss).toContain("--rm-panel: #e7e5e4;");
     expect(appCss).toContain("--rm-fg: #1c1917;");
-    expect(appCss).toContain("--rm-secondary: rgba(28, 25, 23, 0.70);");
-    expect(appCss).toContain("--rm-muted: rgba(28, 25, 23, 0.40);");
-    expect(appCss).toContain("--rm-accent: #003B8E;");
+    expect(appCss).toContain("--rm-secondary: rgba(28, 25, 23, 0.7);");
+    expect(appCss).toContain("--rm-muted: rgba(28, 25, 23, 0.4);");
+    expect(appCss).toContain("--rm-accent: #003b8e;");
     expect(appCss).toContain('"IBM Plex Mono"');
     expect(appCss).toContain("@media (prefers-color-scheme: dark)");
     expect(appCss).toContain("color-scheme: light dark;");
@@ -368,12 +462,12 @@ describe("runtime design system", () => {
   });
 
   test("control runtime config is a first-class route and models stays inspect-only", () => {
-    expect(renderRoute("/app/control/runtime-config", createElement(ControlRuntimeConfigRoute))).toContain(
-      "Runtime config",
-    );
-    expect(renderRoute("/app/control/runtime-config", createElement(ControlRuntimeConfigRoute))).toContain(
-      "Save and apply",
-    );
+    expect(
+      renderRoute("/app/control/runtime-config", createElement(ControlRuntimeConfigRoute)),
+    ).toContain("Runtime config");
+    expect(
+      renderRoute("/app/control/runtime-config", createElement(ControlRuntimeConfigRoute)),
+    ).toContain("Save and apply");
     expect(controlModelsSource).toContain("Inspect");
     expect(controlModelsSource).not.toContain(">Settings<");
     expect(controlModelsSource).toContain("/app/control/runtime-config");

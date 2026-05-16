@@ -43,7 +43,10 @@ function splitAnthropicMessages(
   const systemMessages = messages.filter((message) => message.role === "system");
   const chatMessages = messages.filter((message) => message.role !== "system");
   return {
-    system: systemMessages.length > 0 ? systemMessages.map((message) => message.content).join("\n\n") : null,
+    system:
+      systemMessages.length > 0
+        ? systemMessages.map((message) => message.content).join("\n\n")
+        : null,
     messages: chatMessages.map((message) => ({
       role: message.role,
       content: message.content,
@@ -146,7 +149,8 @@ export function normalizeAnthropicResponse(
     stream: {
       requested: Boolean(
         input.executionRequest?.stream ??
-          ((input.requestCapture.body.stream as boolean | undefined) ?? false),
+          (input.requestCapture.body.stream as boolean | undefined) ??
+          false,
       ),
       textDeltas: outputText ? 1 : 0,
       toolCallDeltas: toolCalls.length,
@@ -154,8 +158,7 @@ export function normalizeAnthropicResponse(
     },
     promptCache: {
       requested: Boolean(
-        input.executionRequest?.promptCache ??
-          input.requestCapture.headers["anthropic-beta"],
+        input.executionRequest?.promptCache ?? input.requestCapture.headers["anthropic-beta"],
       ),
       used: cacheReadTokens > 0 || cacheWriteTokens > 0,
       readTokens: cacheReadTokens,

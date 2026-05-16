@@ -204,8 +204,7 @@ export interface ProviderRequestExecutionInput {
   readonly fallbackModelIds?: readonly string[];
 }
 
-export interface ExecuteLiveRoutedRequestInput
-  extends Omit<ExecuteRoutedRequestInput, "captures"> {
+export interface ExecuteLiveRoutedRequestInput extends Omit<ExecuteRoutedRequestInput, "captures"> {
   readonly executeProviderRequest: (
     input: ProviderRequestExecutionInput,
   ) => Promise<ProviderResponseCapture>;
@@ -244,7 +243,9 @@ function resolveFallbackModelIds(
       return localSource.modelId;
     }
 
-    const candidate = input.registry.endpoints.find((entry) => entry.identity.endpoint_id === endpointId);
+    const candidate = input.registry.endpoints.find(
+      (entry) => entry.identity.endpoint_id === endpointId,
+    );
     if (candidate) {
       return candidate.identity.model_id;
     }
@@ -282,7 +283,9 @@ function findLocalSource(
   return registrySources.local.find((source) => source.endpointId === endpointId);
 }
 
-export function resolveExecutionTarget(input: Omit<ExecuteRoutedRequestInput, "executionRequest" | "adapters" | "captures">): ResolvedExecutionTarget {
+export function resolveExecutionTarget(
+  input: Omit<ExecuteRoutedRequestInput, "executionRequest" | "adapters" | "captures">,
+): ResolvedExecutionTarget {
   const endpointId = input.routeResult.decision.chosen_endpoint_id;
   const candidate = input.registry.endpoints.find(
     (entry) => entry.identity.endpoint_id === endpointId,

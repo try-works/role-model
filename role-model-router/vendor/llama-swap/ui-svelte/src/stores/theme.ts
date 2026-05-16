@@ -1,15 +1,18 @@
-import { writable, derived } from "svelte/store";
-import { persistentStore } from "./persistent";
+import { derived, writable } from "svelte/store";
 import type { ScreenWidth } from "../lib/types";
+import { persistentStore } from "./persistent";
 
 // Persistent stores
-const systemDark = typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches;
+const systemDark =
+  typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches;
 export const isDarkMode = persistentStore<boolean>("theme", systemDark);
 export const appTitle = persistentStore<string>("app-title", "llama-swap");
 
 // Non-persistent stores
 export const screenWidth = writable<ScreenWidth>("md");
-export const connectionState = writable<"connected" | "connecting" | "disconnected">("disconnected");
+export const connectionState = writable<"connected" | "connecting" | "disconnected">(
+  "disconnected",
+);
 
 // Derived store for narrow screens
 export const isNarrow = derived(screenWidth, ($screenWidth) => {

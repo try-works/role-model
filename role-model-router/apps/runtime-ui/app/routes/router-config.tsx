@@ -1,9 +1,22 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 
-import { CodeBlock, EmptyState, ErrorState, FactCard, LoadingState, PageHeader, SectionCard } from "../components/page-primitives";
-import { fieldClassName, mutedPanelClassName, primaryButtonClassName, secondaryButtonClassName } from "../lib/design-system";
-import { fetchRouterConfig, type RouterConfig, type WorkbenchChatInput } from "../lib/runtime-api";
+import {
+  CodeBlock,
+  EmptyState,
+  ErrorState,
+  FactCard,
+  LoadingState,
+  PageHeader,
+  SectionCard,
+} from "../components/page-primitives";
+import {
+  fieldClassName,
+  mutedPanelClassName,
+  primaryButtonClassName,
+  secondaryButtonClassName,
+} from "../lib/design-system";
+import { type RouterConfig, type WorkbenchChatInput, fetchRouterConfig } from "../lib/runtime-api";
 
 const ROUTING_MODE_OPTIONS: Array<{
   value: NonNullable<WorkbenchChatInput["routingModeOverride"]>;
@@ -42,20 +55,21 @@ export default function RouterConfigRoute() {
     useState<NonNullable<WorkbenchChatInput["routingModeOverride"]>>("baseline");
   const [error, setError] = useState<string | null>(null);
 
-  const load = () =>
-    fetchRouterConfig()
+  useEffect(() => {
+    void fetchRouterConfig()
       .then((routerConfig) => {
         setConfig(routerConfig);
         setError(null);
       })
-      .catch((value: unknown) => setError(value instanceof Error ? value.message : "Could not load router config."));
-
-  useEffect(() => {
-    void load();
+      .catch((value: unknown) =>
+        setError(value instanceof Error ? value.message : "Could not load router config."),
+      );
   }, []);
 
   const selectedRoutingModeDetails = useMemo(
-    () => ROUTING_MODE_OPTIONS.find((option) => option.value === selectedRoutingMode) ?? ROUTING_MODE_OPTIONS[0],
+    () =>
+      ROUTING_MODE_OPTIONS.find((option) => option.value === selectedRoutingMode) ??
+      ROUTING_MODE_OPTIONS[0],
     [selectedRoutingMode],
   );
 
@@ -78,10 +92,20 @@ export default function RouterConfigRoute() {
   );
 
   if (error) {
-    return <div className="space-y-6">{header}<ErrorState label={error} /></div>;
+    return (
+      <div className="space-y-6">
+        {header}
+        <ErrorState label={error} />
+      </div>
+    );
   }
   if (!config) {
-    return <div className="space-y-6">{header}<LoadingState label="Loading routing config…" /></div>;
+    return (
+      <div className="space-y-6">
+        {header}
+        <LoadingState label="Loading routing config…" />
+      </div>
+    );
   }
 
   return (
@@ -95,9 +119,21 @@ export default function RouterConfigRoute() {
           detail="Low-level balanced/latency/quality/cost policy if the runtime config sets one."
           emphasis
         />
-        <FactCard label="Execution mode" value={config.persisted.executionMode} detail="Resolved runtime execution mode." />
-        <FactCard label="Controller" value={config.controller?.modelId ?? "unassigned"} detail={config.controller?.endpointId ?? "No controller is assigned."} />
-        <FactCard label="Policy inputs" value={config.policySources.roles.length + config.policySources.tasks.length} detail={`${config.policySources.roles.length} roles and ${config.policySources.tasks.length} tasks currently shape Router policy inputs.`} />
+        <FactCard
+          label="Execution mode"
+          value={config.persisted.executionMode}
+          detail="Resolved runtime execution mode."
+        />
+        <FactCard
+          label="Controller"
+          value={config.controller?.modelId ?? "unassigned"}
+          detail={config.controller?.endpointId ?? "No controller is assigned."}
+        />
+        <FactCard
+          label="Policy inputs"
+          value={config.policySources.roles.length + config.policySources.tasks.length}
+          detail={`${config.policySources.roles.length} roles and ${config.policySources.tasks.length} tasks currently shape Router policy inputs.`}
+        />
       </div>
 
       <SectionCard
@@ -106,7 +142,10 @@ export default function RouterConfigRoute() {
       >
         <div className="grid gap-4 xl:grid-cols-[minmax(0,280px)_1fr]">
           <div className="space-y-3">
-            <label className="block text-sm font-medium text-[var(--rm-fg)]" htmlFor="router-strategy-select">
+            <label
+              className="block text-sm font-medium text-[var(--rm-fg)]"
+              htmlFor="router-strategy-select"
+            >
               Strategy
             </label>
             <select
@@ -114,7 +153,9 @@ export default function RouterConfigRoute() {
               className={fieldClassName}
               value={selectedRoutingMode}
               onChange={(event) =>
-                setSelectedRoutingMode(event.target.value as NonNullable<WorkbenchChatInput["routingModeOverride"]>)
+                setSelectedRoutingMode(
+                  event.target.value as NonNullable<WorkbenchChatInput["routingModeOverride"]>,
+                )
               }
             >
               {ROUTING_MODE_OPTIONS.map((option) => (
@@ -131,63 +172,80 @@ export default function RouterConfigRoute() {
               >
                 Open workbench with strategy
               </Link>
-              <Link
-                className={secondaryButtonClassName}
-                to="/app/control/runtime-config"
-              >
+              <Link className={secondaryButtonClassName} to="/app/control/runtime-config">
                 Advanced config
               </Link>
             </div>
           </div>
           <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
             <p className="font-medium text-[var(--rm-fg)]">{selectedRoutingModeDetails.label}</p>
+            <p className="mt-3 leading-6">{selectedRoutingModeDetails.detail}</p>
             <p className="mt-3 leading-6">
-              {selectedRoutingModeDetails.detail}
-            </p>
-            <p className="mt-3 leading-6">
-              This proposal routing mode is separate from the low-level scoring policy above. The Workbench sends it as a per-request routing override so you can test the mode directly.
+              This proposal routing mode is separate from the low-level scoring policy above. The
+              Workbench sends it as a per-request routing override so you can test the mode
+              directly.
             </p>
           </div>
         </div>
       </SectionCard>
 
       <div className="grid gap-4 xl:grid-cols-[0.85fr_1.15fr]">
-        <SectionCard title="Guidance provenance" description="Keep persisted config separate from advisory guidance so unavailable values stay honest.">
+        <SectionCard
+          title="Guidance provenance"
+          description="Keep persisted config separate from advisory guidance so unavailable values stay honest."
+        >
           <div className="space-y-4">
             <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
               <p className="font-medium text-[var(--rm-fg)]">Guidance endpoint</p>
-              <p className="mt-2">{config.guidance.endpointId ?? "No routing-model endpoint is configured."}</p>
+              <p className="mt-2">
+                {config.guidance.endpointId ?? "No routing-model endpoint is configured."}
+              </p>
             </div>
-            {config.guidance.preferredEndpointIds.length === 0 && config.guidance.ignoredEndpointIds.length === 0 ? (
+            {config.guidance.preferredEndpointIds.length === 0 &&
+            config.guidance.ignoredEndpointIds.length === 0 ? (
               <EmptyState label="No preferred or ignored endpoints are currently configured." />
             ) : (
               <dl className="grid gap-4 text-sm md:grid-cols-2">
                 <div className={`${mutedPanelClassName} p-4`}>
                   <dt className="font-medium text-[var(--rm-fg)]">Preferred endpoints</dt>
-                  <dd className="mt-2 whitespace-pre-wrap text-[var(--rm-secondary)]">{config.guidance.preferredEndpointIds.join("\n") || "n/a"}</dd>
+                  <dd className="mt-2 whitespace-pre-wrap text-[var(--rm-secondary)]">
+                    {config.guidance.preferredEndpointIds.join("\n") || "n/a"}
+                  </dd>
                 </div>
                 <div className={`${mutedPanelClassName} p-4`}>
                   <dt className="font-medium text-[var(--rm-fg)]">Ignored endpoints</dt>
-                  <dd className="mt-2 whitespace-pre-wrap text-[var(--rm-secondary)]">{config.guidance.ignoredEndpointIds.join("\n") || "n/a"}</dd>
+                  <dd className="mt-2 whitespace-pre-wrap text-[var(--rm-secondary)]">
+                    {config.guidance.ignoredEndpointIds.join("\n") || "n/a"}
+                  </dd>
                 </div>
               </dl>
             )}
           </div>
         </SectionCard>
 
-        <SectionCard title="Policy inputs" description="Router config exposes the full role/task inputs so routing-policy overrides are inspectable without digging through fixtures manually.">
+        <SectionCard
+          title="Policy inputs"
+          description="Router config exposes the full role/task inputs so routing-policy overrides are inspectable without digging through fixtures manually."
+        >
           <div className="space-y-4">
             {config.policySources.roles.length === 0 ? (
               <EmptyState label="No role policy inputs are currently available." />
             ) : (
               config.policySources.roles.map((role, index) => (
-                <div key={`${asStringValue(role.role_id) ?? "role"}-${index}`} className={`${mutedPanelClassName} p-4`}>
-                  <p className="font-medium text-[var(--rm-fg)]">{asStringValue(role.role_id) ?? "Unnamed role"}</p>
+                <div
+                  key={`${asStringValue(role.role_id) ?? "role"}-${index}`}
+                  className={`${mutedPanelClassName} p-4`}
+                >
+                  <p className="font-medium text-[var(--rm-fg)]">
+                    {asStringValue(role.role_id) ?? "Unnamed role"}
+                  </p>
                   <p className="mt-2 text-sm text-[var(--rm-secondary)]">
                     {asStringValue(role.description) ?? "No role description provided."}
                   </p>
                   <div className="mt-3">
-                    <CodeBlock>{JSON.stringify(role.routing_policy_overrides ?? {}, null, 2)}</CodeBlock>
+                    <CodeBlock>
+                      {JSON.stringify(role.routing_policy_overrides ?? {}, null, 2)}
+                    </CodeBlock>
                   </div>
                 </div>
               ))

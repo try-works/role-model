@@ -1,14 +1,14 @@
+import { readFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 
 import type { NormalizedCatalog } from "@role-model-router/catalog";
+import { deriveLiteLLMProviders, loadLiteLLMModelPrices } from "@role-model-router/catalog";
 import {
-  deriveLiteLLMProviders,
-  loadLiteLLMModelPrices,
-} from "@role-model-router/catalog";
-import { validateProviderAccounts, type ProviderAccountDiagnostic } from "@role-model-router/provider-account";
+  type ProviderAccountDiagnostic,
+  validateProviderAccounts,
+} from "@role-model-router/provider-account";
 
 import { initializeSqliteMemory, persistProviderAccounts } from "./index.js";
 
@@ -35,15 +35,25 @@ async function readJson<TValue>(filePath: string): Promise<TValue> {
 }
 
 function formatDiagnostics(diagnostics: readonly ProviderAccountDiagnostic[]): string {
-  return diagnostics.map((diagnostic) => `${diagnostic.providerAccountId}:${diagnostic.code}`).join(", ");
+  return diagnostics
+    .map((diagnostic) => `${diagnostic.providerAccountId}:${diagnostic.code}`)
+    .join(", ");
 }
 
 export async function runRuntimeStateValidation(
   options: RuntimeStateValidationOptions,
 ): Promise<RuntimeStateValidationResult> {
-  const fixtureRoot = options.fixtureRoot ?? path.join(options.repoRoot, "testdata", "router-runtime");
+  const fixtureRoot =
+    options.fixtureRoot ?? path.join(options.repoRoot, "testdata", "router-runtime");
   const normalizedCatalog = await readJson<NormalizedCatalog>(
-    path.join(options.repoRoot, "role-model-router", "packages", "catalog", "data", "normalized-catalog.json"),
+    path.join(
+      options.repoRoot,
+      "role-model-router",
+      "packages",
+      "catalog",
+      "data",
+      "normalized-catalog.json",
+    ),
   );
   const providerAccountsFixture = await readJson<{ accounts: unknown[] }>(
     path.join(fixtureRoot, "provider-accounts.json"),
@@ -59,7 +69,9 @@ export async function runRuntimeStateValidation(
   });
 
   if (validation.diagnostics.length > 0) {
-    throw new Error(`Provider-account validation failed: ${formatDiagnostics(validation.diagnostics)}`);
+    throw new Error(
+      `Provider-account validation failed: ${formatDiagnostics(validation.diagnostics)}`,
+    );
   }
 
   const initialization = initializeSqliteMemory({

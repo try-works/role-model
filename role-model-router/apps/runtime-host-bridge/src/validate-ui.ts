@@ -6,7 +6,10 @@ import { fileURLToPath } from "node:url";
 
 import { runRuntimeAdapterValidation } from "@role-model-router/adapter-execution/cli";
 import { createRuntimeObservationBundle } from "@role-model-router/runtime-observability";
-import { persistRuntimeObservationBundle, resolveSqliteMemoryLocation } from "@role-model-router/sqlite-memory";
+import {
+  persistRuntimeObservationBundle,
+  resolveSqliteMemoryLocation,
+} from "@role-model-router/sqlite-memory";
 
 import { createRuntimeBridgeBackend, startBridgeServer } from "./index.js";
 
@@ -101,7 +104,13 @@ export async function runRuntimeUiValidation(
       headers: requestHeaders,
     });
 
-    if (!summaryResponse.ok || !providersResponse.ok || !accountsResponse.ok || !rolesResponse.ok || !endpointsResponse.ok) {
+    if (
+      !summaryResponse.ok ||
+      !providersResponse.ok ||
+      !accountsResponse.ok ||
+      !rolesResponse.ok ||
+      !endpointsResponse.ok
+    ) {
       throw new Error("Runtime UI validation could not read the control-plane routes.");
     }
 
@@ -173,7 +182,9 @@ export async function runRuntimeUiValidation(
         }),
       });
       if (!runtimeConfigUpdateResponse.ok) {
-        throw new Error(`Runtime UI validation runtime-config update failed with ${runtimeConfigUpdateResponse.status}.`);
+        throw new Error(
+          `Runtime UI validation runtime-config update failed with ${runtimeConfigUpdateResponse.status}.`,
+        );
       }
 
       const updatedRuntimeConfigRecord = (await runtimeConfigUpdateResponse.json()) as {
@@ -183,7 +194,8 @@ export async function runRuntimeUiValidation(
         };
       };
       runtimeConfigUpdatedVersion = updatedRuntimeConfigRecord.config?.version ?? null;
-      runtimeConfigUpdatedRoutingStrategy = updatedRuntimeConfigRecord.config?.routingStrategy ?? null;
+      runtimeConfigUpdatedRoutingStrategy =
+        updatedRuntimeConfigRecord.config?.routingStrategy ?? null;
     }
 
     const upsertedAccountId = "moonshot.personal.primary";
@@ -257,7 +269,9 @@ export async function runRuntimeUiValidation(
       }),
     });
     if (!activateEndpointResponse.ok) {
-      throw new Error(`Runtime UI validation endpoint activation failed with ${activateEndpointResponse.status}.`);
+      throw new Error(
+        `Runtime UI validation endpoint activation failed with ${activateEndpointResponse.status}.`,
+      );
     }
 
     const updatedEndpointsResponse = await fetch(`${baseUrl}/api/role-model/endpoints`, {
@@ -282,13 +296,17 @@ export async function runRuntimeUiValidation(
     };
 
     const moonshotProvider = providers.find((provider) => provider.providerId === "moonshot");
-    const fixtureRoot = options.fixtureRoot ?? path.join(options.repoRoot, "testdata", "router-runtime", "fixtures");
+    const fixtureRoot =
+      options.fixtureRoot ?? path.join(options.repoRoot, "testdata", "router-runtime", "fixtures");
     const history = await readJson<{
-      byEndpointId: Record<string, Parameters<typeof createRuntimeObservationBundle>[0]["priorSamples"]>;
+      byEndpointId: Record<
+        string,
+        Parameters<typeof createRuntimeObservationBundle>[0]["priorSamples"]
+      >;
     }>(path.join(options.repoRoot, "testdata", "router-runtime", "observability-history.json"));
-    const policy = await readJson<Parameters<typeof createRuntimeObservationBundle>[0]["capturePolicy"]>(
-      path.join(options.repoRoot, "testdata", "router-runtime", "observability-policy.json"),
-    );
+    const policy = await readJson<
+      Parameters<typeof createRuntimeObservationBundle>[0]["capturePolicy"]
+    >(path.join(options.repoRoot, "testdata", "router-runtime", "observability-policy.json"));
     const validation = await runRuntimeAdapterValidation({
       repoRoot: options.repoRoot,
       fixtureRoot,
@@ -340,9 +358,12 @@ export async function runRuntimeUiValidation(
       observation: routedObservation,
     });
 
-    const telemetryRequestsResponse = await fetch(`${baseUrl}/api/role-model/telemetry/requests?limit=10`, {
-      headers: requestHeaders,
-    });
+    const telemetryRequestsResponse = await fetch(
+      `${baseUrl}/api/role-model/telemetry/requests?limit=10`,
+      {
+        headers: requestHeaders,
+      },
+    );
     if (!telemetryRequestsResponse.ok) {
       throw new Error("Runtime UI validation could not read telemetry requests.");
     }
@@ -353,9 +374,12 @@ export async function runRuntimeUiValidation(
     const routedTelemetryRequest =
       telemetryRequests.find((request) => request.requestId === routedRequestId) ?? null;
 
-    const routedRequestDetailResponse = await fetch(`${baseUrl}/api/role-model/requests/${routedRequestId}`, {
-      headers: requestHeaders,
-    });
+    const routedRequestDetailResponse = await fetch(
+      `${baseUrl}/api/role-model/requests/${routedRequestId}`,
+      {
+        headers: requestHeaders,
+      },
+    );
     if (!routedRequestDetailResponse.ok) {
       throw new Error("Runtime UI validation could not read the routed request detail.");
     }
@@ -389,8 +413,7 @@ export async function runRuntimeUiValidation(
           account.providerAccountId === upsertedAccountId &&
           account.modelRoleBindings?.some(
             (binding) =>
-              binding.modelId === "moonshot/kimi-k2.5" &&
-              binding.roleIds.includes("general.chat"),
+              binding.modelId === "moonshot/kimi-k2.5" && binding.roleIds.includes("general.chat"),
           ),
       ),
       activatedEndpointId,
@@ -400,7 +423,8 @@ export async function runRuntimeUiValidation(
       routedRequestId,
       telemetryListIncludesRoutedRequest: routedTelemetryRequest !== null,
       routedRequestRoutingDecisionId: routedTelemetryRequest?.routingDecisionId ?? null,
-      routedRequestEffectiveMode: routedRequestDetail.routingDiagnostics?.routingMode?.effectiveMode ?? null,
+      routedRequestEffectiveMode:
+        routedRequestDetail.routingDiagnostics?.routingMode?.effectiveMode ?? null,
       routedRequestRewriteReason: routedRequestDetail.routingDiagnostics?.rewrite?.reason ?? null,
     };
   } finally {
@@ -418,19 +442,19 @@ if (process.argv[1] === __filename) {
   try {
     unifiedRuntimeConfigPath = path.join(runtimeStateRoot, "runtime-config.yaml");
     await fs.mkdir(runtimeStateRoot, { recursive: true });
-      await fs.writeFile(
-        unifiedRuntimeConfigPath,
-        [
-          "version: 1.0",
-          "routing:",
-          "  strategy: balanced",
-          "llama_swap:",
-          "  models: {}",
-          "litellm_proxy:",
-          "  providers: {}",
-          "",
-        ].join("\n"),
-        "utf8",
+    await fs.writeFile(
+      unifiedRuntimeConfigPath,
+      [
+        "version: 1.0",
+        "routing:",
+        "  strategy: balanced",
+        "llama_swap:",
+        "  models: {}",
+        "litellm_proxy:",
+        "  providers: {}",
+        "",
+      ].join("\n"),
+      "utf8",
     );
   } catch {
     // If temp config creation fails, fall back to running without it

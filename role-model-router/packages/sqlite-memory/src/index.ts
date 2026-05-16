@@ -1,14 +1,14 @@
-import path from "node:path";
-import { copyFileSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
-import { DatabaseSync } from "node:sqlite";
 import { randomUUID } from "node:crypto";
+import { copyFileSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import path from "node:path";
+import { DatabaseSync } from "node:sqlite";
 
-import type { ObservedPerformanceProfile } from "@role-model/protocol-types";
 import {
-  aggregateObservedPerformanceSamples,
   type ObservedPerformanceSample,
+  aggregateObservedPerformanceSamples,
 } from "@role-model-router/profile-aggregator";
 import type { ProviderAccountRecord } from "@role-model-router/provider-account";
+import type { ObservedPerformanceProfile } from "@role-model/protocol-types";
 
 const INITIAL_MIGRATION_ID = "run06-v1-initial-schema";
 const CURRENT_SCHEMA_VERSION = 1;
@@ -762,7 +762,9 @@ function initializeSchema(database: DatabaseSync): void {
     ).map((row) => row.name),
   );
   if (!providerAccountColumns.has("model_role_bindings_json")) {
-    database.exec("ALTER TABLE provider_accounts ADD COLUMN model_role_bindings_json TEXT NOT NULL DEFAULT '[]'");
+    database.exec(
+      "ALTER TABLE provider_accounts ADD COLUMN model_role_bindings_json TEXT NOT NULL DEFAULT '[]'",
+    );
   }
   const runtimeTelemetryColumns = new Set(
     (
@@ -802,29 +804,27 @@ function seedMaintenanceDefaults(database: DatabaseSync, nowMs: number): void {
   }
 }
 
-function mapProviderAccountRow(
-  row: {
-    provider_account_id: string;
-    provider_id: string;
-    provider_kind: string;
-    org_scope: string;
-    account_scope: string;
-    credential_backend: string;
-    credential_ref: string;
-    auth_mode: string;
-    region_policy_json: string;
-    base_url_override: string | null;
-    allowed_models_json: string;
-    model_role_bindings_json: string;
-    denied_models_json: string;
-    entitlement_tags_json: string;
-    budget_policy_ref: string;
-    quota_policy_ref: string;
-    status: string;
-    health_status: string;
-    rotation_state: string;
-  },
-): ProviderAccountRecord {
+function mapProviderAccountRow(row: {
+  provider_account_id: string;
+  provider_id: string;
+  provider_kind: string;
+  org_scope: string;
+  account_scope: string;
+  credential_backend: string;
+  credential_ref: string;
+  auth_mode: string;
+  region_policy_json: string;
+  base_url_override: string | null;
+  allowed_models_json: string;
+  model_role_bindings_json: string;
+  denied_models_json: string;
+  entitlement_tags_json: string;
+  budget_policy_ref: string;
+  quota_policy_ref: string;
+  status: string;
+  health_status: string;
+  rotation_state: string;
+}): ProviderAccountRecord {
   return {
     providerAccountId: row.provider_account_id,
     providerId: row.provider_id,
@@ -839,7 +839,9 @@ function mapProviderAccountRow(
     regionPolicy: JSON.parse(row.region_policy_json) as ProviderAccountRecord["regionPolicy"],
     baseUrlOverride: row.base_url_override,
     allowedModels: JSON.parse(row.allowed_models_json) as string[],
-    modelRoleBindings: JSON.parse(row.model_role_bindings_json) as ProviderAccountRecord["modelRoleBindings"],
+    modelRoleBindings: JSON.parse(
+      row.model_role_bindings_json,
+    ) as ProviderAccountRecord["modelRoleBindings"],
     deniedModels: JSON.parse(row.denied_models_json) as string[],
     entitlementTags: JSON.parse(row.entitlement_tags_json) as string[],
     budgetPolicyRef: row.budget_policy_ref,
@@ -850,18 +852,16 @@ function mapProviderAccountRow(
   };
 }
 
-function mapRuntimeEndpointRow(
-  row: {
-    endpoint_id: string;
-    provider_account_id: string;
-    model_id: string;
-    region: string;
-    endpoint_kind: string;
-    serving_source: string;
-    lifecycle_state: string;
-    health_status: string;
-  },
-): RuntimeEndpointRecord {
+function mapRuntimeEndpointRow(row: {
+  endpoint_id: string;
+  provider_account_id: string;
+  model_id: string;
+  region: string;
+  endpoint_kind: string;
+  serving_source: string;
+  lifecycle_state: string;
+  health_status: string;
+}): RuntimeEndpointRecord {
   return {
     endpointId: row.endpoint_id,
     providerAccountId: row.provider_account_id,
@@ -874,25 +874,23 @@ function mapRuntimeEndpointRow(
   };
 }
 
-function mapProviderDeviceAuthSessionRow(
-  row: {
-    auth_request_id: string;
-    provider_account_id: string;
-    provider_id: string;
-    variant_id: string;
-    credential_backend: string;
-    credential_ref: string;
-    auth_mode: string;
-    verification_uri: string;
-    verification_uri_complete: string;
-    user_code: string;
-    device_code: string;
-    interval_seconds: number;
-    status: string;
-    last_error: string | null;
-    expires_at_ms: number;
-  },
-): ProviderDeviceAuthSessionRecord {
+function mapProviderDeviceAuthSessionRow(row: {
+  auth_request_id: string;
+  provider_account_id: string;
+  provider_id: string;
+  variant_id: string;
+  credential_backend: string;
+  credential_ref: string;
+  auth_mode: string;
+  verification_uri: string;
+  verification_uri_complete: string;
+  user_code: string;
+  device_code: string;
+  interval_seconds: number;
+  status: string;
+  last_error: string | null;
+  expires_at_ms: number;
+}): ProviderDeviceAuthSessionRecord {
   return {
     authRequestId: row.auth_request_id,
     providerAccountId: row.provider_account_id,
@@ -912,15 +910,13 @@ function mapProviderDeviceAuthSessionRow(
   };
 }
 
-function mapRuntimeControllerAssignmentRow(
-  row: {
-    scope: string;
-    endpoint_id: string;
-    model_id: string;
-    source_type: string;
-    updated_at_ms: number;
-  },
-): RuntimeControllerAssignmentRecord {
+function mapRuntimeControllerAssignmentRow(row: {
+  scope: string;
+  endpoint_id: string;
+  model_id: string;
+  source_type: string;
+  updated_at_ms: number;
+}): RuntimeControllerAssignmentRecord {
   return {
     scope: row.scope,
     endpointId: row.endpoint_id,
@@ -930,18 +926,16 @@ function mapRuntimeControllerAssignmentRow(
   };
 }
 
-function mapObservedThroughputPenaltyStateRow(
-  row: {
-    endpoint_id: string;
-    last_observed_tokens_per_sec: number;
-    min_tokens_per_sec: number;
-    penalty_factor: number;
-    activated_at_ms: number;
-    expires_at_ms: number;
-    last_observation_measured_at_ms: number;
-    updated_at_ms: number;
-  },
-): ObservedThroughputPenaltyStateRecord {
+function mapObservedThroughputPenaltyStateRow(row: {
+  endpoint_id: string;
+  last_observed_tokens_per_sec: number;
+  min_tokens_per_sec: number;
+  penalty_factor: number;
+  activated_at_ms: number;
+  expires_at_ms: number;
+  last_observation_measured_at_ms: number;
+  updated_at_ms: number;
+}): ObservedThroughputPenaltyStateRecord {
   return {
     endpointId: row.endpoint_id,
     lastObservedTokensPerSec: row.last_observed_tokens_per_sec,
@@ -962,7 +956,9 @@ export function initializeSqliteMemory(
   const database = new DatabaseSync(databasePath);
   const nowMs = Date.now();
 
-  const journalModeRow = database.prepare("PRAGMA journal_mode = WAL").get() as { journal_mode?: string } | undefined;
+  const journalModeRow = database.prepare("PRAGMA journal_mode = WAL").get() as
+    | { journal_mode?: string }
+    | undefined;
   initializeSchema(database);
   seedMaintenanceDefaults(database, nowMs);
 
@@ -972,13 +968,15 @@ export function initializeSqliteMemory(
 
   const appliedMigrations: string[] = [];
   if (!currentVersionRow) {
-    database.prepare("INSERT INTO schema_version (schema_version, migration_id, applied_at_ms) VALUES (?, ?, ?)").run(
-      CURRENT_SCHEMA_VERSION,
-      INITIAL_MIGRATION_ID,
-      nowMs,
-    );
     database
-      .prepare("INSERT INTO migration_receipts (migration_id, schema_version, applied_at_ms, status) VALUES (?, ?, ?, ?)")
+      .prepare(
+        "INSERT INTO schema_version (schema_version, migration_id, applied_at_ms) VALUES (?, ?, ?)",
+      )
+      .run(CURRENT_SCHEMA_VERSION, INITIAL_MIGRATION_ID, nowMs);
+    database
+      .prepare(
+        "INSERT INTO migration_receipts (migration_id, schema_version, applied_at_ms, status) VALUES (?, ?, ?, ?)",
+      )
       .run(INITIAL_MIGRATION_ID, CURRENT_SCHEMA_VERSION, nowMs, "applied");
     appliedMigrations.push(INITIAL_MIGRATION_ID);
   }
@@ -1118,7 +1116,8 @@ export function listProviderAccounts(
 export function upsertRuntimeEndpoint(input: UpsertRuntimeEndpointInput): void {
   const database = new DatabaseSync(input.databasePath);
   const nowMs = Date.now();
-  database.prepare(`
+  database
+    .prepare(`
     INSERT OR REPLACE INTO runtime_endpoints (
       endpoint_id,
       provider_account_id,
@@ -1131,18 +1130,19 @@ export function upsertRuntimeEndpoint(input: UpsertRuntimeEndpointInput): void {
       created_at_ms,
       updated_at_ms
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(
-    input.endpoint.endpointId,
-    input.endpoint.providerAccountId,
-    input.endpoint.modelId,
-    input.endpoint.region,
-    input.endpoint.endpointKind,
-    input.endpoint.servingSource,
-    input.endpoint.lifecycleState,
-    input.endpoint.healthStatus,
-    nowMs,
-    nowMs,
-  );
+  `)
+    .run(
+      input.endpoint.endpointId,
+      input.endpoint.providerAccountId,
+      input.endpoint.modelId,
+      input.endpoint.region,
+      input.endpoint.endpointKind,
+      input.endpoint.servingSource,
+      input.endpoint.lifecycleState,
+      input.endpoint.healthStatus,
+      nowMs,
+      nowMs,
+    );
   database.close();
 }
 
@@ -1150,7 +1150,8 @@ export function listRuntimeEndpoints(
   input: ListRuntimeEndpointsInput,
 ): readonly RuntimeEndpointRecord[] {
   const database = new DatabaseSync(input.databasePath);
-  const rows = database.prepare(`
+  const rows = database
+    .prepare(`
       SELECT
         endpoint_id,
         provider_account_id,
@@ -1164,21 +1165,23 @@ export function listRuntimeEndpoints(
       ORDER BY endpoint_id ASC
     `)
     .all() as Array<{
-      endpoint_id: string;
-      provider_account_id: string;
-      model_id: string;
-      region: string;
-      endpoint_kind: string;
-      serving_source: string;
-      lifecycle_state: string;
-      health_status: string;
-    }>;
+    endpoint_id: string;
+    provider_account_id: string;
+    model_id: string;
+    region: string;
+    endpoint_kind: string;
+    serving_source: string;
+    lifecycle_state: string;
+    health_status: string;
+  }>;
   database.close();
 
   return rows.map(mapRuntimeEndpointRow);
 }
 
-export function upsertRuntimeControllerAssignment(input: UpsertRuntimeControllerAssignmentInput): void {
+export function upsertRuntimeControllerAssignment(
+  input: UpsertRuntimeControllerAssignmentInput,
+): void {
   const database = new DatabaseSync(input.databasePath);
   database
     .prepare(
@@ -1216,12 +1219,11 @@ export function readRuntimeControllerAssignment(
   return row ? mapRuntimeControllerAssignmentRow(row) : null;
 }
 
-export function upsertProviderDeviceAuthSession(
-  input: UpsertProviderDeviceAuthSessionInput,
-): void {
+export function upsertProviderDeviceAuthSession(input: UpsertProviderDeviceAuthSessionInput): void {
   const database = new DatabaseSync(input.databasePath);
   const nowMs = Date.now();
-  database.prepare(`
+  database
+    .prepare(`
     INSERT OR REPLACE INTO provider_device_auth_sessions (
       auth_request_id,
       provider_account_id,
@@ -1241,25 +1243,26 @@ export function upsertProviderDeviceAuthSession(
       created_at_ms,
       updated_at_ms
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(
-    input.session.authRequestId,
-    input.session.providerAccountId,
-    input.session.providerId,
-    input.session.variantId,
-    input.session.credentialBackend,
-    input.session.credentialRef,
-    input.session.authMode,
-    input.session.verificationUri,
-    input.session.verificationUriComplete,
-    input.session.userCode,
-    input.session.deviceCode,
-    input.session.intervalSeconds,
-    input.session.status,
-    input.session.lastError,
-    input.session.expiresAtMs,
-    nowMs,
-    nowMs,
-  );
+  `)
+    .run(
+      input.session.authRequestId,
+      input.session.providerAccountId,
+      input.session.providerId,
+      input.session.variantId,
+      input.session.credentialBackend,
+      input.session.credentialRef,
+      input.session.authMode,
+      input.session.verificationUri,
+      input.session.verificationUriComplete,
+      input.session.userCode,
+      input.session.deviceCode,
+      input.session.intervalSeconds,
+      input.session.status,
+      input.session.lastError,
+      input.session.expiresAtMs,
+      nowMs,
+      nowMs,
+    );
   database.close();
 }
 
@@ -1267,7 +1270,8 @@ export function readProviderDeviceAuthSession(
   input: ReadProviderDeviceAuthSessionInput,
 ): ProviderDeviceAuthSessionRecord | null {
   const database = new DatabaseSync(input.databasePath);
-  const row = database.prepare(`
+  const row = database
+    .prepare(`
       SELECT
         auth_request_id,
         provider_account_id,
@@ -1314,8 +1318,15 @@ export function readProviderDeviceAuthSession(
 export function persistContinuitySnapshot(input: PersistContinuitySnapshotInput): void {
   const database = new DatabaseSync(input.databasePath);
   database
-    .prepare("INSERT OR REPLACE INTO sessions (session_id, workspace_scope, created_at_ms, updated_at_ms) VALUES (?, ?, ?, ?)")
-    .run(input.session.sessionId, input.session.workspaceScope, input.session.createdAtMs, input.session.updatedAtMs);
+    .prepare(
+      "INSERT OR REPLACE INTO sessions (session_id, workspace_scope, created_at_ms, updated_at_ms) VALUES (?, ?, ?, ?)",
+    )
+    .run(
+      input.session.sessionId,
+      input.session.workspaceScope,
+      input.session.createdAtMs,
+      input.session.updatedAtMs,
+    );
   database
     .prepare(
       "INSERT OR REPLACE INTO conversations (conversation_id, session_id, created_at_ms, updated_at_ms) VALUES (?, ?, ?, ?)",
@@ -1331,21 +1342,38 @@ export function persistContinuitySnapshot(input: PersistContinuitySnapshotInput)
     "INSERT OR REPLACE INTO conversation_turns (turn_id, conversation_id, role, content_ref, created_at_ms) VALUES (?, ?, ?, ?, ?)",
   );
   for (const turn of input.turns) {
-    turnStatement.run(turn.turnId, turn.conversationId, turn.role, turn.contentRef, turn.createdAtMs);
+    turnStatement.run(
+      turn.turnId,
+      turn.conversationId,
+      turn.role,
+      turn.contentRef,
+      turn.createdAtMs,
+    );
   }
 
   const artifactStatement = database.prepare(
     "INSERT OR REPLACE INTO context_artifacts (artifact_id, artifact_kind, storage_ref, created_at_ms) VALUES (?, ?, ?, ?)",
   );
   for (const artifact of input.artifacts) {
-    artifactStatement.run(artifact.artifactId, artifact.artifactKind, artifact.storageRef, artifact.createdAtMs);
+    artifactStatement.run(
+      artifact.artifactId,
+      artifact.artifactKind,
+      artifact.storageRef,
+      artifact.createdAtMs,
+    );
   }
 
   const linkStatement = database.prepare(
     "INSERT OR REPLACE INTO artifact_links (link_id, artifact_id, conversation_id, session_id, created_at_ms) VALUES (?, ?, ?, ?, ?)",
   );
   for (const link of input.artifactLinks) {
-    linkStatement.run(link.linkId, link.artifactId, link.conversationId, link.sessionId, link.createdAtMs);
+    linkStatement.run(
+      link.linkId,
+      link.artifactId,
+      link.conversationId,
+      link.sessionId,
+      link.createdAtMs,
+    );
   }
 
   const handoffStatement = database.prepare(
@@ -1383,11 +1411,15 @@ export function readConversationContinuity(
 
   if (!conversation) {
     database.close();
-    throw new Error(`Conversation ${input.conversationId} is not present in SQLite continuity state`);
+    throw new Error(
+      `Conversation ${input.conversationId} is not present in SQLite continuity state`,
+    );
   }
 
   const session = database
-    .prepare("SELECT session_id, workspace_scope, created_at_ms, updated_at_ms FROM sessions WHERE session_id = ?")
+    .prepare(
+      "SELECT session_id, workspace_scope, created_at_ms, updated_at_ms FROM sessions WHERE session_id = ?",
+    )
     .get(conversation.session_id) as
     | {
         session_id: string;
@@ -1502,7 +1534,9 @@ export function persistRetrievalReceipt(input: PersistRetrievalReceiptInput): vo
   database.close();
 }
 
-export function readRetrievalReceipts(input: ReadRetrievalReceiptsInput): readonly RetrievalReceiptRecord[] {
+export function readRetrievalReceipts(
+  input: ReadRetrievalReceiptsInput,
+): readonly RetrievalReceiptRecord[] {
   const database = new DatabaseSync(input.databasePath);
   const rows = database
     .prepare(
@@ -1542,44 +1576,42 @@ function percentile95(values: readonly number[]): number | null {
   return sorted[Math.max(0, Math.ceil(sorted.length * 0.95) - 1)] ?? null;
 }
 
-function mapRuntimeTelemetryRecord(
-  row: {
-    request_id: string;
-    routing_decision_id: string;
-    endpoint_id: string;
-    conversation_id: string;
-    created_at_ms: number;
-    model_id: string | null;
-    provider_kind: string | null;
-    provider_family: string | null;
-    input_tokens: number;
-    output_tokens: number;
-    total_tokens: number;
-    latency_ms: number | null;
-    error_class: string | null;
-    status_code: number | null;
-    finish_reason: string | null;
-    prompt_cache_requested: number;
-    prompt_cache_supported: number;
-    prompt_cache_used: number;
-    cache_read_tokens: number;
-    cache_read_tokens_supported: number;
-    cache_write_tokens: number;
-    cache_write_tokens_supported: number;
-    stream_text_delta_count: number;
-    stream_text_supported: number;
-    stream_tool_call_delta_count: number;
-    stream_tool_call_supported: number;
-    stream_tool_argument_delta_count: number;
-    stream_tool_argument_supported: number;
-    tool_call_count: number;
-    tool_execution_count: number;
-    cost_provenance: string;
-    actual_cost_usd: number | null;
-    estimated_cost_usd: number | null;
-    currency: string | null;
-  },
-): RuntimeTelemetryRecord {
+function mapRuntimeTelemetryRecord(row: {
+  request_id: string;
+  routing_decision_id: string;
+  endpoint_id: string;
+  conversation_id: string;
+  created_at_ms: number;
+  model_id: string | null;
+  provider_kind: string | null;
+  provider_family: string | null;
+  input_tokens: number;
+  output_tokens: number;
+  total_tokens: number;
+  latency_ms: number | null;
+  error_class: string | null;
+  status_code: number | null;
+  finish_reason: string | null;
+  prompt_cache_requested: number;
+  prompt_cache_supported: number;
+  prompt_cache_used: number;
+  cache_read_tokens: number;
+  cache_read_tokens_supported: number;
+  cache_write_tokens: number;
+  cache_write_tokens_supported: number;
+  stream_text_delta_count: number;
+  stream_text_supported: number;
+  stream_tool_call_delta_count: number;
+  stream_tool_call_supported: number;
+  stream_tool_argument_delta_count: number;
+  stream_tool_argument_supported: number;
+  tool_call_count: number;
+  tool_execution_count: number;
+  cost_provenance: string;
+  actual_cost_usd: number | null;
+  estimated_cost_usd: number | null;
+  currency: string | null;
+}): RuntimeTelemetryRecord {
   return {
     requestId: row.request_id,
     routingDecisionId: row.routing_decision_id,
@@ -1618,7 +1650,9 @@ function mapRuntimeTelemetryRecord(
   };
 }
 
-function toRuntimeTelemetryRecord(observation: PersistedRuntimeObservationBundle): RuntimeTelemetryRecord {
+function toRuntimeTelemetryRecord(
+  observation: PersistedRuntimeObservationBundle,
+): RuntimeTelemetryRecord {
   const inputTokens = observation.usageEvent.tokens_in ?? 0;
   const outputTokens = observation.usageEvent.tokens_out ?? 0;
   const executionTelemetry = observation.executionTelemetry;
@@ -1635,9 +1669,14 @@ function toRuntimeTelemetryRecord(observation: PersistedRuntimeObservationBundle
     inputTokens,
     outputTokens,
     totalTokens: inputTokens + outputTokens,
-    latencyMs: observation.usageEvent.latency_ms ?? observation.observedPerformance.sample.latency_ms ?? null,
+    latencyMs:
+      observation.usageEvent.latency_ms ??
+      observation.observedPerformance.sample.latency_ms ??
+      null,
     errorClass:
-      observation.usageEvent.error_class ?? observation.observedPerformance.sample.error_class ?? null,
+      observation.usageEvent.error_class ??
+      observation.observedPerformance.sample.error_class ??
+      null,
     statusCode: observation.inspection?.request?.responseCapture?.statusCode ?? null,
     finishReason: executionTelemetry?.finishReason ?? null,
     promptCacheRequested: observation.cacheObservability?.promptCacheRequested ?? false,
@@ -1853,7 +1892,9 @@ export function persistRuntimeObservationBundle(input: PersistRuntimeObservation
       .all(observation.endpointId, difficultyBucket) as Array<{
       sample_json: string;
     }>;
-    const bucketSamples = priorBucketRows.map((row) => JSON.parse(row.sample_json) as ObservedPerformanceSample);
+    const bucketSamples = priorBucketRows.map(
+      (row) => JSON.parse(row.sample_json) as ObservedPerformanceSample,
+    );
     const bucketProfile = aggregateObservedPerformanceSamples(bucketSamples, {
       nowMs: observation.observedPerformance.sample.timestamp_ms,
     });
@@ -1942,17 +1983,19 @@ export function readObservedPerformanceSamples(
   input: ReadObservedPerformanceSamplesInput,
 ): readonly ObservedPerformanceSample[] {
   const database = new DatabaseSync(input.databasePath);
-  const rows = (input.difficultyBucket
-    ? database
-        .prepare(
-          "SELECT sample_json FROM observed_performance_samples_by_difficulty WHERE endpoint_id = ? AND difficulty_bucket = ? ORDER BY timestamp_ms ASC, sample_id ASC",
-        )
-        .all(input.endpointId, input.difficultyBucket)
-    : database
-        .prepare(
-          "SELECT sample_json FROM observed_performance_samples WHERE endpoint_id = ? ORDER BY timestamp_ms ASC, sample_id ASC",
-        )
-        .all(input.endpointId)) as Array<{
+  const rows = (
+    input.difficultyBucket
+      ? database
+          .prepare(
+            "SELECT sample_json FROM observed_performance_samples_by_difficulty WHERE endpoint_id = ? AND difficulty_bucket = ? ORDER BY timestamp_ms ASC, sample_id ASC",
+          )
+          .all(input.endpointId, input.difficultyBucket)
+      : database
+          .prepare(
+            "SELECT sample_json FROM observed_performance_samples WHERE endpoint_id = ? ORDER BY timestamp_ms ASC, sample_id ASC",
+          )
+          .all(input.endpointId)
+  ) as Array<{
     sample_json: string;
   }>;
   database.close();
@@ -1964,17 +2007,19 @@ export function readLatestObservedProfile(
   input: ReadLatestObservedProfileInput,
 ): ObservedPerformanceProfile | null {
   const database = new DatabaseSync(input.databasePath);
-  const row = (input.difficultyBucket
-    ? database
-        .prepare(
-          "SELECT profile_json FROM observed_profile_snapshots_by_difficulty WHERE endpoint_id = ? AND difficulty_bucket = ? ORDER BY measured_at_ms DESC, snapshot_id DESC LIMIT 1",
-        )
-        .get(input.endpointId, input.difficultyBucket)
-    : database
-        .prepare(
-          "SELECT profile_json FROM observed_profile_snapshots WHERE endpoint_id = ? ORDER BY measured_at_ms DESC, snapshot_id DESC LIMIT 1",
-        )
-        .get(input.endpointId)) as
+  const row = (
+    input.difficultyBucket
+      ? database
+          .prepare(
+            "SELECT profile_json FROM observed_profile_snapshots_by_difficulty WHERE endpoint_id = ? AND difficulty_bucket = ? ORDER BY measured_at_ms DESC, snapshot_id DESC LIMIT 1",
+          )
+          .get(input.endpointId, input.difficultyBucket)
+      : database
+          .prepare(
+            "SELECT profile_json FROM observed_profile_snapshots WHERE endpoint_id = ? ORDER BY measured_at_ms DESC, snapshot_id DESC LIMIT 1",
+          )
+          .get(input.endpointId)
+  ) as
     | {
         profile_json: string;
       }
@@ -1993,17 +2038,19 @@ export function readLatestObservedProfilesByEndpointIds(
 
   const database = new DatabaseSync(input.databasePath);
   const placeholders = input.endpointIds.map(() => "?").join(", ");
-  const rows = (input.difficultyBucket
-    ? database
-        .prepare(
-          `SELECT endpoint_id, profile_json FROM observed_profile_snapshots_by_difficulty WHERE endpoint_id IN (${placeholders}) AND difficulty_bucket = ? ORDER BY measured_at_ms DESC, snapshot_id DESC`,
-        )
-        .all(...input.endpointIds, input.difficultyBucket)
-    : database
-        .prepare(
-          `SELECT endpoint_id, profile_json FROM observed_profile_snapshots WHERE endpoint_id IN (${placeholders}) ORDER BY measured_at_ms DESC, snapshot_id DESC`,
-        )
-        .all(...input.endpointIds)) as Array<{
+  const rows = (
+    input.difficultyBucket
+      ? database
+          .prepare(
+            `SELECT endpoint_id, profile_json FROM observed_profile_snapshots_by_difficulty WHERE endpoint_id IN (${placeholders}) AND difficulty_bucket = ? ORDER BY measured_at_ms DESC, snapshot_id DESC`,
+          )
+          .all(...input.endpointIds, input.difficultyBucket)
+      : database
+          .prepare(
+            `SELECT endpoint_id, profile_json FROM observed_profile_snapshots WHERE endpoint_id IN (${placeholders}) ORDER BY measured_at_ms DESC, snapshot_id DESC`,
+          )
+          .all(...input.endpointIds)
+  ) as Array<{
     endpoint_id: string;
     profile_json: string;
   }>;
@@ -2012,7 +2059,9 @@ export function readLatestObservedProfilesByEndpointIds(
   const latestProfilesByEndpointId: Record<string, ObservedPerformanceProfile> = {};
   for (const row of rows) {
     if (!(row.endpoint_id in latestProfilesByEndpointId)) {
-      latestProfilesByEndpointId[row.endpoint_id] = JSON.parse(row.profile_json) as ObservedPerformanceProfile;
+      latestProfilesByEndpointId[row.endpoint_id] = JSON.parse(
+        row.profile_json,
+      ) as ObservedPerformanceProfile;
     }
   }
   return latestProfilesByEndpointId;
@@ -2071,7 +2120,8 @@ export function readAdvisoryMaxDifficultyRecommendation(
     }),
   ) as AdvisoryMaxDifficultyRecommendation["evaluations"];
 
-  let recommendedMaxDifficulty: AdvisoryMaxDifficultyRecommendation["recommendedMaxDifficulty"] = null;
+  let recommendedMaxDifficulty: AdvisoryMaxDifficultyRecommendation["recommendedMaxDifficulty"] =
+    null;
   for (const difficultyBucket of DIFFICULTY_BUCKETS) {
     if (evaluations[difficultyBucket].eligible) {
       recommendedMaxDifficulty = difficultyBucket;
@@ -2085,7 +2135,9 @@ export function readAdvisoryMaxDifficultyRecommendation(
   };
 }
 
-export function upsertDifficultyClassificationCache(input: UpsertDifficultyClassificationCacheInput): void {
+export function upsertDifficultyClassificationCache(
+  input: UpsertDifficultyClassificationCacheInput,
+): void {
   const database = new DatabaseSync(input.databasePath);
   database
     .prepare(
@@ -2169,7 +2221,8 @@ export function readRuntimeTelemetrySummary(
     totalEstimatedCostUsd: roundMetric(
       records.reduce((sum, record) => sum + (record.estimatedCostUsd ?? 0), 0),
     ),
-    averageLatencyMs: latencyValues.length > 0 ? Math.round(totalLatency / latencyValues.length) : null,
+    averageLatencyMs:
+      latencyValues.length > 0 ? Math.round(totalLatency / latencyValues.length) : null,
     p95LatencyMs: percentile95(latencyValues),
     lastSeenAtMs: records[0]?.createdAtMs ?? null,
   };
@@ -2206,26 +2259,24 @@ export function listRuntimeTelemetryComparisonRows(
 
   for (const record of records) {
     const key = `${record.endpointId}\u0000${record.modelId ?? ""}\u0000${record.providerKind ?? ""}`;
-    const existing =
-      grouped.get(key) ??
-        {
-          endpointId: record.endpointId,
-          modelId: record.modelId,
-          providerKind: record.providerKind,
-          providerFamily: record.providerFamily,
-          promptCacheSupported: record.promptCacheSupported,
-          requestCount: 0,
-          successCount: 0,
-          failureCount: 0,
-        totalInputTokens: 0,
-        totalOutputTokens: 0,
-        totalTokens: 0,
-        cachedRequestCount: 0,
-        totalActualCostUsd: 0,
-        totalEstimatedCostUsd: 0,
-        latencies: [],
-        lastSeenAtMs: record.createdAtMs,
-      };
+    const existing = grouped.get(key) ?? {
+      endpointId: record.endpointId,
+      modelId: record.modelId,
+      providerKind: record.providerKind,
+      providerFamily: record.providerFamily,
+      promptCacheSupported: record.promptCacheSupported,
+      requestCount: 0,
+      successCount: 0,
+      failureCount: 0,
+      totalInputTokens: 0,
+      totalOutputTokens: 0,
+      totalTokens: 0,
+      cachedRequestCount: 0,
+      totalActualCostUsd: 0,
+      totalEstimatedCostUsd: 0,
+      latencies: [],
+      lastSeenAtMs: record.createdAtMs,
+    };
     existing.requestCount += 1;
     existing.providerFamily ??= record.providerFamily;
     existing.promptCacheSupported = existing.promptCacheSupported || record.promptCacheSupported;
@@ -2264,7 +2315,9 @@ export function listRuntimeTelemetryComparisonRows(
       totalEstimatedCostUsd: roundMetric(entry.totalEstimatedCostUsd),
       averageLatencyMs:
         entry.latencies.length > 0
-          ? Math.round(entry.latencies.reduce((sum, value) => sum + value, 0) / entry.latencies.length)
+          ? Math.round(
+              entry.latencies.reduce((sum, value) => sum + value, 0) / entry.latencies.length,
+            )
           : null,
       p95LatencyMs: percentile95(entry.latencies),
       lastSeenAtMs: entry.lastSeenAtMs,
@@ -2298,22 +2351,29 @@ export function exportRuntimeState(input: ExportRuntimeStateInput): ExportRuntim
   }>;
   database.close();
 
-  const observations = observationRows.map((row) => JSON.parse(row.observation_json) as PersistedRuntimeObservationBundle);
+  const observations = observationRows.map(
+    (row) => JSON.parse(row.observation_json) as PersistedRuntimeObservationBundle,
+  );
   const latestProfilesByEndpoint = new Map<string, ObservedPerformanceProfile>();
   for (const row of profileRows) {
     if (!latestProfilesByEndpoint.has(row.endpoint_id)) {
-      latestProfilesByEndpoint.set(row.endpoint_id, JSON.parse(row.profile_json) as ObservedPerformanceProfile);
+      latestProfilesByEndpoint.set(
+        row.endpoint_id,
+        JSON.parse(row.profile_json) as ObservedPerformanceProfile,
+      );
     }
   }
 
-  const observedProfiles = [...latestProfilesByEndpoint.entries()].map(([endpointId, latestProfile]) => ({
-    endpointId,
-    latestProfile,
-    recentSamples: readObservedPerformanceSamples({
-      databasePath: input.databasePath,
+  const observedProfiles = [...latestProfilesByEndpoint.entries()].map(
+    ([endpointId, latestProfile]) => ({
       endpointId,
+      latestProfile,
+      recentSamples: readObservedPerformanceSamples({
+        databasePath: input.databasePath,
+        endpointId,
+      }),
     }),
-  }));
+  );
 
   const exported = {
     maintenancePolicy: readRuntimeMaintenancePolicy({
@@ -2390,34 +2450,31 @@ export interface SwapEventRecord {
 
 export function insertSwapEvent(input: InsertSwapEventInput): void {
   const database = new DatabaseSync(input.databasePath);
-  database.prepare(
-    "INSERT INTO llama_swap_events (event_id, timestamp, old_model_id, new_model_id, reason) VALUES (?, ?, ?, ?, ?)"
-  ).run(
-    randomUUID(),
-    input.timestamp,
-    input.oldModelId,
-    input.newModelId,
-    input.reason,
-  );
+  database
+    .prepare(
+      "INSERT INTO llama_swap_events (event_id, timestamp, old_model_id, new_model_id, reason) VALUES (?, ?, ?, ?, ?)",
+    )
+    .run(randomUUID(), input.timestamp, input.oldModelId, input.newModelId, input.reason);
   database.close();
 }
 
-export function listSwapEvents(
-  input: { readonly databasePath: string; readonly limit?: number },
-): readonly SwapEventRecord[] {
+export function listSwapEvents(input: {
+  readonly databasePath: string;
+  readonly limit?: number;
+}): readonly SwapEventRecord[] {
   const database = new DatabaseSync(input.databasePath);
   const limitClause = typeof input.limit === "number" ? " LIMIT ?" : "";
   const rows = database
     .prepare(
-      `SELECT event_id, timestamp, old_model_id, new_model_id, reason FROM llama_swap_events ORDER BY timestamp DESC${limitClause}`
+      `SELECT event_id, timestamp, old_model_id, new_model_id, reason FROM llama_swap_events ORDER BY timestamp DESC${limitClause}`,
     )
     .all(...(typeof input.limit === "number" ? [input.limit] : [])) as Array<{
-      event_id: string;
-      timestamp: string;
-      old_model_id: string | null;
-      new_model_id: string | null;
-      reason: string;
-    }>;
+    event_id: string;
+    timestamp: string;
+    old_model_id: string | null;
+    new_model_id: string | null;
+    reason: string;
+  }>;
   database.close();
 
   return rows.map((row) => ({

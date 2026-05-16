@@ -1,6 +1,6 @@
+import { readFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 
 import type { NormalizedCatalog } from "@role-model-router/catalog";
@@ -15,7 +15,7 @@ import {
   readConversationContinuity,
 } from "@role-model-router/sqlite-memory";
 
-import { buildEndpointRegistry, type RegistrySources } from "./index.js";
+import { type RegistrySources, buildEndpointRegistry } from "./index.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -63,16 +63,26 @@ async function readJson<TValue>(filePath: string): Promise<TValue> {
   return JSON.parse(await readFile(filePath, "utf8")) as TValue;
 }
 
-function formatDiagnostics(diagnostics: readonly { readonly code: string; readonly endpointId: string }[]): string {
+function formatDiagnostics(
+  diagnostics: readonly { readonly code: string; readonly endpointId: string }[],
+): string {
   return diagnostics.map((diagnostic) => `${diagnostic.endpointId}:${diagnostic.code}`).join(", ");
 }
 
 export async function runRuntimeRegistryValidation(
   options: RuntimeRegistryValidationOptions,
 ): Promise<RuntimeRegistryValidationResult> {
-  const fixtureRoot = options.fixtureRoot ?? path.join(options.repoRoot, "testdata", "router-runtime");
+  const fixtureRoot =
+    options.fixtureRoot ?? path.join(options.repoRoot, "testdata", "router-runtime");
   const normalizedCatalog = await readJson<NormalizedCatalog>(
-    path.join(options.repoRoot, "role-model-router", "packages", "catalog", "data", "normalized-catalog.json"),
+    path.join(
+      options.repoRoot,
+      "role-model-router",
+      "packages",
+      "catalog",
+      "data",
+      "normalized-catalog.json",
+    ),
   );
   const providerAccountsFixture = await readJson<{ accounts: unknown[] }>(
     path.join(fixtureRoot, "provider-accounts.json"),
@@ -99,7 +109,7 @@ export async function runRuntimeRegistryValidation(
     accounts: providerAccountsFixture.accounts,
   });
   if (validation.diagnostics.length > 0) {
-    throw new Error(`Provider-account validation failed for runtime registry validation`);
+    throw new Error("Provider-account validation failed for runtime registry validation");
   }
 
   const initialization = initializeSqliteMemory({
@@ -117,7 +127,9 @@ export async function runRuntimeRegistryValidation(
     sources: registrySources,
   });
   if (registry.diagnostics.length > 0) {
-    throw new Error(`Endpoint-registry validation failed: ${formatDiagnostics(registry.diagnostics)}`);
+    throw new Error(
+      `Endpoint-registry validation failed: ${formatDiagnostics(registry.diagnostics)}`,
+    );
   }
 
   persistContinuitySnapshot({

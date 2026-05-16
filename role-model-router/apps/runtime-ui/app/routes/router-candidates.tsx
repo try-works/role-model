@@ -1,8 +1,16 @@
 import { useEffect, useState } from "react";
 
-import { EmptyState, ErrorState, FactCard, LoadingState, PageHeader, SectionCard, StatusPill } from "../components/page-primitives";
+import {
+  EmptyState,
+  ErrorState,
+  FactCard,
+  LoadingState,
+  PageHeader,
+  SectionCard,
+  StatusPill,
+} from "../components/page-primitives";
 import { listRowClassName } from "../lib/design-system";
-import { fetchRouterCandidates, type RouterCandidate } from "../lib/runtime-api";
+import { type RouterCandidate, fetchRouterCandidates } from "../lib/runtime-api";
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   return typeof value === "object" && value !== null ? (value as Record<string, unknown>) : null;
@@ -28,7 +36,9 @@ export default function RouterCandidatesRoute() {
         setCandidates(value);
         setError(null);
       })
-      .catch((value: unknown) => setError(value instanceof Error ? value.message : "Could not load router candidates."));
+      .catch((value: unknown) =>
+        setError(value instanceof Error ? value.message : "Could not load router candidates."),
+      );
   }, []);
 
   const header = (
@@ -40,10 +50,20 @@ export default function RouterCandidatesRoute() {
   );
 
   if (error) {
-    return <div className="space-y-6">{header}<ErrorState label={error} /></div>;
+    return (
+      <div className="space-y-6">
+        {header}
+        <ErrorState label={error} />
+      </div>
+    );
   }
   if (!candidates) {
-    return <div className="space-y-6">{header}<LoadingState label="Loading routing candidates…" /></div>;
+    return (
+      <div className="space-y-6">
+        {header}
+        <LoadingState label="Loading routing candidates…" />
+      </div>
+    );
   }
 
   const localCount = candidates.filter((candidate) => candidate.sourceType === "local").length;
@@ -54,12 +74,28 @@ export default function RouterCandidatesRoute() {
       {header}
 
       <div className="grid gap-4 md:grid-cols-3">
-        <FactCard label="Candidates" value={candidates.length} detail={`${localCount} local / ${remoteCount} remote candidates currently visible.`} emphasis />
-        <FactCard label="Preferred" value={candidates.filter((candidate) => candidate.preferred).length} detail="Candidates currently favored by routing-model guidance." />
-        <FactCard label="Ignored" value={candidates.filter((candidate) => candidate.ignored).length} detail="Candidates currently excluded by guidance even though they exist in the registry." />
+        <FactCard
+          label="Candidates"
+          value={candidates.length}
+          detail={`${localCount} local / ${remoteCount} remote candidates currently visible.`}
+          emphasis
+        />
+        <FactCard
+          label="Preferred"
+          value={candidates.filter((candidate) => candidate.preferred).length}
+          detail="Candidates currently favored by routing-model guidance."
+        />
+        <FactCard
+          label="Ignored"
+          value={candidates.filter((candidate) => candidate.ignored).length}
+          detail="Candidates currently excluded by guidance even though they exist in the registry."
+        />
       </div>
 
-      <SectionCard title="Comparable inventory" description="Keep candidate comparison unified so local and remote routing remain visible under one reading model.">
+      <SectionCard
+        title="Comparable inventory"
+        description="Keep candidate comparison unified so local and remote routing remain visible under one reading model."
+      >
         {candidates.length === 0 ? (
           <EmptyState label="No routing candidates are available yet." />
         ) : (
@@ -76,18 +112,23 @@ export default function RouterCandidatesRoute() {
                     <p className="font-medium text-[var(--rm-fg)]">{candidate.endpointId}</p>
                     <p className="text-sm text-[var(--rm-secondary)]">{candidate.modelId}</p>
                     <p className="text-sm text-[var(--rm-secondary)]">
-                      {candidate.sourceType} • {candidate.endpointKind ?? "unknown kind"} • {candidate.servingSource ?? "unknown source"}
+                      {candidate.sourceType} • {candidate.endpointKind ?? "unknown kind"} •{" "}
+                      {candidate.servingSource ?? "unknown source"}
                     </p>
                     <p className="text-sm text-[var(--rm-secondary)]">
-                      Roles: {candidate.roleBindings?.join(", ") || "none"} • Tools: {candidate.toolCallingSupported ? "supported" : "not advertised"}
+                      Roles: {candidate.roleBindings?.join(", ") || "none"} • Tools:{" "}
+                      {candidate.toolCallingSupported ? "supported" : "not advertised"}
                     </p>
                     <p className="text-sm text-[var(--rm-secondary)]">
-                      Latency {latencyMs ?? "n/a"} ms • Throughput {throughput ?? "n/a"} tps • Failure rate {failureRate ?? "n/a"}
+                      Latency {latencyMs ?? "n/a"} ms • Throughput {throughput ?? "n/a"} tps •
+                      Failure rate {failureRate ?? "n/a"}
                     </p>
                   </div>
                   <div className="flex flex-wrap items-start justify-end gap-2">
                     <StatusPill tone={candidate.controllerEligible ? "accent" : "neutral"}>
-                      {candidate.controllerEligible ? "controller" : candidate.healthStatus ?? "unknown"}
+                      {candidate.controllerEligible
+                        ? "controller"
+                        : (candidate.healthStatus ?? "unknown")}
                     </StatusPill>
                     {candidate.preferred ? <StatusPill tone="success">preferred</StatusPill> : null}
                     {candidate.ignored ? <StatusPill tone="warning">ignored</StatusPill> : null}

@@ -1,9 +1,9 @@
 <script lang="ts">
-  interface Props {
-    content: string;
-  }
+interface Props {
+  content: string;
+}
 
-  let { content }: Props = $props();
+const { content }: Props = $props();
 </script>
 
 <div class="relative group inline-block">

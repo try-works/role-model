@@ -1,162 +1,198 @@
 <script lang="ts">
-  import { renderMarkdown, escapeHtml, renderStreamingMarkdown, createStreamingCache } from "../../lib/markdown";
-  import type { RenderedBlock } from "../../lib/markdown";
-  import { Copy, Check, Pencil, X, Save, RefreshCw, ChevronDown, ChevronRight, Brain, Code } from "lucide-svelte";
-  import { getTextContent, getImageUrls } from "../../lib/types";
-  import type { ContentPart } from "../../lib/types";
+import {
+  Brain,
+  Check,
+  ChevronDown,
+  ChevronRight,
+  Code,
+  Copy,
+  Pencil,
+  RefreshCw,
+  Save,
+  X,
+} from "lucide-svelte";
+import {
+  createStreamingCache,
+  escapeHtml,
+  renderMarkdown,
+  renderStreamingMarkdown,
+} from "../../lib/markdown";
+import type { RenderedBlock } from "../../lib/markdown";
+import { getImageUrls, getTextContent } from "../../lib/types";
+import type { ContentPart } from "../../lib/types";
 
-  interface Props {
-    role: "user" | "assistant" | "system";
-    content: string | ContentPart[];
-    reasoning_content?: string;
-    reasoningTimeMs?: number;
-    isStreaming?: boolean;
-    isReasoning?: boolean;
-    onEdit?: (newContent: string) => void;
-    onRegenerate?: () => void;
+interface Props {
+  role: "user" | "assistant" | "system";
+  content: string | ContentPart[];
+  reasoning_content?: string;
+  reasoningTimeMs?: number;
+  isStreaming?: boolean;
+  isReasoning?: boolean;
+  onEdit?: (newContent: string) => void;
+  onRegenerate?: () => void;
+}
+
+const {
+  role,
+  content,
+  reasoning_content = "",
+  reasoningTimeMs = 0,
+  isStreaming = false,
+  isReasoning = false,
+  onEdit,
+  onRegenerate,
+}: Props = $props();
+
+const textContent = $derived(getTextContent(content));
+const imageUrls = $derived(getImageUrls(content));
+const hasImages = $derived(imageUrls.length > 0);
+const canEdit = $derived(onEdit !== undefined && !hasImages);
+
+let streamingCache = createStreamingCache();
+const renderedParts = $derived.by(() => {
+  if (role !== "assistant") {
+    return {
+      blocks: [{ id: -1, html: escapeHtml(textContent).replace(/\n/g, "<br>") }] as RenderedBlock[],
+      pendingHtml: "",
+    };
   }
+  if (!isStreaming) {
+    streamingCache = createStreamingCache();
+    return {
+      blocks: [{ id: -1, html: renderMarkdown(textContent) }] as RenderedBlock[],
+      pendingHtml: "",
+    };
+  }
+  return renderStreamingMarkdown(textContent, streamingCache);
+});
+let copied = $state(false);
+const showRaw = $state(false);
+let isEditing = $state(false);
+let editContent = $state("");
+const showReasoning = $state(false);
+let modalImageUrl = $state<string | null>(null);
 
-  let { role, content, reasoning_content = "", reasoningTimeMs = 0, isStreaming = false, isReasoning = false, onEdit, onRegenerate }: Props = $props();
+function formatDuration(ms: number): string {
+  if (ms < 1000) {
+    return `${ms.toFixed(0)}ms`;
+  }
+  return `${(ms / 1000).toFixed(1)}s`;
+}
 
-  let textContent = $derived(getTextContent(content));
-  let imageUrls = $derived(getImageUrls(content));
-  let hasImages = $derived(imageUrls.length > 0);
-  let canEdit = $derived(onEdit !== undefined && !hasImages);
-
-  let streamingCache = createStreamingCache();
-  let renderedParts = $derived.by(() => {
-    if (role !== "assistant") {
-      return { blocks: [{ id: -1, html: escapeHtml(textContent).replace(/\n/g, '<br>') }] as RenderedBlock[], pendingHtml: "" };
+async function copyToClipboard() {
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(textContent);
+    } else {
+      // Fallback for non-secure contexts (HTTP)
+      const textarea = document.createElement("textarea");
+      textarea.value = textContent;
+      textarea.style.position = "fixed";
+      textarea.style.left = "-9999px";
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textarea);
     }
-    if (!isStreaming) {
-      streamingCache = createStreamingCache();
-      return { blocks: [{ id: -1, html: renderMarkdown(textContent) }] as RenderedBlock[], pendingHtml: "" };
-    }
-    return renderStreamingMarkdown(textContent, streamingCache);
-  });
-  let copied = $state(false);
-  let showRaw = $state(false);
-  let isEditing = $state(false);
-  let editContent = $state("");
-  let showReasoning = $state(false);
-  let modalImageUrl = $state<string | null>(null);
-
-  function formatDuration(ms: number): string {
-    if (ms < 1000) {
-      return `${ms.toFixed(0)}ms`;
-    }
-    return `${(ms / 1000).toFixed(1)}s`;
+    copied = true;
+    setTimeout(() => {
+      copied = false;
+    }, 2000);
+  } catch (err) {
+    console.error("Failed to copy:", err);
   }
+}
 
-  async function copyToClipboard() {
-    try {
-      if (navigator.clipboard && window.isSecureContext) {
-        await navigator.clipboard.writeText(textContent);
-      } else {
-        // Fallback for non-secure contexts (HTTP)
-        const textarea = document.createElement("textarea");
-        textarea.value = textContent;
-        textarea.style.position = "fixed";
-        textarea.style.left = "-9999px";
-        document.body.appendChild(textarea);
-        textarea.select();
-        document.execCommand("copy");
-        document.body.removeChild(textarea);
-      }
-      copied = true;
-      setTimeout(() => (copied = false), 2000);
-    } catch (err) {
-      console.error("Failed to copy:", err);
-    }
+function startEdit() {
+  editContent = textContent;
+  isEditing = true;
+}
+
+function cancelEdit() {
+  isEditing = false;
+  editContent = "";
+}
+
+function saveEdit() {
+  if (onEdit && editContent.trim() !== textContent) {
+    onEdit(editContent.trim());
   }
+  isEditing = false;
+  editContent = "";
+}
 
-  function startEdit() {
-    editContent = textContent;
-    isEditing = true;
+function openModal(imageUrl: string) {
+  modalImageUrl = imageUrl;
+  document.body.style.overflow = "hidden";
+}
+
+function closeModal(event?: MouseEvent) {
+  // Only close if clicking the background, not the image
+  if (event && event.target !== event.currentTarget) {
+    return;
   }
+  modalImageUrl = null;
+  document.body.style.overflow = "";
+}
 
-  function cancelEdit() {
-    isEditing = false;
-    editContent = "";
+function handleModalKeyDown(event: KeyboardEvent) {
+  if (event.key === "Escape") {
+    closeModal();
   }
+}
 
-  function saveEdit() {
-    if (onEdit && editContent.trim() !== textContent) {
-      onEdit(editContent.trim());
-    }
-    isEditing = false;
-    editContent = "";
+function handleKeyDown(event: KeyboardEvent) {
+  if (event.key === "Enter" && !event.shiftKey) {
+    event.preventDefault();
+    saveEdit();
+  } else if (event.key === "Escape") {
+    cancelEdit();
   }
+}
 
-  function openModal(imageUrl: string) {
-    modalImageUrl = imageUrl;
-    document.body.style.overflow = "hidden";
-  }
+const COPY_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>`;
+const CHECK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>`;
 
-  function closeModal(event?: MouseEvent) {
-    // Only close if clicking the background, not the image
-    if (event && event.target !== event.currentTarget) {
-      return;
-    }
-    modalImageUrl = null;
-    document.body.style.overflow = "";
-  }
-
-  function handleModalKeyDown(event: KeyboardEvent) {
-    if (event.key === "Escape") {
-      closeModal();
-    }
-  }
-
-  function handleKeyDown(event: KeyboardEvent) {
-    if (event.key === "Enter" && !event.shiftKey) {
-      event.preventDefault();
-      saveEdit();
-    } else if (event.key === "Escape") {
-      cancelEdit();
-    }
-  }
-
-  const COPY_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>`;
-  const CHECK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>`;
-
-  function codeBlockCopy(node: HTMLElement) {
-    function attachButtons() {
-      node.querySelectorAll<HTMLPreElement>('pre:not([data-copy-btn])').forEach(pre => {
-        pre.setAttribute('data-copy-btn', 'true');
-        const btn = document.createElement('button');
-        btn.className = 'code-copy-btn';
-        btn.title = 'Copy code';
-        btn.innerHTML = COPY_SVG;
-        btn.addEventListener('click', async () => {
-          const text = pre.querySelector('code')?.textContent ?? pre.textContent ?? '';
-          try {
-            if (navigator.clipboard && window.isSecureContext) {
-              await navigator.clipboard.writeText(text);
-            } else {
-              const ta = document.createElement('textarea');
-              ta.value = text;
-              ta.style.cssText = 'position:fixed;left:-9999px';
-              document.body.appendChild(ta);
-              ta.select();
-              document.execCommand('copy');
-              document.body.removeChild(ta);
-            }
-            btn.innerHTML = CHECK_SVG;
-            btn.classList.add('copied');
-            setTimeout(() => { btn.innerHTML = COPY_SVG; btn.classList.remove('copied'); }, 2000);
-          } catch (e) {
-            console.error('copy failed', e);
+function codeBlockCopy(node: HTMLElement) {
+  function attachButtons() {
+    for (const pre of node.querySelectorAll<HTMLPreElement>("pre:not([data-copy-btn])")) {
+      pre.setAttribute("data-copy-btn", "true");
+      const btn = document.createElement("button");
+      btn.className = "code-copy-btn";
+      btn.title = "Copy code";
+      btn.innerHTML = COPY_SVG;
+      btn.addEventListener("click", async () => {
+        const text = pre.querySelector("code")?.textContent ?? pre.textContent ?? "";
+        try {
+          if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(text);
+          } else {
+            const ta = document.createElement("textarea");
+            ta.value = text;
+            ta.style.cssText = "position:fixed;left:-9999px";
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand("copy");
+            document.body.removeChild(ta);
           }
-        });
-        pre.appendChild(btn);
+          btn.innerHTML = CHECK_SVG;
+          btn.classList.add("copied");
+          setTimeout(() => {
+            btn.innerHTML = COPY_SVG;
+            btn.classList.remove("copied");
+          }, 2000);
+        } catch (e) {
+          console.error("copy failed", e);
+        }
       });
+      pre.appendChild(btn);
     }
-    attachButtons();
-    const mo = new MutationObserver(attachButtons);
-    mo.observe(node, { childList: true, subtree: true });
-    return { destroy: () => mo.disconnect() };
   }
+  attachButtons();
+  const mo = new MutationObserver(attachButtons);
+  mo.observe(node, { childList: true, subtree: true });
+  return { destroy: () => mo.disconnect() };
+}
 </script>
 
 <div class="flex {role === 'user' ? 'justify-end' : 'justify-start'} mb-4">

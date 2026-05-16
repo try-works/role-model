@@ -1,193 +1,189 @@
 <script lang="ts">
-  import { models } from "../../stores/api";
-  import { persistentStore } from "../../stores/persistent";
-  import { generateImage } from "../../lib/imageApi";
-  import { generateSdImage, fetchSdLoras } from "../../lib/sdApi";
-  import { playgroundStores } from "../../stores/playgroundActivity";
-  import ModelSelector from "./ModelSelector.svelte";
-  import ExpandableTextarea from "./ExpandableTextarea.svelte";
-  import type { ImageApiMode, SdApiLora, SdApiLoraRef } from "../../lib/types";
+import { generateImage } from "../../lib/imageApi";
+import { fetchSdLoras, generateSdImage } from "../../lib/sdApi";
+import type { ImageApiMode, SdApiLora, SdApiLoraRef } from "../../lib/types";
+import { models } from "../../stores/api";
+import { persistentStore } from "../../stores/persistent";
+import { playgroundStores } from "../../stores/playgroundActivity";
+import ExpandableTextarea from "./ExpandableTextarea.svelte";
+import ModelSelector from "./ModelSelector.svelte";
 
-  const selectedModelStore = persistentStore<string>("playground-image-model", "");
-  const selectedSizeStore = persistentStore<string>("playground-image-size", "1024x1024");
-  const apiModeStore = persistentStore<ImageApiMode>("playground-image-api-mode", "openai");
+const selectedModelStore = persistentStore<string>("playground-image-model", "");
+const selectedSizeStore = persistentStore<string>("playground-image-size", "1024x1024");
+const apiModeStore = persistentStore<ImageApiMode>("playground-image-api-mode", "openai");
 
-  // SDAPI persistent settings
-  const sdNegativePromptStore = persistentStore<string>("playground-sdapi-negative-prompt", "");
-  const sdStepsStore = persistentStore<number>("playground-sdapi-steps", 20);
-  const sdCfgScaleStore = persistentStore<number>("playground-sdapi-cfg-scale", 7);
-  const sdSeedStore = persistentStore<number>("playground-sdapi-seed", -1);
-  const sdSamplerStore = persistentStore<string>("playground-sdapi-sampler", "");
-  const sdSchedulerStore = persistentStore<string>("playground-sdapi-scheduler", "");
-  const sdBatchSizeStore = persistentStore<number>("playground-sdapi-batch-size", 1);
+// SDAPI persistent settings
+const sdNegativePromptStore = persistentStore<string>("playground-sdapi-negative-prompt", "");
+const sdStepsStore = persistentStore<number>("playground-sdapi-steps", 20);
+const sdCfgScaleStore = persistentStore<number>("playground-sdapi-cfg-scale", 7);
+const sdSeedStore = persistentStore<number>("playground-sdapi-seed", -1);
+const sdSamplerStore = persistentStore<string>("playground-sdapi-sampler", "");
+const sdSchedulerStore = persistentStore<string>("playground-sdapi-scheduler", "");
+const sdBatchSizeStore = persistentStore<number>("playground-sdapi-batch-size", 1);
 
-  let prompt = $state("");
-  let isGenerating = $state(false);
-  let generatedImages = $state<string[]>([]);
-  let error = $state<string | null>(null);
-  let abortController = $state<AbortController | null>(null);
-  let showFullscreen = $state(false);
-  let fullscreenIndex = $state(0);
-  let showSettings = $state(false);
+let prompt = $state("");
+let isGenerating = $state(false);
+let generatedImages = $state<string[]>([]);
+let error = $state<string | null>(null);
+let abortController = $state<AbortController | null>(null);
+let showFullscreen = $state(false);
+let fullscreenIndex = $state(0);
+const showSettings = $state(false);
 
-  // SDAPI lora state
-  let availableLoras = $state<SdApiLora[]>([]);
-  let selectedLoras = $state<SdApiLoraRef[]>([]);
-  let isLoadingLoras = $state(false);
-  let lorasLoaded = $state(false);
-  let loraError = $state<string | null>(null);
+// SDAPI lora state
+let availableLoras = $state<SdApiLora[]>([]);
+let selectedLoras = $state<SdApiLoraRef[]>([]);
+let isLoadingLoras = $state(false);
+let lorasLoaded = $state(false);
+let loraError = $state<string | null>(null);
 
-  let hasModels = $derived($models.some((m) => !m.unlisted));
-  let isSdapi = $derived($apiModeStore === "sdapi");
+const hasModels = $derived($models.some((m) => !m.unlisted));
+const isSdapi = $derived($apiModeStore === "sdapi");
 
-  $effect(() => {
-    playgroundStores.imageGenerating.set(isGenerating);
-  });
+$effect(() => {
+  playgroundStores.imageGenerating.set(isGenerating);
+});
 
-  async function loadLoras() {
-    if (!$selectedModelStore || isLoadingLoras) return;
-    isLoadingLoras = true;
-    loraError = null;
-    try {
-      const loras = await fetchSdLoras($selectedModelStore);
-      availableLoras = loras;
-      lorasLoaded = true;
-    } catch (err) {
-      availableLoras = [];
-      loraError = err instanceof Error ? err.message : "Failed to load LoRAs";
-      lorasLoaded = false;
-    } finally {
-      isLoadingLoras = false;
-    }
+async function loadLoras() {
+  if (!$selectedModelStore || isLoadingLoras) return;
+  isLoadingLoras = true;
+  loraError = null;
+  try {
+    const loras = await fetchSdLoras($selectedModelStore);
+    availableLoras = loras;
+    lorasLoaded = true;
+  } catch (err) {
+    availableLoras = [];
+    loraError = err instanceof Error ? err.message : "Failed to load LoRAs";
+    lorasLoaded = false;
+  } finally {
+    isLoadingLoras = false;
   }
+}
 
-  function addLora(event: Event) {
-    const select = event.target as HTMLSelectElement;
-    const path = select.value;
-    if (!path) return;
+function addLora(event: Event) {
+  const select = event.target as HTMLSelectElement;
+  const path = select.value;
+  if (!path) return;
 
-    const lora = availableLoras.find((l) => l.path === path);
-    if (lora && !selectedLoras.some((l) => l.path === path)) {
-      selectedLoras = [...selectedLoras, { path: lora.path, multiplier: 1.0 }];
-    }
-    select.value = "";
+  const lora = availableLoras.find((l) => l.path === path);
+  if (lora && !selectedLoras.some((l) => l.path === path)) {
+    selectedLoras = [...selectedLoras, { path: lora.path, multiplier: 1.0 }];
   }
+  select.value = "";
+}
 
-  function removeLora(path: string) {
-    selectedLoras = selectedLoras.filter((l) => l.path !== path);
-  }
+function removeLora(path: string) {
+  selectedLoras = selectedLoras.filter((l) => l.path !== path);
+}
 
-  function updateLoraMultiplier(path: string, multiplier: number) {
-    selectedLoras = selectedLoras.map((l) =>
-      l.path === path ? { ...l, multiplier } : l
-    );
-  }
+function updateLoraMultiplier(path: string, multiplier: number) {
+  selectedLoras = selectedLoras.map((l) => (l.path === path ? { ...l, multiplier } : l));
+}
 
-  function getLoraName(path: string): string {
-    return availableLoras.find((l) => l.path === path)?.name ?? path;
-  }
+function getLoraName(path: string): string {
+  return availableLoras.find((l) => l.path === path)?.name ?? path;
+}
 
-  async function generate() {
-    const trimmedPrompt = prompt.trim();
-    if (!trimmedPrompt || !$selectedModelStore || isGenerating) return;
+async function generate() {
+  const trimmedPrompt = prompt.trim();
+  if (!trimmedPrompt || !$selectedModelStore || isGenerating) return;
 
-    isGenerating = true;
-    error = null;
-    abortController = new AbortController();
+  isGenerating = true;
+  error = null;
+  abortController = new AbortController();
 
-    try {
-      if (isSdapi) {
-        const [w, h] = $selectedSizeStore.split("x").map(Number);
-        const request = {
-          model: $selectedModelStore,
-          prompt: trimmedPrompt,
-          negative_prompt: $sdNegativePromptStore || undefined,
-          width: w,
-          height: h,
-          steps: $sdStepsStore,
-          cfg_scale: $sdCfgScaleStore,
-          seed: $sdSeedStore,
-          batch_size: $sdBatchSizeStore,
-          sampler_name: $sdSamplerStore || undefined,
-          scheduler: $sdSchedulerStore || undefined,
-          lora: selectedLoras.length > 0 ? selectedLoras : undefined,
-        };
+  try {
+    if (isSdapi) {
+      const [w, h] = $selectedSizeStore.split("x").map(Number);
+      const request = {
+        model: $selectedModelStore,
+        prompt: trimmedPrompt,
+        negative_prompt: $sdNegativePromptStore || undefined,
+        width: w,
+        height: h,
+        steps: $sdStepsStore,
+        cfg_scale: $sdCfgScaleStore,
+        seed: $sdSeedStore,
+        batch_size: $sdBatchSizeStore,
+        sampler_name: $sdSamplerStore || undefined,
+        scheduler: $sdSchedulerStore || undefined,
+        lora: selectedLoras.length > 0 ? selectedLoras : undefined,
+      };
 
-        const response = await generateSdImage(request, abortController.signal);
-        if (response.images && response.images.length > 0) {
-          generatedImages = response.images.map(
-            (img) => `data:image/png;base64,${img}`
-          );
-        }
-      } else {
-        const response = await generateImage(
-          $selectedModelStore,
-          trimmedPrompt,
-          $selectedSizeStore,
-          abortController.signal
-        );
+      const response = await generateSdImage(request, abortController.signal);
+      if (response.images && response.images.length > 0) {
+        generatedImages = response.images.map((img) => `data:image/png;base64,${img}`);
+      }
+    } else {
+      const response = await generateImage(
+        $selectedModelStore,
+        trimmedPrompt,
+        $selectedSizeStore,
+        abortController.signal,
+      );
 
-        if (response.data && response.data.length > 0) {
-          const imageData = response.data[0];
-          if (imageData.b64_json) {
-            generatedImages = [`data:image/png;base64,${imageData.b64_json}`];
-          } else if (imageData.url) {
-            generatedImages = [imageData.url];
-          }
+      if (response.data && response.data.length > 0) {
+        const imageData = response.data[0];
+        if (imageData.b64_json) {
+          generatedImages = [`data:image/png;base64,${imageData.b64_json}`];
+        } else if (imageData.url) {
+          generatedImages = [imageData.url];
         }
       }
-    } catch (err) {
-      if (err instanceof Error && err.name === "AbortError") {
-        // User cancelled
-      } else {
-        error = err instanceof Error ? err.message : "An error occurred";
-      }
-    } finally {
-      isGenerating = false;
-      abortController = null;
     }
-  }
-
-  function cancelGeneration() {
-    abortController?.abort();
-  }
-
-  function clearImage() {
-    generatedImages = [];
-    error = null;
-    prompt = "";
-  }
-
-  function downloadImage(index: number = 0) {
-    const img = generatedImages[index];
-    if (!img) return;
-
-    const link = document.createElement("a");
-    link.href = img;
-    link.download = `generated-image-${Date.now()}-${index}.png`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  }
-
-  function openFullscreen(index: number = 0) {
-    fullscreenIndex = index;
-    showFullscreen = true;
-  }
-
-  function closeFullscreen(event?: MouseEvent) {
-    if (event && event.target !== event.currentTarget) {
-      return;
+  } catch (err) {
+    if (err instanceof Error && err.name === "AbortError") {
+      // User cancelled
+    } else {
+      error = err instanceof Error ? err.message : "An error occurred";
     }
-    showFullscreen = false;
+  } finally {
+    isGenerating = false;
+    abortController = null;
   }
+}
 
-  function handleKeyDown(event: KeyboardEvent) {
-    if (event.key === "Enter" && !event.shiftKey) {
-      event.preventDefault();
-      generate();
-    }
+function cancelGeneration() {
+  abortController?.abort();
+}
+
+function clearImage() {
+  generatedImages = [];
+  error = null;
+  prompt = "";
+}
+
+function downloadImage(index = 0) {
+  const img = generatedImages[index];
+  if (!img) return;
+
+  const link = document.createElement("a");
+  link.href = img;
+  link.download = `generated-image-${Date.now()}-${index}.png`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+function openFullscreen(index = 0) {
+  fullscreenIndex = index;
+  showFullscreen = true;
+}
+
+function closeFullscreen(event?: MouseEvent) {
+  if (event && event.target !== event.currentTarget) {
+    return;
   }
+  showFullscreen = false;
+}
+
+function handleKeyDown(event: KeyboardEvent) {
+  if (event.key === "Enter" && !event.shiftKey) {
+    event.preventDefault();
+    generate();
+  }
+}
 </script>
 
 <div class="flex flex-col h-full">

@@ -1,10 +1,10 @@
 import { describe, expect, test } from "vitest";
 
 import {
+  type LiteLLMProviderInfo,
   deriveLiteLLMProviders,
   extractLiteLLMProviderIds,
   loadLiteLLMModelPrices,
-  type LiteLLMProviderInfo,
 } from "@role-model-router/catalog";
 
 describe("litellm-catalog", () => {

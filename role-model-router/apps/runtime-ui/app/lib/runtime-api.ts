@@ -503,7 +503,6 @@ export interface RouterDecisionDetail {
   readonly endpointProfile: RuntimeEndpointProfile | null;
   readonly observeRequestPath: string;
 }
-
 export interface RuntimeEndpointProfile {
   readonly endpointId: string;
   readonly latestProfile: Record<string, unknown> | null;
@@ -786,7 +785,6 @@ export async function fetchRouterDecisionDetail(
     fetcher,
   );
 }
-
 export async function fetchActivityMetrics(
   fetcher: RuntimeFetcher = fetch,
 ): Promise<RuntimeActivityLogEntry[]> {

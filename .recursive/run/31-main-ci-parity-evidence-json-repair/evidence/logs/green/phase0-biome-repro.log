@@ -1,0 +1,234 @@
+.recursive/run/15-unified-vendor-execution/evidence/logs/green/sp5-real-vendor-validation.json:1:1 parse ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù String values must be double quoted.
+  
+  > 1 Γöé undefined
+      Γöé ^^^^^^^^^
+    2 Γöé D:\DEV\role-model\.worktrees\15-unified-vendor-execution\role-model-router\apps\runtime-host-bridge:
+    3 Γöé ╬ô├ç├½ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL╬ô├ç├½ Command failed with exit code 3221225786: tsx --eval import('./src/validate-vendors.ts').then(async ({ runRuntimeVendorValidation }) => { const result = await runRuntimeVendorValidation({ repoRoot: 'D:\\DEV\\role-model\\.worktrees\\15-unified-vendor-execution' }); console.log(JSON.stringify(result, null, 2)); })
+  
+
+.recursive/run/15-unified-vendor-execution/evidence/logs/green/sp5-real-vendor-validation.json:2:1 parse ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù String values must be double quoted.
+  
+    1 Γöé undefined
+  > 2 Γöé D:\DEV\role-model\.worktrees\15-unified-vendor-execution\role-model-router\apps\runtime-host-bridge:
+      Γöé ^
+    3 Γöé ╬ô├ç├½ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL╬ô├ç├½ Command failed with exit code 3221225786: tsx --eval import('./src/validate-vendors.ts').then(async ({ runRuntimeVendorValidation }) => { const result = await runRuntimeVendorValidation({ repoRoot: 'D:\\DEV\\role-model\\.worktrees\\15-unified-vendor-execution' }); console.log(JSON.stringify(result, null, 2)); })
+    4 Γöé 
+  
+
+.recursive/run/15-unified-vendor-execution/evidence/logs/green/sp5-real-vendor-validation.json:2:2 parse ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù End of file expected
+  
+    1 Γöé undefined
+  > 2 Γöé D:\DEV\role-model\.worktrees\15-unified-vendor-execution\role-model-router\apps\runtime-host-bridge:
+      Γöé  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    3 Γöé ╬ô├ç├½ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL╬ô├ç├½ Command failed with exit code 3221225786: tsx --eval import('./src/validate-vendors.ts').then(async ({ runRuntimeVendorValidation }) => { const result = await runRuntimeVendorValidation({ repoRoot: 'D:\\DEV\\role-model\\.worktrees\\15-unified-vendor-execution' }); console.log(JSON.stringify(result, null, 2)); })
+    4 Γöé 
+  
+  i Use an array for a sequence of values: `[1, 2]`
+  
+
+.recursive/run/15-unified-vendor-execution/evidence/logs/green/sp5-real-vendor-validation.json:2:3 parse ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù unexpected character `\`
+  
+    1 Γöé undefined
+  > 2 Γöé D:\DEV\role-model\.worktrees\15-unified-vendor-execution\role-model-router\apps\runtime-host-bridge:
+      Γöé   ^
+    3 Γöé ╬ô├ç├½ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL╬ô├ç├½ Command failed with exit code 3221225786: tsx --eval import('./src/validate-vendors.ts').then(async ({ runRuntimeVendorValidation }) => { const result = await runRuntimeVendorValidation({ repoRoot: 'D:\\DEV\\role-model\\.worktrees\\15-unified-vendor-execution' }); console.log(JSON.stringify(result, null, 2)); })
+    4 Γöé 
+  
+
+.recursive/run/15-unified-vendor-execution/evidence/logs/green/sp5-real-vendor-validation.json:2:7 parse ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù unexpected character `\`
+  
+    1 Γöé undefined
+  > 2 Γöé D:\DEV\role-model\.worktrees\15-unified-vendor-execution\role-model-router\apps\runtime-host-bridge:
+      Γöé       ^
+    3 Γöé ╬ô├ç├½ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL╬ô├ç├½ Command failed with exit code 3221225786: tsx --eval import('./src/validate-vendors.ts').then(async ({ runRuntimeVendorValidation }) => { const result = await runRuntimeVendorValidation({ repoRoot: 'D:\\DEV\\role-model\\.worktrees\\15-unified-vendor-execution' }); console.log(JSON.stringify(result, null, 2)); })
+    4 Γöé 
+  
+
+.recursive/run/15-unified-vendor-execution/evidence/logs/green/sp5-real-vendor-validation.json:2:12 parse ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Minus must be followed by a digit
+  
+    1 Γöé undefined
+  > 2 Γöé D:\DEV\role-model\.worktrees\15-unified-vendor-execution\role-model-router\apps\runtime-host-bridge:
+      Γöé            ^
+    3 Γöé ╬ô├ç├½ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL╬ô├ç├½ Command failed with exit code 3221225786: tsx --eval import('./src/validate-vendors.ts').then(async ({ runRuntimeVendorValidation }) => { const result = await runRuntimeVendorValidation({ repoRoot: 'D:\\DEV\\role-model\\.worktrees\\15-unified-vendor-execution' }); console.log(JSON.stringify(result, null, 2)); })
+    4 Γöé 
+  
+
+.recursive/run/15-unified-vendor-execution/evidence/logs/green/sp5-real-vendor-validation.json:2:18 parse ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù unexpected character `\`
+  
+    1 Γöé undefined
+  > 2 Γöé D:\DEV\role-model\.worktrees\15-unified-vendor-execution\role-model-router\apps\runtime-host-bridge:
+      Γöé                  ^
+    3 Γöé ╬ô├ç├½ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL╬ô├ç├½ Command failed with exit code 3221225786: tsx --eval import('./src/validate-vendors.ts').then(async ({ runRuntimeVendorValidation }) => { const result = await runRuntimeVendorValidation({ repoRoot: 'D:\\DEV\\role-model\\.worktrees\\15-unified-vendor-execution' }); console.log(JSON.stringify(result, null, 2)); })
+    4 Γöé 
+  
+
+.recursive/run/15-unified-vendor-execution/evidence/logs/green/sp5-real-vendor-validation.json:2:19 parse ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù unexpected character `.`
+  
+    1 Γöé undefined
+  > 2 Γöé D:\DEV\role-model\.worktrees\15-unified-vendor-execution\role-model-router\apps\runtime-host-bridge:
+      Γöé                   ^
+    3 Γöé ╬ô├ç├½ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL╬ô├ç├½ Command failed with exit code 3221225786: tsx --eval import('./src/validate-vendors.ts').then(async ({ runRuntimeVendorValidation }) => { const result = await runRuntimeVendorValidation({ repoRoot: 'D:\\DEV\\role-model\\.worktrees\\15-unified-vendor-execution' }); console.log(JSON.stringify(result, null, 2)); })
+    4 Γöé 
+  
+
+.recursive/run/15-unified-vendor-execution/evidence/logs/green/sp5-real-vendor-validation.json:2:29 parse ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù unexpected character `\`
+  
+    1 Γöé undefined
+  > 2 Γöé D:\DEV\role-model\.worktrees\15-unified-vendor-execution\role-model-router\apps\runtime-host-bridge:
+      Γöé                             ^
+    3 Γöé ╬ô├ç├½ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL╬ô├ç├½ Command failed with exit code 3221225786: tsx --eval import('./src/validate-vendors.ts').then(async ({ runRuntimeVendorValidation }) => { const result = await runRuntimeVendorValidation({ repoRoot: 'D:\\DEV\\role-model\\.worktrees\\15-unified-vendor-execution' }); console.log(JSON.stringify(result, null, 2)); })
+    4 Γöé 
+  
+
+.recursive/run/15-unified-vendor-execution/evidence/logs/green/sp5-real-vendor-validation.json:2:30 parse ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù End of file expected
+  
+    1 Γöé undefined
+  > 2 Γöé D:\DEV\role-model\.worktrees\15-unified-vendor-execution\role-model-router\apps\runtime-host-bridge:
+      Γöé                              ^^
+    3 Γöé ╬ô├ç├½ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL╬ô├ç├½ Command failed with exit code 3221225786: tsx --eval import('./src/validate-vendors.ts').then(async ({ runRuntimeVendorValidation }) => { const result = await runRuntimeVendorValidation({ repoRoot: 'D:\\DEV\\role-model\\.worktrees\\15-unified-vendor-execution' }); console.log(JSON.stringify(result, null, 2)); })
+    4 Γöé 
+  
+  i Use an array for a sequence of values: `[1, 2]`
+  
+
+.recursive/run/15-unified-vendor-execution/evidence/logs/green/sp5-real-vendor-validation.json:2:32 parse ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Minus must be followed by a digit
+  
+    1 Γöé undefined
+  > 2 Γöé D:\DEV\role-model\.worktrees\15-unified-vendor-execution\role-model-router\apps\runtime-host-bridge:
+      Γöé                                ^
+    3 Γöé ╬ô├ç├½ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL╬ô├ç├½ Command failed with exit code 3221225786: tsx --eval import('./src/validate-vendors.ts').then(async ({ runRuntimeVendorValidation }) => { const result = await runRuntimeVendorValidation({ repoRoot: 'D:\\DEV\\role-model\\.worktrees\\15-unified-vendor-execution' }); console.log(JSON.stringify(result, null, 2)); })
+    4 Γöé 
+  
+
+.recursive/run/15-unified-vendor-execution/evidence/logs/green/sp5-real-vendor-validation.json:2:33 parse ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù String values must be double quoted.
+  
+    1 Γöé undefined
+  > 2 Γöé D:\DEV\role-model\.worktrees\15-unified-vendor-execution\role-model-router\apps\runtime-host-bridge:
+      Γöé                                 ^^^^^^^
+    3 Γöé ╬ô├ç├½ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL╬ô├ç├½ Command failed with exit code 3221225786: tsx --eval import('./src/validate-vendors.ts').then(async ({ runRuntimeVendorValidation }) => { const result = await runRuntimeVendorValidation({ repoRoot: 'D:\\DEV\\role-model\\.worktrees\\15-unified-vendor-execution' }); console.log(JSON.stringify(result, null, 2)); })
+    4 Γöé 
+  
+
+.recursive/run/15-unified-vendor-execution/evidence/logs/green/sp5-real-vendor-validation.json:2:40 parse ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Minus must be followed by a digit
+  
+    1 Γöé undefined
+  > 2 Γöé D:\DEV\role-model\.worktrees\15-unified-vendor-execution\role-model-router\apps\runtime-host-bridge:
+      Γöé                                        ^
+    3 Γöé ╬ô├ç├½ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL╬ô├ç├½ Command failed with exit code 3221225786: tsx --eval import('./src/validate-vendors.ts').then(async ({ runRuntimeVendorValidation }) => { const result = await runRuntimeVendorValidation({ repoRoot: 'D:\\DEV\\role-model\\.worktrees\\15-unified-vendor-execution' }); console.log(JSON.stringify(result, null, 2)); })
+    4 Γöé 
+  
+
+.recursive/run/15-unified-vendor-execution/evidence/logs/green/sp5-real-vendor-validation.json:2:41 parse ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù String values must be double quoted.
+  
+    1 Γöé undefined
+  > 2 Γöé D:\DEV\role-model\.worktrees\15-unified-vendor-execution\role-model-router\apps\runtime-host-bridge:
+      Γöé                                         ^^^^^^
+    3 Γöé ╬ô├ç├½ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL╬ô├ç├½ Command failed with exit code 3221225786: tsx --eval import('./src/validate-vendors.ts').then(async ({ runRuntimeVendorValidation }) => { const result = await runRuntimeVendorValidation({ repoRoot: 'D:\\DEV\\role-model\\.worktrees\\15-unified-vendor-execution' }); console.log(JSON.stringify(result, null, 2)); })
+    4 Γöé 
+  
+
+.recursive/run/15-unified-vendor-execution/evidence/logs/green/sp5-real-vendor-validation.json:2:47 parse ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù End of file expected
+  
+    1 Γöé undefined
+  > 2 Γöé D:\DEV\role-model\.worktrees\15-unified-vendor-execution\role-model-router\apps\runtime-host-bridge:
+      Γöé                                               ^^
+    3 Γöé ╬ô├ç├½ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL╬ô├ç├½ Command failed with exit code 3221225786: tsx --eval import('./src/validate-vendors.ts').then(async ({ runRuntimeVendorValidation }) => { const result = await runRuntimeVendorValidation({ repoRoot: 'D:\\DEV\\role-model\\.worktrees\\15-unified-vendor-execution' }); console.log(JSON.stringify(result, null, 2)); })
+    4 Γöé 
+  
+  i Use an array for a sequence of values: `[1, 2]`
+  
+
+.recursive/run/15-unified-vendor-execution/evidence/logs/green/sp5-real-vendor-validation.json:2:48 parse ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Invalid exponent part
+  
+    1 Γöé undefined
+  > 2 Γöé D:\DEV\role-model\.worktrees\15-unified-vendor-execution\role-model-router\apps\runtime-host-bridge:
+      Γöé                                                ^
+    3 Γöé ╬ô├ç├½ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL╬ô├ç├½ Command failed with exit code 3221225786: tsx --eval import('./src/validate-vendors.ts').then(async ({ runRuntimeVendorValidation }) => { const result = await runRuntimeVendorValidation({ repoRoot: 'D:\\DEV\\role-model\\.worktrees\\15-unified-vendor-execution' }); console.log(JSON.stringify(result, null, 2)); })
+    4 Γöé 
+  
+
+.recursive/run/15-unified-vendor-execution/evidence/logs/green/sp5-real-vendor-validation.json:2:49 parse ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù String values must be double quoted.
+  
+    1 Γöé undefined
+  > 2 Γöé D:\DEV\role-model\.worktrees\15-unified-vendor-execution\role-model-router\apps\runtime-host-bridge:
+      Γöé                                                 ^^^^^^^^
+    3 Γöé ╬ô├ç├½ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL╬ô├ç├½ Command failed with exit code 3221225786: tsx --eval import('./src/validate-vendors.ts').then(async ({ runRuntimeVendorValidation }) => { const result = await runRuntimeVendorValidation({ repoRoot: 'D:\\DEV\\role-model\\.worktrees\\15-unified-vendor-execution' }); console.log(JSON.stringify(result, null, 2)); })
+    4 Γöé 
+  
+
+.recursive/run/15-unified-vendor-execution/evidence/logs/green/sp5-real-vendor-validation.json:2:57 parse ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù unexpected character `\`
+  
+    1 Γöé undefined
+  > 2 Γöé D:\DEV\role-model\.worktrees\15-unified-vendor-execution\role-model-router\apps\runtime-host-bridge:
+      Γöé                                                         ^
+    3 Γöé ╬ô├ç├½ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL╬ô├ç├½ Command failed with exit code 3221225786: tsx --eval import('./src/validate-vendors.ts').then(async ({ runRuntimeVendorValidation }) => { const result = await runRuntimeVendorValidation({ repoRoot: 'D:\\DEV\\role-model\\.worktrees\\15-unified-vendor-execution' }); console.log(JSON.stringify(result, null, 2)); })
+    4 Γöé 
+  
+
+.recursive/run/15-unified-vendor-execution/evidence/logs/green/sp5-real-vendor-validation.json:2:58 parse ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù String values must be double quoted.
+  
+    1 Γöé undefined
+  > 2 Γöé D:\DEV\role-model\.worktrees\15-unified-vendor-execution\role-model-router\apps\runtime-host-bridge:
+      Γöé                                                          ^^^^
+    3 Γöé ╬ô├ç├½ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL╬ô├ç├½ Command failed with exit code 3221225786: tsx --eval import('./src/validate-vendors.ts').then(async ({ runRuntimeVendorValidation }) => { const result = await runRuntimeVendorValidation({ repoRoot: 'D:\\DEV\\role-model\\.worktrees\\15-unified-vendor-execution' }); console.log(JSON.stringify(result, null, 2)); })
+    4 Γöé 
+  
+
+.recursive/run/15-unified-vendor-execution/evidence/logs/green/sp5-real-vendor-validation.json:2:62 parse ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Minus must be followed by a digit
+  
+    1 Γöé undefined
+  > 2 Γöé D:\DEV\role-model\.worktrees\15-unified-vendor-execution\role-model-router\apps\runtime-host-bridge:
+      Γöé                                                              ^
+    3 Γöé ╬ô├ç├½ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL╬ô├ç├½ Command failed with exit code 3221225786: tsx --eval import('./src/validate-vendors.ts').then(async ({ runRuntimeVendorValidation }) => { const result = await runRuntimeVendorValidation({ repoRoot: 'D:\\DEV\\role-model\\.worktrees\\15-unified-vendor-execution' }); console.log(JSON.stringify(result, null, 2)); })
+    4 Γöé 
+  
+
+The number of diagnostics exceeds the number allowed by Biome.
+Diagnostics not shown: 119.
+Checked 1 file in 13ms. No fixes applied.
+Found 139 errors.
+check ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Some errors were emitted while running checks.
+  
+

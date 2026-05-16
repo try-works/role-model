@@ -49,10 +49,15 @@ function artifactPriority(artifactKind: string): number {
   }
 }
 
-export function assembleContextEnvelope(input: AssembleContextEnvelopeInput): ContextEnvelopeResult {
+export function assembleContextEnvelope(
+  input: AssembleContextEnvelopeInput,
+): ContextEnvelopeResult {
   const diagnostics: ContextEnvelopeDiagnostic[] = [];
   const selectedTurns = input.continuity.turns.slice(-input.maxTurns);
-  let estimatedTokenCount = selectedTurns.reduce((total, turn) => total + parseEstimatedTokens(turn.contentRef), 0);
+  let estimatedTokenCount = selectedTurns.reduce(
+    (total, turn) => total + parseEstimatedTokens(turn.contentRef),
+    0,
+  );
 
   if (input.continuity.turns.length > selectedTurns.length) {
     diagnostics.push({
@@ -64,7 +69,8 @@ export function assembleContextEnvelope(input: AssembleContextEnvelopeInput): Co
   }
 
   const rankedArtifacts = [...input.continuity.artifacts].sort((left, right) => {
-    const priorityDelta = artifactPriority(left.artifactKind) - artifactPriority(right.artifactKind);
+    const priorityDelta =
+      artifactPriority(left.artifactKind) - artifactPriority(right.artifactKind);
     if (priorityDelta !== 0) {
       return priorityDelta;
     }

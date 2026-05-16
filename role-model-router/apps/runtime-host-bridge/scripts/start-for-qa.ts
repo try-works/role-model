@@ -4,10 +4,10 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import {
-  createRuntimeBridgeBackend,
-  startBridgeServer,
   type RuntimeBridgeBackend,
   type StartBridgeServerOptions,
+  createRuntimeBridgeBackend,
+  startBridgeServer,
 } from "../src/index.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -69,7 +69,14 @@ export function createQaServerOptions(
   return {
     host,
     port,
-    staticRoot: path.join(currentRepoRoot, "role-model-router", "apps", "runtime-ui", "build", "client"),
+    staticRoot: path.join(
+      currentRepoRoot,
+      "role-model-router",
+      "apps",
+      "runtime-ui",
+      "build",
+      "client",
+    ),
     registry: backend.registry,
     getRegistry: () => backend.registry,
     executeChatCompletions: backend.executeChatCompletions,
@@ -137,7 +144,7 @@ export async function main(): Promise<void> {
 
   const baseUrl = `http://${host}:${server.port}`;
   console.log(`[QA] Bridge server running at ${baseUrl}`);
-  console.log(`[QA] API docs:`);
+  console.log("[QA] API docs:");
   console.log(`  GET ${baseUrl}/api/role-model/runtime/summary`);
   console.log(`  GET ${baseUrl}/api/role-model/providers`);
   console.log(`  GET ${baseUrl}/api/role-model/accounts`);
@@ -153,7 +160,7 @@ export async function main(): Promise<void> {
   console.log(`  GET ${baseUrl}/api/role-model/local/swap`);
   console.log(`  GET ${baseUrl}/v1/models`);
   console.log(`  POST ${baseUrl}/v1/chat/completions`);
-  console.log(`[QA] Press Ctrl+C to stop`);
+  console.log("[QA] Press Ctrl+C to stop");
 
   process.on("SIGINT", async () => {
     console.log("\n[QA] Shutting down...");

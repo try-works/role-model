@@ -1,0 +1,2157 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/31-main-ci-parity-evidence-json-repair/packages/schema-tools[39m
+
+ [31mΓ¥»[39m test/recursive-biome-run80.test.ts [2m([22m[2m1 test[22m[2m | [22m[31m1 failed[39m[2m)[22m[33m 779[2mms[22m[39m
+[31m   [31m├ù[31m run31 bounded Biome regression for run80[2m > [22mrequires the run80 Biome blocker set to pass under repository config[39m[33m 778[2mms[22m[39m
+[31m     ΓåÆ Command failed: cmd.exe /c corepack pnpm exec biome check role-model-router/apps/runtime-ui/app/routes/integrations-downstream.tsx role-model-router/apps/runtime-ui/app/routes/endpoints.tsx role-model-router/apps/runtime-ui/app/routes/integrations-upstream.tsx role-model-router/apps/runtime-ui/app/routes/local-logs.tsx role-model-router/apps/runtime-ui/app/routes/local-matrix.tsx role-model-router/apps/runtime-ui/app/routes/local-peers.tsx role-model-router/vendor/llama-swap/ui-svelte/src/lib/chatApi.ts role-model-router/vendor/llama-swap/ui-svelte/src/lib/audioApi.ts
+role-model-router/apps/runtime-ui/app/routes/local-matrix.tsx organizeImports ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Import statements could be sorted:
+  
+     1  1 Γöé   import { useCallback, useEffect, useState } from "react";ΓÉì
+     2  2 Γöé   ΓÉì
+     3    Γöé - import┬╖{┬╖PageHeader,┬╖SectionCard,┬╖EmptyState,┬╖LoadingState,┬╖ErrorState┬╖}┬╖from┬╖"../components/page-primitives";ΓÉì
+        3 Γöé + import┬╖{┬╖EmptyState,┬╖ErrorState,┬╖LoadingState,┬╖PageHeader,┬╖SectionCard┬╖}┬╖from┬╖"../components/page-primitives";ΓÉì
+     4  4 Γöé   import { fetchLocalModels } from "../lib/runtime-api";ΓÉì
+     5  5 Γöé   ΓÉì
+  
+
+role-model-router/vendor/llama-swap/ui-svelte/src/lib/chatApi.ts organizeImports ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Import statements could be sorted:
+  
+      1     Γöé - import┬╖type┬╖{┬╖ChatMessage,┬╖ChatCompletionRequest┬╖}┬╖from┬╖"./types";ΓÉì
+          1 Γöé + import┬╖type┬╖{┬╖ChatCompletionRequest,┬╖ChatMessage┬╖}┬╖from┬╖"./types";ΓÉì
+      2   2 Γöé   ΓÉì
+      3   3 Γöé   export interface StreamChunk {ΓÉì
+  
+
+role-model-router/apps/runtime-ui/app/routes/local-logs.tsx:50:11 lint/a11y/useButtonType ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    48 Γöé       <SectionCard title="Live logs" description="Buffered log output from the local inference runtime.">
+    49 Γöé         <div className="mb-4 flex items-center gap-4">
+  > 50 Γöé           <button onClick={refresh} disabled={loading} className={secondaryButtonClassName}>
+       Γöé           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    51 Γöé             {loading ? "RefreshingΓÇª" : "Refresh"}
+    52 Γöé           </button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+role-model-router/apps/runtime-ui/app/routes/local-logs.tsx:73:25 lint/suspicious/noArrayIndexKey ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Avoid using the index of an array as key property in an element.
+  
+    71 Γöé           <pre className={`${mutedPanelClassName} h-96 overflow-auto p-4 text-xs leading-5 font-mono text-[var(--rm-secondary)]`}>
+    72 Γöé             {logLines.map((line, i) => (
+  > 73 Γöé               <div key={i} className="whitespace-pre-wrap break-all">{line}</div>
+       Γöé                         ^
+    74 Γöé             ))}
+    75 Γöé           </pre>
+  
+  i This is the source of the key value.
+  
+    70 Γöé         ) : (
+    71 Γöé           <pre className={`${mutedPanelClassName} h-96 overflow-auto p-4 text-xs leading-5 font-mono text-[var(--rm-secondary)]`}>
+  > 72 Γöé             {logLines.map((line, i) => (
+       Γöé                                  ^
+    73 Γöé               <div key={i} className="whitespace-pre-wrap break-all">{line}</div>
+    74 Γöé             ))}
+  
+  i The order of the items may change, and this also affects performances and component state.
+  
+  i Check the React documentation. 
+  
+
+role-model-router/vendor/llama-swap/ui-svelte/src/lib/audioApi.ts format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+     1    Γöé - import┬╖type┬╖{┬╖AudioTranscriptionResponse┬╖}┬╖from┬╖"./types";ΓÉì
+     2    Γöé - ΓÉì
+     3    Γöé - export┬╖async┬╖function┬╖transcribeAudio(ΓÉì
+     4    Γöé - ┬╖┬╖model:┬╖string,ΓÉì
+     5    Γöé - ┬╖┬╖file:┬╖File,ΓÉì
+     6    Γöé - ┬╖┬╖signal?:┬╖AbortSignalΓÉì
+     7    Γöé - ):┬╖Promise<AudioTranscriptionResponse>┬╖{ΓÉì
+     8    Γöé - ┬╖┬╖const┬╖formData┬╖=┬╖new┬╖FormData();ΓÉì
+     9    Γöé - ┬╖┬╖formData.append("file",┬╖file);ΓÉì
+    10    Γöé - ┬╖┬╖formData.append("model",┬╖model);ΓÉì
+    11    Γöé - ΓÉì
+    12    Γöé - ┬╖┬╖const┬╖response┬╖=┬╖await┬╖fetch("/v1/audio/transcriptions",┬╖{ΓÉì
+    13    Γöé - ┬╖┬╖┬╖┬╖method:┬╖"POST",ΓÉì
+    14    Γöé - ┬╖┬╖┬╖┬╖body:┬╖formData,ΓÉì
+    15    Γöé - ┬╖┬╖┬╖┬╖signal,ΓÉì
+    16    Γöé - ┬╖┬╖});ΓÉì
+    17    Γöé - ΓÉì
+    18    Γöé - ┬╖┬╖if┬╖(!response.ok)┬╖{ΓÉì
+    19    Γöé - ┬╖┬╖┬╖┬╖const┬╖errorText┬╖=┬╖await┬╖response.text();ΓÉì
+    20    Γöé - ┬╖┬╖┬╖┬╖throw┬╖new┬╖Error(`Audio┬╖API┬╖error:┬╖${response.status}┬╖-┬╖${errorText}`);ΓÉì
+    21    Γöé - ┬╖┬╖}ΓÉì
+    22    Γöé - ΓÉì
+    23    Γöé - ┬╖┬╖return┬╖response.json();ΓÉì
+    24    Γöé - }ΓÉì
+        1 Γöé + import┬╖type┬╖{┬╖AudioTranscriptionResponse┬╖}┬╖from┬╖"./types";
+        2 Γöé + 
+        3 Γöé + export┬╖async┬╖function┬╖transcribeAudio(
+        4 Γöé + ┬╖┬╖model:┬╖string,
+        5 Γöé + ┬╖┬╖file:┬╖File,
+        6 Γöé + ┬╖┬╖signal?:┬╖AbortSignal,
+        7 Γöé + ):┬╖Promise<AudioTranscriptionResponse>┬╖{
+        8 Γöé + ┬╖┬╖const┬╖formData┬╖=┬╖new┬╖FormData();
+        9 Γöé + ┬╖┬╖formData.append("file",┬╖file);
+       10 Γöé + ┬╖┬╖formData.append("model",┬╖model);
+       11 Γöé + 
+       12 Γöé + ┬╖┬╖const┬╖response┬╖=┬╖await┬╖fetch("/v1/audio/transcriptions",┬╖{
+       13 Γöé + ┬╖┬╖┬╖┬╖method:┬╖"POST",
+       14 Γöé + ┬╖┬╖┬╖┬╖body:┬╖formData,
+       15 Γöé + ┬╖┬╖┬╖┬╖signal,
+       16 Γöé + ┬╖┬╖});
+       17 Γöé + 
+       18 Γöé + ┬╖┬╖if┬╖(!response.ok)┬╖{
+       19 Γöé + ┬╖┬╖┬╖┬╖const┬╖errorText┬╖=┬╖await┬╖response.text();
+       20 Γöé + ┬╖┬╖┬╖┬╖throw┬╖new┬╖Error(`Audio┬╖API┬╖error:┬╖${response.status}┬╖-┬╖${errorText}`);
+       21 Γöé + ┬╖┬╖}
+       22 Γöé + 
+       23 Γöé + ┬╖┬╖return┬╖response.json();
+       24 Γöé + }
+    25 25 Γöé   
+  
+
+role-model-router/apps/runtime-ui/app/routes/local-logs.tsx organizeImports ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Import statements could be sorted:
+  
+     1  1 Γöé   import { useCallback, useEffect, useState } from "react";ΓÉì
+     2  2 Γöé   ΓÉì
+     3    Γöé - import┬╖{┬╖PageHeader,┬╖SectionCard,┬╖EmptyState,┬╖LoadingState,┬╖ErrorState┬╖}┬╖from┬╖"../components/page-primitives";ΓÉì
+        3 Γöé + import┬╖{┬╖EmptyState,┬╖ErrorState,┬╖LoadingState,┬╖PageHeader,┬╖SectionCard┬╖}┬╖from┬╖"../components/page-primitives";ΓÉì
+     4  4 Γöé   import { mutedPanelClassName, secondaryButtonClassName } from "../lib/design-system";ΓÉì
+     5  5 Γöé   import { fetchLocalLogs } from "../lib/runtime-api";ΓÉì
+  
+
+role-model-router/apps/runtime-ui/app/routes/integrations-downstream.tsx organizeImports ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Import statements could be sorted:
+  
+      4   4 Γöé   import { codeBlockClassName, mutedPanelClassName, secondaryButtonClassName } from "../lib/design-system";ΓÉì
+      5   5 Γöé   import {ΓÉì
+      6     Γöé - ┬╖┬╖fetchDownstreamOpenAIProviderConfig,ΓÉì
+      7     Γöé - ┬╖┬╖type┬╖RuntimeDownstreamOpenAIProviderConfig,ΓÉì
+          6 Γöé + ┬╖┬╖type┬╖RuntimeDownstreamOpenAIProviderConfig,ΓÉì
+          7 Γöé + ┬╖┬╖fetchDownstreamOpenAIProviderConfig,ΓÉì
+      8   8 Γöé   } from "../lib/runtime-api";ΓÉì
+      9   9 Γöé   import { buildDownstreamProviderGuide } from "../lib/view-models";ΓÉì
+  
+
+role-model-router/apps/runtime-ui/app/routes/local-matrix.tsx format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+     1    Γöé - import┬╖{┬╖useCallback,┬╖useEffect,┬╖useState┬╖}┬╖from┬╖"react";ΓÉì
+     2    Γöé - ΓÉì
+     3    Γöé - import┬╖{┬╖PageHeader,┬╖SectionCard,┬╖EmptyState,┬╖LoadingState,┬╖ErrorState┬╖}┬╖from┬╖"../components/page-primitives";ΓÉì
+     4    Γöé - import┬╖{┬╖fetchLocalModels┬╖}┬╖from┬╖"../lib/runtime-api";ΓÉì
+     5    Γöé - ΓÉì
+     6    Γöé - interface┬╖LocalModel┬╖{ΓÉì
+     7    Γöé - ┬╖┬╖modelId:┬╖string;ΓÉì
+     8    Γöé - ┬╖┬╖loadedAt:┬╖string;ΓÉì
+     9    Γöé - ┬╖┬╖engine:┬╖string;ΓÉì
+    10    Γöé - }ΓÉì
+    11    Γöé - ΓÉì
+    12    Γöé - export┬╖default┬╖function┬╖LocalMatrixRoute()┬╖{ΓÉì
+    13    Γöé - ┬╖┬╖const┬╖[models,┬╖setModels]┬╖=┬╖useState<readonly┬╖LocalModel[]>([]);ΓÉì
+    14    Γöé - ┬╖┬╖const┬╖[loading,┬╖setLoading]┬╖=┬╖useState(true);ΓÉì
+    15    Γöé - ┬╖┬╖const┬╖[error,┬╖setError]┬╖=┬╖useState<string┬╖|┬╖null>(null);ΓÉì
+    16    Γöé - ΓÉì
+    17    Γöé - ┬╖┬╖const┬╖refresh┬╖=┬╖useCallback(async┬╖()┬╖=>┬╖{ΓÉì
+    18    Γöé - ┬╖┬╖┬╖┬╖setLoading(true);ΓÉì
+    19    Γöé - ┬╖┬╖┬╖┬╖setError(null);ΓÉì
+    20    Γöé - ┬╖┬╖┬╖┬╖try┬╖{ΓÉì
+    21    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖const┬╖data┬╖=┬╖await┬╖fetchLocalModels();ΓÉì
+    22    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖setModels(data);ΓÉì
+    23    Γöé - ┬╖┬╖┬╖┬╖}┬╖catch┬╖(err)┬╖{ΓÉì
+    24    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖setError(err┬╖instanceof┬╖Error┬╖?┬╖err.message┬╖:┬╖"Failed┬╖to┬╖load┬╖model┬╖matrix");ΓÉì
+    25    Γöé - ┬╖┬╖┬╖┬╖}┬╖finally┬╖{ΓÉì
+    26    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖setLoading(false);ΓÉì
+    27    Γöé - ┬╖┬╖┬╖┬╖}ΓÉì
+    28    Γöé - ┬╖┬╖},┬╖[]);ΓÉì
+    29    Γöé - ΓÉì
+    30    Γöé - ┬╖┬╖useEffect(()┬╖=>┬╖{ΓÉì
+    31    Γöé - ┬╖┬╖┬╖┬╖refresh();ΓÉì
+    32    Γöé - ┬╖┬╖},┬╖[refresh]);ΓÉì
+    33    Γöé - ΓÉì
+    34    Γöé - ┬╖┬╖return┬╖(ΓÉì
+    35    Γöé - ┬╖┬╖┬╖┬╖<div┬╖className="space-y-8">ΓÉì
+    36    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖<PageHeaderΓÉì
+    37    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖eyebrow="Local"ΓÉì
+    38    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖title="Model┬╖matrix"ΓÉì
+    39    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖description="Concurrent┬╖model┬╖grid┬╖showing┬╖loaded┬╖state,┬╖engine,┬╖and┬╖resource┬╖usage."ΓÉì
+    40    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖/>ΓÉì
+    41    Γöé - ΓÉì
+    42    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖{error┬╖?┬╖<ErrorState┬╖label={error}┬╖/>┬╖:┬╖null}ΓÉì
+    43    Γöé - ΓÉì
+    44    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖<SectionCard┬╖title="Loaded┬╖model┬╖matrix"┬╖description="Currently┬╖loaded┬╖local┬╖inference┬╖models.">ΓÉì
+    45    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{loading┬╖?┬╖(ΓÉì
+    46    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<LoadingState┬╖label="Loading┬╖matrixΓÇª"┬╖/>ΓÉì
+    47    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖)┬╖:┬╖models.length┬╖===┬╖0┬╖?┬╖(ΓÉì
+    48    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<EmptyState┬╖label="No┬╖models┬╖loaded.┬╖Load┬╖a┬╖model┬╖from┬╖the┬╖Models┬╖page."┬╖/>ΓÉì
+    49    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖)┬╖:┬╖(ΓÉì
+    50    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="grid┬╖grid-cols-1┬╖gap-4┬╖md:grid-cols-2┬╖lg:grid-cols-3">ΓÉì
+    51    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{models.map((model)┬╖=>┬╖(ΓÉì
+    52    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<divΓÉì
+    53    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖key={model.modelId}ΓÉì
+    54    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖className="border┬╖border-[var(--rm-border)]┬╖bg-[var(--rm-surface)]┬╖p-4">ΓÉì
+    55    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="mb-3┬╖flex┬╖items-center┬╖justify-between">ΓÉì
+    56    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<span┬╖className="text-xs┬╖font-mono┬╖uppercase┬╖tracking-wider┬╖text-[var(--rm-accent)]">ΓÉì
+    57    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{model.engine}ΓÉì
+    58    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</span>ΓÉì
+    59    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<span┬╖className="bg-[var(--rm-accent)]┬╖px-2┬╖py-0.5┬╖text-[10px]┬╖font-medium┬╖uppercase┬╖tracking-wider┬╖text-white">ΓÉì
+    60    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖ActiveΓÉì
+    61    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</span>ΓÉì
+    62    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+    63    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="mb-2┬╖font-mono┬╖text-sm┬╖text-[var(--rm-fg)]">{model.modelId}</div>ΓÉì
+    64    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="text-xs┬╖text-[var(--rm-muted)]">ΓÉì
+    65    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖Loaded:┬╖{new┬╖Date(model.loadedAt).toLocaleString()}ΓÉì
+    66    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+    67    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+    68    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖))}ΓÉì
+    69    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+    70    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖)}ΓÉì
+    71    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖</SectionCard>ΓÉì
+    72    Γöé - ┬╖┬╖┬╖┬╖</div>ΓÉì
+    73    Γöé - ┬╖┬╖);ΓÉì
+    74    Γöé - }ΓÉì
+        1 Γöé + import┬╖{┬╖useCallback,┬╖useEffect,┬╖useState┬╖}┬╖from┬╖"react";
+        2 Γöé + 
+        3 Γöé + import┬╖{
+        4 Γöé + ┬╖┬╖PageHeader,
+        5 Γöé + ┬╖┬╖SectionCard,
+        6 Γöé + ┬╖┬╖EmptyState,
+        7 Γöé + ┬╖┬╖LoadingState,
+        8 Γöé + ┬╖┬╖ErrorState,
+        9 Γöé + }┬╖from┬╖"../components/page-primitives";
+       10 Γöé + import┬╖{┬╖fetchLocalModels┬╖}┬╖from┬╖"../lib/runtime-api";
+       11 Γöé + 
+       12 Γöé + interface┬╖LocalModel┬╖{
+       13 Γöé + ┬╖┬╖modelId:┬╖string;
+       14 Γöé + ┬╖┬╖loadedAt:┬╖string;
+       15 Γöé + ┬╖┬╖engine:┬╖string;
+       16 Γöé + }
+       17 Γöé + 
+       18 Γöé + export┬╖default┬╖function┬╖LocalMatrixRoute()┬╖{
+       19 Γöé + ┬╖┬╖const┬╖[models,┬╖setModels]┬╖=┬╖useState<readonly┬╖LocalModel[]>([]);
+       20 Γöé + ┬╖┬╖const┬╖[loading,┬╖setLoading]┬╖=┬╖useState(true);
+       21 Γöé + ┬╖┬╖const┬╖[error,┬╖setError]┬╖=┬╖useState<string┬╖|┬╖null>(null);
+       22 Γöé + 
+       23 Γöé + ┬╖┬╖const┬╖refresh┬╖=┬╖useCallback(async┬╖()┬╖=>┬╖{
+       24 Γöé + ┬╖┬╖┬╖┬╖setLoading(true);
+       25 Γöé + ┬╖┬╖┬╖┬╖setError(null);
+       26 Γöé + ┬╖┬╖┬╖┬╖try┬╖{
+       27 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖const┬╖data┬╖=┬╖await┬╖fetchLocalModels();
+       28 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖setModels(data);
+       29 Γöé + ┬╖┬╖┬╖┬╖}┬╖catch┬╖(err)┬╖{
+       30 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖setError(err┬╖instanceof┬╖Error┬╖?┬╖err.message┬╖:┬╖"Failed┬╖to┬╖load┬╖model┬╖matrix");
+       31 Γöé + ┬╖┬╖┬╖┬╖}┬╖finally┬╖{
+       32 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖setLoading(false);
+       33 Γöé + ┬╖┬╖┬╖┬╖}
+       34 Γöé + ┬╖┬╖},┬╖[]);
+       35 Γöé + 
+       36 Γöé + ┬╖┬╖useEffect(()┬╖=>┬╖{
+       37 Γöé + ┬╖┬╖┬╖┬╖refresh();
+       38 Γöé + ┬╖┬╖},┬╖[refresh]);
+       39 Γöé + 
+       40 Γöé + ┬╖┬╖return┬╖(
+       41 Γöé + ┬╖┬╖┬╖┬╖<div┬╖className="space-y-8">
+       42 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖<PageHeader
+       43 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖eyebrow="Local"
+       44 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖title="Model┬╖matrix"
+       45 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖description="Concurrent┬╖model┬╖grid┬╖showing┬╖loaded┬╖state,┬╖engine,┬╖and┬╖resource┬╖usage."
+       46 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖/>
+       47 Γöé + 
+       48 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖{error┬╖?┬╖<ErrorState┬╖label={error}┬╖/>┬╖:┬╖null}
+       49 Γöé + 
+       50 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖<SectionCard
+       51 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖title="Loaded┬╖model┬╖matrix"
+       52 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖description="Currently┬╖loaded┬╖local┬╖inference┬╖models."
+       53 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖>
+       54 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{loading┬╖?┬╖(
+       55 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<LoadingState┬╖label="Loading┬╖matrixΓÇª"┬╖/>
+       56 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖)┬╖:┬╖models.length┬╖===┬╖0┬╖?┬╖(
+       57 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<EmptyState┬╖label="No┬╖models┬╖loaded.┬╖Load┬╖a┬╖model┬╖from┬╖the┬╖Models┬╖page."┬╖/>
+       58 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖)┬╖:┬╖(
+       59 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="grid┬╖grid-cols-1┬╖gap-4┬╖md:grid-cols-2┬╖lg:grid-cols-3">
+       60 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{models.map((model)┬╖=>┬╖(
+       61 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div
+       62 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖key={model.modelId}
+       63 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖className="border┬╖border-[var(--rm-border)]┬╖bg-[var(--rm-surface)]┬╖p-4"
+       64 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖>
+       65 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="mb-3┬╖flex┬╖items-center┬╖justify-between">
+       66 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<span┬╖className="text-xs┬╖font-mono┬╖uppercase┬╖tracking-wider┬╖text-[var(--rm-accent)]">
+       67 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{model.engine}
+       68 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</span>
+       69 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<span┬╖className="bg-[var(--rm-accent)]┬╖px-2┬╖py-0.5┬╖text-[10px]┬╖font-medium┬╖uppercase┬╖tracking-wider┬╖text-white">
+       70 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖Active
+       71 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</span>
+       72 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>
+       73 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="mb-2┬╖font-mono┬╖text-sm┬╖text-[var(--rm-fg)]">{model.modelId}</div>
+       74 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="text-xs┬╖text-[var(--rm-muted)]">
+       75 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖Loaded:┬╖{new┬╖Date(model.loadedAt).toLocaleString()}
+       76 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>
+  9 more lines truncated
+  
+
+role-model-router/apps/runtime-ui/app/routes/endpoints.tsx organizeImports ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Import statements could be sorted:
+  
+     11  11 Γöé   } from "../components/page-primitives";ΓÉì
+     12  12 Γöé   import { secondaryButtonClassName } from "../lib/design-system";ΓÉì
+     13     Γöé - import┬╖{┬╖fetchRuntimeSnapshot,┬╖type┬╖RuntimeSnapshot┬╖}┬╖from┬╖"../lib/runtime-api";ΓÉì
+         13 Γöé + import┬╖{┬╖type┬╖RuntimeSnapshot,┬╖fetchRuntimeSnapshot┬╖}┬╖from┬╖"../lib/runtime-api";ΓÉì
+     14  14 Γöé   import { buildConfiguredProviderRows, buildEndpointCatalogRows } from "../lib/view-models";ΓÉì
+     15  15 Γöé   ΓÉì
+  
+
+role-model-router/vendor/llama-swap/ui-svelte/src/lib/chatApi.ts format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+      1     Γöé - import┬╖type┬╖{┬╖ChatMessage,┬╖ChatCompletionRequest┬╖}┬╖from┬╖"./types";ΓÉì
+      2     Γöé - ΓÉì
+      3     Γöé - export┬╖interface┬╖StreamChunk┬╖{ΓÉì
+      4     Γöé - ┬╖┬╖content:┬╖string;ΓÉì
+      5     Γöé - ┬╖┬╖reasoning_content?:┬╖string;ΓÉì
+      6     Γöé - ┬╖┬╖done:┬╖boolean;ΓÉì
+      7     Γöé - }ΓÉì
+      8     Γöé - ΓÉì
+      9     Γöé - export┬╖interface┬╖ChatOptions┬╖{ΓÉì
+     10     Γöé - ┬╖┬╖temperature?:┬╖number;ΓÉì
+     11     Γöé - }ΓÉì
+     12     Γöé - ΓÉì
+     13     Γöé - function┬╖parseSSELine(line:┬╖string):┬╖StreamChunk┬╖|┬╖null┬╖{ΓÉì
+     14     Γöé - ┬╖┬╖const┬╖trimmed┬╖=┬╖line.trim();ΓÉì
+     15     Γöé - ┬╖┬╖if┬╖(!trimmed┬╖||┬╖!trimmed.startsWith("data:┬╖"))┬╖{ΓÉì
+     16     Γöé - ┬╖┬╖┬╖┬╖return┬╖null;ΓÉì
+     17     Γöé - ┬╖┬╖}ΓÉì
+     18     Γöé - ΓÉì
+     19     Γöé - ┬╖┬╖const┬╖data┬╖=┬╖trimmed.slice(6);ΓÉì
+     20     Γöé - ┬╖┬╖if┬╖(data┬╖===┬╖"[DONE]")┬╖{ΓÉì
+     21     Γöé - ┬╖┬╖┬╖┬╖return┬╖{┬╖content:┬╖"",┬╖done:┬╖true┬╖};ΓÉì
+     22     Γöé - ┬╖┬╖}ΓÉì
+     23     Γöé - ΓÉì
+     24     Γöé - ┬╖┬╖try┬╖{ΓÉì
+     25     Γöé - ┬╖┬╖┬╖┬╖const┬╖parsed┬╖=┬╖JSON.parse(data);ΓÉì
+     26     Γöé - ┬╖┬╖┬╖┬╖const┬╖delta┬╖=┬╖parsed.choices?.[0]?.delta;ΓÉì
+     27     Γöé - ┬╖┬╖┬╖┬╖const┬╖content┬╖=┬╖delta?.content┬╖||┬╖"";ΓÉì
+     28     Γöé - ┬╖┬╖┬╖┬╖const┬╖reasoning_content┬╖=┬╖delta?.reasoning_content┬╖||┬╖delta?.reasoning┬╖||┬╖"";ΓÉì
+     29     Γöé - ΓÉì
+     30     Γöé - ┬╖┬╖┬╖┬╖if┬╖(content┬╖||┬╖reasoning_content)┬╖{ΓÉì
+     31     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖return┬╖{┬╖content,┬╖reasoning_content,┬╖done:┬╖false┬╖};ΓÉì
+     32     Γöé - ┬╖┬╖┬╖┬╖}ΓÉì
+     33     Γöé - ┬╖┬╖┬╖┬╖return┬╖null;ΓÉì
+     34     Γöé - ┬╖┬╖}┬╖catch┬╖{ΓÉì
+     35     Γöé - ┬╖┬╖┬╖┬╖return┬╖null;ΓÉì
+     36     Γöé - ┬╖┬╖}ΓÉì
+     37     Γöé - }ΓÉì
+     38     Γöé - ΓÉì
+     39     Γöé - export┬╖async┬╖function*┬╖streamChatCompletion(ΓÉì
+     40     Γöé - ┬╖┬╖model:┬╖string,ΓÉì
+     41     Γöé - ┬╖┬╖messages:┬╖ChatMessage[],ΓÉì
+     42     Γöé - ┬╖┬╖signal?:┬╖AbortSignal,ΓÉì
+     43     Γöé - ┬╖┬╖options?:┬╖ChatOptionsΓÉì
+     44     Γöé - ):┬╖AsyncGenerator<StreamChunk>┬╖{ΓÉì
+     45     Γöé - ┬╖┬╖const┬╖request:┬╖ChatCompletionRequest┬╖=┬╖{ΓÉì
+     46     Γöé - ┬╖┬╖┬╖┬╖model,ΓÉì
+     47     Γöé - ┬╖┬╖┬╖┬╖messages,ΓÉì
+     48     Γöé - ┬╖┬╖┬╖┬╖stream:┬╖true,ΓÉì
+     49     Γöé - ┬╖┬╖┬╖┬╖temperature:┬╖options?.temperature,ΓÉì
+     50     Γöé - ┬╖┬╖};ΓÉì
+     51     Γöé - ΓÉì
+     52     Γöé - ┬╖┬╖const┬╖response┬╖=┬╖await┬╖fetch("/v1/chat/completions",┬╖{ΓÉì
+     53     Γöé - ┬╖┬╖┬╖┬╖method:┬╖"POST",ΓÉì
+     54     Γöé - ┬╖┬╖┬╖┬╖headers:┬╖{ΓÉì
+     55     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"Content-Type":┬╖"application/json",ΓÉì
+     56     Γöé - ┬╖┬╖┬╖┬╖},ΓÉì
+     57     Γöé - ┬╖┬╖┬╖┬╖body:┬╖JSON.stringify(request),ΓÉì
+     58     Γöé - ┬╖┬╖┬╖┬╖signal,ΓÉì
+     59     Γöé - ┬╖┬╖});ΓÉì
+     60     Γöé - ΓÉì
+     61     Γöé - ┬╖┬╖if┬╖(!response.ok)┬╖{ΓÉì
+     62     Γöé - ┬╖┬╖┬╖┬╖const┬╖errorText┬╖=┬╖await┬╖response.text();ΓÉì
+     63     Γöé - ┬╖┬╖┬╖┬╖throw┬╖new┬╖Error(`Chat┬╖API┬╖error:┬╖${response.status}┬╖-┬╖${errorText}`);ΓÉì
+     64     Γöé - ┬╖┬╖}ΓÉì
+     65     Γöé - ΓÉì
+     66     Γöé - ┬╖┬╖const┬╖reader┬╖=┬╖response.body?.getReader();ΓÉì
+     67     Γöé - ┬╖┬╖if┬╖(!reader)┬╖{ΓÉì
+     68     Γöé - ┬╖┬╖┬╖┬╖throw┬╖new┬╖Error("Response┬╖body┬╖is┬╖not┬╖readable");ΓÉì
+     69     Γöé - ┬╖┬╖}ΓÉì
+     70     Γöé - ΓÉì
+     71     Γöé - ┬╖┬╖const┬╖decoder┬╖=┬╖new┬╖TextDecoder();ΓÉì
+     72     Γöé - ┬╖┬╖let┬╖buffer┬╖=┬╖"";ΓÉì
+     73     Γöé - ΓÉì
+     74     Γöé - ┬╖┬╖try┬╖{ΓÉì
+     75     Γöé - ┬╖┬╖┬╖┬╖while┬╖(true)┬╖{ΓÉì
+     76     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖const┬╖{┬╖done,┬╖value┬╖}┬╖=┬╖await┬╖reader.read();ΓÉì
+     77     Γöé - ΓÉì
+     78     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖if┬╖(done)┬╖{ΓÉì
+     79     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖break;ΓÉì
+     80     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖}ΓÉì
+     81     Γöé - ΓÉì
+     82     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖buffer┬╖+=┬╖decoder.decode(value,┬╖{┬╖stream:┬╖true┬╖});ΓÉì
+     83     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖const┬╖lines┬╖=┬╖buffer.split("\n");ΓÉì
+     84     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖buffer┬╖=┬╖lines.pop()┬╖||┬╖"";ΓÉì
+     85     Γöé - ΓÉì
+     86     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖for┬╖(const┬╖line┬╖of┬╖lines)┬╖{ΓÉì
+     87     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖const┬╖result┬╖=┬╖parseSSELine(line);ΓÉì
+     88     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖if┬╖(result?.done)┬╖{ΓÉì
+     89     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖yield┬╖result;ΓÉì
+     90     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖return;ΓÉì
+     91     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖}ΓÉì
+     92     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖if┬╖(result)┬╖{ΓÉì
+     93     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖yield┬╖result;ΓÉì
+     94     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖}ΓÉì
+     95     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖}ΓÉì
+     96     Γöé - ┬╖┬╖┬╖┬╖}ΓÉì
+     97     Γöé - ΓÉì
+     98     Γöé - ┬╖┬╖┬╖┬╖//┬╖Process┬╖any┬╖remaining┬╖bufferΓÉì
+     99     Γöé - ┬╖┬╖┬╖┬╖const┬╖result┬╖=┬╖parseSSELine(buffer);ΓÉì
+    100     Γöé - ┬╖┬╖┬╖┬╖if┬╖(result┬╖&&┬╖!result.done)┬╖{ΓÉì
+    101     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖yield┬╖result;ΓÉì
+    102     Γöé - ┬╖┬╖┬╖┬╖}ΓÉì
+    103     Γöé - ΓÉì
+    104     Γöé - ┬╖┬╖┬╖┬╖yield┬╖{┬╖content:┬╖"",┬╖done:┬╖true┬╖};ΓÉì
+    105     Γöé - ┬╖┬╖}┬╖finally┬╖{ΓÉì
+    106     Γöé - ┬╖┬╖┬╖┬╖reader.releaseLock();ΓÉì
+    107     Γöé - ┬╖┬╖}ΓÉì
+    108     Γöé - }ΓÉì
+          1 Γöé + import┬╖type┬╖{┬╖ChatMessage,┬╖ChatCompletionRequest┬╖}┬╖from┬╖"./types";
+          2 Γöé + 
+          3 Γöé + export┬╖interface┬╖StreamChunk┬╖{
+          4 Γöé + ┬╖┬╖content:┬╖string;
+          5 Γöé + ┬╖┬╖reasoning_content?:┬╖string;
+          6 Γöé + ┬╖┬╖done:┬╖boolean;
+          7 Γöé + }
+          8 Γöé + 
+          9 Γöé + export┬╖interface┬╖ChatOptions┬╖{
+         10 Γöé + ┬╖┬╖temperature?:┬╖number;
+         11 Γöé + }
+         12 Γöé + 
+         13 Γöé + function┬╖parseSSELine(line:┬╖string):┬╖StreamChunk┬╖|┬╖null┬╖{
+         14 Γöé + ┬╖┬╖const┬╖trimmed┬╖=┬╖line.trim();
+         15 Γöé + ┬╖┬╖if┬╖(!trimmed┬╖||┬╖!trimmed.startsWith("data:┬╖"))┬╖{
+         16 Γöé + ┬╖┬╖┬╖┬╖return┬╖null;
+         17 Γöé + ┬╖┬╖}
+         18 Γöé + 
+         19 Γöé + ┬╖┬╖const┬╖data┬╖=┬╖trimmed.slice(6);
+         20 Γöé + ┬╖┬╖if┬╖(data┬╖===┬╖"[DONE]")┬╖{
+         21 Γöé + ┬╖┬╖┬╖┬╖return┬╖{┬╖content:┬╖"",┬╖done:┬╖true┬╖};
+         22 Γöé + ┬╖┬╖}
+         23 Γöé + 
+         24 Γöé + ┬╖┬╖try┬╖{
+         25 Γöé + ┬╖┬╖┬╖┬╖const┬╖parsed┬╖=┬╖JSON.parse(data);
+         26 Γöé + ┬╖┬╖┬╖┬╖const┬╖delta┬╖=┬╖parsed.choices?.[0]?.delta;
+         27 Γöé + ┬╖┬╖┬╖┬╖const┬╖content┬╖=┬╖delta?.content┬╖||┬╖"";
+         28 Γöé + ┬╖┬╖┬╖┬╖const┬╖reasoning_content┬╖=┬╖delta?.reasoning_content┬╖||┬╖delta?.reasoning┬╖||┬╖"";
+         29 Γöé + 
+         30 Γöé + ┬╖┬╖┬╖┬╖if┬╖(content┬╖||┬╖reasoning_content)┬╖{
+         31 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖return┬╖{┬╖content,┬╖reasoning_content,┬╖done:┬╖false┬╖};
+         32 Γöé + ┬╖┬╖┬╖┬╖}
+         33 Γöé + ┬╖┬╖┬╖┬╖return┬╖null;
+         34 Γöé + ┬╖┬╖}┬╖catch┬╖{
+         35 Γöé + ┬╖┬╖┬╖┬╖return┬╖null;
+         36 Γöé + ┬╖┬╖}
+         37 Γöé + }
+         38 Γöé + 
+         39 Γöé + export┬╖async┬╖function*┬╖streamChatCompletion(
+         40 Γöé + ┬╖┬╖model:┬╖string,
+         41 Γöé + ┬╖┬╖messages:┬╖ChatMessage[],
+         42 Γöé + ┬╖┬╖signal?:┬╖AbortSignal,
+  67 more lines truncated
+  
+
+role-model-router/apps/runtime-ui/app/routes/local-logs.tsx format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+     1    Γöé - import┬╖{┬╖useCallback,┬╖useEffect,┬╖useState┬╖}┬╖from┬╖"react";ΓÉì
+     2    Γöé - ΓÉì
+     3    Γöé - import┬╖{┬╖PageHeader,┬╖SectionCard,┬╖EmptyState,┬╖LoadingState,┬╖ErrorState┬╖}┬╖from┬╖"../components/page-primitives";ΓÉì
+     4    Γöé - import┬╖{┬╖mutedPanelClassName,┬╖secondaryButtonClassName┬╖}┬╖from┬╖"../lib/design-system";ΓÉì
+     5    Γöé - import┬╖{┬╖fetchLocalLogs┬╖}┬╖from┬╖"../lib/runtime-api";ΓÉì
+     6    Γöé - ΓÉì
+     7    Γöé - export┬╖default┬╖function┬╖LocalLogsRoute()┬╖{ΓÉì
+     8    Γöé - ┬╖┬╖const┬╖[logs,┬╖setLogs]┬╖=┬╖useState<string>("");ΓÉì
+     9    Γöé - ┬╖┬╖const┬╖[loading,┬╖setLoading]┬╖=┬╖useState(true);ΓÉì
+    10    Γöé - ┬╖┬╖const┬╖[error,┬╖setError]┬╖=┬╖useState<string┬╖|┬╖null>(null);ΓÉì
+    11    Γöé - ┬╖┬╖const┬╖[autoRefresh,┬╖setAutoRefresh]┬╖=┬╖useState(false);ΓÉì
+    12    Γöé - ΓÉì
+    13    Γöé - ┬╖┬╖const┬╖refresh┬╖=┬╖useCallback(async┬╖()┬╖=>┬╖{ΓÉì
+    14    Γöé - ┬╖┬╖┬╖┬╖setLoading(true);ΓÉì
+    15    Γöé - ┬╖┬╖┬╖┬╖setError(null);ΓÉì
+    16    Γöé - ┬╖┬╖┬╖┬╖try┬╖{ΓÉì
+    17    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖const┬╖data┬╖=┬╖await┬╖fetchLocalLogs();ΓÉì
+    18    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖setLogs(data.logs);ΓÉì
+    19    Γöé - ┬╖┬╖┬╖┬╖}┬╖catch┬╖(err)┬╖{ΓÉì
+    20    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖setError(err┬╖instanceof┬╖Error┬╖?┬╖err.message┬╖:┬╖"Failed┬╖to┬╖load┬╖logs");ΓÉì
+    21    Γöé - ┬╖┬╖┬╖┬╖}┬╖finally┬╖{ΓÉì
+    22    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖setLoading(false);ΓÉì
+    23    Γöé - ┬╖┬╖┬╖┬╖}ΓÉì
+    24    Γöé - ┬╖┬╖},┬╖[]);ΓÉì
+    25    Γöé - ΓÉì
+    26    Γöé - ┬╖┬╖useEffect(()┬╖=>┬╖{ΓÉì
+    27    Γöé - ┬╖┬╖┬╖┬╖refresh();ΓÉì
+    28    Γöé - ┬╖┬╖},┬╖[refresh]);ΓÉì
+    29    Γöé - ΓÉì
+    30    Γöé - ┬╖┬╖useEffect(()┬╖=>┬╖{ΓÉì
+    31    Γöé - ┬╖┬╖┬╖┬╖if┬╖(!autoRefresh)┬╖return;ΓÉì
+    32    Γöé - ┬╖┬╖┬╖┬╖const┬╖interval┬╖=┬╖setInterval(refresh,┬╖3000);ΓÉì
+    33    Γöé - ┬╖┬╖┬╖┬╖return┬╖()┬╖=>┬╖clearInterval(interval);ΓÉì
+    34    Γöé - ┬╖┬╖},┬╖[autoRefresh,┬╖refresh]);ΓÉì
+    35    Γöé - ΓÉì
+    36    Γöé - ┬╖┬╖const┬╖logLines┬╖=┬╖logs.split("\n").filter((line)┬╖=>┬╖line.trim().length┬╖>┬╖0);ΓÉì
+    37    Γöé - ΓÉì
+    38    Γöé - ┬╖┬╖return┬╖(ΓÉì
+    39    Γöé - ┬╖┬╖┬╖┬╖<div┬╖className="space-y-8">ΓÉì
+    40    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖<PageHeaderΓÉì
+    41    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖eyebrow="Local"ΓÉì
+    42    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖title="Log┬╖streaming"ΓÉì
+    43    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖description="Real-time┬╖log┬╖stream┬╖from┬╖the┬╖local┬╖llama-swap┬╖runtime."ΓÉì
+    44    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖/>ΓÉì
+    45    Γöé - ΓÉì
+    46    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖{error┬╖?┬╖<ErrorState┬╖label={error}┬╖/>┬╖:┬╖null}ΓÉì
+    47    Γöé - ΓÉì
+    48    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖<SectionCard┬╖title="Live┬╖logs"┬╖description="Buffered┬╖log┬╖output┬╖from┬╖the┬╖local┬╖inference┬╖runtime.">ΓÉì
+    49    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="mb-4┬╖flex┬╖items-center┬╖gap-4">ΓÉì
+    50    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<button┬╖onClick={refresh}┬╖disabled={loading}┬╖className={secondaryButtonClassName}>ΓÉì
+    51    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{loading┬╖?┬╖"RefreshingΓÇª"┬╖:┬╖"Refresh"}ΓÉì
+    52    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</button>ΓÉì
+    53    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="flex┬╖items-center┬╖gap-2">ΓÉì
+    54    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<inputΓÉì
+    55    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖type="checkbox"ΓÉì
+    56    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖id="autoRefresh"ΓÉì
+    57    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖checked={autoRefresh}ΓÉì
+    58    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖onChange={(e)┬╖=>┬╖setAutoRefresh(e.target.checked)}ΓÉì
+    59    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖className="h-4┬╖w-4┬╖rounded-none┬╖border-[var(--rm-border-strong)]┬╖accent-[var(--rm-accent)]"ΓÉì
+    60    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖/>ΓÉì
+    61    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<label┬╖htmlFor="autoRefresh"┬╖className="text-sm┬╖text-[var(--rm-fg)]">Auto-refresh┬╖(3s)</label>ΓÉì
+    62    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+    63    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<span┬╖className="ml-auto┬╖text-xs┬╖text-[var(--rm-muted)]">{logLines.length}┬╖lines</span>ΓÉì
+    64    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+    65    Γöé - ΓÉì
+    66    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{loading┬╖&&┬╖logLines.length┬╖===┬╖0┬╖?┬╖(ΓÉì
+    67    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<LoadingState┬╖label="Loading┬╖logsΓÇª"┬╖/>ΓÉì
+    68    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖)┬╖:┬╖logLines.length┬╖===┬╖0┬╖?┬╖(ΓÉì
+    69    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<EmptyState┬╖label="No┬╖logs┬╖available.┬╖The┬╖local┬╖runtime┬╖may┬╖not┬╖be┬╖running."┬╖/>ΓÉì
+    70    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖)┬╖:┬╖(ΓÉì
+    71    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<pre┬╖className={`${mutedPanelClassName}┬╖h-96┬╖overflow-auto┬╖p-4┬╖text-xs┬╖leading-5┬╖font-mono┬╖text-[var(--rm-secondary)]`}>ΓÉì
+    72    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{logLines.map((line,┬╖i)┬╖=>┬╖(ΓÉì
+    73    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖key={i}┬╖className="whitespace-pre-wrap┬╖break-all">{line}</div>ΓÉì
+    74    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖))}ΓÉì
+    75    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</pre>ΓÉì
+    76    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖)}ΓÉì
+    77    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖</SectionCard>ΓÉì
+    78    Γöé - ┬╖┬╖┬╖┬╖</div>ΓÉì
+    79    Γöé - ┬╖┬╖);ΓÉì
+    80    Γöé - }ΓÉì
+        1 Γöé + import┬╖{┬╖useCallback,┬╖useEffect,┬╖useState┬╖}┬╖from┬╖"react";
+        2 Γöé + 
+        3 Γöé + import┬╖{
+        4 Γöé + ┬╖┬╖PageHeader,
+        5 Γöé + ┬╖┬╖SectionCard,
+        6 Γöé + ┬╖┬╖EmptyState,
+        7 Γöé + ┬╖┬╖LoadingState,
+        8 Γöé + ┬╖┬╖ErrorState,
+        9 Γöé + }┬╖from┬╖"../components/page-primitives";
+       10 Γöé + import┬╖{┬╖mutedPanelClassName,┬╖secondaryButtonClassName┬╖}┬╖from┬╖"../lib/design-system";
+       11 Γöé + import┬╖{┬╖fetchLocalLogs┬╖}┬╖from┬╖"../lib/runtime-api";
+       12 Γöé + 
+       13 Γöé + export┬╖default┬╖function┬╖LocalLogsRoute()┬╖{
+       14 Γöé + ┬╖┬╖const┬╖[logs,┬╖setLogs]┬╖=┬╖useState<string>("");
+       15 Γöé + ┬╖┬╖const┬╖[loading,┬╖setLoading]┬╖=┬╖useState(true);
+       16 Γöé + ┬╖┬╖const┬╖[error,┬╖setError]┬╖=┬╖useState<string┬╖|┬╖null>(null);
+       17 Γöé + ┬╖┬╖const┬╖[autoRefresh,┬╖setAutoRefresh]┬╖=┬╖useState(false);
+       18 Γöé + 
+       19 Γöé + ┬╖┬╖const┬╖refresh┬╖=┬╖useCallback(async┬╖()┬╖=>┬╖{
+       20 Γöé + ┬╖┬╖┬╖┬╖setLoading(true);
+       21 Γöé + ┬╖┬╖┬╖┬╖setError(null);
+       22 Γöé + ┬╖┬╖┬╖┬╖try┬╖{
+       23 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖const┬╖data┬╖=┬╖await┬╖fetchLocalLogs();
+       24 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖setLogs(data.logs);
+       25 Γöé + ┬╖┬╖┬╖┬╖}┬╖catch┬╖(err)┬╖{
+       26 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖setError(err┬╖instanceof┬╖Error┬╖?┬╖err.message┬╖:┬╖"Failed┬╖to┬╖load┬╖logs");
+       27 Γöé + ┬╖┬╖┬╖┬╖}┬╖finally┬╖{
+       28 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖setLoading(false);
+       29 Γöé + ┬╖┬╖┬╖┬╖}
+       30 Γöé + ┬╖┬╖},┬╖[]);
+       31 Γöé + 
+       32 Γöé + ┬╖┬╖useEffect(()┬╖=>┬╖{
+       33 Γöé + ┬╖┬╖┬╖┬╖refresh();
+       34 Γöé + ┬╖┬╖},┬╖[refresh]);
+       35 Γöé + 
+       36 Γöé + ┬╖┬╖useEffect(()┬╖=>┬╖{
+       37 Γöé + ┬╖┬╖┬╖┬╖if┬╖(!autoRefresh)┬╖return;
+       38 Γöé + ┬╖┬╖┬╖┬╖const┬╖interval┬╖=┬╖setInterval(refresh,┬╖3000);
+       39 Γöé + ┬╖┬╖┬╖┬╖return┬╖()┬╖=>┬╖clearInterval(interval);
+       40 Γöé + ┬╖┬╖},┬╖[autoRefresh,┬╖refresh]);
+       41 Γöé + 
+       42 Γöé + ┬╖┬╖const┬╖logLines┬╖=┬╖logs.split("\n").filter((line)┬╖=>┬╖line.trim().length┬╖>┬╖0);
+       43 Γöé + 
+       44 Γöé + ┬╖┬╖return┬╖(
+       45 Γöé + ┬╖┬╖┬╖┬╖<div┬╖className="space-y-8">
+       46 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖<PageHeader
+       47 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖eyebrow="Local"
+       48 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖title="Log┬╖streaming"
+       49 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖description="Real-time┬╖log┬╖stream┬╖from┬╖the┬╖local┬╖llama-swap┬╖runtime."
+       50 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖/>
+       51 Γöé + 
+       52 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖{error┬╖?┬╖<ErrorState┬╖label={error}┬╖/>┬╖:┬╖null}
+       53 Γöé + 
+       54 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖<SectionCard
+       55 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖title="Live┬╖logs"
+       56 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖description="Buffered┬╖log┬╖output┬╖from┬╖the┬╖local┬╖inference┬╖runtime."
+       57 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖>
+       58 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="mb-4┬╖flex┬╖items-center┬╖gap-4">
+       59 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<button┬╖onClick={refresh}┬╖disabled={loading}┬╖className={secondaryButtonClassName}>
+       60 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{loading┬╖?┬╖"RefreshingΓÇª"┬╖:┬╖"Refresh"}
+       61 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</button>
+       62 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="flex┬╖items-center┬╖gap-2">
+       63 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<input
+       64 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖type="checkbox"
+       65 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖id="autoRefresh"
+       66 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖checked={autoRefresh}
+       67 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖onChange={(e)┬╖=>┬╖setAutoRefresh(e.target.checked)}
+       68 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖className="h-4┬╖w-4┬╖rounded-none┬╖border-[var(--rm-border-strong)]┬╖accent-[var(--rm-accent)]"
+       69 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖/>
+       70 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<label┬╖htmlFor="autoRefresh"┬╖className="text-sm┬╖text-[var(--rm-fg)]">
+  26 more lines truncated
+  
+
+role-model-router/apps/runtime-ui/app/routes/integrations-downstream.tsx format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+      1     Γöé - import┬╖{┬╖useEffect,┬╖useState┬╖}┬╖from┬╖"react";ΓÉì
+      2     Γöé - ΓÉì
+      3     Γöé - import┬╖{┬╖ErrorState,┬╖LoadingState,┬╖PageHeader,┬╖SectionCard,┬╖StatusPill┬╖}┬╖from┬╖"../components/page-primitives";ΓÉì
+      4     Γöé - import┬╖{┬╖codeBlockClassName,┬╖mutedPanelClassName,┬╖secondaryButtonClassName┬╖}┬╖from┬╖"../lib/design-system";ΓÉì
+      5     Γöé - import┬╖{ΓÉì
+      6     Γöé - ┬╖┬╖fetchDownstreamOpenAIProviderConfig,ΓÉì
+      7     Γöé - ┬╖┬╖type┬╖RuntimeDownstreamOpenAIProviderConfig,ΓÉì
+      8     Γöé - }┬╖from┬╖"../lib/runtime-api";ΓÉì
+      9     Γöé - import┬╖{┬╖buildDownstreamProviderGuide┬╖}┬╖from┬╖"../lib/view-models";ΓÉì
+     10     Γöé - ΓÉì
+     11     Γöé - export┬╖default┬╖function┬╖IntegrationsDownstreamRoute()┬╖{ΓÉì
+     12     Γöé - ┬╖┬╖const┬╖[provider,┬╖setProvider]┬╖=┬╖useState<RuntimeDownstreamOpenAIProviderConfig┬╖|┬╖null>(null);ΓÉì
+     13     Γöé - ┬╖┬╖const┬╖[error,┬╖setError]┬╖=┬╖useState<string┬╖|┬╖null>(null);ΓÉì
+     14     Γöé - ΓÉì
+     15     Γöé - ┬╖┬╖useEffect(()┬╖=>┬╖{ΓÉì
+     16     Γöé - ┬╖┬╖┬╖┬╖void┬╖fetchDownstreamOpenAIProviderConfig()ΓÉì
+     17     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖.then(setProvider)ΓÉì
+     18     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖.catch((value:┬╖unknown)┬╖=>┬╖setError(value┬╖instanceof┬╖Error┬╖?┬╖value.message┬╖:┬╖"Could┬╖not┬╖load┬╖downstream┬╖compatibility┬╖details."));ΓÉì
+     19     Γöé - ┬╖┬╖},┬╖[]);ΓÉì
+     20     Γöé - ΓÉì
+     21     Γöé - ┬╖┬╖if┬╖(error)┬╖{ΓÉì
+     22     Γöé - ┬╖┬╖┬╖┬╖return┬╖<ErrorState┬╖label={error}┬╖/>;ΓÉì
+     23     Γöé - ┬╖┬╖}ΓÉì
+     24     Γöé - ┬╖┬╖if┬╖(!provider)┬╖{ΓÉì
+     25     Γöé - ┬╖┬╖┬╖┬╖return┬╖<LoadingState┬╖label="Loading┬╖downstream┬╖integration┬╖detailsΓÇª"┬╖/>;ΓÉì
+     26     Γöé - ┬╖┬╖}ΓÉì
+     27     Γöé - ΓÉì
+     28     Γöé - ┬╖┬╖const┬╖guide┬╖=┬╖buildDownstreamProviderGuide(provider);ΓÉì
+     29     Γöé - ΓÉì
+     30     Γöé - ┬╖┬╖return┬╖(ΓÉì
+     31     Γöé - ┬╖┬╖┬╖┬╖<div┬╖className="space-y-6">ΓÉì
+     32     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖<PageHeaderΓÉì
+     33     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖eyebrow="Integrations"ΓÉì
+     34     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖title="Downstream┬╖provider┬╖contract"ΓÉì
+     35     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖description="Configure┬╖consumer┬╖apps┬╖such┬╖as┬╖opencode┬╖against┬╖the┬╖runtime's┬╖OpenAI-compatible┬╖downstream┬╖surface."ΓÉì
+     36     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖actions={ΓÉì
+     37     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<a┬╖className={secondaryButtonClassName}┬╖href="/api/role-model/downstream/openai">ΓÉì
+     38     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖Provider┬╖JSONΓÉì
+     39     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</a>ΓÉì
+     40     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖}ΓÉì
+     41     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖/>ΓÉì
+     42     Γöé - ΓÉì
+     43     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖<SectionCard┬╖title="Connection┬╖contract"┬╖description="Base┬╖URL,┬╖auth┬╖expectations,┬╖and┬╖downstream┬╖model┬╖discovery┬╖in┬╖one┬╖reference┬╖block.">ΓÉì
+     44     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="grid┬╖gap-3┬╖md:grid-cols-2┬╖xl:grid-cols-3">ΓÉì
+     45     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{guide.connectionRows.map((row)┬╖=>┬╖(ΓÉì
+     46     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖key={row.label}┬╖className={`${mutedPanelClassName}┬╖p-4`}>ΓÉì
+     47     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<p┬╖className="text-xs┬╖font-normal┬╖uppercase┬╖tracking-[0.2em]┬╖text-[var(--rm-muted)]">{row.label}</p>ΓÉì
+     48     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<p┬╖className="mt-2┬╖break-all┬╖font-mono┬╖text-sm┬╖text-[var(--rm-fg)]">{row.value}</p>ΓÉì
+     49     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+     50     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖))}ΓÉì
+     51     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+     52     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖</SectionCard>ΓÉì
+     53     Γöé - ΓÉì
+     54     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖<SectionCard┬╖title="Consumer┬╖setup"┬╖description="The┬╖runtime┬╖remains┬╖downstream-compatible,┬╖including┬╖tool-calling┬╖consumer┬╖expectations.">ΓÉì
+     55     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="grid┬╖gap-4┬╖xl:grid-cols-[0.9fr_1.1fr]">ΓÉì
+     56     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className={`${mutedPanelClassName}┬╖p-4`}>ΓÉì
+     57     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<p┬╖className="font-medium┬╖text-[var(--rm-fg)]">Setup┬╖steps</p>ΓÉì
+     58     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<ol┬╖className="mt-3┬╖space-y-2┬╖text-sm┬╖text-[var(--rm-secondary)]">ΓÉì
+     59     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{guide.opencodeSteps.map((step)┬╖=>┬╖(ΓÉì
+     60     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<li┬╖key={step}>{step}</li>ΓÉì
+     61     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖))}ΓÉì
+     62     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</ol>ΓÉì
+     63     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<p┬╖className="mt-4┬╖text-sm┬╖text-[var(--rm-secondary)]">{provider.authentication.note}</p>ΓÉì
+     64     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+     65     Γöé - ΓÉì
+     66     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="space-y-4">ΓÉì
+     67     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className={`${mutedPanelClassName}┬╖p-4`}>ΓÉì
+     68     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<p┬╖className="font-medium┬╖text-[var(--rm-fg)]">Available┬╖models</p>ΓÉì
+     69     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="mt-3┬╖flex┬╖flex-wrap┬╖gap-2">ΓÉì
+     70     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{guide.availableModels.map((modelId)┬╖=>┬╖(ΓÉì
+     71     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<StatusPill┬╖key={modelId}┬╖tone={modelId┬╖===┬╖provider.setup.recommendedModel┬╖?┬╖"accent"┬╖:┬╖"neutral"}>ΓÉì
+     72     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{modelId}ΓÉì
+     73     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</StatusPill>ΓÉì
+     74     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖))}ΓÉì
+     75     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+     76     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+     77     Γöé - ΓÉì
+     78     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className={`${mutedPanelClassName}┬╖p-4`}>ΓÉì
+     79     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<p┬╖className="font-medium┬╖text-[var(--rm-fg)]">Example┬╖commands</p>ΓÉì
+     80     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<pre┬╖className={`mt-3┬╖${codeBlockClassName}`}>{guide.examples.modelsCurl}</pre>ΓÉì
+     81     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<pre┬╖className={`mt-3┬╖${codeBlockClassName}`}>{guide.examples.chatCurl}</pre>ΓÉì
+     82     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+     83     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+     84     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+     85     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖</SectionCard>ΓÉì
+     86     Γöé - ΓÉì
+     87     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖<SectionCard┬╖title="Compatibility┬╖posture"┬╖description="Compatibility┬╖notes┬╖stay┬╖with┬╖the┬╖downstream┬╖contract┬╖instead┬╖of┬╖on┬╖a┬╖duplicate┬╖reference┬╖page.">ΓÉì
+     88     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="grid┬╖gap-3┬╖md:grid-cols-3">ΓÉì
+     89     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className={`${mutedPanelClassName}┬╖p-4┬╖text-sm┬╖text-[var(--rm-secondary)]`}>ΓÉì
+     90     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<p┬╖className="font-medium┬╖text-[var(--rm-fg)]">API┬╖family</p>ΓÉì
+     91     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<p┬╖className="mt-2">Downstream┬╖consumers┬╖should┬╖treat┬╖this┬╖runtime┬╖as┬╖an┬╖OpenAI-compatible┬╖provider┬╖surfaced┬╖through┬╖the┬╖model┬╖listing┬╖and┬╖chat-completions┬╖contract┬╖shown┬╖above.</p>ΓÉì
+     92     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+     93     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className={`${mutedPanelClassName}┬╖p-4┬╖text-sm┬╖text-[var(--rm-secondary)]`}>ΓÉì
+     94     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<p┬╖className="font-medium┬╖text-[var(--rm-fg)]">Tool┬╖calling</p>ΓÉì
+     95     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<p┬╖className="mt-2">`tool_calls`┬╖compatibility┬╖follows┬╖the┬╖selected┬╖routed┬╖model┬╖and┬╖remains┬╖inspectable┬╖in┬╖request┬╖detail┬╖rather┬╖than┬╖hidden┬╖behind┬╖a┬╖separate┬╖compatibility┬╖matrix.</p>ΓÉì
+     96     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+     97     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className={`${mutedPanelClassName}┬╖p-4┬╖text-sm┬╖text-[var(--rm-secondary)]`}>ΓÉì
+     98     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<p┬╖className="font-medium┬╖text-[var(--rm-fg)]">MCP┬╖boundary</p>ΓÉì
+     99     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<p┬╖className="mt-2">MCP┬╖and┬╖runtime-owned┬╖tool┬╖execution┬╖stay┬╖backend-governed;┬╖downstream┬╖clients┬╖consume┬╖the┬╖compatible┬╖response┬╖surface┬╖rather┬╖than┬╖negotiating┬╖connector┬╖state┬╖directly.</p>ΓÉì
+    100     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+    101     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+    102     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖</SectionCard>ΓÉì
+    103     Γöé - ┬╖┬╖┬╖┬╖</div>ΓÉì
+    104     Γöé - ┬╖┬╖);ΓÉì
+    105     Γöé - }ΓÉì
+          1 Γöé + import┬╖{┬╖useEffect,┬╖useState┬╖}┬╖from┬╖"react";
+          2 Γöé + 
+          3 Γöé + import┬╖{
+          4 Γöé + ┬╖┬╖ErrorState,
+          5 Γöé + ┬╖┬╖LoadingState,
+          6 Γöé + ┬╖┬╖PageHeader,
+          7 Γöé + ┬╖┬╖SectionCard,
+          8 Γöé + ┬╖┬╖StatusPill,
+          9 Γöé + }┬╖from┬╖"../components/page-primitives";
+         10 Γöé + import┬╖{
+         11 Γöé + ┬╖┬╖codeBlockClassName,
+         12 Γöé + ┬╖┬╖mutedPanelClassName,
+         13 Γöé + ┬╖┬╖secondaryButtonClassName,
+         14 Γöé + }┬╖from┬╖"../lib/design-system";
+         15 Γöé + import┬╖{
+         16 Γöé + ┬╖┬╖fetchDownstreamOpenAIProviderConfig,
+         17 Γöé + ┬╖┬╖type┬╖RuntimeDownstreamOpenAIProviderConfig,
+         18 Γöé + }┬╖from┬╖"../lib/runtime-api";
+         19 Γöé + import┬╖{┬╖buildDownstreamProviderGuide┬╖}┬╖from┬╖"../lib/view-models";
+         20 Γöé + 
+         21 Γöé + export┬╖default┬╖function┬╖IntegrationsDownstreamRoute()┬╖{
+         22 Γöé + ┬╖┬╖const┬╖[provider,┬╖setProvider]┬╖=┬╖useState<RuntimeDownstreamOpenAIProviderConfig┬╖|┬╖null>(null);
+         23 Γöé + ┬╖┬╖const┬╖[error,┬╖setError]┬╖=┬╖useState<string┬╖|┬╖null>(null);
+         24 Γöé + 
+         25 Γöé + ┬╖┬╖useEffect(()┬╖=>┬╖{
+         26 Γöé + ┬╖┬╖┬╖┬╖void┬╖fetchDownstreamOpenAIProviderConfig()
+         27 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖.then(setProvider)
+         28 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖.catch((value:┬╖unknown)┬╖=>
+         29 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖setError(
+         30 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖value┬╖instanceof┬╖Error
+         31 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖?┬╖value.message
+         32 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖:┬╖"Could┬╖not┬╖load┬╖downstream┬╖compatibility┬╖details.",
+         33 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖),
+         34 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖);
+         35 Γöé + ┬╖┬╖},┬╖[]);
+         36 Γöé + 
+         37 Γöé + ┬╖┬╖if┬╖(error)┬╖{
+         38 Γöé + ┬╖┬╖┬╖┬╖return┬╖<ErrorState┬╖label={error}┬╖/>;
+         39 Γöé + ┬╖┬╖}
+         40 Γöé + ┬╖┬╖if┬╖(!provider)┬╖{
+         41 Γöé + ┬╖┬╖┬╖┬╖return┬╖<LoadingState┬╖label="Loading┬╖downstream┬╖integration┬╖detailsΓÇª"┬╖/>;
+         42 Γöé + ┬╖┬╖}
+         43 Γöé + 
+         44 Γöé + ┬╖┬╖const┬╖guide┬╖=┬╖buildDownstreamProviderGuide(provider);
+         45 Γöé + 
+  102 more lines truncated
+  
+
+role-model-router/apps/runtime-ui/app/routes/endpoints.tsx format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+      1     Γöé - import┬╖{┬╖useEffect,┬╖useMemo,┬╖useState┬╖}┬╖from┬╖"react";ΓÉì
+      2     Γöé - import┬╖{┬╖Link┬╖}┬╖from┬╖"react-router";ΓÉì
+      3     Γöé - ΓÉì
+      4     Γöé - import┬╖{ΓÉì
+      5     Γöé - ┬╖┬╖EmptyState,ΓÉì
+      6     Γöé - ┬╖┬╖ErrorState,ΓÉì
+      7     Γöé - ┬╖┬╖LoadingState,ΓÉì
+      8     Γöé - ┬╖┬╖PageHeader,ΓÉì
+      9     Γöé - ┬╖┬╖SectionCard,ΓÉì
+     10     Γöé - ┬╖┬╖StatusPill,ΓÉì
+     11     Γöé - }┬╖from┬╖"../components/page-primitives";ΓÉì
+     12     Γöé - import┬╖{┬╖secondaryButtonClassName┬╖}┬╖from┬╖"../lib/design-system";ΓÉì
+     13     Γöé - import┬╖{┬╖fetchRuntimeSnapshot,┬╖type┬╖RuntimeSnapshot┬╖}┬╖from┬╖"../lib/runtime-api";ΓÉì
+     14     Γöé - import┬╖{┬╖buildConfiguredProviderRows,┬╖buildEndpointCatalogRows┬╖}┬╖from┬╖"../lib/view-models";ΓÉì
+     15     Γöé - ΓÉì
+     16     Γöé - export┬╖default┬╖function┬╖EndpointsRoute()┬╖{ΓÉì
+     17     Γöé - ┬╖┬╖const┬╖[snapshot,┬╖setSnapshot]┬╖=┬╖useState<RuntimeSnapshot┬╖|┬╖null>(null);ΓÉì
+     18     Γöé - ┬╖┬╖const┬╖[error,┬╖setError]┬╖=┬╖useState<string┬╖|┬╖null>(null);ΓÉì
+     19     Γöé - ΓÉì
+     20     Γöé - ┬╖┬╖useEffect(()┬╖=>┬╖{ΓÉì
+     21     Γöé - ┬╖┬╖┬╖┬╖void┬╖fetchRuntimeSnapshot()ΓÉì
+     22     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖.then((nextSnapshot)┬╖=>┬╖{ΓÉì
+     23     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖setSnapshot(nextSnapshot);ΓÉì
+     24     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖setError(null);ΓÉì
+     25     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖})ΓÉì
+     26     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖.catch((value:┬╖unknown)┬╖=>┬╖setError(value┬╖instanceof┬╖Error┬╖?┬╖value.message┬╖:┬╖"Could┬╖not┬╖load┬╖endpoints."));ΓÉì
+     27     Γöé - ┬╖┬╖},┬╖[]);ΓÉì
+     28     Γöé - ΓÉì
+     29     Γöé - ┬╖┬╖const┬╖providerRows┬╖=┬╖useMemo(ΓÉì
+     30     Γöé - ┬╖┬╖┬╖┬╖()┬╖=>ΓÉì
+     31     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖snapshotΓÉì
+     32     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖?┬╖buildConfiguredProviderRows({ΓÉì
+     33     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖accounts:┬╖snapshot.accounts,ΓÉì
+     34     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖endpoints:┬╖snapshot.endpoints,ΓÉì
+     35     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖})ΓÉì
+     36     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖:┬╖[],ΓÉì
+     37     Γöé - ┬╖┬╖┬╖┬╖[snapshot],ΓÉì
+     38     Γöé - ┬╖┬╖);ΓÉì
+     39     Γöé - ┬╖┬╖const┬╖endpointRows┬╖=┬╖useMemo(()┬╖=>┬╖(snapshot┬╖?┬╖buildEndpointCatalogRows(snapshot.endpoints)┬╖:┬╖[]),┬╖[snapshot]);ΓÉì
+     40     Γöé - ΓÉì
+     41     Γöé - ┬╖┬╖if┬╖(error)┬╖{ΓÉì
+     42     Γöé - ┬╖┬╖┬╖┬╖return┬╖<ErrorState┬╖label={error}┬╖/>;ΓÉì
+     43     Γöé - ┬╖┬╖}ΓÉì
+     44     Γöé - ┬╖┬╖if┬╖(!snapshot)┬╖{ΓÉì
+     45     Γöé - ┬╖┬╖┬╖┬╖return┬╖<LoadingState┬╖label="Loading┬╖endpoint┬╖registryΓÇª"┬╖/>;ΓÉì
+     46     Γöé - ┬╖┬╖}ΓÉì
+     47     Γöé - ΓÉì
+     48     Γöé - ┬╖┬╖return┬╖(ΓÉì
+     49     Γöé - ┬╖┬╖┬╖┬╖<div┬╖className="space-y-6">ΓÉì
+     50     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖<PageHeaderΓÉì
+     51     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖eyebrow="Endpoints"ΓÉì
+     52     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖title="Endpoint┬╖registry"ΓÉì
+     53     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖description="Configured┬╖providers,┬╖configured┬╖models,┬╖and┬╖the┬╖live┬╖runtime┬╖endpoint┬╖registry┬╖appear┬╖together┬╖here┬╖after┬╖provider┬╖onboarding."ΓÉì
+     54     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖/>ΓÉì
+     55     Γöé - ΓÉì
+     56     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖{providerRows.length┬╖===┬╖0┬╖&&┬╖endpointRows.length┬╖===┬╖0┬╖?┬╖(ΓÉì
+     57     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<SectionCardΓÉì
+     58     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖title="No┬╖configured┬╖endpoints┬╖yet"ΓÉì
+     59     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖description="Provider┬╖onboarding┬╖happens┬╖on┬╖the┬╖Providers┬╖page.┬╖Once┬╖a┬╖provider┬╖is┬╖configured,┬╖its┬╖resulting┬╖runtime┬╖entries┬╖will┬╖appear┬╖here."ΓÉì
+     60     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖>ΓÉì
+     61     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<EmptyState┬╖label="No┬╖providers┬╖or┬╖endpoints┬╖are┬╖configured┬╖yet."┬╖/>ΓÉì
+     62     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="mt-4">ΓÉì
+     63     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<Link┬╖className={secondaryButtonClassName}┬╖to="/app/control/providers">ΓÉì
+     64     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖Open┬╖ProvidersΓÉì
+     65     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</Link>ΓÉì
+     66     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+     67     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</SectionCard>ΓÉì
+     68     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖)┬╖:┬╖(ΓÉì
+     69     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="grid┬╖gap-4┬╖xl:grid-cols-[0.92fr_1.08fr]">ΓÉì
+     70     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<SectionCardΓÉì
+     71     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖title="Configured┬╖providers"ΓÉì
+     72     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖description="Saved┬╖runtime┬╖provider┬╖connections┬╖and┬╖the┬╖model┬╖inventory┬╖each┬╖one┬╖currently┬╖contributes┬╖to┬╖the┬╖registry."ΓÉì
+     73     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖>ΓÉì
+     74     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{providerRows.length┬╖===┬╖0┬╖?┬╖(ΓÉì
+     75     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<EmptyState┬╖label="No┬╖providers┬╖are┬╖configured┬╖yet."┬╖/>ΓÉì
+     76     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖)┬╖:┬╖(ΓÉì
+     77     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="overflow-x-auto">ΓÉì
+     78     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<table┬╖className="min-w-full┬╖text-left┬╖text-sm">ΓÉì
+     79     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<thead┬╖className="text-[var(--rm-muted)]">ΓÉì
+     80     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<tr>ΓÉì
+     81     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<th┬╖className="pb-3┬╖font-medium">Provider</th>ΓÉì
+     82     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<th┬╖className="pb-3┬╖font-medium">Connections</th>ΓÉì
+     83     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<th┬╖className="pb-3┬╖font-medium">Auth</th>ΓÉì
+     84     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<th┬╖className="pb-3┬╖font-medium">Models</th>ΓÉì
+     85     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<th┬╖className="pb-3┬╖font-medium">Health</th>ΓÉì
+     86     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<th┬╖className="pb-3┬╖font-medium">Endpoints</th>ΓÉì
+     87     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</tr>ΓÉì
+     88     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</thead>ΓÉì
+     89     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<tbody>ΓÉì
+     90     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{providerRows.map((provider)┬╖=>┬╖(ΓÉì
+     91     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<tr┬╖key={provider.providerId}┬╖className="border-t┬╖border-[var(--rm-border)]">ΓÉì
+     92     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<td┬╖className="py-3┬╖font-medium┬╖text-[var(--rm-fg)]">{provider.providerId}</td>ΓÉì
+     93     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<td┬╖className="py-3┬╖text-[var(--rm-secondary)]">{provider.accountIds.join(",┬╖")┬╖||┬╖"ΓÇö"}</td>ΓÉì
+     94     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<td┬╖className="py-3┬╖text-[var(--rm-secondary)]">{provider.authModes.join(",┬╖")┬╖||┬╖"ΓÇö"}</td>ΓÉì
+     95     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<td┬╖className="py-3┬╖text-[var(--rm-secondary)]">ΓÉì
+     96     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{provider.configuredModels.length┬╖>┬╖0┬╖?┬╖provider.configuredModels.join(",┬╖")┬╖:┬╖"ΓÇö"}ΓÉì
+     97     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</td>ΓÉì
+     98     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<td┬╖className="py-3┬╖text-[var(--rm-secondary)]">{provider.healthStatuses.join(",┬╖")┬╖||┬╖"unknown"}</td>ΓÉì
+     99     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<td┬╖className="py-3┬╖text-[var(--rm-secondary)]">ΓÉì
+    100     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{provider.activeEndpointCount}/{provider.endpointCount}┬╖activeΓÉì
+    101     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</td>ΓÉì
+    102     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</tr>ΓÉì
+    103     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖))}ΓÉì
+    104     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</tbody>ΓÉì
+    105     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</table>ΓÉì
+    106     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+    107     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖)}ΓÉì
+    108     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</SectionCard>ΓÉì
+    109     Γöé - ΓÉì
+    110     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<SectionCardΓÉì
+    111     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖title="Runtime┬╖endpoint┬╖rows"ΓÉì
+    112     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖description="Concrete┬╖endpoint┬╖rows┬╖by┬╖endpoint┬╖id,┬╖model,┬╖provider,┬╖serving┬╖source,┬╖and┬╖live┬╖runtime┬╖health."ΓÉì
+    113     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖>ΓÉì
+    114     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{endpointRows.length┬╖===┬╖0┬╖?┬╖(ΓÉì
+    115     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<EmptyState┬╖label="No┬╖runtime┬╖endpoint┬╖rows┬╖are┬╖active┬╖yet.┬╖Configure┬╖a┬╖provider┬╖from┬╖Providers┬╖to┬╖populate┬╖this┬╖registry."┬╖/>ΓÉì
+    116     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖)┬╖:┬╖(ΓÉì
+    117     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="overflow-x-auto">ΓÉì
+    118     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<table┬╖className="min-w-full┬╖text-left┬╖text-sm">ΓÉì
+    119     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<thead┬╖className="text-[var(--rm-muted)]">ΓÉì
+    120     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<tr>ΓÉì
+    121     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<th┬╖className="pb-3┬╖font-medium">Endpoint</th>ΓÉì
+    122     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<th┬╖className="pb-3┬╖font-medium">Model</th>ΓÉì
+    123     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<th┬╖className="pb-3┬╖font-medium">Provider</th>ΓÉì
+    124     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<th┬╖className="pb-3┬╖font-medium">Source</th>ΓÉì
+    125     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<th┬╖className="pb-3┬╖font-medium">Serving┬╖source</th>ΓÉì
+    126     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<th┬╖className="pb-3┬╖font-medium">Health</th>ΓÉì
+    127     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<th┬╖className="pb-3┬╖font-medium">Status</th>ΓÉì
+    128     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</tr>ΓÉì
+    129     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</thead>ΓÉì
+    130     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<tbody>ΓÉì
+    131     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{endpointRows.map((endpoint)┬╖=>┬╖(ΓÉì
+    132     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<tr┬╖key={endpoint.endpointId}┬╖className="border-t┬╖border-[var(--rm-border)]">ΓÉì
+    133     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<td┬╖className="py-3┬╖font-medium┬╖text-[var(--rm-fg)]">{endpoint.endpointId}</td>ΓÉì
+    134     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<td┬╖className="py-3┬╖text-[var(--rm-secondary)]">{endpoint.modelId}</td>ΓÉì
+    135     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<td┬╖className="py-3┬╖text-[var(--rm-secondary)]">{endpoint.providerLabel}</td>ΓÉì
+    136     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<td┬╖className="py-3┬╖text-[var(--rm-secondary)]">ΓÉì
+    137     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{endpoint.sourceLabel}┬╖/┬╖{endpoint.endpointKind}ΓÉì
+    138     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</td>ΓÉì
+    139     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<td┬╖className="py-3┬╖text-[var(--rm-secondary)]">{endpoint.servingSource}</td>ΓÉì
+    140     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<td┬╖className="py-3">ΓÉì
+    141     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<StatusPill┬╖tone={endpoint.healthStatus┬╖===┬╖"healthy"┬╖?┬╖"success"┬╖:┬╖"warning"}>ΓÉì
+    142     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{endpoint.healthStatus}ΓÉì
+    143     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</StatusPill>ΓÉì
+    144     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</td>ΓÉì
+    145     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<td┬╖className="py-3">ΓÉì
+    146     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<StatusPill┬╖tone={endpoint.status┬╖===┬╖"active"┬╖?┬╖"success"┬╖:┬╖endpoint.status┬╖===┬╖"degraded"┬╖?┬╖"warning"┬╖:┬╖"neutral"}>ΓÉì
+    147     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{endpoint.status}ΓÉì
+    148     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</StatusPill>ΓÉì
+    149     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</td>ΓÉì
+    150     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</tr>ΓÉì
+  204 more lines truncated
+  
+
+role-model-router/apps/runtime-ui/app/routes/integrations-upstream.tsx:86:150 lint/a11y/noBlankTarget  FIXABLE  ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Avoid using target="_blank" without rel="noreferrer".
+  
+    84 Γöé             <div className="space-y-3">
+    85 Γöé               {modelTargets.map((target) => (
+  > 86 Γöé                 <a key={target.modelId} className={`${mutedPanelClassName} block p-4 text-sm text-[var(--rm-secondary)]`} href={target.upstreamHref} target="_blank">
+       Γöé                                                                                                                                                      ^^^^^^^^^^^^^^^
+    87 Γöé                   <div className="flex flex-wrap items-center justify-between gap-2">
+    88 Γöé                     <p className="break-all font-medium text-[var(--rm-fg)]">{target.modelId}</p>
+  
+  i Opening external links in new tabs without rel="noreferrer" is a security risk. See the explanation for more details.
+  
+  i Safe fix: Add the rel="noreferrer" attribute.
+  
+    86 Γöé ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<a┬╖key={target.modelId}┬╖className={`${mutedPanelClassName}┬╖block┬╖p-4┬╖text-sm┬╖text-[var(--rm-secondary)]`}┬╖href={target.upstreamHref}┬╖target="_blank"┬╖rel="noreferrer">ΓÉì
+       Γöé                                                                                                                                                                     +++++++++++++++++ 
+
+role-model-router/apps/runtime-ui/app/routes/integrations-upstream.tsx:110:65 lint/style/noUnusedTemplateLiteral  FIXABLE  ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Do not use template literals if interpolation and special-character handling are not needed.
+  
+    108 Γöé             <p className="mt-2">Provider/account posture, passthrough expectations, and model-specific raw links stay together so the integration boundary remains clear.</p>
+    109 Γöé           </div>
+  > 110 Γöé           <pre className={`p-4 text-sm ${codeBlockClassName}`}>{`/upstream/<model>/\nopens the vendor passthrough for a single model target`}</pre>
+        Γöé                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    111 Γöé         </div>
+    112 Γöé       </SectionCard>
+  
+  i Unsafe fix: Replace with string literal
+  
+    108 108 Γöé               <p className="mt-2">Provider/account posture, passthrough expectations, and model-specific raw links stay together so the integration boundary remains clear.</p>ΓÉì
+    109 109 Γöé             </div>ΓÉì
+    110     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<pre┬╖className={`p-4┬╖text-sm┬╖${codeBlockClassName}`}>{`/upstream/<model>/\nopens┬╖the┬╖vendor┬╖passthrough┬╖for┬╖a┬╖single┬╖model┬╖target`}</pre>ΓÉì
+        110 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<pre┬╖className={`p-4┬╖text-sm┬╖${codeBlockClassName}`}>{"/upstream/<model>/\nopens┬╖the┬╖vendor┬╖passthrough┬╖for┬╖a┬╖single┬╖model┬╖target"}</pre>ΓÉì
+    111 111 Γöé           </div>ΓÉì
+    112 112 Γöé         </SectionCard>ΓÉì
+  
+
+role-model-router/apps/runtime-ui/app/routes/integrations-upstream.tsx organizeImports ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Import statements could be sorted:
+  
+      3   3 Γöé   import { EmptyState, ErrorState, FactCard, LoadingState, PageHeader, SectionCard, StatusPill } from "../components/page-primitives";ΓÉì
+      4   4 Γöé   import { codeBlockClassName, mutedPanelClassName } from "../lib/design-system";ΓÉì
+      5     Γöé - import┬╖{┬╖fetchRuntimeSnapshot,┬╖type┬╖RuntimeSnapshot┬╖}┬╖from┬╖"../lib/runtime-api";ΓÉì
+          5 Γöé + import┬╖{┬╖type┬╖RuntimeSnapshot,┬╖fetchRuntimeSnapshot┬╖}┬╖from┬╖"../lib/runtime-api";ΓÉì
+      6   6 Γöé   import { buildProviderCards } from "../lib/view-models";ΓÉì
+      7   7 Γöé   ΓÉì
+  
+
+role-model-router/apps/runtime-ui/app/routes/local-peers.tsx:169:13 lint/a11y/noLabelWithoutControl ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù A form label must be associated with an input.
+  
+    167 Γöé         <div className="space-y-4">
+    168 Γöé           <div className="space-y-2">
+  > 169 Γöé             <label className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]">
+        Γöé             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 170 Γöé               Peer URL
+  > 171 Γöé             </label>
+        Γöé             ^^^^^^^^
+    172 Γöé             <input
+    173 Γöé               type="url"
+  
+  i Consider adding a `for` or `htmlFor` attribute to the label element or moving the input element to inside the label element.
+  
+
+role-model-router/apps/runtime-ui/app/routes/local-peers.tsx:181:13 lint/a11y/noLabelWithoutControl ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù A form label must be associated with an input.
+  
+    179 Γöé           </div>
+    180 Γöé           <div className="space-y-2">
+  > 181 Γöé             <label className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]">
+        Γöé             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 182 Γöé               Auth token (optional)
+  > 183 Γöé             </label>
+        Γöé             ^^^^^^^^
+    184 Γöé             <input
+    185 Γöé               type="password"
+  
+  i Consider adding a `for` or `htmlFor` attribute to the label element or moving the input element to inside the label element.
+  
+
+role-model-router/apps/runtime-ui/app/routes/local-peers.tsx:105:11 lint/a11y/useButtonType ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    103 Γöé         description="Peer llama-swap instance inventory and management."
+    104 Γöé         actions={
+  > 105 Γöé           <button onClick={refresh} disabled={loading} className={secondaryButtonClassName}>
+        Γöé           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    106 Γöé             {loading ? "RefreshingΓÇª" : "Refresh"}
+    107 Γöé           </button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+role-model-router/apps/runtime-ui/app/routes/local-peers.tsx:145:19 lint/a11y/useButtonType ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    143 Γöé                 </div>
+    144 Γöé                 <div className="flex gap-2">
+  > 145 Γöé                   <button
+        Γöé                   ^^^^^^^
+  > 146 Γöé                     onClick={() => handleCheckHealth(peer)}
+  > 147 Γöé                     disabled={checkingHealth[peer.id]}
+  > 148 Γöé                     className={secondaryButtonClassName}
+  > 149 Γöé                   >
+        Γöé                   ^
+    150 Γöé                     {checkingHealth[peer.id] ? "CheckingΓÇª" : "Check health"}
+    151 Γöé                   </button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+check ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Some errors were emitted while running checks.
+  
+
+[39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/recursive-biome-run80.test.ts > run31 bounded Biome regression for run80 > requires the run80 Biome blocker set to pass under repository config
+Error: Command failed: cmd.exe /c corepack pnpm exec biome check role-model-router/apps/runtime-ui/app/routes/integrations-downstream.tsx role-model-router/apps/runtime-ui/app/routes/endpoints.tsx role-model-router/apps/runtime-ui/app/routes/integrations-upstream.tsx role-model-router/apps/runtime-ui/app/routes/local-logs.tsx role-model-router/apps/runtime-ui/app/routes/local-matrix.tsx role-model-router/apps/runtime-ui/app/routes/local-peers.tsx role-model-router/vendor/llama-swap/ui-svelte/src/lib/chatApi.ts role-model-router/vendor/llama-swap/ui-svelte/src/lib/audioApi.ts
+role-model-router/apps/runtime-ui/app/routes/local-matrix.tsx organizeImports ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Import statements could be sorted:
+  
+     1  1 Γöé   import { useCallback, useEffect, useState } from "react";ΓÉì
+     2  2 Γöé   ΓÉì
+     3    Γöé - import┬╖{┬╖PageHeader,┬╖SectionCard,┬╖EmptyState,┬╖LoadingState,┬╖ErrorState┬╖}┬╖from┬╖"../components/page-primitives";ΓÉì
+        3 Γöé + import┬╖{┬╖EmptyState,┬╖ErrorState,┬╖LoadingState,┬╖PageHeader,┬╖SectionCard┬╖}┬╖from┬╖"../components/page-primitives";ΓÉì
+     4  4 Γöé   import { fetchLocalModels } from "../lib/runtime-api";ΓÉì
+     5  5 Γöé   ΓÉì
+  
+
+role-model-router/vendor/llama-swap/ui-svelte/src/lib/chatApi.ts organizeImports ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Import statements could be sorted:
+  
+      1     Γöé - import┬╖type┬╖{┬╖ChatMessage,┬╖ChatCompletionRequest┬╖}┬╖from┬╖"./types";ΓÉì
+          1 Γöé + import┬╖type┬╖{┬╖ChatCompletionRequest,┬╖ChatMessage┬╖}┬╖from┬╖"./types";ΓÉì
+      2   2 Γöé   ΓÉì
+      3   3 Γöé   export interface StreamChunk {ΓÉì
+  
+
+role-model-router/apps/runtime-ui/app/routes/local-logs.tsx:50:11 lint/a11y/useButtonType ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    48 Γöé       <SectionCard title="Live logs" description="Buffered log output from the local inference runtime.">
+    49 Γöé         <div className="mb-4 flex items-center gap-4">
+  > 50 Γöé           <button onClick={refresh} disabled={loading} className={secondaryButtonClassName}>
+       Γöé           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    51 Γöé             {loading ? "RefreshingΓÇª" : "Refresh"}
+    52 Γöé           </button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+role-model-router/apps/runtime-ui/app/routes/local-logs.tsx:73:25 lint/suspicious/noArrayIndexKey ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Avoid using the index of an array as key property in an element.
+  
+    71 Γöé           <pre className={`${mutedPanelClassName} h-96 overflow-auto p-4 text-xs leading-5 font-mono text-[var(--rm-secondary)]`}>
+    72 Γöé             {logLines.map((line, i) => (
+  > 73 Γöé               <div key={i} className="whitespace-pre-wrap break-all">{line}</div>
+       Γöé                         ^
+    74 Γöé             ))}
+    75 Γöé           </pre>
+  
+  i This is the source of the key value.
+  
+    70 Γöé         ) : (
+    71 Γöé           <pre className={`${mutedPanelClassName} h-96 overflow-auto p-4 text-xs leading-5 font-mono text-[var(--rm-secondary)]`}>
+  > 72 Γöé             {logLines.map((line, i) => (
+       Γöé                                  ^
+    73 Γöé               <div key={i} className="whitespace-pre-wrap break-all">{line}</div>
+    74 Γöé             ))}
+  
+  i The order of the items may change, and this also affects performances and component state.
+  
+  i Check the React documentation. 
+  
+
+role-model-router/vendor/llama-swap/ui-svelte/src/lib/audioApi.ts format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+     1    Γöé - import┬╖type┬╖{┬╖AudioTranscriptionResponse┬╖}┬╖from┬╖"./types";ΓÉì
+     2    Γöé - ΓÉì
+     3    Γöé - export┬╖async┬╖function┬╖transcribeAudio(ΓÉì
+     4    Γöé - ┬╖┬╖model:┬╖string,ΓÉì
+     5    Γöé - ┬╖┬╖file:┬╖File,ΓÉì
+     6    Γöé - ┬╖┬╖signal?:┬╖AbortSignalΓÉì
+     7    Γöé - ):┬╖Promise<AudioTranscriptionResponse>┬╖{ΓÉì
+     8    Γöé - ┬╖┬╖const┬╖formData┬╖=┬╖new┬╖FormData();ΓÉì
+     9    Γöé - ┬╖┬╖formData.append("file",┬╖file);ΓÉì
+    10    Γöé - ┬╖┬╖formData.append("model",┬╖model);ΓÉì
+    11    Γöé - ΓÉì
+    12    Γöé - ┬╖┬╖const┬╖response┬╖=┬╖await┬╖fetch("/v1/audio/transcriptions",┬╖{ΓÉì
+    13    Γöé - ┬╖┬╖┬╖┬╖method:┬╖"POST",ΓÉì
+    14    Γöé - ┬╖┬╖┬╖┬╖body:┬╖formData,ΓÉì
+    15    Γöé - ┬╖┬╖┬╖┬╖signal,ΓÉì
+    16    Γöé - ┬╖┬╖});ΓÉì
+    17    Γöé - ΓÉì
+    18    Γöé - ┬╖┬╖if┬╖(!response.ok)┬╖{ΓÉì
+    19    Γöé - ┬╖┬╖┬╖┬╖const┬╖errorText┬╖=┬╖await┬╖response.text();ΓÉì
+    20    Γöé - ┬╖┬╖┬╖┬╖throw┬╖new┬╖Error(`Audio┬╖API┬╖error:┬╖${response.status}┬╖-┬╖${errorText}`);ΓÉì
+    21    Γöé - ┬╖┬╖}ΓÉì
+    22    Γöé - ΓÉì
+    23    Γöé - ┬╖┬╖return┬╖response.json();ΓÉì
+    24    Γöé - }ΓÉì
+        1 Γöé + import┬╖type┬╖{┬╖AudioTranscriptionResponse┬╖}┬╖from┬╖"./types";
+        2 Γöé + 
+        3 Γöé + export┬╖async┬╖function┬╖transcribeAudio(
+        4 Γöé + ┬╖┬╖model:┬╖string,
+        5 Γöé + ┬╖┬╖file:┬╖File,
+        6 Γöé + ┬╖┬╖signal?:┬╖AbortSignal,
+        7 Γöé + ):┬╖Promise<AudioTranscriptionResponse>┬╖{
+        8 Γöé + ┬╖┬╖const┬╖formData┬╖=┬╖new┬╖FormData();
+        9 Γöé + ┬╖┬╖formData.append("file",┬╖file);
+       10 Γöé + ┬╖┬╖formData.append("model",┬╖model);
+       11 Γöé + 
+       12 Γöé + ┬╖┬╖const┬╖response┬╖=┬╖await┬╖fetch("/v1/audio/transcriptions",┬╖{
+       13 Γöé + ┬╖┬╖┬╖┬╖method:┬╖"POST",
+       14 Γöé + ┬╖┬╖┬╖┬╖body:┬╖formData,
+       15 Γöé + ┬╖┬╖┬╖┬╖signal,
+       16 Γöé + ┬╖┬╖});
+       17 Γöé + 
+       18 Γöé + ┬╖┬╖if┬╖(!response.ok)┬╖{
+       19 Γöé + ┬╖┬╖┬╖┬╖const┬╖errorText┬╖=┬╖await┬╖response.text();
+       20 Γöé + ┬╖┬╖┬╖┬╖throw┬╖new┬╖Error(`Audio┬╖API┬╖error:┬╖${response.status}┬╖-┬╖${errorText}`);
+       21 Γöé + ┬╖┬╖}
+       22 Γöé + 
+       23 Γöé + ┬╖┬╖return┬╖response.json();
+       24 Γöé + }
+    25 25 Γöé   
+  
+
+role-model-router/apps/runtime-ui/app/routes/local-logs.tsx organizeImports ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Import statements could be sorted:
+  
+     1  1 Γöé   import { useCallback, useEffect, useState } from "react";ΓÉì
+     2  2 Γöé   ΓÉì
+     3    Γöé - import┬╖{┬╖PageHeader,┬╖SectionCard,┬╖EmptyState,┬╖LoadingState,┬╖ErrorState┬╖}┬╖from┬╖"../components/page-primitives";ΓÉì
+        3 Γöé + import┬╖{┬╖EmptyState,┬╖ErrorState,┬╖LoadingState,┬╖PageHeader,┬╖SectionCard┬╖}┬╖from┬╖"../components/page-primitives";ΓÉì
+     4  4 Γöé   import { mutedPanelClassName, secondaryButtonClassName } from "../lib/design-system";ΓÉì
+     5  5 Γöé   import { fetchLocalLogs } from "../lib/runtime-api";ΓÉì
+  
+
+role-model-router/apps/runtime-ui/app/routes/integrations-downstream.tsx organizeImports ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Import statements could be sorted:
+  
+      4   4 Γöé   import { codeBlockClassName, mutedPanelClassName, secondaryButtonClassName } from "../lib/design-system";ΓÉì
+      5   5 Γöé   import {ΓÉì
+      6     Γöé - ┬╖┬╖fetchDownstreamOpenAIProviderConfig,ΓÉì
+      7     Γöé - ┬╖┬╖type┬╖RuntimeDownstreamOpenAIProviderConfig,ΓÉì
+          6 Γöé + ┬╖┬╖type┬╖RuntimeDownstreamOpenAIProviderConfig,ΓÉì
+          7 Γöé + ┬╖┬╖fetchDownstreamOpenAIProviderConfig,ΓÉì
+      8   8 Γöé   } from "../lib/runtime-api";ΓÉì
+      9   9 Γöé   import { buildDownstreamProviderGuide } from "../lib/view-models";ΓÉì
+  
+
+role-model-router/apps/runtime-ui/app/routes/local-matrix.tsx format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+     1    Γöé - import┬╖{┬╖useCallback,┬╖useEffect,┬╖useState┬╖}┬╖from┬╖"react";ΓÉì
+     2    Γöé - ΓÉì
+     3    Γöé - import┬╖{┬╖PageHeader,┬╖SectionCard,┬╖EmptyState,┬╖LoadingState,┬╖ErrorState┬╖}┬╖from┬╖"../components/page-primitives";ΓÉì
+     4    Γöé - import┬╖{┬╖fetchLocalModels┬╖}┬╖from┬╖"../lib/runtime-api";ΓÉì
+     5    Γöé - ΓÉì
+     6    Γöé - interface┬╖LocalModel┬╖{ΓÉì
+     7    Γöé - ┬╖┬╖modelId:┬╖string;ΓÉì
+     8    Γöé - ┬╖┬╖loadedAt:┬╖string;ΓÉì
+     9    Γöé - ┬╖┬╖engine:┬╖string;ΓÉì
+    10    Γöé - }ΓÉì
+    11    Γöé - ΓÉì
+    12    Γöé - export┬╖default┬╖function┬╖LocalMatrixRoute()┬╖{ΓÉì
+    13    Γöé - ┬╖┬╖const┬╖[models,┬╖setModels]┬╖=┬╖useState<readonly┬╖LocalModel[]>([]);ΓÉì
+    14    Γöé - ┬╖┬╖const┬╖[loading,┬╖setLoading]┬╖=┬╖useState(true);ΓÉì
+    15    Γöé - ┬╖┬╖const┬╖[error,┬╖setError]┬╖=┬╖useState<string┬╖|┬╖null>(null);ΓÉì
+    16    Γöé - ΓÉì
+    17    Γöé - ┬╖┬╖const┬╖refresh┬╖=┬╖useCallback(async┬╖()┬╖=>┬╖{ΓÉì
+    18    Γöé - ┬╖┬╖┬╖┬╖setLoading(true);ΓÉì
+    19    Γöé - ┬╖┬╖┬╖┬╖setError(null);ΓÉì
+    20    Γöé - ┬╖┬╖┬╖┬╖try┬╖{ΓÉì
+    21    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖const┬╖data┬╖=┬╖await┬╖fetchLocalModels();ΓÉì
+    22    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖setModels(data);ΓÉì
+    23    Γöé - ┬╖┬╖┬╖┬╖}┬╖catch┬╖(err)┬╖{ΓÉì
+    24    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖setError(err┬╖instanceof┬╖Error┬╖?┬╖err.message┬╖:┬╖"Failed┬╖to┬╖load┬╖model┬╖matrix");ΓÉì
+    25    Γöé - ┬╖┬╖┬╖┬╖}┬╖finally┬╖{ΓÉì
+    26    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖setLoading(false);ΓÉì
+    27    Γöé - ┬╖┬╖┬╖┬╖}ΓÉì
+    28    Γöé - ┬╖┬╖},┬╖[]);ΓÉì
+    29    Γöé - ΓÉì
+    30    Γöé - ┬╖┬╖useEffect(()┬╖=>┬╖{ΓÉì
+    31    Γöé - ┬╖┬╖┬╖┬╖refresh();ΓÉì
+    32    Γöé - ┬╖┬╖},┬╖[refresh]);ΓÉì
+    33    Γöé - ΓÉì
+    34    Γöé - ┬╖┬╖return┬╖(ΓÉì
+    35    Γöé - ┬╖┬╖┬╖┬╖<div┬╖className="space-y-8">ΓÉì
+    36    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖<PageHeaderΓÉì
+    37    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖eyebrow="Local"ΓÉì
+    38    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖title="Model┬╖matrix"ΓÉì
+    39    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖description="Concurrent┬╖model┬╖grid┬╖showing┬╖loaded┬╖state,┬╖engine,┬╖and┬╖resource┬╖usage."ΓÉì
+    40    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖/>ΓÉì
+    41    Γöé - ΓÉì
+    42    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖{error┬╖?┬╖<ErrorState┬╖label={error}┬╖/>┬╖:┬╖null}ΓÉì
+    43    Γöé - ΓÉì
+    44    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖<SectionCard┬╖title="Loaded┬╖model┬╖matrix"┬╖description="Currently┬╖loaded┬╖local┬╖inference┬╖models.">ΓÉì
+    45    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{loading┬╖?┬╖(ΓÉì
+    46    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<LoadingState┬╖label="Loading┬╖matrixΓÇª"┬╖/>ΓÉì
+    47    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖)┬╖:┬╖models.length┬╖===┬╖0┬╖?┬╖(ΓÉì
+    48    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<EmptyState┬╖label="No┬╖models┬╖loaded.┬╖Load┬╖a┬╖model┬╖from┬╖the┬╖Models┬╖page."┬╖/>ΓÉì
+    49    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖)┬╖:┬╖(ΓÉì
+    50    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="grid┬╖grid-cols-1┬╖gap-4┬╖md:grid-cols-2┬╖lg:grid-cols-3">ΓÉì
+    51    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{models.map((model)┬╖=>┬╖(ΓÉì
+    52    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<divΓÉì
+    53    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖key={model.modelId}ΓÉì
+    54    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖className="border┬╖border-[var(--rm-border)]┬╖bg-[var(--rm-surface)]┬╖p-4">ΓÉì
+    55    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="mb-3┬╖flex┬╖items-center┬╖justify-between">ΓÉì
+    56    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<span┬╖className="text-xs┬╖font-mono┬╖uppercase┬╖tracking-wider┬╖text-[var(--rm-accent)]">ΓÉì
+    57    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{model.engine}ΓÉì
+    58    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</span>ΓÉì
+    59    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<span┬╖className="bg-[var(--rm-accent)]┬╖px-2┬╖py-0.5┬╖text-[10px]┬╖font-medium┬╖uppercase┬╖tracking-wider┬╖text-white">ΓÉì
+    60    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖ActiveΓÉì
+    61    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</span>ΓÉì
+    62    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+    63    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="mb-2┬╖font-mono┬╖text-sm┬╖text-[var(--rm-fg)]">{model.modelId}</div>ΓÉì
+    64    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="text-xs┬╖text-[var(--rm-muted)]">ΓÉì
+    65    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖Loaded:┬╖{new┬╖Date(model.loadedAt).toLocaleString()}ΓÉì
+    66    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+    67    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+    68    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖))}ΓÉì
+    69    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+    70    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖)}ΓÉì
+    71    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖</SectionCard>ΓÉì
+    72    Γöé - ┬╖┬╖┬╖┬╖</div>ΓÉì
+    73    Γöé - ┬╖┬╖);ΓÉì
+    74    Γöé - }ΓÉì
+        1 Γöé + import┬╖{┬╖useCallback,┬╖useEffect,┬╖useState┬╖}┬╖from┬╖"react";
+        2 Γöé + 
+        3 Γöé + import┬╖{
+        4 Γöé + ┬╖┬╖PageHeader,
+        5 Γöé + ┬╖┬╖SectionCard,
+        6 Γöé + ┬╖┬╖EmptyState,
+        7 Γöé + ┬╖┬╖LoadingState,
+        8 Γöé + ┬╖┬╖ErrorState,
+        9 Γöé + }┬╖from┬╖"../components/page-primitives";
+       10 Γöé + import┬╖{┬╖fetchLocalModels┬╖}┬╖from┬╖"../lib/runtime-api";
+       11 Γöé + 
+       12 Γöé + interface┬╖LocalModel┬╖{
+       13 Γöé + ┬╖┬╖modelId:┬╖string;
+       14 Γöé + ┬╖┬╖loadedAt:┬╖string;
+       15 Γöé + ┬╖┬╖engine:┬╖string;
+       16 Γöé + }
+       17 Γöé + 
+       18 Γöé + export┬╖default┬╖function┬╖LocalMatrixRoute()┬╖{
+       19 Γöé + ┬╖┬╖const┬╖[models,┬╖setModels]┬╖=┬╖useState<readonly┬╖LocalModel[]>([]);
+       20 Γöé + ┬╖┬╖const┬╖[loading,┬╖setLoading]┬╖=┬╖useState(true);
+       21 Γöé + ┬╖┬╖const┬╖[error,┬╖setError]┬╖=┬╖useState<string┬╖|┬╖null>(null);
+       22 Γöé + 
+       23 Γöé + ┬╖┬╖const┬╖refresh┬╖=┬╖useCallback(async┬╖()┬╖=>┬╖{
+       24 Γöé + ┬╖┬╖┬╖┬╖setLoading(true);
+       25 Γöé + ┬╖┬╖┬╖┬╖setError(null);
+       26 Γöé + ┬╖┬╖┬╖┬╖try┬╖{
+       27 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖const┬╖data┬╖=┬╖await┬╖fetchLocalModels();
+       28 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖setModels(data);
+       29 Γöé + ┬╖┬╖┬╖┬╖}┬╖catch┬╖(err)┬╖{
+       30 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖setError(err┬╖instanceof┬╖Error┬╖?┬╖err.message┬╖:┬╖"Failed┬╖to┬╖load┬╖model┬╖matrix");
+       31 Γöé + ┬╖┬╖┬╖┬╖}┬╖finally┬╖{
+       32 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖setLoading(false);
+       33 Γöé + ┬╖┬╖┬╖┬╖}
+       34 Γöé + ┬╖┬╖},┬╖[]);
+       35 Γöé + 
+       36 Γöé + ┬╖┬╖useEffect(()┬╖=>┬╖{
+       37 Γöé + ┬╖┬╖┬╖┬╖refresh();
+       38 Γöé + ┬╖┬╖},┬╖[refresh]);
+       39 Γöé + 
+       40 Γöé + ┬╖┬╖return┬╖(
+       41 Γöé + ┬╖┬╖┬╖┬╖<div┬╖className="space-y-8">
+       42 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖<PageHeader
+       43 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖eyebrow="Local"
+       44 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖title="Model┬╖matrix"
+       45 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖description="Concurrent┬╖model┬╖grid┬╖showing┬╖loaded┬╖state,┬╖engine,┬╖and┬╖resource┬╖usage."
+       46 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖/>
+       47 Γöé + 
+       48 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖{error┬╖?┬╖<ErrorState┬╖label={error}┬╖/>┬╖:┬╖null}
+       49 Γöé + 
+       50 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖<SectionCard
+       51 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖title="Loaded┬╖model┬╖matrix"
+       52 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖description="Currently┬╖loaded┬╖local┬╖inference┬╖models."
+       53 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖>
+       54 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{loading┬╖?┬╖(
+       55 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<LoadingState┬╖label="Loading┬╖matrixΓÇª"┬╖/>
+       56 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖)┬╖:┬╖models.length┬╖===┬╖0┬╖?┬╖(
+       57 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<EmptyState┬╖label="No┬╖models┬╖loaded.┬╖Load┬╖a┬╖model┬╖from┬╖the┬╖Models┬╖page."┬╖/>
+       58 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖)┬╖:┬╖(
+       59 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="grid┬╖grid-cols-1┬╖gap-4┬╖md:grid-cols-2┬╖lg:grid-cols-3">
+       60 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{models.map((model)┬╖=>┬╖(
+       61 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div
+       62 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖key={model.modelId}
+       63 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖className="border┬╖border-[var(--rm-border)]┬╖bg-[var(--rm-surface)]┬╖p-4"
+       64 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖>
+       65 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="mb-3┬╖flex┬╖items-center┬╖justify-between">
+       66 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<span┬╖className="text-xs┬╖font-mono┬╖uppercase┬╖tracking-wider┬╖text-[var(--rm-accent)]">
+       67 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{model.engine}
+       68 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</span>
+       69 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<span┬╖className="bg-[var(--rm-accent)]┬╖px-2┬╖py-0.5┬╖text-[10px]┬╖font-medium┬╖uppercase┬╖tracking-wider┬╖text-white">
+       70 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖Active
+       71 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</span>
+       72 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>
+       73 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="mb-2┬╖font-mono┬╖text-sm┬╖text-[var(--rm-fg)]">{model.modelId}</div>
+       74 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="text-xs┬╖text-[var(--rm-muted)]">
+       75 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖Loaded:┬╖{new┬╖Date(model.loadedAt).toLocaleString()}
+       76 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>
+  9 more lines truncated
+  
+
+role-model-router/apps/runtime-ui/app/routes/endpoints.tsx organizeImports ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Import statements could be sorted:
+  
+     11  11 Γöé   } from "../components/page-primitives";ΓÉì
+     12  12 Γöé   import { secondaryButtonClassName } from "../lib/design-system";ΓÉì
+     13     Γöé - import┬╖{┬╖fetchRuntimeSnapshot,┬╖type┬╖RuntimeSnapshot┬╖}┬╖from┬╖"../lib/runtime-api";ΓÉì
+         13 Γöé + import┬╖{┬╖type┬╖RuntimeSnapshot,┬╖fetchRuntimeSnapshot┬╖}┬╖from┬╖"../lib/runtime-api";ΓÉì
+     14  14 Γöé   import { buildConfiguredProviderRows, buildEndpointCatalogRows } from "../lib/view-models";ΓÉì
+     15  15 Γöé   ΓÉì
+  
+
+role-model-router/vendor/llama-swap/ui-svelte/src/lib/chatApi.ts format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+      1     Γöé - import┬╖type┬╖{┬╖ChatMessage,┬╖ChatCompletionRequest┬╖}┬╖from┬╖"./types";ΓÉì
+      2     Γöé - ΓÉì
+      3     Γöé - export┬╖interface┬╖StreamChunk┬╖{ΓÉì
+      4     Γöé - ┬╖┬╖content:┬╖string;ΓÉì
+      5     Γöé - ┬╖┬╖reasoning_content?:┬╖string;ΓÉì
+      6     Γöé - ┬╖┬╖done:┬╖boolean;ΓÉì
+      7     Γöé - }ΓÉì
+      8     Γöé - ΓÉì
+      9     Γöé - export┬╖interface┬╖ChatOptions┬╖{ΓÉì
+     10     Γöé - ┬╖┬╖temperature?:┬╖number;ΓÉì
+     11     Γöé - }ΓÉì
+     12     Γöé - ΓÉì
+     13     Γöé - function┬╖parseSSELine(line:┬╖string):┬╖StreamChunk┬╖|┬╖null┬╖{ΓÉì
+     14     Γöé - ┬╖┬╖const┬╖trimmed┬╖=┬╖line.trim();ΓÉì
+     15     Γöé - ┬╖┬╖if┬╖(!trimmed┬╖||┬╖!trimmed.startsWith("data:┬╖"))┬╖{ΓÉì
+     16     Γöé - ┬╖┬╖┬╖┬╖return┬╖null;ΓÉì
+     17     Γöé - ┬╖┬╖}ΓÉì
+     18     Γöé - ΓÉì
+     19     Γöé - ┬╖┬╖const┬╖data┬╖=┬╖trimmed.slice(6);ΓÉì
+     20     Γöé - ┬╖┬╖if┬╖(data┬╖===┬╖"[DONE]")┬╖{ΓÉì
+     21     Γöé - ┬╖┬╖┬╖┬╖return┬╖{┬╖content:┬╖"",┬╖done:┬╖true┬╖};ΓÉì
+     22     Γöé - ┬╖┬╖}ΓÉì
+     23     Γöé - ΓÉì
+     24     Γöé - ┬╖┬╖try┬╖{ΓÉì
+     25     Γöé - ┬╖┬╖┬╖┬╖const┬╖parsed┬╖=┬╖JSON.parse(data);ΓÉì
+     26     Γöé - ┬╖┬╖┬╖┬╖const┬╖delta┬╖=┬╖parsed.choices?.[0]?.delta;ΓÉì
+     27     Γöé - ┬╖┬╖┬╖┬╖const┬╖content┬╖=┬╖delta?.content┬╖||┬╖"";ΓÉì
+     28     Γöé - ┬╖┬╖┬╖┬╖const┬╖reasoning_content┬╖=┬╖delta?.reasoning_content┬╖||┬╖delta?.reasoning┬╖||┬╖"";ΓÉì
+     29     Γöé - ΓÉì
+     30     Γöé - ┬╖┬╖┬╖┬╖if┬╖(content┬╖||┬╖reasoning_content)┬╖{ΓÉì
+     31     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖return┬╖{┬╖content,┬╖reasoning_content,┬╖done:┬╖false┬╖};ΓÉì
+     32     Γöé - ┬╖┬╖┬╖┬╖}ΓÉì
+     33     Γöé - ┬╖┬╖┬╖┬╖return┬╖null;ΓÉì
+     34     Γöé - ┬╖┬╖}┬╖catch┬╖{ΓÉì
+     35     Γöé - ┬╖┬╖┬╖┬╖return┬╖null;ΓÉì
+     36     Γöé - ┬╖┬╖}ΓÉì
+     37     Γöé - }ΓÉì
+     38     Γöé - ΓÉì
+     39     Γöé - export┬╖async┬╖function*┬╖streamChatCompletion(ΓÉì
+     40     Γöé - ┬╖┬╖model:┬╖string,ΓÉì
+     41     Γöé - ┬╖┬╖messages:┬╖ChatMessage[],ΓÉì
+     42     Γöé - ┬╖┬╖signal?:┬╖AbortSignal,ΓÉì
+     43     Γöé - ┬╖┬╖options?:┬╖ChatOptionsΓÉì
+     44     Γöé - ):┬╖AsyncGenerator<StreamChunk>┬╖{ΓÉì
+     45     Γöé - ┬╖┬╖const┬╖request:┬╖ChatCompletionRequest┬╖=┬╖{ΓÉì
+     46     Γöé - ┬╖┬╖┬╖┬╖model,ΓÉì
+     47     Γöé - ┬╖┬╖┬╖┬╖messages,ΓÉì
+     48     Γöé - ┬╖┬╖┬╖┬╖stream:┬╖true,ΓÉì
+     49     Γöé - ┬╖┬╖┬╖┬╖temperature:┬╖options?.temperature,ΓÉì
+     50     Γöé - ┬╖┬╖};ΓÉì
+     51     Γöé - ΓÉì
+     52     Γöé - ┬╖┬╖const┬╖response┬╖=┬╖await┬╖fetch("/v1/chat/completions",┬╖{ΓÉì
+     53     Γöé - ┬╖┬╖┬╖┬╖method:┬╖"POST",ΓÉì
+     54     Γöé - ┬╖┬╖┬╖┬╖headers:┬╖{ΓÉì
+     55     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"Content-Type":┬╖"application/json",ΓÉì
+     56     Γöé - ┬╖┬╖┬╖┬╖},ΓÉì
+     57     Γöé - ┬╖┬╖┬╖┬╖body:┬╖JSON.stringify(request),ΓÉì
+     58     Γöé - ┬╖┬╖┬╖┬╖signal,ΓÉì
+     59     Γöé - ┬╖┬╖});ΓÉì
+     60     Γöé - ΓÉì
+     61     Γöé - ┬╖┬╖if┬╖(!response.ok)┬╖{ΓÉì
+     62     Γöé - ┬╖┬╖┬╖┬╖const┬╖errorText┬╖=┬╖await┬╖response.text();ΓÉì
+     63     Γöé - ┬╖┬╖┬╖┬╖throw┬╖new┬╖Error(`Chat┬╖API┬╖error:┬╖${response.status}┬╖-┬╖${errorText}`);ΓÉì
+     64     Γöé - ┬╖┬╖}ΓÉì
+     65     Γöé - ΓÉì
+     66     Γöé - ┬╖┬╖const┬╖reader┬╖=┬╖response.body?.getReader();ΓÉì
+     67     Γöé - ┬╖┬╖if┬╖(!reader)┬╖{ΓÉì
+     68     Γöé - ┬╖┬╖┬╖┬╖throw┬╖new┬╖Error("Response┬╖body┬╖is┬╖not┬╖readable");ΓÉì
+     69     Γöé - ┬╖┬╖}ΓÉì
+     70     Γöé - ΓÉì
+     71     Γöé - ┬╖┬╖const┬╖decoder┬╖=┬╖new┬╖TextDecoder();ΓÉì
+     72     Γöé - ┬╖┬╖let┬╖buffer┬╖=┬╖"";ΓÉì
+     73     Γöé - ΓÉì
+     74     Γöé - ┬╖┬╖try┬╖{ΓÉì
+     75     Γöé - ┬╖┬╖┬╖┬╖while┬╖(true)┬╖{ΓÉì
+     76     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖const┬╖{┬╖done,┬╖value┬╖}┬╖=┬╖await┬╖reader.read();ΓÉì
+     77     Γöé - ΓÉì
+     78     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖if┬╖(done)┬╖{ΓÉì
+     79     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖break;ΓÉì
+     80     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖}ΓÉì
+     81     Γöé - ΓÉì
+     82     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖buffer┬╖+=┬╖decoder.decode(value,┬╖{┬╖stream:┬╖true┬╖});ΓÉì
+     83     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖const┬╖lines┬╖=┬╖buffer.split("\n");ΓÉì
+     84     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖buffer┬╖=┬╖lines.pop()┬╖||┬╖"";ΓÉì
+     85     Γöé - ΓÉì
+     86     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖for┬╖(const┬╖line┬╖of┬╖lines)┬╖{ΓÉì
+     87     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖const┬╖result┬╖=┬╖parseSSELine(line);ΓÉì
+     88     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖if┬╖(result?.done)┬╖{ΓÉì
+     89     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖yield┬╖result;ΓÉì
+     90     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖return;ΓÉì
+     91     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖}ΓÉì
+     92     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖if┬╖(result)┬╖{ΓÉì
+     93     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖yield┬╖result;ΓÉì
+     94     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖}ΓÉì
+     95     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖}ΓÉì
+     96     Γöé - ┬╖┬╖┬╖┬╖}ΓÉì
+     97     Γöé - ΓÉì
+     98     Γöé - ┬╖┬╖┬╖┬╖//┬╖Process┬╖any┬╖remaining┬╖bufferΓÉì
+     99     Γöé - ┬╖┬╖┬╖┬╖const┬╖result┬╖=┬╖parseSSELine(buffer);ΓÉì
+    100     Γöé - ┬╖┬╖┬╖┬╖if┬╖(result┬╖&&┬╖!result.done)┬╖{ΓÉì
+    101     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖yield┬╖result;ΓÉì
+    102     Γöé - ┬╖┬╖┬╖┬╖}ΓÉì
+    103     Γöé - ΓÉì
+    104     Γöé - ┬╖┬╖┬╖┬╖yield┬╖{┬╖content:┬╖"",┬╖done:┬╖true┬╖};ΓÉì
+    105     Γöé - ┬╖┬╖}┬╖finally┬╖{ΓÉì
+    106     Γöé - ┬╖┬╖┬╖┬╖reader.releaseLock();ΓÉì
+    107     Γöé - ┬╖┬╖}ΓÉì
+    108     Γöé - }ΓÉì
+          1 Γöé + import┬╖type┬╖{┬╖ChatMessage,┬╖ChatCompletionRequest┬╖}┬╖from┬╖"./types";
+          2 Γöé + 
+          3 Γöé + export┬╖interface┬╖StreamChunk┬╖{
+          4 Γöé + ┬╖┬╖content:┬╖string;
+          5 Γöé + ┬╖┬╖reasoning_content?:┬╖string;
+          6 Γöé + ┬╖┬╖done:┬╖boolean;
+          7 Γöé + }
+          8 Γöé + 
+          9 Γöé + export┬╖interface┬╖ChatOptions┬╖{
+         10 Γöé + ┬╖┬╖temperature?:┬╖number;
+         11 Γöé + }
+         12 Γöé + 
+         13 Γöé + function┬╖parseSSELine(line:┬╖string):┬╖StreamChunk┬╖|┬╖null┬╖{
+         14 Γöé + ┬╖┬╖const┬╖trimmed┬╖=┬╖line.trim();
+         15 Γöé + ┬╖┬╖if┬╖(!trimmed┬╖||┬╖!trimmed.startsWith("data:┬╖"))┬╖{
+         16 Γöé + ┬╖┬╖┬╖┬╖return┬╖null;
+         17 Γöé + ┬╖┬╖}
+         18 Γöé + 
+         19 Γöé + ┬╖┬╖const┬╖data┬╖=┬╖trimmed.slice(6);
+         20 Γöé + ┬╖┬╖if┬╖(data┬╖===┬╖"[DONE]")┬╖{
+         21 Γöé + ┬╖┬╖┬╖┬╖return┬╖{┬╖content:┬╖"",┬╖done:┬╖true┬╖};
+         22 Γöé + ┬╖┬╖}
+         23 Γöé + 
+         24 Γöé + ┬╖┬╖try┬╖{
+         25 Γöé + ┬╖┬╖┬╖┬╖const┬╖parsed┬╖=┬╖JSON.parse(data);
+         26 Γöé + ┬╖┬╖┬╖┬╖const┬╖delta┬╖=┬╖parsed.choices?.[0]?.delta;
+         27 Γöé + ┬╖┬╖┬╖┬╖const┬╖content┬╖=┬╖delta?.content┬╖||┬╖"";
+         28 Γöé + ┬╖┬╖┬╖┬╖const┬╖reasoning_content┬╖=┬╖delta?.reasoning_content┬╖||┬╖delta?.reasoning┬╖||┬╖"";
+         29 Γöé + 
+         30 Γöé + ┬╖┬╖┬╖┬╖if┬╖(content┬╖||┬╖reasoning_content)┬╖{
+         31 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖return┬╖{┬╖content,┬╖reasoning_content,┬╖done:┬╖false┬╖};
+         32 Γöé + ┬╖┬╖┬╖┬╖}
+         33 Γöé + ┬╖┬╖┬╖┬╖return┬╖null;
+         34 Γöé + ┬╖┬╖}┬╖catch┬╖{
+         35 Γöé + ┬╖┬╖┬╖┬╖return┬╖null;
+         36 Γöé + ┬╖┬╖}
+         37 Γöé + }
+         38 Γöé + 
+         39 Γöé + export┬╖async┬╖function*┬╖streamChatCompletion(
+         40 Γöé + ┬╖┬╖model:┬╖string,
+         41 Γöé + ┬╖┬╖messages:┬╖ChatMessage[],
+         42 Γöé + ┬╖┬╖signal?:┬╖AbortSignal,
+  67 more lines truncated
+  
+
+role-model-router/apps/runtime-ui/app/routes/local-logs.tsx format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+     1    Γöé - import┬╖{┬╖useCallback,┬╖useEffect,┬╖useState┬╖}┬╖from┬╖"react";ΓÉì
+     2    Γöé - ΓÉì
+     3    Γöé - import┬╖{┬╖PageHeader,┬╖SectionCard,┬╖EmptyState,┬╖LoadingState,┬╖ErrorState┬╖}┬╖from┬╖"../components/page-primitives";ΓÉì
+     4    Γöé - import┬╖{┬╖mutedPanelClassName,┬╖secondaryButtonClassName┬╖}┬╖from┬╖"../lib/design-system";ΓÉì
+     5    Γöé - import┬╖{┬╖fetchLocalLogs┬╖}┬╖from┬╖"../lib/runtime-api";ΓÉì
+     6    Γöé - ΓÉì
+     7    Γöé - export┬╖default┬╖function┬╖LocalLogsRoute()┬╖{ΓÉì
+     8    Γöé - ┬╖┬╖const┬╖[logs,┬╖setLogs]┬╖=┬╖useState<string>("");ΓÉì
+     9    Γöé - ┬╖┬╖const┬╖[loading,┬╖setLoading]┬╖=┬╖useState(true);ΓÉì
+    10    Γöé - ┬╖┬╖const┬╖[error,┬╖setError]┬╖=┬╖useState<string┬╖|┬╖null>(null);ΓÉì
+    11    Γöé - ┬╖┬╖const┬╖[autoRefresh,┬╖setAutoRefresh]┬╖=┬╖useState(false);ΓÉì
+    12    Γöé - ΓÉì
+    13    Γöé - ┬╖┬╖const┬╖refresh┬╖=┬╖useCallback(async┬╖()┬╖=>┬╖{ΓÉì
+    14    Γöé - ┬╖┬╖┬╖┬╖setLoading(true);ΓÉì
+    15    Γöé - ┬╖┬╖┬╖┬╖setError(null);ΓÉì
+    16    Γöé - ┬╖┬╖┬╖┬╖try┬╖{ΓÉì
+    17    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖const┬╖data┬╖=┬╖await┬╖fetchLocalLogs();ΓÉì
+    18    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖setLogs(data.logs);ΓÉì
+    19    Γöé - ┬╖┬╖┬╖┬╖}┬╖catch┬╖(err)┬╖{ΓÉì
+    20    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖setError(err┬╖instanceof┬╖Error┬╖?┬╖err.message┬╖:┬╖"Failed┬╖to┬╖load┬╖logs");ΓÉì
+    21    Γöé - ┬╖┬╖┬╖┬╖}┬╖finally┬╖{ΓÉì
+    22    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖setLoading(false);ΓÉì
+    23    Γöé - ┬╖┬╖┬╖┬╖}ΓÉì
+    24    Γöé - ┬╖┬╖},┬╖[]);ΓÉì
+    25    Γöé - ΓÉì
+    26    Γöé - ┬╖┬╖useEffect(()┬╖=>┬╖{ΓÉì
+    27    Γöé - ┬╖┬╖┬╖┬╖refresh();ΓÉì
+    28    Γöé - ┬╖┬╖},┬╖[refresh]);ΓÉì
+    29    Γöé - ΓÉì
+    30    Γöé - ┬╖┬╖useEffect(()┬╖=>┬╖{ΓÉì
+    31    Γöé - ┬╖┬╖┬╖┬╖if┬╖(!autoRefresh)┬╖return;ΓÉì
+    32    Γöé - ┬╖┬╖┬╖┬╖const┬╖interval┬╖=┬╖setInterval(refresh,┬╖3000);ΓÉì
+    33    Γöé - ┬╖┬╖┬╖┬╖return┬╖()┬╖=>┬╖clearInterval(interval);ΓÉì
+    34    Γöé - ┬╖┬╖},┬╖[autoRefresh,┬╖refresh]);ΓÉì
+    35    Γöé - ΓÉì
+    36    Γöé - ┬╖┬╖const┬╖logLines┬╖=┬╖logs.split("\n").filter((line)┬╖=>┬╖line.trim().length┬╖>┬╖0);ΓÉì
+    37    Γöé - ΓÉì
+    38    Γöé - ┬╖┬╖return┬╖(ΓÉì
+    39    Γöé - ┬╖┬╖┬╖┬╖<div┬╖className="space-y-8">ΓÉì
+    40    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖<PageHeaderΓÉì
+    41    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖eyebrow="Local"ΓÉì
+    42    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖title="Log┬╖streaming"ΓÉì
+    43    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖description="Real-time┬╖log┬╖stream┬╖from┬╖the┬╖local┬╖llama-swap┬╖runtime."ΓÉì
+    44    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖/>ΓÉì
+    45    Γöé - ΓÉì
+    46    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖{error┬╖?┬╖<ErrorState┬╖label={error}┬╖/>┬╖:┬╖null}ΓÉì
+    47    Γöé - ΓÉì
+    48    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖<SectionCard┬╖title="Live┬╖logs"┬╖description="Buffered┬╖log┬╖output┬╖from┬╖the┬╖local┬╖inference┬╖runtime.">ΓÉì
+    49    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="mb-4┬╖flex┬╖items-center┬╖gap-4">ΓÉì
+    50    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<button┬╖onClick={refresh}┬╖disabled={loading}┬╖className={secondaryButtonClassName}>ΓÉì
+    51    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{loading┬╖?┬╖"RefreshingΓÇª"┬╖:┬╖"Refresh"}ΓÉì
+    52    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</button>ΓÉì
+    53    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="flex┬╖items-center┬╖gap-2">ΓÉì
+    54    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<inputΓÉì
+    55    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖type="checkbox"ΓÉì
+    56    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖id="autoRefresh"ΓÉì
+    57    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖checked={autoRefresh}ΓÉì
+    58    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖onChange={(e)┬╖=>┬╖setAutoRefresh(e.target.checked)}ΓÉì
+    59    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖className="h-4┬╖w-4┬╖rounded-none┬╖border-[var(--rm-border-strong)]┬╖accent-[var(--rm-accent)]"ΓÉì
+    60    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖/>ΓÉì
+    61    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<label┬╖htmlFor="autoRefresh"┬╖className="text-sm┬╖text-[var(--rm-fg)]">Auto-refresh┬╖(3s)</label>ΓÉì
+    62    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+    63    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<span┬╖className="ml-auto┬╖text-xs┬╖text-[var(--rm-muted)]">{logLines.length}┬╖lines</span>ΓÉì
+    64    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+    65    Γöé - ΓÉì
+    66    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{loading┬╖&&┬╖logLines.length┬╖===┬╖0┬╖?┬╖(ΓÉì
+    67    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<LoadingState┬╖label="Loading┬╖logsΓÇª"┬╖/>ΓÉì
+    68    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖)┬╖:┬╖logLines.length┬╖===┬╖0┬╖?┬╖(ΓÉì
+    69    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<EmptyState┬╖label="No┬╖logs┬╖available.┬╖The┬╖local┬╖runtime┬╖may┬╖not┬╖be┬╖running."┬╖/>ΓÉì
+    70    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖)┬╖:┬╖(ΓÉì
+    71    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<pre┬╖className={`${mutedPanelClassName}┬╖h-96┬╖overflow-auto┬╖p-4┬╖text-xs┬╖leading-5┬╖font-mono┬╖text-[var(--rm-secondary)]`}>ΓÉì
+    72    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{logLines.map((line,┬╖i)┬╖=>┬╖(ΓÉì
+    73    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖key={i}┬╖className="whitespace-pre-wrap┬╖break-all">{line}</div>ΓÉì
+    74    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖))}ΓÉì
+    75    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</pre>ΓÉì
+    76    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖)}ΓÉì
+    77    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖</SectionCard>ΓÉì
+    78    Γöé - ┬╖┬╖┬╖┬╖</div>ΓÉì
+    79    Γöé - ┬╖┬╖);ΓÉì
+    80    Γöé - }ΓÉì
+        1 Γöé + import┬╖{┬╖useCallback,┬╖useEffect,┬╖useState┬╖}┬╖from┬╖"react";
+        2 Γöé + 
+        3 Γöé + import┬╖{
+        4 Γöé + ┬╖┬╖PageHeader,
+        5 Γöé + ┬╖┬╖SectionCard,
+        6 Γöé + ┬╖┬╖EmptyState,
+        7 Γöé + ┬╖┬╖LoadingState,
+        8 Γöé + ┬╖┬╖ErrorState,
+        9 Γöé + }┬╖from┬╖"../components/page-primitives";
+       10 Γöé + import┬╖{┬╖mutedPanelClassName,┬╖secondaryButtonClassName┬╖}┬╖from┬╖"../lib/design-system";
+       11 Γöé + import┬╖{┬╖fetchLocalLogs┬╖}┬╖from┬╖"../lib/runtime-api";
+       12 Γöé + 
+       13 Γöé + export┬╖default┬╖function┬╖LocalLogsRoute()┬╖{
+       14 Γöé + ┬╖┬╖const┬╖[logs,┬╖setLogs]┬╖=┬╖useState<string>("");
+       15 Γöé + ┬╖┬╖const┬╖[loading,┬╖setLoading]┬╖=┬╖useState(true);
+       16 Γöé + ┬╖┬╖const┬╖[error,┬╖setError]┬╖=┬╖useState<string┬╖|┬╖null>(null);
+       17 Γöé + ┬╖┬╖const┬╖[autoRefresh,┬╖setAutoRefresh]┬╖=┬╖useState(false);
+       18 Γöé + 
+       19 Γöé + ┬╖┬╖const┬╖refresh┬╖=┬╖useCallback(async┬╖()┬╖=>┬╖{
+       20 Γöé + ┬╖┬╖┬╖┬╖setLoading(true);
+       21 Γöé + ┬╖┬╖┬╖┬╖setError(null);
+       22 Γöé + ┬╖┬╖┬╖┬╖try┬╖{
+       23 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖const┬╖data┬╖=┬╖await┬╖fetchLocalLogs();
+       24 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖setLogs(data.logs);
+       25 Γöé + ┬╖┬╖┬╖┬╖}┬╖catch┬╖(err)┬╖{
+       26 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖setError(err┬╖instanceof┬╖Error┬╖?┬╖err.message┬╖:┬╖"Failed┬╖to┬╖load┬╖logs");
+       27 Γöé + ┬╖┬╖┬╖┬╖}┬╖finally┬╖{
+       28 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖setLoading(false);
+       29 Γöé + ┬╖┬╖┬╖┬╖}
+       30 Γöé + ┬╖┬╖},┬╖[]);
+       31 Γöé + 
+       32 Γöé + ┬╖┬╖useEffect(()┬╖=>┬╖{
+       33 Γöé + ┬╖┬╖┬╖┬╖refresh();
+       34 Γöé + ┬╖┬╖},┬╖[refresh]);
+       35 Γöé + 
+       36 Γöé + ┬╖┬╖useEffect(()┬╖=>┬╖{
+       37 Γöé + ┬╖┬╖┬╖┬╖if┬╖(!autoRefresh)┬╖return;
+       38 Γöé + ┬╖┬╖┬╖┬╖const┬╖interval┬╖=┬╖setInterval(refresh,┬╖3000);
+       39 Γöé + ┬╖┬╖┬╖┬╖return┬╖()┬╖=>┬╖clearInterval(interval);
+       40 Γöé + ┬╖┬╖},┬╖[autoRefresh,┬╖refresh]);
+       41 Γöé + 
+       42 Γöé + ┬╖┬╖const┬╖logLines┬╖=┬╖logs.split("\n").filter((line)┬╖=>┬╖line.trim().length┬╖>┬╖0);
+       43 Γöé + 
+       44 Γöé + ┬╖┬╖return┬╖(
+       45 Γöé + ┬╖┬╖┬╖┬╖<div┬╖className="space-y-8">
+       46 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖<PageHeader
+       47 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖eyebrow="Local"
+       48 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖title="Log┬╖streaming"
+       49 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖description="Real-time┬╖log┬╖stream┬╖from┬╖the┬╖local┬╖llama-swap┬╖runtime."
+       50 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖/>
+       51 Γöé + 
+       52 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖{error┬╖?┬╖<ErrorState┬╖label={error}┬╖/>┬╖:┬╖null}
+       53 Γöé + 
+       54 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖<SectionCard
+       55 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖title="Live┬╖logs"
+       56 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖description="Buffered┬╖log┬╖output┬╖from┬╖the┬╖local┬╖inference┬╖runtime."
+       57 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖>
+       58 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="mb-4┬╖flex┬╖items-center┬╖gap-4">
+       59 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<button┬╖onClick={refresh}┬╖disabled={loading}┬╖className={secondaryButtonClassName}>
+       60 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{loading┬╖?┬╖"RefreshingΓÇª"┬╖:┬╖"Refresh"}
+       61 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</button>
+       62 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="flex┬╖items-center┬╖gap-2">
+       63 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<input
+       64 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖type="checkbox"
+       65 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖id="autoRefresh"
+       66 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖checked={autoRefresh}
+       67 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖onChange={(e)┬╖=>┬╖setAutoRefresh(e.target.checked)}
+       68 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖className="h-4┬╖w-4┬╖rounded-none┬╖border-[var(--rm-border-strong)]┬╖accent-[var(--rm-accent)]"
+       69 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖/>
+       70 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<label┬╖htmlFor="autoRefresh"┬╖className="text-sm┬╖text-[var(--rm-fg)]">
+  26 more lines truncated
+  
+
+role-model-router/apps/runtime-ui/app/routes/integrations-downstream.tsx format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+      1     Γöé - import┬╖{┬╖useEffect,┬╖useState┬╖}┬╖from┬╖"react";ΓÉì
+      2     Γöé - ΓÉì
+      3     Γöé - import┬╖{┬╖ErrorState,┬╖LoadingState,┬╖PageHeader,┬╖SectionCard,┬╖StatusPill┬╖}┬╖from┬╖"../components/page-primitives";ΓÉì
+      4     Γöé - import┬╖{┬╖codeBlockClassName,┬╖mutedPanelClassName,┬╖secondaryButtonClassName┬╖}┬╖from┬╖"../lib/design-system";ΓÉì
+      5     Γöé - import┬╖{ΓÉì
+      6     Γöé - ┬╖┬╖fetchDownstreamOpenAIProviderConfig,ΓÉì
+      7     Γöé - ┬╖┬╖type┬╖RuntimeDownstreamOpenAIProviderConfig,ΓÉì
+      8     Γöé - }┬╖from┬╖"../lib/runtime-api";ΓÉì
+      9     Γöé - import┬╖{┬╖buildDownstreamProviderGuide┬╖}┬╖from┬╖"../lib/view-models";ΓÉì
+     10     Γöé - ΓÉì
+     11     Γöé - export┬╖default┬╖function┬╖IntegrationsDownstreamRoute()┬╖{ΓÉì
+     12     Γöé - ┬╖┬╖const┬╖[provider,┬╖setProvider]┬╖=┬╖useState<RuntimeDownstreamOpenAIProviderConfig┬╖|┬╖null>(null);ΓÉì
+     13     Γöé - ┬╖┬╖const┬╖[error,┬╖setError]┬╖=┬╖useState<string┬╖|┬╖null>(null);ΓÉì
+     14     Γöé - ΓÉì
+     15     Γöé - ┬╖┬╖useEffect(()┬╖=>┬╖{ΓÉì
+     16     Γöé - ┬╖┬╖┬╖┬╖void┬╖fetchDownstreamOpenAIProviderConfig()ΓÉì
+     17     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖.then(setProvider)ΓÉì
+     18     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖.catch((value:┬╖unknown)┬╖=>┬╖setError(value┬╖instanceof┬╖Error┬╖?┬╖value.message┬╖:┬╖"Could┬╖not┬╖load┬╖downstream┬╖compatibility┬╖details."));ΓÉì
+     19     Γöé - ┬╖┬╖},┬╖[]);ΓÉì
+     20     Γöé - ΓÉì
+     21     Γöé - ┬╖┬╖if┬╖(error)┬╖{ΓÉì
+     22     Γöé - ┬╖┬╖┬╖┬╖return┬╖<ErrorState┬╖label={error}┬╖/>;ΓÉì
+     23     Γöé - ┬╖┬╖}ΓÉì
+     24     Γöé - ┬╖┬╖if┬╖(!provider)┬╖{ΓÉì
+     25     Γöé - ┬╖┬╖┬╖┬╖return┬╖<LoadingState┬╖label="Loading┬╖downstream┬╖integration┬╖detailsΓÇª"┬╖/>;ΓÉì
+     26     Γöé - ┬╖┬╖}ΓÉì
+     27     Γöé - ΓÉì
+     28     Γöé - ┬╖┬╖const┬╖guide┬╖=┬╖buildDownstreamProviderGuide(provider);ΓÉì
+     29     Γöé - ΓÉì
+     30     Γöé - ┬╖┬╖return┬╖(ΓÉì
+     31     Γöé - ┬╖┬╖┬╖┬╖<div┬╖className="space-y-6">ΓÉì
+     32     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖<PageHeaderΓÉì
+     33     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖eyebrow="Integrations"ΓÉì
+     34     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖title="Downstream┬╖provider┬╖contract"ΓÉì
+     35     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖description="Configure┬╖consumer┬╖apps┬╖such┬╖as┬╖opencode┬╖against┬╖the┬╖runtime's┬╖OpenAI-compatible┬╖downstream┬╖surface."ΓÉì
+     36     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖actions={ΓÉì
+     37     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<a┬╖className={secondaryButtonClassName}┬╖href="/api/role-model/downstream/openai">ΓÉì
+     38     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖Provider┬╖JSONΓÉì
+     39     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</a>ΓÉì
+     40     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖}ΓÉì
+     41     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖/>ΓÉì
+     42     Γöé - ΓÉì
+     43     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖<SectionCard┬╖title="Connection┬╖contract"┬╖description="Base┬╖URL,┬╖auth┬╖expectations,┬╖and┬╖downstream┬╖model┬╖discovery┬╖in┬╖one┬╖reference┬╖block.">ΓÉì
+     44     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="grid┬╖gap-3┬╖md:grid-cols-2┬╖xl:grid-cols-3">ΓÉì
+     45     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{guide.connectionRows.map((row)┬╖=>┬╖(ΓÉì
+     46     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖key={row.label}┬╖className={`${mutedPanelClassName}┬╖p-4`}>ΓÉì
+     47     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<p┬╖className="text-xs┬╖font-normal┬╖uppercase┬╖tracking-[0.2em]┬╖text-[var(--rm-muted)]">{row.label}</p>ΓÉì
+     48     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<p┬╖className="mt-2┬╖break-all┬╖font-mono┬╖text-sm┬╖text-[var(--rm-fg)]">{row.value}</p>ΓÉì
+     49     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+     50     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖))}ΓÉì
+     51     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+     52     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖</SectionCard>ΓÉì
+     53     Γöé - ΓÉì
+     54     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖<SectionCard┬╖title="Consumer┬╖setup"┬╖description="The┬╖runtime┬╖remains┬╖downstream-compatible,┬╖including┬╖tool-calling┬╖consumer┬╖expectations.">ΓÉì
+     55     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="grid┬╖gap-4┬╖xl:grid-cols-[0.9fr_1.1fr]">ΓÉì
+     56     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className={`${mutedPanelClassName}┬╖p-4`}>ΓÉì
+     57     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<p┬╖className="font-medium┬╖text-[var(--rm-fg)]">Setup┬╖steps</p>ΓÉì
+     58     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<ol┬╖className="mt-3┬╖space-y-2┬╖text-sm┬╖text-[var(--rm-secondary)]">ΓÉì
+     59     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{guide.opencodeSteps.map((step)┬╖=>┬╖(ΓÉì
+     60     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<li┬╖key={step}>{step}</li>ΓÉì
+     61     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖))}ΓÉì
+     62     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</ol>ΓÉì
+     63     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<p┬╖className="mt-4┬╖text-sm┬╖text-[var(--rm-secondary)]">{provider.authentication.note}</p>ΓÉì
+     64     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+     65     Γöé - ΓÉì
+     66     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="space-y-4">ΓÉì
+     67     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className={`${mutedPanelClassName}┬╖p-4`}>ΓÉì
+     68     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<p┬╖className="font-medium┬╖text-[var(--rm-fg)]">Available┬╖models</p>ΓÉì
+     69     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="mt-3┬╖flex┬╖flex-wrap┬╖gap-2">ΓÉì
+     70     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{guide.availableModels.map((modelId)┬╖=>┬╖(ΓÉì
+     71     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<StatusPill┬╖key={modelId}┬╖tone={modelId┬╖===┬╖provider.setup.recommendedModel┬╖?┬╖"accent"┬╖:┬╖"neutral"}>ΓÉì
+     72     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{modelId}ΓÉì
+     73     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</StatusPill>ΓÉì
+     74     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖))}ΓÉì
+     75     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+     76     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+     77     Γöé - ΓÉì
+     78     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className={`${mutedPanelClassName}┬╖p-4`}>ΓÉì
+     79     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<p┬╖className="font-medium┬╖text-[var(--rm-fg)]">Example┬╖commands</p>ΓÉì
+     80     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<pre┬╖className={`mt-3┬╖${codeBlockClassName}`}>{guide.examples.modelsCurl}</pre>ΓÉì
+     81     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<pre┬╖className={`mt-3┬╖${codeBlockClassName}`}>{guide.examples.chatCurl}</pre>ΓÉì
+     82     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+     83     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+     84     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+     85     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖</SectionCard>ΓÉì
+     86     Γöé - ΓÉì
+     87     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖<SectionCard┬╖title="Compatibility┬╖posture"┬╖description="Compatibility┬╖notes┬╖stay┬╖with┬╖the┬╖downstream┬╖contract┬╖instead┬╖of┬╖on┬╖a┬╖duplicate┬╖reference┬╖page.">ΓÉì
+     88     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="grid┬╖gap-3┬╖md:grid-cols-3">ΓÉì
+     89     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className={`${mutedPanelClassName}┬╖p-4┬╖text-sm┬╖text-[var(--rm-secondary)]`}>ΓÉì
+     90     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<p┬╖className="font-medium┬╖text-[var(--rm-fg)]">API┬╖family</p>ΓÉì
+     91     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<p┬╖className="mt-2">Downstream┬╖consumers┬╖should┬╖treat┬╖this┬╖runtime┬╖as┬╖an┬╖OpenAI-compatible┬╖provider┬╖surfaced┬╖through┬╖the┬╖model┬╖listing┬╖and┬╖chat-completions┬╖contract┬╖shown┬╖above.</p>ΓÉì
+     92     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+     93     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className={`${mutedPanelClassName}┬╖p-4┬╖text-sm┬╖text-[var(--rm-secondary)]`}>ΓÉì
+     94     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<p┬╖className="font-medium┬╖text-[var(--rm-fg)]">Tool┬╖calling</p>ΓÉì
+     95     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<p┬╖className="mt-2">`tool_calls`┬╖compatibility┬╖follows┬╖the┬╖selected┬╖routed┬╖model┬╖and┬╖remains┬╖inspectable┬╖in┬╖request┬╖detail┬╖rather┬╖than┬╖hidden┬╖behind┬╖a┬╖separate┬╖compatibility┬╖matrix.</p>ΓÉì
+     96     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+     97     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className={`${mutedPanelClassName}┬╖p-4┬╖text-sm┬╖text-[var(--rm-secondary)]`}>ΓÉì
+     98     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<p┬╖className="font-medium┬╖text-[var(--rm-fg)]">MCP┬╖boundary</p>ΓÉì
+     99     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<p┬╖className="mt-2">MCP┬╖and┬╖runtime-owned┬╖tool┬╖execution┬╖stay┬╖backend-governed;┬╖downstream┬╖clients┬╖consume┬╖the┬╖compatible┬╖response┬╖surface┬╖rather┬╖than┬╖negotiating┬╖connector┬╖state┬╖directly.</p>ΓÉì
+    100     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+    101     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+    102     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖</SectionCard>ΓÉì
+    103     Γöé - ┬╖┬╖┬╖┬╖</div>ΓÉì
+    104     Γöé - ┬╖┬╖);ΓÉì
+    105     Γöé - }ΓÉì
+          1 Γöé + import┬╖{┬╖useEffect,┬╖useState┬╖}┬╖from┬╖"react";
+          2 Γöé + 
+          3 Γöé + import┬╖{
+          4 Γöé + ┬╖┬╖ErrorState,
+          5 Γöé + ┬╖┬╖LoadingState,
+          6 Γöé + ┬╖┬╖PageHeader,
+          7 Γöé + ┬╖┬╖SectionCard,
+          8 Γöé + ┬╖┬╖StatusPill,
+          9 Γöé + }┬╖from┬╖"../components/page-primitives";
+         10 Γöé + import┬╖{
+         11 Γöé + ┬╖┬╖codeBlockClassName,
+         12 Γöé + ┬╖┬╖mutedPanelClassName,
+         13 Γöé + ┬╖┬╖secondaryButtonClassName,
+         14 Γöé + }┬╖from┬╖"../lib/design-system";
+         15 Γöé + import┬╖{
+         16 Γöé + ┬╖┬╖fetchDownstreamOpenAIProviderConfig,
+         17 Γöé + ┬╖┬╖type┬╖RuntimeDownstreamOpenAIProviderConfig,
+         18 Γöé + }┬╖from┬╖"../lib/runtime-api";
+         19 Γöé + import┬╖{┬╖buildDownstreamProviderGuide┬╖}┬╖from┬╖"../lib/view-models";
+         20 Γöé + 
+         21 Γöé + export┬╖default┬╖function┬╖IntegrationsDownstreamRoute()┬╖{
+         22 Γöé + ┬╖┬╖const┬╖[provider,┬╖setProvider]┬╖=┬╖useState<RuntimeDownstreamOpenAIProviderConfig┬╖|┬╖null>(null);
+         23 Γöé + ┬╖┬╖const┬╖[error,┬╖setError]┬╖=┬╖useState<string┬╖|┬╖null>(null);
+         24 Γöé + 
+         25 Γöé + ┬╖┬╖useEffect(()┬╖=>┬╖{
+         26 Γöé + ┬╖┬╖┬╖┬╖void┬╖fetchDownstreamOpenAIProviderConfig()
+         27 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖.then(setProvider)
+         28 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖.catch((value:┬╖unknown)┬╖=>
+         29 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖setError(
+         30 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖value┬╖instanceof┬╖Error
+         31 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖?┬╖value.message
+         32 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖:┬╖"Could┬╖not┬╖load┬╖downstream┬╖compatibility┬╖details.",
+         33 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖),
+         34 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖);
+         35 Γöé + ┬╖┬╖},┬╖[]);
+         36 Γöé + 
+         37 Γöé + ┬╖┬╖if┬╖(error)┬╖{
+         38 Γöé + ┬╖┬╖┬╖┬╖return┬╖<ErrorState┬╖label={error}┬╖/>;
+         39 Γöé + ┬╖┬╖}
+         40 Γöé + ┬╖┬╖if┬╖(!provider)┬╖{
+         41 Γöé + ┬╖┬╖┬╖┬╖return┬╖<LoadingState┬╖label="Loading┬╖downstream┬╖integration┬╖detailsΓÇª"┬╖/>;
+         42 Γöé + ┬╖┬╖}
+         43 Γöé + 
+         44 Γöé + ┬╖┬╖const┬╖guide┬╖=┬╖buildDownstreamProviderGuide(provider);
+         45 Γöé + 
+  102 more lines truncated
+  
+
+role-model-router/apps/runtime-ui/app/routes/endpoints.tsx format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+      1     Γöé - import┬╖{┬╖useEffect,┬╖useMemo,┬╖useState┬╖}┬╖from┬╖"react";ΓÉì
+      2     Γöé - import┬╖{┬╖Link┬╖}┬╖from┬╖"react-router";ΓÉì
+      3     Γöé - ΓÉì
+      4     Γöé - import┬╖{ΓÉì
+      5     Γöé - ┬╖┬╖EmptyState,ΓÉì
+      6     Γöé - ┬╖┬╖ErrorState,ΓÉì
+      7     Γöé - ┬╖┬╖LoadingState,ΓÉì
+      8     Γöé - ┬╖┬╖PageHeader,ΓÉì
+      9     Γöé - ┬╖┬╖SectionCard,ΓÉì
+     10     Γöé - ┬╖┬╖StatusPill,ΓÉì
+     11     Γöé - }┬╖from┬╖"../components/page-primitives";ΓÉì
+     12     Γöé - import┬╖{┬╖secondaryButtonClassName┬╖}┬╖from┬╖"../lib/design-system";ΓÉì
+     13     Γöé - import┬╖{┬╖fetchRuntimeSnapshot,┬╖type┬╖RuntimeSnapshot┬╖}┬╖from┬╖"../lib/runtime-api";ΓÉì
+     14     Γöé - import┬╖{┬╖buildConfiguredProviderRows,┬╖buildEndpointCatalogRows┬╖}┬╖from┬╖"../lib/view-models";ΓÉì
+     15     Γöé - ΓÉì
+     16     Γöé - export┬╖default┬╖function┬╖EndpointsRoute()┬╖{ΓÉì
+     17     Γöé - ┬╖┬╖const┬╖[snapshot,┬╖setSnapshot]┬╖=┬╖useState<RuntimeSnapshot┬╖|┬╖null>(null);ΓÉì
+     18     Γöé - ┬╖┬╖const┬╖[error,┬╖setError]┬╖=┬╖useState<string┬╖|┬╖null>(null);ΓÉì
+     19     Γöé - ΓÉì
+     20     Γöé - ┬╖┬╖useEffect(()┬╖=>┬╖{ΓÉì
+     21     Γöé - ┬╖┬╖┬╖┬╖void┬╖fetchRuntimeSnapshot()ΓÉì
+     22     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖.then((nextSnapshot)┬╖=>┬╖{ΓÉì
+     23     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖setSnapshot(nextSnapshot);ΓÉì
+     24     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖setError(null);ΓÉì
+     25     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖})ΓÉì
+     26     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖.catch((value:┬╖unknown)┬╖=>┬╖setError(value┬╖instanceof┬╖Error┬╖?┬╖value.message┬╖:┬╖"Could┬╖not┬╖load┬╖endpoints."));ΓÉì
+     27     Γöé - ┬╖┬╖},┬╖[]);ΓÉì
+     28     Γöé - ΓÉì
+     29     Γöé - ┬╖┬╖const┬╖providerRows┬╖=┬╖useMemo(ΓÉì
+     30     Γöé - ┬╖┬╖┬╖┬╖()┬╖=>ΓÉì
+     31     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖snapshotΓÉì
+     32     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖?┬╖buildConfiguredProviderRows({ΓÉì
+     33     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖accounts:┬╖snapshot.accounts,ΓÉì
+     34     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖endpoints:┬╖snapshot.endpoints,ΓÉì
+     35     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖})ΓÉì
+     36     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖:┬╖[],ΓÉì
+     37     Γöé - ┬╖┬╖┬╖┬╖[snapshot],ΓÉì
+     38     Γöé - ┬╖┬╖);ΓÉì
+     39     Γöé - ┬╖┬╖const┬╖endpointRows┬╖=┬╖useMemo(()┬╖=>┬╖(snapshot┬╖?┬╖buildEndpointCatalogRows(snapshot.endpoints)┬╖:┬╖[]),┬╖[snapshot]);ΓÉì
+     40     Γöé - ΓÉì
+     41     Γöé - ┬╖┬╖if┬╖(error)┬╖{ΓÉì
+     42     Γöé - ┬╖┬╖┬╖┬╖return┬╖<ErrorState┬╖label={error}┬╖/>;ΓÉì
+     43     Γöé - ┬╖┬╖}ΓÉì
+     44     Γöé - ┬╖┬╖if┬╖(!snapshot)┬╖{ΓÉì
+     45     Γöé - ┬╖┬╖┬╖┬╖return┬╖<LoadingState┬╖label="Loading┬╖endpoint┬╖registryΓÇª"┬╖/>;ΓÉì
+     46     Γöé - ┬╖┬╖}ΓÉì
+     47     Γöé - ΓÉì
+     48     Γöé - ┬╖┬╖return┬╖(ΓÉì
+     49     Γöé - ┬╖┬╖┬╖┬╖<div┬╖className="space-y-6">ΓÉì
+     50     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖<PageHeaderΓÉì
+     51     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖eyebrow="Endpoints"ΓÉì
+     52     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖title="Endpoint┬╖registry"ΓÉì
+     53     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖description="Configured┬╖providers,┬╖configured┬╖models,┬╖and┬╖the┬╖live┬╖runtime┬╖endpoint┬╖registry┬╖appear┬╖together┬╖here┬╖after┬╖provider┬╖onboarding."ΓÉì
+     54     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖/>ΓÉì
+     55     Γöé - ΓÉì
+     56     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖{providerRows.length┬╖===┬╖0┬╖&&┬╖endpointRows.length┬╖===┬╖0┬╖?┬╖(ΓÉì
+     57     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<SectionCardΓÉì
+     58     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖title="No┬╖configured┬╖endpoints┬╖yet"ΓÉì
+     59     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖description="Provider┬╖onboarding┬╖happens┬╖on┬╖the┬╖Providers┬╖page.┬╖Once┬╖a┬╖provider┬╖is┬╖configured,┬╖its┬╖resulting┬╖runtime┬╖entries┬╖will┬╖appear┬╖here."ΓÉì
+     60     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖>ΓÉì
+     61     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<EmptyState┬╖label="No┬╖providers┬╖or┬╖endpoints┬╖are┬╖configured┬╖yet."┬╖/>ΓÉì
+     62     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="mt-4">ΓÉì
+     63     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<Link┬╖className={secondaryButtonClassName}┬╖to="/app/control/providers">ΓÉì
+     64     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖Open┬╖ProvidersΓÉì
+     65     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</Link>ΓÉì
+     66     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+     67     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</SectionCard>ΓÉì
+     68     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖)┬╖:┬╖(ΓÉì
+     69     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="grid┬╖gap-4┬╖xl:grid-cols-[0.92fr_1.08fr]">ΓÉì
+     70     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<SectionCardΓÉì
+     71     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖title="Configured┬╖providers"ΓÉì
+     72     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖description="Saved┬╖runtime┬╖provider┬╖connections┬╖and┬╖the┬╖model┬╖inventory┬╖each┬╖one┬╖currently┬╖contributes┬╖to┬╖the┬╖registry."ΓÉì
+     73     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖>ΓÉì
+     74     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{providerRows.length┬╖===┬╖0┬╖?┬╖(ΓÉì
+     75     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<EmptyState┬╖label="No┬╖providers┬╖are┬╖configured┬╖yet."┬╖/>ΓÉì
+     76     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖)┬╖:┬╖(ΓÉì
+     77     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="overflow-x-auto">ΓÉì
+     78     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<table┬╖className="min-w-full┬╖text-left┬╖text-sm">ΓÉì
+     79     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<thead┬╖className="text-[var(--rm-muted)]">ΓÉì
+     80     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<tr>ΓÉì
+     81     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<th┬╖className="pb-3┬╖font-medium">Provider</th>ΓÉì
+     82     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<th┬╖className="pb-3┬╖font-medium">Connections</th>ΓÉì
+     83     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<th┬╖className="pb-3┬╖font-medium">Auth</th>ΓÉì
+     84     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<th┬╖className="pb-3┬╖font-medium">Models</th>ΓÉì
+     85     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<th┬╖className="pb-3┬╖font-medium">Health</th>ΓÉì
+     86     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<th┬╖className="pb-3┬╖font-medium">Endpoints</th>ΓÉì
+     87     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</tr>ΓÉì
+     88     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</thead>ΓÉì
+     89     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<tbody>ΓÉì
+     90     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{providerRows.map((provider)┬╖=>┬╖(ΓÉì
+     91     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<tr┬╖key={provider.providerId}┬╖className="border-t┬╖border-[var(--rm-border)]">ΓÉì
+     92     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<td┬╖className="py-3┬╖font-medium┬╖text-[var(--rm-fg)]">{provider.providerId}</td>ΓÉì
+     93     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<td┬╖className="py-3┬╖text-[var(--rm-secondary)]">{provider.accountIds.join(",┬╖")┬╖||┬╖"ΓÇö"}</td>ΓÉì
+     94     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<td┬╖className="py-3┬╖text-[var(--rm-secondary)]">{provider.authModes.join(",┬╖")┬╖||┬╖"ΓÇö"}</td>ΓÉì
+     95     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<td┬╖className="py-3┬╖text-[var(--rm-secondary)]">ΓÉì
+     96     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{provider.configuredModels.length┬╖>┬╖0┬╖?┬╖provider.configuredModels.join(",┬╖")┬╖:┬╖"ΓÇö"}ΓÉì
+     97     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</td>ΓÉì
+     98     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<td┬╖className="py-3┬╖text-[var(--rm-secondary)]">{provider.healthStatuses.join(",┬╖")┬╖||┬╖"unknown"}</td>ΓÉì
+     99     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<td┬╖className="py-3┬╖text-[var(--rm-secondary)]">ΓÉì
+    100     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{provider.activeEndpointCount}/{provider.endpointCount}┬╖activeΓÉì
+    101     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</td>ΓÉì
+    102     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</tr>ΓÉì
+    103     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖))}ΓÉì
+    104     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</tbody>ΓÉì
+    105     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</table>ΓÉì
+    106     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+    107     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖)}ΓÉì
+    108     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</SectionCard>ΓÉì
+    109     Γöé - ΓÉì
+    110     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<SectionCardΓÉì
+    111     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖title="Runtime┬╖endpoint┬╖rows"ΓÉì
+    112     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖description="Concrete┬╖endpoint┬╖rows┬╖by┬╖endpoint┬╖id,┬╖model,┬╖provider,┬╖serving┬╖source,┬╖and┬╖live┬╖runtime┬╖health."ΓÉì
+    113     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖>ΓÉì
+    114     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{endpointRows.length┬╖===┬╖0┬╖?┬╖(ΓÉì
+    115     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<EmptyState┬╖label="No┬╖runtime┬╖endpoint┬╖rows┬╖are┬╖active┬╖yet.┬╖Configure┬╖a┬╖provider┬╖from┬╖Providers┬╖to┬╖populate┬╖this┬╖registry."┬╖/>ΓÉì
+    116     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖)┬╖:┬╖(ΓÉì
+    117     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="overflow-x-auto">ΓÉì
+    118     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<table┬╖className="min-w-full┬╖text-left┬╖text-sm">ΓÉì
+    119     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<thead┬╖className="text-[var(--rm-muted)]">ΓÉì
+    120     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<tr>ΓÉì
+    121     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<th┬╖className="pb-3┬╖font-medium">Endpoint</th>ΓÉì
+    122     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<th┬╖className="pb-3┬╖font-medium">Model</th>ΓÉì
+    123     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<th┬╖className="pb-3┬╖font-medium">Provider</th>ΓÉì
+    124     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<th┬╖className="pb-3┬╖font-medium">Source</th>ΓÉì
+    125     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<th┬╖className="pb-3┬╖font-medium">Serving┬╖source</th>ΓÉì
+    126     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<th┬╖className="pb-3┬╖font-medium">Health</th>ΓÉì
+    127     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<th┬╖className="pb-3┬╖font-medium">Status</th>ΓÉì
+    128     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</tr>ΓÉì
+    129     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</thead>ΓÉì
+    130     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<tbody>ΓÉì
+    131     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{endpointRows.map((endpoint)┬╖=>┬╖(ΓÉì
+    132     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<tr┬╖key={endpoint.endpointId}┬╖className="border-t┬╖border-[var(--rm-border)]">ΓÉì
+    133     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<td┬╖className="py-3┬╖font-medium┬╖text-[var(--rm-fg)]">{endpoint.endpointId}</td>ΓÉì
+    134     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<td┬╖className="py-3┬╖text-[var(--rm-secondary)]">{endpoint.modelId}</td>ΓÉì
+    135     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<td┬╖className="py-3┬╖text-[var(--rm-secondary)]">{endpoint.providerLabel}</td>ΓÉì
+    136     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<td┬╖className="py-3┬╖text-[var(--rm-secondary)]">ΓÉì
+    137     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{endpoint.sourceLabel}┬╖/┬╖{endpoint.endpointKind}ΓÉì
+    138     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</td>ΓÉì
+    139     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<td┬╖className="py-3┬╖text-[var(--rm-secondary)]">{endpoint.servingSource}</td>ΓÉì
+    140     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<td┬╖className="py-3">ΓÉì
+    141     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<StatusPill┬╖tone={endpoint.healthStatus┬╖===┬╖"healthy"┬╖?┬╖"success"┬╖:┬╖"warning"}>ΓÉì
+    142     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{endpoint.healthStatus}ΓÉì
+    143     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</StatusPill>ΓÉì
+    144     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</td>ΓÉì
+    145     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<td┬╖className="py-3">ΓÉì
+    146     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<StatusPill┬╖tone={endpoint.status┬╖===┬╖"active"┬╖?┬╖"success"┬╖:┬╖endpoint.status┬╖===┬╖"degraded"┬╖?┬╖"warning"┬╖:┬╖"neutral"}>ΓÉì
+    147     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{endpoint.status}ΓÉì
+    148     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</StatusPill>ΓÉì
+    149     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</td>ΓÉì
+    150     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</tr>ΓÉì
+  204 more lines truncated
+  
+
+role-model-router/apps/runtime-ui/app/routes/integrations-upstream.tsx:86:150 lint/a11y/noBlankTarget  FIXABLE  ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Avoid using target="_blank" without rel="noreferrer".
+  
+    84 Γöé             <div className="space-y-3">
+    85 Γöé               {modelTargets.map((target) => (
+  > 86 Γöé                 <a key={target.modelId} className={`${mutedPanelClassName} block p-4 text-sm text-[var(--rm-secondary)]`} href={target.upstreamHref} target="_blank">
+       Γöé                                                                                                                                                      ^^^^^^^^^^^^^^^
+    87 Γöé                   <div className="flex flex-wrap items-center justify-between gap-2">
+    88 Γöé                     <p className="break-all font-medium text-[var(--rm-fg)]">{target.modelId}</p>
+  
+  i Opening external links in new tabs without rel="noreferrer" is a security risk. See the explanation for more details.
+  
+  i Safe fix: Add the rel="noreferrer" attribute.
+  
+    86 Γöé ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<a┬╖key={target.modelId}┬╖className={`${mutedPanelClassName}┬╖block┬╖p-4┬╖text-sm┬╖text-[var(--rm-secondary)]`}┬╖href={target.upstreamHref}┬╖target="_blank"┬╖rel="noreferrer">ΓÉì
+       Γöé                                                                                                                                                                     +++++++++++++++++ 
+
+role-model-router/apps/runtime-ui/app/routes/integrations-upstream.tsx:110:65 lint/style/noUnusedTemplateLiteral  FIXABLE  ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Do not use template literals if interpolation and special-character handling are not needed.
+  
+    108 Γöé             <p className="mt-2">Provider/account posture, passthrough expectations, and model-specific raw links stay together so the integration boundary remains clear.</p>
+    109 Γöé           </div>
+  > 110 Γöé           <pre className={`p-4 text-sm ${codeBlockClassName}`}>{`/upstream/<model>/\nopens the vendor passthrough for a single model target`}</pre>
+        Γöé                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    111 Γöé         </div>
+    112 Γöé       </SectionCard>
+  
+  i Unsafe fix: Replace with string literal
+  
+    108 108 Γöé               <p className="mt-2">Provider/account posture, passthrough expectations, and model-specific raw links stay together so the integration boundary remains clear.</p>ΓÉì
+    109 109 Γöé             </div>ΓÉì
+    110     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<pre┬╖className={`p-4┬╖text-sm┬╖${codeBlockClassName}`}>{`/upstream/<model>/\nopens┬╖the┬╖vendor┬╖passthrough┬╖for┬╖a┬╖single┬╖model┬╖target`}</pre>ΓÉì
+        110 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<pre┬╖className={`p-4┬╖text-sm┬╖${codeBlockClassName}`}>{"/upstream/<model>/\nopens┬╖the┬╖vendor┬╖passthrough┬╖for┬╖a┬╖single┬╖model┬╖target"}</pre>ΓÉì
+    111 111 Γöé           </div>ΓÉì
+    112 112 Γöé         </SectionCard>ΓÉì
+  
+
+role-model-router/apps/runtime-ui/app/routes/integrations-upstream.tsx organizeImports ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Import statements could be sorted:
+  
+      3   3 Γöé   import { EmptyState, ErrorState, FactCard, LoadingState, PageHeader, SectionCard, StatusPill } from "../components/page-primitives";ΓÉì
+      4   4 Γöé   import { codeBlockClassName, mutedPanelClassName } from "../lib/design-system";ΓÉì
+      5     Γöé - import┬╖{┬╖fetchRuntimeSnapshot,┬╖type┬╖RuntimeSnapshot┬╖}┬╖from┬╖"../lib/runtime-api";ΓÉì
+          5 Γöé + import┬╖{┬╖type┬╖RuntimeSnapshot,┬╖fetchRuntimeSnapshot┬╖}┬╖from┬╖"../lib/runtime-api";ΓÉì
+      6   6 Γöé   import { buildProviderCards } from "../lib/view-models";ΓÉì
+      7   7 Γöé   ΓÉì
+  
+
+role-model-router/apps/runtime-ui/app/routes/local-peers.tsx:169:13 lint/a11y/noLabelWithoutControl ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù A form label must be associated with an input.
+  
+    167 Γöé         <div className="space-y-4">
+    168 Γöé           <div className="space-y-2">
+  > 169 Γöé             <label className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]">
+        Γöé             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 170 Γöé               Peer URL
+  > 171 Γöé             </label>
+        Γöé             ^^^^^^^^
+    172 Γöé             <input
+    173 Γöé               type="url"
+  
+  i Consider adding a `for` or `htmlFor` attribute to the label element or moving the input element to inside the label element.
+  
+
+role-model-router/apps/runtime-ui/app/routes/local-peers.tsx:181:13 lint/a11y/noLabelWithoutControl ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù A form label must be associated with an input.
+  
+    179 Γöé           </div>
+    180 Γöé           <div className="space-y-2">
+  > 181 Γöé             <label className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]">
+        Γöé             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 182 Γöé               Auth token (optional)
+  > 183 Γöé             </label>
+        Γöé             ^^^^^^^^
+    184 Γöé             <input
+    185 Γöé               type="password"
+  
+  i Consider adding a `for` or `htmlFor` attribute to the label element or moving the input element to inside the label element.
+  
+
+role-model-router/apps/runtime-ui/app/routes/local-peers.tsx:105:11 lint/a11y/useButtonType ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    103 Γöé         description="Peer llama-swap instance inventory and management."
+    104 Γöé         actions={
+  > 105 Γöé           <button onClick={refresh} disabled={loading} className={secondaryButtonClassName}>
+        Γöé           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    106 Γöé             {loading ? "RefreshingΓÇª" : "Refresh"}
+    107 Γöé           </button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+role-model-router/apps/runtime-ui/app/routes/local-peers.tsx:145:19 lint/a11y/useButtonType ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    143 Γöé                 </div>
+    144 Γöé                 <div className="flex gap-2">
+  > 145 Γöé                   <button
+        Γöé                   ^^^^^^^
+  > 146 Γöé                     onClick={() => handleCheckHealth(peer)}
+  > 147 Γöé                     disabled={checkingHealth[peer.id]}
+  > 148 Γöé                     className={secondaryButtonClassName}
+  > 149 Γöé                   >
+        Γöé                   ^
+    150 Γöé                     {checkingHealth[peer.id] ? "CheckingΓÇª" : "Check health"}
+    151 Γöé                   </button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+check ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Some errors were emitted while running checks.
+  
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m   Start at [22m 07:13:27
+[2m   Duration [22m 1.45s[2m (transform 90ms, setup 0ms, collect 68ms, tests 779ms, environment 0ms, prepare 263ms)[22m
+

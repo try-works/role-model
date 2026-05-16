@@ -13,10 +13,10 @@ import {
 } from "../components/page-primitives";
 import { fieldClassName, mutedPanelClassName, primaryButtonClassName } from "../lib/design-system";
 import {
-  fetchRuntimeSnapshot,
-  submitWorkbenchChat,
   type RuntimeSnapshot,
   type WorkbenchChatInput,
+  fetchRuntimeSnapshot,
+  submitWorkbenchChat,
 } from "../lib/runtime-api";
 import {
   buildWorkbenchEndpointOptions,
@@ -94,7 +94,6 @@ export default function WorkbenchRoute() {
       setRoutingModeOverride(locationRoutingModeOverride);
     }
   }, [locationRoutingModeOverride]);
-
   const modelOptions = useMemo(
     () => buildWorkbenchModelOptions(snapshot?.models ?? []),
     [snapshot?.models],

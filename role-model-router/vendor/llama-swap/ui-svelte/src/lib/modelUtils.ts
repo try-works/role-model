@@ -17,7 +17,7 @@ export function groupModels(models: Model[]): GroupedModels {
       acc[peerId].push(model);
       return acc;
     },
-    {} as Record<string, Model[]>
+    {} as Record<string, Model[]>,
   );
 
   return { local, peersByProvider };

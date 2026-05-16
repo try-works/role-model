@@ -9,6 +9,7 @@ import type {
   RoutingPolicyStrategy,
   ScoredCandidate,
   TaskDefinitionRecord,
+  ThroughputPenaltyStateRecord,
 } from "./types.js";
 
 function isLocalCandidate(candidate: EndpointCandidate): boolean {
@@ -98,7 +99,11 @@ type CandidateScoreResult = ScoredCandidate & {
   usedDeclared: boolean;
 };
 
-function getFreshnessWeight(input: RouteRequestInput, candidate: EndpointCandidate, halflifeMs: number): number {
+function getFreshnessWeight(
+  input: RouteRequestInput,
+  candidate: EndpointCandidate,
+  halflifeMs: number,
+): number {
   const measuredAtMs = candidate.observed?.measured_at_ms;
   if (!input.observedDataConfig?.enabled || typeof measuredAtMs !== "number") {
     return 1;
@@ -113,14 +118,18 @@ function getFreshnessWeight(input: RouteRequestInput, candidate: EndpointCandida
   return Math.exp((-Math.LN2 * ageMs) / halflifeMs);
 }
 
-function decayToNeutral(observedValue: number, neutralValue: number, freshnessWeight: number): number {
+function decayToNeutral(
+  observedValue: number,
+  neutralValue: number,
+  freshnessWeight: number,
+): number {
   return neutralValue + freshnessWeight * (observedValue - neutralValue);
 }
 
 function getActiveThroughputPenaltyState(
   input: RouteRequestInput,
   candidate: EndpointCandidate,
-): NonNullable<RouteRequestInput["throughputPenaltyStateByEndpointId"]>[string] | undefined {
+): ThroughputPenaltyStateRecord | undefined {
   const state = input.throughputPenaltyStateByEndpointId?.[candidate.identity.endpoint_id];
   if (!input.observedDataConfig?.throughputSla.enabled || !state) {
     return undefined;
@@ -280,7 +289,10 @@ function buildPolicySnapshot(input: RouteRequestInput): {
   );
 
   return {
-    policySnapshot: mergePolicyOverrides(basePolicySnapshot, requestedRole?.routing_policy_overrides),
+    policySnapshot: mergePolicyOverrides(
+      basePolicySnapshot,
+      requestedRole?.routing_policy_overrides,
+    ),
     rolePolicyApplied,
   };
 }
@@ -712,8 +724,7 @@ function toCandidateExclusion(code: CandidateExclusion["code"]): CandidateExclus
       "Endpoint role binding does not allow all required capabilities for this request.",
     ROLE_BINDING_DISABLED: "Endpoint role binding is disabled.",
     ROLE_BINDING_INACTIVE: "Endpoint role binding is inactive.",
-    ROLE_BINDING_TASK_NOT_ALLOWED:
-      "Endpoint role binding does not allow the requested task type.",
+    ROLE_BINDING_TASK_NOT_ALLOWED: "Endpoint role binding does not allow the requested task type.",
     ROLE_NOT_ALLOWED: "Requested role is not allowed for this task.",
     TASK_NOT_SUPPORTED_BY_ROLE: "Requested task is not supported by the requested role.",
     TOOLS_UNSUPPORTED: "Endpoint does not support tool calling.",
@@ -900,9 +911,10 @@ function buildTieBreak(
 ): TieBreakDiagnostic {
   return {
     quality: metricBreakdown.quality.value,
-    latency_ms: typeof metricBreakdown.latency.raw?.effective_latency_ms === "number"
-      ? (metricBreakdown.latency.raw.effective_latency_ms as number)
-      : getEffectiveLatency(candidate),
+    latency_ms:
+      typeof metricBreakdown.latency.raw?.effective_latency_ms === "number"
+        ? (metricBreakdown.latency.raw.effective_latency_ms as number)
+        : getEffectiveLatency(candidate),
     reliability: metricBreakdown.reliability.value,
     endpoint_id: candidate.identity.endpoint_id,
   };
@@ -926,8 +938,12 @@ function scoreCandidate(
 
   const selectionReasons: RouterDecisionRecord["selection_reasons"] = ["DECLARED_PROFILE_USED"];
   const { requestedTask } = getRequestedRoleAndTask(input);
-  const hasMeasuredMetric = Object.values(metricScores).some((metric) => metric.source === "measured");
-  const hasDefaultMetric = Object.values(metricScores).some((metric) => metric.source === "default");
+  const hasMeasuredMetric = Object.values(metricScores).some(
+    (metric) => metric.source === "measured",
+  );
+  const hasDefaultMetric = Object.values(metricScores).some(
+    (metric) => metric.source === "default",
+  );
 
   if (hasMeasuredMetric) {
     selectionReasons.push("MEASURED_PROFILE_USED");
@@ -955,7 +971,10 @@ function scoreCandidate(
     selectionReasons.push("ROUTING_MODEL_PREFERENCE_APPLIED");
   }
 
-  if (toPolicyStrategy(input.request.strategy) === "cost" || policySnapshot.budget_mode === "advisory") {
+  if (
+    toPolicyStrategy(input.request.strategy) === "cost" ||
+    policySnapshot.budget_mode === "advisory"
+  ) {
     selectionReasons.push("BUDGET_OPTIMIZATION");
   }
   if (
@@ -1055,8 +1074,12 @@ export function routeRequest(input: RouteRequestInput): RouterDecisionRecord {
       ])
     : [];
   const scoredCandidates = scored.map(
-    ({ selectionReasons: _selectionReasons, usedMeasured: _usedMeasured, usedDeclared: _usedDeclared, ...candidate }) =>
-      candidate,
+    ({
+      selectionReasons: _selectionReasons,
+      usedMeasured: _usedMeasured,
+      usedDeclared: _usedDeclared,
+      ...candidate
+    }) => candidate,
   );
 
   return {

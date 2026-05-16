@@ -1,0 +1,695 @@
+⣾  ⣽  ⣻  ⢿  ⡿  ⣟  ⣯  ⣷  ⣾  ⣽  ⣻  ⢿  ⡿  ⣟⣾   ⣽  ⣻  ⢿  ⡿⣾   ⣽  ⣻  ⢿  ⡿  ⣟  ⣯  ⣷  ⣾  ⣽  ⣻  ⢿  ⡿  ⣟  ⣯  ⣷  ⣾validateCI parity﻿2026-05-11T22:09:01.9130273Z ##[group]Run pnpm run ci:check
+validateCI parity2026-05-11T22:09:01.9130738Z pnpm run ci:check
+validateCI parity2026-05-11T22:09:01.9162144Z shell: /usr/bin/bash -e {0}
+validateCI parity2026-05-11T22:09:01.9162540Z env:
+validateCI parity2026-05-11T22:09:01.9162923Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+validateCI parity2026-05-11T22:09:01.9163424Z   CARGO_HOME: /home/runner/.cargo
+validateCI parity2026-05-11T22:09:01.9163818Z   CARGO_INCREMENTAL: 0
+validateCI parity2026-05-11T22:09:01.9164145Z   CARGO_TERM_COLOR: always
+validateCI parity2026-05-11T22:09:01.9164538Z ##[endgroup]
+validateCI parity2026-05-11T22:09:02.1891512Z  WARN  Unsupported engine: wanted: {"node":">=24 <25"} (current: {"node":"v22.22.2","pnpm":"10.6.5"})
+validateCI parity2026-05-11T22:09:02.1920039Z 
+validateCI parity2026-05-11T22:09:02.1920696Z > role-model@0.0.0 ci:check /home/runner/work/role-model/role-model
+validateCI parity2026-05-11T22:09:02.1922459Z > corepack pnpm run lint && corepack pnpm run schemas:validate && corepack pnpm run build && corepack pnpm run test && corepack pnpm run test:rust && corepack pnpm run smoke
+validateCI parity2026-05-11T22:09:02.1923576Z 
+validateCI parity2026-05-11T22:09:03.6225960Z  WARN  Unsupported engine: wanted: {"node":">=24 <25"} (current: {"node":"v22.22.2","pnpm":"10.6.5"})
+validateCI parity2026-05-11T22:09:03.6249446Z 
+validateCI parity2026-05-11T22:09:03.6251397Z > role-model@0.0.0 lint /home/runner/work/role-model/role-model
+validateCI parity2026-05-11T22:09:03.6252150Z > biome check . && corepack pnpm run lint:rust
+validateCI parity2026-05-11T22:09:03.6252496Z 
+validateCI parity2026-05-11T22:09:04.2271009Z ./packages/conformance/src/router-fixture-conformance.test.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+validateCI parity2026-05-11T22:09:04.2272097Z 
+validateCI parity2026-05-11T22:09:04.2279951Z   × Formatter would have printed the following content:
+validateCI parity2026-05-11T22:09:04.2286544Z   
+validateCI parity2026-05-11T22:09:04.2287543Z      75  75 │         assertValid(validateRouterDecision, result, fileName);
+validateCI parity2026-05-11T22:09:04.2288558Z      76  76 │         expect(result.app_id, fixture.name).toEqual(expect.any(String));
+validateCI parity2026-05-11T22:09:04.2290382Z      77     │ - ······expect(result.org_id,·fixture.name).toSatisfy((value:·unknown)·=>·value·===·null·||·typeof·value·===·"string");
+validateCI parity2026-05-11T22:09:04.2291599Z          77 │ + ······expect(result.org_id,·fixture.name).toSatisfy(
+validateCI parity2026-05-11T22:09:04.2292538Z          78 │ + ········(value:·unknown)·=>·value·===·null·||·typeof·value·===·"string",
+validateCI parity2026-05-11T22:09:04.2293199Z          79 │ + ······);
+validateCI parity2026-05-11T22:09:04.2293574Z      78  80 │   
+validateCI parity2026-05-11T22:09:04.2294450Z      79  81 │         expect(result.chosen_endpoint_id, fixture.name).toBe(fixture.expected.chosen_endpoint_id);
+validateCI parity2026-05-11T22:09:04.2295637Z   
+validateCI parity2026-05-11T22:09:04.2295782Z 
+validateCI parity2026-05-11T22:09:04.2296610Z ./packages/schema-tools/src/validate-schemas.ts organizeImports ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+validateCI parity2026-05-11T22:09:04.2297224Z 
+validateCI parity2026-05-11T22:09:04.2299819Z   × Import statements could be sorted:
+validateCI parity2026-05-11T22:09:04.2300246Z   
+validateCI parity2026-05-11T22:09:04.2313584Z       6   6 │   
+validateCI parity2026-05-11T22:09:04.2314104Z       7   7 │   import { Command } from "commander";
+validateCI parity2026-05-11T22:09:04.2315312Z       8     │ - import·{·compile,·type·JSONSchema·}·from·"json-schema-to-typescript";
+validateCI parity2026-05-11T22:09:04.2316333Z           8 │ + import·{·type·JSONSchema,·compile·}·from·"json-schema-to-typescript";
+validateCI parity2026-05-11T22:09:04.2316994Z       9   9 │   
+validateCI parity2026-05-11T22:09:04.2317556Z      10  10 │   const __filename = fileURLToPath(import.meta.url);
+validateCI parity2026-05-11T22:09:04.2318052Z   
+validateCI parity2026-05-11T22:09:04.2318200Z 
+validateCI parity2026-05-11T22:09:04.2319033Z ./protocol/fixtures/router-golden/cases/advisory-vs-hard-budget.json format ━━━━━━━━━━━━━━━━━━━━━━━━
+validateCI parity2026-05-11T22:09:04.2319872Z 
+validateCI parity2026-05-11T22:09:04.2322794Z   × Formatter would have printed the following content:
+validateCI parity2026-05-11T22:09:04.2323281Z   
+validateCI parity2026-05-11T22:09:04.2327020Z     105 105 │       "chosen_endpoint_id": "expensive-best",
+validateCI parity2026-05-11T22:09:04.2327743Z     106 106 │       "fallback_endpoint_ids": ["cheap-weaker"],
+validateCI parity2026-05-11T22:09:04.2328463Z     107     │ - ····"selection_reasons":·[
+validate        CI parity       2026-05-11T22:09:04.2328994Z     108     │ - ······"BEST_TOTAL_SCORE",
+validate        CI parity       2026-05-11T22:09:04.2329534Z     109     │ - ······"BUDGET_OPTIMIZATION",
+validate        CI parity       2026-05-11T22:09:04.2330286Z     110     │ - ······"FALLBACK_CHAIN_COMPUTED"
+validate        CI parity       2026-05-11T22:09:04.2331110Z     111     │ - ····],
+validate        CI parity       2026-05-11T22:09:04.2332032Z         107 │ + ····"selection_reasons":·["BEST_TOTAL_SCORE
+E",·"BUDGET_OPTIMIZATION",·"FALLBACK_CHAIN_COMPUTED"],
+validate        CI parity       2026-05-11T22:09:04.2332894Z     112 108 │       "eligibility": []
+validate        CI parity       2026-05-11T22:09:04.2333314Z     113 109 │     }
+validate        CI parity       2026-05-11T22:09:04.2333610Z
+validate        CI parity       2026-05-11T22:09:04.2333753Z
+validate        CI parity       2026-05-11T22:09:04.2334575Z ./packages/schema-tools/src/validate-schemas.ts format ━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+validate        CI parity       2026-05-11T22:09:04.2335230Z
+validate        CI parity       2026-05-11T22:09:04.2345255Z   × Formatter would have printed the following content:    
+validate        CI parity       2026-05-11T22:09:04.2345751Z
+validate        CI parity       2026-05-11T22:09:04.2359425Z      44  44 │       : null;
+validate        CI parity       2026-05-11T22:09:04.2360004Z      45  45 │   }
+validate        CI parity       2026-05-11T22:09:04.2360481Z      46     │ - export·type·FixtureFamily·=
+validate        CI parity       2026-05-11T22:09:04.2361004Z      47     │ - ··|·"top-level"
+validate        CI parity       2026-05-11T22:09:04.2361428Z      48     │ - ··|·"router"
+validate        CI parity       2026-05-11T22:09:04.2361835Z      49     │ - ··|·"profile"
+validate        CI parity       2026-05-11T22:09:04.2362222Z      50     │ - ··|·"trace"
+validate        CI parity       2026-05-11T22:09:04.2362639Z      51     │ - ··|·"usage"
+validate        CI parity       2026-05-11T22:09:04.2363040Z      52     │ - ··|·"role-task";
+validate        CI parity       2026-05-11T22:09:04.2364010Z          46 │ + export·type·FixtureFamily·=·"top-level"·|·"
+"router"·|·"profile"·|·"trace"·|·"usage"·|·"role-task";
+validate        CI parity       2026-05-11T22:09:04.2365222Z      53  47 │   export type FixtureCategory = "example" | "
+"basic" | "minimal" | "edge" | "invalid";
+validate        CI parity       2026-05-11T22:09:04.2366161Z      54  48 │   export type FixtureExpectation = "valid" | 
+ "invalid";
+validate        CI parity       2026-05-11T22:09:04.2366694Z     ······· │
+validate        CI parity       2026-05-11T22:09:04.2367025Z     104  98 │     },
+validate        CI parity       2026-05-11T22:09:04.2367352Z     105  99 │     {
+validate        CI parity       2026-05-11T22:09:04.2368327Z     106     │ - ····filePath:·path.join(fixtureRoot,·"route
+er-golden",·"router-decision-invalid-missing-app-id.json"),
+validate        CI parity       2026-05-11T22:09:04.2369266Z         100 │ + ····filePath:·path.join(
+validate        CI parity       2026-05-11T22:09:04.2369892Z         101 │ + ······fixtureRoot,
+validate        CI parity       2026-05-11T22:09:04.2370378Z         102 │ + ······"router-golden",
+validate        CI parity       2026-05-11T22:09:04.2371072Z         103 │ + ······"router-decision-invalid-missing-app-
+-id.json",
+validate        CI parity       2026-05-11T22:09:04.2371620Z         104 │ + ····),
+validate        CI parity       2026-05-11T22:09:04.2372172Z     107 105 │       schemaFile: "router-decision.schema.jso
+on",
+validate        CI parity       2026-05-11T22:09:04.2372771Z     108 106 │       family: "router",
+validate        CI parity       2026-05-11T22:09:04.2373179Z     ······· │
+validate        CI parity       2026-05-11T22:09:04.2373505Z     125 123 │     },
+validate        CI parity       2026-05-11T22:09:04.2374071Z     126 124 │     {
+validate        CI parity       2026-05-11T22:09:04.2375012Z     127     │ - ····filePath:·path.join(fixtureRoot,·"profi
+ile-golden",·"observed-performance-edge-error-rates.json"),
+validate        CI parity       2026-05-11T22:09:04.2375944Z         125 │ + ····filePath:·path.join(
+validate        CI parity       2026-05-11T22:09:04.2376424Z         126 │ + ······fixtureRoot,
+validate        CI parity       2026-05-11T22:09:04.2376908Z         127 │ + ······"profile-golden",
+validate        CI parity       2026-05-11T22:09:04.2377587Z         128 │ + ······"observed-performance-edge-error-rate
+es.json",
+validate        CI parity       2026-05-11T22:09:04.2378162Z         129 │ + ····),
+validate        CI parity       2026-05-11T22:09:04.2378823Z     128 130 │       schemaFile: "observed-performance-profi
+ile.schema.json",
+validate        CI parity       2026-05-11T22:09:04.2379542Z     129 131 │       family: "profile",
+validate        CI parity       2026-05-11T22:09:04.2380064Z
+validate        CI parity       2026-05-11T22:09:04.2380211Z
+validate        CI parity       2026-05-11T22:09:04.2381043Z ./protocol/fixtures/router-golden/cases/latency-strategy-pr
+refers-faster.json format ━━━━━━━━━━━━━━━━
+validate        CI parity       2026-05-11T22:09:04.2381681Z
+validate        CI parity       2026-05-11T22:09:04.2382068Z   × Formatter would have printed the following content:    
+validate        CI parity       2026-05-11T22:09:04.2382555Z
+validate        CI parity       2026-05-11T22:09:04.2386299Z     104 104 │       "chosen_endpoint_id": "fast-endpoint", 
+validate        CI parity       2026-05-11T22:09:04.2387021Z     105 105 │       "fallback_endpoint_ids": ["slow-endpoin
+nt"],
+validate        CI parity       2026-05-11T22:09:04.2387644Z     106     │ - ····"selection_reasons":·[
+validate        CI parity       2026-05-11T22:09:04.2388169Z     107     │ - ······"BEST_TOTAL_SCORE",
+validate        CI parity       2026-05-11T22:09:04.2388720Z     108     │ - ······"LOW_LATENCY_TARGET_MET",
+validate        CI parity       2026-05-11T22:09:04.2389292Z     109     │ - ······"FALLBACK_CHAIN_COMPUTED"
+validate        CI parity       2026-05-11T22:09:04.2389974Z     110     │ - ····],
+validate        CI parity       2026-05-11T22:09:04.2391336Z         106 │ + ····"selection_reasons":·["BEST_TOTAL_SCORE
+E",·"LOW_LATENCY_TARGET_MET",·"FALLBACK_CHAIN_COMPUTED"],
+validate        CI parity       2026-05-11T22:09:04.2392466Z     111 107 │       "eligibility": []
+validate        CI parity       2026-05-11T22:09:04.2392890Z     112 108 │     }
+validate        CI parity       2026-05-11T22:09:04.2393178Z
+validate        CI parity       2026-05-11T22:09:04.2393318Z
+validate        CI parity       2026-05-11T22:09:04.2394163Z ./protocol/fixtures/router-golden/cases/measured-profile-pa
+artial-coverage.json format ━━━━━━━━━━━━━━
+validate        CI parity       2026-05-11T22:09:04.2394839Z
+validate        CI parity       2026-05-11T22:09:04.2397180Z   × Formatter would have printed the following content:    
+validate        CI parity       2026-05-11T22:09:04.2397706Z
+validate        CI parity       2026-05-11T22:09:04.2401325Z      93 93 │       "chosen_endpoint_id": "measured-candidat
+te",
+validate        CI parity       2026-05-11T22:09:04.2402041Z      94 94 │       "fallback_endpoint_ids": ["declared-only
+y"],
+validate        CI parity       2026-05-11T22:09:04.2402636Z      95    │ - ····"selection_reasons":·[
+validate        CI parity       2026-05-11T22:09:04.2403166Z      96    │ - ······"BEST_TOTAL_SCORE",
+validate        CI parity       2026-05-11T22:09:04.2403698Z      97    │ - ······"MEASURED_PROFILE_USED",
+validate        CI parity       2026-05-11T22:09:04.2404240Z      98    │ - ······"FALLBACK_CHAIN_COMPUTED"
+validate        CI parity       2026-05-11T22:09:04.2404715Z      99    │ - ····],
+validate        CI parity       2026-05-11T22:09:04.2405602Z         95 │ + ····"selection_reasons":·["BEST_TOTAL_SCORE"
+",·"MEASURED_PROFILE_USED",·"FALLBACK_CHAIN_COMPUTED"],
+validate        CI parity       2026-05-11T22:09:04.2406427Z     100 96 │       "eligibility": []
+validate        CI parity       2026-05-11T22:09:04.2406867Z     101 97 │     }
+validate        CI parity       2026-05-11T22:09:04.2407157Z
+validate        CI parity       2026-05-11T22:09:04.2407303Z
+validate        CI parity       2026-05-11T22:09:04.2408122Z ./protocol/schemas/router-decision.schema.json format ━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+validate        CI parity       2026-05-11T22:09:04.2408982Z
+validate        CI parity       2026-05-11T22:09:04.2412314Z   × Formatter would have printed the following content:    
+validate        CI parity       2026-05-11T22:09:04.2412800Z
+validate        CI parity       2026-05-11T22:09:04.2418322Z      90  90 │               "type": "object",
+validate        CI parity       2026-05-11T22:09:04.2419027Z      91  91 │               "additionalProperties": false, 
+validate        CI parity       2026-05-11T22:09:04.2419818Z      92     │ - ············"required":·[
+validate        CI parity       2026-05-11T22:09:04.2420370Z      93     │ - ··············"quality",
+validate        CI parity       2026-05-11T22:09:04.2420894Z      94     │ - ··············"latency",
+validate        CI parity       2026-05-11T22:09:04.2421470Z      95     │ - ··············"throughput",
+validate        CI parity       2026-05-11T22:09:04.2421993Z      96     │ - ··············"cost",
+validate        CI parity       2026-05-11T22:09:04.2422532Z      97     │ - ··············"reliability",
+validate        CI parity       2026-05-11T22:09:04.2423069Z      98     │ - ··············"preference"
+validate        CI parity       2026-05-11T22:09:04.2423583Z      99     │ - ············],
+validate        CI parity       2026-05-11T22:09:04.2424565Z          92 │ + ············"required":·["quality",·"latenc
+cy",·"throughput",·"cost",·"reliability",·"preference"],
+validate        CI parity       2026-05-11T22:09:04.2425460Z     100  93 │               "properties": {
+validate        CI parity       2026-05-11T22:09:04.2426159Z     101  94 │                 "quality": { "$ref": "#/$defs
+s/metricEntry" },
+validate        CI parity       2026-05-11T22:09:04.2426733Z     ······· │
+validate        CI parity       2026-05-11T22:09:04.2427154Z     130 123 │             "BEST_TOTAL_SCORE",
+validate        CI parity       2026-05-11T22:09:04.2427760Z     131 124 │             "MEASURED_PROFILE_USED",
+validate        CI parity       2026-05-11T22:09:04.2428406Z     132     │ - ············"DECLARED_PROFILE_USED",       
+validate        CI parity       2026-05-11T22:09:04.2429019Z     133     │ - ············"DEFAULT_PROFILE_USED",        
+validate        CI parity       2026-05-11T22:09:04.2430157Z     134     │ - ············"LOCAL_PREFERENCE_APPLIED",    
+validate        CI parity       2026-05-11T22:09:04.2430833Z     135     │ - ············"REMOTE_PREFERENCE_APPLIED",   
+validate        CI parity       2026-05-11T22:09:04.2431506Z     136     │ - ············"CONTINUITY_AFFINITY_APPLIED", 
+validate        CI parity       2026-05-11T22:09:04.2432160Z     137     │ - ············"CACHE_AFFINITY_APPLIED",      
+validate        CI parity       2026-05-11T22:09:04.2432849Z     138     │ - ············"ROUTING_MODEL_PREFERENCE_APPLI
+IED",
+validate        CI parity       2026-05-11T22:09:04.2433519Z     139     │ - ············"BUDGET_OPTIMIZATION",
+validate        CI parity       2026-05-11T22:09:04.2434181Z     140     │ - ············"LOW_LATENCY_TARGET_MET",      
+validate        CI parity       2026-05-11T22:09:04.2434913Z     141     │ - ············"HIGH_QUALITY_TARGET_MET",     
+validate        CI parity       2026-05-11T22:09:04.2435631Z         125 │ + ··········"DECLARED_PROFILE_USED",
+validate        CI parity       2026-05-11T22:09:04.2436377Z         126 │ + ··········"DEFAULT_PROFILE_USED",
+validate        CI parity       2026-05-11T22:09:04.2437257Z         127 │ + ··········"LOCAL_PREFERENCE_APPLIED",      
+validate        CI parity       2026-05-11T22:09:04.2438140Z         128 │ + ··········"REMOTE_PREFERENCE_APPLIED",     
+validate        CI parity       2026-05-11T22:09:04.2438946Z         129 │ + ··········"CONTINUITY_AFFINITY_APPLIED",   
+validate        CI parity       2026-05-11T22:09:04.2440087Z         130 │ + ··········"CACHE_AFFINITY_APPLIED",        
+validate        CI parity       2026-05-11T22:09:04.2440948Z         131 │ + ··········"ROUTING_MODEL_PREFERENCE_APPLIED
+D",
+validate        CI parity       2026-05-11T22:09:04.2441673Z         132 │ + ··········"BUDGET_OPTIMIZATION",
+validate        CI parity       2026-05-11T22:09:04.2442459Z         133 │ + ··········"LOW_LATENCY_TARGET_MET",        
+validate        CI parity       2026-05-11T22:09:04.2443269Z         134 │ + ··········"HIGH_QUALITY_TARGET_MET",       
+validate        CI parity       2026-05-11T22:09:04.2443945Z     142 135 │             "ROLE_POLICY_APPLIED",
+validate        CI parity       2026-05-11T22:09:04.2444661Z     143 136 │             "TASK_POLICY_APPLIED",
+validate        CI parity       2026-05-11T22:09:04.2445258Z
+validate        CI parity       2026-05-11T22:09:04.2445447Z
+validate        CI parity       2026-05-11T22:09:04.2446655Z ./role-model-router/apps/runtime-host-bridge/scripts/start-
+-for-qa.ts:77:13 lint/style/noUnusedTemplateLiteral  FIXABLE  ━━━━━━━━━━
+validate        CI parity       2026-05-11T22:09:04.2447632Z
+validate        CI parity       2026-05-11T22:09:04.2448412Z   × Do not use template literals if interpolation and speci
+ial-character handling are not needed.
+validate        CI parity       2026-05-11T22:09:04.2449399Z
+validate        CI parity       2026-05-11T22:09:04.2450163Z     75 │ const baseUrl = `http://127.0.0.1:${server.port}`;
+validate        CI parity       2026-05-11T22:09:04.2451219Z     76 │ console.log(`[QA] Bridge server running at ${baseU
+Url}`);
+validate        CI parity       2026-05-11T22:09:04.2452059Z   > 77 │ console.log(`[QA] API docs:`);
+validate        CI parity       2026-05-11T22:09:04.2511028Z        │             ^^^^^^^^^^^^^^^^
+validate        CI parity       2026-05-11T22:09:04.2511976Z     78 │ console.log(`  GET ${baseUrl}/api/role-model/runti
+ime/summary`);
+validate        CI parity       2026-05-11T22:09:04.2513074Z     79 │ console.log(`  GET ${baseUrl}/api/role-model/provi
+iders`);
+validate        CI parity       2026-05-11T22:09:04.2513487Z
+validate        CI parity       2026-05-11T22:09:04.2513804Z   i Unsafe fix: Replace with string literal
+validate        CI parity       2026-05-11T22:09:04.2514148Z
+validate        CI parity       2026-05-11T22:09:04.2514620Z      75  75 │   const baseUrl = `http://127.0.0.1:${server.
+.port}`;
+validate        CI parity       2026-05-11T22:09:04.2515359Z      76  76 │   console.log(`[QA] Bridge server running at 
+ ${baseUrl}`);
+validate        CI parity       2026-05-11T22:09:04.2516045Z      77     │ - console.log(`[QA]·API·docs:`);
+validate        CI parity       2026-05-11T22:09:04.2516618Z          77 │ + console.log("[QA]·API·docs:");
+validate        CI parity       2026-05-11T22:09:04.2517365Z      78  78 │   console.log(`  GET ${baseUrl}/api/role-mode
+el/runtime/summary`);
+validate        CI parity       2026-05-11T22:09:04.2518194Z      79  79 │   console.log(`  GET ${baseUrl}/api/role-mode
+el/providers`);
+validate        CI parity       2026-05-11T22:09:04.2518704Z
+validate        CI parity       2026-05-11T22:09:04.2518852Z
+validate        CI parity       2026-05-11T22:09:04.2520132Z ./role-model-router/apps/runtime-host-bridge/scripts/start-
+-for-qa.ts:89:13 lint/style/noUnusedTemplateLiteral  FIXABLE  ━━━━━━━━━━
+validate        CI parity       2026-05-11T22:09:04.2520915Z
+validate        CI parity       2026-05-11T22:09:04.2521567Z   × Do not use template literals if interpolation and speci
+ial-character handling are not needed.
+validate        CI parity       2026-05-11T22:09:04.2522211Z
+validate        CI parity       2026-05-11T22:09:04.2522636Z     87 │ console.log(`  GET ${baseUrl}/v1/models`);        
+validate        CI parity       2026-05-11T22:09:04.2523286Z     88 │ console.log(`  POST ${baseUrl}/v1/chat/completions
+s`);
+validate        CI parity       2026-05-11T22:09:04.2523943Z   > 89 │ console.log(`[QA] Press Ctrl+C to stop`);
+validate        CI parity       2026-05-11T22:09:04.2524490Z        │             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+validate        CI parity       2026-05-11T22:09:04.2524890Z     90 │
+validate        CI parity       2026-05-11T22:09:04.2525279Z     91 │ process.on("SIGINT", async () => {
+validate        CI parity       2026-05-11T22:09:04.2525899Z
+validate        CI parity       2026-05-11T22:09:04.2526226Z   i Unsafe fix: Replace with string literal
+validate        CI parity       2026-05-11T22:09:04.2526605Z
+validate        CI parity       2026-05-11T22:09:04.2527056Z      87  87 │   console.log(`  GET ${baseUrl}/v1/models`); 
+validate        CI parity       2026-05-11T22:09:04.2527739Z      88  88 │   console.log(`  POST ${baseUrl}/v1/chat/comp
+pletions`);
+validate        CI parity       2026-05-11T22:09:04.2528443Z      89     │ - console.log(`[QA]·Press·Ctrl+C·to·stop`);  
+validate        CI parity       2026-05-11T22:09:04.2529081Z          89 │ + console.log("[QA]·Press·Ctrl+C·to·stop");  
+validate        CI parity       2026-05-11T22:09:04.2529530Z      90  90 │
+validate        CI parity       2026-05-11T22:09:04.2530147Z      91  91 │   process.on("SIGINT", async () => {
+validate        CI parity       2026-05-11T22:09:04.2530536Z
+validate        CI parity       2026-05-11T22:09:04.2530668Z
+validate        CI parity       2026-05-11T22:09:04.2531423Z ./role-model-router/apps/gateway-smoke/src/index.ts organiz
+zeImports ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+validate        CI parity       2026-05-11T22:09:04.2532003Z
+validate        CI parity       2026-05-11T22:09:04.2532244Z   × Import statements could be sorted:
+validate        CI parity       2026-05-11T22:09:04.2532603Z
+validate        CI parity       2026-05-11T22:09:04.2533311Z      16  16 │   import { readRuntimeMaintenancePolicy } fro
+om "@role-model-router/sqlite-memory";
+validate        CI parity       2026-05-11T22:09:04.2534034Z      17  17 │   import {
+validate        CI parity       2026-05-11T22:09:04.2534467Z      18     │ - ··readTraceArtifacts,
+validate        CI parity       2026-05-11T22:09:04.2534971Z      19     │ - ··type·TraceEventRecord,
+validate        CI parity       2026-05-11T22:09:04.2535480Z          18 │ + ··type·TraceEventRecord,
+validate        CI parity       2026-05-11T22:09:04.2535964Z      20  19 │     type TraceSpanRecord,
+validate        CI parity       2026-05-11T22:09:04.2536481Z      21     │ - ··validateTraceLinkage,
+validate        CI parity       2026-05-11T22:09:04.2536967Z          20 │ + ··readTraceArtifacts,
+validate        CI parity       2026-05-11T22:09:04.2537440Z          21 │ + ··validateTraceLinkage,
+validate        CI parity       2026-05-11T22:09:04.2537921Z      22  22 │     writeTraceArtifacts,
+validate        CI parity       2026-05-11T22:09:04.2538447Z      23  23 │   } from "@role-model-router/trace";
+validate        CI parity       2026-05-11T22:09:04.2538903Z
+validate        CI parity       2026-05-11T22:09:04.2539039Z
+validate        CI parity       2026-05-11T22:09:04.2539935Z ./role-model-router/apps/runtime-host-bridge/scripts/start-
+-for-qa.ts format ━━━━━━━━━━━━━━━━━━━━━━━━
+validate        CI parity       2026-05-11T22:09:04.2540524Z
+validate        CI parity       2026-05-11T22:09:04.2540853Z   × Formatter would have printed the following content:    
+validate        CI parity       2026-05-11T22:09:04.2541303Z
+validate        CI parity       2026-05-11T22:09:04.2541588Z      28  28 │
+validate        CI parity       2026-05-11T22:09:04.2542120Z      29  29 │   const backend = await createRuntimeBridgeBa
+ackend({
+validate        CI parity       2026-05-11T22:09:04.2542971Z      30     │ - ····fixtureRoot:·path.join(repoRoot,·"testd
+data",·"router-runtime"),
+validate        CI parity       2026-05-11T22:09:04.2543867Z          30 │ + ··fixtureRoot:·path.join(repoRoot,·"testdat
+ta",·"router-runtime"),
+validate        CI parity       2026-05-11T22:09:04.2544658Z      31  31 │     repoRoot,
+validate        CI parity       2026-05-11T22:09:04.2545090Z      32  32 │     runtimeStateRoot,
+validate        CI parity       2026-05-11T22:09:04.2545428Z
+validate        CI parity       2026-05-11T22:09:04.2545580Z
+validate        CI parity       2026-05-11T22:09:04.2546312Z ./role-model-router/apps/gateway-smoke/src/index.ts format 
+ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+validate        CI parity       2026-05-11T22:09:04.2546880Z
+validate        CI parity       2026-05-11T22:09:04.2547216Z   × Formatter would have printed the following content:    
+validate        CI parity       2026-05-11T22:09:04.2547645Z
+validate        CI parity       2026-05-11T22:09:04.2547988Z      10  10 │     validateObservedPerformanceProfileConsist
+tency,
+validate        CI parity       2026-05-11T22:09:04.2548489Z      11  11 │   } from "@role-model-router/profile-aggregat
+tor";
+validate        CI parity       2026-05-11T22:09:04.2548825Z      12     │ - import·{
+validate        CI parity       2026-05-11T22:09:04.2549147Z      13     │ - ··createRuntimeObservationBundle,
+validate        CI parity       2026-05-11T22:09:04.2549585Z      14     │ - }·from·"@role-model-router/runtime-observab
+bility";
+validate        CI parity       2026-05-11T22:09:04.2550519Z          12 │ + import·{·createRuntimeObservationBundle·}·f
+from·"@role-model-router/runtime-observability";
+validate        CI parity       2026-05-11T22:09:04.2551405Z      15  13 │   import { createOpenTelemetryGenAiExport } f
+from "@role-model-router/runtime-observability/otel";
+validate        CI parity       2026-05-11T22:09:04.2552169Z      16  14 │   import { readRuntimeMaintenancePolicy } fro
+om "@role-model-router/sqlite-memory";
+validate        CI parity       2026-05-11T22:09:04.2552613Z     ······· │
+validate        CI parity       2026-05-11T22:09:04.2553015Z      87  85 │     const chosen = validation.execution.targe
+et.candidate;
+validate        CI parity       2026-05-11T22:09:04.2553498Z      88  86 │     const observedProfiles = JSON.parse(     
+validate        CI parity       2026-05-11T22:09:04.2554370Z      89     │ - ····await·readFile(path.join(repoRoot,·"tes
+stdata",·"router-runtime",·"routing-observed-profiles.json"),·"utf8"),
+validate        CI parity       2026-05-11T22:09:04.2555326Z          87 │ + ····await·readFile(
+validate        CI parity       2026-05-11T22:09:04.2555897Z          88 │ + ······path.join(repoRoot,·"testdata",·"rout
+ter-runtime",·"routing-observed-profiles.json"),
+validate        CI parity       2026-05-11T22:09:04.2556367Z          89 │ + ······"utf8",
+validate        CI parity       2026-05-11T22:09:04.2556627Z          90 │ + ····),
+validate        CI parity       2026-05-11T22:09:04.2556879Z      90  91 │     ) as Record<
+validate        CI parity       2026-05-11T22:09:04.2557153Z      91  92 │       string,
+validate        CI parity       2026-05-11T22:09:04.2557398Z     ······· │
+validate        CI parity       2026-05-11T22:09:04.2557606Z     100 101 │     >;
+validate        CI parity       2026-05-11T22:09:04.2557936Z     101 102 │     const observabilityHistory = JSON.parse( 
+validate        CI parity       2026-05-11T22:09:04.2558634Z     102     │ - ····await·readFile(path.join(repoRoot,·"tes
+stdata",·"router-runtime",·"observability-history.json"),·"utf8"),
+validate        CI parity       2026-05-11T22:09:04.2559205Z         103 │ + ····await·readFile(
+validate        CI parity       2026-05-11T22:09:04.2559974Z         104 │ + ······path.join(repoRoot,·"testdata",·"rout
+ter-runtime",·"observability-history.json"),
+validate        CI parity       2026-05-11T22:09:04.2560470Z         105 │ + ······"utf8",
+validate        CI parity       2026-05-11T22:09:04.2560720Z         106 │ + ····),
+validate        CI parity       2026-05-11T22:09:04.2560985Z     103 107 │     ) as {
+validate        CI parity       2026-05-11T22:09:04.2561636Z     104     │ - ····byEndpointId:·Record<string,·Parameters
+s<typeof·createRuntimeObservationBundle>[0]["priorSamples"]>;
+validate        CI parity       2026-05-11T22:09:04.2562233Z         108 │ + ····byEndpointId:·Record<
+validate        CI parity       2026-05-11T22:09:04.2562693Z         109 │ + ······string,
+validate        CI parity       2026-05-11T22:09:04.2563171Z         110 │ + ······Parameters<typeof·createRuntimeObserv
+vationBundle>[0]["priorSamples"]
+validate        CI parity       2026-05-11T22:09:04.2563692Z         111 │ + ····>;
+validate        CI parity       2026-05-11T22:09:04.2564031Z     105 112 │     };
+validate        CI parity       2026-05-11T22:09:04.2564524Z     106 113 │     const observabilityPolicy = JSON.parse(  
+validate        CI parity       2026-05-11T22:09:04.2565644Z     107     │ - ····await·readFile(path.join(repoRoot,·"tes
+stdata",·"router-runtime",·"observability-policy.json"),·"utf8"),
+validate        CI parity       2026-05-11T22:09:04.2566518Z         114 │ + ····await·readFile(
+validate        CI parity       2026-05-11T22:09:04.2567346Z         115 │ + ······path.join(repoRoot,·"testdata",·"rout
+ter-runtime",·"observability-policy.json"),
+validate        CI parity       2026-05-11T22:09:04.2568086Z         116 │ + ······"utf8",
+validate        CI parity       2026-05-11T22:09:04.2568462Z         117 │ + ····),
+validate        CI parity       2026-05-11T22:09:04.2569195Z     108 118 │     ) as Parameters<typeof createRuntimeObser
+rvationBundle>[0]["capturePolicy"];
+validate        CI parity       2026-05-11T22:09:04.2570359Z     109 119 │     const chosenObserved = observedProfiles[d
+decision.chosen_endpoint_id];
+validate        CI parity       2026-05-11T22:09:04.2571023Z     ······· │
+validate        CI parity       2026-05-11T22:09:04.2571394Z     142 152 │                     1000,
+validate        CI parity       2026-05-11T22:09:04.2571838Z     143 153 │                 )
+validate        CI parity       2026-05-11T22:09:04.2572425Z     144     │ - ············:·chosenObserved?.tokens_per_se
+ec·??·55,
+validate        CI parity       2026-05-11T22:09:04.2573132Z         154 │ + ············:·(chosenObserved?.tokens_per_s
+sec·??·55),
+validate        CI parity       2026-05-11T22:09:04.2573739Z     145 155 │           cost_per_1k_tokens_est:
+validate        CI parity       2026-05-11T22:09:04.2574544Z     146 156 │             typeof validation.execution.usage
+eEvent.cost_estimate === "number"
+validate        CI parity       2026-05-11T22:09:04.2575440Z     147 157 │               ? validation.execution.usageEve
+ent.cost_estimate
+validate        CI parity       2026-05-11T22:09:04.2576256Z     148     │ - ············:·chosenObserved?.cost_per_1k_t
+tokens_est·??·0.001,
+validate        CI parity       2026-05-11T22:09:04.2577060Z         158 │ + ············:·(chosenObserved?.cost_per_1k_
+_tokens_est·??·0.001),
+validateCI parity2026-05-11T22:09:04.2577453Z     149 159 │           failure: false,
+validate        CI parity       2026-05-11T22:09:04.2577816Z     150 160 │           request_id: decision.request_id,   
+validate        CI parity       2026-05-11T22:09:04.2578136Z     ······· │
+validate        CI parity       2026-05-11T22:09:04.2578416Z     241 251 │         "request-capture.json",
+validate        CI parity       2026-05-11T22:09:04.2578764Z     242 252 │         "response-capture.json",
+validate        CI parity       2026-05-11T22:09:04.2579133Z     243     │ - ········"normalized-response.json",        
+validate        CI parity       2026-05-11T22:09:04.2579526Z     244     │ - ········"adapter-diagnostics.json",        
+validate        CI parity       2026-05-11T22:09:04.2580123Z     245     │ - ········"request-observation.json",        
+validate        CI parity       2026-05-11T22:09:04.2580519Z     246     │ - ········"endpoint-profile-state.json",     
+validate        CI parity       2026-05-11T22:09:04.2580899Z     247     │ - ········"otel-export.json",
+validate        CI parity       2026-05-11T22:09:04.2581456Z     248     │ - ········"trace-spans.json",
+validate        CI parity       2026-05-11T22:09:04.2581790Z     249     │ - ········"trace-events.jsonl",
+validate        CI parity       2026-05-11T22:09:04.2582233Z     250     │ - ········"usage-events.jsonl",
+validate        CI parity       2026-05-11T22:09:04.2582768Z         253 │ + ······"normalized-response.json",
+validate        CI parity       2026-05-11T22:09:04.2583264Z         254 │ + ······"adapter-diagnostics.json",
+validate        CI parity       2026-05-11T22:09:04.2583646Z         255 │ + ······"request-observation.json",
+validate        CI parity       2026-05-11T22:09:04.2584021Z         256 │ + ······"endpoint-profile-state.json",       
+validate        CI parity       2026-05-11T22:09:04.2584385Z         257 │ + ······"otel-export.json",
+validate        CI parity       2026-05-11T22:09:04.2584716Z         258 │ + ······"trace-spans.json",
+validate        CI parity       2026-05-11T22:09:04.2585038Z         259 │ + ······"trace-events.jsonl",
+validate        CI parity       2026-05-11T22:09:04.2585378Z         260 │ + ······"usage-events.jsonl",
+validate        CI parity       2026-05-11T22:09:04.2585843Z     251 261 │       ].map((name) => rm(path.join(outputDir,
+, name), { force: true })),
+validate        CI parity       2026-05-11T22:09:04.2586236Z     252 262 │     );
+validate        CI parity       2026-05-11T22:09:04.2586446Z
+validate        CI parity       2026-05-11T22:09:04.2586545Z
+validate        CI parity       2026-05-11T22:09:04.2587027Z ./role-model-router/apps/runtime-host-bridge/src/litellm-ca
+atalog.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━
+validate        CI parity       2026-05-11T22:09:04.2587419Z
+validate        CI parity       2026-05-11T22:09:04.2587636Z   × Formatter would have printed the following content:    
+validate        CI parity       2026-05-11T22:09:04.2587931Z
+validate        CI parity       2026-05-11T22:09:04.2588354Z     212 212 │       adapterFamily: override?.adapterFamily 
+ ?? "ai-sdk-openai-compatible",
+validate        CI parity       2026-05-11T22:09:04.2589244Z     213 213 │       apiBase: override?.apiBase ?? "",      
+validate        CI parity       2026-05-11T22:09:04.2590523Z     214     │ - ····envVars:·override?.envVars·??·[`${provi
+iderId.toUpperCase().replace(/[^A-Z0-9]/g,·"_")}_API_KEY`],
+validate        CI parity       2026-05-11T22:09:04.2591435Z         214 │ + ····envVars:·override?.envVars·??·[        
+validate        CI parity       2026-05-11T22:09:04.2592232Z         215 │ + ······`${providerId.toUpperCase().replace(/
+/[^A-Z0-9]/g,·"_")}_API_KEY`,
+validate        CI parity       2026-05-11T22:09:04.2592849Z         216 │ + ····],
+validate        CI parity       2026-05-11T22:09:04.2593467Z     215 217 │       supportedAuthModes: override?.supported
+dAuthModes ?? [],
+validate        CI parity       2026-05-11T22:09:04.2594424Z     216 218 │       controlPlaneRequirements: override?.con
+ntrolPlaneRequirements ?? [],
+validate        CI parity       2026-05-11T22:09:04.2595070Z     ······· │
+validate        CI parity       2026-05-11T22:09:04.2595685Z     257 259 │       path.join(liteLLMPath, "model_prices_an
+nd_context_window.json"),
+validate        CI parity       2026-05-11T22:09:04.2596643Z     258 260 │       path.join(repoRoot, "testdata", "catalo
+og", "litellm-model-prices.json"),
+validate        CI parity       2026-05-11T22:09:04.2597883Z     259     │ - ····path.join(repoRoot,·"role-model-router"
+",·"packages",·"vendor-litellm",·"data",·"model-prices.json"),
+validate        CI parity       2026-05-11T22:09:04.2598720Z         261 │ + ····path.join(
+validate        CI parity       2026-05-11T22:09:04.2599161Z         262 │ + ······repoRoot,
+validate        CI parity       2026-05-11T22:09:04.2599762Z         263 │ + ······"role-model-router",
+validate        CI parity       2026-05-11T22:09:04.2600238Z         264 │ + ······"packages",
+validate        CI parity       2026-05-11T22:09:04.2600701Z         265 │ + ······"vendor-litellm",
+validate        CI parity       2026-05-11T22:09:04.2601141Z         266 │ + ······"data",
+validate        CI parity       2026-05-11T22:09:04.2601596Z         267 │ + ······"model-prices.json",
+validate        CI parity       2026-05-11T22:09:04.2602231Z         268 │ + ····),
+validate        CI parity       2026-05-11T22:09:04.2602567Z     260 269 │     ];
+validate        CI parity       2026-05-11T22:09:04.2602899Z     261 270 │
+validate        CI parity       2026-05-11T22:09:04.2603174Z
+validate        CI parity       2026-05-11T22:09:04.2603309Z
+validate        CI parity       2026-05-11T22:09:04.2604094Z ./role-model-router/apps/runtime-host-bridge/src/package-se
+ea.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+validate        CI parity       2026-05-11T22:09:04.2604628Z
+validate        CI parity       2026-05-11T22:09:04.2604846Z   × Formatter would have printed the following content:    
+validate        CI parity       2026-05-11T22:09:04.2605156Z
+validate        CI parity       2026-05-11T22:09:04.2605364Z      56  56 │   ];
+validate        CI parity       2026-05-11T22:09:04.2605581Z      57  57 │
+validate        CI parity       2026-05-11T22:09:04.2606323Z      58     │ - function·runOrThrow(command:·string,·args:·
+·readonly·string[],·cwd:·string,·env?:·NodeJS.ProcessEnv):·void·{
+validate        CI parity       2026-05-11T22:09:04.2607214Z          58 │ + function·runOrThrow(
+validate        CI parity       2026-05-11T22:09:04.2607704Z          59 │ + ··command:·string,
+validate        CI parity       2026-05-11T22:09:04.2608028Z          60 │ + ··args:·readonly·string[],
+validate        CI parity       2026-05-11T22:09:04.2608343Z          61 │ + ··cwd:·string,
+validate        CI parity       2026-05-11T22:09:04.2608651Z          62 │ + ··env?:·NodeJS.ProcessEnv,
+validate        CI parity       2026-05-11T22:09:04.2608953Z          63 │ + ):·void·{
+validate        CI parity       2026-05-11T22:09:04.2609374Z      59  64 │     const result = spawnSync(command, args, {
+validate        CI parity       2026-05-11T22:09:04.2609991Z      60  65 │       cwd,
+validate        CI parity       2026-05-11T22:09:04.2610331Z     ······· │
+validate        CI parity       2026-05-11T22:09:04.2610639Z      75  80 │
+validate        CI parity       2026-05-11T22:09:04.2611086Z      76  81 │   function resolveGoCommand(): string {      
+validate        CI parity       2026-05-11T22:09:04.2611708Z      77     │ - ··return·process.env.GO_BINARY·??
+validate        CI parity       2026-05-11T22:09:04.2612907Z      78     │ - ····(process.platform·===·"win32"·?·"C:\\Pr
+rogram·Files\\Go\\bin\\go.exe"·:·"go");
+validate        CI parity       2026-05-11T22:09:04.2613560Z          82 │ + ··return·(
+validate        CI parity       2026-05-11T22:09:04.2613872Z          83 │ + ····process.env.GO_BINARY·??
+validate        CI parity       2026-05-11T22:09:04.2614389Z          84 │ + ····(process.platform·===·"win32"·?·"C:\\Pr
+rogram·Files\\Go\\bin\\go.exe"·:·"go")
+validate        CI parity       2026-05-11T22:09:04.2614808Z          85 │ + ··);
+validate        CI parity       2026-05-11T22:09:04.2615039Z      79  86 │   }
+validate        CI parity       2026-05-11T22:09:04.2615251Z      80  87 │
+validate        CI parity       2026-05-11T22:09:04.2615484Z     ······· │
+validate        CI parity       2026-05-11T22:09:04.2615701Z     147 154 │     }
+validate        CI parity       2026-05-11T22:09:04.2615911Z     148 155 │
+validate        CI parity       2026-05-11T22:09:04.2616197Z     149     │ - ··const·postjectArgs·=·[
+validate        CI parity       2026-05-11T22:09:04.2616524Z     150     │ - ····outputPath,
+validate        CI parity       2026-05-11T22:09:04.2616817Z     151     │ - ····"NODE_SEA_BLOB",
+validate        CI parity       2026-05-11T22:09:04.2617102Z     152     │ - ····blobPath,
+validate        CI parity       2026-05-11T22:09:04.2617415Z     153     │ - ····"--sentinel-fuse",
+validate        CI parity       2026-05-11T22:09:04.2617919Z     154     │ - ····NODE_SEA_FUSE,
+validate        CI parity       2026-05-11T22:09:04.2618191Z     155     │ - ··];
+validate        CI parity       2026-05-11T22:09:04.2618771Z         156 │ + ··const·postjectArgs·=·[outputPath,·"NODE_S
+SEA_BLOB",·blobPath,·"--sentinel-fuse",·NODE_SEA_FUSE];
+validate        CI parity       2026-05-11T22:09:04.2619382Z     156 157 │     if (process.platform === "darwin") {     
+validate        CI parity       2026-05-11T22:09:04.2619983Z     157 158 │       postjectArgs.push("--macho-segment-name
+e", "NODE_SEA");
+validate        CI parity       2026-05-11T22:09:04.2620313Z
+validate        CI parity       2026-05-11T22:09:04.2620417Z
+validate        CI parity       2026-05-11T22:09:04.2621093Z ./role-model-router/apps/runtime-host-bridge/src/unified-ru
+untime-config.ts:1159:45 lint/complexity/useLiteralKeys  FIXABLE  ━━━━━━━━━━
+validate        CI parity       2026-05-11T22:09:04.2621609Z
+validate        CI parity       2026-05-11T22:09:04.2621940Z   × The computed expression can be simplified without the u
+use of a string literal.
+validate        CI parity       2026-05-11T22:09:04.2622312Z
+validate        CI parity       2026-05-11T22:09:04.2622584Z     1157 │         ? normalizedLiteLLMParams
+validate        CI parity       2026-05-11T22:09:04.2622890Z     1158 │         : {};
+validate        CI parity       2026-05-11T22:09:04.2623482Z   > 1159 │       const rawLitellmModel = litellmParams["mod
+del"];
+validate        CI parity       2026-05-11T22:09:04.2624163Z          │                                             ^^^^
+^^^^
+validate        CI parity       2026-05-11T22:09:04.2625072Z     1160 │       const litellmModel = typeof rawLitellmMode
+el === "string" ? rawLitellmModel : modelId;
+validate        CI parity       2026-05-11T22:09:04.2625885Z     1161 │       if (!modelId || !litellmModel) {
+validate        CI parity       2026-05-11T22:09:04.2626278Z
+validate        CI parity       2026-05-11T22:09:04.2626599Z   i Unsafe fix: Use a literal key instead.
+validate        CI parity       2026-05-11T22:09:04.2626999Z
+validate        CI parity       2026-05-11T22:09:04.2627447Z     1157 1157 │           ? normalizedLiteLLMParams        
+validate        CI parity       2026-05-11T22:09:04.2628231Z     1158 1158 │           : {};
+validate        CI parity       2026-05-11T22:09:04.2628712Z     1159      │ - ······const·rawLitellmModel·=·litellmPara
+ams["model"];
+validate        CI parity       2026-05-11T22:09:04.2629223Z          1159 │ + ······const·rawLitellmModel·=·litellmPara
+ams.model;
+validate        CI parity       2026-05-11T22:09:04.2629976Z     1160 1160 │         const litellmModel = typeof rawLite
+ellmModel === "string" ? rawLitellmModel : modelId;
+validate        CI parity       2026-05-11T22:09:04.2630573Z     1161 1161 │         if (!modelId || !litellmModel) {   
+validate        CI parity       2026-05-11T22:09:04.2630838Z
+validate        CI parity       2026-05-11T22:09:04.2630945Z
+validate        CI parity       2026-05-11T22:09:04.2631416Z ./role-model-router/apps/runtime-host-bridge/src/validate-h
+host.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+validate        CI parity       2026-05-11T22:09:04.2631801Z
+validate        CI parity       2026-05-11T22:09:04.2637166Z   × Formatter would have printed the following content:    
+validate        CI parity       2026-05-11T22:09:04.2637489Z
+validate        CI parity       2026-05-11T22:09:04.2647694Z      95  95 │           ROLE_MODEL_BRIDGE_PORT: String(brid
+dgePort),
+validate        CI parity       2026-05-11T22:09:04.2648625Z      96  96 │           ROLE_MODEL_BRIDGE_SCOPE_ID: "runtim
+me-host-validation",
+validate        CI parity       2026-05-11T22:09:04.2650085Z      97     │ - ········ROLE_MODEL_BRIDGE_FIXTURE_ROOT:·pat
+th.join(repoRoot,·"testdata",·"router-runtime",·"fixtures"),
+validate        CI parity       2026-05-11T22:09:04.2651220Z          97 │ + ········ROLE_MODEL_BRIDGE_FIXTURE_ROOT:·pat
+th.join(
+validate        CI parity       2026-05-11T22:09:04.2651882Z          98 │ + ··········repoRoot,
+validate        CI parity       2026-05-11T22:09:04.2652420Z          99 │ + ··········"testdata",
+validate        CI parity       2026-05-11T22:09:04.2652991Z         100 │ + ··········"router-runtime",
+validate        CI parity       2026-05-11T22:09:04.2653841Z         101 │ + ··········"fixtures",
+validate        CI parity       2026-05-11T22:09:04.2654319Z         102 │ + ········),
+validate        CI parity       2026-05-11T22:09:04.2654753Z      98 103 │         },
+validate        CI parity       2026-05-11T22:09:04.2655321Z      99 104 │         stdio: ["ignore", "pipe", "pipe"],   
+validate        CI parity       2026-05-11T22:09:04.2655853Z     ······· │
+validate        CI parity       2026-05-11T22:09:04.2656237Z     176 181 │       };
+validate        CI parity       2026-05-11T22:09:04.2657069Z     177 182 │       if (!requestDetail.capturePolicy.struct
+turedInspectionAvailable) {
+validate        CI parity       2026-05-11T22:09:04.2658454Z     178     │ - ······throw·new·Error("Structured·request·d
+detail·did·not·expose·structured·inspection·availability.");
+validate        CI parity       2026-05-11T22:09:04.2659458Z         183 │ + ······throw·new·Error(
+validate        CI parity       2026-05-11T22:09:04.2660606Z         184 │ + ········"Structured·request·detail·did·not·
+·expose·structured·inspection·availability.",
+validate        CI parity       2026-05-11T22:09:04.2661420Z         185 │ + ······);
+validate        CI parity       2026-05-11T22:09:04.2661845Z     179 186 │       }
+validate        CI parity       2026-05-11T22:09:04.2662253Z     180 187 │
+validate        CI parity       2026-05-11T22:09:04.2662674Z     ······· │
+validate        CI parity       2026-05-11T22:09:04.2663059Z     195 202 │       }
+validate        CI parity       2026-05-11T22:09:04.2664036Z     196 203 │       if (!endpointProfile.latestProfile || e
+endpointProfile.latestProfile.sample_size < 1) {
+validate        CI parity       2026-05-11T22:09:04.2665610Z     197     │ - ······throw·new·Error("Endpoint·profile·rou
+ute·did·not·expose·a·persisted·observed-performance·profile.");
+validate        CI parity       2026-05-11T22:09:04.2666649Z         204 │ + ······throw·new·Error(
+validate        CI parity       2026-05-11T22:09:04.2667774Z         205 │ + ········"Endpoint·profile·route·did·not·exp
+pose·a·persisted·observed-performance·profile.",
+validate        CI parity       2026-05-11T22:09:04.2668637Z         206 │ + ······);
+validate        CI parity       2026-05-11T22:09:04.2669108Z     198 207 │       }
+validate        CI parity       2026-05-11T22:09:04.2669506Z     199 208 │
+validate        CI parity       2026-05-11T22:09:04.2670134Z
+validate        CI parity       2026-05-11T22:09:04.2670280Z
+validate        CI parity       2026-05-11T22:09:04.2671132Z ./role-model-router/apps/runtime-host-bridge/src/validate-o
+operations.ts format ━━━━━━━━━━━━━━━━━━━━━
+validate        CI parity       2026-05-11T22:09:04.2671793Z
+validate        CI parity       2026-05-11T22:09:04.2672145Z   × Formatter would have printed the following content:    
+validate        CI parity       2026-05-11T22:09:04.2672640Z
+validate        CI parity       2026-05-11T22:09:04.2677752Z      75  75 │     });
+validate        CI parity       2026-05-11T22:09:04.2678322Z      76  76 │     const history = await readJson<{
+validate        CI parity       2026-05-11T22:09:04.2679594Z      77     │ - ····byEndpointId:·Record<string,·Parameters
+s<typeof·createRuntimeObservationBundle>[0]["priorSamples"]>;
+validate        CI parity       2026-05-11T22:09:04.2680706Z          77 │ + ····byEndpointId:·Record<
+validate        CI parity       2026-05-11T22:09:04.2681169Z          78 │ + ······string,
+validate        CI parity       2026-05-11T22:09:04.2681946Z          79 │ + ······Parameters<typeof·createRuntimeObserv
+vationBundle>[0]["priorSamples"]
+validate        CI parity       2026-05-11T22:09:04.2682619Z          80 │ + ····>;
+validate        CI parity       2026-05-11T22:09:04.2683704Z      78  81 │     }>(path.join(input.repoRoot, "testdata", 
+ "router-runtime", "observability-history.json"));
+validate        CI parity       2026-05-11T22:09:04.2685079Z      79     │ - ··const·policy·=·await·readJson<Parameters<
+<typeof·createRuntimeObservationBundle>[0]["capturePolicy"]>(
+validate        CI parity       2026-05-11T22:09:04.2686410Z      80     │ - ····path.join(input.repoRoot,·"testdata",·"
+"router-runtime",·"observability-policy.json"),
+validate        CI parity       2026-05-11T22:09:04.2687169Z      81     │ - ··);
+validate        CI parity       2026-05-11T22:09:04.2687644Z          82 │ + ··const·policy·=·await·readJson<
+validate        CI parity       2026-05-11T22:09:04.2688486Z          83 │ + ····Parameters<typeof·createRuntimeObservat
+tionBundle>[0]["capturePolicy"]
+validate        CI parity       2026-05-11T22:09:04.2689769Z          84 │ + ··>(path.join(input.repoRoot,·"testdata",·"
+"router-runtime",·"observability-policy.json"));
+validate        CI parity       2026-05-11T22:09:04.2690764Z      82  85 │     const observation = createRuntimeObservat
+tionBundle({
+validate        CI parity       2026-05-11T22:09:04.2691438Z      83  86 │       decision: validation.decision,
+validate        CI parity       2026-05-11T22:09:04.2691904Z     ······· │
+validate        CI parity       2026-05-11T22:09:04.2692263Z     137 140 │     });
+validate        CI parity       2026-05-11T22:09:04.2692593Z     138 141 │
+validate        CI parity       2026-05-11T22:09:04.2693573Z     139     │ - ··const·exportPath·=·path.join(options.runt
+timeStateRoot,·primaryScopeId,·"ops",·"runtime-export.json");
+validate        CI parity       2026-05-11T22:09:04.2695065Z     140     │ - ··const·backupPath·=·path.join(options.runt
+timeStateRoot,·primaryScopeId,·"ops",·"memory-backup.sqlite");
+validate        CI parity       2026-05-11T22:09:04.2696234Z         142 │ + ··const·exportPath·=·path.join(
+validate        CI parity       2026-05-11T22:09:04.2696803Z         143 │ + ····options.runtimeStateRoot,
+validate        CI parity       2026-05-11T22:09:04.2697312Z         144 │ + ····primaryScopeId,
+validate        CI parity       2026-05-11T22:09:04.2697745Z         145 │ + ····"ops",
+validate        CI parity       2026-05-11T22:09:04.2698205Z         146 │ + ····"runtime-export.json",
+validate        CI parity       2026-05-11T22:09:04.2698631Z         147 │ + ··);
+validate        CI parity       2026-05-11T22:09:04.2699096Z         148 │ + ··const·backupPath·=·path.join(
+validate        CI parity       2026-05-11T22:09:04.2699798Z         149 │ + ····options.runtimeStateRoot,
+validate        CI parity       2026-05-11T22:09:04.2700307Z         150 │ + ····primaryScopeId,
+validate        CI parity       2026-05-11T22:09:04.2700756Z         151 │ + ····"ops",
+validate        CI parity       2026-05-11T22:09:04.2701213Z         152 │ + ····"memory-backup.sqlite",
+validate        CI parity       2026-05-11T22:09:04.2701642Z         153 │ + ··);
+validate        CI parity       2026-05-11T22:09:04.2702173Z     141 154 │     const exportSummary = exportRuntimeState(
+({
+validate        CI parity       2026-05-11T22:09:04.2702912Z     142 155 │       databasePath: primary.validation.databa
+asePath,
+validate        CI parity       2026-05-11T22:09:04.2703443Z     ······· │
+validate        CI parity       2026-05-11T22:09:04.2704174Z     200 213 │         replayedEndpointId: replay.validation
+n.decision.chosen_endpoint_id,
+validate        CI parity       2026-05-11T22:09:04.2704932Z     201 214 │         matchesChosenEndpoint:
+validate        CI parity       2026-05-11T22:09:04.2706025Z     202     │ - ········replay.validation.decision.chosen_e
+endpoint_id·===·primary.validation.decision.chosen_endpoint_id,
+validate        CI parity       2026-05-11T22:09:04.2707139Z         215 │ + ········replay.validation.decision.chosen_e
+endpoint_id·===
+validate        CI parity       2026-05-11T22:09:04.2707948Z         216 │ + ········primary.validation.decision.chosen_
+_endpoint_id,
+validate        CI parity       2026-05-11T22:09:04.2708498Z     203 217 │       },
+validate        CI parity       2026-05-11T22:09:04.2709038Z     204 218 │     };
+validate        CI parity       2026-05-11T22:09:04.2709328Z
+validate        CI parity       2026-05-11T22:09:04.2709480Z
+validate        CI parity       2026-05-11T22:09:04.2710673Z ./role-model-router/apps/runtime-host-bridge/src/validate-p
+packaging.ts:107:7 lint/correctness/noUnsafeFinally ━━━━━━━━━━
+validate        CI parity       2026-05-11T22:09:04.2711448Z
+validate        CI parity       2026-05-11T22:09:04.2711652Z   × Unsafe usage of 'throw'.
+validate        CI parity       2026-05-11T22:09:04.2712043Z
+validate        CI parity       2026-05-11T22:09:04.2712648Z     105 │     await rm(runtimeStateRoot, { recursive: true,
+, force: true });
+validate        CI parity       2026-05-11T22:09:04.2713563Z     106 │     if (stderrChunks.join("").trim().length > 0 &
+&& !child.killed) {
+validate        CI parity       2026-05-11T22:09:04.2714344Z   > 107 │       throw new Error(stderrChunks.join(""));    
+validate        CI parity       2026-05-11T22:09:04.2714953Z         │       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    
+validateCI parity2026-05-11T22:09:04.2715403Z     108 │     }
+validate        CI parity       2026-05-11T22:09:04.2715720Z     109 │   }
+validate        CI parity       2026-05-11T22:09:04.2715986Z
+validate        CI parity       2026-05-11T22:09:04.2716546Z   i 'throw' in 'finally' overwrites the control flow statem
+ments inside 'try' and 'catch'.
+validate        CI parity       2026-05-11T22:09:04.2717175Z
+validate        CI parity       2026-05-11T22:09:04.2717333Z
+validate        CI parity       2026-05-11T22:09:04.2718135Z ./role-model-router/apps/runtime-host-bridge/src/validate-t
+tools.ts organizeImports ━━━━━━━━━━━━━━━━━
+validate        CI parity       2026-05-11T22:09:04.2718747Z
+validate        CI parity       2026-05-11T22:09:04.2718995Z   × Import statements could be sorted:
+validate        CI parity       2026-05-11T22:09:04.2719370Z
+validate        CI parity       2026-05-11T22:09:04.2719807Z       7   7 │
+validate        CI parity       2026-05-11T22:09:04.2720158Z       8   8 │   import {
+validate        CI parity       2026-05-11T22:09:04.2720652Z       9     │ - ··createRuntimeBridgeBackend,
+validate        CI parity       2026-05-11T22:09:04.2721322Z           9 │ + ··type·BridgeChatCompletionsExecutionResult
+t,
+validate        CI parity       2026-05-11T22:09:04.2721926Z      10  10 │     type BridgeToolCall,
+validate        CI parity       2026-05-11T22:09:04.2722554Z      11     │ - ··type·BridgeChatCompletionsExecutionResult
+t,
+validate        CI parity       2026-05-11T22:09:04.2723209Z          11 │ + ··createRuntimeBridgeBackend,
+validate        CI parity       2026-05-11T22:09:04.2723741Z      12  12 │   } from "./index.js";
+validate        CI parity       2026-05-11T22:09:04.2724153Z      13  13 │
+validate        CI parity       2026-05-11T22:09:04.2724424Z
+validate        CI parity       2026-05-11T22:09:04.2724561Z
+validate        CI parity       2026-05-11T22:09:04.2725376Z ./role-model-router/apps/runtime-host-bridge/src/validate-t
+tools.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━━
+validate        CI parity       2026-05-11T22:09:04.2726008Z
+validate        CI parity       2026-05-11T22:09:04.2726859Z   × Formatter would have printed the following content:    
+validate        CI parity       2026-05-11T22:09:04.2727324Z
+validate        CI parity       2026-05-11T22:09:04.2730943Z      94  94 │       requestId,
+validate        CI parity       2026-05-11T22:09:04.2731562Z      95  95 │     )) as BridgeChatCompletionsExecutionResul
+lt;
+validate        CI parity       2026-05-11T22:09:04.2733137Z      96     │ - ··const·observation·=·requireObservation(aw
+wait·backend.readRequestObservation(requestId),·requestId);
+validate        CI parity       2026-05-11T22:09:04.2734421Z          96 │ + ··const·observation·=·requireObservation(  
+validate        CI parity       2026-05-11T22:09:04.2735148Z          97 │ + ····await·backend.readRequestObservation(re
+equestId),
+validate        CI parity       2026-05-11T22:09:04.2735709Z          98 │ + ····requestId,
+validate        CI parity       2026-05-11T22:09:04.2736094Z          99 │ + ··);
+validate        CI parity       2026-05-11T22:09:04.2736456Z      97 100 │
+validate        CI parity       2026-05-11T22:09:04.2736791Z      98 101 │     return {
+validate        CI parity       2026-05-11T22:09:04.2737102Z
+validate        CI parity       2026-05-11T22:09:04.2737237Z
+validate        CI parity       2026-05-11T22:09:04.2737429Z Skipped 86 suggested fixes.
+validate        CI parity       2026-05-11T22:09:04.2738322Z If you wish to apply the suggested (unsafe) fixes, use the 
+ command biome check --fix --unsafe
+validate        CI parity       2026-05-11T22:09:04.2738874Z
+validate        CI parity       2026-05-11T22:09:04.2739230Z The number of diagnostics exceeds the number allowed by Bio
+ome.
+validate        CI parity       2026-05-11T22:09:04.2739953Z Diagnostics not shown: 380.
+validate        CI parity       2026-05-11T22:09:04.2740426Z Checked 455 files in 552ms. No fixes applied.
+validate        CI parity       2026-05-11T22:09:04.2740864Z Found 381 errors.
+validate        CI parity       2026-05-11T22:09:04.2741690Z check ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+validate        CI parity       2026-05-11T22:09:04.2742127Z
+validate        CI parity       2026-05-11T22:09:04.2742425Z   × Some errors were emitted while running checks.
+validate        CI parity       2026-05-11T22:09:04.2742823Z
+validate        CI parity       2026-05-11T22:09:04.2742982Z
+validate        CI parity       2026-05-11T22:09:04.2944408Z  ELIFECYCLE  Command failed with exit code 1.
+validate        CI parity       2026-05-11T22:09:04.3318411Z  ELIFECYCLE  Command failed with exit code 1.
+validate        CI parity       2026-05-11T22:09:04.3524985Z ##[error]Process completed with exit code 1.
+___BEGIN___COMMAND_DONE_MARKER___0
+PS D:\DEV\role-model\.worktrees\31-main-ci-parity-evidence-json-repair>

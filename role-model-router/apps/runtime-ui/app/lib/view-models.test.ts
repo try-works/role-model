@@ -1,21 +1,21 @@
 import { describe, expect, test } from "vitest";
 
 import {
-  buildActivitySummary,
   buildAccountModelCatalogIds,
-  buildConfiguredProviderRows,
+  buildActivitySummary,
   buildConfiguredModelCards,
-  buildEndpointCatalogRows,
-  buildWorkbenchEndpointOptions,
+  buildConfiguredProviderRows,
   buildDownstreamProviderGuide,
+  buildEndpointCatalogRows,
   buildModelCatalogRows,
   buildProviderCards,
   buildTelemetryComparisonCards,
   buildTelemetryRequestRows,
+  buildWorkbenchEndpointOptions,
   buildWorkbenchModelOptions,
+  summarizeRuntimeStats,
   summarizeTelemetryStats,
   summarizeWorkbenchResult,
-  summarizeRuntimeStats,
 } from "./view-models";
 
 describe("buildProviderCards", () => {

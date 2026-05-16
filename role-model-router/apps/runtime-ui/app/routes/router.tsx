@@ -1,9 +1,16 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
 
-import { ErrorState, FactCard, LoadingState, PageHeader, SectionCard, StatusPill } from "../components/page-primitives";
+import {
+  ErrorState,
+  FactCard,
+  LoadingState,
+  PageHeader,
+  SectionCard,
+  StatusPill,
+} from "../components/page-primitives";
 import { mutedPanelClassName, secondaryButtonClassName } from "../lib/design-system";
-import { fetchRouterSummary, type RouterSummary } from "../lib/runtime-api";
+import { type RouterSummary, fetchRouterSummary } from "../lib/runtime-api";
 
 export default function RouterOverviewRoute() {
   const [summary, setSummary] = useState<RouterSummary | null>(null);
@@ -15,7 +22,9 @@ export default function RouterOverviewRoute() {
         setSummary(value);
         setError(null);
       })
-      .catch((value: unknown) => setError(value instanceof Error ? value.message : "Could not load router overview."));
+      .catch((value: unknown) =>
+        setError(value instanceof Error ? value.message : "Could not load router overview."),
+      );
   }, []);
 
   const header = (
@@ -37,10 +46,20 @@ export default function RouterOverviewRoute() {
   );
 
   if (error) {
-    return <div className="space-y-6">{header}<ErrorState label={error} /></div>;
+    return (
+      <div className="space-y-6">
+        {header}
+        <ErrorState label={error} />
+      </div>
+    );
   }
   if (!summary) {
-    return <div className="space-y-6">{header}<LoadingState label="Loading router overview…" /></div>;
+    return (
+      <div className="space-y-6">
+        {header}
+        <LoadingState label="Loading router overview…" />
+      </div>
+    );
   }
 
   return (
@@ -48,14 +67,27 @@ export default function RouterOverviewRoute() {
       {header}
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <FactCard label="Strategy" value={summary.strategy ?? "unset"} detail="Persisted routing strategy exposed through the Router control plane." emphasis />
-        <FactCard label="Execution mode" value={summary.executionMode} detail="Execution posture that materially changes how routing decisions are interpreted." />
+        <FactCard
+          label="Strategy"
+          value={summary.strategy ?? "unset"}
+          detail="Persisted routing strategy exposed through the Router control plane."
+          emphasis
+        />
+        <FactCard
+          label="Execution mode"
+          value={summary.executionMode}
+          detail="Execution posture that materially changes how routing decisions are interpreted."
+        />
         <FactCard
           label="Controller"
           value={summary.controller?.modelId ?? "unassigned"}
           detail={summary.controller?.endpointId ?? "No controller is currently assigned."}
         />
-        <FactCard label="Recent decisions" value={summary.recentDecisionCount} detail={`${summary.configuredCandidateCount} configured candidates currently visible to the Router inventory.`} />
+        <FactCard
+          label="Recent decisions"
+          value={summary.recentDecisionCount}
+          detail={`${summary.configuredCandidateCount} configured candidates currently visible to the Router inventory.`}
+        />
       </div>
 
       <SectionCard
@@ -66,13 +98,15 @@ export default function RouterOverviewRoute() {
           <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
             <p className="font-medium text-[var(--rm-fg)]">Guidance posture</p>
             <p className="mt-2 leading-6">
-              Preferred endpoints: {summary.guidance?.preferredEndpointIds?.length ?? 0}. Ignored endpoints: {summary.guidance?.ignoredEndpointIds?.length ?? 0}.
+              Preferred endpoints: {summary.guidance?.preferredEndpointIds?.length ?? 0}. Ignored
+              endpoints: {summary.guidance?.ignoredEndpointIds?.length ?? 0}.
             </p>
           </div>
           <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
             <p className="font-medium text-[var(--rm-fg)]">Section ownership</p>
             <p className="mt-2 leading-6">
-              Control remains the editing surface, Observe remains the raw trace surface, and Router owns explanation, provenance, comparison, and decision interpretation.
+              Control remains the editing surface, Observe remains the raw trace surface, and Router
+              owns explanation, provenance, comparison, and decision interpretation.
             </p>
           </div>
         </div>

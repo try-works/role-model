@@ -65,7 +65,10 @@ export interface VendorRuntimeStatus {
 }
 
 export interface VendorRuntime {
-  execute(request: VendorExecutionRequest, options?: VendorExecutionOptions): Promise<VendorExecutionResult>;
+  execute(
+    request: VendorExecutionRequest,
+    options?: VendorExecutionOptions,
+  ): Promise<VendorExecutionResult>;
   executeStream(
     request: VendorExecutionRequest,
     streamWriter: VendorStreamWriter,
@@ -98,9 +101,7 @@ export function parseVendorStreamPayloads(transcript: string): readonly Record<s
 
     try {
       payloads.push(JSON.parse(payloadText) as Record<string, unknown>);
-    } catch {
-      continue;
-    }
+    } catch {}
   }
   return payloads;
 }
@@ -123,7 +124,9 @@ export async function readVendorStreamTranscript(
     const completeBlocks = flushAll ? parts : parts.slice(0, -1);
     pending = flushAll ? "" : (parts.at(-1) ?? "");
 
-    for (const payload of completeBlocks.flatMap((block) => parseVendorStreamPayloads(`${block}\n\n`))) {
+    for (const payload of completeBlocks.flatMap((block) =>
+      parseVendorStreamPayloads(`${block}\n\n`),
+    )) {
       await streamWriter?.(payload);
     }
   };
@@ -191,12 +194,12 @@ function parseRetryAfterMs(retryAfterHeader: string | undefined): number | undef
   return Math.max(absoluteTime - Date.now(), 0);
 }
 
-export function normalizeVendorError(
-  input: NormalizeVendorErrorInput,
-): NormalizedVendorError {
+export function normalizeVendorError(input: NormalizeVendorErrorInput): NormalizedVendorError {
   const rawMessage =
     readVendorMessage(input.body) ??
-    (input.statusCode ? `Vendor request failed with status ${input.statusCode}.` : "Vendor request failed.");
+    (input.statusCode
+      ? `Vendor request failed with status ${input.statusCode}.`
+      : "Vendor request failed.");
 
   if (input.statusCode === 429) {
     return {

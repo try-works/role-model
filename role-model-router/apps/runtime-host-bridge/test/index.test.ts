@@ -1,18 +1,18 @@
-import { describe, expect, test } from "vitest";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
 import { DatabaseSync } from "node:sqlite";
 import { setTimeout as delay } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
+import { describe, expect, test } from "vitest";
 import { stringify } from "yaml";
 
 import type { EndpointRegistryResult } from "@role-model-router/endpoint-registry";
 import { resolveSqliteMemoryLocation } from "@role-model-router/sqlite-memory";
 
-import * as bridge from "../src/index.js";
-import * as cli from "../src/cli.js";
 import { createQaFixtureRoot, createQaServerOptions } from "../scripts/start-for-qa.ts";
+import * as cli from "../src/cli.js";
+import * as bridge from "../src/index.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -2587,15 +2587,18 @@ describe("runtime-host-bridge", () => {
 
       const reader = response.body?.getReader();
       expect(reader).toBeDefined();
+      if (!reader) {
+        throw new Error("Expected responses stream body reader to be available.");
+      }
       const decoder = new TextDecoder();
-      const firstChunk = await reader!.read();
+      const firstChunk = await reader.read();
       const streamedPrefix = decoder.decode(firstChunk.value ?? new Uint8Array(), { stream: true });
       expect(streamedPrefix).toContain('"type":"response.created"');
       expect(executionCompleted).toBe(false);
 
       let transcript = streamedPrefix;
       while (true) {
-        const chunk = await reader!.read();
+        const chunk = await reader.read();
         transcript += decoder.decode(chunk.value ?? new Uint8Array(), { stream: !chunk.done });
         if (chunk.done) {
           break;
@@ -2895,15 +2898,18 @@ describe("runtime-host-bridge", () => {
 
       const reader = response.body?.getReader();
       expect(reader).toBeDefined();
+      if (!reader) {
+        throw new Error("Expected chat stream body reader to be available.");
+      }
       const decoder = new TextDecoder();
-      const firstChunk = await reader!.read();
+      const firstChunk = await reader.read();
       const streamedPrefix = decoder.decode(firstChunk.value ?? new Uint8Array(), { stream: true });
       expect(streamedPrefix).toContain('"content":"un"');
       expect(executionCompleted).toBe(false);
 
       let transcript = streamedPrefix;
       while (true) {
-        const chunk = await reader!.read();
+        const chunk = await reader.read();
         transcript += decoder.decode(chunk.value ?? new Uint8Array(), { stream: !chunk.done });
         if (chunk.done) {
           break;
@@ -5766,6 +5772,9 @@ describe("runtime-host-bridge", () => {
 
       const reader = streamResponse.body?.getReader();
       expect(reader).toBeDefined();
+      if (!reader) {
+        throw new Error("Expected telemetry stream body reader to be available.");
+      }
       const decoder = new TextDecoder();
 
       await fetch(`http://127.0.0.1:${server.port}/v1/chat/completions`, {
@@ -5782,7 +5791,7 @@ describe("runtime-host-bridge", () => {
 
       let transcript = "";
       while (!transcript.includes("req-runtime-bridge-sse-001")) {
-        const chunk = await reader!.read();
+        const chunk = await reader.read();
         transcript += decoder.decode(chunk.value ?? new Uint8Array(), { stream: !chunk.done });
         if (chunk.done) {
           break;

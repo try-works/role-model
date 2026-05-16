@@ -1,144 +1,143 @@
 <script lang="ts">
-  import { metrics, getCapture } from "../stores/api";
-  import ActivityStats from "../components/ActivityStats.svelte";
-  import Tooltip from "../components/Tooltip.svelte";
-  import CaptureDialog from "../components/CaptureDialog.svelte";
-  import { persistentStore } from "../stores/persistent";
-  import { onMount } from "svelte";
-  import type { ReqRespCapture } from "../lib/types";
+import { onMount } from "svelte";
+import ActivityStats from "../components/ActivityStats.svelte";
+import CaptureDialog from "../components/CaptureDialog.svelte";
+import Tooltip from "../components/Tooltip.svelte";
+import type { ReqRespCapture } from "../lib/types";
+import { getCapture, metrics } from "../stores/api";
+import { persistentStore } from "../stores/persistent";
 
-  type ColumnKey =
-    | "id"
-    | "time"
-    | "model"
-    | "req_path"
-    | "resp_status_code"
-    | "resp_content_type"
-    | "cached"
-    | "prompt"
-    | "generated"
-    | "prompt_speed"
-    | "gen_speed"
-    | "duration"
-    | "capture";
+type ColumnKey =
+  | "id"
+  | "time"
+  | "model"
+  | "req_path"
+  | "resp_status_code"
+  | "resp_content_type"
+  | "cached"
+  | "prompt"
+  | "generated"
+  | "prompt_speed"
+  | "gen_speed"
+  | "duration"
+  | "capture";
 
-  interface ColumnDef {
-    key: ColumnKey;
-    label: string;
-    defaultVisible: boolean;
-  }
+interface ColumnDef {
+  key: ColumnKey;
+  label: string;
+  defaultVisible: boolean;
+}
 
-  const columns: ColumnDef[] = [
-    { key: "id", label: "ID", defaultVisible: true },
-    { key: "time", label: "Time", defaultVisible: true },
-    { key: "model", label: "Model", defaultVisible: true },
-    { key: "req_path", label: "Path", defaultVisible: false },
-    { key: "resp_status_code", label: "Status", defaultVisible: false },
-    { key: "resp_content_type", label: "Content-Type", defaultVisible: false },
-    { key: "cached", label: "Cached", defaultVisible: true },
-    { key: "prompt", label: "Prompt", defaultVisible: true },
-    { key: "generated", label: "Generated", defaultVisible: true },
-    { key: "prompt_speed", label: "Prompt Speed", defaultVisible: true },
-    { key: "gen_speed", label: "Gen Speed", defaultVisible: true },
-    { key: "duration", label: "Duration", defaultVisible: true },
-    { key: "capture", label: "Capture", defaultVisible: true },
-  ];
+const columns: ColumnDef[] = [
+  { key: "id", label: "ID", defaultVisible: true },
+  { key: "time", label: "Time", defaultVisible: true },
+  { key: "model", label: "Model", defaultVisible: true },
+  { key: "req_path", label: "Path", defaultVisible: false },
+  { key: "resp_status_code", label: "Status", defaultVisible: false },
+  { key: "resp_content_type", label: "Content-Type", defaultVisible: false },
+  { key: "cached", label: "Cached", defaultVisible: true },
+  { key: "prompt", label: "Prompt", defaultVisible: true },
+  { key: "generated", label: "Generated", defaultVisible: true },
+  { key: "prompt_speed", label: "Prompt Speed", defaultVisible: true },
+  { key: "gen_speed", label: "Gen Speed", defaultVisible: true },
+  { key: "duration", label: "Duration", defaultVisible: true },
+  { key: "capture", label: "Capture", defaultVisible: true },
+];
 
-  const defaultVisibleKeys = columns.filter((c) => c.defaultVisible).map((c) => c.key);
+const defaultVisibleKeys = columns.filter((c) => c.defaultVisible).map((c) => c.key);
 
-  const visibleColumns = persistentStore<ColumnKey[]>(
-    "activity-columns",
-    defaultVisibleKeys
-  );
+const visibleColumns = persistentStore<ColumnKey[]>("activity-columns", defaultVisibleKeys);
 
-  let columnsMenuOpen = $state(false);
-  let dropdownContainer: HTMLDivElement | null = null;
+let columnsMenuOpen = $state(false);
+// biome-ignore lint/style/useConst: bind:this assigns the element reference after render.
+let dropdownContainer: HTMLDivElement | null = null;
 
-  onMount(() => {
-    function handleKeydown(e: KeyboardEvent) {
-      if (e.key === "Escape" && columnsMenuOpen) {
-        columnsMenuOpen = false;
-      }
-    }
-    function handleClick(e: MouseEvent) {
-      if (columnsMenuOpen && dropdownContainer && !dropdownContainer.contains(e.target as Node)) {
-        columnsMenuOpen = false;
-      }
-    }
-    document.addEventListener("keydown", handleKeydown);
-    document.addEventListener("click", handleClick);
-    return () => {
-      document.removeEventListener("keydown", handleKeydown);
-      document.removeEventListener("click", handleClick);
-    };
-  });
-
-  function toggleColumn(key: ColumnKey) {
-    const current = $visibleColumns;
-    if (current.includes(key)) {
-      if (current.length > 1) {
-        visibleColumns.set(current.filter((k) => k !== key));
-      }
-    } else {
-      visibleColumns.set([...current, key]);
+onMount(() => {
+  function handleKeydown(e: KeyboardEvent) {
+    if (e.key === "Escape" && columnsMenuOpen) {
+      columnsMenuOpen = false;
     }
   }
-
-  function formatSpeed(speed: number): string {
-    return speed < 0 ? "unknown" : speed.toFixed(2) + " t/s";
-  }
-
-  function formatDuration(ms: number): string {
-    return (ms / 1000).toFixed(2) + "s";
-  }
-
-  function formatRelativeTime(timestamp: string): string {
-    const now = new Date();
-    const date = new Date(timestamp);
-    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-
-    // Handle future dates by returning "just now"
-    if (diffInSeconds < 5) {
-      return "now";
-    }
-
-    if (diffInSeconds < 60) {
-      return `${diffInSeconds}s ago`;
-    }
-
-    const diffInMinutes = Math.floor(diffInSeconds / 60);
-    if (diffInMinutes < 60) {
-      return `${diffInMinutes}m ago`;
-    }
-
-    const diffInHours = Math.floor(diffInMinutes / 60);
-    if (diffInHours < 24) {
-      return `${diffInHours}h ago`;
-    }
-
-    return "a while ago";
-  }
-
-  let sortedMetrics = $derived([...$metrics].sort((a, b) => b.id - a.id));
-
-  let selectedCapture = $state<ReqRespCapture | null>(null);
-  let dialogOpen = $state(false);
-  let loadingCaptureId = $state<number | null>(null);
-
-  async function viewCapture(id: number) {
-    loadingCaptureId = id;
-    const capture = await getCapture(id);
-    loadingCaptureId = null;
-    if (capture) {
-      selectedCapture = capture;
-      dialogOpen = true;
+  function handleClick(e: MouseEvent) {
+    if (columnsMenuOpen && dropdownContainer && !dropdownContainer.contains(e.target as Node)) {
+      columnsMenuOpen = false;
     }
   }
+  document.addEventListener("keydown", handleKeydown);
+  document.addEventListener("click", handleClick);
+  return () => {
+    document.removeEventListener("keydown", handleKeydown);
+    document.removeEventListener("click", handleClick);
+  };
+});
 
-  function closeDialog() {
-    dialogOpen = false;
-    selectedCapture = null;
+function toggleColumn(key: ColumnKey) {
+  const current = $visibleColumns;
+  if (current.includes(key)) {
+    if (current.length > 1) {
+      visibleColumns.set(current.filter((k) => k !== key));
+    }
+  } else {
+    visibleColumns.set([...current, key]);
   }
+}
+
+function formatSpeed(speed: number): string {
+  return speed < 0 ? "unknown" : `${speed.toFixed(2)} t/s`;
+}
+
+function formatDuration(ms: number): string {
+  return `${(ms / 1000).toFixed(2)}s`;
+}
+
+function formatRelativeTime(timestamp: string): string {
+  const now = new Date();
+  const date = new Date(timestamp);
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+  // Handle future dates by returning "just now"
+  if (diffInSeconds < 5) {
+    return "now";
+  }
+
+  if (diffInSeconds < 60) {
+    return `${diffInSeconds}s ago`;
+  }
+
+  const diffInMinutes = Math.floor(diffInSeconds / 60);
+  if (diffInMinutes < 60) {
+    return `${diffInMinutes}m ago`;
+  }
+
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  if (diffInHours < 24) {
+    return `${diffInHours}h ago`;
+  }
+
+  return "a while ago";
+}
+
+// biome-ignore lint/style/useConst: Svelte $derived bindings remain reactive over time.
+let sortedMetrics = $derived([...$metrics].sort((a, b) => b.id - a.id));
+
+let selectedCapture = $state<ReqRespCapture | null>(null);
+let dialogOpen = $state(false);
+let loadingCaptureId = $state<number | null>(null);
+
+async function viewCapture(id: number) {
+  loadingCaptureId = id;
+  const capture = await getCapture(id);
+  loadingCaptureId = null;
+  if (capture) {
+    selectedCapture = capture;
+    dialogOpen = true;
+  }
+}
+
+function closeDialog() {
+  dialogOpen = false;
+  selectedCapture = null;
+}
 </script>
 
 <div class="p-2">

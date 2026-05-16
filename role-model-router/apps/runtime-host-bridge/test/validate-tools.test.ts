@@ -1,6 +1,6 @@
+import { mkdtemp } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { mkdtemp } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 
 import { describe, expect, test } from "vitest";
@@ -28,7 +28,7 @@ describe("runRuntimeToolsValidation", () => {
         type: "function",
         function: {
           name: "lookupRegistry",
-          arguments: "{\"endpointId\":\"test.capture.tool-v1\"}",
+          arguments: '{"endpointId":"test.capture.tool-v1"}',
         },
       },
     ]);
