@@ -4,16 +4,9 @@
     {
       "vendor": "models.dev",
       "role": "catalog-source",
-      "commit": "8f3c2d1",
-      "capturedAt": "2026-05-04T12:00:00Z",
+      "commit": "a75cf2ed1c76c9502a19ed027c8e4b2a21846055",
+      "capturedAt": "2026-05-15T04:11:04.976Z",
       "schemaVersion": "models.dev.v1"
-    },
-    {
-      "vendor": "llama-swap",
-      "role": "runtime-host",
-      "commit": "e261745c66969c119eed1de740380187b365d458",
-      "capturedAt": "2026-05-05T08:00:00Z",
-      "schemaVersion": "llama-swap.go.v1"
     }
   ]
 }

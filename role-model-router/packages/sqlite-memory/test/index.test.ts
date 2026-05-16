@@ -441,6 +441,13 @@ describe("initializeSqliteMemory", () => {
     expect(
       typeof (
         sqliteMemory as {
+          listProviderDeviceAuthSessions?: unknown;
+        }
+      ).listProviderDeviceAuthSessions,
+    ).toBe("function");
+    expect(
+      typeof (
+        sqliteMemory as {
           readProviderDeviceAuthSession?: unknown;
         }
       ).readProviderDeviceAuthSession,
@@ -502,6 +509,28 @@ describe("initializeSqliteMemory", () => {
         expiresAtMs: 1_762_000_000_000,
       },
     });
+
+    expect(
+      (
+        sqliteMemory as {
+          listProviderDeviceAuthSessions: (value: {
+            databasePath: string;
+          }) => Array<{
+            authRequestId: string;
+            providerAccountId: string;
+            status: string;
+          }>;
+        }
+      ).listProviderDeviceAuthSessions({
+        databasePath: initialized.databasePath,
+      }),
+    ).toEqual([
+      expect.objectContaining({
+        authRequestId: "auth-001",
+        providerAccountId: "moonshot.personal.kimi-code",
+        status: "pending",
+      }),
+    ]);
 
     expect(
       (

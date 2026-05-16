@@ -694,6 +694,8 @@ export async function runRuntimeVendorValidation(options: {
     options.runtimeStateRoot ??
     (await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-vendors-")));
   const scopePrefix = options.scopeId ?? "runtime-vendor-validation";
+  const previousOpenAiApiKey = process.env.OPENAI_API_KEY;
+  process.env.OPENAI_API_KEY = previousOpenAiApiKey || "runtime-vendor-validation-key";
   const plan = await createRuntimeVendorValidationPlan({
     runtimeStateRoot,
     scopeId: scopePrefix,
@@ -1118,6 +1120,11 @@ export async function runRuntimeVendorValidation(options: {
     await decisionRuntime.close();
     if (!options.runtimeStateRoot) {
       await rm(runtimeStateRoot, { recursive: true, force: true });
+    }
+    if (previousOpenAiApiKey === undefined) {
+      process.env.OPENAI_API_KEY = undefined;
+    } else {
+      process.env.OPENAI_API_KEY = previousOpenAiApiKey;
     }
   }
 }

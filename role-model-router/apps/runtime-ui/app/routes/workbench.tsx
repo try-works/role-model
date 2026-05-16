@@ -19,6 +19,7 @@ import {
   submitWorkbenchChat,
 } from "../lib/runtime-api";
 import {
+  buildCredentialReadinessRows,
   buildWorkbenchEndpointOptions,
   buildWorkbenchModelOptions,
   summarizeWorkbenchResult,
@@ -159,6 +160,11 @@ export default function WorkbenchRoute() {
   const toolCapableEndpoints = snapshot.endpoints.filter(
     (endpoint) => endpoint.toolCallingSupported,
   ).length;
+  const readinessRows = buildCredentialReadinessRows(snapshot.summary).filter(
+    (row) => row.value > 0,
+  );
+  const blockingReadinessRows = readinessRows.filter((row) => row.key !== "ready");
+  const hasModels = modelOptions.length > 0;
   const routingModeLabel = formatRoutingModeLabel(routingModeOverride);
 
   return (
@@ -183,7 +189,7 @@ export default function WorkbenchRoute() {
         />
         <FactCard
           label="Selected model"
-          value={model}
+          value={model || "—"}
           detail="The active model binding for the next routed request."
         />
         <FactCard
@@ -193,72 +199,101 @@ export default function WorkbenchRoute() {
         />
       </div>
 
+      {blockingReadinessRows.length > 0 ? (
+        <SectionCard
+          title="Execution readiness"
+          description="Saved provider configuration can still be incomplete even when the control plane is populated."
+        >
+          <div className="flex flex-wrap gap-3">
+            {readinessRows.map((row) => (
+              <StatusPill key={row.key} tone={row.tone}>
+                {row.label} {row.value}
+              </StatusPill>
+            ))}
+          </div>
+        </SectionCard>
+      ) : null}
+
       <div className="grid gap-4 xl:grid-cols-[360px_minmax(0,1fr)]">
         <SectionCard
           title="Composer"
           description="This form posts directly to the runtime-host `/v1/chat/completions` route."
         >
-          <form className="space-y-4" onSubmit={onSubmit}>
-            <label className="grid gap-2 text-sm">
-              <span className="font-medium text-[var(--rm-fg)]">Model</span>
-              <select
-                className={fieldClassName}
-                value={model}
-                onChange={(event) => setModel(event.target.value)}
+          {hasModels ? (
+            <form className="space-y-4" onSubmit={onSubmit}>
+              <label className="grid gap-2 text-sm">
+                <span className="font-medium text-[var(--rm-fg)]">Model</span>
+                <select
+                  className={fieldClassName}
+                  value={model}
+                  onChange={(event) => setModel(event.target.value)}
+                >
+                  {modelOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="grid gap-2 text-sm">
+                <span className="font-medium text-[var(--rm-fg)]">Endpoint</span>
+                <select
+                  className={fieldClassName}
+                  value={endpointId}
+                  onChange={(event) => setEndpointId(event.target.value)}
+                >
+                  {endpointOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="grid gap-2 text-sm">
+                <span className="font-medium text-[var(--rm-fg)]">Routing mode</span>
+                <select
+                  className={fieldClassName}
+                  value={routingModeOverride}
+                  onChange={(event) =>
+                    setRoutingModeOverride(
+                      event.target.value as
+                        | ""
+                        | NonNullable<WorkbenchChatInput["routingModeOverride"]>,
+                    )
+                  }
+                >
+                  {routingModeOptions.map((option) => (
+                    <option key={option.label} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="grid gap-2 text-sm">
+                <span className="font-medium text-[var(--rm-fg)]">Prompt</span>
+                <textarea
+                  className={`${fieldClassName} min-h-40`}
+                  value={prompt}
+                  onChange={(event) => setPrompt(event.target.value)}
+                />
+              </label>
+              <button
+                className={primaryButtonClassName}
+                disabled={submitting || model.trim().length === 0}
+                type="submit"
               >
-                {modelOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="grid gap-2 text-sm">
-              <span className="font-medium text-[var(--rm-fg)]">Endpoint</span>
-              <select
-                className={fieldClassName}
-                value={endpointId}
-                onChange={(event) => setEndpointId(event.target.value)}
-              >
-                {endpointOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="grid gap-2 text-sm">
-              <span className="font-medium text-[var(--rm-fg)]">Routing mode</span>
-              <select
-                className={fieldClassName}
-                value={routingModeOverride}
-                onChange={(event) =>
-                  setRoutingModeOverride(
-                    event.target.value as
-                      | ""
-                      | NonNullable<WorkbenchChatInput["routingModeOverride"]>,
-                  )
-                }
-              >
-                {routingModeOptions.map((option) => (
-                  <option key={option.label} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="grid gap-2 text-sm">
-              <span className="font-medium text-[var(--rm-fg)]">Prompt</span>
-              <textarea
-                className={`${fieldClassName} min-h-40`}
-                value={prompt}
-                onChange={(event) => setPrompt(event.target.value)}
-              />
-            </label>
-            <button className={primaryButtonClassName} disabled={submitting} type="submit">
-              {submitting ? "Running…" : "Run request"}
-            </button>
-          </form>
+                {submitting ? "Running…" : "Run request"}
+              </button>
+            </form>
+          ) : (
+            <EmptyState
+              label={
+                blockingReadinessRows.length > 0
+                  ? "No execution-ready models yet. Complete OAuth, fix credentials, or activate an endpoint from Providers."
+                  : "No execution-ready models are currently available."
+              }
+            />
+          )}
         </SectionCard>
 
         <SectionCard

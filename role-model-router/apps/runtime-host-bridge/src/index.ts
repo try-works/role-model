@@ -1,13 +1,17 @@
 import { randomUUID } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { type IncomingMessage, type Server, type ServerResponse, createServer } from "node:http";
 import os from "node:os";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { setTimeout as delay } from "node:timers/promises";
 
-import type { NormalizedCatalog, NormalizedCatalogModel } from "@role-model-router/catalog";
+import type {
+  NormalizedCatalog,
+  NormalizedCatalogModel,
+  PricingHints,
+} from "@role-model-router/catalog";
 import { assembleContextEnvelope } from "@role-model-router/context-envelope";
 import type { EndpointRegistryResult } from "@role-model-router/endpoint-registry";
 import { type RegistrySources, buildEndpointRegistry } from "@role-model-router/endpoint-registry";
@@ -68,6 +72,7 @@ import {
   upsertProviderAccount as upsertSqliteProviderAccount,
   upsertRuntimeEndpoint as upsertSqliteRuntimeEndpoint,
 } from "@role-model-router/sqlite-memory";
+import { listProviderDeviceAuthSessions } from "@role-model-router/sqlite-memory";
 import {
   type ToolConnector,
   type ToolRegistry,
@@ -116,6 +121,15 @@ interface OpenAIChatCompletionsTool {
   };
 }
 
+const LOCAL_OPENAI_PROVIDER_ID = "local-openai-compatible";
+const LOCAL_OPENAI_PLACEHOLDER_TOKEN = "role-model-local";
+
+interface LocalPeerConfig {
+  readonly id: string;
+  readonly url: string;
+  readonly authToken?: string;
+}
+
 interface OpenAIChatCompletionsMessage {
   readonly role: string;
   readonly content: string;
@@ -153,6 +167,16 @@ export interface BridgeModelRecord {
   readonly object: "model";
   readonly owned_by: "role-model";
   readonly endpoint_ids: readonly string[];
+}
+
+export interface BridgeRuntimeModelRecord extends BridgeModelRecord {
+  readonly providerId: string;
+  readonly displayName: string;
+  readonly capabilities: readonly string[];
+  readonly modalities: readonly string[];
+  readonly contextWindow: number;
+  readonly maxOutputTokens: number;
+  readonly pricing: PricingHints | null;
 }
 
 export interface BridgeModelListResponse {
@@ -910,6 +934,12 @@ function maybeApplyControllerRouting(input: {
   };
 }
 
+type BridgeModelOverrideRecord = {
+  ttl?: number;
+  contextWindow?: number;
+  concurrencyLimit?: number;
+};
+
 export interface BridgeServer {
   readonly port: number;
   close(): Promise<void>;
@@ -1047,8 +1077,10 @@ export interface StartBridgeServerOptions {
   readonly readRuntimeSummary?: () => Promise<unknown>;
   readonly readHealthStatus?: () => Promise<unknown>;
   readonly listProviders?: () => Promise<readonly unknown[]>;
+  readonly listModels?: () => Promise<readonly unknown[]>;
   readonly listRoles?: () => Promise<readonly unknown[]>;
   readonly listAccounts?: () => Promise<readonly unknown[]>;
+  readonly listProviderDeviceAuthorizations?: () => Promise<readonly unknown[]>;
   readonly upsertProviderAccount?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly startProviderDeviceAuthorization?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly pollProviderDeviceAuthorization?: (body: Record<string, unknown>) => Promise<unknown>;
@@ -1093,12 +1125,10 @@ export interface StartBridgeServerOptions {
     }[]
   >;
   readonly getLocalLogs?: () => Promise<{ logs: string }>;
-  readonly readModelOverrides?: () => Promise<
-    Record<string, { ttl?: number; contextWindow?: number; concurrencyLimit?: number }>
-  >;
+  readonly readModelOverrides?: () => Promise<Record<string, BridgeModelOverrideRecord>>;
   readonly updateModelOverrides?: (
-    body: Record<string, { ttl?: number; contextWindow?: number; concurrencyLimit?: number }>,
-  ) => Promise<Record<string, { ttl?: number; contextWindow?: number; concurrencyLimit?: number }>>;
+    body: Record<string, BridgeModelOverrideRecord>,
+  ) => Promise<Record<string, BridgeModelOverrideRecord>>;
   readonly readPeers?: () => Promise<readonly { id: string; url: string; authToken?: string }[]>;
   readonly updatePeers?: (
     body: readonly { id: string; url: string; authToken?: string }[],
@@ -1120,11 +1150,18 @@ export interface RuntimeBridgeBackend {
     streamWriter?: BridgeStreamWriter,
     requestOptions?: BridgeExecutionRequestOptions,
   ) => Promise<BridgeResponsesExecutionResult>;
+  readVersionInfo(): Promise<unknown>;
   readRuntimeSummary(): Promise<{
     lifecycleSummary: EndpointRegistryResult["lifecycleSummary"];
     providerCount: number;
     accountCount: number;
     endpointCount: number;
+    readinessSummary: {
+      pendingDeviceAuthorizationCount: number;
+      credentialsMissingAccountCount: number;
+      connectedWithoutEndpointCount: number;
+      readyAccountCount: number;
+    };
     executionMode: UnifiedRuntimeExecutionMode;
     unifiedConfig: {
       enabled: boolean;
@@ -1153,6 +1190,7 @@ export interface RuntimeBridgeBackend {
       variants: readonly ProviderPresetVariant[];
     }[]
   >;
+  listModels(): Promise<readonly BridgeRuntimeModelRecord[]>;
   listRoles(): Promise<
     readonly {
       roleId: string;
@@ -1162,6 +1200,7 @@ export interface RuntimeBridgeBackend {
     }[]
   >;
   listAccounts(): Promise<ReturnType<typeof listProviderAccounts>>;
+  listProviderDeviceAuthorizations(): Promise<readonly DeviceAuthorizationReadbackResult[]>;
   upsertProviderAccount(account: Record<string, unknown>): Promise<ProviderAccountRecord>;
   startProviderDeviceAuthorization(
     body: Record<string, unknown>,
@@ -1235,12 +1274,10 @@ export interface RuntimeBridgeBackend {
     }[]
   >;
   getLocalLogs(): Promise<{ logs: string }>;
-  readModelOverrides(): Promise<
-    Record<string, { ttl?: number; contextWindow?: number; concurrencyLimit?: number }>
-  >;
+  readModelOverrides(): Promise<Record<string, BridgeModelOverrideRecord>>;
   updateModelOverrides(
-    body: Record<string, { ttl?: number; contextWindow?: number; concurrencyLimit?: number }>,
-  ): Promise<Record<string, { ttl?: number; contextWindow?: number; concurrencyLimit?: number }>>;
+    body: Record<string, BridgeModelOverrideRecord>,
+  ): Promise<Record<string, BridgeModelOverrideRecord>>;
   readPeers(): Promise<readonly { id: string; url: string; authToken?: string }[]>;
   updatePeers(
     body: readonly { id: string; url: string; authToken?: string }[],
@@ -1264,6 +1301,7 @@ export interface BridgeServerOptions {
   readonly repoRoot: string;
   readonly runtimeStateRoot: string;
   readonly scopeId: string;
+  readonly staticRoot: string;
   readonly unifiedRuntimeConfigPath?: string;
 }
 
@@ -1610,6 +1648,67 @@ function createExecutionHeaders(input: {
   };
 }
 
+function createBuiltinLocalOpenAIProvider(
+  catalog: NormalizedCatalog,
+): NormalizedCatalog["providers"][number] {
+  return {
+    providerId: LOCAL_OPENAI_PROVIDER_ID,
+    displayName: "Local OpenAI-compatible",
+    npmPackage: "",
+    providerKind: "provider-openai",
+    authFamily: "none",
+    adapterFamily: "ai-sdk-openai-compatible",
+    apiBase: "http://127.0.0.1:1234/v1",
+    docsUrl: null,
+    envVars: [],
+    supportedAuthModes: ["api-key-static"],
+    controlPlaneRequirements: [],
+    localOverrideApplied: true,
+    upstreamProvenance: catalog.source,
+  };
+}
+
+function withBuiltinLocalOpenAIProvider(catalog: NormalizedCatalog): NormalizedCatalog {
+  if (catalog.providers.some((provider) => provider.providerId === LOCAL_OPENAI_PROVIDER_ID)) {
+    return catalog;
+  }
+  return {
+    ...catalog,
+    providers: [...catalog.providers, createBuiltinLocalOpenAIProvider(catalog)],
+  };
+}
+
+function normalizeLocalPeerApiBase(url: string): string {
+  const trimmed = url.trim().replace(/\/+$/, "");
+  return trimmed.endsWith("/v1") ? trimmed : `${trimmed}/v1`;
+}
+
+function normalizeLocalPeerAuthToken(authToken?: string): string {
+  const trimmed = authToken?.trim() ?? "";
+  if (trimmed.length === 0) {
+    return LOCAL_OPENAI_PLACEHOLDER_TOKEN;
+  }
+  return trimmed.toLowerCase().startsWith("bearer ") ? trimmed.slice(7).trim() : trimmed;
+}
+
+function createLocalPeerProviderAccountId(peerId: string): string {
+  return `${LOCAL_OPENAI_PROVIDER_ID}.personal.${sanitizeSegment(peerId) || "peer"}`;
+}
+
+function createLocalPeerCredentialRef(providerAccountId: string): string {
+  return `local-peers/${sanitizeSegment(providerAccountId)}`;
+}
+
+function buildLocalPeerAuthHeaders(peer: LocalPeerConfig): Record<string, string> {
+  return {
+    authorization: `Bearer ${normalizeLocalPeerAuthToken(peer.authToken)}`,
+  };
+}
+
+function isLocalPeerProviderAccountId(providerAccountId: string): boolean {
+  return providerAccountId.startsWith(`${LOCAL_OPENAI_PROVIDER_ID}.`);
+}
+
 function createUnifiedLocalSources(config: UnifiedRuntimeConfig): RegistrySources["local"] {
   return config.llamaSwap.models.map((model) => ({
     endpointId: `llama-swap.local.${slugify(model.modelId)}`,
@@ -1773,6 +1872,46 @@ function clearRuntimeEndpoints(databasePath: string): void {
   const database = new DatabaseSync(databasePath);
   try {
     database.prepare("DELETE FROM runtime_endpoints").run();
+  } finally {
+    database.close();
+  }
+}
+
+function deleteProviderAccountsById(
+  databasePath: string,
+  providerAccountIds: readonly string[],
+): void {
+  if (providerAccountIds.length === 0) {
+    return;
+  }
+  const database = new DatabaseSync(databasePath);
+  try {
+    const statement = database.prepare(
+      "DELETE FROM provider_accounts WHERE provider_account_id = ?",
+    );
+    for (const providerAccountId of providerAccountIds) {
+      statement.run(providerAccountId);
+    }
+  } finally {
+    database.close();
+  }
+}
+
+function deleteRuntimeEndpointsByProviderAccountId(
+  databasePath: string,
+  providerAccountIds: readonly string[],
+): void {
+  if (providerAccountIds.length === 0) {
+    return;
+  }
+  const database = new DatabaseSync(databasePath);
+  try {
+    const statement = database.prepare(
+      "DELETE FROM runtime_endpoints WHERE provider_account_id = ?",
+    );
+    for (const providerAccountId of providerAccountIds) {
+      statement.run(providerAccountId);
+    }
   } finally {
     database.close();
   }
@@ -1949,6 +2088,81 @@ function synthesizeFixtureModelsForCatalog(
   };
 }
 
+function synthesizeFixtureProviderAccounts(
+  catalog: NormalizedCatalog,
+  accounts: readonly ProviderAccountRecord[],
+  sources: RegistrySources,
+): readonly ProviderAccountRecord[] {
+  if (sources.cloud.length === 0) {
+    return accounts;
+  }
+
+  const providersById = new Map(
+    catalog.providers.map((provider) => [provider.providerId, provider]),
+  );
+  const modelsById = new Map(catalog.models.map((model) => [model.modelId, model]));
+  const accountsById = new Map(accounts.map((account) => [account.providerAccountId, account]));
+  const modelIdsByAccountId = new Map<string, Set<string>>();
+  const regionsByAccountId = new Map<string, Set<string>>();
+
+  for (const source of sources.cloud) {
+    let modelIds = modelIdsByAccountId.get(source.providerAccountId);
+    if (!modelIds) {
+      modelIds = new Set<string>();
+      modelIdsByAccountId.set(source.providerAccountId, modelIds);
+    }
+    modelIds.add(source.modelId);
+
+    let regions = regionsByAccountId.get(source.providerAccountId);
+    if (!regions) {
+      regions = new Set<string>();
+      regionsByAccountId.set(source.providerAccountId, regions);
+    }
+    regions.add(source.region);
+  }
+
+  const synthesizedAccounts: ProviderAccountRecord[] = [];
+  for (const [providerAccountId, modelIds] of modelIdsByAccountId) {
+    if (accountsById.has(providerAccountId)) {
+      continue;
+    }
+    const firstModelId = [...modelIds][0] ?? "";
+    const model = modelsById.get(firstModelId);
+    const providerId = model?.providerId ?? providerAccountId.split(".")[0] ?? "unknown";
+    const provider = providersById.get(providerId);
+    synthesizedAccounts.push({
+      providerAccountId,
+      providerId,
+      providerKind: provider?.providerKind ?? model?.providerKind ?? "remote-openai-compatible",
+      orgScope: providerAccountId.split(".")[1] ?? "personal",
+      accountScope: providerAccountId.split(".").slice(2).join(".") || "default",
+      credentialRef: {
+        backend: "env",
+        ref:
+          provider?.envVars[0] ?? `${providerId.toUpperCase().replace(/[^A-Z0-9]+/g, "_")}_API_KEY`,
+      },
+      authMode: provider?.supportedAuthModes.includes("oauth2-device-code")
+        ? "oauth2-device-code"
+        : "api-key-static",
+      regionPolicy: {
+        mode: "allow",
+        regions: [...(regionsByAccountId.get(providerAccountId) ?? new Set<string>())],
+      },
+      baseUrlOverride: null,
+      allowedModels: [...modelIds],
+      deniedModels: [],
+      entitlementTags: ["chat"],
+      budgetPolicyRef: "budget.default",
+      quotaPolicyRef: "quota.default",
+      status: "active",
+      healthStatus: "healthy",
+      rotationState: "stable",
+    });
+  }
+
+  return [...accounts, ...synthesizedAccounts];
+}
+
 interface CaptureFixtureMap {
   readonly byEndpointId: Readonly<Record<string, { readonly responseFixture: string }>>;
 }
@@ -1999,6 +2213,20 @@ interface DeviceAuthorizationPollResult {
   readonly providerAccountId: string;
   readonly status: "pending" | "connected" | "expired" | "failed";
   readonly retryAfterSeconds?: number;
+  readonly lastError?: string;
+}
+
+interface DeviceAuthorizationReadbackResult {
+  readonly authRequestId: string;
+  readonly providerAccountId: string;
+  readonly providerId: string;
+  readonly variantId: string;
+  readonly status: "pending" | "connected" | "expired" | "failed";
+  readonly userCode: string;
+  readonly verificationUri: string;
+  readonly verificationUriComplete: string;
+  readonly intervalSeconds: number;
+  readonly expiresAtMs: number;
   readonly lastError?: string;
 }
 
@@ -2344,6 +2572,39 @@ export function createModelListResponse(
     object: "list",
     data,
   };
+}
+
+export function createRuntimeModelRecords(
+  registry: EndpointRegistryResult,
+  catalog: NormalizedCatalog,
+): readonly BridgeRuntimeModelRecord[] {
+  const byModelId = new Map<string, string[]>();
+
+  for (const endpoint of registry.endpoints) {
+    const current = byModelId.get(endpoint.identity.model_id) ?? [];
+    current.push(endpoint.identity.endpoint_id);
+    byModelId.set(endpoint.identity.model_id, current);
+  }
+
+  return [...byModelId.entries()]
+    .sort(([left], [right]) => compareText(left, right))
+    .map(([modelId, endpointIds]) => {
+      const model = catalog.models.find((entry) => entry.modelId === modelId);
+      return {
+        id: modelId,
+        object: "model" as const,
+        owned_by: "role-model" as const,
+        providerId:
+          model?.providerId ?? (modelId.includes("/") ? modelId.split("/")[0] : "unknown"),
+        displayName: model?.displayName ?? readDefaultDisplayNameFromModelId(modelId),
+        endpoint_ids: [...endpointIds].sort(compareText),
+        capabilities: model?.capabilities ?? [],
+        modalities: model?.modalities ?? [],
+        contextWindow: model?.contextWindow ?? 0,
+        maxOutputTokens: model?.maxOutputTokens ?? 0,
+        pricing: model?.pricing ?? null,
+      };
+    });
 }
 
 function collectAllowedEndpointIds(
@@ -2840,38 +3101,36 @@ async function readJsonBody(request: IncomingMessage): Promise<Record<string, un
   return JSON.parse(Buffer.concat(chunks).toString("utf8")) as Record<string, unknown>;
 }
 
-function parseModelOverridesBody(
-  input: Record<string, unknown>,
-): Record<string, { ttl?: number; contextWindow?: number; concurrencyLimit?: number }> {
-  const parsed: Record<
-    string,
-    { ttl?: number; contextWindow?: number; concurrencyLimit?: number }
-  > = {};
-
-  for (const [modelId, rawOverride] of Object.entries(input)) {
-    if (!rawOverride || typeof rawOverride !== "object" || Array.isArray(rawOverride)) {
-      throw new Error(`invalid model override for "${modelId}"`);
-    }
-
-    const overrideRecord = rawOverride as Record<string, unknown>;
-    const parsedOverride: { ttl?: number; contextWindow?: number; concurrencyLimit?: number } = {};
-
-    for (const field of ["ttl", "contextWindow", "concurrencyLimit"] as const) {
-      const value = overrideRecord[field];
-      if (typeof value === "undefined") {
-        continue;
-      }
-      if (typeof value !== "number") {
-        throw new Error(`invalid ${field} override for "${modelId}"`);
-      }
-      parsedOverride[field] = value;
-    }
-
-    parsed[modelId] = parsedOverride;
+function readModelOverrideRecord(value: unknown, label: string): BridgeModelOverrideRecord {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    throw new Error(`${label} must be an object.`);
   }
-
-  return parsed;
+  const record = value as Record<string, unknown>;
+  const next: BridgeModelOverrideRecord = {};
+  for (const key of ["ttl", "contextWindow", "concurrencyLimit"] as const) {
+    const candidate = record[key];
+    if (candidate === undefined) {
+      continue;
+    }
+    if (typeof candidate !== "number" || !Number.isFinite(candidate)) {
+      throw new Error(`${label}.${key} must be a finite number.`);
+    }
+    next[key] = candidate;
+  }
+  return next;
 }
+
+function readModelOverridesBody(
+  value: Record<string, unknown>,
+): Record<string, BridgeModelOverrideRecord> {
+  return Object.fromEntries(
+    Object.entries(value).map(([modelId, entry]) => [
+      modelId,
+      readModelOverrideRecord(entry, `modelOverrides.${modelId}`),
+    ]),
+  );
+}
+
 function readOptionalPositiveInteger(params: URLSearchParams, key: string): number | undefined {
   const rawValue = params.get(key);
   if (!rawValue) {
@@ -3077,6 +3336,27 @@ async function persistOauthTokenFile(
   await writeFile(filePath, JSON.stringify(payload, null, 2), "utf8");
 }
 
+async function persistStaticCredentialFile(
+  runtimeStateRoot: string,
+  scopeId: string,
+  credentialRef: string,
+  accessToken: string,
+): Promise<void> {
+  await persistOauthTokenFile(runtimeStateRoot, scopeId, credentialRef, {
+    access_token: accessToken,
+    token_type: "Bearer",
+    saved_at_ms: Date.now(),
+  });
+}
+
+async function removeCredentialFile(
+  runtimeStateRoot: string,
+  scopeId: string,
+  credentialRef: string,
+): Promise<void> {
+  await rm(resolveCredentialFilePath(runtimeStateRoot, scopeId, credentialRef), { force: true });
+}
+
 async function readOauthTokenFile(
   runtimeStateRoot: string,
   scopeId: string,
@@ -3105,6 +3385,121 @@ function readStoredAccessToken(payload: StoredOauthTokenPayload | null): string 
 
 function readStoredRefreshToken(payload: StoredOauthTokenPayload | null): string {
   return typeof payload?.refresh_token === "string" ? payload.refresh_token.trim() : "";
+}
+
+function readStoredOauthTokenFileSync(
+  runtimeStateRoot: string,
+  scopeId: string,
+  credentialRef: string,
+): StoredOauthTokenPayload | null {
+  try {
+    const filePath = resolveCredentialFilePath(runtimeStateRoot, scopeId, credentialRef);
+    return JSON.parse(readFileSync(filePath, "utf8")) as StoredOauthTokenPayload;
+  } catch {
+    return null;
+  }
+}
+
+function hydrateOauthProviderAccounts(
+  runtimeStateRoot: string,
+  scopeId: string,
+  accounts: readonly ProviderAccountRecord[],
+): ProviderAccountRecord[] {
+  return accounts.map((account) => {
+    if (
+      account.authMode !== "oauth2-device-code" ||
+      (account.credentialRef.backend !== "local-file" &&
+        account.credentialRef.backend !== "local-encrypted-file")
+    ) {
+      return account;
+    }
+
+    const payload = readStoredOauthTokenFileSync(
+      runtimeStateRoot,
+      scopeId,
+      account.credentialRef.ref,
+    );
+    const hasStoredToken =
+      readStoredAccessToken(payload).length > 0 || readStoredRefreshToken(payload).length > 0;
+    if (!hasStoredToken) {
+      return account;
+    }
+
+    if (
+      account.status === "active" &&
+      account.healthStatus === "healthy" &&
+      account.rotationState === "stable"
+    ) {
+      return account;
+    }
+
+    return {
+      ...account,
+      status: "active",
+      healthStatus: "healthy",
+      rotationState: "stable",
+    };
+  });
+}
+
+function readEnvCredentialError(
+  account: ProviderAccountRecord,
+  ignoredAccountIds: ReadonlySet<string> = new Set<string>(),
+): string | null {
+  if (account.credentialRef.backend !== "env") {
+    return null;
+  }
+  if (ignoredAccountIds.has(account.providerAccountId)) {
+    return null;
+  }
+
+  const value = process.env[account.credentialRef.ref];
+  if (typeof value === "string" && value.trim().length > 0) {
+    return null;
+  }
+
+  return `Environment credential ${account.credentialRef.ref} is not set.`;
+}
+
+function hydrateEnvProviderAccounts(
+  accounts: readonly ProviderAccountRecord[],
+  ignoredAccountIds: ReadonlySet<string> = new Set<string>(),
+): ProviderAccountRecord[] {
+  return accounts.map((account) => {
+    const envCredentialError = readEnvCredentialError(account, ignoredAccountIds);
+    if (!envCredentialError) {
+      if (
+        account.authMode === "api-key-static" &&
+        (account.status !== "active" ||
+          account.healthStatus !== "healthy" ||
+          account.rotationState !== "stable")
+      ) {
+        return {
+          ...account,
+          status: "active",
+          healthStatus: "healthy",
+          rotationState: "stable",
+        };
+      }
+
+      return account;
+    }
+
+    if (
+      account.status === "disabled" &&
+      account.healthStatus === "credentials-missing" &&
+      account.rotationState === "not-required"
+    ) {
+      return account;
+    }
+
+    return {
+      ...account,
+      status: "disabled",
+      healthStatus: "credentials-missing",
+      rotationState: "not-required",
+    };
+  });
 }
 
 function tokenNeedsRefresh(payload: StoredOauthTokenPayload | null): boolean {
@@ -3505,7 +3900,7 @@ function shouldUseLiveProviderExecution(target: ResolvedExecutionTarget): boolea
   const backend = target.account?.credentialRef.backend;
   return (
     target.adapterFamily === "ai-sdk-openai-compatible" &&
-    (backend === "local-file" || backend === "local-encrypted-file")
+    (backend === "env" || backend === "local-file" || backend === "local-encrypted-file")
   );
 }
 
@@ -4244,6 +4639,15 @@ function createRequestHandler(options: StartBridgeServerOptions) {
       return;
     }
 
+    if (request.method === "GET" && url.pathname === "/api/role-model/models") {
+      if (!options.listModels) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.listModels());
+      return;
+    }
+
     if (request.method === "GET" && url.pathname === "/api/role-model/roles") {
       if (!options.listRoles) {
         writeJson(response, 404, { error: "not found" });
@@ -4259,6 +4663,15 @@ function createRequestHandler(options: StartBridgeServerOptions) {
         return;
       }
       writeJson(response, 200, await options.listAccounts());
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/role-model/accounts/device") {
+      if (!options.listProviderDeviceAuthorizations) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.listProviderDeviceAuthorizations());
       return;
     }
 
@@ -4573,7 +4986,7 @@ function createRequestHandler(options: StartBridgeServerOptions) {
       writeJson(
         response,
         200,
-        await options.updateModelOverrides(parseModelOverridesBody(await readJsonBody(request))),
+        await options.updateModelOverrides(readModelOverridesBody(await readJsonBody(request))),
       );
       return;
     }
@@ -4735,6 +5148,11 @@ export async function createRuntimeBridgeBackend(
   const registrySourcesFixture = await readJson<RegistrySources>(
     path.join(fixtureRoot, "registry-sources.json"),
   );
+  const fixtureAccounts = synthesizeFixtureProviderAccounts(
+    baseCatalog,
+    providerAccountsFixture.accounts,
+    registrySourcesFixture,
+  );
   const continuityFixture = await readJson<{
     session: Parameters<typeof persistContinuitySnapshot>[0]["session"];
     conversation: Parameters<typeof persistContinuitySnapshot>[0]["conversation"];
@@ -4767,9 +5185,18 @@ export async function createRuntimeBridgeBackend(
   const observabilityPolicy = await readJson<RuntimeCapturePolicy>(
     path.join(fixtureRoot, "observability-policy.json"),
   );
-  const providerPresets = await readJson<ProviderPresetCatalog>(
+  const fixtureProviderPresets = await readJson<ProviderPresetCatalog>(
     path.join(fixtureRoot, "provider-presets.json"),
   );
+  const repoProviderPresets = await readJson<ProviderPresetCatalog>(
+    path.join(options.repoRoot, "testdata", "router-runtime", "provider-presets.json"),
+  );
+  const providerPresets: ProviderPresetCatalog = {
+    providers: {
+      ...repoProviderPresets.providers,
+      ...fixtureProviderPresets.providers,
+    },
+  };
   const initialization = initializeSqliteMemory({
     runtimeStateRoot: options.runtimeStateRoot,
     scopeId: options.scopeId,
@@ -4788,11 +5215,11 @@ export async function createRuntimeBridgeBackend(
   });
 
   let currentUnifiedRuntimeConfig = initialUnifiedRuntimeConfig;
-  const catalogWithFixtureModels = synthesizeFixtureModelsForCatalog(
-    baseCatalog,
-    providerAccountsFixture.accounts,
-    registrySourcesFixture,
+  const catalogWithFixtureModels = withBuiltinLocalOpenAIProvider(
+    synthesizeFixtureModelsForCatalog(baseCatalog, fixtureAccounts, registrySourcesFixture),
   );
+  const fixtureAccountIds = new Set(fixtureAccounts.map((account) => account.providerAccountId));
+  let runtimeConfigProviderAccountIds = new Set<string>();
   let currentNormalizedCatalog = applyUnifiedLiteLLMAdapterFamilyOverrides(
     catalogWithFixtureModels,
     currentUnifiedRuntimeConfig,
@@ -4808,7 +5235,98 @@ export async function createRuntimeBridgeBackend(
           local: createUnifiedLocalSources(currentUnifiedRuntimeConfig),
         }
       : registrySourcesFixture;
-  let currentAccounts = [...listProviderAccounts({ databasePath: initialization.databasePath })];
+  const readCurrentAccounts = (): ProviderAccountRecord[] => {
+    const persistedAccounts = listProviderAccounts({ databasePath: initialization.databasePath });
+    const ignoredAccountIds = new Set([...fixtureAccountIds, ...runtimeConfigProviderAccountIds]);
+    const hydratedAccounts = hydrateOauthProviderAccounts(
+      options.runtimeStateRoot,
+      options.scopeId,
+      hydrateEnvProviderAccounts(persistedAccounts, ignoredAccountIds),
+    );
+    const changedAccounts = hydratedAccounts.filter((account, index) => {
+      const persistedAccount = persistedAccounts[index];
+      return (
+        persistedAccount !== undefined &&
+        (persistedAccount.status !== account.status ||
+          persistedAccount.healthStatus !== account.healthStatus ||
+          persistedAccount.rotationState !== account.rotationState)
+      );
+    });
+    if (changedAccounts.length > 0) {
+      persistProviderAccounts({
+        databasePath: initialization.databasePath,
+        accounts: changedAccounts,
+      });
+    }
+    return hydratedAccounts;
+  };
+  const listCurrentProviderDeviceAuthorizations = (): DeviceAuthorizationReadbackResult[] =>
+    listProviderDeviceAuthSessions({ databasePath: initialization.databasePath })
+      .filter(
+        (
+          session,
+        ): session is typeof session & { status: DeviceAuthorizationReadbackResult["status"] } =>
+          session.status === "pending" ||
+          session.status === "connected" ||
+          session.status === "expired" ||
+          session.status === "failed",
+      )
+      .map((session) => ({
+        authRequestId: session.authRequestId,
+        providerAccountId: session.providerAccountId,
+        providerId: session.providerId,
+        variantId: session.variantId,
+        status: session.status,
+        userCode: session.userCode,
+        verificationUri: session.verificationUri,
+        verificationUriComplete: session.verificationUriComplete,
+        intervalSeconds: session.intervalSeconds,
+        expiresAtMs: session.expiresAtMs,
+        ...(session.lastError ? { lastError: session.lastError } : {}),
+      }));
+  const buildCredentialReadinessSummary = (): {
+    pendingDeviceAuthorizationCount: number;
+    credentialsMissingAccountCount: number;
+    connectedWithoutEndpointCount: number;
+    readyAccountCount: number;
+  } => {
+    const pendingAccountIds = new Set(
+      listCurrentProviderDeviceAuthorizations()
+        .filter((authorization) => authorization.status === "pending")
+        .map((authorization) => authorization.providerAccountId),
+    );
+    const readyAccountIds = new Set(
+      runtimeEndpoints
+        .filter((endpoint) => endpoint.lifecycleState === "active")
+        .map((endpoint) => endpoint.providerAccountId),
+    );
+    let credentialsMissingAccountCount = 0;
+    let connectedWithoutEndpointCount = 0;
+
+    for (const account of currentAccounts) {
+      if (
+        readyAccountIds.has(account.providerAccountId) ||
+        pendingAccountIds.has(account.providerAccountId)
+      ) {
+        continue;
+      }
+      if (account.healthStatus === "credentials-missing") {
+        credentialsMissingAccountCount += 1;
+        continue;
+      }
+      if (account.status === "active" && account.healthStatus === "healthy") {
+        connectedWithoutEndpointCount += 1;
+      }
+    }
+
+    return {
+      pendingDeviceAuthorizationCount: pendingAccountIds.size,
+      credentialsMissingAccountCount,
+      connectedWithoutEndpointCount,
+      readyAccountCount: readyAccountIds.size,
+    };
+  };
+  let currentAccounts = [...readCurrentAccounts()];
   let runtimeEndpoints = [...listRuntimeEndpoints({ databasePath: initialization.databasePath })];
   let currentRegistry!: EndpointRegistryResult;
   let currentLlamaSwapVendor: VendorRuntime | null = null;
@@ -4816,7 +5334,7 @@ export async function createRuntimeBridgeBackend(
   const getCurrentRegistrySources = (): RegistrySources =>
     mergeRegistrySources(currentRegistrySources, runtimeEndpoints);
   const rebuildCurrentState = (): void => {
-    currentAccounts = [...listProviderAccounts({ databasePath: initialization.databasePath })];
+    currentAccounts = [...readCurrentAccounts()];
     runtimeEndpoints = [...listRuntimeEndpoints({ databasePath: initialization.databasePath })];
     currentRegistry = buildEndpointRegistry({
       catalog: currentNormalizedCatalog,
@@ -4827,17 +5345,348 @@ export async function createRuntimeBridgeBackend(
       throw new Error("Endpoint-registry validation failed after runtime state update.");
     }
   };
+  const readStoredPeers = async (): Promise<readonly LocalPeerConfig[]> => {
+    const peersPath = path.join(options.runtimeStateRoot, "peers.json");
+    try {
+      if (existsSync(peersPath)) {
+        return JSON.parse(await readFile(peersPath, "utf8")) as readonly LocalPeerConfig[];
+      }
+    } catch {
+      // Fall through to empty
+    }
+    return [];
+  };
+  const createLocalPeerAccount = (peer: LocalPeerConfig): ProviderAccountRecord => {
+    const providerAccountId = createLocalPeerProviderAccountId(peer.id);
+    return {
+      providerAccountId,
+      providerId: LOCAL_OPENAI_PROVIDER_ID,
+      providerKind: "provider-openai",
+      orgScope: "personal",
+      accountScope: sanitizeSegment(peer.id) || "peer",
+      credentialRef: {
+        backend: "local-file",
+        ref: createLocalPeerCredentialRef(providerAccountId),
+      },
+      authMode: "api-key-static",
+      regionPolicy: {
+        mode: "prefer",
+        regions: ["local"],
+      },
+      baseUrlOverride: normalizeLocalPeerApiBase(peer.url),
+      allowedModels: [],
+      deniedModels: [],
+      entitlementTags: ["chat"],
+      budgetPolicyRef: "budget.default",
+      quotaPolicyRef: "quota.default",
+      status: "active",
+      healthStatus: "healthy",
+      rotationState: "stable",
+    };
+  };
+  const syncLocalPeerState = async (peers: readonly LocalPeerConfig[]): Promise<void> => {
+    const localPeerAccounts = peers.map(createLocalPeerAccount);
+    const validationResult = validateProviderAccounts({
+      catalog: currentNormalizedCatalog,
+      additionalProviders: liteLLMProviders,
+      allowedRoleIds,
+      accounts: localPeerAccounts,
+    });
+    if (validationResult.diagnostics.length > 0) {
+      throw new Error(
+        validationResult.diagnostics[0]?.message ?? "Local endpoint account validation failed.",
+      );
+    }
+
+    const existingPeerAccounts = listProviderAccounts({
+      databasePath: initialization.databasePath,
+    }).filter((account) => account.providerId === LOCAL_OPENAI_PROVIDER_ID);
+    const nextPeerAccountIds = new Set(
+      validationResult.accounts.map((account) => account.providerAccountId),
+    );
+    const removedPeerAccounts = existingPeerAccounts.filter(
+      (account) => !nextPeerAccountIds.has(account.providerAccountId),
+    );
+    if (removedPeerAccounts.length > 0) {
+      deleteRuntimeEndpointsByProviderAccountId(
+        initialization.databasePath,
+        removedPeerAccounts.map((account) => account.providerAccountId),
+      );
+      deleteProviderAccountsById(
+        initialization.databasePath,
+        removedPeerAccounts.map((account) => account.providerAccountId),
+      );
+      await Promise.all(
+        removedPeerAccounts.map((account) =>
+          removeCredentialFile(
+            options.runtimeStateRoot,
+            options.scopeId,
+            account.credentialRef.ref,
+          ),
+        ),
+      );
+    }
+
+    if (validationResult.accounts.length > 0) {
+      persistProviderAccounts({
+        databasePath: initialization.databasePath,
+        accounts: validationResult.accounts,
+      });
+      await Promise.all(
+        validationResult.accounts.map((account) =>
+          persistStaticCredentialFile(
+            options.runtimeStateRoot,
+            options.scopeId,
+            account.credentialRef.ref,
+            normalizeLocalPeerAuthToken(
+              peers.find(
+                (peer) => createLocalPeerProviderAccountId(peer.id) === account.providerAccountId,
+              )?.authToken,
+            ),
+          ),
+        ),
+      );
+    }
+  };
+  const readLocalPeerModelIds = async (peer: LocalPeerConfig): Promise<readonly string[]> => {
+    const apiBase = normalizeLocalPeerApiBase(peer.url);
+    const response = await networkFetcher(`${apiBase}/models`, {
+      headers: buildLocalPeerAuthHeaders(peer),
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!response.ok) {
+      throw new Error(`GET ${apiBase}/models returned HTTP ${response.status}.`);
+    }
+    const payload = (await response.json()) as { data?: Array<{ id?: unknown }> };
+    if (!Array.isArray(payload.data)) {
+      throw new Error(`GET ${apiBase}/models did not return a model list.`);
+    }
+    return payload.data.flatMap((entry) =>
+      typeof entry.id === "string" && entry.id.length > 0 ? [entry.id] : [],
+    );
+  };
+  const activateConfiguredLocalPeerModel = async (modelId: string): Promise<boolean> => {
+    const peers = await readStoredPeers();
+    if (peers.length === 0) {
+      return false;
+    }
+
+    await syncLocalPeerState(peers);
+    rebuildCurrentState();
+
+    const matchingPeers: LocalPeerConfig[] = [];
+    const probeErrors: string[] = [];
+    let successfulProbeCount = 0;
+    for (const peer of peers) {
+      try {
+        const modelIds = await readLocalPeerModelIds(peer);
+        successfulProbeCount += 1;
+        if (modelIds.includes(modelId)) {
+          matchingPeers.push(peer);
+        }
+      } catch (error) {
+        probeErrors.push(
+          error instanceof Error
+            ? error.message
+            : `Failed to inspect configured local endpoint ${peer.url}.`,
+        );
+      }
+    }
+
+    if (matchingPeers.length === 0) {
+      if (successfulProbeCount === 0 && probeErrors.length > 0) {
+        throw new Error(probeErrors[0] ?? "Failed to inspect configured local endpoints.");
+      }
+      throw new Error(`Model ${modelId} is not available on any configured local endpoint.`);
+    }
+
+    for (const peer of matchingPeers) {
+      activateRuntimeEndpoint({
+        providerAccountId: createLocalPeerProviderAccountId(peer.id),
+        modelId,
+        region: "local",
+        endpointKind: "local-openai-compatible",
+        servingSource: "local-peer",
+      });
+    }
+
+    insertSwapEvent({
+      databasePath: initialization.databasePath,
+      timestamp: new Date().toISOString(),
+      oldModelId: null,
+      newModelId: modelId,
+      reason: "manual-load",
+    });
+    return true;
+  };
+  const activateRuntimeEndpoint = (
+    body: Record<string, unknown>,
+  ): {
+    endpointId: string;
+    providerAccountId: string;
+    providerId: string;
+    modelId: string;
+    roleIds: readonly string[];
+    status: "active";
+  } => {
+    const providerAccountId = readRequiredString(body, "providerAccountId", "activateEndpoint");
+    const modelId = readRequiredString(body, "modelId", "activateEndpoint");
+    const region = readOptionalString(body, "region") ?? "global";
+    const account = currentAccounts.find((entry) => entry.providerAccountId === providerAccountId);
+    if (!account) {
+      throw new Error(`Provider account ${providerAccountId} was not found.`);
+    }
+    const envCredentialError = readEnvCredentialError(account, fixtureAccountIds);
+    if (envCredentialError) {
+      throw new Error(envCredentialError);
+    }
+    if (account.status !== "active" || account.healthStatus !== "healthy") {
+      throw new Error(
+        `Provider account ${providerAccountId} is not ready for endpoint activation.`,
+      );
+    }
+    if (account.allowedModels.length > 0 && !account.allowedModels.includes(modelId)) {
+      throw new Error(`Model ${modelId} is not enabled for provider account ${providerAccountId}.`);
+    }
+    let model = currentModelsById.get(modelId);
+    if (!model) {
+      const providerId = modelId.includes("/") ? modelId.split("/")[0] : account.providerId;
+      const fallbackTemplate = createFallbackModelTemplate(currentNormalizedCatalog);
+      model = {
+        ...fallbackTemplate,
+        modelId,
+        providerId,
+        displayName: readDefaultDisplayNameFromModelId(modelId),
+        localOverrideApplied: true,
+        localNotes: ["Synthesized on-demand during endpoint activation."],
+        upstreamProvenance: currentNormalizedCatalog.source,
+      };
+      currentNormalizedCatalog = {
+        ...currentNormalizedCatalog,
+        models: [...currentNormalizedCatalog.models, model],
+      };
+      currentModelsById.set(modelId, model);
+    }
+
+    const endpointId =
+      readOptionalString(body, "endpointId") ??
+      createEndpointId(providerAccountId, region, modelId);
+    upsertSqliteRuntimeEndpoint({
+      databasePath: initialization.databasePath,
+      endpoint: {
+        endpointId,
+        providerAccountId,
+        modelId,
+        region,
+        endpointKind: readOptionalString(body, "endpointKind") ?? "remote-openai-compatible",
+        servingSource: readOptionalString(body, "servingSource") ?? "remote-service",
+        lifecycleState: "active",
+        healthStatus: "healthy",
+      },
+    });
+    rebuildCurrentState();
+    return {
+      endpointId,
+      providerAccountId,
+      providerId: account.providerId,
+      modelId: model.modelId,
+      roleIds: getModelRoleIds(account, model.modelId),
+      status: "active",
+    };
+  };
+  const resolveProviderVariants = (input: {
+    providerId: string;
+    displayName: string;
+    apiBase: string;
+    modelIds: readonly string[];
+    presetVariants: readonly ProviderPresetVariant[];
+    supportedAuthModes: readonly string[];
+    oauth?: {
+      apiBase?: string;
+      clientId: string;
+      deviceAuthorizationEndpoint: string;
+      tokenEndpoint: string;
+      requiredHeaders: readonly string[];
+      scope?: string;
+    };
+  }): readonly ProviderPresetVariant[] => {
+    const generatedOAuthVariants: ProviderPresetVariant[] = input.oauth
+      ? [
+          {
+            variantId: `${input.providerId}-oauth`,
+            label: `${input.displayName} OAuth`,
+            description: `OAuth device-code authentication for ${input.displayName}.`,
+            authMode: "oauth2-device-code",
+            availability: "ready" as const,
+            baseUrl: input.oauth.apiBase ?? input.apiBase,
+            modelIds: input.modelIds,
+            oauth: {
+              clientId: input.oauth.clientId,
+              deviceAuthorizationEndpoint: input.oauth.deviceAuthorizationEndpoint,
+              tokenEndpoint: input.oauth.tokenEndpoint,
+              requiredHeaders: [...input.oauth.requiredHeaders],
+              ...(input.oauth.scope ? { scope: input.oauth.scope } : {}),
+            },
+          },
+        ]
+      : [];
+    const generatedApiKeyVariants: ProviderPresetVariant[] =
+      input.supportedAuthModes.includes("api-key-static") || input.supportedAuthModes.length === 0
+        ? [
+            {
+              variantId: `${input.providerId}-api-key`,
+              label: `${input.displayName} API Key`,
+              description: `API-key authentication for ${input.displayName}.`,
+              authMode: "api-key-static",
+              availability: "ready" as const,
+              baseUrl: input.apiBase,
+              modelIds: input.modelIds,
+            },
+          ]
+        : [];
+    const legacyMoonshotVariants: ProviderPresetVariant[] =
+      input.providerId === "moonshot"
+        ? [
+            ...(!input.presetVariants.some(
+              (variant) => variant.variantId === "moonshot-open-platform",
+            ) && generatedApiKeyVariants[0]
+              ? [
+                  {
+                    ...generatedApiKeyVariants[0],
+                    variantId: "moonshot-open-platform",
+                    label: "Moonshot Open Platform",
+                  },
+                ]
+              : []),
+            ...(!input.presetVariants.some((variant) => variant.variantId === "kimi-code") &&
+            generatedOAuthVariants[0]
+              ? [
+                  {
+                    ...generatedOAuthVariants[0],
+                    variantId: "kimi-code",
+                    label: "Kimi Code",
+                  },
+                ]
+              : []),
+          ]
+        : [];
+
+    return [
+      ...input.presetVariants,
+      ...generatedApiKeyVariants,
+      ...generatedOAuthVariants,
+      ...legacyMoonshotVariants,
+    ];
+  };
   const applyUnifiedRuntimeConfigState = async (
     nextConfig: UnifiedRuntimeConfig | null,
   ): Promise<void> => {
-    const nextNormalizedCatalog = applyUnifiedLiteLLMAdapterFamilyOverrides(
-      synthesizeFixtureModelsForCatalog(
-        baseCatalog,
-        providerAccountsFixture.accounts,
-        registrySourcesFixture,
+    const nextNormalizedCatalog = withBuiltinLocalOpenAIProvider(
+      applyUnifiedLiteLLMAdapterFamilyOverrides(
+        synthesizeFixtureModelsForCatalog(baseCatalog, fixtureAccounts, registrySourcesFixture),
+        nextConfig,
+        liteLLMProviders,
       ),
-      nextConfig,
-      liteLLMProviders,
     );
     const resolvedLlamaSwapCommand =
       nextConfig?.llamaSwap.enabled && !nextConfig.llamaSwap.process.command
@@ -4909,6 +5758,11 @@ export async function createRuntimeBridgeBackend(
         databasePath: initialization.databasePath,
         accounts: validation.accounts,
       });
+      runtimeConfigProviderAccountIds = new Set(
+        validation.accounts.map((account) => account.providerAccountId),
+      );
+    } else {
+      runtimeConfigProviderAccountIds = new Set();
     }
 
     currentUnifiedRuntimeConfig = nextConfig;
@@ -4933,25 +5787,25 @@ export async function createRuntimeBridgeBackend(
         : registrySourcesFixture;
     currentLlamaSwapVendor = nextLlamaSwapVendor;
     currentLiteLLMVendor = nextLiteLLMVendor;
+    await syncLocalPeerState(await readStoredPeers());
     rebuildCurrentState();
   };
 
   if (currentUnifiedRuntimeConfig === null) {
-    if (providerAccountsFixture.accounts.length > 0) {
-      const validation = validateProviderAccounts({
-        catalog: currentNormalizedCatalog,
-        additionalProviders: liteLLMProviders,
-        accounts: providerAccountsFixture.accounts,
-        allowedRoleIds,
-      });
-      if (validation.diagnostics.length > 0) {
-        throw new Error("Provider-account validation failed for runtime host bridge.");
-      }
-      persistProviderAccounts({
-        databasePath: initialization.databasePath,
-        accounts: validation.accounts,
-      });
+    const validation = validateProviderAccounts({
+      catalog: currentNormalizedCatalog,
+      additionalProviders: liteLLMProviders,
+      accounts: fixtureAccounts,
+      allowedRoleIds,
+    });
+    if (validation.diagnostics.length > 0) {
+      throw new Error("Provider-account validation failed for runtime host bridge.");
     }
+    persistProviderAccounts({
+      databasePath: initialization.databasePath,
+      accounts: validation.accounts,
+    });
+    await syncLocalPeerState(await readStoredPeers());
     rebuildCurrentState();
   } else {
     await applyUnifiedRuntimeConfigState(currentUnifiedRuntimeConfig);
@@ -5385,6 +6239,23 @@ export async function createRuntimeBridgeBackend(
         const useDirectExecution =
           target.account?.credentialRef.backend === "local-file" ||
           target.account?.credentialRef.backend === "local-encrypted-file";
+        const capture = captures.byEndpointId[target.endpointId];
+        const usesFixtureAccount =
+          target.providerAccountId !== null && fixtureAccountIds.has(target.providerAccountId);
+
+        if (
+          !useDirectExecution &&
+          capture &&
+          currentUnifiedRuntimeConfig === null &&
+          usesFixtureAccount
+        ) {
+          return {
+            providerFamily: target.adapterFamily,
+            endpointId: target.endpointId,
+            statusCode: 200,
+            body: capture.body,
+          };
+        }
 
         if (currentUnifiedRuntimeConfig) {
           if (target.providerAccountId === null) {
@@ -5464,7 +6335,6 @@ export async function createRuntimeBridgeBackend(
         }
 
         if (!useDirectExecution && !shouldUseLiveProviderExecution(target)) {
-          const capture = captures.byEndpointId[target.endpointId];
           if (!capture) {
             throw new Error(`No response capture is configured for endpoint ${target.endpointId}.`);
           }
@@ -5535,6 +6405,24 @@ export async function createRuntimeBridgeBackend(
             adapterFamily: target.adapterFamily,
             routingDecisionId,
           });
+          if (!rawBody.includes("data:")) {
+            return {
+              providerFamily: target.adapterFamily,
+              endpointId: target.endpointId,
+              statusCode: response.status,
+              body: parseProviderResponseBody(rawBody),
+            };
+          }
+          return {
+            providerFamily: target.adapterFamily,
+            endpointId: target.endpointId,
+            statusCode: response.status,
+            body: rawBody,
+          };
+        }
+        const responseContentType = response.headers.get("content-type") ?? "";
+        if (responseContentType.includes("text/event-stream")) {
+          const rawBody = await response.text();
           if (!rawBody.includes("data:")) {
             return {
               providerFamily: target.adapterFamily,
@@ -5967,6 +6855,17 @@ export async function createRuntimeBridgeBackend(
     get registry(): EndpointRegistryResult {
       return currentRegistry;
     },
+    async readVersionInfo(): Promise<{
+      version: string;
+      commit: string;
+      build_date: string;
+    }> {
+      return {
+        version: currentUnifiedRuntimeConfig?.version ?? "unversioned",
+        commit: "runtime-derived",
+        build_date: "runtime-derived",
+      };
+    },
     async executeChatCompletions(
       body: OpenAIChatCompletionsBody,
       requestId: string,
@@ -6207,6 +7106,12 @@ export async function createRuntimeBridgeBackend(
       providerCount: number;
       accountCount: number;
       endpointCount: number;
+      readinessSummary: {
+        pendingDeviceAuthorizationCount: number;
+        credentialsMissingAccountCount: number;
+        connectedWithoutEndpointCount: number;
+        readyAccountCount: number;
+      };
       executionMode: UnifiedRuntimeExecutionMode;
       unifiedConfig: {
         enabled: boolean;
@@ -6223,6 +7128,7 @@ export async function createRuntimeBridgeBackend(
           ).length,
         accountCount: currentAccounts.length,
         endpointCount: currentRegistry.endpoints.length,
+        readinessSummary: buildCredentialReadinessSummary(),
         executionMode: currentUnifiedRuntimeConfig?.executionMode ?? "decision_only",
         unifiedConfig: {
           enabled: currentUnifiedRuntimeConfig !== null,
@@ -6296,10 +7202,12 @@ export async function createRuntimeBridgeBackend(
       readonly {
         providerId: string;
         displayName: string;
+        npmPackage?: string;
         providerKind: string;
         authFamily: string;
         adapterFamily: string;
         apiBase: string;
+        docsUrl?: string | null;
         envVars: readonly string[];
         supportedAuthModes: readonly string[];
         controlPlaneRequirements: readonly string[];
@@ -6346,49 +7254,33 @@ export async function createRuntimeBridgeBackend(
             ...variant,
             modelIds: effectiveModelIds.length > 0 ? effectiveModelIds : variant.modelIds,
           }));
-          // Merge OAuth variant from LiteLLM metadata when present
           const liteLLMProvider = liteLLMProviders.find(
             (p) => p.providerId === provider.providerId,
           );
-          const liteLLMOAuthVariant: ProviderPresetVariant[] = liteLLMProvider?.oauth
-            ? [
-                {
-                  variantId: `${provider.providerId}-oauth`,
-                  label: `${provider.displayName} OAuth`,
-                  description: `OAuth device-code authentication for ${provider.displayName}.`,
-                  authMode: "oauth2-device-code",
-                  availability: "ready" as const,
-                  baseUrl: liteLLMProvider.oauth.apiBase ?? provider.apiBase,
-                  modelIds: effectiveModelIds,
-                  oauth: {
-                    ...(liteLLMProvider.oauth.apiBase
-                      ? { apiBase: liteLLMProvider.oauth.apiBase }
-                      : {}),
-                    clientId: liteLLMProvider.oauth.clientId,
-                    deviceAuthorizationEndpoint: liteLLMProvider.oauth.deviceAuthorizationEndpoint,
-                    tokenEndpoint: liteLLMProvider.oauth.tokenEndpoint,
-                    requiredHeaders: [...liteLLMProvider.oauth.requiredHeaders],
-                    ...(liteLLMProvider.oauth.scope ? { scope: liteLLMProvider.oauth.scope } : {}),
-                  },
-                },
-              ]
-            : [];
+          const variants = resolveProviderVariants({
+            providerId: provider.providerId,
+            displayName: provider.displayName,
+            apiBase: provider.apiBase,
+            modelIds: effectiveModelIds,
+            presetVariants,
+            supportedAuthModes: liteLLMProvider?.supportedAuthModes ?? provider.supportedAuthModes,
+            oauth: liteLLMProvider?.oauth,
+          });
           return {
             providerId: provider.providerId,
             displayName: provider.displayName,
+            npmPackage: provider.npmPackage,
             providerKind: provider.providerKind,
             authFamily: provider.authFamily,
             adapterFamily: provider.adapterFamily,
             apiBase: provider.apiBase,
+            docsUrl: provider.docsUrl,
             envVars: provider.envVars,
             supportedAuthModes: provider.supportedAuthModes,
             controlPlaneRequirements: provider.controlPlaneRequirements,
             localOverrideApplied: provider.localOverrideApplied,
             modelIds: effectiveModelIds,
-            variants: [
-              ...presetVariants,
-              ...liteLLMOAuthVariant,
-            ] as readonly ProviderPresetVariant[],
+            variants,
           };
         }),
         ...liteLLMProviders
@@ -6401,61 +7293,30 @@ export async function createRuntimeBridgeBackend(
               ...variant,
               modelIds: effectiveModelIds.length > 0 ? effectiveModelIds : variant.modelIds,
             }));
-            // Generate OAuth variant from LiteLLM metadata when OAuth config is present
-            const liteLLMOAuthVariants: ProviderPresetVariant[] = provider.oauth
-              ? [
-                  {
-                    variantId: `${provider.providerId}-oauth`,
-                    label: `${provider.displayName} OAuth`,
-                    description: `OAuth device-code authentication for ${provider.displayName}.`,
-                    authMode: "oauth2-device-code",
-                    availability: "ready" as const,
-                    baseUrl: provider.oauth.apiBase ?? provider.apiBase,
-                    modelIds: effectiveModelIds,
-                    oauth: {
-                      ...(provider.oauth.apiBase ? { apiBase: provider.oauth.apiBase } : {}),
-                      clientId: provider.oauth.clientId,
-                      deviceAuthorizationEndpoint: provider.oauth.deviceAuthorizationEndpoint,
-                      tokenEndpoint: provider.oauth.tokenEndpoint,
-                      requiredHeaders: [...provider.oauth.requiredHeaders],
-                      ...(provider.oauth.scope ? { scope: provider.oauth.scope } : {}),
-                    },
-                  },
-                ]
-              : [];
-            // Generate API-key variant when supported
-            const liteLLMApiKeyVariants: ProviderPresetVariant[] =
-              provider.supportedAuthModes.includes("api-key-static") ||
-              provider.supportedAuthModes.length === 0
-                ? [
-                    {
-                      variantId: `${provider.providerId}-api-key`,
-                      label: `${provider.displayName} API Key`,
-                      description: `API-key authentication for ${provider.displayName}.`,
-                      authMode: "api-key-static",
-                      availability: "ready" as const,
-                      baseUrl: provider.apiBase,
-                      modelIds: effectiveModelIds,
-                    },
-                  ]
-                : [];
+            const variants = resolveProviderVariants({
+              providerId: provider.providerId,
+              displayName: provider.displayName,
+              apiBase: provider.apiBase,
+              modelIds: effectiveModelIds,
+              presetVariants,
+              supportedAuthModes: provider.supportedAuthModes,
+              oauth: provider.oauth,
+            });
             return {
               providerId: provider.providerId,
               displayName: provider.displayName,
+              npmPackage: provider.npmPackage || undefined,
               providerKind: provider.providerKind,
               authFamily: provider.authFamily,
               adapterFamily: provider.adapterFamily,
               apiBase: provider.apiBase,
+              docsUrl: provider.docsUrl,
               envVars: provider.envVars,
               supportedAuthModes: provider.supportedAuthModes,
               controlPlaneRequirements: provider.controlPlaneRequirements,
               localOverrideApplied: provider.localOverrideApplied,
               modelIds: effectiveModelIds,
-              variants: [
-                ...liteLLMApiKeyVariants,
-                ...liteLLMOAuthVariants,
-                ...presetVariants,
-              ] as readonly ProviderPresetVariant[],
+              variants,
             };
           }),
         ...(!normalizedProviderIds.has("llamacpp") && !liteLLMProviderIds.has("llamacpp")
@@ -6463,10 +7324,12 @@ export async function createRuntimeBridgeBackend(
               {
                 providerId: "llamacpp",
                 displayName: "llama.cpp",
+                npmPackage: undefined,
                 providerKind: "local-engine",
                 authFamily: "none",
                 adapterFamily: "ai-sdk-openai-compatible",
                 apiBase: "http://localhost:8080",
+                docsUrl: null,
                 envVars: [] as readonly string[],
                 supportedAuthModes: [] as readonly string[],
                 controlPlaneRequirements: [] as readonly string[],
@@ -6488,10 +7351,12 @@ export async function createRuntimeBridgeBackend(
               {
                 providerId: "vllm",
                 displayName: "vLLM",
+                npmPackage: undefined,
                 providerKind: "local-engine",
                 authFamily: "none",
                 adapterFamily: "ai-sdk-openai-compatible",
                 apiBase: "http://localhost:8080",
+                docsUrl: null,
                 envVars: [] as readonly string[],
                 supportedAuthModes: [] as readonly string[],
                 controlPlaneRequirements: [] as readonly string[],
@@ -6513,10 +7378,12 @@ export async function createRuntimeBridgeBackend(
               {
                 providerId: "tabbyapi",
                 displayName: "TabbyAPI",
+                npmPackage: undefined,
                 providerKind: "local-engine",
                 authFamily: "none",
                 adapterFamily: "ai-sdk-openai-compatible",
                 apiBase: "http://localhost:8080",
+                docsUrl: null,
                 envVars: [] as readonly string[],
                 supportedAuthModes: [] as readonly string[],
                 controlPlaneRequirements: [] as readonly string[],
@@ -6538,10 +7405,12 @@ export async function createRuntimeBridgeBackend(
               {
                 providerId: "stable-diffusion-cpp",
                 displayName: "stable-diffusion.cpp",
+                npmPackage: undefined,
                 providerKind: "local-engine",
                 authFamily: "none",
                 adapterFamily: "ai-sdk-openai-compatible",
                 apiBase: "http://localhost:8080",
+                docsUrl: null,
                 envVars: [] as readonly string[],
                 supportedAuthModes: [] as readonly string[],
                 controlPlaneRequirements: [] as readonly string[],
@@ -6565,6 +7434,9 @@ export async function createRuntimeBridgeBackend(
       ];
       return mergedProviders.sort((left, right) => compareText(left.providerId, right.providerId));
     },
+    async listModels(): Promise<readonly BridgeRuntimeModelRecord[]> {
+      return createRuntimeModelRecords(currentRegistry, currentNormalizedCatalog);
+    },
     async listRoles(): Promise<
       readonly {
         roleId: string;
@@ -6576,9 +7448,13 @@ export async function createRuntimeBridgeBackend(
       return runtimeRoles.roleSummaries;
     },
     async listAccounts(): Promise<ReturnType<typeof listProviderAccounts>> {
-      return listProviderAccounts({
-        databasePath: initialization.databasePath,
-      });
+      currentAccounts = [...readCurrentAccounts()];
+      return currentAccounts;
+    },
+    async listProviderDeviceAuthorizations(): Promise<
+      readonly DeviceAuthorizationReadbackResult[]
+    > {
+      return listCurrentProviderDeviceAuthorizations();
     },
     async upsertProviderAccount(account: Record<string, unknown>): Promise<ProviderAccountRecord> {
       const validationResult = validateProviderAccounts({
@@ -6621,14 +7497,34 @@ export async function createRuntimeBridgeBackend(
           `Provider ${providerId} is not present in the normalized catalog or LiteLLM provider list.`,
         );
       }
-      const variant = resolveOAuthVariant(providerPresets, liteLLMProviders, providerId, variantId);
-      if (!variant) {
+      const effectiveModelIds =
+        readUnifiedLiteLLMProviderModelIds(currentUnifiedRuntimeConfig, providerId) ??
+        currentNormalizedCatalog.models
+          .filter((model) => model.providerId === providerId)
+          .map((model) => model.modelId);
+      const presetVariants = (providerPresets.providers[providerId]?.variants ?? []).map(
+        (entry) => ({
+          ...entry,
+          modelIds: effectiveModelIds.length > 0 ? effectiveModelIds : entry.modelIds,
+        }),
+      );
+      const runtimeProvider = liteLLMProviders.find((entry) => entry.providerId === providerId);
+      const variants = resolveProviderVariants({
+        providerId,
+        displayName: provider.displayName,
+        apiBase: provider.apiBase,
+        modelIds: effectiveModelIds,
+        presetVariants,
+        supportedAuthModes: runtimeProvider?.supportedAuthModes ?? provider.supportedAuthModes,
+        oauth: runtimeProvider?.oauth,
+      });
+      const variant = variants.find((entry) => entry.variantId === variantId);
+      if (!variant || variant.authMode !== "oauth2-device-code" || !variant.oauth) {
         throw new Error(`Provider variant ${variantId} does not expose device OAuth.`);
       }
 
       const effectiveVariantModelIds =
-        readUnifiedLiteLLMProviderModelIds(currentUnifiedRuntimeConfig, providerId) ??
-        variant.modelIds;
+        effectiveModelIds.length > 0 ? effectiveModelIds : variant.modelIds;
       const allowedModels =
         readStringArray(body, "allowedModels") ??
         (effectiveVariantModelIds.length > 0
@@ -6754,12 +7650,38 @@ export async function createRuntimeBridgeBackend(
       if (!session) {
         throw new Error(`Device authorization request ${authRequestId} was not found.`);
       }
-      const variant = resolveOAuthVariant(
-        providerPresets,
-        liteLLMProviders,
-        session.providerId,
-        session.variantId,
+      const provider =
+        currentNormalizedCatalog.providers.find(
+          (entry) => entry.providerId === session.providerId,
+        ) ?? liteLLMProviders.find((entry) => entry.providerId === session.providerId);
+      if (!provider) {
+        throw new Error(
+          `Provider ${session.providerId} is not present in the normalized catalog or LiteLLM provider list.`,
+        );
+      }
+      const effectiveModelIds =
+        readUnifiedLiteLLMProviderModelIds(currentUnifiedRuntimeConfig, session.providerId) ??
+        currentNormalizedCatalog.models
+          .filter((model) => model.providerId === session.providerId)
+          .map((model) => model.modelId);
+      const presetVariants = (providerPresets.providers[session.providerId]?.variants ?? []).map(
+        (entry) => ({
+          ...entry,
+          modelIds: effectiveModelIds.length > 0 ? effectiveModelIds : entry.modelIds,
+        }),
       );
+      const runtimeProvider = liteLLMProviders.find(
+        (entry) => entry.providerId === session.providerId,
+      );
+      const variant = resolveProviderVariants({
+        providerId: session.providerId,
+        displayName: provider.displayName,
+        apiBase: provider.apiBase,
+        modelIds: effectiveModelIds,
+        presetVariants,
+        supportedAuthModes: runtimeProvider?.supportedAuthModes ?? provider.supportedAuthModes,
+        oauth: runtimeProvider?.oauth,
+      }).find((entry) => entry.variantId === session.variantId);
       if (!variant?.oauth) {
         throw new Error(`Provider variant ${session.variantId} does not expose device OAuth.`);
       }
@@ -6870,70 +7792,7 @@ export async function createRuntimeBridgeBackend(
       };
     },
     async activateEndpoint(body: Record<string, unknown>): Promise<Record<string, unknown>> {
-      const providerAccountId = readRequiredString(body, "providerAccountId", "activateEndpoint");
-      const modelId = readRequiredString(body, "modelId", "activateEndpoint");
-      const region = readOptionalString(body, "region") ?? "global";
-      const account = currentAccounts.find(
-        (entry) => entry.providerAccountId === providerAccountId,
-      );
-      if (!account) {
-        throw new Error(`Provider account ${providerAccountId} was not found.`);
-      }
-      if (account.status !== "active" || account.healthStatus !== "healthy") {
-        throw new Error(
-          `Provider account ${providerAccountId} is not ready for endpoint activation.`,
-        );
-      }
-      if (account.allowedModels.length > 0 && !account.allowedModels.includes(modelId)) {
-        throw new Error(
-          `Model ${modelId} is not enabled for provider account ${providerAccountId}.`,
-        );
-      }
-      let model = currentModelsById.get(modelId);
-      if (!model) {
-        const providerId = modelId.includes("/") ? modelId.split("/")[0] : account.providerId;
-        const fallbackTemplate = createFallbackModelTemplate(currentNormalizedCatalog);
-        model = {
-          ...fallbackTemplate,
-          modelId,
-          providerId,
-          displayName: readDefaultDisplayNameFromModelId(modelId),
-          localOverrideApplied: true,
-          localNotes: ["Synthesized on-demand during endpoint activation."],
-          upstreamProvenance: currentNormalizedCatalog.source,
-        };
-        currentNormalizedCatalog = {
-          ...currentNormalizedCatalog,
-          models: [...currentNormalizedCatalog.models, model],
-        };
-        currentModelsById.set(modelId, model);
-      }
-
-      const endpointId =
-        readOptionalString(body, "endpointId") ??
-        createEndpointId(providerAccountId, region, modelId);
-      upsertSqliteRuntimeEndpoint({
-        databasePath: initialization.databasePath,
-        endpoint: {
-          endpointId,
-          providerAccountId,
-          modelId,
-          region,
-          endpointKind: readOptionalString(body, "endpointKind") ?? "remote-openai-compatible",
-          servingSource: readOptionalString(body, "servingSource") ?? "remote-service",
-          lifecycleState: "active",
-          healthStatus: "healthy",
-        },
-      });
-      rebuildCurrentState();
-      return {
-        endpointId,
-        providerAccountId,
-        providerId: account.providerId,
-        modelId: model.modelId,
-        roleIds: getModelRoleIds(account, model.modelId),
-        status: "active",
-      };
+      return activateRuntimeEndpoint(body);
     },
     async readControllerAssignment(): Promise<BridgeControllerAssignment | null> {
       const persisted = readPersistedControllerAssignment();
@@ -6972,6 +7831,7 @@ export async function createRuntimeBridgeBackend(
         endpointId: string;
         modelId: string;
         providerId: string | null;
+        providerAccountId?: string;
         roleIds: readonly string[];
         endpointKind: string;
         servingSource: string;
@@ -6987,6 +7847,9 @@ export async function createRuntimeBridgeBackend(
         endpointId: endpoint.identity.endpoint_id,
         modelId: endpoint.identity.model_id,
         providerId: currentModelsById.get(endpoint.identity.model_id)?.providerId ?? null,
+        providerAccountId: runtimeEndpoints.find(
+          (entry) => entry.endpointId === endpoint.identity.endpoint_id,
+        )?.providerAccountId,
         roleIds: getEndpointRoleIds(
           endpoint.identity.endpoint_id,
           runtimeEndpoints,
@@ -7077,34 +7940,70 @@ export async function createRuntimeBridgeBackend(
     async listLocalModels(): Promise<
       readonly { modelId: string; loadedAt: string; engine: string }[]
     > {
-      if (!currentLlamaSwapVendor?.getRunningModels) {
-        return [];
+      const vendorModels = currentLlamaSwapVendor?.getRunningModels
+        ? await currentLlamaSwapVendor.getRunningModels()
+        : [];
+      const localPeerEndpoints = runtimeEndpoints.filter(
+        (endpoint) =>
+          endpoint.lifecycleState === "active" &&
+          isLocalPeerProviderAccountId(endpoint.providerAccountId),
+      );
+      const loadedAtByModelId = new Map<string, string>();
+      for (const event of listSwapEvents({
+        databasePath: initialization.databasePath,
+        limit: 200,
+      })) {
+        if (event.newModelId && !loadedAtByModelId.has(event.newModelId)) {
+          loadedAtByModelId.set(event.newModelId, event.timestamp);
+        }
       }
-      return currentLlamaSwapVendor.getRunningModels();
+      const localPeerModels = localPeerEndpoints.flatMap((endpoint) =>
+        loadedAtByModelId.has(endpoint.modelId) ||
+        !vendorModels.some((model) => model.modelId === endpoint.modelId)
+          ? [
+              {
+                modelId: endpoint.modelId,
+                loadedAt: loadedAtByModelId.get(endpoint.modelId) ?? new Date().toISOString(),
+                engine: LOCAL_OPENAI_PROVIDER_ID,
+              },
+            ]
+          : [],
+      );
+
+      const mergedModels = [...vendorModels];
+      for (const model of localPeerModels) {
+        if (!mergedModels.some((entry) => entry.modelId === model.modelId)) {
+          mergedModels.push(model);
+        }
+      }
+      return mergedModels;
     },
     async loadLocalModel(modelId: string): Promise<{ success: boolean }> {
-      if (!currentLlamaSwapVendor) {
-        return { success: false };
-      }
-      try {
-        await currentLlamaSwapVendor.execute({
-          providerFamily: "local",
-          endpointId: "llama-swap.local",
-          url: "local://runtime/v1/chat/completions",
-          headers: { "content-type": "application/json" },
-          body: { model: modelId, messages: [{ role: "user", content: "hello" }] },
-        });
-        insertSwapEvent({
-          databasePath: initialization.databasePath,
-          timestamp: new Date().toISOString(),
-          oldModelId: null,
-          newModelId: modelId,
-          reason: "manual-load",
-        });
+      if (await activateConfiguredLocalPeerModel(modelId)) {
         return { success: true };
-      } catch {
-        return { success: false };
       }
+
+      if (!currentLlamaSwapVendor) {
+        throw new Error(
+          "No local endpoints are configured. Add a local endpoint or enable llama_swap.models before loading a model.",
+        );
+      }
+
+      await currentLlamaSwapVendor.execute({
+        providerFamily: "local",
+        endpointId: "llama-swap.local",
+        url: "local://runtime/v1/chat/completions",
+        headers: { "content-type": "application/json" },
+        body: { model: modelId, messages: [{ role: "user", content: "hello" }] },
+      });
+      insertSwapEvent({
+        databasePath: initialization.databasePath,
+        timestamp: new Date().toISOString(),
+        oldModelId: null,
+        newModelId: modelId,
+        reason: "manual-load",
+      });
+      return { success: true };
     },
     async unloadLocalModel(modelId?: string): Promise<{ success: boolean }> {
       if (!currentLlamaSwapVendor?.unloadModel) {
@@ -7181,9 +8080,7 @@ export async function createRuntimeBridgeBackend(
         return { logs: "" };
       }
     },
-    async readModelOverrides(): Promise<
-      Record<string, { ttl?: number; contextWindow?: number; concurrencyLimit?: number }>
-    > {
+    async readModelOverrides(): Promise<Record<string, BridgeModelOverrideRecord>> {
       const overridesPath = path.join(options.runtimeStateRoot, "model-overrides.json");
       try {
         if (existsSync(overridesPath)) {
@@ -7198,10 +8095,8 @@ export async function createRuntimeBridgeBackend(
       return {};
     },
     async updateModelOverrides(
-      body: Record<string, { ttl?: number; contextWindow?: number; concurrencyLimit?: number }>,
-    ): Promise<
-      Record<string, { ttl?: number; contextWindow?: number; concurrencyLimit?: number }>
-    > {
+      body: Record<string, BridgeModelOverrideRecord>,
+    ): Promise<Record<string, BridgeModelOverrideRecord>> {
       const overridesPath = path.join(options.runtimeStateRoot, "model-overrides.json");
       await writeFile(overridesPath, JSON.stringify(body, null, 2));
       return body;
@@ -7226,6 +8121,8 @@ export async function createRuntimeBridgeBackend(
     ): Promise<readonly { id: string; url: string; authToken?: string }[]> {
       const peersPath = path.join(options.runtimeStateRoot, "peers.json");
       await writeFile(peersPath, JSON.stringify(body, null, 2));
+      await syncLocalPeerState(body);
+      rebuildCurrentState();
       return body;
     },
     async checkPeerHealth(url: string): Promise<{ healthy: boolean }> {
@@ -7271,21 +8168,45 @@ export function resolveBridgeServerOptions(input: {
   repoRoot?: string;
   runtimeStateRoot?: string;
   scopeId?: string;
+  executablePath?: string;
+  localAppData?: string;
   unifiedRuntimeConfigPath?: string;
 }): BridgeServerOptions {
-  if (!input.repoRoot) {
+  const inferredRepoRoot = input.executablePath
+    ? (() => {
+        const executableDir = path.dirname(path.resolve(input.executablePath));
+        const releaseDir = path.dirname(executableDir);
+        const distDir = path.dirname(releaseDir);
+        const routerRoot = path.dirname(distDir);
+        if (
+          path.basename(releaseDir) !== "release" ||
+          path.basename(distDir) !== "dist" ||
+          path.basename(routerRoot) !== "role-model-router"
+        ) {
+          return undefined;
+        }
+        return path.dirname(routerRoot);
+      })()
+    : undefined;
+  const repoRoot = input.repoRoot?.trim() || inferredRepoRoot;
+  if (!repoRoot) {
     throw new Error("repoRoot is required for the runtime host bridge.");
   }
-  if (!input.runtimeStateRoot) {
-    throw new Error("runtimeStateRoot is required for the runtime host bridge.");
-  }
+  const runtimeStateRoot =
+    input.runtimeStateRoot?.trim() ||
+    path.join(
+      input.localAppData?.trim() || process.env.LOCALAPPDATA || os.tmpdir(),
+      "Role Model Runtime",
+      "state",
+    );
 
   return {
     host: input.host?.trim() || "127.0.0.1",
     port: input.port ? Number.parseInt(input.port, 10) : 8091,
-    repoRoot: input.repoRoot,
-    runtimeStateRoot: input.runtimeStateRoot,
+    repoRoot,
+    runtimeStateRoot,
     scopeId: input.scopeId?.trim() || "runtime-host-bridge",
+    staticRoot: path.join(repoRoot, "role-model-router", "apps", "runtime-ui", "build", "client"),
     unifiedRuntimeConfigPath: input.unifiedRuntimeConfigPath?.trim() || undefined,
   };
 }

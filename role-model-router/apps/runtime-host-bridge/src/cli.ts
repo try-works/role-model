@@ -1,3 +1,4 @@
+import { spawn } from "node:child_process";
 import path from "node:path";
 import { parseArgs } from "node:util";
 
@@ -14,6 +15,7 @@ type CliBackend = Pick<
   | "registry"
   | "executeChatCompletions"
   | "executeResponses"
+  | "readVersionInfo"
   | "readRuntimeSummary"
   | "readRuntimeConfig"
   | "updateRuntimeConfig"
@@ -23,8 +25,10 @@ type CliBackend = Pick<
   | "listTelemetryRequests"
   | "subscribeTelemetry"
   | "listProviders"
+  | "listModels"
   | "listRoles"
   | "listAccounts"
+  | "listProviderDeviceAuthorizations"
   | "upsertProviderAccount"
   | "startProviderDeviceAuthorization"
   | "pollProviderDeviceAuthorization"
@@ -75,9 +79,9 @@ export function createCliServerOptions(
     getRegistry: () => backend.registry,
     executeChatCompletions: backend.executeChatCompletions,
     executeResponses: backend.executeResponses,
-    readVersionInfo: async () => ({ version: "0.0.0-standalone", build: "standalone" }),
+    readVersionInfo: backend.readVersionInfo,
     listActivityMetrics: async () => [],
-    readLogs: async () => "No standalone runtime logs are currently exposed.",
+    readLogs: async () => (await backend.getLocalLogs()).logs,
     readRuntimeSummary: backend.readRuntimeSummary,
     readRuntimeConfig: backend.readRuntimeConfig,
     updateRuntimeConfig: backend.updateRuntimeConfig,
@@ -87,8 +91,10 @@ export function createCliServerOptions(
     listTelemetryRequests: backend.listTelemetryRequests,
     subscribeTelemetry: backend.subscribeTelemetry,
     listProviders: backend.listProviders,
+    listModels: backend.listModels,
     listRoles: backend.listRoles,
     listAccounts: backend.listAccounts,
+    listProviderDeviceAuthorizations: backend.listProviderDeviceAuthorizations,
     upsertProviderAccount: backend.upsertProviderAccount,
     startProviderDeviceAuthorization: backend.startProviderDeviceAuthorization,
     pollProviderDeviceAuthorization: backend.pollProviderDeviceAuthorization,
@@ -117,6 +123,27 @@ export function createCliServerOptions(
     updatePeers: backend.updatePeers,
     checkPeerHealth: backend.checkPeerHealth,
   };
+}
+
+function openBrowser(url: string): void {
+  let executable: string;
+  let args: string[];
+  if (process.platform === "win32") {
+    executable = "cmd";
+    args = ["/c", "start", "", url];
+  } else if (process.platform === "darwin") {
+    executable = "open";
+    args = [url];
+  } else {
+    executable = "xdg-open";
+    args = [url];
+  }
+  const child = spawn(executable, args, {
+    detached: true,
+    stdio: "ignore",
+    shell: false,
+  });
+  child.unref();
 }
 
 export async function main(): Promise<void> {
@@ -149,12 +176,16 @@ export async function main(): Promise<void> {
     },
   });
 
+  const launchedWithoutRuntimeArgs =
+    !args.values["repo-root"] && !args.values["runtime-state-root"];
   const options = resolveBridgeServerOptions({
     host: args.values.host,
     port: args.values.port,
     repoRoot: args.values["repo-root"],
     runtimeStateRoot: args.values["runtime-state-root"],
     scopeId: args.values["scope-id"],
+    executablePath: process.execPath,
+    localAppData: process.env.LOCALAPPDATA,
     unifiedRuntimeConfigPath: args.values["unified-runtime-config"],
   });
   const backend = await createRuntimeBridgeBackend({
@@ -169,7 +200,7 @@ export async function main(): Promise<void> {
       {
         host: options.host,
         port: options.port,
-        staticRoot: args.values["static-root"]?.trim() || undefined,
+        staticRoot: options.staticRoot,
       },
       backend,
     ),
@@ -186,6 +217,10 @@ export async function main(): Promise<void> {
       2,
     ),
   );
+
+  if (launchedWithoutRuntimeArgs) {
+    openBrowser(`http://${options.host}:${server.port}/`);
+  }
 
   const shutdown = async (): Promise<void> => {
     await server.close();

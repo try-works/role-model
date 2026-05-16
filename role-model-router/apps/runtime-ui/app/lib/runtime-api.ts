@@ -7,6 +7,12 @@ export interface RuntimeSummary {
   readonly providerCount: number;
   readonly accountCount: number;
   readonly endpointCount: number;
+  readonly readinessSummary?: {
+    readonly pendingDeviceAuthorizationCount: number;
+    readonly credentialsMissingAccountCount: number;
+    readonly connectedWithoutEndpointCount: number;
+    readonly readyAccountCount: number;
+  };
   readonly lifecycleSummary?: {
     readonly active: number;
     readonly degraded: number;
@@ -87,10 +93,12 @@ export interface ProviderVariant {
 export interface RuntimeProvider {
   readonly providerId: string;
   readonly displayName: string;
+  readonly npmPackage?: string;
   readonly providerKind?: string;
   readonly authFamily?: string;
   readonly adapterFamily?: string;
   readonly apiBase?: string;
+  readonly docsUrl?: string | null;
   readonly envVars?: readonly string[];
   readonly supportedAuthModes?: readonly string[];
   readonly controlPlaneRequirements?: readonly string[];
@@ -147,12 +155,15 @@ export interface RuntimeRoleDefinition {
 export interface RuntimeDeviceAuthorization {
   readonly authRequestId: string;
   readonly providerAccountId: string;
+  readonly providerId?: string;
+  readonly variantId?: string;
   readonly status: string;
   readonly userCode?: string;
   readonly verificationUri?: string;
   readonly verificationUriComplete?: string;
   readonly intervalSeconds?: number;
   readonly expiresAtMs?: number;
+  readonly lastError?: string;
 }
 
 export interface RuntimeRequestListItem {
@@ -266,7 +277,18 @@ export interface RuntimeModelRecord {
   readonly id: string;
   readonly object?: string;
   readonly owned_by?: string;
+  readonly providerId?: string;
+  readonly displayName?: string;
   readonly endpoint_ids?: readonly string[];
+  readonly capabilities?: readonly string[];
+  readonly modalities?: readonly string[];
+  readonly contextWindow?: number | null;
+  readonly maxOutputTokens?: number | null;
+  readonly pricing?: {
+    readonly inputPer1M: number;
+    readonly outputPer1M: number;
+    readonly currency: string;
+  } | null;
   readonly peerID?: string;
 }
 
@@ -410,6 +432,7 @@ export interface RuntimeSnapshot {
   readonly summary: RuntimeSummary;
   readonly providers: readonly RuntimeProvider[];
   readonly accounts: readonly RuntimeAccount[];
+  readonly deviceAuthorizations: readonly RuntimeDeviceAuthorization[];
   readonly endpoints: readonly RuntimeEndpoint[];
   readonly requests: readonly RuntimeRequestListItem[];
   readonly models: readonly RuntimeModelRecord[];
@@ -603,25 +626,37 @@ async function putJson<TValue>(
 export async function fetchRuntimeSnapshot(
   fetcher: RuntimeFetcher = fetch,
 ): Promise<RuntimeSnapshot> {
-  const [summary, providers, accounts, endpoints, roles, requests, modelsResponse] =
+  const [summary, providers, accounts, deviceAuthorizations, endpoints, roles, requests, models] =
     await Promise.all([
       fetchJson<RuntimeSummary>("/api/role-model/runtime/summary", fetcher),
       fetchJson<RuntimeProvider[]>("/api/role-model/providers", fetcher),
       fetchJson<RuntimeAccount[]>("/api/role-model/accounts", fetcher),
+      fetchJson<RuntimeDeviceAuthorization[]>("/api/role-model/accounts/device", fetcher),
       fetchJson<RuntimeEndpoint[]>("/api/role-model/endpoints", fetcher),
       fetchJson<RuntimeRoleDefinition[]>("/api/role-model/roles", fetcher),
       fetchJson<RuntimeRequestListItem[]>("/api/role-model/requests", fetcher),
-      fetchJson<{ data: RuntimeModelRecord[] }>("/v1/models", fetcher),
+      (async () => {
+        try {
+          return await fetchJson<RuntimeModelRecord[]>("/api/role-model/models", fetcher);
+        } catch {
+          const modelsResponse = await fetchJson<{ data: RuntimeModelRecord[] }>(
+            "/v1/models",
+            fetcher,
+          );
+          return modelsResponse.data;
+        }
+      })(),
     ]);
 
   return {
     summary,
     providers,
     accounts,
+    deviceAuthorizations,
     endpoints,
     roles,
     requests,
-    models: modelsResponse.data,
+    models,
   };
 }
 

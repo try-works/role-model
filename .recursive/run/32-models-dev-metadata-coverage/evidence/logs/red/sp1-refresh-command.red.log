@@ -1,0 +1,43 @@
+
+> @role-model-router/catalog@0.0.0 test D:\DEV\role-model\.worktrees\32-models-dev-metadata-coverage\role-model-router\packages\catalog
+> vitest run test/index.test.ts
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/32-models-dev-metadata-coverage/role-model-router/packages/catalog[39m
+
+ [31mΓ¥»[39m test/index.test.ts [2m([22m[2m7 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 65[2mms[22m[39m
+   [32mΓ£ô[39m normalizeCatalogSnapshot[2m > [22mpreserves upstream provenance while layering role-model enrichment[32m 22[2mms[22m[39m
+   [32mΓ£ô[39m normalizeCatalogSnapshot[2m > [22mnormalizes the first moonshot kimi provider slice with explicit auth-mode support[32m 2[2mms[22m[39m
+   [32mΓ£ô[39m normalizeCatalogSnapshot[2m > [22mpreserves provider docs and npm compatibility metadata for downstream consumers[32m 0[2mms[22m[39m
+   [32mΓ£ô[39m exportCatalogArtifacts[2m > [22mwrites stable normalized catalog and vendor ledger artifacts for local validation[32m 7[2mms[22m[39m
+   [32mΓ£ô[39m runCatalogExportCli[2m > [22mderives the repo-local catalog export paths for the validation command[32m 6[2mms[22m[39m
+   [32mΓ£ô[39m runCatalogExportCli[2m > [22mrewrites tracked package-data catalog artifacts alongside the runtime-output export[32m 14[2mms[22m[39m
+[31m   [31m├ù[31m runCatalogRefreshCli[2m > [22mwrites the pinned snapshot fixture from live models.dev provider and model metadata[39m[32m 11[2mms[22m[39m
+[31m     ΓåÆ Cannot find module '../src/refresh.ts' imported from 'D:/DEV/role-model/.worktrees/32-models-dev-metadata-coverage/role-model-router/packages/catalog/test/index.test.ts'[39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/index.test.ts > runCatalogRefreshCli > writes the pinned snapshot fixture from live models.dev provider and model metadata
+Error: Cannot find module '../src/refresh.ts' imported from 'D:/DEV/role-model/.worktrees/32-models-dev-metadata-coverage/role-model-router/packages/catalog/test/index.test.ts'
+ Γ¥» test/index.test.ts:272:38
+    270|   test("writes the pinned snapshot fixture from live models.dev providΓÇª
+    271|     const tempRepoRoot = await createCatalogRefreshFixtureRepoRoot();
+    272|     const { runCatalogRefreshCli } = await import("../src/refresh.ts");
+       |                                      ^
+    273|     const capturedAt = "2026-05-15T03:40:39Z";
+    274| 
+
+Caused by: Error: Failed to load url ../src/refresh.ts (resolved id: ../src/refresh.ts) in D:/DEV/role-model/.worktrees/32-models-dev-metadata-coverage/role-model-router/packages/catalog/test/index.test.ts. Does the file exist?
+ Γ¥» loadAndTransform ../../../node_modules/.pnpm/vite@7.3.2_@types+node@22.1_f7dc1826a0f6bcfe28ab74fd91d23836/node_modules/vite/dist/node/chunks/config.js:22663:33
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m6 passed[39m[22m[90m (7)[39m
+[2m   Start at [22m 11:58:04
+[2m   Duration [22m 1.01s[2m (transform 133ms, setup 0ms, collect 153ms, tests 65ms, environment 0ms, prepare 298ms)[22m
+
+D:\DEV\role-model\.worktrees\32-models-dev-metadata-coverage\role-model-router\packages\catalog:
+ΓÇëERR_PNPM_RECURSIVE_RUN_FIRST_FAILΓÇë @role-model-router/catalog@0.0.0 test: `vitest run test/index.test.ts`
+Exit status 1

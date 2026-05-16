@@ -160,10 +160,12 @@ const localModelsRoute = createRoute({
   icon: Cpu,
   template: "registry-detail",
   eyebrow: "Local",
-  title: "Loaded models",
-  description: "Currently loaded local inference models and manual load/unload controls.",
+  title: "Local models",
+  description:
+    "Load a local model by exact model ID, inspect loaded inference models, and manage overrides.",
   noteTitle: "Registry detail",
-  noteBody: "Lead with loaded model cards; load/unload actions stay visible and contextual.",
+  noteBody:
+    "Lead with the load-model entry point, then keep loaded model cards and overrides visible.",
 });
 
 const localSwapRoute = createRoute({
@@ -225,15 +227,15 @@ const localMatrixRoute = createRoute({
 const localPeersRoute = createRoute({
   id: "local-peers",
   to: "/app/local/peers",
-  label: "Peers",
+  label: "Endpoints",
   section: "Local",
   icon: Network,
   template: "registry-detail",
   eyebrow: "Local",
-  title: "Peer instances",
-  description: "Peer llama-swap instance inventory and management.",
+  title: "Local endpoints",
+  description: "Local llama-swap endpoint inventory and management.",
   noteTitle: "Registry detail",
-  noteBody: "Peer list with health and model availability; add/remove controls.",
+  noteBody: "Endpoint list with health and model availability; add/remove controls stay obvious.",
 });
 
 const controlProvidersRoute = createRoute({

@@ -50,7 +50,17 @@ describe("fetchRuntimeSnapshot", () => {
 
       switch (url) {
         case "/api/role-model/runtime/summary":
-          return jsonResponse({ providerCount: 3, accountCount: 2, endpointCount: 3 });
+          return jsonResponse({
+            providerCount: 3,
+            accountCount: 2,
+            endpointCount: 3,
+            readinessSummary: {
+              pendingDeviceAuthorizationCount: 1,
+              credentialsMissingAccountCount: 1,
+              connectedWithoutEndpointCount: 1,
+              readyAccountCount: 1,
+            },
+          });
         case "/api/role-model/providers":
           return jsonResponse([{ providerId: "moonshot" }]);
         case "/api/role-model/accounts":
@@ -65,12 +75,44 @@ describe("fetchRuntimeSnapshot", () => {
               ],
             },
           ]);
+        case "/api/role-model/accounts/device":
+          return jsonResponse([
+            {
+              authRequestId: "auth-001",
+              providerAccountId: "moonshot.personal.kimi-code",
+              providerId: "moonshot",
+              variantId: "kimi-code",
+              status: "pending",
+              userCode: "ABCD-EFGH",
+              verificationUriComplete: "https://auth.kimi.com/device?user_code=ABCD-EFGH",
+            },
+          ]);
         case "/api/role-model/endpoints":
           return jsonResponse([{ endpointId: "openai.personal.primary.us-east-1.fast" }]);
         case "/api/role-model/roles":
           return jsonResponse([{ roleId: "general.chat", label: "General chat" }]);
         case "/api/role-model/requests":
           return jsonResponse([{ requestId: "req-001" }]);
+        case "/api/role-model/models":
+          return jsonResponse([
+            {
+              id: "openai/gpt-4.1-mini-fast",
+              object: "model",
+              owned_by: "role-model",
+              providerId: "openai",
+              displayName: "GPT-4.1 Mini Fast",
+              endpoint_ids: [],
+              capabilities: ["text.chat", "tools.function_calling"],
+              modalities: ["text"],
+              contextWindow: 1047576,
+              maxOutputTokens: 32768,
+              pricing: {
+                inputPer1M: 0.4,
+                outputPer1M: 1.6,
+                currency: "USD",
+              },
+            },
+          ]);
         case "/v1/models":
           return jsonResponse({
             object: "list",
@@ -79,7 +121,18 @@ describe("fetchRuntimeSnapshot", () => {
                 id: "openai/gpt-4.1-mini-fast",
                 object: "model",
                 owned_by: "role-model",
+                providerId: "openai",
+                displayName: "GPT-4.1 Mini Fast",
                 endpoint_ids: [],
+                capabilities: ["text.chat", "tools.function_calling"],
+                modalities: ["text"],
+                contextWindow: 1047576,
+                maxOutputTokens: 32768,
+                pricing: {
+                  inputPer1M: 0.4,
+                  outputPer1M: 1.6,
+                  currency: "USD",
+                },
               },
             ],
           });
@@ -89,7 +142,17 @@ describe("fetchRuntimeSnapshot", () => {
     });
 
     await expect(fetchRuntimeSnapshot(fetcher)).resolves.toEqual({
-      summary: { providerCount: 3, accountCount: 2, endpointCount: 3 },
+      summary: {
+        providerCount: 3,
+        accountCount: 2,
+        endpointCount: 3,
+        readinessSummary: {
+          pendingDeviceAuthorizationCount: 1,
+          credentialsMissingAccountCount: 1,
+          connectedWithoutEndpointCount: 1,
+          readyAccountCount: 1,
+        },
+      },
       providers: [{ providerId: "moonshot" }],
       accounts: [
         {
@@ -102,6 +165,17 @@ describe("fetchRuntimeSnapshot", () => {
           ],
         },
       ],
+      deviceAuthorizations: [
+        {
+          authRequestId: "auth-001",
+          providerAccountId: "moonshot.personal.kimi-code",
+          providerId: "moonshot",
+          variantId: "kimi-code",
+          status: "pending",
+          userCode: "ABCD-EFGH",
+          verificationUriComplete: "https://auth.kimi.com/device?user_code=ABCD-EFGH",
+        },
+      ],
       endpoints: [{ endpointId: "openai.personal.primary.us-east-1.fast" }],
       requests: [{ requestId: "req-001" }],
       models: [
@@ -109,7 +183,18 @@ describe("fetchRuntimeSnapshot", () => {
           id: "openai/gpt-4.1-mini-fast",
           object: "model",
           owned_by: "role-model",
+          providerId: "openai",
+          displayName: "GPT-4.1 Mini Fast",
           endpoint_ids: [],
+          capabilities: ["text.chat", "tools.function_calling"],
+          modalities: ["text"],
+          contextWindow: 1047576,
+          maxOutputTokens: 32768,
+          pricing: {
+            inputPer1M: 0.4,
+            outputPer1M: 1.6,
+            currency: "USD",
+          },
         },
       ],
       roles: [{ roleId: "general.chat", label: "General chat" }],

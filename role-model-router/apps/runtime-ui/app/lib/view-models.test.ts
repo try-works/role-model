@@ -4,7 +4,9 @@ import {
   buildAccountModelCatalogIds,
   buildActivitySummary,
   buildConfiguredModelCards,
+  buildConfiguredModelMetadataRows,
   buildConfiguredProviderRows,
+  buildCredentialReadinessRows,
   buildDownstreamProviderGuide,
   buildEndpointCatalogRows,
   buildModelCatalogRows,
@@ -85,6 +87,46 @@ describe("summarizeRuntimeStats", () => {
       { label: "Providers", value: "3" },
       { label: "Accounts", value: "2" },
       { label: "Endpoints", value: "3" },
+    ]);
+  });
+});
+
+describe("buildCredentialReadinessRows", () => {
+  test("turns the runtime readiness summary into operator-facing readiness rows", () => {
+    expect(
+      buildCredentialReadinessRows({
+        readinessSummary: {
+          pendingDeviceAuthorizationCount: 1,
+          credentialsMissingAccountCount: 2,
+          connectedWithoutEndpointCount: 1,
+          readyAccountCount: 3,
+        },
+      }),
+    ).toEqual([
+      {
+        key: "pending-device-authorization",
+        label: "Pending OAuth",
+        value: 1,
+        tone: "warning",
+      },
+      {
+        key: "credentials-missing",
+        label: "Credentials missing",
+        value: 2,
+        tone: "warning",
+      },
+      {
+        key: "connected-without-endpoint",
+        label: "Connected, no endpoint",
+        value: 1,
+        tone: "warning",
+      },
+      {
+        key: "ready",
+        label: "Execution-ready",
+        value: 3,
+        tone: "success",
+      },
     ]);
   });
 });
@@ -181,10 +223,25 @@ describe("buildConfiguredModelCards", () => {
           {
             id: "moonshot/kimi-k2.5",
             endpoint_ids: ["moonshot.personal.primary.global.kimi-k2.5"],
+            displayName: "Kimi K2.5",
+            capabilities: ["text.chat", "tools.function_calling"],
+            modalities: ["text"],
+            contextWindow: 262144,
+            maxOutputTokens: 16384,
+            pricing: {
+              inputPer1M: 4,
+              outputPer1M: 12,
+              currency: "USD",
+            },
           },
           {
             id: "gpt-5.4",
             endpoint_ids: ["cli.local.coder"],
+            displayName: "GPT-5.4",
+            capabilities: ["text.chat"],
+            modalities: ["text"],
+            contextWindow: 200000,
+            maxOutputTokens: 64000,
           },
         ],
         endpoints: [
@@ -234,7 +291,7 @@ describe("buildConfiguredModelCards", () => {
     ).toEqual([
       expect.objectContaining({
         modelId: "gpt-5.4",
-        displayName: "GPT 5.4",
+        displayName: "GPT-5.4",
         sourceSummary: "local",
         endpointCount: 1,
         requestCount: 0,
@@ -242,6 +299,10 @@ describe("buildConfiguredModelCards", () => {
         roleIds: ["developer"],
         toolCallingSupported: true,
         controllerState: "active",
+        capabilities: ["text.chat"],
+        modalities: ["text"],
+        contextWindow: 200000,
+        maxOutputTokens: 64000,
       }),
       expect.objectContaining({
         modelId: "moonshot/kimi-k2.5",
@@ -253,7 +314,38 @@ describe("buildConfiguredModelCards", () => {
         roleIds: ["general.chat"],
         toolCallingSupported: true,
         controllerState: "eligible",
+        capabilities: ["text.chat", "tools.function_calling"],
+        modalities: ["text"],
+        contextWindow: 262144,
+        maxOutputTokens: 16384,
+        pricing: {
+          inputPer1M: 4,
+          outputPer1M: 12,
+          currency: "USD",
+        },
       }),
+    ]);
+  });
+});
+
+describe("buildConfiguredModelMetadataRows", () => {
+  test("formats model specifications and pricing for the inspection panel", () => {
+    expect(
+      buildConfiguredModelMetadataRows({
+        modalities: ["text", "image"],
+        contextWindow: 1047576,
+        maxOutputTokens: 32768,
+        pricing: {
+          inputPer1M: 0.4,
+          outputPer1M: 1.6,
+          currency: "USD",
+        },
+      }),
+    ).toEqual([
+      { label: "Modalities", value: "text, image" },
+      { label: "Context window", value: "1,047,576 tokens" },
+      { label: "Max output", value: "32,768 tokens" },
+      { label: "Pricing", value: "$0.4 / 1M input • $1.6 / 1M output" },
     ]);
   });
 });
@@ -390,32 +482,58 @@ describe("buildConfiguredProviderRows", () => {
             status: "active",
             allowedModels: ["moonshot/kimi-k2.6"],
           },
+          {
+            providerAccountId: "moonshot.personal.pending",
+            providerId: "moonshot",
+            authMode: "oauth2-device-code",
+            healthStatus: "credentials-missing",
+            status: "disabled",
+            allowedModels: ["moonshot/kimi-k2.5"],
+          },
         ],
         endpoints: [
           {
             endpointId: "moonshot.litellm.global.moonshot-kimi-k2-6",
             providerId: "moonshot",
+            providerAccountId: "moonshot.personal.primary",
             modelId: "moonshot/kimi-k2.6",
             status: "active",
           },
           {
             endpointId: "moonshot.litellm.global.moonshot-kimi-k2-5",
             providerId: "moonshot",
+            providerAccountId: "moonshot.personal.primary",
             modelId: "moonshot/kimi-k2.5",
             status: "degraded",
+          },
+        ],
+        deviceAuthorizations: [
+          {
+            authRequestId: "auth-001",
+            providerAccountId: "moonshot.personal.pending",
+            providerId: "moonshot",
+            status: "pending",
           },
         ],
       }),
     ).toEqual([
       {
         providerId: "moonshot",
-        accountIds: ["moonshot.personal.kimi-code", "moonshot.personal.primary"],
+        accountIds: [
+          "moonshot.personal.kimi-code",
+          "moonshot.personal.pending",
+          "moonshot.personal.primary",
+        ],
         authModes: ["api-key-static", "oauth2-device-code"],
         configuredModels: ["moonshot/kimi-k2.5", "moonshot/kimi-k2.6"],
         endpointModels: ["moonshot/kimi-k2.5", "moonshot/kimi-k2.6"],
         endpointCount: 2,
         activeEndpointCount: 1,
-        healthStatuses: ["healthy"],
+        healthStatuses: ["credentials-missing", "healthy"],
+        pendingDeviceAuthorizationCount: 1,
+        credentialsMissingAccountCount: 0,
+        connectedWithoutEndpointCount: 1,
+        readyAccountCount: 1,
       },
     ]);
   });

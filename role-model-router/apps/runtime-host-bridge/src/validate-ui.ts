@@ -53,6 +53,8 @@ export interface RuntimeUiValidationResult {
 export async function runRuntimeUiValidation(
   options: RuntimeUiValidationOptions,
 ): Promise<RuntimeUiValidationResult> {
+  const previousMoonshotApiKey = process.env.MOONSHOT_API_KEY;
+  process.env.MOONSHOT_API_KEY = previousMoonshotApiKey || "runtime-ui-validation-key";
   const backend = await createRuntimeBridgeBackend(options);
   const server = await startBridgeServer({
     host: "127.0.0.1",
@@ -430,6 +432,11 @@ export async function runRuntimeUiValidation(
   } finally {
     await server.close();
     await delay(10);
+    if (previousMoonshotApiKey === undefined) {
+      process.env.MOONSHOT_API_KEY = undefined;
+    } else {
+      process.env.MOONSHOT_API_KEY = previousMoonshotApiKey;
+    }
   }
 }
 

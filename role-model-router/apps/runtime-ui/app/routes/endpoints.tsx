@@ -11,7 +11,11 @@ import {
 } from "../components/page-primitives";
 import { secondaryButtonClassName } from "../lib/design-system";
 import { type RuntimeSnapshot, fetchRuntimeSnapshot } from "../lib/runtime-api";
-import { buildConfiguredProviderRows, buildEndpointCatalogRows } from "../lib/view-models";
+import {
+  buildConfiguredProviderRows,
+  buildCredentialReadinessRows,
+  buildEndpointCatalogRows,
+} from "../lib/view-models";
 
 export default function EndpointsRoute() {
   const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(null);
@@ -33,6 +37,7 @@ export default function EndpointsRoute() {
       snapshot
         ? buildConfiguredProviderRows({
             accounts: snapshot.accounts,
+            deviceAuthorizations: snapshot.deviceAuthorizations,
             endpoints: snapshot.endpoints,
           })
         : [],
@@ -40,6 +45,11 @@ export default function EndpointsRoute() {
   );
   const endpointRows = useMemo(
     () => (snapshot ? buildEndpointCatalogRows(snapshot.endpoints) : []),
+    [snapshot],
+  );
+  const readinessRows = useMemo(
+    () =>
+      snapshot ? buildCredentialReadinessRows(snapshot.summary).filter((row) => row.value > 0) : [],
     [snapshot],
   );
 
@@ -58,15 +68,36 @@ export default function EndpointsRoute() {
         description="Configured providers, configured models, and the live runtime endpoint registry appear together here after provider onboarding."
       />
 
+      {readinessRows.length > 0 ? (
+        <SectionCard
+          title="Provider onboarding readiness"
+          description="Saved provider accounts can still be pending OAuth, missing credentials, or connected without an activated endpoint."
+        >
+          <div className="flex flex-wrap gap-3">
+            {readinessRows.map((row) => (
+              <StatusPill key={row.key} tone={row.tone}>
+                {row.label} {row.value}
+              </StatusPill>
+            ))}
+          </div>
+        </SectionCard>
+      ) : null}
+
       {providerRows.length === 0 && endpointRows.length === 0 ? (
         <SectionCard
           title="No configured endpoints yet"
-          description="Provider onboarding happens on the Providers page. Once a provider is configured, its resulting runtime entries will appear here."
+          description="Remote providers are configured on the Providers page. Local llama-swap endpoints are added from Local > Endpoints."
         >
           <EmptyState label="No providers or endpoints are configured yet." />
-          <div className="mt-4">
+          <div className="mt-4 flex flex-wrap gap-3">
             <Link className={secondaryButtonClassName} to="/app/control/providers">
               Open Providers
+            </Link>
+            <Link className={secondaryButtonClassName} to="/app/local/peers">
+              Open Local Endpoints
+            </Link>
+            <Link className={secondaryButtonClassName} to="/app/local/models">
+              Open Local Models
             </Link>
           </div>
         </SectionCard>
@@ -88,6 +119,7 @@ export default function EndpointsRoute() {
                       <th className="pb-3 font-medium">Auth</th>
                       <th className="pb-3 font-medium">Models</th>
                       <th className="pb-3 font-medium">Health</th>
+                      <th className="pb-3 font-medium">Readiness</th>
                       <th className="pb-3 font-medium">Endpoints</th>
                     </tr>
                   </thead>
@@ -112,6 +144,24 @@ export default function EndpointsRoute() {
                           {provider.healthStatuses.join(", ") || "unknown"}
                         </td>
                         <td className="py-3 text-[var(--rm-secondary)]">
+                          {[
+                            provider.pendingDeviceAuthorizationCount > 0
+                              ? `${provider.pendingDeviceAuthorizationCount} pending OAuth`
+                              : null,
+                            provider.credentialsMissingAccountCount > 0
+                              ? `${provider.credentialsMissingAccountCount} missing credentials`
+                              : null,
+                            provider.connectedWithoutEndpointCount > 0
+                              ? `${provider.connectedWithoutEndpointCount} connected, no endpoint`
+                              : null,
+                            provider.readyAccountCount > 0
+                              ? `${provider.readyAccountCount} ready`
+                              : null,
+                          ]
+                            .filter((value): value is string => value !== null)
+                            .join(" • ") || "—"}
+                        </td>
+                        <td className="py-3 text-[var(--rm-secondary)]">
                           {provider.activeEndpointCount}/{provider.endpointCount} active
                         </td>
                       </tr>
@@ -127,7 +177,13 @@ export default function EndpointsRoute() {
             description="Concrete endpoint rows by endpoint id, model, provider, serving source, and live runtime health."
           >
             {endpointRows.length === 0 ? (
-              <EmptyState label="No runtime endpoint rows are active yet. Configure a provider from Providers to populate this registry." />
+              <EmptyState
+                label={
+                  readinessRows.length > 0
+                    ? "No runtime endpoint rows are active yet. Saved providers still need OAuth completion, credentials, or endpoint activation."
+                    : "No runtime endpoint rows are active yet. Configure a provider from Providers to populate this registry."
+                }
+              />
             ) : (
               <div className="overflow-x-auto">
                 <table className="min-w-full text-left text-sm">

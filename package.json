@@ -22,6 +22,7 @@
     "lint:rust": "cargo fmt --manifest-path role-model-router/rust/Cargo.toml --all --check && cargo clippy --manifest-path role-model-router/rust/Cargo.toml --workspace --all-targets -- -D warnings",
     "schemas:validate": "corepack pnpm --filter @role-model/schema-tools exec tsx src/validate-schemas.ts validate",
     "types:generate": "corepack pnpm --filter @role-model/schema-tools exec tsx src/validate-schemas.ts generate-types",
+    "catalog:refresh": "corepack pnpm --filter @role-model-router/catalog exec tsx src/refresh.ts",
     "catalog:export": "corepack pnpm --filter @role-model-router/catalog exec tsx src/cli.ts",
     "runtime:validate-adapter": "corepack pnpm --filter @role-model-router/adapter-execution exec tsx src/cli.ts",
     "runtime:validate-host": "corepack pnpm --filter @role-model-router/runtime-host-bridge exec tsx src/validate-host.ts",

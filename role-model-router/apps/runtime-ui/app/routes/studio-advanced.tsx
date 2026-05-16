@@ -19,7 +19,7 @@ import {
   fetchRuntimeSnapshot,
   submitAdvancedRequest,
 } from "../lib/runtime-api";
-import { buildWorkbenchModelOptions } from "../lib/view-models";
+import { buildCredentialReadinessRows, buildWorkbenchModelOptions } from "../lib/view-models";
 
 const advancedFamilies = [
   {
@@ -127,6 +127,11 @@ export default function StudioAdvancedRoute() {
   );
   const selectedFamily =
     advancedFamilies.find((entry) => entry.path === path) ?? advancedFamilies[0];
+  const readinessRows = snapshot
+    ? buildCredentialReadinessRows(snapshot.summary).filter((row) => row.value > 0)
+    : [];
+  const blockingReadinessRows = readinessRows.filter((row) => row.key !== "ready");
+  const hasModels = modelOptions.length > 0;
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -177,6 +182,24 @@ export default function StudioAdvancedRoute() {
 
       {error ? <ErrorState label={error} /> : null}
 
+      {blockingReadinessRows.length > 0 ? (
+        <SectionCard
+          title="Execution readiness"
+          description="Advanced request families use the same execution-ready model inventory as Workbench and the OpenAI-compatible bridge surfaces."
+        >
+          <div className="flex flex-wrap gap-3">
+            {readinessRows.map((row) => (
+              <span
+                key={row.key}
+                className="inline-flex items-center rounded-full border border-[var(--rm-border)] px-3 py-1 text-xs font-medium text-[var(--rm-secondary)]"
+              >
+                {row.label} {row.value}
+              </span>
+            ))}
+          </div>
+        </SectionCard>
+      ) : null}
+
       <div className="grid gap-4 xl:grid-cols-[360px_minmax(0,1fr)]">
         <SectionCard
           title="Endpoint family"
@@ -184,6 +207,14 @@ export default function StudioAdvancedRoute() {
         >
           {!snapshot ? (
             <LoadingState label="Loading advanced request context…" />
+          ) : !hasModels ? (
+            <EmptyState
+              label={
+                blockingReadinessRows.length > 0
+                  ? "No execution-ready models yet. Complete provider setup or activate an endpoint before using Advanced APIs."
+                  : "No execution-ready models are currently available."
+              }
+            />
           ) : (
             <form className="space-y-4" onSubmit={onSubmit}>
               <label className="grid gap-2 text-sm">
@@ -222,7 +253,11 @@ export default function StudioAdvancedRoute() {
                   onChange={(event) => setPayloadText(event.target.value)}
                 />
               </label>
-              <button className={primaryButtonClassName} disabled={submitting} type="submit">
+              <button
+                className={primaryButtonClassName}
+                disabled={submitting || model.trim().length === 0}
+                type="submit"
+              >
                 {submitting ? "Running…" : "Submit advanced request"}
               </button>
             </form>

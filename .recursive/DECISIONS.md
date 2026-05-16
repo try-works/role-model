@@ -909,3 +909,35 @@
   - root `ci:check` still reproduces the inherited Phase 0 formatter-drift failure in `biome check .`
   - the runtime-ui package test script may need future runner hardening on this Windows environment because the default multi-worker Vitest invocation can OOM during teardown even when the suites themselves pass
   - the advanced raw runtime-config editor remains intentionally available as an escape hatch beside the new structured routing-strategy surface
+
+### Run `32-models-dev-metadata-coverage`
+
+- Run folder: `/.recursive/run/32-models-dev-metadata-coverage/`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `01.5-root-cause.md`
+  - `02-to-be-plan.md`
+  - `addenda/02-to-be-plan.credential-lifecycle-remediation.addendum-01.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - Added the explicit root `catalog:refresh` command and completed the repo-owned refresh/export flow for pinned models.dev snapshot inputs, normalized catalog artifacts, and vendor-version ledger outputs.
+  - Made the generated normalized catalog the default metadata authority for runtime and UI provider/model metadata while preserving role-model-owned auth/control-plane semantics and LiteLLM execution coverage.
+  - Reworked runtime-host and runtime-ui consumers so provider docs, env-var hints, capability/spec labels, and related operator metadata come from the catalog/readiness layer rather than fixture-grade placeholders.
+  - Completed the approved credential-lifecycle remediation inside the same run: pending device-code sessions survive reload/restart, persisted OAuth-backed accounts rehydrate truthfully, unresolved env-backed credentials stay explicitly `credentials-missing`, and packaged/runtime operator surfaces no longer imply execution-readiness when prerequisites are missing.
+  - Strengthened packaged validation so `runtime:validate-packaging` rebuilds the host before SEA injection and proves packaged `/healthz`, `/v1/models`, `/v1/chat/completions`, and `/v1/responses` behavior against the current host/runtime baseline.
+- Why:
+  - To make models.dev the shipped metadata authority without losing LiteLLM coverage or role-model-specific onboarding semantics, and to close the resulting operator-truthfulness gaps that surfaced during packaged OAuth/API-key verification.
+- How:
+  - Implemented under strict TDD with preserved RED receipts for refresh, export, provider-metadata defaulting, and supplement-merge gaps, followed by focused GREEN slices and final integrated reruns.
+  - Final verification included the runtime-ui suite (`5` files / `67` tests), the runtime-host suite (`10` files / `61` tests), `runtime:validate-host`, `runtime:validate-packaging`, and root `build`, plus agent-operated packaged QA evidence.
+- What was not done:
+  - The run did not replace LiteLLM as the execution-coverage layer or widen into unrelated UI redesign or new auth flows outside the existing override/control-plane boundary.
+- Known issues / follow-ups:
+  - Closeout had to document tracked-diff versus status-only additions explicitly because the executable Phase-0 diff basis excludes some untracked worktree paths until they are added; this was treated as an audit-accounting concern, not a requirements gap.

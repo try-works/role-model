@@ -51,6 +51,14 @@ const controlModelsSource = readFileSync(
   new URL("../routes/control-models.tsx", import.meta.url),
   "utf8",
 );
+const localModelsSource = readFileSync(
+  new URL("../routes/local-models.tsx", import.meta.url),
+  "utf8",
+);
+const localPeersSource = readFileSync(
+  new URL("../routes/local-peers.tsx", import.meta.url),
+  "utf8",
+);
 const endpointsRouteSource = readFileSync(
   new URL("../routes/endpoints.tsx", import.meta.url),
   "utf8",
@@ -172,6 +180,19 @@ describe("runtime design system", () => {
       expect.objectContaining({
         id: "control-models",
         template: "model-inventory",
+      }),
+    );
+    expect(getRuntimeRouteDefinition("/app/local/models")).toEqual(
+      expect.objectContaining({
+        id: "local-models",
+        title: "Local models",
+      }),
+    );
+    expect(getRuntimeRouteDefinition("/app/local/peers")).toEqual(
+      expect.objectContaining({
+        id: "local-peers",
+        label: "Endpoints",
+        title: "Local endpoints",
       }),
     );
     expect(getRuntimeRouteDefinition("/app/control/runtime-config")).toEqual(
@@ -471,6 +492,17 @@ describe("runtime design system", () => {
     expect(controlModelsSource).toContain("Inspect");
     expect(controlModelsSource).not.toContain(">Settings<");
     expect(controlModelsSource).toContain("/app/control/runtime-config");
+  });
+
+  test("local setup surfaces stay discoverable from navigation and empty registry states", () => {
+    expect(localModelsSource).toContain("Load local model");
+    expect(localModelsSource).toContain("Open local endpoints");
+    expect(localPeersSource).toContain("Local endpoints");
+    expect(localPeersSource).toContain("Add endpoint");
+    expect(endpointsRouteSource).toContain("/app/local/peers");
+    expect(endpointsRouteSource).toContain("/app/local/models");
+    expect(controlModelsSource).toContain("/app/local/models");
+    expect(controlModelsSource).toContain("/app/local/peers");
   });
 
   test("registry and system layouts avoid redundant KPI strips and placeholder note panels", () => {

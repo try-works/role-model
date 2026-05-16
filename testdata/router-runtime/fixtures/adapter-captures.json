@@ -1,5 +1,8 @@
 {
   "byEndpointId": {
+    "ai21.personal.ai21-api-key.global.j2-light": {
+      "responseFixture": "adapter-openai-response.json"
+    },
     "openai.personal.primary.us-east-1.fast": {
       "responseFixture": "adapter-openai-response.json"
     },

@@ -1,0 +1,152 @@
+ M .recursive/DECISIONS.md
+ M .recursive/STATE.md
+ M .recursive/memory/domains/role-model-baseline.md
+ M package.json
+ M packages/protocol-types/src/generated.ts
+ M role-model-router/apps/runtime-host-bridge/package.json
+ M role-model-router/apps/runtime-host-bridge/src/cli.ts
+ M role-model-router/apps/runtime-host-bridge/src/index.ts
+ M role-model-router/apps/runtime-host-bridge/src/litellm-catalog.ts
+ M role-model-router/apps/runtime-host-bridge/src/validate-packaging.ts
+ M role-model-router/apps/runtime-host-bridge/src/validate-ui.ts
+ M role-model-router/apps/runtime-host-bridge/src/validate-vendors.ts
+ M role-model-router/apps/runtime-host-bridge/test/backend-unified-runtime-config.test.ts
+ M role-model-router/apps/runtime-host-bridge/test/executable.test.ts
+ M role-model-router/apps/runtime-host-bridge/test/index.test.ts
+ M role-model-router/apps/runtime-ui/.react-router/types/+future.ts
+ M role-model-router/apps/runtime-ui/.react-router/types/+routes.ts
+ M role-model-router/apps/runtime-ui/.react-router/types/+server-build.d.ts
+ M role-model-router/apps/runtime-ui/.react-router/types/app/+types/root.ts
+ M role-model-router/apps/runtime-ui/.react-router/types/app/routes/+types/app-layout.ts
+ M role-model-router/apps/runtime-ui/.react-router/types/app/routes/+types/control-controller.ts
+ M role-model-router/apps/runtime-ui/.react-router/types/app/routes/+types/control-models.ts
+ M role-model-router/apps/runtime-ui/.react-router/types/app/routes/+types/control-runtime-config.ts
+ M role-model-router/apps/runtime-ui/.react-router/types/app/routes/+types/dashboard.ts
+ M role-model-router/apps/runtime-ui/.react-router/types/app/routes/+types/endpoints.ts
+ M role-model-router/apps/runtime-ui/.react-router/types/app/routes/+types/index.ts
+ M role-model-router/apps/runtime-ui/.react-router/types/app/routes/+types/integrations-downstream.ts
+ M role-model-router/apps/runtime-ui/.react-router/types/app/routes/+types/integrations-upstream.ts
+ M role-model-router/apps/runtime-ui/.react-router/types/app/routes/+types/local-logs.ts
+ M role-model-router/apps/runtime-ui/.react-router/types/app/routes/+types/local-matrix.ts
+ M role-model-router/apps/runtime-ui/.react-router/types/app/routes/+types/local-models.ts
+ M role-model-router/apps/runtime-ui/.react-router/types/app/routes/+types/local-peers.ts
+ M role-model-router/apps/runtime-ui/.react-router/types/app/routes/+types/local-policy.ts
+ M role-model-router/apps/runtime-ui/.react-router/types/app/routes/+types/local-swap.ts
+ M role-model-router/apps/runtime-ui/.react-router/types/app/routes/+types/not-found.ts
+ M role-model-router/apps/runtime-ui/.react-router/types/app/routes/+types/observe-activity.ts
+ M role-model-router/apps/runtime-ui/.react-router/types/app/routes/+types/observe-logs.ts
+ M role-model-router/apps/runtime-ui/.react-router/types/app/routes/+types/providers.ts
+ M role-model-router/apps/runtime-ui/.react-router/types/app/routes/+types/request-detail.ts
+ M role-model-router/apps/runtime-ui/.react-router/types/app/routes/+types/requests.ts
+ M role-model-router/apps/runtime-ui/.react-router/types/app/routes/+types/runtime.ts
+ M role-model-router/apps/runtime-ui/.react-router/types/app/routes/+types/studio-advanced.ts
+ M role-model-router/apps/runtime-ui/.react-router/types/app/routes/+types/studio-audio.ts
+ M role-model-router/apps/runtime-ui/.react-router/types/app/routes/+types/studio-images.ts
+ M role-model-router/apps/runtime-ui/.react-router/types/app/routes/+types/studio-rerank.ts
+ M role-model-router/apps/runtime-ui/.react-router/types/app/routes/+types/system-peers.ts
+ M role-model-router/apps/runtime-ui/.react-router/types/app/routes/+types/workbench.ts
+ M role-model-router/apps/runtime-ui/app/lib/device-authorization.test.ts
+ M role-model-router/apps/runtime-ui/app/lib/device-authorization.ts
+ A role-model-router/apps/runtime-ui/app/lib/provider-account-state.test.ts
+ A role-model-router/apps/runtime-ui/app/lib/provider-account-state.ts
+ M role-model-router/apps/runtime-ui/app/lib/runtime-api.test.ts
+ M role-model-router/apps/runtime-ui/app/lib/runtime-api.ts
+ M role-model-router/apps/runtime-ui/app/lib/view-models.test.ts
+ M role-model-router/apps/runtime-ui/app/lib/view-models.ts
+ M role-model-router/apps/runtime-ui/app/routes/control-models.tsx
+ M role-model-router/apps/runtime-ui/app/routes/endpoints.tsx
+ M role-model-router/apps/runtime-ui/app/routes/providers.tsx
+ M role-model-router/apps/runtime-ui/app/routes/runtime.tsx
+ M role-model-router/apps/runtime-ui/app/routes/studio-advanced.tsx
+ M role-model-router/apps/runtime-ui/app/routes/workbench.tsx
+ M role-model-router/apps/runtime-ui/build/client/assets/app-layout-sd17RkKf.js
+ M role-model-router/apps/runtime-ui/build/client/assets/chunk-EVOBXE3Y-Bpr6kgtK.js
+ R role-model-router/apps/runtime-ui/build/client/assets/control-controller-DVbHpXV4.js -> role-model-router/apps/runtime-ui/build/client/assets/control-controller-CKmPbRJs.js
+ A role-model-router/apps/runtime-ui/build/client/assets/control-models-Bgkb7Y8m.js
+ R role-model-router/apps/runtime-ui/build/client/assets/control-runtime-config-dEa9pQS1.js -> role-model-router/apps/runtime-ui/build/client/assets/control-runtime-config-D3r53z0u.js
+ R role-model-router/apps/runtime-ui/build/client/assets/dashboard-DQTwJvdf.js -> role-model-router/apps/runtime-ui/build/client/assets/dashboard-B3Etjut_.js
+ M role-model-router/apps/runtime-ui/build/client/assets/design-system-BqVxj1xJ.js
+ A role-model-router/apps/runtime-ui/build/client/assets/endpoints-DTaJkkZ3.js
+ M role-model-router/apps/runtime-ui/build/client/assets/entry.client-BBdlfaFT.js
+ M role-model-router/apps/runtime-ui/build/client/assets/index-fSI7bfiY.js
+ R role-model-router/apps/runtime-ui/build/client/assets/integrations-downstream-DHzGrs6T.js -> role-model-router/apps/runtime-ui/build/client/assets/integrations-downstream-JJHWYD1J.js
+ R role-model-router/apps/runtime-ui/build/client/assets/integrations-upstream-BANmX17a.js -> role-model-router/apps/runtime-ui/build/client/assets/integrations-upstream-DIBPRZ3v.js
+ R role-model-router/apps/runtime-ui/build/client/assets/local-logs-CopBwWyG.js -> role-model-router/apps/runtime-ui/build/client/assets/local-logs-DNNNFV7U.js
+ R role-model-router/apps/runtime-ui/build/client/assets/local-matrix-CT8xc8hS.js -> role-model-router/apps/runtime-ui/build/client/assets/local-matrix-BQXZzBS0.js
+ R role-model-router/apps/runtime-ui/build/client/assets/local-models-DXRJ7gGu.js -> role-model-router/apps/runtime-ui/build/client/assets/local-models-o5RjvlTk.js
+ R role-model-router/apps/runtime-ui/build/client/assets/local-peers-hfICgIXt.js -> role-model-router/apps/runtime-ui/build/client/assets/local-peers-B2ibrKJp.js
+ R role-model-router/apps/runtime-ui/build/client/assets/local-policy-BYKhNvId.js -> role-model-router/apps/runtime-ui/build/client/assets/local-policy-DtKM2Wc9.js
+ R role-model-router/apps/runtime-ui/build/client/assets/local-swap-DMseaVy6.js -> role-model-router/apps/runtime-ui/build/client/assets/local-swap-BapRq-bD.js
+ R role-model-router/apps/runtime-ui/build/client/assets/manifest-9c62d4ee.js -> role-model-router/apps/runtime-ui/build/client/assets/manifest-701de60c.js
+ M role-model-router/apps/runtime-ui/build/client/assets/not-found-CzloIEkZ.js
+ R role-model-router/apps/runtime-ui/build/client/assets/observe-activity-CsuCrDb8.js -> role-model-router/apps/runtime-ui/build/client/assets/observe-activity-SfSLQOk2.js
+ R role-model-router/apps/runtime-ui/build/client/assets/observe-logs-DeZDU-VP.js -> role-model-router/apps/runtime-ui/build/client/assets/observe-logs-C7PbIX-t.js
+ M role-model-router/apps/runtime-ui/build/client/assets/page-primitives-_drhYbfj.js
+ A role-model-router/apps/runtime-ui/build/client/assets/providers-Ck9OMLQm.js
+ R role-model-router/apps/runtime-ui/build/client/assets/request-detail-B1zB9kem.js -> role-model-router/apps/runtime-ui/build/client/assets/request-detail-DAeVYgUQ.js
+ R role-model-router/apps/runtime-ui/build/client/assets/requests-CQ_Z1zJ2.js -> role-model-router/apps/runtime-ui/build/client/assets/requests-CqMh4J4V.js
+ R role-model-router/apps/runtime-ui/build/client/assets/root-Cl4go4yh.css -> role-model-router/apps/runtime-ui/build/client/assets/root-DWGD1nR5.css
+ R role-model-router/apps/runtime-ui/build/client/assets/root-DgyBnsr8.js -> role-model-router/apps/runtime-ui/build/client/assets/root-oYpZt6cp.js
+ A role-model-router/apps/runtime-ui/build/client/assets/runtime-DNtwovUY.js
+ A role-model-router/apps/runtime-ui/build/client/assets/runtime-api-Bh58LJub.js
+ A role-model-router/apps/runtime-ui/build/client/assets/studio-advanced-Dpchtogu.js
+ R role-model-router/apps/runtime-ui/build/client/assets/studio-audio-BpD5BRGG.js -> role-model-router/apps/runtime-ui/build/client/assets/studio-audio-Dejw4Fes.js
+ R role-model-router/apps/runtime-ui/build/client/assets/studio-images-DFeIoEnT.js -> role-model-router/apps/runtime-ui/build/client/assets/studio-images-Dy9D7qO0.js
+ R role-model-router/apps/runtime-ui/build/client/assets/studio-rerank-BK-j4Apk.js -> role-model-router/apps/runtime-ui/build/client/assets/studio-rerank-D9L2leg0.js
+ R role-model-router/apps/runtime-ui/build/client/assets/system-peers-DMjgQUzE.js -> role-model-router/apps/runtime-ui/build/client/assets/system-peers-CQjwPQFX.js
+ A role-model-router/apps/runtime-ui/build/client/assets/view-models-a8O535UU.js
+ A role-model-router/apps/runtime-ui/build/client/assets/workbench-CpjfL2DY.js
+ M role-model-router/apps/runtime-ui/build/client/index.html
+ M role-model-router/apps/runtime-ui/package.json
+ M role-model-router/packages/adapter-execution/src/cli.ts
+ M role-model-router/packages/catalog/data/normalized-catalog.json
+ M role-model-router/packages/catalog/data/vendor-version-ledger.json
+ M role-model-router/packages/catalog/src/cli.ts
+ M role-model-router/packages/catalog/src/index.ts
+ M role-model-router/packages/catalog/src/litellm-catalog.ts
+ A role-model-router/packages/catalog/src/refresh.ts
+ M role-model-router/packages/catalog/test/index.test.ts
+ M role-model-router/packages/sqlite-memory/src/index.ts
+ M role-model-router/packages/sqlite-memory/test/index.test.ts
+ A testdata/catalog/models-dev-local-supplement.json
+ M testdata/catalog/models-dev-snapshot.json
+?? .recursive/run/32-models-dev-metadata-coverage/00-requirements.md
+?? .recursive/run/32-models-dev-metadata-coverage/00-worktree.md
+?? .recursive/run/32-models-dev-metadata-coverage/01-as-is.md
+?? .recursive/run/32-models-dev-metadata-coverage/01.5-root-cause.md
+?? .recursive/run/32-models-dev-metadata-coverage/02-to-be-plan.md
+?? .recursive/run/32-models-dev-metadata-coverage/03-implementation-summary.md
+?? .recursive/run/32-models-dev-metadata-coverage/04-test-summary.md
+?? .recursive/run/32-models-dev-metadata-coverage/05-manual-qa.md
+?? .recursive/run/32-models-dev-metadata-coverage/06-decisions-update.md
+?? .recursive/run/32-models-dev-metadata-coverage/07-state-update.md
+?? .recursive/run/32-models-dev-metadata-coverage/08-memory-impact.md
+?? .recursive/run/32-models-dev-metadata-coverage/addenda/02-to-be-plan.credential-lifecycle-remediation.addendum-01.md
+?? .recursive/run/32-models-dev-metadata-coverage/evidence/logs/green/run32-repo-build.green.log
+?? .recursive/run/32-models-dev-metadata-coverage/evidence/logs/green/run32-runtime-host-suite.green.log
+?? .recursive/run/32-models-dev-metadata-coverage/evidence/logs/green/run32-runtime-ui-suite.green.log
+?? .recursive/run/32-models-dev-metadata-coverage/evidence/logs/green/run32-runtime-validate-host.green.log
+?? .recursive/run/32-models-dev-metadata-coverage/evidence/logs/green/run32-runtime-validate-packaging.green.log
+?? .recursive/run/32-models-dev-metadata-coverage/evidence/logs/green/sp1-catalog-export-command.green.log
+?? .recursive/run/32-models-dev-metadata-coverage/evidence/logs/green/sp1-catalog-export-provider-metadata.green.log
+?? .recursive/run/32-models-dev-metadata-coverage/evidence/logs/green/sp1-catalog-refresh-command.green.log
+?? .recursive/run/32-models-dev-metadata-coverage/evidence/logs/green/sp1-post-refresh-catalog-tests.green.log
+?? .recursive/run/32-models-dev-metadata-coverage/evidence/logs/green/sp1-post-refresh-export.green.log
+?? .recursive/run/32-models-dev-metadata-coverage/evidence/logs/green/sp1-provider-metadata.green.log
+?? .recursive/run/32-models-dev-metadata-coverage/evidence/logs/green/sp1-refresh-command.green.log
+?? .recursive/run/32-models-dev-metadata-coverage/evidence/logs/green/sp1-tracked-catalog-export.green.log
+?? .recursive/run/32-models-dev-metadata-coverage/evidence/logs/green/sp2-catalog-refresh-with-supplement.green.log
+?? .recursive/run/32-models-dev-metadata-coverage/evidence/logs/green/sp2-post-supplement-export.green.log
+?? .recursive/run/32-models-dev-metadata-coverage/evidence/logs/green/sp2-refresh-supplement.green.log
+?? .recursive/run/32-models-dev-metadata-coverage/evidence/logs/green/sp3-runtime-host-test.green.log
+?? .recursive/run/32-models-dev-metadata-coverage/evidence/logs/green/sp3-runtime-ui-test.green.log
+?? .recursive/run/32-models-dev-metadata-coverage/evidence/logs/red/sp1-provider-metadata.red.log
+?? .recursive/run/32-models-dev-metadata-coverage/evidence/logs/red/sp1-refresh-command.red.log
+?? .recursive/run/32-models-dev-metadata-coverage/evidence/logs/red/sp1-tracked-catalog-export.red.log
+?? .recursive/run/32-models-dev-metadata-coverage/evidence/logs/red/sp2-refresh-supplement.red.log
+?? .recursive/run/32-models-dev-metadata-coverage/files-status.txt
+?? .recursive/run/32-models-dev-metadata-coverage/files-tracked-diff.txt
+?? role-model-router/vendor/llama-swap/dist-assets/darwin-arm64/llama-swap
+?? role-model-router/vendor/llama-swap/dist-assets/darwin-x64/llama-swap
+?? role-model-router/vendor/llama-swap/dist-assets/linux-x64/llama-swap
+?? role-model-router/vendor/llama-swap/dist-assets/win32-x64/llama-swap.exe

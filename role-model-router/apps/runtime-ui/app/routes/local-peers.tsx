@@ -109,8 +109,8 @@ export default function LocalPeersRoute() {
     <div className="space-y-8">
       <PageHeader
         eyebrow="Local"
-        title="Peer instances"
-        description="Peer llama-swap instance inventory and management."
+        title="Local endpoints"
+        description="Local llama-swap endpoint inventory and management."
         actions={
           <button
             type="button"
@@ -125,11 +125,11 @@ export default function LocalPeersRoute() {
 
       {error ? <ErrorState label={error} /> : null}
 
-      <SectionCard title="Peer inventory" description="Configured peer llama-swap instances.">
+      <SectionCard title="Endpoint inventory" description="Configured local llama-swap endpoints.">
         {loading && peers.length === 0 ? (
-          <LoadingState label="Loading peers…" />
+          <LoadingState label="Loading local endpoints…" />
         ) : peers.length === 0 ? (
-          <EmptyState label="No peers configured. Add a peer instance below." />
+          <EmptyState label="No local endpoints configured. Add an endpoint below." />
         ) : (
           <div className="space-y-3">
             {peers.map((peer) => (
@@ -180,14 +180,17 @@ export default function LocalPeersRoute() {
         )}
       </SectionCard>
 
-      <SectionCard title="Add peer" description="Register a new peer llama-swap instance.">
+      <SectionCard
+        title="Add local endpoint"
+        description="Register a local llama-swap endpoint for model execution."
+      >
         <div className="space-y-4">
           <div className="space-y-2">
             <label
               htmlFor="peer-url"
               className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]"
             >
-              Peer URL
+              Endpoint URL
             </label>
             <input
               id="peer-url"
@@ -220,7 +223,7 @@ export default function LocalPeersRoute() {
             disabled={!newUrl.trim() || saving}
             className={primaryButtonClassName}
           >
-            {saving ? "Saving…" : "Add peer"}
+            {saving ? "Saving…" : "Add endpoint"}
           </button>
         </div>
       </SectionCard>

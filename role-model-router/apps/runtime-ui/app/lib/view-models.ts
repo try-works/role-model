@@ -2,6 +2,7 @@ import type {
   RuntimeAccount,
   RuntimeActivityLogEntry,
   RuntimeControllerAssignment,
+  RuntimeDeviceAuthorization,
   RuntimeDownstreamOpenAIProviderConfig,
   RuntimeEndpoint,
   RuntimeModelRecord,
@@ -43,6 +44,19 @@ function sortLexical(left: string, right: string): number {
   return left.localeCompare(right, "en");
 }
 
+function formatTokenCount(value: number | null | undefined): string {
+  return typeof value === "number" && value > 0
+    ? `${value.toLocaleString("en-US")} tokens`
+    : "Unknown";
+}
+
+function formatPricingValue(value: RuntimeModelRecord["pricing"]): string {
+  if (!value) {
+    return "Unknown";
+  }
+  return `$${value.inputPer1M} / 1M input • $${value.outputPer1M} / 1M output`;
+}
+
 export function buildProviderCards(
   providers: readonly RuntimeProvider[],
   accounts: readonly RuntimeAccount[],
@@ -78,6 +92,69 @@ export function summarizeRuntimeStats(
     { label: "Accounts", value: String(summary.accountCount) },
     { label: "Endpoints", value: String(summary.endpointCount) },
   ];
+}
+
+export function buildCredentialReadinessRows(
+  summary: Pick<RuntimeSummary, "readinessSummary">,
+): Array<{
+  key:
+    | "pending-device-authorization"
+    | "credentials-missing"
+    | "connected-without-endpoint"
+    | "ready";
+  label: string;
+  value: number;
+  tone: "warning" | "success" | "neutral";
+}> {
+  const readiness = summary.readinessSummary;
+  if (!readiness) {
+    return [];
+  }
+
+  const rows: Array<{
+    key:
+      | "pending-device-authorization"
+      | "credentials-missing"
+      | "connected-without-endpoint"
+      | "ready";
+    label: string;
+    value: number;
+    tone: "warning" | "success" | "neutral";
+  }> = [];
+
+  if (readiness.pendingDeviceAuthorizationCount > 0) {
+    rows.push({
+      key: "pending-device-authorization",
+      label: "Pending OAuth",
+      value: readiness.pendingDeviceAuthorizationCount,
+      tone: "warning",
+    });
+  }
+  if (readiness.credentialsMissingAccountCount > 0) {
+    rows.push({
+      key: "credentials-missing",
+      label: "Credentials missing",
+      value: readiness.credentialsMissingAccountCount,
+      tone: "warning",
+    });
+  }
+  if (readiness.connectedWithoutEndpointCount > 0) {
+    rows.push({
+      key: "connected-without-endpoint",
+      label: "Connected, no endpoint",
+      value: readiness.connectedWithoutEndpointCount,
+      tone: "warning",
+    });
+  }
+
+  rows.push({
+    key: "ready",
+    label: "Execution-ready",
+    value: readiness.readyAccountCount,
+    tone: readiness.readyAccountCount > 0 ? "success" : "neutral",
+  });
+
+  return rows;
 }
 
 function formatCurrency(value: number | null | undefined, mode: "actual" | "estimate"): string {
@@ -467,6 +544,7 @@ export function buildAccountModelCatalogIds(input: {
 
 export function buildConfiguredProviderRows(input: {
   readonly accounts: readonly RuntimeAccount[];
+  readonly deviceAuthorizations?: readonly RuntimeDeviceAuthorization[];
   readonly endpoints: readonly RuntimeEndpoint[];
 }): Array<{
   providerId: string;
@@ -477,9 +555,14 @@ export function buildConfiguredProviderRows(input: {
   endpointCount: number;
   activeEndpointCount: number;
   healthStatuses: string[];
+  pendingDeviceAuthorizationCount: number;
+  credentialsMissingAccountCount: number;
+  connectedWithoutEndpointCount: number;
+  readyAccountCount: number;
 }> {
   const providerIds = uniqueStrings([
     ...input.accounts.map((account) => account.providerId),
+    ...(input.deviceAuthorizations ?? []).map((authorization) => authorization.providerId),
     ...input.endpoints.map((endpoint) => endpoint.providerId),
   ]).sort(sortLexical);
 
@@ -488,6 +571,45 @@ export function buildConfiguredProviderRows(input: {
     const providerEndpoints = input.endpoints.filter(
       (endpoint) => endpoint.providerId === providerId,
     );
+    const pendingDeviceAuthorizationAccountIds = new Set(
+      (input.deviceAuthorizations ?? [])
+        .filter(
+          (authorization) =>
+            authorization.providerId === providerId && authorization.status === "pending",
+        )
+        .map((authorization) => authorization.providerAccountId),
+    );
+    const readyAccountIds = new Set(
+      providerEndpoints
+        .filter(
+          (endpoint) =>
+            endpoint.status === "active" && typeof endpoint.providerAccountId === "string",
+        )
+        .map((endpoint) => endpoint.providerAccountId as string),
+    );
+    let pendingDeviceAuthorizationCount = 0;
+    let credentialsMissingAccountCount = 0;
+    let connectedWithoutEndpointCount = 0;
+    let readyAccountCount = 0;
+
+    for (const account of providerAccounts) {
+      if (readyAccountIds.has(account.providerAccountId)) {
+        readyAccountCount += 1;
+        continue;
+      }
+      if (pendingDeviceAuthorizationAccountIds.has(account.providerAccountId)) {
+        pendingDeviceAuthorizationCount += 1;
+        continue;
+      }
+      if (account.healthStatus === "credentials-missing") {
+        credentialsMissingAccountCount += 1;
+        continue;
+      }
+      if (account.status === "active" && account.healthStatus === "healthy") {
+        connectedWithoutEndpointCount += 1;
+      }
+    }
+
     return {
       providerId,
       accountIds: uniqueStrings(providerAccounts.map((account) => account.providerAccountId)).sort(
@@ -508,6 +630,10 @@ export function buildConfiguredProviderRows(input: {
       healthStatuses: uniqueStrings(providerAccounts.map((account) => account.healthStatus)).sort(
         sortLexical,
       ),
+      pendingDeviceAuthorizationCount,
+      credentialsMissingAccountCount,
+      connectedWithoutEndpointCount,
+      readyAccountCount,
     };
   });
 }
@@ -589,6 +715,11 @@ export function buildConfiguredModelCards(input: {
 }): Array<{
   modelId: string;
   displayName: string;
+  capabilities: readonly string[];
+  modalities: readonly string[];
+  contextWindow: number | null;
+  maxOutputTokens: number | null;
+  pricing?: RuntimeModelRecord["pricing"];
   sourceSummary: string;
   endpointCount: number;
   endpointIds: string[];
@@ -639,7 +770,12 @@ export function buildConfiguredModelCards(input: {
 
       return {
         modelId: model.id,
-        displayName: toTitleLabel(model.id),
+        displayName: model.displayName ?? toTitleLabel(model.id),
+        capabilities: [...(model.capabilities ?? [])],
+        modalities: [...(model.modalities ?? [])],
+        contextWindow: model.contextWindow ?? null,
+        maxOutputTokens: model.maxOutputTokens ?? null,
+        pricing: model.pricing,
         sourceSummary: summarizeSourceTypes(sourceTypes),
         endpointCount: endpointIds.length,
         endpointIds,
@@ -658,6 +794,33 @@ export function buildConfiguredModelCards(input: {
         left.displayName.localeCompare(right.displayName, "en")
       );
     });
+}
+
+export function buildConfiguredModelMetadataRows(model: {
+  readonly modalities?: readonly string[];
+  readonly contextWindow?: number | null;
+  readonly maxOutputTokens?: number | null;
+  readonly pricing?: RuntimeModelRecord["pricing"];
+}): Array<{ label: string; value: string }> {
+  return [
+    {
+      label: "Modalities",
+      value:
+        model.modalities && model.modalities.length > 0 ? model.modalities.join(", ") : "Unknown",
+    },
+    {
+      label: "Context window",
+      value: formatTokenCount(model.contextWindow),
+    },
+    {
+      label: "Max output",
+      value: formatTokenCount(model.maxOutputTokens),
+    },
+    {
+      label: "Pricing",
+      value: formatPricingValue(model.pricing),
+    },
+  ];
 }
 
 export function summarizeWorkbenchResult(result: Record<string, unknown>): {

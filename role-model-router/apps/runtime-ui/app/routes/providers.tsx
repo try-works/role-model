@@ -19,9 +19,11 @@ import {
 import {
   getDeviceAuthorizationPollDelayMs,
   resolveVerificationWindowUrl,
+  restorePersistedDeviceAuthorization,
   shouldAutoPollDeviceAuthorization,
   syncConnectedDeviceAuthorizationEndpoints,
 } from "../lib/device-authorization";
+import { resolveProviderAccountLifecycle } from "../lib/provider-account-state";
 import {
   type RuntimeConfig,
   type RuntimeConfigModel,
@@ -259,6 +261,20 @@ export default function ProvidersRoute() {
     return () => window.clearTimeout(timer);
   }, [load, oauthState, polling, syncConnectedEndpoints]);
 
+  useEffect(() => {
+    if (!snapshot) {
+      return;
+    }
+
+    setOauthState((current) =>
+      restorePersistedDeviceAuthorization({
+        current,
+        providerAccountId,
+        persistedSessions: snapshot.deviceAuthorizations,
+      }),
+    );
+  }, [providerAccountId, snapshot]);
+
   const selectedProvider = useMemo(
     () =>
       snapshot?.providers.find((provider) => provider.providerId === providerId) ??
@@ -281,6 +297,11 @@ export default function ProvidersRoute() {
           })
         : [],
     [selectedProvider, selectedVariant, snapshot],
+  );
+  const selectedSavedAccount = useMemo(
+    () =>
+      snapshot?.accounts.find((account) => account.providerAccountId === providerAccountId) ?? null,
+    [providerAccountId, snapshot],
   );
   const availableRoles = snapshot?.roles ?? [];
 
@@ -324,6 +345,12 @@ export default function ProvidersRoute() {
     if (!selectedProvider || !selectedVariant) {
       throw new Error("Select a provider before saving configuration.");
     }
+    const lifecycle = resolveProviderAccountLifecycle({
+      authMode: selectedVariant.authMode,
+      providerAccountId,
+      oauthState,
+      existingAccount: selectedSavedAccount,
+    });
 
     return {
       providerAccountId,
@@ -356,18 +383,9 @@ export default function ProvidersRoute() {
       entitlementTags: ["chat"],
       budgetPolicyRef: "budget.default",
       quotaPolicyRef: "quota.default",
-      status:
-        selectedVariant.authMode === "api-key-static" || oauthConnected ? "active" : "disabled",
-      healthStatus:
-        selectedVariant.authMode === "api-key-static" || oauthConnected
-          ? "healthy"
-          : "credentials-missing",
-      rotationState:
-        selectedVariant.authMode === "api-key-static"
-          ? "stable"
-          : oauthConnected
-            ? "stable"
-            : "in-progress",
+      status: lifecycle.status,
+      healthStatus: lifecycle.healthStatus,
+      rotationState: lifecycle.rotationState,
     };
   };
 
@@ -817,6 +835,25 @@ export default function ProvidersRoute() {
                   <p>
                     <span className="font-medium text-[var(--rm-fg)]">API base:</span>{" "}
                     {selectedVariant.baseUrl ?? selectedProvider?.apiBase}
+                  </p>
+                  <p>
+                    <span className="font-medium text-[var(--rm-fg)]">SDK package:</span>{" "}
+                    {selectedProvider?.npmPackage ?? "Not cataloged"}
+                  </p>
+                  <p>
+                    <span className="font-medium text-[var(--rm-fg)]">Docs:</span>{" "}
+                    {selectedProvider?.docsUrl ? (
+                      <a
+                        className="underline decoration-[var(--rm-border-strong)] underline-offset-4"
+                        href={selectedProvider.docsUrl}
+                        rel="noreferrer"
+                        target="_blank"
+                      >
+                        {selectedProvider.docsUrl}
+                      </a>
+                    ) : (
+                      "Not cataloged"
+                    )}
                   </p>
                 </div>
                 {selectedVariant.oauth ? (
