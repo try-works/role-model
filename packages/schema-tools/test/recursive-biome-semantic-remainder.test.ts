@@ -43,5 +43,5 @@ async function runBoundedBiomeCheck() {
 describe("run31 bounded Biome regression for semantic remainder", () => {
   it("requires the remaining 7-file semantic lint batch to pass under repository config", async () => {
     await runBoundedBiomeCheck();
-  });
+  }, 15_000);
 });

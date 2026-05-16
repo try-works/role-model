@@ -85,6 +85,7 @@ export interface LocalRegistrySource {
   readonly providerKind: string;
   readonly providerId: string;
   readonly modelId: string;
+  readonly localModelSource?: "llama-swap" | "peer-backed";
   readonly capabilities: readonly string[];
   readonly modalities: readonly string[];
   readonly endpointKind: string;
@@ -94,6 +95,10 @@ export interface LocalRegistrySource {
   readonly deviceClass: string;
   readonly region: string;
   readonly orgScope: string;
+  readonly contextWindow?: number | null;
+  readonly proxyBaseUrl?: string | null;
+  readonly checkEndpoint?: string | null;
+  readonly useModelName?: string | null;
 }
 
 export interface RegistrySources {
@@ -276,7 +281,7 @@ function createLocalEndpoint(source: LocalRegistrySource): EndpointCandidate {
         `Endpoint ${source.endpointId} capabilities`,
       ),
       modalities: toNonEmptyList(source.modalities, `Endpoint ${source.endpointId} modalities`),
-      max_context_tokens: 32768,
+      max_context_tokens: source.contextWindow ?? 32768,
       tool_calling: {
         supported: supportsToolCalling(source.capabilities),
         style: "openai",

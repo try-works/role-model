@@ -1231,6 +1231,7 @@ export interface RuntimeBridgeBackend {
       endpointId: string;
       modelId: string;
       providerId: string | null;
+      localModelSource?: "llama-swap" | "peer-backed";
       endpointKind: string;
       servingSource: string;
       sourceType: "local" | "remote";
@@ -1260,7 +1261,18 @@ export interface RuntimeBridgeBackend {
     latestProfile: ReturnType<typeof readLatestObservedProfile>;
     recentSamples: readonly ObservedPerformanceSample[];
   }>;
-  listLocalModels(): Promise<readonly { modelId: string; loadedAt: string; engine: string }[]>;
+  listLocalModels(): Promise<
+    readonly {
+      modelId: string;
+      loadedAt: string;
+      engine: string;
+      localModelSource?: "llama-swap" | "peer-backed";
+      contextWindow?: number | null;
+      proxyBaseUrl?: string | null;
+      checkEndpoint?: string | null;
+      useModelName?: string | null;
+    }[]
+  >;
   loadLocalModel(modelId: string): Promise<{ success: boolean }>;
   unloadLocalModel(modelId?: string): Promise<{ success: boolean }>;
   readLocalPolicy(): Promise<Record<string, unknown>>;
@@ -1715,6 +1727,7 @@ function createUnifiedLocalSources(config: UnifiedRuntimeConfig): RegistrySource
     providerKind: "ai-sdk-openai-compatible",
     providerId: "llama-swap",
     modelId: model.modelId,
+    localModelSource: "llama-swap" as const,
     capabilities: ["text.chat", "tools.function_calling"],
     modalities: ["text"],
     endpointKind: "local-openai-compatible",
@@ -1724,7 +1737,23 @@ function createUnifiedLocalSources(config: UnifiedRuntimeConfig): RegistrySource
     deviceClass: "localhost",
     region: "local",
     orgScope: "runtime-config",
+    contextWindow: model.contextWindow,
+    proxyBaseUrl: model.proxyBaseUrl,
+    checkEndpoint: model.checkEndpoint,
+    useModelName: model.useModelName,
   }));
+}
+
+function toLocalModelSource(
+  servingSource: string | null | undefined,
+): "llama-swap" | "peer-backed" | undefined {
+  if (servingSource === "vendor-llama-swap") {
+    return "llama-swap";
+  }
+  if (servingSource === "local-peer") {
+    return "peer-backed";
+  }
+  return undefined;
 }
 
 function createUnifiedCloudSources(config: UnifiedRuntimeConfig): RegistrySources["cloud"] {
@@ -7833,6 +7862,7 @@ export async function createRuntimeBridgeBackend(
         providerId: string | null;
         providerAccountId?: string;
         roleIds: readonly string[];
+        localModelSource?: "llama-swap" | "peer-backed";
         endpointKind: string;
         servingSource: string;
         sourceType: "local" | "remote";
@@ -7843,29 +7873,46 @@ export async function createRuntimeBridgeBackend(
         status: string;
       }[]
     > {
-      return currentRegistry.endpoints.map((endpoint) => ({
-        endpointId: endpoint.identity.endpoint_id,
-        modelId: endpoint.identity.model_id,
-        providerId: currentModelsById.get(endpoint.identity.model_id)?.providerId ?? null,
-        providerAccountId: runtimeEndpoints.find(
-          (entry) => entry.endpointId === endpoint.identity.endpoint_id,
-        )?.providerAccountId,
-        roleIds: getEndpointRoleIds(
-          endpoint.identity.endpoint_id,
-          runtimeEndpoints,
-          currentAccounts,
-        ),
-        endpointKind: endpoint.identity.endpoint_kind,
-        servingSource: endpoint.identity.serving_source,
-        sourceType: toSourceType(endpoint.identity.endpoint_kind),
-        healthStatus:
-          runtimeEndpoints.find((entry) => entry.endpointId === endpoint.identity.endpoint_id)
-            ?.healthStatus ?? (endpoint.deniedByPolicy ? "policy-blocked" : "healthy"),
-        capabilities: endpoint.declared.capabilities,
-        toolCallingSupported: endpoint.declared.tool_calling.supported,
-        toolCallingStyle: endpoint.declared.tool_calling.style,
-        status: endpoint.status,
-      }));
+      const localSourcesByEndpointId = new Map(
+        getCurrentRegistrySources().local.map((source) => [source.endpointId, source] as const),
+      );
+      const runtimeEndpointsById = new Map(
+        runtimeEndpoints.map((entry) => [entry.endpointId, entry] as const),
+      );
+      const accountsById = new Map(
+        currentAccounts.map((account) => [account.providerAccountId, account] as const),
+      );
+      return currentRegistry.endpoints.map((endpoint) => {
+        const runtimeEndpoint = runtimeEndpointsById.get(endpoint.identity.endpoint_id);
+        const localSource = localSourcesByEndpointId.get(endpoint.identity.endpoint_id);
+        return {
+          endpointId: endpoint.identity.endpoint_id,
+          modelId: endpoint.identity.model_id,
+          providerId:
+            localSource?.providerId ??
+            (runtimeEndpoint
+              ? (accountsById.get(runtimeEndpoint.providerAccountId)?.providerId ?? null)
+              : (currentModelsById.get(endpoint.identity.model_id)?.providerId ?? null)),
+          providerAccountId: runtimeEndpoint?.providerAccountId,
+          roleIds: getEndpointRoleIds(
+            endpoint.identity.endpoint_id,
+            runtimeEndpoints,
+            currentAccounts,
+          ),
+          localModelSource:
+            localSource?.localModelSource ?? toLocalModelSource(endpoint.identity.serving_source),
+          endpointKind: endpoint.identity.endpoint_kind,
+          servingSource: endpoint.identity.serving_source,
+          sourceType: toSourceType(endpoint.identity.endpoint_kind),
+          healthStatus:
+            runtimeEndpoint?.healthStatus ??
+            (endpoint.deniedByPolicy ? "policy-blocked" : "healthy"),
+          capabilities: endpoint.declared.capabilities,
+          toolCallingSupported: endpoint.declared.tool_calling.supported,
+          toolCallingStyle: endpoint.declared.tool_calling.style,
+          status: endpoint.status,
+        };
+      });
     },
     async readRouterSummary(): Promise<unknown> {
       return readRouterSummaryData();
@@ -7938,8 +7985,22 @@ export async function createRuntimeBridgeBackend(
       return readEndpointProfileData(endpointId);
     },
     async listLocalModels(): Promise<
-      readonly { modelId: string; loadedAt: string; engine: string }[]
+      readonly {
+        modelId: string;
+        loadedAt: string;
+        engine: string;
+        localModelSource?: "llama-swap" | "peer-backed";
+        contextWindow?: number | null;
+        proxyBaseUrl?: string | null;
+        checkEndpoint?: string | null;
+        useModelName?: string | null;
+      }[]
     > {
+      const localConfigByModelId = new Map(
+        (currentUnifiedRuntimeConfig?.llamaSwap.models ?? []).map(
+          (model) => [model.modelId, model] as const,
+        ),
+      );
       const vendorModels = currentLlamaSwapVendor?.getRunningModels
         ? await currentLlamaSwapVendor.getRunningModels()
         : [];
@@ -7965,12 +8026,36 @@ export async function createRuntimeBridgeBackend(
                 modelId: endpoint.modelId,
                 loadedAt: loadedAtByModelId.get(endpoint.modelId) ?? new Date().toISOString(),
                 engine: LOCAL_OPENAI_PROVIDER_ID,
+                localModelSource: "peer-backed" as const,
+                contextWindow: null,
+                proxyBaseUrl: null,
+                checkEndpoint: null,
+                useModelName: null,
               },
             ]
           : [],
       );
 
-      const mergedModels = [...vendorModels];
+      const mergedModels: Array<{
+        modelId: string;
+        loadedAt: string;
+        engine: string;
+        localModelSource?: "llama-swap" | "peer-backed";
+        contextWindow?: number | null;
+        proxyBaseUrl?: string | null;
+        checkEndpoint?: string | null;
+        useModelName?: string | null;
+      }> = vendorModels.map((model) => {
+        const config = localConfigByModelId.get(model.modelId);
+        return {
+          ...model,
+          localModelSource: "llama-swap" as const,
+          contextWindow: config?.contextWindow ?? null,
+          proxyBaseUrl: config?.proxyBaseUrl ?? null,
+          checkEndpoint: config?.checkEndpoint ?? null,
+          useModelName: config?.useModelName ?? null,
+        };
+      });
       for (const model of localPeerModels) {
         if (!mergedModels.some((entry) => entry.modelId === model.modelId)) {
           mergedModels.push(model);
@@ -8162,6 +8247,32 @@ export async function createRuntimeBridgeBackend(
   return backend;
 }
 
+function usesWindowsPathDialect(value: string | undefined): boolean {
+  const normalized = value?.trim();
+  return normalized ? /^[A-Za-z]:\\/u.test(normalized) || normalized.includes("\\") : false;
+}
+
+function usesPosixPathDialect(value: string | undefined): boolean {
+  const normalized = value?.trim();
+  return normalized ? normalized.startsWith("/") : false;
+}
+
+function resolveBridgePathApi(explicitValues: Array<string | undefined>, fallbackValue?: string) {
+  if (explicitValues.some((value) => usesWindowsPathDialect(value))) {
+    return path.win32;
+  }
+  if (explicitValues.some((value) => usesPosixPathDialect(value))) {
+    return path.posix;
+  }
+  if (usesWindowsPathDialect(fallbackValue)) {
+    return path.win32;
+  }
+  if (usesPosixPathDialect(fallbackValue)) {
+    return path.posix;
+  }
+  return process.platform === "win32" ? path.win32 : path.posix;
+}
+
 export function resolveBridgeServerOptions(input: {
   host?: string;
   port?: string;
@@ -8172,20 +8283,22 @@ export function resolveBridgeServerOptions(input: {
   localAppData?: string;
   unifiedRuntimeConfigPath?: string;
 }): BridgeServerOptions {
+  const repoPath = resolveBridgePathApi([input.executablePath, input.repoRoot]);
+  const statePath = resolveBridgePathApi([input.localAppData], process.env.LOCALAPPDATA);
   const inferredRepoRoot = input.executablePath
     ? (() => {
-        const executableDir = path.dirname(path.resolve(input.executablePath));
-        const releaseDir = path.dirname(executableDir);
-        const distDir = path.dirname(releaseDir);
-        const routerRoot = path.dirname(distDir);
+        const executableDir = repoPath.dirname(repoPath.resolve(input.executablePath));
+        const releaseDir = repoPath.dirname(executableDir);
+        const distDir = repoPath.dirname(releaseDir);
+        const routerRoot = repoPath.dirname(distDir);
         if (
-          path.basename(releaseDir) !== "release" ||
-          path.basename(distDir) !== "dist" ||
-          path.basename(routerRoot) !== "role-model-router"
+          repoPath.basename(releaseDir) !== "release" ||
+          repoPath.basename(distDir) !== "dist" ||
+          repoPath.basename(routerRoot) !== "role-model-router"
         ) {
           return undefined;
         }
-        return path.dirname(routerRoot);
+        return repoPath.dirname(routerRoot);
       })()
     : undefined;
   const repoRoot = input.repoRoot?.trim() || inferredRepoRoot;
@@ -8194,7 +8307,7 @@ export function resolveBridgeServerOptions(input: {
   }
   const runtimeStateRoot =
     input.runtimeStateRoot?.trim() ||
-    path.join(
+    statePath.join(
       input.localAppData?.trim() || process.env.LOCALAPPDATA || os.tmpdir(),
       "Role Model Runtime",
       "state",
@@ -8206,7 +8319,14 @@ export function resolveBridgeServerOptions(input: {
     repoRoot,
     runtimeStateRoot,
     scopeId: input.scopeId?.trim() || "runtime-host-bridge",
-    staticRoot: path.join(repoRoot, "role-model-router", "apps", "runtime-ui", "build", "client"),
+    staticRoot: repoPath.join(
+      repoRoot,
+      "role-model-router",
+      "apps",
+      "runtime-ui",
+      "build",
+      "client",
+    ),
     unifiedRuntimeConfigPath: input.unifiedRuntimeConfigPath?.trim() || undefined,
   };
 }

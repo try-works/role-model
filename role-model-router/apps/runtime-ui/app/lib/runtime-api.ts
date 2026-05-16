@@ -133,6 +133,7 @@ export interface RuntimeEndpoint {
   readonly modelId: string;
   readonly providerId: string | null;
   readonly providerAccountId?: string;
+  readonly localModelSource?: "llama-swap" | "peer-backed";
   readonly region?: string;
   readonly roleIds?: readonly string[];
   readonly status?: string;
@@ -143,6 +144,17 @@ export interface RuntimeEndpoint {
   readonly capabilities?: readonly string[];
   readonly toolCallingSupported?: boolean;
   readonly toolCallingStyle?: string;
+}
+
+export interface RuntimeLocalModel {
+  readonly modelId: string;
+  readonly loadedAt: string;
+  readonly engine: string;
+  readonly localModelSource?: "llama-swap" | "peer-backed";
+  readonly contextWindow?: number | null;
+  readonly proxyBaseUrl?: string | null;
+  readonly checkEndpoint?: string | null;
+  readonly useModelName?: string | null;
 }
 
 export interface RuntimeRoleDefinition {
@@ -1000,11 +1012,8 @@ export async function submitAdvancedRequest(
 
 export async function fetchLocalModels(
   fetcher: RuntimeFetcher = fetch,
-): Promise<readonly { modelId: string; loadedAt: string; engine: string }[]> {
-  return fetchJson<readonly { modelId: string; loadedAt: string; engine: string }[]>(
-    "/api/role-model/local/models",
-    fetcher,
-  );
+): Promise<readonly RuntimeLocalModel[]> {
+  return fetchJson<readonly RuntimeLocalModel[]>("/api/role-model/local/models", fetcher);
 }
 
 export async function loadLocalModel(

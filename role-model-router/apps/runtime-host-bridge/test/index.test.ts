@@ -99,6 +99,12 @@ function createSequencedDifficultyClassifierVendorScript(): string {
   return `const http=require("node:http");let classifierCalls=0;const port=Number(process.env.PORT??process.argv[2]);const server=http.createServer((req,res)=>{if(req.url==="/health/liveliness"){res.statusCode=200;res.end("ok");return;}if(req.url==="/v1/chat/completions"){let body="";req.on("data",chunk=>body+=chunk);req.on("end",()=>{const parsed=JSON.parse(body||"{}");const joinedMessages=JSON.stringify(parsed.messages??[]);const isClassifier=joinedMessages.includes("ROLE_MODEL_DIFFICULTY_CLASSIFIER");if(isClassifier){classifierCalls+=1;}const difficulty=isClassifier?(classifierCalls===1?"hard":"easy"):null;res.setHeader("content-type","application/json");res.end(JSON.stringify({id:"chat-difficulty-sequenced",object:"chat.completion",choices:[{index:0,message:{role:"assistant",content:isClassifier?JSON.stringify({difficulty}):"alias remote summary"},finish_reason:"stop"}],usage:{prompt_tokens:12,completion_tokens:4,total_tokens:16},_hidden_params:{response_cost:0.0012,cache_hit:false}}));});return;}res.statusCode=404;res.end("missing");});server.listen(port,"127.0.0.1");const shutdown=()=>server.close(()=>process.exit(0));process.on("SIGTERM",shutdown);process.on("SIGINT",shutdown);`;
 }
 
+function createLlamaSwapRunningModelsVendorScript(input: {
+  readonly models: Readonly<Record<string, { readonly cmd?: string }>>;
+}): string {
+  return `const http=require("node:http");const models=${JSON.stringify(input.models)};const port=Number(process.env.PORT??process.argv[2]);const server=http.createServer((req,res)=>{if(req.url==="/health"){res.statusCode=200;res.setHeader("content-type","application/json");res.end(JSON.stringify({ok:true}));return;}if(req.url==="/running"){res.statusCode=200;res.setHeader("content-type","application/json");res.end(JSON.stringify({models}));return;}res.statusCode=404;res.setHeader("content-type","application/json");res.end(JSON.stringify({error:"not found"}));});server.listen(port,"127.0.0.1");const shutdown=()=>server.close(()=>process.exit(0));process.on("SIGTERM",shutdown);process.on("SIGINT",shutdown);`;
+}
+
 describe("runtime-host-bridge", () => {
   test("creates a stable model-list response grouped by model id", () => {
     expect(typeof (bridge as { createModelListResponse?: unknown }).createModelListResponse).toBe(
@@ -5512,6 +5518,119 @@ describe("runtime-host-bridge", () => {
     expect(result.usage.outputTokens).toBe(4);
   });
 
+  test("exposes llama-swap ownership and config metadata on local model and endpoint readback", async () => {
+    expect(
+      typeof (bridge as { createRuntimeBridgeBackend?: unknown }).createRuntimeBridgeBackend,
+    ).toBe("function");
+
+    const runtimeStateRoot = path.join(
+      os.tmpdir(),
+      `runtime-host-llama-swap-readback-tests-${Date.now()}`,
+    );
+    const unifiedRuntimeConfigPath = path.join(runtimeStateRoot, "runtime-config.yaml");
+    const modelId = "lfm2.5-1.2b-instruct";
+
+    await mkdir(runtimeStateRoot, { recursive: true });
+    await writeFile(
+      unifiedRuntimeConfigPath,
+      stringify({
+        version: "1.0",
+        llama_swap: {
+          command: "node",
+          args: [
+            "-e",
+            createLlamaSwapRunningModelsVendorScript({
+              models: {
+                [modelId]: {
+                  cmd: "llama-server --model lfm2.5-1.2b-instruct.gguf",
+                },
+              },
+            }),
+          ],
+          models: {
+            [modelId]: {
+              path: "C:\\models\\lfm2.5-1.2b-instruct.gguf",
+              context_window: 8192,
+              proxy: "http://127.0.0.1:1234",
+              check_endpoint: "http://127.0.0.1:1234/health",
+              use_model_name: modelId,
+            },
+          },
+        },
+      }),
+      "utf8",
+    );
+
+    const backend = await (
+      bridge as {
+        createRuntimeBridgeBackend: (options: {
+          repoRoot: string;
+          fixtureRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+          unifiedRuntimeConfigPath: string;
+        }) => Promise<{
+          listEndpoints: () => Promise<
+            readonly {
+              endpointId: string;
+              modelId: string;
+              providerId: string | null;
+              localModelSource?: "llama-swap" | "peer-backed";
+            }[]
+          >;
+          listLocalModels: () => Promise<
+            readonly {
+              modelId: string;
+              loadedAt: string;
+              engine: string;
+              localModelSource?: "llama-swap" | "peer-backed";
+              contextWindow?: number | null;
+              proxyBaseUrl?: string | null;
+              checkEndpoint?: string | null;
+              useModelName?: string | null;
+            }[]
+          >;
+          shutdown?: () => Promise<void>;
+        }>;
+      }
+    ).createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: testFixtureRoot,
+      runtimeStateRoot,
+      scopeId: "runtime-host-llama-swap-readback-tests",
+      unifiedRuntimeConfigPath,
+    });
+
+    try {
+      await expect(backend.listEndpoints()).resolves.toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            endpointId: "llama-swap.local.lfm2-5-1-2b-instruct",
+            modelId,
+            providerId: "llama-swap",
+            localModelSource: "llama-swap",
+          }),
+        ]),
+      );
+
+      await expect(backend.listLocalModels()).resolves.toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            modelId,
+            engine: "llama.cpp",
+            localModelSource: "llama-swap",
+            contextWindow: 8192,
+            proxyBaseUrl: "http://127.0.0.1:1234",
+            checkEndpoint: "http://127.0.0.1:1234/health",
+            useModelName: modelId,
+          }),
+        ]),
+      );
+    } finally {
+      await backend.shutdown?.();
+    }
+  });
+
   test("rejects local model activation when no configured local endpoint exposes the requested model", async () => {
     expect(
       typeof (bridge as { createRuntimeBridgeBackend?: unknown }).createRuntimeBridgeBackend,
@@ -6825,6 +6944,45 @@ describe("runtime-host-bridge", () => {
       runtimeStateRoot: "C:\\runtime-state",
       scopeId: "runtime-host-bridge",
       staticRoot: path.join(repoRoot, "role-model-router", "apps", "runtime-ui", "build", "client"),
+      unifiedRuntimeConfigPath: undefined,
+    });
+  });
+
+  test("keeps repoRoot-derived static paths stable when runtimeStateRoot uses a different path dialect", () => {
+    const result = (
+      bridge as {
+        resolveBridgeServerOptions: (value: {
+          host?: string;
+          port?: string;
+          repoRoot?: string;
+          runtimeStateRoot?: string;
+          scopeId?: string;
+          executablePath?: string;
+          localAppData?: string;
+        }) => {
+          host: string;
+          port: number;
+          repoRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+          staticRoot: string;
+        };
+      }
+    ).resolveBridgeServerOptions({
+      repoRoot: "/home/runner/work/role-model/role-model",
+      runtimeStateRoot: "C:\\runtime-state",
+      port: "9191",
+    });
+
+    expect(result).toEqual({
+      host: "127.0.0.1",
+      port: 9191,
+      repoRoot: "/home/runner/work/role-model/role-model",
+      runtimeStateRoot: "C:\\runtime-state",
+      scopeId: "runtime-host-bridge",
+      staticRoot:
+        "/home/runner/work/role-model/role-model/role-model-router/apps/runtime-ui/build/client",
+      unifiedRuntimeConfigPath: undefined,
     });
   });
 
@@ -6861,6 +7019,44 @@ describe("runtime-host-bridge", () => {
       runtimeStateRoot: "C:\\Users\\tester\\AppData\\Local\\Role Model Runtime\\state",
       scopeId: "runtime-host-bridge",
       staticRoot: "D:\\DEV\\role-model\\role-model-router\\apps\\runtime-ui\\build\\client",
+      unifiedRuntimeConfigPath: undefined,
+    });
+  });
+
+  test("resolves packaged bridge server options from POSIX executable path defaults", () => {
+    const result = (
+      bridge as {
+        resolveBridgeServerOptions: (value: {
+          host?: string;
+          port?: string;
+          repoRoot?: string;
+          runtimeStateRoot?: string;
+          scopeId?: string;
+          executablePath?: string;
+          localAppData?: string;
+        }) => {
+          host: string;
+          port: number;
+          repoRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+          staticRoot: string;
+        };
+      }
+    ).resolveBridgeServerOptions({
+      executablePath:
+        "/home/tester/role-model/role-model-router/dist/release/linux-x64/role-model-runtime",
+      localAppData: "/home/tester/.local/share",
+    });
+
+    expect(result).toEqual({
+      host: "127.0.0.1",
+      port: 8091,
+      repoRoot: "/home/tester/role-model",
+      runtimeStateRoot: "/home/tester/.local/share/Role Model Runtime/state",
+      scopeId: "runtime-host-bridge",
+      staticRoot: "/home/tester/role-model/role-model-router/apps/runtime-ui/build/client",
+      unifiedRuntimeConfigPath: undefined,
     });
   });
 });

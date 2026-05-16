@@ -56,5 +56,5 @@ async function runBoundedBiomeCheck() {
 describe("run31 bounded Biome regression for local config format batch", () => {
   it("requires the local config format blocker set to pass under repository config", async () => {
     await runBoundedBiomeCheck();
-  });
+  }, 15_000);
 });

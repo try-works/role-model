@@ -7,6 +7,7 @@ import {
   fetchAudioVoices,
   fetchControllerAssignment,
   fetchDownstreamOpenAIProviderConfig,
+  fetchLocalModels,
   fetchRequestDetail,
   fetchRouterCandidates,
   fetchRouterConfig,
@@ -199,6 +200,42 @@ describe("fetchRuntimeSnapshot", () => {
       ],
       roles: [{ roleId: "general.chat", label: "General chat" }],
     });
+  });
+});
+
+describe("fetchLocalModels", () => {
+  test("preserves local ownership and llama-swap config metadata from the runtime API", async () => {
+    const fetcher = vi.fn(async (input: string | URL | Request) => {
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      expect(url).toBe("/api/role-model/local/models");
+
+      return jsonResponse([
+        {
+          modelId: "lfm2.5-1.2b-instruct",
+          loadedAt: "2026-05-16T00:00:00.000Z",
+          engine: "llama.cpp",
+          localModelSource: "llama-swap",
+          contextWindow: 8192,
+          proxyBaseUrl: "http://127.0.0.1:1234",
+          checkEndpoint: "http://127.0.0.1:1234/health",
+          useModelName: "lfm2.5-1.2b-instruct",
+        },
+      ]);
+    });
+
+    await expect(fetchLocalModels(fetcher)).resolves.toEqual([
+      {
+        modelId: "lfm2.5-1.2b-instruct",
+        loadedAt: "2026-05-16T00:00:00.000Z",
+        engine: "llama.cpp",
+        localModelSource: "llama-swap",
+        contextWindow: 8192,
+        proxyBaseUrl: "http://127.0.0.1:1234",
+        checkEndpoint: "http://127.0.0.1:1234/health",
+        useModelName: "lfm2.5-1.2b-instruct",
+      },
+    ]);
   });
 });
 
