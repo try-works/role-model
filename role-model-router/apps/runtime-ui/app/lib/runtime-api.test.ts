@@ -45,7 +45,8 @@ function jsonResponse(body: unknown): Response {
 describe("fetchRuntimeSnapshot", () => {
   test("loads the operator shell data from the runtime control-plane endpoints", async () => {
     const fetcher = vi.fn(async (input: string | URL | Request) => {
-      const url = typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
 
       switch (url) {
         case "/api/role-model/runtime/summary":
@@ -73,7 +74,14 @@ describe("fetchRuntimeSnapshot", () => {
         case "/v1/models":
           return jsonResponse({
             object: "list",
-            data: [{ id: "openai/gpt-4.1-mini-fast", object: "model", owned_by: "role-model", endpoint_ids: [] }],
+            data: [
+              {
+                id: "openai/gpt-4.1-mini-fast",
+                object: "model",
+                owned_by: "role-model",
+                endpoint_ids: [],
+              },
+            ],
           });
         default:
           throw new Error(`Unexpected request: ${url}`);
@@ -97,7 +105,12 @@ describe("fetchRuntimeSnapshot", () => {
       endpoints: [{ endpointId: "openai.personal.primary.us-east-1.fast" }],
       requests: [{ requestId: "req-001" }],
       models: [
-        { id: "openai/gpt-4.1-mini-fast", object: "model", owned_by: "role-model", endpoint_ids: [] },
+        {
+          id: "openai/gpt-4.1-mini-fast",
+          object: "model",
+          owned_by: "role-model",
+          endpoint_ids: [],
+        },
       ],
       roles: [{ roleId: "general.chat", label: "General chat" }],
     });
@@ -107,7 +120,8 @@ describe("fetchRuntimeSnapshot", () => {
 describe("fetchDownstreamOpenAIProviderConfig", () => {
   test("loads the downstream OpenAI-compatible provider contract for consumer apps", async () => {
     const fetcher = vi.fn(async (input: string | URL | Request) => {
-      const url = typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
       expect(url).toBe("/api/role-model/downstream/openai");
 
       return jsonResponse({
@@ -186,7 +200,8 @@ describe("fetchDownstreamOpenAIProviderConfig", () => {
 describe("fetchRequestDetail", () => {
   test("loads request detail and the linked endpoint profile for the inspector pane", async () => {
     const fetcher = vi.fn(async (input: string | URL | Request) => {
-      const url = typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
 
       switch (url) {
         case "/api/role-model/requests/req-001":
@@ -222,7 +237,8 @@ describe("fetchRequestDetail", () => {
 describe("router APIs", () => {
   test("loads the router summary, config, candidates, and decision ledger from router-specific endpoints", async () => {
     const fetcher = vi.fn(async (input: string | URL | Request) => {
-      const url = typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
 
       switch (url) {
         case "/api/role-model/router/summary":
@@ -259,9 +275,20 @@ describe("router APIs", () => {
               policyInputs: "fixture+runtime",
             },
             policySources: {
-              roles: [{ role_id: "general.chat", routing_policy_overrides: { compute_preference: "balanced" } }],
+              roles: [
+                {
+                  role_id: "general.chat",
+                  routing_policy_overrides: { compute_preference: "balanced" },
+                },
+              ],
               tasks: [{ task_type: "general.chat", description: "General chat task" }],
-              roleBindings: [{ binding_id: "binding-001", endpoint_id: "cli.local.coder", role_id: "general.chat" }],
+              roleBindings: [
+                {
+                  binding_id: "binding-001",
+                  endpoint_id: "cli.local.coder",
+                  role_id: "general.chat",
+                },
+              ],
             },
           });
         case "/api/role-model/router/candidates":
@@ -329,9 +356,13 @@ describe("router APIs", () => {
         policyInputs: "fixture+runtime",
       },
       policySources: {
-        roles: [{ role_id: "general.chat", routing_policy_overrides: { compute_preference: "balanced" } }],
+        roles: [
+          { role_id: "general.chat", routing_policy_overrides: { compute_preference: "balanced" } },
+        ],
         tasks: [{ task_type: "general.chat", description: "General chat task" }],
-        roleBindings: [{ binding_id: "binding-001", endpoint_id: "cli.local.coder", role_id: "general.chat" }],
+        roleBindings: [
+          { binding_id: "binding-001", endpoint_id: "cli.local.coder", role_id: "general.chat" },
+        ],
       },
     });
     await expect(fetchRouterCandidates(fetcher)).resolves.toEqual([
@@ -364,7 +395,8 @@ describe("router APIs", () => {
 
   test("loads router decision detail from the router decision endpoint", async () => {
     const fetcher = vi.fn(async (input: string | URL | Request) => {
-      const url = typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
       expect(url).toBe("/api/role-model/router/decisions/req-router-001");
 
       return jsonResponse({
@@ -429,7 +461,8 @@ describe("router APIs", () => {
 describe("telemetry APIs", () => {
   test("loads the canonical telemetry dashboard reads from the role-model telemetry endpoints", async () => {
     const fetcher = vi.fn(async (input: string | URL | Request) => {
-      const url = typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
 
       switch (url) {
         case "/api/role-model/telemetry/summary":
@@ -522,40 +555,41 @@ describe("telemetry APIs", () => {
         }),
       }),
       rows: [
-          {
-            endpointId: "llama-swap.local.local-mock-llama",
-            modelId: "local/mock-llama",
-            sourceType: "local",
-            providerFamily: "llama-swap",
-            promptCacheSupported: false,
-            requestCount: 1,
-          },
-          {
-            endpointId: "openai.personal.primary.us-east-1.fast",
-            modelId: "openai/gpt-4.1-mini-fast",
-            sourceType: "remote",
-            providerFamily: "ai-sdk-openai",
-            promptCacheSupported: true,
-            requestCount: 2,
-          },
-        ],
+        {
+          endpointId: "llama-swap.local.local-mock-llama",
+          modelId: "local/mock-llama",
+          sourceType: "local",
+          providerFamily: "llama-swap",
+          promptCacheSupported: false,
+          requestCount: 1,
+        },
+        {
+          endpointId: "openai.personal.primary.us-east-1.fast",
+          modelId: "openai/gpt-4.1-mini-fast",
+          sourceType: "remote",
+          providerFamily: "ai-sdk-openai",
+          promptCacheSupported: true,
+          requestCount: 2,
+        },
+      ],
       requests: [
-          {
-            requestId: "req-002",
-            endpointId: "openai.personal.primary.us-east-1.fast",
-            sourceType: "remote",
-            providerFamily: "ai-sdk-openai",
-            finishReason: "stop",
-            promptCacheSupported: true,
-            streamTextDeltaCount: 4,
-          },
-        ],
-      });
+        {
+          requestId: "req-002",
+          endpointId: "openai.personal.primary.us-east-1.fast",
+          sourceType: "remote",
+          providerFamily: "ai-sdk-openai",
+          finishReason: "stop",
+          promptCacheSupported: true,
+          streamTextDeltaCount: 4,
+        },
+      ],
+    });
   });
 
   test("loads telemetry request rows with limit parameters", async () => {
     const fetcher = vi.fn(async (input: string | URL | Request) => {
-      const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
       expect(url).toContain("/api/role-model/telemetry/requests?limit=25");
       return jsonResponse([
         {
@@ -621,7 +655,8 @@ describe("telemetry APIs", () => {
 describe("observe APIs", () => {
   test("loads vendor activity metrics for the observe activity page", async () => {
     const fetcher = vi.fn(async (input: string | URL | Request) => {
-      const url = typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
       expect(url).toBe("/api/metrics");
 
       return jsonResponse([
@@ -668,7 +703,8 @@ describe("observe APIs", () => {
 
   test("loads a persisted request/response capture by id", async () => {
     const fetcher = vi.fn(async (input: string | URL | Request) => {
-      const url = typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
       expect(url).toBe("/api/captures/7");
 
       return jsonResponse({
@@ -700,14 +736,17 @@ describe("observe APIs", () => {
   });
 
   test("returns null when an activity capture is not found", async () => {
-    const fetcher = vi.fn(async () => new Response(JSON.stringify({ error: "capture not found" }), { status: 404 }));
+    const fetcher = vi.fn(
+      async () => new Response(JSON.stringify({ error: "capture not found" }), { status: 404 }),
+    );
 
     await expect(fetchActivityCapture(404, fetcher)).resolves.toBeNull();
   });
 
   test("loads raw log text for observe log consoles", async () => {
     const fetcher = vi.fn(async (input: string | URL | Request) => {
-      const url = typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
       expect(url).toBe("/logs");
 
       return new Response("proxy ready\nupstream warm\n", {
@@ -723,7 +762,8 @@ describe("observe APIs", () => {
 
   test("loads vendor version info for the runtime system surface", async () => {
     const fetcher = vi.fn(async (input: string | URL | Request) => {
-      const url = typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
       expect(url).toBe("/api/version");
 
       return jsonResponse({
@@ -744,7 +784,8 @@ describe("observe APIs", () => {
 describe("controller assignment APIs", () => {
   test("loads the current global controller assignment", async () => {
     const fetcher = vi.fn(async (input: string | URL | Request) => {
-      const url = typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
       expect(url).toBe("/api/role-model/controller");
 
       return jsonResponse({
@@ -767,7 +808,8 @@ describe("controller assignment APIs", () => {
 
   test("loads a null controller assignment when no controller is configured yet", async () => {
     const fetcher = vi.fn(async (input: string | URL | Request) => {
-      const url = typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
       expect(url).toBe("/api/role-model/controller");
 
       return jsonResponse(null);
@@ -778,7 +820,8 @@ describe("controller assignment APIs", () => {
 
   test("patches the selected controller candidate", async () => {
     const fetcher = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
-      const url = typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
       expect(url).toBe("/api/role-model/controller");
       expect(init?.method).toBe("PATCH");
       expect(init?.body).toBe(
@@ -816,7 +859,8 @@ describe("controller assignment APIs", () => {
 describe("submitWorkbenchChat", () => {
   test("posts a chat-completions payload to the runtime workbench path", async () => {
     const fetcher = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
-      const url = typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
       expect(url).toBe("/v1/chat/completions");
       expect(init?.method).toBe("POST");
       expect(init?.headers).toEqual(
@@ -851,7 +895,8 @@ describe("submitWorkbenchChat", () => {
 
   test("sends routing-mode override as a header instead of leaking it into the OpenAI-compatible body", async () => {
     const fetcher = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
-      const url = typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
       expect(url).toBe("/v1/chat/completions");
       expect(init?.method).toBe("POST");
       expect(init?.headers).toEqual(
@@ -872,10 +917,46 @@ describe("submitWorkbenchChat", () => {
       });
     });
 
-    const payload: import("./runtime-api").WorkbenchChatInput & { routingModeOverride: "hybrid" } = {
-      model: "gpt-5.4",
-      messages: [{ role: "user", content: "Route this through the hybrid path." }],
-      routingModeOverride: "hybrid",
+    const payload: import("./runtime-api").WorkbenchChatInput & { routingModeOverride: "hybrid" } =
+      {
+        model: "gpt-5.4",
+        messages: [{ role: "user", content: "Route this through the hybrid path." }],
+        routingModeOverride: "hybrid",
+      };
+
+    await expect(submitWorkbenchChat(payload, fetcher)).resolves.toEqual({
+      choices: [{ message: { content: "Handled." } }],
+    });
+  });
+
+  test("sends endpoint override as a header instead of leaking it into the OpenAI-compatible body", async () => {
+    const fetcher = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      expect(url).toBe("/v1/chat/completions");
+      expect(init?.method).toBe("POST");
+      expect(init?.headers).toEqual(
+        expect.objectContaining({
+          "content-type": "application/json",
+          "x-role-model-endpoint-id": "moonshot.personal.primary.global.kimi-k2.5",
+        }),
+      );
+      expect(init?.body).toBe(
+        JSON.stringify({
+          model: "moonshot/kimi-k2.5",
+          messages: [{ role: "user", content: "Use the saved OAuth endpoint." }],
+        }),
+      );
+
+      return jsonResponse({
+        choices: [{ message: { content: "Handled." } }],
+      });
+    });
+
+    const payload: import("./runtime-api").WorkbenchChatInput & { endpointId: string } = {
+      model: "moonshot/kimi-k2.5",
+      messages: [{ role: "user", content: "Use the saved OAuth endpoint." }],
+      endpointId: "moonshot.personal.primary.global.kimi-k2.5",
     };
 
     await expect(submitWorkbenchChat(payload, fetcher)).resolves.toEqual({
@@ -887,7 +968,8 @@ describe("submitWorkbenchChat", () => {
 describe("studio vendor API helpers", () => {
   test("posts an OpenAI image-generation request", async () => {
     const fetcher = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
-      const url = typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
       expect(url).toBe("/v1/images/generations");
       expect(init?.method).toBe("POST");
       expect(init?.body).toBe(
@@ -922,7 +1004,8 @@ describe("studio vendor API helpers", () => {
 
   test("posts an SDAPI txt2img request", async () => {
     const fetcher = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
-      const url = typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
       expect(url).toBe("/sdapi/v1/txt2img");
       expect(init?.method).toBe("POST");
       return jsonResponse({
@@ -932,7 +1015,9 @@ describe("studio vendor API helpers", () => {
       });
     });
 
-    await expect(submitSdApiTxt2Img({ prompt: "Poster", width: 512, height: 512 }, fetcher)).resolves.toEqual({
+    await expect(
+      submitSdApiTxt2Img({ prompt: "Poster", width: 512, height: 512 }, fetcher),
+    ).resolves.toEqual({
       images: ["c2Q="],
       parameters: { prompt: "Poster" },
       info: "ok",
@@ -941,7 +1026,12 @@ describe("studio vendor API helpers", () => {
 
   test("loads available speech voices for a selected model", async () => {
     const fetcher = vi.fn(async (input: string | URL | Request) => {
-      const url = typeof input === "string" ? input : input instanceof URL ? `${input.pathname}${input.search}` : input.url;
+      const url =
+        typeof input === "string"
+          ? input
+          : input instanceof URL
+            ? `${input.pathname}${input.search}`
+            : input.url;
       expect(url).toBe("/v1/audio/voices?model=moonshot%2Fkimi-audio");
       return jsonResponse([{ id: "alloy", name: "Alloy" }]);
     });
@@ -953,7 +1043,8 @@ describe("studio vendor API helpers", () => {
 
   test("posts a speech-generation request and returns audio bytes as a blob", async () => {
     const fetcher = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
-      const url = typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
       expect(url).toBe("/v1/audio/speech");
       expect(init?.method).toBe("POST");
       return new Response("audio-data", {
@@ -977,7 +1068,8 @@ describe("studio vendor API helpers", () => {
 
   test("posts a multipart transcription request", async () => {
     const fetcher = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
-      const url = typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
       expect(url).toBe("/v1/audio/transcriptions");
       expect(init?.method).toBe("POST");
       expect(init?.body).toBeInstanceOf(FormData);
@@ -998,7 +1090,8 @@ describe("studio vendor API helpers", () => {
 
   test("posts a rerank request to the selected vendor path", async () => {
     const fetcher = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
-      const url = typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
       expect(url).toBe("/v1/reranking");
       expect(init?.method).toBe("POST");
       return jsonResponse({
@@ -1025,7 +1118,8 @@ describe("studio vendor API helpers", () => {
 
   test("posts a raw advanced API request to the selected endpoint family", async () => {
     const fetcher = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
-      const url = typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
       expect(url).toBe("/v1/responses");
       expect(init?.method).toBe("POST");
       return jsonResponse({
@@ -1053,7 +1147,8 @@ describe("studio vendor API helpers", () => {
 describe("startRuntimeDeviceAuthorization", () => {
   test("posts the selected provider account payload to the runtime device-auth start path", async () => {
     const fetcher = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
-      const url = typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
       expect(url).toBe("/api/role-model/accounts/device/start");
       expect(init?.method).toBe("POST");
       expect(init?.headers).toEqual(
@@ -1100,7 +1195,8 @@ describe("startRuntimeDeviceAuthorization", () => {
 describe("pollRuntimeDeviceAuthorization", () => {
   test("posts the auth request id to the runtime device-auth poll path", async () => {
     const fetcher = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
-      const url = typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
       expect(url).toBe("/api/role-model/accounts/device/poll");
       expect(init?.method).toBe("POST");
       expect(init?.body).toBe(JSON.stringify({ authRequestId: "auth-001" }));
@@ -1123,7 +1219,8 @@ describe("pollRuntimeDeviceAuthorization", () => {
 describe("activateRuntimeEndpoint", () => {
   test("posts endpoint activation payload to the runtime endpoints mutation path", async () => {
     const fetcher = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
-      const url = typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
       expect(url).toBe("/api/role-model/endpoints");
       expect(init?.method).toBe("POST");
       expect(init?.body).toBe(
@@ -1163,7 +1260,8 @@ describe("activateRuntimeEndpoint", () => {
 describe("fetchRuntimeConfig", () => {
   test("loads the normalized unified runtime config from the runtime control plane", async () => {
     const fetcher = vi.fn(async (input: string | URL | Request) => {
-      const url = typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
       expect(url).toBe("/api/role-model/runtime/config");
 
       return jsonResponse({
@@ -1179,7 +1277,9 @@ describe("fetchRuntimeConfig", () => {
           },
           liteLLM: {
             enabled: true,
-            providers: [{ providerId: "moonshot", modelMappings: [{ modelId: "moonshot/kimi-k2.5" }] }],
+            providers: [
+              { providerId: "moonshot", modelMappings: [{ modelId: "moonshot/kimi-k2.5" }] },
+            ],
             process: { command: null, args: [], env: {}, cwd: null, startupTimeoutMs: null },
           },
         },
@@ -1199,7 +1299,9 @@ describe("fetchRuntimeConfig", () => {
         },
         liteLLM: {
           enabled: true,
-          providers: [{ providerId: "moonshot", modelMappings: [{ modelId: "moonshot/kimi-k2.5" }] }],
+          providers: [
+            { providerId: "moonshot", modelMappings: [{ modelId: "moonshot/kimi-k2.5" }] },
+          ],
           process: { command: null, args: [], env: {}, cwd: null, startupTimeoutMs: null },
         },
       },
@@ -1210,7 +1312,8 @@ describe("fetchRuntimeConfig", () => {
 describe("updateRuntimeConfig", () => {
   test("puts the normalized unified runtime config to the runtime control plane", async () => {
     const fetcher = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
-      const url = typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
       expect(url).toBe("/api/role-model/runtime/config");
       expect(init?.method).toBe("PUT");
       expect(init?.headers).toEqual(
@@ -1227,7 +1330,9 @@ describe("updateRuntimeConfig", () => {
             process: { command: null, args: [], env: {}, cwd: null, startupTimeoutMs: null },
           },
           liteLLM: {
-            providers: [{ providerId: "moonshot", modelMappings: [{ modelId: "moonshot/kimi-k2.5" }] }],
+            providers: [
+              { providerId: "moonshot", modelMappings: [{ modelId: "moonshot/kimi-k2.5" }] },
+            ],
             process: { command: null, args: [], env: {}, cwd: null, startupTimeoutMs: null },
           },
         }),
@@ -1253,7 +1358,9 @@ describe("updateRuntimeConfig", () => {
             process: { command: null, args: [], env: {}, cwd: null, startupTimeoutMs: null },
           },
           liteLLM: {
-            providers: [{ providerId: "moonshot", modelMappings: [{ modelId: "moonshot/kimi-k2.5" }] }],
+            providers: [
+              { providerId: "moonshot", modelMappings: [{ modelId: "moonshot/kimi-k2.5" }] },
+            ],
             process: { command: null, args: [], env: {}, cwd: null, startupTimeoutMs: null },
           },
         },

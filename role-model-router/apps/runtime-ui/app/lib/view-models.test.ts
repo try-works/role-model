@@ -6,6 +6,7 @@ import {
   buildConfiguredProviderRows,
   buildConfiguredModelCards,
   buildEndpointCatalogRows,
+  buildWorkbenchEndpointOptions,
   buildDownstreamProviderGuide,
   buildModelCatalogRows,
   buildProviderCards,
@@ -93,12 +94,81 @@ describe("buildWorkbenchModelOptions", () => {
     expect(
       buildWorkbenchModelOptions([
         { id: "moonshot/kimi-k2.5", endpoint_ids: ["moonshot.personal.primary.global.kimi-k2.5"] },
-        { id: "openai/gpt-4.1-mini-fast", endpoint_ids: ["openai.personal.primary.us-east-1.fast"] },
+        {
+          id: "openai/gpt-4.1-mini-fast",
+          endpoint_ids: ["openai.personal.primary.us-east-1.fast"],
+        },
         { id: "moonshot/kimi-k2.5", endpoint_ids: ["moonshot.personal.primary.global.kimi-k2.5"] },
       ]),
     ).toEqual([
       { label: "Kimi K2.5", value: "moonshot/kimi-k2.5" },
       { label: "GPT 4.1 Mini Fast", value: "openai/gpt-4.1-mini-fast" },
+    ]);
+  });
+});
+
+describe("buildWorkbenchEndpointOptions", () => {
+  test("prefers saved OAuth endpoints over shared LiteLLM endpoints for the selected model", () => {
+    expect(
+      buildWorkbenchEndpointOptions({
+        modelId: "moonshot/kimi-k2.5",
+        models: [
+          {
+            id: "moonshot/kimi-k2.5",
+            endpoint_ids: [
+              "moonshot.litellm.global.kimi-k2.5",
+              "moonshot.personal.moonshot-oauth.global.kimi-k2.5",
+            ],
+          },
+        ],
+        endpoints: [
+          {
+            endpointId: "moonshot.litellm.global.kimi-k2.5",
+            modelId: "moonshot/kimi-k2.5",
+            providerId: "moonshot",
+            providerAccountId: "moonshot.litellm",
+            status: "active",
+            healthStatus: "healthy",
+            sourceType: "remote",
+          },
+          {
+            endpointId: "moonshot.personal.moonshot-oauth.global.kimi-k2.5",
+            modelId: "moonshot/kimi-k2.5",
+            providerId: "moonshot",
+            providerAccountId: "moonshot.personal.moonshot-oauth",
+            status: "active",
+            healthStatus: "healthy",
+            sourceType: "remote",
+          },
+        ],
+        accounts: [
+          {
+            providerAccountId: "moonshot.litellm",
+            providerId: "moonshot",
+            credentialRef: {
+              backend: "env",
+              ref: "MOONSHOT_API_KEY",
+            },
+          },
+          {
+            providerAccountId: "moonshot.personal.moonshot-oauth",
+            providerId: "moonshot",
+            credentialRef: {
+              backend: "local-file",
+              ref: "oauth/moonshot/moonshot.personal.moonshot-oauth",
+            },
+          },
+        ],
+      }),
+    ).toEqual([
+      {
+        label: "moonshot.personal.moonshot-oauth.global.kimi-k2.5",
+        value: "moonshot.personal.moonshot-oauth.global.kimi-k2.5",
+      },
+      {
+        label: "moonshot.litellm.global.kimi-k2.5",
+        value: "moonshot.litellm.global.kimi-k2.5",
+      },
     ]);
   });
 });
@@ -364,7 +434,7 @@ describe("summarizeWorkbenchResult", () => {
             type: "function",
             function: {
               name: "lookupRegistry",
-              arguments: "{\"endpointId\":\"cli.local.coder\"}",
+              arguments: '{"endpointId":"cli.local.coder"}',
             },
           },
         ],
@@ -460,7 +530,7 @@ describe("buildDownstreamProviderGuide", () => {
       examples: {
         modelsCurl: "curl http://127.0.0.1:8091/v1/models",
         chatCurl:
-          "curl http://127.0.0.1:8091/v1/chat/completions -H \"content-type: application/json\" -H \"Authorization: Bearer role-model-local\" -d '{\"model\":\"moonshot/kimi-k2.5\",\"messages\":[{\"role\":\"user\",\"content\":\"Reply with ok.\"}]}'",
+          'curl http://127.0.0.1:8091/v1/chat/completions -H "content-type: application/json" -H "Authorization: Bearer role-model-local" -d \'{"model":"moonshot/kimi-k2.5","messages":[{"role":"user","content":"Reply with ok."}]}\'',
       },
     });
   });
@@ -510,7 +580,11 @@ describe("buildActivitySummary", () => {
         { label: "Entries", value: "2", detail: "1 with captures" },
         { label: "Errors", value: "1", detail: "Most recent status: 500" },
         { label: "Prompt tokens", value: "54", detail: "19 output tokens recorded" },
-        { label: "Cached tokens", value: "12", detail: "Across the current in-memory metrics window" },
+        {
+          label: "Cached tokens",
+          value: "12",
+          detail: "Across the current in-memory metrics window",
+        },
       ],
       rows: [
         expect.objectContaining({
@@ -582,10 +656,22 @@ describe("telemetry view models", () => {
         },
       }),
     ).toEqual([
-      { label: "Requests", value: "3", detail: "1 local / 2 remote in the current telemetry window" },
+      {
+        label: "Requests",
+        value: "3",
+        detail: "1 local / 2 remote in the current telemetry window",
+      },
       { label: "Failures", value: "1", detail: "2 successful requests recorded" },
-      { label: "Latency", value: "880 ms", detail: "420 ms average latency across structured telemetry" },
-      { label: "Tokens", value: "126", detail: "1 cached request and $0.0042 actual cost recorded" },
+      {
+        label: "Latency",
+        value: "880 ms",
+        detail: "420 ms average latency across structured telemetry",
+      },
+      {
+        label: "Tokens",
+        value: "126",
+        detail: "1 cached request and $0.0042 actual cost recorded",
+      },
     ]);
   });
 
@@ -619,16 +705,16 @@ describe("telemetry view models", () => {
           providerKind: "local_openai_compat",
         },
       ]),
-      ).toEqual([
-        expect.objectContaining({
-          endpointId: "llama-swap.local.local-mock-llama",
-          sourceLabel: "Local",
-          providerLabel: "llama-swap",
-          cacheLabel: "Caching unavailable",
-          reliabilityLabel: "0 failures / 1 success",
-          latencyLabel: "280 ms p95 / 280 ms avg",
-          tokenLabel: "46 tokens",
-          costLabel: "$0.0011 est.",
+    ).toEqual([
+      expect.objectContaining({
+        endpointId: "llama-swap.local.local-mock-llama",
+        sourceLabel: "Local",
+        providerLabel: "llama-swap",
+        cacheLabel: "Caching unavailable",
+        reliabilityLabel: "0 failures / 1 success",
+        latencyLabel: "280 ms p95 / 280 ms avg",
+        tokenLabel: "46 tokens",
+        costLabel: "$0.0011 est.",
         roleSummary: "general.chat",
       }),
     ]);

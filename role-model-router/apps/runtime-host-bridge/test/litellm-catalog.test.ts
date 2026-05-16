@@ -86,6 +86,7 @@ describe("litellm-catalog", () => {
     expect(moonshot?.oauth).toBeDefined();
     expect(moonshot?.oauth?.clientId).toBe("17e5f671-d194-4dfb-9706-5516cb48c098");
     expect(moonshot?.oauth?.oauthHost).toBe("https://auth.kimi.com");
+    expect(moonshot?.oauth?.apiBase).toBe("https://api.kimi.com/coding/v1");
     expect(moonshot?.oauth?.deviceAuthorizationEndpoint).toBe(
       "https://auth.kimi.com/api/oauth/device_authorization",
     );
@@ -98,7 +99,9 @@ describe("litellm-catalog", () => {
 
   test("loads real LiteLLM model prices from testdata", async () => {
     // loadLiteLLMModelPrices already imported statically above
-    const repoRoot = process.cwd().replace(/\\role-model-router[\\/]apps[\\/]runtime-host-bridge$/, "");
+    const repoRoot = process
+      .cwd()
+      .replace(/\\role-model-router[\\/]apps[\\/]runtime-host-bridge$/, "");
 
     const modelPrices = await loadLiteLLMModelPrices(repoRoot);
 

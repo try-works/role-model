@@ -1,10 +1,28 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "react-router";
 
-import { CodeBlock, EmptyState, ErrorState, FactCard, LoadingState, PageHeader, SectionCard, StatusPill } from "../components/page-primitives";
+import {
+  CodeBlock,
+  EmptyState,
+  ErrorState,
+  FactCard,
+  LoadingState,
+  PageHeader,
+  SectionCard,
+  StatusPill,
+} from "../components/page-primitives";
 import { fieldClassName, mutedPanelClassName, primaryButtonClassName } from "../lib/design-system";
-import { fetchRuntimeSnapshot, submitWorkbenchChat, type RuntimeSnapshot, type WorkbenchChatInput } from "../lib/runtime-api";
-import { buildWorkbenchModelOptions, summarizeWorkbenchResult } from "../lib/view-models";
+import {
+  fetchRuntimeSnapshot,
+  submitWorkbenchChat,
+  type RuntimeSnapshot,
+  type WorkbenchChatInput,
+} from "../lib/runtime-api";
+import {
+  buildWorkbenchEndpointOptions,
+  buildWorkbenchModelOptions,
+  summarizeWorkbenchResult,
+} from "../lib/view-models";
 
 const routingModeOptions: Array<{
   label: string;
@@ -17,7 +35,9 @@ const routingModeOptions: Array<{
   { label: "Hybrid", value: "hybrid" },
 ];
 
-function formatRoutingModeLabel(value: "" | NonNullable<WorkbenchChatInput["routingModeOverride"]>): string {
+function formatRoutingModeLabel(
+  value: "" | NonNullable<WorkbenchChatInput["routingModeOverride"]>,
+): string {
   if (!value) {
     return "Alias default";
   }
@@ -51,8 +71,10 @@ export default function WorkbenchRoute() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [model, setModel] = useState("");
-  const [routingModeOverride, setRoutingModeOverride] =
-    useState<"" | NonNullable<WorkbenchChatInput["routingModeOverride"]>>(locationRoutingModeOverride);
+  const [endpointId, setEndpointId] = useState("");
+  const [routingModeOverride, setRoutingModeOverride] = useState<
+    "" | NonNullable<WorkbenchChatInput["routingModeOverride"]>
+  >(locationRoutingModeOverride);
   const [prompt, setPrompt] = useState("Summarize the chosen endpoint.");
   const [result, setResult] = useState<Record<string, unknown> | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -61,11 +83,10 @@ export default function WorkbenchRoute() {
     void fetchRuntimeSnapshot()
       .then((data) => {
         setSnapshot(data);
-        if (data.models[0]?.id) {
-          setModel(data.models[0].id);
-        }
       })
-      .catch((value: unknown) => setLoadError(value instanceof Error ? value.message : "Could not load workbench."));
+      .catch((value: unknown) =>
+        setLoadError(value instanceof Error ? value.message : "Could not load workbench."),
+      );
   }, []);
 
   useEffect(() => {
@@ -74,7 +95,39 @@ export default function WorkbenchRoute() {
     }
   }, [locationRoutingModeOverride]);
 
-  const modelOptions = useMemo(() => buildWorkbenchModelOptions(snapshot?.models ?? []), [snapshot?.models]);
+  const modelOptions = useMemo(
+    () => buildWorkbenchModelOptions(snapshot?.models ?? []),
+    [snapshot?.models],
+  );
+  const endpointOptions = useMemo(
+    () =>
+      snapshot
+        ? buildWorkbenchEndpointOptions({
+            modelId: model,
+            models: snapshot.models,
+            endpoints: snapshot.endpoints,
+            accounts: snapshot.accounts,
+          })
+        : [],
+    [model, snapshot],
+  );
+
+  useEffect(() => {
+    if (!snapshot) {
+      return;
+    }
+    if (!snapshot.models.some((entry) => entry.id === model)) {
+      setModel(snapshot.models[0]?.id ?? "");
+    }
+  }, [model, snapshot]);
+
+  useEffect(() => {
+    setEndpointId((current) =>
+      endpointOptions.some((option) => option.value === current)
+        ? current
+        : (endpointOptions[0]?.value ?? ""),
+    );
+  }, [endpointOptions]);
 
   if (loadError) {
     return <ErrorState label={loadError} />;
@@ -91,6 +144,7 @@ export default function WorkbenchRoute() {
     try {
       const response = await submitWorkbenchChat({
         model,
+        endpointId: endpointId || undefined,
         messages: [{ role: "user", content: prompt }],
         routingModeOverride: routingModeOverride || undefined,
       });
@@ -103,7 +157,9 @@ export default function WorkbenchRoute() {
   };
 
   const resultSummary = result ? summarizeWorkbenchResult(result) : null;
-  const toolCapableEndpoints = snapshot.endpoints.filter((endpoint) => endpoint.toolCallingSupported).length;
+  const toolCapableEndpoints = snapshot.endpoints.filter(
+    (endpoint) => endpoint.toolCallingSupported,
+  ).length;
   const routingModeLabel = formatRoutingModeLabel(routingModeOverride);
 
   return (
@@ -115,38 +171,90 @@ export default function WorkbenchRoute() {
       />
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <FactCard label="Models" value={snapshot.models.length} detail="Available model ids currently exposed through the runtime model listing." emphasis />
-        <FactCard label="Tool-capable endpoints" value={toolCapableEndpoints} detail="Endpoints currently able to surface tool-calling behavior in the workspace." />
-        <FactCard label="Selected model" value={model} detail="The active model binding for the next routed request." />
-        <FactCard label="Routing mode" value={routingModeLabel} detail="Optional per-request override that the runtime host forwards as a routing-mode header." />
+        <FactCard
+          label="Models"
+          value={snapshot.models.length}
+          detail="Available model ids currently exposed through the runtime model listing."
+          emphasis
+        />
+        <FactCard
+          label="Tool-capable endpoints"
+          value={toolCapableEndpoints}
+          detail="Endpoints currently able to surface tool-calling behavior in the workspace."
+        />
+        <FactCard
+          label="Selected model"
+          value={model}
+          detail="The active model binding for the next routed request."
+        />
+        <FactCard
+          label="Routing mode"
+          value={routingModeLabel}
+          detail="Optional per-request override that the runtime host forwards as a routing-mode header."
+        />
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[360px_minmax(0,1fr)]">
-        <SectionCard title="Composer" description="This form posts directly to the runtime-host `/v1/chat/completions` route.">
+        <SectionCard
+          title="Composer"
+          description="This form posts directly to the runtime-host `/v1/chat/completions` route."
+        >
           <form className="space-y-4" onSubmit={onSubmit}>
             <label className="grid gap-2 text-sm">
               <span className="font-medium text-[var(--rm-fg)]">Model</span>
-              <select className={fieldClassName} value={model} onChange={(event) => setModel(event.target.value)}>
+              <select
+                className={fieldClassName}
+                value={model}
+                onChange={(event) => setModel(event.target.value)}
+              >
                 {modelOptions.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
                   </option>
                 ))}
-               </select>
-             </label>
-             <label className="grid gap-2 text-sm">
-               <span className="font-medium text-[var(--rm-fg)]">Routing mode</span>
-               <select className={fieldClassName} value={routingModeOverride} onChange={(event) => setRoutingModeOverride(event.target.value as "" | NonNullable<WorkbenchChatInput["routingModeOverride"]>)}>
-                 {routingModeOptions.map((option) => (
-                   <option key={option.label} value={option.value}>
-                     {option.label}
-                   </option>
-                 ))}
-               </select>
-             </label>
-             <label className="grid gap-2 text-sm">
-               <span className="font-medium text-[var(--rm-fg)]">Prompt</span>
-               <textarea className={`${fieldClassName} min-h-40`} value={prompt} onChange={(event) => setPrompt(event.target.value)} />
+              </select>
+            </label>
+            <label className="grid gap-2 text-sm">
+              <span className="font-medium text-[var(--rm-fg)]">Endpoint</span>
+              <select
+                className={fieldClassName}
+                value={endpointId}
+                onChange={(event) => setEndpointId(event.target.value)}
+              >
+                {endpointOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="grid gap-2 text-sm">
+              <span className="font-medium text-[var(--rm-fg)]">Routing mode</span>
+              <select
+                className={fieldClassName}
+                value={routingModeOverride}
+                onChange={(event) =>
+                  setRoutingModeOverride(
+                    event.target.value as
+                      | ""
+                      | NonNullable<WorkbenchChatInput["routingModeOverride"]>,
+                  )
+                }
+              >
+                {routingModeOptions.map((option) => (
+                  <option key={option.label} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="grid gap-2 text-sm">
+              <span className="font-medium text-[var(--rm-fg)]">Prompt</span>
+              <textarea
+                className={`${fieldClassName} min-h-40`}
+                value={prompt}
+                onChange={(event) => setPrompt(event.target.value)}
+              />
             </label>
             <button className={primaryButtonClassName} disabled={submitting} type="submit">
               {submitting ? "Running…" : "Run request"}
@@ -154,29 +262,41 @@ export default function WorkbenchRoute() {
           </form>
         </SectionCard>
 
-        <SectionCard title="Result workspace" description="Tooling-aware response summary aligned with the runtime host payload.">
+        <SectionCard
+          title="Result workspace"
+          description="Tooling-aware response summary aligned with the runtime host payload."
+        >
           {submitError ? (
             <div className={`${mutedPanelClassName} border-l-4 border-red-500 p-4`}>
-              <p className="text-xs font-normal uppercase tracking-[0.2em] text-red-500">Request failed</p>
-              <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-[var(--rm-fg)]">{submitError}</p>
+              <p className="text-xs font-normal uppercase tracking-[0.2em] text-red-500">
+                Request failed
+              </p>
+              <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-[var(--rm-fg)]">
+                {submitError}
+              </p>
             </div>
           ) : !resultSummary ? (
             <EmptyState label="No result yet." />
           ) : (
             <div className="space-y-4">
               <div className={`${mutedPanelClassName} p-4`}>
-                <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">Routing receipt handoff</p>
+                <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">
+                  Routing receipt handoff
+                </p>
                 <p className="mt-3 text-sm leading-6 text-[var(--rm-fg)]">
-                  Requested mode: <span className="font-medium">{routingModeLabel}</span>. Verify the persisted routing receipt in{" "}
+                  Requested mode: <span className="font-medium">{routingModeLabel}</span>. Verify
+                  the persisted routing receipt in{" "}
                   <Link className="font-medium text-[var(--rm-accent)]" to="/app/observe/requests">
                     Telemetry ledger
-                  </Link>
-                  {" "}after the request completes.
+                  </Link>{" "}
+                  after the request completes.
                 </p>
               </div>
 
               <div className={`${mutedPanelClassName} p-4`}>
-                <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">Assistant output</p>
+                <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">
+                  Assistant output
+                </p>
                 <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-[var(--rm-fg)]">
                   {resultSummary.outputText || "No assistant text was returned."}
                 </p>
@@ -192,10 +312,15 @@ export default function WorkbenchRoute() {
                   </div>
                   <div className="mt-3 space-y-3">
                     {resultSummary.toolCalls.length === 0 ? (
-                      <p className="text-sm text-[var(--rm-secondary)]">No tool calls were surfaced for this response.</p>
+                      <p className="text-sm text-[var(--rm-secondary)]">
+                        No tool calls were surfaced for this response.
+                      </p>
                     ) : (
                       resultSummary.toolCalls.map((toolCall) => (
-                        <div key={toolCall.id ?? `${toolCall.name}-${toolCall.arguments}`} className={`${mutedPanelClassName} p-3`}>
+                        <div
+                          key={toolCall.id ?? `${toolCall.name}-${toolCall.arguments}`}
+                          className={`${mutedPanelClassName} p-3`}
+                        >
                           <p className="font-medium text-[var(--rm-fg)]">{toolCall.name}</p>
                           <CodeBlock className="mt-3 text-xs">{toolCall.arguments}</CodeBlock>
                         </div>
@@ -207,27 +332,40 @@ export default function WorkbenchRoute() {
                 <div className={`${mutedPanelClassName} p-4`}>
                   <div className="flex items-center justify-between">
                     <p className="font-medium text-[var(--rm-fg)]">Execution receipts</p>
-                    <StatusPill tone={resultSummary.toolExecutions.length > 0 ? "success" : "neutral"}>
+                    <StatusPill
+                      tone={resultSummary.toolExecutions.length > 0 ? "success" : "neutral"}
+                    >
                       {resultSummary.toolExecutions.length}
                     </StatusPill>
                   </div>
                   <div className="mt-3 space-y-3">
                     {resultSummary.toolExecutions.length === 0 ? (
-                      <p className="text-sm text-[var(--rm-secondary)]">No runtime tool execution receipts were recorded.</p>
+                      <p className="text-sm text-[var(--rm-secondary)]">
+                        No runtime tool execution receipts were recorded.
+                      </p>
                     ) : (
                       resultSummary.toolExecutions.map((execution, index) => (
-                        <div key={`${execution.connectorId ?? "connector"}-${execution.toolName ?? index}`} className={`${mutedPanelClassName} p-3`}>
+                        <div
+                          key={`${execution.connectorId ?? "connector"}-${execution.toolName ?? index}`}
+                          className={`${mutedPanelClassName} p-3`}
+                        >
                           <div className="flex flex-wrap items-center gap-2">
-                            <p className="font-medium text-[var(--rm-fg)]">{execution.toolName ?? "Unnamed tool"}</p>
+                            <p className="font-medium text-[var(--rm-fg)]">
+                              {execution.toolName ?? "Unnamed tool"}
+                            </p>
                             {execution.status ? (
-                              <StatusPill tone={execution.status === "success" ? "success" : "warning"}>
+                              <StatusPill
+                                tone={execution.status === "success" ? "success" : "warning"}
+                              >
                                 {execution.status}
                               </StatusPill>
                             ) : null}
                           </div>
                           <p className="mt-2 text-sm text-[var(--rm-secondary)]">
                             {execution.connectorId ?? "Unknown connector"}
-                            {typeof execution.durationMs === "number" ? ` • ${execution.durationMs} ms` : ""}
+                            {typeof execution.durationMs === "number"
+                              ? ` • ${execution.durationMs} ms`
+                              : ""}
                           </p>
                         </div>
                       ))
@@ -239,7 +377,9 @@ export default function WorkbenchRoute() {
               <div className="grid gap-3 md:grid-cols-2">
                 {resultSummary.usageRows.map((row) => (
                   <div key={row.label} className={`${mutedPanelClassName} p-4`}>
-                    <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">{row.label}</p>
+                    <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">
+                      {row.label}
+                    </p>
                     <p className="mt-2 text-lg font-medium text-[var(--rm-fg)]">{row.value}</p>
                   </div>
                 ))}
