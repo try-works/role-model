@@ -1,0 +1,85 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/24-router-runtime-recency-bias-throughput-sla/role-model-router/apps/runtime-host-bridge[39m
+
+(node:44608) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [31mΓ¥»[39m test/index.test.ts [2m([22m[2m19 tests[22m[2m | [22m[31m1 failed[39m[2m | [22m[33m18 skipped[39m[2m)[22m[32m 217[2mms[22m[39m
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mcreates a stable model-list response grouped by model id
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mmaps a chat-completions request into role-model routing and execution inputs
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mserves health and model-list endpoints
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mserves preserved host observability and vendor-facing utility endpoints
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mserves runtime control-plane summary, provider, account, and endpoint routes
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mserves canonical telemetry summary, comparison, and recent request routes
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mserves downstream OpenAI-compatible provider metadata for consumer apps
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mserves chat-completions responses with role-model execution metadata
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mserves OpenAI-compatible SSE events for streaming responses requests
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22msurfaces tool calls on chat-completions responses when the backend returns them
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mstreams provider deltas through the bridge as they arrive
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mcreates a runtime backend that executes chat-completions through the real routing and adapter path
+[31m   [31m├ù[31m runtime-host-bridge[2m > [22mcreates a runtime backend that persists structured request and endpoint inspection state[39m[32m 216[2mms[22m[39m
+[31m     ΓåÆ expected { ΓÇª(24) } to match object { ΓÇª(3) }
+(97 matching properties omitted from actual)[39m
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mcreates a runtime backend that exposes provider presets, runtime summary, and account upserts
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mexecutes chat-completions through an activated Kimi Code endpoint
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mcreates a runtime backend that executes responses through the real routing and adapter path
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mserves structured request and endpoint inspection routes through the bridge server
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mstreams canonical telemetry updates over SSE after new requests are persisted
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mresolves bridge server options from explicit values and defaults
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/index.test.ts > runtime-host-bridge > creates a runtime backend that persists structured request and endpoint inspection state
+AssertionError: expected { ΓÇª(24) } to match object { ΓÇª(3) }
+(97 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+    "endpointId": "openai.personal.primary.us-east-1.fast",
+    "requestId": "req-runtime-bridge-observation-002",
+    "routingDiagnostics": {
+-     "effectiveMetrics": {
+-       "latency": ObjectContaining {
+-         "freshnessWeight": Any<Number>,
+-         "measuredAtMs": Any<Number>,
+-         "source": "measured",
+-         "value": Any<Number>,
+-       },
+-       "quality": ObjectContaining {
+-         "freshnessWeight": Any<Number>,
+-         "measuredAtMs": Any<Number>,
+-         "source": "measured",
+-         "value": Any<Number>,
+-       },
+-       "throughput": ObjectContaining {
+-         "freshnessWeight": Any<Number>,
+-         "measuredAtMs": Any<Number>,
+-         "source": "measured",
+-         "value": Any<Number>,
+-       },
+-     },
+      "observedProfile": {
+        "endpointId": "openai.personal.primary.us-east-1.fast",
+        "measuredAtMs": Any<Number>,
+        "readMode": "per-request",
+        "source": "runtime-state",
+-     },
+-     "throughputPenalty": {
+-       "active": false,
+-       "endpointId": "openai.personal.primary.us-east-1.fast",
+      },
+    },
+  }
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[33m18 skipped[39m[90m (19)[39m
+[2m   Start at [22m 19:32:29
+[2m   Duration [22m 1.82s[2m (transform 646ms, setup 0ms, collect 867ms, tests 217ms, environment 0ms, prepare 366ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\24-router-runtime-recency-bias-throughput-sla\role-model-router\apps\runtime-host-bridge:
+ΓÇëERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓÇë Command failed with exit code 1: vitest run test/index.test.ts -t creates a runtime backend that persists structured request and endpoint inspection state

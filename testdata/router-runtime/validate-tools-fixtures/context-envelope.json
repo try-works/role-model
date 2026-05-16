@@ -1,0 +1,38 @@
+{
+  "session": {
+    "sessionId": "session-alpha",
+    "workspaceScope": "workspace-dev",
+    "createdAtMs": 1700000000000,
+    "updatedAtMs": 1700000004000
+  },
+  "conversation": {
+    "conversationId": "conversation-main",
+    "sessionId": "session-alpha",
+    "createdAtMs": 1700000000000,
+    "updatedAtMs": 1700000004000
+  },
+  "turns": [
+    {
+      "turnId": "turn-001",
+      "conversationId": "conversation-main",
+      "role": "user",
+      "contentRef": "ref://turn-001?tokens=60&label=user-intent",
+      "createdAtMs": 1700000001000
+    },
+    {
+      "turnId": "turn-002",
+      "conversationId": "conversation-main",
+      "role": "assistant",
+      "contentRef": "ref://turn-002?tokens=120&label=assistant-baseline",
+      "createdAtMs": 1700000002000
+    }
+  ],
+  "artifacts": [],
+  "artifactLinks": [],
+  "handoffs": [],
+  "selection": {
+    "maxTurns": 2,
+    "maxArtifacts": 2,
+    "tokenBudget": 260
+  }
+}

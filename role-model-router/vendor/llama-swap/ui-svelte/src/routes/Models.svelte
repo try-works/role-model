@@ -1,11 +1,12 @@
 <script lang="ts">
-  import { isNarrow } from "../stores/theme";
-  import { upstreamLogs } from "../stores/api";
-  import ModelsPanel from "../components/ModelsPanel.svelte";
-  import LogPanel from "../components/LogPanel.svelte";
-  import ResizablePanels from "../components/ResizablePanels.svelte";
+import LogPanel from "../components/LogPanel.svelte";
+import ModelsPanel from "../components/ModelsPanel.svelte";
+import ResizablePanels from "../components/ResizablePanels.svelte";
+import { upstreamLogs } from "../stores/api";
+import { isNarrow } from "../stores/theme";
 
-  let direction = $derived<"horizontal" | "vertical">($isNarrow ? "vertical" : "horizontal");
+// biome-ignore lint/style/useConst: Svelte $derived bindings remain reactive over time.
+let direction = $derived<"horizontal" | "vertical">($isNarrow ? "vertical" : "horizontal");
 </script>
 
 <ResizablePanels {direction} storageKey="models-panel-group">

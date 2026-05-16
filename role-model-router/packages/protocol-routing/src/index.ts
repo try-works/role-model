@@ -1,6 +1,7 @@
 import type { ContextEnvelopeResult } from "@role-model-router/context-envelope";
 import type {
   EndpointCandidate as CoreEndpointCandidate,
+  ObservedDataConfigRecord,
   ObservedPerformanceProfileRecord,
   RoleBindingRecord,
   RoleDefinitionRecord,
@@ -8,11 +9,12 @@ import type {
   RouterDecisionRecord,
   RoutingRequest,
   TaskDefinitionRecord,
+  ThroughputPenaltyStateRecord,
 } from "@role-model-router/core";
 import { routeRequest } from "@role-model-router/core";
 import type {
-  EndpointCandidate as RegistryEndpointCandidate,
   EndpointRegistryResult,
+  EndpointCandidate as RegistryEndpointCandidate,
 } from "@role-model-router/endpoint-registry";
 import type { RetrievalReceipt } from "@role-model-router/retrieval-receipt";
 
@@ -25,6 +27,9 @@ export interface ProjectRuntimeRouteInputInput {
   request: RoutingRequest;
   registry: EndpointRegistryResult;
   observedProfilesByEndpointId: Record<string, ObservedPerformanceProfileRecord>;
+  observedDataConfig?: ObservedDataConfigRecord;
+  throughputPenaltyStateByEndpointId?: Record<string, ThroughputPenaltyStateRecord>;
+  routingTimeMs?: number;
   envelope: ContextEnvelopeResult;
   retrievalReceipt: RetrievalReceipt;
   roleDefinitions: readonly RoleDefinitionRecord[];
@@ -92,7 +97,9 @@ function toCoreCandidate(
 export function projectRuntimeRouteInput(
   input: ProjectRuntimeRouteInputInput,
 ): ProjectRuntimeRouteInputResult {
-  const candidateIds = new Set(input.registry.endpoints.map((candidate) => candidate.identity.endpoint_id));
+  const candidateIds = new Set(
+    input.registry.endpoints.map((candidate) => candidate.identity.endpoint_id),
+  );
   const deniedEndpointIds = new Set(input.request.denyEndpoints ?? []);
   const allowEndpoints = input.request.allowEndpoints ?? [];
   const ignoredEndpointIds = input.routingModel?.preferredEndpointIds
@@ -111,6 +118,9 @@ export function projectRuntimeRouteInput(
       roleDefinitions: input.roleDefinitions,
       taskDefinitions: input.taskDefinitions,
       roleBindings: input.roleBindings,
+      observedDataConfig: input.observedDataConfig,
+      throughputPenaltyStateByEndpointId: input.throughputPenaltyStateByEndpointId,
+      routingTimeMs: input.routingTimeMs,
     },
     routingDiagnostics: {
       retrievalReceiptId: input.retrievalReceipt.receiptId,

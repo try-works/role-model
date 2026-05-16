@@ -1,0 +1,482 @@
+Run 27 Phase 5 agent-operated readback
+GeneratedAt: 2026-05-11T15:06:54.759Z
+
+## Scenario: bucketed profile and advisory readback
+{
+  "easyRequest": {
+    "requestId": "req-run27-phase5-profile-easy",
+    "endpointId": "llama-swap.local.local-llama-3-1-8b-instruct",
+    "aliasResolution": {
+      "requestedModel": "gpt-5.4-difficulty",
+      "aliasId": "gpt-5.4-difficulty",
+      "resolvedModelIds": [
+        "local/llama-3.1-8b-instruct",
+        "openai/gpt-4.1-mini-fast"
+      ],
+      "allowEndpoints": [
+        "llama-swap.local.local-llama-3-1-8b-instruct",
+        "openai.litellm.global.openai-gpt-4-1-mini-fast"
+      ]
+    },
+    "difficultyRouting": {
+      "difficulty": "easy",
+      "strategy": "cost",
+      "fallbackApplied": false,
+      "rubricSignals": {
+        "contextTokens": 9,
+        "toolCount": 0,
+        "historyTurnCount": 1,
+        "instructionConstraintCount": 0,
+        "decompositionKeywordCount": 0,
+        "codeOrSchemaBurden": false
+      }
+    },
+    "observedProfile": {
+      "endpointId": "llama-swap.local.local-llama-3-1-8b-instruct",
+      "source": "none",
+      "readMode": "per-request"
+    }
+  },
+  "hardRequest": {
+    "requestId": "req-run27-phase5-profile-hard",
+    "endpointId": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+    "aliasResolution": {
+      "requestedModel": "gpt-5.4-difficulty",
+      "aliasId": "gpt-5.4-difficulty",
+      "resolvedModelIds": [
+        "local/llama-3.1-8b-instruct",
+        "openai/gpt-4.1-mini-fast"
+      ],
+      "allowEndpoints": [
+        "llama-swap.local.local-llama-3-1-8b-instruct",
+        "openai.litellm.global.openai-gpt-4-1-mini-fast"
+      ]
+    },
+    "difficultyRouting": {
+      "difficulty": "hard",
+      "strategy": "quality",
+      "fallbackApplied": false,
+      "cacheInvalidated": true,
+      "cacheInvalidationReasons": [
+        "code-or-schema-change",
+        "tool-count-delta",
+        "decomposition-keyword-delta"
+      ],
+      "excludedEndpointIds": [
+        "llama-swap.local.local-llama-3-1-8b-instruct"
+      ],
+      "rubricSignals": {
+        "contextTokens": 42,
+        "toolCount": 2,
+        "historyTurnCount": 1,
+        "instructionConstraintCount": 1,
+        "decompositionKeywordCount": 3,
+        "codeOrSchemaBurden": true
+      }
+    },
+    "observedProfile": {
+      "endpointId": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+      "source": "none",
+      "readMode": "per-request"
+    }
+  },
+  "easyEndpointProfile": {
+    "latestProfile": {
+      "endpoint_id": "llama-swap.local.local-llama-3-1-8b-instruct",
+      "endpoint_version": "run07-registry-v1:default",
+      "measured_at_ms": 1778512015291,
+      "measurement_window": {
+        "started_at_ms": 1778512015291,
+        "ended_at_ms": 1778512015291
+      },
+      "sample_size": 1,
+      "sources": {
+        "live_request_samples": 1,
+        "benchmark_samples": 0
+      },
+      "latency_ms_p50": 2,
+      "latency_ms_p95": 2,
+      "failure_rate": 0,
+      "freshness_score": 1,
+      "confidence_score": 0.1762914343888821,
+      "tokens_per_sec": 2000
+    },
+    "difficultyProfiles": {
+      "easy": {
+        "endpoint_id": "llama-swap.local.local-llama-3-1-8b-instruct",
+        "endpoint_version": "run07-registry-v1:default",
+        "measured_at_ms": 1778512015291,
+        "measurement_window": {
+          "started_at_ms": 1778512015291,
+          "ended_at_ms": 1778512015291
+        },
+        "sample_size": 1,
+        "sources": {
+          "live_request_samples": 1,
+          "benchmark_samples": 0
+        },
+        "latency_ms_p50": 2,
+        "latency_ms_p95": 2,
+        "failure_rate": 0,
+        "freshness_score": 1,
+        "confidence_score": 0.1762914343888821,
+        "tokens_per_sec": 2000
+      },
+      "medium": null,
+      "hard": null
+    },
+    "advisoryMaxDifficultyRecommendation": {
+      "recommendedMaxDifficulty": null,
+      "thresholds": {
+        "minSamples": 4,
+        "maxFailureRate": 0.2,
+        "minQualityScore": 0.8,
+        "minTokensPerSec": 22
+      },
+      "evaluations": {
+        "easy": {
+          "eligible": false,
+          "rejectionReasons": [
+            "min-samples"
+          ],
+          "profile": {
+            "endpoint_id": "llama-swap.local.local-llama-3-1-8b-instruct",
+            "endpoint_version": "run07-registry-v1:default",
+            "measured_at_ms": 1778512015291,
+            "measurement_window": {
+              "started_at_ms": 1778512015291,
+              "ended_at_ms": 1778512015291
+            },
+            "sample_size": 1,
+            "sources": {
+              "live_request_samples": 1,
+              "benchmark_samples": 0
+            },
+            "latency_ms_p50": 2,
+            "latency_ms_p95": 2,
+            "failure_rate": 0,
+            "freshness_score": 1,
+            "confidence_score": 0.1762914343888821,
+            "tokens_per_sec": 2000
+          }
+        },
+        "medium": {
+          "eligible": false,
+          "rejectionReasons": [
+            "no-profile"
+          ],
+          "profile": null
+        },
+        "hard": {
+          "eligible": false,
+          "rejectionReasons": [
+            "no-profile"
+          ],
+          "profile": null
+        }
+      }
+    },
+    "recentSamples": [
+      {
+        "endpoint_id": "llama-swap.local.local-llama-3-1-8b-instruct",
+        "endpoint_version": "run07-registry-v1:default",
+        "source_type": "live_request",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1778512015291,
+        "latency_ms": 2,
+        "latency_ms_p95": 2,
+        "tokens_per_sec": 2000,
+        "failure": false,
+        "request_id": "req-run27-phase5-profile-easy",
+        "routing_decision_id": "decision-req-run27-phase5-profile-easy"
+      }
+    ]
+  },
+  "hardEndpointProfile": {
+    "latestProfile": {
+      "endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+      "endpoint_version": "run07-registry-v1:custom-base-url",
+      "measured_at_ms": 1778512015360,
+      "measurement_window": {
+        "started_at_ms": 1778512015360,
+        "ended_at_ms": 1778512015360
+      },
+      "sample_size": 1,
+      "sources": {
+        "live_request_samples": 1,
+        "benchmark_samples": 0
+      },
+      "latency_ms_p50": 3,
+      "latency_ms_p95": 3,
+      "failure_rate": 0,
+      "freshness_score": 1,
+      "confidence_score": 0.1762914343888821,
+      "tokens_per_sec": 1667,
+      "cost_per_1k_tokens_est": 0.0042,
+      "currency": "USD"
+    },
+    "difficultyProfiles": {
+      "easy": null,
+      "medium": null,
+      "hard": {
+        "endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "measured_at_ms": 1778512015360,
+        "measurement_window": {
+          "started_at_ms": 1778512015360,
+          "ended_at_ms": 1778512015360
+        },
+        "sample_size": 1,
+        "sources": {
+          "live_request_samples": 1,
+          "benchmark_samples": 0
+        },
+        "latency_ms_p50": 3,
+        "latency_ms_p95": 3,
+        "failure_rate": 0,
+        "freshness_score": 1,
+        "confidence_score": 0.1762914343888821,
+        "tokens_per_sec": 1667,
+        "cost_per_1k_tokens_est": 0.0042,
+        "currency": "USD"
+      }
+    },
+    "advisoryMaxDifficultyRecommendation": {
+      "recommendedMaxDifficulty": null,
+      "thresholds": {
+        "minSamples": 4,
+        "maxFailureRate": 0.2,
+        "minQualityScore": 0.8,
+        "minTokensPerSec": 22
+      },
+      "evaluations": {
+        "easy": {
+          "eligible": false,
+          "rejectionReasons": [
+            "no-profile"
+          ],
+          "profile": null
+        },
+        "medium": {
+          "eligible": false,
+          "rejectionReasons": [
+            "no-profile"
+          ],
+          "profile": null
+        },
+        "hard": {
+          "eligible": false,
+          "rejectionReasons": [
+            "min-samples"
+          ],
+          "profile": {
+            "endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+            "endpoint_version": "run07-registry-v1:custom-base-url",
+            "measured_at_ms": 1778512015360,
+            "measurement_window": {
+              "started_at_ms": 1778512015360,
+              "ended_at_ms": 1778512015360
+            },
+            "sample_size": 1,
+            "sources": {
+              "live_request_samples": 1,
+              "benchmark_samples": 0
+            },
+            "latency_ms_p50": 3,
+            "latency_ms_p95": 3,
+            "failure_rate": 0,
+            "freshness_score": 1,
+            "confidence_score": 0.1762914343888821,
+            "tokens_per_sec": 1667,
+            "cost_per_1k_tokens_est": 0.0042,
+            "currency": "USD"
+          }
+        }
+      }
+    },
+    "recentSamples": [
+      {
+        "endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "live_request",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1778512015360,
+        "latency_ms": 3,
+        "latency_ms_p95": 3,
+        "tokens_per_sec": 1667,
+        "cost_per_1k_tokens_est": 0.0042,
+        "failure": false,
+        "request_id": "req-run27-phase5-profile-hard",
+        "routing_decision_id": "decision-req-run27-phase5-profile-hard"
+      }
+    ]
+  }
+}
+
+## Scenario: cache reuse
+{
+  "requestId": "req-run27-phase5-cache-hit",
+  "endpointId": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+  "aliasResolution": {
+    "requestedModel": "gpt-5.4-difficulty",
+    "aliasId": "gpt-5.4-difficulty",
+    "resolvedModelIds": [
+      "local/llama-3.1-8b-instruct",
+      "openai/gpt-4.1-mini-fast"
+    ],
+    "allowEndpoints": [
+      "llama-swap.local.local-llama-3-1-8b-instruct",
+      "openai.litellm.global.openai-gpt-4-1-mini-fast"
+    ]
+  },
+  "difficultyRouting": {
+    "difficulty": "hard",
+    "strategy": "quality",
+    "fallbackApplied": false,
+    "cacheHit": true,
+    "excludedEndpointIds": [
+      "llama-swap.local.local-llama-3-1-8b-instruct"
+    ],
+    "rubricSignals": {
+      "contextTokens": 9,
+      "toolCount": 0,
+      "historyTurnCount": 1,
+      "instructionConstraintCount": 0,
+      "decompositionKeywordCount": 0,
+      "codeOrSchemaBurden": false
+    }
+  },
+  "observedProfile": {
+    "endpointId": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+    "source": "runtime-state",
+    "readMode": "per-request",
+    "measuredAtMs": 1778512016829,
+    "difficultyBucket": "hard",
+    "bucketOverrideApplied": true
+  }
+}
+
+## Scenario: cache invalidation
+{
+  "requestId": "req-run27-phase5-invalidation-final",
+  "endpointId": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+  "aliasResolution": {
+    "requestedModel": "gpt-5.4-difficulty",
+    "aliasId": "gpt-5.4-difficulty",
+    "resolvedModelIds": [
+      "local/llama-3.1-8b-instruct",
+      "openai/gpt-4.1-mini-fast"
+    ],
+    "allowEndpoints": [
+      "llama-swap.local.local-llama-3-1-8b-instruct",
+      "openai.litellm.global.openai-gpt-4-1-mini-fast"
+    ]
+  },
+  "difficultyRouting": {
+    "difficulty": "easy",
+    "strategy": "cost",
+    "fallbackApplied": false,
+    "cacheInvalidated": true,
+    "cacheInvalidationReasons": [
+      "code-or-schema-change"
+    ],
+    "rubricSignals": {
+      "contextTokens": 12,
+      "toolCount": 0,
+      "historyTurnCount": 1,
+      "instructionConstraintCount": 0,
+      "decompositionKeywordCount": 0,
+      "codeOrSchemaBurden": false
+    }
+  },
+  "observedProfile": {
+    "endpointId": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+    "source": "runtime-state",
+    "readMode": "per-request",
+    "measuredAtMs": 1778512018282,
+    "difficultyBucket": "easy",
+    "bucketOverrideApplied": false
+  }
+}
+
+## Scenario: observed override
+{
+  "requestId": "req-run27-phase5-override",
+  "endpointId": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+  "aliasResolution": {
+    "requestedModel": "gpt-5.4",
+    "aliasId": "gpt-5.4",
+    "resolvedModelIds": [
+      "openai/gpt-4.1-mini-fast"
+    ],
+    "allowEndpoints": [
+      "openai.litellm.global.openai-gpt-4-1-mini-fast"
+    ]
+  },
+  "difficultyRouting": {
+    "difficulty": "hard",
+    "strategy": "quality",
+    "fallbackApplied": false,
+    "overrideAppliedEndpointIds": [
+      "openai.litellm.global.openai-gpt-4-1-mini-fast"
+    ],
+    "overrideRecommendedMaxDifficultyByEndpointId": {
+      "openai.litellm.global.openai-gpt-4-1-mini-fast": "hard"
+    },
+    "rubricSignals": {
+      "contextTokens": 91,
+      "toolCount": 2,
+      "historyTurnCount": 4,
+      "instructionConstraintCount": 3,
+      "decompositionKeywordCount": 3,
+      "codeOrSchemaBurden": true
+    }
+  },
+  "observedProfile": {
+    "endpointId": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+    "source": "runtime-state",
+    "readMode": "per-request",
+    "measuredAtMs": 10000,
+    "difficultyBucket": "hard",
+    "bucketOverrideApplied": true
+  }
+}
+
+## Scenario: bucket-selected routing
+{
+  "requestId": "req-run27-phase5-bucket",
+  "endpointId": "anthropic.litellm.global.claude-3-7-sonnet",
+  "aliasResolution": {
+    "requestedModel": "gpt-5.4",
+    "aliasId": "gpt-5.4",
+    "resolvedModelIds": [
+      "openai/gpt-4.1-mini-fast",
+      "claude-3.7-sonnet"
+    ],
+    "allowEndpoints": [
+      "anthropic.litellm.global.claude-3-7-sonnet",
+      "openai.litellm.global.openai-gpt-4-1-mini-fast"
+    ]
+  },
+  "difficultyRouting": {
+    "difficulty": "hard",
+    "strategy": "quality",
+    "fallbackApplied": false,
+    "rubricSignals": {
+      "contextTokens": 91,
+      "toolCount": 2,
+      "historyTurnCount": 4,
+      "instructionConstraintCount": 3,
+      "decompositionKeywordCount": 3,
+      "codeOrSchemaBurden": true
+    }
+  },
+  "observedProfile": {
+    "endpointId": "anthropic.litellm.global.claude-3-7-sonnet",
+    "source": "runtime-state",
+    "readMode": "per-request",
+    "measuredAtMs": 11100,
+    "difficultyBucket": "hard",
+    "bucketOverrideApplied": true
+  }
+}

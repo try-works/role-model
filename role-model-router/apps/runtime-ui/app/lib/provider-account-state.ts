@@ -4,7 +4,10 @@ export function resolveProviderAccountLifecycle(input: {
   readonly authMode: string;
   readonly providerAccountId: string;
   readonly oauthState: RuntimeDeviceAuthorization | null;
-  readonly existingAccount?: Pick<RuntimeAccount, "providerAccountId" | "authMode" | "status" | "healthStatus" | "rotationState"> | null;
+  readonly existingAccount?: Pick<
+    RuntimeAccount,
+    "providerAccountId" | "authMode" | "status" | "healthStatus" | "rotationState"
+  > | null;
 }): {
   readonly status: string;
   readonly healthStatus: string;

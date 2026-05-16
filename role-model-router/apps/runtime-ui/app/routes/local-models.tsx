@@ -16,12 +16,12 @@ import {
   secondaryButtonClassName,
 } from "../lib/design-system";
 import {
+  type ModelOverride,
   fetchLocalModels,
   fetchModelOverrides,
   loadLocalModel,
   unloadLocalModel,
   updateModelOverrides,
-  type ModelOverride,
 } from "../lib/runtime-api";
 
 interface LocalModel {
@@ -99,6 +99,9 @@ export default function LocalModelsRoute() {
       setActioning((prev) => ({ ...prev, [modelId]: false }));
     }
   };
+
+  const getOverrideFieldId = (modelId: string, field: string) =>
+    `override-${field}-${modelId.replace(/[^a-zA-Z0-9_-]/g, "-")}`;
 
   return (
     <div className="space-y-8">
@@ -238,25 +241,28 @@ export default function LocalModelsRoute() {
           <button
             type="button"
             onClick={async () => {
-              setActioning((prev) => ({ ...prev, "__all__": true }));
+              setActioning((prev) => ({ ...prev, __all__: true }));
               try {
                 await unloadLocalModel();
                 await refresh();
               } catch (err) {
                 setError(err instanceof Error ? err.message : "Failed to unload all models");
               } finally {
-                setActioning((prev) => ({ ...prev, "__all__": false }));
+                setActioning((prev) => ({ ...prev, __all__: false }));
               }
             }}
-            disabled={actioning["__all__"]}
+            disabled={actioning.__all__}
             className={secondaryButtonClassName}
           >
-            {actioning["__all__"] ? "Unloading…" : "Unload all models"}
+            {actioning.__all__ ? "Unloading…" : "Unload all models"}
           </button>
         </div>
       </SectionCard>
 
-      <SectionCard title="Model overrides" description="Per-model runtime parameter overrides (TTL, context window, concurrency).">
+      <SectionCard
+        title="Model overrides"
+        description="Per-model runtime parameter overrides (TTL, context window, concurrency)."
+      >
         {overrideError ? <ErrorState label={overrideError} /> : null}
 
         {overrideLoading && Object.keys(overrides).length === 0 ? (
@@ -265,7 +271,10 @@ export default function LocalModelsRoute() {
           <EmptyState label="No model overrides configured. Add an override below." />
         ) : (
           <div className="space-y-3">
-            {(Object.keys(editingOverrides).length > 0 ? Object.keys(editingOverrides) : Object.keys(overrides)).map((modelId) => (
+            {(Object.keys(editingOverrides).length > 0
+              ? Object.keys(editingOverrides)
+              : Object.keys(overrides)
+            ).map((modelId) => (
               <div key={modelId} className={`${mutedPanelClassName} p-4`}>
                 <div className="mb-3">
                   <p className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]">
@@ -277,16 +286,23 @@ export default function LocalModelsRoute() {
                 </div>
                 <div className="grid gap-3 sm:grid-cols-3">
                   <div>
-                    <label className="mb-1 block text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]">
+                    <label
+                      htmlFor={getOverrideFieldId(modelId, "ttl")}
+                      className="mb-1 block text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]"
+                    >
                       TTL (seconds)
                     </label>
                     <input
+                      id={getOverrideFieldId(modelId, "ttl")}
                       type="number"
                       value={editingOverrides[modelId]?.ttl ?? ""}
                       onChange={(e) =>
                         setEditingOverrides((prev) => ({
                           ...prev,
-                          [modelId]: { ...prev[modelId], ttl: e.target.value ? Number(e.target.value) : undefined },
+                          [modelId]: {
+                            ...prev[modelId],
+                            ttl: e.target.value ? Number(e.target.value) : undefined,
+                          },
                         }))
                       }
                       placeholder="Default"
@@ -294,16 +310,23 @@ export default function LocalModelsRoute() {
                     />
                   </div>
                   <div>
-                    <label className="mb-1 block text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]">
+                    <label
+                      htmlFor={getOverrideFieldId(modelId, "context-window")}
+                      className="mb-1 block text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]"
+                    >
                       Context window
                     </label>
                     <input
+                      id={getOverrideFieldId(modelId, "context-window")}
                       type="number"
                       value={editingOverrides[modelId]?.contextWindow ?? ""}
                       onChange={(e) =>
                         setEditingOverrides((prev) => ({
                           ...prev,
-                          [modelId]: { ...prev[modelId], contextWindow: e.target.value ? Number(e.target.value) : undefined },
+                          [modelId]: {
+                            ...prev[modelId],
+                            contextWindow: e.target.value ? Number(e.target.value) : undefined,
+                          },
                         }))
                       }
                       placeholder="Default"
@@ -311,16 +334,23 @@ export default function LocalModelsRoute() {
                     />
                   </div>
                   <div>
-                    <label className="mb-1 block text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]">
+                    <label
+                      htmlFor={getOverrideFieldId(modelId, "concurrency-limit")}
+                      className="mb-1 block text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]"
+                    >
                       Concurrency limit
                     </label>
                     <input
+                      id={getOverrideFieldId(modelId, "concurrency-limit")}
                       type="number"
                       value={editingOverrides[modelId]?.concurrencyLimit ?? ""}
                       onChange={(e) =>
                         setEditingOverrides((prev) => ({
                           ...prev,
-                          [modelId]: { ...prev[modelId], concurrencyLimit: e.target.value ? Number(e.target.value) : undefined },
+                          [modelId]: {
+                            ...prev[modelId],
+                            concurrencyLimit: e.target.value ? Number(e.target.value) : undefined,
+                          },
                         }))
                       }
                       placeholder="Default"
@@ -330,6 +360,7 @@ export default function LocalModelsRoute() {
                 </div>
                 <div className="mt-3 flex gap-2">
                   <button
+                    type="button"
                     onClick={async () => {
                       setSavingOverrides(true);
                       try {
@@ -345,7 +376,9 @@ export default function LocalModelsRoute() {
                           return copy;
                         });
                       } catch (err) {
-                        setOverrideError(err instanceof Error ? err.message : "Failed to save override");
+                        setOverrideError(
+                          err instanceof Error ? err.message : "Failed to save override",
+                        );
                       } finally {
                         setSavingOverrides(false);
                       }
@@ -356,6 +389,7 @@ export default function LocalModelsRoute() {
                     Save
                   </button>
                   <button
+                    type="button"
                     onClick={() =>
                       setEditingOverrides((prev) => {
                         const copy = { ...prev };
@@ -368,6 +402,7 @@ export default function LocalModelsRoute() {
                     Cancel
                   </button>
                   <button
+                    type="button"
                     onClick={async () => {
                       setSavingOverrides(true);
                       try {
@@ -376,7 +411,9 @@ export default function LocalModelsRoute() {
                         await updateModelOverrides(next);
                         setOverrides(next);
                       } catch (err) {
-                        setOverrideError(err instanceof Error ? err.message : "Failed to delete override");
+                        setOverrideError(
+                          err instanceof Error ? err.message : "Failed to delete override",
+                        );
                       } finally {
                         setSavingOverrides(false);
                       }
@@ -401,11 +438,16 @@ export default function LocalModelsRoute() {
             className={fieldClassName}
           />
           <button
+            type="button"
             onClick={() => {
               if (!newModelId.trim()) return;
               setEditingOverrides((prev) => ({
                 ...prev,
-                [newModelId.trim()]: { ttl: undefined, contextWindow: undefined, concurrencyLimit: undefined },
+                [newModelId.trim()]: {
+                  ttl: undefined,
+                  contextWindow: undefined,
+                  concurrencyLimit: undefined,
+                },
               }));
               setNewModelId("");
             }}

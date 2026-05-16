@@ -1,0 +1,80 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/26-router-runtime-difficulty-guided-routing/role-model-router/apps/runtime-host-bridge[39m
+
+(node:100296) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [31mΓ¥»[39m test/index.test.ts [2m([22m[2m28 tests[22m[2m | [22m[31m2 failed[39m[2m | [22m[33m26 skipped[39m[2m)[22m[32m 36[2mms[22m[39m
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mcreates a stable model-list response grouped by model id
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mcreates alias entries in the model-list response alongside real models
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mmaps a chat-completions request into role-model routing and execution inputs
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mmaps an alias chat-completions request into a pooled endpoint allow-list and alias diagnostics
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mkeeps exact-model routing unchanged when aliases are configured
+[31m   [31m├ù[31m runtime-host-bridge[2m > [22mmaps a difficulty-mode alias chat request into a gated allow-list and difficulty diagnostics[39m[32m 32[2mms[22m[39m
+[31m     ΓåÆ expected 'balanced' to be 'quality' // Object.is equality[39m
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mmaps an alias responses request into a pooled endpoint allow-list and alias diagnostics
+[31m   [31m├ù[31m runtime-host-bridge[2m > [22mmaps a difficulty-mode responses request into an easy strategy and keeps eligible endpoints[39m[32m 2[2mms[22m[39m
+[31m     ΓåÆ expected 'balanced' to be 'cost' // Object.is equality[39m
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mprefers a configured alias in downstream OpenAI provider config
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mserves health and model-list endpoints
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mserves alias entries in model-list and downstream provider config from runtime config
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mserves preserved host observability and vendor-facing utility endpoints
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mserves runtime control-plane summary, provider, account, and endpoint routes
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mserves canonical telemetry summary, comparison, and recent request routes
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mserves downstream OpenAI-compatible provider metadata for consumer apps
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mserves chat-completions responses with role-model execution metadata
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mserves OpenAI-compatible SSE events for streaming responses requests
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22msurfaces tool calls on chat-completions responses when the backend returns them
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mstreams provider deltas through the bridge as they arrive
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mcreates a runtime backend that executes chat-completions through the real routing and adapter path
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mcreates a runtime backend that persists structured request and endpoint inspection state
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mpersists alias-resolution diagnostics for runtime-backed chat requests
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mcreates a runtime backend that exposes provider presets, runtime summary, and account upserts
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mexecutes chat-completions through an activated Kimi Code endpoint
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mcreates a runtime backend that executes responses through the real routing and adapter path
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mserves structured request and endpoint inspection routes through the bridge server
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mstreams canonical telemetry updates over SSE after new requests are persisted
+   [2m[90mΓåô[39m[22m runtime-host-bridge[2m > [22mresolves bridge server options from explicit values and defaults
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 2 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/index.test.ts > runtime-host-bridge > maps a difficulty-mode alias chat request into a gated allow-list and difficulty diagnostics
+AssertionError: expected 'balanced' to be 'quality' // Object.is equality
+
+Expected: "quality"
+Received: "balanced"
+
+ Γ¥» test/index.test.ts:487:44
+    485|     );
+    486| 
+    487|     expect(result.routingRequest.strategy).toBe("quality");
+       |                                            ^
+    488|     expect(result.routingRequest.allowEndpoints).toEqual([
+    489|       "anthropic.team.shared.us-east-1.default",
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/2]ΓÄ»
+
+ FAIL  test/index.test.ts > runtime-host-bridge > maps a difficulty-mode responses request into an easy strategy and keeps eligible endpoints
+AssertionError: expected 'balanced' to be 'cost' // Object.is equality
+
+Expected: "cost"
+Received: "balanced"
+
+ Γ¥» test/index.test.ts:620:44
+    618|     );
+    619| 
+    620|     expect(result.routingRequest.strategy).toBe("cost");
+       |                                            ^
+    621|     expect(result.routingRequest.allowEndpoints).toEqual([
+    622|       "anthropic.team.shared.us-east-1.default",
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[2/2]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m2 failed[39m[22m[2m | [22m[33m26 skipped[39m[90m (28)[39m
+[2m   Start at [22m 20:44:48
+[2m   Duration [22m 1.49s[2m (transform 563ms, setup 0ms, collect 778ms, tests 36ms, environment 0ms, prepare 253ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\26-router-runtime-difficulty-guided-routing\role-model-router\apps\runtime-host-bridge:
+ΓÇëERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓÇë Command failed with exit code 1: vitest run test/index.test.ts -t difficulty-mode

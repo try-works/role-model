@@ -1,0 +1,18 @@
+ M ../.agents/skills/recursive-mode/scripts/__pycache__/lint-recursive-run.cpython-314.pyc
+ M ../.recursive/run/27-router-runtime-difficulty-learning-cache/00-requirements.md
+ M ../.recursive/run/27-router-runtime-difficulty-learning-cache/00-worktree.md
+ M apps/runtime-host-bridge/src/index.ts
+ M apps/runtime-host-bridge/src/unified-runtime-config.ts
+ M apps/runtime-host-bridge/src/validate-vendors.ts
+ M apps/runtime-host-bridge/test/index.test.ts
+ M apps/runtime-host-bridge/test/unified-runtime-config.test.ts
+ M apps/runtime-host-bridge/test/validate-vendors.test.ts
+ M packages/profile-aggregator/src/index.ts
+ M packages/runtime-observability/src/index.ts
+ M packages/runtime-observability/test/index.test.ts
+ M packages/sqlite-memory/src/index.ts
+ M packages/sqlite-memory/test/index.test.ts
+?? ../.recursive/run/27-router-runtime-difficulty-learning-cache/01-as-is.md
+?? ../.recursive/run/27-router-runtime-difficulty-learning-cache/02-to-be-plan.md
+?? ../.recursive/run/27-router-runtime-difficulty-learning-cache/03-implementation-summary.md
+?? ../.recursive/run/27-router-runtime-difficulty-learning-cache/evidence/

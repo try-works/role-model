@@ -1,0 +1,22 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/28-router-runtime-controller-guided-routing/role-model-router/apps/runtime-host-bridge[39m
+
+(node:53596) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [32mΓ£ô[39m test/index.test.ts [2m([22m[2m38 tests[22m[2m)[22m[33m 8761[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m runtime-host-bridge[2m > [22mpersists alias-resolution diagnostics for runtime-backed chat requests [33m 317[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m runtime-host-bridge[2m > [22mpersists difficulty-routing diagnostics for runtime-backed chat requests [33m 318[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m runtime-host-bridge[2m > [22mallows an observed max-difficulty override when bucketed performance supports a harder request [33m 323[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m runtime-host-bridge[2m > [22mroutes hard requests using bucketed observed profiles and records the selected difficulty bucket [33m 350[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m runtime-host-bridge[2m > [22muses the configured remote classifier result for difficulty-mode runtime-backed chat requests [33m 317[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m runtime-host-bridge[2m > [22mfalls back deterministically when the configured classifier times out [33m 380[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m runtime-host-bridge[2m > [22mreuses cached difficulty classification for repeated requests in the same conversation when invalidation thresholds are not exceeded [33m 355[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m runtime-host-bridge[2m > [22mreports cache invalidation reasons before reclassifying a repeated request [33m 374[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m runtime-host-bridge[2m > [22mcreates a runtime backend that exposes provider presets, runtime summary, and account upserts [33m 354[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m runtime-host-bridge[2m > [22mstreams canonical telemetry updates over SSE after new requests are persisted [33m 4181[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m38 passed[39m[22m[90m (38)[39m
+[2m   Start at [22m 23:43:35
+[2m   Duration [22m 10.20s[2m (transform 592ms, setup 0ms, collect 789ms, tests 8.76s, environment 0ms, prepare 235ms)[22m
+

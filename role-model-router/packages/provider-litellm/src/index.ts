@@ -5,10 +5,7 @@ import type {
   ProviderAdapterNormalizeContext,
   ProviderCapabilityMatrix,
 } from "@role-model-router/adapter-execution";
-import {
-  buildOpenAIRequest,
-  normalizeOpenAIResponse,
-} from "@role-model-router/provider-openai";
+import { buildOpenAIRequest, normalizeOpenAIResponse } from "@role-model-router/provider-openai";
 
 function readCachedTokens(body: unknown): number {
   if (!body || typeof body !== "object") {
@@ -19,7 +16,9 @@ function readCachedTokens(body: unknown): number {
     return 0;
   }
   const promptDetails =
-    "prompt_tokens_details" in usage && usage.prompt_tokens_details && typeof usage.prompt_tokens_details === "object"
+    "prompt_tokens_details" in usage &&
+    usage.prompt_tokens_details &&
+    typeof usage.prompt_tokens_details === "object"
       ? usage.prompt_tokens_details
       : undefined;
   if (
@@ -88,9 +87,7 @@ function getLiteLLMCapabilities(hasStructuredOutput: boolean): ProviderCapabilit
   };
 }
 
-export function createLiteLLMProviderAdapter(
-  adapterFamily = "litellm-proxy",
-): ProviderAdapter {
+export function createLiteLLMProviderAdapter(adapterFamily = "litellm-proxy"): ProviderAdapter {
   return {
     adapterFamily,
     negotiateCapabilities: ({ executionRequest }: ProviderAdapterExecutionContext) =>
@@ -105,7 +102,8 @@ export function createLiteLLMProviderAdapter(
         input.responseCapture.vendorMetadata?.cacheUsed ??
         cacheReadTokens > 0;
       const costUsd =
-        readResponseCost(input.responseCapture.body) ?? input.responseCapture.vendorMetadata?.costUsd;
+        readResponseCost(input.responseCapture.body) ??
+        input.responseCapture.vendorMetadata?.costUsd;
 
       return {
         ...normalized,

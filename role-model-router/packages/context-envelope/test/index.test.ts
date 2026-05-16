@@ -1,11 +1,15 @@
+import { mkdtemp, readFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { mkdtemp, readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 
 import { describe, expect, test } from "vitest";
 
-import { initializeSqliteMemory, persistContinuitySnapshot, readConversationContinuity } from "@role-model-router/sqlite-memory";
+import {
+  initializeSqliteMemory,
+  persistContinuitySnapshot,
+  readConversationContinuity,
+} from "@role-model-router/sqlite-memory";
 
 import { assembleContextEnvelope } from "../src/index.ts";
 
@@ -96,7 +100,9 @@ describe("assembleContextEnvelope", () => {
     expect(result.sessionId).toBe("session-alpha");
     expect(result.conversationId).toBe("conversation-main");
     expect(result.selectedTurns.map((turn) => turn.turnId)).toEqual(["turn-003", "turn-004"]);
-    expect(result.selectedArtifacts.map((artifact) => artifact.artifactId)).toEqual(["artifact-summary"]);
+    expect(result.selectedArtifacts.map((artifact) => artifact.artifactId)).toEqual([
+      "artifact-summary",
+    ]);
     expect(result.latestHandoff).toEqual(
       expect.objectContaining({
         handoffId: "handoff-1",

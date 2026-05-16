@@ -1,0 +1,67 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/30-router-runtime-strategy-convergence-e2e/role-model-router/apps/runtime-ui[39m
+
+ [31mΓ¥»[39m app/lib/view-models.test.ts [2m([22m[2m14 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 85[2mms[22m[39m
+   [32mΓ£ô[39m buildProviderCards[2m > [22mturns provider variants and account state into provider cards for the onboarding page[32m 2[2mms[22m[39m
+   [32mΓ£ô[39m summarizeRuntimeStats[2m > [22mcreates stable dashboard stat cards from the runtime summary counts[32m 0[2mms[22m[39m
+   [32mΓ£ô[39m buildWorkbenchModelOptions[2m > [22msorts and deduplicates model options for the workbench composer[32m 14[2mms[22m[39m
+   [32mΓ£ô[39m buildConfiguredModelCards[2m > [22mbuilds unified local and remote model cards with controller and tooling state[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m buildModelCatalogRows[2m > [22mturns the runtime model catalog into sorted rows with endpoint ids[32m 0[2mms[22m[39m
+   [32mΓ£ô[39m buildEndpointCatalogRows[2m > [22mturns the runtime endpoint registry into stable endpoint catalog rows[32m 0[2mms[22m[39m
+   [32mΓ£ô[39m buildAccountModelCatalogIds[2m > [22mprefers provider catalog order while constraining to account-allowed models[32m 0[2mms[22m[39m
+   [32mΓ£ô[39m buildConfiguredProviderRows[2m > [22msummarizes configured providers and models from saved accounts plus live endpoints[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m summarizeWorkbenchResult[2m > [22mextracts text, tool calls, tool executions, and usage for the studio inspector[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m buildDownstreamProviderGuide[2m > [22mcreates stable connection rows and examples for downstream OpenAI-compatible clients[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m buildActivitySummary[2m > [22mturns raw activity metrics into operator summary cards and ledger rows[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m telemetry view models[2m > [22mcreates stable summary cards from the canonical telemetry summary[32m 0[2mms[22m[39m
+   [32mΓ£ô[39m telemetry view models[2m > [22mbuilds telemetry comparison cards for local and remote endpoint rows[32m 0[2mms[22m[39m
+[31m   [31m├ù[31m telemetry view models[2m > [22mbuilds telemetry-backed request ledger rows in newest-first order[39m[32m 61[2mms[22m[39m
+[31m     ΓåÆ expected [ ΓÇª(2) ] to deeply equal [ ObjectContaining{ΓÇª}, ΓÇª(1) ][39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  app/lib/view-models.test.ts > telemetry view models > builds telemetry-backed request ledger rows in newest-first order
+AssertionError: expected [ ΓÇª(2) ] to deeply equal [ ObjectContaining{ΓÇª}, ΓÇª(1) ]
+
+- Expected
++ Received
+
+@@ -1,14 +1,16 @@
+  [
+-   ObjectContaining {
++   {
+      "cacheLabel": "Cache hit",
+      "costLabel": "$0.0042 actual",
++     "createdAtLabel": "Feb 02, 10:40 AM",
++     "endpointId": "openai.personal.primary.us-east-1.fast",
+      "finishReasonLabel": "length",
+      "latencyLabel": "880 ms",
++     "modelId": "openai/gpt-4.1-mini-fast",
+      "providerFamilyLabel": "ai-sdk-openai",
+      "requestId": "req-002",
+-     "routingDecisionLabel": "route-002",
+      "sourceLabel": "Remote",
+      "statusLabel": "504 upstream_timeout",
+      "streamLabel": "4 text deltas / 1 tool / 2 args",
+      "tokenLabel": "80 tokens",
+    },
+
+ Γ¥» app/lib/view-models.test.ts:690:7
+    688|         },
+    689|       ]),
+    690|     ).toEqual([
+       |       ^
+    691|       expect.objectContaining({
+    692|         requestId: "req-002",
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m13 passed[39m[22m[90m (14)[39m
+[2m   Start at [22m 04:11:16
+[2m   Duration [22m 814ms[2m (transform 64ms, setup 0ms, collect 83ms, tests 85ms, environment 0ms, prepare 215ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\30-router-runtime-strategy-convergence-e2e\role-model-router\apps\runtime-ui:
+ΓÇëERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓÇë Command failed with exit code 1: vitest run app/lib/view-models.test.ts

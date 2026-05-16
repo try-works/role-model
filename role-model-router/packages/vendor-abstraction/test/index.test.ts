@@ -31,7 +31,10 @@ describe("vendor-abstraction", () => {
 
   test("creates a normalized vendor-not-configured error for inactive vendor modes", () => {
     expect(
-      createVendorNotConfiguredError("llama-swap", "Configure llama_swap.models to enable local execution."),
+      createVendorNotConfiguredError(
+        "llama-swap",
+        "Configure llama_swap.models to enable local execution.",
+      ),
     ).toEqual({
       errorClass: "VENDOR_NOT_CONFIGURED",
       vendorId: "llama-swap",

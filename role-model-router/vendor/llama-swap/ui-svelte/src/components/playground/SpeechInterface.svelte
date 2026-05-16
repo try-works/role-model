@@ -1,206 +1,217 @@
 <script lang="ts">
-  import { models } from "../../stores/api";
-  import { persistentStore } from "../../stores/persistent";
-  import { generateSpeech } from "../../lib/speechApi";
-  import { playgroundStores } from "../../stores/playgroundActivity";
-  import ModelSelector from "./ModelSelector.svelte";
-  import ExpandableTextarea from "./ExpandableTextarea.svelte";
+import { generateSpeech } from "../../lib/speechApi";
+import { models } from "../../stores/api";
+import { persistentStore } from "../../stores/persistent";
+import { playgroundStores } from "../../stores/playgroundActivity";
+import ExpandableTextarea from "./ExpandableTextarea.svelte";
+import ModelSelector from "./ModelSelector.svelte";
 
-  const selectedModelStore = persistentStore<string>("playground-speech-model", "");
-  const selectedVoiceStore = persistentStore<string>("playground-speech-voice", "coral");
-  const autoPlayStore = persistentStore<boolean>("playground-speech-autoplay", false);
+const selectedModelStore = persistentStore<string>("playground-speech-model", "");
+const selectedVoiceStore = persistentStore<string>("playground-speech-voice", "coral");
+const autoPlayStore = persistentStore<boolean>("playground-speech-autoplay", false);
 
-  let inputText = $state("");
-  let isGenerating = $state(false);
-  let generatedAudioUrl = $state<string | null>(null);
-  let generatedVoice = $state<string | null>(null);
-  let generatedTimestamp = $state<Date | null>(null);
-  let error = $state<string | null>(null);
-  let abortController = $state<AbortController | null>(null);
-  let audioElement = $state<HTMLAudioElement | null>(null);
-  let availableVoices = $state<string[]>(["coral", "alloy", "echo", "fable", "onyx", "nova", "shimmer"]);
-  let isLoadingVoices = $state(false);
+let inputText = $state("");
+let isGenerating = $state(false);
+let generatedAudioUrl = $state<string | null>(null);
+let generatedVoice = $state<string | null>(null);
+let generatedTimestamp = $state<Date | null>(null);
+let error = $state<string | null>(null);
+let abortController = $state<AbortController | null>(null);
+const audioElement = $state<HTMLAudioElement | null>(null);
+let availableVoices = $state<string[]>([
+  "coral",
+  "alloy",
+  "echo",
+  "fable",
+  "onyx",
+  "nova",
+  "shimmer",
+]);
+let isLoadingVoices = $state(false);
 
-  const defaultVoices = ["coral", "alloy", "echo", "fable", "onyx", "nova", "shimmer"];
-  const CACHE_KEY = "playground-speech-voices-cache";
+const defaultVoices = ["coral", "alloy", "echo", "fable", "onyx", "nova", "shimmer"];
+const CACHE_KEY = "playground-speech-voices-cache";
 
-  function getVoicesCache(): Record<string, string[]> {
-    if (typeof window === "undefined") return {};
-    try {
-      const saved = localStorage.getItem(CACHE_KEY);
-      return saved ? JSON.parse(saved) : {};
-    } catch {
-      return {};
+function getVoicesCache(): Record<string, string[]> {
+  if (typeof window === "undefined") return {};
+  try {
+    const saved = localStorage.getItem(CACHE_KEY);
+    return saved ? JSON.parse(saved) : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveVoicesCache(cache: Record<string, string[]>) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
+  } catch (e) {
+    console.error("Error saving voices cache", e);
+  }
+}
+
+const hasModels = $derived($models.some((m) => !m.unlisted));
+
+let isInitialLoad = $state(true);
+
+$effect(() => {
+  playgroundStores.speechGenerating.set(isGenerating);
+});
+
+// On page load, restore cached voices for the selected model if available
+$effect(() => {
+  const model = $selectedModelStore;
+
+  if (isInitialLoad) {
+    isInitialLoad = false;
+    // If we have cached voices for this model, use them
+    const cache = getVoicesCache();
+    if (model && cache[model]) {
+      availableVoices = cache[model];
     }
   }
+});
 
-  function saveVoicesCache(cache: Record<string, string[]>) {
-    if (typeof window === "undefined") return;
-    try {
-      localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
-    } catch (e) {
-      console.error("Error saving voices cache", e);
-    }
-  }
+async function refreshVoices() {
+  const model = $selectedModelStore;
+  if (!model || isLoadingVoices) return;
 
-  let hasModels = $derived($models.some((m) => !m.unlisted));
+  isLoadingVoices = true;
 
-  let isInitialLoad = $state(true);
-
-  $effect(() => {
-    playgroundStores.speechGenerating.set(isGenerating);
-  });
-
-  // On page load, restore cached voices for the selected model if available
-  $effect(() => {
-    const model = $selectedModelStore;
-
-    if (isInitialLoad) {
-      isInitialLoad = false;
-      // If we have cached voices for this model, use them
-      const cache = getVoicesCache();
-      if (model && cache[model]) {
-        availableVoices = cache[model];
-      }
-    }
-  });
-
-  async function refreshVoices() {
-    const model = $selectedModelStore;
-    if (!model || isLoadingVoices) return;
-
-    isLoadingVoices = true;
-
-    try {
-      const response = await fetch(`/v1/audio/voices?model=${encodeURIComponent(model)}`);
-      if (!response.ok) {
-        // Fall back to default voices if API call fails
-        availableVoices = defaultVoices;
-        const cache = getVoicesCache();
-        cache[model] = defaultVoices;
-        saveVoicesCache(cache);
-        selectedVoiceStore.set(defaultVoices[0]);
-        return;
-      }
-      const data = await response.json();
-      // Expect response to be an array of voice strings or an object with a voices array
-      const voices = Array.isArray(data) ? data : (data.voices || defaultVoices);
-      const newVoices = voices.length > 0 ? voices : defaultVoices;
-
-      availableVoices = newVoices;
-      const cache = getVoicesCache();
-      cache[model] = newVoices;
-      saveVoicesCache(cache);
-
-      // Reset to first available voice
-      selectedVoiceStore.set(newVoices[0]);
-    } catch {
-      // Fall back to default voices on error
+  try {
+    const response = await fetch(`/v1/audio/voices?model=${encodeURIComponent(model)}`);
+    if (!response.ok) {
+      // Fall back to default voices if API call fails
       availableVoices = defaultVoices;
       const cache = getVoicesCache();
       cache[model] = defaultVoices;
       saveVoicesCache(cache);
       selectedVoiceStore.set(defaultVoices[0]);
-    } finally {
-      isLoadingVoices = false;
+      return;
     }
+    const data = await response.json();
+    // Expect response to be an array of voice strings or an object with a voices array
+    const voices = Array.isArray(data) ? data : data.voices || defaultVoices;
+    const newVoices = voices.length > 0 ? voices : defaultVoices;
+
+    availableVoices = newVoices;
+    const cache = getVoicesCache();
+    cache[model] = newVoices;
+    saveVoicesCache(cache);
+
+    // Reset to first available voice
+    selectedVoiceStore.set(newVoices[0]);
+  } catch {
+    // Fall back to default voices on error
+    availableVoices = defaultVoices;
+    const cache = getVoicesCache();
+    cache[model] = defaultVoices;
+    saveVoicesCache(cache);
+    selectedVoiceStore.set(defaultVoices[0]);
+  } finally {
+    isLoadingVoices = false;
   }
+}
 
-  function handleVoiceChange(event: Event) {
-    const value = (event.target as HTMLSelectElement).value;
-    if (value === "(refresh)") {
-      refreshVoices();
-    } else {
-      selectedVoiceStore.set(value);
-    }
+function handleVoiceChange(event: Event) {
+  const value = (event.target as HTMLSelectElement).value;
+  if (value === "(refresh)") {
+    refreshVoices();
+  } else {
+    selectedVoiceStore.set(value);
   }
+}
 
-  // Auto-play effect when new audio is generated
-  $effect(() => {
-    if (generatedAudioUrl && $autoPlayStore && audioElement) {
-      audioElement.load();
-      audioElement.play().catch(() => {
-        // Ignore auto-play errors (e.g., browser policy blocks)
-      });
-    }
-  });
-
-  async function generate() {
-    const trimmedText = inputText.trim();
-    if (!trimmedText || !$selectedModelStore || isGenerating) return;
-
-    isGenerating = true;
-    error = null;
-    abortController = new AbortController();
-
-    try {
-      const audioBlob = await generateSpeech(
-        $selectedModelStore,
-        trimmedText,
-        $selectedVoiceStore,
-        abortController.signal
-      );
-
-      // Revoke previous URL to prevent memory leaks
-      if (generatedAudioUrl) {
-        URL.revokeObjectURL(generatedAudioUrl);
-      }
-
-      // Create object URL for the audio blob and store metadata
-      generatedAudioUrl = URL.createObjectURL(audioBlob);
-      generatedVoice = $selectedVoiceStore;
-      generatedTimestamp = new Date();
-    } catch (err) {
-      if (err instanceof Error && err.name === "AbortError") {
-        // User cancelled
-      } else {
-        error = err instanceof Error ? err.message : "An error occurred";
-      }
-    } finally {
-      isGenerating = false;
-      abortController = null;
-    }
-  }
-
-  function cancelGeneration() {
-    abortController?.abort();
-  }
-
-  function clearInput() {
-    inputText = "";
-  }
-
-  function downloadAudio() {
-    if (!generatedAudioUrl) return;
-
-    const timestamp = (generatedTimestamp || new Date()).toISOString().replace(/[:.]/g, '-').slice(0, -5);
-    const voice = generatedVoice || 'speech';
-    const filename = `${voice}-${timestamp}.mp3`;
-
-    const a = document.createElement('a');
-    a.href = generatedAudioUrl;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  }
-
-  function formatTimestamp(date: Date): string {
-    return date.toLocaleString(undefined, {
-      month: 'short',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
+// Auto-play effect when new audio is generated
+$effect(() => {
+  if (generatedAudioUrl && $autoPlayStore && audioElement) {
+    audioElement.load();
+    audioElement.play().catch(() => {
+      // Ignore auto-play errors (e.g., browser policy blocks)
     });
   }
+});
 
-  function handleKeyDown(event: KeyboardEvent) {
-    if (event.key === "Enter" && !event.shiftKey) {
-      event.preventDefault();
-      generate();
+async function generate() {
+  const trimmedText = inputText.trim();
+  if (!trimmedText || !$selectedModelStore || isGenerating) return;
+
+  isGenerating = true;
+  error = null;
+  abortController = new AbortController();
+
+  try {
+    const audioBlob = await generateSpeech(
+      $selectedModelStore,
+      trimmedText,
+      $selectedVoiceStore,
+      abortController.signal,
+    );
+
+    // Revoke previous URL to prevent memory leaks
+    if (generatedAudioUrl) {
+      URL.revokeObjectURL(generatedAudioUrl);
     }
+
+    // Create object URL for the audio blob and store metadata
+    generatedAudioUrl = URL.createObjectURL(audioBlob);
+    generatedVoice = $selectedVoiceStore;
+    generatedTimestamp = new Date();
+  } catch (err) {
+    if (err instanceof Error && err.name === "AbortError") {
+      // User cancelled
+    } else {
+      error = err instanceof Error ? err.message : "An error occurred";
+    }
+  } finally {
+    isGenerating = false;
+    abortController = null;
   }
+}
+
+function cancelGeneration() {
+  abortController?.abort();
+}
+
+function clearInput() {
+  inputText = "";
+}
+
+function downloadAudio() {
+  if (!generatedAudioUrl) return;
+
+  const timestamp = (generatedTimestamp || new Date())
+    .toISOString()
+    .replace(/[:.]/g, "-")
+    .slice(0, -5);
+  const voice = generatedVoice || "speech";
+  const filename = `${voice}-${timestamp}.mp3`;
+
+  const a = document.createElement("a");
+  a.href = generatedAudioUrl;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+function formatTimestamp(date: Date): string {
+  return date.toLocaleString(undefined, {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+}
+
+function handleKeyDown(event: KeyboardEvent) {
+  if (event.key === "Enter" && !event.shiftKey) {
+    event.preventDefault();
+    generate();
+  }
+}
 </script>
 
 <div class="flex flex-col h-full">

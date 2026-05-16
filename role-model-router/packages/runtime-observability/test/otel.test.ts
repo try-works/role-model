@@ -1,6 +1,6 @@
+import { mkdtemp, readFile, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { describe, expect, test } from "vitest";
@@ -21,7 +21,9 @@ describe("runtime-observability otel mapping", () => {
     const runtimeModuleImport = import(
       pathToFileURL(path.join(__dirname, "..", "src", "index.js")).href
     );
-    const otelModuleImport = import(pathToFileURL(path.join(__dirname, "..", "src", "otel.js")).href);
+    const otelModuleImport = import(
+      pathToFileURL(path.join(__dirname, "..", "src", "otel.js")).href
+    );
     await expect(runtimeModuleImport).resolves.toHaveProperty("createRuntimeObservationBundle");
     await expect(otelModuleImport).resolves.toHaveProperty("createOpenTelemetryGenAiExport");
 
@@ -34,13 +36,15 @@ describe("runtime-observability otel mapping", () => {
         createRuntimeObservationBundle(input: Record<string, unknown>): Record<string, unknown>;
       };
       const otel = (await otelModuleImport) as {
-        createOpenTelemetryGenAiExport(
-          bundle: Record<string, unknown>,
-        ): { traceId: string; spanId: string; attributes: Record<string, unknown> };
+        createOpenTelemetryGenAiExport(bundle: Record<string, unknown>): {
+          traceId: string;
+          spanId: string;
+          attributes: Record<string, unknown>;
+        };
       };
       const validation = await runRuntimeAdapterValidation({
         repoRoot,
-      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+        fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
         runtimeStateRoot,
         scopeId: "runtime-observability-otel-test",
       });

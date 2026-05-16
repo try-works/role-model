@@ -3,7 +3,7 @@ import type { AudioTranscriptionResponse } from "./types";
 export async function transcribeAudio(
   model: string,
   file: File,
-  signal?: AbortSignal
+  signal?: AbortSignal,
 ): Promise<AudioTranscriptionResponse> {
   const formData = new FormData();
   formData.append("file", file);

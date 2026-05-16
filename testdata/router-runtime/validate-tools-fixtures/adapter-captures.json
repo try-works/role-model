@@ -1,0 +1,7 @@
+{
+  "byEndpointId": {
+    "test.capture.tool-v1": {
+      "responseFixture": "adapter-test-tool-response.json"
+    }
+  }
+}

@@ -15,7 +15,7 @@ import type {
 } from "./runtime-api";
 
 function toTitleLabel(modelId: string): string {
-  const raw = modelId.includes("/") ? modelId.split("/").at(-1) ?? modelId : modelId;
+  const raw = modelId.includes("/") ? (modelId.split("/").at(-1) ?? modelId) : modelId;
   return raw
     .replace(/[_-]+/g, " ")
     .split(" ")
@@ -33,7 +33,11 @@ function toTitleLabel(modelId: string): string {
 }
 
 function uniqueStrings(values: readonly (string | null | undefined)[]): string[] {
-  return [...new Set(values.filter((value): value is string => typeof value === "string" && value.length > 0))];
+  return [
+    ...new Set(
+      values.filter((value): value is string => typeof value === "string" && value.length > 0),
+    ),
+  ];
 }
 
 function sortLexical(left: string, right: string): number {
@@ -41,7 +45,9 @@ function sortLexical(left: string, right: string): number {
 }
 
 function formatTokenCount(value: number | null | undefined): string {
-  return typeof value === "number" && value > 0 ? `${value.toLocaleString("en-US")} tokens` : "Unknown";
+  return typeof value === "number" && value > 0
+    ? `${value.toLocaleString("en-US")} tokens`
+    : "Unknown";
 }
 
 function formatPricingValue(value: RuntimeModelRecord["pricing"]): string {
@@ -91,7 +97,11 @@ export function summarizeRuntimeStats(
 export function buildCredentialReadinessRows(
   summary: Pick<RuntimeSummary, "readinessSummary">,
 ): Array<{
-  key: "pending-device-authorization" | "credentials-missing" | "connected-without-endpoint" | "ready";
+  key:
+    | "pending-device-authorization"
+    | "credentials-missing"
+    | "connected-without-endpoint"
+    | "ready";
   label: string;
   value: number;
   tone: "warning" | "success" | "neutral";
@@ -102,7 +112,11 @@ export function buildCredentialReadinessRows(
   }
 
   const rows: Array<{
-    key: "pending-device-authorization" | "credentials-missing" | "connected-without-endpoint" | "ready";
+    key:
+      | "pending-device-authorization"
+      | "credentials-missing"
+      | "connected-without-endpoint"
+      | "ready";
     label: string;
     value: number;
     tone: "warning" | "success" | "neutral";
@@ -286,6 +300,7 @@ export function buildTelemetryRequestRows(
     Pick<
       RuntimeTelemetryRequestRecord,
       | "requestId"
+      | "routingDecisionId"
       | "endpointId"
       | "modelId"
       | "sourceType"
@@ -313,6 +328,7 @@ export function buildTelemetryRequestRows(
   >,
 ): Array<{
   requestId: string;
+  routingDecisionLabel: string;
   endpointId: string;
   modelId: string | null | undefined;
   sourceLabel: string;
@@ -330,11 +346,13 @@ export function buildTelemetryRequestRows(
     .sort((left, right) => right.createdAtMs - left.createdAtMs)
     .map((row) => ({
       requestId: row.requestId,
+      routingDecisionLabel: row.routingDecisionId ?? "n/a",
       endpointId: row.endpointId,
       modelId: row.modelId,
       sourceLabel: formatSourceLabel(row.sourceType),
       statusLabel: `${row.statusCode ?? 0} ${row.errorClass ?? "ok"}`,
-      providerFamilyLabel: row.providerFamily ?? row.providerKind ?? row.providerId ?? "unknown provider",
+      providerFamilyLabel:
+        row.providerFamily ?? row.providerKind ?? row.providerId ?? "unknown provider",
       finishReasonLabel: row.finishReason ?? "unknown",
       cacheLabel: summarizeCachePosture({
         promptCacheSupported: row.promptCacheSupported,
@@ -342,7 +360,8 @@ export function buildTelemetryRequestRows(
         promptCacheUsed: row.promptCacheUsed,
       }),
       streamLabel: summarizeStreamLabel(row),
-      latencyLabel: row.latencyMs !== null && row.latencyMs !== undefined ? `${row.latencyMs} ms` : "n/a",
+      latencyLabel:
+        row.latencyMs !== null && row.latencyMs !== undefined ? `${row.latencyMs} ms` : "n/a",
       tokenLabel: `${row.totalTokens ?? 0} tokens`,
       costLabel:
         typeof row.actualCostUsd === "number" && row.actualCostUsd > 0
@@ -370,6 +389,79 @@ export function buildWorkbenchModelOptions(
     }));
 }
 
+export function buildWorkbenchEndpointOptions(input: {
+  readonly modelId: string;
+  readonly models: ReadonlyArray<
+    Pick<RuntimeModelRecord, "id"> & Partial<Pick<RuntimeModelRecord, "endpoint_ids">>
+  >;
+  readonly endpoints: ReadonlyArray<
+    Pick<
+      RuntimeEndpoint,
+      | "endpointId"
+      | "modelId"
+      | "providerId"
+      | "providerAccountId"
+      | "status"
+      | "healthStatus"
+      | "sourceType"
+    >
+  >;
+  readonly accounts: ReadonlyArray<
+    Pick<RuntimeAccount, "providerAccountId" | "providerId"> &
+      Partial<Pick<RuntimeAccount, "credentialRef">>
+  >;
+}): Array<{ label: string; value: string }> {
+  const model = input.models.find((entry) => entry.id === input.modelId);
+  const fallbackEndpointIds = input.endpoints
+    .filter((endpoint) => endpoint.modelId === input.modelId)
+    .map((endpoint) => endpoint.endpointId);
+  const endpointIds = uniqueStrings(
+    model?.endpoint_ids?.length ? model.endpoint_ids : fallbackEndpointIds,
+  );
+  const endpointsById = new Map(input.endpoints.map((endpoint) => [endpoint.endpointId, endpoint]));
+  const accountsById = new Map(
+    input.accounts.map((account) => [account.providerAccountId, account]),
+  );
+  const toCredentialPriority = (endpointId: string): number => {
+    const accountId = endpointsById.get(endpointId)?.providerAccountId;
+    const backend = accountId ? accountsById.get(accountId)?.credentialRef?.backend : undefined;
+    if (backend === "local-file" || backend === "local-encrypted-file") {
+      return 0;
+    }
+    if (backend === "env") {
+      return 1;
+    }
+    return 2;
+  };
+  const toHealthPriority = (endpointId: string): number => {
+    const endpoint = endpointsById.get(endpointId);
+    if (endpoint?.healthStatus === "healthy") {
+      return 0;
+    }
+    if (endpoint?.status === "active") {
+      return 1;
+    }
+    return 2;
+  };
+
+  return endpointIds
+    .sort((left, right) => {
+      const credentialPriority = toCredentialPriority(left) - toCredentialPriority(right);
+      if (credentialPriority !== 0) {
+        return credentialPriority;
+      }
+      const healthPriority = toHealthPriority(left) - toHealthPriority(right);
+      if (healthPriority !== 0) {
+        return healthPriority;
+      }
+      return sortLexical(left, right);
+    })
+    .map((endpointId) => ({
+      label: endpointId,
+      value: endpointId,
+    }));
+}
+
 export function buildModelCatalogRows(
   models: ReadonlyArray<
     Pick<RuntimeModelRecord, "id"> & Partial<Pick<RuntimeModelRecord, "endpoint_ids">>
@@ -393,9 +485,7 @@ export function buildModelCatalogRows(
     .sort((left, right) => sortLexical(left.modelId, right.modelId));
 }
 
-export function buildEndpointCatalogRows(
-  endpoints: readonly RuntimeEndpoint[],
-): Array<{
+export function buildEndpointCatalogRows(endpoints: readonly RuntimeEndpoint[]): Array<{
   endpointId: string;
   modelId: string;
   providerLabel: string;
@@ -478,15 +568,23 @@ export function buildConfiguredProviderRows(input: {
 
   return providerIds.map((providerId) => {
     const providerAccounts = input.accounts.filter((account) => account.providerId === providerId);
-    const providerEndpoints = input.endpoints.filter((endpoint) => endpoint.providerId === providerId);
+    const providerEndpoints = input.endpoints.filter(
+      (endpoint) => endpoint.providerId === providerId,
+    );
     const pendingDeviceAuthorizationAccountIds = new Set(
       (input.deviceAuthorizations ?? [])
-        .filter((authorization) => authorization.providerId === providerId && authorization.status === "pending")
+        .filter(
+          (authorization) =>
+            authorization.providerId === providerId && authorization.status === "pending",
+        )
         .map((authorization) => authorization.providerAccountId),
     );
     const readyAccountIds = new Set(
       providerEndpoints
-        .filter((endpoint) => endpoint.status === "active" && typeof endpoint.providerAccountId === "string")
+        .filter(
+          (endpoint) =>
+            endpoint.status === "active" && typeof endpoint.providerAccountId === "string",
+        )
         .map((endpoint) => endpoint.providerAccountId as string),
     );
     let pendingDeviceAuthorizationCount = 0;
@@ -514,13 +612,24 @@ export function buildConfiguredProviderRows(input: {
 
     return {
       providerId,
-      accountIds: uniqueStrings(providerAccounts.map((account) => account.providerAccountId)).sort(sortLexical),
-      authModes: uniqueStrings(providerAccounts.map((account) => account.authMode)).sort(sortLexical),
-      configuredModels: uniqueStrings(providerAccounts.flatMap((account) => account.allowedModels ?? [])).sort(sortLexical),
-      endpointModels: uniqueStrings(providerEndpoints.map((endpoint) => endpoint.modelId)).sort(sortLexical),
+      accountIds: uniqueStrings(providerAccounts.map((account) => account.providerAccountId)).sort(
+        sortLexical,
+      ),
+      authModes: uniqueStrings(providerAccounts.map((account) => account.authMode)).sort(
+        sortLexical,
+      ),
+      configuredModels: uniqueStrings(
+        providerAccounts.flatMap((account) => account.allowedModels ?? []),
+      ).sort(sortLexical),
+      endpointModels: uniqueStrings(providerEndpoints.map((endpoint) => endpoint.modelId)).sort(
+        sortLexical,
+      ),
       endpointCount: providerEndpoints.length,
-      activeEndpointCount: providerEndpoints.filter((endpoint) => endpoint.status === "active").length,
-      healthStatuses: uniqueStrings(providerAccounts.map((account) => account.healthStatus)).sort(sortLexical),
+      activeEndpointCount: providerEndpoints.filter((endpoint) => endpoint.status === "active")
+        .length,
+      healthStatuses: uniqueStrings(providerAccounts.map((account) => account.healthStatus)).sort(
+        sortLexical,
+      ),
       pendingDeviceAuthorizationCount,
       credentialsMissingAccountCount,
       connectedWithoutEndpointCount,
@@ -529,9 +638,7 @@ export function buildConfiguredProviderRows(input: {
   });
 }
 
-export function buildDownstreamProviderGuide(
-  provider: RuntimeDownstreamOpenAIProviderConfig,
-): {
+export function buildDownstreamProviderGuide(provider: RuntimeDownstreamOpenAIProviderConfig): {
   connectionRows: Array<{ label: string; value: string }>;
   availableModels: string[];
   opencodeSteps: string[];
@@ -543,8 +650,12 @@ export function buildDownstreamProviderGuide(
   const recommendedModel = provider.setup.recommendedModel ?? provider.models[0]?.id ?? "model-id";
   const placeholderToken = provider.authentication.placeholderToken;
 
-  const baseUrlWithV1 = provider.baseUrl.endsWith("/v1") ? provider.baseUrl : `${provider.baseUrl}/v1`;
-  const baseUrlWithoutV1 = provider.baseUrl.endsWith("/v1") ? provider.baseUrl.slice(0, -3) : provider.baseUrl;
+  const baseUrlWithV1 = provider.baseUrl.endsWith("/v1")
+    ? provider.baseUrl
+    : `${provider.baseUrl}/v1`;
+  const baseUrlWithoutV1 = provider.baseUrl.endsWith("/v1")
+    ? provider.baseUrl.slice(0, -3)
+    : provider.baseUrl;
 
   return {
     connectionRows: [
@@ -553,7 +664,10 @@ export function buildDownstreamProviderGuide(
       { label: "Base URL (/v1 suffix)", value: baseUrlWithV1 },
       { label: "Models endpoint", value: provider.endpoints.models },
       { label: "Chat endpoint", value: provider.endpoints.chatCompletions },
-      { label: "Auth header", value: `${provider.authentication.headerName}: Bearer ${placeholderToken}` },
+      {
+        label: "Auth header",
+        value: `${provider.authentication.headerName}: Bearer ${placeholderToken}`,
+      },
     ],
     availableModels: provider.models.map((model) => model.id),
     opencodeSteps: [
@@ -594,7 +708,10 @@ export function buildConfiguredModelCards(input: {
   readonly endpoints: readonly RuntimeEndpoint[];
   readonly accounts: readonly RuntimeAccount[];
   readonly requests: readonly RuntimeRequestListItem[];
-  readonly controller?: Pick<RuntimeControllerAssignment, "endpointId" | "modelId"> & Partial<Pick<RuntimeControllerAssignment, "scope">> | null;
+  readonly controller?:
+    | (Pick<RuntimeControllerAssignment, "endpointId" | "modelId"> &
+        Partial<Pick<RuntimeControllerAssignment, "scope">>)
+    | null;
 }): Array<{
   modelId: string;
   displayName: string;
@@ -615,8 +732,8 @@ export function buildConfiguredModelCards(input: {
   return input.models
     .map((model) => {
       const endpoints = input.endpoints.filter((endpoint) => endpoint.modelId === model.id);
-      const endpointIds = [...new Set(endpoints.map((endpoint) => endpoint.endpointId))].sort((left, right) =>
-        left.localeCompare(right, "en"),
+      const endpointIds = [...new Set(endpoints.map((endpoint) => endpoint.endpointId))].sort(
+        (left, right) => left.localeCompare(right, "en"),
       );
       const roleIds = [
         ...new Set(
@@ -632,13 +749,16 @@ export function buildConfiguredModelCards(input: {
       ];
       const sourceTypes = [
         ...new Set(
-          endpoints.map((endpoint) =>
-            endpoint.sourceType ??
-            (endpoint.servingSource?.toLowerCase().includes("local") ? "local" : "remote"),
+          endpoints.map(
+            (endpoint) =>
+              endpoint.sourceType ??
+              (endpoint.servingSource?.toLowerCase().includes("local") ? "local" : "remote"),
           ),
         ),
       ].sort((left, right) => left.localeCompare(right, "en"));
-      const requestCount = input.requests.filter((request) => endpointIds.includes(request.endpointId ?? "")).length;
+      const requestCount = input.requests.filter((request) =>
+        endpointIds.includes(request.endpointId ?? ""),
+      ).length;
       const controllerState: "active" | "eligible" | "inactive" =
         input.controller &&
         input.controller.modelId === model.id &&
@@ -669,7 +789,10 @@ export function buildConfiguredModelCards(input: {
     .sort((left, right) => {
       const controllerOrder = (value: typeof left) =>
         value.controllerState === "active" ? 0 : value.controllerState === "eligible" ? 1 : 2;
-      return controllerOrder(left) - controllerOrder(right) || left.displayName.localeCompare(right.displayName, "en");
+      return (
+        controllerOrder(left) - controllerOrder(right) ||
+        left.displayName.localeCompare(right.displayName, "en")
+      );
     });
 }
 
@@ -682,7 +805,8 @@ export function buildConfiguredModelMetadataRows(model: {
   return [
     {
       label: "Modalities",
-      value: model.modalities && model.modalities.length > 0 ? model.modalities.join(", ") : "Unknown",
+      value:
+        model.modalities && model.modalities.length > 0 ? model.modalities.join(", ") : "Unknown",
     },
     {
       label: "Context window",
@@ -702,7 +826,12 @@ export function buildConfiguredModelMetadataRows(model: {
 export function summarizeWorkbenchResult(result: Record<string, unknown>): {
   outputText: string;
   toolCalls: Array<{ id?: string; name: string; arguments: string }>;
-  toolExecutions: Array<{ connectorId?: string; toolName?: string; status?: string; durationMs?: number }>;
+  toolExecutions: Array<{
+    connectorId?: string;
+    toolName?: string;
+    status?: string;
+    durationMs?: number;
+  }>;
   usageRows: Array<{ label: string; value: string }>;
   rawPayload: string;
 } {
@@ -712,13 +841,15 @@ export function summarizeWorkbenchResult(result: Record<string, unknown>): {
       : Array.isArray(result.choices) &&
           result.choices[0] &&
           typeof result.choices[0] === "object" &&
-          typeof (result.choices[0] as { message?: { content?: string } }).message?.content === "string"
+          typeof (result.choices[0] as { message?: { content?: string } }).message?.content ===
+            "string"
         ? (result.choices[0] as { message: { content: string } }).message.content
         : "";
   const toolCalls = Array.isArray(result.toolCalls)
     ? result.toolCalls
-        .filter((entry): entry is { id?: string; function?: { name?: string; arguments?: string } } =>
-          typeof entry === "object" && entry !== null,
+        .filter(
+          (entry): entry is { id?: string; function?: { name?: string; arguments?: string } } =>
+            typeof entry === "object" && entry !== null,
         )
         .map((entry) => ({
           id: entry.id,
@@ -728,8 +859,15 @@ export function summarizeWorkbenchResult(result: Record<string, unknown>): {
     : [];
   const toolExecutions = Array.isArray(result.toolExecutions)
     ? result.toolExecutions
-        .filter((entry): entry is { connectorId?: string; toolName?: string; status?: string; durationMs?: number } =>
-          typeof entry === "object" && entry !== null,
+        .filter(
+          (
+            entry,
+          ): entry is {
+            connectorId?: string;
+            toolName?: string;
+            status?: string;
+            durationMs?: number;
+          } => typeof entry === "object" && entry !== null,
         )
         .map((entry) => ({
           connectorId: entry.connectorId,
@@ -739,7 +877,9 @@ export function summarizeWorkbenchResult(result: Record<string, unknown>): {
         }))
     : [];
   const usageRecord =
-    typeof result.usage === "object" && result.usage !== null ? (result.usage as Record<string, unknown>) : {};
+    typeof result.usage === "object" && result.usage !== null
+      ? (result.usage as Record<string, unknown>)
+      : {};
   const usageRows = [
     { label: "Input tokens", value: String(usageRecord.inputTokens ?? 0) },
     { label: "Output tokens", value: String(usageRecord.outputTokens ?? 0) },
@@ -754,9 +894,7 @@ export function summarizeWorkbenchResult(result: Record<string, unknown>): {
   };
 }
 
-export function buildActivitySummary(
-  entries: readonly RuntimeActivityLogEntry[],
-): {
+export function buildActivitySummary(entries: readonly RuntimeActivityLogEntry[]): {
   facts: Array<{ label: string; value: string; detail: string }>;
   rows: Array<{
     id: number;
@@ -798,9 +936,21 @@ export function buildActivitySummary(
   return {
     facts: [
       { label: "Entries", value: String(entries.length), detail: `${captureCount} with captures` },
-      { label: "Errors", value: String(errorCount), detail: `Most recent status: ${mostRecentStatus}` },
-      { label: "Prompt tokens", value: String(inputTokens), detail: `${outputTokens} output tokens recorded` },
-      { label: "Cached tokens", value: String(cacheTokens), detail: "Across the current in-memory metrics window" },
+      {
+        label: "Errors",
+        value: String(errorCount),
+        detail: `Most recent status: ${mostRecentStatus}`,
+      },
+      {
+        label: "Prompt tokens",
+        value: String(inputTokens),
+        detail: `${outputTokens} output tokens recorded`,
+      },
+      {
+        label: "Cached tokens",
+        value: String(cacheTokens),
+        detail: "Across the current in-memory metrics window",
+      },
     ],
     rows,
   };

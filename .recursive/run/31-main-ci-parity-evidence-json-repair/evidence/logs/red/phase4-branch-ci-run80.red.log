@@ -1,0 +1,800 @@
+2026-05-11T23:01:40.6677547Z     275 280 │         cacheLabel: summarizeCachePosture({
+2026-05-11T23:01:40.6678055Z     ······· │ 
+2026-05-11T23:01:40.6678397Z     279 284 │         }),
+2026-05-11T23:01:40.6678954Z     280 285 │         streamLabel: summarizeStreamLabel(row),
+2026-05-11T23:01:40.6680271Z     281     │ - ······latencyLabel:·row.latencyMs·!==·null·&&·row.latencyMs·!==·undefined·?·`${row.latencyMs}·ms`·:·"n/a",
+2026-05-11T23:01:40.6681260Z         286 │ + ······latencyLabel:
+2026-05-11T23:01:40.6682231Z         287 │ + ········row.latencyMs·!==·null·&&·row.latencyMs·!==·undefined·?·`${row.latencyMs}·ms`·:·"n/a",
+2026-05-11T23:01:40.6683240Z     282 288 │         tokenLabel: `${row.totalTokens ?? 0} tokens`,
+2026-05-11T23:01:40.6683846Z     283 289 │         costLabel:
+2026-05-11T23:01:40.6684244Z     ······· │ 
+2026-05-11T23:01:40.6684556Z     330 336 │   }
+2026-05-11T23:01:40.6684911Z     331 337 │   
+2026-05-11T23:01:40.6685436Z     332     │ - export·function·buildEndpointCatalogRows(
+2026-05-11T23:01:40.6686140Z     333     │ - ··endpoints:·readonly·RuntimeEndpoint[],
+2026-05-11T23:01:40.6686683Z     334     │ - ):·Array<{
+2026-05-11T23:01:40.6687636Z         338 │ + export·function·buildEndpointCatalogRows(endpoints:·readonly·RuntimeEndpoint[]):·Array<{
+2026-05-11T23:01:40.6688536Z     335 339 │     endpointId: string;
+2026-05-11T23:01:40.6689016Z     336 340 │     modelId: string;
+2026-05-11T23:01:40.6689499Z     ······· │ 
+2026-05-11T23:01:40.6690051Z     409 413 │     return providerIds.map((providerId) => {
+2026-05-11T23:01:40.6691167Z     410 414 │       const providerAccounts = input.accounts.filter((account) => account.providerId === providerId);
+2026-05-11T23:01:40.6692696Z     411     │ - ····const·providerEndpoints·=·input.endpoints.filter((endpoint)·=>·endpoint.providerId·===·providerId);
+2026-05-11T23:01:40.6693889Z         415 │ + ····const·providerEndpoints·=·input.endpoints.filter(
+2026-05-11T23:01:40.6694911Z         416 │ + ······(endpoint)·=>·endpoint.providerId·===·providerId,
+2026-05-11T23:01:40.6695498Z         417 │ + ····);
+2026-05-11T23:01:40.6695866Z     412 418 │       return {
+2026-05-11T23:01:40.6696305Z     413 419 │         providerId,
+2026-05-11T23:01:40.6697477Z     414     │ - ······accountIds:·uniqueStrings(providerAccounts.map((account)·=>·account.providerAccountId)).sort(sortLexical),
+2026-05-11T23:01:40.6699180Z     415     │ - ······authModes:·uniqueStrings(providerAccounts.map((account)·=>·account.authMode)).sort(sortLexical),
+2026-05-11T23:01:40.6700860Z     416     │ - ······configuredModels:·uniqueStrings(providerAccounts.flatMap((account)·=>·account.allowedModels·??·[])).sort(sortLexical),
+2026-05-11T23:01:40.6702612Z     417     │ - ······endpointModels:·uniqueStrings(providerEndpoints.map((endpoint)·=>·endpoint.modelId)).sort(sortLexical),
+2026-05-11T23:01:40.6704169Z         420 │ + ······accountIds:·uniqueStrings(providerAccounts.map((account)·=>·account.providerAccountId)).sort(
+2026-05-11T23:01:40.6705140Z         421 │ + ········sortLexical,
+2026-05-11T23:01:40.6705571Z         422 │ + ······),
+2026-05-11T23:01:40.6706502Z         423 │ + ······authModes:·uniqueStrings(providerAccounts.map((account)·=>·account.authMode)).sort(
+2026-05-11T23:01:40.6707416Z         424 │ + ········sortLexical,
+2026-05-11T23:01:40.6707851Z         425 │ + ······),
+2026-05-11T23:01:40.6708393Z         426 │ + ······configuredModels:·uniqueStrings(
+2026-05-11T23:01:40.6709575Z         427 │ + ········providerAccounts.flatMap((account)·=>·account.allowedModels·??·[]),
+2026-05-11T23:01:40.6710391Z         428 │ + ······).sort(sortLexical),
+2026-05-11T23:01:40.6711469Z         429 │ + ······endpointModels:·uniqueStrings(providerEndpoints.map((endpoint)·=>·endpoint.modelId)).sort(
+2026-05-11T23:01:40.6712385Z         430 │ + ········sortLexical,
+2026-05-11T23:01:40.6712820Z         431 │ + ······),
+2026-05-11T23:01:40.6713411Z     418 432 │         endpointCount: providerEndpoints.length,
+2026-05-11T23:01:40.6714679Z     419     │ - ······activeEndpointCount:·providerEndpoints.filter((endpoint)·=>·endpoint.status·===·"active").length,
+2026-05-11T23:01:40.6716296Z     420     │ - ······healthStatuses:·uniqueStrings(providerAccounts.map((account)·=>·account.healthStatus)).sort(sortLexical),
+2026-05-11T23:01:40.6717855Z         433 │ + ······activeEndpointCount:·providerEndpoints.filter((endpoint)·=>·endpoint.status·===·"active")
+2026-05-11T23:01:40.6718463Z         434 │ + ········.length,
+2026-05-11T23:01:40.6719175Z         435 │ + ······healthStatuses:·uniqueStrings(providerAccounts.map((account)·=>·account.healthStatus)).sort(
+2026-05-11T23:01:40.6719785Z         436 │ + ········sortLexical,
+2026-05-11T23:01:40.6720072Z         437 │ + ······),
+2026-05-11T23:01:40.6720413Z     421 438 │       };
+2026-05-11T23:01:40.6720764Z     422 439 │     });
+2026-05-11T23:01:40.6720994Z     423 440 │   }
+2026-05-11T23:01:40.6721190Z     424 441 │   
+2026-05-11T23:01:40.6721690Z     425     │ - export·function·buildDownstreamProviderGuide(
+2026-05-11T23:01:40.6722162Z     426     │ - ··provider:·RuntimeDownstreamOpenAIProviderConfig,
+2026-05-11T23:01:40.6722504Z     427     │ - ):·{
+2026-05-11T23:01:40.6723088Z         442 │ + export·function·buildDownstreamProviderGuide(provider:·RuntimeDownstreamOpenAIProviderConfig):·{
+2026-05-11T23:01:40.6723738Z     428 443 │     connectionRows: Array<{ label: string; value: string }>;
+2026-05-11T23:01:40.6724143Z     429 444 │     availableModels: string[];
+2026-05-11T23:01:40.6724434Z     ······· │ 
+2026-05-11T23:01:40.6725132Z     437 452 │     const placeholderToken = provider.authentication.placeholderToken;
+2026-05-11T23:01:40.6725794Z     438 453 │   
+2026-05-11T23:01:40.6726802Z     439     │ - ··const·baseUrlWithV1·=·provider.baseUrl.endsWith("/v1")·?·provider.baseUrl·:·`${provider.baseUrl}/v1`;
+2026-05-11T23:01:40.6728320Z     440     │ - ··const·baseUrlWithoutV1·=·provider.baseUrl.endsWith("/v1")·?·provider.baseUrl.slice(0,·-3)·:·provider.baseUrl;
+2026-05-11T23:01:40.6729016Z         454 │ + ··const·baseUrlWithV1·=·provider.baseUrl.endsWith("/v1")
+2026-05-11T23:01:40.6729577Z         455 │ + ····?·provider.baseUrl
+2026-05-11T23:01:40.6729951Z         456 │ + ····:·`${provider.baseUrl}/v1`;
+2026-05-11T23:01:40.6730398Z         457 │ + ··const·baseUrlWithoutV1·=·provider.baseUrl.endsWith("/v1")
+2026-05-11T23:01:40.6730835Z         458 │ + ····?·provider.baseUrl.slice(0,·-3)
+2026-05-11T23:01:40.6731173Z         459 │ + ····:·provider.baseUrl;
+2026-05-11T23:01:40.6731501Z     441 460 │   
+2026-05-11T23:01:40.6731718Z     442 461 │     return {
+2026-05-11T23:01:40.6731943Z     ······· │ 
+2026-05-11T23:01:40.6732333Z     447 466 │         { label: "Models endpoint", value: provider.endpoints.models },
+2026-05-11T23:01:40.6732909Z     448 467 │         { label: "Chat endpoint", value: provider.endpoints.chatCompletions },
+2026-05-11T23:01:40.6734038Z     449     │ - ······{·label:·"Auth·header",·value:·`${provider.authentication.headerName}:·Bearer·${placeholderToken}`·},
+2026-05-11T23:01:40.6734553Z         468 │ + ······{
+2026-05-11T23:01:40.6734839Z         469 │ + ········label:·"Auth·header",
+2026-05-11T23:01:40.6735378Z         470 │ + ········value:·`${provider.authentication.headerName}:·Bearer·${placeholderToken}`,
+2026-05-11T23:01:40.6735804Z         471 │ + ······},
+2026-05-11T23:01:40.6736017Z     450 472 │       ],
+2026-05-11T23:01:40.6736410Z     451 473 │       availableModels: provider.models.map((model) => model.id),
+2026-05-11T23:01:40.6736751Z     ······· │ 
+2026-05-11T23:01:40.6737301Z     488 510 │     readonly accounts: readonly RuntimeAccount[];
+2026-05-11T23:01:40.6737776Z     489 511 │     readonly requests: readonly RuntimeRequestListItem[];
+2026-05-11T23:01:40.6738673Z     490     │ - ··readonly·controller?:·Pick<RuntimeControllerAssignment,·"endpointId"·|·"modelId">·&·Partial<Pick<RuntimeControllerAssignment,·"scope">>·|·null;
+2026-05-11T23:01:40.6739484Z         512 │ + ··readonly·controller?:
+2026-05-11T23:01:40.6740107Z         513 │ + ····|·(Pick<RuntimeControllerAssignment,·"endpointId"·|·"modelId">·&
+2026-05-11T23:01:40.6741046Z         514 │ + ········Partial<Pick<RuntimeControllerAssignment,·"scope">>)
+2026-05-11T23:01:40.6741679Z         515 │ + ····|·null;
+2026-05-11T23:01:40.6742232Z     491 516 │   }): Array<{
+2026-05-11T23:01:40.6742675Z     492 517 │     modelId: string;
+2026-05-11T23:01:40.6743054Z     ······· │ 
+2026-05-11T23:01:40.6743400Z     504 529 │       .map((model) => {
+2026-05-11T23:01:40.6744373Z     505 530 │         const endpoints = input.endpoints.filter((endpoint) => endpoint.modelId === model.id);
+2026-05-11T23:01:40.6745815Z     506     │ - ······const·endpointIds·=·[...new·Set(endpoints.map((endpoint)·=>·endpoint.endpointId))].sort((left,·right)·=>
+2026-05-11T23:01:40.6746903Z     507     │ - ········left.localeCompare(right,·"en"),
+2026-05-11T23:01:40.6747980Z         531 │ + ······const·endpointIds·=·[...new·Set(endpoints.map((endpoint)·=>·endpoint.endpointId))].sort(
+2026-05-11T23:01:40.6749282Z         532 │ + ········(left,·right)·=>·left.localeCompare(right,·"en"),
+2026-05-11T23:01:40.6749846Z     508 533 │         );
+2026-05-11T23:01:40.6750286Z     509 534 │         const roleIds = [
+2026-05-11T23:01:40.6750694Z     ······· │ 
+2026-05-11T23:01:40.6751120Z     521 546 │         const sourceTypes = [
+2026-05-11T23:01:40.6751647Z     522 547 │           ...new Set(
+2026-05-11T23:01:40.6752209Z     523     │ - ··········endpoints.map((endpoint)·=>
+2026-05-11T23:01:40.6752840Z     524     │ - ············endpoint.sourceType·??
+2026-05-11T23:01:40.6753818Z     525     │ - ············(endpoint.servingSource?.toLowerCase().includes("local")·?·"local"·:·"remote"),
+2026-05-11T23:01:40.6754662Z         548 │ + ··········endpoints.map(
+2026-05-11T23:01:40.6755130Z         549 │ + ············(endpoint)·=>
+2026-05-11T23:01:40.6755656Z         550 │ + ··············endpoint.sourceType·??
+2026-05-11T23:01:40.6756667Z         551 │ + ··············(endpoint.servingSource?.toLowerCase().includes("local")·?·"local"·:·"remote"),
+2026-05-11T23:01:40.6757464Z     526 552 │             ),
+2026-05-11T23:01:40.6757861Z     527 553 │           ),
+2026-05-11T23:01:40.6758532Z     528 554 │         ].sort((left, right) => left.localeCompare(right, "en"));
+2026-05-11T23:01:40.6759995Z     529     │ - ······const·requestCount·=·input.requests.filter((request)·=>·endpointIds.includes(request.endpointId·??·"")).length;
+2026-05-11T23:01:40.6761254Z         555 │ + ······const·requestCount·=·input.requests.filter((request)·=>
+2026-05-11T23:01:40.6762263Z         556 │ + ········endpointIds.includes(request.endpointId·??·""),
+2026-05-11T23:01:40.6762886Z         557 │ + ······).length;
+2026-05-11T23:01:40.6763571Z     530 558 │         const controllerState: "active" | "eligible" | "inactive" =
+2026-05-11T23:01:40.6764270Z     531 559 │           input.controller &&
+2026-05-11T23:01:40.6764700Z     ······· │ 
+2026-05-11T23:01:40.6765211Z     553 581 │         const controllerOrder = (value: typeof left) =>
+2026-05-11T23:01:40.6766298Z     554 582 │           value.controllerState === "active" ? 0 : value.controllerState === "eligible" ? 1 : 2;
+2026-05-11T23:01:40.6767697Z     555     │ - ······return·controllerOrder(left)·-·controllerOrder(right)·||·left.displayName.localeCompare(right.displayName,·"en");
+2026-05-11T23:01:40.6768719Z         583 │ + ······return·(
+2026-05-11T23:01:40.6769460Z         584 │ + ········controllerOrder(left)·-·controllerOrder(right)·||
+2026-05-11T23:01:40.6770355Z         585 │ + ········left.displayName.localeCompare(right.displayName,·"en")
+2026-05-11T23:01:40.6770885Z         586 │ + ······);
+2026-05-11T23:01:40.6771167Z     556 587 │       });
+2026-05-11T23:01:40.6771510Z     557 588 │   }
+2026-05-11T23:01:40.6771836Z     ······· │ 
+2026-05-11T23:01:40.6772225Z     560 591 │     outputText: string;
+2026-05-11T23:01:40.6772986Z     561 592 │     toolCalls: Array<{ id?: string; name: string; arguments: string }>;
+2026-05-11T23:01:40.6774292Z     562     │ - ··toolExecutions:·Array<{·connectorId?:·string;·toolName?:·string;·status?:·string;·durationMs?:·number·}>;
+2026-05-11T23:01:40.6775257Z         593 │ + ··toolExecutions:·Array<{
+2026-05-11T23:01:40.6775789Z         594 │ + ····connectorId?:·string;
+2026-05-11T23:01:40.6776167Z   75 more lines truncated
+2026-05-11T23:01:40.6776358Z   
+2026-05-11T23:01:40.6776445Z 
+2026-05-11T23:01:40.6776923Z ./role-model-router/apps/runtime-ui/app/routes/integrations-downstream.tsx organizeImports ━━━━━━━━━━
+2026-05-11T23:01:40.6777293Z 
+2026-05-11T23:01:40.6777445Z   × Import statements could be sorted:
+2026-05-11T23:01:40.6777682Z   
+2026-05-11T23:01:40.6778237Z       4   4 │   import { codeBlockClassName, mutedPanelClassName, secondaryButtonClassName } from "../lib/design-system";
+2026-05-11T23:01:40.6778735Z       5   5 │   import {
+2026-05-11T23:01:40.6779166Z       6     │ - ··fetchDownstreamOpenAIProviderConfig,
+2026-05-11T23:01:40.6779607Z       7     │ - ··type·RuntimeDownstreamOpenAIProviderConfig,
+2026-05-11T23:01:40.6780046Z           6 │ + ··type·RuntimeDownstreamOpenAIProviderConfig,
+2026-05-11T23:01:40.6780782Z           7 │ + ··fetchDownstreamOpenAIProviderConfig,
+2026-05-11T23:01:40.6781280Z       8   8 │   } from "../lib/runtime-api";
+2026-05-11T23:01:40.6781736Z       9   9 │   import { buildDownstreamProviderGuide } from "../lib/view-models";
+2026-05-11T23:01:40.6782062Z   
+2026-05-11T23:01:40.6782145Z 
+2026-05-11T23:01:40.6782600Z ./role-model-router/apps/runtime-ui/app/routes/endpoints.tsx format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-05-11T23:01:40.6782956Z 
+2026-05-11T23:01:40.6783174Z   × Formatter would have printed the following content:
+2026-05-11T23:01:40.6783437Z   
+2026-05-11T23:01:40.6783653Z      24  24 │           setError(null);
+2026-05-11T23:01:40.6783911Z      25  25 │         })
+2026-05-11T23:01:40.6784549Z      26     │ - ······.catch((value:·unknown)·=>·setError(value·instanceof·Error·?·value.message·:·"Could·not·load·endpoints."));
+2026-05-11T23:01:40.6785131Z          26 │ + ······.catch((value:·unknown)·=>
+2026-05-11T23:01:40.6785715Z          27 │ + ········setError(value·instanceof·Error·?·value.message·:·"Could·not·load·endpoints."),
+2026-05-11T23:01:40.6786357Z          28 │ + ······);
+2026-05-11T23:01:40.6786692Z      27  29 │     }, []);
+2026-05-11T23:01:40.6787002Z      28  30 │   
+2026-05-11T23:01:40.6787328Z     ······· │ 
+2026-05-11T23:01:40.6787724Z      37  39 │       [snapshot],
+2026-05-11T23:01:40.6788106Z      38  40 │     );
+2026-05-11T23:01:40.6789392Z      39     │ - ··const·endpointRows·=·useMemo(()·=>·(snapshot·?·buildEndpointCatalogRows(snapshot.endpoints)·:·[]),·[snapshot]);
+2026-05-11T23:01:40.6790454Z          41 │ + ··const·endpointRows·=·useMemo(
+2026-05-11T23:01:40.6791307Z          42 │ + ····()·=>·(snapshot·?·buildEndpointCatalogRows(snapshot.endpoints)·:·[]),
+2026-05-11T23:01:40.6791931Z          43 │ + ····[snapshot],
+2026-05-11T23:01:40.6792258Z          44 │ + ··);
+2026-05-11T23:01:40.6792585Z      40  45 │   
+2026-05-11T23:01:40.6792951Z      41  46 │     if (error) {
+2026-05-11T23:01:40.6793352Z     ······· │ 
+2026-05-11T23:01:40.6793868Z      90  95 │                       {providerRows.map((provider) => (
+2026-05-11T23:01:40.6794872Z      91  96 │                         <tr key={provider.providerId} className="border-t border-[var(--rm-border)]">
+2026-05-11T23:01:40.6795929Z      92     │ - ························<td·className="py-3·font-medium·text-[var(--rm-fg)]">{provider.providerId}</td>
+2026-05-11T23:01:40.6797356Z      93     │ - ························<td·className="py-3·text-[var(--rm-secondary)]">{provider.accountIds.join(",·")·||·"—"}</td>
+2026-05-11T23:01:40.6798789Z      94     │ - ························<td·className="py-3·text-[var(--rm-secondary)]">{provider.authModes.join(",·")·||·"—"}</td>
+2026-05-11T23:01:40.6800024Z          97 │ + ························<td·className="py-3·font-medium·text-[var(--rm-fg)]">
+2026-05-11T23:01:40.6800850Z          98 │ + ··························{provider.providerId}
+2026-05-11T23:01:40.6801475Z          99 │ + ························</td>
+2026-05-11T23:01:40.6802232Z         100 │ + ························<td·className="py-3·text-[var(--rm-secondary)]">
+2026-05-11T23:01:40.6803117Z         101 │ + ··························{provider.accountIds.join(",·")·||·"—"}
+2026-05-11T23:01:40.6803688Z         102 │ + ························</td>
+2026-05-11T23:01:40.6804475Z         103 │ + ························<td·className="py-3·text-[var(--rm-secondary)]">
+2026-05-11T23:01:40.6805364Z         104 │ + ··························{provider.authModes.join(",·")·||·"—"}
+2026-05-11T23:01:40.6805982Z         105 │ + ························</td>
+2026-05-11T23:01:40.6806702Z      95 106 │                           <td className="py-3 text-[var(--rm-secondary)]">
+2026-05-11T23:01:40.6807967Z      96     │ - ··························{provider.configuredModels.length·>·0·?·provider.configuredModels.join(",·")·:·"—"}
+2026-05-11T23:01:40.6809024Z         107 │ + ··························{provider.configuredModels.length·>·0
+2026-05-11T23:01:40.6810048Z         108 │ + ····························?·provider.configuredModels.join(",·")
+2026-05-11T23:01:40.6810773Z         109 │ + ····························:·"—"}
+2026-05-11T23:01:40.6811308Z      97 110 │                           </td>
+2026-05-11T23:01:40.6812187Z      98     │ - ························<td·className="py-3·text-[var(--rm-secondary)]">{provider.healthStatuses.join(",·")·||·"unknown"}</td>
+2026-05-11T23:01:40.6813360Z         111 │ + ························<td·className="py-3·text-[var(--rm-secondary)]">
+2026-05-11T23:01:40.6814434Z         112 │ + ··························{provider.healthStatuses.join(",·")·||·"unknown"}
+2026-05-11T23:01:40.6815185Z         113 │ + ························</td>
+2026-05-11T23:01:40.6815826Z      99 114 │                           <td className="py-3 text-[var(--rm-secondary)]">
+2026-05-11T23:01:40.6816439Z     100 115 │                             {provider.activeEndpointCount}/{provider.endpointCount} active
+2026-05-11T23:01:40.6817130Z     ······· │ 
+2026-05-11T23:01:40.6817694Z     131 146 │                       {endpointRows.map((endpoint) => (
+2026-05-11T23:01:40.6818710Z     132 147 │                         <tr key={endpoint.endpointId} className="border-t border-[var(--rm-border)]">
+2026-05-11T23:01:40.6820171Z     133     │ - ························<td·className="py-3·font-medium·text-[var(--rm-fg)]">{endpoint.endpointId}</td>
+2026-05-11T23:01:40.6820925Z         148 │ + ························<td·className="py-3·font-medium·text-[var(--rm-fg)]">
+2026-05-11T23:01:40.6821819Z         149 │ + ··························{endpoint.endpointId}
+2026-05-11T23:01:40.6822451Z         150 │ + ························</td>
+2026-05-11T23:01:40.6823345Z     134 151 │                           <td className="py-3 text-[var(--rm-secondary)]">{endpoint.modelId}</td>
+2026-05-11T23:01:40.6824531Z     135     │ - ························<td·className="py-3·text-[var(--rm-secondary)]">{endpoint.providerLabel}</td>
+2026-05-11T23:01:40.6825217Z         152 │ + ························<td·className="py-3·text-[var(--rm-secondary)]">
+2026-05-11T23:01:40.6826030Z         153 │ + ··························{endpoint.providerLabel}
+2026-05-11T23:01:40.6826645Z         154 │ + ························</td>
+2026-05-11T23:01:40.6827359Z     136 155 │                           <td className="py-3 text-[var(--rm-secondary)]">
+2026-05-11T23:01:40.6828155Z     137 156 │                             {endpoint.sourceLabel} / {endpoint.endpointKind}
+2026-05-11T23:01:40.6828787Z     138 157 │                           </td>
+2026-05-11T23:01:40.6829885Z     139     │ - ························<td·className="py-3·text-[var(--rm-secondary)]">{endpoint.servingSource}</td>
+2026-05-11T23:01:40.6830682Z         158 │ + ························<td·className="py-3·text-[var(--rm-secondary)]">
+2026-05-11T23:01:40.6831424Z         159 │ + ··························{endpoint.servingSource}
+2026-05-11T23:01:40.6832004Z         160 │ + ························</td>
+2026-05-11T23:01:40.6832759Z     140 161 │                           <td className="py-3">
+2026-05-11T23:01:40.6833900Z     141     │ - ··························<StatusPill·tone={endpoint.healthStatus·===·"healthy"·?·"success"·:·"warning"}>
+2026-05-11T23:01:40.6834636Z         162 │ + ··························<StatusPill
+2026-05-11T23:01:40.6835227Z         163 │ + ····························tone={endpoint.healthStatus·===·"healthy"·?·"success"·:·"warning"}
+2026-05-11T23:01:40.6836003Z         164 │ + ··························>
+2026-05-11T23:01:40.6836546Z     142 165 │                               {endpoint.healthStatus}
+2026-05-11T23:01:40.6837093Z     143 166 │                             </StatusPill>
+2026-05-11T23:01:40.6837636Z     144 167 │                           </td>
+2026-05-11T23:01:40.6838252Z     145 168 │                           <td className="py-3">
+2026-05-11T23:01:40.6839294Z     146     │ - ··························<StatusPill·tone={endpoint.status·===·"active"·?·"success"·:·endpoint.status·===·"degraded"·?·"warning"·:·"neutral"}>
+2026-05-11T23:01:40.6840311Z         169 │ + ··························<StatusPill
+2026-05-11T23:01:40.6840878Z         170 │ + ····························tone={
+2026-05-11T23:01:40.6841614Z         171 │ + ······························endpoint.status·===·"active"
+2026-05-11T23:01:40.6842251Z         172 │ + ································?·"success"
+2026-05-11T23:01:40.6842704Z         173 │ + ································:·endpoint.status·===·"degraded"
+2026-05-11T23:01:40.6843132Z         174 │ + ··································?·"warning"
+2026-05-11T23:01:40.6843828Z         175 │ + ··································:·"neutral"
+2026-05-11T23:01:40.6844295Z         176 │ + ····························}
+2026-05-11T23:01:40.6844719Z         177 │ + ··························>
+2026-05-11T23:01:40.6845291Z     147 178 │                               {endpoint.status}
+2026-05-11T23:01:40.6845804Z     148 179 │                             </StatusPill>
+2026-05-11T23:01:40.6846237Z   
+2026-05-11T23:01:40.6846375Z 
+2026-05-11T23:01:40.6847168Z ./role-model-router/apps/runtime-ui/app/routes/integrations-downstream.tsx format ━━━━━━━━━━━━━━━━━━
+2026-05-11T23:01:40.6847534Z 
+2026-05-11T23:01:40.6847743Z   × Formatter would have printed the following content:
+2026-05-11T23:01:40.6848006Z   
+2026-05-11T23:01:40.6848298Z       1   1 │   import { useEffect, useState } from "react";
+2026-05-11T23:01:40.6848582Z       2   2 │   
+2026-05-11T23:01:40.6849345Z       3     │ - import·{·ErrorState,·LoadingState,·PageHeader,·SectionCard,·StatusPill·}·from·"../components/page-primitives";
+2026-05-11T23:01:40.6850331Z       4     │ - import·{·codeBlockClassName,·mutedPanelClassName,·secondaryButtonClassName·}·from·"../lib/design-system";
+2026-05-11T23:01:40.6850853Z           3 │ + import·{
+2026-05-11T23:01:40.6851133Z           4 │ + ··ErrorState,
+2026-05-11T23:01:40.6851547Z           5 │ + ··LoadingState,
+2026-05-11T23:01:40.6851956Z           6 │ + ··PageHeader,
+2026-05-11T23:01:40.6852226Z           7 │ + ··SectionCard,
+2026-05-11T23:01:40.6852582Z           8 │ + ··StatusPill,
+2026-05-11T23:01:40.6852903Z           9 │ + }·from·"../components/page-primitives";
+2026-05-11T23:01:40.6853205Z          10 │ + import·{
+2026-05-11T23:01:40.6853476Z          11 │ + ··codeBlockClassName,
+2026-05-11T23:01:40.6853791Z          12 │ + ··mutedPanelClassName,
+2026-05-11T23:01:40.6854104Z          13 │ + ··secondaryButtonClassName,
+2026-05-11T23:01:40.6854517Z          14 │ + }·from·"../lib/design-system";
+2026-05-11T23:01:40.6854792Z       5  15 │   import {
+2026-05-11T23:01:40.6855115Z       6  16 │     fetchDownstreamOpenAIProviderConfig,
+2026-05-11T23:01:40.6855412Z     ······· │ 
+2026-05-11T23:01:40.6855735Z      16  26 │       void fetchDownstreamOpenAIProviderConfig()
+2026-05-11T23:01:40.6856089Z      17  27 │         .then(setProvider)
+2026-05-11T23:01:40.6857096Z      18     │ - ······.catch((value:·unknown)·=>·setError(value·instanceof·Error·?·value.message·:·"Could·not·load·downstream·compatibility·details."));
+2026-05-11T23:01:40.6858308Z          28 │ + ······.catch((value:·unknown)·=>
+2026-05-11T23:01:40.6858824Z          29 │ + ········setError(
+2026-05-11T23:01:40.6859452Z          30 │ + ··········value·instanceof·Error
+2026-05-11T23:01:40.6860030Z          31 │ + ············?·value.message
+2026-05-11T23:01:40.6860597Z          32 │ + ············:·"Could·not·load·downstream·compatibility·details.",
+2026-05-11T23:01:40.6860958Z          33 │ + ········),
+2026-05-11T23:01:40.6861226Z          34 │ + ······);
+2026-05-11T23:01:40.6861449Z      19  35 │     }, []);
+2026-05-11T23:01:40.6861812Z      20  36 │   
+2026-05-11T23:01:40.6862145Z     ······· │ 
+2026-05-11T23:01:40.6862466Z      41  57 │         />
+2026-05-11T23:01:40.6862678Z      42  58 │   
+2026-05-11T23:01:40.6863446Z      43     │ - ······<SectionCard·title="Connection·contract"·description="Base·URL,·auth·expectations,·and·downstream·model·discovery·in·one·reference·block.">
+2026-05-11T23:01:40.6864122Z          59 │ + ······<SectionCard
+2026-05-11T23:01:40.6864545Z          60 │ + ········title="Connection·contract"
+2026-05-11T23:01:40.6865717Z          61 │ + ········description="Base·URL,·auth·expectations,·and·downstream·model·discovery·in·one·reference·block."
+2026-05-11T23:01:40.6866594Z          62 │ + ······>
+2026-05-11T23:01:40.6867139Z      44  63 │           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+2026-05-11T23:01:40.6867911Z      45  64 │             {guide.connectionRows.map((row) => (
+2026-05-11T23:01:40.6868776Z      46  65 │               <div key={row.label} className={`${mutedPanelClassName} p-4`}>
+2026-05-11T23:01:40.6870077Z      47     │ - ··············<p·className="text-xs·font-normal·uppercase·tracking-[0.2em]·text-[var(--rm-muted)]">{row.label}</p>
+2026-05-11T23:01:40.6871346Z          66 │ + ··············<p·className="text-xs·font-normal·uppercase·tracking-[0.2em]·text-[var(--rm-muted)]">
+2026-05-11T23:01:40.6872261Z          67 │ + ················{row.label}
+2026-05-11T23:01:40.6872606Z          68 │ + ··············</p>
+2026-05-11T23:01:40.6873518Z      48  69 │                 <p className="mt-2 break-all font-mono text-sm text-[var(--rm-fg)]">{row.value}</p>
+2026-05-11T23:01:40.6874292Z      49  70 │               </div>
+2026-05-11T23:01:40.6874681Z     ······· │ 
+2026-05-11T23:01:40.6875073Z      52  73 │         </SectionCard>
+2026-05-11T23:01:40.6875333Z      53  74 │   
+2026-05-11T23:01:40.6876707Z      54     │ - ······<SectionCard·title="Consumer·setup"·description="The·runtime·remains·downstream-compatible,·including·tool-calling·consumer·expectations.">
+2026-05-11T23:01:40.6877957Z          75 │ + ······<SectionCard
+2026-05-11T23:01:40.6878489Z          76 │ + ········title="Consumer·setup"
+2026-05-11T23:01:40.6879252Z          77 │ + ········description="The·runtime·remains·downstream-compatible,·including·tool-calling·consumer·expectations."
+2026-05-11T23:01:40.6879780Z          78 │ + ······>
+2026-05-11T23:01:40.6880207Z      55  79 │           <div className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
+2026-05-11T23:01:40.6881076Z      56  80 │             <div className={`${mutedPanelClassName} p-4`}>
+2026-05-11T23:01:40.6881509Z     ······· │ 
+2026-05-11T23:01:40.6881738Z      61  85 │                 ))}
+2026-05-11T23:01:40.6882011Z      62  86 │               </ol>
+2026-05-11T23:01:40.6882598Z      63     │ - ············<p·className="mt-4·text-sm·text-[var(--rm-secondary)]">{provider.authentication.note}</p>
+2026-05-11T23:01:40.6883246Z          87 │ + ············<p·className="mt-4·text-sm·text-[var(--rm-secondary)]">
+2026-05-11T23:01:40.6883864Z          88 │ + ··············{provider.authentication.note}
+2026-05-11T23:01:40.6884409Z          89 │ + ············</p>
+2026-05-11T23:01:40.6884851Z      64  90 │             </div>
+2026-05-11T23:01:40.6885238Z      65  91 │   
+2026-05-11T23:01:40.6885568Z     ······· │ 
+2026-05-11T23:01:40.6886097Z      69  95 │                 <div className="mt-3 flex flex-wrap gap-2">
+2026-05-11T23:01:40.6886853Z      70  96 │                   {guide.availableModels.map((modelId) => (
+2026-05-11T23:01:40.6887855Z      71     │ - ··················<StatusPill·key={modelId}·tone={modelId·===·provider.setup.recommendedModel·?·"accent"·:·"neutral"}>
+2026-05-11T23:01:40.6888423Z          97 │ + ··················<StatusPill
+2026-05-11T23:01:40.6888906Z          98 │ + ····················key={modelId}
+2026-05-11T23:01:40.6889762Z          99 │ + ····················tone={modelId·===·provider.setup.recommendedModel·?·"accent"·:·"neutral"}
+2026-05-11T23:01:40.6890232Z         100 │ + ··················>
+2026-05-11T23:01:40.6890697Z      72 101 │                       {modelId}
+2026-05-11T23:01:40.6891023Z      73 102 │                     </StatusPill>
+2026-05-11T23:01:40.6891436Z     ······· │ 
+2026-05-11T23:01:40.6891829Z      85 114 │         </SectionCard>
+2026-05-11T23:01:40.6892174Z      86 115 │   
+2026-05-11T23:01:40.6893695Z      87     │ - ······<SectionCard·title="Compatibility·posture"·description="Compatibility·notes·stay·with·the·downstream·contract·instead·of·on·a·duplicate·reference·page.">
+2026-05-11T23:01:40.6894787Z         116 │ + ······<SectionCard
+2026-05-11T23:01:40.6895119Z         117 │ + ········title="Compatibility·posture"
+2026-05-11T23:01:40.6895968Z         118 │ + ········description="Compatibility·notes·stay·with·the·downstream·contract·instead·of·on·a·duplicate·reference·page."
+2026-05-11T23:01:40.6896753Z         119 │ + ······>
+2026-05-11T23:01:40.6897088Z      88 120 │           <div className="grid gap-3 md:grid-cols-3">
+2026-05-11T23:01:40.6897733Z      89 121 │             <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
+2026-05-11T23:01:40.6898801Z      90 122 │               <p className="font-medium text-[var(--rm-fg)]">API family</p>
+2026-05-11T23:01:40.6900159Z      91     │ - ············<p·className="mt-2">Downstream·consumers·should·treat·this·runtime·as·an·OpenAI-compatible·provider·surfaced·through·the·model·listing·and·chat-completions·contract·shown·above.</p>
+2026-05-11T23:01:40.6901031Z         123 │ + ············<p·className="mt-2">
+2026-05-11T23:01:40.6902059Z         124 │ + ··············Downstream·consumers·should·treat·this·runtime·as·an·OpenAI-compatible·provider
+2026-05-11T23:01:40.6902829Z         125 │ + ··············surfaced·through·the·model·listing·and·chat-completions·contract·shown·above.
+2026-05-11T23:01:40.6903307Z         126 │ + ············</p>
+2026-05-11T23:01:40.6903581Z      92 127 │             </div>
+2026-05-11T23:01:40.6904076Z      93 128 │             <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
+2026-05-11T23:01:40.6905076Z      94 129 │               <p className="font-medium text-[var(--rm-fg)]">Tool calling</p>
+2026-05-11T23:01:40.6907188Z      95     │ - ············<p·className="mt-2">`tool_calls`·compatibility·follows·the·selected·routed·model·and·remains·inspectable·in·request·detail·rather·than·hidden·behind·a·separate·compatibility·matrix.</p>
+2026-05-11T23:01:40.6908734Z         130 │ + ············<p·className="mt-2">
+2026-05-11T23:01:40.6909928Z         131 │ + ··············`tool_calls`·compatibility·follows·the·selected·routed·model·and·remains·inspectable
+2026-05-11T23:01:40.6911308Z         132 │ + ··············in·request·detail·rather·than·hidden·behind·a·separate·compatibility·matrix.
+2026-05-11T23:01:40.6912154Z         133 │ + ············</p>
+2026-05-11T23:01:40.6912542Z      96 134 │             </div>
+2026-05-11T23:01:40.6913416Z      97 135 │             <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
+2026-05-11T23:01:40.6914498Z      98 136 │               <p className="font-medium text-[var(--rm-fg)]">MCP boundary</p>
+2026-05-11T23:01:40.6916551Z      99     │ - ············<p·className="mt-2">MCP·and·runtime-owned·tool·execution·stay·backend-governed;·downstream·clients·consume·the·compatible·response·surface·rather·than·negotiating·connector·state·directly.</p>
+2026-05-11T23:01:40.6918029Z         137 │ + ············<p·className="mt-2">
+2026-05-11T23:01:40.6919207Z         138 │ + ··············MCP·and·runtime-owned·tool·execution·stay·backend-governed;·downstream·clients·consume
+2026-05-11T23:01:40.6920568Z         139 │ + ··············the·compatible·response·surface·rather·than·negotiating·connector·state·directly.
+2026-05-11T23:01:40.6921067Z         140 │ + ············</p>
+2026-05-11T23:01:40.6921346Z     100 141 │             </div>
+2026-05-11T23:01:40.6921605Z     101 142 │           </div>
+2026-05-11T23:01:40.6921804Z   
+2026-05-11T23:01:40.6921896Z 
+2026-05-11T23:01:40.6922965Z ./role-model-router/apps/runtime-ui/app/routes/integrations-upstream.tsx:86:150 lint/a11y/noBlankTarget  FIXABLE  ━━━━━━━━━━
+2026-05-11T23:01:40.6923411Z 
+2026-05-11T23:01:40.6923632Z   × Avoid using target="_blank" without rel="noreferrer".
+2026-05-11T23:01:40.6923904Z   
+2026-05-11T23:01:40.6924147Z     84 │             <div className="space-y-3">
+2026-05-11T23:01:40.6924513Z     85 │               {modelTargets.map((target) => (
+2026-05-11T23:01:40.6925923Z   > 86 │                 <a key={target.modelId} className={`${mutedPanelClassName} block p-4 text-sm text-[var(--rm-secondary)]`} href={target.upstreamHref} target="_blank">
+2026-05-11T23:01:40.6927562Z        │                                                                                                                                                      ^^^^^^^^^^^^^^^
+2026-05-11T23:01:40.6928572Z     87 │                   <div className="flex flex-wrap items-center justify-between gap-2">
+2026-05-11T23:01:40.6929769Z     88 │                     <p className="break-all font-medium text-[var(--rm-fg)]">{target.modelId}</p>
+2026-05-11T23:01:40.6930397Z   
+2026-05-11T23:01:40.6931192Z   i Opening external links in new tabs without rel="noreferrer" is a security risk. See the explanation for more details.
+2026-05-11T23:01:40.6931978Z   
+2026-05-11T23:01:40.6932336Z   i Safe fix: Add the rel="noreferrer" attribute.
+2026-05-11T23:01:40.6932750Z   
+2026-05-11T23:01:40.6934206Z     86 │ ················<a·key={target.modelId}·className={`${mutedPanelClassName}·block·p-4·text-sm·text-[var(--rm-secondary)]`}·href={target.upstreamHref}·target="_blank"·rel="noreferrer">
+2026-05-11T23:01:40.6935371Z        │                                                                                                                                                                     +++++++++++++++++ 
+2026-05-11T23:01:40.6935696Z 
+2026-05-11T23:01:40.6936316Z ./role-model-router/apps/runtime-ui/app/routes/integrations-upstream.tsx:110:65 lint/style/noUnusedTemplateLiteral  FIXABLE  ━━━━━━━━━━
+2026-05-11T23:01:40.6936781Z 
+2026-05-11T23:01:40.6937154Z   × Do not use template literals if interpolation and special-character handling are not needed.
+2026-05-11T23:01:40.6937608Z   
+2026-05-11T23:01:40.6938375Z     108 │             <p className="mt-2">Provider/account posture, passthrough expectations, and model-specific raw links stay together so the integration boundary remains clear.</p>
+2026-05-11T23:01:40.6939138Z     109 │           </div>
+2026-05-11T23:01:40.6939847Z   > 110 │           <pre className={`p-4 text-sm ${codeBlockClassName}`}>{`/upstream/<model>/\nopens the vendor passthrough for a single model target`}</pre>
+2026-05-11T23:01:40.6941037Z         │                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-05-11T23:01:40.6941423Z     111 │         </div>
+2026-05-11T23:01:40.6941667Z     112 │       </SectionCard>
+2026-05-11T23:01:40.6941862Z   
+2026-05-11T23:01:40.6942074Z   i Unsafe fix: Replace with string literal
+2026-05-11T23:01:40.6942388Z   
+2026-05-11T23:01:40.6943190Z     108 108 │               <p className="mt-2">Provider/account posture, passthrough expectations, and model-specific raw links stay together so the integration boundary remains clear.</p>
+2026-05-11T23:01:40.6943952Z     109 109 │             </div>
+2026-05-11T23:01:40.6944738Z     110     │ - ··········<pre·className={`p-4·text-sm·${codeBlockClassName}`}>{`/upstream/<model>/\nopens·the·vendor·passthrough·for·a·single·model·target`}</pre>
+2026-05-11T23:01:40.6945884Z         110 │ + ··········<pre·className={`p-4·text-sm·${codeBlockClassName}`}>{"/upstream/<model>/\nopens·the·vendor·passthrough·for·a·single·model·target"}</pre>
+2026-05-11T23:01:40.6946508Z     111 111 │           </div>
+2026-05-11T23:01:40.6946773Z     112 112 │         </SectionCard>
+2026-05-11T23:01:40.6946984Z   
+2026-05-11T23:01:40.6947068Z 
+2026-05-11T23:01:40.6947532Z ./role-model-router/apps/runtime-ui/app/routes/integrations-upstream.tsx organizeImports ━━━━━━━━━━━
+2026-05-11T23:01:40.6947944Z 
+2026-05-11T23:01:40.6948212Z   × Import statements could be sorted:
+2026-05-11T23:01:40.6948587Z   
+2026-05-11T23:01:40.6949692Z       3   3 │   import { EmptyState, ErrorState, FactCard, LoadingState, PageHeader, SectionCard, StatusPill } from "../components/page-primitives";
+2026-05-11T23:01:40.6951150Z       4   4 │   import { codeBlockClassName, mutedPanelClassName } from "../lib/design-system";
+2026-05-11T23:01:40.6952377Z       5     │ - import·{·fetchRuntimeSnapshot,·type·RuntimeSnapshot·}·from·"../lib/runtime-api";
+2026-05-11T23:01:40.6953466Z           5 │ + import·{·type·RuntimeSnapshot,·fetchRuntimeSnapshot·}·from·"../lib/runtime-api";
+2026-05-11T23:01:40.6954450Z       6   6 │   import { buildProviderCards } from "../lib/view-models";
+2026-05-11T23:01:40.6955007Z       7   7 │   
+2026-05-11T23:01:40.6955264Z   
+2026-05-11T23:01:40.6955405Z 
+2026-05-11T23:01:40.6956027Z ./role-model-router/vendor/llama-swap/ui-svelte/src/lib/chatApi.ts organizeImports ━━━━━━━━━━━━━━━━━
+2026-05-11T23:01:40.6956661Z 
+2026-05-11T23:01:40.6956942Z   × Import statements could be sorted:
+2026-05-11T23:01:40.6957302Z   
+2026-05-11T23:01:40.6957960Z       1     │ - import·type·{·ChatMessage,·ChatCompletionRequest·}·from·"./types";
+2026-05-11T23:01:40.6958990Z           1 │ + import·type·{·ChatCompletionRequest,·ChatMessage·}·from·"./types";
+2026-05-11T23:01:40.6959496Z       2   2 │   
+2026-05-11T23:01:40.6959849Z       3   3 │   export interface StreamChunk {
+2026-05-11T23:01:40.6960393Z   
+2026-05-11T23:01:40.6960490Z 
+2026-05-11T23:01:40.6961209Z ./role-model-router/apps/runtime-ui/app/routes/local-logs.tsx:50:11 lint/a11y/useButtonType ━━━━━━━━━━
+2026-05-11T23:01:40.6961653Z 
+2026-05-11T23:01:40.6961949Z   × Provide an explicit type prop for the button element.
+2026-05-11T23:01:40.6962400Z   
+2026-05-11T23:01:40.6963259Z     48 │       <SectionCard title="Live logs" description="Buffered log output from the local inference runtime.">
+2026-05-11T23:01:40.6964186Z     49 │         <div className="mb-4 flex items-center gap-4">
+2026-05-11T23:01:40.6965154Z   > 50 │           <button onClick={refresh} disabled={loading} className={secondaryButtonClassName}>
+2026-05-11T23:01:40.6966166Z        │           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-05-11T23:01:40.6966810Z     51 │             {loading ? "Refreshing…" : "Refresh"}
+2026-05-11T23:01:40.6967300Z     52 │           </button>
+2026-05-11T23:01:40.6967621Z   
+2026-05-11T23:01:40.6968680Z   i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. This is likely not the behaviour that you want inside a React application.
+2026-05-11T23:01:40.6969777Z   
+2026-05-11T23:01:40.6970137Z   i Allowed button types are: submit, button or reset
+2026-05-11T23:01:40.6970539Z   
+2026-05-11T23:01:40.6970674Z 
+2026-05-11T23:01:40.6971574Z ./role-model-router/apps/runtime-ui/app/routes/local-logs.tsx:73:25 lint/suspicious/noArrayIndexKey ━━━━━━━━━━
+2026-05-11T23:01:40.6972253Z 
+2026-05-11T23:01:40.6972799Z   × Avoid using the index of an array as key property in an element.
+2026-05-11T23:01:40.6973161Z   
+2026-05-11T23:01:40.6974006Z     71 │           <pre className={`${mutedPanelClassName} h-96 overflow-auto p-4 text-xs leading-5 font-mono text-[var(--rm-secondary)]`}>
+2026-05-11T23:01:40.6975039Z     72 │             {logLines.map((line, i) => (
+2026-05-11T23:01:40.6975844Z   > 73 │               <div key={i} className="whitespace-pre-wrap break-all">{line}</div>
+2026-05-11T23:01:40.6976529Z        │                         ^
+2026-05-11T23:01:40.6976868Z     74 │             ))}
+2026-05-11T23:01:40.6977092Z     75 │           </pre>
+2026-05-11T23:01:40.6977276Z   
+2026-05-11T23:01:40.6977557Z   i This is the source of the key value.
+2026-05-11T23:01:40.6977943Z   
+2026-05-11T23:01:40.6978237Z     70 │         ) : (
+2026-05-11T23:01:40.6979141Z     71 │           <pre className={`${mutedPanelClassName} h-96 overflow-auto p-4 text-xs leading-5 font-mono text-[var(--rm-secondary)]`}>
+2026-05-11T23:01:40.6980204Z   > 72 │             {logLines.map((line, i) => (
+2026-05-11T23:01:40.6980748Z        │                                  ^
+2026-05-11T23:01:40.6981349Z     73 │               <div key={i} className="whitespace-pre-wrap break-all">{line}</div>
+2026-05-11T23:01:40.6981793Z     74 │             ))}
+2026-05-11T23:01:40.6982086Z   
+2026-05-11T23:01:40.6982699Z   i The order of the items may change, and this also affects performances and component state.
+2026-05-11T23:01:40.6983313Z   
+2026-05-11T23:01:40.6983610Z   i Check the React documentation. 
+2026-05-11T23:01:40.6983978Z   
+2026-05-11T23:01:40.6984109Z 
+2026-05-11T23:01:40.6984924Z ./role-model-router/apps/runtime-ui/app/routes/local-logs.tsx organizeImports ━━━━━━━━━━━━━━━━━━━━━━
+2026-05-11T23:01:40.6985550Z 
+2026-05-11T23:01:40.6985735Z   × Import statements could be sorted:
+2026-05-11T23:01:40.6986104Z   
+2026-05-11T23:01:40.6986645Z      1  1 │   import { useCallback, useEffect, useState } from "react";
+2026-05-11T23:01:40.6987221Z      2  2 │   
+2026-05-11T23:01:40.6988295Z      3    │ - import·{·PageHeader,·SectionCard,·EmptyState,·LoadingState,·ErrorState·}·from·"../components/page-primitives";
+2026-05-11T23:01:40.6989700Z         3 │ + import·{·EmptyState,·ErrorState,·LoadingState,·PageHeader,·SectionCard·}·from·"../components/page-primitives";
+2026-05-11T23:01:40.6990980Z      4  4 │   import { mutedPanelClassName, secondaryButtonClassName } from "../lib/design-system";
+2026-05-11T23:01:40.6992095Z      5  5 │   import { fetchLocalLogs } from "../lib/runtime-api";
+2026-05-11T23:01:40.6992558Z   
+2026-05-11T23:01:40.6992705Z 
+2026-05-11T23:01:40.6993169Z ./role-model-router/apps/runtime-ui/app/routes/local-matrix.tsx organizeImports ━━━━━━━━━━━━━━━━━━━━
+2026-05-11T23:01:40.6993643Z 
+2026-05-11T23:01:40.6993904Z   × Import statements could be sorted:
+2026-05-11T23:01:40.6994257Z   
+2026-05-11T23:01:40.6994794Z      1  1 │   import { useCallback, useEffect, useState } from "react";
+2026-05-11T23:01:40.6995337Z      2  2 │   
+2026-05-11T23:01:40.6996413Z      3    │ - import·{·PageHeader,·SectionCard,·EmptyState,·LoadingState,·ErrorState·}·from·"../components/page-primitives";
+2026-05-11T23:01:40.6997682Z         3 │ + import·{·EmptyState,·ErrorState,·LoadingState,·PageHeader,·SectionCard·}·from·"../components/page-primitives";
+2026-05-11T23:01:40.6998821Z      4  4 │   import { fetchLocalModels } from "../lib/runtime-api";
+2026-05-11T23:01:40.6999413Z      5  5 │   
+2026-05-11T23:01:40.6999686Z   
+2026-05-11T23:01:40.6999818Z 
+2026-05-11T23:01:40.7000337Z ./role-model-router/vendor/llama-swap/ui-svelte/src/lib/chatApi.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-05-11T23:01:40.7000951Z 
+2026-05-11T23:01:40.7001296Z   × Formatter would have printed the following content:
+2026-05-11T23:01:40.7001733Z   
+2026-05-11T23:01:40.7002095Z     43 │ ··options?:·ChatOptions,
+2026-05-11T23:01:40.7002558Z        │                        +
+2026-05-11T23:01:40.7002789Z 
+2026-05-11T23:01:40.7003600Z ./role-model-router/apps/runtime-ui/app/routes/local-logs.tsx format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-05-11T23:01:40.7004206Z 
+2026-05-11T23:01:40.7004542Z   × Formatter would have printed the following content:
+2026-05-11T23:01:40.7004996Z   
+2026-05-11T23:01:40.7005443Z      1  1 │   import { useCallback, useEffect, useState } from "react";
+2026-05-11T23:01:40.7005982Z      2  2 │   
+2026-05-11T23:01:40.7007102Z      3    │ - import·{·PageHeader,·SectionCard,·EmptyState,·LoadingState,·ErrorState·}·from·"../components/page-primitives";
+2026-05-11T23:01:40.7008063Z         3 │ + import·{
+2026-05-11T23:01:40.7008440Z         4 │ + ··PageHeader,
+2026-05-11T23:01:40.7008834Z         5 │ + ··SectionCard,
+2026-05-11T23:01:40.7009319Z         6 │ + ··EmptyState,
+2026-05-11T23:01:40.7009681Z         7 │ + ··LoadingState,
+2026-05-11T23:01:40.7010084Z         8 │ + ··ErrorState,
+2026-05-11T23:01:40.7010614Z         9 │ + }·from·"../components/page-primitives";
+2026-05-11T23:01:40.7011611Z      4 10 │   import { mutedPanelClassName, secondaryButtonClassName } from "../lib/design-system";
+2026-05-11T23:01:40.7012560Z      5 11 │   import { fetchLocalLogs } from "../lib/runtime-api";
+2026-05-11T23:01:40.7013086Z     ····· │ 
+2026-05-11T23:01:40.7013595Z     46 52 │         {error ? <ErrorState label={error} /> : null}
+2026-05-11T23:01:40.7014100Z     47 53 │   
+2026-05-11T23:01:40.7015300Z     48    │ - ······<SectionCard·title="Live·logs"·description="Buffered·log·output·from·the·local·inference·runtime.">
+2026-05-11T23:01:40.7015984Z        54 │ + ······<SectionCard
+2026-05-11T23:01:40.7016279Z        55 │ + ········title="Live·logs"
+2026-05-11T23:01:40.7017026Z        56 │ + ········description="Buffered·log·output·from·the·local·inference·runtime."
+2026-05-11T23:01:40.7017694Z        57 │ + ······>
+2026-05-11T23:01:40.7047515Z     49 58 │           <div className="mb-4 flex items-center gap-4">
+2026-05-11T23:01:40.7048589Z     50 59 │             <button onClick={refresh} disabled={loading} className={secondaryButtonClassName}>
+2026-05-11T23:01:40.7049455Z     ····· │ 
+2026-05-11T23:01:40.7050328Z     59 68 │                 className="h-4 w-4 rounded-none border-[var(--rm-border-strong)] accent-[var(--rm-accent)]"
+2026-05-11T23:01:40.7051064Z     60 69 │               />
+2026-05-11T23:01:40.7052045Z     61    │ - ············<label·htmlFor="autoRefresh"·className="text-sm·text-[var(--rm-fg)]">Auto-refresh·(3s)</label>
+2026-05-11T23:01:40.7053270Z        70 │ + ············<label·htmlFor="autoRefresh"·className="text-sm·text-[var(--rm-fg)]">
+2026-05-11T23:01:40.7054071Z        71 │ + ··············Auto-refresh·(3s)
+2026-05-11T23:01:40.7054588Z        72 │ + ············</label>
+2026-05-11T23:01:40.7055031Z     62 73 │             </div>
+2026-05-11T23:01:40.7055919Z     63 74 │             <span className="ml-auto text-xs text-[var(--rm-muted)]">{logLines.length} lines</span>
+2026-05-11T23:01:40.7056665Z     ····· │ 
+2026-05-11T23:01:40.7057395Z     69 80 │             <EmptyState label="No logs available. The local runtime may not be running." />
+2026-05-11T23:01:40.7058108Z     70 81 │           ) : (
+2026-05-11T23:01:40.7059470Z     71    │ - ··········<pre·className={`${mutedPanelClassName}·h-96·overflow-auto·p-4·text-xs·leading-5·font-mono·text-[var(--rm-secondary)]`}>
+2026-05-11T23:01:40.7060490Z        82 │ + ··········<pre
+2026-05-11T23:01:40.7061726Z        83 │ + ············className={`${mutedPanelClassName}·h-96·overflow-auto·p-4·text-xs·leading-5·font-mono·text-[var(--rm-secondary)]`}
+2026-05-11T23:01:40.7062713Z        84 │ + ··········>
+2026-05-11T23:01:40.7063249Z     72 85 │               {logLines.map((line, i) => (
+2026-05-11T23:01:40.7064271Z     73    │ - ··············<div·key={i}·className="whitespace-pre-wrap·break-all">{line}</div>
+2026-05-11T23:01:40.7065270Z        86 │ + ··············<div·key={i}·className="whitespace-pre-wrap·break-all">
+2026-05-11T23:01:40.7065763Z        87 │ + ················{line}
+2026-05-11T23:01:40.7066080Z        88 │ + ··············</div>
+2026-05-11T23:01:40.7066339Z     74 89 │               ))}
+2026-05-11T23:01:40.7066817Z     75 90 │             </pre>
+2026-05-11T23:01:40.7067013Z   
+2026-05-11T23:01:40.7067108Z 
+2026-05-11T23:01:40.7067577Z ./role-model-router/apps/runtime-ui/app/routes/local-matrix.tsx format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-05-11T23:01:40.7067928Z 
+2026-05-11T23:01:40.7068148Z   × Formatter would have printed the following content:
+2026-05-11T23:01:40.7068408Z   
+2026-05-11T23:01:40.7068746Z      1  1 │   import { useCallback, useEffect, useState } from "react";
+2026-05-11T23:01:40.7069254Z      2  2 │   
+2026-05-11T23:01:40.7069907Z      3    │ - import·{·PageHeader,·SectionCard,·EmptyState,·LoadingState,·ErrorState·}·from·"../components/page-primitives";
+2026-05-11T23:01:40.7070462Z         3 │ + import·{
+2026-05-11T23:01:40.7070696Z         4 │ + ··PageHeader,
+2026-05-11T23:01:40.7070933Z         5 │ + ··SectionCard,
+2026-05-11T23:01:40.7071175Z         6 │ + ··EmptyState,
+2026-05-11T23:01:40.7071409Z         7 │ + ··LoadingState,
+2026-05-11T23:01:40.7071642Z         8 │ + ··ErrorState,
+2026-05-11T23:01:40.7071977Z         9 │ + }·from·"../components/page-primitives";
+2026-05-11T23:01:40.7072403Z      4 10 │   import { fetchLocalModels } from "../lib/runtime-api";
+2026-05-11T23:01:40.7072717Z      5 11 │   
+2026-05-11T23:01:40.7072911Z     ····· │ 
+2026-05-11T23:01:40.7073222Z     42 48 │         {error ? <ErrorState label={error} /> : null}
+2026-05-11T23:01:40.7073516Z     43 49 │   
+2026-05-11T23:01:40.7074089Z     44    │ - ······<SectionCard·title="Loaded·model·matrix"·description="Currently·loaded·local·inference·models.">
+2026-05-11T23:01:40.7074737Z        50 │ + ······<SectionCard
+2026-05-11T23:01:40.7075069Z        51 │ + ········title="Loaded·model·matrix"
+2026-05-11T23:01:40.7075528Z        52 │ + ········description="Currently·loaded·local·inference·models."
+2026-05-11T23:01:40.7075884Z        53 │ + ······>
+2026-05-11T23:01:40.7076133Z     45 54 │           {loading ? (
+2026-05-11T23:01:40.7076489Z     46 55 │             <LoadingState label="Loading matrix…" />
+2026-05-11T23:01:40.7076811Z     ····· │ 
+2026-05-11T23:01:40.7077051Z     52 61 │                 <div
+2026-05-11T23:01:40.7077347Z     53 62 │                   key={model.modelId}
+2026-05-11T23:01:40.7077895Z     54    │ - ················className="border·border-[var(--rm-border)]·bg-[var(--rm-surface)]·p-4">
+2026-05-11T23:01:40.7078572Z        63 │ + ················className="border·border-[var(--rm-border)]·bg-[var(--rm-surface)]·p-4"
+2026-05-11T23:01:40.7079005Z        64 │ + ··············>
+2026-05-11T23:01:40.7079548Z     55 65 │                   <div className="mb-3 flex items-center justify-between">
+2026-05-11T23:01:40.7080197Z     56 66 │                     <span className="text-xs font-mono uppercase tracking-wider text-[var(--rm-accent)]">
+2026-05-11T23:01:40.7080596Z   
+2026-05-11T23:01:40.7080686Z 
+2026-05-11T23:01:40.7081151Z ./role-model-router/apps/runtime-ui/app/routes/integrations-upstream.tsx format ━━━━━━━━━━━━━━━━━━━━
+2026-05-11T23:01:40.7081508Z 
+2026-05-11T23:01:40.7081801Z   × Formatter would have printed the following content:
+2026-05-11T23:01:40.7082058Z   
+2026-05-11T23:01:40.7082382Z       1   1 │   import { useEffect, useMemo, useState } from "react";
+2026-05-11T23:01:40.7082686Z       2   2 │   
+2026-05-11T23:01:40.7083433Z       3     │ - import·{·EmptyState,·ErrorState,·FactCard,·LoadingState,·PageHeader,·SectionCard,·StatusPill·}·from·"../components/page-primitives";
+2026-05-11T23:01:40.7084068Z           3 │ + import·{
+2026-05-11T23:01:40.7084321Z           4 │ + ··EmptyState,
+2026-05-11T23:01:40.7084575Z           5 │ + ··ErrorState,
+2026-05-11T23:01:40.7084810Z           6 │ + ··FactCard,
+2026-05-11T23:01:40.7085065Z           7 │ + ··LoadingState,
+2026-05-11T23:01:40.7085319Z           8 │ + ··PageHeader,
+2026-05-11T23:01:40.7085569Z           9 │ + ··SectionCard,
+2026-05-11T23:01:40.7085809Z          10 │ + ··StatusPill,
+2026-05-11T23:01:40.7086136Z          11 │ + }·from·"../components/page-primitives";
+2026-05-11T23:01:40.7086687Z       4  12 │   import { codeBlockClassName, mutedPanelClassName } from "../lib/design-system";
+2026-05-11T23:01:40.7087351Z       5  13 │   import { fetchRuntimeSnapshot, type RuntimeSnapshot } from "../lib/runtime-api";
+2026-05-11T23:01:40.7087762Z     ······· │ 
+2026-05-11T23:01:40.7088038Z      13  21 │       void fetchRuntimeSnapshot()
+2026-05-11T23:01:40.7088362Z      14  22 │         .then(setSnapshot)
+2026-05-11T23:01:40.7089306Z      15     │ - ······.catch((value:·unknown)·=>·setError(value·instanceof·Error·?·value.message·:·"Could·not·load·upstream·integration·details."));
+2026-05-11T23:01:40.7090004Z          23 │ + ······.catch((value:·unknown)·=>
+2026-05-11T23:01:40.7090317Z          24 │ + ········setError(
+2026-05-11T23:01:40.7090928Z          25 │ + ··········value·instanceof·Error·?·value.message·:·"Could·not·load·upstream·integration·details.",
+2026-05-11T23:01:40.7091427Z          26 │ + ········),
+2026-05-11T23:01:40.7091660Z          27 │ + ······);
+2026-05-11T23:01:40.7091883Z      16  28 │     }, []);
+2026-05-11T23:01:40.7092100Z      17  29 │   
+2026-05-11T23:01:40.7092391Z      18  30 │     const providerCards = useMemo(
+2026-05-11T23:01:40.7093126Z      19     │ - ····()·=>·(snapshot·?·buildProviderCards(snapshot.providers,·snapshot.accounts).filter((p)·=>·p.accountCount·>·0)·:·[]),
+2026-05-11T23:01:40.7093691Z          31 │ + ····()·=>
+2026-05-11T23:01:40.7093949Z          32 │ + ······snapshot
+2026-05-11T23:01:40.7094422Z          33 │ + ········?·buildProviderCards(snapshot.providers,·snapshot.accounts).filter(
+2026-05-11T23:01:40.7095038Z          34 │ + ············(p)·=>·p.accountCount·>·0,
+2026-05-11T23:01:40.7095348Z          35 │ + ··········)
+2026-05-11T23:01:40.7095584Z          36 │ + ········:·[],
+2026-05-11T23:01:40.7095852Z      20  37 │       [snapshot],
+2026-05-11T23:01:40.7096085Z      21  38 │     );
+2026-05-11T23:01:40.7096303Z     ······· │ 
+2026-05-11T23:01:40.7096501Z      38  55 │   
+2026-05-11T23:01:40.7096868Z      39  56 │         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+2026-05-11T23:01:40.7098058Z      40     │ - ········<FactCard·label="Providers"·value={snapshot?.providers.length·??·0}·detail="Provider·and·account·posture·stays·visible·here·without·duplicating·the·editable·Control·pages."·emphasis·/>
+2026-05-11T23:01:40.7099630Z      41     │ - ········<FactCard·label="Accounts"·value={snapshot?.accounts.length·??·0}·detail="Configured·provider·accounts·that·feed·current·upstream·model·access."·/>
+2026-05-11T23:01:40.7101026Z      42     │ - ········<FactCard·label="Upstream·targets"·value={modelTargets.length}·detail="Each·target·keeps·a·contextual·`/upstream/<model>/`·doorway·instead·of·a·global·legacy-ui·link."·/>
+2026-05-11T23:01:40.7101831Z          57 │ + ········<FactCard
+2026-05-11T23:01:40.7102140Z          58 │ + ··········label="Providers"
+2026-05-11T23:01:40.7102547Z          59 │ + ··········value={snapshot?.providers.length·??·0}
+2026-05-11T23:01:40.7103299Z          60 │ + ··········detail="Provider·and·account·posture·stays·visible·here·without·duplicating·the·editable·Control·pages."
+2026-05-11T23:01:40.7103978Z          61 │ + ··········emphasis
+2026-05-11T23:01:40.7104236Z          62 │ + ········/>
+2026-05-11T23:01:40.7104486Z          63 │ + ········<FactCard
+2026-05-11T23:01:40.7104776Z          64 │ + ··········label="Accounts"
+2026-05-11T23:01:40.7105151Z          65 │ + ··········value={snapshot?.accounts.length·??·0}
+2026-05-11T23:01:40.7105770Z          66 │ + ··········detail="Configured·provider·accounts·that·feed·current·upstream·model·access."
+2026-05-11T23:01:40.7106252Z          67 │ + ········/>
+2026-05-11T23:01:40.7106504Z          68 │ + ········<FactCard
+2026-05-11T23:01:40.7106825Z          69 │ + ··········label="Upstream·targets"
+2026-05-11T23:01:40.7107193Z          70 │ + ··········value={modelTargets.length}
+2026-05-11T23:01:40.7107893Z          71 │ + ··········detail="Each·target·keeps·a·contextual·`/upstream/<model>/`·doorway·instead·of·a·global·legacy-ui·link."
+2026-05-11T23:01:40.7108433Z          72 │ + ········/>
+2026-05-11T23:01:40.7108682Z      43  73 │         </div>
+2026-05-11T23:01:40.7108897Z      44  74 │   
+2026-05-11T23:01:40.7109222Z     ······· │ 
+2026-05-11T23:01:40.7109509Z      46  76 │   
+2026-05-11T23:01:40.7110053Z      47  77 │         <div className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
+2026-05-11T23:01:40.7111032Z      48     │ - ········<SectionCard·title="Provider·accounts·in·scope"·description="Read·auth·and·provider·posture·here,·then·move·to·raw·passthrough·only·when·needed.">
+2026-05-11T23:01:40.7111874Z          78 │ + ········<SectionCard
+2026-05-11T23:01:40.7112247Z          79 │ + ··········title="Provider·accounts·in·scope"
+2026-05-11T23:01:40.7112957Z          80 │ + ··········description="Read·auth·and·provider·posture·here,·then·move·to·raw·passthrough·only·when·needed."
+2026-05-11T23:01:40.7113478Z          81 │ + ········>
+2026-05-11T23:01:40.7113754Z      49  82 │             {!snapshot ? (
+2026-05-11T23:01:40.7114210Z      50  83 │               <LoadingState label="Loading upstream provider posture…" />
+2026-05-11T23:01:40.7114586Z     ······· │ 
+2026-05-11T23:01:40.7115024Z      57  90 │                     <div className="flex flex-wrap items-center justify-between gap-2">
+2026-05-11T23:01:40.7115649Z      58  91 │                       <p className="font-medium text-[var(--rm-fg)]">{provider.title}</p>
+2026-05-11T23:01:40.7116706Z      59     │ - ····················<StatusPill·tone={provider.accountCount·>·0·?·"accent"·:·"warning"}>{provider.accountCount}·account{provider.accountCount·===·1·?·""·:·"s"}</StatusPill>
+2026-05-11T23:01:40.7117698Z          92 │ + ····················<StatusPill·tone={provider.accountCount·>·0·?·"accent"·:·"warning"}>
+2026-05-11T23:01:40.7118412Z          93 │ + ······················{provider.accountCount}·account{provider.accountCount·===·1·?·""·:·"s"}
+2026-05-11T23:01:40.7118930Z          94 │ + ····················</StatusPill>
+2026-05-11T23:01:40.7119400Z      60  95 │                     </div>
+2026-05-11T23:01:40.7119885Z      61  96 │                     <div className="mt-3 flex flex-wrap gap-2">
+2026-05-11T23:01:40.7120199Z     ······· │ 
+2026-05-11T23:01:40.7120454Z      76 111 │           </SectionCard>
+2026-05-11T23:01:40.7120703Z      77 112 │   
+2026-05-11T23:01:40.7121768Z      78     │ - ········<SectionCard·title="Upstream·target·inventory"·description="Model-specific·passthrough·links·remain·contextual·to·the·integration·page·instead·of·living·in·the·global·shell·chrome.">
+2026-05-11T23:01:40.7122652Z         113 │ + ········<SectionCard
+2026-05-11T23:01:40.7123041Z         114 │ + ··········title="Upstream·target·inventory"
+2026-05-11T23:01:40.7123939Z         115 │ + ··········description="Model-specific·passthrough·links·remain·contextual·to·the·integration·page·instead·of·living·in·the·global·shell·chrome."
+2026-05-11T23:01:40.7124619Z         116 │ + ········>
+2026-05-11T23:01:40.7124892Z      79 117 │             {!snapshot ? (
+2026-05-11T23:01:40.7125296Z      80 118 │               <LoadingState label="Loading upstream targets…" />
+2026-05-11T23:01:40.7125630Z     ······· │ 
+2026-05-11T23:01:40.7125937Z      84 122 │               <div className="space-y-3">
+2026-05-11T23:01:40.7126318Z      85 123 │                 {modelTargets.map((target) => (
+2026-05-11T23:01:40.7127219Z      86     │ - ················<a·key={target.modelId}·className={`${mutedPanelClassName}·block·p-4·text-sm·text-[var(--rm-secondary)]`}·href={target.upstreamHref}·target="_blank">
+2026-05-11T23:01:40.7127914Z         124 │ + ················<a
+2026-05-11T23:01:40.7128266Z         125 │ + ··················key={target.modelId}
+2026-05-11T23:01:40.7128871Z         126 │ + ··················className={`${mutedPanelClassName}·block·p-4·text-sm·text-[var(--rm-secondary)]`}
+2026-05-11T23:01:40.7129607Z         127 │ + ··················href={target.upstreamHref}
+2026-05-11T23:01:40.7129976Z         128 │ + ··················target="_blank"
+2026-05-11T23:01:40.7130285Z         129 │ + ················>
+2026-05-11T23:01:40.7130775Z      87 130 │                     <div className="flex flex-wrap items-center justify-between gap-2">
+2026-05-11T23:01:40.7131437Z      88 131 │                       <p className="break-all font-medium text-[var(--rm-fg)]">{target.modelId}</p>
+2026-05-11T23:01:40.7132330Z      89     │ - ····················<StatusPill·tone="accent">{target.endpointCount}·endpoint{target.endpointCount·===·1·?·""·:·"s"}</StatusPill>
+2026-05-11T23:01:40.7133010Z         132 │ + ····················<StatusPill·tone="accent">
+2026-05-11T23:01:40.7133703Z         133 │ + ······················{target.endpointCount}·endpoint{target.endpointCount·===·1·?·""·:·"s"}
+2026-05-11T23:01:40.7134213Z         134 │ + ····················</StatusPill>
+2026-05-11T23:01:40.7134530Z      90 135 │                     </div>
+2026-05-11T23:01:40.7134915Z      91 136 │                     <p className="mt-2">Owner {target.owner}</p>
+2026-05-11T23:01:40.7135237Z     ······· │ 
+2026-05-11T23:01:40.7135447Z      98 143 │         </div>
+2026-05-11T23:01:40.7135663Z      99 144 │   
+2026-05-11T23:01:40.7136580Z     100     │ - ······<SectionCard·title="Boundary·notes"·description="This·page·documents·when·to·use·raw·passthrough·without·duplicating·the·editable·provider/account·surfaces.">
+2026-05-11T23:01:40.7137369Z         145 │ + ······<SectionCard
+2026-05-11T23:01:40.7137681Z         146 │ + ········title="Boundary·notes"
+2026-05-11T23:01:40.7138466Z         147 │ + ········description="This·page·documents·when·to·use·raw·passthrough·without·duplicating·the·editable·provider/account·surfaces."
+2026-05-11T23:01:40.7139233Z         148 │ + ······>
+2026-05-11T23:01:40.7139585Z     101 149 │           <div className="grid gap-4 md:grid-cols-3">
+2026-05-11T23:01:40.7140174Z     102 150 │             <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
+2026-05-11T23:01:40.7140858Z     103 151 │               <p className="font-medium text-[var(--rm-fg)]">When to use `/upstream/`</p>
+2026-05-11T23:01:40.7142140Z     104     │ - ············<p·className="mt-2">Use·`/upstream/&lt;model&gt;/`·when·you·need·raw·vendor·behavior·for·a·concrete·model·target·and·the·repo-owned·page·intentionally·stays·reference-first.</p>
+2026-05-11T23:01:40.7143018Z         152 │ + ············<p·className="mt-2">
+2026-05-11T23:01:40.7143626Z         153 │ + ··············Use·`/upstream/&lt;model&gt;/`·when·you·need·raw·vendor·behavior·for·a·concrete·model
+2026-05-11T23:01:40.7144340Z         154 │ + ··············target·and·the·repo-owned·page·intentionally·stays·reference-first.
+2026-05-11T23:01:40.7144820Z         155 │ + ············</p>
+2026-05-11T23:01:40.7145094Z     105 156 │             </div>
+2026-05-11T23:01:40.7145589Z     106 157 │             <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
+2026-05-11T23:01:40.7146219Z     107 158 │               <p className="font-medium text-[var(--rm-fg)]">What stays here</p>
+2026-05-11T23:01:40.7147342Z     108     │ - ············<p·className="mt-2">Provider/account·posture,·passthrough·expectations,·and·model-specific·raw·links·stay·together·so·the·integration·boundary·remains·clear.</p>
+2026-05-11T23:01:40.7148184Z         159 │ + ············<p·className="mt-2">
+2026-05-11T23:01:40.7148817Z         160 │ + ··············Provider/account·posture,·passthrough·expectations,·and·model-specific·raw·links·stay
+2026-05-11T23:01:40.7149661Z         161 │ + ··············together·so·the·integration·boundary·remains·clear.
+2026-05-11T23:01:40.7150067Z         162 │ + ············</p>
+2026-05-11T23:01:40.7150413Z     109 163 │             </div>
+2026-05-11T23:01:40.7151219Z     110     │ - ··········<pre·className={`p-4·text-sm·${codeBlockClassName}`}>{`/upstream/<model>/\nopens·the·vendor·passthrough·for·a·single·model·target`}</pre>
+2026-05-11T23:01:40.7151880Z         164 │ + ··········<pre
+2026-05-11T23:01:40.7152274Z         165 │ + ············className={`p-4·text-sm·${codeBlockClassName}`}
+2026-05-11T23:01:40.7152934Z         166 │ + ··········>{`/upstream/<model>/\nopens·the·vendor·passthrough·for·a·single·model·target`}</pre>
+2026-05-11T23:01:40.7153446Z     111 167 │           </div>
+2026-05-11T23:01:40.7153706Z     112 168 │         </SectionCard>
+2026-05-11T23:01:40.7153920Z   
+2026-05-11T23:01:40.7154009Z 
+2026-05-11T23:01:40.7154462Z ./role-model-router/vendor/llama-swap/ui-svelte/src/lib/audioApi.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-05-11T23:01:40.7154819Z 
+2026-05-11T23:01:40.7155029Z   × Formatter would have printed the following content:
+2026-05-11T23:01:40.7155292Z   
+2026-05-11T23:01:40.7155529Z     6 │ ··signal?:·AbortSignal,
+2026-05-11T23:01:40.7155792Z       │                       +
+2026-05-11T23:01:40.7155918Z 
+2026-05-11T23:01:40.7156449Z ./role-model-router/apps/runtime-ui/app/routes/local-peers.tsx:169:13 lint/a11y/noLabelWithoutControl ━━━━━━━━━━
+2026-05-11T23:01:40.7156835Z 
+2026-05-11T23:01:40.7157016Z   × A form label must be associated with an input.
+2026-05-11T23:01:40.7157269Z   
+2026-05-11T23:01:40.7157519Z     167 │         <div className="space-y-4">
+2026-05-11T23:01:40.7157892Z     168 │           <div className="space-y-2">
+2026-05-11T23:01:40.7158493Z   > 169 │             <label className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]">
+2026-05-11T23:01:40.7159194Z         │             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-05-11T23:01:40.7159554Z   > 170 │               Peer URL
+2026-05-11T23:01:40.7159818Z   > 171 │             </label>
+2026-05-11T23:01:40.7160095Z         │             ^^^^^^^^
+2026-05-11T23:01:40.7160329Z     172 │             <input
+2026-05-11T23:01:40.7160596Z     173 │               type="url"
+2026-05-11T23:01:40.7160799Z   
+2026-05-11T23:01:40.7161280Z   i Consider adding a `for` or `htmlFor` attribute to the label element or moving the input element to inside the label element.
+2026-05-11T23:01:40.7161745Z   
+2026-05-11T23:01:40.7161828Z 
+2026-05-11T23:01:40.7162334Z ./role-model-router/apps/runtime-ui/app/routes/local-peers.tsx:181:13 lint/a11y/noLabelWithoutControl ━━━━━━━━━━
+2026-05-11T23:01:40.7162723Z 
+2026-05-11T23:01:40.7163025Z   × A form label must be associated with an input.
+2026-05-11T23:01:40.7163278Z   
+2026-05-11T23:01:40.7163466Z     179 │           </div>
+2026-05-11T23:01:40.7163764Z     180 │           <div className="space-y-2">
+2026-05-11T23:01:40.7164344Z   > 181 │             <label className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]">
+2026-05-11T23:01:40.7164969Z         │             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-05-11T23:01:40.7165374Z   > 182 │               Auth token (optional)
+2026-05-11T23:01:40.7165671Z   > 183 │             </label>
+2026-05-11T23:01:40.7165924Z         │             ^^^^^^^^
+2026-05-11T23:01:40.7166167Z     184 │             <input
+2026-05-11T23:01:40.7166433Z     185 │               type="password"
+2026-05-11T23:01:40.7166648Z   
+2026-05-11T23:01:40.7167124Z   i Consider adding a `for` or `htmlFor` attribute to the label element or moving the input element to inside the label element.
+2026-05-11T23:01:40.7167575Z   
+2026-05-11T23:01:40.7167662Z 
+2026-05-11T23:01:40.7168060Z check ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-05-11T23:01:40.7168322Z 
+2026-05-11T23:01:40.7168514Z   × Some errors were emitted while running checks.
+2026-05-11T23:01:40.7168751Z   
+2026-05-11T23:01:40.7168833Z 
+2026-05-11T23:01:40.7168950Z Skipped 56 suggested fixes.
+2026-05-11T23:01:40.7169544Z If you wish to apply the suggested (unsafe) fixes, use the command biome check --fix --unsafe
+2026-05-11T23:01:40.7169857Z 
+2026-05-11T23:01:40.7170067Z The number of diagnostics exceeds the number allowed by Biome.
+2026-05-11T23:01:40.7170383Z Diagnostics not shown: 235.
+2026-05-11T23:01:40.7170660Z Checked 460 files in 586ms. No fixes applied.
+2026-05-11T23:01:40.7170917Z Found 255 errors.
+2026-05-11T23:01:40.7202472Z  ELIFECYCLE  Command failed with exit code 1.
+2026-05-11T23:01:40.7487357Z  ELIFECYCLE  Command failed with exit code 1.
+2026-05-11T23:01:40.7624605Z ##[error]Process completed with exit code 1.
+2026-05-11T23:01:40.7684344Z Post job cleanup.
+2026-05-11T23:01:40.9029022Z Pruning is unnecessary.
+2026-05-11T23:01:40.9139862Z Post job cleanup.
+2026-05-11T23:01:41.0196112Z [command]/usr/bin/git version
+2026-05-11T23:01:41.0232791Z git version 2.53.0
+2026-05-11T23:01:41.0274565Z Temporarily overriding HOME='/home/runner/work/_temp/c6f4b68b-c671-406a-8f98-41a075d30f33' before making global git config changes
+2026-05-11T23:01:41.0276135Z Adding repository directory to the temporary git global config as a safe directory
+2026-05-11T23:01:41.0290704Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/role-model/role-model
+2026-05-11T23:01:41.0323541Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-05-11T23:01:41.0354275Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-05-11T23:01:41.0540330Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-05-11T23:01:41.0557173Z http.https://github.com/.extraheader
+2026-05-11T23:01:41.0567909Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-05-11T23:01:41.0592074Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-05-11T23:01:41.0765343Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-05-11T23:01:41.0791250Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-05-11T23:01:41.1063263Z Cleaning up orphan processes
+2026-05-11T23:01:41.1272815Z ##[warning]Node.js 20 actions are deprecated. The following actions are running on Node.js 20 and may not work as expected: actions/checkout@v4, actions/setup-node@v4, pnpm/action-setup@v4. Actions will be forced to run with Node.js 24 by default starting June 2nd, 2026. Node.js 20 will be removed from the runner on September 16th, 2026. Please check if updated versions of these actions are available that support Node.js 24. To opt into Node.js 24 now, set the FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true environment variable on the runner or in your workflow file. Once Node.js 24 becomes the default, you can temporarily opt out by setting ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

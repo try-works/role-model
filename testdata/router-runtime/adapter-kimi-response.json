@@ -10,6 +10,12 @@
           "text": "Kimi Code summary"
         }
       ]
+    },
+    {
+      "type": "function_call",
+      "call_id": "call_1",
+      "name": "lookupRegistry",
+      "arguments": "{\"endpointId\":\"moonshot.personal.primary.global.kimi-k2.5\"}"
     }
   ],
   "usage": {

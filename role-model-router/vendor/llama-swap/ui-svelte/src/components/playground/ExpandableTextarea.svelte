@@ -1,55 +1,55 @@
 <script lang="ts">
-  import { untrack } from "svelte";
-  import { Maximize2, X } from "lucide-svelte";
+import { Maximize2, X } from "lucide-svelte";
+import { untrack } from "svelte";
 
-  interface Props {
-    value: string;
-    placeholder?: string;
-    rows?: number;
-    disabled?: boolean;
-    onkeydown?: (event: KeyboardEvent) => void;
+interface Props {
+  value: string;
+  placeholder?: string;
+  rows?: number;
+  disabled?: boolean;
+  onkeydown?: (event: KeyboardEvent) => void;
+}
+
+let {
+  value = $bindable(),
+  placeholder = "",
+  rows = 3,
+  disabled = false,
+  onkeydown,
+}: Props = $props();
+
+let isExpanded = $state(false);
+let expandedValue = $state("");
+const expandedTextarea: HTMLTextAreaElement | undefined = $state();
+
+function openExpanded() {
+  expandedValue = value;
+  isExpanded = true;
+}
+
+function closeExpanded() {
+  isExpanded = false;
+}
+
+function saveExpanded() {
+  value = expandedValue;
+  isExpanded = false;
+}
+
+function handleKeyDown(event: KeyboardEvent) {
+  if (event.key === "Escape") {
+    closeExpanded();
   }
+}
 
-  let {
-    value = $bindable(),
-    placeholder = "",
-    rows = 3,
-    disabled = false,
-    onkeydown,
-  }: Props = $props();
-
-  let isExpanded = $state(false);
-  let expandedValue = $state("");
-  let expandedTextarea: HTMLTextAreaElement | undefined = $state();
-
-  function openExpanded() {
-    expandedValue = value;
-    isExpanded = true;
+// Focus the textarea when expanded view opens
+$effect(() => {
+  if (isExpanded && expandedTextarea) {
+    expandedTextarea.focus();
+    const len = untrack(() => expandedValue.length);
+    expandedTextarea.setSelectionRange(len, len);
   }
-
-  function closeExpanded() {
-    isExpanded = false;
-  }
-
-  function saveExpanded() {
-    value = expandedValue;
-    isExpanded = false;
-  }
-
-  function handleKeyDown(event: KeyboardEvent) {
-    if (event.key === "Escape") {
-      closeExpanded();
-    }
-  }
-
-  // Focus the textarea when expanded view opens
-  $effect(() => {
-    if (isExpanded && expandedTextarea) {
-      expandedTextarea.focus();
-      const len = untrack(() => expandedValue.length);
-      expandedTextarea.setSelectionRange(len, len);
-    }
-  });
+});
 </script>
 
 <div class="flex-1 relative group flex items-stretch min-h-0">

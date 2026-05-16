@@ -1,13 +1,23 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 
-import { CodeBlock, ErrorState, LoadingState, PageHeader, SectionCard } from "../components/page-primitives";
-import { fieldClassName, primaryButtonClassName, secondaryButtonClassName } from "../lib/design-system";
 import {
-  fetchRuntimeConfig,
-  updateRuntimeConfig,
+  CodeBlock,
+  ErrorState,
+  LoadingState,
+  PageHeader,
+  SectionCard,
+} from "../components/page-primitives";
+import {
+  fieldClassName,
+  primaryButtonClassName,
+  secondaryButtonClassName,
+} from "../lib/design-system";
+import {
   type RuntimeConfig,
   type RuntimeConfigRecord,
+  fetchRuntimeConfig,
+  updateRuntimeConfig,
 } from "../lib/runtime-api";
 
 function createEmptyProcessConfig() {
@@ -46,8 +56,8 @@ export default function ControlRuntimeConfigRoute() {
   const [saving, setSaving] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
-  const load = () =>
-    fetchRuntimeConfig()
+  useEffect(() => {
+    void fetchRuntimeConfig()
       .then((nextRecord) => {
         setConfigRecord(nextRecord);
         setEditorText(toEditorText(nextRecord.config));
@@ -56,14 +66,15 @@ export default function ControlRuntimeConfigRoute() {
       .catch((value: unknown) => {
         setError(value instanceof Error ? value.message : "Could not load runtime config.");
       });
-
-  useEffect(() => {
-    void load();
   }, []);
 
   const currentConfig = configRecord?.config ?? createDefaultRuntimeConfig();
   const remoteMappingCount = useMemo(
-    () => currentConfig.liteLLM.providers.reduce((count, provider) => count + provider.modelMappings.length, 0),
+    () =>
+      currentConfig.liteLLM.providers.reduce(
+        (count, provider) => count + provider.modelMappings.length,
+        0,
+      ),
     [currentConfig],
   );
 
@@ -92,6 +103,9 @@ export default function ControlRuntimeConfigRoute() {
         description="Edit the repo-owned unified runtime contract for local llama-swap models, remote LiteLLM providers, and process policy in one control-plane route."
         actions={
           <>
+            <Link className={secondaryButtonClassName} to="/app/control/routing-strategy">
+              Routing strategy
+            </Link>
             <Link className={secondaryButtonClassName} to="/app/control/models">
               Inspect models
             </Link>
@@ -117,7 +131,12 @@ export default function ControlRuntimeConfigRoute() {
             onChange={(event) => setEditorText(event.target.value)}
           />
           <div className="flex flex-wrap gap-3">
-            <button className={primaryButtonClassName} type="button" disabled={saving} onClick={() => void save()}>
+            <button
+              className={primaryButtonClassName}
+              type="button"
+              disabled={saving}
+              onClick={() => void save()}
+            >
               {saving ? "Applying…" : "Save and apply"}
             </button>
             <button
@@ -133,7 +152,9 @@ export default function ControlRuntimeConfigRoute() {
               Reset editor
             </button>
           </div>
-          {statusMessage ? <p className="text-sm text-[var(--rm-secondary)]">{statusMessage}</p> : null}
+          {statusMessage ? (
+            <p className="text-sm text-[var(--rm-secondary)]">{statusMessage}</p>
+          ) : null}
         </div>
       </SectionCard>
 
@@ -141,7 +162,9 @@ export default function ControlRuntimeConfigRoute() {
         title="Applied config snapshot"
         description={`Use this snapshot to confirm the active config file (${configRecord?.path ?? "not configured"}) and the exact local-plus-remote runtime payload in force.`}
       >
-        <CodeBlock>{JSON.stringify(configRecord?.config ?? createDefaultRuntimeConfig(), null, 2)}</CodeBlock>
+        <CodeBlock>
+          {JSON.stringify(configRecord?.config ?? createDefaultRuntimeConfig(), null, 2)}
+        </CodeBlock>
       </SectionCard>
     </div>
   );

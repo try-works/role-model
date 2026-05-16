@@ -49,6 +49,36 @@ export interface RuntimeEligibilitySignals {
   deploymentClassMismatch?: boolean;
 }
 
+export interface ObservedDataConfigRecord {
+  enabled: boolean;
+  aggregation: {
+    minSamples: number;
+  };
+  metricHalflives: {
+    qualityMs: number;
+    latencyMs: number;
+    throughputMs: number;
+    reliabilityMs: number;
+    costMs: number;
+  };
+  throughputSla: {
+    enabled: boolean;
+    minTokensPerSec: number;
+    penaltyTimeoutMs: number;
+    penaltyFactor: number;
+  };
+}
+
+export interface ThroughputPenaltyStateRecord {
+  endpointId: string;
+  lastObservedTokensPerSec: number;
+  minTokensPerSec: number;
+  penaltyFactor: number;
+  activatedAtMs: number;
+  expiresAtMs: number;
+  lastObservationMeasuredAtMs: number;
+}
+
 export interface EndpointCandidate {
   identity: EndpointIdentityRecord;
   declared: DeclaredCapabilityProfileRecord;
@@ -88,4 +118,7 @@ export interface RouteRequestInput {
   roleDefinitions?: readonly RoleDefinitionRecord[];
   taskDefinitions?: readonly TaskDefinitionRecord[];
   roleBindings?: readonly RoleBindingRecord[];
+  observedDataConfig?: ObservedDataConfigRecord;
+  throughputPenaltyStateByEndpointId?: Record<string, ThroughputPenaltyStateRecord>;
+  routingTimeMs?: number;
 }

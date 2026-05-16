@@ -108,6 +108,7 @@ The runtime hierarchy remains:
 | Studio | Request composition and multimodal API workspaces | `/app/studio/*` |
 | Control | Provider, account, endpoint, controller, and model configuration | `/app/control/*` |
 | Local | Local inference runtime: loaded models, swap history, host policy, log streaming, matrix solver, and peer management | `/app/local/*` |
+| Router | Routing explanation, policy visibility, candidate comparison, and decision drill-in | `/app/router/*` |
 | Observe | Request ledgers, raw host activity, logs, metrics, and captures | `/app/observe/*` |
 | Integrations | Downstream contracts, upstream passthrough, and compatibility references | `/app/integrations/*` |
 | System | Host/runtime topology, peer inventory, version, auth, and policy posture | `/app/system/*` |
@@ -123,9 +124,15 @@ The runtime hierarchy remains:
 | `/app/studio/rerank` | live | `studio-workspace` | Ranked-input evaluation workspace over `/v1/rerank` and `/v1/reranking` with a compact request rail, ordered score ledger, and raw payload inspection. |
 | `/app/studio/advanced` | live | `studio-workspace` | Contract-and-request workspace for advanced families that stay under Studio: `/v1/responses`, `/v1/messages`, `/v1/messages/count_tokens`, `/v1/embeddings`, `/completion`, and `/infill`. |
 | `/app/control/providers` | live | `registry-detail` | Primary provider onboarding route for choosing a provider from the effective runtime catalog, choosing that provider's models, and completing either API-key or OAuth setup without leaving the page. |
+| `/app/control/routing-strategy` | live | `registry-detail` | Structured routing-strategy posture for execution mode, controller state, and handoff into advanced config plus request verification. |
 | `/app/control/runtime-config` | live | `registry-detail` | Repo-owned editor for the unified runtime contract covering local llama-swap models, remote LiteLLM providers, and process policy. |
 | `/app/control/endpoints` | live | `registry-detail` | Configured runtime registry for provider-model endpoint entries, health posture, and source visibility after provider onboarding. |
 | `/app/control/controller` | live | `registry-detail` | Explicit controller assignment with candidate health, source type, role coverage, tooling posture, and an honest empty state before any endpoint is activated. |
+| `/app/router` | live | `registry-detail` | First-class routing overview that summarizes active posture, recent decisions, and operator handoff into config, candidates, and decision interpretation. |
+| `/app/router/config` | live | `registry-detail` | Consolidated routing configuration and provenance surface across strategy, execution mode, controller, and policy-source context. |
+| `/app/router/candidates` | live | `ledger-inspector` | Unified local and remote candidate inventory with health, role coverage, and observed routing-signal posture. |
+| `/app/router/decisions` | live | `ledger-inspector` | Explainable routing decision ledger keyed by request identity with direct drill-in to policy and scoring detail. |
+| `/app/router/decisions/:requestId` | live | `ledger-inspector` | Request-keyed routing decision explanation with scored candidates, diagnostics, and Observe request-detail handoff. |
 | `/app/local/models` | live | `registry-detail` | Local inference runtime state: currently loaded models, engine type, uptime, manual load/unload controls, and empty-state when no models are in memory. |
 | `/app/local/swap` | live | `ledger-inspector` | Swap event ledger: chronological log of model swaps with timestamp, old/new model, and reason (request-driven or manual). |
 | `/app/local/policy` | live | `registry-detail` | Local host policy: TTL configuration, auto-unload toggle, startPort, logLevel, and capture buffer settings. |

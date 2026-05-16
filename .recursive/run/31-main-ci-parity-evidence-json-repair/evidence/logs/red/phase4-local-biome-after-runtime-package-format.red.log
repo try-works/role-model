@@ -1,0 +1,1236 @@
+.\role-model-router\packages\retrieval-receipt\tsconfig.json format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+     1    Γöé - {ΓÉì
+     2    Γöé - ┬╖┬╖"extends":┬╖"../../../tsconfig.base.json",ΓÉì
+     3    Γöé - ┬╖┬╖"compilerOptions":┬╖{ΓÉì
+     4    Γöé - ┬╖┬╖┬╖┬╖"rootDir":┬╖"src",ΓÉì
+     5    Γöé - ┬╖┬╖┬╖┬╖"outDir":┬╖"dist"ΓÉì
+     6    Γöé - ┬╖┬╖},ΓÉì
+     7    Γöé - ┬╖┬╖"include":┬╖["src/**/*.ts"],ΓÉì
+     8    Γöé - ┬╖┬╖"exclude":┬╖["test/**/*.ts"]ΓÉì
+     9    Γöé - }ΓÉì
+        1 Γöé + {
+        2 Γöé + ┬╖┬╖"extends":┬╖"../../../tsconfig.base.json",
+        3 Γöé + ┬╖┬╖"compilerOptions":┬╖{
+        4 Γöé + ┬╖┬╖┬╖┬╖"rootDir":┬╖"src",
+        5 Γöé + ┬╖┬╖┬╖┬╖"outDir":┬╖"dist"
+        6 Γöé + ┬╖┬╖},
+        7 Γöé + ┬╖┬╖"include":┬╖["src/**/*.ts"],
+        8 Γöé + ┬╖┬╖"exclude":┬╖["test/**/*.ts"]
+        9 Γöé + }
+    10 10 Γöé   
+  
+
+.\role-model-router\packages\sqlite-memory\package.json format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+     1    Γöé - {ΓÉì
+     2    Γöé - ┬╖┬╖"name":┬╖"@role-model-router/sqlite-memory",ΓÉì
+     3    Γöé - ┬╖┬╖"version":┬╖"0.0.0",ΓÉì
+     4    Γöé - ┬╖┬╖"private":┬╖true,ΓÉì
+     5    Γöé - ┬╖┬╖"type":┬╖"module",ΓÉì
+     6    Γöé - ┬╖┬╖"exports":┬╖{ΓÉì
+     7    Γöé - ┬╖┬╖┬╖┬╖".":┬╖{ΓÉì
+     8    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"types":┬╖"./src/index.ts",ΓÉì
+     9    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"runtime":┬╖"./dist/index.js",ΓÉì
+    10    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"default":┬╖"./src/index.ts"ΓÉì
+    11    Γöé - ┬╖┬╖┬╖┬╖}ΓÉì
+    12    Γöé - ┬╖┬╖},ΓÉì
+    13    Γöé - ┬╖┬╖"files":┬╖["src",┬╖"dist"],ΓÉì
+    14    Γöé - ┬╖┬╖"dependencies":┬╖{ΓÉì
+    15    Γöé - ┬╖┬╖┬╖┬╖"@role-model/protocol-types":┬╖"workspace:*",ΓÉì
+    16    Γöé - ┬╖┬╖┬╖┬╖"@role-model-router/catalog":┬╖"workspace:*",ΓÉì
+    17    Γöé - ┬╖┬╖┬╖┬╖"@role-model-router/profile-aggregator":┬╖"workspace:*",ΓÉì
+    18    Γöé - ┬╖┬╖┬╖┬╖"@role-model-router/provider-account":┬╖"workspace:*"ΓÉì
+    19    Γöé - ┬╖┬╖},ΓÉì
+    20    Γöé - ┬╖┬╖"scripts":┬╖{ΓÉì
+    21    Γöé - ┬╖┬╖┬╖┬╖"build":┬╖"tsc┬╖-p┬╖tsconfig.json",ΓÉì
+    22    Γöé - ┬╖┬╖┬╖┬╖"test":┬╖"vitest┬╖run┬╖test/index.test.ts"ΓÉì
+    23    Γöé - ┬╖┬╖}ΓÉì
+    24    Γöé - }ΓÉì
+        1 Γöé + {
+        2 Γöé + ┬╖┬╖"name":┬╖"@role-model-router/sqlite-memory",
+        3 Γöé + ┬╖┬╖"version":┬╖"0.0.0",
+        4 Γöé + ┬╖┬╖"private":┬╖true,
+        5 Γöé + ┬╖┬╖"type":┬╖"module",
+        6 Γöé + ┬╖┬╖"exports":┬╖{
+        7 Γöé + ┬╖┬╖┬╖┬╖".":┬╖{
+        8 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"types":┬╖"./src/index.ts",
+        9 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"runtime":┬╖"./dist/index.js",
+       10 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"default":┬╖"./src/index.ts"
+       11 Γöé + ┬╖┬╖┬╖┬╖}
+       12 Γöé + ┬╖┬╖},
+       13 Γöé + ┬╖┬╖"files":┬╖["src",┬╖"dist"],
+       14 Γöé + ┬╖┬╖"dependencies":┬╖{
+       15 Γöé + ┬╖┬╖┬╖┬╖"@role-model/protocol-types":┬╖"workspace:*",
+       16 Γöé + ┬╖┬╖┬╖┬╖"@role-model-router/catalog":┬╖"workspace:*",
+       17 Γöé + ┬╖┬╖┬╖┬╖"@role-model-router/profile-aggregator":┬╖"workspace:*",
+       18 Γöé + ┬╖┬╖┬╖┬╖"@role-model-router/provider-account":┬╖"workspace:*"
+       19 Γöé + ┬╖┬╖},
+       20 Γöé + ┬╖┬╖"scripts":┬╖{
+       21 Γöé + ┬╖┬╖┬╖┬╖"build":┬╖"tsc┬╖-p┬╖tsconfig.json",
+       22 Γöé + ┬╖┬╖┬╖┬╖"test":┬╖"vitest┬╖run┬╖test/index.test.ts"
+       23 Γöé + ┬╖┬╖}
+       24 Γöé + }
+    25 25 Γöé   
+  
+
+.\role-model-router\packages\vendor-litellm\tsconfig.json format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+     1    Γöé - {ΓÉì
+     2    Γöé - ┬╖┬╖"extends":┬╖"../../../tsconfig.base.json",ΓÉì
+     3    Γöé - ┬╖┬╖"compilerOptions":┬╖{ΓÉì
+     4    Γöé - ┬╖┬╖┬╖┬╖"rootDir":┬╖"src",ΓÉì
+     5    Γöé - ┬╖┬╖┬╖┬╖"outDir":┬╖"dist"ΓÉì
+     6    Γöé - ┬╖┬╖},ΓÉì
+     7    Γöé - ┬╖┬╖"include":┬╖["src/**/*.ts"],ΓÉì
+     8    Γöé - ┬╖┬╖"exclude":┬╖["test/**/*.ts"]ΓÉì
+     9    Γöé - }ΓÉì
+        1 Γöé + {
+        2 Γöé + ┬╖┬╖"extends":┬╖"../../../tsconfig.base.json",
+        3 Γöé + ┬╖┬╖"compilerOptions":┬╖{
+        4 Γöé + ┬╖┬╖┬╖┬╖"rootDir":┬╖"src",
+        5 Γöé + ┬╖┬╖┬╖┬╖"outDir":┬╖"dist"
+        6 Γöé + ┬╖┬╖},
+        7 Γöé + ┬╖┬╖"include":┬╖["src/**/*.ts"],
+        8 Γöé + ┬╖┬╖"exclude":┬╖["test/**/*.ts"]
+        9 Γöé + }
+    10 10 Γöé   
+  
+
+.\role-model-router\packages\usage\tsconfig.json format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+    1   Γöé - {ΓÉì
+    2   Γöé - ┬╖┬╖"extends":┬╖"../../../tsconfig.base.json",ΓÉì
+    3   Γöé - ┬╖┬╖"compilerOptions":┬╖{ΓÉì
+    4   Γöé - ┬╖┬╖┬╖┬╖"rootDir":┬╖"src",ΓÉì
+    5   Γöé - ┬╖┬╖┬╖┬╖"outDir":┬╖"dist"ΓÉì
+    6   Γöé - ┬╖┬╖},ΓÉì
+    7   Γöé - ┬╖┬╖"include":┬╖["src/**/*.ts"]ΓÉì
+    8   Γöé - }ΓÉì
+      1 Γöé + {
+      2 Γöé + ┬╖┬╖"extends":┬╖"../../../tsconfig.base.json",
+      3 Γöé + ┬╖┬╖"compilerOptions":┬╖{
+      4 Γöé + ┬╖┬╖┬╖┬╖"rootDir":┬╖"src",
+      5 Γöé + ┬╖┬╖┬╖┬╖"outDir":┬╖"dist"
+      6 Γöé + ┬╖┬╖},
+      7 Γöé + ┬╖┬╖"include":┬╖["src/**/*.ts"]
+      8 Γöé + }
+    9 9 Γöé   
+  
+
+.\role-model-router\packages\vendor-llama-swap\package.json format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+     1    Γöé - {ΓÉì
+     2    Γöé - ┬╖┬╖"name":┬╖"@role-model-router/vendor-llama-swap",ΓÉì
+     3    Γöé - ┬╖┬╖"version":┬╖"0.0.0",ΓÉì
+     4    Γöé - ┬╖┬╖"private":┬╖true,ΓÉì
+     5    Γöé - ┬╖┬╖"type":┬╖"module",ΓÉì
+     6    Γöé - ┬╖┬╖"exports":┬╖{ΓÉì
+     7    Γöé - ┬╖┬╖┬╖┬╖".":┬╖{ΓÉì
+     8    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"types":┬╖"./src/index.ts",ΓÉì
+     9    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"runtime":┬╖"./dist/index.js",ΓÉì
+    10    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"default":┬╖"./src/index.ts"ΓÉì
+    11    Γöé - ┬╖┬╖┬╖┬╖}ΓÉì
+    12    Γöé - ┬╖┬╖},ΓÉì
+    13    Γöé - ┬╖┬╖"files":┬╖["src",┬╖"dist"],ΓÉì
+    14    Γöé - ┬╖┬╖"dependencies":┬╖{ΓÉì
+    15    Γöé - ┬╖┬╖┬╖┬╖"@role-model-router/process-supervisor":┬╖"workspace:*",ΓÉì
+    16    Γöé - ┬╖┬╖┬╖┬╖"@role-model-router/vendor-abstraction":┬╖"workspace:*",ΓÉì
+    17    Γöé - ┬╖┬╖┬╖┬╖"yaml":┬╖"^2.8.1"ΓÉì
+    18    Γöé - ┬╖┬╖},ΓÉì
+    19    Γöé - ┬╖┬╖"scripts":┬╖{ΓÉì
+    20    Γöé - ┬╖┬╖┬╖┬╖"build":┬╖"tsc┬╖-p┬╖tsconfig.json",ΓÉì
+    21    Γöé - ┬╖┬╖┬╖┬╖"test":┬╖"vitest┬╖run"ΓÉì
+    22    Γöé - ┬╖┬╖}ΓÉì
+    23    Γöé - }ΓÉì
+        1 Γöé + {
+        2 Γöé + ┬╖┬╖"name":┬╖"@role-model-router/vendor-llama-swap",
+        3 Γöé + ┬╖┬╖"version":┬╖"0.0.0",
+        4 Γöé + ┬╖┬╖"private":┬╖true,
+        5 Γöé + ┬╖┬╖"type":┬╖"module",
+        6 Γöé + ┬╖┬╖"exports":┬╖{
+        7 Γöé + ┬╖┬╖┬╖┬╖".":┬╖{
+        8 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"types":┬╖"./src/index.ts",
+        9 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"runtime":┬╖"./dist/index.js",
+       10 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"default":┬╖"./src/index.ts"
+       11 Γöé + ┬╖┬╖┬╖┬╖}
+       12 Γöé + ┬╖┬╖},
+       13 Γöé + ┬╖┬╖"files":┬╖["src",┬╖"dist"],
+       14 Γöé + ┬╖┬╖"dependencies":┬╖{
+       15 Γöé + ┬╖┬╖┬╖┬╖"@role-model-router/process-supervisor":┬╖"workspace:*",
+       16 Γöé + ┬╖┬╖┬╖┬╖"@role-model-router/vendor-abstraction":┬╖"workspace:*",
+       17 Γöé + ┬╖┬╖┬╖┬╖"yaml":┬╖"^2.8.1"
+       18 Γöé + ┬╖┬╖},
+       19 Γöé + ┬╖┬╖"scripts":┬╖{
+       20 Γöé + ┬╖┬╖┬╖┬╖"build":┬╖"tsc┬╖-p┬╖tsconfig.json",
+       21 Γöé + ┬╖┬╖┬╖┬╖"test":┬╖"vitest┬╖run"
+       22 Γöé + ┬╖┬╖}
+       23 Γöé + }
+    24 24 Γöé   
+  
+
+.\.agents\skills\recursive-mode\docs\templates\hooks\hooks.json format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+    1   Γöé - {ΓÉì
+    2   Γöé - ┬╖┬╖"_note":┬╖"Optional┬╖template┬╖ΓÇö┬╖NOT┬╖auto-installed┬╖by┬╖Skills┬╖CLI.┬╖If┬╖your┬╖agent/runtime┬╖supports┬╖hooks,┬╖you┬╖may┬╖wire┬╖this┬╖up┬╖manually┬╖to┬╖auto-bootstrap┬╖missing┬╖recursive-mode┬╖scaffold┬╖on┬╖session┬╖start.",ΓÉì
+    3   Γöé - ┬╖┬╖"session-start":┬╖{ΓÉì
+    4   Γöé - ┬╖┬╖┬╖┬╖"command":┬╖"docs/templates/hooks/session-start.sh",ΓÉì
+    5   Γöé - ┬╖┬╖┬╖┬╖"async":┬╖false,ΓÉì
+    6   Γöé - ┬╖┬╖┬╖┬╖"description":┬╖"Auto-bootstrap┬╖recursive-mode┬╖scaffold┬╖and┬╖context┬╖at┬╖session┬╖start"ΓÉì
+    7   Γöé - ┬╖┬╖}ΓÉì
+    8   Γöé - }ΓÉì
+      1 Γöé + {
+      2 Γöé + ┬╖┬╖"_note":┬╖"Optional┬╖template┬╖ΓÇö┬╖NOT┬╖auto-installed┬╖by┬╖Skills┬╖CLI.┬╖If┬╖your┬╖agent/runtime┬╖supports┬╖hooks,┬╖you┬╖may┬╖wire┬╖this┬╖up┬╖manually┬╖to┬╖auto-bootstrap┬╖missing┬╖recursive-mode┬╖scaffold┬╖on┬╖session┬╖start.",
+      3 Γöé + ┬╖┬╖"session-start":┬╖{
+      4 Γöé + ┬╖┬╖┬╖┬╖"command":┬╖"docs/templates/hooks/session-start.sh",
+      5 Γöé + ┬╖┬╖┬╖┬╖"async":┬╖false,
+      6 Γöé + ┬╖┬╖┬╖┬╖"description":┬╖"Auto-bootstrap┬╖recursive-mode┬╖scaffold┬╖and┬╖context┬╖at┬╖session┬╖start"
+      7 Γöé + ┬╖┬╖}
+      8 Γöé + }
+    9 9 Γöé   
+  
+
+.\role-model-router\vendor\llama-swap\ui-svelte\tsconfig.json format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+     1    Γöé - {ΓÉì
+     2    Γöé - ┬╖┬╖"extends":┬╖"@tsconfig/svelte/tsconfig.json",ΓÉì
+     3    Γöé - ┬╖┬╖"compilerOptions":┬╖{ΓÉì
+     4    Γöé - ┬╖┬╖┬╖┬╖"target":┬╖"ESNext",ΓÉì
+     5    Γöé - ┬╖┬╖┬╖┬╖"useDefineForClassFields":┬╖true,ΓÉì
+     6    Γöé - ┬╖┬╖┬╖┬╖"module":┬╖"ESNext",ΓÉì
+     7    Γöé - ┬╖┬╖┬╖┬╖"resolveJsonModule":┬╖true,ΓÉì
+     8    Γöé - ┬╖┬╖┬╖┬╖"allowJs":┬╖true,ΓÉì
+     9    Γöé - ┬╖┬╖┬╖┬╖"checkJs":┬╖true,ΓÉì
+    10    Γöé - ┬╖┬╖┬╖┬╖"isolatedModules":┬╖true,ΓÉì
+    11    Γöé - ┬╖┬╖┬╖┬╖"moduleDetection":┬╖"force",ΓÉì
+    12    Γöé - ┬╖┬╖┬╖┬╖"noEmit":┬╖true,ΓÉì
+    13    Γöé - ┬╖┬╖┬╖┬╖"strict":┬╖true,ΓÉì
+    14    Γöé - ┬╖┬╖┬╖┬╖"noUnusedLocals":┬╖true,ΓÉì
+    15    Γöé - ┬╖┬╖┬╖┬╖"noUnusedParameters":┬╖true,ΓÉì
+    16    Γöé - ┬╖┬╖┬╖┬╖"noFallthroughCasesInSwitch":┬╖true,ΓÉì
+    17    Γöé - ┬╖┬╖┬╖┬╖"verbatimModuleSyntax":┬╖trueΓÉì
+    18    Γöé - ┬╖┬╖},ΓÉì
+    19    Γöé - ┬╖┬╖"include":┬╖["src/**/*.ts",┬╖"src/**/*.svelte"]ΓÉì
+    20    Γöé - }ΓÉì
+        1 Γöé + {
+        2 Γöé + ┬╖┬╖"extends":┬╖"@tsconfig/svelte/tsconfig.json",
+        3 Γöé + ┬╖┬╖"compilerOptions":┬╖{
+        4 Γöé + ┬╖┬╖┬╖┬╖"target":┬╖"ESNext",
+        5 Γöé + ┬╖┬╖┬╖┬╖"useDefineForClassFields":┬╖true,
+        6 Γöé + ┬╖┬╖┬╖┬╖"module":┬╖"ESNext",
+        7 Γöé + ┬╖┬╖┬╖┬╖"resolveJsonModule":┬╖true,
+        8 Γöé + ┬╖┬╖┬╖┬╖"allowJs":┬╖true,
+        9 Γöé + ┬╖┬╖┬╖┬╖"checkJs":┬╖true,
+       10 Γöé + ┬╖┬╖┬╖┬╖"isolatedModules":┬╖true,
+       11 Γöé + ┬╖┬╖┬╖┬╖"moduleDetection":┬╖"force",
+       12 Γöé + ┬╖┬╖┬╖┬╖"noEmit":┬╖true,
+       13 Γöé + ┬╖┬╖┬╖┬╖"strict":┬╖true,
+       14 Γöé + ┬╖┬╖┬╖┬╖"noUnusedLocals":┬╖true,
+       15 Γöé + ┬╖┬╖┬╖┬╖"noUnusedParameters":┬╖true,
+       16 Γöé + ┬╖┬╖┬╖┬╖"noFallthroughCasesInSwitch":┬╖true,
+       17 Γöé + ┬╖┬╖┬╖┬╖"verbatimModuleSyntax":┬╖true
+       18 Γöé + ┬╖┬╖},
+       19 Γöé + ┬╖┬╖"include":┬╖["src/**/*.ts",┬╖"src/**/*.svelte"]
+       20 Γöé + }
+    21 21 Γöé   
+  
+
+.\role-model-router\packages\vendor-litellm\package.json format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+     1    Γöé - {ΓÉì
+     2    Γöé - ┬╖┬╖"name":┬╖"@role-model-router/vendor-litellm",ΓÉì
+     3    Γöé - ┬╖┬╖"version":┬╖"0.0.0",ΓÉì
+     4    Γöé - ┬╖┬╖"private":┬╖true,ΓÉì
+     5    Γöé - ┬╖┬╖"type":┬╖"module",ΓÉì
+     6    Γöé - ┬╖┬╖"exports":┬╖{ΓÉì
+     7    Γöé - ┬╖┬╖┬╖┬╖".":┬╖{ΓÉì
+     8    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"types":┬╖"./src/index.ts",ΓÉì
+     9    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"runtime":┬╖"./dist/index.js",ΓÉì
+    10    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"default":┬╖"./src/index.ts"ΓÉì
+    11    Γöé - ┬╖┬╖┬╖┬╖}ΓÉì
+    12    Γöé - ┬╖┬╖},ΓÉì
+    13    Γöé - ┬╖┬╖"files":┬╖["src",┬╖"dist"],ΓÉì
+    14    Γöé - ┬╖┬╖"dependencies":┬╖{ΓÉì
+    15    Γöé - ┬╖┬╖┬╖┬╖"@role-model-router/process-supervisor":┬╖"workspace:*",ΓÉì
+    16    Γöé - ┬╖┬╖┬╖┬╖"@role-model-router/vendor-abstraction":┬╖"workspace:*",ΓÉì
+    17    Γöé - ┬╖┬╖┬╖┬╖"yaml":┬╖"^2.8.1"ΓÉì
+    18    Γöé - ┬╖┬╖},ΓÉì
+    19    Γöé - ┬╖┬╖"scripts":┬╖{ΓÉì
+    20    Γöé - ┬╖┬╖┬╖┬╖"build":┬╖"tsc┬╖-p┬╖tsconfig.json",ΓÉì
+    21    Γöé - ┬╖┬╖┬╖┬╖"test":┬╖"vitest┬╖run"ΓÉì
+    22    Γöé - ┬╖┬╖}ΓÉì
+    23    Γöé - }ΓÉì
+        1 Γöé + {
+        2 Γöé + ┬╖┬╖"name":┬╖"@role-model-router/vendor-litellm",
+        3 Γöé + ┬╖┬╖"version":┬╖"0.0.0",
+        4 Γöé + ┬╖┬╖"private":┬╖true,
+        5 Γöé + ┬╖┬╖"type":┬╖"module",
+        6 Γöé + ┬╖┬╖"exports":┬╖{
+        7 Γöé + ┬╖┬╖┬╖┬╖".":┬╖{
+        8 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"types":┬╖"./src/index.ts",
+        9 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"runtime":┬╖"./dist/index.js",
+       10 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"default":┬╖"./src/index.ts"
+       11 Γöé + ┬╖┬╖┬╖┬╖}
+       12 Γöé + ┬╖┬╖},
+       13 Γöé + ┬╖┬╖"files":┬╖["src",┬╖"dist"],
+       14 Γöé + ┬╖┬╖"dependencies":┬╖{
+       15 Γöé + ┬╖┬╖┬╖┬╖"@role-model-router/process-supervisor":┬╖"workspace:*",
+       16 Γöé + ┬╖┬╖┬╖┬╖"@role-model-router/vendor-abstraction":┬╖"workspace:*",
+       17 Γöé + ┬╖┬╖┬╖┬╖"yaml":┬╖"^2.8.1"
+       18 Γöé + ┬╖┬╖},
+       19 Γöé + ┬╖┬╖"scripts":┬╖{
+       20 Γöé + ┬╖┬╖┬╖┬╖"build":┬╖"tsc┬╖-p┬╖tsconfig.json",
+       21 Γöé + ┬╖┬╖┬╖┬╖"test":┬╖"vitest┬╖run"
+       22 Γöé + ┬╖┬╖}
+       23 Γöé + }
+    24 24 Γöé   
+  
+
+.\.recursive\run\00-baseline\evidence\traces\trace-spans.json format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+     1    Γöé - [ΓÉì
+     2    Γöé - ┬╖┬╖{ΓÉì
+     3    Γöé - ┬╖┬╖┬╖┬╖"trace_id":┬╖"trace-gateway-smoke",ΓÉì
+     4    Γöé - ┬╖┬╖┬╖┬╖"span_id":┬╖"span-router",ΓÉì
+     5    Γöé - ┬╖┬╖┬╖┬╖"name":┬╖"router.selection",ΓÉì
+     6    Γöé - ┬╖┬╖┬╖┬╖"started_at_ms":┬╖1775965647082,ΓÉì
+     7    Γöé - ┬╖┬╖┬╖┬╖"ended_at_ms":┬╖1775965647092,ΓÉì
+     8    Γöé - ┬╖┬╖┬╖┬╖"status":┬╖"ok",ΓÉì
+     9    Γöé - ┬╖┬╖┬╖┬╖"attributes":┬╖{ΓÉì
+    10    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"chosen_endpoint_id":┬╖"cli.local.coder"ΓÉì
+    11    Γöé - ┬╖┬╖┬╖┬╖}ΓÉì
+    12    Γöé - ┬╖┬╖}ΓÉì
+    13    Γöé - ]ΓÉì
+        1 Γöé + [
+        2 Γöé + ┬╖┬╖{
+        3 Γöé + ┬╖┬╖┬╖┬╖"trace_id":┬╖"trace-gateway-smoke",
+        4 Γöé + ┬╖┬╖┬╖┬╖"span_id":┬╖"span-router",
+        5 Γöé + ┬╖┬╖┬╖┬╖"name":┬╖"router.selection",
+        6 Γöé + ┬╖┬╖┬╖┬╖"started_at_ms":┬╖1775965647082,
+        7 Γöé + ┬╖┬╖┬╖┬╖"ended_at_ms":┬╖1775965647092,
+        8 Γöé + ┬╖┬╖┬╖┬╖"status":┬╖"ok",
+        9 Γöé + ┬╖┬╖┬╖┬╖"attributes":┬╖{
+       10 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"chosen_endpoint_id":┬╖"cli.local.coder"
+       11 Γöé + ┬╖┬╖┬╖┬╖}
+       12 Γöé + ┬╖┬╖}
+       13 Γöé + ]
+    14 14 Γöé   
+  
+
+.\.recursive\run\00-baseline\evidence\other\config-export.json format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+     1    Γöé - {ΓÉì
+     2    Γöé - ┬╖┬╖"artifactId":┬╖"router-devtools-config",ΓÉì
+     3    Γöé - ┬╖┬╖"generatedAtMs":┬╖1775965647094,ΓÉì
+     4    Γöé - ┬╖┬╖"endpoints":┬╖[ΓÉì
+     5    Γöé - ┬╖┬╖┬╖┬╖{ΓÉì
+     6    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"endpointId":┬╖"acp.remote.general",ΓÉì
+     7    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"endpointKind":┬╖"acp-endpoint",ΓÉì
+     8    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"providerKind":┬╖"provider-acp",ΓÉì
+     9    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"modelId":┬╖"gpt-5.4-mini",ΓÉì
+    10    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"servingSource":┬╖"remote-service",ΓÉì
+    11    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"modalities":┬╖["text"],ΓÉì
+    12    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"strategyTags":┬╖["text.chat",┬╖"tools.function_calling"]ΓÉì
+    13    Γöé - ┬╖┬╖┬╖┬╖},ΓÉì
+    14    Γöé - ┬╖┬╖┬╖┬╖{ΓÉì
+    15    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"endpointId":┬╖"cli.local.coder",ΓÉì
+    16    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"endpointKind":┬╖"cli-agent",ΓÉì
+    17    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"providerKind":┬╖"provider-cli",ΓÉì
+    18    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"modelId":┬╖"gpt-5.4",ΓÉì
+    19    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"servingSource":┬╖"local-process",ΓÉì
+    20    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"modalities":┬╖["text"],ΓÉì
+    21    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"strategyTags":┬╖["code.edit",┬╖"reasoning.multi_step",┬╖"tools.function_calling"]ΓÉì
+    22    Γöé - ┬╖┬╖┬╖┬╖},ΓÉì
+    23    Γöé - ┬╖┬╖┬╖┬╖{ΓÉì
+    24    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"endpointId":┬╖"mcp.remote.embedder",ΓÉì
+    25    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"endpointKind":┬╖"mcp-endpoint",ΓÉì
+    26    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"providerKind":┬╖"provider-mcp",ΓÉì
+    27    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"modelId":┬╖"text-embedding-3-large",ΓÉì
+    28    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"servingSource":┬╖"remote-service",ΓÉì
+    29    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"modalities":┬╖["text"],ΓÉì
+    30    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"strategyTags":┬╖["embeddings.text",┬╖"tools.function_calling"]ΓÉì
+    31    Γöé - ┬╖┬╖┬╖┬╖}ΓÉì
+    32    Γöé - ┬╖┬╖]ΓÉì
+    33    Γöé - }ΓÉì
+        1 Γöé + {
+        2 Γöé + ┬╖┬╖"artifactId":┬╖"router-devtools-config",
+        3 Γöé + ┬╖┬╖"generatedAtMs":┬╖1775965647094,
+        4 Γöé + ┬╖┬╖"endpoints":┬╖[
+        5 Γöé + ┬╖┬╖┬╖┬╖{
+        6 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"endpointId":┬╖"acp.remote.general",
+        7 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"endpointKind":┬╖"acp-endpoint",
+        8 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"providerKind":┬╖"provider-acp",
+        9 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"modelId":┬╖"gpt-5.4-mini",
+       10 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"servingSource":┬╖"remote-service",
+       11 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"modalities":┬╖["text"],
+       12 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"strategyTags":┬╖["text.chat",┬╖"tools.function_calling"]
+       13 Γöé + ┬╖┬╖┬╖┬╖},
+       14 Γöé + ┬╖┬╖┬╖┬╖{
+       15 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"endpointId":┬╖"cli.local.coder",
+       16 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"endpointKind":┬╖"cli-agent",
+       17 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"providerKind":┬╖"provider-cli",
+       18 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"modelId":┬╖"gpt-5.4",
+       19 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"servingSource":┬╖"local-process",
+       20 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"modalities":┬╖["text"],
+       21 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"strategyTags":┬╖["code.edit",┬╖"reasoning.multi_step",┬╖"tools.function_calling"]
+       22 Γöé + ┬╖┬╖┬╖┬╖},
+       23 Γöé + ┬╖┬╖┬╖┬╖{
+       24 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"endpointId":┬╖"mcp.remote.embedder",
+       25 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"endpointKind":┬╖"mcp-endpoint",
+       26 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"providerKind":┬╖"provider-mcp",
+       27 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"modelId":┬╖"text-embedding-3-large",
+       28 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"servingSource":┬╖"remote-service",
+       29 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"modalities":┬╖["text"],
+       30 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"strategyTags":┬╖["embeddings.text",┬╖"tools.function_calling"]
+       31 Γöé + ┬╖┬╖┬╖┬╖}
+       32 Γöé + ┬╖┬╖]
+       33 Γöé + }
+    34 34 Γöé   
+  
+
+.\.recursive\run\15-unified-vendor-execution\evidence\logs\green\sp5-real-vendor-validation.json format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+    1   Γöé - [ΓÉì
+    2   Γöé - ┬╖┬╖"undefined",ΓÉì
+    3   Γöé - ┬╖┬╖"D:\\DEV\\role-model\\.worktrees\\15-unified-vendor-execution\\role-model-router\\apps\\runtime-host-bridge:",ΓÉì
+    4   Γöé - ┬╖┬╖"Γò¼├┤Γö£├ºΓö£┬╜ERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓò¼├┤Γö£├ºΓö£┬╜┬╖Command┬╖failed┬╖with┬╖exit┬╖code┬╖3221225786:┬╖tsx┬╖--eval┬╖import('./src/validate-vendors.ts').then(async┬╖({┬╖runRuntimeVendorValidation┬╖})┬╖=>┬╖{┬╖const┬╖result┬╖=┬╖await┬╖runRuntimeVendorValidation({┬╖repoRoot:┬╖'D:\\\\DEV\\\\role-model\\\\.worktrees\\\\15-unified-vendor-execution'┬╖});┬╖console.log(JSON.stringify(result,┬╖null,┬╖2));┬╖})"ΓÉì
+    5   Γöé - ]ΓÉì
+      1 Γöé + [
+      2 Γöé + ┬╖┬╖"undefined",
+      3 Γöé + ┬╖┬╖"D:\\DEV\\role-model\\.worktrees\\15-unified-vendor-execution\\role-model-router\\apps\\runtime-host-bridge:",
+      4 Γöé + ┬╖┬╖"Γò¼├┤Γö£├ºΓö£┬╜ERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓò¼├┤Γö£├ºΓö£┬╜┬╖Command┬╖failed┬╖with┬╖exit┬╖code┬╖3221225786:┬╖tsx┬╖--eval┬╖import('./src/validate-vendors.ts').then(async┬╖({┬╖runRuntimeVendorValidation┬╖})┬╖=>┬╖{┬╖const┬╖result┬╖=┬╖await┬╖runRuntimeVendorValidation({┬╖repoRoot:┬╖'D:\\\\DEV\\\\role-model\\\\.worktrees\\\\15-unified-vendor-execution'┬╖});┬╖console.log(JSON.stringify(result,┬╖null,┬╖2));┬╖})"
+      5 Γöé + ]
+    6 6 Γöé   
+  
+
+.\.recursive\run\00-baseline\evidence\other\router-decision.json format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+     1    Γöé - {ΓÉì
+     2    Γöé - ┬╖┬╖"routing_decision_id":┬╖"decision-gateway-smoke",ΓÉì
+     3    Γöé - ┬╖┬╖"request_id":┬╖"gateway-smoke",ΓÉì
+     4    Γöé - ┬╖┬╖"policy_snapshot":┬╖{ΓÉì
+     5    Γöé - ┬╖┬╖┬╖┬╖"policy_id":┬╖"balanced-policy",ΓÉì
+     6    Γöé - ┬╖┬╖┬╖┬╖"strategy":┬╖"balanced",ΓÉì
+     7    Γöé - ┬╖┬╖┬╖┬╖"prefer_local":┬╖true,ΓÉì
+     8    Γöé - ┬╖┬╖┬╖┬╖"budget_mode":┬╖"strict",ΓÉì
+     9    Γöé - ┬╖┬╖┬╖┬╖"tie_break_order":┬╖["prefer_local",┬╖"cost",┬╖"latency_ms_p95",┬╖"endpoint_id"]ΓÉì
+    10    Γöé - ┬╖┬╖},ΓÉì
+    11    Γöé - ┬╖┬╖"eligible_candidates":┬╖["cli.local.coder"],ΓÉì
+    12    Γöé - ┬╖┬╖"ineligible_candidates":┬╖[ΓÉì
+    13    Γöé - ┬╖┬╖┬╖┬╖{ΓÉì
+    14    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"endpoint_id":┬╖"acp.remote.general",ΓÉì
+    15    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"reasons":┬╖["CAPABILITY_MISSING"]ΓÉì
+    16    Γöé - ┬╖┬╖┬╖┬╖},ΓÉì
+    17    Γöé - ┬╖┬╖┬╖┬╖{ΓÉì
+    18    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"endpoint_id":┬╖"mcp.remote.embedder",ΓÉì
+    19    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"reasons":┬╖["CAPABILITY_MISSING"]ΓÉì
+    20    Γöé - ┬╖┬╖┬╖┬╖}ΓÉì
+    21    Γöé - ┬╖┬╖],ΓÉì
+    22    Γöé - ┬╖┬╖"scored_candidates":┬╖[ΓÉì
+    23    Γöé - ┬╖┬╖┬╖┬╖{ΓÉì
+    24    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"endpoint_id":┬╖"cli.local.coder",ΓÉì
+    25    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"score":┬╖108.5ΓÉì
+    26    Γöé - ┬╖┬╖┬╖┬╖}ΓÉì
+    27    Γöé - ┬╖┬╖],ΓÉì
+    28    Γöé - ┬╖┬╖"chosen_endpoint_id":┬╖"cli.local.coder",ΓÉì
+    29    Γöé - ┬╖┬╖"fallback_endpoint_ids":┬╖[],ΓÉì
+    30    Γöé - ┬╖┬╖"selection_reasons":┬╖[ΓÉì
+    31    Γöé - ┬╖┬╖┬╖┬╖"BEST_TOTAL_SCORE",ΓÉì
+    32    Γöé - ┬╖┬╖┬╖┬╖"DECLARED_PROFILE_USED",ΓÉì
+    33    Γöé - ┬╖┬╖┬╖┬╖"MEASURED_PROFILE_USED",ΓÉì
+    34    Γöé - ┬╖┬╖┬╖┬╖"LOCAL_PREFERENCE_APPLIED"ΓÉì
+    35    Γöé - ┬╖┬╖],ΓÉì
+    36    Γöé - ┬╖┬╖"used_measured":┬╖true,ΓÉì
+    37    Γöé - ┬╖┬╖"used_declared":┬╖true,ΓÉì
+    38    Γöé - ┬╖┬╖"scoring_version":┬╖"baseline-v1"ΓÉì
+    39    Γöé - }ΓÉì
+        1 Γöé + {
+        2 Γöé + ┬╖┬╖"routing_decision_id":┬╖"decision-gateway-smoke",
+        3 Γöé + ┬╖┬╖"request_id":┬╖"gateway-smoke",
+        4 Γöé + ┬╖┬╖"policy_snapshot":┬╖{
+        5 Γöé + ┬╖┬╖┬╖┬╖"policy_id":┬╖"balanced-policy",
+        6 Γöé + ┬╖┬╖┬╖┬╖"strategy":┬╖"balanced",
+        7 Γöé + ┬╖┬╖┬╖┬╖"prefer_local":┬╖true,
+        8 Γöé + ┬╖┬╖┬╖┬╖"budget_mode":┬╖"strict",
+        9 Γöé + ┬╖┬╖┬╖┬╖"tie_break_order":┬╖["prefer_local",┬╖"cost",┬╖"latency_ms_p95",┬╖"endpoint_id"]
+       10 Γöé + ┬╖┬╖},
+       11 Γöé + ┬╖┬╖"eligible_candidates":┬╖["cli.local.coder"],
+       12 Γöé + ┬╖┬╖"ineligible_candidates":┬╖[
+       13 Γöé + ┬╖┬╖┬╖┬╖{
+       14 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"endpoint_id":┬╖"acp.remote.general",
+       15 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"reasons":┬╖["CAPABILITY_MISSING"]
+       16 Γöé + ┬╖┬╖┬╖┬╖},
+       17 Γöé + ┬╖┬╖┬╖┬╖{
+       18 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"endpoint_id":┬╖"mcp.remote.embedder",
+       19 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"reasons":┬╖["CAPABILITY_MISSING"]
+       20 Γöé + ┬╖┬╖┬╖┬╖}
+       21 Γöé + ┬╖┬╖],
+       22 Γöé + ┬╖┬╖"scored_candidates":┬╖[
+       23 Γöé + ┬╖┬╖┬╖┬╖{
+       24 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"endpoint_id":┬╖"cli.local.coder",
+       25 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"score":┬╖108.5
+       26 Γöé + ┬╖┬╖┬╖┬╖}
+       27 Γöé + ┬╖┬╖],
+       28 Γöé + ┬╖┬╖"chosen_endpoint_id":┬╖"cli.local.coder",
+       29 Γöé + ┬╖┬╖"fallback_endpoint_ids":┬╖[],
+       30 Γöé + ┬╖┬╖"selection_reasons":┬╖[
+       31 Γöé + ┬╖┬╖┬╖┬╖"BEST_TOTAL_SCORE",
+       32 Γöé + ┬╖┬╖┬╖┬╖"DECLARED_PROFILE_USED",
+       33 Γöé + ┬╖┬╖┬╖┬╖"MEASURED_PROFILE_USED",
+       34 Γöé + ┬╖┬╖┬╖┬╖"LOCAL_PREFERENCE_APPLIED"
+       35 Γöé + ┬╖┬╖],
+       36 Γöé + ┬╖┬╖"used_measured":┬╖true,
+       37 Γöé + ┬╖┬╖"used_declared":┬╖true,
+       38 Γöé + ┬╖┬╖"scoring_version":┬╖"baseline-v1"
+       39 Γöé + }
+    40 40 Γöé   
+  
+
+.\.recursive\run\16-router-runtime-unified-telemetry-dashboard\evidence\browser\run16-sse-api-after.json format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+     1    Γöé - {ΓÉì
+     2    Γöé - ┬╖┬╖"requestCount":┬╖5,ΓÉì
+     3    Γöé - ┬╖┬╖"successCount":┬╖5,ΓÉì
+     4    Γöé - ┬╖┬╖"failureCount":┬╖0,ΓÉì
+     5    Γöé - ┬╖┬╖"totalInputTokens":┬╖64,ΓÉì
+     6    Γöé - ┬╖┬╖"totalOutputTokens":┬╖23,ΓÉì
+     7    Γöé - ┬╖┬╖"totalTokens":┬╖87,ΓÉì
+     8    Γöé - ┬╖┬╖"cachedRequestCount":┬╖3,ΓÉì
+     9    Γöé - ┬╖┬╖"totalActualCostUsd":┬╖0.0126,ΓÉì
+    10    Γöé - ┬╖┬╖"totalEstimatedCostUsd":┬╖0.0126,ΓÉì
+    11    Γöé - ┬╖┬╖"averageLatencyMs":┬╖2,ΓÉì
+    12    Γöé - ┬╖┬╖"p95LatencyMs":┬╖3,ΓÉì
+    13    Γöé - ┬╖┬╖"lastSeenAtMs":┬╖1778217900397,ΓÉì
+    14    Γöé - ┬╖┬╖"sourceBreakdown":┬╖{ΓÉì
+    15    Γöé - ┬╖┬╖┬╖┬╖"local":┬╖{ΓÉì
+    16    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"requestCount":┬╖2,ΓÉì
+    17    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"successCount":┬╖2,ΓÉì
+    18    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"failureCount":┬╖0,ΓÉì
+    19    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"totalInputTokens":┬╖22,ΓÉì
+    20    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"totalOutputTokens":┬╖8,ΓÉì
+    21    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"totalTokens":┬╖30,ΓÉì
+    22    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"cachedRequestCount":┬╖0,ΓÉì
+    23    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"totalActualCostUsd":┬╖0,ΓÉì
+    24    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"totalEstimatedCostUsd":┬╖0,ΓÉì
+    25    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"averageLatencyMs":┬╖2,ΓÉì
+    26    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"p95LatencyMs":┬╖2,ΓÉì
+    27    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"lastSeenAtMs":┬╖1778217900284ΓÉì
+    28    Γöé - ┬╖┬╖┬╖┬╖},ΓÉì
+    29    Γöé - ┬╖┬╖┬╖┬╖"remote":┬╖{ΓÉì
+    30    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"requestCount":┬╖3,ΓÉì
+    31    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"successCount":┬╖3,ΓÉì
+    32    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"failureCount":┬╖0,ΓÉì
+    33    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"totalInputTokens":┬╖42,ΓÉì
+    34    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"totalOutputTokens":┬╖15,ΓÉì
+    35    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"totalTokens":┬╖57,ΓÉì
+    36    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"cachedRequestCount":┬╖3,ΓÉì
+    37    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"totalActualCostUsd":┬╖0.0126,ΓÉì
+    38    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"totalEstimatedCostUsd":┬╖0.0126,ΓÉì
+    39    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"averageLatencyMs":┬╖2,ΓÉì
+    40    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"p95LatencyMs":┬╖3,ΓÉì
+    41    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"lastSeenAtMs":┬╖1778217900397ΓÉì
+    42    Γöé - ┬╖┬╖┬╖┬╖}ΓÉì
+    43    Γöé - ┬╖┬╖}ΓÉì
+    44    Γöé - }ΓÉì
+        1 Γöé + {
+        2 Γöé + ┬╖┬╖"requestCount":┬╖5,
+        3 Γöé + ┬╖┬╖"successCount":┬╖5,
+        4 Γöé + ┬╖┬╖"failureCount":┬╖0,
+        5 Γöé + ┬╖┬╖"totalInputTokens":┬╖64,
+        6 Γöé + ┬╖┬╖"totalOutputTokens":┬╖23,
+        7 Γöé + ┬╖┬╖"totalTokens":┬╖87,
+        8 Γöé + ┬╖┬╖"cachedRequestCount":┬╖3,
+        9 Γöé + ┬╖┬╖"totalActualCostUsd":┬╖0.0126,
+       10 Γöé + ┬╖┬╖"totalEstimatedCostUsd":┬╖0.0126,
+       11 Γöé + ┬╖┬╖"averageLatencyMs":┬╖2,
+       12 Γöé + ┬╖┬╖"p95LatencyMs":┬╖3,
+       13 Γöé + ┬╖┬╖"lastSeenAtMs":┬╖1778217900397,
+       14 Γöé + ┬╖┬╖"sourceBreakdown":┬╖{
+       15 Γöé + ┬╖┬╖┬╖┬╖"local":┬╖{
+       16 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"requestCount":┬╖2,
+       17 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"successCount":┬╖2,
+       18 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"failureCount":┬╖0,
+       19 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"totalInputTokens":┬╖22,
+       20 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"totalOutputTokens":┬╖8,
+       21 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"totalTokens":┬╖30,
+       22 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"cachedRequestCount":┬╖0,
+       23 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"totalActualCostUsd":┬╖0,
+       24 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"totalEstimatedCostUsd":┬╖0,
+       25 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"averageLatencyMs":┬╖2,
+       26 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"p95LatencyMs":┬╖2,
+       27 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"lastSeenAtMs":┬╖1778217900284
+       28 Γöé + ┬╖┬╖┬╖┬╖},
+       29 Γöé + ┬╖┬╖┬╖┬╖"remote":┬╖{
+       30 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"requestCount":┬╖3,
+       31 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"successCount":┬╖3,
+       32 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"failureCount":┬╖0,
+       33 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"totalInputTokens":┬╖42,
+       34 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"totalOutputTokens":┬╖15,
+       35 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"totalTokens":┬╖57,
+       36 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"cachedRequestCount":┬╖3,
+       37 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"totalActualCostUsd":┬╖0.0126,
+       38 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"totalEstimatedCostUsd":┬╖0.0126,
+       39 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"averageLatencyMs":┬╖2,
+       40 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"p95LatencyMs":┬╖3,
+       41 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"lastSeenAtMs":┬╖1778217900397
+       42 Γöé + ┬╖┬╖┬╖┬╖}
+       43 Γöé + ┬╖┬╖}
+       44 Γöé + }
+    45 45 Γöé   
+  
+
+.\role-model-router\packages\vendor-llama-swap\tsconfig.json format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+     1    Γöé - {ΓÉì
+     2    Γöé - ┬╖┬╖"extends":┬╖"../../../tsconfig.base.json",ΓÉì
+     3    Γöé - ┬╖┬╖"compilerOptions":┬╖{ΓÉì
+     4    Γöé - ┬╖┬╖┬╖┬╖"rootDir":┬╖"src",ΓÉì
+     5    Γöé - ┬╖┬╖┬╖┬╖"outDir":┬╖"dist"ΓÉì
+     6    Γöé - ┬╖┬╖},ΓÉì
+     7    Γöé - ┬╖┬╖"include":┬╖["src/**/*.ts"],ΓÉì
+     8    Γöé - ┬╖┬╖"exclude":┬╖["test/**/*.ts"]ΓÉì
+     9    Γöé - }ΓÉì
+        1 Γöé + {
+        2 Γöé + ┬╖┬╖"extends":┬╖"../../../tsconfig.base.json",
+        3 Γöé + ┬╖┬╖"compilerOptions":┬╖{
+        4 Γöé + ┬╖┬╖┬╖┬╖"rootDir":┬╖"src",
+        5 Γöé + ┬╖┬╖┬╖┬╖"outDir":┬╖"dist"
+        6 Γöé + ┬╖┬╖},
+        7 Γöé + ┬╖┬╖"include":┬╖["src/**/*.ts"],
+        8 Γöé + ┬╖┬╖"exclude":┬╖["test/**/*.ts"]
+        9 Γöé + }
+    10 10 Γöé   
+  
+
+.\testdata\router-runtime\routing-observed-profiles.json format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+     1    Γöé - {ΓÉì
+     2    Γöé - ┬╖┬╖"cli.local.coder":┬╖{ΓÉì
+     3    Γöé - ┬╖┬╖┬╖┬╖"endpoint_id":┬╖"cli.local.coder",ΓÉì
+     4    Γöé - ┬╖┬╖┬╖┬╖"judge_score":┬╖0.9,ΓÉì
+     5    Γöé - ┬╖┬╖┬╖┬╖"latency_ms_p50":┬╖65,ΓÉì
+     6    Γöé - ┬╖┬╖┬╖┬╖"latency_ms_p95":┬╖95,ΓÉì
+     7    Γöé - ┬╖┬╖┬╖┬╖"tokens_per_sec":┬╖70,ΓÉì
+     8    Γöé - ┬╖┬╖┬╖┬╖"cold_start_ms":┬╖15,ΓÉì
+     9    Γöé - ┬╖┬╖┬╖┬╖"failure_rate":┬╖0.01,ΓÉì
+    10    Γöé - ┬╖┬╖┬╖┬╖"cost_per_1k_tokens_est":┬╖0,ΓÉì
+    11    Γöé - ┬╖┬╖┬╖┬╖"freshness_score":┬╖0.94,ΓÉì
+    12    Γöé - ┬╖┬╖┬╖┬╖"confidence_score":┬╖0.93ΓÉì
+    13    Γöé - ┬╖┬╖},ΓÉì
+    14    Γöé - ┬╖┬╖"openai.personal.primary.us-east-1.fast":┬╖{ΓÉì
+    15    Γöé - ┬╖┬╖┬╖┬╖"endpoint_id":┬╖"openai.personal.primary.us-east-1.fast",ΓÉì
+    16    Γöé - ┬╖┬╖┬╖┬╖"judge_score":┬╖0.92,ΓÉì
+    17    Γöé - ┬╖┬╖┬╖┬╖"latency_ms_p50":┬╖100,ΓÉì
+    18    Γöé - ┬╖┬╖┬╖┬╖"latency_ms_p95":┬╖135,ΓÉì
+    19    Γöé - ┬╖┬╖┬╖┬╖"tokens_per_sec":┬╖85,ΓÉì
+    20    Γöé - ┬╖┬╖┬╖┬╖"cold_start_ms":┬╖20,ΓÉì
+    21    Γöé - ┬╖┬╖┬╖┬╖"failure_rate":┬╖0.01,ΓÉì
+    22    Γöé - ┬╖┬╖┬╖┬╖"cost_per_1k_tokens_est":┬╖0.004,ΓÉì
+    23    Γöé - ┬╖┬╖┬╖┬╖"freshness_score":┬╖0.92,ΓÉì
+    24    Γöé - ┬╖┬╖┬╖┬╖"confidence_score":┬╖0.91ΓÉì
+    25    Γöé - ┬╖┬╖},ΓÉì
+    26    Γöé - ┬╖┬╖"anthropic.team.shared.us-east-1.default":┬╖{ΓÉì
+    27    Γöé - ┬╖┬╖┬╖┬╖"endpoint_id":┬╖"anthropic.team.shared.us-east-1.default",ΓÉì
+    28    Γöé - ┬╖┬╖┬╖┬╖"judge_score":┬╖0.86,ΓÉì
+    29    Γöé - ┬╖┬╖┬╖┬╖"latency_ms_p50":┬╖130,ΓÉì
+    30    Γöé - ┬╖┬╖┬╖┬╖"latency_ms_p95":┬╖175,ΓÉì
+    31    Γöé - ┬╖┬╖┬╖┬╖"tokens_per_sec":┬╖60,ΓÉì
+    32    Γöé - ┬╖┬╖┬╖┬╖"cold_start_ms":┬╖35,ΓÉì
+    33    Γöé - ┬╖┬╖┬╖┬╖"failure_rate":┬╖0.03,ΓÉì
+    34    Γöé - ┬╖┬╖┬╖┬╖"cost_per_1k_tokens_est":┬╖0.006,ΓÉì
+    35    Γöé - ┬╖┬╖┬╖┬╖"freshness_score":┬╖0.9,ΓÉì
+    36    Γöé - ┬╖┬╖┬╖┬╖"confidence_score":┬╖0.89ΓÉì
+    37    Γöé - ┬╖┬╖}ΓÉì
+    38    Γöé - }ΓÉì
+        1 Γöé + {
+        2 Γöé + ┬╖┬╖"cli.local.coder":┬╖{
+        3 Γöé + ┬╖┬╖┬╖┬╖"endpoint_id":┬╖"cli.local.coder",
+        4 Γöé + ┬╖┬╖┬╖┬╖"judge_score":┬╖0.9,
+        5 Γöé + ┬╖┬╖┬╖┬╖"latency_ms_p50":┬╖65,
+        6 Γöé + ┬╖┬╖┬╖┬╖"latency_ms_p95":┬╖95,
+        7 Γöé + ┬╖┬╖┬╖┬╖"tokens_per_sec":┬╖70,
+        8 Γöé + ┬╖┬╖┬╖┬╖"cold_start_ms":┬╖15,
+        9 Γöé + ┬╖┬╖┬╖┬╖"failure_rate":┬╖0.01,
+       10 Γöé + ┬╖┬╖┬╖┬╖"cost_per_1k_tokens_est":┬╖0,
+       11 Γöé + ┬╖┬╖┬╖┬╖"freshness_score":┬╖0.94,
+       12 Γöé + ┬╖┬╖┬╖┬╖"confidence_score":┬╖0.93
+       13 Γöé + ┬╖┬╖},
+       14 Γöé + ┬╖┬╖"openai.personal.primary.us-east-1.fast":┬╖{
+       15 Γöé + ┬╖┬╖┬╖┬╖"endpoint_id":┬╖"openai.personal.primary.us-east-1.fast",
+       16 Γöé + ┬╖┬╖┬╖┬╖"judge_score":┬╖0.92,
+       17 Γöé + ┬╖┬╖┬╖┬╖"latency_ms_p50":┬╖100,
+       18 Γöé + ┬╖┬╖┬╖┬╖"latency_ms_p95":┬╖135,
+       19 Γöé + ┬╖┬╖┬╖┬╖"tokens_per_sec":┬╖85,
+       20 Γöé + ┬╖┬╖┬╖┬╖"cold_start_ms":┬╖20,
+       21 Γöé + ┬╖┬╖┬╖┬╖"failure_rate":┬╖0.01,
+       22 Γöé + ┬╖┬╖┬╖┬╖"cost_per_1k_tokens_est":┬╖0.004,
+       23 Γöé + ┬╖┬╖┬╖┬╖"freshness_score":┬╖0.92,
+       24 Γöé + ┬╖┬╖┬╖┬╖"confidence_score":┬╖0.91
+       25 Γöé + ┬╖┬╖},
+       26 Γöé + ┬╖┬╖"anthropic.team.shared.us-east-1.default":┬╖{
+       27 Γöé + ┬╖┬╖┬╖┬╖"endpoint_id":┬╖"anthropic.team.shared.us-east-1.default",
+       28 Γöé + ┬╖┬╖┬╖┬╖"judge_score":┬╖0.86,
+       29 Γöé + ┬╖┬╖┬╖┬╖"latency_ms_p50":┬╖130,
+       30 Γöé + ┬╖┬╖┬╖┬╖"latency_ms_p95":┬╖175,
+       31 Γöé + ┬╖┬╖┬╖┬╖"tokens_per_sec":┬╖60,
+       32 Γöé + ┬╖┬╖┬╖┬╖"cold_start_ms":┬╖35,
+       33 Γöé + ┬╖┬╖┬╖┬╖"failure_rate":┬╖0.03,
+       34 Γöé + ┬╖┬╖┬╖┬╖"cost_per_1k_tokens_est":┬╖0.006,
+       35 Γöé + ┬╖┬╖┬╖┬╖"freshness_score":┬╖0.9,
+       36 Γöé + ┬╖┬╖┬╖┬╖"confidence_score":┬╖0.89
+       37 Γöé + ┬╖┬╖}
+       38 Γöé + }
+    39 39 Γöé   
+  
+
+.\role-model-router\vendor\llama-swap\ui-svelte\package.json format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+     1    Γöé - {ΓÉì
+     2    Γöé - ┬╖┬╖"name":┬╖"ui-svelte",ΓÉì
+     3    Γöé - ┬╖┬╖"private":┬╖true,ΓÉì
+     4    Γöé - ┬╖┬╖"version":┬╖"0.0.0",ΓÉì
+     5    Γöé - ┬╖┬╖"type":┬╖"module",ΓÉì
+     6    Γöé - ┬╖┬╖"scripts":┬╖{ΓÉì
+     7    Γöé - ┬╖┬╖┬╖┬╖"start":┬╖"vite",ΓÉì
+     8    Γöé - ┬╖┬╖┬╖┬╖"build":┬╖"vite┬╖build┬╖--emptyOutDir",ΓÉì
+     9    Γöé - ┬╖┬╖┬╖┬╖"preview":┬╖"vite┬╖preview",ΓÉì
+    10    Γöé - ┬╖┬╖┬╖┬╖"check":┬╖"svelte-check┬╖--tsconfig┬╖./tsconfig.json",ΓÉì
+    11    Γöé - ┬╖┬╖┬╖┬╖"test":┬╖"vitest┬╖run",ΓÉì
+    12    Γöé - ┬╖┬╖┬╖┬╖"test:watch":┬╖"vitest"ΓÉì
+    13    Γöé - ┬╖┬╖},ΓÉì
+    14    Γöé - ┬╖┬╖"devDependencies":┬╖{ΓÉì
+    15    Γöé - ┬╖┬╖┬╖┬╖"@sveltejs/vite-plugin-svelte":┬╖"^7.0.0",ΓÉì
+    16    Γöé - ┬╖┬╖┬╖┬╖"@tailwindcss/vite":┬╖"^4.1.8",ΓÉì
+    17    Γöé - ┬╖┬╖┬╖┬╖"@tsconfig/svelte":┬╖"^5.0.4",ΓÉì
+    18    Γöé - ┬╖┬╖┬╖┬╖"@types/hast":┬╖"^3.0.4",ΓÉì
+    19    Γöé - ┬╖┬╖┬╖┬╖"@types/node":┬╖"^25.1.0",ΓÉì
+    20    Γöé - ┬╖┬╖┬╖┬╖"svelte":┬╖"^5.46.4",ΓÉì
+    21    Γöé - ┬╖┬╖┬╖┬╖"svelte-check":┬╖"^4.1.4",ΓÉì
+    22    Γöé - ┬╖┬╖┬╖┬╖"tailwindcss":┬╖"^4.1.8",ΓÉì
+    23    Γöé - ┬╖┬╖┬╖┬╖"typescript":┬╖"~5.8.3",ΓÉì
+    24    Γöé - ┬╖┬╖┬╖┬╖"vite":┬╖"^8.0.0",ΓÉì
+    25    Γöé - ┬╖┬╖┬╖┬╖"vite-plugin-compression2":┬╖"^2.5.1",ΓÉì
+    26    Γöé - ┬╖┬╖┬╖┬╖"vitest":┬╖"^4.1.0"ΓÉì
+    27    Γöé - ┬╖┬╖},ΓÉì
+    28    Γöé - ┬╖┬╖"dependencies":┬╖{ΓÉì
+    29    Γöé - ┬╖┬╖┬╖┬╖"highlight.js":┬╖"^11.11.1",ΓÉì
+    30    Γöé - ┬╖┬╖┬╖┬╖"katex":┬╖"^0.16.28",ΓÉì
+    31    Γöé - ┬╖┬╖┬╖┬╖"lucide-svelte":┬╖"^0.563.0",ΓÉì
+    32    Γöé - ┬╖┬╖┬╖┬╖"rehype-katex":┬╖"^7.0.1",ΓÉì
+    33    Γöé - ┬╖┬╖┬╖┬╖"rehype-stringify":┬╖"^10.0.1",ΓÉì
+    34    Γöé - ┬╖┬╖┬╖┬╖"remark-gfm":┬╖"^4.0.1",ΓÉì
+    35    Γöé - ┬╖┬╖┬╖┬╖"remark-math":┬╖"^6.0.0",ΓÉì
+    36    Γöé - ┬╖┬╖┬╖┬╖"remark-parse":┬╖"^11.0.0",ΓÉì
+    37    Γöé - ┬╖┬╖┬╖┬╖"remark-rehype":┬╖"^11.1.2",ΓÉì
+    38    Γöé - ┬╖┬╖┬╖┬╖"svelte-spa-router":┬╖"^4.0.1",ΓÉì
+    39    Γöé - ┬╖┬╖┬╖┬╖"unified":┬╖"^11.0.5",ΓÉì
+    40    Γöé - ┬╖┬╖┬╖┬╖"unist-util-visit":┬╖"^5.1.0"ΓÉì
+    41    Γöé - ┬╖┬╖}ΓÉì
+    42    Γöé - }ΓÉì
+        1 Γöé + {
+        2 Γöé + ┬╖┬╖"name":┬╖"ui-svelte",
+        3 Γöé + ┬╖┬╖"private":┬╖true,
+        4 Γöé + ┬╖┬╖"version":┬╖"0.0.0",
+        5 Γöé + ┬╖┬╖"type":┬╖"module",
+        6 Γöé + ┬╖┬╖"scripts":┬╖{
+        7 Γöé + ┬╖┬╖┬╖┬╖"start":┬╖"vite",
+        8 Γöé + ┬╖┬╖┬╖┬╖"build":┬╖"vite┬╖build┬╖--emptyOutDir",
+        9 Γöé + ┬╖┬╖┬╖┬╖"preview":┬╖"vite┬╖preview",
+       10 Γöé + ┬╖┬╖┬╖┬╖"check":┬╖"svelte-check┬╖--tsconfig┬╖./tsconfig.json",
+       11 Γöé + ┬╖┬╖┬╖┬╖"test":┬╖"vitest┬╖run",
+       12 Γöé + ┬╖┬╖┬╖┬╖"test:watch":┬╖"vitest"
+       13 Γöé + ┬╖┬╖},
+       14 Γöé + ┬╖┬╖"devDependencies":┬╖{
+       15 Γöé + ┬╖┬╖┬╖┬╖"@sveltejs/vite-plugin-svelte":┬╖"^7.0.0",
+       16 Γöé + ┬╖┬╖┬╖┬╖"@tailwindcss/vite":┬╖"^4.1.8",
+       17 Γöé + ┬╖┬╖┬╖┬╖"@tsconfig/svelte":┬╖"^5.0.4",
+       18 Γöé + ┬╖┬╖┬╖┬╖"@types/hast":┬╖"^3.0.4",
+       19 Γöé + ┬╖┬╖┬╖┬╖"@types/node":┬╖"^25.1.0",
+       20 Γöé + ┬╖┬╖┬╖┬╖"svelte":┬╖"^5.46.4",
+       21 Γöé + ┬╖┬╖┬╖┬╖"svelte-check":┬╖"^4.1.4",
+       22 Γöé + ┬╖┬╖┬╖┬╖"tailwindcss":┬╖"^4.1.8",
+       23 Γöé + ┬╖┬╖┬╖┬╖"typescript":┬╖"~5.8.3",
+       24 Γöé + ┬╖┬╖┬╖┬╖"vite":┬╖"^8.0.0",
+       25 Γöé + ┬╖┬╖┬╖┬╖"vite-plugin-compression2":┬╖"^2.5.1",
+       26 Γöé + ┬╖┬╖┬╖┬╖"vitest":┬╖"^4.1.0"
+       27 Γöé + ┬╖┬╖},
+       28 Γöé + ┬╖┬╖"dependencies":┬╖{
+       29 Γöé + ┬╖┬╖┬╖┬╖"highlight.js":┬╖"^11.11.1",
+       30 Γöé + ┬╖┬╖┬╖┬╖"katex":┬╖"^0.16.28",
+       31 Γöé + ┬╖┬╖┬╖┬╖"lucide-svelte":┬╖"^0.563.0",
+       32 Γöé + ┬╖┬╖┬╖┬╖"rehype-katex":┬╖"^7.0.1",
+       33 Γöé + ┬╖┬╖┬╖┬╖"rehype-stringify":┬╖"^10.0.1",
+       34 Γöé + ┬╖┬╖┬╖┬╖"remark-gfm":┬╖"^4.0.1",
+       35 Γöé + ┬╖┬╖┬╖┬╖"remark-math":┬╖"^6.0.0",
+       36 Γöé + ┬╖┬╖┬╖┬╖"remark-parse":┬╖"^11.0.0",
+       37 Γöé + ┬╖┬╖┬╖┬╖"remark-rehype":┬╖"^11.1.2",
+       38 Γöé + ┬╖┬╖┬╖┬╖"svelte-spa-router":┬╖"^4.0.1",
+       39 Γöé + ┬╖┬╖┬╖┬╖"unified":┬╖"^11.0.5",
+       40 Γöé + ┬╖┬╖┬╖┬╖"unist-util-visit":┬╖"^5.1.0"
+       41 Γöé + ┬╖┬╖}
+       42 Γöé + }
+    43 43 Γöé   
+  
+
+.\.recursive\run\16-router-runtime-unified-telemetry-dashboard\evidence\browser\run16-sse-api-before.json format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+     1    Γöé - [ΓÉì
+     2    Γöé - ┬╖┬╖{ΓÉì
+     3    Γöé - ┬╖┬╖┬╖┬╖"requestId":┬╖"req-runtime-vendor-hybrid-remote",ΓÉì
+     4    Γöé - ┬╖┬╖┬╖┬╖"routingDecisionId":┬╖"decision-req-runtime-vendor-hybrid-remote",ΓÉì
+     5    Γöé - ┬╖┬╖┬╖┬╖"endpointId":┬╖"openai.litellm.global.openai-gpt-4-1-mini-fast",ΓÉì
+     6    Γöé - ┬╖┬╖┬╖┬╖"conversationId":┬╖"conversation-main",ΓÉì
+     7    Γöé - ┬╖┬╖┬╖┬╖"createdAtMs":┬╖1778216560542,ΓÉì
+     8    Γöé - ┬╖┬╖┬╖┬╖"modelId":┬╖"openai/gpt-4.1-mini-fast",ΓÉì
+     9    Γöé - ┬╖┬╖┬╖┬╖"providerKind":┬╖"remote_openai_compat",ΓÉì
+    10    Γöé - ┬╖┬╖┬╖┬╖"providerFamily":┬╖"litellm-proxy",ΓÉì
+    11    Γöé - ┬╖┬╖┬╖┬╖"inputTokens":┬╖14,ΓÉì
+    12    Γöé - ┬╖┬╖┬╖┬╖"outputTokens":┬╖5,ΓÉì
+    13    Γöé - ┬╖┬╖┬╖┬╖"totalTokens":┬╖19,ΓÉì
+    14    Γöé - ┬╖┬╖┬╖┬╖"latencyMs":┬╖2,ΓÉì
+    15    Γöé - ┬╖┬╖┬╖┬╖"errorClass":┬╖null,ΓÉì
+    16    Γöé - ┬╖┬╖┬╖┬╖"statusCode":┬╖200,ΓÉì
+    17    Γöé - ┬╖┬╖┬╖┬╖"finishReason":┬╖"stop",ΓÉì
+    18    Γöé - ┬╖┬╖┬╖┬╖"promptCacheRequested":┬╖false,ΓÉì
+    19    Γöé - ┬╖┬╖┬╖┬╖"promptCacheSupported":┬╖true,ΓÉì
+    20    Γöé - ┬╖┬╖┬╖┬╖"promptCacheUsed":┬╖true,ΓÉì
+    21    Γöé - ┬╖┬╖┬╖┬╖"cacheReadTokens":┬╖0,ΓÉì
+    22    Γöé - ┬╖┬╖┬╖┬╖"cacheReadTokensSupported":┬╖true,ΓÉì
+    23    Γöé - ┬╖┬╖┬╖┬╖"cacheWriteTokens":┬╖0,ΓÉì
+    24    Γöé - ┬╖┬╖┬╖┬╖"cacheWriteTokensSupported":┬╖true,ΓÉì
+    25    Γöé - ┬╖┬╖┬╖┬╖"streamTextDeltaCount":┬╖1,ΓÉì
+    26    Γöé - ┬╖┬╖┬╖┬╖"streamTextSupported":┬╖true,ΓÉì
+    27    Γöé - ┬╖┬╖┬╖┬╖"streamToolCallDeltaCount":┬╖0,ΓÉì
+    28    Γöé - ┬╖┬╖┬╖┬╖"streamToolCallSupported":┬╖true,ΓÉì
+    29    Γöé - ┬╖┬╖┬╖┬╖"streamToolArgumentDeltaCount":┬╖0,ΓÉì
+    30    Γöé - ┬╖┬╖┬╖┬╖"streamToolArgumentSupported":┬╖true,ΓÉì
+    31    Γöé - ┬╖┬╖┬╖┬╖"toolCallCount":┬╖0,ΓÉì
+    32    Γöé - ┬╖┬╖┬╖┬╖"toolExecutionCount":┬╖0,ΓÉì
+    33    Γöé - ┬╖┬╖┬╖┬╖"costProvenance":┬╖"actual",ΓÉì
+    34    Γöé - ┬╖┬╖┬╖┬╖"actualCostUsd":┬╖0.0042,ΓÉì
+    35    Γöé - ┬╖┬╖┬╖┬╖"estimatedCostUsd":┬╖0.0042,ΓÉì
+    36    Γöé - ┬╖┬╖┬╖┬╖"currency":┬╖"USD",ΓÉì
+    37    Γöé - ┬╖┬╖┬╖┬╖"sourceType":┬╖"remote",ΓÉì
+    38    Γöé - ┬╖┬╖┬╖┬╖"providerId":┬╖"openai",ΓÉì
+    39    Γöé - ┬╖┬╖┬╖┬╖"endpointKind":┬╖"remote_api",ΓÉì
+    40    Γöé - ┬╖┬╖┬╖┬╖"servingSource":┬╖"vendor-litellm",ΓÉì
+    41    Γöé - ┬╖┬╖┬╖┬╖"healthStatus":┬╖"healthy",ΓÉì
+    42    Γöé - ┬╖┬╖┬╖┬╖"status":┬╖"active",ΓÉì
+    43    Γöé - ┬╖┬╖┬╖┬╖"roleIds":┬╖[]ΓÉì
+    44    Γöé - ┬╖┬╖},ΓÉì
+    45    Γöé - ┬╖┬╖{ΓÉì
+    46    Γöé - ┬╖┬╖┬╖┬╖"requestId":┬╖"req-runtime-vendor-hybrid-local",ΓÉì
+    47    Γöé - ┬╖┬╖┬╖┬╖"routingDecisionId":┬╖"decision-req-runtime-vendor-hybrid-local",ΓÉì
+    48    Γöé - ┬╖┬╖┬╖┬╖"endpointId":┬╖"llama-swap.local.local-llama-3-1-8b-instruct",ΓÉì
+    49    Γöé - ┬╖┬╖┬╖┬╖"conversationId":┬╖"conversation-main",ΓÉì
+    50    Γöé - ┬╖┬╖┬╖┬╖"createdAtMs":┬╖1778216560513,ΓÉì
+    51    Γöé - ┬╖┬╖┬╖┬╖"modelId":┬╖"local/llama-3.1-8b-instruct",ΓÉì
+    52    Γöé - ┬╖┬╖┬╖┬╖"providerKind":┬╖"remote_openai_compat",ΓÉì
+    53    Γöé - ┬╖┬╖┬╖┬╖"providerFamily":┬╖"ai-sdk-openai-compatible",ΓÉì
+    54    Γöé - ┬╖┬╖┬╖┬╖"inputTokens":┬╖11,ΓÉì
+    55    Γöé - ┬╖┬╖┬╖┬╖"outputTokens":┬╖4,ΓÉì
+    56    Γöé - ┬╖┬╖┬╖┬╖"totalTokens":┬╖15,ΓÉì
+    57    Γöé - ┬╖┬╖┬╖┬╖"latencyMs":┬╖2,ΓÉì
+    58    Γöé - ┬╖┬╖┬╖┬╖"errorClass":┬╖null,ΓÉì
+    59    Γöé - ┬╖┬╖┬╖┬╖"statusCode":┬╖200,ΓÉì
+    60    Γöé - ┬╖┬╖┬╖┬╖"finishReason":┬╖"stop",ΓÉì
+    61    Γöé - ┬╖┬╖┬╖┬╖"promptCacheRequested":┬╖false,ΓÉì
+    62    Γöé - ┬╖┬╖┬╖┬╖"promptCacheSupported":┬╖false,ΓÉì
+    63    Γöé - ┬╖┬╖┬╖┬╖"promptCacheUsed":┬╖false,ΓÉì
+    64    Γöé - ┬╖┬╖┬╖┬╖"cacheReadTokens":┬╖0,ΓÉì
+    65    Γöé - ┬╖┬╖┬╖┬╖"cacheReadTokensSupported":┬╖false,ΓÉì
+    66    Γöé - ┬╖┬╖┬╖┬╖"cacheWriteTokens":┬╖0,ΓÉì
+    67    Γöé - ┬╖┬╖┬╖┬╖"cacheWriteTokensSupported":┬╖false,ΓÉì
+    68    Γöé - ┬╖┬╖┬╖┬╖"streamTextDeltaCount":┬╖1,ΓÉì
+    69    Γöé - ┬╖┬╖┬╖┬╖"streamTextSupported":┬╖true,ΓÉì
+    70    Γöé - ┬╖┬╖┬╖┬╖"streamToolCallDeltaCount":┬╖0,ΓÉì
+    71    Γöé - ┬╖┬╖┬╖┬╖"streamToolCallSupported":┬╖true,ΓÉì
+    72    Γöé - ┬╖┬╖┬╖┬╖"streamToolArgumentDeltaCount":┬╖0,ΓÉì
+    73    Γöé - ┬╖┬╖┬╖┬╖"streamToolArgumentSupported":┬╖true,ΓÉì
+    74    Γöé - ┬╖┬╖┬╖┬╖"toolCallCount":┬╖0,ΓÉì
+    75    Γöé - ┬╖┬╖┬╖┬╖"toolExecutionCount":┬╖0,ΓÉì
+    76    Γöé - ┬╖┬╖┬╖┬╖"costProvenance":┬╖"unavailable",ΓÉì
+    77    Γöé - ┬╖┬╖┬╖┬╖"actualCostUsd":┬╖null,ΓÉì
+    78    Γöé - ┬╖┬╖┬╖┬╖"estimatedCostUsd":┬╖null,ΓÉì
+    79    Γöé - ┬╖┬╖┬╖┬╖"currency":┬╖null,ΓÉì
+    80    Γöé - ┬╖┬╖┬╖┬╖"sourceType":┬╖"local",ΓÉì
+    81    Γöé - ┬╖┬╖┬╖┬╖"providerId":┬╖null,ΓÉì
+    82    Γöé - ┬╖┬╖┬╖┬╖"endpointKind":┬╖"local_engine",ΓÉì
+    83    Γöé - ┬╖┬╖┬╖┬╖"servingSource":┬╖"vendor-llama-swap",ΓÉì
+    84    Γöé - ┬╖┬╖┬╖┬╖"healthStatus":┬╖"healthy",ΓÉì
+    85    Γöé - ┬╖┬╖┬╖┬╖"status":┬╖"active",ΓÉì
+    86    Γöé - ┬╖┬╖┬╖┬╖"roleIds":┬╖[]ΓÉì
+    87    Γöé - ┬╖┬╖}ΓÉì
+    88    Γöé - ]ΓÉì
+        1 Γöé + [
+        2 Γöé + ┬╖┬╖{
+        3 Γöé + ┬╖┬╖┬╖┬╖"requestId":┬╖"req-runtime-vendor-hybrid-remote",
+        4 Γöé + ┬╖┬╖┬╖┬╖"routingDecisionId":┬╖"decision-req-runtime-vendor-hybrid-remote",
+        5 Γöé + ┬╖┬╖┬╖┬╖"endpointId":┬╖"openai.litellm.global.openai-gpt-4-1-mini-fast",
+        6 Γöé + ┬╖┬╖┬╖┬╖"conversationId":┬╖"conversation-main",
+        7 Γöé + ┬╖┬╖┬╖┬╖"createdAtMs":┬╖1778216560542,
+        8 Γöé + ┬╖┬╖┬╖┬╖"modelId":┬╖"openai/gpt-4.1-mini-fast",
+        9 Γöé + ┬╖┬╖┬╖┬╖"providerKind":┬╖"remote_openai_compat",
+       10 Γöé + ┬╖┬╖┬╖┬╖"providerFamily":┬╖"litellm-proxy",
+       11 Γöé + ┬╖┬╖┬╖┬╖"inputTokens":┬╖14,
+       12 Γöé + ┬╖┬╖┬╖┬╖"outputTokens":┬╖5,
+       13 Γöé + ┬╖┬╖┬╖┬╖"totalTokens":┬╖19,
+       14 Γöé + ┬╖┬╖┬╖┬╖"latencyMs":┬╖2,
+       15 Γöé + ┬╖┬╖┬╖┬╖"errorClass":┬╖null,
+       16 Γöé + ┬╖┬╖┬╖┬╖"statusCode":┬╖200,
+       17 Γöé + ┬╖┬╖┬╖┬╖"finishReason":┬╖"stop",
+       18 Γöé + ┬╖┬╖┬╖┬╖"promptCacheRequested":┬╖false,
+       19 Γöé + ┬╖┬╖┬╖┬╖"promptCacheSupported":┬╖true,
+       20 Γöé + ┬╖┬╖┬╖┬╖"promptCacheUsed":┬╖true,
+       21 Γöé + ┬╖┬╖┬╖┬╖"cacheReadTokens":┬╖0,
+       22 Γöé + ┬╖┬╖┬╖┬╖"cacheReadTokensSupported":┬╖true,
+       23 Γöé + ┬╖┬╖┬╖┬╖"cacheWriteTokens":┬╖0,
+       24 Γöé + ┬╖┬╖┬╖┬╖"cacheWriteTokensSupported":┬╖true,
+       25 Γöé + ┬╖┬╖┬╖┬╖"streamTextDeltaCount":┬╖1,
+       26 Γöé + ┬╖┬╖┬╖┬╖"streamTextSupported":┬╖true,
+       27 Γöé + ┬╖┬╖┬╖┬╖"streamToolCallDeltaCount":┬╖0,
+       28 Γöé + ┬╖┬╖┬╖┬╖"streamToolCallSupported":┬╖true,
+       29 Γöé + ┬╖┬╖┬╖┬╖"streamToolArgumentDeltaCount":┬╖0,
+       30 Γöé + ┬╖┬╖┬╖┬╖"streamToolArgumentSupported":┬╖true,
+       31 Γöé + ┬╖┬╖┬╖┬╖"toolCallCount":┬╖0,
+       32 Γöé + ┬╖┬╖┬╖┬╖"toolExecutionCount":┬╖0,
+       33 Γöé + ┬╖┬╖┬╖┬╖"costProvenance":┬╖"actual",
+       34 Γöé + ┬╖┬╖┬╖┬╖"actualCostUsd":┬╖0.0042,
+       35 Γöé + ┬╖┬╖┬╖┬╖"estimatedCostUsd":┬╖0.0042,
+       36 Γöé + ┬╖┬╖┬╖┬╖"currency":┬╖"USD",
+       37 Γöé + ┬╖┬╖┬╖┬╖"sourceType":┬╖"remote",
+       38 Γöé + ┬╖┬╖┬╖┬╖"providerId":┬╖"openai",
+       39 Γöé + ┬╖┬╖┬╖┬╖"endpointKind":┬╖"remote_api",
+       40 Γöé + ┬╖┬╖┬╖┬╖"servingSource":┬╖"vendor-litellm",
+       41 Γöé + ┬╖┬╖┬╖┬╖"healthStatus":┬╖"healthy",
+       42 Γöé + ┬╖┬╖┬╖┬╖"status":┬╖"active",
+       43 Γöé + ┬╖┬╖┬╖┬╖"roleIds":┬╖[]
+       44 Γöé + ┬╖┬╖},
+       45 Γöé + ┬╖┬╖{
+       46 Γöé + ┬╖┬╖┬╖┬╖"requestId":┬╖"req-runtime-vendor-hybrid-local",
+       47 Γöé + ┬╖┬╖┬╖┬╖"routingDecisionId":┬╖"decision-req-runtime-vendor-hybrid-local",
+       48 Γöé + ┬╖┬╖┬╖┬╖"endpointId":┬╖"llama-swap.local.local-llama-3-1-8b-instruct",
+       49 Γöé + ┬╖┬╖┬╖┬╖"conversationId":┬╖"conversation-main",
+       50 Γöé + ┬╖┬╖┬╖┬╖"createdAtMs":┬╖1778216560513,
+       51 Γöé + ┬╖┬╖┬╖┬╖"modelId":┬╖"local/llama-3.1-8b-instruct",
+       52 Γöé + ┬╖┬╖┬╖┬╖"providerKind":┬╖"remote_openai_compat",
+       53 Γöé + ┬╖┬╖┬╖┬╖"providerFamily":┬╖"ai-sdk-openai-compatible",
+       54 Γöé + ┬╖┬╖┬╖┬╖"inputTokens":┬╖11,
+       55 Γöé + ┬╖┬╖┬╖┬╖"outputTokens":┬╖4,
+       56 Γöé + ┬╖┬╖┬╖┬╖"totalTokens":┬╖15,
+       57 Γöé + ┬╖┬╖┬╖┬╖"latencyMs":┬╖2,
+       58 Γöé + ┬╖┬╖┬╖┬╖"errorClass":┬╖null,
+       59 Γöé + ┬╖┬╖┬╖┬╖"statusCode":┬╖200,
+       60 Γöé + ┬╖┬╖┬╖┬╖"finishReason":┬╖"stop",
+       61 Γöé + ┬╖┬╖┬╖┬╖"promptCacheRequested":┬╖false,
+       62 Γöé + ┬╖┬╖┬╖┬╖"promptCacheSupported":┬╖false,
+  27 more lines truncated
+  
+
+.\testdata\router-runtime\registry-sources.json format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+    1   Γöé - {ΓÉì
+    2   Γöé - ┬╖┬╖"cloud":┬╖[],ΓÉì
+    3   Γöé - ┬╖┬╖"local":┬╖[]ΓÉì
+    4   Γöé - }ΓÉì
+      1 Γöé + {
+      2 Γöé + ┬╖┬╖"cloud":┬╖[],
+      3 Γöé + ┬╖┬╖"local":┬╖[]
+      4 Γöé + }
+    5 5 Γöé   
+  
+
+.\.recursive\run\16-router-runtime-unified-telemetry-dashboard\evidence\browser\run16-telemetry-api-proof.json format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+      1     Γöé - {ΓÉì
+      2     Γöé - ┬╖┬╖"summary":┬╖{ΓÉì
+      3     Γöé - ┬╖┬╖┬╖┬╖"requestCount":┬╖2,ΓÉì
+      4     Γöé - ┬╖┬╖┬╖┬╖"successCount":┬╖2,ΓÉì
+      5     Γöé - ┬╖┬╖┬╖┬╖"failureCount":┬╖0,ΓÉì
+      6     Γöé - ┬╖┬╖┬╖┬╖"totalInputTokens":┬╖25,ΓÉì
+      7     Γöé - ┬╖┬╖┬╖┬╖"totalOutputTokens":┬╖9,ΓÉì
+      8     Γöé - ┬╖┬╖┬╖┬╖"totalTokens":┬╖34,ΓÉì
+      9     Γöé - ┬╖┬╖┬╖┬╖"cachedRequestCount":┬╖1,ΓÉì
+     10     Γöé - ┬╖┬╖┬╖┬╖"totalActualCostUsd":┬╖0.0042,ΓÉì
+     11     Γöé - ┬╖┬╖┬╖┬╖"totalEstimatedCostUsd":┬╖0.0042,ΓÉì
+     12     Γöé - ┬╖┬╖┬╖┬╖"averageLatencyMs":┬╖5,ΓÉì
+     13     Γöé - ┬╖┬╖┬╖┬╖"p95LatencyMs":┬╖6,ΓÉì
+     14     Γöé - ┬╖┬╖┬╖┬╖"lastSeenAtMs":┬╖1778210628506,ΓÉì
+     15     Γöé - ┬╖┬╖┬╖┬╖"sourceBreakdown":┬╖{ΓÉì
+     16     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"local":┬╖{ΓÉì
+     17     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"requestCount":┬╖1,ΓÉì
+     18     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"successCount":┬╖1,ΓÉì
+     19     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"failureCount":┬╖0,ΓÉì
+     20     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"totalInputTokens":┬╖11,ΓÉì
+     21     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"totalOutputTokens":┬╖4,ΓÉì
+     22     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"totalTokens":┬╖15,ΓÉì
+     23     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"cachedRequestCount":┬╖0,ΓÉì
+     24     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"totalActualCostUsd":┬╖0,ΓÉì
+     25     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"totalEstimatedCostUsd":┬╖0,ΓÉì
+     26     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"averageLatencyMs":┬╖6,ΓÉì
+     27     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"p95LatencyMs":┬╖6,ΓÉì
+     28     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"lastSeenAtMs":┬╖1778210628393ΓÉì
+     29     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖},ΓÉì
+     30     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"remote":┬╖{ΓÉì
+     31     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"requestCount":┬╖1,ΓÉì
+     32     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"successCount":┬╖1,ΓÉì
+     33     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"failureCount":┬╖0,ΓÉì
+     34     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"totalInputTokens":┬╖14,ΓÉì
+     35     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"totalOutputTokens":┬╖5,ΓÉì
+     36     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"totalTokens":┬╖19,ΓÉì
+     37     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"cachedRequestCount":┬╖1,ΓÉì
+     38     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"totalActualCostUsd":┬╖0.0042,ΓÉì
+     39     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"totalEstimatedCostUsd":┬╖0.0042,ΓÉì
+     40     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"averageLatencyMs":┬╖3,ΓÉì
+     41     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"p95LatencyMs":┬╖3,ΓÉì
+     42     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"lastSeenAtMs":┬╖1778210628506ΓÉì
+     43     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖}ΓÉì
+     44     Γöé - ┬╖┬╖┬╖┬╖}ΓÉì
+     45     Γöé - ┬╖┬╖},ΓÉì
+     46     Γöé - ┬╖┬╖"rows":┬╖[ΓÉì
+     47     Γöé - ┬╖┬╖┬╖┬╖{ΓÉì
+     48     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"endpointId":┬╖"openai.litellm.global.openai-gpt-4-1-mini-fast",ΓÉì
+     49     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"modelId":┬╖"openai/gpt-4.1-mini-fast",ΓÉì
+     50     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"providerKind":┬╖"remote_openai_compat",ΓÉì
+     51     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"providerFamily":┬╖"litellm-proxy",ΓÉì
+     52     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"promptCacheSupported":┬╖true,ΓÉì
+     53     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"requestCount":┬╖1,ΓÉì
+     54     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"successCount":┬╖1,ΓÉì
+     55     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"failureCount":┬╖0,ΓÉì
+     56     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"totalInputTokens":┬╖14,ΓÉì
+     57     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"totalOutputTokens":┬╖5,ΓÉì
+     58     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"totalTokens":┬╖19,ΓÉì
+     59     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"cachedRequestCount":┬╖1,ΓÉì
+     60     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"totalActualCostUsd":┬╖0.0042,ΓÉì
+     61     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"totalEstimatedCostUsd":┬╖0.0042,ΓÉì
+     62     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"averageLatencyMs":┬╖3,ΓÉì
+     63     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"p95LatencyMs":┬╖3,ΓÉì
+     64     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"lastSeenAtMs":┬╖1778210628506,ΓÉì
+     65     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"sourceType":┬╖"remote",ΓÉì
+     66     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"providerId":┬╖"openai",ΓÉì
+     67     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"endpointKind":┬╖"remote_api",ΓÉì
+     68     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"servingSource":┬╖"vendor-litellm",ΓÉì
+     69     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"healthStatus":┬╖"healthy",ΓÉì
+     70     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"status":┬╖"active",ΓÉì
+     71     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"roleIds":┬╖[]ΓÉì
+     72     Γöé - ┬╖┬╖┬╖┬╖},ΓÉì
+     73     Γöé - ┬╖┬╖┬╖┬╖{ΓÉì
+     74     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"endpointId":┬╖"llama-swap.local.local-llama-3-1-8b-instruct",ΓÉì
+     75     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"modelId":┬╖"local/llama-3.1-8b-instruct",ΓÉì
+     76     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"providerKind":┬╖"remote_openai_compat",ΓÉì
+     77     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"providerFamily":┬╖"ai-sdk-openai-compatible",ΓÉì
+     78     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"promptCacheSupported":┬╖false,ΓÉì
+     79     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"requestCount":┬╖1,ΓÉì
+     80     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"successCount":┬╖1,ΓÉì
+     81     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"failureCount":┬╖0,ΓÉì
+     82     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"totalInputTokens":┬╖11,ΓÉì
+     83     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"totalOutputTokens":┬╖4,ΓÉì
+     84     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"totalTokens":┬╖15,ΓÉì
+     85     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"cachedRequestCount":┬╖0,ΓÉì
+     86     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"totalActualCostUsd":┬╖0,ΓÉì
+     87     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"totalEstimatedCostUsd":┬╖0,ΓÉì
+     88     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"averageLatencyMs":┬╖6,ΓÉì
+     89     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"p95LatencyMs":┬╖6,ΓÉì
+     90     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"lastSeenAtMs":┬╖1778210628393,ΓÉì
+     91     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"sourceType":┬╖"local",ΓÉì
+     92     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"providerId":┬╖null,ΓÉì
+     93     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"endpointKind":┬╖"local_engine",ΓÉì
+     94     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"servingSource":┬╖"vendor-llama-swap",ΓÉì
+     95     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"healthStatus":┬╖"healthy",ΓÉì
+     96     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"status":┬╖"active",ΓÉì
+     97     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"roleIds":┬╖[]ΓÉì
+     98     Γöé - ┬╖┬╖┬╖┬╖}ΓÉì
+     99     Γöé - ┬╖┬╖],ΓÉì
+    100     Γöé - ┬╖┬╖"requests":┬╖[ΓÉì
+    101     Γöé - ┬╖┬╖┬╖┬╖{ΓÉì
+    102     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"requestId":┬╖"req-run16-browser-remote",ΓÉì
+    103     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"routingDecisionId":┬╖"decision-req-run16-browser-remote",ΓÉì
+    104     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"endpointId":┬╖"openai.litellm.global.openai-gpt-4-1-mini-fast",ΓÉì
+    105     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"conversationId":┬╖"conversation-main",ΓÉì
+    106     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"createdAtMs":┬╖1778210628506,ΓÉì
+    107     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"modelId":┬╖"openai/gpt-4.1-mini-fast",ΓÉì
+    108     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"providerKind":┬╖"remote_openai_compat",ΓÉì
+    109     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"providerFamily":┬╖"litellm-proxy",ΓÉì
+    110     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"inputTokens":┬╖14,ΓÉì
+    111     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"outputTokens":┬╖5,ΓÉì
+    112     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"totalTokens":┬╖19,ΓÉì
+    113     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"latencyMs":┬╖3,ΓÉì
+    114     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"errorClass":┬╖null,ΓÉì
+    115     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"statusCode":┬╖200,ΓÉì
+    116     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"finishReason":┬╖"stop",ΓÉì
+    117     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"promptCacheRequested":┬╖false,ΓÉì
+    118     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"promptCacheSupported":┬╖true,ΓÉì
+    119     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"promptCacheUsed":┬╖true,ΓÉì
+    120     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"cacheReadTokens":┬╖0,ΓÉì
+    121     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"cacheReadTokensSupported":┬╖true,ΓÉì
+    122     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"cacheWriteTokens":┬╖0,ΓÉì
+    123     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"cacheWriteTokensSupported":┬╖true,ΓÉì
+    124     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"streamTextDeltaCount":┬╖1,ΓÉì
+    125     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"streamTextSupported":┬╖true,ΓÉì
+    126     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"streamToolCallDeltaCount":┬╖0,ΓÉì
+    127     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"streamToolCallSupported":┬╖true,ΓÉì
+    128     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"streamToolArgumentDeltaCount":┬╖0,ΓÉì
+    129     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"streamToolArgumentSupported":┬╖true,ΓÉì
+    130     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"toolCallCount":┬╖0,ΓÉì
+    131     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"toolExecutionCount":┬╖0,ΓÉì
+    132     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"costProvenance":┬╖"actual",ΓÉì
+    133     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"actualCostUsd":┬╖0.0042,ΓÉì
+    134     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"estimatedCostUsd":┬╖0.0042,ΓÉì
+    135     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"currency":┬╖"USD",ΓÉì
+    136     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"sourceType":┬╖"remote",ΓÉì
+    137     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"providerId":┬╖"openai",ΓÉì
+    138     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"endpointKind":┬╖"remote_api",ΓÉì
+    139     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"servingSource":┬╖"vendor-litellm",ΓÉì
+    140     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"healthStatus":┬╖"healthy",ΓÉì
+    141     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"status":┬╖"active",ΓÉì
+    142     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"roleIds":┬╖[]ΓÉì
+    143     Γöé - ┬╖┬╖┬╖┬╖},ΓÉì
+    144     Γöé - ┬╖┬╖┬╖┬╖{ΓÉì
+    145     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"requestId":┬╖"req-run16-browser-local",ΓÉì
+    146     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"routingDecisionId":┬╖"decision-req-run16-browser-local",ΓÉì
+    147     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"endpointId":┬╖"llama-swap.local.local-llama-3-1-8b-instruct",ΓÉì
+    148     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"conversationId":┬╖"conversation-main",ΓÉì
+    149     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"createdAtMs":┬╖1778210628393,ΓÉì
+    150     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"modelId":┬╖"local/llama-3.1-8b-instruct",ΓÉì
+  227 more lines truncated
+  
+
+.\apps\docs-site\app\app.css format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+     1    Γöé - @import┬╖"tailwindcss";ΓÉì
+     2    Γöé - @import┬╖"fumadocs-ui/css/neutral.css";ΓÉì
+     3    Γöé - @import┬╖"fumadocs-ui/css/preset.css";ΓÉì
+     4    Γöé - ΓÉì
+     5    Γöé - html┬╖{ΓÉì
+     6    Γöé - ┬╖┬╖scrollbar-gutter:┬╖stable;ΓÉì
+     7    Γöé - }ΓÉì
+     8    Γöé - ΓÉì
+     9    Γöé - html┬╖>┬╖body[data-scroll-locked]┬╖{ΓÉì
+    10    Γöé - ┬╖┬╖margin-right:┬╖0px┬╖!important;ΓÉì
+    11    Γöé - ┬╖┬╖--removed-body-scroll-bar-size:┬╖0px┬╖!important;ΓÉì
+    12    Γöé - }ΓÉì
+    13    Γöé - ΓÉì
+    14    Γöé - @media┬╖(min-width:┬╖768px)┬╖{ΓÉì
+    15    Γöé - ┬╖┬╖.role-model-docs-layout┬╖#nd-sidebar┬╖[data-search-full],ΓÉì
+    16    Γöé - ┬╖┬╖.role-model-docs-layout┬╖[data-sidebar-panel]┬╖[data-search]┬╖{ΓÉì
+    17    Γöé - ┬╖┬╖┬╖┬╖display:┬╖none;ΓÉì
+    18    Γöé - ┬╖┬╖}ΓÉì
+    19    Γöé - ΓÉì
+    20    Γöé - ┬╖┬╖.role-model-docs-layout┬╖#nd-sidebar┬╖>┬╖div:last-child┬╖{ΓÉì
+    21    Γöé - ┬╖┬╖┬╖┬╖display:┬╖none;ΓÉì
+    22    Γöé - ┬╖┬╖}ΓÉì
+    23    Γöé - ΓÉì
+    24    Γöé - ┬╖┬╖.role-model-docs-layout┬╖[data-sidebar-panel]┬╖{ΓÉì
+    25    Γöé - ┬╖┬╖┬╖┬╖top:┬╖calc(var(--fd-docs-row-1)┬╖+┬╖0.75rem)┬╖!important;ΓÉì
+    26    Γöé - ┬╖┬╖}ΓÉì
+    27    Γöé - ΓÉì
+    28    Γöé - ┬╖┬╖.role-model-docs-layout┬╖#nd-page┬╖{ΓÉì
+    29    Γöé - ┬╖┬╖┬╖┬╖padding-top:┬╖2rem;ΓÉì
+    30    Γöé - ┬╖┬╖}ΓÉì
+    31    Γöé - }ΓÉì
+    32    Γöé - ΓÉì
+    33    Γöé - @media┬╖(min-width:┬╖1280px)┬╖{ΓÉì
+    34    Γöé - ┬╖┬╖.role-model-docs-layout┬╖.role-model-docs-header-actions┬╖{ΓÉì
+    35    Γöé - ┬╖┬╖┬╖┬╖transform:┬╖translateX(calc(var(--fd-toc-width)┬╖*┬╖0.38));ΓÉì
+    36    Γöé - ┬╖┬╖}ΓÉì
+    37    Γöé - ΓÉì
+    38    Γöé - ┬╖┬╖.role-model-docs-layout┬╖#nd-toc┬╖{ΓÉì
+    39    Γöé - ┬╖┬╖┬╖┬╖padding-top:┬╖5.5rem;ΓÉì
+    40    Γöé - ┬╖┬╖}ΓÉì
+    41    Γöé - }ΓÉì
+        1 Γöé + @import┬╖"tailwindcss";
+        2 Γöé + @import┬╖"fumadocs-ui/css/neutral.css";
+        3 Γöé + @import┬╖"fumadocs-ui/css/preset.css";
+        4 Γöé + 
+        5 Γöé + html┬╖{
+        6 Γöé + ┬╖┬╖scrollbar-gutter:┬╖stable;
+        7 Γöé + }
+        8 Γöé + 
+        9 Γöé + html┬╖>┬╖body[data-scroll-locked]┬╖{
+       10 Γöé + ┬╖┬╖margin-right:┬╖0px┬╖!important;
+       11 Γöé + ┬╖┬╖--removed-body-scroll-bar-size:┬╖0px┬╖!important;
+       12 Γöé + }
+       13 Γöé + 
+       14 Γöé + @media┬╖(min-width:┬╖768px)┬╖{
+       15 Γöé + ┬╖┬╖.role-model-docs-layout┬╖#nd-sidebar┬╖[data-search-full],
+       16 Γöé + ┬╖┬╖.role-model-docs-layout┬╖[data-sidebar-panel]┬╖[data-search]┬╖{
+       17 Γöé + ┬╖┬╖┬╖┬╖display:┬╖none;
+       18 Γöé + ┬╖┬╖}
+       19 Γöé + 
+       20 Γöé + ┬╖┬╖.role-model-docs-layout┬╖#nd-sidebar┬╖>┬╖div:last-child┬╖{
+       21 Γöé + ┬╖┬╖┬╖┬╖display:┬╖none;
+       22 Γöé + ┬╖┬╖}
+       23 Γöé + 
+       24 Γöé + ┬╖┬╖.role-model-docs-layout┬╖[data-sidebar-panel]┬╖{
+       25 Γöé + ┬╖┬╖┬╖┬╖top:┬╖calc(var(--fd-docs-row-1)┬╖+┬╖0.75rem)┬╖!important;
+       26 Γöé + ┬╖┬╖}
+       27 Γöé + 
+       28 Γöé + ┬╖┬╖.role-model-docs-layout┬╖#nd-page┬╖{
+       29 Γöé + ┬╖┬╖┬╖┬╖padding-top:┬╖2rem;
+       30 Γöé + ┬╖┬╖}
+       31 Γöé + }
+       32 Γöé + 
+       33 Γöé + @media┬╖(min-width:┬╖1280px)┬╖{
+       34 Γöé + ┬╖┬╖.role-model-docs-layout┬╖.role-model-docs-header-actions┬╖{
+       35 Γöé + ┬╖┬╖┬╖┬╖transform:┬╖translateX(calc(var(--fd-toc-width)┬╖*┬╖0.38));
+       36 Γöé + ┬╖┬╖}
+       37 Γöé + 
+       38 Γöé + ┬╖┬╖.role-model-docs-layout┬╖#nd-toc┬╖{
+       39 Γöé + ┬╖┬╖┬╖┬╖padding-top:┬╖5.5rem;
+       40 Γöé + ┬╖┬╖}
+       41 Γöé + }
+    42 42 Γöé   
+  
+
+Skipped 49 suggested fixes.
+If you wish to apply the suggested (unsafe) fixes, use the command biome check --fix --unsafe
+
+The number of diagnostics exceeds the number allowed by Biome.
+Diagnostics not shown: 439.
+Checked 465 files in 451ms. No fixes applied.
+Found 459 errors.
+check ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Some errors were emitted while running checks.
+  
+

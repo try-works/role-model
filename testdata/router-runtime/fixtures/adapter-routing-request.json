@@ -10,9 +10,6 @@
   "needsTools": true,
   "strategy": "balanced",
   "preferLocal": false,
-  "allowEndpoints": [
-    "openai.personal.primary.us-east-1.fast",
-    "anthropic.team.shared.us-east-1.default"
-  ],
+  "allowEndpoints": [],
   "budgetLimit": 0.01
 }

@@ -1,6 +1,6 @@
+import { access, mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { access, mkdir, readFile, writeFile } from "node:fs/promises";
 
 import type { CatalogSnapshot, CatalogSnapshotModel, CatalogSnapshotProvider } from "./index.js";
 
@@ -8,7 +8,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const DEFAULT_MODELS_DEV_API_URL = "https://models.dev/api.json";
-const DEFAULT_MODELS_DEV_COMMIT_URL = "https://api.github.com/repos/anomalyco/models.dev/commits/dev";
+const DEFAULT_MODELS_DEV_COMMIT_URL =
+  "https://api.github.com/repos/anomalyco/models.dev/commits/dev";
 
 interface ModelsDevApiModel {
   readonly id: string;
@@ -101,7 +102,10 @@ function deriveCapabilities(model: ModelsDevApiModel): string[] {
   return capabilities;
 }
 
-function toCatalogSnapshotProvider(providerId: string, provider: ModelsDevApiProvider): CatalogSnapshotProvider {
+function toCatalogSnapshotProvider(
+  providerId: string,
+  provider: ModelsDevApiProvider,
+): CatalogSnapshotProvider {
   const npmPackage = provider.npm ?? "@ai-sdk/openai-compatible";
 
   return {
@@ -115,7 +119,10 @@ function toCatalogSnapshotProvider(providerId: string, provider: ModelsDevApiPro
   };
 }
 
-function toCatalogSnapshotModel(providerId: string, model: ModelsDevApiModel): CatalogSnapshotModel {
+function toCatalogSnapshotModel(
+  providerId: string,
+  model: ModelsDevApiModel,
+): CatalogSnapshotModel {
   return {
     modelId: `${providerId}/${model.id}`,
     providerId,
@@ -147,7 +154,9 @@ function buildCatalogSnapshotFromModelsDev(
 
   const models = Object.entries(apiCatalog)
     .flatMap(([providerId, provider]) =>
-      Object.values(provider.models ?? {}).map((model) => toCatalogSnapshotModel(provider.id ?? providerId, model)),
+      Object.values(provider.models ?? {}).map((model) =>
+        toCatalogSnapshotModel(provider.id ?? providerId, model),
+      ),
     )
     .sort((left, right) => left.modelId.localeCompare(right.modelId));
 
@@ -206,7 +215,10 @@ function mergeSupplementModel(
     displayName: supplementModel.displayName || liveModel.displayName,
     version: supplementModel.version ?? liveModel.version,
     extends: supplementModel.extends ?? liveModel.extends,
-    capabilities: unique([...(liveModel.capabilities ?? []), ...(supplementModel.capabilities ?? [])]),
+    capabilities: unique([
+      ...(liveModel.capabilities ?? []),
+      ...(supplementModel.capabilities ?? []),
+    ]),
     modalities: unique([...(liveModel.modalities ?? []), ...(supplementModel.modalities ?? [])]),
     contextWindow: liveModel.contextWindow || supplementModel.contextWindow,
     maxOutputTokens: liveModel.maxOutputTokens || supplementModel.maxOutputTokens,
@@ -224,9 +236,14 @@ function mergeCatalogSnapshotWithSupplement(
     return snapshot;
   }
 
-  const providersById = new Map(snapshot.providers.map((provider) => [provider.providerId, provider]));
+  const providersById = new Map(
+    snapshot.providers.map((provider) => [provider.providerId, provider]),
+  );
   for (const provider of supplement.providers ?? []) {
-    providersById.set(provider.providerId, mergeSupplementProvider(providersById.get(provider.providerId), provider));
+    providersById.set(
+      provider.providerId,
+      mergeSupplementProvider(providersById.get(provider.providerId), provider),
+    );
   }
 
   const modelsById = new Map(snapshot.models.map((model) => [model.modelId, model]));
@@ -236,8 +253,12 @@ function mergeCatalogSnapshotWithSupplement(
 
   return {
     ...snapshot,
-    providers: [...providersById.values()].sort((left, right) => left.providerId.localeCompare(right.providerId)),
-    models: [...modelsById.values()].sort((left, right) => left.modelId.localeCompare(right.modelId)),
+    providers: [...providersById.values()].sort((left, right) =>
+      left.providerId.localeCompare(right.providerId),
+    ),
+    models: [...modelsById.values()].sort((left, right) =>
+      left.modelId.localeCompare(right.modelId),
+    ),
   };
 }
 
@@ -257,7 +278,8 @@ export async function runCatalogRefreshCli(
   const snapshotPath =
     options.snapshotPath ?? path.join(repoRoot, "testdata", "catalog", "models-dev-snapshot.json");
   const supplementPath =
-    options.supplementPath ?? path.join(repoRoot, "testdata", "catalog", "models-dev-local-supplement.json");
+    options.supplementPath ??
+    path.join(repoRoot, "testdata", "catalog", "models-dev-local-supplement.json");
   const fetchImpl = options.fetchImpl ?? fetch;
   const capturedAt = options.capturedAt ?? new Date().toISOString();
   const apiUrl = options.apiUrl ?? DEFAULT_MODELS_DEV_API_URL;
@@ -268,7 +290,11 @@ export async function runCatalogRefreshCli(
     fetchJson<ModelsDevCommitResponse>(commitUrl, fetchImpl),
   ]);
 
-  const liveSnapshot = buildCatalogSnapshotFromModelsDev(apiCatalog, commitResponse.sha, capturedAt);
+  const liveSnapshot = buildCatalogSnapshotFromModelsDev(
+    apiCatalog,
+    commitResponse.sha,
+    capturedAt,
+  );
   const supplement = await readJsonFileIfPresent<LocalCatalogSupplement>(supplementPath);
   const snapshot = mergeCatalogSnapshotWithSupplement(liveSnapshot, supplement);
 

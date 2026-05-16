@@ -1,6 +1,7 @@
-import path from "node:path";
+import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import os from "node:os";
-import { mkdtemp, mkdir, readFile, writeFile } from "node:fs/promises";
+import path from "node:path";
+import { gzipSync } from "node:zlib";
 
 import { describe, expect, test } from "vitest";
 
@@ -101,6 +102,42 @@ describe("runtime asset packaging", () => {
         "dist-assets",
         "linux-x64",
         "llama-swap",
+      ),
+    );
+    await expect(readFile(extractedPath ?? "", "utf8")).resolves.toBe("sea-asset");
+  });
+
+  test("extracts a gzip-compressed embedded SEA asset into the runtime state root", async () => {
+    const tempRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-assets-"));
+    const extractedPath = await resolveLlamaSwapCommand({
+      repoRoot: path.join(tempRoot, "repo"),
+      runtimeStateRoot: path.join(tempRoot, "runtime"),
+      platform: "win32",
+      arch: "x64",
+      assetReader: {
+        isSea: true,
+        getRawAsset(assetKey) {
+          if (assetKey === "vendor/llama-swap/win32-x64/llama-swap.exe") {
+            return undefined;
+          }
+          if (assetKey === "vendor/llama-swap/win32-x64/llama-swap.exe.gz") {
+            return gzipSync(Buffer.from("sea-asset"));
+          }
+          throw new Error(`Unexpected asset key: ${assetKey}`);
+        },
+      },
+    });
+
+    expect(extractedPath).toBe(
+      path.join(
+        tempRoot,
+        "runtime",
+        "sea-assets",
+        "vendor",
+        "llama-swap",
+        "dist-assets",
+        "win32-x64",
+        "llama-swap.exe",
       ),
     );
     await expect(readFile(extractedPath ?? "", "utf8")).resolves.toBe("sea-asset");

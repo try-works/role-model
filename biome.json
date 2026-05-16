@@ -13,12 +13,15 @@
     }
   },
   "files": {
+    "maxSize": 2000000,
     "ignore": [
       "**/.react-router/**",
       "**/.source/**",
       "**/.worktrees/**",
       "**/build/**",
       "**/dist/**",
+      "**/role-model-router/packages/catalog/data/normalized-catalog.json",
+      "**/testdata/catalog/models-dev-snapshot.json",
       "**/target/**",
       "**/runtime-output/**"
     ]

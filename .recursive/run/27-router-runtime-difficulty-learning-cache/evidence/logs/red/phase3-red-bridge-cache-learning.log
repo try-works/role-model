@@ -1,0 +1,118 @@
+
+> @role-model-router/runtime-host-bridge@0.0.0 test D:\DEV\role-model\.worktrees\27-router-runtime-difficulty-learning-cache\role-model-router\apps\runtime-host-bridge
+> vitest run test/index.test.ts test/backend-unified-runtime-config.test.ts test/executable.test.ts test/runtime-assets.test.ts test/unified-runtime-config.test.ts test/validate-operations.test.ts test/validate-tools.test.ts test/validate-ui.test.ts test/validate-vendors.test.ts test/local-policy.test.ts
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/27-router-runtime-difficulty-learning-cache/role-model-router/apps/runtime-host-bridge[39m
+
+ [32mΓ£ô[39m test/executable.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 47[2mms[22m[39m
+(node:88208) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:60992) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:80428) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:65604) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [32mΓ£ô[39m test/unified-runtime-config.test.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 63[2mms[22m[39m
+(node:6504) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:72864) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [32mΓ£ô[39m test/runtime-assets.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 25[2mms[22m[39m
+(node:93860) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [32mΓ£ô[39m test/validate-tools.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 507[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m runRuntimeToolsValidation[2m > [22mexecutes runtime-owned MCP tool calls and persists their observation receipts [33m 504[2mms[22m[39m
+ [32mΓ£ô[39m test/validate-ui.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 835[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m runRuntimeUiValidation[2m > [22mvalidates runtime config reads and the main control-plane mutations [33m 832[2mms[22m[39m
+ [32mΓ£ô[39m test/validate-operations.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 983[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m runRuntimeOperationsValidation[2m > [22mvalidates isolated scopes and runtime-state maintenance drills [33m 980[2mms[22m[39m
+ [32mΓ£ô[39m test/backend-unified-runtime-config.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 2319[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m runtime-host-bridge unified runtime backend[2m > [22msurfaces the derived execution mode in the runtime summary when a unified config file is provided [33m 424[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m runtime-host-bridge unified runtime backend[2m > [22mreads and updates unified runtime config through the backend [33m 378[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m runtime-host-bridge unified runtime backend[2m > [22msurfaces LiteLLM-backed Moonshot models and endpoints from unified runtime config [33m 1242[2mms[22m[39m
+ [32mΓ£ô[39m test/local-policy.test.ts [2m([22m[2m13 tests[22m[2m)[22m[33m 2943[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m local policy persistence[2m > [22mreadLocalPolicy returns defaults when file does not exist [33m 421[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m local policy persistence[2m > [22mupdateLocalPolicy writes merged policy to file [33m 362[2mms[22m[39m
+ [32mΓ£ô[39m test/validate-vendors.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 4581[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m runRuntimeVendorValidation[2m > [22mexecutes decision-only, local-only, remote-only, and hybrid vendor modes end to end [33m 4573[2mms[22m[39m
+ [31mΓ¥»[39m test/index.test.ts [2m([22m[2m32 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[33m 8688[2mms[22m[39m
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22mcreates a stable model-list response grouped by model id[32m 35[2mms[22m[39m
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22mcreates alias entries in the model-list response alongside real models[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22mmaps a chat-completions request into role-model routing and execution inputs[32m 3[2mms[22m[39m
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22mmaps an alias chat-completions request into a pooled endpoint allow-list and alias diagnostics[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22mkeeps exact-model routing unchanged when aliases are configured[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22mmaps a difficulty-mode alias chat request into a gated allow-list and difficulty diagnostics[32m 3[2mms[22m[39m
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22mmaps an alias responses request into a pooled endpoint allow-list and alias diagnostics[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22mmaps a difficulty-mode responses request into an easy strategy and keeps eligible endpoints[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22mprefers a configured alias in downstream OpenAI provider config[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22mserves health and model-list endpoints[32m 86[2mms[22m[39m
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22mserves alias entries in model-list and downstream provider config from runtime config[32m 34[2mms[22m[39m
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22mserves preserved host observability and vendor-facing utility endpoints[32m 24[2mms[22m[39m
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22mserves runtime control-plane summary, provider, account, and endpoint routes[32m 31[2mms[22m[39m
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22mserves canonical telemetry summary, comparison, and recent request routes[32m 8[2mms[22m[39m
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22mserves downstream OpenAI-compatible provider metadata for consumer apps[32m 4[2mms[22m[39m
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22mserves chat-completions responses with role-model execution metadata[32m 5[2mms[22m[39m
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22mserves OpenAI-compatible SSE events for streaming responses requests[32m 63[2mms[22m[39m
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22msurfaces tool calls on chat-completions responses when the backend returns them[32m 4[2mms[22m[39m
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22mstreams provider deltas through the bridge as they arrive[32m 75[2mms[22m[39m
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22mcreates a runtime backend that executes chat-completions through the real routing and adapter path[32m 290[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m runtime-host-bridge[2m > [22mcreates a runtime backend that persists structured request and endpoint inspection state [33m 358[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m runtime-host-bridge[2m > [22mpersists alias-resolution diagnostics for runtime-backed chat requests [33m 499[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m runtime-host-bridge[2m > [22mpersists difficulty-routing diagnostics for runtime-backed chat requests [33m 407[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m runtime-host-bridge[2m > [22muses the configured remote classifier result for difficulty-mode runtime-backed chat requests [33m 361[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m runtime-host-bridge[2m > [22mfalls back deterministically when the configured classifier times out [33m 463[2mms[22m[39m
+[31m   [31m├ù[31m runtime-host-bridge[2m > [22mreuses cached difficulty classification for repeated requests in the same conversation when invalidation thresholds are not exceeded[39m[33m 429[2mms[22m[39m
+[31m     ΓåÆ expected { ΓÇª(24) } to match object { ΓÇª(2) }
+(128 matching properties omitted from actual)[39m
+   [33m[2mΓ£ô[22m[39m runtime-host-bridge[2m > [22mcreates a runtime backend that exposes provider presets, runtime summary, and account upserts [33m 884[2mms[22m[39m
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22mexecutes chat-completions through an activated Kimi Code endpoint[32m 182[2mms[22m[39m
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22mcreates a runtime backend that executes responses through the real routing and adapter path[32m 114[2mms[22m[39m
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22mserves structured request and endpoint inspection routes through the bridge server[32m 137[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m runtime-host-bridge[2m > [22mstreams canonical telemetry updates over SSE after new requests are persisted [33m 4177[2mms[22m[39m
+   [32mΓ£ô[39m runtime-host-bridge[2m > [22mresolves bridge server options from explicit values and defaults[32m 0[2mms[22m[39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/index.test.ts > runtime-host-bridge > reuses cached difficulty classification for repeated requests in the same conversation when invalidation thresholds are not exceeded
+AssertionError: expected { ΓÇª(24) } to match object { ΓÇª(2) }
+(128 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+    "requestId": "req-runtime-bridge-difficulty-cache-002",
+    "routingDiagnostics": {
+-     "difficultyRouting": ObjectContaining {
+-       "cacheHit": true,
+-       "difficulty": "hard",
++     "difficultyRouting": {
++       "difficulty": "easy",
+        "fallbackApplied": false,
+-       "strategy": "quality",
++       "rubricSignals": {
++         "codeOrSchemaBurden": false,
++         "contextTokens": 12,
++         "decompositionKeywordCount": 0,
++         "historyTurnCount": 1,
++         "instructionConstraintCount": 0,
++         "toolCount": 0,
++       },
++       "strategy": "cost",
+      },
+    },
+  }
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m9 passed[39m[22m[90m (10)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m72 passed[39m[22m[90m (73)[39m
+[2m   Start at [22m 22:17:33
+[2m   Duration [22m 10.34s[2m (transform 2.00s, setup 0ms, collect 7.42s, tests 20.99s, environment 4ms, prepare 3.26s)[22m
+
+D:\DEV\role-model\.worktrees\27-router-runtime-difficulty-learning-cache\role-model-router\apps\runtime-host-bridge:
+ΓÇëERR_PNPM_RECURSIVE_RUN_FIRST_FAILΓÇë @role-model-router/runtime-host-bridge@0.0.0 test: `vitest run test/index.test.ts test/backend-unified-runtime-config.test.ts test/executable.test.ts test/runtime-assets.test.ts test/unified-runtime-config.test.ts test/validate-operations.test.ts test/validate-tools.test.ts test/validate-ui.test.ts test/validate-vendors.test.ts test/local-policy.test.ts`
+Exit status 1

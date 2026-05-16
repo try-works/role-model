@@ -1,10 +1,10 @@
 import { describe, expect, test } from "vitest";
 
 import {
-  executeRoutedRequest,
-  executeLiveRoutedRequest,
   type ProviderAdapter,
   type RuntimeExecutionRequest,
+  executeLiveRoutedRequest,
+  executeRoutedRequest,
 } from "../src/index.js";
 
 describe("executeRoutedRequest", () => {
@@ -899,8 +899,8 @@ describe("executeRoutedRequest", () => {
           requestCapture,
           responseCapture,
           outputText: String(
-            ((responseCapture.body as { choices?: Array<{ message?: { content?: string } }> }).choices ?? [])[0]
-              ?.message?.content ?? "",
+            ((responseCapture.body as { choices?: Array<{ message?: { content?: string } }> })
+              .choices ?? [])[0]?.message?.content ?? "",
           ),
           toolCalls: [],
           finishReason: "stop",

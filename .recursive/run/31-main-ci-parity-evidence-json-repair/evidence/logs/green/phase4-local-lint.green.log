@@ -1,0 +1,10 @@
+
+> role-model@0.0.0 lint D:\DEV\role-model\.worktrees\31-main-ci-parity-evidence-json-repair
+> biome check . && corepack pnpm run lint:rust
+
+Checked 469 files in 538ms. No fixes applied.
+
+> role-model@0.0.0 lint:rust D:\DEV\role-model\.worktrees\31-main-ci-parity-evidence-json-repair
+> cargo fmt --manifest-path role-model-router/rust/Cargo.toml --all --check && cargo clippy --manifest-path role-model-router/rust/Cargo.toml --workspace --all-targets -- -D warnings
+
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.11s

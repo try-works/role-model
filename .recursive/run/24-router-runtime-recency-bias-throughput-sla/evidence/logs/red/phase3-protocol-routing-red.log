@@ -1,0 +1,84 @@
+
+> @role-model-router/protocol-routing@0.0.0 test D:\DEV\role-model\.worktrees\24-router-runtime-recency-bias-throughput-sla\role-model-router\packages\protocol-routing
+> vitest run test/index.test.ts
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/24-router-runtime-recency-bias-throughput-sla/role-model-router/packages/protocol-routing[39m
+
+(node:96528) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [31mΓ¥»[39m test/index.test.ts [2m([22m[2m6 tests[22m[2m | [22m[31m3 failed[39m[2m)[22m[32m 164[2mms[22m[39m
+   [32mΓ£ô[39m projectRuntimeRouteInput[2m > [22mmerges registry candidates, observed profiles, and runtime routing signals[32m 6[2mms[22m[39m
+   [32mΓ£ô[39m routeRuntimeRequest[2m > [22memits canonical runtime eligibility exclusions from registry/provider-account state[32m 6[2mms[22m[39m
+   [32mΓ£ô[39m routeRuntimeRequest[2m > [22mkeeps explicit policy denial ahead of routing-model guidance[32m 1[2mms[22m[39m
+[31m   [31m├ù[31m routeRuntimeRequest[2m > [22mprefers fresher latency observations when adaptive observed-data scoring is enabled[39m[32m 16[2mms[22m[39m
+[31m     ΓåÆ expected 'remote.stale.fast' to be 'local.fresh.steady' // Object.is equality[39m
+[31m   [31m├ù[31m routeRuntimeRequest[2m > [22mexcludes endpoints under an active throughput penalty when the penalty factor is zero[39m[32m 3[2mms[22m[39m
+[31m     ΓåÆ expected 'remote.penalized.fast' to be 'local.steady.fallback' // Object.is equality[39m
+[31m   [31m├ù[31m runRuntimeRoutingValidation[2m > [22mloads pinned fixtures and emits deterministic routing diagnostics[39m[32m 130[2mms[22m[39m
+[31m     ΓåÆ expected [ Array(1) ] to deeply equal [ ΓÇª(2) ][39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 3 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/index.test.ts > routeRuntimeRequest > prefers fresher latency observations when adaptive observed-data scoring is enabled
+AssertionError: expected 'remote.stale.fast' to be 'local.fresh.steady' // Object.is equality
+
+Expected: "local.fresh.steady"
+Received: "remote.stale.fast"
+
+ Γ¥» test/index.test.ts:819:48
+    817|     } as Parameters<typeof routeRuntimeRequest>[0]);
+    818| 
+    819|     expect(result.decision.chosen_endpoint_id).toBe("local.fresh.steadΓÇª
+       |                                                ^
+    820|   });
+    821| 
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/3]ΓÄ»
+
+ FAIL  test/index.test.ts > routeRuntimeRequest > excludes endpoints under an active throughput penalty when the penalty factor is zero
+AssertionError: expected 'remote.penalized.fast' to be 'local.steady.fallback' // Object.is equality
+
+Expected: "local.steady.fallback"
+Received: "remote.penalized.fast"
+
+ Γ¥» test/index.test.ts:982:48
+    980|     } as Parameters<typeof routeRuntimeRequest>[0]);
+    981| 
+    982|     expect(result.decision.chosen_endpoint_id).toBe("local.steady.fallΓÇª
+       |                                                ^
+    983|     expect(
+    984|       result.decision.eligibility.find((entry) => entry.endpoint_id ==ΓÇª
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[2/3]ΓÄ»
+
+ FAIL  test/index.test.ts > runRuntimeRoutingValidation > loads pinned fixtures and emits deterministic routing diagnostics
+AssertionError: expected [ Array(1) ] to deeply equal [ ΓÇª(2) ]
+
+- Expected
++ Received
+
+  [
+    "openai.personal.primary.us-east-1.fast",
+-   "cli.local.coder",
+  ]
+
+ Γ¥» test/index.test.ts:1004:73
+    1002| 
+    1003|     expect(result.decision.chosen_endpoint_id).toBe("cli.local.coder");
+    1004|     expect(result.routingDiagnostics.routingModel.preferredEndpointIdsΓÇª
+       |                                                                         ^
+    1005|       "openai.personal.primary.us-east-1.fast",
+    1006|       "cli.local.coder",
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[3/3]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m3 failed[39m[22m[2m | [22m[1m[32m3 passed[39m[22m[90m (6)[39m
+[2m   Start at [22m 19:28:08
+[2m   Duration [22m 1.32s[2m (transform 292ms, setup 0ms, collect 355ms, tests 164ms, environment 0ms, prepare 387ms)[22m
+
+D:\DEV\role-model\.worktrees\24-router-runtime-recency-bias-throughput-sla\role-model-router\packages\protocol-routing:
+ΓÇëERR_PNPM_RECURSIVE_RUN_FIRST_FAILΓÇë @role-model-router/protocol-routing@0.0.0 test: `vitest run test/index.test.ts`
+Exit status 1

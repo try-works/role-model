@@ -1,6 +1,7 @@
 import { access, chmod, mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { getRawAsset, isSea } from "node:sea";
+import { gunzipSync } from "node:zlib";
 
 export {
   readLlamaSwapAssetDefinition,
@@ -28,6 +29,10 @@ const DEFAULT_ASSET_READER: RuntimeAssetReader = {
   },
 };
 
+function asBuffer(value: ArrayBuffer | Buffer): Buffer {
+  return Buffer.isBuffer(value) ? value : Buffer.from(value);
+}
+
 async function accessIfExists(filePath: string): Promise<boolean> {
   try {
     await access(filePath);
@@ -49,7 +54,12 @@ export async function resolveLlamaSwapCommand(
 
   const assetReader = options.assetReader ?? DEFAULT_ASSET_READER;
   if (assetReader.isSea) {
-    const rawAsset = assetReader.getRawAsset(definition.assetKey);
+    const rawAsset =
+      assetReader.getRawAsset(definition.assetKey) ??
+      (() => {
+        const compressed = assetReader.getRawAsset(`${definition.assetKey}.gz`);
+        return compressed ? gunzipSync(asBuffer(compressed)) : undefined;
+      })();
     if (rawAsset) {
       const extractedPath = path.join(
         options.runtimeStateRoot,
@@ -57,7 +67,7 @@ export async function resolveLlamaSwapCommand(
         definition.relativeAssetPath,
       );
       await mkdir(path.dirname(extractedPath), { recursive: true });
-      await writeFile(extractedPath, Buffer.isBuffer(rawAsset) ? rawAsset : Buffer.from(rawAsset));
+      await writeFile(extractedPath, asBuffer(rawAsset));
       if (platform !== "win32") {
         await chmod(extractedPath, 0o755);
       }

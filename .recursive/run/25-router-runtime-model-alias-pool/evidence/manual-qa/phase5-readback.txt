@@ -1,0 +1,33 @@
+{
+  "modelListIds": [
+    "gpt-5.4",
+    "local/llama-3.1-8b-instruct",
+    "openai/gpt-4.1-mini-fast"
+  ],
+  "aliasModelIdVisible": true,
+  "realModelsVisible": true,
+  "downstreamRecommendedModel": "gpt-5.4",
+  "aliasRequest": {
+    "statusCode": 200,
+    "outputText": "local llama summary",
+    "chosenEndpointId": "llama-swap.local.local-llama-3-1-8b-instruct",
+    "aliasResolution": {
+      "requestedModel": "gpt-5.4",
+      "aliasId": "gpt-5.4",
+      "resolvedModelIds": [
+        "local/llama-3.1-8b-instruct",
+        "openai/gpt-4.1-mini-fast"
+      ],
+      "allowEndpoints": [
+        "llama-swap.local.local-llama-3-1-8b-instruct",
+        "openai.litellm.global.openai-gpt-4-1-mini-fast"
+      ]
+    }
+  },
+  "exactRequest": {
+    "statusCode": 200,
+    "outputText": "remote litellm summary",
+    "chosenEndpointId": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+    "aliasResolution": null
+  }
+}

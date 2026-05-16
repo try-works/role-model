@@ -1,193 +1,188 @@
 <script lang="ts">
-  import type { ReqRespCapture } from "../lib/types";
+import type { ReqRespCapture } from "../lib/types";
 
-  interface Props {
-    capture: ReqRespCapture | null;
-    open: boolean;
-    onclose: () => void;
+interface Props {
+  capture: ReqRespCapture | null;
+  open: boolean;
+  onclose: () => void;
+}
+
+const { capture, open, onclose }: Props = $props();
+
+const dialogEl: HTMLDialogElement | undefined = $state();
+
+type BodyTab = "raw" | "pretty" | "chat";
+let reqBodyTab: BodyTab = $state("pretty");
+let respBodyTab: BodyTab = $state("pretty");
+let copiedReq = $state(false);
+let copiedResp = $state(false);
+
+$effect(() => {
+  if (open && dialogEl) {
+    dialogEl.showModal();
+  } else if (!open && dialogEl) {
+    dialogEl.close();
   }
+});
 
-  let { capture, open, onclose }: Props = $props();
-
-  let dialogEl: HTMLDialogElement | undefined = $state();
-
-  type BodyTab = "raw" | "pretty" | "chat";
-  let reqBodyTab: BodyTab = $state("pretty");
-  let respBodyTab: BodyTab = $state("pretty");
-  let copiedReq = $state(false);
-  let copiedResp = $state(false);
-
-  $effect(() => {
-    if (open && dialogEl) {
-      dialogEl.showModal();
-    } else if (!open && dialogEl) {
-      dialogEl.close();
-    }
-  });
-
-  // Reset tabs when capture changes
-  $effect(() => {
-    if (capture) {
-      const reqCt = getContentType(capture.req_headers);
-      const respCt = getContentType(capture.resp_headers);
-      reqBodyTab = reqCt.includes("json") ? "pretty" : "raw";
-      respBodyTab = respCt.includes("text/event-stream")
-        ? "chat"
-        : respCt.includes("json")
-          ? "pretty"
-          : "raw";
-    }
-  });
-
-  function handleDialogClose() {
-    onclose();
+// Reset tabs when capture changes
+$effect(() => {
+  if (capture) {
+    const reqCt = getContentType(capture.req_headers);
+    const respCt = getContentType(capture.resp_headers);
+    reqBodyTab = reqCt.includes("json") ? "pretty" : "raw";
+    respBodyTab = respCt.includes("text/event-stream")
+      ? "chat"
+      : respCt.includes("json")
+        ? "pretty"
+        : "raw";
   }
+});
 
-  function decodeBody(body: string | null | undefined): string {
-    if (!body) return "";
-    try {
-      const binary = atob(body);
-      const bytes = Uint8Array.from(binary, (c) => c.charCodeAt(0));
-      return new TextDecoder().decode(bytes);
-    } catch {
-      return body;
-    }
+function handleDialogClose() {
+  onclose();
+}
+
+function decodeBody(body: string | null | undefined): string {
+  if (!body) return "";
+  try {
+    const binary = atob(body);
+    const bytes = Uint8Array.from(binary, (c) => c.charCodeAt(0));
+    return new TextDecoder().decode(bytes);
+  } catch {
+    return body;
   }
+}
 
-  function formatJson(str: string): string {
-    try {
-      const parsed = JSON.parse(str);
-      return JSON.stringify(parsed, null, 2);
-    } catch {
-      return str;
-    }
+function formatJson(str: string): string {
+  try {
+    const parsed = JSON.parse(str);
+    return JSON.stringify(parsed, null, 2);
+  } catch {
+    return str;
   }
+}
 
-  function getContentType(
-    headers: Record<string, string> | null | undefined,
-  ): string {
-    if (!headers) return "";
-    const ct = headers["Content-Type"] || headers["content-type"] || "";
-    return ct.toLowerCase();
-  }
+function getContentType(headers: Record<string, string> | null | undefined): string {
+  if (!headers) return "";
+  const ct = headers["Content-Type"] || headers["content-type"] || "";
+  return ct.toLowerCase();
+}
 
-  function isImageContentType(contentType: string): boolean {
-    return contentType.startsWith("image/");
-  }
+function isImageContentType(contentType: string): boolean {
+  return contentType.startsWith("image/");
+}
 
-  function isTextContentType(contentType: string): boolean {
-    return (
-      contentType.startsWith("text/") ||
-      contentType.includes("application/json") ||
-      contentType.includes("application/xml") ||
-      contentType.includes("application/javascript")
-    );
-  }
-
-  function getImageDataUrl(body: string, contentType: string): string {
-    const mimeType = contentType.split(";")[0].trim();
-    return `data:${mimeType};base64,${body}`;
-  }
-
-  interface SSEChat {
-    reasoning: string;
-    content: string;
-  }
-
-  function parseSSEChat(text: string): SSEChat {
-    const result: SSEChat = { reasoning: "", content: "" };
-    for (const line of text.split("\n")) {
-      const trimmed = line.trim();
-      if (!trimmed || !trimmed.startsWith("data: ")) continue;
-      const data = trimmed.slice(6);
-      if (data === "[DONE]") continue;
-      try {
-        const parsed = JSON.parse(data);
-        const delta = parsed.choices?.[0]?.delta;
-        if (delta?.content) result.content += delta.content;
-        if (delta?.reasoning_content) result.reasoning += delta.reasoning_content;
-        if (delta?.reasoning) result.reasoning += delta.reasoning;
-      } catch {
-        // skip unparseable lines
-      }
-    }
-    return result;
-  }
-
-  async function copyToClipboard(text: string, type: "req" | "resp") {
-    try {
-      await navigator.clipboard.writeText(text);
-      if (type === "req") {
-        copiedReq = true;
-        setTimeout(() => (copiedReq = false), 1500);
-      } else {
-        copiedResp = true;
-        setTimeout(() => (copiedResp = false), 1500);
-      }
-    } catch {
-      // ignore
-    }
-  }
-
-  function getCopyText(): string {
-    if (respBodyTab === "chat") {
-      let text = "";
-      if (sseChat.reasoning) text += sseChat.reasoning + "\n\n";
-      text += sseChat.content;
-      return text;
-    }
-    return displayedResponseBody;
-  }
-
-  // Request body derivations
-  let requestContentType = $derived(
-    capture ? getContentType(capture.req_headers) : "",
+function isTextContentType(contentType: string): boolean {
+  return (
+    contentType.startsWith("text/") ||
+    contentType.includes("application/json") ||
+    contentType.includes("application/xml") ||
+    contentType.includes("application/javascript")
   );
-  let isRequestJson = $derived(requestContentType.includes("json"));
+}
 
-  let requestBodyRaw = $derived.by(() => {
-    if (!capture) return "";
-    return decodeBody(capture.req_body);
-  });
+function getImageDataUrl(body: string, contentType: string): string {
+  const mimeType = contentType.split(";")[0].trim();
+  return `data:${mimeType};base64,${body}`;
+}
 
-  let requestBodyPretty = $derived.by(() => {
-    if (!isRequestJson) return requestBodyRaw;
-    return formatJson(requestBodyRaw);
-  });
+interface SSEChat {
+  reasoning: string;
+  content: string;
+}
 
-  let displayedRequestBody = $derived(
-    reqBodyTab === "pretty" ? requestBodyPretty : requestBodyRaw,
-  );
+function parseSSEChat(text: string): SSEChat {
+  const result: SSEChat = { reasoning: "", content: "" };
+  for (const line of text.split("\n")) {
+    const trimmed = line.trim();
+    if (!trimmed || !trimmed.startsWith("data: ")) continue;
+    const data = trimmed.slice(6);
+    if (data === "[DONE]") continue;
+    try {
+      const parsed = JSON.parse(data);
+      const delta = parsed.choices?.[0]?.delta;
+      if (delta?.content) result.content += delta.content;
+      if (delta?.reasoning_content) result.reasoning += delta.reasoning_content;
+      if (delta?.reasoning) result.reasoning += delta.reasoning;
+    } catch {
+      // skip unparseable lines
+    }
+  }
+  return result;
+}
 
-  // Response body derivations
-  let responseContentType = $derived(
-    capture ? getContentType(capture.resp_headers) : "",
-  );
-  let isResponseImage = $derived(isImageContentType(responseContentType));
-  let isResponseText = $derived(isTextContentType(responseContentType));
-  let isResponseJson = $derived(responseContentType.includes("json"));
-  let isSSE = $derived(responseContentType.includes("text/event-stream"));
+async function copyToClipboard(text: string, type: "req" | "resp") {
+  try {
+    await navigator.clipboard.writeText(text);
+    if (type === "req") {
+      copiedReq = true;
+      setTimeout(() => {
+        copiedReq = false;
+      }, 1500);
+    } else {
+      copiedResp = true;
+      setTimeout(() => {
+        copiedResp = false;
+      }, 1500);
+    }
+  } catch {
+    // ignore
+  }
+}
 
-  let responseBodyRaw = $derived.by(() => {
-    if (!capture) return "";
-    return decodeBody(capture.resp_body);
-  });
+function getCopyText(): string {
+  if (respBodyTab === "chat") {
+    let text = "";
+    if (sseChat.reasoning) text += `${sseChat.reasoning}\n\n`;
+    text += sseChat.content;
+    return text;
+  }
+  return displayedResponseBody;
+}
 
-  let responseBodyPretty = $derived.by(() => {
-    if (!isResponseJson) return responseBodyRaw;
-    return formatJson(responseBodyRaw);
-  });
+// Request body derivations
+const requestContentType = $derived(capture ? getContentType(capture.req_headers) : "");
+const isRequestJson = $derived(requestContentType.includes("json"));
 
-  let sseChat = $derived.by(() => {
-    if (!isSSE || !responseBodyRaw)
-      return { reasoning: "", content: "" } as SSEChat;
-    return parseSSEChat(responseBodyRaw);
-  });
+const requestBodyRaw = $derived.by(() => {
+  if (!capture) return "";
+  return decodeBody(capture.req_body);
+});
 
-  let displayedResponseBody = $derived.by(() => {
-    if (respBodyTab === "pretty") return responseBodyPretty;
-    return responseBodyRaw;
-  });
+const requestBodyPretty = $derived.by(() => {
+  if (!isRequestJson) return requestBodyRaw;
+  return formatJson(requestBodyRaw);
+});
+
+const displayedRequestBody = $derived(reqBodyTab === "pretty" ? requestBodyPretty : requestBodyRaw);
+
+// Response body derivations
+const responseContentType = $derived(capture ? getContentType(capture.resp_headers) : "");
+const isResponseImage = $derived(isImageContentType(responseContentType));
+const isResponseText = $derived(isTextContentType(responseContentType));
+const isResponseJson = $derived(responseContentType.includes("json"));
+const isSSE = $derived(responseContentType.includes("text/event-stream"));
+
+const responseBodyRaw = $derived.by(() => {
+  if (!capture) return "";
+  return decodeBody(capture.resp_body);
+});
+
+const responseBodyPretty = $derived.by(() => {
+  if (!isResponseJson) return responseBodyRaw;
+  return formatJson(responseBodyRaw);
+});
+
+const sseChat = $derived.by(() => {
+  if (!isSSE || !responseBodyRaw) return { reasoning: "", content: "" } as SSEChat;
+  return parseSSEChat(responseBodyRaw);
+});
+
+const displayedResponseBody = $derived.by(() => {
+  if (respBodyTab === "pretty") return responseBodyPretty;
+  return responseBodyRaw;
+});
 </script>
 
 <dialog

@@ -1,11 +1,11 @@
 import { execFile as execFileCallback } from "node:child_process";
+import { access, chmod, mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
-import { access, chmod, mkdir, writeFile } from "node:fs/promises";
 
 import { stringify } from "yaml";
 
-import { ProcessSupervisor } from "@role-model-router/process-supervisor";
+import type { ProcessSupervisor } from "@role-model-router/process-supervisor";
 import type {
   VendorExecutionOptions,
   VendorExecutionRequest,
@@ -162,7 +162,9 @@ export function renderLiteLLMConfig(input: {
         litellm_params: {
           ...(mapping.litellmParams ?? {}),
           model: mapping.litellmModel,
-          ...(!mapping.litellmParams?.api_key && provider.apiKeyRef ? { api_key: provider.apiKeyRef } : {}),
+          ...(!mapping.litellmParams?.api_key && provider.apiKeyRef
+            ? { api_key: provider.apiKeyRef }
+            : {}),
         },
       })),
     ),
@@ -306,7 +308,9 @@ export async function ensureLiteLLMCommand(
   const toolBinDir = path.join(toolDir, "bin");
   const installEnv = {
     ...Object.fromEntries(
-      Object.entries(process.env).filter((entry): entry is [string, string] => typeof entry[1] === "string"),
+      Object.entries(process.env).filter(
+        (entry): entry is [string, string] => typeof entry[1] === "string",
+      ),
     ),
     UV_TOOL_DIR: toolDir,
     UV_TOOL_BIN_DIR: toolBinDir,
@@ -577,9 +581,7 @@ export async function startLiteLLMVendor(
       ...parsed,
       metadata: {
         vendorId,
-        ...(typeof request.body.model === "string"
-          ? { resolvedModelId: request.body.model }
-          : {}),
+        ...(typeof request.body.model === "string" ? { resolvedModelId: request.body.model } : {}),
         ...(typeof latencyMs === "number" ? { latencyMs } : {}),
         ...(typeof readCost(parsed.body, parsed.headers) === "number"
           ? { costUsd: readCost(parsed.body, parsed.headers) }

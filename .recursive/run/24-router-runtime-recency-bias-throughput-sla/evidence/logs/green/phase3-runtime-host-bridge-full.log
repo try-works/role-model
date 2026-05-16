@@ -1,0 +1,51 @@
+
+> @role-model-router/runtime-host-bridge@0.0.0 test D:\DEV\role-model\.worktrees\24-router-runtime-recency-bias-throughput-sla\role-model-router\apps\runtime-host-bridge
+> vitest run test/index.test.ts test/backend-unified-runtime-config.test.ts test/executable.test.ts test/runtime-assets.test.ts test/unified-runtime-config.test.ts test/validate-operations.test.ts test/validate-tools.test.ts test/validate-ui.test.ts test/validate-vendors.test.ts test/local-policy.test.ts
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/24-router-runtime-recency-bias-throughput-sla/role-model-router/apps/runtime-host-bridge[39m
+
+ [32mΓ£ô[39m test/executable.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 42[2mms[22m[39m
+(node:26036) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:56516) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:62376) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:42928) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:59920) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:90676) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [32mΓ£ô[39m test/unified-runtime-config.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 63[2mms[22m[39m
+ [32mΓ£ô[39m test/runtime-assets.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 27[2mms[22m[39m
+(node:40720) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [32mΓ£ô[39m test/validate-tools.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 495[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m runRuntimeToolsValidation[2m > [22mexecutes runtime-owned MCP tool calls and persists their observation receipts [33m 493[2mms[22m[39m
+ [32mΓ£ô[39m test/validate-operations.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 941[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m runRuntimeOperationsValidation[2m > [22mvalidates isolated scopes and runtime-state maintenance drills [33m 938[2mms[22m[39m
+ [32mΓ£ô[39m test/validate-ui.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 926[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m runRuntimeUiValidation[2m > [22mvalidates runtime config reads and the main control-plane mutations [33m 924[2mms[22m[39m
+ [32mΓ£ô[39m test/backend-unified-runtime-config.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 2203[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m runtime-host-bridge unified runtime backend[2m > [22msurfaces the derived execution mode in the runtime summary when a unified config file is provided [33m 432[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m runtime-host-bridge unified runtime backend[2m > [22mreads and updates unified runtime config through the backend [33m 326[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m runtime-host-bridge unified runtime backend[2m > [22msurfaces LiteLLM-backed Moonshot models and endpoints from unified runtime config [33m 1191[2mms[22m[39m
+ [32mΓ£ô[39m test/local-policy.test.ts [2m([22m[2m13 tests[22m[2m)[22m[33m 3154[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m local policy persistence[2m > [22mreadLocalPolicy returns defaults when file does not exist [33m 429[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m local policy persistence[2m > [22mupdateLocalPolicy writes merged policy to file [33m 307[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m local swap history[2m > [22mlistSwapHistory returns events in descending order [33m 486[2mms[22m[39m
+ [32mΓ£ô[39m test/validate-vendors.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 4642[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m runRuntimeVendorValidation[2m > [22mexecutes decision-only, local-only, remote-only, and hybrid vendor modes end to end [33m 4633[2mms[22m[39m
+ [32mΓ£ô[39m test/index.test.ts [2m([22m[2m19 tests[22m[2m)[22m[33m 6749[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m runtime-host-bridge[2m > [22mcreates a runtime backend that executes chat-completions through the real routing and adapter path [33m 314[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m runtime-host-bridge[2m > [22mcreates a runtime backend that persists structured request and endpoint inspection state [33m 309[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m runtime-host-bridge[2m > [22mcreates a runtime backend that exposes provider presets, runtime summary, and account upserts [33m 915[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m runtime-host-bridge[2m > [22mstreams canonical telemetry updates over SSE after new requests are persisted [33m 4241[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m10 passed[39m[22m[90m (10)[39m
+[2m      Tests [22m [1m[32m55 passed[39m[22m[90m (55)[39m
+[2m   Start at [22m 19:35:06
+[2m   Duration [22m 8.64s[2m (transform 2.38s, setup 0ms, collect 8.12s, tests 19.24s, environment 4ms, prepare 3.36s)[22m
+

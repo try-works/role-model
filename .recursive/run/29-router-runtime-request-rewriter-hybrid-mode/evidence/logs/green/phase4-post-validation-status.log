@@ -1,0 +1,12 @@
+ M .agents/skills/recursive-mode/scripts/__pycache__/lint-recursive-run.cpython-314.pyc
+ M .recursive/run/29-router-runtime-request-rewriter-hybrid-mode/00-requirements.md
+ M .recursive/run/29-router-runtime-request-rewriter-hybrid-mode/00-worktree.md
+ M role-model-router/apps/runtime-host-bridge/src/index.ts
+ M role-model-router/apps/runtime-host-bridge/src/validate-vendors.ts
+ M role-model-router/apps/runtime-host-bridge/test/index.test.ts
+ M role-model-router/apps/runtime-host-bridge/test/validate-vendors.test.ts
+ M role-model-router/packages/runtime-observability/src/index.ts
+?? .recursive/run/29-router-runtime-request-rewriter-hybrid-mode/01-as-is.md
+?? .recursive/run/29-router-runtime-request-rewriter-hybrid-mode/02-to-be-plan.md
+?? .recursive/run/29-router-runtime-request-rewriter-hybrid-mode/03-implementation-summary.md
+?? .recursive/run/29-router-runtime-request-rewriter-hybrid-mode/evidence/

@@ -18,13 +18,19 @@ import {
 } from "../lib/design-system";
 import {
   getDeviceAuthorizationPollDelayMs,
-  restorePersistedDeviceAuthorization,
   resolveVerificationWindowUrl,
+  restorePersistedDeviceAuthorization,
   shouldAutoPollDeviceAuthorization,
   syncConnectedDeviceAuthorizationEndpoints,
 } from "../lib/device-authorization";
 import { resolveProviderAccountLifecycle } from "../lib/provider-account-state";
 import {
+  type RuntimeConfig,
+  type RuntimeConfigModel,
+  type RuntimeConfigRecord,
+  type RuntimeDeviceAuthorization,
+  type RuntimeProvider,
+  type RuntimeSnapshot,
   activateRuntimeEndpoint,
   fetchRuntimeConfig,
   fetchRuntimeSnapshot,
@@ -32,12 +38,6 @@ import {
   startRuntimeDeviceAuthorization,
   updateRuntimeConfig,
   upsertRuntimeAccount,
-  type RuntimeConfig,
-  type RuntimeConfigModel,
-  type RuntimeConfigRecord,
-  type RuntimeDeviceAuthorization,
-  type RuntimeProvider,
-  type RuntimeSnapshot,
 } from "../lib/runtime-api";
 import { buildAccountModelCatalogIds } from "../lib/view-models";
 
@@ -51,7 +51,11 @@ function defaultVariantId(provider?: RuntimeProvider): string {
 }
 
 function slugifyAccountSegment(value: string): string {
-  const normalized = value.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  const normalized = value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
   return normalized.length > 0 ? normalized : "primary";
 }
 
@@ -70,13 +74,17 @@ function buildModelRoleSelection(
     readonly roleIds: readonly string[];
   }[],
 ): ModelRoleSelection {
-  const byModelId = new Map((bindings ?? []).map((binding) => [binding.modelId, [...binding.roleIds].sort()]));
+  const byModelId = new Map(
+    (bindings ?? []).map((binding) => [binding.modelId, [...binding.roleIds].sort()]),
+  );
   return Object.fromEntries(modelIds.map((modelId) => [modelId, byModelId.get(modelId) ?? []]));
 }
 
 function buildModelRoleBindings(selectedModels: readonly string[], selection: ModelRoleSelection) {
   return selectedModels.flatMap((modelId) => {
-    const roleIds = [...new Set(selection[modelId] ?? [])].sort((left, right) => left.localeCompare(right, "en"));
+    const roleIds = [...new Set(selection[modelId] ?? [])].sort((left, right) =>
+      left.localeCompare(right, "en"),
+    );
     return roleIds.length > 0 ? [{ modelId, roleIds }] : [];
   });
 }
@@ -90,7 +98,9 @@ function buildAvailableModels(input: {
     return [];
   }
 
-  const variant = input.provider.variants?.find((entry) => entry.variantId === input.variantId) ?? input.provider.variants?.[0];
+  const variant =
+    input.provider.variants?.find((entry) => entry.variantId === input.variantId) ??
+    input.provider.variants?.[0];
   return buildAccountModelCatalogIds({
     account: {
       providerId: input.provider.providerId,
@@ -101,9 +111,17 @@ function buildAvailableModels(input: {
   });
 }
 
+let nextLocalModelKeyId = 0;
+
+function createLocalModelKey(): string {
+  nextLocalModelKeyId += 1;
+  return `local-model-${nextLocalModelKeyId}`;
+}
+
 export default function ProvidersRoute() {
   const [searchParams] = useSearchParams();
   const initializedRef = useRef(false);
+  const localModelKeyMapRef = useRef(new WeakMap<RuntimeConfigModel, string>());
   const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [providerAccountId, setProviderAccountId] = useState("");
@@ -113,6 +131,7 @@ export default function ProvidersRoute() {
   const [selectedModel, setSelectedModel] = useState<string>("");
   const [selectedModelRoles, setSelectedModelRoles] = useState<ModelRoleSelection>({});
   const [oauthState, setOauthState] = useState<RuntimeDeviceAuthorization | null>(null);
+  const [oauthConnected, setOauthConnected] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [authorizing, setAuthorizing] = useState(false);
   const [polling, setPolling] = useState(false);
@@ -120,15 +139,31 @@ export default function ProvidersRoute() {
   const [localModels, setLocalModels] = useState<RuntimeConfigModel[]>([]);
   const [savingLocalModels, setSavingLocalModels] = useState(false);
 
+  const getLocalModelKey = useCallback((model: RuntimeConfigModel) => {
+    const existing = localModelKeyMapRef.current.get(model);
+    if (existing) {
+      return existing;
+    }
+    const nextKey = createLocalModelKey();
+    localModelKeyMapRef.current.set(model, nextKey);
+    return nextKey;
+  }, []);
+
   const applyProviderSelection = useCallback(
-    (nextSnapshot: RuntimeSnapshot, requestedProviderId?: string | null, requestedVariantId?: string | null) => {
+    (
+      nextSnapshot: RuntimeSnapshot,
+      requestedProviderId?: string | null,
+      requestedVariantId?: string | null,
+    ) => {
       const nextProvider =
-        nextSnapshot.providers.find((provider) => provider.providerId === requestedProviderId) ?? nextSnapshot.providers[0];
+        nextSnapshot.providers.find((provider) => provider.providerId === requestedProviderId) ??
+        nextSnapshot.providers[0];
       if (!nextProvider) {
         return;
       }
       const nextVariantId =
-        requestedVariantId && nextProvider.variants?.some((variant) => variant.variantId === requestedVariantId)
+        requestedVariantId &&
+        nextProvider.variants?.some((variant) => variant.variantId === requestedVariantId)
           ? requestedVariantId
           : defaultVariantId(nextProvider);
       const nextModels = buildAvailableModels({
@@ -144,6 +179,7 @@ export default function ProvidersRoute() {
       setSelectedModel("");
       setSelectedModelRoles({});
       setOauthState(null);
+      setOauthConnected(false);
     },
     [],
   );
@@ -156,7 +192,9 @@ export default function ProvidersRoute() {
       ]);
       setSnapshot(nextSnapshot);
       setConfigRecord(nextConfigRecord);
-      setLocalModels(nextConfigRecord.config?.llamaSwap.models.map((model) => ({ ...model })) ?? []);
+      setLocalModels(
+        nextConfigRecord.config?.llamaSwap.models.map((model) => ({ ...model })) ?? [],
+      );
       setError(null);
 
       if (!initializedRef.current) {
@@ -206,9 +244,17 @@ export default function ProvidersRoute() {
           if (result.status !== "pending") {
             await syncConnectedEndpoints(result);
             await load();
+            if (result.status === "connected") {
+              setOauthConnected(true);
+              window.setTimeout(() => setOauthState(null), 2000);
+            }
           }
         })
-        .catch((value) => setError(value instanceof Error ? value.message : "Could not refresh provider authorization."))
+        .catch((value) =>
+          setError(
+            value instanceof Error ? value.message : "Could not refresh provider authorization.",
+          ),
+        )
         .finally(() => setPolling(false));
     }, getDeviceAuthorizationPollDelayMs(pendingOauthState));
 
@@ -230,11 +276,15 @@ export default function ProvidersRoute() {
   }, [providerAccountId, snapshot]);
 
   const selectedProvider = useMemo(
-    () => snapshot?.providers.find((provider) => provider.providerId === providerId) ?? snapshot?.providers[0],
+    () =>
+      snapshot?.providers.find((provider) => provider.providerId === providerId) ??
+      snapshot?.providers[0],
     [providerId, snapshot],
   );
   const selectedVariant = useMemo(
-    () => selectedProvider?.variants?.find((variant) => variant.variantId === variantId) ?? selectedProvider?.variants?.[0],
+    () =>
+      selectedProvider?.variants?.find((variant) => variant.variantId === variantId) ??
+      selectedProvider?.variants?.[0],
     [selectedProvider, variantId],
   );
   const availableModels = useMemo(
@@ -249,7 +299,8 @@ export default function ProvidersRoute() {
     [selectedProvider, selectedVariant, snapshot],
   );
   const selectedSavedAccount = useMemo(
-    () => snapshot?.accounts.find((account) => account.providerAccountId === providerAccountId) ?? null,
+    () =>
+      snapshot?.accounts.find((account) => account.providerAccountId === providerAccountId) ?? null,
     [providerAccountId, snapshot],
   );
   const availableRoles = snapshot?.roles ?? [];
@@ -274,9 +325,7 @@ export default function ProvidersRoute() {
 
   const onModelSelect = (modelId: string) => {
     setSelectedModel(modelId);
-    setSelectedModelRoles((current) =>
-      modelId ? { [modelId]: current[modelId] ?? [] } : {},
-    );
+    setSelectedModelRoles((current) => (modelId ? { [modelId]: current[modelId] ?? [] } : {}));
   };
 
   const toggleModelRole = (modelId: string, roleId: string) => {
@@ -326,7 +375,10 @@ export default function ProvidersRoute() {
       },
       baseUrlOverride: selectedVariant.baseUrl ?? selectedProvider.apiBase,
       allowedModels: selectedModel ? [selectedModel] : [],
-      modelRoleBindings: buildModelRoleBindings(selectedModel ? [selectedModel] : [], selectedModelRoles),
+      modelRoleBindings: buildModelRoleBindings(
+        selectedModel ? [selectedModel] : [],
+        selectedModelRoles,
+      ),
       deniedModels: [],
       entitlementTags: ["chat"],
       budgetPolicyRef: "budget.default",
@@ -347,7 +399,7 @@ export default function ProvidersRoute() {
     setError(null);
     try {
       await upsertRuntimeAccount(buildProviderPayload());
-      if (selectedVariant.authMode === "api-key-static") {
+      if (selectedVariant.authMode === "api-key-static" || oauthConnected) {
         await activateRuntimeEndpoint({
           providerAccountId,
           modelId: selectedModel,
@@ -375,7 +427,10 @@ export default function ProvidersRoute() {
         providerKind: selectedProvider.providerKind,
         variantId: selectedVariant.variantId,
         allowedModels: selectedModel ? [selectedModel] : [],
-        modelRoleBindings: buildModelRoleBindings(selectedModel ? [selectedModel] : [], selectedModelRoles),
+        modelRoleBindings: buildModelRoleBindings(
+          selectedModel ? [selectedModel] : [],
+          selectedModelRoles,
+        ),
         deniedModels: [],
         entitlementTags: ["chat"],
         budgetPolicyRef: "budget.default",
@@ -409,8 +464,14 @@ export default function ProvidersRoute() {
       setOauthState((current) => (current ? { ...current, ...result } : result));
       await syncConnectedEndpoints(result);
       await load();
+      if (result.status === "connected") {
+        setOauthConnected(true);
+        window.setTimeout(() => setOauthState(null), 2000);
+      }
     } catch (value) {
-      setError(value instanceof Error ? value.message : "Could not refresh provider authorization.");
+      setError(
+        value instanceof Error ? value.message : "Could not refresh provider authorization.",
+      );
     } finally {
       setPolling(false);
     }
@@ -431,7 +492,11 @@ export default function ProvidersRoute() {
     ]);
   };
 
-  const updateLocalModel = (index: number, field: keyof RuntimeConfigModel, value: string | number | null) => {
+  const updateLocalModel = (
+    index: number,
+    field: keyof RuntimeConfigModel,
+    value: string | number | null,
+  ) => {
     setLocalModels((current) =>
       current.map((model, i) =>
         i === index
@@ -456,7 +521,9 @@ export default function ProvidersRoute() {
     setSavingLocalModels(true);
     setError(null);
     try {
-      const validatedModels = localModels.filter((model) => model.modelId.trim().length > 0 && model.path.trim().length > 0);
+      const validatedModels = localModels.filter(
+        (model) => model.modelId.trim().length > 0 && model.path.trim().length > 0,
+      );
       const nextConfig: RuntimeConfig = {
         ...configRecord.config,
         llamaSwap: {
@@ -491,7 +558,11 @@ export default function ProvidersRoute() {
           <form className="space-y-4" onSubmit={onSubmit}>
             <label className="grid gap-2 text-sm">
               <span className="font-medium text-[var(--rm-fg)]">Provider</span>
-              <select className={inputClass} value={selectedProvider?.providerId ?? ""} onChange={(event) => onProviderChange(event.target.value)}>
+              <select
+                className={inputClass}
+                value={selectedProvider?.providerId ?? ""}
+                onChange={(event) => onProviderChange(event.target.value)}
+              >
                 {snapshot.providers.map((provider) => (
                   <option key={provider.providerId} value={provider.providerId}>
                     {provider.displayName}
@@ -502,7 +573,11 @@ export default function ProvidersRoute() {
 
             <label className="grid gap-2 text-sm">
               <span className="font-medium text-[var(--rm-fg)]">Connection method</span>
-              <select className={inputClass} value={selectedVariant?.variantId ?? ""} onChange={(event) => onVariantChange(event.target.value)}>
+              <select
+                className={inputClass}
+                value={selectedVariant?.variantId ?? ""}
+                onChange={(event) => onVariantChange(event.target.value)}
+              >
                 {(selectedProvider?.variants ?? []).map((variant) => (
                   <option key={variant.variantId} value={variant.variantId}>
                     {variant.label}
@@ -513,24 +588,36 @@ export default function ProvidersRoute() {
 
             <label className="grid gap-2 text-sm">
               <span className="font-medium text-[var(--rm-fg)]">Provider connection id</span>
-              <input className={inputClass} value={providerAccountId} onChange={(event) => setProviderAccountId(event.target.value)} />
+              <input
+                className={inputClass}
+                value={providerAccountId}
+                onChange={(event) => setProviderAccountId(event.target.value)}
+              />
             </label>
 
             {selectedProvider?.providerKind === "local-engine" ? (
               <div className="space-y-4">
                 <div className={`${mutedPanelClassName} p-4 text-sm`}>
-                  <p className="font-medium text-[var(--rm-fg)]">Local {selectedProvider?.displayName} models</p>
+                  <p className="font-medium text-[var(--rm-fg)]">
+                    Local {selectedProvider?.displayName} models
+                  </p>
                   <p className="mt-1 text-[var(--rm-secondary)]">
-                    Add, edit, or remove locally hosted models. Each model needs a unique model id and a path (GGUF file or model identifier).
+                    Add, edit, or remove locally hosted models. Each model needs a unique model id
+                    and a path (GGUF file or model identifier).
                   </p>
                 </div>
 
                 {localModels.length === 0 ? (
-                  <p className="text-sm text-[var(--rm-secondary)]">No local models configured yet.</p>
+                  <p className="text-sm text-[var(--rm-secondary)]">
+                    No local models configured yet.
+                  </p>
                 ) : (
                   <div className="space-y-3">
                     {localModels.map((model, index) => (
-                      <div key={index} className={`${raisedPanelClassName} space-y-3 p-4 text-sm`}>
+                      <div
+                        key={getLocalModelKey(model)}
+                        className={`${raisedPanelClassName} space-y-3 p-4 text-sm`}
+                      >
                         <div className="flex items-center justify-between">
                           <p className="font-medium text-[var(--rm-fg)]">Model {index + 1}</p>
                           <button
@@ -547,7 +634,9 @@ export default function ProvidersRoute() {
                             <input
                               className={inputClass}
                               value={model.modelId}
-                              onChange={(event) => updateLocalModel(index, "modelId", event.target.value)}
+                              onChange={(event) =>
+                                updateLocalModel(index, "modelId", event.target.value)
+                              }
                               placeholder="local/llama-3.3-70b"
                             />
                           </label>
@@ -556,7 +645,9 @@ export default function ProvidersRoute() {
                             <input
                               className={inputClass}
                               value={model.path}
-                              onChange={(event) => updateLocalModel(index, "path", event.target.value)}
+                              onChange={(event) =>
+                                updateLocalModel(index, "path", event.target.value)
+                              }
                               placeholder="/path/to/model.gguf"
                             />
                           </label>
@@ -567,7 +658,11 @@ export default function ProvidersRoute() {
                               type="number"
                               value={model.contextWindow ?? ""}
                               onChange={(event) =>
-                                updateLocalModel(index, "contextWindow", event.target.value ? Number(event.target.value) : null)
+                                updateLocalModel(
+                                  index,
+                                  "contextWindow",
+                                  event.target.value ? Number(event.target.value) : null,
+                                )
                               }
                               placeholder="128000"
                             />
@@ -577,7 +672,9 @@ export default function ProvidersRoute() {
                             <input
                               className={inputClass}
                               value={model.command ?? ""}
-                              onChange={(event) => updateLocalModel(index, "command", event.target.value || null)}
+                              onChange={(event) =>
+                                updateLocalModel(index, "command", event.target.value || null)
+                              }
                               placeholder="Optional"
                             />
                           </label>
@@ -586,7 +683,9 @@ export default function ProvidersRoute() {
                             <input
                               className={inputClass}
                               value={model.proxyBaseUrl ?? ""}
-                              onChange={(event) => updateLocalModel(index, "proxyBaseUrl", event.target.value || null)}
+                              onChange={(event) =>
+                                updateLocalModel(index, "proxyBaseUrl", event.target.value || null)
+                              }
                               placeholder="Optional"
                             />
                           </label>
@@ -595,7 +694,9 @@ export default function ProvidersRoute() {
                             <input
                               className={inputClass}
                               value={model.checkEndpoint ?? ""}
-                              onChange={(event) => updateLocalModel(index, "checkEndpoint", event.target.value || null)}
+                              onChange={(event) =>
+                                updateLocalModel(index, "checkEndpoint", event.target.value || null)
+                              }
                               placeholder="Optional"
                             />
                           </label>
@@ -604,7 +705,9 @@ export default function ProvidersRoute() {
                             <input
                               className={inputClass}
                               value={model.useModelName ?? ""}
-                              onChange={(event) => updateLocalModel(index, "useModelName", event.target.value || null)}
+                              onChange={(event) =>
+                                updateLocalModel(index, "useModelName", event.target.value || null)
+                              }
                               placeholder="Optional — mapped name for the local engine"
                             />
                           </label>
@@ -615,7 +718,11 @@ export default function ProvidersRoute() {
                 )}
 
                 <div className="flex flex-wrap gap-3">
-                  <button className={secondaryButtonClassName} type="button" onClick={addLocalModel}>
+                  <button
+                    className={secondaryButtonClassName}
+                    type="button"
+                    onClick={addLocalModel}
+                  >
                     Add model
                   </button>
                   <button
@@ -634,13 +741,20 @@ export default function ProvidersRoute() {
             ) : selectedVariant?.authMode === "api-key-static" ? (
               <label className="grid gap-2 text-sm">
                 <span className="font-medium text-[var(--rm-fg)]">Credential reference</span>
-                <input className={inputClass} value={credentialRef} onChange={(event) => setCredentialRef(event.target.value)} />
+                <input
+                  className={inputClass}
+                  value={credentialRef}
+                  onChange={(event) => setCredentialRef(event.target.value)}
+                />
               </label>
             ) : (
               <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
-                <p className="font-medium text-[var(--rm-fg)]">Runtime-managed credential reference</p>
+                <p className="font-medium text-[var(--rm-fg)]">
+                  Runtime-managed credential reference
+                </p>
                 <p className="mt-2">
-                  OAuth-backed providers store the resulting token locally and expose only the generated credential reference back to the control plane.
+                  OAuth-backed providers store the resulting token locally and expose only the
+                  generated credential reference back to the control plane.
                 </p>
               </div>
             )}
@@ -666,7 +780,8 @@ export default function ProvidersRoute() {
                 <div>
                   <p className="font-medium text-[var(--rm-fg)]">Model roles</p>
                   <p className="text-[var(--rm-secondary)]">
-                    Assign runtime roles to the selected model so the resulting endpoint registry preserves operator intent.
+                    Assign runtime roles to the selected model so the resulting endpoint registry
+                    preserves operator intent.
                   </p>
                 </div>
                 <div className={`${mutedPanelClassName} space-y-3 p-4`}>
@@ -675,9 +790,14 @@ export default function ProvidersRoute() {
                     {availableRoles.length > 0 ? (
                       <div className="flex flex-wrap gap-3">
                         {availableRoles.map((role) => (
-                          <label key={`${selectedModel}:${role.roleId}`} className="flex items-center gap-2 rounded-none border border-[var(--rm-border)] px-3 py-1.5">
+                          <label
+                            key={`${selectedModel}:${role.roleId}`}
+                            className="flex items-center gap-2 rounded-none border border-[var(--rm-border)] px-3 py-1.5"
+                          >
                             <input
-                              checked={(selectedModelRoles[selectedModel] ?? []).includes(role.roleId)}
+                              checked={(selectedModelRoles[selectedModel] ?? []).includes(
+                                role.roleId,
+                              )}
                               type="checkbox"
                               onChange={() => toggleModelRole(selectedModel, role.roleId)}
                             />
@@ -686,7 +806,9 @@ export default function ProvidersRoute() {
                         ))}
                       </div>
                     ) : (
-                      <p className="text-[var(--rm-secondary)]">No runtime roles are available from the host bridge yet.</p>
+                      <p className="text-[var(--rm-secondary)]">
+                        No runtime roles are available from the host bridge yet.
+                      </p>
                     )}
                   </div>
                 </div>
@@ -697,7 +819,9 @@ export default function ProvidersRoute() {
               <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
                 <div className="flex flex-wrap items-center gap-2">
                   <p className="font-medium text-[var(--rm-fg)]">{selectedVariant.label}</p>
-                  <StatusPill tone={selectedVariant.availability === "ready" ? "success" : "warning"}>
+                  <StatusPill
+                    tone={selectedVariant.availability === "ready" ? "success" : "warning"}
+                  >
                     {selectedVariant.availability}
                   </StatusPill>
                   <StatusPill tone="neutral">{selectedVariant.authMode}</StatusPill>
@@ -705,13 +829,16 @@ export default function ProvidersRoute() {
                 <p className="mt-2">{selectedVariant.description}</p>
                 <div className="mt-3 grid gap-2 md:grid-cols-2">
                   <p>
-                    <span className="font-medium text-[var(--rm-fg)]">Catalog models:</span> {availableModels.length}
+                    <span className="font-medium text-[var(--rm-fg)]">Catalog models:</span>{" "}
+                    {availableModels.length}
                   </p>
                   <p>
-                    <span className="font-medium text-[var(--rm-fg)]">API base:</span> {selectedVariant.baseUrl ?? selectedProvider?.apiBase}
+                    <span className="font-medium text-[var(--rm-fg)]">API base:</span>{" "}
+                    {selectedVariant.baseUrl ?? selectedProvider?.apiBase}
                   </p>
                   <p>
-                    <span className="font-medium text-[var(--rm-fg)]">SDK package:</span> {selectedProvider?.npmPackage ?? "Not cataloged"}
+                    <span className="font-medium text-[var(--rm-fg)]">SDK package:</span>{" "}
+                    {selectedProvider?.npmPackage ?? "Not cataloged"}
                   </p>
                   <p>
                     <span className="font-medium text-[var(--rm-fg)]">Docs:</span>{" "}
@@ -733,10 +860,12 @@ export default function ProvidersRoute() {
                   <div className={`mt-3 ${raisedPanelClassName} p-3`}>
                     <p className="font-medium text-[var(--rm-fg)]">OAuth metadata</p>
                     <p className="mt-2">
-                      <span className="font-medium text-[var(--rm-fg)]">Client id:</span> {selectedVariant.oauth.clientId}
+                      <span className="font-medium text-[var(--rm-fg)]">Client id:</span>{" "}
+                      {selectedVariant.oauth.clientId}
                     </p>
                     <p>
-                      <span className="font-medium text-[var(--rm-fg)]">Device endpoint:</span> {selectedVariant.oauth.deviceAuthorizationEndpoint}
+                      <span className="font-medium text-[var(--rm-fg)]">Device endpoint:</span>{" "}
+                      {selectedVariant.oauth.deviceAuthorizationEndpoint}
                     </p>
                   </div>
                 ) : null}
@@ -747,7 +876,9 @@ export default function ProvidersRoute() {
               {selectedProvider?.providerKind !== "local-engine" ? (
                 <button
                   className={buttonClass}
-                  disabled={submitting || !selectedProvider || !selectedVariant || selectedModel === ""}
+                  disabled={
+                    submitting || !selectedProvider || !selectedVariant || selectedModel === ""
+                  }
                   type="submit"
                 >
                   {submitting ? "Saving…" : "Save provider"}
@@ -791,24 +922,40 @@ export default function ProvidersRoute() {
               <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
                 <div className="flex flex-wrap items-center gap-2">
                   <p className="font-medium text-[var(--rm-fg)]">Current provider authorization</p>
-                  <StatusPill tone={oauthState.status === "connected" ? "success" : oauthState.status === "pending" ? "accent" : "warning"}>
+                  <StatusPill
+                    tone={
+                      oauthState.status === "connected"
+                        ? "success"
+                        : oauthState.status === "pending"
+                          ? "accent"
+                          : "warning"
+                    }
+                  >
                     {oauthState.status}
                   </StatusPill>
                 </div>
                 {oauthState.userCode ? (
                   <p className="mt-2">
-                    <span className="font-medium text-[var(--rm-fg)]">User code:</span> {oauthState.userCode}
+                    <span className="font-medium text-[var(--rm-fg)]">User code:</span>{" "}
+                    {oauthState.userCode}
                   </p>
                 ) : null}
                 {shouldAutoPollDeviceAuthorization(oauthState) ? (
                   <p className="mt-2">
-                    The verification page opens in a new tab and this screen keeps checking automatically. Successful completion activates the selected models into the runtime endpoint registry.
+                    The verification page opens in a new tab and this screen keeps checking
+                    automatically. Successful completion activates the selected models into the
+                    runtime endpoint registry.
                   </p>
                 ) : null}
                 {oauthState.verificationUriComplete ? (
                   <p className="mt-2 break-all">
                     <span className="font-medium text-[var(--rm-fg)]">Verification URL:</span>{" "}
-                    <a className="text-[var(--rm-accent)] underline" href={oauthState.verificationUriComplete} rel="noreferrer" target="_blank">
+                    <a
+                      className="text-[var(--rm-accent)] underline"
+                      href={oauthState.verificationUriComplete}
+                      rel="noreferrer"
+                      target="_blank"
+                    >
                       {oauthState.verificationUriComplete}
                     </a>
                   </p>
@@ -816,42 +963,53 @@ export default function ProvidersRoute() {
               </div>
             ) : null}
 
-            {snapshot.accounts.length === 0 && snapshot.endpoints.filter((e) => e.providerId === "llama-swap").length === 0 ? (
+            {snapshot.accounts.length === 0 &&
+            snapshot.endpoints.filter((e) => e.providerId === "llama-swap").length === 0 ? (
               <EmptyState label="No providers are configured yet. Save one from the setup form to populate the runtime registry." />
             ) : (
               <>
                 {snapshot.accounts.map((account) => (
                   <div key={account.providerAccountId} className={`${mutedPanelClassName} p-4`}>
                     <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="font-medium text-[var(--rm-fg)]">{account.providerAccountId}</h3>
+                      <h3 className="font-medium text-[var(--rm-fg)]">
+                        {account.providerAccountId}
+                      </h3>
                       <StatusPill tone="neutral">{account.providerId}</StatusPill>
                       {account.healthStatus ? (
-                        <StatusPill tone={account.healthStatus === "healthy" ? "success" : "warning"}>
+                        <StatusPill
+                          tone={account.healthStatus === "healthy" ? "success" : "warning"}
+                        >
                           {account.healthStatus}
                         </StatusPill>
                       ) : null}
                     </div>
                     <div className="mt-3 grid gap-1 text-sm text-[var(--rm-secondary)]">
                       <p>
-                        <span className="font-medium text-[var(--rm-fg)]">Connection method:</span> {account.authMode}
+                        <span className="font-medium text-[var(--rm-fg)]">Connection method:</span>{" "}
+                        {account.authMode}
                       </p>
                       <p>
                         <span className="font-medium text-[var(--rm-fg)]">Credential ref:</span>{" "}
-                        {account.credentialRef ? `${account.credentialRef.backend}:${account.credentialRef.ref}` : "Not set"}
+                        {account.credentialRef
+                          ? `${account.credentialRef.backend}:${account.credentialRef.ref}`
+                          : "Not set"}
                       </p>
                       <p>
                         <span className="font-medium text-[var(--rm-fg)]">Base URL:</span>{" "}
                         {account.baseUrlOverride ?? "Provider default"}
                       </p>
                       <p>
-                        <span className="font-medium text-[var(--rm-fg)]">Status:</span> {account.status ?? "unknown"}
+                        <span className="font-medium text-[var(--rm-fg)]">Status:</span>{" "}
+                        {account.status ?? "unknown"}
                       </p>
                     </div>
                     {account.allowedModels?.length ? (
                       <div className="mt-3 space-y-3">
                         {account.allowedModels.map((modelId) => {
                           const roleIds =
-                            account.modelRoleBindings?.find((binding) => binding.modelId === modelId)?.roleIds ?? [];
+                            account.modelRoleBindings?.find(
+                              (binding) => binding.modelId === modelId,
+                            )?.roleIds ?? [];
                           return (
                             <div key={modelId} className={`${raisedPanelClassName} p-3`}>
                               <div className="flex flex-wrap items-center gap-2">
@@ -863,7 +1021,9 @@ export default function ProvidersRoute() {
                                     </StatusPill>
                                   ))
                                 ) : (
-                                  <span className="text-sm text-[var(--rm-secondary)]">No roles assigned</span>
+                                  <span className="text-sm text-[var(--rm-secondary)]">
+                                    No roles assigned
+                                  </span>
                                 )}
                               </div>
                             </div>
@@ -880,23 +1040,29 @@ export default function ProvidersRoute() {
                       <div className="flex flex-wrap items-center gap-2">
                         <h3 className="font-medium text-[var(--rm-fg)]">{endpoint.endpointId}</h3>
                         <StatusPill tone="neutral">llama-swap</StatusPill>
-                        <StatusPill tone={endpoint.healthStatus === "healthy" ? "success" : "warning"}>
+                        <StatusPill
+                          tone={endpoint.healthStatus === "healthy" ? "success" : "warning"}
+                        >
                           {endpoint.healthStatus ?? "unknown"}
                         </StatusPill>
                       </div>
                       <div className="mt-3 grid gap-1 text-sm text-[var(--rm-secondary)]">
                         <p>
-                          <span className="font-medium text-[var(--rm-fg)]">Model:</span> {endpoint.modelId}
+                          <span className="font-medium text-[var(--rm-fg)]">Model:</span>{" "}
+                          {endpoint.modelId}
                         </p>
                         <p>
                           <span className="font-medium text-[var(--rm-fg)]">Source:</span>{" "}
-                          {endpoint.sourceType ?? "local"} / {endpoint.endpointKind ?? "local-engine"}
+                          {endpoint.sourceType ?? "local"} /{" "}
+                          {endpoint.endpointKind ?? "local-engine"}
                         </p>
                         <p>
-                          <span className="font-medium text-[var(--rm-fg)]">Serving source:</span> {endpoint.servingSource ?? "vendor-llama-swap"}
+                          <span className="font-medium text-[var(--rm-fg)]">Serving source:</span>{" "}
+                          {endpoint.servingSource ?? "vendor-llama-swap"}
                         </p>
                         <p>
-                          <span className="font-medium text-[var(--rm-fg)]">Status:</span> {endpoint.status ?? "unknown"}
+                          <span className="font-medium text-[var(--rm-fg)]">Status:</span>{" "}
+                          {endpoint.status ?? "unknown"}
                         </p>
                       </div>
                     </div>

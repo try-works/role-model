@@ -1,17 +1,17 @@
-import path from "node:path";
 import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import os from "node:os";
+import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { describe, expect, test } from "vitest";
 
+import { runCatalogExportCli } from "../src/cli.ts";
 import {
   deriveLiteLLMProviders,
   deriveVendorVersionLedger,
   exportCatalogArtifacts,
   normalizeCatalogSnapshot,
 } from "../src/index.ts";
-import { runCatalogExportCli } from "../src/cli.ts";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -24,28 +24,51 @@ async function readJson<T>(relativePath: string): Promise<T> {
 
 async function createCatalogCliFixtureRepoRoot(): Promise<string> {
   const tempRepoRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-catalog-fixture-"));
-  const snapshotFixture = await readFile(path.join(repoRoot, "testdata", "catalog", "models-dev-snapshot.json"), "utf8");
+  const snapshotFixture = await readFile(
+    path.join(repoRoot, "testdata", "catalog", "models-dev-snapshot.json"),
+    "utf8",
+  );
   const overridesFixture = await readFile(
     path.join(repoRoot, "testdata", "catalog", "models-dev-local-overrides.json"),
     "utf8",
   );
 
   await mkdir(path.join(tempRepoRoot, "testdata", "catalog"), { recursive: true });
-  await mkdir(path.join(tempRepoRoot, "role-model-router", "packages", "catalog", "data"), { recursive: true });
+  await mkdir(path.join(tempRepoRoot, "role-model-router", "packages", "catalog", "data"), {
+    recursive: true,
+  });
 
-  await writeFile(path.join(tempRepoRoot, "testdata", "catalog", "models-dev-snapshot.json"), snapshotFixture, "utf8");
+  await writeFile(
+    path.join(tempRepoRoot, "testdata", "catalog", "models-dev-snapshot.json"),
+    snapshotFixture,
+    "utf8",
+  );
   await writeFile(
     path.join(tempRepoRoot, "testdata", "catalog", "models-dev-local-overrides.json"),
     overridesFixture,
     "utf8",
   );
   await writeFile(
-    path.join(tempRepoRoot, "role-model-router", "packages", "catalog", "data", "normalized-catalog.json"),
+    path.join(
+      tempRepoRoot,
+      "role-model-router",
+      "packages",
+      "catalog",
+      "data",
+      "normalized-catalog.json",
+    ),
     '{\n  "providers": [],\n  "models": []\n}\n',
     "utf8",
   );
   await writeFile(
-    path.join(tempRepoRoot, "role-model-router", "packages", "catalog", "data", "vendor-version-ledger.json"),
+    path.join(
+      tempRepoRoot,
+      "role-model-router",
+      "packages",
+      "catalog",
+      "data",
+      "vendor-version-ledger.json",
+    ),
     '{\n  "ledgerVersion": "1",\n  "vendors": []\n}\n',
     "utf8",
   );
@@ -138,7 +161,9 @@ describe("normalizeCatalogSnapshot", () => {
     const catalog = normalizeCatalogSnapshot(snapshot, overrides);
     const ledger = deriveVendorVersionLedger(snapshot);
     const openaiProvider = catalog.providers.find((provider) => provider.providerId === "openai");
-    const fastVariant = catalog.models.find((model) => model.modelId === "openai/gpt-4.1-mini-fast");
+    const fastVariant = catalog.models.find(
+      (model) => model.modelId === "openai/gpt-4.1-mini-fast",
+    );
 
     expect(ledger).toMatchObject({
       ledgerVersion: "1",
@@ -223,7 +248,9 @@ describe("normalizeCatalogSnapshot", () => {
     }`);
 
     const catalog = normalizeCatalogSnapshot(snapshot, overrides);
-    const moonshotProvider = catalog.providers.find((provider) => provider.providerId === "moonshot");
+    const moonshotProvider = catalog.providers.find(
+      (provider) => provider.providerId === "moonshot",
+    );
     const kimiModel = catalog.models.find((model) => model.modelId === "moonshot/kimi-k2.5");
 
     expect(moonshotProvider).toMatchObject({
@@ -414,7 +441,8 @@ describe("runCatalogRefreshCli", () => {
       repoRoot: tempRepoRoot,
       capturedAt,
       fetchImpl: async (input) => {
-        const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+        const url =
+          typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
         if (url === "https://models.dev/api.json") {
           return new Response(
             JSON.stringify({
@@ -571,7 +599,8 @@ describe("runCatalogRefreshCli", () => {
       repoRoot: tempRepoRoot,
       capturedAt: "2026-05-15T03:40:39Z",
       fetchImpl: async (input) => {
-        const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+        const url =
+          typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
         if (url === "https://models.dev/api.json") {
           return new Response(
             JSON.stringify({
@@ -631,7 +660,10 @@ describe("runCatalogRefreshCli", () => {
     });
 
     const snapshot = JSON.parse(
-      await readFile(path.join(tempRepoRoot, "testdata", "catalog", "models-dev-snapshot.json"), "utf8"),
+      await readFile(
+        path.join(tempRepoRoot, "testdata", "catalog", "models-dev-snapshot.json"),
+        "utf8",
+      ),
     );
 
     expect(snapshot.providers).toContainEqual(

@@ -50,75 +50,24 @@ jobs:
       - name: Package SEA runtime
         run: corepack pnpm run runtime:package-sea
 
-      - name: Build Windows launcher
+      - name: Verify Windows standalone package
         if: matrix.target == 'win32-x64'
         shell: pwsh
         run: |
           $packageDir = "role-model-router/dist/release/win32-x64"
-          $clientDir = "$packageDir/build/client"
-
-          # Build Go launcher
-          go build -o "$packageDir/role-model-launcher.exe" ./role-model-router/apps/launcher/main.go
-
-          # Copy UI build files
-          Copy-Item -Recurse -Force "role-model-router/apps/runtime-ui/build/client" "$packageDir/build/"
-
-          # Generate batch file with CRLF line endings
-          $bat = @(
-            "@echo off",
-            "echo.",
-            "echo ================================================================",
-            "echo              Role Model Runtime - Windows Launcher",
-            "echo ================================================================",
-            "echo.",
-            "echo Starting bridge server...",
-            "",
-            "set SCRIPT_DIR=%~dp0",
-            "",
-            "if exist `"%SCRIPT_DIR%role-model-runtime.exe`" (",
-            "    cd /d `"%SCRIPT_DIR%`"",
-            "    start /b `"`" `"%SCRIPT_DIR%role-model-runtime.exe`" --static-root `"%SCRIPT_DIR%build\client`"",
-            ") else (",
-            "    echo ERROR: role-model-runtime.exe not found.",
-            "    echo Please download the full release package.",
-            "    pause",
-            "    exit /b 1",
-            ")",
-            "",
-            "echo.",
-            "echo Waiting for server to start...",
-            ":check",
-            "timeout /t 1 /nobreak >nul 2>&1",
-            "if errorlevel 1 ping -n 2 127.0.0.1 >nul",
-            "curl -s http://127.0.0.1:3456/healthz >nul 2>&1",
-            "if errorlevel 1 goto check",
-            "",
-            "echo.",
-            "echo Server ready at http://127.0.0.1:3456",
-            "echo.",
-            "echo Opening browser...",
-            "start msedge --app=http://127.0.0.1:3456",
-            "",
-            "echo.",
-            "echo ================================================================",
-            "echo  Role Model is running!",
-            "echo.",
-            "echo   - Close the browser window when done",
-            "echo   - Then press any key here to stop the server",
-            "echo ================================================================",
-            "echo.",
-            "",
-            "pause >nul",
-            "",
-            "echo.",
-            "echo Stopping server...",
-            "for /f `"tokens=2`" %%%%a in ('tasklist ^| findstr `"node.exe`"') do taskkill /F /PID %%%%a >nul 2>&1",
-            "echo Server stopped. Goodbye!",
-            "echo."
-          ) -join "`r`n"
-
-          [System.IO.File]::WriteAllText("$packageDir/Role-Model.bat", $bat, [System.Text.Encoding]::ASCII)
-          Write-Host "Generated Role-Model.bat with CRLF line endings"
+          @(
+            "$packageDir/role-model-runtime.exe",
+            "$packageDir/role-model-launcher.exe",
+            "$packageDir/Role-Model.bat",
+            "$packageDir/build/client/index.html",
+            "$packageDir/testdata/router-runtime/fixtures/provider-accounts.json",
+            "$packageDir/testdata/catalog/litellm-model-prices.json",
+            "$packageDir/role-model-router/packages/catalog/data/normalized-catalog.json"
+          ) | ForEach-Object {
+            if (-not (Test-Path $_)) {
+              throw "Missing packaged artifact: $_"
+            }
+          }
 
       - name: Upload workflow artifact
         uses: actions/upload-artifact@v4

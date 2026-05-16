@@ -1,8 +1,9 @@
-import path from "node:path";
 import { access, readFile } from "node:fs/promises";
+import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { describe, expect, test } from "vitest";
+import * as packageSea from "../src/package-sea.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -106,33 +107,103 @@ describe("runtime-host-bridge executable packaging", () => {
     }
   });
 
-  test("declares a SEA config and packaging command for platform-specific llama-swap assets", async () => {
+  test("declares target-scoped SEA config and standalone release inputs for Windows packaging", async () => {
     const rootManifest = await readManifest("package.json");
     expect(rootManifest.scripts).toMatchObject({
       "runtime:package-sea": expect.any(String),
     });
 
-    const seaConfigPath = path.join(repoRoot, "role-model-router", "sea-config.json");
-    const seaConfig = JSON.parse(await readFile(seaConfigPath, "utf8")) as {
-      readonly main?: string;
-      readonly output?: string;
-      readonly assets?: Record<string, string>;
-    };
+    expect(typeof (packageSea as { resolveBuildTarget?: unknown }).resolveBuildTarget).toBe(
+      "function",
+    );
+    expect(
+      typeof (packageSea as { createSeaConfigForTarget?: unknown }).createSeaConfigForTarget,
+    ).toBe("function");
+    expect(
+      typeof (packageSea as { listStandaloneReleaseCopies?: unknown }).listStandaloneReleaseCopies,
+    ).toBe("function");
 
-    expect(seaConfig).toMatchObject({
+    const target = (
+      packageSea as {
+        resolveBuildTarget: (
+          platform: NodeJS.Platform,
+          arch: string,
+        ) => {
+          platform: NodeJS.Platform;
+          arch: string;
+          executableName: string;
+        } | null;
+      }
+    ).resolveBuildTarget("win32", "x64");
+
+    expect(target).toMatchObject({
+      platform: "win32",
+      arch: "x64",
+      executableName: "llama-swap.exe",
+    });
+    if (!target) {
+      throw new Error("Expected win32 x64 build target to be available.");
+    }
+
+    const seaConfig = (
+      packageSea as {
+        createSeaConfigForTarget: (target: {
+          platform: NodeJS.Platform;
+          arch: string;
+          executableName: string;
+        }) => {
+          main: string;
+          output: string;
+          disableExperimentalSEAWarning: boolean;
+          useCodeCache: boolean;
+          useSnapshot: boolean;
+          assets: Record<string, string>;
+        };
+      }
+    ).createSeaConfigForTarget(target);
+
+    expect(seaConfig).toEqual({
       main: "./dist/sea/cli.cjs",
       output: "./dist/sea-prep.blob",
+      disableExperimentalSEAWarning: true,
+      useCodeCache: false,
+      useSnapshot: false,
+      assets: {
+        "vendor/llama-swap/win32-x64/llama-swap.exe.gz":
+          "./vendor/llama-swap/dist-assets/win32-x64/llama-swap.exe.gz",
+      },
     });
-    expect(seaConfig.assets).toMatchObject({
-      "vendor/llama-swap/linux-x64/llama-swap":
-        "./vendor/llama-swap/dist-assets/linux-x64/llama-swap",
-      "vendor/llama-swap/darwin-x64/llama-swap":
-        "./vendor/llama-swap/dist-assets/darwin-x64/llama-swap",
-      "vendor/llama-swap/darwin-arm64/llama-swap":
-        "./vendor/llama-swap/dist-assets/darwin-arm64/llama-swap",
-      "vendor/llama-swap/win32-x64/llama-swap.exe":
-        "./vendor/llama-swap/dist-assets/win32-x64/llama-swap.exe",
-    });
+
+    const copies = (
+      packageSea as {
+        listStandaloneReleaseCopies: () => Array<{
+          sourceRelativePath: string;
+          destinationRelativePath: string;
+        }>;
+      }
+    ).listStandaloneReleaseCopies();
+
+    expect(copies).toEqual(
+      expect.arrayContaining([
+        {
+          sourceRelativePath: "role-model-router/apps/runtime-ui/build/client",
+          destinationRelativePath: "build/client",
+        },
+        {
+          sourceRelativePath: "testdata/router-runtime/fixtures",
+          destinationRelativePath: "testdata/router-runtime/fixtures",
+        },
+        {
+          sourceRelativePath: "testdata/catalog/litellm-model-prices.json",
+          destinationRelativePath: "testdata/catalog/litellm-model-prices.json",
+        },
+        {
+          sourceRelativePath: "role-model-router/packages/catalog/data/normalized-catalog.json",
+          destinationRelativePath:
+            "role-model-router/packages/catalog/data/normalized-catalog.json",
+        },
+      ]),
+    );
   });
 
   test("ships install and compose artifacts for packaged runtime distribution", async () => {

@@ -1,13 +1,22 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 
-import { CodeBlock, EmptyState, ErrorState, FactCard, LoadingState, PageHeader, SectionCard, StatusPill } from "../components/page-primitives";
+import {
+  CodeBlock,
+  EmptyState,
+  ErrorState,
+  FactCard,
+  LoadingState,
+  PageHeader,
+  SectionCard,
+  StatusPill,
+} from "../components/page-primitives";
 import { mutedPanelClassName, secondaryButtonClassName } from "../lib/design-system";
 import {
-  fetchControllerAssignment,
-  fetchRuntimeSnapshot,
   type RuntimeControllerAssignment,
   type RuntimeSnapshot,
+  fetchControllerAssignment,
+  fetchRuntimeSnapshot,
 } from "../lib/runtime-api";
 import { buildConfiguredModelCards, buildConfiguredModelMetadataRows } from "../lib/view-models";
 
@@ -25,7 +34,9 @@ export default function ControlModelsRoute() {
         setController(nextController);
         setControllerLoaded(true);
       })
-      .catch((value: unknown) => setError(value instanceof Error ? value.message : "Could not load configured models."));
+      .catch((value: unknown) =>
+        setError(value instanceof Error ? value.message : "Could not load configured models."),
+      );
   }, []);
 
   const cards = useMemo(
@@ -48,7 +59,10 @@ export default function ControlModelsRoute() {
       ? snapshot.endpoints.filter((endpoint) => endpoint.modelId === selectedCard.modelId)
       : [];
   const selectedCapabilities = [
-    ...new Set([...(selectedCard?.capabilities ?? []), ...selectedEndpoints.flatMap((endpoint) => endpoint.capabilities ?? [])]),
+    ...new Set([
+      ...(selectedCard?.capabilities ?? []),
+      ...selectedEndpoints.flatMap((endpoint) => endpoint.capabilities ?? []),
+    ]),
   ].sort((left, right) => left.localeCompare(right, "en"));
   const selectedToolStyles = [
     ...new Set(
@@ -79,10 +93,27 @@ export default function ControlModelsRoute() {
         />
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <FactCard label="Configured models" value={cards.length} detail="Every configured model appears once in the merged inventory." emphasis />
-          <FactCard label="Active models" value={activeModelCount} detail="Models whose endpoint summary currently resolves to active." />
-          <FactCard label="Tool-capable" value={toolCapableCount} detail="Models with at least one tool-calling capable endpoint." />
-          <FactCard label="Observed requests" value={snapshot.requests.length} detail="Request count currently available to the inventory as runtime context." />
+          <FactCard
+            label="Configured models"
+            value={cards.length}
+            detail="Every configured model appears once in the merged inventory."
+            emphasis
+          />
+          <FactCard
+            label="Active models"
+            value={activeModelCount}
+            detail="Models whose endpoint summary currently resolves to active."
+          />
+          <FactCard
+            label="Tool-capable"
+            value={toolCapableCount}
+            detail="Models with at least one tool-calling capable endpoint."
+          />
+          <FactCard
+            label="Observed requests"
+            value={snapshot.requests.length}
+            detail="Request count currently available to the inventory as runtime context."
+          />
         </div>
 
         {!controller ? (
@@ -94,7 +125,10 @@ export default function ControlModelsRoute() {
           </SectionCard>
         ) : null}
 
-        <SectionCard title="Model inventory" description="Every configured model appears once, with local and remote endpoint state merged into a card-based registry.">
+        <SectionCard
+          title="Model inventory"
+          description="Every configured model appears once, with local and remote endpoint state merged into a card-based registry."
+        >
           {cards.length === 0 ? (
             <>
               <EmptyState label="No configured models are available yet." />
@@ -113,14 +147,31 @@ export default function ControlModelsRoute() {
           ) : (
             <div className="grid gap-4 xl:grid-cols-2">
               {cards.map((card) => (
-                <article key={card.modelId} className="rounded-none border border-[var(--rm-border)] bg-[var(--rm-surface)] p-5">
+                <article
+                  key={card.modelId}
+                  className="rounded-none border border-[var(--rm-border)] bg-[var(--rm-surface)] p-5"
+                >
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
-                      <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">{card.sourceSummary}</p>
-                      <h3 className="mt-2 text-lg font-medium text-[var(--rm-fg)]">{card.displayName}</h3>
-                      <p className="mt-2 break-all text-sm text-[var(--rm-secondary)]">{card.modelId}</p>
+                      <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">
+                        {card.sourceSummary}
+                      </p>
+                      <h3 className="mt-2 text-lg font-medium text-[var(--rm-fg)]">
+                        {card.displayName}
+                      </h3>
+                      <p className="mt-2 break-all text-sm text-[var(--rm-secondary)]">
+                        {card.modelId}
+                      </p>
                     </div>
-                    <StatusPill tone={card.controllerState === "active" ? "accent" : card.status === "active" ? "success" : "warning"}>
+                    <StatusPill
+                      tone={
+                        card.controllerState === "active"
+                          ? "accent"
+                          : card.status === "active"
+                            ? "success"
+                            : "warning"
+                      }
+                    >
                       {card.controllerState === "active" ? "controller" : card.status}
                     </StatusPill>
                   </div>
@@ -138,12 +189,22 @@ export default function ControlModelsRoute() {
                   </div>
 
                   <div className="mt-4 grid gap-3 md:grid-cols-2 text-sm text-[var(--rm-secondary)]">
-                    <p><span className="font-medium text-[var(--rm-fg)]">Roles:</span> {card.roleIds.join(", ") || "None"}</p>
-                    <p><span className="font-medium text-[var(--rm-fg)]">Endpoints:</span> {card.endpointIds.join(", ") || "None"}</p>
+                    <p>
+                      <span className="font-medium text-[var(--rm-fg)]">Roles:</span>{" "}
+                      {card.roleIds.join(", ") || "None"}
+                    </p>
+                    <p>
+                      <span className="font-medium text-[var(--rm-fg)]">Endpoints:</span>{" "}
+                      {card.endpointIds.join(", ") || "None"}
+                    </p>
                   </div>
 
                   <div className="mt-5">
-                    <button className={secondaryButtonClassName} type="button" onClick={() => setSelectedModelId(card.modelId)}>
+                    <button
+                      className={secondaryButtonClassName}
+                      type="button"
+                      onClick={() => setSelectedModelId(card.modelId)}
+                    >
                       Inspect
                     </button>
                   </div>
@@ -159,11 +220,21 @@ export default function ControlModelsRoute() {
           <div className="mx-auto max-w-5xl rounded-none border border-[var(--rm-border)] bg-[var(--rm-surface)] p-6 shadow-[var(--rm-shadow-card)]">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
-                <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">Model inspection</p>
-                <h2 className="mt-2 text-2xl font-light tracking-tight text-[var(--rm-fg)]">{selectedCard.displayName}</h2>
-                <p className="mt-2 break-all text-sm text-[var(--rm-secondary)]">{selectedCard.modelId}</p>
+                <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">
+                  Model inspection
+                </p>
+                <h2 className="mt-2 text-2xl font-light tracking-tight text-[var(--rm-fg)]">
+                  {selectedCard.displayName}
+                </h2>
+                <p className="mt-2 break-all text-sm text-[var(--rm-secondary)]">
+                  {selectedCard.modelId}
+                </p>
               </div>
-              <button className={secondaryButtonClassName} type="button" onClick={() => setSelectedModelId(null)}>
+              <button
+                className={secondaryButtonClassName}
+                type="button"
+                onClick={() => setSelectedModelId(null)}
+              >
                 Close
               </button>
             </div>
@@ -176,10 +247,14 @@ export default function ControlModelsRoute() {
                     <StatusPill tone="warning">No roles</StatusPill>
                   ) : (
                     selectedCard.roleIds.map((roleId) => (
-                      <StatusPill key={roleId} tone="neutral">{roleId}</StatusPill>
+                      <StatusPill key={roleId} tone="neutral">
+                        {roleId}
+                      </StatusPill>
                     ))
                   )}
-                  <StatusPill tone={selectedCard.controllerState === "active" ? "accent" : "neutral"}>
+                  <StatusPill
+                    tone={selectedCard.controllerState === "active" ? "accent" : "neutral"}
+                  >
                     {selectedCard.controllerState}
                   </StatusPill>
                 </div>
@@ -192,7 +267,9 @@ export default function ControlModelsRoute() {
                     <StatusPill tone="warning">No declared capabilities</StatusPill>
                   ) : (
                     selectedCapabilities.map((capability) => (
-                      <StatusPill key={capability} tone="neutral">{capability}</StatusPill>
+                      <StatusPill key={capability} tone="neutral">
+                        {capability}
+                      </StatusPill>
                     ))
                   )}
                 </div>
@@ -201,10 +278,22 @@ export default function ControlModelsRoute() {
               <div className={`${mutedPanelClassName} p-4`}>
                 <p className="font-medium text-[var(--rm-fg)]">Metrics</p>
                 <div className="mt-3 grid gap-3 md:grid-cols-2 text-sm text-[var(--rm-secondary)]">
-                  <p><span className="font-medium text-[var(--rm-fg)]">Requests observed:</span> {selectedCard.requestCount}</p>
-                  <p><span className="font-medium text-[var(--rm-fg)]">Configured endpoints:</span> {selectedCard.endpointCount}</p>
-                  <p><span className="font-medium text-[var(--rm-fg)]">Source mix:</span> {selectedCard.sourceSummary}</p>
-                  <p><span className="font-medium text-[var(--rm-fg)]">Status:</span> {selectedCard.status}</p>
+                  <p>
+                    <span className="font-medium text-[var(--rm-fg)]">Requests observed:</span>{" "}
+                    {selectedCard.requestCount}
+                  </p>
+                  <p>
+                    <span className="font-medium text-[var(--rm-fg)]">Configured endpoints:</span>{" "}
+                    {selectedCard.endpointCount}
+                  </p>
+                  <p>
+                    <span className="font-medium text-[var(--rm-fg)]">Source mix:</span>{" "}
+                    {selectedCard.sourceSummary}
+                  </p>
+                  <p>
+                    <span className="font-medium text-[var(--rm-fg)]">Status:</span>{" "}
+                    {selectedCard.status}
+                  </p>
                 </div>
               </div>
 
@@ -213,7 +302,8 @@ export default function ControlModelsRoute() {
                 <div className="mt-3 grid gap-3 md:grid-cols-2 text-sm text-[var(--rm-secondary)]">
                   {selectedMetadataRows.map((row) => (
                     <p key={row.label}>
-                      <span className="font-medium text-[var(--rm-fg)]">{row.label}:</span> {row.value}
+                      <span className="font-medium text-[var(--rm-fg)]">{row.label}:</span>{" "}
+                      {row.value}
                     </p>
                   ))}
                 </div>
@@ -223,14 +313,19 @@ export default function ControlModelsRoute() {
                 <p className="font-medium text-[var(--rm-fg)]">Tooling / MCP</p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <StatusPill tone={selectedCard.toolCallingSupported ? "success" : "warning"}>
-                    {selectedCard.toolCallingSupported ? "tool calling enabled" : "tool calling unavailable"}
+                    {selectedCard.toolCallingSupported
+                      ? "tool calling enabled"
+                      : "tool calling unavailable"}
                   </StatusPill>
                   {selectedToolStyles.map((style) => (
-                    <StatusPill key={style} tone="neutral">{style}</StatusPill>
+                    <StatusPill key={style} tone="neutral">
+                      {style}
+                    </StatusPill>
                   ))}
                 </div>
                 <p className="mt-3 text-sm text-[var(--rm-secondary)]">
-                  MCP-backed execution is reflected through runtime tool receipts when the selected endpoint supports tool calling.
+                  MCP-backed execution is reflected through runtime tool receipts when the selected
+                  endpoint supports tool calling.
                 </p>
               </div>
             </div>

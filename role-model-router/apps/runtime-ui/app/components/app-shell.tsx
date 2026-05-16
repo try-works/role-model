@@ -2,7 +2,11 @@ import type { ReactNode } from "react";
 import { NavLink, useLocation } from "react-router";
 
 import { cn } from "../lib/cn";
-import { cardClassName, getRuntimeRouteDefinition, runtimeNavigationSections } from "../lib/design-system";
+import {
+  cardClassName,
+  getRuntimeRouteDefinition,
+  runtimeNavigationSections,
+} from "../lib/design-system";
 
 function primarySectionLinkClass(isActive: boolean): string {
   return cn(
@@ -26,7 +30,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   const location = useLocation();
   const route = getRuntimeRouteDefinition(location.pathname) ?? getRuntimeRouteDefinition("/app");
   const activeSection =
-    runtimeNavigationSections.find((section) => section.title === route?.section) ?? runtimeNavigationSections[0];
+    runtimeNavigationSections.find((section) => section.title === route?.section) ??
+    runtimeNavigationSections[0];
 
   return (
     <div className="min-h-screen bg-[var(--rm-bg)] text-[var(--rm-fg)]">
@@ -54,7 +59,6 @@ export function AppShell({ children }: { children: ReactNode }) {
               </div>
             ))}
           </div>
-
         </aside>
 
         <div className="min-w-0 space-y-5">
@@ -64,11 +68,13 @@ export function AppShell({ children }: { children: ReactNode }) {
               <p className="text-xs font-normal uppercase tracking-[0.24em] text-[var(--rm-muted)]">
                 {route?.section ?? "Overview"}
               </p>
-              <h2 className="mt-3 text-3xl font-light tracking-tight">{route?.title ?? "Runtime overview"}</h2>
+              <h2 className="mt-3 text-3xl font-light tracking-tight">
+                {route?.title ?? "Runtime overview"}
+              </h2>
               <p className="mt-3 max-w-[60ch] text-sm leading-6 text-[var(--rm-secondary)]">
-                {route?.description ?? "Runtime, provider onboarding, endpoint visibility, and request inspection in one shell."}
+                {route?.description ??
+                  "Runtime, provider onboarding, endpoint visibility, and request inspection in one shell."}
               </p>
-
             </div>
             <div className="mt-5 border-t border-[var(--rm-border)] pt-4">
               <p className="text-xs font-normal uppercase tracking-[0.22em] text-[var(--rm-muted)]">

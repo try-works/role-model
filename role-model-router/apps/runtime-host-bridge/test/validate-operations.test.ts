@@ -1,6 +1,6 @@
+import { mkdtemp } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { mkdtemp } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 
 import { describe, expect, test } from "vitest";
@@ -10,6 +10,7 @@ import { runRuntimeOperationsValidation } from "../src/validate-operations.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "..", "..", "..", "..");
+const testFixtureRoot = path.join(__dirname, "fixtures");
 
 describe("runRuntimeOperationsValidation", () => {
   test("validates isolated scopes and runtime-state maintenance drills", async () => {
@@ -17,17 +18,18 @@ describe("runRuntimeOperationsValidation", () => {
 
     const result = await runRuntimeOperationsValidation({
       repoRoot,
+      fixtureRoot: testFixtureRoot,
       runtimeStateRoot,
       hostValidation: async () => ({
         requestId: "req-runtime-host-observability-001",
-        endpointId: "openai.personal.primary.us-east-1.fast",
+        endpointId: "test.capture.tool-v1",
         captureId: 0,
       }),
     });
 
     expect(result.hostValidation).toEqual({
       requestId: "req-runtime-host-observability-001",
-      endpointId: "openai.personal.primary.us-east-1.fast",
+      endpointId: "test.capture.tool-v1",
       captureId: 0,
     });
     expect(result.isolation.distinctDatabasePaths).toBe(true);

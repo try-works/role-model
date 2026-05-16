@@ -1,6 +1,6 @@
+import { mkdtemp, readFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { mkdtemp, readFile } from "node:fs/promises";
 import { DatabaseSync } from "node:sqlite";
 import { fileURLToPath } from "node:url";
 
@@ -40,7 +40,9 @@ describe("initializeSqliteMemory", () => {
       scopeId: "workspace-dev",
     });
 
-    expect(resolveSqliteMemoryLocation({ runtimeStateRoot, scopeId: "workspace-dev" })).toBe(result.databasePath);
+    expect(resolveSqliteMemoryLocation({ runtimeStateRoot, scopeId: "workspace-dev" })).toBe(
+      result.databasePath,
+    );
     expect(result.databasePath).toContain(path.join("workspace-dev", "memory", "memory.sqlite"));
     expect(result.appliedMigrations).toEqual(["run06-v1-initial-schema"]);
 
@@ -76,8 +78,12 @@ describe("initializeSqliteMemory", () => {
 
   test("persists validated provider accounts by credential reference without storing raw secrets", async () => {
     const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
-    const catalog = await readJson("role-model-router/packages/catalog/data/normalized-catalog.json");
-    const fixture = await readJson<{ accounts: unknown[] }>("testdata/router-runtime/fixtures/provider-accounts.json");
+    const catalog = await readJson(
+      "role-model-router/packages/catalog/data/normalized-catalog.json",
+    );
+    const fixture = await readJson<{ accounts: unknown[] }>(
+      "testdata/router-runtime/fixtures/provider-accounts.json",
+    );
     const validated = validateProviderAccounts({
       catalog,
       additionalProviders: [
@@ -145,7 +151,9 @@ describe("initializeSqliteMemory", () => {
       credential_backend: string;
       credential_ref: string;
     }>;
-    const columns = database.prepare("PRAGMA table_info(provider_accounts)").all() as Array<{ name: string }>;
+    const columns = database.prepare("PRAGMA table_info(provider_accounts)").all() as Array<{
+      name: string;
+    }>;
 
     expect(rows).toEqual([
       {
@@ -201,22 +209,22 @@ describe("initializeSqliteMemory", () => {
             credentialRef: {
               backend: string;
               ref: string;
-             };
-             authMode: string;
-             regionPolicy: {
-               mode: string;
-               regions: string[];
-             };
-             baseUrlOverride?: string;
-             allowedModels: string[];
-             modelRoleBindings: Array<{
-               modelId: string;
-               roleIds: string[];
-             }>;
-             deniedModels: string[];
-             entitlementTags: string[];
-             budgetPolicyRef: string;
-             quotaPolicyRef: string;
+            };
+            authMode: string;
+            regionPolicy: {
+              mode: string;
+              regions: string[];
+            };
+            baseUrlOverride?: string;
+            allowedModels: string[];
+            modelRoleBindings: Array<{
+              modelId: string;
+              roleIds: string[];
+            }>;
+            deniedModels: string[];
+            entitlementTags: string[];
+            budgetPolicyRef: string;
+            quotaPolicyRef: string;
             status: string;
             healthStatus: string;
             rotationState: string;
@@ -236,22 +244,22 @@ describe("initializeSqliteMemory", () => {
           ref: "MOONSHOT_API_KEY",
         },
         authMode: "api-key-static",
-         regionPolicy: {
-           mode: "prefer",
-           regions: ["global"],
-         },
-         baseUrlOverride: "https://api.moonshot.ai/v1",
-         allowedModels: ["moonshot/kimi-k2.5"],
-         modelRoleBindings: [
-           {
-             modelId: "moonshot/kimi-k2.5",
-             roleIds: ["general.chat", "coder.patch"],
-           },
-         ],
-         deniedModels: [],
-         entitlementTags: ["chat"],
-         budgetPolicyRef: "budget.default",
-         quotaPolicyRef: "quota.default",
+        regionPolicy: {
+          mode: "prefer",
+          regions: ["global"],
+        },
+        baseUrlOverride: "https://api.moonshot.ai/v1",
+        allowedModels: ["moonshot/kimi-k2.5"],
+        modelRoleBindings: [
+          {
+            modelId: "moonshot/kimi-k2.5",
+            roleIds: ["general.chat", "coder.patch"],
+          },
+        ],
+        deniedModels: [],
+        entitlementTags: ["chat"],
+        budgetPolicyRef: "budget.default",
+        quotaPolicyRef: "quota.default",
         status: "active",
         healthStatus: "healthy",
         rotationState: "stable",
@@ -261,39 +269,43 @@ describe("initializeSqliteMemory", () => {
     expect(
       (
         sqliteMemory as {
-           listProviderAccounts: (value: { databasePath: string }) => Array<{
-             providerAccountId: string;
-             providerId: string;
-             authMode: string;
-             baseUrlOverride?: string;
-             modelRoleBindings: Array<{
-               modelId: string;
-               roleIds: string[];
-             }>;
-           }>;
-         }
-       ).listProviderAccounts({
-         databasePath: initialized.databasePath,
+          listProviderAccounts: (value: { databasePath: string }) => Array<{
+            providerAccountId: string;
+            providerId: string;
+            authMode: string;
+            baseUrlOverride?: string;
+            modelRoleBindings: Array<{
+              modelId: string;
+              roleIds: string[];
+            }>;
+          }>;
+        }
+      ).listProviderAccounts({
+        databasePath: initialized.databasePath,
       }),
     ).toEqual([
-        expect.objectContaining({
-          providerAccountId: "moonshot.personal.primary",
-          providerId: "moonshot",
-          authMode: "api-key-static",
-          baseUrlOverride: "https://api.moonshot.ai/v1",
-          modelRoleBindings: [
-            {
-              modelId: "moonshot/kimi-k2.5",
-              roleIds: ["general.chat", "coder.patch"],
-            },
-          ],
-        }),
-      ]);
+      expect.objectContaining({
+        providerAccountId: "moonshot.personal.primary",
+        providerId: "moonshot",
+        authMode: "api-key-static",
+        baseUrlOverride: "https://api.moonshot.ai/v1",
+        modelRoleBindings: [
+          {
+            modelId: "moonshot/kimi-k2.5",
+            roleIds: ["general.chat", "coder.patch"],
+          },
+        ],
+      }),
+    ]);
   });
 
   test("persists runtime-managed endpoint activations for dynamic registry materialization", async () => {
-    expect(typeof (sqliteMemory as { listRuntimeEndpoints?: unknown }).listRuntimeEndpoints).toBe("function");
-    expect(typeof (sqliteMemory as { upsertRuntimeEndpoint?: unknown }).upsertRuntimeEndpoint).toBe("function");
+    expect(typeof (sqliteMemory as { listRuntimeEndpoints?: unknown }).listRuntimeEndpoints).toBe(
+      "function",
+    );
+    expect(typeof (sqliteMemory as { upsertRuntimeEndpoint?: unknown }).upsertRuntimeEndpoint).toBe(
+      "function",
+    );
 
     const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
     const initialized = initializeSqliteMemory({
@@ -561,7 +573,9 @@ describe("initializeSqliteMemory", () => {
 
     const database = new DatabaseSync(first.databasePath);
     const maintenanceRows = database
-      .prepare("SELECT maintenance_key, maintenance_value FROM memory_maintenance ORDER BY maintenance_key")
+      .prepare(
+        "SELECT maintenance_key, maintenance_value FROM memory_maintenance ORDER BY maintenance_key",
+      )
       .all() as Array<{
       maintenance_key: string;
       maintenance_value: string;
@@ -644,7 +658,12 @@ describe("initializeSqliteMemory", () => {
 
     expect(continuity.session).toEqual(fixture.session);
     expect(continuity.conversation).toEqual(fixture.conversation);
-    expect(continuity.turns.map((turn) => turn.turnId)).toEqual(["turn-001", "turn-002", "turn-003", "turn-004"]);
+    expect(continuity.turns.map((turn) => turn.turnId)).toEqual([
+      "turn-001",
+      "turn-002",
+      "turn-003",
+      "turn-004",
+    ]);
     expect(continuity.artifacts.map((artifact) => artifact.artifactId)).toEqual([
       "artifact-stale",
       "artifact-summary",
@@ -688,7 +707,7 @@ describe("initializeSqliteMemory", () => {
       {
         retrievalReceiptId: "conversation-main-retrieval-receipt",
         conversationId: "conversation-main",
-        receiptSummary: "{\"selectedTurns\":2,\"selectedArtifacts\":1,\"estimatedTokens\":240}",
+        receiptSummary: '{"selectedTurns":2,"selectedArtifacts":1,"estimatedTokens":240}',
       },
     ]);
   });
@@ -738,11 +757,14 @@ describe("initializeSqliteMemory", () => {
       scopeId: "workspace-dev",
     });
     const history = await readJson<{
-      byEndpointId: Record<string, Parameters<typeof createRuntimeObservationBundle>[0]["priorSamples"]>;
+      byEndpointId: Record<
+        string,
+        Parameters<typeof createRuntimeObservationBundle>[0]["priorSamples"]
+      >;
     }>("testdata/router-runtime/fixtures/observability-history.json");
-    const policy = await readJson<Parameters<typeof createRuntimeObservationBundle>[0]["capturePolicy"]>(
-      "testdata/router-runtime/fixtures/observability-policy.json",
-    );
+    const policy = await readJson<
+      Parameters<typeof createRuntimeObservationBundle>[0]["capturePolicy"]
+    >("testdata/router-runtime/fixtures/observability-policy.json");
 
     const bundle = createRuntimeObservationBundle({
       decision: validation.decision,
@@ -837,6 +859,433 @@ describe("initializeSqliteMemory", () => {
     });
   });
 
+  test("stores and reads conversation-level difficulty classification cache entries", async () => {
+    expect(
+      typeof (
+        sqliteMemory as {
+          upsertDifficultyClassificationCache?: unknown;
+        }
+      ).upsertDifficultyClassificationCache,
+    ).toBe("function");
+    expect(
+      typeof (
+        sqliteMemory as {
+          readDifficultyClassificationCache?: unknown;
+        }
+      ).readDifficultyClassificationCache,
+    ).toBe("function");
+
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+    const initialized = initializeSqliteMemory({
+      runtimeStateRoot,
+      scopeId: "workspace-dev-difficulty-cache",
+    });
+
+    (
+      sqliteMemory as {
+        upsertDifficultyClassificationCache(input: {
+          databasePath: string;
+          cache: {
+            conversationId: string;
+            difficulty: "easy" | "medium" | "hard";
+            fallbackApplied: boolean;
+            fallbackReason?: string;
+            cachedAtMs: number;
+            expiresAtMs: number;
+            rubricSignals: {
+              contextTokens: number;
+              toolCount: number;
+              historyTurnCount: number;
+              instructionConstraintCount: number;
+              decompositionKeywordCount: number;
+              codeOrSchemaBurden: boolean;
+            };
+          };
+        }): void;
+      }
+    ).upsertDifficultyClassificationCache({
+      databasePath: initialized.databasePath,
+      cache: {
+        conversationId: "conversation-cache-001",
+        difficulty: "medium",
+        fallbackApplied: false,
+        cachedAtMs: 1000,
+        expiresAtMs: 2000,
+        rubricSignals: {
+          contextTokens: 640,
+          toolCount: 1,
+          historyTurnCount: 2,
+          instructionConstraintCount: 3,
+          decompositionKeywordCount: 1,
+          codeOrSchemaBurden: false,
+        },
+      },
+    });
+
+    expect(
+      (
+        sqliteMemory as {
+          readDifficultyClassificationCache(input: {
+            databasePath: string;
+            conversationId: string;
+          }): {
+            conversationId: string;
+            difficulty: "easy" | "medium" | "hard";
+            fallbackApplied: boolean;
+            fallbackReason?: string;
+            cachedAtMs: number;
+            expiresAtMs: number;
+            rubricSignals: {
+              contextTokens: number;
+              toolCount: number;
+              historyTurnCount: number;
+              instructionConstraintCount: number;
+              decompositionKeywordCount: number;
+              codeOrSchemaBurden: boolean;
+            };
+          } | null;
+        }
+      ).readDifficultyClassificationCache({
+        databasePath: initialized.databasePath,
+        conversationId: "conversation-cache-001",
+      }),
+    ).toEqual({
+      conversationId: "conversation-cache-001",
+      difficulty: "medium",
+      fallbackApplied: false,
+      cachedAtMs: 1000,
+      expiresAtMs: 2000,
+      rubricSignals: {
+        contextTokens: 640,
+        toolCount: 1,
+        historyTurnCount: 2,
+        instructionConstraintCount: 3,
+        decompositionKeywordCount: 1,
+        codeOrSchemaBurden: false,
+      },
+    });
+  });
+
+  test("persists and reads segmented observed samples and profiles by difficulty bucket", async () => {
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+    const validation = await runRuntimeAdapterValidation({
+      repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      runtimeStateRoot,
+      scopeId: "workspace-dev-difficulty-profiles",
+    });
+    const policy = await readJson<
+      Parameters<typeof createRuntimeObservationBundle>[0]["capturePolicy"]
+    >("testdata/router-runtime/fixtures/observability-policy.json");
+
+    const bundle = createRuntimeObservationBundle({
+      decision: validation.decision,
+      routingDiagnostics: {
+        ...validation.routingDiagnostics,
+        difficultyRouting: {
+          difficulty: "hard",
+          strategy: "quality",
+          fallbackApplied: false,
+          rubricSignals: {
+            contextTokens: 2048,
+            toolCount: 2,
+            historyTurnCount: 3,
+            instructionConstraintCount: 4,
+            decompositionKeywordCount: 2,
+            codeOrSchemaBurden: true,
+          },
+        },
+      },
+      retrievalReceipt: validation.retrievalReceipt,
+      contextEnvelope: validation.contextEnvelope,
+      execution: validation.execution,
+      priorSamples: [],
+      maintenancePolicy: {
+        "redaction.level": "strict",
+        "retention.class": "standard",
+      },
+      capturePolicy: policy,
+    });
+
+    (
+      sqliteMemory as {
+        persistRuntimeObservationBundle(input: {
+          databasePath: string;
+          observation: ReturnType<typeof createRuntimeObservationBundle>;
+        }): void;
+      }
+    ).persistRuntimeObservationBundle({
+      databasePath: validation.databasePath,
+      observation: bundle,
+    });
+
+    expect(
+      (
+        sqliteMemory as {
+          readObservedPerformanceSamples(input: {
+            databasePath: string;
+            endpointId: string;
+            difficultyBucket?: "easy" | "medium" | "hard";
+          }): Array<{ request_id?: string; source_type: string; difficulty_bucket?: string }>;
+        }
+      ).readObservedPerformanceSamples({
+        databasePath: validation.databasePath,
+        endpointId: validation.decision.chosen_endpoint_id,
+        difficultyBucket: "hard",
+      }),
+    ).toEqual([
+      expect.objectContaining({
+        request_id: validation.decision.request_id,
+        source_type: "live_request",
+        difficulty_bucket: "hard",
+      }),
+    ]);
+    expect(
+      (
+        sqliteMemory as {
+          readLatestObservedProfile(input: {
+            databasePath: string;
+            endpointId: string;
+            difficultyBucket?: "easy" | "medium" | "hard";
+          }): { endpoint_id: string; sample_size: number } | null;
+        }
+      ).readLatestObservedProfile({
+        databasePath: validation.databasePath,
+        endpointId: validation.decision.chosen_endpoint_id,
+        difficultyBucket: "hard",
+      }),
+    ).toMatchObject({
+      endpoint_id: validation.decision.chosen_endpoint_id,
+      sample_size: 1,
+    });
+  });
+
+  test("derives an advisory max-difficulty recommendation from bucketed observed profiles", async () => {
+    expect(
+      typeof (
+        sqliteMemory as {
+          readAdvisoryMaxDifficultyRecommendation?: unknown;
+        }
+      ).readAdvisoryMaxDifficultyRecommendation,
+    ).toBe("function");
+
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+    const initialized = initializeSqliteMemory({
+      runtimeStateRoot,
+      scopeId: "workspace-dev-advisory-difficulty",
+    });
+    const database = new DatabaseSync(initialized.databasePath);
+    const endpointId = "openai.personal.primary.us-east-1.fast";
+    const baseProfile = {
+      endpoint_id: endpointId,
+      endpoint_version: "run27-test-v1",
+      measurement_window: {
+        started_at_ms: 1_000,
+        ended_at_ms: 2_000,
+      },
+      freshness_score: 0.98,
+      confidence_score: 0.96,
+      latency_ms_p50: 420,
+      latency_ms_p95: 700,
+      sources: {
+        live_request_samples: 4,
+        benchmark_samples: 0,
+      },
+      currency: "USD",
+    };
+
+    const insertProfile = database.prepare(
+      "INSERT INTO observed_profile_snapshots_by_difficulty (snapshot_id, endpoint_id, difficulty_bucket, measured_at_ms, profile_json) VALUES (?, ?, ?, ?, ?)",
+    );
+    insertProfile.run(
+      "snapshot-easy",
+      endpointId,
+      "easy",
+      10_000,
+      JSON.stringify({
+        ...baseProfile,
+        measured_at_ms: 10_000,
+        sample_size: 5,
+        failure_rate: 0.02,
+        quality_score: 0.96,
+        tokens_per_sec: 36,
+        cost_per_1k_tokens_est: 0.8,
+      }),
+    );
+    insertProfile.run(
+      "snapshot-medium",
+      endpointId,
+      "medium",
+      11_000,
+      JSON.stringify({
+        ...baseProfile,
+        measured_at_ms: 11_000,
+        sample_size: 4,
+        failure_rate: 0.12,
+        quality_score: 0.84,
+        tokens_per_sec: 25,
+        cost_per_1k_tokens_est: 1.1,
+      }),
+    );
+    insertProfile.run(
+      "snapshot-hard",
+      endpointId,
+      "hard",
+      12_000,
+      JSON.stringify({
+        ...baseProfile,
+        measured_at_ms: 12_000,
+        sample_size: 4,
+        failure_rate: 0.29,
+        quality_score: 0.82,
+        tokens_per_sec: 29,
+        cost_per_1k_tokens_est: 1.7,
+      }),
+    );
+    database.close();
+
+    expect(
+      (
+        sqliteMemory as {
+          readAdvisoryMaxDifficultyRecommendation(input: {
+            databasePath: string;
+            endpointId: string;
+            thresholds: {
+              minSamples: number;
+              maxFailureRate: number;
+              minQualityScore: number;
+              minTokensPerSec: number;
+            };
+          }): {
+            recommendedMaxDifficulty: "easy" | "medium" | "hard" | null;
+            evaluations: Record<
+              "easy" | "medium" | "hard",
+              {
+                eligible: boolean;
+                rejectionReasons: readonly string[];
+                profile: { sample_size: number; failure_rate: number } | null;
+              }
+            >;
+          };
+        }
+      ).readAdvisoryMaxDifficultyRecommendation({
+        databasePath: initialized.databasePath,
+        endpointId,
+        thresholds: {
+          minSamples: 4,
+          maxFailureRate: 0.2,
+          minQualityScore: 0.8,
+          minTokensPerSec: 22,
+        },
+      }),
+    ).toEqual({
+      recommendedMaxDifficulty: "medium",
+      thresholds: {
+        minSamples: 4,
+        maxFailureRate: 0.2,
+        minQualityScore: 0.8,
+        minTokensPerSec: 22,
+      },
+      evaluations: {
+        easy: {
+          eligible: true,
+          rejectionReasons: [],
+          profile: expect.objectContaining({
+            sample_size: 5,
+            failure_rate: 0.02,
+          }),
+        },
+        medium: {
+          eligible: true,
+          rejectionReasons: [],
+          profile: expect.objectContaining({
+            sample_size: 4,
+            failure_rate: 0.12,
+          }),
+        },
+        hard: {
+          eligible: false,
+          rejectionReasons: ["max-failure-rate"],
+          profile: expect.objectContaining({
+            sample_size: 4,
+            failure_rate: 0.29,
+          }),
+        },
+      },
+    });
+  });
+
+  test("reads the latest observed profiles for a set of endpoint ids", async () => {
+    expect(
+      typeof (
+        sqliteMemory as {
+          readLatestObservedProfilesByEndpointIds?: unknown;
+        }
+      ).readLatestObservedProfilesByEndpointIds,
+    ).toBe("function");
+
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+    const validation = await runRuntimeAdapterValidation({
+      repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      runtimeStateRoot,
+      scopeId: "workspace-dev-latest-profiles",
+    });
+    const history = await readJson<{
+      byEndpointId: Record<
+        string,
+        Parameters<typeof createRuntimeObservationBundle>[0]["priorSamples"]
+      >;
+    }>("testdata/router-runtime/fixtures/observability-history.json");
+    const policy = await readJson<
+      Parameters<typeof createRuntimeObservationBundle>[0]["capturePolicy"]
+    >("testdata/router-runtime/fixtures/observability-policy.json");
+
+    const bundle = createRuntimeObservationBundle({
+      decision: validation.decision,
+      routingDiagnostics: validation.routingDiagnostics,
+      retrievalReceipt: validation.retrievalReceipt,
+      contextEnvelope: validation.contextEnvelope,
+      execution: validation.execution,
+      priorSamples: history.byEndpointId[validation.decision.chosen_endpoint_id] ?? [],
+      maintenancePolicy: {
+        "redaction.level": "strict",
+        "retention.class": "standard",
+      },
+      capturePolicy: policy,
+    });
+
+    (
+      sqliteMemory as {
+        persistRuntimeObservationBundle(input: {
+          databasePath: string;
+          observation: ReturnType<typeof createRuntimeObservationBundle>;
+        }): void;
+      }
+    ).persistRuntimeObservationBundle({
+      databasePath: validation.databasePath,
+      observation: bundle,
+    });
+
+    expect(
+      (
+        sqliteMemory as {
+          readLatestObservedProfilesByEndpointIds(input: {
+            databasePath: string;
+            endpointIds: readonly string[];
+          }): Record<string, { endpoint_id: string }>;
+        }
+      ).readLatestObservedProfilesByEndpointIds({
+        databasePath: validation.databasePath,
+        endpointIds: [validation.decision.chosen_endpoint_id, "missing-endpoint"],
+      }),
+    ).toEqual({
+      [validation.decision.chosen_endpoint_id]: expect.objectContaining({
+        endpoint_id: validation.decision.chosen_endpoint_id,
+      }),
+    });
+  });
+
   test("flattens persisted runtime observations into canonical telemetry summary, comparison, and request rows", async () => {
     expect(
       typeof (
@@ -868,11 +1317,14 @@ describe("initializeSqliteMemory", () => {
       scopeId: "workspace-dev",
     });
     const history = await readJson<{
-      byEndpointId: Record<string, Parameters<typeof createRuntimeObservationBundle>[0]["priorSamples"]>;
+      byEndpointId: Record<
+        string,
+        Parameters<typeof createRuntimeObservationBundle>[0]["priorSamples"]
+      >;
     }>("testdata/router-runtime/fixtures/observability-history.json");
-    const policy = await readJson<Parameters<typeof createRuntimeObservationBundle>[0]["capturePolicy"]>(
-      "testdata/router-runtime/fixtures/observability-policy.json",
-    );
+    const policy = await readJson<
+      Parameters<typeof createRuntimeObservationBundle>[0]["capturePolicy"]
+    >("testdata/router-runtime/fixtures/observability-policy.json");
 
     const baseBundle = createRuntimeObservationBundle({
       decision: validation.decision,
@@ -1295,11 +1747,14 @@ describe("initializeSqliteMemory", () => {
       scopeId: "workspace-dev",
     });
     const history = await readJson<{
-      byEndpointId: Record<string, Parameters<typeof createRuntimeObservationBundle>[0]["priorSamples"]>;
+      byEndpointId: Record<
+        string,
+        Parameters<typeof createRuntimeObservationBundle>[0]["priorSamples"]
+      >;
     }>("testdata/router-runtime/fixtures/observability-history.json");
-    const policy = await readJson<Parameters<typeof createRuntimeObservationBundle>[0]["capturePolicy"]>(
-      "testdata/router-runtime/fixtures/observability-policy.json",
-    );
+    const policy = await readJson<
+      Parameters<typeof createRuntimeObservationBundle>[0]["capturePolicy"]
+    >("testdata/router-runtime/fixtures/observability-policy.json");
     const bundle = createRuntimeObservationBundle({
       decision: validation.decision,
       routingDiagnostics: validation.routingDiagnostics,
@@ -1401,11 +1856,14 @@ describe("initializeSqliteMemory", () => {
       scopeId: "workspace-dev",
     });
     const history = await readJson<{
-      byEndpointId: Record<string, Parameters<typeof createRuntimeObservationBundle>[0]["priorSamples"]>;
+      byEndpointId: Record<
+        string,
+        Parameters<typeof createRuntimeObservationBundle>[0]["priorSamples"]
+      >;
     }>("testdata/router-runtime/fixtures/observability-history.json");
-    const policy = await readJson<Parameters<typeof createRuntimeObservationBundle>[0]["capturePolicy"]>(
-      "testdata/router-runtime/fixtures/observability-policy.json",
-    );
+    const policy = await readJson<
+      Parameters<typeof createRuntimeObservationBundle>[0]["capturePolicy"]
+    >("testdata/router-runtime/fixtures/observability-policy.json");
     const bundle = createRuntimeObservationBundle({
       decision: validation.decision,
       routingDiagnostics: validation.routingDiagnostics,
@@ -1435,7 +1893,9 @@ describe("initializeSqliteMemory", () => {
     const backupPath = path.join(runtimeStateRoot, "memory-backup.sqlite");
     (
       sqliteMemory as {
-        backupRuntimeState(input: { databasePath: string; backupPath: string }): { backupPath: string };
+        backupRuntimeState(input: { databasePath: string; backupPath: string }): {
+          backupPath: string;
+        };
       }
     ).backupRuntimeState({
       databasePath: validation.databasePath,
@@ -1476,6 +1936,106 @@ describe("initializeSqliteMemory", () => {
       requestId: validation.decision.request_id,
       endpointId: validation.decision.chosen_endpoint_id,
     });
+  });
+
+  test("persists throughput penalty state and expires it after the penalty window", async () => {
+    expect(
+      typeof (
+        sqliteMemory as {
+          upsertObservedThroughputPenaltyState?: unknown;
+        }
+      ).upsertObservedThroughputPenaltyState,
+    ).toBe("function");
+    expect(
+      typeof (
+        sqliteMemory as {
+          readObservedThroughputPenaltyState?: unknown;
+        }
+      ).readObservedThroughputPenaltyState,
+    ).toBe("function");
+
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+    const initialized = initializeSqliteMemory({
+      runtimeStateRoot,
+      scopeId: "workspace-dev",
+    });
+
+    (
+      sqliteMemory as {
+        upsertObservedThroughputPenaltyState: (value: {
+          databasePath: string;
+          penaltyState: {
+            endpointId: string;
+            lastObservedTokensPerSec: number;
+            minTokensPerSec: number;
+            penaltyFactor: number;
+            activatedAtMs: number;
+            expiresAtMs: number;
+            lastObservationMeasuredAtMs: number;
+          };
+        }) => void;
+      }
+    ).upsertObservedThroughputPenaltyState({
+      databasePath: initialized.databasePath,
+      penaltyState: {
+        endpointId: "openai.litellm.global.openai-gpt-4-1-mini-fast",
+        lastObservedTokensPerSec: 12,
+        minTokensPerSec: 24,
+        penaltyFactor: 0,
+        activatedAtMs: 1_762_000_100_000,
+        expiresAtMs: 1_762_000_700_000,
+        lastObservationMeasuredAtMs: 1_762_000_095_000,
+      },
+    });
+
+    expect(
+      (
+        sqliteMemory as {
+          readObservedThroughputPenaltyState: (value: {
+            databasePath: string;
+            endpointId: string;
+            nowMs: number;
+          }) => {
+            endpointId: string;
+            lastObservedTokensPerSec: number;
+            minTokensPerSec: number;
+            penaltyFactor: number;
+            activatedAtMs: number;
+            expiresAtMs: number;
+            lastObservationMeasuredAtMs: number;
+          } | null;
+        }
+      ).readObservedThroughputPenaltyState({
+        databasePath: initialized.databasePath,
+        endpointId: "openai.litellm.global.openai-gpt-4-1-mini-fast",
+        nowMs: 1_762_000_650_000,
+      }),
+    ).toEqual(
+      expect.objectContaining({
+        endpointId: "openai.litellm.global.openai-gpt-4-1-mini-fast",
+        lastObservedTokensPerSec: 12,
+        minTokensPerSec: 24,
+        penaltyFactor: 0,
+        activatedAtMs: 1_762_000_100_000,
+        expiresAtMs: 1_762_000_700_000,
+      }),
+    );
+
+    expect(
+      (
+        sqliteMemory as {
+          readObservedThroughputPenaltyState: (value: {
+            databasePath: string;
+            endpointId: string;
+            nowMs: number;
+          }) => unknown | null;
+        }
+      ).readObservedThroughputPenaltyState({
+        databasePath: initialized.databasePath,
+        endpointId: "openai.litellm.global.openai-gpt-4-1-mini-fast",
+        nowMs: 1_762_000_700_001,
+      }),
+    ).toBeNull();
   });
 });
 

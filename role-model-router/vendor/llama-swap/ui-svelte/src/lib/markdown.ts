@@ -1,13 +1,13 @@
-import { unified } from "unified";
-import remarkParse from "remark-parse";
-import remarkGfm from "remark-gfm";
-import remarkMath from "remark-math";
-import remarkRehype from "remark-rehype";
+import type { Element, Root } from "hast";
+import hljs from "highlight.js";
 import rehypeKatex from "rehype-katex";
 import rehypeStringify from "rehype-stringify";
-import hljs from "highlight.js";
+import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
+import remarkParse from "remark-parse";
+import remarkRehype from "remark-rehype";
+import { unified } from "unified";
 import { visit } from "unist-util-visit";
-import type { Element, Root } from "hast";
 
 // Custom plugin to highlight code blocks with highlight.js
 function rehypeHighlight() {
@@ -18,9 +18,7 @@ function rehypeHighlight() {
         const classes = Array.isArray(className)
           ? className.filter((c): c is string => typeof c === "string")
           : [];
-        const lang = classes
-          .find((c) => c.startsWith("language-"))
-          ?.replace("language-", "");
+        const lang = classes.find((c) => c.startsWith("language-"))?.replace("language-", "");
 
         const text = node.children
           .filter((child): child is { type: "text"; value: string } => child.type === "text")
@@ -38,15 +36,12 @@ function rehypeHighlight() {
             ...classes.filter((c) => !c.startsWith("language-")),
           ];
           // Use type assertion since we're modifying the tree structure
-          (node.children as unknown) = [
-            { type: "raw", value: highlighted },
-          ];
+          (node.children as unknown) = [{ type: "raw", value: highlighted }];
         }
       }
     });
   };
 }
-
 
 export function escapeHtml(text: string): string {
   const htmlEntities: Record<string, string> = {
@@ -180,12 +175,11 @@ export function closePendingBlock(pending: string): string {
     if (trimmed === "\\[") {
       inMathBlock = true;
       mathClose = "\\]";
-      continue;
     }
   }
 
-  if (inFence) return pending + "\n" + fenceStr;
-  if (inMathBlock) return pending + "\n" + mathClose;
+  if (inFence) return `${pending}\n${fenceStr}`;
+  if (inMathBlock) return `${pending}\n${mathClose}`;
   return pending;
 }
 
@@ -238,11 +232,12 @@ export function renderStreamingMarkdown(
 
 // Convert \[...\] to $$...$$ and \(...\) to $...$
 export function normalizeLatexDelimiters(text: string): string {
+  let normalized = text;
   // Display math: \[...\] → $$...$$  (may span multiple lines)
-  text = text.replace(/\\\[([\s\S]*?)\\\]/g, (_match, inner) => `$$${inner}$$`);
+  normalized = normalized.replace(/\\\[([\s\S]*?)\\\]/g, (_match, inner) => `$$${inner}$$`);
   // Inline math: \(...\) → $...$
-  text = text.replace(/\\\(([\s\S]*?)\\\)/g, (_match, inner) => `$${inner}$`);
-  return text;
+  normalized = normalized.replace(/\\\(([\s\S]*?)\\\)/g, (_match, inner) => `$${inner}$`);
+  return normalized;
 }
 
 export function renderMarkdown(content: string): string {

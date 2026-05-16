@@ -1,6 +1,6 @@
 Type: `domain`
 Status: `CURRENT`
-Scope: `Stable baseline ownership for the repo workspace, canonical protocol tree, shared packages, router family, fixtures, validation surfaces, and the repo-owned runtime/operator baseline extended through unified vendor execution, telemetry dashboard remediation, runtime-config control, and the run-32 models.dev metadata/readiness baseline.`
+Scope: `Stable baseline ownership for the repo workspace, canonical protocol tree, shared packages, router family, fixtures, validation surfaces, and the repo-owned runtime/operator baseline extended through the routing-strategy UI convergence baseline in run 30, unified vendor execution, telemetry dashboard remediation, runtime-config control, and the run-32 models.dev metadata/readiness baseline.`
 Owns-Paths:
 - `/README.md`
 - `/LICENSE`
@@ -37,6 +37,15 @@ Source-Runs:
 - `14-router-runtime-ui-foundation`
 - `15-unified-vendor-execution`
 - `16-router-runtime-unified-telemetry-dashboard`
+- `22-router-runtime-routing-strategy-lock`
+- `23-router-runtime-live-observed-feedback`
+- `24-router-runtime-recency-bias-throughput-sla`
+- `25-router-runtime-model-alias-pool`
+- `26-router-runtime-difficulty-guided-routing`
+- `27-router-runtime-difficulty-learning-cache`
+- `28-router-runtime-controller-guided-routing`
+- `29-router-runtime-request-rewriter-hybrid-mode`
+- `30-router-runtime-strategy-convergence-e2e`
 - `32-models-dev-metadata-coverage`
 Validated-At-Commit: `working-tree`
 Last-Validated: `2026-05-15T06:30:00Z`
@@ -103,6 +112,34 @@ This repository now has a real product baseline rather than only recursive scaff
 - The protocol generation path now preserves `UsageEvent.cost_actual` and emits titled helper types for internal `$defs` entries, so focused `types:generate`, `schemas:validate`, and `@role-model/schema-tools build` stay green in the current baseline
 - Provider-account writes remain credential-reference-only; the UI can upsert runtime accounts, but endpoint rows still remain controlled by the existing registry baseline rather than being auto-created by account-save side effects
 - Browser, edge, and native provider families are intentionally scaffold-grade in this baseline
+- `/docs/architecture/07-router-runtime-routing-strategy-lock.md` now freezes the repo-owned routing-strategy handoff for alias-based local-plus-remote routing, including mode vocabulary, config ownership, the easy/medium/hard rubric, compatibility policy, rollout mapping for runs `23` through `30`, and the later-run verification discipline
+- The downstream routing-strategy run contracts under `/.recursive/run/23-.../` through `/.recursive/run/30-.../` now consume the repo-owned strategy lock directly instead of only the external proposal path
+- The bridge now reads latest observed profiles from SQLite runtime state on each request instead of routing from the startup fixture-only `routing-observed-profiles.json` map
+- Runtime request observations now expose `routingDiagnostics.observedProfile` with source, `per-request` read mode, and measured-at metadata so operators can confirm which persisted profile influenced a route
+- The repo-owned validation floor for this routing-feedback baseline now includes focused bridge tests plus `runtime:validate-host` and `runtime:validate-vendors`, including local-and-remote feedback-loop readback visibility
+- The runtime now also owns an explicit `observedData` policy contract in `/role-model-router/apps/runtime-host-bridge/src/unified-runtime-config.ts`, including metric-halflife tuning and throughput-SLA configuration with shared local-plus-remote semantics
+- Adaptive routing now uses freshness-decayed effective metrics plus SQLite-backed throughput-penalty state to change real route outcomes in `/role-model-router/packages/core/`, `/role-model-router/packages/protocol-routing/`, and `/role-model-router/apps/runtime-host-bridge/`
+- Runtime request observations and validator proof now also expose `routingDiagnostics.effectiveMetrics` and `routingDiagnostics.throughputPenalty`, so operators can see the adaptive metric values, freshness weighting, and current penalty state behind a routing decision
+- The runtime now also owns a `model_aliases` contract in `/role-model-router/apps/runtime-host-bridge/src/unified-runtime-config.ts`, and bridge discovery surfaces expose configured alias ids beside real model ids
+- Alias requests now expand into pooled real endpoint candidates in `/role-model-router/apps/runtime-host-bridge/src/index.ts` before the existing routing stack runs, while exact-model requests remain additive and unchanged
+- Runtime request observations and validator proof now also expose durable `routingDiagnostics.aliasResolution` metadata, including one hybrid local-plus-remote alias pool readback
+- The runtime now also owns a difficulty-routing contract in `/role-model-router/apps/runtime-host-bridge/src/unified-runtime-config.ts`, including the shared easy-medium-hard rubric family, `difficulty_classifier`, alias mode `difficulty`, and per-source `maxDifficulty`
+- `/role-model-router/apps/runtime-host-bridge/src/index.ts` now executes configured classifier-backed difficulty assignment with deterministic fallback, maps difficulty to live routing strategy behavior before final selection, and applies mixed local-and-remote `maxDifficulty` gating on difficulty-mode alias requests
+- Runtime request observations and validator proof now also expose durable `routingDiagnostics.difficultyRouting` metadata, including assigned difficulty, selected strategy, fallback status or reason, rubric-signal summaries, and excluded endpoint ids
+- The repo-owned validation floor now also proves mixed local-plus-remote difficulty routing through focused bridge tests, `runtime:validate-vendors`, and agent-operated readback of easy-path cost routing plus hard-path quality routing and local-endpoint exclusion; medium-path live QA remains automated-evidence-only under the current binary mock classifier
+- The runtime now also owns an explicit `observed_data.difficulty_learning` contract in `/role-model-router/apps/runtime-host-bridge/src/unified-runtime-config.ts`, including conversation-cache invalidation controls plus advisory-recommendation and observed-override thresholds
+- `/role-model-router/packages/sqlite-memory/` and `/role-model-router/apps/runtime-host-bridge/` now persist conversation difficulty cache entries, segmented easy/medium/hard observed profiles, advisory `maxDifficulty` recommendation payloads, observed override explanations, and selected-bucket observed-profile diagnostics across both local and remote endpoints
+- `/role-model-router/apps/runtime-host-bridge/src/index.ts` now reuses cached conversation difficulty when invalidation rules allow, deterministically reclassifies when the conversation changes materially, and can use observed per-bucket performance to override configured `maxDifficulty` ceilings without mutating operator config
+- The repo-owned validation floor now also proves bucketed endpoint-profile readback, deterministic cache reuse and invalidation, observed override above configured ceilings, and bucket-selected routing through focused bridge tests, `runtime:validate-host`, `runtime:validate-vendors`, and agent-operated readback of live runtime surfaces
+- The runtime now also owns an explicit `controller` contract in `/role-model-router/apps/runtime-host-bridge/src/unified-runtime-config.ts`, including source-type targeting, controller model or endpoint selection, and bounded timeout behavior for request-time guidance
+- `/role-model-router/apps/runtime-host-bridge/src/index.ts` now executes request-time controller inference for intelligent aliases on both chat-completions and responses paths, validates structured controller directives, merges accepted guidance into existing `RoutingRequest` fields plus `routingModel.preferredEndpointIds`, and fails closed on invalid controller output
+- Runtime request observations and mixed-vendor validator proof now also expose durable `routingDiagnostics.controllerRouting` metadata with controller-active state, accepted directives, and explicit fallback reasons across mixed local-plus-remote runtime surfaces
+- The repo-owned validation floor now also proves mixed local-plus-remote controller steering, invalid-controller-output fallback, controller-inactive alias behavior, and exact-model backward compatibility through focused bridge tests, `runtime:validate-vendors`, and agent-operated readback
+- The runtime now also owns per-request routing-mode overrides for `baseline`, `difficulty`, `controller`, and `hybrid`, with deterministic invalid-value rejection and durable receipts that distinguish request overrides from alias-default routing modes
+- `/role-model-router/apps/runtime-host-bridge/src/index.ts` and `/role-model-router/packages/runtime-observability/src/index.ts` now persist durable `routingDiagnostics.rewrite` and `routingDiagnostics.hybridArbitration` metadata, including rewrite-applied versus rewrite-skipped outcomes, downstream model ids, hybrid strategy changes, controller dominance, and preferred endpoint guidance
+- The repo-owned validation floor now also proves same-pool override-mode execution, exact-model rewrite-skipped compatibility, explicit invalid-override `400` ingress failure, and mixed local-plus-remote readback of override, rewrite, and hybrid-arbitration diagnostics through focused bridge tests, `runtime:validate-vendors`, `runtime:validate-host`, and agent-operated QA
+- The repo-owned runtime UI now also has a first-class routing-strategy operator baseline: `Control > Routing strategy`, workbench routing-mode override control, request-ledger routing decision readback, request-detail routing receipts, and a preserved advanced raw-config or raw-observation escape-hatch path all ship together in `/role-model-router/apps/runtime-ui/`
+- The runtime UI validation floor now also includes deterministic routed-request receipt proof in `runtime:validate-ui`, confirming that shipped telemetry-list and request-detail APIs expose persisted `routingDecisionId`, effective routing mode, and rewrite reason for the operator shell
 
 ## Validation Path
 

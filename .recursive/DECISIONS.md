@@ -628,6 +628,288 @@
 - Known issues / follow-ups:
   - runtime:validate-ui script appears to hang in the current environment (exits with code 143 after timeout); this is an environment issue, not a code issue
 
+### Run `22-router-runtime-routing-strategy-lock`
+
+- Run folder: `/.recursive/run/22-router-runtime-routing-strategy-lock/`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - added `/docs/architecture/07-router-runtime-routing-strategy-lock.md` as the repo-owned routing-strategy handoff for alias routing, mode vocabulary, config ownership, difficulty rubric, compatibility policy, and rollout mapping
+  - aligned runs `23` through `30` so their requirement docs now consume the repo-owned handoff
+  - captured the routing-strategy verification discipline as a durable repo contract before implementation begins in run `23`
+- Why:
+  - to import the external strategy proposal into repo-owned control-plane artifacts before the routing-runtime implementation sequence starts
+- How:
+  - implemented a docs-only control-plane run with pragmatic TDD evidence, validated the existing runtime baseline through `schemas:validate`, `runtime:validate-ui`, `runtime:validate-host`, and `smoke`, and performed agent-operated readback QA over the new handoff and downstream run contracts
+- What was not done:
+  - no runtime execution, routing, controller, difficulty, hybrid, or UI behavior changed in this run
+- Known issues / follow-ups:
+  - the actual runtime implementation starts in run `23-router-runtime-live-observed-feedback`
+
+### Run `23-router-runtime-live-observed-feedback`
+
+- Run folder: `/.recursive/run/23-router-runtime-live-observed-feedback/`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - live routing now reads latest observed profiles from runtime-owned SQLite state on each request instead of relying on the startup fixture-only observed-profile map
+  - request observations now expose `routingDiagnostics.observedProfile` with source, `per-request` read mode, and measured-at metadata
+  - runtime-level validation now reads back local and remote request observations plus endpoint profiles to prove the feedback loop end to end
+- Why:
+  - to make persisted live observations the actual routing input before later recency, alias, difficulty, and controller runs build on the same baseline
+- How:
+  - implemented with strict RED/GREEN TDD, validated the locked Phase 3 slice through focused SQLite and bridge tests plus `schemas:validate`, `runtime:validate-host`, and `runtime:validate-vendors`, and completed agent-operated readback QA over the operator-visible feedback surfaces
+- What was not done:
+  - no alias routing, recency weighting, difficulty segmentation, controller inference, or hybrid arbitration shipped in this run
+- Known issues / follow-ups:
+  - later runs still need recency weighting, alias pools, difficulty-aware routing, controller guidance, and hybrid arbitration on top of the runtime-owned feedback baseline
+
+### Run `24-router-runtime-recency-bias-throughput-sla`
+
+- Run folder: `/.recursive/run/24-router-runtime-recency-bias-throughput-sla/`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - the runtime now owns an explicit `observedData` config contract with defaults and validation for recency weighting and throughput-SLA policy
+  - adaptive routing now decays measured quality, latency, throughput, reliability, and cost toward neutral defaults as observations age
+  - active throughput-SLA penalties now persist in SQLite runtime state and can either exclude or discount endpoints during routing
+  - request observations and runtime validation now expose effective metrics plus throughput-penalty diagnostics for both local and remote endpoint paths
+- Why:
+  - to turn the run-23 live observed-feedback baseline into real adaptive route selection before later alias, difficulty, controller, and hybrid routing runs build on the same state
+- How:
+  - implemented with strict RED/GREEN TDD across config, SQLite, protocol-routing, and bridge diagnostics slices, validated the locked Phase 3 slice through `schemas:validate`, focused package tests, `runtime-host-bridge` tests, `runtime:validate-host`, and `runtime:validate-vendors`, and completed agent-operated readback QA over adaptive diagnostics and penalty-driven route outcomes
+- What was not done:
+  - no alias routing, difficulty classification, controller-guided scoring, hybrid arbitration, or runtime UI implementation shipped in this run
+- Known issues / follow-ups:
+  - later runs still need alias pools, easy-medium-hard difficulty routing, controller guidance, hybrid arbitration, and final integrated runtime verification on top of the new adaptive observed-data baseline
+
+### Run `25-router-runtime-model-alias-pool`
+
+- Run folder: `/.recursive/run/25-router-runtime-model-alias-pool/`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - the unified runtime config now owns a `model_aliases` contract that normalizes to `modelAliases` and round-trips through the runtime config surface
+  - bridge model discovery and downstream OpenAI-compatible provider guidance now expose configured alias ids alongside real model ids
+  - alias requests now expand to pooled real endpoint candidates before existing routing, while exact-model requests stay on the existing direct lookup path
+  - persisted request observations and runtime vendor validation now expose durable `aliasResolution` diagnostics, including one hybrid local-plus-remote alias pool proof
+- Why:
+  - to let operators and downstream clients route through stable alias ids that can span both local and remote models before later difficulty, controller, and hybrid policy runs build on the same baseline
+- How:
+  - implemented with strict RED/GREEN TDD across config, bridge, runtime-observability, and validator slices, validated the locked Phase 3 slice through `schemas:validate`, `protocol-routing` tests, `runtime-host-bridge` tests, `runtime:validate-host`, and `runtime:validate-vendors`, and completed agent-operated readback QA over live runtime alias surfaces
+- What was not done:
+  - no difficulty classification, controller-guided routing, hybrid arbitration policy, or runtime UI implementation shipped in this run
+- Known issues / follow-ups:
+  - alias pools are currently static config-driven mappings; later runs still need difficulty segmentation, controller guidance, hybrid arbitration, and final integrated runtime verification on top of this alias-routing baseline
+
+### Run `26-router-runtime-difficulty-guided-routing`
+
+- Run folder: `/.recursive/run/26-router-runtime-difficulty-guided-routing/`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - the unified runtime config now owns an explicit difficulty-routing contract, including the shared rubric family, `difficulty_classifier`, alias mode `difficulty`, and per-source `maxDifficulty`
+  - bridge request planning now executes a configured classifier with deterministic fallback, maps difficulty to live routing strategy behavior, and persists durable `difficultyRouting` diagnostics with rubric-signal summaries
+  - mixed local-plus-remote runtime validation and agent-operated readback now prove difficulty alias discovery, easy-path cost routing, hard-path quality routing, and live hard-request exclusion of underpowered local endpoints
+- Why:
+  - to make the alias-pool baseline content-aware so the runtime can route across both local and remote endpoints by request difficulty before later cache, controller, and hybrid policy runs build on the same contract
+- How:
+  - implemented with strict RED/GREEN TDD across config, bridge, runtime-observability, and validator slices, validated the locked Phase 3 slice through `schemas:validate`, `protocol-routing` tests, `runtime-host-bridge` tests, `runtime:validate-host`, and `runtime:validate-vendors`, and completed agent-operated readback QA over live difficulty-alias request observations
+- What was not done:
+  - no difficulty-learning cache, controller-guided classification or judging, hybrid arbitration policy, or runtime UI implementation shipped in this run
+- Known issues / follow-ups:
+  - the repo-owned mock classifier used for local readback and validator QA currently emits `easy` or `hard` only, so medium-path live QA remains automated-evidence-only until a richer mock or real classifier-backed harness lands
+  - later runs still need difficulty-segmented observed learning, controller guidance, hybrid arbitration, and final integrated runtime verification on top of this difficulty-routing baseline
+
+### Run `27-router-runtime-difficulty-learning-cache`
+
+- Run folder: `/.recursive/run/27-router-runtime-difficulty-learning-cache/`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - the unified runtime config now owns a durable `observed_data.difficulty_learning` contract with explicit cache invalidation, advisory recommendation thresholds, and observed override thresholds
+  - bridge and SQLite runtime state now persist conversation difficulty cache entries, segmented easy/medium/hard observed profiles, advisory `maxDifficulty` recommendation payloads, observed override explanations, and selected-bucket observed-profile diagnostics
+  - mixed local-plus-remote validation and agent-operated readback now prove bucketed endpoint-profile inspection, deterministic cache reuse and invalidation, observed override of configured ceilings, and bucket-selected routing outcomes
+- Why:
+  - to make the run-26 difficulty-routing baseline stateful and self-tuning without silently mutating operator config before later controller-guided routing, hybrid policy, and final integration runs build on the same learning semantics
+- How:
+  - implemented with strict RED/GREEN TDD across config, SQLite-memory, bridge, runtime-observability, and validator slices, validated the locked Phase 3 slice through `schemas:validate`, `sqlite-memory` tests, `runtime-observability` tests, `protocol-routing` tests, `runtime-host-bridge` tests, `runtime:validate-host`, and `runtime:validate-vendors`, and completed agent-operated readback QA over live bucket, cache, override, and route-selection surfaces
+- What was not done:
+  - no controller-guided routing or judging, broader hybrid arbitration policy, automatic config mutation from recommendations, or runtime UI implementation shipped in this run
+- Known issues / follow-ups:
+  - advisory recommendations remain explicit but will continue to report `recommendedMaxDifficulty = null` until enough per-bucket samples accumulate to clear the configured `minSamples` threshold
+  - later runs still need controller-guided routing and judging, richer hybrid policy arbitration, operator UI surfaces, and final integrated runtime verification on top of this stateful learning baseline
+
+### Run `28-router-runtime-controller-guided-routing`
+
+- Run folder: `/.recursive/run/28-router-runtime-controller-guided-routing/`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - the unified runtime config now owns an explicit `controller` contract with source-type targeting, model or endpoint selection, and bounded timeout behavior
+  - the bridge now executes request-time controller inference for intelligent aliases, validates structured routing directives, merges accepted guidance into live routing requests and `routingModel` preference, and fails closed on invalid controller output
+  - runtime observations, validator proof, and agent-operated readback now distinguish controller-active steering, explicit fallback, alias-only behavior, and exact-model compatibility across mixed local-plus-remote runtime surfaces
+- Why:
+  - to implement the strategy-B controller-guided routing slice before later request rewriting, broader hybrid arbitration, UI expansion, and final runtime convergence work build on the same routing contract
+- How:
+  - implemented with strict RED/GREEN TDD across unified config, bridge plan merge, live controller execution, runtime-observability diagnostics, and mixed-vendor validator slices, then validated through `runtime-host-bridge` tests, `runtime-observability` tests, `protocol-routing` tests, `runtime:validate-vendors`, `runtime:validate-host`, `schemas:validate`, and agent-operated readback QA
+- What was not done:
+  - no request rewriting, broader hybrid arbitration policy, UI implementation, or final integrated runtime convergence shipped in this run
+- Known issues / follow-ups:
+  - the current live mixed-pool proof uses strategy-level controller guidance and endpoint preference rather than richer role-task rewriting, which remains owned by later runs
+  - the legacy global controller-assignment API still exists as an operator surface but remains intentionally distinct from request-time controller inference
+  - later runs still need request rewriting, hybrid arbitration, UI surfaces, and final end-to-end runtime integration on top of this controller-guided baseline
+
+### Run `29-router-runtime-request-rewriter-hybrid-mode`
+
+- Run folder: `/.recursive/run/29-router-runtime-request-rewriter-hybrid-mode/`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - the bridge now accepts per-request routing-mode overrides for `baseline`, `difficulty`, `controller`, and `hybrid`, rejects invalid values deterministically, and records whether the effective mode came from a request override or alias default
+  - the bridge now records explicit rewrite receipts and hybrid-arbitration receipts, including rewrite-applied versus rewrite-skipped outcomes, downstream model ids, hybrid strategy changes, and controller-dominant planning signals
+  - runtime observations, same-pool validator proof, and agent-operated readback now expose durable `routingDiagnostics.routingMode`, `routingDiagnostics.rewrite`, and `routingDiagnostics.hybridArbitration` metadata across mixed local-plus-remote endpoint pools while preserving exact-model additive compatibility
+- Why:
+  - to complete the backend routing-strategy surface before run 30 performs proposal-wide runtime convergence, UI work, and final end-to-end verification on top of the same local-plus-remote routing contract
+- How:
+  - implemented with strict RED/GREEN TDD across bridge ingress, planning, runtime-observability diagnostics, and mixed-vendor validator slices, then validated through `runtime-host-bridge` tests, `runtime-observability` tests, `protocol-routing` tests, `runtime:validate-vendors`, `runtime:validate-host`, `schemas:validate`, and agent-operated readback QA
+- What was not done:
+  - no proposal-wide convergence audit, integrated runtime UI implementation, or final end-to-end strategy closeout shipped in this run
+- Known issues / follow-ups:
+  - the legacy global controller-assignment API still exists as an operator surface but remains intentionally distinct from per-request override and hybrid-routing behavior
+  - later runs still need final integrated runtime convergence, UI surfaces, and proposal-wide verification on top of the now-complete backend routing surface
+
+### Run `30-router-runtime-strategy-convergence-e2e`
+
+- Run folder: `/.recursive/run/30-router-runtime-strategy-convergence-e2e/`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - the repo-owned runtime UI now exposes a first-class `Control > Routing strategy` surface instead of treating routing strategy as raw runtime-config JSON only
+  - the workbench now exposes alias-default plus explicit `baseline`, `difficulty`, `controller`, and `hybrid` override control, while request ledger and request detail now surface routing decision ids plus routing-mode, rewrite, difficulty, controller, hybrid, and rubric-signal receipts ahead of raw bundles
+  - `runtime:validate-ui` now includes deterministic routed-request proof for the same operator-facing telemetry and request-detail receipt surfaces that the runtime UI depends on
+- Why:
+  - to close the final proposal-convergence gap on top of the already-complete run-29 backend routing surface by making routing strategy operable and inspectable from the shipped runtime shell
+- How:
+  - implemented with strict RED/GREEN TDD across design-system route contracts, the workbench override API seam, request-ledger view models, route-level receipt surfaces, and the runtime UI validator, then validated through the runtime-ui suite, focused runtime-host-bridge validator coverage, `runtime:validate-ui`, `runtime:validate-host`, `runtime:validate-vendors`, `schemas:validate`, and agent-operated UI readback
+- What was not done:
+  - no new routing strategies beyond the locked baseline, difficulty, controller, and hybrid modes were introduced
+  - no separate browser automation harness was added; the run stayed on the repo-owned runtime UI and validator stack
+- Known issues / follow-ups:
+  - persisted routing receipts remain owned by request-observation surfaces, so the workbench result panel still hands operators to the telemetry ledger or request detail for durable receipt verification rather than embedding synthetic response-body copies
+
+### Run `32-router-runtime-routing-operator-surface`
+
+- Run folder: `/.recursive/run/32-router-runtime-routing-operator-surface/`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `03.5-code-review.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - the runtime UI now exposes a first-class `Router` section with overview, config, candidates, decisions, and request-keyed decision-detail pages
+  - the runtime host bridge now exposes a structured `/api/role-model/router/*` family and the frontend consumes it through typed runtime API helpers instead of scraping raw request bundles inline
+  - the live-QA bootstrap now uses the complete fixture bundle and forwards the Router readers into `startBridgeServer`, and the Router detail page now ignores stale async completions after rapid navigation
+- Why:
+  - to close the remaining operator-visibility gap left after run 30 by making routing configuration, candidate posture, and per-request decisions legible in the shipped runtime UI rather than scattering them across Control, Observe, and raw JSON
+- How:
+  - implemented with design-system-first RED/GREEN updates, backend Router API TDD, frontend runtime API and page TDD, focused package validation, a code-review hardening pass, and live browser-backed runtime QA against a seeded routed request
+- What was not done:
+  - no new routing strategies beyond the already locked runtime-routing program were introduced
+  - no broad repo-wide formatter or baseline hygiene remediation was widened into this run
+- Known issues / follow-ups:
+  - root `ci:check` still reproduces the inherited Phase 0 formatter-drift failure in `biome check .`
+  - the runtime-ui package test script may need future runner hardening on this Windows environment because the default multi-worker Vitest invocation can OOM during teardown even when the suites themselves pass
+  - the advanced raw runtime-config editor remains intentionally available as an escape hatch beside the new structured routing-strategy surface
+
 ### Run `32-models-dev-metadata-coverage`
 
 - Run folder: `/.recursive/run/32-models-dev-metadata-coverage/`

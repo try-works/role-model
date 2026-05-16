@@ -1,14 +1,18 @@
-import path from "node:path";
-import { copyFileSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
-import { DatabaseSync } from "node:sqlite";
 import { randomUUID } from "node:crypto";
+import { copyFileSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import path from "node:path";
+import { DatabaseSync } from "node:sqlite";
 
-import type { ObservedPerformanceProfile } from "@role-model/protocol-types";
-import type { ObservedPerformanceSample } from "@role-model-router/profile-aggregator";
+import {
+  type ObservedPerformanceSample,
+  aggregateObservedPerformanceSamples,
+} from "@role-model-router/profile-aggregator";
 import type { ProviderAccountRecord } from "@role-model-router/provider-account";
+import type { ObservedPerformanceProfile } from "@role-model/protocol-types";
 
 const INITIAL_MIGRATION_ID = "run06-v1-initial-schema";
 const CURRENT_SCHEMA_VERSION = 1;
+const DIFFICULTY_BUCKETS = ["easy", "medium", "hard"] as const;
 const MAINTENANCE_DEFAULTS = [
   { key: "backup.policy", value: "wal-copy-on-demand" },
   { key: "deletion.policy", value: "explicit-export-delete" },
@@ -131,6 +135,38 @@ CREATE TABLE IF NOT EXISTS observed_profile_snapshots (
   endpoint_id TEXT NOT NULL,
   measured_at_ms INTEGER NOT NULL,
   profile_json TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS difficulty_classification_cache (
+  conversation_id TEXT PRIMARY KEY,
+  cache_json TEXT NOT NULL,
+  updated_at_ms INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS observed_performance_samples_by_difficulty (
+  sample_id TEXT PRIMARY KEY,
+  endpoint_id TEXT NOT NULL,
+  difficulty_bucket TEXT NOT NULL,
+  request_id TEXT,
+  routing_decision_id TEXT,
+  source_type TEXT NOT NULL,
+  timestamp_ms INTEGER NOT NULL,
+  sample_json TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS observed_profile_snapshots_by_difficulty (
+  snapshot_id TEXT PRIMARY KEY,
+  endpoint_id TEXT NOT NULL,
+  difficulty_bucket TEXT NOT NULL,
+  measured_at_ms INTEGER NOT NULL,
+  profile_json TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS observed_throughput_penalties (
+  endpoint_id TEXT PRIMARY KEY,
+  last_observed_tokens_per_sec REAL NOT NULL,
+  min_tokens_per_sec REAL NOT NULL,
+  penalty_factor REAL NOT NULL,
+  activated_at_ms INTEGER NOT NULL,
+  expires_at_ms INTEGER NOT NULL,
+  last_observation_measured_at_ms INTEGER NOT NULL,
+  updated_at_ms INTEGER NOT NULL
 );
 CREATE TABLE IF NOT EXISTS runtime_telemetry_records (
   request_id TEXT PRIMARY KEY,
@@ -352,15 +388,104 @@ export interface ReadRuntimeObservationBundleInput {
 export interface ReadObservedPerformanceSamplesInput {
   readonly databasePath: string;
   readonly endpointId: string;
+  readonly difficultyBucket?: "easy" | "medium" | "hard";
 }
 
 export interface ReadLatestObservedProfileInput {
   readonly databasePath: string;
   readonly endpointId: string;
+  readonly difficultyBucket?: "easy" | "medium" | "hard";
+}
+
+export interface ReadLatestObservedProfilesByEndpointIdsInput {
+  readonly databasePath: string;
+  readonly endpointIds: readonly string[];
+  readonly difficultyBucket?: "easy" | "medium" | "hard";
+}
+
+export interface AdvisoryMaxDifficultyThresholds {
+  readonly minSamples: number;
+  readonly maxFailureRate: number;
+  readonly minQualityScore: number;
+  readonly minTokensPerSec: number;
+}
+
+export type AdvisoryMaxDifficultyRejectionReason =
+  | "no-profile"
+  | "min-samples"
+  | "max-failure-rate"
+  | "min-quality-score"
+  | "min-tokens-per-sec";
+
+export interface AdvisoryMaxDifficultyEvaluation {
+  readonly eligible: boolean;
+  readonly rejectionReasons: readonly AdvisoryMaxDifficultyRejectionReason[];
+  readonly profile: ObservedPerformanceProfile | null;
+}
+
+export interface ReadAdvisoryMaxDifficultyRecommendationInput {
+  readonly databasePath: string;
+  readonly endpointId: string;
+  readonly thresholds: AdvisoryMaxDifficultyThresholds;
+}
+
+export interface AdvisoryMaxDifficultyRecommendation {
+  readonly recommendedMaxDifficulty: "easy" | "medium" | "hard" | null;
+  readonly thresholds: AdvisoryMaxDifficultyThresholds;
+  readonly evaluations: Record<"easy" | "medium" | "hard", AdvisoryMaxDifficultyEvaluation>;
+}
+
+export interface DifficultyClassificationCacheRecord {
+  readonly conversationId: string;
+  readonly difficulty: "easy" | "medium" | "hard";
+  readonly fallbackApplied: boolean;
+  readonly fallbackReason?: string;
+  readonly cachedAtMs: number;
+  readonly expiresAtMs: number;
+  readonly rubricSignals: {
+    readonly contextTokens: number;
+    readonly toolCount: number;
+    readonly historyTurnCount: number;
+    readonly instructionConstraintCount: number;
+    readonly decompositionKeywordCount: number;
+    readonly codeOrSchemaBurden: boolean;
+  };
+}
+
+export interface UpsertDifficultyClassificationCacheInput {
+  readonly databasePath: string;
+  readonly cache: DifficultyClassificationCacheRecord;
+}
+
+export interface ReadDifficultyClassificationCacheInput {
+  readonly databasePath: string;
+  readonly conversationId: string;
 }
 
 export interface ReadRuntimeMaintenancePolicyInput {
   readonly databasePath: string;
+}
+
+export interface ObservedThroughputPenaltyStateRecord {
+  readonly endpointId: string;
+  readonly lastObservedTokensPerSec: number;
+  readonly minTokensPerSec: number;
+  readonly penaltyFactor: number;
+  readonly activatedAtMs: number;
+  readonly expiresAtMs: number;
+  readonly lastObservationMeasuredAtMs: number;
+  readonly updatedAtMs?: number;
+}
+
+export interface UpsertObservedThroughputPenaltyStateInput {
+  readonly databasePath: string;
+  readonly penaltyState: Omit<ObservedThroughputPenaltyStateRecord, "updatedAtMs">;
+}
+
+export interface ReadObservedThroughputPenaltyStateInput {
+  readonly databasePath: string;
+  readonly endpointId: string;
+  readonly nowMs: number;
 }
 
 export interface RuntimeEndpointRecord {
@@ -641,7 +766,9 @@ function initializeSchema(database: DatabaseSync): void {
     ).map((row) => row.name),
   );
   if (!providerAccountColumns.has("model_role_bindings_json")) {
-    database.exec("ALTER TABLE provider_accounts ADD COLUMN model_role_bindings_json TEXT NOT NULL DEFAULT '[]'");
+    database.exec(
+      "ALTER TABLE provider_accounts ADD COLUMN model_role_bindings_json TEXT NOT NULL DEFAULT '[]'",
+    );
   }
   const runtimeTelemetryColumns = new Set(
     (
@@ -681,29 +808,27 @@ function seedMaintenanceDefaults(database: DatabaseSync, nowMs: number): void {
   }
 }
 
-function mapProviderAccountRow(
-  row: {
-    provider_account_id: string;
-    provider_id: string;
-    provider_kind: string;
-    org_scope: string;
-    account_scope: string;
-    credential_backend: string;
-    credential_ref: string;
-    auth_mode: string;
-    region_policy_json: string;
-    base_url_override: string | null;
-    allowed_models_json: string;
-    model_role_bindings_json: string;
-    denied_models_json: string;
-    entitlement_tags_json: string;
-    budget_policy_ref: string;
-    quota_policy_ref: string;
-    status: string;
-    health_status: string;
-    rotation_state: string;
-  },
-): ProviderAccountRecord {
+function mapProviderAccountRow(row: {
+  provider_account_id: string;
+  provider_id: string;
+  provider_kind: string;
+  org_scope: string;
+  account_scope: string;
+  credential_backend: string;
+  credential_ref: string;
+  auth_mode: string;
+  region_policy_json: string;
+  base_url_override: string | null;
+  allowed_models_json: string;
+  model_role_bindings_json: string;
+  denied_models_json: string;
+  entitlement_tags_json: string;
+  budget_policy_ref: string;
+  quota_policy_ref: string;
+  status: string;
+  health_status: string;
+  rotation_state: string;
+}): ProviderAccountRecord {
   return {
     providerAccountId: row.provider_account_id,
     providerId: row.provider_id,
@@ -718,7 +843,9 @@ function mapProviderAccountRow(
     regionPolicy: JSON.parse(row.region_policy_json) as ProviderAccountRecord["regionPolicy"],
     baseUrlOverride: row.base_url_override,
     allowedModels: JSON.parse(row.allowed_models_json) as string[],
-    modelRoleBindings: JSON.parse(row.model_role_bindings_json) as ProviderAccountRecord["modelRoleBindings"],
+    modelRoleBindings: JSON.parse(
+      row.model_role_bindings_json,
+    ) as ProviderAccountRecord["modelRoleBindings"],
     deniedModels: JSON.parse(row.denied_models_json) as string[],
     entitlementTags: JSON.parse(row.entitlement_tags_json) as string[],
     budgetPolicyRef: row.budget_policy_ref,
@@ -729,18 +856,16 @@ function mapProviderAccountRow(
   };
 }
 
-function mapRuntimeEndpointRow(
-  row: {
-    endpoint_id: string;
-    provider_account_id: string;
-    model_id: string;
-    region: string;
-    endpoint_kind: string;
-    serving_source: string;
-    lifecycle_state: string;
-    health_status: string;
-  },
-): RuntimeEndpointRecord {
+function mapRuntimeEndpointRow(row: {
+  endpoint_id: string;
+  provider_account_id: string;
+  model_id: string;
+  region: string;
+  endpoint_kind: string;
+  serving_source: string;
+  lifecycle_state: string;
+  health_status: string;
+}): RuntimeEndpointRecord {
   return {
     endpointId: row.endpoint_id,
     providerAccountId: row.provider_account_id,
@@ -753,25 +878,23 @@ function mapRuntimeEndpointRow(
   };
 }
 
-function mapProviderDeviceAuthSessionRow(
-  row: {
-    auth_request_id: string;
-    provider_account_id: string;
-    provider_id: string;
-    variant_id: string;
-    credential_backend: string;
-    credential_ref: string;
-    auth_mode: string;
-    verification_uri: string;
-    verification_uri_complete: string;
-    user_code: string;
-    device_code: string;
-    interval_seconds: number;
-    status: string;
-    last_error: string | null;
-    expires_at_ms: number;
-  },
-): ProviderDeviceAuthSessionRecord {
+function mapProviderDeviceAuthSessionRow(row: {
+  auth_request_id: string;
+  provider_account_id: string;
+  provider_id: string;
+  variant_id: string;
+  credential_backend: string;
+  credential_ref: string;
+  auth_mode: string;
+  verification_uri: string;
+  verification_uri_complete: string;
+  user_code: string;
+  device_code: string;
+  interval_seconds: number;
+  status: string;
+  last_error: string | null;
+  expires_at_ms: number;
+}): ProviderDeviceAuthSessionRecord {
   return {
     authRequestId: row.auth_request_id,
     providerAccountId: row.provider_account_id,
@@ -791,20 +914,40 @@ function mapProviderDeviceAuthSessionRow(
   };
 }
 
-function mapRuntimeControllerAssignmentRow(
-  row: {
-    scope: string;
-    endpoint_id: string;
-    model_id: string;
-    source_type: string;
-    updated_at_ms: number;
-  },
-): RuntimeControllerAssignmentRecord {
+function mapRuntimeControllerAssignmentRow(row: {
+  scope: string;
+  endpoint_id: string;
+  model_id: string;
+  source_type: string;
+  updated_at_ms: number;
+}): RuntimeControllerAssignmentRecord {
   return {
     scope: row.scope,
     endpointId: row.endpoint_id,
     modelId: row.model_id,
     sourceType: row.source_type,
+    updatedAtMs: row.updated_at_ms,
+  };
+}
+
+function mapObservedThroughputPenaltyStateRow(row: {
+  endpoint_id: string;
+  last_observed_tokens_per_sec: number;
+  min_tokens_per_sec: number;
+  penalty_factor: number;
+  activated_at_ms: number;
+  expires_at_ms: number;
+  last_observation_measured_at_ms: number;
+  updated_at_ms: number;
+}): ObservedThroughputPenaltyStateRecord {
+  return {
+    endpointId: row.endpoint_id,
+    lastObservedTokensPerSec: row.last_observed_tokens_per_sec,
+    minTokensPerSec: row.min_tokens_per_sec,
+    penaltyFactor: row.penalty_factor,
+    activatedAtMs: row.activated_at_ms,
+    expiresAtMs: row.expires_at_ms,
+    lastObservationMeasuredAtMs: row.last_observation_measured_at_ms,
     updatedAtMs: row.updated_at_ms,
   };
 }
@@ -817,7 +960,9 @@ export function initializeSqliteMemory(
   const database = new DatabaseSync(databasePath);
   const nowMs = Date.now();
 
-  const journalModeRow = database.prepare("PRAGMA journal_mode = WAL").get() as { journal_mode?: string } | undefined;
+  const journalModeRow = database.prepare("PRAGMA journal_mode = WAL").get() as
+    | { journal_mode?: string }
+    | undefined;
   initializeSchema(database);
   seedMaintenanceDefaults(database, nowMs);
 
@@ -827,13 +972,15 @@ export function initializeSqliteMemory(
 
   const appliedMigrations: string[] = [];
   if (!currentVersionRow) {
-    database.prepare("INSERT INTO schema_version (schema_version, migration_id, applied_at_ms) VALUES (?, ?, ?)").run(
-      CURRENT_SCHEMA_VERSION,
-      INITIAL_MIGRATION_ID,
-      nowMs,
-    );
     database
-      .prepare("INSERT INTO migration_receipts (migration_id, schema_version, applied_at_ms, status) VALUES (?, ?, ?, ?)")
+      .prepare(
+        "INSERT INTO schema_version (schema_version, migration_id, applied_at_ms) VALUES (?, ?, ?)",
+      )
+      .run(CURRENT_SCHEMA_VERSION, INITIAL_MIGRATION_ID, nowMs);
+    database
+      .prepare(
+        "INSERT INTO migration_receipts (migration_id, schema_version, applied_at_ms, status) VALUES (?, ?, ?, ?)",
+      )
       .run(INITIAL_MIGRATION_ID, CURRENT_SCHEMA_VERSION, nowMs, "applied");
     appliedMigrations.push(INITIAL_MIGRATION_ID);
   }
@@ -973,7 +1120,8 @@ export function listProviderAccounts(
 export function upsertRuntimeEndpoint(input: UpsertRuntimeEndpointInput): void {
   const database = new DatabaseSync(input.databasePath);
   const nowMs = Date.now();
-  database.prepare(`
+  database
+    .prepare(`
     INSERT OR REPLACE INTO runtime_endpoints (
       endpoint_id,
       provider_account_id,
@@ -986,18 +1134,19 @@ export function upsertRuntimeEndpoint(input: UpsertRuntimeEndpointInput): void {
       created_at_ms,
       updated_at_ms
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(
-    input.endpoint.endpointId,
-    input.endpoint.providerAccountId,
-    input.endpoint.modelId,
-    input.endpoint.region,
-    input.endpoint.endpointKind,
-    input.endpoint.servingSource,
-    input.endpoint.lifecycleState,
-    input.endpoint.healthStatus,
-    nowMs,
-    nowMs,
-  );
+  `)
+    .run(
+      input.endpoint.endpointId,
+      input.endpoint.providerAccountId,
+      input.endpoint.modelId,
+      input.endpoint.region,
+      input.endpoint.endpointKind,
+      input.endpoint.servingSource,
+      input.endpoint.lifecycleState,
+      input.endpoint.healthStatus,
+      nowMs,
+      nowMs,
+    );
   database.close();
 }
 
@@ -1005,7 +1154,8 @@ export function listRuntimeEndpoints(
   input: ListRuntimeEndpointsInput,
 ): readonly RuntimeEndpointRecord[] {
   const database = new DatabaseSync(input.databasePath);
-  const rows = database.prepare(`
+  const rows = database
+    .prepare(`
       SELECT
         endpoint_id,
         provider_account_id,
@@ -1019,21 +1169,23 @@ export function listRuntimeEndpoints(
       ORDER BY endpoint_id ASC
     `)
     .all() as Array<{
-      endpoint_id: string;
-      provider_account_id: string;
-      model_id: string;
-      region: string;
-      endpoint_kind: string;
-      serving_source: string;
-      lifecycle_state: string;
-      health_status: string;
-    }>;
+    endpoint_id: string;
+    provider_account_id: string;
+    model_id: string;
+    region: string;
+    endpoint_kind: string;
+    serving_source: string;
+    lifecycle_state: string;
+    health_status: string;
+  }>;
   database.close();
 
   return rows.map(mapRuntimeEndpointRow);
 }
 
-export function upsertRuntimeControllerAssignment(input: UpsertRuntimeControllerAssignmentInput): void {
+export function upsertRuntimeControllerAssignment(
+  input: UpsertRuntimeControllerAssignmentInput,
+): void {
   const database = new DatabaseSync(input.databasePath);
   database
     .prepare(
@@ -1071,12 +1223,11 @@ export function readRuntimeControllerAssignment(
   return row ? mapRuntimeControllerAssignmentRow(row) : null;
 }
 
-export function upsertProviderDeviceAuthSession(
-  input: UpsertProviderDeviceAuthSessionInput,
-): void {
+export function upsertProviderDeviceAuthSession(input: UpsertProviderDeviceAuthSessionInput): void {
   const database = new DatabaseSync(input.databasePath);
   const nowMs = Date.now();
-  database.prepare(`
+  database
+    .prepare(`
     INSERT OR REPLACE INTO provider_device_auth_sessions (
       auth_request_id,
       provider_account_id,
@@ -1096,25 +1247,26 @@ export function upsertProviderDeviceAuthSession(
       created_at_ms,
       updated_at_ms
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(
-    input.session.authRequestId,
-    input.session.providerAccountId,
-    input.session.providerId,
-    input.session.variantId,
-    input.session.credentialBackend,
-    input.session.credentialRef,
-    input.session.authMode,
-    input.session.verificationUri,
-    input.session.verificationUriComplete,
-    input.session.userCode,
-    input.session.deviceCode,
-    input.session.intervalSeconds,
-    input.session.status,
-    input.session.lastError,
-    input.session.expiresAtMs,
-    nowMs,
-    nowMs,
-  );
+  `)
+    .run(
+      input.session.authRequestId,
+      input.session.providerAccountId,
+      input.session.providerId,
+      input.session.variantId,
+      input.session.credentialBackend,
+      input.session.credentialRef,
+      input.session.authMode,
+      input.session.verificationUri,
+      input.session.verificationUriComplete,
+      input.session.userCode,
+      input.session.deviceCode,
+      input.session.intervalSeconds,
+      input.session.status,
+      input.session.lastError,
+      input.session.expiresAtMs,
+      nowMs,
+      nowMs,
+    );
   database.close();
 }
 
@@ -1122,7 +1274,8 @@ export function readProviderDeviceAuthSession(
   input: ReadProviderDeviceAuthSessionInput,
 ): ProviderDeviceAuthSessionRecord | null {
   const database = new DatabaseSync(input.databasePath);
-  const row = database.prepare(`
+  const row = database
+    .prepare(`
       SELECT
         auth_request_id,
         provider_account_id,
@@ -1216,8 +1369,15 @@ export function listProviderDeviceAuthSessions(
 export function persistContinuitySnapshot(input: PersistContinuitySnapshotInput): void {
   const database = new DatabaseSync(input.databasePath);
   database
-    .prepare("INSERT OR REPLACE INTO sessions (session_id, workspace_scope, created_at_ms, updated_at_ms) VALUES (?, ?, ?, ?)")
-    .run(input.session.sessionId, input.session.workspaceScope, input.session.createdAtMs, input.session.updatedAtMs);
+    .prepare(
+      "INSERT OR REPLACE INTO sessions (session_id, workspace_scope, created_at_ms, updated_at_ms) VALUES (?, ?, ?, ?)",
+    )
+    .run(
+      input.session.sessionId,
+      input.session.workspaceScope,
+      input.session.createdAtMs,
+      input.session.updatedAtMs,
+    );
   database
     .prepare(
       "INSERT OR REPLACE INTO conversations (conversation_id, session_id, created_at_ms, updated_at_ms) VALUES (?, ?, ?, ?)",
@@ -1233,21 +1393,38 @@ export function persistContinuitySnapshot(input: PersistContinuitySnapshotInput)
     "INSERT OR REPLACE INTO conversation_turns (turn_id, conversation_id, role, content_ref, created_at_ms) VALUES (?, ?, ?, ?, ?)",
   );
   for (const turn of input.turns) {
-    turnStatement.run(turn.turnId, turn.conversationId, turn.role, turn.contentRef, turn.createdAtMs);
+    turnStatement.run(
+      turn.turnId,
+      turn.conversationId,
+      turn.role,
+      turn.contentRef,
+      turn.createdAtMs,
+    );
   }
 
   const artifactStatement = database.prepare(
     "INSERT OR REPLACE INTO context_artifacts (artifact_id, artifact_kind, storage_ref, created_at_ms) VALUES (?, ?, ?, ?)",
   );
   for (const artifact of input.artifacts) {
-    artifactStatement.run(artifact.artifactId, artifact.artifactKind, artifact.storageRef, artifact.createdAtMs);
+    artifactStatement.run(
+      artifact.artifactId,
+      artifact.artifactKind,
+      artifact.storageRef,
+      artifact.createdAtMs,
+    );
   }
 
   const linkStatement = database.prepare(
     "INSERT OR REPLACE INTO artifact_links (link_id, artifact_id, conversation_id, session_id, created_at_ms) VALUES (?, ?, ?, ?, ?)",
   );
   for (const link of input.artifactLinks) {
-    linkStatement.run(link.linkId, link.artifactId, link.conversationId, link.sessionId, link.createdAtMs);
+    linkStatement.run(
+      link.linkId,
+      link.artifactId,
+      link.conversationId,
+      link.sessionId,
+      link.createdAtMs,
+    );
   }
 
   const handoffStatement = database.prepare(
@@ -1285,11 +1462,15 @@ export function readConversationContinuity(
 
   if (!conversation) {
     database.close();
-    throw new Error(`Conversation ${input.conversationId} is not present in SQLite continuity state`);
+    throw new Error(
+      `Conversation ${input.conversationId} is not present in SQLite continuity state`,
+    );
   }
 
   const session = database
-    .prepare("SELECT session_id, workspace_scope, created_at_ms, updated_at_ms FROM sessions WHERE session_id = ?")
+    .prepare(
+      "SELECT session_id, workspace_scope, created_at_ms, updated_at_ms FROM sessions WHERE session_id = ?",
+    )
     .get(conversation.session_id) as
     | {
         session_id: string;
@@ -1404,7 +1585,9 @@ export function persistRetrievalReceipt(input: PersistRetrievalReceiptInput): vo
   database.close();
 }
 
-export function readRetrievalReceipts(input: ReadRetrievalReceiptsInput): readonly RetrievalReceiptRecord[] {
+export function readRetrievalReceipts(
+  input: ReadRetrievalReceiptsInput,
+): readonly RetrievalReceiptRecord[] {
   const database = new DatabaseSync(input.databasePath);
   const rows = database
     .prepare(
@@ -1428,6 +1611,10 @@ function sampleIdFor(sample: ObservedPerformanceSample): string {
   return sample.request_id ?? `${sample.endpoint_id}:${sample.timestamp_ms}:${sample.source_type}`;
 }
 
+function segmentedSampleIdFor(sample: ObservedPerformanceSample): string {
+  return `${sampleIdFor(sample)}:${sample.difficulty_bucket ?? "unknown"}`;
+}
+
 function roundMetric(value: number): number {
   return Number(value.toFixed(6));
 }
@@ -1440,44 +1627,42 @@ function percentile95(values: readonly number[]): number | null {
   return sorted[Math.max(0, Math.ceil(sorted.length * 0.95) - 1)] ?? null;
 }
 
-function mapRuntimeTelemetryRecord(
-  row: {
-    request_id: string;
-    routing_decision_id: string;
-    endpoint_id: string;
-    conversation_id: string;
-    created_at_ms: number;
-    model_id: string | null;
-    provider_kind: string | null;
-    provider_family: string | null;
-    input_tokens: number;
-    output_tokens: number;
-    total_tokens: number;
-    latency_ms: number | null;
-    error_class: string | null;
-    status_code: number | null;
-    finish_reason: string | null;
-    prompt_cache_requested: number;
-    prompt_cache_supported: number;
-    prompt_cache_used: number;
-    cache_read_tokens: number;
-    cache_read_tokens_supported: number;
-    cache_write_tokens: number;
-    cache_write_tokens_supported: number;
-    stream_text_delta_count: number;
-    stream_text_supported: number;
-    stream_tool_call_delta_count: number;
-    stream_tool_call_supported: number;
-    stream_tool_argument_delta_count: number;
-    stream_tool_argument_supported: number;
-    tool_call_count: number;
-    tool_execution_count: number;
-    cost_provenance: string;
-    actual_cost_usd: number | null;
-    estimated_cost_usd: number | null;
-    currency: string | null;
-  },
-): RuntimeTelemetryRecord {
+function mapRuntimeTelemetryRecord(row: {
+  request_id: string;
+  routing_decision_id: string;
+  endpoint_id: string;
+  conversation_id: string;
+  created_at_ms: number;
+  model_id: string | null;
+  provider_kind: string | null;
+  provider_family: string | null;
+  input_tokens: number;
+  output_tokens: number;
+  total_tokens: number;
+  latency_ms: number | null;
+  error_class: string | null;
+  status_code: number | null;
+  finish_reason: string | null;
+  prompt_cache_requested: number;
+  prompt_cache_supported: number;
+  prompt_cache_used: number;
+  cache_read_tokens: number;
+  cache_read_tokens_supported: number;
+  cache_write_tokens: number;
+  cache_write_tokens_supported: number;
+  stream_text_delta_count: number;
+  stream_text_supported: number;
+  stream_tool_call_delta_count: number;
+  stream_tool_call_supported: number;
+  stream_tool_argument_delta_count: number;
+  stream_tool_argument_supported: number;
+  tool_call_count: number;
+  tool_execution_count: number;
+  cost_provenance: string;
+  actual_cost_usd: number | null;
+  estimated_cost_usd: number | null;
+  currency: string | null;
+}): RuntimeTelemetryRecord {
   return {
     requestId: row.request_id,
     routingDecisionId: row.routing_decision_id,
@@ -1516,7 +1701,9 @@ function mapRuntimeTelemetryRecord(
   };
 }
 
-function toRuntimeTelemetryRecord(observation: PersistedRuntimeObservationBundle): RuntimeTelemetryRecord {
+function toRuntimeTelemetryRecord(
+  observation: PersistedRuntimeObservationBundle,
+): RuntimeTelemetryRecord {
   const inputTokens = observation.usageEvent.tokens_in ?? 0;
   const outputTokens = observation.usageEvent.tokens_out ?? 0;
   const executionTelemetry = observation.executionTelemetry;
@@ -1533,9 +1720,14 @@ function toRuntimeTelemetryRecord(observation: PersistedRuntimeObservationBundle
     inputTokens,
     outputTokens,
     totalTokens: inputTokens + outputTokens,
-    latencyMs: observation.usageEvent.latency_ms ?? observation.observedPerformance.sample.latency_ms ?? null,
+    latencyMs:
+      observation.usageEvent.latency_ms ??
+      observation.observedPerformance.sample.latency_ms ??
+      null,
     errorClass:
-      observation.usageEvent.error_class ?? observation.observedPerformance.sample.error_class ?? null,
+      observation.usageEvent.error_class ??
+      observation.observedPerformance.sample.error_class ??
+      null,
     statusCode: observation.inspection?.request?.responseCapture?.statusCode ?? null,
     finishReason: executionTelemetry?.finishReason ?? null,
     promptCacheRequested: observation.cacheObservability?.promptCacheRequested ?? false,
@@ -1638,6 +1830,67 @@ export function readRuntimeMaintenancePolicy(
   return Object.fromEntries(rows.map((row) => [row.maintenance_key, row.maintenance_value]));
 }
 
+export function upsertObservedThroughputPenaltyState(
+  input: UpsertObservedThroughputPenaltyStateInput,
+): void {
+  const database = new DatabaseSync(input.databasePath);
+  const updatedAtMs = Date.now();
+  database
+    .prepare(
+      `INSERT OR REPLACE INTO observed_throughput_penalties (
+        endpoint_id,
+        last_observed_tokens_per_sec,
+        min_tokens_per_sec,
+        penalty_factor,
+        activated_at_ms,
+        expires_at_ms,
+        last_observation_measured_at_ms,
+        updated_at_ms
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    )
+    .run(
+      input.penaltyState.endpointId,
+      input.penaltyState.lastObservedTokensPerSec,
+      input.penaltyState.minTokensPerSec,
+      input.penaltyState.penaltyFactor,
+      input.penaltyState.activatedAtMs,
+      input.penaltyState.expiresAtMs,
+      input.penaltyState.lastObservationMeasuredAtMs,
+      updatedAtMs,
+    );
+  database.close();
+}
+
+export function readObservedThroughputPenaltyState(
+  input: ReadObservedThroughputPenaltyStateInput,
+): ObservedThroughputPenaltyStateRecord | null {
+  const database = new DatabaseSync(input.databasePath);
+  const row = database
+    .prepare(
+      `SELECT endpoint_id, last_observed_tokens_per_sec, min_tokens_per_sec, penalty_factor, activated_at_ms, expires_at_ms, last_observation_measured_at_ms, updated_at_ms
+       FROM observed_throughput_penalties
+       WHERE endpoint_id = ?`,
+    )
+    .get(input.endpointId) as
+    | {
+        endpoint_id: string;
+        last_observed_tokens_per_sec: number;
+        min_tokens_per_sec: number;
+        penalty_factor: number;
+        activated_at_ms: number;
+        expires_at_ms: number;
+        last_observation_measured_at_ms: number;
+        updated_at_ms: number;
+      }
+    | undefined;
+  database.close();
+
+  if (!row || row.expires_at_ms < input.nowMs) {
+    return null;
+  }
+  return mapObservedThroughputPenaltyStateRow(row);
+}
+
 export function persistRuntimeObservationBundle(input: PersistRuntimeObservationBundleInput): void {
   const database = new DatabaseSync(input.databasePath);
   const observation = input.observation;
@@ -1667,6 +1920,47 @@ export function persistRuntimeObservationBundle(input: PersistRuntimeObservation
       observation.observedPerformance.sample.timestamp_ms,
       JSON.stringify(observation.observedPerformance.sample),
     );
+  if (observation.observedPerformance.sample.difficulty_bucket) {
+    const difficultyBucket = observation.observedPerformance.sample.difficulty_bucket;
+    database
+      .prepare(
+        "INSERT OR REPLACE INTO observed_performance_samples_by_difficulty (sample_id, endpoint_id, difficulty_bucket, request_id, routing_decision_id, source_type, timestamp_ms, sample_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      )
+      .run(
+        segmentedSampleIdFor(observation.observedPerformance.sample),
+        observation.endpointId,
+        difficultyBucket,
+        observation.observedPerformance.sample.request_id ?? null,
+        observation.observedPerformance.sample.routing_decision_id ?? null,
+        observation.observedPerformance.sample.source_type,
+        observation.observedPerformance.sample.timestamp_ms,
+        JSON.stringify(observation.observedPerformance.sample),
+      );
+    const priorBucketRows = database
+      .prepare(
+        "SELECT sample_json FROM observed_performance_samples_by_difficulty WHERE endpoint_id = ? AND difficulty_bucket = ? ORDER BY timestamp_ms ASC, sample_id ASC",
+      )
+      .all(observation.endpointId, difficultyBucket) as Array<{
+      sample_json: string;
+    }>;
+    const bucketSamples = priorBucketRows.map(
+      (row) => JSON.parse(row.sample_json) as ObservedPerformanceSample,
+    );
+    const bucketProfile = aggregateObservedPerformanceSamples(bucketSamples, {
+      nowMs: observation.observedPerformance.sample.timestamp_ms,
+    });
+    database
+      .prepare(
+        "INSERT OR REPLACE INTO observed_profile_snapshots_by_difficulty (snapshot_id, endpoint_id, difficulty_bucket, measured_at_ms, profile_json) VALUES (?, ?, ?, ?, ?)",
+      )
+      .run(
+        `${observation.endpointId}:${difficultyBucket}:${bucketProfile.measured_at_ms}`,
+        observation.endpointId,
+        difficultyBucket,
+        bucketProfile.measured_at_ms,
+        JSON.stringify(bucketProfile),
+      );
+  }
   database
     .prepare(
       "INSERT OR REPLACE INTO observed_profile_snapshots (snapshot_id, endpoint_id, measured_at_ms, profile_json) VALUES (?, ?, ?, ?)",
@@ -1740,11 +2034,19 @@ export function readObservedPerformanceSamples(
   input: ReadObservedPerformanceSamplesInput,
 ): readonly ObservedPerformanceSample[] {
   const database = new DatabaseSync(input.databasePath);
-  const rows = database
-    .prepare(
-      "SELECT sample_json FROM observed_performance_samples WHERE endpoint_id = ? ORDER BY timestamp_ms ASC, sample_id ASC",
-    )
-    .all(input.endpointId) as Array<{
+  const rows = (
+    input.difficultyBucket
+      ? database
+          .prepare(
+            "SELECT sample_json FROM observed_performance_samples_by_difficulty WHERE endpoint_id = ? AND difficulty_bucket = ? ORDER BY timestamp_ms ASC, sample_id ASC",
+          )
+          .all(input.endpointId, input.difficultyBucket)
+      : database
+          .prepare(
+            "SELECT sample_json FROM observed_performance_samples WHERE endpoint_id = ? ORDER BY timestamp_ms ASC, sample_id ASC",
+          )
+          .all(input.endpointId)
+  ) as Array<{
     sample_json: string;
   }>;
   database.close();
@@ -1756,11 +2058,19 @@ export function readLatestObservedProfile(
   input: ReadLatestObservedProfileInput,
 ): ObservedPerformanceProfile | null {
   const database = new DatabaseSync(input.databasePath);
-  const row = database
-    .prepare(
-      "SELECT profile_json FROM observed_profile_snapshots WHERE endpoint_id = ? ORDER BY measured_at_ms DESC, snapshot_id DESC LIMIT 1",
-    )
-    .get(input.endpointId) as
+  const row = (
+    input.difficultyBucket
+      ? database
+          .prepare(
+            "SELECT profile_json FROM observed_profile_snapshots_by_difficulty WHERE endpoint_id = ? AND difficulty_bucket = ? ORDER BY measured_at_ms DESC, snapshot_id DESC LIMIT 1",
+          )
+          .get(input.endpointId, input.difficultyBucket)
+      : database
+          .prepare(
+            "SELECT profile_json FROM observed_profile_snapshots WHERE endpoint_id = ? ORDER BY measured_at_ms DESC, snapshot_id DESC LIMIT 1",
+          )
+          .get(input.endpointId)
+  ) as
     | {
         profile_json: string;
       }
@@ -1768,6 +2078,139 @@ export function readLatestObservedProfile(
   database.close();
 
   return row ? (JSON.parse(row.profile_json) as ObservedPerformanceProfile) : null;
+}
+
+export function readLatestObservedProfilesByEndpointIds(
+  input: ReadLatestObservedProfilesByEndpointIdsInput,
+): Record<string, ObservedPerformanceProfile> {
+  if (input.endpointIds.length === 0) {
+    return {};
+  }
+
+  const database = new DatabaseSync(input.databasePath);
+  const placeholders = input.endpointIds.map(() => "?").join(", ");
+  const rows = (
+    input.difficultyBucket
+      ? database
+          .prepare(
+            `SELECT endpoint_id, profile_json FROM observed_profile_snapshots_by_difficulty WHERE endpoint_id IN (${placeholders}) AND difficulty_bucket = ? ORDER BY measured_at_ms DESC, snapshot_id DESC`,
+          )
+          .all(...input.endpointIds, input.difficultyBucket)
+      : database
+          .prepare(
+            `SELECT endpoint_id, profile_json FROM observed_profile_snapshots WHERE endpoint_id IN (${placeholders}) ORDER BY measured_at_ms DESC, snapshot_id DESC`,
+          )
+          .all(...input.endpointIds)
+  ) as Array<{
+    endpoint_id: string;
+    profile_json: string;
+  }>;
+  database.close();
+
+  const latestProfilesByEndpointId: Record<string, ObservedPerformanceProfile> = {};
+  for (const row of rows) {
+    if (!(row.endpoint_id in latestProfilesByEndpointId)) {
+      latestProfilesByEndpointId[row.endpoint_id] = JSON.parse(
+        row.profile_json,
+      ) as ObservedPerformanceProfile;
+    }
+  }
+  return latestProfilesByEndpointId;
+}
+
+function evaluateAdvisoryMaxDifficultyProfile(
+  profile: ObservedPerformanceProfile | null,
+  thresholds: AdvisoryMaxDifficultyThresholds,
+): AdvisoryMaxDifficultyEvaluation {
+  if (!profile) {
+    return {
+      eligible: false,
+      rejectionReasons: ["no-profile"],
+      profile: null,
+    };
+  }
+
+  const rejectionReasons: AdvisoryMaxDifficultyRejectionReason[] = [];
+  if (profile.sample_size < thresholds.minSamples) {
+    rejectionReasons.push("min-samples");
+  }
+  if (profile.failure_rate > thresholds.maxFailureRate) {
+    rejectionReasons.push("max-failure-rate");
+  }
+  if (
+    typeof profile.quality_score === "number" &&
+    profile.quality_score < thresholds.minQualityScore
+  ) {
+    rejectionReasons.push("min-quality-score");
+  }
+  if (
+    typeof profile.tokens_per_sec === "number" &&
+    profile.tokens_per_sec < thresholds.minTokensPerSec
+  ) {
+    rejectionReasons.push("min-tokens-per-sec");
+  }
+
+  return {
+    eligible: rejectionReasons.length === 0,
+    rejectionReasons,
+    profile,
+  };
+}
+
+export function readAdvisoryMaxDifficultyRecommendation(
+  input: ReadAdvisoryMaxDifficultyRecommendationInput,
+): AdvisoryMaxDifficultyRecommendation {
+  const evaluations = Object.fromEntries(
+    DIFFICULTY_BUCKETS.map((difficultyBucket) => {
+      const profile = readLatestObservedProfile({
+        databasePath: input.databasePath,
+        endpointId: input.endpointId,
+        difficultyBucket,
+      });
+      return [difficultyBucket, evaluateAdvisoryMaxDifficultyProfile(profile, input.thresholds)];
+    }),
+  ) as AdvisoryMaxDifficultyRecommendation["evaluations"];
+
+  let recommendedMaxDifficulty: AdvisoryMaxDifficultyRecommendation["recommendedMaxDifficulty"] =
+    null;
+  for (const difficultyBucket of DIFFICULTY_BUCKETS) {
+    if (evaluations[difficultyBucket].eligible) {
+      recommendedMaxDifficulty = difficultyBucket;
+    }
+  }
+
+  return {
+    recommendedMaxDifficulty,
+    thresholds: input.thresholds,
+    evaluations,
+  };
+}
+
+export function upsertDifficultyClassificationCache(
+  input: UpsertDifficultyClassificationCacheInput,
+): void {
+  const database = new DatabaseSync(input.databasePath);
+  database
+    .prepare(
+      "INSERT OR REPLACE INTO difficulty_classification_cache (conversation_id, cache_json, updated_at_ms) VALUES (?, ?, ?)",
+    )
+    .run(input.cache.conversationId, JSON.stringify(input.cache), input.cache.cachedAtMs);
+  database.close();
+}
+
+export function readDifficultyClassificationCache(
+  input: ReadDifficultyClassificationCacheInput,
+): DifficultyClassificationCacheRecord | null {
+  const database = new DatabaseSync(input.databasePath);
+  const row = database
+    .prepare("SELECT cache_json FROM difficulty_classification_cache WHERE conversation_id = ?")
+    .get(input.conversationId) as
+    | {
+        cache_json: string;
+      }
+    | undefined;
+  database.close();
+  return row ? (JSON.parse(row.cache_json) as DifficultyClassificationCacheRecord) : null;
 }
 
 export function listRecentRuntimeObservations(
@@ -1829,7 +2272,8 @@ export function readRuntimeTelemetrySummary(
     totalEstimatedCostUsd: roundMetric(
       records.reduce((sum, record) => sum + (record.estimatedCostUsd ?? 0), 0),
     ),
-    averageLatencyMs: latencyValues.length > 0 ? Math.round(totalLatency / latencyValues.length) : null,
+    averageLatencyMs:
+      latencyValues.length > 0 ? Math.round(totalLatency / latencyValues.length) : null,
     p95LatencyMs: percentile95(latencyValues),
     lastSeenAtMs: records[0]?.createdAtMs ?? null,
   };
@@ -1866,26 +2310,24 @@ export function listRuntimeTelemetryComparisonRows(
 
   for (const record of records) {
     const key = `${record.endpointId}\u0000${record.modelId ?? ""}\u0000${record.providerKind ?? ""}`;
-    const existing =
-      grouped.get(key) ??
-        {
-          endpointId: record.endpointId,
-          modelId: record.modelId,
-          providerKind: record.providerKind,
-          providerFamily: record.providerFamily,
-          promptCacheSupported: record.promptCacheSupported,
-          requestCount: 0,
-          successCount: 0,
-          failureCount: 0,
-        totalInputTokens: 0,
-        totalOutputTokens: 0,
-        totalTokens: 0,
-        cachedRequestCount: 0,
-        totalActualCostUsd: 0,
-        totalEstimatedCostUsd: 0,
-        latencies: [],
-        lastSeenAtMs: record.createdAtMs,
-      };
+    const existing = grouped.get(key) ?? {
+      endpointId: record.endpointId,
+      modelId: record.modelId,
+      providerKind: record.providerKind,
+      providerFamily: record.providerFamily,
+      promptCacheSupported: record.promptCacheSupported,
+      requestCount: 0,
+      successCount: 0,
+      failureCount: 0,
+      totalInputTokens: 0,
+      totalOutputTokens: 0,
+      totalTokens: 0,
+      cachedRequestCount: 0,
+      totalActualCostUsd: 0,
+      totalEstimatedCostUsd: 0,
+      latencies: [],
+      lastSeenAtMs: record.createdAtMs,
+    };
     existing.requestCount += 1;
     existing.providerFamily ??= record.providerFamily;
     existing.promptCacheSupported = existing.promptCacheSupported || record.promptCacheSupported;
@@ -1924,7 +2366,9 @@ export function listRuntimeTelemetryComparisonRows(
       totalEstimatedCostUsd: roundMetric(entry.totalEstimatedCostUsd),
       averageLatencyMs:
         entry.latencies.length > 0
-          ? Math.round(entry.latencies.reduce((sum, value) => sum + value, 0) / entry.latencies.length)
+          ? Math.round(
+              entry.latencies.reduce((sum, value) => sum + value, 0) / entry.latencies.length,
+            )
           : null,
       p95LatencyMs: percentile95(entry.latencies),
       lastSeenAtMs: entry.lastSeenAtMs,
@@ -1958,22 +2402,29 @@ export function exportRuntimeState(input: ExportRuntimeStateInput): ExportRuntim
   }>;
   database.close();
 
-  const observations = observationRows.map((row) => JSON.parse(row.observation_json) as PersistedRuntimeObservationBundle);
+  const observations = observationRows.map(
+    (row) => JSON.parse(row.observation_json) as PersistedRuntimeObservationBundle,
+  );
   const latestProfilesByEndpoint = new Map<string, ObservedPerformanceProfile>();
   for (const row of profileRows) {
     if (!latestProfilesByEndpoint.has(row.endpoint_id)) {
-      latestProfilesByEndpoint.set(row.endpoint_id, JSON.parse(row.profile_json) as ObservedPerformanceProfile);
+      latestProfilesByEndpoint.set(
+        row.endpoint_id,
+        JSON.parse(row.profile_json) as ObservedPerformanceProfile,
+      );
     }
   }
 
-  const observedProfiles = [...latestProfilesByEndpoint.entries()].map(([endpointId, latestProfile]) => ({
-    endpointId,
-    latestProfile,
-    recentSamples: readObservedPerformanceSamples({
-      databasePath: input.databasePath,
+  const observedProfiles = [...latestProfilesByEndpoint.entries()].map(
+    ([endpointId, latestProfile]) => ({
       endpointId,
+      latestProfile,
+      recentSamples: readObservedPerformanceSamples({
+        databasePath: input.databasePath,
+        endpointId,
+      }),
     }),
-  }));
+  );
 
   const exported = {
     maintenancePolicy: readRuntimeMaintenancePolicy({
@@ -2050,34 +2501,31 @@ export interface SwapEventRecord {
 
 export function insertSwapEvent(input: InsertSwapEventInput): void {
   const database = new DatabaseSync(input.databasePath);
-  database.prepare(
-    "INSERT INTO llama_swap_events (event_id, timestamp, old_model_id, new_model_id, reason) VALUES (?, ?, ?, ?, ?)"
-  ).run(
-    randomUUID(),
-    input.timestamp,
-    input.oldModelId,
-    input.newModelId,
-    input.reason,
-  );
+  database
+    .prepare(
+      "INSERT INTO llama_swap_events (event_id, timestamp, old_model_id, new_model_id, reason) VALUES (?, ?, ?, ?, ?)",
+    )
+    .run(randomUUID(), input.timestamp, input.oldModelId, input.newModelId, input.reason);
   database.close();
 }
 
-export function listSwapEvents(
-  input: { readonly databasePath: string; readonly limit?: number },
-): readonly SwapEventRecord[] {
+export function listSwapEvents(input: {
+  readonly databasePath: string;
+  readonly limit?: number;
+}): readonly SwapEventRecord[] {
   const database = new DatabaseSync(input.databasePath);
   const limitClause = typeof input.limit === "number" ? " LIMIT ?" : "";
   const rows = database
     .prepare(
-      `SELECT event_id, timestamp, old_model_id, new_model_id, reason FROM llama_swap_events ORDER BY timestamp DESC${limitClause}`
+      `SELECT event_id, timestamp, old_model_id, new_model_id, reason FROM llama_swap_events ORDER BY timestamp DESC${limitClause}`,
     )
     .all(...(typeof input.limit === "number" ? [input.limit] : [])) as Array<{
-      event_id: string;
-      timestamp: string;
-      old_model_id: string | null;
-      new_model_id: string | null;
-      reason: string;
-    }>;
+    event_id: string;
+    timestamp: string;
+    old_model_id: string | null;
+    new_model_id: string | null;
+    reason: string;
+  }>;
   database.close();
 
   return rows.map((row) => ({

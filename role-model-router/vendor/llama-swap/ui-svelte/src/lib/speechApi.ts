@@ -4,7 +4,7 @@ export async function generateSpeech(
   model: string,
   input: string,
   voice: string,
-  signal?: AbortSignal
+  signal?: AbortSignal,
 ): Promise<Blob> {
   const request: SpeechGenerationRequest = {
     model,

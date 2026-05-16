@@ -10,8 +10,12 @@ import {
   StatusPill,
 } from "../components/page-primitives";
 import { secondaryButtonClassName } from "../lib/design-system";
-import { fetchRuntimeSnapshot, type RuntimeSnapshot } from "../lib/runtime-api";
-import { buildConfiguredProviderRows, buildCredentialReadinessRows, buildEndpointCatalogRows } from "../lib/view-models";
+import { type RuntimeSnapshot, fetchRuntimeSnapshot } from "../lib/runtime-api";
+import {
+  buildConfiguredProviderRows,
+  buildCredentialReadinessRows,
+  buildEndpointCatalogRows,
+} from "../lib/view-models";
 
 export default function EndpointsRoute() {
   const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(null);
@@ -23,7 +27,9 @@ export default function EndpointsRoute() {
         setSnapshot(nextSnapshot);
         setError(null);
       })
-      .catch((value: unknown) => setError(value instanceof Error ? value.message : "Could not load endpoints."));
+      .catch((value: unknown) =>
+        setError(value instanceof Error ? value.message : "Could not load endpoints."),
+      );
   }, []);
 
   const providerRows = useMemo(
@@ -37,9 +43,13 @@ export default function EndpointsRoute() {
         : [],
     [snapshot],
   );
-  const endpointRows = useMemo(() => (snapshot ? buildEndpointCatalogRows(snapshot.endpoints) : []), [snapshot]);
+  const endpointRows = useMemo(
+    () => (snapshot ? buildEndpointCatalogRows(snapshot.endpoints) : []),
+    [snapshot],
+  );
   const readinessRows = useMemo(
-    () => (snapshot ? buildCredentialReadinessRows(snapshot.summary).filter((row) => row.value > 0) : []),
+    () =>
+      snapshot ? buildCredentialReadinessRows(snapshot.summary).filter((row) => row.value > 0) : [],
     [snapshot],
   );
 
@@ -116,13 +126,23 @@ export default function EndpointsRoute() {
                   <tbody>
                     {providerRows.map((provider) => (
                       <tr key={provider.providerId} className="border-t border-[var(--rm-border)]">
-                        <td className="py-3 font-medium text-[var(--rm-fg)]">{provider.providerId}</td>
-                        <td className="py-3 text-[var(--rm-secondary)]">{provider.accountIds.join(", ") || "—"}</td>
-                        <td className="py-3 text-[var(--rm-secondary)]">{provider.authModes.join(", ") || "—"}</td>
-                        <td className="py-3 text-[var(--rm-secondary)]">
-                          {provider.configuredModels.length > 0 ? provider.configuredModels.join(", ") : "—"}
+                        <td className="py-3 font-medium text-[var(--rm-fg)]">
+                          {provider.providerId}
                         </td>
-                        <td className="py-3 text-[var(--rm-secondary)]">{provider.healthStatuses.join(", ") || "unknown"}</td>
+                        <td className="py-3 text-[var(--rm-secondary)]">
+                          {provider.accountIds.join(", ") || "—"}
+                        </td>
+                        <td className="py-3 text-[var(--rm-secondary)]">
+                          {provider.authModes.join(", ") || "—"}
+                        </td>
+                        <td className="py-3 text-[var(--rm-secondary)]">
+                          {provider.configuredModels.length > 0
+                            ? provider.configuredModels.join(", ")
+                            : "—"}
+                        </td>
+                        <td className="py-3 text-[var(--rm-secondary)]">
+                          {provider.healthStatuses.join(", ") || "unknown"}
+                        </td>
                         <td className="py-3 text-[var(--rm-secondary)]">
                           {[
                             provider.pendingDeviceAuthorizationCount > 0
@@ -134,7 +154,9 @@ export default function EndpointsRoute() {
                             provider.connectedWithoutEndpointCount > 0
                               ? `${provider.connectedWithoutEndpointCount} connected, no endpoint`
                               : null,
-                            provider.readyAccountCount > 0 ? `${provider.readyAccountCount} ready` : null,
+                            provider.readyAccountCount > 0
+                              ? `${provider.readyAccountCount} ready`
+                              : null,
                           ]
                             .filter((value): value is string => value !== null)
                             .join(" • ") || "—"}
@@ -179,20 +201,36 @@ export default function EndpointsRoute() {
                   <tbody>
                     {endpointRows.map((endpoint) => (
                       <tr key={endpoint.endpointId} className="border-t border-[var(--rm-border)]">
-                        <td className="py-3 font-medium text-[var(--rm-fg)]">{endpoint.endpointId}</td>
+                        <td className="py-3 font-medium text-[var(--rm-fg)]">
+                          {endpoint.endpointId}
+                        </td>
                         <td className="py-3 text-[var(--rm-secondary)]">{endpoint.modelId}</td>
-                        <td className="py-3 text-[var(--rm-secondary)]">{endpoint.providerLabel}</td>
+                        <td className="py-3 text-[var(--rm-secondary)]">
+                          {endpoint.providerLabel}
+                        </td>
                         <td className="py-3 text-[var(--rm-secondary)]">
                           {endpoint.sourceLabel} / {endpoint.endpointKind}
                         </td>
-                        <td className="py-3 text-[var(--rm-secondary)]">{endpoint.servingSource}</td>
+                        <td className="py-3 text-[var(--rm-secondary)]">
+                          {endpoint.servingSource}
+                        </td>
                         <td className="py-3">
-                          <StatusPill tone={endpoint.healthStatus === "healthy" ? "success" : "warning"}>
+                          <StatusPill
+                            tone={endpoint.healthStatus === "healthy" ? "success" : "warning"}
+                          >
                             {endpoint.healthStatus}
                           </StatusPill>
                         </td>
                         <td className="py-3">
-                          <StatusPill tone={endpoint.status === "active" ? "success" : endpoint.status === "degraded" ? "warning" : "neutral"}>
+                          <StatusPill
+                            tone={
+                              endpoint.status === "active"
+                                ? "success"
+                                : endpoint.status === "degraded"
+                                  ? "warning"
+                                  : "neutral"
+                            }
+                          >
                             {endpoint.status}
                           </StatusPill>
                         </td>

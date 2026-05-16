@@ -55,10 +55,7 @@ async function waitForOk(url: string, timeoutMs: number): Promise<Response> {
   throw new Error(`Timed out waiting for ${url}`);
 }
 
-async function fetchJson<TValue>(
-  url: string,
-  init?: RequestInit,
-): Promise<TValue> {
+async function fetchJson<TValue>(url: string, init?: RequestInit): Promise<TValue> {
   const response = await fetch(url, init);
   if (!response.ok) {
     throw new Error(`Request to ${url} failed with ${response.status}: ${await response.text()}`);
@@ -107,9 +104,7 @@ function extractResponsesOutputText(payload: unknown): string {
   }
   const outputTextPart = message.content.find(
     (entry): entry is { text?: unknown } =>
-      Boolean(entry) &&
-      typeof entry === "object" &&
-      "text" in entry,
+      Boolean(entry) && typeof entry === "object" && "text" in entry,
   );
   return typeof outputTextPart?.text === "string" ? outputTextPart.text : "";
 }
@@ -120,7 +115,8 @@ async function startMockOpenAICompatibleServer(): Promise<{
 }> {
   const port = await allocateLocalPort();
   const server = createHttpServer(async (request, response) => {
-    const unauthorized = request.headers.authorization !== `Bearer ${packagingValidationCredentialValue}`;
+    const unauthorized =
+      request.headers.authorization !== `Bearer ${packagingValidationCredentialValue}`;
     if (unauthorized) {
       response.writeHead(401, { "content-type": "application/json" });
       response.end(JSON.stringify({ error: "missing bearer credential" }));
@@ -315,13 +311,14 @@ export async function runRuntimePackagingValidation(): Promise<{
   const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-sea-"));
   const port = await allocateLocalPort();
   const packaged = await packageSeaRuntime();
+  const packagedRepoRoot = path.dirname(packaged.outputPath);
   const mockUpstream = await startMockOpenAICompatibleServer();
 
   const child = spawn(
     packaged.outputPath,
     [
       "--repo-root",
-      repoRoot,
+      packagedRepoRoot,
       "--runtime-state-root",
       runtimeStateRoot,
       "--scope-id",
@@ -330,9 +327,11 @@ export async function runRuntimePackagingValidation(): Promise<{
       "127.0.0.1",
       "--port",
       String(port),
+      "--static-root",
+      path.join(packagedRepoRoot, "build", "client"),
     ],
     {
-      cwd: repoRoot,
+      cwd: packagedRepoRoot,
       stdio: ["ignore", "pipe", "pipe"],
       env: {
         ...process.env,
@@ -352,6 +351,18 @@ export async function runRuntimePackagingValidation(): Promise<{
     stderrChunks.push(chunk);
   });
 
+  let validationResult:
+    | {
+        readonly packagedExecutable: string;
+        readonly healthStatus: string;
+        readonly modelCount: number;
+        readonly endpointId: string;
+        readonly chatOutputText: string;
+        readonly responsesOutputText: string;
+      }
+    | undefined;
+  let validationError: unknown;
+
   try {
     const health = await waitForOk(`http://127.0.0.1:${port}/healthz`, 20000);
     const healthJson = (await health.json()) as { status: string };
@@ -368,14 +379,26 @@ export async function runRuntimePackagingValidation(): Promise<{
       chatOutputText: packagedExecution.chatOutputText,
       responsesOutputText: packagedExecution.responsesOutputText,
     };
+  } catch (error) {
+    validationError = error;
   } finally {
     child.kill("SIGTERM");
     await mockUpstream.close();
     await rm(runtimeStateRoot, { recursive: true, force: true });
-    if (stderrChunks.join("").trim().length > 0 && !child.killed) {
-      throw new Error(stderrChunks.join(""));
-    }
   }
+
+  const stderrOutput = stderrChunks.join("").trim();
+  if (validationError) {
+    throw validationError;
+  }
+  if (stderrOutput.length > 0 && !child.killed) {
+    throw new Error(stderrOutput);
+  }
+  if (!validationResult) {
+    throw new Error("Runtime packaging validation did not produce a result.");
+  }
+
+  return validationResult;
 }
 
 const result = await runRuntimePackagingValidation();

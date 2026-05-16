@@ -1,6 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 
-import { PageHeader, SectionCard, EmptyState, LoadingState, ErrorState } from "../components/page-primitives";
+import {
+  EmptyState,
+  ErrorState,
+  LoadingState,
+  PageHeader,
+  SectionCard,
+} from "../components/page-primitives";
 import { fetchLocalModels } from "../lib/runtime-api";
 
 interface LocalModel {
@@ -41,7 +47,10 @@ export default function LocalMatrixRoute() {
 
       {error ? <ErrorState label={error} /> : null}
 
-      <SectionCard title="Loaded model matrix" description="Currently loaded local inference models.">
+      <SectionCard
+        title="Loaded model matrix"
+        description="Currently loaded local inference models."
+      >
         {loading ? (
           <LoadingState label="Loading matrix…" />
         ) : models.length === 0 ? (
@@ -51,7 +60,8 @@ export default function LocalMatrixRoute() {
             {models.map((model) => (
               <div
                 key={model.modelId}
-                className="border border-[var(--rm-border)] bg-[var(--rm-surface)] p-4">
+                className="border border-[var(--rm-border)] bg-[var(--rm-surface)] p-4"
+              >
                 <div className="mb-3 flex items-center justify-between">
                   <span className="text-xs font-mono uppercase tracking-wider text-[var(--rm-accent)]">
                     {model.engine}

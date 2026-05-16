@@ -3,7 +3,11 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 
-import { fixtureValidationManifest, getFixtureValidationCounts, validateFixtures } from "@role-model/schema-tools";
+import {
+  fixtureValidationManifest,
+  getFixtureValidationCounts,
+  validateFixtures,
+} from "@role-model/schema-tools";
 import { describe, test } from "vitest";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -59,7 +63,7 @@ describe("run01 protocol fixture conformance", () => {
     const output = `${result.stdout}\n${result.stderr}`;
     const counts = getFixtureValidationCounts();
 
-    if (!new RegExp(`Validated ${counts.totalCount} fixture file\\(s\\)\\.`,"u").test(output)) {
+    if (!new RegExp(`Validated ${counts.totalCount} fixture file\\(s\\)\\.`, "u").test(output)) {
       throw new Error(output);
     }
   }, 60_000);

@@ -1,17 +1,20 @@
+import { readFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 
 import type { NormalizedCatalog } from "@role-model-router/catalog";
 import { assembleContextEnvelope } from "@role-model-router/context-envelope";
-import { buildEndpointRegistry, type RegistrySources } from "@role-model-router/endpoint-registry";
-import { createAnthropicProviderAdapter } from "@role-model-router/provider-anthropic";
-import { type ProviderAccountRecord, validateProviderAccounts } from "@role-model-router/provider-account";
-import { createOpenAIProviderAdapter } from "@role-model-router/provider-openai";
+import { type RegistrySources, buildEndpointRegistry } from "@role-model-router/endpoint-registry";
 import {
-  createRetrievalReceipt,
-} from "@role-model-router/retrieval-receipt";
+  type RoutingModelSelection,
+  routeRuntimeRequest,
+} from "@role-model-router/protocol-routing";
+import type { ProviderAccountRecord } from "@role-model-router/provider-account";
+import { validateProviderAccounts } from "@role-model-router/provider-account";
+import { createAnthropicProviderAdapter } from "@role-model-router/provider-anthropic";
+import { createOpenAIProviderAdapter } from "@role-model-router/provider-openai";
+import { createRetrievalReceipt } from "@role-model-router/retrieval-receipt";
 import {
   initializeSqliteMemory,
   persistContinuitySnapshot,
@@ -19,20 +22,13 @@ import {
   persistRetrievalReceipt,
   readConversationContinuity,
 } from "@role-model-router/sqlite-memory";
-import {
-  routeRuntimeRequest,
-  type RoutingModelSelection,
-} from "@role-model-router/protocol-routing";
 
+import { deriveLiteLLMProviders, loadLiteLLMModelPrices } from "@role-model-router/catalog";
 import {
-  executeRoutedRequest,
-  type RuntimeExecutionRequest,
   type RoutedExecutionResult,
+  type RuntimeExecutionRequest,
+  executeRoutedRequest,
 } from "./index.js";
-import {
-  deriveLiteLLMProviders,
-  loadLiteLLMModelPrices,
-} from "@role-model-router/catalog";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -104,10 +100,15 @@ function synthesizeFixtureProviderAccounts(
 
   const existingIds = new Set(
     accounts
-      .filter((entry): entry is { providerAccountId: string } => typeof entry === "object" && entry !== null && "providerAccountId" in entry)
+      .filter(
+        (entry): entry is { providerAccountId: string } =>
+          typeof entry === "object" && entry !== null && "providerAccountId" in entry,
+      )
       .map((entry) => entry.providerAccountId),
   );
-  const providersById = new Map(catalog.providers.map((provider) => [provider.providerId, provider]));
+  const providersById = new Map(
+    catalog.providers.map((provider) => [provider.providerId, provider]),
+  );
   const modelsById = new Map(catalog.models.map((model) => [model.modelId, model]));
   const modelIdsByAccountId = new Map<string, Set<string>>();
   const regionsByAccountId = new Map<string, Set<string>>();
@@ -145,9 +146,12 @@ function synthesizeFixtureProviderAccounts(
       accountScope: providerAccountId.split(".").slice(2).join(".") || "default",
       credentialRef: {
         backend: "env",
-        ref: provider?.envVars[0] ?? `${providerId.toUpperCase().replace(/[^A-Z0-9]+/g, "_")}_API_KEY`,
+        ref:
+          provider?.envVars[0] ?? `${providerId.toUpperCase().replace(/[^A-Z0-9]+/g, "_")}_API_KEY`,
       },
-      authMode: provider?.supportedAuthModes.includes("oauth2-device-code") ? "oauth2-device-code" : "api-key-static",
+      authMode: provider?.supportedAuthModes.includes("oauth2-device-code")
+        ? "oauth2-device-code"
+        : "api-key-static",
       regionPolicy: {
         mode: "allow",
         regions: [...(regionsByAccountId.get(providerAccountId) ?? new Set<string>())],
@@ -170,9 +174,17 @@ function synthesizeFixtureProviderAccounts(
 export async function runRuntimeAdapterValidation(
   options: RuntimeAdapterValidationOptions,
 ): Promise<RuntimeAdapterValidationResult> {
-  const fixtureRoot = options.fixtureRoot ?? path.join(options.repoRoot, "testdata", "router-runtime");
+  const fixtureRoot =
+    options.fixtureRoot ?? path.join(options.repoRoot, "testdata", "router-runtime");
   let normalizedCatalog = await readJson<NormalizedCatalog>(
-    path.join(options.repoRoot, "role-model-router", "packages", "catalog", "data", "normalized-catalog.json"),
+    path.join(
+      options.repoRoot,
+      "role-model-router",
+      "packages",
+      "catalog",
+      "data",
+      "normalized-catalog.json",
+    ),
   );
   const providerAccountsFixture = await readJson<{ accounts: unknown[] }>(
     path.join(fixtureRoot, "provider-accounts.json"),
@@ -180,7 +192,11 @@ export async function runRuntimeAdapterValidation(
   const registrySources = await readJson<RegistrySources>(
     path.join(fixtureRoot, "registry-sources.json"),
   );
-  const fixtureAccounts = synthesizeFixtureProviderAccounts(normalizedCatalog, providerAccountsFixture.accounts, registrySources);
+  const fixtureAccounts = synthesizeFixtureProviderAccounts(
+    normalizedCatalog,
+    providerAccountsFixture.accounts,
+    registrySources,
+  );
   const continuityFixture = await readJson<{
     session: Parameters<typeof persistContinuitySnapshot>[0]["session"];
     conversation: Parameters<typeof persistContinuitySnapshot>[0]["conversation"];
@@ -225,7 +241,10 @@ export async function runRuntimeAdapterValidation(
   for (const source of registrySources.local) {
     fixtureModelIds.add(source.modelId);
   }
-  for (const account of fixtureAccounts as { allowedModels?: string[]; deniedModels?: string[] }[]) {
+  for (const account of fixtureAccounts as {
+    allowedModels?: string[];
+    deniedModels?: string[];
+  }[]) {
     for (const modelId of account.allowedModels ?? []) {
       fixtureModelIds.add(modelId);
     }

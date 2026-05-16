@@ -1,6 +1,6 @@
+import { mkdtemp, readFile, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { describe, expect, test } from "vitest";
@@ -31,7 +31,7 @@ describe("runtime-observability", () => {
       };
       const validation = await runRuntimeAdapterValidation({
         repoRoot,
-      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+        fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
         runtimeStateRoot,
         scopeId: "runtime-observability-test",
       });
@@ -117,7 +117,9 @@ describe("runtime-observability", () => {
           expect.objectContaining({ code: "AUTH_ACCOUNT_PROVIDER_AUTH_ERROR" }),
         ]),
       );
-      expect((bundle.diagnostics as { memoryQuality: Array<{ code: string }> }).memoryQuality).toEqual(
+      expect(
+        (bundle.diagnostics as { memoryQuality: Array<{ code: string }> }).memoryQuality,
+      ).toEqual(
         expect.arrayContaining([expect.objectContaining({ code: "MEMORY_CONTEXT_OMITTED" })]),
       );
       expect(
@@ -166,6 +168,71 @@ describe("runtime-observability", () => {
         suppressed: true,
         reason: "policy.rawCapture.responseBody.disabled",
       });
+    } finally {
+      await rm(runtimeStateRoot, { recursive: true, force: true });
+    }
+  });
+
+  test("tags live-request samples with the classified difficulty bucket when difficulty routing is present", async () => {
+    const moduleImport = import(pathToFileURL(path.join(__dirname, "..", "src", "index.js")).href);
+    await expect(moduleImport).resolves.toHaveProperty("createRuntimeObservationBundle");
+
+    const runtimeStateRoot = await mkdtemp(
+      path.join(os.tmpdir(), "role-model-runtime-observability-difficulty-"),
+    );
+
+    try {
+      const runtimeObservability = (await moduleImport) as {
+        createRuntimeObservationBundle(input: Record<string, unknown>): {
+          observedPerformance: {
+            sample: {
+              difficulty_bucket?: string;
+            };
+          };
+        };
+      };
+      const validation = await runRuntimeAdapterValidation({
+        repoRoot,
+        fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+        runtimeStateRoot,
+        scopeId: "runtime-observability-difficulty-test",
+      });
+      const policy = await readJson<Record<string, unknown>>(
+        "testdata/router-runtime/observability-policy.json",
+      );
+
+      const bundle = runtimeObservability.createRuntimeObservationBundle({
+        decision: validation.decision,
+        routingDiagnostics: {
+          ...validation.routingDiagnostics,
+          difficultyRouting: {
+            difficulty: "hard",
+            strategy: "quality",
+            fallbackApplied: false,
+            rubricSignals: {
+              contextTokens: 2048,
+              toolCount: 2,
+              historyTurnCount: 3,
+              instructionConstraintCount: 4,
+              decompositionKeywordCount: 2,
+              codeOrSchemaBurden: true,
+            },
+          },
+        },
+        retrievalReceipt: validation.retrievalReceipt,
+        contextEnvelope: validation.contextEnvelope,
+        execution: validation.execution,
+        priorSamples: [],
+        maintenancePolicy: {
+          "redaction.level": "strict",
+          "retention.class": "standard",
+          "backup.policy": "wal-copy-on-demand",
+          "deletion.policy": "explicit-export-delete",
+        },
+        capturePolicy: policy,
+      });
+
+      expect(bundle.observedPerformance.sample.difficulty_bucket).toBe("hard");
     } finally {
       await rm(runtimeStateRoot, { recursive: true, force: true });
     }

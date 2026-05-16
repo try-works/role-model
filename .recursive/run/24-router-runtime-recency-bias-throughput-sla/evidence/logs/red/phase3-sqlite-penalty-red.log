@@ -1,0 +1,55 @@
+
+> @role-model-router/sqlite-memory@0.0.0 test D:\DEV\role-model\.worktrees\24-router-runtime-recency-bias-throughput-sla\role-model-router\packages\sqlite-memory
+> vitest run test/index.test.ts
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/24-router-runtime-recency-bias-throughput-sla/role-model-router/packages/sqlite-memory[39m
+
+(node:26144) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [31mΓ¥»[39m test/index.test.ts [2m([22m[2m16 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[33m 1451[2mms[22m[39m
+   [32mΓ£ô[39m initializeSqliteMemory[2m > [22mcreates the planned schema, WAL mode, and initial migration receipt under the runtime state root[32m 60[2mms[22m[39m
+   [32mΓ£ô[39m initializeSqliteMemory[2m > [22mpersists validated provider accounts by credential reference without storing raw secrets[32m 72[2mms[22m[39m
+   [32mΓ£ô[39m initializeSqliteMemory[2m > [22mupserts and lists provider accounts for runtime control-plane reads[32m 66[2mms[22m[39m
+   [32mΓ£ô[39m initializeSqliteMemory[2m > [22mpersists runtime-managed endpoint activations for dynamic registry materialization[32m 64[2mms[22m[39m
+   [32mΓ£ô[39m initializeSqliteMemory[2m > [22mpersists and reads the global controller assignment for the runtime control plane[32m 66[2mms[22m[39m
+   [32mΓ£ô[39m initializeSqliteMemory[2m > [22mpersists device-auth session state for runtime OAuth polling[32m 64[2mms[22m[39m
+   [32mΓ£ô[39m initializeSqliteMemory[2m > [22mrecords explicit maintenance defaults and idempotent migration behavior[32m 69[2mms[22m[39m
+   [32mΓ£ô[39m initializeSqliteMemory[2m > [22mpersists and reloads the continuity rows needed for bounded context assembly[32m 84[2mms[22m[39m
+   [32mΓ£ô[39m initializeSqliteMemory[2m > [22mpersists retrieval receipts for later routing diagnostics[32m 69[2mms[22m[39m
+   [32mΓ£ô[39m initializeSqliteMemory[2m > [22mpersists runtime observation bundles, profile snapshots, and maintenance-policy reads[32m 158[2mms[22m[39m
+   [32mΓ£ô[39m initializeSqliteMemory[2m > [22mreads the latest observed profiles for a set of endpoint ids[32m 165[2mms[22m[39m
+   [32mΓ£ô[39m initializeSqliteMemory[2m > [22mflattens persisted runtime observations into canonical telemetry summary, comparison, and request rows[32m 153[2mms[22m[39m
+   [32mΓ£ô[39m initializeSqliteMemory[2m > [22mexports persisted runtime state for operator drills[32m 135[2mms[22m[39m
+   [32mΓ£ô[39m initializeSqliteMemory[2m > [22mrestores runtime state from a backup after scoped deletion[32m 143[2mms[22m[39m
+[31m   [31m├ù[31m initializeSqliteMemory[2m > [22mpersists throughput penalty state and expires it after the penalty window[39m[32m 9[2mms[22m[39m
+[31m     ΓåÆ expected 'undefined' to be 'function' // Object.is equality[39m
+   [32mΓ£ô[39m runRuntimeStateValidation[2m > [22mvalidates provider accounts and initializes SQLite through the local validation path[32m 70[2mms[22m[39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/index.test.ts > initializeSqliteMemory > persists throughput penalty state and expires it after the penalty window
+AssertionError: expected 'undefined' to be 'function' // Object.is equality
+
+Expected: "function"
+Received: "undefined"
+
+ Γ¥» test/index.test.ts:1527:7
+    1525|         }
+    1526|       ).upsertObservedThroughputPenaltyState,
+    1527|     ).toBe("function");
+       |       ^
+    1528|     expect(
+    1529|       typeof (
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m15 passed[39m[22m[90m (16)[39m
+[2m   Start at [22m 19:23:50
+[2m   Duration [22m 3.30s[2m (transform 409ms, setup 0ms, collect 503ms, tests 1.45s, environment 0ms, prepare 351ms)[22m
+
+D:\DEV\role-model\.worktrees\24-router-runtime-recency-bias-throughput-sla\role-model-router\packages\sqlite-memory:
+ΓÇëERR_PNPM_RECURSIVE_RUN_FIRST_FAILΓÇë @role-model-router/sqlite-memory@0.0.0 test: `vitest run test/index.test.ts`
+Exit status 1

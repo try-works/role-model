@@ -1,0 +1,13 @@
+Run 22 manual QA readback
+
+1. Read docs/architecture/07-router-runtime-routing-strategy-lock.md
+   - Confirmed proposal goals, mode vocabulary, config ownership, difficulty rubric, compatibility policy, and run mapping are repo-owned.
+
+2. Read downstream requirement contracts for runs 23 and 30
+   - Confirmed both now consume the repo-owned routing-strategy lock doc as input.
+
+3. Read back the frozen policy/scope rules
+   - Confirmed local-plus-remote scope is explicit.
+   - Confirmed exact-model backward compatibility is explicit.
+   - Confirmed design-system-first UI work is explicit for the convergence run.
+   - Confirmed TDD and end-to-end verification discipline is explicit for later implementation runs.

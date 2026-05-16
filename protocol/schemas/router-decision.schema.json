@@ -89,14 +89,7 @@
           "metric_breakdown": {
             "type": "object",
             "additionalProperties": false,
-            "required": [
-              "quality",
-              "latency",
-              "throughput",
-              "cost",
-              "reliability",
-              "preference"
-            ],
+            "required": ["quality", "latency", "throughput", "cost", "reliability", "preference"],
             "properties": {
               "quality": { "$ref": "#/$defs/metricEntry" },
               "latency": { "$ref": "#/$defs/metricEntry" },
@@ -129,16 +122,16 @@
         "enum": [
           "BEST_TOTAL_SCORE",
           "MEASURED_PROFILE_USED",
-            "DECLARED_PROFILE_USED",
-            "DEFAULT_PROFILE_USED",
-            "LOCAL_PREFERENCE_APPLIED",
-            "REMOTE_PREFERENCE_APPLIED",
-            "CONTINUITY_AFFINITY_APPLIED",
-            "CACHE_AFFINITY_APPLIED",
-            "ROUTING_MODEL_PREFERENCE_APPLIED",
-            "BUDGET_OPTIMIZATION",
-            "LOW_LATENCY_TARGET_MET",
-            "HIGH_QUALITY_TARGET_MET",
+          "DECLARED_PROFILE_USED",
+          "DEFAULT_PROFILE_USED",
+          "LOCAL_PREFERENCE_APPLIED",
+          "REMOTE_PREFERENCE_APPLIED",
+          "CONTINUITY_AFFINITY_APPLIED",
+          "CACHE_AFFINITY_APPLIED",
+          "ROUTING_MODEL_PREFERENCE_APPLIED",
+          "BUDGET_OPTIMIZATION",
+          "LOW_LATENCY_TARGET_MET",
+          "HIGH_QUALITY_TARGET_MET",
           "ROLE_POLICY_APPLIED",
           "TASK_POLICY_APPLIED",
           "FALLBACK_CHAIN_COMPUTED"

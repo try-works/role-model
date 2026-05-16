@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 
 export interface LiteLLMProviderOAuth {
+  readonly apiBase?: string;
   readonly oauthHost: string;
   readonly clientId: string;
   readonly deviceAuthorizationEndpoint: string;
@@ -56,6 +57,7 @@ const KNOWN_PROVIDER_OVERRIDES: Readonly<Record<string, Partial<LiteLLMProviderI
     supportedAuthModes: ["api-key-static", "oauth2-device-code"],
     controlPlaneRequirements: ["workspace.required", "kimi-code.oauth.device"],
     oauth: {
+      apiBase: "https://api.kimi.com/coding/v1",
       oauthHost: "https://auth.kimi.com",
       clientId: "17e5f671-d194-4dfb-9706-5516cb48c098",
       deviceAuthorizationEndpoint: "https://auth.kimi.com/api/oauth/device_authorization",
@@ -259,7 +261,9 @@ function inferProviderInfo(providerId: string): LiteLLMProviderInfo {
     adapterFamily,
     apiBase: override?.apiBase ?? "",
     docsUrl: override?.docsUrl ?? null,
-    envVars: override?.envVars ?? [`${providerId.toUpperCase().replace(/[^A-Z0-9]/g, "_")}_API_KEY`],
+    envVars: override?.envVars ?? [
+      `${providerId.toUpperCase().replace(/[^A-Z0-9]/g, "_")}_API_KEY`,
+    ],
     supportedAuthModes: override?.supportedAuthModes ?? [],
     controlPlaneRequirements: override?.controlPlaneRequirements ?? [],
     localOverrideApplied: Boolean(override),
@@ -300,7 +304,10 @@ export function deriveLiteLLMProviders(modelPrices: unknown): readonly LiteLLMPr
   return providerIds.map(inferProviderInfo);
 }
 
-export function extractLiteLLMModelIds(modelPrices: unknown, providerId: string): readonly string[] {
+export function extractLiteLLMModelIds(
+  modelPrices: unknown,
+  providerId: string,
+): readonly string[] {
   if (!modelPrices || typeof modelPrices !== "object") {
     return [];
   }
@@ -332,7 +339,14 @@ export async function loadLiteLLMModelPrices(repoRoot: string): Promise<unknown>
   const candidates = [
     path.join(liteLLMPath, "model_prices_and_context_window.json"),
     path.join(repoRoot, "testdata", "catalog", "litellm-model-prices.json"),
-    path.join(repoRoot, "role-model-router", "packages", "vendor-litellm", "data", "model-prices.json"),
+    path.join(
+      repoRoot,
+      "role-model-router",
+      "packages",
+      "vendor-litellm",
+      "data",
+      "model-prices.json",
+    ),
   ];
 
   for (const candidate of candidates) {

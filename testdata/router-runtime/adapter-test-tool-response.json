@@ -1,0 +1,15 @@
+{
+  "id": "resp_test_tool_01",
+  "output": [
+    {
+      "type": "function_call",
+      "call_id": "call_1",
+      "name": "lookupRegistry",
+      "arguments": "{\"endpointId\":\"test.capture.tool-v1\"}"
+    }
+  ],
+  "usage": {
+    "input_tokens": 20,
+    "output_tokens": 12
+  }
+}

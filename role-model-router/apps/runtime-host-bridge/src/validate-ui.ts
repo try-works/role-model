@@ -1,18 +1,31 @@
+import { readFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
+
+import { runRuntimeAdapterValidation } from "@role-model-router/adapter-execution/cli";
+import { createRuntimeObservationBundle } from "@role-model-router/runtime-observability";
+import {
+  persistRuntimeObservationBundle,
+  resolveSqliteMemoryLocation,
+} from "@role-model-router/sqlite-memory";
 
 import { createRuntimeBridgeBackend, startBridgeServer } from "./index.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+async function readJson<T>(filePath: string): Promise<T> {
+  return JSON.parse(await readFile(filePath, "utf8")) as T;
+}
+
 export interface RuntimeUiValidationOptions {
   readonly repoRoot: string;
   readonly runtimeStateRoot: string;
   readonly scopeId: string;
   readonly unifiedRuntimeConfigPath?: string;
+  readonly fixtureRoot?: string;
 }
 
 export interface RuntimeUiValidationResult {
@@ -30,6 +43,11 @@ export interface RuntimeUiValidationResult {
   readonly accountRoleBindingIncludesUpsert: boolean;
   readonly activatedEndpointId: string;
   readonly endpointListIncludesActivation: boolean;
+  readonly routedRequestId: string;
+  readonly telemetryListIncludesRoutedRequest: boolean;
+  readonly routedRequestRoutingDecisionId: string | null;
+  readonly routedRequestEffectiveMode: string | null;
+  readonly routedRequestRewriteReason: string | null;
 }
 
 export async function runRuntimeUiValidation(
@@ -88,7 +106,13 @@ export async function runRuntimeUiValidation(
       headers: requestHeaders,
     });
 
-    if (!summaryResponse.ok || !providersResponse.ok || !accountsResponse.ok || !rolesResponse.ok || !endpointsResponse.ok) {
+    if (
+      !summaryResponse.ok ||
+      !providersResponse.ok ||
+      !accountsResponse.ok ||
+      !rolesResponse.ok ||
+      !endpointsResponse.ok
+    ) {
       throw new Error("Runtime UI validation could not read the control-plane routes.");
     }
 
@@ -160,7 +184,9 @@ export async function runRuntimeUiValidation(
         }),
       });
       if (!runtimeConfigUpdateResponse.ok) {
-        throw new Error(`Runtime UI validation runtime-config update failed with ${runtimeConfigUpdateResponse.status}.`);
+        throw new Error(
+          `Runtime UI validation runtime-config update failed with ${runtimeConfigUpdateResponse.status}.`,
+        );
       }
 
       const updatedRuntimeConfigRecord = (await runtimeConfigUpdateResponse.json()) as {
@@ -170,7 +196,8 @@ export async function runRuntimeUiValidation(
         };
       };
       runtimeConfigUpdatedVersion = updatedRuntimeConfigRecord.config?.version ?? null;
-      runtimeConfigUpdatedRoutingStrategy = updatedRuntimeConfigRecord.config?.routingStrategy ?? null;
+      runtimeConfigUpdatedRoutingStrategy =
+        updatedRuntimeConfigRecord.config?.routingStrategy ?? null;
     }
 
     const upsertedAccountId = "moonshot.personal.primary";
@@ -244,7 +271,9 @@ export async function runRuntimeUiValidation(
       }),
     });
     if (!activateEndpointResponse.ok) {
-      throw new Error(`Runtime UI validation endpoint activation failed with ${activateEndpointResponse.status}.`);
+      throw new Error(
+        `Runtime UI validation endpoint activation failed with ${activateEndpointResponse.status}.`,
+      );
     }
 
     const updatedEndpointsResponse = await fetch(`${baseUrl}/api/role-model/endpoints`, {
@@ -269,6 +298,103 @@ export async function runRuntimeUiValidation(
     };
 
     const moonshotProvider = providers.find((provider) => provider.providerId === "moonshot");
+    const fixtureRoot =
+      options.fixtureRoot ?? path.join(options.repoRoot, "testdata", "router-runtime", "fixtures");
+    const history = await readJson<{
+      byEndpointId: Record<
+        string,
+        Parameters<typeof createRuntimeObservationBundle>[0]["priorSamples"]
+      >;
+    }>(path.join(options.repoRoot, "testdata", "router-runtime", "observability-history.json"));
+    const policy = await readJson<
+      Parameters<typeof createRuntimeObservationBundle>[0]["capturePolicy"]
+    >(path.join(options.repoRoot, "testdata", "router-runtime", "observability-policy.json"));
+    const validation = await runRuntimeAdapterValidation({
+      repoRoot: options.repoRoot,
+      fixtureRoot,
+      runtimeStateRoot: options.runtimeStateRoot,
+      scopeId: `${options.scopeId}-routing-proof`,
+    });
+    const routedRequestId = "req-runtime-ui-routing-001";
+    const routedObservation = createRuntimeObservationBundle({
+      decision: {
+        ...validation.decision,
+        request_id: routedRequestId,
+        routing_decision_id: "route-runtime-ui-routing-001",
+      },
+      routingDiagnostics: {
+        ...validation.routingDiagnostics,
+        routingMode: {
+          source: "request-override",
+          requestedOverride: "baseline",
+          effectiveMode: "baseline",
+        },
+        rewrite: {
+          requestedModel: "openai/gpt-4.1-mini-fast",
+          downstreamModelId: "openai/gpt-4.1-mini-fast",
+          applied: false,
+          reason: "requested-model-matches-downstream",
+        },
+      },
+      retrievalReceipt: validation.retrievalReceipt,
+      contextEnvelope: validation.contextEnvelope,
+      execution: validation.execution,
+      priorSamples: history.byEndpointId[validation.decision.chosen_endpoint_id] ?? [],
+      maintenancePolicy: {
+        "redaction.level": "strict",
+        "retention.class": "standard",
+      },
+      capturePolicy: policy,
+      accountState: {
+        providerAccountId: validation.execution.target.providerAccountId,
+        status: "active",
+        healthStatus: "healthy",
+        rotationState: "stable",
+      },
+    });
+    persistRuntimeObservationBundle({
+      databasePath: resolveSqliteMemoryLocation({
+        runtimeStateRoot: options.runtimeStateRoot,
+        scopeId: options.scopeId,
+      }),
+      observation: routedObservation,
+    });
+
+    const telemetryRequestsResponse = await fetch(
+      `${baseUrl}/api/role-model/telemetry/requests?limit=10`,
+      {
+        headers: requestHeaders,
+      },
+    );
+    if (!telemetryRequestsResponse.ok) {
+      throw new Error("Runtime UI validation could not read telemetry requests.");
+    }
+    const telemetryRequests = (await telemetryRequestsResponse.json()) as Array<{
+      requestId: string;
+      routingDecisionId?: string | null;
+    }>;
+    const routedTelemetryRequest =
+      telemetryRequests.find((request) => request.requestId === routedRequestId) ?? null;
+
+    const routedRequestDetailResponse = await fetch(
+      `${baseUrl}/api/role-model/requests/${routedRequestId}`,
+      {
+        headers: requestHeaders,
+      },
+    );
+    if (!routedRequestDetailResponse.ok) {
+      throw new Error("Runtime UI validation could not read the routed request detail.");
+    }
+    const routedRequestDetail = (await routedRequestDetailResponse.json()) as {
+      routingDiagnostics?: {
+        routingMode?: {
+          effectiveMode?: string | null;
+        };
+        rewrite?: {
+          reason?: string | null;
+        };
+      };
+    };
 
     return {
       providerCount: finalSummary.providerCount,
@@ -289,20 +415,25 @@ export async function runRuntimeUiValidation(
           account.providerAccountId === upsertedAccountId &&
           account.modelRoleBindings?.some(
             (binding) =>
-              binding.modelId === "moonshot/kimi-k2.5" &&
-              binding.roleIds.includes("general.chat"),
+              binding.modelId === "moonshot/kimi-k2.5" && binding.roleIds.includes("general.chat"),
           ),
       ),
       activatedEndpointId,
       endpointListIncludesActivation: updatedEndpoints.some(
         (endpoint) => endpoint.endpointId === activatedEndpointId,
       ),
+      routedRequestId,
+      telemetryListIncludesRoutedRequest: routedTelemetryRequest !== null,
+      routedRequestRoutingDecisionId: routedTelemetryRequest?.routingDecisionId ?? null,
+      routedRequestEffectiveMode:
+        routedRequestDetail.routingDiagnostics?.routingMode?.effectiveMode ?? null,
+      routedRequestRewriteReason: routedRequestDetail.routingDiagnostics?.rewrite?.reason ?? null,
     };
   } finally {
     await server.close();
     await delay(10);
     if (previousMoonshotApiKey === undefined) {
-      delete process.env.MOONSHOT_API_KEY;
+      process.env.MOONSHOT_API_KEY = undefined;
     } else {
       process.env.MOONSHOT_API_KEY = previousMoonshotApiKey;
     }
@@ -341,6 +472,7 @@ if (process.argv[1] === __filename) {
     JSON.stringify(
       await runRuntimeUiValidation({
         repoRoot,
+        fixtureRoot: path.join(__dirname, "..", "test", "fixtures"),
         runtimeStateRoot,
         scopeId: "runtime-ui-validation",
         unifiedRuntimeConfigPath,

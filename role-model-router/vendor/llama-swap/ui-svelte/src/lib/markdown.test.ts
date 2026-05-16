@@ -1,5 +1,13 @@
-import { describe, it, expect } from "vitest";
-import { renderMarkdown, escapeHtml, splitCompleteBlocks, closePendingBlock, normalizeLatexDelimiters, renderStreamingMarkdown, createStreamingCache } from "./markdown";
+import { describe, expect, it } from "vitest";
+import {
+  closePendingBlock,
+  createStreamingCache,
+  escapeHtml,
+  normalizeLatexDelimiters,
+  renderMarkdown,
+  renderStreamingMarkdown,
+  splitCompleteBlocks,
+} from "./markdown";
 
 describe("renderMarkdown", () => {
   describe("basic markdown", () => {
@@ -182,7 +190,7 @@ More text here.
 
     it("returns fallback HTML on processing errors", () => {
       // Very large or malformed input should be handled
-      const result = renderMarkdown("$" + "a".repeat(10000) + "$");
+      const result = renderMarkdown(`$${"a".repeat(10000)}$`);
       expect(result).toBeTruthy();
     });
   });

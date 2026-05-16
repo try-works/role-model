@@ -159,7 +159,9 @@ function unique(values: readonly string[] | undefined): string[] {
 }
 
 function inferAuthFamily(provider: CatalogSnapshotProvider): string {
-  return provider.envVars.some((envVar) => envVar.endsWith("_API_KEY")) ? "api-key" : "runtime-defined";
+  return provider.envVars.some((envVar) => envVar.endsWith("_API_KEY"))
+    ? "api-key"
+    : "runtime-defined";
 }
 
 function validateSnapshot(snapshot: CatalogSnapshot): void {
@@ -169,7 +171,10 @@ function validateSnapshot(snapshot: CatalogSnapshot): void {
   ensure(snapshot.models.length > 0, "Catalog snapshot must contain at least one model");
   for (const provider of snapshot.providers) {
     ensure(provider.providerId.trim().length > 0, "Catalog snapshot providerId is required");
-    ensure(provider.displayName.trim().length > 0, "Catalog snapshot provider displayName is required");
+    ensure(
+      provider.displayName.trim().length > 0,
+      "Catalog snapshot provider displayName is required",
+    );
   }
   for (const model of snapshot.models) {
     ensure(model.modelId.trim().length > 0, "Catalog snapshot modelId is required");
@@ -199,7 +204,10 @@ function resolveModelDefinition(
     };
   }
 
-  ensure(!seen.includes(model.modelId), `Catalog model inheritance cycle detected for ${model.modelId}`);
+  ensure(
+    !seen.includes(model.modelId),
+    `Catalog model inheritance cycle detected for ${model.modelId}`,
+  );
   const baseModel = modelsById.get(model.extends);
   ensure(baseModel, `Catalog model ${model.modelId} extends missing base model ${model.extends}`);
 
@@ -209,7 +217,10 @@ function resolveModelDefinition(
     model: {
       ...resolvedBase.model,
       ...model,
-      capabilities: unique([...(resolvedBase.model.capabilities ?? []), ...(model.capabilities ?? [])]),
+      capabilities: unique([
+        ...(resolvedBase.model.capabilities ?? []),
+        ...(model.capabilities ?? []),
+      ]),
       modalities: unique(model.modalities ?? resolvedBase.model.modalities),
       experimentalModes: model.experimentalModes ?? resolvedBase.model.experimentalModes,
       requestShapeHints: model.requestShapeHints ?? resolvedBase.model.requestShapeHints,
@@ -242,7 +253,9 @@ export function normalizeCatalogSnapshot(
 ): NormalizedCatalog {
   validateSnapshot(snapshot);
 
-  const providersById = new Map(snapshot.providers.map((provider) => [provider.providerId, provider]));
+  const providersById = new Map(
+    snapshot.providers.map((provider) => [provider.providerId, provider]),
+  );
   const modelsById = new Map(snapshot.models.map((model) => [model.modelId, model]));
 
   const providers = snapshot.providers
@@ -271,7 +284,10 @@ export function normalizeCatalogSnapshot(
     .map<NormalizedCatalogModel>((model) => {
       const resolved = resolveModelDefinition(modelsById, model);
       const provider = providersById.get(resolved.model.providerId);
-      ensure(provider, `Catalog model ${resolved.model.modelId} references missing provider ${resolved.model.providerId}`);
+      ensure(
+        provider,
+        `Catalog model ${resolved.model.modelId} references missing provider ${resolved.model.providerId}`,
+      );
 
       const providerOverride = overrides.providers?.[provider.providerId];
       const modelOverride = overrides.models?.[resolved.model.modelId];
@@ -283,7 +299,10 @@ export function normalizeCatalogSnapshot(
         authFamily: providerOverride?.authFamily ?? inferAuthFamily(provider),
         displayName: resolved.model.displayName,
         version: resolved.model.version ?? "unversioned",
-        capabilities: unique([...(resolved.model.capabilities ?? []), ...(modelOverride?.capabilities ?? [])]),
+        capabilities: unique([
+          ...(resolved.model.capabilities ?? []),
+          ...(modelOverride?.capabilities ?? []),
+        ]),
         modalities: unique(resolved.model.modalities),
         contextWindow: resolved.model.contextWindow ?? 0,
         maxOutputTokens: resolved.model.maxOutputTokens ?? 0,
