@@ -6,3 +6,4 @@ coverage/
 *.tsbuildinfo
 role-model-router/rust/target/
 runtime-output/
+.cache/

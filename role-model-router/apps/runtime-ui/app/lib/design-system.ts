@@ -332,6 +332,86 @@ const controlModelsRoute = createRoute({
     "Model cards stay observational unless a real persistence surface exists; editing belongs to Runtime Config or account onboarding.",
 });
 
+const routerOverviewRoute = createRoute({
+  id: "router-overview",
+  to: "/app/router",
+  label: "Overview",
+  section: "Router",
+  icon: GitBranch,
+  template: "registry-detail",
+  eyebrow: "Router",
+  title: "Routing overview",
+  description:
+    "First-class operator summary for routing posture, decision flow, and the live handoff between config, candidates, and request outcomes.",
+  noteTitle: "Registry detail",
+  noteBody:
+    "Lead with the current routing posture and recent decision movement so the Router section reads as explanation, not raw trace replay.",
+});
+
+const routerConfigRoute = createRoute({
+  id: "router-config",
+  to: "/app/router/config",
+  label: "Config",
+  section: "Router",
+  icon: SlidersHorizontal,
+  template: "registry-detail",
+  eyebrow: "Router",
+  title: "Routing config",
+  description:
+    "Consolidated routing configuration and provenance surface spanning strategy, execution mode, controller, and policy-source context.",
+  noteTitle: "Registry detail",
+  noteBody:
+    "Separate persisted config from advisory guidance and per-request policy resolution so unconfigured values stay honest.",
+});
+
+const routerCandidatesRoute = createRoute({
+  id: "router-candidates",
+  to: "/app/router/candidates",
+  label: "Candidates",
+  section: "Router",
+  icon: Network,
+  template: "ledger-inspector",
+  eyebrow: "Router",
+  title: "Candidate inventory",
+  description:
+    "Comparable local and remote endpoint inventory with health, role coverage, and observed routing signals in one operator surface.",
+  noteTitle: "Ledger inspector",
+  noteBody:
+    "Optimize for scanability first, then expose richer per-candidate posture without splitting local and remote inventory into separate pages.",
+});
+
+const routerDecisionsRoute = createRoute({
+  id: "router-decisions",
+  to: "/app/router/decisions",
+  label: "Decisions",
+  section: "Router",
+  icon: ListChecks,
+  template: "ledger-inspector",
+  eyebrow: "Router",
+  title: "Routing decisions",
+  description:
+    "Explainable routing ledger keyed by recent requests with direct drill-in to chosen endpoint, fallback posture, and policy summary.",
+  noteTitle: "Ledger inspector",
+  noteBody:
+    "Keep the decision ledger scannable and make the drill-in path explicit instead of forcing users through raw request detail first.",
+});
+
+const routerDecisionDetailRoute = createRoute({
+  id: "router-decision-detail",
+  to: "/app/router/decisions/:requestId",
+  label: "Decision detail",
+  section: "Router",
+  icon: ListChecks,
+  template: "ledger-inspector",
+  eyebrow: "Router",
+  title: "Routing decision detail",
+  description:
+    "Explainable routing detail for one request, including scored candidates, routing diagnostics, and links into Observe request traces.",
+  noteTitle: "Ledger inspector",
+  noteBody:
+    "Expose scored candidates, provenance, and downstream trace links together so Router remains the explanation surface and Observe stays the deep inspector.",
+});
+
 const observeActivityRoute = createRoute({
   id: "observe-activity",
   to: "/app/observe/activity",
@@ -478,6 +558,11 @@ const runtimeRouteDefinitions = [
   controlControllerRoute,
   controlEndpointsRoute,
   controlModelsRoute,
+  routerOverviewRoute,
+  routerConfigRoute,
+  routerCandidatesRoute,
+  routerDecisionsRoute,
+  routerDecisionDetailRoute,
   observeActivityRoute,
   observeRequestsRoute,
   observeLogsRoute,
@@ -527,6 +612,11 @@ export const runtimeNavigationSections: readonly RuntimeNavigationSection[] = [
       controlEndpointsRoute,
       controlModelsRoute,
     ],
+  },
+  {
+    title: "Router",
+    icon: GitBranch,
+    items: [routerOverviewRoute, routerConfigRoute, routerCandidatesRoute, routerDecisionsRoute],
   },
   {
     title: "Observe",
@@ -668,6 +758,9 @@ export function getRuntimeRouteDefinition(pathname: string): RuntimeRouteDefinit
   }
   if (pathname.startsWith("/app/observe/requests/")) {
     return observeRequestDetailRoute;
+  }
+  if (pathname.startsWith("/app/router/decisions/")) {
+    return routerDecisionDetailRoute;
   }
   return runtimeRouteDefinitions.find((route) => route.to === pathname);
 }

@@ -1,0 +1,17 @@
+{
+  "byEndpointId": {
+    "test.capture.chat-v1": [
+      {
+        "endpoint_id": "test.capture.chat-v1",
+        "endpoint_version": "run07-registry-v1:default",
+        "source_type": "benchmark",
+        "timestamp_ms": 1748000000000,
+        "latency_ms": 120,
+        "latency_ms_p95": 250,
+        "tokens_per_sec": 45,
+        "judge_score": 0.87,
+        "cost_per_1k_tokens_est": 0.0003
+      }
+    ]
+  }
+}

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router";
+import { Link, useLocation } from "react-router";
 
 import {
   CodeBlock,
@@ -18,7 +18,11 @@ import {
   fetchRuntimeSnapshot,
   submitWorkbenchChat,
 } from "../lib/runtime-api";
-import { buildWorkbenchModelOptions, summarizeWorkbenchResult } from "../lib/view-models";
+import {
+  buildWorkbenchEndpointOptions,
+  buildWorkbenchModelOptions,
+  summarizeWorkbenchResult,
+} from "../lib/view-models";
 
 const routingModeOptions: Array<{
   label: string;
@@ -41,14 +45,36 @@ function formatRoutingModeLabel(
   return value.slice(0, 1).toUpperCase() + value.slice(1);
 }
 
+function readLocationRoutingModeOverride(
+  value: unknown,
+): "" | NonNullable<WorkbenchChatInput["routingModeOverride"]> {
+  if (
+    value === "baseline" ||
+    value === "difficulty" ||
+    value === "controller" ||
+    value === "hybrid"
+  ) {
+    return value;
+  }
+
+  return "";
+}
+
 export default function WorkbenchRoute() {
+  const location = useLocation();
+  const locationRoutingModeOverride = readLocationRoutingModeOverride(
+    typeof location.state === "object" && location.state !== null
+      ? (location.state as { routingModeOverride?: unknown }).routingModeOverride
+      : undefined,
+  );
   const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [model, setModel] = useState("");
+  const [endpointId, setEndpointId] = useState("");
   const [routingModeOverride, setRoutingModeOverride] = useState<
     "" | NonNullable<WorkbenchChatInput["routingModeOverride"]>
-  >("");
+  >(locationRoutingModeOverride);
   const [prompt, setPrompt] = useState("Summarize the chosen endpoint.");
   const [result, setResult] = useState<Record<string, unknown> | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -57,19 +83,50 @@ export default function WorkbenchRoute() {
     void fetchRuntimeSnapshot()
       .then((data) => {
         setSnapshot(data);
-        if (data.models[0]?.id) {
-          setModel(data.models[0].id);
-        }
       })
       .catch((value: unknown) =>
         setLoadError(value instanceof Error ? value.message : "Could not load workbench."),
       );
   }, []);
 
+  useEffect(() => {
+    if (locationRoutingModeOverride) {
+      setRoutingModeOverride(locationRoutingModeOverride);
+    }
+  }, [locationRoutingModeOverride]);
   const modelOptions = useMemo(
     () => buildWorkbenchModelOptions(snapshot?.models ?? []),
     [snapshot?.models],
   );
+  const endpointOptions = useMemo(
+    () =>
+      snapshot
+        ? buildWorkbenchEndpointOptions({
+            modelId: model,
+            models: snapshot.models,
+            endpoints: snapshot.endpoints,
+            accounts: snapshot.accounts,
+          })
+        : [],
+    [model, snapshot],
+  );
+
+  useEffect(() => {
+    if (!snapshot) {
+      return;
+    }
+    if (!snapshot.models.some((entry) => entry.id === model)) {
+      setModel(snapshot.models[0]?.id ?? "");
+    }
+  }, [model, snapshot]);
+
+  useEffect(() => {
+    setEndpointId((current) =>
+      endpointOptions.some((option) => option.value === current)
+        ? current
+        : (endpointOptions[0]?.value ?? ""),
+    );
+  }, [endpointOptions]);
 
   if (loadError) {
     return <ErrorState label={loadError} />;
@@ -86,6 +143,7 @@ export default function WorkbenchRoute() {
     try {
       const response = await submitWorkbenchChat({
         model,
+        endpointId: endpointId || undefined,
         messages: [{ role: "user", content: prompt }],
         routingModeOverride: routingModeOverride || undefined,
       });
@@ -149,6 +207,20 @@ export default function WorkbenchRoute() {
                 onChange={(event) => setModel(event.target.value)}
               >
                 {modelOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="grid gap-2 text-sm">
+              <span className="font-medium text-[var(--rm-fg)]">Endpoint</span>
+              <select
+                className={fieldClassName}
+                value={endpointId}
+                onChange={(event) => setEndpointId(event.target.value)}
+              >
+                {endpointOptions.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
                   </option>

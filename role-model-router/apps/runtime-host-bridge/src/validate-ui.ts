@@ -25,6 +25,7 @@ export interface RuntimeUiValidationOptions {
   readonly runtimeStateRoot: string;
   readonly scopeId: string;
   readonly unifiedRuntimeConfigPath?: string;
+  readonly fixtureRoot?: string;
 }
 
 export interface RuntimeUiValidationResult {
@@ -295,7 +296,8 @@ export async function runRuntimeUiValidation(
     };
 
     const moonshotProvider = providers.find((provider) => provider.providerId === "moonshot");
-    const fixtureRoot = path.join(options.repoRoot, "testdata", "router-runtime", "fixtures");
+    const fixtureRoot =
+      options.fixtureRoot ?? path.join(options.repoRoot, "testdata", "router-runtime", "fixtures");
     const history = await readJson<{
       byEndpointId: Record<
         string,
@@ -463,6 +465,7 @@ if (process.argv[1] === __filename) {
     JSON.stringify(
       await runRuntimeUiValidation({
         repoRoot,
+        fixtureRoot: path.join(__dirname, "..", "test", "fixtures"),
         runtimeStateRoot,
         scopeId: "runtime-ui-validation",
         unifiedRuntimeConfigPath,

@@ -51,7 +51,7 @@ function createToolValidationRequest(): {
   ];
 } {
   return {
-    model: "openai/gpt-4.1-mini-fast",
+    model: "deepseek/tool-call-capture-v1",
     messages: [{ role: "user", content: "Use the registry tool." }],
     tools: [
       {
@@ -87,7 +87,15 @@ function requireObservation(
 export async function runRuntimeToolsValidation(
   options: RuntimeToolsValidationOptions,
 ): Promise<RuntimeToolsValidationResult> {
-  const backend = await createRuntimeBridgeBackend(options);
+  const backend = await createRuntimeBridgeBackend({
+    ...options,
+    fixtureRoot: path.join(
+      options.repoRoot,
+      "testdata",
+      "router-runtime",
+      "validate-tools-fixtures",
+    ),
+  });
   const requestId = "req-runtime-tools-validation-001";
   const result = (await backend.executeChatCompletions(
     createToolValidationRequest(),

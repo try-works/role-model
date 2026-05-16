@@ -8,6 +8,11 @@ import {
   fetchControllerAssignment,
   fetchDownstreamOpenAIProviderConfig,
   fetchRequestDetail,
+  fetchRouterCandidates,
+  fetchRouterConfig,
+  fetchRouterDecisionDetail,
+  fetchRouterDecisions,
+  fetchRouterSummary,
   fetchRuntimeConfig,
   fetchRuntimeSnapshot,
   fetchTelemetryDashboard,
@@ -225,6 +230,230 @@ describe("fetchRequestDetail", () => {
         latestProfile: { endpoint_id: "openai.personal.primary.us-east-1.fast" },
         recentSamples: [],
       },
+    });
+  });
+});
+
+describe("router APIs", () => {
+  test("loads the router summary, config, candidates, and decision ledger from router-specific endpoints", async () => {
+    const fetcher = vi.fn(async (input: string | URL | Request) => {
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+
+      switch (url) {
+        case "/api/role-model/router/summary":
+          return jsonResponse({
+            strategy: "balanced",
+            executionMode: "hybrid",
+            controller: {
+              endpointId: "cli.local.coder",
+              modelId: "gpt-5.4",
+              sourceType: "local",
+            },
+            configuredCandidateCount: 2,
+            recentDecisionCount: 3,
+          });
+        case "/api/role-model/router/config":
+          return jsonResponse({
+            persisted: {
+              strategy: "balanced",
+              executionMode: "hybrid",
+            },
+            controller: {
+              endpointId: "cli.local.coder",
+              modelId: "gpt-5.4",
+              sourceType: "local",
+            },
+            guidance: {
+              endpointId: "cli.local.coder",
+              preferredEndpointIds: ["cli.local.coder"],
+              ignoredEndpointIds: ["moonshot.personal.primary.global.kimi-k2.5"],
+            },
+            sources: {
+              runtimeConfigPath: "D:\\runtime-config.yaml",
+              routingModel: "fixture",
+              policyInputs: "fixture+runtime",
+            },
+            policySources: {
+              roles: [
+                {
+                  role_id: "general.chat",
+                  routing_policy_overrides: { compute_preference: "balanced" },
+                },
+              ],
+              tasks: [{ task_type: "general.chat", description: "General chat task" }],
+              roleBindings: [
+                {
+                  binding_id: "binding-001",
+                  endpoint_id: "cli.local.coder",
+                  role_id: "general.chat",
+                },
+              ],
+            },
+          });
+        case "/api/role-model/router/candidates":
+          return jsonResponse([
+            {
+              endpointId: "cli.local.coder",
+              modelId: "gpt-5.4",
+              providerId: "local",
+              sourceType: "local",
+              endpointKind: "local_process",
+              servingSource: "local",
+              healthStatus: "healthy",
+              controllerEligible: true,
+              preferred: true,
+              ignored: false,
+              roleBindings: ["general.chat"],
+              toolCallingSupported: true,
+            },
+          ]);
+        case "/api/role-model/router/decisions":
+          return jsonResponse([
+            {
+              requestId: "req-router-001",
+              routingDecisionId: "route-001",
+              selectedEndpointId: "cli.local.coder",
+              selectedModelId: "gpt-5.4",
+              strategyLabel: "balanced",
+              decidedAtMs: 1_735_689_600_000,
+            },
+          ]);
+        default:
+          throw new Error(`Unexpected request: ${url}`);
+      }
+    });
+
+    await expect(fetchRouterSummary(fetcher)).resolves.toEqual({
+      strategy: "balanced",
+      executionMode: "hybrid",
+      controller: {
+        endpointId: "cli.local.coder",
+        modelId: "gpt-5.4",
+        sourceType: "local",
+      },
+      configuredCandidateCount: 2,
+      recentDecisionCount: 3,
+    });
+    await expect(fetchRouterConfig(fetcher)).resolves.toEqual({
+      persisted: {
+        strategy: "balanced",
+        executionMode: "hybrid",
+      },
+      controller: {
+        endpointId: "cli.local.coder",
+        modelId: "gpt-5.4",
+        sourceType: "local",
+      },
+      guidance: {
+        endpointId: "cli.local.coder",
+        preferredEndpointIds: ["cli.local.coder"],
+        ignoredEndpointIds: ["moonshot.personal.primary.global.kimi-k2.5"],
+      },
+      sources: {
+        runtimeConfigPath: "D:\\runtime-config.yaml",
+        routingModel: "fixture",
+        policyInputs: "fixture+runtime",
+      },
+      policySources: {
+        roles: [
+          { role_id: "general.chat", routing_policy_overrides: { compute_preference: "balanced" } },
+        ],
+        tasks: [{ task_type: "general.chat", description: "General chat task" }],
+        roleBindings: [
+          { binding_id: "binding-001", endpoint_id: "cli.local.coder", role_id: "general.chat" },
+        ],
+      },
+    });
+    await expect(fetchRouterCandidates(fetcher)).resolves.toEqual([
+      {
+        endpointId: "cli.local.coder",
+        modelId: "gpt-5.4",
+        providerId: "local",
+        sourceType: "local",
+        endpointKind: "local_process",
+        servingSource: "local",
+        healthStatus: "healthy",
+        controllerEligible: true,
+        preferred: true,
+        ignored: false,
+        roleBindings: ["general.chat"],
+        toolCallingSupported: true,
+      },
+    ]);
+    await expect(fetchRouterDecisions(fetcher)).resolves.toEqual([
+      {
+        requestId: "req-router-001",
+        routingDecisionId: "route-001",
+        selectedEndpointId: "cli.local.coder",
+        selectedModelId: "gpt-5.4",
+        strategyLabel: "balanced",
+        decidedAtMs: 1_735_689_600_000,
+      },
+    ]);
+  });
+
+  test("loads router decision detail from the router decision endpoint", async () => {
+    const fetcher = vi.fn(async (input: string | URL | Request) => {
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      expect(url).toBe("/api/role-model/router/decisions/req-router-001");
+
+      return jsonResponse({
+        requestId: "req-router-001",
+        routingDecisionId: "route-001",
+        selectedEndpointId: "cli.local.coder",
+        selectedModelId: "gpt-5.4",
+        fallbackEndpointIds: ["moonshot.personal.primary.global.kimi-k2.5"],
+        strategyLabel: "balanced",
+        decision: {
+          routing_decision_id: "route-001",
+          fallback_endpoint_ids: ["moonshot.personal.primary.global.kimi-k2.5"],
+        },
+        routingDiagnostics: {
+          routingMode: {
+            effectiveMode: "controller",
+          },
+        },
+        request: {
+          requestId: "req-router-001",
+          endpointId: "cli.local.coder",
+        },
+        endpointProfile: {
+          endpointId: "cli.local.coder",
+          latestProfile: { endpoint_id: "cli.local.coder" },
+          recentSamples: [],
+        },
+        observeRequestPath: "/app/observe/requests/req-router-001",
+      });
+    });
+
+    await expect(fetchRouterDecisionDetail("req-router-001", fetcher)).resolves.toEqual({
+      requestId: "req-router-001",
+      routingDecisionId: "route-001",
+      selectedEndpointId: "cli.local.coder",
+      selectedModelId: "gpt-5.4",
+      fallbackEndpointIds: ["moonshot.personal.primary.global.kimi-k2.5"],
+      strategyLabel: "balanced",
+      decision: {
+        routing_decision_id: "route-001",
+        fallback_endpoint_ids: ["moonshot.personal.primary.global.kimi-k2.5"],
+      },
+      routingDiagnostics: {
+        routingMode: {
+          effectiveMode: "controller",
+        },
+      },
+      request: {
+        requestId: "req-router-001",
+        endpointId: "cli.local.coder",
+      },
+      endpointProfile: {
+        endpointId: "cli.local.coder",
+        latestProfile: { endpoint_id: "cli.local.coder" },
+        recentSamples: [],
+      },
+      observeRequestPath: "/app/observe/requests/req-router-001",
     });
   });
 });
@@ -694,6 +923,41 @@ describe("submitWorkbenchChat", () => {
         messages: [{ role: "user", content: "Route this through the hybrid path." }],
         routingModeOverride: "hybrid",
       };
+
+    await expect(submitWorkbenchChat(payload, fetcher)).resolves.toEqual({
+      choices: [{ message: { content: "Handled." } }],
+    });
+  });
+
+  test("sends endpoint override as a header instead of leaking it into the OpenAI-compatible body", async () => {
+    const fetcher = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      expect(url).toBe("/v1/chat/completions");
+      expect(init?.method).toBe("POST");
+      expect(init?.headers).toEqual(
+        expect.objectContaining({
+          "content-type": "application/json",
+          "x-role-model-endpoint-id": "moonshot.personal.primary.global.kimi-k2.5",
+        }),
+      );
+      expect(init?.body).toBe(
+        JSON.stringify({
+          model: "moonshot/kimi-k2.5",
+          messages: [{ role: "user", content: "Use the saved OAuth endpoint." }],
+        }),
+      );
+
+      return jsonResponse({
+        choices: [{ message: { content: "Handled." } }],
+      });
+    });
+
+    const payload: import("./runtime-api").WorkbenchChatInput & { endpointId: string } = {
+      model: "moonshot/kimi-k2.5",
+      messages: [{ role: "user", content: "Use the saved OAuth endpoint." }],
+      endpointId: "moonshot.personal.primary.global.kimi-k2.5",
+    };
 
     await expect(submitWorkbenchChat(payload, fetcher)).resolves.toEqual({
       choices: [{ message: { content: "Handled." } }],

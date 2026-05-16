@@ -1,0 +1,32 @@
+{
+  "cloud": [
+    {
+      "endpointId": "test.capture.chat-v1",
+      "providerAccountId": "deepseek.capture.account",
+      "modelId": "deepseek/chat-capture-v1",
+      "region": "global",
+      "endpointKind": "remote-openai-compatible",
+      "servingSource": "remote-service",
+      "lifecycleState": "active",
+      "healthStatus": "healthy",
+      "capabilities": ["text.chat", "tools.function_calling"]
+    }
+  ],
+  "local": [
+    {
+      "endpointId": "cli.local.coder",
+      "providerKind": "provider-cli",
+      "providerId": "local-cli",
+      "modelId": "gpt-5.4",
+      "capabilities": ["code.edit", "reasoning.multi_step", "tools.function_calling"],
+      "modalities": ["text"],
+      "endpointKind": "cli-agent",
+      "servingSource": "local-process",
+      "lifecycleState": "active",
+      "hostClass": "developer-workstation",
+      "deviceClass": "developer-workstation",
+      "region": "local",
+      "orgScope": "personal"
+    }
+  ]
+}

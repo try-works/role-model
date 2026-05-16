@@ -109,9 +109,17 @@ function buildAvailableModels(input: {
   });
 }
 
+let nextLocalModelKeyId = 0;
+
+function createLocalModelKey(): string {
+  nextLocalModelKeyId += 1;
+  return `local-model-${nextLocalModelKeyId}`;
+}
+
 export default function ProvidersRoute() {
   const [searchParams] = useSearchParams();
   const initializedRef = useRef(false);
+  const localModelKeyMapRef = useRef(new WeakMap<RuntimeConfigModel, string>());
   const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [providerAccountId, setProviderAccountId] = useState("");
@@ -121,12 +129,23 @@ export default function ProvidersRoute() {
   const [selectedModel, setSelectedModel] = useState<string>("");
   const [selectedModelRoles, setSelectedModelRoles] = useState<ModelRoleSelection>({});
   const [oauthState, setOauthState] = useState<RuntimeDeviceAuthorization | null>(null);
+  const [oauthConnected, setOauthConnected] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [authorizing, setAuthorizing] = useState(false);
   const [polling, setPolling] = useState(false);
   const [configRecord, setConfigRecord] = useState<RuntimeConfigRecord | null>(null);
   const [localModels, setLocalModels] = useState<RuntimeConfigModel[]>([]);
   const [savingLocalModels, setSavingLocalModels] = useState(false);
+
+  const getLocalModelKey = useCallback((model: RuntimeConfigModel) => {
+    const existing = localModelKeyMapRef.current.get(model);
+    if (existing) {
+      return existing;
+    }
+    const nextKey = createLocalModelKey();
+    localModelKeyMapRef.current.set(model, nextKey);
+    return nextKey;
+  }, []);
 
   const applyProviderSelection = useCallback(
     (
@@ -158,6 +177,7 @@ export default function ProvidersRoute() {
       setSelectedModel("");
       setSelectedModelRoles({});
       setOauthState(null);
+      setOauthConnected(false);
     },
     [],
   );
@@ -222,6 +242,10 @@ export default function ProvidersRoute() {
           if (result.status !== "pending") {
             await syncConnectedEndpoints(result);
             await load();
+            if (result.status === "connected") {
+              setOauthConnected(true);
+              window.setTimeout(() => setOauthState(null), 2000);
+            }
           }
         })
         .catch((value) =>
@@ -333,17 +357,15 @@ export default function ProvidersRoute() {
       budgetPolicyRef: "budget.default",
       quotaPolicyRef: "quota.default",
       status:
-        selectedVariant.authMode === "api-key-static" || oauthState?.status === "connected"
-          ? "active"
-          : "disabled",
+        selectedVariant.authMode === "api-key-static" || oauthConnected ? "active" : "disabled",
       healthStatus:
-        selectedVariant.authMode === "api-key-static" || oauthState?.status === "connected"
+        selectedVariant.authMode === "api-key-static" || oauthConnected
           ? "healthy"
           : "credentials-missing",
       rotationState:
         selectedVariant.authMode === "api-key-static"
           ? "stable"
-          : oauthState?.status === "connected"
+          : oauthConnected
             ? "stable"
             : "in-progress",
     };
@@ -359,7 +381,7 @@ export default function ProvidersRoute() {
     setError(null);
     try {
       await upsertRuntimeAccount(buildProviderPayload());
-      if (selectedVariant.authMode === "api-key-static") {
+      if (selectedVariant.authMode === "api-key-static" || oauthConnected) {
         await activateRuntimeEndpoint({
           providerAccountId,
           modelId: selectedModel,
@@ -424,6 +446,10 @@ export default function ProvidersRoute() {
       setOauthState((current) => (current ? { ...current, ...result } : result));
       await syncConnectedEndpoints(result);
       await load();
+      if (result.status === "connected") {
+        setOauthConnected(true);
+        window.setTimeout(() => setOauthState(null), 2000);
+      }
     } catch (value) {
       setError(
         value instanceof Error ? value.message : "Could not refresh provider authorization.",
@@ -571,7 +597,7 @@ export default function ProvidersRoute() {
                   <div className="space-y-3">
                     {localModels.map((model, index) => (
                       <div
-                        key={`${model.modelId}:${model.path}:${index === 0 ? 1 : localModels.slice(0, index + 1).filter((entry) => entry.modelId === model.modelId && entry.path === model.path).length}`}
+                        key={getLocalModelKey(model)}
                         className={`${raisedPanelClassName} space-y-3 p-4 text-sm`}
                       >
                         <div className="flex items-center justify-between">

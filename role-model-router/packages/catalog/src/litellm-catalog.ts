@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 
 export interface LiteLLMProviderOAuth {
+  readonly apiBase?: string;
   readonly oauthHost: string;
   readonly clientId: string;
   readonly deviceAuthorizationEndpoint: string;
@@ -54,6 +55,7 @@ const KNOWN_PROVIDER_OVERRIDES: Readonly<Record<string, Partial<LiteLLMProviderI
     supportedAuthModes: ["api-key-static", "oauth2-device-code"],
     controlPlaneRequirements: ["workspace.required", "kimi-code.oauth.device"],
     oauth: {
+      apiBase: "https://api.kimi.com/coding/v1",
       oauthHost: "https://auth.kimi.com",
       clientId: "17e5f671-d194-4dfb-9706-5516cb48c098",
       deviceAuthorizationEndpoint: "https://auth.kimi.com/api/oauth/device_authorization",

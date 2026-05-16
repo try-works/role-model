@@ -312,6 +312,79 @@ export function buildWorkbenchModelOptions(
     }));
 }
 
+export function buildWorkbenchEndpointOptions(input: {
+  readonly modelId: string;
+  readonly models: ReadonlyArray<
+    Pick<RuntimeModelRecord, "id"> & Partial<Pick<RuntimeModelRecord, "endpoint_ids">>
+  >;
+  readonly endpoints: ReadonlyArray<
+    Pick<
+      RuntimeEndpoint,
+      | "endpointId"
+      | "modelId"
+      | "providerId"
+      | "providerAccountId"
+      | "status"
+      | "healthStatus"
+      | "sourceType"
+    >
+  >;
+  readonly accounts: ReadonlyArray<
+    Pick<RuntimeAccount, "providerAccountId" | "providerId"> &
+      Partial<Pick<RuntimeAccount, "credentialRef">>
+  >;
+}): Array<{ label: string; value: string }> {
+  const model = input.models.find((entry) => entry.id === input.modelId);
+  const fallbackEndpointIds = input.endpoints
+    .filter((endpoint) => endpoint.modelId === input.modelId)
+    .map((endpoint) => endpoint.endpointId);
+  const endpointIds = uniqueStrings(
+    model?.endpoint_ids?.length ? model.endpoint_ids : fallbackEndpointIds,
+  );
+  const endpointsById = new Map(input.endpoints.map((endpoint) => [endpoint.endpointId, endpoint]));
+  const accountsById = new Map(
+    input.accounts.map((account) => [account.providerAccountId, account]),
+  );
+  const toCredentialPriority = (endpointId: string): number => {
+    const accountId = endpointsById.get(endpointId)?.providerAccountId;
+    const backend = accountId ? accountsById.get(accountId)?.credentialRef?.backend : undefined;
+    if (backend === "local-file" || backend === "local-encrypted-file") {
+      return 0;
+    }
+    if (backend === "env") {
+      return 1;
+    }
+    return 2;
+  };
+  const toHealthPriority = (endpointId: string): number => {
+    const endpoint = endpointsById.get(endpointId);
+    if (endpoint?.healthStatus === "healthy") {
+      return 0;
+    }
+    if (endpoint?.status === "active") {
+      return 1;
+    }
+    return 2;
+  };
+
+  return endpointIds
+    .sort((left, right) => {
+      const credentialPriority = toCredentialPriority(left) - toCredentialPriority(right);
+      if (credentialPriority !== 0) {
+        return credentialPriority;
+      }
+      const healthPriority = toHealthPriority(left) - toHealthPriority(right);
+      if (healthPriority !== 0) {
+        return healthPriority;
+      }
+      return sortLexical(left, right);
+    })
+    .map((endpointId) => ({
+      label: endpointId,
+      value: endpointId,
+    }));
+}
+
 export function buildModelCatalogRows(
   models: ReadonlyArray<
     Pick<RuntimeModelRecord, "id"> & Partial<Pick<RuntimeModelRecord, "endpoint_ids">>

@@ -587,6 +587,19 @@ function toDifficultyStrategy(
   }
 }
 
+function toHybridSummaryStrategy(strategy: string): "balanced" | "cost" | "quality" {
+  switch (strategy) {
+    case "cost":
+    case "low-cost":
+      return "cost";
+    case "quality":
+    case "high-quality":
+      return "quality";
+    default:
+      return "balanced";
+  }
+}
+
 function filterEndpointsByDifficulty(input: {
   readonly allowEndpoints: readonly string[];
   readonly difficulty: UnifiedRuntimeDifficultyBucket;
@@ -808,7 +821,7 @@ function maybeApplyControllerRouting(input: {
       routingRequest: input.routingRequest,
       controllerContext: input.controllerContext,
       preferredEndpointIds: [],
-      finalStrategy: input.routingRequest.strategy,
+      finalStrategy: toHybridSummaryStrategy(input.routingRequest.strategy),
     });
     return {
       routingRequest: input.routingRequest,
@@ -829,7 +842,7 @@ function maybeApplyControllerRouting(input: {
   const guidanceStrategy =
     guidance.strategy && isBridgeRoutingStrategy(guidance.strategy) ? guidance.strategy : undefined;
   const preferredEndpointIds = collectPreferredEndpointIds(
-    input.routingRequest.allowEndpoints,
+    input.routingRequest.allowEndpoints ?? [],
     guidance.preferredEndpointIds,
   );
   const requiredCapabilities =
@@ -1047,6 +1060,11 @@ export interface StartBridgeServerOptions {
   readonly updateControllerAssignment?: (
     body: Record<string, unknown>,
   ) => Promise<BridgeControllerAssignment>;
+  readonly readRouterSummary?: () => Promise<unknown>;
+  readonly readRouterConfig?: () => Promise<unknown>;
+  readonly listRouterCandidates?: () => Promise<readonly unknown[]>;
+  readonly listRouterDecisions?: () => Promise<readonly unknown[]>;
+  readonly readRouterDecision?: (requestId: string) => Promise<unknown>;
   readonly listRecentRequestObservations?: () => Promise<readonly unknown[]>;
   readonly readTelemetrySummary?: (query?: BridgeTelemetryQuery) => Promise<unknown>;
   readonly listTelemetryComparisonRows?: (
@@ -1164,6 +1182,11 @@ export interface RuntimeBridgeBackend {
   activateEndpoint(body: Record<string, unknown>): Promise<Record<string, unknown>>;
   readControllerAssignment(): Promise<BridgeControllerAssignment | null>;
   updateControllerAssignment(body: Record<string, unknown>): Promise<BridgeControllerAssignment>;
+  readRouterSummary(): Promise<unknown>;
+  readRouterConfig(): Promise<unknown>;
+  listRouterCandidates(): Promise<readonly unknown[]>;
+  listRouterDecisions(): Promise<readonly unknown[]>;
+  readRouterDecision(requestId: string): Promise<unknown>;
   listEndpoints(): Promise<
     readonly {
       endpointId: string;
@@ -1246,6 +1269,7 @@ export interface BridgeServerOptions {
 
 export interface BridgeExecutionRequestOptions {
   readonly routingModeOverride?: RuntimeRoutingMode;
+  readonly endpointId?: string;
 }
 
 class BridgeHttpError extends Error {
@@ -1314,11 +1338,15 @@ function readBridgeExecutionRequestOptions(
   request: IncomingMessage,
 ): BridgeExecutionRequestOptions | undefined {
   const routingModeOverrideHeader = request.headers["x-role-model-routing-mode"]?.toString().trim();
-  if (!routingModeOverrideHeader) {
+  const endpointIdHeader = request.headers["x-role-model-endpoint-id"]?.toString().trim();
+  if (!routingModeOverrideHeader && !endpointIdHeader) {
     return undefined;
   }
   return {
-    routingModeOverride: parseRuntimeRoutingModeOverride(routingModeOverrideHeader),
+    ...(routingModeOverrideHeader
+      ? { routingModeOverride: parseRuntimeRoutingModeOverride(routingModeOverrideHeader) }
+      : {}),
+    ...(endpointIdHeader ? { endpointId: endpointIdHeader } : {}),
   };
 }
 
@@ -2360,6 +2388,23 @@ function resolveRequestedModelPool(
   };
 }
 
+function applyRequestedEndpointOverride(input: {
+  readonly requestedModel: string;
+  readonly allowEndpoints: readonly string[];
+  readonly requestOptions?: BridgeExecutionRequestOptions;
+}): readonly string[] {
+  const endpointId = input.requestOptions?.endpointId;
+  if (!endpointId) {
+    return input.allowEndpoints;
+  }
+  if (!input.allowEndpoints.includes(endpointId)) {
+    throw new Error(
+      `Requested endpoint ${endpointId} is not available for model ${input.requestedModel}.`,
+    );
+  }
+  return [endpointId];
+}
+
 function resolveRequestedModelAlias(
   requestedModel: string,
   modelAliases: readonly UnifiedRuntimeModelAliasConfig[] = [],
@@ -2548,7 +2593,7 @@ function summarizeHybridArbitration(input: {
         : "aligned";
   return {
     active: true,
-    difficultyStrategy: input.routingRequest.strategy,
+    difficultyStrategy: toHybridSummaryStrategy(input.routingRequest.strategy),
     finalStrategy: input.finalStrategy,
     controllerChangedPlan,
     dominantSignal,
@@ -2568,11 +2613,16 @@ export function mapChatCompletionsRequest(
   requestOptions?: BridgeExecutionRequestOptions,
 ): BridgeExecutionPlan {
   const contextTokens = estimateContextTokens(body.messages, body.tools?.length ?? 0);
-  const { allowEndpoints, routingDiagnostics } = resolveRequestedModelPool(
+  const { allowEndpoints: modelAllowEndpoints, routingDiagnostics } = resolveRequestedModelPool(
     registry,
     body.model,
     modelAliases,
   );
+  const allowEndpoints = applyRequestedEndpointOverride({
+    requestedModel: body.model,
+    allowEndpoints: modelAllowEndpoints,
+    requestOptions,
+  });
   const effectiveRoutingMode = resolveEffectiveRoutingMode({
     requestedModel: body.model,
     modelAliases,
@@ -2655,11 +2705,16 @@ export function mapResponsesRequest(
 ): BridgeExecutionPlan {
   const messages = toResponsesInputMessages(body.input);
   const contextTokens = estimateContextTokens(messages, body.tools?.length ?? 0);
-  const { allowEndpoints, routingDiagnostics } = resolveRequestedModelPool(
+  const { allowEndpoints: modelAllowEndpoints, routingDiagnostics } = resolveRequestedModelPool(
     registry,
     body.model,
     modelAliases,
   );
+  const allowEndpoints = applyRequestedEndpointOverride({
+    requestedModel: body.model,
+    allowEndpoints: modelAllowEndpoints,
+    requestOptions,
+  });
   const effectiveRoutingMode = resolveEffectiveRoutingMode({
     requestedModel: body.model,
     modelAliases,
@@ -2817,7 +2872,6 @@ function parseModelOverridesBody(
 
   return parsed;
 }
-
 function readOptionalPositiveInteger(params: URLSearchParams, key: string): number | undefined {
   const rawValue = params.get(key);
   if (!rawValue) {
@@ -3064,18 +3118,87 @@ function tokenNeedsRefresh(payload: StoredOauthTokenPayload | null): boolean {
   return payload.saved_at_ms + payload.expires_in * 1000 <= Date.now() + 60_000;
 }
 
+function resolveOAuthVariant(
+  providerPresets: ProviderPresetCatalog,
+  liteLLMProviders: readonly {
+    providerId: string;
+    displayName: string;
+    apiBase: string;
+    oauth?: {
+      apiBase?: string;
+      clientId: string;
+      deviceAuthorizationEndpoint: string;
+      tokenEndpoint: string;
+      requiredHeaders: readonly string[];
+      scope?: string;
+    } | null;
+  }[],
+  providerId: string,
+  variantId: string,
+): (ProviderPresetVariant & { oauth: ProviderPresetVariantOAuth }) | undefined {
+  // Exact match in presets
+  const fromPresets = providerPresets.providers[providerId]?.variants.find(
+    (entry): entry is ProviderPresetVariant & { oauth: ProviderPresetVariantOAuth } =>
+      entry.variantId === variantId &&
+      entry.authMode === "oauth2-device-code" &&
+      Boolean(entry.oauth),
+  );
+  if (fromPresets) return fromPresets;
+  // Fall back to LiteLLM provider OAuth config (handles "{providerId}-oauth" alias from UI)
+  if (variantId === `${providerId}-oauth`) {
+    const liteLLMProvider = liteLLMProviders.find((p) => p.providerId === providerId);
+    if (liteLLMProvider?.oauth) {
+      return {
+        variantId,
+        label: `${liteLLMProvider.displayName} OAuth`,
+        description: `OAuth device-code authentication for ${liteLLMProvider.displayName}.`,
+        authMode: "oauth2-device-code",
+        availability: "ready" as const,
+        baseUrl: liteLLMProvider.oauth.apiBase ?? liteLLMProvider.apiBase,
+        modelIds: [],
+        oauth: liteLLMProvider.oauth,
+      };
+    }
+  }
+  return undefined;
+}
+
 function getOauthVariant(
   providerPresets: ProviderPresetCatalog,
+  liteLLMProviders: readonly {
+    providerId: string;
+    displayName: string;
+    apiBase: string;
+    oauth?: {
+      apiBase?: string;
+      clientId: string;
+      deviceAuthorizationEndpoint: string;
+      tokenEndpoint: string;
+      requiredHeaders: readonly string[];
+      scope?: string;
+    } | null;
+  }[],
   providerId: string,
 ): ProviderPresetVariant & { oauth: ProviderPresetVariantOAuth } {
-  const variant = providerPresets.providers[providerId]?.variants.find(
+  const fromPresets = providerPresets.providers[providerId]?.variants.find(
     (entry): entry is ProviderPresetVariant & { oauth: ProviderPresetVariantOAuth } =>
       entry.authMode === "oauth2-device-code" && Boolean(entry.oauth),
   );
-  if (!variant) {
-    throw new Error(`Provider ${providerId} does not expose an OAuth device-code variant.`);
+  if (fromPresets) return fromPresets;
+  const liteLLMProvider = liteLLMProviders.find((p) => p.providerId === providerId);
+  if (liteLLMProvider?.oauth) {
+    return {
+      variantId: `${providerId}-oauth`,
+      label: `${liteLLMProvider.displayName} OAuth`,
+      description: `OAuth device-code authentication for ${liteLLMProvider.displayName}.`,
+      authMode: "oauth2-device-code",
+      availability: "ready" as const,
+      baseUrl: liteLLMProvider.oauth.apiBase ?? liteLLMProvider.apiBase,
+      modelIds: [],
+      oauth: liteLLMProvider.oauth,
+    };
   }
-  return variant;
+  throw new Error(`Provider ${providerId} does not expose an OAuth device-code variant.`);
 }
 
 async function refreshOauthAccessToken(
@@ -3083,6 +3206,18 @@ async function refreshOauthAccessToken(
   scopeId: string,
   target: ResolvedExecutionTarget,
   providerPresets: ProviderPresetCatalog,
+  liteLLMProviders: readonly {
+    providerId: string;
+    displayName: string;
+    apiBase: string;
+    oauth?: {
+      clientId: string;
+      deviceAuthorizationEndpoint: string;
+      tokenEndpoint: string;
+      requiredHeaders: readonly string[];
+      scope?: string;
+    } | null;
+  }[],
   networkFetcher: typeof fetch,
   deviceId: string,
   onRefreshed?: () => void,
@@ -3107,7 +3242,7 @@ async function refreshOauthAccessToken(
     );
   }
 
-  const variant = getOauthVariant(providerPresets, target.providerId);
+  const variant = getOauthVariant(providerPresets, liteLLMProviders, target.providerId);
   const tokenResponse = await networkFetcher(variant.oauth.tokenEndpoint, {
     method: "POST",
     headers: createDeviceHeaders(deviceId, variant.oauth.requiredHeaders),
@@ -3156,6 +3291,18 @@ async function resolveCredentialValue(
   scopeId: string,
   target: ResolvedExecutionTarget,
   providerPresets?: ProviderPresetCatalog,
+  liteLLMProviders?: readonly {
+    providerId: string;
+    displayName: string;
+    apiBase: string;
+    oauth?: {
+      clientId: string;
+      deviceAuthorizationEndpoint: string;
+      tokenEndpoint: string;
+      requiredHeaders: readonly string[];
+      scope?: string;
+    } | null;
+  }[],
   networkFetcher?: typeof fetch,
   deviceId?: string,
   onRefreshed?: () => void,
@@ -3182,6 +3329,7 @@ async function resolveCredentialValue(
     if (
       tokenNeedsRefresh(tokenPayload) &&
       providerPresets &&
+      liteLLMProviders &&
       networkFetcher &&
       typeof deviceId === "string"
     ) {
@@ -3190,6 +3338,7 @@ async function resolveCredentialValue(
         scopeId,
         target,
         providerPresets,
+        liteLLMProviders,
         networkFetcher,
         deviceId,
         onRefreshed,
@@ -3353,10 +3502,10 @@ function summarizeProviderError(status: number, body: unknown): string {
 }
 
 function shouldUseLiveProviderExecution(target: ResolvedExecutionTarget): boolean {
+  const backend = target.account?.credentialRef.backend;
   return (
     target.adapterFamily === "ai-sdk-openai-compatible" &&
-    (target.account?.credentialRef.backend === "local-file" ||
-      target.account?.credentialRef.backend === "local-encrypted-file")
+    (backend === "local-file" || backend === "local-encrypted-file")
   );
 }
 
@@ -3705,7 +3854,7 @@ function setCorsHeaders(response: ServerResponse): void {
   response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
   response.setHeader(
     "Access-Control-Allow-Headers",
-    "Content-Type, Authorization, X-Request-ID, X-Role-Model-Routing-Mode",
+    "Content-Type, Authorization, X-Request-ID, X-Role-Model-Routing-Mode, X-Role-Model-Endpoint-Id",
   );
 }
 
@@ -4139,6 +4288,59 @@ function createRequestHandler(options: StartBridgeServerOptions) {
           error: error instanceof Error ? error.message : "controller assignment update failed",
         });
       }
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/role-model/router/summary") {
+      if (!options.readRouterSummary) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.readRouterSummary());
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/role-model/router/config") {
+      if (!options.readRouterConfig) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.readRouterConfig());
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/role-model/router/candidates") {
+      if (!options.listRouterCandidates) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.listRouterCandidates());
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/role-model/router/decisions") {
+      if (!options.listRouterDecisions) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.listRouterDecisions());
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname.startsWith("/api/role-model/router/decisions/")) {
+      if (!options.readRouterDecision) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      const requestId = decodeURIComponent(
+        url.pathname.slice("/api/role-model/router/decisions/".length),
+      );
+      const detail = await options.readRouterDecision(requestId);
+      if (!detail) {
+        writeJson(response, 404, { error: "request not found" });
+        return;
+      }
+      writeJson(response, 200, detail);
       return;
     }
 
@@ -4735,19 +4937,21 @@ export async function createRuntimeBridgeBackend(
   };
 
   if (currentUnifiedRuntimeConfig === null) {
-    const validation = validateProviderAccounts({
-      catalog: currentNormalizedCatalog,
-      additionalProviders: liteLLMProviders,
-      accounts: providerAccountsFixture.accounts,
-      allowedRoleIds,
-    });
-    if (validation.diagnostics.length > 0) {
-      throw new Error("Provider-account validation failed for runtime host bridge.");
+    if (providerAccountsFixture.accounts.length > 0) {
+      const validation = validateProviderAccounts({
+        catalog: currentNormalizedCatalog,
+        additionalProviders: liteLLMProviders,
+        accounts: providerAccountsFixture.accounts,
+        allowedRoleIds,
+      });
+      if (validation.diagnostics.length > 0) {
+        throw new Error("Provider-account validation failed for runtime host bridge.");
+      }
+      persistProviderAccounts({
+        databasePath: initialization.databasePath,
+        accounts: validation.accounts,
+      });
     }
-    persistProviderAccounts({
-      databasePath: initialization.databasePath,
-      accounts: validation.accounts,
-    });
     rebuildCurrentState();
   } else {
     await applyUnifiedRuntimeConfigState(currentUnifiedRuntimeConfig);
@@ -4891,7 +5095,7 @@ export async function createRuntimeBridgeBackend(
     }));
   };
   const emitTelemetryUpdate = (requestId: string): void => {
-    const request = listTelemetryRequestRecords({ limit: 1 }).find(
+    const request = listTelemetryRequestRecords({ limit: DEFAULT_TELEMETRY_LIMIT }).find(
       (record) => record.requestId === requestId,
     );
     if (!request) {
@@ -4923,6 +5127,185 @@ export async function createRuntimeBridgeBackend(
       databasePath: initialization.databasePath,
       scope: "global",
     });
+  const asObjectRecord = (value: unknown): Record<string, unknown> | null =>
+    typeof value === "object" && value !== null ? (value as Record<string, unknown>) : null;
+  const asStringValue = (value: unknown): string | null =>
+    typeof value === "string" && value.length > 0 ? value : null;
+  const getCurrentControllerAssignment = (): BridgeControllerAssignment | null => {
+    const persisted = readPersistedControllerAssignment();
+    if (persisted) {
+      return {
+        ...persisted,
+        scope: "global",
+        sourceType: persisted.sourceType === "remote" ? "remote" : "local",
+      };
+    }
+    return getDefaultControllerAssignment();
+  };
+  const getRouterGuidance = () => ({
+    endpointId: routingModel.endpointId,
+    preferredEndpointIds: [...routingModel.preferredEndpointIds],
+    ignoredEndpointIds: currentRegistry.endpoints
+      .map((endpoint) => endpoint.identity.endpoint_id)
+      .filter((endpointId) => !routingModel.preferredEndpointIds.includes(endpointId)),
+  });
+  const readEndpointProfileData = (endpointId: string) => {
+    const observedDataConfig = resolveUnifiedRuntimeObservedDataConfig(currentUnifiedRuntimeConfig);
+    const difficultyProfiles = Object.fromEntries(
+      (["easy", "medium", "hard"] as const).map((difficultyBucket) => [
+        difficultyBucket,
+        readLatestObservedProfile({
+          databasePath: initialization.databasePath,
+          endpointId,
+          difficultyBucket,
+        }),
+      ]),
+    ) as Record<UnifiedRuntimeDifficultyBucket, ReturnType<typeof readLatestObservedProfile>>;
+
+    return {
+      endpointId,
+      latestProfile: readLatestObservedProfile({
+        databasePath: initialization.databasePath,
+        endpointId,
+      }),
+      recentSamples: readObservedPerformanceSamples({
+        databasePath: initialization.databasePath,
+        endpointId,
+      }),
+      difficultyProfiles,
+      advisoryMaxDifficultyRecommendation: readAdvisoryMaxDifficultyRecommendation({
+        databasePath: initialization.databasePath,
+        endpointId,
+        thresholds: observedDataConfig.difficultyLearning.recommendation,
+      }),
+    };
+  };
+  const readRouterSummaryData = () => ({
+    strategy: currentUnifiedRuntimeConfig?.routingStrategy ?? null,
+    executionMode: currentUnifiedRuntimeConfig?.executionMode ?? "decision_only",
+    controller: getCurrentControllerAssignment(),
+    guidance: getRouterGuidance(),
+    configuredCandidateCount: currentRegistry.endpoints.length,
+    recentDecisionCount: listTelemetryRequestRecords({ limit: DEFAULT_TELEMETRY_LIMIT }).length,
+  });
+  const readRouterConfigData = () => ({
+    persisted: {
+      strategy: currentUnifiedRuntimeConfig?.routingStrategy ?? null,
+      executionMode: currentUnifiedRuntimeConfig?.executionMode ?? "decision_only",
+    },
+    controller: getCurrentControllerAssignment(),
+    guidance: getRouterGuidance(),
+    sources: {
+      runtimeConfigPath: options.unifiedRuntimeConfigPath ?? null,
+      routingModel: "fixture",
+      policyInputs: "fixture+runtime",
+    },
+    policySources: {
+      roles: runtimeRoles.roleDefinitions,
+      tasks: roleTaskFixture.taskDefinitions,
+      roleBindings: buildRuntimeRoleBindings(
+        roleTaskFixture.roleBindings ?? [],
+        runtimeEndpoints,
+        currentAccounts,
+        currentRegistry,
+        runtimeRoles.roleDefinitions,
+      ),
+    },
+  });
+  const listRouterCandidateData = () => {
+    const controller = getCurrentControllerAssignment();
+    const guidance = getRouterGuidance();
+    return currentRegistry.endpoints.map((endpoint) => {
+      const endpointId = endpoint.identity.endpoint_id;
+      const profile = readEndpointProfileData(endpointId);
+      return {
+        endpointId,
+        modelId: endpoint.identity.model_id,
+        providerId: currentModelsById.get(endpoint.identity.model_id)?.providerId ?? null,
+        sourceType: toSourceType(endpoint.identity.endpoint_kind),
+        endpointKind: endpoint.identity.endpoint_kind,
+        servingSource: endpoint.identity.serving_source,
+        region: endpoint.identity.region,
+        status: endpoint.status,
+        healthStatus:
+          runtimeEndpoints.find((entry) => entry.endpointId === endpointId)?.healthStatus ??
+          (endpoint.deniedByPolicy ? "policy-blocked" : "healthy"),
+        roleBindings: getEndpointRoleIds(endpointId, runtimeEndpoints, currentAccounts),
+        capabilities: endpoint.declared.capabilities,
+        toolCallingSupported: endpoint.declared.tool_calling.supported,
+        toolCallingStyle: endpoint.declared.tool_calling.style,
+        controllerEligible: controller?.endpointId === endpointId,
+        preferred: guidance.preferredEndpointIds.includes(endpointId),
+        ignored: guidance.ignoredEndpointIds.includes(endpointId),
+        latestProfile: profile.latestProfile,
+        recentSamples: profile.recentSamples,
+        difficultyProfiles: profile.difficultyProfiles,
+        advisoryMaxDifficultyRecommendation: profile.advisoryMaxDifficultyRecommendation,
+      };
+    });
+  };
+  const listRouterDecisionData = () =>
+    listTelemetryRequestRecords({ limit: DEFAULT_TELEMETRY_LIMIT }).map((record) => {
+      const observation = readRuntimeObservationBundle({
+        databasePath: initialization.databasePath,
+        requestId: record.requestId,
+      }) as Record<string, unknown> | null;
+      const routingDiagnostics = asObjectRecord(observation?.routingDiagnostics);
+      const routingMode = asObjectRecord(routingDiagnostics?.routingMode);
+      return {
+        requestId: record.requestId,
+        routingDecisionId: record.routingDecisionId ?? null,
+        selectedEndpointId: record.endpointId,
+        selectedModelId: record.modelId ?? null,
+        strategyLabel:
+          asStringValue(routingMode?.effectiveMode) ??
+          currentUnifiedRuntimeConfig?.routingStrategy ??
+          null,
+        decidedAtMs: record.createdAtMs,
+        sourceType: record.sourceType,
+        providerId: record.providerId ?? null,
+        finishReason: record.finishReason ?? null,
+      };
+    });
+  const readRouterDecisionData = (requestId: string) => {
+    const observation = readRuntimeObservationBundle({
+      databasePath: initialization.databasePath,
+      requestId,
+    }) as (RuntimeObservationBundle & BridgeTelemetryEndpointMeta) | null;
+    if (!observation) {
+      return null;
+    }
+    const routingDiagnostics = asObjectRecord(observation.routingDiagnostics);
+    const routingMode = asObjectRecord(routingDiagnostics?.routingMode);
+    const decision = asObjectRecord(observation.decision);
+    const requestRecord = listTelemetryRequestRecords({ limit: DEFAULT_TELEMETRY_LIMIT }).find(
+      (record) => record.requestId === requestId,
+    );
+    return {
+      requestId,
+      routingDecisionId:
+        requestRecord?.routingDecisionId ?? asStringValue(decision?.routing_decision_id) ?? null,
+      selectedEndpointId: observation.endpointId,
+      selectedModelId: requestRecord?.modelId ?? null,
+      fallbackEndpointIds: Array.isArray(decision?.fallback_endpoint_ids)
+        ? decision.fallback_endpoint_ids
+        : [],
+      strategyLabel:
+        asStringValue(routingMode?.effectiveMode) ??
+        currentUnifiedRuntimeConfig?.routingStrategy ??
+        null,
+      decision,
+      routingDiagnostics: observation.routingDiagnostics ?? null,
+      retrievalReceipt: observation.retrievalReceipt ?? null,
+      contextEnvelope: observation.contextEnvelope ?? null,
+      request: {
+        ...observation,
+        ...getTelemetryEndpointMeta(observation.endpointId),
+      },
+      endpointProfile: readEndpointProfileData(observation.endpointId),
+      observeRequestPath: `/app/observe/requests/${requestId}`,
+    };
+  };
   const executeBridgePlan = async (
     plan: BridgeExecutionPlan,
     requestId: string,
@@ -4995,6 +5378,14 @@ export async function createRuntimeBridgeBackend(
         requestCapture: ProviderRequestCapture;
         fallbackModelIds?: readonly string[];
       }) => {
+        // File-backed credentials (OAuth, locally-saved API keys) always need direct HTTP execution
+        // so that OAuth tokens are correctly resolved and X-Msh-* device headers are applied.
+        // In the unified config path, LiteLLM providers get adapterFamily "litellm-proxy", so
+        // shouldUseLiveProviderExecution would return false for them — this flag bypasses that check.
+        const useDirectExecution =
+          target.account?.credentialRef.backend === "local-file" ||
+          target.account?.credentialRef.backend === "local-encrypted-file";
+
         if (currentUnifiedRuntimeConfig) {
           if (target.providerAccountId === null) {
             if (!currentLlamaSwapVendor) {
@@ -5031,45 +5422,48 @@ export async function createRuntimeBridgeBackend(
               vendorMetadata: result.metadata,
             };
           }
-          if (!currentLiteLLMVendor) {
-            throw createVendorError(
-              "litellm",
-              "Configure litellm_proxy.providers to enable remote execution.",
+          if (!useDirectExecution) {
+            if (!currentLiteLLMVendor) {
+              throw createVendorError(
+                "litellm",
+                "Configure litellm_proxy.providers to enable remote execution.",
+              );
+            }
+            const result = await currentLiteLLMVendor.execute(
+              {
+                providerFamily: requestCapture.providerFamily,
+                endpointId: requestCapture.endpointId,
+                url: requestCapture.url,
+                headers: requestCapture.headers,
+                body: requestCapture.body,
+              },
+              {
+                ...(trackedStreamWriter && requestCapture.body.stream === true
+                  ? {
+                      streamWriter: async (chunk) => {
+                        await trackedStreamWriter(chunk, {
+                          endpointId: target.endpointId,
+                          adapterFamily: target.adapterFamily,
+                          routingDecisionId,
+                        });
+                      },
+                    }
+                  : {}),
+                ...(fallbackModelIds?.length ? { fallbackModelIds } : {}),
+              },
             );
+            return {
+              providerFamily: target.adapterFamily,
+              endpointId: target.endpointId,
+              statusCode: result.statusCode,
+              body: result.body,
+              vendorMetadata: result.metadata,
+            };
           }
-          const result = await currentLiteLLMVendor.execute(
-            {
-              providerFamily: requestCapture.providerFamily,
-              endpointId: requestCapture.endpointId,
-              url: requestCapture.url,
-              headers: requestCapture.headers,
-              body: requestCapture.body,
-            },
-            {
-              ...(trackedStreamWriter && requestCapture.body.stream === true
-                ? {
-                    streamWriter: async (chunk) => {
-                      await trackedStreamWriter(chunk, {
-                        endpointId: target.endpointId,
-                        adapterFamily: target.adapterFamily,
-                        routingDecisionId,
-                      });
-                    },
-                  }
-                : {}),
-              ...(fallbackModelIds?.length ? { fallbackModelIds } : {}),
-            },
-          );
-          return {
-            providerFamily: target.adapterFamily,
-            endpointId: target.endpointId,
-            statusCode: result.statusCode,
-            body: result.body,
-            vendorMetadata: result.metadata,
-          };
+          // Fall through to direct HTTP execution for file-backed credential accounts.
         }
 
-        if (!shouldUseLiveProviderExecution(target)) {
+        if (!useDirectExecution && !shouldUseLiveProviderExecution(target)) {
           const capture = captures.byEndpointId[target.endpointId];
           if (!capture) {
             throw new Error(`No response capture is configured for endpoint ${target.endpointId}.`);
@@ -5087,21 +5481,25 @@ export async function createRuntimeBridgeBackend(
           options.scopeId,
           target,
           providerPresets,
+          liteLLMProviders,
           networkFetcher,
           deviceId,
           rebuildCurrentState,
         );
         const oauthVariant = (() => {
-          const preset = providerPresets.providers[target.providerId ?? ""];
-          if (!preset || !target.account) return null;
-          return preset.variants.find((v) => v.authMode === target.account?.authMode && v.oauth);
+          if (!target.account || target.account.authMode !== "oauth2-device-code") return null;
+          try {
+            return getOauthVariant(providerPresets, liteLLMProviders, target.providerId ?? "");
+          } catch {
+            return null;
+          }
         })();
         const performRequest = async (resolvedCredentialValue: string) =>
           networkFetcher(requestCapture.url, {
             method: "POST",
             headers: {
               "content-type": "application/json",
-              ...(shouldUseLiveProviderExecution(target)
+              ...(useDirectExecution
                 ? createDeviceHeaders(deviceId, oauthVariant?.oauth?.requiredHeaders)
                 : {}),
               ...applyCredentialToHeaders(requestCapture.headers, resolvedCredentialValue),
@@ -5119,6 +5517,7 @@ export async function createRuntimeBridgeBackend(
             options.scopeId,
             target,
             providerPresets,
+            liteLLMProviders,
             networkFetcher,
             deviceId,
             rebuildCurrentState,
@@ -5959,9 +6358,12 @@ export async function createRuntimeBridgeBackend(
                   description: `OAuth device-code authentication for ${provider.displayName}.`,
                   authMode: "oauth2-device-code",
                   availability: "ready" as const,
-                  baseUrl: provider.apiBase,
+                  baseUrl: liteLLMProvider.oauth.apiBase ?? provider.apiBase,
                   modelIds: effectiveModelIds,
                   oauth: {
+                    ...(liteLLMProvider.oauth.apiBase
+                      ? { apiBase: liteLLMProvider.oauth.apiBase }
+                      : {}),
                     clientId: liteLLMProvider.oauth.clientId,
                     deviceAuthorizationEndpoint: liteLLMProvider.oauth.deviceAuthorizationEndpoint,
                     tokenEndpoint: liteLLMProvider.oauth.tokenEndpoint,
@@ -6008,9 +6410,10 @@ export async function createRuntimeBridgeBackend(
                     description: `OAuth device-code authentication for ${provider.displayName}.`,
                     authMode: "oauth2-device-code",
                     availability: "ready" as const,
-                    baseUrl: provider.apiBase,
+                    baseUrl: provider.oauth.apiBase ?? provider.apiBase,
                     modelIds: effectiveModelIds,
                     oauth: {
+                      ...(provider.oauth.apiBase ? { apiBase: provider.oauth.apiBase } : {}),
                       clientId: provider.oauth.clientId,
                       deviceAuthorizationEndpoint: provider.oauth.deviceAuthorizationEndpoint,
                       tokenEndpoint: provider.oauth.tokenEndpoint,
@@ -6218,10 +6621,8 @@ export async function createRuntimeBridgeBackend(
           `Provider ${providerId} is not present in the normalized catalog or LiteLLM provider list.`,
         );
       }
-      const variant = providerPresets.providers[providerId]?.variants.find(
-        (entry) => entry.variantId === variantId,
-      );
-      if (!variant || variant.authMode !== "oauth2-device-code" || !variant.oauth) {
+      const variant = resolveOAuthVariant(providerPresets, liteLLMProviders, providerId, variantId);
+      if (!variant) {
         throw new Error(`Provider variant ${variantId} does not expose device OAuth.`);
       }
 
@@ -6353,8 +6754,11 @@ export async function createRuntimeBridgeBackend(
       if (!session) {
         throw new Error(`Device authorization request ${authRequestId} was not found.`);
       }
-      const variant = providerPresets.providers[session.providerId]?.variants.find(
-        (entry) => entry.variantId === session.variantId,
+      const variant = resolveOAuthVariant(
+        providerPresets,
+        liteLLMProviders,
+        session.providerId,
+        session.variantId,
       );
       if (!variant?.oauth) {
         throw new Error(`Provider variant ${session.variantId} does not expose device OAuth.`);
@@ -6600,6 +7004,21 @@ export async function createRuntimeBridgeBackend(
         status: endpoint.status,
       }));
     },
+    async readRouterSummary(): Promise<unknown> {
+      return readRouterSummaryData();
+    },
+    async readRouterConfig(): Promise<unknown> {
+      return readRouterConfigData();
+    },
+    async listRouterCandidates(): Promise<readonly unknown[]> {
+      return listRouterCandidateData();
+    },
+    async listRouterDecisions(): Promise<readonly unknown[]> {
+      return listRouterDecisionData();
+    },
+    async readRouterDecision(requestId: string): Promise<unknown> {
+      return readRouterDecisionData(requestId);
+    },
     async readTelemetrySummary(query?: BridgeTelemetryQuery): Promise<BridgeTelemetrySummary> {
       return readTelemetrySummaryData(query);
     },
@@ -6653,37 +7072,7 @@ export async function createRuntimeBridgeBackend(
         typeof readAdvisoryMaxDifficultyRecommendation
       >;
     }> {
-      const observedDataConfig = resolveUnifiedRuntimeObservedDataConfig(
-        currentUnifiedRuntimeConfig,
-      );
-      const difficultyProfiles = Object.fromEntries(
-        (["easy", "medium", "hard"] as const).map((difficultyBucket) => [
-          difficultyBucket,
-          readLatestObservedProfile({
-            databasePath: initialization.databasePath,
-            endpointId,
-            difficultyBucket,
-          }),
-        ]),
-      ) as Record<UnifiedRuntimeDifficultyBucket, ReturnType<typeof readLatestObservedProfile>>;
-
-      return {
-        endpointId,
-        latestProfile: readLatestObservedProfile({
-          databasePath: initialization.databasePath,
-          endpointId,
-        }),
-        recentSamples: readObservedPerformanceSamples({
-          databasePath: initialization.databasePath,
-          endpointId,
-        }),
-        difficultyProfiles,
-        advisoryMaxDifficultyRecommendation: readAdvisoryMaxDifficultyRecommendation({
-          databasePath: initialization.databasePath,
-          endpointId,
-          thresholds: observedDataConfig.difficultyLearning.recommendation,
-        }),
-      };
+      return readEndpointProfileData(endpointId);
     },
     async listLocalModels(): Promise<
       readonly { modelId: string; loadedAt: string; engine: string }[]

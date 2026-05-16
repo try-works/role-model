@@ -11,6 +11,7 @@ import {
   buildProviderCards,
   buildTelemetryComparisonCards,
   buildTelemetryRequestRows,
+  buildWorkbenchEndpointOptions,
   buildWorkbenchModelOptions,
   summarizeRuntimeStats,
   summarizeTelemetryStats,
@@ -102,6 +103,72 @@ describe("buildWorkbenchModelOptions", () => {
     ).toEqual([
       { label: "Kimi K2.5", value: "moonshot/kimi-k2.5" },
       { label: "GPT 4.1 Mini Fast", value: "openai/gpt-4.1-mini-fast" },
+    ]);
+  });
+});
+
+describe("buildWorkbenchEndpointOptions", () => {
+  test("prefers saved OAuth endpoints over shared LiteLLM endpoints for the selected model", () => {
+    expect(
+      buildWorkbenchEndpointOptions({
+        modelId: "moonshot/kimi-k2.5",
+        models: [
+          {
+            id: "moonshot/kimi-k2.5",
+            endpoint_ids: [
+              "moonshot.litellm.global.kimi-k2.5",
+              "moonshot.personal.moonshot-oauth.global.kimi-k2.5",
+            ],
+          },
+        ],
+        endpoints: [
+          {
+            endpointId: "moonshot.litellm.global.kimi-k2.5",
+            modelId: "moonshot/kimi-k2.5",
+            providerId: "moonshot",
+            providerAccountId: "moonshot.litellm",
+            status: "active",
+            healthStatus: "healthy",
+            sourceType: "remote",
+          },
+          {
+            endpointId: "moonshot.personal.moonshot-oauth.global.kimi-k2.5",
+            modelId: "moonshot/kimi-k2.5",
+            providerId: "moonshot",
+            providerAccountId: "moonshot.personal.moonshot-oauth",
+            status: "active",
+            healthStatus: "healthy",
+            sourceType: "remote",
+          },
+        ],
+        accounts: [
+          {
+            providerAccountId: "moonshot.litellm",
+            providerId: "moonshot",
+            credentialRef: {
+              backend: "env",
+              ref: "MOONSHOT_API_KEY",
+            },
+          },
+          {
+            providerAccountId: "moonshot.personal.moonshot-oauth",
+            providerId: "moonshot",
+            credentialRef: {
+              backend: "local-file",
+              ref: "oauth/moonshot/moonshot.personal.moonshot-oauth",
+            },
+          },
+        ],
+      }),
+    ).toEqual([
+      {
+        label: "moonshot.personal.moonshot-oauth.global.kimi-k2.5",
+        value: "moonshot.personal.moonshot-oauth.global.kimi-k2.5",
+      },
+      {
+        label: "moonshot.litellm.global.kimi-k2.5",
+        value: "moonshot.litellm.global.kimi-k2.5",
+      },
     ]);
   });
 });

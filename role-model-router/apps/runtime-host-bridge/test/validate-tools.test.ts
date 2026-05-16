@@ -21,14 +21,14 @@ describe("runRuntimeToolsValidation", () => {
       scopeId: "runtime-tools-validation",
     });
 
-    expect(result.endpointId).toBe("openai.personal.primary.us-east-1.fast");
+    expect(result.endpointId).toBe("test.capture.tool-v1");
     expect(result.toolCalls).toEqual([
       {
         id: "call_1",
         type: "function",
         function: {
           name: "lookupRegistry",
-          arguments: '{"endpointId":"openai.personal.primary.us-east-1.fast"}',
+          arguments: '{"endpointId":"test.capture.tool-v1"}',
         },
       },
     ]);
@@ -40,8 +40,8 @@ describe("runRuntimeToolsValidation", () => {
         connectorKind: "mcp",
         status: "succeeded",
         output: {
-          endpointId: "openai.personal.primary.us-east-1.fast",
-          modelId: "openai/gpt-4.1-mini-fast",
+          endpointId: "test.capture.tool-v1",
+          modelId: "deepseek/tool-call-capture-v1",
           status: "active",
         },
         diagnostics: [],

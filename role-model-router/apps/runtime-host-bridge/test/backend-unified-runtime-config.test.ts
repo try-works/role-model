@@ -10,6 +10,7 @@ import { createRuntimeBridgeBackend } from "../src/index.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "..", "..", "..", "..");
+const testFixtureRoot = path.join(__dirname, "fixtures");
 
 const tempRoots: string[] = [];
 
@@ -38,7 +39,7 @@ version: "1.0"
 
     const backend = await createRuntimeBridgeBackend({
       repoRoot,
-      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      fixtureRoot: testFixtureRoot,
       runtimeStateRoot,
       scopeId: "runtime-host-unified-config",
       unifiedRuntimeConfigPath,
@@ -73,7 +74,7 @@ version: "1.0"
 
     const backend = await createRuntimeBridgeBackend({
       repoRoot,
-      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      fixtureRoot: testFixtureRoot,
       runtimeStateRoot,
       scopeId: "runtime-host-unified-config-update",
       unifiedRuntimeConfigPath,
@@ -168,7 +169,7 @@ version: "1.0"
 
     const backend = await createRuntimeBridgeBackend({
       repoRoot,
-      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      fixtureRoot: testFixtureRoot,
       runtimeStateRoot,
       scopeId: "runtime-host-empty-controller",
       unifiedRuntimeConfigPath,
@@ -220,7 +221,7 @@ version: "1.0"
 
     const backend = await createRuntimeBridgeBackend({
       repoRoot,
-      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      fixtureRoot: testFixtureRoot,
       runtimeStateRoot,
       scopeId: "runtime-host-unified-litellm-models",
       unifiedRuntimeConfigPath,

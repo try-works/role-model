@@ -1,0 +1,15 @@
+{
+  "cloud": [
+    {
+      "endpointId": "test.capture.tool-v1",
+      "providerAccountId": "deepseek.capture.account",
+      "modelId": "deepseek/tool-call-capture-v1",
+      "region": "global",
+      "endpointKind": "remote-openai-compatible",
+      "servingSource": "remote-service",
+      "lifecycleState": "active",
+      "healthStatus": "healthy"
+    }
+  ],
+  "local": []
+}

@@ -1,0 +1,29 @@
+{
+  "accounts": [
+    {
+      "providerAccountId": "deepseek.capture.account",
+      "providerId": "deepseek",
+      "providerKind": "provider-openai",
+      "orgScope": "personal",
+      "accountScope": "workspace-default",
+      "credentialRef": {
+        "backend": "env",
+        "ref": "DEEPSEEK_API_KEY"
+      },
+      "authMode": "api-key-static",
+      "regionPolicy": {
+        "mode": "allow",
+        "regions": ["global"]
+      },
+      "baseUrlOverride": null,
+      "allowedModels": ["deepseek/tool-call-capture-v1"],
+      "deniedModels": [],
+      "entitlementTags": ["chat"],
+      "budgetPolicyRef": "budget.default",
+      "quotaPolicyRef": "quota.default",
+      "status": "active",
+      "healthStatus": "healthy",
+      "rotationState": "stable"
+    }
+  ]
+}

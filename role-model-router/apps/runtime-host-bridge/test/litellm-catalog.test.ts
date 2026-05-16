@@ -73,6 +73,30 @@ describe("litellm-catalog", () => {
     expect(acme.envVars).toEqual(["ACME_AI_API_KEY"]);
   });
 
+  test("moonshot provider includes oauth configuration from KNOWN_PROVIDER_OVERRIDES", () => {
+    const modelPrices = {
+      "kimi-k2.5": { litellm_provider: "moonshot", max_tokens: 262144 },
+      "moonshot-v1-8k": { litellm_provider: "moonshot", max_tokens: 8192 },
+    };
+
+    const providers = deriveLiteLLMProviders(modelPrices);
+    const moonshot = providers.find((p) => p.providerId === "moonshot");
+
+    expect(moonshot).toBeDefined();
+    expect(moonshot?.oauth).toBeDefined();
+    expect(moonshot?.oauth?.clientId).toBe("17e5f671-d194-4dfb-9706-5516cb48c098");
+    expect(moonshot?.oauth?.oauthHost).toBe("https://auth.kimi.com");
+    expect(moonshot?.oauth?.apiBase).toBe("https://api.kimi.com/coding/v1");
+    expect(moonshot?.oauth?.deviceAuthorizationEndpoint).toBe(
+      "https://auth.kimi.com/api/oauth/device_authorization",
+    );
+    expect(moonshot?.oauth?.tokenEndpoint).toBe("https://auth.kimi.com/api/oauth/token");
+    expect(moonshot?.oauth?.requiredHeaders).toContain("X-Msh-Platform");
+    expect(moonshot?.oauth?.requiredHeaders).toContain("X-Msh-Version");
+    expect(moonshot?.oauth?.requiredHeaders).toContain("X-Msh-Device-Name");
+    expect(moonshot?.oauth?.requiredHeaders).toContain("X-Msh-Device-Id");
+  });
+
   test("loads real LiteLLM model prices from testdata", async () => {
     // loadLiteLLMModelPrices already imported statically above
     const repoRoot = process

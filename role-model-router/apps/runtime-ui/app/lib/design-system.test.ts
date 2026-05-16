@@ -6,6 +6,11 @@ import { describe, expect, test } from "vitest";
 
 import ControlRuntimeConfigRoute from "../routes/control-runtime-config";
 import IntegrationsUpstreamRoute from "../routes/integrations-upstream";
+import RouterOverviewRoute from "../routes/router";
+import RouterCandidatesRoute from "../routes/router-candidates";
+import RouterConfigRoute from "../routes/router-config";
+import RouterDecisionDetailRoute from "../routes/router-decision-detail";
+import RouterDecisionsRoute from "../routes/router-decisions";
 import StudioAdvancedRoute from "../routes/studio-advanced";
 import StudioAudioRoute from "../routes/studio-audio";
 import StudioImagesRoute from "../routes/studio-images";
@@ -64,6 +69,23 @@ const requestDetailRouteSource = readFileSync(
   new URL("../routes/request-detail.tsx", import.meta.url),
   "utf8",
 );
+const routerCandidatesRouteSource = readFileSync(
+  new URL("../routes/router-candidates.tsx", import.meta.url),
+  "utf8",
+);
+const routerConfigRouteSource = readFileSync(
+  new URL("../routes/router-config.tsx", import.meta.url),
+  "utf8",
+);
+const routerDecisionDetailRouteSource = readFileSync(
+  new URL("../routes/router-decision-detail.tsx", import.meta.url),
+  "utf8",
+);
+const routerDecisionsRouteSource = readFileSync(
+  new URL("../routes/router-decisions.tsx", import.meta.url),
+  "utf8",
+);
+const routerRouteSource = readFileSync(new URL("../routes/router.tsx", import.meta.url), "utf8");
 const workbenchRouteSource = readFileSync(
   new URL("../routes/workbench.tsx", import.meta.url),
   "utf8",
@@ -118,6 +140,15 @@ describe("runtime design system", () => {
         ],
       },
       {
+        title: "Router",
+        routes: [
+          "/app/router",
+          "/app/router/config",
+          "/app/router/candidates",
+          "/app/router/decisions",
+        ],
+      },
+      {
         title: "Observe",
         routes: ["/app/observe/activity", "/app/observe/requests", "/app/observe/logs"],
       },
@@ -159,6 +190,18 @@ describe("runtime design system", () => {
       expect.objectContaining({
         id: "control-controller",
         template: "registry-detail",
+      }),
+    );
+    expect(getRuntimeRouteDefinition("/app/router")).toEqual(
+      expect.objectContaining({
+        id: "router-overview",
+        template: "registry-detail",
+      }),
+    );
+    expect(getRuntimeRouteDefinition("/app/router/decisions/req-runtime-bridge-route-001")).toEqual(
+      expect.objectContaining({
+        id: "router-decision-detail",
+        template: "ledger-inspector",
       }),
     );
     expect(getRuntimeRouteDefinition("/app/observe/requests/req-runtime-bridge-route-001")).toEqual(
@@ -307,12 +350,67 @@ describe("runtime design system", () => {
     expect(peersMarkup).not.toContain("Open raw health");
   });
 
+  test("router implementation targets render repo-owned routing explanation surfaces", () => {
+    expect(renderRoute("/app/router", createElement(RouterOverviewRoute))).toContain(
+      "Routing overview",
+    );
+    expect(renderRoute("/app/router/config", createElement(RouterConfigRoute))).toContain(
+      "Routing config",
+    );
+    expect(renderRoute("/app/router/candidates", createElement(RouterCandidatesRoute))).toContain(
+      "Candidate inventory",
+    );
+    expect(renderRoute("/app/router/decisions", createElement(RouterDecisionsRoute))).toContain(
+      "Routing decisions",
+    );
+    expect(
+      renderRoute(
+        "/app/router/decisions/req-runtime-bridge-route-001",
+        createElement(RouterDecisionDetailRoute),
+      ),
+    ).toContain("Routing decision detail");
+  });
+
+  test("router routes preserve empty-state and observe-link affordances", () => {
+    expect(routerRouteSource).toContain("LoadingState");
+    expect(routerConfigRouteSource).toContain("ErrorState");
+    expect(routerCandidatesRouteSource).toContain("EmptyState");
+    expect(routerDecisionsRouteSource).toContain("/app/router/decisions/");
+    expect(routerDecisionDetailRouteSource).toContain("/app/observe/requests/");
+  });
+
+  test("router config exposes proposal strategy modes and keeps the dynamic detail route out of section tabs", () => {
+    expect(routerConfigRouteSource).toContain("Choose routing strategy");
+    expect(routerConfigRouteSource).toContain("Strategy A");
+    expect(routerConfigRouteSource).toContain("Strategy B");
+    expect(routerConfigRouteSource).toContain("Strategy C");
+    expect(routerConfigRouteSource).toContain("Open workbench with strategy");
+    expect(routerConfigRouteSource).toContain("routingModeOverride");
+    expect(workbenchRouteSource).toContain("useLocation");
+    expect(
+      runtimeNavigationSections
+        .find((section) => section.title === "Router")
+        ?.items.map((item) => item.id),
+    ).not.toContain("router-decision-detail");
+  });
+
   test("design system doc marks the converted pages as live routes", () => {
     expect(designSystemDocSource).toContain(
       "| `/app/control/routing-strategy` | live | `registry-detail` |",
     );
     expect(designSystemDocSource).toContain(
       "| `/app/control/runtime-config` | live | `registry-detail` |",
+    );
+    expect(designSystemDocSource).toContain("| `/app/router` | live | `registry-detail` |");
+    expect(designSystemDocSource).toContain("| `/app/router/config` | live | `registry-detail` |");
+    expect(designSystemDocSource).toContain(
+      "| `/app/router/candidates` | live | `ledger-inspector` |",
+    );
+    expect(designSystemDocSource).toContain(
+      "| `/app/router/decisions` | live | `ledger-inspector` |",
+    );
+    expect(designSystemDocSource).toContain(
+      "| `/app/router/decisions/:requestId` | live | `ledger-inspector` |",
     );
     expect(designSystemDocSource).not.toContain("| `/app/control/accounts` |");
     expect(designSystemDocSource).toContain("| `/app/studio/images` | live | `studio-workspace` |");
