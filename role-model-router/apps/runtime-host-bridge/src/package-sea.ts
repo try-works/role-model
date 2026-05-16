@@ -55,7 +55,12 @@ const buildTargets: readonly BuildTarget[] = [
   },
 ];
 
-function runOrThrow(command: string, args: readonly string[], cwd: string, env?: NodeJS.ProcessEnv): void {
+function runOrThrow(
+  command: string,
+  args: readonly string[],
+  cwd: string,
+  env?: NodeJS.ProcessEnv,
+): void {
   const result = spawnSync(command, args, {
     cwd,
     env: env ? { ...process.env, ...env } : process.env,
@@ -74,8 +79,10 @@ function resolvePostjectCommand(): string {
 }
 
 function resolveGoCommand(): string {
-  return process.env.GO_BINARY ??
-    (process.platform === "win32" ? "C:\\Program Files\\Go\\bin\\go.exe" : "go");
+  return (
+    process.env.GO_BINARY ??
+    (process.platform === "win32" ? "C:\\Program Files\\Go\\bin\\go.exe" : "go")
+  );
 }
 
 function resolvePackagedRuntimeName(): string {
@@ -146,13 +153,7 @@ export async function packageSeaRuntime(): Promise<{
     await chmod(outputPath, 0o755);
   }
 
-  const postjectArgs = [
-    outputPath,
-    "NODE_SEA_BLOB",
-    blobPath,
-    "--sentinel-fuse",
-    NODE_SEA_FUSE,
-  ];
+  const postjectArgs = [outputPath, "NODE_SEA_BLOB", blobPath, "--sentinel-fuse", NODE_SEA_FUSE];
   if (process.platform === "darwin") {
     postjectArgs.push("--macho-segment-name", "NODE_SEA");
   }

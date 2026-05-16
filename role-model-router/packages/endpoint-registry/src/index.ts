@@ -5,7 +5,11 @@ import type {
 } from "@role-model-router/catalog";
 import type { ProviderAccountRecord } from "@role-model-router/provider-account";
 
-export type RegistryEndpointKind = "local_engine" | "remote_api" | "browser_engine" | "dispatch_adapter";
+export type RegistryEndpointKind =
+  | "local_engine"
+  | "remote_api"
+  | "browser_engine"
+  | "dispatch_adapter";
 export type RegistryProviderKind =
   | "acp"
   | "mcp"
@@ -192,26 +196,24 @@ function toRuntimeEligibility(
   if (account.healthStatus === "budget-exhausted") {
     runtimeEligibility.budgetExceeded = true;
   }
-  if (
-    account.healthStatus === "regional-restriction" ||
-    !isRegionAllowed(account, source.region)
-  ) {
+  if (account.healthStatus === "regional-restriction" || !isRegionAllowed(account, source.region)) {
     runtimeEligibility.regionDisallowed = true;
   }
   if (account.healthStatus === "entitlement-missing") {
     runtimeEligibility.entitlementMissing = true;
   }
-  if (
-    source.healthStatus === "provider-unavailable" ||
-    source.healthStatus === "provider-outage"
-  ) {
+  if (source.healthStatus === "provider-unavailable" || source.healthStatus === "provider-outage") {
     runtimeEligibility.providerUnavailable = true;
   }
 
   return Object.keys(runtimeEligibility).length > 0 ? runtimeEligibility : undefined;
 }
 
-function createCloudEndpoint(model: NormalizedCatalogModel, account: ProviderAccountRecord, source: CloudRegistrySource): EndpointCandidate {
+function createCloudEndpoint(
+  model: NormalizedCatalogModel,
+  account: ProviderAccountRecord,
+  source: CloudRegistrySource,
+): EndpointCandidate {
   return {
     identity: {
       endpoint_id: source.endpointId,
@@ -231,7 +233,10 @@ function createCloudEndpoint(model: NormalizedCatalogModel, account: ProviderAcc
     },
     declared: {
       endpoint_id: source.endpointId,
-      capabilities: toNonEmptyList(model.capabilities, `Catalog model ${model.modelId} capabilities`),
+      capabilities: toNonEmptyList(
+        model.capabilities,
+        `Catalog model ${model.modelId} capabilities`,
+      ),
       modalities: toNonEmptyList(model.modalities, `Catalog model ${model.modelId} modalities`),
       max_context_tokens: model.contextWindow,
       tool_calling: {
@@ -266,7 +271,10 @@ function createLocalEndpoint(source: LocalRegistrySource): EndpointCandidate {
     },
     declared: {
       endpoint_id: source.endpointId,
-      capabilities: toNonEmptyList(source.capabilities, `Endpoint ${source.endpointId} capabilities`),
+      capabilities: toNonEmptyList(
+        source.capabilities,
+        `Endpoint ${source.endpointId} capabilities`,
+      ),
       modalities: toNonEmptyList(source.modalities, `Endpoint ${source.endpointId} modalities`),
       max_context_tokens: 32768,
       tool_calling: {
@@ -282,7 +290,9 @@ function createLocalEndpoint(source: LocalRegistrySource): EndpointCandidate {
 
 export function buildEndpointRegistry(input: BuildEndpointRegistryInput): EndpointRegistryResult {
   const modelsById = new Map(input.catalog.models.map((model) => [model.modelId, model]));
-  const accountsById = new Map(input.accounts.map((account) => [account.providerAccountId, account]));
+  const accountsById = new Map(
+    input.accounts.map((account) => [account.providerAccountId, account]),
+  );
   const diagnostics: EndpointRegistryDiagnostic[] = [];
   const endpoints: EndpointCandidate[] = [];
 

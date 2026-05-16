@@ -4,10 +4,7 @@
   "modelsCount": 3,
   "responsesJsonStatus": 200,
   "responsesJsonModel": "openai/gpt-4.1-mini-fast",
-  "responsesJsonOutputTypes": [
-    "message",
-    "function_call"
-  ],
+  "responsesJsonOutputTypes": ["message", "function_call"],
   "chatStreamStatus": 200,
   "chatStreamContentType": "text/event-stream; charset=utf-8",
   "chatStreamEndpointId": "openai.personal.primary.us-east-1.fast",

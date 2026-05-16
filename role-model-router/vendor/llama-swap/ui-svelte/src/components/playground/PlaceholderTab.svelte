@@ -1,9 +1,9 @@
 <script lang="ts">
-  interface Props {
-    featureName: string;
-  }
+interface Props {
+  featureName: string;
+}
 
-  let { featureName }: Props = $props();
+const { featureName }: Props = $props();
 </script>
 
 <div class="flex items-center justify-center h-full">

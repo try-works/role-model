@@ -1,0 +1,1200 @@
+2026-05-11T22:27:57.9126071Z     ······· │ 
+2026-05-11T22:27:57.9126409Z      42  57 │   }) {
+2026-05-11T22:27:57.9126766Z      43  58 │     return (
+2026-05-11T22:27:57.9127181Z      44     │ - ····<section
+2026-05-11T22:27:57.9127667Z      45     │ - ······className={cn(
+2026-05-11T22:27:57.9128621Z      46     │ - ········`${cardClassName}·px-5·py-5·md:px-6·md:py-6`,
+2026-05-11T22:27:57.9129313Z      47     │ - ········className,
+2026-05-11T22:27:57.9129769Z      48     │ - ······)}
+2026-05-11T22:27:57.9130161Z      49     │ - ····>
+2026-05-11T22:27:57.9131052Z          59 │ + ····<section·className={cn(`${cardClassName}·px-5·py-5·md:px-6·md:py-6`,·className)}>
+2026-05-11T22:27:57.9132197Z      50  60 │         <div className="mb-5 border-b border-[var(--rm-border)] pb-4">
+2026-05-11T22:27:57.9133186Z      51  61 │           <div className="mb-3 h-px w-8 bg-[var(--rm-border-strong)]" />
+2026-05-11T22:27:57.9134497Z      52  62 │           <h2 className="text-lg font-normal text-[var(--rm-fg)]">{title}</h2>
+2026-05-11T22:27:57.9136116Z      53     │ - ········{description·?·<p·className="mt-2·max-w-[60ch]·text-sm·leading-6·text-[var(--rm-secondary)]">{description}</p>·:·null}
+2026-05-11T22:27:57.9137248Z          63 │ + ········{description·?·(
+2026-05-11T22:27:57.9138262Z          64 │ + ··········<p·className="mt-2·max-w-[60ch]·text-sm·leading-6·text-[var(--rm-secondary)]">
+2026-05-11T22:27:57.9139136Z          65 │ + ············{description}
+2026-05-11T22:27:57.9139659Z          66 │ + ··········</p>
+2026-05-11T22:27:57.9140141Z          67 │ + ········)·:·null}
+2026-05-11T22:27:57.9140570Z      54  68 │         </div>
+2026-05-11T22:27:57.9141024Z      55  69 │         {children}
+2026-05-11T22:27:57.9141465Z     ······· │ 
+2026-05-11T22:27:57.9141800Z      61  75 │     return (
+2026-05-11T22:27:57.9142428Z      62  76 │       <div className={`${raisedPanelClassName} p-5`}>
+2026-05-11T22:27:57.9143728Z      63     │ - ······<p·className="text-xs·font-normal·uppercase·tracking-[0.2em]·text-[var(--rm-muted)]">{label}</p>
+2026-05-11T22:27:57.9145458Z          77 │ + ······<p·className="text-xs·font-normal·uppercase·tracking-[0.2em]·text-[var(--rm-muted)]">
+2026-05-11T22:27:57.9146350Z          78 │ + ········{label}
+2026-05-11T22:27:57.9146792Z          79 │ + ······</p>
+2026-05-11T22:27:57.9147617Z      64  80 │         <p className="mt-4 text-3xl font-light text-[var(--rm-fg)]">{value}</p>
+2026-05-11T22:27:57.9148338Z      65  81 │       </div>
+2026-05-11T22:27:57.9148722Z     ······· │ 
+2026-05-11T22:27:57.9149069Z      81  97 │   }) {
+2026-05-11T22:27:57.9149443Z      82  98 │     return (
+2026-05-11T22:27:57.9150561Z      83     │ - ····<div·className={cn(`${emphasis·?·raisedPanelClassName·:·mutedPanelClassName}·p-4·md:p-5`,·className)}>
+2026-05-11T22:27:57.9152485Z      84     │ - ······<p·className="text-[11px]·font-medium·uppercase·tracking-[0.24em]·text-[var(--rm-muted)]">{label}</p>
+2026-05-11T22:27:57.9154542Z      85     │ - ······<p·className="mt-3·break-words·text-xl·font-light·leading-snug·tabular-nums·text-[var(--rm-fg)]·md:text-2xl">{value}</p>
+2026-05-11T22:27:57.9156401Z      86     │ - ······{detail·?·<p·className="mt-2·max-w-[28ch]·text-sm·leading-6·text-[var(--rm-secondary)]">{detail}</p>·:·null}
+2026-05-11T22:27:57.9157368Z          99 │ + ····<div
+2026-05-11T22:27:57.9157842Z         100 │ + ······className={cn(
+2026-05-11T22:27:57.9158806Z         101 │ + ········`${emphasis·?·raisedPanelClassName·:·mutedPanelClassName}·p-4·md:p-5`,
+2026-05-11T22:27:57.9159648Z         102 │ + ········className,
+2026-05-11T22:27:57.9160096Z         103 │ + ······)}
+2026-05-11T22:27:57.9160477Z         104 │ + ····>
+2026-05-11T22:27:57.9161468Z         105 │ + ······<p·className="text-[11px]·font-medium·uppercase·tracking-[0.24em]·text-[var(--rm-muted)]">
+2026-05-11T22:27:57.9162420Z         106 │ + ········{label}
+2026-05-11T22:27:57.9162850Z         107 │ + ······</p>
+2026-05-11T22:27:57.9164071Z         108 │ + ······<p·className="mt-3·break-words·text-xl·font-light·leading-snug·tabular-nums·text-[var(--rm-fg)]·md:text-2xl">
+2026-05-11T22:27:57.9165346Z         109 │ + ········{value}
+2026-05-11T22:27:57.9165768Z         110 │ + ······</p>
+2026-05-11T22:27:57.9166247Z         111 │ + ······{detail·?·(
+2026-05-11T22:27:57.9167535Z         112 │ + ········<p·className="mt-2·max-w-[28ch]·text-sm·leading-6·text-[var(--rm-secondary)]">{detail}</p>
+2026-05-11T22:27:57.9168476Z         113 │ + ······)·:·null}
+2026-05-11T22:27:57.9168905Z      87 114 │       </div>
+2026-05-11T22:27:57.9169288Z      88 115 │     );
+2026-05-11T22:27:57.9169652Z     ······· │ 
+2026-05-11T22:27:57.9169988Z     106 133 │   
+2026-05-11T22:27:57.9170345Z     107 134 │     return (
+2026-05-11T22:27:57.9171844Z     108     │ - ····<span·className={cn("inline-flex·items-center·rounded-none·border·px-2.5·py-1·text-xs·font-medium·tracking-[0.14em]·uppercase",·toneClass)}>
+2026-05-11T22:27:57.9173065Z         135 │ + ····<span
+2026-05-11T22:27:57.9173537Z         136 │ + ······className={cn(
+2026-05-11T22:27:57.9175062Z         137 │ + ········"inline-flex·items-center·rounded-none·border·px-2.5·py-1·text-xs·font-medium·tracking-[0.14em]·uppercase",
+2026-05-11T22:27:57.9176166Z         138 │ + ········toneClass,
+2026-05-11T22:27:57.9176602Z         139 │ + ······)}
+2026-05-11T22:27:57.9176992Z         140 │ + ····>
+2026-05-11T22:27:57.9177437Z     109 141 │         {children}
+2026-05-11T22:27:57.9177869Z     110 142 │       </span>
+2026-05-11T22:27:57.9178259Z     ······· │ 
+2026-05-11T22:27:57.9178585Z     113 145 │   
+2026-05-11T22:27:57.9179257Z     114 146 │   export function LoadingState({ label }: { label: string }) {
+2026-05-11T22:27:57.9180724Z     115     │ - ··return·<p·className={`${mutedPanelClassName}·border-dashed·p-6·text-sm·text-[var(--rm-secondary)]`}>{label}</p>;
+2026-05-11T22:27:57.9181968Z         147 │ + ··return·(
+2026-05-11T22:27:57.9183005Z         148 │ + ····<p·className={`${mutedPanelClassName}·border-dashed·p-6·text-sm·text-[var(--rm-secondary)]`}>
+2026-05-11T22:27:57.9183919Z         149 │ + ······{label}
+2026-05-11T22:27:57.9184544Z         150 │ + ····</p>
+2026-05-11T22:27:57.9184944Z         151 │ + ··);
+2026-05-11T22:27:57.9185294Z     116 152 │   }
+2026-05-11T22:27:57.9185642Z     117 153 │   
+2026-05-11T22:27:57.9186298Z     118 154 │   export function EmptyState({ label }: { label: string }) {
+2026-05-11T22:27:57.9187770Z     119     │ - ··return·<p·className={`${mutedPanelClassName}·border-dashed·p-6·text-sm·text-[var(--rm-secondary)]`}>{label}</p>;
+2026-05-11T22:27:57.9188808Z         155 │ + ··return·(
+2026-05-11T22:27:57.9189844Z         156 │ + ····<p·className={`${mutedPanelClassName}·border-dashed·p-6·text-sm·text-[var(--rm-secondary)]`}>
+2026-05-11T22:27:57.9190753Z         157 │ + ······{label}
+2026-05-11T22:27:57.9191200Z         158 │ + ····</p>
+2026-05-11T22:27:57.9191587Z         159 │ + ··);
+2026-05-11T22:27:57.9191937Z     120 160 │   }
+2026-05-11T22:27:57.9192278Z     121 161 │   
+2026-05-11T22:27:57.9192924Z     122 162 │   export function ErrorState({ label }: { label: string }) {
+2026-05-11T22:27:57.9194793Z     123     │ - ··return·<p·className="rounded-none·border·border-[var(--rm-error)]·bg-[var(--rm-error-ghost)]·p-6·text-sm·text-[var(--rm-error)]">{label}</p>;
+2026-05-11T22:27:57.9195713Z         163 │ + ··return·(
+2026-05-11T22:27:57.9196609Z         164 │ + ····<p·className="rounded-none·border·border-[var(--rm-error)]·bg-[var(--rm-error-ghost)]·p-6·text-sm·text-[var(--rm-error)]">
+2026-05-11T22:27:57.9197247Z         165 │ + ······{label}
+2026-05-11T22:27:57.9197499Z         166 │ + ····</p>
+2026-05-11T22:27:57.9197722Z         167 │ + ··);
+2026-05-11T22:27:57.9197940Z     124 168 │   }
+2026-05-11T22:27:57.9198143Z     125 169 │   
+2026-05-11T22:27:57.9198311Z   
+2026-05-11T22:27:57.9198410Z 
+2026-05-11T22:27:57.9198920Z ./role-model-router/apps/runtime-ui/app/lib/design-system.test.ts organizeImports ━━━━━━━━━━━━━━━━━━
+2026-05-11T22:27:57.9199320Z 
+2026-05-11T22:27:57.9199479Z   × Import statements could be sorted:
+2026-05-11T22:27:57.9199713Z   
+2026-05-11T22:27:57.9199994Z       1   1 │   import { readFileSync } from "node:fs";
+2026-05-11T22:27:57.9200487Z       2     │ - import·{·createElement,·type·ReactElement·}·from·"react";
+2026-05-11T22:27:57.9201047Z           2 │ + import·{·type·ReactElement,·createElement·}·from·"react";
+2026-05-11T22:27:57.9201593Z       3   3 │   import { renderToStaticMarkup } from "react-dom/server";
+2026-05-11T22:27:57.9202157Z       4   4 │   import { RouterProvider, createMemoryRouter } from "react-router";
+2026-05-11T22:27:57.9202764Z       5   5 │   import { describe, expect, test } from "vitest";
+2026-05-11T22:27:57.9203082Z       6   6 │   
+2026-05-11T22:27:57.9203792Z       7     │ - import·{·getRuntimeRouteDefinition,·runtimeNavigationSections,·runtimeTheme,·shellQuickLinks·}·from·"./design-system";
+2026-05-11T22:27:57.9205322Z           7 │ + import·ControlRuntimeConfigRoute·from·"../routes/control-runtime-config";
+2026-05-11T22:27:57.9206557Z       8   8 │   import IntegrationsUpstreamRoute from "../routes/integrations-upstream";
+2026-05-11T22:27:57.9207613Z       9   9 │   import StudioAdvancedRoute from "../routes/studio-advanced";
+2026-05-11T22:27:57.9208261Z     ······· │ 
+2026-05-11T22:27:57.9208888Z      11  11 │   import StudioImagesRoute from "../routes/studio-images";
+2026-05-11T22:27:57.9209774Z      12  12 │   import StudioRerankRoute from "../routes/studio-rerank";
+2026-05-11T22:27:57.9210831Z      13     │ - import·ControlRuntimeConfigRoute·from·"../routes/control-runtime-config";
+2026-05-11T22:27:57.9211463Z      14     │ - import·SystemPeersRoute·from·"../routes/system-peers";
+2026-05-11T22:27:57.9211978Z          13 │ + import·SystemPeersRoute·from·"../routes/system-peers";
+2026-05-11T22:27:57.9212838Z          14 │ + import·{·getRuntimeRouteDefinition,·runtimeNavigationSections,·runtimeTheme,·shellQuickLinks·}·from·"./design-system";
+2026-05-11T22:27:57.9213676Z      15  15 │   
+2026-05-11T22:27:57.9214284Z      16  16 │   function renderRoute(pathname: string, element: ReactElement): string {
+2026-05-11T22:27:57.9214666Z   
+2026-05-11T22:27:57.9214753Z 
+2026-05-11T22:27:57.9215250Z ./role-model-router/apps/runtime-ui/app/lib/design-system.test.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-05-11T22:27:57.9215636Z 
+2026-05-11T22:27:57.9215846Z   × Formatter would have printed the following content:
+2026-05-11T22:27:57.9216122Z   
+2026-05-11T22:27:57.9216487Z       5   5 │   import { describe, expect, test } from "vitest";
+2026-05-11T22:27:57.9216806Z       6   6 │   
+2026-05-11T22:27:57.9217584Z       7     │ - import·{·getRuntimeRouteDefinition,·runtimeNavigationSections,·runtimeTheme,·shellQuickLinks·}·from·"./design-system";
+2026-05-11T22:27:57.9218254Z           7 │ + import·{
+2026-05-11T22:27:57.9218558Z           8 │ + ··getRuntimeRouteDefinition,
+2026-05-11T22:27:57.9218914Z           9 │ + ··runtimeNavigationSections,
+2026-05-11T22:27:57.9219227Z          10 │ + ··runtimeTheme,
+2026-05-11T22:27:57.9219504Z          11 │ + ··shellQuickLinks,
+2026-05-11T22:27:57.9219813Z          12 │ + }·from·"./design-system";
+2026-05-11T22:27:57.9220328Z       8  13 │   import IntegrationsUpstreamRoute from "../routes/integrations-upstream";
+2026-05-11T22:27:57.9220918Z       9  14 │   import StudioAdvancedRoute from "../routes/studio-advanced";
+2026-05-11T22:27:57.9221290Z     ······· │ 
+2026-05-11T22:27:57.9221488Z      22  27 │   
+2026-05-11T22:27:57.9222067Z      23  28 │   const appCss = readFileSync(new URL("../app.css", import.meta.url), "utf8");
+2026-05-11T22:27:57.9223294Z      24     │ - const·appShellSource·=·readFileSync(new·URL("../components/app-shell.tsx",·import.meta.url),·"utf8");
+2026-05-11T22:27:57.9225264Z      25     │ - const·pagePrimitivesSource·=·readFileSync(new·URL("../components/page-primitives.tsx",·import.meta.url),·"utf8");
+2026-05-11T22:27:57.9227123Z      26     │ - const·controlControllerSource·=·readFileSync(new·URL("../routes/control-controller.tsx",·import.meta.url),·"utf8");
+2026-05-11T22:27:57.9229050Z      27     │ - const·controlRuntimeConfigSource·=·readFileSync(new·URL("../routes/control-runtime-config.tsx",·import.meta.url),·"utf8");
+2026-05-11T22:27:57.9230901Z      28     │ - const·controlModelsSource·=·readFileSync(new·URL("../routes/control-models.tsx",·import.meta.url),·"utf8");
+2026-05-11T22:27:57.9231880Z      29     │ - const·endpointsRouteSource·=·readFileSync(new·URL("../routes/endpoints.tsx",·import.meta.url),·"utf8");
+2026-05-11T22:27:57.9232807Z      30     │ - const·providersRouteSource·=·readFileSync(new·URL("../routes/providers.tsx",·import.meta.url),·"utf8");
+2026-05-11T22:27:57.9233718Z      31     │ - const·requestsRouteSource·=·readFileSync(new·URL("../routes/requests.tsx",·import.meta.url),·"utf8");
+2026-05-11T22:27:57.9234505Z          29 │ + const·appShellSource·=·readFileSync(
+2026-05-11T22:27:57.9234996Z          30 │ + ··new·URL("../components/app-shell.tsx",·import.meta.url),
+2026-05-11T22:27:57.9235373Z          31 │ + ··"utf8",
+2026-05-11T22:27:57.9235598Z          32 │ + );
+2026-05-11T22:27:57.9235923Z          33 │ + const·pagePrimitivesSource·=·readFileSync(
+2026-05-11T22:27:57.9236439Z          34 │ + ··new·URL("../components/page-primitives.tsx",·import.meta.url),
+2026-05-11T22:27:57.9236820Z          35 │ + ··"utf8",
+2026-05-11T22:27:57.9237034Z          36 │ + );
+2026-05-11T22:27:57.9237376Z          37 │ + const·controlControllerSource·=·readFileSync(
+2026-05-11T22:27:57.9237901Z          38 │ + ··new·URL("../routes/control-controller.tsx",·import.meta.url),
+2026-05-11T22:27:57.9238279Z          39 │ + ··"utf8",
+2026-05-11T22:27:57.9238497Z          40 │ + );
+2026-05-11T22:27:57.9238847Z          41 │ + const·controlRuntimeConfigSource·=·readFileSync(
+2026-05-11T22:27:57.9239393Z          42 │ + ··new·URL("../routes/control-runtime-config.tsx",·import.meta.url),
+2026-05-11T22:27:57.9240065Z          43 │ + ··"utf8",
+2026-05-11T22:27:57.9240277Z          44 │ + );
+2026-05-11T22:27:57.9240591Z          45 │ + const·controlModelsSource·=·readFileSync(
+2026-05-11T22:27:57.9241075Z          46 │ + ··new·URL("../routes/control-models.tsx",·import.meta.url),
+2026-05-11T22:27:57.9241433Z          47 │ + ··"utf8",
+2026-05-11T22:27:57.9241655Z          48 │ + );
+2026-05-11T22:27:57.9241966Z          49 │ + const·endpointsRouteSource·=·readFileSync(
+2026-05-11T22:27:57.9242437Z          50 │ + ··new·URL("../routes/endpoints.tsx",·import.meta.url),
+2026-05-11T22:27:57.9242827Z          51 │ + ··"utf8",
+2026-05-11T22:27:57.9243053Z          52 │ + );
+2026-05-11T22:27:57.9243382Z          53 │ + const·providersRouteSource·=·readFileSync(
+2026-05-11T22:27:57.9243942Z          54 │ + ··new·URL("../routes/providers.tsx",·import.meta.url),
+2026-05-11T22:27:57.9244775Z          55 │ + ··"utf8",
+2026-05-11T22:27:57.9245201Z          56 │ + );
+2026-05-11T22:27:57.9245776Z          57 │ + const·requestsRouteSource·=·readFileSync(
+2026-05-11T22:27:57.9246609Z          58 │ + ··new·URL("../routes/requests.tsx",·import.meta.url),
+2026-05-11T22:27:57.9247210Z          59 │ + ··"utf8",
+2026-05-11T22:27:57.9247585Z          60 │ + );
+2026-05-11T22:27:57.9248414Z      32  61 │   const rootSource = readFileSync(new URL("../root.tsx", import.meta.url), "utf8");
+2026-05-11T22:27:57.9249822Z      33  62 │   const runtimeRouteSource = readFileSync(new URL("../routes/runtime.tsx", import.meta.url), "utf8");
+2026-05-11T22:27:57.9251124Z      34     │ - const·requestDetailRouteSource·=·readFileSync(new·URL("../routes/request-detail.tsx",·import.meta.url),·"utf8");
+2026-05-11T22:27:57.9252105Z      35     │ - const·workbenchRouteSource·=·readFileSync(new·URL("../routes/workbench.tsx",·import.meta.url),·"utf8");
+2026-05-11T22:27:57.9253016Z      36     │ - const·designSystemDocSource·=·readFileSync(new·URL("../../DESIGN_SYSTEM.md",·import.meta.url),·"utf8");
+2026-05-11T22:27:57.9253681Z          63 │ + const·requestDetailRouteSource·=·readFileSync(
+2026-05-11T22:27:57.9254378Z          64 │ + ··new·URL("../routes/request-detail.tsx",·import.meta.url),
+2026-05-11T22:27:57.9254760Z          65 │ + ··"utf8",
+2026-05-11T22:27:57.9254986Z          66 │ + );
+2026-05-11T22:27:57.9255309Z          67 │ + const·workbenchRouteSource·=·readFileSync(
+2026-05-11T22:27:57.9255783Z          68 │ + ··new·URL("../routes/workbench.tsx",·import.meta.url),
+2026-05-11T22:27:57.9256123Z          69 │ + ··"utf8",
+2026-05-11T22:27:57.9256387Z          70 │ + );
+2026-05-11T22:27:57.9256753Z          71 │ + const·designSystemDocSource·=·readFileSync(
+2026-05-11T22:27:57.9257228Z          72 │ + ··new·URL("../../DESIGN_SYSTEM.md",·import.meta.url),
+2026-05-11T22:27:57.9257570Z          73 │ + ··"utf8",
+2026-05-11T22:27:57.9257795Z          74 │ + );
+2026-05-11T22:27:57.9257992Z      37  75 │   
+2026-05-11T22:27:57.9258293Z      38  76 │   describe("runtime design system", () => {
+2026-05-11T22:27:57.9258595Z     ······· │ 
+2026-05-11T22:27:57.9259210Z     207 245 │       expect(shellQuickLinks.map((link) => link.href)).not.toContain("/ui");
+2026-05-11T22:27:57.9259785Z     208 246 │       expect(appShellSource).not.toContain('href="/ui"');
+2026-05-11T22:27:57.9260578Z     209     │ - ····expect(renderRoute("/app/studio/images",·createElement(StudioImagesRoute))).not.toContain("Open·preserved·UI");
+2026-05-11T22:27:57.9261580Z     210     │ - ····expect(renderRoute("/app/studio/audio",·createElement(StudioAudioRoute))).not.toContain("Open·preserved·UI");
+2026-05-11T22:27:57.9262581Z     211     │ - ····expect(renderRoute("/app/studio/rerank",·createElement(StudioRerankRoute))).not.toContain("Open·preserved·UI");
+2026-05-11T22:27:57.9263607Z     212     │ - ····expect(renderRoute("/app/studio/advanced",·createElement(StudioAdvancedRoute))).not.toContain("Open·preserved·UI");
+2026-05-11T22:27:57.9265024Z     213     │ - ····expect(renderRoute("/app/integrations/upstream",·createElement(IntegrationsUpstreamRoute))).not.toContain("Open·preserved·UI");
+2026-05-11T22:27:57.9266995Z     214     │ - ····expect(renderRoute("/app/system/peers",·createElement(SystemPeersRoute))).not.toContain("Open·raw·health");
+2026-05-11T22:27:57.9268582Z         247 │ + ····expect(renderRoute("/app/studio/images",·createElement(StudioImagesRoute))).not.toContain(
+2026-05-11T22:27:57.9269558Z         248 │ + ······"Open·preserved·UI",
+2026-05-11T22:27:57.9270067Z         249 │ + ····);
+2026-05-11T22:27:57.9271020Z         250 │ + ····expect(renderRoute("/app/studio/audio",·createElement(StudioAudioRoute))).not.toContain(
+2026-05-11T22:27:57.9271969Z         251 │ + ······"Open·preserved·UI",
+2026-05-11T22:27:57.9272516Z         252 │ + ····);
+2026-05-11T22:27:57.9273482Z         253 │ + ····expect(renderRoute("/app/studio/rerank",·createElement(StudioRerankRoute))).not.toContain(
+2026-05-11T22:27:57.9274718Z         254 │ + ······"Open·preserved·UI",
+2026-05-11T22:27:57.9275205Z         255 │ + ····);
+2026-05-11T22:27:57.9276201Z         256 │ + ····expect(renderRoute("/app/studio/advanced",·createElement(StudioAdvancedRoute))).not.toContain(
+2026-05-11T22:27:57.9277214Z         257 │ + ······"Open·preserved·UI",
+2026-05-11T22:27:57.9277700Z         258 │ + ····);
+2026-05-11T22:27:57.9278088Z         259 │ + ····expect(
+2026-05-11T22:27:57.9279063Z         260 │ + ······renderRoute("/app/integrations/upstream",·createElement(IntegrationsUpstreamRoute)),
+2026-05-11T22:27:57.9280093Z         261 │ + ····).not.toContain("Open·preserved·UI");
+2026-05-11T22:27:57.9281215Z         262 │ + ····expect(renderRoute("/app/system/peers",·createElement(SystemPeersRoute))).not.toContain(
+2026-05-11T22:27:57.9282384Z         263 │ + ······"Open·raw·health",
+2026-05-11T22:27:57.9282888Z         264 │ + ····);
+2026-05-11T22:27:57.9283259Z     215 265 │     });
+2026-05-11T22:27:57.9283617Z     216 266 │   
+2026-05-11T22:27:57.9283964Z     ······· │ 
+2026-05-11T22:27:57.9284487Z     242 292 │   
+2026-05-11T22:27:57.9285519Z     243 293 │     test("integration and system implementation targets render live upstream and peer surfaces", () => {
+2026-05-11T22:27:57.9287256Z     244     │ - ····const·upstreamMarkup·=·renderRoute("/app/integrations/upstream",·createElement(IntegrationsUpstreamRoute));
+2026-05-11T22:27:57.9288458Z         294 │ + ····const·upstreamMarkup·=·renderRoute(
+2026-05-11T22:27:57.9289149Z         295 │ + ······"/app/integrations/upstream",
+2026-05-11T22:27:57.9289887Z         296 │ + ······createElement(IntegrationsUpstreamRoute),
+2026-05-11T22:27:57.9290458Z         297 │ + ····);
+2026-05-11T22:27:57.9291194Z     245 298 │       expect(upstreamMarkup).toContain("Upstream target inventory");
+2026-05-11T22:27:57.9292263Z     246 299 │       expect(upstreamMarkup).toContain("Provider accounts in scope");
+2026-05-11T22:27:57.9292937Z     ······· │ 
+2026-05-11T22:27:57.9293268Z     256 309 │   
+2026-05-11T22:27:57.9294038Z     257 310 │     test("design system doc marks the converted pages as live routes", () => {
+2026-05-11T22:27:57.9295699Z     258     │ - ····expect(designSystemDocSource).toContain("|·`/app/control/routing-strategy`·|·live·|·`registry-detail`·|");
+2026-05-11T22:27:57.9297604Z     259     │ - ····expect(designSystemDocSource).toContain("|·`/app/control/runtime-config`·|·live·|·`registry-detail`·|");
+2026-05-11T22:27:57.9298770Z         311 │ + ····expect(designSystemDocSource).toContain(
+2026-05-11T22:27:57.9299698Z         312 │ + ······"|·`/app/control/routing-strategy`·|·live·|·`registry-detail`·|",
+2026-05-11T22:27:57.9300388Z         313 │ + ····);
+2026-05-11T22:27:57.9300962Z         314 │ + ····expect(designSystemDocSource).toContain(
+2026-05-11T22:27:57.9301907Z         315 │ + ······"|·`/app/control/runtime-config`·|·live·|·`registry-detail`·|",
+2026-05-11T22:27:57.9302576Z         316 │ + ····);
+2026-05-11T22:27:57.9303416Z     260 317 │       expect(designSystemDocSource).not.toContain("| `/app/control/accounts` |");
+2026-05-11T22:27:57.9305028Z     261 318 │       expect(designSystemDocSource).toContain("| `/app/studio/images` | live | `studio-workspace` |");
+2026-05-11T22:27:57.9306568Z     262 319 │       expect(designSystemDocSource).toContain("| `/app/studio/audio` | live | `studio-workspace` |");
+2026-05-11T22:27:57.9308073Z     263 320 │       expect(designSystemDocSource).toContain("| `/app/studio/rerank` | live | `studio-workspace` |");
+2026-05-11T22:27:57.9309637Z     264     │ - ····expect(designSystemDocSource).toContain("|·`/app/studio/advanced`·|·live·|·`studio-workspace`·|");
+2026-05-11T22:27:57.9311312Z     265     │ - ····expect(designSystemDocSource).toContain("|·`/app/integrations/upstream`·|·live·|·`contract-reference`·|");
+2026-05-11T22:27:57.9312656Z         321 │ + ····expect(designSystemDocSource).toContain(
+2026-05-11T22:27:57.9313539Z         322 │ + ······"|·`/app/studio/advanced`·|·live·|·`studio-workspace`·|",
+2026-05-11T22:27:57.9314359Z         323 │ + ····);
+2026-05-11T22:27:57.9314960Z         324 │ + ····expect(designSystemDocSource).toContain(
+2026-05-11T22:27:57.9315893Z         325 │ + ······"|·`/app/integrations/upstream`·|·live·|·`contract-reference`·|",
+2026-05-11T22:27:57.9316613Z         326 │ + ····);
+2026-05-11T22:27:57.9317597Z     266 327 │       expect(designSystemDocSource).toContain("| `/app/system/peers` | live | `system-topology` |");
+2026-05-11T22:27:57.9319110Z     267 328 │       expect(designSystemDocSource).not.toContain("| `/app/studio/images` | implementation target |");
+2026-05-11T22:27:57.9320851Z     268     │ - ····expect(designSystemDocSource).not.toContain("even·if·the·repo-owned·page·implementation·is·still·in·progress");
+2026-05-11T22:27:57.9322133Z         329 │ + ····expect(designSystemDocSource).not.toContain(
+2026-05-11T22:27:57.9323187Z         330 │ + ······"even·if·the·repo-owned·page·implementation·is·still·in·progress",
+2026-05-11T22:27:57.9323932Z         331 │ + ····);
+2026-05-11T22:27:57.9324488Z     269 332 │     });
+2026-05-11T22:27:57.9324845Z     270 333 │   
+2026-05-11T22:27:57.9325197Z     ······· │ 
+2026-05-11T22:27:57.9325525Z     302 365 │   
+2026-05-11T22:27:57.9326437Z     303 366 │     test("control runtime config is a first-class route and models stays inspect-only", () => {
+2026-05-11T22:27:57.9328027Z     304     │ - ····expect(renderRoute("/app/control/runtime-config",·createElement(ControlRuntimeConfigRoute))).toContain(
+2026-05-11T22:27:57.9329076Z     305     │ - ······"Runtime·config",
+2026-05-11T22:27:57.9329553Z     306     │ - ····);
+2026-05-11T22:27:57.9330641Z     307     │ - ····expect(renderRoute("/app/control/runtime-config",·createElement(ControlRuntimeConfigRoute))).toContain(
+2026-05-11T22:27:57.9331687Z     308     │ - ······"Save·and·apply",
+2026-05-11T22:27:57.9332151Z     309     │ - ····);
+2026-05-11T22:27:57.9332591Z         367 │ + ····expect(
+2026-05-11T22:27:57.9333563Z         368 │ + ······renderRoute("/app/control/runtime-config",·createElement(ControlRuntimeConfigRoute)),
+2026-05-11T22:27:57.9334742Z         369 │ + ····).toContain("Runtime·config");
+2026-05-11T22:27:57.9335221Z   5 more lines truncated
+2026-05-11T22:27:57.9335541Z   
+2026-05-11T22:27:57.9335881Z 
+2026-05-11T22:27:57.9336774Z ./role-model-router/apps/runtime-ui/app/lib/design-system.ts organizeImports ━━━━━━━━━━━━━━━━━━━━━━━
+2026-05-11T22:27:57.9337458Z 
+2026-05-11T22:27:57.9337725Z   × Import statements could be sorted:
+2026-05-11T22:27:57.9338133Z   
+2026-05-11T22:27:57.9338511Z      11  11 │     ListChecks,
+2026-05-11T22:27:57.9338926Z      12  12 │     Logs,
+2026-05-11T22:27:57.9339311Z      13     │ - ··Mic,
+2026-05-11T22:27:57.9339760Z          13 │ + ··type·LucideIcon,
+2026-05-11T22:27:57.9340203Z          14 │ + ··Mic,
+2026-05-11T22:27:57.9340571Z      14  15 │     Network,
+2026-05-11T22:27:57.9341046Z      15  16 │     PanelsTopLeft,
+2026-05-11T22:27:57.9341469Z     ······· │ 
+2026-05-11T22:27:57.9341874Z      18  19 │     Telescope,
+2026-05-11T22:27:57.9342286Z      19  20 │     Terminal,
+2026-05-11T22:27:57.9342697Z      20     │ - ··Waypoints,
+2026-05-11T22:27:57.9343187Z      21     │ - ··type·LucideIcon,
+2026-05-11T22:27:57.9343657Z          21 │ + ··Waypoints,
+2026-05-11T22:27:57.9344338Z      22  22 │   } from "lucide-react";
+2026-05-11T22:27:57.9344815Z      23  23 │   
+2026-05-11T22:27:57.9345093Z   
+2026-05-11T22:27:57.9345242Z 
+2026-05-11T22:27:57.9346106Z ./role-model-router/apps/runtime-ui/app/lib/design-system.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-05-11T22:27:57.9346783Z 
+2026-05-11T22:27:57.9347157Z   × Formatter would have printed the following content:
+2026-05-11T22:27:57.9347624Z   
+2026-05-11T22:27:57.9348015Z      66  66 │     eyebrow: "Overview",
+2026-05-11T22:27:57.9348580Z      67  67 │     title: "Unified telemetry",
+2026-05-11T22:27:57.9350374Z      68     │ - ··description:·"A·telemetry-first·overview·of·local·and·remote·runtime·posture,·comparison·rows,·controller·state,·and·recent·request·flow.",
+2026-05-11T22:27:57.9351753Z          68 │ + ··description:
+2026-05-11T22:27:57.9353183Z          69 │ + ····"A·telemetry-first·overview·of·local·and·remote·runtime·posture,·comparison·rows,·controller·state,·and·recent·request·flow.",
+2026-05-11T22:27:57.9354722Z      69  70 │     noteTitle: "Summary board",
+2026-05-11T22:27:57.9356488Z      70     │ - ··noteBody:·"Lead·with·cross-vendor·telemetry·KPIs·and·comparison·rows,·then·branch·into·Control,·Observe,·and·Studio·without·duplicating·detailed·ledgers.",
+2026-05-11T22:27:57.9357876Z          71 │ + ··noteBody:
+2026-05-11T22:27:57.9359451Z          72 │ + ····"Lead·with·cross-vendor·telemetry·KPIs·and·comparison·rows,·then·branch·into·Control,·Observe,·and·Studio·without·duplicating·detailed·ledgers.",
+2026-05-11T22:27:57.9360744Z      71  73 │   });
+2026-05-11T22:27:57.9361091Z      72  74 │   
+2026-05-11T22:27:57.9361434Z     ······· │ 
+2026-05-11T22:27:57.9361925Z      80  82 │     eyebrow: "Studio",
+2026-05-11T22:27:57.9362490Z      81  83 │     title: "Chat workspace",
+2026-05-11T22:27:57.9363908Z      82     │ - ··description:·"Compose·routed·chat·requests·and·inspect·assistant·output,·tool·calls,·and·execution·receipts·side·by·side.",
+2026-05-11T22:27:57.9365305Z          84 │ + ··description:
+2026-05-11T22:27:57.9366614Z          85 │ + ····"Compose·routed·chat·requests·and·inspect·assistant·output,·tool·calls,·and·execution·receipts·side·by·side.",
+2026-05-11T22:27:57.9367785Z      83  86 │     noteTitle: "Studio workspace",
+2026-05-11T22:27:57.9369328Z      84     │ - ··noteBody:·"Prompt·composition·stays·compact·while·output,·tooling·activity,·and·runtime·metadata·occupy·the·dominant·reading·area.",
+2026-05-11T22:27:57.9370549Z          87 │ + ··noteBody:
+2026-05-11T22:27:57.9371904Z          88 │ + ····"Prompt·composition·stays·compact·while·output,·tooling·activity,·and·runtime·metadata·occupy·the·dominant·reading·area.",
+2026-05-11T22:27:57.9373147Z      85  89 │   });
+2026-05-11T22:27:57.9373542Z      86  90 │   
+2026-05-11T22:27:57.9373882Z     ······· │ 
+2026-05-11T22:27:57.9374550Z      94  98 │     eyebrow: "Studio",
+2026-05-11T22:27:57.9375110Z      95  99 │     title: "Image workflows",
+2026-05-11T22:27:57.9376614Z      96     │ - ··description:·"Image·generation·workspace·for·OpenAI-style·and·SDAPI-style·request·modes·inside·one·repo-owned·studio·surface.",
+2026-05-11T22:27:57.9378088Z         100 │ + ··description:
+2026-05-11T22:27:57.9379473Z         101 │ + ····"Image·generation·workspace·for·OpenAI-style·and·SDAPI-style·request·modes·inside·one·repo-owned·studio·surface.",
+2026-05-11T22:27:57.9380725Z      97 102 │     noteTitle: "Studio workspace",
+2026-05-11T22:27:57.9382541Z      98     │ - ··noteBody:·"Keep·OpenAI·and·SDAPI·mode·selection·in·the·left·rail,·generated·images·in·the·dominant·stage,·and·raw·generation·detail·in·the·secondary·inspector.",
+2026-05-11T22:27:57.9383953Z         103 │ + ··noteBody:
+2026-05-11T22:27:57.9385833Z         104 │ + ····"Keep·OpenAI·and·SDAPI·mode·selection·in·the·left·rail,·generated·images·in·the·dominant·stage,·and·raw·generation·detail·in·the·secondary·inspector.",
+2026-05-11T22:27:57.9387185Z      99 105 │   });
+2026-05-11T22:27:57.9387541Z     100 106 │   
+2026-05-11T22:27:57.9387879Z     ······· │ 
+2026-05-11T22:27:57.9388297Z     108 114 │     eyebrow: "Studio",
+2026-05-11T22:27:57.9388870Z     109 115 │     title: "Audio workflows",
+2026-05-11T22:27:57.9390593Z     110     │ - ··description:·"Speech·generation,·voice·discovery,·and·transcription·share·one·audio·workspace·so·the·operator·flow·does·not·split·into·duplicate·pages.",
+2026-05-11T22:27:57.9392030Z         116 │ + ··description:
+2026-05-11T22:27:57.9393579Z         117 │ + ····"Speech·generation,·voice·discovery,·and·transcription·share·one·audio·workspace·so·the·operator·flow·does·not·split·into·duplicate·pages.",
+2026-05-11T22:27:57.9395164Z     111 118 │     noteTitle: "Studio workspace",
+2026-05-11T22:27:57.9396887Z     112     │ - ··noteBody:·"Use·one·mode-switched·workspace·for·voices,·uploads,·transcripts,·playable·outputs,·and·request/result·diagnostics.",
+2026-05-11T22:27:57.9398080Z         119 │ + ··noteBody:
+2026-05-11T22:27:57.9399387Z         120 │ + ····"Use·one·mode-switched·workspace·for·voices,·uploads,·transcripts,·playable·outputs,·and·request/result·diagnostics.",
+2026-05-11T22:27:57.9400508Z     113 121 │   });
+2026-05-11T22:27:57.9400849Z     114 122 │   
+2026-05-11T22:27:57.9401192Z     ······· │ 
+2026-05-11T22:27:57.9401613Z     122 130 │     eyebrow: "Studio",
+2026-05-11T22:27:57.9402116Z     123 131 │     title: "Rerank",
+2026-05-11T22:27:57.9403636Z     124     │ - ··description:·"Ranked-input·evaluation·workspace·for·query,·candidate,·and·ordered-score·inspection·without·leaving·the·studio·section.",
+2026-05-11T22:27:57.9405167Z         132 │ + ··description:
+2026-05-11T22:27:57.9406292Z         133 │ + ····"Ranked-input·evaluation·workspace·for·query,·candidate,·and·ordered-score·inspection·without·leaving·the·studio·section.",
+2026-05-11T22:27:57.9407054Z     125 134 │     noteTitle: "Studio workspace",
+2026-05-11T22:27:57.9407922Z     126     │ - ··noteBody:·"Treat·rerank·output·as·a·structured·result·ledger·with·compact·input·controls·and·a·secondary·raw·payload·inspector.",
+2026-05-11T22:27:57.9408594Z         135 │ + ··noteBody:
+2026-05-11T22:27:57.9409567Z         136 │ + ····"Treat·rerank·output·as·a·structured·result·ledger·with·compact·input·controls·and·a·secondary·raw·payload·inspector.",
+2026-05-11T22:27:57.9410197Z     127 137 │   });
+2026-05-11T22:27:57.9410399Z     128 138 │   
+2026-05-11T22:27:57.9410601Z     ······· │ 
+2026-05-11T22:27:57.9410847Z     136 146 │     eyebrow: "Studio",
+2026-05-11T22:27:57.9411153Z     137 147 │     title: "Advanced APIs",
+2026-05-11T22:27:57.9412132Z     138     │ - ··description:·"Contract-and-request·workspace·for·responses,·messages,·token·counting,·embeddings,·completion,·and·infill·families·that·stay·under·Studio.",
+2026-05-11T22:27:57.9412961Z         148 │ + ··description:
+2026-05-11T22:27:57.9413839Z         149 │ + ····"Contract-and-request·workspace·for·responses,·messages,·token·counting,·embeddings,·completion,·and·infill·families·that·stay·under·Studio.",
+2026-05-11T22:27:57.9414827Z     139 150 │     noteTitle: "Studio workspace",
+2026-05-11T22:27:57.9415620Z     140     │ - ··noteBody:·"Use·this·page·as·a·family·selector·plus·request/response·workspace,·not·a·miscellaneous·dumping·ground.",
+2026-05-11T22:27:57.9416253Z         151 │ + ··noteBody:
+2026-05-11T22:27:57.9416933Z         152 │ + ····"Use·this·page·as·a·family·selector·plus·request/response·workspace,·not·a·miscellaneous·dumping·ground.",
+2026-05-11T22:27:57.9417499Z     141 153 │   });
+2026-05-11T22:27:57.9417696Z     142 154 │   
+2026-05-11T22:27:57.9417895Z     ······· │ 
+2026-05-11T22:27:57.9418137Z     234 246 │     eyebrow: "Control",
+2026-05-11T22:27:57.9418470Z     235 247 │     title: "Provider onboarding",
+2026-05-11T22:27:57.9419529Z     236     │ - ··description:·"Choose·a·LiteLLM-backed·provider,·select·the·models·available·for·that·provider,·and·complete·setup·from·one·onboarding·surface.",
+2026-05-11T22:27:57.9420288Z         248 │ + ··description:
+2026-05-11T22:27:57.9421108Z         249 │ + ····"Choose·a·LiteLLM-backed·provider,·select·the·models·available·for·that·provider,·and·complete·setup·from·one·onboarding·surface.",
+2026-05-11T22:27:57.9421862Z     237 250 │     noteTitle: "Registry detail",
+2026-05-11T22:27:57.9422834Z     238     │ - ··noteBody:·"Lead·with·provider·selection·and·model·availability;·API-key·and·OAuth·setup·stay·in·the·same·workflow·instead·of·splitting·into·a·second·page.",
+2026-05-11T22:27:57.9423588Z         251 │ + ··noteBody:
+2026-05-11T22:27:57.9425008Z         252 │ + ····"Lead·with·provider·selection·and·model·availability;·API-key·and·OAuth·setup·stay·in·the·same·workflow·instead·of·splitting·into·a·second·page.",
+2026-05-11T22:27:57.9426335Z     239 253 │   });
+2026-05-11T22:27:57.9426678Z     240 254 │   
+2026-05-11T22:27:57.9427025Z     ······· │ 
+2026-05-11T22:27:57.9427482Z     248 262 │     eyebrow: "Control",
+2026-05-11T22:27:57.9428044Z     249 263 │     title: "Routing strategy",
+2026-05-11T22:27:57.9429814Z     250     │ - ··description:·"Structured·routing-strategy·posture·for·execution·mode,·controller·state,·and·operator·handoff·into·advanced·config·and·request·verification.",
+2026-05-11T22:27:57.9430855Z         264 │ + ··description:
+2026-05-11T22:27:57.9431787Z         265 │ + ····"Structured·routing-strategy·posture·for·execution·mode,·controller·state,·and·operator·handoff·into·advanced·config·and·request·verification.",
+2026-05-11T22:27:57.9432622Z     251 266 │     noteTitle: "Registry detail",
+2026-05-11T22:27:57.9433728Z     252     │ - ··noteBody:·"Lead·with·the·current·strategy·posture·and·links·into·advanced·config,·controller,·workbench,·and·request·inspection·instead·of·hiding·strategy·under·raw·JSON·alone.",
+2026-05-11T22:27:57.9434747Z         267 │ + ··noteBody:
+2026-05-11T22:27:57.9435761Z         268 │ + ····"Lead·with·the·current·strategy·posture·and·links·into·advanced·config,·controller,·workbench,·and·request·inspection·instead·of·hiding·strategy·under·raw·JSON·alone.",
+2026-05-11T22:27:57.9436599Z     253 269 │   });
+2026-05-11T22:27:57.9436805Z     254 270 │   
+2026-05-11T22:27:57.9437011Z     ······· │ 
+2026-05-11T22:27:57.9437255Z     262 278 │     eyebrow: "Control",
+2026-05-11T22:27:57.9437804Z     263 279 │     title: "Runtime config",
+2026-05-11T22:27:57.9438785Z     264     │ - ··description:·"Edit·the·unified·runtime·contract·for·local·llama-swap·models,·remote·LiteLLM·providers,·and·process·policy·through·one·repo-owned·route.",
+2026-05-11T22:27:57.9439582Z         280 │ + ··description:
+2026-05-11T22:27:57.9440446Z         281 │ + ····"Edit·the·unified·runtime·contract·for·local·llama-swap·models,·remote·LiteLLM·providers,·and·process·policy·through·one·repo-owned·route.",
+2026-05-11T22:27:57.9441237Z     265 282 │     noteTitle: "Registry detail",
+2026-05-11T22:27:57.9442109Z     266     │ - ··noteBody:·"Keep·the·editable·config·payload·and·the·applied·runtime·snapshot·adjacent·so·changes·stay·honest·and·inspectable.",
+2026-05-11T22:27:57.9442774Z         283 │ + ··noteBody:
+2026-05-11T22:27:57.9443520Z         284 │ + ····"Keep·the·editable·config·payload·and·the·applied·runtime·snapshot·adjacent·so·changes·stay·honest·and·inspectable.",
+2026-05-11T22:27:57.9444387Z     267 285 │   });
+2026-05-11T22:27:57.9444591Z     268 286 │   
+2026-05-11T22:27:57.9444799Z     ······· │ 
+2026-05-11T22:27:57.9445044Z     276 294 │     eyebrow: "Control",
+2026-05-11T22:27:57.9445376Z     277 295 │     title: "Routing controller",
+2026-05-11T22:27:57.9446075Z     278     │ - ··description:·"Choose·the·concrete·endpoint/model·pair·that·acts·as·the·global·routing·controller.",
+2026-05-11T22:27:57.9446651Z         296 │ + ··description:
+2026-05-11T22:27:57.9447238Z         297 │ + ····"Choose·the·concrete·endpoint/model·pair·that·acts·as·the·global·routing·controller.",
+2026-05-11T22:27:57.9447941Z     279 298 │     noteTitle: "Registry detail",
+2026-05-11T22:27:57.9448787Z     280     │ - ··noteBody:·"The·controller·stays·explicit·and·editable;·candidate·health,·tooling·posture,·and·source·type·remain·visible.",
+2026-05-11T22:27:57.9449458Z         299 │ + ··noteBody:
+2026-05-11T22:27:57.9450169Z         300 │ + ····"The·controller·stays·explicit·and·editable;·candidate·health,·tooling·posture,·and·source·type·remain·visible.",
+2026-05-11T22:27:57.9450783Z     281 301 │   });
+2026-05-11T22:27:57.9450983Z     282 302 │   
+2026-05-11T22:27:57.9451182Z     ······· │ 
+2026-05-11T22:27:57.9451424Z     290 310 │     eyebrow: "Control",
+2026-05-11T22:27:57.9451741Z     291 311 │     title: "Endpoint registry",
+2026-05-11T22:27:57.9452766Z     292     │ - ··description:·"Review·configured·providers,·models,·and·runtime·endpoint·status·after·onboarding·without·duplicating·provider·setup·here.",
+2026-05-11T22:27:57.9454341Z         312 │ + ··description:
+2026-05-11T22:27:57.9455830Z         313 │ + ····"Review·configured·providers,·models,·and·runtime·endpoint·status·after·onboarding·without·duplicating·provider·setup·here.",
+2026-05-11T22:27:57.9457138Z     293 314 │     noteTitle: "Registry detail",
+2026-05-11T22:27:57.9458772Z     294     │ - ··noteBody:·"Treat·this·page·as·the·live·configured·registry·for·provider-model·runtime·entries,·with·health·and·source·posture·kept·visible.",
+2026-05-11T22:27:57.9460078Z         315 │ + ··noteBody:
+2026-05-11T22:27:57.9461522Z         316 │ + ····"Treat·this·page·as·the·live·configured·registry·for·provider-model·runtime·entries,·with·health·and·source·posture·kept·visible.",
+2026-05-11T22:27:57.9462716Z     295 317 │   });
+2026-05-11T22:27:57.9463052Z     296 318 │   
+2026-05-11T22:27:57.9463401Z     ······· │ 
+2026-05-11T22:27:57.9463807Z     304 326 │     eyebrow: "Control",
+2026-05-11T22:27:57.9464568Z     305 327 │     title: "Configured models",
+2026-05-11T22:27:57.9466423Z     306     │ - ··description:·"Unified·local·and·remote·model·inventory·with·inspect-only·cards,·controller·state,·and·explicit·links·back·to·the·editable·runtime·config·surface.",
+2026-05-11T22:27:57.9467898Z         328 │ + ··description:
+2026-05-11T22:27:57.9469536Z         329 │ + ····"Unified·local·and·remote·model·inventory·with·inspect-only·cards,·controller·state,·and·explicit·links·back·to·the·editable·runtime·config·surface.",
+2026-05-11T22:27:57.9470998Z     307 330 │     noteTitle: "Model inventory",
+2026-05-11T22:27:57.9472889Z     308     │ - ··noteBody:·"Model·cards·stay·observational·unless·a·real·persistence·surface·exists;·editing·belongs·to·Runtime·Config·or·account·onboarding.",
+2026-05-11T22:27:57.9473777Z         331 │ + ··noteBody:
+2026-05-11T22:27:57.9474813Z         332 │ + ····"Model·cards·stay·observational·unless·a·real·persistence·surface·exists;·editing·belongs·to·Runtime·Config·or·account·onboarding.",
+2026-05-11T22:27:57.9475501Z     309 333 │   });
+2026-05-11T22:27:57.9475704Z     310 334 │   
+2026-05-11T22:27:57.9475910Z     ······· │ 
+2026-05-11T22:27:57.9476177Z     318 342 │     eyebrow: "Observe",
+2026-05-11T22:27:57.9476531Z     319 343 │     title: "Host activity and metrics",
+2026-05-11T22:27:57.9477525Z     320     │ - ··description:·"A·preserved·raw-host·ledger·for·metrics,·captures,·tooling,·and·controller·changes·that·stays·adjacent·to·the·canonical·telemetry·pages.",
+2026-05-11T22:27:57.9478318Z         344 │ + ··description:
+2026-05-11T22:27:57.9479201Z         345 │ + ····"A·preserved·raw-host·ledger·for·metrics,·captures,·tooling,·and·controller·changes·that·stays·adjacent·to·the·canonical·telemetry·pages.",
+2026-05-11T22:27:57.9479989Z     321 346 │     noteTitle: "Ledger inspector",
+2026-05-11T22:27:57.9480937Z     322     │ - ··noteBody:·"Keep·metrics·and·capture·drill-ins·inside·the·raw-host·activity·ledger·rather·than·duplicating·them·in·the·canonical·telemetry·pages.",
+2026-05-11T22:27:57.9481671Z         347 │ + ··noteBody:
+2026-05-11T22:27:57.9482668Z         348 │ + ····"Keep·metrics·and·capture·drill-ins·inside·the·raw-host·activity·ledger·rather·than·duplicating·them·in·the·canonical·telemetry·pages.",
+2026-05-11T22:27:57.9483388Z     323 349 │   });
+2026-05-11T22:27:57.9483588Z     324 350 │   
+2026-05-11T22:27:57.9483791Z     ······· │ 
+2026-05-11T22:27:57.9484033Z     332 358 │     eyebrow: "Observe",
+2026-05-11T22:27:57.9484620Z     333 359 │     title: "Telemetry request ledger",
+2026-05-11T22:27:57.9485589Z     334     │ - ··description:·"Canonical·runtime·telemetry·rows·with·direct·drill-in·to·request·captures,·endpoint·profile·context,·and·tooling·receipts.",
+2026-05-11T22:27:57.9486347Z         360 │ + ··description:
+2026-05-11T22:27:57.9487133Z         361 │ + ····"Canonical·runtime·telemetry·rows·with·direct·drill-in·to·request·captures,·endpoint·profile·context,·and·tooling·receipts.",
+2026-05-11T22:27:57.9487857Z     335 362 │     noteTitle: "Ledger inspector",
+2026-05-11T22:27:57.9488672Z     336     │ - ··noteBody:·"Optimize·for·scanability:·source·type,·latency,·tokens,·endpoint,·and·tool·activity·should·be·immediately·legible.",
+2026-05-11T22:27:57.9489315Z   97 more lines truncated
+2026-05-11T22:27:57.9489515Z   
+2026-05-11T22:27:57.9489603Z 
+2026-05-11T22:27:57.9490112Z ./role-model-router/apps/runtime-ui/app/lib/device-authorization.test.ts organizeImports ━━━━━━━━━━━
+2026-05-11T22:27:57.9490601Z 
+2026-05-11T22:27:57.9490890Z   × Import statements could be sorted:
+2026-05-11T22:27:57.9491298Z   
+2026-05-11T22:27:57.9492016Z       4   4 │     getDeviceAuthorizationPollDelayMs,
+2026-05-11T22:27:57.9492700Z       5   5 │     resolveVerificationWindowUrl,
+2026-05-11T22:27:57.9493447Z       6     │ - ··syncConnectedDeviceAuthorizationEndpoints,
+2026-05-11T22:27:57.9494397Z       7     │ - ··shouldAutoPollDeviceAuthorization,
+2026-05-11T22:27:57.9495130Z           6 │ + ··shouldAutoPollDeviceAuthorization,
+2026-05-11T22:27:57.9495883Z           7 │ + ··syncConnectedDeviceAuthorizationEndpoints,
+2026-05-11T22:27:57.9496592Z       8   8 │   } from "./device-authorization";
+2026-05-11T22:27:57.9497024Z       9   9 │   
+2026-05-11T22:27:57.9497189Z   
+2026-05-11T22:27:57.9497298Z 
+2026-05-11T22:27:57.9497801Z ./role-model-router/apps/runtime-ui/app/lib/device-authorization.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-05-11T22:27:57.9498200Z 
+2026-05-11T22:27:57.9498424Z   × Formatter would have printed the following content:
+2026-05-11T22:27:57.9498706Z   
+2026-05-11T22:27:57.9498886Z     16 16 │   }
+2026-05-11T22:27:57.9499091Z     17 17 │   
+2026-05-11T22:27:57.9499744Z     18    │ - export·function·shouldAutoPollDeviceAuthorization(session:·RuntimeDeviceAuthorization·|·null):·boolean·{
+2026-05-11T22:27:57.9500473Z        18 │ + export·function·shouldAutoPollDeviceAuthorization(
+2026-05-11T22:27:57.9500947Z        19 │ + ··session:·RuntimeDeviceAuthorization·|·null,
+2026-05-11T22:27:57.9501291Z        20 │ + ):·boolean·{
+2026-05-11T22:27:57.9501750Z     19 21 │     return Boolean(session?.authRequestId) && session?.status === "pending";
+2026-05-11T22:27:57.9502152Z     20 22 │   }
+2026-05-11T22:27:57.9502345Z     21 23 │   
+2026-05-11T22:27:57.9503065Z     22 24 │   export function getDeviceAuthorizationPollDelayMs(session: RuntimeDeviceAuthorization): number {
+2026-05-11T22:27:57.9504298Z     23    │ - ··if·(typeof·session.intervalSeconds·===·"number"·&&·Number.isFinite(session.intervalSeconds)·&&·session.intervalSeconds·>·0)·{
+2026-05-11T22:27:57.9504955Z        25 │ + ··if·(
+2026-05-11T22:27:57.9505322Z        26 │ + ····typeof·session.intervalSeconds·===·"number"·&&
+2026-05-11T22:27:57.9505802Z        27 │ + ····Number.isFinite(session.intervalSeconds)·&&
+2026-05-11T22:27:57.9506246Z        28 │ + ····session.intervalSeconds·>·0
+2026-05-11T22:27:57.9506572Z        29 │ + ··)·{
+2026-05-11T22:27:57.9506892Z     24 30 │       return session.intervalSeconds * 1_000;
+2026-05-11T22:27:57.9507204Z     25 31 │     }
+2026-05-11T22:27:57.9507408Z     ····· │ 
+2026-05-11T22:27:57.9507603Z     47 53 │     }
+2026-05-11T22:27:57.9507800Z     48 54 │   
+2026-05-11T22:27:57.9508503Z     49    │ - ··const·selectedModels·=·[...new·Set(input.selectedModels.map((value)·=>·value.trim()).filter((value)·=>·value.length·>·0))];
+2026-05-11T22:27:57.9509174Z        55 │ + ··const·selectedModels·=·[
+2026-05-11T22:27:57.9509496Z        56 │ + ····...new·Set(
+2026-05-11T22:27:57.9510051Z        57 │ + ······input.selectedModels.map((value)·=>·value.trim()).filter((value)·=>·value.length·>·0),
+2026-05-11T22:27:57.9510522Z        58 │ + ····),
+2026-05-11T22:27:57.9510748Z        59 │ + ··];
+2026-05-11T22:27:57.9511037Z     50 60 │     if (selectedModels.length === 0) {
+2026-05-11T22:27:57.9511341Z     51 61 │       return;
+2026-05-11T22:27:57.9511527Z   
+2026-05-11T22:27:57.9511618Z 
+2026-05-11T22:27:57.9512109Z ./role-model-router/apps/runtime-ui/app/lib/runtime-api.test.ts organizeImports ━━━━━━━━━━━━━━━━━━━━
+2026-05-11T22:27:57.9512510Z 
+2026-05-11T22:27:57.9512669Z   × Import statements could be sorted:
+2026-05-11T22:27:57.9512897Z   
+2026-05-11T22:27:57.9513110Z        3    3 │   import {
+2026-05-11T22:27:57.9513404Z        4    4 │     activateRuntimeEndpoint,
+2026-05-11T22:27:57.9513742Z        5      │ - ··fetchAudioVoices,
+2026-05-11T22:27:57.9514062Z        6      │ - ··fetchActivityCapture,
+2026-05-11T22:27:57.9514585Z             5 │ + ··fetchActivityCapture,
+2026-05-11T22:27:57.9514895Z        7    6 │     fetchActivityMetrics,
+2026-05-11T22:27:57.9515225Z        8      │ - ··fetchTelemetryDashboard,
+2026-05-11T22:27:57.9515559Z        9      │ - ··fetchTelemetryRequests,
+2026-05-11T22:27:57.9516046Z             7 │ + ··fetchAudioVoices,
+2026-05-11T22:27:57.9516374Z             8 │ + ··fetchControllerAssignment,
+2026-05-11T22:27:57.9516759Z       10    9 │     fetchDownstreamOpenAIProviderConfig,
+2026-05-11T22:27:57.9517145Z       11      │ - ··fetchControllerAssignment,
+2026-05-11T22:27:57.9517477Z       12      │ - ··fetchRequestDetail,
+2026-05-11T22:27:57.9517787Z       13      │ - ··fetchRuntimeConfig,
+2026-05-11T22:27:57.9518103Z       14      │ - ··fetchRuntimeSnapshot,
+2026-05-11T22:27:57.9518668Z       15      │ - ··fetchVersionInfo,
+2026-05-11T22:27:57.9519265Z            10 │ + ··fetchRequestDetail,
+2026-05-11T22:27:57.9519812Z            11 │ + ··fetchRuntimeConfig,
+2026-05-11T22:27:57.9520355Z            12 │ + ··fetchRuntimeSnapshot,
+2026-05-11T22:27:57.9520940Z            13 │ + ··fetchTelemetryDashboard,
+2026-05-11T22:27:57.9521529Z            14 │ + ··fetchTelemetryRequests,
+2026-05-11T22:27:57.9522055Z       16   15 │     fetchTextLogs,
+2026-05-11T22:27:57.9522678Z       17      │ - ··pollRuntimeDeviceAuthorization,
+2026-05-11T22:27:57.9523324Z       18      │ - ··subscribeTelemetryStream,
+2026-05-11T22:27:57.9523895Z            16 │ + ··fetchVersionInfo,
+2026-05-11T22:27:57.9524719Z            17 │ + ··pollRuntimeDeviceAuthorization,
+2026-05-11T22:27:57.9525410Z            18 │ + ··startRuntimeDeviceAuthorization,
+2026-05-11T22:27:57.9526040Z       19   19 │     submitAdvancedRequest,
+2026-05-11T22:27:57.9526629Z       20   20 │     submitAudioTranscription,
+2026-05-11T22:27:57.9527123Z     ········· │ 
+2026-05-11T22:27:57.9527556Z       23   23 │     submitSdApiTxt2Img,
+2026-05-11T22:27:57.9528322Z       24   24 │     submitSpeechGeneration,
+2026-05-11T22:27:57.9528999Z       25      │ - ··startRuntimeDeviceAuthorization,
+2026-05-11T22:27:57.9529619Z       26      │ - ··submitWorkbenchChat,
+2026-05-11T22:27:57.9530179Z       27      │ - ··updateRuntimeConfig,
+2026-05-11T22:27:57.9530786Z       28      │ - ··updateControllerAssignment,
+2026-05-11T22:27:57.9531397Z            25 │ + ··submitWorkbenchChat,
+2026-05-11T22:27:57.9531967Z            26 │ + ··subscribeTelemetryStream,
+2026-05-11T22:27:57.9532590Z            27 │ + ··updateControllerAssignment,
+2026-05-11T22:27:57.9533182Z            28 │ + ··updateRuntimeConfig,
+2026-05-11T22:27:57.9533723Z       29   29 │   } from "./runtime-api";
+2026-05-11T22:27:57.9534372Z       30   30 │   
+2026-05-11T22:27:57.9534658Z   
+2026-05-11T22:27:57.9534810Z 
+2026-05-11T22:27:57.9535682Z ./role-model-router/apps/runtime-ui/app/lib/runtime-api.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-05-11T22:27:57.9536356Z 
+2026-05-11T22:27:57.9536739Z   × Formatter would have printed the following content:
+2026-05-11T22:27:57.9537213Z   
+2026-05-11T22:27:57.9537548Z       15  15 │   }
+2026-05-11T22:27:57.9537898Z       16  16 │   
+2026-05-11T22:27:57.9538240Z       17     │ - 
+2026-05-11T22:27:57.9538765Z       18  17 │   export interface RuntimeProcessConfig {
+2026-05-11T22:27:57.9539438Z       19  18 │     readonly command: string | null;
+2026-05-11T22:27:57.9539948Z     ········ │ 
+2026-05-11T22:27:57.9540491Z       23  22 │     readonly startupTimeoutMs: number | null;
+2026-05-11T22:27:57.9541023Z       24  23 │   }
+2026-05-11T22:27:57.9541355Z       25     │ - 
+2026-05-11T22:27:57.9541692Z       26  24 │   
+2026-05-11T22:27:57.9542200Z       27  25 │   export interface RuntimeConfigModel {
+2026-05-11T22:27:57.9542716Z     ········ │ 
+2026-05-11T22:27:57.9543235Z       34  32 │     readonly useModelName?: string | null;
+2026-05-11T22:27:57.9543741Z       35  33 │   }
+2026-05-11T22:27:57.9544252Z       36     │ - 
+2026-05-11T22:27:57.9544612Z       37  34 │   
+2026-05-11T22:27:57.9545209Z       38  35 │   export interface RuntimeConfigProviderMapping {
+2026-05-11T22:27:57.9545788Z     ········ │ 
+2026-05-11T22:27:57.9546123Z       42  39 │   }
+2026-05-11T22:27:57.9546465Z       43  40 │   
+2026-05-11T22:27:57.9546806Z       44     │ - 
+2026-05-11T22:27:57.9547336Z       45  41 │   export interface RuntimeConfigProvider {
+2026-05-11T22:27:57.9548214Z       46  42 │     readonly providerId: string;
+2026-05-11T22:27:57.9548701Z     ········ │ 
+2026-05-11T22:27:57.9549416Z       49  45 │     readonly modelMappings: readonly RuntimeConfigProviderMapping[];
+2026-05-11T22:27:57.9550102Z       50  46 │   }
+2026-05-11T22:27:57.9550439Z       51     │ - 
+2026-05-11T22:27:57.9550785Z       52  47 │   
+2026-05-11T22:27:57.9551264Z       53  48 │   export interface RuntimeConfig {
+2026-05-11T22:27:57.9551760Z     ········ │ 
+2026-05-11T22:27:57.9552103Z       66  61 │     };
+2026-05-11T22:27:57.9552457Z       67  62 │   }
+2026-05-11T22:27:57.9552793Z       68     │ - 
+2026-05-11T22:27:57.9553142Z       69  63 │   
+2026-05-11T22:27:57.9553649Z       70  64 │   export interface RuntimeConfigRecord {
+2026-05-11T22:27:57.9554368Z     ········ │ 
+2026-05-11T22:27:57.9554728Z       74  68 │   }
+2026-05-11T22:27:57.9555065Z       75  69 │   
+2026-05-11T22:27:57.9555406Z       76     │ - 
+2026-05-11T22:27:57.9555896Z       77  70 │   export interface ProviderVariant {
+2026-05-11T22:27:57.9556545Z       78  71 │     readonly variantId: string;
+2026-05-11T22:27:57.9557028Z     ········ │ 
+2026-05-11T22:27:57.9557366Z       91  84 │     };
+2026-05-11T22:27:57.9557726Z       92  85 │   }
+2026-05-11T22:27:57.9558066Z       93     │ - 
+2026-05-11T22:27:57.9558396Z       94  86 │   
+2026-05-11T22:27:57.9558890Z       95  87 │   export interface RuntimeProvider {
+2026-05-11T22:27:57.9559385Z     ········ │ 
+2026-05-11T22:27:57.9559977Z      107  99 │     readonly variants?: readonly ProviderVariant[];
+2026-05-11T22:27:57.9560557Z      108 100 │   }
+2026-05-11T22:27:57.9560891Z      109     │ - 
+2026-05-11T22:27:57.9561402Z      110 101 │   
+2026-05-11T22:27:57.9561902Z      111 102 │   export interface RuntimeAccount {
+2026-05-11T22:27:57.9562402Z     ········ │ 
+2026-05-11T22:27:57.9562730Z      130 121 │   }
+2026-05-11T22:27:57.9563063Z      131 122 │   
+2026-05-11T22:27:57.9563395Z      132     │ - 
+2026-05-11T22:27:57.9563890Z      133 123 │   export interface RuntimeEndpoint {
+2026-05-11T22:27:57.9564735Z      134 124 │     readonly endpointId: string;
+2026-05-11T22:27:57.9565231Z     ········ │ 
+2026-05-11T22:27:57.9565736Z      147 137 │     readonly toolCallingStyle?: string;
+2026-05-11T22:27:57.9566246Z      148 138 │   }
+2026-05-11T22:27:57.9566589Z      149     │ - 
+2026-05-11T22:27:57.9566922Z      150 139 │   
+2026-05-11T22:27:57.9567465Z      151 140 │   export interface RuntimeRoleDefinition {
+2026-05-11T22:27:57.9568008Z     ········ │ 
+2026-05-11T22:27:57.9568531Z      155 144 │     readonly taskTypes?: readonly string[];
+2026-05-11T22:27:57.9569063Z      156 145 │   }
+2026-05-11T22:27:57.9569416Z      157     │ - 
+2026-05-11T22:27:57.9569768Z      158 146 │   
+2026-05-11T22:27:57.9570350Z      159 147 │   export interface RuntimeDeviceAuthorization {
+2026-05-11T22:27:57.9570919Z     ········ │ 
+2026-05-11T22:27:57.9571256Z      168 156 │   }
+2026-05-11T22:27:57.9571595Z      169 157 │   
+2026-05-11T22:27:57.9571933Z      170     │ - 
+2026-05-11T22:27:57.9572564Z      171 158 │   export interface RuntimeRequestListItem {
+2026-05-11T22:27:57.9572966Z      172 159 │     readonly requestId: string;
+2026-05-11T22:27:57.9573275Z     ········ │ 
+2026-05-11T22:27:57.9573565Z      174 161 │     readonly createdAtMs?: number;
+2026-05-11T22:27:57.9573852Z      175 162 │   }
+2026-05-11T22:27:57.9574244Z      176     │ - 
+2026-05-11T22:27:57.9574469Z      177 163 │   
+2026-05-11T22:27:57.9574811Z      178 164 │   export interface RuntimeTelemetrySourceSummary {
+2026-05-11T22:27:57.9575157Z     ········ │ 
+2026-05-11T22:27:57.9575458Z      190 176 │     readonly lastSeenAtMs: number | null;
+2026-05-11T22:27:57.9575766Z      191 177 │   }
+2026-05-11T22:27:57.9575967Z      192     │ - 
+2026-05-11T22:27:57.9576167Z      193 178 │   
+2026-05-11T22:27:57.9576653Z      194 179 │   export interface RuntimeTelemetrySummary extends RuntimeTelemetrySourceSummary {
+2026-05-11T22:27:57.9577122Z     ········ │ 
+2026-05-11T22:27:57.9577314Z      199 184 │   }
+2026-05-11T22:27:57.9577524Z      200 185 │   
+2026-05-11T22:27:57.9577723Z      201     │ - 
+2026-05-11T22:27:57.9578249Z      202 186 │   export interface RuntimeTelemetryComparisonRow extends RuntimeTelemetrySourceSummary {
+2026-05-11T22:27:57.9578821Z      203 187 │     readonly endpointId: string;
+2026-05-11T22:27:57.9579184Z     ········ │ 
+2026-05-11T22:27:57.9579481Z      214 198 │     readonly roleIds?: readonly string[];
+2026-05-11T22:27:57.9579780Z      215 199 │   }
+2026-05-11T22:27:57.9579976Z      216     │ - 
+2026-05-11T22:27:57.9580172Z      217 200 │   
+2026-05-11T22:27:57.9580512Z      218 201 │   export interface RuntimeTelemetryRequestRecord {
+2026-05-11T22:27:57.9580858Z     ········ │ 
+2026-05-11T22:27:57.9581221Z      259 242 │     readonly currency?: string | null;
+2026-05-11T22:27:57.9581781Z      260 243 │   }
+2026-05-11T22:27:57.9582128Z      261     │ - 
+2026-05-11T22:27:57.9582470Z      262 244 │   
+2026-05-11T22:27:57.9583036Z      263 245 │   export interface RuntimeTelemetryDashboard {
+2026-05-11T22:27:57.9583623Z     ········ │ 
+2026-05-11T22:27:57.9583966Z      267 249 │   }
+2026-05-11T22:27:57.9584502Z      268 250 │   
+2026-05-11T22:27:57.9584853Z      269     │ - 
+2026-05-11T22:27:57.9585445Z      270 251 │   export interface RuntimeTelemetryStreamEvent {
+2026-05-11T22:27:57.9586099Z      271 252 │     readonly eventName: "telemetry.update";
+2026-05-11T22:27:57.9586420Z     ········ │ 
+2026-05-11T22:27:57.9586767Z      274 255 │     readonly request: RuntimeTelemetryRequestRecord;
+2026-05-11T22:27:57.9587110Z      275 256 │   }
+2026-05-11T22:27:57.9587314Z      276     │ - 
+2026-05-11T22:27:57.9587506Z      277 257 │   
+2026-05-11T22:27:57.9588069Z      278 258 │   export interface RuntimeEventSourceLike {
+2026-05-11T22:27:57.9588425Z     ········ │ 
+2026-05-11T22:27:57.9588664Z      280 260 │     close(): void;
+2026-05-11T22:27:57.9588911Z      281 261 │   }
+2026-05-11T22:27:57.9589113Z      282     │ - 
+2026-05-11T22:27:57.9589316Z      283 262 │   
+2026-05-11T22:27:57.9589820Z      284 263 │   export type RuntimeEventSourceFactory = (url: string) => RuntimeEventSourceLike;
+2026-05-11T22:27:57.9590280Z     ········ │ 
+2026-05-11T22:27:57.9590485Z      292 271 │   }
+2026-05-11T22:27:57.9590688Z      293 272 │   
+2026-05-11T22:27:57.9590882Z      294     │ - 
+2026-05-11T22:27:57.9604783Z      295 273 │   export interface RuntimeControllerAssignment {
+2026-05-11T22:27:57.9605593Z      296 274 │     readonly scope: string;
+2026-05-11T22:27:57.9606091Z     ········ │ 
+2026-05-11T22:27:57.9606594Z      301 279 │     readonly updatedAtMs?: number;
+2026-05-11T22:27:57.9607102Z      302 280 │   }
+2026-05-11T22:27:57.9607462Z      303     │ - 
+2026-05-11T22:27:57.9607832Z      304 281 │   
+2026-05-11T22:27:57.9608516Z      305 282 │   export interface RuntimeDownstreamOpenAIProviderConfig {
+2026-05-11T22:27:57.9609176Z     ········ │ 
+2026-05-11T22:27:57.9609512Z      327 304 │   }
+2026-05-11T22:27:57.9609855Z      328 305 │   
+2026-05-11T22:27:57.9610200Z      329     │ - 
+2026-05-11T22:27:57.9610981Z      330 306 │   export interface RuntimeTokenMetrics {
+2026-05-11T22:27:57.9611666Z      331 307 │     readonly cache_tokens: number;
+2026-05-11T22:27:57.9612170Z     ········ │ 
+2026-05-11T22:27:57.9612704Z      335 311 │     readonly tokens_per_second: number;
+2026-05-11T22:27:57.9613081Z      336 312 │   }
+2026-05-11T22:27:57.9613298Z      337     │ - 
+2026-05-11T22:27:57.9613507Z      338 313 │   
+2026-05-11T22:27:57.9613835Z      339 314 │   export interface RuntimeActivityLogEntry {
+2026-05-11T22:27:57.9614335Z     ········ │ 
+2026-05-11T22:27:57.9614630Z      348 323 │     readonly has_capture: boolean;
+2026-05-11T22:27:57.9614942Z      349 324 │   }
+2026-05-11T22:27:57.9615149Z      350     │ - 
+2026-05-11T22:27:57.9615349Z      351 325 │   
+2026-05-11T22:27:57.9615661Z      352 326 │   export interface RuntimeActivityCapture {
+2026-05-11T22:27:57.9615981Z     ········ │ 
+2026-05-11T22:27:57.9616168Z      359 333 │   }
+2026-05-11T22:27:57.9616365Z      360 334 │   
+2026-05-11T22:27:57.9616574Z      361     │ - 
+2026-05-11T22:27:57.9616863Z      362 335 │   export interface RuntimeVersionInfo {
+2026-05-11T22:27:57.9617234Z      363 336 │     readonly build_date: string;
+2026-05-11T22:27:57.9617518Z     ········ │ 
+2026-05-11T22:27:57.9617769Z      365 338 │     readonly version: string;
+2026-05-11T22:27:57.9618036Z      366 339 │   }
+2026-05-11T22:27:57.9618224Z      367     │ - 
+2026-05-11T22:27:57.9618414Z      368 340 │   
+2026-05-11T22:27:57.9618755Z      369 341 │   export interface RuntimeImageGenerationRequest {
+2026-05-11T22:27:57.9619135Z     ········ │ 
+2026-05-11T22:27:57.9619415Z      373 345 │     readonly size?: string;
+2026-05-11T22:27:57.9619837Z      374 346 │   }
+2026-05-11T22:27:57.9620050Z      375     │ - 
+2026-05-11T22:27:57.9620244Z      376 347 │   
+2026-05-11T22:27:57.9620582Z      377 348 │   export interface RuntimeImageGenerationResponse {
+2026-05-11T22:27:57.9620927Z     ········ │ 
+2026-05-11T22:27:57.9621119Z      383 354 │   }
+2026-05-11T22:27:57.9621304Z      384 355 │   
+2026-05-11T22:27:57.9621507Z      385     │ - 
+2026-05-11T22:27:57.9621827Z      386 356 │   export interface RuntimeSdApiTxt2ImgRequest {
+2026-05-11T22:27:57.9622208Z      387 357 │     readonly model?: string;
+2026-05-11T22:27:57.9622470Z   359 more lines truncated
+2026-05-11T22:27:57.9622834Z   
+2026-05-11T22:27:57.9622997Z 
+2026-05-11T22:27:57.9623903Z ./role-model-router/apps/runtime-ui/app/lib/view-models.test.ts organizeImports ━━━━━━━━━━━━━━━━━━━━
+2026-05-11T22:27:57.9624781Z 
+2026-05-11T22:27:57.9625095Z   × Import statements could be sorted:
+2026-05-11T22:27:57.9625491Z   
+2026-05-11T22:27:57.9625796Z       2   2 │   
+2026-05-11T22:27:57.9626180Z       3   3 │   import {
+2026-05-11T22:27:57.9626670Z       4     │ - ··buildActivitySummary,
+2026-05-11T22:27:57.9627278Z       5     │ - ··buildAccountModelCatalogIds,
+2026-05-11T22:27:57.9627914Z           4 │ + ··buildAccountModelCatalogIds,
+2026-05-11T22:27:57.9628491Z           5 │ + ··buildActivitySummary,
+2026-05-11T22:27:57.9629050Z           6 │ + ··buildConfiguredModelCards,
+2026-05-11T22:27:57.9629424Z       6   7 │     buildConfiguredProviderRows,
+2026-05-11T22:27:57.9629775Z       7     │ - ··buildConfiguredModelCards,
+2026-05-11T22:27:57.9630114Z       8     │ - ··buildEndpointCatalogRows,
+2026-05-11T22:27:57.9630463Z       9     │ - ··buildDownstreamProviderGuide,
+2026-05-11T22:27:57.9630848Z           8 │ + ··buildDownstreamProviderGuide,
+2026-05-11T22:27:57.9631206Z           9 │ + ··buildEndpointCatalogRows,
+2026-05-11T22:27:57.9631532Z      10  10 │     buildModelCatalogRows,
+2026-05-11T22:27:57.9631846Z      11  11 │     buildProviderCards,
+2026-05-11T22:27:57.9632104Z     ······· │ 
+2026-05-11T22:27:57.9632386Z      13  13 │     buildTelemetryRequestRows,
+2026-05-11T22:27:57.9632736Z      14  14 │     buildWorkbenchModelOptions,
+2026-05-11T22:27:57.9633073Z      15     │ - ··summarizeTelemetryStats,
+2026-05-11T22:27:57.9633411Z      16     │ - ··summarizeWorkbenchResult,
+2026-05-11T22:27:57.9633751Z      17     │ - ··summarizeRuntimeStats,
+2026-05-11T22:27:57.9634488Z          15 │ + ··summarizeRuntimeStats,
+2026-05-11T22:27:57.9634881Z          16 │ + ··summarizeTelemetryStats,
+2026-05-11T22:27:57.9635216Z          17 │ + ··summarizeWorkbenchResult,
+2026-05-11T22:27:57.9635530Z      18  18 │   } from "./view-models";
+2026-05-11T22:27:57.9635787Z      19  19 │   
+2026-05-11T22:27:57.9635949Z   
+2026-05-11T22:27:57.9636038Z 
+2026-05-11T22:27:57.9636531Z ./role-model-router/apps/runtime-ui/app/lib/view-models.test.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-05-11T22:27:57.9636920Z 
+2026-05-11T22:27:57.9637134Z   × Formatter would have printed the following content:
+2026-05-11T22:27:57.9637418Z   
+2026-05-11T22:27:57.9642971Z      94  94 │         buildWorkbenchModelOptions([
+2026-05-11T22:27:57.9644680Z      95  95 │           { id: "moonshot/kimi-k2.5", endpoint_ids: ["moonshot.personal.primary.global.kimi-k2.5"] },
+2026-05-11T22:27:57.9646411Z      96     │ - ········{·id:·"openai/gpt-4.1-mini-fast",·endpoint_ids:·["openai.personal.primary.us-east-1.fast"]·},
+2026-05-11T22:27:57.9647356Z          96 │ + ········{
+2026-05-11T22:27:57.9647944Z          97 │ + ··········id:·"openai/gpt-4.1-mini-fast",
+2026-05-11T22:27:57.9648852Z          98 │ + ··········endpoint_ids:·["openai.personal.primary.us-east-1.fast"],
+2026-05-11T22:27:57.9649548Z          99 │ + ········},
+2026-05-11T22:27:57.9650541Z      97 100 │           { id: "moonshot/kimi-k2.5", endpoint_ids: ["moonshot.personal.primary.global.kimi-k2.5"] },
+2026-05-11T22:27:57.9651392Z      98 101 │         ]),
+2026-05-11T22:27:57.9651773Z     ······· │ 
+2026-05-11T22:27:57.9652210Z     365 368 │               function: {
+2026-05-11T22:27:57.9653082Z     366 369 │                 name: "lookupRegistry",
+2026-05-11T22:27:57.9653954Z     367     │ - ··············arguments:·"{\"endpointId\":\"cli.local.coder\"}",
+2026-05-11T22:27:57.9655131Z         370 │ + ··············arguments:·'{"endpointId":"cli.local.coder"}',
+2026-05-11T22:27:57.9655799Z     368 371 │               },
+2026-05-11T22:27:57.9656249Z     369 372 │             },
+2026-05-11T22:27:57.9656650Z     ······· │ 
+2026-05-11T22:27:57.9657283Z     461 464 │           modelsCurl: "curl http://127.0.0.1:8091/v1/models",
+2026-05-11T22:27:57.9657959Z     462 465 │           chatCurl:
+2026-05-11T22:27:57.9660272Z     463     │ - ··········"curl·http://127.0.0.1:8091/v1/chat/completions·-H·\"content-type:·application/json\"·-H·\"Authorization:·Bearer·role-model-local\"·-d·'{\"model\":\"moonshot/kimi-k2.5\",\"messages\":[{\"role\":\"user\",\"content\":\"Reply·with·ok.\"}]}'",
+2026-05-11T22:27:57.9663792Z         466 │ + ··········'curl·http://127.0.0.1:8091/v1/chat/completions·-H·"content-type:·application/json"·-H·"Authorization:·Bearer·role-model-local"·-d·\'{"model":"moonshot/kimi-k2.5","messages":[{"role":"user","content":"Reply·with·ok."}]}\'',
+2026-05-11T22:27:57.9665682Z     464 467 │         },
+2026-05-11T22:27:57.9666080Z     465 468 │       });
+2026-05-11T22:27:57.9666456Z     ······· │ 
+2026-05-11T22:27:57.9667179Z     511 514 │           { label: "Errors", value: "1", detail: "Most recent status: 500" },
+2026-05-11T22:27:57.9668359Z     512 515 │           { label: "Prompt tokens", value: "54", detail: "19 output tokens recorded" },
+2026-05-11T22:27:57.9669787Z     513     │ - ········{·label:·"Cached·tokens",·value:·"12",·detail:·"Across·the·current·in-memory·metrics·window"·},
+2026-05-11T22:27:57.9670696Z         516 │ + ········{
+2026-05-11T22:27:57.9671234Z         517 │ + ··········label:·"Cached·tokens",
+2026-05-11T22:27:57.9671832Z         518 │ + ··········value:·"12",
+2026-05-11T22:27:57.9672633Z         519 │ + ··········detail:·"Across·the·current·in-memory·metrics·window",
+2026-05-11T22:27:57.9673328Z         520 │ + ········},
+2026-05-11T22:27:57.9673510Z     514 521 │         ],
+2026-05-11T22:27:57.9673707Z     515 522 │         rows: [
+2026-05-11T22:27:57.9673880Z     ······· │ 
+2026-05-11T22:27:57.9674062Z     583 590 │         }),
+2026-05-11T22:27:57.9674509Z     584 591 │       ).toEqual([
+2026-05-11T22:27:57.9675604Z     585     │ - ······{·label:·"Requests",·value:·"3",·detail:·"1·local·/·2·remote·in·the·current·telemetry·window"·},
+2026-05-11T22:27:57.9675804Z         592 │ + ······{
+2026-05-11T22:27:57.9676087Z         593 │ + ········label:·"Requests",
+2026-05-11T22:27:57.9676342Z         594 │ + ········value:·"3",
+2026-05-11T22:27:57.9676921Z         595 │ + ········detail:·"1·local·/·2·remote·in·the·current·telemetry·window",
+2026-05-11T22:27:57.9677115Z         596 │ + ······},
+2026-05-11T22:27:57.9677736Z     586 597 │         { label: "Failures", value: "1", detail: "2 successful requests recorded" },
+2026-05-11T22:27:57.9678732Z     587     │ - ······{·label:·"Latency",·value:·"880·ms",·detail:·"420·ms·average·latency·across·structured·telemetry"·},
+2026-05-11T22:27:57.9679549Z     588     │ - ······{·label:·"Tokens",·value:·"126",·detail:·"1·cached·request·and·$0.0042·actual·cost·recorded"·},
+2026-05-11T22:27:57.9679748Z         598 │ + ······{
+2026-05-11T22:27:57.9680026Z         599 │ + ········label:·"Latency",
+2026-05-11T22:27:57.9680331Z         600 │ + ········value:·"880·ms",
+2026-05-11T22:27:57.9680909Z         601 │ + ········detail:·"420·ms·average·latency·across·structured·telemetry",
+2026-05-11T22:27:57.9681103Z         602 │ + ······},
+2026-05-11T22:27:57.9681295Z         603 │ + ······{
+2026-05-11T22:27:57.9681564Z         604 │ + ········label:·"Tokens",
+2026-05-11T22:27:57.9681831Z         605 │ + ········value:·"126",
+2026-05-11T22:27:57.9682393Z         606 │ + ········detail:·"1·cached·request·and·$0.0042·actual·cost·recorded",
+2026-05-11T22:27:57.9682583Z         607 │ + ······},
+2026-05-11T22:27:57.9682763Z     589 608 │       ]);
+2026-05-11T22:27:57.9683127Z     590 609 │     });
+2026-05-11T22:27:57.9683311Z     ······· │ 
+2026-05-11T22:27:57.9683508Z     620 639 │           },
+2026-05-11T22:27:57.9683692Z     621 640 │         ]),
+2026-05-11T22:27:57.9683937Z     622     │ - ······).toEqual([
+2026-05-11T22:27:57.9684484Z     623     │ - ········expect.objectContaining({
+2026-05-11T22:27:57.9685008Z     624     │ - ··········endpointId:·"llama-swap.local.local-mock-llama",
+2026-05-11T22:27:57.9685330Z     625     │ - ··········sourceLabel:·"Local",
+2026-05-11T22:27:57.9685861Z     626     │ - ··········providerLabel:·"llama-swap",
+2026-05-11T22:27:57.9686258Z     627     │ - ··········cacheLabel:·"Caching·unavailable",
+2026-05-11T22:27:57.9686720Z     628     │ - ··········reliabilityLabel:·"0·failures·/·1·success",
+2026-05-11T22:27:57.9687149Z     629     │ - ··········latencyLabel:·"280·ms·p95·/·280·ms·avg",
+2026-05-11T22:27:57.9687491Z     630     │ - ··········tokenLabel:·"46·tokens",
+2026-05-11T22:27:57.9687864Z     631     │ - ··········costLabel:·"$0.0011·est.",
+2026-05-11T22:27:57.9688105Z         641 │ + ····).toEqual([
+2026-05-11T22:27:57.9688425Z         642 │ + ······expect.objectContaining({
+2026-05-11T22:27:57.9688898Z         643 │ + ········endpointId:·"llama-swap.local.local-mock-llama",
+2026-05-11T22:27:57.9689208Z         644 │ + ········sourceLabel:·"Local",
+2026-05-11T22:27:57.9689619Z         645 │ + ········providerLabel:·"llama-swap",
+2026-05-11T22:27:57.9689836Z         646 │ + ········cacheLabel:·"Caching·unavailable",
+2026-05-11T22:27:57.9690087Z         647 │ + ········reliabilityLabel:·"0·failures·/·1·success",
+2026-05-11T22:27:57.9690324Z         648 │ + ········latencyLabel:·"280·ms·p95·/·280·ms·avg",
+2026-05-11T22:27:57.9690502Z         649 │ + ········tokenLabel:·"46·tokens",
+2026-05-11T22:27:57.9690688Z         650 │ + ········costLabel:·"$0.0011·est.",
+2026-05-11T22:27:57.9690888Z     632 651 │           roleSummary: "general.chat",
+2026-05-11T22:27:57.9691007Z     633 652 │         }),
+2026-05-11T22:27:57.9691099Z   
+2026-05-11T22:27:57.9691108Z 
+2026-05-11T22:27:57.9691605Z ./role-model-router/apps/runtime-ui/app/lib/runtime-api.test.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-05-11T22:27:57.9691615Z 
+2026-05-11T22:27:57.9712672Z   × Formatter would have printed the following content:
+2026-05-11T22:27:57.9712796Z   
+2026-05-11T22:27:57.9747844Z       41   41 │     test("loads the operator shell data from the runtime control-plane endpoints", async () => {
+2026-05-11T22:27:57.9748583Z       42   42 │       const fetcher = vi.fn(async (input: string | URL | Request) => {
+2026-05-11T22:27:57.9749768Z       43      │ - ······const·url·=·typeof·input·===·"string"·?·input·:·input·instanceof·URL·?·input.pathname·:·input.url;
+2026-05-11T22:27:57.9750100Z            43 │ + ······const·url·=
+2026-05-11T22:27:57.9751105Z            44 │ + ········typeof·input·===·"string"·?·input·:·input·instanceof·URL·?·input.pathname·:·input.url;
+2026-05-11T22:27:57.9751338Z       44   45 │   
+2026-05-11T22:27:57.9751978Z       45   46 │         switch (url) {
+2026-05-11T22:27:57.9752228Z     ········· │ 
+2026-05-11T22:27:57.9752629Z       69   70 │             return jsonResponse({
+2026-05-11T22:27:57.9752981Z       70   71 │               object: "list",
+2026-05-11T22:27:57.9754396Z       71      │ - ············data:·[{·id:·"openai/gpt-4.1-mini-fast",·object:·"model",·owned_by:·"role-model",·endpoint_ids:·[]·}],
+2026-05-11T22:27:57.9754749Z            72 │ + ············data:·[
+2026-05-11T22:27:57.9755006Z            73 │ + ··············{
+2026-05-11T22:27:57.9755431Z            74 │ + ················id:·"openai/gpt-4.1-mini-fast",
+2026-05-11T22:27:57.9755766Z            75 │ + ················object:·"model",
+2026-05-11T22:27:57.9756131Z            76 │ + ················owned_by:·"role-model",
+2026-05-11T22:27:57.9756461Z            77 │ + ················endpoint_ids:·[],
+2026-05-11T22:27:57.9756730Z            78 │ + ··············},
+2026-05-11T22:27:57.9756983Z            79 │ + ············],
+2026-05-11T22:27:57.9757235Z       72   80 │             });
+2026-05-11T22:27:57.9757473Z       73   81 │           default:
+2026-05-11T22:27:57.9757665Z     ········· │ 
+2026-05-11T22:27:57.9758045Z       93  101 │         requests: [{ requestId: "req-001" }],
+2026-05-11T22:27:57.9758285Z       94  102 │         models: [
+2026-05-11T22:27:57.9759125Z       95      │ - ········{·id:·"openai/gpt-4.1-mini-fast",·object:·"model",·owned_by:·"role-model",·endpoint_ids:·[]·},
+2026-05-11T22:27:57.9759355Z           103 │ + ········{
+2026-05-11T22:27:57.9759743Z           104 │ + ··········id:·"openai/gpt-4.1-mini-fast",
+2026-05-11T22:27:57.9760040Z           105 │ + ··········object:·"model",
+2026-05-11T22:27:57.9760372Z           106 │ + ··········owned_by:·"role-model",
+2026-05-11T22:27:57.9760669Z           107 │ + ··········endpoint_ids:·[],
+2026-05-11T22:27:57.9760874Z           108 │ + ········},
+2026-05-11T22:27:57.9761072Z       96  109 │         ],
+2026-05-11T22:27:57.9761753Z       97  110 │         roles: [{ roleId: "general.chat", label: "General chat" }],
+2026-05-11T22:27:57.9761949Z     ········· │ 
+2026-05-11T22:27:57.9763227Z      103  116 │     test("loads the downstream OpenAI-compatible provider contract for consumer apps", async () => {
+2026-05-11T22:27:57.9763770Z      104  117 │       const fetcher = vi.fn(async (input: string | URL | Request) => {
+2026-05-11T22:27:57.9765357Z      105      │ - ······const·url·=·typeof·input·===·"string"·?·input·:·input·instanceof·URL·?·input.pathname·:·input.url;
+2026-05-11T22:27:57.9765871Z           118 │ + ······const·url·=
+2026-05-11T22:27:57.9766718Z           119 │ + ········typeof·input·===·"string"·?·input·:·input·instanceof·URL·?·input.pathname·:·input.url;
+2026-05-11T22:27:57.9767210Z      106  120 │         expect(url).toBe("/api/role-model/downstream/openai");
+2026-05-11T22:27:57.9767396Z      107  121 │   
+2026-05-11T22:27:57.9767584Z     ········· │ 
+2026-05-11T22:27:57.9768593Z      182  196 │     test("loads request detail and the linked endpoint profile for the inspector pane", async () => {
+2026-05-11T22:27:57.9769149Z      183  197 │       const fetcher = vi.fn(async (input: string | URL | Request) => {
+2026-05-11T22:27:57.9770498Z      184      │ - ······const·url·=·typeof·input·===·"string"·?·input·:·input·instanceof·URL·?·input.pathname·:·input.url;
+2026-05-11T22:27:57.9770772Z           198 │ + ······const·url·=
+2026-05-11T22:27:57.9771664Z           199 │ + ········typeof·input·===·"string"·?·input·:·input·instanceof·URL·?·input.pathname·:·input.url;
+2026-05-11T22:27:57.9771854Z      185  200 │   
+2026-05-11T22:27:57.9772117Z      186  201 │         switch (url) {
+2026-05-11T22:27:57.9772299Z     ········· │ 
+2026-05-11T22:27:57.9773454Z      218  233 │     test("loads the canonical telemetry dashboard reads from the role-model telemetry endpoints", async () => {
+2026-05-11T22:27:57.9773990Z      219  234 │       const fetcher = vi.fn(async (input: string | URL | Request) => {
+2026-05-11T22:27:57.9775676Z      220      │ - ······const·url·=·typeof·input·===·"string"·?·input·:·input·instanceof·URL·?·input.pathname·:·input.url;
+2026-05-11T22:27:57.9775990Z           235 │ + ······const·url·=
+2026-05-11T22:27:57.9776805Z           236 │ + ········typeof·input·===·"string"·?·input·:·input·instanceof·URL·?·input.pathname·:·input.url;
+2026-05-11T22:27:57.9776993Z      221  237 │   
+2026-05-11T22:27:57.9777253Z      222  238 │         switch (url) {
+2026-05-11T22:27:57.9777459Z     ········· │ 
+2026-05-11T22:27:57.9777657Z      311  327 │         }),
+2026-05-11T22:27:57.9777886Z      312  328 │         rows: [
+2026-05-11T22:27:57.9778099Z      313      │ - ··········{
+2026-05-11T22:27:57.9778616Z      314      │ - ············endpointId:·"llama-swap.local.local-mock-llama",
+2026-05-11T22:27:57.9778993Z      315      │ - ············modelId:·"local/mock-llama",
+2026-05-11T22:27:57.9779329Z      316      │ - ············sourceType:·"local",
+2026-05-11T22:27:57.9779738Z      317      │ - ············providerFamily:·"llama-swap",
+2026-05-11T22:27:57.9780231Z      318      │ - ············promptCacheSupported:·false,
+2026-05-11T22:27:57.9780554Z      319      │ - ············requestCount:·1,
+2026-05-11T22:27:57.9780797Z      320      │ - ··········},
+2026-05-11T22:27:57.9781016Z      321      │ - ··········{
+2026-05-11T22:27:57.9782009Z      322      │ - ············endpointId:·"openai.personal.primary.us-east-1.fast",
+2026-05-11T22:27:57.9782625Z      323      │ - ············modelId:·"openai/gpt-4.1-mini-fast",
+2026-05-11T22:27:57.9782970Z      324      │ - ············sourceType:·"remote",
+2026-05-11T22:27:57.9783365Z      325      │ - ············providerFamily:·"ai-sdk-openai",
+2026-05-11T22:27:57.9783845Z      326      │ - ············promptCacheSupported:·true,
+2026-05-11T22:27:57.9784374Z      327      │ - ············requestCount:·2,
+2026-05-11T22:27:57.9784643Z      328      │ - ··········},
+2026-05-11T22:27:57.9784857Z      329      │ - ········],
+2026-05-11T22:27:57.9785067Z           329 │ + ········{
+2026-05-11T22:27:57.9785909Z           330 │ + ··········endpointId:·"llama-swap.local.local-mock-llama",
+2026-05-11T22:27:57.9786281Z           331 │ + ··········modelId:·"local/mock-llama",
+2026-05-11T22:27:57.9786596Z           332 │ + ··········sourceType:·"local",
+2026-05-11T22:27:57.9787123Z           333 │ + ··········providerFamily:·"llama-swap",
+2026-05-11T22:27:57.9787627Z           334 │ + ··········promptCacheSupported:·false,
+2026-05-11T22:27:57.9787949Z           335 │ + ··········requestCount:·1,
+2026-05-11T22:27:57.9788156Z           336 │ + ········},
+2026-05-11T22:27:57.9788353Z           337 │ + ········{
+2026-05-11T22:27:57.9789389Z           338 │ + ··········endpointId:·"openai.personal.primary.us-east-1.fast",
+2026-05-11T22:27:57.9789787Z           339 │ + ··········modelId:·"openai/gpt-4.1-mini-fast",
+2026-05-11T22:27:57.9790128Z           340 │ + ··········sourceType:·"remote",
+2026-05-11T22:27:57.9790709Z           341 │ + ··········providerFamily:·"ai-sdk-openai",
+2026-05-11T22:27:57.9791171Z           342 │ + ··········promptCacheSupported:·true,
+2026-05-11T22:27:57.9791666Z           343 │ + ··········requestCount:·2,
+2026-05-11T22:27:57.9791888Z           344 │ + ········},
+2026-05-11T22:27:57.9792089Z           345 │ + ······],
+2026-05-11T22:27:57.9792339Z      330  346 │         requests: [
+2026-05-11T22:27:57.9792558Z      331      │ - ··········{
+2026-05-11T22:27:57.9792946Z      332      │ - ············requestId:·"req-002",
+2026-05-11T22:27:57.9793873Z      333      │ - ············endpointId:·"openai.personal.primary.us-east-1.fast",
+2026-05-11T22:27:57.9794439Z      334      │ - ············sourceType:·"remote",
+2026-05-11T22:27:57.9794864Z      335      │ - ············providerFamily:·"ai-sdk-openai",
+2026-05-11T22:27:57.9795244Z      336      │ - ············finishReason:·"stop",
+2026-05-11T22:27:57.9795750Z      337      │ - ············promptCacheSupported:·true,
+2026-05-11T22:27:57.9796172Z      338      │ - ············streamTextDeltaCount:·4,
+2026-05-11T22:27:57.9796417Z      339      │ - ··········},
+2026-05-11T22:27:57.9796634Z      340      │ - ········],
+2026-05-11T22:27:57.9796857Z      341      │ - ······});
+2026-05-11T22:27:57.9797066Z           347 │ + ········{
+2026-05-11T22:27:57.9797547Z           348 │ + ··········requestId:·"req-002",
+2026-05-11T22:27:57.9798472Z           349 │ + ··········endpointId:·"openai.personal.primary.us-east-1.fast",
+2026-05-11T22:27:57.9798784Z           350 │ + ··········sourceType:·"remote",
+2026-05-11T22:27:57.9799256Z           351 │ + ··········providerFamily:·"ai-sdk-openai",
+2026-05-11T22:27:57.9799658Z           352 │ + ··········finishReason:·"stop",
+2026-05-11T22:27:57.9800122Z           353 │ + ··········promptCacheSupported:·true,
+2026-05-11T22:27:57.9800564Z           354 │ + ··········streamTextDeltaCount:·4,
+2026-05-11T22:27:57.9800765Z           355 │ + ········},
+2026-05-11T22:27:57.9800961Z           356 │ + ······],
+2026-05-11T22:27:57.9801147Z           357 │ + ····});
+2026-05-11T22:27:57.9801321Z      342  358 │     });
+2026-05-11T22:27:57.9801494Z      343  359 │   
+2026-05-11T22:27:57.9802686Z      344  360 │     test("loads telemetry request rows with limit parameters", async () => {
+2026-05-11T22:27:57.9803338Z      345  361 │       const fetcher = vi.fn(async (input: string | URL | Request) => {
+2026-05-11T22:27:57.9805014Z      346      │ - ······const·url·=·typeof·input·===·"string"·?·input·:·input·instanceof·URL·?·input.toString()·:·input.url;
+2026-05-11T22:27:57.9805521Z           362 │ + ······const·url·=
+2026-05-11T22:27:57.9806338Z           363 │ + ········typeof·input·===·"string"·?·input·:·input·instanceof·URL·?·input.toString()·:·input.url;
+2026-05-11T22:27:57.9806940Z      347  364 │         expect(url).toContain("/api/role-model/telemetry/requests?limit=25");
+2026-05-11T22:27:57.9807234Z      348  365 │         return jsonResponse([
+2026-05-11T22:27:57.9807423Z     ········· │ 
+2026-05-11T22:27:57.9808201Z      410  427 │     test("loads vendor activity metrics for the observe activity page", async () => {
+2026-05-11T22:27:57.9808854Z      411  428 │       const fetcher = vi.fn(async (input: string | URL | Request) => {
+2026-05-11T22:27:57.9810278Z      412      │ - ······const·url·=·typeof·input·===·"string"·?·input·:·input·instanceof·URL·?·input.pathname·:·input.url;
+2026-05-11T22:27:57.9810557Z           429 │ + ······const·url·=
+2026-05-11T22:27:57.9811386Z           430 │ + ········typeof·input·===·"string"·?·input·:·input·instanceof·URL·?·input.pathname·:·input.url;
+2026-05-11T22:27:57.9811778Z      413  431 │         expect(url).toBe("/api/metrics");
+2026-05-11T22:27:57.9811952Z      414  432 │   
+2026-05-11T22:27:57.9812140Z     ········· │ 
+2026-05-11T22:27:57.9812823Z      457  475 │     test("loads a persisted request/response capture by id", async () => {
+2026-05-11T22:27:57.9813522Z      458  476 │       const fetcher = vi.fn(async (input: string | URL | Request) => {
+2026-05-11T22:27:57.9815198Z      459      │ - ······const·url·=·typeof·input·===·"string"·?·input·:·input·instanceof·URL·?·input.pathname·:·input.url;
+2026-05-11T22:27:57.9815481Z           477 │ + ······const·url·=
+2026-05-11T22:27:57.9816573Z           478 │ + ········typeof·input·===·"string"·?·input·:·input·instanceof·URL·?·input.pathname·:·input.url;
+2026-05-11T22:27:57.9816970Z      460  479 │         expect(url).toBe("/api/captures/7");
+2026-05-11T22:27:57.9817140Z      461  480 │   
+2026-05-11T22:27:57.9817313Z     ········· │ 
+2026-05-11T22:27:57.9817509Z      489  508 │   
+2026-05-11T22:27:57.9818102Z      490  509 │     test("returns null when an activity capture is not found", async () => {
+2026-05-11T22:27:57.9819598Z      491      │ - ····const·fetcher·=·vi.fn(async·()·=>·new·Response(JSON.stringify({·error:·"capture·not·found"·}),·{·status:·404·}));
+2026-05-11T22:27:57.9819915Z           510 │ + ····const·fetcher·=·vi.fn(
+2026-05-11T22:27:57.9820714Z           511 │ + ······async·()·=>·new·Response(JSON.stringify({·error:·"capture·not·found"·}),·{·status:·404·}),
+2026-05-11T22:27:57.9820916Z           512 │ + ····);
+2026-05-11T22:27:57.9821083Z      492  513 │   
+2026-05-11T22:27:57.9821730Z      493  514 │       await expect(fetchActivityCapture(404, fetcher)).resolves.toBeNull();
+2026-05-11T22:27:57.9821911Z     ········· │ 
+2026-05-11T22:27:57.9822444Z      496  517 │     test("loads raw log text for observe log consoles", async () => {
+2026-05-11T22:27:57.9823109Z      497  518 │       const fetcher = vi.fn(async (input: string | URL | Request) => {
+2026-05-11T22:27:57.9824768Z      498      │ - ······const·url·=·typeof·input·===·"string"·?·input·:·input·instanceof·URL·?·input.pathname·:·input.url;
+2026-05-11T22:27:57.9825056Z           519 │ + ······const·url·=
+2026-05-11T22:27:57.9825912Z           520 │ + ········typeof·input·===·"string"·?·input·:·input·instanceof·URL·?·input.pathname·:·input.url;
+2026-05-11T22:27:57.9826240Z      499  521 │         expect(url).toBe("/logs");
+2026-05-11T22:27:57.9826414Z      500  522 │   
+2026-05-11T22:27:57.9826590Z     ········· │ 
+2026-05-11T22:27:57.9827360Z      512  534 │     test("loads vendor version info for the runtime system surface", async () => {
+2026-05-11T22:27:57.9827534Z   184 more lines truncated
+2026-05-11T22:27:57.9827647Z   
+2026-05-11T22:27:57.9827681Z 
+2026-05-11T22:27:57.9829530Z ./role-model-router/apps/runtime-ui/app/root.tsx:46:3 lint/style/useConst  FIXABLE  ━━━━━━━━━━━━━━━━
+2026-05-11T22:27:57.9829553Z 
+2026-05-11T22:27:57.9829957Z   × This let declares a variable that is only assigned once.
+2026-05-11T22:27:57.9830273Z   
+2026-05-11T22:27:57.9830752Z     45 │ export function ErrorBoundary({ error }: { error: unknown }) {
+2026-05-11T22:27:57.9831070Z   > 46 │   let message = "Something went wrong.";
+2026-05-11T22:27:57.9831232Z        │   ^^^
+2026-05-11T22:27:57.9831683Z     47 │   let details = "The runtime UI could not render this route.";
+2026-05-11T22:27:57.9831845Z     48 │ 
+2026-05-11T22:27:57.9831952Z   
+2026-05-11T22:27:57.9832154Z   i 'message' is never reassigned.
+2026-05-11T22:27:57.9832259Z   
+2026-05-11T22:27:57.9832716Z     45 │ export function ErrorBoundary({ error }: { error: unknown }) {
+2026-05-11T22:27:57.9833045Z   > 46 │   let message = "Something went wrong.";
+2026-05-11T22:27:57.9833225Z        │       ^^^^^^^
+2026-05-11T22:27:57.9833871Z     47 │   let details = "The runtime UI could not render this route.";
+2026-05-11T22:27:57.9834031Z     48 │ 
+2026-05-11T22:27:57.9834328Z   
+2026-05-11T22:27:57.9834524Z   i Safe fix: Use const instead.
+2026-05-11T22:27:57.9834646Z   
+2026-05-11T22:27:57.9834914Z     44 44 │   
+2026-05-11T22:27:57.9835888Z     45 45 │   export function ErrorBoundary({ error }: { error: unknown }) {
+2026-05-11T22:27:57.9836304Z     46    │ - ··let·message·=·"Something·went·wrong.";
+2026-05-11T22:27:57.9836794Z        46 │ + ··const·message·=·"Something·went·wrong.";
+2026-05-11T22:27:57.9837555Z     47 47 │     let details = "The runtime UI could not render this route.";
+2026-05-11T22:27:57.9837728Z     48 48 │   
+2026-05-11T22:27:57.9837838Z   
+2026-05-11T22:27:57.9837849Z 
+2026-05-11T22:27:57.9838932Z ./role-model-router/apps/runtime-ui/app/root.tsx organizeImports ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-05-11T22:27:57.9839148Z 
+2026-05-11T22:27:57.9840529Z   × Import statements could be sorted:
+2026-05-11T22:27:57.9840645Z   
+2026-05-11T22:27:57.9845017Z      1    │ - import·{·isRouteErrorResponse,·Links,·Meta,·Outlet,·Scripts,·ScrollRestoration·}·from·"react-router";
+2026-05-11T22:27:57.9845414Z      2    │ - import·type·{·ReactNode·}·from·"react";
+2026-05-11T22:27:57.9845806Z         1 │ + import·type·{·ReactNode·}·from·"react";
+2026-05-11T22:27:57.9847033Z         2 │ + import·{·Links,·Meta,·Outlet,·Scripts,·ScrollRestoration,·isRouteErrorResponse·}·from·"react-router";
+2026-05-11T22:27:57.9847233Z      3  3 │   
+2026-05-11T22:27:57.9847609Z      4  4 │   import "./app.css";
+2026-05-11T22:27:57.9847720Z   
+2026-05-11T22:27:57.9847732Z 
+2026-05-11T22:27:57.9848607Z ./role-model-router/apps/runtime-ui/app/root.tsx format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-05-11T22:27:57.9848621Z 
+2026-05-11T22:27:57.9849747Z   × Formatter would have printed the following content:
+2026-05-11T22:27:57.9849890Z   
+2026-05-11T22:27:57.9853809Z      1    │ - import·{·isRouteErrorResponse,·Links,·Meta,·Outlet,·Scripts,·ScrollRestoration·}·from·"react-router";
+2026-05-11T22:27:57.9854034Z         1 │ + import·{
+2026-05-11T22:27:57.9854520Z         2 │ + ··isRouteErrorResponse,
+2026-05-11T22:27:57.9854714Z         3 │ + ··Links,
+2026-05-11T22:27:57.9854896Z         4 │ + ··Meta,
+2026-05-11T22:27:57.9855326Z         5 │ + ··Outlet,
+2026-05-11T22:27:57.9855523Z         6 │ + ··Scripts,
+2026-05-11T22:27:57.9855797Z         7 │ + ··ScrollRestoration,
+2026-05-11T22:27:57.9856061Z         8 │ + }·from·"react-router";
+2026-05-11T22:27:57.9856410Z      2  9 │   import type { ReactNode } from "react";
+2026-05-11T22:27:57.9856580Z      3 10 │   
+2026-05-11T22:27:57.9856690Z   
+2026-05-11T22:27:57.9856710Z 
+2026-05-11T22:27:57.9857891Z ./role-model-router/apps/runtime-ui/app/routes/control-controller.tsx:36:3 lint/correctness/useExhaustiveDependencies ━━━━━━━━━━
+2026-05-11T22:27:57.9857905Z 
+2026-05-11T22:27:57.9858336Z   × This hook does not specify all of its dependencies: load
+2026-05-11T22:27:57.9858457Z   
+2026-05-11T22:27:57.9859353Z     34 │       .catch((value: unknown) => setError(value instanceof Error ? value.message : "Could not load controller state."));
+2026-05-11T22:27:57.9859520Z     35 │ 
+2026-05-11T22:27:57.9859724Z   > 36 │   useEffect(() => {
+2026-05-11T22:27:57.9859916Z        │   ^^^^^^^^^
+2026-05-11T22:27:57.9860104Z     37 │     void load();
+2026-05-11T22:27:57.9860275Z     38 │   }, []);
+2026-05-11T22:27:57.9860384Z   
+2026-05-11T22:27:57.9860746Z   i This dependency is not specified in the hook dependency list.
+2026-05-11T22:27:57.9860855Z   
+2026-05-11T22:27:57.9861047Z     36 │   useEffect(() => {
+2026-05-11T22:27:57.9861248Z   > 37 │     void load();
+2026-05-11T22:27:57.9861421Z        │          ^^^^
+2026-05-11T22:27:57.9861595Z     38 │   }, []);
+2026-05-11T22:27:57.9861750Z     39 │ 
+2026-05-11T22:27:57.9861860Z   
+2026-05-11T22:27:57.9862143Z   i Either include it or remove the dependency array
+2026-05-11T22:27:57.9862427Z   
+2026-05-11T22:27:57.9862440Z 
+2026-05-11T22:27:57.9863338Z ./role-model-router/apps/runtime-ui/app/routes/control-controller.tsx organizeImports ━━━━━━━━━━━━━━
+2026-05-11T22:27:57.9863352Z 
+2026-05-11T22:27:57.9869141Z   × Import statements could be sorted:
+2026-05-11T22:27:57.9869261Z   
+2026-05-11T22:27:57.9876887Z       4   4 │   import { mutedPanelClassName, primaryButtonClassName } from "../lib/design-system";
+2026-05-11T22:27:57.9877130Z       5   5 │   import {
+2026-05-11T22:27:57.9877448Z       6     │ - ··fetchControllerAssignment,
+2026-05-11T22:27:57.9877735Z       7     │ - ··fetchRuntimeSnapshot,
+2026-05-11T22:27:57.9878043Z       8     │ - ··updateControllerAssignment,
+2026-05-11T22:27:57.9878386Z       9     │ - ··type·RuntimeControllerAssignment,
+2026-05-11T22:27:57.9878675Z      10     │ - ··type·RuntimeEndpoint,
+2026-05-11T22:27:57.9878952Z      11     │ - ··type·RuntimeSnapshot,
+2026-05-11T22:27:57.9879298Z           6 │ + ··type·RuntimeControllerAssignment,
+2026-05-11T22:27:57.9879590Z           7 │ + ··type·RuntimeEndpoint,
+2026-05-11T22:27:57.9879861Z           8 │ + ··type·RuntimeSnapshot,
+2026-05-11T22:27:57.9880277Z           9 │ + ··fetchControllerAssignment,
+2026-05-11T22:27:57.9880670Z          10 │ + ··fetchRuntimeSnapshot,
+2026-05-11T22:27:57.9881031Z          11 │ + ··updateControllerAssignment,
+2026-05-11T22:27:57.9881408Z      12  12 │   } from "../lib/runtime-api";
+2026-05-11T22:27:57.9881581Z      13  13 │   
+2026-05-11T22:27:57.9881698Z   
+2026-05-11T22:27:57.9881710Z 
+2026-05-11T22:27:57.9883053Z ./role-model-router/apps/runtime-ui/app/routes/control-models.tsx organizeImports ━━━━━━━━━━━━━━━━━━
+2026-05-11T22:27:57.9883069Z 
+2026-05-11T22:27:57.9891058Z   × Import statements could be sorted:
+2026-05-11T22:27:57.9891183Z   
+2026-05-11T22:27:57.9901653Z       5   5 │   import { mutedPanelClassName, secondaryButtonClassName } from "../lib/design-system";
+2026-05-11T22:27:57.9901871Z       6   6 │   import {
+2026-05-11T22:27:57.9902220Z       7     │ - ··fetchControllerAssignment,
+2026-05-11T22:27:57.9902507Z       8     │ - ··fetchRuntimeSnapshot,
+2026-05-11T22:27:57.9902860Z       9     │ - ··type·RuntimeControllerAssignment,
+2026-05-11T22:27:57.9903153Z      10     │ - ··type·RuntimeSnapshot,
+2026-05-11T22:27:57.9903489Z           7 │ + ··type·RuntimeControllerAssignment,
+2026-05-11T22:27:57.9904272Z           8 │ + ··type·RuntimeSnapshot,
+2026-05-11T22:27:57.9904600Z           9 │ + ··fetchControllerAssignment,
+2026-05-11T22:27:57.9904872Z          10 │ + ··fetchRuntimeSnapshot,
+2026-05-11T22:27:57.9905161Z      11  11 │   } from "../lib/runtime-api";
+2026-05-11T22:27:57.9905831Z      12  12 │   import { buildConfiguredModelCards } from "../lib/view-models";
+2026-05-11T22:27:57.9905958Z   
+2026-05-11T22:27:57.9905970Z 
+2026-05-11T22:27:57.9906175Z Skipped 68 suggested fixes.
+2026-05-11T22:27:57.9906805Z If you wish to apply the suggested (unsafe) fixes, use the command biome check --fix --unsafe
+2026-05-11T22:27:57.9906819Z 
+2026-05-11T22:27:57.9907247Z The number of diagnostics exceeds the number allowed by Biome.
+2026-05-11T22:27:57.9907427Z Diagnostics not shown: 304.
+2026-05-11T22:27:57.9907708Z Checked 458 files in 589ms. No fixes applied.
+2026-05-11T22:27:57.9907855Z Found 305 errors.
+2026-05-11T22:27:57.9908989Z check ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-05-11T22:27:57.9909038Z 
+2026-05-11T22:27:57.9909362Z   × Some errors were emitted while running checks.
+2026-05-11T22:27:57.9909479Z   
+2026-05-11T22:27:57.9909491Z 
+2026-05-11T22:27:58.0093622Z  ELIFECYCLE  Command failed with exit code 1.
+2026-05-11T22:27:58.0422910Z  ELIFECYCLE  Command failed with exit code 1.
+2026-05-11T22:27:58.0612340Z ##[error]Process completed with exit code 1.
+2026-05-11T22:27:58.0677190Z Post job cleanup.
+2026-05-11T22:27:58.2165808Z Pruning is unnecessary.
+2026-05-11T22:27:58.2304869Z Post job cleanup.
+2026-05-11T22:27:58.3319223Z [command]/usr/bin/git version
+2026-05-11T22:27:58.3356886Z git version 2.53.0
+2026-05-11T22:27:58.3400083Z Temporarily overriding HOME='/home/runner/work/_temp/68bcd5b6-9052-4728-918e-85c789d0e266' before making global git config changes
+2026-05-11T22:27:58.3401545Z Adding repository directory to the temporary git global config as a safe directory
+2026-05-11T22:27:58.3413294Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/role-model/role-model
+2026-05-11T22:27:58.3448673Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-05-11T22:27:58.3481011Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-05-11T22:27:58.3713775Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-05-11T22:27:58.3734470Z http.https://github.com/.extraheader
+2026-05-11T22:27:58.3747375Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-05-11T22:27:58.3779147Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-05-11T22:27:58.4017438Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-05-11T22:27:58.4054876Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-05-11T22:27:58.4422673Z Cleaning up orphan processes
+2026-05-11T22:27:58.4690713Z ##[warning]Node.js 20 actions are deprecated. The following actions are running on Node.js 20 and may not work as expected: actions/checkout@v4, actions/setup-node@v4, pnpm/action-setup@v4. Actions will be forced to run with Node.js 24 by default starting June 2nd, 2026. Node.js 20 will be removed from the runner on September 16th, 2026. Please check if updated versions of these actions are available that support Node.js 24. To opt into Node.js 24 now, set the FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true environment variable on the runner or in your workflow file. Once Node.js 24 becomes the default, you can temporarily opt out by setting ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

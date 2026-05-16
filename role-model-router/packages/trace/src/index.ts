@@ -50,7 +50,9 @@ export function validateTraceLinkage(
 
   for (const span of spans) {
     if (span.parent_span_id && !spanIds.has(span.parent_span_id)) {
-      throw new Error(`Trace span ${span.span_id} references missing parent span ${span.parent_span_id}.`);
+      throw new Error(
+        `Trace span ${span.span_id} references missing parent span ${span.parent_span_id}.`,
+      );
     }
   }
 
@@ -61,10 +63,14 @@ export function validateTraceLinkage(
     if (event.span_id && !spanIds.has(event.span_id)) {
       throw new Error(`Trace event ${event.event_id} references unknown span ${event.span_id}.`);
     }
-    const span = event.span_id ? spans.find((candidate) => candidate.span_id === event.span_id) : undefined;
+    const span = event.span_id
+      ? spans.find((candidate) => candidate.span_id === event.span_id)
+      : undefined;
     if (span) {
       if (span.request_id !== event.request_id) {
-        throw new Error(`Trace event ${event.event_id} request_id does not match span ${event.span_id}.`);
+        throw new Error(
+          `Trace event ${event.event_id} request_id does not match span ${event.span_id}.`,
+        );
       }
       if (span.routing_decision_id !== event.routing_decision_id) {
         throw new Error(

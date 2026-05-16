@@ -1,58 +1,60 @@
 <script lang="ts">
-  import { models, loadModel, unloadAllModels, unloadSingleModel } from "../stores/api";
-  import { isNarrow } from "../stores/theme";
-  import { persistentStore } from "../stores/persistent";
-  import type { Model } from "../lib/types";
+import type { Model } from "../lib/types";
+import { loadModel, models, unloadAllModels, unloadSingleModel } from "../stores/api";
+import { persistentStore } from "../stores/persistent";
+import { isNarrow } from "../stores/theme";
 
-  let isUnloading = $state(false);
-  let menuOpen = $state(false);
+let isUnloading = $state(false);
+const menuOpen = $state(false);
 
-  const showUnlistedStore = persistentStore<boolean>("showUnlisted", true);
-  const showIdorNameStore = persistentStore<"id" | "name">("showIdorName", "id");
+const showUnlistedStore = persistentStore<boolean>("showUnlisted", true);
+const showIdorNameStore = persistentStore<"id" | "name">("showIdorName", "id");
 
-  let filteredModels = $derived.by(() => {
-    const filtered = $models.filter((model) => $showUnlistedStore || !model.unlisted);
-    const peerModels = filtered.filter((m) => m.peerID);
+const filteredModels = $derived.by(() => {
+  const filtered = $models.filter((model) => $showUnlistedStore || !model.unlisted);
+  const peerModels = filtered.filter((m) => m.peerID);
 
-    // Group peer models by peerID
-    const grouped = peerModels.reduce(
-      (acc, model) => {
-        const peerId = model.peerID || "unknown";
-        if (!acc[peerId]) acc[peerId] = [];
-        acc[peerId].push(model);
-        return acc;
-      },
-      {} as Record<string, Model[]>
-    );
+  // Group peer models by peerID
+  const grouped = peerModels.reduce(
+    (acc, model) => {
+      const peerId = model.peerID || "unknown";
+      if (!acc[peerId]) acc[peerId] = [];
+      acc[peerId].push(model);
+      return acc;
+    },
+    {} as Record<string, Model[]>,
+  );
 
-    return {
-      regularModels: filtered.filter((m) => !m.peerID),
-      peerModelsByPeerId: grouped,
-    };
-  });
+  return {
+    regularModels: filtered.filter((m) => !m.peerID),
+    peerModelsByPeerId: grouped,
+  };
+});
 
-  async function handleUnloadAllModels(): Promise<void> {
-    isUnloading = true;
-    try {
-      await unloadAllModels();
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setTimeout(() => (isUnloading = false), 1000);
-    }
+async function handleUnloadAllModels(): Promise<void> {
+  isUnloading = true;
+  try {
+    await unloadAllModels();
+  } catch (e) {
+    console.error(e);
+  } finally {
+    setTimeout(() => {
+      isUnloading = false;
+    }, 1000);
   }
+}
 
-  function toggleIdorName(): void {
-    showIdorNameStore.update((prev) => (prev === "name" ? "id" : "name"));
-  }
+function toggleIdorName(): void {
+  showIdorNameStore.update((prev) => (prev === "name" ? "id" : "name"));
+}
 
-  function toggleShowUnlisted(): void {
-    showUnlistedStore.update((prev) => !prev);
-  }
+function toggleShowUnlisted(): void {
+  showUnlistedStore.update((prev) => !prev);
+}
 
-  function getModelDisplay(model: Model): string {
-    return $showIdorNameStore === "id" ? model.id : (model.name || model.id);
-  }
+function getModelDisplay(model: Model): string {
+  return $showIdorNameStore === "id" ? model.id : model.name || model.id;
+}
 </script>
 
 <div class="card h-full flex flex-col">

@@ -1,33 +1,32 @@
 <script lang="ts">
-  import { link } from "svelte-spa-router";
-  import { screenWidth, toggleTheme, isDarkMode, appTitle, isNarrow } from "../stores/theme";
-  import { currentRoute } from "../stores/route";
-  import { playgroundActivity } from "../stores/playgroundActivity";
-  import ConnectionStatus from "./ConnectionStatus.svelte";
+import { link } from "svelte-spa-router";
+import { playgroundActivity } from "../stores/playgroundActivity";
+import { currentRoute } from "../stores/route";
+import { appTitle, isDarkMode, isNarrow, screenWidth, toggleTheme } from "../stores/theme";
+import ConnectionStatus from "./ConnectionStatus.svelte";
 
-  function handleTitleChange(newTitle: string): void {
-    const sanitized = newTitle.replace(/\n/g, "").trim().substring(0, 64) || "llama-swap";
-    appTitle.set(sanitized);
-  }
+function handleTitleChange(newTitle: string): void {
+  const sanitized = newTitle.replace(/\n/g, "").trim().substring(0, 64) || "llama-swap";
+  appTitle.set(sanitized);
+}
 
-  function handleKeyDown(e: KeyboardEvent): void {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      const target = e.currentTarget as HTMLElement;
-      handleTitleChange(target.textContent || "(set title)");
-      target.blur();
-    }
-  }
-
-  function handleBlur(e: FocusEvent): void {
+function handleKeyDown(e: KeyboardEvent): void {
+  if (e.key === "Enter") {
+    e.preventDefault();
     const target = e.currentTarget as HTMLElement;
     handleTitleChange(target.textContent || "(set title)");
+    target.blur();
   }
+}
 
-  function isActive(path: string, current: string): boolean {
-    return path === "/" ? current === "/" : current.startsWith(path);
-  }
+function handleBlur(e: FocusEvent): void {
+  const target = e.currentTarget as HTMLElement;
+  handleTitleChange(target.textContent || "(set title)");
+}
 
+function isActive(path: string, current: string): boolean {
+  return path === "/" ? current === "/" : current.startsWith(path);
+}
 </script>
 
 <header

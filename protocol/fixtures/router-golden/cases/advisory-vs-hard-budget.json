@@ -104,11 +104,7 @@
   "expected": {
     "chosen_endpoint_id": "expensive-best",
     "fallback_endpoint_ids": ["cheap-weaker"],
-    "selection_reasons": [
-      "BEST_TOTAL_SCORE",
-      "BUDGET_OPTIMIZATION",
-      "FALLBACK_CHAIN_COMPUTED"
-    ],
+    "selection_reasons": ["BEST_TOTAL_SCORE", "BUDGET_OPTIMIZATION", "FALLBACK_CHAIN_COMPUTED"],
     "eligibility": []
   }
 }

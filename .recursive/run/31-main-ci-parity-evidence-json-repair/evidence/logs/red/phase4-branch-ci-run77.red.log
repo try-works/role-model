@@ -1,0 +1,734 @@
+2026-05-11T22:21:28.1499519Z Current runner version: '2.334.0'
+2026-05-11T22:21:28.1522496Z ##[group]Runner Image Provisioner
+2026-05-11T22:21:28.1523242Z Hosted Compute Agent
+2026-05-11T22:21:28.1523769Z Version: 20260213.493
+2026-05-11T22:21:28.1524307Z Commit: 5c115507f6dd24b8de37d8bbe0bb4509d0cc0fa3
+2026-05-11T22:21:28.1524953Z Build Date: 2026-02-13T00:28:41Z
+2026-05-11T22:21:28.1525505Z Worker ID: {236d7207-d2e8-4b45-a089-68498580cb68}
+2026-05-11T22:21:28.1526134Z Azure Region: westus3
+2026-05-11T22:21:28.1526622Z ##[endgroup]
+2026-05-11T22:21:28.1528077Z ##[group]Operating System
+2026-05-11T22:21:28.1528651Z Ubuntu
+2026-05-11T22:21:28.1529066Z 24.04.4
+2026-05-11T22:21:28.1529486Z LTS
+2026-05-11T22:21:28.1529858Z ##[endgroup]
+2026-05-11T22:21:28.1530372Z ##[group]Runner Image
+2026-05-11T22:21:28.1530862Z Image: ubuntu-24.04
+2026-05-11T22:21:28.1531330Z Version: 20260413.86.1
+2026-05-11T22:21:28.1532412Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260413.86/images/ubuntu/Ubuntu2404-Readme.md
+2026-05-11T22:21:28.1533696Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260413.86
+2026-05-11T22:21:28.1534484Z ##[endgroup]
+2026-05-11T22:21:28.1535470Z ##[group]GITHUB_TOKEN Permissions
+2026-05-11T22:21:28.1537691Z Contents: read
+2026-05-11T22:21:28.1538161Z Metadata: read
+2026-05-11T22:21:28.1538629Z Packages: read
+2026-05-11T22:21:28.1539148Z ##[endgroup]
+2026-05-11T22:21:28.1541223Z Secret source: Actions
+2026-05-11T22:21:28.1541838Z Prepare workflow directory
+2026-05-11T22:21:28.1855843Z Prepare all required actions
+2026-05-11T22:21:28.1893510Z Getting action download info
+2026-05-11T22:21:28.7042530Z Download action repository 'actions/checkout@v4' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+2026-05-11T22:21:28.7971882Z Download action repository 'pnpm/action-setup@v4' (SHA:b906affcce14559ad1aafd4ab0e942779e9f58b1)
+2026-05-11T22:21:29.8051313Z Download action repository 'actions/setup-node@v4' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+2026-05-11T22:21:30.1611665Z Download action repository 'dtolnay/rust-toolchain@stable' (SHA:29eef336d9b2848a0b548edc03f92a220660cdb8)
+2026-05-11T22:21:30.5631659Z Complete job name: validate
+2026-05-11T22:21:30.6503510Z ##[group]Run actions/checkout@v4
+2026-05-11T22:21:30.6504592Z with:
+2026-05-11T22:21:30.6505237Z   repository: try-works/role-model
+2026-05-11T22:21:30.6506367Z   token: ***
+2026-05-11T22:21:30.6507127Z   ssh-strict: true
+2026-05-11T22:21:30.6507766Z   ssh-user: git
+2026-05-11T22:21:30.6508432Z   persist-credentials: true
+2026-05-11T22:21:30.6509166Z   clean: true
+2026-05-11T22:21:30.6509824Z   sparse-checkout-cone-mode: true
+2026-05-11T22:21:30.6510622Z   fetch-depth: 1
+2026-05-11T22:21:30.6511263Z   fetch-tags: false
+2026-05-11T22:21:30.6511927Z   show-progress: true
+2026-05-11T22:21:30.6512602Z   lfs: false
+2026-05-11T22:21:30.6513210Z   submodules: false
+2026-05-11T22:21:30.6513884Z   set-safe-directory: true
+2026-05-11T22:21:30.6514837Z ##[endgroup]
+2026-05-11T22:21:30.7589645Z Syncing repository: try-works/role-model
+2026-05-11T22:21:30.7592151Z ##[group]Getting Git version info
+2026-05-11T22:21:30.7593260Z Working directory is '/home/runner/work/role-model/role-model'
+2026-05-11T22:21:30.7594901Z [command]/usr/bin/git version
+2026-05-11T22:21:30.7618369Z git version 2.53.0
+2026-05-11T22:21:30.7642644Z ##[endgroup]
+2026-05-11T22:21:30.7656907Z Temporarily overriding HOME='/home/runner/work/_temp/eeb79025-0b8a-4f78-a540-1efffe59612c' before making global git config changes
+2026-05-11T22:21:30.7659527Z Adding repository directory to the temporary git global config as a safe directory
+2026-05-11T22:21:30.7671111Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/role-model/role-model
+2026-05-11T22:21:30.7700541Z Deleting the contents of '/home/runner/work/role-model/role-model'
+2026-05-11T22:21:30.7703932Z ##[group]Initializing the repository
+2026-05-11T22:21:30.7707973Z [command]/usr/bin/git init /home/runner/work/role-model/role-model
+2026-05-11T22:21:30.7785069Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-05-11T22:21:30.7788344Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-05-11T22:21:30.7790925Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-05-11T22:21:30.7792853Z hint: call:
+2026-05-11T22:21:30.7793883Z hint:
+2026-05-11T22:21:30.7795127Z hint: 	git config --global init.defaultBranch <name>
+2026-05-11T22:21:30.7796559Z hint:
+2026-05-11T22:21:30.7798218Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-05-11T22:21:30.7800761Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-05-11T22:21:30.7802636Z hint:
+2026-05-11T22:21:30.7803625Z hint: 	git branch -m <name>
+2026-05-11T22:21:30.7804822Z hint:
+2026-05-11T22:21:30.7806120Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-05-11T22:21:30.7807923Z Initialized empty Git repository in /home/runner/work/role-model/role-model/.git/
+2026-05-11T22:21:30.7811327Z [command]/usr/bin/git remote add origin https://github.com/try-works/role-model
+2026-05-11T22:21:30.7828740Z ##[endgroup]
+2026-05-11T22:21:30.7830629Z ##[group]Disabling automatic garbage collection
+2026-05-11T22:21:30.7832790Z [command]/usr/bin/git config --local gc.auto 0
+2026-05-11T22:21:30.7859595Z ##[endgroup]
+2026-05-11T22:21:30.7861622Z ##[group]Setting up auth
+2026-05-11T22:21:30.7868397Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-05-11T22:21:30.7895896Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-05-11T22:21:30.8158345Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-05-11T22:21:30.8187749Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-05-11T22:21:30.8365442Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-05-11T22:21:30.8393201Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-05-11T22:21:30.8578846Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-05-11T22:21:30.8609170Z ##[endgroup]
+2026-05-11T22:21:30.8611102Z ##[group]Fetching the repository
+2026-05-11T22:21:30.8620589Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +52548e5169692d9b1ded080410214e362a6dbba2:refs/remotes/origin/recursive/31-main-ci-parity-evidence-json-repair
+2026-05-11T22:21:32.7170358Z From https://github.com/try-works/role-model
+2026-05-11T22:21:32.7175275Z  * [new ref]         52548e5169692d9b1ded080410214e362a6dbba2 -> origin/recursive/31-main-ci-parity-evidence-json-repair
+2026-05-11T22:21:32.7194370Z ##[endgroup]
+2026-05-11T22:21:32.7194826Z ##[group]Determining the checkout info
+2026-05-11T22:21:32.7196324Z ##[endgroup]
+2026-05-11T22:21:32.7201463Z [command]/usr/bin/git sparse-checkout disable
+2026-05-11T22:21:32.7232769Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-05-11T22:21:32.7253484Z ##[group]Checking out the ref
+2026-05-11T22:21:32.7258224Z [command]/usr/bin/git checkout --progress --force -B recursive/31-main-ci-parity-evidence-json-repair refs/remotes/origin/recursive/31-main-ci-parity-evidence-json-repair
+2026-05-11T22:21:32.9692454Z Switched to a new branch 'recursive/31-main-ci-parity-evidence-json-repair'
+2026-05-11T22:21:32.9693639Z branch 'recursive/31-main-ci-parity-evidence-json-repair' set up to track 'origin/recursive/31-main-ci-parity-evidence-json-repair'.
+2026-05-11T22:21:32.9705448Z ##[endgroup]
+2026-05-11T22:21:32.9740009Z [command]/usr/bin/git log -1 --format=%H
+2026-05-11T22:21:32.9760764Z 52548e5169692d9b1ded080410214e362a6dbba2
+2026-05-11T22:21:32.9949533Z ##[group]Run pnpm/action-setup@v4
+2026-05-11T22:21:32.9949818Z with:
+2026-05-11T22:21:32.9950002Z   version: 10.6.5
+2026-05-11T22:21:32.9950192Z   dest: ~/setup-pnpm
+2026-05-11T22:21:32.9950386Z   run_install: null
+2026-05-11T22:21:32.9950579Z   cache: false
+2026-05-11T22:21:32.9950772Z   cache_dependency_path: pnpm-lock.yaml
+2026-05-11T22:21:32.9951034Z   package_json_file: package.json
+2026-05-11T22:21:32.9951254Z   standalone: false
+2026-05-11T22:21:32.9951437Z ##[endgroup]
+2026-05-11T22:21:33.1255883Z ##[group]Running self-installer...
+2026-05-11T22:21:33.7590276Z Progress: resolved 1, reused 0, downloaded 0, added 0
+2026-05-11T22:21:33.7672203Z Packages: +1
+2026-05-11T22:21:33.7672591Z +
+2026-05-11T22:21:34.1680140Z Progress: resolved 1, reused 0, downloaded 1, added 1, done
+2026-05-11T22:21:34.3847593Z 
+2026-05-11T22:21:34.3848055Z dependencies:
+2026-05-11T22:21:34.3848470Z + pnpm 10.6.5 (11.1.0 is available)
+2026-05-11T22:21:34.3848823Z 
+2026-05-11T22:21:34.3879250Z Done in 1s
+2026-05-11T22:21:34.4000157Z ##[endgroup]
+2026-05-11T22:21:34.4000921Z Installation Completed!
+2026-05-11T22:21:34.4147578Z ##[group]Run actions/setup-node@v4
+2026-05-11T22:21:34.4147830Z with:
+2026-05-11T22:21:34.4147996Z   node-version: 22
+2026-05-11T22:21:34.4148187Z   cache: pnpm
+2026-05-11T22:21:34.4148361Z   always-auth: false
+2026-05-11T22:21:34.4148559Z   check-latest: false
+2026-05-11T22:21:34.4148878Z   token: ***
+2026-05-11T22:21:34.4149050Z env:
+2026-05-11T22:21:34.4149280Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+2026-05-11T22:21:34.4149553Z ##[endgroup]
+2026-05-11T22:21:34.5834354Z Found in cache @ /opt/hostedtoolcache/node/22.22.2/x64
+2026-05-11T22:21:34.5840320Z ##[group]Environment details
+2026-05-11T22:21:34.9653621Z node: v22.22.2
+2026-05-11T22:21:34.9653995Z npm: 10.9.7
+2026-05-11T22:21:34.9654257Z yarn: 1.22.22
+2026-05-11T22:21:34.9654925Z ##[endgroup]
+2026-05-11T22:21:34.9675704Z [command]/home/runner/setup-pnpm/node_modules/.bin/pnpm store path --silent
+2026-05-11T22:21:35.3746160Z /home/runner/setup-pnpm/node_modules/.bin/store/v10
+2026-05-11T22:21:35.6441250Z pnpm cache is not found
+2026-05-11T22:21:35.6616452Z ##[group]Run dtolnay/rust-toolchain@stable
+2026-05-11T22:21:35.6616960Z with:
+2026-05-11T22:21:35.6617138Z   toolchain: stable
+2026-05-11T22:21:35.6617329Z env:
+2026-05-11T22:21:35.6617547Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+2026-05-11T22:21:35.6617830Z ##[endgroup]
+2026-05-11T22:21:35.6728455Z ##[group]Run : parse toolchain version
+2026-05-11T22:21:35.6728849Z [36;1m: parse toolchain version[0m
+2026-05-11T22:21:35.6729143Z [36;1mif [[ -z $toolchain ]]; then[0m
+2026-05-11T22:21:35.6729709Z [36;1m  # GitHub does not enforce `required: true` inputs itself. https://github.com/actions/runner/issues/1070[0m
+2026-05-11T22:21:35.6730308Z [36;1m  echo "'toolchain' is a required input" >&2[0m
+2026-05-11T22:21:35.6730619Z [36;1m  exit 1[0m
+2026-05-11T22:21:35.6730993Z [36;1melif [[ $toolchain =~ ^stable' '[0-9]+' '(year|month|week|day)s?' 'ago$ ]]; then[0m
+2026-05-11T22:21:35.6731459Z [36;1m  if [[ Linux == macOS ]]; then[0m
+2026-05-11T22:21:35.6732085Z [36;1m    echo "toolchain=1.$((($(date -v-$(sed 's/stable \([0-9]*\) \(.\).*/\1\2/' <<< $toolchain) +%s)/60/60/24-16569)/7/6))" >> $GITHUB_OUTPUT[0m
+2026-05-11T22:21:35.6732628Z [36;1m  else[0m
+2026-05-11T22:21:35.6733060Z [36;1m    echo "toolchain=1.$((($(date --date "${toolchain#stable }" +%s)/60/60/24-16569)/7/6))" >> $GITHUB_OUTPUT[0m
+2026-05-11T22:21:35.6733551Z [36;1m  fi[0m
+2026-05-11T22:21:35.6733857Z [36;1melif [[ $toolchain =~ ^stable' 'minus' '[0-9]+' 'releases?$ ]]; then[0m
+2026-05-11T22:21:35.6734443Z [36;1m  echo "toolchain=1.$((($(date +%s)/60/60/24-16569)/7/6-${toolchain//[^0-9]/}))" >> $GITHUB_OUTPUT[0m
+2026-05-11T22:21:35.6734928Z [36;1melif [[ $toolchain =~ ^1\.[0-9]+$ ]]; then[0m
+2026-05-11T22:21:35.6735503Z [36;1m  echo "toolchain=1.$((i=${toolchain#1.}, c=($(date +%s)/60/60/24-16569)/7/6, i+9*i*(10*i<=c)+90*i*(100*i<=c)))" >> $GITHUB_OUTPUT[0m
+2026-05-11T22:21:35.6736183Z [36;1melse[0m
+2026-05-11T22:21:35.6736432Z [36;1m  echo "toolchain=$toolchain" >> $GITHUB_OUTPUT[0m
+2026-05-11T22:21:35.6736866Z [36;1mfi[0m
+2026-05-11T22:21:35.6763953Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-05-11T22:21:35.6764261Z env:
+2026-05-11T22:21:35.6764495Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+2026-05-11T22:21:35.6764768Z   toolchain: stable
+2026-05-11T22:21:35.6764964Z ##[endgroup]
+2026-05-11T22:21:35.6870569Z ##[group]Run : construct rustup command line
+2026-05-11T22:21:35.6870880Z [36;1m: construct rustup command line[0m
+2026-05-11T22:21:35.6871296Z [36;1mecho "targets=$(for t in ${targets//,/ }; do echo -n ' --target' $t; done)" >> $GITHUB_OUTPUT[0m
+2026-05-11T22:21:35.6871853Z [36;1mecho "components=$(for c in ${components//,/ }; do echo -n ' --component' $c; done)" >> $GITHUB_OUTPUT[0m
+2026-05-11T22:21:35.6872288Z [36;1mecho "downgrade=" >> $GITHUB_OUTPUT[0m
+2026-05-11T22:21:35.6885408Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-05-11T22:21:35.6885703Z env:
+2026-05-11T22:21:35.6885957Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+2026-05-11T22:21:35.6886229Z   targets: 
+2026-05-11T22:21:35.6886389Z   components: 
+2026-05-11T22:21:35.6886563Z ##[endgroup]
+2026-05-11T22:21:35.6949564Z ##[group]Run : set $CARGO_HOME
+2026-05-11T22:21:35.6949826Z [36;1m: set $CARGO_HOME[0m
+2026-05-11T22:21:35.6950134Z [36;1mecho CARGO_HOME=${CARGO_HOME:-"$HOME/.cargo"} >> $GITHUB_ENV[0m
+2026-05-11T22:21:35.6963387Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-05-11T22:21:35.6963685Z env:
+2026-05-11T22:21:35.6963921Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+2026-05-11T22:21:35.6964193Z ##[endgroup]
+2026-05-11T22:21:35.7020157Z ##[group]Run : install rustup if needed
+2026-05-11T22:21:35.7020442Z [36;1m: install rustup if needed[0m
+2026-05-11T22:21:35.7020716Z [36;1mif ! command -v rustup &>/dev/null; then[0m
+2026-05-11T22:21:35.7021557Z [36;1m  curl --proto '=https' --tlsv1.2 --retry 10 --retry-connrefused --location --silent --show-error --fail https://sh.rustup.rs | sh -s -- --default-toolchain none -y[0m
+2026-05-11T22:21:35.7022233Z [36;1m  echo "$CARGO_HOME/bin" >> $GITHUB_PATH[0m
+2026-05-11T22:21:35.7022490Z [36;1mfi[0m
+2026-05-11T22:21:35.7035076Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-05-11T22:21:35.7035379Z env:
+2026-05-11T22:21:35.7035608Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+2026-05-11T22:21:35.7035902Z   CARGO_HOME: /home/runner/.cargo
+2026-05-11T22:21:35.7036125Z ##[endgroup]
+2026-05-11T22:21:35.7097356Z ##[group]Run rustup toolchain install stable --profile minimal --no-self-update
+2026-05-11T22:21:35.7097858Z [36;1mrustup toolchain install stable --profile minimal --no-self-update[0m
+2026-05-11T22:21:35.7110871Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-05-11T22:21:35.7111177Z env:
+2026-05-11T22:21:35.7111396Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+2026-05-11T22:21:35.7111728Z   CARGO_HOME: /home/runner/.cargo
+2026-05-11T22:21:35.7112024Z   RUSTUP_PERMIT_COPY_RENAME: 1
+2026-05-11T22:21:35.7112254Z ##[endgroup]
+2026-05-11T22:21:35.8622199Z info: syncing channel updates for stable-x86_64-unknown-linux-gnu
+2026-05-11T22:21:36.0419335Z info: latest update on 2026-04-16 for version 1.95.0 (59807616e 2026-04-14)
+2026-05-11T22:21:36.0638209Z info: removing previous version of component clippy
+2026-05-11T22:21:36.0768145Z info: removing previous version of component rustfmt
+2026-05-11T22:21:36.0780168Z info: removing previous version of component cargo
+2026-05-11T22:21:36.0858655Z info: removing previous version of component rust-std
+2026-05-11T22:21:36.0925027Z info: removing previous version of component rustc
+2026-05-11T22:21:36.0966552Z info: downloading 5 components
+2026-05-11T22:21:45.1602914Z 
+2026-05-11T22:21:45.1676012Z   stable-x86_64-unknown-linux-gnu updated - rustc 1.95.0 (59807616e 2026-04-14) (from rustc 1.94.1 (e408947bf 2026-03-25))
+2026-05-11T22:21:45.1677671Z 
+2026-05-11T22:21:45.1732568Z ##[group]Run rustup default stable
+2026-05-11T22:21:45.1732850Z [36;1mrustup default stable[0m
+2026-05-11T22:21:45.1745927Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-05-11T22:21:45.1746232Z env:
+2026-05-11T22:21:45.1746455Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+2026-05-11T22:21:45.1746972Z   CARGO_HOME: /home/runner/.cargo
+2026-05-11T22:21:45.1747191Z ##[endgroup]
+2026-05-11T22:21:45.1830549Z info: using existing install for stable-x86_64-unknown-linux-gnu
+2026-05-11T22:21:45.1837065Z info: default toolchain set to stable-x86_64-unknown-linux-gnu
+2026-05-11T22:21:45.1837513Z 
+2026-05-11T22:21:45.1903020Z   stable-x86_64-unknown-linux-gnu unchanged - rustc 1.95.0 (59807616e 2026-04-14)
+2026-05-11T22:21:45.1904334Z info: note that the toolchain 'stable-x86_64-unknown-linux-gnu' is currently in use (overridden by '/home/runner/work/role-model/role-model/rust-toolchain.toml')
+2026-05-11T22:21:45.1905298Z 
+2026-05-11T22:21:45.2011917Z ##[group]Run : create cachekey
+2026-05-11T22:21:45.2012189Z [36;1m: create cachekey[0m
+2026-05-11T22:21:45.2012659Z [36;1mDATE=$(rustc +stable --version --verbose | sed -ne 's/^commit-date: \(20[0-9][0-9]\)-\([01][0-9]\)-\([0-3][0-9]\)$/\1\2\3/p')[0m
+2026-05-11T22:21:45.2013241Z [36;1mHASH=$(rustc +stable --version --verbose | sed -ne 's/^commit-hash: //p')[0m
+2026-05-11T22:21:45.2013732Z [36;1mecho "cachekey=$(echo $DATE$HASH | head -c12)" >> $GITHUB_OUTPUT[0m
+2026-05-11T22:21:45.2027029Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-05-11T22:21:45.2027337Z env:
+2026-05-11T22:21:45.2027565Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+2026-05-11T22:21:45.2027858Z   CARGO_HOME: /home/runner/.cargo
+2026-05-11T22:21:45.2028082Z ##[endgroup]
+2026-05-11T22:21:45.2349957Z ##[group]Run : disable incremental compilation
+2026-05-11T22:21:45.2350293Z [36;1m: disable incremental compilation[0m
+2026-05-11T22:21:45.2350607Z [36;1mif [ -z "${CARGO_INCREMENTAL+set}" ]; then[0m
+2026-05-11T22:21:45.2350918Z [36;1m  echo CARGO_INCREMENTAL=0 >> $GITHUB_ENV[0m
+2026-05-11T22:21:45.2351176Z [36;1mfi[0m
+2026-05-11T22:21:45.2364261Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-05-11T22:21:45.2364568Z env:
+2026-05-11T22:21:45.2364801Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+2026-05-11T22:21:45.2365084Z   CARGO_HOME: /home/runner/.cargo
+2026-05-11T22:21:45.2365309Z ##[endgroup]
+2026-05-11T22:21:45.2413643Z ##[group]Run : enable colors in Cargo output
+2026-05-11T22:21:45.2413946Z [36;1m: enable colors in Cargo output[0m
+2026-05-11T22:21:45.2414235Z [36;1mif [ -z "${CARGO_TERM_COLOR+set}" ]; then[0m
+2026-05-11T22:21:45.2414535Z [36;1m  echo CARGO_TERM_COLOR=always >> $GITHUB_ENV[0m
+2026-05-11T22:21:45.2414796Z [36;1mfi[0m
+2026-05-11T22:21:45.2426532Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-05-11T22:21:45.2426995Z env:
+2026-05-11T22:21:45.2427272Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+2026-05-11T22:21:45.2427590Z   CARGO_HOME: /home/runner/.cargo
+2026-05-11T22:21:45.2427836Z   CARGO_INCREMENTAL: 0
+2026-05-11T22:21:45.2428029Z ##[endgroup]
+2026-05-11T22:21:45.2475484Z ##[group]Run : enable Cargo sparse registry
+2026-05-11T22:21:45.2475797Z [36;1m: enable Cargo sparse registry[0m
+2026-05-11T22:21:45.2476127Z [36;1m# implemented in 1.66, stabilized in 1.68, made default in 1.70[0m
+2026-05-11T22:21:45.2476954Z [36;1mif [ -z "${CARGO_REGISTRIES_CRATES_IO_PROTOCOL+set}" -o -f "/home/runner/work/_temp"/.implicit_cargo_registries_crates_io_protocol ]; then[0m
+2026-05-11T22:21:45.2477610Z [36;1m  if rustc +stable --version --verbose | grep -q '^release: 1\.6[89]\.'; then[0m
+2026-05-11T22:21:45.2478114Z [36;1m    touch "/home/runner/work/_temp"/.implicit_cargo_registries_crates_io_protocol || true[0m
+2026-05-11T22:21:45.2478608Z [36;1m    echo CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse >> $GITHUB_ENV[0m
+2026-05-11T22:21:45.2479061Z [36;1m  elif rustc +stable --version --verbose | grep -q '^release: 1\.6[67]\.'; then[0m
+2026-05-11T22:21:45.2479713Z [36;1m    touch "/home/runner/work/_temp"/.implicit_cargo_registries_crates_io_protocol || true[0m
+2026-05-11T22:21:45.2480188Z [36;1m    echo CARGO_REGISTRIES_CRATES_IO_PROTOCOL=git >> $GITHUB_ENV[0m
+2026-05-11T22:21:45.2480482Z [36;1m  fi[0m
+2026-05-11T22:21:45.2480653Z [36;1mfi[0m
+2026-05-11T22:21:45.2491710Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-05-11T22:21:45.2492001Z env:
+2026-05-11T22:21:45.2492226Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+2026-05-11T22:21:45.2492515Z   CARGO_HOME: /home/runner/.cargo
+2026-05-11T22:21:45.2492738Z   CARGO_INCREMENTAL: 0
+2026-05-11T22:21:45.2492936Z   CARGO_TERM_COLOR: always
+2026-05-11T22:21:45.2493129Z ##[endgroup]
+2026-05-11T22:21:45.2780125Z ##[group]Run : work around spurious network errors in curl 8.0
+2026-05-11T22:21:45.2780532Z [36;1m: work around spurious network errors in curl 8.0[0m
+2026-05-11T22:21:45.2781030Z [36;1m# https://rust-lang.zulipchat.com/#narrow/stream/246057-t-cargo/topic/timeout.20investigation[0m
+2026-05-11T22:21:45.2781605Z [36;1mif rustc +stable --version --verbose | grep -q '^release: 1\.7[01]\.'; then[0m
+2026-05-11T22:21:45.2782041Z [36;1m  echo CARGO_HTTP_MULTIPLEXING=false >> $GITHUB_ENV[0m
+2026-05-11T22:21:45.2782319Z [36;1mfi[0m
+2026-05-11T22:21:45.2795276Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-05-11T22:21:45.2795565Z env:
+2026-05-11T22:21:45.2795803Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+2026-05-11T22:21:45.2796095Z   CARGO_HOME: /home/runner/.cargo
+2026-05-11T22:21:45.2796330Z   CARGO_INCREMENTAL: 0
+2026-05-11T22:21:45.2796524Z   CARGO_TERM_COLOR: always
+2026-05-11T22:21:45.2797315Z ##[endgroup]
+2026-05-11T22:21:45.2969528Z ##[group]Run rustc +stable --version --verbose
+2026-05-11T22:21:45.2969844Z [36;1mrustc +stable --version --verbose[0m
+2026-05-11T22:21:45.2982542Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-05-11T22:21:45.2982854Z env:
+2026-05-11T22:21:45.2983076Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+2026-05-11T22:21:45.2983388Z   CARGO_HOME: /home/runner/.cargo
+2026-05-11T22:21:45.2983749Z   CARGO_INCREMENTAL: 0
+2026-05-11T22:21:45.2983971Z   CARGO_TERM_COLOR: always
+2026-05-11T22:21:45.2984174Z ##[endgroup]
+2026-05-11T22:21:45.3126202Z rustc 1.95.0 (59807616e 2026-04-14)
+2026-05-11T22:21:45.3126927Z binary: rustc
+2026-05-11T22:21:45.3127464Z commit-hash: 59807616e1fa2540724bfbac14d7976d7e4a3860
+2026-05-11T22:21:45.3127932Z commit-date: 2026-04-14
+2026-05-11T22:21:45.3128337Z host: x86_64-unknown-linux-gnu
+2026-05-11T22:21:45.3128702Z release: 1.95.0
+2026-05-11T22:21:45.3129021Z LLVM version: 22.1.2
+2026-05-11T22:21:45.3193512Z ##[group]Run pnpm install --frozen-lockfile=false
+2026-05-11T22:21:45.3193869Z [36;1mpnpm install --frozen-lockfile=false[0m
+2026-05-11T22:21:45.3207815Z shell: /usr/bin/bash -e {0}
+2026-05-11T22:21:45.3208072Z env:
+2026-05-11T22:21:45.3208315Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+2026-05-11T22:21:45.3208612Z   CARGO_HOME: /home/runner/.cargo
+2026-05-11T22:21:45.3208882Z   CARGO_INCREMENTAL: 0
+2026-05-11T22:21:45.3209079Z   CARGO_TERM_COLOR: always
+2026-05-11T22:21:45.3209287Z ##[endgroup]
+2026-05-11T22:21:45.6062093Z  WARN  Unsupported engine: wanted: {"node":">=24 <25"} (current: {"node":"v22.22.2","pnpm":"10.6.5"})
+2026-05-11T22:21:45.6278508Z Scope: all 42 workspace projects
+2026-05-11T22:21:45.6430119Z  WARN  There are cyclic workspace dependencies: /home/runner/work/role-model/role-model/role-model-router/packages/adapter-execution, /home/runner/work/role-model/role-model/role-model-router/packages/provider-anthropic
+2026-05-11T22:21:45.7077124Z Lockfile is up to date, resolution step is skipped
+2026-05-11T22:21:45.7597100Z Progress: resolved 1, reused 0, downloaded 0, added 0
+2026-05-11T22:21:45.8333350Z Packages: +525
+2026-05-11T22:21:45.8338495Z ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2026-05-11T22:21:46.7610262Z Progress: resolved 525, reused 0, downloaded 88, added 87
+2026-05-11T22:21:47.7600715Z Progress: resolved 525, reused 0, downloaded 272, added 269
+2026-05-11T22:21:48.7603529Z Progress: resolved 525, reused 0, downloaded 501, added 506
+2026-05-11T22:21:49.4499888Z Progress: resolved 525, reused 0, downloaded 519, added 525, done
+2026-05-11T22:21:49.7895604Z 
+2026-05-11T22:21:49.7896554Z devDependencies:
+2026-05-11T22:21:49.7897413Z + @biomejs/biome 1.9.4
+2026-05-11T22:21:49.7897945Z + @types/node 22.19.17
+2026-05-11T22:21:49.7898526Z + ajv 8.18.0
+2026-05-11T22:21:49.7899002Z + ajv-formats 3.0.1
+2026-05-11T22:21:49.7899472Z + commander 13.1.0
+2026-05-11T22:21:49.7899943Z + esbuild 0.25.12
+2026-05-11T22:21:49.7900468Z + json-schema-to-typescript 15.0.4
+2026-05-11T22:21:49.7901052Z + postject 1.0.0-alpha.6
+2026-05-11T22:21:49.7901531Z + tsx 4.21.0
+2026-05-11T22:21:49.7901936Z + typescript 5.9.3
+2026-05-11T22:21:49.7902365Z + vitest 3.2.4
+2026-05-11T22:21:49.7902676Z 
+2026-05-11T22:21:49.7905968Z ╭ Warning ─────────────────────────────────────────────────────────────────────╮│                                                                              ││   Ignored build scripts: @biomejs/biome, esbuild, sharp, workerd.            ││   Run "pnpm approve-builds" to pick which dependencies should be allowed     ││   to run scripts.                                                            ││                                                                              │╰──────────────────────────────────────────────────────────────────────────────╯
+2026-05-11T22:21:49.7907587Z 
+2026-05-11T22:21:49.8337448Z Done in 4.4s using pnpm v10.6.5
+2026-05-11T22:21:49.8561020Z ##[group]Run pnpm run ci:check
+2026-05-11T22:21:49.8561296Z [36;1mpnpm run ci:check[0m
+2026-05-11T22:21:49.8575009Z shell: /usr/bin/bash -e {0}
+2026-05-11T22:21:49.8575300Z env:
+2026-05-11T22:21:49.8575530Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+2026-05-11T22:21:49.8575831Z   CARGO_HOME: /home/runner/.cargo
+2026-05-11T22:21:49.8576068Z   CARGO_INCREMENTAL: 0
+2026-05-11T22:21:49.8576272Z   CARGO_TERM_COLOR: always
+2026-05-11T22:21:49.8576492Z ##[endgroup]
+2026-05-11T22:21:50.1275307Z  WARN  Unsupported engine: wanted: {"node":">=24 <25"} (current: {"node":"v22.22.2","pnpm":"10.6.5"})
+2026-05-11T22:21:50.1300858Z 
+2026-05-11T22:21:50.1301427Z > role-model@0.0.0 ci:check /home/runner/work/role-model/role-model
+2026-05-11T22:21:50.1303253Z > corepack pnpm run lint && corepack pnpm run schemas:validate && corepack pnpm run build && corepack pnpm run test && corepack pnpm run test:rust && corepack pnpm run smoke
+2026-05-11T22:21:50.1304409Z 
+2026-05-11T22:21:51.6049387Z  WARN  Unsupported engine: wanted: {"node":">=24 <25"} (current: {"node":"v22.22.2","pnpm":"10.6.5"})
+2026-05-11T22:21:51.6084494Z 
+2026-05-11T22:21:51.6085408Z > role-model@0.0.0 lint /home/runner/work/role-model/role-model
+2026-05-11T22:21:51.6086291Z > biome check . && corepack pnpm run lint:rust
+2026-05-11T22:21:51.6086650Z 
+2026-05-11T22:21:52.3701001Z ./role-model-router/vendor/llama-swap/ui-svelte/src/main.ts:7:11 lint/style/noNonNullAssertion ━━━━━━━━━━
+2026-05-11T22:21:52.3701991Z 
+2026-05-11T22:21:52.3702743Z   × Forbidden non-null assertion.
+2026-05-11T22:21:52.3703237Z   
+2026-05-11T22:21:52.3703777Z     6 │ const app = mount(App, {
+2026-05-11T22:21:52.3704508Z   > 7 │   target: document.getElementById("app")!,
+2026-05-11T22:21:52.3705261Z       │           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-05-11T22:21:52.3705754Z     8 │ });
+2026-05-11T22:21:52.3706171Z     9 │ 
+2026-05-11T22:21:52.3706522Z   
+2026-05-11T22:21:52.3706985Z 
+2026-05-11T22:21:52.3708080Z ./role-model-router/vendor/llama-swap/ui-svelte/src/main.ts organizeImports ━━━━━━━━━━━━━━━━━━━━━━━━
+2026-05-11T22:21:52.3708818Z 
+2026-05-11T22:21:52.3709192Z   × Import statements could be sorted:
+2026-05-11T22:21:52.3709700Z   
+2026-05-11T22:21:52.3710192Z      1  1 │   import "./index.css";
+2026-05-11T22:21:52.3710954Z      2  2 │   import "highlight.js/styles/github-dark.css";
+2026-05-11T22:21:52.3711958Z      3    │ - import·App·from·"./App.svelte";
+2026-05-11T22:21:52.3713084Z      4    │ - import·{·mount·}·from·"svelte";
+2026-05-11T22:21:52.3713804Z         3 │ + import·{·mount·}·from·"svelte";
+2026-05-11T22:21:52.3714524Z         4 │ + import·App·from·"./App.svelte";
+2026-05-11T22:21:52.3715144Z      5  5 │   
+2026-05-11T22:21:52.3715671Z      6  6 │   const app = mount(App, {
+2026-05-11T22:21:52.3716163Z   
+2026-05-11T22:21:52.3716382Z 
+2026-05-11T22:21:52.3717748Z ./role-model-router/vendor/llama-swap/ui-svelte/src/lib/speechApi.ts format ━━━━━━━━━━━━━━━━━━━━━━━━
+2026-05-11T22:21:52.3718476Z 
+2026-05-11T22:21:52.3718925Z   × Formatter would have printed the following content:
+2026-05-11T22:21:52.3719450Z   
+2026-05-11T22:21:52.3719874Z     7 │ ··signal?:·AbortSignal,
+2026-05-11T22:21:52.3720370Z       │                       +
+2026-05-11T22:21:52.3720638Z 
+2026-05-11T22:21:52.3721646Z ./role-model-router/vendor/llama-swap/ui-svelte/src/lib/sdApi.ts organizeImports ━━━━━━━━━━━━━━━━━━━
+2026-05-11T22:21:52.3722386Z 
+2026-05-11T22:21:52.3722673Z   × Import statements could be sorted:
+2026-05-11T22:21:52.3723124Z   
+2026-05-11T22:21:52.3724001Z      1    │ - import·type·{·SdApiTxt2ImgRequest,·SdApiResponse,·SdApiLora·}·from·"./types";
+2026-05-11T22:21:52.3725389Z         1 │ + import·type·{·SdApiLora,·SdApiResponse,·SdApiTxt2ImgRequest·}·from·"./types";
+2026-05-11T22:21:52.3726199Z      2  2 │   
+2026-05-11T22:21:52.3726828Z      3  3 │   export async function generateSdImage(
+2026-05-11T22:21:52.3727297Z   
+2026-05-11T22:21:52.3727459Z 
+2026-05-11T22:21:52.3728715Z ./role-model-router/vendor/llama-swap/ui-svelte/src/lib/sdApi.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-05-11T22:21:52.3729445Z 
+2026-05-11T22:21:52.3729844Z   × Formatter would have printed the following content:
+2026-05-11T22:21:52.3730377Z   
+2026-05-11T22:21:52.3730873Z      3  3 │   export async function generateSdImage(
+2026-05-11T22:21:52.3731549Z      4  4 │     request: SdApiTxt2ImgRequest,
+2026-05-11T22:21:52.3732158Z      5    │ - ··signal?:·AbortSignal
+2026-05-11T22:21:52.3732731Z         5 │ + ··signal?:·AbortSignal,
+2026-05-11T22:21:52.3733346Z      6  6 │   ): Promise<SdApiResponse> {
+2026-05-11T22:21:52.3734101Z      7  7 │     const response = await fetch("/sdapi/v1/txt2img", {
+2026-05-11T22:21:52.3734710Z     ····· │ 
+2026-05-11T22:21:52.3735066Z     22 22 │   }
+2026-05-11T22:21:52.3735423Z     23 23 │   
+2026-05-11T22:21:52.3735962Z     24    │ - export·async·function·fetchSdLoras(
+2026-05-11T22:21:52.3736582Z     25    │ - ··model:·string,
+2026-05-11T22:21:52.3737200Z     26    │ - ··signal?:·AbortSignal
+2026-05-11T22:21:52.3737829Z     27    │ - ):·Promise<SdApiLora[]>·{
+2026-05-11T22:21:52.3738685Z     28    │ - ··const·response·=·await·fetch(
+2026-05-11T22:21:52.3739601Z     29    │ - ····`/sdapi/v1/loras?model=${encodeURIComponent(model)}`,
+2026-05-11T22:21:52.3740354Z     30    │ - ····{·signal·}
+2026-05-11T22:21:52.3740878Z     31    │ - ··);
+2026-05-11T22:21:52.3742027Z        24 │ + export·async·function·fetchSdLoras(model:·string,·signal?:·AbortSignal):·Promise<SdApiLora[]>·{
+2026-05-11T22:21:52.3743745Z        25 │ + ··const·response·=·await·fetch(`/sdapi/v1/loras?model=${encodeURIComponent(model)}`,·{·signal·});
+2026-05-11T22:21:52.3744771Z     32 26 │   
+2026-05-11T22:21:52.3745412Z     33 27 │     if (!response.ok) {
+2026-05-11T22:21:52.3745904Z   
+2026-05-11T22:21:52.3746132Z 
+2026-05-11T22:21:52.3747284Z ./role-model-router/vendor/llama-swap/ui-svelte/src/lib/rerankApi.ts format ━━━━━━━━━━━━━━━━━━━━━━━━
+2026-05-11T22:21:52.3748015Z 
+2026-05-11T22:21:52.3748488Z   × Formatter would have printed the following content:
+2026-05-11T22:21:52.3749082Z   
+2026-05-11T22:21:52.3749598Z     17 │ ··signal:·AbortSignal,
+2026-05-11T22:21:52.3750167Z        │                      +
+2026-05-11T22:21:52.3750492Z 
+2026-05-11T22:21:52.3751547Z ./role-model-router/vendor/llama-swap/ui-svelte/src/lib/modelUtils.ts format ━━━━━━━━━━━━━━━━━━━━━━━
+2026-05-11T22:21:52.3752368Z 
+2026-05-11T22:21:52.3752836Z   × Formatter would have printed the following content:
+2026-05-11T22:21:52.3753440Z   
+2026-05-11T22:21:52.3754184Z     20 │ ····{}·as·Record<string,·Model[]>,
+2026-05-11T22:21:52.3754856Z        │                                  +
+2026-05-11T22:21:52.3755234Z 
+2026-05-11T22:21:52.3756634Z ./role-model-router/vendor/llama-swap/ui-svelte/src/lib/markdown.ts:183:7 lint/correctness/noUnnecessaryContinue  FIXABLE  ━━━━━━━━━━
+2026-05-11T22:21:52.3757687Z 
+2026-05-11T22:21:52.3757968Z   × Unnecessary continue statement
+2026-05-11T22:21:52.3758383Z   
+2026-05-11T22:21:52.3758807Z     181 │       inMathBlock = true;
+2026-05-11T22:21:52.3759356Z     182 │       mathClose = "\\]";
+2026-05-11T22:21:52.3759844Z   > 183 │       continue;
+2026-05-11T22:21:52.3760358Z         │       ^^^^^^^^^
+2026-05-11T22:21:52.3760748Z     184 │     }
+2026-05-11T22:21:52.3761166Z     185 │   }
+2026-05-11T22:21:52.3761538Z   
+2026-05-11T22:21:52.3762058Z   i Unsafe fix: Delete the unnecessary continue statement
+2026-05-11T22:21:52.3762657Z   
+2026-05-11T22:21:52.3763159Z     181 181 │         inMathBlock = true;
+2026-05-11T22:21:52.3763804Z     182 182 │         mathClose = "\\]";
+2026-05-11T22:21:52.3764452Z     183     │ - ······continue;
+2026-05-11T22:21:52.3764969Z     184 183 │       }
+2026-05-11T22:21:52.3765513Z     185 184 │     }
+2026-05-11T22:21:52.3765892Z   
+2026-05-11T22:21:52.3766124Z 
+2026-05-11T22:21:52.3767439Z ./role-model-router/vendor/llama-swap/ui-svelte/src/lib/markdown.ts:187:23 lint/style/useTemplate  FIXABLE  ━━━━━━━━━━
+2026-05-11T22:21:52.3768297Z 
+2026-05-11T22:21:52.3768828Z   × Template literals are preferred over string concatenation.
+2026-05-11T22:21:52.3769476Z   
+2026-05-11T22:21:52.3770022Z     185 │   }
+2026-05-11T22:21:52.3770447Z     186 │ 
+2026-05-11T22:21:52.3771079Z   > 187 │   if (inFence) return pending + "\n" + fenceStr;
+2026-05-11T22:21:52.3771949Z         │                       ^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-05-11T22:21:52.3772769Z     188 │   if (inMathBlock) return pending + "\n" + mathClose;
+2026-05-11T22:21:52.3773474Z     189 │   return pending;
+2026-05-11T22:21:52.3773902Z   
+2026-05-11T22:21:52.3774364Z   i Unsafe fix: Use a template literal.
+2026-05-11T22:21:52.3774867Z   
+2026-05-11T22:21:52.3775270Z     185 185 │     }
+2026-05-11T22:21:52.3775709Z     186 186 │   
+2026-05-11T22:21:52.3776412Z     187     │ - ··if·(inFence)·return·pending·+·"\n"·+·fenceStr;
+2026-05-11T22:21:52.3777430Z         187 │ + ··if·(inFence)·return·`${pending}\n${fenceStr}`;
+2026-05-11T22:21:52.3778377Z     188 188 │     if (inMathBlock) return pending + "\n" + mathClose;
+2026-05-11T22:21:52.3779159Z     189 189 │     return pending;
+2026-05-11T22:21:52.3779615Z   
+2026-05-11T22:21:52.3779853Z 
+2026-05-11T22:21:52.3781061Z ./role-model-router/vendor/llama-swap/ui-svelte/src/lib/markdown.ts:188:27 lint/style/useTemplate  FIXABLE  ━━━━━━━━━━
+2026-05-11T22:21:52.3781909Z 
+2026-05-11T22:21:52.3782365Z   × Template literals are preferred over string concatenation.
+2026-05-11T22:21:52.3783022Z   
+2026-05-11T22:21:52.3783561Z     187 │   if (inFence) return pending + "\n" + fenceStr;
+2026-05-11T22:21:52.3784429Z   > 188 │   if (inMathBlock) return pending + "\n" + mathClose;
+2026-05-11T22:21:52.3785298Z         │                           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-05-11T22:21:52.3785941Z     189 │   return pending;
+2026-05-11T22:21:52.3786419Z     190 │ }
+2026-05-11T22:21:52.3786862Z   
+2026-05-11T22:21:52.3787311Z   i Unsafe fix: Use a template literal.
+2026-05-11T22:21:52.3787806Z   
+2026-05-11T22:21:52.3788204Z     186 186 │   
+2026-05-11T22:21:52.3788893Z     187 187 │     if (inFence) return pending + "\n" + fenceStr;
+2026-05-11T22:21:52.3789868Z     188     │ - ··if·(inMathBlock)·return·pending·+·"\n"·+·mathClose;
+2026-05-11T22:21:52.3790861Z         188 │ + ··if·(inMathBlock)·return·`${pending}\n${mathClose}`;
+2026-05-11T22:21:52.3791635Z     189 189 │     return pending;
+2026-05-11T22:21:52.3792153Z     190 190 │   }
+2026-05-11T22:21:52.3792532Z   
+2026-05-11T22:21:52.3792754Z 
+2026-05-11T22:21:52.3793931Z ./role-model-router/vendor/llama-swap/ui-svelte/src/lib/markdown.ts:242:3 lint/style/noParameterAssign ━━━━━━━━━━
+2026-05-11T22:21:52.3794933Z 
+2026-05-11T22:21:52.3795306Z   × Reassigning a function parameter is confusing.
+2026-05-11T22:21:52.3795873Z   
+2026-05-11T22:21:52.3796648Z     240 │ export function normalizeLatexDelimiters(text: string): string {
+2026-05-11T22:21:52.3797820Z     241 │   // Display math: \[...\] → $$...$$  (may span multiple lines)
+2026-05-11T22:21:52.3799092Z   > 242 │   text = text.replace(/\\\[([\s\S]*?)\\\]/g, (_match, inner) => `$$${inner}$$`);
+2026-05-11T22:21:52.3799879Z         │   ^^^^
+2026-05-11T22:21:52.3800431Z     243 │   // Inline math: \(...\) → $...$
+2026-05-11T22:21:52.3801370Z     244 │   text = text.replace(/\\\(([\s\S]*?)\\\)/g, (_match, inner) => `$${inner}$`);
+2026-05-11T22:21:52.3802114Z   
+2026-05-11T22:21:52.3802536Z   i The parameter is declared here:
+2026-05-11T22:21:52.3803024Z   
+2026-05-11T22:21:52.3803617Z     239 │ // Convert \[...\] to $$...$$ and \(...\) to $...$
+2026-05-11T22:21:52.3804609Z   > 240 │ export function normalizeLatexDelimiters(text: string): string {
+2026-05-11T22:21:52.3805576Z         │                                          ^^^^^^^^^^^^
+2026-05-11T22:21:52.3806472Z     241 │   // Display math: \[...\] → $$...$$  (may span multiple lines)
+2026-05-11T22:21:52.3807767Z     242 │   text = text.replace(/\\\[([\s\S]*?)\\\]/g, (_match, inner) => `$$${inner}$$`);
+2026-05-11T22:21:52.3808443Z   
+2026-05-11T22:21:52.3808799Z   i Use a local variable instead.
+2026-05-11T22:21:52.3809271Z   
+2026-05-11T22:21:52.3809429Z 
+2026-05-11T22:21:52.3810662Z ./role-model-router/vendor/llama-swap/ui-svelte/src/lib/markdown.ts:244:3 lint/style/noParameterAssign ━━━━━━━━━━
+2026-05-11T22:21:52.3811477Z 
+2026-05-11T22:21:52.3811849Z   × Reassigning a function parameter is confusing.
+2026-05-11T22:21:52.3812343Z   
+2026-05-11T22:21:52.3813058Z     242 │   text = text.replace(/\\\[([\s\S]*?)\\\]/g, (_match, inner) => `$$${inner}$$`);
+2026-05-11T22:21:52.3813872Z     243 │   // Inline math: \(...\) → $...$
+2026-05-11T22:21:52.3814753Z   > 244 │   text = text.replace(/\\\(([\s\S]*?)\\\)/g, (_match, inner) => `$${inner}$`);
+2026-05-11T22:21:52.3815486Z         │   ^^^^
+2026-05-11T22:21:52.3815879Z     245 │   return text;
+2026-05-11T22:21:52.3816262Z     246 │ }
+2026-05-11T22:21:52.3816549Z   
+2026-05-11T22:21:52.3816994Z   i The parameter is declared here:
+2026-05-11T22:21:52.3817435Z   
+2026-05-11T22:21:52.3817963Z     239 │ // Convert \[...\] to $$...$$ and \(...\) to $...$
+2026-05-11T22:21:52.3818871Z   > 240 │ export function normalizeLatexDelimiters(text: string): string {
+2026-05-11T22:21:52.3819819Z         │                                          ^^^^^^^^^^^^
+2026-05-11T22:21:52.3820636Z     241 │   // Display math: \[...\] → $$...$$  (may span multiple lines)
+2026-05-11T22:21:52.3821659Z     242 │   text = text.replace(/\\\[([\s\S]*?)\\\]/g, (_match, inner) => `$$${inner}$$`);
+2026-05-11T22:21:52.3822298Z   
+2026-05-11T22:21:52.3822649Z   i Use a local variable instead.
+2026-05-11T22:21:52.3823042Z   
+2026-05-11T22:21:52.3823211Z 
+2026-05-11T22:21:52.3824138Z ./role-model-router/vendor/llama-swap/ui-svelte/src/lib/markdown.ts organizeImports ━━━━━━━━━━━━━━━━
+2026-05-11T22:21:52.3824989Z 
+2026-05-11T22:21:52.3825282Z   × Import statements could be sorted:
+2026-05-11T22:21:52.3825709Z   
+2026-05-11T22:21:52.3826278Z       1     │ - import·{·unified·}·from·"unified";
+2026-05-11T22:21:52.3827151Z       2     │ - import·remarkParse·from·"remark-parse";
+2026-05-11T22:21:52.3827883Z       3     │ - import·remarkGfm·from·"remark-gfm";
+2026-05-11T22:21:52.3828622Z       4     │ - import·remarkMath·from·"remark-math";
+2026-05-11T22:21:52.3829414Z       5     │ - import·remarkRehype·from·"remark-rehype";
+2026-05-11T22:21:52.3830195Z       6     │ - import·rehypeKatex·from·"rehype-katex";
+2026-05-11T22:21:52.3831035Z       7     │ - import·rehypeStringify·from·"rehype-stringify";
+2026-05-11T22:21:52.3831806Z       8     │ - import·hljs·from·"highlight.js";
+2026-05-11T22:21:52.3832546Z       9     │ - import·{·visit·}·from·"unist-util-visit";
+2026-05-11T22:21:52.3833333Z      10     │ - import·type·{·Element,·Root·}·from·"hast";
+2026-05-11T22:21:52.3834144Z           1 │ + import·type·{·Element,·Root·}·from·"hast";
+2026-05-11T22:21:52.3834872Z           2 │ + import·hljs·from·"highlight.js";
+2026-05-11T22:21:52.3835607Z           3 │ + import·rehypeKatex·from·"rehype-katex";
+2026-05-11T22:21:52.3836467Z           4 │ + import·rehypeStringify·from·"rehype-stringify";
+2026-05-11T22:21:52.3837468Z           5 │ + import·remarkGfm·from·"remark-gfm";
+2026-05-11T22:21:52.3838213Z           6 │ + import·remarkMath·from·"remark-math";
+2026-05-11T22:21:52.3838982Z           7 │ + import·remarkParse·from·"remark-parse";
+2026-05-11T22:21:52.3839764Z           8 │ + import·remarkRehype·from·"remark-rehype";
+2026-05-11T22:21:52.3840499Z           9 │ + import·{·unified·}·from·"unified";
+2026-05-11T22:21:52.3841246Z          10 │ + import·{·visit·}·from·"unist-util-visit";
+2026-05-11T22:21:52.3841797Z      11  11 │   
+2026-05-11T22:21:52.3842486Z      12  12 │   // Custom plugin to highlight code blocks with highlight.js
+2026-05-11T22:21:52.3843111Z   
+2026-05-11T22:21:52.3843269Z 
+2026-05-11T22:21:52.3844215Z ./role-model-router/vendor/llama-swap/ui-svelte/src/lib/markdown.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-05-11T22:21:52.3844942Z 
+2026-05-11T22:21:52.3845333Z   × Formatter would have printed the following content:
+2026-05-11T22:21:52.3845856Z   
+2026-05-11T22:21:52.3846549Z      19  19 │             ? className.filter((c): c is string => typeof c === "string")
+2026-05-11T22:21:52.3847381Z      20  20 │             : [];
+2026-05-11T22:21:52.3848111Z      21     │ - ········const·lang·=·classes
+2026-05-11T22:21:52.3848870Z      22     │ - ··········.find((c)·=>·c.startsWith("language-"))
+2026-05-11T22:21:52.3849632Z      23     │ - ··········?.replace("language-",·"");
+2026-05-11T22:21:52.3850801Z          21 │ + ········const·lang·=·classes.find((c)·=>·c.startsWith("language-"))?.replace("language-",·"");
+2026-05-11T22:21:52.3851661Z      24  22 │   
+2026-05-11T22:21:52.3852182Z      25  23 │           const text = node.children
+2026-05-11T22:21:52.3852736Z     ······· │ 
+2026-05-11T22:21:52.3853113Z      39  37 │             ];
+2026-05-11T22:21:52.3853912Z      40  38 │             // Use type assertion since we're modifying the tree structure
+2026-05-11T22:21:52.3854814Z      41     │ - ··········(node.children·as·unknown)·=·[
+2026-05-11T22:21:52.3855607Z      42     │ - ············{·type:·"raw",·value:·highlighted·},
+2026-05-11T22:21:52.3856221Z      43     │ - ··········];
+2026-05-11T22:21:52.3857228Z          39 │ + ··········(node.children·as·unknown)·=·[{·type:·"raw",·value:·highlighted·}];
+2026-05-11T22:21:52.3857989Z      44  40 │           }
+2026-05-11T22:21:52.3858406Z      45  41 │         }
+2026-05-11T22:21:52.3858796Z     ······· │ 
+2026-05-11T22:21:52.3859158Z      47  43 │     };
+2026-05-11T22:21:52.3859535Z      48  44 │   }
+2026-05-11T22:21:52.3859892Z      49     │ - 
+2026-05-11T22:21:52.3860251Z      50  45 │   
+2026-05-11T22:21:52.3860866Z      51  46 │   export function escapeHtml(text: string): string {
+2026-05-11T22:21:52.3861538Z   
+2026-05-11T22:21:52.3861694Z 
+2026-05-11T22:21:52.3862866Z ./role-model-router/vendor/llama-swap/ui-svelte/src/lib/markdown.test.ts:185:37 lint/style/useTemplate  FIXABLE  ━━━━━━━━━━
+2026-05-11T22:21:52.3863750Z 
+2026-05-11T22:21:52.3864209Z   × Template literals are preferred over string concatenation.
+2026-05-11T22:21:52.3864790Z   
+2026-05-11T22:21:52.3865413Z     183 │     it("returns fallback HTML on processing errors", () => {
+2026-05-11T22:21:52.3866304Z     184 │       // Very large or malformed input should be handled
+2026-05-11T22:21:52.3867325Z   > 185 │       const result = renderMarkdown("$" + "a".repeat(10000) + "$");
+2026-05-11T22:21:52.3868605Z         │                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-05-11T22:21:52.3869286Z     186 │       expect(result).toBeTruthy();
+2026-05-11T22:21:52.3869793Z     187 │     });
+2026-05-11T22:21:52.3870097Z   
+2026-05-11T22:21:52.3870471Z   i Unsafe fix: Use a template literal.
+2026-05-11T22:21:52.3871211Z   
+2026-05-11T22:21:52.3871858Z     183 183 │       it("returns fallback HTML on processing errors", () => {
+2026-05-11T22:21:52.3872803Z     184 184 │         // Very large or malformed input should be handled
+2026-05-11T22:21:52.3873835Z     185     │ - ······const·result·=·renderMarkdown("$"·+·"a".repeat(10000)·+·"$");
+2026-05-11T22:21:52.3874887Z         185 │ + ······const·result·=·renderMarkdown(`$${"a".repeat(10000)}$`);
+2026-05-11T22:21:52.3875756Z     186 186 │         expect(result).toBeTruthy();
+2026-05-11T22:21:52.3876538Z     187 187 │       });
+2026-05-11T22:21:52.3876960Z   
+2026-05-11T22:21:52.3877119Z 
+2026-05-11T22:21:52.3878072Z ./role-model-router/vendor/llama-swap/ui-svelte/src/lib/markdown.test.ts organizeImports ━━━━━━━━━━━
+2026-05-11T22:21:52.3878817Z 
+2026-05-11T22:21:52.3879104Z   × Import statements could be sorted:
+2026-05-11T22:21:52.3879550Z   
+2026-05-11T22:21:52.3880138Z       1     │ - import·{·describe,·it,·expect·}·from·"vitest";
+2026-05-11T22:21:52.3882509Z       2     │ - import·{·renderMarkdown,·escapeHtml,·splitCompleteBlocks,·closePendingBlock,·normalizeLatexDelimiters,·renderStreamingMarkdown,·createStreamingCache·}·from·"./markdown";
+2026-05-11T22:21:52.3884385Z           1 │ + import·{·describe,·expect,·it·}·from·"vitest";
+2026-05-11T22:21:52.3886851Z           2 │ + import·{·closePendingBlock,·createStreamingCache,·escapeHtml,·normalizeLatexDelimiters,·renderMarkdown,·renderStreamingMarkdown,·splitCompleteBlocks·}·from·"./markdown";
+2026-05-11T22:21:52.3888755Z       3   3 │   
+2026-05-11T22:21:52.3889373Z       4   4 │   describe("renderMarkdown", () => {
+2026-05-11T22:21:52.3889916Z   
+2026-05-11T22:21:52.3890083Z 
+2026-05-11T22:21:52.3891864Z ./role-model-router/vendor/llama-swap/ui-svelte/src/lib/markdown.test.ts format ━━━━━━━━━━━━━━━━━━━━
+2026-05-11T22:21:52.3892619Z 
+2026-05-11T22:21:52.3893060Z   × Formatter would have printed the following content:
+2026-05-11T22:21:52.3893598Z   
+2026-05-11T22:21:52.3894149Z       1   1 │   import { describe, it, expect } from "vitest";
+2026-05-11T22:21:52.3896299Z       2     │ - import·{·renderMarkdown,·escapeHtml,·splitCompleteBlocks,·closePendingBlock,·normalizeLatexDelimiters,·renderStreamingMarkdown,·createStreamingCache·}·from·"./markdown";
+2026-05-11T22:21:52.3898102Z           2 │ + import·{
+2026-05-11T22:21:52.3898714Z           3 │ + ··renderMarkdown,
+2026-05-11T22:21:52.3899205Z           4 │ + ··escapeHtml,
+2026-05-11T22:21:52.3899744Z           5 │ + ··splitCompleteBlocks,
+2026-05-11T22:21:52.3900317Z           6 │ + ··closePendingBlock,
+2026-05-11T22:21:52.3900946Z           7 │ + ··normalizeLatexDelimiters,
+2026-05-11T22:21:52.3901574Z           8 │ + ··renderStreamingMarkdown,
+2026-05-11T22:21:52.3902174Z           9 │ + ··createStreamingCache,
+2026-05-11T22:21:52.3902748Z          10 │ + }·from·"./markdown";
+2026-05-11T22:21:52.3903207Z       3  11 │   
+2026-05-11T22:21:52.3903720Z       4  12 │   describe("renderMarkdown", () => {
+2026-05-11T22:21:52.3904188Z   
+2026-05-11T22:21:52.3904600Z 
+2026-05-11T22:21:52.3905537Z ./role-model-router/vendor/llama-swap/ui-svelte/src/lib/imageApi.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-05-11T22:21:52.3906268Z 
+2026-05-11T22:21:52.3906649Z   × Formatter would have printed the following content:
+2026-05-11T22:21:52.3907167Z   
+2026-05-11T22:21:52.3907577Z     7 │ ··signal?:·AbortSignal,
+2026-05-11T22:21:52.3908078Z       │                       +
+2026-05-11T22:21:52.3908328Z 
+2026-05-11T22:21:52.3909362Z ./role-model-router/apps/runtime-host-bridge/src/index.ts:1437:67 lint/style/noNonNullAssertion ━━━━━━━━━━
+2026-05-11T22:21:52.3910172Z 
+2026-05-11T22:21:52.3910446Z   × Forbidden non-null assertion.
+2026-05-11T22:21:52.3910936Z   
+2026-05-11T22:21:52.3911561Z     1435 │     "x-role-model-adapter-family": input.adapterFamily,
+2026-05-11T22:21:52.3912968Z     1436 │     ...(input.routingDecisionId ? { "x-role-model-routing-decision-id": input.routingDecisionId } : {}),
+2026-05-11T22:21:52.3914631Z   > 1437 │     ...(formatCostUsd(input.costUsd) ? { "x-role-model-cost-usd": formatCostUsd(input.costUsd)! } : {}),
+2026-05-11T22:21:52.3915928Z          │                                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-05-11T22:21:52.3916563Z     1438 │   };
+2026-05-11T22:21:52.3916999Z     1439 │ }
+2026-05-11T22:21:52.3917288Z   
+2026-05-11T22:21:52.3917451Z 
+2026-05-11T22:21:52.3918453Z ./role-model-router/apps/runtime-host-bridge/src/index.ts:1925:45 lint/style/noNonNullAssertion ━━━━━━━━━━
+2026-05-11T22:21:52.3919230Z 
+2026-05-11T22:21:52.3919501Z   × Forbidden non-null assertion.
+2026-05-11T22:21:52.3920056Z   
+2026-05-11T22:21:52.3921069Z     1923 │   const byRoleId = [...summaries.values()].sort((left, right) => compareText(left.roleId, right.roleId));
+2026-05-11T22:21:52.3922002Z     1924 │   return {
+2026-05-11T22:21:52.3922836Z   > 1925 │     roleDefinitions: byRoleId.map((role) => definitions.get(role.roleId)!),
+2026-05-11T22:21:52.3923876Z          │                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-05-11T22:21:52.3924569Z     1926 │     roleSummaries: byRoleId,
+2026-05-11T22:21:52.3925063Z     1927 │   };
+2026-05-11T22:21:52.3925373Z   
+2026-05-11T22:21:52.3925529Z 
+2026-05-11T22:21:52.3926360Z check ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-05-11T22:21:52.3927010Z 
+2026-05-11T22:21:52.3927359Z   × Some errors were emitted while running checks.
+2026-05-11T22:21:52.3927858Z   
+2026-05-11T22:21:52.3928016Z 
+2026-05-11T22:21:52.3928233Z Skipped 73 suggested fixes.
+2026-05-11T22:21:52.3929167Z If you wish to apply the suggested (unsafe) fixes, use the command biome check --fix --unsafe
+2026-05-11T22:21:52.3929811Z 
+2026-05-11T22:21:52.3930247Z The number of diagnostics exceeds the number allowed by Biome.
+2026-05-11T22:21:52.3930885Z Diagnostics not shown: 333.
+2026-05-11T22:21:52.3931434Z Checked 457 files in 722ms. No fixes applied.
+2026-05-11T22:21:52.3931936Z Found 334 errors.
+2026-05-11T22:21:52.4052677Z  ELIFECYCLE  Command failed with exit code 1.
+2026-05-11T22:21:52.4349759Z  ELIFECYCLE  Command failed with exit code 1.
+2026-05-11T22:21:52.4509181Z ##[error]Process completed with exit code 1.
+2026-05-11T22:21:52.4570033Z Post job cleanup.
+2026-05-11T22:21:52.5954282Z Pruning is unnecessary.
+2026-05-11T22:21:52.6103742Z Post job cleanup.
+2026-05-11T22:21:52.7026991Z [command]/usr/bin/git version
+2026-05-11T22:21:52.7063705Z git version 2.53.0
+2026-05-11T22:21:52.7105154Z Temporarily overriding HOME='/home/runner/work/_temp/4be0ba06-e63f-40d1-9421-2c2b1e112a4c' before making global git config changes
+2026-05-11T22:21:52.7106926Z Adding repository directory to the temporary git global config as a safe directory
+2026-05-11T22:21:52.7122323Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/role-model/role-model
+2026-05-11T22:21:52.7157164Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-05-11T22:21:52.7187293Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-05-11T22:21:52.7389041Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-05-11T22:21:52.7410356Z http.https://github.com/.extraheader
+2026-05-11T22:21:52.7422495Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-05-11T22:21:52.7452064Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-05-11T22:21:52.7645783Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-05-11T22:21:52.7675248Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-05-11T22:21:52.7983896Z Cleaning up orphan processes
+2026-05-11T22:21:52.8224348Z ##[warning]Node.js 20 actions are deprecated. The following actions are running on Node.js 20 and may not work as expected: actions/checkout@v4, actions/setup-node@v4, pnpm/action-setup@v4. Actions will be forced to run with Node.js 24 by default starting June 2nd, 2026. Node.js 20 will be removed from the runner on September 16th, 2026. Please check if updated versions of these actions are available that support Node.js 24. To opt into Node.js 24 now, set the FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true environment variable on the runner or in your workflow file. Once Node.js 24 becomes the default, you can temporarily opt out by setting ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

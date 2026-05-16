@@ -1,0 +1,384 @@
+.\role-model-router\apps\runtime-ui\app\routes\local-policy.tsx:77:17 lint/a11y/noLabelWithoutControl ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù A form label must be associated with an input.
+  
+    75 Γöé             <div className="grid gap-6 md:grid-cols-2">
+    76 Γöé               <div className="space-y-2">
+  > 77 Γöé                 <label className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]">
+       Γöé                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 78 Γöé                   TTL (seconds)
+  > 79 Γöé                 </label>
+       Γöé                 ^^^^^^^^
+    80 Γöé                 <input
+    81 Γöé                   type="number"
+  
+  i Consider adding a `for` or `htmlFor` attribute to the label element or moving the input element to inside the label element.
+  
+
+.\role-model-router\apps\runtime-ui\app\routes\local-policy.tsx:93:17 lint/a11y/noLabelWithoutControl ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù A form label must be associated with an input.
+  
+    92 Γöé               <div className="space-y-2">
+  > 93 Γöé                 <label className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]">
+       Γöé                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 94 Γöé                   Max concurrency
+  > 95 Γöé                 </label>
+       Γöé                 ^^^^^^^^
+    96 Γöé                 <input
+    97 Γöé                   type="number"
+  
+  i Consider adding a `for` or `htmlFor` attribute to the label element or moving the input element to inside the label element.
+  
+
+.\role-model-router\apps\runtime-ui\app\routes\local-policy.tsx:125:15 lint/a11y/useButtonType ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    124 Γöé             <div className="flex gap-3 pt-2">
+  > 125 Γöé               <button
+        Γöé               ^^^^^^^
+  > 126 Γöé                 onClick={handleSave}
+  > 127 Γöé                 disabled={saving}
+  > 128 Γöé                 className={primaryButtonClassName}
+  > 129 Γöé               >
+        Γöé               ^
+    130 Γöé                 {saving ? "SavingΓÇª" : "Save policy"}
+    131 Γöé               </button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+.\role-model-router\apps\runtime-ui\app\routes\local-policy.tsx:132:15 lint/a11y/useButtonType ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    130 Γöé                 {saving ? "SavingΓÇª" : "Save policy"}
+    131 Γöé               </button>
+  > 132 Γöé               <button
+        Γöé               ^^^^^^^
+  > 133 Γöé                 onClick={handleReset}
+  > 134 Γöé                 disabled={saving}
+  > 135 Γöé                 className={secondaryButtonClassName}
+  > 136 Γöé               >
+        Γöé               ^
+    137 Γöé                 Reset
+    138 Γöé               </button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+.\role-model-router\apps\runtime-ui\app\routes\studio-audio.tsx:246:36 lint/a11y/useMediaCaption ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Provide a track for captions when using audio or video elements.
+  
+    244 Γöé                   </p>
+    245 Γöé                 </div>
+  > 246 Γöé                 {result.audioUrl ? <audio className="w-full" controls src={result.audioUrl} /> : <EmptyState label="Speech audio is available, but this environment cannot create a local audio URL." />}
+        Γöé                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    247 Γöé               </div>
+    248 Γöé             ) : (
+  
+  i Captions support users with hearing-impairments. They should be a transcription or translation of the dialogue, sound effects, musical cues, and other relevant audio information.
+  
+
+.\role-model-router\apps\runtime-ui\app\routes\studio-images.tsx:183:30 lint/a11y/noRedundantAlt ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Avoid the words "image", "picture", or "photo" in img element alt text.
+  
+    181 Γöé                 {result.images.map((image, index) => (
+    182 Γöé                   <div key={`${result.mode}-${index}`} className={`${mutedPanelClassName} p-3`}>
+  > 183 Γöé                     <img alt={`Generated image ${index + 1}`} className="aspect-square w-full object-cover" src={image} />
+        Γöé                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    184 Γöé                   </div>
+    185 Γöé                 ))}
+  
+  i Screen readers announce img elements as "images", so it is not necessary to redeclare this in alternative text.
+  
+
+.\role-model-router\apps\runtime-ui\app\routes\local-models.tsx:204:21 lint/a11y/noLabelWithoutControl ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù A form label must be associated with an input.
+  
+    202 Γöé                 <div className="grid gap-3 sm:grid-cols-3">
+    203 Γöé                   <div>
+  > 204 Γöé                     <label className="mb-1 block text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]">
+        Γöé                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 205 Γöé                       TTL (seconds)
+  > 206 Γöé                     </label>
+        Γöé                     ^^^^^^^^
+    207 Γöé                     <input
+    208 Γöé                       type="number"
+  
+  i Consider adding a `for` or `htmlFor` attribute to the label element or moving the input element to inside the label element.
+  
+
+.\role-model-router\apps\runtime-ui\app\routes\local-models.tsx:221:21 lint/a11y/noLabelWithoutControl ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù A form label must be associated with an input.
+  
+    219 Γöé                   </div>
+    220 Γöé                   <div>
+  > 221 Γöé                     <label className="mb-1 block text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]">
+        Γöé                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 222 Γöé                       Context window
+  > 223 Γöé                     </label>
+        Γöé                     ^^^^^^^^
+    224 Γöé                     <input
+    225 Γöé                       type="number"
+  
+  i Consider adding a `for` or `htmlFor` attribute to the label element or moving the input element to inside the label element.
+  
+
+.\role-model-router\apps\runtime-ui\app\routes\local-models.tsx:238:21 lint/a11y/noLabelWithoutControl ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù A form label must be associated with an input.
+  
+    236 Γöé                   </div>
+    237 Γöé                   <div>
+  > 238 Γöé                     <label className="mb-1 block text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]">
+        Γöé                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 239 Γöé                       Concurrency limit
+  > 240 Γöé                     </label>
+        Γöé                     ^^^^^^^^
+    241 Γöé                     <input
+    242 Γöé                       type="number"
+  
+  i Consider adding a `for` or `htmlFor` attribute to the label element or moving the input element to inside the label element.
+  
+
+.\role-model-router\apps\runtime-ui\app\routes\local-models.tsx:89:11 lint/a11y/useButtonType ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    87 Γöé         description="Currently loaded local inference models and manual load/unload controls."
+    88 Γöé         actions={
+  > 89 Γöé           <button
+       Γöé           ^^^^^^^
+  > 90 Γöé             onClick={refresh}
+  > 91 Γöé             disabled={loading}
+  > 92 Γöé             className={secondaryButtonClassName}
+  > 93 Γöé           >
+       Γöé           ^
+    94 Γöé             {loading ? "RefreshingΓÇª" : "Refresh"}
+    95 Γöé           </button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+.\role-model-router\apps\runtime-ui\app\routes\local-models.tsx:140:19 lint/a11y/useButtonType ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    139 Γöé                 <div className="flex gap-2">
+  > 140 Γöé                   <button
+        Γöé                   ^^^^^^^
+  > 141 Γöé                     onClick={() => handleLoad(model.modelId)}
+  > 142 Γöé                     disabled={actioning[model.modelId]}
+  > 143 Γöé                     className={primaryButtonClassName}
+  > 144 Γöé                   >
+        Γöé                   ^
+    145 Γöé                     {actioning[model.modelId] ? "WorkingΓÇª" : "Reload"}
+    146 Γöé                   </button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+.\role-model-router\apps\runtime-ui\app\routes\local-models.tsx:147:19 lint/a11y/useButtonType ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    145 Γöé                     {actioning[model.modelId] ? "WorkingΓÇª" : "Reload"}
+    146 Γöé                   </button>
+  > 147 Γöé                   <button
+        Γöé                   ^^^^^^^
+  > 148 Γöé                     onClick={() => handleUnload(model.modelId)}
+  > 149 Γöé                     disabled={actioning[model.modelId]}
+  > 150 Γöé                     className={secondaryButtonClassName}
+  > 151 Γöé                   >
+        Γöé                   ^
+    152 Γöé                     Unload
+    153 Γöé                   </button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+.\role-model-router\apps\runtime-ui\app\routes\local-models.tsx:163:11 lint/a11y/useButtonType ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    161 Γöé       <SectionCard title="Quick actions" description="Global model lifecycle controls.">
+    162 Γöé         <div className="flex flex-wrap gap-3">
+  > 163 Γöé           <button
+        Γöé           ^^^^^^^
+  > 164 Γöé             onClick={async () => {
+         ...
+  > 176 Γöé             className={secondaryButtonClassName}
+  > 177 Γöé           >
+        Γöé           ^
+    178 Γöé             {actioning.__all__ ? "UnloadingΓÇª" : "Unload all models"}
+    179 Γöé           </button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+.\role-model-router\apps\runtime-ui\app\routes\local-models.tsx:256:19 lint/a11y/useButtonType ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    254 Γöé                 </div>
+    255 Γöé                 <div className="mt-3 flex gap-2">
+  > 256 Γöé                   <button
+        Γöé                   ^^^^^^^
+  > 257 Γöé                     onClick={async () => {
+         ...
+  > 278 Γöé                     className={primaryButtonClassName}
+  > 279 Γöé                   >
+        Γöé                   ^
+    280 Γöé                     Save
+    281 Γöé                   </button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+.\role-model-router\apps\runtime-ui\app\routes\local-models.tsx:282:19 lint/a11y/useButtonType ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    280 Γöé                     Save
+    281 Γöé                   </button>
+  > 282 Γöé                   <button
+        Γöé                   ^^^^^^^
+  > 283 Γöé                     onClick={() =>
+         ...
+  > 290 Γöé                     className={secondaryButtonClassName}
+  > 291 Γöé                   >
+        Γöé                   ^
+    292 Γöé                     Cancel
+    293 Γöé                   </button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+.\role-model-router\apps\runtime-ui\app\routes\local-models.tsx:294:19 lint/a11y/useButtonType ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    292 Γöé                     Cancel
+    293 Γöé                   </button>
+  > 294 Γöé                   <button
+        Γöé                   ^^^^^^^
+  > 295 Γöé                     onClick={async () => {
+         ...
+  > 309 Γöé                     className={`${secondaryButtonClassName} ml-auto`}
+  > 310 Γöé                   >
+        Γöé                   ^
+    311 Γöé                     Delete
+    312 Γöé                   </button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+.\role-model-router\apps\runtime-ui\app\routes\local-models.tsx:327:11 lint/a11y/useButtonType ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    325 Γöé             className={fieldClassName}
+    326 Γöé           />
+  > 327 Γöé           <button
+        Γöé           ^^^^^^^
+  > 328 Γöé             onClick={() => {
+         ...
+  > 337 Γöé             className={primaryButtonClassName}
+  > 338 Γöé           >
+        Γöé           ^
+    339 Γöé             Add override
+    340 Γöé           </button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+.\role-model-router\apps\runtime-ui\app\routes\providers.tsx:516:33 lint/suspicious/noArrayIndexKey ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Avoid using the index of an array as key property in an element.
+  
+    514 Γöé                   <div className="space-y-3">
+    515 Γöé                     {localModels.map((model, index) => (
+  > 516 Γöé                       <div key={index} className={`${raisedPanelClassName} space-y-3 p-4 text-sm`}>
+        Γöé                                 ^^^^^
+    517 Γöé                         <div className="flex items-center justify-between">
+    518 Γöé                           <p className="font-medium text-[var(--rm-fg)]">Model {index + 1}</p>
+  
+  i This is the source of the key value.
+  
+    513 Γöé                 ) : (
+    514 Γöé                   <div className="space-y-3">
+  > 515 Γöé                     {localModels.map((model, index) => (
+        Γöé                                              ^^^^^
+    516 Γöé                       <div key={index} className={`${raisedPanelClassName} space-y-3 p-4 text-sm`}>
+    517 Γöé                         <div className="flex items-center justify-between">
+  
+  i The order of the items may change, and this also affects performances and component state.
+  
+  i Check the React documentation. 
+  
+
+.\role-model-router\vendor\llama-swap\ui-svelte\src\components\ModelsPanel.svelte:41:25 lint/suspicious/noAssignInExpressions ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù The assignment should not be in an expression.
+  
+    39 Γöé       console.error(e);
+    40 Γöé     } finally {
+  > 41 Γöé       setTimeout(() => (isUnloading = false), 1000);
+       Γöé                         ^^^^^^^^^^^^^^^^^^^
+    42 Γöé     }
+    43 Γöé   }
+  
+  i The use of assignments in expressions is confusing.
+    Expressions are often considered as side-effect free.
+  
+
+.\role-model-router\vendor\llama-swap\ui-svelte\src\components\playground\ChatMessage.svelte:67:25 lint/suspicious/noAssignInExpressions ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù The assignment should not be in an expression.
+  
+    65 Γöé       }
+    66 Γöé       copied = true;
+  > 67 Γöé       setTimeout(() => (copied = false), 2000);
+       Γöé                         ^^^^^^^^^^^^^^
+    68 Γöé     } catch (err) {
+    69 Γöé       console.error("Failed to copy:", err);
+  
+  i The use of assignments in expressions is confusing.
+    Expressions are often considered as side-effect free.
+  
+
+The number of diagnostics exceeds the number allowed by Biome.
+Diagnostics not shown: 3.
+Checked 466 files in 1000ms. Fixed 305 files.
+Found 23 errors.
+check ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Some errors were emitted while running checks.
+  
+

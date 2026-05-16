@@ -1,9 +1,9 @@
-import { describe, test, expect, beforeEach, afterEach } from "vitest";
-import { mkdtempSync, rmSync, existsSync, readFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path, { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { EndpointRegistryResult } from "@role-model-router/endpoint-registry";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
 
 import * as bridge from "../src/index.js";
 
@@ -188,7 +188,14 @@ describe("local swap history", () => {
           registry: EndpointRegistryResult;
           providerPresetsPath: string;
         }) => Promise<{
-          listSwapHistory(): Promise<readonly { timestamp: string; oldModel: string | null; newModel: string | null; reason: string }[]>;
+          listSwapHistory(): Promise<
+            readonly {
+              timestamp: string;
+              oldModel: string | null;
+              newModel: string | null;
+              reason: string;
+            }[]
+          >;
         }>;
       }
     ).createRuntimeBridgeBackend({

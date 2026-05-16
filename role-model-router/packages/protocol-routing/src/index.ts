@@ -13,8 +13,8 @@ import type {
 } from "@role-model-router/core";
 import { routeRequest } from "@role-model-router/core";
 import type {
-  EndpointCandidate as RegistryEndpointCandidate,
   EndpointRegistryResult,
+  EndpointCandidate as RegistryEndpointCandidate,
 } from "@role-model-router/endpoint-registry";
 import type { RetrievalReceipt } from "@role-model-router/retrieval-receipt";
 
@@ -97,7 +97,9 @@ function toCoreCandidate(
 export function projectRuntimeRouteInput(
   input: ProjectRuntimeRouteInputInput,
 ): ProjectRuntimeRouteInputResult {
-  const candidateIds = new Set(input.registry.endpoints.map((candidate) => candidate.identity.endpoint_id));
+  const candidateIds = new Set(
+    input.registry.endpoints.map((candidate) => candidate.identity.endpoint_id),
+  );
   const deniedEndpointIds = new Set(input.request.denyEndpoints ?? []);
   const allowEndpoints = input.request.allowEndpoints ?? [];
   const ignoredEndpointIds = input.routingModel?.preferredEndpointIds

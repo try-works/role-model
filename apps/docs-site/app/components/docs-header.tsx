@@ -40,11 +40,7 @@ export function DocsHeader() {
 
         {slots.themeSwitch ? <slots.themeSwitch className="shrink-0" /> : null}
 
-        <Link
-          className={actionLinkClass}
-          external={true}
-          href="https://x.com/trydotworks"
-        >
+        <Link className={actionLinkClass} external={true} href="https://x.com/trydotworks">
           <SquareArrowOutUpRight className="size-4" />
           @trydotworks
         </Link>

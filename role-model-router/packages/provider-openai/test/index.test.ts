@@ -1,8 +1,8 @@
 import { describe, expect, test } from "vitest";
 
 import {
-  createOpenAIProviderAdapter,
   buildOpenAIRequest,
+  createOpenAIProviderAdapter,
   normalizeOpenAIResponse,
 } from "../src/index.js";
 
@@ -115,7 +115,7 @@ describe("OpenAI provider adapter", () => {
               type: "function_call",
               call_id: "call_1",
               name: "lookupRegistry",
-              arguments: "{\"endpointId\":\"openai.personal.primary.us-east-1.fast\"}",
+              arguments: '{"endpointId":"openai.personal.primary.us-east-1.fast"}',
             },
           ],
           usage: {

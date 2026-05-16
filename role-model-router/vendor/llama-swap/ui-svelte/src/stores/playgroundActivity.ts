@@ -1,4 +1,4 @@
-import { writable, derived } from "svelte/store";
+import { derived, writable } from "svelte/store";
 
 const chatStreaming = writable(false);
 const imageGenerating = writable(false);
@@ -8,7 +8,7 @@ const rerankLoading = writable(false);
 
 export const playgroundActivity = derived(
   [chatStreaming, imageGenerating, speechGenerating, audioTranscribing, rerankLoading],
-  ([$chat, $image, $speech, $audio, $rerank]) => $chat || $image || $speech || $audio || $rerank
+  ([$chat, $image, $speech, $audio, $rerank]) => $chat || $image || $speech || $audio || $rerank,
 );
 
 export const playgroundStores = {

@@ -5,8 +5,8 @@ import { describe, expect, test } from "vitest";
 
 import { buildEndpointRegistry } from "@role-model-router/endpoint-registry";
 
-import { projectRuntimeRouteInput, routeRuntimeRequest } from "../src/index.js";
 import { runRuntimeRoutingValidation } from "../src/cli.js";
+import { projectRuntimeRouteInput, routeRuntimeRequest } from "../src/index.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -176,10 +176,7 @@ describe("projectRuntimeRouteInput", () => {
       roleBindings: [],
       routingModel: {
         endpointId: "cli.local.coder",
-        preferredEndpointIds: [
-          "openai.personal.primary.us-east-1.fast",
-          "cli.local.coder",
-        ],
+        preferredEndpointIds: ["openai.personal.primary.us-east-1.fast", "cli.local.coder"],
       },
     });
 
@@ -206,10 +203,7 @@ describe("projectRuntimeRouteInput", () => {
     expect(projected.routingDiagnostics.routingModel).toEqual({
       enabled: true,
       endpointId: "cli.local.coder",
-      preferredEndpointIds: [
-        "openai.personal.primary.us-east-1.fast",
-        "cli.local.coder",
-      ],
+      preferredEndpointIds: ["openai.personal.primary.us-east-1.fast", "cli.local.coder"],
       ignoredEndpointIds: [],
     });
   });
@@ -475,7 +469,9 @@ describe("routeRuntimeRequest", () => {
 
     expect(result.decision.chosen_endpoint_id).toBe("cli.local.coder");
     expect(
-      result.decision.eligibility.find((entry) => entry.endpoint_id === "openai.disabled.us-east-1"),
+      result.decision.eligibility.find(
+        (entry) => entry.endpoint_id === "openai.disabled.us-east-1",
+      ),
     ).toEqual(
       expect.objectContaining({
         eligible: false,
@@ -483,7 +479,9 @@ describe("routeRuntimeRequest", () => {
       }),
     );
     expect(
-      result.decision.eligibility.find((entry) => entry.endpoint_id === "openai.auth-missing.us-east-1"),
+      result.decision.eligibility.find(
+        (entry) => entry.endpoint_id === "openai.auth-missing.us-east-1",
+      ),
     ).toEqual(
       expect.objectContaining({
         eligible: false,
@@ -501,11 +499,15 @@ describe("routeRuntimeRequest", () => {
       }),
     );
     expect(
-      result.decision.eligibility.find((entry) => entry.endpoint_id === "openai.region-denied.eu-west-1"),
+      result.decision.eligibility.find(
+        (entry) => entry.endpoint_id === "openai.region-denied.eu-west-1",
+      ),
     ).toEqual(
       expect.objectContaining({
         eligible: false,
-        exclusions: expect.arrayContaining([expect.objectContaining({ code: "REGION_DISALLOWED" })]),
+        exclusions: expect.arrayContaining([
+          expect.objectContaining({ code: "REGION_DISALLOWED" }),
+        ]),
       }),
     );
   });
@@ -640,10 +642,7 @@ describe("routeRuntimeRequest", () => {
       roleBindings: [],
       routingModel: {
         endpointId: "cli.local.coder",
-        preferredEndpointIds: [
-          "openai.personal.primary.us-east-1.fast",
-          "cli.local.coder",
-        ],
+        preferredEndpointIds: ["openai.personal.primary.us-east-1.fast", "cli.local.coder"],
       },
     });
 

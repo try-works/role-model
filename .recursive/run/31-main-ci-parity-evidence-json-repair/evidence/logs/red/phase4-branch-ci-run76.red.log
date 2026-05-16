@@ -1,0 +1,1200 @@
+2026-05-11T22:16:23.5761552Z   lfs: false
+2026-05-11T22:16:23.5762190Z   submodules: false
+2026-05-11T22:16:23.5762897Z   set-safe-directory: true
+2026-05-11T22:16:23.5763923Z ##[endgroup]
+2026-05-11T22:16:23.6932847Z Syncing repository: try-works/role-model
+2026-05-11T22:16:23.6935538Z ##[group]Getting Git version info
+2026-05-11T22:16:23.6936804Z Working directory is '/home/runner/work/role-model/role-model'
+2026-05-11T22:16:23.6938954Z [command]/usr/bin/git version
+2026-05-11T22:16:23.7006902Z git version 2.53.0
+2026-05-11T22:16:23.7034728Z ##[endgroup]
+2026-05-11T22:16:23.7060287Z Temporarily overriding HOME='/home/runner/work/_temp/e1073a90-96ef-4e0f-b06b-fa90f88496bf' before making global git config changes
+2026-05-11T22:16:23.7064783Z Adding repository directory to the temporary git global config as a safe directory
+2026-05-11T22:16:23.7068712Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/role-model/role-model
+2026-05-11T22:16:23.7101986Z Deleting the contents of '/home/runner/work/role-model/role-model'
+2026-05-11T22:16:23.7105707Z ##[group]Initializing the repository
+2026-05-11T22:16:23.7111007Z [command]/usr/bin/git init /home/runner/work/role-model/role-model
+2026-05-11T22:16:23.7201191Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-05-11T22:16:23.7204211Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-05-11T22:16:23.7206000Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-05-11T22:16:23.7207593Z hint: call:
+2026-05-11T22:16:23.7208625Z hint:
+2026-05-11T22:16:23.7209485Z hint: 	git config --global init.defaultBranch <name>
+2026-05-11T22:16:23.7210561Z hint:
+2026-05-11T22:16:23.7211569Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-05-11T22:16:23.7213249Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-05-11T22:16:23.7215081Z hint:
+2026-05-11T22:16:23.7215729Z hint: 	git branch -m <name>
+2026-05-11T22:16:23.7216487Z hint:
+2026-05-11T22:16:23.7217541Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-05-11T22:16:23.7219944Z Initialized empty Git repository in /home/runner/work/role-model/role-model/.git/
+2026-05-11T22:16:23.7222796Z [command]/usr/bin/git remote add origin https://github.com/try-works/role-model
+2026-05-11T22:16:23.7246252Z ##[endgroup]
+2026-05-11T22:16:23.7247484Z ##[group]Disabling automatic garbage collection
+2026-05-11T22:16:23.7249838Z [command]/usr/bin/git config --local gc.auto 0
+2026-05-11T22:16:23.7277653Z ##[endgroup]
+2026-05-11T22:16:23.7279164Z ##[group]Setting up auth
+2026-05-11T22:16:23.7284135Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-05-11T22:16:23.7314492Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-05-11T22:16:23.7606144Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-05-11T22:16:23.7639013Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-05-11T22:16:23.7860092Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-05-11T22:16:23.7897101Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-05-11T22:16:23.8124261Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-05-11T22:16:23.8158798Z ##[endgroup]
+2026-05-11T22:16:23.8161066Z ##[group]Fetching the repository
+2026-05-11T22:16:23.8171641Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +0d877618d478754fd65f8fdc8c858e4c9197c459:refs/remotes/origin/recursive/31-main-ci-parity-evidence-json-repair
+2026-05-11T22:16:25.6328662Z From https://github.com/try-works/role-model
+2026-05-11T22:16:25.6329980Z  * [new ref]         0d877618d478754fd65f8fdc8c858e4c9197c459 -> origin/recursive/31-main-ci-parity-evidence-json-repair
+2026-05-11T22:16:25.6360811Z ##[endgroup]
+2026-05-11T22:16:25.6361504Z ##[group]Determining the checkout info
+2026-05-11T22:16:25.6364146Z ##[endgroup]
+2026-05-11T22:16:25.6371436Z [command]/usr/bin/git sparse-checkout disable
+2026-05-11T22:16:25.6425715Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-05-11T22:16:25.6466460Z ##[group]Checking out the ref
+2026-05-11T22:16:25.6469532Z [command]/usr/bin/git checkout --progress --force -B recursive/31-main-ci-parity-evidence-json-repair refs/remotes/origin/recursive/31-main-ci-parity-evidence-json-repair
+2026-05-11T22:16:25.9309726Z Switched to a new branch 'recursive/31-main-ci-parity-evidence-json-repair'
+2026-05-11T22:16:25.9311804Z branch 'recursive/31-main-ci-parity-evidence-json-repair' set up to track 'origin/recursive/31-main-ci-parity-evidence-json-repair'.
+2026-05-11T22:16:25.9329205Z ##[endgroup]
+2026-05-11T22:16:25.9368301Z [command]/usr/bin/git log -1 --format=%H
+2026-05-11T22:16:25.9391902Z 0d877618d478754fd65f8fdc8c858e4c9197c459
+2026-05-11T22:16:25.9606153Z ##[group]Run pnpm/action-setup@v4
+2026-05-11T22:16:25.9606448Z with:
+2026-05-11T22:16:25.9606622Z   version: 10.6.5
+2026-05-11T22:16:25.9606806Z   dest: ~/setup-pnpm
+2026-05-11T22:16:25.9607007Z   run_install: null
+2026-05-11T22:16:25.9607199Z   cache: false
+2026-05-11T22:16:25.9607395Z   cache_dependency_path: pnpm-lock.yaml
+2026-05-11T22:16:25.9607667Z   package_json_file: package.json
+2026-05-11T22:16:25.9607897Z   standalone: false
+2026-05-11T22:16:25.9608477Z ##[endgroup]
+2026-05-11T22:16:26.1037517Z ##[group]Running self-installer...
+2026-05-11T22:16:26.6882667Z Progress: resolved 1, reused 0, downloaded 0, added 0
+2026-05-11T22:16:26.6984240Z Packages: +1
+2026-05-11T22:16:26.6987423Z +
+2026-05-11T22:16:27.1143379Z Progress: resolved 1, reused 0, downloaded 1, added 1, done
+2026-05-11T22:16:27.1442792Z 
+2026-05-11T22:16:27.1443535Z dependencies:
+2026-05-11T22:16:27.1444347Z + pnpm 10.6.5 (11.1.0 is available)
+2026-05-11T22:16:27.1444919Z 
+2026-05-11T22:16:27.1477184Z Done in 858ms
+2026-05-11T22:16:27.1655921Z ##[endgroup]
+2026-05-11T22:16:27.1661142Z Installation Completed!
+2026-05-11T22:16:27.1920668Z ##[group]Run actions/setup-node@v4
+2026-05-11T22:16:27.1920933Z with:
+2026-05-11T22:16:27.1921097Z   node-version: 22
+2026-05-11T22:16:27.1921285Z   cache: pnpm
+2026-05-11T22:16:27.1921456Z   always-auth: false
+2026-05-11T22:16:27.1921654Z   check-latest: false
+2026-05-11T22:16:27.1921993Z   token: ***
+2026-05-11T22:16:27.1922161Z env:
+2026-05-11T22:16:27.1922394Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+2026-05-11T22:16:27.1922685Z ##[endgroup]
+2026-05-11T22:16:27.3759256Z Found in cache @ /opt/hostedtoolcache/node/22.22.2/x64
+2026-05-11T22:16:27.3760383Z ##[group]Environment details
+2026-05-11T22:16:27.6920896Z node: v22.22.2
+2026-05-11T22:16:27.6921473Z npm: 10.9.7
+2026-05-11T22:16:27.6921934Z yarn: 1.22.22
+2026-05-11T22:16:27.6923434Z ##[endgroup]
+2026-05-11T22:16:27.6950624Z [command]/home/runner/setup-pnpm/node_modules/.bin/pnpm store path --silent
+2026-05-11T22:16:28.0901531Z /home/runner/setup-pnpm/node_modules/.bin/store/v10
+2026-05-11T22:16:28.3818602Z pnpm cache is not found
+2026-05-11T22:16:28.4022711Z ##[group]Run dtolnay/rust-toolchain@stable
+2026-05-11T22:16:28.4022997Z with:
+2026-05-11T22:16:28.4023158Z   toolchain: stable
+2026-05-11T22:16:28.4023332Z env:
+2026-05-11T22:16:28.4023542Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+2026-05-11T22:16:28.4023838Z ##[endgroup]
+2026-05-11T22:16:28.4133678Z ##[group]Run : parse toolchain version
+2026-05-11T22:16:28.4134030Z [36;1m: parse toolchain version[0m
+2026-05-11T22:16:28.4134307Z [36;1mif [[ -z $toolchain ]]; then[0m
+2026-05-11T22:16:28.4134825Z [36;1m  # GitHub does not enforce `required: true` inputs itself. https://github.com/actions/runner/issues/1070[0m
+2026-05-11T22:16:28.4135391Z [36;1m  echo "'toolchain' is a required input" >&2[0m
+2026-05-11T22:16:28.4135668Z [36;1m  exit 1[0m
+2026-05-11T22:16:28.4135988Z [36;1melif [[ $toolchain =~ ^stable' '[0-9]+' '(year|month|week|day)s?' 'ago$ ]]; then[0m
+2026-05-11T22:16:28.4136421Z [36;1m  if [[ Linux == macOS ]]; then[0m
+2026-05-11T22:16:28.4136986Z [36;1m    echo "toolchain=1.$((($(date -v-$(sed 's/stable \([0-9]*\) \(.\).*/\1\2/' <<< $toolchain) +%s)/60/60/24-16569)/7/6))" >> $GITHUB_OUTPUT[0m
+2026-05-11T22:16:28.4137490Z [36;1m  else[0m
+2026-05-11T22:16:28.4137886Z [36;1m    echo "toolchain=1.$((($(date --date "${toolchain#stable }" +%s)/60/60/24-16569)/7/6))" >> $GITHUB_OUTPUT[0m
+2026-05-11T22:16:28.4138724Z [36;1m  fi[0m
+2026-05-11T22:16:28.4139009Z [36;1melif [[ $toolchain =~ ^stable' 'minus' '[0-9]+' 'releases?$ ]]; then[0m
+2026-05-11T22:16:28.4139534Z [36;1m  echo "toolchain=1.$((($(date +%s)/60/60/24-16569)/7/6-${toolchain//[^0-9]/}))" >> $GITHUB_OUTPUT[0m
+2026-05-11T22:16:28.4139983Z [36;1melif [[ $toolchain =~ ^1\.[0-9]+$ ]]; then[0m
+2026-05-11T22:16:28.4140498Z [36;1m  echo "toolchain=1.$((i=${toolchain#1.}, c=($(date +%s)/60/60/24-16569)/7/6, i+9*i*(10*i<=c)+90*i*(100*i<=c)))" >> $GITHUB_OUTPUT[0m
+2026-05-11T22:16:28.4141191Z [36;1melse[0m
+2026-05-11T22:16:28.4141415Z [36;1m  echo "toolchain=$toolchain" >> $GITHUB_OUTPUT[0m
+2026-05-11T22:16:28.4141701Z [36;1mfi[0m
+2026-05-11T22:16:28.4171811Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-05-11T22:16:28.4172151Z env:
+2026-05-11T22:16:28.4172388Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+2026-05-11T22:16:28.4172706Z   toolchain: stable
+2026-05-11T22:16:28.4172910Z ##[endgroup]
+2026-05-11T22:16:28.4286706Z ##[group]Run : construct rustup command line
+2026-05-11T22:16:28.4287017Z [36;1m: construct rustup command line[0m
+2026-05-11T22:16:28.4287458Z [36;1mecho "targets=$(for t in ${targets//,/ }; do echo -n ' --target' $t; done)" >> $GITHUB_OUTPUT[0m
+2026-05-11T22:16:28.4288381Z [36;1mecho "components=$(for c in ${components//,/ }; do echo -n ' --component' $c; done)" >> $GITHUB_OUTPUT[0m
+2026-05-11T22:16:28.4288875Z [36;1mecho "downgrade=" >> $GITHUB_OUTPUT[0m
+2026-05-11T22:16:28.4308688Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-05-11T22:16:28.4309025Z env:
+2026-05-11T22:16:28.4309278Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+2026-05-11T22:16:28.4309593Z   targets: 
+2026-05-11T22:16:28.4309785Z   components: 
+2026-05-11T22:16:28.4309979Z ##[endgroup]
+2026-05-11T22:16:28.4382352Z ##[group]Run : set $CARGO_HOME
+2026-05-11T22:16:28.4382611Z [36;1m: set $CARGO_HOME[0m
+2026-05-11T22:16:28.4382930Z [36;1mecho CARGO_HOME=${CARGO_HOME:-"$HOME/.cargo"} >> $GITHUB_ENV[0m
+2026-05-11T22:16:28.4402132Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-05-11T22:16:28.4402462Z env:
+2026-05-11T22:16:28.4402699Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+2026-05-11T22:16:28.4403004Z ##[endgroup]
+2026-05-11T22:16:28.4469650Z ##[group]Run : install rustup if needed
+2026-05-11T22:16:28.4469937Z [36;1m: install rustup if needed[0m
+2026-05-11T22:16:28.4470222Z [36;1mif ! command -v rustup &>/dev/null; then[0m
+2026-05-11T22:16:28.4471165Z [36;1m  curl --proto '=https' --tlsv1.2 --retry 10 --retry-connrefused --location --silent --show-error --fail https://sh.rustup.rs | sh -s -- --default-toolchain none -y[0m
+2026-05-11T22:16:28.4471928Z [36;1m  echo "$CARGO_HOME/bin" >> $GITHUB_PATH[0m
+2026-05-11T22:16:28.4472194Z [36;1mfi[0m
+2026-05-11T22:16:28.4491610Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-05-11T22:16:28.4491943Z env:
+2026-05-11T22:16:28.4492180Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+2026-05-11T22:16:28.4492502Z   CARGO_HOME: /home/runner/.cargo
+2026-05-11T22:16:28.4492750Z ##[endgroup]
+2026-05-11T22:16:28.4563858Z ##[group]Run rustup toolchain install stable --profile minimal --no-self-update
+2026-05-11T22:16:28.4564444Z [36;1mrustup toolchain install stable --profile minimal --no-self-update[0m
+2026-05-11T22:16:28.4584058Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-05-11T22:16:28.4584389Z env:
+2026-05-11T22:16:28.4584618Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+2026-05-11T22:16:28.4584986Z   CARGO_HOME: /home/runner/.cargo
+2026-05-11T22:16:28.4585293Z   RUSTUP_PERMIT_COPY_RENAME: 1
+2026-05-11T22:16:28.4585539Z ##[endgroup]
+2026-05-11T22:16:30.4104746Z info: syncing channel updates for stable-x86_64-unknown-linux-gnu
+2026-05-11T22:16:30.5035224Z info: latest update on 2026-04-16 for version 1.95.0 (59807616e 2026-04-14)
+2026-05-11T22:16:30.5204040Z info: removing previous version of component clippy
+2026-05-11T22:16:30.5362940Z info: removing previous version of component rustfmt
+2026-05-11T22:16:30.5372633Z info: removing previous version of component cargo
+2026-05-11T22:16:30.5464606Z info: removing previous version of component rust-std
+2026-05-11T22:16:30.5559229Z info: removing previous version of component rustc
+2026-05-11T22:16:30.5605958Z info: downloading 5 components
+2026-05-11T22:16:38.9559596Z 
+2026-05-11T22:16:38.9637585Z   stable-x86_64-unknown-linux-gnu updated - rustc 1.95.0 (59807616e 2026-04-14) (from rustc 1.94.1 (e408947bf 2026-03-25))
+2026-05-11T22:16:38.9639247Z 
+2026-05-11T22:16:38.9736372Z ##[group]Run rustup default stable
+2026-05-11T22:16:38.9736781Z [36;1mrustup default stable[0m
+2026-05-11T22:16:38.9758576Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-05-11T22:16:38.9759009Z env:
+2026-05-11T22:16:38.9759305Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+2026-05-11T22:16:38.9759717Z   CARGO_HOME: /home/runner/.cargo
+2026-05-11T22:16:38.9760022Z ##[endgroup]
+2026-05-11T22:16:38.9863269Z info: using existing install for stable-x86_64-unknown-linux-gnu
+2026-05-11T22:16:38.9872007Z info: default toolchain set to stable-x86_64-unknown-linux-gnu
+2026-05-11T22:16:38.9872574Z 
+2026-05-11T22:16:38.9947530Z   stable-x86_64-unknown-linux-gnu unchanged - rustc 1.95.0 (59807616e 2026-04-14)
+2026-05-11T22:16:38.9948368Z 
+2026-05-11T22:16:38.9949652Z info: note that the toolchain 'stable-x86_64-unknown-linux-gnu' is currently in use (overridden by '/home/runner/work/role-model/role-model/rust-toolchain.toml')
+2026-05-11T22:16:39.0011181Z ##[group]Run : create cachekey
+2026-05-11T22:16:39.0011496Z [36;1m: create cachekey[0m
+2026-05-11T22:16:39.0012068Z [36;1mDATE=$(rustc +stable --version --verbose | sed -ne 's/^commit-date: \(20[0-9][0-9]\)-\([01][0-9]\)-\([0-3][0-9]\)$/\1\2\3/p')[0m
+2026-05-11T22:16:39.0012818Z [36;1mHASH=$(rustc +stable --version --verbose | sed -ne 's/^commit-hash: //p')[0m
+2026-05-11T22:16:39.0013402Z [36;1mecho "cachekey=$(echo $DATE$HASH | head -c12)" >> $GITHUB_OUTPUT[0m
+2026-05-11T22:16:39.0034902Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-05-11T22:16:39.0035260Z env:
+2026-05-11T22:16:39.0035515Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+2026-05-11T22:16:39.0035859Z   CARGO_HOME: /home/runner/.cargo
+2026-05-11T22:16:39.0036126Z ##[endgroup]
+2026-05-11T22:16:39.0407096Z ##[group]Run : disable incremental compilation
+2026-05-11T22:16:39.0407540Z [36;1m: disable incremental compilation[0m
+2026-05-11T22:16:39.0408259Z [36;1mif [ -z "${CARGO_INCREMENTAL+set}" ]; then[0m
+2026-05-11T22:16:39.0408732Z [36;1m  echo CARGO_INCREMENTAL=0 >> $GITHUB_ENV[0m
+2026-05-11T22:16:39.0409102Z [36;1mfi[0m
+2026-05-11T22:16:39.0430226Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-05-11T22:16:39.0430618Z env:
+2026-05-11T22:16:39.0430891Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+2026-05-11T22:16:39.0431264Z   CARGO_HOME: /home/runner/.cargo
+2026-05-11T22:16:39.0431541Z ##[endgroup]
+2026-05-11T22:16:39.0496024Z ##[group]Run : enable colors in Cargo output
+2026-05-11T22:16:39.0496375Z [36;1m: enable colors in Cargo output[0m
+2026-05-11T22:16:39.0496711Z [36;1mif [ -z "${CARGO_TERM_COLOR+set}" ]; then[0m
+2026-05-11T22:16:39.0497075Z [36;1m  echo CARGO_TERM_COLOR=always >> $GITHUB_ENV[0m
+2026-05-11T22:16:39.0497398Z [36;1mfi[0m
+2026-05-11T22:16:39.0516392Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-05-11T22:16:39.0516740Z env:
+2026-05-11T22:16:39.0516994Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+2026-05-11T22:16:39.0517344Z   CARGO_HOME: /home/runner/.cargo
+2026-05-11T22:16:39.0517611Z   CARGO_INCREMENTAL: 0
+2026-05-11T22:16:39.0517828Z ##[endgroup]
+2026-05-11T22:16:39.0580433Z ##[group]Run : enable Cargo sparse registry
+2026-05-11T22:16:39.0580770Z [36;1m: enable Cargo sparse registry[0m
+2026-05-11T22:16:39.0581142Z [36;1m# implemented in 1.66, stabilized in 1.68, made default in 1.70[0m
+2026-05-11T22:16:39.0581890Z [36;1mif [ -z "${CARGO_REGISTRIES_CRATES_IO_PROTOCOL+set}" -o -f "/home/runner/work/_temp"/.implicit_cargo_registries_crates_io_protocol ]; then[0m
+2026-05-11T22:16:39.0582682Z [36;1m  if rustc +stable --version --verbose | grep -q '^release: 1\.6[89]\.'; then[0m
+2026-05-11T22:16:39.0583290Z [36;1m    touch "/home/runner/work/_temp"/.implicit_cargo_registries_crates_io_protocol || true[0m
+2026-05-11T22:16:39.0583851Z [36;1m    echo CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse >> $GITHUB_ENV[0m
+2026-05-11T22:16:39.0584373Z [36;1m  elif rustc +stable --version --verbose | grep -q '^release: 1\.6[67]\.'; then[0m
+2026-05-11T22:16:39.0585145Z [36;1m    touch "/home/runner/work/_temp"/.implicit_cargo_registries_crates_io_protocol || true[0m
+2026-05-11T22:16:39.0585708Z [36;1m    echo CARGO_REGISTRIES_CRATES_IO_PROTOCOL=git >> $GITHUB_ENV[0m
+2026-05-11T22:16:39.0586060Z [36;1m  fi[0m
+2026-05-11T22:16:39.0586232Z [36;1mfi[0m
+2026-05-11T22:16:39.0605197Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-05-11T22:16:39.0605532Z env:
+2026-05-11T22:16:39.0605766Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+2026-05-11T22:16:39.0606086Z   CARGO_HOME: /home/runner/.cargo
+2026-05-11T22:16:39.0606328Z   CARGO_INCREMENTAL: 0
+2026-05-11T22:16:39.0606537Z   CARGO_TERM_COLOR: always
+2026-05-11T22:16:39.0606746Z ##[endgroup]
+2026-05-11T22:16:39.0940982Z ##[group]Run : work around spurious network errors in curl 8.0
+2026-05-11T22:16:39.0941511Z [36;1m: work around spurious network errors in curl 8.0[0m
+2026-05-11T22:16:39.0942181Z [36;1m# https://rust-lang.zulipchat.com/#narrow/stream/246057-t-cargo/topic/timeout.20investigation[0m
+2026-05-11T22:16:39.0942960Z [36;1mif rustc +stable --version --verbose | grep -q '^release: 1\.7[01]\.'; then[0m
+2026-05-11T22:16:39.0943514Z [36;1m  echo CARGO_HTTP_MULTIPLEXING=false >> $GITHUB_ENV[0m
+2026-05-11T22:16:39.0943880Z [36;1mfi[0m
+2026-05-11T22:16:39.0964993Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-05-11T22:16:39.0965349Z env:
+2026-05-11T22:16:39.0965601Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+2026-05-11T22:16:39.0965948Z   CARGO_HOME: /home/runner/.cargo
+2026-05-11T22:16:39.0966213Z   CARGO_INCREMENTAL: 0
+2026-05-11T22:16:39.0966434Z   CARGO_TERM_COLOR: always
+2026-05-11T22:16:39.0966667Z ##[endgroup]
+2026-05-11T22:16:39.1171486Z ##[group]Run rustc +stable --version --verbose
+2026-05-11T22:16:39.1171919Z [36;1mrustc +stable --version --verbose[0m
+2026-05-11T22:16:39.1193395Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-05-11T22:16:39.1193824Z env:
+2026-05-11T22:16:39.1194127Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+2026-05-11T22:16:39.1194585Z   CARGO_HOME: /home/runner/.cargo
+2026-05-11T22:16:39.1195076Z   CARGO_INCREMENTAL: 0
+2026-05-11T22:16:39.1195349Z   CARGO_TERM_COLOR: always
+2026-05-11T22:16:39.1195627Z ##[endgroup]
+2026-05-11T22:16:39.1365191Z rustc 1.95.0 (59807616e 2026-04-14)
+2026-05-11T22:16:39.1366035Z binary: rustc
+2026-05-11T22:16:39.1366736Z commit-hash: 59807616e1fa2540724bfbac14d7976d7e4a3860
+2026-05-11T22:16:39.1367297Z commit-date: 2026-04-14
+2026-05-11T22:16:39.1368165Z host: x86_64-unknown-linux-gnu
+2026-05-11T22:16:39.1368918Z release: 1.95.0
+2026-05-11T22:16:39.1369575Z LLVM version: 22.1.2
+2026-05-11T22:16:39.1440800Z ##[group]Run pnpm install --frozen-lockfile=false
+2026-05-11T22:16:39.1441234Z [36;1mpnpm install --frozen-lockfile=false[0m
+2026-05-11T22:16:39.1463375Z shell: /usr/bin/bash -e {0}
+2026-05-11T22:16:39.1463650Z env:
+2026-05-11T22:16:39.1463937Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+2026-05-11T22:16:39.1464336Z   CARGO_HOME: /home/runner/.cargo
+2026-05-11T22:16:39.1464628Z   CARGO_INCREMENTAL: 0
+2026-05-11T22:16:39.1464873Z   CARGO_TERM_COLOR: always
+2026-05-11T22:16:39.1465128Z ##[endgroup]
+2026-05-11T22:16:39.4514017Z  WARN  Unsupported engine: wanted: {"node":">=24 <25"} (current: {"node":"v22.22.2","pnpm":"10.6.5"})
+2026-05-11T22:16:39.4768256Z Scope: all 42 workspace projects
+2026-05-11T22:16:39.4896231Z  WARN  There are cyclic workspace dependencies: /home/runner/work/role-model/role-model/role-model-router/packages/adapter-execution, /home/runner/work/role-model/role-model/role-model-router/packages/provider-anthropic
+2026-05-11T22:16:39.5678403Z Lockfile is up to date, resolution step is skipped
+2026-05-11T22:16:39.6469521Z Progress: resolved 1, reused 0, downloaded 0, added 0
+2026-05-11T22:16:39.7419227Z Packages: +525
+2026-05-11T22:16:39.7429128Z ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2026-05-11T22:16:40.6469359Z Progress: resolved 525, reused 0, downloaded 35, added 9
+2026-05-11T22:16:41.6603735Z Progress: resolved 525, reused 0, downloaded 243, added 137
+2026-05-11T22:16:42.6729597Z Progress: resolved 525, reused 0, downloaded 379, added 211
+2026-05-11T22:16:43.6742762Z Progress: resolved 525, reused 0, downloaded 517, added 355
+2026-05-11T22:16:44.0719923Z Progress: resolved 525, reused 0, downloaded 519, added 525, done
+2026-05-11T22:16:44.5288792Z 
+2026-05-11T22:16:44.5289388Z devDependencies:
+2026-05-11T22:16:44.5290030Z + @biomejs/biome 1.9.4
+2026-05-11T22:16:44.5290594Z + @types/node 22.19.17
+2026-05-11T22:16:44.5291070Z + ajv 8.18.0
+2026-05-11T22:16:44.5291576Z + ajv-formats 3.0.1
+2026-05-11T22:16:44.5292297Z + commander 13.1.0
+2026-05-11T22:16:44.5292777Z + esbuild 0.25.12
+2026-05-11T22:16:44.5299929Z + json-schema-to-typescript 15.0.4
+2026-05-11T22:16:44.5306449Z + postject 1.0.0-alpha.6
+2026-05-11T22:16:44.5307011Z + tsx 4.21.0
+2026-05-11T22:16:44.5307595Z + typescript 5.9.3
+2026-05-11T22:16:44.5308407Z + vitest 3.2.4
+2026-05-11T22:16:44.5308797Z 
+2026-05-11T22:16:44.5313452Z ╭ Warning ─────────────────────────────────────────────────────────────────────╮│                                                                              ││   Ignored build scripts: @biomejs/biome, esbuild, sharp, workerd.            ││   Run "pnpm approve-builds" to pick which dependencies should be allowed     ││   to run scripts.                                                            ││                                                                              │╰──────────────────────────────────────────────────────────────────────────────╯
+2026-05-11T22:16:44.5315934Z 
+2026-05-11T22:16:44.5844543Z Done in 5.4s using pnpm v10.6.5
+2026-05-11T22:16:44.6275219Z ##[group]Run pnpm run ci:check
+2026-05-11T22:16:44.6275669Z [36;1mpnpm run ci:check[0m
+2026-05-11T22:16:44.6304654Z shell: /usr/bin/bash -e {0}
+2026-05-11T22:16:44.6305072Z env:
+2026-05-11T22:16:44.6305440Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+2026-05-11T22:16:44.6305964Z   CARGO_HOME: /home/runner/.cargo
+2026-05-11T22:16:44.6306410Z   CARGO_INCREMENTAL: 0
+2026-05-11T22:16:44.6306766Z   CARGO_TERM_COLOR: always
+2026-05-11T22:16:44.6307119Z ##[endgroup]
+2026-05-11T22:16:44.9223300Z  WARN  Unsupported engine: wanted: {"node":">=24 <25"} (current: {"node":"v22.22.2","pnpm":"10.6.5"})
+2026-05-11T22:16:44.9250394Z 
+2026-05-11T22:16:44.9251011Z > role-model@0.0.0 ci:check /home/runner/work/role-model/role-model
+2026-05-11T22:16:44.9252936Z > corepack pnpm run lint && corepack pnpm run schemas:validate && corepack pnpm run build && corepack pnpm run test && corepack pnpm run test:rust && corepack pnpm run smoke
+2026-05-11T22:16:44.9254154Z 
+2026-05-11T22:16:46.4378303Z  WARN  Unsupported engine: wanted: {"node":">=24 <25"} (current: {"node":"v22.22.2","pnpm":"10.6.5"})
+2026-05-11T22:16:46.4402124Z 
+2026-05-11T22:16:46.4402929Z > role-model@0.0.0 lint /home/runner/work/role-model/role-model
+2026-05-11T22:16:46.4403873Z > biome check . && corepack pnpm run lint:rust
+2026-05-11T22:16:46.4404308Z 
+2026-05-11T22:16:47.0879975Z ./role-model-router/apps/runtime-host-bridge/src/validate-ui.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-05-11T22:16:47.0880734Z 
+2026-05-11T22:16:47.0892321Z   × Formatter would have printed the following content:
+2026-05-11T22:16:47.0892893Z   
+2026-05-11T22:16:47.0908660Z       7   7 │   import { runRuntimeAdapterValidation } from "@role-model-router/adapter-execution/cli";
+2026-05-11T22:16:47.0910139Z       8   8 │   import { createRuntimeObservationBundle } from "@role-model-router/runtime-observability";
+2026-05-11T22:16:47.0912170Z       9     │ - import·{·persistRuntimeObservationBundle,·resolveSqliteMemoryLocation·}·from·"@role-model-router/sqlite-memory";
+2026-05-11T22:16:47.0913299Z           9 │ + import·{
+2026-05-11T22:16:47.0913879Z          10 │ + ··persistRuntimeObservationBundle,
+2026-05-11T22:16:47.0914549Z          11 │ + ··resolveSqliteMemoryLocation,
+2026-05-11T22:16:47.0915251Z          12 │ + }·from·"@role-model-router/sqlite-memory";
+2026-05-11T22:16:47.0915790Z      10  13 │   
+2026-05-11T22:16:47.0917152Z      11  14 │   import { createRuntimeBridgeBackend, startBridgeServer } from "./index.js";
+2026-05-11T22:16:47.0917900Z     ······· │ 
+2026-05-11T22:16:47.0918492Z     101 104 │       });
+2026-05-11T22:16:47.0918860Z     102 105 │   
+2026-05-11T22:16:47.0920154Z     103     │ - ····if·(!summaryResponse.ok·||·!providersResponse.ok·||·!accountsResponse.ok·||·!rolesResponse.ok·||·!endpointsResponse.ok)·{
+2026-05-11T22:16:47.0921239Z         106 │ + ····if·(
+2026-05-11T22:16:47.0921760Z         107 │ + ······!summaryResponse.ok·||
+2026-05-11T22:16:47.0922468Z         108 │ + ······!providersResponse.ok·||
+2026-05-11T22:16:47.0923134Z         109 │ + ······!accountsResponse.ok·||
+2026-05-11T22:16:47.0923716Z         110 │ + ······!rolesResponse.ok·||
+2026-05-11T22:16:47.0924290Z         111 │ + ······!endpointsResponse.ok
+2026-05-11T22:16:47.0924765Z         112 │ + ····)·{
+2026-05-11T22:16:47.0925643Z     104 113 │         throw new Error("Runtime UI validation could not read the control-plane routes.");
+2026-05-11T22:16:47.0926425Z     105 114 │       }
+2026-05-11T22:16:47.0926792Z     ······· │ 
+2026-05-11T22:16:47.0927132Z     173 182 │         });
+2026-05-11T22:16:47.0927722Z     174 183 │         if (!runtimeConfigUpdateResponse.ok) {
+2026-05-11T22:16:47.0929394Z     175     │ - ········throw·new·Error(`Runtime·UI·validation·runtime-config·update·failed·with·${runtimeConfigUpdateResponse.status}.`);
+2026-05-11T22:16:47.0930553Z         184 │ + ········throw·new·Error(
+2026-05-11T22:16:47.0931767Z         185 │ + ··········`Runtime·UI·validation·runtime-config·update·failed·with·${runtimeConfigUpdateResponse.status}.`,
+2026-05-11T22:16:47.0933107Z         186 │ + ········);
+2026-05-11T22:16:47.0933522Z     176 187 │         }
+2026-05-11T22:16:47.0933892Z     177 188 │   
+2026-05-11T22:16:47.0934227Z     ······· │ 
+2026-05-11T22:16:47.0934573Z     183 194 │         };
+2026-05-11T22:16:47.0935518Z     184 195 │         runtimeConfigUpdatedVersion = updatedRuntimeConfigRecord.config?.version ?? null;
+2026-05-11T22:16:47.0937118Z     185     │ - ······runtimeConfigUpdatedRoutingStrategy·=·updatedRuntimeConfigRecord.config?.routingStrategy·??·null;
+2026-05-11T22:16:47.0938544Z         196 │ + ······runtimeConfigUpdatedRoutingStrategy·=
+2026-05-11T22:16:47.0939506Z         197 │ + ········updatedRuntimeConfigRecord.config?.routingStrategy·??·null;
+2026-05-11T22:16:47.0940182Z     186 198 │       }
+2026-05-11T22:16:47.0940539Z     187 199 │   
+2026-05-11T22:16:47.0940878Z     ······· │ 
+2026-05-11T22:16:47.0941214Z     257 269 │       });
+2026-05-11T22:16:47.0941761Z     258 270 │       if (!activateEndpointResponse.ok) {
+2026-05-11T22:16:47.0943127Z     259     │ - ······throw·new·Error(`Runtime·UI·validation·endpoint·activation·failed·with·${activateEndpointResponse.status}.`);
+2026-05-11T22:16:47.0944231Z         271 │ + ······throw·new·Error(
+2026-05-11T22:16:47.0945361Z         272 │ + ········`Runtime·UI·validation·endpoint·activation·failed·with·${activateEndpointResponse.status}.`,
+2026-05-11T22:16:47.0946301Z         273 │ + ······);
+2026-05-11T22:16:47.0946674Z     260 274 │       }
+2026-05-11T22:16:47.0947024Z     261 275 │   
+2026-05-11T22:16:47.0947355Z     ······· │ 
+2026-05-11T22:16:47.0948444Z     284 298 │       const fixtureRoot = path.join(options.repoRoot, "testdata", "router-runtime", "fixtures");
+2026-05-11T22:16:47.0949445Z     285 299 │       const history = await readJson<{
+2026-05-11T22:16:47.0950673Z     286     │ - ······byEndpointId:·Record<string,·Parameters<typeof·createRuntimeObservationBundle>[0]["priorSamples"]>;
+2026-05-11T22:16:47.0951720Z         300 │ + ······byEndpointId:·Record<
+2026-05-11T22:16:47.0952272Z         301 │ + ········string,
+2026-05-11T22:16:47.0953202Z         302 │ + ········Parameters<typeof·createRuntimeObservationBundle>[0]["priorSamples"]
+2026-05-11T22:16:47.0953963Z         303 │ + ······>;
+2026-05-11T22:16:47.0954945Z     287 304 │       }>(path.join(options.repoRoot, "testdata", "router-runtime", "observability-history.json"));
+2026-05-11T22:16:47.0956695Z     288     │ - ····const·policy·=·await·readJson<Parameters<typeof·createRuntimeObservationBundle>[0]["capturePolicy"]>(
+2026-05-11T22:16:47.0958426Z     289     │ - ······path.join(options.repoRoot,·"testdata",·"router-runtime",·"observability-policy.json"),
+2026-05-11T22:16:47.0959291Z     290     │ - ····);
+2026-05-11T22:16:47.0959822Z         305 │ + ····const·policy·=·await·readJson<
+2026-05-11T22:16:47.0960760Z         306 │ + ······Parameters<typeof·createRuntimeObservationBundle>[0]["capturePolicy"]
+2026-05-11T22:16:47.0962089Z         307 │ + ····>(path.join(options.repoRoot,·"testdata",·"router-runtime",·"observability-policy.json"));
+2026-05-11T22:16:47.0963212Z     291 308 │       const validation = await runRuntimeAdapterValidation({
+2026-05-11T22:16:47.0963966Z     292 309 │         repoRoot: options.repoRoot,
+2026-05-11T22:16:47.0964459Z     ······· │ 
+2026-05-11T22:16:47.0964800Z     340 357 │       });
+2026-05-11T22:16:47.0965154Z     341 358 │   
+2026-05-11T22:16:47.0966248Z     342     │ - ····const·telemetryRequestsResponse·=·await·fetch(`${baseUrl}/api/role-model/telemetry/requests?limit=10`,·{
+2026-05-11T22:16:47.0967310Z     343     │ - ······headers:·requestHeaders,
+2026-05-11T22:16:47.0967800Z     344     │ - ····});
+2026-05-11T22:16:47.0968650Z         359 │ + ····const·telemetryRequestsResponse·=·await·fetch(
+2026-05-11T22:16:47.0969539Z         360 │ + ······`${baseUrl}/api/role-model/telemetry/requests?limit=10`,
+2026-05-11T22:16:47.0970157Z         361 │ + ······{
+2026-05-11T22:16:47.0970665Z         362 │ + ········headers:·requestHeaders,
+2026-05-11T22:16:47.0971156Z         363 │ + ······},
+2026-05-11T22:16:47.0971750Z         364 │ + ····);
+2026-05-11T22:16:47.0972302Z     345 365 │       if (!telemetryRequestsResponse.ok) {
+2026-05-11T22:16:47.0973276Z     346 366 │         throw new Error("Runtime UI validation could not read telemetry requests.");
+2026-05-11T22:16:47.0974002Z     ······· │ 
+2026-05-11T22:16:47.0974852Z     353 373 │         telemetryRequests.find((request) => request.requestId === routedRequestId) ?? null;
+2026-05-11T22:16:47.0975650Z     354 374 │   
+2026-05-11T22:16:47.0976715Z     355     │ - ····const·routedRequestDetailResponse·=·await·fetch(`${baseUrl}/api/role-model/requests/${routedRequestId}`,·{
+2026-05-11T22:16:47.0977803Z     356     │ - ······headers:·requestHeaders,
+2026-05-11T22:16:47.0978513Z     357     │ - ····});
+2026-05-11T22:16:47.0979177Z         375 │ + ····const·routedRequestDetailResponse·=·await·fetch(
+2026-05-11T22:16:47.0980087Z         376 │ + ······`${baseUrl}/api/role-model/requests/${routedRequestId}`,
+2026-05-11T22:16:47.0980720Z         377 │ + ······{
+2026-05-11T22:16:47.0981245Z         378 │ + ········headers:·requestHeaders,
+2026-05-11T22:16:47.0981747Z         379 │ + ······},
+2026-05-11T22:16:47.0982129Z         380 │ + ····);
+2026-05-11T22:16:47.0982717Z     358 381 │       if (!routedRequestDetailResponse.ok) {
+2026-05-11T22:16:47.0983774Z     359 382 │         throw new Error("Runtime UI validation could not read the routed request detail.");
+2026-05-11T22:16:47.0984791Z     ······· │ 
+2026-05-11T22:16:47.0985313Z     389 412 │             account.modelRoleBindings?.some(
+2026-05-11T22:16:47.0985926Z     390 413 │               (binding) =>
+2026-05-11T22:16:47.0986675Z     391     │ - ··············binding.modelId·===·"moonshot/kimi-k2.5"·&&
+2026-05-11T22:16:47.0987542Z     392     │ - ··············binding.roleIds.includes("general.chat"),
+2026-05-11T22:16:47.0988985Z         414 │ + ··············binding.modelId·===·"moonshot/kimi-k2.5"·&&·binding.roleIds.includes("general.chat"),
+2026-05-11T22:16:47.0989868Z     393 415 │             ),
+2026-05-11T22:16:47.0990287Z     394 416 │         ),
+2026-05-11T22:16:47.0990642Z     ······· │ 
+2026-05-11T22:16:47.0991404Z     400 422 │         telemetryListIncludesRoutedRequest: routedTelemetryRequest !== null,
+2026-05-11T22:16:47.0992667Z     401 423 │         routedRequestRoutingDecisionId: routedTelemetryRequest?.routingDecisionId ?? null,
+2026-05-11T22:16:47.0994267Z     402     │ - ······routedRequestEffectiveMode:·routedRequestDetail.routingDiagnostics?.routingMode?.effectiveMode·??·null,
+2026-05-11T22:16:47.0995401Z         424 │ + ······routedRequestEffectiveMode:
+2026-05-11T22:16:47.0996412Z         425 │ + ········routedRequestDetail.routingDiagnostics?.routingMode?.effectiveMode·??·null,
+2026-05-11T22:16:47.0997838Z     403 426 │         routedRequestRewriteReason: routedRequestDetail.routingDiagnostics?.rewrite?.reason ?? null,
+2026-05-11T22:16:47.0998930Z     404 427 │       };
+2026-05-11T22:16:47.0999281Z     ······· │ 
+2026-05-11T22:16:47.1000122Z     418 441 │       unifiedRuntimeConfigPath = path.join(runtimeStateRoot, "runtime-config.yaml");
+2026-05-11T22:16:47.1001162Z     419 442 │       await fs.mkdir(runtimeStateRoot, { recursive: true });
+2026-05-11T22:16:47.1001851Z     420     │ - ······await·fs.writeFile(
+2026-05-11T22:16:47.1002447Z     421     │ - ········unifiedRuntimeConfigPath,
+2026-05-11T22:16:47.1002952Z     422     │ - ········[
+2026-05-11T22:16:47.1003441Z     423     │ - ··········"version:·1.0",
+2026-05-11T22:16:47.1003936Z     424     │ - ··········"routing:",
+2026-05-11T22:16:47.1004478Z     425     │ - ··········"··strategy:·balanced",
+2026-05-11T22:16:47.1005040Z     426     │ - ··········"llama_swap:",
+2026-05-11T22:16:47.1005568Z     427     │ - ··········"··models:·{}",
+2026-05-11T22:16:47.1006102Z     428     │ - ··········"litellm_proxy:",
+2026-05-11T22:16:47.1006684Z     429     │ - ··········"··providers:·{}",
+2026-05-11T22:16:47.1007175Z     430     │ - ··········"",
+2026-05-11T22:16:47.1007645Z     431     │ - ········].join("\n"),
+2026-05-11T22:16:47.1008566Z     432     │ - ········"utf8",
+2026-05-11T22:16:47.1009088Z         443 │ + ····await·fs.writeFile(
+2026-05-11T22:16:47.1009967Z         444 │ + ······unifiedRuntimeConfigPath,
+2026-05-11T22:16:47.1010621Z         445 │ + ······[
+2026-05-11T22:16:47.1011171Z         446 │ + ········"version:·1.0",
+2026-05-11T22:16:47.1012020Z         447 │ + ········"routing:",
+2026-05-11T22:16:47.1012726Z         448 │ + ········"··strategy:·balanced",
+2026-05-11T22:16:47.1013389Z         449 │ + ········"llama_swap:",
+2026-05-11T22:16:47.1014150Z         450 │ + ········"··models:·{}",
+2026-05-11T22:16:47.1014779Z         451 │ + ········"litellm_proxy:",
+2026-05-11T22:16:47.1015463Z         452 │ + ········"··providers:·{}",
+2026-05-11T22:16:47.1016164Z         453 │ + ········"",
+2026-05-11T22:16:47.1016751Z         454 │ + ······].join("\n"),
+2026-05-11T22:16:47.1017310Z         455 │ + ······"utf8",
+2026-05-11T22:16:47.1018155Z     433 456 │       );
+2026-05-11T22:16:47.1018705Z     434 457 │     } catch {
+2026-05-11T22:16:47.1019174Z   
+2026-05-11T22:16:47.1019439Z 
+2026-05-11T22:16:47.1020373Z ./role-model-router/apps/runtime-host-bridge/src/validate-vendors.ts organizeImports ━━━━━━━━━━━━━━━
+2026-05-11T22:16:47.1021195Z 
+2026-05-11T22:16:47.1024912Z   × Import statements could be sorted:
+2026-05-11T22:16:47.1025430Z   
+2026-05-11T22:16:47.1060937Z        1      │ - import·path·from·"node:path";
+2026-05-11T22:16:47.1130857Z        2      │ - import·os·from·"node:os";
+2026-05-11T22:16:47.1132134Z        3      │ - import·{·spawn,·spawnSync,·type·ChildProcess·}·from·"node:child_process";
+2026-05-11T22:16:47.1133282Z        4      │ - import·{·mkdtemp,·mkdir,·rm,·writeFile·}·from·"node:fs/promises";
+2026-05-11T22:16:47.1134370Z             1 │ + import·{·type·ChildProcess,·spawn,·spawnSync·}·from·"node:child_process";
+2026-05-11T22:16:47.1135417Z             2 │ + import·{·mkdir,·mkdtemp,·rm,·writeFile·}·from·"node:fs/promises";
+2026-05-11T22:16:47.1136226Z        5    3 │   import { createServer } from "node:net";
+2026-05-11T22:16:47.1137085Z        6      │ - import·{·setTimeout·as·delay·}·from·"node:timers/promises";
+2026-05-11T22:16:47.1137810Z             4 │ + import·os·from·"node:os";
+2026-05-11T22:16:47.1138638Z             5 │ + import·path·from·"node:path";
+2026-05-11T22:16:47.1139419Z             6 │ + import·{·setTimeout·as·delay·}·from·"node:timers/promises";
+2026-05-11T22:16:47.1140229Z        7    7 │   import { fileURLToPath } from "node:url";
+2026-05-11T22:16:47.1140723Z        8    8 │   
+2026-05-11T22:16:47.1141069Z     ········· │ 
+2026-05-11T22:16:47.1141395Z       10   10 │   
+2026-05-11T22:16:47.1141732Z       11   11 │   import {
+2026-05-11T22:16:47.1142235Z       12      │ - ··createRuntimeBridgeBackend,
+2026-05-11T22:16:47.1142792Z       13      │ - ··startBridgeServer,
+2026-05-11T22:16:47.1143342Z       14      │ - ··type·RuntimeBridgeBackend,
+2026-05-11T22:16:47.1143919Z            12 │ + ··type·RuntimeBridgeBackend,
+2026-05-11T22:16:47.1144485Z            13 │ + ··createRuntimeBridgeBackend,
+2026-05-11T22:16:47.1145372Z            14 │ + ··startBridgeServer,
+2026-05-11T22:16:47.1145882Z       15   15 │   } from "./index.js";
+2026-05-11T22:16:47.1146282Z       16   16 │   
+2026-05-11T22:16:47.1146549Z   
+2026-05-11T22:16:47.1146687Z 
+2026-05-11T22:16:47.1147539Z ./role-model-router/apps/runtime-host-bridge/test/executable.test.ts organizeImports ━━━━━━━━━━━━━━━
+2026-05-11T22:16:47.1148418Z 
+2026-05-11T22:16:47.1148683Z   × Import statements could be sorted:
+2026-05-11T22:16:47.1149061Z   
+2026-05-11T22:16:47.1149484Z       1     │ - import·path·from·"node:path";
+2026-05-11T22:16:47.1150226Z       2     │ - import·{·access,·readFile·}·from·"node:fs/promises";
+2026-05-11T22:16:47.1150984Z       3     │ - import·{·fileURLToPath·}·from·"node:url";
+2026-05-11T22:16:47.1151735Z           1 │ + import·{·access,·readFile·}·from·"node:fs/promises";
+2026-05-11T22:16:47.1152401Z           2 │ + import·path·from·"node:path";
+2026-05-11T22:16:47.1153034Z           3 │ + import·{·fileURLToPath·}·from·"node:url";
+2026-05-11T22:16:47.1153611Z       4   4 │   
+2026-05-11T22:16:47.1154152Z       5   5 │   import { describe, expect, test } from "vitest";
+2026-05-11T22:16:47.1154603Z   
+2026-05-11T22:16:47.1154740Z 
+2026-05-11T22:16:47.1155563Z ./role-model-router/apps/runtime-host-bridge/src/validate-vendors.ts format ━━━━━━━━━━━━━━━━━━━━━━━━
+2026-05-11T22:16:47.1156208Z 
+2026-05-11T22:16:47.1180041Z   × Formatter would have printed the following content:
+2026-05-11T22:16:47.1180541Z   
+2026-05-11T22:16:47.1252689Z      161  161 │     readonly remoteModelId: string;
+2026-05-11T22:16:47.1253579Z      162  162 │     readonly decisionConfig: RuntimeValidationConfig;
+2026-05-11T22:16:47.1254944Z      163      │ - ··readonly·localConfig:·RuntimeValidationConfig·&·{·readonly·llama_swap:·LlamaSwapValidationConfig·};
+2026-05-11T22:16:47.1256663Z      164      │ - ··readonly·remoteConfig:·RuntimeValidationConfig·&·{·readonly·litellm_proxy:·LiteLLMValidationConfig·};
+2026-05-11T22:16:47.1258148Z           163 │ + ··readonly·localConfig:·RuntimeValidationConfig·&·{
+2026-05-11T22:16:47.1259062Z           164 │ + ····readonly·llama_swap:·LlamaSwapValidationConfig;
+2026-05-11T22:16:47.1259651Z           165 │ + ··};
+2026-05-11T22:16:47.1260316Z           166 │ + ··readonly·remoteConfig:·RuntimeValidationConfig·&·{
+2026-05-11T22:16:47.1261182Z           167 │ + ····readonly·litellm_proxy:·LiteLLMValidationConfig;
+2026-05-11T22:16:47.1262134Z           168 │ + ··};
+2026-05-11T22:16:47.1262779Z      165  169 │     readonly hybridConfig: RuntimeValidationConfig & {
+2026-05-11T22:16:47.1263623Z      166  170 │       readonly llama_swap: LlamaSwapValidationConfig;
+2026-05-11T22:16:47.1264223Z     ········· │ 
+2026-05-11T22:16:47.1264590Z      168  172 │     };
+2026-05-11T22:16:47.1265243Z      169  173 │     readonly vendorHarness: RuntimeVendorHarnessSummary;
+2026-05-11T22:16:47.1265996Z      170      │ - ··readonly·remoteUpstream:
+2026-05-11T22:16:47.1266507Z      171      │ - ····|·{
+2026-05-11T22:16:47.1267075Z      172      │ - ········readonly·port:·number;
+2026-05-11T22:16:47.1267751Z      173      │ - ········readonly·scriptPath:·string;
+2026-05-11T22:16:47.1268656Z      174      │ - ········readonly·apiBaseUrl:·string;
+2026-05-11T22:16:47.1269327Z      175      │ - ········readonly·healthUrl:·string;
+2026-05-11T22:16:47.1269855Z      176      │ - ······}
+2026-05-11T22:16:47.1270262Z      177      │ - ····|·null;
+2026-05-11T22:16:47.1270820Z           174 │ + ··readonly·remoteUpstream:·{
+2026-05-11T22:16:47.1271415Z           175 │ + ····readonly·port:·number;
+2026-05-11T22:16:47.1272015Z           176 │ + ····readonly·scriptPath:·string;
+2026-05-11T22:16:47.1272649Z           177 │ + ····readonly·apiBaseUrl:·string;
+2026-05-11T22:16:47.1273282Z           178 │ + ····readonly·healthUrl:·string;
+2026-05-11T22:16:47.1273793Z           179 │ + ··}·|·null;
+2026-05-11T22:16:47.1274190Z      178  180 │   };
+2026-05-11T22:16:47.1274548Z      179  181 │   
+2026-05-11T22:16:47.1274895Z     ········· │ 
+2026-05-11T22:16:47.1275757Z      330  332 │       const localConfig = createMockLocalConfig(localModelId);
+2026-05-11T22:16:47.1276742Z      331  333 │       const remoteConfig = createMockRemoteConfig(remoteModelId);
+2026-05-11T22:16:47.1277452Z      332      │ - ······return·{
+2026-05-11T22:16:47.1278166Z      333      │ - ········aliasModelId,
+2026-05-11T22:16:47.1278777Z      334      │ - ········difficultyAliasModelId,
+2026-05-11T22:16:47.1279438Z      335      │ - ········intelligentAliasModelId,
+2026-05-11T22:16:47.1280018Z      336      │ - ········localModelId,
+2026-05-11T22:16:47.1280545Z      337      │ - ········remoteModelId,
+2026-05-11T22:16:47.1281227Z      338      │ - ········decisionConfig:·createDecisionConfig(),
+2026-05-11T22:16:47.1281841Z           334 │ + ····return·{
+2026-05-11T22:16:47.1282318Z           335 │ + ······aliasModelId,
+2026-05-11T22:16:47.1282886Z           336 │ + ······difficultyAliasModelId,
+2026-05-11T22:16:47.1283490Z           337 │ + ······intelligentAliasModelId,
+2026-05-11T22:16:47.1284066Z           338 │ + ······localModelId,
+2026-05-11T22:16:47.1284586Z           339 │ + ······remoteModelId,
+2026-05-11T22:16:47.1285235Z           340 │ + ······decisionConfig:·createDecisionConfig(),
+2026-05-11T22:16:47.1285840Z      339  341 │         localConfig,
+2026-05-11T22:16:47.1286337Z      340  342 │         remoteConfig,
+2026-05-11T22:16:47.1286857Z      341      │ - ········hybridConfig:·{
+2026-05-11T22:16:47.1287679Z      342      │ - ··········...createDecisionConfig(),
+2026-05-11T22:16:47.1288571Z      343      │ - ···········difficulty_classifier:·{
+2026-05-11T22:16:47.1289180Z      344      │ - ·············enabled:·true,
+2026-05-11T22:16:47.1289795Z      345      │ - ·············rubric_version:·"v1",
+2026-05-11T22:16:47.1290432Z      346      │ - ·············source_type:·"remote",
+2026-05-11T22:16:47.1291077Z      347      │ - ·············model_id:·remoteModelId,
+2026-05-11T22:16:47.1291707Z      348      │ - ·············timeout_ms:·1500,
+2026-05-11T22:16:47.1292410Z      349      │ - ·············fallback_difficulty:·"medium",
+2026-05-11T22:16:47.1292989Z      350      │ - ···········},
+2026-05-11T22:16:47.1293503Z      351      │ - ···········controller:·{
+2026-05-11T22:16:47.1294068Z      352      │ - ·············enabled:·true,
+2026-05-11T22:16:47.1294685Z      353      │ - ·············source_type:·"remote",
+2026-05-11T22:16:47.1295345Z      354      │ - ·············model_id:·remoteModelId,
+2026-05-11T22:16:47.1295991Z      355      │ - ·············timeout_ms:·1500,
+2026-05-11T22:16:47.1296525Z      356      │ - ···········},
+2026-05-11T22:16:47.1297043Z      357      │ - ···········model_aliases:·{
+2026-05-11T22:16:47.1297632Z      358      │ - ·············[aliasModelId]:·{
+2026-05-11T22:16:47.1298584Z      359      │ - ···············model_ids:·[localModelId,·remoteModelId],
+2026-05-11T22:16:47.1299242Z      360      │ - ·············},
+2026-05-11T22:16:47.1299852Z      361      │ - ·············[difficultyAliasModelId]:·{
+2026-05-11T22:16:47.1300523Z      362      │ - ···············mode:·"difficulty",
+2026-05-11T22:16:47.1301471Z      363      │ - ···············model_ids:·[localModelId,·remoteModelId],
+2026-05-11T22:16:47.1302128Z      364      │ - ·············},
+2026-05-11T22:16:47.1302745Z      365      │ - ·············[intelligentAliasModelId]:·{
+2026-05-11T22:16:47.1303415Z      366      │ - ···············mode:·"intelligent",
+2026-05-11T22:16:47.1304195Z      367      │ - ···············model_ids:·[localModelId,·remoteModelId],
+2026-05-11T22:16:47.1304845Z      368      │ - ·············},
+2026-05-11T22:16:47.1305342Z      369      │ - ···········},
+2026-05-11T22:16:47.1305950Z      370      │ - ··········llama_swap:·localConfig.llama_swap,
+2026-05-11T22:16:47.1306746Z      371      │ - ··········litellm_proxy:·remoteConfig.litellm_proxy,
+2026-05-11T22:16:47.1307397Z           343 │ + ······hybridConfig:·{
+2026-05-11T22:16:47.1308181Z           344 │ + ········...createDecisionConfig(),
+2026-05-11T22:16:47.1308851Z           345 │ + ········difficulty_classifier:·{
+2026-05-11T22:16:47.1309464Z           346 │ + ··········enabled:·true,
+2026-05-11T22:16:47.1310049Z           347 │ + ··········rubric_version:·"v1",
+2026-05-11T22:16:47.1310664Z           348 │ + ··········source_type:·"remote",
+2026-05-11T22:16:47.1311283Z           349 │ + ··········model_id:·remoteModelId,
+2026-05-11T22:16:47.1311878Z           350 │ + ··········timeout_ms:·1500,
+2026-05-11T22:16:47.1312540Z           351 │ + ··········fallback_difficulty:·"medium",
+2026-05-11T22:16:47.1313064Z           352 │ + ········},
+2026-05-11T22:16:47.1313546Z           353 │ + ········controller:·{
+2026-05-11T22:16:47.1314078Z           354 │ + ··········enabled:·true,
+2026-05-11T22:16:47.1314660Z           355 │ + ··········source_type:·"remote",
+2026-05-11T22:16:47.1315285Z           356 │ + ··········model_id:·remoteModelId,
+2026-05-11T22:16:47.1315873Z           357 │ + ··········timeout_ms:·1500,
+2026-05-11T22:16:47.1316351Z           358 │ + ········},
+2026-05-11T22:16:47.1316841Z           359 │ + ········model_aliases:·{
+2026-05-11T22:16:47.1317415Z           360 │ + ··········[aliasModelId]:·{
+2026-05-11T22:16:47.1318314Z           361 │ + ············model_ids:·[localModelId,·remoteModelId],
+2026-05-11T22:16:47.1318959Z           362 │ + ··········},
+2026-05-11T22:16:47.1319520Z           363 │ + ··········[difficultyAliasModelId]:·{
+2026-05-11T22:16:47.1320148Z           364 │ + ············mode:·"difficulty",
+2026-05-11T22:16:47.1321175Z           365 │ + ············model_ids:·[localModelId,·remoteModelId],
+2026-05-11T22:16:47.1321796Z           366 │ + ··········},
+2026-05-11T22:16:47.1322378Z           367 │ + ··········[intelligentAliasModelId]:·{
+2026-05-11T22:16:47.1323024Z           368 │ + ············mode:·"intelligent",
+2026-05-11T22:16:47.1323757Z           369 │ + ············model_ids:·[localModelId,·remoteModelId],
+2026-05-11T22:16:47.1324396Z           370 │ + ··········},
+2026-05-11T22:16:47.1324816Z           371 │ + ········},
+2026-05-11T22:16:47.1325415Z           372 │ + ········llama_swap:·localConfig.llama_swap,
+2026-05-11T22:16:47.1326241Z           373 │ + ········litellm_proxy:·remoteConfig.litellm_proxy,
+2026-05-11T22:16:47.1326861Z      372  374 │         },
+2026-05-11T22:16:47.1327412Z      373  375 │         vendorHarness: {
+2026-05-11T22:16:47.1327881Z     ········· │ 
+2026-05-11T22:16:47.1328467Z      690  692 │   }> {
+2026-05-11T22:16:47.1328953Z      691  693 │     const runtimeStateRoot =
+2026-05-11T22:16:47.1330276Z      692      │ - ····options.runtimeStateRoot·??·(await·mkdtemp(path.join(os.tmpdir(),·"role-model-runtime-vendors-")));
+2026-05-11T22:16:47.1331380Z           694 │ + ····options.runtimeStateRoot·??
+2026-05-11T22:16:47.1332378Z           695 │ + ····(await·mkdtemp(path.join(os.tmpdir(),·"role-model-runtime-vendors-")));
+2026-05-11T22:16:47.1333522Z      693  696 │     const scopePrefix = options.scopeId ?? "runtime-vendor-validation";
+2026-05-11T22:16:47.1334518Z      694  697 │     const plan = await createRuntimeVendorValidationPlan({
+2026-05-11T22:16:47.1335145Z     ········· │ 
+2026-05-11T22:16:47.1335748Z      714  717 │             });
+2026-05-11T22:16:47.1336185Z      715  718 │       try {
+2026-05-11T22:16:47.1336844Z      716      │ - ····const·decisionResponse·=·await·postResponses(
+2026-05-11T22:16:47.1337547Z      717      │ - ······decisionRuntime.baseUrl,
+2026-05-11T22:16:47.1338343Z      718      │ - ······plan.remoteModelId,
+2026-05-11T22:16:47.1339020Z      719      │ - ······"req-runtime-vendor-decision",
+2026-05-11T22:16:47.1339539Z      720      │ - ····);
+2026-05-11T22:16:47.1340209Z      721      │ - ····const·decisionBody·=·decisionResponse.body·as·{
+2026-05-11T22:16:47.1340893Z      722      │ - ······error?:·{
+2026-05-11T22:16:47.1341428Z      723      │ - ········type?:·string;
+2026-05-11T22:16:47.1341894Z      724      │ - ······};
+2026-05-11T22:16:47.1342278Z      725      │ - ····};
+2026-05-11T22:16:47.1342929Z           719 │ + ······const·decisionResponse·=·await·postResponses(
+2026-05-11T22:16:47.1343652Z           720 │ + ········decisionRuntime.baseUrl,
+2026-05-11T22:16:47.1344291Z           721 │ + ········plan.remoteModelId,
+2026-05-11T22:16:47.1344948Z           722 │ + ········"req-runtime-vendor-decision",
+2026-05-11T22:16:47.1345507Z           723 │ + ······);
+2026-05-11T22:16:47.1346181Z           724 │ + ······const·decisionBody·=·decisionResponse.body·as·{
+2026-05-11T22:16:47.1346866Z           725 │ + ········error?:·{
+2026-05-11T22:16:47.1347621Z           726 │ + ··········type?:·string;
+2026-05-11T22:16:47.1348314Z           727 │ + ········};
+2026-05-11T22:16:47.1348737Z           728 │ + ······};
+2026-05-11T22:16:47.1349111Z      726  729 │   
+2026-05-11T22:16:47.1349762Z      727      │ - ····const·localRuntime·=·await·startRuntimeForConfig({
+2026-05-11T22:16:47.1350529Z      728      │ - ······repoRoot:·options.repoRoot,
+2026-05-11T22:16:47.1351123Z      729      │ - ······runtimeStateRoot,
+2026-05-11T22:16:47.1351760Z      730      │ - ······scopeId:·`${scopePrefix}-local`,
+2026-05-11T22:16:47.1352405Z      731      │ - ······config:·plan.localConfig,
+2026-05-11T22:16:47.1352924Z      732      │ - ····});
+2026-05-11T22:16:47.1353391Z      733      │ - ····try·{
+2026-05-11T22:16:47.1354018Z      734      │ - ······const·localResponse·=·await·postResponses(
+2026-05-11T22:16:47.1354547Z   743 more lines truncated
+2026-05-11T22:16:47.1354867Z   
+2026-05-11T22:16:47.1355006Z 
+2026-05-11T22:16:47.1355863Z ./role-model-router/apps/runtime-host-bridge/test/litellm-catalog.test.ts organizeImports ━━━━━━━━━━
+2026-05-11T22:16:47.1356570Z 
+2026-05-11T22:16:47.1356831Z   × Import statements could be sorted:
+2026-05-11T22:16:47.1357216Z   
+2026-05-11T22:16:47.1357516Z      2  2 │   
+2026-05-11T22:16:47.1357854Z      3  3 │   import {
+2026-05-11T22:16:47.1358539Z      4    │ - ··deriveLiteLLMProviders,
+2026-05-11T22:16:47.1359091Z         4 │ + ··type·LiteLLMProviderInfo,
+2026-05-11T22:16:47.1359641Z         5 │ + ··deriveLiteLLMProviders,
+2026-05-11T22:16:47.1360192Z      5  6 │     extractLiteLLMProviderIds,
+2026-05-11T22:16:47.1360759Z      6    │ - ··loadLiteLLMModelPrices,
+2026-05-11T22:16:47.1361346Z      7    │ - ··type·LiteLLMProviderInfo,
+2026-05-11T22:16:47.1361900Z         7 │ + ··loadLiteLLMModelPrices,
+2026-05-11T22:16:47.1362497Z      8  8 │   } from "@role-model-router/catalog";
+2026-05-11T22:16:47.1362994Z      9  9 │   
+2026-05-11T22:16:47.1363268Z   
+2026-05-11T22:16:47.1363412Z 
+2026-05-11T22:16:47.1364289Z ./role-model-router/apps/runtime-host-bridge/test/litellm-catalog.test.ts format ━━━━━━━━━━━━━━━━━━━
+2026-05-11T22:16:47.1365032Z 
+2026-05-11T22:16:47.1365431Z   × Formatter would have printed the following content:
+2026-05-11T22:16:47.1365903Z   
+2026-05-11T22:16:47.1366581Z     76 76 │     test("loads real LiteLLM model prices from testdata", async () => {
+2026-05-11T22:16:47.1367532Z     77 77 │       // loadLiteLLMModelPrices already imported statically above
+2026-05-11T22:16:47.1369041Z     78    │ - ····const·repoRoot·=·process.cwd().replace(/\\role-model-router[\\/]apps[\\/]runtime-host-bridge$/,·"");
+2026-05-11T22:16:47.1370225Z        78 │ + ····const·repoRoot·=·process
+2026-05-11T22:16:47.1370724Z        79 │ + ······.cwd()
+2026-05-11T22:16:47.1371507Z        80 │ + ······.replace(/\\role-model-router[\\/]apps[\\/]runtime-host-bridge$/,·"");
+2026-05-11T22:16:47.1372170Z     79 81 │   
+2026-05-11T22:16:47.1372802Z     80 82 │       const modelPrices = await loadLiteLLMModelPrices(repoRoot);
+2026-05-11T22:16:47.1373385Z   
+2026-05-11T22:16:47.1373524Z 
+2026-05-11T22:16:47.1374384Z ./role-model-router/apps/runtime-host-bridge/test/local-policy.test.ts organizeImports ━━━━━━━━━━━━━
+2026-05-11T22:16:47.1375078Z 
+2026-05-11T22:16:47.1375354Z   × Import statements could be sorted:
+2026-05-11T22:16:47.1375749Z   
+2026-05-11T22:16:47.1383895Z       1     │ - import·{·describe,·test,·expect,·beforeEach,·afterEach·}·from·"vitest";
+2026-05-11T22:16:47.1385080Z       2     │ - import·{·mkdtempSync,·rmSync,·existsSync,·readFileSync·}·from·"node:fs";
+2026-05-11T22:16:47.1386226Z           1 │ + import·{·existsSync,·mkdtempSync,·readFileSync,·rmSync·}·from·"node:fs";
+2026-05-11T22:16:47.1387117Z       3   2 │   import { tmpdir } from "node:os";
+2026-05-11T22:16:47.1387769Z       4   3 │   import path, { join } from "node:path";
+2026-05-11T22:16:47.1388678Z       5   4 │   import { fileURLToPath } from "node:url";
+2026-05-11T22:16:47.1389682Z       6   5 │   import type { EndpointRegistryResult } from "@role-model-router/endpoint-registry";
+2026-05-11T22:16:47.1391099Z           6 │ + import·{·afterEach,·beforeEach,·describe,·expect,·test·}·from·"vitest";
+2026-05-11T22:16:47.1391794Z       7   7 │   
+2026-05-11T22:16:47.1392306Z       8   8 │   import * as bridge from "../src/index.js";
+2026-05-11T22:16:47.1392749Z   
+2026-05-11T22:16:47.1392897Z 
+2026-05-11T22:16:47.1393755Z ./role-model-router/apps/runtime-host-bridge/test/local-policy.test.ts format ━━━━━━━━━━━━━━━━━━━━━━
+2026-05-11T22:16:47.1394483Z 
+2026-05-11T22:16:47.1401966Z   × Formatter would have printed the following content:
+2026-05-11T22:16:47.1402454Z   
+2026-05-11T22:16:47.1414382Z     189 189 │             providerPresetsPath: string;
+2026-05-11T22:16:47.1415011Z     190 190 │           }) => Promise<{
+2026-05-11T22:16:47.1416477Z     191     │ - ··········listSwapHistory():·Promise<readonly·{·timestamp:·string;·oldModel:·string·|·null;·newModel:·string·|·null;·reason:·string·}[]>;
+2026-05-11T22:16:47.1417775Z         191 │ + ··········listSwapHistory():·Promise<
+2026-05-11T22:16:47.1418658Z         192 │ + ············readonly·{
+2026-05-11T22:16:47.1419249Z         193 │ + ··············timestamp:·string;
+2026-05-11T22:16:47.1419907Z         194 │ + ··············oldModel:·string·|·null;
+2026-05-11T22:16:47.1420597Z         195 │ + ··············newModel:·string·|·null;
+2026-05-11T22:16:47.1421220Z         196 │ + ··············reason:·string;
+2026-05-11T22:16:47.1421766Z         197 │ + ············}[]
+2026-05-11T22:16:47.1422206Z         198 │ + ··········>;
+2026-05-11T22:16:47.1422615Z     192 199 │           }>;
+2026-05-11T22:16:47.1423010Z     193 200 │         }
+2026-05-11T22:16:47.1423321Z   
+2026-05-11T22:16:47.1423796Z 
+2026-05-11T22:16:47.1424727Z ./role-model-router/apps/runtime-host-bridge/test/runtime-assets.test.ts organizeImports ━━━━━━━━━━━
+2026-05-11T22:16:47.1425467Z 
+2026-05-11T22:16:47.1425765Z   × Import statements could be sorted:
+2026-05-11T22:16:47.1426178Z   
+2026-05-11T22:16:47.1430060Z       1     │ - import·path·from·"node:path";
+2026-05-11T22:16:47.1431035Z           1 │ + import·{·mkdir,·mkdtemp,·readFile,·writeFile·}·from·"node:fs/promises";
+2026-05-11T22:16:47.1431840Z       2   2 │   import os from "node:os";
+2026-05-11T22:16:47.1432718Z       3     │ - import·{·mkdtemp,·mkdir,·readFile,·writeFile·}·from·"node:fs/promises";
+2026-05-11T22:16:47.1433559Z           3 │ + import·path·from·"node:path";
+2026-05-11T22:16:47.1434017Z       4   4 │   
+2026-05-11T22:16:47.1434566Z       5   5 │   import { describe, expect, test } from "vitest";
+2026-05-11T22:16:47.1435044Z   
+2026-05-11T22:16:47.1435186Z 
+2026-05-11T22:16:47.1436065Z ./role-model-router/apps/runtime-host-bridge/test/unified-runtime-config.test.ts format ━━━━━━━━━━━━
+2026-05-11T22:16:47.1436740Z 
+2026-05-11T22:16:47.1454885Z   × Formatter would have printed the following content:
+2026-05-11T22:16:47.1455414Z   
+2026-05-11T22:16:47.1479729Z     223 223 │       });
+2026-05-11T22:16:47.1480140Z     224 224 │   
+2026-05-11T22:16:47.1481230Z     225     │ - ····expect(parseUnifiedRuntimeConfigText(renderUnifiedRuntimeConfigText(normalized))).toMatchObject({
+2026-05-11T22:16:47.1482311Z     226     │ - ······version:·"1.0",
+2026-05-11T22:16:47.1482937Z     227     │ - ······routingStrategy:·"latency-first",
+2026-05-11T22:16:47.1483576Z     228     │ - ······executionMode:·"hybrid",
+2026-05-11T22:16:47.1484127Z     229     │ - ······llamaSwap:·{
+2026-05-11T22:16:47.1484652Z     230     │ - ········enabled:·true,
+2026-05-11T22:16:47.1485155Z     231     │ - ········models:·[
+2026-05-11T22:16:47.1485600Z     232     │ - ··········{
+2026-05-11T22:16:47.1486180Z     233     │ - ············modelId:·"local/mock-llama",
+2026-05-11T22:16:47.1486936Z     234     │ - ············path:·"./models/mock-llama.gguf",
+2026-05-11T22:16:47.1487633Z     235     │ - ············contextWindow:·8192,
+2026-05-11T22:16:47.1488771Z     236     │ - ············command:·"node·./scripts/mock-llama-server.js·--port·${PORT}",
+2026-05-11T22:16:47.1489768Z     237     │ - ············proxyBaseUrl:·"http://127.0.0.1:${PORT}/v1",
+2026-05-11T22:16:47.1490827Z     238     │ - ············checkEndpoint:·"/ready",
+2026-05-11T22:16:47.1491573Z     239     │ - ············useModelName:·"mock/llama-upstream",
+2026-05-11T22:16:47.1492252Z     240     │ - ············maxDifficulty:·null,
+2026-05-11T22:16:47.1492772Z     241     │ - ··········},
+2026-05-11T22:16:47.1493199Z     242     │ - ········],
+2026-05-11T22:16:47.1493660Z     243     │ - ········process:·{
+2026-05-11T22:16:47.1494190Z     244     │ - ··········command:·null,
+2026-05-11T22:16:47.1494724Z     245     │ - ··········args:·[],
+2026-05-11T22:16:47.1495225Z     246     │ - ··········env:·{
+2026-05-11T22:16:47.1495860Z     247     │ - ············LLAMA_SWAP_MODE:·"live-reload",
+2026-05-11T22:16:47.1496407Z     248     │ - ··········},
+2026-05-11T22:16:47.1496904Z     249     │ - ··········cwd:·null,
+2026-05-11T22:16:47.1497497Z     250     │ - ··········startupTimeoutMs:·15000,
+2026-05-11T22:16:47.1498201Z     251     │ - ········},
+2026-05-11T22:16:47.1498634Z     252     │ - ······},
+2026-05-11T22:16:47.1499112Z     253     │ - ······liteLLM:·{
+2026-05-11T22:16:47.1499608Z     254     │ - ········enabled:·true,
+2026-05-11T22:16:47.1500139Z     255     │ - ········providers:·[
+2026-05-11T22:16:47.1500597Z     256     │ - ··········{
+2026-05-11T22:16:47.1501145Z     257     │ - ············providerId:·"moonshot",
+2026-05-11T22:16:47.1501848Z     258     │ - ············apiKeyRef:·"${MOONSHOT_API_KEY}",
+2026-05-11T22:16:47.1502581Z     259     │ - ············modelNames:·["moonshot/kimi-k2.5"],
+2026-05-11T22:16:47.1503246Z     260     │ - ············modelMappings:·[
+2026-05-11T22:16:47.1503987Z     261     │ - ··············{
+2026-05-11T22:16:47.1504618Z     262     │ - ················modelId:·"moonshot/kimi-k2.5",
+2026-05-11T22:16:47.1505413Z     263     │ - ················litellmModel:·"moonshot/kimi-k2.5",
+2026-05-11T22:16:47.1506137Z     264     │ - ················maxDifficulty:·null,
+2026-05-11T22:16:47.1506772Z     265     │ - ················litellmParams:·{
+2026-05-11T22:16:47.1507498Z     266     │ - ··················model:·"moonshot/kimi-k2.5",
+2026-05-11T22:16:47.1508526Z     267     │ - ··················api_base:·"https://api.moonshot.ai/v1",
+2026-05-11T22:16:47.1509266Z     268     │ - ··················temperature:·0,
+2026-05-11T22:16:47.1509829Z     269     │ - ················},
+2026-05-11T22:16:47.1510330Z     270     │ - ··············},
+2026-05-11T22:16:47.1510804Z     271     │ - ············],
+2026-05-11T22:16:47.1511236Z     272     │ - ··········},
+2026-05-11T22:16:47.1511650Z     273     │ - ········],
+2026-05-11T22:16:47.1512114Z     274     │ - ········process:·{
+2026-05-11T22:16:47.1512691Z     275     │ - ··········command:·"litellm",
+2026-05-11T22:16:47.1513262Z     276     │ - ··········args:·["--debug"],
+2026-05-11T22:16:47.1513794Z     277     │ - ··········env:·{
+2026-05-11T22:16:47.1514385Z     278     │ - ············LITELLM_MODE:·"live-reload",
+2026-05-11T22:16:47.1514914Z     279     │ - ··········},
+2026-05-11T22:16:47.1515396Z     280     │ - ··········cwd:·null,
+2026-05-11T22:16:47.1516164Z     281     │ - ··········startupTimeoutMs:·30000,
+2026-05-11T22:16:47.1517374Z         225 │ + ····expect(parseUnifiedRuntimeConfigText(renderUnifiedRuntimeConfigText(normalized))).toMatchObject(
+2026-05-11T22:16:47.1518516Z         226 │ + ······{
+2026-05-11T22:16:47.1518992Z         227 │ + ········version:·"1.0",
+2026-05-11T22:16:47.1519617Z         228 │ + ········routingStrategy:·"latency-first",
+2026-05-11T22:16:47.1520266Z         229 │ + ········executionMode:·"hybrid",
+2026-05-11T22:16:47.1520820Z         230 │ + ········llamaSwap:·{
+2026-05-11T22:16:47.1521373Z         231 │ + ··········enabled:·true,
+2026-05-11T22:16:47.1521896Z         232 │ + ··········models:·[
+2026-05-11T22:16:47.1522344Z         233 │ + ············{
+2026-05-11T22:16:47.1522926Z         234 │ + ··············modelId:·"local/mock-llama",
+2026-05-11T22:16:47.1523641Z         235 │ + ··············path:·"./models/mock-llama.gguf",
+2026-05-11T22:16:47.1524315Z         236 │ + ··············contextWindow:·8192,
+2026-05-11T22:16:47.1525259Z         237 │ + ··············command:·"node·./scripts/mock-llama-server.js·--port·${PORT}",
+2026-05-11T22:16:47.1526236Z         238 │ + ··············proxyBaseUrl:·"http://127.0.0.1:${PORT}/v1",
+2026-05-11T22:16:47.1526978Z         239 │ + ··············checkEndpoint:·"/ready",
+2026-05-11T22:16:47.1527706Z         240 │ + ··············useModelName:·"mock/llama-upstream",
+2026-05-11T22:16:47.1528583Z         241 │ + ··············maxDifficulty:·null,
+2026-05-11T22:16:47.1529126Z         242 │ + ············},
+2026-05-11T22:16:47.1529556Z         243 │ + ··········],
+2026-05-11T22:16:47.1530207Z         244 │ + ··········process:·{
+2026-05-11T22:16:47.1530761Z         245 │ + ············command:·null,
+2026-05-11T22:16:47.1531293Z         246 │ + ············args:·[],
+2026-05-11T22:16:47.1531794Z         247 │ + ············env:·{
+2026-05-11T22:16:47.1532412Z         248 │ + ··············LLAMA_SWAP_MODE:·"live-reload",
+2026-05-11T22:16:47.1533019Z         249 │ + ············},
+2026-05-11T22:16:47.1533518Z         250 │ + ············cwd:·null,
+2026-05-11T22:16:47.1534116Z         251 │ + ············startupTimeoutMs:·15000,
+2026-05-11T22:16:47.1534636Z         252 │ + ··········},
+2026-05-11T22:16:47.1535042Z         253 │ + ········},
+2026-05-11T22:16:47.1535496Z         254 │ + ········liteLLM:·{
+2026-05-11T22:16:47.1536004Z         255 │ + ··········enabled:·true,
+2026-05-11T22:16:47.1536535Z         256 │ + ··········providers:·[
+2026-05-11T22:16:47.1537002Z         257 │ + ············{
+2026-05-11T22:16:47.1537556Z         258 │ + ··············providerId:·"moonshot",
+2026-05-11T22:16:47.1538489Z         259 │ + ··············apiKeyRef:·"${MOONSHOT_API_KEY}",
+2026-05-11T22:16:47.1539252Z         260 │ + ··············modelNames:·["moonshot/kimi-k2.5"],
+2026-05-11T22:16:47.1539908Z         261 │ + ··············modelMappings:·[
+2026-05-11T22:16:47.1540453Z         262 │ + ················{
+2026-05-11T22:16:47.1541088Z         263 │ + ··················modelId:·"moonshot/kimi-k2.5",
+2026-05-11T22:16:47.1541877Z         264 │ + ··················litellmModel:·"moonshot/kimi-k2.5",
+2026-05-11T22:16:47.1542597Z         265 │ + ··················maxDifficulty:·null,
+2026-05-11T22:16:47.1543245Z         266 │ + ··················litellmParams:·{
+2026-05-11T22:16:47.1543946Z         267 │ + ····················model:·"moonshot/kimi-k2.5",
+2026-05-11T22:16:47.1544757Z         268 │ + ····················api_base:·"https://api.moonshot.ai/v1",
+2026-05-11T22:16:47.1545498Z         269 │ + ····················temperature:·0,
+2026-05-11T22:16:47.1546084Z         270 │ + ··················},
+2026-05-11T22:16:47.1546628Z         271 │ + ················},
+2026-05-11T22:16:47.1547142Z         272 │ + ··············],
+2026-05-11T22:16:47.1547614Z         273 │ + ············},
+2026-05-11T22:16:47.1548246Z         274 │ + ··········],
+2026-05-11T22:16:47.1548748Z         275 │ + ··········process:·{
+2026-05-11T22:16:47.1549328Z         276 │ + ············command:·"litellm",
+2026-05-11T22:16:47.1550184Z         277 │ + ············args:·["--debug"],
+2026-05-11T22:16:47.1550719Z         278 │ + ············env:·{
+2026-05-11T22:16:47.1551325Z         279 │ + ··············LITELLM_MODE:·"live-reload",
+2026-05-11T22:16:47.1551897Z         280 │ + ············},
+2026-05-11T22:16:47.1552375Z         281 │ + ············cwd:·null,
+2026-05-11T22:16:47.1552971Z         282 │ + ············startupTimeoutMs:·30000,
+2026-05-11T22:16:47.1553573Z         283 │ + ··········},
+2026-05-11T22:16:47.1553966Z     282 284 │           },
+2026-05-11T22:16:47.1554353Z     283 285 │         },
+2026-05-11T22:16:47.1554931Z     284     │ - ····});
+2026-05-11T22:16:47.1555332Z         286 │ + ····);
+2026-05-11T22:16:47.1555710Z     285 287 │     });
+2026-05-11T22:16:47.1556063Z     286 288 │   
+2026-05-11T22:16:47.1556421Z     ······· │ 
+2026-05-11T22:16:47.1556762Z     306 308 │   
+2026-05-11T22:16:47.1557121Z     307 309 │       expect(
+2026-05-11T22:16:47.1557668Z     308     │ - ······(result·as·unknown·as·{
+2026-05-11T22:16:47.1558501Z     309     │ - ········observedData?:·{
+2026-05-11T22:16:47.1559078Z     310     │ - ··········enabled:·boolean;
+2026-05-11T22:16:47.1559854Z     311     │ - ··········aggregation:·{·minSamples:·number·};
+2026-05-11T22:16:47.1560538Z     312     │ - ··········difficultyLearning:·{
+2026-05-11T22:16:47.1561143Z     313     │ - ············cacheTtlMs:·number;
+2026-05-11T22:16:47.1561722Z     314     │ - ············invalidation:·{
+2026-05-11T22:16:47.1562392Z     315     │ - ··············maxContextTokensDelta:·number;
+2026-05-11T22:16:47.1563110Z     316     │ - ··············maxHistoryTurnDelta:·number;
+2026-05-11T22:16:47.1563841Z     317     │ - ··············maxToolCountDelta:·number;
+2026-05-11T22:16:47.1564595Z     318     │ - ··············maxInstructionConstraintDelta:·number;
+2026-05-11T22:16:47.1565408Z     319     │ - ··············maxDecompositionKeywordDelta:·number;
+2026-05-11T22:16:47.1566260Z     320     │ - ··············reclassifyOnCodeOrSchemaChange:·boolean;
+2026-05-11T22:16:47.1566934Z     321     │ - ············};
+2026-05-11T22:16:47.1567429Z     322     │ - ············override:·{
+2026-05-11T22:16:47.1568215Z     323     │ - ··············minSamples:·number;
+2026-05-11T22:16:47.1568897Z     324     │ - ··············maxFailureRate:·number;
+2026-05-11T22:16:47.1569585Z     325     │ - ··············minQualityScore:·number;
+2026-05-11T22:16:47.1570261Z     326     │ - ··············minTokensPerSec:·number;
+2026-05-11T22:16:47.1570818Z     327     │ - ············};
+2026-05-11T22:16:47.1571350Z     328     │ - ············recommendation:·{
+2026-05-11T22:16:47.1571993Z     329     │ - ··············minSamples:·number;
+2026-05-11T22:16:47.1572627Z     330     │ - ··············maxFailureRate:·number;
+2026-05-11T22:16:47.1573283Z     331     │ - ··············minQualityScore:·number;
+2026-05-11T22:16:47.1573734Z   139 more lines truncated
+2026-05-11T22:16:47.1574056Z   
+2026-05-11T22:16:47.1574196Z 
+2026-05-11T22:16:47.1575112Z ./role-model-router/apps/runtime-host-bridge/test/validate-operations.test.ts organizeImports ━━━━━━━━━━
+2026-05-11T22:16:47.1576043Z 
+2026-05-11T22:16:47.1576332Z   × Import statements could be sorted:
+2026-05-11T22:16:47.1576723Z   
+2026-05-11T22:16:47.1577129Z      1    │ - import·os·from·"node:os";
+2026-05-11T22:16:47.1577689Z      2    │ - import·path·from·"node:path";
+2026-05-11T22:16:47.1578589Z      3    │ - import·{·mkdtemp·}·from·"node:fs/promises";
+2026-05-11T22:16:47.1579325Z         1 │ + import·{·mkdtemp·}·from·"node:fs/promises";
+2026-05-11T22:16:47.1579978Z         2 │ + import·os·from·"node:os";
+2026-05-11T22:16:47.1580583Z         3 │ + import·path·from·"node:path";
+2026-05-11T22:16:47.1581215Z      4  4 │   import { fileURLToPath } from "node:url";
+2026-05-11T22:16:47.1581710Z      5  5 │   
+2026-05-11T22:16:47.1581983Z   
+2026-05-11T22:16:47.1582126Z 
+2026-05-11T22:16:47.1582979Z ./role-model-router/apps/runtime-host-bridge/test/validate-tools.test.ts organizeImports ━━━━━━━━━━━
+2026-05-11T22:16:47.1583680Z 
+2026-05-11T22:16:47.1583939Z   × Import statements could be sorted:
+2026-05-11T22:16:47.1584317Z   
+2026-05-11T22:16:47.1584729Z      1    │ - import·os·from·"node:os";
+2026-05-11T22:16:47.1585287Z      2    │ - import·path·from·"node:path";
+2026-05-11T22:16:47.1585943Z      3    │ - import·{·mkdtemp·}·from·"node:fs/promises";
+2026-05-11T22:16:47.1586651Z         1 │ + import·{·mkdtemp·}·from·"node:fs/promises";
+2026-05-11T22:16:47.1587280Z         2 │ + import·os·from·"node:os";
+2026-05-11T22:16:47.1587827Z         3 │ + import·path·from·"node:path";
+2026-05-11T22:16:47.1588691Z      4  4 │   import { fileURLToPath } from "node:url";
+2026-05-11T22:16:47.1589376Z      5  5 │   
+2026-05-11T22:16:47.1589658Z   
+2026-05-11T22:16:47.1589812Z 
+2026-05-11T22:16:47.1590687Z ./role-model-router/apps/runtime-host-bridge/test/validate-tools.test.ts format ━━━━━━━━━━━━━━━━━━━━
+2026-05-11T22:16:47.1591358Z 
+2026-05-11T22:16:47.1591735Z   × Formatter would have printed the following content:
+2026-05-11T22:16:47.1592218Z   
+2026-05-11T22:16:47.1592592Z     29 29 │           function: {
+2026-05-11T22:16:47.1593129Z     30 30 │             name: "lookupRegistry",
+2026-05-11T22:16:47.1594096Z     31    │ - ··········arguments:·"{\"endpointId\":\"openai.personal.primary.us-east-1.fast\"}",
+2026-05-11T22:16:47.1595269Z        31 │ + ··········arguments:·'{"endpointId":"openai.personal.primary.us-east-1.fast"}',
+2026-05-11T22:16:47.1595985Z     32 32 │           },
+2026-05-11T22:16:47.1596365Z     33 33 │         },
+2026-05-11T22:16:47.1596672Z   
+2026-05-11T22:16:47.1596810Z 
+2026-05-11T22:16:47.1597666Z ./role-model-router/apps/runtime-host-bridge/test/validate-ui.test.ts organizeImports ━━━━━━━━━━━━━━
+2026-05-11T22:16:47.1598549Z 
+2026-05-11T22:16:47.1598826Z   × Import statements could be sorted:
+2026-05-11T22:16:47.1599210Z   
+2026-05-11T22:16:47.1599603Z      1    │ - import·os·from·"node:os";
+2026-05-11T22:16:47.1600166Z      2    │ - import·path·from·"node:path";
+2026-05-11T22:16:47.1600912Z      3    │ - import·{·mkdtemp,·writeFile·}·from·"node:fs/promises";
+2026-05-11T22:16:47.1601808Z         1 │ + import·{·mkdtemp,·writeFile·}·from·"node:fs/promises";
+2026-05-11T22:16:47.1602513Z         2 │ + import·os·from·"node:os";
+2026-05-11T22:16:47.1603082Z         3 │ + import·path·from·"node:path";
+2026-05-11T22:16:47.1603729Z      4  4 │   import { fileURLToPath } from "node:url";
+2026-05-11T22:16:47.1604256Z      5  5 │   
+2026-05-11T22:16:47.1604539Z   
+2026-05-11T22:16:47.1604684Z 
+2026-05-11T22:16:47.1605572Z ./role-model-router/apps/runtime-host-bridge/test/validate-ui.test.ts format ━━━━━━━━━━━━━━━━━━━━━━━
+2026-05-11T22:16:47.1606296Z 
+2026-05-11T22:16:47.1606704Z   × Formatter would have printed the following content:
+2026-05-11T22:16:47.1607199Z   
+2026-05-11T22:16:47.1608207Z     46 46 │       expect(result.runtimeConfigUpdatedRoutingStrategy).toBe("latency-first");
+2026-05-11T22:16:47.1609220Z     47 47 │       expect(result.moonshotVariantIds).toEqual(
+2026-05-11T22:16:47.1610487Z     48    │ - ······expect.arrayContaining(["moonshot-open-platform",·"kimi-code",·"moonshot-api-key",·"moonshot-oauth"]),
+2026-05-11T22:16:47.1611763Z        48 │ + ······expect.arrayContaining([
+2026-05-11T22:16:47.1612376Z        49 │ + ········"moonshot-open-platform",
+2026-05-11T22:16:47.1612947Z        50 │ + ········"kimi-code",
+2026-05-11T22:16:47.1613483Z        51 │ + ········"moonshot-api-key",
+2026-05-11T22:16:47.1614033Z        52 │ + ········"moonshot-oauth",
+2026-05-11T22:16:47.1614500Z        53 │ + ······]),
+2026-05-11T22:16:47.1614975Z     49 54 │       );
+2026-05-11T22:16:47.1615893Z     50 55 │       expect(result.availableRoleIds).toEqual(expect.arrayContaining(["general.chat"]));
+2026-05-11T22:16:47.1616646Z   
+2026-05-11T22:16:47.1616789Z 
+2026-05-11T22:16:47.1617672Z ./role-model-router/apps/runtime-host-bridge/test/validate-vendors.test.ts organizeImports ━━━━━━━━━━
+2026-05-11T22:16:47.1618582Z 
+2026-05-11T22:16:47.1618862Z   × Import statements could be sorted:
+2026-05-11T22:16:47.1619250Z   
+2026-05-11T22:16:47.1635023Z       1     │ - import·os·from·"node:os";
+2026-05-11T22:16:47.1635680Z       2     │ - import·path·from·"node:path";
+2026-05-11T22:16:47.1636413Z       3     │ - import·{·mkdtemp,·rm·}·from·"node:fs/promises";
+2026-05-11T22:16:47.1637207Z           1 │ + import·{·mkdtemp,·rm·}·from·"node:fs/promises";
+2026-05-11T22:16:47.1637892Z           2 │ + import·os·from·"node:os";
+2026-05-11T22:16:47.1638724Z           3 │ + import·path·from·"node:path";
+2026-05-11T22:16:47.1639384Z       4   4 │   import { fileURLToPath } from "node:url";
+2026-05-11T22:16:47.1639894Z       5   5 │   
+2026-05-11T22:16:47.1640175Z   
+2026-05-11T22:16:47.1640315Z 
+2026-05-11T22:16:47.1641383Z ./role-model-router/apps/runtime-host-bridge/test/validate-vendors.test.ts format ━━━━━━━━━━━━━━━━━━
+2026-05-11T22:16:47.1642070Z 
+2026-05-11T22:16:47.1653481Z   × Formatter would have printed the following content:
+2026-05-11T22:16:47.1654006Z   
+2026-05-11T22:16:47.1669614Z     668 668 │   
+2026-05-11T22:16:47.1670494Z     669 669 │     test("plans a real-vendor harness with repo-owned mock upstreams", async () => {
+2026-05-11T22:16:47.1672040Z     670     │ - ····const·runtimeStateRoot·=·await·mkdtemp(path.join(os.tmpdir(),·"role-model-runtime-vendor-plan-"));
+2026-05-11T22:16:47.1673170Z         670 │ + ····const·runtimeStateRoot·=·await·mkdtemp(
+2026-05-11T22:16:47.1674091Z         671 │ + ······path.join(os.tmpdir(),·"role-model-runtime-vendor-plan-"),
+2026-05-11T22:16:47.1674766Z         672 │ + ····);
+2026-05-11T22:16:47.1675305Z     671 673 │       tempRoots.push(runtimeStateRoot);
+2026-05-11T22:16:47.1675835Z     672 674 │   
+2026-05-11T22:16:47.1676127Z   
+2026-05-11T22:16:47.1676273Z 
+2026-05-11T22:16:47.1677165Z ./role-model-router/apps/runtime-ui/app/app.css format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-05-11T22:16:47.1677893Z 
+2026-05-11T22:16:47.1680145Z   × Formatter would have printed the following content:
+2026-05-11T22:16:47.1680651Z   
+2026-05-11T22:16:47.1684989Z       7   7 │     --rm-panel: #e7e5e4;
+2026-05-11T22:16:47.1685829Z       8   8 │     --rm-fg: #1c1917;
+2026-05-11T22:16:47.1686456Z       9     │ - ··--rm-secondary:·rgba(28,·25,·23,·0.70);
+2026-05-11T22:16:47.1687125Z      10     │ - ··--rm-muted:·rgba(28,·25,·23,·0.40);
+2026-05-11T22:16:47.1687775Z           9 │ + ··--rm-secondary:·rgba(28,·25,·23,·0.7);
+2026-05-11T22:16:47.1688651Z          10 │ + ··--rm-muted:·rgba(28,·25,·23,·0.4);
+2026-05-11T22:16:47.1689232Z      11  11 │     --rm-border: #e7e5e4;
+2026-05-11T22:16:47.1689810Z      12  12 │     --rm-border-strong: #f5f5f4;
+2026-05-11T22:16:47.1690376Z      13     │ - ··--rm-accent:·#003B8E;
+2026-05-11T22:16:47.1691045Z      14     │ - ··--rm-accent-muted:·rgba(0,·59,·142,·0.60);
+2026-05-11T22:16:47.1691767Z      15     │ - ··--rm-accent-subtle:·rgba(0,·59,·142,·0.20);
+2026-05-11T22:16:47.1692479Z      16     │ - ··--rm-accent-ghost:·rgba(0,·59,·142,·0.10);
+2026-05-11T22:16:47.1693092Z      17     │ - ··--rm-error:·#C8102E;
+2026-05-11T22:16:47.1693726Z      18     │ - ··--rm-error-muted:·rgba(200,·16,·46,·0.60);
+2026-05-11T22:16:47.1694456Z      19     │ - ··--rm-error-subtle:·rgba(200,·16,·46,·0.20);
+2026-05-11T22:16:47.1695154Z      20     │ - ··--rm-error-ghost:·rgba(200,·16,·46,·0.10);
+2026-05-11T22:16:47.1695754Z          13 │ + ··--rm-accent:·#003b8e;
+2026-05-11T22:16:47.1696372Z          14 │ + ··--rm-accent-muted:·rgba(0,·59,·142,·0.6);
+2026-05-11T22:16:47.1697063Z          15 │ + ··--rm-accent-subtle:·rgba(0,·59,·142,·0.2);
+2026-05-11T22:16:47.1697753Z          16 │ + ··--rm-accent-ghost:·rgba(0,·59,·142,·0.1);
+2026-05-11T22:16:47.1698521Z          17 │ + ··--rm-error:·#c8102e;
+2026-05-11T22:16:47.1699319Z          18 │ + ··--rm-error-muted:·rgba(200,·16,·46,·0.6);
+2026-05-11T22:16:47.1700021Z          19 │ + ··--rm-error-subtle:·rgba(200,·16,·46,·0.2);
+2026-05-11T22:16:47.1700715Z          20 │ + ··--rm-error-ghost:·rgba(200,·16,·46,·0.1);
+2026-05-11T22:16:47.1701319Z      21  21 │     --rm-success: #166534;
+2026-05-11T22:16:47.1701987Z      22     │ - ··--rm-success-muted:·rgba(22,·101,·52,·0.60);
+2026-05-11T22:16:47.1702734Z      23     │ - ··--rm-success-subtle:·rgba(22,·101,·52,·0.20);
+2026-05-11T22:16:47.1703448Z          22 │ + ··--rm-success-muted:·rgba(22,·101,·52,·0.6);
+2026-05-11T22:16:47.1704160Z          23 │ + ··--rm-success-subtle:·rgba(22,·101,·52,·0.2);
+2026-05-11T22:16:47.1704758Z      24  24 │     --rm-warning: #b45309;
+2026-05-11T22:16:47.1705397Z      25     │ - ··--rm-warning-muted:·rgba(180,·83,·9,·0.60);
+2026-05-11T22:16:47.1706092Z          25 │ + ··--rm-warning-muted:·rgba(180,·83,·9,·0.6);
+2026-05-11T22:16:47.1706734Z      26  26 │     --rm-telemetry-local: #1f2937;
+2026-05-11T22:16:47.1707391Z      27     │ - ··--rm-telemetry-remote:·#003B8E;
+2026-05-11T22:16:47.1708185Z          27 │ + ··--rm-telemetry-remote:·#003b8e;
+2026-05-11T22:16:47.1708836Z      28  28 │     --rm-telemetry-healthy: #166534;
+2026-05-11T22:16:47.1709469Z      29  29 │     --rm-telemetry-degraded: #b45309;
+2026-05-11T22:16:47.1709958Z     ······· │ 
+2026-05-11T22:16:47.1710390Z      43  43 │       --rm-panel: #292524;
+2026-05-11T22:16:47.1710936Z      44  44 │       --rm-fg: #fafaf9;
+2026-05-11T22:16:47.1711569Z      45     │ - ····--rm-secondary:·rgba(250,·250,·249,·0.70);
+2026-05-11T22:16:47.1712258Z      46     │ - ····--rm-muted:·rgba(250,·250,·249,·0.40);
+2026-05-11T22:16:47.1712947Z          45 │ + ····--rm-secondary:·rgba(250,·250,·249,·0.7);
+2026-05-11T22:16:47.1713607Z          46 │ + ····--rm-muted:·rgba(250,·250,·249,·0.4);
+2026-05-11T22:16:47.1714182Z      47  47 │       --rm-border: #292524;
+2026-05-11T22:16:47.1714766Z      48  48 │       --rm-border-strong: #1c1917;
+2026-05-11T22:16:47.1715240Z     ······· │ 
+2026-05-11T22:16:47.1715720Z      53  53 │       --rm-telemetry-raw: #a8a29e;
+2026-05-11T22:16:47.1716281Z      54  54 │       --rm-accent: #60a5fa;
+2026-05-11T22:16:47.1716942Z      55     │ - ····--rm-accent-muted:·rgba(96,·165,·250,·0.60);
+2026-05-11T22:16:47.1717696Z      56     │ - ····--rm-accent-subtle:·rgba(96,·165,·250,·0.20);
+2026-05-11T22:16:47.1718651Z      57     │ - ····--rm-accent-ghost:·rgba(96,·165,·250,·0.10);
+2026-05-11T22:16:47.1719582Z          55 │ + ····--rm-accent-muted:·rgba(96,·165,·250,·0.6);
+2026-05-11T22:16:47.1720306Z          56 │ + ····--rm-accent-subtle:·rgba(96,·165,·250,·0.2);
+2026-05-11T22:16:47.1721023Z          57 │ + ····--rm-accent-ghost:·rgba(96,·165,·250,·0.1);
+2026-05-11T22:16:47.1721617Z      58  58 │       --rm-error: #fb7185;
+2026-05-11T22:16:47.1722267Z      59     │ - ····--rm-error-muted:·rgba(251,·113,·133,·0.60);
+2026-05-11T22:16:47.1723001Z      60     │ - ····--rm-error-subtle:·rgba(251,·113,·133,·0.20);
+2026-05-11T22:16:47.1723744Z      61     │ - ····--rm-error-ghost:·rgba(251,·113,·133,·0.10);
+2026-05-11T22:16:47.1724478Z          59 │ + ····--rm-error-muted:·rgba(251,·113,·133,·0.6);
+2026-05-11T22:16:47.1725190Z          60 │ + ····--rm-error-subtle:·rgba(251,·113,·133,·0.2);
+2026-05-11T22:16:47.1725924Z          61 │ + ····--rm-error-ghost:·rgba(251,·113,·133,·0.1);
+2026-05-11T22:16:47.1726564Z      62  62 │       --rm-success: #86efac;
+2026-05-11T22:16:47.1727275Z      63     │ - ····--rm-success-muted:·rgba(134,·239,·172,·0.60);
+2026-05-11T22:16:47.1728264Z      64     │ - ····--rm-success-subtle:·rgba(134,·239,·172,·0.20);
+2026-05-11T22:16:47.1729067Z          63 │ + ····--rm-success-muted:·rgba(134,·239,·172,·0.6);
+2026-05-11T22:16:47.1729829Z          64 │ + ····--rm-success-subtle:·rgba(134,·239,·172,·0.2);
+2026-05-11T22:16:47.1730559Z      65  65 │       --rm-warning: #fbbf24;
+2026-05-11T22:16:47.1731257Z      66     │ - ····--rm-warning-muted:·rgba(251,·191,·36,·0.60);
+2026-05-11T22:16:47.1732019Z          66 │ + ····--rm-warning-muted:·rgba(251,·191,·36,·0.6);
+2026-05-11T22:16:47.1732760Z      67  67 │     }
+2026-05-11T22:16:47.1733134Z      68  68 │   }
+2026-05-11T22:16:47.1733476Z     ······· │ 
+2026-05-11T22:16:47.1733927Z      78  78 │     background: var(--rm-bg);
+2026-05-11T22:16:47.1734471Z      79  79 │     color: var(--rm-fg);
+2026-05-11T22:16:47.1735645Z      80     │ - ··font-family:·"IBM·Plex·Sans",·"Hanken·Grotesk",·"Barlow",·"Host·Grotesk",·"DM·Sans",·system-ui,·sans-serif;
+2026-05-11T22:16:47.1737217Z          80 │ + ··font-family:·"IBM·Plex·Sans",·"Hanken·Grotesk",·"Barlow",·"Host·Grotesk",·"DM·Sans",·system-ui,
+2026-05-11T22:16:47.1738352Z          81 │ + ····sans-serif;
+2026-05-11T22:16:47.1738767Z      81  82 │   }
+2026-05-11T22:16:47.1739124Z      82  83 │   
+2026-05-11T22:16:47.1739401Z   
+2026-05-11T22:16:47.1739554Z 
+2026-05-11T22:16:47.1740416Z ./role-model-router/apps/runtime-ui/app/components/app-shell.tsx format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-05-11T22:16:47.1741069Z 
+2026-05-11T22:16:47.1741442Z   × Formatter would have printed the following content:
+2026-05-11T22:16:47.1741936Z   
+2026-05-11T22:16:47.1742234Z      3   3 │   
+2026-05-11T22:16:47.1742687Z      4   4 │   import { cn } from "../lib/cn";
+2026-05-11T22:16:47.1743931Z      5     │ - import·{·cardClassName,·getRuntimeRouteDefinition,·runtimeNavigationSections·}·from·"../lib/design-system";
+2026-05-11T22:16:47.1744927Z          5 │ + import·{
+2026-05-11T22:16:47.1745388Z          6 │ + ··cardClassName,
+2026-05-11T22:16:47.1745901Z          7 │ + ··getRuntimeRouteDefinition,
+2026-05-11T22:16:47.1746481Z          8 │ + ··runtimeNavigationSections,
+2026-05-11T22:16:47.1747057Z          9 │ + }·from·"../lib/design-system";
+2026-05-11T22:16:47.1747505Z      6  10 │   
+2026-05-11T22:16:47.1748358Z      7  11 │   function primarySectionLinkClass(isActive: boolean): string {
+2026-05-11T22:16:47.1749003Z     ······ │ 
+2026-05-11T22:16:47.1749974Z     27  31 │     const route = getRuntimeRouteDefinition(location.pathname) ?? getRuntimeRouteDefinition("/app");
+2026-05-11T22:16:47.1750953Z     28  32 │     const activeSection =
+2026-05-11T22:16:47.1752160Z     29     │ - ····runtimeNavigationSections.find((section)·=>·section.title·===·route?.section)·??·runtimeNavigationSections[0];
+2026-05-11T22:16:47.1753697Z         33 │ + ····runtimeNavigationSections.find((section)·=>·section.title·===·route?.section)·??
+2026-05-11T22:16:47.1754623Z         34 │ + ····runtimeNavigationSections[0];
+2026-05-11T22:16:47.1755368Z     30  35 │   
+2026-05-11T22:16:47.1755713Z     31  36 │     return (
+2026-05-11T22:16:47.1756092Z     ······ │ 
+2026-05-11T22:16:47.1756464Z     55  60 │               ))}
+2026-05-11T22:16:47.1756903Z     56  61 │             </div>
+2026-05-11T22:16:47.1757295Z     57     │ - 
+2026-05-11T22:16:47.1757681Z     58  62 │           </aside>
+2026-05-11T22:16:47.1758256Z     59  63 │   
+2026-05-11T22:16:47.1758599Z     ······ │ 
+2026-05-11T22:16:47.1759121Z     65  69 │                   {route?.section ?? "Overview"}
+2026-05-11T22:16:47.1759721Z     66  70 │                 </p>
+2026-05-11T22:16:47.1760980Z     67     │ - ··············<h2·className="mt-3·text-3xl·font-light·tracking-tight">{route?.title·??·"Runtime·overview"}</h2>
+2026-05-11T22:16:47.1762487Z         71 │ + ··············<h2·className="mt-3·text-3xl·font-light·tracking-tight">
+2026-05-11T22:16:47.1763374Z         72 │ + ················{route?.title·??·"Runtime·overview"}
+2026-05-11T22:16:47.1764119Z         73 │ + ··············</h2>
+2026-05-11T22:16:47.1765191Z     68  74 │                 <p className="mt-3 max-w-[60ch] text-sm leading-6 text-[var(--rm-secondary)]">
+2026-05-11T22:16:47.1767165Z     69     │ - ················{route?.description·??·"Runtime,·provider·onboarding,·endpoint·visibility,·and·request·inspection·in·one·shell."}
+2026-05-11T22:16:47.1768709Z         75 │ + ················{route?.description·??
+2026-05-11T22:16:47.1769911Z         76 │ + ··················"Runtime,·provider·onboarding,·endpoint·visibility,·and·request·inspection·in·one·shell."}
+2026-05-11T22:16:47.1770874Z     70  77 │                 </p>
+2026-05-11T22:16:47.1771474Z     71     │ - 
+2026-05-11T22:16:47.1771878Z     72  78 │               </div>
+2026-05-11T22:16:47.1772624Z     73  79 │               <div className="mt-5 border-t border-[var(--rm-border)] pt-4">
+2026-05-11T22:16:47.1773185Z   
+2026-05-11T22:16:47.1773330Z 
+2026-05-11T22:16:47.1774407Z ./role-model-router/apps/runtime-host-bridge/test/index.test.ts:2181:32 lint/style/noNonNullAssertion  FIXABLE  ━━━━━━━━━━
+2026-05-11T22:16:47.1775214Z 
+2026-05-11T22:16:47.1775471Z   × Forbidden non-null assertion.
+2026-05-11T22:16:47.1775833Z   
+2026-05-11T22:16:47.1776268Z     2179 │       expect(reader).toBeDefined();
+2026-05-11T22:16:47.1776892Z     2180 │       const decoder = new TextDecoder();
+2026-05-11T22:16:47.1777560Z   > 2181 │       const firstChunk = await reader!.read();
+2026-05-11T22:16:47.1778401Z          │                                ^^^^^^^
+2026-05-11T22:16:47.1779449Z     2182 │       const streamedPrefix = decoder.decode(firstChunk.value ?? new Uint8Array(), { stream: true });
+2026-05-11T22:16:47.1780641Z     2183 │       expect(streamedPrefix).toContain('"type":"response.created"');
+2026-05-11T22:16:47.1781231Z   
+2026-05-11T22:16:47.1782314Z   i Unsafe fix: Replace with optional chain operator ?. This operator includes runtime checks, so it is safer than the compile-only non-null assertion operator
+2026-05-11T22:16:47.1783375Z   
+2026-05-11T22:16:47.1809126Z     2179 2179 │         expect(reader).toBeDefined();
+2026-05-11T22:16:47.1809846Z     2180 2180 │         const decoder = new TextDecoder();
+2026-05-11T22:16:47.1810640Z     2181      │ - ······const·firstChunk·=·await·reader!.read();
+2026-05-11T22:16:47.1811455Z          2181 │ + ······const·firstChunk·=·await·reader?.read();
+2026-05-11T22:16:47.1812693Z     2182 2182 │         const streamedPrefix = decoder.decode(firstChunk.value ?? new Uint8Array(), { stream: true });
+2026-05-11T22:16:47.1814131Z     2183 2183 │         expect(streamedPrefix).toContain('"type":"response.created"');
+2026-05-11T22:16:47.1814749Z   
+2026-05-11T22:16:47.1814934Z 
+2026-05-11T22:16:47.1815160Z Skipped 83 suggested fixes.
+2026-05-11T22:16:47.1816062Z If you wish to apply the suggested (unsafe) fixes, use the command biome check --fix --unsafe
+2026-05-11T22:16:47.1816646Z 
+2026-05-11T22:16:47.1817040Z The number of diagnostics exceeds the number allowed by Biome.
+2026-05-11T22:16:47.1817600Z Diagnostics not shown: 359.
+2026-05-11T22:16:47.1818334Z Checked 456 files in 604ms. No fixes applied.
+2026-05-11T22:16:47.1818770Z Found 360 errors.
+2026-05-11T22:16:47.1819365Z check ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-05-11T22:16:47.1819686Z 
+2026-05-11T22:16:47.1819884Z   × Some errors were emitted while running checks.
+2026-05-11T22:16:47.1820171Z   
+2026-05-11T22:16:47.1820259Z 
+2026-05-11T22:16:47.2031750Z  ELIFECYCLE  Command failed with exit code 1.
+2026-05-11T22:16:47.2447721Z  ELIFECYCLE  Command failed with exit code 1.
+2026-05-11T22:16:47.2660024Z ##[error]Process completed with exit code 1.
+2026-05-11T22:16:47.2726767Z Post job cleanup.
+2026-05-11T22:16:47.4191884Z Pruning is unnecessary.
+2026-05-11T22:16:47.4344067Z Post job cleanup.
+2026-05-11T22:16:47.5367775Z [command]/usr/bin/git version
+2026-05-11T22:16:47.5406497Z git version 2.53.0
+2026-05-11T22:16:47.5453925Z Temporarily overriding HOME='/home/runner/work/_temp/2e43165b-13ec-4895-9df9-b65f4f30d050' before making global git config changes
+2026-05-11T22:16:47.5455618Z Adding repository directory to the temporary git global config as a safe directory
+2026-05-11T22:16:47.5461549Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/role-model/role-model
+2026-05-11T22:16:47.5502612Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-05-11T22:16:47.5536105Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-05-11T22:16:47.5770288Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-05-11T22:16:47.5793874Z http.https://github.com/.extraheader
+2026-05-11T22:16:47.5808504Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-05-11T22:16:47.5842371Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-05-11T22:16:47.6080392Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-05-11T22:16:47.6114325Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-05-11T22:16:47.6457112Z Cleaning up orphan processes
+2026-05-11T22:16:47.6744390Z ##[warning]Node.js 20 actions are deprecated. The following actions are running on Node.js 20 and may not work as expected: actions/checkout@v4, actions/setup-node@v4, pnpm/action-setup@v4. Actions will be forced to run with Node.js 24 by default starting June 2nd, 2026. Node.js 20 will be removed from the runner on September 16th, 2026. Please check if updated versions of these actions are available that support Node.js 24. To opt into Node.js 24 now, set the FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true environment variable on the runner or in your workflow file. Once Node.js 24 becomes the default, you can temporarily opt out by setting ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

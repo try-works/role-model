@@ -1,17 +1,18 @@
 <script lang="ts">
-  import { proxyLogs, upstreamLogs } from "../stores/api";
-  import { screenWidth } from "../stores/theme";
-  import { persistentStore } from "../stores/persistent";
-  import LogPanel from "../components/LogPanel.svelte";
-  import ResizablePanels from "../components/ResizablePanels.svelte";
+import LogPanel from "../components/LogPanel.svelte";
+import ResizablePanels from "../components/ResizablePanels.svelte";
+import { proxyLogs, upstreamLogs } from "../stores/api";
+import { persistentStore } from "../stores/persistent";
+import { screenWidth } from "../stores/theme";
 
-  type ViewMode = "proxy" | "upstream" | "panels";
+type ViewMode = "proxy" | "upstream" | "panels";
 
-  const viewModeStore = persistentStore<ViewMode>("logviewer-view-mode", "panels");
+const viewModeStore = persistentStore<ViewMode>("logviewer-view-mode", "panels");
 
-  let direction = $derived<"horizontal" | "vertical">(
-    $screenWidth === "xs" || $screenWidth === "sm" ? "vertical" : "horizontal",
-  );
+// biome-ignore lint/style/useConst: Svelte $derived bindings remain reactive over time.
+let direction = $derived<"horizontal" | "vertical">(
+  $screenWidth === "xs" || $screenWidth === "sm" ? "vertical" : "horizontal",
+);
 </script>
 
 <div class="flex flex-col h-full w-full gap-2">

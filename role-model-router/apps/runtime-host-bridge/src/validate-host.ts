@@ -94,7 +94,12 @@ export async function runRuntimeHostValidation(): Promise<RuntimeHostValidationR
         ROLE_MODEL_BRIDGE_RUNTIME_STATE_ROOT: runtimeStateRoot,
         ROLE_MODEL_BRIDGE_PORT: String(bridgePort),
         ROLE_MODEL_BRIDGE_SCOPE_ID: "runtime-host-validation",
-        ROLE_MODEL_BRIDGE_FIXTURE_ROOT: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+        ROLE_MODEL_BRIDGE_FIXTURE_ROOT: path.join(
+          repoRoot,
+          "testdata",
+          "router-runtime",
+          "fixtures",
+        ),
       },
       stdio: ["ignore", "pipe", "pipe"],
     },
@@ -175,7 +180,9 @@ export async function runRuntimeHostValidation(): Promise<RuntimeHostValidationR
       };
     };
     if (!requestDetail.capturePolicy.structuredInspectionAvailable) {
-      throw new Error("Structured request detail did not expose structured inspection availability.");
+      throw new Error(
+        "Structured request detail did not expose structured inspection availability.",
+      );
     }
 
     const endpointProfileResponse = await waitForOk(
@@ -194,7 +201,9 @@ export async function runRuntimeHostValidation(): Promise<RuntimeHostValidationR
       throw new Error("Endpoint profile route returned the wrong endpoint id.");
     }
     if (!endpointProfile.latestProfile || endpointProfile.latestProfile.sample_size < 1) {
-      throw new Error("Endpoint profile route did not expose a persisted observed-performance profile.");
+      throw new Error(
+        "Endpoint profile route did not expose a persisted observed-performance profile.",
+      );
     }
 
     const otelExport = createOpenTelemetryGenAiExport(requestDetail as never);

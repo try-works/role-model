@@ -1,12 +1,16 @@
-import path from "node:path";
 import { mkdtemp, readFile } from "node:fs/promises";
 import os from "node:os";
+import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { describe, expect, test } from "vitest";
 
-import { deriveVendorVersionLedger, exportCatalogArtifacts, normalizeCatalogSnapshot } from "../src/index.ts";
 import { runCatalogExportCli } from "../src/cli.ts";
+import {
+  deriveVendorVersionLedger,
+  exportCatalogArtifacts,
+  normalizeCatalogSnapshot,
+} from "../src/index.ts";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -25,7 +29,9 @@ describe("normalizeCatalogSnapshot", () => {
     const catalog = normalizeCatalogSnapshot(snapshot, overrides);
     const ledger = deriveVendorVersionLedger(snapshot);
     const openaiProvider = catalog.providers.find((provider) => provider.providerId === "openai");
-    const fastVariant = catalog.models.find((model) => model.modelId === "openai/gpt-4.1-mini-fast");
+    const fastVariant = catalog.models.find(
+      (model) => model.modelId === "openai/gpt-4.1-mini-fast",
+    );
 
     expect(ledger).toMatchObject({
       ledgerVersion: "1",
@@ -72,7 +78,9 @@ describe("normalizeCatalogSnapshot", () => {
     const overrides = await readJson("testdata/catalog/models-dev-local-overrides.json");
 
     const catalog = normalizeCatalogSnapshot(snapshot, overrides);
-    const moonshotProvider = catalog.providers.find((provider) => provider.providerId === "moonshot");
+    const moonshotProvider = catalog.providers.find(
+      (provider) => provider.providerId === "moonshot",
+    );
     const kimiModel = catalog.models.find((model) => model.modelId === "moonshot/kimi-k2.5");
 
     expect(moonshotProvider).toMatchObject({

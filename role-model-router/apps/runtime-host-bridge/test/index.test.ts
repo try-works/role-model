@@ -1,10 +1,10 @@
-import { describe, expect, test } from "vitest";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { DatabaseSync } from "node:sqlite";
 import { setTimeout as delay } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
+import { describe, expect, test } from "vitest";
 import { stringify } from "yaml";
 
 import type { EndpointRegistryResult } from "@role-model-router/endpoint-registry";
@@ -826,10 +826,7 @@ describe("runtime-host-bridge", () => {
             modelIds: readonly string[];
           }[],
           difficultyContext?: {
-            endpointMaxDifficultyByEndpointId?: Record<
-              string,
-              "easy" | "medium" | "hard"
-            >;
+            endpointMaxDifficultyByEndpointId?: Record<string, "easy" | "medium" | "hard">;
           },
         ) => {
           routingRequest: {
@@ -937,10 +934,7 @@ describe("runtime-host-bridge", () => {
             modelIds: readonly string[];
           }[],
           difficultyContext?: {
-            endpointMaxDifficultyByEndpointId?: Record<
-              string,
-              "easy" | "medium" | "hard"
-            >;
+            endpointMaxDifficultyByEndpointId?: Record<string, "easy" | "medium" | "hard">;
           },
           controllerContext?: unknown,
           requestOptions?: {
@@ -1113,10 +1107,7 @@ describe("runtime-host-bridge", () => {
             modelIds: readonly string[];
           }[],
           difficultyContext?: {
-            endpointMaxDifficultyByEndpointId?: Record<
-              string,
-              "easy" | "medium" | "hard"
-            >;
+            endpointMaxDifficultyByEndpointId?: Record<string, "easy" | "medium" | "hard">;
           },
         ) => {
           routingRequest: {
@@ -1204,11 +1195,11 @@ describe("runtime-host-bridge", () => {
     expect(typeof (bridge as { startBridgeServer?: unknown }).startBridgeServer).toBe("function");
 
     const server = await (
-       bridge as {
-         startBridgeServer: (options: {
-           host: string;
-           port: number;
-           registry: EndpointRegistryResult;
+      bridge as {
+        startBridgeServer: (options: {
+          host: string;
+          port: number;
+          registry: EndpointRegistryResult;
           executeChatCompletions: (
             body: Record<string, unknown>,
             requestId: string,
@@ -1335,7 +1326,9 @@ describe("runtime-host-bridge", () => {
         ],
       });
 
-      const providerResponse = await fetch(`http://127.0.0.1:${server.port}/api/role-model/downstream/openai`);
+      const providerResponse = await fetch(
+        `http://127.0.0.1:${server.port}/api/role-model/downstream/openai`,
+      );
       expect(providerResponse.status).toBe(200);
       await expect(providerResponse.json()).resolves.toEqual(
         expect.objectContaining({
@@ -1359,19 +1352,21 @@ describe("runtime-host-bridge", () => {
 
     const server = await (
       bridge as {
-        startBridgeServer: (options: Record<string, unknown> & {
-          host: string;
-          port: number;
-          registry: EndpointRegistryResult;
-          executeChatCompletions: (
-            body: Record<string, unknown>,
-            requestId: string,
-          ) => Promise<unknown>;
-          readVersionInfo: () => Promise<unknown>;
-          listActivityMetrics: () => Promise<unknown>;
-          readActivityCapture: (captureId: number) => Promise<unknown>;
-          readLogs: () => Promise<string>;
-        }) => Promise<{ port: number; close(): Promise<void> }>;
+        startBridgeServer: (
+          options: Record<string, unknown> & {
+            host: string;
+            port: number;
+            registry: EndpointRegistryResult;
+            executeChatCompletions: (
+              body: Record<string, unknown>,
+              requestId: string,
+            ) => Promise<unknown>;
+            readVersionInfo: () => Promise<unknown>;
+            listActivityMetrics: () => Promise<unknown>;
+            readActivityCapture: (captureId: number) => Promise<unknown>;
+            readLogs: () => Promise<string>;
+          },
+        ) => Promise<{ port: number; close(): Promise<void> }>;
       }
     ).startBridgeServer({
       host: "127.0.0.1",
@@ -1485,22 +1480,22 @@ describe("runtime-host-bridge", () => {
             body: Record<string, unknown>,
             requestId: string,
           ) => Promise<unknown>;
-           readRuntimeSummary: () => Promise<unknown>;
-           listProviders: () => Promise<unknown>;
-           listRoles: () => Promise<unknown>;
-           listAccounts: () => Promise<unknown>;
-           upsertProviderAccount: (body: Record<string, unknown>) => Promise<unknown>;
-           startProviderDeviceAuthorization: (body: Record<string, unknown>) => Promise<unknown>;
-           pollProviderDeviceAuthorization: (body: Record<string, unknown>) => Promise<unknown>;
-           readRuntimeConfig: () => Promise<unknown>;
-           updateRuntimeConfig: (body: Record<string, unknown>) => Promise<unknown>;
-           activateEndpoint: (body: Record<string, unknown>) => Promise<unknown>;
-           readControllerAssignment: () => Promise<unknown>;
-           updateControllerAssignment: (body: Record<string, unknown>) => Promise<unknown>;
-           listEndpoints: () => Promise<unknown>;
-           }) => Promise<{ port: number; close(): Promise<void> }>;
-        }
-      ).startBridgeServer({
+          readRuntimeSummary: () => Promise<unknown>;
+          listProviders: () => Promise<unknown>;
+          listRoles: () => Promise<unknown>;
+          listAccounts: () => Promise<unknown>;
+          upsertProviderAccount: (body: Record<string, unknown>) => Promise<unknown>;
+          startProviderDeviceAuthorization: (body: Record<string, unknown>) => Promise<unknown>;
+          pollProviderDeviceAuthorization: (body: Record<string, unknown>) => Promise<unknown>;
+          readRuntimeConfig: () => Promise<unknown>;
+          updateRuntimeConfig: (body: Record<string, unknown>) => Promise<unknown>;
+          activateEndpoint: (body: Record<string, unknown>) => Promise<unknown>;
+          readControllerAssignment: () => Promise<unknown>;
+          updateControllerAssignment: (body: Record<string, unknown>) => Promise<unknown>;
+          listEndpoints: () => Promise<unknown>;
+        }) => Promise<{ port: number; close(): Promise<void> }>;
+      }
+    ).startBridgeServer({
       host: "127.0.0.1",
       port: 0,
       registry,
@@ -1538,66 +1533,68 @@ describe("runtime-host-bridge", () => {
           ],
         },
       ],
-       upsertProviderAccount: async (body) => ({
-         saved: true,
-         providerAccountId: body.providerAccountId,
-       }),
-       startProviderDeviceAuthorization: async () => ({
-         authRequestId: "auth-001",
-         providerAccountId: "moonshot.personal.kimi-code",
-         status: "pending",
-         userCode: "ABCD-EFGH",
-       }),
-       pollProviderDeviceAuthorization: async () => ({
-         authRequestId: "auth-001",
-         providerAccountId: "moonshot.personal.kimi-code",
-         status: "connected",
-       }),
-       readRuntimeConfig: async () => ({
-         applied: true,
-         path: "D:\\runtime-config.yaml",
-         config: {
-           version: "1.0",
-           executionMode: "hybrid",
-         },
-       }),
-       updateRuntimeConfig: async (body) => ({
-         applied: true,
-         path: "D:\\runtime-config.yaml",
-         config: {
-           version: body.version,
-           executionMode: "hybrid",
-         },
-       }),
-        activateEndpoint: async () => ({
+      upsertProviderAccount: async (body) => ({
+        saved: true,
+        providerAccountId: body.providerAccountId,
+      }),
+      startProviderDeviceAuthorization: async () => ({
+        authRequestId: "auth-001",
+        providerAccountId: "moonshot.personal.kimi-code",
+        status: "pending",
+        userCode: "ABCD-EFGH",
+      }),
+      pollProviderDeviceAuthorization: async () => ({
+        authRequestId: "auth-001",
+        providerAccountId: "moonshot.personal.kimi-code",
+        status: "connected",
+      }),
+      readRuntimeConfig: async () => ({
+        applied: true,
+        path: "D:\\runtime-config.yaml",
+        config: {
+          version: "1.0",
+          executionMode: "hybrid",
+        },
+      }),
+      updateRuntimeConfig: async (body) => ({
+        applied: true,
+        path: "D:\\runtime-config.yaml",
+        config: {
+          version: body.version,
+          executionMode: "hybrid",
+        },
+      }),
+      activateEndpoint: async () => ({
+        endpointId: "moonshot.personal.primary.global.kimi-k2.5",
+        providerAccountId: "moonshot.personal.primary",
+        modelId: "moonshot/kimi-k2.5",
+        status: "active",
+      }),
+      readControllerAssignment: async () => ({
+        scope: "global",
+        endpointId: "cli.local.coder",
+        modelId: "gpt-5.4",
+        sourceType: "local",
+      }),
+      updateControllerAssignment: async (body) => ({
+        scope: "global",
+        endpointId: body.endpointId,
+        modelId: "moonshot/kimi-k2.5",
+        sourceType: "remote",
+      }),
+      listEndpoints: async () => [
+        {
           endpointId: "moonshot.personal.primary.global.kimi-k2.5",
-           providerAccountId: "moonshot.personal.primary",
-           modelId: "moonshot/kimi-k2.5",
-           status: "active",
-        }),
-        readControllerAssignment: async () => ({
-          scope: "global",
-          endpointId: "cli.local.coder",
-          modelId: "gpt-5.4",
-          sourceType: "local",
-        }),
-        updateControllerAssignment: async (body) => ({
-          scope: "global",
-          endpointId: body.endpointId,
+          providerId: "moonshot",
           modelId: "moonshot/kimi-k2.5",
-          sourceType: "remote",
-        }),
-        listEndpoints: async () => [
-          {
-            endpointId: "moonshot.personal.primary.global.kimi-k2.5",
-            providerId: "moonshot",
-            modelId: "moonshot/kimi-k2.5",
         },
       ],
     });
 
     try {
-      const summaryResponse = await fetch(`http://127.0.0.1:${server.port}/api/role-model/runtime/summary`);
+      const summaryResponse = await fetch(
+        `http://127.0.0.1:${server.port}/api/role-model/runtime/summary`,
+      );
       expect(summaryResponse.status).toBe(200);
       expect(await summaryResponse.json()).toEqual({
         lifecycleSummary: registry.lifecycleSummary,
@@ -1605,7 +1602,9 @@ describe("runtime-host-bridge", () => {
         accountCount: 2,
       });
 
-      const providersResponse = await fetch(`http://127.0.0.1:${server.port}/api/role-model/providers`);
+      const providersResponse = await fetch(
+        `http://127.0.0.1:${server.port}/api/role-model/providers`,
+      );
       expect(providersResponse.status).toBe(200);
       expect(await providersResponse.json()).toEqual([
         {
@@ -1615,91 +1614,106 @@ describe("runtime-host-bridge", () => {
         },
       ]);
 
-       const accountsResponse = await fetch(`http://127.0.0.1:${server.port}/api/role-model/accounts`);
-       expect(accountsResponse.status).toBe(200);
-       expect(await accountsResponse.json()).toEqual([
-         {
-           providerAccountId: "moonshot.personal.primary",
-           providerId: "moonshot",
-           authMode: "api-key-static",
-           modelRoleBindings: [
-             {
-               modelId: "moonshot/kimi-k2.5",
-               roleIds: ["general.chat"],
-             },
-           ],
-         },
-       ]);
-
-       const rolesResponse = await fetch(`http://127.0.0.1:${server.port}/api/role-model/roles`);
-       expect(rolesResponse.status).toBe(200);
-       expect(await rolesResponse.json()).toEqual([
-         {
-           roleId: "general.chat",
-           label: "General chat",
-         },
-       ]);
-
-      const upsertResponse = await fetch(`http://127.0.0.1:${server.port}/api/role-model/accounts`, {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-        },
-        body: JSON.stringify({
+      const accountsResponse = await fetch(
+        `http://127.0.0.1:${server.port}/api/role-model/accounts`,
+      );
+      expect(accountsResponse.status).toBe(200);
+      expect(await accountsResponse.json()).toEqual([
+        {
           providerAccountId: "moonshot.personal.primary",
-        }),
-      });
-      expect(upsertResponse.status).toBe(200);
-       expect(await upsertResponse.json()).toEqual({
-         saved: true,
-         providerAccountId: "moonshot.personal.primary",
-       });
+          providerId: "moonshot",
+          authMode: "api-key-static",
+          modelRoleBindings: [
+            {
+              modelId: "moonshot/kimi-k2.5",
+              roleIds: ["general.chat"],
+            },
+          ],
+        },
+      ]);
 
-       const deviceStartResponse = await fetch(`http://127.0.0.1:${server.port}/api/role-model/accounts/device/start`, {
-         method: "POST",
-         headers: {
-           "content-type": "application/json",
-         },
-         body: JSON.stringify({
-           providerAccountId: "moonshot.personal.kimi-code",
-         }),
-       });
-       expect(deviceStartResponse.status).toBe(200);
-       expect(await deviceStartResponse.json()).toEqual({
-         authRequestId: "auth-001",
-         providerAccountId: "moonshot.personal.kimi-code",
-         status: "pending",
-         userCode: "ABCD-EFGH",
-       });
+      const rolesResponse = await fetch(`http://127.0.0.1:${server.port}/api/role-model/roles`);
+      expect(rolesResponse.status).toBe(200);
+      expect(await rolesResponse.json()).toEqual([
+        {
+          roleId: "general.chat",
+          label: "General chat",
+        },
+      ]);
 
-       const devicePollResponse = await fetch(`http://127.0.0.1:${server.port}/api/role-model/accounts/device/poll`, {
-         method: "POST",
-         headers: {
-           "content-type": "application/json",
-         },
-         body: JSON.stringify({
-           authRequestId: "auth-001",
-         }),
-       });
-       expect(devicePollResponse.status).toBe(200);
-        expect(await devicePollResponse.json()).toEqual({
-          authRequestId: "auth-001",
-          providerAccountId: "moonshot.personal.kimi-code",
-          status: "connected",
-        });
-
-        const runtimeConfigResponse = await fetch(`http://127.0.0.1:${server.port}/api/role-model/runtime/config`);
-        expect(runtimeConfigResponse.status).toBe(200);
-        expect(await runtimeConfigResponse.json()).toEqual({
-          applied: true,
-          path: "D:\\runtime-config.yaml",
-          config: {
-            version: "1.0",
-            executionMode: "hybrid",
+      const upsertResponse = await fetch(
+        `http://127.0.0.1:${server.port}/api/role-model/accounts`,
+        {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
           },
-        });
+          body: JSON.stringify({
+            providerAccountId: "moonshot.personal.primary",
+          }),
+        },
+      );
+      expect(upsertResponse.status).toBe(200);
+      expect(await upsertResponse.json()).toEqual({
+        saved: true,
+        providerAccountId: "moonshot.personal.primary",
+      });
 
-        const runtimeConfigUpdateResponse = await fetch(`http://127.0.0.1:${server.port}/api/role-model/runtime/config`, {
+      const deviceStartResponse = await fetch(
+        `http://127.0.0.1:${server.port}/api/role-model/accounts/device/start`,
+        {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({
+            providerAccountId: "moonshot.personal.kimi-code",
+          }),
+        },
+      );
+      expect(deviceStartResponse.status).toBe(200);
+      expect(await deviceStartResponse.json()).toEqual({
+        authRequestId: "auth-001",
+        providerAccountId: "moonshot.personal.kimi-code",
+        status: "pending",
+        userCode: "ABCD-EFGH",
+      });
+
+      const devicePollResponse = await fetch(
+        `http://127.0.0.1:${server.port}/api/role-model/accounts/device/poll`,
+        {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({
+            authRequestId: "auth-001",
+          }),
+        },
+      );
+      expect(devicePollResponse.status).toBe(200);
+      expect(await devicePollResponse.json()).toEqual({
+        authRequestId: "auth-001",
+        providerAccountId: "moonshot.personal.kimi-code",
+        status: "connected",
+      });
+
+      const runtimeConfigResponse = await fetch(
+        `http://127.0.0.1:${server.port}/api/role-model/runtime/config`,
+      );
+      expect(runtimeConfigResponse.status).toBe(200);
+      expect(await runtimeConfigResponse.json()).toEqual({
+        applied: true,
+        path: "D:\\runtime-config.yaml",
+        config: {
+          version: "1.0",
+          executionMode: "hybrid",
+        },
+      });
+
+      const runtimeConfigUpdateResponse = await fetch(
+        `http://127.0.0.1:${server.port}/api/role-model/runtime/config`,
+        {
           method: "PUT",
           headers: {
             "content-type": "application/json",
@@ -1707,27 +1721,32 @@ describe("runtime-host-bridge", () => {
           body: JSON.stringify({
             version: "1.1",
           }),
-        });
-        expect(runtimeConfigUpdateResponse.status).toBe(200);
-        expect(await runtimeConfigUpdateResponse.json()).toEqual({
-          applied: true,
-          path: "D:\\runtime-config.yaml",
-          config: {
-            version: "1.1",
-            executionMode: "hybrid",
-          },
-        });
+        },
+      );
+      expect(runtimeConfigUpdateResponse.status).toBe(200);
+      expect(await runtimeConfigUpdateResponse.json()).toEqual({
+        applied: true,
+        path: "D:\\runtime-config.yaml",
+        config: {
+          version: "1.1",
+          executionMode: "hybrid",
+        },
+      });
 
-        const controllerResponse = await fetch(`http://127.0.0.1:${server.port}/api/role-model/controller`);
-        expect(controllerResponse.status).toBe(200);
-        expect(await controllerResponse.json()).toEqual({
-          scope: "global",
-          endpointId: "cli.local.coder",
-          modelId: "gpt-5.4",
-          sourceType: "local",
-        });
+      const controllerResponse = await fetch(
+        `http://127.0.0.1:${server.port}/api/role-model/controller`,
+      );
+      expect(controllerResponse.status).toBe(200);
+      expect(await controllerResponse.json()).toEqual({
+        scope: "global",
+        endpointId: "cli.local.coder",
+        modelId: "gpt-5.4",
+        sourceType: "local",
+      });
 
-        const updateControllerResponse = await fetch(`http://127.0.0.1:${server.port}/api/role-model/controller`, {
+      const updateControllerResponse = await fetch(
+        `http://127.0.0.1:${server.port}/api/role-model/controller`,
+        {
           method: "PATCH",
           headers: {
             "content-type": "application/json",
@@ -1735,36 +1754,42 @@ describe("runtime-host-bridge", () => {
           body: JSON.stringify({
             endpointId: "moonshot.personal.primary.global.kimi-k2.5",
           }),
-        });
-        expect(updateControllerResponse.status).toBe(200);
-        expect(await updateControllerResponse.json()).toEqual({
-          scope: "global",
-          endpointId: "moonshot.personal.primary.global.kimi-k2.5",
-          modelId: "moonshot/kimi-k2.5",
-          sourceType: "remote",
-        });
+        },
+      );
+      expect(updateControllerResponse.status).toBe(200);
+      expect(await updateControllerResponse.json()).toEqual({
+        scope: "global",
+        endpointId: "moonshot.personal.primary.global.kimi-k2.5",
+        modelId: "moonshot/kimi-k2.5",
+        sourceType: "remote",
+      });
 
-        const activateResponse = await fetch(`http://127.0.0.1:${server.port}/api/role-model/endpoints`, {
+      const activateResponse = await fetch(
+        `http://127.0.0.1:${server.port}/api/role-model/endpoints`,
+        {
           method: "POST",
           headers: {
             "content-type": "application/json",
-         },
-         body: JSON.stringify({
-           providerAccountId: "moonshot.personal.primary",
-           modelId: "moonshot/kimi-k2.5",
-           region: "global",
-         }),
-       });
-       expect(activateResponse.status).toBe(200);
-       expect(await activateResponse.json()).toEqual({
-         endpointId: "moonshot.personal.primary.global.kimi-k2.5",
-         providerAccountId: "moonshot.personal.primary",
-         modelId: "moonshot/kimi-k2.5",
-         status: "active",
-       });
+          },
+          body: JSON.stringify({
+            providerAccountId: "moonshot.personal.primary",
+            modelId: "moonshot/kimi-k2.5",
+            region: "global",
+          }),
+        },
+      );
+      expect(activateResponse.status).toBe(200);
+      expect(await activateResponse.json()).toEqual({
+        endpointId: "moonshot.personal.primary.global.kimi-k2.5",
+        providerAccountId: "moonshot.personal.primary",
+        modelId: "moonshot/kimi-k2.5",
+        status: "active",
+      });
 
-       const endpointsResponse = await fetch(`http://127.0.0.1:${server.port}/api/role-model/endpoints`);
-       expect(endpointsResponse.status).toBe(200);
+      const endpointsResponse = await fetch(
+        `http://127.0.0.1:${server.port}/api/role-model/endpoints`,
+      );
+      expect(endpointsResponse.status).toBe(200);
       expect(await endpointsResponse.json()).toEqual([
         {
           endpointId: "moonshot.personal.primary.global.kimi-k2.5",
@@ -1839,7 +1864,9 @@ describe("runtime-host-bridge", () => {
     });
 
     try {
-      const summaryResponse = await fetch(`http://127.0.0.1:${server.port}/api/role-model/telemetry/summary`);
+      const summaryResponse = await fetch(
+        `http://127.0.0.1:${server.port}/api/role-model/telemetry/summary`,
+      );
       expect(summaryResponse.status).toBe(200);
       expect(await summaryResponse.json()).toEqual({
         requestCount: 2,
@@ -1848,7 +1875,9 @@ describe("runtime-host-bridge", () => {
         totalTokens: 200,
       });
 
-      const rowsResponse = await fetch(`http://127.0.0.1:${server.port}/api/role-model/telemetry/rows`);
+      const rowsResponse = await fetch(
+        `http://127.0.0.1:${server.port}/api/role-model/telemetry/rows`,
+      );
       expect(rowsResponse.status).toBe(200);
       expect(await rowsResponse.json()).toEqual([
         {
@@ -1863,7 +1892,9 @@ describe("runtime-host-bridge", () => {
         },
       ]);
 
-      const requestsResponse = await fetch(`http://127.0.0.1:${server.port}/api/role-model/telemetry/requests`);
+      const requestsResponse = await fetch(
+        `http://127.0.0.1:${server.port}/api/role-model/telemetry/requests`,
+      );
       expect(requestsResponse.status).toBe(200);
       expect(await requestsResponse.json()).toEqual([
         {
@@ -1907,7 +1938,9 @@ describe("runtime-host-bridge", () => {
     });
 
     try {
-      const response = await fetch(`http://127.0.0.1:${server.port}/api/role-model/downstream/openai`);
+      const response = await fetch(
+        `http://127.0.0.1:${server.port}/api/role-model/downstream/openai`,
+      );
       expect(response.status).toBe(200);
       expect(await response.json()).toEqual({
         kind: "openai-compatible",
@@ -2057,36 +2090,38 @@ describe("runtime-host-bridge", () => {
     let executionCompleted = false;
     const server = await (
       bridge as {
-        startBridgeServer: (options: Record<string, unknown> & {
-          host: string;
-          port: number;
-          registry: EndpointRegistryResult;
-          executeChatCompletions: (
-            body: Record<string, unknown>,
-            requestId: string,
-            streamWriter?: (chunk: Record<string, unknown>) => void | Promise<void>,
-          ) => Promise<unknown>;
-          executeResponses: (
-            body: Record<string, unknown>,
-            requestId: string,
-            streamWriter?: (chunk: Record<string, unknown>) => void | Promise<void>,
-          ) => Promise<{
-            responseId: string;
-            model: string;
-            endpointId: string;
-            adapterFamily: string;
-            routingDecisionId?: string;
-            outputText: string;
-            finishReason: string;
-            usage: {
-              inputTokens: number;
-              outputTokens: number;
-            };
-            vendorMetadata?: {
-              costUsd?: number;
-            };
-          }>;
-        }) => Promise<{ port: number; close(): Promise<void> }>;
+        startBridgeServer: (
+          options: Record<string, unknown> & {
+            host: string;
+            port: number;
+            registry: EndpointRegistryResult;
+            executeChatCompletions: (
+              body: Record<string, unknown>,
+              requestId: string,
+              streamWriter?: (chunk: Record<string, unknown>) => void | Promise<void>,
+            ) => Promise<unknown>;
+            executeResponses: (
+              body: Record<string, unknown>,
+              requestId: string,
+              streamWriter?: (chunk: Record<string, unknown>) => void | Promise<void>,
+            ) => Promise<{
+              responseId: string;
+              model: string;
+              endpointId: string;
+              adapterFamily: string;
+              routingDecisionId?: string;
+              outputText: string;
+              finishReason: string;
+              usage: {
+                inputTokens: number;
+                outputTokens: number;
+              };
+              vendorMetadata?: {
+                costUsd?: number;
+              };
+            }>;
+          },
+        ) => Promise<{ port: number; close(): Promise<void> }>;
       }
     ).startBridgeServer({
       host: "127.0.0.1",
@@ -2098,42 +2133,51 @@ describe("runtime-host-bridge", () => {
       executeResponses: async (_body, _requestId, streamWriter) => {
         executionCalls += 1;
         expect(typeof streamWriter).toBe("function");
-        await streamWriter?.({
-          type: "response.created",
-          response: {
-            id: "resp_123",
-            created_at: 1,
-            model: "openai/gpt-4.1-mini-fast",
-          },
-        }, {
-          endpointId: "openai.personal.primary.us-east-1.fast",
-          adapterFamily: "ai-sdk-openai",
-          routingDecisionId: "decision-responses-stream-123",
-        });
-        await delay(25);
-        await streamWriter?.({
-          type: "response.output_text.delta",
-          item_id: "msg_1",
-          delta: "Ready now",
-        }, {
-          endpointId: "openai.personal.primary.us-east-1.fast",
-          adapterFamily: "ai-sdk-openai",
-          routingDecisionId: "decision-responses-stream-123",
-        });
-        await delay(25);
-        await streamWriter?.({
-          type: "response.completed",
-          response: {
-            usage: {
-              input_tokens: 11,
-              output_tokens: 4,
+        await streamWriter?.(
+          {
+            type: "response.created",
+            response: {
+              id: "resp_123",
+              created_at: 1,
+              model: "openai/gpt-4.1-mini-fast",
             },
           },
-        }, {
-          endpointId: "openai.personal.primary.us-east-1.fast",
-          adapterFamily: "ai-sdk-openai",
-          routingDecisionId: "decision-responses-stream-123",
-        });
+          {
+            endpointId: "openai.personal.primary.us-east-1.fast",
+            adapterFamily: "ai-sdk-openai",
+            routingDecisionId: "decision-responses-stream-123",
+          },
+        );
+        await delay(25);
+        await streamWriter?.(
+          {
+            type: "response.output_text.delta",
+            item_id: "msg_1",
+            delta: "Ready now",
+          },
+          {
+            endpointId: "openai.personal.primary.us-east-1.fast",
+            adapterFamily: "ai-sdk-openai",
+            routingDecisionId: "decision-responses-stream-123",
+          },
+        );
+        await delay(25);
+        await streamWriter?.(
+          {
+            type: "response.completed",
+            response: {
+              usage: {
+                input_tokens: 11,
+                output_tokens: 4,
+              },
+            },
+          },
+          {
+            endpointId: "openai.personal.primary.us-east-1.fast",
+            adapterFamily: "ai-sdk-openai",
+            routingDecisionId: "decision-responses-stream-123",
+          },
+        );
         executionCompleted = true;
         return {
           responseId: "resp_123",
@@ -2173,19 +2217,24 @@ describe("runtime-host-bridge", () => {
         "openai.personal.primary.us-east-1.fast",
       );
       expect(response.headers.get("x-role-model-adapter-family")).toBe("ai-sdk-openai");
-      expect(response.headers.get("x-role-model-routing-decision-id")).toBe("decision-responses-stream-123");
+      expect(response.headers.get("x-role-model-routing-decision-id")).toBe(
+        "decision-responses-stream-123",
+      );
 
       const reader = response.body?.getReader();
       expect(reader).toBeDefined();
+      if (!reader) {
+        throw new Error("Expected response stream reader to be available.");
+      }
       const decoder = new TextDecoder();
-      const firstChunk = await reader!.read();
+      const firstChunk = await reader.read();
       const streamedPrefix = decoder.decode(firstChunk.value ?? new Uint8Array(), { stream: true });
       expect(streamedPrefix).toContain('"type":"response.created"');
       expect(executionCompleted).toBe(false);
 
       let transcript = streamedPrefix;
       while (true) {
-        const chunk = await reader!.read();
+        const chunk = await reader.read();
         transcript += decoder.decode(chunk.value ?? new Uint8Array(), { stream: !chunk.done });
         if (chunk.done) {
           break;
@@ -2283,7 +2332,7 @@ describe("runtime-host-bridge", () => {
             type: "function",
             function: {
               name: "lookupRegistry",
-              arguments: "{\"endpointId\":\"openai.personal.primary.us-east-1.fast\"}",
+              arguments: '{"endpointId":"openai.personal.primary.us-east-1.fast"}',
             },
           },
         ],
@@ -2320,8 +2369,7 @@ describe("runtime-host-bridge", () => {
                   type: "function",
                   function: {
                     name: "lookupRegistry",
-                    arguments:
-                      "{\"endpointId\":\"openai.personal.primary.us-east-1.fast\"}",
+                    arguments: '{"endpointId":"openai.personal.primary.us-east-1.fast"}',
                   },
                 },
               ],
@@ -2375,64 +2423,73 @@ describe("runtime-host-bridge", () => {
       executeChatCompletions: async (_body, _requestId, streamWriter) => {
         executionCalls += 1;
         expect(typeof streamWriter).toBe("function");
-        await streamWriter?.({
-          id: "chatcmpl-role-model",
-          object: "chat.completion.chunk",
-          created: 1,
-          model: "openai/gpt-4.1-mini-fast",
-          choices: [
-            {
-              index: 0,
-              delta: {
-                role: "assistant",
-                content: "un",
+        await streamWriter?.(
+          {
+            id: "chatcmpl-role-model",
+            object: "chat.completion.chunk",
+            created: 1,
+            model: "openai/gpt-4.1-mini-fast",
+            choices: [
+              {
+                index: 0,
+                delta: {
+                  role: "assistant",
+                  content: "un",
+                },
+                finish_reason: null,
               },
-              finish_reason: null,
-            },
-          ],
-        }, {
-          endpointId: "openai.personal.primary.us-east-1.fast",
-          adapterFamily: "ai-sdk-openai",
-          routingDecisionId: "decision-chat-stream-123",
-        });
+            ],
+          },
+          {
+            endpointId: "openai.personal.primary.us-east-1.fast",
+            adapterFamily: "ai-sdk-openai",
+            routingDecisionId: "decision-chat-stream-123",
+          },
+        );
         await delay(25);
-        await streamWriter?.({
-          id: "chatcmpl-role-model",
-          object: "chat.completion.chunk",
-          created: 1,
-          model: "openai/gpt-4.1-mini-fast",
-          choices: [
-            {
-              index: 0,
-              delta: {
-                content: "expected",
+        await streamWriter?.(
+          {
+            id: "chatcmpl-role-model",
+            object: "chat.completion.chunk",
+            created: 1,
+            model: "openai/gpt-4.1-mini-fast",
+            choices: [
+              {
+                index: 0,
+                delta: {
+                  content: "expected",
+                },
+                finish_reason: null,
               },
-              finish_reason: null,
-            },
-          ],
-        }, {
-          endpointId: "openai.personal.primary.us-east-1.fast",
-          adapterFamily: "ai-sdk-openai",
-          routingDecisionId: "decision-chat-stream-123",
-        });
+            ],
+          },
+          {
+            endpointId: "openai.personal.primary.us-east-1.fast",
+            adapterFamily: "ai-sdk-openai",
+            routingDecisionId: "decision-chat-stream-123",
+          },
+        );
         await delay(25);
-        await streamWriter?.({
-          id: "chatcmpl-role-model",
-          object: "chat.completion.chunk",
-          created: 1,
-          model: "openai/gpt-4.1-mini-fast",
-          choices: [
-            {
-              index: 0,
-              delta: {},
-              finish_reason: "stop",
-            },
-          ],
-        }, {
-          endpointId: "openai.personal.primary.us-east-1.fast",
-          adapterFamily: "ai-sdk-openai",
-          routingDecisionId: "decision-chat-stream-123",
-        });
+        await streamWriter?.(
+          {
+            id: "chatcmpl-role-model",
+            object: "chat.completion.chunk",
+            created: 1,
+            model: "openai/gpt-4.1-mini-fast",
+            choices: [
+              {
+                index: 0,
+                delta: {},
+                finish_reason: "stop",
+              },
+            ],
+          },
+          {
+            endpointId: "openai.personal.primary.us-east-1.fast",
+            adapterFamily: "ai-sdk-openai",
+            routingDecisionId: "decision-chat-stream-123",
+          },
+        );
         executionCompleted = true;
         return {
           model: "openai/gpt-4.1-mini-fast",
@@ -2471,19 +2528,21 @@ describe("runtime-host-bridge", () => {
         "openai.personal.primary.us-east-1.fast",
       );
       expect(response.headers.get("x-role-model-adapter-family")).toBe("ai-sdk-openai");
-      expect(response.headers.get("x-role-model-routing-decision-id")).toBe("decision-chat-stream-123");
+      expect(response.headers.get("x-role-model-routing-decision-id")).toBe(
+        "decision-chat-stream-123",
+      );
 
       const reader = response.body?.getReader();
       expect(reader).toBeDefined();
       const decoder = new TextDecoder();
-      const firstChunk = await reader!.read();
+      const firstChunk = await reader?.read();
       const streamedPrefix = decoder.decode(firstChunk.value ?? new Uint8Array(), { stream: true });
       expect(streamedPrefix).toContain('"content":"un"');
       expect(executionCompleted).toBe(false);
 
       let transcript = streamedPrefix;
       while (true) {
-        const chunk = await reader!.read();
+        const chunk = await reader?.read();
         transcript += decoder.decode(chunk.value ?? new Uint8Array(), { stream: !chunk.done });
         if (chunk.done) {
           break;
@@ -2699,7 +2758,7 @@ describe("runtime-host-bridge", () => {
       expect(response.status).toBe(400);
       await expect(response.json()).resolves.toEqual({
         error:
-          "Invalid x-role-model-routing-mode header value \"bogus\". Expected one of: baseline, difficulty, controller, hybrid.",
+          'Invalid x-role-model-routing-mode header value "bogus". Expected one of: baseline, difficulty, controller, hybrid.',
       });
       expect(executionCalls).toBe(0);
     } finally {
@@ -2878,7 +2937,9 @@ describe("runtime-host-bridge", () => {
   });
 
   test("persists routing-mode override and rewrite-skipped diagnostics for exact-model runtime-backed chat requests", async () => {
-    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-host-routing-mode-tests-"));
+    const runtimeStateRoot = await mkdtemp(
+      path.join(os.tmpdir(), "role-model-runtime-host-routing-mode-tests-"),
+    );
 
     try {
       const backend = await (
@@ -2912,7 +2973,9 @@ describe("runtime-host-bridge", () => {
       await backend.executeChatCompletions(
         {
           model: "openai/gpt-4.1-mini-fast",
-          messages: [{ role: "user", content: "Keep the exact-model route and record the rewrite receipt." }],
+          messages: [
+            { role: "user", content: "Keep the exact-model route and record the rewrite receipt." },
+          ],
         },
         requestId,
         undefined,
@@ -2943,7 +3006,9 @@ describe("runtime-host-bridge", () => {
   });
 
   test("persists alias-resolution diagnostics for runtime-backed chat requests", async () => {
-    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-host-alias-tests-"));
+    const runtimeStateRoot = await mkdtemp(
+      path.join(os.tmpdir(), "role-model-runtime-host-alias-tests-"),
+    );
     const unifiedRuntimeConfigPath = path.join(runtimeStateRoot, "runtime-config.yaml");
     await writeFile(
       unifiedRuntimeConfigPath,
@@ -3027,7 +3092,9 @@ describe("runtime-host-bridge", () => {
   });
 
   test("persists difficulty-routing diagnostics for runtime-backed chat requests", async () => {
-    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-host-difficulty-tests-"));
+    const runtimeStateRoot = await mkdtemp(
+      path.join(os.tmpdir(), "role-model-runtime-host-difficulty-tests-"),
+    );
     const unifiedRuntimeConfigPath = path.join(runtimeStateRoot, "runtime-config.yaml");
     await writeFile(
       unifiedRuntimeConfigPath,
@@ -3106,7 +3173,10 @@ describe("runtime-host-bridge", () => {
             content:
               "Analyze this code-edit workflow, apply multiple constraints, use the available tools, and verify the final contract end to end.",
           },
-          { role: "assistant", content: "I will inspect the schema and update the implementation carefully." },
+          {
+            role: "assistant",
+            content: "I will inspect the schema and update the implementation carefully.",
+          },
           {
             role: "user",
             content:
@@ -3157,7 +3227,9 @@ describe("runtime-host-bridge", () => {
   });
 
   test("allows an observed max-difficulty override when bucketed performance supports a harder request", async () => {
-    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-host-difficulty-override-tests-"));
+    const runtimeStateRoot = await mkdtemp(
+      path.join(os.tmpdir(), "role-model-runtime-host-difficulty-override-tests-"),
+    );
     const unifiedRuntimeConfigPath = path.join(runtimeStateRoot, "runtime-config.yaml");
     await writeFile(
       unifiedRuntimeConfigPath,
@@ -3288,7 +3360,10 @@ describe("runtime-host-bridge", () => {
               content:
                 "Analyze this code-edit workflow, apply multiple constraints, use the available tools, and verify the final contract end to end.",
             },
-            { role: "assistant", content: "I will inspect the schema and update the implementation carefully." },
+            {
+              role: "assistant",
+              content: "I will inspect the schema and update the implementation carefully.",
+            },
             {
               role: "user",
               content:
@@ -3335,7 +3410,9 @@ describe("runtime-host-bridge", () => {
   });
 
   test("routes hard requests using bucketed observed profiles and records the selected difficulty bucket", async () => {
-    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-host-difficulty-bucket-tests-"));
+    const runtimeStateRoot = await mkdtemp(
+      path.join(os.tmpdir(), "role-model-runtime-host-difficulty-bucket-tests-"),
+    );
     const unifiedRuntimeConfigPath = path.join(runtimeStateRoot, "runtime-config.yaml");
     await writeFile(
       unifiedRuntimeConfigPath,
@@ -3464,7 +3541,15 @@ describe("runtime-host-bridge", () => {
       "openai.litellm.global.openai-gpt-4-1-mini-fast",
       10_000,
       JSON.stringify(
-        buildProfile("openai.litellm.global.openai-gpt-4-1-mini-fast", 10_000, 0.96, 0.02, 36, 180, 280),
+        buildProfile(
+          "openai.litellm.global.openai-gpt-4-1-mini-fast",
+          10_000,
+          0.96,
+          0.02,
+          36,
+          180,
+          280,
+        ),
       ),
     );
     insertProfile.run(
@@ -3472,7 +3557,15 @@ describe("runtime-host-bridge", () => {
       "anthropic.litellm.global.claude-3-7-sonnet",
       10_100,
       JSON.stringify(
-        buildProfile("anthropic.litellm.global.claude-3-7-sonnet", 10_100, 0.42, 0.05, 12, 700, 980),
+        buildProfile(
+          "anthropic.litellm.global.claude-3-7-sonnet",
+          10_100,
+          0.42,
+          0.05,
+          12,
+          700,
+          980,
+        ),
       ),
     );
     insertBucketedProfile.run(
@@ -3481,7 +3574,15 @@ describe("runtime-host-bridge", () => {
       "hard",
       11_000,
       JSON.stringify(
-        buildProfile("openai.litellm.global.openai-gpt-4-1-mini-fast", 11_000, 0.28, 0.24, 9, 880, 1_120),
+        buildProfile(
+          "openai.litellm.global.openai-gpt-4-1-mini-fast",
+          11_000,
+          0.28,
+          0.24,
+          9,
+          880,
+          1_120,
+        ),
       ),
     );
     insertBucketedProfile.run(
@@ -3490,7 +3591,15 @@ describe("runtime-host-bridge", () => {
       "hard",
       11_100,
       JSON.stringify(
-        buildProfile("anthropic.litellm.global.claude-3-7-sonnet", 11_100, 0.97, 0.01, 27, 260, 390),
+        buildProfile(
+          "anthropic.litellm.global.claude-3-7-sonnet",
+          11_100,
+          0.97,
+          0.01,
+          27,
+          260,
+          390,
+        ),
       ),
     );
     database.close();
@@ -3507,7 +3616,10 @@ describe("runtime-host-bridge", () => {
               content:
                 "Analyze this code-edit workflow, apply multiple constraints, use the available tools, and verify the final contract end to end.",
             },
-            { role: "assistant", content: "I will inspect the schema and update the implementation carefully." },
+            {
+              role: "assistant",
+              content: "I will inspect the schema and update the implementation carefully.",
+            },
             {
               role: "user",
               content:
@@ -3559,7 +3671,9 @@ describe("runtime-host-bridge", () => {
   });
 
   test("uses the configured remote classifier result for difficulty-mode runtime-backed chat requests", async () => {
-    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-host-difficulty-classifier-tests-"));
+    const runtimeStateRoot = await mkdtemp(
+      path.join(os.tmpdir(), "role-model-runtime-host-difficulty-classifier-tests-"),
+    );
     const unifiedRuntimeConfigPath = path.join(runtimeStateRoot, "runtime-config.yaml");
     await writeFile(
       unifiedRuntimeConfigPath,
@@ -3649,7 +3763,9 @@ describe("runtime-host-bridge", () => {
   });
 
   test("uses the configured remote controller result for intelligent runtime-backed chat requests", async () => {
-    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-host-controller-tests-"));
+    const runtimeStateRoot = await mkdtemp(
+      path.join(os.tmpdir(), "role-model-runtime-host-controller-tests-"),
+    );
     const unifiedRuntimeConfigPath = path.join(runtimeStateRoot, "runtime-config.yaml");
     await writeFile(
       unifiedRuntimeConfigPath,
@@ -3719,7 +3835,9 @@ describe("runtime-host-bridge", () => {
     await backend.executeChatCompletions(
       {
         model: "gpt-5.4",
-        messages: [{ role: "user", content: "Prepare a patch plan and preserve the existing contract." }],
+        messages: [
+          { role: "user", content: "Prepare a patch plan and preserve the existing contract." },
+        ],
       },
       requestId,
     );
@@ -3739,7 +3857,9 @@ describe("runtime-host-bridge", () => {
   });
 
   test("persists alias-default hybrid arbitration and rewrite-applied diagnostics for runtime-backed chat requests", async () => {
-    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-host-hybrid-tests-"));
+    const runtimeStateRoot = await mkdtemp(
+      path.join(os.tmpdir(), "role-model-runtime-host-hybrid-tests-"),
+    );
     const unifiedRuntimeConfigPath = path.join(runtimeStateRoot, "runtime-config.yaml");
     await writeFile(
       unifiedRuntimeConfigPath,
@@ -3859,7 +3979,9 @@ describe("runtime-host-bridge", () => {
   });
 
   test("falls back deterministically when the configured classifier times out", async () => {
-    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-host-difficulty-timeout-tests-"));
+    const runtimeStateRoot = await mkdtemp(
+      path.join(os.tmpdir(), "role-model-runtime-host-difficulty-timeout-tests-"),
+    );
     const unifiedRuntimeConfigPath = path.join(runtimeStateRoot, "runtime-config.yaml");
     await writeFile(
       unifiedRuntimeConfigPath,
@@ -3950,7 +4072,9 @@ describe("runtime-host-bridge", () => {
   });
 
   test("reuses cached difficulty classification for repeated requests in the same conversation when invalidation thresholds are not exceeded", async () => {
-    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-host-difficulty-cache-tests-"));
+    const runtimeStateRoot = await mkdtemp(
+      path.join(os.tmpdir(), "role-model-runtime-host-difficulty-cache-tests-"),
+    );
     const unifiedRuntimeConfigPath = path.join(runtimeStateRoot, "runtime-config.yaml");
     await writeFile(
       unifiedRuntimeConfigPath,
@@ -4094,7 +4218,9 @@ describe("runtime-host-bridge", () => {
   });
 
   test("reports cache invalidation reasons before reclassifying a repeated request", async () => {
-    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-host-difficulty-invalidation-tests-"));
+    const runtimeStateRoot = await mkdtemp(
+      path.join(os.tmpdir(), "role-model-runtime-host-difficulty-invalidation-tests-"),
+    );
     const unifiedRuntimeConfigPath = path.join(runtimeStateRoot, "runtime-config.yaml");
     await writeFile(
       unifiedRuntimeConfigPath,
@@ -4259,7 +4385,8 @@ describe("runtime-host-bridge", () => {
       runtimeStateRoot: path.join(os.tmpdir(), controlPlaneTestId),
       scopeId: controlPlaneTestId,
       networkFetcher: async (input, init) => {
-        const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+        const url =
+          typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
         if (url === "https://auth.kimi.com/api/oauth/device_authorization") {
           expect(init?.method ?? "POST").toBe("POST");
           return new Response(
@@ -4557,7 +4684,8 @@ describe("runtime-host-bridge", () => {
       runtimeStateRoot: path.join(os.tmpdir(), "role-model-runtime-host-kimi-execution-tests"),
       scopeId: "runtime-host-kimi-execution-tests",
       networkFetcher: async (input, init) => {
-        const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+        const url =
+          typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
         if (url === "https://auth.kimi.com/api/oauth/device_authorization") {
           expect(init?.method ?? "POST").toBe("POST");
           return new Response(
@@ -4846,17 +4974,20 @@ describe("runtime-host-bridge", () => {
 
     try {
       const requestId = "req-runtime-bridge-route-001";
-      const completionResponse = await fetch(`http://127.0.0.1:${server.port}/v1/chat/completions`, {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-          "x-request-id": requestId,
+      const completionResponse = await fetch(
+        `http://127.0.0.1:${server.port}/v1/chat/completions`,
+        {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            "x-request-id": requestId,
+          },
+          body: JSON.stringify({
+            model: "openai/gpt-4.1-mini-fast",
+            messages: [{ role: "user", content: "Summarize the chosen endpoint." }],
+          }),
         },
-        body: JSON.stringify({
-          model: "openai/gpt-4.1-mini-fast",
-          messages: [{ role: "user", content: "Summarize the chosen endpoint." }],
-        }),
-      });
+      );
       expect(completionResponse.status).toBe(200);
 
       const recentResponse = await fetch(`http://127.0.0.1:${server.port}/api/role-model/requests`);
@@ -4960,7 +5091,9 @@ describe("runtime-host-bridge", () => {
       typeof (bridge as { createRuntimeBridgeBackend?: unknown }).createRuntimeBridgeBackend,
     ).toBe("function");
 
-    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-host-difficulty-"));
+    const runtimeStateRoot = await mkdtemp(
+      path.join(os.tmpdir(), "role-model-runtime-host-difficulty-"),
+    );
     const scopeId = "runtime-host-difficulty-profile-tests";
     const backend = await (
       bridge as {
@@ -5151,9 +5284,12 @@ describe("runtime-host-bridge", () => {
     const abortController = new AbortController();
 
     try {
-      const streamResponse = await fetch(`http://127.0.0.1:${server.port}/api/role-model/telemetry/stream`, {
-        signal: abortController.signal,
-      });
+      const streamResponse = await fetch(
+        `http://127.0.0.1:${server.port}/api/role-model/telemetry/stream`,
+        {
+          signal: abortController.signal,
+        },
+      );
       expect(streamResponse.status).toBe(200);
       expect(streamResponse.headers.get("content-type")).toContain("text/event-stream");
 
@@ -5175,7 +5311,7 @@ describe("runtime-host-bridge", () => {
 
       let transcript = "";
       while (!transcript.includes("req-runtime-bridge-sse-001")) {
-        const chunk = await reader!.read();
+        const chunk = await reader?.read();
         transcript += decoder.decode(chunk.value ?? new Uint8Array(), { stream: !chunk.done });
         if (chunk.done) {
           break;
@@ -5193,9 +5329,9 @@ describe("runtime-host-bridge", () => {
   });
 
   test("resolves bridge server options from explicit values and defaults", () => {
-    expect(typeof (bridge as { resolveBridgeServerOptions?: unknown }).resolveBridgeServerOptions).toBe(
-      "function",
-    );
+    expect(
+      typeof (bridge as { resolveBridgeServerOptions?: unknown }).resolveBridgeServerOptions,
+    ).toBe("function");
 
     const result = (
       bridge as {

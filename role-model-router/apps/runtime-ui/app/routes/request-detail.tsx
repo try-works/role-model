@@ -1,7 +1,16 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 
-import { CodeBlock, EmptyState, ErrorState, FactCard, LoadingState, PageHeader, SectionCard, StatusPill } from "../components/page-primitives";
+import {
+  CodeBlock,
+  EmptyState,
+  ErrorState,
+  FactCard,
+  LoadingState,
+  PageHeader,
+  SectionCard,
+  StatusPill,
+} from "../components/page-primitives";
 import { fetchRequestDetail } from "../lib/runtime-api";
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -82,7 +91,9 @@ export default function RequestDetailRoute() {
 
     void fetchRequestDetail(requestId)
       .then(setDetail)
-      .catch((value: unknown) => setError(value instanceof Error ? value.message : "Could not load request detail."));
+      .catch((value: unknown) =>
+        setError(value instanceof Error ? value.message : "Could not load request detail."),
+      );
   }, [requestId]);
 
   if (error) {
@@ -95,8 +106,11 @@ export default function RequestDetailRoute() {
   const request = asRecord(detail.request) ?? {};
   const endpointProfile = asRecord(detail.endpointProfile) ?? {};
   const latestProfile = asRecord(endpointProfile.latestProfile) ?? {};
-  const recentSamples = Array.isArray(endpointProfile.recentSamples) ? endpointProfile.recentSamples : [];
-  const endpointIdentity = asRecord(latestProfile.endpoint_identity ?? latestProfile.endpointIdentity) ?? {};
+  const recentSamples = Array.isArray(endpointProfile.recentSamples)
+    ? endpointProfile.recentSamples
+    : [];
+  const endpointIdentity =
+    asRecord(latestProfile.endpoint_identity ?? latestProfile.endpointIdentity) ?? {};
   const usageEvent = asRecord(request.usageEvent) ?? {};
   const executionTelemetry = asRecord(request.executionTelemetry) ?? {};
   const executionStream = asRecord(executionTelemetry.stream) ?? {};
@@ -147,8 +161,11 @@ export default function RequestDetailRoute() {
     pickBoolean(request, "promptCacheSupported") ??
     pickBoolean(executionPromptCaching, "supported") ??
     false;
-  const promptCacheRequested = pickBoolean(cacheObservability, "promptCacheRequested") ?? pickBoolean(request, "promptCacheRequested");
-  const promptCacheUsed = pickBoolean(cacheObservability, "promptCacheUsed") ?? pickBoolean(request, "promptCacheUsed");
+  const promptCacheRequested =
+    pickBoolean(cacheObservability, "promptCacheRequested") ??
+    pickBoolean(request, "promptCacheRequested");
+  const promptCacheUsed =
+    pickBoolean(cacheObservability, "promptCacheUsed") ?? pickBoolean(request, "promptCacheUsed");
   const cacheStatus = !promptCacheSupported
     ? "unavailable"
     : promptCacheUsed
@@ -157,31 +174,41 @@ export default function RequestDetailRoute() {
         ? "miss"
         : "ready";
   const responseStatus = asNumber(responseCapture.statusCode);
-  const createdAtMs = pickNumber(request, "createdAtMs") ?? pickNumber(usageEvent, "timestamp_ms", "timestampMs");
+  const createdAtMs =
+    pickNumber(request, "createdAtMs") ?? pickNumber(usageEvent, "timestamp_ms", "timestampMs");
   const measuredAtMs =
     pickNumber(latestProfile, "measured_at_ms", "measuredAtMs") ??
     pickNumber(observedSample, "timestamp_ms", "timestampMs");
-  const modelId = pickString(usageEvent, "model_id", "modelId") ?? pickString(endpointIdentity, "model_id", "modelId");
+  const modelId =
+    pickString(usageEvent, "model_id", "modelId") ??
+    pickString(endpointIdentity, "model_id", "modelId");
   const providerKind =
     pickString(usageEvent, "provider_kind", "providerKind") ??
     pickString(endpointIdentity, "provider_kind", "providerKind");
   const endpointId = pickString(request, "endpointId") ?? "unknown";
-  const streamTextDeltaCount = pickNumber(request, "streamTextDeltaCount") ?? pickNumber(executionStream, "textDeltas") ?? 0;
+  const streamTextDeltaCount =
+    pickNumber(request, "streamTextDeltaCount") ?? pickNumber(executionStream, "textDeltas") ?? 0;
   const streamToolCallDeltaCount =
-    pickNumber(request, "streamToolCallDeltaCount") ?? pickNumber(executionStream, "toolCallDeltas") ?? 0;
+    pickNumber(request, "streamToolCallDeltaCount") ??
+    pickNumber(executionStream, "toolCallDeltas") ??
+    0;
   const streamToolArgumentDeltaCount =
-    pickNumber(request, "streamToolArgumentDeltaCount") ?? pickNumber(executionStream, "toolArgumentDeltas") ?? 0;
+    pickNumber(request, "streamToolArgumentDeltaCount") ??
+    pickNumber(executionStream, "toolArgumentDeltas") ??
+    0;
   const streamTextSupported =
     pickBoolean(request, "streamTextSupported") ??
-    (pickString(executionStreamSupport, "text") !== "unsupported");
+    pickString(executionStreamSupport, "text") !== "unsupported";
   const streamToolCallSupported =
     pickBoolean(request, "streamToolCallSupported") ??
-    (pickString(executionStreamSupport, "toolCalls") !== "unsupported");
+    pickString(executionStreamSupport, "toolCalls") !== "unsupported";
   const streamToolArgumentSupported =
     pickBoolean(request, "streamToolArgumentSupported") ??
-    (pickString(executionStreamSupport, "toolArguments") !== "unsupported");
+    pickString(executionStreamSupport, "toolArguments") !== "unsupported";
   const streamSummary = [
-    streamTextSupported ? `${streamTextDeltaCount} text delta${streamTextDeltaCount === 1 ? "" : "s"}` : null,
+    streamTextSupported
+      ? `${streamTextDeltaCount} text delta${streamTextDeltaCount === 1 ? "" : "s"}`
+      : null,
     streamToolCallSupported
       ? `${streamToolCallDeltaCount} tool-call delta${streamToolCallDeltaCount === 1 ? "" : "s"}`
       : null,
@@ -238,21 +265,53 @@ export default function RequestDetailRoute() {
       />
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
-        <FactCard label="Endpoint" value={endpointId} detail="Endpoint id currently associated with the captured request." emphasis />
-        <FactCard label="Source" value={renderMetricValue(sourceType)} detail="Canonical source family used by the telemetry ledger." />
-        <FactCard label="Provider family" value={renderMetricValue(providerFamily)} detail="Execution adapter family preserved in the canonical telemetry contract." />
-        <FactCard label="Latency" value={latencyMs === null ? "n/a" : `${latencyMs} ms`} detail="Observed request latency from the persisted usage event." />
-        <FactCard label="Tokens" value={renderMetricValue(totalTokens)} detail="Total token usage when the provider exposed prompt/completion accounting." />
+        <FactCard
+          label="Endpoint"
+          value={endpointId}
+          detail="Endpoint id currently associated with the captured request."
+          emphasis
+        />
+        <FactCard
+          label="Source"
+          value={renderMetricValue(sourceType)}
+          detail="Canonical source family used by the telemetry ledger."
+        />
+        <FactCard
+          label="Provider family"
+          value={renderMetricValue(providerFamily)}
+          detail="Execution adapter family preserved in the canonical telemetry contract."
+        />
+        <FactCard
+          label="Latency"
+          value={latencyMs === null ? "n/a" : `${latencyMs} ms`}
+          detail="Observed request latency from the persisted usage event."
+        />
+        <FactCard
+          label="Tokens"
+          value={renderMetricValue(totalTokens)}
+          detail="Total token usage when the provider exposed prompt/completion accounting."
+        />
         <FactCard
           label="Cost"
           value={formatUsd(actualCostUsd ?? estimatedCostUsd)}
-          detail={actualCostUsd !== null ? "Actual USD cost from the execution receipt." : "Estimated USD cost from the persisted runtime usage event."}
+          detail={
+            actualCostUsd !== null
+              ? "Actual USD cost from the execution receipt."
+              : "Estimated USD cost from the persisted runtime usage event."
+          }
         />
-        <FactCard label="Cache" value={renderMetricValue(cacheStatus)} detail="Captured cache posture using explicit support semantics rather than zero-only inference." />
+        <FactCard
+          label="Cache"
+          value={renderMetricValue(cacheStatus)}
+          detail="Captured cache posture using explicit support semantics rather than zero-only inference."
+        />
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[0.8fr_1.2fr]">
-        <SectionCard title="Telemetry summary" description="Canonical request facts for source, usage, timings, and endpoint identity.">
+        <SectionCard
+          title="Telemetry summary"
+          description="Canonical request facts for source, usage, timings, and endpoint identity."
+        >
           <dl className="grid gap-x-6 gap-y-3 text-sm md:grid-cols-2">
             {[
               ["Provider", providerKind],
@@ -266,23 +325,38 @@ export default function RequestDetailRoute() {
               ["Stream deltas", streamSummary.length > 0 ? streamSummary : null],
             ].map(([label, value]) => (
               <div key={label} className="border-b border-[var(--rm-border)] pb-3">
-                <dt className="text-xs uppercase tracking-[0.24em] text-[var(--rm-muted)]">{label}</dt>
+                <dt className="text-xs uppercase tracking-[0.24em] text-[var(--rm-muted)]">
+                  {label}
+                </dt>
                 <dd className="mt-1 font-medium text-[var(--rm-fg)]">{renderMetricValue(value)}</dd>
               </div>
             ))}
           </dl>
         </SectionCard>
 
-        <SectionCard title="Observed performance" description="Request-level execution telemetry and profile-history posture stay adjacent to tooling and captures.">
+        <SectionCard
+          title="Observed performance"
+          description="Request-level execution telemetry and profile-history posture stay adjacent to tooling and captures."
+        >
           <dl className="grid gap-x-6 gap-y-3 text-sm md:grid-cols-2">
             {[
               ["Recent samples", String(profileSampleCount)],
-              ["Profile failure rate", latestProfileFailureRate === null ? null : String(latestProfileFailureRate)],
+              [
+                "Profile failure rate",
+                latestProfileFailureRate === null ? null : String(latestProfileFailureRate),
+              ],
               ["Latest profile error class", latestProfileErrorClass],
-              ["Recent sample bundle", recentEndpointSamples.length > 0 ? `${recentEndpointSamples.length} samples available` : "No recent samples"],
+              [
+                "Recent sample bundle",
+                recentEndpointSamples.length > 0
+                  ? `${recentEndpointSamples.length} samples available`
+                  : "No recent samples",
+              ],
             ].map(([label, value]) => (
               <div key={label} className="border-b border-[var(--rm-border)] pb-3">
-                <dt className="text-xs uppercase tracking-[0.24em] text-[var(--rm-muted)]">{label}</dt>
+                <dt className="text-xs uppercase tracking-[0.24em] text-[var(--rm-muted)]">
+                  {label}
+                </dt>
                 <dd className="mt-1 font-medium text-[var(--rm-fg)]">{renderMetricValue(value)}</dd>
               </div>
             ))}
@@ -295,7 +369,10 @@ export default function RequestDetailRoute() {
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[0.85fr_1.15fr]">
-        <SectionCard title="Routing receipts" description="First-class routing observations show the exact mode, rewrite posture, and arbitration details that shaped endpoint selection.">
+        <SectionCard
+          title="Routing receipts"
+          description="First-class routing observations show the exact mode, rewrite posture, and arbitration details that shaped endpoint selection."
+        >
           <dl className="grid gap-x-6 gap-y-3 text-sm md:grid-cols-2">
             {[
               ["Effective mode", routingModeSummary],
@@ -314,32 +391,47 @@ export default function RequestDetailRoute() {
               ["Rubric signals", rubricSignalSummary],
             ].map(([label, value]) => (
               <div key={label} className="border-b border-[var(--rm-border)] pb-3">
-                <dt className="text-xs uppercase tracking-[0.24em] text-[var(--rm-muted)]">{label}</dt>
+                <dt className="text-xs uppercase tracking-[0.24em] text-[var(--rm-muted)]">
+                  {label}
+                </dt>
                 <dd className="mt-1 font-medium text-[var(--rm-fg)]">{renderMetricValue(value)}</dd>
               </div>
             ))}
           </dl>
         </SectionCard>
 
-        <SectionCard title="Routing diagnostics bundle" description="Keep the raw routingDiagnostics receipt adjacent to the normalized summary for deeper arbitration and rewrite debugging.">
-          <CodeBlock>{JSON.stringify({ routingDiagnostics, hybridArbitration }, null, 2)}</CodeBlock>
+        <SectionCard
+          title="Routing diagnostics bundle"
+          description="Keep the raw routingDiagnostics receipt adjacent to the normalized summary for deeper arbitration and rewrite debugging."
+        >
+          <CodeBlock>
+            {JSON.stringify({ routingDiagnostics, hybridArbitration }, null, 2)}
+          </CodeBlock>
         </SectionCard>
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[0.8fr_1.2fr]">
-        <SectionCard title="Tooling" description="Tool calls, execution receipts, and tooling diagnostics from persisted runtime observability.">
+        <SectionCard
+          title="Tooling"
+          description="Tool calls, execution receipts, and tooling diagnostics from persisted runtime observability."
+        >
           <div className="space-y-4">
             <div>
               <div className="flex items-center justify-between">
                 <p className="font-medium text-[var(--rm-fg)]">Tool calls</p>
-                <StatusPill tone={toolCalls.length > 0 ? "accent" : "neutral"}>{toolCalls.length}</StatusPill>
+                <StatusPill tone={toolCalls.length > 0 ? "accent" : "neutral"}>
+                  {toolCalls.length}
+                </StatusPill>
               </div>
               <div className="mt-3 space-y-3">
                 {toolCalls.length === 0 ? (
                   <EmptyState label="No tool calls were recorded for this request." />
                 ) : (
                   toolCalls.map((toolCall, index) => (
-                    <div key={String((asRecord(toolCall)?.toolCallId as string | undefined) ?? index)} className="rounded-none border border-[var(--rm-border)] bg-[var(--rm-panel)] p-3">
+                    <div
+                      key={String((asRecord(toolCall)?.toolCallId as string | undefined) ?? index)}
+                      className="rounded-none border border-[var(--rm-border)] bg-[var(--rm-panel)] p-3"
+                    >
                       <p className="font-medium text-[var(--rm-fg)]">
                         {String(asRecord(toolCall)?.toolName ?? "unknown")}
                       </p>
@@ -355,7 +447,9 @@ export default function RequestDetailRoute() {
             <div>
               <div className="flex items-center justify-between">
                 <p className="font-medium text-[var(--rm-fg)]">Execution receipts</p>
-                <StatusPill tone={toolExecutions.length > 0 ? "success" : "neutral"}>{toolExecutions.length}</StatusPill>
+                <StatusPill tone={toolExecutions.length > 0 ? "success" : "neutral"}>
+                  {toolExecutions.length}
+                </StatusPill>
               </div>
               <div className="mt-3 space-y-3">
                 {toolExecutions.length === 0 ? (
@@ -364,11 +458,18 @@ export default function RequestDetailRoute() {
                   toolExecutions.map((execution, index) => {
                     const executionRecord = asRecord(execution) ?? {};
                     return (
-                      <div key={String(executionRecord.executionId ?? index)} className="rounded-none border border-[var(--rm-border)] bg-[var(--rm-panel)] p-3">
+                      <div
+                        key={String(executionRecord.executionId ?? index)}
+                        className="rounded-none border border-[var(--rm-border)] bg-[var(--rm-panel)] p-3"
+                      >
                         <div className="flex flex-wrap items-center gap-2">
-                          <p className="font-medium text-[var(--rm-fg)]">{String(executionRecord.toolName ?? "Unnamed tool")}</p>
+                          <p className="font-medium text-[var(--rm-fg)]">
+                            {String(executionRecord.toolName ?? "Unnamed tool")}
+                          </p>
                           {executionRecord.status ? (
-                            <StatusPill tone={executionRecord.status === "success" ? "success" : "warning"}>
+                            <StatusPill
+                              tone={executionRecord.status === "success" ? "success" : "warning"}
+                            >
                               {String(executionRecord.status)}
                             </StatusPill>
                           ) : null}
@@ -391,7 +492,10 @@ export default function RequestDetailRoute() {
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
-        <SectionCard title="Captures and profile" description="Preserved request/response captures plus the linked endpoint profile remain available as secondary debug surfaces.">
+        <SectionCard
+          title="Captures and profile"
+          description="Preserved request/response captures plus the linked endpoint profile remain available as secondary debug surfaces."
+        >
           <div className="space-y-4">
             <div className="grid gap-4 xl:grid-cols-2">
               <div>
@@ -410,7 +514,10 @@ export default function RequestDetailRoute() {
           </div>
         </SectionCard>
 
-        <SectionCard title="Raw observation bundle" description="The full persisted request observation stays visible for low-level debugging and audit trails.">
+        <SectionCard
+          title="Raw observation bundle"
+          description="The full persisted request observation stays visible for low-level debugging and audit trails."
+        >
           <CodeBlock>{JSON.stringify(detail.request, null, 2)}</CodeBlock>
         </SectionCard>
       </div>

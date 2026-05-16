@@ -1,0 +1,428 @@
+⣾  ⣽  ⣻  ⢿  ⡿  ⣟  ⣯  ⣷  ⣾  ⣽  ⣻  ⢿  ⡿  ⣟⣾   ⣽  ⣻  ⢿  ⡿⣾   ⣽  ⣻  ⢿  ⡿  ⣟  ⣯  ⣷  ⣾  ⣽  ⣻  ⢿  ⡿  ⣟  ⣯  ⣷  ⣾validateCI parity﻿2026-05-11T21:56:51.0099890Z ##[group]Run pnpm run ci:check
+validateCI parity2026-05-11T21:56:51.0100209Z pnpm run ci:check
+validateCI parity2026-05-11T21:56:51.0122506Z shell: /usr/bin/bash -e {0}
+validateCI parity2026-05-11T21:56:51.0122748Z env:
+validateCI parity2026-05-11T21:56:51.0122986Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+validateCI parity2026-05-11T21:56:51.0123309Z   CARGO_HOME: /home/runner/.cargo
+validateCI parity2026-05-11T21:56:51.0123549Z   CARGO_INCREMENTAL: 0
+validateCI parity2026-05-11T21:56:51.0123778Z   CARGO_TERM_COLOR: always
+validateCI parity2026-05-11T21:56:51.0123986Z ##[endgroup]
+validateCI parity2026-05-11T21:56:51.2971333Z  WARN  Unsupported engine: wanted: {"node":">=24 <25"} (current: {"node":"v22.22.2","pnpm":"10.6.5"})
+validateCI parity2026-05-11T21:56:51.2997383Z 
+validateCI parity2026-05-11T21:56:51.2997944Z > role-model@0.0.0 ci:check /home/runner/work/role-model/role-model
+validateCI parity2026-05-11T21:56:51.2999778Z > corepack pnpm run lint && corepack pnpm run schemas:validate && corepack pnpm run build && corepack pnpm run test && corepack pnpm run test:rust && corepack pnpm run smoke
+validateCI parity2026-05-11T21:56:51.3001202Z 
+validateCI parity2026-05-11T21:56:52.9999684Z  WARN  Unsupported engine: wanted: {"node":">=24 <25"} (current: {"node":"v22.22.2","pnpm":"10.6.5"})
+validateCI parity2026-05-11T21:56:53.0023282Z 
+validateCI parity2026-05-11T21:56:53.0023770Z > role-model@0.0.0 lint /home/runner/work/role-model/role-model
+validateCI parity2026-05-11T21:56:53.0024304Z > biome check . && corepack pnpm run lint:rust
+validateCI parity2026-05-11T21:56:53.0024510Z 
+validateCI parity2026-05-11T21:56:53.6900068Z ./testdata/catalog/litellm-model-prices.json lint ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+validateCI parity2026-05-11T21:56:53.6903072Z 
+validateCI parity2026-05-11T21:56:53.6904571Z   × Size of ./testdata/catalog/litellm-model-prices.json is 1.2 MiB which exceeds configured maximum of 1.0 MiB for this project.
+validateCI parity2026-05-11T21:56:53.6906457Z     The file size limit exists to prevent us inadvertently slowing down and loading large files that we shouldn't.
+validateCI parity2026-05-11T21:56:53.6907974Z     Use the `files.maxSize` configuration to change the maximum size of files processed.
+validateCI parity2026-05-11T21:56:53.6908890Z   
+validateCI parity2026-05-11T21:56:53.6909265Z 
+validateCI parity2026-05-11T21:56:53.6910002Z ./testdata/catalog/litellm-model-prices.json organizeImports ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+validateCI parity2026-05-11T21:56:53.6910610Z 
+validateCI parity2026-05-11T21:56:53.6912022Z   × Size of ./testdata/catalog/litellm-model-prices.json is 1.2 MiB which exceeds configured maximum of 1.0 MiB for this project.
+validateCI parity2026-05-11T21:56:53.6913524Z     The file size limit exists to prevent us inadvertently slowing down and loading large files that we shouldn't.
+validateCI parity2026-05-11T21:56:53.6915068Z     Use the `files.maxSize` configuration to change the maximum size of files processed.
+validateCI parity2026-05-11T21:56:53.6915895Z   
+validateCI parity2026-05-11T21:56:53.6916192Z 
+validateCI parity2026-05-11T21:56:53.6917146Z ./testdata/catalog/litellm-model-prices.json assists ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+validateCI parity2026-05-11T21:56:53.6917841Z 
+validateCI parity2026-05-11T21:56:53.6918869Z   × Size of ./testdata/catalog/litellm-model-prices.json is 1.2 MiB which exceeds configured maximum of 1.0 MiB for this project.
+validateCI parity2026-05-11T21:56:53.6920394Z     The file size limit exists to prevent us inadvertently slowing down and loading large files that we shouldn't.
+validateCI parity2026-05-11T21:56:53.6921860Z     Use the `files.maxSize` configuration to change the maximum size of files processed.
+validateCI parity2026-05-11T21:56:53.6922547Z   
+validateCI parity2026-05-11T21:56:53.6922688Z 
+validateCI parity2026-05-11T21:56:53.6923587Z ./testdata/catalog/litellm-model-prices.json format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+validateCI parity2026-05-11T21:56:53.6924257Z 
+validateCI parity2026-05-11T21:56:53.6925205Z   × Size of ./testdata/catalog/litellm-model-prices.json is 1.2 MiB which exceeds configured maximum of 1.0 MiB for this project.
+validateCI parity2026-05-11T21:56:53.6926723Z     The file size limit exists to prevent us inadvertently slowing down and loading large files that we shouldn't.
+validateCI parity2026-05-11T21:56:53.6927929Z     Use the `files.maxSize` configuration to change the maximum size of files processed.
+validateCI parity2026-05-11T21:56:53.6928605Z   
+validateCI parity2026-05-11T21:56:53.6928742Z 
+validateCI parity2026-05-11T21:56:53.6929630Z ./packages/conformance/src/protocol-fixture-conformance.test.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+validate        CI parity       2026-05-11T21:56:53.6930346Z
+validate        CI parity       2026-05-11T21:56:53.6931174Z   × Formatter would have printed the following content:    
+validate        CI parity       2026-05-11T21:56:53.6932029Z
+validate        CI parity       2026-05-11T21:56:53.6932532Z      4  4 │   import { promisify } from "node:util";       
+validate        CI parity       2026-05-11T21:56:53.6933061Z      5  5 │
+validate        CI parity       2026-05-11T21:56:53.6934416Z      6    │ - import·{·fixtureValidationManifest,·getFixtur
+reValidationCounts,·validateFixtures·}·from·"@role-model/schema-tools";
+validate        CI parity       2026-05-11T21:56:53.6935568Z         6 │ + import·{
+validate        CI parity       2026-05-11T21:56:53.6936102Z         7 │ + ··fixtureValidationManifest,
+validate        CI parity       2026-05-11T21:56:53.6936702Z         8 │ + ··getFixtureValidationCounts,
+validate        CI parity       2026-05-11T21:56:53.6937255Z         9 │ + ··validateFixtures,
+validate        CI parity       2026-05-11T21:56:53.6937838Z        10 │ + }·from·"@role-model/schema-tools";
+validate        CI parity       2026-05-11T21:56:53.6938598Z      7 11 │   import { describe, test } from "vitest";     
+validate        CI parity       2026-05-11T21:56:53.6939114Z      8 12 │
+validate        CI parity       2026-05-11T21:56:53.6939463Z     ····· │
+validate        CI parity       2026-05-11T21:56:53.6940017Z     60 64 │       const counts = getFixtureValidationCounts
+s();
+validate        CI parity       2026-05-11T21:56:53.6940580Z     61 65 │
+validate        CI parity       2026-05-11T21:56:53.6941883Z     62    │ - ····if·(!new·RegExp(`Validated·${counts.total
+lCount}·fixture·file\\(s\\)\\.`,"u").test(output))·{
+validate        CI parity       2026-05-11T21:56:53.6943339Z        66 │ + ····if·(!new·RegExp(`Validated·${counts.total
+lCount}·fixture·file\\(s\\)\\.`,·"u").test(output))·{
+validate        CI parity       2026-05-11T21:56:53.6944285Z     63 67 │         throw new Error(output);
+validate        CI parity       2026-05-11T21:56:53.6944760Z     64 68 │       }
+validate        CI parity       2026-05-11T21:56:53.6945070Z
+validate        CI parity       2026-05-11T21:56:53.6945212Z
+validate        CI parity       2026-05-11T21:56:53.6946254Z ./role-model-router/vendor/llama-swap/ui-svelte/src/routes/
+/Models.svelte:8:3 lint/style/useConst  FIXABLE  ━━━━━━━━━━
+validate        CI parity       2026-05-11T21:56:53.6947048Z
+validate        CI parity       2026-05-11T21:56:53.6947442Z   × This let declares a variable that is only assigned once
+e.
+validate        CI parity       2026-05-11T21:56:53.6947952Z
+validate        CI parity       2026-05-11T21:56:53.6948622Z      6 │   import ResizablePanels from "../components/Resiz
+zablePanels.svelte";
+validate        CI parity       2026-05-11T21:56:53.6949280Z      7 │
+validate        CI parity       2026-05-11T21:56:53.6950142Z    > 8 │   let direction = $derived<"horizontal" | "vertica
+al">($isNarrow ? "vertical" : "horizontal");
+validate        CI parity       2026-05-11T21:56:53.6951190Z        │   ^^^
+validate        CI parity       2026-05-11T21:56:53.6951534Z      9 │ </script>
+validate        CI parity       2026-05-11T21:56:53.6951864Z     10 │
+validate        CI parity       2026-05-11T21:56:53.6952114Z
+validate        CI parity       2026-05-11T21:56:53.6952441Z   i 'direction' is never reassigned.
+validate        CI parity       2026-05-11T21:56:53.6952838Z
+validate        CI parity       2026-05-11T21:56:53.6953423Z     4 │   import ModelsPanel from "../components/ModelsPane
+el.svelte";
+validate        CI parity       2026-05-11T21:56:53.6954282Z     5 │   import LogPanel from "../components/LogPanel.svel
+lte";
+validate        CI parity       2026-05-11T21:56:53.6955548Z   > 6 │   import ResizablePanels from "../components/Resiza
+ablePanels.svelte";
+validate        CI parity       2026-05-11T21:56:53.6956416Z       │                                                    
+       ^^^^^^^^^
+validate        CI parity       2026-05-11T21:56:53.6956920Z     7 │
+validate        CI parity       2026-05-11T21:56:53.6957730Z     8 │   let direction = $derived<"horizontal" | "vertical
+l">($isNarrow ? "vertical" : "horizontal");
+validate        CI parity       2026-05-11T21:56:53.6958435Z
+validate        CI parity       2026-05-11T21:56:53.6958747Z   i Safe fix: Use const instead.
+validate        CI parity       2026-05-11T21:56:53.6959102Z
+validate        CI parity       2026-05-11T21:56:53.6959779Z     5 5 │     import ResizablePanels from "../components/Re
+esizablePanels.svelte";
+validate        CI parity       2026-05-11T21:56:53.6960476Z     6 6 │
+validate        CI parity       2026-05-11T21:56:53.6961606Z     7   │ - ··let·direction·=·$derived<"horizontal"·|·"vert
+tical">($isNarrow·?·"vertical"·:·"horizontal");
+validate        CI parity       2026-05-11T21:56:53.6963034Z       7 │ + ··const·direction·=·$derived<"horizontal"·|·"ve
+ertical">($isNarrow·?·"vertical"·:·"horizontal");
+validate        CI parity       2026-05-11T21:56:53.6963855Z     8 8 │
+validate        CI parity       2026-05-11T21:56:53.6964143Z
+validate        CI parity       2026-05-11T21:56:53.6964284Z
+validate        CI parity       2026-05-11T21:56:53.6965160Z ./role-model-router/vendor/llama-swap/ui-svelte/src/routes/
+/Models.svelte organizeImports ━━━━━━━━━━━
+validate        CI parity       2026-05-11T21:56:53.6965854Z
+validate        CI parity       2026-05-11T21:56:53.6966120Z   × Import statements could be sorted:
+validate        CI parity       2026-05-11T21:56:53.6966510Z
+validate        CI parity       2026-05-11T21:56:53.6966876Z      1  1 │   <script lang="ts">
+validate        CI parity       2026-05-11T21:56:53.6967509Z      2    │ - ··import·{·isNarrow·}·from·"../stores/theme";
+validate        CI parity       2026-05-11T21:56:53.6968296Z      3    │ - ··import·{·upstreamLogs·}·from·"../stores/api
+i";
+validate        CI parity       2026-05-11T21:56:53.6969190Z      4    │ - ··import·ModelsPanel·from·"../components/Mode
+elsPanel.svelte";
+validate        CI parity       2026-05-11T21:56:53.6970363Z      5    │ - ··import·LogPanel·from·"../components/LogPane
+el.svelte";
+validate        CI parity       2026-05-11T21:56:53.6971620Z      6    │ - ··import·ResizablePanels·from·"../components/
+/ResizablePanels.svelte";
+validate        CI parity       2026-05-11T21:56:53.6972619Z         2 │ + ··import·LogPanel·from·"../components/LogPane
+el.svelte";
+validate        CI parity       2026-05-11T21:56:53.6973393Z         3 │ + ··import·ModelsPanel·from·"../components/Mode
+elsPanel.svelte";
+validate        CI parity       2026-05-11T21:56:53.6974016Z         4 │ + ··import·ResizablePanels·from·"../components/
+/ResizablePanels.svelte";
+validate        CI parity       2026-05-11T21:56:53.6974543Z         5 │ + ··import·{·upstreamLogs·}·from·"../stores/api
+i";
+validate        CI parity       2026-05-11T21:56:53.6975266Z         6 │ + ··import·{·isNarrow·}·from·"../stores/theme";
+validate        CI parity       2026-05-11T21:56:53.6975797Z      7  7 │
+validate        CI parity       2026-05-11T21:56:53.6976446Z      8  8 │     let direction = $derived<"horizontal" | "ve
+ertical">($isNarrow ? "vertical" : "horizontal");
+validate        CI parity       2026-05-11T21:56:53.6976866Z
+validate        CI parity       2026-05-11T21:56:53.6976953Z
+validate        CI parity       2026-05-11T21:56:53.6977462Z ./role-model-router/vendor/llama-swap/ui-svelte/src/routes/
+/Models.svelte format ━━━━━━━━━━━━━━━━━━━━
+validate        CI parity       2026-05-11T21:56:53.6977848Z
+validate        CI parity       2026-05-11T21:56:53.6978142Z   × Formatter would have printed the following content:    
+validate        CI parity       2026-05-11T21:56:53.6978645Z
+validate        CI parity       2026-05-11T21:56:53.6979024Z      1  1 │   <script lang="ts">
+validate        CI parity       2026-05-11T21:56:53.6979664Z      2    │ - ··import·{·isNarrow·}·from·"../stores/theme";
+validate        CI parity       2026-05-11T21:56:53.6980641Z      3    │ - ··import·{·upstreamLogs·}·from·"../stores/api
+i";
+validate        CI parity       2026-05-11T21:56:53.6981728Z      4    │ - ··import·ModelsPanel·from·"../components/Mode
+elsPanel.svelte";
+validate        CI parity       2026-05-11T21:56:53.6982657Z      5    │ - ··import·LogPanel·from·"../components/LogPane
+el.svelte";
+validate        CI parity       2026-05-11T21:56:53.6983660Z      6    │ - ··import·ResizablePanels·from·"../components/
+/ResizablePanels.svelte";
+validate        CI parity       2026-05-11T21:56:53.6984565Z         2 │ + import·{·isNarrow·}·from·"../stores/theme";  
+validate        CI parity       2026-05-11T21:56:53.6985302Z         3 │ + import·{·upstreamLogs·}·from·"../stores/api";
+validate        CI parity       2026-05-11T21:56:53.6986162Z         4 │ + import·ModelsPanel·from·"../components/Models
+sPanel.svelte";
+validate        CI parity       2026-05-11T21:56:53.6987089Z         5 │ + import·LogPanel·from·"../components/LogPanel.
+.svelte";
+validate        CI parity       2026-05-11T21:56:53.6987815Z         6 │ + import·ResizablePanels·from·"../components/Re
+esizablePanels.svelte";
+validate        CI parity       2026-05-11T21:56:53.6988211Z      7  7 │
+validate        CI parity       2026-05-11T21:56:53.6988744Z      8    │ - ··let·direction·=·$derived<"horizontal"·|·"ve
+ertical">($isNarrow·?·"vertical"·:·"horizontal");
+validate        CI parity       2026-05-11T21:56:53.6990218Z         8 │ + let·direction·=·$derived<"horizontal"·|·"vert
+tical">($isNarrow·?·"vertical"·:·"horizontal");
+validate        CI parity       2026-05-11T21:56:53.6991021Z      9  9 │   </script>
+validate        CI parity       2026-05-11T21:56:53.6991275Z     10 10 │
+validate        CI parity       2026-05-11T21:56:53.6991443Z
+validate        CI parity       2026-05-11T21:56:53.6991535Z
+validate        CI parity       2026-05-11T21:56:53.6992198Z ./role-model-router/vendor/llama-swap/ui-svelte/src/routes/
+/LogViewer.svelte:12:3 lint/style/useConst  FIXABLE  ━━━━━━━━━━
+validate        CI parity       2026-05-11T21:56:53.6993051Z
+validate        CI parity       2026-05-11T21:56:53.6993532Z   × This let declares a variable that is only assigned once
+e.
+validate        CI parity       2026-05-11T21:56:53.6994072Z
+validate        CI parity       2026-05-11T21:56:53.6994860Z     10 │   const viewModeStore = persistentStore<ViewMode>(
+("logviewer-view-mode", "panels");
+validate        CI parity       2026-05-11T21:56:53.6995600Z     11 │
+validate        CI parity       2026-05-11T21:56:53.6996141Z   > 12 │   let direction = $derived<"horizontal" | "vertica
+al">(
+validate        CI parity       2026-05-11T21:56:53.6996693Z        │   ^^^
+validate        CI parity       2026-05-11T21:56:53.6997377Z     13 │     $screenWidth === "xs" || $screenWidth === "sm"
+" ? "vertical" : "horizontal",
+validate        CI parity       2026-05-11T21:56:53.6998053Z     14 │   );
+validate        CI parity       2026-05-11T21:56:53.6998321Z
+validate        CI parity       2026-05-11T21:56:53.6998634Z   i 'direction' is never reassigned.
+validate        CI parity       2026-05-11T21:56:53.6999021Z
+validate        CI parity       2026-05-11T21:56:53.6999503Z      8 │   type ViewMode = "proxy" | "upstream" | "panels";
+validate        CI parity       2026-05-11T21:56:53.7000024Z      9 │
+validate        CI parity       2026-05-11T21:56:53.7001018Z   > 10 │   const viewModeStore = persistentStore<ViewMode>(
+("logviewer-view-mode", "panels");
+validate        CI parity       2026-05-11T21:56:53.7002046Z        │                                                   
+                      ^^^^^^^^^
+validate        CI parity       2026-05-11T21:56:53.7002580Z     11 │
+validate        CI parity       2026-05-11T21:56:53.7003353Z     12 │   let direction = $derived<"horizontal" | "vertica
+al">(
+validate        CI parity       2026-05-11T21:56:53.7003847Z
+validate        CI parity       2026-05-11T21:56:53.7004164Z   i Safe fix: Use const instead.
+validate        CI parity       2026-05-11T21:56:53.7004524Z
+validate        CI parity       2026-05-11T21:56:53.7005321Z      9  9 │     const viewModeStore = persistentStore<ViewM
+Mode>("logviewer-view-mode", "panels");
+validate        CI parity       2026-05-11T21:56:53.7006111Z     10 10 │
+validate        CI parity       2026-05-11T21:56:53.7006751Z     11    │ - ··let·direction·=·$derived<"horizontal"·|·"ve
+ertical">(
+validate        CI parity       2026-05-11T21:56:53.7007736Z        11 │ + ··const·direction·=·$derived<"horizontal"·|·"
+"vertical">(
+validate        CI parity       2026-05-11T21:56:53.7008745Z     12 12 │       $screenWidth === "xs" || $screenWidth ===
+= "sm" ? "vertical" : "horizontal",
+validate        CI parity       2026-05-11T21:56:53.7009427Z     13 13 │     );
+validate        CI parity       2026-05-11T21:56:53.7009703Z
+validate        CI parity       2026-05-11T21:56:53.7009947Z
+validate        CI parity       2026-05-11T21:56:53.7011062Z ./role-model-router/vendor/llama-swap/ui-svelte/src/routes/
+/LogViewer.svelte organizeImports ━━━━━━━━━━
+validate        CI parity       2026-05-11T21:56:53.7011895Z
+validate        CI parity       2026-05-11T21:56:53.7012290Z   × Import statements could be sorted:
+validate        CI parity       2026-05-11T21:56:53.7012798Z
+validate        CI parity       2026-05-11T21:56:53.7013468Z      1  1 │   <script lang="ts">
+validate        CI parity       2026-05-11T21:56:53.7014442Z      2    │ - ··import·{·proxyLogs,·upstreamLogs·}·from·"..
+./stores/api";
+validate        CI parity       2026-05-11T21:56:53.7015450Z      3    │ - ··import·{·screenWidth·}·from·"../stores/them
+me";
+validate        CI parity       2026-05-11T21:56:53.7016526Z      4    │ - ··import·{·persistentStore·}·from·"../stores/
+/persistent";
+validate        CI parity       2026-05-11T21:56:53.7017820Z      5    │ - ··import·LogPanel·from·"../components/LogPane
+el.svelte";
+validate        CI parity       2026-05-11T21:56:53.7018965Z      6    │ - ··import·ResizablePanels·from·"../components/
+/ResizablePanels.svelte";
+validate        CI parity       2026-05-11T21:56:53.7020245Z         2 │ + ··import·LogPanel·from·"../components/LogPane
+el.svelte";
+validate        CI parity       2026-05-11T21:56:53.7021750Z         3 │ + ··import·ResizablePanels·from·"../components/
+/ResizablePanels.svelte";
+validate        CI parity       2026-05-11T21:56:53.7022945Z         4 │ + ··import·{·proxyLogs,·upstreamLogs·}·from·"..
+./stores/api";
+validate        CI parity       2026-05-11T21:56:53.7024090Z         5 │ + ··import·{·persistentStore·}·from·"../stores/
+/persistent";
+validate        CI parity       2026-05-11T21:56:53.7025130Z         6 │ + ··import·{·screenWidth·}·from·"../stores/them
+me";
+validate        CI parity       2026-05-11T21:56:53.7025861Z      7  7 │
+validate        CI parity       2026-05-11T21:56:53.7026610Z      8  8 │     type ViewMode = "proxy" | "upstream" | "pan
+nels";
+validate        CI parity       2026-05-11T21:56:53.7095574Z
+validate        CI parity       2026-05-11T21:56:53.7095737Z
+validate        CI parity       2026-05-11T21:56:53.7096337Z ./role-model-router/vendor/llama-swap/ui-svelte/src/routes/
+/LogViewer.svelte format ━━━━━━━━━━━━━━━━━
+validate        CI parity       2026-05-11T21:56:53.7096790Z
+validate        CI parity       2026-05-11T21:56:53.7097026Z   × Formatter would have printed the following content:    
+validate        CI parity       2026-05-11T21:56:53.7097327Z
+validate        CI parity       2026-05-11T21:56:53.7097559Z      1  1 │   <script lang="ts">
+validate        CI parity       2026-05-11T21:56:53.7098035Z      2    │ - ··import·{·proxyLogs,·upstreamLogs·}·from·"..
+./stores/api";
+validate        CI parity       2026-05-11T21:56:53.7098542Z      3    │ - ··import·{·screenWidth·}·from·"../stores/them
+me";
+validate        CI parity       2026-05-11T21:56:53.7099070Z      4    │ - ··import·{·persistentStore·}·from·"../stores/
+/persistent";
+validate        CI parity       2026-05-11T21:56:53.7099614Z      5    │ - ··import·LogPanel·from·"../components/LogPane
+el.svelte";
+validate        CI parity       2026-05-11T21:56:53.7100471Z      6    │ - ··import·ResizablePanels·from·"../components/
+/ResizablePanels.svelte";
+validate        CI parity       2026-05-11T21:56:53.7102774Z         2 │ + import·{·proxyLogs,·upstreamLogs·}·from·"../s
+stores/api";
+validate        CI parity       2026-05-11T21:56:53.7103508Z         3 │ + import·{·screenWidth·}·from·"../stores/theme"
+";
+validate        CI parity       2026-05-11T21:56:53.7104036Z         4 │ + import·{·persistentStore·}·from·"../stores/pe
+ersistent";
+validate        CI parity       2026-05-11T21:56:53.7104581Z         5 │ + import·LogPanel·from·"../components/LogPanel.
+.svelte";
+validate        CI parity       2026-05-11T21:56:53.7105136Z         6 │ + import·ResizablePanels·from·"../components/Re
+esizablePanels.svelte";
+validate        CI parity       2026-05-11T21:56:53.7105542Z      7  7 │
+validate        CI parity       2026-05-11T21:56:53.7105900Z      8    │ - ··type·ViewMode·=·"proxy"·|·"upstream"·|·"pan
+nels";
+validate        CI parity       2026-05-11T21:56:53.7106357Z         8 │ + type·ViewMode·=·"proxy"·|·"upstream"·|·"panel
+ls";
+validate        CI parity       2026-05-11T21:56:53.7106666Z      9  9 │
+validate        CI parity       2026-05-11T21:56:53.7107165Z     10    │ - ··const·viewModeStore·=·persistentStore<ViewM
+Mode>("logviewer-view-mode",·"panels");
+validate        CI parity       2026-05-11T21:56:53.7107926Z        10 │ + const·viewModeStore·=·persistentStore<ViewMod
+de>("logviewer-view-mode",·"panels");
+validate        CI parity       2026-05-11T21:56:53.7108364Z     11 11 │
+validate        CI parity       2026-05-11T21:56:53.7108719Z     12    │ - ··let·direction·=·$derived<"horizontal"·|·"ve
+ertical">(
+validate        CI parity       2026-05-11T21:56:53.7109303Z     13    │ - ····$screenWidth·===·"xs"·||·$screenWidth·===
+=·"sm"·?·"vertical"·:·"horizontal",
+validate        CI parity       2026-05-11T21:56:53.7109726Z     14    │ - ··);
+validate        CI parity       2026-05-11T21:56:53.7110080Z        12 │ + let·direction·=·$derived<"horizontal"·|·"vert
+tical">(
+validate        CI parity       2026-05-11T21:56:53.7110647Z        13 │ + ··$screenWidth·===·"xs"·||·$screenWidth·===·"
+"sm"·?·"vertical"·:·"horizontal",
+validate        CI parity       2026-05-11T21:56:53.7111508Z        14 │ + );
+validate        CI parity       2026-05-11T21:56:53.7111726Z     15 15 │   </script>
+validate        CI parity       2026-05-11T21:56:53.7111940Z     16 16 │
+validate        CI parity       2026-05-11T21:56:53.7112102Z
+validate        CI parity       2026-05-11T21:56:53.7112191Z
+validate        CI parity       2026-05-11T21:56:53.7112814Z ./role-model-router/vendor/llama-swap/ui-svelte/src/routes/
+/Activity.svelte:88:36 lint/style/useTemplate  FIXABLE  ━━━━━━━━━━
+validate        CI parity       2026-05-11T21:56:53.7113315Z
+validate        CI parity       2026-05-11T21:56:53.7113561Z   × Template literals are preferred over string concatenati
+ion.
+validate        CI parity       2026-05-11T21:56:53.7113868Z
+validate        CI parity       2026-05-11T21:56:53.7114154Z     87 │   function formatSpeed(speed: number): string {   
+validate        CI parity       2026-05-11T21:56:53.7114622Z   > 88 │     return speed < 0 ? "unknown" : speed.toFixed(2
+2) + " t/s";
+validate        CI parity       2026-05-11T21:56:53.7115052Z        │                                    ^^^^^^^^^^^^^^^
+^^^^^^^^^^^
+validate        CI parity       2026-05-11T21:56:53.7115561Z     89 │   }
+validate        CI parity       2026-05-11T21:56:53.7115752Z     90 │
+validate        CI parity       2026-05-11T21:56:53.7115901Z
+validate        CI parity       2026-05-11T21:56:53.7116102Z   i Unsafe fix: Use a template literal.
+validate        CI parity       2026-05-11T21:56:53.7116333Z
+validate        CI parity       2026-05-11T21:56:53.7116509Z      85  85 │
+validate        CI parity       2026-05-11T21:56:53.7116842Z      86  86 │     function formatSpeed(speed: number): stri
+ing {
+validate        CI parity       2026-05-11T21:56:53.7117358Z      87     │ - ····return·speed·<·0·?·"unknown"·:·speed.to
+oFixed(2)·+·"·t/s";
+validate        CI parity       2026-05-11T21:56:53.7117901Z          87 │ + ····return·speed·<·0·?·"unknown"·:·`${speed
+d.toFixed(2)}·t/s`;
+validate        CI parity       2026-05-11T21:56:53.7118265Z      88  88 │     }
+validate        CI parity       2026-05-11T21:56:53.7118461Z      89  89 │
+validate        CI parity       2026-05-11T21:56:53.7118629Z
+validate        CI parity       2026-05-11T21:56:53.7118710Z
+validate        CI parity       2026-05-11T21:56:53.7119334Z ./role-model-router/vendor/llama-swap/ui-svelte/src/routes/
+/Activity.svelte:92:12 lint/style/useTemplate  FIXABLE  ━━━━━━━━━━
+validate        CI parity       2026-05-11T21:56:53.7119823Z
+validate        CI parity       2026-05-11T21:56:53.7120071Z   × Template literals are preferred over string concatenati
+ion.
+validate        CI parity       2026-05-11T21:56:53.7120400Z
+validate        CI parity       2026-05-11T21:56:53.7120914Z     91 │   function formatDuration(ms: number): string {   
+validate        CI parity       2026-05-11T21:56:53.7121649Z   > 92 │     return (ms / 1000).toFixed(2) + "s";
+validate        CI parity       2026-05-11T21:56:53.7122235Z        │            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+validate        CI parity       2026-05-11T21:56:53.7122683Z     93 │   }
+validate        CI parity       2026-05-11T21:56:53.7122989Z     94 │
+validate        CI parity       2026-05-11T21:56:53.7123223Z
+validate        CI parity       2026-05-11T21:56:53.7123546Z   i Unsafe fix: Use a template literal.
+validate        CI parity       2026-05-11T21:56:53.7123948Z
+validate        CI parity       2026-05-11T21:56:53.7124240Z      89  89 │
+validate        CI parity       2026-05-11T21:56:53.7124801Z      90  90 │     function formatDuration(ms: number): stri
+ing {
+validate        CI parity       2026-05-11T21:56:53.7125749Z      91     │ - ····return·(ms·/·1000).toFixed(2)·+·"s";   
+validate        CI parity       2026-05-11T21:56:53.7126447Z          91 │ + ····return·`${(ms·/·1000).toFixed(2)}s`;   
+validate        CI parity       2026-05-11T21:56:53.7126950Z      92  92 │     }
+validate        CI parity       2026-05-11T21:56:53.7127279Z      93  93 │
+validate        CI parity       2026-05-11T21:56:53.7127560Z
+validate        CI parity       2026-05-11T21:56:53.7127699Z
+validate        CI parity       2026-05-11T21:56:53.7128778Z ./role-model-router/vendor/llama-swap/ui-svelte/src/routes/
+/Activity.svelte:55:3 lint/style/useConst  FIXABLE  ━━━━━━━━━━
+validate        CI parity       2026-05-11T21:56:53.7129663Z
+validate        CI parity       2026-05-11T21:56:53.7130052Z   × This let declares a variable that is only assigned once
+e.
+validate        CI parity       2026-05-11T21:56:53.7130566Z
+validate        CI parity       2026-05-11T21:56:53.7131204Z     54 │   let columnsMenuOpen = $state(false);
+validate        CI parity       2026-05-11T21:56:53.7131963Z   > 55 │   let dropdownContainer: HTMLDivElement | null = n
+null;
+validate        CI parity       2026-05-11T21:56:53.7132582Z        │   ^^^
+validate        CI parity       2026-05-11T21:56:53.7132894Z     56 │
+validate        CI parity       2026-05-11T21:56:53.7133233Z     57 │   onMount(() => {
+validate        CI parity       2026-05-11T21:56:53.7133560Z
+validate        CI parity       2026-05-11T21:56:53.7133949Z   i 'dropdownContainer' is never reassigned.
+validate        CI parity       2026-05-11T21:56:53.7134385Z
+validate        CI parity       2026-05-11T21:56:53.7134672Z     52 │   );
+validate        CI parity       2026-05-11T21:56:53.7134986Z     53 │
+validate        CI parity       2026-05-11T21:56:53.7135533Z   > 54 │   let columnsMenuOpen = $state(false);
+validate        CI parity       2026-05-11T21:56:53.7136154Z        │                           ^^^^^^^^^^^^
+validate        CI parity       2026-05-11T21:56:53.7136854Z   > 55 │   let dropdownContainer: HTMLDivElement | null = n
+null;
+validate        CI parity       2026-05-11T21:56:53.7137223Z        │   ^^
+validate        CI parity       2026-05-11T21:56:53.7137403Z     56 │
+validate        CI parity       2026-05-11T21:56:53.7137604Z     57 │   onMount(() => {
+validate        CI parity       2026-05-11T21:56:53.7137795Z
+validate        CI parity       2026-05-11T21:56:53.7137984Z   i Safe fix: Use const instead.
+validate        CI parity       2026-05-11T21:56:53.7138189Z
+validate        CI parity       2026-05-11T21:56:53.7138468Z      52  52 │
+validate        CI parity       2026-05-11T21:56:53.7138989Z      53  53 │     let columnsMenuOpen = $state(false);     
+validate        CI parity       2026-05-11T21:56:53.7139783Z      54     │ - ··let·dropdownContainer:·HTMLDivElement·|·n
+null·=·null;
+validate        CI parity       2026-05-11T21:56:53.7141018Z          54 │ + ··const·dropdownContainer:·HTMLDivElement·|
+|·null·=·null;
+validate        CI parity       2026-05-11T21:56:53.7141780Z      55  55 │
+validate        CI parity       2026-05-11T21:56:53.7142220Z      56  56 │     onMount(() => {
+validate        CI parity       2026-05-11T21:56:53.7142621Z
+validate        CI parity       2026-05-11T21:56:53.7142779Z
+validate        CI parity       2026-05-11T21:56:53.7143884Z ./role-model-router/vendor/llama-swap/ui-svelte/src/routes/
+/Activity.svelte:122:3 lint/style/useConst  FIXABLE  ━━━━━━━━━━
+validate        CI parity       2026-05-11T21:56:53.7144759Z
+validate        CI parity       2026-05-11T21:56:53.7145206Z   × This let declares a variable that is only assigned once
+e.
+validate        CI parity       2026-05-11T21:56:53.7146035Z
+validate        CI parity       2026-05-11T21:56:53.7146409Z     120 │   }
+validate        CI parity       2026-05-11T21:56:53.7146783Z     121 │
+validate        CI parity       2026-05-11T21:56:53.7147548Z   > 122 │   let sortedMetrics = $derived([...$metrics].sort
+t((a, b) => b.id - a.id));
+validate        CI parity       2026-05-11T21:56:53.7148286Z         │   ^^^
+validate        CI parity       2026-05-11T21:56:53.7148672Z     123 │
+validate        CI parity       2026-05-11T21:56:53.7149328Z     124 │   let selectedCapture = $state<ReqRespCapture | n
+null>(null);
+validate        CI parity       2026-05-11T21:56:53.7149914Z
+validate        CI parity       2026-05-11T21:56:53.7150307Z   i 'sortedMetrics' is never reassigned.
+validate        CI parity       2026-05-11T21:56:53.7151078Z
+validate        CI parity       2026-05-11T21:56:53.7151467Z     117 │     }
+validate        CI parity       2026-05-11T21:56:53.7151818Z     118 │
+validate        CI parity       2026-05-11T21:56:53.7152214Z   > 119 │     return "a while ago";
+validate        CI parity       2026-05-11T21:56:53.7152711Z         │                   ^^^^^^^
+validate        CI parity       2026-05-11T21:56:53.7153109Z   > 120 │   }
+validate        CI parity       2026-05-11T21:56:53.7153418Z   > 121 │
+validate        CI parity       2026-05-11T21:56:53.7154106Z   > 122 │   let sortedMetrics = $derived([...$metrics].sort
+t((a, b) => b.id - a.id));
+validate        CI parity       2026-05-11T21:56:53.7154854Z Biome encountered an unexpected error
+validate        CI parity       2026-05-11T21:56:53.7155185Z
+validate        CI parity       2026-05-11T21:56:53.7156719Z This is a bug in Biome, not an error in your code, and we w
+would appreciate it if you could report it to https://github.com/biomejs/biome/issues/ along with the following informati
+ion to help us fixing the issue:
+validate        CI parity       2026-05-11T21:56:53.7158001Z
+validate        CI parity       2026-05-11T21:56:53.7158612Z Source Location: /home/runner/work/biome/biome/crates/biome
+e_text_size/src/range.rs:66:9
+validate        CI parity       2026-05-11T21:56:53.7159347Z Thread Name: main
+validate        CI parity       2026-05-11T21:56:53.7159824Z Message: assertion failed: start.raw <= end.raw
+validate        CI parity       2026-05-11T21:56:53.7160167Z
+validate        CI parity       2026-05-11T21:56:53.7278237Z  ELIFECYCLE  Command failed with exit code 101.
+validate        CI parity       2026-05-11T21:56:53.7617090Z  ELIFECYCLE  Command failed with exit code 101.
+validate        CI parity       2026-05-11T21:56:53.7821013Z ##[error]Process completed with exit code 101.
+___BEGIN___COMMAND_DONE_MARKER___0
+PS D:\DEV\role-model\.worktrees\31-main-ci-parity-evidence-json-repair>

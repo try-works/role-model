@@ -1,25 +1,34 @@
-import { readFile } from "node:fs/promises";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 
 import { generateProtocolTypes } from "../src/validate-schemas.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const generatedTypesPath = path.resolve(
-  __dirname,
-  "..",
-  "..",
-  "protocol-types",
-  "src",
-  "generated.ts",
-);
+const tempRoots: string[] = [];
+
+afterEach(async () => {
+  await Promise.all(
+    tempRoots.splice(0).map(async (tempRoot) => {
+      await rm(tempRoot, { recursive: true, force: true });
+    }),
+  );
+});
+
+async function createGeneratedTypesPath(): Promise<string> {
+  const tempRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-generated-types-"));
+  tempRoots.push(tempRoot);
+  return path.join(tempRoot, "generated.ts");
+}
 
 describe("generateProtocolTypes", () => {
   it("does not emit duplicate exported interfaces for externally referenced schemas", async () => {
-    await generateProtocolTypes();
+    const generatedTypesPath = await createGeneratedTypesPath();
+    await generateProtocolTypes(generatedTypesPath);
 
     const generatedTypes = await readFile(generatedTypesPath, "utf8");
     const exportMatches = Array.from(
@@ -32,7 +41,8 @@ describe("generateProtocolTypes", () => {
   });
 
   it("emits the router metricEntry helper instead of referencing an undefined MetricEntry symbol", async () => {
-    await generateProtocolTypes();
+    const generatedTypesPath = await createGeneratedTypesPath();
+    await generateProtocolTypes(generatedTypesPath);
 
     const generatedTypes = await readFile(generatedTypesPath, "utf8");
 

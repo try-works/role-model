@@ -222,66 +222,68 @@ litellm_proxy:
       },
     });
 
-    expect(parseUnifiedRuntimeConfigText(renderUnifiedRuntimeConfigText(normalized))).toMatchObject({
-      version: "1.0",
-      routingStrategy: "latency-first",
-      executionMode: "hybrid",
-      llamaSwap: {
-        enabled: true,
-        models: [
-          {
-            modelId: "local/mock-llama",
-            path: "./models/mock-llama.gguf",
-            contextWindow: 8192,
-            command: "node ./scripts/mock-llama-server.js --port ${PORT}",
-            proxyBaseUrl: "http://127.0.0.1:${PORT}/v1",
-            checkEndpoint: "/ready",
-            useModelName: "mock/llama-upstream",
-            maxDifficulty: null,
+    expect(parseUnifiedRuntimeConfigText(renderUnifiedRuntimeConfigText(normalized))).toMatchObject(
+      {
+        version: "1.0",
+        routingStrategy: "latency-first",
+        executionMode: "hybrid",
+        llamaSwap: {
+          enabled: true,
+          models: [
+            {
+              modelId: "local/mock-llama",
+              path: "./models/mock-llama.gguf",
+              contextWindow: 8192,
+              command: "node ./scripts/mock-llama-server.js --port ${PORT}",
+              proxyBaseUrl: "http://127.0.0.1:${PORT}/v1",
+              checkEndpoint: "/ready",
+              useModelName: "mock/llama-upstream",
+              maxDifficulty: null,
+            },
+          ],
+          process: {
+            command: null,
+            args: [],
+            env: {
+              LLAMA_SWAP_MODE: "live-reload",
+            },
+            cwd: null,
+            startupTimeoutMs: 15000,
           },
-        ],
-        process: {
-          command: null,
-          args: [],
-          env: {
-            LLAMA_SWAP_MODE: "live-reload",
-          },
-          cwd: null,
-          startupTimeoutMs: 15000,
         },
-      },
-      liteLLM: {
-        enabled: true,
-        providers: [
-          {
-            providerId: "moonshot",
-            apiKeyRef: "${MOONSHOT_API_KEY}",
-            modelNames: ["moonshot/kimi-k2.5"],
-            modelMappings: [
-              {
-                modelId: "moonshot/kimi-k2.5",
-                litellmModel: "moonshot/kimi-k2.5",
-                maxDifficulty: null,
-                litellmParams: {
-                  model: "moonshot/kimi-k2.5",
-                  api_base: "https://api.moonshot.ai/v1",
-                  temperature: 0,
+        liteLLM: {
+          enabled: true,
+          providers: [
+            {
+              providerId: "moonshot",
+              apiKeyRef: "${MOONSHOT_API_KEY}",
+              modelNames: ["moonshot/kimi-k2.5"],
+              modelMappings: [
+                {
+                  modelId: "moonshot/kimi-k2.5",
+                  litellmModel: "moonshot/kimi-k2.5",
+                  maxDifficulty: null,
+                  litellmParams: {
+                    model: "moonshot/kimi-k2.5",
+                    api_base: "https://api.moonshot.ai/v1",
+                    temperature: 0,
+                  },
                 },
-              },
-            ],
+              ],
+            },
+          ],
+          process: {
+            command: "litellm",
+            args: ["--debug"],
+            env: {
+              LITELLM_MODE: "live-reload",
+            },
+            cwd: null,
+            startupTimeoutMs: 30000,
           },
-        ],
-        process: {
-          command: "litellm",
-          args: ["--debug"],
-          env: {
-            LITELLM_MODE: "live-reload",
-          },
-          cwd: null,
-          startupTimeoutMs: 30000,
         },
       },
-    });
+    );
   });
 
   test("parses observed-data policy and round-trips it back to config text", () => {
@@ -305,48 +307,50 @@ observed_data:
 `);
 
     expect(
-      (result as unknown as {
-        observedData?: {
-          enabled: boolean;
-          aggregation: { minSamples: number };
-          difficultyLearning: {
-            cacheTtlMs: number;
-            invalidation: {
-              maxContextTokensDelta: number;
-              maxHistoryTurnDelta: number;
-              maxToolCountDelta: number;
-              maxInstructionConstraintDelta: number;
-              maxDecompositionKeywordDelta: number;
-              reclassifyOnCodeOrSchemaChange: boolean;
-            };
-            override: {
-              minSamples: number;
-              maxFailureRate: number;
-              minQualityScore: number;
-              minTokensPerSec: number;
-            };
-            recommendation: {
-              minSamples: number;
-              maxFailureRate: number;
-              minQualityScore: number;
-              minTokensPerSec: number;
-            };
-          };
-          metricHalflives: {
-            qualityMs: number;
-            latencyMs: number;
-            throughputMs: number;
-            reliabilityMs: number;
-            costMs: number;
-          };
-          throughputSla: {
+      (
+        result as unknown as {
+          observedData?: {
             enabled: boolean;
-            minTokensPerSec: number;
-            penaltyTimeoutMs: number;
-            penaltyFactor: number;
+            aggregation: { minSamples: number };
+            difficultyLearning: {
+              cacheTtlMs: number;
+              invalidation: {
+                maxContextTokensDelta: number;
+                maxHistoryTurnDelta: number;
+                maxToolCountDelta: number;
+                maxInstructionConstraintDelta: number;
+                maxDecompositionKeywordDelta: number;
+                reclassifyOnCodeOrSchemaChange: boolean;
+              };
+              override: {
+                minSamples: number;
+                maxFailureRate: number;
+                minQualityScore: number;
+                minTokensPerSec: number;
+              };
+              recommendation: {
+                minSamples: number;
+                maxFailureRate: number;
+                minQualityScore: number;
+                minTokensPerSec: number;
+              };
+            };
+            metricHalflives: {
+              qualityMs: number;
+              latencyMs: number;
+              throughputMs: number;
+              reliabilityMs: number;
+              costMs: number;
+            };
+            throughputSla: {
+              enabled: boolean;
+              minTokensPerSec: number;
+              penaltyTimeoutMs: number;
+              penaltyFactor: number;
+            };
           };
-        };
-      }).observedData,
+        }
+      ).observedData,
     ).toMatchObject({
       enabled: true,
       aggregation: {
@@ -458,33 +462,35 @@ observed_data:
 `);
 
     expect(
-      (result as unknown as {
-        observedData?: {
-          difficultyLearning?: {
-            cacheTtlMs: number;
-            invalidation: {
-              maxContextTokensDelta: number;
-              maxHistoryTurnDelta: number;
-              maxToolCountDelta: number;
-              maxInstructionConstraintDelta: number;
-              maxDecompositionKeywordDelta: number;
-              reclassifyOnCodeOrSchemaChange: boolean;
-            };
-            override: {
-              minSamples: number;
-              maxFailureRate: number;
-              minQualityScore: number;
-              minTokensPerSec: number;
-            };
-            recommendation: {
-              minSamples: number;
-              maxFailureRate: number;
-              minQualityScore: number;
-              minTokensPerSec: number;
+      (
+        result as unknown as {
+          observedData?: {
+            difficultyLearning?: {
+              cacheTtlMs: number;
+              invalidation: {
+                maxContextTokensDelta: number;
+                maxHistoryTurnDelta: number;
+                maxToolCountDelta: number;
+                maxInstructionConstraintDelta: number;
+                maxDecompositionKeywordDelta: number;
+                reclassifyOnCodeOrSchemaChange: boolean;
+              };
+              override: {
+                minSamples: number;
+                maxFailureRate: number;
+                minQualityScore: number;
+                minTokensPerSec: number;
+              };
+              recommendation: {
+                minSamples: number;
+                maxFailureRate: number;
+                minQualityScore: number;
+                minTokensPerSec: number;
+              };
             };
           };
-        };
-      }).observedData?.difficultyLearning,
+        }
+      ).observedData?.difficultyLearning,
     ).toEqual({
       cacheTtlMs: 900000,
       invalidation: {
@@ -571,12 +577,14 @@ model_aliases:
 `);
 
     expect(
-      (result as unknown as {
-        modelAliases?: readonly {
-          aliasId: string;
-          modelIds: readonly string[];
-        }[];
-      }).modelAliases,
+      (
+        result as unknown as {
+          modelAliases?: readonly {
+            aliasId: string;
+            modelIds: readonly string[];
+          }[];
+        }
+      ).modelAliases,
     ).toEqual([
       {
         aliasId: "gpt-5.4",

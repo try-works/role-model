@@ -9,15 +9,13 @@ import {
   aggregateObservedPerformanceSamples,
   validateObservedPerformanceProfileConsistency,
 } from "@role-model-router/profile-aggregator";
-import {
-  createRuntimeObservationBundle,
-} from "@role-model-router/runtime-observability";
+import { createRuntimeObservationBundle } from "@role-model-router/runtime-observability";
 import { createOpenTelemetryGenAiExport } from "@role-model-router/runtime-observability/otel";
 import { readRuntimeMaintenancePolicy } from "@role-model-router/sqlite-memory";
 import {
-  readTraceArtifacts,
   type TraceEventRecord,
   type TraceSpanRecord,
+  readTraceArtifacts,
   validateTraceLinkage,
   writeTraceArtifacts,
 } from "@role-model-router/trace";
@@ -86,7 +84,10 @@ async function main(): Promise<void> {
   const decision = validation.decision;
   const chosen = validation.execution.target.candidate;
   const observedProfiles = JSON.parse(
-    await readFile(path.join(repoRoot, "testdata", "router-runtime", "routing-observed-profiles.json"), "utf8"),
+    await readFile(
+      path.join(repoRoot, "testdata", "router-runtime", "routing-observed-profiles.json"),
+      "utf8",
+    ),
   ) as Record<
     string,
     {
@@ -99,12 +100,21 @@ async function main(): Promise<void> {
     }
   >;
   const observabilityHistory = JSON.parse(
-    await readFile(path.join(repoRoot, "testdata", "router-runtime", "observability-history.json"), "utf8"),
+    await readFile(
+      path.join(repoRoot, "testdata", "router-runtime", "observability-history.json"),
+      "utf8",
+    ),
   ) as {
-    byEndpointId: Record<string, Parameters<typeof createRuntimeObservationBundle>[0]["priorSamples"]>;
+    byEndpointId: Record<
+      string,
+      Parameters<typeof createRuntimeObservationBundle>[0]["priorSamples"]
+    >;
   };
   const observabilityPolicy = JSON.parse(
-    await readFile(path.join(repoRoot, "testdata", "router-runtime", "observability-policy.json"), "utf8"),
+    await readFile(
+      path.join(repoRoot, "testdata", "router-runtime", "observability-policy.json"),
+      "utf8",
+    ),
   ) as Parameters<typeof createRuntimeObservationBundle>[0]["capturePolicy"];
   const chosenObserved = observedProfiles[decision.chosen_endpoint_id];
   if (!decision.chosen_endpoint_id) {
@@ -141,11 +151,11 @@ async function main(): Promise<void> {
                   validation.execution.normalized.latencyMs) *
                   1000,
               )
-            : chosenObserved?.tokens_per_sec ?? 55,
+            : (chosenObserved?.tokens_per_sec ?? 55),
         cost_per_1k_tokens_est:
           typeof validation.execution.usageEvent.cost_estimate === "number"
             ? validation.execution.usageEvent.cost_estimate
-            : chosenObserved?.cost_per_1k_tokens_est ?? 0.001,
+            : (chosenObserved?.cost_per_1k_tokens_est ?? 0.001),
         failure: false,
         request_id: decision.request_id,
         routing_decision_id: decision.routing_decision_id,
@@ -240,14 +250,14 @@ async function main(): Promise<void> {
       "observed-performance.json",
       "request-capture.json",
       "response-capture.json",
-        "normalized-response.json",
-        "adapter-diagnostics.json",
-        "request-observation.json",
-        "endpoint-profile-state.json",
-        "otel-export.json",
-        "trace-spans.json",
-        "trace-events.jsonl",
-        "usage-events.jsonl",
+      "normalized-response.json",
+      "adapter-diagnostics.json",
+      "request-observation.json",
+      "endpoint-profile-state.json",
+      "otel-export.json",
+      "trace-spans.json",
+      "trace-events.jsonl",
+      "usage-events.jsonl",
     ].map((name) => rm(path.join(outputDir, name), { force: true })),
   );
   await writeFile(

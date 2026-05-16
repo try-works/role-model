@@ -74,11 +74,14 @@ async function prepareObservedScope(input: {
     fixtureRoot: input.fixtureRoot,
   });
   const history = await readJson<{
-    byEndpointId: Record<string, Parameters<typeof createRuntimeObservationBundle>[0]["priorSamples"]>;
+    byEndpointId: Record<
+      string,
+      Parameters<typeof createRuntimeObservationBundle>[0]["priorSamples"]
+    >;
   }>(path.join(input.repoRoot, "testdata", "router-runtime", "observability-history.json"));
-  const policy = await readJson<Parameters<typeof createRuntimeObservationBundle>[0]["capturePolicy"]>(
-    path.join(input.repoRoot, "testdata", "router-runtime", "observability-policy.json"),
-  );
+  const policy = await readJson<
+    Parameters<typeof createRuntimeObservationBundle>[0]["capturePolicy"]
+  >(path.join(input.repoRoot, "testdata", "router-runtime", "observability-policy.json"));
   const observation = createRuntimeObservationBundle({
     decision: validation.decision,
     routingDiagnostics: validation.routingDiagnostics,
@@ -136,8 +139,18 @@ export async function runRuntimeOperationsValidation(
     fixtureRoot,
   });
 
-  const exportPath = path.join(options.runtimeStateRoot, primaryScopeId, "ops", "runtime-export.json");
-  const backupPath = path.join(options.runtimeStateRoot, primaryScopeId, "ops", "memory-backup.sqlite");
+  const exportPath = path.join(
+    options.runtimeStateRoot,
+    primaryScopeId,
+    "ops",
+    "runtime-export.json",
+  );
+  const backupPath = path.join(
+    options.runtimeStateRoot,
+    primaryScopeId,
+    "ops",
+    "memory-backup.sqlite",
+  );
   const exportSummary = exportRuntimeState({
     databasePath: primary.validation.databasePath,
     exportPath,
@@ -199,7 +212,8 @@ export async function runRuntimeOperationsValidation(
     replayShadow: {
       replayedEndpointId: replay.validation.decision.chosen_endpoint_id,
       matchesChosenEndpoint:
-        replay.validation.decision.chosen_endpoint_id === primary.validation.decision.chosen_endpoint_id,
+        replay.validation.decision.chosen_endpoint_id ===
+        primary.validation.decision.chosen_endpoint_id,
     },
   };
 }

@@ -1,0 +1,899 @@
+role-model-router/vendor/llama-swap/ui-svelte/src/main.ts:7:11 lint/style/noNonNullAssertion ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Forbidden non-null assertion.
+  
+    6 Γöé const app = mount(App, {
+  > 7 Γöé   target: document.getElementById("app")!,
+      Γöé           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    8 Γöé });
+    9 Γöé 
+  
+
+role-model-router/vendor/llama-swap/ui-svelte/src/main.ts organizeImports ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Import statements could be sorted:
+  
+     1  1 Γöé   import "./index.css";ΓÉì
+     2  2 Γöé   import "highlight.js/styles/github-dark.css";ΓÉì
+     3    Γöé - import┬╖App┬╖from┬╖"./App.svelte";ΓÉì
+     4    Γöé - import┬╖{┬╖mount┬╖}┬╖from┬╖"svelte";ΓÉì
+        3 Γöé + import┬╖{┬╖mount┬╖}┬╖from┬╖"svelte";ΓÉì
+        4 Γöé + import┬╖App┬╖from┬╖"./App.svelte";ΓÉì
+     5  5 Γöé   ΓÉì
+     6  6 Γöé   const app = mount(App, {ΓÉì
+  
+
+role-model-router/vendor/llama-swap/ui-svelte/src/lib/sdApi.ts organizeImports ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Import statements could be sorted:
+  
+     1    Γöé - import┬╖type┬╖{┬╖SdApiTxt2ImgRequest,┬╖SdApiResponse,┬╖SdApiLora┬╖}┬╖from┬╖"./types";ΓÉì
+        1 Γöé + import┬╖type┬╖{┬╖SdApiLora,┬╖SdApiResponse,┬╖SdApiTxt2ImgRequest┬╖}┬╖from┬╖"./types";ΓÉì
+     2  2 Γöé   ΓÉì
+     3  3 Γöé   export async function generateSdImage(ΓÉì
+  
+
+role-model-router/vendor/llama-swap/ui-svelte/src/main.ts format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+     1    Γöé - import┬╖"./index.css";ΓÉì
+     2    Γöé - import┬╖"highlight.js/styles/github-dark.css";ΓÉì
+     3    Γöé - import┬╖App┬╖from┬╖"./App.svelte";ΓÉì
+     4    Γöé - import┬╖{┬╖mount┬╖}┬╖from┬╖"svelte";ΓÉì
+     5    Γöé - ΓÉì
+     6    Γöé - const┬╖app┬╖=┬╖mount(App,┬╖{ΓÉì
+     7    Γöé - ┬╖┬╖target:┬╖document.getElementById("app")!,ΓÉì
+     8    Γöé - });ΓÉì
+     9    Γöé - ΓÉì
+    10    Γöé - export┬╖default┬╖app;ΓÉì
+        1 Γöé + import┬╖"./index.css";
+        2 Γöé + import┬╖"highlight.js/styles/github-dark.css";
+        3 Γöé + import┬╖App┬╖from┬╖"./App.svelte";
+        4 Γöé + import┬╖{┬╖mount┬╖}┬╖from┬╖"svelte";
+        5 Γöé + 
+        6 Γöé + const┬╖app┬╖=┬╖mount(App,┬╖{
+        7 Γöé + ┬╖┬╖target:┬╖document.getElementById("app")!,
+        8 Γöé + });
+        9 Γöé + 
+       10 Γöé + export┬╖default┬╖app;
+    11 11 Γöé   
+  
+
+role-model-router/vendor/llama-swap/ui-svelte/src/lib/speechApi.ts format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+     1    Γöé - import┬╖type┬╖{┬╖SpeechGenerationRequest┬╖}┬╖from┬╖"./types";ΓÉì
+     2    Γöé - ΓÉì
+     3    Γöé - export┬╖async┬╖function┬╖generateSpeech(ΓÉì
+     4    Γöé - ┬╖┬╖model:┬╖string,ΓÉì
+     5    Γöé - ┬╖┬╖input:┬╖string,ΓÉì
+     6    Γöé - ┬╖┬╖voice:┬╖string,ΓÉì
+     7    Γöé - ┬╖┬╖signal?:┬╖AbortSignalΓÉì
+     8    Γöé - ):┬╖Promise<Blob>┬╖{ΓÉì
+     9    Γöé - ┬╖┬╖const┬╖request:┬╖SpeechGenerationRequest┬╖=┬╖{ΓÉì
+    10    Γöé - ┬╖┬╖┬╖┬╖model,ΓÉì
+    11    Γöé - ┬╖┬╖┬╖┬╖input,ΓÉì
+    12    Γöé - ┬╖┬╖┬╖┬╖voice,ΓÉì
+    13    Γöé - ┬╖┬╖};ΓÉì
+    14    Γöé - ΓÉì
+    15    Γöé - ┬╖┬╖const┬╖response┬╖=┬╖await┬╖fetch("/v1/audio/speech",┬╖{ΓÉì
+    16    Γöé - ┬╖┬╖┬╖┬╖method:┬╖"POST",ΓÉì
+    17    Γöé - ┬╖┬╖┬╖┬╖headers:┬╖{ΓÉì
+    18    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"Content-Type":┬╖"application/json",ΓÉì
+    19    Γöé - ┬╖┬╖┬╖┬╖},ΓÉì
+    20    Γöé - ┬╖┬╖┬╖┬╖body:┬╖JSON.stringify(request),ΓÉì
+    21    Γöé - ┬╖┬╖┬╖┬╖signal,ΓÉì
+    22    Γöé - ┬╖┬╖});ΓÉì
+    23    Γöé - ΓÉì
+    24    Γöé - ┬╖┬╖if┬╖(!response.ok)┬╖{ΓÉì
+    25    Γöé - ┬╖┬╖┬╖┬╖const┬╖errorText┬╖=┬╖await┬╖response.text();ΓÉì
+    26    Γöé - ┬╖┬╖┬╖┬╖throw┬╖new┬╖Error(`Speech┬╖API┬╖error:┬╖${response.status}┬╖-┬╖${errorText}`);ΓÉì
+    27    Γöé - ┬╖┬╖}ΓÉì
+    28    Γöé - ΓÉì
+    29    Γöé - ┬╖┬╖return┬╖response.blob();ΓÉì
+    30    Γöé - }ΓÉì
+        1 Γöé + import┬╖type┬╖{┬╖SpeechGenerationRequest┬╖}┬╖from┬╖"./types";
+        2 Γöé + 
+        3 Γöé + export┬╖async┬╖function┬╖generateSpeech(
+        4 Γöé + ┬╖┬╖model:┬╖string,
+        5 Γöé + ┬╖┬╖input:┬╖string,
+        6 Γöé + ┬╖┬╖voice:┬╖string,
+        7 Γöé + ┬╖┬╖signal?:┬╖AbortSignal,
+        8 Γöé + ):┬╖Promise<Blob>┬╖{
+        9 Γöé + ┬╖┬╖const┬╖request:┬╖SpeechGenerationRequest┬╖=┬╖{
+       10 Γöé + ┬╖┬╖┬╖┬╖model,
+       11 Γöé + ┬╖┬╖┬╖┬╖input,
+       12 Γöé + ┬╖┬╖┬╖┬╖voice,
+       13 Γöé + ┬╖┬╖};
+       14 Γöé + 
+       15 Γöé + ┬╖┬╖const┬╖response┬╖=┬╖await┬╖fetch("/v1/audio/speech",┬╖{
+       16 Γöé + ┬╖┬╖┬╖┬╖method:┬╖"POST",
+       17 Γöé + ┬╖┬╖┬╖┬╖headers:┬╖{
+       18 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"Content-Type":┬╖"application/json",
+       19 Γöé + ┬╖┬╖┬╖┬╖},
+       20 Γöé + ┬╖┬╖┬╖┬╖body:┬╖JSON.stringify(request),
+       21 Γöé + ┬╖┬╖┬╖┬╖signal,
+       22 Γöé + ┬╖┬╖});
+       23 Γöé + 
+       24 Γöé + ┬╖┬╖if┬╖(!response.ok)┬╖{
+       25 Γöé + ┬╖┬╖┬╖┬╖const┬╖errorText┬╖=┬╖await┬╖response.text();
+       26 Γöé + ┬╖┬╖┬╖┬╖throw┬╖new┬╖Error(`Speech┬╖API┬╖error:┬╖${response.status}┬╖-┬╖${errorText}`);
+       27 Γöé + ┬╖┬╖}
+       28 Γöé + 
+       29 Γöé + ┬╖┬╖return┬╖response.blob();
+       30 Γöé + }
+    31 31 Γöé   
+  
+
+role-model-router/vendor/llama-swap/ui-svelte/src/lib/imageApi.ts format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+     1    Γöé - import┬╖type┬╖{┬╖ImageGenerationRequest,┬╖ImageGenerationResponse┬╖}┬╖from┬╖"./types";ΓÉì
+     2    Γöé - ΓÉì
+     3    Γöé - export┬╖async┬╖function┬╖generateImage(ΓÉì
+     4    Γöé - ┬╖┬╖model:┬╖string,ΓÉì
+     5    Γöé - ┬╖┬╖prompt:┬╖string,ΓÉì
+     6    Γöé - ┬╖┬╖size:┬╖string,ΓÉì
+     7    Γöé - ┬╖┬╖signal?:┬╖AbortSignalΓÉì
+     8    Γöé - ):┬╖Promise<ImageGenerationResponse>┬╖{ΓÉì
+     9    Γöé - ┬╖┬╖const┬╖request:┬╖ImageGenerationRequest┬╖=┬╖{ΓÉì
+    10    Γöé - ┬╖┬╖┬╖┬╖model,ΓÉì
+    11    Γöé - ┬╖┬╖┬╖┬╖prompt,ΓÉì
+    12    Γöé - ┬╖┬╖┬╖┬╖n:┬╖1,ΓÉì
+    13    Γöé - ┬╖┬╖┬╖┬╖size,ΓÉì
+    14    Γöé - ┬╖┬╖};ΓÉì
+    15    Γöé - ΓÉì
+    16    Γöé - ┬╖┬╖const┬╖response┬╖=┬╖await┬╖fetch("/v1/images/generations",┬╖{ΓÉì
+    17    Γöé - ┬╖┬╖┬╖┬╖method:┬╖"POST",ΓÉì
+    18    Γöé - ┬╖┬╖┬╖┬╖headers:┬╖{ΓÉì
+    19    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"Content-Type":┬╖"application/json",ΓÉì
+    20    Γöé - ┬╖┬╖┬╖┬╖},ΓÉì
+    21    Γöé - ┬╖┬╖┬╖┬╖body:┬╖JSON.stringify(request),ΓÉì
+    22    Γöé - ┬╖┬╖┬╖┬╖signal,ΓÉì
+    23    Γöé - ┬╖┬╖});ΓÉì
+    24    Γöé - ΓÉì
+    25    Γöé - ┬╖┬╖if┬╖(!response.ok)┬╖{ΓÉì
+    26    Γöé - ┬╖┬╖┬╖┬╖const┬╖errorText┬╖=┬╖await┬╖response.text();ΓÉì
+    27    Γöé - ┬╖┬╖┬╖┬╖throw┬╖new┬╖Error(`Image┬╖API┬╖error:┬╖${response.status}┬╖-┬╖${errorText}`);ΓÉì
+    28    Γöé - ┬╖┬╖}ΓÉì
+    29    Γöé - ΓÉì
+    30    Γöé - ┬╖┬╖return┬╖response.json();ΓÉì
+    31    Γöé - }ΓÉì
+        1 Γöé + import┬╖type┬╖{┬╖ImageGenerationRequest,┬╖ImageGenerationResponse┬╖}┬╖from┬╖"./types";
+        2 Γöé + 
+        3 Γöé + export┬╖async┬╖function┬╖generateImage(
+        4 Γöé + ┬╖┬╖model:┬╖string,
+        5 Γöé + ┬╖┬╖prompt:┬╖string,
+        6 Γöé + ┬╖┬╖size:┬╖string,
+        7 Γöé + ┬╖┬╖signal?:┬╖AbortSignal,
+        8 Γöé + ):┬╖Promise<ImageGenerationResponse>┬╖{
+        9 Γöé + ┬╖┬╖const┬╖request:┬╖ImageGenerationRequest┬╖=┬╖{
+       10 Γöé + ┬╖┬╖┬╖┬╖model,
+       11 Γöé + ┬╖┬╖┬╖┬╖prompt,
+       12 Γöé + ┬╖┬╖┬╖┬╖n:┬╖1,
+       13 Γöé + ┬╖┬╖┬╖┬╖size,
+       14 Γöé + ┬╖┬╖};
+       15 Γöé + 
+       16 Γöé + ┬╖┬╖const┬╖response┬╖=┬╖await┬╖fetch("/v1/images/generations",┬╖{
+       17 Γöé + ┬╖┬╖┬╖┬╖method:┬╖"POST",
+       18 Γöé + ┬╖┬╖┬╖┬╖headers:┬╖{
+       19 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"Content-Type":┬╖"application/json",
+       20 Γöé + ┬╖┬╖┬╖┬╖},
+       21 Γöé + ┬╖┬╖┬╖┬╖body:┬╖JSON.stringify(request),
+       22 Γöé + ┬╖┬╖┬╖┬╖signal,
+       23 Γöé + ┬╖┬╖});
+       24 Γöé + 
+       25 Γöé + ┬╖┬╖if┬╖(!response.ok)┬╖{
+       26 Γöé + ┬╖┬╖┬╖┬╖const┬╖errorText┬╖=┬╖await┬╖response.text();
+       27 Γöé + ┬╖┬╖┬╖┬╖throw┬╖new┬╖Error(`Image┬╖API┬╖error:┬╖${response.status}┬╖-┬╖${errorText}`);
+       28 Γöé + ┬╖┬╖}
+       29 Γöé + 
+       30 Γöé + ┬╖┬╖return┬╖response.json();
+       31 Γöé + }
+    32 32 Γöé   
+  
+
+role-model-router/vendor/llama-swap/ui-svelte/src/lib/rerankApi.ts format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+     1    Γöé - export┬╖interface┬╖RerankResult┬╖{ΓÉì
+     2    Γöé - ┬╖┬╖index:┬╖number;ΓÉì
+     3    Γöé - ┬╖┬╖relevance_score:┬╖number;ΓÉì
+     4    Γöé - }ΓÉì
+     5    Γöé - ΓÉì
+     6    Γöé - export┬╖interface┬╖RerankResponse┬╖{ΓÉì
+     7    Γöé - ┬╖┬╖model:┬╖string;ΓÉì
+     8    Γöé - ┬╖┬╖object:┬╖string;ΓÉì
+     9    Γöé - ┬╖┬╖usage:┬╖{┬╖prompt_tokens:┬╖number;┬╖total_tokens:┬╖number┬╖};ΓÉì
+    10    Γöé - ┬╖┬╖results:┬╖RerankResult[];ΓÉì
+    11    Γöé - }ΓÉì
+    12    Γöé - ΓÉì
+    13    Γöé - export┬╖async┬╖function┬╖rerank(ΓÉì
+    14    Γöé - ┬╖┬╖model:┬╖string,ΓÉì
+    15    Γöé - ┬╖┬╖query:┬╖string,ΓÉì
+    16    Γöé - ┬╖┬╖documents:┬╖string[],ΓÉì
+    17    Γöé - ┬╖┬╖signal:┬╖AbortSignalΓÉì
+    18    Γöé - ):┬╖Promise<RerankResponse>┬╖{ΓÉì
+    19    Γöé - ┬╖┬╖const┬╖response┬╖=┬╖await┬╖fetch("/v1/rerank",┬╖{ΓÉì
+    20    Γöé - ┬╖┬╖┬╖┬╖method:┬╖"POST",ΓÉì
+    21    Γöé - ┬╖┬╖┬╖┬╖headers:┬╖{┬╖"Content-Type":┬╖"application/json"┬╖},ΓÉì
+    22    Γöé - ┬╖┬╖┬╖┬╖body:┬╖JSON.stringify({┬╖model,┬╖query,┬╖documents┬╖}),ΓÉì
+    23    Γöé - ┬╖┬╖┬╖┬╖signal,ΓÉì
+    24    Γöé - ┬╖┬╖});ΓÉì
+    25    Γöé - ┬╖┬╖if┬╖(!response.ok)┬╖throw┬╖new┬╖Error(`${response.status}┬╖${response.statusText}`);ΓÉì
+    26    Γöé - ┬╖┬╖return┬╖response.json();ΓÉì
+    27    Γöé - }ΓÉì
+        1 Γöé + export┬╖interface┬╖RerankResult┬╖{
+        2 Γöé + ┬╖┬╖index:┬╖number;
+        3 Γöé + ┬╖┬╖relevance_score:┬╖number;
+        4 Γöé + }
+        5 Γöé + 
+        6 Γöé + export┬╖interface┬╖RerankResponse┬╖{
+        7 Γöé + ┬╖┬╖model:┬╖string;
+        8 Γöé + ┬╖┬╖object:┬╖string;
+        9 Γöé + ┬╖┬╖usage:┬╖{┬╖prompt_tokens:┬╖number;┬╖total_tokens:┬╖number┬╖};
+       10 Γöé + ┬╖┬╖results:┬╖RerankResult[];
+       11 Γöé + }
+       12 Γöé + 
+       13 Γöé + export┬╖async┬╖function┬╖rerank(
+       14 Γöé + ┬╖┬╖model:┬╖string,
+       15 Γöé + ┬╖┬╖query:┬╖string,
+       16 Γöé + ┬╖┬╖documents:┬╖string[],
+       17 Γöé + ┬╖┬╖signal:┬╖AbortSignal,
+       18 Γöé + ):┬╖Promise<RerankResponse>┬╖{
+       19 Γöé + ┬╖┬╖const┬╖response┬╖=┬╖await┬╖fetch("/v1/rerank",┬╖{
+       20 Γöé + ┬╖┬╖┬╖┬╖method:┬╖"POST",
+       21 Γöé + ┬╖┬╖┬╖┬╖headers:┬╖{┬╖"Content-Type":┬╖"application/json"┬╖},
+       22 Γöé + ┬╖┬╖┬╖┬╖body:┬╖JSON.stringify({┬╖model,┬╖query,┬╖documents┬╖}),
+       23 Γöé + ┬╖┬╖┬╖┬╖signal,
+       24 Γöé + ┬╖┬╖});
+       25 Γöé + ┬╖┬╖if┬╖(!response.ok)┬╖throw┬╖new┬╖Error(`${response.status}┬╖${response.statusText}`);
+       26 Γöé + ┬╖┬╖return┬╖response.json();
+       27 Γöé + }
+    28 28 Γöé   
+  
+
+role-model-router/vendor/llama-swap/ui-svelte/src/lib/modelUtils.ts format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+     1    Γöé - import┬╖type┬╖{┬╖Model┬╖}┬╖from┬╖"./types";ΓÉì
+     2    Γöé - ΓÉì
+     3    Γöé - export┬╖interface┬╖GroupedModels┬╖{ΓÉì
+     4    Γöé - ┬╖┬╖local:┬╖Model[];ΓÉì
+     5    Γöé - ┬╖┬╖peersByProvider:┬╖Record<string,┬╖Model[]>;ΓÉì
+     6    Γöé - }ΓÉì
+     7    Γöé - ΓÉì
+     8    Γöé - export┬╖function┬╖groupModels(models:┬╖Model[]):┬╖GroupedModels┬╖{ΓÉì
+     9    Γöé - ┬╖┬╖const┬╖available┬╖=┬╖models.filter((m)┬╖=>┬╖!m.unlisted);ΓÉì
+    10    Γöé - ┬╖┬╖const┬╖local┬╖=┬╖available.filter((m)┬╖=>┬╖!m.peerID);ΓÉì
+    11    Γöé - ┬╖┬╖const┬╖peerModels┬╖=┬╖available.filter((m)┬╖=>┬╖m.peerID);ΓÉì
+    12    Γöé - ΓÉì
+    13    Γöé - ┬╖┬╖const┬╖peersByProvider┬╖=┬╖peerModels.reduce(ΓÉì
+    14    Γöé - ┬╖┬╖┬╖┬╖(acc,┬╖model)┬╖=>┬╖{ΓÉì
+    15    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖const┬╖peerId┬╖=┬╖model.peerID┬╖||┬╖"unknown";ΓÉì
+    16    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖if┬╖(!acc[peerId])┬╖acc[peerId]┬╖=┬╖[];ΓÉì
+    17    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖acc[peerId].push(model);ΓÉì
+    18    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖return┬╖acc;ΓÉì
+    19    Γöé - ┬╖┬╖┬╖┬╖},ΓÉì
+    20    Γöé - ┬╖┬╖┬╖┬╖{}┬╖as┬╖Record<string,┬╖Model[]>ΓÉì
+    21    Γöé - ┬╖┬╖);ΓÉì
+    22    Γöé - ΓÉì
+    23    Γöé - ┬╖┬╖return┬╖{┬╖local,┬╖peersByProvider┬╖};ΓÉì
+    24    Γöé - }ΓÉì
+        1 Γöé + import┬╖type┬╖{┬╖Model┬╖}┬╖from┬╖"./types";
+        2 Γöé + 
+        3 Γöé + export┬╖interface┬╖GroupedModels┬╖{
+        4 Γöé + ┬╖┬╖local:┬╖Model[];
+        5 Γöé + ┬╖┬╖peersByProvider:┬╖Record<string,┬╖Model[]>;
+        6 Γöé + }
+        7 Γöé + 
+        8 Γöé + export┬╖function┬╖groupModels(models:┬╖Model[]):┬╖GroupedModels┬╖{
+        9 Γöé + ┬╖┬╖const┬╖available┬╖=┬╖models.filter((m)┬╖=>┬╖!m.unlisted);
+       10 Γöé + ┬╖┬╖const┬╖local┬╖=┬╖available.filter((m)┬╖=>┬╖!m.peerID);
+       11 Γöé + ┬╖┬╖const┬╖peerModels┬╖=┬╖available.filter((m)┬╖=>┬╖m.peerID);
+       12 Γöé + 
+       13 Γöé + ┬╖┬╖const┬╖peersByProvider┬╖=┬╖peerModels.reduce(
+       14 Γöé + ┬╖┬╖┬╖┬╖(acc,┬╖model)┬╖=>┬╖{
+       15 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖const┬╖peerId┬╖=┬╖model.peerID┬╖||┬╖"unknown";
+       16 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖if┬╖(!acc[peerId])┬╖acc[peerId]┬╖=┬╖[];
+       17 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖acc[peerId].push(model);
+       18 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖return┬╖acc;
+       19 Γöé + ┬╖┬╖┬╖┬╖},
+       20 Γöé + ┬╖┬╖┬╖┬╖{}┬╖as┬╖Record<string,┬╖Model[]>,
+       21 Γöé + ┬╖┬╖);
+       22 Γöé + 
+       23 Γöé + ┬╖┬╖return┬╖{┬╖local,┬╖peersByProvider┬╖};
+       24 Γöé + }
+    25 25 Γöé   
+  
+
+role-model-router/vendor/llama-swap/ui-svelte/src/lib/sdApi.ts format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+     1    Γöé - import┬╖type┬╖{┬╖SdApiTxt2ImgRequest,┬╖SdApiResponse,┬╖SdApiLora┬╖}┬╖from┬╖"./types";ΓÉì
+     2    Γöé - ΓÉì
+     3    Γöé - export┬╖async┬╖function┬╖generateSdImage(ΓÉì
+     4    Γöé - ┬╖┬╖request:┬╖SdApiTxt2ImgRequest,ΓÉì
+     5    Γöé - ┬╖┬╖signal?:┬╖AbortSignalΓÉì
+     6    Γöé - ):┬╖Promise<SdApiResponse>┬╖{ΓÉì
+     7    Γöé - ┬╖┬╖const┬╖response┬╖=┬╖await┬╖fetch("/sdapi/v1/txt2img",┬╖{ΓÉì
+     8    Γöé - ┬╖┬╖┬╖┬╖method:┬╖"POST",ΓÉì
+     9    Γöé - ┬╖┬╖┬╖┬╖headers:┬╖{ΓÉì
+    10    Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖"Content-Type":┬╖"application/json",ΓÉì
+    11    Γöé - ┬╖┬╖┬╖┬╖},ΓÉì
+    12    Γöé - ┬╖┬╖┬╖┬╖body:┬╖JSON.stringify(request),ΓÉì
+    13    Γöé - ┬╖┬╖┬╖┬╖signal,ΓÉì
+    14    Γöé - ┬╖┬╖});ΓÉì
+    15    Γöé - ΓÉì
+    16    Γöé - ┬╖┬╖if┬╖(!response.ok)┬╖{ΓÉì
+    17    Γöé - ┬╖┬╖┬╖┬╖const┬╖errorText┬╖=┬╖await┬╖response.text();ΓÉì
+    18    Γöé - ┬╖┬╖┬╖┬╖throw┬╖new┬╖Error(`SDAPI┬╖error:┬╖${response.status}┬╖-┬╖${errorText}`);ΓÉì
+    19    Γöé - ┬╖┬╖}ΓÉì
+    20    Γöé - ΓÉì
+    21    Γöé - ┬╖┬╖return┬╖response.json();ΓÉì
+    22    Γöé - }ΓÉì
+    23    Γöé - ΓÉì
+    24    Γöé - export┬╖async┬╖function┬╖fetchSdLoras(ΓÉì
+    25    Γöé - ┬╖┬╖model:┬╖string,ΓÉì
+    26    Γöé - ┬╖┬╖signal?:┬╖AbortSignalΓÉì
+    27    Γöé - ):┬╖Promise<SdApiLora[]>┬╖{ΓÉì
+    28    Γöé - ┬╖┬╖const┬╖response┬╖=┬╖await┬╖fetch(ΓÉì
+    29    Γöé - ┬╖┬╖┬╖┬╖`/sdapi/v1/loras?model=${encodeURIComponent(model)}`,ΓÉì
+    30    Γöé - ┬╖┬╖┬╖┬╖{┬╖signal┬╖}ΓÉì
+    31    Γöé - ┬╖┬╖);ΓÉì
+    32    Γöé - ΓÉì
+    33    Γöé - ┬╖┬╖if┬╖(!response.ok)┬╖{ΓÉì
+    34    Γöé - ┬╖┬╖┬╖┬╖const┬╖errorText┬╖=┬╖await┬╖response.text();ΓÉì
+    35    Γöé - ┬╖┬╖┬╖┬╖throw┬╖new┬╖Error(`SDAPI┬╖loras┬╖error:┬╖${response.status}┬╖-┬╖${errorText}`);ΓÉì
+    36    Γöé - ┬╖┬╖}ΓÉì
+    37    Γöé - ΓÉì
+    38    Γöé - ┬╖┬╖return┬╖response.json();ΓÉì
+    39    Γöé - }ΓÉì
+        1 Γöé + import┬╖type┬╖{┬╖SdApiTxt2ImgRequest,┬╖SdApiResponse,┬╖SdApiLora┬╖}┬╖from┬╖"./types";
+        2 Γöé + 
+        3 Γöé + export┬╖async┬╖function┬╖generateSdImage(
+        4 Γöé + ┬╖┬╖request:┬╖SdApiTxt2ImgRequest,
+        5 Γöé + ┬╖┬╖signal?:┬╖AbortSignal,
+        6 Γöé + ):┬╖Promise<SdApiResponse>┬╖{
+        7 Γöé + ┬╖┬╖const┬╖response┬╖=┬╖await┬╖fetch("/sdapi/v1/txt2img",┬╖{
+        8 Γöé + ┬╖┬╖┬╖┬╖method:┬╖"POST",
+        9 Γöé + ┬╖┬╖┬╖┬╖headers:┬╖{
+       10 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖"Content-Type":┬╖"application/json",
+       11 Γöé + ┬╖┬╖┬╖┬╖},
+       12 Γöé + ┬╖┬╖┬╖┬╖body:┬╖JSON.stringify(request),
+       13 Γöé + ┬╖┬╖┬╖┬╖signal,
+       14 Γöé + ┬╖┬╖});
+       15 Γöé + 
+       16 Γöé + ┬╖┬╖if┬╖(!response.ok)┬╖{
+       17 Γöé + ┬╖┬╖┬╖┬╖const┬╖errorText┬╖=┬╖await┬╖response.text();
+       18 Γöé + ┬╖┬╖┬╖┬╖throw┬╖new┬╖Error(`SDAPI┬╖error:┬╖${response.status}┬╖-┬╖${errorText}`);
+       19 Γöé + ┬╖┬╖}
+       20 Γöé + 
+       21 Γöé + ┬╖┬╖return┬╖response.json();
+       22 Γöé + }
+       23 Γöé + 
+       24 Γöé + export┬╖async┬╖function┬╖fetchSdLoras(model:┬╖string,┬╖signal?:┬╖AbortSignal):┬╖Promise<SdApiLora[]>┬╖{
+       25 Γöé + ┬╖┬╖const┬╖response┬╖=┬╖await┬╖fetch(`/sdapi/v1/loras?model=${encodeURIComponent(model)}`,┬╖{┬╖signal┬╖});
+       26 Γöé + 
+       27 Γöé + ┬╖┬╖if┬╖(!response.ok)┬╖{
+       28 Γöé + ┬╖┬╖┬╖┬╖const┬╖errorText┬╖=┬╖await┬╖response.text();
+       29 Γöé + ┬╖┬╖┬╖┬╖throw┬╖new┬╖Error(`SDAPI┬╖loras┬╖error:┬╖${response.status}┬╖-┬╖${errorText}`);
+       30 Γöé + ┬╖┬╖}
+       31 Γöé + 
+       32 Γöé + ┬╖┬╖return┬╖response.json();
+       33 Γöé + }
+    40 34 Γöé   
+  
+
+role-model-router/vendor/llama-swap/ui-svelte/src/lib/markdown.ts:183:7 lint/correctness/noUnnecessaryContinue  FIXABLE  ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Unnecessary continue statement
+  
+    181 Γöé       inMathBlock = true;
+    182 Γöé       mathClose = "\\]";
+  > 183 Γöé       continue;
+        Γöé       ^^^^^^^^^
+    184 Γöé     }
+    185 Γöé   }
+  
+  i Unsafe fix: Delete the unnecessary continue statement
+  
+    180 180 Γöé       if (trimmed === "\\[") {ΓÉì
+    181 181 Γöé         inMathBlock = true;ΓÉì
+    182     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖mathClose┬╖=┬╖"\\]";ΓÉì
+    183     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖continue;ΓÉì
+        182 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖mathClose┬╖=┬╖"\\]";ΓÉì
+    184 183 Γöé       }ΓÉì
+    185 184 Γöé     }ΓÉì
+  
+
+role-model-router/vendor/llama-swap/ui-svelte/src/lib/markdown.ts:187:23 lint/style/useTemplate  FIXABLE  ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Template literals are preferred over string concatenation.
+  
+    185 Γöé   }
+    186 Γöé 
+  > 187 Γöé   if (inFence) return pending + "\n" + fenceStr;
+        Γöé                       ^^^^^^^^^^^^^^^^^^^^^^^^^
+    188 Γöé   if (inMathBlock) return pending + "\n" + mathClose;
+    189 Γöé   return pending;
+  
+  i Unsafe fix: Use a template literal.
+  
+    185 185 Γöé     }ΓÉì
+    186 186 Γöé   ΓÉì
+    187     Γöé - ┬╖┬╖if┬╖(inFence)┬╖return┬╖pending┬╖+┬╖"\n"┬╖+┬╖fenceStr;ΓÉì
+        187 Γöé + ┬╖┬╖if┬╖(inFence)┬╖return┬╖`${pending}\n${fenceStr}`;ΓÉì
+    188 188 Γöé     if (inMathBlock) return pending + "\n" + mathClose;ΓÉì
+    189 189 Γöé     return pending;ΓÉì
+  
+
+role-model-router/vendor/llama-swap/ui-svelte/src/lib/markdown.ts:188:27 lint/style/useTemplate  FIXABLE  ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Template literals are preferred over string concatenation.
+  
+    187 Γöé   if (inFence) return pending + "\n" + fenceStr;
+  > 188 Γöé   if (inMathBlock) return pending + "\n" + mathClose;
+        Γöé                           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    189 Γöé   return pending;
+    190 Γöé }
+  
+  i Unsafe fix: Use a template literal.
+  
+    186 186 Γöé   ΓÉì
+    187 187 Γöé     if (inFence) return pending + "\n" + fenceStr;ΓÉì
+    188     Γöé - ┬╖┬╖if┬╖(inMathBlock)┬╖return┬╖pending┬╖+┬╖"\n"┬╖+┬╖mathClose;ΓÉì
+        188 Γöé + ┬╖┬╖if┬╖(inMathBlock)┬╖return┬╖`${pending}\n${mathClose}`;ΓÉì
+    189 189 Γöé     return pending;ΓÉì
+    190 190 Γöé   }ΓÉì
+  
+
+role-model-router/vendor/llama-swap/ui-svelte/src/lib/markdown.ts:242:3 lint/style/noParameterAssign ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Reassigning a function parameter is confusing.
+  
+    240 Γöé export function normalizeLatexDelimiters(text: string): string {
+    241 Γöé   // Display math: \[...\] ΓåÆ $$...$$  (may span multiple lines)
+  > 242 Γöé   text = text.replace(/\\\[([\s\S]*?)\\\]/g, (_match, inner) => `$$${inner}$$`);
+        Γöé   ^^^^
+    243 Γöé   // Inline math: \(...\) ΓåÆ $...$
+    244 Γöé   text = text.replace(/\\\(([\s\S]*?)\\\)/g, (_match, inner) => `$${inner}$`);
+  
+  i The parameter is declared here:
+  
+    239 Γöé // Convert \[...\] to $$...$$ and \(...\) to $...$
+  > 240 Γöé export function normalizeLatexDelimiters(text: string): string {
+        Γöé                                          ^^^^^^^^^^^^
+    241 Γöé   // Display math: \[...\] ΓåÆ $$...$$  (may span multiple lines)
+    242 Γöé   text = text.replace(/\\\[([\s\S]*?)\\\]/g, (_match, inner) => `$$${inner}$$`);
+  
+  i Use a local variable instead.
+  
+
+role-model-router/vendor/llama-swap/ui-svelte/src/lib/markdown.ts:244:3 lint/style/noParameterAssign ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Reassigning a function parameter is confusing.
+  
+    242 Γöé   text = text.replace(/\\\[([\s\S]*?)\\\]/g, (_match, inner) => `$$${inner}$$`);
+    243 Γöé   // Inline math: \(...\) ΓåÆ $...$
+  > 244 Γöé   text = text.replace(/\\\(([\s\S]*?)\\\)/g, (_match, inner) => `$${inner}$`);
+        Γöé   ^^^^
+    245 Γöé   return text;
+    246 Γöé }
+  
+  i The parameter is declared here:
+  
+    239 Γöé // Convert \[...\] to $$...$$ and \(...\) to $...$
+  > 240 Γöé export function normalizeLatexDelimiters(text: string): string {
+        Γöé                                          ^^^^^^^^^^^^
+    241 Γöé   // Display math: \[...\] ΓåÆ $$...$$  (may span multiple lines)
+    242 Γöé   text = text.replace(/\\\[([\s\S]*?)\\\]/g, (_match, inner) => `$$${inner}$$`);
+  
+  i Use a local variable instead.
+  
+
+role-model-router/vendor/llama-swap/ui-svelte/src/lib/markdown.ts organizeImports ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Import statements could be sorted:
+  
+      1     Γöé - import┬╖{┬╖unified┬╖}┬╖from┬╖"unified";ΓÉì
+      2     Γöé - import┬╖remarkParse┬╖from┬╖"remark-parse";ΓÉì
+      3     Γöé - import┬╖remarkGfm┬╖from┬╖"remark-gfm";ΓÉì
+      4     Γöé - import┬╖remarkMath┬╖from┬╖"remark-math";ΓÉì
+      5     Γöé - import┬╖remarkRehype┬╖from┬╖"remark-rehype";ΓÉì
+      6     Γöé - import┬╖rehypeKatex┬╖from┬╖"rehype-katex";ΓÉì
+      7     Γöé - import┬╖rehypeStringify┬╖from┬╖"rehype-stringify";ΓÉì
+      8     Γöé - import┬╖hljs┬╖from┬╖"highlight.js";ΓÉì
+      9     Γöé - import┬╖{┬╖visit┬╖}┬╖from┬╖"unist-util-visit";ΓÉì
+     10     Γöé - import┬╖type┬╖{┬╖Element,┬╖Root┬╖}┬╖from┬╖"hast";ΓÉì
+          1 Γöé + import┬╖type┬╖{┬╖Element,┬╖Root┬╖}┬╖from┬╖"hast";ΓÉì
+          2 Γöé + import┬╖hljs┬╖from┬╖"highlight.js";ΓÉì
+          3 Γöé + import┬╖rehypeKatex┬╖from┬╖"rehype-katex";ΓÉì
+          4 Γöé + import┬╖rehypeStringify┬╖from┬╖"rehype-stringify";ΓÉì
+          5 Γöé + import┬╖remarkGfm┬╖from┬╖"remark-gfm";ΓÉì
+          6 Γöé + import┬╖remarkMath┬╖from┬╖"remark-math";ΓÉì
+          7 Γöé + import┬╖remarkParse┬╖from┬╖"remark-parse";ΓÉì
+          8 Γöé + import┬╖remarkRehype┬╖from┬╖"remark-rehype";ΓÉì
+          9 Γöé + import┬╖{┬╖unified┬╖}┬╖from┬╖"unified";ΓÉì
+         10 Γöé + import┬╖{┬╖visit┬╖}┬╖from┬╖"unist-util-visit";ΓÉì
+     11  11 Γöé   ΓÉì
+     12  12 Γöé   // Custom plugin to highlight code blocks with highlight.jsΓÉì
+  
+
+role-model-router/vendor/llama-swap/ui-svelte/src/lib/markdown.ts format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+      1     Γöé - import┬╖{┬╖unified┬╖}┬╖from┬╖"unified";ΓÉì
+      2     Γöé - import┬╖remarkParse┬╖from┬╖"remark-parse";ΓÉì
+      3     Γöé - import┬╖remarkGfm┬╖from┬╖"remark-gfm";ΓÉì
+      4     Γöé - import┬╖remarkMath┬╖from┬╖"remark-math";ΓÉì
+      5     Γöé - import┬╖remarkRehype┬╖from┬╖"remark-rehype";ΓÉì
+      6     Γöé - import┬╖rehypeKatex┬╖from┬╖"rehype-katex";ΓÉì
+      7     Γöé - import┬╖rehypeStringify┬╖from┬╖"rehype-stringify";ΓÉì
+      8     Γöé - import┬╖hljs┬╖from┬╖"highlight.js";ΓÉì
+      9     Γöé - import┬╖{┬╖visit┬╖}┬╖from┬╖"unist-util-visit";ΓÉì
+     10     Γöé - import┬╖type┬╖{┬╖Element,┬╖Root┬╖}┬╖from┬╖"hast";ΓÉì
+     11     Γöé - ΓÉì
+     12     Γöé - //┬╖Custom┬╖plugin┬╖to┬╖highlight┬╖code┬╖blocks┬╖with┬╖highlight.jsΓÉì
+     13     Γöé - function┬╖rehypeHighlight()┬╖{ΓÉì
+     14     Γöé - ┬╖┬╖return┬╖(tree:┬╖Root)┬╖=>┬╖{ΓÉì
+     15     Γöé - ┬╖┬╖┬╖┬╖visit(tree,┬╖"element",┬╖(node:┬╖Element)┬╖=>┬╖{ΓÉì
+     16     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖if┬╖(node.tagName┬╖===┬╖"code"┬╖&&┬╖node.properties)┬╖{ΓÉì
+     17     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖const┬╖className┬╖=┬╖node.properties.className;ΓÉì
+     18     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖const┬╖classes┬╖=┬╖Array.isArray(className)ΓÉì
+     19     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖?┬╖className.filter((c):┬╖c┬╖is┬╖string┬╖=>┬╖typeof┬╖c┬╖===┬╖"string")ΓÉì
+     20     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖:┬╖[];ΓÉì
+     21     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖const┬╖lang┬╖=┬╖classesΓÉì
+     22     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖.find((c)┬╖=>┬╖c.startsWith("language-"))ΓÉì
+     23     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖?.replace("language-",┬╖"");ΓÉì
+     24     Γöé - ΓÉì
+     25     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖const┬╖text┬╖=┬╖node.childrenΓÉì
+     26     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖.filter((child):┬╖child┬╖is┬╖{┬╖type:┬╖"text";┬╖value:┬╖string┬╖}┬╖=>┬╖child.type┬╖===┬╖"text")ΓÉì
+     27     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖.map((child)┬╖=>┬╖child.value)ΓÉì
+     28     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖.join("");ΓÉì
+     29     Γöé - ΓÉì
+     30     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖if┬╖(text)┬╖{ΓÉì
+     31     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖const┬╖language┬╖=┬╖lang┬╖&&┬╖hljs.getLanguage(lang)┬╖?┬╖lang┬╖:┬╖"plaintext";ΓÉì
+     32     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖const┬╖highlighted┬╖=┬╖hljs.highlight(text,┬╖{┬╖language┬╖}).value;ΓÉì
+     33     Γöé - ΓÉì
+     34     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖//┬╖Replace┬╖the┬╖text┬╖node┬╖with┬╖raw┬╖HTMLΓÉì
+     35     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖node.properties.className┬╖=┬╖[ΓÉì
+     36     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"hljs",ΓÉì
+     37     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖`language-${language}`,ΓÉì
+     38     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖...classes.filter((c)┬╖=>┬╖!c.startsWith("language-")),ΓÉì
+     39     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖];ΓÉì
+     40     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖//┬╖Use┬╖type┬╖assertion┬╖since┬╖we're┬╖modifying┬╖the┬╖tree┬╖structureΓÉì
+     41     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖(node.children┬╖as┬╖unknown)┬╖=┬╖[ΓÉì
+     42     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{┬╖type:┬╖"raw",┬╖value:┬╖highlighted┬╖},ΓÉì
+     43     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖];ΓÉì
+     44     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖}ΓÉì
+     45     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖}ΓÉì
+     46     Γöé - ┬╖┬╖┬╖┬╖});ΓÉì
+     47     Γöé - ┬╖┬╖};ΓÉì
+     48     Γöé - }ΓÉì
+     49     Γöé - ΓÉì
+     50     Γöé - ΓÉì
+     51     Γöé - export┬╖function┬╖escapeHtml(text:┬╖string):┬╖string┬╖{ΓÉì
+     52     Γöé - ┬╖┬╖const┬╖htmlEntities:┬╖Record<string,┬╖string>┬╖=┬╖{ΓÉì
+     53     Γöé - ┬╖┬╖┬╖┬╖"&":┬╖"&amp;",ΓÉì
+     54     Γöé - ┬╖┬╖┬╖┬╖"<":┬╖"&lt;",ΓÉì
+     55     Γöé - ┬╖┬╖┬╖┬╖">":┬╖"&gt;",ΓÉì
+     56     Γöé - ┬╖┬╖┬╖┬╖'"':┬╖"&quot;",ΓÉì
+     57     Γöé - ┬╖┬╖┬╖┬╖"'":┬╖"&#39;",ΓÉì
+     58     Γöé - ┬╖┬╖};ΓÉì
+     59     Γöé - ┬╖┬╖return┬╖text.replace(/[&<>"']/g,┬╖(char)┬╖=>┬╖htmlEntities[char]);ΓÉì
+     60     Γöé - }ΓÉì
+     61     Γöé - ΓÉì
+     62     Γöé - //┬╖Create┬╖the┬╖unified┬╖processorΓÉì
+     63     Γöé - const┬╖processor┬╖=┬╖unified()ΓÉì
+     64     Γöé - ┬╖┬╖.use(remarkParse)ΓÉì
+     65     Γöé - ┬╖┬╖.use(remarkGfm)ΓÉì
+     66     Γöé - ┬╖┬╖.use(remarkMath)ΓÉì
+     67     Γöé - ┬╖┬╖.use(remarkRehype,┬╖{┬╖allowDangerousHtml:┬╖true┬╖})ΓÉì
+     68     Γöé - ┬╖┬╖.use(rehypeKatex)ΓÉì
+     69     Γöé - ┬╖┬╖.use(rehypeHighlight)ΓÉì
+     70     Γöé - ┬╖┬╖.use(rehypeStringify,┬╖{┬╖allowDangerousHtml:┬╖true┬╖});ΓÉì
+     71     Γöé - ΓÉì
+     72     Γöé - export┬╖function┬╖splitCompleteBlocks(text:┬╖string):┬╖{┬╖complete:┬╖string;┬╖pending:┬╖string┬╖}┬╖{ΓÉì
+     73     Γöé - ┬╖┬╖if┬╖(!text)┬╖{ΓÉì
+     74     Γöé - ┬╖┬╖┬╖┬╖return┬╖{┬╖complete:┬╖"",┬╖pending:┬╖""┬╖};ΓÉì
+     75     Γöé - ┬╖┬╖}ΓÉì
+     76     Γöé - ΓÉì
+     77     Γöé - ┬╖┬╖const┬╖lines┬╖=┬╖text.split("\n");ΓÉì
+     78     Γöé - ┬╖┬╖let┬╖lastCompleteBoundary┬╖=┬╖-1;┬╖//┬╖index┬╖of┬╖last┬╖line┬╖that┬╖ends┬╖a┬╖complete┬╖blockΓÉì
+     79     Γöé - ┬╖┬╖let┬╖inFence┬╖=┬╖false;ΓÉì
+     80     Γöé - ┬╖┬╖let┬╖fenceChar┬╖=┬╖"";ΓÉì
+     81     Γöé - ┬╖┬╖let┬╖inMathBlock┬╖=┬╖false;ΓÉì
+     82     Γöé - ΓÉì
+     83     Γöé - ┬╖┬╖for┬╖(let┬╖i┬╖=┬╖0;┬╖i┬╖<┬╖lines.length;┬╖i++)┬╖{ΓÉì
+     84     Γöé - ┬╖┬╖┬╖┬╖const┬╖trimmed┬╖=┬╖lines[i].trimEnd();ΓÉì
+     85     Γöé - ΓÉì
+     86     Γöé - ┬╖┬╖┬╖┬╖if┬╖(inFence)┬╖{ΓÉì
+     87     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖//┬╖Check┬╖for┬╖closing┬╖fence:┬╖same┬╖character,┬╖at┬╖least┬╖3,┬╖no┬╖other┬╖contentΓÉì
+     88     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖if┬╖(new┬╖RegExp(`^\\s*${fenceChar.replace(/~/g,┬╖"\\~")}{3,}\\s*$`).test(trimmed))┬╖{ΓÉì
+     89     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖inFence┬╖=┬╖false;ΓÉì
+     90     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖fenceChar┬╖=┬╖"";ΓÉì
+     91     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖lastCompleteBoundary┬╖=┬╖i;ΓÉì
+     92     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖}ΓÉì
+     93     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖continue;ΓÉì
+     94     Γöé - ┬╖┬╖┬╖┬╖}ΓÉì
+     95     Γöé - ΓÉì
+     96     Γöé - ┬╖┬╖┬╖┬╖if┬╖(inMathBlock)┬╖{ΓÉì
+     97     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖if┬╖(trimmed┬╖===┬╖"$$"┬╖||┬╖trimmed┬╖===┬╖"\\]")┬╖{ΓÉì
+     98     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖inMathBlock┬╖=┬╖false;ΓÉì
+     99     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖lastCompleteBoundary┬╖=┬╖i;ΓÉì
+    100     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖}ΓÉì
+    101     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖continue;ΓÉì
+    102     Γöé - ┬╖┬╖┬╖┬╖}ΓÉì
+    103     Γöé - ΓÉì
+    104     Γöé - ┬╖┬╖┬╖┬╖//┬╖Check┬╖for┬╖opening┬╖fenceΓÉì
+    105     Γöé - ┬╖┬╖┬╖┬╖const┬╖fenceMatch┬╖=┬╖trimmed.match(/^(\s*)(```|~~~)/);ΓÉì
+    106     Γöé - ┬╖┬╖┬╖┬╖if┬╖(fenceMatch)┬╖{ΓÉì
+    107     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖//┬╖Check┬╖if┬╖it's┬╖an┬╖opening┬╖fence┬╖(may┬╖have┬╖language┬╖info┬╖after)ΓÉì
+    108     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖//┬╖A┬╖line┬╖with┬╖just┬╖```┬╖or┬╖~~~┬╖could┬╖be┬╖opening┬╖or┬╖closing,┬╖but┬╖since┬╖we're┬╖not┬╖in┬╖a┬╖fence┬╖it's┬╖openingΓÉì
+    109     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖fenceChar┬╖=┬╖fenceMatch[2][0];┬╖//┬╖'`'┬╖or┬╖'~'ΓÉì
+    110     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖inFence┬╖=┬╖true;ΓÉì
+    111     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖continue;ΓÉì
+    112     Γöé - ┬╖┬╖┬╖┬╖}ΓÉì
+    113     Γöé - ΓÉì
+    114     Γöé - ┬╖┬╖┬╖┬╖//┬╖Check┬╖for┬╖opening┬╖math┬╖blockΓÉì
+    115     Γöé - ┬╖┬╖┬╖┬╖if┬╖(trimmed┬╖===┬╖"$$"┬╖||┬╖trimmed┬╖===┬╖"\\[")┬╖{ΓÉì
+    116     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖inMathBlock┬╖=┬╖true;ΓÉì
+    117     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖continue;ΓÉì
+    118     Γöé - ┬╖┬╖┬╖┬╖}ΓÉì
+    119     Γöé - ΓÉì
+    120     Γöé - ┬╖┬╖┬╖┬╖//┬╖Outside┬╖fences/math:┬╖blank┬╖line┬╖marks┬╖a┬╖complete┬╖boundaryΓÉì
+    121     Γöé - ┬╖┬╖┬╖┬╖if┬╖(trimmed┬╖===┬╖"")┬╖{ΓÉì
+    122     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖lastCompleteBoundary┬╖=┬╖i;ΓÉì
+    123     Γöé - ┬╖┬╖┬╖┬╖}ΓÉì
+    124     Γöé - ┬╖┬╖}ΓÉì
+    125     Γöé - ΓÉì
+    126     Γöé - ┬╖┬╖if┬╖(lastCompleteBoundary┬╖<┬╖0)┬╖{ΓÉì
+    127     Γöé - ┬╖┬╖┬╖┬╖return┬╖{┬╖complete:┬╖"",┬╖pending:┬╖text┬╖};ΓÉì
+    128     Γöé - ┬╖┬╖}ΓÉì
+    129     Γöé - ΓÉì
+    130     Γöé - ┬╖┬╖const┬╖completeLines┬╖=┬╖lines.slice(0,┬╖lastCompleteBoundary┬╖+┬╖1);ΓÉì
+    131     Γöé - ┬╖┬╖const┬╖pendingLines┬╖=┬╖lines.slice(lastCompleteBoundary┬╖+┬╖1);ΓÉì
+    132     Γöé - ΓÉì
+    133     Γöé - ┬╖┬╖return┬╖{ΓÉì
+    134     Γöé - ┬╖┬╖┬╖┬╖complete:┬╖completeLines.join("\n"),ΓÉì
+    135     Γöé - ┬╖┬╖┬╖┬╖pending:┬╖pendingLines.join("\n"),ΓÉì
+    136     Γöé - ┬╖┬╖};ΓÉì
+    137     Γöé - }ΓÉì
+    138     Γöé - ΓÉì
+    139     Γöé - export┬╖function┬╖closePendingBlock(pending:┬╖string):┬╖string┬╖{ΓÉì
+    140     Γöé - ┬╖┬╖if┬╖(!pending)┬╖return┬╖"";ΓÉì
+    141     Γöé - ΓÉì
+    142     Γöé - ┬╖┬╖const┬╖lines┬╖=┬╖pending.split("\n");ΓÉì
+    143     Γöé - ┬╖┬╖let┬╖inFence┬╖=┬╖false;ΓÉì
+    144     Γöé - ┬╖┬╖let┬╖fenceStr┬╖=┬╖"";ΓÉì
+    145     Γöé - ┬╖┬╖let┬╖inMathBlock┬╖=┬╖false;ΓÉì
+    146     Γöé - ┬╖┬╖let┬╖mathClose┬╖=┬╖"";ΓÉì
+    147     Γöé - ΓÉì
+    148     Γöé - ┬╖┬╖for┬╖(const┬╖line┬╖of┬╖lines)┬╖{ΓÉì
+    149     Γöé - ┬╖┬╖┬╖┬╖const┬╖trimmed┬╖=┬╖line.trimEnd();ΓÉì
+    150     Γöé - ΓÉì
+  366 more lines truncated
+  
+
+role-model-router/vendor/llama-swap/ui-svelte/src/lib/markdown.test.ts:185:37 lint/style/useTemplate  FIXABLE  ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Template literals are preferred over string concatenation.
+  
+    183 Γöé     it("returns fallback HTML on processing errors", () => {
+    184 Γöé       // Very large or malformed input should be handled
+  > 185 Γöé       const result = renderMarkdown("$" + "a".repeat(10000) + "$");
+        Γöé                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    186 Γöé       expect(result).toBeTruthy();
+    187 Γöé     });
+  
+  i Unsafe fix: Use a template literal.
+  
+    183 183 Γöé       it("returns fallback HTML on processing errors", () => {ΓÉì
+    184 184 Γöé         // Very large or malformed input should be handledΓÉì
+    185     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖const┬╖result┬╖=┬╖renderMarkdown("$"┬╖+┬╖"a".repeat(10000)┬╖+┬╖"$");ΓÉì
+        185 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖const┬╖result┬╖=┬╖renderMarkdown(`$${"a".repeat(10000)}$`);ΓÉì
+    186 186 Γöé         expect(result).toBeTruthy();ΓÉì
+    187 187 Γöé       });ΓÉì
+  
+
+role-model-router/vendor/llama-swap/ui-svelte/src/lib/markdown.test.ts organizeImports ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Import statements could be sorted:
+  
+      1     Γöé - import┬╖{┬╖describe,┬╖it,┬╖expect┬╖}┬╖from┬╖"vitest";ΓÉì
+      2     Γöé - import┬╖{┬╖renderMarkdown,┬╖escapeHtml,┬╖splitCompleteBlocks,┬╖closePendingBlock,┬╖normalizeLatexDelimiters,┬╖renderStreamingMarkdown,┬╖createStreamingCache┬╖}┬╖from┬╖"./markdown";ΓÉì
+          1 Γöé + import┬╖{┬╖describe,┬╖expect,┬╖it┬╖}┬╖from┬╖"vitest";ΓÉì
+          2 Γöé + import┬╖{┬╖closePendingBlock,┬╖createStreamingCache,┬╖escapeHtml,┬╖normalizeLatexDelimiters,┬╖renderMarkdown,┬╖renderStreamingMarkdown,┬╖splitCompleteBlocks┬╖}┬╖from┬╖"./markdown";ΓÉì
+      3   3 Γöé   ΓÉì
+      4   4 Γöé   describe("renderMarkdown", () => {ΓÉì
+  
+
+role-model-router/vendor/llama-swap/ui-svelte/src/lib/markdown.test.ts format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+      1     Γöé - import┬╖{┬╖describe,┬╖it,┬╖expect┬╖}┬╖from┬╖"vitest";ΓÉì
+      2     Γöé - import┬╖{┬╖renderMarkdown,┬╖escapeHtml,┬╖splitCompleteBlocks,┬╖closePendingBlock,┬╖normalizeLatexDelimiters,┬╖renderStreamingMarkdown,┬╖createStreamingCache┬╖}┬╖from┬╖"./markdown";ΓÉì
+      3     Γöé - ΓÉì
+      4     Γöé - describe("renderMarkdown",┬╖()┬╖=>┬╖{ΓÉì
+      5     Γöé - ┬╖┬╖describe("basic┬╖markdown",┬╖()┬╖=>┬╖{ΓÉì
+      6     Γöé - ┬╖┬╖┬╖┬╖it("renders┬╖plain┬╖text",┬╖()┬╖=>┬╖{ΓÉì
+      7     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖const┬╖result┬╖=┬╖renderMarkdown("Hello┬╖world");ΓÉì
+      8     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖expect(result).toContain("Hello┬╖world");ΓÉì
+      9     Γöé - ┬╖┬╖┬╖┬╖});ΓÉì
+     10     Γöé - ΓÉì
+     11     Γöé - ┬╖┬╖┬╖┬╖it("renders┬╖bold┬╖text",┬╖()┬╖=>┬╖{ΓÉì
+     12     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖const┬╖result┬╖=┬╖renderMarkdown("**bold**");ΓÉì
+     13     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖expect(result).toContain("<strong>bold</strong>");ΓÉì
+     14     Γöé - ┬╖┬╖┬╖┬╖});ΓÉì
+     15     Γöé - ΓÉì
+     16     Γöé - ┬╖┬╖┬╖┬╖it("renders┬╖italic┬╖text",┬╖()┬╖=>┬╖{ΓÉì
+     17     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖const┬╖result┬╖=┬╖renderMarkdown("*italic*");ΓÉì
+     18     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖expect(result).toContain("<em>italic</em>");ΓÉì
+     19     Γöé - ┬╖┬╖┬╖┬╖});ΓÉì
+     20     Γöé - ΓÉì
+     21     Γöé - ┬╖┬╖┬╖┬╖it("renders┬╖code┬╖blocks",┬╖()┬╖=>┬╖{ΓÉì
+     22     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖const┬╖result┬╖=┬╖renderMarkdown("```js\nconst┬╖x┬╖=┬╖1;\n```");ΓÉì
+     23     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖expect(result).toContain("hljs");ΓÉì
+     24     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖expect(result).toContain("const");ΓÉì
+     25     Γöé - ┬╖┬╖┬╖┬╖});ΓÉì
+     26     Γöé - ΓÉì
+     27     Γöé - ┬╖┬╖┬╖┬╖it("returns┬╖empty┬╖string┬╖for┬╖empty┬╖content",┬╖()┬╖=>┬╖{ΓÉì
+     28     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖const┬╖result┬╖=┬╖renderMarkdown("");ΓÉì
+     29     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖expect(result).toBe("");ΓÉì
+     30     Γöé - ┬╖┬╖┬╖┬╖});ΓÉì
+     31     Γöé - ΓÉì
+     32     Γöé - ┬╖┬╖┬╖┬╖it("returns┬╖empty┬╖string┬╖for┬╖null/undefined┬╖content",┬╖()┬╖=>┬╖{ΓÉì
+     33     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖//┬╖@ts-expect-error┬╖-┬╖testing┬╖null┬╖inputΓÉì
+     34     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖expect(renderMarkdown(null)).toBe("");ΓÉì
+     35     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖//┬╖@ts-expect-error┬╖-┬╖testing┬╖undefined┬╖inputΓÉì
+     36     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖expect(renderMarkdown(undefined)).toBe("");ΓÉì
+     37     Γöé - ┬╖┬╖┬╖┬╖});ΓÉì
+     38     Γöé - ┬╖┬╖});ΓÉì
+     39     Γöé - ΓÉì
+     40     Γöé - ┬╖┬╖describe("KaTeX┬╖math┬╖rendering",┬╖()┬╖=>┬╖{ΓÉì
+     41     Γöé - ┬╖┬╖┬╖┬╖it("renders┬╖inline┬╖math┬╖with┬╖$...$┬╖syntax",┬╖()┬╖=>┬╖{ΓÉì
+     42     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖const┬╖result┬╖=┬╖renderMarkdown("The┬╖equation┬╖$E┬╖=┬╖mc^2$┬╖is┬╖famous.");ΓÉì
+     43     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖//┬╖KaTeX┬╖should┬╖convert┬╖this┬╖to┬╖HTML┬╖with┬╖katex┬╖classΓÉì
+     44     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖expect(result).toContain("katex");ΓÉì
+     45     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖expect(result).toContain("E");ΓÉì
+     46     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖expect(result).toContain("=");ΓÉì
+     47     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖expect(result).toContain("mc");ΓÉì
+     48     Γöé - ┬╖┬╖┬╖┬╖});ΓÉì
+     49     Γöé - ΓÉì
+     50     Γöé - ┬╖┬╖┬╖┬╖it("renders┬╖display┬╖math┬╖with┬╖$$...$$┬╖syntax",┬╖()┬╖=>┬╖{ΓÉì
+     51     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖const┬╖result┬╖=┬╖renderMarkdown("$$\\int_{a}^{b}┬╖f(x)┬╖dx$$");ΓÉì
+     52     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖//┬╖Math┬╖should┬╖be┬╖rendered┬╖with┬╖KaTeXΓÉì
+     53     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖expect(result).toContain("katex");ΓÉì
+     54     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖expect(result).toContain("Γê½");ΓÉì
+     55     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖expect(result).toContain("f(x)");ΓÉì
+     56     Γöé - ┬╖┬╖┬╖┬╖});ΓÉì
+     57     Γöé - ΓÉì
+     58     Γöé - ┬╖┬╖┬╖┬╖it("renders┬╖complex┬╖LaTeX┬╖expressions",┬╖()┬╖=>┬╖{ΓÉì
+     59     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖const┬╖result┬╖=┬╖renderMarkdown("$$\\sum_{i=1}^{n}┬╖x_i┬╖=┬╖\\frac{1}{n}\\sum_{i=1}^{n}┬╖x_i$$");ΓÉì
+     60     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖expect(result).toContain("katex");ΓÉì
+     61     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖expect(result).toContain("Γêæ");┬╖//┬╖or┬╖the┬╖MathML┬╖equivalentΓÉì
+     62     Γöé - ┬╖┬╖┬╖┬╖});ΓÉì
+     63     Γöé - ΓÉì
+     64     Γöé - ┬╖┬╖┬╖┬╖it("renders┬╖LaTeX┬╖with┬╖Greek┬╖letters",┬╖()┬╖=>┬╖{ΓÉì
+     65     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖const┬╖result┬╖=┬╖renderMarkdown("$\\alpha┬╖+┬╖\\beta┬╖=┬╖\\gamma$");ΓÉì
+     66     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖expect(result).toContain("katex");ΓÉì
+     67     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖//┬╖Greek┬╖letters┬╖should┬╖be┬╖renderedΓÉì
+     68     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖expect(result).toMatch(/[╬▒╬▓╬│]|alpha|beta|gamma/);ΓÉì
+     69     Γöé - ┬╖┬╖┬╖┬╖});ΓÉì
+     70     Γöé - ΓÉì
+     71     Γöé - ┬╖┬╖┬╖┬╖it("renders┬╖LaTeX┬╖with┬╖fractions",┬╖()┬╖=>┬╖{ΓÉì
+     72     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖const┬╖result┬╖=┬╖renderMarkdown("$\\frac{a}{b}$");ΓÉì
+     73     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖expect(result).toContain("katex");ΓÉì
+     74     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖expect(result).toContain("frac");ΓÉì
+     75     Γöé - ┬╖┬╖┬╖┬╖});ΓÉì
+     76     Γöé - ΓÉì
+     77     Γöé - ┬╖┬╖┬╖┬╖it("renders┬╖LaTeX┬╖with┬╖subscripts┬╖and┬╖superscripts",┬╖()┬╖=>┬╖{ΓÉì
+     78     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖const┬╖result┬╖=┬╖renderMarkdown("$x^2┬╖+┬╖y_3$");ΓÉì
+     79     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖expect(result).toContain("katex");ΓÉì
+     80     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖expect(result).toContain("sup");┬╖//┬╖superscriptΓÉì
+     81     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖expect(result).toContain("sub");┬╖//┬╖subscriptΓÉì
+     82     Γöé - ┬╖┬╖┬╖┬╖});ΓÉì
+     83     Γöé - ΓÉì
+     84     Γöé - ┬╖┬╖┬╖┬╖it("renders┬╖multiple┬╖inline┬╖math┬╖expressions┬╖in┬╖one┬╖paragraph",┬╖()┬╖=>┬╖{ΓÉì
+     85     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖const┬╖result┬╖=┬╖renderMarkdown("First┬╖$x┬╖=┬╖1$┬╖and┬╖then┬╖$y┬╖=┬╖2$.");ΓÉì
+     86     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖//┬╖Should┬╖contain┬╖multiple┬╖katex┬╖spansΓÉì
+     87     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖const┬╖katexMatches┬╖=┬╖result.match(/katex/g);ΓÉì
+     88     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖expect(katexMatches?.length).toBeGreaterThanOrEqual(2);ΓÉì
+     89     Γöé - ┬╖┬╖┬╖┬╖});ΓÉì
+     90     Γöé - ΓÉì
+     91     Γöé - ┬╖┬╖┬╖┬╖it("renders┬╖math┬╖within┬╖a┬╖larger┬╖markdown┬╖document",┬╖()┬╖=>┬╖{ΓÉì
+     92     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖const┬╖markdown┬╖=┬╖`#┬╖HeadingΓÉì
+     93     Γöé - ΓÉì
+     94     Γöé - This┬╖is┬╖a┬╖paragraph┬╖with┬╖$E┬╖=┬╖mc^2$┬╖inline┬╖math.ΓÉì
+     95     Γöé - ΓÉì
+     96     Γöé - $$\\int_0^\\infty┬╖e^{-x}┬╖dx┬╖=┬╖1$$ΓÉì
+     97     Γöé - ΓÉì
+     98     Γöé - More┬╖text┬╖here.ΓÉì
+     99     Γöé - `;ΓÉì
+    100     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖const┬╖result┬╖=┬╖renderMarkdown(markdown);ΓÉì
+    101     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖expect(result).toContain("<h1>Heading</h1>");ΓÉì
+    102     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖expect(result).toContain("katex");ΓÉì
+    103     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖//┬╖Both┬╖inline┬╖and┬╖display┬╖math┬╖should┬╖be┬╖renderedΓÉì
+    104     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖expect(result).toContain("E┬╖=┬╖mc");ΓÉì
+    105     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖expect(result).toContain("Γê½");ΓÉì
+    106     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖expect(result).toContain("Γê₧");ΓÉì
+    107     Γöé - ┬╖┬╖┬╖┬╖});ΓÉì
+    108     Γöé - ΓÉì
+    109     Γöé - ┬╖┬╖┬╖┬╖it("handles┬╖escaped┬╖dollar┬╖signs",┬╖()┬╖=>┬╖{ΓÉì
+    110     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖const┬╖result┬╖=┬╖renderMarkdown("This┬╖costs┬╖\\$5┬╖and┬╖$x┬╖=┬╖1$.");ΓÉì
+    111     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖//┬╖Should┬╖render┬╖the┬╖escaped┬╖$5┬╖as┬╖text┬╖and┬╖the┬╖mathΓÉì
+    112     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖expect(result).toContain("katex");ΓÉì
+    113     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖expect(result).toContain("$5");ΓÉì
+    114     Γöé - ┬╖┬╖┬╖┬╖});ΓÉì
+    115     Γöé - ΓÉì
+    116     Γöé - ┬╖┬╖┬╖┬╖it("handles┬╖empty┬╖math┬╖expressions┬╖gracefully",┬╖()┬╖=>┬╖{ΓÉì
+    117     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖//┬╖Empty┬╖math┬╖should┬╖not┬╖break┬╖the┬╖rendererΓÉì
+    118     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖const┬╖result┬╖=┬╖renderMarkdown("$$$");ΓÉì
+    119     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖expect(result).toBeTruthy();ΓÉì
+    120     Γöé - ┬╖┬╖┬╖┬╖});ΓÉì
+    121     Γöé - ΓÉì
+    122     Γöé - ┬╖┬╖┬╖┬╖it("renders┬╖LaTeX┬╖matrices",┬╖()┬╖=>┬╖{ΓÉì
+    123     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖const┬╖result┬╖=┬╖renderMarkdown("$$\\begin{pmatrix}┬╖a┬╖&┬╖b┬╖\\\\┬╖c┬╖&┬╖d┬╖\\end{pmatrix}$$");ΓÉì
+    124     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖expect(result).toContain("katex");ΓÉì
+    125     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖expect(result).toContain("pmatrix");ΓÉì
+    126     Γöé - ┬╖┬╖┬╖┬╖});ΓÉì
+    127     Γöé - ΓÉì
+    128     Γöé - ┬╖┬╖┬╖┬╖it("renders┬╖LaTeX┬╖square┬╖roots",┬╖()┬╖=>┬╖{ΓÉì
+    129     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖const┬╖result┬╖=┬╖renderMarkdown("$\\sqrt{x^2┬╖+┬╖y^2}$");ΓÉì
+    130     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖expect(result).toContain("katex");ΓÉì
+    131     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖expect(result).toContain("sqrt");ΓÉì
+    132     Γöé - ┬╖┬╖┬╖┬╖});ΓÉì
+    133     Γöé - ΓÉì
+    134     Γöé - ┬╖┬╖┬╖┬╖it("renders┬╖\\[...\\]┬╖display┬╖math",┬╖()┬╖=>┬╖{ΓÉì
+    135     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖const┬╖result┬╖=┬╖renderMarkdown("\\[\nx^2┬╖+┬╖y^2┬╖=┬╖z^2\n\\]");ΓÉì
+    136     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖expect(result).toContain("katex");ΓÉì
+    137     Γöé - ┬╖┬╖┬╖┬╖});ΓÉì
+    138     Γöé - ΓÉì
+    139     Γöé - ┬╖┬╖┬╖┬╖it("renders┬╖\\(...\\)┬╖inline┬╖math",┬╖()┬╖=>┬╖{ΓÉì
+    140     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖const┬╖result┬╖=┬╖renderMarkdown("The┬╖equation┬╖\\(E┬╖=┬╖mc^2\\)┬╖is┬╖famous.");ΓÉì
+    141     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖expect(result).toContain("katex");ΓÉì
+    142     Γöé - ┬╖┬╖┬╖┬╖});ΓÉì
+    143     Γöé - ┬╖┬╖});ΓÉì
+    144     Γöé - ΓÉì
+    145     Γöé - ┬╖┬╖describe("normalizeLatexDelimiters",┬╖()┬╖=>┬╖{ΓÉì
+    146     Γöé - ┬╖┬╖┬╖┬╖it("converts┬╖\\[...\\]┬╖to┬╖$$...$$",┬╖()┬╖=>┬╖{ΓÉì
+    147     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖expect(normalizeLatexDelimiters("\\[\nx^2\n\\]")).toBe("$$\nx^2\n$$");ΓÉì
+    148     Γöé - ┬╖┬╖┬╖┬╖});ΓÉì
+    149     Γöé - ΓÉì
+    150     Γöé - ┬╖┬╖┬╖┬╖it("converts┬╖\\(...\\)┬╖to┬╖$...$",┬╖()┬╖=>┬╖{ΓÉì
+  705 more lines truncated
+  
+
+role-model-router/apps/runtime-host-bridge/src/index.ts:1437:67 lint/style/noNonNullAssertion ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Forbidden non-null assertion.
+  
+    1435 Γöé     "x-role-model-adapter-family": input.adapterFamily,
+    1436 Γöé     ...(input.routingDecisionId ? { "x-role-model-routing-decision-id": input.routingDecisionId } : {}),
+  > 1437 Γöé     ...(formatCostUsd(input.costUsd) ? { "x-role-model-cost-usd": formatCostUsd(input.costUsd)! } : {}),
+         Γöé                                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    1438 Γöé   };
+    1439 Γöé }
+  
+
+Skipped 5 suggested fixes.
+If you wish to apply the suggested (unsafe) fixes, use the command biome check --fix --unsafe
+
+The number of diagnostics exceeds the number allowed by Biome.
+Diagnostics not shown: 10.
+Checked 9 files in 235ms. No fixes applied.
+Found 30 errors.
+check ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Some errors were emitted while running checks.
+  
+

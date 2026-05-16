@@ -5,9 +5,9 @@ import path from "node:path";
 import { afterEach, describe, expect, test } from "vitest";
 
 import {
-  ProcessSupervisor,
   type ManagedVendor,
   type ManagedVendorStatus,
+  ProcessSupervisor,
   type StartVendorOptions,
 } from "@role-model-router/process-supervisor";
 
@@ -159,17 +159,17 @@ describe("vendor-litellm", () => {
     process.env.PATH = tempRoot;
     process.env.Path = tempRoot;
 
-      try {
-        const ensured = await ensureLiteLLMCommand({
-          runtimeStateRoot,
-          runCommand: async (command, args, env) => {
-            expect(command).toBe(pathUv);
-            expect(args).toEqual(["tool", "install", "litellm[proxy]"]);
-            expect(env.UV_TOOL_DIR).toBe(toolDir);
-            expect(env.UV_TOOL_BIN_DIR).toBe(path.join(toolDir, "bin"));
-            await mkdir(path.dirname(expectedCommand), { recursive: true });
-            await writeFile(expectedCommand, "litellm", "utf8");
-          },
+    try {
+      const ensured = await ensureLiteLLMCommand({
+        runtimeStateRoot,
+        runCommand: async (command, args, env) => {
+          expect(command).toBe(pathUv);
+          expect(args).toEqual(["tool", "install", "litellm[proxy]"]);
+          expect(env.UV_TOOL_DIR).toBe(toolDir);
+          expect(env.UV_TOOL_BIN_DIR).toBe(path.join(toolDir, "bin"));
+          await mkdir(path.dirname(expectedCommand), { recursive: true });
+          await writeFile(expectedCommand, "litellm", "utf8");
+        },
         downloadArchive: async () => {
           throw new Error("should not download uv when PATH already provides it");
         },

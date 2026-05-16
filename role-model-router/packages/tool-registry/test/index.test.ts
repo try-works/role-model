@@ -117,8 +117,7 @@ describe("tool-registry", () => {
         diagnostics: [
           {
             code: "TOOL_SCHEMA_INVALID",
-            message:
-              "Tool lookupRegistry is missing required field endpointId.",
+            message: "Tool lookupRegistry is missing required field endpointId.",
           },
         ],
       },
@@ -126,8 +125,7 @@ describe("tool-registry", () => {
     expect(result.diagnostics).toEqual([
       {
         code: "TOOL_SCHEMA_INVALID",
-        message:
-          "Tool lookupRegistry is missing required field endpointId.",
+        message: "Tool lookupRegistry is missing required field endpointId.",
       },
     ]);
   });

@@ -1,10 +1,10 @@
-import type { ObservedPerformanceProfile } from "@role-model/protocol-types";
 import type { RoutedExecutionResult } from "@role-model-router/adapter-execution";
 import {
-  aggregateObservedPerformanceSamples,
   type ObservedPerformanceSample,
+  aggregateObservedPerformanceSamples,
 } from "@role-model-router/profile-aggregator";
 import type { ToolRegistryExecution } from "@role-model-router/tool-registry";
+import type { ObservedPerformanceProfile } from "@role-model/protocol-types";
 
 export type RuntimeRoutingMode = "baseline" | "difficulty" | "controller" | "hybrid";
 
@@ -26,7 +26,10 @@ export interface RuntimeRoutingDiagnostics {
     readonly fallbackReason?: string;
     readonly excludedEndpointIds?: readonly string[];
     readonly overrideAppliedEndpointIds?: readonly string[];
-    readonly overrideRecommendedMaxDifficultyByEndpointId?: Record<string, "easy" | "medium" | "hard">;
+    readonly overrideRecommendedMaxDifficultyByEndpointId?: Record<
+      string,
+      "easy" | "medium" | "hard"
+    >;
     readonly rubricSignals: {
       readonly contextTokens: number;
       readonly toolCount: number;
@@ -52,8 +55,8 @@ export interface RuntimeRoutingDiagnostics {
   };
   readonly hybridArbitration?: {
     readonly active: boolean;
-    readonly difficultyStrategy: "balanced" | "cost" | "quality";
-    readonly finalStrategy: "balanced" | "cost" | "quality";
+    readonly difficultyStrategy: string;
+    readonly finalStrategy: string;
     readonly controllerChangedPlan: boolean;
     readonly dominantSignal: "difficulty" | "controller" | "aligned";
     readonly preferredEndpointIds?: readonly string[];
@@ -68,7 +71,9 @@ export interface RuntimeRoutingDiagnostics {
     readonly requestedModel: string;
     readonly downstreamModelId: string;
     readonly applied: boolean;
-    readonly reason: "requested-model-matches-downstream" | "requested-model-rewritten-for-selected-endpoint";
+    readonly reason:
+      | "requested-model-matches-downstream"
+      | "requested-model-rewritten-for-selected-endpoint";
   };
   readonly observedProfile?: {
     readonly endpointId: string;
@@ -322,7 +327,8 @@ function buildObservedPerformanceSample(
     tokens_per_sec:
       input.execution.normalized.usage.outputTokens > 0 && input.execution.normalized.latencyMs > 0
         ? Math.round(
-            (input.execution.normalized.usage.outputTokens / input.execution.normalized.latencyMs) * 1000,
+            (input.execution.normalized.usage.outputTokens / input.execution.normalized.latencyMs) *
+              1000,
           )
         : undefined,
     cost_per_1k_tokens_est: input.execution.usageEvent.cost_estimate,
@@ -334,7 +340,10 @@ function buildObservedPerformanceSample(
 }
 
 function toUpperSnake(value: string): string {
-  return value.replace(/[^a-zA-Z0-9]+/g, "_").replace(/^_+|_+$/g, "").toUpperCase();
+  return value
+    .replace(/[^a-zA-Z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .toUpperCase();
 }
 
 function buildRoutingDiagnostics(input: RuntimeObservationBundleInput): RuntimeDiagnostic[] {
@@ -432,7 +441,10 @@ function buildToolingDiagnostics(input: RuntimeObservationBundleInput): RuntimeD
       message: diagnostic.message,
     })),
   );
-  if (input.execution.normalized.toolCalls.length > 0 && (input.tooling?.executions.length ?? 0) === 0) {
+  if (
+    input.execution.normalized.toolCalls.length > 0 &&
+    (input.tooling?.executions.length ?? 0) === 0
+  ) {
     diagnostics.push({
       code: "TOOL_EXECUTION_MISSING",
       severity: "warning",
@@ -499,7 +511,10 @@ function redactRequestCapture(
   readonly body: Record<string, unknown> | RedactedCaptureBody;
 } {
   const headers = cloneHeaders(input.execution.requestCapture.headers);
-  if (capturePolicy.redactedFields.includes("request.headers.authorization") && headers.authorization) {
+  if (
+    capturePolicy.redactedFields.includes("request.headers.authorization") &&
+    headers.authorization
+  ) {
     headers.authorization = "[redacted]";
   }
 
@@ -537,7 +552,9 @@ function buildOperatorDiagnostics(
 ): RuntimeDiagnostic[] {
   return [
     {
-      code: capturePolicy.rawCaptureAvailable ? "OPERATOR_RAW_CAPTURE_AVAILABLE" : "OPERATOR_RAW_CAPTURE_DISABLED",
+      code: capturePolicy.rawCaptureAvailable
+        ? "OPERATOR_RAW_CAPTURE_AVAILABLE"
+        : "OPERATOR_RAW_CAPTURE_DISABLED",
       severity: "info",
       message: capturePolicy.rawCaptureAvailable
         ? "Raw operator captures remain available through the preserved host capture surface."

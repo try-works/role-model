@@ -1,6 +1,6 @@
+import { mkdtemp, readFile, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { describe, expect, test } from "vitest";
@@ -31,7 +31,7 @@ describe("runtime-observability", () => {
       };
       const validation = await runRuntimeAdapterValidation({
         repoRoot,
-      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+        fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
         runtimeStateRoot,
         scopeId: "runtime-observability-test",
       });
@@ -117,7 +117,9 @@ describe("runtime-observability", () => {
           expect.objectContaining({ code: "AUTH_ACCOUNT_PROVIDER_AUTH_ERROR" }),
         ]),
       );
-      expect((bundle.diagnostics as { memoryQuality: Array<{ code: string }> }).memoryQuality).toEqual(
+      expect(
+        (bundle.diagnostics as { memoryQuality: Array<{ code: string }> }).memoryQuality,
+      ).toEqual(
         expect.arrayContaining([expect.objectContaining({ code: "MEMORY_CONTEXT_OMITTED" })]),
       );
       expect(

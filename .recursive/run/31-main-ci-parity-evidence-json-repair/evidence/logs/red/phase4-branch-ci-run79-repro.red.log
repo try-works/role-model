@@ -1,0 +1,1096 @@
+role-model-router\apps\runtime-ui\app\routes\control-routing-strategy.tsx organizeImports ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Import statements could be sorted:
+  
+      5   5 Γöé   import { mutedPanelClassName, secondaryButtonClassName } from "../lib/design-system";ΓÉì
+      6   6 Γöé   import {ΓÉì
+      7     Γöé - ┬╖┬╖fetchControllerAssignment,ΓÉì
+      8     Γöé - ┬╖┬╖fetchRuntimeConfig,ΓÉì
+      9     Γöé - ┬╖┬╖type┬╖RuntimeConfigRecord,ΓÉì
+     10     Γöé - ┬╖┬╖type┬╖RuntimeControllerAssignment,ΓÉì
+          7 Γöé + ┬╖┬╖type┬╖RuntimeConfigRecord,ΓÉì
+          8 Γöé + ┬╖┬╖type┬╖RuntimeControllerAssignment,ΓÉì
+          9 Γöé + ┬╖┬╖fetchControllerAssignment,ΓÉì
+         10 Γöé + ┬╖┬╖fetchRuntimeConfig,ΓÉì
+     11  11 Γöé   } from "../lib/runtime-api";ΓÉì
+     12  12 Γöé   ΓÉì
+  
+
+role-model-router\apps\runtime-ui\app\routes\control-runtime-config.tsx:60:3 lint/correctness/useExhaustiveDependencies ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù This hook does not specify all of its dependencies: load
+  
+    58 Γöé       });
+    59 Γöé 
+  > 60 Γöé   useEffect(() => {
+       Γöé   ^^^^^^^^^
+    61 Γöé     void load();
+    62 Γöé   }, []);
+  
+  i This dependency is not specified in the hook dependency list.
+  
+    60 Γöé   useEffect(() => {
+  > 61 Γöé     void load();
+       Γöé          ^^^^
+    62 Γöé   }, []);
+    63 Γöé 
+  
+  i Either include it or remove the dependency array
+  
+
+role-model-router\apps\runtime-ui\app\components\future-surface.tsx:1:8 lint/style/useImportType  FIXABLE  ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù All these imports are only used as types.
+  
+  > 1 Γöé import { type ReactNode } from "react";
+      Γöé        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    2 Γöé import { useLocation } from "react-router";
+    3 Γöé 
+  
+  i Importing the types with import type ensures that they are removed by the compilers and avoids loading unnecessary modules.
+  
+  i Safe fix: Use import type.
+  
+      1     Γöé - import┬╖{┬╖type┬╖ReactNode┬╖}┬╖from┬╖"react";ΓÉì
+          1 Γöé + import┬╖type┬╖{┬╖ReactNode┬╖}┬╖from┬╖"react";ΓÉì
+      2   2 Γöé   import { useLocation } from "react-router";ΓÉì
+      3   3 Γöé   ΓÉì
+  
+
+role-model-router\apps\runtime-ui\app\routes\control-runtime-config.tsx organizeImports ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Import statements could be sorted:
+  
+      5   5 Γöé   import { fieldClassName, primaryButtonClassName, secondaryButtonClassName } from "../lib/design-system";ΓÉì
+      6   6 Γöé   import {ΓÉì
+      7     Γöé - ┬╖┬╖fetchRuntimeConfig,ΓÉì
+      8     Γöé - ┬╖┬╖updateRuntimeConfig,ΓÉì
+      9     Γöé - ┬╖┬╖type┬╖RuntimeConfig,ΓÉì
+     10     Γöé - ┬╖┬╖type┬╖RuntimeConfigRecord,ΓÉì
+          7 Γöé + ┬╖┬╖type┬╖RuntimeConfig,ΓÉì
+          8 Γöé + ┬╖┬╖type┬╖RuntimeConfigRecord,ΓÉì
+          9 Γöé + ┬╖┬╖fetchRuntimeConfig,ΓÉì
+         10 Γöé + ┬╖┬╖updateRuntimeConfig,ΓÉì
+     11  11 Γöé   } from "../lib/runtime-api";ΓÉì
+     12  12 Γöé   ΓÉì
+  
+
+role-model-router\apps\runtime-ui\app\routes\dashboard.tsx organizeImports ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Import statements could be sorted:
+  
+      4   4 Γöé   import { EmptyState, ErrorState, FactCard, LoadingState, PageHeader, SectionCard, StatusPill } from "../components/page-primitives";ΓÉì
+      5   5 Γöé   import { listRowClassName, mutedPanelClassName } from "../lib/design-system";ΓÉì
+      6     Γöé - import┬╖{┬╖fetchTelemetryDashboard,┬╖subscribeTelemetryStream,┬╖type┬╖RuntimeTelemetryDashboard┬╖}┬╖from┬╖"../lib/runtime-api";ΓÉì
+          6 Γöé + import┬╖{┬╖type┬╖RuntimeTelemetryDashboard,┬╖fetchTelemetryDashboard,┬╖subscribeTelemetryStream┬╖}┬╖from┬╖"../lib/runtime-api";ΓÉì
+      7   7 Γöé   import { buildTelemetryComparisonCards, buildTelemetryRequestRows, summarizeTelemetryStats } from "../lib/view-models";ΓÉì
+      8   8 Γöé   ΓÉì
+  
+
+role-model-router\apps\runtime-ui\app\components\page-primitives.tsx format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+      1     Γöé - import┬╖type┬╖{┬╖ReactNode┬╖}┬╖from┬╖"react";ΓÉì
+      2     Γöé - ΓÉì
+      3     Γöé - import┬╖{┬╖cn┬╖}┬╖from┬╖"../lib/cn";ΓÉì
+      4     Γöé - import┬╖{┬╖cardClassName,┬╖codeBlockClassName,┬╖mutedPanelClassName,┬╖raisedPanelClassName┬╖}┬╖from┬╖"../lib/design-system";ΓÉì
+      5     Γöé - ΓÉì
+      6     Γöé - export┬╖function┬╖PageHeader({ΓÉì
+      7     Γöé - ┬╖┬╖eyebrow,ΓÉì
+      8     Γöé - ┬╖┬╖title,ΓÉì
+      9     Γöé - ┬╖┬╖description,ΓÉì
+     10     Γöé - ┬╖┬╖actions,ΓÉì
+     11     Γöé - }:┬╖{ΓÉì
+     12     Γöé - ┬╖┬╖eyebrow?:┬╖string;ΓÉì
+     13     Γöé - ┬╖┬╖title:┬╖string;ΓÉì
+     14     Γöé - ┬╖┬╖description:┬╖string;ΓÉì
+     15     Γöé - ┬╖┬╖actions?:┬╖ReactNode;ΓÉì
+     16     Γöé - })┬╖{ΓÉì
+     17     Γöé - ┬╖┬╖return┬╖(ΓÉì
+     18     Γöé - ┬╖┬╖┬╖┬╖<div┬╖className="grid┬╖gap-5┬╖border-b┬╖border-[var(--rm-border)]┬╖pb-6┬╖xl:grid-cols-[minmax(0,1fr)_auto]┬╖xl:items-end">ΓÉì
+     19     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="space-y-4">ΓÉì
+     20     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="h-px┬╖w-10┬╖bg-[var(--rm-accent)]"┬╖/>ΓÉì
+     21     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{eyebrow┬╖?┬╖<p┬╖className="text-xs┬╖font-normal┬╖uppercase┬╖tracking-[0.24em]┬╖text-[var(--rm-muted)]">{eyebrow}</p>┬╖:┬╖null}ΓÉì
+     22     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="space-y-3">ΓÉì
+     23     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<h1┬╖className="max-w-[16ch]┬╖text-balance┬╖text-3xl┬╖font-light┬╖tracking-tight┬╖text-[var(--rm-fg)]┬╖md:text-4xl">{title}</h1>ΓÉì
+     24     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<p┬╖className="max-w-[60ch]┬╖text-sm┬╖leading-6┬╖text-[var(--rm-secondary)]┬╖md:text-[15px]">{description}</p>ΓÉì
+     25     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+     26     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+     27     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖{actions┬╖?┬╖<div┬╖className="flex┬╖flex-wrap┬╖gap-2┬╖xl:justify-end┬╖xl:self-end">{actions}</div>┬╖:┬╖null}ΓÉì
+     28     Γöé - ┬╖┬╖┬╖┬╖</div>ΓÉì
+     29     Γöé - ┬╖┬╖);ΓÉì
+     30     Γöé - }ΓÉì
+     31     Γöé - ΓÉì
+     32     Γöé - export┬╖function┬╖SectionCard({ΓÉì
+     33     Γöé - ┬╖┬╖title,ΓÉì
+     34     Γöé - ┬╖┬╖description,ΓÉì
+     35     Γöé - ┬╖┬╖children,ΓÉì
+     36     Γöé - ┬╖┬╖className,ΓÉì
+     37     Γöé - }:┬╖{ΓÉì
+     38     Γöé - ┬╖┬╖title:┬╖string;ΓÉì
+     39     Γöé - ┬╖┬╖description?:┬╖string;ΓÉì
+     40     Γöé - ┬╖┬╖children:┬╖ReactNode;ΓÉì
+     41     Γöé - ┬╖┬╖className?:┬╖string;ΓÉì
+     42     Γöé - })┬╖{ΓÉì
+     43     Γöé - ┬╖┬╖return┬╖(ΓÉì
+     44     Γöé - ┬╖┬╖┬╖┬╖<sectionΓÉì
+     45     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖className={cn(ΓÉì
+     46     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖`${cardClassName}┬╖px-5┬╖py-5┬╖md:px-6┬╖md:py-6`,ΓÉì
+     47     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖className,ΓÉì
+     48     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖)}ΓÉì
+     49     Γöé - ┬╖┬╖┬╖┬╖>ΓÉì
+     50     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="mb-5┬╖border-b┬╖border-[var(--rm-border)]┬╖pb-4">ΓÉì
+     51     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="mb-3┬╖h-px┬╖w-8┬╖bg-[var(--rm-border-strong)]"┬╖/>ΓÉì
+     52     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<h2┬╖className="text-lg┬╖font-normal┬╖text-[var(--rm-fg)]">{title}</h2>ΓÉì
+     53     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{description┬╖?┬╖<p┬╖className="mt-2┬╖max-w-[60ch]┬╖text-sm┬╖leading-6┬╖text-[var(--rm-secondary)]">{description}</p>┬╖:┬╖null}ΓÉì
+     54     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+     55     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖{children}ΓÉì
+     56     Γöé - ┬╖┬╖┬╖┬╖</section>ΓÉì
+     57     Γöé - ┬╖┬╖);ΓÉì
+     58     Γöé - }ΓÉì
+     59     Γöé - ΓÉì
+     60     Γöé - export┬╖function┬╖StatCard({┬╖label,┬╖value┬╖}:┬╖{┬╖label:┬╖string;┬╖value:┬╖string┬╖})┬╖{ΓÉì
+     61     Γöé - ┬╖┬╖return┬╖(ΓÉì
+     62     Γöé - ┬╖┬╖┬╖┬╖<div┬╖className={`${raisedPanelClassName}┬╖p-5`}>ΓÉì
+     63     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖<p┬╖className="text-xs┬╖font-normal┬╖uppercase┬╖tracking-[0.2em]┬╖text-[var(--rm-muted)]">{label}</p>ΓÉì
+     64     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖<p┬╖className="mt-4┬╖text-3xl┬╖font-light┬╖text-[var(--rm-fg)]">{value}</p>ΓÉì
+     65     Γöé - ┬╖┬╖┬╖┬╖</div>ΓÉì
+     66     Γöé - ┬╖┬╖);ΓÉì
+     67     Γöé - }ΓÉì
+     68     Γöé - ΓÉì
+     69     Γöé - export┬╖function┬╖FactCard({ΓÉì
+     70     Γöé - ┬╖┬╖label,ΓÉì
+     71     Γöé - ┬╖┬╖value,ΓÉì
+     72     Γöé - ┬╖┬╖detail,ΓÉì
+     73     Γöé - ┬╖┬╖emphasis┬╖=┬╖false,ΓÉì
+     74     Γöé - ┬╖┬╖className,ΓÉì
+     75     Γöé - }:┬╖{ΓÉì
+     76     Γöé - ┬╖┬╖label:┬╖string;ΓÉì
+     77     Γöé - ┬╖┬╖value:┬╖ReactNode;ΓÉì
+     78     Γöé - ┬╖┬╖detail?:┬╖ReactNode;ΓÉì
+     79     Γöé - ┬╖┬╖emphasis?:┬╖boolean;ΓÉì
+     80     Γöé - ┬╖┬╖className?:┬╖string;ΓÉì
+     81     Γöé - })┬╖{ΓÉì
+     82     Γöé - ┬╖┬╖return┬╖(ΓÉì
+     83     Γöé - ┬╖┬╖┬╖┬╖<div┬╖className={cn(`${emphasis┬╖?┬╖raisedPanelClassName┬╖:┬╖mutedPanelClassName}┬╖p-4┬╖md:p-5`,┬╖className)}>ΓÉì
+     84     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖<p┬╖className="text-[11px]┬╖font-medium┬╖uppercase┬╖tracking-[0.24em]┬╖text-[var(--rm-muted)]">{label}</p>ΓÉì
+     85     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖<p┬╖className="mt-3┬╖break-words┬╖text-xl┬╖font-light┬╖leading-snug┬╖tabular-nums┬╖text-[var(--rm-fg)]┬╖md:text-2xl">{value}</p>ΓÉì
+     86     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖{detail┬╖?┬╖<p┬╖className="mt-2┬╖max-w-[28ch]┬╖text-sm┬╖leading-6┬╖text-[var(--rm-secondary)]">{detail}</p>┬╖:┬╖null}ΓÉì
+     87     Γöé - ┬╖┬╖┬╖┬╖</div>ΓÉì
+     88     Γöé - ┬╖┬╖);ΓÉì
+     89     Γöé - }ΓÉì
+     90     Γöé - ΓÉì
+     91     Γöé - export┬╖function┬╖StatusPill({ΓÉì
+     92     Γöé - ┬╖┬╖tone,ΓÉì
+     93     Γöé - ┬╖┬╖children,ΓÉì
+     94     Γöé - }:┬╖{ΓÉì
+     95     Γöé - ┬╖┬╖tone:┬╖"neutral"┬╖|┬╖"accent"┬╖|┬╖"warning"┬╖|┬╖"success";ΓÉì
+     96     Γöé - ┬╖┬╖children:┬╖ReactNode;ΓÉì
+     97     Γöé - })┬╖{ΓÉì
+     98     Γöé - ┬╖┬╖const┬╖toneClass┬╖=ΓÉì
+     99     Γöé - ┬╖┬╖┬╖┬╖tone┬╖===┬╖"accent"ΓÉì
+    100     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖?┬╖"border-[color:var(--rm-accent-muted)]┬╖bg-[var(--rm-accent-ghost)]┬╖text-[var(--rm-accent)]"ΓÉì
+    101     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖:┬╖tone┬╖===┬╖"warning"ΓÉì
+    102     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖?┬╖"border-[var(--rm-warning)]┬╖bg-[var(--rm-warning-muted)]┬╖text-[var(--rm-warning)]"ΓÉì
+    103     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖:┬╖tone┬╖===┬╖"success"ΓÉì
+    104     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖?┬╖"border-[var(--rm-success)]┬╖bg-[var(--rm-success-subtle)]┬╖text-[var(--rm-success)]"ΓÉì
+    105     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖:┬╖"border-[var(--rm-border)]┬╖bg-[var(--rm-bg)]┬╖text-[var(--rm-secondary)]";ΓÉì
+    106     Γöé - ΓÉì
+    107     Γöé - ┬╖┬╖return┬╖(ΓÉì
+    108     Γöé - ┬╖┬╖┬╖┬╖<span┬╖className={cn("inline-flex┬╖items-center┬╖rounded-none┬╖border┬╖px-2.5┬╖py-1┬╖text-xs┬╖font-medium┬╖tracking-[0.14em]┬╖uppercase",┬╖toneClass)}>ΓÉì
+    109     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖{children}ΓÉì
+    110     Γöé - ┬╖┬╖┬╖┬╖</span>ΓÉì
+    111     Γöé - ┬╖┬╖);ΓÉì
+    112     Γöé - }ΓÉì
+    113     Γöé - ΓÉì
+    114     Γöé - export┬╖function┬╖LoadingState({┬╖label┬╖}:┬╖{┬╖label:┬╖string┬╖})┬╖{ΓÉì
+    115     Γöé - ┬╖┬╖return┬╖<p┬╖className={`${mutedPanelClassName}┬╖border-dashed┬╖p-6┬╖text-sm┬╖text-[var(--rm-secondary)]`}>{label}</p>;ΓÉì
+    116     Γöé - }ΓÉì
+    117     Γöé - ΓÉì
+    118     Γöé - export┬╖function┬╖EmptyState({┬╖label┬╖}:┬╖{┬╖label:┬╖string┬╖})┬╖{ΓÉì
+    119     Γöé - ┬╖┬╖return┬╖<p┬╖className={`${mutedPanelClassName}┬╖border-dashed┬╖p-6┬╖text-sm┬╖text-[var(--rm-secondary)]`}>{label}</p>;ΓÉì
+    120     Γöé - }ΓÉì
+    121     Γöé - ΓÉì
+    122     Γöé - export┬╖function┬╖ErrorState({┬╖label┬╖}:┬╖{┬╖label:┬╖string┬╖})┬╖{ΓÉì
+    123     Γöé - ┬╖┬╖return┬╖<p┬╖className="rounded-none┬╖border┬╖border-[var(--rm-error)]┬╖bg-[var(--rm-error-ghost)]┬╖p-6┬╖text-sm┬╖text-[var(--rm-error)]">{label}</p>;ΓÉì
+    124     Γöé - }ΓÉì
+    125     Γöé - ΓÉì
+    126     Γöé - export┬╖function┬╖CodeBlock({┬╖children,┬╖className┬╖}:┬╖{┬╖children:┬╖ReactNode;┬╖className?:┬╖string┬╖})┬╖{ΓÉì
+    127     Γöé - ┬╖┬╖return┬╖<pre┬╖className={cn(codeBlockClassName,┬╖className)}>{children}</pre>;ΓÉì
+    128     Γöé - }ΓÉì
+          1 Γöé + import┬╖type┬╖{┬╖ReactNode┬╖}┬╖from┬╖"react";
+          2 Γöé + 
+          3 Γöé + import┬╖{┬╖cn┬╖}┬╖from┬╖"../lib/cn";
+          4 Γöé + import┬╖{
+          5 Γöé + ┬╖┬╖cardClassName,
+          6 Γöé + ┬╖┬╖codeBlockClassName,
+          7 Γöé + ┬╖┬╖mutedPanelClassName,
+          8 Γöé + ┬╖┬╖raisedPanelClassName,
+          9 Γöé + }┬╖from┬╖"../lib/design-system";
+         10 Γöé + 
+         11 Γöé + export┬╖function┬╖PageHeader({
+         12 Γöé + ┬╖┬╖eyebrow,
+         13 Γöé + ┬╖┬╖title,
+         14 Γöé + ┬╖┬╖description,
+         15 Γöé + ┬╖┬╖actions,
+         16 Γöé + }:┬╖{
+         17 Γöé + ┬╖┬╖eyebrow?:┬╖string;
+         18 Γöé + ┬╖┬╖title:┬╖string;
+         19 Γöé + ┬╖┬╖description:┬╖string;
+         20 Γöé + ┬╖┬╖actions?:┬╖ReactNode;
+         21 Γöé + })┬╖{
+         22 Γöé + ┬╖┬╖return┬╖(
+  151 more lines truncated
+  
+
+role-model-router\apps\runtime-ui\app\routes\control-routing-strategy.tsx format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+      1     Γöé - import┬╖{┬╖useEffect,┬╖useState┬╖}┬╖from┬╖"react";ΓÉì
+      2     Γöé - import┬╖{┬╖Link┬╖}┬╖from┬╖"react-router";ΓÉì
+      3     Γöé - ΓÉì
+      4     Γöé - import┬╖{┬╖ErrorState,┬╖FactCard,┬╖LoadingState,┬╖PageHeader,┬╖SectionCard,┬╖StatusPill┬╖}┬╖from┬╖"../components/page-primitives";ΓÉì
+      5     Γöé - import┬╖{┬╖mutedPanelClassName,┬╖secondaryButtonClassName┬╖}┬╖from┬╖"../lib/design-system";ΓÉì
+      6     Γöé - import┬╖{ΓÉì
+      7     Γöé - ┬╖┬╖fetchControllerAssignment,ΓÉì
+      8     Γöé - ┬╖┬╖fetchRuntimeConfig,ΓÉì
+      9     Γöé - ┬╖┬╖type┬╖RuntimeConfigRecord,ΓÉì
+     10     Γöé - ┬╖┬╖type┬╖RuntimeControllerAssignment,ΓÉì
+     11     Γöé - }┬╖from┬╖"../lib/runtime-api";ΓÉì
+     12     Γöé - ΓÉì
+     13     Γöé - export┬╖default┬╖function┬╖ControlRoutingStrategyRoute()┬╖{ΓÉì
+     14     Γöé - ┬╖┬╖const┬╖[configRecord,┬╖setConfigRecord]┬╖=┬╖useState<RuntimeConfigRecord┬╖|┬╖null>(null);ΓÉì
+     15     Γöé - ┬╖┬╖const┬╖[controller,┬╖setController]┬╖=┬╖useState<RuntimeControllerAssignment┬╖|┬╖null>(null);ΓÉì
+     16     Γöé - ┬╖┬╖const┬╖[controllerLoaded,┬╖setControllerLoaded]┬╖=┬╖useState(false);ΓÉì
+     17     Γöé - ┬╖┬╖const┬╖[error,┬╖setError]┬╖=┬╖useState<string┬╖|┬╖null>(null);ΓÉì
+     18     Γöé - ΓÉì
+     19     Γöé - ┬╖┬╖useEffect(()┬╖=>┬╖{ΓÉì
+     20     Γöé - ┬╖┬╖┬╖┬╖void┬╖Promise.all([fetchRuntimeConfig(),┬╖fetchControllerAssignment()])ΓÉì
+     21     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖.then(([nextConfigRecord,┬╖nextController])┬╖=>┬╖{ΓÉì
+     22     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖setConfigRecord(nextConfigRecord);ΓÉì
+     23     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖setController(nextController);ΓÉì
+     24     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖setControllerLoaded(true);ΓÉì
+     25     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖setError(null);ΓÉì
+     26     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖})ΓÉì
+     27     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖.catch((value:┬╖unknown)┬╖=>┬╖setError(value┬╖instanceof┬╖Error┬╖?┬╖value.message┬╖:┬╖"Could┬╖not┬╖load┬╖routing┬╖strategy┬╖posture."));ΓÉì
+     28     Γöé - ┬╖┬╖},┬╖[]);ΓÉì
+     29     Γöé - ΓÉì
+     30     Γöé - ┬╖┬╖if┬╖(error)┬╖{ΓÉì
+     31     Γöé - ┬╖┬╖┬╖┬╖return┬╖<ErrorState┬╖label={error}┬╖/>;ΓÉì
+     32     Γöé - ┬╖┬╖}ΓÉì
+     33     Γöé - ┬╖┬╖if┬╖(!configRecord┬╖||┬╖!controllerLoaded)┬╖{ΓÉì
+     34     Γöé - ┬╖┬╖┬╖┬╖return┬╖<LoadingState┬╖label="Loading┬╖routing┬╖strategy┬╖postureΓÇª"┬╖/>;ΓÉì
+     35     Γöé - ┬╖┬╖}ΓÉì
+     36     Γöé - ΓÉì
+     37     Γöé - ┬╖┬╖const┬╖config┬╖=┬╖configRecord.config;ΓÉì
+     38     Γöé - ΓÉì
+     39     Γöé - ┬╖┬╖return┬╖(ΓÉì
+     40     Γöé - ┬╖┬╖┬╖┬╖<div┬╖className="space-y-6">ΓÉì
+     41     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖<PageHeaderΓÉì
+     42     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖eyebrow="Control"ΓÉì
+     43     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖title="Routing┬╖strategy"ΓÉì
+     44     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖description="Read┬╖the┬╖current┬╖execution┬╖posture┬╖in┬╖one┬╖place,┬╖then┬╖hand┬╖off┬╖into┬╖the┬╖advanced┬╖config┬╖editor,┬╖controller┬╖assignment,┬╖chat┬╖workspace,┬╖and┬╖request┬╖ledger┬╖without┬╖treating┬╖routing┬╖strategy┬╖as┬╖raw┬╖JSON┬╖only."ΓÉì
+     45     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖actions={ΓÉì
+     46     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<>ΓÉì
+     47     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<Link┬╖className={secondaryButtonClassName}┬╖to="/app/control/runtime-config">ΓÉì
+     48     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖Advanced┬╖configΓÉì
+     49     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</Link>ΓÉì
+     50     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<Link┬╖className={secondaryButtonClassName}┬╖to="/app/studio/chat">ΓÉì
+     51     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖Open┬╖workbenchΓÉì
+     52     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</Link>ΓÉì
+     53     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</>ΓÉì
+     54     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖}ΓÉì
+     55     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖/>ΓÉì
+     56     Γöé - ΓÉì
+     57     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="grid┬╖gap-4┬╖md:grid-cols-2┬╖xl:grid-cols-4">ΓÉì
+     58     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<FactCard┬╖label="Execution┬╖mode"┬╖value={config?.executionMode┬╖??┬╖"pending"}┬╖detail="Top-level┬╖runtime┬╖execution┬╖mode┬╖currently┬╖applied┬╖by┬╖the┬╖control┬╖plane."┬╖emphasis┬╖/>ΓÉì
+     59     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<FactCard┬╖label="Routing┬╖strategy"┬╖value={config?.routingStrategy┬╖??┬╖"unset"}┬╖detail="Baseline┬╖routing┬╖policy┬╖persisted┬╖in┬╖the┬╖runtime┬╖config┬╖record."┬╖/>ΓÉì
+     60     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<FactCard┬╖label="Controller"┬╖value={controller?.modelId┬╖??┬╖"unassigned"}┬╖detail={controller┬╖?┬╖controller.endpointId┬╖:┬╖"Assign┬╖a┬╖controller┬╖to┬╖enable┬╖explicit┬╖controller-guided┬╖routing┬╖posture."}┬╖/>ΓÉì
+     61     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<FactCard┬╖label="Config┬╖path"┬╖value={configRecord.path┬╖??┬╖"not┬╖configured"}┬╖detail={configRecord.applied┬╖?┬╖"Applied"┬╖:┬╖"Pending"}┬╖/>ΓÉì
+     62     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+     63     Γöé - ΓÉì
+     64     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖<SectionCardΓÉì
+     65     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖title="Strategy┬╖reading┬╖order"ΓÉì
+     66     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖description="This┬╖page┬╖is┬╖the┬╖structured┬╖strategy┬╖entry┬╖point.┬╖Use┬╖it┬╖to┬╖orient┬╖the┬╖runtime┬╖posture┬╖first,┬╖then┬╖move┬╖into┬╖the┬╖advanced┬╖config┬╖or┬╖request┬╖verification┬╖surfaces."ΓÉì
+     67     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖>ΓÉì
+     68     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="grid┬╖gap-4┬╖xl:grid-cols-2">ΓÉì
+     69     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className={`${mutedPanelClassName}┬╖p-4┬╖text-sm┬╖text-[var(--rm-secondary)]`}>ΓÉì
+     70     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<p┬╖className="font-medium┬╖text-[var(--rm-fg)]">Control-plane┬╖posture</p>ΓÉì
+     71     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<p┬╖className="mt-3┬╖leading-6">ΓÉì
+     72     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖Execution┬╖mode,┬╖top-level┬╖strategy,┬╖and┬╖controller┬╖assignment┬╖stay┬╖visible┬╖here┬╖before┬╖you┬╖change┬╖the┬╖raw┬╖runtime┬╖config┬╖or┬╖inspect┬╖routed┬╖requests.ΓÉì
+     73     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</p>ΓÉì
+     74     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+     75     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className={`${mutedPanelClassName}┬╖p-4┬╖text-sm┬╖text-[var(--rm-secondary)]`}>ΓÉì
+     76     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<p┬╖className="font-medium┬╖text-[var(--rm-fg)]">Verification┬╖path</p>ΓÉì
+     77     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<p┬╖className="mt-3┬╖leading-6">ΓÉì
+     78     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖Use┬╖the┬╖workbench┬╖to┬╖exercise┬╖routing┬╖decisions┬╖and┬╖the┬╖request┬╖ledger┬╖to┬╖verify┬╖the┬╖resulting┬╖receipts┬╖after┬╖the┬╖structured┬╖strategy┬╖posture┬╖looks┬╖correct.ΓÉì
+     79     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</p>ΓÉì
+     80     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+     81     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+     82     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖</SectionCard>ΓÉì
+     83     Γöé - ΓÉì
+     84     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖<SectionCardΓÉì
+     85     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖title="Operator┬╖handoff"ΓÉì
+     86     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖description="The┬╖routing┬╖strategy┬╖surface┬╖stays┬╖adjacent┬╖to┬╖the┬╖concrete┬╖editing┬╖and┬╖verification┬╖routes┬╖instead┬╖of┬╖duplicating┬╖them."ΓÉì
+     87     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖>ΓÉì
+     88     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="grid┬╖gap-4┬╖md:grid-cols-2┬╖xl:grid-cols-4">ΓÉì
+     89     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<Link┬╖className={`${mutedPanelClassName}┬╖p-4┬╖text-sm┬╖text-[var(--rm-secondary)]`}┬╖to="/app/control/runtime-config">ΓÉì
+     90     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<span┬╖className="block┬╖font-medium┬╖text-[var(--rm-fg)]">Advanced┬╖config</span>ΓÉì
+     91     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖Edit┬╖the┬╖raw┬╖runtime┬╖JSON┬╖when┬╖the┬╖structured┬╖posture┬╖is┬╖not┬╖enough.ΓÉì
+     92     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</Link>ΓÉì
+     93     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<Link┬╖className={`${mutedPanelClassName}┬╖p-4┬╖text-sm┬╖text-[var(--rm-secondary)]`}┬╖to="/app/control/controller">ΓÉì
+     94     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<span┬╖className="block┬╖font-medium┬╖text-[var(--rm-fg)]">Controller</span>ΓÉì
+     95     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖Review┬╖or┬╖change┬╖the┬╖current┬╖controller┬╖assignment.ΓÉì
+     96     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</Link>ΓÉì
+     97     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<Link┬╖className={`${mutedPanelClassName}┬╖p-4┬╖text-sm┬╖text-[var(--rm-secondary)]`}┬╖to="/app/studio/chat">ΓÉì
+     98     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<span┬╖className="block┬╖font-medium┬╖text-[var(--rm-fg)]">Workbench</span>ΓÉì
+     99     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖Run┬╖routed┬╖requests┬╖against┬╖the┬╖live┬╖runtime.ΓÉì
+    100     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</Link>ΓÉì
+    101     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<Link┬╖className={`${mutedPanelClassName}┬╖p-4┬╖text-sm┬╖text-[var(--rm-secondary)]`}┬╖to="/app/observe/requests">ΓÉì
+    102     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<span┬╖className="block┬╖font-medium┬╖text-[var(--rm-fg)]">Requests</span>ΓÉì
+    103     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖Inspect┬╖routing┬╖receipts┬╖and┬╖raw┬╖request┬╖observations.ΓÉì
+    104     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</Link>ΓÉì
+    105     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+    106     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="mt-4┬╖flex┬╖flex-wrap┬╖gap-2">ΓÉì
+    107     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<StatusPill┬╖tone={configRecord.applied┬╖?┬╖"success"┬╖:┬╖"warning"}>{configRecord.applied┬╖?┬╖"config┬╖applied"┬╖:┬╖"config┬╖pending"}</StatusPill>ΓÉì
+    108     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<StatusPill┬╖tone={controller┬╖?┬╖"accent"┬╖:┬╖"neutral"}>{controller┬╖?┬╖controller.sourceType┬╖:┬╖"controller┬╖unassigned"}</StatusPill>ΓÉì
+    109     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+    110     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖</SectionCard>ΓÉì
+    111     Γöé - ┬╖┬╖┬╖┬╖</div>ΓÉì
+    112     Γöé - ┬╖┬╖);ΓÉì
+    113     Γöé - }ΓÉì
+          1 Γöé + import┬╖{┬╖useEffect,┬╖useState┬╖}┬╖from┬╖"react";
+          2 Γöé + import┬╖{┬╖Link┬╖}┬╖from┬╖"react-router";
+          3 Γöé + 
+          4 Γöé + import┬╖{
+          5 Γöé + ┬╖┬╖ErrorState,
+          6 Γöé + ┬╖┬╖FactCard,
+          7 Γöé + ┬╖┬╖LoadingState,
+          8 Γöé + ┬╖┬╖PageHeader,
+          9 Γöé + ┬╖┬╖SectionCard,
+         10 Γöé + ┬╖┬╖StatusPill,
+         11 Γöé + }┬╖from┬╖"../components/page-primitives";
+         12 Γöé + import┬╖{┬╖mutedPanelClassName,┬╖secondaryButtonClassName┬╖}┬╖from┬╖"../lib/design-system";
+         13 Γöé + import┬╖{
+         14 Γöé + ┬╖┬╖fetchControllerAssignment,
+         15 Γöé + ┬╖┬╖fetchRuntimeConfig,
+         16 Γöé + ┬╖┬╖type┬╖RuntimeConfigRecord,
+         17 Γöé + ┬╖┬╖type┬╖RuntimeControllerAssignment,
+         18 Γöé + }┬╖from┬╖"../lib/runtime-api";
+         19 Γöé + 
+         20 Γöé + export┬╖default┬╖function┬╖ControlRoutingStrategyRoute()┬╖{
+         21 Γöé + ┬╖┬╖const┬╖[configRecord,┬╖setConfigRecord]┬╖=┬╖useState<RuntimeConfigRecord┬╖|┬╖null>(null);
+         22 Γöé + ┬╖┬╖const┬╖[controller,┬╖setController]┬╖=┬╖useState<RuntimeControllerAssignment┬╖|┬╖null>(null);
+         23 Γöé + ┬╖┬╖const┬╖[controllerLoaded,┬╖setControllerLoaded]┬╖=┬╖useState(false);
+         24 Γöé + ┬╖┬╖const┬╖[error,┬╖setError]┬╖=┬╖useState<string┬╖|┬╖null>(null);
+         25 Γöé + 
+         26 Γöé + ┬╖┬╖useEffect(()┬╖=>┬╖{
+         27 Γöé + ┬╖┬╖┬╖┬╖void┬╖Promise.all([fetchRuntimeConfig(),┬╖fetchControllerAssignment()])
+         28 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖.then(([nextConfigRecord,┬╖nextController])┬╖=>┬╖{
+         29 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖setConfigRecord(nextConfigRecord);
+         30 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖setController(nextController);
+         31 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖setControllerLoaded(true);
+         32 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖setError(null);
+         33 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖})
+         34 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖.catch((value:┬╖unknown)┬╖=>
+         35 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖setError(
+         36 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖value┬╖instanceof┬╖Error┬╖?┬╖value.message┬╖:┬╖"Could┬╖not┬╖load┬╖routing┬╖strategy┬╖posture.",
+         37 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖),
+  127 more lines truncated
+  
+
+role-model-router\apps\runtime-ui\app\routes\control-runtime-config.tsx format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+      1     Γöé - import┬╖{┬╖useEffect,┬╖useMemo,┬╖useState┬╖}┬╖from┬╖"react";ΓÉì
+      2     Γöé - import┬╖{┬╖Link┬╖}┬╖from┬╖"react-router";ΓÉì
+      3     Γöé - ΓÉì
+      4     Γöé - import┬╖{┬╖CodeBlock,┬╖ErrorState,┬╖LoadingState,┬╖PageHeader,┬╖SectionCard┬╖}┬╖from┬╖"../components/page-primitives";ΓÉì
+      5     Γöé - import┬╖{┬╖fieldClassName,┬╖primaryButtonClassName,┬╖secondaryButtonClassName┬╖}┬╖from┬╖"../lib/design-system";ΓÉì
+      6     Γöé - import┬╖{ΓÉì
+      7     Γöé - ┬╖┬╖fetchRuntimeConfig,ΓÉì
+      8     Γöé - ┬╖┬╖updateRuntimeConfig,ΓÉì
+      9     Γöé - ┬╖┬╖type┬╖RuntimeConfig,ΓÉì
+     10     Γöé - ┬╖┬╖type┬╖RuntimeConfigRecord,ΓÉì
+     11     Γöé - }┬╖from┬╖"../lib/runtime-api";ΓÉì
+     12     Γöé - ΓÉì
+     13     Γöé - function┬╖createEmptyProcessConfig()┬╖{ΓÉì
+     14     Γöé - ┬╖┬╖return┬╖{ΓÉì
+     15     Γöé - ┬╖┬╖┬╖┬╖command:┬╖null,ΓÉì
+     16     Γöé - ┬╖┬╖┬╖┬╖args:┬╖[],ΓÉì
+     17     Γöé - ┬╖┬╖┬╖┬╖env:┬╖{},ΓÉì
+     18     Γöé - ┬╖┬╖┬╖┬╖cwd:┬╖null,ΓÉì
+     19     Γöé - ┬╖┬╖┬╖┬╖startupTimeoutMs:┬╖null,ΓÉì
+     20     Γöé - ┬╖┬╖}┬╖as┬╖const;ΓÉì
+     21     Γöé - }ΓÉì
+     22     Γöé - ΓÉì
+     23     Γöé - function┬╖createDefaultRuntimeConfig():┬╖RuntimeConfig┬╖{ΓÉì
+     24     Γöé - ┬╖┬╖return┬╖{ΓÉì
+     25     Γöé - ┬╖┬╖┬╖┬╖version:┬╖"1.0",ΓÉì
+     26     Γöé - ┬╖┬╖┬╖┬╖routingStrategy:┬╖null,ΓÉì
+     27     Γöé - ┬╖┬╖┬╖┬╖llamaSwap:┬╖{ΓÉì
+     28     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖models:┬╖[],ΓÉì
+     29     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖process:┬╖createEmptyProcessConfig(),ΓÉì
+     30     Γöé - ┬╖┬╖┬╖┬╖},ΓÉì
+     31     Γöé - ┬╖┬╖┬╖┬╖liteLLM:┬╖{ΓÉì
+     32     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖providers:┬╖[],ΓÉì
+     33     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖process:┬╖createEmptyProcessConfig(),ΓÉì
+     34     Γöé - ┬╖┬╖┬╖┬╖},ΓÉì
+     35     Γöé - ┬╖┬╖};ΓÉì
+     36     Γöé - }ΓÉì
+     37     Γöé - ΓÉì
+     38     Γöé - function┬╖toEditorText(config:┬╖RuntimeConfig┬╖|┬╖null):┬╖string┬╖{ΓÉì
+     39     Γöé - ┬╖┬╖return┬╖JSON.stringify(config┬╖??┬╖createDefaultRuntimeConfig(),┬╖null,┬╖2);ΓÉì
+     40     Γöé - }ΓÉì
+     41     Γöé - ΓÉì
+     42     Γöé - export┬╖default┬╖function┬╖ControlRuntimeConfigRoute()┬╖{ΓÉì
+     43     Γöé - ┬╖┬╖const┬╖[configRecord,┬╖setConfigRecord]┬╖=┬╖useState<RuntimeConfigRecord┬╖|┬╖null>(null);ΓÉì
+     44     Γöé - ┬╖┬╖const┬╖[editorText,┬╖setEditorText]┬╖=┬╖useState<string>(toEditorText(null));ΓÉì
+     45     Γöé - ┬╖┬╖const┬╖[error,┬╖setError]┬╖=┬╖useState<string┬╖|┬╖null>(null);ΓÉì
+     46     Γöé - ┬╖┬╖const┬╖[saving,┬╖setSaving]┬╖=┬╖useState(false);ΓÉì
+     47     Γöé - ┬╖┬╖const┬╖[statusMessage,┬╖setStatusMessage]┬╖=┬╖useState<string┬╖|┬╖null>(null);ΓÉì
+     48     Γöé - ΓÉì
+     49     Γöé - ┬╖┬╖const┬╖load┬╖=┬╖()┬╖=>ΓÉì
+     50     Γöé - ┬╖┬╖┬╖┬╖fetchRuntimeConfig()ΓÉì
+     51     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖.then((nextRecord)┬╖=>┬╖{ΓÉì
+     52     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖setConfigRecord(nextRecord);ΓÉì
+     53     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖setEditorText(toEditorText(nextRecord.config));ΓÉì
+     54     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖setError(null);ΓÉì
+     55     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖})ΓÉì
+     56     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖.catch((value:┬╖unknown)┬╖=>┬╖{ΓÉì
+     57     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖setError(value┬╖instanceof┬╖Error┬╖?┬╖value.message┬╖:┬╖"Could┬╖not┬╖load┬╖runtime┬╖config.");ΓÉì
+     58     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖});ΓÉì
+     59     Γöé - ΓÉì
+     60     Γöé - ┬╖┬╖useEffect(()┬╖=>┬╖{ΓÉì
+     61     Γöé - ┬╖┬╖┬╖┬╖void┬╖load();ΓÉì
+     62     Γöé - ┬╖┬╖},┬╖[]);ΓÉì
+     63     Γöé - ΓÉì
+     64     Γöé - ┬╖┬╖const┬╖currentConfig┬╖=┬╖configRecord?.config┬╖??┬╖createDefaultRuntimeConfig();ΓÉì
+     65     Γöé - ┬╖┬╖const┬╖remoteMappingCount┬╖=┬╖useMemo(ΓÉì
+     66     Γöé - ┬╖┬╖┬╖┬╖()┬╖=>┬╖currentConfig.liteLLM.providers.reduce((count,┬╖provider)┬╖=>┬╖count┬╖+┬╖provider.modelMappings.length,┬╖0),ΓÉì
+     67     Γöé - ┬╖┬╖┬╖┬╖[currentConfig],ΓÉì
+     68     Γöé - ┬╖┬╖);ΓÉì
+     69     Γöé - ΓÉì
+     70     Γöé - ┬╖┬╖const┬╖save┬╖=┬╖async┬╖()┬╖=>┬╖{ΓÉì
+     71     Γöé - ┬╖┬╖┬╖┬╖setSaving(true);ΓÉì
+     72     Γöé - ┬╖┬╖┬╖┬╖setStatusMessage(null);ΓÉì
+     73     Γöé - ┬╖┬╖┬╖┬╖try┬╖{ΓÉì
+     74     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖const┬╖payload┬╖=┬╖JSON.parse(editorText)┬╖as┬╖RuntimeConfig;ΓÉì
+     75     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖const┬╖nextRecord┬╖=┬╖await┬╖updateRuntimeConfig(payload);ΓÉì
+     76     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖setConfigRecord(nextRecord);ΓÉì
+     77     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖setEditorText(toEditorText(nextRecord.config));ΓÉì
+     78     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖setError(null);ΓÉì
+     79     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖setStatusMessage("Runtime┬╖config┬╖applied.");ΓÉì
+     80     Γöé - ┬╖┬╖┬╖┬╖}┬╖catch┬╖(value)┬╖{ΓÉì
+     81     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖setError(value┬╖instanceof┬╖Error┬╖?┬╖value.message┬╖:┬╖"Could┬╖not┬╖apply┬╖runtime┬╖config.");ΓÉì
+     82     Γöé - ┬╖┬╖┬╖┬╖}┬╖finally┬╖{ΓÉì
+     83     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖setSaving(false);ΓÉì
+     84     Γöé - ┬╖┬╖┬╖┬╖}ΓÉì
+     85     Γöé - ┬╖┬╖};ΓÉì
+     86     Γöé - ΓÉì
+     87     Γöé - ┬╖┬╖return┬╖(ΓÉì
+     88     Γöé - ┬╖┬╖┬╖┬╖<div┬╖className="space-y-6">ΓÉì
+     89     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖<PageHeaderΓÉì
+     90     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖eyebrow="Control"ΓÉì
+     91     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖title="Runtime┬╖config"ΓÉì
+     92     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖description="Edit┬╖the┬╖repo-owned┬╖unified┬╖runtime┬╖contract┬╖for┬╖local┬╖llama-swap┬╖models,┬╖remote┬╖LiteLLM┬╖providers,┬╖and┬╖process┬╖policy┬╖in┬╖one┬╖control-plane┬╖route."ΓÉì
+     93     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖actions={ΓÉì
+     94     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<>ΓÉì
+     95     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<Link┬╖className={secondaryButtonClassName}┬╖to="/app/control/routing-strategy">ΓÉì
+     96     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖Routing┬╖strategyΓÉì
+     97     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</Link>ΓÉì
+     98     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<Link┬╖className={secondaryButtonClassName}┬╖to="/app/control/models">ΓÉì
+     99     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖Inspect┬╖modelsΓÉì
+    100     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</Link>ΓÉì
+    101     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<a┬╖className={secondaryButtonClassName}┬╖href="/api/role-model/runtime/config">ΓÉì
+    102     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖Runtime┬╖config┬╖JSONΓÉì
+    103     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</a>ΓÉì
+    104     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</>ΓÉì
+    105     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖}ΓÉì
+    106     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖/>ΓÉì
+    107     Γöé - ΓÉì
+    108     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖{error┬╖?┬╖<ErrorState┬╖label={error}┬╖/>┬╖:┬╖null}ΓÉì
+    109     Γöé - ΓÉì
+    110     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖<SectionCardΓÉì
+    111     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖title="Config┬╖editor"ΓÉì
+    112     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖description={`Edit┬╖the┬╖canonical┬╖JSON┬╖payload┬╖directly,┬╖then┬╖save┬╖and┬╖apply┬╖it┬╖through┬╖the┬╖role-model┬╖runtime┬╖control┬╖plane.┬╖Current┬╖scope:┬╖${currentConfig.llamaSwap.models.length}┬╖local┬╖models,┬╖${remoteMappingCount}┬╖remote┬╖mappings,┬╖execution┬╖mode┬╖${currentConfig.executionMode┬╖??┬╖"pending"}.`}ΓÉì
+    113     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖>ΓÉì
+    114     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="space-y-4">ΓÉì
+    115     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{!configRecord┬╖?┬╖<LoadingState┬╖label="Loading┬╖runtime┬╖configΓÇª"┬╖/>┬╖:┬╖null}ΓÉì
+    116     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<textareaΓÉì
+    117     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖className={`${fieldClassName}┬╖min-h-96┬╖font-mono┬╖text-xs┬╖leading-6`}ΓÉì
+    118     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖spellCheck={false}ΓÉì
+    119     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖value={editorText}ΓÉì
+    120     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖onChange={(event)┬╖=>┬╖setEditorText(event.target.value)}ΓÉì
+    121     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖/>ΓÉì
+    122     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="flex┬╖flex-wrap┬╖gap-3">ΓÉì
+    123     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<button┬╖className={primaryButtonClassName}┬╖type="button"┬╖disabled={saving}┬╖onClick={()┬╖=>┬╖void┬╖save()}>ΓÉì
+    124     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{saving┬╖?┬╖"ApplyingΓÇª"┬╖:┬╖"Save┬╖and┬╖apply"}ΓÉì
+    125     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</button>ΓÉì
+    126     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<buttonΓÉì
+    127     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖className={secondaryButtonClassName}ΓÉì
+    128     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖type="button"ΓÉì
+    129     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖disabled={saving}ΓÉì
+    130     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖onClick={()┬╖=>┬╖{ΓÉì
+    131     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖setEditorText(toEditorText(configRecord?.config┬╖??┬╖null));ΓÉì
+    132     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖setStatusMessage(null);ΓÉì
+    133     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖setError(null);ΓÉì
+    134     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖}}ΓÉì
+    135     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖>ΓÉì
+    136     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖Reset┬╖editorΓÉì
+    137     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</button>ΓÉì
+    138     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+    139     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{statusMessage┬╖?┬╖<p┬╖className="text-sm┬╖text-[var(--rm-secondary)]">{statusMessage}</p>┬╖:┬╖null}ΓÉì
+    140     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+    141     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖</SectionCard>ΓÉì
+    142     Γöé - ΓÉì
+    143     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖<SectionCardΓÉì
+    144     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖title="Applied┬╖config┬╖snapshot"ΓÉì
+    145     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖description={`Use┬╖this┬╖snapshot┬╖to┬╖confirm┬╖the┬╖active┬╖config┬╖file┬╖(${configRecord?.path┬╖??┬╖"not┬╖configured"})┬╖and┬╖the┬╖exact┬╖local-plus-remote┬╖runtime┬╖payload┬╖in┬╖force.`}ΓÉì
+    146     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖>ΓÉì
+    147     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<CodeBlock>{JSON.stringify(configRecord?.config┬╖??┬╖createDefaultRuntimeConfig(),┬╖null,┬╖2)}</CodeBlock>ΓÉì
+    148     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖</SectionCard>ΓÉì
+    149     Γöé - ┬╖┬╖┬╖┬╖</div>ΓÉì
+    150     Γöé - ┬╖┬╖);ΓÉì
+  176 more lines truncated
+  
+
+role-model-router\apps\runtime-ui\app\components\future-surface.tsx format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+      1     Γöé - import┬╖{┬╖type┬╖ReactNode┬╖}┬╖from┬╖"react";ΓÉì
+      2     Γöé - import┬╖{┬╖useLocation┬╖}┬╖from┬╖"react-router";ΓÉì
+      3     Γöé - ΓÉì
+      4     Γöé - import┬╖{┬╖cn┬╖}┬╖from┬╖"../lib/cn";ΓÉì
+      5     Γöé - import┬╖{┬╖getRuntimeRouteDefinition,┬╖mutedPanelClassName,┬╖raisedPanelClassName,┬╖secondaryButtonClassName┬╖}┬╖from┬╖"../lib/design-system";ΓÉì
+      6     Γöé - import┬╖{┬╖EmptyState,┬╖PageHeader,┬╖SectionCard┬╖}┬╖from┬╖"./page-primitives";ΓÉì
+      7     Γöé - ΓÉì
+      8     Γöé - function┬╖BlueprintPanel({ΓÉì
+      9     Γöé - ┬╖┬╖label,ΓÉì
+     10     Γöé - ┬╖┬╖body,ΓÉì
+     11     Γöé - ┬╖┬╖className,ΓÉì
+     12     Γöé - ┬╖┬╖emphasis┬╖=┬╖false,ΓÉì
+     13     Γöé - }:┬╖{ΓÉì
+     14     Γöé - ┬╖┬╖label:┬╖string;ΓÉì
+     15     Γöé - ┬╖┬╖body:┬╖string;ΓÉì
+     16     Γöé - ┬╖┬╖className?:┬╖string;ΓÉì
+     17     Γöé - ┬╖┬╖emphasis?:┬╖boolean;ΓÉì
+     18     Γöé - })┬╖{ΓÉì
+     19     Γöé - ┬╖┬╖return┬╖(ΓÉì
+     20     Γöé - ┬╖┬╖┬╖┬╖<divΓÉì
+     21     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖className={cn(ΓÉì
+     22     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖`${emphasis┬╖?┬╖raisedPanelClassName┬╖:┬╖mutedPanelClassName}┬╖min-h-32┬╖p-4┬╖md:p-5`,ΓÉì
+     23     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖className,ΓÉì
+     24     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖)}ΓÉì
+     25     Γöé - ┬╖┬╖┬╖┬╖>ΓÉì
+     26     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖<p┬╖className="text-[11px]┬╖font-medium┬╖uppercase┬╖tracking-[0.24em]┬╖text-[var(--rm-muted)]">{label}</p>ΓÉì
+     27     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖<p┬╖className="mt-3┬╖max-w-[34ch]┬╖text-sm┬╖leading-6┬╖text-[var(--rm-secondary)]">{body}</p>ΓÉì
+     28     Γöé - ┬╖┬╖┬╖┬╖</div>ΓÉì
+     29     Γöé - ┬╖┬╖);ΓÉì
+     30     Γöé - }ΓÉì
+     31     Γöé - ΓÉì
+     32     Γöé - function┬╖TemplateBlueprint({┬╖template┬╖}:┬╖{┬╖template:┬╖string┬╖})┬╖{ΓÉì
+     33     Γöé - ┬╖┬╖if┬╖(template┬╖===┬╖"summary-board")┬╖{ΓÉì
+     34     Γöé - ┬╖┬╖┬╖┬╖return┬╖(ΓÉì
+     35     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="grid┬╖grid-cols-12┬╖gap-4">ΓÉì
+     36     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<BlueprintPanel┬╖className="col-span-12┬╖md:col-span-4"┬╖label="Counters"┬╖body="Top-line┬╖runtime┬╖counts┬╖appear┬╖first┬╖so┬╖the┬╖page┬╖opens┬╖with┬╖a┬╖fast┬╖operational┬╖read."┬╖emphasis┬╖/>ΓÉì
+     37     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<BlueprintPanel┬╖className="col-span-12┬╖md:col-span-4"┬╖label="Attention┬╖items"┬╖body="Surface┬╖degraded┬╖or┬╖blocked┬╖states┬╖in┬╖a┬╖second┬╖compact┬╖summary┬╖block."┬╖/>ΓÉì
+     38     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<BlueprintPanel┬╖className="col-span-12┬╖md:col-span-4"┬╖label="Controller┬╖pulse"┬╖body="Reserve┬╖a┬╖concise┬╖controller┬╖and┬╖endpoint┬╖posture┬╖summary┬╖in┬╖the┬╖third┬╖summary┬╖cell."┬╖/>ΓÉì
+     39     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<BlueprintPanel┬╖className="col-span-12┬╖md:col-span-8"┬╖label="Primary┬╖ledger"┬╖body="The┬╖dominant┬╖lower-left┬╖region┬╖holds┬╖recent┬╖requests,┬╖activity,┬╖or┬╖issues┬╖that┬╖demand┬╖follow-up."┬╖/>ΓÉì
+     40     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<BlueprintPanel┬╖className="col-span-12┬╖md:col-span-4"┬╖label="Readiness┬╖rail"┬╖body="A┬╖narrow┬╖side┬╖rail┬╖carries┬╖provider┬╖or┬╖system┬╖readiness┬╖so┬╖it┬╖does┬╖not┬╖compete┬╖with┬╖the┬╖main┬╖ledger."┬╖/>ΓÉì
+     41     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+     42     Γöé - ┬╖┬╖┬╖┬╖);ΓÉì
+     43     Γöé - ┬╖┬╖}ΓÉì
+     44     Γöé - ΓÉì
+     45     Γöé - ┬╖┬╖if┬╖(template┬╖===┬╖"studio-workspace")┬╖{ΓÉì
+     46     Γöé - ┬╖┬╖┬╖┬╖return┬╖(ΓÉì
+     47     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="grid┬╖grid-cols-12┬╖gap-4">ΓÉì
+     48     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<BlueprintPanel┬╖className="col-span-12┬╖xl:col-span-4"┬╖label="Composer┬╖rail"┬╖body="Keep┬╖inputs,┬╖mode┬╖switches,┬╖and┬╖compact┬╖controls┬╖in┬╖a┬╖narrow┬╖left┬╖rail┬╖with┬╖no┬╖decorative┬╖nesting."┬╖/>ΓÉì
+     49     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<BlueprintPanel┬╖className="col-span-12┬╖xl:col-span-8"┬╖label="Primary┬╖result┬╖stage"┬╖body="The┬╖dominant┬╖pane┬╖belongs┬╖to┬╖the┬╖generated┬╖output,┬╖transcript,┬╖ranking┬╖result,┬╖or┬╖contract┬╖response."┬╖emphasis┬╖/>ΓÉì
+     50     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<BlueprintPanel┬╖className="col-span-12┬╖md:col-span-6"┬╖label="Diagnostics"┬╖body="Usage,┬╖receipts,┬╖captures,┬╖or┬╖request┬╖metadata┬╖stack┬╖below┬╖the┬╖primary┬╖stage┬╖on┬╖smaller┬╖screens."┬╖/>ΓÉì
+     51     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<BlueprintPanel┬╖className="col-span-12┬╖md:col-span-6"┬╖label="Payload┬╖reference"┬╖body="Raw┬╖request┬╖and┬╖response┬╖artifacts┬╖remain┬╖adjacent┬╖instead┬╖of┬╖moving┬╖into┬╖hidden┬╖drawers."┬╖/>ΓÉì
+     52     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+     53     Γöé - ┬╖┬╖┬╖┬╖);ΓÉì
+     54     Γöé - ┬╖┬╖}ΓÉì
+     55     Γöé - ΓÉì
+     56     Γöé - ┬╖┬╖if┬╖(template┬╖===┬╖"registry-detail")┬╖{ΓÉì
+     57     Γöé - ┬╖┬╖┬╖┬╖return┬╖(ΓÉì
+     58     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="grid┬╖grid-cols-12┬╖gap-4">ΓÉì
+     59     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<BlueprintPanel┬╖className="col-span-12┬╖xl:col-span-5"┬╖label="Registry┬╖rail"┬╖body="Keep┬╖the┬╖candidate┬╖list,┬╖variants,┬╖or┬╖editable┬╖registry┬╖rows┬╖in┬╖a┬╖compact┬╖scanning┬╖column."┬╖/>ΓÉì
+     60     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<BlueprintPanel┬╖className="col-span-12┬╖xl:col-span-7"┬╖label="Detail┬╖dossier"┬╖body="Use┬╖the┬╖larger┬╖pane┬╖for┬╖readiness┬╖notes,┬╖forms,┬╖and┬╖current┬╖operational┬╖state."┬╖emphasis┬╖/>ΓÉì
+     61     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<BlueprintPanel┬╖className="col-span-12"┬╖label="Action┬╖strip"┬╖body="Primary┬╖actions┬╖sit┬╖below┬╖the┬╖two-column┬╖split┬╖so┬╖setup┬╖steps┬╖remain┬╖visible┬╖at┬╖the┬╖end┬╖of┬╖the┬╖reading┬╖flow."┬╖/>ΓÉì
+     62     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+     63     Γöé - ┬╖┬╖┬╖┬╖);ΓÉì
+     64     Γöé - ┬╖┬╖}ΓÉì
+     65     Γöé - ΓÉì
+     66     Γöé - ┬╖┬╖if┬╖(template┬╖===┬╖"model-inventory")┬╖{ΓÉì
+     67     Γöé - ┬╖┬╖┬╖┬╖return┬╖(ΓÉì
+     68     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="grid┬╖grid-cols-12┬╖gap-4">ΓÉì
+     69     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<BlueprintPanel┬╖className="col-span-12"┬╖label="Filter┬╖bar"┬╖body="Reserve┬╖a┬╖full-width┬╖band┬╖for┬╖search,┬╖role┬╖filters,┬╖and┬╖concise┬╖model┬╖inventory┬╖controls."┬╖/>ΓÉì
+     70     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<BlueprintPanel┬╖className="col-span-12┬╖lg:col-span-8"┬╖label="Card┬╖grid"┬╖body="Configured┬╖models┬╖render┬╖as┬╖a┬╖mobile-first┬╖grid┬╖of┬╖cards┬╖so┬╖source,┬╖status,┬╖roles,┬╖and┬╖tooling┬╖remain┬╖comparable┬╖at┬╖a┬╖glance."┬╖emphasis┬╖/>ΓÉì
+     71     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<BlueprintPanel┬╖className="col-span-12┬╖lg:col-span-4"┬╖label="Detail┬╖modal┬╖contract"┬╖body="The┬╖right┬╖column┬╖documents┬╖the┬╖shared┬╖modal┬╖structure┬╖rather┬╖than┬╖adding┬╖another┬╖persistent┬╖detail┬╖page."┬╖/>ΓÉì
+     72     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+     73     Γöé - ┬╖┬╖┬╖┬╖);ΓÉì
+     74     Γöé - ┬╖┬╖}ΓÉì
+     75     Γöé - ΓÉì
+     76     Γöé - ┬╖┬╖if┬╖(template┬╖===┬╖"ledger-inspector")┬╖{ΓÉì
+     77     Γöé - ┬╖┬╖┬╖┬╖return┬╖(ΓÉì
+     78     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="grid┬╖grid-cols-12┬╖gap-4">ΓÉì
+     79     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<BlueprintPanel┬╖className="col-span-12┬╖xl:col-span-7"┬╖label="Ledger"┬╖body="The┬╖primary┬╖column┬╖is┬╖a┬╖dense┬╖request,┬╖activity,┬╖or┬╖capture┬╖ledger┬╖optimized┬╖for┬╖scanning┬╖and┬╖linking."┬╖emphasis┬╖/>ΓÉì
+     80     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<BlueprintPanel┬╖className="col-span-12┬╖xl:col-span-5"┬╖label="Inspector"┬╖body="Use┬╖the┬╖secondary┬╖column┬╖for┬╖captures,┬╖profiles,┬╖metrics┬╖details,┬╖and┬╖execution┬╖receipts."┬╖/>ΓÉì
+     81     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<BlueprintPanel┬╖className="col-span-12"┬╖label="Raw┬╖payload┬╖rail"┬╖body="Raw┬╖JSON┬╖and┬╖transport┬╖details┬╖sit┬╖below┬╖the┬╖split┬╖when┬╖they┬╖should┬╖not┬╖compete┬╖with┬╖the┬╖primary┬╖ledger."┬╖/>ΓÉì
+     82     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+     83     Γöé - ┬╖┬╖┬╖┬╖);ΓÉì
+     84     Γöé - ┬╖┬╖}ΓÉì
+     85     Γöé - ΓÉì
+     86     Γöé - ┬╖┬╖if┬╖(template┬╖===┬╖"dual-console")┬╖{ΓÉì
+     87     Γöé - ┬╖┬╖┬╖┬╖return┬╖(ΓÉì
+     88     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="grid┬╖grid-cols-12┬╖gap-4">ΓÉì
+     89     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<BlueprintPanel┬╖className="col-span-12┬╖md:col-span-6"┬╖label="Console┬╖A"┬╖body="The┬╖first┬╖console┬╖gets┬╖a┬╖full-height┬╖pane┬╖with┬╖one┬╖explicit┬╖source┬╖label┬╖and┬╖minimal┬╖toolbar."┬╖emphasis┬╖/>ΓÉì
+     90     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<BlueprintPanel┬╖className="col-span-12┬╖md:col-span-6"┬╖label="Console┬╖B"┬╖body="The┬╖second┬╖console┬╖mirrors┬╖the┬╖first┬╖so┬╖proxy┬╖and┬╖upstream┬╖output┬╖can┬╖be┬╖compared┬╖side┬╖by┬╖side."┬╖/>ΓÉì
+     91     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+     92     Γöé - ┬╖┬╖┬╖┬╖);ΓÉì
+     93     Γöé - ┬╖┬╖}ΓÉì
+     94     Γöé - ΓÉì
+     95     Γöé - ┬╖┬╖if┬╖(template┬╖===┬╖"contract-reference")┬╖{ΓÉì
+     96     Γöé - ┬╖┬╖┬╖┬╖return┬╖(ΓÉì
+     97     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="grid┬╖grid-cols-12┬╖gap-4">ΓÉì
+     98     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<BlueprintPanel┬╖className="col-span-12┬╖xl:col-span-4"┬╖label="Reference┬╖column"┬╖body="A┬╖narrow┬╖left┬╖column┬╖carries┬╖base┬╖URLs,┬╖auth┬╖posture,┬╖and┬╖the┬╖reading-order┬╖summary."┬╖/>ΓÉì
+     99     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<BlueprintPanel┬╖className="col-span-12┬╖xl:col-span-8"┬╖label="Implementation┬╖panel"┬╖body="Use┬╖the┬╖larger┬╖pane┬╖for┬╖examples,┬╖compatibility┬╖notes,┬╖and┬╖operator┬╖commands."┬╖emphasis┬╖/>ΓÉì
+    100     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<BlueprintPanel┬╖className="col-span-12"┬╖label="Boundary┬╖notes"┬╖body="Keep┬╖caveats┬╖and┬╖integration┬╖limits┬╖in┬╖a┬╖final┬╖full-width┬╖row┬╖instead┬╖of┬╖duplicating┬╖them┬╖across┬╖separate┬╖pages."┬╖/>ΓÉì
+    101     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+    102     Γöé - ┬╖┬╖┬╖┬╖);ΓÉì
+    103     Γöé - ┬╖┬╖}ΓÉì
+    104     Γöé - ΓÉì
+    105     Γöé - ┬╖┬╖return┬╖(ΓÉì
+    106     Γöé - ┬╖┬╖┬╖┬╖<div┬╖className="grid┬╖grid-cols-12┬╖gap-4">ΓÉì
+    107     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖<BlueprintPanel┬╖className="col-span-12┬╖md:col-span-4"┬╖label="Runtime┬╖summary"┬╖body="Lead┬╖with┬╖lifecycle┬╖and┬╖control-plane┬╖facts┬╖in┬╖a┬╖compact┬╖top┬╖row."┬╖emphasis┬╖/>ΓÉì
+    108     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖<BlueprintPanel┬╖className="col-span-12┬╖md:col-span-4"┬╖label="Policy┬╖blocks"┬╖body="Use┬╖structured┬╖side-by-side┬╖panels┬╖for┬╖version,┬╖auth,┬╖config-watch,┬╖and┬╖vendor┬╖posture."┬╖/>ΓÉì
+    109     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖<BlueprintPanel┬╖className="col-span-12┬╖md:col-span-4"┬╖label="Preserved┬╖tools"┬╖body="Keep┬╖raw┬╖host┬╖links┬╖visible┬╖but┬╖subordinate┬╖to┬╖the┬╖repo-owned┬╖system┬╖view."┬╖/>ΓÉì
+    110     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖<BlueprintPanel┬╖className="col-span-12┬╖xl:col-span-8"┬╖label="Topology┬╖pane"┬╖body="The┬╖main┬╖lower┬╖pane┬╖holds┬╖runtime,┬╖peer,┬╖or┬╖host┬╖topology┬╖with┬╖explicit┬╖boundaries┬╖and┬╖no┬╖ornamental┬╖chrome."┬╖/>ΓÉì
+    111     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖<BlueprintPanel┬╖className="col-span-12┬╖xl:col-span-4"┬╖label="Operator┬╖rail"┬╖body="Reserve┬╖a┬╖narrower┬╖rail┬╖for┬╖version┬╖facts,┬╖policy┬╖notes,┬╖or┬╖follow-up┬╖actions."┬╖/>ΓÉì
+    112     Γöé - ┬╖┬╖┬╖┬╖</div>ΓÉì
+    113     Γöé - ┬╖┬╖);ΓÉì
+    114     Γöé - }ΓÉì
+    115     Γöé - ΓÉì
+    116     Γöé - export┬╖function┬╖FutureSurface({ΓÉì
+    117     Γöé - ┬╖┬╖eyebrow,ΓÉì
+    118     Γöé - ┬╖┬╖title,ΓÉì
+    119     Γöé - ┬╖┬╖description,ΓÉì
+    120     Γöé - ┬╖┬╖notes,ΓÉì
+    121     Γöé - ┬╖┬╖actions,ΓÉì
+    122     Γöé - }:┬╖{ΓÉì
+    123     Γöé - ┬╖┬╖eyebrow:┬╖string;ΓÉì
+    124     Γöé - ┬╖┬╖title:┬╖string;ΓÉì
+    125     Γöé - ┬╖┬╖description:┬╖string;ΓÉì
+    126     Γöé - ┬╖┬╖notes:┬╖readonly┬╖string[];ΓÉì
+    127     Γöé - ┬╖┬╖actions?:┬╖ReactNode;ΓÉì
+    128     Γöé - })┬╖{ΓÉì
+    129     Γöé - ┬╖┬╖const┬╖location┬╖=┬╖useLocation();ΓÉì
+    130     Γöé - ┬╖┬╖const┬╖route┬╖=┬╖getRuntimeRouteDefinition(location.pathname);ΓÉì
+    131     Γöé - ┬╖┬╖const┬╖template┬╖=┬╖route?.template┬╖??┬╖"registry-detail";ΓÉì
+    132     Γöé - ΓÉì
+    133     Γöé - ┬╖┬╖return┬╖(ΓÉì
+    134     Γöé - ┬╖┬╖┬╖┬╖<div┬╖className="space-y-6">ΓÉì
+    135     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖<PageHeader┬╖eyebrow={eyebrow}┬╖title={title}┬╖description={description}┬╖actions={actions}┬╖/>ΓÉì
+    136     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖<SectionCardΓÉì
+    137     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖title="Layout┬╖blueprint"ΓÉì
+    138     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖description={`This┬╖planned┬╖page┬╖now┬╖carries┬╖an┬╖explicit┬╖${template}┬╖structure┬╖so┬╖the┬╖final┬╖implementation┬╖has┬╖a┬╖clear┬╖Swiss-style┬╖reading┬╖order┬╖before┬╖live┬╖data┬╖lands.`}ΓÉì
+    139     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖>ΓÉì
+    140     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<TemplateBlueprint┬╖template={template}┬╖/>ΓÉì
+    141     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖</SectionCard>ΓÉì
+    142     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖<SectionCardΓÉì
+    143     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖title="Planned┬╖surface"ΓÉì
+    144     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖description="This┬╖page┬╖is┬╖intentionally┬╖scaffolded┬╖while┬╖the┬╖first-priority┬╖routes┬╖land┬╖with┬╖real┬╖runtime┬╖data."ΓÉì
+    145     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖>ΓÉì
+    146     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{notes.length┬╖===┬╖0┬╖?┬╖(ΓÉì
+    147     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<EmptyState┬╖label="No┬╖planning┬╖notes┬╖were┬╖provided┬╖for┬╖this┬╖surface."┬╖/>ΓÉì
+    148     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖)┬╖:┬╖(ΓÉì
+    149     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<ul┬╖className="space-y-3┬╖text-sm┬╖leading-6┬╖text-[var(--rm-secondary)]">ΓÉì
+    150     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{notes.map((note)┬╖=>┬╖(ΓÉì
+  298 more lines truncated
+  
+
+role-model-router\apps\runtime-ui\app\routes\dashboard.tsx format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+      1     Γöé - import┬╖{┬╖useEffect,┬╖useState┬╖}┬╖from┬╖"react";ΓÉì
+      2     Γöé - import┬╖{┬╖Link┬╖}┬╖from┬╖"react-router";ΓÉì
+      3     Γöé - ΓÉì
+      4     Γöé - import┬╖{┬╖EmptyState,┬╖ErrorState,┬╖FactCard,┬╖LoadingState,┬╖PageHeader,┬╖SectionCard,┬╖StatusPill┬╖}┬╖from┬╖"../components/page-primitives";ΓÉì
+      5     Γöé - import┬╖{┬╖listRowClassName,┬╖mutedPanelClassName┬╖}┬╖from┬╖"../lib/design-system";ΓÉì
+      6     Γöé - import┬╖{┬╖fetchTelemetryDashboard,┬╖subscribeTelemetryStream,┬╖type┬╖RuntimeTelemetryDashboard┬╖}┬╖from┬╖"../lib/runtime-api";ΓÉì
+      7     Γöé - import┬╖{┬╖buildTelemetryComparisonCards,┬╖buildTelemetryRequestRows,┬╖summarizeTelemetryStats┬╖}┬╖from┬╖"../lib/view-models";ΓÉì
+      8     Γöé - ΓÉì
+      9     Γöé - export┬╖default┬╖function┬╖DashboardRoute()┬╖{ΓÉì
+     10     Γöé - ┬╖┬╖const┬╖[dashboard,┬╖setDashboard]┬╖=┬╖useState<RuntimeTelemetryDashboard┬╖|┬╖null>(null);ΓÉì
+     11     Γöé - ┬╖┬╖const┬╖[error,┬╖setError]┬╖=┬╖useState<string┬╖|┬╖null>(null);ΓÉì
+     12     Γöé - ΓÉì
+     13     Γöé - ┬╖┬╖useEffect(()┬╖=>┬╖{ΓÉì
+     14     Γöé - ┬╖┬╖┬╖┬╖let┬╖disposed┬╖=┬╖false;ΓÉì
+     15     Γöé - ┬╖┬╖┬╖┬╖const┬╖load┬╖=┬╖async┬╖()┬╖=>┬╖{ΓÉì
+     16     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖try┬╖{ΓÉì
+     17     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖const┬╖result┬╖=┬╖await┬╖fetchTelemetryDashboard();ΓÉì
+     18     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖if┬╖(!disposed)┬╖{ΓÉì
+     19     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖setDashboard(result);ΓÉì
+     20     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖setError(null);ΓÉì
+     21     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖}ΓÉì
+     22     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖}┬╖catch┬╖(value)┬╖{ΓÉì
+     23     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖if┬╖(!disposed)┬╖{ΓÉì
+     24     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖setError(value┬╖instanceof┬╖Error┬╖?┬╖value.message┬╖:┬╖"Could┬╖not┬╖load┬╖runtime┬╖telemetry.");ΓÉì
+     25     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖}ΓÉì
+     26     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖}ΓÉì
+     27     Γöé - ┬╖┬╖┬╖┬╖};ΓÉì
+     28     Γöé - ΓÉì
+     29     Γöé - ┬╖┬╖┬╖┬╖void┬╖load();ΓÉì
+     30     Γöé - ┬╖┬╖┬╖┬╖const┬╖unsubscribe┬╖=┬╖subscribeTelemetryStream(()┬╖=>┬╖{ΓÉì
+     31     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖void┬╖load();ΓÉì
+     32     Γöé - ┬╖┬╖┬╖┬╖});ΓÉì
+     33     Γöé - ΓÉì
+     34     Γöé - ┬╖┬╖┬╖┬╖return┬╖()┬╖=>┬╖{ΓÉì
+     35     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖disposed┬╖=┬╖true;ΓÉì
+     36     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖unsubscribe();ΓÉì
+     37     Γöé - ┬╖┬╖┬╖┬╖};ΓÉì
+     38     Γöé - ┬╖┬╖},┬╖[]);ΓÉì
+     39     Γöé - ΓÉì
+     40     Γöé - ┬╖┬╖if┬╖(error)┬╖{ΓÉì
+     41     Γöé - ┬╖┬╖┬╖┬╖return┬╖<ErrorState┬╖label={error}┬╖/>;ΓÉì
+     42     Γöé - ┬╖┬╖}ΓÉì
+     43     Γöé - ┬╖┬╖if┬╖(!dashboard)┬╖{ΓÉì
+     44     Γöé - ┬╖┬╖┬╖┬╖return┬╖<LoadingState┬╖label="Loading┬╖runtime┬╖telemetryΓÇª"┬╖/>;ΓÉì
+     45     Γöé - ┬╖┬╖}ΓÉì
+     46     Γöé - ΓÉì
+     47     Γöé - ┬╖┬╖const┬╖statCards┬╖=┬╖summarizeTelemetryStats(dashboard.summary);ΓÉì
+     48     Γöé - ┬╖┬╖const┬╖comparisonCards┬╖=┬╖buildTelemetryComparisonCards(dashboard.rows);ΓÉì
+     49     Γöé - ┬╖┬╖const┬╖requestRows┬╖=┬╖buildTelemetryRequestRows(dashboard.requests);ΓÉì
+     50     Γöé - ΓÉì
+     51     Γöé - ┬╖┬╖return┬╖(ΓÉì
+     52     Γöé - ┬╖┬╖┬╖┬╖<div┬╖className="space-y-6">ΓÉì
+     53     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖<PageHeaderΓÉì
+     54     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖eyebrow="Overview"ΓÉì
+     55     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖title="Unified┬╖telemetry"ΓÉì
+     56     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖description="One┬╖structured┬╖local-plus-remote┬╖telemetry┬╖surface┬╖for┬╖the┬╖runtime┬╖summary,┬╖comparison┬╖rows,┬╖and┬╖freshest┬╖request┬╖activity."ΓÉì
+     57     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖/>ΓÉì
+     58     Γöé - ΓÉì
+     59     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="grid┬╖gap-4┬╖md:grid-cols-2┬╖xl:grid-cols-4">ΓÉì
+     60     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{statCards.map((card,┬╖index)┬╖=>┬╖(ΓÉì
+     61     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<FactCardΓÉì
+     62     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖key={card.label}ΓÉì
+     63     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖label={card.label}ΓÉì
+     64     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖value={card.value}ΓÉì
+     65     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖detail={card.detail}ΓÉì
+     66     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖emphasis={index┬╖===┬╖0}ΓÉì
+     67     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖/>ΓÉì
+     68     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖))}ΓÉì
+     69     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+     70     Γöé - ΓÉì
+     71     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="grid┬╖grid-cols-12┬╖gap-4">ΓÉì
+     72     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<SectionCardΓÉì
+     73     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖className="col-span-12┬╖xl:col-span-8"ΓÉì
+     74     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖title="Endpoint┬╖comparison"ΓÉì
+     75     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖description="Canonical┬╖telemetry┬╖rows┬╖group┬╖local┬╖and┬╖remote┬╖request┬╖volume,┬╖latency,┬╖cache┬╖posture,┬╖and┬╖cost┬╖into┬╖one┬╖comparison┬╖rail."ΓÉì
+     76     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖>ΓÉì
+     77     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{comparisonCards.length┬╖===┬╖0┬╖?┬╖(ΓÉì
+     78     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<EmptyState┬╖label="No┬╖telemetry┬╖comparison┬╖rows┬╖are┬╖available┬╖yet."┬╖/>ΓÉì
+     79     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖)┬╖:┬╖(ΓÉì
+     80     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="space-y-3">ΓÉì
+     81     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{comparisonCards.map((row)┬╖=>┬╖(ΓÉì
+     82     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖key={row.endpointId}┬╖className={`${listRowClassName}┬╖md:items-center`}>ΓÉì
+     83     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div>ΓÉì
+     84     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="flex┬╖flex-wrap┬╖items-center┬╖gap-2">ΓÉì
+     85     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<p┬╖className="font-medium┬╖text-[var(--rm-fg)]">{row.modelId┬╖??┬╖row.endpointId}</p>ΓÉì
+     86     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<StatusPill┬╖tone={row.sourceLabel┬╖===┬╖"Remote"┬╖?┬╖"accent"┬╖:┬╖"neutral"}>{row.sourceLabel}</StatusPill>ΓÉì
+     87     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<StatusPill┬╖tone={row.statusLabel┬╖===┬╖"healthy"┬╖||┬╖row.statusLabel┬╖===┬╖"active"┬╖?┬╖"success"┬╖:┬╖"warning"}>ΓÉì
+     88     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{row.statusLabel}ΓÉì
+     89     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</StatusPill>ΓÉì
+     90     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+     91     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<p┬╖className="text-sm┬╖text-[var(--rm-secondary)]">{row.endpointId}</p>ΓÉì
+     92     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<p┬╖className="mt-2┬╖text-sm┬╖text-[var(--rm-secondary)]">ΓÉì
+     93     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{row.requestCountLabel}┬╖ΓÇó┬╖{row.latencyLabel}┬╖ΓÇó┬╖{row.tokenLabel}┬╖ΓÇó┬╖{row.costLabel}ΓÉì
+     94     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</p>ΓÉì
+     95     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<p┬╖className="mt-1┬╖text-sm┬╖text-[var(--rm-secondary)]">ΓÉì
+     96     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{row.providerLabel}┬╖ΓÇó┬╖{row.cacheLabel}┬╖ΓÇó┬╖{row.reliabilityLabel}ΓÉì
+     97     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</p>ΓÉì
+     98     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+     99     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<p┬╖className="text-right┬╖text-sm┬╖text-[var(--rm-secondary)]">{row.roleSummary}</p>ΓÉì
+    100     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+    101     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖))}ΓÉì
+    102     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+    103     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖)}ΓÉì
+    104     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</SectionCard>ΓÉì
+    105     Γöé - ΓÉì
+    106     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="col-span-12┬╖space-y-4┬╖xl:col-span-4">ΓÉì
+    107     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<SectionCard┬╖title="Latest┬╖requests"┬╖description="The┬╖freshest┬╖structured┬╖request┬╖rows┬╖stay┬╖adjacent┬╖to┬╖the┬╖comparison┬╖board┬╖and┬╖refresh┬╖via┬╖SSE.">ΓÉì
+    108     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="space-y-3">ΓÉì
+    109     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{requestRows.slice(0,┬╖5).map((request)┬╖=>┬╖(ΓÉì
+    110     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖key={request.requestId}┬╖className={`${mutedPanelClassName}┬╖p-4`}>ΓÉì
+    111     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="flex┬╖items-center┬╖justify-between┬╖gap-3">ΓÉì
+    112     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div>ΓÉì
+    113     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<p┬╖className="font-medium┬╖text-[var(--rm-fg)]">{request.requestId}</p>ΓÉì
+    114     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<p┬╖className="text-sm┬╖text-[var(--rm-secondary)]">{request.endpointId}</p>ΓÉì
+    115     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+    116     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<StatusPill┬╖tone={request.sourceLabel┬╖===┬╖"Remote"┬╖?┬╖"accent"┬╖:┬╖"neutral"}>ΓÉì
+    117     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{request.sourceLabel}ΓÉì
+    118     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</StatusPill>ΓÉì
+    119     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+    120     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<p┬╖className="mt-3┬╖text-sm┬╖text-[var(--rm-secondary)]">ΓÉì
+    121     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{request.statusLabel}┬╖ΓÇó┬╖{request.latencyLabel}┬╖ΓÇó┬╖{request.tokenLabel}ΓÉì
+    122     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</p>ΓÉì
+    123     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<p┬╖className="mt-1┬╖text-sm┬╖text-[var(--rm-secondary)]">ΓÉì
+    124     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{request.providerFamilyLabel}┬╖ΓÇó┬╖{request.finishReasonLabel}┬╖ΓÇó┬╖{request.cacheLabel}ΓÉì
+    125     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</p>ΓÉì
+    126     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="mt-3┬╖flex┬╖items-center┬╖justify-between┬╖gap-3">ΓÉì
+    127     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<span┬╖className="text-xs┬╖uppercase┬╖tracking-[0.24em]┬╖text-[var(--rm-muted)]">ΓÉì
+    128     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖{request.createdAtLabel}ΓÉì
+    129     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</span>ΓÉì
+    130     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<Link┬╖className="text-sm┬╖font-medium┬╖text-[var(--rm-accent)]"┬╖to={`/app/observe/requests/${request.requestId}`}>ΓÉì
+    131     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖InspectΓÉì
+    132     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</Link>ΓÉì
+    133     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+    134     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+    135     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖))}ΓÉì
+    136     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+    137     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</SectionCard>ΓÉì
+    138     Γöé - ΓÉì
+    139     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<SectionCard┬╖title="Reading┬╖order"┬╖description="Structured┬╖telemetry┬╖leads;┬╖preserved┬╖raw┬╖host┬╖tooling┬╖remains┬╖adjacent.">ΓÉì
+    140     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className="space-y-3">ΓÉì
+    141     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className={`${mutedPanelClassName}┬╖p-4`}>ΓÉì
+    142     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<p┬╖className="text-[11px]┬╖font-medium┬╖uppercase┬╖tracking-[0.24em]┬╖text-[var(--rm-muted)]">Canonical┬╖first</p>ΓÉì
+    143     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<p┬╖className="mt-3┬╖max-w-[28ch]┬╖text-sm┬╖leading-6┬╖text-[var(--rm-secondary)]">ΓÉì
+    144     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖Overview┬╖now┬╖leads┬╖with┬╖structured┬╖role-model┬╖telemetry.┬╖Use┬╖Requests┬╖for┬╖the┬╖full┬╖ledger┬╖and┬╖request┬╖inspector.ΓÉì
+    145     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</p>ΓÉì
+    146     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖</div>ΓÉì
+    147     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<div┬╖className={`${mutedPanelClassName}┬╖p-4`}>ΓÉì
+    148     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<p┬╖className="text-[11px]┬╖font-medium┬╖uppercase┬╖tracking-[0.24em]┬╖text-[var(--rm-muted)]">Raw┬╖adjacency</p>ΓÉì
+    149     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖<p┬╖className="mt-3┬╖max-w-[28ch]┬╖text-sm┬╖leading-6┬╖text-[var(--rm-secondary)]">ΓÉì
+    150     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖Observe┬╖&gt;┬╖Activity┬╖stays┬╖available┬╖for┬╖raw┬╖host┬╖metrics┬╖and┬╖captures┬╖when┬╖you┬╖need┬╖preserved┬╖llama-swap┬╖operator┬╖detail.ΓÉì
+  212 more lines truncated
+  
+
+role-model-router\vendor\llama-swap\ui-svelte\src\lib\histogram.test.ts:13:14 lint/style/noNonNullAssertion  FIXABLE  ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Forbidden non-null assertion.
+  
+    11 Γöé       const result = calculateHistogramData([42]);
+    12 Γöé       expect(result).not.toBeNull();
+  > 13 Γöé       expect(result!.bins).toEqual([1]);
+       Γöé              ^^^^^^^
+    14 Γöé       expect(result!.min).toBe(42);
+    15 Γöé       expect(result!.max).toBe(42);
+  
+  i Unsafe fix: Replace with optional chain operator ?. This operator includes runtime checks, so it is safer than the compile-only non-null assertion operator
+  
+     11  11 Γöé         const result = calculateHistogramData([42]);ΓÉì
+     12  12 Γöé         expect(result).not.toBeNull();ΓÉì
+     13     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖expect(result!.bins).toEqual([1]);ΓÉì
+         13 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖expect(result?.bins).toEqual([1]);ΓÉì
+     14  14 Γöé         expect(result!.min).toBe(42);ΓÉì
+     15  15 Γöé         expect(result!.max).toBe(42);ΓÉì
+  
+
+role-model-router\vendor\llama-swap\ui-svelte\src\lib\histogram.test.ts:14:14 lint/style/noNonNullAssertion  FIXABLE  ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Forbidden non-null assertion.
+  
+    12 Γöé       expect(result).not.toBeNull();
+    13 Γöé       expect(result!.bins).toEqual([1]);
+  > 14 Γöé       expect(result!.min).toBe(42);
+       Γöé              ^^^^^^^
+    15 Γöé       expect(result!.max).toBe(42);
+    16 Γöé       expect(result!.binSize).toBe(0);
+  
+  i Unsafe fix: Replace with optional chain operator ?. This operator includes runtime checks, so it is safer than the compile-only non-null assertion operator
+  
+     12  12 Γöé         expect(result).not.toBeNull();ΓÉì
+     13  13 Γöé         expect(result!.bins).toEqual([1]);ΓÉì
+     14     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖expect(result!.min).toBe(42);ΓÉì
+         14 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖expect(result?.min).toBe(42);ΓÉì
+     15  15 Γöé         expect(result!.max).toBe(42);ΓÉì
+     16  16 Γöé         expect(result!.binSize).toBe(0);ΓÉì
+  
+
+role-model-router\vendor\llama-swap\ui-svelte\src\lib\histogram.test.ts:15:14 lint/style/noNonNullAssertion  FIXABLE  ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Forbidden non-null assertion.
+  
+    13 Γöé       expect(result!.bins).toEqual([1]);
+    14 Γöé       expect(result!.min).toBe(42);
+  > 15 Γöé       expect(result!.max).toBe(42);
+       Γöé              ^^^^^^^
+    16 Γöé       expect(result!.binSize).toBe(0);
+    17 Γöé       expect(result!.p50).toBe(42);
+  
+  i Unsafe fix: Replace with optional chain operator ?. This operator includes runtime checks, so it is safer than the compile-only non-null assertion operator
+  
+     13  13 Γöé         expect(result!.bins).toEqual([1]);ΓÉì
+     14  14 Γöé         expect(result!.min).toBe(42);ΓÉì
+     15     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖expect(result!.max).toBe(42);ΓÉì
+         15 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖expect(result?.max).toBe(42);ΓÉì
+     16  16 Γöé         expect(result!.binSize).toBe(0);ΓÉì
+     17  17 Γöé         expect(result!.p50).toBe(42);ΓÉì
+  
+
+role-model-router\vendor\llama-swap\ui-svelte\src\lib\histogram.test.ts:16:14 lint/style/noNonNullAssertion  FIXABLE  ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Forbidden non-null assertion.
+  
+    14 Γöé       expect(result!.min).toBe(42);
+    15 Γöé       expect(result!.max).toBe(42);
+  > 16 Γöé       expect(result!.binSize).toBe(0);
+       Γöé              ^^^^^^^
+    17 Γöé       expect(result!.p50).toBe(42);
+    18 Γöé       expect(result!.p95).toBe(42);
+  
+  i Unsafe fix: Replace with optional chain operator ?. This operator includes runtime checks, so it is safer than the compile-only non-null assertion operator
+  
+     14  14 Γöé         expect(result!.min).toBe(42);ΓÉì
+     15  15 Γöé         expect(result!.max).toBe(42);ΓÉì
+     16     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖expect(result!.binSize).toBe(0);ΓÉì
+         16 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖expect(result?.binSize).toBe(0);ΓÉì
+     17  17 Γöé         expect(result!.p50).toBe(42);ΓÉì
+     18  18 Γöé         expect(result!.p95).toBe(42);ΓÉì
+  
+
+role-model-router\vendor\llama-swap\ui-svelte\src\lib\histogram.test.ts:17:14 lint/style/noNonNullAssertion  FIXABLE  ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Forbidden non-null assertion.
+  
+    15 Γöé       expect(result!.max).toBe(42);
+    16 Γöé       expect(result!.binSize).toBe(0);
+  > 17 Γöé       expect(result!.p50).toBe(42);
+       Γöé              ^^^^^^^
+    18 Γöé       expect(result!.p95).toBe(42);
+    19 Γöé       expect(result!.p99).toBe(42);
+  
+  i Unsafe fix: Replace with optional chain operator ?. This operator includes runtime checks, so it is safer than the compile-only non-null assertion operator
+  
+     15  15 Γöé         expect(result!.max).toBe(42);ΓÉì
+     16  16 Γöé         expect(result!.binSize).toBe(0);ΓÉì
+     17     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖expect(result!.p50).toBe(42);ΓÉì
+         17 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖expect(result?.p50).toBe(42);ΓÉì
+     18  18 Γöé         expect(result!.p95).toBe(42);ΓÉì
+     19  19 Γöé         expect(result!.p99).toBe(42);ΓÉì
+  
+
+role-model-router\vendor\llama-swap\ui-svelte\src\lib\histogram.test.ts:18:14 lint/style/noNonNullAssertion  FIXABLE  ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Forbidden non-null assertion.
+  
+    16 Γöé       expect(result!.binSize).toBe(0);
+    17 Γöé       expect(result!.p50).toBe(42);
+  > 18 Γöé       expect(result!.p95).toBe(42);
+       Γöé              ^^^^^^^
+    19 Γöé       expect(result!.p99).toBe(42);
+    20 Γöé     });
+  
+  i Unsafe fix: Replace with optional chain operator ?. This operator includes runtime checks, so it is safer than the compile-only non-null assertion operator
+  
+     16  16 Γöé         expect(result!.binSize).toBe(0);ΓÉì
+     17  17 Γöé         expect(result!.p50).toBe(42);ΓÉì
+     18     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖expect(result!.p95).toBe(42);ΓÉì
+         18 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖expect(result?.p95).toBe(42);ΓÉì
+     19  19 Γöé         expect(result!.p99).toBe(42);ΓÉì
+     20  20 Γöé       });ΓÉì
+  
+
+role-model-router\vendor\llama-swap\ui-svelte\src\lib\histogram.test.ts:19:14 lint/style/noNonNullAssertion  FIXABLE  ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Forbidden non-null assertion.
+  
+    17 Γöé       expect(result!.p50).toBe(42);
+    18 Γöé       expect(result!.p95).toBe(42);
+  > 19 Γöé       expect(result!.p99).toBe(42);
+       Γöé              ^^^^^^^
+    20 Γöé     });
+    21 Γöé 
+  
+  i Unsafe fix: Replace with optional chain operator ?. This operator includes runtime checks, so it is safer than the compile-only non-null assertion operator
+  
+     17  17 Γöé         expect(result!.p50).toBe(42);ΓÉì
+     18  18 Γöé         expect(result!.p95).toBe(42);ΓÉì
+     19     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖expect(result!.p99).toBe(42);ΓÉì
+         19 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖expect(result?.p99).toBe(42);ΓÉì
+     20  20 Γöé       });ΓÉì
+     21  21 Γöé   ΓÉì
+  
+
+role-model-router\vendor\llama-swap\ui-svelte\src\lib\histogram.test.ts:25:14 lint/style/noNonNullAssertion  FIXABLE  ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Forbidden non-null assertion.
+  
+    23 Γöé       const result = calculateHistogramData([10, 10, 10, 10, 10]);
+    24 Γöé       expect(result).not.toBeNull();
+  > 25 Γöé       expect(result!.bins).toEqual([5]);
+       Γöé              ^^^^^^^
+    26 Γöé       expect(result!.min).toBe(10);
+    27 Γöé       expect(result!.max).toBe(10);
+  
+  i Unsafe fix: Replace with optional chain operator ?. This operator includes runtime checks, so it is safer than the compile-only non-null assertion operator
+  
+     23  23 Γöé         const result = calculateHistogramData([10, 10, 10, 10, 10]);ΓÉì
+     24  24 Γöé         expect(result).not.toBeNull();ΓÉì
+     25     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖expect(result!.bins).toEqual([5]);ΓÉì
+         25 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖expect(result?.bins).toEqual([5]);ΓÉì
+     26  26 Γöé         expect(result!.min).toBe(10);ΓÉì
+     27  27 Γöé         expect(result!.max).toBe(10);ΓÉì
+  
+
+role-model-router\vendor\llama-swap\ui-svelte\src\lib\histogram.test.ts:26:14 lint/style/noNonNullAssertion  FIXABLE  ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Forbidden non-null assertion.
+  
+    24 Γöé       expect(result).not.toBeNull();
+    25 Γöé       expect(result!.bins).toEqual([5]);
+  > 26 Γöé       expect(result!.min).toBe(10);
+       Γöé              ^^^^^^^
+    27 Γöé       expect(result!.max).toBe(10);
+    28 Γöé       expect(result!.binSize).toBe(0);
+  
+  i Unsafe fix: Replace with optional chain operator ?. This operator includes runtime checks, so it is safer than the compile-only non-null assertion operator
+  
+     24  24 Γöé         expect(result).not.toBeNull();ΓÉì
+     25  25 Γöé         expect(result!.bins).toEqual([5]);ΓÉì
+     26     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖expect(result!.min).toBe(10);ΓÉì
+         26 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖expect(result?.min).toBe(10);ΓÉì
+     27  27 Γöé         expect(result!.max).toBe(10);ΓÉì
+     28  28 Γöé         expect(result!.binSize).toBe(0);ΓÉì
+  
+
+role-model-router\vendor\llama-swap\ui-svelte\src\lib\histogram.test.ts:27:14 lint/style/noNonNullAssertion  FIXABLE  ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Forbidden non-null assertion.
+  
+    25 Γöé       expect(result!.bins).toEqual([5]);
+    26 Γöé       expect(result!.min).toBe(10);
+  > 27 Γöé       expect(result!.max).toBe(10);
+       Γöé              ^^^^^^^
+    28 Γöé       expect(result!.binSize).toBe(0);
+    29 Γöé     });
+  
+  i Unsafe fix: Replace with optional chain operator ?. This operator includes runtime checks, so it is safer than the compile-only non-null assertion operator
+  
+     25  25 Γöé         expect(result!.bins).toEqual([5]);ΓÉì
+     26  26 Γöé         expect(result!.min).toBe(10);ΓÉì
+     27     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖expect(result!.max).toBe(10);ΓÉì
+         27 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖expect(result?.max).toBe(10);ΓÉì
+     28  28 Γöé         expect(result!.binSize).toBe(0);ΓÉì
+     29  29 Γöé       });ΓÉì
+  
+
+Skipped 4 suggested fixes.
+If you wish to apply the suggested (unsafe) fixes, use the command biome check --fix --unsafe
+
+The number of diagnostics exceeds the number allowed by Biome.
+Diagnostics not shown: 31.
+Checked 6 files in 14ms. No fixes applied.
+Found 32 errors.
+check ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Some errors were emitted while running checks.
+  
+

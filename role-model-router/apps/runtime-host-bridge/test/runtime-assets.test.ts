@@ -1,6 +1,6 @@
-import path from "node:path";
+import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import os from "node:os";
-import { mkdtemp, mkdir, readFile, writeFile } from "node:fs/promises";
+import path from "node:path";
 
 import { describe, expect, test } from "vitest";
 

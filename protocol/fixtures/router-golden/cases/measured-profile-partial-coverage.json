@@ -92,11 +92,7 @@
   "expected": {
     "chosen_endpoint_id": "measured-candidate",
     "fallback_endpoint_ids": ["declared-only"],
-    "selection_reasons": [
-      "BEST_TOTAL_SCORE",
-      "MEASURED_PROFILE_USED",
-      "FALLBACK_CHAIN_COMPUTED"
-    ],
+    "selection_reasons": ["BEST_TOTAL_SCORE", "MEASURED_PROFILE_USED", "FALLBACK_CHAIN_COMPUTED"],
     "eligibility": []
   }
 }
