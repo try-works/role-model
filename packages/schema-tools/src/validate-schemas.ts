@@ -448,13 +448,14 @@ export async function generateProtocolTypes(outputPath = protocolTypesOutput): P
 
 async function formatGeneratedTypes(outputPath: string): Promise<void> {
   await new Promise<void>((resolve, reject) => {
+    const biomeTargetPath = path.relative(repoRoot, outputPath);
     const command =
       process.platform === "win32"
         ? {
             file: "cmd.exe",
-            args: ["/c", biomeExecutable, "format", "--write", outputPath],
+            args: ["/c", biomeExecutable, "format", "--write", biomeTargetPath],
           }
-        : { file: biomeExecutable, args: ["format", "--write", outputPath] };
+        : { file: biomeExecutable, args: ["format", "--write", biomeTargetPath] };
     const child = spawn(command.file, command.args, {
       cwd: repoRoot,
       stdio: "inherit",
