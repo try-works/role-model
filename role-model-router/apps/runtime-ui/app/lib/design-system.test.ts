@@ -186,6 +186,7 @@ describe("runtime design system", () => {
       expect.objectContaining({
         id: "local-models",
         title: "Local models",
+        description: "Load and inspect llama-swap-managed local models and runtime overrides.",
       }),
     );
     expect(getRuntimeRouteDefinition("/app/local/peers")).toEqual(
@@ -193,6 +194,7 @@ describe("runtime design system", () => {
         id: "local-peers",
         label: "Endpoints",
         title: "Local endpoints",
+        description: "Generic OpenAI-compatible local peer endpoint inventory and management.",
       }),
     );
     expect(getRuntimeRouteDefinition("/app/control/runtime-config")).toEqual(
@@ -496,8 +498,10 @@ describe("runtime design system", () => {
 
   test("local setup surfaces stay discoverable from navigation and empty registry states", () => {
     expect(localModelsSource).toContain("Load local model");
-    expect(localModelsSource).toContain("Open local endpoints");
+    expect(localModelsSource).toContain("llama-swap-managed local models");
+    expect(localModelsSource).toContain("Open peer endpoints");
     expect(localPeersSource).toContain("Local endpoints");
+    expect(localPeersSource).toContain("OpenAI-compatible peer endpoints");
     expect(localPeersSource).toContain("Add endpoint");
     expect(endpointsRouteSource).toContain("/app/local/peers");
     expect(endpointsRouteSource).toContain("/app/local/models");

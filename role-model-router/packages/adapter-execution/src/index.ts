@@ -224,34 +224,58 @@ export interface RoutedExecutionResult {
   readonly diagnostics: readonly AdapterDiagnostic[];
 }
 
+function endpointSourceTypeFromKind(endpointKind: string): "local" | "remote" {
+  return endpointKind.startsWith("remote") || endpointKind === "remote_api" ? "remote" : "local";
+}
+
+function resolveFallbackEndpoint(
+  input: Pick<ExecuteLiveRoutedRequestInput, "registrySources" | "registry">,
+  endpointId: string,
+): { modelId: string; sourceType: "local" | "remote" } {
+  const cloudSource = findCloudSource(input.registrySources, endpointId);
+  if (cloudSource) {
+    return {
+      modelId: cloudSource.modelId,
+      sourceType: endpointSourceTypeFromKind(cloudSource.endpointKind),
+    };
+  }
+
+  const localSource = findLocalSource(input.registrySources, endpointId);
+  if (localSource) {
+    return {
+      modelId: localSource.modelId,
+      sourceType: endpointSourceTypeFromKind(localSource.endpointKind),
+    };
+  }
+
+  const candidate = input.registry.endpoints.find(
+    (entry) => entry.identity.endpoint_id === endpointId,
+  );
+  if (candidate) {
+    return {
+      modelId: candidate.identity.model_id,
+      sourceType: endpointSourceTypeFromKind(candidate.identity.endpoint_kind),
+    };
+  }
+
+  throw new Error(`Fallback endpoint ${endpointId} is not present in the registry sources.`);
+}
+
 function resolveFallbackModelIds(
   input: Pick<ExecuteLiveRoutedRequestInput, "routeResult" | "registrySources" | "registry">,
+  target: ResolvedExecutionTarget,
 ): readonly string[] | undefined {
   const fallbackEndpointIds = input.routeResult.decision.fallback_endpoint_ids;
   if (!Array.isArray(fallbackEndpointIds) || fallbackEndpointIds.length === 0) {
     return undefined;
   }
 
-  return fallbackEndpointIds.map((endpointId) => {
-    const cloudSource = findCloudSource(input.registrySources, endpointId);
-    if (cloudSource) {
-      return cloudSource.modelId;
-    }
-
-    const localSource = findLocalSource(input.registrySources, endpointId);
-    if (localSource) {
-      return localSource.modelId;
-    }
-
-    const candidate = input.registry.endpoints.find(
-      (entry) => entry.identity.endpoint_id === endpointId,
-    );
-    if (candidate) {
-      return candidate.identity.model_id;
-    }
-
-    throw new Error(`Fallback endpoint ${endpointId} is not present in the registry sources.`);
+  const targetSourceType = endpointSourceTypeFromKind(target.candidate.identity.endpoint_kind);
+  const fallbackModelIds = fallbackEndpointIds.flatMap((endpointId) => {
+    const fallback = resolveFallbackEndpoint(input, endpointId);
+    return fallback.sourceType === targetSourceType ? [fallback.modelId] : [];
   });
+  return fallbackModelIds.length > 0 ? fallbackModelIds : undefined;
 }
 
 function parseJsonArguments(value: unknown): unknown {
@@ -592,7 +616,7 @@ export async function executeLiveRoutedRequest(
   input: ExecuteLiveRoutedRequestInput,
 ): Promise<RoutedExecutionResult> {
   const { target, adapter, capabilities, requestCapture } = prepareRoutedExecution(input);
-  const fallbackModelIds = resolveFallbackModelIds(input);
+  const fallbackModelIds = resolveFallbackModelIds(input, target);
   const responseCapture = await input.executeProviderRequest({
     target,
     requestCapture,

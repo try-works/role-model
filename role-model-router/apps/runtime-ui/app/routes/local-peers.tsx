@@ -110,7 +110,7 @@ export default function LocalPeersRoute() {
       <PageHeader
         eyebrow="Local"
         title="Local endpoints"
-        description="Local llama-swap endpoint inventory and management."
+        description="OpenAI-compatible peer endpoint inventory and management."
         actions={
           <button
             type="button"
@@ -125,7 +125,10 @@ export default function LocalPeersRoute() {
 
       {error ? <ErrorState label={error} /> : null}
 
-      <SectionCard title="Endpoint inventory" description="Configured local llama-swap endpoints.">
+      <SectionCard
+        title="Endpoint inventory"
+        description="Configured OpenAI-compatible peer endpoints available for local execution."
+      >
         {loading && peers.length === 0 ? (
           <LoadingState label="Loading local endpoints…" />
         ) : peers.length === 0 ? (
@@ -182,7 +185,7 @@ export default function LocalPeersRoute() {
 
       <SectionCard
         title="Add local endpoint"
-        description="Register a local llama-swap endpoint for model execution."
+        description="Register an OpenAI-compatible peer endpoint for local model execution."
       >
         <div className="space-y-4">
           <div className="space-y-2">

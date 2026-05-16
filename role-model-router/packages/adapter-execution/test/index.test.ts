@@ -1188,7 +1188,7 @@ describe("executeRoutedRequest", () => {
     expect(result.responseCapture.statusCode).toBe(200);
   });
 
-  test("resolves fallback endpoint ids into fallback model ids for live provider execution", async () => {
+  test("filters mixed-vendor fallback endpoint ids to vendor-compatible fallback model ids for live provider execution", async () => {
     const adapters: ProviderAdapter[] = [
       {
         adapterFamily: "ai-sdk-openai",
@@ -1295,7 +1295,10 @@ describe("executeRoutedRequest", () => {
           app_id: "app-runtime",
           org_id: "org-runtime",
           chosen_endpoint_id: "openai.litellm.global.openai-gpt-4-1-mini-fast",
-          fallback_endpoint_ids: ["openai.litellm.global.openai-gpt-4-1-mini-slow"],
+          fallback_endpoint_ids: [
+            "llama-swap.local.local-mock-llama",
+            "openai.litellm.global.openai-gpt-4-1-mini-slow",
+          ],
           eligible_count: 2,
           ineligible_count: 0,
           policy_snapshot: {
@@ -1500,6 +1503,33 @@ describe("executeRoutedRequest", () => {
           },
           {
             identity: {
+              endpoint_id: "llama-swap.local.local-mock-llama",
+              endpoint_kind: "local_engine",
+              provider_kind: "remote_openai_compat",
+              serving_source: "vendor-llama-swap",
+              model_id: "local/mock-llama",
+              runtime_version: "run15",
+              region: "local",
+              host_class: "localhost",
+              device_class: "localhost",
+              org_scope: "runtime-config",
+            },
+            declared: {
+              endpoint_id: "llama-swap.local.local-mock-llama",
+              capabilities: ["text.chat"],
+              modalities: ["text"],
+              max_context_tokens: 8192,
+              tool_calling: {
+                supported: true,
+                style: "openai",
+              },
+              supports_embeddings: false,
+              platform_constraints: [],
+            },
+            status: "active",
+          },
+          {
+            identity: {
               endpoint_id: "openai.litellm.global.openai-gpt-4-1-mini-slow",
               endpoint_kind: "remote_api",
               provider_kind: "remote_openai_compat",
@@ -1566,7 +1596,23 @@ describe("executeRoutedRequest", () => {
             },
           },
         ],
-        local: [],
+        local: [
+          {
+            endpointId: "llama-swap.local.local-mock-llama",
+            providerKind: "ai-sdk-openai-compatible",
+            providerId: "llama-swap",
+            modelId: "local/mock-llama",
+            capabilities: ["text.chat"],
+            modalities: ["text"],
+            endpointKind: "local-openai-compatible",
+            servingSource: "vendor-llama-swap",
+            lifecycleState: "active",
+            hostClass: "localhost",
+            deviceClass: "localhost",
+            region: "local",
+            orgScope: "runtime-config",
+          },
+        ],
       },
       executionRequest: {
         messages: [{ role: "user", content: "Say hi." }],

@@ -15,6 +15,7 @@
   "files": {
     "maxSize": 2000000,
     "ignore": [
+      "**/.cache/**",
       "**/.react-router/**",
       "**/.source/**",
       "**/.worktrees/**",

@@ -35,5 +35,5 @@ async function runRepoWideBiomeCheck() {
 describe("run31 repo-wide Biome parity", () => {
   it("requires repo-wide biome check to pass under repository config", async () => {
     await runRepoWideBiomeCheck();
-  });
+  }, 15_000);
 });

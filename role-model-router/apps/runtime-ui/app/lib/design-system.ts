@@ -161,8 +161,7 @@ const localModelsRoute = createRoute({
   template: "registry-detail",
   eyebrow: "Local",
   title: "Local models",
-  description:
-    "Load a local model by exact model ID, inspect loaded inference models, and manage overrides.",
+  description: "Load and inspect llama-swap-managed local models and runtime overrides.",
   noteTitle: "Registry detail",
   noteBody:
     "Lead with the load-model entry point, then keep loaded model cards and overrides visible.",
@@ -233,7 +232,7 @@ const localPeersRoute = createRoute({
   template: "registry-detail",
   eyebrow: "Local",
   title: "Local endpoints",
-  description: "Local llama-swap endpoint inventory and management.",
+  description: "Generic OpenAI-compatible local peer endpoint inventory and management.",
   noteTitle: "Registry detail",
   noteBody: "Endpoint list with health and model availability; add/remove controls stay obvious.",
 });

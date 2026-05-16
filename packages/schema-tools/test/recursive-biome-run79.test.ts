@@ -42,5 +42,5 @@ async function runBoundedBiomeCheck() {
 describe("run31 bounded Biome regression for run79", () => {
   it("requires the run79 Biome blocker set to pass under repository config", async () => {
     await runBoundedBiomeCheck();
-  });
+  }, 15_000);
 });

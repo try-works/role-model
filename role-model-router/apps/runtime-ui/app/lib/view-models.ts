@@ -499,7 +499,13 @@ export function buildEndpointCatalogRows(endpoints: readonly RuntimeEndpoint[]):
     .map((endpoint) => ({
       endpointId: endpoint.endpointId,
       modelId: endpoint.modelId,
-      providerLabel: endpoint.providerId ?? "local/runtime",
+      providerLabel:
+        endpoint.providerId ??
+        (endpoint.localModelSource === "llama-swap"
+          ? "llama-swap"
+          : endpoint.localModelSource === "peer-backed"
+            ? "local-openai-compatible"
+            : "local/runtime"),
       sourceLabel: formatSourceLabel(
         endpoint.sourceType ??
           (endpoint.servingSource?.toLowerCase().includes("local") ? "local" : "remote"),

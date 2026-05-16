@@ -17,6 +17,7 @@ import {
 } from "../lib/design-system";
 import {
   type ModelOverride,
+  type RuntimeLocalModel,
   fetchLocalModels,
   fetchModelOverrides,
   loadLocalModel,
@@ -24,14 +25,8 @@ import {
   updateModelOverrides,
 } from "../lib/runtime-api";
 
-interface LocalModel {
-  modelId: string;
-  loadedAt: string;
-  engine: string;
-}
-
 export default function LocalModelsRoute() {
-  const [models, setModels] = useState<LocalModel[]>([]);
+  const [models, setModels] = useState<RuntimeLocalModel[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actioning, setActioning] = useState<Record<string, boolean>>({});
@@ -108,7 +103,7 @@ export default function LocalModelsRoute() {
       <PageHeader
         eyebrow="Local"
         title="Local models"
-        description="Load a local model by exact model ID, inspect loaded inference models, and manage overrides."
+        description="Load and inspect llama-swap-managed local models and runtime overrides."
         actions={
           <button
             type="button"
@@ -125,7 +120,7 @@ export default function LocalModelsRoute() {
 
       <SectionCard
         title="Load local model"
-        description="Load a model by exact model ID. Local llama-swap hosts are configured from Local > Endpoints."
+        description="Load a model by exact model ID into the llama-swap-managed runtime. Generic peer endpoints are managed from Local > Endpoints."
       >
         <div className="flex flex-col gap-3 xl:flex-row xl:items-end">
           <div className="min-w-0 flex-1 space-y-2">
@@ -166,14 +161,14 @@ export default function LocalModelsRoute() {
             {actioning.__load__ ? "Loading…" : "Load model"}
           </button>
           <Link className={secondaryButtonClassName} to="/app/local/peers">
-            Open local endpoints
+            Open peer endpoints
           </Link>
         </div>
       </SectionCard>
 
       <SectionCard
         title="Runtime state"
-        description="Models currently resident in local inference memory."
+        description="Models currently resident in local inference memory across llama-swap and peer-backed execution."
       >
         {loading && models.length === 0 ? (
           <LoadingState label="Loading local model state…" />
@@ -198,6 +193,16 @@ export default function LocalModelsRoute() {
                 <div className="mb-4 grid grid-cols-2 gap-3">
                   <div>
                     <p className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]">
+                      Source
+                    </p>
+                    <p className="mt-1 text-sm text-[var(--rm-secondary)]">
+                      {model.localModelSource === "peer-backed"
+                        ? "Peer-backed endpoint"
+                        : "Llama-swap"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]">
                       Engine
                     </p>
                     <p className="mt-1 text-sm text-[var(--rm-secondary)]">{model.engine}</p>
@@ -210,7 +215,41 @@ export default function LocalModelsRoute() {
                       {new Date(model.loadedAt).toLocaleString()}
                     </p>
                   </div>
+                  <div>
+                    <p className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]">
+                      Context window
+                    </p>
+                    <p className="mt-1 text-sm text-[var(--rm-secondary)]">
+                      {typeof model.contextWindow === "number"
+                        ? model.contextWindow.toLocaleString()
+                        : "Runtime default"}
+                    </p>
+                  </div>
                 </div>
+
+                {model.localModelSource === "llama-swap" ? (
+                  <div className="mb-4 space-y-2 border border-[var(--rm-border)] bg-[var(--rm-surface)] p-3">
+                    <p className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]">
+                      Llama-swap runtime
+                    </p>
+                    <dl className="grid gap-2 text-sm text-[var(--rm-secondary)]">
+                      <div className="grid gap-1 sm:grid-cols-[120px_minmax(0,1fr)]">
+                        <dt className="text-[var(--rm-muted)]">Proxy base</dt>
+                        <dd className="break-all">
+                          {model.proxyBaseUrl ?? "Inherited from runtime"}
+                        </dd>
+                      </div>
+                      <div className="grid gap-1 sm:grid-cols-[120px_minmax(0,1fr)]">
+                        <dt className="text-[var(--rm-muted)]">Health check</dt>
+                        <dd className="break-all">{model.checkEndpoint ?? "Not set"}</dd>
+                      </div>
+                      <div className="grid gap-1 sm:grid-cols-[120px_minmax(0,1fr)]">
+                        <dt className="text-[var(--rm-muted)]">Model name</dt>
+                        <dd className="break-all">{model.useModelName ?? model.modelId}</dd>
+                      </div>
+                    </dl>
+                  </div>
+                ) : null}
 
                 <div className="flex gap-2">
                   <button
