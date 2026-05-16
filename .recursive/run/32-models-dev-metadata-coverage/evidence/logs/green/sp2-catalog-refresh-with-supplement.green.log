@@ -1,0 +1,7 @@
+
+> role-model@0.0.0 catalog:refresh D:\DEV\role-model\.worktrees\32-models-dev-metadata-coverage
+> corepack pnpm --filter @role-model-router/catalog exec tsx src/refresh.ts
+
+D:\DEV\role-model\.worktrees\32-models-dev-metadata-coverage\testdata\catalog\models-dev-snapshot.json
+129 providers
+4577 models

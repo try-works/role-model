@@ -1,0 +1,71 @@
+
+> @role-model-router/catalog@0.0.0 test D:\DEV\role-model\.worktrees\32-models-dev-metadata-coverage\role-model-router\packages\catalog
+> vitest run test/index.test.ts
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/32-models-dev-metadata-coverage/role-model-router/packages/catalog[39m
+
+ [31mΓ¥»[39m test/index.test.ts [2m([22m[2m6 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 67[2mms[22m[39m
+   [32mΓ£ô[39m normalizeCatalogSnapshot[2m > [22mpreserves upstream provenance while layering role-model enrichment[32m 24[2mms[22m[39m
+   [32mΓ£ô[39m normalizeCatalogSnapshot[2m > [22mnormalizes the first moonshot kimi provider slice with explicit auth-mode support[32m 2[2mms[22m[39m
+[31m   [31m├ù[31m normalizeCatalogSnapshot[2m > [22mpreserves provider docs and npm compatibility metadata for downstream consumers[39m[32m 9[2mms[22m[39m
+[31m     ΓåÆ expected [ { ΓÇª(11) } ] to deep equally contain ObjectContaining{ΓÇª}[39m
+   [32mΓ£ô[39m exportCatalogArtifacts[2m > [22mwrites stable normalized catalog and vendor ledger artifacts for local validation[32m 5[2mms[22m[39m
+   [32mΓ£ô[39m runCatalogExportCli[2m > [22mderives the repo-local catalog export paths for the validation command[32m 6[2mms[22m[39m
+   [32mΓ£ô[39m runCatalogExportCli[2m > [22mrewrites tracked package-data catalog artifacts alongside the runtime-output export[32m 18[2mms[22m[39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/index.test.ts > normalizeCatalogSnapshot > preserves provider docs and npm compatibility metadata for downstream consumers
+AssertionError: expected [ { ΓÇª(11) } ] to deep equally contain ObjectContaining{ΓÇª}
+
+- Expected: 
+ObjectContaining {
+  "docsUrl": "https://fireworks.ai/docs/",
+  "npmPackage": "@ai-sdk/openai-compatible",
+  "providerId": "fireworks_ai",
+}
+
++ Received: 
+[
+  {
+    "adapterFamily": "ai-sdk-openai-compatible",
+    "apiBase": "https://api.fireworks.ai/inference/v1",
+    "authFamily": "api-key",
+    "controlPlaneRequirements": [],
+    "displayName": "Fireworks AI",
+    "envVars": [
+      "FIREWORKS_API_KEY",
+    ],
+    "localOverrideApplied": false,
+    "providerId": "fireworks_ai",
+    "providerKind": "provider-fireworks_ai",
+    "supportedAuthModes": [],
+    "upstreamProvenance": {
+      "capturedAt": "2026-05-15T03:40:39Z",
+      "commit": "refresh-commit",
+      "schemaVersion": "models.dev.v1",
+      "vendor": "models.dev",
+    },
+  },
+]
+
+ Γ¥» test/index.test.ts:162:31
+    160|     const catalog = normalizeCatalogSnapshot(snapshot);
+    161| 
+    162|     expect(catalog.providers).toContainEqual(
+       |                               ^
+    163|       expect.objectContaining({
+    164|         providerId: "fireworks_ai",
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m5 passed[39m[22m[90m (6)[39m
+[2m   Start at [22m 11:55:18
+[2m   Duration [22m 795ms[2m (transform 96ms, setup 0ms, collect 112ms, tests 67ms, environment 0ms, prepare 187ms)[22m
+
+D:\DEV\role-model\.worktrees\32-models-dev-metadata-coverage\role-model-router\packages\catalog:
+ΓÇëERR_PNPM_RECURSIVE_RUN_FIRST_FAILΓÇë @role-model-router/catalog@0.0.0 test: `vitest run test/index.test.ts`
+Exit status 1

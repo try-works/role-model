@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import os from "node:os";
 import path from "node:path";
+import { DatabaseSync } from "node:sqlite";
 import { setTimeout as delay } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
 
@@ -480,6 +481,16 @@ describe("runtime-host-bridge", () => {
           ],
         },
       ],
+       listProviderDeviceAuthorizations: async () => [
+         {
+           authRequestId: "auth-001",
+           providerAccountId: "moonshot.personal.kimi-code",
+           providerId: "moonshot",
+           variantId: "kimi-code",
+           status: "pending",
+           userCode: "ABCD-EFGH",
+         },
+       ],
        upsertProviderAccount: async (body) => ({
          saved: true,
          providerAccountId: body.providerAccountId,
@@ -559,21 +570,36 @@ describe("runtime-host-bridge", () => {
 
        const accountsResponse = await fetch(`http://127.0.0.1:${server.port}/api/role-model/accounts`);
        expect(accountsResponse.status).toBe(200);
-       expect(await accountsResponse.json()).toEqual([
-         {
-           providerAccountId: "moonshot.personal.primary",
-           providerId: "moonshot",
-           authMode: "api-key-static",
+        expect(await accountsResponse.json()).toEqual([
+          {
+            providerAccountId: "moonshot.personal.primary",
+            providerId: "moonshot",
+            authMode: "api-key-static",
            modelRoleBindings: [
              {
                modelId: "moonshot/kimi-k2.5",
                roleIds: ["general.chat"],
              },
-           ],
-         },
-       ]);
+            ],
+          },
+        ]);
 
-       const rolesResponse = await fetch(`http://127.0.0.1:${server.port}/api/role-model/roles`);
+        const deviceAuthorizationsResponse = await fetch(
+          `http://127.0.0.1:${server.port}/api/role-model/accounts/device`,
+        );
+        expect(deviceAuthorizationsResponse.status).toBe(200);
+        expect(await deviceAuthorizationsResponse.json()).toEqual([
+          {
+            authRequestId: "auth-001",
+            providerAccountId: "moonshot.personal.kimi-code",
+            providerId: "moonshot",
+            variantId: "kimi-code",
+            status: "pending",
+            userCode: "ABCD-EFGH",
+          },
+        ]);
+
+        const rolesResponse = await fetch(`http://127.0.0.1:${server.port}/api/role-model/roles`);
        expect(rolesResponse.status).toBe(200);
        expect(await rolesResponse.json()).toEqual([
          {
@@ -1636,8 +1662,10 @@ describe("runtime-host-bridge", () => {
         }) => Promise<{
           readRuntimeSummary?: () => Promise<unknown>;
           listProviders?: () => Promise<unknown>;
+          listModels?: () => Promise<unknown>;
           listRoles?: () => Promise<unknown>;
           listAccounts?: () => Promise<unknown>;
+          listProviderDeviceAuthorizations?: () => Promise<unknown>;
           upsertProviderAccount?: (body: Record<string, unknown>) => Promise<unknown>;
           startProviderDeviceAuthorization?: (body: Record<string, unknown>) => Promise<unknown>;
           pollProviderDeviceAuthorization?: (body: Record<string, unknown>) => Promise<unknown>;
@@ -1728,6 +1756,7 @@ describe("runtime-host-bridge", () => {
     expect(typeof backend.listProviders).toBe("function");
     expect(typeof backend.listRoles).toBe("function");
     expect(typeof backend.listAccounts).toBe("function");
+    expect(typeof backend.listProviderDeviceAuthorizations).toBe("function");
     expect(typeof backend.upsertProviderAccount).toBe("function");
     expect(typeof backend.startProviderDeviceAuthorization).toBe("function");
     expect(typeof backend.pollProviderDeviceAuthorization).toBe("function");
@@ -1761,6 +1790,26 @@ describe("runtime-host-bridge", () => {
               }),
             }),
           ]),
+        }),
+        expect.objectContaining({
+          providerId: "azure_ai",
+          displayName: "Azure AI",
+          npmPackage: "@ai-sdk/azure",
+          adapterFamily: "ai-sdk-azure",
+          apiBase: "https://services.ai.azure.com/models",
+          envVars: ["AZURE_AI_API_KEY"],
+        }),
+      ]),
+    );
+    await expect(backend.listModels?.()).resolves.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: "openai/gpt-4.1-mini-fast",
+          providerId: "openai",
+          displayName: "GPT-4.1 Mini Fast",
+          endpoint_ids: ["openai.personal.primary.us-east-1.fast"],
+          capabilities: expect.arrayContaining(["text.chat"]),
+          modalities: expect.arrayContaining(["text"]),
         }),
       ]),
     );
@@ -1816,6 +1865,9 @@ describe("runtime-host-bridge", () => {
         expect.objectContaining({
           providerAccountId: "moonshot.personal.primary",
           providerId: "moonshot",
+          status: "disabled",
+          healthStatus: "credentials-missing",
+          rotationState: "not-required",
           modelRoleBindings: [
             {
               modelId: "moonshot/kimi-k2.5",
@@ -1825,6 +1877,14 @@ describe("runtime-host-bridge", () => {
         }),
       ]),
     );
+
+    await expect(
+      backend.activateEndpoint?.({
+        providerAccountId: "moonshot.personal.primary",
+        modelId: "moonshot/kimi-k2.5",
+        region: "global",
+      }),
+    ).rejects.toThrow("Environment credential MOONSHOT_API_KEY is not set.");
 
     const pending = await backend.startProviderDeviceAuthorization?.({
       providerAccountId: "moonshot.personal.kimi-code",
@@ -1857,6 +1917,28 @@ describe("runtime-host-bridge", () => {
       ]),
     );
 
+    const pendingSummary = await backend.readRuntimeSummary?.();
+    expect(
+      (
+        pendingSummary as {
+          readinessSummary?: {
+            pendingDeviceAuthorizationCount?: number;
+            credentialsMissingAccountCount?: number;
+          };
+        }
+      ).readinessSummary?.pendingDeviceAuthorizationCount,
+    ).toBeGreaterThan(0);
+    expect(
+      (
+        pendingSummary as {
+          readinessSummary?: {
+            pendingDeviceAuthorizationCount?: number;
+            credentialsMissingAccountCount?: number;
+          };
+        }
+      ).readinessSummary?.credentialsMissingAccountCount,
+    ).toBeGreaterThan(0);
+
     const connected = await backend.pollProviderDeviceAuthorization?.({
       authRequestId: (pending as { authRequestId: string }).authRequestId,
     });
@@ -1866,6 +1948,17 @@ describe("runtime-host-bridge", () => {
         status: "connected",
       }),
     );
+
+    const connectedSummary = await backend.readRuntimeSummary?.();
+    expect(
+      (
+        connectedSummary as {
+          readinessSummary?: {
+            connectedWithoutEndpointCount?: number;
+          };
+        }
+      ).readinessSummary?.connectedWithoutEndpointCount,
+    ).toBeGreaterThan(0);
 
     await expect(
       backend.activateEndpoint?.({
@@ -1909,6 +2002,580 @@ describe("runtime-host-bridge", () => {
         sourceType: "remote",
       }),
     );
+  });
+
+  test("executes env-backed api-key accounts through the live provider path when the env credential resolves", async () => {
+    expect(
+      typeof (bridge as { createRuntimeBridgeBackend?: unknown }).createRuntimeBridgeBackend,
+    ).toBe("function");
+
+    const runtimeStateRoot = path.join(
+      os.tmpdir(),
+      `runtime-host-live-env-tests-${Date.now()}`,
+    );
+    const originalMoonshotApiKey = process.env.MOONSHOT_API_KEY;
+    process.env.MOONSHOT_API_KEY = "moonshot-live-key";
+
+    try {
+      const backend = await (
+        bridge as {
+          createRuntimeBridgeBackend: (options: {
+            repoRoot: string;
+            fixtureRoot: string;
+            runtimeStateRoot: string;
+            scopeId: string;
+            networkFetcher?: typeof fetch;
+          }) => Promise<{
+            upsertProviderAccount: (body: Record<string, unknown>) => Promise<unknown>;
+            activateEndpoint: (body: Record<string, unknown>) => Promise<{ endpointId: string }>;
+            executeChatCompletions: (
+              body: Record<string, unknown>,
+              requestId: string,
+              streamWriter?: (chunk: Record<string, unknown>) => void | Promise<void>,
+            ) => Promise<{
+              model: string;
+              endpointId: string;
+              adapterFamily: string;
+              outputText: string;
+              finishReason: string;
+              usage: {
+                inputTokens: number;
+                outputTokens: number;
+              };
+            }>;
+          }>;
+        }
+      ).createRuntimeBridgeBackend({
+        repoRoot,
+        fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+        runtimeStateRoot,
+        scopeId: "runtime-host-live-env-tests",
+        networkFetcher: async (input, init) => {
+          const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+          if (url === "https://api.moonshot.ai/v1/chat/completions") {
+            expect(init?.method ?? "POST").toBe("POST");
+            expect(init?.headers).toEqual(
+              expect.objectContaining({
+                authorization: "Bearer moonshot-live-key",
+              }),
+            );
+            expect(JSON.parse(String(init?.body))).toMatchObject({
+              model: "moonshot/kimi-k2.5",
+              messages: [{ role: "user", content: "Summarize the chosen endpoint." }],
+            });
+            return new Response(
+              JSON.stringify({
+                id: "chatcmpl-moonshot-env",
+                object: "chat.completion",
+                model: "moonshot/kimi-k2.5",
+                choices: [
+                  {
+                    index: 0,
+                    message: {
+                      role: "assistant",
+                      content: "live moonshot env endpoint summary",
+                    },
+                    finish_reason: "stop",
+                  },
+                ],
+                usage: {
+                  prompt_tokens: 19,
+                  completion_tokens: 6,
+                  total_tokens: 25,
+                },
+              }),
+              { status: 200, headers: { "content-type": "application/json" } },
+            );
+          }
+
+          throw new Error(`Unexpected network request: ${url}`);
+        },
+      });
+
+      await backend.upsertProviderAccount({
+        providerAccountId: "moonshot.personal.primary",
+        providerId: "moonshot",
+        providerKind: "provider-openai",
+        orgScope: "personal",
+        accountScope: "workspace-default",
+        credentialRef: {
+          backend: "env",
+          ref: "MOONSHOT_API_KEY",
+        },
+        authMode: "api-key-static",
+        regionPolicy: {
+          mode: "prefer",
+          regions: ["global"],
+        },
+        baseUrlOverride: "https://api.moonshot.ai/v1",
+        allowedModels: ["moonshot/kimi-k2.5"],
+        modelRoleBindings: [
+          {
+            modelId: "moonshot/kimi-k2.5",
+            roleIds: ["general.chat", "coder.patch"],
+          },
+        ],
+        deniedModels: [],
+        entitlementTags: ["chat"],
+        budgetPolicyRef: "budget.default",
+        quotaPolicyRef: "quota.default",
+        status: "active",
+        healthStatus: "healthy",
+        rotationState: "stable",
+      });
+      const endpoint = await backend.activateEndpoint({
+        providerAccountId: "moonshot.personal.primary",
+        modelId: "moonshot/kimi-k2.5",
+        region: "global",
+      });
+      const result = await backend.executeChatCompletions(
+        {
+          model: "moonshot/kimi-k2.5",
+          messages: [{ role: "user", content: "Summarize the chosen endpoint." }],
+        },
+        "req-runtime-bridge-live-env-001",
+      );
+
+      expect(result.model).toBe("moonshot/kimi-k2.5");
+      expect(result.endpointId).toBe(endpoint.endpointId);
+      expect(result.adapterFamily).toBe("ai-sdk-openai-compatible");
+      expect(result.outputText).toBe("live moonshot env endpoint summary");
+      expect(result.finishReason).toBe("stop");
+      expect(result.usage.inputTokens).toBe(19);
+      expect(result.usage.outputTokens).toBe(6);
+    } finally {
+      if (originalMoonshotApiKey === undefined) {
+        delete process.env.MOONSHOT_API_KEY;
+      } else {
+        process.env.MOONSHOT_API_KEY = originalMoonshotApiKey;
+      }
+    }
+  });
+
+  test("registers configured local OpenAI-compatible peers as execution-ready model endpoints", async () => {
+    expect(
+      typeof (bridge as { createRuntimeBridgeBackend?: unknown }).createRuntimeBridgeBackend,
+    ).toBe("function");
+
+    const runtimeStateRoot = path.join(
+      os.tmpdir(),
+      `runtime-host-local-peer-tests-${Date.now()}`,
+    );
+    const modelId = "lfm2.5-1.2b-instruct";
+    const peerUrl = "http://127.0.0.1:1234";
+
+    const backend = await (
+      bridge as {
+        createRuntimeBridgeBackend: (options: {
+          repoRoot: string;
+          fixtureRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+          networkFetcher?: typeof fetch;
+        }) => Promise<{
+          updatePeers: (
+            body: readonly { id: string; url: string; authToken?: string }[],
+          ) => Promise<readonly { id: string; url: string; authToken?: string }[]>;
+          listAccounts: () => Promise<readonly Record<string, unknown>[]>;
+          loadLocalModel: (modelId: string) => Promise<{ success: boolean }>;
+          listEndpoints: () => Promise<readonly Record<string, unknown>[]>;
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+            streamWriter?: (chunk: Record<string, unknown>) => void | Promise<void>,
+          ) => Promise<{
+            model: string;
+            endpointId: string;
+            adapterFamily: string;
+            outputText: string;
+            finishReason: string;
+            usage: {
+              inputTokens: number;
+              outputTokens: number;
+            };
+          }>;
+        }>;
+      }
+    ).createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      runtimeStateRoot,
+      scopeId: "runtime-host-local-peer-tests",
+      networkFetcher: async (input, init) => {
+        const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+        if (url === `${peerUrl}/v1/models`) {
+          return new Response(
+            JSON.stringify({
+              object: "list",
+              data: [{ id: modelId, object: "model" }],
+            }),
+            { status: 200, headers: { "content-type": "application/json" } },
+          );
+        }
+        if (url === `${peerUrl}/v1/chat/completions`) {
+          expect(init?.method ?? "POST").toBe("POST");
+          expect(init?.headers).toEqual(
+            expect.objectContaining({
+              authorization: "Bearer role-model-local",
+            }),
+          );
+          expect(JSON.parse(String(init?.body))).toMatchObject({
+            model: modelId,
+            messages: [{ role: "user", content: "Summarize the configured local endpoint." }],
+          });
+          return new Response(
+            JSON.stringify({
+              id: "chatcmpl-local-peer",
+              object: "chat.completion",
+              model: modelId,
+              choices: [
+                {
+                  index: 0,
+                  message: {
+                    role: "assistant",
+                    content: "local endpoint summary",
+                  },
+                  finish_reason: "stop",
+                },
+              ],
+              usage: {
+                prompt_tokens: 12,
+                completion_tokens: 4,
+                total_tokens: 16,
+              },
+            }),
+            { status: 200, headers: { "content-type": "application/json" } },
+          );
+        }
+
+        throw new Error(`Unexpected network request: ${url}`);
+      },
+    });
+
+    await backend.updatePeers([{ id: "local-main", url: peerUrl }]);
+
+    await expect(backend.listAccounts()).resolves.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          providerId: "local-openai-compatible",
+          providerAccountId: "local-openai-compatible.personal.local-main",
+          baseUrlOverride: `${peerUrl}/v1`,
+          status: "active",
+          healthStatus: "healthy",
+        }),
+      ]),
+    );
+
+    await expect(backend.loadLocalModel(modelId)).resolves.toEqual({ success: true });
+
+    await expect(backend.listEndpoints()).resolves.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          endpointId: "local-openai-compatible.personal.local-main.local.lfm2.5-1.2b-instruct",
+          modelId,
+          providerId: "local-openai-compatible",
+          providerAccountId: "local-openai-compatible.personal.local-main",
+        }),
+      ]),
+    );
+
+    await expect(backend.listLocalModels()).resolves.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          modelId,
+          engine: "local-openai-compatible",
+        }),
+      ]),
+    );
+
+    const result = await backend.executeChatCompletions(
+      {
+        model: modelId,
+        messages: [{ role: "user", content: "Summarize the configured local endpoint." }],
+      },
+      "req-runtime-bridge-local-peer-001",
+    );
+
+    expect(result.model).toBe(modelId);
+    expect(result.endpointId).toBe("local-openai-compatible.personal.local-main.local.lfm2.5-1.2b-instruct");
+    expect(result.adapterFamily).toBe("ai-sdk-openai-compatible");
+    expect(result.outputText).toBe("local endpoint summary");
+    expect(result.finishReason).toBe("stop");
+    expect(result.usage.inputTokens).toBe(12);
+    expect(result.usage.outputTokens).toBe(4);
+  });
+
+  test("rejects local model activation when no configured local endpoint exposes the requested model", async () => {
+    expect(
+      typeof (bridge as { createRuntimeBridgeBackend?: unknown }).createRuntimeBridgeBackend,
+    ).toBe("function");
+
+    const runtimeStateRoot = path.join(
+      os.tmpdir(),
+      `runtime-host-local-peer-miss-tests-${Date.now()}`,
+    );
+    const peerUrl = "http://127.0.0.1:1234";
+
+    const backend = await (
+      bridge as {
+        createRuntimeBridgeBackend: (options: {
+          repoRoot: string;
+          fixtureRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+          networkFetcher?: typeof fetch;
+        }) => Promise<{
+          updatePeers: (
+            body: readonly { id: string; url: string; authToken?: string }[],
+          ) => Promise<readonly { id: string; url: string; authToken?: string }[]>;
+          loadLocalModel: (modelId: string) => Promise<{ success: boolean }>;
+          listEndpoints: () => Promise<readonly Record<string, unknown>[]>;
+        }>;
+      }
+    ).createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      runtimeStateRoot,
+      scopeId: "runtime-host-local-peer-miss-tests",
+      networkFetcher: async (input) => {
+        const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+        if (url === `${peerUrl}/v1/models`) {
+          return new Response(
+            JSON.stringify({
+              object: "list",
+              data: [{ id: "different-model", object: "model" }],
+            }),
+            { status: 200, headers: { "content-type": "application/json" } },
+          );
+        }
+
+        throw new Error(`Unexpected network request: ${url}`);
+      },
+    });
+
+    await backend.updatePeers([{ id: "local-main", url: peerUrl }]);
+
+    await expect(backend.loadLocalModel("lfm2.5-1.2b-instruct")).rejects.toThrow(
+      "Model lfm2.5-1.2b-instruct is not available on any configured local endpoint.",
+    );
+    await expect(backend.listEndpoints()).resolves.not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          providerId: "local-openai-compatible",
+          modelId: "lfm2.5-1.2b-instruct",
+        }),
+      ]),
+    );
+  });
+
+  test("rehydrates connected OAuth accounts from stored token files on backend restart", async () => {
+    const runtimeStateId = `runtime-host-oauth-readback-${Date.now()}`;
+    const runtimeStateRoot = path.join(os.tmpdir(), runtimeStateId);
+    const networkFetcher: typeof fetch = async (input, init) => {
+      const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+      if (url === "https://auth.kimi.com/api/oauth/device_authorization") {
+        expect(init?.method ?? "POST").toBe("POST");
+        return new Response(
+          JSON.stringify({
+            user_code: "ABCD-EFGH",
+            device_code: "device-001",
+            verification_uri: "https://auth.kimi.com/device",
+            verification_uri_complete: "https://auth.kimi.com/device?user_code=ABCD-EFGH",
+            expires_in: 900,
+            interval: 5,
+          }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        );
+      }
+      if (url === "https://auth.kimi.com/api/oauth/token") {
+        expect(init?.method ?? "POST").toBe("POST");
+        return new Response(
+          JSON.stringify({
+            access_token: "access-001",
+            refresh_token: "refresh-001",
+            expires_in: 3600,
+            scope: "openid profile",
+            token_type: "Bearer",
+          }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        );
+      }
+
+      throw new Error(`Unexpected network request: ${url}`);
+    };
+
+    const backend = await (
+      bridge as {
+        createRuntimeBridgeBackend: (options: {
+          repoRoot: string;
+          fixtureRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+          networkFetcher?: typeof fetch;
+        }) => Promise<{
+          listAccounts?: () => Promise<unknown>;
+          startProviderDeviceAuthorization?: (body: Record<string, unknown>) => Promise<unknown>;
+          pollProviderDeviceAuthorization?: (body: Record<string, unknown>) => Promise<unknown>;
+        }>;
+      }
+    ).createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      runtimeStateRoot,
+      scopeId: runtimeStateId,
+      networkFetcher,
+    });
+
+    const pending = await backend.startProviderDeviceAuthorization?.({
+      providerAccountId: "moonshot.personal.kimi-code",
+      providerId: "moonshot",
+      providerKind: "provider-openai",
+      variantId: "kimi-code",
+      orgScope: "personal",
+      accountScope: "workspace-default",
+      allowedModels: ["moonshot/kimi-k2.5"],
+      deniedModels: [],
+      entitlementTags: ["chat"],
+      budgetPolicyRef: "budget.default",
+      quotaPolicyRef: "quota.default",
+    });
+    await backend.pollProviderDeviceAuthorization?.({
+      authRequestId: (pending as { authRequestId: string }).authRequestId,
+    });
+
+    const databasePath = path.join(runtimeStateRoot, runtimeStateId, "memory", "memory.sqlite");
+    const database = new DatabaseSync(databasePath);
+    database
+      .prepare(
+        "UPDATE provider_accounts SET status = ?, health_status = ?, rotation_state = ? WHERE provider_account_id = ?",
+      )
+      .run("disabled", "credentials-missing", "in-progress", "moonshot.personal.kimi-code");
+    database.close();
+
+    const restartedBackend = await (
+      bridge as {
+        createRuntimeBridgeBackend: (options: {
+          repoRoot: string;
+          fixtureRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+          networkFetcher?: typeof fetch;
+        }) => Promise<{
+          listAccounts?: () => Promise<unknown>;
+        }>;
+      }
+    ).createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      runtimeStateRoot,
+      scopeId: runtimeStateId,
+      networkFetcher: async (input) => {
+        const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+        throw new Error(`Unexpected network request after restart: ${url}`);
+      },
+    });
+
+    await expect(restartedBackend.listAccounts?.()).resolves.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          providerAccountId: "moonshot.personal.kimi-code",
+          status: "active",
+          healthStatus: "healthy",
+          rotationState: "stable",
+        }),
+      ]),
+    );
+  });
+
+  test("restores pending OAuth device-authorizations from SQLite after backend restart", async () => {
+    const runtimeStateId = `runtime-host-oauth-pending-${Date.now()}`;
+    const runtimeStateRoot = path.join(os.tmpdir(), runtimeStateId);
+    const backend = await (
+      bridge as {
+        createRuntimeBridgeBackend: (options: {
+          repoRoot: string;
+          fixtureRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+          networkFetcher?: typeof fetch;
+        }) => Promise<{
+          startProviderDeviceAuthorization?: (body: Record<string, unknown>) => Promise<unknown>;
+        }>;
+      }
+    ).createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      runtimeStateRoot,
+      scopeId: runtimeStateId,
+      networkFetcher: async (input, init) => {
+        const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+        if (url === "https://auth.kimi.com/api/oauth/device_authorization") {
+          expect(init?.method ?? "POST").toBe("POST");
+          return new Response(
+            JSON.stringify({
+              user_code: "ABCD-EFGH",
+              device_code: "device-001",
+              verification_uri: "https://auth.kimi.com/device",
+              verification_uri_complete: "https://auth.kimi.com/device?user_code=ABCD-EFGH",
+              expires_in: 900,
+              interval: 5,
+            }),
+            { status: 200, headers: { "content-type": "application/json" } },
+          );
+        }
+
+        throw new Error(`Unexpected network request: ${url}`);
+      },
+    });
+
+    await backend.startProviderDeviceAuthorization?.({
+      providerAccountId: "moonshot.personal.kimi-code",
+      providerId: "moonshot",
+      providerKind: "provider-openai",
+      variantId: "kimi-code",
+      orgScope: "personal",
+      accountScope: "workspace-default",
+      allowedModels: ["moonshot/kimi-k2.5"],
+      deniedModels: [],
+      entitlementTags: ["chat"],
+      budgetPolicyRef: "budget.default",
+      quotaPolicyRef: "quota.default",
+    });
+
+    const restartedBackend = await (
+      bridge as {
+        createRuntimeBridgeBackend: (options: {
+          repoRoot: string;
+          fixtureRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+          networkFetcher?: typeof fetch;
+        }) => Promise<{
+          listProviderDeviceAuthorizations?: () => Promise<unknown>;
+        }>;
+      }
+    ).createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      runtimeStateRoot,
+      scopeId: runtimeStateId,
+      networkFetcher: async (input) => {
+        const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+        throw new Error(`Unexpected network request after restart: ${url}`);
+      },
+    });
+
+    await expect(restartedBackend.listProviderDeviceAuthorizations?.()).resolves.toEqual([
+      expect.objectContaining({
+        authRequestId: expect.any(String),
+        providerAccountId: "moonshot.personal.kimi-code",
+        providerId: "moonshot",
+        variantId: "kimi-code",
+        status: "pending",
+        userCode: "ABCD-EFGH",
+        verificationUriComplete: "https://auth.kimi.com/device?user_code=ABCD-EFGH",
+      }),
+    ]);
   });
 
   test("executes chat-completions through an activated Kimi Code endpoint", async () => {
@@ -2469,12 +3136,15 @@ describe("runtime-host-bridge", () => {
           repoRoot?: string;
           runtimeStateRoot?: string;
           scopeId?: string;
+          executablePath?: string;
+          localAppData?: string;
         }) => {
           host: string;
           port: number;
           repoRoot: string;
           runtimeStateRoot: string;
           scopeId: string;
+          staticRoot: string;
         };
       }
     ).resolveBridgeServerOptions({
@@ -2489,6 +3159,42 @@ describe("runtime-host-bridge", () => {
       repoRoot,
       runtimeStateRoot: "C:\\runtime-state",
       scopeId: "runtime-host-bridge",
+      staticRoot: path.join(repoRoot, "role-model-router", "apps", "runtime-ui", "build", "client"),
+    });
+  });
+
+  test("resolves packaged bridge server options from executable path defaults", () => {
+    const result = (
+      bridge as {
+        resolveBridgeServerOptions: (value: {
+          host?: string;
+          port?: string;
+          repoRoot?: string;
+          runtimeStateRoot?: string;
+          scopeId?: string;
+          executablePath?: string;
+          localAppData?: string;
+        }) => {
+          host: string;
+          port: number;
+          repoRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+          staticRoot: string;
+        };
+      }
+    ).resolveBridgeServerOptions({
+      executablePath: "D:\\DEV\\role-model\\role-model-router\\dist\\release\\win32-x64\\role-model-runtime.exe",
+      localAppData: "C:\\Users\\tester\\AppData\\Local",
+    });
+
+    expect(result).toEqual({
+      host: "127.0.0.1",
+      port: 8091,
+      repoRoot: "D:\\DEV\\role-model",
+      runtimeStateRoot: "C:\\Users\\tester\\AppData\\Local\\Role Model Runtime\\state",
+      scopeId: "runtime-host-bridge",
+      staticRoot: "D:\\DEV\\role-model\\role-model-router\\apps\\runtime-ui\\build\\client",
     });
   });
 });

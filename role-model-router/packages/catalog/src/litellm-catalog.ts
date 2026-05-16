@@ -13,10 +13,12 @@ export interface LiteLLMProviderOAuth {
 export interface LiteLLMProviderInfo {
   readonly providerId: string;
   readonly displayName: string;
+  readonly npmPackage: string;
   readonly providerKind: string;
   readonly authFamily: string;
   readonly adapterFamily: string;
   readonly apiBase: string;
+  readonly docsUrl: string | null;
   readonly envVars: readonly string[];
   readonly supportedAuthModes: readonly string[];
   readonly controlPlaneRequirements: readonly string[];
@@ -225,16 +227,38 @@ function toTitleCase(value: string): string {
     .join(" ");
 }
 
+function inferNpmPackage(adapterFamily: string): string {
+  switch (adapterFamily) {
+    case "ai-sdk-openai":
+      return "@ai-sdk/openai";
+    case "ai-sdk-anthropic":
+      return "@ai-sdk/anthropic";
+    case "ai-sdk-azure":
+      return "@ai-sdk/azure";
+    case "ai-sdk-vertex":
+      return "@ai-sdk/google-vertex";
+    case "ai-sdk-bedrock":
+      return "@ai-sdk/amazon-bedrock";
+    case "ai-sdk-openai-compatible":
+      return "@ai-sdk/openai-compatible";
+    default:
+      return "";
+  }
+}
+
 function inferProviderInfo(providerId: string): LiteLLMProviderInfo {
   const override = KNOWN_PROVIDER_OVERRIDES[providerId];
+  const adapterFamily = override?.adapterFamily ?? "ai-sdk-openai-compatible";
   const displayName = override?.displayName ?? toTitleCase(providerId);
   return {
     providerId,
     displayName,
+    npmPackage: override?.npmPackage ?? inferNpmPackage(adapterFamily),
     providerKind: override?.providerKind ?? "provider-openai",
     authFamily: override?.authFamily ?? "api-key",
-    adapterFamily: override?.adapterFamily ?? "ai-sdk-openai-compatible",
+    adapterFamily,
     apiBase: override?.apiBase ?? "",
+    docsUrl: override?.docsUrl ?? null,
     envVars: override?.envVars ?? [`${providerId.toUpperCase().replace(/[^A-Z0-9]/g, "_")}_API_KEY`],
     supportedAuthModes: override?.supportedAuthModes ?? [],
     controlPlaneRequirements: override?.controlPlaneRequirements ?? [],

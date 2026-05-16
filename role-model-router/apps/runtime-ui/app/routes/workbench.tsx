@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { CodeBlock, EmptyState, ErrorState, FactCard, LoadingState, PageHeader, SectionCard, StatusPill } from "../components/page-primitives";
 import { fieldClassName, mutedPanelClassName, primaryButtonClassName } from "../lib/design-system";
 import { fetchRuntimeSnapshot, submitWorkbenchChat, type RuntimeSnapshot } from "../lib/runtime-api";
-import { buildWorkbenchModelOptions, summarizeWorkbenchResult } from "../lib/view-models";
+import { buildCredentialReadinessRows, buildWorkbenchModelOptions, summarizeWorkbenchResult } from "../lib/view-models";
 
 export default function WorkbenchRoute() {
   const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(null);
@@ -54,6 +54,9 @@ export default function WorkbenchRoute() {
 
   const resultSummary = result ? summarizeWorkbenchResult(result) : null;
   const toolCapableEndpoints = snapshot.endpoints.filter((endpoint) => endpoint.toolCallingSupported).length;
+  const readinessRows = buildCredentialReadinessRows(snapshot.summary).filter((row) => row.value > 0);
+  const blockingReadinessRows = readinessRows.filter((row) => row.key !== "ready");
+  const hasModels = modelOptions.length > 0;
 
   return (
     <div className="space-y-6">
@@ -66,30 +69,55 @@ export default function WorkbenchRoute() {
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <FactCard label="Models" value={snapshot.models.length} detail="Available model ids currently exposed through the runtime model listing." emphasis />
         <FactCard label="Tool-capable endpoints" value={toolCapableEndpoints} detail="Endpoints currently able to surface tool-calling behavior in the workspace." />
-        <FactCard label="Selected model" value={model} detail="The active model binding for the next routed request." className="xl:col-span-2" />
+        <FactCard label="Selected model" value={model || "—"} detail="The active model binding for the next routed request." className="xl:col-span-2" />
       </div>
+
+      {blockingReadinessRows.length > 0 ? (
+        <SectionCard
+          title="Execution readiness"
+          description="Saved provider configuration can still be incomplete even when the control plane is populated."
+        >
+          <div className="flex flex-wrap gap-3">
+            {readinessRows.map((row) => (
+              <StatusPill key={row.key} tone={row.tone}>
+                {row.label} {row.value}
+              </StatusPill>
+            ))}
+          </div>
+        </SectionCard>
+      ) : null}
 
       <div className="grid gap-4 xl:grid-cols-[360px_minmax(0,1fr)]">
         <SectionCard title="Composer" description="This form posts directly to the runtime-host `/v1/chat/completions` route.">
-          <form className="space-y-4" onSubmit={onSubmit}>
-            <label className="grid gap-2 text-sm">
-              <span className="font-medium text-[var(--rm-fg)]">Model</span>
-              <select className={fieldClassName} value={model} onChange={(event) => setModel(event.target.value)}>
-                {modelOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="grid gap-2 text-sm">
-              <span className="font-medium text-[var(--rm-fg)]">Prompt</span>
-              <textarea className={`${fieldClassName} min-h-40`} value={prompt} onChange={(event) => setPrompt(event.target.value)} />
-            </label>
-            <button className={primaryButtonClassName} disabled={submitting} type="submit">
-              {submitting ? "Running…" : "Run request"}
-            </button>
-          </form>
+          {hasModels ? (
+            <form className="space-y-4" onSubmit={onSubmit}>
+              <label className="grid gap-2 text-sm">
+                <span className="font-medium text-[var(--rm-fg)]">Model</span>
+                <select className={fieldClassName} value={model} onChange={(event) => setModel(event.target.value)}>
+                  {modelOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="grid gap-2 text-sm">
+                <span className="font-medium text-[var(--rm-fg)]">Prompt</span>
+                <textarea className={`${fieldClassName} min-h-40`} value={prompt} onChange={(event) => setPrompt(event.target.value)} />
+              </label>
+              <button className={primaryButtonClassName} disabled={submitting || model.trim().length === 0} type="submit">
+                {submitting ? "Running…" : "Run request"}
+              </button>
+            </form>
+          ) : (
+            <EmptyState
+              label={
+                blockingReadinessRows.length > 0
+                  ? "No execution-ready models yet. Complete OAuth, fix credentials, or activate an endpoint from Providers."
+                  : "No execution-ready models are currently available."
+              }
+            />
+          )}
         </SectionCard>
 
         <SectionCard title="Result workspace" description="Tooling-aware response summary aligned with the runtime host payload.">

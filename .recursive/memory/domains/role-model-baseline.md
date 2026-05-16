@@ -1,6 +1,6 @@
 Type: `domain`
 Status: `CURRENT`
-Scope: `Stable baseline ownership for the repo workspace, canonical protocol tree, shared packages, router family, fixtures, validation surfaces, and the repo-owned runtime/operator baseline extended through unified vendor execution, telemetry dashboard remediation, and runtime-config control in runs 04-16.`
+Scope: `Stable baseline ownership for the repo workspace, canonical protocol tree, shared packages, router family, fixtures, validation surfaces, and the repo-owned runtime/operator baseline extended through unified vendor execution, telemetry dashboard remediation, runtime-config control, and the run-32 models.dev metadata/readiness baseline.`
 Owns-Paths:
 - `/README.md`
 - `/LICENSE`
@@ -37,8 +37,9 @@ Source-Runs:
 - `14-router-runtime-ui-foundation`
 - `15-unified-vendor-execution`
 - `16-router-runtime-unified-telemetry-dashboard`
+- `32-models-dev-metadata-coverage`
 Validated-At-Commit: `working-tree`
-Last-Validated: `2026-05-08T13:37:51.7395149+08:00`
+Last-Validated: `2026-05-15T06:30:00Z`
 Tags:
 - `baseline`
 - `workspace`
@@ -75,6 +76,7 @@ This repository now has a real product baseline rather than only recursive scaff
 - The stable config export path emits normalized ACP, MCP, and CLI endpoint inventory rather than a CLI-only snapshot
 - The protocol docs now carry both the baseline role/task examples and the hardened M1-M3 contract details for profiles, traces, usage, benchmarks, and reason codes
 - The current router-runtime baseline is single-host and local-machine scoped, not distributed or multi-host
+- The repo now owns an explicit root `catalog:refresh` command that rewrites the pinned models.dev snapshot under `/testdata/catalog/`, while `catalog:export` regenerates the tracked normalized catalog and vendor-version ledger consumed by runtime and packaging flows
 - The runtime stack now includes runtime-owned provider-account, SQLite memory, endpoint registry, context envelope, retrieval receipt, protocol routing, adapter execution, provider-family adapters, a managed TypeScript runtime host bridge, and a shared runtime observability layer
 - The live host path is a managed TypeScript bridge in `/role-model-router/apps/runtime-host-bridge/` over vendored `/role-model-router/vendor/llama-swap/`, with raw vendor surfaces preserved and structured role-model inspection routes added beside them
 - The vendored host now has a tracked fallback UI surface under `/role-model-router/vendor/llama-swap/proxy/ui_stub/`, so clean worktrees no longer require leftover generated `proxy/ui_dist` assets just to compile or start the local host
@@ -86,6 +88,7 @@ This repository now has a real product baseline rather than only recursive scaff
 - The compiled runtime package graph now declares `runtime` export conditions so plain Node uses built `dist` entrypoints for executable verification instead of falling back to source-only TypeScript entrypoints
 - Durable operator guidance for the single-host runtime baseline now lives under `/docs/operations/01-router-runtime-hardening-playbook.md`
 - The repo now also owns a hierarchical runtime operator shell under `/role-model-router/apps/runtime-ui/` with `Overview`, `Studio`, `Control`, `Observe`, `Integrations`, and `System` sections layered over the existing host bridge, including controller/models, activity/log drill-ins, vendor-backed studio workspaces, and upstream/downstream/system pages
+- The generated normalized catalog under `/role-model-router/packages/catalog/data/` is now the default shipped provider/model metadata layer for runtime and UI consumers, while LiteLLM-derived providers, models, and endpoints remain preserved as the execution-coverage layer when upstream metadata is missing or divergent
 - The host bridge now exposes runtime summary, provider list, account list/upsert, endpoint list, and controller/config control-plane routes, and the repo-local `runtime:validate-ui` command proves those operator surfaces against the live runtime baseline
 - The first repo-owned provider-onboarding slice is Moonshot/Kimi-first: Moonshot Open Platform is modeled as a ready API-key path, while Kimi Code remains intentionally backend-limited with real device-OAuth metadata visible in the UI and control plane
 - The bridge and provider-openai stack now support OpenAI-compatible downstream streaming for routed `/v1/chat/completions` and `/v1/responses`; live host-path E2E is green, while Kimi remains on the current chat-completions-shaped contract
@@ -95,6 +98,8 @@ This repository now has a real product baseline rather than only recursive scaff
 - The runtime now has a first SEA packaging path through `/role-model-router/sea-config.json`, `/role-model-router/apps/runtime-host-bridge/src/package-sea.ts`, `runtime:package-sea`, `runtime:validate-packaging`, and `/.github/workflows/build-binaries.yml`; the packaged executable embeds platform-aware llama-swap assets and is validated by booting the SEA binary and exercising `/healthz` plus `/v1/models`
 - The runtime now also exposes a canonical unified telemetry baseline for mixed local and remote execution, including summary, ledger, request-detail, and `/api/role-model/telemetry/stream` SSE surfaces in `/role-model-router/apps/runtime-host-bridge/` and matching dashboard, requests, and request-detail consumers in `/role-model-router/apps/runtime-ui/`
 - The repo-owned control plane now includes mutable runtime-config read and write routes, `Control > Runtime Config`, live account save and Kimi device-OAuth state, endpoint activation, and honest zero-endpoint `decision_only` controller or models or runtime empty states instead of 500 or loading traps
+- Provider-account and endpoint surfaces now preserve truthful readiness semantics across reload, restart, and packaged execution: pending device-auth flows survive reload/restart, persisted OAuth-backed accounts rehydrate from stored tokens, unresolved env-backed credentials remain `credentials-missing`, and Studio/Workbench/Runtime consumers no longer imply execution readiness before credentials and endpoint activation are actually satisfied
+- `runtime:validate-packaging` now rebuilds the host before SEA packaging and proves the packaged Windows executable can serve `/healthz`, `/v1/models`, `/v1/chat/completions`, and `/v1/responses` against the current runtime baseline
 - The protocol generation path now preserves `UsageEvent.cost_actual` and emits titled helper types for internal `$defs` entries, so focused `types:generate`, `schemas:validate`, and `@role-model/schema-tools build` stay green in the current baseline
 - Provider-account writes remain credential-reference-only; the UI can upsert runtime accounts, but endpoint rows still remain controlled by the existing registry baseline rather than being auto-created by account-save side effects
 - Browser, edge, and native provider families are intentionally scaffold-grade in this baseline
@@ -106,6 +111,7 @@ This repository now has a real product baseline rather than only recursive scaff
 - GitHub Actions validates this repo from a clean checkout of tracked files only; local Biome parity work should prefer a clean export or tracked-file-targeted checks instead of repo-root sweeps that also traverse nested `.worktrees/`
 - On Windows, CRLF-only worktree churn can make local status noisier than the real Linux CI content diff; use `git diff` to identify the actual files that need formatter commits
 - The repo-local runtime validation floor is the staged command family `runtime:validate-state`, `runtime:validate-registry`, `runtime:validate-routing`, `runtime:validate-adapter`, `runtime:validate-ui`, `runtime:validate-host`, `runtime:validate-vendors`, `runtime:validate-packaging`, `runtime:validate-observability`, `runtime:validate-operations`, `runtime:validate-tools`, plus `smoke`
+- For models.dev metadata work, prefer the explicit refresh/export entrypoints (`corepack pnpm run catalog:refresh` and `corepack pnpm run catalog:export`) plus the focused runtime-ui/runtime-host suites and `runtime:validate-host`/`runtime:validate-packaging` before claiming the metadata layer is fully integrated
 - When validating runtime work, treat the focused runtime validators and package tests as the run-owned baseline; broader root `build` now fails on the unrelated `provider-acp` / `provider-cli` `endpoint_kind` mismatch, broader root `test` can still fail on the workspace-level `process-supervisor` crash-callback case while the isolated package rerun passes, and vendored proxy or full Go tests on Windows still reproduce the upstream `sleep` PATH assumption
 
 ## Scope Boundary

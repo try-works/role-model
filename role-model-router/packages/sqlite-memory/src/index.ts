@@ -411,6 +411,10 @@ export interface ReadProviderDeviceAuthSessionInput {
   readonly authRequestId: string;
 }
 
+export interface ListProviderDeviceAuthSessionsInput {
+  readonly databasePath: string;
+}
+
 export interface RuntimeControllerAssignmentRecord {
   readonly scope: string;
   readonly endpointId: string;
@@ -1160,6 +1164,53 @@ export function readProviderDeviceAuthSession(
   database.close();
 
   return row ? mapProviderDeviceAuthSessionRow(row) : null;
+}
+
+export function listProviderDeviceAuthSessions(
+  input: ListProviderDeviceAuthSessionsInput,
+): ProviderDeviceAuthSessionRecord[] {
+  const database = new DatabaseSync(input.databasePath);
+  const rows = database
+    .prepare(`
+      SELECT
+        auth_request_id,
+        provider_account_id,
+        provider_id,
+        variant_id,
+        credential_backend,
+        credential_ref,
+        auth_mode,
+        verification_uri,
+        verification_uri_complete,
+        user_code,
+        device_code,
+        interval_seconds,
+        status,
+        last_error,
+        expires_at_ms
+      FROM provider_device_auth_sessions
+      ORDER BY updated_at_ms DESC, auth_request_id DESC
+    `)
+    .all() as Array<{
+    auth_request_id: string;
+    provider_account_id: string;
+    provider_id: string;
+    variant_id: string;
+    credential_backend: string;
+    credential_ref: string;
+    auth_mode: string;
+    verification_uri: string;
+    verification_uri_complete: string;
+    user_code: string;
+    device_code: string;
+    interval_seconds: number;
+    status: string;
+    last_error: string | null;
+    expires_at_ms: number;
+  }>;
+  database.close();
+
+  return rows.map((row) => mapProviderDeviceAuthSessionRow(row));
 }
 
 export function persistContinuitySnapshot(input: PersistContinuitySnapshotInput): void {

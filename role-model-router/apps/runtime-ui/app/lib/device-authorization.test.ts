@@ -2,6 +2,7 @@ import { describe, expect, test, vi } from "vitest";
 
 import {
   getDeviceAuthorizationPollDelayMs,
+  restorePersistedDeviceAuthorization,
   resolveVerificationWindowUrl,
   syncConnectedDeviceAuthorizationEndpoints,
   shouldAutoPollDeviceAuthorization,
@@ -128,5 +129,68 @@ describe("syncConnectedDeviceAuthorizationEndpoints", () => {
     });
 
     expect(activateEndpoint).not.toHaveBeenCalled();
+  });
+});
+
+describe("restorePersistedDeviceAuthorization", () => {
+  test("restores a pending persisted device-auth session for the selected provider account", () => {
+    expect(
+      restorePersistedDeviceAuthorization({
+        current: null,
+        providerAccountId: "moonshot.personal.kimi-code",
+        persistedSessions: [
+          {
+            authRequestId: "auth-001",
+            providerAccountId: "moonshot.personal.kimi-code",
+            providerId: "moonshot",
+            variantId: "kimi-code",
+            status: "pending",
+            userCode: "ABCD-EFGH",
+            verificationUriComplete: "https://auth.kimi.com/device?user_code=ABCD-EFGH",
+          },
+        ],
+      }),
+    ).toEqual({
+      authRequestId: "auth-001",
+      providerAccountId: "moonshot.personal.kimi-code",
+      providerId: "moonshot",
+      variantId: "kimi-code",
+      status: "pending",
+      userCode: "ABCD-EFGH",
+      verificationUriComplete: "https://auth.kimi.com/device?user_code=ABCD-EFGH",
+    });
+  });
+
+  test("preserves the current session when it already matches the selected provider account", () => {
+    expect(
+      restorePersistedDeviceAuthorization({
+        current: {
+          authRequestId: "auth-current",
+          providerAccountId: "moonshot.personal.kimi-code",
+          providerId: "moonshot",
+          variantId: "kimi-code",
+          status: "pending",
+          userCode: "LIVE-CODE",
+        },
+        providerAccountId: "moonshot.personal.kimi-code",
+        persistedSessions: [
+          {
+            authRequestId: "auth-001",
+            providerAccountId: "moonshot.personal.kimi-code",
+            providerId: "moonshot",
+            variantId: "kimi-code",
+            status: "pending",
+            userCode: "ABCD-EFGH",
+          },
+        ],
+      }),
+    ).toEqual({
+      authRequestId: "auth-current",
+      providerAccountId: "moonshot.personal.kimi-code",
+      providerId: "moonshot",
+      variantId: "kimi-code",
+      status: "pending",
+      userCode: "LIVE-CODE",
+    });
   });
 });

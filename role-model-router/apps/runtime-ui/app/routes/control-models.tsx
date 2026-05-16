@@ -9,7 +9,7 @@ import {
   type RuntimeControllerAssignment,
   type RuntimeSnapshot,
 } from "../lib/runtime-api";
-import { buildConfiguredModelCards } from "../lib/view-models";
+import { buildConfiguredModelCards, buildConfiguredModelMetadataRows } from "../lib/view-models";
 
 export default function ControlModelsRoute() {
   const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(null);
@@ -48,7 +48,7 @@ export default function ControlModelsRoute() {
       ? snapshot.endpoints.filter((endpoint) => endpoint.modelId === selectedCard.modelId)
       : [];
   const selectedCapabilities = [
-    ...new Set(selectedEndpoints.flatMap((endpoint) => endpoint.capabilities ?? [])),
+    ...new Set([...(selectedCard?.capabilities ?? []), ...selectedEndpoints.flatMap((endpoint) => endpoint.capabilities ?? [])]),
   ].sort((left, right) => left.localeCompare(right, "en"));
   const selectedToolStyles = [
     ...new Set(
@@ -57,6 +57,7 @@ export default function ControlModelsRoute() {
         .map((endpoint) => endpoint.toolCallingStyle ?? "unknown"),
     ),
   ].sort((left, right) => left.localeCompare(right, "en"));
+  const selectedMetadataRows = selectedCard ? buildConfiguredModelMetadataRows(selectedCard) : [];
 
   if (error) {
     return <ErrorState label={error} />;
@@ -95,7 +96,20 @@ export default function ControlModelsRoute() {
 
         <SectionCard title="Model inventory" description="Every configured model appears once, with local and remote endpoint state merged into a card-based registry.">
           {cards.length === 0 ? (
-            <EmptyState label="No configured models are available yet." />
+            <>
+              <EmptyState label="No configured models are available yet." />
+              <div className="mt-4 flex flex-wrap gap-3">
+                <Link className={secondaryButtonClassName} to="/app/local/models">
+                  Open Local Models
+                </Link>
+                <Link className={secondaryButtonClassName} to="/app/local/peers">
+                  Open Local Endpoints
+                </Link>
+                <Link className={secondaryButtonClassName} to="/app/control/providers">
+                  Open Providers
+                </Link>
+              </div>
+            </>
           ) : (
             <div className="grid gap-4 xl:grid-cols-2">
               {cards.map((card) => (
@@ -191,6 +205,17 @@ export default function ControlModelsRoute() {
                   <p><span className="font-medium text-[var(--rm-fg)]">Configured endpoints:</span> {selectedCard.endpointCount}</p>
                   <p><span className="font-medium text-[var(--rm-fg)]">Source mix:</span> {selectedCard.sourceSummary}</p>
                   <p><span className="font-medium text-[var(--rm-fg)]">Status:</span> {selectedCard.status}</p>
+                </div>
+              </div>
+
+              <div className={`${mutedPanelClassName} p-4`}>
+                <p className="font-medium text-[var(--rm-fg)]">Model specifications</p>
+                <div className="mt-3 grid gap-3 md:grid-cols-2 text-sm text-[var(--rm-secondary)]">
+                  {selectedMetadataRows.map((row) => (
+                    <p key={row.label}>
+                      <span className="font-medium text-[var(--rm-fg)]">{row.label}:</span> {row.value}
+                    </p>
+                  ))}
                 </div>
               </div>
 

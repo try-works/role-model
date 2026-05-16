@@ -142,4 +142,45 @@ describe("runtime-host-bridge executable packaging", () => {
     await expect(access(installScriptPath)).resolves.toBeUndefined();
     await expect(access(composePath)).resolves.toBeUndefined();
   });
+
+  test("wires device-authorization readback into the packaged runtime cli server", async () => {
+    const cliPath = path.join(
+      repoRoot,
+      "role-model-router",
+      "apps",
+      "runtime-host-bridge",
+      "src",
+      "cli.ts",
+    );
+    const cliText = await readFile(cliPath, "utf8");
+
+    expect(cliText).toContain(
+      "listProviderDeviceAuthorizations: backend.listProviderDeviceAuthorizations",
+    );
+    expect(cliText).toContain("listModels: backend.listModels");
+    expect(cliText).toContain("readVersionInfo: backend.readVersionInfo");
+  });
+
+  test("packaged runtime validation exercises account activation and routed request flows", async () => {
+    const validatePackagingPath = path.join(
+      repoRoot,
+      "role-model-router",
+      "apps",
+      "runtime-host-bridge",
+      "src",
+      "validate-packaging.ts",
+    );
+    const validatePackagingText = await readFile(validatePackagingPath, "utf8");
+
+    expect(validatePackagingText).toContain("/api/role-model/accounts");
+    expect(validatePackagingText).toContain("/api/role-model/endpoints");
+    expect(validatePackagingText).toContain("/v1/chat/completions");
+    expect(validatePackagingText).toContain("/v1/responses");
+  });
+
+  test("packaged runtime validation rebuilds the bridge before creating the SEA executable", async () => {
+    const manifest = await readManifest("role-model-router/apps/runtime-host-bridge/package.json");
+
+    expect(manifest.scripts?.["validate-packaging"]).toContain("pnpm build &&");
+  });
 });

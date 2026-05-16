@@ -7,7 +7,7 @@ import type { NormalizedCatalog } from "@role-model-router/catalog";
 import { assembleContextEnvelope } from "@role-model-router/context-envelope";
 import { buildEndpointRegistry, type RegistrySources } from "@role-model-router/endpoint-registry";
 import { createAnthropicProviderAdapter } from "@role-model-router/provider-anthropic";
-import { validateProviderAccounts } from "@role-model-router/provider-account";
+import { type ProviderAccountRecord, validateProviderAccounts } from "@role-model-router/provider-account";
 import { createOpenAIProviderAdapter } from "@role-model-router/provider-openai";
 import {
   createRetrievalReceipt,
@@ -93,6 +93,80 @@ async function loadResponseCaptures(
   return { byEndpointId };
 }
 
+function synthesizeFixtureProviderAccounts(
+  catalog: NormalizedCatalog,
+  accounts: readonly unknown[],
+  sources: RegistrySources,
+): readonly unknown[] {
+  if (sources.cloud.length === 0) {
+    return accounts;
+  }
+
+  const existingIds = new Set(
+    accounts
+      .filter((entry): entry is { providerAccountId: string } => typeof entry === "object" && entry !== null && "providerAccountId" in entry)
+      .map((entry) => entry.providerAccountId),
+  );
+  const providersById = new Map(catalog.providers.map((provider) => [provider.providerId, provider]));
+  const modelsById = new Map(catalog.models.map((model) => [model.modelId, model]));
+  const modelIdsByAccountId = new Map<string, Set<string>>();
+  const regionsByAccountId = new Map<string, Set<string>>();
+
+  for (const source of sources.cloud) {
+    let modelIds = modelIdsByAccountId.get(source.providerAccountId);
+    if (!modelIds) {
+      modelIds = new Set<string>();
+      modelIdsByAccountId.set(source.providerAccountId, modelIds);
+    }
+    modelIds.add(source.modelId);
+
+    let regions = regionsByAccountId.get(source.providerAccountId);
+    if (!regions) {
+      regions = new Set<string>();
+      regionsByAccountId.set(source.providerAccountId, regions);
+    }
+    regions.add(source.region);
+  }
+
+  const synthesizedAccounts: ProviderAccountRecord[] = [];
+  for (const [providerAccountId, modelIds] of modelIdsByAccountId) {
+    if (existingIds.has(providerAccountId)) {
+      continue;
+    }
+    const firstModelId = [...modelIds][0] ?? "";
+    const model = modelsById.get(firstModelId);
+    const providerId = model?.providerId ?? providerAccountId.split(".")[0] ?? "unknown";
+    const provider = providersById.get(providerId);
+    synthesizedAccounts.push({
+      providerAccountId,
+      providerId,
+      providerKind: provider?.providerKind ?? model?.providerKind ?? "remote-openai-compatible",
+      orgScope: providerAccountId.split(".")[1] ?? "personal",
+      accountScope: providerAccountId.split(".").slice(2).join(".") || "default",
+      credentialRef: {
+        backend: "env",
+        ref: provider?.envVars[0] ?? `${providerId.toUpperCase().replace(/[^A-Z0-9]+/g, "_")}_API_KEY`,
+      },
+      authMode: provider?.supportedAuthModes.includes("oauth2-device-code") ? "oauth2-device-code" : "api-key-static",
+      regionPolicy: {
+        mode: "allow",
+        regions: [...(regionsByAccountId.get(providerAccountId) ?? new Set<string>())],
+      },
+      baseUrlOverride: null,
+      allowedModels: [...modelIds],
+      deniedModels: [],
+      entitlementTags: ["chat"],
+      budgetPolicyRef: "budget.default",
+      quotaPolicyRef: "quota.default",
+      status: "active",
+      healthStatus: "healthy",
+      rotationState: "stable",
+    });
+  }
+
+  return [...accounts, ...synthesizedAccounts];
+}
+
 export async function runRuntimeAdapterValidation(
   options: RuntimeAdapterValidationOptions,
 ): Promise<RuntimeAdapterValidationResult> {
@@ -106,6 +180,7 @@ export async function runRuntimeAdapterValidation(
   const registrySources = await readJson<RegistrySources>(
     path.join(fixtureRoot, "registry-sources.json"),
   );
+  const fixtureAccounts = synthesizeFixtureProviderAccounts(normalizedCatalog, providerAccountsFixture.accounts, registrySources);
   const continuityFixture = await readJson<{
     session: Parameters<typeof persistContinuitySnapshot>[0]["session"];
     conversation: Parameters<typeof persistContinuitySnapshot>[0]["conversation"];
@@ -150,7 +225,7 @@ export async function runRuntimeAdapterValidation(
   for (const source of registrySources.local) {
     fixtureModelIds.add(source.modelId);
   }
-  for (const account of providerAccountsFixture.accounts as { allowedModels?: string[]; deniedModels?: string[] }[]) {
+  for (const account of fixtureAccounts as { allowedModels?: string[]; deniedModels?: string[] }[]) {
     for (const modelId of account.allowedModels ?? []) {
       fixtureModelIds.add(modelId);
     }
@@ -190,7 +265,7 @@ export async function runRuntimeAdapterValidation(
   const validation = validateProviderAccounts({
     catalog: normalizedCatalog,
     additionalProviders: liteLLMProviders,
-    accounts: providerAccountsFixture.accounts,
+    accounts: fixtureAccounts,
   });
   if (validation.diagnostics.length > 0) {
     throw new Error("Provider-account validation failed for runtime adapter validation.");

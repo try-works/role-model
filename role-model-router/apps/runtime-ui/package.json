@@ -5,7 +5,7 @@
   "scripts": {
     "build": "react-router build && tsc --noEmit",
     "dev": "react-router dev",
-    "test": "vitest run app/lib/runtime-api.test.ts app/lib/view-models.test.ts app/lib/device-authorization.test.ts app/lib/design-system.test.ts"
+    "test": "vitest run app/lib/runtime-api.test.ts app/lib/view-models.test.ts app/lib/device-authorization.test.ts app/lib/design-system.test.ts app/lib/provider-account-state.test.ts"
   },
   "dependencies": {
     "@react-router/node": "^7.14.2",

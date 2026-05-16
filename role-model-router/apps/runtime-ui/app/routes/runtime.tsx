@@ -10,6 +10,7 @@ import {
   type RuntimeSnapshot,
   type RuntimeVersionInfo,
 } from "../lib/runtime-api";
+import { buildCredentialReadinessRows } from "../lib/view-models";
 
 export default function RuntimeRoute() {
   const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(null);
@@ -36,6 +37,8 @@ export default function RuntimeRoute() {
     return <LoadingState label="Loading runtime summary…" />;
   }
 
+  const readinessRows = buildCredentialReadinessRows(snapshot.summary).filter((row) => row.value > 0);
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -55,6 +58,23 @@ export default function RuntimeRoute() {
           <StatusPill tone="success">Active {snapshot.summary.lifecycleSummary?.active ?? 0}</StatusPill>
           <StatusPill tone="warning">Degraded {snapshot.summary.lifecycleSummary?.degraded ?? 0}</StatusPill>
           <StatusPill tone="neutral">Offline {snapshot.summary.lifecycleSummary?.offline ?? 0}</StatusPill>
+        </div>
+      </SectionCard>
+
+      <SectionCard
+        title="Credential readiness"
+        description="Saved providers can exist before they are execution-ready. This contract separates pending OAuth, missing credentials, connected-but-not-activated, and ready accounts."
+      >
+        <div className="flex flex-wrap gap-3">
+          {readinessRows.length === 0 ? (
+            <StatusPill tone="neutral">No saved provider readiness state yet</StatusPill>
+          ) : (
+            readinessRows.map((row) => (
+              <StatusPill key={row.key} tone={row.tone}>
+                {row.label} {row.value}
+              </StatusPill>
+            ))
+          )}
         </div>
       </SectionCard>
 

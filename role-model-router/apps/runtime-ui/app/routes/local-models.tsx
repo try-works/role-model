@@ -1,8 +1,28 @@
 import { useCallback, useEffect, useState } from "react";
+import { Link } from "react-router";
 
-import { PageHeader, SectionCard, StatusPill, EmptyState, LoadingState, ErrorState } from "../components/page-primitives";
-import { mutedPanelClassName, primaryButtonClassName, secondaryButtonClassName, fieldClassName } from "../lib/design-system";
-import { fetchLocalModels, loadLocalModel, unloadLocalModel, fetchModelOverrides, updateModelOverrides, type ModelOverride } from "../lib/runtime-api";
+import {
+  EmptyState,
+  ErrorState,
+  LoadingState,
+  PageHeader,
+  SectionCard,
+  StatusPill,
+} from "../components/page-primitives";
+import {
+  fieldClassName,
+  mutedPanelClassName,
+  primaryButtonClassName,
+  secondaryButtonClassName,
+} from "../lib/design-system";
+import {
+  fetchLocalModels,
+  fetchModelOverrides,
+  loadLocalModel,
+  unloadLocalModel,
+  updateModelOverrides,
+  type ModelOverride,
+} from "../lib/runtime-api";
 
 interface LocalModel {
   modelId: string;
@@ -15,6 +35,7 @@ export default function LocalModelsRoute() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actioning, setActioning] = useState<Record<string, boolean>>({});
+  const [loadModelId, setLoadModelId] = useState("");
 
   const [overrides, setOverrides] = useState<Record<string, ModelOverride>>({});
   const [overrideLoading, setOverrideLoading] = useState(true);
@@ -83,10 +104,11 @@ export default function LocalModelsRoute() {
     <div className="space-y-8">
       <PageHeader
         eyebrow="Local"
-        title="Loaded models"
-        description="Currently loaded local inference models and manual load/unload controls."
+        title="Local models"
+        description="Load a local model by exact model ID, inspect loaded inference models, and manage overrides."
         actions={
           <button
+            type="button"
             onClick={refresh}
             disabled={loading}
             className={secondaryButtonClassName}
@@ -98,7 +120,58 @@ export default function LocalModelsRoute() {
 
       {error ? <ErrorState label={error} /> : null}
 
-      <SectionCard title="Runtime state" description="Models currently resident in local inference memory.">
+      <SectionCard
+        title="Load local model"
+        description="Load a model by exact model ID. Local llama-swap hosts are configured from Local > Endpoints."
+      >
+        <div className="flex flex-col gap-3 xl:flex-row xl:items-end">
+          <div className="min-w-0 flex-1 space-y-2">
+            <label
+              htmlFor="local-model-load-id"
+              className="block text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]"
+            >
+              Model ID
+            </label>
+            <input
+              id="local-model-load-id"
+              type="text"
+              value={loadModelId}
+              onChange={(e) => setLoadModelId(e.target.value)}
+              placeholder="meta-llama/llama-3.1-8b-instruct"
+              className={fieldClassName}
+            />
+          </div>
+          <button
+            type="button"
+            onClick={async () => {
+              const nextModelId = loadModelId.trim();
+              if (!nextModelId) return;
+              setActioning((prev) => ({ ...prev, __load__: true }));
+              try {
+                await loadLocalModel(nextModelId);
+                setLoadModelId("");
+                await refresh();
+              } catch (err) {
+                setError(err instanceof Error ? err.message : `Failed to load ${nextModelId}`);
+              } finally {
+                setActioning((prev) => ({ ...prev, __load__: false }));
+              }
+            }}
+            disabled={!loadModelId.trim() || actioning.__load__}
+            className={primaryButtonClassName}
+          >
+            {actioning.__load__ ? "Loading…" : "Load model"}
+          </button>
+          <Link className={secondaryButtonClassName} to="/app/local/peers">
+            Open local endpoints
+          </Link>
+        </div>
+      </SectionCard>
+
+      <SectionCard
+        title="Runtime state"
+        description="Models currently resident in local inference memory."
+      >
         {loading && models.length === 0 ? (
           <LoadingState label="Loading local model state…" />
         ) : models.length === 0 ? (
@@ -138,6 +211,7 @@ export default function LocalModelsRoute() {
 
                 <div className="flex gap-2">
                   <button
+                    type="button"
                     onClick={() => handleLoad(model.modelId)}
                     disabled={actioning[model.modelId]}
                     className={primaryButtonClassName}
@@ -145,6 +219,7 @@ export default function LocalModelsRoute() {
                     {actioning[model.modelId] ? "Working…" : "Reload"}
                   </button>
                   <button
+                    type="button"
                     onClick={() => handleUnload(model.modelId)}
                     disabled={actioning[model.modelId]}
                     className={secondaryButtonClassName}
@@ -161,6 +236,7 @@ export default function LocalModelsRoute() {
       <SectionCard title="Quick actions" description="Global model lifecycle controls.">
         <div className="flex flex-wrap gap-3">
           <button
+            type="button"
             onClick={async () => {
               setActioning((prev) => ({ ...prev, "__all__": true }));
               try {

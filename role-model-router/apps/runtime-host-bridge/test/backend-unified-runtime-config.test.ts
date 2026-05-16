@@ -186,6 +186,41 @@ version: "1.0"
     await backend.shutdown();
   });
 
+  test("surfaces normalized provider docs and npm metadata through listProviders", async () => {
+    const tempRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-run32-provider-metadata-"));
+    tempRoots.push(tempRoot);
+    const runtimeStateRoot = path.join(tempRoot, "state");
+    const unifiedRuntimeConfigPath = path.join(tempRoot, "runtime-config.yaml");
+
+    await writeFile(
+      unifiedRuntimeConfigPath,
+      `
+version: "1.0"
+`,
+      "utf8",
+    );
+
+    const backend = await createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      runtimeStateRoot,
+      scopeId: "runtime-host-provider-metadata",
+      unifiedRuntimeConfigPath,
+    });
+
+    await expect(backend.listProviders()).resolves.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          providerId: "anthropic",
+          npmPackage: "@ai-sdk/anthropic",
+          docsUrl: "https://docs.anthropic.com/en/docs/about-claude/models",
+        }),
+      ]),
+    );
+
+    await backend.shutdown();
+  });
+
   test("surfaces LiteLLM-backed Moonshot models and endpoints from unified runtime config", async () => {
     const tempRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-run16-litellm-models-"));
     tempRoots.push(tempRoot);
@@ -233,11 +268,11 @@ version: "1.0"
           modelIds: ["moonshot/kimi-k2.6", "moonshot/kimi-k2.5"],
           variants: expect.arrayContaining([
             expect.objectContaining({
-              variantId: "moonshot-open-platform",
+              variantId: "moonshot-api-key",
               modelIds: ["moonshot/kimi-k2.6", "moonshot/kimi-k2.5"],
             }),
             expect.objectContaining({
-              variantId: "kimi-code",
+              variantId: "moonshot-oauth",
               modelIds: ["moonshot/kimi-k2.6", "moonshot/kimi-k2.5"],
             }),
           ]),

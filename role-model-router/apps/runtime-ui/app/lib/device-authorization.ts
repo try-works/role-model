@@ -27,6 +27,31 @@ export function getDeviceAuthorizationPollDelayMs(session: RuntimeDeviceAuthoriz
   return DEFAULT_POLL_DELAY_MS;
 }
 
+export function restorePersistedDeviceAuthorization(input: {
+  readonly current: RuntimeDeviceAuthorization | null;
+  readonly providerAccountId: string;
+  readonly persistedSessions: readonly RuntimeDeviceAuthorization[];
+}): RuntimeDeviceAuthorization | null {
+  const providerAccountId = input.providerAccountId.trim();
+  if (providerAccountId.length === 0) {
+    return null;
+  }
+
+  if (input.current?.providerAccountId === providerAccountId) {
+    return input.current;
+  }
+
+  return (
+    input.persistedSessions.find(
+      (session) => session.providerAccountId === providerAccountId && session.status === "pending",
+    ) ??
+    input.persistedSessions.find(
+      (session) => session.providerAccountId === providerAccountId && session.status === "connected",
+    ) ??
+    null
+  );
+}
+
 export async function syncConnectedDeviceAuthorizationEndpoints(input: {
   readonly session: RuntimeDeviceAuthorization;
   readonly selectedModels: readonly string[];

@@ -10,6 +10,7 @@ export interface CatalogSnapshotProvider {
   readonly displayName: string;
   readonly npmPackage: string;
   readonly apiBase: string;
+  readonly docsUrl?: string;
   readonly envVars: readonly string[];
   readonly adapterFamilyHint: string;
 }
@@ -86,10 +87,12 @@ export interface VendorVersionLedger {
 export interface NormalizedCatalogProvider {
   readonly providerId: string;
   readonly displayName: string;
+  readonly npmPackage: string;
   readonly providerKind: string;
   readonly authFamily: string;
   readonly adapterFamily: string;
   readonly apiBase: string;
+  readonly docsUrl: string | null;
   readonly envVars: readonly string[];
   readonly supportedAuthModes: readonly string[];
   readonly controlPlaneRequirements: readonly string[];
@@ -249,10 +252,12 @@ export function normalizeCatalogSnapshot(
       return {
         providerId: provider.providerId,
         displayName: provider.displayName,
+        npmPackage: provider.npmPackage,
         providerKind: override?.providerKind ?? `provider-${provider.providerId}`,
         authFamily: override?.authFamily ?? inferAuthFamily(provider),
         adapterFamily: override?.adapterFamily ?? provider.adapterFamilyHint,
         apiBase: provider.apiBase,
+        docsUrl: provider.docsUrl ?? null,
         envVars: provider.envVars,
         supportedAuthModes: override?.supportedAuthModes ?? [],
         controlPlaneRequirements: override?.controlPlaneRequirements ?? [],
