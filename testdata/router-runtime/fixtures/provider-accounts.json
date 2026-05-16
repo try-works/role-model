@@ -1,1 +1,54 @@
-{"accounts":[]}
+{
+  "accounts": [
+    {
+      "providerAccountId": "openai.personal.primary",
+      "providerId": "openai",
+      "providerKind": "provider-openai",
+      "orgScope": "personal",
+      "accountScope": "workspace-default",
+      "credentialRef": {
+        "backend": "env",
+        "ref": "OPENAI_API_KEY"
+      },
+      "authMode": "api-key-static",
+      "regionPolicy": {
+        "mode": "prefer",
+        "regions": ["us-east-1", "us-west-2"]
+      },
+      "baseUrlOverride": null,
+      "allowedModels": ["openai/gpt-4.1-mini-fast"],
+      "deniedModels": [],
+      "entitlementTags": ["chat", "reasoning"],
+      "budgetPolicyRef": "budget.default",
+      "quotaPolicyRef": "quota.default",
+      "status": "active",
+      "healthStatus": "healthy",
+      "rotationState": "stable"
+    },
+    {
+      "providerAccountId": "anthropic.team.shared",
+      "providerId": "anthropic",
+      "providerKind": "provider-anthropic",
+      "orgScope": "team",
+      "accountScope": "workspace-shared",
+      "credentialRef": {
+        "backend": "local-keychain",
+        "ref": "anthropic/team/shared"
+      },
+      "authMode": "api-key-rotating-ref",
+      "regionPolicy": {
+        "mode": "allow",
+        "regions": ["us-east-1"]
+      },
+      "baseUrlOverride": null,
+      "allowedModels": ["anthropic/claude-3.7-sonnet"],
+      "deniedModels": [],
+      "entitlementTags": ["chat"],
+      "budgetPolicyRef": "budget.team",
+      "quotaPolicyRef": "quota.team",
+      "status": "active",
+      "healthStatus": "healthy",
+      "rotationState": "due"
+    }
+  ]
+}
