@@ -11,27 +11,76 @@ import {
   SectionCard,
   StatusPill,
 } from "../components/page-primitives";
-import { mutedPanelClassName, secondaryButtonClassName } from "../lib/design-system";
 import {
+  mutedPanelClassName,
+  primaryButtonClassName,
+  secondaryButtonClassName,
+} from "../lib/design-system";
+import {
+  type RuntimeAccount,
   type RuntimeControllerAssignment,
+  type RuntimeRolePolicy,
   type RuntimeSnapshot,
   fetchControllerAssignment,
+  fetchRolePolicy,
   fetchRuntimeSnapshot,
+  upsertRuntimeAccount,
 } from "../lib/runtime-api";
 import { buildConfiguredModelCards, buildConfiguredModelMetadataRows } from "../lib/view-models";
+
+function getAccountRoleIdsForModel(account: RuntimeAccount, modelId: string): string[] {
+  const binding = account.modelRoleBindings?.find((entry) => entry.modelId === modelId);
+  return binding ? [...binding.roleIds] : [];
+}
+
+function createAccountMutationPayload(
+  account: RuntimeAccount,
+  modelId: string,
+  roleIds: readonly string[],
+): Record<string, unknown> {
+  const otherBindings = (account.modelRoleBindings ?? []).filter(
+    (binding) => binding.modelId !== modelId,
+  );
+  return {
+    providerAccountId: account.providerAccountId,
+    providerId: account.providerId,
+    providerKind: account.providerKind,
+    orgScope: account.orgScope ?? "personal",
+    accountScope: account.accountScope ?? "workspace-default",
+    credentialRef: account.credentialRef,
+    authMode: account.authMode,
+    regionPolicy: account.regionPolicy ?? { mode: "prefer", regions: ["global"] },
+    baseUrlOverride: account.baseUrlOverride ?? null,
+    allowedModels: [...(account.allowedModels ?? [])],
+    modelRoleBindings:
+      roleIds.length > 0 ? [...otherBindings, { modelId, roleIds: [...roleIds] }] : otherBindings,
+    deniedModels: [...(account.deniedModels ?? [])],
+    entitlementTags: [...(account.entitlementTags ?? [])],
+    budgetPolicyRef: account.budgetPolicyRef ?? "budget.default",
+    quotaPolicyRef: account.quotaPolicyRef ?? "quota.default",
+    status: account.status ?? "active",
+    healthStatus: account.healthStatus ?? "healthy",
+    rotationState: account.rotationState ?? "stable",
+  };
+}
 
 export default function ControlModelsRoute() {
   const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(null);
   const [controller, setController] = useState<RuntimeControllerAssignment | null>(null);
+  const [rolePolicy, setRolePolicy] = useState<RuntimeRolePolicy | null>(null);
   const [controllerLoaded, setControllerLoaded] = useState(false);
   const [selectedModelId, setSelectedModelId] = useState<string | null>(null);
+  const [draftRolesByAccountId, setDraftRolesByAccountId] = useState<Record<string, string[]>>({});
+  const [savingAccountId, setSavingAccountId] = useState<string | null>(null);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    void Promise.all([fetchRuntimeSnapshot(), fetchControllerAssignment()])
-      .then(([nextSnapshot, nextController]) => {
+    void Promise.all([fetchRuntimeSnapshot(), fetchControllerAssignment(), fetchRolePolicy()])
+      .then(([nextSnapshot, nextController, nextRolePolicy]) => {
         setSnapshot(nextSnapshot);
         setController(nextController);
+        setRolePolicy(nextRolePolicy);
         setControllerLoaded(true);
       })
       .catch((value: unknown) =>
@@ -72,6 +121,78 @@ export default function ControlModelsRoute() {
     ),
   ].sort((left, right) => left.localeCompare(right, "en"));
   const selectedMetadataRows = selectedCard ? buildConfiguredModelMetadataRows(selectedCard) : [];
+  const selectedModelAccounts = useMemo(
+    () =>
+      snapshot && selectedCard
+        ? snapshot.accounts.filter(
+            (account) =>
+              (account.allowedModels ?? []).includes(selectedCard.modelId) ||
+              (account.modelRoleBindings ?? []).some(
+                (binding) => binding.modelId === selectedCard.modelId,
+              ),
+          )
+        : [],
+    [selectedCard, snapshot],
+  );
+
+  useEffect(() => {
+    if (!selectedCard) {
+      setDraftRolesByAccountId({});
+      return;
+    }
+    setDraftRolesByAccountId(
+      Object.fromEntries(
+        selectedModelAccounts.map((account) => [
+          account.providerAccountId,
+          getAccountRoleIdsForModel(account, selectedCard.modelId),
+        ]),
+      ),
+    );
+  }, [selectedCard, selectedModelAccounts]);
+
+  const toggleAccountRole = (providerAccountId: string, roleId: string) => {
+    setDraftRolesByAccountId((current) => {
+      const next = new Set(current[providerAccountId] ?? []);
+      if (next.has(roleId)) {
+        next.delete(roleId);
+      } else {
+        next.add(roleId);
+      }
+      return {
+        ...current,
+        [providerAccountId]: [...next].sort((left, right) => left.localeCompare(right, "en")),
+      };
+    });
+  };
+
+  const saveAccountRoles = async (account: RuntimeAccount) => {
+    if (!selectedCard) {
+      return;
+    }
+    setSavingAccountId(account.providerAccountId);
+    setStatusMessage(null);
+    try {
+      await upsertRuntimeAccount(
+        createAccountMutationPayload(
+          account,
+          selectedCard.modelId,
+          draftRolesByAccountId[account.providerAccountId] ?? [],
+        ),
+      );
+      const [nextSnapshot, nextRolePolicy] = await Promise.all([
+        fetchRuntimeSnapshot(),
+        fetchRolePolicy(),
+      ]);
+      setSnapshot(nextSnapshot);
+      setRolePolicy(nextRolePolicy);
+      setError(null);
+      setStatusMessage(`Updated roles for ${account.providerAccountId}.`);
+    } catch (value) {
+      setError(value instanceof Error ? value.message : "Could not update model roles.");
+    } finally {
+      setSavingAccountId(null);
+    }
+  };
 
   if (error) {
     return <ErrorState label={error} />;
@@ -89,7 +210,12 @@ export default function ControlModelsRoute() {
         <PageHeader
           eyebrow="Control"
           title="Configured models"
-          description="Unified local and remote model cards with controller status, roles, capabilities, request metrics, and inspect-first drill-ins."
+          description="Unified local and remote model cards with controller status, live role bindings, capabilities, request metrics, and backing-account role assignment."
+          actions={
+            <Link className={secondaryButtonClassName} to="/app/control/roles">
+              Edit runtime roles
+            </Link>
+          }
         />
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -258,6 +384,10 @@ export default function ControlModelsRoute() {
                     {selectedCard.controllerState}
                   </StatusPill>
                 </div>
+                <p className="mt-3 text-sm text-[var(--rm-secondary)]">
+                  Runtime roles are authored in Control &gt; Roles and assigned per backing account
+                  here.
+                </p>
               </div>
 
               <div className={`${mutedPanelClassName} p-4`}>
@@ -328,16 +458,98 @@ export default function ControlModelsRoute() {
                   endpoint supports tool calling.
                 </p>
               </div>
+
+              <div className={`${mutedPanelClassName} p-4 xl:col-span-2`}>
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="font-medium text-[var(--rm-fg)]">Backing account role bindings</p>
+                    <p className="mt-2 text-sm text-[var(--rm-secondary)]">
+                      Assign live runtime roles per provider account for this model. These bindings
+                      feed router-visible endpoint role coverage directly.
+                    </p>
+                  </div>
+                  <Link className={secondaryButtonClassName} to="/app/control/roles">
+                    Manage role definitions
+                  </Link>
+                </div>
+                {selectedModelAccounts.length === 0 ? (
+                  <p className="mt-4 text-sm text-[var(--rm-secondary)]">
+                    No backing provider accounts currently expose this model.
+                  </p>
+                ) : (
+                  <div className="mt-4 space-y-4">
+                    {selectedModelAccounts.map((account) => (
+                      <div
+                        key={account.providerAccountId}
+                        className="rounded-none border border-[var(--rm-border)] bg-[var(--rm-surface)] p-4"
+                      >
+                        <div className="flex flex-wrap items-start justify-between gap-3">
+                          <div>
+                            <p className="font-medium text-[var(--rm-fg)]">
+                              {account.providerAccountId}
+                            </p>
+                            <p className="mt-1 text-sm text-[var(--rm-secondary)]">
+                              {account.providerId} · {account.authMode ?? "unknown auth"}
+                            </p>
+                          </div>
+                          <StatusPill
+                            tone={account.healthStatus === "healthy" ? "success" : "warning"}
+                          >
+                            {account.healthStatus ?? "unknown"}
+                          </StatusPill>
+                        </div>
+                        <div className="mt-4 flex flex-wrap gap-3">
+                          {(rolePolicy?.roleDefinitions ?? []).map((role) => (
+                            <label
+                              key={`${account.providerAccountId}:${role.role_id}`}
+                              className="flex items-center gap-2 rounded-none border border-[var(--rm-border)] px-3 py-2 text-sm text-[var(--rm-secondary)]"
+                            >
+                              <input
+                                checked={(
+                                  draftRolesByAccountId[account.providerAccountId] ?? []
+                                ).includes(role.role_id)}
+                                type="checkbox"
+                                onChange={() =>
+                                  toggleAccountRole(account.providerAccountId, role.role_id)
+                                }
+                              />
+                              <span>{role.name}</span>
+                            </label>
+                          ))}
+                        </div>
+                        <div className="mt-4 flex flex-wrap gap-3">
+                          <button
+                            className={primaryButtonClassName}
+                            type="button"
+                            disabled={savingAccountId === account.providerAccountId}
+                            onClick={() => void saveAccountRoles(account)}
+                          >
+                            {savingAccountId === account.providerAccountId
+                              ? "Saving…"
+                              : "Save bindings"}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="mt-4 flex flex-wrap gap-3">
               <Link className={secondaryButtonClassName} to="/app/control/runtime-config">
                 Edit runtime config
               </Link>
+              <Link className={secondaryButtonClassName} to="/app/control/roles">
+                Edit runtime roles
+              </Link>
               <Link className={secondaryButtonClassName} to="/app/control/providers">
                 Review providers
               </Link>
             </div>
+            {statusMessage ? (
+              <p className="mt-4 text-sm text-[var(--rm-secondary)]">{statusMessage}</p>
+            ) : null}
 
             <div className="mt-4">
               <p className="mb-2 font-medium text-[var(--rm-fg)]">Endpoint and model ids</p>

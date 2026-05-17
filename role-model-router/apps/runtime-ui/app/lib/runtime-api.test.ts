@@ -2,6 +2,7 @@ import { describe, expect, test, vi } from "vitest";
 
 import {
   activateRuntimeEndpoint,
+  createRolePolicyRole,
   fetchActivityCapture,
   fetchActivityMetrics,
   fetchAudioVoices,
@@ -9,6 +10,7 @@ import {
   fetchDownstreamOpenAIProviderConfig,
   fetchLocalModels,
   fetchRequestDetail,
+  fetchRolePolicy,
   fetchRouterCandidates,
   fetchRouterConfig,
   fetchRouterDecisionDetail,
@@ -31,7 +33,9 @@ import {
   submitWorkbenchChat,
   subscribeTelemetryStream,
   updateControllerAssignment,
+  updateRolePolicyRole,
   updateRuntimeConfig,
+  updateTaskDefinitions,
 } from "./runtime-api";
 
 function jsonResponse(body: unknown): Response {
@@ -394,7 +398,7 @@ describe("router APIs", () => {
             sources: {
               runtimeConfigPath: "D:\\runtime-config.yaml",
               routingModel: "fixture",
-              policyInputs: "fixture+runtime",
+              policyInputs: "runtime",
             },
             policySources: {
               roles: [
@@ -475,7 +479,7 @@ describe("router APIs", () => {
       sources: {
         runtimeConfigPath: "D:\\runtime-config.yaml",
         routingModel: "fixture",
-        policyInputs: "fixture+runtime",
+        policyInputs: "runtime",
       },
       policySources: {
         roles: [
@@ -635,8 +639,8 @@ describe("telemetry APIs", () => {
         case "/api/role-model/telemetry/rows":
           return jsonResponse([
             {
-              endpointId: "llama-swap.local.local-mock-llama",
-              modelId: "local/mock-llama",
+              endpointId: "llama-swap.local.lfm2.5-1.2b-instruct",
+              modelId: "lfm2.5-1.2b-instruct",
               sourceType: "local",
               providerFamily: "llama-swap",
               promptCacheSupported: false,
@@ -678,8 +682,8 @@ describe("telemetry APIs", () => {
       }),
       rows: [
         {
-          endpointId: "llama-swap.local.local-mock-llama",
-          modelId: "local/mock-llama",
+          endpointId: "llama-swap.local.lfm2.5-1.2b-instruct",
+          modelId: "lfm2.5-1.2b-instruct",
           sourceType: "local",
           providerFamily: "llama-swap",
           promptCacheSupported: false,
@@ -716,7 +720,7 @@ describe("telemetry APIs", () => {
       return jsonResponse([
         {
           requestId: "req-001",
-          endpointId: "llama-swap.local.local-mock-llama",
+          endpointId: "llama-swap.local.lfm2.5-1.2b-instruct",
           sourceType: "local",
         },
       ]);
@@ -725,7 +729,7 @@ describe("telemetry APIs", () => {
     await expect(fetchTelemetryRequests({ limit: 25 }, fetcher)).resolves.toEqual([
       {
         requestId: "req-001",
-        endpointId: "llama-swap.local.local-mock-llama",
+        endpointId: "llama-swap.local.lfm2.5-1.2b-instruct",
         sourceType: "local",
       },
     ]);
@@ -1394,7 +1398,12 @@ describe("fetchRuntimeConfig", () => {
           executionMode: "hybrid",
           llamaSwap: {
             enabled: true,
-            models: [{ modelId: "local/mock-llama", path: "./models/mock-llama.gguf" }],
+            models: [
+              {
+                modelId: "lfm2.5-1.2b-instruct",
+                path: "./models/lfm2.5-1.2b-instruct.gguf",
+              },
+            ],
             process: { command: null, args: [], env: {}, cwd: null, startupTimeoutMs: null },
           },
           liteLLM: {
@@ -1416,7 +1425,12 @@ describe("fetchRuntimeConfig", () => {
         executionMode: "hybrid",
         llamaSwap: {
           enabled: true,
-          models: [{ modelId: "local/mock-llama", path: "./models/mock-llama.gguf" }],
+          models: [
+            {
+              modelId: "lfm2.5-1.2b-instruct",
+              path: "./models/lfm2.5-1.2b-instruct.gguf",
+            },
+          ],
           process: { command: null, args: [], env: {}, cwd: null, startupTimeoutMs: null },
         },
         liteLLM: {
@@ -1448,7 +1462,12 @@ describe("updateRuntimeConfig", () => {
           version: "1.0",
           routingStrategy: "balanced",
           llamaSwap: {
-            models: [{ modelId: "local/mock-llama", path: "./models/mock-llama-v2.gguf" }],
+            models: [
+              {
+                modelId: "lfm2.5-1.2b-instruct",
+                path: "./models/lfm2.5-1.2b-instruct-v2.gguf",
+              },
+            ],
             process: { command: null, args: [], env: {}, cwd: null, startupTimeoutMs: null },
           },
           liteLLM: {
@@ -1476,7 +1495,12 @@ describe("updateRuntimeConfig", () => {
           version: "1.0",
           routingStrategy: "balanced",
           llamaSwap: {
-            models: [{ modelId: "local/mock-llama", path: "./models/mock-llama-v2.gguf" }],
+            models: [
+              {
+                modelId: "lfm2.5-1.2b-instruct",
+                path: "./models/lfm2.5-1.2b-instruct-v2.gguf",
+              },
+            ],
             process: { command: null, args: [], env: {}, cwd: null, startupTimeoutMs: null },
           },
           liteLLM: {
@@ -1496,5 +1520,159 @@ describe("updateRuntimeConfig", () => {
         executionMode: "hybrid",
       },
     });
+  });
+});
+
+describe("role policy APIs", () => {
+  test("loads the full runtime-managed role policy from the control plane", async () => {
+    const fetcher = vi.fn(async (input: string | URL | Request) => {
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      expect(url).toBe("/api/role-model/role-policy");
+      return jsonResponse({
+        roleDefinitions: [
+          {
+            role_id: "qa.reviewer",
+            name: "QA Reviewer",
+            description: "Validates runtime behavior before release.",
+            role_kind: "assistant",
+            default_system_instructions: "Review carefully.",
+            task_types_supported: ["code.review"],
+            required_capabilities: [],
+            preferred_capabilities: ["reasoning.multi_step"],
+            forbidden_capabilities: [],
+            tool_policy: { mode: "limited", allowed_tools: ["run_tests"] },
+            routing_policy_overrides: { compute_preference: "balanced" },
+            output_contracts: ["review.checklist"],
+            safety_policy_refs: ["safety.review"],
+          },
+        ],
+        taskDefinitions: [
+          {
+            task_type: "code.review",
+            description: "Code review task",
+            required_inputs: [],
+            required_capabilities: ["code.edit"],
+            preferred_capabilities: ["reasoning.multi_step"],
+            quality_metrics: [],
+            allowed_roles: ["qa.reviewer"],
+            default_benchmark_suites: [],
+          },
+        ],
+      });
+    });
+
+    await expect(fetchRolePolicy(fetcher)).resolves.toEqual({
+      roleDefinitions: [
+        expect.objectContaining({
+          role_id: "qa.reviewer",
+          tool_policy: { mode: "limited", allowed_tools: ["run_tests"] },
+        }),
+      ],
+      taskDefinitions: [
+        expect.objectContaining({
+          task_type: "code.review",
+          allowed_roles: ["qa.reviewer"],
+        }),
+      ],
+    });
+  });
+
+  test("posts role creation, puts role updates, and puts task allowlists to the control plane", async () => {
+    const fetcher = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      if (url === "/api/role-model/roles" && init?.method === "POST") {
+        expect(init?.body).toBe(
+          JSON.stringify({
+            role_id: "qa.reviewer",
+            name: "QA Reviewer",
+          }),
+        );
+        return jsonResponse({ role_id: "qa.reviewer", name: "QA Reviewer" });
+      }
+      if (url === "/api/role-model/roles/qa.reviewer" && init?.method === "PUT") {
+        expect(init?.body).toBe(JSON.stringify({ name: "QA Reviewer Updated" }));
+        return jsonResponse({ role_id: "qa.reviewer", name: "QA Reviewer Updated" });
+      }
+      if (url === "/api/role-model/tasks" && init?.method === "PUT") {
+        expect(init?.body).toBe(
+          JSON.stringify([
+            {
+              task_type: "code.review",
+              description: "Code review task",
+              required_inputs: [],
+              required_capabilities: ["code.edit"],
+              preferred_capabilities: [],
+              quality_metrics: [],
+              allowed_roles: ["qa.reviewer"],
+              default_benchmark_suites: [],
+            },
+          ]),
+        );
+        return jsonResponse([
+          {
+            task_type: "code.review",
+            description: "Code review task",
+            required_inputs: [],
+            required_capabilities: ["code.edit"],
+            preferred_capabilities: [],
+            quality_metrics: [],
+            allowed_roles: ["qa.reviewer"],
+            default_benchmark_suites: [],
+          },
+        ]);
+      }
+      throw new Error(`Unexpected request: ${url}`);
+    });
+
+    await expect(
+      createRolePolicyRole(
+        {
+          role_id: "qa.reviewer",
+          name: "QA Reviewer",
+        },
+        fetcher,
+      ),
+    ).resolves.toEqual({ role_id: "qa.reviewer", name: "QA Reviewer" });
+
+    await expect(
+      updateRolePolicyRole(
+        "qa.reviewer",
+        {
+          name: "QA Reviewer Updated",
+        },
+        fetcher,
+      ),
+    ).resolves.toEqual({ role_id: "qa.reviewer", name: "QA Reviewer Updated" });
+
+    await expect(
+      updateTaskDefinitions(
+        [
+          {
+            task_type: "code.review",
+            description: "Code review task",
+            required_inputs: [],
+            required_capabilities: ["code.edit"],
+            preferred_capabilities: [],
+            quality_metrics: [],
+            allowed_roles: ["qa.reviewer"],
+            default_benchmark_suites: [],
+          },
+        ],
+        fetcher,
+      ),
+    ).resolves.toEqual([
+      {
+        task_type: "code.review",
+        description: "Code review task",
+        required_inputs: [],
+        required_capabilities: ["code.edit"],
+        preferred_capabilities: [],
+        quality_metrics: [],
+        allowed_roles: ["qa.reviewer"],
+        default_benchmark_suites: [],
+      },
+    ]);
   });
 });

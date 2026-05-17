@@ -1,0 +1,15 @@
+Runtime/browser QA against QA bridge
+URL: http://127.0.0.1:3456
+
+PASS /app/control/roles
+- live role catalog loaded
+- created role qa.browser / QA Browser
+
+PASS /app/control/models
+- live configured model cards loaded
+- opened inspection panel for openai.personal.primary
+- saved role binding general.chat
+
+PASS QA bootstrap route repairs
+- role-policy reader routes available
+- model inventory and device-authorization routes available

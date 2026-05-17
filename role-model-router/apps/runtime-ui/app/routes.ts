@@ -20,6 +20,7 @@ export default [
     route("control/runtime-config", "routes/control-runtime-config.tsx"),
     route("control/controller", "routes/control-controller.tsx"),
     route("control/endpoints", "routes/endpoints.tsx"),
+    route("control/roles", "routes/control-roles.tsx"),
     route("control/models", "routes/control-models.tsx"),
     route("router", "routes/router.tsx"),
     route("router/config", "routes/router-config.tsx"),

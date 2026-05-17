@@ -317,6 +317,22 @@ const controlEndpointsRoute = createRoute({
     "Treat this page as the live configured registry for provider-model runtime entries, with health and source posture kept visible.",
 });
 
+const controlRolesRoute = createRoute({
+  id: "control-roles",
+  to: "/app/control/roles",
+  label: "Roles",
+  section: "Control",
+  icon: LayoutGrid,
+  template: "registry-detail",
+  eyebrow: "Control",
+  title: "Runtime roles",
+  description:
+    "Author full router-grade role definitions and task allowlists from the live runtime policy surface instead of relying on seeded role catalogs.",
+  noteTitle: "Registry detail",
+  noteBody:
+    "Keep role authoring, task allowlists, and policy diagnostics in one editable surface so operators can add roles without leaving the control plane.",
+});
+
 const controlModelsRoute = createRoute({
   id: "control-models",
   to: "/app/control/models",
@@ -327,10 +343,10 @@ const controlModelsRoute = createRoute({
   eyebrow: "Control",
   title: "Configured models",
   description:
-    "Unified local and remote model inventory with inspect-only cards, controller state, and explicit links back to the editable runtime config surface.",
+    "Unified local and remote model inventory with model-side role assignment, controller state, and links into the live runtime policy surface.",
   noteTitle: "Model inventory",
   noteBody:
-    "Model cards stay observational unless a real persistence surface exists; editing belongs to Runtime Config or account onboarding.",
+    "Lead with live model posture, then expose backing-account role bindings so role assignment is editable without sending operators back to provider onboarding.",
 });
 
 const routerOverviewRoute = createRoute({
@@ -558,6 +574,7 @@ const runtimeRouteDefinitions = [
   controlRuntimeConfigRoute,
   controlControllerRoute,
   controlEndpointsRoute,
+  controlRolesRoute,
   controlModelsRoute,
   routerOverviewRoute,
   routerConfigRoute,
@@ -611,6 +628,7 @@ export const runtimeNavigationSections: readonly RuntimeNavigationSection[] = [
       controlRuntimeConfigRoute,
       controlControllerRoute,
       controlEndpointsRoute,
+      controlRolesRoute,
       controlModelsRoute,
     ],
   },

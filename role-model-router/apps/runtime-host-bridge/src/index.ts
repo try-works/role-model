@@ -238,6 +238,7 @@ export interface BridgeExecutionPlan {
     | "controllerRouting"
     | "hybridArbitration"
     | "routingMode"
+    | "rolePolicy"
   >;
 }
 
@@ -1116,6 +1117,18 @@ export interface StartBridgeServerOptions {
   readonly unloadLocalModel?: (modelId?: string) => Promise<{ success: boolean }>;
   readonly readLocalPolicy?: () => Promise<Record<string, unknown>>;
   readonly updateLocalPolicy?: (body: Record<string, unknown>) => Promise<Record<string, unknown>>;
+  readonly readRolePolicy?: () => Promise<RuntimeRolePolicyRecord>;
+  readonly createRolePolicyRole?: (
+    body: Record<string, unknown>,
+  ) => Promise<RuntimeRoleDefinitionRecord>;
+  readonly updateRolePolicyRole?: (
+    roleId: string,
+    body: Record<string, unknown>,
+  ) => Promise<RuntimeRoleDefinitionRecord>;
+  readonly listTaskDefinitions?: () => Promise<readonly RuntimeTaskDefinitionRecord[]>;
+  readonly updateTaskDefinitions?: (
+    body: readonly Record<string, unknown>[],
+  ) => Promise<readonly RuntimeTaskDefinitionRecord[]>;
   readonly listSwapHistory?: () => Promise<
     readonly {
       timestamp: string;
@@ -1277,6 +1290,16 @@ export interface RuntimeBridgeBackend {
   unloadLocalModel(modelId?: string): Promise<{ success: boolean }>;
   readLocalPolicy(): Promise<Record<string, unknown>>;
   updateLocalPolicy(body: Record<string, unknown>): Promise<Record<string, unknown>>;
+  readRolePolicy(): Promise<RuntimeRolePolicyRecord>;
+  createRolePolicyRole(body: Record<string, unknown>): Promise<RuntimeRoleDefinitionRecord>;
+  updateRolePolicyRole(
+    roleId: string,
+    body: Record<string, unknown>,
+  ): Promise<RuntimeRoleDefinitionRecord>;
+  listTaskDefinitions(): Promise<readonly RuntimeTaskDefinitionRecord[]>;
+  updateTaskDefinitions(
+    body: readonly Record<string, unknown>[],
+  ): Promise<readonly RuntimeTaskDefinitionRecord[]>;
   listSwapHistory(): Promise<
     readonly {
       timestamp: string;
@@ -1320,6 +1343,7 @@ export interface BridgeServerOptions {
 export interface BridgeExecutionRequestOptions {
   readonly routingModeOverride?: RuntimeRoutingMode;
   readonly endpointId?: string;
+  readonly requestedRoleId?: string;
 }
 
 class BridgeHttpError extends Error {
@@ -1389,7 +1413,10 @@ function readBridgeExecutionRequestOptions(
 ): BridgeExecutionRequestOptions | undefined {
   const routingModeOverrideHeader = request.headers["x-role-model-routing-mode"]?.toString().trim();
   const endpointIdHeader = request.headers["x-role-model-endpoint-id"]?.toString().trim();
-  if (!routingModeOverrideHeader && !endpointIdHeader) {
+  const requestedRoleIdHeader = request.headers["x-role-model-requested-role-id"]
+    ?.toString()
+    .trim();
+  if (!routingModeOverrideHeader && !endpointIdHeader && !requestedRoleIdHeader) {
     return undefined;
   }
   return {
@@ -1397,6 +1424,7 @@ function readBridgeExecutionRequestOptions(
       ? { routingModeOverride: parseRuntimeRoutingModeOverride(routingModeOverrideHeader) }
       : {}),
     ...(endpointIdHeader ? { endpointId: endpointIdHeader } : {}),
+    ...(requestedRoleIdHeader ? { requestedRoleId: requestedRoleIdHeader } : {}),
   };
 }
 
@@ -2266,6 +2294,21 @@ interface RuntimeRoleSummary {
   readonly taskTypes: readonly string[];
 }
 
+type RuntimeRoleDefinitionRecord = NonNullable<
+  Parameters<typeof routeRuntimeRequest>[0]["roleDefinitions"]
+>[number];
+type RuntimeTaskDefinitionRecord = NonNullable<
+  Parameters<typeof routeRuntimeRequest>[0]["taskDefinitions"]
+>[number];
+type RuntimeRoleBindingRecord = NonNullable<
+  Parameters<typeof routeRuntimeRequest>[0]["roleBindings"]
+>[number];
+
+interface RuntimeRolePolicyRecord {
+  readonly roleDefinitions: readonly RuntimeRoleDefinitionRecord[];
+  readonly taskDefinitions: readonly RuntimeTaskDefinitionRecord[];
+}
+
 const defaultRoles = [
   { role_id: "general.chat", task_types_supported: ["text.chat"] },
   { role_id: "coder.patch", task_types_supported: ["code.edit"] },
@@ -2274,6 +2317,79 @@ const defaultRoles = [
   { role_id: "embedder", task_types_supported: ["embeddings.text"] },
   { role_id: "classifier", task_types_supported: ["text.classification"] },
   { role_id: "language.detector", task_types_supported: ["text.language_detection"] },
+] as const;
+
+const defaultTaskDefinitions: readonly RuntimeTaskDefinitionRecord[] = [
+  {
+    task_type: "text.chat",
+    description: "General chat task",
+    required_inputs: [],
+    required_capabilities: ["text.chat"],
+    preferred_capabilities: [],
+    quality_metrics: [],
+    allowed_roles: ["general.chat"],
+    default_benchmark_suites: [],
+  },
+  {
+    task_type: "code.edit",
+    description: "Code editing task",
+    required_inputs: [],
+    required_capabilities: ["code.edit"],
+    preferred_capabilities: ["reasoning.multi_step"],
+    quality_metrics: [],
+    allowed_roles: ["coder.patch", "coder.review"],
+    default_benchmark_suites: [],
+  },
+  {
+    task_type: "json.schema_adherence",
+    description: "Schema-adherence task",
+    required_inputs: [],
+    required_capabilities: ["json.schema_adherence"],
+    preferred_capabilities: ["reasoning.multi_step"],
+    quality_metrics: [],
+    allowed_roles: ["coder.review"],
+    default_benchmark_suites: [],
+  },
+  {
+    task_type: "tools.function_calling",
+    description: "Tool-calling task",
+    required_inputs: [],
+    required_capabilities: ["tools.function_calling"],
+    preferred_capabilities: [],
+    quality_metrics: [],
+    allowed_roles: ["tool.agent"],
+    default_benchmark_suites: [],
+  },
+  {
+    task_type: "embeddings.text",
+    description: "Embedding generation task",
+    required_inputs: [],
+    required_capabilities: ["embeddings.text"],
+    preferred_capabilities: [],
+    quality_metrics: [],
+    allowed_roles: ["embedder"],
+    default_benchmark_suites: [],
+  },
+  {
+    task_type: "text.classification",
+    description: "Classification task",
+    required_inputs: [],
+    required_capabilities: ["text.classification"],
+    preferred_capabilities: [],
+    quality_metrics: [],
+    allowed_roles: ["classifier"],
+    default_benchmark_suites: [],
+  },
+  {
+    task_type: "text.language_detection",
+    description: "Language detection task",
+    required_inputs: [],
+    required_capabilities: ["text.language_detection"],
+    preferred_capabilities: [],
+    quality_metrics: [],
+    allowed_roles: ["language.detector"],
+    default_benchmark_suites: [],
+  },
 ] as const;
 
 function compareText(left: string, right: string): number {
@@ -2312,7 +2428,7 @@ function buildBuiltinRoleDescription(roleId: string): string {
 function createBuiltinRoleDefinition(
   roleId: string,
   taskTypes: readonly string[],
-): NonNullable<Parameters<typeof routeRuntimeRequest>[0]["roleDefinitions"]>[number] {
+): RuntimeRoleDefinitionRecord {
   return {
     role_id: roleId,
     name: titleCaseWords(roleId),
@@ -2330,6 +2446,134 @@ function createBuiltinRoleDefinition(
     output_contracts: [],
     safety_policy_refs: [],
   };
+}
+
+function buildDefaultRuntimeRolePolicy(): RuntimeRolePolicyRecord {
+  return {
+    roleDefinitions: defaultRoles.map((role) =>
+      createBuiltinRoleDefinition(role.role_id, role.task_types_supported),
+    ),
+    taskDefinitions: defaultTaskDefinitions.map((task) => ({
+      ...task,
+      required_inputs: [...task.required_inputs],
+      required_capabilities: [...task.required_capabilities],
+      preferred_capabilities: [...task.preferred_capabilities],
+      quality_metrics: [...task.quality_metrics],
+      allowed_roles: [...task.allowed_roles],
+      default_benchmark_suites: [...task.default_benchmark_suites],
+    })),
+  };
+}
+
+function readRequiredStringArray(
+  record: Record<string, unknown>,
+  key: string,
+  label: string,
+): string[] {
+  const value = readStringArray(record, key);
+  if (!value) {
+    throw new Error(`${label}.${key} must be an array of strings`);
+  }
+  return value;
+}
+
+function validateRuntimeRoleDefinitionRecord(
+  value: unknown,
+  label: string,
+): RuntimeRoleDefinitionRecord {
+  const record = asObject(value, label);
+  const toolPolicy = asObject(record.tool_policy, `${label}.tool_policy`);
+  const toolPolicyMode = readRequiredString(toolPolicy, "mode", `${label}.tool_policy`);
+  if (!["disabled", "limited", "allowed"].includes(toolPolicyMode)) {
+    throw new Error(`${label}.tool_policy.mode must be one of disabled, limited, allowed`);
+  }
+  if (!("routing_policy_overrides" in record)) {
+    throw new Error(`${label}.routing_policy_overrides must be present`);
+  }
+  return {
+    role_id: readRequiredString(record, "role_id", label),
+    name: readRequiredString(record, "name", label),
+    description: readRequiredString(record, "description", label),
+    role_kind: readRequiredString(record, "role_kind", label),
+    default_system_instructions: readRequiredString(record, "default_system_instructions", label),
+    task_types_supported: readRequiredStringArray(record, "task_types_supported", label),
+    required_capabilities: readRequiredStringArray(record, "required_capabilities", label),
+    preferred_capabilities: readRequiredStringArray(record, "preferred_capabilities", label),
+    forbidden_capabilities: readRequiredStringArray(record, "forbidden_capabilities", label),
+    tool_policy: {
+      mode: toolPolicyMode as RuntimeRoleDefinitionRecord["tool_policy"]["mode"],
+      ...(readStringArray(toolPolicy, "allowed_tools")
+        ? { allowed_tools: readStringArray(toolPolicy, "allowed_tools") }
+        : {}),
+    },
+    routing_policy_overrides: asObject(
+      record.routing_policy_overrides ?? {},
+      `${label}.routing_policy_overrides`,
+    ),
+    output_contracts: readRequiredStringArray(record, "output_contracts", label),
+    safety_policy_refs: readRequiredStringArray(record, "safety_policy_refs", label),
+  };
+}
+
+function validateRuntimeTaskDefinitionRecord(
+  value: unknown,
+  label: string,
+): RuntimeTaskDefinitionRecord {
+  const record = asObject(value, label);
+  return {
+    task_type: readRequiredString(record, "task_type", label),
+    description: readRequiredString(record, "description", label),
+    required_inputs: readRequiredStringArray(record, "required_inputs", label),
+    required_capabilities: readRequiredStringArray(record, "required_capabilities", label),
+    preferred_capabilities: readRequiredStringArray(record, "preferred_capabilities", label),
+    quality_metrics: readRequiredStringArray(record, "quality_metrics", label),
+    allowed_roles: readRequiredStringArray(record, "allowed_roles", label),
+    default_benchmark_suites: readRequiredStringArray(record, "default_benchmark_suites", label),
+  };
+}
+
+function validateRuntimeRolePolicyRecord(value: unknown, label: string): RuntimeRolePolicyRecord {
+  const record = asObject(value, label);
+  if (!Array.isArray(record.roleDefinitions)) {
+    throw new Error(`${label}.roleDefinitions must be an array`);
+  }
+  if (!Array.isArray(record.taskDefinitions)) {
+    throw new Error(`${label}.taskDefinitions must be an array`);
+  }
+  const roleDefinitions = record.roleDefinitions.map((entry, index) =>
+    validateRuntimeRoleDefinitionRecord(entry, `${label}.roleDefinitions[${index}]`),
+  );
+  const taskDefinitions = record.taskDefinitions.map((entry, index) =>
+    validateRuntimeTaskDefinitionRecord(entry, `${label}.taskDefinitions[${index}]`),
+  );
+  const roleIds = roleDefinitions.map((role) => role.role_id);
+  if (new Set(roleIds).size !== roleIds.length) {
+    throw new Error(`${label}.roleDefinitions must not repeat role ids`);
+  }
+  const taskTypes = taskDefinitions.map((task) => task.task_type);
+  if (new Set(taskTypes).size !== taskTypes.length) {
+    throw new Error(`${label}.taskDefinitions must not repeat task types`);
+  }
+  const roleIdSet = new Set(roleIds);
+  for (const taskDefinition of taskDefinitions) {
+    if (taskDefinition.allowed_roles.some((roleId) => !roleIdSet.has(roleId))) {
+      throw new Error(
+        `${label}.taskDefinitions.${taskDefinition.task_type} includes a role id that is not present in roleDefinitions`,
+      );
+    }
+  }
+  return {
+    roleDefinitions: [...roleDefinitions].sort((left, right) =>
+      compareText(left.role_id, right.role_id),
+    ),
+    taskDefinitions: [...taskDefinitions].sort((left, right) =>
+      compareText(left.task_type, right.task_type),
+    ),
+  };
+}
+
+function getRuntimeRolePolicyPath(runtimeStateRoot: string): string {
+  return path.join(runtimeStateRoot, "role-policy.json");
 }
 
 function buildRuntimeRoleCatalog(
@@ -2517,6 +2761,124 @@ function toResponsesToolDefinition(tool: OpenAIResponsesTool): {
     name: tool.name,
     description: tool.description,
     inputSchema: tool.parameters,
+  };
+}
+
+type BridgeExecutionToolDefinition = NonNullable<
+  BridgeExecutionPlan["executionRequest"]["tools"]
+>[number];
+
+function buildRolePolicySystemMessages(
+  roleDefinition: RuntimeRoleDefinitionRecord | undefined,
+): readonly OpenAIChatCompletionsMessage[] {
+  if (!roleDefinition) {
+    return [];
+  }
+
+  const messages: OpenAIChatCompletionsMessage[] = [];
+  const defaultInstructions = roleDefinition.default_system_instructions.trim();
+  if (defaultInstructions.length > 0) {
+    messages.push({
+      role: "system",
+      content: defaultInstructions,
+    });
+  }
+  if (roleDefinition.output_contracts.length > 0) {
+    messages.push({
+      role: "system",
+      content: `You must satisfy these output contracts in your response: ${roleDefinition.output_contracts.join(", ")}.`,
+    });
+  }
+  if (roleDefinition.safety_policy_refs.length > 0) {
+    messages.push({
+      role: "system",
+      content: `Apply these safety policies while handling the request: ${roleDefinition.safety_policy_refs.join(", ")}.`,
+    });
+  }
+  return messages;
+}
+
+function applyRequestedRoleExecutionPolicy(input: {
+  readonly routingRequest: BridgeExecutionPlan["routingRequest"];
+  readonly messages: readonly OpenAIChatCompletionsMessage[];
+  readonly tools?: readonly BridgeExecutionToolDefinition[];
+  readonly routingDiagnostics?: BridgeExecutionPlan["routingDiagnostics"];
+  readonly roleDefinitions?: readonly RuntimeRoleDefinitionRecord[];
+  readonly requestOptions?: BridgeExecutionRequestOptions;
+}): {
+  readonly routingRequest: BridgeExecutionPlan["routingRequest"];
+  readonly executionRequest: BridgeExecutionPlan["executionRequest"];
+  readonly routingDiagnostics?: BridgeExecutionPlan["routingDiagnostics"];
+} {
+  const requestedRoleId =
+    input.requestOptions?.requestedRoleId ?? input.routingRequest.requestedRoleId;
+  const roleDefinition = requestedRoleId
+    ? (input.roleDefinitions ?? []).find((entry) => entry.role_id === requestedRoleId)
+    : undefined;
+
+  if (
+    requestedRoleId &&
+    input.roleDefinitions &&
+    input.roleDefinitions.length > 0 &&
+    !roleDefinition
+  ) {
+    throw new Error(`Requested role ${requestedRoleId} is not defined in the runtime role policy.`);
+  }
+
+  const rolePolicyMessages = buildRolePolicySystemMessages(roleDefinition);
+  const messages =
+    rolePolicyMessages.length > 0
+      ? ([...rolePolicyMessages, ...input.messages] as const)
+      : input.messages;
+  const toolPolicyMode = roleDefinition?.tool_policy?.mode ?? "allowed";
+  const allowedTools = roleDefinition?.tool_policy?.allowed_tools ?? [];
+  const tools =
+    toolPolicyMode === "disabled"
+      ? undefined
+      : toolPolicyMode === "limited"
+        ? input.tools?.filter((tool) => allowedTools.includes(tool.name))
+        : input.tools;
+  const needsTools = Boolean(tools?.length);
+
+  return {
+    routingRequest: {
+      ...input.routingRequest,
+      ...(requestedRoleId ? { requestedRoleId } : {}),
+      needsTools,
+      ...(needsTools
+        ? {}
+        : {
+            requiredCapabilities: input.routingRequest.requiredCapabilities.filter(
+              (capability) => capability !== "tools.function_calling",
+            ),
+            preferredCapabilities: input.routingRequest.preferredCapabilities.filter(
+              (capability) => capability !== "tools.function_calling",
+            ),
+          }),
+    },
+    executionRequest: {
+      messages,
+      ...(tools?.length ? { tools } : {}),
+    },
+    ...(roleDefinition
+      ? {
+          routingDiagnostics: {
+            ...input.routingDiagnostics,
+            rolePolicy: {
+              requestedRoleId: roleDefinition.role_id,
+              appliedRoleId: roleDefinition.role_id,
+              defaultSystemInstructionsApplied:
+                roleDefinition.default_system_instructions.trim().length > 0,
+              toolPolicyMode,
+              ...(toolPolicyMode === "limited" ? { allowedTools } : {}),
+              outputContracts: roleDefinition.output_contracts,
+              safetyPolicyRefs: roleDefinition.safety_policy_refs,
+            },
+          },
+        }
+      : input.routingDiagnostics
+        ? { routingDiagnostics: input.routingDiagnostics }
+        : {}),
   };
 }
 
@@ -2901,6 +3263,7 @@ export function mapChatCompletionsRequest(
   difficultyContext?: BridgeDifficultyRoutingContext,
   controllerContext?: BridgeControllerRoutingContext,
   requestOptions?: BridgeExecutionRequestOptions,
+  roleDefinitions?: readonly RuntimeRoleDefinitionRecord[],
 ): BridgeExecutionPlan {
   const contextTokens = estimateContextTokens(body.messages, body.tools?.length ?? 0);
   const { allowEndpoints: modelAllowEndpoints, routingDiagnostics } = resolveRequestedModelPool(
@@ -2968,18 +3331,26 @@ export function mapChatCompletionsRequest(
     controllerContext,
   });
 
-  return {
+  const rolePolicyExecution = applyRequestedRoleExecutionPolicy({
     routingRequest: controllerRouting.routingRequest,
+    messages: body.messages,
+    tools,
+    routingDiagnostics: controllerRouting.routingDiagnostics,
+    roleDefinitions,
+    requestOptions,
+  });
+
+  return {
+    routingRequest: rolePolicyExecution.routingRequest,
     executionRequest: {
-      messages: body.messages,
-      ...(tools?.length ? { tools } : {}),
+      ...rolePolicyExecution.executionRequest,
       ...(typeof body.stream === "boolean" ? { stream: body.stream } : {}),
       ...(typeof body.max_tokens === "number" ? { maxOutputTokens: body.max_tokens } : {}),
       ...(typeof body.temperature === "number" ? { temperature: body.temperature } : {}),
     },
     ...(controllerRouting.routingModel ? { routingModel: controllerRouting.routingModel } : {}),
-    ...(controllerRouting.routingDiagnostics
-      ? { routingDiagnostics: controllerRouting.routingDiagnostics }
+    ...(rolePolicyExecution.routingDiagnostics
+      ? { routingDiagnostics: rolePolicyExecution.routingDiagnostics }
       : {}),
   };
 }
@@ -2992,6 +3363,7 @@ export function mapResponsesRequest(
   difficultyContext?: BridgeDifficultyRoutingContext,
   controllerContext?: BridgeControllerRoutingContext,
   requestOptions?: BridgeExecutionRequestOptions,
+  roleDefinitions?: readonly RuntimeRoleDefinitionRecord[],
 ): BridgeExecutionPlan {
   const messages = toResponsesInputMessages(body.input);
   const contextTokens = estimateContextTokens(messages, body.tools?.length ?? 0);
@@ -3060,11 +3432,19 @@ export function mapResponsesRequest(
     controllerContext,
   });
 
-  return {
+  const rolePolicyExecution = applyRequestedRoleExecutionPolicy({
     routingRequest: controllerRouting.routingRequest,
+    messages,
+    tools,
+    routingDiagnostics: controllerRouting.routingDiagnostics,
+    roleDefinitions,
+    requestOptions,
+  });
+
+  return {
+    routingRequest: rolePolicyExecution.routingRequest,
     executionRequest: {
-      messages,
-      ...(tools?.length ? { tools } : {}),
+      ...rolePolicyExecution.executionRequest,
       ...(typeof body.stream === "boolean" ? { stream: body.stream } : {}),
       ...(typeof body.max_output_tokens === "number"
         ? { maxOutputTokens: body.max_output_tokens }
@@ -3072,8 +3452,8 @@ export function mapResponsesRequest(
       ...(typeof body.temperature === "number" ? { temperature: body.temperature } : {}),
     },
     ...(controllerRouting.routingModel ? { routingModel: controllerRouting.routingModel } : {}),
-    ...(controllerRouting.routingDiagnostics
-      ? { routingDiagnostics: controllerRouting.routingDiagnostics }
+    ...(rolePolicyExecution.routingDiagnostics
+      ? { routingDiagnostics: rolePolicyExecution.routingDiagnostics }
       : {}),
   };
 }
@@ -4278,7 +4658,7 @@ function setCorsHeaders(response: ServerResponse): void {
   response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
   response.setHeader(
     "Access-Control-Allow-Headers",
-    "Content-Type, Authorization, X-Request-ID, X-Role-Model-Routing-Mode, X-Role-Model-Endpoint-Id",
+    "Content-Type, Authorization, X-Request-ID, X-Role-Model-Routing-Mode, X-Role-Model-Endpoint-Id, X-Role-Model-Requested-Role-Id",
   );
 }
 
@@ -4683,6 +5063,78 @@ function createRequestHandler(options: StartBridgeServerOptions) {
         return;
       }
       writeJson(response, 200, await options.listRoles());
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/role-model/role-policy") {
+      if (!options.readRolePolicy) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.readRolePolicy());
+      return;
+    }
+
+    if (request.method === "POST" && url.pathname === "/api/role-model/roles") {
+      if (!options.createRolePolicyRole) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      try {
+        writeJson(response, 200, await options.createRolePolicyRole(await readJsonBody(request)));
+      } catch (error) {
+        writeJson(response, 400, {
+          error: error instanceof Error ? error.message : "role create failed",
+        });
+      }
+      return;
+    }
+
+    if (request.method === "PUT" && url.pathname.startsWith("/api/role-model/roles/")) {
+      if (!options.updateRolePolicyRole) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      try {
+        const roleId = decodeURIComponent(url.pathname.slice("/api/role-model/roles/".length));
+        writeJson(
+          response,
+          200,
+          await options.updateRolePolicyRole(roleId, await readJsonBody(request)),
+        );
+      } catch (error) {
+        writeJson(response, 400, {
+          error: error instanceof Error ? error.message : "role update failed",
+        });
+      }
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/role-model/tasks") {
+      if (!options.listTaskDefinitions) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.listTaskDefinitions());
+      return;
+    }
+
+    if (request.method === "PUT" && url.pathname === "/api/role-model/tasks") {
+      if (!options.updateTaskDefinitions) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      try {
+        const body = await readJsonBody(request);
+        if (!Array.isArray(body)) {
+          throw new Error("tasks body must be an array");
+        }
+        writeJson(response, 200, await options.updateTaskDefinitions(body));
+      } catch (error) {
+        writeJson(response, 400, {
+          error: error instanceof Error ? error.message : "task update failed",
+        });
+      }
       return;
     }
 
@@ -5195,13 +5647,6 @@ export async function createRuntimeBridgeBackend(
       tokenBudget: number;
     };
   }>(path.join(fixtureRoot, "context-envelope.json"));
-  const roleTaskFixture = await readJson<{
-    roleDefinitions: Parameters<typeof routeRuntimeRequest>[0]["roleDefinitions"];
-    taskDefinitions: Parameters<typeof routeRuntimeRequest>[0]["taskDefinitions"];
-    roleBindings: Parameters<typeof routeRuntimeRequest>[0]["roleBindings"];
-  }>(path.join(fixtureRoot, "adapter-role-task.json"));
-  const runtimeRoles = buildRuntimeRoleCatalog(roleTaskFixture.roleDefinitions ?? []);
-  const allowedRoleIds = runtimeRoles.roleSummaries.map((role) => role.roleId);
   const routingModel = await readJson<RoutingModelSelection>(
     path.join(fixtureRoot, "routing-model-guidance.json"),
   );
@@ -5231,6 +5676,21 @@ export async function createRuntimeBridgeBackend(
     scopeId: options.scopeId,
   });
   clearRuntimeEndpoints(initialization.databasePath);
+  const rolePolicyPath = getRuntimeRolePolicyPath(options.runtimeStateRoot);
+  let currentRolePolicy: RuntimeRolePolicyRecord;
+  try {
+    currentRolePolicy = existsSync(rolePolicyPath)
+      ? validateRuntimeRolePolicyRecord(
+          JSON.parse(await readFile(rolePolicyPath, "utf8")),
+          "runtime role policy",
+        )
+      : buildDefaultRuntimeRolePolicy();
+  } catch {
+    currentRolePolicy = buildDefaultRuntimeRolePolicy();
+  }
+  let currentRuntimeRoles = buildRuntimeRoleCatalog(currentRolePolicy.roleDefinitions);
+  const getAllowedRoleIds = (): readonly string[] =>
+    currentRuntimeRoles.roleSummaries.map((role) => role.roleId);
   const deviceId = randomUUID();
 
   persistContinuitySnapshot({
@@ -5374,6 +5834,26 @@ export async function createRuntimeBridgeBackend(
       throw new Error("Endpoint-registry validation failed after runtime state update.");
     }
   };
+  const persistCurrentRolePolicy = async (
+    nextPolicy: RuntimeRolePolicyRecord,
+  ): Promise<RuntimeRolePolicyRecord> => {
+    const validatedPolicy = validateRuntimeRolePolicyRecord(nextPolicy, "runtime role policy");
+    const nextRuntimeRoles = buildRuntimeRoleCatalog(validatedPolicy.roleDefinitions);
+    const validation = validateProviderAccounts({
+      catalog: currentNormalizedCatalog,
+      additionalProviders: liteLLMProviders,
+      accounts: currentAccounts,
+      allowedRoleIds: nextRuntimeRoles.roleSummaries.map((role) => role.roleId),
+    });
+    if (validation.diagnostics.length > 0) {
+      throw new Error(validation.diagnostics[0]?.message ?? "runtime role policy is incompatible");
+    }
+    await mkdir(options.runtimeStateRoot, { recursive: true });
+    await writeFile(rolePolicyPath, JSON.stringify(validatedPolicy, null, 2));
+    currentRolePolicy = validatedPolicy;
+    currentRuntimeRoles = nextRuntimeRoles;
+    return currentRolePolicy;
+  };
   const readStoredPeers = async (): Promise<readonly LocalPeerConfig[]> => {
     const peersPath = path.join(options.runtimeStateRoot, "peers.json");
     try {
@@ -5418,7 +5898,7 @@ export async function createRuntimeBridgeBackend(
     const validationResult = validateProviderAccounts({
       catalog: currentNormalizedCatalog,
       additionalProviders: liteLLMProviders,
-      allowedRoleIds,
+      allowedRoleIds: getAllowedRoleIds(),
       accounts: localPeerAccounts,
     });
     if (validationResult.diagnostics.length > 0) {
@@ -5776,7 +6256,7 @@ export async function createRuntimeBridgeBackend(
           options.runtimeStateRoot,
           options.scopeId,
         ),
-        allowedRoleIds,
+        allowedRoleIds: getAllowedRoleIds(),
       });
       if (validation.diagnostics.length > 0) {
         await Promise.all([nextLlamaSwapVendor?.shutdown(), nextLiteLLMVendor?.shutdown()]);
@@ -5825,7 +6305,7 @@ export async function createRuntimeBridgeBackend(
       catalog: currentNormalizedCatalog,
       additionalProviders: liteLLMProviders,
       accounts: fixtureAccounts,
-      allowedRoleIds,
+      allowedRoleIds: getAllowedRoleIds(),
     });
     if (validation.diagnostics.length > 0) {
       throw new Error("Provider-account validation failed for runtime host bridge.");
@@ -6081,17 +6561,17 @@ export async function createRuntimeBridgeBackend(
     sources: {
       runtimeConfigPath: options.unifiedRuntimeConfigPath ?? null,
       routingModel: "fixture",
-      policyInputs: "fixture+runtime",
+      policyInputs: "runtime",
     },
     policySources: {
-      roles: runtimeRoles.roleDefinitions,
-      tasks: roleTaskFixture.taskDefinitions,
+      roles: currentRuntimeRoles.roleDefinitions,
+      tasks: currentRolePolicy.taskDefinitions,
       roleBindings: buildRuntimeRoleBindings(
-        roleTaskFixture.roleBindings ?? [],
+        [],
         runtimeEndpoints,
         currentAccounts,
         currentRegistry,
-        runtimeRoles.roleDefinitions,
+        currentRuntimeRoles.roleDefinitions,
       ),
     },
   });
@@ -6226,14 +6706,14 @@ export async function createRuntimeBridgeBackend(
       routingTimeMs,
       envelope,
       retrievalReceipt,
-      roleDefinitions: runtimeRoles.roleDefinitions,
-      taskDefinitions: roleTaskFixture.taskDefinitions,
+      roleDefinitions: currentRuntimeRoles.roleDefinitions,
+      taskDefinitions: currentRolePolicy.taskDefinitions,
       roleBindings: buildRuntimeRoleBindings(
-        roleTaskFixture.roleBindings ?? [],
+        [],
         runtimeEndpoints,
         currentAccounts,
         currentRegistry,
-        runtimeRoles.roleDefinitions,
+        currentRuntimeRoles.roleDefinitions,
       ),
       routingModel: plan.routingModel ?? routingModel,
     });
@@ -6955,6 +7435,7 @@ export async function createRuntimeBridgeBackend(
         },
         resolvedControllerGuidance,
         requestOptions,
+        currentRolePolicy.roleDefinitions,
       );
       const { execution, toolExecutionResult, routingDecisionId } = await executeBridgePlan(
         plan,
@@ -7075,6 +7556,7 @@ export async function createRuntimeBridgeBackend(
         },
         resolvedControllerGuidance,
         requestOptions,
+        currentRolePolicy.roleDefinitions,
       );
       const { execution, routingDecisionId } = await executeBridgePlan(
         plan,
@@ -7474,7 +7956,7 @@ export async function createRuntimeBridgeBackend(
         taskTypes: readonly string[];
       }[]
     > {
-      return runtimeRoles.roleSummaries;
+      return currentRuntimeRoles.roleSummaries;
     },
     async listAccounts(): Promise<ReturnType<typeof listProviderAccounts>> {
       currentAccounts = [...readCurrentAccounts()];
@@ -7489,7 +7971,7 @@ export async function createRuntimeBridgeBackend(
       const validationResult = validateProviderAccounts({
         catalog: currentNormalizedCatalog,
         additionalProviders: liteLLMProviders,
-        allowedRoleIds,
+        allowedRoleIds: getAllowedRoleIds(),
         accounts: [account],
       });
 
@@ -7569,7 +8051,7 @@ export async function createRuntimeBridgeBackend(
       const validationResult = validateProviderAccounts({
         catalog: currentNormalizedCatalog,
         additionalProviders: liteLLMProviders,
-        allowedRoleIds,
+        allowedRoleIds: getAllowedRoleIds(),
         accounts: [
           {
             providerAccountId,
@@ -8127,6 +8609,62 @@ export async function createRuntimeBridgeBackend(
       const merged = { ...existing, ...body };
       await writeFile(policyPath, JSON.stringify(merged, null, 2));
       return merged;
+    },
+    async readRolePolicy(): Promise<RuntimeRolePolicyRecord> {
+      return currentRolePolicy;
+    },
+    async createRolePolicyRole(
+      body: Record<string, unknown>,
+    ): Promise<RuntimeRoleDefinitionRecord> {
+      const nextRole = validateRuntimeRoleDefinitionRecord(body, "createRolePolicyRole");
+      if (currentRolePolicy.roleDefinitions.some((role) => role.role_id === nextRole.role_id)) {
+        throw new Error(`Role ${nextRole.role_id} already exists.`);
+      }
+      const nextPolicy = await persistCurrentRolePolicy({
+        roleDefinitions: [...currentRolePolicy.roleDefinitions, nextRole],
+        taskDefinitions: currentRolePolicy.taskDefinitions,
+      });
+      return (
+        nextPolicy.roleDefinitions.find((role) => role.role_id === nextRole.role_id) ?? nextRole
+      );
+    },
+    async updateRolePolicyRole(
+      roleId: string,
+      body: Record<string, unknown>,
+    ): Promise<RuntimeRoleDefinitionRecord> {
+      const bodyRoleId = readOptionalString(body, "role_id");
+      if (bodyRoleId && bodyRoleId !== roleId) {
+        throw new Error(`Role update body role_id must match ${roleId}.`);
+      }
+      if (!currentRolePolicy.roleDefinitions.some((role) => role.role_id === roleId)) {
+        throw new Error(`Role ${roleId} does not exist.`);
+      }
+      const nextRole = validateRuntimeRoleDefinitionRecord(
+        { ...body, role_id: roleId },
+        "updateRolePolicyRole",
+      );
+      const nextPolicy = await persistCurrentRolePolicy({
+        roleDefinitions: currentRolePolicy.roleDefinitions.map((role) =>
+          role.role_id === roleId ? nextRole : role,
+        ),
+        taskDefinitions: currentRolePolicy.taskDefinitions,
+      });
+      return nextPolicy.roleDefinitions.find((role) => role.role_id === roleId) ?? nextRole;
+    },
+    async listTaskDefinitions(): Promise<readonly RuntimeTaskDefinitionRecord[]> {
+      return currentRolePolicy.taskDefinitions;
+    },
+    async updateTaskDefinitions(
+      body: readonly Record<string, unknown>[],
+    ): Promise<readonly RuntimeTaskDefinitionRecord[]> {
+      const nextTasks = body.map((entry, index) =>
+        validateRuntimeTaskDefinitionRecord(entry, `updateTaskDefinitions[${index}]`),
+      );
+      const nextPolicy = await persistCurrentRolePolicy({
+        roleDefinitions: currentRolePolicy.roleDefinitions,
+        taskDefinitions: nextTasks,
+      });
+      return nextPolicy.taskDefinitions;
     },
     async listSwapHistory(): Promise<
       readonly {

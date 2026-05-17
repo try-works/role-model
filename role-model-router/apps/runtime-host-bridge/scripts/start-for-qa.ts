@@ -33,7 +33,14 @@ type QaBridgeBackend = Pick<
   | "subscribeTelemetry"
   | "listProviders"
   | "listRoles"
+  | "listModels"
+  | "readRolePolicy"
+  | "createRolePolicyRole"
+  | "updateRolePolicyRole"
+  | "listTaskDefinitions"
+  | "updateTaskDefinitions"
   | "listAccounts"
+  | "listProviderDeviceAuthorizations"
   | "upsertProviderAccount"
   | "startProviderDeviceAuthorization"
   | "pollProviderDeviceAuthorization"
@@ -93,7 +100,14 @@ export function createQaServerOptions(
     subscribeTelemetry: backend.subscribeTelemetry,
     listProviders: backend.listProviders,
     listRoles: backend.listRoles,
+    listModels: backend.listModels,
+    readRolePolicy: backend.readRolePolicy,
+    createRolePolicyRole: backend.createRolePolicyRole,
+    updateRolePolicyRole: backend.updateRolePolicyRole,
+    listTaskDefinitions: backend.listTaskDefinitions,
+    updateTaskDefinitions: backend.updateTaskDefinitions,
     listAccounts: backend.listAccounts,
+    listProviderDeviceAuthorizations: backend.listProviderDeviceAuthorizations,
     upsertProviderAccount: backend.upsertProviderAccount,
     startProviderDeviceAuthorization: backend.startProviderDeviceAuthorization,
     pollProviderDeviceAuthorization: backend.pollProviderDeviceAuthorization,

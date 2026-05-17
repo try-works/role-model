@@ -1,6 +1,6 @@
 Type: `domain`
 Status: `CURRENT`
-Scope: `Stable baseline ownership for the repo workspace, canonical protocol tree, shared packages, router family, fixtures, validation surfaces, and the repo-owned runtime/operator baseline extended through the routing-strategy UI convergence baseline in run 30, unified vendor execution, telemetry dashboard remediation, runtime-config control, and the run-32 models.dev metadata/readiness baseline.`
+Scope: `Stable baseline ownership for the repo workspace, canonical protocol tree, shared packages, router family, fixtures, validation surfaces, and the repo-owned runtime/operator baseline extended through the routing-strategy UI convergence baseline in run 30, unified vendor execution, telemetry dashboard remediation, runtime-config control, the run-32 models.dev metadata/readiness baseline, and the run-34 runtime-owned role-policy/operator-control baseline.`
 Owns-Paths:
 - `/README.md`
 - `/LICENSE`
@@ -47,8 +47,9 @@ Source-Runs:
 - `29-router-runtime-request-rewriter-hybrid-mode`
 - `30-router-runtime-strategy-convergence-e2e`
 - `32-models-dev-metadata-coverage`
+- `34-router-runtime-role-policy-and-ui-fixture-reduction`
 Validated-At-Commit: `working-tree`
-Last-Validated: `2026-05-15T06:30:00Z`
+Last-Validated: `2026-05-17T08:30:00Z`
 Tags:
 - `baseline`
 - `workspace`
@@ -107,6 +108,11 @@ This repository now has a real product baseline rather than only recursive scaff
 - The runtime now has a first SEA packaging path through `/role-model-router/sea-config.json`, `/role-model-router/apps/runtime-host-bridge/src/package-sea.ts`, `runtime:package-sea`, `runtime:validate-packaging`, and `/.github/workflows/build-binaries.yml`; the packaged executable embeds platform-aware llama-swap assets and is validated by booting the SEA binary and exercising `/healthz` plus `/v1/models`
 - The runtime now also exposes a canonical unified telemetry baseline for mixed local and remote execution, including summary, ledger, request-detail, and `/api/role-model/telemetry/stream` SSE surfaces in `/role-model-router/apps/runtime-host-bridge/` and matching dashboard, requests, and request-detail consumers in `/role-model-router/apps/runtime-ui/`
 - The repo-owned control plane now includes mutable runtime-config read and write routes, `Control > Runtime Config`, live account save and Kimi device-OAuth state, endpoint activation, and honest zero-endpoint `decision_only` controller or models or runtime empty states instead of 500 or loading traps
+- The runtime now also owns router-grade role/task policy persistence at `runtimeStateRoot\role-policy.json`, with bridge CRUD/readback routes and router inputs consuming the runtime-owned policy instead of the earlier fixture-fed `adapter-role-task.json` source
+- The repo-owned runtime UI now also includes `Control > Roles` for live role create/edit and task allowlist authoring, while `Control > Models` can mutate model-side role bindings against the same runtime-owned policy surface instead of staying inspect-only
+- Request ingress now also supports direct `requestedRoleId` targeting on chat-completions and responses paths, and the selected role can inject `default_system_instructions`, constrain `tool_policy`, surface `output_contracts` plus `safety_policy_refs`, and persist the applied policy under durable `routingDiagnostics.rolePolicy`
+- The QA bootstrap server now forwards the role-policy, model inventory, and device-authorization routes needed for live Roles/Models browser proof, but it still lacks `unifiedRuntimeConfigPath`, so runtime-config save and full alias-routing proof remain validator or harness-owned rather than QA-launcher-owned
+- The vendored llama-swap managed bridge must launch `/role-model-router/apps/runtime-host-bridge/src/cli-entry.ts`; invoking `src/cli.ts` exits without serving `/healthz` and breaks `runtime:validate-host`
 - Provider-account and endpoint surfaces now preserve truthful readiness semantics across reload, restart, and packaged execution: pending device-auth flows survive reload/restart, persisted OAuth-backed accounts rehydrate from stored tokens, unresolved env-backed credentials remain `credentials-missing`, and Studio/Workbench/Runtime consumers no longer imply execution readiness before credentials and endpoint activation are actually satisfied
 - `runtime:validate-packaging` now rebuilds the host before SEA packaging and proves the packaged Windows executable can serve `/healthz`, `/v1/models`, `/v1/chat/completions`, and `/v1/responses` against the current runtime baseline
 - The protocol generation path now preserves `UsageEvent.cost_actual` and emits titled helper types for internal `$defs` entries, so focused `types:generate`, `schemas:validate`, and `@role-model/schema-tools build` stay green in the current baseline

@@ -1,6 +1,6 @@
 Type: `pattern`
 Status: `CURRENT`
-Scope: `How runtime UI verification should combine browser-use with direct Edge CDP when truthful mobile-width or color-scheme evidence is required on Windows.`
+Scope: `How runtime UI verification should combine browser-use with direct Edge CDP when truthful operator-flow evidence is required on Windows, and when QA-bridge browser proof must be paired with backend validators for execution or routing claims.`
 Owns-Paths:
 Watch-Paths:
 - `/.recursive/memory/skills/SKILLS.md`
@@ -8,8 +8,9 @@ Watch-Paths:
 - `/role-model-router/apps/runtime-host-bridge/**`
 Source-Runs:
 - `16-router-runtime-unified-telemetry-dashboard`
+- `34-router-runtime-role-policy-and-ui-fixture-reduction`
 Validated-At-Commit: `working-tree`
-Last-Validated: `2026-05-08T13:37:51.7395149+08:00`
+Last-Validated: `2026-05-17T08:30:00Z`
 Tags:
 - `skills`
 - `browser`
@@ -50,3 +51,4 @@ On Windows, prefer direct Edge CDP for the final receipt when:
 - Keep the browser proof same-origin to the live repo-owned UI and bridge.
 - Save both screenshots and text-or-JSON companion receipts when the scenario is stateful.
 - When refreshing SSE or other live data proof, use explicit request ids so new events do not overwrite each other in the captured ledger.
+- Use the QA bridge/browser flow to prove operator reachability, form behavior, and live readback, but switch to backend validators or a direct HTTP harness when the QA launcher does not persist runtime config or cannot faithfully prove downstream routing behavior.

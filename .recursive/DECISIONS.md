@@ -941,3 +941,33 @@
   - The run did not replace LiteLLM as the execution-coverage layer or widen into unrelated UI redesign or new auth flows outside the existing override/control-plane boundary.
 - Known issues / follow-ups:
   - Closeout had to document tracked-diff versus status-only additions explicitly because the executable Phase-0 diff basis excludes some untracked worktree paths until they are added; this was treated as an audit-accounting concern, not a requirements gap.
+
+### Run `34-router-runtime-role-policy-and-ui-fixture-reduction`
+
+- Run folder: `/.recursive/run/34-router-runtime-role-policy-and-ui-fixture-reduction/`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `01.5-root-cause.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - the runtime now owns router-grade role and task policy under `runtimeStateRoot\role-policy.json`, with bridge CRUD/readback routes and router consumption switched away from the old fixture-fed `adapter-role-task.json` source
+  - the runtime UI now ships `Control > Roles` plus live role create/edit, task allowlist editing, and model-side role binding updates from `Control > Models`, while touched frontend surfaces/tests no longer lean on placeholder model ids or fixture-oriented operator copy
+  - request-time role targeting is now a first-class bridge seam for chat-completions and responses, and the selected role policy applies `default_system_instructions`, `tool_policy`, `output_contracts`, and `safety_policy_refs` with durable `routingDiagnostics.rolePolicy` receipts
+  - the QA launcher now exposes the role-policy, model inventory, and device-authorization readers needed for live Roles/Models browser proof, and the vendored llama-swap launcher now uses `src/cli-entry.ts`, which restores `runtime:validate-host`
+- Why:
+  - to make role policy operator-owned and router-effective instead of fixture-owned, expose the full router-grade role workflow in the shipped runtime UI, remove touched frontend fixture debt, and close the remaining validation blocker before final end-to-end proof
+- How:
+  - implemented under strict RED/GREEN TDD across host-bridge, runtime-observability, runtime-ui design-system/client routes, QA bootstrap wiring, and the vendored Go launcher seam, then validated with focused package tests/builds, `runtime:validate-ui`, `runtime:validate-host`, `runtime:validate-vendors`, live browser QA, and backend alias-routing proof
+- What was not done:
+  - the run did not widen into new routing-strategy modes, broad repo-wide formatter remediation, or a QA-launcher runtime-config persistence redesign
+- Known issues / follow-ups:
+  - the QA launcher still has no `unifiedRuntimeConfigPath`, so browser proof remains suitable for live operator workflows but not for runtime-config-save plus downstream alias-routing proof
+  - the broader worktree still contains unrelated status noise outside run 34 scope, including older nested `role-model-router/.recursive/run/*` history and a Python `__pycache__` artifact

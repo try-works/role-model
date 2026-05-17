@@ -1,0 +1,123 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/34-router-runtime-role-policy-and-ui-fixture-reduction/role-model-router/apps/runtime-ui[39m
+
+ [31mΓ¥»[39m app/lib/runtime-api.test.ts [2m([22m[2m34 tests[22m[2m | [22m[31m2 failed[39m[2m)[22m[32m 65[2mms[22m[39m
+   [32mΓ£ô[39m fetchRuntimeSnapshot[2m > [22mloads the operator shell data from the runtime control-plane endpoints[32m 13[2mms[22m[39m
+   [32mΓ£ô[39m fetchLocalModels[2m > [22mpreserves local ownership and llama-swap config metadata from the runtime API[32m 2[2mms[22m[39m
+   [32mΓ£ô[39m fetchDownstreamOpenAIProviderConfig[2m > [22mloads the downstream OpenAI-compatible provider contract for consumer apps[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m fetchRequestDetail[2m > [22mloads request detail and the linked endpoint profile for the inspector pane[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m router APIs[2m > [22mloads the router summary, config, candidates, and decision ledger from router-specific endpoints[32m 2[2mms[22m[39m
+   [32mΓ£ô[39m router APIs[2m > [22mloads router decision detail from the router decision endpoint[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m telemetry APIs[2m > [22mloads the canonical telemetry dashboard reads from the role-model telemetry endpoints[32m 2[2mms[22m[39m
+   [32mΓ£ô[39m telemetry APIs[2m > [22mloads telemetry request rows with limit parameters[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m telemetry APIs[2m > [22msubscribes to canonical telemetry SSE updates and closes the source on cleanup[32m 3[2mms[22m[39m
+   [32mΓ£ô[39m observe APIs[2m > [22mloads vendor activity metrics for the observe activity page[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m observe APIs[2m > [22mloads a persisted request/response capture by id[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m observe APIs[2m > [22mreturns null when an activity capture is not found[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m observe APIs[2m > [22mloads raw log text for observe log consoles[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m observe APIs[2m > [22mloads vendor version info for the runtime system surface[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m controller assignment APIs[2m > [22mloads the current global controller assignment[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m controller assignment APIs[2m > [22mloads a null controller assignment when no controller is configured yet[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m controller assignment APIs[2m > [22mpatches the selected controller candidate[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m submitWorkbenchChat[2m > [22mposts a chat-completions payload to the runtime workbench path[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m submitWorkbenchChat[2m > [22msends routing-mode override as a header instead of leaking it into the OpenAI-compatible body[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m submitWorkbenchChat[2m > [22msends endpoint override as a header instead of leaking it into the OpenAI-compatible body[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m studio vendor API helpers[2m > [22mposts an OpenAI image-generation request[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m studio vendor API helpers[2m > [22mposts an SDAPI txt2img request[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m studio vendor API helpers[2m > [22mloads available speech voices for a selected model[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m studio vendor API helpers[2m > [22mposts a speech-generation request and returns audio bytes as a blob[32m 2[2mms[22m[39m
+   [32mΓ£ô[39m studio vendor API helpers[2m > [22mposts a multipart transcription request[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m studio vendor API helpers[2m > [22mposts a rerank request to the selected vendor path[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m studio vendor API helpers[2m > [22mposts a raw advanced API request to the selected endpoint family[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m startRuntimeDeviceAuthorization[2m > [22mposts the selected provider account payload to the runtime device-auth start path[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m pollRuntimeDeviceAuthorization[2m > [22mposts the auth request id to the runtime device-auth poll path[32m 5[2mms[22m[39m
+   [32mΓ£ô[39m activateRuntimeEndpoint[2m > [22mposts endpoint activation payload to the runtime endpoints mutation path[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m fetchRuntimeConfig[2m > [22mloads the normalized unified runtime config from the runtime control plane[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m updateRuntimeConfig[2m > [22mputs the normalized unified runtime config to the runtime control plane[32m 1[2mms[22m[39m
+[31m   [31m├ù[31m role policy APIs[2m > [22mloads the full runtime-managed role policy from the control plane[39m[32m 7[2mms[22m[39m
+[31m     ΓåÆ (0 , fetchRolePolicy) is not a function[39m
+[31m   [31m├ù[31m role policy APIs[2m > [22mposts role creation, puts role updates, and puts task allowlists to the control plane[39m[32m 1[2mms[22m[39m
+[31m     ΓåÆ (0 , createRolePolicyRole) is not a function[39m
+ [31mΓ¥»[39m app/lib/design-system.test.ts [2m([22m[2m16 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 91[2mms[22m[39m
+[31m   [31m├ù[31m runtime design system[2m > [22mdefines navigation groups and layout templates for every runtime route[39m[32m 13[2mms[22m[39m
+[31m     ΓåÆ expected [ { title: 'Overview', ΓÇª(1) }, ΓÇª(7) ] to deeply equal [ { title: 'Overview', ΓÇª(1) }, ΓÇª(7) ][39m
+   [32mΓ£ô[39m runtime design system[2m > [22mkeeps the shell on restrained radii and explicit content widths[32m 1[2mms[22m[39m
+   [32mΓ£ô[39m runtime design system[2m > [22mglobal shell chrome keeps legacy vendor ui out of the main runtime contract[32m 41[2mms[22m[39m
+   [32mΓ£ô[39m runtime design system[2m > [22mstudio implementation targets render repo-owned workspace sections instead of placeholder blueprints[32m 11[2mms[22m[39m
+   [32mΓ£ô[39m runtime design system[2m > [22mintegration and system implementation targets render live upstream and peer surfaces[32m 6[2mms[22m[39m
+   [32mΓ£ô[39m runtime design system[2m > [22mrouter implementation targets render repo-owned routing explanation surfaces[32m 10[2mms[22m[39m
+   [32mΓ£ô[39m runtime design system[2m > [22mrouter routes preserve empty-state and observe-link affordances[32m 0[2mms[22m[39m
+   [32mΓ£ô[39m runtime design system[2m > [22mrouter config exposes proposal strategy modes and keeps the dynamic detail route out of section tabs[32m 0[2mms[22m[39m
+   [32mΓ£ô[39m runtime design system[2m > [22mdesign system doc marks the converted pages as live routes[32m 0[2mms[22m[39m
+   [32mΓ£ô[39m runtime design system[2m > [22mcontrol routes tolerate an unassigned controller before endpoint activation[32m 0[2mms[22m[39m
+   [32mΓ£ô[39m runtime design system[2m > [22mapplies the swiss stone palette, ibm plex typography, and dual-scheme browser contract in shared app chrome[32m 0[2mms[22m[39m
+   [32mΓ£ô[39m runtime design system[2m > [22mkeeps shared states on the stone plus single-accent palette[32m 0[2mms[22m[39m
+   [32mΓ£ô[39m runtime design system[2m > [22mcontrol runtime config is a first-class route and models stays inspect-only[32m 5[2mms[22m[39m
+   [32mΓ£ô[39m runtime design system[2m > [22mlocal setup surfaces stay discoverable from navigation and empty registry states[32m 0[2mms[22m[39m
+   [32mΓ£ô[39m runtime design system[2m > [22mregistry and system layouts avoid redundant KPI strips and placeholder note panels[32m 0[2mms[22m[39m
+   [32mΓ£ô[39m runtime design system[2m > [22mworkbench and observe routes expose routing controls and receipts in repo-owned UI surfaces[32m 0[2mms[22m[39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 3 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  app/lib/design-system.test.ts > runtime design system > defines navigation groups and layout templates for every runtime route
+AssertionError: expected [ { title: 'Overview', ΓÇª(1) }, ΓÇª(7) ] to deeply equal [ { title: 'Overview', ΓÇª(1) }, ΓÇª(7) ]
+
+- Expected
++ Received
+
+@@ -31,11 +31,10 @@
+        "/app/control/providers",
+        "/app/control/routing-strategy",
+        "/app/control/runtime-config",
+        "/app/control/controller",
+        "/app/control/endpoints",
+-       "/app/control/roles",
+        "/app/control/models",
+      ],
+      "title": "Control",
+    },
+    {
+
+ Γ¥» app/lib/design-system.test.ts:113:7
+    111|         routes: section.items.map((item) => item.to),
+    112|       })),
+    113|     ).toEqual([
+       |       ^
+    114|       {
+    115|         title: "Overview",
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/3]ΓÄ»
+
+ FAIL  app/lib/runtime-api.test.ts > role policy APIs > loads the full runtime-managed role policy from the control plane
+TypeError: (0 , fetchRolePolicy) is not a function
+ Γ¥» app/lib/runtime-api.test.ts:1565:18
+    1563|     });
+    1564| 
+    1565|     await expect(fetchRolePolicy(fetcher)).resolves.toEqual({
+       |                  ^
+    1566|       roleDefinitions: [
+    1567|         expect.objectContaining({
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[2/3]ΓÄ»
+
+ FAIL  app/lib/runtime-api.test.ts > role policy APIs > posts role creation, puts role updates, and puts task allowlists to the control plane
+TypeError: (0 , createRolePolicyRole) is not a function
+ Γ¥» app/lib/runtime-api.test.ts:1630:7
+    1628| 
+    1629|     await expect(
+    1630|       createRolePolicyRole(
+       |       ^
+    1631|         {
+    1632|           role_id: "qa.reviewer",
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[3/3]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m2 failed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[31m3 failed[39m[22m[2m | [22m[1m[32m47 passed[39m[22m[90m (50)[39m
+[2m   Start at [22m 07:24:48
+[2m   Duration [22m 1.57s[2m (transform 491ms, setup 0ms, collect 857ms, tests 156ms, environment 1ms, prepare 353ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\34-router-runtime-role-policy-and-ui-fixture-reduction\role-model-router\apps\runtime-ui:
+ΓÇëERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓÇë Command failed with exit code 1: vitest run app/lib/runtime-api.test.ts app/lib/design-system.test.ts

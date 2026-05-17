@@ -77,7 +77,7 @@ export default function RouterConfigRoute() {
     <PageHeader
       eyebrow="Router"
       title="Routing config"
-      description="See low-level routing policy state, proposal routing modes, fixture-backed guidance, and the raw role/task policy inputs that shape resolved routing behavior."
+      description="See low-level routing policy state, proposal routing modes, live guidance provenance, and the raw role/task policy inputs that shape resolved routing behavior."
       actions={
         <>
           <Link className={secondaryButtonClassName} to="/app/control/runtime-config">
@@ -225,7 +225,7 @@ export default function RouterConfigRoute() {
 
         <SectionCard
           title="Policy inputs"
-          description="Router config exposes the full role/task inputs so routing-policy overrides are inspectable without digging through fixtures manually."
+          description="Router config exposes the full role/task inputs so routing-policy overrides stay inspectable without leaving the runtime UI."
         >
           <div className="space-y-4">
             {config.policySources.roles.length === 0 ? (

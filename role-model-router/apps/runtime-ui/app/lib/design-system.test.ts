@@ -4,6 +4,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { RouterProvider, createMemoryRouter } from "react-router";
 import { describe, expect, test } from "vitest";
 
+import ControlRolesRoute from "../routes/control-roles";
 import ControlRuntimeConfigRoute from "../routes/control-runtime-config";
 import IntegrationsUpstreamRoute from "../routes/integrations-upstream";
 import RouterOverviewRoute from "../routes/router";
@@ -144,6 +145,7 @@ describe("runtime design system", () => {
           "/app/control/runtime-config",
           "/app/control/controller",
           "/app/control/endpoints",
+          "/app/control/roles",
           "/app/control/models",
         ],
       },
@@ -180,6 +182,12 @@ describe("runtime design system", () => {
       expect.objectContaining({
         id: "control-models",
         template: "model-inventory",
+      }),
+    );
+    expect(getRuntimeRouteDefinition("/app/control/roles")).toEqual(
+      expect.objectContaining({
+        id: "control-roles",
+        template: "registry-detail",
       }),
     );
     expect(getRuntimeRouteDefinition("/app/local/models")).toEqual(
@@ -484,16 +492,23 @@ describe("runtime design system", () => {
     expect(rootSource).not.toMatch(/rose-/);
   });
 
-  test("control runtime config is a first-class route and models stays inspect-only", () => {
+  test("control runtime config, runtime roles, and model bindings are first-class control routes", () => {
     expect(
       renderRoute("/app/control/runtime-config", createElement(ControlRuntimeConfigRoute)),
     ).toContain("Runtime config");
     expect(
       renderRoute("/app/control/runtime-config", createElement(ControlRuntimeConfigRoute)),
     ).toContain("Save and apply");
+    expect(renderRoute("/app/control/roles", createElement(ControlRolesRoute))).toContain(
+      "Runtime roles",
+    );
+    expect(renderRoute("/app/control/roles", createElement(ControlRolesRoute))).toContain(
+      "Loading runtime role policy",
+    );
     expect(controlModelsSource).toContain("Inspect");
-    expect(controlModelsSource).not.toContain(">Settings<");
+    expect(controlModelsSource).toContain("Save bindings");
     expect(controlModelsSource).toContain("/app/control/runtime-config");
+    expect(controlModelsSource).toContain("/app/control/roles");
   });
 
   test("local setup surfaces stay discoverable from navigation and empty registry states", () => {

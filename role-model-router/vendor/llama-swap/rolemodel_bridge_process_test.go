@@ -34,7 +34,7 @@ func TestResolveRoleModelBridgeProcessOptions_Defaults(t *testing.T) {
 	}
 }
 
-func TestBuildRoleModelBridgeCommand_UsesWorkspaceCli(t *testing.T) {
+func TestBuildRoleModelBridgeCommand_UsesWorkspaceCliEntryPoint(t *testing.T) {
 	options := &roleModelBridgeProcessOptions{
 		RepoRoot:         `D:\repo`,
 		RuntimeStateRoot: `D:\runtime-state`,
@@ -58,7 +58,7 @@ func TestBuildRoleModelBridgeCommand_UsesWorkspaceCli(t *testing.T) {
 		"@role-model-router/runtime-host-bridge",
 		"exec",
 		"tsx",
-		"src/cli.ts",
+		"src/cli-entry.ts",
 		"--host",
 		"127.0.0.1",
 		"--port",
