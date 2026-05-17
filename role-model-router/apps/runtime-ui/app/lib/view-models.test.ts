@@ -398,8 +398,8 @@ describe("buildEndpointCatalogRows", () => {
           healthStatus: "healthy",
         },
         {
-          endpointId: "llama-swap.local.local-mock-llama",
-          modelId: "local/mock-llama",
+          endpointId: "llama-swap.local.lfm2.5-1.2b-instruct",
+          modelId: "lfm2.5-1.2b-instruct",
           providerId: "llama-swap",
           sourceType: "local",
           servingSource: "vendor-llama-swap",
@@ -422,8 +422,8 @@ describe("buildEndpointCatalogRows", () => {
       ]),
     ).toEqual([
       {
-        endpointId: "llama-swap.local.local-mock-llama",
-        modelId: "local/mock-llama",
+        endpointId: "llama-swap.local.lfm2.5-1.2b-instruct",
+        modelId: "lfm2.5-1.2b-instruct",
         providerLabel: "llama-swap",
         sourceLabel: "Local",
         servingSource: "vendor-llama-swap",
@@ -819,8 +819,8 @@ describe("telemetry view models", () => {
     expect(
       buildTelemetryComparisonCards([
         {
-          endpointId: "llama-swap.local.local-mock-llama",
-          modelId: "local/mock-llama",
+          endpointId: "llama-swap.local.lfm2.5-1.2b-instruct",
+          modelId: "lfm2.5-1.2b-instruct",
           sourceType: "local",
           providerFamily: "llama-swap",
           promptCacheSupported: false,
@@ -847,7 +847,7 @@ describe("telemetry view models", () => {
       ]),
     ).toEqual([
       expect.objectContaining({
-        endpointId: "llama-swap.local.local-mock-llama",
+        endpointId: "llama-swap.local.lfm2.5-1.2b-instruct",
         sourceLabel: "Local",
         providerLabel: "llama-swap",
         cacheLabel: "Caching unavailable",
@@ -865,8 +865,8 @@ describe("telemetry view models", () => {
       buildTelemetryRequestRows([
         {
           requestId: "req-001",
-          endpointId: "llama-swap.local.local-mock-llama",
-          modelId: "local/mock-llama",
+          endpointId: "llama-swap.local.lfm2.5-1.2b-instruct",
+          modelId: "lfm2.5-1.2b-instruct",
           sourceType: "local",
           providerFamily: "llama-swap",
           createdAtMs: 1_770_000_000_000,

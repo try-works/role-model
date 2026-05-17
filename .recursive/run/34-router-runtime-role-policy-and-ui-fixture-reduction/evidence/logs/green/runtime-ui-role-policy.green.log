@@ -1,0 +1,11 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/34-router-runtime-role-policy-and-ui-fixture-reduction/role-model-router/apps/runtime-ui[39m
+
+ [32mΓ£ô[39m app/lib/runtime-api.test.ts [2m([22m[2m34 tests[22m[2m)[22m[32m 60[2mms[22m[39m
+ [32mΓ£ô[39m app/lib/design-system.test.ts [2m([22m[2m16 tests[22m[2m)[22m[32m 106[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m2 passed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[32m50 passed[39m[22m[90m (50)[39m
+[2m   Start at [22m 07:29:22
+[2m   Duration [22m 1.93s[2m (transform 672ms, setup 0ms, collect 1.15s, tests 165ms, environment 1ms, prepare 619ms)[22m
+

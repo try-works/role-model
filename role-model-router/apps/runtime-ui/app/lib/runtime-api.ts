@@ -111,10 +111,16 @@ export interface RuntimeAccount {
   readonly providerAccountId: string;
   readonly providerId: string;
   readonly providerKind?: string;
+  readonly orgScope?: string;
+  readonly accountScope?: string;
   readonly authMode?: string;
   readonly credentialRef?: {
     readonly backend: string;
     readonly ref: string;
+  };
+  readonly regionPolicy?: {
+    readonly mode: string;
+    readonly regions: readonly string[];
   };
   readonly baseUrlOverride?: string | null;
   readonly allowedModels?: readonly string[];
@@ -123,6 +129,9 @@ export interface RuntimeAccount {
     readonly roleIds: readonly string[];
   }[];
   readonly deniedModels?: readonly string[];
+  readonly entitlementTags?: readonly string[];
+  readonly budgetPolicyRef?: string;
+  readonly quotaPolicyRef?: string;
   readonly status?: string;
   readonly healthStatus?: string;
   readonly rotationState?: string;
@@ -162,6 +171,41 @@ export interface RuntimeRoleDefinition {
   readonly label: string;
   readonly description?: string;
   readonly taskTypes?: readonly string[];
+}
+
+export interface RuntimeRolePolicyRole {
+  readonly role_id: string;
+  readonly name: string;
+  readonly description: string;
+  readonly role_kind: string;
+  readonly default_system_instructions: string;
+  readonly task_types_supported: readonly string[];
+  readonly required_capabilities: readonly string[];
+  readonly preferred_capabilities: readonly string[];
+  readonly forbidden_capabilities: readonly string[];
+  readonly tool_policy: {
+    readonly mode: string;
+    readonly allowed_tools?: readonly string[];
+  };
+  readonly routing_policy_overrides: Record<string, unknown>;
+  readonly output_contracts: readonly string[];
+  readonly safety_policy_refs: readonly string[];
+}
+
+export interface RuntimeTaskDefinition {
+  readonly task_type: string;
+  readonly description: string;
+  readonly required_inputs: readonly string[];
+  readonly required_capabilities: readonly string[];
+  readonly preferred_capabilities: readonly string[];
+  readonly quality_metrics: readonly string[];
+  readonly allowed_roles: readonly string[];
+  readonly default_benchmark_suites: readonly string[];
+}
+
+export interface RuntimeRolePolicy {
+  readonly roleDefinitions: readonly RuntimeRolePolicyRole[];
+  readonly taskDefinitions: readonly RuntimeTaskDefinition[];
 }
 
 export interface RuntimeDeviceAuthorization {
@@ -760,6 +804,36 @@ export async function updateRuntimeConfig(
   fetcher: RuntimeFetcher = fetch,
 ): Promise<RuntimeConfigRecord> {
   return putJson<RuntimeConfigRecord>("/api/role-model/runtime/config", payload, fetcher);
+}
+
+export async function fetchRolePolicy(fetcher: RuntimeFetcher = fetch): Promise<RuntimeRolePolicy> {
+  return fetchJson<RuntimeRolePolicy>("/api/role-model/role-policy", fetcher);
+}
+
+export async function createRolePolicyRole(
+  payload: Record<string, unknown>,
+  fetcher: RuntimeFetcher = fetch,
+): Promise<RuntimeRolePolicyRole> {
+  return postJson<RuntimeRolePolicyRole>("/api/role-model/roles", payload, fetcher);
+}
+
+export async function updateRolePolicyRole(
+  roleId: string,
+  payload: Record<string, unknown>,
+  fetcher: RuntimeFetcher = fetch,
+): Promise<RuntimeRolePolicyRole> {
+  return putJson<RuntimeRolePolicyRole>(
+    `/api/role-model/roles/${encodeURIComponent(roleId)}`,
+    payload,
+    fetcher,
+  );
+}
+
+export async function updateTaskDefinitions(
+  payload: readonly Record<string, unknown>[],
+  fetcher: RuntimeFetcher = fetch,
+): Promise<readonly RuntimeTaskDefinition[]> {
+  return putJson<readonly RuntimeTaskDefinition[]>("/api/role-model/tasks", payload, fetcher);
 }
 
 export async function updateControllerAssignment(

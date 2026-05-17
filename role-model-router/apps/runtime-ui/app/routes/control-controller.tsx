@@ -81,7 +81,7 @@ export default function ControlControllerRoute() {
 
       <SectionCard
         title="Current assignment"
-        description="The controller is persisted in the runtime control plane and can be changed without editing fixtures."
+        description="The controller is persisted in the runtime control plane and can be changed without editing seed data."
       >
         {controller ? (
           <div className="grid gap-3 md:grid-cols-3">

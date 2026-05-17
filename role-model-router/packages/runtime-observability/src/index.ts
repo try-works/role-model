@@ -67,6 +67,15 @@ export interface RuntimeRoutingDiagnostics {
     readonly aliasMode?: RuntimeRoutingMode;
     readonly effectiveMode: RuntimeRoutingMode;
   };
+  readonly rolePolicy?: {
+    readonly requestedRoleId: string;
+    readonly appliedRoleId: string;
+    readonly defaultSystemInstructionsApplied: boolean;
+    readonly toolPolicyMode: "allowed" | "limited" | "disabled";
+    readonly allowedTools?: readonly string[];
+    readonly outputContracts: readonly string[];
+    readonly safetyPolicyRefs: readonly string[];
+  };
   readonly rewrite?: {
     readonly requestedModel: string;
     readonly downstreamModelId: string;

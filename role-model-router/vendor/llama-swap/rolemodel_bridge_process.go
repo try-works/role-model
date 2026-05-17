@@ -70,7 +70,7 @@ func buildRoleModelBridgeCommand(options *roleModelBridgeProcessOptions) *exec.C
 		"@role-model-router/runtime-host-bridge",
 		"exec",
 		"tsx",
-		"src/cli.ts",
+		"src/cli-entry.ts",
 		"--host",
 		options.Host,
 		"--port",

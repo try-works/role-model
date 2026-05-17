@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { cp, mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
@@ -182,6 +182,16 @@ describe("runtime-host-bridge", () => {
     const listRouterCandidates = async () => [{ candidateId: "cand-1" }];
     const listRouterDecisions = async () => [{ requestId: "req-1" }];
     const readRouterDecision = async (requestId: string) => ({ requestId });
+    const readRolePolicy = async () => ({
+      roleDefinitions: [],
+      taskDefinitions: [],
+    });
+    const createRolePolicyRole = async () => ({ role_id: "qa.reviewer" });
+    const updateRolePolicyRole = async () => ({ role_id: "qa.reviewer" });
+    const listTaskDefinitions = async () => [];
+    const updateTaskDefinitions = async () => [];
+    const listModels = async () => [];
+    const listProviderDeviceAuthorizations = async () => [];
 
     const backend = {
       registry,
@@ -200,7 +210,9 @@ describe("runtime-host-bridge", () => {
       subscribeTelemetry: () => () => undefined,
       listProviders: async () => [],
       listRoles: async () => [],
+      listModels,
       listAccounts: async () => [],
+      listProviderDeviceAuthorizations,
       upsertProviderAccount: async () => ({ providerAccountId: "acct-1" }),
       startProviderDeviceAuthorization: async () => ({ status: "pending" }),
       pollProviderDeviceAuthorization: async () => ({ status: "pending" }),
@@ -217,6 +229,11 @@ describe("runtime-host-bridge", () => {
       listRouterCandidates,
       listRouterDecisions,
       readRouterDecision,
+      readRolePolicy,
+      createRolePolicyRole,
+      updateRolePolicyRole,
+      listTaskDefinitions,
+      updateTaskDefinitions,
       listEndpoints: async () => [],
       listRecentRequestObservations: async () => [],
       readRequestObservation: async () => ({ requestId: "req-1" }),
@@ -246,6 +263,13 @@ describe("runtime-host-bridge", () => {
     expect(options.listRouterCandidates).toBe(listRouterCandidates);
     expect(options.listRouterDecisions).toBe(listRouterDecisions);
     expect(options.readRouterDecision).toBe(readRouterDecision);
+    expect(options.readRolePolicy).toBe(readRolePolicy);
+    expect(options.createRolePolicyRole).toBe(createRolePolicyRole);
+    expect(options.updateRolePolicyRole).toBe(updateRolePolicyRole);
+    expect(options.listTaskDefinitions).toBe(listTaskDefinitions);
+    expect(options.updateTaskDefinitions).toBe(updateTaskDefinitions);
+    expect(options.listModels).toBe(listModels);
+    expect(options.listProviderDeviceAuthorizations).toBe(listProviderDeviceAuthorizations);
   });
 
   test("builds packaged CLI options with static UI, router surfaces, and fixture-root defaults", () => {
@@ -878,6 +902,141 @@ describe("runtime-host-bridge", () => {
     });
   });
 
+  test("applies a directly requested role to chat routing and execution policy", () => {
+    const result = (
+      bridge as {
+        mapChatCompletionsRequest: (
+          value: EndpointRegistryResult,
+          body: Record<string, unknown>,
+          requestId: string,
+          modelAliases?: readonly {
+            aliasId: string;
+            mode?: "basic" | "difficulty" | "intelligent" | "hybrid" | null;
+            modelIds: readonly string[];
+          }[],
+          difficultyContext?: unknown,
+          controllerContext?: unknown,
+          requestOptions?: {
+            requestedRoleId?: string;
+          },
+          roleDefinitions?: readonly Record<string, unknown>[],
+        ) => {
+          routingRequest: {
+            requestedRoleId?: string;
+            taskType: string;
+            requiredCapabilities: readonly string[];
+            preferredCapabilities: readonly string[];
+            needsTools: boolean;
+          };
+          executionRequest: {
+            messages: readonly { role: string; content: string }[];
+            tools?: readonly { name: string }[];
+          };
+          routingDiagnostics?: {
+            rolePolicy?: {
+              requestedRoleId: string;
+              appliedRoleId: string;
+              defaultSystemInstructionsApplied: boolean;
+              toolPolicyMode: string;
+              allowedTools?: readonly string[];
+              outputContracts: readonly string[];
+              safetyPolicyRefs: readonly string[];
+            };
+          };
+        };
+      }
+    ).mapChatCompletionsRequest(
+      registry,
+      {
+        model: "moonshot/kimi-k2.5",
+        messages: [{ role: "user", content: "Review the runtime policy update." }],
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "run_tests",
+              parameters: { type: "object", properties: {} },
+            },
+          },
+          {
+            type: "function",
+            function: {
+              name: "deploy_release",
+              parameters: { type: "object", properties: {} },
+            },
+          },
+        ],
+      },
+      "req-host-role-policy-chat-001",
+      [],
+      undefined,
+      undefined,
+      {
+        requestedRoleId: "qa.reviewer",
+      },
+      [
+        {
+          role_id: "qa.reviewer",
+          name: "QA Reviewer",
+          description: "Validates runtime behavior.",
+          role_kind: "assistant",
+          default_system_instructions: "Review carefully and call only approved tools.",
+          task_types_supported: ["text.chat"],
+          required_capabilities: [],
+          preferred_capabilities: ["reasoning.multi_step"],
+          forbidden_capabilities: [],
+          tool_policy: {
+            mode: "limited",
+            allowed_tools: ["run_tests"],
+          },
+          routing_policy_overrides: {},
+          output_contracts: ["review.checklist"],
+          safety_policy_refs: ["safety.review"],
+        },
+      ],
+    );
+
+    expect(result.routingRequest).toMatchObject({
+      requestedRoleId: "qa.reviewer",
+      taskType: "text.chat",
+      requiredCapabilities: ["text.chat"],
+      preferredCapabilities: [],
+      needsTools: true,
+    });
+    expect(result.executionRequest.messages).toEqual([
+      {
+        role: "system",
+        content: "Review carefully and call only approved tools.",
+      },
+      {
+        role: "system",
+        content: "You must satisfy these output contracts in your response: review.checklist.",
+      },
+      {
+        role: "system",
+        content: "Apply these safety policies while handling the request: safety.review.",
+      },
+      {
+        role: "user",
+        content: "Review the runtime policy update.",
+      },
+    ]);
+    expect(result.executionRequest.tools).toEqual([
+      expect.objectContaining({
+        name: "run_tests",
+      }),
+    ]);
+    expect(result.routingDiagnostics?.rolePolicy).toEqual({
+      requestedRoleId: "qa.reviewer",
+      appliedRoleId: "qa.reviewer",
+      defaultSystemInstructionsApplied: true,
+      toolPolicyMode: "limited",
+      allowedTools: ["run_tests"],
+      outputContracts: ["review.checklist"],
+      safetyPolicyRefs: ["safety.review"],
+    });
+  });
+
   test("records explicit hybrid arbitration when controller guidance alters the difficulty plan", () => {
     const result = (
       bridge as {
@@ -1359,6 +1518,137 @@ describe("runtime-host-bridge", () => {
     );
   });
 
+  test("applies requested role execution policy to responses requests", () => {
+    const result = (
+      bridge as {
+        mapResponsesRequest: (
+          value: EndpointRegistryResult,
+          body: Record<string, unknown>,
+          requestId: string,
+          modelAliases?: readonly {
+            aliasId: string;
+            mode?: "basic" | "difficulty" | "intelligent" | "hybrid" | null;
+            modelIds: readonly string[];
+          }[],
+          difficultyContext?: unknown,
+          controllerContext?: unknown,
+          requestOptions?: {
+            requestedRoleId?: string;
+          },
+          roleDefinitions?: readonly Record<string, unknown>[],
+        ) => {
+          routingRequest: {
+            requestedRoleId?: string;
+            taskType: string;
+            requiredCapabilities: readonly string[];
+            preferredCapabilities: readonly string[];
+            needsTools: boolean;
+          };
+          executionRequest: {
+            messages: readonly { role: string; content: string }[];
+            tools?: readonly { name: string }[];
+          };
+          routingDiagnostics?: {
+            rolePolicy?: {
+              requestedRoleId: string;
+              appliedRoleId: string;
+              defaultSystemInstructionsApplied: boolean;
+              toolPolicyMode: string;
+              allowedTools?: readonly string[];
+              outputContracts: readonly string[];
+              safetyPolicyRefs: readonly string[];
+            };
+          };
+        };
+      }
+    ).mapResponsesRequest(
+      registry,
+      {
+        model: "moonshot/kimi-k2.5",
+        input: "Review the runtime policy update.",
+        tools: [
+          {
+            type: "function",
+            name: "run_tests",
+            parameters: { type: "object", properties: {} },
+          },
+          {
+            type: "function",
+            name: "deploy_release",
+            parameters: { type: "object", properties: {} },
+          },
+        ],
+      },
+      "req-host-role-policy-response-001",
+      [],
+      undefined,
+      undefined,
+      {
+        requestedRoleId: "qa.reviewer",
+      },
+      [
+        {
+          role_id: "qa.reviewer",
+          name: "QA Reviewer",
+          description: "Validates runtime behavior.",
+          role_kind: "assistant",
+          default_system_instructions: "Review carefully and call only approved tools.",
+          task_types_supported: ["text.chat"],
+          required_capabilities: [],
+          preferred_capabilities: ["reasoning.multi_step"],
+          forbidden_capabilities: [],
+          tool_policy: {
+            mode: "limited",
+            allowed_tools: ["run_tests"],
+          },
+          routing_policy_overrides: {},
+          output_contracts: ["review.checklist"],
+          safety_policy_refs: ["safety.review"],
+        },
+      ],
+    );
+
+    expect(result.routingRequest).toMatchObject({
+      requestedRoleId: "qa.reviewer",
+      taskType: "text.chat",
+      requiredCapabilities: ["text.chat"],
+      preferredCapabilities: [],
+      needsTools: true,
+    });
+    expect(result.executionRequest.messages).toEqual([
+      {
+        role: "system",
+        content: "Review carefully and call only approved tools.",
+      },
+      {
+        role: "system",
+        content: "You must satisfy these output contracts in your response: review.checklist.",
+      },
+      {
+        role: "system",
+        content: "Apply these safety policies while handling the request: safety.review.",
+      },
+      {
+        role: "user",
+        content: "Review the runtime policy update.",
+      },
+    ]);
+    expect(result.executionRequest.tools).toEqual([
+      expect.objectContaining({
+        name: "run_tests",
+      }),
+    ]);
+    expect(result.routingDiagnostics?.rolePolicy).toEqual({
+      requestedRoleId: "qa.reviewer",
+      appliedRoleId: "qa.reviewer",
+      defaultSystemInstructionsApplied: true,
+      toolPolicyMode: "limited",
+      allowedTools: ["run_tests"],
+      outputContracts: ["review.checklist"],
+      safetyPolicyRefs: ["safety.review"],
+    });
+  });
+
   test("prefers a configured alias in downstream OpenAI provider config", () => {
     const result = (
       bridge as {
@@ -1705,6 +1995,59 @@ describe("runtime-host-bridge", () => {
           label: "General chat",
         },
       ],
+      readRolePolicy: async () => ({
+        roleDefinitions: [
+          {
+            role_id: "general.chat",
+            name: "General Chat",
+            description: "General chat role",
+            role_kind: "assistant",
+            default_system_instructions: "Help the user.",
+            task_types_supported: ["text.chat"],
+            required_capabilities: [],
+            preferred_capabilities: [],
+            forbidden_capabilities: [],
+            tool_policy: { mode: "allowed", allowed_tools: [] },
+            routing_policy_overrides: {},
+            output_contracts: [],
+            safety_policy_refs: [],
+          },
+        ],
+        taskDefinitions: [
+          {
+            task_type: "text.chat",
+            description: "General chat task",
+            required_inputs: [],
+            required_capabilities: ["text.chat"],
+            preferred_capabilities: [],
+            quality_metrics: [],
+            allowed_roles: ["general.chat"],
+            default_benchmark_suites: [],
+          },
+        ],
+      }),
+      createRolePolicyRole: async (body) => ({
+        saved: true,
+        ...body,
+      }),
+      updateRolePolicyRole: async (roleId, body) => ({
+        saved: true,
+        role_id: roleId,
+        ...body,
+      }),
+      listTaskDefinitions: async () => [
+        {
+          task_type: "text.chat",
+          description: "General chat task",
+          required_inputs: [],
+          required_capabilities: ["text.chat"],
+          preferred_capabilities: [],
+          quality_metrics: [],
+          allowed_roles: ["general.chat"],
+          default_benchmark_suites: [],
+        },
+      ],
+      updateTaskDefinitions: async (body) => body,
       listAccounts: async () => [
         {
           providerAccountId: "moonshot.personal.primary",
@@ -1931,6 +2274,108 @@ describe("runtime-host-bridge", () => {
         {
           roleId: "general.chat",
           label: "General chat",
+        },
+      ]);
+
+      const rolePolicyResponse = await fetch(
+        `http://127.0.0.1:${server.port}/api/role-model/role-policy`,
+      );
+      expect(rolePolicyResponse.status).toBe(200);
+      expect(await rolePolicyResponse.json()).toEqual({
+        roleDefinitions: [
+          expect.objectContaining({
+            role_id: "general.chat",
+            task_types_supported: ["text.chat"],
+          }),
+        ],
+        taskDefinitions: [
+          expect.objectContaining({
+            task_type: "text.chat",
+            allowed_roles: ["general.chat"],
+          }),
+        ],
+      });
+
+      const createRoleResponse = await fetch(
+        `http://127.0.0.1:${server.port}/api/role-model/roles`,
+        {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({
+            role_id: "qa.reviewer",
+            name: "QA Reviewer",
+          }),
+        },
+      );
+      expect(createRoleResponse.status).toBe(200);
+      expect(await createRoleResponse.json()).toEqual({
+        saved: true,
+        role_id: "qa.reviewer",
+        name: "QA Reviewer",
+      });
+
+      const updateRoleResponse = await fetch(
+        `http://127.0.0.1:${server.port}/api/role-model/roles/qa.reviewer`,
+        {
+          method: "PUT",
+          headers: {
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({
+            name: "QA Reviewer Updated",
+          }),
+        },
+      );
+      expect(updateRoleResponse.status).toBe(200);
+      expect(await updateRoleResponse.json()).toEqual({
+        saved: true,
+        role_id: "qa.reviewer",
+        name: "QA Reviewer Updated",
+      });
+
+      const tasksResponse = await fetch(`http://127.0.0.1:${server.port}/api/role-model/tasks`);
+      expect(tasksResponse.status).toBe(200);
+      expect(await tasksResponse.json()).toEqual([
+        expect.objectContaining({
+          task_type: "text.chat",
+          allowed_roles: ["general.chat"],
+        }),
+      ]);
+
+      const updateTasksResponse = await fetch(
+        `http://127.0.0.1:${server.port}/api/role-model/tasks`,
+        {
+          method: "PUT",
+          headers: {
+            "content-type": "application/json",
+          },
+          body: JSON.stringify([
+            {
+              task_type: "code.review",
+              description: "Code review task",
+              required_inputs: [],
+              required_capabilities: ["code.edit"],
+              preferred_capabilities: [],
+              quality_metrics: [],
+              allowed_roles: ["qa.reviewer"],
+              default_benchmark_suites: [],
+            },
+          ]),
+        },
+      );
+      expect(updateTasksResponse.status).toBe(200);
+      expect(await updateTasksResponse.json()).toEqual([
+        {
+          task_type: "code.review",
+          description: "Code review task",
+          required_inputs: [],
+          required_capabilities: ["code.edit"],
+          preferred_capabilities: [],
+          quality_metrics: [],
+          allowed_roles: ["qa.reviewer"],
+          default_benchmark_suites: [],
         },
       ]);
 
@@ -3018,6 +3463,7 @@ describe("runtime-host-bridge", () => {
       | {
           routingModeOverride?: string;
           endpointId?: string;
+          requestedRoleId?: string;
         }
       | undefined;
 
@@ -3034,6 +3480,7 @@ describe("runtime-host-bridge", () => {
             requestOptions?: {
               routingModeOverride?: string;
               endpointId?: string;
+              requestedRoleId?: string;
             },
           ) => Promise<{
             model: string;
@@ -3076,6 +3523,7 @@ describe("runtime-host-bridge", () => {
           "content-type": "application/json",
           "x-role-model-routing-mode": "baseline",
           "x-role-model-endpoint-id": "moonshot.personal.primary.global.kimi-k2.5",
+          "x-role-model-requested-role-id": "qa.reviewer",
         },
         body: JSON.stringify({
           model: "moonshot/kimi-k2.5",
@@ -3087,6 +3535,7 @@ describe("runtime-host-bridge", () => {
       expect(requestOptions).toEqual({
         routingModeOverride: "baseline",
         endpointId: "moonshot.personal.primary.global.kimi-k2.5",
+        requestedRoleId: "qa.reviewer",
       });
     } finally {
       await server.close();
@@ -3403,6 +3852,166 @@ describe("runtime-host-bridge", () => {
         },
       });
     } finally {
+      await rm(runtimeStateRoot, { recursive: true, force: true });
+    }
+  });
+
+  test("persists applied role policy diagnostics and injected system instructions for runtime-backed chat requests", async () => {
+    const fixtureRoot = await mkdtemp(
+      path.join(os.tmpdir(), "role-model-runtime-host-role-policy-fixtures-"),
+    );
+    const runtimeStateRoot = await mkdtemp(
+      path.join(os.tmpdir(), "role-model-runtime-host-role-policy-execution-"),
+    );
+
+    try {
+      await cp(testFixtureRoot, fixtureRoot, { recursive: true });
+      await writeFile(
+        path.join(fixtureRoot, "observability-policy.json"),
+        JSON.stringify(
+          {
+            environment: "local-dev",
+            rawCapture: {
+              requestHeaders: "redact-secrets",
+              requestBody: "enabled",
+              responseBody: "disabled",
+            },
+            structuredInspection: {
+              mode: "redacted",
+              redactHeaders: ["authorization"],
+            },
+            operatorSurface: {
+              preserveRawCaptures: true,
+            },
+          },
+          null,
+          2,
+        ),
+      );
+
+      const backend = await (
+        bridge as {
+          createRuntimeBridgeBackend: (options: {
+            repoRoot: string;
+            fixtureRoot: string;
+            runtimeStateRoot: string;
+            scopeId: string;
+          }) => Promise<{
+            createRolePolicyRole: (
+              body: Record<string, unknown>,
+            ) => Promise<Record<string, unknown>>;
+            listTaskDefinitions: () => Promise<readonly Record<string, unknown>[]>;
+            updateTaskDefinitions: (
+              body: readonly Record<string, unknown>[],
+            ) => Promise<readonly Record<string, unknown>[]>;
+            executeChatCompletions: (
+              body: Record<string, unknown>,
+              requestId: string,
+              streamWriter?: (chunk: Record<string, unknown>) => void | Promise<void>,
+              requestOptions?: {
+                requestedRoleId?: string;
+              },
+            ) => Promise<{
+              endpointId: string;
+            }>;
+            readRequestObservation: (requestId: string) => Promise<unknown>;
+          }>;
+        }
+      ).createRuntimeBridgeBackend({
+        repoRoot,
+        fixtureRoot,
+        runtimeStateRoot,
+        scopeId: "runtime-host-role-policy-execution-tests",
+      });
+
+      await backend.createRolePolicyRole({
+        role_id: "qa.reviewer",
+        name: "QA Reviewer",
+        description: "Reviews routed runtime behavior.",
+        role_kind: "assistant",
+        default_system_instructions: "Review carefully and produce a release-readiness assessment.",
+        task_types_supported: ["text.chat"],
+        required_capabilities: [],
+        preferred_capabilities: ["reasoning.multi_step"],
+        forbidden_capabilities: [],
+        tool_policy: { mode: "allowed", allowed_tools: [] },
+        routing_policy_overrides: {},
+        output_contracts: ["review.checklist"],
+        safety_policy_refs: ["safety.review"],
+      });
+
+      const taskDefinitions = await backend.listTaskDefinitions();
+      await backend.updateTaskDefinitions(
+        taskDefinitions.map((taskDefinition) =>
+          taskDefinition.task_type === "text.chat"
+            ? {
+                ...taskDefinition,
+                allowed_roles: Array.from(
+                  new Set([...(taskDefinition.allowed_roles as readonly string[]), "qa.reviewer"]),
+                ),
+              }
+            : taskDefinition,
+        ),
+      );
+
+      const requestId = "req-runtime-bridge-role-policy-001";
+      await backend.executeChatCompletions(
+        {
+          model: "deepseek/chat-capture-v1",
+          messages: [{ role: "user", content: "Assess release readiness." }],
+        },
+        requestId,
+        undefined,
+        {
+          requestedRoleId: "qa.reviewer",
+        },
+      );
+
+      await expect(backend.readRequestObservation(requestId)).resolves.toMatchObject({
+        requestId,
+        endpointId: "test.capture.chat-v1",
+        routingDiagnostics: {
+          rolePolicy: {
+            requestedRoleId: "qa.reviewer",
+            appliedRoleId: "qa.reviewer",
+            defaultSystemInstructionsApplied: true,
+            toolPolicyMode: "allowed",
+            outputContracts: ["review.checklist"],
+            safetyPolicyRefs: ["safety.review"],
+          },
+        },
+        inspection: {
+          request: {
+            requestCapture: {
+              body: {
+                model: "deepseek/chat-capture-v1",
+                input: [
+                  {
+                    role: "system",
+                    content: "Review carefully and produce a release-readiness assessment.",
+                  },
+                  {
+                    role: "system",
+                    content:
+                      "You must satisfy these output contracts in your response: review.checklist.",
+                  },
+                  {
+                    role: "system",
+                    content:
+                      "Apply these safety policies while handling the request: safety.review.",
+                  },
+                  {
+                    role: "user",
+                    content: "Assess release readiness.",
+                  },
+                ],
+              },
+            },
+          },
+        },
+      });
+    } finally {
+      await rm(fixtureRoot, { recursive: true, force: true });
       await rm(runtimeStateRoot, { recursive: true, force: true });
     }
   });
@@ -5219,6 +5828,154 @@ describe("runtime-host-bridge", () => {
     );
   });
 
+  test("persists runtime-managed role policy and task allowlists across backend restart", async () => {
+    expect(
+      typeof (bridge as { createRuntimeBridgeBackend?: unknown }).createRuntimeBridgeBackend,
+    ).toBe("function");
+
+    const controlPlaneTestId = `runtime-host-role-policy-tests-${Date.now()}`;
+    const runtimeStateRoot = path.join(os.tmpdir(), controlPlaneTestId);
+    const createBackend = () =>
+      (
+        bridge as {
+          createRuntimeBridgeBackend: (options: {
+            repoRoot: string;
+            fixtureRoot: string;
+            runtimeStateRoot: string;
+            scopeId: string;
+          }) => Promise<{
+            readRolePolicy?: () => Promise<{
+              roleDefinitions: readonly Record<string, unknown>[];
+              taskDefinitions: readonly Record<string, unknown>[];
+            }>;
+            createRolePolicyRole?: (
+              body: Record<string, unknown>,
+            ) => Promise<Record<string, unknown>>;
+            updateRolePolicyRole?: (
+              roleId: string,
+              body: Record<string, unknown>,
+            ) => Promise<Record<string, unknown>>;
+            listTaskDefinitions?: () => Promise<readonly Record<string, unknown>[]>;
+            updateTaskDefinitions?: (
+              body: readonly Record<string, unknown>[],
+            ) => Promise<readonly Record<string, unknown>[]>;
+            shutdown?: () => Promise<void>;
+          }>;
+        }
+      ).createRuntimeBridgeBackend({
+        repoRoot,
+        fixtureRoot: testFixtureRoot,
+        runtimeStateRoot,
+        scopeId: controlPlaneTestId,
+      });
+
+    const backend = await createBackend();
+    expect(typeof backend.readRolePolicy).toBe("function");
+    expect(typeof backend.createRolePolicyRole).toBe("function");
+    expect(typeof backend.updateRolePolicyRole).toBe("function");
+    expect(typeof backend.listTaskDefinitions).toBe("function");
+    expect(typeof backend.updateTaskDefinitions).toBe("function");
+
+    await expect(backend.readRolePolicy?.()).resolves.toEqual(
+      expect.objectContaining({
+        roleDefinitions: expect.arrayContaining([
+          expect.objectContaining({
+            role_id: "general.chat",
+            default_system_instructions: expect.any(String),
+          }),
+        ]),
+        taskDefinitions: expect.arrayContaining([
+          expect.objectContaining({
+            task_type: "text.chat",
+            allowed_roles: expect.arrayContaining(["general.chat"]),
+          }),
+        ]),
+      }),
+    );
+
+    await expect(
+      backend.createRolePolicyRole?.({
+        role_id: "qa.reviewer",
+        name: "QA Reviewer",
+        description: "Reviews and validates changes before release.",
+        role_kind: "assistant",
+        default_system_instructions: "Review changes carefully and highlight risks.",
+        task_types_supported: ["code.review"],
+        required_capabilities: [],
+        preferred_capabilities: ["reasoning.multi_step"],
+        forbidden_capabilities: [],
+        tool_policy: { mode: "limited", allowed_tools: ["run_tests"] },
+        routing_policy_overrides: { compute_preference: "balanced" },
+        output_contracts: ["review.checklist"],
+        safety_policy_refs: ["safety.review"],
+      }),
+    ).resolves.toEqual(
+      expect.objectContaining({
+        role_id: "qa.reviewer",
+        name: "QA Reviewer",
+      }),
+    );
+
+    await expect(
+      backend.updateTaskDefinitions?.([
+        {
+          task_type: "text.chat",
+          description: "General chat task",
+          required_inputs: [],
+          required_capabilities: ["text.chat"],
+          preferred_capabilities: [],
+          quality_metrics: [],
+          allowed_roles: ["general.chat"],
+          default_benchmark_suites: [],
+        },
+        {
+          task_type: "code.review",
+          description: "Code review task",
+          required_inputs: [],
+          required_capabilities: ["code.edit"],
+          preferred_capabilities: ["reasoning.multi_step"],
+          quality_metrics: [],
+          allowed_roles: ["qa.reviewer"],
+          default_benchmark_suites: [],
+        },
+      ]),
+    ).resolves.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          task_type: "code.review",
+          allowed_roles: ["qa.reviewer"],
+        }),
+      ]),
+    );
+
+    await backend.shutdown?.();
+
+    const restartedBackend = await createBackend();
+    await expect(restartedBackend.readRolePolicy?.()).resolves.toEqual(
+      expect.objectContaining({
+        roleDefinitions: expect.arrayContaining([
+          expect.objectContaining({
+            role_id: "qa.reviewer",
+            default_system_instructions: "Review changes carefully and highlight risks.",
+            tool_policy: {
+              mode: "limited",
+              allowed_tools: ["run_tests"],
+            },
+            output_contracts: ["review.checklist"],
+            safety_policy_refs: ["safety.review"],
+          }),
+        ]),
+        taskDefinitions: expect.arrayContaining([
+          expect.objectContaining({
+            task_type: "code.review",
+            allowed_roles: ["qa.reviewer"],
+          }),
+        ]),
+      }),
+    );
+    await restartedBackend.shutdown?.();
+  });
+
   test("executes env-backed api-key accounts through the live provider path when the env credential resolves", async () => {
     expect(
       typeof (bridge as { createRuntimeBridgeBackend?: unknown }).createRuntimeBridgeBackend,
@@ -6153,6 +6910,179 @@ describe("runtime-host-bridge", () => {
     expect(result.finishReason).toBe("stop");
     expect(result.usage.inputTokens).toBe(32);
     expect(result.usage.outputTokens).toBe(24);
+  });
+
+  test("persists applied role policy diagnostics and injected policy messages for runtime-backed responses requests", async () => {
+    const fixtureRoot = await mkdtemp(
+      path.join(os.tmpdir(), "role-model-runtime-host-role-policy-response-fixtures-"),
+    );
+    const runtimeStateRoot = await mkdtemp(
+      path.join(os.tmpdir(), "role-model-runtime-host-role-policy-responses-"),
+    );
+
+    try {
+      await cp(testFixtureRoot, fixtureRoot, { recursive: true });
+      await writeFile(
+        path.join(fixtureRoot, "observability-policy.json"),
+        JSON.stringify(
+          {
+            environment: "local-dev",
+            rawCapture: {
+              requestHeaders: "redact-secrets",
+              requestBody: "enabled",
+              responseBody: "disabled",
+            },
+            structuredInspection: {
+              mode: "redacted",
+              redactHeaders: ["authorization"],
+            },
+            operatorSurface: {
+              preserveRawCaptures: true,
+            },
+          },
+          null,
+          2,
+        ),
+      );
+
+      const backend = await (
+        bridge as {
+          createRuntimeBridgeBackend: (options: {
+            repoRoot: string;
+            fixtureRoot: string;
+            runtimeStateRoot: string;
+            scopeId: string;
+          }) => Promise<{
+            createRolePolicyRole: (
+              body: Record<string, unknown>,
+            ) => Promise<Record<string, unknown>>;
+            listTaskDefinitions: () => Promise<readonly Record<string, unknown>[]>;
+            updateTaskDefinitions: (
+              body: readonly Record<string, unknown>[],
+            ) => Promise<readonly Record<string, unknown>[]>;
+            executeResponses: (
+              body: Record<string, unknown>,
+              requestId: string,
+              streamWriter?: (chunk: Record<string, unknown>) => void | Promise<void>,
+              requestOptions?: {
+                requestedRoleId?: string;
+              },
+            ) => Promise<{
+              endpointId: string;
+            }>;
+            readRequestObservation: (requestId: string) => Promise<unknown>;
+          }>;
+        }
+      ).createRuntimeBridgeBackend({
+        repoRoot,
+        fixtureRoot,
+        runtimeStateRoot,
+        scopeId: "runtime-host-role-policy-response-tests",
+      });
+
+      await backend.createRolePolicyRole({
+        role_id: "qa.reviewer",
+        name: "QA Reviewer",
+        description: "Reviews routed runtime behavior.",
+        role_kind: "assistant",
+        default_system_instructions: "Review carefully and produce a release-readiness assessment.",
+        task_types_supported: ["text.chat"],
+        required_capabilities: [],
+        preferred_capabilities: ["reasoning.multi_step"],
+        forbidden_capabilities: [],
+        tool_policy: { mode: "limited", allowed_tools: ["run_tests"] },
+        routing_policy_overrides: {},
+        output_contracts: ["review.checklist"],
+        safety_policy_refs: ["safety.review"],
+      });
+
+      const taskDefinitions = await backend.listTaskDefinitions();
+      await backend.updateTaskDefinitions(
+        taskDefinitions.map((taskDefinition) =>
+          taskDefinition.task_type === "text.chat"
+            ? {
+                ...taskDefinition,
+                allowed_roles: Array.from(
+                  new Set([...(taskDefinition.allowed_roles as readonly string[]), "qa.reviewer"]),
+                ),
+              }
+            : taskDefinition,
+        ),
+      );
+
+      const requestId = "req-runtime-bridge-role-policy-responses-001";
+      await backend.executeResponses(
+        {
+          model: "deepseek/chat-capture-v1",
+          input: "Assess release readiness.",
+          tools: [
+            {
+              type: "function",
+              name: "run_tests",
+              parameters: { type: "object", properties: {} },
+            },
+            {
+              type: "function",
+              name: "deploy_release",
+              parameters: { type: "object", properties: {} },
+            },
+          ],
+        },
+        requestId,
+        undefined,
+        {
+          requestedRoleId: "qa.reviewer",
+        },
+      );
+
+      await expect(backend.readRequestObservation(requestId)).resolves.toMatchObject({
+        requestId,
+        endpointId: "test.capture.chat-v1",
+        routingDiagnostics: {
+          rolePolicy: {
+            requestedRoleId: "qa.reviewer",
+            appliedRoleId: "qa.reviewer",
+            defaultSystemInstructionsApplied: true,
+            toolPolicyMode: "limited",
+            allowedTools: ["run_tests"],
+            outputContracts: ["review.checklist"],
+            safetyPolicyRefs: ["safety.review"],
+          },
+        },
+        inspection: {
+          request: {
+            requestCapture: {
+              body: {
+                model: "deepseek/chat-capture-v1",
+                input: [
+                  {
+                    role: "system",
+                    content: "Review carefully and produce a release-readiness assessment.",
+                  },
+                  {
+                    role: "system",
+                    content:
+                      "You must satisfy these output contracts in your response: review.checklist.",
+                  },
+                  {
+                    role: "system",
+                    content:
+                      "Apply these safety policies while handling the request: safety.review.",
+                  },
+                  {
+                    role: "user",
+                    content: "Assess release readiness.",
+                  },
+                ],
+              },
+            },
+          },
+        },
+      });
+    } finally {
+      await rm(fixtureRoot, { recursive: true, force: true });
+      await rm(runtimeStateRoot, { recursive: true, force: true });
+    }
   });
 
   test("serves structured request and endpoint inspection routes through the bridge server", async () => {
