@@ -78,8 +78,8 @@ const standaloneReleaseCopies = [
     destinationRelativePath: "build/client",
   },
   {
-    sourceRelativePath: "testdata/router-runtime/fixtures",
-    destinationRelativePath: "testdata/router-runtime/fixtures",
+    sourceRelativePath: "testdata/router-runtime",
+    destinationRelativePath: "testdata/router-runtime",
   },
   {
     sourceRelativePath: "testdata/catalog/litellm-model-prices.json",

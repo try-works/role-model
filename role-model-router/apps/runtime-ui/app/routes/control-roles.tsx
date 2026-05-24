@@ -397,12 +397,12 @@ export default function ControlRolesRoute() {
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Control"
+        eyebrow="Models"
         title="Runtime roles"
         description="Author full router-grade role policy in the live control plane, then manage which roles each task type can use without falling back to seeded JSON."
         actions={
           <>
-            <Link className={secondaryButtonClassName} to="/app/control/models">
+            <Link className={secondaryButtonClassName} to="/app/models">
               Model bindings
             </Link>
             <Link className={secondaryButtonClassName} to="/app/router/config">

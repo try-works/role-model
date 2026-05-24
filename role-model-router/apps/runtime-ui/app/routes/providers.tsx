@@ -25,18 +25,13 @@ import {
 } from "../lib/device-authorization";
 import { resolveProviderAccountLifecycle } from "../lib/provider-account-state";
 import {
-  type RuntimeConfig,
-  type RuntimeConfigModel,
-  type RuntimeConfigRecord,
   type RuntimeDeviceAuthorization,
   type RuntimeProvider,
   type RuntimeSnapshot,
   activateRuntimeEndpoint,
-  fetchRuntimeConfig,
   fetchRuntimeSnapshot,
   pollRuntimeDeviceAuthorization,
   startRuntimeDeviceAuthorization,
-  updateRuntimeConfig,
   upsertRuntimeAccount,
 } from "../lib/runtime-api";
 import { buildAccountModelCatalogIds } from "../lib/view-models";
@@ -111,17 +106,9 @@ function buildAvailableModels(input: {
   });
 }
 
-let nextLocalModelKeyId = 0;
-
-function createLocalModelKey(): string {
-  nextLocalModelKeyId += 1;
-  return `local-model-${nextLocalModelKeyId}`;
-}
-
 export default function ProvidersRoute() {
   const [searchParams] = useSearchParams();
   const initializedRef = useRef(false);
-  const localModelKeyMapRef = useRef(new WeakMap<RuntimeConfigModel, string>());
   const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [providerAccountId, setProviderAccountId] = useState("");
@@ -135,19 +122,6 @@ export default function ProvidersRoute() {
   const [submitting, setSubmitting] = useState(false);
   const [authorizing, setAuthorizing] = useState(false);
   const [polling, setPolling] = useState(false);
-  const [configRecord, setConfigRecord] = useState<RuntimeConfigRecord | null>(null);
-  const [localModels, setLocalModels] = useState<RuntimeConfigModel[]>([]);
-  const [savingLocalModels, setSavingLocalModels] = useState(false);
-
-  const getLocalModelKey = useCallback((model: RuntimeConfigModel) => {
-    const existing = localModelKeyMapRef.current.get(model);
-    if (existing) {
-      return existing;
-    }
-    const nextKey = createLocalModelKey();
-    localModelKeyMapRef.current.set(model, nextKey);
-    return nextKey;
-  }, []);
 
   const applyProviderSelection = useCallback(
     (
@@ -155,9 +129,12 @@ export default function ProvidersRoute() {
       requestedProviderId?: string | null,
       requestedVariantId?: string | null,
     ) => {
+      const remoteProviders = nextSnapshot.providers.filter(
+        (provider) => provider.providerKind !== "local-engine",
+      );
       const nextProvider =
-        nextSnapshot.providers.find((provider) => provider.providerId === requestedProviderId) ??
-        nextSnapshot.providers[0];
+        remoteProviders.find((provider) => provider.providerId === requestedProviderId) ??
+        remoteProviders[0];
       if (!nextProvider) {
         return;
       }
@@ -186,15 +163,8 @@ export default function ProvidersRoute() {
 
   const load = useCallback(async () => {
     try {
-      const [nextSnapshot, nextConfigRecord] = await Promise.all([
-        fetchRuntimeSnapshot(),
-        fetchRuntimeConfig(),
-      ]);
+      const nextSnapshot = await fetchRuntimeSnapshot();
       setSnapshot(nextSnapshot);
-      setConfigRecord(nextConfigRecord);
-      setLocalModels(
-        nextConfigRecord.config?.llamaSwap.models.map((model) => ({ ...model })) ?? [],
-      );
       setError(null);
 
       if (!initializedRef.current) {
@@ -207,7 +177,11 @@ export default function ProvidersRoute() {
         return;
       }
 
-      if (!nextSnapshot.providers.some((provider) => provider.providerId === providerId)) {
+      if (
+        !nextSnapshot.providers
+          .filter((provider) => provider.providerKind !== "local-engine")
+          .some((provider) => provider.providerId === providerId)
+      ) {
         applyProviderSelection(nextSnapshot, null, null);
       }
     } catch (value: unknown) {
@@ -275,11 +249,14 @@ export default function ProvidersRoute() {
     );
   }, [providerAccountId, snapshot]);
 
+  const remoteProviders = useMemo(
+    () => snapshot?.providers.filter((provider) => provider.providerKind !== "local-engine") ?? [],
+    [snapshot],
+  );
   const selectedProvider = useMemo(
     () =>
-      snapshot?.providers.find((provider) => provider.providerId === providerId) ??
-      snapshot?.providers[0],
-    [providerId, snapshot],
+      remoteProviders.find((provider) => provider.providerId === providerId) ?? remoteProviders[0],
+    [providerId, remoteProviders],
   );
   const selectedVariant = useMemo(
     () =>
@@ -311,8 +288,8 @@ export default function ProvidersRoute() {
   if (!snapshot) {
     return <LoadingState label="Loading provider catalog…" />;
   }
-  if (snapshot.providers.length === 0) {
-    return <EmptyState label="No providers are currently available from the runtime catalog." />;
+  if (remoteProviders.length === 0) {
+    return <EmptyState label="No LiteLLM-backed remote providers are currently available from the runtime catalog." />;
   }
 
   const onProviderChange = (nextProviderId: string) => {
@@ -477,76 +454,11 @@ export default function ProvidersRoute() {
     }
   };
 
-  const addLocalModel = () => {
-    setLocalModels((current) => [
-      ...current,
-      {
-        modelId: "",
-        path: "",
-        contextWindow: null,
-        command: null,
-        proxyBaseUrl: null,
-        checkEndpoint: null,
-        useModelName: null,
-      },
-    ]);
-  };
-
-  const updateLocalModel = (
-    index: number,
-    field: keyof RuntimeConfigModel,
-    value: string | number | null,
-  ) => {
-    setLocalModels((current) =>
-      current.map((model, i) =>
-        i === index
-          ? {
-              ...model,
-              [field]: value,
-            }
-          : model,
-      ),
-    );
-  };
-
-  const removeLocalModel = (index: number) => {
-    setLocalModels((current) => current.filter((_, i) => i !== index));
-  };
-
-  const onSaveLocalModels = async () => {
-    if (!configRecord?.config) {
-      setError("Runtime config is not loaded yet.");
-      return;
-    }
-    setSavingLocalModels(true);
-    setError(null);
-    try {
-      const validatedModels = localModels.filter(
-        (model) => model.modelId.trim().length > 0 && model.path.trim().length > 0,
-      );
-      const nextConfig: RuntimeConfig = {
-        ...configRecord.config,
-        llamaSwap: {
-          ...configRecord.config.llamaSwap,
-          models: validatedModels,
-        },
-      };
-      const result = await updateRuntimeConfig(nextConfig);
-      setConfigRecord(result);
-      setLocalModels(result.config?.llamaSwap.models.map((model) => ({ ...model })) ?? []);
-      await load();
-    } catch (value) {
-      setError(value instanceof Error ? value.message : "Could not save local models.");
-    } finally {
-      setSavingLocalModels(false);
-    }
-  };
-
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Providers"
-        title="Provider onboarding"
+        eyebrow="Remote"
+        title="Remote providers"
         description="Choose a provider from the runtime catalog, choose the models available for that provider, and complete either API-key or OAuth setup from one page."
       />
 
@@ -563,7 +475,7 @@ export default function ProvidersRoute() {
                 value={selectedProvider?.providerId ?? ""}
                 onChange={(event) => onProviderChange(event.target.value)}
               >
-                {snapshot.providers.map((provider) => (
+                {remoteProviders.map((provider) => (
                   <option key={provider.providerId} value={provider.providerId}>
                     {provider.displayName}
                   </option>
@@ -595,150 +507,7 @@ export default function ProvidersRoute() {
               />
             </label>
 
-            {selectedProvider?.providerKind === "local-engine" ? (
-              <div className="space-y-4">
-                <div className={`${mutedPanelClassName} p-4 text-sm`}>
-                  <p className="font-medium text-[var(--rm-fg)]">
-                    Local {selectedProvider?.displayName} models
-                  </p>
-                  <p className="mt-1 text-[var(--rm-secondary)]">
-                    Add, edit, or remove locally hosted models. Each model needs a unique model id
-                    and a path (GGUF file or model identifier).
-                  </p>
-                </div>
-
-                {localModels.length === 0 ? (
-                  <p className="text-sm text-[var(--rm-secondary)]">
-                    No local models configured yet.
-                  </p>
-                ) : (
-                  <div className="space-y-3">
-                    {localModels.map((model, index) => (
-                      <div
-                        key={getLocalModelKey(model)}
-                        className={`${raisedPanelClassName} space-y-3 p-4 text-sm`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <p className="font-medium text-[var(--rm-fg)]">Model {index + 1}</p>
-                          <button
-                            className="text-[var(--rm-danger)] hover:underline"
-                            type="button"
-                            onClick={() => removeLocalModel(index)}
-                          >
-                            Remove
-                          </button>
-                        </div>
-                        <div className="grid gap-3 md:grid-cols-2">
-                          <label className="grid gap-1">
-                            <span className="text-[var(--rm-secondary)]">Model ID</span>
-                            <input
-                              className={inputClass}
-                              value={model.modelId}
-                              onChange={(event) =>
-                                updateLocalModel(index, "modelId", event.target.value)
-                              }
-                              placeholder="local/llama-3.3-70b"
-                            />
-                          </label>
-                          <label className="grid gap-1">
-                            <span className="text-[var(--rm-secondary)]">Path</span>
-                            <input
-                              className={inputClass}
-                              value={model.path}
-                              onChange={(event) =>
-                                updateLocalModel(index, "path", event.target.value)
-                              }
-                              placeholder="/path/to/model.gguf"
-                            />
-                          </label>
-                          <label className="grid gap-1">
-                            <span className="text-[var(--rm-secondary)]">Context window</span>
-                            <input
-                              className={inputClass}
-                              type="number"
-                              value={model.contextWindow ?? ""}
-                              onChange={(event) =>
-                                updateLocalModel(
-                                  index,
-                                  "contextWindow",
-                                  event.target.value ? Number(event.target.value) : null,
-                                )
-                              }
-                              placeholder="128000"
-                            />
-                          </label>
-                          <label className="grid gap-1">
-                            <span className="text-[var(--rm-secondary)]">Command override</span>
-                            <input
-                              className={inputClass}
-                              value={model.command ?? ""}
-                              onChange={(event) =>
-                                updateLocalModel(index, "command", event.target.value || null)
-                              }
-                              placeholder="Optional"
-                            />
-                          </label>
-                          <label className="grid gap-1">
-                            <span className="text-[var(--rm-secondary)]">Proxy base URL</span>
-                            <input
-                              className={inputClass}
-                              value={model.proxyBaseUrl ?? ""}
-                              onChange={(event) =>
-                                updateLocalModel(index, "proxyBaseUrl", event.target.value || null)
-                              }
-                              placeholder="Optional"
-                            />
-                          </label>
-                          <label className="grid gap-1">
-                            <span className="text-[var(--rm-secondary)]">Check endpoint</span>
-                            <input
-                              className={inputClass}
-                              value={model.checkEndpoint ?? ""}
-                              onChange={(event) =>
-                                updateLocalModel(index, "checkEndpoint", event.target.value || null)
-                              }
-                              placeholder="Optional"
-                            />
-                          </label>
-                          <label className="grid gap-1 md:col-span-2">
-                            <span className="text-[var(--rm-secondary)]">Use model name</span>
-                            <input
-                              className={inputClass}
-                              value={model.useModelName ?? ""}
-                              onChange={(event) =>
-                                updateLocalModel(index, "useModelName", event.target.value || null)
-                              }
-                              placeholder="Optional — mapped name for the local engine"
-                            />
-                          </label>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                <div className="flex flex-wrap gap-3">
-                  <button
-                    className={secondaryButtonClassName}
-                    type="button"
-                    onClick={addLocalModel}
-                  >
-                    Add model
-                  </button>
-                  <button
-                    className={buttonClass}
-                    disabled={savingLocalModels}
-                    type="button"
-                    onClick={() => void onSaveLocalModels()}
-                  >
-                    {savingLocalModels ? "Saving…" : "Update local models"}
-                  </button>
-                  <Link className={secondaryButtonClassName} to="/app/control/runtime-config">
-                    Advanced process config
-                  </Link>
-                </div>
-              </div>
-            ) : selectedVariant?.authMode === "api-key-static" ? (
+            {selectedVariant?.authMode === "api-key-static" ? (
               <label className="grid gap-2 text-sm">
                 <span className="font-medium text-[var(--rm-fg)]">Credential reference</span>
                 <input
@@ -758,6 +527,18 @@ export default function ProvidersRoute() {
                 </p>
               </div>
             )}
+
+            <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
+              <p className="font-medium text-[var(--rm-fg)]">LiteLLM-backed remote onboarding</p>
+              <p className="mt-2">
+                Remote providers are activated through LiteLLM so the router can evaluate shared
+                remote candidates alongside local llama-swap endpoints.
+              </p>
+              <p className="mt-2">
+                Models.dev metadata stays additive only: it enriches endpoint and model readback but
+                does not replace the live LiteLLM connection path.
+              </p>
+            </div>
 
             <label className="grid gap-2 text-sm">
               <span className="font-medium text-[var(--rm-fg)]">Model</span>
@@ -873,17 +654,13 @@ export default function ProvidersRoute() {
             ) : null}
 
             <div className="flex flex-wrap gap-3">
-              {selectedProvider?.providerKind !== "local-engine" ? (
-                <button
-                  className={buttonClass}
-                  disabled={
-                    submitting || !selectedProvider || !selectedVariant || selectedModel === ""
-                  }
-                  type="submit"
-                >
-                  {submitting ? "Saving…" : "Save provider"}
-                </button>
-              ) : null}
+              <button
+                className={buttonClass}
+                disabled={submitting || !selectedProvider || !selectedVariant || selectedModel === ""}
+                type="submit"
+              >
+                {submitting ? "Saving…" : "Save provider"}
+              </button>
 
               {selectedVariant?.authMode === "oauth2-device-code" ? (
                 <>
@@ -906,7 +683,7 @@ export default function ProvidersRoute() {
                 </>
               ) : null}
 
-              <Link className={secondaryButtonClassName} to="/app/control/endpoints">
+              <Link className={secondaryButtonClassName} to="/app/endpoints">
                 Review endpoints
               </Link>
             </div>
@@ -963,8 +740,7 @@ export default function ProvidersRoute() {
               </div>
             ) : null}
 
-            {snapshot.accounts.length === 0 &&
-            snapshot.endpoints.filter((e) => e.providerId === "llama-swap").length === 0 ? (
+            {snapshot.accounts.length === 0 ? (
               <EmptyState label="No providers are configured yet. Save one from the setup form to populate the runtime registry." />
             ) : (
               <>
@@ -1033,40 +809,6 @@ export default function ProvidersRoute() {
                     ) : null}
                   </div>
                 ))}
-                {snapshot.endpoints
-                  .filter((endpoint) => endpoint.providerId === "llama-swap")
-                  .map((endpoint) => (
-                    <div key={endpoint.endpointId} className={`${mutedPanelClassName} p-4`}>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="font-medium text-[var(--rm-fg)]">{endpoint.endpointId}</h3>
-                        <StatusPill tone="neutral">llama-swap</StatusPill>
-                        <StatusPill
-                          tone={endpoint.healthStatus === "healthy" ? "success" : "warning"}
-                        >
-                          {endpoint.healthStatus ?? "unknown"}
-                        </StatusPill>
-                      </div>
-                      <div className="mt-3 grid gap-1 text-sm text-[var(--rm-secondary)]">
-                        <p>
-                          <span className="font-medium text-[var(--rm-fg)]">Model:</span>{" "}
-                          {endpoint.modelId}
-                        </p>
-                        <p>
-                          <span className="font-medium text-[var(--rm-fg)]">Source:</span>{" "}
-                          {endpoint.sourceType ?? "local"} /{" "}
-                          {endpoint.endpointKind ?? "local-engine"}
-                        </p>
-                        <p>
-                          <span className="font-medium text-[var(--rm-fg)]">Serving source:</span>{" "}
-                          {endpoint.servingSource ?? "vendor-llama-swap"}
-                        </p>
-                        <p>
-                          <span className="font-medium text-[var(--rm-fg)]">Status:</span>{" "}
-                          {endpoint.status ?? "unknown"}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
               </>
             )}
           </div>

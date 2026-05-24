@@ -5,6 +5,7 @@ import { RouterProvider, createMemoryRouter } from "react-router";
 import { describe, expect, test } from "vitest";
 
 import ControlRolesRoute from "../routes/control-roles";
+import ControlRoutingStrategyRoute from "../routes/control-routing-strategy";
 import ControlRuntimeConfigRoute from "../routes/control-runtime-config";
 import IntegrationsUpstreamRoute from "../routes/integrations-upstream";
 import RouterOverviewRoute from "../routes/router";
@@ -48,6 +49,11 @@ const controlRuntimeConfigSource = readFileSync(
   new URL("../routes/control-runtime-config.tsx", import.meta.url),
   "utf8",
 );
+const controlRoutingStrategySource = readFileSync(
+  new URL("../routes/control-routing-strategy.tsx", import.meta.url),
+  "utf8",
+);
+const routingModeSource = readFileSync(new URL("./routing-mode.ts", import.meta.url), "utf8");
 const controlModelsSource = readFileSync(
   new URL("../routes/control-models.tsx", import.meta.url),
   "utf8",
@@ -56,10 +62,12 @@ const localModelsSource = readFileSync(
   new URL("../routes/local-models.tsx", import.meta.url),
   "utf8",
 );
+const localLogsSource = readFileSync(new URL("../routes/local-logs.tsx", import.meta.url), "utf8");
 const localPeersSource = readFileSync(
   new URL("../routes/local-peers.tsx", import.meta.url),
   "utf8",
 );
+const observeLogsSource = readFileSync(new URL("../routes/observe-logs.tsx", import.meta.url), "utf8");
 const endpointsRouteSource = readFileSync(
   new URL("../routes/endpoints.tsx", import.meta.url),
   "utf8",
@@ -130,29 +138,27 @@ describe("runtime design system", () => {
         title: "Local",
         routes: [
           "/app/local/models",
+          "/app/local/endpoints",
           "/app/local/swap",
           "/app/local/policy",
           "/app/local/logs",
           "/app/local/matrix",
-          "/app/local/peers",
         ],
       },
       {
-        title: "Control",
-        routes: [
-          "/app/control/providers",
-          "/app/control/routing-strategy",
-          "/app/control/runtime-config",
-          "/app/control/controller",
-          "/app/control/endpoints",
-          "/app/control/roles",
-          "/app/control/models",
-        ],
+        title: "Remote",
+        routes: ["/app/remote/providers"],
+      },
+      {
+        title: "Models",
+        routes: ["/app/models", "/app/models/roles"],
       },
       {
         title: "Router",
         routes: [
           "/app/router",
+          "/app/router/strategy",
+          "/app/router/controller",
           "/app/router/config",
           "/app/router/candidates",
           "/app/router/decisions",
@@ -163,12 +169,12 @@ describe("runtime design system", () => {
         routes: ["/app/observe/activity", "/app/observe/requests", "/app/observe/logs"],
       },
       {
-        title: "Integrations",
-        routes: ["/app/integrations/downstream", "/app/integrations/upstream"],
+        title: "Endpoints",
+        routes: ["/app/endpoints", "/app/endpoints/downstream", "/app/endpoints/upstream"],
       },
       {
         title: "System",
-        routes: ["/app/system/runtime", "/app/system/peers"],
+        routes: ["/app/system/runtime", "/app/system/runtime-config", "/app/system/peers"],
       },
     ]);
 
@@ -178,15 +184,15 @@ describe("runtime design system", () => {
         template: "summary-board",
       }),
     );
-    expect(getRuntimeRouteDefinition("/app/control/models")).toEqual(
+    expect(getRuntimeRouteDefinition("/app/models")).toEqual(
       expect.objectContaining({
-        id: "control-models",
+        id: "models-inventory",
         template: "model-inventory",
       }),
     );
-    expect(getRuntimeRouteDefinition("/app/control/roles")).toEqual(
+    expect(getRuntimeRouteDefinition("/app/models/roles")).toEqual(
       expect.objectContaining({
-        id: "control-roles",
+        id: "models-roles",
         template: "registry-detail",
       }),
     );
@@ -197,29 +203,29 @@ describe("runtime design system", () => {
         description: "Load and inspect llama-swap-managed local models and runtime overrides.",
       }),
     );
-    expect(getRuntimeRouteDefinition("/app/local/peers")).toEqual(
+    expect(getRuntimeRouteDefinition("/app/local/endpoints")).toEqual(
       expect.objectContaining({
-        id: "local-peers",
+        id: "local-endpoints",
         label: "Endpoints",
         title: "Local endpoints",
         description: "Generic OpenAI-compatible local peer endpoint inventory and management.",
       }),
     );
-    expect(getRuntimeRouteDefinition("/app/control/runtime-config")).toEqual(
+    expect(getRuntimeRouteDefinition("/app/system/runtime-config")).toEqual(
       expect.objectContaining({
-        id: "control-runtime-config",
+        id: "system-runtime-config",
         template: "registry-detail",
       }),
     );
-    expect(getRuntimeRouteDefinition("/app/control/routing-strategy")).toEqual(
+    expect(getRuntimeRouteDefinition("/app/router/strategy")).toEqual(
       expect.objectContaining({
-        id: "control-routing-strategy",
+        id: "router-strategy",
         template: "registry-detail",
       }),
     );
-    expect(getRuntimeRouteDefinition("/app/control/controller")).toEqual(
+    expect(getRuntimeRouteDefinition("/app/router/controller")).toEqual(
       expect.objectContaining({
-        id: "control-controller",
+        id: "router-controller",
         template: "registry-detail",
       }),
     );
@@ -331,7 +337,7 @@ describe("runtime design system", () => {
       "Open preserved UI",
     );
     expect(
-      renderRoute("/app/integrations/upstream", createElement(IntegrationsUpstreamRoute)),
+      renderRoute("/app/endpoints/upstream", createElement(IntegrationsUpstreamRoute)),
     ).not.toContain("Open preserved UI");
     expect(renderRoute("/app/system/peers", createElement(SystemPeersRoute))).not.toContain(
       "Open raw health",
@@ -366,7 +372,7 @@ describe("runtime design system", () => {
 
   test("integration and system implementation targets render live upstream and peer surfaces", () => {
     const upstreamMarkup = renderRoute(
-      "/app/integrations/upstream",
+      "/app/endpoints/upstream",
       createElement(IntegrationsUpstreamRoute),
     );
     expect(upstreamMarkup).toContain("Upstream target inventory");
@@ -402,6 +408,17 @@ describe("runtime design system", () => {
     ).toContain("Routing decision detail");
   });
 
+  test("router, endpoints, and remote surfaces expose alias/readiness ownership instead of generic filler", () => {
+    expect(routerRouteSource).toContain("Alias inventory");
+    expect(routerRouteSource).toContain("Execution-ready aliases");
+    expect(routerRouteSource).not.toContain("Control remains the editing surface");
+    expect(endpointsRouteSource).toContain("Alias readiness");
+    expect(endpointsRouteSource).toContain("Alias coverage");
+    expect(providersRouteSource).toContain("LiteLLM");
+    expect(providersRouteSource).toContain("Models.dev metadata");
+    expect(providersRouteSource).not.toContain('providerKind === "local-engine"');
+  });
+
   test("router routes preserve empty-state and observe-link affordances", () => {
     expect(routerRouteSource).toContain("LoadingState");
     expect(routerConfigRouteSource).toContain("ErrorState");
@@ -410,13 +427,15 @@ describe("runtime design system", () => {
     expect(routerDecisionDetailRouteSource).toContain("/app/observe/requests/");
   });
 
-  test("router config exposes proposal strategy modes and keeps the dynamic detail route out of section tabs", () => {
-    expect(routerConfigRouteSource).toContain("Choose routing strategy");
-    expect(routerConfigRouteSource).toContain("Strategy A");
-    expect(routerConfigRouteSource).toContain("Strategy B");
-    expect(routerConfigRouteSource).toContain("Strategy C");
-    expect(routerConfigRouteSource).toContain("Open workbench with strategy");
-    expect(routerConfigRouteSource).toContain("routingModeOverride");
+  test("router config stays observational while routing strategy owns editing controls", () => {
+    expect(routerConfigRouteSource).not.toContain("Choose routing strategy");
+    expect(routerConfigRouteSource).toContain("formatRoutingModeLabel");
+    expect(routingModeSource).toContain("Strategy A - Baseline");
+    expect(routingModeSource).toContain("Strategy B - Intelligent");
+    expect(routingModeSource).toContain("Strategy C - Difficulty");
+    expect(routerConfigRouteSource).not.toContain("Open workbench with strategy");
+    expect(routerConfigRouteSource).not.toContain("routingModeOverride");
+    expect(routerConfigRouteSource).toContain("/app/router/strategy");
     expect(workbenchRouteSource).toContain("useLocation");
     expect(
       runtimeNavigationSections
@@ -427,12 +446,16 @@ describe("runtime design system", () => {
 
   test("design system doc marks the converted pages as live routes", () => {
     expect(designSystemDocSource).toContain(
-      "| `/app/control/routing-strategy` | live | `registry-detail` |",
+      "| `/app/router/strategy` | live | `registry-detail` |",
     );
     expect(designSystemDocSource).toContain(
-      "| `/app/control/runtime-config` | live | `registry-detail` |",
+      "| `/app/system/runtime-config` | live | `registry-detail` |",
     );
+    expect(designSystemDocSource).toContain("| `/app/remote/providers` | live | `registry-detail` |");
+    expect(designSystemDocSource).toContain("| `/app/models` | live | `model-inventory` |");
+    expect(designSystemDocSource).toContain("| `/app/models/roles` | live | `registry-detail` |");
     expect(designSystemDocSource).toContain("| `/app/router` | live | `registry-detail` |");
+    expect(designSystemDocSource).toContain("| `/app/router/controller` | live | `registry-detail` |");
     expect(designSystemDocSource).toContain("| `/app/router/config` | live | `registry-detail` |");
     expect(designSystemDocSource).toContain(
       "| `/app/router/candidates` | live | `ledger-inspector` |",
@@ -451,7 +474,11 @@ describe("runtime design system", () => {
       "| `/app/studio/advanced` | live | `studio-workspace` |",
     );
     expect(designSystemDocSource).toContain(
-      "| `/app/integrations/upstream` | live | `contract-reference` |",
+      "| `/app/endpoints/upstream` | live | `contract-reference` |",
+    );
+    expect(designSystemDocSource).toContain("| `/app/endpoints` | live | `registry-detail` |");
+    expect(designSystemDocSource).toContain(
+      "| `/app/endpoints/downstream` | live | `contract-reference` |",
     );
     expect(designSystemDocSource).toContain("| `/app/system/peers` | live | `system-topology` |");
     expect(designSystemDocSource).not.toContain("| `/app/studio/images` | implementation target |");
@@ -492,23 +519,33 @@ describe("runtime design system", () => {
     expect(rootSource).not.toMatch(/rose-/);
   });
 
-  test("control runtime config, runtime roles, and model bindings are first-class control routes", () => {
+  test("remote, models, router, and system runtime config routes are first-class pages in the retained taxonomy", () => {
     expect(
-      renderRoute("/app/control/runtime-config", createElement(ControlRuntimeConfigRoute)),
+      renderRoute("/app/router/strategy", createElement(ControlRoutingStrategyRoute)),
+    ).toContain("Loading routing strategy");
+    expect(controlRoutingStrategySource).toContain("updateRuntimeConfig");
+    expect(controlRoutingStrategySource).toContain("Save and apply strategy");
+    expect(controlRoutingStrategySource).toContain("formatRoutingModeLabel");
+    expect(routingModeSource).toContain("Strategy A - Baseline");
+    expect(routingModeSource).toContain("Strategy B - Intelligent");
+    expect(routingModeSource).toContain("Strategy C - Difficulty");
+    expect(controlRoutingStrategySource).not.toContain("Balanced");
+    expect(
+      renderRoute("/app/system/runtime-config", createElement(ControlRuntimeConfigRoute)),
     ).toContain("Runtime config");
     expect(
-      renderRoute("/app/control/runtime-config", createElement(ControlRuntimeConfigRoute)),
+      renderRoute("/app/system/runtime-config", createElement(ControlRuntimeConfigRoute)),
     ).toContain("Save and apply");
-    expect(renderRoute("/app/control/roles", createElement(ControlRolesRoute))).toContain(
+    expect(renderRoute("/app/models/roles", createElement(ControlRolesRoute))).toContain(
       "Runtime roles",
     );
-    expect(renderRoute("/app/control/roles", createElement(ControlRolesRoute))).toContain(
+    expect(renderRoute("/app/models/roles", createElement(ControlRolesRoute))).toContain(
       "Loading runtime role policy",
     );
     expect(controlModelsSource).toContain("Inspect");
     expect(controlModelsSource).toContain("Save bindings");
-    expect(controlModelsSource).toContain("/app/control/runtime-config");
-    expect(controlModelsSource).toContain("/app/control/roles");
+    expect(controlModelsSource).toContain("/app/system/runtime-config");
+    expect(controlModelsSource).toContain("/app/models/roles");
   });
 
   test("local setup surfaces stay discoverable from navigation and empty registry states", () => {
@@ -518,10 +555,24 @@ describe("runtime design system", () => {
     expect(localPeersSource).toContain("Local endpoints");
     expect(localPeersSource).toContain("OpenAI-compatible peer endpoints");
     expect(localPeersSource).toContain("Add endpoint");
-    expect(endpointsRouteSource).toContain("/app/local/peers");
+    expect(endpointsRouteSource).toContain("/app/local/endpoints");
     expect(endpointsRouteSource).toContain("/app/local/models");
     expect(controlModelsSource).toContain("/app/local/models");
-    expect(controlModelsSource).toContain("/app/local/peers");
+    expect(controlModelsSource).toContain("/app/local/endpoints");
+  });
+
+  test("observe and local log surfaces render structured ledgers rather than raw iframe placeholders", () => {
+    expect(observeLogsSource).not.toContain("<iframe");
+    expect(observeLogsSource).toContain("Structured log history");
+    expect(observeLogsSource).toContain("Source");
+    expect(observeLogsSource).toContain("Severity");
+    expect(observeLogsSource).toContain("Source filter");
+    expect(observeLogsSource).toContain("Raw lines");
+    expect(localLogsSource).not.toContain("<iframe");
+    expect(localLogsSource).toContain("Structured local log history");
+    expect(localLogsSource).toContain("Request");
+    expect(localLogsSource).toContain("Proxy log stream");
+    expect(localLogsSource).toContain("Llama-swap log stream");
   });
 
   test("registry and system layouts avoid redundant KPI strips and placeholder note panels", () => {

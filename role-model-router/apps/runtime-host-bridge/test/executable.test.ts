@@ -190,8 +190,8 @@ describe("runtime-host-bridge executable packaging", () => {
           destinationRelativePath: "build/client",
         },
         {
-          sourceRelativePath: "testdata/router-runtime/fixtures",
-          destinationRelativePath: "testdata/router-runtime/fixtures",
+          sourceRelativePath: "testdata/router-runtime",
+          destinationRelativePath: "testdata/router-runtime",
         },
         {
           sourceRelativePath: "testdata/catalog/litellm-model-prices.json",
@@ -245,8 +245,11 @@ describe("runtime-host-bridge executable packaging", () => {
 
     expect(validatePackagingText).toContain("/api/role-model/accounts");
     expect(validatePackagingText).toContain("/api/role-model/endpoints");
+    expect(validatePackagingText).toContain("/api/role-model/role-policy");
     expect(validatePackagingText).toContain("/v1/chat/completions");
     expect(validatePackagingText).toContain("/v1/responses");
+    expect(validatePackagingText).toContain("--fixture-root");
+    expect(validatePackagingText).toContain('path.join(packagedRepoRoot, "testdata", "router-runtime", "fixtures")');
   });
 
   test("packaged runtime validation rebuilds the bridge before creating the SEA executable", async () => {

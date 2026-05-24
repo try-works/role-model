@@ -215,6 +215,7 @@ async function exercisePackagedExecutionValidation(input: {
 }): Promise<{
   readonly endpointId: string;
   readonly modelCount: number;
+  readonly roleDefinitionCount: number;
   readonly chatOutputText: string;
   readonly responsesOutputText: string;
 }> {
@@ -270,6 +271,10 @@ async function exercisePackagedExecutionValidation(input: {
     }),
   });
 
+  const rolePolicy = await fetchJson<{
+    roleDefinitions: unknown[];
+    taskDefinitions: unknown[];
+  }>(`${input.baseUrl}/api/role-model/role-policy`);
   const models = await fetchJson<{ data: unknown[] }>(`${input.baseUrl}/v1/models`);
   const chatResponse = await fetchJson(`${input.baseUrl}/v1/chat/completions`, {
     method: "POST",
@@ -295,6 +300,7 @@ async function exercisePackagedExecutionValidation(input: {
   return {
     endpointId: activatedEndpoint.endpointId,
     modelCount: models.data.length,
+    roleDefinitionCount: rolePolicy.roleDefinitions.length,
     chatOutputText: extractChatOutputText(chatResponse),
     responsesOutputText: extractResponsesOutputText(responsesResponse),
   };
@@ -304,6 +310,7 @@ export async function runRuntimePackagingValidation(): Promise<{
   readonly packagedExecutable: string;
   readonly healthStatus: string;
   readonly modelCount: number;
+  readonly roleDefinitionCount: number;
   readonly endpointId: string;
   readonly chatOutputText: string;
   readonly responsesOutputText: string;
@@ -327,6 +334,8 @@ export async function runRuntimePackagingValidation(): Promise<{
       "127.0.0.1",
       "--port",
       String(port),
+      "--fixture-root",
+      path.join(packagedRepoRoot, "testdata", "router-runtime", "fixtures"),
       "--static-root",
       path.join(packagedRepoRoot, "build", "client"),
     ],
@@ -356,6 +365,7 @@ export async function runRuntimePackagingValidation(): Promise<{
         readonly packagedExecutable: string;
         readonly healthStatus: string;
         readonly modelCount: number;
+        readonly roleDefinitionCount: number;
         readonly endpointId: string;
         readonly chatOutputText: string;
         readonly responsesOutputText: string;
@@ -375,6 +385,7 @@ export async function runRuntimePackagingValidation(): Promise<{
       packagedExecutable: packaged.outputPath,
       healthStatus: healthJson.status,
       modelCount: packagedExecution.modelCount,
+      roleDefinitionCount: packagedExecution.roleDefinitionCount,
       endpointId: packagedExecution.endpointId,
       chatOutputText: packagedExecution.chatOutputText,
       responsesOutputText: packagedExecution.responsesOutputText,

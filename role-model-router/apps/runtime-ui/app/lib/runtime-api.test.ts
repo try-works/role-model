@@ -537,9 +537,18 @@ describe("router APIs", () => {
           fallback_endpoint_ids: ["moonshot.personal.primary.global.kimi-k2.5"],
         },
         routingDiagnostics: {
+          aliasResolution: {
+            aliasId: "gpt-5.4",
+            resolvedModelIds: ["gpt-5.4", "moonshot/kimi-k2.5"],
+          },
           routingMode: {
             effectiveMode: "controller",
           },
+        },
+        requestAlias: "gpt-5.4",
+        aliasPoolResolution: {
+          aliasId: "gpt-5.4",
+          modelIds: ["gpt-5.4", "moonshot/kimi-k2.5"],
         },
         request: {
           requestId: "req-router-001",
@@ -566,9 +575,18 @@ describe("router APIs", () => {
         fallback_endpoint_ids: ["moonshot.personal.primary.global.kimi-k2.5"],
       },
       routingDiagnostics: {
+        aliasResolution: {
+          aliasId: "gpt-5.4",
+          resolvedModelIds: ["gpt-5.4", "moonshot/kimi-k2.5"],
+        },
         routingMode: {
           effectiveMode: "controller",
         },
+      },
+      requestAlias: "gpt-5.4",
+      aliasPoolResolution: {
+        aliasId: "gpt-5.4",
+        modelIds: ["gpt-5.4", "moonshot/kimi-k2.5"],
       },
       request: {
         requestId: "req-router-001",
@@ -1396,6 +1414,13 @@ describe("fetchRuntimeConfig", () => {
         config: {
           version: "1.0",
           executionMode: "hybrid",
+          modelAliases: [
+            {
+              aliasId: "gpt-5.4",
+              modelIds: ["gpt-5.4", "moonshot/kimi-k2.5"],
+              mode: "hybrid",
+            },
+          ],
           llamaSwap: {
             enabled: true,
             models: [
@@ -1423,6 +1448,13 @@ describe("fetchRuntimeConfig", () => {
       config: {
         version: "1.0",
         executionMode: "hybrid",
+        modelAliases: [
+          {
+            aliasId: "gpt-5.4",
+            modelIds: ["gpt-5.4", "moonshot/kimi-k2.5"],
+            mode: "hybrid",
+          },
+        ],
         llamaSwap: {
           enabled: true,
           models: [

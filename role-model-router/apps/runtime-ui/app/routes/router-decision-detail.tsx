@@ -11,6 +11,7 @@ import {
   SectionCard,
 } from "../components/page-primitives";
 import { secondaryButtonClassName } from "../lib/design-system";
+import { formatRoutingModeLabel } from "../lib/routing-mode";
 import { type RouterDecisionDetail, fetchRouterDecisionDetail } from "../lib/runtime-api";
 
 export default function RouterDecisionDetailRoute() {
@@ -101,7 +102,7 @@ export default function RouterDecisionDetailRoute() {
         />
         <FactCard
           label="Strategy"
-          value={detail.strategyLabel ?? "n/a"}
+          value={detail.strategyLabel ? formatRoutingModeLabel(detail.strategyLabel) : "n/a"}
           detail="Effective Router strategy summary for this request."
         />
       </div>

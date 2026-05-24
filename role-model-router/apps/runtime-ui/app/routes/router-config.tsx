@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router";
 
 import {
@@ -11,39 +11,11 @@ import {
   SectionCard,
 } from "../components/page-primitives";
 import {
-  fieldClassName,
   mutedPanelClassName,
-  primaryButtonClassName,
   secondaryButtonClassName,
 } from "../lib/design-system";
-import { type RouterConfig, type WorkbenchChatInput, fetchRouterConfig } from "../lib/runtime-api";
-
-const ROUTING_MODE_OPTIONS: Array<{
-  value: NonNullable<WorkbenchChatInput["routingModeOverride"]>;
-  label: string;
-  detail: string;
-}> = [
-  {
-    value: "baseline",
-    label: "Strategy A - Baseline",
-    detail: "Use the deterministic baseline route without controller or difficulty guidance.",
-  },
-  {
-    value: "controller",
-    label: "Strategy B - Intelligent",
-    detail: "Use controller-guided endpoint selection when the routing controller is available.",
-  },
-  {
-    value: "difficulty",
-    label: "Strategy C - Difficulty",
-    detail: "Use difficulty-aware routing that matches the request to endpoint difficulty bounds.",
-  },
-  {
-    value: "hybrid",
-    label: "Hybrid",
-    detail: "Blend controller guidance with difficulty-aware fallback behavior.",
-  },
-] as const;
+import { formatRoutingModeLabel } from "../lib/routing-mode";
+import { type RouterConfig, fetchRouterConfig } from "../lib/runtime-api";
 
 function asStringValue(value: unknown): string | null {
   return typeof value === "string" && value.length > 0 ? value : null;
@@ -51,8 +23,6 @@ function asStringValue(value: unknown): string | null {
 
 export default function RouterConfigRoute() {
   const [config, setConfig] = useState<RouterConfig | null>(null);
-  const [selectedRoutingMode, setSelectedRoutingMode] =
-    useState<NonNullable<WorkbenchChatInput["routingModeOverride"]>>("baseline");
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -66,21 +36,17 @@ export default function RouterConfigRoute() {
       );
   }, []);
 
-  const selectedRoutingModeDetails = useMemo(
-    () =>
-      ROUTING_MODE_OPTIONS.find((option) => option.value === selectedRoutingMode) ??
-      ROUTING_MODE_OPTIONS[0],
-    [selectedRoutingMode],
-  );
-
   const header = (
     <PageHeader
       eyebrow="Router"
       title="Routing config"
-      description="See low-level routing policy state, proposal routing modes, live guidance provenance, and the raw role/task policy inputs that shape resolved routing behavior."
+      description="See the low-level routing policy state, persisted posture, live guidance provenance, and the raw role/task policy inputs that shape resolved routing behavior."
       actions={
         <>
-          <Link className={secondaryButtonClassName} to="/app/control/runtime-config">
+          <Link className={secondaryButtonClassName} to="/app/router/strategy">
+            Edit strategy
+          </Link>
+          <Link className={secondaryButtonClassName} to="/app/system/runtime-config">
             Advanced config
           </Link>
           <Link className={secondaryButtonClassName} to="/app/router/decisions">
@@ -114,9 +80,9 @@ export default function RouterConfigRoute() {
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <FactCard
-          label="Scoring policy"
-          value={config.persisted.strategy ?? "unset"}
-          detail="Low-level balanced/latency/quality/cost policy if the runtime config sets one."
+          label="Persisted strategy"
+          value={config.persisted.strategy ? formatRoutingModeLabel(config.persisted.strategy) : "unset"}
+          detail="Saved Strategy A/B/C or Hybrid routing mode from the runtime config."
           emphasis
         />
         <FactCard
@@ -137,54 +103,36 @@ export default function RouterConfigRoute() {
       </div>
 
       <SectionCard
-        title="Choose routing strategy"
-        description="Choose the proposal routing mode here, then open the Workbench with that mode preselected for the next request."
+        title="Editing boundary"
+        description="This page explains the active routing posture. Use the dedicated Routing strategy page to change the persisted Strategy A/B/C mode or execution mode."
       >
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,280px)_1fr]">
-          <div className="space-y-3">
-            <label
-              className="block text-sm font-medium text-[var(--rm-fg)]"
-              htmlFor="router-strategy-select"
-            >
-              Strategy
-            </label>
-            <select
-              id="router-strategy-select"
-              className={fieldClassName}
-              value={selectedRoutingMode}
-              onChange={(event) =>
-                setSelectedRoutingMode(
-                  event.target.value as NonNullable<WorkbenchChatInput["routingModeOverride"]>,
-                )
-              }
-            >
-              {ROUTING_MODE_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-            <div className="flex flex-wrap gap-3">
-              <Link
-                className={primaryButtonClassName}
-                to="/app/studio/chat"
-                state={{ routingModeOverride: selectedRoutingMode }}
-              >
-                Open workbench with strategy
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(320px,0.9fr)]">
+          <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
+            <p className="font-medium text-[var(--rm-fg)]">Where to edit</p>
+            <p className="mt-3 leading-6">
+              Persisted routing mode and execution mode now live on the dedicated
+              {" "}
+              <Link className="underline decoration-[var(--rm-border-strong)] underline-offset-4" to="/app/router/strategy">
+                Routing strategy
               </Link>
-              <Link className={secondaryButtonClassName} to="/app/control/runtime-config">
-                Advanced config
-              </Link>
-            </div>
+              {" "}
+              page so this config view stays focused on provenance and policy inputs.
+            </p>
           </div>
           <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
-            <p className="font-medium text-[var(--rm-fg)]">{selectedRoutingModeDetails.label}</p>
-            <p className="mt-3 leading-6">{selectedRoutingModeDetails.detail}</p>
+            <p className="font-medium text-[var(--rm-fg)]">Where to test</p>
             <p className="mt-3 leading-6">
-              This proposal routing mode is separate from the low-level scoring policy above. The
-              Workbench sends it as a per-request routing override so you can test the mode
-              directly.
+              Use the Workbench for request-level experiments and the decisions ledger to verify how
+              the saved strategy, controller guidance, and policy overrides affected routing.
             </p>
+            <div className="mt-4 flex flex-wrap gap-3">
+              <Link className={secondaryButtonClassName} to="/app/router/strategy">
+                Open routing strategy
+              </Link>
+              <Link className={secondaryButtonClassName} to="/app/studio/chat">
+                Open workbench
+              </Link>
+            </div>
           </div>
         </div>
       </SectionCard>

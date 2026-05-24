@@ -160,7 +160,7 @@ export default function LocalModelsRoute() {
           >
             {actioning.__load__ ? "Loading…" : "Load model"}
           </button>
-          <Link className={secondaryButtonClassName} to="/app/local/peers">
+          <Link className={secondaryButtonClassName} to="/app/local/endpoints">
             Open peer endpoints
           </Link>
         </div>

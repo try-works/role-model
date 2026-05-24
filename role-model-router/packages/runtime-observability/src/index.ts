@@ -62,7 +62,7 @@ export interface RuntimeRoutingDiagnostics {
     readonly preferredEndpointIds?: readonly string[];
   };
   readonly routingMode?: {
-    readonly source: "request-override" | "alias-default";
+    readonly source: "request-override" | "alias-default" | "runtime-config";
     readonly requestedOverride?: RuntimeRoutingMode;
     readonly aliasMode?: RuntimeRoutingMode;
     readonly effectiveMode: RuntimeRoutingMode;

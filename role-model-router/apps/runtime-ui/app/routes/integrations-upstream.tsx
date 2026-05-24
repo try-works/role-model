@@ -48,7 +48,7 @@ export default function IntegrationsUpstreamRoute() {
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Integrations"
+        eyebrow="Endpoints"
         title="Upstream providers"
         description="Keep upstream passthrough boundaries, provider/account posture, and model-specific raw doorways in one repo-owned integration surface."
       />

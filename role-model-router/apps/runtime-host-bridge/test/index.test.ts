@@ -8,9 +8,18 @@ import { describe, expect, test } from "vitest";
 import { stringify } from "yaml";
 
 import type { EndpointRegistryResult } from "@role-model-router/endpoint-registry";
-import { resolveSqliteMemoryLocation } from "@role-model-router/sqlite-memory";
+import {
+  resolveSqliteMemoryLocation,
+  upsertProviderAccount as upsertSqliteProviderAccount,
+} from "@role-model-router/sqlite-memory";
 
-import { createQaFixtureRoot, createQaServerOptions } from "../scripts/start-for-qa.ts";
+import {
+  bootstrapQaControlPlane,
+  createQaFixtureRoot,
+  createQaRuntimeConfigPath,
+  createQaRuntimeConfigText,
+  createQaServerOptions,
+} from "../scripts/start-for-qa.ts";
 import * as cli from "../src/cli.js";
 import * as bridge from "../src/index.js";
 
@@ -192,6 +201,12 @@ describe("runtime-host-bridge", () => {
     const updateTaskDefinitions = async () => [];
     const listModels = async () => [];
     const listProviderDeviceAuthorizations = async () => [];
+    const getLocalLogs = async () => ({ logs: "local log line" });
+    const readModelOverrides = async () => ({});
+    const updateModelOverrides = async () => ({});
+    const readPeers = async () => [];
+    const updatePeers = async () => [];
+    const checkPeerHealth = async () => ({ healthy: true });
 
     const backend = {
       registry,
@@ -246,12 +261,30 @@ describe("runtime-host-bridge", () => {
       readLocalPolicy: async () => ({}),
       updateLocalPolicy: async () => ({}),
       listSwapHistory: async () => [],
+      getLocalLogs,
+      readModelOverrides,
+      updateModelOverrides,
+      readPeers,
+      updatePeers,
+      checkPeerHealth,
       shutdown: async () => undefined,
     } as Parameters<typeof createQaServerOptions>[1];
 
     expect(createQaFixtureRoot(repoRoot)).toBe(
       path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
     );
+    expect(createQaRuntimeConfigPath("D:\\qa-runtime")).toBe(
+      path.join("D:\\qa-runtime", "runtime-config.yaml"),
+    );
+    expect(createQaRuntimeConfigText()).toContain("model_aliases:");
+    expect(createQaRuntimeConfigText()).toContain("mixed.local-remote:");
+    expect(createQaRuntimeConfigText()).toContain("lfm2.5-1.2b-instruct");
+    expect(createQaRuntimeConfigText()).toContain("openai/gpt-4.1-mini-fast");
+    expect(createQaRuntimeConfigText()).toContain("llama_swap:");
+    expect(createQaRuntimeConfigText()).toContain("models:");
+    expect(createQaRuntimeConfigText()).toContain("path: ./models/lfm2.5-1.2b-instruct.gguf");
+    expect(createQaRuntimeConfigText()).toContain("litellm_proxy:");
+    expect(createQaRuntimeConfigText()).toContain("providers: {}");
 
     const options = createQaServerOptions(repoRoot, backend);
 
@@ -270,6 +303,75 @@ describe("runtime-host-bridge", () => {
     expect(options.updateTaskDefinitions).toBe(updateTaskDefinitions);
     expect(options.listModels).toBe(listModels);
     expect(options.listProviderDeviceAuthorizations).toBe(listProviderDeviceAuthorizations);
+    expect(options.getLocalLogs).toBe(getLocalLogs);
+    expect(options.readModelOverrides).toBe(readModelOverrides);
+    expect(options.updateModelOverrides).toBe(updateModelOverrides);
+    expect(options.readPeers).toBe(readPeers);
+    expect(options.updatePeers).toBe(updatePeers);
+    expect(options.checkPeerHealth).toBe(checkPeerHealth);
+  });
+
+  test("bootstraps QA control-plane state for mixed local+remote routing proof", async () => {
+    const calls: Array<{ kind: string; body: Record<string, unknown> }> = [];
+    const backend = {
+      upsertProviderAccount: async (body: Record<string, unknown>) => {
+        calls.push({ kind: "account", body });
+        return { providerAccountId: "moonshot.personal.primary" };
+      },
+      activateEndpoint: async (body: Record<string, unknown>) => {
+        calls.push({ kind: "endpoint", body });
+        return { endpointId: "moonshot.personal.primary.global.kimi-k2.5" };
+      },
+    };
+
+    await bootstrapQaControlPlane(
+      backend as Pick<Parameters<typeof createQaServerOptions>[1], "upsertProviderAccount" | "activateEndpoint">,
+    );
+
+    expect(calls).toEqual([
+      {
+        kind: "account",
+        body: {
+          providerAccountId: "moonshot.personal.primary",
+          providerId: "moonshot",
+          providerKind: "provider-openai",
+          orgScope: "personal",
+          accountScope: "workspace-default",
+          credentialRef: {
+            backend: "env",
+            ref: "MOONSHOT_API_KEY",
+          },
+          authMode: "api-key-static",
+          regionPolicy: {
+            mode: "prefer",
+            regions: ["global"],
+          },
+          baseUrlOverride: "https://api.moonshot.ai/v1",
+          allowedModels: ["moonshot/kimi-k2.5"],
+          modelRoleBindings: [
+            {
+              modelId: "moonshot/kimi-k2.5",
+              roleIds: ["general.chat"],
+            },
+          ],
+          deniedModels: [],
+          entitlementTags: ["chat"],
+          budgetPolicyRef: "budget.default",
+          quotaPolicyRef: "quota.default",
+          status: "active",
+          healthStatus: "healthy",
+          rotationState: "stable",
+        },
+      },
+      {
+        kind: "endpoint",
+        body: {
+          providerAccountId: "moonshot.personal.primary",
+          modelId: "moonshot/kimi-k2.5",
+          region: "global",
+        },
+      },
+    ]);
   });
 
   test("builds packaged CLI options with static UI, router surfaces, and fixture-root defaults", () => {
@@ -325,6 +427,48 @@ describe("runtime-host-bridge", () => {
       unloadLocalModel: async () => ({ success: true }),
       readLocalPolicy: async () => ({}),
       updateLocalPolicy: async () => ({}),
+      readRolePolicy: async () => ({
+        roleDefinitions: [],
+        taskDefinitions: [],
+      }),
+      createRolePolicyRole: async () => ({
+        role_id: "qa.reviewer",
+        name: "QA Reviewer",
+        description: "Reviews work.",
+        role_kind: "assistant",
+        default_system_instructions: "",
+        task_types_supported: [],
+        required_capabilities: [],
+        preferred_capabilities: [],
+        forbidden_capabilities: [],
+        tool_policy: {
+          mode: "allowed",
+          allowed_tools: [],
+        },
+        routing_policy_overrides: {},
+        output_contracts: [],
+        safety_policy_refs: [],
+      }),
+      updateRolePolicyRole: async () => ({
+        role_id: "qa.reviewer",
+        name: "QA Reviewer",
+        description: "Reviews work.",
+        role_kind: "assistant",
+        default_system_instructions: "",
+        task_types_supported: [],
+        required_capabilities: [],
+        preferred_capabilities: [],
+        forbidden_capabilities: [],
+        tool_policy: {
+          mode: "allowed",
+          allowed_tools: [],
+        },
+        routing_policy_overrides: {},
+        output_contracts: [],
+        safety_policy_refs: [],
+      }),
+      listTaskDefinitions: async () => [],
+      updateTaskDefinitions: async () => [],
       listSwapHistory: async () => [],
       getLocalLogs: async () => "logs",
       readModelOverrides: async () => ({}),
@@ -347,7 +491,7 @@ describe("runtime-host-bridge", () => {
         resolveCliFixtureRoot: (repoRoot: string, fixtureRoot?: string) => string;
       }
     ).resolveCliFixtureRoot(repoRoot);
-    expect(fixtureRoot).toBe(path.join(repoRoot, "testdata", "router-runtime", "fixtures"));
+    expect(fixtureRoot).toBe(path.join(repoRoot, "testdata", "router-runtime"));
 
     const staticRoot = path.join(
       repoRoot,
@@ -369,11 +513,16 @@ describe("runtime-host-bridge", () => {
           listRouterCandidates?: unknown;
           listRouterDecisions?: unknown;
           readRouterDecision?: unknown;
-          listLocalModels?: unknown;
-          getLocalLogs?: unknown;
-          readModelOverrides?: unknown;
-          updateModelOverrides?: unknown;
-          readPeers?: unknown;
+           listLocalModels?: unknown;
+           getLocalLogs?: unknown;
+           readRolePolicy?: unknown;
+           createRolePolicyRole?: unknown;
+           updateRolePolicyRole?: unknown;
+           listTaskDefinitions?: unknown;
+           updateTaskDefinitions?: unknown;
+           readModelOverrides?: unknown;
+           updateModelOverrides?: unknown;
+           readPeers?: unknown;
           updatePeers?: unknown;
           checkPeerHealth?: unknown;
         };
@@ -395,11 +544,187 @@ describe("runtime-host-bridge", () => {
     expect(options.readRouterDecision).toBe(readRouterDecision);
     expect(options.listLocalModels).toBe(backend.listLocalModels);
     expect(options.getLocalLogs).toBe(backend.getLocalLogs);
+    expect(options.readRolePolicy).toBe(backend.readRolePolicy);
+    expect(options.createRolePolicyRole).toBe(backend.createRolePolicyRole);
+    expect(options.updateRolePolicyRole).toBe(backend.updateRolePolicyRole);
+    expect(options.listTaskDefinitions).toBe(backend.listTaskDefinitions);
+    expect(options.updateTaskDefinitions).toBe(backend.updateTaskDefinitions);
     expect(options.readModelOverrides).toBe(backend.readModelOverrides);
     expect(options.updateModelOverrides).toBe(backend.updateModelOverrides);
     expect(options.readPeers).toBe(backend.readPeers);
     expect(options.updatePeers).toBe(backend.updatePeers);
     expect(options.checkPeerHealth).toBe(backend.checkPeerHealth);
+  });
+
+  test("suppresses placeholder provider accounts when using the packaged CLI defaults", async () => {
+    const runtimeStateRoot = await mkdtemp(
+      path.join(os.tmpdir(), "role-model-runtime-host-cli-fixtures-"),
+    );
+
+    try {
+      const fixtureRoot = (
+        cli as {
+          resolveCliFixtureRoot: (repoRoot: string, fixtureRoot?: string) => string;
+        }
+      ).resolveCliFixtureRoot(repoRoot);
+
+      const backend = await (
+        bridge as {
+          createRuntimeBridgeBackend: (options: {
+            repoRoot: string;
+            fixtureRoot: string;
+            runtimeStateRoot: string;
+            scopeId: string;
+          }) => Promise<{
+            listAccounts: () => Promise<Array<{ providerAccountId: string }>>;
+            shutdown: () => Promise<void>;
+          }>;
+        }
+      ).createRuntimeBridgeBackend({
+        repoRoot,
+        fixtureRoot,
+        runtimeStateRoot,
+        scopeId: "runtime-host-cli-default-fixtures",
+      });
+
+      try {
+        const accounts = await backend.listAccounts();
+        expect(accounts.map((account) => account.providerAccountId)).not.toEqual(
+          expect.arrayContaining(["openai.personal.primary", "anthropic.team.shared"]),
+        );
+      } finally {
+        await backend.shutdown();
+      }
+    } finally {
+      await rm(runtimeStateRoot, { recursive: true, force: true });
+    }
+  });
+
+  test("removes legacy placeholder provider accounts from persisted runtime state when using packaged defaults", async () => {
+    const runtimeStateRoot = await mkdtemp(
+      path.join(os.tmpdir(), "role-model-runtime-host-cli-migration-"),
+    );
+    const pollutedFixtureRoot = path.join(repoRoot, "testdata", "router-runtime", "fixtures");
+    const packagedFixtureRoot = (
+      cli as {
+        resolveCliFixtureRoot: (repoRoot: string, fixtureRoot?: string) => string;
+      }
+    ).resolveCliFixtureRoot(repoRoot);
+
+    try {
+      const bootstrapBackend = await (
+        bridge as {
+          createRuntimeBridgeBackend: (options: {
+            repoRoot: string;
+            fixtureRoot: string;
+            runtimeStateRoot: string;
+            scopeId: string;
+          }) => Promise<{
+            shutdown: () => Promise<void>;
+          }>;
+        }
+      ).createRuntimeBridgeBackend({
+        repoRoot,
+        fixtureRoot: pollutedFixtureRoot,
+        runtimeStateRoot,
+        scopeId: "runtime-host-cli-placeholder-cleanup",
+      });
+      await bootstrapBackend.shutdown();
+
+      const databasePath = resolveSqliteMemoryLocation({
+        runtimeStateRoot,
+        scopeId: "runtime-host-cli-placeholder-cleanup",
+      });
+
+      upsertSqliteProviderAccount({
+        databasePath,
+        account: {
+          providerAccountId: "openai.personal.primary",
+          providerId: "openai",
+          providerKind: "provider-openai",
+          orgScope: "personal",
+          accountScope: "workspace-default",
+          credentialRef: {
+            backend: "env",
+            ref: "OPENAI_API_KEY",
+          },
+          authMode: "api-key-static",
+          regionPolicy: {
+            mode: "prefer",
+            regions: ["us-east-1"],
+          },
+          baseUrlOverride: null,
+          allowedModels: ["openai/gpt-4.1-mini-fast"],
+          modelRoleBindings: [],
+          deniedModels: [],
+          entitlementTags: ["chat"],
+          budgetPolicyRef: "budget.default",
+          quotaPolicyRef: "quota.default",
+          status: "active",
+          healthStatus: "healthy",
+          rotationState: "stable",
+        },
+      });
+      upsertSqliteProviderAccount({
+        databasePath,
+        account: {
+          providerAccountId: "anthropic.team.shared",
+          providerId: "anthropic",
+          providerKind: "provider-anthropic",
+          orgScope: "team",
+          accountScope: "workspace-shared",
+          credentialRef: {
+            backend: "local-keychain",
+            ref: "anthropic/team/shared",
+          },
+          authMode: "api-key-rotating-ref",
+          regionPolicy: {
+            mode: "allow",
+            regions: ["us-east-1"],
+          },
+          baseUrlOverride: null,
+          allowedModels: ["anthropic/claude-3.7-sonnet"],
+          modelRoleBindings: [],
+          deniedModels: [],
+          entitlementTags: ["chat"],
+          budgetPolicyRef: "budget.team",
+          quotaPolicyRef: "quota.team",
+          status: "active",
+          healthStatus: "healthy",
+          rotationState: "stable",
+        },
+      });
+
+      const backend = await (
+        bridge as {
+          createRuntimeBridgeBackend: (options: {
+            repoRoot: string;
+            fixtureRoot: string;
+            runtimeStateRoot: string;
+            scopeId: string;
+          }) => Promise<{
+            listAccounts: () => Promise<Array<{ providerAccountId: string }>>;
+            shutdown: () => Promise<void>;
+          }>;
+        }
+      ).createRuntimeBridgeBackend({
+        repoRoot,
+        fixtureRoot: packagedFixtureRoot,
+        runtimeStateRoot,
+        scopeId: "runtime-host-cli-placeholder-cleanup",
+      });
+
+      try {
+        const accounts = await backend.listAccounts();
+        expect(accounts.map((account) => account.providerAccountId)).not.toEqual(
+          expect.arrayContaining(["openai.personal.primary", "anthropic.team.shared"]),
+        );
+      } finally {
+        await backend.shutdown();
+      }
+    } finally {
+      await rm(runtimeStateRoot, { recursive: true, force: true });
+    }
   });
 
   test("maps a chat-completions request into role-model routing and execution inputs", () => {
@@ -1392,6 +1717,94 @@ describe("runtime-host-bridge", () => {
           "moonshot.personal.kimi-code.global.kimi-k2.5",
           "moonshot.personal.primary.global.kimi-k2.5",
         ],
+      },
+    });
+  });
+
+  test("uses the persisted Strategy B mode as the default routing mode when no alias mode or request override is set", () => {
+    const result = (
+      bridge as {
+        mapChatCompletionsRequest: (
+          value: EndpointRegistryResult,
+          body: Record<string, unknown>,
+          requestId: string,
+          modelAliases?: readonly {
+            aliasId: string;
+            mode?: "basic" | "difficulty" | "intelligent" | "hybrid" | null;
+            modelIds: readonly string[];
+          }[],
+          difficultyContext?: unknown,
+          controllerContext?: {
+            active: boolean;
+            resolvedGuidance?: {
+              strategy?: string;
+              preferLocal?: boolean;
+            };
+          },
+          requestOptions?: unknown,
+          roleDefinitions?: unknown,
+          defaultRoutingMode?: "baseline" | "difficulty" | "controller" | "hybrid",
+        ) => {
+          routingRequest: {
+            strategy: string;
+            preferLocal: boolean;
+            allowEndpoints: readonly string[];
+          };
+          routingDiagnostics?: {
+            routingMode?: {
+              source: string;
+              effectiveMode: string;
+            };
+            controllerRouting?: {
+              active: boolean;
+              acceptedDirectives?: {
+                strategy?: string;
+                preferLocal?: boolean;
+              };
+            };
+          };
+        };
+      }
+    ).mapChatCompletionsRequest(
+      registry,
+      {
+        model: "moonshot/kimi-k2.5",
+        messages: [{ role: "user", content: "Route this with the saved strategy." }],
+      },
+      "req-host-default-controller-chat-001",
+      [],
+      undefined,
+      {
+        active: true,
+        resolvedGuidance: {
+          strategy: "quality",
+          preferLocal: true,
+        },
+      },
+      undefined,
+      undefined,
+      "controller",
+    );
+
+    expect(result.routingRequest).toMatchObject({
+      strategy: "quality",
+      preferLocal: true,
+      allowEndpoints: [
+        "moonshot.personal.kimi-code.global.kimi-k2.5",
+        "moonshot.personal.primary.global.kimi-k2.5",
+      ],
+    });
+    expect(result.routingDiagnostics).toMatchObject({
+      routingMode: {
+        source: "runtime-config",
+        effectiveMode: "controller",
+      },
+      controllerRouting: {
+        active: true,
+        acceptedDirectives: {
+          strategy: "quality",
+          preferLocal: true,
+        },
       },
     });
   });
@@ -7874,7 +8287,7 @@ describe("runtime-host-bridge", () => {
       runtimeStateRoot: "C:\\runtime-state",
       scopeId: "runtime-host-bridge",
       staticRoot: path.join(repoRoot, "role-model-router", "apps", "runtime-ui", "build", "client"),
-      unifiedRuntimeConfigPath: undefined,
+      unifiedRuntimeConfigPath: "C:\\runtime-state\\runtime-config.yaml",
     });
   });
 
@@ -7912,7 +8325,7 @@ describe("runtime-host-bridge", () => {
       scopeId: "runtime-host-bridge",
       staticRoot:
         "/home/runner/work/role-model/role-model/role-model-router/apps/runtime-ui/build/client",
-      unifiedRuntimeConfigPath: undefined,
+      unifiedRuntimeConfigPath: "C:\\runtime-state\\runtime-config.yaml",
     });
   });
 
@@ -7949,7 +8362,8 @@ describe("runtime-host-bridge", () => {
       runtimeStateRoot: "C:\\Users\\tester\\AppData\\Local\\Role Model Runtime\\state",
       scopeId: "runtime-host-bridge",
       staticRoot: "D:\\DEV\\role-model\\role-model-router\\apps\\runtime-ui\\build\\client",
-      unifiedRuntimeConfigPath: undefined,
+      unifiedRuntimeConfigPath:
+        "C:\\Users\\tester\\AppData\\Local\\Role Model Runtime\\state\\runtime-config.yaml",
     });
   });
 
@@ -7986,7 +8400,7 @@ describe("runtime-host-bridge", () => {
       runtimeStateRoot: "/home/tester/.local/share/Role Model Runtime/state",
       scopeId: "runtime-host-bridge",
       staticRoot: "/home/tester/role-model/role-model-router/apps/runtime-ui/build/client",
-      unifiedRuntimeConfigPath: undefined,
+      unifiedRuntimeConfigPath: "/home/tester/.local/share/Role Model Runtime/state/runtime-config.yaml",
     });
   });
 });

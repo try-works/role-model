@@ -74,7 +74,7 @@ export default function ControlControllerRoute() {
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Control"
+        eyebrow="Router"
         title="Routing controller"
         description="Choose the explicit endpoint/model pair that adjudicates routed requests, with local and remote candidates shown in one list."
       />

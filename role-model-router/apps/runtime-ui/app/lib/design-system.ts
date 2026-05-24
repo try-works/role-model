@@ -224,8 +224,8 @@ const localMatrixRoute = createRoute({
 });
 
 const localPeersRoute = createRoute({
-  id: "local-peers",
-  to: "/app/local/peers",
+  id: "local-endpoints",
+  to: "/app/local/endpoints",
   label: "Endpoints",
   section: "Local",
   icon: Network,
@@ -238,14 +238,14 @@ const localPeersRoute = createRoute({
 });
 
 const controlProvidersRoute = createRoute({
-  id: "control-providers",
-  to: "/app/control/providers",
+  id: "remote-providers",
+  to: "/app/remote/providers",
   label: "Providers",
-  section: "Control",
+  section: "Remote",
   icon: PanelsTopLeft,
   template: "registry-detail",
-  eyebrow: "Control",
-  title: "Provider onboarding",
+  eyebrow: "Remote",
+  title: "Remote providers",
   description:
     "Choose a LiteLLM-backed provider, select the models available for that provider, and complete setup from one onboarding surface.",
   noteTitle: "Registry detail",
@@ -254,29 +254,29 @@ const controlProvidersRoute = createRoute({
 });
 
 const controlRoutingStrategyRoute = createRoute({
-  id: "control-routing-strategy",
-  to: "/app/control/routing-strategy",
+  id: "router-strategy",
+  to: "/app/router/strategy",
   label: "Routing Strategy",
-  section: "Control",
+  section: "Router",
   icon: GitBranch,
   template: "registry-detail",
-  eyebrow: "Control",
+  eyebrow: "Router",
   title: "Routing strategy",
   description:
-    "Structured routing-strategy posture for execution mode, controller state, and operator handoff into advanced config and request verification.",
+    "Editable routing posture for the persisted scoring strategy and execution mode, with controller context and direct verification links.",
   noteTitle: "Registry detail",
   noteBody:
-    "Lead with the current strategy posture and links into advanced config, controller, workbench, and request inspection instead of hiding strategy under raw JSON alone.",
+    "Lead with an explicit strategy editor, keep the currently applied posture visible, and preserve direct links into controller, router, and request verification surfaces.",
 });
 
 const controlRuntimeConfigRoute = createRoute({
-  id: "control-runtime-config",
-  to: "/app/control/runtime-config",
+  id: "system-runtime-config",
+  to: "/app/system/runtime-config",
   label: "Runtime Config",
-  section: "Control",
+  section: "System",
   icon: SlidersHorizontal,
   template: "registry-detail",
-  eyebrow: "Control",
+  eyebrow: "System",
   title: "Runtime config",
   description:
     "Edit the unified runtime contract for local llama-swap models, remote LiteLLM providers, and process policy through one repo-owned route.",
@@ -286,13 +286,13 @@ const controlRuntimeConfigRoute = createRoute({
 });
 
 const controlControllerRoute = createRoute({
-  id: "control-controller",
-  to: "/app/control/controller",
+  id: "router-controller",
+  to: "/app/router/controller",
   label: "Controller",
-  section: "Control",
+  section: "Router",
   icon: Waypoints,
   template: "registry-detail",
-  eyebrow: "Control",
+  eyebrow: "Router",
   title: "Routing controller",
   description:
     "Choose the concrete endpoint/model pair that acts as the global routing controller.",
@@ -302,13 +302,13 @@ const controlControllerRoute = createRoute({
 });
 
 const controlEndpointsRoute = createRoute({
-  id: "control-endpoints",
-  to: "/app/control/endpoints",
+  id: "endpoints-overview",
+  to: "/app/endpoints",
   label: "Endpoints",
-  section: "Control",
+  section: "Endpoints",
   icon: Cpu,
   template: "registry-detail",
-  eyebrow: "Control",
+  eyebrow: "Endpoints",
   title: "Endpoint registry",
   description:
     "Review configured providers, models, and runtime endpoint status after onboarding without duplicating provider setup here.",
@@ -318,13 +318,13 @@ const controlEndpointsRoute = createRoute({
 });
 
 const controlRolesRoute = createRoute({
-  id: "control-roles",
-  to: "/app/control/roles",
+  id: "models-roles",
+  to: "/app/models/roles",
   label: "Roles",
-  section: "Control",
+  section: "Models",
   icon: LayoutGrid,
   template: "registry-detail",
-  eyebrow: "Control",
+  eyebrow: "Models",
   title: "Runtime roles",
   description:
     "Author full router-grade role definitions and task allowlists from the live runtime policy surface instead of relying on seeded role catalogs.",
@@ -334,13 +334,13 @@ const controlRolesRoute = createRoute({
 });
 
 const controlModelsRoute = createRoute({
-  id: "control-models",
-  to: "/app/control/models",
+  id: "models-inventory",
+  to: "/app/models",
   label: "Models",
-  section: "Control",
+  section: "Models",
   icon: Boxes,
   template: "model-inventory",
-  eyebrow: "Control",
+  eyebrow: "Models",
   title: "Configured models",
   description:
     "Unified local and remote model inventory with model-side role assignment, controller state, and links into the live runtime policy surface.",
@@ -375,10 +375,10 @@ const routerConfigRoute = createRoute({
   eyebrow: "Router",
   title: "Routing config",
   description:
-    "Consolidated routing configuration and provenance surface spanning strategy, execution mode, controller, and policy-source context.",
+    "Read-only routing provenance surface spanning persisted posture, controller context, guidance, and policy-source inputs.",
   noteTitle: "Registry detail",
   noteBody:
-    "Separate persisted config from advisory guidance and per-request policy resolution so unconfigured values stay honest.",
+    "Keep editing on the dedicated Routing strategy page so this surface stays focused on provenance, guidance, and policy resolution.",
 });
 
 const routerCandidatesRoute = createRoute({
@@ -493,13 +493,13 @@ const observeLogsRoute = createRoute({
 });
 
 const integrationsDownstreamRoute = createRoute({
-  id: "integrations-downstream",
-  to: "/app/integrations/downstream",
+  id: "endpoints-downstream",
+  to: "/app/endpoints/downstream",
   label: "Downstream",
-  section: "Integrations",
+  section: "Endpoints",
   icon: Cable,
   template: "contract-reference",
-  eyebrow: "Integrations",
+  eyebrow: "Endpoints",
   title: "Downstream provider contract",
   description:
     "Use Role Model as an OpenAI-compatible downstream provider and keep the compatibility matrix with the same contract instead of on a duplicate page.",
@@ -509,13 +509,13 @@ const integrationsDownstreamRoute = createRoute({
 });
 
 const integrationsUpstreamRoute = createRoute({
-  id: "integrations-upstream",
-  to: "/app/integrations/upstream",
+  id: "endpoints-upstream",
+  to: "/app/endpoints/upstream",
   label: "Upstream",
-  section: "Integrations",
+  section: "Endpoints",
   icon: GitBranch,
   template: "contract-reference",
-  eyebrow: "Integrations",
+  eyebrow: "Endpoints",
   title: "Upstream providers",
   description:
     "Reference upstream passthrough boundaries, auth modes, and model-specific targets without duplicating the editable control surfaces.",
@@ -612,30 +612,34 @@ export const runtimeNavigationSections: readonly RuntimeNavigationSection[] = [
     icon: Cpu,
     items: [
       localModelsRoute,
+      localPeersRoute,
       localSwapRoute,
       localPolicyRoute,
       localLogsRoute,
       localMatrixRoute,
-      localPeersRoute,
     ],
   },
   {
-    title: "Control",
+    title: "Remote",
     icon: PanelsTopLeft,
-    items: [
-      controlProvidersRoute,
-      controlRoutingStrategyRoute,
-      controlRuntimeConfigRoute,
-      controlControllerRoute,
-      controlEndpointsRoute,
-      controlRolesRoute,
-      controlModelsRoute,
-    ],
+    items: [controlProvidersRoute],
+  },
+  {
+    title: "Models",
+    icon: Boxes,
+    items: [controlModelsRoute, controlRolesRoute],
   },
   {
     title: "Router",
     icon: GitBranch,
-    items: [routerOverviewRoute, routerConfigRoute, routerCandidatesRoute, routerDecisionsRoute],
+    items: [
+      routerOverviewRoute,
+      controlRoutingStrategyRoute,
+      controlControllerRoute,
+      routerConfigRoute,
+      routerCandidatesRoute,
+      routerDecisionsRoute,
+    ],
   },
   {
     title: "Observe",
@@ -643,14 +647,14 @@ export const runtimeNavigationSections: readonly RuntimeNavigationSection[] = [
     items: [observeActivityRoute, observeRequestsRoute, observeLogsRoute],
   },
   {
-    title: "Integrations",
+    title: "Endpoints",
     icon: Cable,
-    items: [integrationsDownstreamRoute, integrationsUpstreamRoute],
+    items: [controlEndpointsRoute, integrationsDownstreamRoute, integrationsUpstreamRoute],
   },
   {
     title: "System",
     icon: Gauge,
-    items: [systemRuntimeRoute, systemPeersRoute],
+    items: [systemRuntimeRoute, controlRuntimeConfigRoute, systemPeersRoute],
   },
 ] as const;
 
@@ -750,6 +754,15 @@ export const primaryButtonClassName =
 export const secondaryButtonClassName =
   "inline-flex min-h-[44px] items-center justify-center rounded-none border border-[var(--rm-border-strong)] bg-[var(--rm-surface-strong)] px-4 py-2 text-sm font-medium tracking-wide text-[var(--rm-fg)] transition hover:border-[var(--rm-fg)]";
 
+export function getSelectablePanelClassName(selected: boolean): string {
+  return [
+    "w-full rounded-none border p-4 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--rm-accent-subtle)]",
+    selected
+      ? "border-[var(--rm-accent)] bg-[var(--rm-accent-ghost)] text-[var(--rm-fg)]"
+      : "border-[var(--rm-border)] bg-[var(--rm-surface)] text-[var(--rm-secondary)] hover:border-[var(--rm-fg)]",
+  ].join(" ");
+}
+
 export const codeBlockClassName =
   "overflow-x-auto rounded-none border border-[var(--rm-border)] bg-[var(--rm-panel)] p-4 text-xs leading-6 text-[var(--rm-secondary)]";
 
@@ -757,8 +770,38 @@ export const listRowClassName =
   "flex flex-col gap-3 rounded-none border border-[var(--rm-border)] bg-[var(--rm-panel)] p-4 md:flex-row md:items-start md:justify-between";
 
 export function getRuntimeRouteDefinition(pathname: string): RuntimeRouteDefinition | undefined {
+  if (pathname === "/app/local/peers") {
+    return localPeersRoute;
+  }
+  if (pathname === "/app/control/providers") {
+    return controlProvidersRoute;
+  }
+  if (pathname === "/app/control/routing-strategy") {
+    return controlRoutingStrategyRoute;
+  }
+  if (pathname === "/app/control/runtime-config") {
+    return controlRuntimeConfigRoute;
+  }
+  if (pathname === "/app/control/controller") {
+    return controlControllerRoute;
+  }
   if (pathname === "/app/providers") {
     return controlProvidersRoute;
+  }
+  if (pathname === "/app/control/endpoints") {
+    return controlEndpointsRoute;
+  }
+  if (pathname === "/app/control/roles") {
+    return controlRolesRoute;
+  }
+  if (pathname === "/app/control/models") {
+    return controlModelsRoute;
+  }
+  if (pathname === "/app/integrations/downstream") {
+    return integrationsDownstreamRoute;
+  }
+  if (pathname === "/app/integrations/upstream") {
+    return integrationsUpstreamRoute;
   }
   if (pathname === "/app/workbench") {
     return studioChatRoute;

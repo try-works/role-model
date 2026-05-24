@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { cp, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -149,6 +149,221 @@ version: "1.0"
     );
 
     await expect(readFile(unifiedRuntimeConfigPath, "utf8")).resolves.toContain("latency-first");
+
+    await backend.shutdown();
+  });
+
+  test("creates and updates unified runtime config when the configured path does not exist yet", async () => {
+    const tempRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-run35-config-create-"));
+    tempRoots.push(tempRoot);
+    const runtimeStateRoot = path.join(tempRoot, "state");
+    const unifiedRuntimeConfigPath = path.join(runtimeStateRoot, "runtime-config.yaml");
+
+    const backend = await createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: testFixtureRoot,
+      runtimeStateRoot,
+      scopeId: "runtime-host-unified-config-create",
+      unifiedRuntimeConfigPath,
+    });
+
+    await expect(backend.readRuntimeConfig()).resolves.toEqual({
+      applied: false,
+      path: unifiedRuntimeConfigPath,
+      config: null,
+    });
+
+    await expect(
+      backend.updateRuntimeConfig({
+        version: "1.0",
+        routingStrategy: "hybrid",
+        executionMode: "hybrid",
+        llamaSwap: {
+          enabled: true,
+          models: [],
+          process: {
+            command: null,
+            args: [],
+            env: {},
+            cwd: null,
+            startupTimeoutMs: null,
+          },
+        },
+        liteLLM: {
+          enabled: true,
+          providers: [],
+          process: {
+            command: null,
+            args: [],
+            env: {},
+            cwd: null,
+            startupTimeoutMs: null,
+          },
+        },
+      }),
+    ).resolves.toEqual(
+      expect.objectContaining({
+        applied: true,
+        path: unifiedRuntimeConfigPath,
+        config: expect.objectContaining({
+          routingStrategy: "hybrid",
+        }),
+      }),
+    );
+
+    await expect(readFile(unifiedRuntimeConfigPath, "utf8")).resolves.toContain("strategy: hybrid");
+
+    await backend.shutdown();
+  });
+
+  test("does not mark all candidates ignored when routing guidance has no preferred endpoints", async () => {
+    const tempRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-run35-router-guidance-"));
+    tempRoots.push(tempRoot);
+    const runtimeStateRoot = path.join(tempRoot, "state");
+    const fixtureRoot = path.join(tempRoot, "fixtures");
+
+    await cp(testFixtureRoot, fixtureRoot, { recursive: true });
+    await writeFile(
+      path.join(fixtureRoot, "routing-model-guidance.json"),
+      JSON.stringify(
+        {
+          endpointId: null,
+          preferredEndpointIds: [],
+        },
+        null,
+        2,
+      ),
+      "utf8",
+    );
+
+    const backend = await createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot,
+      runtimeStateRoot,
+      scopeId: "runtime-host-router-guidance",
+    });
+
+    await expect(backend.readRouterSummary()).resolves.toEqual(
+      expect.objectContaining({
+        guidance: expect.objectContaining({
+          preferredEndpointIds: [],
+          ignoredEndpointIds: [],
+        }),
+      }),
+    );
+
+    await expect(backend.listRouterCandidates()).resolves.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          endpointId: "test.capture.chat-v1",
+          preferred: false,
+          ignored: false,
+        }),
+      ]),
+    );
+
+    await backend.shutdown();
+  });
+
+  test("preserves synthesized activated endpoint models across runtime config updates", async () => {
+    const tempRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-run35-synth-models-"));
+    tempRoots.push(tempRoot);
+    const runtimeStateRoot = path.join(tempRoot, "state");
+    const unifiedRuntimeConfigPath = path.join(tempRoot, "runtime-config.yaml");
+
+    await writeFile(
+      unifiedRuntimeConfigPath,
+      [
+        'version: "1.0"',
+        "routing:",
+        "  strategy: difficulty",
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+
+    const backend = await createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: testFixtureRoot,
+      runtimeStateRoot,
+      scopeId: "runtime-host-synth-models",
+      unifiedRuntimeConfigPath,
+    });
+
+    await backend.updatePeers([
+      {
+        id: "integration-test",
+        url: "http://127.0.0.1:1234",
+      },
+    ]);
+
+    await backend.activateEndpoint({
+      providerAccountId: "local-openai-compatible.personal.integration-test",
+      modelId: "lfm2.5-1.2b-instruct",
+      region: "local",
+      endpointKind: "local-openai-compatible",
+      servingSource: "local-peer",
+    });
+
+    await expect(
+      backend.updateRuntimeConfig({
+        version: "1.0",
+        routingStrategy: "difficulty",
+        executionMode: "decision_only",
+        llamaSwap: {
+          enabled: false,
+          models: [],
+          process: {
+            command: null,
+            args: [],
+            env: {},
+            cwd: null,
+            startupTimeoutMs: null,
+          },
+        },
+        liteLLM: {
+          enabled: false,
+          providers: [],
+          process: {
+            command: null,
+            args: [],
+            env: {},
+            cwd: null,
+            startupTimeoutMs: null,
+          },
+        },
+      }),
+    ).resolves.toEqual(
+      expect.objectContaining({
+        applied: true,
+        path: unifiedRuntimeConfigPath,
+        config: expect.objectContaining({
+          routingStrategy: "difficulty",
+          executionMode: "decision_only",
+        }),
+      }),
+    );
+
+    await expect(backend.listEndpoints()).resolves.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          endpointId:
+            "local-openai-compatible.personal.integration-test.local.lfm2.5-1.2b-instruct",
+          modelId: "lfm2.5-1.2b-instruct",
+        }),
+      ]),
+    );
+
+    await expect(backend.listRouterCandidates()).resolves.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          endpointId:
+            "local-openai-compatible.personal.integration-test.local.lfm2.5-1.2b-instruct",
+          modelId: "lfm2.5-1.2b-instruct",
+          sourceType: "local",
+        }),
+      ]),
+    );
 
     await backend.shutdown();
   });

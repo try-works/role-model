@@ -1,6 +1,7 @@
 import type {
   RuntimeAccount,
   RuntimeActivityLogEntry,
+  RuntimeModelAlias,
   RuntimeControllerAssignment,
   RuntimeDeviceAuthorization,
   RuntimeDownstreamOpenAIProviderConfig,
@@ -516,6 +517,110 @@ export function buildEndpointCatalogRows(endpoints: readonly RuntimeEndpoint[]):
       healthStatus: endpoint.healthStatus ?? "unknown",
     }))
     .sort((left, right) => sortLexical(left.endpointId, right.endpointId));
+}
+
+export function buildAliasReadinessRows(
+  aliases: readonly RuntimeModelAlias[],
+  endpoints: readonly RuntimeEndpoint[],
+): Array<{
+  aliasId: string;
+  modeLabel: string;
+  modelIds: string[];
+  endpointCount: number;
+  localEndpointCount: number;
+  remoteEndpointCount: number;
+  activeEndpointCount: number;
+  healthyEndpointCount: number;
+  readinessLabel: "ready" | "degraded" | "unavailable";
+  sourceSummary: string;
+}> {
+  return [...aliases]
+    .map((alias) => {
+      const modelIds = uniqueStrings(alias.modelIds).sort(sortLexical);
+      const matchingEndpoints = endpoints.filter((endpoint) => modelIds.includes(endpoint.modelId));
+      const localEndpointCount = matchingEndpoints.filter(
+        (endpoint) => endpoint.sourceType === "local",
+      ).length;
+      const remoteEndpointCount = matchingEndpoints.filter(
+        (endpoint) => endpoint.sourceType === "remote",
+      ).length;
+      const activeEndpointCount = matchingEndpoints.filter(
+        (endpoint) => endpoint.status === "active",
+      ).length;
+      const healthyEndpointCount = matchingEndpoints.filter(
+        (endpoint) => endpoint.healthStatus === "healthy",
+      ).length;
+
+      const readinessLabel: "ready" | "degraded" | "unavailable" =
+        matchingEndpoints.length === 0 || activeEndpointCount === 0
+          ? "unavailable"
+          : activeEndpointCount === matchingEndpoints.length &&
+              healthyEndpointCount === matchingEndpoints.length
+            ? "ready"
+            : "degraded";
+
+      return {
+        aliasId: alias.aliasId,
+        modeLabel: alias.mode ?? "basic",
+        modelIds,
+        endpointCount: matchingEndpoints.length,
+        localEndpointCount,
+        remoteEndpointCount,
+        activeEndpointCount,
+        healthyEndpointCount,
+        readinessLabel,
+        sourceSummary: `${localEndpointCount} local / ${remoteEndpointCount} remote`,
+      };
+    })
+    .sort((left, right) => sortLexical(left.aliasId, right.aliasId));
+}
+
+export function buildStructuredLogRows(
+  logText: string,
+  fallbackSourceClass: string,
+): Array<{
+  key: string;
+  timestamp: string | null;
+  sourceClass: string;
+  severity: "debug" | "info" | "warn" | "error" | null;
+  requestId: string | null;
+  message: string;
+  rawLine: string;
+}> {
+  const lineCounts = new Map<string, number>();
+
+  return logText
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0)
+    .map((line) => {
+      const occurrence = (lineCounts.get(line) ?? 0) + 1;
+      lineCounts.set(line, occurrence);
+
+      const structuredMatch = line.match(
+        /^(\S+)\s+(DEBUG|INFO|WARN|ERROR)\s+([^\s]+)(?:\s+(req-[^\s]+))?\s+(.+)$/i,
+      );
+      const timestamp = structuredMatch?.[1] ?? null;
+      const severity = structuredMatch?.[2]?.toLowerCase() as
+        | "debug"
+        | "info"
+        | "warn"
+        | "error"
+        | undefined;
+      const sourceClass = structuredMatch?.[3] ?? fallbackSourceClass;
+      const requestId = structuredMatch?.[4] ?? null;
+      const message = structuredMatch?.[5] ?? line;
+
+      return {
+        key: `${line}-${occurrence}`,
+        timestamp,
+        sourceClass,
+        severity: severity ?? null,
+        requestId,
+        message,
+        rawLine: line,
+      };
+    });
 }
 
 export function buildAccountModelCatalogIds(input: {

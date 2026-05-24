@@ -49,6 +49,11 @@ type CliBackend = Pick<
   | "unloadLocalModel"
   | "readLocalPolicy"
   | "updateLocalPolicy"
+  | "readRolePolicy"
+  | "createRolePolicyRole"
+  | "updateRolePolicyRole"
+  | "listTaskDefinitions"
+  | "updateTaskDefinitions"
   | "listSwapHistory"
   | "getLocalLogs"
   | "readModelOverrides"
@@ -60,7 +65,7 @@ type CliBackend = Pick<
 >;
 
 export function resolveCliFixtureRoot(repoRoot: string, fixtureRoot?: string): string {
-  return fixtureRoot?.trim() || path.join(repoRoot, "testdata", "router-runtime", "fixtures");
+  return fixtureRoot?.trim() || path.join(repoRoot, "testdata", "router-runtime");
 }
 
 export function createCliServerOptions(
@@ -115,6 +120,11 @@ export function createCliServerOptions(
     unloadLocalModel: backend.unloadLocalModel,
     readLocalPolicy: backend.readLocalPolicy,
     updateLocalPolicy: backend.updateLocalPolicy,
+    readRolePolicy: backend.readRolePolicy,
+    createRolePolicyRole: backend.createRolePolicyRole,
+    updateRolePolicyRole: backend.updateRolePolicyRole,
+    listTaskDefinitions: backend.listTaskDefinitions,
+    updateTaskDefinitions: backend.updateTaskDefinitions,
     listSwapHistory: backend.listSwapHistory,
     getLocalLogs: backend.getLocalLogs,
     readModelOverrides: backend.readModelOverrides,

@@ -1,4 +1,4 @@
-import { rm } from "node:fs/promises";
+import { mkdir, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -18,6 +18,9 @@ const runtimeStateRoot = path.join(os.tmpdir(), "role-model-runtime-qa");
 const scopeId = "runtime-qa";
 const host = "127.0.0.1";
 const port = 3456;
+const qaProviderAccountId = "moonshot.personal.primary";
+const qaActivatedModelId = "moonshot/kimi-k2.5";
+const qaActivatedEndpointRegion = "global";
 
 type QaBridgeBackend = Pick<
   RuntimeBridgeBackend,
@@ -62,11 +65,81 @@ type QaBridgeBackend = Pick<
   | "readLocalPolicy"
   | "updateLocalPolicy"
   | "listSwapHistory"
+  | "getLocalLogs"
+  | "readModelOverrides"
+  | "updateModelOverrides"
+  | "readPeers"
+  | "updatePeers"
+  | "checkPeerHealth"
   | "shutdown"
 >;
 
 export function createQaFixtureRoot(value: string): string {
   return path.join(value, "testdata", "router-runtime", "fixtures");
+}
+
+export function createQaRuntimeConfigPath(value: string): string {
+  return path.join(value, "runtime-config.yaml");
+}
+
+export function createQaRuntimeConfigText(): string {
+  return `version: "1.1"
+routing:
+  strategy: baseline
+model_aliases:
+  mixed.local-remote:
+    model_ids:
+      - lfm2.5-1.2b-instruct
+      - openai/gpt-4.1-mini-fast
+llama_swap:
+  models:
+    lfm2.5-1.2b-instruct:
+      path: ./models/lfm2.5-1.2b-instruct.gguf
+litellm_proxy:
+  providers: {}
+`;
+}
+
+export async function bootstrapQaControlPlane(
+  backend: Pick<QaBridgeBackend, "upsertProviderAccount" | "activateEndpoint">,
+): Promise<void> {
+  await backend.upsertProviderAccount({
+    providerAccountId: qaProviderAccountId,
+    providerId: "moonshot",
+    providerKind: "provider-openai",
+    orgScope: "personal",
+    accountScope: "workspace-default",
+    credentialRef: {
+      backend: "env",
+      ref: "MOONSHOT_API_KEY",
+    },
+    authMode: "api-key-static",
+    regionPolicy: {
+      mode: "prefer",
+      regions: ["global"],
+    },
+    baseUrlOverride: "https://api.moonshot.ai/v1",
+    allowedModels: [qaActivatedModelId],
+    modelRoleBindings: [
+      {
+        modelId: qaActivatedModelId,
+        roleIds: ["general.chat"],
+      },
+    ],
+    deniedModels: [],
+    entitlementTags: ["chat"],
+    budgetPolicyRef: "budget.default",
+    quotaPolicyRef: "quota.default",
+    status: "active",
+    healthStatus: "healthy",
+    rotationState: "stable",
+  });
+
+  await backend.activateEndpoint({
+    providerAccountId: qaProviderAccountId,
+    modelId: qaActivatedModelId,
+    region: qaActivatedEndpointRegion,
+  });
 }
 
 export function createQaServerOptions(
@@ -129,6 +202,12 @@ export function createQaServerOptions(
     readLocalPolicy: backend.readLocalPolicy,
     updateLocalPolicy: backend.updateLocalPolicy,
     listSwapHistory: backend.listSwapHistory,
+    getLocalLogs: backend.getLocalLogs,
+    readModelOverrides: backend.readModelOverrides,
+    updateModelOverrides: backend.updateModelOverrides,
+    readPeers: backend.readPeers,
+    updatePeers: backend.updatePeers,
+    checkPeerHealth: backend.checkPeerHealth,
   };
 }
 
@@ -147,12 +226,19 @@ export async function main(): Promise<void> {
     // Directory may not exist; that's fine
   }
 
+  await mkdir(runtimeStateRoot, { recursive: true });
+  const unifiedRuntimeConfigPath = createQaRuntimeConfigPath(runtimeStateRoot);
+  await writeFile(unifiedRuntimeConfigPath, createQaRuntimeConfigText(), "utf8");
+  console.log(`[QA] Seeded runtime config: ${unifiedRuntimeConfigPath}`);
+
   const backend = await createRuntimeBridgeBackend({
     fixtureRoot: createQaFixtureRoot(repoRoot),
     repoRoot,
     runtimeStateRoot,
     scopeId,
+    unifiedRuntimeConfigPath,
   });
+  await bootstrapQaControlPlane(backend);
 
   const server = await startBridgeServer(createQaServerOptions(repoRoot, backend));
 
@@ -172,6 +258,7 @@ export async function main(): Promise<void> {
   console.log(`  GET ${baseUrl}/api/role-model/local/models`);
   console.log(`  GET ${baseUrl}/api/role-model/local/policy`);
   console.log(`  GET ${baseUrl}/api/role-model/local/swap`);
+  console.log(`  GET ${baseUrl}/api/role-model/local/logs`);
   console.log(`  GET ${baseUrl}/v1/models`);
   console.log(`  POST ${baseUrl}/v1/chat/completions`);
   console.log("[QA] Press Ctrl+C to stop");

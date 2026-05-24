@@ -11,6 +11,7 @@ import {
   SectionCard,
   StatusPill,
 } from "../components/page-primitives";
+import { formatRoutingModeLabel } from "../lib/routing-mode";
 import { fetchRequestDetail } from "../lib/runtime-api";
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -375,10 +376,13 @@ export default function RequestDetailRoute() {
         >
           <dl className="grid gap-x-6 gap-y-3 text-sm md:grid-cols-2">
             {[
-              ["Effective mode", routingModeSummary],
+              [
+                "Effective mode",
+                routingModeSummary ? formatRoutingModeLabel(routingModeSummary) : routingModeSummary,
+              ],
               ["Mode source", routingModeSource],
               ["Requested override", routingRequestedOverride],
-              ["Alias mode", routingAliasMode],
+              ["Alias mode", routingAliasMode ? formatRoutingModeLabel(routingAliasMode) : routingAliasMode],
               ["Rewrite", rewriteSummary],
               ["Rewrite reason", rewriteReason],
               ["Difficulty bucket", difficultyBucket],
