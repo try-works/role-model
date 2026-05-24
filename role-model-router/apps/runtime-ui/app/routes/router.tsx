@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 
 import {
+  EmptyState,
   ErrorState,
   FactCard,
   LoadingState,
@@ -9,17 +10,29 @@ import {
   SectionCard,
   StatusPill,
 } from "../components/page-primitives";
-import { mutedPanelClassName, secondaryButtonClassName } from "../lib/design-system";
-import { type RouterSummary, fetchRouterSummary } from "../lib/runtime-api";
+import { secondaryButtonClassName } from "../lib/design-system";
+import {
+  type RouterSummary,
+  type RuntimeConfigRecord,
+  type RuntimeSnapshot,
+  fetchRouterSummary,
+  fetchRuntimeConfig,
+  fetchRuntimeSnapshot,
+} from "../lib/runtime-api";
+import { buildAliasReadinessRows } from "../lib/view-models";
 
 export default function RouterOverviewRoute() {
   const [summary, setSummary] = useState<RouterSummary | null>(null);
+  const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(null);
+  const [configRecord, setConfigRecord] = useState<RuntimeConfigRecord | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    void fetchRouterSummary()
-      .then((value) => {
-        setSummary(value);
+    void Promise.all([fetchRouterSummary(), fetchRuntimeSnapshot(), fetchRuntimeConfig()])
+      .then(([nextSummary, nextSnapshot, nextConfigRecord]) => {
+        setSummary(nextSummary);
+        setSnapshot(nextSnapshot);
+        setConfigRecord(nextConfigRecord);
         setError(null);
       })
       .catch((value: unknown) =>
@@ -27,11 +40,21 @@ export default function RouterOverviewRoute() {
       );
   }, []);
 
+  const aliasRows = useMemo(
+    () =>
+      buildAliasReadinessRows(
+        configRecord?.config?.modelAliases ?? configRecord?.config?.model_aliases ?? [],
+        snapshot?.endpoints ?? [],
+      ),
+    [configRecord, snapshot],
+  );
+  const readyAliasCount = aliasRows.filter((row) => row.readinessLabel === "ready").length;
+
   const header = (
     <PageHeader
       eyebrow="Router"
       title="Routing overview"
-      description="Use the Router section as the primary explanation layer for routing posture, candidate availability, and recent decisions before dropping into raw request traces."
+      description="Use Router to inspect active strategy, alias coverage, and decision posture before drilling into per-request receipts."
       actions={
         <>
           <Link className={secondaryButtonClassName} to="/app/router/config">
@@ -53,7 +76,7 @@ export default function RouterOverviewRoute() {
       </div>
     );
   }
-  if (!summary) {
+  if (!summary || !snapshot || !configRecord) {
     return (
       <div className="space-y-6">
         {header}
@@ -70,13 +93,13 @@ export default function RouterOverviewRoute() {
         <FactCard
           label="Strategy"
           value={summary.strategy ?? "unset"}
-          detail="Persisted routing strategy exposed through the Router control plane."
+          detail="Persisted routing strategy currently applied by the runtime."
           emphasis
         />
         <FactCard
           label="Execution mode"
           value={summary.executionMode}
-          detail="Execution posture that materially changes how routing decisions are interpreted."
+          detail="Execution posture that changes how local and remote candidates are considered."
         />
         <FactCard
           label="Controller"
@@ -84,38 +107,77 @@ export default function RouterOverviewRoute() {
           detail={summary.controller?.endpointId ?? "No controller is currently assigned."}
         />
         <FactCard
-          label="Recent decisions"
-          value={summary.recentDecisionCount}
-          detail={`${summary.configuredCandidateCount} configured candidates currently visible to the Router inventory.`}
+          label="Alias pools"
+          value={String(aliasRows.length)}
+          detail={`${readyAliasCount} execution-ready aliases mapped across ${snapshot.endpoints.length} runtime endpoints.`}
         />
       </div>
 
       <SectionCard
-        title="Routing reading order"
-        description="Start here for top-level posture, move into Config for policy provenance, Candidates for comparison, and Decisions for per-request explanation."
+        title="Alias inventory"
+        description="Each alias expands into one or more model ids. Router readiness reflects whether those models currently resolve to healthy local and remote endpoints."
       >
-        <div className="grid gap-4 xl:grid-cols-2">
-          <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
-            <p className="font-medium text-[var(--rm-fg)]">Guidance posture</p>
-            <p className="mt-2 leading-6">
-              Preferred endpoints: {summary.guidance?.preferredEndpointIds?.length ?? 0}. Ignored
-              endpoints: {summary.guidance?.ignoredEndpointIds?.length ?? 0}.
-            </p>
+        {aliasRows.length === 0 ? (
+          <EmptyState label="No model aliases are configured yet." />
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-left text-sm">
+              <thead className="text-[var(--rm-muted)]">
+                <tr>
+                  <th className="pb-3 font-medium">Alias</th>
+                  <th className="pb-3 font-medium">Mode</th>
+                  <th className="pb-3 font-medium">Alias coverage</th>
+                  <th className="pb-3 font-medium">Endpoints</th>
+                  <th className="pb-3 font-medium">Readiness</th>
+                </tr>
+              </thead>
+              <tbody>
+                {aliasRows.map((row) => (
+                  <tr key={row.aliasId} className="border-t border-[var(--rm-border)]">
+                    <td className="py-3 font-medium text-[var(--rm-fg)]">{row.aliasId}</td>
+                    <td className="py-3 text-[var(--rm-secondary)]">{row.modeLabel}</td>
+                    <td className="py-3 text-[var(--rm-secondary)]">
+                      {row.modelIds.join(", ") || "—"}
+                    </td>
+                    <td className="py-3 text-[var(--rm-secondary)]">{row.sourceSummary}</td>
+                    <td className="py-3">
+                      <StatusPill
+                        tone={
+                          row.readinessLabel === "ready"
+                            ? "success"
+                            : row.readinessLabel === "degraded"
+                              ? "warning"
+                              : "neutral"
+                        }
+                      >
+                        {row.readinessLabel}
+                      </StatusPill>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-          <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
-            <p className="font-medium text-[var(--rm-fg)]">Section ownership</p>
-            <p className="mt-2 leading-6">
-              Control remains the editing surface, Observe remains the raw trace surface, and Router
-              owns explanation, provenance, comparison, and decision interpretation.
-            </p>
+        )}
+      </SectionCard>
+
+      <SectionCard
+        title="Execution-ready aliases"
+        description="These alias pools currently have at least one active endpoint behind them and can participate in routing strategy evaluation."
+      >
+        {readyAliasCount === 0 ? (
+          <EmptyState label="No aliases are execution-ready yet. Activate matching local or remote endpoints first." />
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            {aliasRows
+              .filter((row) => row.readinessLabel === "ready")
+              .map((row) => (
+                <StatusPill key={row.aliasId} tone="success">
+                  {row.aliasId}
+                </StatusPill>
+              ))}
           </div>
-        </div>
-        <div className="mt-4 flex flex-wrap gap-2">
-          <StatusPill tone="accent">{summary.executionMode}</StatusPill>
-          <StatusPill tone={summary.controller ? "success" : "warning"}>
-            {summary.controller ? summary.controller.sourceType : "controller pending"}
-          </StatusPill>
-        </div>
+        )}
       </SectionCard>
     </div>
   );

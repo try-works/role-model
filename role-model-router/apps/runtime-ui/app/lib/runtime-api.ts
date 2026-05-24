@@ -51,10 +51,18 @@ export interface RuntimeConfigProvider {
   readonly modelMappings: readonly RuntimeConfigProviderMapping[];
 }
 
+export interface RuntimeModelAlias {
+  readonly aliasId: string;
+  readonly modelIds: readonly string[];
+  readonly mode?: string | null;
+}
+
 export interface RuntimeConfig {
   readonly version: string;
   readonly routingStrategy?: string | null;
   readonly executionMode?: "decision_only" | "hybrid" | "local_only" | "remote_only";
+  readonly modelAliases?: readonly RuntimeModelAlias[];
+  readonly model_aliases?: readonly RuntimeModelAlias[];
   readonly llamaSwap: {
     readonly enabled?: boolean;
     readonly models: readonly RuntimeConfigModel[];

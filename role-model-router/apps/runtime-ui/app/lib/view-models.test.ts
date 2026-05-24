@@ -3,12 +3,14 @@ import { describe, expect, test } from "vitest";
 import {
   buildAccountModelCatalogIds,
   buildActivitySummary,
+  buildAliasReadinessRows,
   buildConfiguredModelCards,
   buildConfiguredModelMetadataRows,
   buildConfiguredProviderRows,
   buildCredentialReadinessRows,
   buildDownstreamProviderGuide,
   buildEndpointCatalogRows,
+  buildStructuredLogRows,
   buildModelCatalogRows,
   buildProviderCards,
   buildTelemetryComparisonCards,
@@ -450,6 +452,113 @@ describe("buildEndpointCatalogRows", () => {
         endpointKind: "remote_api",
         status: "active",
         healthStatus: "healthy",
+      },
+    ]);
+  });
+});
+
+describe("buildAliasReadinessRows", () => {
+  test("summarizes alias pools across mixed local and remote endpoint candidates", () => {
+    expect(
+      buildAliasReadinessRows(
+        [
+          {
+            aliasId: "gpt-5.4",
+            modelIds: ["gpt-5.4", "moonshot/kimi-k2.5"],
+            mode: "hybrid",
+          },
+          {
+            aliasId: "local-only",
+            modelIds: ["gpt-5.4"],
+            mode: "basic",
+          },
+        ],
+        [
+          {
+            endpointId: "cli.local.coder",
+            modelId: "gpt-5.4",
+            providerId: null,
+            sourceType: "local",
+            healthStatus: "healthy",
+            status: "active",
+          },
+          {
+            endpointId: "moonshot.personal.primary.global.kimi-k2.5",
+            modelId: "moonshot/kimi-k2.5",
+            providerId: "moonshot",
+            sourceType: "remote",
+            healthStatus: "degraded",
+            status: "degraded",
+          },
+        ],
+      ),
+    ).toEqual([
+      {
+        aliasId: "gpt-5.4",
+        modeLabel: "hybrid",
+        modelIds: ["gpt-5.4", "moonshot/kimi-k2.5"],
+        endpointCount: 2,
+        localEndpointCount: 1,
+        remoteEndpointCount: 1,
+        activeEndpointCount: 1,
+        healthyEndpointCount: 1,
+        readinessLabel: "degraded",
+        sourceSummary: "1 local / 1 remote",
+      },
+      {
+        aliasId: "local-only",
+        modeLabel: "basic",
+        modelIds: ["gpt-5.4"],
+        endpointCount: 1,
+        localEndpointCount: 1,
+        remoteEndpointCount: 0,
+        activeEndpointCount: 1,
+        healthyEndpointCount: 1,
+        readinessLabel: "ready",
+        sourceSummary: "1 local / 0 remote",
+      },
+    ]);
+  });
+});
+
+describe("buildStructuredLogRows", () => {
+  test("parses raw logs into structured rows with source, severity, and request correlation when available", () => {
+    expect(
+      buildStructuredLogRows(
+        [
+          "2026-05-17T12:00:00.000Z INFO proxy req-runtime-ui-routing-001 Forwarded request",
+          "2026-05-17T12:00:01.000Z WARN upstream Retry against remote provider",
+          "local llama-swap model loaded",
+        ].join("\n"),
+        "local",
+      ),
+    ).toEqual([
+      {
+        key: "2026-05-17T12:00:00.000Z INFO proxy req-runtime-ui-routing-001 Forwarded request-1",
+        timestamp: "2026-05-17T12:00:00.000Z",
+        sourceClass: "proxy",
+        severity: "info",
+        requestId: "req-runtime-ui-routing-001",
+        message: "Forwarded request",
+        rawLine: "2026-05-17T12:00:00.000Z INFO proxy req-runtime-ui-routing-001 Forwarded request",
+      },
+      {
+        key: "2026-05-17T12:00:01.000Z WARN upstream Retry against remote provider-1",
+        timestamp: "2026-05-17T12:00:01.000Z",
+        sourceClass: "upstream",
+        severity: "warn",
+        requestId: null,
+        message: "Retry against remote provider",
+        rawLine: "2026-05-17T12:00:01.000Z WARN upstream Retry against remote provider",
+      },
+      {
+        key: "local llama-swap model loaded-1",
+        timestamp: null,
+        sourceClass: "local",
+        severity: null,
+        requestId: null,
+        message: "local llama-swap model loaded",
+        rawLine: "local llama-swap model loaded",
       },
     ]);
   });

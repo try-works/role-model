@@ -10,6 +10,7 @@ import {
   SectionCard,
 } from "../components/page-primitives";
 import { listRowClassName } from "../lib/design-system";
+import { formatRoutingModeLabel } from "../lib/routing-mode";
 import {
   type RouterDecisionListItem,
   fetchRouterDecisions,
@@ -113,7 +114,10 @@ export default function RouterDecisionsRoute() {
                   </p>
                   <p className="mt-2 text-sm text-[var(--rm-secondary)]">
                     {decision.selectedModelId ?? "unknown model"} •{" "}
-                    {decision.strategyLabel ?? "no strategy label"} •{" "}
+                    {decision.strategyLabel
+                      ? formatRoutingModeLabel(decision.strategyLabel)
+                      : "no strategy label"}{" "}
+                    •{" "}
                     {decision.sourceType ?? "unknown source"}
                   </p>
                 </div>

@@ -98,15 +98,15 @@ export default function ControlRuntimeConfigRoute() {
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Control"
+        eyebrow="System"
         title="Runtime config"
         description="Edit the repo-owned unified runtime contract for local llama-swap models, remote LiteLLM providers, and process policy in one control-plane route."
         actions={
           <>
-            <Link className={secondaryButtonClassName} to="/app/control/routing-strategy">
+            <Link className={secondaryButtonClassName} to="/app/router/strategy">
               Routing strategy
             </Link>
-            <Link className={secondaryButtonClassName} to="/app/control/models">
+            <Link className={secondaryButtonClassName} to="/app/models">
               Inspect models
             </Link>
             <a className={secondaryButtonClassName} href="/api/role-model/runtime/config">

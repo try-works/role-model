@@ -1408,6 +1408,32 @@ function parseRuntimeRoutingModeOverride(value: string): RuntimeRoutingMode {
   });
 }
 
+function normalizeConfiguredRoutingMode(value: string | null | undefined): RuntimeRoutingMode | null {
+  const normalized = value?.trim().toLowerCase() ?? "";
+  switch (normalized) {
+    case "baseline":
+    case "basic":
+    case "balanced":
+    case "latency":
+    case "quality":
+    case "cost":
+    case "low-latency":
+    case "high-quality":
+    case "low-cost":
+    case "latency-first":
+      return "baseline";
+    case "controller":
+    case "intelligent":
+      return "controller";
+    case "difficulty":
+      return "difficulty";
+    case "hybrid":
+      return "hybrid";
+    default:
+      return null;
+  }
+}
+
 function readBridgeExecutionRequestOptions(
   request: IncomingMessage,
 ): BridgeExecutionRequestOptions | undefined {
@@ -1974,6 +2000,26 @@ function deleteRuntimeEndpointsByProviderAccountId(
   }
 }
 
+function deleteProviderDeviceAuthorizationsByAccountId(
+  databasePath: string,
+  providerAccountIds: readonly string[],
+): void {
+  if (providerAccountIds.length === 0) {
+    return;
+  }
+  const database = new DatabaseSync(databasePath);
+  try {
+    const statement = database.prepare(
+      "DELETE FROM provider_device_auth_sessions WHERE provider_account_id = ?",
+    );
+    for (const providerAccountId of providerAccountIds) {
+      statement.run(providerAccountId);
+    }
+  } finally {
+    database.close();
+  }
+}
+
 function readUnifiedLiteLLMProviderModelIds(
   config: UnifiedRuntimeConfig | null,
   providerId: string,
@@ -2014,6 +2060,51 @@ function createFallbackModelTemplate(catalog: NormalizedCatalog): NormalizedCata
     localOverrideApplied: true,
     localNotes: ["Fallback template for models not present in static catalog."],
     upstreamProvenance: catalog.source,
+  };
+}
+
+function withRuntimeEndpointFallbackModels(
+  catalog: NormalizedCatalog,
+  accounts: readonly ProviderAccountRecord[],
+  runtimeEndpoints: readonly {
+    endpointId: string;
+    providerAccountId: string;
+    modelId: string;
+  }[],
+): NormalizedCatalog {
+  const knownModelIds = new Set(catalog.models.map((model) => model.modelId));
+  const accountsById = new Map(accounts.map((account) => [account.providerAccountId, account] as const));
+  const fallbackTemplate = createFallbackModelTemplate(catalog);
+  const synthesizedModels: NormalizedCatalogModel[] = [];
+
+  for (const endpoint of runtimeEndpoints) {
+    if (knownModelIds.has(endpoint.modelId)) {
+      continue;
+    }
+    const account = accountsById.get(endpoint.providerAccountId);
+    if (!account) {
+      continue;
+    }
+    synthesizedModels.push({
+      ...fallbackTemplate,
+      modelId: endpoint.modelId,
+      providerId:
+        endpoint.modelId.includes("/") ? endpoint.modelId.split("/")[0] : account.providerId,
+      displayName: readDefaultDisplayNameFromModelId(endpoint.modelId),
+      localNotes: [
+        "Synthesized during runtime registry rebuild for an activated endpoint model that is not present in the static catalog.",
+      ],
+    });
+    knownModelIds.add(endpoint.modelId);
+  }
+
+  if (synthesizedModels.length === 0) {
+    return catalog;
+  }
+
+  return {
+    ...catalog,
+    models: [...catalog.models, ...synthesizedModels],
   };
 }
 
@@ -3183,7 +3274,7 @@ function summarizeAliasDefaultRoutingModeDiagnostics(input: {
     return undefined;
   }
   const alias = resolveRequestedModelAlias(input.requestedModel, input.modelAliases);
-  if (!alias) {
+  if (!alias || alias.mode === undefined || alias.mode === null) {
     return undefined;
   }
   return {
@@ -3193,16 +3284,44 @@ function summarizeAliasDefaultRoutingModeDiagnostics(input: {
   };
 }
 
+function summarizeConfiguredDefaultRoutingModeDiagnostics(input: {
+  readonly requestedModel: string;
+  readonly modelAliases: readonly UnifiedRuntimeModelAliasConfig[];
+  readonly effectiveRoutingMode: RuntimeRoutingMode;
+  readonly requestOptions?: BridgeExecutionRequestOptions;
+  readonly defaultRoutingMode?: RuntimeRoutingMode;
+}): RuntimeRoutingDiagnostics["routingMode"] | undefined {
+  if (
+    input.requestOptions?.routingModeOverride ||
+    !input.defaultRoutingMode ||
+    input.defaultRoutingMode === "baseline"
+  ) {
+    return undefined;
+  }
+  const alias = resolveRequestedModelAlias(input.requestedModel, input.modelAliases);
+  if (alias?.mode !== undefined && alias.mode !== null) {
+    return undefined;
+  }
+  return {
+    source: "runtime-config",
+    effectiveMode: input.effectiveRoutingMode,
+  };
+}
+
 function resolveEffectiveRoutingMode(input: {
   readonly requestedModel: string;
   readonly modelAliases: readonly UnifiedRuntimeModelAliasConfig[];
   readonly requestOptions?: BridgeExecutionRequestOptions;
+  readonly defaultRoutingMode?: RuntimeRoutingMode;
 }): RuntimeRoutingMode {
   if (input.requestOptions?.routingModeOverride) {
     return input.requestOptions.routingModeOverride;
   }
   const alias = resolveRequestedModelAlias(input.requestedModel, input.modelAliases);
-  return toAliasRoutingMode(alias?.mode);
+  if (alias?.mode !== undefined && alias.mode !== null) {
+    return toAliasRoutingMode(alias.mode);
+  }
+  return input.defaultRoutingMode ?? "baseline";
 }
 
 function shouldApplyDifficultyRouting(effectiveRoutingMode: RuntimeRoutingMode): boolean {
@@ -3264,6 +3383,7 @@ export function mapChatCompletionsRequest(
   controllerContext?: BridgeControllerRoutingContext,
   requestOptions?: BridgeExecutionRequestOptions,
   roleDefinitions?: readonly RuntimeRoleDefinitionRecord[],
+  defaultRoutingMode?: RuntimeRoutingMode,
 ): BridgeExecutionPlan {
   const contextTokens = estimateContextTokens(body.messages, body.tools?.length ?? 0);
   const { allowEndpoints: modelAllowEndpoints, routingDiagnostics } = resolveRequestedModelPool(
@@ -3280,6 +3400,7 @@ export function mapChatCompletionsRequest(
     requestedModel: body.model,
     modelAliases,
     requestOptions,
+    defaultRoutingMode,
   });
   const aliasDefaultRoutingMode = summarizeAliasDefaultRoutingModeDiagnostics({
     requestedModel: body.model,
@@ -3287,11 +3408,23 @@ export function mapChatCompletionsRequest(
     effectiveRoutingMode,
     requestOptions,
   });
+  const configuredDefaultRoutingMode = summarizeConfiguredDefaultRoutingModeDiagnostics({
+    requestedModel: body.model,
+    modelAliases,
+    effectiveRoutingMode,
+    requestOptions,
+    defaultRoutingMode,
+  });
   const baseRoutingDiagnostics = aliasDefaultRoutingMode
     ? {
         ...routingDiagnostics,
         routingMode: aliasDefaultRoutingMode,
       }
+    : configuredDefaultRoutingMode
+      ? {
+          ...routingDiagnostics,
+          routingMode: configuredDefaultRoutingMode,
+        }
     : routingDiagnostics;
   const difficultyRouting = maybeApplyDifficultyRouting({
     effectiveRoutingMode,
@@ -3364,6 +3497,7 @@ export function mapResponsesRequest(
   controllerContext?: BridgeControllerRoutingContext,
   requestOptions?: BridgeExecutionRequestOptions,
   roleDefinitions?: readonly RuntimeRoleDefinitionRecord[],
+  defaultRoutingMode?: RuntimeRoutingMode,
 ): BridgeExecutionPlan {
   const messages = toResponsesInputMessages(body.input);
   const contextTokens = estimateContextTokens(messages, body.tools?.length ?? 0);
@@ -3381,6 +3515,7 @@ export function mapResponsesRequest(
     requestedModel: body.model,
     modelAliases,
     requestOptions,
+    defaultRoutingMode,
   });
   const aliasDefaultRoutingMode = summarizeAliasDefaultRoutingModeDiagnostics({
     requestedModel: body.model,
@@ -3388,11 +3523,23 @@ export function mapResponsesRequest(
     effectiveRoutingMode,
     requestOptions,
   });
+  const configuredDefaultRoutingMode = summarizeConfiguredDefaultRoutingModeDiagnostics({
+    requestedModel: body.model,
+    modelAliases,
+    effectiveRoutingMode,
+    requestOptions,
+    defaultRoutingMode,
+  });
   const baseRoutingDiagnostics = aliasDefaultRoutingMode
     ? {
         ...routingDiagnostics,
         routingMode: aliasDefaultRoutingMode,
       }
+    : configuredDefaultRoutingMode
+      ? {
+          ...routingDiagnostics,
+          routingMode: configuredDefaultRoutingMode,
+        }
     : routingDiagnostics;
   const difficultyRouting = maybeApplyDifficultyRouting({
     effectiveRoutingMode,
@@ -5608,7 +5755,14 @@ export async function createRuntimeBridgeBackend(
   const fixtureRoot =
     options.fixtureRoot ?? path.join(options.repoRoot, "testdata", "router-runtime", "fixtures");
   const initialUnifiedRuntimeConfig = options.unifiedRuntimeConfigPath
-    ? parseUnifiedRuntimeConfigText(await readFile(options.unifiedRuntimeConfigPath, "utf8"))
+    ? await readFile(options.unifiedRuntimeConfigPath, "utf8")
+        .then((text) => parseUnifiedRuntimeConfigText(text))
+        .catch((error: unknown) => {
+          if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+            return null;
+          }
+          throw error;
+        })
     : null;
   const supervisor = options.unifiedRuntimeConfigPath ? new ProcessSupervisor() : null;
   const baseCatalog = await readJson<NormalizedCatalog>(
@@ -5665,6 +5819,20 @@ export async function createRuntimeBridgeBackend(
   const repoProviderPresets = await readJson<ProviderPresetCatalog>(
     path.join(options.repoRoot, "testdata", "router-runtime", "provider-presets.json"),
   );
+  const legacyPlaceholderFixturePaths = [
+    path.join(options.repoRoot, "testdata", "router-runtime", "provider-accounts.json"),
+    path.join(options.repoRoot, "testdata", "router-runtime", "fixtures", "provider-accounts.json"),
+  ];
+  const legacyPlaceholderAccounts = (
+    await Promise.all(
+      legacyPlaceholderFixturePaths.map((fixturePath) =>
+        readJson<{ accounts: ProviderAccountRecord[] }>(fixturePath).catch(() => ({ accounts: [] })),
+      ),
+    )
+  ).flatMap((fixture) => fixture.accounts);
+  const legacyPlaceholderProviderAccountIds = [
+    ...new Set(legacyPlaceholderAccounts.map((account) => account.providerAccountId).filter(Boolean)),
+  ];
   const providerPresets: ProviderPresetCatalog = {
     providers: {
       ...repoProviderPresets.providers,
@@ -5676,6 +5844,11 @@ export async function createRuntimeBridgeBackend(
     scopeId: options.scopeId,
   });
   clearRuntimeEndpoints(initialization.databasePath);
+  deleteProviderDeviceAuthorizationsByAccountId(
+    initialization.databasePath,
+    legacyPlaceholderProviderAccountIds,
+  );
+  deleteProviderAccountsById(initialization.databasePath, legacyPlaceholderProviderAccountIds);
   const rolePolicyPath = getRuntimeRolePolicyPath(options.runtimeStateRoot);
   let currentRolePolicy: RuntimeRolePolicyRecord;
   try {
@@ -5825,8 +5998,14 @@ export async function createRuntimeBridgeBackend(
   const rebuildCurrentState = (): void => {
     currentAccounts = [...readCurrentAccounts()];
     runtimeEndpoints = [...listRuntimeEndpoints({ databasePath: initialization.databasePath })];
+    const registryCatalog = withRuntimeEndpointFallbackModels(
+      currentNormalizedCatalog,
+      currentAccounts,
+      runtimeEndpoints,
+    );
+    currentModelsById = new Map(registryCatalog.models.map((model) => [model.modelId, model]));
     currentRegistry = buildEndpointRegistry({
-      catalog: currentNormalizedCatalog,
+      catalog: registryCatalog,
       accounts: currentAccounts,
       sources: getCurrentRegistrySources(),
     });
@@ -6508,9 +6687,7 @@ export async function createRuntimeBridgeBackend(
   const getRouterGuidance = () => ({
     endpointId: routingModel.endpointId,
     preferredEndpointIds: [...routingModel.preferredEndpointIds],
-    ignoredEndpointIds: currentRegistry.endpoints
-      .map((endpoint) => endpoint.identity.endpoint_id)
-      .filter((endpointId) => !routingModel.preferredEndpointIds.includes(endpointId)),
+    ignoredEndpointIds: [] as readonly string[],
   });
   const readEndpointProfileData = (endpointId: string) => {
     const observedDataConfig = resolveUnifiedRuntimeObservedDataConfig(currentUnifiedRuntimeConfig);
@@ -7078,6 +7255,8 @@ export async function createRuntimeBridgeBackend(
       requestedModel: input.requestedModel,
       modelAliases,
       requestOptions: input.requestOptions,
+      defaultRoutingMode:
+        normalizeConfiguredRoutingMode(currentUnifiedRuntimeConfig?.routingStrategy) ?? undefined,
     });
     if (!shouldApplyDifficultyRouting(effectiveRoutingMode)) {
       return undefined;
@@ -7266,6 +7445,8 @@ export async function createRuntimeBridgeBackend(
       requestedModel: input.requestedModel,
       modelAliases,
       requestOptions: input.requestOptions,
+      defaultRoutingMode:
+        normalizeConfiguredRoutingMode(currentUnifiedRuntimeConfig?.routingStrategy) ?? undefined,
     });
     if (!shouldApplyControllerRouting(effectiveRoutingMode)) {
       return undefined;
@@ -7436,6 +7617,7 @@ export async function createRuntimeBridgeBackend(
         resolvedControllerGuidance,
         requestOptions,
         currentRolePolicy.roleDefinitions,
+        normalizeConfiguredRoutingMode(currentUnifiedRuntimeConfig?.routingStrategy) ?? undefined,
       );
       const { execution, toolExecutionResult, routingDecisionId } = await executeBridgePlan(
         plan,
@@ -7557,6 +7739,7 @@ export async function createRuntimeBridgeBackend(
         resolvedControllerGuidance,
         requestOptions,
         currentRolePolicy.roleDefinitions,
+        normalizeConfiguredRoutingMode(currentUnifiedRuntimeConfig?.routingStrategy) ?? undefined,
       );
       const { execution, routingDecisionId } = await executeBridgePlan(
         plan,
@@ -7687,16 +7870,28 @@ export async function createRuntimeBridgeBackend(
       }
 
       const previousConfig = currentUnifiedRuntimeConfig;
-      const previousText = await readFile(options.unifiedRuntimeConfigPath, "utf8");
+      const previousText = await readFile(options.unifiedRuntimeConfigPath, "utf8").catch(
+        (error: unknown) => {
+          if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+            return null;
+          }
+          throw error;
+        },
+      );
       const nextConfig = normalizeUnifiedRuntimeConfigInput(body);
       const nextText = renderUnifiedRuntimeConfigText(nextConfig);
 
+      await mkdir(path.dirname(options.unifiedRuntimeConfigPath), { recursive: true });
       await writeFile(options.unifiedRuntimeConfigPath, nextText, "utf8");
 
       try {
         await applyUnifiedRuntimeConfigState(nextConfig);
       } catch (error) {
-        await writeFile(options.unifiedRuntimeConfigPath, previousText, "utf8");
+        if (previousText === null) {
+          await rm(options.unifiedRuntimeConfigPath, { force: true });
+        } else {
+          await writeFile(options.unifiedRuntimeConfigPath, previousText, "utf8");
+        }
         if (previousConfig) {
           await applyUnifiedRuntimeConfigState(previousConfig);
         }
@@ -8823,6 +9018,10 @@ export function resolveBridgeServerOptions(input: {
 }): BridgeServerOptions {
   const repoPath = resolveBridgePathApi([input.executablePath, input.repoRoot]);
   const statePath = resolveBridgePathApi([input.localAppData], process.env.LOCALAPPDATA);
+  const runtimeStatePath = resolveBridgePathApi(
+    [input.runtimeStateRoot, input.localAppData],
+    process.env.LOCALAPPDATA,
+  );
   const inferredRepoRoot = input.executablePath
     ? (() => {
         const executableDir = repoPath.dirname(repoPath.resolve(input.executablePath));
@@ -8865,6 +9064,8 @@ export function resolveBridgeServerOptions(input: {
       "build",
       "client",
     ),
-    unifiedRuntimeConfigPath: input.unifiedRuntimeConfigPath?.trim() || undefined,
+    unifiedRuntimeConfigPath:
+      input.unifiedRuntimeConfigPath?.trim() ||
+      runtimeStatePath.join(runtimeStateRoot, "runtime-config.yaml"),
   };
 }

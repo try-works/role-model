@@ -208,11 +208,11 @@ export default function ControlModelsRoute() {
     <>
       <div className="space-y-6">
         <PageHeader
-          eyebrow="Control"
+          eyebrow="Models"
           title="Configured models"
           description="Unified local and remote model cards with controller status, live role bindings, capabilities, request metrics, and backing-account role assignment."
           actions={
-            <Link className={secondaryButtonClassName} to="/app/control/roles">
+            <Link className={secondaryButtonClassName} to="/app/models/roles">
               Edit runtime roles
             </Link>
           }
@@ -247,7 +247,7 @@ export default function ControlModelsRoute() {
             title="Controller pending"
             description="The runtime-config editor can leave the system in a valid pre-activation state before any controller candidate exists."
           >
-            <EmptyState label="Activate a local or remote endpoint, then assign it from Control > Controller." />
+            <EmptyState label="Activate a local or remote endpoint, then assign it from Router > Controller." />
           </SectionCard>
         ) : null}
 
@@ -262,10 +262,10 @@ export default function ControlModelsRoute() {
                 <Link className={secondaryButtonClassName} to="/app/local/models">
                   Open Local Models
                 </Link>
-                <Link className={secondaryButtonClassName} to="/app/local/peers">
+                <Link className={secondaryButtonClassName} to="/app/local/endpoints">
                   Open Local Endpoints
                 </Link>
-                <Link className={secondaryButtonClassName} to="/app/control/providers">
+                <Link className={secondaryButtonClassName} to="/app/remote/providers">
                   Open Providers
                 </Link>
               </div>
@@ -468,7 +468,7 @@ export default function ControlModelsRoute() {
                       feed router-visible endpoint role coverage directly.
                     </p>
                   </div>
-                  <Link className={secondaryButtonClassName} to="/app/control/roles">
+                  <Link className={secondaryButtonClassName} to="/app/models/roles">
                     Manage role definitions
                   </Link>
                 </div>
@@ -537,13 +537,13 @@ export default function ControlModelsRoute() {
             </div>
 
             <div className="mt-4 flex flex-wrap gap-3">
-              <Link className={secondaryButtonClassName} to="/app/control/runtime-config">
+              <Link className={secondaryButtonClassName} to="/app/system/runtime-config">
                 Edit runtime config
               </Link>
-              <Link className={secondaryButtonClassName} to="/app/control/roles">
+              <Link className={secondaryButtonClassName} to="/app/models/roles">
                 Edit runtime roles
               </Link>
-              <Link className={secondaryButtonClassName} to="/app/control/providers">
+              <Link className={secondaryButtonClassName} to="/app/remote/providers">
                 Review providers
               </Link>
             </div>

@@ -21,7 +21,7 @@ describe("runRuntimeUiValidation", () => {
       [
         "version: 1.0",
         "routing:",
-        "  strategy: balanced",
+        "  strategy: baseline",
         "llama_swap:",
         "  models: {}",
         "litellm_proxy:",
@@ -45,7 +45,7 @@ describe("runRuntimeUiValidation", () => {
     expect(result.runtimeConfigPath).toBe(unifiedRuntimeConfigPath);
     expect(result.runtimeConfigInitialApplied).toBe(true);
     expect(result.runtimeConfigUpdatedVersion).toBe("1.1");
-    expect(result.runtimeConfigUpdatedRoutingStrategy).toBe("latency-first");
+    expect(result.runtimeConfigUpdatedRoutingStrategy).toBe("baseline");
     expect(result.moonshotVariantIds).toEqual(
       expect.arrayContaining([
         "moonshot-open-platform",
@@ -65,5 +65,24 @@ describe("runRuntimeUiValidation", () => {
     expect(result.routedRequestRoutingDecisionId).toEqual(expect.any(String));
     expect(result.routedRequestEffectiveMode).toBe("baseline");
     expect(result.routedRequestRewriteReason).toBe("requested-model-matches-downstream");
+    expect(result.mixedAliasId).toBe("mixed.local-remote");
+    expect(result.mixedAliasModelListIncludesAlias).toBe(true);
+    expect(result.mixedAliasRequestId).toBe("req-runtime-ui-mixed-alias-001");
+    expect(result.mixedAliasAllowEndpoints).toEqual(
+      expect.arrayContaining([
+        "llama-swap.local.lfm2-5-1-2b-instruct",
+        "moonshot.personal.primary.global.kimi-k2.5",
+      ]),
+    );
+    expect(result.mixedAliasResolvedModelIds).toEqual(
+      expect.arrayContaining(["lfm2.5-1.2b-instruct", "moonshot/kimi-k2.5"]),
+    );
+    expect(result.mixedAliasTelemetryListIncludesRequest).toBe(true);
+    expect(result.mixedAliasRequestDetailAliasResolvedModelIds).toEqual(
+      expect.arrayContaining(["lfm2.5-1.2b-instruct", "moonshot/kimi-k2.5"]),
+    );
+    expect(result.mixedAliasRouterDecisionMatchesRequest).toBe(true);
+    expect(result.mixedAliasOverviewIncludesSelectedEndpoint).toBe(true);
+    expect(result.mixedAliasEndpointsIncludeSelectedEndpoint).toBe(true);
   }, 60_000);
 });

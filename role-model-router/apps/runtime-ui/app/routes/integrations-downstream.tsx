@@ -46,7 +46,7 @@ export default function IntegrationsDownstreamRoute() {
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Integrations"
+        eyebrow="Endpoints"
         title="Downstream provider contract"
         description="Configure consumer apps such as opencode against the runtime's OpenAI-compatible downstream surface."
         actions={

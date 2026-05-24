@@ -10,8 +10,14 @@ import {
   StatusPill,
 } from "../components/page-primitives";
 import { secondaryButtonClassName } from "../lib/design-system";
-import { type RuntimeSnapshot, fetchRuntimeSnapshot } from "../lib/runtime-api";
 import {
+  type RuntimeConfigRecord,
+  type RuntimeSnapshot,
+  fetchRuntimeConfig,
+  fetchRuntimeSnapshot,
+} from "../lib/runtime-api";
+import {
+  buildAliasReadinessRows,
   buildConfiguredProviderRows,
   buildCredentialReadinessRows,
   buildEndpointCatalogRows,
@@ -19,12 +25,14 @@ import {
 
 export default function EndpointsRoute() {
   const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(null);
+  const [configRecord, setConfigRecord] = useState<RuntimeConfigRecord | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    void fetchRuntimeSnapshot()
-      .then((nextSnapshot) => {
+    void Promise.all([fetchRuntimeSnapshot(), fetchRuntimeConfig()])
+      .then(([nextSnapshot, nextConfigRecord]) => {
         setSnapshot(nextSnapshot);
+        setConfigRecord(nextConfigRecord);
         setError(null);
       })
       .catch((value: unknown) =>
@@ -47,6 +55,14 @@ export default function EndpointsRoute() {
     () => (snapshot ? buildEndpointCatalogRows(snapshot.endpoints) : []),
     [snapshot],
   );
+  const aliasRows = useMemo(
+    () =>
+      buildAliasReadinessRows(
+        configRecord?.config?.modelAliases ?? configRecord?.config?.model_aliases ?? [],
+        snapshot?.endpoints ?? [],
+      ),
+    [configRecord, snapshot],
+  );
   const readinessRows = useMemo(
     () =>
       snapshot ? buildCredentialReadinessRows(snapshot.summary).filter((row) => row.value > 0) : [],
@@ -56,7 +72,7 @@ export default function EndpointsRoute() {
   if (error) {
     return <ErrorState label={error} />;
   }
-  if (!snapshot) {
+  if (!snapshot || !configRecord) {
     return <LoadingState label="Loading endpoint registry…" />;
   }
 
@@ -65,7 +81,7 @@ export default function EndpointsRoute() {
       <PageHeader
         eyebrow="Endpoints"
         title="Endpoint registry"
-        description="Configured providers, configured models, and the live runtime endpoint registry appear together here after provider onboarding."
+        description="Configured providers, live endpoint rows, and alias coverage stay together here so operators can verify what the router can actually consume."
       />
 
       {readinessRows.length > 0 ? (
@@ -83,6 +99,62 @@ export default function EndpointsRoute() {
         </SectionCard>
       ) : null}
 
+      <SectionCard
+        title="Alias readiness"
+        description="Alias coverage shows whether each model alias currently resolves to active local and remote endpoint rows."
+      >
+        {aliasRows.length === 0 ? (
+          <EmptyState label="No model aliases are configured yet." />
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-left text-sm">
+              <thead className="text-[var(--rm-muted)]">
+                <tr>
+                  <th className="pb-3 font-medium">Alias</th>
+                  <th className="pb-3 font-medium">Mode</th>
+                  <th className="pb-3 font-medium">Alias coverage</th>
+                  <th className="pb-3 font-medium">Endpoint mix</th>
+                  <th className="pb-3 font-medium">Readiness</th>
+                </tr>
+              </thead>
+              <tbody>
+                {aliasRows.map((row) => (
+                  <tr key={row.aliasId} className="border-t border-[var(--rm-border)]">
+                    <td className="py-3 font-medium text-[var(--rm-fg)]">{row.aliasId}</td>
+                    <td className="py-3 text-[var(--rm-secondary)]">{row.modeLabel}</td>
+                    <td className="py-3 text-[var(--rm-secondary)]">
+                      {row.modelIds.join(", ") || "—"}
+                    </td>
+                    <td className="py-3 text-[var(--rm-secondary)]">{row.sourceSummary}</td>
+                    <td className="py-3">
+                      <StatusPill
+                        tone={
+                          row.readinessLabel === "ready"
+                            ? "success"
+                            : row.readinessLabel === "degraded"
+                              ? "warning"
+                              : "neutral"
+                        }
+                      >
+                        {row.readinessLabel}
+                      </StatusPill>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+        <div className="mt-4 flex flex-wrap gap-3">
+          <Link className={secondaryButtonClassName} to="/app/router">
+            Open Router
+          </Link>
+          <Link className={secondaryButtonClassName} to="/app/router/decisions">
+            Review routing decisions
+          </Link>
+        </div>
+      </SectionCard>
+
       {providerRows.length === 0 && endpointRows.length === 0 ? (
         <SectionCard
           title="No configured endpoints yet"
@@ -90,10 +162,10 @@ export default function EndpointsRoute() {
         >
           <EmptyState label="No providers or endpoints are configured yet." />
           <div className="mt-4 flex flex-wrap gap-3">
-            <Link className={secondaryButtonClassName} to="/app/control/providers">
+            <Link className={secondaryButtonClassName} to="/app/remote/providers">
               Open Providers
             </Link>
-            <Link className={secondaryButtonClassName} to="/app/local/peers">
+            <Link className={secondaryButtonClassName} to="/app/local/endpoints">
               Open Local Endpoints
             </Link>
             <Link className={secondaryButtonClassName} to="/app/local/models">

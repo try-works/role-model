@@ -11,7 +11,7 @@ import {
   resolveSqliteMemoryLocation,
 } from "@role-model-router/sqlite-memory";
 
-import { createRuntimeBridgeBackend, startBridgeServer } from "./index.js";
+import { createRuntimeBridgeBackend, mapChatCompletionsRequest, startBridgeServer } from "./index.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -48,6 +48,16 @@ export interface RuntimeUiValidationResult {
   readonly routedRequestRoutingDecisionId: string | null;
   readonly routedRequestEffectiveMode: string | null;
   readonly routedRequestRewriteReason: string | null;
+  readonly mixedAliasId: string;
+  readonly mixedAliasModelListIncludesAlias: boolean;
+  readonly mixedAliasRequestId: string;
+  readonly mixedAliasAllowEndpoints: readonly string[];
+  readonly mixedAliasResolvedModelIds: readonly string[];
+  readonly mixedAliasTelemetryListIncludesRequest: boolean;
+  readonly mixedAliasRequestDetailAliasResolvedModelIds: readonly string[];
+  readonly mixedAliasRouterDecisionMatchesRequest: boolean;
+  readonly mixedAliasOverviewIncludesSelectedEndpoint: boolean;
+  readonly mixedAliasEndpointsIncludeSelectedEndpoint: boolean;
 }
 
 export async function runRuntimeUiValidation(
@@ -83,6 +93,8 @@ export async function runRuntimeUiValidation(
     listRecentRequestObservations: backend.listRecentRequestObservations,
     readRequestObservation: backend.readRequestObservation,
     readEndpointProfile: backend.readEndpointProfile,
+    listRouterDecisions: backend.listRouterDecisions,
+    readRouterDecision: backend.readRouterDecision,
   });
 
   try {
@@ -132,6 +144,8 @@ export async function runRuntimeUiValidation(
     let runtimeConfigInitialApplied = false;
     let runtimeConfigUpdatedVersion: string | null = null;
     let runtimeConfigUpdatedRoutingStrategy: string | null = null;
+    const mixedAliasId = "mixed.local-remote";
+    const mixedAliasModelIds = ["lfm2.5-1.2b-instruct", "moonshot/kimi-k2.5"] as const;
 
     if (options.unifiedRuntimeConfigPath) {
       const runtimeConfigResponse = await fetch(`${baseUrl}/api/role-model/runtime/config`, {
@@ -159,6 +173,7 @@ export async function runRuntimeUiValidation(
           ...(runtimeConfigRecord.config ?? {
             version: "1.0",
             llamaSwap: {
+              enabled: true,
               models: [],
               process: {
                 command: null,
@@ -180,7 +195,26 @@ export async function runRuntimeUiValidation(
             },
           }),
           version: "1.1",
-          routingStrategy: "latency-first",
+          executionMode: "hybrid",
+          routingStrategy: "baseline",
+          llamaSwap: {
+            ...((runtimeConfigRecord.config as { llamaSwap?: Record<string, unknown> } | null)?.llamaSwap ??
+              {}),
+            enabled: true,
+            models: [
+              {
+                modelId: "lfm2.5-1.2b-instruct",
+                path: "./models/lfm2.5-1.2b-instruct.gguf",
+              },
+            ],
+          },
+          modelAliases: [
+            {
+              aliasId: mixedAliasId,
+              modelIds: mixedAliasModelIds,
+              mode: "hybrid",
+            },
+          ],
         }),
       });
       if (!runtimeConfigUpdateResponse.ok) {
@@ -290,12 +324,42 @@ export async function runRuntimeUiValidation(
     }
     const updatedEndpoints = (await updatedEndpointsResponse.json()) as Array<{
       endpointId: string;
+      modelId?: string;
+      providerId?: string;
+      providerKind?: string;
+      sourceType?: string;
+      servingSource?: string | null;
     }>;
     const finalSummary = (await finalSummaryResponse.json()) as {
       providerCount: number;
       accountCount: number;
       endpointCount: number;
     };
+    const activatedEndpoint =
+      updatedEndpoints.find((endpoint) => endpoint.endpointId === activatedEndpointId) ?? null;
+
+    const modelsResponse = await fetch(`${baseUrl}/v1/models`, {
+      headers: requestHeaders,
+    });
+    if (!modelsResponse.ok) {
+      throw new Error("Runtime UI validation could not read the routed model list.");
+    }
+    const modelsPayload = (await modelsResponse.json()) as {
+      data?: Array<{ id?: string }>;
+    };
+    const mixedAliasModelListIncludesAlias =
+      modelsPayload.data?.some((model) => model.id === mixedAliasId) ?? false;
+
+    const mixedAliasRequestId = "req-runtime-ui-mixed-alias-001";
+    const mixedAliasPlan = mapChatCompletionsRequest(
+      backend.registry,
+      {
+        model: mixedAliasId,
+        messages: [{ role: "user", content: "Summarize mixed alias routing." }],
+      },
+      mixedAliasRequestId,
+      [{ aliasId: mixedAliasId, modelIds: mixedAliasModelIds }],
+    );
 
     const moonshotProvider = providers.find((provider) => provider.providerId === "moonshot");
     const fixtureRoot =
@@ -360,6 +424,124 @@ export async function runRuntimeUiValidation(
       observation: routedObservation,
     });
 
+    const mixedAliasRoutingDecisionId = "route-runtime-ui-mixed-alias-001";
+    const mixedAliasSelectedModelId = activatedEndpoint?.modelId ?? "moonshot/kimi-k2.5";
+    const mixedAliasResponseVendorMetadata = validation.execution.responseCapture.vendorMetadata
+      ? {
+          ...validation.execution.responseCapture.vendorMetadata,
+          resolvedModelId: mixedAliasSelectedModelId,
+        }
+      : {
+          vendorId: validation.execution.responseCapture.providerFamily,
+          resolvedModelId: mixedAliasSelectedModelId,
+        };
+    const mixedAliasRequestCapture = {
+      ...validation.execution.requestCapture,
+      endpointId: activatedEndpointId,
+      body: {
+        ...validation.execution.requestCapture.body,
+        model: mixedAliasId,
+      },
+    };
+    const mixedAliasResponseCapture = {
+      ...validation.execution.responseCapture,
+      endpointId: activatedEndpointId,
+      vendorMetadata: mixedAliasResponseVendorMetadata,
+    };
+    const mixedAliasExecution = {
+      ...validation.execution,
+      target: {
+        ...validation.execution.target,
+        endpointId: activatedEndpointId,
+        modelId: mixedAliasSelectedModelId,
+        providerId: activatedEndpoint?.providerId ?? validation.execution.target.providerId,
+        providerAccountId: upsertedAccountId,
+        candidate: {
+          ...validation.execution.target.candidate,
+          identity: {
+            ...validation.execution.target.candidate.identity,
+            endpoint_id: activatedEndpointId,
+            model_id: mixedAliasSelectedModelId,
+            endpoint_kind:
+              activatedEndpoint?.sourceType === "remote"
+                ? "remote_api"
+                : validation.execution.target.candidate.identity.endpoint_kind,
+            serving_source:
+              activatedEndpoint?.servingSource ??
+              validation.execution.target.candidate.identity.serving_source,
+          },
+        },
+      },
+      requestCapture: mixedAliasRequestCapture,
+      responseCapture: mixedAliasResponseCapture,
+      normalized: {
+        ...validation.execution.normalized,
+        requestCapture: mixedAliasRequestCapture,
+        responseCapture: mixedAliasResponseCapture,
+        vendorMetadata: {
+          ...validation.execution.normalized.vendorMetadata,
+          resolvedModelId: mixedAliasSelectedModelId,
+        },
+      },
+      usageEvent: {
+        ...validation.execution.usageEvent,
+        request_id: mixedAliasRequestId,
+        routing_decision_id: mixedAliasRoutingDecisionId,
+        endpoint_id: activatedEndpointId,
+        model_id: mixedAliasSelectedModelId,
+      },
+    };
+    const mixedAliasObservation = createRuntimeObservationBundle({
+      decision: {
+        ...validation.decision,
+        request_id: mixedAliasRequestId,
+        routing_decision_id: mixedAliasRoutingDecisionId,
+        chosen_endpoint_id: activatedEndpointId,
+      },
+      routingDiagnostics: {
+        ...validation.routingDiagnostics,
+        aliasResolution: {
+          requestedModel: mixedAliasId,
+          aliasId: mixedAliasId,
+          resolvedModelIds: mixedAliasModelIds,
+          allowEndpoints: mixedAliasPlan.routingRequest.allowEndpoints ?? [],
+        },
+        routingMode: {
+          source: "alias-default",
+          aliasMode: "hybrid",
+          effectiveMode: "hybrid",
+        },
+        rewrite: {
+          requestedModel: mixedAliasId,
+          downstreamModelId: mixedAliasSelectedModelId,
+          applied: true,
+          reason: "requested-model-rewritten-for-selected-endpoint",
+        },
+      },
+      retrievalReceipt: validation.retrievalReceipt,
+      contextEnvelope: validation.contextEnvelope,
+      execution: mixedAliasExecution,
+      priorSamples: history.byEndpointId[activatedEndpointId] ?? [],
+      maintenancePolicy: {
+        "redaction.level": "strict",
+        "retention.class": "standard",
+      },
+      capturePolicy: policy,
+      accountState: {
+        providerAccountId: upsertedAccountId,
+        status: "active",
+        healthStatus: "healthy",
+        rotationState: "stable",
+      },
+    });
+    persistRuntimeObservationBundle({
+      databasePath: resolveSqliteMemoryLocation({
+        runtimeStateRoot: options.runtimeStateRoot,
+        scopeId: options.scopeId,
+      }),
+      observation: mixedAliasObservation,
+    });
+
     const telemetryRequestsResponse = await fetch(
       `${baseUrl}/api/role-model/telemetry/requests?limit=10`,
       {
@@ -386,6 +568,8 @@ export async function runRuntimeUiValidation(
       throw new Error("Runtime UI validation could not read the routed request detail.");
     }
     const routedRequestDetail = (await routedRequestDetailResponse.json()) as {
+      endpointId?: string | null;
+      routingDecisionId?: string | null;
       routingDiagnostics?: {
         routingMode?: {
           effectiveMode?: string | null;
@@ -395,6 +579,49 @@ export async function runRuntimeUiValidation(
         };
       };
     };
+    const telemetryRowsResponse = await fetch(`${baseUrl}/api/role-model/telemetry/rows`, {
+      headers: requestHeaders,
+    });
+    if (!telemetryRowsResponse.ok) {
+      throw new Error("Runtime UI validation could not read telemetry comparison rows.");
+    }
+    const telemetryRows = (await telemetryRowsResponse.json()) as Array<{
+      endpointId?: string | null;
+    }>;
+    const mixedAliasRequestDetailResponse = await fetch(
+      `${baseUrl}/api/role-model/requests/${mixedAliasRequestId}`,
+      {
+        headers: requestHeaders,
+      },
+    );
+    if (!mixedAliasRequestDetailResponse.ok) {
+      throw new Error("Runtime UI validation could not read the mixed alias request detail.");
+    }
+    const mixedAliasRequestDetail = (await mixedAliasRequestDetailResponse.json()) as {
+      endpointId?: string | null;
+      routingDecisionId?: string | null;
+      routingDiagnostics?: {
+        aliasResolution?: {
+          resolvedModelIds?: readonly string[];
+        };
+      };
+    };
+    const mixedAliasRouterDecisionsResponse = await fetch(`${baseUrl}/api/role-model/router/decisions`, {
+      headers: requestHeaders,
+    });
+    if (!mixedAliasRouterDecisionsResponse.ok) {
+      throw new Error("Runtime UI validation could not read the mixed alias router decisions ledger.");
+    }
+    const mixedAliasRouterDecision =
+      (
+        (await mixedAliasRouterDecisionsResponse.json()) as Array<{
+          requestId: string;
+          routingDecisionId?: string | null;
+          selectedEndpointId?: string | null;
+        }>
+      ).find((decision) => decision.requestId === mixedAliasRequestId) ?? null;
+    const mixedAliasTelemetryRequest =
+      telemetryRequests.find((request) => request.requestId === mixedAliasRequestId) ?? null;
 
     return {
       providerCount: finalSummary.providerCount,
@@ -428,6 +655,25 @@ export async function runRuntimeUiValidation(
       routedRequestEffectiveMode:
         routedRequestDetail.routingDiagnostics?.routingMode?.effectiveMode ?? null,
       routedRequestRewriteReason: routedRequestDetail.routingDiagnostics?.rewrite?.reason ?? null,
+      mixedAliasId,
+      mixedAliasModelListIncludesAlias,
+      mixedAliasRequestId,
+      mixedAliasAllowEndpoints: mixedAliasPlan.routingRequest.allowEndpoints ?? [],
+      mixedAliasResolvedModelIds:
+        mixedAliasPlan.routingDiagnostics?.aliasResolution?.resolvedModelIds ?? [],
+      mixedAliasTelemetryListIncludesRequest: mixedAliasTelemetryRequest !== null,
+      mixedAliasRequestDetailAliasResolvedModelIds:
+        mixedAliasRequestDetail.routingDiagnostics?.aliasResolution?.resolvedModelIds ?? [],
+      mixedAliasRouterDecisionMatchesRequest:
+        mixedAliasRouterDecision?.requestId === mixedAliasRequestId &&
+        mixedAliasRouterDecision?.routingDecisionId === mixedAliasRequestDetail.routingDecisionId &&
+        mixedAliasRouterDecision?.selectedEndpointId === mixedAliasRequestDetail.endpointId,
+      mixedAliasOverviewIncludesSelectedEndpoint: telemetryRows.some(
+        (row) => row.endpointId === mixedAliasRouterDecision?.selectedEndpointId,
+      ),
+      mixedAliasEndpointsIncludeSelectedEndpoint: updatedEndpoints.some(
+        (endpoint) => endpoint.endpointId === mixedAliasRouterDecision?.selectedEndpointId,
+      ),
     };
   } finally {
     await server.close();
@@ -454,7 +700,7 @@ if (process.argv[1] === __filename) {
       [
         "version: 1.0",
         "routing:",
-        "  strategy: balanced",
+        "  strategy: baseline",
         "llama_swap:",
         "  models: {}",
         "litellm_proxy:",
