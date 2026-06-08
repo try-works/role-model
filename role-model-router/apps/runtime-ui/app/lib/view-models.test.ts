@@ -7,6 +7,7 @@ import {
   buildConfiguredModelCards,
   buildConfiguredModelMetadataRows,
   buildConfiguredProviderRows,
+  countActiveEndpointModels,
   buildCredentialReadinessRows,
   buildDownstreamProviderGuide,
   buildEndpointCatalogRows,
@@ -454,6 +455,52 @@ describe("buildEndpointCatalogRows", () => {
         healthStatus: "healthy",
       },
     ]);
+  });
+});
+
+describe("countActiveEndpointModels", () => {
+  test("counts distinct active local and remote model ids from registry endpoints", () => {
+    expect(
+      countActiveEndpointModels([
+        {
+          endpointId: "local.lfm",
+          modelId: "lfm2.5-1.2b-instruct",
+          providerId: "local-openai-compatible",
+          sourceType: "local",
+          status: "active",
+          healthStatus: "healthy",
+        },
+        {
+          endpointId: "remote.kimi",
+          modelId: "moonshot/kimi-k2.6",
+          providerId: "moonshot",
+          sourceType: "remote",
+          status: "active",
+          healthStatus: "healthy",
+        },
+        {
+          endpointId: "remote.kimi.duplicate",
+          modelId: "moonshot/kimi-k2.6",
+          providerId: "moonshot",
+          sourceType: "remote",
+          status: "active",
+          healthStatus: "degraded",
+        },
+        {
+          endpointId: "local.offline",
+          modelId: "offline-model",
+          providerId: "local-openai-compatible",
+          sourceType: "local",
+          status: "offline",
+          healthStatus: "offline",
+        },
+      ]),
+    ).toEqual({
+      localModelCount: 1,
+      remoteModelCount: 1,
+      localEndpointCount: 1,
+      remoteEndpointCount: 2,
+    });
   });
 });
 

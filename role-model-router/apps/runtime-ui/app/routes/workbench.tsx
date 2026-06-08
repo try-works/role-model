@@ -169,42 +169,26 @@ export default function WorkbenchRoute() {
   return (
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <FactCard
-          label="Models"
-          value={snapshot.models.length}
-          detail="Available model ids currently exposed through the runtime model listing."
-          emphasis
-        />
-        <FactCard
-          label="Tool-capable endpoints"
-          value={toolCapableEndpoints}
-          detail="Endpoints currently able to surface tool-calling behavior in the workspace."
-        />
-        <FactCard
-          label="Selected model"
-          value={model || "—"}
-          detail="The active model binding for the next routed request."
-        />
-        <FactCard
-          label="Routing mode"
-          value={routingModeLabel}
-          detail="Optional per-request override that the runtime host forwards as a routing-mode header."
-        />
+        <FactCard label="Models" value={snapshot.models.length} emphasis />
+        <FactCard label="Tool-capable endpoints" value={toolCapableEndpoints} />
+        <FactCard label="Selected model" value={model || "—"} />
+        <FactCard label="Routing mode" value={routingModeLabel} />
       </div>
 
       {blockingReadinessRows.length > 0 ? (
-        <SectionCard
-          title="Execution readiness"
-          description="Saved provider configuration can still be incomplete even when the control plane is populated."
+        <div
+          className={`${mutedPanelClassName} flex flex-wrap items-center gap-3 p-4 text-sm text-[var(--rm-secondary)]`}
         >
-          <div className="flex flex-wrap gap-3">
-            {readinessRows.map((row) => (
-              <StatusPill key={row.key} tone={row.tone}>
-                {row.label} {row.value}
-              </StatusPill>
-            ))}
-          </div>
-        </SectionCard>
+          <span className="font-medium text-[var(--rm-fg)]">Provider setup incomplete:</span>
+          {blockingReadinessRows.map((row) => (
+            <StatusPill key={row.key} tone={row.tone}>
+              {row.label} {row.value}
+            </StatusPill>
+          ))}
+          <Link className="text-[var(--rm-accent)]" to="/app/remote/providers">
+            Remote → Providers
+          </Link>
+        </div>
       ) : null}
 
       <div className="grid gap-4 xl:grid-cols-[360px_minmax(0,1fr)]">

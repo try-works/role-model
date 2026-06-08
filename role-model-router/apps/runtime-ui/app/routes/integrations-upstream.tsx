@@ -70,7 +70,6 @@ export default function IntegrationsUpstreamRoute() {
       <div className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
         <SectionCard
           title="Provider accounts in scope"
-          description="Read auth and provider posture here, then move to raw passthrough only when needed."
         >
           {!snapshot ? (
             <LoadingState label="Loading upstream provider posture…" />
@@ -105,7 +104,6 @@ export default function IntegrationsUpstreamRoute() {
 
         <SectionCard
           title="Upstream target inventory"
-          description="Model-specific passthrough links remain contextual to the integration page instead of living in the global shell chrome."
         >
           {!snapshot ? (
             <LoadingState label="Loading upstream targets…" />
@@ -138,7 +136,6 @@ export default function IntegrationsUpstreamRoute() {
 
       <SectionCard
         title="Boundary notes"
-        description="This page documents when to use raw passthrough without duplicating the editable provider/account surfaces."
       >
         <div className="grid gap-4 md:grid-cols-3">
           <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>

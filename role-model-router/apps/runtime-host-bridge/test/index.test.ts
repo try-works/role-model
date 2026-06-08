@@ -1,3 +1,4 @@
+import { existsSync } from "node:fs";
 import { cp, mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -8330,6 +8331,22 @@ describe("runtime-host-bridge", () => {
   });
 
   test("resolves packaged bridge server options from executable path defaults", () => {
+    const packageDir = path.join(
+      repoRoot,
+      "role-model-router",
+      "dist",
+      "release",
+      "win32-x64",
+    );
+    const packagedStaticRoot = path.join(packageDir, "build", "client");
+    const devStaticRoot = path.join(
+      repoRoot,
+      "role-model-router",
+      "apps",
+      "runtime-ui",
+      "build",
+      "client",
+    );
     const result = (
       bridge as {
         resolveBridgeServerOptions: (value: {
@@ -8350,18 +8367,19 @@ describe("runtime-host-bridge", () => {
         };
       }
     ).resolveBridgeServerOptions({
-      executablePath:
-        "D:\\DEV\\role-model\\role-model-router\\dist\\release\\win32-x64\\role-model-runtime.exe",
+      executablePath: path.join(packageDir, "role-model-runtime.exe"),
       localAppData: "C:\\Users\\tester\\AppData\\Local",
     });
 
     expect(result).toEqual({
       host: "127.0.0.1",
       port: 8091,
-      repoRoot: "D:\\DEV\\role-model",
+      repoRoot,
       runtimeStateRoot: "C:\\Users\\tester\\AppData\\Local\\Role Model Runtime\\state",
       scopeId: "runtime-host-bridge",
-      staticRoot: "D:\\DEV\\role-model\\role-model-router\\apps\\runtime-ui\\build\\client",
+      staticRoot: existsSync(path.join(packagedStaticRoot, "index.html"))
+        ? packagedStaticRoot
+        : devStaticRoot,
       unifiedRuntimeConfigPath:
         "C:\\Users\\tester\\AppData\\Local\\Role Model Runtime\\state\\runtime-config.yaml",
     });

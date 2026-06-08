@@ -113,11 +113,7 @@ export default function ObserveActivityRoute() {
       </div>
 
       <div className="grid grid-cols-12 gap-4">
-        <SectionCard
-          className="col-span-12 xl:col-span-8"
-          title="Recent host activity"
-          description="Scan the latest vendor metrics first, then pull a concrete capture into the inspector when you need payload-level detail."
-        >
+        <SectionCard className="col-span-12 xl:col-span-8" title="Recent host activity">
           {summary.rows.length === 0 ? (
             <EmptyState label="No host activity is available yet." />
           ) : (
@@ -162,19 +158,8 @@ export default function ObserveActivityRoute() {
           )}
         </SectionCard>
 
-        <SectionCard
-          className="col-span-12 xl:col-span-4"
-          title="Capture inspector"
-          description="Request and response bodies remain secondary to the ledger, but stay one click away when raw payload audit is needed."
-        >
+        <SectionCard className="col-span-12 xl:col-span-4" title="Capture inspector">
           <div className="space-y-3">
-            <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
-              <p className="font-medium text-[var(--rm-fg)]">Reading order</p>
-              <p className="mt-2">
-                Use the ledger to spot failing paths or suspicious latencies, then move into
-                captures only for the entries that need raw payload inspection.
-              </p>
-            </div>
             {selectedCaptureId === null ? (
               <EmptyState label="Choose a ledger row with a capture to inspect raw request and response bodies." />
             ) : captureLoading ? (

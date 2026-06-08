@@ -77,6 +77,15 @@ type Pages = {
   "/app/control/controller": {
     params: {};
   };
+  "/app/connect": {
+    params: {};
+  };
+  "/app/connect/downstream": {
+    params: {};
+  };
+  "/app/connect/upstream": {
+    params: {};
+  };
   "/app/endpoints": {
     params: {};
   };
@@ -154,7 +163,7 @@ type Pages = {
 type RouteFiles = {
   "root.tsx": {
     id: "root";
-    page: "/" | "/app" | "/app/studio/chat" | "/app/studio/images" | "/app/studio/audio" | "/app/studio/rerank" | "/app/studio/advanced" | "/app/local/models" | "/app/local/swap" | "/app/local/policy" | "/app/local/logs" | "/app/local/matrix" | "/app/local/endpoints" | "/app/local/peers" | "/app/remote/providers" | "/app/control/providers" | "/app/router/strategy" | "/app/control/routing-strategy" | "/app/system/runtime-config" | "/app/control/runtime-config" | "/app/router/controller" | "/app/control/controller" | "/app/endpoints" | "/app/control/endpoints" | "/app/models/roles" | "/app/control/roles" | "/app/models" | "/app/control/models" | "/app/router" | "/app/router/config" | "/app/router/candidates" | "/app/router/decisions" | "/app/router/decisions/:requestId" | "/app/observe/activity" | "/app/observe/requests" | "/app/observe/requests/:requestId" | "/app/observe/logs" | "/app/endpoints/downstream" | "/app/integrations/downstream" | "/app/endpoints/upstream" | "/app/integrations/upstream" | "/app/system/runtime" | "/app/system/peers" | "/*";
+    page: "/" | "/app" | "/app/studio/chat" | "/app/studio/images" | "/app/studio/audio" | "/app/studio/rerank" | "/app/studio/advanced" | "/app/local/models" | "/app/local/swap" | "/app/local/policy" | "/app/local/logs" | "/app/local/matrix" | "/app/local/endpoints" | "/app/local/peers" | "/app/remote/providers" | "/app/control/providers" | "/app/router/strategy" | "/app/control/routing-strategy" | "/app/system/runtime-config" | "/app/control/runtime-config" | "/app/router/controller" | "/app/control/controller" | "/app/connect" | "/app/connect/downstream" | "/app/connect/upstream" | "/app/endpoints" | "/app/control/endpoints" | "/app/models/roles" | "/app/control/roles" | "/app/models" | "/app/control/models" | "/app/router" | "/app/router/config" | "/app/router/candidates" | "/app/router/decisions" | "/app/router/decisions/:requestId" | "/app/observe/activity" | "/app/observe/requests" | "/app/observe/requests/:requestId" | "/app/observe/logs" | "/app/endpoints/downstream" | "/app/integrations/downstream" | "/app/endpoints/upstream" | "/app/integrations/upstream" | "/app/system/runtime" | "/app/system/peers" | "/*";
   };
   "routes/index.tsx": {
     id: "routes/index";
@@ -162,7 +171,7 @@ type RouteFiles = {
   };
   "routes/app-layout.tsx": {
     id: "routes/app-layout";
-    page: "/app" | "/app/studio/chat" | "/app/studio/images" | "/app/studio/audio" | "/app/studio/rerank" | "/app/studio/advanced" | "/app/local/models" | "/app/local/swap" | "/app/local/policy" | "/app/local/logs" | "/app/local/matrix" | "/app/local/endpoints" | "/app/local/peers" | "/app/remote/providers" | "/app/control/providers" | "/app/router/strategy" | "/app/control/routing-strategy" | "/app/system/runtime-config" | "/app/control/runtime-config" | "/app/router/controller" | "/app/control/controller" | "/app/endpoints" | "/app/control/endpoints" | "/app/models/roles" | "/app/control/roles" | "/app/models" | "/app/control/models" | "/app/router" | "/app/router/config" | "/app/router/candidates" | "/app/router/decisions" | "/app/router/decisions/:requestId" | "/app/observe/activity" | "/app/observe/requests" | "/app/observe/requests/:requestId" | "/app/observe/logs" | "/app/endpoints/downstream" | "/app/integrations/downstream" | "/app/endpoints/upstream" | "/app/integrations/upstream" | "/app/system/runtime" | "/app/system/peers";
+    page: "/app" | "/app/studio/chat" | "/app/studio/images" | "/app/studio/audio" | "/app/studio/rerank" | "/app/studio/advanced" | "/app/local/models" | "/app/local/swap" | "/app/local/policy" | "/app/local/logs" | "/app/local/matrix" | "/app/local/endpoints" | "/app/local/peers" | "/app/remote/providers" | "/app/control/providers" | "/app/router/strategy" | "/app/control/routing-strategy" | "/app/system/runtime-config" | "/app/control/runtime-config" | "/app/router/controller" | "/app/control/controller" | "/app/connect" | "/app/connect/downstream" | "/app/connect/upstream" | "/app/endpoints" | "/app/control/endpoints" | "/app/models/roles" | "/app/control/roles" | "/app/models" | "/app/control/models" | "/app/router" | "/app/router/config" | "/app/router/candidates" | "/app/router/decisions" | "/app/router/decisions/:requestId" | "/app/observe/activity" | "/app/observe/requests" | "/app/observe/requests/:requestId" | "/app/observe/logs" | "/app/endpoints/downstream" | "/app/integrations/downstream" | "/app/endpoints/upstream" | "/app/integrations/upstream" | "/app/system/runtime" | "/app/system/peers";
   };
   "routes/dashboard.tsx": {
     id: "routes/dashboard";
@@ -228,6 +237,9 @@ type RouteFiles = {
     id: "legacy-control-controller";
     page: "/app/control/controller";
   } | {
+    id: "legacy-endpoints";
+    page: "/app/endpoints";
+  } | {
     id: "legacy-control-endpoints";
     page: "/app/control/endpoints";
   } | {
@@ -237,8 +249,14 @@ type RouteFiles = {
     id: "legacy-control-models";
     page: "/app/control/models";
   } | {
+    id: "legacy-endpoints-downstream";
+    page: "/app/endpoints/downstream";
+  } | {
     id: "legacy-integrations-downstream";
     page: "/app/integrations/downstream";
+  } | {
+    id: "legacy-endpoints-upstream";
+    page: "/app/endpoints/upstream";
   } | {
     id: "legacy-integrations-upstream";
     page: "/app/integrations/upstream";
@@ -261,7 +279,15 @@ type RouteFiles = {
   };
   "routes/endpoints.tsx": {
     id: "routes/endpoints";
-    page: "/app/endpoints";
+    page: "/app/connect";
+  };
+  "routes/integrations-downstream.tsx": {
+    id: "routes/integrations-downstream";
+    page: "/app/connect/downstream";
+  };
+  "routes/integrations-upstream.tsx": {
+    id: "routes/integrations-upstream";
+    page: "/app/connect/upstream";
   };
   "routes/control-roles.tsx": {
     id: "routes/control-roles";
@@ -307,14 +333,6 @@ type RouteFiles = {
     id: "routes/observe-logs";
     page: "/app/observe/logs";
   };
-  "routes/integrations-downstream.tsx": {
-    id: "routes/integrations-downstream";
-    page: "/app/endpoints/downstream";
-  };
-  "routes/integrations-upstream.tsx": {
-    id: "routes/integrations-upstream";
-    page: "/app/endpoints/upstream";
-  };
   "routes/runtime.tsx": {
     id: "routes/runtime";
     page: "/app/system/runtime";
@@ -355,6 +373,9 @@ type RouteModules = {
   "routes/control-controller": typeof import("./app/routes/control-controller.tsx");
   "legacy-control-controller": typeof import("./app/routes/legacy-redirect.tsx");
   "routes/endpoints": typeof import("./app/routes/endpoints.tsx");
+  "routes/integrations-downstream": typeof import("./app/routes/integrations-downstream.tsx");
+  "routes/integrations-upstream": typeof import("./app/routes/integrations-upstream.tsx");
+  "legacy-endpoints": typeof import("./app/routes/legacy-redirect.tsx");
   "legacy-control-endpoints": typeof import("./app/routes/legacy-redirect.tsx");
   "routes/control-roles": typeof import("./app/routes/control-roles.tsx");
   "legacy-control-roles": typeof import("./app/routes/legacy-redirect.tsx");
@@ -369,9 +390,9 @@ type RouteModules = {
   "routes/requests": typeof import("./app/routes/requests.tsx");
   "routes/request-detail": typeof import("./app/routes/request-detail.tsx");
   "routes/observe-logs": typeof import("./app/routes/observe-logs.tsx");
-  "routes/integrations-downstream": typeof import("./app/routes/integrations-downstream.tsx");
+  "legacy-endpoints-downstream": typeof import("./app/routes/legacy-redirect.tsx");
   "legacy-integrations-downstream": typeof import("./app/routes/legacy-redirect.tsx");
-  "routes/integrations-upstream": typeof import("./app/routes/integrations-upstream.tsx");
+  "legacy-endpoints-upstream": typeof import("./app/routes/legacy-redirect.tsx");
   "legacy-integrations-upstream": typeof import("./app/routes/legacy-redirect.tsx");
   "routes/runtime": typeof import("./app/routes/runtime.tsx");
   "routes/system-peers": typeof import("./app/routes/system-peers.tsx");

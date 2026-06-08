@@ -64,10 +64,7 @@ export default function RuntimeRoute() {
 
   return (
     <div className="space-y-6">
-      <SectionCard
-        title="Lifecycle summary"
-        description="Current endpoint lifecycle groups from the runtime control plane."
-      >
+      <SectionCard title="Lifecycle summary">
         <div className="flex flex-wrap gap-3">
           <StatusPill tone="success">
             Active {snapshot.summary.lifecycleSummary?.active ?? 0}
@@ -81,10 +78,7 @@ export default function RuntimeRoute() {
         </div>
       </SectionCard>
 
-      <SectionCard
-        title="Credential readiness"
-        description="Saved providers can exist before they are execution-ready. This contract separates pending OAuth, missing credentials, connected-but-not-activated, and ready accounts."
-      >
+      <SectionCard title="Credential readiness">
         <div className="flex flex-wrap gap-3">
           {readinessRows.length === 0 ? (
             <StatusPill tone="neutral">No saved provider readiness state yet</StatusPill>
@@ -98,10 +92,7 @@ export default function RuntimeRoute() {
         </div>
       </SectionCard>
 
-      <SectionCard
-        title="Controller posture"
-        description="The controller remains an explicit runtime-owned assignment rather than an implicit default."
-      >
+      <SectionCard title="Controller posture">
         {controller ? (
           <div className="grid gap-3 md:grid-cols-3">
             <div className={`${mutedPanelClassName} p-4`}>
@@ -134,10 +125,7 @@ export default function RuntimeRoute() {
         )}
       </SectionCard>
 
-      <SectionCard
-        title="Version and boundary facts"
-        description="Version, provenance, and health-oriented references now live in the runtime page instead of a separate system route."
-      >
+      <SectionCard title="Version and boundary facts">
         <div className="grid gap-3 md:grid-cols-2">
           <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
             <p className="font-medium text-[var(--rm-fg)]">Vendor host version</p>
@@ -157,10 +145,7 @@ export default function RuntimeRoute() {
         </div>
       </SectionCard>
 
-      <SectionCard
-        title="Preserved host surfaces"
-        description="These stay operator-adjacent and are intentionally not hidden by the new app shell."
-      >
+      <SectionCard title="Preserved host surfaces">
         <div className="grid gap-3 md:grid-cols-2">
           <a
             className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}

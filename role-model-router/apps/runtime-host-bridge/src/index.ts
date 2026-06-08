@@ -9006,6 +9006,34 @@ function resolveBridgePathApi(explicitValues: Array<string | undefined>, fallbac
   return process.platform === "win32" ? path.win32 : path.posix;
 }
 
+export function resolveStandaloneStaticRoot(input: {
+  readonly repoPath: typeof path;
+  readonly repoRoot: string;
+  readonly executablePath?: string;
+}): string {
+  const devStaticRoot = input.repoPath.join(
+    input.repoRoot,
+    "role-model-router",
+    "apps",
+    "runtime-ui",
+    "build",
+    "client",
+  );
+  const candidates: string[] = [];
+  if (input.executablePath) {
+    const executableDir = input.repoPath.dirname(input.repoPath.resolve(input.executablePath));
+    candidates.push(input.repoPath.join(executableDir, "build", "client"));
+  }
+  candidates.push(input.repoPath.join(input.repoRoot, "build", "client"));
+  candidates.push(devStaticRoot);
+  for (const candidate of candidates) {
+    if (existsSync(input.repoPath.join(candidate, "index.html"))) {
+      return candidate;
+    }
+  }
+  return devStaticRoot;
+}
+
 export function resolveBridgeServerOptions(input: {
   host?: string;
   port?: string;
@@ -9056,14 +9084,11 @@ export function resolveBridgeServerOptions(input: {
     repoRoot,
     runtimeStateRoot,
     scopeId: input.scopeId?.trim() || "runtime-host-bridge",
-    staticRoot: repoPath.join(
+    staticRoot: resolveStandaloneStaticRoot({
+      repoPath,
       repoRoot,
-      "role-model-router",
-      "apps",
-      "runtime-ui",
-      "build",
-      "client",
-    ),
+      executablePath: input.executablePath,
+    }),
     unifiedRuntimeConfigPath:
       input.unifiedRuntimeConfigPath?.trim() ||
       runtimeStatePath.join(runtimeStateRoot, "runtime-config.yaml"),

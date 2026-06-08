@@ -239,16 +239,16 @@ const controlControllerRoute = createRoute({
     "Choose the concrete endpoint/model pair that acts as the global routing controller.",
 });
 
-const controlEndpointsRoute = createRoute({
-  id: "endpoints-overview",
-  to: "/app/endpoints",
-  label: "Endpoints",
-  section: "Endpoints",
+const connectRegistryRoute = createRoute({
+  id: "connect-registry",
+  to: "/app/connect",
+  label: "Registry",
+  section: "Connect",
   icon: Cpu,
   template: "registry-detail",
-  title: "Endpoint registry",
+  title: "Available models & endpoints",
   description:
-    "Review configured providers, models, and runtime endpoint status after onboarding without duplicating provider setup here.",
+    "Models and endpoints client applications can call through role-model after remote provider onboarding.",
 });
 
 const controlRolesRoute = createRoute({
@@ -384,27 +384,27 @@ const observeLogsRoute = createRoute({
 });
 
 const integrationsDownstreamRoute = createRoute({
-  id: "endpoints-downstream",
-  to: "/app/endpoints/downstream",
+  id: "connect-downstream",
+  to: "/app/connect/downstream",
   label: "Downstream",
-  section: "Endpoints",
+  section: "Connect",
   icon: Cable,
   template: "contract-reference",
-  title: "Downstream provider contract",
+  title: "Connect your application",
   description:
-    "Use Role Model as an OpenAI-compatible downstream provider and keep the compatibility matrix with the same contract instead of on a duplicate page.",
+    "OpenAI-compatible downstream contract, auth modes, and model discovery for applications calling role-model.",
 });
 
 const integrationsUpstreamRoute = createRoute({
-  id: "endpoints-upstream",
-  to: "/app/endpoints/upstream",
+  id: "connect-upstream",
+  to: "/app/connect/upstream",
   label: "Upstream",
-  section: "Endpoints",
+  section: "Connect",
   icon: GitBranch,
   template: "contract-reference",
-  title: "Upstream providers",
+  title: "Upstream passthrough",
   description:
-    "Reference upstream passthrough boundaries, auth modes, and model-specific targets without duplicating the editable control surfaces.",
+    "Upstream passthrough boundaries, auth modes, and model-specific targets without duplicating editable control surfaces.",
 });
 
 const systemRuntimeRoute = createRoute({
@@ -439,16 +439,16 @@ const runtimeRouteDefinitions = [
   studioRerankRoute,
   studioAdvancedRoute,
   localModelsRoute,
+  localPeersRoute,
   localSwapRoute,
   localPolicyRoute,
   localLogsRoute,
   localMatrixRoute,
-  localPeersRoute,
   controlProvidersRoute,
   controlRoutingStrategyRoute,
   controlRuntimeConfigRoute,
   controlControllerRoute,
-  controlEndpointsRoute,
+  connectRegistryRoute,
   controlRolesRoute,
   controlModelsRoute,
   routerOverviewRoute,
@@ -485,14 +485,7 @@ export const runtimeNavigationSections: readonly RuntimeNavigationSection[] = [
   {
     title: "Local",
     icon: Cpu,
-    items: [
-      localModelsRoute,
-      localPeersRoute,
-      localSwapRoute,
-      localPolicyRoute,
-      localLogsRoute,
-      localMatrixRoute,
-    ],
+    items: [localModelsRoute, localPeersRoute, localSwapRoute, localPolicyRoute, localLogsRoute],
   },
   {
     title: "Remote",
@@ -511,7 +504,6 @@ export const runtimeNavigationSections: readonly RuntimeNavigationSection[] = [
       routerOverviewRoute,
       controlRoutingStrategyRoute,
       controlControllerRoute,
-      routerConfigRoute,
       routerCandidatesRoute,
       routerDecisionsRoute,
     ],
@@ -522,9 +514,9 @@ export const runtimeNavigationSections: readonly RuntimeNavigationSection[] = [
     items: [observeActivityRoute, observeRequestsRoute, observeLogsRoute],
   },
   {
-    title: "Endpoints",
+    title: "Connect",
     icon: Cable,
-    items: [controlEndpointsRoute, integrationsDownstreamRoute, integrationsUpstreamRoute],
+    items: [connectRegistryRoute, integrationsDownstreamRoute, integrationsUpstreamRoute],
   },
   {
     title: "System",
@@ -627,7 +619,7 @@ export const primaryButtonClassName =
   "inline-flex min-h-[44px] items-center justify-center rounded-none border border-[var(--rm-accent)] bg-[var(--rm-accent)] px-4 py-2 text-sm font-medium tracking-wide text-[var(--rm-bg)] transition hover:border-[color:var(--rm-accent-muted)] hover:bg-[color:var(--rm-accent-muted)] disabled:opacity-60";
 
 export const secondaryButtonClassName =
-  "inline-flex min-h-[44px] items-center justify-center rounded-none border border-[var(--rm-border-strong)] bg-[var(--rm-surface-strong)] px-4 py-2 text-sm font-medium tracking-wide text-[var(--rm-fg)] transition hover:border-[var(--rm-fg)]";
+  "inline-flex min-h-[44px] items-center justify-center rounded-none border border-[var(--rm-border-strong)] bg-[var(--rm-surface-strong)] px-4 py-2 text-sm font-medium tracking-wide text-[var(--rm-fg)] shadow-sm transition hover:border-[var(--rm-fg)]";
 
 export function getSelectablePanelClassName(selected: boolean): string {
   return [
@@ -664,7 +656,7 @@ export function getRuntimeRouteDefinition(pathname: string): RuntimeRouteDefinit
     return controlProvidersRoute;
   }
   if (pathname === "/app/control/endpoints") {
-    return controlEndpointsRoute;
+    return connectRegistryRoute;
   }
   if (pathname === "/app/control/roles") {
     return controlRolesRoute;
@@ -684,8 +676,23 @@ export function getRuntimeRouteDefinition(pathname: string): RuntimeRouteDefinit
   if (pathname === "/app/runtime") {
     return systemRuntimeRoute;
   }
+  if (pathname === "/app/connect") {
+    return connectRegistryRoute;
+  }
+  if (pathname === "/app/connect/downstream") {
+    return integrationsDownstreamRoute;
+  }
+  if (pathname === "/app/connect/upstream") {
+    return integrationsUpstreamRoute;
+  }
   if (pathname === "/app/endpoints") {
-    return controlEndpointsRoute;
+    return connectRegistryRoute;
+  }
+  if (pathname === "/app/endpoints/downstream") {
+    return integrationsDownstreamRoute;
+  }
+  if (pathname === "/app/endpoints/upstream") {
+    return integrationsUpstreamRoute;
   }
   if (pathname === "/app/requests") {
     return observeRequestsRoute;

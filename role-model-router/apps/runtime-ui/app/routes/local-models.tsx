@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link } from "react-router";
+import { Link, useSearchParams } from "react-router";
 
 import {
   EmptyState,
@@ -25,7 +25,11 @@ import {
   updateModelOverrides,
 } from "../lib/runtime-api";
 
+type ModelViewMode = "list" | "grid";
+
 export default function LocalModelsRoute() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const viewMode: ModelViewMode = searchParams.get("view") === "grid" ? "grid" : "list";
   const [models, setModels] = useState<RuntimeLocalModel[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -162,14 +166,53 @@ export default function LocalModelsRoute() {
         </div>
       </SectionCard>
 
-      <SectionCard
-        title="Runtime state"
-        description="Models currently resident in local inference memory across llama-swap and peer-backed execution."
-      >
+      <SectionCard title="Runtime state">
+        <div className="mb-4 flex gap-2">
+          <button
+            type="button"
+            className={
+              viewMode === "list" ? primaryButtonClassName : secondaryButtonClassName
+            }
+            onClick={() => setSearchParams({})}
+          >
+            List
+          </button>
+          <button
+            type="button"
+            className={
+              viewMode === "grid" ? primaryButtonClassName : secondaryButtonClassName
+            }
+            onClick={() => setSearchParams({ view: "grid" })}
+          >
+            Grid
+          </button>
+        </div>
         {loading && models.length === 0 ? (
           <LoadingState label="Loading local model state…" />
         ) : models.length === 0 ? (
           <EmptyState label="No models currently loaded. Send a request or load a model manually." />
+        ) : viewMode === "grid" ? (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {models.map((model) => (
+              <div
+                key={model.modelId}
+                className="border border-[var(--rm-border)] bg-[var(--rm-surface)] p-4"
+              >
+                <div className="mb-3 flex items-center justify-between">
+                  <span className="font-mono text-xs uppercase tracking-wider text-[var(--rm-accent)]">
+                    {model.engine}
+                  </span>
+                  <StatusPill tone="success">Loaded</StatusPill>
+                </div>
+                <p className="mb-2 break-all font-mono text-sm text-[var(--rm-fg)]">
+                  {model.modelId}
+                </p>
+                <p className="text-xs text-[var(--rm-muted)]">
+                  Loaded: {new Date(model.loadedAt).toLocaleString()}
+                </p>
+              </div>
+            ))}
+          </div>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {models.map((model) => (

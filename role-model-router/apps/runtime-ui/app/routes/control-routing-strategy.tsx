@@ -26,10 +26,13 @@ import {
   type RuntimeConfig,
   type RuntimeConfigRecord,
   type RuntimeControllerAssignment,
+  type RuntimeSnapshot,
   fetchControllerAssignment,
   fetchRuntimeConfig,
+  fetchRuntimeSnapshot,
   updateRuntimeConfig,
 } from "../lib/runtime-api";
+import { countActiveEndpointModels } from "../lib/view-models";
 
 type RoutingStrategyChoice = RuntimeRoutingMode | "unset" | "custom";
 type RuntimeExecutionMode = NonNullable<RuntimeConfig["executionMode"]>;
@@ -127,6 +130,7 @@ function applyExecutionMode(config: RuntimeConfig, executionMode: RuntimeExecuti
 
 export default function ControlRoutingStrategyRoute() {
   const [configRecord, setConfigRecord] = useState<RuntimeConfigRecord | null>(null);
+  const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(null);
   const [controller, setController] = useState<RuntimeControllerAssignment | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -145,9 +149,10 @@ export default function ControlRoutingStrategyRoute() {
   }, []);
 
   const loadState = useCallback(async () => {
-    void Promise.all([fetchRuntimeConfig(), fetchControllerAssignment()])
-      .then(([nextConfigRecord, nextController]) => {
+    void Promise.all([fetchRuntimeConfig(), fetchRuntimeSnapshot(), fetchControllerAssignment()])
+      .then(([nextConfigRecord, nextSnapshot, nextController]) => {
         setConfigRecord(nextConfigRecord);
+        setSnapshot(nextSnapshot);
         setController(nextController);
         syncDrafts(nextConfigRecord);
         setError(null);
@@ -168,7 +173,7 @@ export default function ControlRoutingStrategyRoute() {
       <Link className={secondaryButtonClassName} to="/app/system/runtime-config">
         Advanced config
       </Link>
-      <Link className={secondaryButtonClassName} to="/app/router/config">
+      <Link className={secondaryButtonClassName} to="/app/router">
         Router detail
       </Link>
     </>,
@@ -178,11 +183,17 @@ export default function ControlRoutingStrategyRoute() {
   if (error) {
     return <ErrorState label={error} />;
   }
-  if (!configRecord) {
+  if (!configRecord || !snapshot) {
     return <LoadingState label="Loading routing strategy posture…" />;
   }
 
   const config = configRecord.config ?? createDefaultRuntimeConfig();
+  const activeEndpointModels = countActiveEndpointModels(snapshot.endpoints);
+  const configLocalModelCount = config.llamaSwap.models.length;
+  const configRemoteMappingCount = config.liteLLM.providers.reduce(
+    (count, provider) => count + provider.modelMappings.length,
+    0,
+  );
   const selectedStrategyDetails = (() => {
     if (selectedRoutingStrategy === "unset") {
       return {
@@ -425,7 +436,13 @@ export default function ControlRoutingStrategyRoute() {
               Local models
             </p>
             <p className="mt-2 text-sm font-medium text-[var(--rm-fg)]">
-              {config.llamaSwap.models.length}
+              {activeEndpointModels.localModelCount}
+            </p>
+            <p className="mt-2 text-sm text-[var(--rm-secondary)]">
+              Active local models with registry endpoints.
+              {configLocalModelCount > 0
+                ? ` Runtime config also declares ${configLocalModelCount} llama-swap model${configLocalModelCount === 1 ? "" : "s"}.`
+                : ""}
             </p>
           </div>
           <div className={`${mutedPanelClassName} p-4`}>
@@ -433,10 +450,13 @@ export default function ControlRoutingStrategyRoute() {
               Remote mappings
             </p>
             <p className="mt-2 text-sm font-medium text-[var(--rm-fg)]">
-              {config.liteLLM.providers.reduce(
-                (count, provider) => count + provider.modelMappings.length,
-                0,
-              )}
+              {activeEndpointModels.remoteModelCount}
+            </p>
+            <p className="mt-2 text-sm text-[var(--rm-secondary)]">
+              Active remote models with registry endpoints.
+              {configRemoteMappingCount > 0
+                ? ` Runtime config also declares ${configRemoteMappingCount} LiteLLM mapping${configRemoteMappingCount === 1 ? "" : "s"}.`
+                : ""}
             </p>
           </div>
         </div>
@@ -450,7 +470,7 @@ export default function ControlRoutingStrategyRoute() {
           </Link>
           <Link
             className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}
-            to="/app/router/config"
+            to="/app/router"
           >
             <span className="block font-medium text-[var(--rm-fg)]">Router detail</span>
             Inspect routing provenance, controller guidance, and policy inputs.

@@ -116,8 +116,12 @@ const designSystemDocSource = readFileSync(
   "utf8",
 );
 const designSystemSource = readFileSync(new URL("./design-system.ts", import.meta.url), "utf8");
-const futureSurfaceSource = readFileSync(
-  new URL("../components/future-surface.tsx", import.meta.url),
+const dashboardRouteSource = readFileSync(
+  new URL("../routes/dashboard.tsx", import.meta.url),
+  "utf8",
+);
+const observeActivityRouteSource = readFileSync(
+  new URL("../routes/observe-activity.tsx", import.meta.url),
   "utf8",
 );
 const appLayoutSource = readFileSync(new URL("../routes/app-layout.tsx", import.meta.url), "utf8");
@@ -160,7 +164,6 @@ describe("runtime design system", () => {
           "/app/local/swap",
           "/app/local/policy",
           "/app/local/logs",
-          "/app/local/matrix",
         ],
       },
       {
@@ -177,7 +180,6 @@ describe("runtime design system", () => {
           "/app/router",
           "/app/router/strategy",
           "/app/router/controller",
-          "/app/router/config",
           "/app/router/candidates",
           "/app/router/decisions",
         ],
@@ -187,8 +189,8 @@ describe("runtime design system", () => {
         routes: ["/app/observe/activity", "/app/observe/requests", "/app/observe/logs"],
       },
       {
-        title: "Endpoints",
-        routes: ["/app/endpoints", "/app/endpoints/downstream", "/app/endpoints/upstream"],
+        title: "Connect",
+        routes: ["/app/connect", "/app/connect/downstream", "/app/connect/upstream"],
       },
       {
         title: "System",
@@ -269,6 +271,32 @@ describe("runtime design system", () => {
       expect.objectContaining({
         id: "system-runtime",
         template: "system-topology",
+      }),
+    );
+    expect(getRuntimeRouteDefinition("/app/connect")).toEqual(
+      expect.objectContaining({
+        id: "connect-registry",
+        label: "Registry",
+        section: "Connect",
+        title: "Available models & endpoints",
+      }),
+    );
+    expect(getRuntimeRouteDefinition("/app/connect/downstream")).toEqual(
+      expect.objectContaining({
+        id: "connect-downstream",
+        section: "Connect",
+        title: "Connect your application",
+      }),
+    );
+    expect(getRuntimeRouteDefinition("/app/endpoints")).toEqual(
+      expect.objectContaining({
+        id: "connect-registry",
+        section: "Connect",
+      }),
+    );
+    expect(getRuntimeRouteDefinition("/app/endpoints/downstream")).toEqual(
+      expect.objectContaining({
+        id: "connect-downstream",
       }),
     );
   });
@@ -355,7 +383,7 @@ describe("runtime design system", () => {
       "Open preserved UI",
     );
     expect(
-      renderRoute("/app/endpoints/upstream", createElement(IntegrationsUpstreamRoute)),
+      renderRoute("/app/connect/upstream", createElement(IntegrationsUpstreamRoute)),
     ).not.toContain("Open preserved UI");
     expect(renderRoute("/app/system/peers", createElement(SystemPeersRoute))).not.toContain(
       "Open raw health",
@@ -407,7 +435,7 @@ describe("runtime design system", () => {
 
   test("router implementation targets render repo-owned routing explanation surfaces", () => {
     expect(getRuntimeRouteDefinition("/app/router")?.title).toBe("Routing overview");
-    expect(getRuntimeRouteDefinition("/app/router/config")?.title).toBe("Routing config");
+    expect(getRuntimeRouteDefinition("/app/local/matrix")?.title).toBe("Model matrix");
     expect(getRuntimeRouteDefinition("/app/router/candidates")?.title).toBe(
       "Candidate inventory",
     );
@@ -419,12 +447,15 @@ describe("runtime design system", () => {
     expect(routerCandidatesRouteSource).toContain("Loading routing candidates");
   });
 
-  test("router, endpoints, and remote surfaces expose alias/readiness ownership instead of generic filler", () => {
+  test("router, connect registry, and remote surfaces expose alias/readiness ownership instead of generic filler", () => {
     expect(routerRouteSource).toContain("Alias inventory");
     expect(routerRouteSource).toContain("Execution-ready aliases");
+    expect(routerRouteSource).toContain("Guidance provenance");
+    expect(routerRouteSource).toContain("Policy inputs");
     expect(routerRouteSource).not.toContain("Control remains the editing surface");
-    expect(endpointsRouteSource).toContain("Alias readiness");
-    expect(endpointsRouteSource).toContain("Alias coverage");
+    expect(endpointsRouteSource).not.toContain("Alias readiness");
+    expect(endpointsRouteSource).not.toContain("Alias coverage");
+    expect(endpointsRouteSource).toContain("View alias posture");
     expect(providersRouteSource).toContain("LiteLLM");
     expect(providersRouteSource).toContain("Models.dev metadata");
     expect(providersRouteSource).not.toContain('providerKind === "local-engine"');
@@ -432,27 +463,38 @@ describe("runtime design system", () => {
 
   test("router routes preserve empty-state and observe-link affordances", () => {
     expect(routerRouteSource).toContain("LoadingState");
-    expect(routerConfigRouteSource).toContain("ErrorState");
     expect(routerCandidatesRouteSource).toContain("EmptyState");
     expect(routerDecisionsRouteSource).toContain("/app/router/decisions/");
     expect(routerDecisionDetailRouteSource).toContain("/app/observe/requests/");
   });
 
-  test("router config stays observational while routing strategy owns editing controls", () => {
-    expect(routerConfigRouteSource).not.toContain("Choose routing strategy");
-    expect(routerConfigRouteSource).toContain("formatRoutingModeLabel");
+  test("merged router overview stays observational while routing strategy owns editing controls", () => {
+    expect(routerRouteSource).not.toContain("updateRuntimeConfig");
+    expect(routerRouteSource).not.toContain("Save and apply strategy");
+    expect(routerRouteSource).toContain("Guidance provenance");
+    expect(routerRouteSource).toContain("Policy inputs");
+    expect(routerRouteSource).toContain("/app/router/strategy");
     expect(routingModeSource).toContain("Strategy A - Baseline");
-    expect(routingModeSource).toContain("Strategy B - Intelligent");
-    expect(routingModeSource).toContain("Strategy C - Difficulty");
-    expect(routerConfigRouteSource).not.toContain("Open workbench with strategy");
-    expect(routerConfigRouteSource).not.toContain("routingModeOverride");
-    expect(routerConfigRouteSource).toContain("/app/router/strategy");
-    expect(workbenchRouteSource).toContain("useLocation");
+    expect(controlRoutingStrategySource).toContain("updateRuntimeConfig");
+    expect(
+      runtimeNavigationSections
+        .find((section) => section.title === "Router")
+        ?.items.map((item) => item.id),
+    ).not.toContain("router-config");
     expect(
       runtimeNavigationSections
         .find((section) => section.title === "Router")
         ?.items.map((item) => item.id),
     ).not.toContain("router-decision-detail");
+  });
+
+  test("meta-guidance panels stay removed from overview and observe routes", () => {
+    expect(dashboardRouteSource).not.toContain("Reading order");
+    expect(requestsRouteSource).not.toContain("Inspection path");
+    expect(requestsRouteSource).not.toContain("Adjacent surfaces");
+    expect(observeActivityRouteSource).not.toContain("Reading order");
+    expect(routerConfigRouteSource).not.toContain("Editing boundary");
+    expect(routerConfigRouteSource).not.toContain("Where to edit");
   });
 
   test("design system doc marks the converted pages as live routes", () => {
@@ -467,7 +509,7 @@ describe("runtime design system", () => {
     expect(designSystemDocSource).toContain("| `/app/models/roles` | live | `registry-detail` |");
     expect(designSystemDocSource).toContain("| `/app/router` | live | `registry-detail` |");
     expect(designSystemDocSource).toContain("| `/app/router/controller` | live | `registry-detail` |");
-    expect(designSystemDocSource).toContain("| `/app/router/config` | live | `registry-detail` |");
+    expect(designSystemDocSource).not.toContain("| `/app/router/config` | live | `registry-detail` |");
     expect(designSystemDocSource).toContain(
       "| `/app/router/candidates` | live | `ledger-inspector` |",
     );
@@ -485,11 +527,11 @@ describe("runtime design system", () => {
       "| `/app/studio/advanced` | live | `studio-workspace` |",
     );
     expect(designSystemDocSource).toContain(
-      "| `/app/endpoints/upstream` | live | `contract-reference` |",
+      "| `/app/connect/upstream` | live | `contract-reference` |",
     );
-    expect(designSystemDocSource).toContain("| `/app/endpoints` | live | `registry-detail` |");
+    expect(designSystemDocSource).toContain("| `/app/connect` | live | `registry-detail` |");
     expect(designSystemDocSource).toContain(
-      "| `/app/endpoints/downstream` | live | `contract-reference` |",
+      "| `/app/connect/downstream` | live | `contract-reference` |",
     );
     expect(designSystemDocSource).toContain("| `/app/system/peers` | live | `system-topology` |");
     expect(designSystemDocSource).not.toContain("| `/app/studio/images` | implementation target |");
@@ -563,7 +605,7 @@ describe("runtime design system", () => {
     expect(localPeersSource).toContain("OpenAI-compatible peer endpoints");
     expect(localPeersSource).toContain("Add endpoint");
     expect(endpointsRouteSource).toContain("/app/local/endpoints");
-    expect(endpointsRouteSource).toContain("/app/local/models");
+    expect(endpointsRouteSource).toContain("/app/connect/downstream");
     expect(controlModelsSource).toContain("/app/local/models");
     expect(controlModelsSource).toContain("/app/local/endpoints");
   });
@@ -606,6 +648,8 @@ describe("runtime design system", () => {
     expect(shellHeaderContextSource).toContain("usePageActions");
     expect(shellHeaderContextSource).toContain("useShellHeaderOverride");
     expect(pagePrimitivesSource).not.toContain("PageHeader");
+    expect(pagePrimitivesSource).not.toContain("h-px w-8");
+    expect(appShellSource).not.toContain("pages");
     expect(designSystemDocSource).toContain("only** route-level header");
     expect(designSystemDocSource).not.toContain("`PageHeader` begins");
     expect(designSystemDocSource).not.toMatch(/Section.*Template.*Route/i);
@@ -649,9 +693,8 @@ describe("runtime design system", () => {
       }),
     );
     expect(Object.keys(getRuntimeRouteDefinition("/app") ?? {})).not.toContain("eyebrow");
-    expect(futureSurfaceSource).not.toContain("eyebrow:");
-    expect(futureSurfaceSource).not.toContain("title: string");
-    expect(futureSurfaceSource).not.toContain("description: string");
+    expect(pagePrimitivesSource).toContain("DisclosureSection");
+    expect(requestDetailRouteSource).toContain("DisclosureSection");
     expect(designSystemDocSource).toContain(
       "usePageActions()` only — not `RuntimeRouteDefinition`",
     );

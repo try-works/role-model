@@ -205,12 +205,13 @@ export async function main(): Promise<void> {
     scopeId: options.scopeId,
     unifiedRuntimeConfigPath: options.unifiedRuntimeConfigPath,
   });
+  const staticRoot = args.values["static-root"]?.trim() || options.staticRoot;
   const server = await startBridgeServer(
     createCliServerOptions(
       {
         host: options.host,
         port: options.port,
-        staticRoot: options.staticRoot,
+        staticRoot,
       },
       backend,
     ),

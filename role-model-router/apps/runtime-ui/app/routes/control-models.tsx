@@ -5,6 +5,7 @@ import {
   CodeBlock,
   EmptyState,
   ErrorState,
+  DisclosureSection,
   FactCard,
   LoadingState,
   SectionCard,
@@ -361,7 +362,7 @@ export default function ControlModelsRoute() {
               </button>
             </div>
 
-            <div className="mt-6 grid gap-4 xl:grid-cols-2">
+            <div className="mt-6 space-y-4">
               <div className={`${mutedPanelClassName} p-4`}>
                 <p className="font-medium text-[var(--rm-fg)]">Roles and controller</p>
                 <div className="mt-3 flex flex-wrap gap-2">
@@ -387,75 +388,6 @@ export default function ControlModelsRoute() {
               </div>
 
               <div className={`${mutedPanelClassName} p-4`}>
-                <p className="font-medium text-[var(--rm-fg)]">Capabilities</p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {selectedCapabilities.length === 0 ? (
-                    <StatusPill tone="warning">No declared capabilities</StatusPill>
-                  ) : (
-                    selectedCapabilities.map((capability) => (
-                      <StatusPill key={capability} tone="neutral">
-                        {capability}
-                      </StatusPill>
-                    ))
-                  )}
-                </div>
-              </div>
-
-              <div className={`${mutedPanelClassName} p-4`}>
-                <p className="font-medium text-[var(--rm-fg)]">Metrics</p>
-                <div className="mt-3 grid gap-3 md:grid-cols-2 text-sm text-[var(--rm-secondary)]">
-                  <p>
-                    <span className="font-medium text-[var(--rm-fg)]">Requests observed:</span>{" "}
-                    {selectedCard.requestCount}
-                  </p>
-                  <p>
-                    <span className="font-medium text-[var(--rm-fg)]">Configured endpoints:</span>{" "}
-                    {selectedCard.endpointCount}
-                  </p>
-                  <p>
-                    <span className="font-medium text-[var(--rm-fg)]">Source mix:</span>{" "}
-                    {selectedCard.sourceSummary}
-                  </p>
-                  <p>
-                    <span className="font-medium text-[var(--rm-fg)]">Status:</span>{" "}
-                    {selectedCard.status}
-                  </p>
-                </div>
-              </div>
-
-              <div className={`${mutedPanelClassName} p-4`}>
-                <p className="font-medium text-[var(--rm-fg)]">Model specifications</p>
-                <div className="mt-3 grid gap-3 md:grid-cols-2 text-sm text-[var(--rm-secondary)]">
-                  {selectedMetadataRows.map((row) => (
-                    <p key={row.label}>
-                      <span className="font-medium text-[var(--rm-fg)]">{row.label}:</span>{" "}
-                      {row.value}
-                    </p>
-                  ))}
-                </div>
-              </div>
-
-              <div className={`${mutedPanelClassName} p-4`}>
-                <p className="font-medium text-[var(--rm-fg)]">Tooling / MCP</p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <StatusPill tone={selectedCard.toolCallingSupported ? "success" : "warning"}>
-                    {selectedCard.toolCallingSupported
-                      ? "tool calling enabled"
-                      : "tool calling unavailable"}
-                  </StatusPill>
-                  {selectedToolStyles.map((style) => (
-                    <StatusPill key={style} tone="neutral">
-                      {style}
-                    </StatusPill>
-                  ))}
-                </div>
-                <p className="mt-3 text-sm text-[var(--rm-secondary)]">
-                  MCP-backed execution is reflected through runtime tool receipts when the selected
-                  endpoint supports tool calling.
-                </p>
-              </div>
-
-              <div className={`${mutedPanelClassName} p-4 xl:col-span-2`}>
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <p className="font-medium text-[var(--rm-fg)]">Backing account role bindings</p>
@@ -530,6 +462,67 @@ export default function ControlModelsRoute() {
                   </div>
                 )}
               </div>
+
+              <DisclosureSection summary="Capabilities">
+                <div className="flex flex-wrap gap-2">
+                  {selectedCapabilities.length === 0 ? (
+                    <StatusPill tone="warning">No declared capabilities</StatusPill>
+                  ) : (
+                    selectedCapabilities.map((capability) => (
+                      <StatusPill key={capability} tone="neutral">
+                        {capability}
+                      </StatusPill>
+                    ))
+                  )}
+                </div>
+              </DisclosureSection>
+
+              <DisclosureSection summary="Metrics">
+                <div className="grid gap-3 md:grid-cols-2 text-sm text-[var(--rm-secondary)]">
+                  <p>
+                    <span className="font-medium text-[var(--rm-fg)]">Requests observed:</span>{" "}
+                    {selectedCard.requestCount}
+                  </p>
+                  <p>
+                    <span className="font-medium text-[var(--rm-fg)]">Configured endpoints:</span>{" "}
+                    {selectedCard.endpointCount}
+                  </p>
+                  <p>
+                    <span className="font-medium text-[var(--rm-fg)]">Source mix:</span>{" "}
+                    {selectedCard.sourceSummary}
+                  </p>
+                  <p>
+                    <span className="font-medium text-[var(--rm-fg)]">Status:</span>{" "}
+                    {selectedCard.status}
+                  </p>
+                </div>
+              </DisclosureSection>
+
+              <DisclosureSection summary="Model specifications">
+                <div className="grid gap-3 md:grid-cols-2 text-sm text-[var(--rm-secondary)]">
+                  {selectedMetadataRows.map((row) => (
+                    <p key={row.label}>
+                      <span className="font-medium text-[var(--rm-fg)]">{row.label}:</span>{" "}
+                      {row.value}
+                    </p>
+                  ))}
+                </div>
+              </DisclosureSection>
+
+              <DisclosureSection summary="Tooling / MCP">
+                <div className="flex flex-wrap gap-2">
+                  <StatusPill tone={selectedCard.toolCallingSupported ? "success" : "warning"}>
+                    {selectedCard.toolCallingSupported
+                      ? "tool calling enabled"
+                      : "tool calling unavailable"}
+                  </StatusPill>
+                  {selectedToolStyles.map((style) => (
+                    <StatusPill key={style} tone="neutral">
+                      {style}
+                    </StatusPill>
+                  ))}
+                </div>
+              </DisclosureSection>
             </div>
 
             <div className="mt-4 flex flex-wrap gap-3">

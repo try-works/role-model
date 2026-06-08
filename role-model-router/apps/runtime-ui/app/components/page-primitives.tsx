@@ -22,7 +22,6 @@ export function SectionCard({
   return (
     <section className={cn(`${cardClassName} px-5 py-5 md:px-6 md:py-6`, className)}>
       <div className="mb-5 border-b border-[var(--rm-border)] pb-4">
-        <div className="mb-3 h-px w-8 bg-[var(--rm-border-strong)]" />
         <h2 className="text-lg font-normal text-[var(--rm-fg)]">{title}</h2>
         {description ? (
           <p className="mt-2 max-w-[60ch] text-sm leading-6 text-[var(--rm-secondary)]">
@@ -133,5 +132,27 @@ export function ErrorState({ label }: { label: string }) {
 
 export function CodeBlock({ children, className }: { children: ReactNode; className?: string }) {
   return <pre className={cn(codeBlockClassName, className)}>{children}</pre>;
+}
+
+export function DisclosureSection({
+  summary,
+  children,
+  defaultOpen = false,
+}: {
+  summary: string;
+  children: ReactNode;
+  defaultOpen?: boolean;
+}) {
+  return (
+    <details
+      className={`${cardClassName} px-5 py-4 md:px-6`}
+      open={defaultOpen ? true : undefined}
+    >
+      <summary className="cursor-pointer list-none text-lg font-normal text-[var(--rm-fg)] marker:content-none [&::-webkit-details-marker]:hidden">
+        {summary}
+      </summary>
+      <div className="mt-4 border-t border-[var(--rm-border)] pt-4">{children}</div>
+    </details>
+  );
 }
 

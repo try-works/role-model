@@ -676,8 +676,8 @@ export default function ProvidersRoute() {
                 </>
               ) : null}
 
-              <Link className={secondaryButtonClassName} to="/app/endpoints">
-                Review endpoints
+              <Link className={secondaryButtonClassName} to="/app/connect">
+                View in Connect registry
               </Link>
             </div>
           </form>

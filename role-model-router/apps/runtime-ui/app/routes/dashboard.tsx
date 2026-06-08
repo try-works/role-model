@@ -67,22 +67,12 @@ export default function DashboardRoute() {
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {statCards.map((card, index) => (
-          <FactCard
-            key={card.label}
-            label={card.label}
-            value={card.value}
-            detail={card.detail}
-            emphasis={index === 0}
-          />
+          <FactCard key={card.label} label={card.label} value={card.value} emphasis={index === 0} />
         ))}
       </div>
 
       <div className="grid grid-cols-12 gap-4">
-        <SectionCard
-          className="col-span-12 xl:col-span-8"
-          title="Endpoint comparison"
-          description="Canonical telemetry rows group local and remote request volume, latency, cache posture, and cost into one comparison rail."
-        >
+        <SectionCard className="col-span-12 xl:col-span-8" title="Endpoint comparison">
           {comparisonCards.length === 0 ? (
             <EmptyState label="No telemetry comparison rows are available yet." />
           ) : (
@@ -124,69 +114,30 @@ export default function DashboardRoute() {
         </SectionCard>
 
         <div className="col-span-12 space-y-4 xl:col-span-4">
-          <SectionCard
-            title="Latest requests"
-            description="The freshest structured request rows stay adjacent to the comparison board and refresh via SSE."
-          >
-            <div className="space-y-3">
-              {requestRows.slice(0, 5).map((request) => (
-                <div key={request.requestId} className={`${mutedPanelClassName} p-4`}>
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="font-medium text-[var(--rm-fg)]">{request.requestId}</p>
-                      <p className="text-sm text-[var(--rm-secondary)]">{request.endpointId}</p>
-                    </div>
-                    <StatusPill tone={request.sourceLabel === "Remote" ? "accent" : "neutral"}>
-                      {request.sourceLabel}
-                    </StatusPill>
-                  </div>
-                  <p className="mt-3 text-sm text-[var(--rm-secondary)]">
-                    {request.statusLabel} • {request.latencyLabel} • {request.tokenLabel}
-                  </p>
-                  <p className="mt-1 text-sm text-[var(--rm-secondary)]">
-                    {request.providerFamilyLabel} • {request.finishReasonLabel} •{" "}
-                    {request.cacheLabel}
-                  </p>
-                  <div className="mt-3 flex items-center justify-between gap-3">
-                    <span className="text-xs uppercase tracking-[0.24em] text-[var(--rm-muted)]">
-                      {request.createdAtLabel}
+          <SectionCard title="Latest requests">
+            {requestRows.length === 0 ? (
+              <EmptyState label="No recent requests yet." />
+            ) : (
+              <div className="space-y-2">
+                {requestRows.slice(0, 3).map((request) => (
+                  <div
+                    key={request.requestId}
+                    className={`${mutedPanelClassName} flex items-center justify-between gap-3 p-3 text-sm`}
+                  >
+                    <span className="font-medium text-[var(--rm-fg)]">{request.requestId}</span>
+                    <span className="text-[var(--rm-secondary)]">
+                      {request.statusLabel} • {request.latencyLabel}
                     </span>
-                    <Link
-                      className="text-sm font-medium text-[var(--rm-accent)]"
-                      to={`/app/observe/requests/${request.requestId}`}
-                    >
-                      Inspect
-                    </Link>
                   </div>
-                </div>
-              ))}
-            </div>
-          </SectionCard>
-
-          <SectionCard
-            title="Reading order"
-            description="Structured telemetry leads; preserved raw host tooling remains adjacent."
-          >
-            <div className="space-y-3">
-              <div className={`${mutedPanelClassName} p-4`}>
-                <p className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]">
-                  Canonical first
-                </p>
-                <p className="mt-3 max-w-[28ch] text-sm leading-6 text-[var(--rm-secondary)]">
-                  Overview now leads with structured role-model telemetry. Use Requests for the full
-                  ledger and request inspector.
-                </p>
+                ))}
               </div>
-              <div className={`${mutedPanelClassName} p-4`}>
-                <p className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]">
-                  Raw adjacency
-                </p>
-                <p className="mt-3 max-w-[28ch] text-sm leading-6 text-[var(--rm-secondary)]">
-                  Observe &gt; Activity stays available for raw host metrics and captures when you
-                  need preserved llama-swap operator detail.
-                </p>
-              </div>
-            </div>
+            )}
+            <Link
+              className="mt-4 inline-block text-sm font-medium text-[var(--rm-accent)]"
+              to="/app/observe/requests"
+            >
+              View all requests →
+            </Link>
           </SectionCard>
         </div>
       </div>

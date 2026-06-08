@@ -353,6 +353,15 @@ export async function packageSeaRuntime(): Promise<{
     throw new Error(`Unsupported runtime packaging target: ${process.platform}-${process.arch}`);
   }
   const releaseTarget = `${buildTarget.platform}-${buildTarget.arch}`;
+  runOrThrow(
+    process.execPath,
+    [
+      path.join(repoRoot, "node_modules", "typescript", "bin", "tsc"),
+      "-p",
+      path.join(routerRoot, "apps", "runtime-host-bridge", "tsconfig.json"),
+    ],
+    repoRoot,
+  );
   await buildLlamaSwapAsset(buildTarget);
   await mkdir(distRoot, { recursive: true });
   await bundleSeaEntrypoint();

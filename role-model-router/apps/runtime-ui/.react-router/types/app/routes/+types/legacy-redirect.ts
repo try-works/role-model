@@ -61,6 +61,15 @@ type Matches = [{
   id: "routes/app-layout";
   module: typeof import("../app-layout.js");
 }, {
+  id: "legacy-endpoints";
+  module: typeof import("../legacy-redirect.js");
+}] | [{
+  id: "root";
+  module: typeof import("../../root.js");
+}, {
+  id: "routes/app-layout";
+  module: typeof import("../app-layout.js");
+}, {
   id: "legacy-control-endpoints";
   module: typeof import("../legacy-redirect.js");
 }] | [{
@@ -88,7 +97,25 @@ type Matches = [{
   id: "routes/app-layout";
   module: typeof import("../app-layout.js");
 }, {
+  id: "legacy-endpoints-downstream";
+  module: typeof import("../legacy-redirect.js");
+}] | [{
+  id: "root";
+  module: typeof import("../../root.js");
+}, {
+  id: "routes/app-layout";
+  module: typeof import("../app-layout.js");
+}, {
   id: "legacy-integrations-downstream";
+  module: typeof import("../legacy-redirect.js");
+}] | [{
+  id: "root";
+  module: typeof import("../../root.js");
+}, {
+  id: "routes/app-layout";
+  module: typeof import("../app-layout.js");
+}, {
+  id: "legacy-endpoints-upstream";
   module: typeof import("../legacy-redirect.js");
 }] | [{
   id: "root";

@@ -519,6 +519,40 @@ export function buildEndpointCatalogRows(endpoints: readonly RuntimeEndpoint[]):
     .sort((left, right) => sortLexical(left.endpointId, right.endpointId));
 }
 
+export function countActiveEndpointModels(endpoints: readonly RuntimeEndpoint[]): {
+  readonly localModelCount: number;
+  readonly remoteModelCount: number;
+  readonly localEndpointCount: number;
+  readonly remoteEndpointCount: number;
+} {
+  const localModelIds = new Set<string>();
+  const remoteModelIds = new Set<string>();
+  let localEndpointCount = 0;
+  let remoteEndpointCount = 0;
+
+  for (const endpoint of endpoints) {
+    if (endpoint.status && endpoint.status !== "active") {
+      continue;
+    }
+    if (endpoint.sourceType === "local") {
+      localEndpointCount += 1;
+      localModelIds.add(endpoint.modelId);
+      continue;
+    }
+    if (endpoint.sourceType === "remote") {
+      remoteEndpointCount += 1;
+      remoteModelIds.add(endpoint.modelId);
+    }
+  }
+
+  return {
+    localModelCount: localModelIds.size,
+    remoteModelCount: remoteModelIds.size,
+    localEndpointCount,
+    remoteEndpointCount,
+  };
+}
+
 export function buildAliasReadinessRows(
   aliases: readonly RuntimeModelAlias[],
   endpoints: readonly RuntimeEndpoint[],

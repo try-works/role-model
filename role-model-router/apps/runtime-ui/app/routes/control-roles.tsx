@@ -395,7 +395,7 @@ export default function ControlRolesRoute() {
       <Link className={secondaryButtonClassName} to="/app/models">
         Model bindings
       </Link>
-      <Link className={secondaryButtonClassName} to="/app/router/config">
+      <Link className={secondaryButtonClassName} to="/app/router">
         Routing config
       </Link>
     </>,

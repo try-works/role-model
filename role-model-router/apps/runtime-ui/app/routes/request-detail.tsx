@@ -3,6 +3,7 @@ import { useParams } from "react-router";
 
 import {
   CodeBlock,
+  DisclosureSection,
   EmptyState,
   ErrorState,
   FactCard,
@@ -365,11 +366,8 @@ export default function RequestDetailRoute() {
         </SectionCard>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[0.85fr_1.15fr]">
-        <SectionCard
-          title="Routing receipts"
-          description="First-class routing observations show the exact mode, rewrite posture, and arbitration details that shaped endpoint selection."
-        >
+      <div className="space-y-4">
+        <DisclosureSection summary="Routing receipts">
           <dl className="grid gap-x-6 gap-y-3 text-sm md:grid-cols-2">
             {[
               [
@@ -398,23 +396,16 @@ export default function RequestDetailRoute() {
               </div>
             ))}
           </dl>
-        </SectionCard>
+        </DisclosureSection>
 
-        <SectionCard
-          title="Routing diagnostics bundle"
-          description="Keep the raw routingDiagnostics receipt adjacent to the normalized summary for deeper arbitration and rewrite debugging."
-        >
+        <DisclosureSection summary="Routing diagnostics bundle">
           <CodeBlock>
             {JSON.stringify({ routingDiagnostics, hybridArbitration }, null, 2)}
           </CodeBlock>
-        </SectionCard>
+        </DisclosureSection>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[0.8fr_1.2fr]">
-        <SectionCard
-          title="Tooling"
-          description="Tool calls, execution receipts, and tooling diagnostics from persisted runtime observability."
-        >
+      <DisclosureSection summary="Tooling">
           <div className="space-y-4">
             <div>
               <div className="flex items-center justify-between">
@@ -488,14 +479,9 @@ export default function RequestDetailRoute() {
               <CodeBlock>{JSON.stringify(toolDiagnostics, null, 2)}</CodeBlock>
             ) : null}
           </div>
-        </SectionCard>
-      </div>
+      </DisclosureSection>
 
-      <div className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
-        <SectionCard
-          title="Captures and profile"
-          description="Preserved request/response captures plus the linked endpoint profile remain available as secondary debug surfaces."
-        >
+      <DisclosureSection summary="Captures and profile">
           <div className="space-y-4">
             <div className="grid gap-4 xl:grid-cols-2">
               <div>
@@ -512,15 +498,11 @@ export default function RequestDetailRoute() {
               <CodeBlock>{JSON.stringify({ latestProfile, recentSamples }, null, 2)}</CodeBlock>
             </div>
           </div>
-        </SectionCard>
+      </DisclosureSection>
 
-        <SectionCard
-          title="Raw observation bundle"
-          description="The full persisted request observation stays visible for low-level debugging and audit trails."
-        >
-          <CodeBlock>{JSON.stringify(detail.request, null, 2)}</CodeBlock>
-        </SectionCard>
-      </div>
+      <DisclosureSection summary="Raw observation bundle">
+        <CodeBlock>{JSON.stringify(detail.request, null, 2)}</CodeBlock>
+      </DisclosureSection>
     </div>
   );
 }

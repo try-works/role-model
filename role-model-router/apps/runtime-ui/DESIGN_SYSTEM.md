@@ -112,7 +112,7 @@ The runtime hierarchy remains:
 | Remote | LiteLLM-backed remote provider onboarding and remote model availability | `/app/remote/*` |
 | Models | Unified configured-model inventory and runtime role policy surfaces | `/app/models*` |
 | Router | Routing explanation, policy visibility, candidate comparison, and decision drill-in | `/app/router/*` |
-| Endpoints | Endpoint inventory plus downstream and upstream contract surfaces | `/app/endpoints*` |
+| Connect | How client applications use role-model as an inference provider: registry, downstream contract, upstream passthrough | `/app/connect*` |
 | Observe | Request ledgers, raw host activity, logs, metrics, and captures | `/app/observe/*` |
 | System | Host/runtime topology, peer inventory, version, auth, and policy posture | `/app/system/*` |
 
@@ -142,7 +142,6 @@ The runtime hierarchy remains:
 | `/app/router` | live | `registry-detail` | First-class routing overview that summarizes active posture, recent decisions, and operator handoff into config, candidates, and decision interpretation. |
 | `/app/router/strategy` | live | `registry-detail` | Structured routing-strategy posture for execution mode, controller state, and handoff into advanced config plus request verification. |
 | `/app/router/controller` | live | `registry-detail` | Explicit controller assignment with candidate health, source type, role coverage, tooling posture, and an honest empty state before any endpoint is activated. |
-| `/app/router/config` | live | `registry-detail` | Consolidated routing configuration and provenance surface across strategy, execution mode, controller, and policy-source context. |
 | `/app/router/candidates` | live | `ledger-inspector` | Unified local and remote candidate inventory with health, role coverage, and observed routing-signal posture. |
 | `/app/router/decisions` | live | `ledger-inspector` | Explainable routing decision ledger keyed by request identity with direct drill-in to policy and scoring detail. |
 | `/app/router/decisions/:requestId` | live | `ledger-inspector` | Request-keyed routing decision explanation with scored candidates, diagnostics, and Observe request-detail handoff. |
@@ -151,14 +150,14 @@ The runtime hierarchy remains:
 | `/app/local/swap` | live | `ledger-inspector` | Swap event ledger: chronological log of model swaps with timestamp, old/new model, and reason (request-driven or manual). |
 | `/app/local/policy` | live | `registry-detail` | Local host policy: TTL configuration, auto-unload toggle, startPort, logLevel, and capture buffer settings. |
 | `/app/local/logs` | target | `dual-console` | Real-time log streaming from llama-swap: live `/logs/stream` feed, historical `/logs` buffer, proxy/upstream source toggle, auto-scroll. |
-| `/app/local/matrix` | target | `matrix-grid` | Concurrent model matrix: grid of loaded models with engine, memory, uptime; color-coded status; add/remove controls. |
-| `/app/endpoints` | live | `registry-detail` | Configured runtime registry for provider-model endpoint entries, health posture, alias visibility, and source visibility after provider onboarding. |
+| `/app/local/models?view=grid` | live | `matrix-grid` | Grid view on Local Models for concurrently loaded models; `/app/local/matrix` redirects here. |
+| `/app/connect` | live | `registry-detail` | Consumer-facing registry of models and endpoints client applications can call after provider onboarding. |
 | `/app/observe/activity` | live | `ledger-inspector` | Preserved raw-host activity ledger over `/api/metrics` with inline capture drill-ins from `/api/captures/:id` and adjacent access to `/api/events`. |
 | `/app/observe/requests` | live | `ledger-inspector` | Canonical telemetry request ledger over `/api/role-model/telemetry/requests` with latency, token, cache, and source context. |
 | `/app/observe/requests/:requestId` | live | `ledger-inspector` | Telemetry-first request inspector with usage, cache, captures, endpoint profile, tooling receipts, and raw observation detail. |
 | `/app/observe/logs` | live | `dual-console` | Repo-owned log shell with preserved `/logs` history plus split proxy/upstream consoles over `/logs/stream/*`. |
-| `/app/endpoints/downstream` | live | `contract-reference` | Downstream OpenAI-compatible contract, auth, model discovery, and tool-calling expectations. |
-| `/app/endpoints/upstream` | live | `contract-reference` | Upstream passthrough reference with model-specific upstream target inventory, boundary guidance, and contextual raw `/upstream/*` escape hatches. |
+| `/app/connect/downstream` | live | `contract-reference` | Downstream OpenAI-compatible contract, auth, model discovery, and tool-calling expectations for client applications. |
+| `/app/connect/upstream` | live | `contract-reference` | Upstream passthrough reference with model-specific upstream target inventory, boundary guidance, and contextual raw `/upstream/*` escape hatches. |
 | `/app/system/runtime` | live | `system-topology` | Runtime health, controller posture, version/provenance facts, host controls, validation floor, and vendor-policy summary. |
 | `/app/system/runtime-config` | live | `registry-detail` | Repo-owned editor for the unified runtime contract covering local llama-swap models, remote LiteLLM providers, and process policy. |
 | `/app/system/peers` | live | `system-topology` | Peer inventory and policy page for `peers` config, including remote model sources, auth posture, timeouts, request filters, matrix/group/runtime-policy relationships, and a real empty-state contract when no peers are configured. |
@@ -195,9 +194,9 @@ No current runtime route may rely on `FutureSurface`, fixture rows, or other pla
 | `model-inventory` | `/app/models` uses fact strips before a responsive configured-model card grid and an inspect-only modal. |
 | `ledger-inspector` | Requests and request detail lead with telemetry facts while Activity remains the raw-host adjacency surface for metrics, captures, and payload drill-ins. |
 | `dual-console` | `/app/observe/logs` and `/app/local/logs` start with combined history, then split proxy and upstream consoles into mirrored panes. |
-| `contract-reference` | `/app/endpoints/downstream` keeps connection facts in a narrow reference column and examples/compatibility in the larger contract pane. |
+| `contract-reference` | `/app/connect/downstream` keeps connection facts in a narrow reference column and examples/compatibility in the larger contract pane. |
 | `system-topology` | `/app/system/runtime` layers lifecycle, controller posture, live version facts, and preserved host diagnostics without extra note-only panels. |
-| `matrix-grid` | `/app/local/matrix` shows a dense status-first grid of concurrently loaded models with resource metrics and add/remove controls. |
+| `matrix-grid` | Local Models grid view shows a dense status-first grid of concurrently loaded models with engine and loaded state. |
 
 ## Live route layouts
 
@@ -230,7 +229,7 @@ These routes are no longer vague placeholder ideas. Their layout contracts are i
 - Secondary example/template panel
 - Only advanced families with real vendor/runtime backing belong here
 
-### `Endpoints > Upstream`
+### `Connect > Upstream`
 
 - Narrow contract/reference column
 - Larger model/upstream target inventory pane
@@ -347,7 +346,7 @@ Placement rules:
 - **Control > Runtime Config** owns editable local/remote runtime policy and model/provider metadata.
 - **Control > Models** owns inspect-first model inventory and links back to editable surfaces.
 - **Control > Models** and **Control > Controller** must render honest pre-activation empty states when the runtime has zero configured endpoints.
-- **Control > Endpoints** owns endpoint/runtime readiness and bound execution surfaces.
+- **Connect > Registry** owns consumer-facing endpoint/model visibility after onboarding; alias adjudication defers to **Router**.
 - **System > Runtime** owns global host policy and matrix summary.
 - **System > Peers** owns remote-peer config and upstream auth posture.
 
@@ -368,7 +367,9 @@ During the conversion window, some placeholder routes may still expose a context
 - `AppShell` owns the section rail, the shell header (eyebrow, title, description, optional actions), and the section-local tab row
 - `ShellHeaderProvider` plus `usePageActions()` and `useShellHeaderOverride()` let active routes register page-local actions or dynamic titles without reintroducing in-page header blocks
 - Route files must not render duplicate title/description blocks; metadata lives once in `RuntimeRouteDefinition`
-- `SectionCard` is the default sectional frame: one divider, one heading block, then content.
+- `SectionCard` is the default sectional frame: one heading block, then content.
+- `DisclosureSection` collapses dense secondary detail; default closed unless a route needs primary content expanded.
+- Copy budget: shell has no page counts; route `description` values stay one sentence (max 120 chars); ledger/meta routes omit `SectionCard.description` and non-essential `FactCard.detail`.
 - `FactCard` is the default live summary primitive for top-of-page fact strips; prefer 3-4 cards and emphasize only the primary one.
 - `CodeBlock` is the canonical payload/log container for mono transport artifacts.
 - Long ids, endpoint ids, and routes must wrap rather than overflow summary cards or metadata cells.
@@ -379,13 +380,7 @@ During the conversion window, some placeholder routes may still expose a context
 
 ### Temporary conversion scaffolds
 
-- `FutureSurface` is the only allowed temporary scaffold while an `implementation target` route is still being converted.
-- Scaffold pages rely on the shell header for route metadata; `FutureSurface` does not accept title or eyebrow props.
-- Every temporary scaffold must show:
-  - a template-specific blueprint
-  - a clear route-local conversion note block
-  - optional page actions via `usePageActions()` when raw-host doorways are relevant
-- Generic placeholder cards with no template reading order are not allowed.
+- Live routes must not rely on placeholder scaffolds; use honest empty states instead.
 
 ### Cards and panels
 

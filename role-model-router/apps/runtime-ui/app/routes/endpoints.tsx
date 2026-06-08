@@ -8,15 +8,13 @@ import {
   SectionCard,
   StatusPill,
 } from "../components/page-primitives";
-import { secondaryButtonClassName } from "../lib/design-system";
+import { mutedPanelClassName, secondaryButtonClassName } from "../lib/design-system";
 import {
-  type RuntimeConfigRecord,
   type RuntimeSnapshot,
   fetchRuntimeConfig,
   fetchRuntimeSnapshot,
 } from "../lib/runtime-api";
 import {
-  buildAliasReadinessRows,
   buildConfiguredProviderRows,
   buildCredentialReadinessRows,
   buildEndpointCatalogRows,
@@ -24,14 +22,12 @@ import {
 
 export default function EndpointsRoute() {
   const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(null);
-  const [configRecord, setConfigRecord] = useState<RuntimeConfigRecord | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     void Promise.all([fetchRuntimeSnapshot(), fetchRuntimeConfig()])
-      .then(([nextSnapshot, nextConfigRecord]) => {
+      .then(([nextSnapshot]) => {
         setSnapshot(nextSnapshot);
-        setConfigRecord(nextConfigRecord);
         setError(null);
       })
       .catch((value: unknown) =>
@@ -54,14 +50,6 @@ export default function EndpointsRoute() {
     () => (snapshot ? buildEndpointCatalogRows(snapshot.endpoints) : []),
     [snapshot],
   );
-  const aliasRows = useMemo(
-    () =>
-      buildAliasReadinessRows(
-        configRecord?.config?.modelAliases ?? configRecord?.config?.model_aliases ?? [],
-        snapshot?.endpoints ?? [],
-      ),
-    [configRecord, snapshot],
-  );
   const readinessRows = useMemo(
     () =>
       snapshot ? buildCredentialReadinessRows(snapshot.summary).filter((row) => row.value > 0) : [],
@@ -71,107 +59,55 @@ export default function EndpointsRoute() {
   if (error) {
     return <ErrorState label={error} />;
   }
-  if (!snapshot || !configRecord) {
+  if (!snapshot) {
     return <LoadingState label="Loading endpoint registry…" />;
   }
 
   return (
     <div className="space-y-6">
       {readinessRows.length > 0 ? (
-        <SectionCard
-          title="Provider onboarding readiness"
-          description="Saved provider accounts can still be pending OAuth, missing credentials, or connected without an activated endpoint."
+        <div
+          className={`${mutedPanelClassName} flex flex-wrap items-center gap-3 p-4 text-sm text-[var(--rm-secondary)]`}
         >
-          <div className="flex flex-wrap gap-3">
-            {readinessRows.map((row) => (
-              <StatusPill key={row.key} tone={row.tone}>
-                {row.label} {row.value}
-              </StatusPill>
-            ))}
-          </div>
-        </SectionCard>
-      ) : null}
-
-      <SectionCard
-        title="Alias readiness"
-        description="Alias coverage shows whether each model alias currently resolves to active local and remote endpoint rows."
-      >
-        {aliasRows.length === 0 ? (
-          <EmptyState label="No model aliases are configured yet." />
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-left text-sm">
-              <thead className="text-[var(--rm-muted)]">
-                <tr>
-                  <th className="pb-3 font-medium">Alias</th>
-                  <th className="pb-3 font-medium">Mode</th>
-                  <th className="pb-3 font-medium">Alias coverage</th>
-                  <th className="pb-3 font-medium">Endpoint mix</th>
-                  <th className="pb-3 font-medium">Readiness</th>
-                </tr>
-              </thead>
-              <tbody>
-                {aliasRows.map((row) => (
-                  <tr key={row.aliasId} className="border-t border-[var(--rm-border)]">
-                    <td className="py-3 font-medium text-[var(--rm-fg)]">{row.aliasId}</td>
-                    <td className="py-3 text-[var(--rm-secondary)]">{row.modeLabel}</td>
-                    <td className="py-3 text-[var(--rm-secondary)]">
-                      {row.modelIds.join(", ") || "—"}
-                    </td>
-                    <td className="py-3 text-[var(--rm-secondary)]">{row.sourceSummary}</td>
-                    <td className="py-3">
-                      <StatusPill
-                        tone={
-                          row.readinessLabel === "ready"
-                            ? "success"
-                            : row.readinessLabel === "degraded"
-                              ? "warning"
-                              : "neutral"
-                        }
-                      >
-                        {row.readinessLabel}
-                      </StatusPill>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-        <div className="mt-4 flex flex-wrap gap-3">
-          <Link className={secondaryButtonClassName} to="/app/router">
-            Open Router
+          <span className="font-medium text-[var(--rm-fg)]">Provider onboarding pending:</span>
+          {readinessRows.map((row) => (
+            <StatusPill key={row.key} tone={row.tone}>
+              {row.label} {row.value}
+            </StatusPill>
+          ))}
+          <Link className="text-[var(--rm-accent)]" to="/app/remote/providers">
+            Remote → Providers
           </Link>
-          <Link className={secondaryButtonClassName} to="/app/router/decisions">
-            Review routing decisions
+          <Link className="text-[var(--rm-accent)]" to="/app/system/runtime">
+            System → Runtime
           </Link>
         </div>
-      </SectionCard>
+      ) : null}
+
+      <div className="flex flex-wrap gap-3">
+        <Link className={secondaryButtonClassName} to="/app/router">
+          View alias posture → Router
+        </Link>
+      </div>
 
       {providerRows.length === 0 && endpointRows.length === 0 ? (
-        <SectionCard
-          title="No configured endpoints yet"
-          description="Remote providers are configured on the Providers page. Local llama-swap endpoints are added from Local > Endpoints."
-        >
+        <SectionCard title="No configured endpoints yet">
           <EmptyState label="No providers or endpoints are configured yet." />
           <div className="mt-4 flex flex-wrap gap-3">
             <Link className={secondaryButtonClassName} to="/app/remote/providers">
-              Open Providers
+              Remote → Providers
             </Link>
             <Link className={secondaryButtonClassName} to="/app/local/endpoints">
-              Open Local Endpoints
+              Local → Endpoints
             </Link>
-            <Link className={secondaryButtonClassName} to="/app/local/models">
-              Open Local Models
+            <Link className={secondaryButtonClassName} to="/app/connect/downstream">
+              Connect → Downstream
             </Link>
           </div>
         </SectionCard>
       ) : (
         <div className="grid gap-4 xl:grid-cols-[0.92fr_1.08fr]">
-          <SectionCard
-            title="Configured providers"
-            description="Saved runtime provider connections and the model inventory each one currently contributes to the registry."
-          >
+          <SectionCard title="Configured providers">
             {providerRows.length === 0 ? (
               <EmptyState label="No providers are configured yet." />
             ) : (
@@ -237,10 +173,7 @@ export default function EndpointsRoute() {
             )}
           </SectionCard>
 
-          <SectionCard
-            title="Runtime endpoint rows"
-            description="Concrete endpoint rows by endpoint id, model, provider, serving source, and live runtime health."
-          >
+          <SectionCard title="Runtime endpoint rows">
             {endpointRows.length === 0 ? (
               <EmptyState
                 label={

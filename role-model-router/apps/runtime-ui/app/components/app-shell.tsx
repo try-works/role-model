@@ -59,9 +59,6 @@ export function AppShell({ children }: { children: ReactNode }) {
                     <section.icon size={16} />
                     <span>{section.title}</span>
                   </span>
-                  <span className="text-xs uppercase tracking-[0.18em] text-[var(--rm-muted)]">
-                    {section.items.length}
-                  </span>
                 </NavLink>
               </div>
             ))}
@@ -87,10 +84,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               ) : null}
             </div>
             <div className="mt-5 border-t border-[var(--rm-border)] pt-4">
-              <p className="text-xs font-normal uppercase tracking-[0.22em] text-[var(--rm-muted)]">
-                {activeSection.title} pages
-              </p>
-              <nav className="mt-3 flex flex-wrap gap-2">
+              <nav className="flex flex-wrap gap-2">
                 {activeSection.items.map((item) => (
                   <NavLink
                     key={item.to}

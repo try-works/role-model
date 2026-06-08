@@ -52,10 +52,7 @@ export default function IntegrationsDownstreamRoute() {
 
   return (
     <div className="space-y-6">
-      <SectionCard
-        title="Connection contract"
-        description="Base URL, auth expectations, and downstream model discovery in one reference block."
-      >
+      <SectionCard title="Connection contract">
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {guide.connectionRows.map((row) => (
             <div key={row.label} className={`${mutedPanelClassName} p-4`}>
@@ -68,10 +65,7 @@ export default function IntegrationsDownstreamRoute() {
         </div>
       </SectionCard>
 
-      <SectionCard
-        title="Consumer setup"
-        description="The runtime remains downstream-compatible, including tool-calling consumer expectations."
-      >
+      <SectionCard title="Consumer setup">
         <div className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
           <div className={`${mutedPanelClassName} p-4`}>
             <p className="font-medium text-[var(--rm-fg)]">Setup steps</p>
@@ -109,10 +103,7 @@ export default function IntegrationsDownstreamRoute() {
         </div>
       </SectionCard>
 
-      <SectionCard
-        title="Compatibility posture"
-        description="Compatibility notes stay with the downstream contract instead of on a duplicate reference page."
-      >
+      <SectionCard title="Compatibility posture">
         <div className="grid gap-3 md:grid-cols-3">
           <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
             <p className="font-medium text-[var(--rm-fg)]">API family</p>

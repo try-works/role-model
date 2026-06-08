@@ -28,7 +28,10 @@ export default [
     }),
     route("router/controller", "routes/control-controller.tsx"),
     route("control/controller", "routes/legacy-redirect.tsx", { id: "legacy-control-controller" }),
-    route("endpoints", "routes/endpoints.tsx"),
+    route("connect", "routes/endpoints.tsx"),
+    route("connect/downstream", "routes/integrations-downstream.tsx"),
+    route("connect/upstream", "routes/integrations-upstream.tsx"),
+    route("endpoints", "routes/legacy-redirect.tsx", { id: "legacy-endpoints" }),
     route("control/endpoints", "routes/legacy-redirect.tsx", { id: "legacy-control-endpoints" }),
     route("models/roles", "routes/control-roles.tsx"),
     route("control/roles", "routes/legacy-redirect.tsx", { id: "legacy-control-roles" }),
@@ -43,11 +46,15 @@ export default [
     route("observe/requests", "routes/requests.tsx"),
     route("observe/requests/:requestId", "routes/request-detail.tsx"),
     route("observe/logs", "routes/observe-logs.tsx"),
-    route("endpoints/downstream", "routes/integrations-downstream.tsx"),
+    route("endpoints/downstream", "routes/legacy-redirect.tsx", {
+      id: "legacy-endpoints-downstream",
+    }),
     route("integrations/downstream", "routes/legacy-redirect.tsx", {
       id: "legacy-integrations-downstream",
     }),
-    route("endpoints/upstream", "routes/integrations-upstream.tsx"),
+    route("endpoints/upstream", "routes/legacy-redirect.tsx", {
+      id: "legacy-endpoints-upstream",
+    }),
     route("integrations/upstream", "routes/legacy-redirect.tsx", {
       id: "legacy-integrations-upstream",
     }),
