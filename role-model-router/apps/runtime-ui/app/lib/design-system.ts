@@ -39,11 +39,8 @@ export interface RuntimeRouteDefinition {
   readonly section: string;
   readonly icon: LucideIcon;
   readonly template: RuntimeLayoutTemplate;
-  readonly eyebrow: string;
   readonly title: string;
   readonly description: string;
-  readonly noteTitle: string;
-  readonly noteBody: string;
 }
 
 export interface RuntimeNavigationSection {
@@ -63,13 +60,9 @@ const overviewSummaryRoute = createRoute({
   section: "Overview",
   icon: LayoutDashboard,
   template: "summary-board",
-  eyebrow: "Overview",
   title: "Unified telemetry",
   description:
     "A telemetry-first overview of local and remote runtime posture, comparison rows, controller state, and recent request flow.",
-  noteTitle: "Summary board",
-  noteBody:
-    "Lead with cross-vendor telemetry KPIs and comparison rows, then branch into Control, Observe, and Studio without duplicating detailed ledgers.",
 });
 
 const studioChatRoute = createRoute({
@@ -79,13 +72,9 @@ const studioChatRoute = createRoute({
   section: "Studio",
   icon: Speech,
   template: "studio-workspace",
-  eyebrow: "Studio",
   title: "Chat workspace",
   description:
     "Compose routed chat requests and inspect assistant output, tool calls, and execution receipts side by side.",
-  noteTitle: "Studio workspace",
-  noteBody:
-    "Prompt composition stays compact while output, tooling activity, and runtime metadata occupy the dominant reading area.",
 });
 
 const studioImagesRoute = createRoute({
@@ -95,13 +84,9 @@ const studioImagesRoute = createRoute({
   section: "Studio",
   icon: Image,
   template: "studio-workspace",
-  eyebrow: "Studio",
   title: "Image workflows",
   description:
     "Image generation workspace for OpenAI-style and SDAPI-style request modes inside one repo-owned studio surface.",
-  noteTitle: "Studio workspace",
-  noteBody:
-    "Keep OpenAI and SDAPI mode selection in the left rail, generated images in the dominant stage, and raw generation detail in the secondary inspector.",
 });
 
 const studioAudioRoute = createRoute({
@@ -111,13 +96,9 @@ const studioAudioRoute = createRoute({
   section: "Studio",
   icon: Mic,
   template: "studio-workspace",
-  eyebrow: "Studio",
   title: "Audio workflows",
   description:
     "Speech generation, voice discovery, and transcription share one audio workspace so the operator flow does not split into duplicate pages.",
-  noteTitle: "Studio workspace",
-  noteBody:
-    "Use one mode-switched workspace for voices, uploads, transcripts, playable outputs, and request/result diagnostics.",
 });
 
 const studioRerankRoute = createRoute({
@@ -127,13 +108,9 @@ const studioRerankRoute = createRoute({
   section: "Studio",
   icon: SlidersHorizontal,
   template: "studio-workspace",
-  eyebrow: "Studio",
   title: "Rerank",
   description:
     "Ranked-input evaluation workspace for query, candidate, and ordered-score inspection without leaving the studio section.",
-  noteTitle: "Studio workspace",
-  noteBody:
-    "Treat rerank output as a structured result ledger with compact input controls and a secondary raw payload inspector.",
 });
 
 const studioAdvancedRoute = createRoute({
@@ -143,13 +120,9 @@ const studioAdvancedRoute = createRoute({
   section: "Studio",
   icon: Telescope,
   template: "studio-workspace",
-  eyebrow: "Studio",
   title: "Advanced APIs",
   description:
     "Contract-and-request workspace for responses, messages, token counting, embeddings, completion, and infill families that stay under Studio.",
-  noteTitle: "Studio workspace",
-  noteBody:
-    "Use this page as a family selector plus request/response workspace, not a miscellaneous dumping ground.",
 });
 
 const localModelsRoute = createRoute({
@@ -159,12 +132,8 @@ const localModelsRoute = createRoute({
   section: "Local",
   icon: Cpu,
   template: "registry-detail",
-  eyebrow: "Local",
   title: "Local models",
   description: "Load and inspect llama-swap-managed local models and runtime overrides.",
-  noteTitle: "Registry detail",
-  noteBody:
-    "Lead with the load-model entry point, then keep loaded model cards and overrides visible.",
 });
 
 const localSwapRoute = createRoute({
@@ -174,11 +143,8 @@ const localSwapRoute = createRoute({
   section: "Local",
   icon: Activity,
   template: "ledger-inspector",
-  eyebrow: "Local",
   title: "Swap history",
   description: "Chronological log of model swap events.",
-  noteTitle: "Ledger inspector",
-  noteBody: "Event list primary, event detail secondary; filter by model ID.",
 });
 
 const localPolicyRoute = createRoute({
@@ -188,11 +154,8 @@ const localPolicyRoute = createRoute({
   section: "Local",
   icon: SlidersHorizontal,
   template: "registry-detail",
-  eyebrow: "Local",
   title: "Host policy",
   description: "Local inference runtime policy: TTL, auto-unload, and resource limits.",
-  noteTitle: "Registry detail",
-  noteBody: "Editable policy form with read-only host awareness fields.",
 });
 
 const localLogsRoute = createRoute({
@@ -202,11 +165,8 @@ const localLogsRoute = createRoute({
   section: "Local",
   icon: Terminal,
   template: "dual-console",
-  eyebrow: "Local",
   title: "Log streaming",
   description: "Real-time log stream from the local llama-swap runtime.",
-  noteTitle: "Dual console",
-  noteBody: "Split proxy and upstream consoles with source toggle and auto-scroll.",
 });
 
 const localMatrixRoute = createRoute({
@@ -216,11 +176,8 @@ const localMatrixRoute = createRoute({
   section: "Local",
   icon: LayoutGrid,
   template: "matrix-grid",
-  eyebrow: "Local",
   title: "Model matrix",
   description: "Concurrent model grid showing loaded state, engine, and resource usage.",
-  noteTitle: "Matrix grid",
-  noteBody: "Status-first cells with resource metrics; add/remove controls.",
 });
 
 const localPeersRoute = createRoute({
@@ -230,11 +187,8 @@ const localPeersRoute = createRoute({
   section: "Local",
   icon: Network,
   template: "registry-detail",
-  eyebrow: "Local",
   title: "Local endpoints",
   description: "Generic OpenAI-compatible local peer endpoint inventory and management.",
-  noteTitle: "Registry detail",
-  noteBody: "Endpoint list with health and model availability; add/remove controls stay obvious.",
 });
 
 const controlProvidersRoute = createRoute({
@@ -244,13 +198,9 @@ const controlProvidersRoute = createRoute({
   section: "Remote",
   icon: PanelsTopLeft,
   template: "registry-detail",
-  eyebrow: "Remote",
   title: "Remote providers",
   description:
     "Choose a LiteLLM-backed provider, select the models available for that provider, and complete setup from one onboarding surface.",
-  noteTitle: "Registry detail",
-  noteBody:
-    "Lead with provider selection and model availability; API-key and OAuth setup stay in the same workflow instead of splitting into a second page.",
 });
 
 const controlRoutingStrategyRoute = createRoute({
@@ -260,13 +210,9 @@ const controlRoutingStrategyRoute = createRoute({
   section: "Router",
   icon: GitBranch,
   template: "registry-detail",
-  eyebrow: "Router",
   title: "Routing strategy",
   description:
     "Editable routing posture for the persisted scoring strategy and execution mode, with controller context and direct verification links.",
-  noteTitle: "Registry detail",
-  noteBody:
-    "Lead with an explicit strategy editor, keep the currently applied posture visible, and preserve direct links into controller, router, and request verification surfaces.",
 });
 
 const controlRuntimeConfigRoute = createRoute({
@@ -276,13 +222,9 @@ const controlRuntimeConfigRoute = createRoute({
   section: "System",
   icon: SlidersHorizontal,
   template: "registry-detail",
-  eyebrow: "System",
   title: "Runtime config",
   description:
     "Edit the unified runtime contract for local llama-swap models, remote LiteLLM providers, and process policy through one repo-owned route.",
-  noteTitle: "Registry detail",
-  noteBody:
-    "Keep the editable config payload and the applied runtime snapshot adjacent so changes stay honest and inspectable.",
 });
 
 const controlControllerRoute = createRoute({
@@ -292,13 +234,9 @@ const controlControllerRoute = createRoute({
   section: "Router",
   icon: Waypoints,
   template: "registry-detail",
-  eyebrow: "Router",
   title: "Routing controller",
   description:
     "Choose the concrete endpoint/model pair that acts as the global routing controller.",
-  noteTitle: "Registry detail",
-  noteBody:
-    "The controller stays explicit and editable; candidate health, tooling posture, and source type remain visible.",
 });
 
 const controlEndpointsRoute = createRoute({
@@ -308,13 +246,9 @@ const controlEndpointsRoute = createRoute({
   section: "Endpoints",
   icon: Cpu,
   template: "registry-detail",
-  eyebrow: "Endpoints",
   title: "Endpoint registry",
   description:
     "Review configured providers, models, and runtime endpoint status after onboarding without duplicating provider setup here.",
-  noteTitle: "Registry detail",
-  noteBody:
-    "Treat this page as the live configured registry for provider-model runtime entries, with health and source posture kept visible.",
 });
 
 const controlRolesRoute = createRoute({
@@ -324,13 +258,9 @@ const controlRolesRoute = createRoute({
   section: "Models",
   icon: LayoutGrid,
   template: "registry-detail",
-  eyebrow: "Models",
   title: "Runtime roles",
   description:
     "Author full router-grade role definitions and task allowlists from the live runtime policy surface instead of relying on seeded role catalogs.",
-  noteTitle: "Registry detail",
-  noteBody:
-    "Keep role authoring, task allowlists, and policy diagnostics in one editable surface so operators can add roles without leaving the control plane.",
 });
 
 const controlModelsRoute = createRoute({
@@ -340,13 +270,9 @@ const controlModelsRoute = createRoute({
   section: "Models",
   icon: Boxes,
   template: "model-inventory",
-  eyebrow: "Models",
   title: "Configured models",
   description:
     "Unified local and remote model inventory with model-side role assignment, controller state, and links into the live runtime policy surface.",
-  noteTitle: "Model inventory",
-  noteBody:
-    "Lead with live model posture, then expose backing-account role bindings so role assignment is editable without sending operators back to provider onboarding.",
 });
 
 const routerOverviewRoute = createRoute({
@@ -356,13 +282,9 @@ const routerOverviewRoute = createRoute({
   section: "Router",
   icon: GitBranch,
   template: "registry-detail",
-  eyebrow: "Router",
   title: "Routing overview",
   description:
     "First-class operator summary for routing posture, decision flow, and the live handoff between config, candidates, and request outcomes.",
-  noteTitle: "Registry detail",
-  noteBody:
-    "Lead with the current routing posture and recent decision movement so the Router section reads as explanation, not raw trace replay.",
 });
 
 const routerConfigRoute = createRoute({
@@ -372,13 +294,9 @@ const routerConfigRoute = createRoute({
   section: "Router",
   icon: SlidersHorizontal,
   template: "registry-detail",
-  eyebrow: "Router",
   title: "Routing config",
   description:
     "Read-only routing provenance surface spanning persisted posture, controller context, guidance, and policy-source inputs.",
-  noteTitle: "Registry detail",
-  noteBody:
-    "Keep editing on the dedicated Routing strategy page so this surface stays focused on provenance, guidance, and policy resolution.",
 });
 
 const routerCandidatesRoute = createRoute({
@@ -388,13 +306,9 @@ const routerCandidatesRoute = createRoute({
   section: "Router",
   icon: Network,
   template: "ledger-inspector",
-  eyebrow: "Router",
   title: "Candidate inventory",
   description:
     "Comparable local and remote endpoint inventory with health, role coverage, and observed routing signals in one operator surface.",
-  noteTitle: "Ledger inspector",
-  noteBody:
-    "Optimize for scanability first, then expose richer per-candidate posture without splitting local and remote inventory into separate pages.",
 });
 
 const routerDecisionsRoute = createRoute({
@@ -404,13 +318,9 @@ const routerDecisionsRoute = createRoute({
   section: "Router",
   icon: ListChecks,
   template: "ledger-inspector",
-  eyebrow: "Router",
   title: "Routing decisions",
   description:
     "Explainable routing ledger keyed by recent requests with direct drill-in to chosen endpoint, fallback posture, and policy summary.",
-  noteTitle: "Ledger inspector",
-  noteBody:
-    "Keep the decision ledger scannable and make the drill-in path explicit instead of forcing users through raw request detail first.",
 });
 
 const routerDecisionDetailRoute = createRoute({
@@ -420,13 +330,9 @@ const routerDecisionDetailRoute = createRoute({
   section: "Router",
   icon: ListChecks,
   template: "ledger-inspector",
-  eyebrow: "Router",
   title: "Routing decision detail",
   description:
     "Explainable routing detail for one request, including scored candidates, routing diagnostics, and links into Observe request traces.",
-  noteTitle: "Ledger inspector",
-  noteBody:
-    "Expose scored candidates, provenance, and downstream trace links together so Router remains the explanation surface and Observe stays the deep inspector.",
 });
 
 const observeActivityRoute = createRoute({
@@ -436,13 +342,9 @@ const observeActivityRoute = createRoute({
   section: "Observe",
   icon: Activity,
   template: "ledger-inspector",
-  eyebrow: "Observe",
   title: "Host activity and metrics",
   description:
     "A preserved raw-host ledger for metrics, captures, tooling, and controller changes that stays adjacent to the canonical telemetry pages.",
-  noteTitle: "Ledger inspector",
-  noteBody:
-    "Keep metrics and capture drill-ins inside the raw-host activity ledger rather than duplicating them in the canonical telemetry pages.",
 });
 
 const observeRequestsRoute = createRoute({
@@ -452,13 +354,9 @@ const observeRequestsRoute = createRoute({
   section: "Observe",
   icon: ListChecks,
   template: "ledger-inspector",
-  eyebrow: "Observe",
   title: "Telemetry request ledger",
   description:
     "Canonical runtime telemetry rows with direct drill-in to request captures, endpoint profile context, and tooling receipts.",
-  noteTitle: "Ledger inspector",
-  noteBody:
-    "Optimize for scanability: source type, latency, tokens, endpoint, and tool activity should be immediately legible.",
 });
 
 const observeRequestDetailRoute = createRoute({
@@ -468,13 +366,9 @@ const observeRequestDetailRoute = createRoute({
   section: "Observe",
   icon: ListChecks,
   template: "ledger-inspector",
-  eyebrow: "Observe",
   title: "Telemetry request detail",
   description:
     "Canonical telemetry detail with usage, cache, capture, endpoint profile, and tooling receipts aligned in one inspector.",
-  noteTitle: "Ledger inspector",
-  noteBody:
-    "Lead with telemetry facts, then keep payloads and diagnostics side by side so routing and tool behavior can be audited together.",
 });
 
 const observeLogsRoute = createRoute({
@@ -484,12 +378,9 @@ const observeLogsRoute = createRoute({
   section: "Observe",
   icon: Logs,
   template: "dual-console",
-  eyebrow: "Observe",
   title: "Logs",
   description:
     "Preserved log surfaces remain accessible from a repo-owned shell with a cleaner operator frame.",
-  noteTitle: "Dual console",
-  noteBody: "Use split consoles and clear labels; do not bury raw logs behind nested drawers.",
 });
 
 const integrationsDownstreamRoute = createRoute({
@@ -499,13 +390,9 @@ const integrationsDownstreamRoute = createRoute({
   section: "Endpoints",
   icon: Cable,
   template: "contract-reference",
-  eyebrow: "Endpoints",
   title: "Downstream provider contract",
   description:
     "Use Role Model as an OpenAI-compatible downstream provider and keep the compatibility matrix with the same contract instead of on a duplicate page.",
-  noteTitle: "Contract reference",
-  noteBody:
-    "Base URL, auth expectations, model discovery, and tooling compatibility belong together.",
 });
 
 const integrationsUpstreamRoute = createRoute({
@@ -515,13 +402,9 @@ const integrationsUpstreamRoute = createRoute({
   section: "Endpoints",
   icon: GitBranch,
   template: "contract-reference",
-  eyebrow: "Endpoints",
   title: "Upstream providers",
   description:
     "Reference upstream passthrough boundaries, auth modes, and model-specific targets without duplicating the editable control surfaces.",
-  noteTitle: "Contract reference",
-  noteBody:
-    "Keep the contract/reference column narrow, the target inventory larger, and raw upstream links contextual to this page.",
 });
 
 const systemRuntimeRoute = createRoute({
@@ -531,13 +414,9 @@ const systemRuntimeRoute = createRoute({
   section: "System",
   icon: Gauge,
   template: "system-topology",
-  eyebrow: "System",
   title: "Runtime topology",
   description:
     "Bridge lifecycle, validation floor, controller posture, version facts, and tooling runtime contracts in one system view.",
-  noteTitle: "System topology",
-  noteBody:
-    "Keep validation, version facts, preserved host links, and runtime-owned control-plane facts visible together.",
 });
 
 const systemPeersRoute = createRoute({
@@ -547,13 +426,9 @@ const systemPeersRoute = createRoute({
   section: "System",
   icon: Waypoints,
   template: "system-topology",
-  eyebrow: "System",
   title: "Peers",
   description:
     "Peer inventory and policy page for remote model sources, auth posture, timeouts, filters, and peer-backed topology decisions.",
-  noteTitle: "System topology",
-  noteBody:
-    "Lead with topology facts, then split peer inventory from contract detail and preserve a real empty state when no peers are configured.",
 });
 
 const runtimeRouteDefinitions = [

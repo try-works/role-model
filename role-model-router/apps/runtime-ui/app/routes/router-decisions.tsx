@@ -6,7 +6,6 @@ import {
   ErrorState,
   FactCard,
   LoadingState,
-  PageHeader,
   SectionCard,
 } from "../components/page-primitives";
 import { listRowClassName } from "../lib/design-system";
@@ -49,35 +48,15 @@ export default function RouterDecisionsRoute() {
     };
   }, []);
 
-  const header = (
-    <PageHeader
-      eyebrow="Router"
-      title="Routing decisions"
-      description="Follow recent routing outcomes as explainable records, then drill into the decision detail or jump to Observe when you need the deeper request trace."
-    />
-  );
-
   if (error) {
-    return (
-      <div className="space-y-6">
-        {header}
-        <ErrorState label={error} />
-      </div>
-    );
+    return <ErrorState label={error} />;
   }
   if (!decisions) {
-    return (
-      <div className="space-y-6">
-        {header}
-        <LoadingState label="Loading routing decisions…" />
-      </div>
-    );
+    return <LoadingState label="Loading routing decisions…" />;
   }
 
   return (
     <div className="space-y-6">
-      {header}
-
       <div className="grid gap-4 md:grid-cols-3">
         <FactCard
           label="Decisions"

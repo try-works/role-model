@@ -5,11 +5,11 @@ import {
   ErrorState,
   FactCard,
   LoadingState,
-  PageHeader,
   SectionCard,
   StatusPill,
 } from "../components/page-primitives";
 import { secondaryButtonClassName } from "../lib/design-system";
+import { usePageActions } from "../lib/shell-header-context";
 import { fetchTextLogs } from "../lib/runtime-api";
 import { buildStructuredLogRows } from "../lib/view-models";
 
@@ -41,6 +41,21 @@ export default function ObserveLogsRoute() {
   const correlatedCount = rows.filter((row) => row.requestId).length;
   const sourceCount = new Set(rows.map((row) => row.sourceClass)).size;
 
+  usePageActions(
+    <>
+      <a className={secondaryButtonClassName} href="/logs">
+        Combined log
+      </a>
+      <a className={secondaryButtonClassName} href="/logs/stream/proxy">
+        Proxy stream
+      </a>
+      <a className={secondaryButtonClassName} href="/logs/stream/upstream">
+        Upstream stream
+      </a>
+    </>,
+    [],
+  );
+
   if (error) {
     return <ErrorState label={error} />;
   }
@@ -50,25 +65,6 @@ export default function ObserveLogsRoute() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        eyebrow="Observe"
-        title="Logs"
-        description="Structured log history keeps request correlation readable while raw stream endpoints remain available for tailing."
-        actions={
-          <>
-            <a className={secondaryButtonClassName} href="/logs">
-              Combined log
-            </a>
-            <a className={secondaryButtonClassName} href="/logs/stream/proxy">
-              Proxy stream
-            </a>
-            <a className={secondaryButtonClassName} href="/logs/stream/upstream">
-              Upstream stream
-            </a>
-          </>
-        }
-      />
-
       <div className="grid gap-4 md:grid-cols-3">
         <FactCard
           label="Structured log history"

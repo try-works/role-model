@@ -5,11 +5,11 @@ import {
   ErrorState,
   FactCard,
   LoadingState,
-  PageHeader,
   SectionCard,
   StatusPill,
 } from "../components/page-primitives";
 import { mutedPanelClassName, secondaryButtonClassName } from "../lib/design-system";
+import { usePageActions } from "../lib/shell-header-context";
 import { type RuntimeSnapshot, fetchRuntimeSnapshot } from "../lib/runtime-api";
 
 export default function SystemPeersRoute() {
@@ -42,19 +42,15 @@ export default function SystemPeersRoute() {
 
   const peerModelCount = peerGroups.reduce((total, group) => total + group.modelIds.length, 0);
 
+  usePageActions(
+    <a className={secondaryButtonClassName} href="/api/role-model/runtime/summary">
+      Runtime summary
+    </a>,
+    [],
+  );
+
   return (
     <div className="space-y-6">
-      <PageHeader
-        eyebrow="System"
-        title="Peers"
-        description="Keep peer-backed topology explicit: inventory first, then the peer contract fields and runtime policy notes that govern remote model sources."
-        actions={
-          <a className={secondaryButtonClassName} href="/api/role-model/runtime/summary">
-            Runtime summary
-          </a>
-        }
-      />
-
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         <FactCard
           label="Configured peers"

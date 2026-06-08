@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import {
   ErrorState,
   LoadingState,
-  PageHeader,
   SectionCard,
   StatusPill,
 } from "../components/page-primitives";
@@ -12,6 +11,7 @@ import {
   mutedPanelClassName,
   secondaryButtonClassName,
 } from "../lib/design-system";
+import { usePageActions } from "../lib/shell-header-context";
 import {
   type RuntimeDownstreamOpenAIProviderConfig,
   fetchDownstreamOpenAIProviderConfig,
@@ -34,6 +34,13 @@ export default function IntegrationsDownstreamRoute() {
       );
   }, []);
 
+  usePageActions(
+    <a className={secondaryButtonClassName} href="/api/role-model/downstream/openai">
+      Provider JSON
+    </a>,
+    [],
+  );
+
   if (error) {
     return <ErrorState label={error} />;
   }
@@ -45,17 +52,6 @@ export default function IntegrationsDownstreamRoute() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        eyebrow="Endpoints"
-        title="Downstream provider contract"
-        description="Configure consumer apps such as opencode against the runtime's OpenAI-compatible downstream surface."
-        actions={
-          <a className={secondaryButtonClassName} href="/api/role-model/downstream/openai">
-            Provider JSON
-          </a>
-        }
-      />
-
       <SectionCard
         title="Connection contract"
         description="Base URL, auth expectations, and downstream model discovery in one reference block."

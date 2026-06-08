@@ -1,4 +1,6 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { type ReactElement, createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { RouterProvider, createMemoryRouter } from "react-router";
@@ -24,9 +26,11 @@ import {
   runtimeTheme,
   shellQuickLinks,
 } from "./design-system";
+import { ShellHeaderProvider } from "./shell-header-context";
 
 function renderRoute(pathname: string, element: ReactElement): string {
-  const router = createMemoryRouter([{ path: pathname, element }], {
+  const wrapped = createElement(ShellHeaderProvider, null, element);
+  const router = createMemoryRouter([{ path: pathname, element: wrapped }], {
     initialEntries: [pathname],
   });
   return renderToStaticMarkup(createElement(RouterProvider, { router }));
@@ -111,6 +115,20 @@ const designSystemDocSource = readFileSync(
   new URL("../../DESIGN_SYSTEM.md", import.meta.url),
   "utf8",
 );
+const designSystemSource = readFileSync(new URL("./design-system.ts", import.meta.url), "utf8");
+const futureSurfaceSource = readFileSync(
+  new URL("../components/future-surface.tsx", import.meta.url),
+  "utf8",
+);
+const appLayoutSource = readFileSync(new URL("../routes/app-layout.tsx", import.meta.url), "utf8");
+const shellHeaderContextSource = readFileSync(
+  new URL("./shell-header-context.tsx", import.meta.url),
+  "utf8",
+);
+const routesDir = path.dirname(fileURLToPath(new URL("../routes", import.meta.url)));
+const routeSources = readdirSync(routesDir)
+  .filter((name) => name.endsWith(".tsx"))
+  .map((name) => readFileSync(path.join(routesDir, name), "utf8"));
 
 describe("runtime design system", () => {
   test("defines navigation groups and layout templates for every runtime route", () => {
@@ -388,24 +406,17 @@ describe("runtime design system", () => {
   });
 
   test("router implementation targets render repo-owned routing explanation surfaces", () => {
-    expect(renderRoute("/app/router", createElement(RouterOverviewRoute))).toContain(
-      "Routing overview",
-    );
-    expect(renderRoute("/app/router/config", createElement(RouterConfigRoute))).toContain(
-      "Routing config",
-    );
-    expect(renderRoute("/app/router/candidates", createElement(RouterCandidatesRoute))).toContain(
+    expect(getRuntimeRouteDefinition("/app/router")?.title).toBe("Routing overview");
+    expect(getRuntimeRouteDefinition("/app/router/config")?.title).toBe("Routing config");
+    expect(getRuntimeRouteDefinition("/app/router/candidates")?.title).toBe(
       "Candidate inventory",
     );
-    expect(renderRoute("/app/router/decisions", createElement(RouterDecisionsRoute))).toContain(
-      "Routing decisions",
-    );
+    expect(getRuntimeRouteDefinition("/app/router/decisions")?.title).toBe("Routing decisions");
     expect(
-      renderRoute(
-        "/app/router/decisions/req-runtime-bridge-route-001",
-        createElement(RouterDecisionDetailRoute),
-      ),
-    ).toContain("Routing decision detail");
+      getRuntimeRouteDefinition("/app/router/decisions/req-runtime-bridge-route-001")?.title,
+    ).toBe("Routing decision detail");
+    expect(routerRouteSource).toContain("Alias inventory");
+    expect(routerCandidatesRouteSource).toContain("Loading routing candidates");
   });
 
   test("router, endpoints, and remote surfaces expose alias/readiness ownership instead of generic filler", () => {
@@ -530,15 +541,11 @@ describe("runtime design system", () => {
     expect(routingModeSource).toContain("Strategy B - Intelligent");
     expect(routingModeSource).toContain("Strategy C - Difficulty");
     expect(controlRoutingStrategySource).not.toContain("Balanced");
-    expect(
-      renderRoute("/app/system/runtime-config", createElement(ControlRuntimeConfigRoute)),
-    ).toContain("Runtime config");
+    expect(getRuntimeRouteDefinition("/app/system/runtime-config")?.title).toBe("Runtime config");
     expect(
       renderRoute("/app/system/runtime-config", createElement(ControlRuntimeConfigRoute)),
     ).toContain("Save and apply");
-    expect(renderRoute("/app/models/roles", createElement(ControlRolesRoute))).toContain(
-      "Runtime roles",
-    );
+    expect(getRuntimeRouteDefinition("/app/models/roles")?.title).toBe("Runtime roles");
     expect(renderRoute("/app/models/roles", createElement(ControlRolesRoute))).toContain(
       "Loading runtime role policy",
     );
@@ -550,9 +557,9 @@ describe("runtime design system", () => {
 
   test("local setup surfaces stay discoverable from navigation and empty registry states", () => {
     expect(localModelsSource).toContain("Load local model");
-    expect(localModelsSource).toContain("llama-swap-managed local models");
+    expect(localModelsSource).toContain("llama-swap-managed runtime");
     expect(localModelsSource).toContain("Open peer endpoints");
-    expect(localPeersSource).toContain("Local endpoints");
+    expect(localPeersSource).toContain("Endpoint inventory");
     expect(localPeersSource).toContain("OpenAI-compatible peer endpoints");
     expect(localPeersSource).toContain("Add endpoint");
     expect(endpointsRouteSource).toContain("/app/local/endpoints");
@@ -591,5 +598,62 @@ describe("runtime design system", () => {
     expect(requestsRouteSource).toContain("routingDecisionLabel");
     expect(requestDetailRouteSource).toContain("Routing receipts");
     expect(requestDetailRouteSource).toContain("hybridArbitration");
+  });
+
+  test("shell header owns route metadata and page actions without duplicate page headers", () => {
+    expect(appLayoutSource).toContain("ShellHeaderProvider");
+    expect(appShellSource).toContain("useShellHeaderState");
+    expect(shellHeaderContextSource).toContain("usePageActions");
+    expect(shellHeaderContextSource).toContain("useShellHeaderOverride");
+    expect(pagePrimitivesSource).not.toContain("PageHeader");
+    expect(designSystemDocSource).toContain("only** route-level header");
+    expect(designSystemDocSource).not.toContain("`PageHeader` begins");
+    expect(designSystemDocSource).not.toMatch(/Section.*Template.*Route/i);
+    expect(designSystemDocSource).toContain(
+      "All templates assume the shell header is already visible.",
+    );
+    for (const template of [
+      "summary-board",
+      "studio-workspace",
+      "registry-detail",
+      "model-inventory",
+      "ledger-inspector",
+      "dual-console",
+      "contract-reference",
+      "matrix-grid",
+      "system-topology",
+    ]) {
+      expect(designSystemDocSource).toContain(
+        `\`${template}\` | Content starts under the shell header.`,
+      );
+    }
+    for (const source of routeSources) {
+      expect(source).not.toContain("<PageHeader");
+      expect(source).not.toContain("PageHeader,");
+    }
+    expect(requestDetailRouteSource).toContain("useShellHeaderOverride");
+    expect(routerRouteSource).toContain("usePageActions");
+  });
+
+  test("runtime route definitions stay slim and future scaffolds avoid duplicate header props", () => {
+    expect(designSystemSource).not.toMatch(/\beyebrow:/);
+    expect(designSystemSource).not.toMatch(/\bnoteTitle:/);
+    expect(designSystemSource).not.toMatch(/\bnoteBody:/);
+    expect(designSystemSource).not.toContain("readonly eyebrow:");
+    expect(designSystemSource).not.toContain("readonly noteTitle:");
+    expect(designSystemSource).not.toContain("readonly noteBody:");
+    expect(getRuntimeRouteDefinition("/app/local/models")).toEqual(
+      expect.objectContaining({
+        section: "Local",
+        title: "Local models",
+      }),
+    );
+    expect(Object.keys(getRuntimeRouteDefinition("/app") ?? {})).not.toContain("eyebrow");
+    expect(futureSurfaceSource).not.toContain("eyebrow:");
+    expect(futureSurfaceSource).not.toContain("title: string");
+    expect(futureSurfaceSource).not.toContain("description: string");
+    expect(designSystemDocSource).toContain(
+      "usePageActions()` only — not `RuntimeRouteDefinition`",
+    );
   });
 });

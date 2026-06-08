@@ -7,13 +7,13 @@ import {
   ErrorState,
   FactCard,
   LoadingState,
-  PageHeader,
   SectionCard,
 } from "../components/page-primitives";
 import {
   mutedPanelClassName,
   secondaryButtonClassName,
 } from "../lib/design-system";
+import { usePageActions } from "../lib/shell-header-context";
 import { formatRoutingModeLabel } from "../lib/routing-mode";
 import { type RouterConfig, fetchRouterConfig } from "../lib/runtime-api";
 
@@ -36,48 +36,30 @@ export default function RouterConfigRoute() {
       );
   }, []);
 
-  const header = (
-    <PageHeader
-      eyebrow="Router"
-      title="Routing config"
-      description="See the low-level routing policy state, persisted posture, live guidance provenance, and the raw role/task policy inputs that shape resolved routing behavior."
-      actions={
-        <>
-          <Link className={secondaryButtonClassName} to="/app/router/strategy">
-            Edit strategy
-          </Link>
-          <Link className={secondaryButtonClassName} to="/app/system/runtime-config">
-            Advanced config
-          </Link>
-          <Link className={secondaryButtonClassName} to="/app/router/decisions">
-            Open decisions
-          </Link>
-        </>
-      }
-    />
+  usePageActions(
+    <>
+      <Link className={secondaryButtonClassName} to="/app/router/strategy">
+        Edit strategy
+      </Link>
+      <Link className={secondaryButtonClassName} to="/app/system/runtime-config">
+        Advanced config
+      </Link>
+      <Link className={secondaryButtonClassName} to="/app/router/decisions">
+        Open decisions
+      </Link>
+    </>,
+    [],
   );
 
   if (error) {
-    return (
-      <div className="space-y-6">
-        {header}
-        <ErrorState label={error} />
-      </div>
-    );
+    return <ErrorState label={error} />;
   }
   if (!config) {
-    return (
-      <div className="space-y-6">
-        {header}
-        <LoadingState label="Loading routing config…" />
-      </div>
-    );
+    return <LoadingState label="Loading routing config…" />;
   }
 
   return (
     <div className="space-y-6">
-      {header}
-
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <FactCard
           label="Persisted strategy"

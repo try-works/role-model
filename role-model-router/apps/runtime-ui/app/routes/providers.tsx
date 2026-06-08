@@ -5,7 +5,6 @@ import {
   EmptyState,
   ErrorState,
   LoadingState,
-  PageHeader,
   SectionCard,
   StatusPill,
 } from "../components/page-primitives";
@@ -456,12 +455,6 @@ export default function ProvidersRoute() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        eyebrow="Remote"
-        title="Remote providers"
-        description="Choose a provider from the runtime catalog, choose the models available for that provider, and complete either API-key or OAuth setup from one page."
-      />
-
       <div className="grid gap-4 xl:grid-cols-[0.95fr_1.05fr]">
         <SectionCard
           title="Choose provider and models"

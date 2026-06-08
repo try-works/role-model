@@ -5,7 +5,6 @@ import {
   EmptyState,
   ErrorState,
   LoadingState,
-  PageHeader,
   SectionCard,
   StatusPill,
 } from "../components/page-primitives";
@@ -15,6 +14,7 @@ import {
   primaryButtonClassName,
   secondaryButtonClassName,
 } from "../lib/design-system";
+import { usePageActions } from "../lib/shell-header-context";
 import {
   type ModelOverride,
   type RuntimeLocalModel,
@@ -98,24 +98,20 @@ export default function LocalModelsRoute() {
   const getOverrideFieldId = (modelId: string, field: string) =>
     `override-${field}-${modelId.replace(/[^a-zA-Z0-9_-]/g, "-")}`;
 
+  usePageActions(
+    <button
+      type="button"
+      onClick={refresh}
+      disabled={loading}
+      className={secondaryButtonClassName}
+    >
+      {loading ? "Refreshing…" : "Refresh"}
+    </button>,
+    [loading, refresh],
+  );
+
   return (
     <div className="space-y-8">
-      <PageHeader
-        eyebrow="Local"
-        title="Local models"
-        description="Load and inspect llama-swap-managed local models and runtime overrides."
-        actions={
-          <button
-            type="button"
-            onClick={refresh}
-            disabled={loading}
-            className={secondaryButtonClassName}
-          >
-            {loading ? "Refreshing…" : "Refresh"}
-          </button>
-        }
-      />
-
       {error ? <ErrorState label={error} /> : null}
 
       <SectionCard

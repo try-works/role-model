@@ -4,7 +4,6 @@ import {
   EmptyState,
   ErrorState,
   LoadingState,
-  PageHeader,
   SectionCard,
 } from "../components/page-primitives";
 import { fetchLocalModels } from "../lib/runtime-api";
@@ -39,12 +38,6 @@ export default function LocalMatrixRoute() {
 
   return (
     <div className="space-y-8">
-      <PageHeader
-        eyebrow="Local"
-        title="Model matrix"
-        description="Concurrent model grid showing loaded state, engine, and resource usage."
-      />
-
       {error ? <ErrorState label={error} /> : null}
 
       <SectionCard

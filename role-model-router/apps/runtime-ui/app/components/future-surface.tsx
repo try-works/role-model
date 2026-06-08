@@ -8,7 +8,8 @@ import {
   raisedPanelClassName,
   secondaryButtonClassName,
 } from "../lib/design-system";
-import { EmptyState, PageHeader, SectionCard } from "./page-primitives";
+import { usePageActions } from "../lib/shell-header-context";
+import { EmptyState, SectionCard } from "./page-primitives";
 
 function BlueprintPanel({
   label,
@@ -241,15 +242,9 @@ function TemplateBlueprint({ template }: { template: string }) {
 }
 
 export function FutureSurface({
-  eyebrow,
-  title,
-  description,
   notes,
   actions,
 }: {
-  eyebrow: string;
-  title: string;
-  description: string;
   notes: readonly string[];
   actions?: ReactNode;
 }) {
@@ -257,9 +252,10 @@ export function FutureSurface({
   const route = getRuntimeRouteDefinition(location.pathname);
   const template = route?.template ?? "registry-detail";
 
+  usePageActions(actions ?? null, [actions]);
+
   return (
     <div className="space-y-6">
-      <PageHeader eyebrow={eyebrow} title={title} description={description} actions={actions} />
       <SectionCard
         title="Layout blueprint"
         description={`This planned page now carries an explicit ${template} structure so the final implementation has a clear Swiss-style reading order before live data lands.`}

@@ -6,7 +6,6 @@ import {
   ErrorState,
   FactCard,
   LoadingState,
-  PageHeader,
   SectionCard,
 } from "../components/page-primitives";
 import {
@@ -15,6 +14,7 @@ import {
   primaryButtonClassName,
   secondaryButtonClassName,
 } from "../lib/design-system";
+import { usePageActions } from "../lib/shell-header-context";
 import {
   type RuntimeSnapshot,
   fetchRuntimeSnapshot,
@@ -115,24 +115,20 @@ export default function StudioImagesRoute() {
     }
   }
 
+  usePageActions(
+    <>
+      <a className={secondaryButtonClassName} href="/v1/models">
+        Model list
+      </a>
+      <a className={secondaryButtonClassName} href="/sdapi/v1/loras">
+        SDAPI LoRAs
+      </a>
+    </>,
+    [],
+  );
+
   return (
     <div className="space-y-6">
-      <PageHeader
-        eyebrow="Studio"
-        title="Image workflows"
-        description="Use one repo-owned workspace for OpenAI-style and SDAPI-style image generation, with the request rail on the left and the result stage in the dominant column."
-        actions={
-          <>
-            <a className={secondaryButtonClassName} href="/v1/models">
-              Model list
-            </a>
-            <a className={secondaryButtonClassName} href="/sdapi/v1/loras">
-              SDAPI LoRAs
-            </a>
-          </>
-        }
-      />
-
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         <FactCard
           label="Available models"

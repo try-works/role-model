@@ -4,7 +4,6 @@ import {
   EmptyState,
   ErrorState,
   LoadingState,
-  PageHeader,
   SectionCard,
   StatusPill,
 } from "../components/page-primitives";
@@ -55,12 +54,6 @@ export default function LocalLogsRoute() {
 
   return (
     <div className="space-y-8">
-      <PageHeader
-        eyebrow="Local"
-        title="Log streaming"
-        description="Structured local log history for the llama-swap runtime, with optional auto-refresh while you watch model swaps and request handling."
-      />
-
       {error ? <ErrorState label={error} /> : null}
 
       <SectionCard

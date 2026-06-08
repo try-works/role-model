@@ -8,42 +8,6 @@ import {
   raisedPanelClassName,
 } from "../lib/design-system";
 
-export function PageHeader({
-  eyebrow,
-  title,
-  description,
-  actions,
-}: {
-  eyebrow?: string;
-  title: string;
-  description: string;
-  actions?: ReactNode;
-}) {
-  return (
-    <div className="grid gap-5 border-b border-[var(--rm-border)] pb-6 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end">
-      <div className="space-y-4">
-        <div className="h-px w-10 bg-[var(--rm-accent)]" />
-        {eyebrow ? (
-          <p className="text-xs font-normal uppercase tracking-[0.24em] text-[var(--rm-muted)]">
-            {eyebrow}
-          </p>
-        ) : null}
-        <div className="space-y-3">
-          <h1 className="max-w-[16ch] text-balance text-3xl font-light tracking-tight text-[var(--rm-fg)] md:text-4xl">
-            {title}
-          </h1>
-          <p className="max-w-[60ch] text-sm leading-6 text-[var(--rm-secondary)] md:text-[15px]">
-            {description}
-          </p>
-        </div>
-      </div>
-      {actions ? (
-        <div className="flex flex-wrap gap-2 xl:justify-end xl:self-end">{actions}</div>
-      ) : null}
-    </div>
-  );
-}
-
 export function SectionCard({
   title,
   description,
@@ -170,3 +134,4 @@ export function ErrorState({ label }: { label: string }) {
 export function CodeBlock({ children, className }: { children: ReactNode; className?: string }) {
   return <pre className={cn(codeBlockClassName, className)}>{children}</pre>;
 }
+

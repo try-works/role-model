@@ -4,11 +4,11 @@ import {
   EmptyState,
   ErrorState,
   LoadingState,
-  PageHeader,
   SectionCard,
   StatusPill,
 } from "../components/page-primitives";
 import { mutedPanelClassName, secondaryButtonClassName } from "../lib/design-system";
+import { usePageActions } from "../lib/shell-header-context";
 import {
   type RuntimeControllerAssignment,
   type RuntimeSnapshot,
@@ -39,6 +39,18 @@ export default function RuntimeRoute() {
       );
   }, []);
 
+  usePageActions(
+    <>
+      <a className={secondaryButtonClassName} href="/api/role-model/runtime/summary">
+        Runtime JSON
+      </a>
+      <a className={secondaryButtonClassName} href="/api/role-model/controller">
+        Controller JSON
+      </a>
+    </>,
+    [],
+  );
+
   if (error) {
     return <ErrorState label={error} />;
   }
@@ -52,22 +64,6 @@ export default function RuntimeRoute() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        eyebrow="System"
-        title="Runtime topology"
-        description="Bridge lifecycle, controller posture, version facts, tooling-aware validation links, and preserved host boundaries in one system view."
-        actions={
-          <>
-            <a className={secondaryButtonClassName} href="/api/role-model/runtime/summary">
-              Runtime JSON
-            </a>
-            <a className={secondaryButtonClassName} href="/api/role-model/controller">
-              Controller JSON
-            </a>
-          </>
-        }
-      />
-
       <SectionCard
         title="Lifecycle summary"
         description="Current endpoint lifecycle groups from the runtime control plane."

@@ -7,10 +7,10 @@ import {
   ErrorState,
   FactCard,
   LoadingState,
-  PageHeader,
   SectionCard,
 } from "../components/page-primitives";
 import { secondaryButtonClassName } from "../lib/design-system";
+import { usePageActions } from "../lib/shell-header-context";
 import { formatRoutingModeLabel } from "../lib/routing-mode";
 import { type RouterDecisionDetail, fetchRouterDecisionDetail } from "../lib/runtime-api";
 
@@ -49,40 +49,23 @@ export default function RouterDecisionDetailRoute() {
   }, [requestId]);
 
   const observePath = detail?.observeRequestPath ?? `/app/observe/requests/${requestId}`;
-  const header = (
-    <PageHeader
-      eyebrow="Router"
-      title="Routing decision detail"
-      description="Explain one routed request through the Router lens first, then hand off to Observe for the deeper telemetry and capture trace."
-      actions={
-        <Link className={secondaryButtonClassName} to={observePath}>
-          Open Observe detail
-        </Link>
-      }
-    />
+
+  usePageActions(
+    <Link className={secondaryButtonClassName} to={observePath}>
+      Open Observe detail
+    </Link>,
+    [observePath],
   );
 
   if (error) {
-    return (
-      <div className="space-y-6">
-        {header}
-        <ErrorState label={error} />
-      </div>
-    );
+    return <ErrorState label={error} />;
   }
   if (!detail) {
-    return (
-      <div className="space-y-6">
-        {header}
-        <LoadingState label="Loading routing decision detail…" />
-      </div>
-    );
+    return <LoadingState label="Loading routing decision detail…" />;
   }
 
   return (
     <div className="space-y-6">
-      {header}
-
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <FactCard
           label="Request"

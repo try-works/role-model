@@ -20,7 +20,7 @@ This shell must not clone the vendored llama-swap UI. It should absorb the vendo
 3. **Typography stays light and precise.** `IBM Plex Sans` is primary; `IBM Plex Mono` is reserved for ids, paths, payloads, and API shapes.
 4. **12-column thinking, even when implemented as split panes.** Mobile stacks first; larger breakpoints introduce asymmetry and inspection tension.
 5. **Body copy stays narrow.** Explanatory text should stay near `60ch`.
-6. **Operator chrome stays quiet.** The shell may expose only structural metadata (`Section`, `Template`, `Route`) in addition to route title and description; no redundant note cards or fixed JSON/log quick-link strips.
+6. **Operator chrome stays quiet.** The shell header exposes only the section eyebrow, route title, description, optional page actions, and section-local tabs; no redundant in-page title blocks, note cards, or fixed JSON/log quick-link strips.
 
 ## Tokens
 
@@ -90,12 +90,14 @@ This shell must not clone the vendored llama-swap UI. It should absorb the vendo
 - Desktop: fixed primary left rail, main content region, and section-local top tabs
 - Mobile: section rail stacks above content and secondary navigation becomes a horizontal scroll row
 - The left rail contains the primary section list plus a quiet preserved-host-tools list for `/logs` and `/api/metrics`
-- The shell header contains:
-  - eyebrow
-  - title
-  - concise technical description
-  - a three-card structural metadata strip for `Section`, `Template`, and `Route`
-- Secondary navigation sits beneath the shell header metadata as section-local page tabs
+- The shell header is the **only** route-level header. It contains:
+  - section eyebrow (from `RuntimeRouteDefinition.section`)
+  - page title (from `RuntimeRouteDefinition.title`, overridable on detail routes)
+  - concise technical description (from `RuntimeRouteDefinition.description`)
+  - optional page actions (registered by the active route via `usePageActions()`)
+- Secondary navigation sits beneath the shell header as section-local page tabs
+- Page content begins immediately in `<main>` with template primitives (`FactCard`, `SectionCard`, …)
+- Route files must **not** repeat eyebrow, title, or description metadata
 - Preserve vendor-host escape hatches as contextual page actions or route-local references, not as a global `/ui` affordance in shell chrome
 
 ## Navigation model
@@ -113,6 +115,16 @@ The runtime hierarchy remains:
 | Endpoints | Endpoint inventory plus downstream and upstream contract surfaces | `/app/endpoints*` |
 | Observe | Request ledgers, raw host activity, logs, metrics, and captures | `/app/observe/*` |
 | System | Host/runtime topology, peer inventory, version, auth, and policy posture | `/app/system/*` |
+
+## Header metadata ownership
+
+| Field | Owner | API |
+| --- | --- | --- |
+| section eyebrow | `RuntimeRouteDefinition.section` | `getRuntimeRouteDefinition()` |
+| title | `RuntimeRouteDefinition.title` | shell default; `useShellHeaderOverride()` on detail routes |
+| description | `RuntimeRouteDefinition.description` | shell default; override rarely |
+| page actions | active route component | `usePageActions()` only — not `RuntimeRouteDefinition` (actions are often dynamic, conditional, or stateful) |
+| section tabs | `runtimeNavigationSections` | `AppShell` |
 
 ## Route and layout contract
 
@@ -157,17 +169,19 @@ Status note:
 
 ## Page templates
 
+All templates assume the shell header is already visible. Page content begins directly with template primitives (`FactCard`, `SectionCard`, …)—never with a duplicate title block.
+
 | Template | Layout definition |
 | --- | --- |
-| `summary-board` | Two-tier dashboard: telemetry summary cards first, then a split between cross-vendor comparison and recent request/configuration posture. |
-| `studio-workspace` | Left composition rail, dominant result surface, and secondary inspection region for payload, captures, or contracts. |
-| `registry-detail` | Dense registry/editor split: compact editing or selection on one side, operational state ledger on the other. |
-| `model-inventory` | Mobile-first card grid with modal drill-in; cards are the default object representation, not rows. |
-| `ledger-inspector` | Dense sortable ledger plus adjacent inspector or drill-in drawer for telemetry facts, captures, payloads, and profile context. |
-| `dual-console` | Two raw log consoles or stream panes with clear source labels and a small operator toolbar. |
-| `contract-reference` | Narrow reference column plus implementation contract panels and example payloads. |
-| `matrix-grid` | Dense grid of concurrent operational cells: status-first, then resource metrics, with add/remove controls and honest empty state. |
-| `system-topology` | Layered operational summary: health and version first, then host/runtime policy panels and contextual host diagnostics. |
+| `summary-board` | Content starts under the shell header. Two-tier dashboard: telemetry summary cards first, then a split between cross-vendor comparison and recent request/configuration posture. |
+| `studio-workspace` | Content starts under the shell header. Left composition rail, dominant result surface, and secondary inspection region for payload, captures, or contracts. |
+| `registry-detail` | Content starts under the shell header. Dense registry/editor split: compact editing or selection on one side, operational state ledger on the other. |
+| `model-inventory` | Content starts under the shell header. Mobile-first card grid with modal drill-in; cards are the default object representation, not rows. |
+| `ledger-inspector` | Content starts under the shell header. Dense sortable ledger plus adjacent inspector or drill-in drawer for telemetry facts, captures, payloads, and profile context. |
+| `dual-console` | Content starts under the shell header. Two raw log consoles or stream panes with clear source labels and a small operator toolbar. |
+| `contract-reference` | Content starts under the shell header. Narrow reference column plus implementation contract panels and example payloads. |
+| `matrix-grid` | Content starts under the shell header. Dense grid of concurrent operational cells: status-first, then resource metrics, with add/remove controls and honest empty state. |
+| `system-topology` | Content starts under the shell header. Layered operational summary: health and version first, then host/runtime policy panels and contextual host diagnostics. |
 
 No current runtime route may rely on `FutureSurface`, fixture rows, or other placeholder scaffolds; live routes must render honest data or explicit empty states.
 
@@ -351,8 +365,9 @@ During the conversion window, some placeholder routes may still expose a context
 
 ### Shell and shared primitives
 
-- `AppShell` owns the section rail, the quiet preserved-host-tools list, the shell-level metadata strip, and the section-local tab row.
-- `PageHeader` begins with a short accent rule, keeps body copy near `60ch`, and reserves actions for page-local JSON/raw-host links.
+- `AppShell` owns the section rail, the shell header (eyebrow, title, description, optional actions), and the section-local tab row
+- `ShellHeaderProvider` plus `usePageActions()` and `useShellHeaderOverride()` let active routes register page-local actions or dynamic titles without reintroducing in-page header blocks
+- Route files must not render duplicate title/description blocks; metadata lives once in `RuntimeRouteDefinition`
 - `SectionCard` is the default sectional frame: one divider, one heading block, then content.
 - `FactCard` is the default live summary primitive for top-of-page fact strips; prefer 3-4 cards and emphasize only the primary one.
 - `CodeBlock` is the canonical payload/log container for mono transport artifacts.
@@ -365,17 +380,18 @@ During the conversion window, some placeholder routes may still expose a context
 ### Temporary conversion scaffolds
 
 - `FutureSurface` is the only allowed temporary scaffold while an `implementation target` route is still being converted.
+- Scaffold pages rely on the shell header for route metadata; `FutureSurface` does not accept title or eyebrow props.
 - Every temporary scaffold must show:
   - a template-specific blueprint
   - a clear route-local conversion note block
-  - any preserved raw-host doorway relevant to that surface
+  - optional page actions via `usePageActions()` when raw-host doorways are relevant
 - Generic placeholder cards with no template reading order are not allowed.
 
 ### Cards and panels
 
 - Use borders and spacing for separation.
 - Prefer internal dividers over nested decorative containers.
-- Use accent rules only when a section truly needs emphasis.
+- Do not use decorative accent rules in page or shell headers; reserve accent for primary actions, active routes, and explicit status emphasis.
 
 ### Configured model cards
 
@@ -480,3 +496,5 @@ The run-13 tool/MCP baseline remains part of the runtime design contract rather 
    - expose runtime policy, peers, and config-watch posture from the vendored host, with version facts folded into Runtime
 4. **Integrations**
    - finish upstream reference surfaces after the operator pages are concrete, with compatibility guidance folded into Downstream
+
+

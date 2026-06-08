@@ -7,7 +7,6 @@ import {
   ErrorState,
   FactCard,
   LoadingState,
-  PageHeader,
   SectionCard,
   StatusPill,
 } from "../components/page-primitives";
@@ -16,6 +15,7 @@ import {
   primaryButtonClassName,
   secondaryButtonClassName,
 } from "../lib/design-system";
+import { usePageActions } from "../lib/shell-header-context";
 import {
   type RuntimeAccount,
   type RuntimeControllerAssignment,
@@ -194,6 +194,13 @@ export default function ControlModelsRoute() {
     }
   };
 
+  usePageActions(
+    <Link className={secondaryButtonClassName} to="/app/models/roles">
+      Edit runtime roles
+    </Link>,
+    [],
+  );
+
   if (error) {
     return <ErrorState label={error} />;
   }
@@ -207,17 +214,6 @@ export default function ControlModelsRoute() {
   return (
     <>
       <div className="space-y-6">
-        <PageHeader
-          eyebrow="Models"
-          title="Configured models"
-          description="Unified local and remote model cards with controller status, live role bindings, capabilities, request metrics, and backing-account role assignment."
-          actions={
-            <Link className={secondaryButtonClassName} to="/app/models/roles">
-              Edit runtime roles
-            </Link>
-          }
-        />
-
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <FactCard
             label="Configured models"

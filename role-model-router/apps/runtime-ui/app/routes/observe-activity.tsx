@@ -6,7 +6,6 @@ import {
   ErrorState,
   FactCard,
   LoadingState,
-  PageHeader,
   SectionCard,
   StatusPill,
 } from "../components/page-primitives";
@@ -15,6 +14,7 @@ import {
   mutedPanelClassName,
   secondaryButtonClassName,
 } from "../lib/design-system";
+import { usePageActions } from "../lib/shell-header-context";
 import {
   type RuntimeActivityCapture,
   type RuntimeActivityLogEntry,
@@ -77,6 +77,18 @@ export default function ObserveActivityRoute() {
       .finally(() => setCaptureLoading(false));
   }, [selectedCaptureId]);
 
+  usePageActions(
+    <>
+      <a className={secondaryButtonClassName} href="/api/metrics">
+        Raw metrics
+      </a>
+      <a className={secondaryButtonClassName} href="/api/events">
+        Event stream
+      </a>
+    </>,
+    [],
+  );
+
   if (error) {
     return <ErrorState label={error} />;
   }
@@ -88,22 +100,6 @@ export default function ObserveActivityRoute() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        eyebrow="Observe"
-        title="Activity and metrics"
-        description="Host request activity, capture drill-ins, and raw vendor observability stay in one compact operator ledger instead of being split across duplicate pages."
-        actions={
-          <>
-            <a className={secondaryButtonClassName} href="/api/metrics">
-              Raw metrics
-            </a>
-            <a className={secondaryButtonClassName} href="/api/events">
-              Event stream
-            </a>
-          </>
-        }
-      />
-
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {summary.facts.map((fact) => (
           <FactCard

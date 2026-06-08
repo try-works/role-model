@@ -4,7 +4,6 @@ import {
   EmptyState,
   ErrorState,
   LoadingState,
-  PageHeader,
   SectionCard,
 } from "../components/page-primitives";
 import { mutedPanelClassName } from "../lib/design-system";
@@ -41,12 +40,6 @@ export default function LocalSwapRoute() {
 
   return (
     <div className="space-y-8">
-      <PageHeader
-        eyebrow="Local"
-        title="Swap history"
-        description="Chronological log of model swap events."
-      />
-
       {error ? <ErrorState label={error} /> : null}
 
       <SectionCard title="Event ledger" description="Most recent swap events first.">

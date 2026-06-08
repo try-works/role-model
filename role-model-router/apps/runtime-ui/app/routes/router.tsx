@@ -6,11 +6,11 @@ import {
   ErrorState,
   FactCard,
   LoadingState,
-  PageHeader,
   SectionCard,
   StatusPill,
 } from "../components/page-primitives";
 import { secondaryButtonClassName } from "../lib/design-system";
+import { usePageActions } from "../lib/shell-header-context";
 import {
   type RouterSummary,
   type RuntimeConfigRecord,
@@ -50,45 +50,27 @@ export default function RouterOverviewRoute() {
   );
   const readyAliasCount = aliasRows.filter((row) => row.readinessLabel === "ready").length;
 
-  const header = (
-    <PageHeader
-      eyebrow="Router"
-      title="Routing overview"
-      description="Use Router to inspect active strategy, alias coverage, and decision posture before drilling into per-request receipts."
-      actions={
-        <>
-          <Link className={secondaryButtonClassName} to="/app/router/config">
-            View config
-          </Link>
-          <Link className={secondaryButtonClassName} to="/app/router/decisions">
-            Open decisions
-          </Link>
-        </>
-      }
-    />
+  usePageActions(
+    <>
+      <Link className={secondaryButtonClassName} to="/app/router/config">
+        View config
+      </Link>
+      <Link className={secondaryButtonClassName} to="/app/router/decisions">
+        Open decisions
+      </Link>
+    </>,
+    [],
   );
 
   if (error) {
-    return (
-      <div className="space-y-6">
-        {header}
-        <ErrorState label={error} />
-      </div>
-    );
+    return <ErrorState label={error} />;
   }
   if (!summary || !snapshot || !configRecord) {
-    return (
-      <div className="space-y-6">
-        {header}
-        <LoadingState label="Loading router overview…" />
-      </div>
-    );
+    return <LoadingState label="Loading router overview…" />;
   }
 
   return (
     <div className="space-y-6">
-      {header}
-
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <FactCard
           label="Strategy"

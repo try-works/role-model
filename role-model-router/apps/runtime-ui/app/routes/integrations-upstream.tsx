@@ -5,7 +5,6 @@ import {
   ErrorState,
   FactCard,
   LoadingState,
-  PageHeader,
   SectionCard,
   StatusPill,
 } from "../components/page-primitives";
@@ -47,12 +46,6 @@ export default function IntegrationsUpstreamRoute() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        eyebrow="Endpoints"
-        title="Upstream providers"
-        description="Keep upstream passthrough boundaries, provider/account posture, and model-specific raw doorways in one repo-owned integration surface."
-      />
-
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         <FactCard
           label="Providers"

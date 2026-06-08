@@ -4,7 +4,6 @@ import { Link } from "react-router";
 import {
   ErrorState,
   LoadingState,
-  PageHeader,
   SectionCard,
   StatusPill,
 } from "../components/page-primitives";
@@ -15,6 +14,7 @@ import {
   primaryButtonClassName,
   secondaryButtonClassName,
 } from "../lib/design-system";
+import { usePageActions } from "../lib/shell-header-context";
 import {
   ROUTING_MODE_OPTIONS,
   describeRoutingMode,
@@ -163,6 +163,18 @@ export default function ControlRoutingStrategyRoute() {
     void loadState();
   }, [loadState]);
 
+  usePageActions(
+    <>
+      <Link className={secondaryButtonClassName} to="/app/system/runtime-config">
+        Advanced config
+      </Link>
+      <Link className={secondaryButtonClassName} to="/app/router/config">
+        Router detail
+      </Link>
+    </>,
+    [],
+  );
+
   if (error) {
     return <ErrorState label={error} />;
   }
@@ -229,22 +241,6 @@ export default function ControlRoutingStrategyRoute() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        eyebrow="Router"
-        title="Routing strategy"
-        description="Set the persisted Strategy A/B/C routing mode and execution mode from one control-plane surface, then verify the result through controller, router, and request views."
-        actions={
-          <>
-            <Link className={secondaryButtonClassName} to="/app/system/runtime-config">
-              Advanced config
-            </Link>
-            <Link className={secondaryButtonClassName} to="/app/router/config">
-              Router detail
-            </Link>
-          </>
-        }
-      />
-
       <SectionCard
         title="Persisted routing posture"
         description="Change the saved Strategy A/B/C routing mode and the effective execution mode here; both write through the runtime config control-plane record instead of living as placeholder UI state."

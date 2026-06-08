@@ -4,7 +4,6 @@ import {
   EmptyState,
   ErrorState,
   LoadingState,
-  PageHeader,
   SectionCard,
 } from "../components/page-primitives";
 import {
@@ -72,12 +71,6 @@ export default function LocalPolicyRoute() {
 
   return (
     <div className="space-y-8">
-      <PageHeader
-        eyebrow="Local"
-        title="Host policy"
-        description="Local inference runtime policy: TTL, auto-unload, and resource limits."
-      />
-
       {error ? <ErrorState label={error} /> : null}
 
       <SectionCard

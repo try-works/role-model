@@ -5,73 +5,53 @@ Update it as tasks move — not only at the end.
 
 ---
 
-## Active session — 2026-06-08
+## Active session — 2026-06-08 (design-system cleanup)
 
 ### Goal
 
-Remove duplicate runtime UI headers: keep `AppShell` as the single route-level header; remove per-page `PageHeader` duplication.
+Close design-system debt after the single-shell-header refactor: align docs, slim `RuntimeRouteDefinition`, simplify `FutureSurface`, remove metadata-strip spec entirely (Option C).
 
-### Plan (approved in chat)
+### Plan (approved)
 
-1. Add `ShellHeaderProvider` + `usePageActions()` + `useShellHeaderOverride()`
-2. Move actions into `AppShell` header top-right
-3. Remove `PageHeader` from all routes
-4. Update `DESIGN_SYSTEM.md` and tests
-5. Verify with `pnpm test` + `pnpm build` in `runtime-ui`
+- **Phase A:** Documentation & spec cleanup
+- **Phase B:** Remove `eyebrow`, `noteTitle`, `noteBody` from `RuntimeRouteDefinition`
+- **Phase C:** Slim `FutureSurface`, tests/guards, verify build
 
 ### Progress
 
 | Task | Status | Notes |
 | --- | --- | --- |
-| `shell-header-context.tsx` | done | Provider + hooks |
-| `app-shell.tsx` actions/override slot | done | Single header |
-| `app-layout.tsx` provider wiring | done | |
-| Remove `PageHeader` primitive | done | |
-| Migrate 33 route files | done | 18 use `usePageActions` |
-| `request-detail` dynamic title | done | `useShellHeaderOverride` |
-| `not-found` standalone heading | done | Outside shell |
-| `future-surface.tsx` | done | Actions via hook only |
-| `DESIGN_SYSTEM.md` | done | Header ownership section |
-| `design-system.test.ts` guards | done | 85/85 pass |
-| `runtime-ui` build | done | |
+| A1 Page template global rule + 9 row prefixes | done | `DESIGN_SYSTEM.md` |
+| A2 Remove metadata strip from spec (Option C) | done | Core rule §6 rewritten; no deferred strip |
+| A3 Document `usePageActions()` only for actions | done | Header metadata table |
+| A4 `FutureSurface` scaffold rules | done | No title/eyebrow props |
+| B1 Remove `eyebrow` from route definitions | done | `design-system.ts` |
+| B2 Remove `noteTitle` / `noteBody` | done | `design-system.ts` |
+| C1 Slim `FutureSurface` API | done | `{ notes, actions? }` only |
+| C2 Test/guard updates | done | `design-system.test.ts` |
+| C3 Build verification | done | 86 tests pass; build OK |
+
+### Explicitly out of scope
+
+- Three-card metadata strip UI — **removed from spec**, not deferred
+- Static actions in `RuntimeRouteDefinition` — rejected
 
 ### Key files touched
 
-- `role-model-router/apps/runtime-ui/app/lib/shell-header-context.tsx` (new)
-- `role-model-router/apps/runtime-ui/app/components/app-shell.tsx`
-- `role-model-router/apps/runtime-ui/app/routes/app-layout.tsx`
-- `role-model-router/apps/runtime-ui/app/components/page-primitives.tsx`
-- `role-model-router/apps/runtime-ui/app/routes/*.tsx` (33 files)
 - `role-model-router/apps/runtime-ui/DESIGN_SYSTEM.md`
+- `role-model-router/apps/runtime-ui/app/lib/design-system.ts`
+- `role-model-router/apps/runtime-ui/app/components/future-surface.tsx`
 - `role-model-router/apps/runtime-ui/app/lib/design-system.test.ts`
 
-### Earlier in same session (UI polish)
+### Prior session — header refactor (2026-06-08)
 
-- Removed accent rule from `AppShell` header
-- Removed accent rule from `PageHeader` (before component removal)
-- Started dev servers: UI `:5173`, bridge `:3456` (QA mode, placeholder `MOONSHOT_API_KEY`)
-
-### Open / optional follow-ups
-
-- [ ] Add “content starts under shell header” note to remaining page-template rows in `DESIGN_SYSTEM.md` (only `summary-board` updated)
-- [ ] Remove unused `eyebrow` field from `RuntimeRouteDefinition` or document as alias of `section`
-- [ ] Trim dead `eyebrow`/`title`/`description` props from `FutureSurface`
-- [ ] Git commit when ready (not done in session)
-
-### How to verify
-
-```bash
-cd role-model-router/apps/runtime-ui
-corepack pnpm test
-corepack pnpm run build
-# Manual: http://127.0.0.1:5173/app — one header, no duplicate title block
-```
+Completed earlier same day: `ShellHeaderProvider`, removed `PageHeader`, migrated 33 routes. UI refactor changes may still be uncommitted in working tree alongside this cleanup.
 
 ### For next session
 
-- Read this file + `DESIGN_SYSTEM.md` § Shell layout / Header metadata ownership before more UI work
-- Route copy is canonical in `app/lib/design-system.ts` (`RuntimeRouteDefinition`); do not reintroduce in-page title blocks
-- Page-local links/controls → `usePageActions()`; dynamic titles → `useShellHeaderOverride()`
+- Route copy canonical in `design-system.ts` only (`section`, `title`, `description`, `template`)
+- Page actions → `usePageActions()`; dynamic titles → `useShellHeaderOverride()`
+- Read `DESIGN_SYSTEM.md` § Shell layout / Header metadata ownership / Page templates before UI work
 
 ---
 

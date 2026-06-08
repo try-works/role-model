@@ -7,6 +7,7 @@ import {
   getRuntimeRouteDefinition,
   runtimeNavigationSections,
 } from "../lib/design-system";
+import { useShellHeaderState } from "../lib/shell-header-context";
 
 function primarySectionLinkClass(isActive: boolean): string {
   return cn(
@@ -28,10 +29,16 @@ function secondaryNavLinkClass(isActive: boolean): string {
 
 export function AppShell({ children }: { children: ReactNode }) {
   const location = useLocation();
+  const { actions, override } = useShellHeaderState();
   const route = getRuntimeRouteDefinition(location.pathname) ?? getRuntimeRouteDefinition("/app");
   const activeSection =
     runtimeNavigationSections.find((section) => section.title === route?.section) ??
     runtimeNavigationSections[0];
+  const title = override?.title ?? route?.title ?? "Runtime overview";
+  const description =
+    override?.description ??
+    route?.description ??
+    "Runtime, provider onboarding, endpoint visibility, and request inspection in one shell.";
 
   return (
     <div className="min-h-screen bg-[var(--rm-bg)] text-[var(--rm-fg)]">
@@ -63,18 +70,21 @@ export function AppShell({ children }: { children: ReactNode }) {
 
         <div className="min-w-0 space-y-5">
           <header className={`${cardClassName} px-5 py-5`}>
-            <div>
-              <div className="h-px w-10 bg-[var(--rm-accent)]" />
-              <p className="text-xs font-normal uppercase tracking-[0.24em] text-[var(--rm-muted)]">
-                {route?.section ?? "Overview"}
-              </p>
-              <h2 className="mt-3 text-3xl font-light tracking-tight">
-                {route?.title ?? "Runtime overview"}
-              </h2>
-              <p className="mt-3 max-w-[60ch] text-sm leading-6 text-[var(--rm-secondary)]">
-                {route?.description ??
-                  "Runtime, provider onboarding, endpoint visibility, and request inspection in one shell."}
-              </p>
+            <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end">
+              <div>
+                <p className="text-xs font-normal uppercase tracking-[0.24em] text-[var(--rm-muted)]">
+                  {route?.section ?? "Overview"}
+                </p>
+                <h2 className="mt-3 max-w-[16ch] text-balance text-3xl font-light tracking-tight">
+                  {title}
+                </h2>
+                <p className="mt-3 max-w-[60ch] text-sm leading-6 text-[var(--rm-secondary)]">
+                  {description}
+                </p>
+              </div>
+              {actions ? (
+                <div className="flex flex-wrap gap-2 xl:justify-end xl:self-end">{actions}</div>
+              ) : null}
             </div>
             <div className="mt-5 border-t border-[var(--rm-border)] pt-4">
               <p className="text-xs font-normal uppercase tracking-[0.22em] text-[var(--rm-muted)]">

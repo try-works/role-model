@@ -13,7 +13,6 @@ import {
   ErrorState,
   FactCard,
   LoadingState,
-  PageHeader,
   SectionCard,
   StatusPill,
 } from "../components/page-primitives";
@@ -23,6 +22,7 @@ import {
   primaryButtonClassName,
   secondaryButtonClassName,
 } from "../lib/design-system";
+import { usePageActions } from "../lib/shell-header-context";
 import {
   type RuntimeRolePolicy,
   type RuntimeRolePolicyRole,
@@ -390,28 +390,24 @@ export default function ControlRolesRoute() {
     }
   };
 
+  usePageActions(
+    <>
+      <Link className={secondaryButtonClassName} to="/app/models">
+        Model bindings
+      </Link>
+      <Link className={secondaryButtonClassName} to="/app/router/config">
+        Routing config
+      </Link>
+    </>,
+    [],
+  );
+
   if (error && !policy) {
     return <ErrorState label={error} />;
   }
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        eyebrow="Models"
-        title="Runtime roles"
-        description="Author full router-grade role policy in the live control plane, then manage which roles each task type can use without falling back to seeded JSON."
-        actions={
-          <>
-            <Link className={secondaryButtonClassName} to="/app/models">
-              Model bindings
-            </Link>
-            <Link className={secondaryButtonClassName} to="/app/router/config">
-              Routing config
-            </Link>
-          </>
-        }
-      />
-
       {error ? <ErrorState label={error} /> : null}
       {!policy ? <LoadingState label="Loading runtime role policy…" /> : null}
 

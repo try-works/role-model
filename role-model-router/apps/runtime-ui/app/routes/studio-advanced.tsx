@@ -6,7 +6,6 @@ import {
   ErrorState,
   FactCard,
   LoadingState,
-  PageHeader,
   SectionCard,
 } from "../components/page-primitives";
 import {
@@ -14,6 +13,7 @@ import {
   primaryButtonClassName,
   secondaryButtonClassName,
 } from "../lib/design-system";
+import { usePageActions } from "../lib/shell-header-context";
 import {
   type RuntimeSnapshot,
   fetchRuntimeSnapshot,
@@ -148,19 +148,15 @@ export default function StudioAdvancedRoute() {
     }
   }
 
+  usePageActions(
+    <a className={secondaryButtonClassName} href="/v1/models">
+      Model list
+    </a>,
+    [],
+  );
+
   return (
     <div className="space-y-6">
-      <PageHeader
-        eyebrow="Studio"
-        title="Advanced APIs"
-        description="Use one operator workspace for advanced endpoint families that have real vendor/runtime backing but do not merit separate primary navigation."
-        actions={
-          <a className={secondaryButtonClassName} href="/v1/models">
-            Model list
-          </a>
-        }
-      />
-
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         <FactCard
           label="Endpoint families"

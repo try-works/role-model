@@ -5,7 +5,6 @@ import {
   CodeBlock,
   ErrorState,
   LoadingState,
-  PageHeader,
   SectionCard,
 } from "../components/page-primitives";
 import {
@@ -13,6 +12,7 @@ import {
   primaryButtonClassName,
   secondaryButtonClassName,
 } from "../lib/design-system";
+import { usePageActions } from "../lib/shell-header-context";
 import {
   type RuntimeConfig,
   type RuntimeConfigRecord,
@@ -95,27 +95,23 @@ export default function ControlRuntimeConfigRoute() {
     }
   };
 
+  usePageActions(
+    <>
+      <Link className={secondaryButtonClassName} to="/app/router/strategy">
+        Routing strategy
+      </Link>
+      <Link className={secondaryButtonClassName} to="/app/models">
+        Inspect models
+      </Link>
+      <a className={secondaryButtonClassName} href="/api/role-model/runtime/config">
+        Runtime config JSON
+      </a>
+    </>,
+    [],
+  );
+
   return (
     <div className="space-y-6">
-      <PageHeader
-        eyebrow="System"
-        title="Runtime config"
-        description="Edit the repo-owned unified runtime contract for local llama-swap models, remote LiteLLM providers, and process policy in one control-plane route."
-        actions={
-          <>
-            <Link className={secondaryButtonClassName} to="/app/router/strategy">
-              Routing strategy
-            </Link>
-            <Link className={secondaryButtonClassName} to="/app/models">
-              Inspect models
-            </Link>
-            <a className={secondaryButtonClassName} href="/api/role-model/runtime/config">
-              Runtime config JSON
-            </a>
-          </>
-        }
-      />
-
       {error ? <ErrorState label={error} /> : null}
 
       <SectionCard

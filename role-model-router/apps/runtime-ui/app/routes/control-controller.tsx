@@ -4,7 +4,6 @@ import {
   EmptyState,
   ErrorState,
   LoadingState,
-  PageHeader,
   SectionCard,
   StatusPill,
 } from "../components/page-primitives";
@@ -73,12 +72,6 @@ export default function ControlControllerRoute() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        eyebrow="Router"
-        title="Routing controller"
-        description="Choose the explicit endpoint/model pair that adjudicates routed requests, with local and remote candidates shown in one list."
-      />
-
       <SectionCard
         title="Current assignment"
         description="The controller is persisted in the runtime control plane and can be changed without editing seed data."

@@ -5,7 +5,6 @@ import {
   EmptyState,
   ErrorState,
   LoadingState,
-  PageHeader,
   SectionCard,
   StatusPill,
 } from "../components/page-primitives";
@@ -78,12 +77,6 @@ export default function EndpointsRoute() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        eyebrow="Endpoints"
-        title="Endpoint registry"
-        description="Configured providers, live endpoint rows, and alias coverage stay together here so operators can verify what the router can actually consume."
-      />
-
       {readinessRows.length > 0 ? (
         <SectionCard
           title="Provider onboarding readiness"

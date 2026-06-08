@@ -6,7 +6,6 @@ import {
   ErrorState,
   FactCard,
   LoadingState,
-  PageHeader,
   SectionCard,
   StatusPill,
 } from "../components/page-primitives";
@@ -16,6 +15,7 @@ import {
   primaryButtonClassName,
   secondaryButtonClassName,
 } from "../lib/design-system";
+import { usePageActions } from "../lib/shell-header-context";
 import {
   type RuntimeAudioVoiceRecord,
   type RuntimeSnapshot,
@@ -172,29 +172,25 @@ export default function StudioAudioRoute() {
     }
   }
 
+  usePageActions(
+    <>
+      <a className={secondaryButtonClassName} href="/v1/models">
+        Model list
+      </a>
+      {model ? (
+        <a
+          className={secondaryButtonClassName}
+          href={`/v1/audio/voices?model=${encodeURIComponent(model)}`}
+        >
+          Voice endpoint
+        </a>
+      ) : null}
+    </>,
+    [model],
+  );
+
   return (
     <div className="space-y-6">
-      <PageHeader
-        eyebrow="Studio"
-        title="Audio workflows"
-        description="Keep speech synthesis, voice discovery, and transcription in one audio workspace so the request rail, result stage, and diagnostics stay aligned."
-        actions={
-          <>
-            <a className={secondaryButtonClassName} href="/v1/models">
-              Model list
-            </a>
-            {model ? (
-              <a
-                className={secondaryButtonClassName}
-                href={`/v1/audio/voices?model=${encodeURIComponent(model)}`}
-              >
-                Voice endpoint
-              </a>
-            ) : null}
-          </>
-        }
-      />
-
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         <FactCard
           label="Available models"

@@ -6,7 +6,6 @@ import {
   ErrorState,
   FactCard,
   LoadingState,
-  PageHeader,
   SectionCard,
 } from "../components/page-primitives";
 import { listRowClassName, mutedPanelClassName } from "../lib/design-system";
@@ -64,12 +63,6 @@ export default function RequestsRoute() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        eyebrow="Observe"
-        title="Telemetry ledger"
-        description="Structured local and remote request rows, ordered by newest activity and refreshed from the canonical telemetry stream."
-      />
-
       <div className="grid gap-4 md:grid-cols-3">
         <FactCard
           label="Requests"

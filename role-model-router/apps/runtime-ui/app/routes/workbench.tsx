@@ -7,7 +7,6 @@ import {
   ErrorState,
   FactCard,
   LoadingState,
-  PageHeader,
   SectionCard,
   StatusPill,
 } from "../components/page-primitives";
@@ -169,12 +168,6 @@ export default function WorkbenchRoute() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        eyebrow="Studio"
-        title="Chat workspace"
-        description="Compose routed chat requests, then inspect assistant text, tool calls, execution receipts, and token usage without leaving the shell."
-      />
-
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <FactCard
           label="Models"

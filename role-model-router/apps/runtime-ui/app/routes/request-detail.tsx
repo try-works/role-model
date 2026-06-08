@@ -7,11 +7,11 @@ import {
   ErrorState,
   FactCard,
   LoadingState,
-  PageHeader,
   SectionCard,
   StatusPill,
 } from "../components/page-primitives";
 import { formatRoutingModeLabel } from "../lib/routing-mode";
+import { useShellHeaderOverride } from "../lib/shell-header-context";
 import { fetchRequestDetail } from "../lib/runtime-api";
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -96,6 +96,8 @@ export default function RequestDetailRoute() {
         setError(value instanceof Error ? value.message : "Could not load request detail."),
       );
   }, [requestId]);
+
+  useShellHeaderOverride({ title: requestId }, [requestId]);
 
   if (error) {
     return <ErrorState label={error} />;
@@ -259,12 +261,6 @@ export default function RequestDetailRoute() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        eyebrow="Observe"
-        title={requestId}
-        description="Telemetry-first request inspection leads with usage, cache, and endpoint facts, while keeping raw captures and the full observation bundle available for debugging."
-      />
-
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
         <FactCard
           label="Endpoint"

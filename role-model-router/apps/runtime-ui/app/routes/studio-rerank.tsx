@@ -6,7 +6,6 @@ import {
   ErrorState,
   FactCard,
   LoadingState,
-  PageHeader,
   SectionCard,
   StatusPill,
 } from "../components/page-primitives";
@@ -16,6 +15,7 @@ import {
   primaryButtonClassName,
   secondaryButtonClassName,
 } from "../lib/design-system";
+import { usePageActions } from "../lib/shell-header-context";
 import {
   type RuntimeSnapshot,
   fetchRuntimeSnapshot,
@@ -101,19 +101,15 @@ export default function StudioRerankRoute() {
     }
   }
 
+  usePageActions(
+    <a className={secondaryButtonClassName} href="/v1/models">
+      Model list
+    </a>,
+    [],
+  );
+
   return (
     <div className="space-y-6">
-      <PageHeader
-        eyebrow="Studio"
-        title="Rerank"
-        description="Keep query, candidate set, ordered score ledger, and raw payload inspection in one rerank workspace beside the rest of Studio."
-        actions={
-          <a className={secondaryButtonClassName} href="/v1/models">
-            Model list
-          </a>
-        }
-      />
-
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         <FactCard
           label="Available models"

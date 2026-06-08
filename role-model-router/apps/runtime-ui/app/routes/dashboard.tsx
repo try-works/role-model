@@ -6,7 +6,6 @@ import {
   ErrorState,
   FactCard,
   LoadingState,
-  PageHeader,
   SectionCard,
   StatusPill,
 } from "../components/page-primitives";
@@ -66,12 +65,6 @@ export default function DashboardRoute() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        eyebrow="Overview"
-        title="Unified telemetry"
-        description="One structured local-plus-remote telemetry surface for the runtime summary, comparison rows, and freshest request activity."
-      />
-
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {statCards.map((card, index) => (
           <FactCard

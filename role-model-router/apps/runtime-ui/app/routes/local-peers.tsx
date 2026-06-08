@@ -4,7 +4,6 @@ import {
   EmptyState,
   ErrorState,
   LoadingState,
-  PageHeader,
   SectionCard,
 } from "../components/page-primitives";
 import {
@@ -12,6 +11,7 @@ import {
   primaryButtonClassName,
   secondaryButtonClassName,
 } from "../lib/design-system";
+import { usePageActions } from "../lib/shell-header-context";
 import { checkPeerHealth, fetchPeers, updatePeers } from "../lib/runtime-api";
 
 interface PeerConfig {
@@ -105,24 +105,20 @@ export default function LocalPeersRoute() {
     }
   };
 
+  usePageActions(
+    <button
+      type="button"
+      onClick={refresh}
+      disabled={loading}
+      className={secondaryButtonClassName}
+    >
+      {loading ? "Refreshing…" : "Refresh"}
+    </button>,
+    [loading, refresh],
+  );
+
   return (
     <div className="space-y-8">
-      <PageHeader
-        eyebrow="Local"
-        title="Local endpoints"
-        description="OpenAI-compatible peer endpoint inventory and management."
-        actions={
-          <button
-            type="button"
-            onClick={refresh}
-            disabled={loading}
-            className={secondaryButtonClassName}
-          >
-            {loading ? "Refreshing…" : "Refresh"}
-          </button>
-        }
-      />
-
       {error ? <ErrorState label={error} /> : null}
 
       <SectionCard

@@ -5,7 +5,6 @@ import {
   ErrorState,
   FactCard,
   LoadingState,
-  PageHeader,
   SectionCard,
   StatusPill,
 } from "../components/page-primitives";
@@ -41,29 +40,11 @@ export default function RouterCandidatesRoute() {
       );
   }, []);
 
-  const header = (
-    <PageHeader
-      eyebrow="Router"
-      title="Candidate inventory"
-      description="Compare local and remote routing candidates in one place, including controller posture, role coverage, and observed signals when available."
-    />
-  );
-
   if (error) {
-    return (
-      <div className="space-y-6">
-        {header}
-        <ErrorState label={error} />
-      </div>
-    );
+    return <ErrorState label={error} />;
   }
   if (!candidates) {
-    return (
-      <div className="space-y-6">
-        {header}
-        <LoadingState label="Loading routing candidates…" />
-      </div>
-    );
+    return <LoadingState label="Loading routing candidates…" />;
   }
 
   const localCount = candidates.filter((candidate) => candidate.sourceType === "local").length;
@@ -71,8 +52,6 @@ export default function RouterCandidatesRoute() {
 
   return (
     <div className="space-y-6">
-      {header}
-
       <div className="grid gap-4 md:grid-cols-3">
         <FactCard
           label="Candidates"
