@@ -1,0 +1,48 @@
+Scope: all 42 workspace projects
+(node:344924) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+ΓÇëWARNΓÇë There are cyclic workspace dependencies: D:\DEV\role-model\.worktrees\35-runtime-ui-connect-declutter\role-model-router\packages\adapter-execution, D:\DEV\role-model\.worktrees\35-runtime-ui-connect-declutter\role-model-router\packages\provider-anthropic
+Lockfile is up to date, resolution step is skipped
+Progress: resolved 1, reused 0, downloaded 0, added 0
+Packages: +518
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Progress: resolved 518, reused 202, downloaded 0, added 0
+
+   Γò¡ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓò«
+   Γöé                                              Γöé
+   Γöé      Update available! 10.6.5 ΓåÆ 11.5.2.      Γöé
+   Γöé     Changelog: https://pnpm.io/v/11.5.2      Γöé
+   Γöé   To update, run: corepack use pnpm@11.5.2   Γöé
+   Γöé                                              Γöé
+   Γò░ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓò»
+
+Progress: resolved 518, reused 507, downloaded 0, added 1
+Progress: resolved 518, reused 510, downloaded 0, added 50
+Progress: resolved 518, reused 510, downloaded 0, added 113
+Progress: resolved 518, reused 511, downloaded 0, added 229
+Progress: resolved 518, reused 512, downloaded 0, added 301
+Progress: resolved 518, reused 512, downloaded 0, added 334
+Progress: resolved 518, reused 512, downloaded 0, added 395
+Progress: resolved 518, reused 512, downloaded 0, added 475
+Progress: resolved 518, reused 512, downloaded 0, added 512
+Progress: resolved 518, reused 512, downloaded 0, added 514
+Progress: resolved 518, reused 512, downloaded 0, added 516
+Progress: resolved 518, reused 512, downloaded 0, added 517
+Progress: resolved 518, reused 512, downloaded 0, added 518, done
+
+devDependencies:
++ @biomejs/biome 1.9.4
++ @types/node 22.19.17
++ ajv 8.18.0
++ ajv-formats 3.0.1
++ commander 13.1.0
++ esbuild 0.25.12
++ json-schema-to-typescript 15.0.4
++ postject 1.0.0-alpha.6
++ tsx 4.21.0
++ typescript 5.9.3
++ vitest 3.2.4
+
+Γò¡ Warning ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓò«Γöé                                                                              ΓöéΓöé   Ignored build scripts: @biomejs/biome, esbuild, sharp, workerd.            ΓöéΓöé   Run "pnpm approve-builds" to pick which dependencies should be allowed     ΓöéΓöé   to run scripts.                                                            ΓöéΓöé                                                                              ΓöéΓò░ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓò»
+
+Done in 17.5s using pnpm v10.6.5

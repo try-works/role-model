@@ -1,0 +1,18 @@
+
+> @role-model-router/runtime-ui@ test D:\DEV\role-model\.worktrees\35-runtime-ui-connect-declutter\role-model-router\apps\runtime-ui
+> vitest run app/lib/runtime-api.test.ts app/lib/view-models.test.ts app/lib/device-authorization.test.ts app/lib/design-system.test.ts app/lib/provider-account-state.test.ts
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/35-runtime-ui-connect-declutter/role-model-router/apps/runtime-ui
+
+ Γ£ô app/lib/provider-account-state.test.ts (2 tests) 10ms
+ Γ£ô app/lib/device-authorization.test.ts (11 tests) 21ms
+ Γ£ô app/lib/view-models.test.ts (19 tests) 120ms
+ Γ£ô app/lib/runtime-api.test.ts (34 tests) 141ms
+ Γ£ô app/lib/design-system.test.ts (20 tests) 135ms
+
+ Test Files  5 passed (5)
+      Tests  86 passed (86)
+   Start at  12:43:19
+   Duration  2.91s (transform 1.38s, setup 0ms, collect 2.71s, tests 426ms, environment 2ms, prepare 1.61s)
+

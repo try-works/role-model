@@ -9,8 +9,9 @@ Watch-Paths:
 Source-Runs:
 - `16-router-runtime-unified-telemetry-dashboard`
 - `34-router-runtime-role-policy-and-ui-fixture-reduction`
+- `35-runtime-ui-connect-declutter`
 Validated-At-Commit: `working-tree`
-Last-Validated: `2026-05-17T08:30:00Z`
+Last-Validated: `2026-06-08T11:15:00Z`
 Tags:
 - `skills`
 - `browser`
@@ -24,8 +25,9 @@ Use `browser-use` as the default browser driver for interactive runtime UI flows
 
 ## Default Pattern
 
+- For runtime UI frontend changes, Phase 5 manual QA must use a live browser session plus visual verification (screenshots and/or DOM text receipts). Test-encoded nav contracts alone are companion proof, not a substitute.
 - Seed a persistent runtime state first so screenshots and text receipts come from a reproducible live baseline.
-- Use `browser-use` for:
+- Use `browser-use` or Cursor IDE `cursor-ide-browser` MCP for:
   - route navigation
   - clicking through repo-owned controls
   - form input
@@ -52,3 +54,5 @@ On Windows, prefer direct Edge CDP for the final receipt when:
 - Save both screenshots and text-or-JSON companion receipts when the scenario is stateful.
 - When refreshing SSE or other live data proof, use explicit request ids so new events do not overwrite each other in the captured ledger.
 - Use the QA bridge/browser flow to prove operator reachability, form behavior, and live readback, but switch to backend validators or a direct HTTP harness when the QA launcher does not persist runtime config or cannot faithfully prove downstream routing behavior.
+- When `browser_snapshot` returns empty refs but the page has rendered content, use CDP `Runtime.evaluate` against `document.body.innerText` or targeted selectors as the visual receipt companion to screenshots.
+- Run the dev server from the implementation worktree on a dedicated port when the main-repo dev instance does not carry the feature diff.
