@@ -1,0 +1,302 @@
+Using runtime http://127.0.0.1:8091
+Runtime endpoints active: 2
+Started benchmark run 32750042-fcf9-42f8-9ae9-250cf5b9643e
+[32750042-fcf9-42f8-9ae9-250cf5b9643e] status=running phase=execution steps=0/48 case=p17-tools-multi-hard endpoint=local-openai-compatible.personal.ca2ba73f-38f6-4feb-97b1-12b903bd81a4.local.lfm2.5-1.2b-instruct
+[32750042-fcf9-42f8-9ae9-250cf5b9643e] status=running phase=execution steps=1/48 case=x01-max-signal endpoint=local-openai-compatible.personal.ca2ba73f-38f6-4feb-97b1-12b903bd81a4.local.lfm2.5-1.2b-instruct
+[32750042-fcf9-42f8-9ae9-250cf5b9643e] status=running phase=execution steps=2/48 case=h01-implement-two-sum endpoint=local-openai-compatible.personal.ca2ba73f-38f6-4feb-97b1-12b903bd81a4.local.lfm2.5-1.2b-instruct
+[32750042-fcf9-42f8-9ae9-250cf5b9643e] status=running phase=execution steps=3/48 case=h02-fix-async-counter endpoint=local-openai-compatible.personal.ca2ba73f-38f6-4feb-97b1-12b903bd81a4.local.lfm2.5-1.2b-instruct
+[32750042-fcf9-42f8-9ae9-250cf5b9643e] status=running phase=execution steps=4/48 case=h04-tool-read-router endpoint=local-openai-compatible.personal.ca2ba73f-38f6-4feb-97b1-12b903bd81a4.local.lfm2.5-1.2b-instruct
+[32750042-fcf9-42f8-9ae9-250cf5b9643e] status=running phase=execution steps=5/48 case=h05-tool-grep-eligibility endpoint=local-openai-compatible.personal.ca2ba73f-38f6-4feb-97b1-12b903bd81a4.local.lfm2.5-1.2b-instruct
+[32750042-fcf9-42f8-9ae9-250cf5b9643e] status=running phase=execution steps=6/48 case=h06-tool-apply-patch endpoint=local-openai-compatible.personal.ca2ba73f-38f6-4feb-97b1-12b903bd81a4.local.lfm2.5-1.2b-instruct
+[32750042-fcf9-42f8-9ae9-250cf5b9643e] status=running phase=execution steps=7/48 case=h07-multi-turn-sla-guard endpoint=local-openai-compatible.personal.ca2ba73f-38f6-4feb-97b1-12b903bd81a4.local.lfm2.5-1.2b-instruct
+[32750042-fcf9-42f8-9ae9-250cf5b9643e] status=running phase=execution steps=8/48 case=h08-multi-turn-tool-refine endpoint=local-openai-compatible.personal.ca2ba73f-38f6-4feb-97b1-12b903bd81a4.local.lfm2.5-1.2b-instruct
+[32750042-fcf9-42f8-9ae9-250cf5b9643e] status=running phase=execution steps=9/48 case=h09-agent-metrics-chain endpoint=local-openai-compatible.personal.ca2ba73f-38f6-4feb-97b1-12b903bd81a4.local.lfm2.5-1.2b-instruct
+[32750042-fcf9-42f8-9ae9-250cf5b9643e] status=running phase=execution steps=10/48 case=h10-agent-read-grep-patch endpoint=local-openai-compatible.personal.ca2ba73f-38f6-4feb-97b1-12b903bd81a4.local.lfm2.5-1.2b-instruct
+[32750042-fcf9-42f8-9ae9-250cf5b9643e] status=running phase=execution steps=11/48 case=h15-max-signal-v3 endpoint=local-openai-compatible.personal.ca2ba73f-38f6-4feb-97b1-12b903bd81a4.local.lfm2.5-1.2b-instruct
+[32750042-fcf9-42f8-9ae9-250cf5b9643e] status=running phase=execution steps=12/48 case=p17-tools-multi-hard endpoint=moonshot.personal.kimi-code.global.kimi-k2.6
+[32750042-fcf9-42f8-9ae9-250cf5b9643e] status=running phase=execution steps=13/48 case=x01-max-signal endpoint=moonshot.personal.kimi-code.global.kimi-k2.6
+[32750042-fcf9-42f8-9ae9-250cf5b9643e] status=running phase=execution steps=14/48 case=h01-implement-two-sum endpoint=moonshot.personal.kimi-code.global.kimi-k2.6
+[32750042-fcf9-42f8-9ae9-250cf5b9643e] status=running phase=execution steps=15/48 case=h02-fix-async-counter endpoint=moonshot.personal.kimi-code.global.kimi-k2.6
+[32750042-fcf9-42f8-9ae9-250cf5b9643e] status=running phase=execution steps=16/48 case=h04-tool-read-router endpoint=moonshot.personal.kimi-code.global.kimi-k2.6
+[32750042-fcf9-42f8-9ae9-250cf5b9643e] status=running phase=execution steps=17/48 case=h05-tool-grep-eligibility endpoint=moonshot.personal.kimi-code.global.kimi-k2.6
+[32750042-fcf9-42f8-9ae9-250cf5b9643e] status=running phase=execution steps=18/48 case=h06-tool-apply-patch endpoint=moonshot.personal.kimi-code.global.kimi-k2.6
+[32750042-fcf9-42f8-9ae9-250cf5b9643e] status=running phase=execution steps=19/48 case=h07-multi-turn-sla-guard endpoint=moonshot.personal.kimi-code.global.kimi-k2.6
+[32750042-fcf9-42f8-9ae9-250cf5b9643e] status=running phase=execution steps=20/48 case=h08-multi-turn-tool-refine endpoint=moonshot.personal.kimi-code.global.kimi-k2.6
+[32750042-fcf9-42f8-9ae9-250cf5b9643e] status=running phase=execution steps=21/48 case=h09-agent-metrics-chain endpoint=moonshot.personal.kimi-code.global.kimi-k2.6
+[32750042-fcf9-42f8-9ae9-250cf5b9643e] status=running phase=execution steps=22/48 case=h10-agent-read-grep-patch endpoint=moonshot.personal.kimi-code.global.kimi-k2.6
+[32750042-fcf9-42f8-9ae9-250cf5b9643e] status=running phase=execution steps=23/48 case=h15-max-signal-v3 endpoint=moonshot.personal.kimi-code.global.kimi-k2.6
+[32750042-fcf9-42f8-9ae9-250cf5b9643e] status=running phase=grading steps=24/48 case=p17-tools-multi-hard endpoint=local-openai-compatible.personal.ca2ba73f-38f6-4feb-97b1-12b903bd81a4.local.lfm2.5-1.2b-instruct
+[32750042-fcf9-42f8-9ae9-250cf5b9643e] status=running phase=grading steps=25/48 case=x01-max-signal endpoint=local-openai-compatible.personal.ca2ba73f-38f6-4feb-97b1-12b903bd81a4.local.lfm2.5-1.2b-instruct
+[32750042-fcf9-42f8-9ae9-250cf5b9643e] status=running phase=grading steps=26/48 case=h01-implement-two-sum endpoint=local-openai-compatible.personal.ca2ba73f-38f6-4feb-97b1-12b903bd81a4.local.lfm2.5-1.2b-instruct
+[32750042-fcf9-42f8-9ae9-250cf5b9643e] status=running phase=grading steps=27/48 case=h02-fix-async-counter endpoint=local-openai-compatible.personal.ca2ba73f-38f6-4feb-97b1-12b903bd81a4.local.lfm2.5-1.2b-instruct
+[32750042-fcf9-42f8-9ae9-250cf5b9643e] status=running phase=grading steps=28/48 case=h04-tool-read-router endpoint=local-openai-compatible.personal.ca2ba73f-38f6-4feb-97b1-12b903bd81a4.local.lfm2.5-1.2b-instruct
+[32750042-fcf9-42f8-9ae9-250cf5b9643e] status=running phase=grading steps=29/48 case=h05-tool-grep-eligibility endpoint=local-openai-compatible.personal.ca2ba73f-38f6-4feb-97b1-12b903bd81a4.local.lfm2.5-1.2b-instruct
+[32750042-fcf9-42f8-9ae9-250cf5b9643e] status=running phase=grading steps=30/48 case=h06-tool-apply-patch endpoint=local-openai-compatible.personal.ca2ba73f-38f6-4feb-97b1-12b903bd81a4.local.lfm2.5-1.2b-instruct
+[32750042-fcf9-42f8-9ae9-250cf5b9643e] status=running phase=grading steps=31/48 case=h07-multi-turn-sla-guard endpoint=local-openai-compatible.personal.ca2ba73f-38f6-4feb-97b1-12b903bd81a4.local.lfm2.5-1.2b-instruct
+[32750042-fcf9-42f8-9ae9-250cf5b9643e] status=running phase=grading steps=32/48 case=h08-multi-turn-tool-refine endpoint=local-openai-compatible.personal.ca2ba73f-38f6-4feb-97b1-12b903bd81a4.local.lfm2.5-1.2b-instruct
+[32750042-fcf9-42f8-9ae9-250cf5b9643e] status=running phase=grading steps=33/48 case=h09-agent-metrics-chain endpoint=local-openai-compatible.personal.ca2ba73f-38f6-4feb-97b1-12b903bd81a4.local.lfm2.5-1.2b-instruct
+[32750042-fcf9-42f8-9ae9-250cf5b9643e] status=running phase=grading steps=34/48 case=h10-agent-read-grep-patch endpoint=local-openai-compatible.personal.ca2ba73f-38f6-4feb-97b1-12b903bd81a4.local.lfm2.5-1.2b-instruct
+[32750042-fcf9-42f8-9ae9-250cf5b9643e] status=running phase=grading steps=35/48 case=h15-max-signal-v3 endpoint=local-openai-compatible.personal.ca2ba73f-38f6-4feb-97b1-12b903bd81a4.local.lfm2.5-1.2b-instruct
+[32750042-fcf9-42f8-9ae9-250cf5b9643e] status=running phase=grading steps=36/48 case=p17-tools-multi-hard endpoint=moonshot.personal.kimi-code.global.kimi-k2.6
+[32750042-fcf9-42f8-9ae9-250cf5b9643e] status=running phase=grading steps=37/48 case=x01-max-signal endpoint=moonshot.personal.kimi-code.global.kimi-k2.6
+[32750042-fcf9-42f8-9ae9-250cf5b9643e] status=running phase=grading steps=38/48 case=h01-implement-two-sum endpoint=moonshot.personal.kimi-code.global.kimi-k2.6
+[32750042-fcf9-42f8-9ae9-250cf5b9643e] status=running phase=grading steps=39/48 case=h02-fix-async-counter endpoint=moonshot.personal.kimi-code.global.kimi-k2.6
+[32750042-fcf9-42f8-9ae9-250cf5b9643e] status=running phase=grading steps=40/48 case=h04-tool-read-router endpoint=moonshot.personal.kimi-code.global.kimi-k2.6
+[32750042-fcf9-42f8-9ae9-250cf5b9643e] status=running phase=grading steps=41/48 case=h05-tool-grep-eligibility endpoint=moonshot.personal.kimi-code.global.kimi-k2.6
+[32750042-fcf9-42f8-9ae9-250cf5b9643e] status=running phase=grading steps=42/48 case=h06-tool-apply-patch endpoint=moonshot.personal.kimi-code.global.kimi-k2.6
+[32750042-fcf9-42f8-9ae9-250cf5b9643e] status=running phase=grading steps=43/48 case=h07-multi-turn-sla-guard endpoint=moonshot.personal.kimi-code.global.kimi-k2.6
+[32750042-fcf9-42f8-9ae9-250cf5b9643e] status=running phase=grading steps=44/48 case=h08-multi-turn-tool-refine endpoint=moonshot.personal.kimi-code.global.kimi-k2.6
+[32750042-fcf9-42f8-9ae9-250cf5b9643e] status=running phase=grading steps=45/48 case=h09-agent-metrics-chain endpoint=moonshot.personal.kimi-code.global.kimi-k2.6
+[32750042-fcf9-42f8-9ae9-250cf5b9643e] status=running phase=grading steps=46/48 case=h10-agent-read-grep-patch endpoint=moonshot.personal.kimi-code.global.kimi-k2.6
+[32750042-fcf9-42f8-9ae9-250cf5b9643e] status=running phase=grading steps=47/48 case=h15-max-signal-v3 endpoint=moonshot.personal.kimi-code.global.kimi-k2.6
+[32750042-fcf9-42f8-9ae9-250cf5b9643e] status=running phase=grading steps=48/48 case=h15-max-signal-v3 endpoint=moonshot.personal.kimi-code.global.kimi-k2.6
+Wrote D:\DEV\role-model\.worktrees\36-runtime-consumption-telemetry-remediation\.recursive\run\36-runtime-consumption-telemetry-remediation\evidence\logs\benchmark-judge-remediation-result.json
+{
+  "runId": "32750042-fcf9-42f8-9ae9-250cf5b9643e",
+  "artifactRoot": "C:\\Users\\erikb\\AppData\\Local\\Role Model Runtime\\state\\runtime-host-bridge\\memory\\benchmark-runs\\32750042-fcf9-42f8-9ae9-250cf5b9643e",
+  "judgeEndpointId": "moonshot.personal.kimi-code.global.kimi-k2.6",
+  "startedAtMs": 1780997870188,
+  "completedAtMs": 1781001164078,
+  "endpoints": [
+    {
+      "endpointId": "local-openai-compatible.personal.ca2ba73f-38f6-4feb-97b1-12b903bd81a4.local.lfm2.5-1.2b-instruct",
+      "modelId": "lfm2.5-1.2b-instruct",
+      "overallScore": 0.3333333333333333,
+      "passingCases": 4,
+      "totalCases": 12,
+      "parseFailureCount": 0,
+      "parseFailureCases": [],
+      "caseResults": [
+        {
+          "caseId": "p17-tools-multi-hard",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "rationale": "The deliverable includes the required read_file and apply_patch tool calls with correct arguments, and the answer field is a non-empty string (meets minLength 8) that acknowledges schema/test validation, matching the expected response.",
+          "gradingMethod": "judge",
+          "latencyMs": 4946,
+          "actualPreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    },\n    {\n      \"name\": \"apply_patch\",\n      \"arguments\": {\n        \"diff\": \"---/+++\"\n      }\n    }\n  ],\n  \"answer\": \"Valid"
+        },
+        {
+          "caseId": "x01-max-signal",
+          "difficultyBucket": "hard",
+          "score": 0,
+          "rationale": "The response failed to emit any required API tool calls (read_file, grep_search, apply_patch), which is a core requirement of the task and grading criteria. The plan contains only a single vague milestone rather than covering the required workflow steps. The patch_summary incorrectly claims \"No changes detected\" even though the task explicitly required an apply_patch operation. The test_snippet is a generic placeholder instead of a meaningful test checklist. Additionally, the deliverable includes an extraneous \"tool_calls\" key outside the required schema. These substantive failures represent a complete breakdown of the benchmarked routing capability.",
+          "gradingMethod": "judge",
+          "latencyMs": 11235,
+          "actualPreview": "{\n  \"tool_calls\": [],\n  \"plan\": [\n    \"Read and verify router file\"\n  ],\n  \"patch_summary\": \"No changes detected in the source file.\",\n  \"test_snippet\": \"Example test to validate workflow output\"\n}"
+        },
+        {
+          "caseId": "h01-implement-two-sum",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "rationale": "The deliverable defines twoSum with the correct signature, uses a Map for single-pass O(n) iteration over nums, checks for the complement before inserting the current element, and returns a tuple of two numeric indices. It contains no nested loops and satisfies all grading criteria.",
+          "gradingMethod": "judge",
+          "latencyMs": 4380,
+          "actualPreview": "{\n  \"code\": \"function twoSum(nums: number[], target: number): [number, number] {\\n  const map = new Map<number, number>();\\n  for (let i = 0; i < nums.length; i++) {\\n    const complement = target - nums[i];\\n    if (map.has(complement)) {\\"
+        },
+        {
+          "caseId": "h02-fix-async-counter",
+          "difficultyBucket": "hard",
+          "score": 0,
+          "rationale": "The code references `new Mutex()` without defining, importing, or implementing a `Mutex` class. `Mutex` is not a built-in JavaScript/TypeScript global, so the code throws a ReferenceError and fails to run. Because the fix is incomplete and does not reliably produce count 3, it does not satisfy the requirement for complete working code with no placeholders.",
+          "gradingMethod": "judge",
+          "latencyMs": 3657,
+          "actualPreview": "{\n  \"code\": \"let count = 0;\\nconst mutex = new Mutex();\\n\\nasync function increment() {\\n  await mutex.acquire();\\n  try {\\n    const current = count;\\n    count = current + 1;\\n  } finally {\\n    mutex.release();\\n  }\\n}\\n\\nawait Promise.a"
+        },
+        {
+          "caseId": "h04-tool-read-router",
+          "difficultyBucket": "hard",
+          "score": 0,
+          "rationale": "The deliverable violates the required output schema and format rules. The benchmark requires the final JSON to contain only an \"answer\" key, but the response includes an extra \"tool_calls\" key. Additionally, the answer value \"read_file\" is the tool name rather than a function exported from src/router.ts, indicating incorrect extraction.",
+          "gradingMethod": "judge",
+          "latencyMs": 3155,
+          "actualPreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    }\n  ],\n  \"answer\": \"read_file\"\n}"
+        },
+        {
+          "caseId": "h05-tool-grep-eligibility",
+          "difficultyBucket": "hard",
+          "score": 0,
+          "rationale": "The deliverable contains an empty tool_calls array, so the required grep_search call with evaluateEligibility pattern is missing. Additionally, the bullets do not mention eligibility checks, offering only generic validation statements.",
+          "gradingMethod": "judge",
+          "latencyMs": 7360,
+          "actualPreview": "{\n  \"tool_calls\": [],\n  \"bullets\": [\n    \"The first check verifies input format consistency.\",\n    \"The second validation ensures pattern matches expected keywords.\"\n  ]\n}"
+        },
+        {
+          "caseId": "h06-tool-apply-patch",
+          "difficultyBucket": "hard",
+          "score": 0,
+          "rationale": "The apply_patch tool call is present, but the diff argument is malformed: it lacks proper unified diff ---/+++ headers (shows '--+ File header' instead of '--- src/config.ts') and does not contain the required change from MODE = 'baseline' to MODE = 'difficulty'.",
+          "gradingMethod": "judge",
+          "latencyMs": 3844,
+          "actualPreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"apply_patch\",\n      \"arguments\": {\n        \"diff\": \"src/config.ts\\n--+ File header\\n+++ src/config.ts -->+\"\n      }\n    }\n  ]\n}"
+        },
+        {
+          "caseId": "h07-multi-turn-sla-guard",
+          "difficultyBucket": "hard",
+          "score": 0,
+          "rationale": "The code has critical type and logic errors. The `endpoints` parameter in `remoteOnlyAliasRequest` is typed as a single object, not an array, so calling `.filter()` on it is invalid TypeScript. `isSoleCandidate` is misimplemented: it returns `true` when *zero* endpoints are allowed, and the guard clause `if (!isSoleCandidate(endpoints))` therefore throws when endpoints *are* available, making the fallback unreachable. There is no reference to throughput SLA, no modeling of hard-denial reasons, and no correct sole-candidate fallback guard. It fails the prompt requirements entirely.",
+          "gradingMethod": "judge",
+          "latencyMs": 4135,
+          "actualPreview": "{\n  \"code\": \"function isSoleCandidate(endpoints: Endpoint[]): boolean {\\n  const available = endpoints.filter(e => e.allowed);\\n  return !available.length;\\n}\\n\\nexport function remoteOnlyAliasRequest(endpoints: { allowed: boolean, chosen_e"
+        },
+        {
+          "caseId": "h08-multi-turn-tool-refine",
+          "difficultyBucket": "hard",
+          "score": 0,
+          "rationale": "The read_file tool call targeted the wrong path ('database://example:db' instead of 'runtime-config.yaml'), and the answer incorrectly returns that path rather than the routing.strategy value from the correct file. The deliverable fails the core requirement to read runtime-config.yaml and extract its routing strategy.",
+          "gradingMethod": "judge",
+          "latencyMs": 4007,
+          "actualPreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"database://example:db\"\n      }\n    }\n  ],\n  \"answer\": \"database://example:db\"\n}"
+        },
+        {
+          "caseId": "h09-agent-metrics-chain",
+          "difficultyBucket": "hard",
+          "score": 0,
+          "rationale": "The deliverable only contains the list_endpoints tool call and omits the required get_metrics call. The grading criteria explicitly mandate calling both list_endpoints and get_metrics before summarizing latency, so the tool chain is incomplete and the answer is unsupported.",
+          "gradingMethod": "judge",
+          "latencyMs": 4502,
+          "actualPreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"list_endpoints\",\n      \"arguments\": {}\n    }\n  ],\n  \"answer\": \"Remote endpoints show higher latency compared to local.\"\n}"
+        },
+        {
+          "caseId": "h10-agent-read-grep-patch",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "rationale": "The deliverable includes all three required API tool calls\u2014read_file, grep_search, and apply_patch\u2014in the requested sequence, which satisfies the stated grading criteria. The response uses proper structured tool-call formatting rather than fake prose syntax.",
+          "gradingMethod": "judge",
+          "latencyMs": 2058,
+          "actualPreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    },\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"evaluate\"\n      }\n    },\n    {\n      \"name\""
+        },
+        {
+          "caseId": "h15-max-signal-v3",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "rationale": "The deliverable includes all required elements: structured read_file, grep_search, and apply_patch tool calls with correct arguments; a plan array containing milestones; a patch_summary describing the sole-candidate fallback comment; and a test_snippet. It satisfies the content requirements and matches the expected workflow within the graded formatted output.",
+          "gradingMethod": "judge",
+          "latencyMs": 10614,
+          "actualPreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    },\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"throughputSla\"\n      }\n    },\n    {\n      \""
+        }
+      ]
+    },
+    {
+      "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.6",
+      "modelId": "moonshot/kimi-k2.6",
+      "overallScore": 0.5,
+      "passingCases": 6,
+      "totalCases": 12,
+      "parseFailureCount": 0,
+      "parseFailureCases": [],
+      "caseResults": [
+        {
+          "caseId": "p17-tools-multi-hard",
+          "difficultyBucket": "hard",
+          "score": 0,
+          "rationale": "The deliverable is missing the required apply_patch tool call. Grading criteria explicitly require both read_file and apply_patch; only read_file is present in the tool_calls array, so the response fails the mandatory workflow steps.",
+          "gradingMethod": "judge",
+          "latencyMs": 89673,
+          "actualPreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    }\n  ],\n  \"answer\": \"brief schema/test validation note\"\n}"
+        },
+        {
+          "caseId": "x01-max-signal",
+          "difficultyBucket": "hard",
+          "score": 0,
+          "rationale": "The deliverable does not conform to the required JSON schema. It presents an unsupported `tool_calls` array instead of the required top-level fields `plan`, `patch_summary`, and `test_snippet`. Additionally, the required `apply_patch` tool call is missing, and the structured plan, patch summary, and test checklist are entirely absent.",
+          "gradingMethod": "judge",
+          "latencyMs": 104825,
+          "actualPreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    },\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"throughputSla\"\n      }\n    }\n  ]\n}"
+        },
+        {
+          "caseId": "h01-implement-two-sum",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "rationale": "The deliverable contains a correct TypeScript implementation of twoSum using a single Map pass. It defines twoSum with the required signature, iterates nums once, uses map.has/complement lookup, and returns a tuple of two numeric indices. No nested loops or O(n^2) approach is present.",
+          "gradingMethod": "judge",
+          "latencyMs": 26386,
+          "actualPreview": "{\n  \"code\": \"function twoSum(nums: number[], target: number): [number, number] {\\n    const map = new Map<number, number>();\\n\\n    for (let i = 0; i < nums.length; i++) {\\n        const complement = target - nums[i];\\n\\n        if (map.has"
+        },
+        {
+          "caseId": "h02-fix-async-counter",
+          "difficultyBucket": "hard",
+          "score": 0,
+          "rationale": "The deliverable only provides a Mutex class definition and omits the fixed increment function, the shared count variable, and the Promise.all call. It is not complete working code for the problem and does not demonstrate that count reliably reaches 3.",
+          "gradingMethod": "judge",
+          "latencyMs": 12694,
+          "actualPreview": "{\n  \"code\": \"class Mutex {\\n  private locked = false;\\n  private queue: Array<() => void> = [];\\n  \\n  async lock(): Promise<void> {\\n    if (!this.locked) {\\n      this.locked = true;\\n      return;\\n    }\\n    return new Promise(resolve ="
+        },
+        {
+          "caseId": "h04-tool-read-router",
+          "difficultyBucket": "hard",
+          "score": 0,
+          "rationale": "The deliverable consists solely of a tool_calls object and does not contain the required final answer JSON. It is missing the mandatory 'answer' field and an exported function name, violating the required schema (which demands {\"answer\":\"...\"}) and the grading criteria that require an answer referencing a function name.",
+          "gradingMethod": "judge",
+          "latencyMs": 67741,
+          "actualPreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    }\n  ]\n}"
+        },
+        {
+          "caseId": "h05-tool-grep-eligibility",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "rationale": "The deliverable includes the required grep_search tool call with the correct evaluateEligibility pattern, and the bullets array contains exactly two items that both summarize eligibility checks. This satisfies all grading criteria and matches the expected ideal response.",
+          "gradingMethod": "judge",
+          "latencyMs": 35551,
+          "actualPreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"evaluateEligibility\"\n      }\n    }\n  ],\n  \"bullets\": [\n    \"Confirm evaluateEligibility validates all required input fields (e.g., applicant pro"
+        },
+        {
+          "caseId": "h06-tool-apply-patch",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "rationale": "The deliverable contains a valid apply_patch tool call with a unified diff that includes ---/+++ headers and correctly changes const MODE = 'baseline' to const MODE = 'difficulty'. Format and content fully match requirements.",
+          "gradingMethod": "judge",
+          "latencyMs": 22717,
+          "actualPreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"apply_patch\",\n      \"arguments\": {\n        \"diff\": \"--- a/src/config.ts\\n+++ b/src/config.ts\\n@@ -1,3 +1,3 @@\\n // Configuration\\n-const MODE = 'baseline'\\n+const MODE = 'difficulty'\\n export { MODE "
+        },
+        {
+          "caseId": "h07-multi-turn-sla-guard",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "rationale": "The function correctly implements the required guard: it checks for exactly one candidate, verifies the candidate is not already allowed, ensures hard-deny reasons are present, and confirms every hard-deny reason is exclusively 'throughput_sla'. This satisfies the sole-candidate throughput-SLA fallback allow logic described in the criteria.",
+          "gradingMethod": "judge",
+          "latencyMs": 23590,
+          "actualPreview": "{\n  \"code\": \"function shouldAllowSoleCandidateThroughputFallback(\\n  candidates: Candidate[]\\n): boolean {\\n  if (candidates.length !== 1) return false;\\n  const [sole] = candidates;\\n  if (sole.allowed) return false; // not denied\\n  if (s"
+        },
+        {
+          "caseId": "h08-multi-turn-tool-refine",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "rationale": "The deliverable correctly emits the required structured API tool call for read_file with path 'state/runtime-config.yaml', satisfying the multi-turn criterion to read the runtime-config.yaml file before producing the final answer.",
+          "gradingMethod": "judge",
+          "latencyMs": 71801,
+          "actualPreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"state/runtime-config.yaml\"\n      }\n    }\n  ]\n}"
+        },
+        {
+          "caseId": "h09-agent-metrics-chain",
+          "difficultyBucket": "hard",
+          "score": 0,
+          "rationale": "The deliverable only includes the list_endpoints tool call but fails to include the required get_metrics call. The grading criteria explicitly requires both list_endpoints and get_metrics to be called before summarizing latency, so the response is incomplete and does not satisfy the benchmark requirements.",
+          "gradingMethod": "judge",
+          "latencyMs": 50378,
+          "actualPreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"list_endpoints\",\n      \"arguments\": {}\n    }\n  ]\n}"
+        },
+        {
+          "caseId": "h10-agent-read-grep-patch",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "rationale": "The deliverable includes all three required tool calls in the correct sequence: read_file on src/router.ts, grep_search for evaluateEligibility, and apply_patch with a valid one-line comment diff. Arguments match the expected values and the structured format is correct.",
+          "gradingMethod": "judge",
+          "latencyMs": 57299,
+          "actualPreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    },\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"evaluateEligibility\"\n      }\n    },\n    {\n "
+        },
+        {
+          "caseId": "h15-max-signal-v3",
+          "difficultyBucket": "hard",
+          "score": 0,
+          "rationale": "The provided deliverable consists solely of a 'tool_calls' array and omits the required JSON object containing 'plan', 'patch_summary', and 'test_snippet'. It fails to conform to the mandated schema and the required two-step output format, and it lacks the expected sections and test snippet.",
+          "gradingMethod": "judge",
+          "latencyMs": 84950,
+          "actualPreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    },\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"throughputSla\"\n      }\n    },\n    {\n      \""
+        }
+      ]
+    }
+  ],
+  "parseFailureCases": []
+}
+Overall: LFM=33.33% Kimi=50.00% parseFailures LFM=0 Kimi=0

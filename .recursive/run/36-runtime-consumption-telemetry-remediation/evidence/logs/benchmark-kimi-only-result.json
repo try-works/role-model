@@ -1,0 +1,141 @@
+{
+  "runId": "63894211-5dbe-4915-b8f0-40af4b853d1f",
+  "suiteId": "routing-capability-v2",
+  "mode": "quick",
+  "judgeEndpointId": "moonshot.personal.kimi-code.global.kimi-k2.6",
+  "startedAtMs": 1780986186399,
+  "completedAtMs": 1780987780474,
+  "artifactRoot": "C:\\Users\\erikb\\AppData\\Local\\Role Model Runtime\\state\\runtime-host-bridge\\memory\\benchmark-runs\\63894211-5dbe-4915-b8f0-40af4b853d1f",
+  "endpointGrades": [
+    {
+      "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.6",
+      "modelId": "moonshot/kimi-k2.6",
+      "sourceType": "remote",
+      "overallScore": 0.16666666666666666,
+      "byDifficulty": {
+        "easy": {
+          "cases": 0,
+          "score": 0
+        },
+        "medium": {
+          "cases": 0,
+          "score": 0
+        },
+        "hard": {
+          "cases": 12,
+          "score": 0.16666666666666666
+        }
+      },
+      "caseResults": [
+        {
+          "caseId": "p17-tools-multi-hard",
+          "difficultyBucket": "hard",
+          "score": 0,
+          "rationale": "Judge provided score.",
+          "gradingMethod": "judge",
+          "latencyMs": 64250,
+          "actualPreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    }\n  ],\n  \"answer\": \"brief schema/test validation note\"\n}"
+        },
+        {
+          "caseId": "x01-max-signal",
+          "difficultyBucket": "hard",
+          "score": 0,
+          "rationale": "Judge provided score.",
+          "gradingMethod": "judge",
+          "latencyMs": 112959,
+          "actualPreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    },\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"throughputSla\"\n      }\n    }\n  ]\n}"
+        },
+        {
+          "caseId": "h01-implement-two-sum",
+          "difficultyBucket": "hard",
+          "score": 0,
+          "rationale": "...",
+          "gradingMethod": "judge",
+          "latencyMs": 16512,
+          "actualPreview": "{\n  \"code\": \"function twoSum(nums: number[], target: number): [number, number] {\\n  const seen = new Map<number, number>();\\n  for (let i = 0; i < nums.length; i++) {\\n    const complement = target - nums[i];\\n    if (seen.has(complement)) "
+        },
+        {
+          "caseId": "h02-fix-async-counter",
+          "difficultyBucket": "hard",
+          "score": 0,
+          "rationale": "Judge grading failed to return parseable JSON after retries.",
+          "gradingMethod": "judge",
+          "latencyMs": 23344,
+          "actualPreview": "{\n  \"code\": \"const mutex = new Mutex();\\nasync function increment() {\\n  const release = await mutex.lock();\\n  try {\\n    const current = count;\\n    await Promise.resolve();\\n    count = current + 1;\\n  } finally {\\n    release();\\n  }\\n}"
+        },
+        {
+          "caseId": "h04-tool-read-router",
+          "difficultyBucket": "hard",
+          "score": 0,
+          "rationale": "Judge grading failed to return parseable JSON after retries.",
+          "gradingMethod": "judge",
+          "latencyMs": 67101,
+          "actualPreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    }\n  ]\n}"
+        },
+        {
+          "caseId": "h05-tool-grep-eligibility",
+          "difficultyBucket": "hard",
+          "score": 0,
+          "rationale": "Judge grading failed to return parseable JSON after retries.",
+          "gradingMethod": "judge",
+          "latencyMs": 62747,
+          "actualPreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"evaluateEligibility\"\n      }\n    }\n  ],\n  \"bullets\": [\n    \"evaluateEligibility is defined in the rules engine and checks age, income, and resid"
+        },
+        {
+          "caseId": "h06-tool-apply-patch",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "rationale": "The deliverable contains a valid apply_patch tool call with a unified diff that includes --- and +++ headers and correctly changes const MODE from 'baseline' to 'difficulty'.",
+          "gradingMethod": "judge",
+          "latencyMs": 16796,
+          "actualPreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"apply_patch\",\n      \"arguments\": {\n        \"diff\": \"--- a/src/config.ts\\n+++ b/src/config.ts\\n@@ -1,1 +1,1 @@\\n-const MODE = 'baseline'\\n+const MODE = 'difficulty'\"\n      }\n    }\n  ]\n}"
+        },
+        {
+          "caseId": "h07-multi-turn-sla-guard",
+          "difficultyBucket": "hard",
+          "score": 0,
+          "rationale": "...",
+          "gradingMethod": "judge",
+          "latencyMs": 48995,
+          "actualPreview": "{\n  \"code\": \"interface EndpointCandidate {\\n  id: string;\\n  allowListed: boolean;\\n  hardDenied: boolean;\\n  hardDenyReasons: string[];\\n}\\n\\nexport function allowSoleCandidateThroughputFallback(\\n  candidates: EndpointCandidate[]\\n): bool"
+        },
+        {
+          "caseId": "h08-multi-turn-tool-refine",
+          "difficultyBucket": "hard",
+          "score": 0,
+          "rationale": "Judge grading failed to return parseable JSON after retries.",
+          "gradingMethod": "judge",
+          "latencyMs": 55053,
+          "actualPreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"state/runtime-config.yaml\"\n      }\n    }\n  ],\n  \"answer\": \"state/runtime-config.yaml\"\n}"
+        },
+        {
+          "caseId": "h09-agent-metrics-chain",
+          "difficultyBucket": "hard",
+          "score": 0,
+          "rationale": "Missing required get_metrics tool call; only list_endpoints was emitted, failing the prerequisite to summarize latency.",
+          "gradingMethod": "judge",
+          "latencyMs": 79433,
+          "actualPreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"list_endpoints\",\n      \"arguments\": {}\n    }\n  ]\n}"
+        },
+        {
+          "caseId": "h10-agent-read-grep-patch",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "rationale": "The deliverable contains all three required tool calls (read_file, grep_search, apply_patch) in the correct sequence with proper arguments, fully satisfying the benchmark criteria.",
+          "gradingMethod": "judge",
+          "latencyMs": 42532,
+          "actualPreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    },\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"evaluateEligibility\"\n      }\n    },\n    {\n "
+        },
+        {
+          "caseId": "h15-max-signal-v3",
+          "difficultyBucket": "hard",
+          "score": 0,
+          "rationale": "Judge grading failed to return parseable JSON after retries.",
+          "gradingMethod": "judge",
+          "latencyMs": 77202,
+          "actualPreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    },\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"throughputSla\"\n      }\n    },\n    {\n      \""
+        }
+      ]
+    }
+  ]
+}

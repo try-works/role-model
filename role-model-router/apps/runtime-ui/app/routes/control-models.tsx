@@ -16,14 +16,15 @@ import {
   primaryButtonClassName,
   secondaryButtonClassName,
 } from "../lib/design-system";
-import { usePageActions } from "../lib/shell-header-context";
 import {
+  type RouterCandidate,
   type RuntimeAccount,
   type RuntimeControllerAssignment,
   type RuntimeRolePolicy,
   type RuntimeSnapshot,
   fetchControllerAssignment,
   fetchRolePolicy,
+  fetchRouterCandidates,
   fetchRuntimeSnapshot,
   upsertRuntimeAccount,
 } from "../lib/runtime-api";
@@ -75,13 +76,20 @@ export default function ControlModelsRoute() {
   const [savingAccountId, setSavingAccountId] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [candidates, setCandidates] = useState<readonly RouterCandidate[]>([]);
 
   useEffect(() => {
-    void Promise.all([fetchRuntimeSnapshot(), fetchControllerAssignment(), fetchRolePolicy()])
-      .then(([nextSnapshot, nextController, nextRolePolicy]) => {
+    void Promise.all([
+      fetchRuntimeSnapshot(),
+      fetchControllerAssignment(),
+      fetchRolePolicy(),
+      fetchRouterCandidates(),
+    ])
+      .then(([nextSnapshot, nextController, nextRolePolicy, nextCandidates]) => {
         setSnapshot(nextSnapshot);
         setController(nextController);
         setRolePolicy(nextRolePolicy);
+        setCandidates(nextCandidates);
         setControllerLoaded(true);
       })
       .catch((value: unknown) =>
@@ -195,13 +203,6 @@ export default function ControlModelsRoute() {
     }
   };
 
-  usePageActions(
-    <Link className={secondaryButtonClassName} to="/app/models/roles">
-      Edit runtime roles
-    </Link>,
-    [],
-  );
-
   if (error) {
     return <ErrorState label={error} />;
   }
@@ -211,6 +212,18 @@ export default function ControlModelsRoute() {
 
   const toolCapableCount = cards.filter((card) => card.toolCallingSupported).length;
   const activeModelCount = cards.filter((card) => card.status === "active").length;
+
+  const capabilityByModelId = new Map<string, number>();
+  for (const candidate of candidates) {
+    const score = candidate.benchmarkCapability?.overallScore;
+    if (typeof score !== "number") {
+      continue;
+    }
+    const current = capabilityByModelId.get(candidate.modelId);
+    if (current === undefined || score > current) {
+      capabilityByModelId.set(candidate.modelId, score);
+    }
+  }
 
   return (
     <>
@@ -269,7 +282,9 @@ export default function ControlModelsRoute() {
             </>
           ) : (
             <div className="grid gap-4 xl:grid-cols-2">
-              {cards.map((card) => (
+              {cards.map((card) => {
+                const capabilityScore = capabilityByModelId.get(card.modelId);
+                return (
                 <article
                   key={card.modelId}
                   className="rounded-none border border-[var(--rm-border)] bg-[var(--rm-surface)] p-5"
@@ -309,6 +324,11 @@ export default function ControlModelsRoute() {
                     <StatusPill tone={card.requestCount > 0 ? "neutral" : "warning"}>
                       {card.requestCount} request{card.requestCount === 1 ? "" : "s"}
                     </StatusPill>
+                    {typeof capabilityScore === "number" ? (
+                      <StatusPill tone="success">
+                        Capability {Math.round(capabilityScore * 100)}%
+                      </StatusPill>
+                    ) : null}
                   </div>
 
                   <div className="mt-4 grid gap-3 md:grid-cols-2 text-sm text-[var(--rm-secondary)]">
@@ -322,7 +342,7 @@ export default function ControlModelsRoute() {
                     </p>
                   </div>
 
-                  <div className="mt-5">
+                  <div className="mt-5 flex flex-wrap gap-2">
                     <button
                       className={secondaryButtonClassName}
                       type="button"
@@ -330,9 +350,15 @@ export default function ControlModelsRoute() {
                     >
                       Inspect
                     </button>
+                    {typeof capabilityScore === "number" ? (
+                      <Link className={secondaryButtonClassName} to="/app/models/benchmark">
+                        View benchmark
+                      </Link>
+                    ) : null}
                   </div>
                 </article>
-              ))}
+              );
+              })}
             </div>
           )}
         </SectionCard>

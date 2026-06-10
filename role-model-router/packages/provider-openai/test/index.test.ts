@@ -405,4 +405,77 @@ describe("OpenAI provider adapter", () => {
       toolArgumentDeltas: 0,
     });
   });
+
+  test("normalizes reasoning-only chat-completions bodies into assistant output text", () => {
+    const target = {
+      endpointId: "moonshot.personal.kimi-code.global.kimi-k2.6",
+      modelId: "moonshot/kimi-k2.6",
+      providerId: "moonshot",
+      providerKind: "provider-openai",
+      providerAccountId: "moonshot.personal.kimi-code",
+      adapterFamily: "ai-sdk-openai-compatible",
+      authFamily: "api-key",
+      apiBase: "https://api.kimi.test/coding/v1",
+      requestShapeHints: {
+        providerShape: "openai.chat.completions",
+        bodyKeys: ["temperature", "max_tokens"],
+        headerKeys: ["Authorization"],
+      },
+      candidate: {
+        identity: {
+          endpoint_id: "moonshot.personal.kimi-code.global.kimi-k2.6",
+          provider_kind: "remote_openai_compat",
+        },
+      },
+      account: {
+        credentialRef: {
+          backend: "local-encrypted-file",
+          ref: "oauth/moonshot/moonshot.personal.kimi-code",
+        },
+      },
+    };
+
+    const executionRequest = {
+      messages: [{ role: "user", content: "Say ready." }],
+      maxOutputTokens: 128,
+      temperature: 0.1,
+    };
+
+    const adapter = createOpenAIProviderAdapter("ai-sdk-openai-compatible");
+    const capabilities = adapter.negotiateCapabilities({ target, executionRequest });
+    const requestCapture = buildOpenAIRequest({
+      target,
+      executionRequest,
+      capabilities,
+    });
+    const normalized = normalizeOpenAIResponse({
+      target,
+      executionRequest,
+      requestCapture,
+      responseCapture: {
+        providerFamily: "ai-sdk-openai-compatible",
+        endpointId: target.endpointId,
+        statusCode: 200,
+        body: {
+          choices: [
+            {
+              finish_reason: "stop",
+              message: {
+                content: "",
+                reasoning_content: "Ready for routing.",
+              },
+            },
+          ],
+          usage: {
+            prompt_tokens: 9,
+            completion_tokens: 6,
+          },
+        },
+      },
+      capabilities,
+    });
+
+    expect(normalized.outputText).toBe("");
+    expect(normalized.reasoningText).toBe("Ready for routing.");
+  });
 });

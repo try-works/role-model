@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router";
 
 import {
   EmptyState,
@@ -8,7 +9,7 @@ import {
   SectionCard,
   StatusPill,
 } from "../components/page-primitives";
-import { listRowClassName } from "../lib/design-system";
+import { listRowClassName, secondaryButtonClassName } from "../lib/design-system";
 import { type RouterCandidate, fetchRouterCandidates } from "../lib/runtime-api";
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -23,6 +24,26 @@ function pickNumber(record: Record<string, unknown> | null, ...keys: string[]): 
     }
   }
   return null;
+}
+
+function formatScore(score: number | null | undefined): string {
+  if (typeof score !== "number" || !Number.isFinite(score)) {
+    return "n/a";
+  }
+  return `${Math.round(score * 100)}%`;
+}
+
+function formatStaleness(
+  measuredAtMs: number | null | undefined,
+  freshnessScore: number | null | undefined,
+): string {
+  if (typeof measuredAtMs !== "number") {
+    return "staleness unknown";
+  }
+  const ageHours = Math.max(0, Math.round((Date.now() - measuredAtMs) / (60 * 60 * 1000)));
+  const freshness =
+    typeof freshnessScore === "number" ? `freshness ${Math.round(freshnessScore * 100)}%` : null;
+  return freshness ? `${ageHours}h old • ${freshness}` : `${ageHours}h old`;
 }
 
 export default function RouterCandidatesRoute() {
@@ -49,6 +70,7 @@ export default function RouterCandidatesRoute() {
 
   const localCount = candidates.filter((candidate) => candidate.sourceType === "local").length;
   const remoteCount = candidates.filter((candidate) => candidate.sourceType === "remote").length;
+  const benchmarkedCount = candidates.filter((candidate) => candidate.benchmarkCapability).length;
 
   return (
     <div className="space-y-6">
@@ -60,9 +82,9 @@ export default function RouterCandidatesRoute() {
           emphasis
         />
         <FactCard
-          label="Preferred"
-          value={candidates.filter((candidate) => candidate.preferred).length}
-          detail="Candidates currently favored by routing-model guidance."
+          label="Benchmarked"
+          value={benchmarkedCount}
+          detail="Candidates with capability scores from Models → Benchmark."
         />
         <FactCard
           label="Ignored"
@@ -73,7 +95,7 @@ export default function RouterCandidatesRoute() {
 
       <SectionCard
         title="Comparable inventory"
-        description="Keep candidate comparison unified so local and remote routing remain visible under one reading model."
+        description="Capability scores come from Models → Benchmark observed profiles. Latency, throughput, and failure rate remain live routing signals."
       >
         {candidates.length === 0 ? (
           <EmptyState label="No routing candidates are available yet." />
@@ -84,6 +106,7 @@ export default function RouterCandidatesRoute() {
               const latencyMs = pickNumber(latestProfile, "latency_ms", "latencyMs");
               const throughput = pickNumber(latestProfile, "tokens_per_second", "tokensPerSecond");
               const failureRate = pickNumber(latestProfile, "failure_rate", "failureRate");
+              const capability = candidate.benchmarkCapability;
 
               return (
                 <div key={candidate.endpointId} className={listRowClassName}>
@@ -102,6 +125,29 @@ export default function RouterCandidatesRoute() {
                       Latency {latencyMs ?? "n/a"} ms • Throughput {throughput ?? "n/a"} tps •
                       Failure rate {failureRate ?? "n/a"}
                     </p>
+                    {capability ? (
+                      <p className="text-sm text-[var(--rm-secondary)]">
+                        Capability {formatScore(capability.overallScore)}
+                        {capability.scoresByBucket?.medium
+                          ? ` • medium ${formatScore(capability.scoresByBucket.medium.score)}`
+                          : ""}
+                        {capability.scoresByBucket?.hard
+                          ? ` • hard ${formatScore(capability.scoresByBucket.hard.score)}`
+                          : ""}
+                        {" • "}
+                        {capability.benchmarkSamples} benchmark sample
+                        {capability.benchmarkSamples === 1 ? "" : "s"}
+                        {" • "}
+                        {formatStaleness(capability.measuredAtMs, capability.freshnessScore)}
+                      </p>
+                    ) : (
+                      <p className="text-sm text-[var(--rm-secondary)]">
+                        Capability n/a — no benchmark observations yet.
+                      </p>
+                    )}
+                    <Link to="/app/models/benchmark" className={secondaryButtonClassName}>
+                      View in Models → Benchmark
+                    </Link>
                   </div>
                   <div className="flex flex-wrap items-start justify-end gap-2">
                     <StatusPill tone={candidate.controllerEligible ? "accent" : "neutral"}>
@@ -109,6 +155,11 @@ export default function RouterCandidatesRoute() {
                         ? "controller"
                         : (candidate.healthStatus ?? "unknown")}
                     </StatusPill>
+                    {capability ? (
+                      <StatusPill tone="success">
+                        {formatScore(capability.overallScore)}
+                      </StatusPill>
+                    ) : null}
                     {candidate.preferred ? <StatusPill tone="success">preferred</StatusPill> : null}
                     {candidate.ignored ? <StatusPill tone="warning">ignored</StatusPill> : null}
                   </div>

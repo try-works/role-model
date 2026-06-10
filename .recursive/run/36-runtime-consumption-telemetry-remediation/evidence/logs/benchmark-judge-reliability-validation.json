@@ -1,0 +1,20 @@
+{
+  "addendum": "07",
+  "runId": "36-runtime-consumption-telemetry-remediation",
+  "validatedAt": "2026-06-09T19:22:00Z",
+  "triggerRun": "2f5ab51b-23cc-4284-a9c5-0e067be7a125",
+  "commands": [
+    {
+      "command": "npx vitest run apps/runtime-host-bridge/test/benchmark-runner-judge.test.ts packages/bench-routing/src/index.test.ts apps/runtime-host-bridge/test/benchmark-artifacts.test.ts",
+      "result": "3 files, 13/13 pass"
+    }
+  ],
+  "requirements": {
+    "J12": "max_tokens 512 + compact system prompts",
+    "J13": "readJudgeGradingText content-first",
+    "J14": "2s judge throttle + retry backoff",
+    "J15": "judgeError on artifacts",
+    "J16": "judgeUnavailable heuristic fallback",
+    "J17": "orderEndpointsForGrading judge-first"
+  }
+}

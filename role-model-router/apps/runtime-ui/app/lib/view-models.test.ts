@@ -768,6 +768,29 @@ describe("summarizeWorkbenchResult", () => {
       }),
     );
   });
+
+  test("falls back to reasoning_content when chat completion content is empty", () => {
+    expect(
+      summarizeWorkbenchResult({
+        choices: [
+          {
+            message: {
+              content: "",
+              reasoning_content: "Reasoning-only assistant reply.",
+            },
+          },
+        ],
+        usage: {
+          prompt_tokens: 10,
+          completion_tokens: 8,
+        },
+      }),
+    ).toEqual(
+      expect.objectContaining({
+        outputText: "Reasoning-only assistant reply.",
+      }),
+    );
+  });
 });
 
 describe("buildDownstreamProviderGuide", () => {

@@ -172,7 +172,7 @@ describe("runtime design system", () => {
       },
       {
         title: "Models",
-        routes: ["/app/models", "/app/models/roles"],
+        routes: ["/app/models", "/app/models/roles", "/app/models/benchmark"],
       },
       {
         title: "Router",
@@ -213,6 +213,13 @@ describe("runtime design system", () => {
     expect(getRuntimeRouteDefinition("/app/models/roles")).toEqual(
       expect.objectContaining({
         id: "models-roles",
+        template: "registry-detail",
+      }),
+    );
+    expect(getRuntimeRouteDefinition("/app/models/benchmark")).toEqual(
+      expect.objectContaining({
+        id: "models-benchmark",
+        section: "Models",
         template: "registry-detail",
       }),
     );
@@ -507,6 +514,7 @@ describe("runtime design system", () => {
     expect(designSystemDocSource).toContain("| `/app/remote/providers` | live | `registry-detail` |");
     expect(designSystemDocSource).toContain("| `/app/models` | live | `model-inventory` |");
     expect(designSystemDocSource).toContain("| `/app/models/roles` | live | `registry-detail` |");
+    expect(designSystemDocSource).toContain("| `/app/models/benchmark` | live | `registry-detail` |");
     expect(designSystemDocSource).toContain("| `/app/router` | live | `registry-detail` |");
     expect(designSystemDocSource).toContain("| `/app/router/controller` | live | `registry-detail` |");
     expect(designSystemDocSource).not.toContain("| `/app/router/config` | live | `registry-detail` |");

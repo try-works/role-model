@@ -1,0 +1,271 @@
+{
+  "runId": "a6c136b6-b748-448c-a565-38e966f9b504",
+  "suiteId": "routing-capability-v2",
+  "mode": "quick",
+  "judgeEndpointId": "moonshot.personal.kimi-code.global.kimi-k2.6",
+  "startedAtMs": 1780971603581,
+  "completedAtMs": 1780972112823,
+  "artifactRoot": "C:\\Users\\erikb\\AppData\\Local\\Role Model Runtime\\state\\runtime-host-bridge\\memory\\benchmark-runs\\a6c136b6-b748-448c-a565-38e966f9b504",
+  "endpointGrades": [
+    {
+      "endpointId": "local-openai-compatible.personal.ca2ba73f-38f6-4feb-97b1-12b903bd81a4.local.lfm2.5-1.2b-instruct",
+      "modelId": "lfm2.5-1.2b-instruct",
+      "sourceType": "local",
+      "overallScore": 0.4236111111111111,
+      "byDifficulty": {
+        "easy": {
+          "cases": 0,
+          "score": 0
+        },
+        "medium": {
+          "cases": 0,
+          "score": 0
+        },
+        "hard": {
+          "cases": 12,
+          "score": 0.4236111111111111
+        }
+      },
+      "caseResults": [
+        {
+          "caseId": "p17-tools-multi-hard",
+          "difficultyBucket": "hard",
+          "score": 0,
+          "rationale": "Required tool call missing from model output. Keyword/pattern overlap (read); judge confirmation required for full credit.",
+          "gradingMethod": "heuristic",
+          "latencyMs": 5221,
+          "actualPreview": "The tools provided do not align with the requested tasks. Here's what I can assist with:\n\n1. **Reading files** using `read_file` (requires file path)\n2. **Applying patches** using `apply_patch` (requires diff content)\n\nTo proceed, please pr"
+        },
+        {
+          "caseId": "x01-max-signal",
+          "difficultyBucket": "hard",
+          "score": 0.3333333333333333,
+          "rationale": "Missing required tool calls: grep_search, apply_patch. Keyword/pattern overlap (milestone|plan); judge confirmation required for full credit.",
+          "gradingMethod": "heuristic",
+          "latencyMs": 5359,
+          "actualPreview": "I will follow the requested planning structure in this step-by-step workflow:\n\n1. **Read affected files** - I'll examine `affected_files.txt` to understand what needs modification.\n2. **Grepl search logic eligibility** - Search for relevant"
+        },
+        {
+          "caseId": "h01-implement-two-sum",
+          "difficultyBucket": "hard",
+          "score": 0.5,
+          "rationale": "Keyword/pattern overlap (function\\s+twoSum); judge confirmation required for full credit.",
+          "gradingMethod": "heuristic",
+          "latencyMs": 2411,
+          "actualPreview": "```typescript\nfunction twoSum(nums: number[], target: number): [number, number] {\n  const map = new Map<number, number>();\n  for (let i = 0; i < nums.length; i++) {\n    const complement = target - nums[i];\n    if (map.has(complement)) {\n   "
+        },
+        {
+          "caseId": "h02-fix-async-counter",
+          "difficultyBucket": "hard",
+          "score": 0.25,
+          "rationale": "Response did not match expected shape; judge review recommended.",
+          "gradingMethod": "heuristic",
+          "latencyMs": 1149,
+          "actualPreview": "```ts\nlet count = 0;\nasync function increment() { count += 1; }\nawait Promise.all([increment(), increment(), increment()]);\nconsole.log(count); // This should print 3\n```"
+        },
+        {
+          "caseId": "h04-tool-read-router",
+          "difficultyBucket": "hard",
+          "score": 0.5,
+          "rationale": "Required tool calls present: read_file. Keyword/pattern overlap (router\\.ts|read_file); judge confirmation required for full credit.",
+          "gradingMethod": "heuristic",
+          "latencyMs": 1946,
+          "actualPreview": "I am reading the file located at src/router.ts to determine its contents and will subsequently identify the first exported function within it.\nTOOL_CALL name=read_file args={\"path\":\"src/router.ts\"}"
+        },
+        {
+          "caseId": "h05-tool-grep-eligibility",
+          "difficultyBucket": "hard",
+          "score": 0.5,
+          "rationale": "Required tool calls present: grep_search. Keyword/pattern overlap (evaluateEligibility|eligib); judge confirmation required for full credit.",
+          "gradingMethod": "heuristic",
+          "latencyMs": 836,
+          "actualPreview": "[grep_search(pattern=\"evaluateEligibility\")]<|tool_call_end|>\nTOOL_CALL name=grep_search args={\"pattern\":\"evaluateEligibility\"}"
+        },
+        {
+          "caseId": "h06-tool-apply-patch",
+          "difficultyBucket": "hard",
+          "score": 0.5,
+          "rationale": "Required tool calls present: apply_patch. Keyword/pattern overlap (apply_patch|MODE|difficulty|\\+\\+\\+|---); judge confirmation required for full credit.",
+          "gradingMethod": "heuristic",
+          "latencyMs": 789,
+          "actualPreview": "TOOL_CALL name=apply_patch args={\"diff\":\"const MODE = 'baseline'\\\\nconst MODE = 'difficulty'\"}"
+        },
+        {
+          "caseId": "h07-multi-turn-sla-guard",
+          "difficultyBucket": "hard",
+          "score": 0.5,
+          "rationale": "Keyword/pattern overlap (throughput|sla|sole|candidate|fallback|allow); judge confirmation required for full credit.",
+          "gradingMethod": "heuristic",
+          "latencyMs": 2960,
+          "actualPreview": "```\ninterface AllowEndpoints {\n  [key: string]: number;\n}\n\nconst allowedEndpoints: AllowEndpoints = {\n  primary: 100,\n  secondary: 80\n};\n\nexport function isEligibleEndpoint(endpointId: string, throughputSla: number): boolean {\n  const slas "
+        },
+        {
+          "caseId": "h08-multi-turn-tool-refine",
+          "difficultyBucket": "hard",
+          "score": 0.5,
+          "rationale": "Required tool calls present: read_file. Keyword/pattern overlap (runtime-config|routing\\.strategy|strategy); judge confirmation required for full credit.",
+          "gradingMethod": "heuristic",
+          "latencyMs": 2507,
+          "actualPreview": "[read_file(path=\"state/runtime-config.yaml\")]<|tool_call_end|>\nTOOL_CALL name=read_file args={\"path\":\"state/runtime-config.yaml\"}"
+        },
+        {
+          "caseId": "h09-agent-metrics-chain",
+          "difficultyBucket": "hard",
+          "score": 0.5,
+          "rationale": "Missing required tool calls: get_metrics. Keyword/pattern overlap (latency|p95|remote|local|endpoint); judge confirmation required for full credit.",
+          "gradingMethod": "heuristic",
+          "latencyMs": 1170,
+          "actualPreview": "I am listing all configured router endpoints and then fetching latency metrics for the remote endpoint to compare its performance.\nTOOL_CALL name=list_endpoints args={}"
+        },
+        {
+          "caseId": "h10-agent-read-grep-patch",
+          "difficultyBucket": "hard",
+          "score": 0.5,
+          "rationale": "Required tool calls present: read_file, grep_search, apply_patch. Keyword/pattern overlap (router|evaluateEligibility|patch|diff); judge confirmation required for full credit.",
+          "gradingMethod": "heuristic",
+          "latencyMs": 3006,
+          "actualPreview": "TOOL_CALL name=read_file args={\"path\":\"src/router.ts\"}\nTOOL_CALL name=grep_search args={\"pattern\":\"evaluateEligibility\"}\nTOOL_CALL name=apply_patch args={\"diff\":\"Fix: Ensure the comment starts with '//'\"}"
+        },
+        {
+          "caseId": "h15-max-signal-v3",
+          "difficultyBucket": "hard",
+          "score": 0.5,
+          "rationale": "Missing required tool calls: apply_patch. Keyword/pattern overlap (^A[)|:]|milestone); judge confirmation required for full credit.",
+          "gradingMethod": "heuristic",
+          "latencyMs": 4461,
+          "actualPreview": "I will perform the following actions:\n1. Read the file at path \"src/router.ts\" to retrieve bullet milestones.\n2. Search the codebase for the pattern \"throughputSla\" using grep_search.\n3. Apply a patch with the unified diff provided in the a"
+        }
+      ]
+    },
+    {
+      "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.6",
+      "modelId": "moonshot/kimi-k2.6",
+      "sourceType": "remote",
+      "overallScore": 0.3541666666666667,
+      "byDifficulty": {
+        "easy": {
+          "cases": 0,
+          "score": 0
+        },
+        "medium": {
+          "cases": 0,
+          "score": 0
+        },
+        "hard": {
+          "cases": 12,
+          "score": 0.3541666666666667
+        }
+      },
+      "caseResults": [
+        {
+          "caseId": "p17-tools-multi-hard",
+          "difficultyBucket": "hard",
+          "score": 0,
+          "rationale": "Required tool call missing from model output. Keyword/pattern overlap (read); judge confirmation required for full credit.",
+          "gradingMethod": "heuristic",
+          "latencyMs": 5318,
+          "actualPreview": "The user wants me to analyze a code-edit workflow, read affected files, apply a patch, validate schema contract, and refactor tests. However, they haven't provided the patch or the files to work with. Let me check if there's any implicit co"
+        },
+        {
+          "caseId": "x01-max-signal",
+          "difficultyBucket": "hard",
+          "score": 0.25,
+          "rationale": "Missing required tool calls: read_file, apply_patch. Response did not match expected shape; judge review recommended.",
+          "gradingMethod": "heuristic",
+          "latencyMs": 8108,
+          "actualPreview": "I'll begin by exploring the codebase to identify the affected files, then proceed through the workflow systematically.\nTOOL_CALL name=grep_search args={\"pattern\":\"router\\\\.ts\"}\nTOOL_CALL name=grep_search args={\"pattern\":\"routingDiagnostics\""
+        },
+        {
+          "caseId": "h01-implement-two-sum",
+          "difficultyBucket": "hard",
+          "score": 0.5,
+          "rationale": "Keyword/pattern overlap (function\\s+twoSum); judge confirmation required for full credit.",
+          "gradingMethod": "heuristic",
+          "latencyMs": 10954,
+          "actualPreview": "The user wants a TypeScript function `twoSum` that takes an array of numbers and a target, returns indices of two numbers that sum to the target, runs in O(n) time using a Map. The output should be only a TypeScript fenced code block with t"
+        },
+        {
+          "caseId": "h02-fix-async-counter",
+          "difficultyBucket": "hard",
+          "score": 0.5,
+          "rationale": "Keyword/pattern overlap (Mutex|mutex|lock|queue|semaphore|atomic|Promise\\.resolve); judge confirmation required for full credit.",
+          "gradingMethod": "heuristic",
+          "latencyMs": 9695,
+          "actualPreview": "We need answer user: \"Fix this bug so `count` prints 3: [code]. Return only the corrected TypeScript in one fenced code block.\" The provided code:\n\nlet count = 0;\nasync function increment() { count += 1; }\nawait Promise.all([increment(), in"
+        },
+        {
+          "caseId": "h04-tool-read-router",
+          "difficultyBucket": "hard",
+          "score": 0.5,
+          "rationale": "Required tool calls present: read_file. Keyword/pattern overlap (router\\.ts|read_file); judge confirmation required for full credit.",
+          "gradingMethod": "heuristic",
+          "latencyMs": 2957,
+          "actualPreview": "The user wants me to call read_file on path `src/router.ts` and then name the first exported function in that file. I must emit a read_file tool call. Let me do that now.\nTOOL_CALL name=read_file args={\"path\":\"src/router.ts\"}"
+        },
+        {
+          "caseId": "h05-tool-grep-eligibility",
+          "difficultyBucket": "hard",
+          "score": 0.5,
+          "rationale": "Required tool calls present: grep_search. Keyword/pattern overlap (evaluateEligibility|eligib); judge confirmation required for full credit.",
+          "gradingMethod": "heuristic",
+          "latencyMs": 3797,
+          "actualPreview": "The user wants me to use grep_search to find `evaluateEligibility` in the codebase. I need to:\n1. Emit the grep_search tool call first\n2. Then summarize in 2 bullets what the function checks\n\nLet me call grep_search with the pattern `evalua"
+        },
+        {
+          "caseId": "h06-tool-apply-patch",
+          "difficultyBucket": "hard",
+          "score": 0,
+          "rationale": "Required tool call missing from model output. Keyword/pattern overlap (apply_patch|MODE|difficulty|\\+\\+\\+|---); judge confirmation required for full credit.",
+          "gradingMethod": "heuristic",
+          "latencyMs": 11619,
+          "actualPreview": "The user wants me to apply a unified diff patch that changes `const MODE = 'baseline'` to `const MODE = 'difficulty'` in `src/config.ts`.\n\nI need to construct a valid unified diff. A unified diff for a single line change in a single file wo"
+        },
+        {
+          "caseId": "h07-multi-turn-sla-guard",
+          "difficultyBucket": "hard",
+          "score": 0,
+          "rationale": "The response consists entirely of chain-of-thought reasoning and does not contain the required TypeScript guard code. No fenced code block is present, and no final answer is provided.",
+          "gradingMethod": "judge",
+          "latencyMs": 9081,
+          "actualPreview": "The user wants a TypeScript guard function that allows a \"sole-candidate fallback\" when every allow-listed endpoint is hard-denied *only* by throughput SLA. This implies the scenario where there's essentially one candidate (or all candidate"
+        },
+        {
+          "caseId": "h08-multi-turn-tool-refine",
+          "difficultyBucket": "hard",
+          "score": 0.5,
+          "rationale": "Required tool calls present: read_file. Keyword/pattern overlap (runtime-config|routing\\.strategy|strategy); judge confirmation required for full credit.",
+          "gradingMethod": "heuristic",
+          "latencyMs": 4085,
+          "actualPreview": "The user wants me to read the runtime-config.yaml file to find where routing.strategy is persisted and report its value. I should call read_file on the appropriate path. The user mentioned \"state/runtime-config.yaml\" or similar. Let me look"
+        },
+        {
+          "caseId": "h09-agent-metrics-chain",
+          "difficultyBucket": "hard",
+          "score": 0.5,
+          "rationale": "Missing required tool calls: get_metrics. Keyword/pattern overlap (latency|p95|remote|local|endpoint); judge confirmation required for full credit.",
+          "gradingMethod": "heuristic",
+          "latencyMs": 4490,
+          "actualPreview": "The user wants me to execute an agent chain:\n1. list_endpoints (tool call)\n2. get_metrics for the remote endpoint (tool call)\n3. compare p95 latency vs local in one sentence\n\nI need to first call list_endpoints to see what endpoints are ava"
+        },
+        {
+          "caseId": "h10-agent-read-grep-patch",
+          "difficultyBucket": "hard",
+          "score": 0.5,
+          "rationale": "Missing required tool calls: apply_patch. Keyword/pattern overlap (router|evaluateEligibility|patch|diff); judge confirmation required for full credit.",
+          "gradingMethod": "heuristic",
+          "latencyMs": 12850,
+          "actualPreview": "The user wants me to perform three specific tool calls in order:\n\n1. read_file src/router.ts\n2. grep_search evaluateEligibility\n3. apply_patch a one-line comment fix\n\nI need to emit all three tool calls. However, there's a dependency issue "
+        },
+        {
+          "caseId": "h15-max-signal-v3",
+          "difficultyBucket": "hard",
+          "score": 0.5,
+          "rationale": "Missing required tool calls: apply_patch. Keyword/pattern overlap (^A[)|:]|milestone); judge confirmation required for full credit.",
+          "gradingMethod": "heuristic",
+          "latencyMs": 10832,
+          "actualPreview": "The user wants a full agent task with four sections A-D. Specific constraints:\n- (A) bullet milestones with verification\n- (B) read_file src/router.ts and grep_search throughputSla via tool calls\n- (C) apply_patch adding a sole-candidate fa"
+        }
+      ]
+    }
+  ]
+}

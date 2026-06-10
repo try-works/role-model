@@ -23,11 +23,13 @@ import {
   type RuntimeRoutingMode,
 } from "../lib/routing-mode";
 import {
+  type RouterCandidate,
   type RuntimeConfig,
   type RuntimeConfigRecord,
   type RuntimeControllerAssignment,
   type RuntimeSnapshot,
   fetchControllerAssignment,
+  fetchRouterCandidates,
   fetchRuntimeConfig,
   fetchRuntimeSnapshot,
   updateRuntimeConfig,
@@ -139,6 +141,7 @@ export default function ControlRoutingStrategyRoute() {
     useState<RoutingStrategyChoice>("unset");
   const [customRoutingStrategy, setCustomRoutingStrategy] = useState("");
   const [selectedExecutionMode, setSelectedExecutionMode] = useState<RuntimeExecutionMode>("hybrid");
+  const [candidates, setCandidates] = useState<readonly RouterCandidate[]>([]);
 
   const syncDrafts = useCallback((nextRecord: RuntimeConfigRecord) => {
     const nextConfig = nextRecord.config ?? createDefaultRuntimeConfig();
@@ -149,11 +152,17 @@ export default function ControlRoutingStrategyRoute() {
   }, []);
 
   const loadState = useCallback(async () => {
-    void Promise.all([fetchRuntimeConfig(), fetchRuntimeSnapshot(), fetchControllerAssignment()])
-      .then(([nextConfigRecord, nextSnapshot, nextController]) => {
+    void Promise.all([
+      fetchRuntimeConfig(),
+      fetchRuntimeSnapshot(),
+      fetchControllerAssignment(),
+      fetchRouterCandidates(),
+    ])
+      .then(([nextConfigRecord, nextSnapshot, nextController, nextCandidates]) => {
         setConfigRecord(nextConfigRecord);
         setSnapshot(nextSnapshot);
         setController(nextController);
+        setCandidates(nextCandidates);
         syncDrafts(nextConfigRecord);
         setError(null);
       })
@@ -402,6 +411,83 @@ export default function ControlRoutingStrategyRoute() {
               <p className="mt-3 break-all leading-6">{configRecord.path ?? "not configured"}</p>
             </div>
           </div>
+        </div>
+      </SectionCard>
+
+      <SectionCard
+        title="Benchmark-informed difficulty advisory"
+        description="When Strategy C (difficulty) is active, per-endpoint quality scores from Models → Benchmark inform the recommended max difficulty ceiling."
+      >
+        {candidates.length === 0 ? (
+          <p className="text-sm text-[var(--rm-secondary)]">No routing candidates are available.</p>
+        ) : (
+          <div className="space-y-3">
+            {candidates.map((candidate) => {
+              const advisory =
+                typeof candidate.advisoryMaxDifficultyRecommendation === "object" &&
+                candidate.advisoryMaxDifficultyRecommendation !== null
+                  ? (candidate.advisoryMaxDifficultyRecommendation as Record<string, unknown>)
+                  : null;
+              const latestProfile =
+                typeof candidate.latestProfile === "object" && candidate.latestProfile !== null
+                  ? (candidate.latestProfile as Record<string, unknown>)
+                  : null;
+              const sources =
+                typeof latestProfile?.sources === "object" && latestProfile.sources !== null
+                  ? (latestProfile.sources as Record<string, unknown>)
+                  : null;
+              const benchmarkSamples =
+                typeof sources?.benchmark_samples === "number" ? sources.benchmark_samples : 0;
+              const qualityScore =
+                typeof latestProfile?.quality_score === "number"
+                  ? latestProfile.quality_score
+                  : typeof latestProfile?.judge_score === "number"
+                    ? latestProfile.judge_score
+                    : null;
+              const minQualityScore =
+                typeof advisory?.min_quality_score === "number"
+                  ? advisory.min_quality_score
+                  : typeof advisory?.minQualityScore === "number"
+                    ? advisory.minQualityScore
+                    : null;
+              const recommended =
+                typeof advisory?.recommended_max_difficulty === "string"
+                  ? advisory.recommended_max_difficulty
+                  : typeof advisory?.recommendedMaxDifficulty === "string"
+                    ? advisory.recommendedMaxDifficulty
+                    : "n/a";
+
+              return (
+                <div key={candidate.endpointId} className={`${mutedPanelClassName} p-4 text-sm`}>
+                  <p className="font-medium text-[var(--rm-fg)]">
+                    {candidate.modelId} • {candidate.endpointId}
+                  </p>
+                  <p className="mt-2 text-[var(--rm-secondary)]">
+                    Recommended max difficulty:{" "}
+                    <span className="font-medium text-[var(--rm-fg)]">{recommended}</span>
+                  </p>
+                  <p className="mt-1 text-[var(--rm-secondary)]">
+                    Quality score{" "}
+                    {qualityScore !== null ? `${Math.round(qualityScore * 100)}%` : "n/a"}
+                    {minQualityScore !== null
+                      ? ` vs threshold ${Math.round(minQualityScore * 100)}%`
+                      : ""}
+                  </p>
+                  <p className="mt-1 text-[var(--rm-secondary)]">
+                    Score source:{" "}
+                    {benchmarkSamples > 0
+                      ? `Models → Benchmark (${benchmarkSamples} benchmark sample${benchmarkSamples === 1 ? "" : "s"})`
+                      : "live requests only"}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        )}
+        <div className="mt-4">
+          <Link className={secondaryButtonClassName} to="/app/models/benchmark">
+            Open Models → Benchmark
+          </Link>
         </div>
       </SectionCard>
 

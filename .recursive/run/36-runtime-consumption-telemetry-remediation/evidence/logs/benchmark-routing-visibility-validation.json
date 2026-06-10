@@ -1,0 +1,33 @@
+{
+  "addendum": "04-benchmark-routing-visibility",
+  "generatedAt": "2026-06-08T14:50:00.000Z",
+  "worktree": "D:\\DEV\\role-model\\.worktrees\\36-runtime-consumption-telemetry-remediation",
+  "tests": {
+    "designSystem": {
+      "command": "vitest run app/lib/design-system.test.ts",
+      "package": "apps/runtime-ui",
+      "result": "21/21 pass"
+    },
+    "benchmarkSummary": {
+      "command": "vitest run test/benchmark-summary.test.ts test/benchmark-artifacts.test.ts",
+      "package": "apps/runtime-host-bridge",
+      "result": "6/6 pass (targeted)"
+    }
+  },
+  "apis": [
+    "GET /api/role-model/benchmark/summary",
+    "GET /api/role-model/benchmark/preferences",
+    "PUT /api/role-model/benchmark/preferences",
+    "GET /api/role-model/router/candidates (benchmarkCapability)"
+  ],
+  "navigation": {
+    "modelsTabs": ["Models", "Roles", "Benchmark"],
+    "canonicalBenchmarkPath": "/app/models/benchmark",
+    "legacyRedirect": "/app/control/benchmark"
+  },
+  "manualQaPending": [
+    "Restart packaged/runtime bridge and confirm Models header shows Benchmark tab",
+    "Open Router → Candidates after prior benchmark run; verify capability %",
+    "Reload Models → Benchmark; confirm judge preference persists"
+  ]
+}

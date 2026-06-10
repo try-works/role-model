@@ -191,6 +191,12 @@ importers:
       '@role-model-router/adapter-execution':
         specifier: workspace:*
         version: link:../../packages/adapter-execution
+      '@role-model-router/bench-judge':
+        specifier: workspace:*
+        version: link:../../packages/bench-judge
+      '@role-model-router/bench-routing':
+        specifier: workspace:*
+        version: link:../../packages/bench-routing
       '@role-model-router/catalog':
         specifier: workspace:*
         version: link:../../packages/catalog
@@ -343,6 +349,12 @@ importers:
   role-model-router/packages/bench-core: {}
 
   role-model-router/packages/bench-judge: {}
+
+  role-model-router/packages/bench-routing:
+    dependencies:
+      '@role-model-router/bench-judge':
+        specifier: workspace:*
+        version: link:../bench-judge
 
   role-model-router/packages/catalog: {}
 

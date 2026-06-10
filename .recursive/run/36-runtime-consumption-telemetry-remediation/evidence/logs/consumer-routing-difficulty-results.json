@@ -1,0 +1,1359 @@
+{
+  "generated_at": "2026-06-10T12:05:34.803631+00:00",
+  "base_url": "http://127.0.0.1:3456",
+  "routing_mode": "difficulty",
+  "model": "mixed.local-remote",
+  "preconditions": {
+    "base_url": "http://127.0.0.1:3456",
+    "captured_at": "2026-06-10T12:02:13.070101+00:00",
+    "health": {
+      "status": 200,
+      "body": {
+        "status": "healthy",
+        "executionMode": "decision_only",
+        "vendors": {
+          "llama-swap": {
+            "vendorId": "llama-swap",
+            "healthStatus": "inactive"
+          },
+          "litellm": {
+            "vendorId": "litellm",
+            "healthStatus": "inactive"
+          }
+        },
+        "inactiveVendors": [
+          "llama-swap",
+          "litellm"
+        ]
+      }
+    },
+    "version": {
+      "status": 200,
+      "body": {
+        "version": "1.0",
+        "commit": "runtime-derived",
+        "build_date": "runtime-derived"
+      }
+    },
+    "endpoints": {
+      "status": 200,
+      "body": [
+        {
+          "endpointId": "local-openai-compatible.personal.54fc2746-6472-42b0-901b-f2b178f5c0d0.local.lfm2.5-1.2b-instruct",
+          "modelId": "lfm2.5-1.2b-instruct",
+          "providerId": "local-openai-compatible",
+          "providerAccountId": "local-openai-compatible.personal.54fc2746-6472-42b0-901b-f2b178f5c0d0",
+          "roleIds": [],
+          "localModelSource": "peer-backed",
+          "endpointKind": "local_engine",
+          "servingSource": "local-peer",
+          "sourceType": "local",
+          "healthStatus": "healthy",
+          "capabilities": [
+            "text.chat",
+            "tools.function_calling"
+          ],
+          "toolCallingSupported": true,
+          "toolCallingStyle": "none",
+          "status": "active"
+        },
+        {
+          "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.6",
+          "modelId": "moonshot/kimi-k2.6",
+          "providerId": "moonshot",
+          "providerAccountId": "moonshot.personal.kimi-code",
+          "roleIds": [
+            "classifier",
+            "coder.patch",
+            "coder.review",
+            "embedder",
+            "general.chat",
+            "language.detector",
+            "tool.agent"
+          ],
+          "endpointKind": "remote_api",
+          "servingSource": "remote-service",
+          "sourceType": "remote",
+          "healthStatus": "healthy",
+          "capabilities": [
+            "text.chat",
+            "tools.function_calling",
+            "structured.output"
+          ],
+          "toolCallingSupported": true,
+          "toolCallingStyle": "openai",
+          "status": "active"
+        }
+      ]
+    },
+    "runtime_summary": {
+      "status": 200,
+      "body": {
+        "lifecycleSummary": {
+          "active": 2,
+          "degraded": 0,
+          "offline": 0
+        },
+        "providerCount": 215,
+        "accountCount": 3,
+        "endpointCount": 2,
+        "scopeId": "standalone-runtime",
+        "runtimeStateRoot": "C:\\Users\\erikb\\AppData\\Local\\Role Model Runtime",
+        "readinessSummary": {
+          "pendingDeviceAuthorizationCount": 1,
+          "credentialsMissingAccountCount": 0,
+          "connectedWithoutEndpointCount": 0,
+          "readyAccountCount": 2
+        },
+        "executionMode": "decision_only",
+        "unifiedConfig": {
+          "enabled": true,
+          "path": "C:\\Users\\erikb\\AppData\\Local\\Role Model Runtime\\runtime-config.yaml"
+        }
+      }
+    },
+    "telemetry_summary": {
+      "status": 200,
+      "body": {
+        "requestCount": 0,
+        "successCount": 0,
+        "failureCount": 0,
+        "totalInputTokens": 0,
+        "totalOutputTokens": 0,
+        "totalTokens": 0,
+        "cachedRequestCount": 0,
+        "totalActualCostUsd": 0,
+        "totalEstimatedCostUsd": 0,
+        "averageLatencyMs": null,
+        "p95LatencyMs": null,
+        "lastSeenAtMs": null,
+        "sourceBreakdown": {
+          "local": {
+            "requestCount": 0,
+            "successCount": 0,
+            "failureCount": 0,
+            "totalInputTokens": 0,
+            "totalOutputTokens": 0,
+            "totalTokens": 0,
+            "cachedRequestCount": 0,
+            "totalActualCostUsd": 0,
+            "totalEstimatedCostUsd": 0,
+            "averageLatencyMs": null,
+            "p95LatencyMs": null,
+            "lastSeenAtMs": null
+          },
+          "remote": {
+            "requestCount": 0,
+            "successCount": 0,
+            "failureCount": 0,
+            "totalInputTokens": 0,
+            "totalOutputTokens": 0,
+            "totalTokens": 0,
+            "cachedRequestCount": 0,
+            "totalActualCostUsd": 0,
+            "totalEstimatedCostUsd": 0,
+            "averageLatencyMs": null,
+            "p95LatencyMs": null,
+            "lastSeenAtMs": null
+          }
+        }
+      }
+    },
+    "router_config": {
+      "status": 200,
+      "body": {
+        "persisted": {
+          "strategy": "difficulty",
+          "executionMode": "decision_only"
+        },
+        "controller": {
+          "scope": "global",
+          "endpointId": "local-openai-compatible.personal.54fc2746-6472-42b0-901b-f2b178f5c0d0.local.lfm2.5-1.2b-instruct",
+          "modelId": "lfm2.5-1.2b-instruct",
+          "sourceType": "local"
+        },
+        "guidance": {
+          "endpointId": "openai.personal.primary.us-east-1.fast",
+          "preferredEndpointIds": [
+            "openai.personal.primary.us-east-1.fast"
+          ],
+          "ignoredEndpointIds": []
+        },
+        "sources": {
+          "runtimeConfigPath": "C:\\Users\\erikb\\AppData\\Local\\Role Model Runtime\\runtime-config.yaml",
+          "routingModel": "fixture",
+          "policyInputs": "runtime"
+        },
+        "policySources": {
+          "roles": [
+            {
+              "role_id": "classifier",
+              "name": "Classifier",
+              "description": "Classification and labeling tasks.",
+              "role_kind": "assistant",
+              "default_system_instructions": "Operate as Classifier.",
+              "task_types_supported": [
+                "text.classification"
+              ],
+              "required_capabilities": [],
+              "preferred_capabilities": [],
+              "forbidden_capabilities": [],
+              "tool_policy": {
+                "mode": "allowed"
+              },
+              "routing_policy_overrides": {},
+              "output_contracts": [],
+              "safety_policy_refs": []
+            },
+            {
+              "role_id": "coder.patch",
+              "name": "Coder Patch",
+              "description": "Code editing and patch generation tasks.",
+              "role_kind": "assistant",
+              "default_system_instructions": "Operate as Coder Patch.",
+              "task_types_supported": [
+                "code.edit"
+              ],
+              "required_capabilities": [],
+              "preferred_capabilities": [],
+              "forbidden_capabilities": [],
+              "tool_policy": {
+                "mode": "allowed"
+              },
+              "routing_policy_overrides": {},
+              "output_contracts": [],
+              "safety_policy_refs": []
+            },
+            {
+              "role_id": "coder.review",
+              "name": "Coder Review",
+              "description": "Code review and schema-adherence tasks.",
+              "role_kind": "assistant",
+              "default_system_instructions": "Operate as Coder Review.",
+              "task_types_supported": [
+                "code.edit",
+                "json.schema_adherence"
+              ],
+              "required_capabilities": [],
+              "preferred_capabilities": [],
+              "forbidden_capabilities": [],
+              "tool_policy": {
+                "mode": "allowed"
+              },
+              "routing_policy_overrides": {},
+              "output_contracts": [],
+              "safety_policy_refs": []
+            },
+            {
+              "role_id": "embedder",
+              "name": "Embedder",
+              "description": "Embedding generation tasks.",
+              "role_kind": "assistant",
+              "default_system_instructions": "Operate as Embedder.",
+              "task_types_supported": [
+                "embeddings.text"
+              ],
+              "required_capabilities": [],
+              "preferred_capabilities": [],
+              "forbidden_capabilities": [],
+              "tool_policy": {
+                "mode": "allowed"
+              },
+              "routing_policy_overrides": {},
+              "output_contracts": [],
+              "safety_policy_refs": []
+            },
+            {
+              "role_id": "general.chat",
+              "name": "General Chat",
+              "description": "General-purpose chat, assistant, and conversational tasks.",
+              "role_kind": "assistant",
+              "default_system_instructions": "Operate as General Chat.",
+              "task_types_supported": [
+                "text.chat"
+              ],
+              "required_capabilities": [],
+              "preferred_capabilities": [],
+              "forbidden_capabilities": [],
+              "tool_policy": {
+                "mode": "allowed"
+              },
+              "routing_policy_overrides": {},
+              "output_contracts": [],
+              "safety_policy_refs": []
+            },
+            {
+              "role_id": "language.detector",
+              "name": "Language Detector",
+              "description": "Language-detection tasks.",
+              "role_kind": "assistant",
+              "default_system_instructions": "Operate as Language Detector.",
+              "task_types_supported": [
+                "text.language_detection"
+              ],
+              "required_capabilities": [],
+              "preferred_capabilities": [],
+              "forbidden_capabilities": [],
+              "tool_policy": {
+                "mode": "allowed"
+              },
+              "routing_policy_overrides": {},
+              "output_contracts": [],
+              "safety_policy_refs": []
+            },
+            {
+              "role_id": "tool.agent",
+              "name": "Tool Agent",
+              "description": "Tool-calling and function-execution tasks.",
+              "role_kind": "assistant",
+              "default_system_instructions": "Operate as Tool Agent.",
+              "task_types_supported": [
+                "tools.function_calling"
+              ],
+              "required_capabilities": [],
+              "preferred_capabilities": [],
+              "forbidden_capabilities": [],
+              "tool_policy": {
+                "mode": "allowed"
+              },
+              "routing_policy_overrides": {},
+              "output_contracts": [],
+              "safety_policy_refs": []
+            }
+          ],
+          "tasks": [
+            {
+              "task_type": "text.chat",
+              "description": "General chat task",
+              "required_inputs": [],
+              "required_capabilities": [
+                "text.chat"
+              ],
+              "preferred_capabilities": [],
+              "quality_metrics": [],
+              "allowed_roles": [
+                "general.chat"
+              ],
+              "default_benchmark_suites": []
+            },
+            {
+              "task_type": "code.edit",
+              "description": "Code editing task",
+              "required_inputs": [],
+              "required_capabilities": [
+                "code.edit"
+              ],
+              "preferred_capabilities": [
+                "reasoning.multi_step"
+              ],
+              "quality_metrics": [],
+              "allowed_roles": [
+                "coder.patch",
+                "coder.review"
+              ],
+              "default_benchmark_suites": []
+            },
+            {
+              "task_type": "json.schema_adherence",
+              "description": "Schema-adherence task",
+              "required_inputs": [],
+              "required_capabilities": [
+                "json.schema_adherence"
+              ],
+              "preferred_capabilities": [
+                "reasoning.multi_step"
+              ],
+              "quality_metrics": [],
+              "allowed_roles": [
+                "coder.review"
+              ],
+              "default_benchmark_suites": []
+            },
+            {
+              "task_type": "tools.function_calling",
+              "description": "Tool-calling task",
+              "required_inputs": [],
+              "required_capabilities": [
+                "tools.function_calling"
+              ],
+              "preferred_capabilities": [],
+              "quality_metrics": [],
+              "allowed_roles": [
+                "tool.agent"
+              ],
+              "default_benchmark_suites": []
+            },
+            {
+              "task_type": "embeddings.text",
+              "description": "Embedding generation task",
+              "required_inputs": [],
+              "required_capabilities": [
+                "embeddings.text"
+              ],
+              "preferred_capabilities": [],
+              "quality_metrics": [],
+              "allowed_roles": [
+                "embedder"
+              ],
+              "default_benchmark_suites": []
+            },
+            {
+              "task_type": "text.classification",
+              "description": "Classification task",
+              "required_inputs": [],
+              "required_capabilities": [
+                "text.classification"
+              ],
+              "preferred_capabilities": [],
+              "quality_metrics": [],
+              "allowed_roles": [
+                "classifier"
+              ],
+              "default_benchmark_suites": []
+            },
+            {
+              "task_type": "text.language_detection",
+              "description": "Language detection task",
+              "required_inputs": [],
+              "required_capabilities": [
+                "text.language_detection"
+              ],
+              "preferred_capabilities": [],
+              "quality_metrics": [],
+              "allowed_roles": [
+                "language.detector"
+              ],
+              "default_benchmark_suites": []
+            }
+          ],
+          "roleBindings": [
+            {
+              "binding_id": "runtime.moonshot.personal.kimi-code.global.kimi-k2.6.classifier",
+              "role_id": "classifier",
+              "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.6",
+              "status": "active",
+              "policy_overrides": {},
+              "effective_capabilities": [
+                "text.chat",
+                "tools.function_calling",
+                "structured.output"
+              ],
+              "effective_task_types": [
+                "text.classification"
+              ]
+            },
+            {
+              "binding_id": "runtime.moonshot.personal.kimi-code.global.kimi-k2.6.coder.patch",
+              "role_id": "coder.patch",
+              "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.6",
+              "status": "active",
+              "policy_overrides": {},
+              "effective_capabilities": [
+                "text.chat",
+                "tools.function_calling",
+                "structured.output"
+              ],
+              "effective_task_types": [
+                "code.edit"
+              ]
+            },
+            {
+              "binding_id": "runtime.moonshot.personal.kimi-code.global.kimi-k2.6.coder.review",
+              "role_id": "coder.review",
+              "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.6",
+              "status": "active",
+              "policy_overrides": {},
+              "effective_capabilities": [
+                "text.chat",
+                "tools.function_calling",
+                "structured.output"
+              ],
+              "effective_task_types": [
+                "code.edit",
+                "json.schema_adherence"
+              ]
+            },
+            {
+              "binding_id": "runtime.moonshot.personal.kimi-code.global.kimi-k2.6.embedder",
+              "role_id": "embedder",
+              "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.6",
+              "status": "active",
+              "policy_overrides": {},
+              "effective_capabilities": [
+                "text.chat",
+                "tools.function_calling",
+                "structured.output"
+              ],
+              "effective_task_types": [
+                "embeddings.text"
+              ]
+            },
+            {
+              "binding_id": "runtime.moonshot.personal.kimi-code.global.kimi-k2.6.general.chat",
+              "role_id": "general.chat",
+              "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.6",
+              "status": "active",
+              "policy_overrides": {},
+              "effective_capabilities": [
+                "text.chat",
+                "tools.function_calling",
+                "structured.output"
+              ],
+              "effective_task_types": [
+                "text.chat"
+              ]
+            },
+            {
+              "binding_id": "runtime.moonshot.personal.kimi-code.global.kimi-k2.6.language.detector",
+              "role_id": "language.detector",
+              "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.6",
+              "status": "active",
+              "policy_overrides": {},
+              "effective_capabilities": [
+                "text.chat",
+                "tools.function_calling",
+                "structured.output"
+              ],
+              "effective_task_types": [
+                "text.language_detection"
+              ]
+            },
+            {
+              "binding_id": "runtime.moonshot.personal.kimi-code.global.kimi-k2.6.tool.agent",
+              "role_id": "tool.agent",
+              "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.6",
+              "status": "active",
+              "policy_overrides": {},
+              "effective_capabilities": [
+                "text.chat",
+                "tools.function_calling",
+                "structured.output"
+              ],
+              "effective_task_types": [
+                "tools.function_calling"
+              ]
+            }
+          ]
+        }
+      }
+    }
+  },
+  "scenario_count": 15,
+  "passed": 14,
+  "failed_count": 1,
+  "telemetry_request_hits": 15,
+  "hard_remote_ratio": "3/3",
+  "easy_local_ratio": "3/3",
+  "results": [
+    {
+      "index": 1,
+      "case_id": "e01-yes-no",
+      "category": "easy-trivial",
+      "request_id": "consumer-e01-yes-no",
+      "model": "mixed.local-remote",
+      "http_status": 200,
+      "latency_ms": 3169,
+      "response_model": "lfm2.5-1.2b-instruct",
+      "content_preview": "Yes.",
+      "content_length": 4,
+      "endpoint_id": "local-openai-compatible.personal.54fc2746-6472-42b0-901b-f2b178f5c0d0.local.lfm2.5-1.2b-instruct",
+      "endpoint_short": "local",
+      "source_type": "local",
+      "strategy_label": "difficulty",
+      "routing": {
+        "routingMode": {
+          "source": "request-override",
+          "requestedOverride": "difficulty",
+          "effectiveMode": "difficulty"
+        },
+        "aliasResolution": {
+          "requestedModel": "mixed.local-remote",
+          "aliasId": "mixed.local-remote",
+          "resolvedModelIds": [
+            "lfm2.5-1.2b-instruct",
+            "moonshot/kimi-k2.6"
+          ],
+          "allowEndpoints": [
+            "local-openai-compatible.personal.54fc2746-6472-42b0-901b-f2b178f5c0d0.local.lfm2.5-1.2b-instruct",
+            "moonshot.personal.kimi-code.global.kimi-k2.6"
+          ]
+        },
+        "difficulty": "easy",
+        "difficultyStrategy": "cost",
+        "cacheHit": null,
+        "cacheInvalidated": true,
+        "cacheInvalidationReasons": [
+          "expired",
+          "code-or-schema-change",
+          "context-tokens-delta",
+          "instruction-constraint-delta",
+          "decomposition-keyword-delta"
+        ],
+        "fallbackApplied": false,
+        "excludedEndpointIds": null,
+        "rubricSignals": {
+          "contextTokens": 11,
+          "toolCount": 0,
+          "historyTurnCount": 1,
+          "instructionConstraintCount": 0,
+          "decompositionKeywordCount": 0,
+          "codeOrSchemaBurden": false
+        }
+      },
+      "request_found": true,
+      "decision_found": true,
+      "issues": [],
+      "pass": true
+    },
+    {
+      "index": 2,
+      "case_id": "e03-count",
+      "category": "easy-trivial",
+      "request_id": "consumer-e03-count",
+      "model": "mixed.local-remote",
+      "http_status": 200,
+      "latency_ms": 455,
+      "response_model": "lfm2.5-1.2b-instruct",
+      "content_preview": "1,2,3",
+      "content_length": 5,
+      "endpoint_id": "local-openai-compatible.personal.54fc2746-6472-42b0-901b-f2b178f5c0d0.local.lfm2.5-1.2b-instruct",
+      "endpoint_short": "local",
+      "source_type": "local",
+      "strategy_label": "difficulty",
+      "routing": {
+        "routingMode": {
+          "source": "request-override",
+          "requestedOverride": "difficulty",
+          "effectiveMode": "difficulty"
+        },
+        "aliasResolution": {
+          "requestedModel": "mixed.local-remote",
+          "aliasId": "mixed.local-remote",
+          "resolvedModelIds": [
+            "lfm2.5-1.2b-instruct",
+            "moonshot/kimi-k2.6"
+          ],
+          "allowEndpoints": [
+            "local-openai-compatible.personal.54fc2746-6472-42b0-901b-f2b178f5c0d0.local.lfm2.5-1.2b-instruct",
+            "moonshot.personal.kimi-code.global.kimi-k2.6"
+          ]
+        },
+        "difficulty": "easy",
+        "difficultyStrategy": "cost",
+        "cacheHit": true,
+        "cacheInvalidated": null,
+        "cacheInvalidationReasons": null,
+        "fallbackApplied": false,
+        "excludedEndpointIds": null,
+        "rubricSignals": {
+          "contextTokens": 12,
+          "toolCount": 0,
+          "historyTurnCount": 1,
+          "instructionConstraintCount": 0,
+          "decompositionKeywordCount": 0,
+          "codeOrSchemaBurden": false
+        }
+      },
+      "request_found": true,
+      "decision_found": true,
+      "issues": [],
+      "pass": true
+    },
+    {
+      "index": 3,
+      "case_id": "p02-easy-math",
+      "category": "easy-short",
+      "request_id": "consumer-p02-easy-math",
+      "model": "mixed.local-remote",
+      "http_status": 200,
+      "latency_ms": 375,
+      "response_model": "lfm2.5-1.2b-instruct",
+      "content_preview": "4",
+      "content_length": 1,
+      "endpoint_id": "local-openai-compatible.personal.54fc2746-6472-42b0-901b-f2b178f5c0d0.local.lfm2.5-1.2b-instruct",
+      "endpoint_short": "local",
+      "source_type": "local",
+      "strategy_label": "difficulty",
+      "routing": {
+        "routingMode": {
+          "source": "request-override",
+          "requestedOverride": "difficulty",
+          "effectiveMode": "difficulty"
+        },
+        "aliasResolution": {
+          "requestedModel": "mixed.local-remote",
+          "aliasId": "mixed.local-remote",
+          "resolvedModelIds": [
+            "lfm2.5-1.2b-instruct",
+            "moonshot/kimi-k2.6"
+          ],
+          "allowEndpoints": [
+            "local-openai-compatible.personal.54fc2746-6472-42b0-901b-f2b178f5c0d0.local.lfm2.5-1.2b-instruct",
+            "moonshot.personal.kimi-code.global.kimi-k2.6"
+          ]
+        },
+        "difficulty": "easy",
+        "difficultyStrategy": "cost",
+        "cacheHit": true,
+        "cacheInvalidated": null,
+        "cacheInvalidationReasons": null,
+        "fallbackApplied": false,
+        "excludedEndpointIds": null,
+        "rubricSignals": {
+          "contextTokens": 13,
+          "toolCount": 0,
+          "historyTurnCount": 1,
+          "instructionConstraintCount": 0,
+          "decompositionKeywordCount": 0,
+          "codeOrSchemaBurden": false
+        }
+      },
+      "request_found": true,
+      "decision_found": true,
+      "issues": [],
+      "pass": true
+    },
+    {
+      "index": 4,
+      "case_id": "p06-medium-explain",
+      "category": "medium-qa",
+      "request_id": "consumer-p06-medium-explain",
+      "model": "mixed.local-remote",
+      "http_status": 200,
+      "latency_ms": 12561,
+      "response_model": "lfm2.5-1.2b-instruct",
+      "content_preview": "A **reverse proxy** is a server that sits between clients (such as web browsers) and servers, acting on behalf of the latter. Its main functions include:\n\n- **Load balancing** – Distributing incoming ",
+      "content_length": 2312,
+      "endpoint_id": "local-openai-compatible.personal.54fc2746-6472-42b0-901b-f2b178f5c0d0.local.lfm2.5-1.2b-instruct",
+      "endpoint_short": "local",
+      "source_type": "local",
+      "strategy_label": "difficulty",
+      "routing": {
+        "routingMode": {
+          "source": "request-override",
+          "requestedOverride": "difficulty",
+          "effectiveMode": "difficulty"
+        },
+        "aliasResolution": {
+          "requestedModel": "mixed.local-remote",
+          "aliasId": "mixed.local-remote",
+          "resolvedModelIds": [
+            "lfm2.5-1.2b-instruct",
+            "moonshot/kimi-k2.6"
+          ],
+          "allowEndpoints": [
+            "local-openai-compatible.personal.54fc2746-6472-42b0-901b-f2b178f5c0d0.local.lfm2.5-1.2b-instruct",
+            "moonshot.personal.kimi-code.global.kimi-k2.6"
+          ]
+        },
+        "difficulty": "easy",
+        "difficultyStrategy": "cost",
+        "cacheHit": true,
+        "cacheInvalidated": null,
+        "cacheInvalidationReasons": null,
+        "fallbackApplied": false,
+        "excludedEndpointIds": null,
+        "rubricSignals": {
+          "contextTokens": 24,
+          "toolCount": 0,
+          "historyTurnCount": 1,
+          "instructionConstraintCount": 0,
+          "decompositionKeywordCount": 0,
+          "codeOrSchemaBurden": false
+        }
+      },
+      "request_found": true,
+      "decision_found": true,
+      "issues": [],
+      "pass": true
+    },
+    {
+      "index": 5,
+      "case_id": "l01-verbose-incident",
+      "category": "long-context",
+      "request_id": "consumer-l01-verbose-incident",
+      "model": "mixed.local-remote",
+      "http_status": 200,
+      "latency_ms": 632,
+      "response_model": "lfm2.5-1.2b-instruct",
+      "content_preview": "Difficulty-based routing selects network paths according to the computational or processing demands of a task.",
+      "content_length": 110,
+      "endpoint_id": "local-openai-compatible.personal.54fc2746-6472-42b0-901b-f2b178f5c0d0.local.lfm2.5-1.2b-instruct",
+      "endpoint_short": "local",
+      "source_type": "local",
+      "strategy_label": "difficulty",
+      "routing": {
+        "routingMode": {
+          "source": "request-override",
+          "requestedOverride": "difficulty",
+          "effectiveMode": "difficulty"
+        },
+        "aliasResolution": {
+          "requestedModel": "mixed.local-remote",
+          "aliasId": "mixed.local-remote",
+          "resolvedModelIds": [
+            "lfm2.5-1.2b-instruct",
+            "moonshot/kimi-k2.6"
+          ],
+          "allowEndpoints": [
+            "local-openai-compatible.personal.54fc2746-6472-42b0-901b-f2b178f5c0d0.local.lfm2.5-1.2b-instruct",
+            "moonshot.personal.kimi-code.global.kimi-k2.6"
+          ]
+        },
+        "difficulty": "medium",
+        "difficultyStrategy": "balanced",
+        "cacheHit": null,
+        "cacheInvalidated": true,
+        "cacheInvalidationReasons": [
+          "code-or-schema-change"
+        ],
+        "fallbackApplied": false,
+        "excludedEndpointIds": null,
+        "rubricSignals": {
+          "contextTokens": 362,
+          "toolCount": 0,
+          "historyTurnCount": 1,
+          "instructionConstraintCount": 2,
+          "decompositionKeywordCount": 1,
+          "codeOrSchemaBurden": true
+        }
+      },
+      "request_found": true,
+      "decision_found": true,
+      "issues": [],
+      "pass": true
+    },
+    {
+      "index": 6,
+      "case_id": "p12-code-patch",
+      "category": "code-burden",
+      "request_id": "consumer-p12-code-patch",
+      "model": "mixed.local-remote",
+      "http_status": 200,
+      "latency_ms": 11148,
+      "response_model": "moonshot/kimi-k2.6",
+      "content_preview": "I don’t see the code-edit workflow, the original `src/router.ts` file, or the intended changes in your message. To produce an accurate unified diff and a meaningful explanation of the refactor, I’ll n",
+      "content_length": 948,
+      "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.6",
+      "endpoint_short": "remote",
+      "source_type": "remote",
+      "strategy_label": "difficulty",
+      "routing": {
+        "routingMode": {
+          "source": "request-override",
+          "requestedOverride": "difficulty",
+          "effectiveMode": "difficulty"
+        },
+        "aliasResolution": {
+          "requestedModel": "mixed.local-remote",
+          "aliasId": "mixed.local-remote",
+          "resolvedModelIds": [
+            "lfm2.5-1.2b-instruct",
+            "moonshot/kimi-k2.6"
+          ],
+          "allowEndpoints": [
+            "local-openai-compatible.personal.54fc2746-6472-42b0-901b-f2b178f5c0d0.local.lfm2.5-1.2b-instruct",
+            "moonshot.personal.kimi-code.global.kimi-k2.6"
+          ]
+        },
+        "difficulty": "medium",
+        "difficultyStrategy": "balanced",
+        "cacheHit": true,
+        "cacheInvalidated": null,
+        "cacheInvalidationReasons": null,
+        "fallbackApplied": false,
+        "excludedEndpointIds": null,
+        "rubricSignals": {
+          "contextTokens": 29,
+          "toolCount": 0,
+          "historyTurnCount": 1,
+          "instructionConstraintCount": 0,
+          "decompositionKeywordCount": 3,
+          "codeOrSchemaBurden": true
+        }
+      },
+      "request_found": true,
+      "decision_found": true,
+      "issues": [],
+      "pass": true
+    },
+    {
+      "index": 7,
+      "case_id": "c02-ts-generics",
+      "category": "code-burden",
+      "request_id": "consumer-c02-ts-generics",
+      "model": "mixed.local-remote",
+      "http_status": 200,
+      "latency_ms": 46101,
+      "response_model": "moonshot/kimi-k2.6",
+      "content_preview": "Here is the most common fix for the widening/generic-inference issue in `evaluateEligibility`. The bug is that **TypeScript widens the inferred generic `T` to its constraint (`EndpointCandidate`)**, c",
+      "content_length": 4192,
+      "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.6",
+      "endpoint_short": "remote",
+      "source_type": "remote",
+      "strategy_label": "difficulty",
+      "routing": {
+        "routingMode": {
+          "source": "request-override",
+          "requestedOverride": "difficulty",
+          "effectiveMode": "difficulty"
+        },
+        "aliasResolution": {
+          "requestedModel": "mixed.local-remote",
+          "aliasId": "mixed.local-remote",
+          "resolvedModelIds": [
+            "lfm2.5-1.2b-instruct",
+            "moonshot/kimi-k2.6"
+          ],
+          "allowEndpoints": [
+            "local-openai-compatible.personal.54fc2746-6472-42b0-901b-f2b178f5c0d0.local.lfm2.5-1.2b-instruct",
+            "moonshot.personal.kimi-code.global.kimi-k2.6"
+          ]
+        },
+        "difficulty": "medium",
+        "difficultyStrategy": "balanced",
+        "cacheHit": true,
+        "cacheInvalidated": null,
+        "cacheInvalidationReasons": null,
+        "fallbackApplied": false,
+        "excludedEndpointIds": null,
+        "rubricSignals": {
+          "contextTokens": 38,
+          "toolCount": 0,
+          "historyTurnCount": 1,
+          "instructionConstraintCount": 0,
+          "decompositionKeywordCount": 0,
+          "codeOrSchemaBurden": true
+        }
+      },
+      "request_found": true,
+      "decision_found": true,
+      "issues": [],
+      "pass": true
+    },
+    {
+      "index": 8,
+      "case_id": "p17-tools-multi-hard",
+      "category": "tools-heavy",
+      "request_id": "consumer-p17-tools-multi-hard",
+      "model": "mixed.local-remote",
+      "http_status": 200,
+      "latency_ms": 12443,
+      "response_model": "moonshot/kimi-k2.6",
+      "content_preview": "I'm ready to help you analyze the workflow, apply patches, validate schemas, and refactor tests. However, I need you to provide the necessary inputs first:\n\n1. **The patch/diff** you want me to apply\n",
+      "content_length": 820,
+      "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.6",
+      "endpoint_short": "remote",
+      "source_type": "remote",
+      "strategy_label": "difficulty",
+      "routing": {
+        "routingMode": {
+          "source": "request-override",
+          "requestedOverride": "difficulty",
+          "effectiveMode": "difficulty"
+        },
+        "aliasResolution": {
+          "requestedModel": "mixed.local-remote",
+          "aliasId": "mixed.local-remote",
+          "resolvedModelIds": [
+            "lfm2.5-1.2b-instruct",
+            "moonshot/kimi-k2.6"
+          ],
+          "allowEndpoints": [
+            "local-openai-compatible.personal.54fc2746-6472-42b0-901b-f2b178f5c0d0.local.lfm2.5-1.2b-instruct",
+            "moonshot.personal.kimi-code.global.kimi-k2.6"
+          ]
+        },
+        "difficulty": "hard",
+        "difficultyStrategy": "quality",
+        "cacheHit": null,
+        "cacheInvalidated": true,
+        "cacheInvalidationReasons": [
+          "tool-count-delta"
+        ],
+        "fallbackApplied": false,
+        "excludedEndpointIds": null,
+        "rubricSignals": {
+          "contextTokens": 39,
+          "toolCount": 2,
+          "historyTurnCount": 1,
+          "instructionConstraintCount": 0,
+          "decompositionKeywordCount": 3,
+          "codeOrSchemaBurden": true
+        }
+      },
+      "request_found": true,
+      "decision_found": true,
+      "issues": [],
+      "pass": true
+    },
+    {
+      "index": 9,
+      "case_id": "t02-tools-triple",
+      "category": "tools-heavy",
+      "request_id": "consumer-t02-tools-triple",
+      "model": "mixed.local-remote",
+      "http_status": 200,
+      "latency_ms": 85887,
+      "response_model": "moonshot/kimi-k2.6",
+      "content_preview": "Here's my analysis of this **code-edit workflow**, broken down by phase, risk factors, and execution strategy using the available toolchain.\n\n---\n\n## 1. Read Affected Files (Baseline Discovery)\n**Purp",
+      "content_length": 5229,
+      "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.6",
+      "endpoint_short": "remote",
+      "source_type": "remote",
+      "strategy_label": "difficulty",
+      "routing": {
+        "routingMode": {
+          "source": "request-override",
+          "requestedOverride": "difficulty",
+          "effectiveMode": "difficulty"
+        },
+        "aliasResolution": {
+          "requestedModel": "mixed.local-remote",
+          "aliasId": "mixed.local-remote",
+          "resolvedModelIds": [
+            "lfm2.5-1.2b-instruct",
+            "moonshot/kimi-k2.6"
+          ],
+          "allowEndpoints": [
+            "local-openai-compatible.personal.54fc2746-6472-42b0-901b-f2b178f5c0d0.local.lfm2.5-1.2b-instruct",
+            "moonshot.personal.kimi-code.global.kimi-k2.6"
+          ]
+        },
+        "difficulty": "hard",
+        "difficultyStrategy": "quality",
+        "cacheHit": true,
+        "cacheInvalidated": null,
+        "cacheInvalidationReasons": null,
+        "fallbackApplied": false,
+        "excludedEndpointIds": null,
+        "rubricSignals": {
+          "contextTokens": 48,
+          "toolCount": 3,
+          "historyTurnCount": 1,
+          "instructionConstraintCount": 0,
+          "decompositionKeywordCount": 3,
+          "codeOrSchemaBurden": true
+        }
+      },
+      "request_found": true,
+      "decision_found": true,
+      "issues": [],
+      "pass": true
+    },
+    {
+      "index": 10,
+      "case_id": "x01-max-signal",
+      "category": "max-signal",
+      "request_id": "consumer-x01-max-signal",
+      "model": "mixed.local-remote",
+      "http_status": 200,
+      "latency_ms": 5015,
+      "response_model": "moonshot/kimi-k2.6",
+      "content_preview": "I'll begin by exploring the codebase to locate the relevant files and understand the current implementation.",
+      "content_length": 108,
+      "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.6",
+      "endpoint_short": "remote",
+      "source_type": "remote",
+      "strategy_label": "difficulty",
+      "routing": {
+        "routingMode": {
+          "source": "request-override",
+          "requestedOverride": "difficulty",
+          "effectiveMode": "difficulty"
+        },
+        "aliasResolution": {
+          "requestedModel": "mixed.local-remote",
+          "aliasId": "mixed.local-remote",
+          "resolvedModelIds": [
+            "lfm2.5-1.2b-instruct",
+            "moonshot/kimi-k2.6"
+          ],
+          "allowEndpoints": [
+            "local-openai-compatible.personal.54fc2746-6472-42b0-901b-f2b178f5c0d0.local.lfm2.5-1.2b-instruct",
+            "moonshot.personal.kimi-code.global.kimi-k2.6"
+          ]
+        },
+        "difficulty": "hard",
+        "difficultyStrategy": "quality",
+        "cacheHit": null,
+        "cacheInvalidated": true,
+        "cacheInvalidationReasons": [
+          "decomposition-keyword-delta"
+        ],
+        "fallbackApplied": false,
+        "excludedEndpointIds": null,
+        "rubricSignals": {
+          "contextTokens": 118,
+          "toolCount": 3,
+          "historyTurnCount": 1,
+          "instructionConstraintCount": 0,
+          "decompositionKeywordCount": 6,
+          "codeOrSchemaBurden": true
+        }
+      },
+      "request_found": true,
+      "decision_found": true,
+      "issues": [],
+      "pass": true
+    },
+    {
+      "index": 11,
+      "case_id": "p24-exact-local",
+      "category": "exact-model",
+      "request_id": "consumer-p24-exact-local",
+      "model": "lfm2.5-1.2b-instruct",
+      "http_status": 200,
+      "latency_ms": 4018,
+      "response_model": "lfm2.5-1.2b-instruct",
+      "content_preview": "The term \"routed-local\" isn't a standard technical phrase, but it could refer to network routing in a local context. If you're referring to how data is directed within a local network (like between de",
+      "content_length": 746,
+      "endpoint_id": "local-openai-compatible.personal.54fc2746-6472-42b0-901b-f2b178f5c0d0.local.lfm2.5-1.2b-instruct",
+      "endpoint_short": "local",
+      "source_type": "local",
+      "strategy_label": "difficulty",
+      "routing": {
+        "routingMode": {
+          "source": "request-override",
+          "requestedOverride": "difficulty",
+          "effectiveMode": "difficulty"
+        },
+        "aliasResolution": null,
+        "difficulty": "easy",
+        "difficultyStrategy": "cost",
+        "cacheHit": null,
+        "cacheInvalidated": true,
+        "cacheInvalidationReasons": [
+          "code-or-schema-change",
+          "tool-count-delta",
+          "decomposition-keyword-delta"
+        ],
+        "fallbackApplied": false,
+        "excludedEndpointIds": null,
+        "rubricSignals": {
+          "contextTokens": 9,
+          "toolCount": 0,
+          "historyTurnCount": 1,
+          "instructionConstraintCount": 0,
+          "decompositionKeywordCount": 0,
+          "codeOrSchemaBurden": false
+        }
+      },
+      "request_found": true,
+      "decision_found": true,
+      "issues": [],
+      "pass": true
+    },
+    {
+      "index": 12,
+      "case_id": "p25-exact-remote",
+      "category": "exact-model",
+      "request_id": "consumer-p25-exact-remote",
+      "model": "moonshot/kimi-k2.6",
+      "http_status": 200,
+      "latency_ms": 2046,
+      "response_model": "moonshot/kimi-k2.6",
+      "content_preview": "routed-remote",
+      "content_length": 13,
+      "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.6",
+      "endpoint_short": "remote",
+      "source_type": "remote",
+      "strategy_label": "difficulty",
+      "routing": {
+        "routingMode": {
+          "source": "request-override",
+          "requestedOverride": "difficulty",
+          "effectiveMode": "difficulty"
+        },
+        "aliasResolution": null,
+        "difficulty": "easy",
+        "difficultyStrategy": "cost",
+        "cacheHit": true,
+        "cacheInvalidated": null,
+        "cacheInvalidationReasons": null,
+        "fallbackApplied": false,
+        "excludedEndpointIds": null,
+        "rubricSignals": {
+          "contextTokens": 9,
+          "toolCount": 0,
+          "historyTurnCount": 1,
+          "instructionConstraintCount": 0,
+          "decompositionKeywordCount": 0,
+          "codeOrSchemaBurden": false
+        }
+      },
+      "request_found": true,
+      "decision_found": true,
+      "issues": [],
+      "pass": true
+    },
+    {
+      "index": 13,
+      "case_id": "p26-cache-easy-a",
+      "category": "cache-probe",
+      "request_id": "consumer-p26-cache-easy-a",
+      "model": "mixed.local-remote",
+      "http_status": 200,
+      "latency_ms": 448,
+      "response_model": "lfm2.5-1.2b-instruct",
+      "content_preview": "Hello! How can I assist you today?",
+      "content_length": 34,
+      "endpoint_id": "local-openai-compatible.personal.54fc2746-6472-42b0-901b-f2b178f5c0d0.local.lfm2.5-1.2b-instruct",
+      "endpoint_short": "local",
+      "source_type": "local",
+      "strategy_label": "difficulty",
+      "routing": {
+        "routingMode": {
+          "source": "request-override",
+          "requestedOverride": "difficulty",
+          "effectiveMode": "difficulty"
+        },
+        "aliasResolution": {
+          "requestedModel": "mixed.local-remote",
+          "aliasId": "mixed.local-remote",
+          "resolvedModelIds": [
+            "lfm2.5-1.2b-instruct",
+            "moonshot/kimi-k2.6"
+          ],
+          "allowEndpoints": [
+            "local-openai-compatible.personal.54fc2746-6472-42b0-901b-f2b178f5c0d0.local.lfm2.5-1.2b-instruct",
+            "moonshot.personal.kimi-code.global.kimi-k2.6"
+          ]
+        },
+        "difficulty": "easy",
+        "difficultyStrategy": "cost",
+        "cacheHit": true,
+        "cacheInvalidated": null,
+        "cacheInvalidationReasons": null,
+        "fallbackApplied": false,
+        "excludedEndpointIds": null,
+        "rubricSignals": {
+          "contextTokens": 10,
+          "toolCount": 0,
+          "historyTurnCount": 1,
+          "instructionConstraintCount": 0,
+          "decompositionKeywordCount": 0,
+          "codeOrSchemaBurden": false
+        }
+      },
+      "request_found": true,
+      "decision_found": true,
+      "issues": [
+        "expected cacheHit=False, got True"
+      ],
+      "pass": false
+    },
+    {
+      "index": 14,
+      "case_id": "p27-cache-easy-b",
+      "category": "cache-probe",
+      "request_id": "consumer-p27-cache-easy-b",
+      "model": "mixed.local-remote",
+      "http_status": 200,
+      "latency_ms": 484,
+      "response_model": "lfm2.5-1.2b-instruct",
+      "content_preview": "Hello! How can I assist you today?",
+      "content_length": 34,
+      "endpoint_id": "local-openai-compatible.personal.54fc2746-6472-42b0-901b-f2b178f5c0d0.local.lfm2.5-1.2b-instruct",
+      "endpoint_short": "local",
+      "source_type": "local",
+      "strategy_label": "difficulty",
+      "routing": {
+        "routingMode": {
+          "source": "request-override",
+          "requestedOverride": "difficulty",
+          "effectiveMode": "difficulty"
+        },
+        "aliasResolution": {
+          "requestedModel": "mixed.local-remote",
+          "aliasId": "mixed.local-remote",
+          "resolvedModelIds": [
+            "lfm2.5-1.2b-instruct",
+            "moonshot/kimi-k2.6"
+          ],
+          "allowEndpoints": [
+            "local-openai-compatible.personal.54fc2746-6472-42b0-901b-f2b178f5c0d0.local.lfm2.5-1.2b-instruct",
+            "moonshot.personal.kimi-code.global.kimi-k2.6"
+          ]
+        },
+        "difficulty": "easy",
+        "difficultyStrategy": "cost",
+        "cacheHit": true,
+        "cacheInvalidated": null,
+        "cacheInvalidationReasons": null,
+        "fallbackApplied": false,
+        "excludedEndpointIds": null,
+        "rubricSignals": {
+          "contextTokens": 10,
+          "toolCount": 0,
+          "historyTurnCount": 1,
+          "instructionConstraintCount": 0,
+          "decompositionKeywordCount": 0,
+          "codeOrSchemaBurden": false
+        }
+      },
+      "request_found": true,
+      "decision_found": true,
+      "issues": [],
+      "pass": true
+    },
+    {
+      "index": 15,
+      "case_id": "p30-cache-invalidate",
+      "category": "cache-probe",
+      "request_id": "consumer-p30-cache-invalidate",
+      "model": "mixed.local-remote",
+      "http_status": 200,
+      "latency_ms": 13658,
+      "response_model": "moonshot/kimi-k2.6",
+      "content_preview": "I'd be happy to help you analyze the workflow, apply patches, validate schema contracts, and refactor tests. However, I need you to provide the actual materials to work with:\n\n1. **Code/Files to analy",
+      "content_length": 710,
+      "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.6",
+      "endpoint_short": "remote",
+      "source_type": "remote",
+      "strategy_label": "difficulty",
+      "routing": {
+        "routingMode": {
+          "source": "request-override",
+          "requestedOverride": "difficulty",
+          "effectiveMode": "difficulty"
+        },
+        "aliasResolution": {
+          "requestedModel": "mixed.local-remote",
+          "aliasId": "mixed.local-remote",
+          "resolvedModelIds": [
+            "lfm2.5-1.2b-instruct",
+            "moonshot/kimi-k2.6"
+          ],
+          "allowEndpoints": [
+            "local-openai-compatible.personal.54fc2746-6472-42b0-901b-f2b178f5c0d0.local.lfm2.5-1.2b-instruct",
+            "moonshot.personal.kimi-code.global.kimi-k2.6"
+          ]
+        },
+        "difficulty": "hard",
+        "difficultyStrategy": "quality",
+        "cacheHit": null,
+        "cacheInvalidated": true,
+        "cacheInvalidationReasons": [
+          "code-or-schema-change",
+          "tool-count-delta",
+          "decomposition-keyword-delta"
+        ],
+        "fallbackApplied": false,
+        "excludedEndpointIds": null,
+        "rubricSignals": {
+          "contextTokens": 36,
+          "toolCount": 2,
+          "historyTurnCount": 1,
+          "instructionConstraintCount": 0,
+          "decompositionKeywordCount": 3,
+          "codeOrSchemaBurden": true
+        }
+      },
+      "request_found": true,
+      "decision_found": true,
+      "issues": [],
+      "pass": true
+    }
+  ]
+}

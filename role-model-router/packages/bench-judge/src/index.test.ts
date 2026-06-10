@@ -1,0 +1,96 @@
+import { describe, expect, test } from "vitest";
+
+import {
+  buildCompareGradingPrompt,
+  buildJudgeGradingPrompt,
+  extractCompareGradingJsonText,
+  extractJudgeGradingJsonText,
+  parseCompareGradingResponse,
+  parseJudgeGradingResponse,
+} from "./index.ts";
+
+const P17_BRIEF = {
+  questionTranscript: "[user]\nAPI workflow: read_file src/router.ts, apply_patch minimal diff",
+  exemplarAnswer: '{"tool_calls":[{"name":"read_file"}]}',
+  exemplarQuality: "authored" as const,
+  deliverablesChecklist: [
+    "[MUST] Must call read_file and apply_patch",
+    "[MUST] apply_patch diff must contain ---/+++ file headers and @@ hunk markers with real content",
+  ],
+  antiPatterns: ["MUST NOT use diff placeholders (----/+++, [file header])"],
+};
+
+const P17_LFM_DELIVERABLE = JSON.stringify(
+  {
+    tool_calls: [
+      { name: "read_file", arguments: { path: "src/router.ts" } },
+      { name: "apply_patch", arguments: { patch: "----/+++" } },
+    ],
+    answer: "what schema fields and tests you validated",
+  },
+  null,
+  2,
+);
+
+describe("bench-judge grading prompts", () => {
+  test("buildJudgeGradingPrompt includes structured briefing sections for p17", () => {
+    const prompt = buildJudgeGradingPrompt({
+      caseId: "p17-tools-multi-hard",
+      expectedResponse: "read_file and apply_patch tool calls plus validation plan",
+      gradingCriteria: "Must call read_file and apply_patch",
+      actualResponse: P17_LFM_DELIVERABLE,
+      formattedDeliverable: P17_LFM_DELIVERABLE,
+      briefing: P17_BRIEF,
+      answerFormatInstruction: "Emit tools then JSON answer",
+      requiredToolNames: ["read_file", "apply_patch"],
+      structuredToolNames: ["read_file", "apply_patch"],
+    });
+
+    expect(prompt).toContain("## Original question");
+    expect(prompt).toContain("## Example expected answer");
+    expect(prompt).toContain("## Key deliverables");
+    expect(prompt).toContain("@@ hunk");
+    expect(prompt).not.toContain("Prompt summary:");
+  });
+
+  test("buildCompareGradingPrompt shares briefing sections with per-case judge", () => {
+    const prompt = buildCompareGradingPrompt({
+      caseId: "p17-tools-multi-hard",
+      briefing: P17_BRIEF,
+      gradingCriteria: "Must call read_file and apply_patch",
+      models: [
+        { endpointId: "lfm", deliverable: P17_LFM_DELIVERABLE, perCaseScore: 1 },
+        { endpointId: "kimi", deliverable: '{"tool_calls":[{"name":"read_file"}]}', perCaseScore: 0 },
+      ],
+    });
+
+    expect(prompt).toContain("## Original question");
+    expect(prompt).toContain("## Key deliverables");
+    expect(prompt).toContain("## Model deliverables");
+  });
+
+  test("parseJudgeGradingResponse accepts strict JSON score payloads", () => {
+    const parsed = parseJudgeGradingResponse('{"score":0.8,"rationale":"Good patch."}');
+    expect(parsed?.score).toBe(0.8);
+    expect(parsed?.method).toBe("judge");
+  });
+
+  test("extractCompareGradingJsonText pulls compare JSON from reasoning preambles", () => {
+    const extracted = extractCompareGradingJsonText(
+      'Ranking complete. {"relativeRanking":["moonshot.kimi","local.lfm"],"rationale":"remote wins"}',
+    );
+    expect(extracted).toContain('"relativeRanking"');
+    expect(parseCompareGradingResponse(extracted)?.relativeRanking).toEqual([
+      "moonshot.kimi",
+      "local.lfm",
+    ]);
+  });
+
+  test("extractJudgeGradingJsonText pulls JSON from reasoning preambles", () => {
+    const extracted = extractJudgeGradingJsonText(
+      'The user wants a grade. {"score":0.25,"rationale":"partial deliverable only"}',
+    );
+    expect(extracted).toContain('"score":0.25');
+    expect(parseJudgeGradingResponse(extracted)?.score).toBe(0.25);
+  });
+});

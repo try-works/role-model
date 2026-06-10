@@ -980,16 +980,24 @@ export function summarizeWorkbenchResult(result: Record<string, unknown>): {
   usageRows: Array<{ label: string; value: string }>;
   rawPayload: string;
 } {
+  const choiceMessage =
+    Array.isArray(result.choices) &&
+    result.choices[0] &&
+    typeof result.choices[0] === "object"
+      ? (
+          result.choices[0] as {
+            message?: { content?: string; reasoning_content?: string };
+          }
+        ).message
+      : undefined;
   const outputText =
     typeof result.outputText === "string"
       ? result.outputText
-      : Array.isArray(result.choices) &&
-          result.choices[0] &&
-          typeof result.choices[0] === "object" &&
-          typeof (result.choices[0] as { message?: { content?: string } }).message?.content ===
-            "string"
-        ? (result.choices[0] as { message: { content: string } }).message.content
-        : "";
+      : typeof choiceMessage?.content === "string" && choiceMessage.content.length > 0
+        ? choiceMessage.content
+        : typeof choiceMessage?.reasoning_content === "string"
+          ? choiceMessage.reasoning_content
+          : "";
   const toolCalls = Array.isArray(result.toolCalls)
     ? result.toolCalls
         .filter(

@@ -1,0 +1,2451 @@
+{
+  "suite_id": "routing-capability-v2",
+  "suite_version": "3.2",
+  "description": "Capability benchmark v3: concrete code implementation, required tool calls, and multi-step prompts.",
+  "task_type": "routing_capability",
+  "capability_targets": [
+    "agentic_workflow",
+    "code_generation",
+    "debugging",
+    "explanation",
+    "general_knowledge",
+    "instruction_following",
+    "long_context",
+    "planning",
+    "reasoning",
+    "summarization",
+    "tool_calling"
+  ],
+  "cases": [
+    {
+      "case_id": "e01-yes-no",
+      "category": "easy-trivial",
+      "difficulty_bucket": "easy",
+      "benchmark_eligible": true,
+      "capability_targets": [
+        "instruction_following"
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "Is water wet? Answer yes or no only."
+        }
+      ],
+      "max_tokens": 8,
+      "expected_response": "yes",
+      "grading_criteria": "Must answer yes or no only.",
+      "accept_patterns": [
+        "^yes$",
+        "^no$"
+      ],
+      "quick_benchmark": false
+    },
+    {
+      "case_id": "e02-single-word",
+      "category": "easy-trivial",
+      "difficulty_bucket": "easy",
+      "benchmark_eligible": true,
+      "capability_targets": [
+        "instruction_following"
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "Reply with one word: ok"
+        }
+      ],
+      "max_tokens": 8,
+      "expected_response": "ok",
+      "grading_criteria": "Single word ok.",
+      "accept_patterns": [
+        "^ok$"
+      ],
+      "quick_benchmark": false
+    },
+    {
+      "case_id": "e03-count",
+      "category": "easy-trivial",
+      "difficulty_bucket": "easy",
+      "benchmark_eligible": true,
+      "capability_targets": [
+        "instruction_following"
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "Count from 1 to 3 separated by commas."
+        }
+      ],
+      "max_tokens": 16,
+      "expected_response": "1, 2, 3",
+      "grading_criteria": "Lists integers 1 through 3.",
+      "accept_patterns": [
+        "1.*2.*3"
+      ],
+      "quick_benchmark": false
+    },
+    {
+      "case_id": "e04-capitalize",
+      "category": "easy-trivial",
+      "difficulty_bucket": "easy",
+      "benchmark_eligible": true,
+      "capability_targets": [
+        "instruction_following"
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "Capitalize this: hello world"
+        }
+      ],
+      "max_tokens": 16,
+      "expected_response": "Hello World",
+      "grading_criteria": "Capitalizes hello world.",
+      "accept_patterns": [
+        "Hello World"
+      ],
+      "quick_benchmark": false
+    },
+    {
+      "case_id": "e05-emoji",
+      "category": "easy-trivial",
+      "difficulty_bucket": "easy",
+      "benchmark_eligible": true,
+      "capability_targets": [
+        "instruction_following"
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "Reply with a single smile emoji."
+        }
+      ],
+      "max_tokens": 8,
+      "expected_response": "Concise correct answer following instructions.",
+      "grading_criteria": "Follows user instruction: Reply with a single smile emoji.",
+      "accept_patterns": [
+        ".+"
+      ],
+      "quick_benchmark": false
+    },
+    {
+      "case_id": "e06-timezone",
+      "category": "easy-trivial",
+      "difficulty_bucket": "easy",
+      "benchmark_eligible": true,
+      "capability_targets": [
+        "instruction_following"
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "What does UTC stand for? One phrase."
+        }
+      ],
+      "max_tokens": 24,
+      "expected_response": "Concise correct answer following instructions.",
+      "grading_criteria": "Follows user instruction: What does UTC stand for? One phrase.",
+      "accept_patterns": [
+        ".+"
+      ],
+      "quick_benchmark": false
+    },
+    {
+      "case_id": "e07-boolean",
+      "category": "easy-trivial",
+      "difficulty_bucket": "easy",
+      "benchmark_eligible": true,
+      "capability_targets": [
+        "instruction_following"
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "True or false: HTTP uses port 80 by default."
+        }
+      ],
+      "max_tokens": 16,
+      "expected_response": "true",
+      "grading_criteria": "Correct boolean for HTTP port 80.",
+      "accept_patterns": [
+        "^true$",
+        "^false$"
+      ],
+      "quick_benchmark": false
+    },
+    {
+      "case_id": "e08-format-json",
+      "category": "easy-trivial",
+      "difficulty_bucket": "easy",
+      "benchmark_eligible": true,
+      "capability_targets": [
+        "instruction_following"
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "Return valid JSON with keys name and value only."
+        }
+      ],
+      "max_tokens": 32,
+      "expected_response": "{\"name\":\"\",\"value\":\"\"}",
+      "grading_criteria": "Valid JSON with name and value keys only.",
+      "accept_patterns": [
+        "\"name\"",
+        "\"value\""
+      ],
+      "quick_benchmark": false
+    },
+    {
+      "case_id": "p01-easy-greet",
+      "category": "easy-short",
+      "difficulty_bucket": "easy",
+      "benchmark_eligible": true,
+      "capability_targets": [
+        "instruction_following",
+        "general_knowledge"
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "Say hello in one sentence."
+        }
+      ],
+      "max_tokens": 32,
+      "expected_response": "Concise correct answer following instructions.",
+      "grading_criteria": "Follows user instruction: Say hello in one sentence.",
+      "accept_patterns": [
+        ".+"
+      ],
+      "quick_benchmark": false
+    },
+    {
+      "case_id": "p02-easy-math",
+      "category": "easy-short",
+      "difficulty_bucket": "easy",
+      "benchmark_eligible": true,
+      "capability_targets": [
+        "instruction_following",
+        "general_knowledge"
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "What is 2+2? Answer with just the number."
+        }
+      ],
+      "max_tokens": 16,
+      "expected_response": "4",
+      "grading_criteria": "Numeric answer 4 only.",
+      "accept_patterns": [
+        "^4$"
+      ],
+      "quick_benchmark": false
+    },
+    {
+      "case_id": "p03-easy-define",
+      "category": "easy-short",
+      "difficulty_bucket": "easy",
+      "benchmark_eligible": true,
+      "capability_targets": [
+        "instruction_following",
+        "general_knowledge"
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "Define API in one line."
+        }
+      ],
+      "max_tokens": 32,
+      "expected_response": "Application Programming Interface",
+      "grading_criteria": "Defines API succinctly.",
+      "accept_patterns": [
+        "Application Programming Interface",
+        "programming interface"
+      ],
+      "quick_benchmark": false
+    },
+    {
+      "case_id": "p04-easy-translate",
+      "category": "easy-short",
+      "difficulty_bucket": "easy",
+      "benchmark_eligible": true,
+      "capability_targets": [
+        "instruction_following",
+        "general_knowledge"
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "Translate 'good morning' to French."
+        }
+      ],
+      "max_tokens": 16,
+      "expected_response": "Bonjour",
+      "grading_criteria": "French translation of good morning.",
+      "accept_patterns": [
+        "Bonjour"
+      ],
+      "quick_benchmark": false
+    },
+    {
+      "case_id": "p05-easy-list",
+      "category": "easy-short",
+      "difficulty_bucket": "easy",
+      "benchmark_eligible": true,
+      "capability_targets": [
+        "instruction_following",
+        "general_knowledge"
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "List three colors."
+        }
+      ],
+      "max_tokens": 24,
+      "expected_response": "Concise correct answer following instructions.",
+      "grading_criteria": "Follows user instruction: List three colors.",
+      "accept_patterns": [
+        ".+"
+      ],
+      "quick_benchmark": false
+    },
+    {
+      "case_id": "p06-medium-explain",
+      "category": "medium-qa",
+      "difficulty_bucket": "medium",
+      "benchmark_eligible": true,
+      "capability_targets": [
+        "explanation",
+        "reasoning"
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "Explain what a reverse proxy does and when you would put one in front of an LLM runtime."
+        }
+      ],
+      "max_tokens": 128,
+      "expected_response": "Accurate explanatory answer to the user question.",
+      "grading_criteria": "Answers the question with relevant technical detail.",
+      "accept_patterns": [
+        ".{20,}"
+      ],
+      "quick_benchmark": false
+    },
+    {
+      "case_id": "p07-medium-compare",
+      "category": "medium-qa",
+      "difficulty_bucket": "medium",
+      "benchmark_eligible": true,
+      "capability_targets": [
+        "explanation",
+        "reasoning"
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "Compare local inference vs remote API for a personal assistant. Give pros and cons in bullet points."
+        }
+      ],
+      "max_tokens": 160,
+      "expected_response": "Accurate explanatory answer to the user question.",
+      "grading_criteria": "Answers the question with relevant technical detail.",
+      "accept_patterns": [
+        ".{20,}"
+      ],
+      "quick_benchmark": false
+    },
+    {
+      "case_id": "p08-medium-summarize",
+      "category": "medium-qa",
+      "difficulty_bucket": "medium",
+      "benchmark_eligible": true,
+      "capability_targets": [
+        "explanation",
+        "reasoning"
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "Summarize the benefits of difficulty-based routing for mixed local and remote model pools."
+        }
+      ],
+      "max_tokens": 120,
+      "expected_response": "Accurate explanatory answer to the user question.",
+      "grading_criteria": "Answers the question with relevant technical detail.",
+      "accept_patterns": [
+        ".{20,}"
+      ],
+      "quick_benchmark": false
+    },
+    {
+      "case_id": "p09-medium-howto",
+      "category": "medium-qa",
+      "difficulty_bucket": "medium",
+      "benchmark_eligible": true,
+      "capability_targets": [
+        "explanation",
+        "reasoning"
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "How do I configure an OpenAI-compatible client to point at a local runtime on port 3456?"
+        }
+      ],
+      "max_tokens": 128,
+      "expected_response": "Accurate explanatory answer to the user question.",
+      "grading_criteria": "Answers the question with relevant technical detail.",
+      "accept_patterns": [
+        ".{20,}"
+      ],
+      "quick_benchmark": false
+    },
+    {
+      "case_id": "p10-long-context",
+      "category": "long-context",
+      "difficulty_bucket": "medium",
+      "benchmark_eligible": true,
+      "capability_targets": [
+        "long_context",
+        "summarization"
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "You are reviewing a long incident report. Context: At 09:12 the runtime began returning HTTP 400 with empty chosen_endpoint_id for exact remote model requests after a partial config PUT. Telemetry showed unknown.endpoint and execution_failed. Later investigation found default throughput SLA hard-denied sub-24 tps remote endpoints when they were the only allow-listed candidate. Strategy C alias routing still worked because local remained eligible. Operators restored routing.strategy via merge-preserving config updates. Question: what were the two root causes and the fixes? Answer in structured bullets."
+        }
+      ],
+      "max_tokens": 256,
+      "expected_response": "throughput SLA hard-deny; partial config PUT dropped routing.strategy",
+      "grading_criteria": "Names both root causes and merge-preserving fix.",
+      "accept_patterns": [
+        "throughput",
+        "routing\\.strategy",
+        "merge"
+      ],
+      "quick_benchmark": false
+    },
+    {
+      "case_id": "p11-long-multi-turn",
+      "category": "long-context",
+      "difficulty_bucket": "medium",
+      "benchmark_eligible": true,
+      "capability_targets": [
+        "long_context",
+        "summarization"
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "I need a checklist for validating packaged runtime consumption."
+        },
+        {
+          "role": "assistant",
+          "content": "1. Verify local peer health. 2. Verify remote OAuth account. 3. Curl /v1/models."
+        },
+        {
+          "role": "user",
+          "content": "Extend that checklist with logs, telemetry, and Strategy C alias tests."
+        }
+      ],
+      "max_tokens": 200,
+      "expected_response": "Accurate explanatory answer to the user question.",
+      "grading_criteria": "Answers the question with relevant technical detail.",
+      "accept_patterns": [
+        ".{20,}"
+      ],
+      "quick_benchmark": false
+    },
+    {
+      "case_id": "l01-verbose-incident",
+      "category": "long-context",
+      "difficulty_bucket": "medium",
+      "benchmark_eligible": true,
+      "capability_targets": [
+        "long_context",
+        "summarization"
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "Background notes (ignore for scoring, answer final question only): Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Repeat: routing telemetry cache invalidation throughput SLA eligibility scoring controller hybrid baseline difficulty classifier rubric signals decomposition keywords schema contract unified diff patch refactor test suite milestones verification criteria extension points arbitration observed profiles penalty factor hard deny sole candidate merge preserving config PUT runtime host bridge OpenAI compatible peer Kimi moonshot local LFM decision only vendors inactive logs stream JSON 503 request id alias measured latency reasoning content execution failed unknown endpoint registry result chosen endpoint id empty HTTP 400 consumer contract Strategy C alias mixed local remote model ids mode difficulty cost balanced quality learning cache hit invalidated tool count delta code schema burden history turn count instruction constraint count context tokens. Final question: In one sentence, what is difficulty-based routing?"
+        }
+      ],
+      "max_tokens": 64,
+      "expected_response": "difficulty-based routing selects models by request difficulty within an alias pool",
+      "grading_criteria": "One-sentence definition despite long filler context.",
+      "accept_patterns": [
+        "difficulty",
+        "routing"
+      ],
+      "quick_benchmark": false
+    },
+    {
+      "case_id": "l02-many-constraints",
+      "category": "long-context",
+      "difficulty_bucket": "medium",
+      "benchmark_eligible": true,
+      "capability_targets": [
+        "long_context",
+        "summarization"
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "Follow these constraints exactly: (1) use bullet points only, (2) max 6 bullets, (3) mention local and remote endpoints, (4) mention cache invalidation reasons, (5) mention rubric signals, (6) do not use the word 'however', (7) keep under 120 words, (8) end with a one-line recommendation. Task: explain when Strategy C should pick remote over local."
+        }
+      ],
+      "max_tokens": 180,
+      "expected_response": "bullet list with recommendation line",
+      "grading_criteria": "Bullet-only, <=6 bullets, mentions local/remote/cache/rubric, no 'however', recommendation line.",
+      "accept_patterns": [
+        "local",
+        "remote",
+        "recommend"
+      ],
+      "quick_benchmark": false
+    },
+    {
+      "case_id": "p12-code-patch",
+      "category": "code-burden",
+      "difficulty_bucket": "medium",
+      "benchmark_eligible": true,
+      "capability_targets": [
+        "code_generation",
+        "debugging"
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "Analyze this code-edit workflow, produce a unified diff patch for src/router.ts, and explain the refactor."
+        }
+      ],
+      "max_tokens": 128,
+      "expected_response": "unified diff patch for router.ts with refactor explanation",
+      "grading_criteria": "Must include unified diff with ---/+++ hunks for router.ts and brief refactor rationale.",
+      "accept_patterns": [
+        "---|\\+\\+\\+|@@",
+        "router",
+        "diff|patch"
+      ],
+      "quick_benchmark": false
+    },
+    {
+      "case_id": "p13-code-debug",
+      "category": "code-burden",
+      "difficulty_bucket": "medium",
+      "benchmark_eligible": true,
+      "capability_targets": [
+        "code_generation",
+        "debugging"
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "Debug this TypeScript error: Chosen endpoint is not present in the registry result. The chosen_endpoint_id is empty. What eligibility checks should I inspect?"
+        }
+      ],
+      "max_tokens": 160,
+      "expected_response": "inspect eligibility, throughput SLA, allowEndpoints, chosen_endpoint_id",
+      "grading_criteria": "Lists eligibility checks for empty chosen_endpoint_id.",
+      "accept_patterns": [
+        "eligib",
+        "endpoint",
+        "registry|allow"
+      ],
+      "quick_benchmark": false
+    },
+    {
+      "case_id": "p14-schema-validate",
+      "category": "code-burden",
+      "difficulty_bucket": "medium",
+      "benchmark_eligible": true,
+      "capability_targets": [
+        "code_generation",
+        "debugging"
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "Validate this JSON schema contract for routing diagnostics and refactor the test suite if fields are missing."
+        }
+      ],
+      "max_tokens": 128,
+      "expected_response": "Technical analysis referencing code, patch, schema, or tests.",
+      "grading_criteria": "Engages with code-edit or debugging request substantively.",
+      "accept_patterns": [
+        "code|patch|schema|test|typescript|router"
+      ],
+      "quick_benchmark": false
+    },
+    {
+      "case_id": "c01-full-refactor",
+      "category": "code-burden",
+      "difficulty_bucket": "medium",
+      "benchmark_eligible": true,
+      "capability_targets": [
+        "code_generation",
+        "debugging"
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "You are a senior engineer. Analyze the code-edit workflow for router.ts, produce a unified diff patch, validate the JSON schema contract for routingDiagnostics.difficultyRouting, refactor conformance tests, and explain each change with before/after examples."
+        }
+      ],
+      "max_tokens": 200,
+      "expected_response": "Technical analysis referencing code, patch, schema, or tests.",
+      "grading_criteria": "Engages with code-edit or debugging request substantively.",
+      "accept_patterns": [
+        "code|patch|schema|test|typescript|router"
+      ],
+      "quick_benchmark": false
+    },
+    {
+      "case_id": "c02-ts-generics",
+      "category": "code-burden",
+      "difficulty_bucket": "medium",
+      "benchmark_eligible": true,
+      "capability_targets": [
+        "code_generation",
+        "debugging"
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "Fix this TypeScript generic inference bug in evaluateEligibility<T extends EndpointCandidate> and show the patch hunk plus unit test updates."
+        }
+      ],
+      "max_tokens": 160,
+      "expected_response": "Technical analysis referencing code, patch, schema, or tests.",
+      "grading_criteria": "Engages with code-edit or debugging request substantively.",
+      "accept_patterns": [
+        "code|patch|schema|test|typescript|router"
+      ],
+      "quick_benchmark": false
+    },
+    {
+      "case_id": "p15-tools-read-one",
+      "category": "tools-light",
+      "difficulty_bucket": "medium",
+      "benchmark_eligible": true,
+      "capability_targets": [
+        "tool_calling"
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "Read the runtime config file and tell me the routing strategy."
+        }
+      ],
+      "max_tokens": 96,
+      "expected_response": "Coherent plan or summary addressing the tool-using task.",
+      "grading_criteria": "Attempts the requested tool workflow without refusing outright.",
+      "accept_patterns": [
+        "read|search|list|patch|tool|plan"
+      ],
+      "quick_benchmark": false,
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "read_file",
+            "description": "Read a file",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path"
+              ]
+            }
+          }
+        }
+      ],
+      "required_tool_call": true,
+      "expected_tool_names": [
+        "read_file"
+      ]
+    },
+    {
+      "case_id": "p16-tools-search",
+      "category": "tools-light",
+      "difficulty_bucket": "medium",
+      "benchmark_eligible": true,
+      "capability_targets": [
+        "tool_calling"
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "Search the codebase for throughputSla and summarize where hard-deny happens."
+        }
+      ],
+      "max_tokens": 128,
+      "expected_response": "Coherent plan or summary addressing the tool-using task.",
+      "grading_criteria": "Attempts the requested tool workflow without refusing outright.",
+      "accept_patterns": [
+        "read|search|list|patch|tool|plan"
+      ],
+      "quick_benchmark": false,
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "grep_search",
+            "description": "Search code",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "pattern": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "pattern"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "t01-tools-list-dir",
+      "category": "tools-light",
+      "difficulty_bucket": "medium",
+      "benchmark_eligible": true,
+      "capability_targets": [
+        "tool_calling"
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "List files in the config directory and summarize routing-related filenames."
+        }
+      ],
+      "max_tokens": 96,
+      "expected_response": "Coherent plan or summary addressing the tool-using task.",
+      "grading_criteria": "Attempts the requested tool workflow without refusing outright.",
+      "accept_patterns": [
+        "read|search|list|patch|tool|plan"
+      ],
+      "quick_benchmark": false,
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "list_dir",
+            "description": "List directory",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "p17-tools-multi-hard",
+      "category": "tools-heavy",
+      "difficulty_bucket": "hard",
+      "benchmark_eligible": true,
+      "capability_targets": [
+        "tool_calling",
+        "agentic_workflow"
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "API workflow: read_file src/router.ts, apply_patch minimal diff (---/+++), then JSON {\"answer\":\"what schema fields and tests you validated\"}."
+        }
+      ],
+      "max_tokens": 512,
+      "expected_response": "read_file and apply_patch tool calls plus validation plan",
+      "grading_criteria": "Must call read_file and apply_patch; acknowledges schema/test validation steps.",
+      "accept_patterns": [
+        "read",
+        "patch",
+        "schema|test"
+      ],
+      "quick_benchmark": true,
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "read_file",
+            "description": "Read a file",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "apply_patch",
+            "description": "Apply patch",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "diff": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "diff"
+              ]
+            }
+          }
+        }
+      ],
+      "required_tool_call": true,
+      "expected_tool_names": [
+        "read_file",
+        "apply_patch"
+      ],
+      "answer_format": {
+        "kind": "tool_calls_with_answer",
+        "instruction": "Step 1: API read_file src/router.ts and apply_patch with minimal unified diff. Step 2: ```json {\"answer\":\"brief schema/test validation note\"}",
+        "schema": {
+          "type": "object",
+          "required": [
+            "answer"
+          ],
+          "properties": {
+            "answer": {
+              "type": "string",
+              "minLength": 8
+            }
+          }
+        }
+      },
+      "example_deliverable": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    },\n    {\n      \"name\": \"apply_patch\",\n      \"arguments\": {\n        \"patch\": \"--- a/src/router.ts\\n+++ b/src/router.ts\\n@@ -12,3 +12,3 @@\\n export const MODE = \\\"difficulty\\\";\\n\"\n      }\n    }\n  ],\n  \"answer\": \"Validated MODE and throughput SLA schema fields; added guard regression test.\"\n}"
+    },
+    {
+      "case_id": "p18-tools-agent",
+      "category": "tools-heavy",
+      "difficulty_bucket": "hard",
+      "benchmark_eligible": true,
+      "capability_targets": [
+        "tool_calling",
+        "agentic_workflow"
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "Plan and execute a multi-step agent task: inspect endpoints, compare latency profiles, and recommend routing strategy changes."
+        }
+      ],
+      "max_tokens": 160,
+      "expected_response": "Coherent plan or summary addressing the tool-using task.",
+      "grading_criteria": "Attempts the requested tool workflow without refusing outright.",
+      "accept_patterns": [
+        "read|search|list|patch|tool|plan"
+      ],
+      "quick_benchmark": false,
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "list_endpoints",
+            "description": "List endpoints",
+            "parameters": {
+              "type": "object",
+              "properties": {}
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "get_metrics",
+            "description": "Get metrics",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "endpoint_id": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "endpoint_id"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "t02-tools-triple",
+      "category": "tools-heavy",
+      "difficulty_bucket": "hard",
+      "benchmark_eligible": true,
+      "capability_targets": [
+        "tool_calling",
+        "agentic_workflow"
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "Analyze this code-edit workflow: read affected files, grep for eligibility checks, apply a unified diff patch, validate JSON schema contract, and refactor the test suite."
+        }
+      ],
+      "max_tokens": 160,
+      "expected_response": "Coherent plan or summary addressing the tool-using task.",
+      "grading_criteria": "Attempts the requested tool workflow without refusing outright.",
+      "accept_patterns": [
+        "read|search|list|patch|tool|plan"
+      ],
+      "quick_benchmark": false,
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "read_file",
+            "description": "Read",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "grep_search",
+            "description": "Grep",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "pattern": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "pattern"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "apply_patch",
+            "description": "Patch",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "diff": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "diff"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "t03-tools-agent-plan",
+      "category": "tools-heavy",
+      "difficulty_bucket": "hard",
+      "benchmark_eligible": true,
+      "capability_targets": [
+        "tool_calling",
+        "agentic_workflow"
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "Decompose and execute an agent plan with milestones: inspect router decisions API, compare local vs remote latency profiles, validate schema for difficultyRouting, apply patch to router.ts, and recommend routing strategy improvements."
+        }
+      ],
+      "max_tokens": 192,
+      "expected_response": "Coherent plan or summary addressing the tool-using task.",
+      "grading_criteria": "Attempts the requested tool workflow without refusing outright.",
+      "accept_patterns": [
+        "read|search|list|patch|tool|plan"
+      ],
+      "quick_benchmark": false,
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "read_file",
+            "description": "Read",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "apply_patch",
+            "description": "Patch",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "diff": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "diff"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "validate_schema",
+            "description": "Validate schema",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "document": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "document"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "p19-decompose-plan",
+      "category": "decomposition",
+      "difficulty_bucket": "medium",
+      "benchmark_eligible": true,
+      "capability_targets": [
+        "planning",
+        "reasoning"
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "Break down the work to implement difficulty learning cache invalidation, step by step, with milestones and verification criteria for each phase."
+        }
+      ],
+      "max_tokens": 200,
+      "expected_response": "Step-by-step plan with milestones and verification criteria.",
+      "grading_criteria": "Provides structured decomposition with phases or milestones.",
+      "accept_patterns": [
+        "step|phase|milestone|verif"
+      ],
+      "quick_benchmark": false
+    },
+    {
+      "case_id": "p20-decompose-arch",
+      "category": "decomposition",
+      "difficulty_bucket": "medium",
+      "benchmark_eligible": true,
+      "capability_targets": [
+        "planning",
+        "reasoning"
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "Design a decomposition of the routing pipeline: alias resolution, rubric classification, controller arbitration, eligibility, scoring, execution. Identify extension points."
+        }
+      ],
+      "max_tokens": 220,
+      "expected_response": "Step-by-step plan with milestones and verification criteria.",
+      "grading_criteria": "Provides structured decomposition with phases or milestones.",
+      "accept_patterns": [
+        "step|phase|milestone|verif"
+      ],
+      "quick_benchmark": false
+    },
+    {
+      "case_id": "d01-milestones-heavy",
+      "category": "decomposition",
+      "difficulty_bucket": "medium",
+      "benchmark_eligible": true,
+      "capability_targets": [
+        "planning",
+        "reasoning"
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "Break down a multi-phase plan to improve difficulty classifier thresholds, controller arbitration, and hybrid routing overrides. Provide milestones, verification criteria, rollback steps, and extension points for each subsystem."
+        }
+      ],
+      "max_tokens": 240,
+      "expected_response": "Step-by-step plan with milestones and verification criteria.",
+      "grading_criteria": "Provides structured decomposition with phases or milestones.",
+      "accept_patterns": [
+        "step|phase|milestone|verif"
+      ],
+      "quick_benchmark": false
+    },
+    {
+      "case_id": "x01-max-signal",
+      "category": "max-signal",
+      "difficulty_bucket": "hard",
+      "benchmark_eligible": true,
+      "capability_targets": [
+        "tool_calling",
+        "code_generation",
+        "planning"
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "Workflow: (1) API read_file src/router.ts and grep_search throughputSla (2) apply_patch sole-candidate fallback comment (3) JSON with plan milestones, patch_summary, test_snippet."
+        }
+      ],
+      "max_tokens": 512,
+      "expected_response": "milestone plan, patch summary, test refactor checklist",
+      "grading_criteria": "Structured plan with milestones; read_file, grep_search, apply_patch tool calls; test checklist.",
+      "required_tool_call": true,
+      "expected_tool_names": [
+        "read_file",
+        "grep_search",
+        "apply_patch"
+      ],
+      "accept_patterns": [
+        "milestone|plan",
+        "patch",
+        "test"
+      ],
+      "quick_benchmark": true,
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "read_file",
+            "description": "Read",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "grep_search",
+            "description": "Grep",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "pattern": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "pattern"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "apply_patch",
+            "description": "Patch",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "diff": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "diff"
+              ]
+            }
+          }
+        }
+      ],
+      "answer_format": {
+        "kind": "tool_calls_with_summary",
+        "instruction": "Step 1: emit read_file, grep_search, apply_patch via API. Step 2: output ONLY ```json {\"plan\":[\"milestone 1\"],\"patch_summary\":\"what changed\",\"test_snippet\":\"short test idea\"}.",
+        "schema": {
+          "type": "object",
+          "required": [
+            "plan",
+            "patch_summary"
+          ],
+          "properties": {
+            "plan": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "patch_summary": {
+              "type": "string"
+            },
+            "test_snippet": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "example_deliverable": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    },\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"MODE\"\n      }\n    },\n    {\n      \"name\": \"apply_patch\",\n      \"arguments\": {\n        \"patch\": \"--- a/src/router.ts\\n+++ b/src/router.ts\\n@@ -1,3 +1,3 @@\\n-MODE=fast\\n+MODE=difficulty\\n\"\n      }\n    }\n  ],\n  \"plan\": [\n    \"Read router config\",\n    \"Patch MODE to difficulty\",\n    \"Add SLA guard test\"\n  ],\n  \"patch_summary\": \"Switched MODE default to difficulty and documented throughput SLA guard.\",\n  \"test_snippet\": \"expect(guardSoleCandidate(...)).toAllowFallbackWhenHardDenied();\"\n}"
+    },
+    {
+      "case_id": "x02-max-context-tools",
+      "category": "max-signal",
+      "difficulty_bucket": "hard",
+      "benchmark_eligible": true,
+      "capability_targets": [
+        "tool_calling",
+        "code_generation",
+        "planning"
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "Incident context: routing returned empty chosen_endpoint_id under throughput SLA hard-deny; partial config PUT dropped routing.strategy; difficulty cache invalidated on tool-count-delta and code-or-schema-change; hybrid and controller overrides behaved differently; remote Kimi returned reasoning_content. Task: analyze code-edit workflow, apply patch, validate schema, refactor tests, decompose architecture extension points, and recommend when to route hard prompts to remote despite local tps advantage."
+        }
+      ],
+      "max_tokens": 256,
+      "expected_response": "analysis of workflow with routing recommendation for hard prompts",
+      "grading_criteria": "Addresses incident context and when to route hard prompts remote.",
+      "accept_patterns": [
+        "remote",
+        "routing",
+        "patch|schema"
+      ],
+      "quick_benchmark": false,
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "read_file",
+            "description": "Read",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "apply_patch",
+            "description": "Patch",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "diff": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "diff"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "validate_schema",
+            "description": "Validate",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "document": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "document"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "p24-exact-local",
+      "category": "exact-model",
+      "difficulty_bucket": "easy",
+      "benchmark_eligible": true,
+      "capability_targets": [
+        "instruction_following"
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "Reply exactly: routed-local"
+        }
+      ],
+      "max_tokens": 16,
+      "expected_response": "routed-local",
+      "grading_criteria": "Exact text routed-local.",
+      "accept_patterns": [
+        "routed-local"
+      ],
+      "quick_benchmark": false
+    },
+    {
+      "case_id": "p25-exact-remote",
+      "category": "exact-model",
+      "difficulty_bucket": "easy",
+      "benchmark_eligible": true,
+      "capability_targets": [
+        "instruction_following"
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "Reply exactly: routed-remote"
+        }
+      ],
+      "max_tokens": 16,
+      "expected_response": "routed-remote",
+      "grading_criteria": "Exact text routed-remote.",
+      "accept_patterns": [
+        "routed-remote"
+      ],
+      "quick_benchmark": false
+    },
+    {
+      "case_id": "p26-cache-easy-a",
+      "category": "cache-probe",
+      "difficulty_bucket": "easy",
+      "benchmark_eligible": false,
+      "capability_targets": [
+        "instruction_following"
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "Say hello in one short sentence."
+        }
+      ],
+      "max_tokens": 32,
+      "expected_response": "Concise correct answer following instructions.",
+      "grading_criteria": "Follows user instruction: Say hello in one short sentence.",
+      "accept_patterns": [
+        ".+"
+      ],
+      "quick_benchmark": false
+    },
+    {
+      "case_id": "p27-cache-easy-b",
+      "category": "cache-probe",
+      "difficulty_bucket": "easy",
+      "benchmark_eligible": false,
+      "capability_targets": [
+        "instruction_following"
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "Say hello in one short sentence."
+        }
+      ],
+      "max_tokens": 32,
+      "expected_response": "Concise correct answer following instructions.",
+      "grading_criteria": "Follows user instruction: Say hello in one short sentence.",
+      "accept_patterns": [
+        ".+"
+      ],
+      "quick_benchmark": false
+    },
+    {
+      "case_id": "p28-cache-hard-a",
+      "category": "cache-probe",
+      "difficulty_bucket": "easy",
+      "benchmark_eligible": false,
+      "capability_targets": [
+        "instruction_following"
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "Analyze this code-edit workflow and apply a patch with schema validation."
+        }
+      ],
+      "max_tokens": 96,
+      "expected_response": "Concise correct answer following instructions.",
+      "grading_criteria": "Follows user instruction: Analyze this code-edit workflow and apply a patch with schema validation.",
+      "accept_patterns": [
+        ".+"
+      ],
+      "quick_benchmark": false,
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "read_file",
+            "description": "Read",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "apply_patch",
+            "description": "Patch",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "diff": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "diff"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "p29-cache-hard-b",
+      "category": "cache-probe",
+      "difficulty_bucket": "easy",
+      "benchmark_eligible": false,
+      "capability_targets": [
+        "instruction_following"
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "Analyze this code-edit workflow and apply a patch with schema validation."
+        }
+      ],
+      "max_tokens": 96,
+      "expected_response": "Concise correct answer following instructions.",
+      "grading_criteria": "Follows user instruction: Analyze this code-edit workflow and apply a patch with schema validation.",
+      "accept_patterns": [
+        ".+"
+      ],
+      "quick_benchmark": false,
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "read_file",
+            "description": "Read",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "apply_patch",
+            "description": "Patch",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "diff": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "diff"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "p30-cache-invalidate",
+      "category": "cache-probe",
+      "difficulty_bucket": "easy",
+      "benchmark_eligible": false,
+      "capability_targets": [
+        "instruction_following"
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "Analyze this code-edit workflow, apply a patch, validate schema contract, and refactor the test suite with multiple tool calls."
+        }
+      ],
+      "max_tokens": 128,
+      "expected_response": "Concise correct answer following instructions.",
+      "grading_criteria": "Follows user instruction: Analyze this code-edit workflow, apply a patch, validate schema contract, and refactor the test suite with multiple tool",
+      "accept_patterns": [
+        ".+"
+      ],
+      "quick_benchmark": false,
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "read_file",
+            "description": "Read",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "apply_patch",
+            "description": "Patch",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "diff": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "diff"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "p31-cache-strategy-switch",
+      "category": "cache-probe",
+      "difficulty_bucket": "easy",
+      "benchmark_eligible": false,
+      "capability_targets": [
+        "instruction_following"
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "What is 1+1? Number only."
+        }
+      ],
+      "max_tokens": 8,
+      "expected_response": "Concise correct answer following instructions.",
+      "grading_criteria": "Follows user instruction: What is 1+1? Number only.",
+      "accept_patterns": [
+        ".+"
+      ],
+      "quick_benchmark": false
+    },
+    {
+      "case_id": "h01-implement-two-sum",
+      "category": "code-implementation",
+      "difficulty_bucket": "hard",
+      "benchmark_eligible": true,
+      "capability_targets": [
+        "code_generation"
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "Implement twoSum(nums: number[], target: number): [number, number] in TypeScript. Use one Map pass, O(n). Return the two indices."
+        }
+      ],
+      "max_tokens": 320,
+      "expected_response": "TypeScript twoSum using Map, single pass, returns index tuple",
+      "grading_criteria": "Must define twoSum, use Map or hash map, iterate nums once, return two numeric indices. No nested O(n^2) double loop.",
+      "accept_patterns": [
+        "function\\s+twoSum",
+        "Map|new Map",
+        "nums",
+        "target",
+        "return"
+      ],
+      "quick_benchmark": true,
+      "answer_format": {
+        "kind": "code_fence",
+        "language": "typescript",
+        "instruction": "Reasoning allowed. Final message must contain exactly one ```typescript fenced code block with complete working code. No placeholders."
+      },
+      "example_deliverable": "{\n  \"code\": \"function twoSum(nums: number[], target: number): [number, number] {\\n  const map = new Map<number, number>();\\n  for (let i = 0; i < nums.length; i++) {\\n    const need = target - nums[i];\\n    if (map.has(need)) return [map.get(need)!, i];\\n    map.set(nums[i], i);\\n  }\\n  throw new Error('no pair');\\n}\"\n}"
+    },
+    {
+      "case_id": "h02-fix-async-counter",
+      "category": "code-implementation",
+      "difficulty_bucket": "hard",
+      "benchmark_eligible": true,
+      "capability_targets": [
+        "code_generation",
+        "debugging"
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "Fix this async race so count reliably prints 3. Serialize increments with a mutex/lock/queue:\n```ts\nlet count = 0;\nasync function increment() {\n  const current = count;\n  await Promise.resolve();\n  count = current + 1;\n}\nawait Promise.all([increment(), increment(), increment()]);\nconsole.log(count);\n```\nOutput one complete ```typescript fence with runnable fixed code only."
+        }
+      ],
+      "max_tokens": 512,
+      "expected_response": "Uses mutex/lock/queue/atomic pattern so concurrent increments serialize",
+      "grading_criteria": "Must fix race on shared count (mutex, semaphore, queue, or atomic increment pattern). Final code should reliably reach count 3.",
+      "accept_patterns": [
+        "Mutex|mutex|lock|queue|semaphore|atomic|Promise\\.resolve"
+      ],
+      "quick_benchmark": true,
+      "answer_format": {
+        "kind": "code_fence",
+        "language": "typescript",
+        "instruction": "Reasoning allowed. Final message must contain exactly one ```typescript fenced code block with complete working code. No placeholders."
+      },
+      "example_deliverable": "{\n  \"code\": \"let count = 0;\\nlet chain = Promise.resolve();\\nfunction withLock<T>(fn: () => Promise<T>): Promise<T> {\\n  const run = chain.then(fn);\\n  chain = run.catch(() => undefined);\\n  return run;\\n}\\nasync function increment() {\\n  await withLock(async () => {\\n    const current = count;\\n    await Promise.resolve();\\n    count = current + 1;\\n  });\\n}\\nawait Promise.all([increment(), increment(), increment()]);\\nconsole.log(count);\"\n}"
+    },
+    {
+      "case_id": "h03-implement-lru-cache",
+      "category": "code-implementation",
+      "difficulty_bucket": "hard",
+      "benchmark_eligible": true,
+      "capability_targets": [
+        "code_generation",
+        "reasoning"
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "Implement a TypeScript class LRUCache with constructor(capacity: number), get(key: number): number, and put(key: number, value: number): void. Use Map insertion order or explicit doubly-linked list. Output code only."
+        }
+      ],
+      "max_tokens": 480,
+      "expected_response": "LRUCache class with get/put and eviction at capacity",
+      "grading_criteria": "Defines LRUCache class with get and put, evicts least-recently-used when capacity exceeded.",
+      "accept_patterns": [
+        "class\\s+LRUCache",
+        "get\\(",
+        "put\\(",
+        "capacity"
+      ],
+      "quick_benchmark": false
+    },
+    {
+      "case_id": "h04-tool-read-router",
+      "category": "tools-heavy",
+      "difficulty_bucket": "hard",
+      "benchmark_eligible": true,
+      "capability_targets": [
+        "tool_calling"
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "Phase 1 only: API read_file path src/router.ts"
+        },
+        {
+          "role": "assistant",
+          "content": "read_file emitted."
+        },
+        {
+          "role": "user",
+          "content": "Phase 2 only: ```json {\"answer\":\"<first exported function name>\"}"
+        }
+      ],
+      "max_tokens": 320,
+      "expected_response": "TOOL_CALL read_file path src/router.ts then function name",
+      "grading_criteria": "Must call read_file with router.ts path; answer references a function name.",
+      "accept_patterns": [
+        "router\\.ts|read_file"
+      ],
+      "required_tool_call": true,
+      "expected_tool_names": [
+        "read_file"
+      ],
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "read_file",
+            "description": "Read a file from the repository",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path"
+              ]
+            }
+          }
+        }
+      ],
+      "quick_benchmark": true,
+      "answer_format": {
+        "kind": "tool_calls_with_answer",
+        "instruction": "Step 1: emit required API tool calls. Step 2: after tools succeed, output ONLY a ```json fence: {\"answer\":\"...\"}. No reasoning inside the JSON.",
+        "schema": {
+          "type": "object",
+          "required": [
+            "answer"
+          ],
+          "properties": {
+            "answer": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      },
+      "example_deliverable": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    }\n  ],\n  \"answer\": \"routeRuntimeRequest\"\n}"
+    },
+    {
+      "case_id": "h05-tool-grep-eligibility",
+      "category": "tools-heavy",
+      "difficulty_bucket": "hard",
+      "benchmark_eligible": true,
+      "capability_targets": [
+        "tool_calling"
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "Phase 1 only: API grep_search pattern evaluateEligibility"
+        },
+        {
+          "role": "assistant",
+          "content": "grep_search emitted."
+        },
+        {
+          "role": "user",
+          "content": "Phase 2 only: ```json {\"bullets\":[\"<check A>\",\"<check B>\"]} with 2 real bullets"
+        }
+      ],
+      "max_tokens": 320,
+      "expected_response": "grep_search for evaluateEligibility then eligibility summary bullets",
+      "grading_criteria": "Must call grep_search with evaluateEligibility pattern; summary mentions eligibility checks.",
+      "accept_patterns": [
+        "evaluateEligibility|eligib"
+      ],
+      "required_tool_call": true,
+      "expected_tool_names": [
+        "grep_search"
+      ],
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "grep_search",
+            "description": "Search the codebase for a regex pattern",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "pattern": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "pattern"
+              ]
+            }
+          }
+        }
+      ],
+      "quick_benchmark": true,
+      "answer_format": {
+        "kind": "tool_calls_with_summary",
+        "instruction": "Step 1: emit required API tool calls. Step 2: output ONLY ```json {\"bullets\":[\"...\",\"...\"]}. Exactly two bullets.",
+        "schema": {
+          "type": "object",
+          "required": [
+            "bullets"
+          ],
+          "properties": {
+            "bullets": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 2
+            }
+          }
+        }
+      },
+      "example_deliverable": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"eligibility\"\n      }\n    }\n  ],\n  \"bullets\": [\n    \"Candidate passes allow-list and freshness checks.\",\n    \"Throughput SLA hard-deny would block sole remaining candidate.\"\n  ]\n}"
+    },
+    {
+      "case_id": "h06-tool-apply-patch",
+      "category": "tools-heavy",
+      "difficulty_bucket": "hard",
+      "benchmark_eligible": true,
+      "capability_targets": [
+        "tool_calling",
+        "code_generation"
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "API apply_patch only. Unified diff for src/config.ts changing const MODE = 'baseline' to const MODE = 'difficulty'. Must include --- and +++ file headers."
+        }
+      ],
+      "max_tokens": 256,
+      "expected_response": "apply_patch tool call with unified diff changing MODE to difficulty",
+      "grading_criteria": "Must call apply_patch; diff includes ---/+++ headers and changes MODE to difficulty.",
+      "accept_patterns": [
+        "apply_patch|MODE|difficulty|\\+\\+\\+|---"
+      ],
+      "required_tool_call": true,
+      "expected_tool_names": [
+        "apply_patch"
+      ],
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "apply_patch",
+            "description": "Apply a unified diff patch",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "diff": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "diff"
+              ]
+            }
+          }
+        }
+      ],
+      "quick_benchmark": true,
+      "answer_format": {
+        "kind": "tool_calls",
+        "instruction": "Emit all required tool calls through the API in as few turns as needed. Do not write fake TOOL_CALL text. No final prose unless asked in a follow-up."
+      },
+      "example_deliverable": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"apply_patch\",\n      \"arguments\": {\n        \"patch\": \"--- a/src/router.ts\\n+++ b/src/router.ts\\n@@ -1,3 +1,3 @@\\n-MODE=fast\\n+MODE=difficulty\\n\"\n      }\n    }\n  ]\n}"
+    },
+    {
+      "case_id": "h07-multi-turn-sla-guard",
+      "category": "multi-step",
+      "difficulty_bucket": "hard",
+      "benchmark_eligible": true,
+      "capability_targets": [
+        "code_generation",
+        "debugging",
+        "reasoning"
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "Remote-only alias requests return HTTP 400 with empty chosen_endpoint_id when throughput SLA hard-denies the sole candidate."
+        },
+        {
+          "role": "assistant",
+          "content": "Throughput SLA hard-deny on the only allow-listed endpoint leaves zero eligible candidates."
+        },
+        {
+          "role": "user",
+          "content": "Write a TypeScript guard function that allows sole-candidate fallback when every allow-listed endpoint is hard-denied only by throughput SLA. Output only one ```typescript code fence with the full function."
+        }
+      ],
+      "max_tokens": 512,
+      "expected_response": "Guard clause checking sole candidate + throughput SLA hard deny fallback",
+      "grading_criteria": "Multi-turn context used; code references throughput SLA, sole candidate, and fallback allow.",
+      "accept_patterns": [
+        "throughput|sla|sole|candidate|fallback|allow"
+      ],
+      "quick_benchmark": true,
+      "answer_format": {
+        "kind": "code_fence",
+        "language": "typescript",
+        "instruction": "Reasoning allowed. Final message must contain exactly one ```typescript fenced code block with complete working code. No placeholders."
+      },
+      "example_deliverable": "{\n  \"code\": \"export function guardSoleCandidateThroughputDeny(input: {\\n  readonly candidates: readonly { id: string; hardDeniedBySla: boolean }[];\\n  readonly throughputSlaHardDeny: boolean;\\n}): boolean {\\n  const allowListed = input.candidates.filter((c) => !c.hardDeniedBySla);\\n  if (allowListed.length !== 1) return false;\\n  if (!input.throughputSlaHardDeny) return false;\\n  return true;\\n}\"\n}"
+    },
+    {
+      "case_id": "h08-multi-turn-tool-refine",
+      "category": "multi-step",
+      "difficulty_bucket": "hard",
+      "benchmark_eligible": true,
+      "capability_targets": [
+        "tool_calling",
+        "agentic_workflow"
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "Where is routing.strategy persisted?"
+        },
+        {
+          "role": "assistant",
+          "content": "In state/runtime-config.yaml."
+        },
+        {
+          "role": "user",
+          "content": "Phase 1: API read_file path state/runtime-config.yaml"
+        },
+        {
+          "role": "assistant",
+          "content": "read_file emitted."
+        },
+        {
+          "role": "user",
+          "content": "Phase 2: ```json {\"answer\":\"<routing.strategy value>\"}"
+        }
+      ],
+      "max_tokens": 320,
+      "expected_response": "read_file runtime-config.yaml and routing.strategy value",
+      "grading_criteria": "Must call read_file on runtime-config.yaml after multi-turn context.",
+      "accept_patterns": [
+        "runtime-config|routing\\.strategy|strategy"
+      ],
+      "required_tool_call": true,
+      "expected_tool_names": [
+        "read_file"
+      ],
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "read_file",
+            "description": "Read a file from the repository",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path"
+              ]
+            }
+          }
+        }
+      ],
+      "quick_benchmark": true,
+      "answer_format": {
+        "kind": "tool_calls_with_answer",
+        "instruction": "Step 1: emit required API tool calls. Step 2: after tools succeed, output ONLY a ```json fence: {\"answer\":\"...\"}. No reasoning inside the JSON.",
+        "schema": {
+          "type": "object",
+          "required": [
+            "answer"
+          ],
+          "properties": {
+            "answer": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      },
+      "example_deliverable": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    }\n  ],\n  \"answer\": \"createRouter\"\n}"
+    },
+    {
+      "case_id": "h09-agent-metrics-chain",
+      "category": "tools-heavy",
+      "difficulty_bucket": "hard",
+      "benchmark_eligible": true,
+      "capability_targets": [
+        "tool_calling",
+        "agentic_workflow"
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "Phase 1a: API list_endpoints"
+        },
+        {
+          "role": "assistant",
+          "content": "list_endpoints emitted."
+        },
+        {
+          "role": "user",
+          "content": "Phase 1b: API get_metrics for a remote endpoint_id"
+        },
+        {
+          "role": "assistant",
+          "content": "get_metrics emitted."
+        },
+        {
+          "role": "user",
+          "content": "Phase 2: ```json {\"answer\":\"<one sentence remote vs local p95 latency>\"}"
+        }
+      ],
+      "max_tokens": 448,
+      "expected_response": "list_endpoints then get_metrics tool calls and latency comparison",
+      "grading_criteria": "Must call list_endpoints and get_metrics before summarizing latency.",
+      "accept_patterns": [
+        "latency|p95|remote|local|endpoint"
+      ],
+      "required_tool_call": true,
+      "expected_tool_names": [
+        "list_endpoints",
+        "get_metrics"
+      ],
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "list_endpoints",
+            "description": "List configured router endpoints",
+            "parameters": {
+              "type": "object",
+              "properties": {}
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "get_metrics",
+            "description": "Fetch latency metrics for an endpoint",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "endpoint_id": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "endpoint_id"
+              ]
+            }
+          }
+        }
+      ],
+      "quick_benchmark": true,
+      "answer_format": {
+        "kind": "tool_calls_with_answer",
+        "instruction": "Step 1: emit required API tool calls. Step 2: after tools succeed, output ONLY a ```json fence: {\"answer\":\"...\"}. No reasoning inside the JSON.",
+        "schema": {
+          "type": "object",
+          "required": [
+            "answer"
+          ],
+          "properties": {
+            "answer": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      },
+      "example_deliverable": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"list_endpoints\",\n      \"arguments\": {}\n    },\n    {\n      \"name\": \"get_metrics\",\n      \"arguments\": {\n        \"endpoint_id\": \"local.primary\"\n      }\n    }\n  ],\n  \"answer\": \"local.primary has lower p95 latency for this workload.\"\n}"
+    },
+    {
+      "case_id": "h10-agent-read-grep-patch",
+      "category": "tools-heavy",
+      "difficulty_bucket": "hard",
+      "benchmark_eligible": true,
+      "capability_targets": [
+        "tool_calling",
+        "agentic_workflow",
+        "code_generation"
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "Emit API tool calls in order: read_file src/router.ts, grep_search evaluateEligibility, apply_patch with a one-line comment fix diff. All three tools required."
+        }
+      ],
+      "max_tokens": 640,
+      "expected_response": "read_file, grep_search, apply_patch tool calls in sequence",
+      "grading_criteria": "Must emit read_file, grep_search, and apply_patch tool calls.",
+      "accept_patterns": [
+        "router|evaluateEligibility|patch|diff"
+      ],
+      "required_tool_call": true,
+      "expected_tool_names": [
+        "read_file",
+        "grep_search",
+        "apply_patch"
+      ],
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "read_file",
+            "description": "Read a file from the repository",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "grep_search",
+            "description": "Search the codebase for a regex pattern",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "pattern": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "pattern"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "apply_patch",
+            "description": "Apply a unified diff patch",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "diff": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "diff"
+              ]
+            }
+          }
+        }
+      ],
+      "quick_benchmark": true,
+      "answer_format": {
+        "kind": "tool_calls",
+        "instruction": "Emit all required tool calls through the API in as few turns as needed. Do not write fake TOOL_CALL text. No final prose unless asked in a follow-up."
+      },
+      "example_deliverable": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    },\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"MODE\"\n      }\n    },\n    {\n      \"name\": \"apply_patch\",\n      \"arguments\": {\n        \"patch\": \"--- a/src/router.ts\\n+++ b/src/router.ts\\n@@ -4,3 +4,3 @@\\n-MODE=fast\\n+MODE=difficulty\\n\"\n      }\n    }\n  ]\n}"
+    },
+    {
+      "case_id": "h11-decompose-code-verify",
+      "category": "multi-step",
+      "difficulty_bucket": "hard",
+      "benchmark_eligible": true,
+      "capability_targets": [
+        "planning",
+        "code_generation",
+        "tool_calling"
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "Phase 1: bullet milestones to add benchmark progress API. Phase 2: write TypeScript interface BenchmarkRunProgress with runId, status, completedSteps, totalSteps. Phase 3: call run_tests with `pnpm test benchmark-progress`. Use run_tests tool for phase 3."
+        }
+      ],
+      "max_tokens": 400,
+      "expected_response": "Milestone bullets, BenchmarkRunProgress interface, run_tests tool call",
+      "grading_criteria": "Structured phases; includes BenchmarkRunProgress interface fields; run_tests tool emitted.",
+      "accept_patterns": [
+        "BenchmarkRunProgress|milestone|phase|run_tests"
+      ],
+      "required_tool_call": true,
+      "expected_tool_names": [
+        "run_tests"
+      ],
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "run_tests",
+            "description": "Run a test command",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "command": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "command"
+              ]
+            }
+          }
+        }
+      ],
+      "quick_benchmark": false
+    },
+    {
+      "case_id": "h12-four-turn-architecture",
+      "category": "multi-step",
+      "difficulty_bucket": "hard",
+      "benchmark_eligible": true,
+      "capability_targets": [
+        "planning",
+        "reasoning"
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "Design difficulty routing for mixed local-remote pools."
+        },
+        {
+          "role": "assistant",
+          "content": "Use alias pool, classifier buckets, observed profiles, and controller arbitration."
+        },
+        {
+          "role": "user",
+          "content": "Add cache invalidation triggers and extension points for custom rubrics."
+        },
+        {
+          "role": "assistant",
+          "content": "Invalidate on tool-count delta, model change, strategy change; rubric hooks after classifier."
+        },
+        {
+          "role": "user",
+          "content": "Now produce a numbered 5-step implementation plan with verification criteria per step. Max 180 words."
+        }
+      ],
+      "max_tokens": 280,
+      "expected_response": "5-step numbered plan with verification per step under 180 words",
+      "grading_criteria": "Uses prior turns; numbered plan with 5 steps; each step has verification; <=180 words.",
+      "accept_patterns": [
+        "1[.)\\s]",
+        "verif|verify|criteria",
+        "cache|rubric|classifier"
+      ],
+      "quick_benchmark": false
+    },
+    {
+      "case_id": "h13-parse-nested-json",
+      "category": "code-implementation",
+      "difficulty_bucket": "hard",
+      "benchmark_eligible": true,
+      "capability_targets": [
+        "code_generation"
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "Write TypeScript function `parseRoutingDiagnostics(raw: string): { difficulty: string; chosenEndpointId: string | null }` that safely parses JSON and returns defaults on invalid input. Code block only."
+        }
+      ],
+      "max_tokens": 320,
+      "expected_response": "parseRoutingDiagnostics with try/catch JSON parse and typed return",
+      "grading_criteria": "Defines parseRoutingDiagnostics, handles invalid JSON, returns difficulty and chosenEndpointId.",
+      "accept_patterns": [
+        "parseRoutingDiagnostics",
+        "JSON\\.parse|try",
+        "chosenEndpointId|difficulty"
+      ],
+      "quick_benchmark": false
+    },
+    {
+      "case_id": "h14-refactor-extract-helper",
+      "category": "code-implementation",
+      "difficulty_bucket": "hard",
+      "benchmark_eligible": true,
+      "capability_targets": [
+        "code_generation",
+        "debugging"
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "Refactor this inline logic into `function pickFallbackJudge(gradedId: string, judgeId: string, pool: string[]): string | null` and show before/after in two code blocks:\n```ts\nconst fallbacks = pool.filter(id => id !== gradedId && id !== judgeId);\nreturn fallbacks[0] ?? null;\n```"
+        }
+      ],
+      "max_tokens": 360,
+      "expected_response": "pickFallbackJudge helper with before/after code blocks",
+      "grading_criteria": "Extracts pickFallbackJudge function; shows before and after blocks.",
+      "accept_patterns": [
+        "pickFallbackJudge",
+        "before|after|fallback"
+      ],
+      "quick_benchmark": false
+    },
+    {
+      "case_id": "h15-max-signal-v3",
+      "category": "max-signal",
+      "difficulty_bucket": "hard",
+      "benchmark_eligible": true,
+      "capability_targets": [
+        "tool_calling",
+        "code_generation",
+        "planning",
+        "agentic_workflow"
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "Workflow: (1) API read_file src/router.ts (2) grep_search throughputSla (3) apply_patch adding sole-candidate fallback comment (4) JSON plan with milestones, patch_summary, test_snippet."
+        }
+      ],
+      "max_tokens": 512,
+      "expected_response": "Sections A-D with milestones, tool calls, patch, and test snippet",
+      "grading_criteria": "Has A/B/C/D sections; read_file and grep_search and apply_patch tool calls; includes test snippet.",
+      "accept_patterns": [
+        "^A[)|:]|milestone",
+        "read_file|grep_search|apply_patch",
+        "test|expect|assert"
+      ],
+      "required_tool_call": true,
+      "expected_tool_names": [
+        "read_file",
+        "grep_search",
+        "apply_patch"
+      ],
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "read_file",
+            "description": "Read a file from the repository",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "grep_search",
+            "description": "Search the codebase for a regex pattern",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "pattern": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "pattern"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "apply_patch",
+            "description": "Apply a unified diff patch",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "diff": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "diff"
+              ]
+            }
+          }
+        }
+      ],
+      "quick_benchmark": true,
+      "answer_format": {
+        "kind": "tool_calls_with_summary",
+        "instruction": "Step 1: emit read_file, grep_search, apply_patch via API. Step 2: output ONLY ```json {\"plan\":[\"milestone 1\"],\"patch_summary\":\"what changed\",\"test_snippet\":\"short test idea\"}.",
+        "schema": {
+          "type": "object",
+          "required": [
+            "plan",
+            "patch_summary"
+          ],
+          "properties": {
+            "plan": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "patch_summary": {
+              "type": "string"
+            },
+            "test_snippet": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "example_deliverable": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    },\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"SLA\"\n      }\n    },\n    {\n      \"name\": \"apply_patch\",\n      \"arguments\": {\n        \"patch\": \"--- a/src/router.ts\\n+++ b/src/router.ts\\n@@ -20,3 +20,4 @@\\n+// throughput SLA guard\\n\"\n      }\n    }\n  ],\n  \"plan\": [\n    \"Inspect router\",\n    \"Patch SLA guard\",\n    \"Validate with test snippet\"\n  ],\n  \"patch_summary\": \"Added throughput SLA guard comment and regression hook.\",\n  \"test_snippet\": \"expect(guardSoleCandidateThroughputDeny(...)).toBe(true);\"\n}"
+    }
+  ]
+}

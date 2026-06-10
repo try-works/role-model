@@ -36,6 +36,8 @@ export default [
     route("models/roles", "routes/control-roles.tsx"),
     route("control/roles", "routes/legacy-redirect.tsx", { id: "legacy-control-roles" }),
     route("models", "routes/control-models.tsx"),
+    route("models/benchmark", "routes/control-benchmark.tsx"),
+    route("control/benchmark", "routes/legacy-redirect.tsx", { id: "legacy-control-benchmark" }),
     route("control/models", "routes/legacy-redirect.tsx", { id: "legacy-control-models" }),
     route("router", "routes/router.tsx"),
     route("router/config", "routes/router-config.tsx"),

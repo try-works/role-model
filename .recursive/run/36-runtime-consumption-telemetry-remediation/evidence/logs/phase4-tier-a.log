@@ -1,0 +1,215 @@
+=== Phase 4 Tier A - 2026-06-08T17:30:26.6169682+02:00 ===
+
+> @role-model-router/provider-openai@0.0.0 test D:\DEV\role-model\.worktrees\36-runtime-consumption-telemetry-remediation\role-model-router\packages\provider-openai
+> vitest run test/index.test.ts
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/36-runtime-consumption-telemetry-remediation/role-model-router/packages/provider-openai
+
+ Γ£ô test/index.test.ts (6 tests) 19ms
+
+ Test Files  1 passed (1)
+      Tests  6 passed (6)
+   Start at  17:30:28
+   Duration  1.04s (transform 213ms, setup 0ms, collect 188ms, tests 19ms, environment 0ms, prepare 350ms)
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/36-runtime-consumption-telemetry-remediation/role-model-router/apps/runtime-ui
+
+ Γ£ô app/lib/view-models.test.ts (21 tests) 76ms
+
+ Test Files  1 passed (1)
+      Tests  21 passed (21)
+   Start at  17:30:32
+   Duration  1.20s (transform 174ms, setup 0ms, collect 171ms, tests 76ms, environment 0ms, prepare 332ms)
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/36-runtime-consumption-telemetry-remediation/role-model-router/apps/runtime-host-bridge
+
+(node:1002148) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ Γ¥» test/index.test.ts (71 tests | 1 failed) 18276ms
+   Γ£ô runtime-host-bridge > creates a stable model-list response grouped by model id 24ms
+   Γ£ô runtime-host-bridge > creates alias entries in the model-list response alongside real models 1ms
+   Γ£ô runtime-host-bridge > builds QA bootstrap options with router surfaces and complete fixtures 3ms
+   Γ£ô runtime-host-bridge > bootstraps QA control-plane state for mixed local+remote routing proof 1ms
+   Γ£ô runtime-host-bridge > builds packaged CLI options with static UI, router surfaces, and fixture-root defaults 2ms
+   Γ£ô runtime-host-bridge > suppresses placeholder provider accounts when using the packaged CLI defaults 252ms
+   Γ£ô runtime-host-bridge > removes legacy placeholder provider accounts from persisted runtime state when using packaged defaults  454ms
+   Γ£ô runtime-host-bridge > maps a chat-completions request into role-model routing and execution inputs 2ms
+   Γ£ô runtime-host-bridge > maps an alias chat-completions request into a pooled endpoint allow-list and alias diagnostics 1ms
+   Γ£ô runtime-host-bridge > keeps exact-model routing unchanged when aliases are configured 0ms
+   Γ£ô runtime-host-bridge > narrows exact-model chat routing to an explicitly requested endpoint 0ms
+   Γ£ô runtime-host-bridge > maps validated controller guidance into an intelligent alias routing plan 2ms
+   Γ£ô runtime-host-bridge > uses a baseline override to bypass intelligent alias controller routing 1ms
+   Γ£ô runtime-host-bridge > applies a directly requested role to chat routing and execution policy 2ms
+   Γ£ô runtime-host-bridge > records explicit hybrid arbitration when controller guidance alters the difficulty plan 2ms
+   Γ£ô runtime-host-bridge > maps a difficulty-mode alias chat request into a gated allow-list and difficulty diagnostics 1ms
+   Γ£ô runtime-host-bridge > uses a baseline override to bypass difficulty alias gating 1ms
+   Γ£ô runtime-host-bridge > uses the persisted Strategy B mode as the default routing mode when no alias mode or request override is set 1ms
+   Γ£ô runtime-host-bridge > maps an alias responses request into a pooled endpoint allow-list and alias diagnostics 1ms
+   Γ£ô runtime-host-bridge > maps a difficulty-mode responses request into an easy strategy and keeps eligible endpoints 1ms
+   Γ£ô runtime-host-bridge > applies requested role execution policy to responses requests 1ms
+   Γ£ô runtime-host-bridge > prefers a configured alias in downstream OpenAI provider config 1ms
+   Γ£ô runtime-host-bridge > serves health and model-list endpoints 64ms
+   Γ£ô runtime-host-bridge > serves alias entries in model-list and downstream provider config from runtime config 26ms
+   Γ£ô runtime-host-bridge > serves preserved host observability and vendor-facing utility endpoints 24ms
+   Γ£ô runtime-host-bridge > returns JSON for /logs/stream before static root catch-all 12ms
+   Γ£ô runtime-host-bridge > accepts x-role-model-request-id as the bridge request id alias 12ms
+   Γ£ô runtime-host-bridge > serves runtime control-plane summary, provider, account, and endpoint routes 49ms
+   Γ£ô runtime-host-bridge > serves canonical telemetry summary, comparison, and recent request routes 10ms
+   Γ£ô runtime-host-bridge > serves downstream OpenAI-compatible provider metadata for consumer apps 5ms
+   Γ£ô runtime-host-bridge > serves chat-completions responses with role-model execution metadata 7ms
+   Γ£ô runtime-host-bridge > serves OpenAI-compatible SSE events for streaming responses requests 76ms
+   Γ£ô runtime-host-bridge > surfaces tool calls on chat-completions responses when the backend returns them 6ms
+   Γ£ô runtime-host-bridge > streams provider deltas through the bridge as they arrive 73ms
+   Γ£ô runtime-host-bridge > forwards x-role-model-routing-mode to chat-completions execution 5ms
+   Γ£ô runtime-host-bridge > rejects an invalid x-role-model-routing-mode header 6ms
+   Γ£ô runtime-host-bridge > creates a runtime backend that executes chat-completions through the real routing and adapter path 297ms
+   Γ£ô runtime-host-bridge > creates a runtime backend that persists structured request and endpoint inspection state  354ms
+   Γ£ô runtime-host-bridge > persists routing-mode override and rewrite-skipped diagnostics for exact-model runtime-backed chat requests 272ms
+   Γ£ô runtime-host-bridge > persists applied role policy diagnostics and injected system instructions for runtime-backed chat requests  312ms
+   Γ£ô runtime-host-bridge > does not seed placeholder Anthropic/OpenAI accounts, endpoints, models, or router guidance in the default runtime bootstrap 233ms
+   Γ£ô runtime-host-bridge > persists alias-resolution diagnostics for runtime-backed chat requests  501ms
+   Γ£ô runtime-host-bridge > persists difficulty-routing diagnostics for runtime-backed chat requests  490ms
+   Γ£ô runtime-host-bridge > allows an observed max-difficulty override when bucketed performance supports a harder request  520ms
+   Γ£ô runtime-host-bridge > routes hard requests using bucketed observed profiles and records the selected difficulty bucket  534ms
+   Γ£ô runtime-host-bridge > uses the configured remote classifier result for difficulty-mode runtime-backed chat requests  548ms
+   Γ£ô runtime-host-bridge > uses the configured remote controller result for intelligent runtime-backed chat requests  434ms
+   Γ£ô runtime-host-bridge > persists alias-default hybrid arbitration and rewrite-applied diagnostics for runtime-backed chat requests  482ms
+   Γ£ô runtime-host-bridge > falls back deterministically when the configured classifier times out  535ms
+   Γ£ô runtime-host-bridge > reuses cached difficulty classification for repeated requests in the same conversation when invalidation thresholds are not exceeded  587ms
+   Γ£ô runtime-host-bridge > reports cache invalidation reasons before reclassifying a repeated request  559ms
+   ├ù runtime-host-bridge > creates a runtime backend that exposes provider presets, runtime summary, and account upserts 482ms
+     ΓåÆ expected [ { ΓÇª(18) }, { ΓÇª(18) } ] to deeply equal ArrayContaining{ΓÇª}
+   Γ£ô runtime-host-bridge > persists runtime-managed role policy and task allowlists across backend restart  388ms
+   Γ£ô runtime-host-bridge > executes env-backed api-key accounts through the live provider path when the env credential resolves 294ms
+   Γ£ô runtime-host-bridge > registers configured local OpenAI-compatible peers as execution-ready model endpoints  340ms
+   Γ£ô runtime-host-bridge > exposes llama-swap ownership and config metadata on local model and endpoint readback  677ms
+   Γ£ô runtime-host-bridge > rejects local model activation when no configured local endpoint exposes the requested model 295ms
+   Γ£ô runtime-host-bridge > rehydrates connected OAuth accounts from stored token files on backend restart  814ms
+   Γ£ô runtime-host-bridge > restores pending OAuth device-authorizations from SQLite after backend restart  435ms
+   Γ£ô runtime-host-bridge > executes chat-completions through an activated Kimi Code endpoint  371ms
+   Γ£ô runtime-host-bridge > creates a runtime backend that executes responses through the real routing and adapter path 257ms
+   Γ£ô runtime-host-bridge > persists applied role policy diagnostics and injected policy messages for runtime-backed responses requests 287ms
+   Γ£ô runtime-host-bridge > serves structured request and endpoint inspection routes through the bridge server  371ms
+   Γ£ô runtime-host-bridge > reads bucketed endpoint profiles with an advisory max-difficulty recommendation 255ms
+   Γ£ô runtime-host-bridge > streams canonical telemetry updates over SSE after new requests are persisted  4286ms
+   Γ£ô runtime-host-bridge > executes chat-completions through a LiteLLM-derived moonshot-oauth endpoint with X-Msh headers  628ms
+   Γ£ô runtime-host-bridge > executes chat-completions through an api-key-static provider via environment credential 297ms
+   Γ£ô runtime-host-bridge > resolves bridge server options from explicit values and defaults 1ms
+   Γ£ô runtime-host-bridge > keeps repoRoot-derived static paths stable when runtimeStateRoot uses a different path dialect 1ms
+   Γ£ô runtime-host-bridge > resolves packaged bridge server options from executable path defaults 1ms
+   Γ£ô runtime-host-bridge > resolves packaged bridge server options from POSIX executable path defaults 1ms
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/index.test.ts > runtime-host-bridge > creates a runtime backend that exposes provider presets, runtime summary, and account upserts
+AssertionError: expected [ { ΓÇª(18) }, { ΓÇª(18) } ] to deeply equal ArrayContaining{ΓÇª}
+
+- Expected
++ Received
+
+- ArrayContaining [
+-   ObjectContaining {
+-     "healthStatus": "credentials-missing",
++ [
++   {
++     "accountScope": "workspace-default",
++     "allowedModels": [
++       "deepseek/chat-capture-v1",
++     ],
++     "authMode": "api-key-static",
++     "baseUrlOverride": null,
++     "budgetPolicyRef": "budget.default",
++     "credentialRef": {
++       "backend": "env",
++       "ref": "DEEPSEEK_API_KEY",
++     },
++     "deniedModels": [],
++     "entitlementTags": [
++       "chat",
++     ],
++     "healthStatus": "healthy",
++     "modelRoleBindings": [],
++     "orgScope": "personal",
++     "providerAccountId": "deepseek.capture.account",
++     "providerId": "deepseek",
++     "providerKind": "provider-openai",
++     "quotaPolicyRef": "quota.default",
++     "regionPolicy": {
++       "mode": "allow",
++       "regions": [
++         "global",
++       ],
++     },
++     "rotationState": "stable",
++     "status": "active",
++   },
++   {
++     "accountScope": "workspace-default",
++     "allowedModels": [
++       "moonshot/kimi-k2.5",
++     ],
++     "authMode": "api-key-static",
++     "baseUrlOverride": "https://api.moonshot.ai/v1",
++     "budgetPolicyRef": "budget.default",
++     "credentialRef": {
++       "backend": "env",
++       "ref": "MOONSHOT_API_KEY",
++     },
++     "deniedModels": [],
++     "entitlementTags": [
++       "chat",
++     ],
++     "healthStatus": "healthy",
+      "modelRoleBindings": [
+        {
+          "modelId": "moonshot/kimi-k2.5",
+          "roleIds": [
+            "general.chat",
+            "coder.patch",
+          ],
+        },
+      ],
++     "orgScope": "personal",
+      "providerAccountId": "moonshot.personal.primary",
+      "providerId": "moonshot",
+-     "rotationState": "not-required",
+-     "status": "disabled",
++     "providerKind": "provider-openai",
++     "quotaPolicyRef": "quota.default",
++     "regionPolicy": {
++       "mode": "prefer",
++       "regions": [
++         "global",
++       ],
++     },
++     "rotationState": "stable",
++     "status": "active",
+    },
+  ]
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 70 passed (71)
+   Start at  17:30:36
+   Duration  20.55s (transform 1.02s, setup 0ms, collect 1.31s, tests 18.28s, environment 0ms, prepare 367ms)
+
+undefined
+D:\DEV\role-model\.worktrees\36-runtime-consumption-telemetry-remediation\role-model-router\apps\runtime-host-bridge:
+ΓÇëERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓÇë Command failed with exit code 1: vitest run test/index.test.ts
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/36-runtime-consumption-telemetry-remediation/role-model-router/apps/runtime-host-bridge
+
+(node:152424) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ Γ£ô test/index.test.ts (71 tests | 69 skipped) 8ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed | 69 skipped (71)
+   Start at  17:30:59
+   Duration  2.17s (transform 955ms, setup 0ms, collect 1.28s, tests 8ms, environment 0ms, prepare 264ms)
+

@@ -1599,3 +1599,36 @@ export function renderUnifiedRuntimeConfigText(config: UnifiedRuntimeConfig): st
 
   return `${stringify(document).trimEnd()}\n`;
 }
+
+function normalizeRuntimeConfigPatchDocument(
+  patch: Record<string, unknown>,
+): Record<string, unknown> {
+  const normalized = { ...patch };
+  if (
+    Object.prototype.hasOwnProperty.call(normalized, "routingStrategy") &&
+    !Object.prototype.hasOwnProperty.call(normalized, "routing")
+  ) {
+    normalized.routing = { strategy: normalized.routingStrategy };
+    delete normalized.routingStrategy;
+  }
+  if (
+    Object.prototype.hasOwnProperty.call(normalized, "routing_strategy") &&
+    !Object.prototype.hasOwnProperty.call(normalized, "routing")
+  ) {
+    normalized.routing = { strategy: normalized.routing_strategy };
+    delete normalized.routing_strategy;
+  }
+  return normalized;
+}
+
+export function mergeUnifiedRuntimeConfigDocuments(
+  current: Record<string, unknown> | null,
+  patch: Record<string, unknown>,
+): UnifiedRuntimeConfig {
+  const normalizedPatch = normalizeRuntimeConfigPatchDocument(patch);
+  const mergedDocument = {
+    ...(current ?? {}),
+    ...normalizedPatch,
+  };
+  return parseUnifiedRuntimeConfigText(stringify(mergedDocument));
+}

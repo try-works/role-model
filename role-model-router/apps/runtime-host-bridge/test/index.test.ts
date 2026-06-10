@@ -2351,6 +2351,105 @@ describe("runtime-host-bridge", () => {
     }
   });
 
+  test("returns JSON for /logs/stream before static root catch-all", async () => {
+    const staticRoot = path.join(os.tmpdir(), `role-model-static-${Date.now()}`);
+    await mkdir(staticRoot, { recursive: true });
+    await writeFile(
+      path.join(staticRoot, "index.html"),
+      "<!doctype html><html><body>spa</body></html>",
+      "utf8",
+    );
+
+    const server = await (
+      bridge as {
+        startBridgeServer: (options: {
+          host: string;
+          port: number;
+          registry: EndpointRegistryResult;
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+          ) => Promise<unknown>;
+          staticRoot: string;
+        }) => Promise<{ port: number; close(): Promise<void> }>;
+      }
+    ).startBridgeServer({
+      host: "127.0.0.1",
+      port: 0,
+      registry,
+      staticRoot,
+      executeChatCompletions: async () => {
+        throw new Error("not used");
+      },
+    });
+
+    try {
+      const response = await fetch(`http://127.0.0.1:${server.port}/logs/stream`);
+      expect(response.status).toBe(503);
+      expect(response.headers.get("content-type")).toContain("application/json");
+      const body = (await response.json()) as { error?: string };
+      expect(body.error).toContain("log stream unavailable");
+      expect(JSON.stringify(body)).not.toContain("<!doctype html>");
+    } finally {
+      await server.close();
+      await rm(staticRoot, { recursive: true, force: true });
+    }
+  });
+
+  test("accepts x-role-model-request-id as the bridge request id alias", async () => {
+    let capturedRequestId = "";
+    const server = await (
+      bridge as {
+        startBridgeServer: (options: {
+          host: string;
+          port: number;
+          registry: EndpointRegistryResult;
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+          ) => Promise<unknown>;
+        }) => Promise<{ port: number; close(): Promise<void> }>;
+      }
+    ).startBridgeServer({
+      host: "127.0.0.1",
+      port: 0,
+      registry,
+      executeChatCompletions: async (_body, requestId) => {
+        capturedRequestId = requestId;
+        return {
+          model: "moonshot/kimi-k2.5",
+          endpointId: "moonshot.personal.primary.global.kimi-k2.5",
+          adapterFamily: "ai-sdk-openai-compatible",
+          routingDecisionId: "decision-alias-test",
+          outputText: "ok",
+          finishReason: "stop",
+          usage: {
+            inputTokens: 1,
+            outputTokens: 1,
+          },
+        };
+      },
+    });
+
+    try {
+      const response = await fetch(`http://127.0.0.1:${server.port}/v1/chat/completions`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-role-model-request-id": "req-alias-36",
+        },
+        body: JSON.stringify({
+          model: "moonshot/kimi-k2.5",
+          messages: [{ role: "user", content: "ping" }],
+        }),
+      });
+      expect(response.status).toBe(200);
+      expect(capturedRequestId).toBe("req-alias-36");
+    } finally {
+      await server.close();
+    }
+  });
+
   test("serves runtime control-plane summary, provider, account, and endpoint routes", async () => {
     expect(typeof (bridge as { startBridgeServer?: unknown }).startBridgeServer).toBe("function");
 

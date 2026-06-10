@@ -1,6 +1,8 @@
 import { describe, expect, test } from "vitest";
+import { parse } from "yaml";
 
 import {
+  mergeUnifiedRuntimeConfigDocuments,
   normalizeUnifiedRuntimeConfigInput,
   parseUnifiedRuntimeConfigText,
   renderUnifiedRuntimeConfigText,
@@ -904,5 +906,58 @@ llama_swap:
       max_difficulty: impossible
 `),
     ).toThrow(/difficulty_classifier|max_difficulty|mode/i);
+  });
+
+  test("merges partial runtime config patches without dropping existing routing strategy", () => {
+    const merged = mergeUnifiedRuntimeConfigDocuments(
+      parse(`
+version: "1.0"
+routing:
+  strategy: difficulty
+observed_data:
+  enabled: true
+  throughput_sla:
+    enabled: true
+    min_tokens_per_sec: 24
+`) as Record<string, unknown>,
+      {
+        model_aliases: {
+          "mixed.local-remote": {
+            mode: "difficulty",
+            model_ids: ["lfm2.5-1.2b-instruct", "moonshot/kimi-k2.6"],
+          },
+        },
+      },
+    );
+
+    expect(merged.routingStrategy).toBe("difficulty");
+    expect(merged.modelAliases).toEqual([
+      expect.objectContaining({
+        aliasId: "mixed.local-remote",
+        mode: "difficulty",
+        modelIds: ["lfm2.5-1.2b-instruct", "moonshot/kimi-k2.6"],
+      }),
+    ]);
+    expect(merged.observedData?.throughputSla.enabled).toBe(true);
+  });
+
+  test("accepts routing_strategy alias in partial runtime config patches", () => {
+    const merged = mergeUnifiedRuntimeConfigDocuments(
+      {
+        version: "1.0",
+        model_aliases: {
+          "mixed.local-remote": {
+            mode: "difficulty",
+            model_ids: ["local-model"],
+          },
+        },
+      },
+      {
+        routing_strategy: "difficulty",
+      },
+    );
+
+    expect(merged.routingStrategy).toBe("difficulty");
+    expect(merged.modelAliases?.[0]?.aliasId).toBe("mixed.local-remote");
   });
 });

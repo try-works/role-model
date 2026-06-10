@@ -1,0 +1,125 @@
+{
+  "addendum": "09",
+  "canonicalWorkflow": "/.recursive/BENCHMARK-WORKFLOW.md",
+  "validationScript": "evidence/scripts/validate-benchmark-run.py",
+  "operatorRun": {
+    "runId": "c0b66038-a5ae-4264-86d9-b8a76aa68651",
+    "completedAt": "2026-06-10",
+    "durationMinutes": 76,
+    "runtimeSha256": "3e64226c31840a22eae72e190e5cb0fe16009e515dc96d1856d93fd29fa011a9",
+    "scopeNote": "iteration 4: no max_tokens caps; Kimi-as-judge; substantive rationale gate",
+    "endpoints": {
+      "local": "local-openai-compatible.personal.ca2ba73f-38f6-4feb-97b1-12b903bd81a4.global.lfm2.5-1.2b-instruct",
+      "remote": "moonshot.personal.kimi-code.global.kimi-k2.6",
+      "judge": "moonshot.personal.kimi-code.global.kimi-k2.6"
+    },
+    "judgeSubjectOverlap": true,
+    "scores": {
+      "lfm2.5-1.2b-instruct": "17%",
+      "moonshot/kimi-k2.6": "92%"
+    },
+    "controlCheck": "HEALTHY",
+    "workflowVerdict": "VALID",
+    "failedGates": []
+  },
+  "accuracyGates": {
+    "judge_parse_gte75_pct": { "actual": "24/24 (100%)", "gate": "PASS" },
+    "empty_raw_lt20_pct": { "actual": "0/24 (0%)", "gate": "PASS" },
+    "compare_12_of_12": { "actual": "12/12", "gate": "PASS" },
+    "heuristic_fallback_lte25_pct": { "actual": "0/24 (0%)", "gate": "PASS" },
+    "grading_brief_100_pct": { "actual": "24/24 (100%)", "gate": "PASS" },
+    "non_trivial_rationale_gte80_pct": { "actual": "24/24 (100%)", "gate": "PASS" },
+    "progress_60_of_60": { "actual": "60/60", "gate": "PASS" }
+  },
+  "comparisonToPriorRuns": {
+    "05ca93bd_pre_cap_fix": {
+      "controlCheck": "UNHEALTHY",
+      "lfm": "33%",
+      "kimi": "27%",
+      "judgeParse": "50%",
+      "heuristicFallback": "50%"
+    },
+    "cd0c30a6_post_cap_fix": {
+      "controlCheck": "HEALTHY",
+      "lfm": "15%",
+      "kimi": "18%",
+      "judgeParse": "75%",
+      "heuristicFallback": "25%"
+    }
+  },
+  "addendum09ImplementationAudit": {
+    "alreadyApplied": [
+      {
+        "item": "J31 canonical workflow",
+        "evidence": "/.recursive/BENCHMARK-WORKFLOW.md + STATE.md reference"
+      },
+      {
+        "item": "J32 validate-benchmark-run.py",
+        "evidence": "evidence/scripts/validate-benchmark-run.py exit code 1 with gate table"
+      },
+      {
+        "item": "J38 dynamic endpoint resolution",
+        "evidence": "run-benchmark-quick.py resolved ca2ba73f + kimi endpoints"
+      },
+      {
+        "item": "Post-08 scoring fixes (not J31-40 but prerequisite)",
+        "evidence": "reasoning extraction, reasoning follow-up, JUDGE_UNAVAILABLE_HEURISTIC_CAP=0.25"
+      }
+    ],
+    "stillRequired": [
+      {
+        "id": "J33",
+        "priority": "high",
+        "action": "Reject or warn on POST /benchmark/runs when endpointIds.length < 2 and compare expected",
+        "rationale": "Prevents Kimi-only runs like 7bf720a0"
+      },
+      {
+        "id": "J34",
+        "priority": "high",
+        "action": "Warn when judgeEndpointId ∈ endpointIds; persist judgeSubjectOverlap on manifest",
+        "rationale": "cd0c30a6 had overlap; 64% empty raw likely exhaustion-related"
+      },
+      {
+        "id": "J35",
+        "priority": "medium",
+        "action": "Expose scopeId, state root, endpointCount on Benchmark UI or runtime/summary banner",
+        "rationale": "Prevents empty-endpoint surprise after rebuild"
+      },
+      {
+        "id": "J36",
+        "priority": "medium",
+        "action": "Expand judge-brief.test.ts for all quick-suite cases",
+        "rationale": "gradingBrief 100% but rationale quality still 61%"
+      },
+      {
+        "id": "J37",
+        "priority": "low",
+        "action": "Golden-run regression vs 2be17a26 tolerances in CI or validation script",
+        "rationale": "Catch regressions automatically"
+      },
+      {
+        "id": "J39",
+        "priority": "done",
+        "action": "workflowVerdict in evidence JSON",
+        "rationale": "This file"
+      },
+      {
+        "id": "engineering-empty-raw",
+        "priority": "high",
+        "action": "Further judge I/O hardening: dedicated judge endpoint operator guidance; longer adaptive backoff when overlap; compare parse recovery",
+        "rationale": "64% empty raw blocks VALID verdict despite healthy control"
+      },
+      {
+        "id": "engineering-rationale-quality",
+        "priority": "medium",
+        "action": "Reject or follow-up on generic rationales ('Judge provided score.', '...')",
+        "rationale": "61% non-trivial vs 80% gate"
+      }
+    ],
+    "verdict": "Iteration 4 VALID+HEALTHY: removed max_tokens caps; Kimi-as-judge (LFM graded first); substantive rationale + self-grade strictness; run c0b66038"
+  },
+  "evidencePaths": [
+    "evidence/logs/benchmark-addendum08-result.json",
+    "evidence/logs/benchmark-addendum08-progress.jsonl"
+  ]
+}

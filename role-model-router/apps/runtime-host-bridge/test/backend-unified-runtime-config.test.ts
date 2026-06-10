@@ -153,6 +153,59 @@ version: "1.0"
     await backend.shutdown();
   });
 
+  test("merges partial runtime config updates without dropping existing routing strategy", async () => {
+    const tempRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-run36-config-merge-"));
+    tempRoots.push(tempRoot);
+    const runtimeStateRoot = path.join(tempRoot, "state");
+    const unifiedRuntimeConfigPath = path.join(tempRoot, "runtime-config.yaml");
+
+    await writeFile(
+      unifiedRuntimeConfigPath,
+      `
+version: "1.0"
+routing:
+  strategy: difficulty
+observed_data:
+  enabled: true
+`,
+      "utf8",
+    );
+
+    const backend = await createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: testFixtureRoot,
+      runtimeStateRoot,
+      scopeId: "runtime-host-unified-config-merge",
+      unifiedRuntimeConfigPath,
+    });
+
+    await expect(
+      backend.updateRuntimeConfig({
+        model_aliases: {
+          "mixed.local-remote": {
+            mode: "difficulty",
+            model_ids: ["lfm2.5-1.2b-instruct", "moonshot/kimi-k2.6"],
+          },
+        },
+      }),
+    ).resolves.toEqual(
+      expect.objectContaining({
+        config: expect.objectContaining({
+          routingStrategy: "difficulty",
+          modelAliases: [
+            expect.objectContaining({
+              aliasId: "mixed.local-remote",
+            }),
+          ],
+        }),
+      }),
+    );
+
+    await expect(readFile(unifiedRuntimeConfigPath, "utf8")).resolves.toContain("strategy: difficulty");
+
+    await backend.shutdown();
+  });
+
   test("creates and updates unified runtime config when the configured path does not exist yet", async () => {
     const tempRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-run35-config-create-"));
     tempRoots.push(tempRoot);

@@ -275,6 +275,18 @@ const controlModelsRoute = createRoute({
     "Unified local and remote model inventory with model-side role assignment, controller state, and links into the live runtime policy surface.",
 });
 
+const controlBenchmarkRoute = createRoute({
+  id: "models-benchmark",
+  to: "/app/models/benchmark",
+  label: "Benchmark",
+  section: "Models",
+  icon: Telescope,
+  template: "registry-detail",
+  title: "Capability benchmark",
+  description:
+    "Grade configured local and remote models, persist observed capability profiles, and explain how benchmark scores inform routing.",
+});
+
 const routerOverviewRoute = createRoute({
   id: "router-overview",
   to: "/app/router",
@@ -451,6 +463,7 @@ const runtimeRouteDefinitions = [
   connectRegistryRoute,
   controlRolesRoute,
   controlModelsRoute,
+  controlBenchmarkRoute,
   routerOverviewRoute,
   routerConfigRoute,
   routerCandidatesRoute,
@@ -495,7 +508,7 @@ export const runtimeNavigationSections: readonly RuntimeNavigationSection[] = [
   {
     title: "Models",
     icon: Boxes,
-    items: [controlModelsRoute, controlRolesRoute],
+    items: [controlModelsRoute, controlRolesRoute, controlBenchmarkRoute],
   },
   {
     title: "Router",
@@ -663,6 +676,9 @@ export function getRuntimeRouteDefinition(pathname: string): RuntimeRouteDefinit
   }
   if (pathname === "/app/control/models") {
     return controlModelsRoute;
+  }
+  if (pathname === "/app/control/benchmark") {
+    return controlBenchmarkRoute;
   }
   if (pathname === "/app/integrations/downstream") {
     return integrationsDownstreamRoute;

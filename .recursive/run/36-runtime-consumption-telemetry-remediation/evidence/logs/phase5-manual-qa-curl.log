@@ -1,0 +1,20 @@
+=== Phase 5 agent-operated HTTP QA - 2026-06-08T17:36:50.7669432+02:00 ===
+Preview URL: http://127.0.0.1:3456 (from preview-server.log)
+
+--- GET /logs/stream ---
+HTTP 503
+{"error":"log stream unavailable without an active llama-swap vendor"}
+
+--- POST /v1/chat/completions (failure, x-role-model-request-id: req-qa-fail-36b) ---
+HTTP 400
+{"error":"No registry endpoints are available for requested model nonexistent-model-36."}
+
+--- GET /api/role-model/telemetry/requests?limit=5 ---
+Shows req-qa-fail-36 and req-qa-fail-36b with errorClass=execution_failed, statusCode=400
+
+--- GET /api/role-model/local/logs ---
+[2026-06-08T15:35:30.136Z] req-qa-fail-36b endpoint=unknown.endpoint model=nonexistent-model-36 error=execution_failed latency_ms=n/a
+[2026-06-08T15:34:41.117Z] req-qa-fail-36 endpoint=unknown.endpoint model=nonexistent-model-36 error=execution_failed latency_ms=n/a
+
+--- POST pinned moonshot (decision_only QA, no litellm) ---
+HTTP 503 VENDOR_NOT_CONFIGURED (expected in QA fixture mode)

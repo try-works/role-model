@@ -1,0 +1,94 @@
+
+=== 2026-06-08T18:47:18.4373787+02:00 Consumer + Strategy C rerun ===
+
+--- Restore config (routing.strategy=difficulty) ---
+{"applied":true,"path":"C:\\Users\\erikb\\AppData\\Local\\Role Model Runtime\\runtime-config.yaml","config":{"version":"1.0","routingStrategy":"difficulty","executionMode":"decision_only","modelAliases":[{"aliasId":"mixed.local-remote","mode":"difficulty","modelIds":["lfm2.5-1.2b-instruct","moonshot/kimi-k2.6"]}],"llamaSwap":{"enabled":false,"models":[],"process":{"command":null,"args":[],"env":{},"cwd":null,"startupTimeoutMs":null}},"liteLLM":{"enabled":false,"providers":[],"process":{"command":null,"args":[],"env":{},"cwd":null,"startupTimeoutMs":null}}}}
+router summary: {"strategy":"difficulty","executionMode":"decision_only","controller":{"scope":"global","endpointId":"local-openai-compatible.personal.54fc2746-6472-42b0-901b-f2b178f5c0d0.local.lfm2.5-1.2b-instruct","modelId":"lfm2.5-1.2b-instruct","sourceType":"local"},"guidance":{"endpointId":"openai.personal.primary.us-east-1.fast","preferredEndpointIds":["openai.personal.primary.us-east-1.fast"],"ignoredEndpointIds":[]},"configuredCandidateCount":2,"recentDecisionCount":12}
+
+--- GET /v1/models ---
+{"object":"list","data":[{"id":"lfm2.5-1.2b-instruct","object":"model","owned_by":"role-model","endpoint_ids":["local-openai-compatible.personal.54fc2746-6472-42b0-901b-f2b178f5c0d0.local.lfm2.5-1.2b-instruct"]},{"id":"mixed.local-remote","object":"model","owned_by":"role-model","endpoint_ids":["local-openai-compatible.personal.54fc2746-6472-42b0-901b-f2b178f5c0d0.local.lfm2.5-1.2b-instruct","moonshot.personal.kimi-code.global.kimi-k2.6"]},{"id":"moonshot/kimi-k2.6","object":"model","owned_by":"role-model","endpoint_ids":["moonshot.personal.kimi-code.global.kimi-k2.6"]}]}
+
+--- Consumer local exact model ---
+{"error":"Chosen endpoint  is not present in the registry result."}
+
+HTTP:400
+
+--- Consumer remote exact model ---
+{"error":"Chosen endpoint  is not present in the registry result."}
+
+HTTP:400
+
+--- Strategy C easy alias (mixed.local-remote) ---
+{"error":"Chosen endpoint  is not present in the registry result."}
+
+HTTP:400
+
+--- Strategy C hard alias (tools + code burden) ---
+{"error":"Chosen endpoint  is not present in the registry result."}
+
+HTTP:400
+
+--- Router decisions (latest 4) ---
+req-difficulty-hard-rerun unknown.endpoint mixed.local-remote difficulty None
+req-difficulty-easy-rerun unknown.endpoint mixed.local-remote difficulty None
+req-consumer-remote-rerun unknown.endpoint moonshot/kimi-k2.6 difficulty None
+req-consumer-local-rerun unknown.endpoint lfm2.5-1.2b-instruct difficulty None
+
+--- Observation req-consumer-local-rerun difficultyRouting ---
+{
+  "routingMode": null,
+  "aliasResolution": null,
+  "difficultyRouting": null,
+  "controllerRouting": null
+}
+
+--- Observation req-difficulty-easy-rerun difficultyRouting ---
+{
+  "routingMode": null,
+  "aliasResolution": null,
+  "difficultyRouting": null,
+  "controllerRouting": null
+}
+
+--- Observation req-difficulty-hard-rerun difficultyRouting ---
+{
+  "routingMode": null,
+  "aliasResolution": null,
+  "difficultyRouting": null,
+  "controllerRouting": null
+}
+
+--- /logs tail (last 8 telemetry lines) ---
+[2026-06-08T16:44:25.451Z] req-consumer-local-36 endpoint=unknown.endpoint model=lfm2.5-1.2b-instruct error=execution_failed latency_ms=n/a
+[2026-06-08T16:39:06.606Z] req-runtime-host-bridge endpoint=moonshot.personal.kimi-code.global.kimi-k2.6 model=moonshot/kimi-k2.6 status=200 latency_ms=13664
+[2026-06-08T15:48:53.410Z] req-qa-r6-packaged endpoint=unknown.endpoint model=bad-model-xyz error=execution_failed latency_ms=n/a
+[2026-06-08T15:48:27.589Z] req-qa-r2-36 endpoint=moonshot.personal.kimi-code.global.kimi-k2.6 model=moonshot/kimi-k2.6 status=200 latency_ms=2665
+[2026-06-08T15:48:24.104Z] req-qa-r1-36 endpoint=local-openai-compatible.personal.54fc2746-6472-42b0-901b-f2b178f5c0d0.local.lfm2.5-1.2b-instruct model=lfm2.5-1.2b-instruct status=200 latency_ms=384
+[2026-06-08T15:02:19.245Z] req-live-remote-final endpoint=moonshot.personal.kimi-code.global.kimi-k2.6 model=moonshot/kimi-k2.6 status=200 latency_ms=120
+[2026-06-08T14:25:10.342Z] req-ui-test-k26 endpoint=moonshot.personal.kimi-code.global.kimi-k2.6 model=moonshot/kimi-k2.6 status=200 latency_ms=120
+[2026-06-08T14:25:07.749Z] req-ui-test-lfm endpoint=local-openai-compatible.personal.54fc2746-6472-42b0-901b-f2b178f5c0d0.local.lfm2.5-1.2b-instruct model=lfm2.5-1.2b-instruct status=200 latency_ms=120
+
+--- /logs/stream probe ---
+{"error":"log stream unavailable without an active llama-swap vendor"}
+ HTTP:503
+
+=== done ===
+
+=== FINAL PASSING CONSUMER + STRATEGY C (2026-06-08T18:55:49.5155879+02:00) ===
+Config: routing.strategy=difficulty, alias mixed.local-remote (mode difficulty)
+Endpoints: local LFM healthy, remote Kimi healthy
+
+Strategy C alias tests (x-role-model-routing-mode: difficulty):
+- req-diff-easy-ctrl: easy/cost -> local LFM, latency 206ms, HTTP 200
+- req-diff-hard-ctrl: hard/quality -> local LFM, latency 1843ms, HTTP 200
+
+Exact model consumer:
+- req-local-retry (lfm2.5-1.2b-instruct, global difficulty): HTTP 200 local
+- req-remote-hybrid (moonshot/kimi-k2.6, x-role-model-routing-mode: hybrid): HTTP 200 remote, latency ~22s
+- req-remote-retry (moonshot/kimi-k2.6, no override): HTTP 400 empty chosen_endpoint_id
+
+Logs: /logs shows measured latency on successes; /logs/stream HTTP 503 (no llama-swap)
+Telemetry API: req-diff-easy-ctrl 206ms, req-diff-hard-ctrl 1843ms, req-remote-hybrid measured
+
+NOTE: Partial PUT with routing_strategy (wrong key) previously nulled routingStrategy and wiped config sections.
+Use: {"routing":{"strategy":"difficulty"},...}

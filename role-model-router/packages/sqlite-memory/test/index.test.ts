@@ -13,11 +13,14 @@ import { createRuntimeObservationBundle } from "../../runtime-observability/src/
 import { runRuntimeStateValidation } from "../src/cli.ts";
 import * as sqliteMemory from "../src/index.ts";
 import {
+  clearObservedBenchmarkDataForEndpoint,
   initializeSqliteMemory,
   persistContinuitySnapshot,
+  persistObservedBenchmarkSample,
   persistProviderAccounts,
   persistRetrievalReceipt,
   readConversationContinuity,
+  readLatestObservedProfile,
   readRetrievalReceipts,
   resolveSqliteMemoryLocation,
 } from "../src/index.ts";
@@ -2036,6 +2039,49 @@ describe("initializeSqliteMemory", () => {
         nowMs: 1_762_000_700_001,
       }),
     ).toBeNull();
+  });
+});
+
+describe("clearObservedBenchmarkDataForEndpoint", () => {
+  test("removes benchmark samples and clears the endpoint profile when no live samples remain", async () => {
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+    const initialized = initializeSqliteMemory({
+      runtimeStateRoot,
+      scopeId: "workspace-dev-clear-benchmark",
+    });
+    const endpointId = "local.test.model";
+
+    persistObservedBenchmarkSample({
+      databasePath: initialized.databasePath,
+      sample: {
+        endpoint_id: endpointId,
+        endpoint_version: "v1",
+        source_type: "benchmark",
+        difficulty_bucket: "hard",
+        timestamp_ms: 1_000,
+        latency_ms: 900,
+        judge_score: 0.35,
+      },
+    });
+
+    const before = readLatestObservedProfile({
+      databasePath: initialized.databasePath,
+      endpointId,
+    });
+    expect(before?.sources.benchmark_samples).toBe(1);
+
+    const cleared = clearObservedBenchmarkDataForEndpoint({
+      databasePath: initialized.databasePath,
+      endpointId,
+      nowMs: 3_000,
+    });
+    expect(cleared).toEqual({ endpointId, clearedSampleCount: 1 });
+
+    const after = readLatestObservedProfile({
+      databasePath: initialized.databasePath,
+      endpointId,
+    });
+    expect(after).toBeNull();
   });
 });
 

@@ -1,0 +1,130 @@
+{
+  "addendum": "08",
+  "tddMode": {
+    "SP14-A": "strict",
+    "SP14-B": "strict",
+    "SP14-C": "strict",
+    "SP14-D": "pragmatic"
+  },
+  "vitest": [
+    {
+      "package": "@role-model-router/bench-routing",
+      "command": "npm test",
+      "result": "20/20 passed",
+      "files": [
+        "test/subject-prompt.test.ts",
+        "src/index.test.ts (buildHeuristicCompareRanking)"
+      ]
+    },
+    {
+      "package": "@role-model-router/runtime-host-bridge",
+      "command": "npx vitest run test/benchmark-*.test.ts src/benchmark-reasoning.test.ts",
+      "result": "23/23 passed",
+      "files": [
+        "test/benchmark-artifacts.test.ts",
+        "test/benchmark-runner-compare.test.ts",
+        "test/benchmark-runner-judge.test.ts",
+        "test/benchmark-judge-runtime.test.ts",
+        "test/benchmark-progress.test.ts",
+        "test/benchmark-summary.test.ts"
+      ]
+    }
+  ],
+  "build": {
+    "command": "corepack pnpm run runtime:package-sea",
+    "result": "pass",
+    "runtimeSha256": "0075f2e002ed12b2d6ce078eb8ecca93830d5edc69d3a1b9c469401e161bbf74"
+  },
+  "requirements": {
+    "J18": { "status": "verified", "evidence": "benchmark-artifacts.test.ts compareError/rawResponse" },
+    "J19": { "status": "verified", "evidence": "benchmark-runner-compare.test.ts fallback compare artifact" },
+    "J20": { "status": "verified", "evidence": "benchmark-progress.test.ts compare phase steps" },
+    "J21": { "status": "verified", "evidence": "benchmark-judge-runtime.test.ts circuit breaker" },
+    "J22": { "status": "verified", "evidence": "benchmark-judge-runtime.test.ts adaptive throttle" },
+    "J23": { "status": "verified", "evidence": "benchmark-artifacts.test.ts responseChannel" },
+    "J24": { "status": "verified", "evidence": "existing index.test.ts judgeUnavailable + compare fallback" },
+    "J26": { "status": "verified", "evidence": "benchmark-progress.test.ts phase transitions" },
+    "J27": { "status": "verified", "evidence": "subject-prompt.test.ts model-agnostic JSON prompt" },
+    "J28": { "status": "verified", "evidence": "benchmark-summary.test.ts caseAudits" },
+    "J29": { "status": "verified", "evidence": "benchmark-runner-judge.test.ts probeJudgeEndpoint" },
+    "J30": { "status": "verified", "evidence": "operatorReRun run 05ca93bd below" }
+  },
+  "baselineRun": {
+    "runId": "aa8cd041-e8d7-4ae5-b7f4-83352455b8ab",
+    "compareArtifactCount": 0,
+    "judgeParseRate": "22/78",
+    "note": "pre-addendum-08 operator validation run"
+  },
+  "invalidRun": {
+    "runId": "7bf720a0",
+    "note": "Kimi-only due to stale hardcoded LFM endpoint id in script; superseded by dynamic resolve_endpoint_ids()"
+  },
+  "operatorReRun": {
+    "status": "completed",
+    "runId": "05ca93bd-a5f9-44c2-80ab-79cb2b75f89a",
+    "startedAt": "2026-06-09T19:29:02Z",
+    "completedAt": "2026-06-09T19:59:07Z",
+    "durationMinutes": 30,
+    "endpoints": {
+      "local": "local-openai-compatible.personal.54fc2746-6472-42b0-901b-f2b178f5c0d0.local.lfm2.5-1.2b-instruct",
+      "remote": "moonshot.personal.kimi-code.global.kimi-k2.6",
+      "judge": "moonshot.personal.kimi-code.global.kimi-k2.6"
+    },
+    "progress": {
+      "totalSteps": 60,
+      "completedSteps": 60,
+      "phasesObserved": ["execution", "grading", "compare", "complete"]
+    },
+    "manifest": {
+      "responseCount": 24,
+      "judgeArtifactCount": 78,
+      "compareArtifactCount": 12
+    },
+    "accuracyMetrics": {
+      "judgeParseSuccessCaseGrades": "12/24 (50.0%)",
+      "judgeParseSuccessAttempts": "12/54 (22.2%)",
+      "emptyRawResponseAttempts": "42/54 (77.8%)",
+      "heuristicFallbackCaseGrades": "12/24 (50.0%)",
+      "compareArtifacts": "12/12",
+      "compareJudgeParseSuccess": "0/12",
+      "compareHeuristicFallback": "12/12 (compare_circuit_open)",
+      "gradingBriefOnAttempts": "54/54 (100%)",
+      "nonTrivialJudgeRationale": "4/12 judge-graded cases (33%)"
+    },
+    "accuracyGates": {
+      "judgeParseGte75Pct": "FAIL",
+      "emptyRawResponseLt20Pct": "FAIL",
+      "compareArtifacts12of12": "PASS",
+      "heuristicFallbackLte25Pct": "FAIL",
+      "noMassHardZero": "PASS",
+      "nonTrivialRationaleGte80Pct": "FAIL",
+      "gradingBrief100Pct": "PASS",
+      "overall": "PARTIAL — infrastructure fixes verified; judge reliability still below target"
+    },
+    "artifactRoot": "C:\\Users\\erikb\\AppData\\Local\\Role Model Runtime\\standalone-runtime\\memory\\benchmark-runs\\05ca93bd-a5f9-44c2-80ab-79cb2b75f89a",
+    "evidencePaths": [
+      "evidence/logs/benchmark-addendum08-result.json",
+      "evidence/logs/benchmark-addendum08-progress.jsonl",
+      "evidence/scripts/run-benchmark-quick.py"
+    ]
+  },
+  "controlCheck": {
+    "description": "When user benchmarks Kimi k2.6 vs LFM 1.2B, Kimi should rank higher on a healthy run; inversion signals judge/run failure",
+    "preRemediationSignal": "aa8cd041 Kimi 16.7% vs LFM 35.4% (unhealthy)",
+    "postRemediationSignal": "05ca93bd Kimi 27% vs LFM 33% (unhealthy — heuristic 0.5 inflation on LFM empty-judge cases)",
+    "outcome": "UNHEALTHY",
+    "encodedInRuntime": false
+  },
+  "improvementsVerified": [
+    "Compare phase completes with 12/12 artifacts (all heuristic fallback after compare_circuit_open)",
+    "Progress reports 60/60 through execution → grading → compare → complete (no 100% stall)",
+    "No silent compare null — compareError and compareFallback persisted",
+    "Heuristic fallback replaces hard-zero when judge returns empty (J24)",
+    "Dynamic endpoint resolution in validation script (both subjects present)"
+  ],
+  "remainingIssues": [
+    "Kimi-as-judge returns empty_judge_response for ~50% of LFM case grades (likely judge exhaustion / self-grading throttle when same endpoint is judge and subject)",
+    "Compare circuit opens before any successful compare judge call — all 12 compares used score-derived fallback",
+    "Overall scores still inverted vs control check; investigate separate judge endpoint or longer adaptive backoff"
+  ]
+}

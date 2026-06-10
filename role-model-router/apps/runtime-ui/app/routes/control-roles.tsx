@@ -22,7 +22,6 @@ import {
   primaryButtonClassName,
   secondaryButtonClassName,
 } from "../lib/design-system";
-import { usePageActions } from "../lib/shell-header-context";
 import {
   type RuntimeRolePolicy,
   type RuntimeRolePolicyRole,
@@ -389,18 +388,6 @@ export default function ControlRolesRoute() {
       setSavingTasks(false);
     }
   };
-
-  usePageActions(
-    <>
-      <Link className={secondaryButtonClassName} to="/app/models">
-        Model bindings
-      </Link>
-      <Link className={secondaryButtonClassName} to="/app/router">
-        Routing config
-      </Link>
-    </>,
-    [],
-  );
 
   if (error && !policy) {
     return <ErrorState label={error} />;

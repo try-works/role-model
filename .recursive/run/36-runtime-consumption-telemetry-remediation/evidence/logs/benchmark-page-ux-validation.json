@@ -1,0 +1,90 @@
+{
+  "runId": "36-runtime-consumption-telemetry-remediation",
+  "addendum": "05",
+  "artifact": "benchmark-page-ux",
+  "validatedAt": "2026-06-09T15:46:00.000Z",
+  "runtime": {
+    "host": "127.0.0.1",
+    "port": 8091,
+    "staticRoot": "role-model-router/apps/runtime-ui/build/client",
+    "packageSeaSha256": "3563db57d18fdbfeb8b9098ff097f71e82b56327ecb7fd78438b2ee7a9f2e095"
+  },
+  "requirements": {
+    "U1": {
+      "disposition": "verified",
+      "checks": [
+        "Removed usePageActions from control-benchmark.tsx, control-models.tsx, control-roles.tsx",
+        "Models pillar route headers show title + description only"
+      ]
+    },
+    "U2": {
+      "disposition": "verified",
+      "checks": [
+        "Model scores and routing profiles section with per-model scores and routing impact",
+        "Slim last-run metadata line replaces FactCard artifact counts"
+      ]
+    },
+    "U3": {
+      "disposition": "verified",
+      "checks": [
+        "Clear benchmark data button on each model score card",
+        "Disabled while run in progress or clear in flight"
+      ]
+    },
+    "U4": {
+      "disposition": "verified",
+      "checks": [
+        "DELETE /api/role-model/benchmark/endpoints/{endpointId}/data",
+        "clearObservedBenchmarkDataForEndpoint in sqlite-memory",
+        "sqlite-memory test: clearObservedBenchmarkDataForEndpoint"
+      ]
+    },
+    "U5": {
+      "disposition": "verified",
+      "checks": [
+        "Phase 1 of 2 · Recording responses when runPhase=execution",
+        "Phase 2 of 2 · Judge grading when runPhase=grading"
+      ]
+    },
+    "U6": {
+      "disposition": "verified",
+      "checks": [
+        "GET /api/role-model/benchmark/runs/active returns null when idle",
+        "readActiveBenchmarkRun in benchmark-progress.ts"
+      ]
+    },
+    "U7": {
+      "disposition": "verified",
+      "checks": [
+        "sessionStorage key role-model.benchmark.activeRunId",
+        "Mount resume effect queries active API and restores polling"
+      ]
+    },
+    "U8": {
+      "disposition": "verified",
+      "checks": [
+        "readBenchmarkSummary enriches empty subjects from router candidates",
+        "buildModelScoreRows uses capability/profile fallback"
+      ]
+    }
+  },
+  "tests": {
+    "sqlite-memory": {
+      "command": "vitest run test/index.test.ts",
+      "result": "20/20 pass"
+    },
+    "runtime-ui-build": {
+      "command": "npm run build",
+      "result": "pass"
+    },
+    "runtime-host-bridge-package-sea": {
+      "command": "npm run package-sea",
+      "result": "pass"
+    }
+  },
+  "manualQaPending": [
+    "Clear benchmark data on one model card and confirm card removal / empty state",
+    "Start quick benchmark, navigate to /app/models, return to /app/models/benchmark — progress visible",
+    "Observe Phase 1 label during first half of steps, Phase 2 during grading half"
+  ]
+}

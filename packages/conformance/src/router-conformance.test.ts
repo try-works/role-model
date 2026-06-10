@@ -664,4 +664,83 @@ describe("routeRequest", () => {
 
     expect(result.chosen_endpoint_id).toBe("higher-quality-costlier");
   });
+
+  test("keeps a sole allow-listed endpoint eligible when throughput SLA would otherwise hard-deny it", () => {
+    const slowRemote = {
+      ...candidates[1],
+      identity: { ...candidates[1].identity, endpoint_id: "slow-remote" },
+      declared: { ...candidates[1].declared, endpoint_id: "slow-remote" },
+      observed: {
+        ...candidates[1].observed,
+        endpoint_id: "slow-remote",
+        tokens_per_sec: 18,
+      },
+    };
+
+    const result = routeRequest({
+      request: {
+        ...baseRequest,
+        requestId: "req-throughput-sla-sole-allow",
+        preferLocal: false,
+        preferredCapabilities: [],
+        allowEndpoints: ["slow-remote"],
+      },
+      candidates: [slowRemote],
+      observedDataConfig: {
+        enabled: true,
+        aggregation: { minSamples: 2 },
+        difficultyLearning: {
+          cacheTtlMs: 900_000,
+          invalidation: {
+            maxContextTokensDelta: 800,
+            maxHistoryTurnDelta: 2,
+            maxToolCountDelta: 1,
+            maxInstructionConstraintDelta: 3,
+            maxDecompositionKeywordDelta: 2,
+            reclassifyOnCodeOrSchemaChange: true,
+          },
+          override: {
+            minSamples: 3,
+            maxFailureRate: 0.35,
+            minQualityScore: 0.7,
+            minTokensPerSec: 18,
+          },
+          recommendation: {
+            minSamples: 4,
+            maxFailureRate: 0.2,
+            minQualityScore: 0.8,
+            minTokensPerSec: 22,
+          },
+        },
+        metricHalflives: {
+          qualityMs: 900_000,
+          latencyMs: 300_000,
+          throughputMs: 120_000,
+          reliabilityMs: 600_000,
+          costMs: 1_800_000,
+        },
+        throughputSla: {
+          enabled: true,
+          minTokensPerSec: 24,
+          penaltyTimeoutMs: 600_000,
+          penaltyFactor: 0,
+        },
+      },
+      throughputPenaltyStateByEndpointId: {
+        "slow-remote": {
+          endpointId: "slow-remote",
+          lastObservedTokensPerSec: 18,
+          minTokensPerSec: 24,
+          penaltyFactor: 0,
+          activatedAtMs: 1,
+          expiresAtMs: Number.MAX_SAFE_INTEGER,
+          lastObservationMeasuredAtMs: 1,
+        },
+      },
+      routingTimeMs: 100,
+    });
+
+    expect(result.chosen_endpoint_id).toBe("slow-remote");
+    expect(getEligibilityEntry(result, "slow-remote").eligible).toBe(true);
+  });
 });

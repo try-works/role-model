@@ -7,6 +7,8 @@ export interface RuntimeSummary {
   readonly providerCount: number;
   readonly accountCount: number;
   readonly endpointCount: number;
+  readonly scopeId?: string;
+  readonly runtimeStateRoot?: string;
   readonly readinessSummary?: {
     readonly pendingDeviceAuthorizationCount: number;
     readonly credentialsMissingAccountCount: number;
@@ -541,6 +543,20 @@ export interface RouterConfig {
   };
 }
 
+export interface BenchmarkCapability {
+  readonly overallScore: number | null;
+  readonly scoresByBucket?: Partial<
+    Record<"easy" | "medium" | "hard", { readonly score: number; readonly cases?: number }>
+  >;
+  readonly benchmarkSamples: number;
+  readonly sampleCount: number;
+  readonly measuredAtMs: number | null;
+  readonly freshnessScore: number | null;
+  readonly lastRunId: string | null;
+  readonly lastRunCompletedAtMs: number | null;
+  readonly judgeEndpointId: string | null;
+}
+
 export interface RouterCandidate {
   readonly endpointId: string;
   readonly modelId: string;
@@ -561,6 +577,61 @@ export interface RouterCandidate {
   readonly recentSamples?: readonly unknown[];
   readonly difficultyProfiles?: Record<string, unknown>;
   readonly advisoryMaxDifficultyRecommendation?: Record<string, unknown> | null;
+  readonly benchmarkCapability?: BenchmarkCapability | null;
+}
+
+export interface BenchmarkCaseComparison {
+  readonly caseId: string;
+  readonly relativeRanking: readonly string[];
+  readonly rationale: string;
+  readonly compareFallback?: boolean;
+  readonly compareError?: string | null;
+}
+
+export interface BenchmarkCaseAuditEntry {
+  readonly caseId: string;
+  readonly endpointId: string;
+  readonly parseSuccess?: boolean;
+  readonly judgeError?: string | null;
+  readonly judgeUnavailable?: boolean;
+  readonly cappedByValidator?: boolean;
+  readonly gradingMethod?: string;
+}
+
+export interface BenchmarkSummarySubject {
+  readonly endpointId: string;
+  readonly modelId: string;
+  readonly overallScore: number;
+  readonly scoresByBucket: Record<
+    "easy" | "medium" | "hard",
+    { readonly score: number; readonly cases: number }
+  >;
+  readonly passingCaseIds: readonly string[];
+  readonly caseCount: number;
+}
+
+export interface BenchmarkSummary {
+  readonly runId: string | null;
+  readonly completedAtMs: number | null;
+  readonly mode: "quick" | "full" | null;
+  readonly suiteId: string | null;
+  readonly suiteVersion: string | null;
+  readonly judgeEndpointId: string | null;
+  readonly judgeModelId: string | null;
+  readonly artifactRoot: string | null;
+  readonly subjects: readonly BenchmarkSummarySubject[];
+  readonly caseComparisons: readonly BenchmarkCaseComparison[];
+  readonly caseAudits: readonly BenchmarkCaseAuditEntry[];
+  readonly manifest: {
+    readonly executionCompletedAtMs: number;
+    readonly gradingCompletedAtMs: number;
+    readonly judgeArtifactCount: number;
+    readonly compareArtifactCount: number;
+  } | null;
+}
+
+export interface BenchmarkPreferences {
+  readonly judgeEndpointId?: string;
 }
 
 export interface RouterDecisionListItem {
@@ -897,6 +968,178 @@ export async function fetchRouterCandidates(
   fetcher: RuntimeFetcher = fetch,
 ): Promise<RouterCandidate[]> {
   return fetchJson<RouterCandidate[]>("/api/role-model/router/candidates", fetcher);
+}
+
+export interface BenchmarkSuiteCase {
+  readonly case_id: string;
+  readonly category: string;
+  readonly difficulty_bucket: "easy" | "medium" | "hard";
+  readonly benchmark_eligible: boolean;
+  readonly capability_targets: readonly string[];
+  readonly expected_response: string;
+  readonly grading_criteria: string;
+  readonly quick_benchmark?: boolean;
+  readonly required_tool_call?: boolean;
+  readonly expected_tool_names?: readonly string[];
+}
+
+export interface BenchmarkSuite {
+  readonly suite_id: string;
+  readonly suite_version: string;
+  readonly description: string;
+  readonly task_type: string;
+  readonly capability_targets: readonly string[];
+  readonly cases: readonly BenchmarkSuiteCase[];
+}
+
+export interface BenchmarkCaseResult {
+  readonly caseId: string;
+  readonly difficultyBucket: "easy" | "medium" | "hard";
+  readonly score: number;
+  readonly rationale: string;
+  readonly gradingMethod: string;
+  readonly latencyMs: number;
+  readonly actualPreview: string;
+  readonly parseSuccess?: boolean;
+  readonly judgeError?: string | null;
+  readonly judgeUnavailable?: boolean;
+  readonly cappedByValidator?: boolean;
+}
+
+export interface BenchmarkEndpointGrade {
+  readonly endpointId: string;
+  readonly modelId: string;
+  readonly sourceType: string | null;
+  readonly overallScore: number;
+  readonly byDifficulty: Record<
+    "easy" | "medium" | "hard",
+    { readonly score: number; readonly cases: number }
+  >;
+  readonly caseResults: readonly BenchmarkCaseResult[];
+}
+
+export interface BenchmarkRunResult {
+  readonly runId: string;
+  readonly suiteId: string;
+  readonly mode: "quick" | "full";
+  readonly judgeEndpointId: string | null;
+  readonly startedAtMs: number;
+  readonly completedAtMs: number;
+  readonly artifactRoot?: string;
+  readonly endpointGrades: readonly BenchmarkEndpointGrade[];
+}
+
+export interface BenchmarkRunStart {
+  readonly runId: string;
+  readonly status: "running";
+  readonly warnings?: readonly string[];
+}
+
+export type BenchmarkRunProgressStatus = "running" | "completed" | "failed";
+
+export interface BenchmarkRunProgress {
+  readonly runId: string;
+  readonly status: BenchmarkRunProgressStatus;
+  readonly mode: "quick" | "full";
+  readonly startedAtMs: number;
+  readonly updatedAtMs: number;
+  readonly totalSteps: number;
+  readonly completedSteps: number;
+  readonly endpointIndex: number;
+  readonly endpointCount: number;
+  readonly currentEndpointId: string | null;
+  readonly currentEndpointModelId: string | null;
+  readonly caseIndex: number;
+  readonly caseCount: number;
+  readonly currentCaseId: string | null;
+  readonly currentPhase: "execute" | "judge" | "compare" | null;
+  readonly runPhase: "execution" | "grading" | "compare" | "complete";
+  readonly judgeEndpointId: string | null;
+  readonly activeJudgeEndpointId: string | null;
+  readonly artifactRoot: string | null;
+  readonly errorMessage?: string;
+  readonly result?: BenchmarkRunResult;
+}
+
+export async function fetchBenchmarkSuite(
+  fetcher: RuntimeFetcher = fetch,
+): Promise<BenchmarkSuite> {
+  return fetchJson<BenchmarkSuite>("/api/role-model/benchmark/suite", fetcher);
+}
+
+export async function startCapabilityBenchmark(
+  body: {
+    readonly endpointIds?: readonly string[];
+    readonly judgeEndpointId?: string;
+    readonly mode?: "quick" | "full";
+    readonly caseIds?: readonly string[];
+    readonly useJudge?: boolean;
+  },
+  fetcher: RuntimeFetcher = fetch,
+): Promise<BenchmarkRunStart> {
+  return postJson<BenchmarkRunStart>("/api/role-model/benchmark/runs", body, fetcher);
+}
+
+export async function fetchBenchmarkRunProgress(
+  runId: string,
+  fetcher: RuntimeFetcher = fetch,
+): Promise<BenchmarkRunProgress> {
+  return fetchJson<BenchmarkRunProgress>(
+    `/api/role-model/benchmark/runs/${encodeURIComponent(runId)}`,
+    fetcher,
+  );
+}
+
+export async function fetchActiveBenchmarkRun(
+  fetcher: RuntimeFetcher = fetch,
+): Promise<BenchmarkRunProgress | null> {
+  const progress = await fetchJson<BenchmarkRunProgress | null>(
+    "/api/role-model/benchmark/runs/active",
+    fetcher,
+  );
+  return progress?.status === "running" ? progress : null;
+}
+
+export async function clearBenchmarkEndpointData(
+  endpointId: string,
+  fetcher: RuntimeFetcher = fetch,
+): Promise<{ endpointId: string; clearedSampleCount: number }> {
+  return fetchJson<{ endpointId: string; clearedSampleCount: number }>(
+    `/api/role-model/benchmark/endpoints/${encodeURIComponent(endpointId)}/data`,
+    fetcher,
+    { method: "DELETE" },
+  );
+}
+
+export async function fetchBenchmarkSummary(
+  fetcher: RuntimeFetcher = fetch,
+): Promise<BenchmarkSummary> {
+  return fetchJson<BenchmarkSummary>("/api/role-model/benchmark/summary", fetcher);
+}
+
+export async function fetchRuntimeSummary(
+  fetcher: RuntimeFetcher = fetch,
+): Promise<RuntimeSummary> {
+  return fetchJson<RuntimeSummary>("/api/role-model/runtime/summary", fetcher);
+}
+
+export async function fetchBenchmarkPreferences(
+  fetcher: RuntimeFetcher = fetch,
+): Promise<BenchmarkPreferences> {
+  return fetchJson<BenchmarkPreferences>("/api/role-model/benchmark/preferences", fetcher);
+}
+
+export async function updateBenchmarkPreferences(
+  body: BenchmarkPreferences,
+  fetcher: RuntimeFetcher = fetch,
+): Promise<BenchmarkPreferences> {
+  return fetchJson<BenchmarkPreferences>("/api/role-model/benchmark/preferences", fetcher, {
+    method: "PUT",
+    headers: {
+      "content-type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
 }
 
 export async function fetchRouterDecisions(

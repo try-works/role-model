@@ -9,6 +9,7 @@ const legacyRouteMap: Record<string, string> = {
   "/app/control/endpoints": "/app/connect",
   "/app/control/roles": "/app/models/roles",
   "/app/control/models": "/app/models",
+  "/app/control/benchmark": "/app/models/benchmark",
   "/app/endpoints": "/app/connect",
   "/app/endpoints/downstream": "/app/connect/downstream",
   "/app/endpoints/upstream": "/app/connect/upstream",

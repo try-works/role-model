@@ -86,6 +86,37 @@ function readLatencyMs(input: {
   return input.responseCapture.vendorMetadata?.latencyMs ?? 120;
 }
 
+function readAssistantContent(
+  message:
+    | {
+        readonly content?: string | Array<{ readonly type?: string; readonly text?: string }>;
+      }
+    | undefined,
+): string {
+  if (!message) {
+    return "";
+  }
+  const messageContent = message.content;
+  return typeof messageContent === "string"
+    ? messageContent
+    : Array.isArray(messageContent)
+      ? messageContent
+          .map((entry) => (typeof entry?.text === "string" ? entry.text : ""))
+          .filter(Boolean)
+          .join("\n")
+      : "";
+}
+
+function readAssistantReasoning(
+  message:
+    | {
+        readonly reasoning_content?: string | null;
+      }
+    | undefined,
+): string {
+  return typeof message?.reasoning_content === "string" ? message.reasoning_content : "";
+}
+
 function readOpenAIStreamPayloads(rawTranscript: string): readonly string[] {
   if (!rawTranscript.includes("data:")) {
     return [];
@@ -119,6 +150,7 @@ function parseOpenAIChatCompletionsStreamTranscript(rawTranscript: string): {
       readonly finish_reason: string;
       readonly message: {
         readonly content: string;
+        readonly reasoning_content?: string | null;
         readonly tool_calls: Array<{
           readonly id?: string;
           readonly function: {
@@ -154,6 +186,7 @@ function parseOpenAIChatCompletionsStreamTranscript(rawTranscript: string): {
     }
   >();
   let outputText = "";
+  let reasoningText = "";
   let finishReason = "stop";
   let usage:
     | {
@@ -171,6 +204,7 @@ function parseOpenAIChatCompletionsStreamTranscript(rawTranscript: string): {
         readonly finish_reason?: string | null;
         readonly delta?: {
           readonly content?: string;
+          readonly reasoning_content?: string;
           readonly tool_calls?: Array<{
             readonly index?: number;
             readonly id?: string;
@@ -205,6 +239,14 @@ function parseOpenAIChatCompletionsStreamTranscript(rawTranscript: string): {
 
     if (typeof firstChoice.delta?.content === "string" && firstChoice.delta.content.length > 0) {
       outputText += firstChoice.delta.content;
+      textDeltas += 1;
+    }
+
+    if (
+      typeof firstChoice.delta?.reasoning_content === "string" &&
+      firstChoice.delta.reasoning_content.length > 0
+    ) {
+      reasoningText += firstChoice.delta.reasoning_content;
       textDeltas += 1;
     }
 
@@ -249,6 +291,7 @@ function parseOpenAIChatCompletionsStreamTranscript(rawTranscript: string): {
           finish_reason: finishReason,
           message: {
             content: outputText,
+            reasoning_content: reasoningText.length > 0 ? reasoningText : null,
             tool_calls: [...toolCalls.entries()]
               .sort((left, right) => left[0] - right[0])
               .map(([, value]) => value),
@@ -587,6 +630,7 @@ export function normalizeOpenAIResponse(
         finish_reason?: string;
         message?: {
           content?: string | Array<{ type?: string; text?: string }>;
+          reasoning_content?: string | null;
           tool_calls?: Array<{
             id?: string;
             function?: {
@@ -602,16 +646,8 @@ export function normalizeOpenAIResponse(
       };
     };
     const firstChoice = body.choices?.[0];
-    const messageContent = firstChoice?.message?.content;
-    const outputText =
-      typeof messageContent === "string"
-        ? messageContent
-        : Array.isArray(messageContent)
-          ? messageContent
-              .map((entry) => (typeof entry?.text === "string" ? entry.text : ""))
-              .filter(Boolean)
-              .join("\n")
-          : "";
+    const outputText = readAssistantContent(firstChoice?.message);
+    const reasoningText = readAssistantReasoning(firstChoice?.message);
     const toolCalls = (firstChoice?.message?.tool_calls ?? [])
       .filter((entry) => entry.function?.name)
       .map((entry) => ({
@@ -625,6 +661,7 @@ export function normalizeOpenAIResponse(
       requestCapture: input.requestCapture,
       responseCapture: input.responseCapture,
       outputText,
+      ...(reasoningText.length > 0 ? { reasoningText } : {}),
       toolCalls,
       finishReason: firstChoice?.finish_reason ?? "stop",
       structuredOutputMode:
@@ -638,7 +675,8 @@ export function normalizeOpenAIResponse(
             (input.requestCapture.body.stream as boolean | undefined) ??
             false,
         ),
-        textDeltas: streamedBody?.streamStats.textDeltas ?? (outputText ? 1 : 0),
+        textDeltas:
+          streamedBody?.streamStats.textDeltas ?? (outputText || reasoningText ? 1 : 0),
         toolCallDeltas: streamedBody?.streamStats.toolCallDeltas ?? toolCalls.length,
         toolArgumentDeltas: streamedBody?.streamStats.toolArgumentDeltas ?? toolCalls.length,
       },

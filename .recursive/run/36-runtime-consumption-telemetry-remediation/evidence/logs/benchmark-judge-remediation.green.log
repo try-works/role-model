@@ -1,0 +1,18 @@
+npm warn Unknown env config "devdir". This will stop working in the next major version of npm.
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/36-runtime-consumption-telemetry-remediation/role-model-router
+
+(node:42232) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ Γ£ô apps/runtime-host-bridge/test/benchmark-artifacts.test.ts (3 tests) 22ms
+ Γ£ô packages/bench-routing/src/answer-format.test.ts (4 tests) 11ms
+ Γ£ô packages/bench-judge/src/index.test.ts (7 tests) 9ms
+ Γ£ô packages/bench-routing/src/index.test.ts (3 tests) 8ms
+ Γ£ô apps/runtime-host-bridge/src/benchmark-reasoning.test.ts (4 tests) 6ms
+ Γ£ô apps/runtime-host-bridge/test/benchmark-runner-judge.test.ts (3 tests) 187ms
+
+ Test Files  6 passed (6)
+      Tests  24 passed (24)
+   Start at  11:25:55
+   Duration  1.26s (transform 479ms, setup 0ms, collect 965ms, tests 243ms, environment 2ms, prepare 1.56s)
+

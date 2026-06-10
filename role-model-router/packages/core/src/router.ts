@@ -737,6 +737,84 @@ function toCandidateExclusion(code: CandidateExclusion["code"]): CandidateExclus
   };
 }
 
+function isThroughputSlaHardDeny(
+  input: RouteRequestInput,
+  candidate: EndpointCandidate,
+): boolean {
+  return (
+    getActiveThroughputPenaltyState(input, candidate)?.penaltyFactor === 0 &&
+    input.observedDataConfig?.throughputSla.enabled === true
+  );
+}
+
+function isAllowListedCandidate(
+  candidate: EndpointCandidate,
+  allowEndpoints: readonly string[],
+): boolean {
+  return (
+    allowEndpoints.length === 0 ||
+    allowEndpoints.includes(candidate.identity.endpoint_id)
+  );
+}
+
+function applyThroughputSlaEligibility(
+  input: RouteRequestInput,
+  policySnapshot: RoutingPolicySnapshot,
+  eligible: EndpointCandidate[],
+  eligibility: RouterDecisionRecord["eligibility"],
+): {
+  eligible: EndpointCandidate[];
+  eligibility: RouterDecisionRecord["eligibility"];
+} {
+  if (!input.observedDataConfig?.throughputSla.enabled || eligible.length === 0) {
+    return { eligible, eligibility };
+  }
+
+  const allowEndpoints = policySnapshot.allow_endpoints;
+  const nonPenalized = eligible.filter((candidate) => !isThroughputSlaHardDeny(input, candidate));
+  const allowListedNonPenalized = nonPenalized.filter((candidate) =>
+    isAllowListedCandidate(candidate, allowEndpoints),
+  );
+
+  let nextEligible = eligible;
+  if (allowEndpoints.length > 0) {
+    if (allowListedNonPenalized.length > 0) {
+      nextEligible = nonPenalized;
+    } else {
+      const penalizedAllowListed = eligible.filter(
+        (candidate) =>
+          isAllowListedCandidate(candidate, allowEndpoints) &&
+          isThroughputSlaHardDeny(input, candidate),
+      );
+      if (penalizedAllowListed.length > 0) {
+        nextEligible = penalizedAllowListed;
+      }
+    }
+  } else if (nonPenalized.length > 0) {
+    nextEligible = nonPenalized;
+  }
+
+  const eligibleIds = new Set(nextEligible.map((candidate) => candidate.identity.endpoint_id));
+  const nextEligibility = eligibility.map((entry) => {
+    if (!entry.eligible) {
+      return entry;
+    }
+    if (eligibleIds.has(entry.endpoint_id)) {
+      return entry;
+    }
+    return {
+      endpoint_id: entry.endpoint_id,
+      eligible: false,
+      exclusions: unique([
+        ...entry.exclusions.map((exclusion) => exclusion.code),
+        "POLICY_DENY_ENDPOINT",
+      ] as CandidateExclusion["code"][]).map(toCandidateExclusion),
+    };
+  });
+
+  return { eligible: nextEligible, eligibility: nextEligibility };
+}
+
 function evaluateEligibility(
   input: RouteRequestInput,
   policySnapshot: RoutingPolicySnapshot,
@@ -744,7 +822,7 @@ function evaluateEligibility(
   eligible: EndpointCandidate[];
   eligibility: RouterDecisionRecord["eligibility"];
 } {
-  const eligible: EndpointCandidate[] = [];
+  let eligible: EndpointCandidate[] = [];
   const eligibility: RouterDecisionRecord["eligibility"] = [];
   const requestedRoleId = input.request.requestedRoleId;
   const { requestedRole, requestedTask } = getRequestedRoleAndTask(input);
@@ -878,13 +956,6 @@ function evaluateEligibility(
     ) {
       reasons.push("BUDGET_EXCEEDED");
     }
-    if (
-      getActiveThroughputPenaltyState(input, candidate)?.penaltyFactor === 0 &&
-      input.observedDataConfig?.throughputSla.enabled
-    ) {
-      reasons.push("POLICY_DENY_ENDPOINT");
-    }
-
     if (reasons.length > 0) {
       eligibility.push({
         endpoint_id: candidate.identity.endpoint_id,
@@ -902,7 +973,7 @@ function evaluateEligibility(
     });
   }
 
-  return { eligible, eligibility };
+  return applyThroughputSlaEligibility(input, policySnapshot, eligible, eligibility);
 }
 
 function buildTieBreak(

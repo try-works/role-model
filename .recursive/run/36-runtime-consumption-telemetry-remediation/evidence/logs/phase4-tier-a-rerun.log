@@ -1,0 +1,35 @@
+=== Phase 4 Tier A rerun (env keys cleared) - 2026-06-08T17:32:02.0866882+02:00 ===
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/36-runtime-consumption-telemetry-remediation/role-model-router/apps/runtime-host-bridge
+
+(node:307300) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ Γ£ô test/index.test.ts (71 tests) 17708ms
+   Γ£ô runtime-host-bridge > removes legacy placeholder provider accounts from persisted runtime state when using packaged defaults  418ms
+   Γ£ô runtime-host-bridge > persists alias-resolution diagnostics for runtime-backed chat requests  455ms
+   Γ£ô runtime-host-bridge > persists difficulty-routing diagnostics for runtime-backed chat requests  500ms
+   Γ£ô runtime-host-bridge > allows an observed max-difficulty override when bucketed performance supports a harder request  476ms
+   Γ£ô runtime-host-bridge > routes hard requests using bucketed observed profiles and records the selected difficulty bucket  504ms
+   Γ£ô runtime-host-bridge > uses the configured remote classifier result for difficulty-mode runtime-backed chat requests  456ms
+   Γ£ô runtime-host-bridge > uses the configured remote controller result for intelligent runtime-backed chat requests  449ms
+   Γ£ô runtime-host-bridge > persists alias-default hybrid arbitration and rewrite-applied diagnostics for runtime-backed chat requests  449ms
+   Γ£ô runtime-host-bridge > falls back deterministically when the configured classifier times out  769ms
+   Γ£ô runtime-host-bridge > reuses cached difficulty classification for repeated requests in the same conversation when invalidation thresholds are not exceeded  539ms
+   Γ£ô runtime-host-bridge > reports cache invalidation reasons before reclassifying a repeated request  553ms
+   Γ£ô runtime-host-bridge > creates a runtime backend that exposes provider presets, runtime summary, and account upserts  597ms
+   Γ£ô runtime-host-bridge > persists runtime-managed role policy and task allowlists across backend restart  379ms
+   Γ£ô runtime-host-bridge > executes env-backed api-key accounts through the live provider path when the env credential resolves  320ms
+   Γ£ô runtime-host-bridge > registers configured local OpenAI-compatible peers as execution-ready model endpoints  499ms
+   Γ£ô runtime-host-bridge > exposes llama-swap ownership and config metadata on local model and endpoint readback  670ms
+   Γ£ô runtime-host-bridge > rehydrates connected OAuth accounts from stored token files on backend restart  469ms
+   Γ£ô runtime-host-bridge > restores pending OAuth device-authorizations from SQLite after backend restart  437ms
+   Γ£ô runtime-host-bridge > executes chat-completions through an activated Kimi Code endpoint  328ms
+   Γ£ô runtime-host-bridge > persists applied role policy diagnostics and injected policy messages for runtime-backed responses requests  307ms
+   Γ£ô runtime-host-bridge > streams canonical telemetry updates over SSE after new requests are persisted  4300ms
+   Γ£ô runtime-host-bridge > executes chat-completions through a LiteLLM-derived moonshot-oauth endpoint with X-Msh headers  506ms
+
+ Test Files  1 passed (1)
+      Tests  71 passed (71)
+   Start at  17:32:03
+   Duration  19.89s (transform 950ms, setup 0ms, collect 1.28s, tests 17.71s, environment 0ms, prepare 281ms)
+

@@ -1,0 +1,270 @@
+{
+  "runId": "1951f6d7-d625-4466-905b-ffc86bc0d909",
+  "suiteId": "routing-capability-v2",
+  "mode": "quick",
+  "judgeEndpointId": "moonshot.personal.kimi-code.global.kimi-k2.6",
+  "startedAtMs": 1780946830396,
+  "completedAtMs": 1780947095306,
+  "endpointGrades": [
+    {
+      "endpointId": "local-openai-compatible.personal.ca2ba73f-38f6-4feb-97b1-12b903bd81a4.local.lfm2.5-1.2b-instruct",
+      "modelId": "lfm2.5-1.2b-instruct",
+      "sourceType": "local",
+      "overallScore": 0.8124999999999999,
+      "byDifficulty": {
+        "easy": {
+          "cases": 0,
+          "score": 0
+        },
+        "medium": {
+          "cases": 0,
+          "score": 0
+        },
+        "hard": {
+          "cases": 12,
+          "score": 0.8124999999999999
+        }
+      },
+      "caseResults": [
+        {
+          "caseId": "p17-tools-multi-hard",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "rationale": "Required tool calls present: read_file, apply_patch. Matched accept pattern read.",
+          "gradingMethod": "heuristic",
+          "latencyMs": 2643,
+          "actualPreview": "TOOL_CALL name=read_file args={\"path\":\"code_edit_workflow.md\"}\nTOOL_CALL name=apply_patch args={\"diff\":\"refined_edits.md\"}\nTOOL_CALL name=read_file args={\"path\":\"schema_contract.json\"}\nTOOL_CALL name=apply_patch args={\"diff\":\"optimized_sche"
+        },
+        {
+          "caseId": "x01-max-signal",
+          "difficultyBucket": "hard",
+          "score": 0.3333333333333333,
+          "rationale": "Missing required tool calls: grep_search, apply_patch. Matched accept pattern milestone|plan.",
+          "gradingMethod": "heuristic",
+          "latencyMs": 5206,
+          "actualPreview": "I will follow the structured plan you provided. First, I'll read the affected file located at \"src/routing/diagnostics.json\". Next, I'll search for any relevant eligibility patterns in that file using grep. After confirming the content is s"
+        },
+        {
+          "caseId": "h01-implement-two-sum",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "rationale": "Matched accept pattern function\\s+twoSum.",
+          "gradingMethod": "heuristic",
+          "latencyMs": 4646,
+          "actualPreview": "```typescript\nfunction twoSum(nums: number[], target: number): [number, number] {\n  const map = new Map<number, number>();\n  for (let i = 0; i < nums.length; i++) {\n    const complement = target - nums[i];\n    if (map.has(complement)) {\n   "
+        },
+        {
+          "caseId": "h02-fix-async-counter",
+          "difficultyBucket": "hard",
+          "score": 0.25,
+          "rationale": "Response did not match expected shape; judge review recommended.",
+          "gradingMethod": "heuristic",
+          "latencyMs": 2466,
+          "actualPreview": "```ts\nlet count = 0;\nasync function increment() { count += 1; }\nawait Promise.all([increment(), increment(), increment()]);\nconsole.log(count);\n```"
+        },
+        {
+          "caseId": "h04-tool-read-router",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "rationale": "Required tool calls present: read_file. Matched accept pattern router\\.ts|read_file.",
+          "gradingMethod": "heuristic",
+          "latencyMs": 2641,
+          "actualPreview": "I will read the file located at \"src/router.ts\" using the read_file tool, and then identify its first exported function for you.\nTOOL_CALL name=read_file args={\"path\":\"src/router.ts\"}"
+        },
+        {
+          "caseId": "h05-tool-grep-eligibility",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "rationale": "Required tool calls present: grep_search. Matched accept pattern evaluateEligibility|eligib.",
+          "gradingMethod": "heuristic",
+          "latencyMs": 2246,
+          "actualPreview": "[grep_search(pattern=\"evaluateEligibility\")]<|tool_call_end|>\nTOOL_CALL name=grep_search args={\"pattern\":\"evaluateEligibility\"}"
+        },
+        {
+          "caseId": "h06-tool-apply-patch",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "rationale": "Required tool calls present: apply_patch. Matched accept pattern apply_patch|MODE|difficulty|\\+\\+\\+|---.",
+          "gradingMethod": "heuristic",
+          "latencyMs": 2089,
+          "actualPreview": "TOOL_CALL name=apply_patch args={\"diff\":\"const MODE = 'baseline'; const MODE = 'difficulty';\"}"
+        },
+        {
+          "caseId": "h07-multi-turn-sla-guard",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "rationale": "Matched accept pattern throughput|sla|sole|candidate|fallback|allow.",
+          "gradingMethod": "heuristic",
+          "latencyMs": 5628,
+          "actualPreview": "```typescript\nconst isAllowedEndpoint = (endpointId: string): boolean => {\n  return !allowList.includes(endpointId);\n};\n\nexport function isThroughputSlaDenied(): boolean {\n  const allowedEndpoints = ['endpoint1', 'endpoint2'];\n  if (allowed"
+        },
+        {
+          "caseId": "h08-multi-turn-tool-refine",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "rationale": "Required tool calls present: read_file. Matched accept pattern runtime-config|routing\\.strategy|strategy.",
+          "gradingMethod": "heuristic",
+          "latencyMs": 2747,
+          "actualPreview": "Read the runtime configuration file at state/runtime-config.yaml to check for routing.strategy value.\nTOOL_CALL name=read_file args={\"path\":\"state/runtime-config.yaml\"}"
+        },
+        {
+          "caseId": "h09-agent-metrics-chain",
+          "difficultyBucket": "hard",
+          "score": 0.5,
+          "rationale": "Missing required tool calls: get_metrics. Matched accept pattern latency|p95|remote|local|endpoint.",
+          "gradingMethod": "heuristic",
+          "latencyMs": 3271,
+          "actualPreview": "I will first retrieve the configured router endpoints using list_endpoints, then fetch latency metrics with get_metrics for the remote endpoint identified, and finally compare its p95 latency against any local measurements to provide a conc"
+        },
+        {
+          "caseId": "h10-agent-read-grep-patch",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "rationale": "Required tool calls present: read_file, grep_search, apply_patch. Matched accept pattern router|evaluateEligibility|patch|diff.",
+          "gradingMethod": "heuristic",
+          "latencyMs": 3123,
+          "actualPreview": "TOOL_CALL name=read_file args={\"path\":\"src/router.ts\"}\nTOOL_CALL name=grep_search args={\"pattern\":\"evaluateEligibility\"}\nTOOL_CALL name=apply_patch args={\"diff\":\"fix: Add 'const isAdmin = true;' before route handlers\"}"
+        },
+        {
+          "caseId": "h15-max-signal-v3",
+          "difficultyBucket": "hard",
+          "score": 0.6666666666666666,
+          "rationale": "Missing required tool calls: apply_patch. Matched accept pattern read_file|grep_search|apply_patch.",
+          "gradingMethod": "heuristic",
+          "latencyMs": 4748,
+          "actualPreview": "I will read the file located at \"src/router.ts\" to retrieve its contents, then search that file's content for any occurrence of the pattern \"throughputSla\". After obtaining the search results, I'll apply a unified diff patch with a fallback"
+        }
+      ]
+    },
+    {
+      "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.6",
+      "modelId": "moonshot/kimi-k2.6",
+      "sourceType": "remote",
+      "overallScore": 0.5416666666666666,
+      "byDifficulty": {
+        "easy": {
+          "cases": 0,
+          "score": 0
+        },
+        "medium": {
+          "cases": 0,
+          "score": 0
+        },
+        "hard": {
+          "cases": 12,
+          "score": 0.5416666666666666
+        }
+      },
+      "caseResults": [
+        {
+          "caseId": "p17-tools-multi-hard",
+          "difficultyBucket": "hard",
+          "score": 0,
+          "rationale": "Required tool call missing from model output. The response closely aligns with the expected workflow and includes key steps like reading files, applying patches, validating schema, and refactoring tests.",
+          "gradingMethod": "heuristic",
+          "latencyMs": 4332,
+          "actualPreview": "The user wants me to:\n1. Analyze a code-edit workflow\n2. Read affected files\n3. Apply a patch\n4. Validate schema contract\n5. Refactor tests with multiple tool calls\n\nHowever, the user hasn't provided:\n- The code-edit workflow details\n- The "
+        },
+        {
+          "caseId": "x01-max-signal",
+          "difficultyBucket": "hard",
+          "score": 0,
+          "rationale": "Required tool call missing from model output. Matched accept pattern milestone|plan.",
+          "gradingMethod": "heuristic",
+          "latencyMs": 7217,
+          "actualPreview": "The user wants a complex code-edit workflow implementation. I need to:\n\n1. First provide a bullet plan with milestones and verification criteria\n2. Read affected files to understand the codebase\n3. Grep for eligibility logic\n4. Apply a unif"
+        },
+        {
+          "caseId": "h01-implement-two-sum",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "rationale": "The response fully aligns with the grading criteria, providing a clear TypeScript implementation using a Map in O(n) time.",
+          "gradingMethod": "judge",
+          "latencyMs": 9865,
+          "actualPreview": "Now, the user requests the implementation of a twoSum function written in TypeScript. It needs to return indices and have a time complexity of O(n), using a Map. Only a TypeScript code block should be output, with no other text.  \n\nFirst, I"
+        },
+        {
+          "caseId": "h02-fix-async-counter",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "rationale": "The code executes all three async increments synchronously; since `count += 1` runs immediately and no await is present, the promises resolve in sequence, resulting in count=3.",
+          "gradingMethod": "judge",
+          "latencyMs": 7851,
+          "actualPreview": "The user wants me to fix a bug in a TypeScript snippet so that `count` prints 3.\n\nLooking at the code:\n```ts\nlet count = 0;\nasync function increment() { count += 1; }\nawait Promise.all([increment(), increment(), increment()]);\nconsole.log(c"
+        },
+        {
+          "caseId": "h04-tool-read-router",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "rationale": "Required tool calls present: read_file. The response correctly instructs to call read_file on src/router.ts and identifies the first exported function as read_file.",
+          "gradingMethod": "heuristic",
+          "latencyMs": 3328,
+          "actualPreview": "The user wants me to:\n1. Call read_file on path `src/router.ts`\n2. Then name the first exported function in that file\n3. I must emit a read_file tool call\n\nI need to make the read_file call first before answering. I cannot answer until I ha"
+        },
+        {
+          "caseId": "h05-tool-grep-eligibility",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "rationale": "Required tool calls present: grep_search. Matched accept pattern evaluateEligibility|eligib.",
+          "gradingMethod": "heuristic",
+          "latencyMs": 3041,
+          "actualPreview": "The user wants me to search for `evaluateEligibility` in the codebase using grep_search, then summarize in 2 bullets what the function checks. I need to emit the grep_search tool call first.\nTOOL_CALL name=grep_search args={\"pattern\":\"evalu"
+        },
+        {
+          "caseId": "h06-tool-apply-patch",
+          "difficultyBucket": "hard",
+          "score": 0,
+          "rationale": "Required tool call missing from model output. Matched accept pattern apply_patch|MODE|difficulty|\\+\\+\\+|---.",
+          "gradingMethod": "heuristic",
+          "latencyMs": 8334,
+          "actualPreview": "The user wants me to apply a unified diff patch that changes `const MODE = 'baseline'` to `const MODE = 'difficulty'` in `src/config.ts`.\n\nI need to construct a valid unified diff. A unified diff for a single line change in a single file lo"
+        },
+        {
+          "caseId": "h07-multi-turn-sla-guard",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "rationale": "Matched accept pattern throughput|sla|sole|candidate|fallback|allow.",
+          "gradingMethod": "heuristic",
+          "latencyMs": 10353,
+          "actualPreview": "The user wants a TypeScript guard function that allows a sole-candidate fallback when every allow-listed endpoint is hard-denied **only** by throughput SLA. \n\nKey requirements:\n1. It's a guard function (returns boolean or asserts)\n2. Remote"
+        },
+        {
+          "caseId": "h08-multi-turn-tool-refine",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "rationale": "Required tool calls present: read_file. The model correctly identified the requirement to read runtime-config.yaml and extract the routing.strategy value. It executed the read_file call as instructed and provided the expected output.",
+          "gradingMethod": "heuristic",
+          "latencyMs": 2496,
+          "actualPreview": "The user wants me to read the runtime-config.yaml file and find the routing.strategy value. I need to call read_file on state/runtime-config.yaml.\nTOOL_CALL name=read_file args={\"path\":\"state/runtime-config.yaml\"}"
+        },
+        {
+          "caseId": "h09-agent-metrics-chain",
+          "difficultyBucket": "hard",
+          "score": 0.5,
+          "rationale": "Missing required tool calls: get_metrics. The model correctly outlined the required agent chain steps and initiated the evaluation process.",
+          "gradingMethod": "heuristic",
+          "latencyMs": 3794,
+          "actualPreview": "The user wants me to execute an agent chain:\n1. list_endpoints (tool call)\n2. get_metrics for the remote endpoint (tool call)\n3. compare p95 latency vs local in one sentence\n\nI need to first call list_endpoints to see what endpoints are ava"
+        },
+        {
+          "caseId": "h10-agent-read-grep-patch",
+          "difficultyBucket": "hard",
+          "score": 0,
+          "rationale": "Required tool call missing from model output. The response fully aligns with the expected sequence and grading criteria.",
+          "gradingMethod": "heuristic",
+          "latencyMs": 10610,
+          "actualPreview": "The user wants me to emit three tool calls in order:\n1. read_file src/router.ts\n2. grep_search evaluateEligibility\n3. apply_patch a one-line comment fix\n\nHowever, I need to be careful here. The apply_patch tool requires a \"diff\" parameter. "
+        },
+        {
+          "caseId": "h15-max-signal-v3",
+          "difficultyBucket": "hard",
+          "score": 0,
+          "rationale": "Required tool call missing from model output. Matched accept pattern ^A[)|:]|milestone.",
+          "gradingMethod": "heuristic",
+          "latencyMs": 15100,
+          "actualPreview": "The user wants me to perform a multi-step task with specific constraints:\n\n(A) bullet milestones with verification - I need to list out the milestones as bullets and include verification steps\n(B) read_file src/router.ts and grep_search thr"
+        }
+      ]
+    }
+  ]
+}

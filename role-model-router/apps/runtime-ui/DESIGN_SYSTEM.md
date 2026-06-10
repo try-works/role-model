@@ -139,6 +139,7 @@ The runtime hierarchy remains:
 | `/app/remote/providers` | live | `registry-detail` | Primary remote-provider onboarding route for choosing a LiteLLM-backed provider, selecting provider models, and completing either API-key or OAuth setup without leaving the page. |
 | `/app/models` | live | `model-inventory` | Unified local/remote model inventory with inspect-only card drill-ins, explicit handoff to the runtime-config editor, and a non-error pre-activation state when no controller exists yet. |
 | `/app/models/roles` | live | `registry-detail` | Runtime role policy authoring and task allowlist management over the live router policy surface. |
+| `/app/models/benchmark` | live | `registry-detail` | Capability benchmark for configured models with judge grading, persisted scores, and routing-impact explanation. |
 | `/app/router` | live | `registry-detail` | First-class routing overview that summarizes active posture, recent decisions, and operator handoff into config, candidates, and decision interpretation. |
 | `/app/router/strategy` | live | `registry-detail` | Structured routing-strategy posture for execution mode, controller state, and handoff into advanced config plus request verification. |
 | `/app/router/controller` | live | `registry-detail` | Explicit controller assignment with candidate health, source type, role coverage, tooling posture, and an honest empty state before any endpoint is activated. |

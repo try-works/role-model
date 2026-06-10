@@ -13,6 +13,8 @@
   "files": ["src", "dist"],
   "dependencies": {
     "@role-model-router/adapter-execution": "workspace:*",
+    "@role-model-router/bench-judge": "workspace:*",
+    "@role-model-router/bench-routing": "workspace:*",
     "@role-model-router/catalog": "workspace:*",
     "@role-model-router/context-envelope": "workspace:*",
     "@role-model-router/endpoint-registry": "workspace:*",
@@ -35,7 +37,7 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "test": "vitest run test/index.test.ts test/backend-unified-runtime-config.test.ts test/executable.test.ts test/runtime-assets.test.ts test/unified-runtime-config.test.ts test/validate-operations.test.ts test/validate-tools.test.ts test/validate-ui.test.ts test/validate-vendors.test.ts test/local-policy.test.ts",
+    "test": "vitest run test/index.test.ts test/backend-unified-runtime-config.test.ts test/executable.test.ts test/runtime-assets.test.ts test/unified-runtime-config.test.ts test/validate-operations.test.ts test/validate-tools.test.ts test/validate-ui.test.ts test/validate-vendors.test.ts test/local-policy.test.ts test/benchmark-artifacts.test.ts test/benchmark-start-guards.test.ts test/benchmark-validation-metrics.test.ts test/benchmark-runner-judge.test.ts test/benchmark-runner-compare.test.ts test/benchmark-judge-runtime.test.ts test/benchmark-progress.test.ts test/benchmark-summary.test.ts src/benchmark-reasoning.test.ts",
     "package-sea": "tsx src/package-sea.ts",
     "validate-packaging": "corepack pnpm build && tsx src/validate-packaging.ts"
   }

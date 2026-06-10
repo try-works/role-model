@@ -104,6 +104,7 @@ export interface NormalizedProviderResponse {
   readonly requestCapture: ProviderRequestCapture;
   readonly responseCapture: ProviderResponseCapture;
   readonly outputText: string;
+  readonly reasoningText?: string;
   readonly toolCalls: readonly NormalizedToolCall[];
   readonly finishReason: string;
   readonly structuredOutputMode: "native" | "json-fallback" | "none";

@@ -1,0 +1,48 @@
+
+=== 2026-06-08T19:15:47.2123098+02:00 Final consumer + Strategy C suite ===
+
+--- final-local ---
+{"id":"chatcmpl-role-model","object":"chat.completion","created":1780938951,"model":"lfm2.5-1.2b-instruct","choices":[{"index":0,"message":{"role":"assistant","content":"OK, I understand. Let's proceed with \"local-3\". How"},"finish_reason":"length"}],"usage":{"prompt_tokens":17,"completion_tokens":16,"total_tokens":33}}
+
+HTTP:200
+
+--- final-remote ---
+{"error":"Chosen endpoint  is not present in the registry result."}
+
+HTTP:400
+
+--- final-diff-easy ---
+{"id":"chatcmpl-role-model","object":"chat.completion","created":1780938952,"model":"lfm2.5-1.2b-instruct","choices":[{"index":0,"message":{"role":"assistant","content":"Hello! How can I assist you today?"},"finish_reason":"stop"}],"usage":{"prompt_tokens":17,"completion_tokens":10,"total_tokens":27}}
+
+HTTP:200
+
+--- final-diff-hard ---
+{"id":"chatcmpl-role-model","object":"chat.completion","created":1780938952,"model":"lfm2.5-1.2b-instruct","choices":[{"index":0,"message":{"role":"assistant","content":"The current tools available do not support analyzing code-edit workflows, generating unified diffs, validating schema contracts, or refactoring test suites in a single process. Each task requires distinct capabilities that aren't present in the provided functions. \n\nWould you like me to:\n1. Explain how these"},"finish_reason":"length"}],"usage":{"prompt_tokens":158,"completion_tokens":64,"total_tokens":222}}
+
+HTTP:200
+
+--- decisions ---
+final-diff-hard local-openai-compatible.personal.54fc2746-6472-42b0-901b-f2b178f5c0d0.local.lfm2.5-1.2b-instruct difficulty length
+final-diff-easy local-openai-compatible.personal.54fc2746-6472-42b0-901b-f2b178f5c0d0.local.lfm2.5-1.2b-instruct difficulty stop
+final-remote unknown.endpoint difficulty None
+final-local local-openai-compatible.personal.54fc2746-6472-42b0-901b-f2b178f5c0d0.local.lfm2.5-1.2b-instruct difficulty length
+
+--- telemetry ---
+final-diff-hard local-openai-compatible.personal.54fc2746-6472-42b0-901b-f2b178f5c0d0.local.lfm2.5-1.2b-instruct 488 200
+final-diff-easy local-openai-compatible.personal.54fc2746-6472-42b0-901b-f2b178f5c0d0.local.lfm2.5-1.2b-instruct 151 200
+final-remote unknown.endpoint None 400
+final-local local-openai-compatible.personal.54fc2746-6472-42b0-901b-f2b178f5c0d0.local.lfm2.5-1.2b-instruct 3863 200
+
+=== POST-FIX suite (throughput SLA disabled) 2026-06-08T19:19:24.9263564+02:00 ===
+
+final2-local: {"id":"chatcmpl-role-model","object":"chat.completion","created":1780939165,"model":"lfm2.5-1.2b-instruct","choices":[{"index":0,"message":{"role":"assistant","content":"OK, I understand! How can I assist you?"},"finish_reason":"stop"}],"usage":{"prompt_tokens":17,"completion_tokens":12,"total_tokens":29}}  HTTP:200
+
+final2-remote: {"id":"chatcmpl-role-model","object":"chat.completion","created":1780939167,"model":"moonshot/kimi-k2.6","choices":[{"index":0,"message":{"role":"assistant","content":"The user wants me to reply exactly with the text: \"ok-remote-"},"finish_reason":"length"}],"usage":{"prompt_tokens":14,"completion_tokens":16,"total_tokens":30}}  HTTP:200
+
+final2-diff-easy: {"id":"chatcmpl-role-model","object":"chat.completion","created":1780939167,"model":"lfm2.5-1.2b-instruct","choices":[{"index":0,"message":{"role":"assistant","content":"Hello! How can I assist you today?"},"finish_reason":"stop"}],"usage":{"prompt_tokens":17,"completion_tokens":10,"total_tokens":27}}  HTTP:200
+
+final2-diff-hard: {"id":"chatcmpl-role-model","object":"chat.completion","created":1780939168,"model":"lfm2.5-1.2b-instruct","choices":[{"index":0,"message":{"role":"assistant","content":"The requested tasks involve complex workflows that require specific tools or inputs not fully described in the current environment. Here's what I can do:\n\n1. **Unified Diff Patch** - If you provide a code diff output (e.g., from Git diffs), I can generate the patch using `apply"},"finish_reason":"length"}],"usage":{"prompt_tokens":158,"completion_tokens":64,"total_tokens":222}}  HTTP:200
+final2-diff-hard local-openai-compatible.personal.54fc274 difficulty
+final2-diff-easy local-openai-compatible.personal.54fc274 difficulty
+final2-remote moonshot.personal.kimi-code.global.kimi- difficulty
+final2-local local-openai-compatible.personal.54fc274 difficulty

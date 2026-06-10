@@ -971,3 +971,75 @@
 - Known issues / follow-ups:
   - the QA launcher still has no `unifiedRuntimeConfigPath`, so browser proof remains suitable for live operator workflows but not for runtime-config-save plus downstream alias-routing proof
   - the broader worktree still contains unrelated status noise outside run 34 scope, including older nested `role-model-router/.recursive/run/*` history and a Python `__pycache__` artifact
+
+### Run `35-runtime-ui-connect-declutter`
+
+- Run folder: `/.recursive/run/35-runtime-ui-connect-declutter/`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `03.5-code-review.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+  - `addenda/02-to-be-plan.post-closeout-packaged-runtime.addendum-01.md`
+  - `addenda/03-implementation-summary.post-closeout-packaged-runtime.addendum-01.md`
+- What changed:
+  - the runtime UI now uses a **Connect** nav pillar with canonical `/app/connect*` routes (Registry / Downstream / Upstream) for how applications consume role-model as a provider, while **Local → Endpoints** at `/app/local/endpoints` remains the device-inference peer inventory
+  - legacy `/app/endpoints*`, `/app/control/endpoints`, and `/app/integrations/*` paths redirect to the Connect routes; Connect registry no longer owns alias inventory and instead hands off to Router
+  - the operator shell is quieter: left-rail page counts and meta-guidance panels (Reading order, Inspection path) are removed; Overview shows a slim latest-requests teaser; Local Matrix is merged into Local Models **List | Grid**; Router Config guidance/policy sections merge into Router Overview with `/app/router/config` redirecting to `/app/router`
+  - a shared `DisclosureSection` primitive collapses dense request-detail and model-inspection secondary groups by default; unused `future-surface.tsx` was deleted and `DESIGN_SYSTEM.md` was updated for the Connect pillar and copy budgets
+  - frontend manual QA for this run uses hybrid browser-session visual verification (Cursor IDE browser MCP + screenshots) with Phase 4 tests as companion proof; request-detail disclosure remains partially blocked when the telemetry ledger is empty
+- Why:
+  - to reduce runtime UI clutter, fix the Local Endpoints versus router-as-provider naming collision, and keep the three configuration pillars (Local device inference, Remote cloud providers, Connect app consumption) legible without widening backend scope
+- How:
+  - implemented design-system-first across SP1–SP7 in an isolated worktree, kept `design-system.test.ts` regression guards green (88 runtime-ui tests), passed production build, delegated Phase 3.5 code review, and re-ran Phase 5 with live browser QA plus screenshot evidence; post-closeout addendum 01 (SP8) fixed packaged `--static-root` serving and routing-strategy live registry endpoint counts, then merged to `main` at `c8de236`
+- What was not done:
+  - the run did not change bridge routing semantics, provider onboarding backends, or auth flows; it did not add new operator features beyond IA/copy/merge/disclosure refactors
+- Known issues / follow-ups:
+  - request-detail disclosure could not be visually verified when no telemetry requests exist and test chat completion returned `503`; model-modal disclosure provides compensating visual proof for `DisclosureSection`
+  - packaged `/logs` and Observe → Logs may still show zero rows even when request telemetry is present; treat as a separate observability follow-up outside run 35 scope
+
+### Run `36-runtime-consumption-telemetry-remediation`
+
+- Run folder: `/.recursive/run/36-runtime-consumption-telemetry-remediation/`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+  - `addenda/02-to-be-plan.benchmark-routing-visibility.addendum-04.md` through `addenda/03-implementation-summary.benchmark-workflow-control-remediation.addendum-10.md`
+  - `05-manual-qa.addendum-01.md` through `05-manual-qa.addendum-03-routing-strategy-matrix.md`
+- What changed:
+  - **SP1–SP6 (base):** bridge execution enriches the normalized catalog at request time (`getCurrentExecutionCatalog()`); provider-openai/workbench map `reasoning_content`; telemetry-backed logs fallback and `/logs/stream` pre-static guard; measured `latencyMs`; `x-role-model-request-id` alias; failure telemetry persistence
+  - **QA addendum 01:** packaged `Role-Model.bat` on `:3456` verified R1–R6 live (local LFM + remote Kimi k2.6, measured latency 384ms/2665ms)
+  - **QA addendum 02:** SP7 throughput SLA sole-candidate fix in `evaluateEligibility`; SP8 partial runtime-config merge (`mergeUnifiedRuntimeConfigDocuments`); Connect consumer curls and Strategy C difficulty alias validated; exact-remote SLA root cause documented
+  - **QA addendum 03:** routing strategy matrix — 46 prompts × 4 strategies (166 runs, 0 HTTP failures) for classifier/strategy tuning decisions
+  - **Addendum 04:** Models pillar Benchmark tab, benchmark summary/preferences APIs, router `benchmarkCapability` on candidates
+  - **Addendum 05:** Benchmark page UX — header cleanup, per-model score breakdown, clear benchmark data per endpoint
+  - **Addendum 06:** Judge grading brief, invalid-patch score caps, reasoning-channel extraction, decimal score display
+  - **Addendum 07:** Judge throttle/retry, `judgeUnavailable` fallback, grading order (later refined by addendum 10)
+  - **Addendum 08:** Compare persistence, circuit breaker, case audit transparency, subject preflight prompt
+  - **Addendum 09:** Canonical `/.recursive/BENCHMARK-WORKFLOW.md`, `validate-benchmark-run.py` gates, model-agnostic safeguards
+  - **Addendum 10:** Removed `max_tokens` on benchmark paths; Kimi-preferred overlap judge; separate grade/compare parsers; substantive rationale gate; operator run `c0b66038` **VALID** + **HEALTHY** (Kimi 92% > LFM 17%)
+  - **Consumer routing E2E:** difficulty suite on `:3456` — 14/15 pass (hard→remote 3/3, easy→local 3/3, telemetry 15/15); `p26-cache-easy-a` false-fail on warm shared `conversationId`
+- Why:
+  - to remediate packaged-runtime consumption, reasoning-model output, logs, and telemetry truthfulness gaps discovered after run 35 and to validate benchmark workflow plus live consumer routing on the operator-packaged runtime
+- How:
+  - implemented SP1–SP6 in an isolated worktree with strict/pragmatic TDD, agent-operated Phase 5 HTTP QA, then iterated benchmark addenda until operator validation passed all accuracy gates with HEALTHY control; rebuilt SEA package and ran consumer routing difficulty suite against live `:3456`
+- What was not done:
+  - the run did not redesign Studio-only bypass paths, change provider onboarding backends, or fix unrelated root `build`/`test` Biome drift; it did not require cold-cache isolation for every cache-probe scenario in the consumer suite
+- Known issues / follow-ups:
+  - consumer cache-probe scenario `p26-cache-easy-a` can false-fail when prior easy prompts warmed the shared conversation cache; isolate `conversationId` per cache expectation if the suite is promoted to CI
+  - medium-path live difficulty QA on the binary mock classifier remains automated-evidence-only under the current classifier fixture

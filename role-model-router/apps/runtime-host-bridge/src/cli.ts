@@ -44,6 +44,14 @@ type CliBackend = Pick<
   | "listRecentRequestObservations"
   | "readRequestObservation"
   | "readEndpointProfile"
+  | "readBenchmarkSuite"
+  | "runBenchmark"
+  | "readBenchmarkRun"
+  | "readActiveBenchmarkRun"
+  | "clearBenchmarkEndpointData"
+  | "readBenchmarkSummary"
+  | "readBenchmarkPreferences"
+  | "updateBenchmarkPreferences"
   | "listLocalModels"
   | "loadLocalModel"
   | "unloadLocalModel"
@@ -56,6 +64,7 @@ type CliBackend = Pick<
   | "updateTaskDefinitions"
   | "listSwapHistory"
   | "getLocalLogs"
+  | "proxyVendorLogStream"
   | "readModelOverrides"
   | "updateModelOverrides"
   | "readPeers"
@@ -87,6 +96,7 @@ export function createCliServerOptions(
     readVersionInfo: backend.readVersionInfo,
     listActivityMetrics: async () => [],
     readLogs: async () => (await backend.getLocalLogs()).logs,
+    proxyVendorLogStream: backend.proxyVendorLogStream,
     readRuntimeSummary: backend.readRuntimeSummary,
     readRuntimeConfig: backend.readRuntimeConfig,
     updateRuntimeConfig: backend.updateRuntimeConfig,
@@ -115,6 +125,14 @@ export function createCliServerOptions(
     listRecentRequestObservations: backend.listRecentRequestObservations,
     readRequestObservation: backend.readRequestObservation,
     readEndpointProfile: backend.readEndpointProfile,
+    readBenchmarkSuite: backend.readBenchmarkSuite,
+    runBenchmark: backend.runBenchmark,
+    readBenchmarkRun: backend.readBenchmarkRun,
+    readActiveBenchmarkRun: backend.readActiveBenchmarkRun,
+    clearBenchmarkEndpointData: backend.clearBenchmarkEndpointData,
+    readBenchmarkSummary: backend.readBenchmarkSummary,
+    readBenchmarkPreferences: backend.readBenchmarkPreferences,
+    updateBenchmarkPreferences: backend.updateBenchmarkPreferences,
     listLocalModels: backend.listLocalModels,
     loadLocalModel: backend.loadLocalModel,
     unloadLocalModel: backend.unloadLocalModel,

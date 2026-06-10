@@ -64,6 +64,25 @@ export default function RouterDecisionDetailRoute() {
     return <LoadingState label="Loading routing decision detail…" />;
   }
 
+  const endpointProfile =
+    typeof detail.endpointProfile === "object" && detail.endpointProfile !== null
+      ? (detail.endpointProfile as unknown as Record<string, unknown>)
+      : null;
+  const latestProfile =
+    typeof endpointProfile?.latestProfile === "object" && endpointProfile.latestProfile !== null
+      ? (endpointProfile.latestProfile as Record<string, unknown>)
+      : null;
+  const profileSources =
+    typeof latestProfile?.sources === "object" && latestProfile.sources !== null
+      ? (latestProfile.sources as Record<string, unknown>)
+      : null;
+  const benchmarkSamples =
+    typeof profileSources?.benchmark_samples === "number" ? profileSources.benchmark_samples : 0;
+  const judgeScore =
+    typeof latestProfile?.judge_score === "number" ? latestProfile.judge_score : null;
+  const measuredAtMs =
+    typeof latestProfile?.measured_at_ms === "number" ? latestProfile.measured_at_ms : null;
+
   return (
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -89,6 +108,37 @@ export default function RouterDecisionDetailRoute() {
           detail="Effective Router strategy summary for this request."
         />
       </div>
+
+      {judgeScore !== null && benchmarkSamples > 0 ? (
+        <SectionCard
+          title="Benchmark provenance"
+          description="This endpoint profile includes benchmark-sourced judge scores that may have informed routing quality."
+        >
+          <div className="space-y-2 text-sm text-[var(--rm-secondary)]">
+            <p>
+              Benchmark judge score:{" "}
+              <span className="font-medium text-[var(--rm-fg)]">
+                {Math.round(judgeScore * 100)}%
+              </span>
+            </p>
+            {measuredAtMs !== null ? (
+              <p>
+                Profile measured at:{" "}
+                <span className="font-medium text-[var(--rm-fg)]">
+                  {new Date(measuredAtMs).toLocaleString()}
+                </span>
+              </p>
+            ) : null}
+            <p>
+              Source: Models → Benchmark ({benchmarkSamples} benchmark sample
+              {benchmarkSamples === 1 ? "" : "s"})
+            </p>
+            <Link className={secondaryButtonClassName} to="/app/models/benchmark">
+              Open Models → Benchmark
+            </Link>
+          </div>
+        </SectionCard>
+      ) : null}
 
       <SectionCard
         title="Fallback endpoints"

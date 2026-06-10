@@ -1,0 +1,115 @@
+{
+  "auditAddendum": "06",
+  "runId": "2be17a26-f4c4-47a8-9bcd-36eb87fb80ac",
+  "completedAtMs": 1781016654407,
+  "mode": "quick",
+  "suiteId": "routing-capability-v2",
+  "suiteVersion": "3.1",
+  "judgeEndpointId": "moonshot.personal.kimi-code.global.kimi-k2.6",
+  "judgeModelId": "moonshot/kimi-k2.6",
+  "artifactRoot": "C:\\Users\\erikb\\AppData\\Local\\Role Model Runtime\\state\\runtime-host-bridge\\memory\\benchmark-runs\\2be17a26-f4c4-47a8-9bcd-36eb87fb80ac",
+  "overallScores": {
+    "lfm2.5-1.2b-instruct": {
+      "exact": 0.525,
+      "sum": 6.3,
+      "cases": 12,
+      "uiRoundedPercent": 53
+    },
+    "moonshot/kimi-k2.6": {
+      "exact": 0.5275,
+      "sum": 6.33,
+      "cases": 12,
+      "uiRoundedPercent": 53
+    }
+  },
+  "perCaseScores": {
+    "p17-tools-multi-hard": { "lfm": 1, "kimi": 0, "lfmWon": true },
+    "x01-max-signal": { "lfm": 0.3, "kimi": 0, "lfmWon": true },
+    "h01-implement-two-sum": { "lfm": 1, "kimi": 1, "tie": true },
+    "h02-fix-async-counter": { "lfm": 1, "kimi": 0, "lfmWon": true },
+    "h04-tool-read-router": { "lfm": 0, "kimi": 0, "tie": true },
+    "h05-tool-grep-eligibility": { "lfm": 0, "kimi": 1, "kimiWon": true },
+    "h06-tool-apply-patch": { "lfm": 0, "kimi": 1, "kimiWon": true },
+    "h07-multi-turn-sla-guard": { "lfm": 0.2, "kimi": 0, "lfmWon": true },
+    "h08-multi-turn-tool-refine": { "lfm": 1, "kimi": 1, "tie": true },
+    "h09-agent-metrics-chain": { "lfm": 0, "kimi": 1, "kimiWon": true },
+    "h10-agent-read-grep-patch": { "lfm": 1, "kimi": 1, "tie": true },
+    "h15-max-signal-v3": { "lfm": 0.8, "kimi": 0.33, "lfmWon": true }
+  },
+  "rootCauses": [
+    {
+      "id": "RC1",
+      "title": "UI integer rounding",
+      "detail": "52.5% and 52.75% both render as 53%"
+    },
+    {
+      "id": "RC2",
+      "title": "Judge checklist leniency on LFM",
+      "detail": "p17: LFM scored 1.0 with apply_patch diff '----/+++'",
+      "evidence": [
+        "responses/local-openai-compatible.../p17-tools-multi-hard.json",
+        "judge/local-openai-compatible.../p17-tools-multi-hard.json",
+        "judge/compare/p17-tools-multi-hard.json"
+      ]
+    },
+    {
+      "id": "RC3",
+      "title": "Reasoning extraction penalizes Kimi",
+      "detail": "h07: reasoning prose extracted as code; h02: only mutex helper extracted",
+      "evidence": [
+        "responses/moonshot.../h07-multi-turn-sla-guard.json",
+        "responses/moonshot.../h02-fix-async-counter.json"
+      ]
+    },
+    {
+      "id": "RC4",
+      "title": "Judge/subject overlap expected not defective",
+      "detail": "Kimi as judge and subject is supported; scoring issues traced to RC2/RC3/RC6 not overlap",
+      "productDecision": "Do not warn or block judge in endpointIds"
+    },
+    {
+      "id": "RC5",
+      "title": "Compare ranking unused in scores",
+      "detail": "h02 compare ranks Kimi above LFM but per-case scores remain LFM 1 / Kimi 0",
+      "evidence": ["judge/compare/h02-fix-async-counter.json"]
+    },
+    {
+      "id": "RC6",
+      "title": "Judge grading brief under-specified",
+      "detail": "summarizePrompt truncates to 240 chars; expected_response vague; no exemplar deliverable or structured checklist; compare prompt lacks case context",
+      "evidence": [
+        "packages/bench-judge/src/index.ts buildJudgeGradingPrompt",
+        "packages/bench-routing/src/index.ts summarizePrompt",
+        "judge/local.../p17-tools-multi-hard.json"
+      ]
+    }
+  ],
+  "keyExcerpts": {
+    "lfm_p17_diff": "----/+++",
+    "kimi_p17_tools": "read_file only; 110818ms latency; reasoning in rawResponse",
+    "kimi_h07_extracted_code_prefix": "code block with the full function. No prose before or after the fence."
+  },
+  "compareVsPerCaseConflicts": [
+    {
+      "caseId": "h02-fix-async-counter",
+      "perCase": { "lfm": 1, "kimi": 0 },
+      "compareRanking": [
+        "moonshot.personal.kimi-code.global.kimi-k2.6",
+        "local-openai-compatible.personal.ca2ba73f-38f6-4feb-97b1-12b903bd81a4.local.lfm2.5-1.2b-instruct"
+      ],
+      "compareRationale": "Kimi mutex correct; LFM flawed snippet"
+    }
+  ],
+  "remediationRequirements": ["J1", "J2", "J3", "J4", "J5", "J6", "J7", "J8", "J9", "J10", "J11"],
+  "fixedDecisions": {
+    "judgeSubjectOverlap": "allowed — operators with few models will use a benchmarked endpoint as judge"
+  },
+  "judgeBriefingRequirements": {
+    "J4": "Judge endpoint may overlap subjects; no warn/block — supported for limited model inventories",
+    "J7": "Full messages[] transcript as Original question (no 240-char truncation)",
+    "J8": "example_deliverable per quick case — concrete passing answer exemplar",
+    "J9": "Key deliverables checklist (MUST / MUST NOT) from criteria, tools, schema, anti-patterns",
+    "J10": "Compare prompt includes same briefing as per-case judge",
+    "J11": "Persist gradingBrief in judge/compare artifacts"
+  }
+}

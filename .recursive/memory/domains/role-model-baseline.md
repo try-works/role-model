@@ -1,6 +1,6 @@
 Type: `domain`
 Status: `CURRENT`
-Scope: `Stable baseline ownership for the repo workspace, canonical protocol tree, shared packages, router family, fixtures, validation surfaces, and the repo-owned runtime/operator baseline extended through the routing-strategy UI convergence baseline in run 30, unified vendor execution, telemetry dashboard remediation, runtime-config control, the run-32 models.dev metadata/readiness baseline, and the run-34 runtime-owned role-policy/operator-control baseline.`
+Scope: `Stable baseline ownership for the repo workspace, canonical protocol tree, shared packages, router family, fixtures, validation surfaces, and the repo-owned runtime/operator baseline extended through the routing-strategy UI convergence baseline in run 30, unified vendor execution, telemetry dashboard remediation, runtime-config control, the run-32 models.dev metadata/readiness baseline, the run-34 runtime-owned role-policy/operator-control baseline, the run-35 Connect/de-clutter operator shell, and the run-36 packaged-runtime consumption, benchmark workflow, and consumer-routing validation baseline.`
 Owns-Paths:
 - `/README.md`
 - `/LICENSE`
@@ -48,8 +48,10 @@ Source-Runs:
 - `30-router-runtime-strategy-convergence-e2e`
 - `32-models-dev-metadata-coverage`
 - `34-router-runtime-role-policy-and-ui-fixture-reduction`
+- `35-runtime-ui-connect-declutter`
+- `36-runtime-consumption-telemetry-remediation`
 Validated-At-Commit: `working-tree`
-Last-Validated: `2026-05-17T08:30:00Z`
+Last-Validated: `2026-06-10T12:00:00Z`
 Tags:
 - `baseline`
 - `workspace`
@@ -146,6 +148,11 @@ This repository now has a real product baseline rather than only recursive scaff
 - The repo-owned validation floor now also proves same-pool override-mode execution, exact-model rewrite-skipped compatibility, explicit invalid-override `400` ingress failure, and mixed local-plus-remote readback of override, rewrite, and hybrid-arbitration diagnostics through focused bridge tests, `runtime:validate-vendors`, `runtime:validate-host`, and agent-operated QA
 - The repo-owned runtime UI now also has a first-class routing-strategy operator baseline: `Control > Routing strategy`, workbench routing-mode override control, request-ledger routing decision readback, request-detail routing receipts, and a preserved advanced raw-config or raw-observation escape-hatch path all ship together in `/role-model-router/apps/runtime-ui/`
 - The runtime UI validation floor now also includes deterministic routed-request receipt proof in `runtime:validate-ui`, confirming that shipped telemetry-list and request-detail APIs expose persisted `routingDecisionId`, effective routing mode, and rewrite reason for the operator shell
+- Run 35 added the **Connect** pillar (`/app/connect*`) for downstream consumer guidance while **Local → Endpoints** stays separate; quieter shell, `DisclosureSection`, and browser-visual QA policy for UI-only runs
+- Run 36 remediated packaged-runtime consumption: `getCurrentExecutionCatalog()` at execution time, `reasoning_content` assistant mapping, telemetry logs fallback, measured `latencyMs`, `x-role-model-request-id` alias, failure telemetry rows — verified on packaged `:3456` (QA addendum 01)
+- Run 36 addendum 02 fixed sole-candidate throughput SLA hard-deny (SP7) and partial runtime-config merge (SP8); exact-remote below 24 tps still needs SLA disabled or alias pools
+- Run 36 addendum 03 recorded a 46-prompt × 4-strategy routing matrix for tuning; consumer difficulty E2E on `mixed.local-remote` passed 14/15 with cache-probe caveat on shared `conversationId`
+- Run 36 addenda 04–10 delivered the benchmark operator workflow: `/.recursive/BENCHMARK-WORKFLOW.md`, **Models → Benchmark** at `/app/models/benchmark`, `validate-benchmark-run.py`, judge pipeline hardening; operator run `c0b66038` is VALID with HEALTHY control (Kimi 92% > LFM 17%)
 
 ## Validation Path
 

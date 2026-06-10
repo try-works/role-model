@@ -6,6 +6,7 @@ import os from "node:os";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { setTimeout as delay } from "node:timers/promises";
+import { parse } from "yaml";
 
 import type {
   NormalizedCatalog,
@@ -53,6 +54,8 @@ import {
   persistProviderAccounts,
   persistRetrievalReceipt,
   persistRuntimeObservationBundle,
+  persistRuntimeTelemetryFailure,
+  clearObservedBenchmarkDataForEndpoint,
   readAdvisoryMaxDifficultyRecommendation,
   readConversationContinuity,
   readDifficultyClassificationCache,
@@ -94,6 +97,23 @@ import { startLiteLLMVendor } from "@role-model-router/vendor-litellm";
 import { startLlamaSwapVendor } from "@role-model-router/vendor-llama-swap";
 
 import {
+  readActiveBenchmarkRun as readActiveBenchmarkRunProgress,
+  readBenchmarkRunProgress,
+} from "./benchmark-progress.js";
+import {
+  probeJudgeEndpoint,
+  readRoutingCapabilityBenchmarkSuite,
+  runRoutingCapabilityBenchmark,
+} from "./benchmark-runner.js";
+import { evaluateBenchmarkStartGuards } from "./benchmark-start-guards.js";
+import {
+  buildBenchmarkCapabilityForEndpoint,
+  readBenchmarkPreferences,
+  readLatestBenchmarkSummary,
+  writeBenchmarkPreferences,
+} from "./benchmark-summary.js";
+
+import {
   type LiteLLMProviderInfo,
   deriveLiteLLMProviders,
   extractLiteLLMModelIds,
@@ -106,6 +126,7 @@ import {
   type UnifiedRuntimeDifficultyClassifierConfig,
   type UnifiedRuntimeExecutionMode,
   type UnifiedRuntimeModelAliasConfig,
+  mergeUnifiedRuntimeConfigDocuments,
   normalizeUnifiedRuntimeConfigInput,
   parseUnifiedRuntimeConfigText,
   renderUnifiedRuntimeConfigText,
@@ -953,6 +974,8 @@ export interface BridgeChatCompletionsExecutionResult {
   readonly routingDecisionId?: string;
   readonly vendorId?: string;
   readonly outputText: string;
+  readonly contentText?: string;
+  readonly reasoningText?: string;
   readonly finishReason: string;
   readonly toolCalls?: readonly BridgeToolCall[];
   readonly toolExecutions?: readonly ToolRegistryExecution[];
@@ -1075,6 +1098,10 @@ export interface StartBridgeServerOptions {
   readonly listActivityMetrics?: () => Promise<unknown>;
   readonly readActivityCapture?: (captureId: number) => Promise<unknown>;
   readonly readLogs?: () => Promise<string>;
+  readonly proxyVendorLogStream?: (
+    pathname: string,
+    search: string,
+  ) => Promise<{ readonly body: string; readonly contentType: string } | null>;
   readonly readRuntimeSummary?: () => Promise<unknown>;
   readonly readHealthStatus?: () => Promise<unknown>;
   readonly listProviders?: () => Promise<readonly unknown[]>;
@@ -1109,6 +1136,14 @@ export interface StartBridgeServerOptions {
   ) => () => void;
   readonly readRequestObservation?: (requestId: string) => Promise<unknown>;
   readonly readEndpointProfile?: (endpointId: string) => Promise<unknown>;
+  readonly readBenchmarkSuite?: () => Promise<unknown>;
+  readonly runBenchmark?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly readBenchmarkRun?: (runId: string) => Promise<unknown>;
+  readonly readActiveBenchmarkRun?: () => Promise<unknown>;
+  readonly clearBenchmarkEndpointData?: (endpointId: string) => Promise<unknown>;
+  readonly readBenchmarkSummary?: () => Promise<unknown>;
+  readonly readBenchmarkPreferences?: () => Promise<unknown>;
+  readonly updateBenchmarkPreferences?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly staticRoot?: string;
   readonly listLocalModels?: () => Promise<
     readonly { modelId: string; loadedAt: string; engine: string }[]
@@ -1169,6 +1204,8 @@ export interface RuntimeBridgeBackend {
     providerCount: number;
     accountCount: number;
     endpointCount: number;
+    scopeId: string;
+    runtimeStateRoot: string;
     readinessSummary: {
       pendingDeviceAuthorizationCount: number;
       credentialsMissingAccountCount: number;
@@ -1274,6 +1311,14 @@ export interface RuntimeBridgeBackend {
     latestProfile: ReturnType<typeof readLatestObservedProfile>;
     recentSamples: readonly ObservedPerformanceSample[];
   }>;
+  readBenchmarkSuite(): Promise<unknown>;
+  runBenchmark(body: Record<string, unknown>): Promise<unknown>;
+  readBenchmarkRun(runId: string): Promise<unknown>;
+  readActiveBenchmarkRun(): Promise<unknown>;
+  clearBenchmarkEndpointData(endpointId: string): Promise<unknown>;
+  readBenchmarkSummary(): Promise<unknown>;
+  readBenchmarkPreferences(): Promise<unknown>;
+  updateBenchmarkPreferences(body: Record<string, unknown>): Promise<unknown>;
   listLocalModels(): Promise<
     readonly {
       modelId: string;
@@ -1309,6 +1354,10 @@ export interface RuntimeBridgeBackend {
     }[]
   >;
   getLocalLogs(): Promise<{ logs: string }>;
+  proxyVendorLogStream(
+    pathname: string,
+    search: string,
+  ): Promise<{ readonly body: string; readonly contentType: string } | null>;
   readModelOverrides(): Promise<Record<string, BridgeModelOverrideRecord>>;
   updateModelOverrides(
     body: Record<string, BridgeModelOverrideRecord>,
@@ -1432,6 +1481,28 @@ function normalizeConfiguredRoutingMode(value: string | null | undefined): Runti
     default:
       return null;
   }
+}
+
+function readBridgeRequestId(request: IncomingMessage): string {
+  return (
+    request.headers["x-request-id"]?.toString().trim() ||
+    request.headers["x-role-model-request-id"]?.toString().trim() ||
+    "req-runtime-host-bridge"
+  );
+}
+
+function formatRuntimeTelemetryLogs(
+  records: ReturnType<typeof listRuntimeTelemetryRecords>,
+): string {
+  return records
+    .map((record) => {
+      const timestamp = new Date(record.createdAtMs).toISOString();
+      const statusLabel = record.errorClass
+        ? `error=${record.errorClass}`
+        : `status=${record.statusCode ?? 200}`;
+      return `[${timestamp}] ${record.requestId} endpoint=${record.endpointId} model=${record.modelId ?? "unknown"} ${statusLabel} latency_ms=${record.latencyMs ?? "n/a"}`;
+    })
+    .join("\n");
 }
 
 function readBridgeExecutionRequestOptions(
@@ -4867,7 +4938,7 @@ function createRequestHandler(options: StartBridgeServerOptions) {
 
     if (request.method === "POST" && url.pathname === "/v1/chat/completions") {
       try {
-        const requestId = request.headers["x-request-id"]?.toString() ?? "req-runtime-host-bridge";
+        const requestId = readBridgeRequestId(request);
         const requestOptions = readBridgeExecutionRequestOptions(request);
         const body = await readJsonBody(request);
         const parsedBody = parseChatCompletionsBody(body);
@@ -4960,7 +5031,7 @@ function createRequestHandler(options: StartBridgeServerOptions) {
     }
 
     if (request.method === "POST" && url.pathname === "/v1/responses") {
-      const requestId = request.headers["x-request-id"]?.toString() ?? "req-runtime-host-bridge";
+      const requestId = readBridgeRequestId(request);
       const requestOptions = readBridgeExecutionRequestOptions(request);
       const body = await readJsonBody(request);
       const parsedBody = parseResponsesBody(body);
@@ -5160,6 +5231,24 @@ function createRequestHandler(options: StartBridgeServerOptions) {
       return;
     }
 
+    if (request.method === "GET" && url.pathname.startsWith("/logs/stream")) {
+      if (!options.proxyVendorLogStream) {
+        writeJson(response, 503, {
+          error: "log stream unavailable without an active llama-swap vendor",
+        });
+        return;
+      }
+      const proxied = await options.proxyVendorLogStream(url.pathname, url.search);
+      if (!proxied) {
+        writeJson(response, 503, {
+          error: "log stream unavailable without an active llama-swap vendor",
+        });
+        return;
+      }
+      writeText(response, 200, proxied.body, proxied.contentType);
+      return;
+    }
+
     if (request.method === "GET" && url.pathname === "/logs") {
       if (!options.readLogs) {
         writeJson(response, 404, { error: "not found" });
@@ -5356,6 +5445,120 @@ function createRequestHandler(options: StartBridgeServerOptions) {
         return;
       }
       writeJson(response, 200, await options.listRouterCandidates());
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/role-model/benchmark/suite") {
+      if (!options.readBenchmarkSuite) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.readBenchmarkSuite());
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/role-model/benchmark/runs/active") {
+      if (!options.readActiveBenchmarkRun) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.readActiveBenchmarkRun());
+      return;
+    }
+
+    if (
+      request.method === "DELETE" &&
+      url.pathname.startsWith("/api/role-model/benchmark/endpoints/") &&
+      url.pathname.endsWith("/data")
+    ) {
+      if (!options.clearBenchmarkEndpointData) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      const endpointId = decodeURIComponent(
+        url.pathname
+          .slice("/api/role-model/benchmark/endpoints/".length)
+          .slice(0, -"/data".length),
+      ).trim();
+      if (!endpointId) {
+        writeJson(response, 400, { error: "endpointId is required" });
+        return;
+      }
+      try {
+        writeJson(response, 200, await options.clearBenchmarkEndpointData(endpointId));
+      } catch (error) {
+        writeJson(response, 400, {
+          error: error instanceof Error ? error.message : "benchmark data clear failed",
+        });
+      }
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname.startsWith("/api/role-model/benchmark/runs/")) {
+      if (!options.readBenchmarkRun) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      const runId = url.pathname.slice("/api/role-model/benchmark/runs/".length).trim();
+      if (!runId) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      try {
+        writeJson(response, 200, await options.readBenchmarkRun(runId));
+      } catch (error) {
+        writeJson(response, 404, {
+          error: error instanceof Error ? error.message : "benchmark run not found",
+        });
+      }
+      return;
+    }
+
+    if (request.method === "POST" && url.pathname === "/api/role-model/benchmark/runs") {
+      if (!options.runBenchmark) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      try {
+        writeJson(response, 202, await options.runBenchmark(await readJsonBody(request)));
+      } catch (error) {
+        writeJson(response, 400, {
+          error: error instanceof Error ? error.message : "benchmark run failed",
+        });
+      }
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/role-model/benchmark/summary") {
+      if (!options.readBenchmarkSummary) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.readBenchmarkSummary());
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/role-model/benchmark/preferences") {
+      if (!options.readBenchmarkPreferences) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.readBenchmarkPreferences());
+      return;
+    }
+
+    if (request.method === "PUT" && url.pathname === "/api/role-model/benchmark/preferences") {
+      if (!options.updateBenchmarkPreferences) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      try {
+        writeJson(response, 200, await options.updateBenchmarkPreferences(await readJsonBody(request)));
+      } catch (error) {
+        writeJson(response, 400, {
+          error: error instanceof Error ? error.message : "benchmark preferences update failed",
+        });
+      }
       return;
     }
 
@@ -5995,6 +6198,12 @@ export async function createRuntimeBridgeBackend(
   let currentLiteLLMVendor: VendorRuntime | null = null;
   const getCurrentRegistrySources = (): RegistrySources =>
     mergeRegistrySources(currentRegistrySources, runtimeEndpoints);
+  const getCurrentExecutionCatalog = (): NormalizedCatalog =>
+    withRuntimeEndpointFallbackModels(
+      currentNormalizedCatalog,
+      currentAccounts,
+      runtimeEndpoints,
+    );
   const rebuildCurrentState = (): void => {
     currentAccounts = [...readCurrentAccounts()];
     runtimeEndpoints = [...listRuntimeEndpoints({ databasePath: initialization.databasePath })];
@@ -6752,12 +6961,47 @@ export async function createRuntimeBridgeBackend(
       ),
     },
   });
-  const listRouterCandidateData = () => {
+  const benchmarkArtifactRoot = path.join(
+    path.dirname(initialization.databasePath),
+    "benchmark-runs",
+  );
+  const benchmarkPreferencesPath = path.join(
+    path.dirname(initialization.databasePath),
+    "benchmark-preferences.json",
+  );
+  const resolveBenchmarkEndpointModelId = (endpointId: string): string | null => {
+    const registryEndpoint = currentRegistry.endpoints.find(
+      (entry) => entry.identity.endpoint_id === endpointId,
+    );
+    return registryEndpoint?.identity.model_id ?? null;
+  };
+  const readBenchmarkSummaryData = async () =>
+    readLatestBenchmarkSummary({
+      artifactRoot: benchmarkArtifactRoot,
+      resolveModelId: resolveBenchmarkEndpointModelId,
+    });
+  const resolveHealthyEndpoint = (endpointId: string): boolean => {
+    const runtimeEndpoint = runtimeEndpoints.find((entry) => entry.endpointId === endpointId);
+    if (!runtimeEndpoint) {
+      return currentRegistry.endpoints.some(
+        (entry) => entry.identity.endpoint_id === endpointId && !entry.deniedByPolicy,
+      );
+    }
+    return runtimeEndpoint.healthStatus !== "offline";
+  };
+  const listRouterCandidateData = async () => {
     const controller = getCurrentControllerAssignment();
     const guidance = getRouterGuidance();
+    const benchmarkSummary = await readBenchmarkSummaryData();
     return currentRegistry.endpoints.map((endpoint) => {
       const endpointId = endpoint.identity.endpoint_id;
       const profile = readEndpointProfileData(endpointId);
+      const benchmarkCapability = buildBenchmarkCapabilityForEndpoint({
+        endpointId,
+        latestProfile: profile.latestProfile as Record<string, unknown> | null,
+        difficultyProfiles: profile.difficultyProfiles as Record<string, unknown> | null,
+        summary: benchmarkSummary,
+      });
       return {
         endpointId,
         modelId: endpoint.identity.model_id,
@@ -6781,6 +7025,7 @@ export async function createRuntimeBridgeBackend(
         recentSamples: profile.recentSamples,
         difficultyProfiles: profile.difficultyProfiles,
         advisoryMaxDifficultyRecommendation: profile.advisoryMaxDifficultyRecommendation,
+        ...(benchmarkCapability ? { benchmarkCapability } : {}),
       };
     });
   };
@@ -6897,7 +7142,7 @@ export async function createRuntimeBridgeBackend(
     const routingDecisionId = routed.decision.routing_decision_id;
     const execution = await executeLiveRoutedRequest({
       routeResult: routed,
-      catalog: currentNormalizedCatalog,
+      catalog: getCurrentExecutionCatalog(),
       additionalProviders: liteLLMProviders,
       accounts: currentAccounts,
       registry: currentRegistry,
@@ -7050,8 +7295,9 @@ export async function createRuntimeBridgeBackend(
             return null;
           }
         })();
-        const performRequest = async (resolvedCredentialValue: string) =>
-          networkFetcher(requestCapture.url, {
+        const performRequest = async (resolvedCredentialValue: string) => {
+          const startedAtMs = Date.now();
+          const response = await networkFetcher(requestCapture.url, {
             method: "POST",
             headers: {
               "content-type": "application/json",
@@ -7062,7 +7308,12 @@ export async function createRuntimeBridgeBackend(
             },
             body: JSON.stringify(requestCapture.body),
           });
-        let response = await performRequest(credentialValue);
+          return {
+            response,
+            latencyMs: Math.max(0, Date.now() - startedAtMs),
+          };
+        };
+        let { response, latencyMs } = await performRequest(credentialValue);
         if (
           (response.status === 401 || response.status === 403) &&
           (target.account?.credentialRef.backend === "local-file" ||
@@ -7078,8 +7329,12 @@ export async function createRuntimeBridgeBackend(
             deviceId,
             rebuildCurrentState,
           );
-          response = await performRequest(refreshedCredentialValue);
+          ({ response, latencyMs } = await performRequest(refreshedCredentialValue));
         }
+        const measuredVendorMetadata = {
+          vendorId: "direct-http",
+          latencyMs,
+        };
         if (!response.ok) {
           const rawBody = await response.text();
           const parsedBody = parseProviderResponseBody(rawBody);
@@ -7097,6 +7352,7 @@ export async function createRuntimeBridgeBackend(
               endpointId: target.endpointId,
               statusCode: response.status,
               body: parseProviderResponseBody(rawBody),
+              vendorMetadata: measuredVendorMetadata,
             };
           }
           return {
@@ -7104,6 +7360,7 @@ export async function createRuntimeBridgeBackend(
             endpointId: target.endpointId,
             statusCode: response.status,
             body: rawBody,
+            vendorMetadata: measuredVendorMetadata,
           };
         }
         const responseContentType = response.headers.get("content-type") ?? "";
@@ -7115,6 +7372,7 @@ export async function createRuntimeBridgeBackend(
               endpointId: target.endpointId,
               statusCode: response.status,
               body: parseProviderResponseBody(rawBody),
+              vendorMetadata: measuredVendorMetadata,
             };
           }
           return {
@@ -7122,6 +7380,7 @@ export async function createRuntimeBridgeBackend(
             endpointId: target.endpointId,
             statusCode: response.status,
             body: rawBody,
+            vendorMetadata: measuredVendorMetadata,
           };
         }
         const rawBody = await response.text();
@@ -7131,6 +7390,7 @@ export async function createRuntimeBridgeBackend(
           endpointId: target.endpointId,
           statusCode: response.status,
           body: parsedBody,
+          vendorMetadata: measuredVendorMetadata,
         };
       },
     });
@@ -7562,6 +7822,17 @@ export async function createRuntimeBridgeBackend(
       streamWriter?: BridgeStreamWriter,
       requestOptions?: BridgeExecutionRequestOptions,
     ): Promise<BridgeChatCompletionsExecutionResult> {
+      const recordChatCompletionFailure = (error: unknown): void => {
+        const statusCode = error instanceof BridgeHttpError ? error.statusCode : 400;
+        persistRuntimeTelemetryFailure({
+          databasePath: initialization.databasePath,
+          requestId,
+          modelId: body.model,
+          statusCode,
+          errorClass: "execution_failed",
+        });
+      };
+      try {
       if (
         currentUnifiedRuntimeConfig?.executionMode === "decision_only" &&
         currentRegistry.endpoints.length === 0
@@ -7627,6 +7898,7 @@ export async function createRuntimeBridgeBackend(
         {
           requestOptions,
           requestedModel: body.model,
+          persistObservation: !requestId.startsWith("bench-"),
         },
       );
       const costUsd =
@@ -7650,6 +7922,10 @@ export async function createRuntimeBridgeBackend(
             }
           : {}),
         outputText: execution.normalized.outputText,
+        contentText: execution.normalized.outputText,
+        ...(execution.normalized.reasoningText
+          ? { reasoningText: execution.normalized.reasoningText }
+          : {}),
         finishReason: execution.normalized.finishReason,
         ...(execution.normalized.toolCalls.length
           ? {
@@ -7676,6 +7952,10 @@ export async function createRuntimeBridgeBackend(
             }
           : {}),
       };
+      } catch (error) {
+        recordChatCompletionFailure(error);
+        throw error;
+      }
     },
     async executeResponses(
       body: OpenAIResponsesBody,
@@ -7800,6 +8080,8 @@ export async function createRuntimeBridgeBackend(
       providerCount: number;
       accountCount: number;
       endpointCount: number;
+      scopeId: string;
+      runtimeStateRoot: string;
       readinessSummary: {
         pendingDeviceAuthorizationCount: number;
         credentialsMissingAccountCount: number;
@@ -7822,6 +8104,8 @@ export async function createRuntimeBridgeBackend(
           ).length,
         accountCount: currentAccounts.length,
         endpointCount: currentRegistry.endpoints.length,
+        scopeId: options.scopeId,
+        runtimeStateRoot: options.runtimeStateRoot,
         readinessSummary: buildCredentialReadinessSummary(),
         executionMode: currentUnifiedRuntimeConfig?.executionMode ?? "decision_only",
         unifiedConfig: {
@@ -7878,7 +8162,10 @@ export async function createRuntimeBridgeBackend(
           throw error;
         },
       );
-      const nextConfig = normalizeUnifiedRuntimeConfigInput(body);
+      const previousDocument = previousText
+        ? (parse(previousText) as Record<string, unknown>)
+        : null;
+      const nextConfig = mergeUnifiedRuntimeConfigDocuments(previousDocument, body);
       const nextText = renderUnifiedRuntimeConfigText(nextConfig);
 
       await mkdir(path.dirname(options.unifiedRuntimeConfigPath), { recursive: true });
@@ -8600,6 +8887,72 @@ export async function createRuntimeBridgeBackend(
     async listRouterCandidates(): Promise<readonly unknown[]> {
       return listRouterCandidateData();
     },
+    async readBenchmarkSummary(): Promise<unknown> {
+      const summary = await readBenchmarkSummaryData();
+      if (summary.subjects.length > 0) {
+        return summary;
+      }
+      const candidates = await listRouterCandidateData();
+      const subjects = candidates.flatMap((candidate) => {
+        const capability = (
+          candidate as { benchmarkCapability?: { overallScore: number | null; scoresByBucket?: Record<string, { score: number; cases?: number }> } }
+        ).benchmarkCapability;
+        const latestProfile = candidate.latestProfile as Record<string, unknown> | null;
+        const sources = latestProfile?.sources as Record<string, unknown> | undefined;
+        const benchmarkSamples =
+          typeof sources?.benchmark_samples === "number" ? sources.benchmark_samples : 0;
+        const profileScore =
+          typeof latestProfile?.judge_score === "number"
+            ? latestProfile.judge_score
+            : typeof latestProfile?.quality_score === "number"
+              ? latestProfile.quality_score
+              : null;
+        if (!capability && benchmarkSamples === 0 && profileScore === null) {
+          return [];
+        }
+        const emptyBucket = { score: 0, cases: 0 };
+        const scoresByBucket = {
+          easy: capability?.scoresByBucket?.easy ?? emptyBucket,
+          medium: capability?.scoresByBucket?.medium ?? emptyBucket,
+          hard: capability?.scoresByBucket?.hard ?? emptyBucket,
+        };
+        return [
+          {
+            endpointId: candidate.endpointId,
+            modelId: candidate.modelId,
+            overallScore: capability?.overallScore ?? profileScore ?? 0,
+            scoresByBucket,
+            passingCaseIds: [],
+            caseCount: 0,
+          },
+        ];
+      });
+      return subjects.length > 0 ? { ...summary, subjects } : summary;
+    },
+    async readBenchmarkPreferences(): Promise<unknown> {
+      return readBenchmarkPreferences(benchmarkPreferencesPath);
+    },
+    async updateBenchmarkPreferences(body: Record<string, unknown>): Promise<unknown> {
+      const judgeEndpointId =
+        typeof body.judge_endpoint_id === "string"
+          ? body.judge_endpoint_id
+          : typeof body.judgeEndpointId === "string"
+            ? body.judgeEndpointId
+            : null;
+      if (!judgeEndpointId) {
+        throw new Error("judgeEndpointId is required.");
+      }
+      const registryEndpoint = currentRegistry.endpoints.find(
+        (entry) => entry.identity.endpoint_id === judgeEndpointId,
+      );
+      if (!registryEndpoint) {
+        throw new Error(`Unknown endpoint id: ${judgeEndpointId}`);
+      }
+      if (!resolveHealthyEndpoint(judgeEndpointId)) {
+        throw new Error(`Endpoint is not healthy enough for judge role: ${judgeEndpointId}`);
+      }
+      return writeBenchmarkPreferences(benchmarkPreferencesPath, { judgeEndpointId });
+    },
     async listRouterDecisions(): Promise<readonly unknown[]> {
       return listRouterDecisionData();
     },
@@ -8660,6 +9013,148 @@ export async function createRuntimeBridgeBackend(
       >;
     }> {
       return readEndpointProfileData(endpointId);
+    },
+    async readBenchmarkSuite(): Promise<unknown> {
+      return readRoutingCapabilityBenchmarkSuite();
+    },
+    async runBenchmark(body: Record<string, unknown>): Promise<unknown> {
+      const endpointIds = Array.isArray(body.endpoint_ids)
+        ? body.endpoint_ids.filter((value): value is string => typeof value === "string")
+        : Array.isArray(body.endpointIds)
+          ? body.endpointIds.filter((value): value is string => typeof value === "string")
+          : undefined;
+      const caseIds = Array.isArray(body.case_ids)
+        ? body.case_ids.filter((value): value is string => typeof value === "string")
+        : Array.isArray(body.caseIds)
+          ? body.caseIds.filter((value): value is string => typeof value === "string")
+          : undefined;
+      const mode = body.mode === "full" ? "full" : "quick";
+      const judgeEndpointId =
+        typeof body.judge_endpoint_id === "string"
+          ? body.judge_endpoint_id
+          : typeof body.judgeEndpointId === "string"
+            ? body.judgeEndpointId
+            : undefined;
+      const useJudge = body.use_judge === false || body.useJudge === false ? false : true;
+      const preflightProbe =
+        body.preflight_probe === true || body.preflightProbe === true;
+      const startGuards = evaluateBenchmarkStartGuards({
+        endpointIds,
+        judgeEndpointId,
+        useJudge,
+      });
+      if (!startGuards.allowed) {
+        throw new Error(startGuards.warnings[0] ?? "benchmark_start_rejected");
+      }
+      if (judgeEndpointId && resolveHealthyEndpoint(judgeEndpointId)) {
+        await writeBenchmarkPreferences(benchmarkPreferencesPath, { judgeEndpointId });
+      }
+      const runId = randomUUID();
+      const warnings: string[] = [...startGuards.warnings];
+      if (preflightProbe && judgeEndpointId && resolveHealthyEndpoint(judgeEndpointId)) {
+        const configuredEndpoints = await backend.listEndpoints();
+        const judgeEndpoint = configuredEndpoints.find(
+          (endpoint) => endpoint.endpointId === judgeEndpointId,
+        );
+        if (judgeEndpoint) {
+          const probe = await probeJudgeEndpoint(
+            {
+              databasePath: initialization.databasePath,
+              listConfiguredEndpoints: async () => {
+                const endpoints = await backend.listEndpoints();
+                return endpoints.map((endpoint) => ({
+                  endpointId: endpoint.endpointId,
+                  modelId: endpoint.modelId,
+                  sourceType: endpoint.sourceType,
+                  healthStatus: endpoint.healthStatus,
+                }));
+              },
+              executeChatCompletions: async (chatBody, requestId, requestOptions) =>
+                backend.executeChatCompletions(
+                  chatBody as unknown as OpenAIChatCompletionsBody,
+                  requestId,
+                  undefined,
+                  requestOptions,
+                ),
+              deriveEndpointVersion: () => "preflight",
+            },
+            { endpointId: judgeEndpoint.endpointId, modelId: judgeEndpoint.modelId },
+          );
+          if (!probe.ok) {
+            warnings.push(`judge_probe_failed: ${probe.error ?? "unknown"}`);
+          }
+        }
+      }
+      void runRoutingCapabilityBenchmark(
+        {
+          databasePath: initialization.databasePath,
+          benchmarkArtifactRoot,
+          listConfiguredEndpoints: async () => {
+            const endpoints = await backend.listEndpoints();
+            return endpoints.map((endpoint) => ({
+              endpointId: endpoint.endpointId,
+              modelId: endpoint.modelId,
+              sourceType: endpoint.sourceType,
+              healthStatus: endpoint.healthStatus,
+            }));
+          },
+          executeChatCompletions: async (chatBody, requestId, requestOptions) =>
+            backend.executeChatCompletions(
+              chatBody as unknown as OpenAIChatCompletionsBody,
+              requestId,
+              undefined,
+              requestOptions,
+            ),
+          deriveEndpointVersion: (endpointId: string) => {
+            const endpoint = currentRegistry.endpoints.find(
+              (entry) => entry.identity.endpoint_id === endpointId,
+            );
+            if (!endpoint) {
+              return `${endpointId}:unknown`;
+            }
+            return `${endpoint.identity.runtime_version}:${endpoint.identity.variant_id ?? "default"}`;
+          },
+        },
+        {
+          runId,
+          endpointIds,
+          judgeEndpointId,
+          mode,
+          caseIds,
+          useJudge,
+          preflightProbe,
+        },
+      ).catch(() => undefined);
+      return warnings.length > 0
+        ? {
+            runId,
+            status: "running",
+            warnings,
+            judgeSubjectOverlap: startGuards.judgeSubjectOverlap,
+          }
+        : { runId, status: "running", judgeSubjectOverlap: startGuards.judgeSubjectOverlap };
+    },
+    async readBenchmarkRun(runId: string): Promise<unknown> {
+      const progress = readBenchmarkRunProgress(runId);
+      if (!progress) {
+        throw new Error("benchmark run not found");
+      }
+      return progress;
+    },
+    async readActiveBenchmarkRun(): Promise<unknown> {
+      return readActiveBenchmarkRunProgress();
+    },
+    async clearBenchmarkEndpointData(endpointId: string): Promise<unknown> {
+      const registryEndpoint = currentRegistry.endpoints.find(
+        (entry) => entry.identity.endpoint_id === endpointId,
+      );
+      if (!registryEndpoint) {
+        throw new Error(`Unknown endpoint id: ${endpointId}`);
+      }
+      return clearObservedBenchmarkDataForEndpoint({
+        databasePath: initialization.databasePath,
+        endpointId,
+      });
     },
     async listLocalModels(): Promise<
       readonly {
@@ -8884,18 +9379,45 @@ export async function createRuntimeBridgeBackend(
     async getLocalLogs(): Promise<{ logs: string }> {
       const status = currentLlamaSwapVendor?.readStatus();
       const baseUrl = status?.baseUrl;
+      if (baseUrl) {
+        try {
+          const response = await fetch(`${baseUrl}/logs`);
+          if (response.ok) {
+            const text = await response.text();
+            if (text.trim().length > 0) {
+              return { logs: text };
+            }
+          }
+        } catch {
+          // Fall through to telemetry-formatted logs.
+        }
+      }
+      const records = listRuntimeTelemetryRecords({
+        databasePath: initialization.databasePath,
+        limit: 200,
+      });
+      return { logs: formatRuntimeTelemetryLogs(records) };
+    },
+    async proxyVendorLogStream(
+      pathname: string,
+      search: string,
+    ): Promise<{ readonly body: string; readonly contentType: string } | null> {
+      const status = currentLlamaSwapVendor?.readStatus();
+      const baseUrl = status?.baseUrl;
       if (!baseUrl) {
-        return { logs: "" };
+        return null;
       }
       try {
-        const response = await fetch(`${baseUrl}/logs`);
+        const response = await fetch(`${baseUrl}${pathname}${search}`);
         if (!response.ok) {
-          return { logs: "" };
+          return null;
         }
-        const text = await response.text();
-        return { logs: text };
+        return {
+          body: await response.text(),
+          contentType: response.headers.get("content-type") ?? "text/plain; charset=utf-8",
+        };
       } catch {
-        return { logs: "" };
+        return null;
       }
     },
     async readModelOverrides(): Promise<Record<string, BridgeModelOverrideRecord>> {

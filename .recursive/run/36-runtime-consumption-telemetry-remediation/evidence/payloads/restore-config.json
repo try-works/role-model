@@ -1,0 +1,1 @@
+{"routing":{"strategy":"difficulty"},"model_aliases":{"mixed.local-remote":{"model_ids":["lfm2.5-1.2b-instruct","moonshot/kimi-k2.6"],"mode":"difficulty"}}}

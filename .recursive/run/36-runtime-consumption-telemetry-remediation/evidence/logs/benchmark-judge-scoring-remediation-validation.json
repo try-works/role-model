@@ -1,0 +1,33 @@
+{
+  "addendum": "06",
+  "runId": "36-runtime-consumption-telemetry-remediation",
+  "validatedAt": "2026-06-09T17:31:30Z",
+  "tddMode": {
+    "SP12-A": "pragmatic",
+    "SP12-B": "strict",
+    "SP12-C": "strict",
+    "SP12-D": "pragmatic",
+    "SP12-E": "strict"
+  },
+  "commands": [
+    {
+      "cwd": "role-model-router",
+      "command": "npx vitest run packages/bench-judge/src/index.test.ts packages/bench-routing/src/index.test.ts packages/bench-routing/src/judge-brief.test.ts packages/bench-routing/src/diff-validator.test.ts packages/bench-routing/src/reasoning-extraction.test.ts packages/bench-routing/src/answer-format.test.ts",
+      "result": "6 files, 20/20 pass"
+    },
+    {
+      "cwd": "role-model-router",
+      "command": "npx vitest run apps/runtime-host-bridge/test/benchmark-artifacts.test.ts apps/runtime-host-bridge/test/benchmark-summary.test.ts apps/runtime-host-bridge/test/benchmark-runner-judge.test.ts apps/runtime-ui/app/lib/format-score.test.ts",
+      "result": "4 files, 12/12 pass"
+    }
+  ],
+  "suiteVersion": "3.2",
+  "requirements": {
+    "J1": "format-score.test.ts — 52.5% vs 52.8% distinct",
+    "J2": "diff-validator.test.ts + score cap < 0.5 for p17 LFM fixture",
+    "J3": "reasoning-extraction.test.ts — h02/h07 fixtures",
+    "J4": "index.test.ts — judge overlap allowed",
+    "J5": "benchmark-summary.test.ts caseComparisons + control-benchmark compare panel",
+    "J7-J11": "judge-brief.test.ts, index.test.ts briefing sections, benchmark-artifacts gradingBrief"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "name": "@role-model-router/bench-routing",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./data/routing-capability-suite.json": "./data/routing-capability-suite.json"
+  },
+  "files": ["src", "data", "dist"],
+  "dependencies": {
+    "@role-model-router/bench-judge": "workspace:*"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  }
+}

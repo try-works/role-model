@@ -1891,6 +1891,189 @@ export function readObservedThroughputPenaltyState(
   return mapObservedThroughputPenaltyStateRow(row);
 }
 
+export interface PersistObservedBenchmarkSampleInput {
+  readonly databasePath: string;
+  readonly sample: ObservedPerformanceSample;
+}
+
+export interface ClearObservedBenchmarkDataForEndpointInput {
+  readonly databasePath: string;
+  readonly endpointId: string;
+  readonly nowMs?: number;
+}
+
+export interface ClearObservedBenchmarkDataForEndpointResult {
+  readonly endpointId: string;
+  readonly clearedSampleCount: number;
+}
+
+export function clearObservedBenchmarkDataForEndpoint(
+  input: ClearObservedBenchmarkDataForEndpointInput,
+): ClearObservedBenchmarkDataForEndpointResult {
+  const database = new DatabaseSync(input.databasePath);
+  const nowMs = input.nowMs ?? Date.now();
+
+  const countRow = database
+    .prepare(
+      "SELECT COUNT(*) AS count FROM observed_performance_samples WHERE endpoint_id = ? AND source_type = 'benchmark'",
+    )
+    .get(input.endpointId) as { count: number };
+  const clearedSampleCount = countRow.count;
+
+  database
+    .prepare(
+      "DELETE FROM observed_performance_samples WHERE endpoint_id = ? AND source_type = 'benchmark'",
+    )
+    .run(input.endpointId);
+  database
+    .prepare(
+      "DELETE FROM observed_performance_samples_by_difficulty WHERE endpoint_id = ? AND source_type = 'benchmark'",
+    )
+    .run(input.endpointId);
+
+  const remainingRows = database
+    .prepare(
+      "SELECT sample_json FROM observed_performance_samples WHERE endpoint_id = ? ORDER BY timestamp_ms ASC, sample_id ASC",
+    )
+    .all(input.endpointId) as Array<{ sample_json: string }>;
+
+  if (remainingRows.length === 0) {
+    database
+      .prepare("DELETE FROM observed_profile_snapshots WHERE endpoint_id = ?")
+      .run(input.endpointId);
+  } else {
+    const samples = remainingRows.map(
+      (row) => JSON.parse(row.sample_json) as ObservedPerformanceSample,
+    );
+    const profile = aggregateObservedPerformanceSamples(samples, { nowMs });
+    database
+      .prepare(
+        "INSERT OR REPLACE INTO observed_profile_snapshots (snapshot_id, endpoint_id, measured_at_ms, profile_json) VALUES (?, ?, ?, ?)",
+      )
+      .run(
+        `${input.endpointId}:${profile.measured_at_ms}`,
+        input.endpointId,
+        profile.measured_at_ms,
+        JSON.stringify(profile),
+      );
+  }
+
+  for (const difficultyBucket of DIFFICULTY_BUCKETS) {
+    const bucketRows = database
+      .prepare(
+        "SELECT sample_json FROM observed_performance_samples_by_difficulty WHERE endpoint_id = ? AND difficulty_bucket = ? ORDER BY timestamp_ms ASC, sample_id ASC",
+      )
+      .all(input.endpointId, difficultyBucket) as Array<{ sample_json: string }>;
+
+    if (bucketRows.length === 0) {
+      database
+        .prepare(
+          "DELETE FROM observed_profile_snapshots_by_difficulty WHERE endpoint_id = ? AND difficulty_bucket = ?",
+        )
+        .run(input.endpointId, difficultyBucket);
+    } else {
+      const bucketSamples = bucketRows.map(
+        (row) => JSON.parse(row.sample_json) as ObservedPerformanceSample,
+      );
+      const bucketProfile = aggregateObservedPerformanceSamples(bucketSamples, { nowMs });
+      database
+        .prepare(
+          "INSERT OR REPLACE INTO observed_profile_snapshots_by_difficulty (snapshot_id, endpoint_id, difficulty_bucket, measured_at_ms, profile_json) VALUES (?, ?, ?, ?, ?)",
+        )
+        .run(
+          `${input.endpointId}:${difficultyBucket}:${bucketProfile.measured_at_ms}`,
+          input.endpointId,
+          difficultyBucket,
+          bucketProfile.measured_at_ms,
+          JSON.stringify(bucketProfile),
+        );
+    }
+  }
+
+  database.close();
+  return { endpointId: input.endpointId, clearedSampleCount };
+}
+
+export function persistObservedBenchmarkSample(input: PersistObservedBenchmarkSampleInput): void {
+  const database = new DatabaseSync(input.databasePath);
+  const sample = {
+    ...input.sample,
+    source_type: "benchmark" as const,
+  };
+  database
+    .prepare(
+      "INSERT OR REPLACE INTO observed_performance_samples (sample_id, endpoint_id, request_id, routing_decision_id, source_type, timestamp_ms, sample_json) VALUES (?, ?, ?, ?, ?, ?, ?)",
+    )
+    .run(
+      sampleIdFor(sample),
+      sample.endpoint_id,
+      sample.request_id ?? null,
+      sample.routing_decision_id ?? null,
+      sample.source_type,
+      sample.timestamp_ms,
+      JSON.stringify(sample),
+    );
+  if (sample.difficulty_bucket) {
+    const difficultyBucket = sample.difficulty_bucket;
+    database
+      .prepare(
+        "INSERT OR REPLACE INTO observed_performance_samples_by_difficulty (sample_id, endpoint_id, difficulty_bucket, request_id, routing_decision_id, source_type, timestamp_ms, sample_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      )
+      .run(
+        segmentedSampleIdFor(sample),
+        sample.endpoint_id,
+        difficultyBucket,
+        sample.request_id ?? null,
+        sample.routing_decision_id ?? null,
+        sample.source_type,
+        sample.timestamp_ms,
+        JSON.stringify(sample),
+      );
+    const priorBucketRows = database
+      .prepare(
+        "SELECT sample_json FROM observed_performance_samples_by_difficulty WHERE endpoint_id = ? AND difficulty_bucket = ? ORDER BY timestamp_ms ASC, sample_id ASC",
+      )
+      .all(sample.endpoint_id, difficultyBucket) as Array<{ sample_json: string }>;
+    const bucketSamples = priorBucketRows.map(
+      (row) => JSON.parse(row.sample_json) as ObservedPerformanceSample,
+    );
+    const bucketProfile = aggregateObservedPerformanceSamples(bucketSamples, {
+      nowMs: sample.timestamp_ms,
+    });
+    database
+      .prepare(
+        "INSERT OR REPLACE INTO observed_profile_snapshots_by_difficulty (snapshot_id, endpoint_id, difficulty_bucket, measured_at_ms, profile_json) VALUES (?, ?, ?, ?, ?)",
+      )
+      .run(
+        `${sample.endpoint_id}:${difficultyBucket}:${bucketProfile.measured_at_ms}`,
+        sample.endpoint_id,
+        difficultyBucket,
+        bucketProfile.measured_at_ms,
+        JSON.stringify(bucketProfile),
+      );
+  }
+  const priorRows = database
+    .prepare(
+      "SELECT sample_json FROM observed_performance_samples WHERE endpoint_id = ? ORDER BY timestamp_ms ASC, sample_id ASC",
+    )
+    .all(sample.endpoint_id) as Array<{ sample_json: string }>;
+  const allSamples = priorRows.map((row) => JSON.parse(row.sample_json) as ObservedPerformanceSample);
+  const profile = aggregateObservedPerformanceSamples(allSamples, {
+    nowMs: sample.timestamp_ms,
+  });
+  database
+    .prepare(
+      "INSERT OR REPLACE INTO observed_profile_snapshots (snapshot_id, endpoint_id, measured_at_ms, profile_json) VALUES (?, ?, ?, ?)",
+    )
+    .run(
+      `${sample.endpoint_id}:${profile.measured_at_ms}`,
+      sample.endpoint_id,
+      profile.measured_at_ms,
+      JSON.stringify(profile),
+    );
+  database.close();
+}
+
 export function persistRuntimeObservationBundle(input: PersistRuntimeObservationBundleInput): void {
   const database = new DatabaseSync(input.databasePath);
   const observation = input.observation;
@@ -2010,6 +2193,64 @@ export function persistRuntimeObservationBundle(input: PersistRuntimeObservation
       telemetryRecord.actualCostUsd,
       telemetryRecord.estimatedCostUsd,
       telemetryRecord.currency,
+    );
+  database.close();
+}
+
+export interface PersistRuntimeTelemetryFailureInput {
+  readonly databasePath: string;
+  readonly requestId: string;
+  readonly routingDecisionId?: string;
+  readonly endpointId?: string;
+  readonly modelId?: string;
+  readonly statusCode: number;
+  readonly errorClass: string;
+}
+
+export function persistRuntimeTelemetryFailure(input: PersistRuntimeTelemetryFailureInput): void {
+  const database = new DatabaseSync(input.databasePath);
+  const createdAtMs = Date.now();
+  const routingDecisionId = input.routingDecisionId ?? `decision-${input.requestId}`;
+  const endpointId = input.endpointId ?? "unknown.endpoint";
+  database
+    .prepare(
+      "INSERT OR REPLACE INTO runtime_telemetry_records (request_id, routing_decision_id, endpoint_id, conversation_id, created_at_ms, model_id, provider_kind, provider_family, input_tokens, output_tokens, total_tokens, latency_ms, error_class, status_code, finish_reason, prompt_cache_requested, prompt_cache_supported, prompt_cache_used, cache_read_tokens, cache_read_tokens_supported, cache_write_tokens, cache_write_tokens_supported, stream_text_delta_count, stream_text_supported, stream_tool_call_delta_count, stream_tool_call_supported, stream_tool_argument_delta_count, stream_tool_argument_supported, tool_call_count, tool_execution_count, cost_provenance, actual_cost_usd, estimated_cost_usd, currency) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+    )
+    .run(
+      input.requestId,
+      routingDecisionId,
+      endpointId,
+      "conversation-main",
+      createdAtMs,
+      input.modelId ?? null,
+      null,
+      null,
+      0,
+      0,
+      0,
+      null,
+      input.errorClass,
+      input.statusCode,
+      null,
+      0,
+      1,
+      0,
+      0,
+      1,
+      0,
+      1,
+      0,
+      1,
+      0,
+      1,
+      0,
+      1,
+      0,
+      0,
+      "unavailable",
+      null,
+      null,
+      null,
     );
   database.close();
 }
