@@ -115,8 +115,9 @@ export default function IntegrationsDownstreamRoute() {
           <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
             <p className="font-medium text-[var(--rm-fg)]">Tool calling</p>
             <p className="mt-2">
-              `tool_calls` compatibility follows the selected routed model and remains inspectable
-              in request detail rather than hidden behind a separate compatibility matrix.
+              Multi-turn tool history with `tool_calls` and tool results must use
+              `POST /v1/chat/completions`. `tool_calls` compatibility follows the selected routed
+              model and remains inspectable in request detail.
             </p>
           </div>
           <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>

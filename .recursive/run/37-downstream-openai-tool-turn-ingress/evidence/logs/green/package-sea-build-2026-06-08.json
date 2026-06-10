@@ -1,0 +1,15 @@
+{
+  "builtAt": "2026-06-08",
+  "outputPath": "D:\\DEV\\role-model\\role-model-router\\dist\\release\\win32-x64\\role-model-runtime.exe",
+  "launcher": "D:\\DEV\\role-model\\role-model-router\\dist\\release\\win32-x64\\Role-Model.bat",
+  "sha256": "adf54a80e6623c95ebc76102126516297f9e819f38d75100afbef314d01854ae",
+  "configParitySteps": [
+    "POST /api/role-model/local/models/lfm2.5-8b-a1b/load",
+    "POST /api/role-model/endpoints moonshot.personal.kimi-code + moonshot/kimi-k2.6"
+  ],
+  "probeSummary": {
+    "totalCases": 33,
+    "bridgeCrash": 0,
+    "pass": 20
+  }
+}

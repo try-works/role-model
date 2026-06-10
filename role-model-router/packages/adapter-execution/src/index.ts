@@ -14,9 +14,27 @@ import type { ProviderAccountRecord } from "@role-model-router/provider-account"
 import type { TraceEventRecord, TraceSpanRecord } from "@role-model-router/trace";
 import type { UsageEventRecord } from "@role-model-router/usage";
 
+export type RuntimeExecutionMessageContent =
+  | string
+  | null
+  | readonly {
+      readonly type?: string;
+      readonly text?: string;
+    }[];
+
 export interface RuntimeExecutionMessage {
   readonly role: string;
-  readonly content: string;
+  readonly content: RuntimeExecutionMessageContent;
+  readonly tool_calls?: readonly {
+    readonly id: string;
+    readonly type: string;
+    readonly function: {
+      readonly name: string;
+      readonly arguments: string;
+    };
+  }[];
+  readonly tool_call_id?: string;
+  readonly name?: string;
 }
 
 export interface RuntimeExecutionToolDefinition {

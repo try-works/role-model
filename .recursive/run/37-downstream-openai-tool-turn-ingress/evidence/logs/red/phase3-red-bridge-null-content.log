@@ -1,0 +1,213 @@
+
+> @role-model-router/runtime-host-bridge@0.0.0 test D:\DEV\role-model\role-model-router\apps\runtime-host-bridge
+> vitest run test/index.test.ts test/backend-unified-runtime-config.test.ts test/executable.test.ts test/runtime-assets.test.ts test/unified-runtime-config.test.ts test/validate-operations.test.ts test/validate-tools.test.ts test/validate-ui.test.ts test/validate-vendors.test.ts test/local-policy.test.ts test/benchmark-artifacts.test.ts test/benchmark-start-guards.test.ts test/benchmark-validation-metrics.test.ts test/benchmark-runner-judge.test.ts test/benchmark-runner-compare.test.ts test/benchmark-judge-runtime.test.ts test/benchmark-progress.test.ts test/benchmark-summary.test.ts src/benchmark-reasoning.test.ts "--" "test/index.test.ts" "-t" "null assistant content"
+
+
+ RUN  v3.2.4 D:/DEV/role-model/role-model-router/apps/runtime-host-bridge
+
+(node:27612) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:23856) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:28160) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:12252) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:28396) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:28464) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ Γ£ô test/benchmark-artifacts.test.ts (4 tests) 61ms
+ Γ£ô test/benchmark-summary.test.ts (3 tests) 52ms
+(node:28280) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ Γ£ô src/benchmark-reasoning.test.ts (6 tests) 13ms
+ Γ£ô test/unified-runtime-config.test.ts (16 tests) 115ms
+ Γ£ô test/runtime-assets.test.ts (4 tests) 51ms
+(node:28448) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:28288) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ Γ£ô test/benchmark-start-guards.test.ts (7 tests) 14ms
+ Γ£ô test/benchmark-runner-judge.test.ts (7 tests) 502ms
+ Γ£ô test/benchmark-judge-runtime.test.ts (3 tests) 13ms
+ Γ£ô test/benchmark-progress.test.ts (2 tests) 9ms
+ Γ£ô test/benchmark-validation-metrics.test.ts (2 tests) 11ms
+ Γ£ô test/validate-tools.test.ts (1 test) 709ms
+   Γ£ô runRuntimeToolsValidation > executes runtime-owned MCP tool calls and persists their observation receipts  704ms
+ Γ£ô test/validate-operations.test.ts (1 test) 1462ms
+   Γ£ô runRuntimeOperationsValidation > validates isolated scopes and runtime-state maintenance drills  1458ms
+ Γ¥» test/validate-ui.test.ts (1 test | 1 failed) 1928ms
+   ├ù runRuntimeUiValidation > validates runtime config reads and the main control-plane mutations 1925ms
+     ΓåÆ expected false to be true // Object.is equality
+ Γ¥» test/benchmark-runner-compare.test.ts (1 test | 1 failed) 5023ms
+   ├ù benchmark-runner compare remediation > writes fallback compare artifact when judge compare parse fails 5020ms
+     ΓåÆ Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ Γ£ô test/local-policy.test.ts (13 tests) 5287ms
+   Γ£ô local policy persistence > readLocalPolicy returns defaults when file does not exist  699ms
+   Γ£ô local policy persistence > updateLocalPolicy writes merged policy to file  461ms
+   Γ£ô local policy persistence > readLocalPolicy reads persisted file  411ms
+   Γ£ô local policy persistence > updateLocalPolicy merges with existing policy  436ms
+   Γ£ô local swap history > listSwapHistory returns empty array when no events  313ms
+   Γ£ô local swap history > listSwapHistory returns events in descending order  370ms
+   Γ£ô model overrides > readModelOverrides returns empty object when file does not exist  359ms
+   Γ£ô model overrides > updateModelOverrides writes to file  336ms
+   Γ£ô model overrides > readModelOverrides reads persisted file  369ms
+   Γ£ô peer configuration > readPeers returns empty array when file does not exist  352ms
+   Γ£ô peer configuration > updatePeers writes to file  417ms
+   Γ£ô peer configuration > readPeers reads persisted file  382ms
+   Γ£ô peer configuration > checkPeerHealth returns false for unreachable url  379ms
+ Γ£ô test/backend-unified-runtime-config.test.ts (9 tests) 5413ms
+   Γ£ô runtime-host-bridge unified runtime backend > surfaces the derived execution mode in the runtime summary when a unified config file is provided  694ms
+   Γ£ô runtime-host-bridge unified runtime backend > reads and updates unified runtime config through the backend  537ms
+   Γ£ô runtime-host-bridge unified runtime backend > merges partial runtime config updates without dropping existing routing strategy  433ms
+   Γ£ô runtime-host-bridge unified runtime backend > creates and updates unified runtime config when the configured path does not exist yet  448ms
+   Γ£ô runtime-host-bridge unified runtime backend > does not mark all candidates ignored when routing guidance has no preferred endpoints  504ms
+   Γ£ô runtime-host-bridge unified runtime backend > preserves synthesized activated endpoint models across runtime config updates  547ms
+   Γ£ô runtime-host-bridge unified runtime backend > returns no controller assignment when the unified config has no endpoints yet  317ms
+   Γ£ô runtime-host-bridge unified runtime backend > surfaces normalized provider docs and npm metadata through listProviders  689ms
+   Γ£ô runtime-host-bridge unified runtime backend > surfaces LiteLLM-backed Moonshot models and endpoints from unified runtime config  1242ms
+ Γ£ô test/validate-vendors.test.ts (2 tests) 7975ms
+   Γ£ô runRuntimeVendorValidation > executes decision-only, local-only, remote-only, and hybrid vendor modes end to end  7956ms
+ Γ¥» test/index.test.ts (72 tests | 1 failed) 24607ms
+   Γ£ô runtime-host-bridge > creates a stable model-list response grouped by model id 69ms
+   Γ£ô runtime-host-bridge > creates alias entries in the model-list response alongside real models 1ms
+   Γ£ô runtime-host-bridge > builds QA bootstrap options with router surfaces and complete fixtures 10ms
+   Γ£ô runtime-host-bridge > bootstraps QA control-plane state for mixed local+remote routing proof 2ms
+   Γ£ô runtime-host-bridge > builds packaged CLI options with static UI, router surfaces, and fixture-root defaults 3ms
+   Γ£ô runtime-host-bridge > suppresses placeholder provider accounts when using the packaged CLI defaults  556ms
+   Γ£ô runtime-host-bridge > removes legacy placeholder provider accounts from persisted runtime state when using packaged defaults  836ms
+   Γ£ô runtime-host-bridge > maps a chat-completions request into role-model routing and execution inputs 4ms
+   ├ù runtime-host-bridge > maps chat-completions tool-turn history with null assistant content without crashing 53ms
+     ΓåÆ Cannot read properties of null (reading 'length')
+   Γ£ô runtime-host-bridge > maps an alias chat-completions request into a pooled endpoint allow-list and alias diagnostics 1ms
+   Γ£ô runtime-host-bridge > keeps exact-model routing unchanged when aliases are configured 1ms
+   Γ£ô runtime-host-bridge > narrows exact-model chat routing to an explicitly requested endpoint 0ms
+   Γ£ô runtime-host-bridge > maps validated controller guidance into an intelligent alias routing plan 3ms
+   Γ£ô runtime-host-bridge > uses a baseline override to bypass intelligent alias controller routing 1ms
+   Γ£ô runtime-host-bridge > applies a directly requested role to chat routing and execution policy 2ms
+   Γ£ô runtime-host-bridge > records explicit hybrid arbitration when controller guidance alters the difficulty plan 3ms
+   Γ£ô runtime-host-bridge > maps a difficulty-mode alias chat request into a gated allow-list and difficulty diagnostics 2ms
+   Γ£ô runtime-host-bridge > uses a baseline override to bypass difficulty alias gating 1ms
+   Γ£ô runtime-host-bridge > uses the persisted Strategy B mode as the default routing mode when no alias mode or request override is set 1ms
+   Γ£ô runtime-host-bridge > maps an alias responses request into a pooled endpoint allow-list and alias diagnostics 1ms
+   Γ£ô runtime-host-bridge > maps a difficulty-mode responses request into an easy strategy and keeps eligible endpoints 1ms
+   Γ£ô runtime-host-bridge > applies requested role execution policy to responses requests 1ms
+   Γ£ô runtime-host-bridge > prefers a configured alias in downstream OpenAI provider config 1ms
+   Γ£ô runtime-host-bridge > serves health and model-list endpoints 104ms
+   Γ£ô runtime-host-bridge > serves alias entries in model-list and downstream provider config from runtime config 34ms
+   Γ£ô runtime-host-bridge > serves preserved host observability and vendor-facing utility endpoints 34ms
+   Γ£ô runtime-host-bridge > returns JSON for /logs/stream before static root catch-all 17ms
+   Γ£ô runtime-host-bridge > accepts x-role-model-request-id as the bridge request id alias 18ms
+   Γ£ô runtime-host-bridge > serves runtime control-plane summary, provider, account, and endpoint routes 79ms
+   Γ£ô runtime-host-bridge > serves canonical telemetry summary, comparison, and recent request routes 16ms
+   Γ£ô runtime-host-bridge > serves downstream OpenAI-compatible provider metadata for consumer apps 23ms
+   Γ£ô runtime-host-bridge > serves chat-completions responses with role-model execution metadata 9ms
+   Γ£ô runtime-host-bridge > serves OpenAI-compatible SSE events for streaming responses requests 74ms
+   Γ£ô runtime-host-bridge > surfaces tool calls on chat-completions responses when the backend returns them 8ms
+   Γ£ô runtime-host-bridge > streams provider deltas through the bridge as they arrive 71ms
+   Γ£ô runtime-host-bridge > forwards x-role-model-routing-mode to chat-completions execution 7ms
+   Γ£ô runtime-host-bridge > rejects an invalid x-role-model-routing-mode header 9ms
+   Γ£ô runtime-host-bridge > creates a runtime backend that executes chat-completions through the real routing and adapter path  354ms
+   Γ£ô runtime-host-bridge > creates a runtime backend that persists structured request and endpoint inspection state  494ms
+   Γ£ô runtime-host-bridge > persists routing-mode override and rewrite-skipped diagnostics for exact-model runtime-backed chat requests  389ms
+   Γ£ô runtime-host-bridge > persists applied role policy diagnostics and injected system instructions for runtime-backed chat requests  483ms
+   Γ£ô runtime-host-bridge > does not seed placeholder Anthropic/OpenAI accounts, endpoints, models, or router guidance in the default runtime bootstrap  353ms
+   Γ£ô runtime-host-bridge > persists alias-resolution diagnostics for runtime-backed chat requests  677ms
+   Γ£ô runtime-host-bridge > persists difficulty-routing diagnostics for runtime-backed chat requests  691ms
+   Γ£ô runtime-host-bridge > allows an observed max-difficulty override when bucketed performance supports a harder request  985ms
+   Γ£ô runtime-host-bridge > routes hard requests using bucketed observed profiles and records the selected difficulty bucket  790ms
+   Γ£ô runtime-host-bridge > uses the configured remote classifier result for difficulty-mode runtime-backed chat requests  1002ms
+   Γ£ô runtime-host-bridge > uses the configured remote controller result for intelligent runtime-backed chat requests  827ms
+   Γ£ô runtime-host-bridge > persists alias-default hybrid arbitration and rewrite-applied diagnostics for runtime-backed chat requests  1012ms
+   Γ£ô runtime-host-bridge > falls back deterministically when the configured classifier times out  1116ms
+   Γ£ô runtime-host-bridge > reuses cached difficulty classification for repeated requests in the same conversation when invalidation thresholds are not exceeded  1109ms
+   Γ£ô runtime-host-bridge > reports cache invalidation reasons before reclassifying a repeated request  983ms
+   Γ£ô runtime-host-bridge > creates a runtime backend that exposes provider presets, runtime summary, and account upserts  1246ms
+   Γ£ô runtime-host-bridge > persists runtime-managed role policy and task allowlists across backend restart  500ms
+   Γ£ô runtime-host-bridge > executes env-backed api-key accounts through the live provider path when the env credential resolves  344ms
+   Γ£ô runtime-host-bridge > registers configured local OpenAI-compatible peers as execution-ready model endpoints  417ms
+   Γ£ô runtime-host-bridge > exposes llama-swap ownership and config metadata on local model and endpoint readback  649ms
+   Γ£ô runtime-host-bridge > rejects local model activation when no configured local endpoint exposes the requested model  437ms
+   Γ£ô runtime-host-bridge > rehydrates connected OAuth accounts from stored token files on backend restart  539ms
+   Γ£ô runtime-host-bridge > restores pending OAuth device-authorizations from SQLite after backend restart  500ms
+   Γ£ô runtime-host-bridge > executes chat-completions through an activated Kimi Code endpoint  325ms
+   Γ£ô runtime-host-bridge > creates a runtime backend that executes responses through the real routing and adapter path 222ms
+   Γ£ô runtime-host-bridge > persists applied role policy diagnostics and injected policy messages for runtime-backed responses requests  351ms
+   Γ£ô runtime-host-bridge > serves structured request and endpoint inspection routes through the bridge server 283ms
+   Γ£ô runtime-host-bridge > reads bucketed endpoint profiles with an advisory max-difficulty recommendation 267ms
+   Γ£ô runtime-host-bridge > streams canonical telemetry updates over SSE after new requests are persisted  4317ms
+   Γ£ô runtime-host-bridge > executes chat-completions through a LiteLLM-derived moonshot-oauth endpoint with X-Msh headers  587ms
+   Γ£ô runtime-host-bridge > executes chat-completions through an api-key-static provider via environment credential 284ms
+   Γ£ô runtime-host-bridge > resolves bridge server options from explicit values and defaults 2ms
+   Γ£ô runtime-host-bridge > keeps repoRoot-derived static paths stable when runtimeStateRoot uses a different path dialect 1ms
+   Γ£ô runtime-host-bridge > resolves packaged bridge server options from executable path defaults 2ms
+   Γ£ô runtime-host-bridge > resolves packaged bridge server options from POSIX executable path defaults 1ms
+Wrote single executable preparation blob to ./dist/sea-prep.blob
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Suites 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/executable.test.ts [ test/executable.test.ts ]
+Error: EPERM: operation not permitted, unlink 'D:\DEV\role-model\role-model-router\dist\release\win32-x64\role-model-runtime.exe'
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/4]ΓÄ»
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 3 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/benchmark-runner-compare.test.ts > benchmark-runner compare remediation > writes fallback compare artifact when judge compare parse fails
+Error: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ Γ¥» test/benchmark-runner-compare.test.ts:63:3
+     61|   });
+     62| 
+     63|   test("writes fallback compare artifact when judge compare parse failΓÇª
+       |   ^
+     64|     artifactRoot = await mkdtemp(path.join(os.tmpdir(), "bench-compareΓÇª
+     65|     const databasePath = path.join(artifactRoot, "state", "memory.db");
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[2/4]ΓÄ»
+
+ FAIL  test/index.test.ts > runtime-host-bridge > maps chat-completions tool-turn history with null assistant content without crashing
+TypeError: Cannot read properties of null (reading 'length')
+ Γ¥» src/index.ts:2893:78
+    2891| }
+    2892| 
+    2893| function getModelRoleIds(account: ProviderAccountRecord, modelId: striΓÇª
+       |                                                                              ^
+    2894|   return (
+    2895|     account.modelRoleBindings
+ Γ¥» estimateContextTokens src/index.ts:2893:31
+ Γ¥» Module.mapChatCompletionsRequest src/index.ts:3459:25
+ Γ¥» test/index.test.ts:859:7
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[3/4]ΓÄ»
+
+ FAIL  test/validate-ui.test.ts > runRuntimeUiValidation > validates runtime config reads and the main control-plane mutations
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ Γ¥» test/validate-ui.test.ts:69:53
+     67|     expect(result.routedRequestRewriteReason).toBe("requested-model-maΓÇª
+     68|     expect(result.mixedAliasId).toBe("mixed.local-remote");
+     69|     expect(result.mixedAliasModelListIncludesAlias).toBe(true);
+       |                                                     ^
+     70|     expect(result.mixedAliasRequestId).toBe("req-runtime-ui-mixed-aliaΓÇª
+     71|     expect(result.mixedAliasAllowEndpoints).toEqual(
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[4/4]ΓÄ»
+
+
+ Test Files  4 failed | 15 passed (19)
+      Tests  3 failed | 151 passed (154)
+   Start at  17:13:18
+   Duration  40.43s (transform 6.21s, setup 0ms, collect 21.11s, tests 53.24s, environment 11ms, prepare 8.64s)
+
+D:\DEV\role-model\role-model-router\apps\runtime-host-bridge:
+ΓÇëERR_PNPM_RECURSIVE_RUN_FIRST_FAILΓÇë @role-model-router/runtime-host-bridge@0.0.0 test: `vitest run test/index.test.ts test/backend-unified-runtime-config.test.ts test/executable.test.ts test/runtime-assets.test.ts test/unified-runtime-config.test.ts test/validate-operations.test.ts test/validate-tools.test.ts test/validate-ui.test.ts test/validate-vendors.test.ts test/local-policy.test.ts test/benchmark-artifacts.test.ts test/benchmark-start-guards.test.ts test/benchmark-validation-metrics.test.ts test/benchmark-runner-judge.test.ts test/benchmark-runner-compare.test.ts test/benchmark-judge-runtime.test.ts test/benchmark-progress.test.ts test/benchmark-summary.test.ts src/benchmark-reasoning.test.ts "--" "test/index.test.ts" "-t" "null assistant content"`
+Exit status 1

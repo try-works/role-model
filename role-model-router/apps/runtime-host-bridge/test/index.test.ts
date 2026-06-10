@@ -834,6 +834,99 @@ describe("runtime-host-bridge", () => {
     });
   });
 
+  test("maps chat-completions tool-turn history with null assistant content without crashing", () => {
+    const result = (
+      bridge as {
+        mapChatCompletionsRequest: (
+          value: EndpointRegistryResult,
+          body: Record<string, unknown>,
+          requestId: string,
+        ) => {
+          routingRequest: {
+            contextTokens: number;
+            needsTools: boolean;
+          };
+          executionRequest: {
+            messages: readonly {
+              role: string;
+              content?: string | null;
+              tool_calls?: readonly unknown[];
+              tool_call_id?: string;
+            }[];
+          };
+        };
+      }
+    ).mapChatCompletionsRequest(
+      registry,
+      {
+        model: "moonshot/kimi-k2.5",
+        messages: [
+          { role: "user", content: "Can you check the stock price of cloudflare" },
+          {
+            role: "assistant",
+            content: null,
+            tool_calls: [
+              {
+                id: "call_1",
+                type: "function",
+                function: {
+                  name: "web_search",
+                  arguments: '{"query":"Cloudflare NET stock price"}',
+                },
+              },
+            ],
+          },
+          {
+            role: "tool",
+            tool_call_id: "call_1",
+            content: "NET: $185.42",
+          },
+        ],
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "web_search",
+              description: "Search the web.",
+              parameters: {
+                type: "object",
+                properties: {
+                  query: { type: "string" },
+                },
+              },
+            },
+          },
+        ],
+      },
+      "req-null-content-tool-turn",
+    );
+
+    expect(result.routingRequest.contextTokens).toBeGreaterThan(0);
+    expect(result.routingRequest.needsTools).toBe(true);
+    expect(result.executionRequest.messages).toEqual([
+      { role: "user", content: "Can you check the stock price of cloudflare" },
+      {
+        role: "assistant",
+        content: null,
+        tool_calls: [
+          {
+            id: "call_1",
+            type: "function",
+            function: {
+              name: "web_search",
+              arguments: '{"query":"Cloudflare NET stock price"}',
+            },
+          },
+        ],
+      },
+      {
+        role: "tool",
+        tool_call_id: "call_1",
+        content: "NET: $185.42",
+      },
+    ]);
+  });
+
   test("maps an alias chat-completions request into a pooled endpoint allow-list and alias diagnostics", () => {
     const result = (
       bridge as {

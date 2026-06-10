@@ -1,0 +1,49 @@
+# Downstream OpenAI ingress probe — RED baseline
+# Date: 2026-06-08
+# Target: http://127.0.0.1:3456
+# Model alias: mixed.local-remote
+# Auth: Bearer role-model-local
+# Script: role-model-router/scripts/probe-downstream-ingress.py
+
+ID	HTTP	VERDICT	SNIPPET
+A1	200	PASS	chat completion hello
+A2	200	PASS	first-turn tools returned tool_calls
+A3	200	PASS	streaming chat SSE
+A4	200	PASS	streaming + tools SSE
+A5	200	PASS	direct moonshot/kimi-k2.6
+B1	400	BRIDGE_CRASH	{"error":"Cannot read properties of null (reading 'length')"}
+B2	400	BRIDGE_CRASH	{"error":"Cannot read properties of undefined (reading 'length')"}
+B3	400	ERROR_400	{"error":"tool_call_id is not found"}
+B4	400	BRIDGE_CRASH	{"error":"Cannot read properties of null (reading 'length')"}
+B5	400	BRIDGE_CRASH	{"error":"Cannot read properties of null (reading 'length')"}
+B6	400	BRIDGE_CRASH	{"error":"Cannot read properties of null (reading 'length')"}
+B7	400	BRIDGE_CRASH	{"error":"Cannot read properties of null (reading 'length')"}
+B8	200	PASS	first-turn tools only
+C1	200	PASS	array text content
+C2	400	ERROR_400	{"error":"Invalid request: unsupported image url: https://example.com/x.png"}
+C3	400	ERROR_400	{"error":"tool_call_id is not found"}
+C4	400	ERROR_400	{"error":"the message at position 0 with role 'user' must not be empty"}
+D1	400	BRIDGE_CRASH	{"error":"Cannot read properties of null (reading 'length')"}
+D2	400	ERROR_400	{"error":"Invalid request: tokenization failed"}
+D3	200	PASS	assistant prefix history
+D4	400	BRIDGE_CRASH	{"error":"Cannot read properties of null (reading 'length')"}
+E1	200	PASS	responses string input
+E2	200	PASS	responses message array
+E3	500	ERROR_500	{"error":"responses input messages must include string role and content fields"}
+E4	500	ERROR_500	{"error":"responses input messages must include string role and content fields"}
+E5	500	ERROR_500	{"error":"responses input messages must include string role and content fields"}
+F1	400	BRIDGE_VALIDATION	missing model
+F2	400	BRIDGE_VALIDATION	missing messages
+F3	400	ERROR_400	{"error":"messages must not be empty"}
+F4	400	BRIDGE_VALIDATION	malformed tool def
+F5	200	PASS	max_tokens + temperature
+F6	400	ROUTING_ERROR	unknown model
+G3	400	BRIDGE_CRASH	{"error":"Cannot read properties of null (reading 'length')"}
+
+# G1 sequence: A2 (first turn PASS) + B1 (follow-up BRIDGE_CRASH) — matches Pi web-search flow
+
+# Summary: 33 cases, 9 BRIDGE_CRASH, 11 PASS
+# BRIDGE_CRASH IDs: B1, B2, B4, B5, B6, B7, D1, D4, G3
+
+# Telemetry signature for bridge crashes:
+# statusCode=400, errorClass=execution_failed, inputTokens=0, endpointId=unknown.endpoint

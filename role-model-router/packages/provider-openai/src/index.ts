@@ -43,13 +43,35 @@ function getOpenAICapabilities(hasStructuredOutput: boolean): ProviderCapability
   };
 }
 
+function toOpenAIProviderMessageContent(
+  content: ProviderAdapterExecutionContext["executionRequest"]["messages"][number]["content"],
+): string | null | Array<{ readonly type?: string; readonly text?: string }> {
+  if (typeof content === "string" || content === null) {
+    return content;
+  }
+  return [...content];
+}
+
 function toOpenAIInput(
   messages: ProviderAdapterExecutionContext["executionRequest"]["messages"],
-): Array<{ role: string; content: string }> {
-  return messages.map((message) => ({
-    role: message.role,
-    content: message.content,
-  }));
+): Array<Record<string, unknown>> {
+  return messages.map((message) => {
+    const rawContent = message.content === undefined ? null : message.content;
+    const normalizedContent =
+      message.role === "tool" && (rawContent === null || rawContent === undefined)
+        ? ""
+        : toOpenAIProviderMessageContent(rawContent);
+    return {
+      role: message.role,
+      content: normalizedContent,
+      ...(message.tool_calls?.length ? { tool_calls: message.tool_calls } : {}),
+      ...(message.role === "assistant" && message.tool_calls?.length
+        ? { reasoning_content: "" }
+        : {}),
+      ...(typeof message.tool_call_id === "string" ? { tool_call_id: message.tool_call_id } : {}),
+      ...(typeof message.name === "string" ? { name: message.name } : {}),
+    };
+  });
 }
 
 function toOpenAITools(

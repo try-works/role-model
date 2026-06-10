@@ -478,4 +478,103 @@ describe("OpenAI provider adapter", () => {
     expect(normalized.outputText).toBe("");
     expect(normalized.reasoningText).toBe("Ready for routing.");
   });
+
+  test("forwards null assistant content and tool-turn fields for chat completions", () => {
+    const target = {
+      endpointId: "moonshot.personal.kimi-code.global.kimi-k2.6",
+      modelId: "moonshot/kimi-k2.6",
+      providerId: "moonshot",
+      providerKind: "provider-openai",
+      providerAccountId: "moonshot.personal.kimi-code",
+      adapterFamily: "ai-sdk-openai-compatible",
+      authFamily: "api-key",
+      apiBase: "https://api.moonshot.test/v1",
+      requestShapeHints: {
+        providerShape: "openai.chat.completions",
+        bodyKeys: ["temperature", "max_tokens"],
+        headerKeys: [],
+      },
+      candidate: {
+        identity: {
+          endpoint_id: "moonshot.personal.kimi-code.global.kimi-k2.6",
+          provider_kind: "remote_openai_compat",
+        },
+      },
+      account: {
+        credentialRef: {
+          backend: "env",
+          ref: "MOONSHOT_API_KEY",
+        },
+      },
+    };
+
+    const executionRequest = {
+      messages: [
+        { role: "user", content: "Check Cloudflare stock price" },
+        {
+          role: "assistant",
+          content: null,
+          tool_calls: [
+            {
+              id: "call_1",
+              type: "function",
+              function: {
+                name: "web_search",
+                arguments: '{"query":"NET stock price"}',
+              },
+            },
+          ],
+        },
+        {
+          role: "tool",
+          tool_call_id: "call_1",
+          content: "NET: $185.42",
+        },
+      ],
+      tools: [
+        {
+          name: "web_search",
+          description: "Search the web.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              query: { type: "string" },
+            },
+          },
+        },
+      ],
+    };
+
+    const adapter = createOpenAIProviderAdapter("ai-sdk-openai-compatible");
+    const capabilities = adapter.negotiateCapabilities({ target, executionRequest });
+    const requestCapture = buildOpenAIRequest({
+      target,
+      executionRequest,
+      capabilities,
+    });
+
+    expect(requestCapture.body.messages).toEqual([
+      { role: "user", content: "Check Cloudflare stock price" },
+      {
+        role: "assistant",
+        content: null,
+        reasoning_content: "",
+        tool_calls: [
+          {
+            id: "call_1",
+            type: "function",
+            function: {
+              name: "web_search",
+              arguments: '{"query":"NET stock price"}',
+            },
+          },
+        ],
+      },
+      {
+        role: "tool",
+        content: "NET: $185.42",
+        tool_call_id: "call_1",
+      },
+    ]);
+  });
 });

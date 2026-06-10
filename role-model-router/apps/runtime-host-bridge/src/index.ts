@@ -151,9 +151,42 @@ interface LocalPeerConfig {
   readonly authToken?: string;
 }
 
+type OpenAIChatCompletionsMessageContent =
+  | string
+  | null
+  | readonly {
+      readonly type?: string;
+      readonly text?: string;
+    }[];
+
 interface OpenAIChatCompletionsMessage {
   readonly role: string;
-  readonly content: string;
+  readonly content?: OpenAIChatCompletionsMessageContent;
+  readonly tool_calls?: readonly {
+    readonly id: string;
+    readonly type: string;
+    readonly function: {
+      readonly name: string;
+      readonly arguments: string;
+    };
+  }[];
+  readonly tool_call_id?: string;
+  readonly name?: string;
+}
+
+function readChatMessageTextContent(
+  content: OpenAIChatCompletionsMessageContent | undefined,
+): string {
+  if (typeof content === "string") {
+    return content;
+  }
+  if (content === null || content === undefined) {
+    return "";
+  }
+  return content
+    .map((entry) => (typeof entry?.text === "string" ? entry.text : ""))
+    .filter(Boolean)
+    .join("\n");
 }
 
 interface OpenAIChatCompletionsBody {
@@ -325,7 +358,9 @@ function summarizeDifficultySignals(input: {
   readonly contextTokens: number;
   readonly toolCount: number;
 }): DifficultyRoutingSignals {
-  const combined = input.messages.map((message) => message.content).join("\n");
+  const combined = input.messages
+    .map((message) => readChatMessageTextContent(message.content))
+    .join("\n");
   const instructionConstraintCount = countMatches(
     combined.toLowerCase(),
     /\b(must|should|need to|required|preserve|verify|strict|do not|don't|never|without|constraint|compatible)\b/g,
@@ -2890,7 +2925,10 @@ function estimateContextTokens(
   messages: readonly OpenAIChatCompletionsMessage[],
   toolCount: number,
 ): number {
-  const totalChars = messages.reduce((sum, message) => sum + message.content.length, 0);
+  const totalChars = messages.reduce(
+    (sum, message) => sum + readChatMessageTextContent(message.content).length,
+    0,
+  );
   return Math.max(1, Math.ceil(totalChars / 4) + messages.length * 2 + toolCount);
 }
 
@@ -3314,7 +3352,8 @@ export function createDownstreamOpenAIProviderConfig(
       notes: [
         "Configure downstream tooling as an OpenAI-compatible provider.",
         "Use GET /v1/models to discover the current model ids.",
-        "Use POST /v1/chat/completions or POST /v1/responses for routed inference.",
+        "Use POST /v1/chat/completions for routed inference and multi-turn tool history.",
+        "POST /v1/responses supports string or string-content message input only; use chat-completions for tool-turn histories.",
       ],
     },
   };
@@ -5031,6 +5070,7 @@ function createRequestHandler(options: StartBridgeServerOptions) {
     }
 
     if (request.method === "POST" && url.pathname === "/v1/responses") {
+      try {
       const requestId = readBridgeRequestId(request);
       const requestOptions = readBridgeExecutionRequestOptions(request);
       const body = await readJsonBody(request);
@@ -5112,6 +5152,14 @@ function createRequestHandler(options: StartBridgeServerOptions) {
         }),
       );
       return;
+      } catch (error) {
+        if (error instanceof BridgeHttpError) {
+          throw error;
+        }
+        const message = error instanceof Error ? error.message : "responses request failed";
+        writeJson(response, 400, { error: message });
+        return;
+      }
     }
 
     if (request.method === "GET" && url.pathname === "/api/role-model/runtime/summary") {

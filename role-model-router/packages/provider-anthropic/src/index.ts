@@ -37,6 +37,21 @@ export function createAnthropicProviderAdapter(): ProviderAdapter {
   };
 }
 
+function readAnthropicMessageText(
+  content: ProviderAdapterExecutionContext["executionRequest"]["messages"][number]["content"],
+): string {
+  if (typeof content === "string") {
+    return content;
+  }
+  if (content === null || content === undefined) {
+    return "";
+  }
+  return content
+    .map((entry) => (typeof entry?.text === "string" ? entry.text : ""))
+    .filter(Boolean)
+    .join("\n");
+}
+
 function splitAnthropicMessages(
   messages: ProviderAdapterExecutionContext["executionRequest"]["messages"],
 ): { system: string | null; messages: Array<{ role: string; content: string }> } {
@@ -45,11 +60,11 @@ function splitAnthropicMessages(
   return {
     system:
       systemMessages.length > 0
-        ? systemMessages.map((message) => message.content).join("\n\n")
+        ? systemMessages.map((message) => readAnthropicMessageText(message.content)).join("\n\n")
         : null,
     messages: chatMessages.map((message) => ({
       role: message.role,
-      content: message.content,
+      content: readAnthropicMessageText(message.content),
     })),
   };
 }

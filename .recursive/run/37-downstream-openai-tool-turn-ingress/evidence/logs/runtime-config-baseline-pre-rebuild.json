@@ -1,0 +1,69 @@
+{
+  "capturedAt": "2026-06-08",
+  "purpose": "R7 pre-rebuild configuration parity baseline for packaged runtime validation",
+  "previewUrl": "http://127.0.0.1:3456",
+  "downstreamAuth": {
+    "type": "bearer",
+    "placeholderToken": "role-model-local"
+  },
+  "runtimeSummary": {
+    "executionMode": "decision_only",
+    "runtimeStateRoot": "C:\\Users\\erikb\\AppData\\Local\\Role Model Runtime",
+    "unifiedConfigPath": "C:\\Users\\erikb\\AppData\\Local\\Role Model Runtime\\runtime-config.yaml",
+    "endpointCount": 2,
+    "accountCount": 3,
+    "readinessSummary": {
+      "readyAccountCount": 2,
+      "pendingDeviceAuthorizationCount": 1
+    }
+  },
+  "models": [
+    {
+      "id": "lfm2.5-8b-a1b",
+      "endpoint_ids": ["local-openai-compatible.personal.54fc2746-6472-42b0-901b-f2b178f5c0d0.local.lfm2.5-8b-a1b"]
+    },
+    {
+      "id": "mixed.local-remote",
+      "endpoint_ids": ["moonshot.personal.kimi-code.global.kimi-k2.6"]
+    },
+    {
+      "id": "moonshot/kimi-k2.6",
+      "endpoint_ids": ["moonshot.personal.kimi-code.global.kimi-k2.6"]
+    }
+  ],
+  "endpoints": [
+    {
+      "endpointId": "local-openai-compatible.personal.54fc2746-6472-42b0-901b-f2b178f5c0d0.local.lfm2.5-8b-a1b",
+      "modelId": "lfm2.5-8b-a1b",
+      "sourceType": "local",
+      "baseUrlPeer": "http://127.0.0.1:1234/v1",
+      "healthStatus": "healthy"
+    },
+    {
+      "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.6",
+      "modelId": "moonshot/kimi-k2.6",
+      "sourceType": "remote",
+      "providerAccountId": "moonshot.personal.kimi-code",
+      "healthStatus": "healthy"
+    }
+  ],
+  "modelAliases": [
+    {
+      "aliasId": "mixed.local-remote",
+      "mode": "difficulty",
+      "modelIds": ["lfm2.5-1.2b-instruct", "moonshot/kimi-k2.6"]
+    }
+  ],
+  "routingStrategy": "difficulty",
+  "parityChecklist": [
+    "GET /v1/models lists lfm2.5-8b-a1b, mixed.local-remote, moonshot/kimi-k2.6",
+    "mixed.local-remote alias mode difficulty with local + remote model pool",
+    "local peer at http://127.0.0.1:1234/v1 serving lfm2.5-8b-a1b",
+    "moonshot.personal.kimi-code account active for moonshot/kimi-k2.6",
+    "probe script uses mixed.local-remote against :3456 with bearer role-model-local"
+  ],
+  "notes": [
+    "Alias pool references lfm2.5-1.2b-instruct while active local endpoint is lfm2.5-8b-a1b; post-rebuild parity should preserve operator runtime-config.yaml and peer registration, not necessarily identical alias member ids if operator retargets peer model.",
+    "Credentials and OAuth tokens are not stored in this file; reuse existing %LOCALAPPDATA% Role Model Runtime state after rebuild."
+  ]
+}
