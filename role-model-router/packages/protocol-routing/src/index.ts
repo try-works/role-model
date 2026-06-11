@@ -120,17 +120,14 @@ function toCoreCandidate(
     maxOutputTokens: resolveMaxOutputTokens(candidate, input),
   });
   const catalogCostEstimate = toCatalogCostEstimateSignals(routingCostEstimate);
-  const observedBase = observedProfile
-    ? { ...observedProfile }
-    : { endpoint_id: candidate.identity.endpoint_id };
-  delete observedBase.cost_per_1k_tokens_est;
-  if (typeof catalogCostEstimate.cost_per_1k_tokens_est === "number") {
-    observedBase.cost_per_1k_tokens_est = catalogCostEstimate.cost_per_1k_tokens_est;
-  }
-  const observed =
-    Object.keys(observedBase).length > 1 || typeof observedBase.cost_per_1k_tokens_est === "number"
-      ? observedBase
-      : undefined;
+  const observed: CoreEndpointCandidate["observed"] = observedProfile
+    ? {
+        ...observedProfile,
+        ...(typeof catalogCostEstimate.cost_per_1k_tokens_est === "number"
+          ? { cost_per_1k_tokens_est: catalogCostEstimate.cost_per_1k_tokens_est }
+          : {}),
+      }
+    : undefined;
 
   return {
     identity: candidate.identity,

@@ -7982,8 +7982,8 @@ export async function createRuntimeBridgeBackend(
         runtimeObservedProfiles.throughputPenaltyStateByEndpointId,
       routingTimeMs,
       maxOutputTokens:
-        typeof plan.executionRequest.max_tokens === "number"
-          ? plan.executionRequest.max_tokens
+        typeof plan.executionRequest.maxOutputTokens === "number"
+          ? plan.executionRequest.maxOutputTokens
           : undefined,
       envelope,
       retrievalReceipt,

@@ -511,14 +511,9 @@ function getCostMetric(
 
   const targetCost = policySnapshot.budget.target_cost_per_request ?? DEFAULT_COST_TARGET;
   const observedValue = clamp(1 - costPer1k / targetCost);
-  const freshnessWeight = getFreshnessWeight(
-    input,
-    candidate,
-    input.observedDataConfig?.metricHalflives.costMs ?? 1,
-  );
-  const value = input.observedDataConfig?.enabled
-    ? decayToNeutral(observedValue, FRESHNESS_NEUTRAL, freshnessWeight)
-    : observedValue;
+  // Catalog-derived estimates use fixed rate tables; do not decay toward neutral based on
+  // stale observed-profile freshness (R6/R7).
+  const value = observedValue;
   return {
     value,
     source: "catalog",
@@ -530,8 +525,6 @@ function getCostMetric(
       token_economics_source: catalogEstimate?.tokenEconomicsSource ?? null,
       canonical_model_id: catalogEstimate?.canonicalModelId ?? null,
       target_cost_per_request: targetCost,
-      freshness_weight: freshnessWeight,
-      neutral_value: FRESHNESS_NEUTRAL,
       observed_value: observedValue,
       effective_value: value,
     },

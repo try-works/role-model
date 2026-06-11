@@ -237,7 +237,7 @@ export interface RoleDefinition {
 
 export interface MetricEntry {
   value: number;
-  source: "measured" | "declared" | "default";
+  source: "measured" | "declared" | "default" | "catalog";
   raw?: {
     [k: string]: unknown;
   };
