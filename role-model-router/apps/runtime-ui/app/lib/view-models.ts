@@ -158,6 +158,144 @@ export function buildCredentialReadinessRows(
   return rows;
 }
 
+const BOOTSTRAP_STAGE_LABELS: Record<string, string> = {
+  credentials: "Credentials",
+  endpoints: "Endpoints",
+  peers: "Peers",
+  vendors: "Vendors",
+  "local-reload": "Local reload",
+  "remote-health": "Remote health",
+  inventory: "Inventory",
+};
+
+function bootstrapStageTone(
+  status: string,
+): "success" | "warning" | "neutral" | "accent" {
+  switch (status) {
+    case "ready":
+      return "success";
+    case "degraded":
+    case "failed":
+      return "warning";
+    case "running":
+      return "accent";
+    default:
+      return "neutral";
+  }
+}
+
+export function buildSessionBootstrapRows(
+  summary: Pick<RuntimeSummary, "sessionBootstrap">,
+): Array<{
+  stageId: string;
+  label: string;
+  status: string;
+  message: string | null;
+  tone: "success" | "warning" | "neutral" | "accent";
+}> {
+  const bootstrap = summary.sessionBootstrap;
+  if (!bootstrap) {
+    return [];
+  }
+
+  return bootstrap.stages.map((stage) => ({
+    stageId: stage.stageId,
+    label: BOOTSTRAP_STAGE_LABELS[stage.stageId] ?? stage.stageId,
+    status: stage.status,
+    message: stage.message ?? null,
+    tone: bootstrapStageTone(stage.status),
+  }));
+}
+
+export function summarizeSessionBootstrapStatus(
+  summary: Pick<RuntimeSummary, "sessionBootstrap">,
+): { label: string; tone: "success" | "warning" | "neutral" | "accent" } | null {
+  const status = summary.sessionBootstrap?.status;
+  if (!status) {
+    return null;
+  }
+
+  switch (status) {
+    case "ready":
+      return { label: "Ready", tone: "success" };
+    case "running":
+      return { label: "Running", tone: "accent" };
+    case "degraded":
+      return { label: "Degraded", tone: "warning" };
+    case "blocked":
+      return { label: "Blocked", tone: "warning" };
+    default:
+      return { label: "Pending", tone: "neutral" };
+  }
+}
+
+export function buildInventorySummaryStats(
+  summary: Pick<RuntimeSummary, "inventorySummary">,
+): Array<{ label: string; value: string }> {
+  const inventory = summary.inventorySummary;
+  if (!inventory) {
+    return [];
+  }
+
+  return [
+    { label: "Routable models", value: String(inventory.modelIdCount) },
+    { label: "Routable endpoints", value: String(inventory.endpointIdCount) },
+    { label: "Local endpoints", value: String(inventory.localEndpointCount) },
+    { label: "Remote endpoints", value: String(inventory.remoteEndpointCount) },
+    {
+      label: "Empty alias pools",
+      value:
+        inventory.emptyAliasIds.length > 0 ? inventory.emptyAliasIds.join(", ") : "none",
+    },
+  ];
+}
+
+export function buildAliasDriftRows(
+  summary: Pick<RuntimeSummary, "aliasDrift">,
+): Array<{
+  aliasId: string;
+  hintModelId: string;
+  suggestedModelIds: readonly string[];
+  message: string;
+}> {
+  return [...(summary.aliasDrift ?? [])];
+}
+
+export function buildOperatorIntentSummary(
+  summary: Pick<RuntimeSummary, "operatorIntent">,
+): {
+  label: string;
+  detail: string;
+  tone: "success" | "warning" | "neutral";
+} | null {
+  const operatorIntent = summary.operatorIntent;
+  if (!operatorIntent) {
+    return null;
+  }
+
+  if (operatorIntent.status === "corrupt") {
+    return {
+      label: "Corrupt operator-intent manifest",
+      detail: operatorIntent.message ?? "operator-intent.json failed validation.",
+      tone: "warning",
+    };
+  }
+
+  if (operatorIntent.status === "missing") {
+    return {
+      label: "Operator-intent manifest",
+      detail: "No operator-intent.json persisted yet for this scope.",
+      tone: "neutral",
+    };
+  }
+
+  return {
+    label: "Operator-intent manifest",
+    detail: "operator-intent.json is readable and schema-valid.",
+    tone: "success",
+  };
+}
+
 function formatCurrency(value: number | null | undefined, mode: "actual" | "estimate"): string {
   if (typeof value !== "number" || value <= 0) {
     return mode === "actual" ? "$0.0000 actual" : "$0.0000 est.";

@@ -77,6 +77,7 @@ type CliBackend = Pick<
   | "readPeers"
   | "updatePeers"
   | "checkPeerHealth"
+  | "getRoutableInventory"
   | "shutdown"
 >;
 
@@ -164,6 +165,7 @@ export function createCliServerOptions(
     readPeers: backend.readPeers,
     updatePeers: backend.updatePeers,
     checkPeerHealth: backend.checkPeerHealth,
+    getRoutableInventory: backend.getRoutableInventory,
   };
 }
 

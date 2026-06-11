@@ -1,0 +1,20 @@
+=== Run 39 Phase 5 agent-operated QA (recovery verification) ===
+Date: 2026-06-11
+Worktree: D:\DEV\role-model\.worktrees\39-runtime-session-rehydration-model-inventory
+Branch: recursive/39-runtime-session-rehydration-model-inventory
+
+Bridge focused suite (PASS):
+  test/session-readiness-api.test.ts
+  test/restart-rehydration.test.ts
+  test/routable-inventory-bootstrap.test.ts
+  test/endpoint-rehydration.test.ts
+
+UI suite (PASS):
+  app/lib/view-models.test.ts (22 tests)
+
+Recovery fixes applied before lock:
+  - readiness summary reads fresh SQLite accounts/endpoints
+  - bootstrap endpoints stage rebuilds state when sqlite rows exist
+  - restart test uses fixtures-restart-rehydration (no capture-account noise)
+
+Packaged :3456 restart drill: DEFERRED (operator follow-up after merge)

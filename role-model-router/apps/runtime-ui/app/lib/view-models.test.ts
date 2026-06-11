@@ -8,7 +8,11 @@ import {
   buildConfiguredModelMetadataRows,
   buildConfiguredProviderRows,
   countActiveEndpointModels,
+  buildAliasDriftRows,
   buildCredentialReadinessRows,
+  buildInventorySummaryStats,
+  buildSessionBootstrapRows,
+  summarizeSessionBootstrapStatus,
   buildDownstreamProviderGuide,
   buildEndpointCatalogRows,
   buildStructuredLogRows,
@@ -91,6 +95,59 @@ describe("summarizeRuntimeStats", () => {
       { label: "Accounts", value: "2" },
       { label: "Endpoints", value: "3" },
     ]);
+  });
+});
+
+describe("session readiness view models", () => {
+  test("builds bootstrap rows and inventory stats from runtime summary", () => {
+    const summary = {
+      sessionBootstrap: {
+        status: "ready" as const,
+        startedAt: "2026-06-08T10:00:00.000Z",
+        finishedAt: "2026-06-08T10:00:01.000Z",
+        stages: [
+          {
+            stageId: "inventory",
+            status: "ready" as const,
+            startedAt: "2026-06-08T10:00:01.000Z",
+            finishedAt: "2026-06-08T10:00:01.100Z",
+            message: "inventory ready",
+          },
+        ],
+      },
+      inventorySummary: {
+        modelIdCount: 2,
+        endpointIdCount: 2,
+        localEndpointCount: 1,
+        remoteEndpointCount: 1,
+        emptyAliasIds: [],
+      },
+      aliasDrift: [
+        {
+          aliasId: "mixed.local-remote",
+          hintModelId: "lfm2.5-1.2b-instruct",
+          suggestedModelIds: ["lfm2.5-8b-a1b"],
+          message: "hint drift",
+        },
+      ],
+    };
+
+    expect(summarizeSessionBootstrapStatus(summary)).toEqual({
+      label: "Ready",
+      tone: "success",
+    });
+    expect(buildSessionBootstrapRows(summary)).toEqual([
+      expect.objectContaining({
+        stageId: "inventory",
+        label: "Inventory",
+        status: "ready",
+        tone: "success",
+      }),
+    ]);
+    expect(buildInventorySummaryStats(summary)).toEqual(
+      expect.arrayContaining([{ label: "Routable endpoints", value: "2" }]),
+    );
+    expect(buildAliasDriftRows(summary)).toHaveLength(1);
   });
 });
 

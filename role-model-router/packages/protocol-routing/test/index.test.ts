@@ -664,6 +664,114 @@ describe("routeRuntimeRequest", () => {
     expect(result.routingDiagnostics.routingModel.ignoredEndpointIds).toEqual([
       "openai.personal.primary.us-east-1.fast",
     ]);
+    expect(result.routingDiagnostics.routingModel).toMatchObject({
+      enabled: true,
+      endpointId: "cli.local.coder",
+      preferredEndpointIds: ["cli.local.coder"],
+    });
+  });
+
+  test("disables routing model diagnostics when every preferred endpoint is ignored", () => {
+    const result = projectRuntimeRouteInput({
+      request: {
+        requestId: "req-runtime-routing-model-disabled",
+        taskType: "text.chat",
+        requiredCapabilities: ["text.chat"],
+        preferredCapabilities: [],
+        requiredModalities: ["text"],
+        contextTokens: 32,
+        needsTools: false,
+        strategy: "balanced",
+        preferLocal: false,
+        allowEndpoints: [
+          "local-openai-compatible.personal.example.local.lfm2.5-8b-a1b",
+          "moonshot.personal.kimi-code.global.kimi-k2.6",
+        ],
+      },
+      registry: {
+        endpoints: [
+          {
+            identity: {
+              endpoint_id: "local-openai-compatible.personal.example.local.lfm2.5-8b-a1b",
+              endpoint_kind: "local_engine",
+              provider_kind: "local_openai_compat",
+              serving_source: "local-peer",
+              model_id: "lfm2.5-8b-a1b",
+              provider_id: "local-openai-compatible",
+              provider_account_id: "local-openai-compatible.personal.example",
+              region: "local",
+            },
+            declared: {
+              capabilities: ["text.chat"],
+              modalities: ["text"],
+              max_context_tokens: 8192,
+              tool_calling: { supported: true, style: "none" },
+            },
+            status: "active",
+            deniedByPolicy: false,
+            runtimeEligibility: { eligible: true, exclusions: [] },
+          },
+          {
+            identity: {
+              endpoint_id: "moonshot.personal.kimi-code.global.kimi-k2.6",
+              endpoint_kind: "remote_api",
+              provider_kind: "remote_openai_compat",
+              serving_source: "remote-service",
+              model_id: "moonshot/kimi-k2.6",
+              provider_id: "moonshot",
+              provider_account_id: "moonshot.personal.kimi-code",
+              region: "global",
+            },
+            declared: {
+              capabilities: ["text.chat"],
+              modalities: ["text"],
+              max_context_tokens: 128000,
+              tool_calling: { supported: true, style: "openai" },
+            },
+            status: "active",
+            deniedByPolicy: false,
+            runtimeEligibility: { eligible: true, exclusions: [] },
+          },
+        ],
+        diagnostics: [],
+      },
+      observedProfilesByEndpointId: {},
+      envelope: {
+        sessionId: "session-alpha",
+        conversationId: "conversation-main",
+        selectedTurns: [],
+        selectedArtifacts: [],
+        latestHandoff: null,
+        estimatedTokenCount: 0,
+        diagnostics: [],
+      },
+      retrievalReceipt: {
+        receiptId: "conversation-main-retrieval-receipt",
+        conversationId: "conversation-main",
+        summary: {
+          selectedTurns: 0,
+          selectedArtifacts: 0,
+          omittedTurns: 0,
+          omittedArtifacts: 0,
+          estimatedTokens: 0,
+        },
+        entries: [],
+      },
+      roleDefinitions: [],
+      taskDefinitions: [],
+      roleBindings: [],
+      routingModel: {
+        endpointId: "openai.personal.primary.us-east-1.fast",
+        preferredEndpointIds: ["openai.personal.primary.us-east-1.fast"],
+      },
+    });
+
+    expect(result.routingDiagnostics.routingModel).toEqual({
+      enabled: false,
+      endpointId: null,
+      preferredEndpointIds: [],
+      ignoredEndpointIds: ["openai.personal.primary.us-east-1.fast"],
+    });
   });
 
   test("prefers fresher latency observations when adaptive observed-data scoring is enabled", () => {

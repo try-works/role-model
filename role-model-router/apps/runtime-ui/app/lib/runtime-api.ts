@@ -3,12 +3,41 @@ export type RuntimeFetcher = (
   init?: RequestInit,
 ) => Promise<Response>;
 
+export type SessionBootstrapStatus =
+  | "pending"
+  | "running"
+  | "ready"
+  | "degraded"
+  | "blocked";
+
+export type BootstrapStageStatus =
+  | "pending"
+  | "running"
+  | "ready"
+  | "degraded"
+  | "failed"
+  | "skipped";
+
+export interface BootstrapStageReceipt {
+  readonly stageId: string;
+  readonly status: BootstrapStageStatus;
+  readonly startedAt: string;
+  readonly finishedAt: string;
+  readonly message?: string;
+  readonly details?: Record<string, unknown>;
+}
+
 export interface RuntimeSummary {
   readonly providerCount: number;
   readonly accountCount: number;
   readonly endpointCount: number;
   readonly scopeId?: string;
   readonly runtimeStateRoot?: string;
+  readonly executionMode?: "decision_only" | "hybrid" | "local_only" | "remote_only";
+  readonly unifiedConfig?: {
+    readonly enabled: boolean;
+    readonly path: string | null;
+  };
   readonly readinessSummary?: {
     readonly pendingDeviceAuthorizationCount: number;
     readonly credentialsMissingAccountCount: number;
@@ -20,6 +49,37 @@ export interface RuntimeSummary {
     readonly degraded: number;
     readonly offline: number;
   };
+  readonly sessionBootstrap?: {
+    readonly status: SessionBootstrapStatus;
+    readonly startedAt: string | null;
+    readonly finishedAt: string | null;
+    readonly stages: readonly BootstrapStageReceipt[];
+  };
+  readonly inventorySummary?: {
+    readonly modelIdCount: number;
+    readonly endpointIdCount: number;
+    readonly localEndpointCount: number;
+    readonly remoteEndpointCount: number;
+    readonly emptyAliasIds: readonly string[];
+  };
+  readonly aliasDrift?: readonly {
+    readonly aliasId: string;
+    readonly hintModelId: string;
+    readonly suggestedModelIds: readonly string[];
+    readonly message: string;
+  }[];
+  readonly operatorIntent?: {
+    readonly path: string;
+    readonly status: "missing" | "ok" | "corrupt";
+    readonly message?: string;
+  };
+}
+
+export interface RuntimeHealthStatus {
+  readonly status: "healthy" | "degraded";
+  readonly executionMode?: RuntimeSummary["executionMode"];
+  readonly inactiveVendors?: readonly string[];
+  readonly sessionBootstrap?: RuntimeSummary["sessionBootstrap"];
 }
 
 export interface RuntimeProcessConfig {
@@ -1122,6 +1182,12 @@ export async function fetchRuntimeSummary(
   fetcher: RuntimeFetcher = fetch,
 ): Promise<RuntimeSummary> {
   return fetchJson<RuntimeSummary>("/api/role-model/runtime/summary", fetcher);
+}
+
+export async function fetchHealthStatus(
+  fetcher: RuntimeFetcher = fetch,
+): Promise<RuntimeHealthStatus> {
+  return fetchJson<RuntimeHealthStatus>("/healthz", fetcher);
 }
 
 export async function fetchBenchmarkPreferences(

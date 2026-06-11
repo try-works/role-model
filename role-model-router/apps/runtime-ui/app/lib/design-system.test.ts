@@ -200,7 +200,12 @@ describe("runtime design system", () => {
       },
       {
         title: "System",
-        routes: ["/app/system/runtime", "/app/system/runtime-config", "/app/system/peers"],
+        routes: [
+          "/app/system/session-readiness",
+          "/app/system/runtime",
+          "/app/system/runtime-config",
+          "/app/system/peers",
+        ],
       },
     ]);
 
@@ -288,6 +293,13 @@ describe("runtime design system", () => {
       expect.objectContaining({
         id: "system-runtime",
         template: "system-topology",
+      }),
+    );
+    expect(getRuntimeRouteDefinition("/app/system/session-readiness")).toEqual(
+      expect.objectContaining({
+        id: "system-session-readiness",
+        template: "system-topology",
+        title: "Session readiness",
       }),
     );
     expect(getRuntimeRouteDefinition("/app/connect")).toEqual(

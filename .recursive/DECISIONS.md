@@ -1073,9 +1073,25 @@
   - llama-swap live load+role browser proof in operator env (llama-swap disabled); isolated git worktree not created (feature branch at repo root)
 - Known issues / follow-ups:
   - peer-models prerequisites flash fix in working tree requires SEA rebuild to ship; optional llama-swap-enabled QA for `R3`/`R7` scenario B
-  - run 39: session rehydration for peer/remote activations and inventory-driven alias pools across restart
 - **Addendum 01** (`llama-swap-setup-scaffold-and-ui-hints`):
   - Artifacts: `addenda/00-requirements.llama-swap-setup-scaffold-and-ui-hints.addendum-01.md`, `03-implementation-summary.addendum-01.md`, `05-manual-qa.addendum-01.md`
   - What changed: `llama-swap-setup.ts` scaffold helpers; runtime-config **Insert llama-swap scaffold**; setup hints + modal on llama-swap Local surfaces when not operational
   - Why: peer-only operators had no onboarding path when `llama_swap.models` empty (run 38 `R3`/`R7` scenario B deferred)
   - Verified: 6/6 unit tests; browser QA on `:3456` with peer-only config; SEA SHA256 `acf14c9829f6b7b9144dc5e9334fc212c8ce8fbd4eff873dec44aaf1b492dce5`
+
+### Run `39-runtime-session-rehydration-model-inventory`
+
+- Run folder: `/.recursive/run/39-runtime-session-rehydration-model-inventory/`
+- Artifacts: `00-requirements.md` through `08-memory-impact.md`, addenda `routing-diagnostics-remediation` + `session-persistence-and-r11-gap`
+- What changed:
+  - Removed init-time `runtime_endpoints` wipe; dual-write/read `operator-intent.json`; ordered session bootstrap pipeline with readiness API/UI
+  - Inventory-first alias reconciliation with drift warnings; remote health bootstrap stage (skipped in `decision_only`)
+  - R10/R15 routing diagnostics and Craft ask-mode difficulty fixes (`runtime-routing-model.ts`, last-user-turn burden)
+- Why:
+  - Restart dropped activations while OAuth persisted; Craft `hello` inflated to `medium` via user-role preamble
+- How:
+  - strict TDD SP1–SP6; addenda R10–R15; restart-rehydration + session-readiness validators; agent-operated QA
+- What was not done:
+  - live packaged `:3456` peer reload drill in operator env; local latency-score preference tuning
+- Known issues / follow-ups:
+  - rebuild SEA after merge; optional cleanup of duplicate `moonshot.personal.moonshot-oauth` account

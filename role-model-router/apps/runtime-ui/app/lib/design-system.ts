@@ -455,6 +455,18 @@ const systemRuntimeRoute = createRoute({
     "Bridge lifecycle, validation floor, controller posture, version facts, and tooling runtime contracts in one system view.",
 });
 
+const systemSessionReadinessRoute = createRoute({
+  id: "system-session-readiness",
+  to: "/app/system/session-readiness",
+  label: "Session readiness",
+  section: "System",
+  icon: ListChecks,
+  template: "system-topology",
+  title: "Session readiness",
+  description:
+    "Bootstrap stage receipts, credential readiness, routable inventory, remote health outcomes, and alias drift warnings after restart.",
+});
+
 const systemPeersRoute = createRoute({
   id: "system-peers",
   to: "/app/system/peers",
@@ -501,6 +513,7 @@ const runtimeRouteDefinitions = [
   integrationsDownstreamRoute,
   integrationsUpstreamRoute,
   systemRuntimeRoute,
+  systemSessionReadinessRoute,
   systemPeersRoute,
 ] as const;
 
@@ -568,7 +581,7 @@ export const runtimeNavigationSections: readonly RuntimeNavigationSection[] = [
   {
     title: "System",
     icon: Gauge,
-    items: [systemRuntimeRoute, controlRuntimeConfigRoute, systemPeersRoute],
+    items: [systemSessionReadinessRoute, systemRuntimeRoute, controlRuntimeConfigRoute, systemPeersRoute],
   },
 ] as const;
 
@@ -725,6 +738,9 @@ export function getRuntimeRouteDefinition(pathname: string): RuntimeRouteDefinit
   }
   if (pathname === "/app/runtime") {
     return systemRuntimeRoute;
+  }
+  if (pathname === "/app/control/session-readiness") {
+    return systemSessionReadinessRoute;
   }
   if (pathname === "/app/connect") {
     return connectRegistryRoute;

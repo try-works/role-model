@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router";
 
 import {
   EmptyState,
@@ -64,6 +65,18 @@ export default function RuntimeRoute() {
 
   return (
     <div className="space-y-6">
+      <SectionCard title="Session readiness">
+        <p className="text-sm text-[var(--rm-secondary)]">
+          Bootstrap receipts, routable inventory, and alias drift warnings live on the dedicated
+          session readiness surface.
+        </p>
+        <div className="mt-4">
+          <Link className={secondaryButtonClassName} to="/app/system/session-readiness">
+            Open session readiness
+          </Link>
+        </div>
+      </SectionCard>
+
       <SectionCard title="Lifecycle summary">
         <div className="flex flex-wrap gap-3">
           <StatusPill tone="success">

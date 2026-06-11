@@ -171,6 +171,15 @@ type Matches = [{
 }, {
   id: "legacy-integrations-upstream";
   module: typeof import("../legacy-redirect.js");
+}] | [{
+  id: "root";
+  module: typeof import("../../root.js");
+}, {
+  id: "routes/app-layout";
+  module: typeof import("../app-layout.js");
+}, {
+  id: "legacy-control-session-readiness";
+  module: typeof import("../legacy-redirect.js");
 }];
 
 type Annotations = GetAnnotations<Info & { module: Module, matches: Matches }>;

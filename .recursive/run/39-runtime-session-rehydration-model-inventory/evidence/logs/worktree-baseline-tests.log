@@ -1,0 +1,10 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/39-runtime-session-rehydration-model-inventory
+
+┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖
+
+ Test Files  2 passed (2)
+      Tests  11 passed (11)
+   Start at  06:42:35
+   Duration  1.08s (transform 282ms, setup 0ms, collect 368ms, tests 20ms, environment 1ms, prepare 535ms)
+

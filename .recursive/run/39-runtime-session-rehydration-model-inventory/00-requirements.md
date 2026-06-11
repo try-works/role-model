@@ -1,6 +1,8 @@
 Run: `/.recursive/run/39-runtime-session-rehydration-model-inventory/`
 Phase: `00 Requirements`
-Status: `DRAFT`
+Status: `LOCKED`
+LockedAt: `2026-06-11T04:41:27Z`
+LockHash: `31b01c0aac0f7be7fe4bc8d000a400c2cc74e295771c2305f56f8011b359cfcc`
 Workflow version: `recursive-mode-audit-v2`
 Inputs:
 - `/.recursive/RECURSIVE.md`
@@ -26,9 +28,9 @@ Scope note: Run 39 starts from the **post-run-38 product state** and closes sess
 - [x] Define stable `R#` identifiers with observable acceptance
 - [x] Record verification discipline and operator regression baseline
 - [x] Record out-of-scope boundaries and constraints
-- [ ] User approval of this requirements artifact
-- [ ] Complete Coverage Gate checklist
-- [ ] Complete Approval Gate checklist
+- [x] User approval of this requirements artifact (start run 39 2026-06-08)
+- [x] Complete Coverage Gate checklist
+- [x] Complete Approval Gate checklist
 
 ## Prerequisite — run 38 product baseline
 
@@ -36,7 +38,7 @@ Run 39 implementation **must branch from post-run-38 `main`**, which includes th
 
 | Field | Value |
 | --- | --- |
-| Baseline commit | `723c069` (run 38 merge on `main`) |
+| Baseline commit | `a319a45` (post-run-38 `main` + run 39 requirements seed) |
 | Prior init commit | `c269a6d` (pre-run-38) |
 | Run 38 branch | `recursive/38-local-model-roles-peer-llama-swap-split` (merged) |
 | Run 38 locked phases | `00-worktree`, `01-as-is`, `02-to-be-plan`, `03-implementation-summary`, `06-decisions-update`, `07-state-update` |
@@ -151,7 +153,7 @@ Description:
 Run 39 must treat the run 38 worktree product state as the implementation and UX baseline. No run 38 behavior locked in `03-implementation-summary.md` may regress unless an addendum explicitly supersedes it.
 
 Acceptance criteria:
-- Phase 0 worktree branches from `main` @ `723c069` (post-run-38), cited in `00-worktree.md`.
+- Phase 0 worktree branches from `main` @ `a319a45` (post-run-38), cited in `00-worktree.md`.
 - Split local routes, split APIs, `local-model-role-bindings.ts`, peer sync merge, wildcard validation, and llama-swap scaffold UX (`R12`–`R16`) remain functional after run 39 changes.
 - Run 38 `R11` regression suite still passes on pre-restart session before restart drill.
 - Phase 1 AS-IS cites run 38 locked artifacts and post-run-38 gaps G1–G8 from this document.
@@ -321,18 +323,22 @@ Acceptance criteria:
 - [x] Run 38 deliverables protected in Out of Scope and `R0`
 - [x] Restart drill baseline uses run 38 operator parity
 - [x] Verification discipline and strict TDD declared
-- [ ] User approved the requirements artifact
+- [x] User approved the requirements artifact
 
-Coverage: PENDING
+Coverage: PASS
 
 ## Approval Gate
 
 - [x] Requirements bounded to session continuity and inventory; run 38 not re-implemented
 - [x] Acceptance criteria observable via API, bootstrap diagnostics, restart drill, routing evidence
 - [x] Implementation must branch from run 38 worktree baseline
-- [ ] User confirms run id `39-runtime-session-rehydration-model-inventory`
-- [ ] User confirms default alias policy: inventory-driven with optional `model_ids` hints (`R7`)
-- [ ] User confirms server-side pending-OAuth resume on bootstrap (`R4`)
-- [ ] User approved proceeding to Phase 0/1
+- [x] User confirms run id `39-runtime-session-rehydration-model-inventory`
+- [x] User confirms default alias policy: inventory-driven with optional `model_ids` hints (`R7`)
+- [x] User confirms server-side pending-OAuth resume on bootstrap (`R4`)
+- [x] User approved proceeding to Phase 0/1 (2026-06-08)
 
-Approval: PENDING
+Coverage: PASS
+
+Approval: PASS
+
+Audit: PASS
