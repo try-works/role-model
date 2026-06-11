@@ -1,0 +1,27 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/40-catalog-economics-moonshot-consolidation/role-model-router/packages/catalog
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Suites 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/token-economics.test.ts [ test/token-economics.test.ts ]
+Error: Cannot find module '../src/token-economics.js' imported from 'D:/DEV/role-model/.worktrees/40-catalog-economics-moonshot-consolidation/role-model-router/packages/catalog/test/token-economics.test.ts'
+ Γ¥» test/token-economics.test.ts:8:1
+      6| 
+      7| import type { NormalizedCatalog } from "../src/index.js";
+      8| import {
+       | ^
+      9|   CANONICAL_MODEL_ID_ALIASES,
+     10|   OPERATOR_HIDDEN_CATALOG_PROVIDER_IDS,
+
+Caused by: Error: Failed to load url ../src/token-economics.js (resolved id: ../src/token-economics.js) in D:/DEV/role-model/.worktrees/40-catalog-economics-moonshot-consolidation/role-model-router/packages/catalog/test/token-economics.test.ts. Does the file exist?
+ Γ¥» loadAndTransform ../../../node_modules/.pnpm/vite@7.3.2_@types+node@22.1_f7dc1826a0f6bcfe28ab74fd91d23836/node_modules/vite/dist/node/chunks/config.js:22663:33
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  16:13:34
+   Duration  817ms (transform 82ms, setup 0ms, collect 0ms, tests 0ms, environment 0ms, prepare 233ms)
+

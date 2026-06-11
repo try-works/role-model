@@ -36,6 +36,16 @@ export interface RuntimeRoutingSignals {
   continuityAffinity?: boolean;
   cacheAffinity?: boolean;
   routingModelRank?: number;
+  catalogCostEstimate?: CatalogCostEstimateSignals;
+}
+
+export interface CatalogCostEstimateSignals {
+  readonly canonicalModelId: string;
+  readonly tokenEconomicsSource: "catalog" | "local-free" | "unknown";
+  readonly inputPer1M: number | null;
+  readonly outputPer1M: number | null;
+  readonly estimatedRequestUsd: number | null;
+  readonly cost_per_1k_tokens_est: number | null;
 }
 
 export interface RuntimeEligibilitySignals {

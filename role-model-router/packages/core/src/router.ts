@@ -79,7 +79,7 @@ type ScoringMetricName =
   | "reliability"
   | "preference";
 
-type MetricSource = "measured" | "declared" | "default";
+type MetricSource = "measured" | "declared" | "default" | "catalog";
 type MetricEntry = {
   value: number;
   source: MetricSource;
@@ -496,7 +496,13 @@ function getCostMetric(
   policySnapshot: RoutingPolicySnapshot,
   input: RouteRequestInput,
 ): MetricEntry {
-  if (typeof candidate.observed?.cost_per_1k_tokens_est !== "number") {
+  const catalogEstimate = candidate.routingSignals?.catalogCostEstimate;
+  const costPer1k =
+    typeof catalogEstimate?.cost_per_1k_tokens_est === "number"
+      ? catalogEstimate.cost_per_1k_tokens_est
+      : undefined;
+
+  if (typeof costPer1k !== "number") {
     return {
       value: 0.5,
       source: "default",
@@ -504,24 +510,21 @@ function getCostMetric(
   }
 
   const targetCost = policySnapshot.budget.target_cost_per_request ?? DEFAULT_COST_TARGET;
-  const observedValue = clamp(1 - candidate.observed.cost_per_1k_tokens_est / targetCost);
-  const freshnessWeight = getFreshnessWeight(
-    input,
-    candidate,
-    input.observedDataConfig?.metricHalflives.costMs ?? 1,
-  );
-  const value = input.observedDataConfig?.enabled
-    ? decayToNeutral(observedValue, FRESHNESS_NEUTRAL, freshnessWeight)
-    : observedValue;
+  const observedValue = clamp(1 - costPer1k / targetCost);
+  // Catalog-derived estimates use fixed rate tables; do not decay toward neutral based on
+  // stale observed-profile freshness (R6/R7).
+  const value = observedValue;
   return {
     value,
-    source: "measured",
+    source: "catalog",
     raw: {
-      cost_per_1k_tokens_est: candidate.observed.cost_per_1k_tokens_est,
+      cost_per_1k_tokens_est: costPer1k,
+      estimated_request_usd: catalogEstimate?.estimatedRequestUsd ?? null,
+      input_per_1m: catalogEstimate?.inputPer1M ?? null,
+      output_per_1m: catalogEstimate?.outputPer1M ?? null,
+      token_economics_source: catalogEstimate?.tokenEconomicsSource ?? null,
+      canonical_model_id: catalogEstimate?.canonicalModelId ?? null,
       target_cost_per_request: targetCost,
-      measured_at_ms: candidate.observed.measured_at_ms,
-      freshness_weight: freshnessWeight,
-      neutral_value: FRESHNESS_NEUTRAL,
       observed_value: observedValue,
       effective_value: value,
     },
@@ -951,8 +954,9 @@ function evaluateEligibility(
       policySnapshot.budget.enabled &&
       policySnapshot.budget_mode !== "advisory" &&
       typeof policySnapshot.budget.max_cost_per_request === "number" &&
-      typeof candidate.observed?.cost_per_1k_tokens_est === "number" &&
-      candidate.observed.cost_per_1k_tokens_est > policySnapshot.budget.max_cost_per_request
+      typeof candidate.routingSignals?.catalogCostEstimate?.estimatedRequestUsd === "number" &&
+      candidate.routingSignals.catalogCostEstimate.estimatedRequestUsd >
+        policySnapshot.budget.max_cost_per_request
     ) {
       reasons.push("BUDGET_EXCEEDED");
     }

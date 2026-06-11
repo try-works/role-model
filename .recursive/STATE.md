@@ -180,3 +180,9 @@
   - Inventory-first alias pool resolution in `routable-inventory.ts` with config-save validation and drift warnings
   - Addendum routing remediation: `runtime-routing-model.ts` hides non-routable fixture routing-model IDs in diagnostics (R10); ask-mode difficulty uses last `user` turn for Craft payloads (R11/R15)
   - Focused validation green: 39 run-39 bridge tests + `validate-ui` + `validate-restart-rehydration`; packaged restart drill deferred where operator peer process unavailable
+
+- Run 40 (Catalog Economics + Moonshot Consolidation) on branch `recursive/40-catalog-economics-moonshot-consolidation`:
+  - Catalog `TokenEconomics` + canonical Kimi map; catalog-derived `cost_per_1k_tokens_est` for routing/budget
+  - Protocol-routing requires catalog; router cost metric source `"catalog"`; telemetry cost excluded
+  - Bridge hides `moonshotai` from provider list; Moonshot variant dedupe; diagnostics `catalogEconomics`
+  - Strict TDD RED/GREEN evidence; automated floor green; packaged `:3456` drill deferred; R8 authProfile partial

@@ -1,0 +1,168 @@
+# run 40 catalog economics QA drill
+started_at=2026-06-11T16:45:12.190202+00:00
+base_url=http://127.0.0.1:3456
+alias=mixed.local-remote
+readiness={"ok": true, "healthz": {"status": "healthy", "executionMode": "decision_only", "vendors": {"llama-swap": {"vendorId": "llama-swap", "healthStatus": "inactive"}, "litellm": {"vendorId": "litellm", "healthStatus": "inactive"}}, "inactiveVendors": ["llama-swap", "litellm"], "sessionBootstrap": {"status": "ready", "startedAt": "2026-06-11T16:44:52.954Z", "finishedAt": "2026-06-11T16:44:54.197Z", "stages": [{"stageId": "credentials", "status": "ready", "startedAt": "2026-06-11T16:44:52.954Z", "finishedAt": "2026-06-11T16:44:54.078Z", "details": {"pendingPolled": 0, "pendingConnected": 0, "refreshAttempted": 2, "refreshSucceeded": 2}}, {"stageId": "endpoints", "status": "ready", "startedAt": "2026-06-11T16:44:54.078Z", "finishedAt": "2026-06-11T16:44:54.092Z", "details": {"source": "sqlite", "count": 2}}, {"stageId": "peers", "status": "ready", "startedAt": "2026-06-11T16:44:54.092Z", "finishedAt": "2026-06-11T16:44:54.196Z", "details": {"reloaded": 1, "failed": 0}}, {"stageId": "vendors", "status": "ready", "startedAt": "2026-06-11T16:44:54.196Z", "finishedAt": "2026-06-11T16:44:54.196Z"}, {"stageId": "local-reload", "status": "skipped", "startedAt": "2026-06-11T16:44:54.196Z", "finishedAt": "2026-06-11T16:44:54.197Z", "message": "no llama-swap loads in manifest"}, {"stageId": "remote-health", "status": "skipped", "startedAt": "2026-06-11T16:44:54.197Z", "finishedAt": "2026-06-11T16:44:54.197Z", "message": "execution probes skipped in decision_only mode"}, {"stageId": "inventory", "status": "ready", "startedAt": "2026-06-11T16:44:54.197Z", "finishedAt": "2026-06-11T16:44:54.197Z", "details": {"modelIdCount": 2, "endpointIdCount": 2, "localEndpointCount": 1, "remoteEndpointCount": 1, "emptyAliasIds": [], "driftWarningCount": 0, "driftWarnings": []}}]}}}
+runtime_summary={"lifecycleSummary":{"active":2,"degraded":0,"offline":0},"providerCount":215,"accountCount":3,"endpointCount":2,"scopeId":"standalone-runtime","runtimeStateRoot":"C:\\Users\\erikb\\AppData\\Local\\Role Model Runtime","readinessSummary":{"pendingDeviceAuthorizationCount":1,"credentialsMissingAccountCount":0,"connectedWithoutEndpointCount":0,"readyAccountCount":2},"executionMode":"decision_only","unifiedConfig":{"enabled":true,"path":"C:\\Users\\erikb\\AppData\\Local\\Role Model Runtime\\runtime-config.yaml"},"sessionBootstrap":{"status":"ready","startedAt":"2026-06-11T16:44:52.954Z","finishedAt":"2026-06-11T16:44:54.197Z","stages":[{"stageId":"credentials","status":"ready","startedAt":"2026-06-11T16:44:52.954Z","finishedAt":"2026-06-11T16:44:54.078Z","details":{"pendingPolled":0,"pendingConnected":0,"refreshAttempted":2,"refreshSucceeded":2}},{"stageId":"endpoints","status":"ready","startedAt":"2026-06-11T16:44:54.078Z","finishedAt":"2026-06-11T16:44:54.092Z","details":{"source":"sqlite","count":2}},{"stageId":"peers","status":"ready","startedAt":"2026-06-11T16:44:54.092Z","finishedAt":"2026-06-11T16:44:54.196Z","details":{"reloaded":1,"failed":0}},{"stageId":"vendors","status":"ready","startedAt":"2026-06-11T16:44:54.196Z","finishedAt":"2026-06-11T16:44:54.196Z"},{"stageId":"local-reload","status":"skipped","startedAt":"2026-06-11T16:44:54.196Z","finishedAt":"2026-06-11T16:44:54.197Z","message":"no llama-swap loads in manifest"},{"stageId":"remote-health","status":"skipped","startedAt":"2026-06-11T16:44:54.197Z","finishedAt":"2026-06-11T16:44:54.197Z","message":"execution probes skipped in decision_only mode"},{"stageId":"inventory","status":"ready","startedAt":"2026-06-11T16:44:54.197Z","finishedAt":"2026-06-11T16:44:54.197Z","details":{"modelIdCount":2,"endpointIdCount":2,"localEndpointCount":1,"remoteEndpointCount":1,"emptyAliasIds":[],"driftWarningCount":0,"driftWarnings":[]}}]},"inventorySummary":{"modelIdCount":2,"endpointIdCount":2,"localEndpointCount":1,"remoteEndpointCount":1,"emptyAliasIds":[]},"aliasDrift":[],"operatorIntent":{"path":"C:\\Users\\erikb\\AppData\\Local\\Role Model Runtime\\standalone-runtime\\operator-intent.json","status":"ok"}}
+
+$ C:\Python314\python.exe D:\DEV\role-model\.worktrees\40-catalog-economics-moonshot-consolidation\role-model-router\scripts\operator-probe-catalog-economics.py --base-url http://127.0.0.1:3456 --token role-model-local --alias mixed.local-remote
+{
+  "baseUrl": "http://127.0.0.1:3456",
+  "alias": "mixed.local-remote",
+  "requestId": "req-operator-catalog-economics-probe-001",
+  "healthz": {
+    "status": "healthy",
+    "executionMode": "decision_only",
+    "vendors": {
+      "llama-swap": {
+        "vendorId": "llama-swap",
+        "healthStatus": "inactive"
+      },
+      "litellm": {
+        "vendorId": "litellm",
+        "healthStatus": "inactive"
+      }
+    },
+    "inactiveVendors": [
+      "llama-swap",
+      "litellm"
+    ],
+    "sessionBootstrap": {
+      "status": "ready",
+      "startedAt": "2026-06-11T16:44:52.954Z",
+      "finishedAt": "2026-06-11T16:44:54.197Z",
+      "stages": [
+        {
+          "stageId": "credentials",
+          "status": "ready",
+          "startedAt": "2026-06-11T16:44:52.954Z",
+          "finishedAt": "2026-06-11T16:44:54.078Z",
+          "details": {
+            "pendingPolled": 0,
+            "pendingConnected": 0,
+            "refreshAttempted": 2,
+            "refreshSucceeded": 2
+          }
+        },
+        {
+          "stageId": "endpoints",
+          "status": "ready",
+          "startedAt": "2026-06-11T16:44:54.078Z",
+          "finishedAt": "2026-06-11T16:44:54.092Z",
+          "details": {
+            "source": "sqlite",
+            "count": 2
+          }
+        },
+        {
+          "stageId": "peers",
+          "status": "ready",
+          "startedAt": "2026-06-11T16:44:54.092Z",
+          "finishedAt": "2026-06-11T16:44:54.196Z",
+          "details": {
+            "reloaded": 1,
+            "failed": 0
+          }
+        },
+        {
+          "stageId": "vendors",
+          "status": "ready",
+          "startedAt": "2026-06-11T16:44:54.196Z",
+          "finishedAt": "2026-06-11T16:44:54.196Z"
+        },
+        {
+          "stageId": "local-reload",
+          "status": "skipped",
+          "startedAt": "2026-06-11T16:44:54.196Z",
+          "finishedAt": "2026-06-11T16:44:54.197Z",
+          "message": "no llama-swap loads in manifest"
+        },
+        {
+          "stageId": "remote-health",
+          "status": "skipped",
+          "startedAt": "2026-06-11T16:44:54.197Z",
+          "finishedAt": "2026-06-11T16:44:54.197Z",
+          "message": "execution probes skipped in decision_only mode"
+        },
+        {
+          "stageId": "inventory",
+          "status": "ready",
+          "startedAt": "2026-06-11T16:44:54.197Z",
+          "finishedAt": "2026-06-11T16:44:54.197Z",
+          "details": {
+            "modelIdCount": 2,
+            "endpointIdCount": 2,
+            "localEndpointCount": 1,
+            "remoteEndpointCount": 1,
+            "emptyAliasIds": [],
+            "driftWarningCount": 0,
+            "driftWarnings": []
+          }
+        }
+      ]
+    }
+  },
+  "providers": {
+    "moonshotCount": 1,
+    "moonshotaiCount": 0
+  },
+  "routing": {
+    "requestId": "req-operator-catalog-economics-probe-001",
+    "selectedModelId": "lfm2.5-8b-a1b",
+    "selectedEndpointId": "local-openai-compatible.personal.54fc2746-6472-42b0-901b-f2b178f5c0d0.local.lfm2.5-8b-a1b",
+    "difficultyStrategy": "cost",
+    "catalogEconomics": {
+      "canonicalModelId": "lfm2.5-8b-a1b",
+      "tokenEconomicsSource": "local-free",
+      "inputPer1M": 0,
+      "outputPer1M": 0,
+      "estimatedRequestUsd": 0,
+      "cost_per_1k_tokens_est": 0
+    },
+    "completionModel": "lfm2.5-8b-a1b"
+  },
+  "status": "PASS"
+}
+[operator-probe-catalog-economics] exit=0
+$ C:\Python314\python.exe D:\DEV\role-model\.worktrees\40-catalog-economics-moonshot-consolidation\role-model-router\scripts\probe-downstream-ingress.py
+ID	HTTP	VERDICT	SNIPPET
+A1	200	PASS	{"id":"chatcmpl-role-model","object":"chat.completion","created":1781196352,"model":"lfm2.5-8b-a1b","choices":[{"index":0,"message":{"role":"assistant","content":"\nHi"},"finish...
+A2	200	PASS	{"id":"chatcmpl-role-model","object":"chat.completion","created":1781196394,"model":"lfm2.5-8b-a1b","choices":[{"index":0,"message":{"role":"assistant","content":"","tool_calls"...
+A3	200	PASS	data: {"id":"chatcmpl-s85kkd9ne6dlcdwwzdy6yo","object":"chat.completion.chunk","created":1781196394,"model":"lfm2.5-8b-a1b","system_fingerprint":"lfm2.5-8b-a1b","choices":[{"ind...
+A4	200	PASS	data: {"id":"chatcmpl-94xctqef3yq3xrcz1jqib8","object":"chat.completion.chunk","created":1781196413,"model":"lfm2.5-8b-a1b","system_fingerprint":"lfm2.5-8b-a1b","choices":[{"ind...
+A5	200	PASS	{"id":"chatcmpl-role-model","object":"chat.completion","created":1781196499,"model":"moonshot/kimi-k2.6","choices":[{"index":0,"message":{"role":"assistant","content":"Hello"},"...
+B1	0	UNKNOWN	timed out
+B2	0	UNKNOWN	timed out
+B3	200	PASS	{"id":"chatcmpl-role-model","object":"chat.completion","created":1781196581,"model":"lfm2.5-8b-a1b","choices":[{"index":0,"message":{"role":"assistant","content":"I noticed you ...
+B4	200	PASS	{"id":"chatcmpl-role-model","object":"chat.completion","created":1781196591,"model":"lfm2.5-8b-a1b","choices":[{"index":0,"message":{"role":"assistant","content":"I'll check the...
+B5	0	UNKNOWN	timed out
+B6	0	UNKNOWN	timed out
+B7	0	UNKNOWN	timed out
+B8	0	UNKNOWN	timed out
+C1	200	PASS	{"id":"chatcmpl-role-model","object":"chat.completion","created":1781196810,"model":"lfm2.5-8b-a1b","choices":[{"index":0,"message":{"role":"assistant","content":"\nHello! It’s ...
+C2	400	ERROR_400	{"error":"Provider request failed with HTTP 400."}
+C3	200	PASS	{"id":"chatcmpl-role-model","object":"chat.completion","created":1781196827,"model":"lfm2.5-8b-a1b","choices":[{"index":0,"message":{"role":"assistant","content":"It seems there...
+C4	0	UNKNOWN	timed out
+D1	400	ERROR_400	{"error":"Provider request failed with HTTP 400."}
+D2	200	PASS	{"id":"chatcmpl-role-model","object":"chat.completion","created":1781196906,"model":"lfm2.5-8b-a1b","choices":[{"index":0,"message":{"role":"assistant","content":"\nHello! How c...
+D3	0	UNKNOWN	timed out
+D4	200	PASS	{"id":"chatcmpl-role-model","object":"chat.completion","created":1781196984,"model":"lfm2.5-8b-a1b","choices":[{"index":0,"message":{"role":"assistant","content":"I apologize, b...
+E1	200	PASS	{"id":"chatcmpl-w1m9ruur3jjvk7ri7y5ado","object":"response","created_at":1781197006,"status":"completed","model":"lfm2.5-8b-a1b","output":[{"type":"message","id":"msg_chatcmpl-w...
+E2	200	PASS	{"id":"chatcmpl-ihzweno0j6feoifcle1k68","object":"response","created_at":1781197024,"status":"completed","model":"lfm2.5-8b-a1b","output":[{"type":"message","id":"msg_chatcmpl-i...
+E3	400	BRIDGE_VALIDATION	{"error":"responses input messages must include string role and content fields"}
+E4	400	BRIDGE_VALIDATION	{"error":"responses input messages must include string role and content fields"}
+E5	400	BRIDGE_VALIDATION	{"error":"responses input messages must include string role and content fields"}
+F1	400	BRIDGE_VALIDATION	{"error":"chat-completions request must include a string model"}
+F2	400	BRIDGE_VALIDATION	{"error":"chat-completions request must include a messages array"}
+F3	400	ERROR_400	{"error":"Provider request failed with HTTP 400."}
+F4	400	BRIDGE_VALIDATION	{"error":"Only OpenAI function tools are supported by the runtime host bridge."}
+F5	200	PASS	{"id":"chatcmpl-role-model","object":"chat.completion","created":1781197034,"model":"lfm2.5-8b-a1b","choices":[{"index":0,"message":{"role":"assistant","content":""},"finish_rea...
+F6	400	ROUTING_ERROR	{"error":"No registry endpoints are available for requested model does-not-exist."}
+G3	200	PASS	data: {"id":"chatcmpl-qyuxiswl6v92pb6o6bgxho","object":"chat.completion.chunk","created":1781197034,"model":"lfm2.5-8b-a1b","system_fingerprint":"lfm2.5-8b-a1b","choices":[{"ind...
+
+# G1 sequence: A2 (first turn) + B1 (follow-up) — see A2 and B1 rows
+
+# Summary: 33 cases, 0 BRIDGE_CRASH, 15 PASS
+[probe-downstream-ingress] exit=0
+finished_at=2026-06-11T16:59:16.857093+00:00
+exit_code=0

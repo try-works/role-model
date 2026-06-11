@@ -216,6 +216,7 @@ export async function runRuntimeRoutingValidation(
   const routed = routeRuntimeRequest({
     request: routingRequest,
     registry,
+    catalog: normalizedCatalogWithModels,
     observedProfilesByEndpointId,
     envelope,
     retrievalReceipt,

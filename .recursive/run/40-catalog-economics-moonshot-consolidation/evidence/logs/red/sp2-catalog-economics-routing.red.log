@@ -1,0 +1,45 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/40-catalog-economics-moonshot-consolidation/role-model-router/packages/protocol-routing
+
+ Γ¥» test/catalog-economics-routing.test.ts (2 tests | 2 failed) 60ms
+   ├ù catalog economics routing > prefers local-free endpoint over Kimi on cost strategy when both are eligible 57ms
+     ΓåÆ expected 'moonshot.personal.kimi-code.global.kiΓÇª' to be 'peer.local.lfm' // Object.is equality
+   ├ù catalog economics routing > ignores telemetry cost_per_1k when catalog economics are available 1ms
+     ΓåÆ Cannot read properties of undefined (reading 'remote.kimi')
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 2 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/catalog-economics-routing.test.ts > catalog economics routing > prefers local-free endpoint over Kimi on cost strategy when both are eligible
+AssertionError: expected 'moonshot.personal.kimi-code.global.kiΓÇª' to be 'peer.local.lfm' // Object.is equality
+
+Expected: "peer.local.lfm"
+Received: "moonshot.personal.kimi-code.global.kimi-k2.6"
+
+ Γ¥» test/catalog-economics-routing.test.ts:150:48
+    148|     });
+    149| 
+    150|     expect(result.decision.chosen_endpoint_id).toBe("peer.local.lfm");
+       |                                                ^
+    151|     expect(
+    152|       result.catalogEconomicsByEndpointId["peer.local.lfm"]?.tokenEconΓÇª
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/2]ΓÄ»
+
+ FAIL  test/catalog-economics-routing.test.ts > catalog economics routing > ignores telemetry cost_per_1k when catalog economics are available
+TypeError: Cannot read properties of undefined (reading 'remote.kimi')
+ Γ¥» test/catalog-economics-routing.test.ts:250:14
+    248| 
+    249|     expect(
+    250|       result.catalogEconomicsByEndpointId["remote.kimi"]?.cost_per_1k_ΓÇª
+       |              ^
+    251|     ).toBeGreaterThan(0.0001);
+    252|     expect(result.projected.routeInput.candidates[0]?.observed?.cost_pΓÇª
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[2/2]ΓÄ»
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed (2)
+   Start at  16:14:44
+   Duration  1.04s (transform 172ms, setup 0ms, collect 204ms, tests 60ms, environment 0ms, prepare 259ms)
+

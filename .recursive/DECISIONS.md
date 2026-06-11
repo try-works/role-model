@@ -1095,3 +1095,12 @@
   - live packaged `:3456` peer reload drill in operator env; local latency-score preference tuning
 - Known issues / follow-ups:
   - rebuild SEA after merge; optional cleanup of duplicate `moonshot.personal.moonshot-oauth` account
+
+### Run `40-catalog-economics-moonshot-consolidation`
+
+- Run folder: `/.recursive/run/40-catalog-economics-moonshot-consolidation/`
+- What changed: catalog-only routing economics, Kimi canonical map, Moonshot picker hygiene, routing diagnostics
+- Why: neutral 0.5 cost ties; dual Moonshot providers; operator Kimi model lacked catalog pricing
+- How: strict TDD Phase 0→8 from locked requirements; RED/GREEN logs on disk
+- What was not done: R8 authProfile refactor; packaged `:3456` drill
+- Follow-ups: SEA rebuild; optional R8 addendum

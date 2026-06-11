@@ -363,3 +363,14 @@ export {
   loadLiteLLMModelPrices,
   type LiteLLMProviderInfo,
 } from "./litellm-catalog.js";
+export {
+  CANONICAL_MODEL_ID_ALIASES,
+  OPERATOR_HIDDEN_CATALOG_PROVIDER_IDS,
+  estimateCostPer1kTokens,
+  estimateRequestCostUsd,
+  resolveCanonicalModelId,
+  resolveRoutingCostEstimate,
+  resolveTokenEconomics,
+  type TokenEconomics,
+  type TokenEconomicsSource,
+} from "./token-economics.js";
