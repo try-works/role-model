@@ -108,7 +108,7 @@ The runtime hierarchy remains:
 | --- | --- | --- |
 | Overview | Runtime-wide posture and attention items | `/app` |
 | Studio | Request composition and multimodal API workspaces | `/app/studio/*` |
-| Local | Local inference runtime: loaded models, local endpoint management, swap history, host policy, log streaming, and matrix solver | `/app/local/*` |
+| Local | Two local inference backends: **peer** (you run the server) and **llama-swap** (role-model runs the swap manager). Peer and llama-swap pages are never combined. Role assignment happens on the model page for the backend in use. | `/app/local/*` |
 | Remote | LiteLLM-backed remote provider onboarding and remote model availability | `/app/remote/*` |
 | Models | Unified configured-model inventory and runtime role policy surfaces | `/app/models*` |
 | Router | Routing explanation, policy visibility, candidate comparison, and decision drill-in | `/app/router/*` |
@@ -146,12 +146,19 @@ The runtime hierarchy remains:
 | `/app/router/candidates` | live | `ledger-inspector` | Unified local and remote candidate inventory with health, role coverage, and observed routing-signal posture. |
 | `/app/router/decisions` | live | `ledger-inspector` | Explainable routing decision ledger keyed by request identity with direct drill-in to policy and scoring detail. |
 | `/app/router/decisions/:requestId` | live | `ledger-inspector` | Request-keyed routing decision explanation with scored candidates, diagnostics, and Observe request-detail handoff. |
-| `/app/local/models` | live | `registry-detail` | Local inference runtime state: currently loaded models, engine type, uptime, manual load/unload controls, and empty-state when no models are in memory. |
-| `/app/local/endpoints` | live | `registry-detail` | Local endpoint management for generic OpenAI-compatible peers, including health posture, model availability, and add/remove controls. |
-| `/app/local/swap` | live | `ledger-inspector` | Swap event ledger: chronological log of model swaps with timestamp, old/new model, and reason (request-driven or manual). |
-| `/app/local/policy` | live | `registry-detail` | Local host policy: TTL configuration, auto-unload toggle, startPort, logLevel, and capture buffer settings. |
-| `/app/local/logs` | target | `dual-console` | Real-time log streaming from llama-swap: live `/logs/stream` feed, historical `/logs` buffer, proxy/upstream source toggle, auto-scroll. |
-| `/app/local/models?view=grid` | live | `matrix-grid` | Grid view on Local Models for concurrently loaded models; `/app/local/matrix` redirects here. |
+| `/app/local/choose` | live | `registry-detail` | Backend chooser: peer-backed vs llama-swap workflows with handoff links to endpoints, model pages, and runtime config. |
+| `/app/local/endpoints` | live | `registry-detail` | Peer endpoint inventory for OpenAI-compatible servers you operate. Required before registering peer models. |
+| `/app/local/peer-models` | live | `registry-detail` | Register peer-backed models with the router and assign runtime roles for routing. |
+| `/app/local/llama-swap/models` | live | `registry-detail` | Load llama-swap-managed models, assign runtime roles, and edit per-model overrides. |
+| `/app/local/llama-swap/swap` | live | `ledger-inspector` | Chronological llama-swap load and swap events. |
+| `/app/local/llama-swap/policy` | live | `registry-detail` | TTL, auto-unload, and concurrency for the managed llama-swap runtime. |
+| `/app/local/llama-swap/logs` | live | `dual-console` | Live proxy and upstream logs from the llama-swap process. |
+| `/app/local/llama-swap/matrix` | live | `matrix-grid` | Grid of concurrently loaded llama-swap models. |
+| `/app/local/models` | redirect | — | Redirects to `/app/local/choose`. |
+| `/app/local/swap` | redirect | — | Redirects to `/app/local/llama-swap/swap`. |
+| `/app/local/policy` | redirect | — | Redirects to `/app/local/llama-swap/policy`. |
+| `/app/local/logs` | redirect | — | Redirects to `/app/local/llama-swap/logs`. |
+| `/app/local/matrix` | redirect | — | Redirects to `/app/local/llama-swap/matrix`. |
 | `/app/connect` | live | `registry-detail` | Consumer-facing registry of models and endpoints client applications can call after provider onboarding. |
 | `/app/observe/activity` | live | `ledger-inspector` | Preserved raw-host activity ledger over `/api/metrics` with inline capture drill-ins from `/api/captures/:id` and adjacent access to `/api/events`. |
 | `/app/observe/requests` | live | `ledger-inspector` | Canonical telemetry request ledger over `/api/role-model/telemetry/requests` with latency, token, cache, and source context. |
@@ -235,6 +242,16 @@ These routes are no longer vague placeholder ideas. Their layout contracts are i
 - Narrow contract/reference column
 - Larger model/upstream target inventory pane
 - Raw passthrough links stay contextual rather than global shell chrome
+
+### `Local > Choose` and llama-swap setup hints
+
+- **Choose** keeps peer-backed and llama-swap cards on separate columns; never mix load workflows on one page.
+- When llama-swap is not operational (no declared models or missing GGUF paths), llama-swap surfaces show honest setup hints instead of implying the host is broken.
+- **Prominent hint** on `/app/local/llama-swap/models`: headline, one-sentence peer vs llama-swap distinction, primary **Setup guide** CTA, secondary link to System → Runtime config.
+- **Compact note** on `/app/local/choose` (llama-swap card only) and compact banners on satellite llama-swap pages (`policy`, `swap`, `logs`, `matrix`).
+- **Setup guide modal** owns detailed numbered steps plus YAML/JSON scaffold copy blocks; inline hints stay short.
+- Load model stays visible but disabled with helper text until config is operational; declared model ids may appear as placeholders.
+- System → Runtime config exposes **Insert llama-swap scaffold** when `llamaSwap.models` is empty; operator must still Save and apply explicitly.
 
 ### `Local > Models`
 

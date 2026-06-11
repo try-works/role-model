@@ -1,0 +1,21 @@
+{
+  "builtAt": "2026-06-11",
+  "outputPath": "D:\\DEV\\role-model\\role-model-router\\dist\\release\\win32-x64\\role-model-runtime.exe",
+  "launcher": "D:\\DEV\\role-model\\role-model-router\\dist\\release\\win32-x64\\Role-Model.bat",
+  "sha256": "87c7bef6166e32462c30c84f819d36f5a3892efb8e92743d4e33bb5a8ffc8a11",
+  "configParitySteps": [
+    "POST /api/role-model/local/peer/models/lfm2.5-8b-a1b/load with roleIds [general.chat, tool.agent]",
+    "POST /api/role-model/endpoints moonshot.personal.kimi-code + moonshot/kimi-k2.6"
+  ],
+  "probeSummary": {
+    "totalCases": 33,
+    "bridgeCrash": 0,
+    "pass": 19,
+    "logPath": ".recursive/run/38-local-model-roles-peer-llama-swap-split/evidence/logs/green/routing-regression-2026-06-11.log"
+  },
+  "featureRouting": {
+    "directLocalModel": "HTTP 200 model=lfm2.5-8b-a1b",
+    "peerEndpointRoleIds": ["general.chat", "tool.agent"],
+    "peerModelsApi": "/api/role-model/local/peer/models"
+  }
+}

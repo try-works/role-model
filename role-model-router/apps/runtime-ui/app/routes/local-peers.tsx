@@ -123,12 +123,12 @@ export default function LocalPeersRoute() {
 
       <SectionCard
         title="Endpoint inventory"
-        description="Configured OpenAI-compatible peer endpoints available for local execution."
+        description="role-model probes each server at /v1/models before peer models can be registered."
       >
         {loading && peers.length === 0 ? (
           <LoadingState label="Loading local endpoints…" />
         ) : peers.length === 0 ? (
-          <EmptyState label="No local endpoints configured. Add an endpoint below." />
+          <EmptyState label="No peer endpoints configured. Add a server URL below to use peer-backed local models." />
         ) : (
           <div className="space-y-3">
             {peers.map((peer) => (
@@ -180,8 +180,8 @@ export default function LocalPeersRoute() {
       </SectionCard>
 
       <SectionCard
-        title="Add local endpoint"
-        description="Register an OpenAI-compatible peer endpoint for local model execution."
+        title="Add peer endpoint"
+        description="Base URL of your OpenAI-compatible API (with or without /v1). Optional bearer token if the server requires auth."
       >
         <div className="space-y-4">
           <div className="space-y-2">
@@ -196,7 +196,7 @@ export default function LocalPeersRoute() {
               type="url"
               value={newUrl}
               onChange={(e) => setNewUrl(e.target.value)}
-              placeholder="http://192.168.1.100:8080"
+              placeholder="http://127.0.0.1:1234"
               className={fieldClassName}
             />
           </div>
@@ -212,7 +212,7 @@ export default function LocalPeersRoute() {
               type="password"
               value={newToken}
               onChange={(e) => setNewToken(e.target.value)}
-              placeholder="Bearer token"
+              placeholder="Bearer token (optional)"
               className={fieldClassName}
             />
           </div>

@@ -1,0 +1,62 @@
+{
+  "capturedAt": "2026-06-11",
+  "peerModels": [
+    {
+      "modelId": "lfm2.5-8b-a1b",
+      "loadedAt": "2026-06-11T02:35:56.215Z",
+      "engine": "local-openai-compatible",
+      "localModelSource": "peer-backed",
+      "roleIds": [
+        "general.chat",
+        "tool.agent"
+      ],
+      "contextWindow": null,
+      "proxyBaseUrl": null,
+      "checkEndpoint": null,
+      "useModelName": null
+    }
+  ],
+  "purpose": "R9 pre-rebuild configuration parity baseline for run 38",
+  "previewUrl": "http://127.0.0.1:3456",
+  "downstreamAuth": {
+    "placeholderToken": "role-model-local",
+    "type": "bearer"
+  },
+  "endpoints": [
+    {
+      "modelId": "lfm2.5-8b-a1b",
+      "sourceType": "local",
+      "roleIds": [
+        "general.chat",
+        "tool.agent"
+      ],
+      "endpointId": "local-openai-compatible.personal.54fc2746-6472-42b0-901b-f2b178f5c0d0.local.lfm2.5-8b-a1b"
+    },
+    {
+      "modelId": "moonshot/kimi-k2.6",
+      "sourceType": "remote",
+      "roleIds": [
+        "classifier",
+        "coder.patch",
+        "coder.review",
+        "embedder",
+        "general.chat",
+        "language.detector",
+        "tool.agent"
+      ],
+      "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.6"
+    }
+  ],
+  "packageSeaSha256": "87c7bef6166e32462c30c84f819d36f5a3892efb8e92743d4e33bb5a8ffc8a11",
+  "models": [
+    {
+      "id": "lfm2.5-8b-a1b"
+    },
+    {
+      "id": "mixed.local-remote"
+    },
+    {
+      "id": "moonshot/kimi-k2.6"
+    }
+  ]
+}

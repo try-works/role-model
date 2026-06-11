@@ -133,13 +133,20 @@ export default function ControlModelsRoute() {
   const selectedModelAccounts = useMemo(
     () =>
       snapshot && selectedCard
-        ? snapshot.accounts.filter(
-            (account) =>
-              (account.allowedModels ?? []).includes(selectedCard.modelId) ||
-              (account.modelRoleBindings ?? []).some(
-                (binding) => binding.modelId === selectedCard.modelId,
-              ),
-          )
+        ? snapshot.accounts.filter((account) => {
+            const hasBinding = (account.modelRoleBindings ?? []).some(
+              (binding) => binding.modelId === selectedCard.modelId,
+            );
+            const allowsModel = (account.allowedModels ?? []).includes(selectedCard.modelId);
+            const wildcardPeerEndpoint =
+              (account.allowedModels ?? []).length === 0 &&
+              snapshot.endpoints.some(
+                (endpoint) =>
+                  endpoint.modelId === selectedCard.modelId &&
+                  endpoint.providerAccountId === account.providerAccountId,
+              );
+            return allowsModel || hasBinding || wildcardPeerEndpoint;
+          })
         : [],
     [selectedCard, snapshot],
   );
@@ -269,7 +276,7 @@ export default function ControlModelsRoute() {
             <>
               <EmptyState label="No configured models are available yet." />
               <div className="mt-4 flex flex-wrap gap-3">
-                <Link className={secondaryButtonClassName} to="/app/local/models">
+                <Link className={secondaryButtonClassName} to="/app/local/choose">
                   Open Local Models
                 </Link>
                 <Link className={secondaryButtonClassName} to="/app/local/endpoints">

@@ -62,8 +62,12 @@ const controlModelsSource = readFileSync(
   new URL("../routes/control-models.tsx", import.meta.url),
   "utf8",
 );
-const localModelsSource = readFileSync(
-  new URL("../routes/local-models.tsx", import.meta.url),
+const localPeerModelsSource = readFileSync(
+  new URL("../routes/local-peer-models.tsx", import.meta.url),
+  "utf8",
+);
+const localLlamaSwapModelsSource = readFileSync(
+  new URL("../routes/local-llama-swap-models.tsx", import.meta.url),
   "utf8",
 );
 const localLogsSource = readFileSync(new URL("../routes/local-logs.tsx", import.meta.url), "utf8");
@@ -159,11 +163,13 @@ describe("runtime design system", () => {
       {
         title: "Local",
         routes: [
-          "/app/local/models",
           "/app/local/endpoints",
-          "/app/local/swap",
-          "/app/local/policy",
-          "/app/local/logs",
+          "/app/local/peer-models",
+          "/app/local/llama-swap/models",
+          "/app/local/llama-swap/swap",
+          "/app/local/llama-swap/policy",
+          "/app/local/llama-swap/logs",
+          "/app/local/llama-swap/matrix",
         ],
       },
       {
@@ -223,11 +229,16 @@ describe("runtime design system", () => {
         template: "registry-detail",
       }),
     );
-    expect(getRuntimeRouteDefinition("/app/local/models")).toEqual(
+    expect(getRuntimeRouteDefinition("/app/local/peer-models")).toEqual(
       expect.objectContaining({
-        id: "local-models",
-        title: "Local models",
-        description: "Load and inspect llama-swap-managed local models and runtime overrides.",
+        id: "local-peer-models",
+        title: "Peer models",
+      }),
+    );
+    expect(getRuntimeRouteDefinition("/app/local/llama-swap/models")).toEqual(
+      expect.objectContaining({
+        id: "local-llama-swap-models",
+        title: "Llama-swap models",
       }),
     );
     expect(getRuntimeRouteDefinition("/app/local/endpoints")).toEqual(
@@ -235,7 +246,6 @@ describe("runtime design system", () => {
         id: "local-endpoints",
         label: "Endpoints",
         title: "Local endpoints",
-        description: "Generic OpenAI-compatible local peer endpoint inventory and management.",
       }),
     );
     expect(getRuntimeRouteDefinition("/app/system/runtime-config")).toEqual(
@@ -442,7 +452,9 @@ describe("runtime design system", () => {
 
   test("router implementation targets render repo-owned routing explanation surfaces", () => {
     expect(getRuntimeRouteDefinition("/app/router")?.title).toBe("Routing overview");
-    expect(getRuntimeRouteDefinition("/app/local/matrix")?.title).toBe("Model matrix");
+    expect(getRuntimeRouteDefinition("/app/local/llama-swap/matrix")?.title).toBe(
+      "Llama-swap matrix",
+    );
     expect(getRuntimeRouteDefinition("/app/router/candidates")?.title).toBe(
       "Candidate inventory",
     );
@@ -606,15 +618,15 @@ describe("runtime design system", () => {
   });
 
   test("local setup surfaces stay discoverable from navigation and empty registry states", () => {
-    expect(localModelsSource).toContain("Load local model");
-    expect(localModelsSource).toContain("llama-swap-managed runtime");
-    expect(localModelsSource).toContain("Open peer endpoints");
+    expect(localPeerModelsSource).toContain("Register model");
+    expect(localPeerModelsSource).toContain("Peer-backed");
+    expect(localLlamaSwapModelsSource).toContain("Load model");
+    expect(localLlamaSwapModelsSource).toContain("Llama-swap");
     expect(localPeersSource).toContain("Endpoint inventory");
-    expect(localPeersSource).toContain("OpenAI-compatible peer endpoints");
     expect(localPeersSource).toContain("Add endpoint");
     expect(endpointsRouteSource).toContain("/app/local/endpoints");
     expect(endpointsRouteSource).toContain("/app/connect/downstream");
-    expect(controlModelsSource).toContain("/app/local/models");
+    expect(controlModelsSource).toContain("/app/local/choose");
     expect(controlModelsSource).toContain("/app/local/endpoints");
   });
 
@@ -694,10 +706,10 @@ describe("runtime design system", () => {
     expect(designSystemSource).not.toContain("readonly eyebrow:");
     expect(designSystemSource).not.toContain("readonly noteTitle:");
     expect(designSystemSource).not.toContain("readonly noteBody:");
-    expect(getRuntimeRouteDefinition("/app/local/models")).toEqual(
+    expect(getRuntimeRouteDefinition("/app/local/llama-swap/models")).toEqual(
       expect.objectContaining({
         section: "Local",
-        title: "Local models",
+        title: "Llama-swap models",
       }),
     );
     expect(Object.keys(getRuntimeRouteDefinition("/app") ?? {})).not.toContain("eyebrow");

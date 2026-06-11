@@ -1,0 +1,100 @@
+
+ RUN  v3.2.4 D:/DEV/role-model
+
+ Γ£ô role-model-router/apps/runtime-host-bridge/src/local-model-role-bindings.test.ts (5 tests) 16ms
+ Γ£ô .worktrees/15-unified-vendor-execution/role-model-router/apps/runtime-ui/app/lib/design-system.test.ts (8 tests) 140ms
+ Γ£ô .worktrees/14-router-runtime-ui-foundation/role-model-router/apps/runtime-ui/app/lib/design-system.test.ts (8 tests) 146ms
+ Γ£ô .worktrees/26-router-runtime-difficulty-guided-routing/role-model-router/apps/runtime-ui/app/lib/design-system.test.ts (11 tests) 260ms
+ Γ£ô .worktrees/24-router-runtime-recency-bias-throughput-sla/role-model-router/apps/runtime-ui/app/lib/design-system.test.ts (11 tests) 260ms
+ Γ£ô .worktrees/20-local-llama-swap-completion/role-model-router/apps/runtime-ui/app/lib/design-system.test.ts (11 tests) 338ms
+ Γ£ô .worktrees/17-oauth-litellm-generalization/role-model-router/apps/runtime-ui/app/lib/design-system.test.ts (11 tests) 332ms
+ Γ£ô .worktrees/29-router-runtime-request-rewriter-hybrid-mode/role-model-router/apps/runtime-ui/app/lib/design-system.test.ts (11 tests) 332ms
+ Γ£ô .worktrees/22-router-runtime-routing-strategy-lock/role-model-router/apps/runtime-ui/app/lib/design-system.test.ts (11 tests) 378ms
+ Γ£ô .worktrees/21-semantic-color-system/role-model-router/apps/runtime-ui/app/lib/design-system.test.ts (11 tests) 409ms
+ Γ¥» .worktrees/18-local-llama-swap-runtime/role-model-router/apps/runtime-ui/app/lib/design-system.test.ts (11 tests | 1 failed) 421ms
+   ├ù runtime design system > defines navigation groups and layout templates for every runtime route 54ms
+     ΓåÆ expected [ { title: 'Overview', ΓÇª(1) }, ΓÇª(6) ] to deeply equal [ { title: 'Overview', ΓÇª(1) }, ΓÇª(5) ]
+   Γ£ô runtime design system > keeps the shell on restrained radii and explicit content widths 3ms
+   Γ£ô runtime design system > global shell chrome keeps legacy vendor ui out of the main runtime contract 193ms
+   Γ£ô runtime design system > studio implementation targets render repo-owned workspace sections instead of placeholder blueprints 50ms
+   Γ£ô runtime design system > integration and system implementation targets render live upstream and peer surfaces 62ms
+   Γ£ô runtime design system > design system doc marks the converted pages as live routes 8ms
+   Γ£ô runtime design system > control routes tolerate an unassigned controller before endpoint activation 1ms
+   Γ£ô runtime design system > applies the swiss stone palette, ibm plex typography, and dual-scheme browser contract in shared app chrome 1ms
+   Γ£ô runtime design system > keeps shared states on the stone plus single-accent palette 1ms
+   Γ£ô runtime design system > control runtime config is a first-class route and models stays inspect-only 43ms
+   Γ£ô runtime design system > registry and system layouts avoid redundant KPI strips and placeholder note panels 1ms
+ Γ£ô .worktrees/23-router-runtime-live-observed-feedback/role-model-router/apps/runtime-ui/app/lib/design-system.test.ts (11 tests) 319ms
+ Γ£ô .worktrees/25-router-runtime-model-alias-pool/role-model-router/apps/runtime-ui/app/lib/design-system.test.ts (11 tests) 281ms
+ Γ£ô .worktrees/27-router-runtime-difficulty-learning-cache/role-model-router/apps/runtime-ui/app/lib/design-system.test.ts (11 tests) 317ms
+ Γ£ô role-model-router/apps/runtime-ui/app/lib/design-system.test.ts (21 tests) 243ms
+ Γ£ô .worktrees/30-router-runtime-strategy-convergence-e2e/role-model-router/apps/runtime-ui/app/lib/design-system.test.ts (12 tests) 186ms
+ Γ£ô .worktrees/31-merge-validate/role-model-router/apps/runtime-ui/app/lib/design-system.test.ts (12 tests) 170ms
+ Γ£ô .worktrees/31-main-ci-parity-evidence-json-repair/role-model-router/apps/runtime-ui/app/lib/design-system.test.ts (12 tests) 166ms
+ Γ£ô .worktrees/main-after-run31-validate/role-model-router/apps/runtime-ui/app/lib/design-system.test.ts (12 tests) 151ms
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Suites 15 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  .worktrees/19-local-llama-swap-proxy/role-model-router/apps/runtime-ui/app/lib/design-system.test.ts [ .worktrees/19-local-llama-swap-proxy/role-model-router/apps/runtime-ui/app/lib/design-system.test.ts ]
+ FAIL  .worktrees/16-router-runtime-unified-telemetry-dashboard/role-model-router/apps/runtime-ui/app/lib/design-system.test.ts [ .worktrees/16-router-runtime-unified-telemetry-dashboard/role-model-router/apps/runtime-ui/app/lib/design-system.test.ts ]
+ FAIL  .worktrees/28-router-runtime-controller-guided-routing/role-model-router/apps/runtime-ui/app/lib/design-system.test.ts [ .worktrees/28-router-runtime-controller-guided-routing/role-model-router/apps/runtime-ui/app/lib/design-system.test.ts ]
+ FAIL  .worktrees/32-models-dev-metadata-coverage-lf/role-model-router/apps/runtime-ui/app/lib/design-system.test.ts [ .worktrees/32-models-dev-metadata-coverage-lf/role-model-router/apps/runtime-ui/app/lib/design-system.test.ts ]
+ FAIL  .worktrees/32-models-dev-metadata-coverage/role-model-router/apps/runtime-ui/app/lib/design-system.test.ts [ .worktrees/32-models-dev-metadata-coverage/role-model-router/apps/runtime-ui/app/lib/design-system.test.ts ]
+ FAIL  .worktrees/32-router-runtime-routing-operator-surface/role-model-router/apps/runtime-ui/app/lib/design-system.test.ts [ .worktrees/32-router-runtime-routing-operator-surface/role-model-router/apps/runtime-ui/app/lib/design-system.test.ts ]
+ FAIL  .worktrees/33-router-runtime-llamaswap-litellm-routing-alignment/role-model-router/apps/runtime-ui/app/lib/design-system.test.ts [ .worktrees/33-router-runtime-llamaswap-litellm-routing-alignment/role-model-router/apps/runtime-ui/app/lib/design-system.test.ts ]
+ FAIL  .worktrees/35-runtime-ui-connect-declutter/role-model-router/apps/runtime-ui/app/lib/design-system.test.ts [ .worktrees/35-runtime-ui-connect-declutter/role-model-router/apps/runtime-ui/app/lib/design-system.test.ts ]
+ FAIL  .worktrees/34-router-runtime-role-policy-and-ui-fixture-reduction/role-model-router/apps/runtime-ui/app/lib/design-system.test.ts [ .worktrees/34-router-runtime-role-policy-and-ui-fixture-reduction/role-model-router/apps/runtime-ui/app/lib/design-system.test.ts ]
+ FAIL  .worktrees/36-runtime-consumption-telemetry-remediation/role-model-router/apps/runtime-ui/app/lib/design-system.test.ts [ .worktrees/36-runtime-consumption-telemetry-remediation/role-model-router/apps/runtime-ui/app/lib/design-system.test.ts ]
+ FAIL  .worktrees/run31-originmain-ci-probe/role-model-router/apps/runtime-ui/app/lib/design-system.test.ts [ .worktrees/run31-originmain-ci-probe/role-model-router/apps/runtime-ui/app/lib/design-system.test.ts ]
+ FAIL  .worktrees/validate-main-after-hotfix10/role-model-router/apps/runtime-ui/app/lib/design-system.test.ts [ .worktrees/validate-main-after-hotfix10/role-model-router/apps/runtime-ui/app/lib/design-system.test.ts ]
+ FAIL  .worktrees/32a-routing-operator-stabilize/role-model-router/apps/runtime-ui/app/lib/design-system.test.ts [ .worktrees/32a-routing-operator-stabilize/role-model-router/apps/runtime-ui/app/lib/design-system.test.ts ]
+ FAIL  .worktrees/validate-main-after-run32a/role-model-router/apps/runtime-ui/app/lib/design-system.test.ts [ .worktrees/validate-main-after-run32a/role-model-router/apps/runtime-ui/app/lib/design-system.test.ts ]
+ FAIL  .worktrees/validate-main-after-run32b/role-model-router/apps/runtime-ui/app/lib/design-system.test.ts [ .worktrees/validate-main-after-run32b/role-model-router/apps/runtime-ui/app/lib/design-system.test.ts ]
+Error: ENOSPC: no space left on device, write
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/16]ΓÄ»
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  .worktrees/18-local-llama-swap-runtime/role-model-router/apps/runtime-ui/app/lib/design-system.test.ts > runtime design system > defines navigation groups and layout templates for every runtime route
+AssertionError: expected [ { title: 'Overview', ΓÇª(1) }, ΓÇª(6) ] to deeply equal [ { title: 'Overview', ΓÇª(1) }, ΓÇª(5) ]
+
+- Expected
++ Received
+
+@@ -15,10 +15,18 @@
+      ],
+      "title": "Studio",
+    },
+    {
+      "routes": [
++       "/app/local/models",
++       "/app/local/swap",
++       "/app/local/policy",
++     ],
++     "title": "Local",
++   },
++   {
++     "routes": [
+        "/app/control/providers",
+        "/app/control/runtime-config",
+        "/app/control/controller",
+        "/app/control/endpoints",
+        "/app/control/models",
+
+ Γ¥» .worktrees/18-local-llama-swap-runtime/role-model-router/apps/runtime-ui/app/lib/design-system.test.ts:42:7
+     40|         routes: section.items.map((item) => item.to),
+     41|       })),
+     42|     ).toEqual([
+       |       ^
+     43|       {
+     44|         title: "Overview",
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[2/16]ΓÄ»
+
+
+ Test Files  16 failed | 18 passed (34)
+      Tests  1 failed | 210 passed (211)
+   Start at  04:51:16
+   Duration  12.04s (transform 40.97s, setup 0ms, collect 70.65s, tests 4.86s, environment 19ms, prepare 14.47s)
+

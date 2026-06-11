@@ -1,0 +1,29 @@
+Run 38 worktree bootstrap — 2026-06-11
+
+Commands:
+  git stash push -u -m "run-38 WIP before worktree bootstrap"
+  git checkout main
+  git worktree add .worktrees/38-local-model-roles-peer-llama-swap-split recursive/38-local-model-roles-peer-llama-swap-split
+  cd .worktrees/38-local-model-roles-peer-llama-swap-split && git stash pop
+  git restore .recursive/DECISIONS.md .recursive/STATE.md role-model-router/  (repo root main cleanup)
+
+Results:
+  Worktree path: D:\DEV\role-model\.worktrees\38-local-model-roles-peer-llama-swap-split
+  Worktree branch: recursive/38-local-model-roles-peer-llama-swap-split
+  Repo root branch: main
+  Base commit: c269a6d2e462dc0ca80539f1684785b2fc3b0960
+
+  corepack pnpm install (worktree role-model-router): PASS
+  vitest local-model-role-bindings.test.ts + design-system.test.ts: 26/26 PASS
+
+Product changes in worktree (uncommitted):
+  Modified: bridge index/cli, runtime-ui routes/design-system, provider-account, DECISIONS/STATE
+  New: local-choose, local-peer-models, local-llama-swap-models, local-model-role-picker, local-model-role-bindings.ts
+
+Run artifacts:
+  Canonical location: D:\DEV\role-model\.worktrees\38-local-model-roles-peer-llama-swap-split\.recursive\run\38-local-model-roles-peer-llama-swap-split\
+  (addenda + evidence + phase docs — worktree-only; repo-root duplicate removed)
+
+Notes:
+  Stash warned: failed to remove evidence/logs/runtime-startup.log (file lock) — harmless
+  Main repo root product tree restored to clean; all run-38 product edits live in worktree only

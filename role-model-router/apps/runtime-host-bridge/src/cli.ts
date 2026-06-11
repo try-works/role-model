@@ -53,7 +53,14 @@ type CliBackend = Pick<
   | "readBenchmarkPreferences"
   | "updateBenchmarkPreferences"
   | "listLocalModels"
+  | "listPeerLocalModels"
+  | "listLlamaSwapLocalModels"
   | "loadLocalModel"
+  | "loadPeerModel"
+  | "loadLlamaSwapModel"
+  | "setPeerModelRoles"
+  | "setLlamaSwapModelRoles"
+  | "unloadPeerModel"
   | "unloadLocalModel"
   | "readLocalPolicy"
   | "updateLocalPolicy"
@@ -134,7 +141,14 @@ export function createCliServerOptions(
     readBenchmarkPreferences: backend.readBenchmarkPreferences,
     updateBenchmarkPreferences: backend.updateBenchmarkPreferences,
     listLocalModels: backend.listLocalModels,
+    listPeerLocalModels: backend.listPeerLocalModels,
+    listLlamaSwapLocalModels: backend.listLlamaSwapLocalModels,
     loadLocalModel: backend.loadLocalModel,
+    loadPeerModel: backend.loadPeerModel,
+    loadLlamaSwapModel: backend.loadLlamaSwapModel,
+    setPeerModelRoles: backend.setPeerModelRoles,
+    setLlamaSwapModelRoles: backend.setLlamaSwapModelRoles,
+    unloadPeerModel: backend.unloadPeerModel,
     unloadLocalModel: backend.unloadLocalModel,
     readLocalPolicy: backend.readLocalPolicy,
     updateLocalPolicy: backend.updateLocalPolicy,
