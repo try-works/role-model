@@ -1,0 +1,10 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/39-runtime-session-rehydration-model-inventory/role-model-router/apps/runtime-host-bridge
+
+ Γ£ô src/operator-intent.test.ts (7 tests) 30ms
+
+ Test Files  1 passed (1)
+      Tests  7 passed (7)
+   Start at  06:51:19
+   Duration  1.03s (transform 122ms, setup 0ms, collect 126ms, tests 30ms, environment 0ms, prepare 272ms)
+

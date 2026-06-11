@@ -1,0 +1,15 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/39-runtime-session-rehydration-model-inventory/role-model-router/apps/runtime-host-bridge
+
+ Γ£ô src/session-bootstrap.test.ts (4 tests) 13ms
+ Γ£ô src/oauth-credential.test.ts (2 tests) 32ms
+(node:24832) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ Γ£ô test/endpoint-rehydration.test.ts (1 test) 587ms
+   Γ£ô endpoint rehydration > rehydrates sqlite runtime endpoints across backend restart without re-activation  585ms
+
+ Test Files  3 passed (3)
+      Tests  7 passed (7)
+   Start at  06:57:28
+   Duration  3.12s (transform 1.41s, setup 0ms, collect 1.94s, tests 632ms, environment 1ms, prepare 986ms)
+

@@ -78,6 +78,8 @@ type QaBridgeBackend = Pick<
   | "readPeers"
   | "updatePeers"
   | "checkPeerHealth"
+  | "getRoutableInventory"
+  | "readHealthStatus"
   | "shutdown"
 >;
 
@@ -172,6 +174,7 @@ export function createQaServerOptions(
     listActivityMetrics: async () => [],
     readLogs: async () => "No logs available in QA mode.",
     readRuntimeSummary: backend.readRuntimeSummary,
+    readHealthStatus: backend.readHealthStatus,
     readRuntimeConfig: backend.readRuntimeConfig,
     updateRuntimeConfig: backend.updateRuntimeConfig,
     readTelemetrySummary: backend.readTelemetrySummary,
@@ -222,6 +225,7 @@ export function createQaServerOptions(
     readPeers: backend.readPeers,
     updatePeers: backend.updatePeers,
     checkPeerHealth: backend.checkPeerHealth,
+    getRoutableInventory: backend.getRoutableInventory,
   };
 }
 

@@ -103,6 +103,36 @@ import {
   readLlamaSwapRoleIdsByModelId,
   resolveEndpointRoleIds,
 } from "./local-model-role-bindings.js";
+import { resolveOauthCredentialRef } from "./oauth-credential.js";
+import {
+  type OperatorIntentDiagnostic,
+  persistOperatorIntent,
+  readOperatorIntent,
+  readOperatorIntentResult,
+  resolveOperatorIntentPath,
+  removePeerLoad,
+  upsertLlamaSwapLoad,
+  upsertPeerLoad,
+  upsertRemoteActivation,
+} from "./operator-intent.js";
+import {
+  probeRemoteEndpoints,
+  type RemoteHealthProbeResult,
+  type RemoteHealthProbeTarget,
+} from "./remote-health-probe.js";
+import {
+  buildRoutableInventory,
+  resolveAliasAllowEndpoints,
+  validateAliasInventoryResolution,
+  warnAliasModelIdDrift,
+  type AliasDriftWarning,
+  type RoutableInventory,
+} from "./routable-inventory.js";
+import {
+  createPendingBootstrapState,
+  runSessionBootstrapStages,
+  type SessionBootstrapState,
+} from "./session-bootstrap.js";
 import {
   readActiveBenchmarkRun as readActiveBenchmarkRunProgress,
   readBenchmarkRunProgress,
@@ -127,6 +157,10 @@ import {
   loadLiteLLMModelPrices,
 } from "@role-model-router/catalog";
 import { resolveLlamaSwapCommand } from "./runtime-assets.js";
+import {
+  resolveRuntimeRoutingModelSelection,
+  summarizeRouterGuidance,
+} from "./runtime-routing-model.js";
 import {
   type UnifiedRuntimeConfig,
   type UnifiedRuntimeDifficultyBucket,
@@ -360,16 +394,38 @@ function isBridgeRoutingStrategy(value: string): value is BridgeRoutingStrategy 
   return BRIDGE_ROUTING_STRATEGIES.has(value as BridgeRoutingStrategy);
 }
 
+function combineDifficultyMessageText(
+  messages: readonly OpenAIChatCompletionsMessage[],
+  options?: { readonly roles?: readonly OpenAIChatCompletionsMessage["role"][] },
+): string {
+  const selectedMessages = options?.roles
+    ? messages.filter((message) => options.roles?.includes(message.role))
+    : messages;
+  return selectedMessages
+    .map((message) => readChatMessageTextContent(message.content))
+    .join("\n");
+}
+
+function combineLastUserDifficultyMessageText(
+  messages: readonly OpenAIChatCompletionsMessage[],
+): string {
+  const userMessages = messages.filter((message) => message.role === "user");
+  if (userMessages.length === 0) {
+    return "";
+  }
+  return readChatMessageTextContent(userMessages[userMessages.length - 1]?.content);
+}
+
 function summarizeDifficultySignals(input: {
   readonly messages: readonly OpenAIChatCompletionsMessage[];
   readonly contextTokens: number;
   readonly toolCount: number;
 }): DifficultyRoutingSignals {
-  const combined = input.messages
-    .map((message) => readChatMessageTextContent(message.content))
-    .join("\n");
+  const combined = combineDifficultyMessageText(input.messages);
+  const askModeBurdenSource =
+    input.toolCount === 0 ? combineLastUserDifficultyMessageText(input.messages) : combined;
   const instructionConstraintCount = countMatches(
-    combined.toLowerCase(),
+    askModeBurdenSource.toLowerCase(),
     /\b(must|should|need to|required|preserve|verify|strict|do not|don't|never|without|constraint|compatible)\b/g,
   );
   const decompositionKeywordCount = countMatches(
@@ -383,7 +439,7 @@ function summarizeDifficultySignals(input: {
     instructionConstraintCount,
     decompositionKeywordCount,
     codeOrSchemaBurden: /\b(code|diff|patch|refactor|schema|contract|validation|test)\b/i.test(
-      combined,
+      askModeBurdenSource,
     ),
   };
 }
@@ -1266,6 +1322,7 @@ export interface StartBridgeServerOptions {
     body: readonly { id: string; url: string; authToken?: string }[],
   ) => Promise<readonly { id: string; url: string; authToken?: string }[]>;
   readonly checkPeerHealth?: (url: string) => Promise<{ healthy: boolean }>;
+  readonly getRoutableInventory?: () => RoutableInventory | null;
 }
 
 export interface RuntimeBridgeBackend {
@@ -1301,12 +1358,37 @@ export interface RuntimeBridgeBackend {
       enabled: boolean;
       path: string | null;
     };
+    sessionBootstrap: {
+      status: SessionBootstrapState["status"];
+      startedAt: string | null;
+      finishedAt: string | null;
+      stages: SessionBootstrapState["stages"];
+    };
+    inventorySummary: {
+      modelIdCount: number;
+      endpointIdCount: number;
+      localEndpointCount: number;
+      remoteEndpointCount: number;
+      emptyAliasIds: readonly string[];
+    };
+    aliasDrift: readonly {
+      aliasId: string;
+      hintModelId: string;
+      suggestedModelIds: readonly string[];
+      message: string;
+    }[];
   }>;
   readHealthStatus(): Promise<{
     status: "healthy" | "degraded";
     executionMode: UnifiedRuntimeExecutionMode;
     vendors: Record<string, VendorRuntimeStatus>;
     inactiveVendors: string[];
+    sessionBootstrap: {
+      status: SessionBootstrapState["status"];
+      startedAt: string | null;
+      finishedAt: string | null;
+      stages: SessionBootstrapState["stages"];
+    };
   }>;
   listProviders(): Promise<
     readonly {
@@ -1486,6 +1568,7 @@ export interface RuntimeBridgeBackend {
     body: readonly { id: string; url: string; authToken?: string }[],
   ): Promise<readonly { id: string; url: string; authToken?: string }[]>;
   checkPeerHealth(url: string): Promise<{ healthy: boolean }>;
+  getRoutableInventory?(): RoutableInventory | null;
   shutdown(): Promise<void>;
 }
 
@@ -2067,46 +2150,30 @@ function createUnifiedProviderAccounts(
       );
     }
 
-    // Check for existing OAuth token file (R5)
-    const oauthTokenPath = path.join(
-      runtimeStateRoot,
-      scopeId,
-      "credentials",
-      "oauth",
+    const providerAccountId = `${providerConfig.providerId}.litellm`;
+    const resolvedOauthCredential = resolveOauthCredentialRef(
+      { runtimeStateRoot, scopeId },
       provider.providerId,
-      `${provider.providerId}.litellm.json`,
+      providerAccountId,
     );
-    let hasOauthToken = false;
-    try {
-      const tokenContent = readFileSync(oauthTokenPath, "utf8");
-      const tokenPayload = JSON.parse(tokenContent) as Record<string, unknown>;
-      hasOauthToken =
-        typeof tokenPayload.access_token === "string" && tokenPayload.access_token.length > 0;
-    } catch {
-      // Token file does not exist or is invalid
-    }
-
     const supportsOAuth = provider.supportedAuthModes?.includes("oauth2-device-code") ?? false;
     const authMode =
-      hasOauthToken && supportsOAuth
+      resolvedOauthCredential && supportsOAuth
         ? "oauth2-device-code"
         : (provider.supportedAuthModes?.find((candidate) => candidate === "api-key-static") ??
           provider.supportedAuthModes?.[0] ??
           "api-key-static");
 
     const credentialRef =
-      hasOauthToken && supportsOAuth
-        ? {
-            backend: "local-file" as const,
-            ref: `oauth/${provider.providerId}/${provider.providerId}.litellm`,
-          }
+      resolvedOauthCredential && supportsOAuth
+        ? resolvedOauthCredential
         : resolveEnvCredentialRef(
             providerConfig.apiKeyRef,
             `${provider.providerId.toUpperCase()}_API_KEY`,
           );
 
     return {
-      providerAccountId: `${providerConfig.providerId}.litellm`,
+      providerAccountId,
       providerId: provider.providerId,
       providerKind: provider.providerKind,
       orgScope: "runtime-config",
@@ -3209,6 +3276,7 @@ function parseResponsesBody(body: Record<string, unknown>): OpenAIResponsesBody 
 export function createModelListResponse(
   registry: EndpointRegistryResult,
   modelAliases: readonly UnifiedRuntimeModelAliasConfig[] = [],
+  inventory: RoutableInventory | null = null,
 ): BridgeModelListResponse {
   const byModelId = new Map<string, string[]>();
 
@@ -3219,14 +3287,23 @@ export function createModelListResponse(
   }
 
   for (const alias of modelAliases) {
-    const endpointIds = registry.endpoints
-      .filter((endpoint) => alias.modelIds.includes(endpoint.identity.model_id))
-      .map((endpoint) => endpoint.identity.endpoint_id)
-      .sort(compareText);
+    const endpointIds = inventory
+      ? resolveAliasAllowEndpoints(
+          alias,
+          inventory,
+          registry,
+        ).allowEndpoints
+      : [
+          ...new Set(
+            registry.endpoints
+              .filter((endpoint) => alias.modelIds.includes(endpoint.identity.model_id))
+              .map((endpoint) => endpoint.identity.endpoint_id),
+          ),
+        ].sort(compareText);
     if (endpointIds.length === 0) {
       continue;
     }
-    byModelId.set(alias.aliasId, endpointIds);
+    byModelId.set(alias.aliasId, [...endpointIds]);
   }
 
   const data = [...byModelId.entries()]
@@ -3294,6 +3371,7 @@ function resolveRequestedModelPool(
   registry: EndpointRegistryResult,
   requestedModel: string,
   modelAliases: readonly UnifiedRuntimeModelAliasConfig[] = [],
+  inventory: RoutableInventory | null = null,
 ): {
   readonly allowEndpoints: readonly string[];
   readonly routingDiagnostics?: Pick<RuntimeRoutingDiagnostics, "aliasResolution">;
@@ -3302,6 +3380,27 @@ function resolveRequestedModelPool(
   if (!alias) {
     return {
       allowEndpoints: collectAllowedEndpointIds(registry, [requestedModel]),
+    };
+  }
+
+  if (inventory) {
+    const resolution = resolveAliasAllowEndpoints(alias, inventory, registry);
+    return {
+      allowEndpoints: resolution.allowEndpoints,
+      routingDiagnostics: {
+        aliasResolution: {
+          requestedModel,
+          aliasId: alias.aliasId,
+          resolvedModelIds: [...resolution.resolvedModelIds],
+          allowEndpoints: resolution.allowEndpoints,
+          ...(resolution.poolEmptyReason
+            ? { poolEmptyReason: resolution.poolEmptyReason }
+            : {}),
+          ...(resolution.driftWarnings.length > 0
+            ? { driftWarnings: resolution.driftWarnings }
+            : {}),
+        },
+      },
     };
   }
 
@@ -3314,6 +3413,7 @@ function resolveRequestedModelPool(
         aliasId: alias.aliasId,
         resolvedModelIds: [...alias.modelIds],
         allowEndpoints,
+        ...(allowEndpoints.length === 0 ? { poolEmptyReason: "ALIAS_POOL_EMPTY" as const } : {}),
       },
     },
   };
@@ -3573,12 +3673,14 @@ export function mapChatCompletionsRequest(
   requestOptions?: BridgeExecutionRequestOptions,
   roleDefinitions?: readonly RuntimeRoleDefinitionRecord[],
   defaultRoutingMode?: RuntimeRoutingMode,
+  inventory: RoutableInventory | null = null,
 ): BridgeExecutionPlan {
   const contextTokens = estimateContextTokens(body.messages, body.tools?.length ?? 0);
   const { allowEndpoints: modelAllowEndpoints, routingDiagnostics } = resolveRequestedModelPool(
     registry,
     body.model,
     modelAliases,
+    inventory,
   );
   const allowEndpoints = applyRequestedEndpointOverride({
     requestedModel: body.model,
@@ -3687,6 +3789,7 @@ export function mapResponsesRequest(
   requestOptions?: BridgeExecutionRequestOptions,
   roleDefinitions?: readonly RuntimeRoleDefinitionRecord[],
   defaultRoutingMode?: RuntimeRoutingMode,
+  inventory: RoutableInventory | null = null,
 ): BridgeExecutionPlan {
   const messages = toResponsesInputMessages(body.input);
   const contextTokens = estimateContextTokens(messages, body.tools?.length ?? 0);
@@ -3694,6 +3797,7 @@ export function mapResponsesRequest(
     registry,
     body.model,
     modelAliases,
+    inventory,
   );
   const allowEndpoints = applyRequestedEndpointOverride({
     requestedModel: body.model,
@@ -4191,6 +4295,7 @@ function hydrateOauthProviderAccounts(
   scopeId: string,
   accounts: readonly ProviderAccountRecord[],
 ): ProviderAccountRecord[] {
+  const oauthLocation = { runtimeStateRoot, scopeId };
   return accounts.map((account) => {
     if (
       account.authMode !== "oauth2-device-code" ||
@@ -4200,10 +4305,17 @@ function hydrateOauthProviderAccounts(
       return account;
     }
 
+    const resolvedCredential =
+      resolveOauthCredentialRef(
+        oauthLocation,
+        account.providerId,
+        account.providerAccountId,
+        account.credentialRef,
+      ) ?? account.credentialRef;
     const payload = readStoredOauthTokenFileSync(
       runtimeStateRoot,
       scopeId,
-      account.credentialRef.ref,
+      resolvedCredential.ref,
     );
     const hasStoredToken =
       readStoredAccessToken(payload).length > 0 || readStoredRefreshToken(payload).length > 0;
@@ -4211,20 +4323,24 @@ function hydrateOauthProviderAccounts(
       return account;
     }
 
+    const hydratedAccount = {
+      ...account,
+      credentialRef: resolvedCredential,
+      status: "active" as const,
+      healthStatus: "healthy" as const,
+      rotationState: "stable" as const,
+    };
+
     if (
-      account.status === "active" &&
-      account.healthStatus === "healthy" &&
-      account.rotationState === "stable"
+      account.status === hydratedAccount.status &&
+      account.healthStatus === hydratedAccount.healthStatus &&
+      account.rotationState === hydratedAccount.rotationState &&
+      account.credentialRef.ref === hydratedAccount.credentialRef.ref
     ) {
       return account;
     }
 
-    return {
-      ...account,
-      status: "active",
-      healthStatus: "healthy",
-      rotationState: "stable",
-    };
+    return hydratedAccount;
   });
 }
 
@@ -5091,7 +5207,8 @@ function createRequestHandler(options: StartBridgeServerOptions) {
 
     if (request.method === "GET" && url.pathname === "/v1/models") {
       const modelAliases = await resolveConfiguredModelAliases(options.readRuntimeConfig);
-      writeJson(response, 200, createModelListResponse(registry, modelAliases));
+      const inventory = options.getRoutableInventory?.() ?? null;
+      writeJson(response, 200, createModelListResponse(registry, modelAliases, inventory));
       return;
     }
 
@@ -6290,9 +6407,10 @@ export async function createRuntimeBridgeBackend(
       tokenBudget: number;
     };
   }>(path.join(fixtureRoot, "context-envelope.json"));
-  const routingModel = await readJson<RoutingModelSelection>(
+  const fixtureRoutingModel = await readJson<RoutingModelSelection>(
     path.join(fixtureRoot, "routing-model-guidance.json"),
-  );
+  ).catch(() => undefined);
+  let routingModel: RoutingModelSelection | undefined;
   const captureFixtureMap = await readJson<CaptureFixtureMap>(
     path.join(fixtureRoot, "adapter-captures.json"),
   );
@@ -6332,7 +6450,13 @@ export async function createRuntimeBridgeBackend(
     runtimeStateRoot: options.runtimeStateRoot,
     scopeId: options.scopeId,
   });
-  clearRuntimeEndpoints(initialization.databasePath);
+  const operatorIntentLocation = {
+    runtimeStateRoot: options.runtimeStateRoot,
+    scopeId: options.scopeId,
+  };
+  let operatorIntentDiagnostic: OperatorIntentDiagnostic = readOperatorIntentResult(
+    operatorIntentLocation,
+  ).diagnostic;
   deleteProviderDeviceAuthorizationsByAccountId(
     initialization.databasePath,
     legacyPlaceholderProviderAccountIds,
@@ -6441,20 +6565,24 @@ export async function createRuntimeBridgeBackend(
     connectedWithoutEndpointCount: number;
     readyAccountCount: number;
   } => {
+    const latestAccounts = readCurrentAccounts();
+    const latestEndpoints = listRuntimeEndpoints({
+      databasePath: initialization.databasePath,
+    });
     const pendingAccountIds = new Set(
       listCurrentProviderDeviceAuthorizations()
         .filter((authorization) => authorization.status === "pending")
         .map((authorization) => authorization.providerAccountId),
     );
     const readyAccountIds = new Set(
-      runtimeEndpoints
+      latestEndpoints
         .filter((endpoint) => endpoint.lifecycleState === "active")
         .map((endpoint) => endpoint.providerAccountId),
     );
     let credentialsMissingAccountCount = 0;
     let connectedWithoutEndpointCount = 0;
 
-    for (const account of currentAccounts) {
+    for (const account of latestAccounts) {
       if (
         readyAccountIds.has(account.providerAccountId) ||
         pendingAccountIds.has(account.providerAccountId)
@@ -6495,6 +6623,55 @@ export async function createRuntimeBridgeBackend(
       currentAccounts,
       runtimeEndpoints,
     );
+  const emptyRoutableInventory = (): RoutableInventory => ({
+    modelIds: [],
+    endpointIds: [],
+    entries: [],
+    bySourceType: { local: [], remote: [] },
+  });
+  let currentRoutableInventory: RoutableInventory = emptyRoutableInventory();
+  let currentAliasDriftWarnings: readonly AliasDriftWarning[] = [];
+  const refreshRoutableInventoryState = (): void => {
+    currentRoutableInventory = buildRoutableInventory(
+      currentRegistry,
+      getCurrentRegistrySources(),
+    );
+    const aliases = currentUnifiedRuntimeConfig?.modelAliases ?? [];
+    currentAliasDriftWarnings = aliases.flatMap((alias) =>
+      warnAliasModelIdDrift(alias, currentRoutableInventory),
+    );
+  };
+  const buildInventorySummary = (): {
+    modelIdCount: number;
+    endpointIdCount: number;
+    localEndpointCount: number;
+    remoteEndpointCount: number;
+    emptyAliasIds: readonly string[];
+  } => {
+    const aliases = currentUnifiedRuntimeConfig?.modelAliases ?? [];
+    const emptyAliasIds = aliases
+      .filter((alias) =>
+        resolveAliasAllowEndpoints(alias, currentRoutableInventory, currentRegistry).poolEmpty,
+      )
+      .map((alias) => alias.aliasId)
+      .sort(compareText);
+    return {
+      modelIdCount: currentRoutableInventory.modelIds.length,
+      endpointIdCount: currentRoutableInventory.endpointIds.length,
+      localEndpointCount: currentRoutableInventory.bySourceType.local.length,
+      remoteEndpointCount: currentRoutableInventory.bySourceType.remote.length,
+      emptyAliasIds,
+    };
+  };
+  const syncRoutingModelSelection = (): void => {
+    routingModel = resolveRuntimeRoutingModelSelection({
+      fixtureRoutingModel,
+      unifiedConfig: currentUnifiedRuntimeConfig,
+      routableEndpointIds: currentRegistry.endpoints.map(
+        (endpoint) => endpoint.identity.endpoint_id,
+      ),
+    });
+  };
   const rebuildCurrentState = (): void => {
     currentAccounts = [...readCurrentAccounts()];
     runtimeEndpoints = [...listRuntimeEndpoints({ databasePath: initialization.databasePath })];
@@ -6513,6 +6690,94 @@ export async function createRuntimeBridgeBackend(
       throw new Error("Endpoint-registry validation failed after runtime state update.");
     }
     currentModelOverrides = readModelOverridesFromDisk(options.runtimeStateRoot);
+    syncRoutingModelSelection();
+    refreshRoutableInventoryState();
+  };
+  const resolveProbeAuthorization = async (providerAccountId: string): Promise<string | null> => {
+    const account = currentAccounts.find((entry) => entry.providerAccountId === providerAccountId);
+    if (!account) {
+      return null;
+    }
+    if (account.credentialRef.backend === "env") {
+      const value = process.env[account.credentialRef.ref];
+      return typeof value === "string" && value.trim().length > 0 ? value.trim() : null;
+    }
+    if (
+      account.credentialRef.backend === "local-file" ||
+      account.credentialRef.backend === "local-encrypted-file"
+    ) {
+      const tokenPayload = readStoredOauthTokenFileSync(
+        options.runtimeStateRoot,
+        options.scopeId,
+        account.credentialRef.ref,
+      );
+      const accessToken = readStoredAccessToken(tokenPayload);
+      return accessToken.length > 0 ? accessToken : null;
+    }
+    return null;
+  };
+  const collectRemoteHealthProbeTargets = (): RemoteHealthProbeTarget[] => {
+    const accountsById = new Map(
+      currentAccounts.map((account) => [account.providerAccountId, account] as const),
+    );
+    const litellmBaseUrl = currentLiteLLMVendor?.readStatus().baseUrl ?? null;
+    const seenEndpointIds = new Set<string>();
+    const targets: RemoteHealthProbeTarget[] = [];
+
+    for (const source of getCurrentRegistrySources().cloud) {
+      if (seenEndpointIds.has(source.endpointId)) {
+        continue;
+      }
+      seenEndpointIds.add(source.endpointId);
+      const account = accountsById.get(source.providerAccountId);
+      const apiBase =
+        account?.baseUrlOverride ??
+        (source.servingSource === "vendor-litellm" ? litellmBaseUrl : null) ??
+        "";
+      if (apiBase.trim().length === 0) {
+        continue;
+      }
+      targets.push({
+        endpointId: source.endpointId,
+        providerAccountId: source.providerAccountId,
+        modelId: source.modelId,
+        apiBase,
+        servingSource: source.servingSource,
+      });
+    }
+
+    return targets;
+  };
+  const applyRemoteHealthProbeResults = (results: readonly RemoteHealthProbeResult[]): void => {
+    const resultsByEndpointId = new Map(
+      results.map((result) => [result.endpointId, result] as const),
+    );
+
+    for (const endpoint of runtimeEndpoints) {
+      const result = resultsByEndpointId.get(endpoint.endpointId);
+      if (!result || endpoint.healthStatus === result.healthStatus) {
+        continue;
+      }
+      upsertSqliteRuntimeEndpoint({
+        databasePath: initialization.databasePath,
+        endpoint: {
+          ...endpoint,
+          healthStatus: result.healthStatus,
+        },
+      });
+    }
+
+    if (currentUnifiedRuntimeConfig !== null) {
+      currentRegistrySources = {
+        ...currentRegistrySources,
+        cloud: currentRegistrySources.cloud.map((source) => {
+          const result = resultsByEndpointId.get(source.endpointId);
+          return result ? { ...source, healthStatus: result.healthStatus } : source;
+        }),
+      };
+    }
+
+    rebuildCurrentState();
   };
   const persistCurrentRolePolicy = async (
     nextPolicy: RuntimeRolePolicyRecord,
@@ -6908,6 +7173,19 @@ export async function createRuntimeBridgeBackend(
       });
     }
 
+    for (const peer of matchingPeers) {
+      const providerAccountId = createLocalPeerProviderAccountId(peer.id);
+      const account = currentAccounts.find((entry) => entry.providerAccountId === providerAccountId);
+      persistOperatorIntent(operatorIntentLocation, (intent) =>
+        upsertPeerLoad(intent, {
+          peerId: peer.id,
+          modelId,
+          roleIds: account ? getModelRoleIds(account, modelId) : roleIds ?? [],
+          autoReload: true,
+        }),
+      );
+    }
+
     insertSwapEvent({
       databasePath: initialization.databasePath,
       timestamp: new Date().toISOString(),
@@ -6969,6 +7247,8 @@ export async function createRuntimeBridgeBackend(
     const endpointId =
       readOptionalString(body, "endpointId") ??
       createEndpointId(providerAccountId, region, modelId);
+    const endpointKind = readOptionalString(body, "endpointKind") ?? "remote-openai-compatible";
+    const servingSource = readOptionalString(body, "servingSource") ?? "remote-service";
     upsertSqliteRuntimeEndpoint({
       databasePath: initialization.databasePath,
       endpoint: {
@@ -6976,12 +7256,29 @@ export async function createRuntimeBridgeBackend(
         providerAccountId,
         modelId,
         region,
-        endpointKind: readOptionalString(body, "endpointKind") ?? "remote-openai-compatible",
-        servingSource: readOptionalString(body, "servingSource") ?? "remote-service",
+        endpointKind,
+        servingSource,
         lifecycleState: "active",
         healthStatus: "healthy",
       },
     });
+    if (servingSource !== "local-peer") {
+      const modelRoleBindings = (account.modelRoleBindings ?? [])
+        .filter((binding) => binding.modelId === model.modelId)
+        .map((binding) => ({
+          modelId: binding.modelId,
+          roleIds: [...binding.roleIds],
+        }));
+      persistOperatorIntent(operatorIntentLocation, (intent) =>
+        upsertRemoteActivation(intent, {
+          providerAccountId,
+          modelId: model.modelId,
+          region,
+          endpointId,
+          ...(modelRoleBindings.length > 0 ? { modelRoleBindings } : {}),
+        }),
+      );
+    }
     rebuildCurrentState();
     return {
       endpointId,
@@ -7187,6 +7484,20 @@ export async function createRuntimeBridgeBackend(
     currentLiteLLMVendor = nextLiteLLMVendor;
     await syncLocalPeerState(await readStoredPeers());
     rebuildCurrentState();
+    const nextModelAliases = nextConfig?.modelAliases ?? [];
+    if (
+      nextConfig !== null &&
+      nextModelAliases.length > 0 &&
+      currentRoutableInventory.endpointIds.length > 0
+    ) {
+      const aliasValidation = validateAliasInventoryResolution(
+        nextModelAliases,
+        currentRoutableInventory,
+      );
+      if (!aliasValidation.valid) {
+        throw new Error(aliasValidation.errors[0] ?? "Alias inventory resolution failed.");
+      }
+    }
   };
 
   if (currentUnifiedRuntimeConfig === null) {
@@ -7370,9 +7681,17 @@ export async function createRuntimeBridgeBackend(
     }
   };
   const getDefaultControllerAssignment = (): BridgeControllerAssignment | null => {
-    const defaultEndpoint = getRegistryEndpoint(routingModel.endpointId);
-    if (defaultEndpoint) {
-      return toControllerAssignmentFromEndpoint(defaultEndpoint);
+    const guidance = summarizeRouterGuidance({
+      routingModel,
+      routableEndpointIds: currentRegistry.endpoints.map(
+        (endpoint) => endpoint.identity.endpoint_id,
+      ),
+    });
+    if (guidance.endpointId) {
+      const defaultEndpoint = getRegistryEndpoint(guidance.endpointId);
+      if (defaultEndpoint) {
+        return toControllerAssignmentFromEndpoint(defaultEndpoint);
+      }
     }
     const fallbackEndpoint = currentRegistry.endpoints[0];
     if (!fallbackEndpoint) {
@@ -7400,11 +7719,13 @@ export async function createRuntimeBridgeBackend(
     }
     return getDefaultControllerAssignment();
   };
-  const getRouterGuidance = () => ({
-    endpointId: routingModel.endpointId,
-    preferredEndpointIds: [...routingModel.preferredEndpointIds],
-    ignoredEndpointIds: [] as readonly string[],
-  });
+  const getRouterGuidance = () =>
+    summarizeRouterGuidance({
+      routingModel,
+      routableEndpointIds: currentRegistry.endpoints.map(
+        (endpoint) => endpoint.identity.endpoint_id,
+      ),
+    });
   const readEndpointProfileData = (endpointId: string) => {
     const observedDataConfig = resolveUnifiedRuntimeObservedDataConfig(currentUnifiedRuntimeConfig);
     const difficultyProfiles = Object.fromEntries(
@@ -7453,7 +7774,7 @@ export async function createRuntimeBridgeBackend(
     guidance: getRouterGuidance(),
     sources: {
       runtimeConfigPath: options.unifiedRuntimeConfigPath ?? null,
-      routingModel: "fixture",
+      routingModel: routingModel ? "resolved" : "unconfigured",
       policyInputs: "runtime",
     },
     policySources: {
@@ -7652,7 +7973,7 @@ export async function createRuntimeBridgeBackend(
         currentRuntimeRoles.roleDefinitions,
         getLlamaSwapRoleIdsByModelId(),
       ),
-      routingModel: plan.routingModel ?? routingModel,
+      routingModel: plan.routingModel ?? routingModel ?? undefined,
     });
     const routingDecisionId = routed.decision.routing_decision_id;
     const execution = await executeLiveRoutedRequest({
@@ -8253,6 +8574,7 @@ export async function createRuntimeBridgeBackend(
       currentRegistry,
       input.requestedModel,
       modelAliases,
+      currentRoutableInventory.endpointIds.length > 0 ? currentRoutableInventory : null,
     ).allowEndpoints;
     const controllerMessages = buildControllerRoutingMessages({
       requestedModel: input.requestedModel,
@@ -8316,6 +8638,7 @@ export async function createRuntimeBridgeBackend(
   };
 
   let lastDetectedModel: string | null = null;
+  let sessionBootstrapState: SessionBootstrapState = createPendingBootstrapState();
   const backend = {
     get registry(): EndpointRegistryResult {
       return currentRegistry;
@@ -8404,6 +8727,7 @@ export async function createRuntimeBridgeBackend(
         requestOptions,
         currentRolePolicy.roleDefinitions,
         normalizeConfiguredRoutingMode(currentUnifiedRuntimeConfig?.routingStrategy) ?? undefined,
+        currentRoutableInventory.endpointIds.length > 0 ? currentRoutableInventory : null,
       );
       const { execution, toolExecutionResult, routingDecisionId } = await executeBridgePlan(
         plan,
@@ -8535,6 +8859,7 @@ export async function createRuntimeBridgeBackend(
         requestOptions,
         currentRolePolicy.roleDefinitions,
         normalizeConfiguredRoutingMode(currentUnifiedRuntimeConfig?.routingStrategy) ?? undefined,
+        currentRoutableInventory.endpointIds.length > 0 ? currentRoutableInventory : null,
       );
       const { execution, routingDecisionId } = await executeBridgePlan(
         plan,
@@ -8608,6 +8933,30 @@ export async function createRuntimeBridgeBackend(
         enabled: boolean;
         path: string | null;
       };
+      sessionBootstrap: {
+        status: SessionBootstrapState["status"];
+        startedAt: string | null;
+        finishedAt: string | null;
+        stages: SessionBootstrapState["stages"];
+      };
+      inventorySummary: {
+        modelIdCount: number;
+        endpointIdCount: number;
+        localEndpointCount: number;
+        remoteEndpointCount: number;
+        emptyAliasIds: readonly string[];
+      };
+      aliasDrift: readonly {
+        aliasId: string;
+        hintModelId: string;
+        suggestedModelIds: readonly string[];
+        message: string;
+      }[];
+      operatorIntent: {
+        path: string;
+        status: OperatorIntentDiagnostic["status"];
+        message?: string;
+      };
     }> {
       return {
         lifecycleSummary: currentRegistry.lifecycleSummary,
@@ -8627,6 +8976,26 @@ export async function createRuntimeBridgeBackend(
           enabled: currentUnifiedRuntimeConfig !== null,
           path: options.unifiedRuntimeConfigPath ?? null,
         },
+        sessionBootstrap: {
+          status: sessionBootstrapState.status,
+          startedAt: sessionBootstrapState.startedAt,
+          finishedAt: sessionBootstrapState.finishedAt,
+          stages: sessionBootstrapState.stages,
+        },
+        inventorySummary: buildInventorySummary(),
+        aliasDrift: currentAliasDriftWarnings.map((warning) => ({
+          aliasId: warning.aliasId,
+          hintModelId: warning.hintModelId,
+          suggestedModelIds: warning.suggestedModelIds,
+          message: warning.message,
+        })),
+        operatorIntent: {
+          path: resolveOperatorIntentPath(operatorIntentLocation),
+          status: operatorIntentDiagnostic.status,
+          ...(operatorIntentDiagnostic.status === "corrupt"
+            ? { message: operatorIntentDiagnostic.message }
+            : {}),
+        },
       };
     },
     async readHealthStatus(): Promise<{
@@ -8634,6 +9003,12 @@ export async function createRuntimeBridgeBackend(
       executionMode: UnifiedRuntimeExecutionMode;
       vendors: Record<string, VendorRuntimeStatus>;
       inactiveVendors: string[];
+      sessionBootstrap: {
+        status: SessionBootstrapState["status"];
+        startedAt: string | null;
+        finishedAt: string | null;
+        stages: SessionBootstrapState["stages"];
+      };
     }> {
       const vendors = {
         "llama-swap":
@@ -8641,12 +9016,23 @@ export async function createRuntimeBridgeBackend(
         litellm: currentLiteLLMVendor?.readStatus() ?? createInactiveVendorStatus("litellm"),
       };
       const summarized = summarizeHealthStatus(vendors);
+      const bootstrapBlocked =
+        sessionBootstrapState.status === "blocked" || sessionBootstrapState.status === "degraded";
       return {
-        status: summarized.status,
+        status: bootstrapBlocked ? "degraded" : summarized.status,
         executionMode: currentUnifiedRuntimeConfig?.executionMode ?? "decision_only",
         vendors,
         inactiveVendors: summarized.inactiveVendors,
+        sessionBootstrap: {
+          status: sessionBootstrapState.status,
+          startedAt: sessionBootstrapState.startedAt,
+          finishedAt: sessionBootstrapState.finishedAt,
+          stages: sessionBootstrapState.stages,
+        },
       };
+    },
+    getRoutableInventory(): RoutableInventory | null {
+      return currentRoutableInventory.endpointIds.length > 0 ? currentRoutableInventory : null;
     },
     async readRuntimeConfig(): Promise<{
       applied: boolean;
@@ -9768,6 +10154,13 @@ export async function createRuntimeBridgeBackend(
         newModelId: modelId,
         reason: "manual-load",
       });
+      persistOperatorIntent(operatorIntentLocation, (intent) =>
+        upsertLlamaSwapLoad(intent, {
+          modelId,
+          roleIds: roleIds ?? getLlamaSwapRoleIdsByModelId()[modelId] ?? [],
+          autoReload: true,
+        }),
+      );
       return { success: true };
     },
     async setPeerModelRoles(
@@ -9819,6 +10212,12 @@ export async function createRuntimeBridgeBackend(
         return { success: false };
       }
       deleteRuntimeEndpointsByModelId(initialization.databasePath, modelId, peerAccountIds);
+      const peers = await readStoredPeers();
+      for (const peer of peers) {
+        persistOperatorIntent(operatorIntentLocation, (intent) =>
+          removePeerLoad(intent, peer.id, modelId),
+        );
+      }
       rebuildCurrentState();
       return { success: true };
     },
@@ -10041,6 +10440,376 @@ export async function createRuntimeBridgeBackend(
       await supervisor?.shutdown();
     },
   };
+
+  void (async () => {
+    sessionBootstrapState = {
+      status: "running",
+      startedAt: new Date().toISOString(),
+      finishedAt: null,
+      stages: [],
+    };
+    sessionBootstrapState = await runSessionBootstrapStages({
+      credentials: async () => {
+        const operatorIntentRead = readOperatorIntentResult(operatorIntentLocation);
+        operatorIntentDiagnostic = operatorIntentRead.diagnostic;
+        if (operatorIntentRead.diagnostic.status === "corrupt") {
+          return {
+            status: "failed",
+            message: `operator-intent.json is corrupt: ${operatorIntentRead.diagnostic.message}`,
+            details: {
+              path: resolveOperatorIntentPath(operatorIntentLocation),
+            },
+          };
+        }
+
+        currentAccounts = [...readCurrentAccounts()];
+        rebuildCurrentState();
+
+        const pendingAuthorizations = listCurrentProviderDeviceAuthorizations().filter(
+          (authorization) =>
+            authorization.status === "pending" && authorization.expiresAtMs > Date.now(),
+        );
+        let pendingPolled = 0;
+        let pendingConnected = 0;
+        for (const authorization of pendingAuthorizations.slice(0, 5)) {
+          try {
+            const pollResult = await backend.pollProviderDeviceAuthorization({
+              authRequestId: authorization.authRequestId,
+            });
+            pendingPolled += 1;
+            if (pollResult.status === "connected") {
+              pendingConnected += 1;
+            }
+          } catch {
+            // Continue polling other pending authorizations.
+          }
+        }
+
+        let refreshAttempted = 0;
+        let refreshSucceeded = 0;
+        for (const account of currentAccounts) {
+          if (account.authMode !== "oauth2-device-code") {
+            continue;
+          }
+          const tokenPayload = readStoredOauthTokenFileSync(
+            options.runtimeStateRoot,
+            options.scopeId,
+            account.credentialRef.ref,
+          );
+          if (!tokenNeedsRefresh(tokenPayload)) {
+            continue;
+          }
+          refreshAttempted += 1;
+          try {
+            await refreshOauthAccessToken(
+              options.runtimeStateRoot,
+              options.scopeId,
+              {
+                endpointId: account.providerAccountId,
+                modelId: account.allowedModels[0] ?? account.providerId,
+                providerId: account.providerId,
+                providerAccountId: account.providerAccountId,
+                account,
+              } as ResolvedExecutionTarget,
+              providerPresets,
+              liteLLMProviders,
+              networkFetcher,
+              deviceId,
+              () => {
+                rebuildCurrentState();
+              },
+            );
+            refreshSucceeded += 1;
+          } catch {
+            // Continue refreshing other OAuth accounts.
+          }
+        }
+
+        return {
+          status: "ready",
+          details: {
+            pendingPolled,
+            pendingConnected,
+            refreshAttempted,
+            refreshSucceeded,
+          },
+        };
+      },
+      endpoints: async () => {
+        const existingEndpoints = listRuntimeEndpoints({
+          databasePath: initialization.databasePath,
+        });
+        if (existingEndpoints.length > 0) {
+          rebuildCurrentState();
+          return {
+            status: "ready",
+            details: { source: "sqlite", count: existingEndpoints.length },
+          };
+        }
+
+        const operatorIntentRead = readOperatorIntentResult(operatorIntentLocation);
+        operatorIntentDiagnostic = operatorIntentRead.diagnostic;
+        if (operatorIntentRead.diagnostic.status === "corrupt") {
+          return {
+            status: "failed",
+            message: `operator-intent.json is corrupt: ${operatorIntentRead.diagnostic.message}`,
+            details: {
+              path: resolveOperatorIntentPath(operatorIntentLocation),
+            },
+          };
+        }
+
+        const manifest = operatorIntentRead.intent;
+        let reconciled = 0;
+        let failed = 0;
+        for (const activation of manifest?.remoteActivations ?? []) {
+          try {
+            activateRuntimeEndpoint({
+              providerAccountId: activation.providerAccountId,
+              modelId: activation.modelId,
+              region: activation.region,
+              endpointId: activation.endpointId,
+            });
+            reconciled += 1;
+          } catch {
+            failed += 1;
+          }
+        }
+
+        if (reconciled === 0 && failed > 0) {
+          return {
+            status: "degraded",
+            message: "manifest endpoint reconciliation failed",
+            details: { reconciled, failed },
+          };
+        }
+
+        return {
+          status: failed > 0 ? "degraded" : "ready",
+          details: { reconciled, failed },
+        };
+      },
+      peers: async () => {
+        const operatorIntentRead = readOperatorIntentResult(operatorIntentLocation);
+        operatorIntentDiagnostic = operatorIntentRead.diagnostic;
+        if (operatorIntentRead.diagnostic.status === "corrupt") {
+          return {
+            status: "failed",
+            message: `operator-intent.json is corrupt: ${operatorIntentRead.diagnostic.message}`,
+            details: {
+              path: resolveOperatorIntentPath(operatorIntentLocation),
+            },
+          };
+        }
+
+        const manifest = operatorIntentRead.intent;
+        const peerLoads = (manifest?.peerLoads ?? []).filter((entry) => entry.autoReload);
+        const modelIds = [...new Set(peerLoads.map((entry) => entry.modelId))];
+        let reloaded = 0;
+        let failed = 0;
+        for (const modelId of modelIds) {
+          const roleIds = peerLoads.find((entry) => entry.modelId === modelId)?.roleIds;
+          try {
+            if (await activateConfiguredLocalPeerModel(modelId, roleIds)) {
+              reloaded += 1;
+            } else {
+              failed += 1;
+            }
+          } catch {
+            failed += 1;
+          }
+        }
+
+        if (failed > 0) {
+          return {
+            status: "degraded",
+            message: "peer reload incomplete",
+            details: { reloaded, failed },
+          };
+        }
+
+        return {
+          status: modelIds.length === 0 ? "skipped" : "ready",
+          message: modelIds.length === 0 ? "no peer loads in manifest" : undefined,
+          details: { reloaded, failed },
+        };
+      },
+      vendors: async () => {
+        if (currentUnifiedRuntimeConfig === null) {
+          return {
+            status: "skipped",
+            message: "unified runtime config disabled",
+          };
+        }
+
+        const unhealthyVendors: string[] = [];
+        if (
+          currentUnifiedRuntimeConfig.llamaSwap.enabled &&
+          currentLlamaSwapVendor?.readStatus().healthStatus !== "healthy"
+        ) {
+          unhealthyVendors.push("llama-swap");
+        }
+        if (
+          currentUnifiedRuntimeConfig.liteLLM.enabled &&
+          currentLiteLLMVendor?.readStatus().healthStatus !== "healthy"
+        ) {
+          unhealthyVendors.push("litellm");
+        }
+
+        if (unhealthyVendors.length > 0) {
+          return {
+            status: "degraded",
+            message: `vendors not healthy: ${unhealthyVendors.join(", ")}`,
+            details: { unhealthyVendors },
+          };
+        }
+
+        return { status: "ready" };
+      },
+      localReload: async () => {
+        const operatorIntentRead = readOperatorIntentResult(operatorIntentLocation);
+        operatorIntentDiagnostic = operatorIntentRead.diagnostic;
+        if (operatorIntentRead.diagnostic.status === "corrupt") {
+          return {
+            status: "failed",
+            message: `operator-intent.json is corrupt: ${operatorIntentRead.diagnostic.message}`,
+            details: {
+              path: resolveOperatorIntentPath(operatorIntentLocation),
+            },
+          };
+        }
+
+        const manifest = operatorIntentRead.intent;
+        const loads = (manifest?.llamaSwapLoads ?? []).filter((entry) => entry.autoReload);
+        if (loads.length === 0) {
+          return {
+            status: "skipped",
+            message: "no llama-swap loads in manifest",
+          };
+        }
+        if (!currentLlamaSwapVendor) {
+          return {
+            status: "degraded",
+            message: "llama-swap vendor is not running",
+          };
+        }
+
+        let reloaded = 0;
+        let failed = 0;
+        for (const load of loads) {
+          try {
+            await backend.loadLlamaSwapModel(load.modelId, load.roleIds);
+            reloaded += 1;
+          } catch {
+            failed += 1;
+          }
+        }
+
+        if (failed > 0) {
+          return {
+            status: "degraded",
+            message: "llama-swap reload incomplete",
+            details: { reloaded, failed },
+          };
+        }
+
+        return {
+          status: "ready",
+          details: { reloaded, failed },
+        };
+      },
+      remoteHealth: async () => {
+        const executionMode = currentUnifiedRuntimeConfig?.executionMode ?? "decision_only";
+        if (executionMode === "decision_only") {
+          return {
+            status: "skipped",
+            message: "execution probes skipped in decision_only mode",
+          };
+        }
+
+        const targets = collectRemoteHealthProbeTargets();
+        if (targets.length === 0) {
+          return {
+            status: "skipped",
+            message: "no remote endpoints to probe",
+          };
+        }
+
+        const litellmHealthy = currentLiteLLMVendor?.readStatus().healthStatus === "healthy";
+        const summary = await probeRemoteEndpoints({
+          litellmHealthy,
+          targets,
+          resolveAuthorization: resolveProbeAuthorization,
+          networkFetcher,
+        });
+        applyRemoteHealthProbeResults(summary.results);
+
+        return {
+          status: summary.degraded > 0 ? "degraded" : "ready",
+          details: {
+            probed: summary.probed,
+            healthy: summary.healthy,
+            degraded: summary.degraded,
+            results: summary.results.map((result) => ({
+              endpointId: result.endpointId,
+              modelId: result.modelId,
+              reason: result.reason,
+              healthStatus: result.healthStatus,
+              ...(result.message ? { message: result.message } : {}),
+            })),
+          },
+        };
+      },
+      inventory: async () => {
+        refreshRoutableInventoryState();
+        const inventorySummary = buildInventorySummary();
+        const driftWarnings = currentAliasDriftWarnings;
+
+        if (inventorySummary.endpointIdCount === 0) {
+          return {
+            status: "skipped",
+            message: "no routable endpoints in inventory",
+            details: inventorySummary,
+          };
+        }
+
+        return {
+          status:
+            inventorySummary.emptyAliasIds.length > 0 || driftWarnings.length > 0
+              ? "degraded"
+              : "ready",
+          ...(driftWarnings.length > 0
+            ? { message: `${driftWarnings.length} alias hint drift warning(s)` }
+            : {}),
+          details: {
+            ...inventorySummary,
+            driftWarningCount: driftWarnings.length,
+            driftWarnings: driftWarnings.map((warning) => ({
+              aliasId: warning.aliasId,
+              hintModelId: warning.hintModelId,
+              suggestedModelIds: warning.suggestedModelIds,
+            })),
+          },
+        };
+      },
+    });
+  })().catch((error) => {
+    sessionBootstrapState = {
+      status: "blocked",
+      startedAt: sessionBootstrapState.startedAt ?? new Date().toISOString(),
+      finishedAt: new Date().toISOString(),
+      stages: [
+        ...sessionBootstrapState.stages,
+        {
+          stageId: "credentials",
+          status: "failed",
+          startedAt: new Date().toISOString(),
+          finishedAt: new Date().toISOString(),
+          message: error instanceof Error ? error.message : "session bootstrap failed",
+        },
+      ],
+    };
+  });
 
   const autoSwapInterval = setInterval(async () => {
     try {

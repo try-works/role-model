@@ -10,6 +10,7 @@ const legacyRouteMap: Record<string, string> = {
   "/app/control/providers": "/app/remote/providers",
   "/app/control/routing-strategy": "/app/router/strategy",
   "/app/control/runtime-config": "/app/system/runtime-config",
+  "/app/control/session-readiness": "/app/system/session-readiness",
   "/app/control/controller": "/app/router/controller",
   "/app/control/endpoints": "/app/connect",
   "/app/control/roles": "/app/models/roles",

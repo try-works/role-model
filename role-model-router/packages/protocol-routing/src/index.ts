@@ -102,14 +102,25 @@ export function projectRuntimeRouteInput(
   );
   const deniedEndpointIds = new Set(input.request.denyEndpoints ?? []);
   const allowEndpoints = input.request.allowEndpoints ?? [];
-  const ignoredEndpointIds = input.routingModel?.preferredEndpointIds
-    ? input.routingModel.preferredEndpointIds.filter(
-        (endpointId) =>
-          !candidateIds.has(endpointId) ||
-          deniedEndpointIds.has(endpointId) ||
-          (allowEndpoints.length > 0 && !allowEndpoints.includes(endpointId)),
-      )
-    : [];
+  const preferredEndpointIds = input.routingModel?.preferredEndpointIds ?? [];
+  const ignoredEndpointIds = preferredEndpointIds.filter(
+    (endpointId) =>
+      !candidateIds.has(endpointId) ||
+      deniedEndpointIds.has(endpointId) ||
+      (allowEndpoints.length > 0 && !allowEndpoints.includes(endpointId)),
+  );
+  const routablePreferredEndpointIds = preferredEndpointIds.filter(
+    (endpointId) => !ignoredEndpointIds.includes(endpointId),
+  );
+  const endpointId = input.routingModel?.endpointId ?? null;
+  const endpointIdRoutable =
+    endpointId !== null &&
+    candidateIds.has(endpointId) &&
+    !deniedEndpointIds.has(endpointId) &&
+    (allowEndpoints.length === 0 || allowEndpoints.includes(endpointId));
+  const routingModelEnabled = Boolean(
+    input.routingModel && (routablePreferredEndpointIds.length > 0 || endpointIdRoutable),
+  );
 
   return {
     routeInput: {
@@ -124,12 +135,21 @@ export function projectRuntimeRouteInput(
     },
     routingDiagnostics: {
       retrievalReceiptId: input.retrievalReceipt.receiptId,
-      routingModel: {
-        enabled: Boolean(input.routingModel),
-        endpointId: input.routingModel?.endpointId ?? null,
-        preferredEndpointIds: input.routingModel?.preferredEndpointIds ?? [],
-        ignoredEndpointIds,
-      },
+      routingModel: routingModelEnabled
+        ? {
+            enabled: true,
+            endpointId: endpointIdRoutable
+              ? endpointId
+              : (routablePreferredEndpointIds[0] ?? null),
+            preferredEndpointIds: routablePreferredEndpointIds,
+            ignoredEndpointIds,
+          }
+        : {
+            enabled: false,
+            endpointId: null,
+            preferredEndpointIds: [],
+            ignoredEndpointIds,
+          },
     },
   };
 }

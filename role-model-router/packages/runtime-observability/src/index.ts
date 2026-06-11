@@ -15,6 +15,13 @@ export interface RuntimeRoutingDiagnostics {
     readonly aliasId: string;
     readonly resolvedModelIds: readonly string[];
     readonly allowEndpoints: readonly string[];
+    readonly poolEmptyReason?: "ALIAS_POOL_EMPTY";
+    readonly driftWarnings?: readonly {
+      readonly aliasId: string;
+      readonly hintModelId: string;
+      readonly suggestedModelIds: readonly string[];
+      readonly message: string;
+    }[];
   };
   readonly difficultyRouting?: {
     readonly difficulty: "easy" | "medium" | "hard";

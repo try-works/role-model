@@ -177,9 +177,11 @@ describe("runtime routing conformance", () => {
 
     assertValid(validateRouterDecision, result.decision, "runtime-routing-validation");
     expect(result.decision.chosen_endpoint_id).toBe("cli.local.coder");
-    expect(result.routingDiagnostics.routingModel.preferredEndpointIds).toEqual([
-      "openai.personal.primary.us-east-1.fast",
-    ]);
+    expect(result.routingDiagnostics.routingModel).toMatchObject({
+      enabled: false,
+      endpointId: null,
+      preferredEndpointIds: [],
+    });
     expect(
       result.decision.eligibility.find(
         (entry) => entry.endpoint_id === "openai.personal.primary.us-east-1.fast",

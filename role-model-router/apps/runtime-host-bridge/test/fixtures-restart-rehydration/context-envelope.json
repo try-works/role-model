@@ -1,0 +1,93 @@
+{
+  "session": {
+    "sessionId": "session-alpha",
+    "workspaceScope": "workspace-dev",
+    "createdAtMs": 1700000000000,
+    "updatedAtMs": 1700000004000
+  },
+  "conversation": {
+    "conversationId": "conversation-main",
+    "sessionId": "session-alpha",
+    "createdAtMs": 1700000000000,
+    "updatedAtMs": 1700000004000
+  },
+  "turns": [
+    {
+      "turnId": "turn-001",
+      "conversationId": "conversation-main",
+      "role": "user",
+      "contentRef": "ref://turn-001?tokens=60&label=user-intent",
+      "createdAtMs": 1700000001000
+    },
+    {
+      "turnId": "turn-002",
+      "conversationId": "conversation-main",
+      "role": "assistant",
+      "contentRef": "ref://turn-002?tokens=120&label=assistant-baseline",
+      "createdAtMs": 1700000002000
+    },
+    {
+      "turnId": "turn-003",
+      "conversationId": "conversation-main",
+      "role": "user",
+      "contentRef": "ref://turn-003?tokens=80&label=user-follow-up",
+      "createdAtMs": 1700000003000
+    },
+    {
+      "turnId": "turn-004",
+      "conversationId": "conversation-main",
+      "role": "assistant",
+      "contentRef": "ref://turn-004?tokens=90&label=assistant-next-steps",
+      "createdAtMs": 1700000004000
+    }
+  ],
+  "artifacts": [
+    {
+      "artifactId": "artifact-stale",
+      "artifactKind": "summary",
+      "storageRef": "ref://artifact-stale?tokens=200&label=stale-summary",
+      "createdAtMs": 1700000000500
+    },
+    {
+      "artifactId": "artifact-summary",
+      "artifactKind": "summary",
+      "storageRef": "ref://artifact-summary?tokens=70&label=session-summary",
+      "createdAtMs": 1700000001500
+    },
+    {
+      "artifactId": "artifact-policy",
+      "artifactKind": "policy",
+      "storageRef": "ref://artifact-policy?tokens=50&label=workspace-policy",
+      "createdAtMs": 1700000002500
+    }
+  ],
+  "artifactLinks": [
+    {
+      "linkId": "link-1",
+      "artifactId": "artifact-stale",
+      "conversationId": "conversation-main",
+      "sessionId": "session-alpha",
+      "createdAtMs": 1700000000500
+    },
+    {
+      "linkId": "link-2",
+      "artifactId": "artifact-summary",
+      "conversationId": "conversation-main",
+      "sessionId": "session-alpha",
+      "createdAtMs": 1700000001500
+    },
+    {
+      "linkId": "link-3",
+      "artifactId": "artifact-policy",
+      "conversationId": "conversation-main",
+      "sessionId": "session-alpha",
+      "createdAtMs": 1700000002500
+    }
+  ],
+  "handoffs": [],
+  "selection": {
+    "maxTurns": 2,
+    "maxArtifacts": 2,
+    "tokenBudget": 260
+  }
+}

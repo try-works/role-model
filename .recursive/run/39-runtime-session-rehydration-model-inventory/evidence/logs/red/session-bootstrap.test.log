@@ -1,0 +1,42 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/39-runtime-session-rehydration-model-inventory/role-model-router/apps/runtime-host-bridge
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Suites 2 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  src/oauth-credential.test.ts [ src/oauth-credential.test.ts ]
+Error: Cannot find module './oauth-credential.js' imported from 'D:/DEV/role-model/.worktrees/39-runtime-session-rehydration-model-inventory/role-model-router/apps/runtime-host-bridge/src/oauth-credential.test.ts'
+ Γ¥» src/oauth-credential.test.ts:7:1
+      5| import { describe, expect, it } from "vitest";
+      6| 
+      7| import {
+       | ^
+      8|   credentialRefFileExists,
+      9|   resolveOauthCredentialFilePath,
+
+Caused by: Error: Failed to load url ./oauth-credential.js (resolved id: ./oauth-credential.js) in D:/DEV/role-model/.worktrees/39-runtime-session-rehydration-model-inventory/role-model-router/apps/runtime-host-bridge/src/oauth-credential.test.ts. Does the file exist?
+ Γ¥» loadAndTransform ../../../node_modules/.pnpm/vite@7.3.2_@types+node@22.1_f7dc1826a0f6bcfe28ab74fd91d23836/node_modules/vite/dist/node/chunks/config.js:22663:33
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/2]ΓÄ»
+
+ FAIL  src/session-bootstrap.test.ts [ src/session-bootstrap.test.ts ]
+Error: Cannot find module './session-bootstrap.js' imported from 'D:/DEV/role-model/.worktrees/39-runtime-session-rehydration-model-inventory/role-model-router/apps/runtime-host-bridge/src/session-bootstrap.test.ts'
+ Γ¥» src/session-bootstrap.test.ts:3:1
+      1| import { describe, expect, it } from "vitest";
+      2| 
+      3| import {
+       | ^
+      4|   SESSION_BOOTSTRAP_STAGE_ORDER,
+      5|   createPendingBootstrapState,
+
+Caused by: Error: Failed to load url ./session-bootstrap.js (resolved id: ./session-bootstrap.js) in D:/DEV/role-model/.worktrees/39-runtime-session-rehydration-model-inventory/role-model-router/apps/runtime-host-bridge/src/session-bootstrap.test.ts. Does the file exist?
+ Γ¥» loadAndTransform ../../../node_modules/.pnpm/vite@7.3.2_@types+node@22.1_f7dc1826a0f6bcfe28ab74fd91d23836/node_modules/vite/dist/node/chunks/config.js:22663:33
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[2/2]ΓÄ»
+
+
+ Test Files  2 failed (2)
+      Tests  no tests
+   Start at  06:55:49
+   Duration  1.03s (transform 114ms, setup 0ms, collect 0ms, tests 0ms, environment 1ms, prepare 623ms)
+

@@ -173,3 +173,10 @@
   - `provider-account` accepts `modelRoleBindings` on peer accounts with empty `allowedModels` (wildcard semantics)
   - Packaged runtime on `:3456` validated: peer `lfm2.5-8b-a1b` with `general.chat` + `tool.agent`, `probe-downstream-ingress.py` 0 BRIDGE_CRASH, browser QA PASS for split pages and legacy redirects
   - Addendum 01: `llama-swap-setup.ts` scaffold + runtime-config insert action + llama-swap setup hints/modal when config not operational; verified on peer-only operator config without enabling llama-swap inference
+
+- Run 39 (Runtime Session Rehydration + Model Inventory) completed on branch `recursive/39-runtime-session-rehydration-model-inventory`:
+  - Session bootstrap rehydrates `operator-intent.json` and SQLite `runtime_endpoints` on startup without Providers UI revisit; corrupt manifest surfaces bootstrap diagnostics
+  - `/api/role-model/runtime/summary` and `/healthz` expose bootstrap stages, inventory summary, and alias drift; `/app/system/session-readiness` operator surface added
+  - Inventory-first alias pool resolution in `routable-inventory.ts` with config-save validation and drift warnings
+  - Addendum routing remediation: `runtime-routing-model.ts` hides non-routable fixture routing-model IDs in diagnostics (R10); ask-mode difficulty uses last `user` turn for Craft payloads (R11/R15)
+  - Focused validation green: 39 run-39 bridge tests + `validate-ui` + `validate-restart-rehydration`; packaged restart drill deferred where operator peer process unavailable

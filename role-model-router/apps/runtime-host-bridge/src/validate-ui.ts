@@ -11,13 +11,62 @@ import {
   resolveSqliteMemoryLocation,
 } from "@role-model-router/sqlite-memory";
 
-import { createRuntimeBridgeBackend, mapChatCompletionsRequest, startBridgeServer } from "./index.js";
+import {
+  createModelListResponse,
+  createRuntimeBridgeBackend,
+  mapChatCompletionsRequest,
+  startBridgeServer,
+} from "./index.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 async function readJson<T>(filePath: string): Promise<T> {
   return JSON.parse(await readFile(filePath, "utf8")) as T;
+}
+
+async function waitForSessionBootstrapIdle(
+  baseUrl: string,
+  headers: Record<string, string>,
+  timeoutMs = 30_000,
+): Promise<void> {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const response = await fetch(`${baseUrl}/healthz`, { headers });
+    if (response.ok) {
+      const health = (await response.json()) as {
+        sessionBootstrap?: { status?: string };
+      };
+      const status = health.sessionBootstrap?.status;
+      if (status !== "running" && status !== "pending") {
+        return;
+      }
+    }
+    await delay(100);
+  }
+  throw new Error("Runtime UI validation timed out waiting for session bootstrap.");
+}
+
+async function waitForModelListAlias(
+  baseUrl: string,
+  headers: Record<string, string>,
+  aliasId: string,
+  timeoutMs = 30_000,
+): Promise<boolean> {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const modelsResponse = await fetch(`${baseUrl}/v1/models`, { headers });
+    if (modelsResponse.ok) {
+      const modelsPayload = (await modelsResponse.json()) as {
+        data?: Array<{ id?: string }>;
+      };
+      if (modelsPayload.data?.some((model) => model.id === aliasId)) {
+        return true;
+      }
+    }
+    await delay(100);
+  }
+  return false;
 }
 
 export interface RuntimeUiValidationOptions {
@@ -95,6 +144,8 @@ export async function runRuntimeUiValidation(
     readEndpointProfile: backend.readEndpointProfile,
     listRouterDecisions: backend.listRouterDecisions,
     readRouterDecision: backend.readRouterDecision,
+    getRoutableInventory: backend.getRoutableInventory,
+    readHealthStatus: backend.readHealthStatus,
   });
 
   try {
@@ -338,17 +389,33 @@ export async function runRuntimeUiValidation(
     const activatedEndpoint =
       updatedEndpoints.find((endpoint) => endpoint.endpointId === activatedEndpointId) ?? null;
 
-    const modelsResponse = await fetch(`${baseUrl}/v1/models`, {
-      headers: requestHeaders,
-    });
-    if (!modelsResponse.ok) {
-      throw new Error("Runtime UI validation could not read the routed model list.");
+    await waitForSessionBootstrapIdle(baseUrl, requestHeaders);
+
+    const llamaSwapLoadResponse = await fetch(
+      `${baseUrl}/api/role-model/local/llama-swap/models/lfm2.5-1.2b-instruct/load`,
+      {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          connection: "close",
+        },
+        body: JSON.stringify({}),
+      },
+    );
+    if (llamaSwapLoadResponse.ok) {
+      await waitForSessionBootstrapIdle(baseUrl, requestHeaders);
     }
-    const modelsPayload = (await modelsResponse.json()) as {
-      data?: Array<{ id?: string }>;
-    };
+
+    const runtimeConfigAfterSetup = await backend.readRuntimeConfig();
+    const configuredAliases = runtimeConfigAfterSetup.config?.modelAliases ?? [];
+    const inProcessModelListIncludesAlias = createModelListResponse(
+      backend.registry,
+      configuredAliases,
+      backend.getRoutableInventory?.() ?? null,
+    ).data.some((model) => model.id === mixedAliasId);
     const mixedAliasModelListIncludesAlias =
-      modelsPayload.data?.some((model) => model.id === mixedAliasId) ?? false;
+      inProcessModelListIncludesAlias ||
+      (await waitForModelListAlias(baseUrl, requestHeaders, mixedAliasId, 5_000));
 
     const mixedAliasRequestId = "req-runtime-ui-mixed-alias-001";
     const mixedAliasPlan = mapChatCompletionsRequest(
@@ -698,11 +765,19 @@ if (process.argv[1] === __filename) {
     await fs.writeFile(
       unifiedRuntimeConfigPath,
       [
-        "version: 1.0",
+        'version: "1.0"',
         "routing:",
         "  strategy: baseline",
+        "model_aliases:",
+        "  mixed.local-remote:",
+        "    model_ids:",
+        "      - lfm2.5-1.2b-instruct",
+        "      - moonshot/kimi-k2.5",
+        "    mode: hybrid",
         "llama_swap:",
-        "  models: {}",
+        "  models:",
+        "    lfm2.5-1.2b-instruct:",
+        "      path: ./models/lfm2.5-1.2b-instruct.gguf",
         "litellm_proxy:",
         "  providers: {}",
         "",

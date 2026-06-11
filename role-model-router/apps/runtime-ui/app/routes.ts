@@ -68,6 +68,10 @@ export default [
       id: "legacy-integrations-upstream",
     }),
     route("system/runtime", "routes/runtime.tsx"),
+    route("system/session-readiness", "routes/session-readiness.tsx"),
+    route("control/session-readiness", "routes/legacy-redirect.tsx", {
+      id: "legacy-control-session-readiness",
+    }),
     route("system/peers", "routes/system-peers.tsx"),
   ]),
   route("*", "routes/not-found.tsx"),
