@@ -97,6 +97,13 @@ import { startLiteLLMVendor } from "@role-model-router/vendor-litellm";
 import { startLlamaSwapVendor } from "@role-model-router/vendor-llama-swap";
 
 import {
+  buildAccountEndpointRoleBindings,
+  buildLlamaSwapRegistryRoleBindings,
+  mergeRuntimeRoleBindings,
+  readLlamaSwapRoleIdsByModelId,
+  resolveEndpointRoleIds,
+} from "./local-model-role-bindings.js";
+import {
   readActiveBenchmarkRun as readActiveBenchmarkRunProgress,
   readBenchmarkRunProgress,
 } from "./benchmark-progress.js";
@@ -995,6 +1002,7 @@ type BridgeModelOverrideRecord = {
   ttl?: number;
   contextWindow?: number;
   concurrencyLimit?: number;
+  roleIds?: readonly string[];
 };
 
 export interface BridgeServer {
@@ -1181,9 +1189,50 @@ export interface StartBridgeServerOptions {
   readonly updateBenchmarkPreferences?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly staticRoot?: string;
   readonly listLocalModels?: () => Promise<
-    readonly { modelId: string; loadedAt: string; engine: string }[]
+    readonly {
+      modelId: string;
+      loadedAt: string;
+      engine: string;
+      localModelSource?: "llama-swap" | "peer-backed";
+      roleIds?: readonly string[];
+    }[]
+  >;
+  readonly listPeerLocalModels?: () => Promise<
+    readonly {
+      modelId: string;
+      loadedAt: string;
+      engine: string;
+      localModelSource?: "llama-swap" | "peer-backed";
+      roleIds?: readonly string[];
+    }[]
+  >;
+  readonly listLlamaSwapLocalModels?: () => Promise<
+    readonly {
+      modelId: string;
+      loadedAt: string;
+      engine: string;
+      localModelSource?: "llama-swap" | "peer-backed";
+      roleIds?: readonly string[];
+    }[]
   >;
   readonly loadLocalModel?: (modelId: string) => Promise<{ success: boolean }>;
+  readonly loadPeerModel?: (
+    modelId: string,
+    roleIds?: readonly string[],
+  ) => Promise<{ success: boolean }>;
+  readonly loadLlamaSwapModel?: (
+    modelId: string,
+    roleIds?: readonly string[],
+  ) => Promise<{ success: boolean }>;
+  readonly setPeerModelRoles?: (
+    modelId: string,
+    roleIds: readonly string[],
+  ) => Promise<{ success: boolean }>;
+  readonly setLlamaSwapModelRoles?: (
+    modelId: string,
+    roleIds: readonly string[],
+  ) => Promise<{ success: boolean }>;
+  readonly unloadPeerModel?: (modelId: string) => Promise<{ success: boolean }>;
   readonly unloadLocalModel?: (modelId?: string) => Promise<{ success: boolean }>;
   readonly readLocalPolicy?: () => Promise<Record<string, unknown>>;
   readonly updateLocalPolicy?: (body: Record<string, unknown>) => Promise<Record<string, unknown>>;
@@ -1360,6 +1409,33 @@ export interface RuntimeBridgeBackend {
       loadedAt: string;
       engine: string;
       localModelSource?: "llama-swap" | "peer-backed";
+      roleIds?: readonly string[];
+      contextWindow?: number | null;
+      proxyBaseUrl?: string | null;
+      checkEndpoint?: string | null;
+      useModelName?: string | null;
+    }[]
+  >;
+  listPeerLocalModels(): Promise<
+    readonly {
+      modelId: string;
+      loadedAt: string;
+      engine: string;
+      localModelSource?: "llama-swap" | "peer-backed";
+      roleIds?: readonly string[];
+      contextWindow?: number | null;
+      proxyBaseUrl?: string | null;
+      checkEndpoint?: string | null;
+      useModelName?: string | null;
+    }[]
+  >;
+  listLlamaSwapLocalModels(): Promise<
+    readonly {
+      modelId: string;
+      loadedAt: string;
+      engine: string;
+      localModelSource?: "llama-swap" | "peer-backed";
+      roleIds?: readonly string[];
       contextWindow?: number | null;
       proxyBaseUrl?: string | null;
       checkEndpoint?: string | null;
@@ -1367,6 +1443,14 @@ export interface RuntimeBridgeBackend {
     }[]
   >;
   loadLocalModel(modelId: string): Promise<{ success: boolean }>;
+  loadPeerModel(modelId: string, roleIds?: readonly string[]): Promise<{ success: boolean }>;
+  loadLlamaSwapModel(modelId: string, roleIds?: readonly string[]): Promise<{ success: boolean }>;
+  setPeerModelRoles(modelId: string, roleIds: readonly string[]): Promise<{ success: boolean }>;
+  setLlamaSwapModelRoles(
+    modelId: string,
+    roleIds: readonly string[],
+  ): Promise<{ success: boolean }>;
+  unloadPeerModel(modelId: string): Promise<{ success: boolean }>;
   unloadLocalModel(modelId?: string): Promise<{ success: boolean }>;
   readLocalPolicy(): Promise<Record<string, unknown>>;
   updateLocalPolicy(body: Record<string, unknown>): Promise<Record<string, unknown>>;
@@ -2100,6 +2184,27 @@ function deleteRuntimeEndpointsByProviderAccountId(
     );
     for (const providerAccountId of providerAccountIds) {
       statement.run(providerAccountId);
+    }
+  } finally {
+    database.close();
+  }
+}
+
+function deleteRuntimeEndpointsByModelId(
+  databasePath: string,
+  modelId: string,
+  providerAccountIds: readonly string[],
+): void {
+  if (providerAccountIds.length === 0) {
+    return;
+  }
+  const database = new DatabaseSync(databasePath);
+  try {
+    const statement = database.prepare(
+      "DELETE FROM runtime_endpoints WHERE model_id = ? AND provider_account_id = ?",
+    );
+    for (const providerAccountId of providerAccountIds) {
+      statement.run(modelId, providerAccountId);
     }
   } finally {
     database.close();
@@ -2846,48 +2951,23 @@ function buildRuntimeRoleBindings(
   roleDefinitions: readonly NonNullable<
     Parameters<typeof routeRuntimeRequest>[0]["roleDefinitions"]
   >[number][],
+  llamaSwapRoleIdsByModelId: Readonly<Record<string, readonly string[]>> = {},
 ): readonly NonNullable<Parameters<typeof routeRuntimeRequest>[0]["roleBindings"]>[number][] {
-  const roleDefinitionsById = new Map(roleDefinitions.map((role) => [role.role_id, role]));
-  const capabilitiesByEndpointId = new Map(
-    registry.endpoints.map((endpoint) => [
-      endpoint.identity.endpoint_id,
-      [...endpoint.declared.capabilities],
-    ]),
-  );
-  const dynamicBindings = runtimeEndpoints.flatMap((endpoint) => {
-    const account = accounts.find(
-      (entry) => entry.providerAccountId === endpoint.providerAccountId,
-    );
-    if (!account) {
-      return [];
-    }
-    const modelBinding = account.modelRoleBindings?.find(
-      (entry) => entry.modelId === endpoint.modelId,
-    );
-    if (!modelBinding) {
-      return [];
-    }
-    const endpointCapabilities = capabilitiesByEndpointId.get(endpoint.endpointId) ?? [];
-    return modelBinding.roleIds.flatMap((roleId) => {
-      const roleDefinition = roleDefinitionsById.get(roleId);
-      if (!roleDefinition) {
-        return [];
-      }
-      return [
-        {
-          binding_id: `runtime.${sanitizeSegment(endpoint.endpointId)}.${sanitizeSegment(roleId)}`,
-          role_id: roleId,
-          endpoint_id: endpoint.endpointId,
-          status: "active" as const,
-          policy_overrides: {},
-          effective_capabilities: endpointCapabilities,
-          effective_task_types: [...roleDefinition.task_types_supported],
-        },
-      ];
-    });
+  const accountBindings = buildAccountEndpointRoleBindings({
+    staticBindings,
+    runtimeEndpoints,
+    accounts,
+    registry,
+    roleDefinitions,
+    sanitizeSegment,
   });
-
-  return [...staticBindings, ...dynamicBindings];
+  const llamaSwapBindings = buildLlamaSwapRegistryRoleBindings({
+    registry,
+    roleDefinitions,
+    roleIdsByModelId: llamaSwapRoleIdsByModelId,
+    sanitizeSegment,
+  });
+  return mergeRuntimeRoleBindings(accountBindings, llamaSwapBindings);
 }
 
 function getModelRoleIds(account: ProviderAccountRecord, modelId: string): readonly string[] {
@@ -2907,18 +2987,17 @@ function getEndpointRoleIds(
     modelId: string;
   }[],
   accounts: readonly ProviderAccountRecord[],
+  registry: EndpointRegistryResult,
+  llamaSwapRoleIdsByModelId: Readonly<Record<string, readonly string[]>> = {},
 ): readonly string[] {
-  const runtimeEndpoint = runtimeEndpoints.find((entry) => entry.endpointId === endpointId);
-  if (!runtimeEndpoint) {
-    return [];
-  }
-  const account = accounts.find(
-    (entry) => entry.providerAccountId === runtimeEndpoint.providerAccountId,
-  );
-  if (!account) {
-    return [];
-  }
-  return getModelRoleIds(account, runtimeEndpoint.modelId);
+  return resolveEndpointRoleIds({
+    endpointId,
+    runtimeEndpoints,
+    accounts,
+    registry,
+    roleIdsByModelId: llamaSwapRoleIdsByModelId,
+    compareText,
+  });
 }
 
 function estimateContextTokens(
@@ -3783,6 +3862,13 @@ function readModelOverrideRecord(value: unknown, label: string): BridgeModelOver
     }
     next[key] = candidate;
   }
+  const roleIds = record.roleIds;
+  if (roleIds !== undefined) {
+    if (!Array.isArray(roleIds) || roleIds.some((entry) => typeof entry !== "string")) {
+      throw new Error(`${label}.roleIds must be an array of strings.`);
+    }
+    next.roleIds = [...roleIds];
+  }
   return next;
 }
 
@@ -3795,6 +3881,40 @@ function readModelOverridesBody(
       readModelOverrideRecord(entry, `modelOverrides.${modelId}`),
     ]),
   );
+}
+
+function readOptionalRoleIdsFromBody(body: Record<string, unknown>): readonly string[] | undefined {
+  if (!("roleIds" in body)) {
+    return undefined;
+  }
+  const roleIds = body.roleIds;
+  if (!Array.isArray(roleIds) || roleIds.some((entry) => typeof entry !== "string")) {
+    throw new Error("roleIds must be an array of strings.");
+  }
+  return [...roleIds];
+}
+
+function readRequiredRoleIdsFromBody(body: Record<string, unknown>): readonly string[] {
+  const roleIds = body.roleIds;
+  if (!Array.isArray(roleIds) || roleIds.some((entry) => typeof entry !== "string")) {
+    throw new Error("roleIds must be an array of strings.");
+  }
+  return [...roleIds];
+}
+
+function readModelOverridesFromDisk(runtimeStateRoot: string): Record<string, BridgeModelOverrideRecord> {
+  const overridesPath = path.join(runtimeStateRoot, "model-overrides.json");
+  try {
+    if (existsSync(overridesPath)) {
+      return JSON.parse(readFileSync(overridesPath, "utf8")) as Record<
+        string,
+        BridgeModelOverrideRecord
+      >;
+    }
+  } catch {
+    // Fall through to empty
+  }
+  return {};
 }
 
 function readOptionalPositiveInteger(params: URLSearchParams, key: string): number | undefined {
@@ -5771,6 +5891,124 @@ function createRequestHandler(options: StartBridgeServerOptions) {
       return;
     }
 
+    if (request.method === "GET" && url.pathname === "/api/role-model/local/peer/models") {
+      if (!options.listPeerLocalModels) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.listPeerLocalModels());
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/role-model/local/llama-swap/models") {
+      if (!options.listLlamaSwapLocalModels) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.listLlamaSwapLocalModels());
+      return;
+    }
+
+    if (
+      request.method === "POST" &&
+      url.pathname.startsWith("/api/role-model/local/peer/models/") &&
+      url.pathname.endsWith("/load")
+    ) {
+      if (!options.loadPeerModel) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      const modelId = decodeURIComponent(
+        url.pathname.slice("/api/role-model/local/peer/models/".length, -"/load".length),
+      );
+      const body = await readJsonBody(request);
+      writeJson(
+        response,
+        200,
+        await options.loadPeerModel(modelId, readOptionalRoleIdsFromBody(body)),
+      );
+      return;
+    }
+
+    if (
+      request.method === "PUT" &&
+      url.pathname.startsWith("/api/role-model/local/peer/models/") &&
+      url.pathname.endsWith("/roles")
+    ) {
+      if (!options.setPeerModelRoles) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      const modelId = decodeURIComponent(
+        url.pathname.slice("/api/role-model/local/peer/models/".length, -"/roles".length),
+      );
+      const body = await readJsonBody(request);
+      writeJson(
+        response,
+        200,
+        await options.setPeerModelRoles(modelId, readRequiredRoleIdsFromBody(body)),
+      );
+      return;
+    }
+
+    if (
+      request.method === "POST" &&
+      url.pathname.startsWith("/api/role-model/local/peer/models/") &&
+      url.pathname.endsWith("/unload")
+    ) {
+      if (!options.unloadPeerModel) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      const modelId = decodeURIComponent(
+        url.pathname.slice("/api/role-model/local/peer/models/".length, -"/unload".length),
+      );
+      writeJson(response, 200, await options.unloadPeerModel(modelId));
+      return;
+    }
+
+    if (
+      request.method === "POST" &&
+      url.pathname.startsWith("/api/role-model/local/llama-swap/models/") &&
+      url.pathname.endsWith("/load")
+    ) {
+      if (!options.loadLlamaSwapModel) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      const modelId = decodeURIComponent(
+        url.pathname.slice("/api/role-model/local/llama-swap/models/".length, -"/load".length),
+      );
+      const body = await readJsonBody(request);
+      writeJson(
+        response,
+        200,
+        await options.loadLlamaSwapModel(modelId, readOptionalRoleIdsFromBody(body)),
+      );
+      return;
+    }
+
+    if (
+      request.method === "PUT" &&
+      url.pathname.startsWith("/api/role-model/local/llama-swap/models/") &&
+      url.pathname.endsWith("/roles")
+    ) {
+      if (!options.setLlamaSwapModelRoles) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      const modelId = decodeURIComponent(
+        url.pathname.slice("/api/role-model/local/llama-swap/models/".length, -"/roles".length),
+      );
+      const body = await readJsonBody(request);
+      writeJson(
+        response,
+        200,
+        await options.setLlamaSwapModelRoles(modelId, readRequiredRoleIdsFromBody(body)),
+      );
+      return;
+    }
+
     if (
       request.method === "POST" &&
       url.pathname.startsWith("/api/role-model/local/models/") &&
@@ -6241,6 +6479,11 @@ export async function createRuntimeBridgeBackend(
   };
   let currentAccounts = [...readCurrentAccounts()];
   let runtimeEndpoints = [...listRuntimeEndpoints({ databasePath: initialization.databasePath })];
+  let currentModelOverrides: Record<string, BridgeModelOverrideRecord> = readModelOverridesFromDisk(
+    options.runtimeStateRoot,
+  );
+  const getLlamaSwapRoleIdsByModelId = (): Record<string, readonly string[]> =>
+    readLlamaSwapRoleIdsByModelId(currentModelOverrides);
   let currentRegistry!: EndpointRegistryResult;
   let currentLlamaSwapVendor: VendorRuntime | null = null;
   let currentLiteLLMVendor: VendorRuntime | null = null;
@@ -6269,6 +6512,7 @@ export async function createRuntimeBridgeBackend(
     if (currentRegistry.diagnostics.length > 0) {
       throw new Error("Endpoint-registry validation failed after runtime state update.");
     }
+    currentModelOverrides = readModelOverridesFromDisk(options.runtimeStateRoot);
   };
   const persistCurrentRolePolicy = async (
     nextPolicy: RuntimeRolePolicyRecord,
@@ -6330,7 +6574,30 @@ export async function createRuntimeBridgeBackend(
     };
   };
   const syncLocalPeerState = async (peers: readonly LocalPeerConfig[]): Promise<void> => {
-    const localPeerAccounts = peers.map(createLocalPeerAccount);
+    const existingPeerAccounts = listProviderAccounts({
+      databasePath: initialization.databasePath,
+    }).filter((account) => account.providerId === LOCAL_OPENAI_PROVIDER_ID);
+    const existingPeerAccountsById = new Map(
+      existingPeerAccounts.map((account) => [account.providerAccountId, account] as const),
+    );
+    const localPeerAccounts = peers.map((peer) => {
+      const nextAccount = createLocalPeerAccount(peer);
+      const existingAccount = existingPeerAccountsById.get(nextAccount.providerAccountId);
+      if (!existingAccount) {
+        return nextAccount;
+      }
+      return {
+        ...nextAccount,
+        allowedModels: [...existingAccount.allowedModels],
+        modelRoleBindings: existingAccount.modelRoleBindings
+          ? existingAccount.modelRoleBindings.map((binding) => ({
+              modelId: binding.modelId,
+              roleIds: [...binding.roleIds],
+            }))
+          : undefined,
+        deniedModels: [...existingAccount.deniedModels],
+      };
+    });
     const validationResult = validateProviderAccounts({
       catalog: currentNormalizedCatalog,
       additionalProviders: liteLLMProviders,
@@ -6343,9 +6610,6 @@ export async function createRuntimeBridgeBackend(
       );
     }
 
-    const existingPeerAccounts = listProviderAccounts({
-      databasePath: initialization.databasePath,
-    }).filter((account) => account.providerId === LOCAL_OPENAI_PROVIDER_ID);
     const nextPeerAccountIds = new Set(
       validationResult.accounts.map((account) => account.providerAccountId),
     );
@@ -6410,7 +6674,188 @@ export async function createRuntimeBridgeBackend(
       typeof entry.id === "string" && entry.id.length > 0 ? [entry.id] : [],
     );
   };
-  const activateConfiguredLocalPeerModel = async (modelId: string): Promise<boolean> => {
+  const upsertPeerModelRoleBindings = async (
+    modelId: string,
+    roleIds: readonly string[],
+    peerAccountIds?: ReadonlySet<string>,
+  ): Promise<void> => {
+    const peerAccounts = listProviderAccounts({
+      databasePath: initialization.databasePath,
+    })
+      .filter((account) => account.providerId === LOCAL_OPENAI_PROVIDER_ID)
+      .filter(
+        (account) => !peerAccountIds || peerAccountIds.has(account.providerAccountId),
+      );
+    if (peerAccounts.length === 0) {
+      return;
+    }
+
+    const nextAccounts = peerAccounts.map((account) => {
+      const otherBindings = (account.modelRoleBindings ?? []).filter(
+        (binding) => binding.modelId !== modelId,
+      );
+      const nextBindings =
+        roleIds.length > 0
+          ? [...otherBindings, { modelId, roleIds: [...roleIds] }]
+          : otherBindings;
+      return {
+        ...account,
+        modelRoleBindings: nextBindings.length > 0 ? nextBindings : undefined,
+      };
+    });
+    const validationResult = validateProviderAccounts({
+      catalog: currentNormalizedCatalog,
+      additionalProviders: liteLLMProviders,
+      allowedRoleIds: getAllowedRoleIds(),
+      accounts: nextAccounts,
+    });
+    if (validationResult.diagnostics.length > 0) {
+      throw new Error(
+        validationResult.diagnostics[0]?.message ?? "Peer model role binding validation failed.",
+      );
+    }
+    for (const account of validationResult.accounts) {
+      upsertSqliteProviderAccount({
+        databasePath: initialization.databasePath,
+        account,
+      });
+    }
+    rebuildCurrentState();
+  };
+  const persistLlamaSwapModelRoleIds = async (
+    modelId: string,
+    roleIds: readonly string[],
+  ): Promise<void> => {
+    const nextOverrides = { ...currentModelOverrides };
+    const existing = nextOverrides[modelId] ?? {};
+    if (roleIds.length === 0) {
+      const { roleIds: _removed, ...rest } = existing;
+      if (Object.keys(rest).length === 0) {
+        delete nextOverrides[modelId];
+      } else {
+        nextOverrides[modelId] = rest;
+      }
+    } else {
+      nextOverrides[modelId] = { ...existing, roleIds: [...roleIds] };
+    }
+    const overridesPath = path.join(options.runtimeStateRoot, "model-overrides.json");
+    await writeFile(overridesPath, JSON.stringify(nextOverrides, null, 2));
+    currentModelOverrides = nextOverrides;
+    rebuildCurrentState();
+  };
+  const getPeerRoleIdsForModel = (modelId: string): readonly string[] => {
+    const roleIds = new Set<string>();
+    for (const account of currentAccounts) {
+      if (account.providerId !== LOCAL_OPENAI_PROVIDER_ID) {
+        continue;
+      }
+      const binding = account.modelRoleBindings?.find((entry) => entry.modelId === modelId);
+      if (!binding) {
+        continue;
+      }
+      for (const roleId of binding.roleIds) {
+        roleIds.add(roleId);
+      }
+    }
+    return [...roleIds].sort(compareText);
+  };
+  const collectLocalModels = async (
+    sourceFilter?: "peer-backed" | "llama-swap",
+  ): Promise<
+    readonly {
+      modelId: string;
+      loadedAt: string;
+      engine: string;
+      localModelSource?: "llama-swap" | "peer-backed";
+      roleIds?: readonly string[];
+      contextWindow?: number | null;
+      proxyBaseUrl?: string | null;
+      checkEndpoint?: string | null;
+      useModelName?: string | null;
+    }[]
+  > => {
+    const localConfigByModelId = new Map(
+      (currentUnifiedRuntimeConfig?.llamaSwap.models ?? []).map(
+        (model) => [model.modelId, model] as const,
+      ),
+    );
+    const vendorModels =
+      sourceFilter === "peer-backed" || !currentLlamaSwapVendor?.getRunningModels
+        ? []
+        : await currentLlamaSwapVendor.getRunningModels();
+    const localPeerEndpoints =
+      sourceFilter === "llama-swap"
+        ? []
+        : runtimeEndpoints.filter(
+            (endpoint) =>
+              endpoint.lifecycleState === "active" &&
+              isLocalPeerProviderAccountId(endpoint.providerAccountId),
+          );
+    const loadedAtByModelId = new Map<string, string>();
+    for (const event of listSwapEvents({
+      databasePath: initialization.databasePath,
+      limit: 200,
+    })) {
+      if (event.newModelId && !loadedAtByModelId.has(event.newModelId)) {
+        loadedAtByModelId.set(event.newModelId, event.timestamp);
+      }
+    }
+    const llamaSwapRoleIdsByModelId = getLlamaSwapRoleIdsByModelId();
+    const localPeerModels = localPeerEndpoints.flatMap((endpoint) =>
+      loadedAtByModelId.has(endpoint.modelId) ||
+      !vendorModels.some((model) => model.modelId === endpoint.modelId)
+        ? [
+            {
+              modelId: endpoint.modelId,
+              loadedAt: loadedAtByModelId.get(endpoint.modelId) ?? new Date().toISOString(),
+              engine: LOCAL_OPENAI_PROVIDER_ID,
+              localModelSource: "peer-backed" as const,
+              roleIds: getPeerRoleIdsForModel(endpoint.modelId),
+              contextWindow: null,
+              proxyBaseUrl: null,
+              checkEndpoint: null,
+              useModelName: null,
+            },
+          ]
+        : [],
+    );
+
+    const mergedModels: Array<{
+      modelId: string;
+      loadedAt: string;
+      engine: string;
+      localModelSource?: "llama-swap" | "peer-backed";
+      roleIds?: readonly string[];
+      contextWindow?: number | null;
+      proxyBaseUrl?: string | null;
+      checkEndpoint?: string | null;
+      useModelName?: string | null;
+    }> = vendorModels.map((model) => {
+      const config = localConfigByModelId.get(model.modelId);
+      return {
+        ...model,
+        localModelSource: "llama-swap" as const,
+        roleIds: [...(llamaSwapRoleIdsByModelId[model.modelId] ?? [])].sort(compareText),
+        contextWindow: config?.contextWindow ?? null,
+        proxyBaseUrl: config?.proxyBaseUrl ?? null,
+        checkEndpoint: config?.checkEndpoint ?? null,
+        useModelName: config?.useModelName ?? null,
+      };
+    });
+    for (const model of localPeerModels) {
+      if (!mergedModels.some((entry) => entry.modelId === model.modelId)) {
+        mergedModels.push(model);
+      }
+    }
+    if (!sourceFilter) {
+      return mergedModels;
+    }
+    return mergedModels.filter((model) => model.localModelSource === sourceFilter);
+  };
+  const activateConfiguredLocalPeerModel = async (
+    modelId: string,
+    roleIds?: readonly string[],
+  ): Promise<boolean> => {
     const peers = await readStoredPeers();
     if (peers.length === 0) {
       return false;
@@ -6443,6 +6888,14 @@ export async function createRuntimeBridgeBackend(
         throw new Error(probeErrors[0] ?? "Failed to inspect configured local endpoints.");
       }
       throw new Error(`Model ${modelId} is not available on any configured local endpoint.`);
+    }
+
+    if (roleIds !== undefined) {
+      await upsertPeerModelRoleBindings(
+        modelId,
+        roleIds,
+        new Set(matchingPeers.map((peer) => createLocalPeerProviderAccountId(peer.id))),
+      );
     }
 
     for (const peer of matchingPeers) {
@@ -6848,7 +7301,13 @@ export async function createRuntimeBridgeBackend(
             ? "healthy"
             : "unknown"),
       status: registryEndpoint?.status ?? runtimeEndpoint?.lifecycleState ?? "unknown",
-      roleIds: getEndpointRoleIds(endpointId, runtimeEndpoints, currentAccounts),
+      roleIds: getEndpointRoleIds(
+        endpointId,
+        runtimeEndpoints,
+        currentAccounts,
+        currentRegistry,
+        getLlamaSwapRoleIdsByModelId(),
+      ),
     };
   };
   const listTelemetryRequestRecords = (
@@ -7006,6 +7465,7 @@ export async function createRuntimeBridgeBackend(
         currentAccounts,
         currentRegistry,
         currentRuntimeRoles.roleDefinitions,
+        getLlamaSwapRoleIdsByModelId(),
       ),
     },
   });
@@ -7062,7 +7522,13 @@ export async function createRuntimeBridgeBackend(
         healthStatus:
           runtimeEndpoints.find((entry) => entry.endpointId === endpointId)?.healthStatus ??
           (endpoint.deniedByPolicy ? "policy-blocked" : "healthy"),
-        roleBindings: getEndpointRoleIds(endpointId, runtimeEndpoints, currentAccounts),
+        roleBindings: getEndpointRoleIds(
+          endpointId,
+          runtimeEndpoints,
+          currentAccounts,
+          currentRegistry,
+          getLlamaSwapRoleIdsByModelId(),
+        ),
         capabilities: endpoint.declared.capabilities,
         toolCallingSupported: endpoint.declared.tool_calling.supported,
         toolCallingStyle: endpoint.declared.tool_calling.style,
@@ -7184,6 +7650,7 @@ export async function createRuntimeBridgeBackend(
         currentAccounts,
         currentRegistry,
         currentRuntimeRoles.roleDefinitions,
+        getLlamaSwapRoleIdsByModelId(),
       ),
       routingModel: plan.routingModel ?? routingModel,
     });
@@ -8910,6 +9377,8 @@ export async function createRuntimeBridgeBackend(
             endpoint.identity.endpoint_id,
             runtimeEndpoints,
             currentAccounts,
+            currentRegistry,
+            getLlamaSwapRoleIdsByModelId(),
           ),
           localModelSource:
             localSource?.localModelSource ?? toLocalModelSource(endpoint.identity.serving_source),
@@ -9210,87 +9679,78 @@ export async function createRuntimeBridgeBackend(
         loadedAt: string;
         engine: string;
         localModelSource?: "llama-swap" | "peer-backed";
+        roleIds?: readonly string[];
         contextWindow?: number | null;
         proxyBaseUrl?: string | null;
         checkEndpoint?: string | null;
         useModelName?: string | null;
       }[]
     > {
-      const localConfigByModelId = new Map(
-        (currentUnifiedRuntimeConfig?.llamaSwap.models ?? []).map(
-          (model) => [model.modelId, model] as const,
-        ),
-      );
-      const vendorModels = currentLlamaSwapVendor?.getRunningModels
-        ? await currentLlamaSwapVendor.getRunningModels()
-        : [];
-      const localPeerEndpoints = runtimeEndpoints.filter(
-        (endpoint) =>
-          endpoint.lifecycleState === "active" &&
-          isLocalPeerProviderAccountId(endpoint.providerAccountId),
-      );
-      const loadedAtByModelId = new Map<string, string>();
-      for (const event of listSwapEvents({
-        databasePath: initialization.databasePath,
-        limit: 200,
-      })) {
-        if (event.newModelId && !loadedAtByModelId.has(event.newModelId)) {
-          loadedAtByModelId.set(event.newModelId, event.timestamp);
-        }
-      }
-      const localPeerModels = localPeerEndpoints.flatMap((endpoint) =>
-        loadedAtByModelId.has(endpoint.modelId) ||
-        !vendorModels.some((model) => model.modelId === endpoint.modelId)
-          ? [
-              {
-                modelId: endpoint.modelId,
-                loadedAt: loadedAtByModelId.get(endpoint.modelId) ?? new Date().toISOString(),
-                engine: LOCAL_OPENAI_PROVIDER_ID,
-                localModelSource: "peer-backed" as const,
-                contextWindow: null,
-                proxyBaseUrl: null,
-                checkEndpoint: null,
-                useModelName: null,
-              },
-            ]
-          : [],
-      );
-
-      const mergedModels: Array<{
+      return collectLocalModels();
+    },
+    async listPeerLocalModels(): Promise<
+      readonly {
         modelId: string;
         loadedAt: string;
         engine: string;
         localModelSource?: "llama-swap" | "peer-backed";
+        roleIds?: readonly string[];
         contextWindow?: number | null;
         proxyBaseUrl?: string | null;
         checkEndpoint?: string | null;
         useModelName?: string | null;
-      }> = vendorModels.map((model) => {
-        const config = localConfigByModelId.get(model.modelId);
-        return {
-          ...model,
-          localModelSource: "llama-swap" as const,
-          contextWindow: config?.contextWindow ?? null,
-          proxyBaseUrl: config?.proxyBaseUrl ?? null,
-          checkEndpoint: config?.checkEndpoint ?? null,
-          useModelName: config?.useModelName ?? null,
-        };
-      });
-      for (const model of localPeerModels) {
-        if (!mergedModels.some((entry) => entry.modelId === model.modelId)) {
-          mergedModels.push(model);
-        }
-      }
-      return mergedModels;
+      }[]
+    > {
+      return collectLocalModels("peer-backed");
+    },
+    async listLlamaSwapLocalModels(): Promise<
+      readonly {
+        modelId: string;
+        loadedAt: string;
+        engine: string;
+        localModelSource?: "llama-swap" | "peer-backed";
+        roleIds?: readonly string[];
+        contextWindow?: number | null;
+        proxyBaseUrl?: string | null;
+        checkEndpoint?: string | null;
+        useModelName?: string | null;
+      }[]
+    > {
+      return collectLocalModels("llama-swap");
     },
     async loadLocalModel(modelId: string): Promise<{ success: boolean }> {
       if (await activateConfiguredLocalPeerModel(modelId)) {
         return { success: true };
       }
-
+      return this.loadLlamaSwapModel(modelId);
+    },
+    async loadPeerModel(
+      modelId: string,
+      roleIds?: readonly string[],
+    ): Promise<{ success: boolean }> {
+      const peers = await readStoredPeers();
+      if (peers.length === 0) {
+        throw new Error(
+          "No peer endpoints configured. Add a peer endpoint before registering peer models.",
+        );
+      }
+      if (!(await activateConfiguredLocalPeerModel(modelId, roleIds))) {
+        throw new Error(
+          "No peer endpoints configured. Add a peer endpoint before registering peer models.",
+        );
+      }
+      return { success: true };
+    },
+    async loadLlamaSwapModel(
+      modelId: string,
+      roleIds?: readonly string[],
+    ): Promise<{ success: boolean }> {
+      if (roleIds !== undefined) {
+        await persistLlamaSwapModelRoleIds(modelId, roleIds);
+      }
       if (!currentLlamaSwapVendor) {
         throw new Error(
-          "No local endpoints are configured. Add a local endpoint or enable llama_swap.models before loading a model.",
+          "Llama-swap is not running. Enable llama_swap in runtime config before loading a model.",
         );
       }
 
@@ -9308,6 +9768,58 @@ export async function createRuntimeBridgeBackend(
         newModelId: modelId,
         reason: "manual-load",
       });
+      return { success: true };
+    },
+    async setPeerModelRoles(
+      modelId: string,
+      roleIds: readonly string[],
+    ): Promise<{ success: boolean }> {
+      const peerAccountIds = new Set(
+        runtimeEndpoints
+          .filter(
+            (endpoint) =>
+              endpoint.lifecycleState === "active" &&
+              endpoint.modelId === modelId &&
+              isLocalPeerProviderAccountId(endpoint.providerAccountId),
+          )
+          .map((endpoint) => endpoint.providerAccountId),
+      );
+      if (peerAccountIds.size === 0) {
+        const peers = await readStoredPeers();
+        if (peers.length === 0) {
+          throw new Error(`Peer model ${modelId} is not registered with the router.`);
+        }
+        await upsertPeerModelRoleBindings(
+          modelId,
+          roleIds,
+          new Set(peers.map((peer) => createLocalPeerProviderAccountId(peer.id))),
+        );
+      } else {
+        await upsertPeerModelRoleBindings(modelId, roleIds, peerAccountIds);
+      }
+      return { success: true };
+    },
+    async setLlamaSwapModelRoles(
+      modelId: string,
+      roleIds: readonly string[],
+    ): Promise<{ success: boolean }> {
+      await persistLlamaSwapModelRoleIds(modelId, roleIds);
+      return { success: true };
+    },
+    async unloadPeerModel(modelId: string): Promise<{ success: boolean }> {
+      const peerAccountIds = runtimeEndpoints
+        .filter(
+          (endpoint) =>
+            endpoint.lifecycleState === "active" &&
+            endpoint.modelId === modelId &&
+            isLocalPeerProviderAccountId(endpoint.providerAccountId),
+        )
+        .map((endpoint) => endpoint.providerAccountId);
+      if (peerAccountIds.length === 0) {
+        return { success: false };
+      }
+      deleteRuntimeEndpointsByModelId(initialization.databasePath, modelId, peerAccountIds);
+      rebuildCurrentState();
       return { success: true };
     },
     async unloadLocalModel(modelId?: string): Promise<{ success: boolean }> {
@@ -9487,6 +9999,8 @@ export async function createRuntimeBridgeBackend(
     ): Promise<Record<string, BridgeModelOverrideRecord>> {
       const overridesPath = path.join(options.runtimeStateRoot, "model-overrides.json");
       await writeFile(overridesPath, JSON.stringify(body, null, 2));
+      currentModelOverrides = body;
+      rebuildCurrentState();
       return body;
     },
     async readPeers(): Promise<readonly { id: string; url: string; authToken?: string }[]> {

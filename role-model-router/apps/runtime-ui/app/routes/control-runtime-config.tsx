@@ -13,6 +13,7 @@ import {
   secondaryButtonClassName,
 } from "../lib/design-system";
 import { usePageActions } from "../lib/shell-header-context";
+import { applyLlamaSwapScaffold } from "../lib/llama-swap-setup";
 import {
   type RuntimeConfig,
   type RuntimeConfigRecord,
@@ -69,6 +70,14 @@ export default function ControlRuntimeConfigRoute() {
   }, []);
 
   const currentConfig = configRecord?.config ?? createDefaultRuntimeConfig();
+  const editorConfig = useMemo(() => {
+    try {
+      return JSON.parse(editorText) as RuntimeConfig;
+    } catch {
+      return null;
+    }
+  }, [editorText]);
+  const canInsertScaffold = (editorConfig?.llamaSwap?.models?.length ?? 0) === 0;
   const remoteMappingCount = useMemo(
     () =>
       currentConfig.liteLLM.providers.reduce(
@@ -135,6 +144,24 @@ export default function ControlRuntimeConfigRoute() {
             >
               {saving ? "Applying…" : "Save and apply"}
             </button>
+            {canInsertScaffold ? (
+              <button
+                className={secondaryButtonClassName}
+                type="button"
+                disabled={saving}
+                onClick={() => {
+                  const base = editorConfig ?? createDefaultRuntimeConfig();
+                  const next = applyLlamaSwapScaffold(base);
+                  setEditorText(JSON.stringify(next, null, 2));
+                  setStatusMessage(
+                    "Llama-swap scaffold inserted. Replace your-model-id and the GGUF path, then Save and apply.",
+                  );
+                  setError(null);
+                }}
+              >
+                Insert llama-swap scaffold
+              </button>
+            ) : null}
             <button
               className={secondaryButtonClassName}
               type="button"

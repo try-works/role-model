@@ -1,6 +1,11 @@
 import { Navigate, useLocation } from "react-router";
 
 const legacyRouteMap: Record<string, string> = {
+  "/app/local/models": "/app/local/choose",
+  "/app/local/swap": "/app/local/llama-swap/swap",
+  "/app/local/policy": "/app/local/llama-swap/policy",
+  "/app/local/logs": "/app/local/llama-swap/logs",
+  "/app/local/matrix": "/app/local/llama-swap/matrix",
   "/app/local/peers": "/app/local/endpoints",
   "/app/control/providers": "/app/remote/providers",
   "/app/control/routing-strategy": "/app/router/strategy",

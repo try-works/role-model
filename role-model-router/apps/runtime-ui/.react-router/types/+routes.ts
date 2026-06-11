@@ -32,7 +32,28 @@ type Pages = {
   "/app/studio/advanced": {
     params: {};
   };
+  "/app/local/choose": {
+    params: {};
+  };
   "/app/local/models": {
+    params: {};
+  };
+  "/app/local/peer-models": {
+    params: {};
+  };
+  "/app/local/llama-swap/models": {
+    params: {};
+  };
+  "/app/local/llama-swap/swap": {
+    params: {};
+  };
+  "/app/local/llama-swap/policy": {
+    params: {};
+  };
+  "/app/local/llama-swap/logs": {
+    params: {};
+  };
+  "/app/local/llama-swap/matrix": {
     params: {};
   };
   "/app/local/swap": {
@@ -169,7 +190,7 @@ type Pages = {
 type RouteFiles = {
   "root.tsx": {
     id: "root";
-    page: "/" | "/app" | "/app/studio/chat" | "/app/studio/images" | "/app/studio/audio" | "/app/studio/rerank" | "/app/studio/advanced" | "/app/local/models" | "/app/local/swap" | "/app/local/policy" | "/app/local/logs" | "/app/local/matrix" | "/app/local/endpoints" | "/app/local/peers" | "/app/remote/providers" | "/app/control/providers" | "/app/router/strategy" | "/app/control/routing-strategy" | "/app/system/runtime-config" | "/app/control/runtime-config" | "/app/router/controller" | "/app/control/controller" | "/app/connect" | "/app/connect/downstream" | "/app/connect/upstream" | "/app/endpoints" | "/app/control/endpoints" | "/app/models/roles" | "/app/control/roles" | "/app/models" | "/app/models/benchmark" | "/app/control/benchmark" | "/app/control/models" | "/app/router" | "/app/router/config" | "/app/router/candidates" | "/app/router/decisions" | "/app/router/decisions/:requestId" | "/app/observe/activity" | "/app/observe/requests" | "/app/observe/requests/:requestId" | "/app/observe/logs" | "/app/endpoints/downstream" | "/app/integrations/downstream" | "/app/endpoints/upstream" | "/app/integrations/upstream" | "/app/system/runtime" | "/app/system/peers" | "/*";
+    page: "/" | "/app" | "/app/studio/chat" | "/app/studio/images" | "/app/studio/audio" | "/app/studio/rerank" | "/app/studio/advanced" | "/app/local/choose" | "/app/local/models" | "/app/local/peer-models" | "/app/local/llama-swap/models" | "/app/local/llama-swap/swap" | "/app/local/llama-swap/policy" | "/app/local/llama-swap/logs" | "/app/local/llama-swap/matrix" | "/app/local/swap" | "/app/local/policy" | "/app/local/logs" | "/app/local/matrix" | "/app/local/endpoints" | "/app/local/peers" | "/app/remote/providers" | "/app/control/providers" | "/app/router/strategy" | "/app/control/routing-strategy" | "/app/system/runtime-config" | "/app/control/runtime-config" | "/app/router/controller" | "/app/control/controller" | "/app/connect" | "/app/connect/downstream" | "/app/connect/upstream" | "/app/endpoints" | "/app/control/endpoints" | "/app/models/roles" | "/app/control/roles" | "/app/models" | "/app/models/benchmark" | "/app/control/benchmark" | "/app/control/models" | "/app/router" | "/app/router/config" | "/app/router/candidates" | "/app/router/decisions" | "/app/router/decisions/:requestId" | "/app/observe/activity" | "/app/observe/requests" | "/app/observe/requests/:requestId" | "/app/observe/logs" | "/app/endpoints/downstream" | "/app/integrations/downstream" | "/app/endpoints/upstream" | "/app/integrations/upstream" | "/app/system/runtime" | "/app/system/peers" | "/*";
   };
   "routes/index.tsx": {
     id: "routes/index";
@@ -177,7 +198,7 @@ type RouteFiles = {
   };
   "routes/app-layout.tsx": {
     id: "routes/app-layout";
-    page: "/app" | "/app/studio/chat" | "/app/studio/images" | "/app/studio/audio" | "/app/studio/rerank" | "/app/studio/advanced" | "/app/local/models" | "/app/local/swap" | "/app/local/policy" | "/app/local/logs" | "/app/local/matrix" | "/app/local/endpoints" | "/app/local/peers" | "/app/remote/providers" | "/app/control/providers" | "/app/router/strategy" | "/app/control/routing-strategy" | "/app/system/runtime-config" | "/app/control/runtime-config" | "/app/router/controller" | "/app/control/controller" | "/app/connect" | "/app/connect/downstream" | "/app/connect/upstream" | "/app/endpoints" | "/app/control/endpoints" | "/app/models/roles" | "/app/control/roles" | "/app/models" | "/app/models/benchmark" | "/app/control/benchmark" | "/app/control/models" | "/app/router" | "/app/router/config" | "/app/router/candidates" | "/app/router/decisions" | "/app/router/decisions/:requestId" | "/app/observe/activity" | "/app/observe/requests" | "/app/observe/requests/:requestId" | "/app/observe/logs" | "/app/endpoints/downstream" | "/app/integrations/downstream" | "/app/endpoints/upstream" | "/app/integrations/upstream" | "/app/system/runtime" | "/app/system/peers";
+    page: "/app" | "/app/studio/chat" | "/app/studio/images" | "/app/studio/audio" | "/app/studio/rerank" | "/app/studio/advanced" | "/app/local/choose" | "/app/local/models" | "/app/local/peer-models" | "/app/local/llama-swap/models" | "/app/local/llama-swap/swap" | "/app/local/llama-swap/policy" | "/app/local/llama-swap/logs" | "/app/local/llama-swap/matrix" | "/app/local/swap" | "/app/local/policy" | "/app/local/logs" | "/app/local/matrix" | "/app/local/endpoints" | "/app/local/peers" | "/app/remote/providers" | "/app/control/providers" | "/app/router/strategy" | "/app/control/routing-strategy" | "/app/system/runtime-config" | "/app/control/runtime-config" | "/app/router/controller" | "/app/control/controller" | "/app/connect" | "/app/connect/downstream" | "/app/connect/upstream" | "/app/endpoints" | "/app/control/endpoints" | "/app/models/roles" | "/app/control/roles" | "/app/models" | "/app/models/benchmark" | "/app/control/benchmark" | "/app/control/models" | "/app/router" | "/app/router/config" | "/app/router/candidates" | "/app/router/decisions" | "/app/router/decisions/:requestId" | "/app/observe/activity" | "/app/observe/requests" | "/app/observe/requests/:requestId" | "/app/observe/logs" | "/app/endpoints/downstream" | "/app/integrations/downstream" | "/app/endpoints/upstream" | "/app/integrations/upstream" | "/app/system/runtime" | "/app/system/peers";
   };
   "routes/dashboard.tsx": {
     id: "routes/dashboard";
@@ -203,31 +224,51 @@ type RouteFiles = {
     id: "routes/studio-advanced";
     page: "/app/studio/advanced";
   };
+  "routes/local-choose.tsx": {
+    id: "routes/local-choose";
+    page: "/app/local/choose";
+  };
   "routes/local-models.tsx": {
     id: "routes/local-models";
     page: "/app/local/models";
   };
+  "routes/local-peer-models.tsx": {
+    id: "routes/local-peer-models";
+    page: "/app/local/peer-models";
+  };
+  "routes/local-llama-swap-models.tsx": {
+    id: "routes/local-llama-swap-models";
+    page: "/app/local/llama-swap/models";
+  };
   "routes/local-swap.tsx": {
     id: "routes/local-swap";
-    page: "/app/local/swap";
+    page: "/app/local/llama-swap/swap";
   };
   "routes/local-policy.tsx": {
     id: "routes/local-policy";
-    page: "/app/local/policy";
+    page: "/app/local/llama-swap/policy";
   };
   "routes/local-logs.tsx": {
     id: "routes/local-logs";
-    page: "/app/local/logs";
+    page: "/app/local/llama-swap/logs";
   };
   "routes/local-matrix.tsx": {
     id: "routes/local-matrix";
-    page: "/app/local/matrix";
-  };
-  "routes/local-peers.tsx": {
-    id: "routes/local-peers";
-    page: "/app/local/endpoints";
+    page: "/app/local/llama-swap/matrix";
   };
   "routes/legacy-redirect.tsx": {
+    id: "legacy-local-swap";
+    page: "/app/local/swap";
+  } | {
+    id: "legacy-local-policy";
+    page: "/app/local/policy";
+  } | {
+    id: "legacy-local-logs";
+    page: "/app/local/logs";
+  } | {
+    id: "legacy-local-matrix";
+    page: "/app/local/matrix";
+  } | {
     id: "legacy-local-peers";
     page: "/app/local/peers";
   } | {
@@ -269,6 +310,10 @@ type RouteFiles = {
   } | {
     id: "legacy-integrations-upstream";
     page: "/app/integrations/upstream";
+  };
+  "routes/local-peers.tsx": {
+    id: "routes/local-peers";
+    page: "/app/local/endpoints";
   };
   "routes/providers.tsx": {
     id: "routes/providers";
@@ -370,11 +415,18 @@ type RouteModules = {
   "routes/studio-audio": typeof import("./app/routes/studio-audio.tsx");
   "routes/studio-rerank": typeof import("./app/routes/studio-rerank.tsx");
   "routes/studio-advanced": typeof import("./app/routes/studio-advanced.tsx");
+  "routes/local-choose": typeof import("./app/routes/local-choose.tsx");
   "routes/local-models": typeof import("./app/routes/local-models.tsx");
+  "routes/local-peer-models": typeof import("./app/routes/local-peer-models.tsx");
+  "routes/local-llama-swap-models": typeof import("./app/routes/local-llama-swap-models.tsx");
   "routes/local-swap": typeof import("./app/routes/local-swap.tsx");
   "routes/local-policy": typeof import("./app/routes/local-policy.tsx");
   "routes/local-logs": typeof import("./app/routes/local-logs.tsx");
   "routes/local-matrix": typeof import("./app/routes/local-matrix.tsx");
+  "legacy-local-swap": typeof import("./app/routes/legacy-redirect.tsx");
+  "legacy-local-policy": typeof import("./app/routes/legacy-redirect.tsx");
+  "legacy-local-logs": typeof import("./app/routes/legacy-redirect.tsx");
+  "legacy-local-matrix": typeof import("./app/routes/legacy-redirect.tsx");
   "routes/local-peers": typeof import("./app/routes/local-peers.tsx");
   "legacy-local-peers": typeof import("./app/routes/legacy-redirect.tsx");
   "routes/providers": typeof import("./app/routes/providers.tsx");

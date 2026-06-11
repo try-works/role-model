@@ -165,3 +165,11 @@
   - Fixed a Router decision-detail race where stale async responses could overwrite the active request after fast navigation
   - Focused validation green: `runtime-host-bridge` test/build, `runtime-ui` build, `runtime-ui` suite set in single-worker mode; live browser QA proved Router overview/config/candidates/decisions/detail and Observe cross-link against seeded request `req-run32-router-003`
   - Root `ci:check` still reproduces the inherited Phase 0 formatter-drift failure signature in `biome check .`
+
+- Run 38 (Local Model Roles — Peer / Llama-swap Split) completed on branch `recursive/38-local-model-roles-peer-llama-swap-split`:
+  - Local pillar now uses **Choose local backend** (`/app/local/choose`), **Peer models** (`/app/local/peer-models`), and **Llama-swap models** (`/app/local/llama-swap/models`); legacy `/app/local/models` redirects to the chooser; llama-swap satellite routes live under `/app/local/llama-swap/*` with legacy redirects from `/app/local/swap`, `/app/local/policy`, `/app/local/logs`, `/app/local/matrix`
+  - `runtime-host-bridge` exposes split local model APIs; peer roles persist on provider-account `modelRoleBindings` and survive `syncLocalPeerState` merge; llama-swap roles persist on `model-overrides.json` `roleIds`
+  - `local-model-role-bindings.ts` feeds `buildRuntimeRoleBindings` so assigned local roles appear in router candidates and endpoint readback
+  - `provider-account` accepts `modelRoleBindings` on peer accounts with empty `allowedModels` (wildcard semantics)
+  - Packaged runtime on `:3456` validated: peer `lfm2.5-8b-a1b` with `general.chat` + `tool.agent`, `probe-downstream-ingress.py` 0 BRIDGE_CRASH, browser QA PASS for split pages and legacy redirects
+  - Addendum 01: `llama-swap-setup.ts` scaffold + runtime-config insert action + llama-swap setup hints/modal when config not operational; verified on peer-only operator config without enabling llama-swap inference

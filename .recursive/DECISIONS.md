@@ -1043,3 +1043,39 @@
 - Known issues / follow-ups:
   - consumer cache-probe scenario `p26-cache-easy-a` can false-fail when prior easy prompts warmed the shared conversation cache; isolate `conversationId` per cache expectation if the suite is promoted to CI
   - medium-path live difficulty QA on the binary mock classifier remains automated-evidence-only under the current classifier fixture
+
+### Run `38-local-model-roles-peer-llama-swap-split`
+
+- Run folder: `/.recursive/run/38-local-model-roles-peer-llama-swap-split/`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+  - `addenda/ui-architecture-and-page-spec.md`
+- What changed:
+  - Split Local UI into **Choose local backend**, **Peer models**, and **Llama-swap models** with legacy redirects to `/app/local/llama-swap/*`
+  - Split local model HTTP APIs for peer vs llama-swap list/load/roles/unload
+  - Peer `modelRoleBindings` persist and merge on `syncLocalPeerState`; wildcard peer validation when `allowedModels` is empty
+  - `local-model-role-bindings.ts` feeds router dynamic bindings for peer and llama-swap registry endpoints
+  - Packaged SEA rebuild, config parity, `probe-downstream-ingress.py` green (0 BRIDGE_CRASH), browser QA on `:3456`
+- Why:
+  - local models were routable but not role-aware; peer and llama-swap were mixed on one page; peer roles were wiped on sync; router ignored llama-swap bindings
+- How:
+  - strict TDD for provider-account, bindings module, and design-system; SEA rebuild + operator config parity + routing regression + cursor-ide-browser MCP QA
+- What was not done:
+  - llama-swap live load+role browser proof in operator env (llama-swap disabled); isolated git worktree not created (feature branch at repo root)
+- Known issues / follow-ups:
+  - peer-models prerequisites flash fix in working tree requires SEA rebuild to ship; optional llama-swap-enabled QA for `R3`/`R7` scenario B
+  - run 39: session rehydration for peer/remote activations and inventory-driven alias pools across restart
+- **Addendum 01** (`llama-swap-setup-scaffold-and-ui-hints`):
+  - Artifacts: `addenda/00-requirements.llama-swap-setup-scaffold-and-ui-hints.addendum-01.md`, `03-implementation-summary.addendum-01.md`, `05-manual-qa.addendum-01.md`
+  - What changed: `llama-swap-setup.ts` scaffold helpers; runtime-config **Insert llama-swap scaffold**; setup hints + modal on llama-swap Local surfaces when not operational
+  - Why: peer-only operators had no onboarding path when `llama_swap.models` empty (run 38 `R3`/`R7` scenario B deferred)
+  - Verified: 6/6 unit tests; browser QA on `:3456` with peer-only config; SEA SHA256 `acf14c9829f6b7b9144dc5e9334fc212c8ce8fbd4eff873dec44aaf1b492dce5`

@@ -318,8 +318,10 @@ export function validateProviderAccounts(
     const seenModelRoleBindings = new Set<string>();
     const allowedRoleIds = input.allowedRoleIds ? new Set(input.allowedRoleIds) : null;
 
+    const allowsWildcardModelRoleBindings = account.allowedModels.length === 0;
+
     for (const binding of modelRoleBindings) {
-      if (!allowedModelSet.has(binding.modelId)) {
+      if (!allowsWildcardModelRoleBindings && !allowedModelSet.has(binding.modelId)) {
         diagnostics.push({
           providerAccountId: account.providerAccountId,
           severity: "error",

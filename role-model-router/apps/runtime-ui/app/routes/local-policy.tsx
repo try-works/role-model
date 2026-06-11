@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 
+import { LlamaSwapSetupBanner } from "../components/llama-swap-setup-hint";
 import {
   EmptyState,
   ErrorState,
@@ -71,6 +72,7 @@ export default function LocalPolicyRoute() {
 
   return (
     <div className="space-y-8">
+      <LlamaSwapSetupBanner />
       {error ? <ErrorState label={error} /> : null}
 
       <SectionCard

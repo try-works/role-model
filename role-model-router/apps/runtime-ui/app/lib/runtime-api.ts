@@ -170,6 +170,7 @@ export interface RuntimeLocalModel {
   readonly loadedAt: string;
   readonly engine: string;
   readonly localModelSource?: "llama-swap" | "peer-backed";
+  readonly roleIds?: readonly string[];
   readonly contextWindow?: number | null;
   readonly proxyBaseUrl?: string | null;
   readonly checkEndpoint?: string | null;
@@ -1341,12 +1342,89 @@ export async function fetchLocalModels(
   return fetchJson<readonly RuntimeLocalModel[]>("/api/role-model/local/models", fetcher);
 }
 
+export async function fetchPeerLocalModels(
+  fetcher: RuntimeFetcher = fetch,
+): Promise<readonly RuntimeLocalModel[]> {
+  return fetchJson<readonly RuntimeLocalModel[]>(
+    "/api/role-model/local/peer/models",
+    fetcher,
+  );
+}
+
+export async function fetchLlamaSwapLocalModels(
+  fetcher: RuntimeFetcher = fetch,
+): Promise<readonly RuntimeLocalModel[]> {
+  return fetchJson<readonly RuntimeLocalModel[]>(
+    "/api/role-model/local/llama-swap/models",
+    fetcher,
+  );
+}
+
 export async function loadLocalModel(
   modelId: string,
   fetcher: RuntimeFetcher = fetch,
 ): Promise<{ success: boolean }> {
   return postJson<{ success: boolean }>(
     `/api/role-model/local/models/${encodeURIComponent(modelId)}/load`,
+    {},
+    fetcher,
+  );
+}
+
+export async function loadPeerModel(
+  modelId: string,
+  roleIds?: readonly string[],
+  fetcher: RuntimeFetcher = fetch,
+): Promise<{ success: boolean }> {
+  return postJson<{ success: boolean }>(
+    `/api/role-model/local/peer/models/${encodeURIComponent(modelId)}/load`,
+    roleIds !== undefined ? { roleIds: [...roleIds] } : {},
+    fetcher,
+  );
+}
+
+export async function loadLlamaSwapModel(
+  modelId: string,
+  roleIds?: readonly string[],
+  fetcher: RuntimeFetcher = fetch,
+): Promise<{ success: boolean }> {
+  return postJson<{ success: boolean }>(
+    `/api/role-model/local/llama-swap/models/${encodeURIComponent(modelId)}/load`,
+    roleIds !== undefined ? { roleIds: [...roleIds] } : {},
+    fetcher,
+  );
+}
+
+export async function setPeerModelRoles(
+  modelId: string,
+  roleIds: readonly string[],
+  fetcher: RuntimeFetcher = fetch,
+): Promise<{ success: boolean }> {
+  return putJson<{ success: boolean }>(
+    `/api/role-model/local/peer/models/${encodeURIComponent(modelId)}/roles`,
+    { roleIds: [...roleIds] },
+    fetcher,
+  );
+}
+
+export async function setLlamaSwapModelRoles(
+  modelId: string,
+  roleIds: readonly string[],
+  fetcher: RuntimeFetcher = fetch,
+): Promise<{ success: boolean }> {
+  return putJson<{ success: boolean }>(
+    `/api/role-model/local/llama-swap/models/${encodeURIComponent(modelId)}/roles`,
+    { roleIds: [...roleIds] },
+    fetcher,
+  );
+}
+
+export async function unloadPeerModel(
+  modelId: string,
+  fetcher: RuntimeFetcher = fetch,
+): Promise<{ success: boolean }> {
+  return postJson<{ success: boolean }>(
+    `/api/role-model/local/peer/models/${encodeURIComponent(modelId)}/unload`,
     {},
     fetcher,
   );
@@ -1397,6 +1475,7 @@ export interface ModelOverride {
   ttl?: number;
   contextWindow?: number;
   concurrencyLimit?: number;
+  roleIds?: readonly string[];
 }
 
 export async function fetchModelOverrides(

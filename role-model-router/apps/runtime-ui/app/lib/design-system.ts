@@ -125,59 +125,83 @@ const studioAdvancedRoute = createRoute({
     "Contract-and-request workspace for responses, messages, token counting, embeddings, completion, and infill families that stay under Studio.",
 });
 
-const localModelsRoute = createRoute({
-  id: "local-models",
-  to: "/app/local/models",
+const localChooseRoute = createRoute({
+  id: "local-choose",
+  to: "/app/local/choose",
+  label: "Local",
+  section: "Local",
+  icon: Cpu,
+  template: "registry-detail",
+  title: "Choose local backend",
+  description:
+    "Peer and llama-swap are different ways to run models on this machine. Pick the workflow that matches how you host inference.",
+});
+
+const localPeerModelsRoute = createRoute({
+  id: "local-peer-models",
+  to: "/app/local/peer-models",
+  label: "Peer models",
+  section: "Local",
+  icon: Cpu,
+  template: "registry-detail",
+  title: "Peer models",
+  description: "Register models from your endpoints with the router and assign runtime roles.",
+});
+
+const localLlamaSwapModelsRoute = createRoute({
+  id: "local-llama-swap-models",
+  to: "/app/local/llama-swap/models",
   label: "Models",
   section: "Local",
   icon: Cpu,
   template: "registry-detail",
-  title: "Local models",
-  description: "Load and inspect llama-swap-managed local models and runtime overrides.",
+  title: "Llama-swap models",
+  description:
+    "Load and swap models managed by the role-model llama-swap process. Assign runtime roles per model.",
 });
 
 const localSwapRoute = createRoute({
-  id: "local-swap",
-  to: "/app/local/swap",
+  id: "local-llama-swap-swap",
+  to: "/app/local/llama-swap/swap",
   label: "Swap history",
   section: "Local",
   icon: Activity,
   template: "ledger-inspector",
-  title: "Swap history",
-  description: "Chronological log of model swap events.",
+  title: "Llama-swap swap history",
+  description: "Chronological llama-swap load and swap events.",
 });
 
 const localPolicyRoute = createRoute({
-  id: "local-policy",
-  to: "/app/local/policy",
-  label: "Policy",
+  id: "local-llama-swap-policy",
+  to: "/app/local/llama-swap/policy",
+  label: "Host policy",
   section: "Local",
   icon: SlidersHorizontal,
   template: "registry-detail",
-  title: "Host policy",
-  description: "Local inference runtime policy: TTL, auto-unload, and resource limits.",
+  title: "Llama-swap host policy",
+  description: "TTL, auto-unload, and concurrency for the managed llama-swap runtime.",
 });
 
 const localLogsRoute = createRoute({
-  id: "local-logs",
-  to: "/app/local/logs",
+  id: "local-llama-swap-logs",
+  to: "/app/local/llama-swap/logs",
   label: "Logs",
   section: "Local",
   icon: Terminal,
   template: "dual-console",
-  title: "Log streaming",
-  description: "Real-time log stream from the local llama-swap runtime.",
+  title: "Llama-swap logs",
+  description: "Live proxy and upstream logs from the llama-swap process.",
 });
 
 const localMatrixRoute = createRoute({
-  id: "local-matrix",
-  to: "/app/local/matrix",
+  id: "local-llama-swap-matrix",
+  to: "/app/local/llama-swap/matrix",
   label: "Matrix",
   section: "Local",
   icon: LayoutGrid,
   template: "matrix-grid",
-  title: "Model matrix",
-  description: "Concurrent model grid showing loaded state, engine, and resource usage.",
+  title: "Llama-swap matrix",
+  description: "Grid of concurrently loaded llama-swap models.",
 });
 
 const localPeersRoute = createRoute({
@@ -188,7 +212,7 @@ const localPeersRoute = createRoute({
   icon: Network,
   template: "registry-detail",
   title: "Local endpoints",
-  description: "Generic OpenAI-compatible local peer endpoint inventory and management.",
+  description: "Register OpenAI-compatible servers you operate. Required before loading peer models.",
 });
 
 const controlProvidersRoute = createRoute({
@@ -450,8 +474,10 @@ const runtimeRouteDefinitions = [
   studioAudioRoute,
   studioRerankRoute,
   studioAdvancedRoute,
-  localModelsRoute,
+  localChooseRoute,
   localPeersRoute,
+  localPeerModelsRoute,
+  localLlamaSwapModelsRoute,
   localSwapRoute,
   localPolicyRoute,
   localLogsRoute,
@@ -498,7 +524,15 @@ export const runtimeNavigationSections: readonly RuntimeNavigationSection[] = [
   {
     title: "Local",
     icon: Cpu,
-    items: [localModelsRoute, localPeersRoute, localSwapRoute, localPolicyRoute, localLogsRoute],
+    items: [
+      localPeersRoute,
+      localPeerModelsRoute,
+      localLlamaSwapModelsRoute,
+      localSwapRoute,
+      localPolicyRoute,
+      localLogsRoute,
+      localMatrixRoute,
+    ],
   },
   {
     title: "Remote",

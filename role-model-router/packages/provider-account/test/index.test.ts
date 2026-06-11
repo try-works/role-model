@@ -382,4 +382,83 @@ describe("validateProviderAccounts", () => {
       }),
     );
   });
+
+  test("accepts model role bindings when allowedModels is empty (wildcard peer accounts)", () => {
+    const result = validateProviderAccounts({
+      catalog: {
+        source: {
+          vendor: "models.dev",
+          commit: "local-peer-run38",
+          capturedAt: "2026-06-08T00:00:00Z",
+          schemaVersion: "models.dev.v1",
+        },
+        providers: [
+          {
+            providerId: "local-openai-compatible",
+            displayName: "Local OpenAI-compatible",
+            npmPackage: "",
+            providerKind: "provider-openai",
+            authFamily: "none",
+            adapterFamily: "ai-sdk-openai-compatible",
+            apiBase: "http://127.0.0.1:1234/v1",
+            docsUrl: null,
+            envVars: [],
+            supportedAuthModes: ["api-key-static"],
+            controlPlaneRequirements: [],
+            localOverrideApplied: true,
+            upstreamProvenance: {
+              vendor: "models.dev",
+              commit: "local-peer-run38",
+              capturedAt: "2026-06-08T00:00:00Z",
+              schemaVersion: "models.dev.v1",
+            },
+          },
+        ],
+        models: [],
+      } as Parameters<typeof validateProviderAccounts>[0]["catalog"],
+      allowedRoleIds: ["general.chat", "tool.agent"],
+      accounts: [
+        {
+          providerAccountId: "local-openai-compatible.personal.local-main",
+          providerId: "local-openai-compatible",
+          providerKind: "provider-openai",
+          orgScope: "personal",
+          accountScope: "local-main",
+          credentialRef: {
+            backend: "local-file",
+            ref: "local-peers/local-openai-compatible.personal.local-main",
+          },
+          authMode: "api-key-static",
+          regionPolicy: {
+            mode: "prefer",
+            regions: ["local"],
+          },
+          baseUrlOverride: "http://127.0.0.1:1234/v1",
+          allowedModels: [],
+          modelRoleBindings: [
+            {
+              modelId: "lfm2.5-8b-a1b",
+              roleIds: ["general.chat", "tool.agent"],
+            },
+          ],
+          deniedModels: [],
+          entitlementTags: ["chat"],
+          budgetPolicyRef: "budget.default",
+          quotaPolicyRef: "quota.default",
+          status: "active",
+          healthStatus: "healthy",
+          rotationState: "stable",
+        },
+      ],
+    });
+
+    expect(result.diagnostics).toHaveLength(0);
+    expect(result.accounts).toHaveLength(1);
+    expect(result.accounts[0]?.modelRoleBindings).toEqual([
+      {
+        modelId: "lfm2.5-8b-a1b",
+        roleIds: ["general.chat", "tool.agent"],
+      },
+    ]);
+  });
 });

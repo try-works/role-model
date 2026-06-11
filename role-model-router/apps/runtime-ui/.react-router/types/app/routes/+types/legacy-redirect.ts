@@ -16,6 +16,42 @@ type Matches = [{
   id: "routes/app-layout";
   module: typeof import("../app-layout.js");
 }, {
+  id: "legacy-local-swap";
+  module: typeof import("../legacy-redirect.js");
+}] | [{
+  id: "root";
+  module: typeof import("../../root.js");
+}, {
+  id: "routes/app-layout";
+  module: typeof import("../app-layout.js");
+}, {
+  id: "legacy-local-policy";
+  module: typeof import("../legacy-redirect.js");
+}] | [{
+  id: "root";
+  module: typeof import("../../root.js");
+}, {
+  id: "routes/app-layout";
+  module: typeof import("../app-layout.js");
+}, {
+  id: "legacy-local-logs";
+  module: typeof import("../legacy-redirect.js");
+}] | [{
+  id: "root";
+  module: typeof import("../../root.js");
+}, {
+  id: "routes/app-layout";
+  module: typeof import("../app-layout.js");
+}, {
+  id: "legacy-local-matrix";
+  module: typeof import("../legacy-redirect.js");
+}] | [{
+  id: "root";
+  module: typeof import("../../root.js");
+}, {
+  id: "routes/app-layout";
+  module: typeof import("../app-layout.js");
+}, {
   id: "legacy-local-peers";
   module: typeof import("../legacy-redirect.js");
 }] | [{
