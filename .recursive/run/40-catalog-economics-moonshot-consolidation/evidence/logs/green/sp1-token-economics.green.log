@@ -1,0 +1,15 @@
+
+> @role-model-router/catalog@0.0.0 test D:\DEV\role-model\.worktrees\40-catalog-economics-moonshot-consolidation\role-model-router\packages\catalog
+> vitest run test
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/40-catalog-economics-moonshot-consolidation/role-model-router/packages/catalog
+
+ Γ£ô test/token-economics.test.ts (4 tests) 109ms
+ Γ£ô test/index.test.ts (9 tests) 555ms
+
+ Test Files  2 passed (2)
+      Tests  13 passed (13)
+   Start at  16:14:15
+   Duration  1.53s (transform 224ms, setup 0ms, collect 296ms, tests 665ms, environment 1ms, prepare 546ms)
+

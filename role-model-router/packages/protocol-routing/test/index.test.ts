@@ -7,6 +7,7 @@ import { buildEndpointRegistry } from "@role-model-router/endpoint-registry";
 
 import { runRuntimeRoutingValidation } from "../src/cli.js";
 import { projectRuntimeRouteInput, routeRuntimeRequest } from "../src/index.js";
+import { TEST_CATALOG } from "./test-catalog-fixture.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -29,6 +30,7 @@ describe("projectRuntimeRouteInput", () => {
         preferLocal: true,
         budgetLimit: 0.01,
       },
+      catalog: TEST_CATALOG,
       registry: {
         endpoints: [
           {
@@ -193,11 +195,14 @@ describe("projectRuntimeRouteInput", () => {
     });
     expect(projected.routeInput.candidates[1]).toMatchObject({
       identity: { endpoint_id: "openai.personal.primary.us-east-1.fast" },
-      observed: { cost_per_1k_tokens_est: 0.004 },
       routingSignals: {
         continuityAffinity: false,
         cacheAffinity: true,
         routingModelRank: 0,
+        catalogCostEstimate: {
+          tokenEconomicsSource: "catalog",
+          canonicalModelId: "openai/gpt-4.1-mini-fast",
+        },
       },
     });
     expect(projected.routingDiagnostics.routingModel).toEqual({
@@ -426,6 +431,7 @@ describe("routeRuntimeRequest", () => {
         strategy: "balanced",
         preferLocal: true,
       },
+      catalog: TEST_CATALOG,
       registry,
       observedProfilesByEndpointId: {
         "cli.local.coder": {
@@ -526,6 +532,7 @@ describe("routeRuntimeRequest", () => {
         preferLocal: true,
         denyEndpoints: ["openai.personal.primary.us-east-1.fast"],
       },
+      catalog: TEST_CATALOG,
       registry: {
         endpoints: [
           {
@@ -688,6 +695,7 @@ describe("routeRuntimeRequest", () => {
           "moonshot.personal.kimi-code.global.kimi-k2.6",
         ],
       },
+      catalog: TEST_CATALOG,
       registry: {
         endpoints: [
           {
@@ -787,6 +795,7 @@ describe("routeRuntimeRequest", () => {
         strategy: "latency",
         preferLocal: false,
       },
+      catalog: TEST_CATALOG,
       registry: {
         endpoints: [
           {
@@ -939,6 +948,7 @@ describe("routeRuntimeRequest", () => {
         strategy: "balanced",
         preferLocal: false,
       },
+      catalog: TEST_CATALOG,
       registry: {
         endpoints: [
           {

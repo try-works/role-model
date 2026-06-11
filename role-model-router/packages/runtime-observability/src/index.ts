@@ -140,6 +140,14 @@ export interface RuntimeRoutingDiagnostics {
     readonly minTokensPerSec?: number;
     readonly lastObservedTokensPerSec?: number;
   };
+  readonly catalogEconomics?: {
+    readonly canonicalModelId: string;
+    readonly tokenEconomicsSource: "catalog" | "local-free" | "unknown";
+    readonly inputPer1M: number | null;
+    readonly outputPer1M: number | null;
+    readonly estimatedRequestUsd: number | null;
+    readonly cost_per_1k_tokens_est: number | null;
+  };
   readonly routingModel?: {
     readonly enabled: boolean;
     readonly endpointId?: string | null;

@@ -155,6 +155,7 @@ import {
   deriveLiteLLMProviders,
   extractLiteLLMModelIds,
   loadLiteLLMModelPrices,
+  OPERATOR_HIDDEN_CATALOG_PROVIDER_IDS,
 } from "@role-model-router/catalog";
 import { resolveLlamaSwapCommand } from "./runtime-assets.js";
 import {
@@ -7289,6 +7290,18 @@ export async function createRuntimeBridgeBackend(
       status: "active",
     };
   };
+  const dedupeProviderVariantsById = (
+    variants: readonly ProviderPresetVariant[],
+  ): ProviderPresetVariant[] => {
+    const seen = new Set<string>();
+    return variants.filter((variant) => {
+      if (seen.has(variant.variantId)) {
+        return false;
+      }
+      seen.add(variant.variantId);
+      return true;
+    });
+  };
   const resolveProviderVariants = (input: {
     providerId: string;
     displayName: string;
@@ -7366,12 +7379,18 @@ export async function createRuntimeBridgeBackend(
           ]
         : [];
 
-    return [
+    return dedupeProviderVariantsById([
       ...input.presetVariants,
-      ...generatedApiKeyVariants,
-      ...generatedOAuthVariants,
+      ...(input.providerId === "moonshot" &&
+      input.presetVariants.some((variant) => variant.variantId === "moonshot-open-platform")
+        ? []
+        : generatedApiKeyVariants),
+      ...(input.providerId === "moonshot" &&
+      input.presetVariants.some((variant) => variant.variantId === "kimi-code")
+        ? []
+        : generatedOAuthVariants),
       ...legacyMoonshotVariants,
-    ];
+    ]);
   };
   const applyUnifiedRuntimeConfigState = async (
     nextConfig: UnifiedRuntimeConfig | null,
@@ -7956,11 +7975,16 @@ export async function createRuntimeBridgeBackend(
     const routed = routeRuntimeRequest({
       request: plan.routingRequest,
       registry: currentRegistry,
+      catalog: currentNormalizedCatalog,
       observedProfilesByEndpointId: runtimeObservedProfiles.observedProfilesByEndpointId,
       observedDataConfig,
       throughputPenaltyStateByEndpointId:
         runtimeObservedProfiles.throughputPenaltyStateByEndpointId,
       routingTimeMs,
+      maxOutputTokens:
+        typeof plan.executionRequest.max_tokens === "number"
+          ? plan.executionRequest.max_tokens
+          : undefined,
       envelope,
       retrievalReceipt,
       roleDefinitions: currentRuntimeRoles.roleDefinitions,
@@ -8284,6 +8308,8 @@ export async function createRuntimeBridgeBackend(
           ...(requestRoutingMode ? { routingMode: requestRoutingMode } : {}),
           ...(rewriteDiagnostics ? { rewrite: rewriteDiagnostics } : {}),
           observedProfile: observedProfileDiagnostic,
+          catalogEconomics:
+            routed.catalogEconomicsByEndpointId[routed.decision.chosen_endpoint_id] ?? undefined,
           effectiveMetrics: summarizeEffectiveMetricsFromDecision(routed.decision),
           throughputPenalty: summarizeThroughputPenaltyFromDecision(routed.decision),
         },
@@ -9140,7 +9166,9 @@ export async function createRuntimeBridgeBackend(
       const localModelIds =
         currentUnifiedRuntimeConfig?.llamaSwap.models.map((m) => m.modelId) ?? [];
       const mergedProviders = [
-        ...currentNormalizedCatalog.providers.map((provider) => {
+        ...currentNormalizedCatalog.providers
+          .filter((provider) => !OPERATOR_HIDDEN_CATALOG_PROVIDER_IDS.has(provider.providerId))
+          .map((provider) => {
           const effectiveModelIds = resolveModelIds(provider.providerId);
           const presetVariants = (
             providerPresets.providers[provider.providerId]?.variants ?? []

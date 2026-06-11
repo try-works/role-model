@@ -1,5 +1,8 @@
 import type { ContextEnvelopeResult } from "@role-model-router/context-envelope";
+import type { NormalizedCatalog } from "@role-model-router/catalog";
+import { resolveRoutingCostEstimate } from "@role-model-router/catalog";
 import type {
+  CatalogCostEstimateSignals,
   EndpointCandidate as CoreEndpointCandidate,
   ObservedDataConfigRecord,
   ObservedPerformanceProfileRecord,
@@ -26,6 +29,7 @@ export interface RoutingModelSelection {
 export interface ProjectRuntimeRouteInputInput {
   request: RoutingRequest;
   registry: EndpointRegistryResult;
+  catalog: NormalizedCatalog;
   observedProfilesByEndpointId: Record<string, ObservedPerformanceProfileRecord>;
   observedDataConfig?: ObservedDataConfigRecord;
   throughputPenaltyStateByEndpointId?: Record<string, ThroughputPenaltyStateRecord>;
@@ -36,6 +40,7 @@ export interface ProjectRuntimeRouteInputInput {
   taskDefinitions: readonly TaskDefinitionRecord[];
   roleBindings: readonly RoleBindingRecord[];
   routingModel?: RoutingModelSelection;
+  maxOutputTokens?: number;
 }
 
 export interface ProjectRuntimeRouteInputResult {
@@ -55,6 +60,7 @@ export interface RouteRuntimeRequestResult {
   projected: ProjectRuntimeRouteInputResult;
   decision: RouterDecisionRecord;
   routingDiagnostics: ProjectRuntimeRouteInputResult["routingDiagnostics"];
+  catalogEconomicsByEndpointId: Readonly<Record<string, CatalogCostEstimateSignals>>;
 }
 
 function toRoutingModelRank(
@@ -69,12 +75,62 @@ function toRoutingModelRank(
   return index === -1 ? undefined : index;
 }
 
+function isLocalRegistryCandidate(candidate: RegistryEndpointCandidate): boolean {
+  return (
+    candidate.identity.serving_source === "local-process" ||
+    candidate.identity.serving_source === "local-peer" ||
+    candidate.identity.region === "local"
+  );
+}
+
+function resolveMaxOutputTokens(
+  candidate: RegistryEndpointCandidate,
+  input: ProjectRuntimeRouteInputInput,
+): number {
+  if (typeof input.maxOutputTokens === "number" && input.maxOutputTokens > 0) {
+    return input.maxOutputTokens;
+  }
+  return Math.min(candidate.declared.max_context_tokens, 4096);
+}
+
+function toCatalogCostEstimateSignals(
+  estimate: ReturnType<typeof resolveRoutingCostEstimate>,
+): CatalogCostEstimateSignals {
+  return {
+    canonicalModelId: estimate.economics.canonicalModelId,
+    tokenEconomicsSource: estimate.economics.source,
+    inputPer1M: estimate.economics.inputPer1M,
+    outputPer1M: estimate.economics.outputPer1M,
+    estimatedRequestUsd: estimate.estimatedRequestUsd,
+    cost_per_1k_tokens_est: estimate.cost_per_1k_tokens_est,
+  };
+}
+
 function toCoreCandidate(
   candidate: RegistryEndpointCandidate,
   input: ProjectRuntimeRouteInputInput,
 ): CoreEndpointCandidate {
-  const observed = input.observedProfilesByEndpointId[candidate.identity.endpoint_id];
+  const observedProfile = input.observedProfilesByEndpointId[candidate.identity.endpoint_id];
   const routingModelRank = toRoutingModelRank(candidate.identity.endpoint_id, input.routingModel);
+  const routingCostEstimate = resolveRoutingCostEstimate({
+    modelId: candidate.identity.model_id,
+    catalog: input.catalog,
+    isLocalEndpoint: isLocalRegistryCandidate(candidate),
+    contextTokens: input.request.contextTokens,
+    maxOutputTokens: resolveMaxOutputTokens(candidate, input),
+  });
+  const catalogCostEstimate = toCatalogCostEstimateSignals(routingCostEstimate);
+  const observedBase = observedProfile
+    ? { ...observedProfile }
+    : { endpoint_id: candidate.identity.endpoint_id };
+  delete observedBase.cost_per_1k_tokens_est;
+  if (typeof catalogCostEstimate.cost_per_1k_tokens_est === "number") {
+    observedBase.cost_per_1k_tokens_est = catalogCostEstimate.cost_per_1k_tokens_est;
+  }
+  const observed =
+    Object.keys(observedBase).length > 1 || typeof observedBase.cost_per_1k_tokens_est === "number"
+      ? observedBase
+      : undefined;
 
   return {
     identity: candidate.identity,
@@ -90,6 +146,7 @@ function toCoreCandidate(
         input.envelope.estimatedTokenCount <= candidate.declared.max_context_tokens &&
         input.retrievalReceipt.summary.estimatedTokens <= candidate.declared.max_context_tokens,
       ...(typeof routingModelRank === "number" ? { routingModelRank } : {}),
+      catalogCostEstimate,
     },
   };
 }
@@ -159,10 +216,24 @@ export function routeRuntimeRequest(
 ): RouteRuntimeRequestResult {
   const projected = projectRuntimeRouteInput(input);
   const decision = routeRequest(projected.routeInput);
+  const catalogEconomicsByEndpointId = Object.fromEntries(
+    projected.routeInput.candidates.map((candidate) => [
+      candidate.identity.endpoint_id,
+      candidate.routingSignals?.catalogCostEstimate ?? {
+        canonicalModelId: candidate.identity.model_id,
+        tokenEconomicsSource: "unknown" as const,
+        inputPer1M: null,
+        outputPer1M: null,
+        estimatedRequestUsd: null,
+        cost_per_1k_tokens_est: null,
+      },
+    ]),
+  );
 
   return {
     projected,
     decision,
     routingDiagnostics: projected.routingDiagnostics,
+    catalogEconomicsByEndpointId,
   };
 }

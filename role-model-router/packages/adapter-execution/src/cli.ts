@@ -343,6 +343,7 @@ export async function runRuntimeAdapterValidation(
   const routed = routeRuntimeRequest({
     request: routingRequest,
     registry,
+    catalog: normalizedCatalog,
     observedProfilesByEndpointId,
     envelope,
     retrievalReceipt,
