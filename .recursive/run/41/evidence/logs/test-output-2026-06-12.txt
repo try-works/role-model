@@ -1,0 +1,14 @@
+Test Execution Evidence for Run 41
+===================================
+Date: 2026-06-12T05:17:16+02:00
+Command: corepack pnpm --filter @role-model-router/runtime-ui run test
+Result: 90/90 tests pass
+
+Test Files:
+- provider-account-state.test.ts: 2 pass
+- device-authorization.test.ts: 11 pass
+- view-models.test.ts: 22 pass
+- runtime-api.test.ts: 34 pass
+- design-system.test.ts: 21 pass
+
+All view-models tests pass with updated latency card assertions.

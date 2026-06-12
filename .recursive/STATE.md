@@ -186,3 +186,8 @@
   - Protocol-routing requires catalog; router cost metric source `"catalog"`; telemetry cost excluded
   - Bridge hides `moonshotai` from provider list; Moonshot variant dedupe; diagnostics `catalogEconomics`
   - Strict TDD RED/GREEN evidence; automated floor green; packaged `:3456` drill deferred; R8 authProfile partial
+
+- Run 41 (Dashboard Latency Summary Display) merged on branch `recursive/41`:
+  - Dashboard overview Latency card shows **average** as primary value and **p95** as secondary context (UI-only; `summarizeTelemetryStats` in `view-models.ts`)
+  - Backend `RuntimeTelemetrySummary` contract unchanged; comparison rows already showed both metrics
+  - All 90 runtime-ui tests green; no new architectural decisions
