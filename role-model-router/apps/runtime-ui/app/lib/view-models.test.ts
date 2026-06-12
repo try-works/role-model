@@ -1040,8 +1040,8 @@ describe("telemetry view models", () => {
       { label: "Failures", value: "1", detail: "2 successful requests recorded" },
       {
         label: "Latency",
-        value: "880 ms",
-        detail: "420 ms average latency across structured telemetry",
+        value: "420 ms avg",
+        detail: "880 ms p95 / 420 ms avg across structured telemetry",
       },
       {
         label: "Tokens",

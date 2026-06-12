@@ -382,11 +382,18 @@ export function summarizeTelemetryStats(
     },
     {
       label: "Latency",
-      value: summary.p95LatencyMs !== null ? `${summary.p95LatencyMs} ms` : "n/a",
-      detail:
+      value:
         summary.averageLatencyMs !== null
-          ? `${summary.averageLatencyMs} ms average latency across structured telemetry`
-          : "Average latency not available yet",
+          ? `${summary.averageLatencyMs} ms avg`
+          : "n/a",
+      detail:
+        summary.p95LatencyMs !== null && summary.averageLatencyMs !== null
+          ? `${summary.p95LatencyMs} ms p95 / ${summary.averageLatencyMs} ms avg across structured telemetry`
+          : summary.p95LatencyMs !== null
+            ? `${summary.p95LatencyMs} ms p95 — average not available`
+            : summary.averageLatencyMs !== null
+              ? `${summary.averageLatencyMs} ms avg — p95 not available`
+              : "Latency data not available yet",
     },
     {
       label: "Tokens",
