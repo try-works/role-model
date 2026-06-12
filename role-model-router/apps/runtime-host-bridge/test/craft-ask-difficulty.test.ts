@@ -12,7 +12,7 @@ const registry: EndpointRegistryResult = {
         provider_kind: "local_openai_compat",
         serving_source: "local-peer",
         model_id: "lfm2.5-8b-a1b",
-        runtime_version: "run39-craft-test",
+        runtime_version: "run42-craft-test",
         region: "local",
       },
       declared: {
@@ -55,7 +55,7 @@ const registry: EndpointRegistryResult = {
         provider_kind: "remote_openai_compat",
         serving_source: "remote-service",
         model_id: "moonshot/kimi-k2.6",
-        runtime_version: "run39-craft-test",
+        runtime_version: "run42-craft-test",
         region: "global",
       },
       declared: {
@@ -98,6 +98,25 @@ const registry: EndpointRegistryResult = {
 const craftPreamble =
   "You are Craft Agent, powered by Craft Agents Backend. Help users connect data sources, automate workflows, and validate integrations. Follow the system contract and schema for tool validation.";
 
+const mixedAlias = [
+  {
+    aliasId: "mixed.local-remote",
+    mode: "difficulty" as const,
+    modelIds: ["lfm2.5-8b-a1b", "moonshot/kimi-k2.6"],
+  },
+];
+
+function buildDeclaredTools(count: number) {
+  return Array.from({ length: count }, (_, index) => ({
+    type: "function" as const,
+    function: {
+      name: `craft_tool_${index}`,
+      description: "Craft declared tool schema",
+      parameters: { type: "object", properties: {} },
+    },
+  }));
+}
+
 type MapResult = ReturnType<typeof bridge.mapChatCompletionsRequest>;
 
 describe("Craft ask-mode difficulty (R11/R15)", () => {
@@ -112,13 +131,7 @@ describe("Craft ask-mode difficulty (R11/R15)", () => {
         ],
       },
       "req-craft-dual-user-001",
-      [
-        {
-          aliasId: "mixed.local-remote",
-          mode: "difficulty",
-          modelIds: ["lfm2.5-8b-a1b", "moonshot/kimi-k2.6"],
-        },
-      ],
+      mixedAlias,
     );
 
     expect(result.routingDiagnostics?.difficultyRouting).toMatchObject({
@@ -142,22 +155,78 @@ describe("Craft ask-mode difficulty (R11/R15)", () => {
         ],
       },
       "req-craft-assistant-001",
-      [
-        {
-          aliasId: "mixed.local-remote",
-          mode: "difficulty",
-          modelIds: ["lfm2.5-8b-a1b", "moonshot/kimi-k2.6"],
-        },
-      ],
+      mixedAlias,
     );
 
     expect(result.routingDiagnostics?.difficultyRouting).toMatchObject({
       difficulty: "easy",
       strategy: "cost",
       rubricSignals: {
+        historyTurnCount: 1,
+        codeOrSchemaBurden: false,
+      },
+    });
+  });
+});
+
+describe("Craft declared-tools ask-mode difficulty (R2)", () => {
+  test("classifies declared-tools Craft chat without active tool usage as easy", () => {
+    const result: MapResult = bridge.mapChatCompletionsRequest(
+      registry,
+      {
+        model: "mixed.local-remote",
+        messages: [
+          { role: "user", content: craftPreamble },
+          { role: "user", content: "hello" },
+        ],
+        tools: buildDeclaredTools(33),
+      },
+      "req-craft-declared-tools-001",
+      mixedAlias,
+    );
+
+    expect(result.routingDiagnostics?.difficultyRouting).toMatchObject({
+      difficulty: "easy",
+      strategy: "cost",
+      rubricSignals: {
+        toolCount: 0,
         historyTurnCount: 2,
         codeOrSchemaBurden: false,
       },
+    });
+  });
+
+  test("does not apply ask-mode when message history includes active tool usage", () => {
+    const result: MapResult = bridge.mapChatCompletionsRequest(
+      registry,
+      {
+        model: "mixed.local-remote",
+        messages: [
+          { role: "user", content: "run the workflow" },
+          {
+            role: "assistant",
+            content: "",
+            tool_calls: [
+              {
+                id: "call_1",
+                type: "function",
+                function: { name: "craft_tool_0", arguments: "{}" },
+              },
+            ],
+          },
+          { role: "tool", content: "ok", tool_call_id: "call_1" },
+          { role: "user", content: "thanks" },
+        ],
+        tools: buildDeclaredTools(10),
+      },
+      "req-craft-active-tools-001",
+      mixedAlias,
+    );
+
+    expect(result.routingDiagnostics?.difficultyRouting?.difficulty).not.toBe("easy");
+    expect(result.routingDiagnostics?.difficultyRouting?.strategy).not.toBe("cost");
+    expect(result.routingDiagnostics?.difficultyRouting?.rubricSignals).toMatchObject({
+      toolCount: 10,
     });
   });
 });

@@ -174,6 +174,7 @@ import {
   renderUnifiedRuntimeConfigText,
   resolveUnifiedRuntimeObservedDataConfig,
 } from "./unified-runtime-config.js";
+import { resolveValidationProviderMetadata } from "./provider-metadata-merge.js";
 
 interface OpenAIChatCompletionsTool {
   readonly type: string;
@@ -417,14 +418,42 @@ function combineLastUserDifficultyMessageText(
   return readChatMessageTextContent(userMessages[userMessages.length - 1]?.content);
 }
 
+function hasActiveToolUsage(messages: readonly OpenAIChatCompletionsMessage[]): boolean {
+  for (const message of messages) {
+    if (message.role === "tool") {
+      return true;
+    }
+    if (message.role === "assistant" && (message.tool_calls?.length ?? 0) > 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function isDifficultyAskMode(input: {
+  readonly messages: readonly OpenAIChatCompletionsMessage[];
+  readonly declaredToolCount: number;
+}): boolean {
+  if (input.declaredToolCount === 0) {
+    return true;
+  }
+  return !hasActiveToolUsage(input.messages);
+}
+
 function summarizeDifficultySignals(input: {
   readonly messages: readonly OpenAIChatCompletionsMessage[];
   readonly contextTokens: number;
   readonly toolCount: number;
 }): DifficultyRoutingSignals {
+  const askMode = isDifficultyAskMode({
+    messages: input.messages,
+    declaredToolCount: input.toolCount,
+  });
+  const userMessages = input.messages.filter((message) => message.role === "user");
   const combined = combineDifficultyMessageText(input.messages);
-  const askModeBurdenSource =
-    input.toolCount === 0 ? combineLastUserDifficultyMessageText(input.messages) : combined;
+  const askModeBurdenSource = askMode
+    ? combineLastUserDifficultyMessageText(input.messages)
+    : combined;
   const instructionConstraintCount = countMatches(
     askModeBurdenSource.toLowerCase(),
     /\b(must|should|need to|required|preserve|verify|strict|do not|don't|never|without|constraint|compatible)\b/g,
@@ -433,10 +462,15 @@ function summarizeDifficultySignals(input: {
     combined.toLowerCase(),
     /\b(analyze|compare|iterate|plan|step|decompose|refactor|workflow|multi-step|across)\b/g,
   );
+  const effectiveToolCount = askMode ? 0 : input.toolCount;
+  const effectiveHistoryTurnCount = askMode ? userMessages.length : input.messages.length;
+  const effectiveContextTokens = askMode
+    ? estimateContextTokens(userMessages, 0)
+    : input.contextTokens;
   return {
-    contextTokens: input.contextTokens,
-    toolCount: input.toolCount,
-    historyTurnCount: input.messages.length,
+    contextTokens: effectiveContextTokens,
+    toolCount: effectiveToolCount,
+    historyTurnCount: effectiveHistoryTurnCount,
     instructionConstraintCount,
     decompositionKeywordCount,
     codeOrSchemaBurden: /\b(code|diff|patch|refactor|schema|contract|validation|test)\b/i.test(
@@ -2142,14 +2176,24 @@ function createUnifiedProviderAccounts(
     return [];
   }
   return config.liteLLM.providers.map((providerConfig) => {
-    const provider =
-      catalog.providers.find((entry) => entry.providerId === providerConfig.providerId) ??
-      liteLLMProviderList.find((entry) => entry.providerId === providerConfig.providerId);
+    const catalogProvider = catalog.providers.find(
+      (entry) => entry.providerId === providerConfig.providerId,
+    );
+    const liteLLMProvider = liteLLMProviderList.find(
+      (entry) => entry.providerId === providerConfig.providerId,
+    );
+    const provider = catalogProvider ?? liteLLMProvider;
     if (!provider) {
       throw new Error(
         `Unified runtime provider ${providerConfig.providerId} is not present in the catalog or LiteLLM provider list.`,
       );
     }
+    const mergedMetadata = catalogProvider
+      ? resolveValidationProviderMetadata({
+          catalogProvider,
+          liteLLMProvider,
+        })
+      : null;
 
     const providerAccountId = `${providerConfig.providerId}.litellm`;
     const resolvedOauthCredential = resolveOauthCredentialRef(
@@ -2176,7 +2220,7 @@ function createUnifiedProviderAccounts(
     return {
       providerAccountId,
       providerId: provider.providerId,
-      providerKind: provider.providerKind,
+      providerKind: mergedMetadata?.providerKind ?? provider.providerKind,
       orgScope: "runtime-config",
       accountScope: "runtime-config",
       credentialRef,
@@ -9179,10 +9223,14 @@ export async function createRuntimeBridgeBackend(
           const liteLLMProvider = liteLLMProviders.find(
             (p) => p.providerId === provider.providerId,
           );
+          const mergedMetadata = resolveValidationProviderMetadata({
+            catalogProvider: provider,
+            liteLLMProvider,
+          });
           const variants = resolveProviderVariants({
             providerId: provider.providerId,
             displayName: provider.displayName,
-            apiBase: provider.apiBase,
+            apiBase: mergedMetadata.apiBase,
             modelIds: effectiveModelIds,
             presetVariants,
             supportedAuthModes: liteLLMProvider?.supportedAuthModes ?? provider.supportedAuthModes,
@@ -9192,10 +9240,10 @@ export async function createRuntimeBridgeBackend(
             providerId: provider.providerId,
             displayName: provider.displayName,
             npmPackage: provider.npmPackage,
-            providerKind: provider.providerKind,
+            providerKind: mergedMetadata.providerKind,
             authFamily: provider.authFamily,
-            adapterFamily: provider.adapterFamily,
-            apiBase: provider.apiBase,
+            adapterFamily: mergedMetadata.adapterFamily,
+            apiBase: mergedMetadata.apiBase,
             docsUrl: provider.docsUrl,
             envVars: provider.envVars,
             supportedAuthModes: provider.supportedAuthModes,
@@ -9411,14 +9459,22 @@ export async function createRuntimeBridgeBackend(
       );
       const providerId = readRequiredString(body, "providerId", "deviceAuthorization");
       const variantId = readRequiredString(body, "variantId", "deviceAuthorization");
-      const provider =
-        currentNormalizedCatalog.providers.find((entry) => entry.providerId === providerId) ??
-        liteLLMProviders.find((entry) => entry.providerId === providerId);
+      const catalogProvider = currentNormalizedCatalog.providers.find(
+        (entry) => entry.providerId === providerId,
+      );
+      const liteLLMProvider = liteLLMProviders.find((entry) => entry.providerId === providerId);
+      const provider = catalogProvider ?? liteLLMProvider;
       if (!provider) {
         throw new Error(
           `Provider ${providerId} is not present in the normalized catalog or LiteLLM provider list.`,
         );
       }
+      const mergedMetadata = catalogProvider
+        ? resolveValidationProviderMetadata({
+            catalogProvider,
+            liteLLMProvider,
+          })
+        : null;
       const effectiveModelIds =
         readUnifiedLiteLLMProviderModelIds(currentUnifiedRuntimeConfig, providerId) ??
         currentNormalizedCatalog.models
@@ -9430,11 +9486,11 @@ export async function createRuntimeBridgeBackend(
           modelIds: effectiveModelIds.length > 0 ? effectiveModelIds : entry.modelIds,
         }),
       );
-      const runtimeProvider = liteLLMProviders.find((entry) => entry.providerId === providerId);
+      const runtimeProvider = liteLLMProvider;
       const variants = resolveProviderVariants({
         providerId,
         displayName: provider.displayName,
-        apiBase: provider.apiBase,
+        apiBase: mergedMetadata?.apiBase ?? provider.apiBase,
         modelIds: effectiveModelIds,
         presetVariants,
         supportedAuthModes: runtimeProvider?.supportedAuthModes ?? provider.supportedAuthModes,
@@ -9467,7 +9523,10 @@ export async function createRuntimeBridgeBackend(
           {
             providerAccountId,
             providerId,
-            providerKind: readOptionalString(body, "providerKind") ?? provider.providerKind,
+            providerKind:
+              readOptionalString(body, "providerKind") ??
+              mergedMetadata?.providerKind ??
+              provider.providerKind,
             orgScope: readOptionalString(body, "orgScope") ?? "personal",
             accountScope: readOptionalString(body, "accountScope") ?? "workspace-default",
             credentialRef: {
