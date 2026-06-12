@@ -1,0 +1,34 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/42-provider-kind-craft-ask-routing/role-model-router
+
+(node:37560) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:40068) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ Γ£ô apps/runtime-host-bridge/test/craft-ask-difficulty.test.ts (4 tests) 31ms
+ Γ£ô apps/runtime-host-bridge/test/provider-overlap-metadata.test.ts (44 tests) 12344ms
+   Γ£ô listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for baseten  538ms
+   Γ£ô listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for cerebras  523ms
+   Γ£ô listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for cohere  510ms
+   Γ£ô listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for databricks  522ms
+   Γ£ô listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for deepinfra  539ms
+   Γ£ô listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for deepseek  527ms
+   Γ£ô listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for groq  637ms
+   Γ£ô listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for minimax  740ms
+   Γ£ô listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for mistral  537ms
+   Γ£ô listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for morph  559ms
+   Γ£ô listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for nebius  507ms
+   Γ£ô listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for openrouter  523ms
+   Γ£ô listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for ovhcloud  524ms
+   Γ£ô listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for perplexity  543ms
+   Γ£ô listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for sarvam  623ms
+   Γ£ô listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for v0  621ms
+   Γ£ô listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for wandb  670ms
+   Γ£ô listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for xai  468ms
+   Γ£ô listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for zai  552ms
+
+ Test Files  2 passed (2)
+      Tests  48 passed (48)
+   Start at  12:29:36
+   Duration  14.58s (transform 1.10s, setup 0ms, collect 2.82s, tests 12.37s, environment 1ms, prepare 578ms)
+

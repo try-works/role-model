@@ -1,0 +1,49 @@
+Run: 42-provider-kind-craft-ask-routing
+Date: 2026-06-12T12:16:00+02:00
+QA Execution Mode: agent-operated
+Worktree: D:\DEV\role-model\.worktrees\42-provider-kind-craft-ask-routing
+SEA SHA256: eeb842ac699fc05b161f806289ce8ec7937e68b5104b12bc4d9c8474417039c1
+Runtime: http://127.0.0.1:3456 (packaged SEA, scope-id run42-verify)
+Benchmark API: POST /api/role-model/benchmark/runs
+
+## Request
+
+- mode: quick (12 routing-capability cases)
+- endpointIds:
+  - deepseek.litellm.global.deepseek-deepseek-v4-pro
+  - deepseek.litellm.global.deepseek-deepseek-v4-flash
+- judgeEndpointId: deepseek.litellm.global.deepseek-deepseek-v4-pro
+- useJudge: true (execution + grading + compare)
+
+## Result
+
+- runId: 63c38ad7-b4a3-4930-b0a1-078ea6c8da5e
+- status: completed (60/60 steps: execution, grading, compare)
+- durationMs: ~660088
+- artifactRoot: C:\Users\erikb\AppData\Local\Temp\role-model-run42-verify-state\run42-verify\memory\benchmark-runs\63c38ad7-b4a3-4930-b0a1-078ea6c8da5e
+- judgeArtifactCount: 48
+- compareArtifactCount: 12
+- parseSuccess: 24/24 case audits (both endpoints, all cases)
+- judgeUnavailable: 0
+- compareFallback: 0 (all 12 compare cases used live judge)
+
+### Overall scores (GET /api/role-model/benchmark/summary)
+
+| endpointId | modelId | overallScore |
+| --- | --- | --- |
+| deepseek.litellm.global.deepseek-deepseek-v4-pro | deepseek/deepseek-v4-pro | 0.42 |
+| deepseek.litellm.global.deepseek-deepseek-v4-flash | deepseek/deepseek-v4-flash | 0.42 |
+
+### Notable passing cases (score=1, both models unless noted)
+
+- h01-implement-two-sum
+- h02-fix-async-counter
+- h05-tool-grep-eligibility
+- h06-tool-apply-patch
+- h10-agent-read-grep-patch
+
+### Verification interpretation
+
+Both DeepSeek endpoints executed the full quick capability benchmark through the packaged runtime LiteLLM vendor path: live model calls, judge grading, and pairwise compare completed without infrastructure failures. Scores reflect model capability on hard agentic cases, not connect/routing regressions targeted by run 42.
+
+RESULT: PASS

@@ -1,0 +1,382 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/42-provider-kind-craft-ask-routing/role-model-router/apps/runtime-host-bridge
+
+(node:45484) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ Γ¥» test/provider-overlap-metadata.test.ts (44 tests | 19 failed) 10973ms
+   Γ£ô provider overlap metadata (R1) > legacy listProviders metadata mismatches exactly the 19 known overlap ids 106ms
+   Γ£ô provider overlap metadata (R1) > merged operator metadata aligns with validateProviderAccounts for all overlap ids 80ms
+   Γ£ô provider overlap metadata (R1) > upsert validation accepts UI-equivalent payload for overlap provider baseten 65ms
+   Γ£ô provider overlap metadata (R1) > upsert validation accepts UI-equivalent payload for overlap provider cerebras 66ms
+   Γ£ô provider overlap metadata (R1) > upsert validation accepts UI-equivalent payload for overlap provider cohere 62ms
+   Γ£ô provider overlap metadata (R1) > upsert validation accepts UI-equivalent payload for overlap provider databricks 63ms
+   Γ£ô provider overlap metadata (R1) > upsert validation accepts UI-equivalent payload for overlap provider deepinfra 60ms
+   Γ£ô provider overlap metadata (R1) > upsert validation accepts UI-equivalent payload for overlap provider deepseek 60ms
+   Γ£ô provider overlap metadata (R1) > upsert validation accepts UI-equivalent payload for overlap provider groq 60ms
+   Γ£ô provider overlap metadata (R1) > upsert validation accepts UI-equivalent payload for overlap provider minimax 61ms
+   Γ£ô provider overlap metadata (R1) > upsert validation accepts UI-equivalent payload for overlap provider mistral 60ms
+   Γ£ô provider overlap metadata (R1) > upsert validation accepts UI-equivalent payload for overlap provider morph 60ms
+   Γ£ô provider overlap metadata (R1) > upsert validation accepts UI-equivalent payload for overlap provider nebius 59ms
+   Γ£ô provider overlap metadata (R1) > upsert validation accepts UI-equivalent payload for overlap provider openrouter 59ms
+   Γ£ô provider overlap metadata (R1) > upsert validation accepts UI-equivalent payload for overlap provider ovhcloud 59ms
+   Γ£ô provider overlap metadata (R1) > upsert validation accepts UI-equivalent payload for overlap provider perplexity 63ms
+   Γ£ô provider overlap metadata (R1) > upsert validation accepts UI-equivalent payload for overlap provider sarvam 62ms
+   Γ£ô provider overlap metadata (R1) > upsert validation accepts UI-equivalent payload for overlap provider v0 60ms
+   Γ£ô provider overlap metadata (R1) > upsert validation accepts UI-equivalent payload for overlap provider wandb 59ms
+   Γ£ô provider overlap metadata (R1) > upsert validation accepts UI-equivalent payload for overlap provider xai 58ms
+   Γ£ô provider overlap metadata (R1) > upsert validation accepts UI-equivalent payload for overlap provider zai 61ms
+   Γ£ô provider overlap metadata (R1) > aligned overlap provider openai keeps stable providerKind 60ms
+   Γ£ô provider overlap metadata (R1) > aligned overlap provider anthropic keeps stable providerKind 59ms
+   Γ£ô provider overlap metadata (R1) > aligned overlap provider moonshot keeps stable providerKind 61ms
+   Γ£ô provider overlap metadata (R1) > aligned overlap provider azure keeps stable providerKind 62ms
+   ├ù listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for baseten 580ms
+     ΓåÆ expected 'provider-baseten' to be 'provider-openai' // Object.is equality
+   ├ù listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for cerebras 494ms
+     ΓåÆ expected 'provider-cerebras' to be 'provider-openai' // Object.is equality
+   ├ù listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for cohere 501ms
+     ΓåÆ expected 'provider-cohere' to be 'provider-openai' // Object.is equality
+   ├ù listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for databricks 492ms
+     ΓåÆ expected 'provider-databricks' to be 'provider-openai' // Object.is equality
+   ├ù listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for deepinfra 491ms
+     ΓåÆ expected 'provider-deepinfra' to be 'provider-openai' // Object.is equality
+   ├ù listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for deepseek 480ms
+     ΓåÆ expected 'provider-deepseek' to be 'provider-openai' // Object.is equality
+   ├ù listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for groq 484ms
+     ΓåÆ expected 'provider-groq' to be 'provider-openai' // Object.is equality
+   ├ù listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for minimax 478ms
+     ΓåÆ expected 'provider-minimax' to be 'provider-openai' // Object.is equality
+   ├ù listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for mistral 520ms
+     ΓåÆ expected 'provider-mistral' to be 'provider-openai' // Object.is equality
+   ├ù listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for morph 511ms
+     ΓåÆ expected 'provider-morph' to be 'provider-openai' // Object.is equality
+   ├ù listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for nebius 491ms
+     ΓåÆ expected 'provider-nebius' to be 'provider-openai' // Object.is equality
+   ├ù listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for openrouter 494ms
+     ΓåÆ expected 'provider-openrouter' to be 'provider-openai' // Object.is equality
+   ├ù listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for ovhcloud 485ms
+     ΓåÆ expected 'provider-ovhcloud' to be 'provider-openai' // Object.is equality
+   ├ù listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for perplexity 481ms
+     ΓåÆ expected 'provider-perplexity' to be 'provider-openai' // Object.is equality
+   ├ù listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for sarvam 463ms
+     ΓåÆ expected 'provider-sarvam' to be 'provider-openai' // Object.is equality
+   ├ù listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for v0 481ms
+     ΓåÆ expected 'provider-v0' to be 'provider-openai' // Object.is equality
+   ├ù listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for wandb 475ms
+     ΓåÆ expected 'provider-wandb' to be 'provider-openai' // Object.is equality
+   ├ù listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for xai 513ms
+     ΓåÆ expected 'provider-xai' to be 'provider-openai' // Object.is equality
+   ├ù listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for zai 471ms
+     ΓåÆ expected 'provider-zai' to be 'provider-openai' // Object.is equality
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 19 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/provider-overlap-metadata.test.ts > listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for baseten
+AssertionError: expected 'provider-baseten' to be 'provider-openai' // Object.is equality
+
+Expected: "provider-openai"
+Received: "provider-baseten"
+
+ Γ¥» test/provider-overlap-metadata.test.ts:167:38
+    165|         const providers = await backend.listProviders();
+    166|         const listed = providers.find((entry) => entry.providerId === ΓÇª
+    167|         expect(listed?.providerKind).toBe(expected.providerKind);
+       |                                      ^
+    168|       } finally {
+    169|         await backend.shutdown();
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/19]ΓÄ»
+
+ FAIL  test/provider-overlap-metadata.test.ts > listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for cerebras
+AssertionError: expected 'provider-cerebras' to be 'provider-openai' // Object.is equality
+
+Expected: "provider-openai"
+Received: "provider-cerebras"
+
+ Γ¥» test/provider-overlap-metadata.test.ts:167:38
+    165|         const providers = await backend.listProviders();
+    166|         const listed = providers.find((entry) => entry.providerId === ΓÇª
+    167|         expect(listed?.providerKind).toBe(expected.providerKind);
+       |                                      ^
+    168|       } finally {
+    169|         await backend.shutdown();
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[2/19]ΓÄ»
+
+ FAIL  test/provider-overlap-metadata.test.ts > listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for cohere
+AssertionError: expected 'provider-cohere' to be 'provider-openai' // Object.is equality
+
+Expected: "provider-openai"
+Received: "provider-cohere"
+
+ Γ¥» test/provider-overlap-metadata.test.ts:167:38
+    165|         const providers = await backend.listProviders();
+    166|         const listed = providers.find((entry) => entry.providerId === ΓÇª
+    167|         expect(listed?.providerKind).toBe(expected.providerKind);
+       |                                      ^
+    168|       } finally {
+    169|         await backend.shutdown();
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[3/19]ΓÄ»
+
+ FAIL  test/provider-overlap-metadata.test.ts > listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for databricks
+AssertionError: expected 'provider-databricks' to be 'provider-openai' // Object.is equality
+
+Expected: "provider-openai"
+Received: "provider-databricks"
+
+ Γ¥» test/provider-overlap-metadata.test.ts:167:38
+    165|         const providers = await backend.listProviders();
+    166|         const listed = providers.find((entry) => entry.providerId === ΓÇª
+    167|         expect(listed?.providerKind).toBe(expected.providerKind);
+       |                                      ^
+    168|       } finally {
+    169|         await backend.shutdown();
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[4/19]ΓÄ»
+
+ FAIL  test/provider-overlap-metadata.test.ts > listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for deepinfra
+AssertionError: expected 'provider-deepinfra' to be 'provider-openai' // Object.is equality
+
+Expected: "provider-openai"
+Received: "provider-deepinfra"
+
+ Γ¥» test/provider-overlap-metadata.test.ts:167:38
+    165|         const providers = await backend.listProviders();
+    166|         const listed = providers.find((entry) => entry.providerId === ΓÇª
+    167|         expect(listed?.providerKind).toBe(expected.providerKind);
+       |                                      ^
+    168|       } finally {
+    169|         await backend.shutdown();
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[5/19]ΓÄ»
+
+ FAIL  test/provider-overlap-metadata.test.ts > listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for deepseek
+AssertionError: expected 'provider-deepseek' to be 'provider-openai' // Object.is equality
+
+Expected: "provider-openai"
+Received: "provider-deepseek"
+
+ Γ¥» test/provider-overlap-metadata.test.ts:167:38
+    165|         const providers = await backend.listProviders();
+    166|         const listed = providers.find((entry) => entry.providerId === ΓÇª
+    167|         expect(listed?.providerKind).toBe(expected.providerKind);
+       |                                      ^
+    168|       } finally {
+    169|         await backend.shutdown();
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[6/19]ΓÄ»
+
+ FAIL  test/provider-overlap-metadata.test.ts > listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for groq
+AssertionError: expected 'provider-groq' to be 'provider-openai' // Object.is equality
+
+Expected: "provider-openai"
+Received: "provider-groq"
+
+ Γ¥» test/provider-overlap-metadata.test.ts:167:38
+    165|         const providers = await backend.listProviders();
+    166|         const listed = providers.find((entry) => entry.providerId === ΓÇª
+    167|         expect(listed?.providerKind).toBe(expected.providerKind);
+       |                                      ^
+    168|       } finally {
+    169|         await backend.shutdown();
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[7/19]ΓÄ»
+
+ FAIL  test/provider-overlap-metadata.test.ts > listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for minimax
+AssertionError: expected 'provider-minimax' to be 'provider-openai' // Object.is equality
+
+Expected: "provider-openai"
+Received: "provider-minimax"
+
+ Γ¥» test/provider-overlap-metadata.test.ts:167:38
+    165|         const providers = await backend.listProviders();
+    166|         const listed = providers.find((entry) => entry.providerId === ΓÇª
+    167|         expect(listed?.providerKind).toBe(expected.providerKind);
+       |                                      ^
+    168|       } finally {
+    169|         await backend.shutdown();
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[8/19]ΓÄ»
+
+ FAIL  test/provider-overlap-metadata.test.ts > listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for mistral
+AssertionError: expected 'provider-mistral' to be 'provider-openai' // Object.is equality
+
+Expected: "provider-openai"
+Received: "provider-mistral"
+
+ Γ¥» test/provider-overlap-metadata.test.ts:167:38
+    165|         const providers = await backend.listProviders();
+    166|         const listed = providers.find((entry) => entry.providerId === ΓÇª
+    167|         expect(listed?.providerKind).toBe(expected.providerKind);
+       |                                      ^
+    168|       } finally {
+    169|         await backend.shutdown();
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[9/19]ΓÄ»
+
+ FAIL  test/provider-overlap-metadata.test.ts > listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for morph
+AssertionError: expected 'provider-morph' to be 'provider-openai' // Object.is equality
+
+Expected: "provider-openai"
+Received: "provider-morph"
+
+ Γ¥» test/provider-overlap-metadata.test.ts:167:38
+    165|         const providers = await backend.listProviders();
+    166|         const listed = providers.find((entry) => entry.providerId === ΓÇª
+    167|         expect(listed?.providerKind).toBe(expected.providerKind);
+       |                                      ^
+    168|       } finally {
+    169|         await backend.shutdown();
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[10/19]ΓÄ»
+
+ FAIL  test/provider-overlap-metadata.test.ts > listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for nebius
+AssertionError: expected 'provider-nebius' to be 'provider-openai' // Object.is equality
+
+Expected: "provider-openai"
+Received: "provider-nebius"
+
+ Γ¥» test/provider-overlap-metadata.test.ts:167:38
+    165|         const providers = await backend.listProviders();
+    166|         const listed = providers.find((entry) => entry.providerId === ΓÇª
+    167|         expect(listed?.providerKind).toBe(expected.providerKind);
+       |                                      ^
+    168|       } finally {
+    169|         await backend.shutdown();
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[11/19]ΓÄ»
+
+ FAIL  test/provider-overlap-metadata.test.ts > listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for openrouter
+AssertionError: expected 'provider-openrouter' to be 'provider-openai' // Object.is equality
+
+Expected: "provider-openai"
+Received: "provider-openrouter"
+
+ Γ¥» test/provider-overlap-metadata.test.ts:167:38
+    165|         const providers = await backend.listProviders();
+    166|         const listed = providers.find((entry) => entry.providerId === ΓÇª
+    167|         expect(listed?.providerKind).toBe(expected.providerKind);
+       |                                      ^
+    168|       } finally {
+    169|         await backend.shutdown();
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[12/19]ΓÄ»
+
+ FAIL  test/provider-overlap-metadata.test.ts > listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for ovhcloud
+AssertionError: expected 'provider-ovhcloud' to be 'provider-openai' // Object.is equality
+
+Expected: "provider-openai"
+Received: "provider-ovhcloud"
+
+ Γ¥» test/provider-overlap-metadata.test.ts:167:38
+    165|         const providers = await backend.listProviders();
+    166|         const listed = providers.find((entry) => entry.providerId === ΓÇª
+    167|         expect(listed?.providerKind).toBe(expected.providerKind);
+       |                                      ^
+    168|       } finally {
+    169|         await backend.shutdown();
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[13/19]ΓÄ»
+
+ FAIL  test/provider-overlap-metadata.test.ts > listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for perplexity
+AssertionError: expected 'provider-perplexity' to be 'provider-openai' // Object.is equality
+
+Expected: "provider-openai"
+Received: "provider-perplexity"
+
+ Γ¥» test/provider-overlap-metadata.test.ts:167:38
+    165|         const providers = await backend.listProviders();
+    166|         const listed = providers.find((entry) => entry.providerId === ΓÇª
+    167|         expect(listed?.providerKind).toBe(expected.providerKind);
+       |                                      ^
+    168|       } finally {
+    169|         await backend.shutdown();
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[14/19]ΓÄ»
+
+ FAIL  test/provider-overlap-metadata.test.ts > listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for sarvam
+AssertionError: expected 'provider-sarvam' to be 'provider-openai' // Object.is equality
+
+Expected: "provider-openai"
+Received: "provider-sarvam"
+
+ Γ¥» test/provider-overlap-metadata.test.ts:167:38
+    165|         const providers = await backend.listProviders();
+    166|         const listed = providers.find((entry) => entry.providerId === ΓÇª
+    167|         expect(listed?.providerKind).toBe(expected.providerKind);
+       |                                      ^
+    168|       } finally {
+    169|         await backend.shutdown();
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[15/19]ΓÄ»
+
+ FAIL  test/provider-overlap-metadata.test.ts > listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for v0
+AssertionError: expected 'provider-v0' to be 'provider-openai' // Object.is equality
+
+Expected: "provider-openai"
+Received: "provider-v0"
+
+ Γ¥» test/provider-overlap-metadata.test.ts:167:38
+    165|         const providers = await backend.listProviders();
+    166|         const listed = providers.find((entry) => entry.providerId === ΓÇª
+    167|         expect(listed?.providerKind).toBe(expected.providerKind);
+       |                                      ^
+    168|       } finally {
+    169|         await backend.shutdown();
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[16/19]ΓÄ»
+
+ FAIL  test/provider-overlap-metadata.test.ts > listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for wandb
+AssertionError: expected 'provider-wandb' to be 'provider-openai' // Object.is equality
+
+Expected: "provider-openai"
+Received: "provider-wandb"
+
+ Γ¥» test/provider-overlap-metadata.test.ts:167:38
+    165|         const providers = await backend.listProviders();
+    166|         const listed = providers.find((entry) => entry.providerId === ΓÇª
+    167|         expect(listed?.providerKind).toBe(expected.providerKind);
+       |                                      ^
+    168|       } finally {
+    169|         await backend.shutdown();
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[17/19]ΓÄ»
+
+ FAIL  test/provider-overlap-metadata.test.ts > listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for xai
+AssertionError: expected 'provider-xai' to be 'provider-openai' // Object.is equality
+
+Expected: "provider-openai"
+Received: "provider-xai"
+
+ Γ¥» test/provider-overlap-metadata.test.ts:167:38
+    165|         const providers = await backend.listProviders();
+    166|         const listed = providers.find((entry) => entry.providerId === ΓÇª
+    167|         expect(listed?.providerKind).toBe(expected.providerKind);
+       |                                      ^
+    168|       } finally {
+    169|         await backend.shutdown();
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[18/19]ΓÄ»
+
+ FAIL  test/provider-overlap-metadata.test.ts > listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for zai
+AssertionError: expected 'provider-zai' to be 'provider-openai' // Object.is equality
+
+Expected: "provider-openai"
+Received: "provider-zai"
+
+ Γ¥» test/provider-overlap-metadata.test.ts:167:38
+    165|         const providers = await backend.listProviders();
+    166|         const listed = providers.find((entry) => entry.providerId === ΓÇª
+    167|         expect(listed?.providerKind).toBe(expected.providerKind);
+       |                                      ^
+    168|       } finally {
+    169|         await backend.shutdown();
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[19/19]ΓÄ»
+
+
+ Test Files  1 failed (1)
+      Tests  19 failed | 25 passed (44)
+   Start at  11:05:23
+   Duration  13.28s (transform 1.05s, setup 0ms, collect 1.49s, tests 10.97s, environment 0ms, prepare 267ms)
+

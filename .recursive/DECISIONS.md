@@ -1104,3 +1104,29 @@
 - How: strict TDD Phase 0→8 from locked requirements; RED/GREEN logs on disk
 - What was not done: R8 authProfile refactor; packaged `:3456` drill
 - Follow-ups: SEA rebuild; optional R8 addendum
+
+### Run `41`
+
+- Run folder: `/.recursive/run/41/`
+- What changed: dashboard Latency card shows average as headline and p95 in detail (UI-only)
+- Why: p95-only headline alarmed operators when average latency was reasonable
+- How: pragmatic TDD; 90/90 runtime-ui tests green
+- What was not done: no backend telemetry contract changes
+- Known issues / follow-ups: none
+
+### Run `42-provider-kind-craft-ask-routing`
+
+- Run folder: `/.recursive/run/42-provider-kind-craft-ask-routing/`
+- Artifacts: `00-requirements.md` through `08-memory-impact.md`, RED/GREEN and phase5 QA logs
+- What changed:
+  - added `provider-metadata-merge.ts` and wired merged operator metadata into `listProviders`, OAuth start, and `createUnifiedProviderAccounts`
+  - extended Craft ask-mode rubric for declared tools without active tool usage
+  - packaged DeepSeek verification on `:3456` (connect, chat, quick benchmark)
+- Why:
+  - 19 overlap providers failed connect with `PROVIDER_KIND_MISMATCH`; Craft simple chat misclassified as hard
+- How:
+  - strict RED/GREEN TDD; agent-operated phase5 QA; self-audit closeout phases 3–8
+- What was not done:
+  - no catalog export rewrite; no per-provider-id exception branches; full 19-id parameterized phase5 connect loop deferred to unit/integration tests
+- Known issues / follow-ups:
+  - DeepSeek reasoning models need sufficient `max_tokens` for chat probes; overlap CI guard should run on catalog/LiteLLM inventory changes

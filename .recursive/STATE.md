@@ -191,3 +191,9 @@
   - Dashboard overview Latency card shows **average** as primary value and **p95** as secondary context (UI-only; `summarizeTelemetryStats` in `view-models.ts`)
   - Backend `RuntimeTelemetrySummary` contract unchanged; comparison rows already showed both metrics
   - All 90 runtime-ui tests green; no new architectural decisions
+
+- Run 42 (Provider Kind + Craft Ask Routing) on branch `recursive/42-provider-kind-craft-ask-routing`:
+  - Shared `resolveValidationProviderMetadata` merge makes operator-facing provider metadata match `validateProviderAccounts` for all catalog∩LiteLLM overlap ids (19 historically broken)
+  - Craft declared-tools ask-mode: declared tools without active `tool`/`tool_calls` usage use last-user-turn rubric with `toolCount: 0` for difficulty scoring
+  - Packaged `:3456` DeepSeek verification: connect (`provider-openai`), chat pong, quick capability benchmark 60/60
+  - 48/48 targeted bridge tests green
