@@ -1,0 +1,4 @@
+SP43-C GREEN — candidate routing quality enrichment
+Command: corepack pnpm --filter @role-model-router/runtime-host-bridge exec vitest run test/benchmark-candidates-routing-quality.test.ts
+
+ ✓ test/benchmark-candidates-routing-quality.test.ts (1 test)

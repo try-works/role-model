@@ -666,6 +666,11 @@ describe("runtime design system", () => {
     expect(designSystemDocSource).not.toContain("fact strips before the registry rail");
   });
 
+  test("dashboard passes telemetry detail to FactCard for Latency", () => {
+    expect(dashboardRouteSource).toContain("detail={card.detail}");
+    expect(dashboardRouteSource).toMatch(/FactCard[\s\S]*detail=\{card\.detail\}/);
+  });
+
   test("workbench and observe routes expose routing controls and receipts in repo-owned UI surfaces", () => {
     expect(workbenchRouteSource).toContain("Routing mode");
     expect(workbenchRouteSource).toContain("routingModeOverride");

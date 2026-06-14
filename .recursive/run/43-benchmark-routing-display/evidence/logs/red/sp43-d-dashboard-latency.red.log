@@ -1,0 +1,8 @@
+SP43-D RED — persistRuntimeTelemetryFailure latencyMs
+Command: corepack pnpm --filter @role-model-router/sqlite-memory exec vitest run test/index.test.ts -t "persistRuntimeTelemetryFailure records latencyMs"
+Baseline: 92fbc16 (before fix)
+
+FAIL  persistRuntimeTelemetryFailure records latencyMs in telemetry summary average
+AssertionError: expected { requestCount: 1, … } to deeply equal ObjectContaining{…}
+- Expected: "averageLatencyMs": 850
++ Received: "averageLatencyMs": null

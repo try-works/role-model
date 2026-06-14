@@ -1,0 +1,2176 @@
+[
+  {
+    "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+    "modelId": "deepseek/deepseek-v4-pro",
+    "providerId": "deepseek",
+    "sourceType": "remote",
+    "endpointKind": "remote_api",
+    "servingSource": "vendor-litellm",
+    "region": "global",
+    "status": "active",
+    "healthStatus": "healthy",
+    "roleBindings": [],
+    "capabilities": [
+      "text.chat",
+      "tools.function_calling",
+      "reasoning"
+    ],
+    "toolCallingSupported": true,
+    "toolCallingStyle": "none",
+    "controllerEligible": true,
+    "preferred": false,
+    "ignored": false,
+    "latestProfile": {
+      "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+      "endpoint_version": "run07-registry-v1:custom-base-url",
+      "measured_at_ms": 1781459142535,
+      "measurement_window": {
+        "started_at_ms": 1781445499136,
+        "ended_at_ms": 1781459142535
+      },
+      "sample_size": 68,
+      "sources": {
+        "live_request_samples": 1,
+        "benchmark_samples": 67
+      },
+      "latency_ms_p50": 4441.5,
+      "latency_ms_p95": 18352.5,
+      "failure_rate": 0,
+      "freshness_score": 1,
+      "confidence_score": 1,
+      "judge_score": 0.6268656716417911,
+      "quality_score": 0.6268656716417911,
+      "tokens_per_sec": 10
+    },
+    "recentSamples": [
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "live_request",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781445499136,
+        "latency_ms": 1670,
+        "latency_ms_p95": 1670,
+        "tokens_per_sec": 10,
+        "failure": false,
+        "request_id": "req-runtime-host-bridge",
+        "routing_decision_id": "decision-req-runtime-host-bridge"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781456942698,
+        "latency_ms": 4034,
+        "latency_ms_p95": 4034,
+        "judge_score": 0,
+        "failure": false,
+        "request_id": "bench-b9fba560-fbe1-4d7b-8acf-aa94af06c20c-p17-tools-multi-hard-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781456952934,
+        "latency_ms": 4486,
+        "latency_ms_p95": 4486,
+        "judge_score": 0,
+        "failure": false,
+        "request_id": "bench-b9fba560-fbe1-4d7b-8acf-aa94af06c20c-x01-max-signal-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781456959002,
+        "latency_ms": 6788,
+        "latency_ms_p95": 6788,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-b9fba560-fbe1-4d7b-8acf-aa94af06c20c-h01-implement-two-sum-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781456971351,
+        "latency_ms": 9871,
+        "latency_ms_p95": 9871,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-b9fba560-fbe1-4d7b-8acf-aa94af06c20c-h02-fix-async-counter-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781456977811,
+        "latency_ms": 3467,
+        "latency_ms_p95": 3467,
+        "judge_score": 0,
+        "failure": false,
+        "request_id": "bench-b9fba560-fbe1-4d7b-8acf-aa94af06c20c-h04-tool-read-router-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781456987051,
+        "latency_ms": 7190,
+        "latency_ms_p95": 7190,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-b9fba560-fbe1-4d7b-8acf-aa94af06c20c-h05-tool-grep-eligibility-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781456994792,
+        "latency_ms": 1952,
+        "latency_ms_p95": 1952,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-b9fba560-fbe1-4d7b-8acf-aa94af06c20c-h06-tool-apply-patch-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781457016606,
+        "latency_ms": 18559,
+        "latency_ms_p95": 18559,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-b9fba560-fbe1-4d7b-8acf-aa94af06c20c-h07-multi-turn-sla-guard-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781457024705,
+        "latency_ms": 3994,
+        "latency_ms_p95": 3994,
+        "judge_score": 0,
+        "failure": false,
+        "request_id": "bench-b9fba560-fbe1-4d7b-8acf-aa94af06c20c-h08-multi-turn-tool-refine-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781457030011,
+        "latency_ms": 4911,
+        "latency_ms_p95": 4911,
+        "judge_score": 0,
+        "failure": false,
+        "request_id": "bench-b9fba560-fbe1-4d7b-8acf-aa94af06c20c-h09-agent-metrics-chain-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781457043546,
+        "latency_ms": 2882,
+        "latency_ms_p95": 2882,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-b9fba560-fbe1-4d7b-8acf-aa94af06c20c-h10-agent-read-grep-patch-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781457050211,
+        "latency_ms": 4354,
+        "latency_ms_p95": 4354,
+        "judge_score": 0,
+        "failure": false,
+        "request_id": "bench-b9fba560-fbe1-4d7b-8acf-aa94af06c20c-h15-max-signal-v3-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781458739299,
+        "latency_ms": 3188,
+        "latency_ms_p95": 3188,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-e01-yes-no-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781458744062,
+        "latency_ms": 1646,
+        "latency_ms_p95": 1646,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-e02-single-word-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781458748895,
+        "latency_ms": 1976,
+        "latency_ms_p95": 1976,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-e03-count-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781458753404,
+        "latency_ms": 2347,
+        "latency_ms_p95": 2347,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-e04-capitalize-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781458759898,
+        "latency_ms": 2453,
+        "latency_ms_p95": 2453,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-e05-emoji-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781458766007,
+        "latency_ms": 2325,
+        "latency_ms_p95": 2325,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-e06-timezone-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781458770773,
+        "latency_ms": 1646,
+        "latency_ms_p95": 1646,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-e07-boolean-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781458779376,
+        "latency_ms": 7426,
+        "latency_ms_p95": 7426,
+        "judge_score": 0,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-e08-format-json-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781458786009,
+        "latency_ms": 2240,
+        "latency_ms_p95": 2240,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-p01-easy-greet-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781458792177,
+        "latency_ms": 11844,
+        "latency_ms_p95": 11844,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-p02-easy-math-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781458800971,
+        "latency_ms": 2619,
+        "latency_ms_p95": 2619,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-p03-easy-define-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781458806396,
+        "latency_ms": 2472,
+        "latency_ms_p95": 2472,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-p04-easy-translate-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781458813013,
+        "latency_ms": 1955,
+        "latency_ms_p95": 1955,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-p05-easy-list-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781458818226,
+        "latency_ms": 7654,
+        "latency_ms_p95": 7654,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-p06-medium-explain-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781458824268,
+        "latency_ms": 10278,
+        "latency_ms_p95": 10278,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-p07-medium-compare-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781458830262,
+        "latency_ms": 4462,
+        "latency_ms_p95": 4462,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-p08-medium-summarize-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781458835905,
+        "latency_ms": 4343,
+        "latency_ms_p95": 4343,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-p09-medium-howto-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781458844297,
+        "latency_ms": 16680,
+        "latency_ms_p95": 16680,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-p10-long-context-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781458852209,
+        "latency_ms": 2928,
+        "latency_ms_p95": 2928,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-p11-long-multi-turn-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781458859053,
+        "latency_ms": 4786,
+        "latency_ms_p95": 4786,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-l01-verbose-incident-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781458871638,
+        "latency_ms": 14019,
+        "latency_ms_p95": 14019,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-l02-many-constraints-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781458876817,
+        "latency_ms": 4810,
+        "latency_ms_p95": 4810,
+        "judge_score": 0,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-p12-code-patch-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781458887537,
+        "latency_ms": 8973,
+        "latency_ms_p95": 8973,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-p13-code-debug-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781458897517,
+        "latency_ms": 5749,
+        "latency_ms_p95": 5749,
+        "judge_score": 0,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-p14-schema-validate-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781458908924,
+        "latency_ms": 77356,
+        "latency_ms_p95": 77356,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-c01-full-refactor-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781458921998,
+        "latency_ms": 49280,
+        "latency_ms_p95": 49280,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-c02-ts-generics-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781458928449,
+        "latency_ms": 2190,
+        "latency_ms_p95": 2190,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-p15-tools-read-one-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781458937367,
+        "latency_ms": 4072,
+        "latency_ms_p95": 4072,
+        "judge_score": 0,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-p16-tools-search-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781458945776,
+        "latency_ms": 3912,
+        "latency_ms_p95": 3912,
+        "judge_score": 0,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-t01-tools-list-dir-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781458952827,
+        "latency_ms": 4030,
+        "latency_ms_p95": 4030,
+        "judge_score": 0,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-p17-tools-multi-hard-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781458961129,
+        "latency_ms": 4087,
+        "latency_ms_p95": 4087,
+        "judge_score": 0,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-p18-tools-agent-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781458973763,
+        "latency_ms": 6833,
+        "latency_ms_p95": 6833,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-t02-tools-triple-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781458980875,
+        "latency_ms": 4495,
+        "latency_ms_p95": 4495,
+        "judge_score": 0,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-t03-tools-agent-plan-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781458987084,
+        "latency_ms": 9909,
+        "latency_ms_p95": 9909,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-p19-decompose-plan-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781458997315,
+        "latency_ms": 7828,
+        "latency_ms_p95": 7828,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-p20-decompose-arch-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781459004921,
+        "latency_ms": 42243,
+        "latency_ms_p95": 42243,
+        "judge_score": 0,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-d01-milestones-heavy-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781459009215,
+        "latency_ms": 4349,
+        "latency_ms_p95": 4349,
+        "judge_score": 0,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-x01-max-signal-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781459016164,
+        "latency_ms": 11552,
+        "latency_ms_p95": 11552,
+        "judge_score": 0,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-x02-max-context-tools-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781459021202,
+        "latency_ms": 1882,
+        "latency_ms_p95": 1882,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-p24-exact-local-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781459025756,
+        "latency_ms": 1444,
+        "latency_ms_p95": 1444,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-p25-exact-remote-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781459031613,
+        "latency_ms": 4043,
+        "latency_ms_p95": 4043,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-h01-implement-two-sum-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781459037344,
+        "latency_ms": 17969,
+        "latency_ms_p95": 17969,
+        "judge_score": 0,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-h02-fix-async-counter-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781459045398,
+        "latency_ms": 4743,
+        "latency_ms_p95": 4743,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-h03-implement-lru-cache-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781459052347,
+        "latency_ms": 4021,
+        "latency_ms_p95": 4021,
+        "judge_score": 0,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-h04-tool-read-router-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781459060020,
+        "latency_ms": 9464,
+        "latency_ms_p95": 9464,
+        "judge_score": 0,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-h05-tool-grep-eligibility-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781459066391,
+        "latency_ms": 2059,
+        "latency_ms_p95": 2059,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-h06-tool-apply-patch-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781459073933,
+        "latency_ms": 16160,
+        "latency_ms_p95": 16160,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-h07-multi-turn-sla-guard-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781459080834,
+        "latency_ms": 4462,
+        "latency_ms_p95": 4462,
+        "judge_score": 0,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-h08-multi-turn-tool-refine-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781459085174,
+        "latency_ms": 5018,
+        "latency_ms_p95": 5018,
+        "judge_score": 0,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-h09-agent-metrics-chain-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781459098683,
+        "latency_ms": 2645,
+        "latency_ms_p95": 2645,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-h10-agent-read-grep-patch-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781459104829,
+        "latency_ms": 4421,
+        "latency_ms_p95": 4421,
+        "judge_score": 0,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-h11-decompose-code-verify-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781459116742,
+        "latency_ms": 7453,
+        "latency_ms_p95": 7453,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-h12-four-turn-architecture-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781459124101,
+        "latency_ms": 7247,
+        "latency_ms_p95": 7247,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-h13-parse-nested-json-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781459136749,
+        "latency_ms": 10049,
+        "latency_ms_p95": 10049,
+        "judge_score": 0,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-h14-refactor-extract-helper-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781459142535,
+        "latency_ms": 4236,
+        "latency_ms_p95": 4236,
+        "judge_score": 0,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-h15-max-signal-v3-deepseek.litellm.global.deepseek-deepseek-v4-pro"
+      }
+    ],
+    "difficultyProfiles": {
+      "easy": {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "measured_at_ms": 1781459025756,
+        "measurement_window": {
+          "started_at_ms": 1781445499136,
+          "ended_at_ms": 1781459025756
+        },
+        "sample_size": 16,
+        "sources": {
+          "live_request_samples": 1,
+          "benchmark_samples": 15
+        },
+        "latency_ms_p50": 2282.5,
+        "latency_ms_p95": 8530.5,
+        "failure_rate": 0,
+        "freshness_score": 1,
+        "confidence_score": 0.7205846872952778,
+        "judge_score": 0.9333333333333333,
+        "quality_score": 0.9333333333333333,
+        "tokens_per_sec": 10
+      },
+      "medium": {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "measured_at_ms": 1781459004921,
+        "measurement_window": {
+          "started_at_ms": 1781458818226,
+          "ended_at_ms": 1781459004921
+        },
+        "sample_size": 19,
+        "sources": {
+          "live_request_samples": 0,
+          "benchmark_samples": 19
+        },
+        "latency_ms_p50": 7654,
+        "latency_ms_p95": 52087.59999999994,
+        "failure_rate": 0,
+        "freshness_score": 1,
+        "confidence_score": 0.7619189031733016,
+        "judge_score": 0.7368421052631579,
+        "quality_score": 0.7368421052631579
+      },
+      "hard": {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "measured_at_ms": 1781459142535,
+        "measurement_window": {
+          "started_at_ms": 1781456942698,
+          "ended_at_ms": 1781459142535
+        },
+        "sample_size": 33,
+        "sources": {
+          "live_request_samples": 0,
+          "benchmark_samples": 33
+        },
+        "latency_ms_p50": 4486,
+        "latency_ms_p95": 16883.6,
+        "failure_rate": 0,
+        "freshness_score": 1,
+        "confidence_score": 0.89687612168416,
+        "judge_score": 0.42424242424242425,
+        "quality_score": 0.42424242424242425
+      }
+    },
+    "advisoryMaxDifficultyRecommendation": {
+      "recommendedMaxDifficulty": null,
+      "thresholds": {
+        "minSamples": 4,
+        "maxFailureRate": 0.2,
+        "minQualityScore": 0.8,
+        "minTokensPerSec": 22
+      },
+      "evaluations": {
+        "easy": {
+          "eligible": false,
+          "rejectionReasons": [
+            "min-tokens-per-sec"
+          ],
+          "profile": {
+            "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+            "endpoint_version": "run07-registry-v1:custom-base-url",
+            "measured_at_ms": 1781459025756,
+            "measurement_window": {
+              "started_at_ms": 1781445499136,
+              "ended_at_ms": 1781459025756
+            },
+            "sample_size": 16,
+            "sources": {
+              "live_request_samples": 1,
+              "benchmark_samples": 15
+            },
+            "latency_ms_p50": 2282.5,
+            "latency_ms_p95": 8530.5,
+            "failure_rate": 0,
+            "freshness_score": 1,
+            "confidence_score": 0.7205846872952778,
+            "judge_score": 0.9333333333333333,
+            "quality_score": 0.9333333333333333,
+            "tokens_per_sec": 10
+          }
+        },
+        "medium": {
+          "eligible": false,
+          "rejectionReasons": [
+            "min-quality-score"
+          ],
+          "profile": {
+            "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+            "endpoint_version": "run07-registry-v1:custom-base-url",
+            "measured_at_ms": 1781459004921,
+            "measurement_window": {
+              "started_at_ms": 1781458818226,
+              "ended_at_ms": 1781459004921
+            },
+            "sample_size": 19,
+            "sources": {
+              "live_request_samples": 0,
+              "benchmark_samples": 19
+            },
+            "latency_ms_p50": 7654,
+            "latency_ms_p95": 52087.59999999994,
+            "failure_rate": 0,
+            "freshness_score": 1,
+            "confidence_score": 0.7619189031733016,
+            "judge_score": 0.7368421052631579,
+            "quality_score": 0.7368421052631579
+          }
+        },
+        "hard": {
+          "eligible": false,
+          "rejectionReasons": [
+            "min-quality-score"
+          ],
+          "profile": {
+            "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+            "endpoint_version": "run07-registry-v1:custom-base-url",
+            "measured_at_ms": 1781459142535,
+            "measurement_window": {
+              "started_at_ms": 1781456942698,
+              "ended_at_ms": 1781459142535
+            },
+            "sample_size": 33,
+            "sources": {
+              "live_request_samples": 0,
+              "benchmark_samples": 33
+            },
+            "latency_ms_p50": 4486,
+            "latency_ms_p95": 16883.6,
+            "failure_rate": 0,
+            "freshness_score": 1,
+            "confidence_score": 0.89687612168416,
+            "judge_score": 0.42424242424242425,
+            "quality_score": 0.42424242424242425
+          }
+        }
+      }
+    },
+    "benchmarkCapability": {
+      "overallScore": 0.6545454545454545,
+      "scoresByBucket": {
+        "easy": {
+          "cases": 15,
+          "score": 0.9333333333333333
+        },
+        "medium": {
+          "cases": 19,
+          "score": 0.7368421052631579
+        },
+        "hard": {
+          "cases": 21,
+          "score": 0.38095238095238093
+        }
+      },
+      "benchmarkSamples": 67,
+      "sampleCount": 68,
+      "measuredAtMs": 1781459142535,
+      "freshnessScore": 1,
+      "lastRunId": "1820b2d1-840b-4e6a-9a05-71e3aa44a659",
+      "lastRunCompletedAtMs": 1781459755732,
+      "judgeEndpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro"
+    },
+    "routingBenchmarkQuality": {
+      "judge_score": 0.6268656716417911,
+      "quality_score": 0.6268656716417911,
+      "benchmark_samples": 67,
+      "scoresByBucket": {
+        "easy": {
+          "score": 0.9333333333333333,
+          "cases": 15
+        },
+        "medium": {
+          "score": 0.7368421052631579,
+          "cases": 19
+        },
+        "hard": {
+          "score": 0.42424242424242425,
+          "cases": 33
+        }
+      }
+    },
+    "routingQualityScore": 0.6268656716417911
+  },
+  {
+    "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+    "modelId": "deepseek/deepseek-v4-flash",
+    "providerId": "deepseek",
+    "sourceType": "remote",
+    "endpointKind": "remote_api",
+    "servingSource": "vendor-litellm",
+    "region": "global",
+    "status": "active",
+    "healthStatus": "healthy",
+    "roleBindings": [],
+    "capabilities": [
+      "text.chat",
+      "tools.function_calling",
+      "reasoning"
+    ],
+    "toolCallingSupported": true,
+    "toolCallingStyle": "none",
+    "controllerEligible": false,
+    "preferred": false,
+    "ignored": false,
+    "latestProfile": {
+      "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+      "endpoint_version": "run07-registry-v1:custom-base-url",
+      "measured_at_ms": 1781458720720,
+      "measurement_window": {
+        "started_at_ms": 1781447186090,
+        "ended_at_ms": 1781458720720
+      },
+      "sample_size": 72,
+      "sources": {
+        "live_request_samples": 0,
+        "benchmark_samples": 72
+      },
+      "latency_ms_p50": 3666.5,
+      "latency_ms_p95": 12148.85,
+      "failure_rate": 0,
+      "freshness_score": 1,
+      "confidence_score": 1,
+      "judge_score": 0.5555555555555556,
+      "quality_score": 0.5555555555555556
+    },
+    "recentSamples": [
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781447186090,
+        "latency_ms": 3459,
+        "latency_ms_p95": 3459,
+        "judge_score": 0,
+        "failure": false,
+        "request_id": "bench-d0da4eb0-42d2-4d2b-8423-8f305df9cc70-p17-tools-multi-hard-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781447191012,
+        "latency_ms": 3414,
+        "latency_ms_p95": 3414,
+        "judge_score": 0,
+        "failure": false,
+        "request_id": "bench-d0da4eb0-42d2-4d2b-8423-8f305df9cc70-x01-max-signal-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781447198949,
+        "latency_ms": 2654,
+        "latency_ms_p95": 2654,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-d0da4eb0-42d2-4d2b-8423-8f305df9cc70-h01-implement-two-sum-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781447236962,
+        "latency_ms": 6116,
+        "latency_ms_p95": 6116,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-d0da4eb0-42d2-4d2b-8423-8f305df9cc70-h02-fix-async-counter-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781447248954,
+        "latency_ms": 3672,
+        "latency_ms_p95": 3672,
+        "judge_score": 0,
+        "failure": false,
+        "request_id": "bench-d0da4eb0-42d2-4d2b-8423-8f305df9cc70-h04-tool-read-router-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781456819456,
+        "latency_ms": 3661,
+        "latency_ms_p95": 3661,
+        "judge_score": 0,
+        "failure": false,
+        "request_id": "bench-b9fba560-fbe1-4d7b-8acf-aa94af06c20c-p17-tools-multi-hard-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781456824666,
+        "latency_ms": 3937,
+        "latency_ms_p95": 3937,
+        "judge_score": 0,
+        "failure": false,
+        "request_id": "bench-b9fba560-fbe1-4d7b-8acf-aa94af06c20c-x01-max-signal-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781456832529,
+        "latency_ms": 2078,
+        "latency_ms_p95": 2078,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-b9fba560-fbe1-4d7b-8acf-aa94af06c20c-h01-implement-two-sum-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781456840046,
+        "latency_ms": 5949,
+        "latency_ms_p95": 5949,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-b9fba560-fbe1-4d7b-8acf-aa94af06c20c-h02-fix-async-counter-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781456847498,
+        "latency_ms": 3696,
+        "latency_ms_p95": 3696,
+        "judge_score": 0,
+        "failure": false,
+        "request_id": "bench-b9fba560-fbe1-4d7b-8acf-aa94af06c20c-h04-tool-read-router-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781456858824,
+        "latency_ms": 3854,
+        "latency_ms_p95": 3854,
+        "judge_score": 0,
+        "failure": false,
+        "request_id": "bench-b9fba560-fbe1-4d7b-8acf-aa94af06c20c-h05-tool-grep-eligibility-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781456866750,
+        "latency_ms": 1870,
+        "latency_ms_p95": 1870,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-b9fba560-fbe1-4d7b-8acf-aa94af06c20c-h06-tool-apply-patch-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781456907961,
+        "latency_ms": 7185,
+        "latency_ms_p95": 7185,
+        "judge_score": 0,
+        "failure": false,
+        "request_id": "bench-b9fba560-fbe1-4d7b-8acf-aa94af06c20c-h07-multi-turn-sla-guard-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781456918736,
+        "latency_ms": 3552,
+        "latency_ms_p95": 3552,
+        "judge_score": 0,
+        "failure": false,
+        "request_id": "bench-b9fba560-fbe1-4d7b-8acf-aa94af06c20c-h08-multi-turn-tool-refine-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781456924533,
+        "latency_ms": 3457,
+        "latency_ms_p95": 3457,
+        "judge_score": 0,
+        "failure": false,
+        "request_id": "bench-b9fba560-fbe1-4d7b-8acf-aa94af06c20c-h09-agent-metrics-chain-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781456929780,
+        "latency_ms": 5585,
+        "latency_ms_p95": 5585,
+        "judge_score": 0,
+        "failure": false,
+        "request_id": "bench-b9fba560-fbe1-4d7b-8acf-aa94af06c20c-h10-agent-read-grep-patch-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781456936960,
+        "latency_ms": 3589,
+        "latency_ms_p95": 3589,
+        "judge_score": 0,
+        "failure": false,
+        "request_id": "bench-b9fba560-fbe1-4d7b-8acf-aa94af06c20c-h15-max-signal-v3-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781458230823,
+        "latency_ms": 1761,
+        "latency_ms_p95": 1761,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-e01-yes-no-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781458236844,
+        "latency_ms": 1546,
+        "latency_ms_p95": 1546,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-e02-single-word-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781458242908,
+        "latency_ms": 1479,
+        "latency_ms_p95": 1479,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-e03-count-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781458248623,
+        "latency_ms": 1470,
+        "latency_ms_p95": 1470,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-e04-capitalize-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781458253665,
+        "latency_ms": 1522,
+        "latency_ms_p95": 1522,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-e05-emoji-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781458258988,
+        "latency_ms": 1428,
+        "latency_ms_p95": 1428,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-e06-timezone-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781458264711,
+        "latency_ms": 1646,
+        "latency_ms_p95": 1646,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-e07-boolean-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781458273521,
+        "latency_ms": 6738,
+        "latency_ms_p95": 6738,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-e08-format-json-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781458278334,
+        "latency_ms": 1183,
+        "latency_ms_p95": 1183,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-p01-easy-greet-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781458284832,
+        "latency_ms": 9741,
+        "latency_ms_p95": 9741,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-p02-easy-math-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781458293230,
+        "latency_ms": 1424,
+        "latency_ms_p95": 1424,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-p03-easy-define-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781458307153,
+        "latency_ms": 1587,
+        "latency_ms_p95": 1587,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-p04-easy-translate-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781458313308,
+        "latency_ms": 1837,
+        "latency_ms_p95": 1837,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-p05-easy-list-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781458321822,
+        "latency_ms": 2695,
+        "latency_ms_p95": 2695,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-p06-medium-explain-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781458327014,
+        "latency_ms": 4476,
+        "latency_ms_p95": 4476,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-p07-medium-compare-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781458333411,
+        "latency_ms": 2700,
+        "latency_ms_p95": 2700,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-p08-medium-summarize-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781458341798,
+        "latency_ms": 12354,
+        "latency_ms_p95": 12354,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-p09-medium-howto-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781458351972,
+        "latency_ms": 5045,
+        "latency_ms_p95": 5045,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-p10-long-context-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781458358882,
+        "latency_ms": 2462,
+        "latency_ms_p95": 2462,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-p11-long-multi-turn-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781458367083,
+        "latency_ms": 3141,
+        "latency_ms_p95": 3141,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-l01-verbose-incident-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781458383227,
+        "latency_ms": 9441,
+        "latency_ms_p95": 9441,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-l02-many-constraints-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781458389546,
+        "latency_ms": 6076,
+        "latency_ms_p95": 6076,
+        "judge_score": 0,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-p12-code-patch-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781458398152,
+        "latency_ms": 3883,
+        "latency_ms_p95": 3883,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-p13-code-debug-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781458405245,
+        "latency_ms": 6374,
+        "latency_ms_p95": 6374,
+        "judge_score": 0,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-p14-schema-validate-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781458413528,
+        "latency_ms": 41658,
+        "latency_ms_p95": 41658,
+        "judge_score": 0,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-c01-full-refactor-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781458426973,
+        "latency_ms": 26201,
+        "latency_ms_p95": 26201,
+        "judge_score": 0,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-c02-ts-generics-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781458432039,
+        "latency_ms": 1163,
+        "latency_ms_p95": 1163,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-p15-tools-read-one-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781458441481,
+        "latency_ms": 3712,
+        "latency_ms_p95": 3712,
+        "judge_score": 0,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-p16-tools-search-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781458454064,
+        "latency_ms": 3778,
+        "latency_ms_p95": 3778,
+        "judge_score": 0,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-t01-tools-list-dir-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781458461492,
+        "latency_ms": 3395,
+        "latency_ms_p95": 3395,
+        "judge_score": 0,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-p17-tools-multi-hard-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781458473889,
+        "latency_ms": 3323,
+        "latency_ms_p95": 3323,
+        "judge_score": 0,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-p18-tools-agent-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781458482225,
+        "latency_ms": 3518,
+        "latency_ms_p95": 3518,
+        "judge_score": 0,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-t02-tools-triple-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781458491301,
+        "latency_ms": 4094,
+        "latency_ms_p95": 4094,
+        "judge_score": 0,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-t03-tools-agent-plan-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781458498482,
+        "latency_ms": 19869,
+        "latency_ms_p95": 19869,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-p19-decompose-plan-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781458504808,
+        "latency_ms": 4857,
+        "latency_ms_p95": 4857,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-p20-decompose-arch-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781458510502,
+        "latency_ms": 11981,
+        "latency_ms_p95": 11981,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-d01-milestones-heavy-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781458516042,
+        "latency_ms": 3599,
+        "latency_ms_p95": 3599,
+        "judge_score": 0,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-x01-max-signal-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781458524417,
+        "latency_ms": 4195,
+        "latency_ms_p95": 4195,
+        "judge_score": 0,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-x02-max-context-tools-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781458530171,
+        "latency_ms": 1310,
+        "latency_ms_p95": 1310,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-p24-exact-local-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781458535048,
+        "latency_ms": 1452,
+        "latency_ms_p95": 1452,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-p25-exact-remote-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781458544972,
+        "latency_ms": 4159,
+        "latency_ms_p95": 4159,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-h01-implement-two-sum-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781458553054,
+        "latency_ms": 5214,
+        "latency_ms_p95": 5214,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-h02-fix-async-counter-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781458560668,
+        "latency_ms": 4368,
+        "latency_ms_p95": 4368,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-h03-implement-lru-cache-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781458566886,
+        "latency_ms": 3508,
+        "latency_ms_p95": 3508,
+        "judge_score": 0,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-h04-tool-read-router-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781458578690,
+        "latency_ms": 3543,
+        "latency_ms_p95": 3543,
+        "judge_score": 0,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-h05-tool-grep-eligibility-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781458585636,
+        "latency_ms": 1612,
+        "latency_ms_p95": 1612,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-h06-tool-apply-patch-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781458636014,
+        "latency_ms": 7701,
+        "latency_ms_p95": 7701,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-h07-multi-turn-sla-guard-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781458648819,
+        "latency_ms": 3214,
+        "latency_ms_p95": 3214,
+        "judge_score": 0,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-h08-multi-turn-tool-refine-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781458653739,
+        "latency_ms": 3383,
+        "latency_ms_p95": 3383,
+        "judge_score": 0,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-h09-agent-metrics-chain-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781458657803,
+        "latency_ms": 7813,
+        "latency_ms_p95": 7813,
+        "judge_score": 0,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-h10-agent-read-grep-patch-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781458672177,
+        "latency_ms": 3713,
+        "latency_ms_p95": 3713,
+        "judge_score": 0,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-h11-decompose-code-verify-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781458690699,
+        "latency_ms": 5728,
+        "latency_ms_p95": 5728,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-h12-four-turn-architecture-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781458700921,
+        "latency_ms": 3780,
+        "latency_ms_p95": 3780,
+        "judge_score": 1,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-h13-parse-nested-json-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781458712024,
+        "latency_ms": 6394,
+        "latency_ms_p95": 6394,
+        "judge_score": 0,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-h14-refactor-extract-helper-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781458720720,
+        "latency_ms": 4288,
+        "latency_ms_p95": 4288,
+        "judge_score": 0,
+        "failure": false,
+        "request_id": "bench-1820b2d1-840b-4e6a-9a05-71e3aa44a659-h15-max-signal-v3-deepseek.litellm.global.deepseek-deepseek-v4-flash"
+      }
+    ],
+    "difficultyProfiles": {
+      "easy": {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "measured_at_ms": 1781458535048,
+        "measurement_window": {
+          "started_at_ms": 1781458230823,
+          "ended_at_ms": 1781458535048
+        },
+        "sample_size": 15,
+        "sources": {
+          "live_request_samples": 0,
+          "benchmark_samples": 15
+        },
+        "latency_ms_p50": 1522,
+        "latency_ms_p95": 7638.899999999997,
+        "failure_rate": 0,
+        "freshness_score": 1,
+        "confidence_score": 0.7051657375555284,
+        "judge_score": 1,
+        "quality_score": 1
+      },
+      "medium": {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "measured_at_ms": 1781458510502,
+        "measurement_window": {
+          "started_at_ms": 1781458321822,
+          "ended_at_ms": 1781458510502
+        },
+        "sample_size": 19,
+        "sources": {
+          "live_request_samples": 0,
+          "benchmark_samples": 19
+        },
+        "latency_ms_p50": 4857,
+        "latency_ms_p95": 27746.699999999968,
+        "failure_rate": 0,
+        "freshness_score": 1,
+        "confidence_score": 0.7619189031733016,
+        "judge_score": 0.6842105263157895,
+        "quality_score": 0.6842105263157895
+      },
+      "hard": {
+        "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "measured_at_ms": 1781458720720,
+        "measurement_window": {
+          "started_at_ms": 1781447186090,
+          "ended_at_ms": 1781458720720
+        },
+        "sample_size": 38,
+        "sources": {
+          "live_request_samples": 0,
+          "benchmark_samples": 38
+        },
+        "latency_ms_p50": 3684,
+        "latency_ms_p95": 7262.4,
+        "failure_rate": 0,
+        "freshness_score": 1,
+        "confidence_score": 0.9317711384854058,
+        "judge_score": 0.3157894736842105,
+        "quality_score": 0.3157894736842105
+      }
+    },
+    "advisoryMaxDifficultyRecommendation": {
+      "recommendedMaxDifficulty": "easy",
+      "thresholds": {
+        "minSamples": 4,
+        "maxFailureRate": 0.2,
+        "minQualityScore": 0.8,
+        "minTokensPerSec": 22
+      },
+      "evaluations": {
+        "easy": {
+          "eligible": true,
+          "rejectionReasons": [],
+          "profile": {
+            "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+            "endpoint_version": "run07-registry-v1:custom-base-url",
+            "measured_at_ms": 1781458535048,
+            "measurement_window": {
+              "started_at_ms": 1781458230823,
+              "ended_at_ms": 1781458535048
+            },
+            "sample_size": 15,
+            "sources": {
+              "live_request_samples": 0,
+              "benchmark_samples": 15
+            },
+            "latency_ms_p50": 1522,
+            "latency_ms_p95": 7638.899999999997,
+            "failure_rate": 0,
+            "freshness_score": 1,
+            "confidence_score": 0.7051657375555284,
+            "judge_score": 1,
+            "quality_score": 1
+          }
+        },
+        "medium": {
+          "eligible": false,
+          "rejectionReasons": [
+            "min-quality-score"
+          ],
+          "profile": {
+            "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+            "endpoint_version": "run07-registry-v1:custom-base-url",
+            "measured_at_ms": 1781458510502,
+            "measurement_window": {
+              "started_at_ms": 1781458321822,
+              "ended_at_ms": 1781458510502
+            },
+            "sample_size": 19,
+            "sources": {
+              "live_request_samples": 0,
+              "benchmark_samples": 19
+            },
+            "latency_ms_p50": 4857,
+            "latency_ms_p95": 27746.699999999968,
+            "failure_rate": 0,
+            "freshness_score": 1,
+            "confidence_score": 0.7619189031733016,
+            "judge_score": 0.6842105263157895,
+            "quality_score": 0.6842105263157895
+          }
+        },
+        "hard": {
+          "eligible": false,
+          "rejectionReasons": [
+            "min-quality-score"
+          ],
+          "profile": {
+            "endpoint_id": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+            "endpoint_version": "run07-registry-v1:custom-base-url",
+            "measured_at_ms": 1781458720720,
+            "measurement_window": {
+              "started_at_ms": 1781447186090,
+              "ended_at_ms": 1781458720720
+            },
+            "sample_size": 38,
+            "sources": {
+              "live_request_samples": 0,
+              "benchmark_samples": 38
+            },
+            "latency_ms_p50": 3684,
+            "latency_ms_p95": 7262.4,
+            "failure_rate": 0,
+            "freshness_score": 1,
+            "confidence_score": 0.9317711384854058,
+            "judge_score": 0.3157894736842105,
+            "quality_score": 0.3157894736842105
+          }
+        }
+      }
+    },
+    "benchmarkCapability": {
+      "overallScore": 0.6363636363636364,
+      "scoresByBucket": {
+        "easy": {
+          "cases": 15,
+          "score": 1
+        },
+        "medium": {
+          "cases": 19,
+          "score": 0.6842105263157895
+        },
+        "hard": {
+          "cases": 21,
+          "score": 0.3333333333333333
+        }
+      },
+      "benchmarkSamples": 72,
+      "sampleCount": 72,
+      "measuredAtMs": 1781458720720,
+      "freshnessScore": 1,
+      "lastRunId": "1820b2d1-840b-4e6a-9a05-71e3aa44a659",
+      "lastRunCompletedAtMs": 1781459755732,
+      "judgeEndpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro"
+    },
+    "routingBenchmarkQuality": {
+      "judge_score": 0.5555555555555556,
+      "quality_score": 0.5555555555555556,
+      "benchmark_samples": 72,
+      "scoresByBucket": {
+        "easy": {
+          "score": 1,
+          "cases": 15
+        },
+        "medium": {
+          "score": 0.6842105263157895,
+          "cases": 19
+        },
+        "hard": {
+          "score": 0.3157894736842105,
+          "cases": 38
+        }
+      }
+    },
+    "routingQualityScore": 0.5555555555555556
+  }
+]

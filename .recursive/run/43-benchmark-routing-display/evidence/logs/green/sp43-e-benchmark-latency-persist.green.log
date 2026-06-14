@@ -1,0 +1,4 @@
+SP43-E GREEN — result.json latencyMs round-trip
+Command: corepack pnpm --filter @role-model-router/runtime-host-bridge exec vitest run test/benchmark-summary.test.ts -t "round-trips latencyMs"
+
+ ✓ benchmark-summary.test.ts — round-trips latencyMs in result.json

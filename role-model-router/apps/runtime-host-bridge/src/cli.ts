@@ -49,7 +49,10 @@ type CliBackend = Pick<
   | "readBenchmarkRun"
   | "readActiveBenchmarkRun"
   | "clearBenchmarkEndpointData"
+  | "clearBenchmarkData"
   | "readBenchmarkSummary"
+  | "listBenchmarkRuns"
+  | "readBenchmarkSummariesByMode"
   | "readBenchmarkPreferences"
   | "updateBenchmarkPreferences"
   | "listLocalModels"
@@ -138,7 +141,10 @@ export function createCliServerOptions(
     readBenchmarkRun: backend.readBenchmarkRun,
     readActiveBenchmarkRun: backend.readActiveBenchmarkRun,
     clearBenchmarkEndpointData: backend.clearBenchmarkEndpointData,
+    clearBenchmarkData: backend.clearBenchmarkData,
     readBenchmarkSummary: backend.readBenchmarkSummary,
+    listBenchmarkRuns: backend.listBenchmarkRuns,
+    readBenchmarkSummariesByMode: backend.readBenchmarkSummariesByMode,
     readBenchmarkPreferences: backend.readBenchmarkPreferences,
     updateBenchmarkPreferences: backend.updateBenchmarkPreferences,
     listLocalModels: backend.listLocalModels,

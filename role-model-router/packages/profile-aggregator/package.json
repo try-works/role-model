@@ -15,6 +15,7 @@
     "@role-model/protocol-types": "workspace:*"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json"
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run test/benchmark-routing-quality.test.ts"
   }
 }

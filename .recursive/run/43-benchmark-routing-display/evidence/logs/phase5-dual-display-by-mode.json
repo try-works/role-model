@@ -1,0 +1,2090 @@
+{
+  "full": {
+    "runId": "1820b2d1-840b-4e6a-9a05-71e3aa44a659",
+    "completedAtMs": 1781459755732,
+    "mode": "full",
+    "suiteId": "routing-capability-v2",
+    "suiteVersion": "3.2",
+    "judgeEndpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+    "judgeModelId": "deepseek/deepseek-v4-pro",
+    "artifactRoot": "1820b2d1-840b-4e6a-9a05-71e3aa44a659",
+    "subjects": [
+      {
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "modelId": "deepseek/deepseek-v4-pro",
+        "overallScore": 0.6545454545454545,
+        "scoresByBucket": {
+          "easy": {
+            "cases": 15,
+            "score": 0.9333333333333333
+          },
+          "medium": {
+            "cases": 19,
+            "score": 0.7368421052631579
+          },
+          "hard": {
+            "cases": 21,
+            "score": 0.38095238095238093
+          }
+        },
+        "passingCaseIds": [
+          "e01-yes-no",
+          "e02-single-word",
+          "e03-count",
+          "e04-capitalize",
+          "e05-emoji",
+          "e06-timezone",
+          "e07-boolean",
+          "p01-easy-greet",
+          "p02-easy-math",
+          "p03-easy-define",
+          "p04-easy-translate",
+          "p05-easy-list",
+          "p06-medium-explain",
+          "p07-medium-compare",
+          "p08-medium-summarize",
+          "p09-medium-howto",
+          "p10-long-context",
+          "p11-long-multi-turn",
+          "l01-verbose-incident",
+          "l02-many-constraints",
+          "p13-code-debug",
+          "c01-full-refactor",
+          "c02-ts-generics",
+          "p15-tools-read-one",
+          "t02-tools-triple",
+          "p19-decompose-plan",
+          "p20-decompose-arch",
+          "p24-exact-local",
+          "p25-exact-remote",
+          "h01-implement-two-sum",
+          "h03-implement-lru-cache",
+          "h06-tool-apply-patch",
+          "h07-multi-turn-sla-guard",
+          "h10-agent-read-grep-patch",
+          "h12-four-turn-architecture",
+          "h13-parse-nested-json"
+        ],
+        "caseCount": 55
+      },
+      {
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "modelId": "deepseek/deepseek-v4-flash",
+        "overallScore": 0.6363636363636364,
+        "scoresByBucket": {
+          "easy": {
+            "cases": 15,
+            "score": 1
+          },
+          "medium": {
+            "cases": 19,
+            "score": 0.6842105263157895
+          },
+          "hard": {
+            "cases": 21,
+            "score": 0.3333333333333333
+          }
+        },
+        "passingCaseIds": [
+          "e01-yes-no",
+          "e02-single-word",
+          "e03-count",
+          "e04-capitalize",
+          "e05-emoji",
+          "e06-timezone",
+          "e07-boolean",
+          "e08-format-json",
+          "p01-easy-greet",
+          "p02-easy-math",
+          "p03-easy-define",
+          "p04-easy-translate",
+          "p05-easy-list",
+          "p06-medium-explain",
+          "p07-medium-compare",
+          "p08-medium-summarize",
+          "p09-medium-howto",
+          "p10-long-context",
+          "p11-long-multi-turn",
+          "l01-verbose-incident",
+          "l02-many-constraints",
+          "p13-code-debug",
+          "p15-tools-read-one",
+          "p19-decompose-plan",
+          "p20-decompose-arch",
+          "d01-milestones-heavy",
+          "p24-exact-local",
+          "p25-exact-remote",
+          "h01-implement-two-sum",
+          "h02-fix-async-counter",
+          "h03-implement-lru-cache",
+          "h06-tool-apply-patch",
+          "h07-multi-turn-sla-guard",
+          "h12-four-turn-architecture",
+          "h13-parse-nested-json"
+        ],
+        "caseCount": 55
+      }
+    ],
+    "caseComparisons": [
+      {
+        "caseId": "c01-full-refactor",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash"
+        ],
+        "rationale": "v4-pro provided a comprehensive answer with a unified diff, JSON schema validation, refactored test code, and detailed explanations, substantively engaging with the code-edit request. v4-flash used a placeholder answer lacking any substantive code, patch, or analysis.",
+        "compareFallback": false,
+        "compareError": null
+      },
+      {
+        "caseId": "c02-ts-generics",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash"
+        ],
+        "rationale": "The second endpoint provides a proper patch hunk with @@ header and comprehensive unit test updates, fully engaging with the code-edit request. The first endpoint does not include a hunk header, violating the MUST NOT rule, and gives only minimal test updates.",
+        "compareFallback": false,
+        "compareError": null
+      },
+      {
+        "caseId": "d01-milestones-heavy",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro"
+        ],
+        "rationale": "The flash endpoint provides a thorough, structured decomposition with clear phases, milestones, verification criteria, and extension points, satisfying all MUST and grading criteria. The pro endpoint only contains placeholder text, offering no substantive plan and therefore fails the essential requirements.",
+        "compareFallback": false,
+        "compareError": null
+      },
+      {
+        "caseId": "e01-yes-no",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro"
+        ],
+        "rationale": "The exemplar answer is 'yes'. The flash endpoint correctly answered 'yes', while the pro endpoint incorrectly answered 'no'. Both delivered valid JSON with the required key, but only the flash endpoint matched the expected pattern and substantive correctness.",
+        "compareFallback": false,
+        "compareError": null
+      },
+      {
+        "caseId": "e02-single-word",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro"
+        ],
+        "rationale": "Both models provided the identical correct answer 'ok' in the required JSON format, fulfilling all criteria.",
+        "compareFallback": false,
+        "compareError": null
+      },
+      {
+        "caseId": "e03-count",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash"
+        ],
+        "rationale": "Both responses correctly list integers 1 through 3, include the required JSON key 'answer', and match the pattern '1.*2.*3'. The deepseek-v4-pro response matches the exemplar exactly with spaces after commas, while deepseek-v4-flash omits spaces. Although both are substantively correct, the pro response shows slightly higher fidelity to the expected exact output format.",
+        "compareFallback": false,
+        "compareError": null
+      },
+      {
+        "caseId": "e04-capitalize",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro"
+        ],
+        "rationale": "Both endpoints correctly capitalize 'hello world' to 'Hello World' and return a JSON object with the required 'answer' key, perfectly matching the expected answer. They are substantively identical and fully meet all checklist requirements.",
+        "compareFallback": false,
+        "compareError": null
+      },
+      {
+        "caseId": "e05-emoji",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro"
+        ],
+        "rationale": "Both models correctly replied with a single smile emoji in the required JSON format. They are substantively identical and follow all instructions.",
+        "compareFallback": false,
+        "compareError": null
+      },
+      {
+        "caseId": "e06-timezone",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro"
+        ],
+        "rationale": "Both models provided the same correct answer 'Coordinated Universal Time' in the required JSON format with the 'answer' key, following the user instruction exactly. There is no substantive difference in correctness or adherence to the checklist.",
+        "compareFallback": false,
+        "compareError": null
+      },
+      {
+        "caseId": "e07-boolean",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro"
+        ],
+        "rationale": "Both answers are identical and correct (true), meeting all requirements.",
+        "compareFallback": false,
+        "compareError": null
+      },
+      {
+        "caseId": "e08-format-json",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro"
+        ],
+        "rationale": "Flash delivered a valid JSON string with name and value keys, matching the expected output. Pro only provided 'something', failing to include the required name/value JSON structure. Thus, flash ranks higher.",
+        "compareFallback": false,
+        "compareError": null
+      },
+      {
+        "caseId": "h01-implement-two-sum",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash"
+        ],
+        "rationale": "Both solutions correctly implement O(n) two‑sum with Map and single pass. The pro version matches the exemplar's return pattern `[map.get(complement)!, i]` exactly, while the flash version adds an unnecessary index‑ordering conditional. The pro version better satisfies the 'SHOULD match patterns' checklist item.",
+        "compareFallback": false,
+        "compareError": null
+      },
+      {
+        "caseId": "h02-fix-async-counter",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro"
+        ],
+        "rationale": "First endpoint provides complete, correct Mutex implementation serializing increments and reliably prints 3. Second endpoint contains an unfinished function and no concluding calls, thus not a valid solution.",
+        "compareFallback": false,
+        "compareError": null
+      },
+      {
+        "caseId": "h03-implement-lru-cache",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro"
+        ],
+        "rationale": "Both implementations are substantively correct and fully meet the requirements: they define an LRUCache class with get and put, correctly evict the least-recently-used item when capacity is exceeded, and are complete working TypeScript. The only minor difference is the private Map variable name ('cache' vs 'map'), which does not affect correctness or functionality. Therefore, they are equally good and have no basis for ranking one above the other.",
+        "compareFallback": false,
+        "compareError": null
+      },
+      {
+        "caseId": "h04-tool-read-router",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro"
+        ],
+        "rationale": "Both models emitted only the read_file tool call and omitted the required 'answer' key containing a function name. Neither submitted the final JSON answer, so both are equally non-compliant with the benchmark's key deliverable. Ranking them in any order is arbitrary; they are tied for worst.",
+        "compareFallback": false,
+        "compareError": null
+      },
+      {
+        "caseId": "h05-tool-grep-eligibility",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash"
+        ],
+        "rationale": "V4 Pro emitted both required tool_calls and bullets, though the pattern 'eligibility' deviates slightly from the mandatory 'evaluateEligibility' and the bullets merely describe grep findings rather than substantive eligibility checks. V4 Flash used the correct pattern but completely omitted the required bullets, making V4 Pro relatively stronger.",
+        "compareFallback": false,
+        "compareError": null
+      },
+      {
+        "caseId": "h06-tool-apply-patch",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro"
+        ],
+        "rationale": "Both responses call apply_patch correctly, include required ---/+++ headers, and change MODE to 'difficulty' with proper @@ hunk markers. The flash model uses a 3-line context hunk (‑1,3/+1,3) which better matches the exemplar and provides more robustness, while the pro model uses a minimal 1‑line hunk. No parameter‑name penalty was applied as both were accepted.",
+        "compareFallback": false,
+        "compareError": null
+      },
+      {
+        "caseId": "h07-multi-turn-sla-guard",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash"
+        ],
+        "rationale": "Pro's code explicitly checks for sole candidate (allowList.length === 1) and denial solely by throughput SLA (filter non-THROUGHPUT_SLA reasons), satisfying the checklist requirements. Flash's code only checks that all candidates have throughput_sla denial, omitting the sole-candidate condition and thus failing to meet the core requirement. While neither matches the exemplar's interface, Pro is more substantively correct against the stated problem and checklist.",
+        "compareFallback": false,
+        "compareError": null
+      },
+      {
+        "caseId": "h08-multi-turn-tool-refine",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro"
+        ],
+        "rationale": "Both models returned identical tool_calls but failed to include the required 'answer' key in the final JSON, making both submissions incomplete and equally incorrect.",
+        "compareFallback": false,
+        "compareError": null
+      },
+      {
+        "caseId": "h09-agent-metrics-chain",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro"
+        ],
+        "rationale": "Both endpoints failed to fully address the prompt: they only emitted the list_endpoints tool call, missing the required get_metrics call and final JSON answer summarizing latency. Neither met the core must-haves, resulting in equally insufficient answers. No substantive advantage between them; tie.",
+        "compareFallback": false,
+        "compareError": null
+      },
+      {
+        "caseId": "h10-agent-read-grep-patch",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash"
+        ],
+        "rationale": "deepseek-v4-pro correctly emitted all three required tool calls (read_file, grep_search, apply_patch) with a valid diff including headers and hunk markers. deepseek-v4-flash omitted the apply_patch call entirely, failing the mandatory requirement.",
+        "compareFallback": false,
+        "compareError": null
+      },
+      {
+        "caseId": "h11-decompose-code-verify",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro"
+        ],
+        "rationale": "Both models only emitted a run_tests tool call but failed to produce the required structured milestones, BenchmarkRunProgress interface, and bullets JSON. They are equally incomplete and scored 0, so they are ranked equally, with order as given.",
+        "compareFallback": false,
+        "compareError": null
+      },
+      {
+        "caseId": "h12-four-turn-architecture",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash"
+        ],
+        "rationale": "Both responses correctly use prior turns, produce a 5-step numbered plan with verification per step, and stay under 180 words. The v4-pro answer provides more concrete verification methods (unit tests, simulated traffic, integration test) and a final integration step, while v4-flash’s criteria are more general. This makes v4-pro slightly stronger in demonstrating verifiable criteria, hence ranked first.",
+        "compareFallback": false,
+        "compareError": null
+      },
+      {
+        "caseId": "h13-parse-nested-json",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro"
+        ],
+        "rationale": "Both responses fully meet the requirements: they define parseRoutingDiagnostics, use try/catch JSON.parse, handle invalid input by returning defaults for difficulty and chosenEndpointId. The flash version includes an additional safety check for non-object parsed values, but it's not necessary. Both are substantively correct and complete.",
+        "compareFallback": false,
+        "compareError": null
+      },
+      {
+        "caseId": "h14-refactor-extract-helper",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro"
+        ],
+        "rationale": "Both models only provided the extracted function code but failed to show the required before and after code blocks, which is a MUST deliverable. Neither submission is substantively correct against the exemplar and checklist, so they are ranked equally poor.",
+        "compareFallback": false,
+        "compareError": null
+      },
+      {
+        "caseId": "h15-max-signal-v3",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro"
+        ],
+        "rationale": "Both responses omit the required apply_patch tool call and the JSON deliverable with plan, patch_summary, and test_snippet. They are identically incomplete relative to the exemplar and checklist, so they are tied at the lowest ranking.",
+        "compareFallback": false,
+        "compareError": null
+      },
+      {
+        "caseId": "l01-verbose-incident",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash"
+        ],
+        "rationale": "Both definitions are substantively correct one-sentence descriptions of difficulty-based routing. The pro answer is slightly more aligned with the concise style of the exemplar, focusing on directing requests based on a predicted difficulty score without adding extra implementation details. The flash answer is also accurate but elaborates with classification signals, which, while not incorrect, deviates somewhat from the minimal definition expected.",
+        "compareFallback": false,
+        "compareError": null
+      },
+      {
+        "caseId": "l02-many-constraints",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro"
+        ],
+        "rationale": "Both responses meet all constraints: bullet-only, ≤6 bullets, mention local/remote/cache invalidation reasons and rubric signals, no 'however', end with a one-line recommendation, word count under 120. Substantive explanations are accurate and equivalent; neither shows any error or omission.",
+        "compareFallback": false,
+        "compareError": null
+      },
+      {
+        "caseId": "p01-easy-greet",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro"
+        ],
+        "rationale": "Both responses contain the required 'answer' key and greet in one sentence as instructed. The exemplar expects a concise answer, and both are concise; there is no substantive difference in correctness.",
+        "compareFallback": false,
+        "compareError": null
+      },
+      {
+        "caseId": "p02-easy-math",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro"
+        ],
+        "rationale": "Both responses contain the required JSON with answer='4', matching the exemplar and all checklist criteria. They are identically correct, so they tie for best rank.",
+        "compareFallback": false,
+        "compareError": null
+      },
+      {
+        "caseId": "p03-easy-define",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro"
+        ],
+        "rationale": "Both definitions are substantively correct: they succinctly define API as Application Programming Interface, fulfilling the checklist. They differ only in phrasing ('applications' vs. 'systems', 'communicate and interact' vs. 'communicate and share data'), not in correctness. No criterion allows distinguishing, so ranking is arbitrary.",
+        "compareFallback": false,
+        "compareError": null
+      },
+      {
+        "caseId": "p04-easy-translate",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash"
+        ],
+        "rationale": "Both endpoints correctly translate 'good morning' to French and include the required key 'answer'. However, the exemplar and the SHOULD pattern specify 'Bonjour' with capital B. The pro endpoint matches this exactly, while the flash endpoint gives lowercase 'bonjour', making the pro endpoint's response more aligned with the expected pattern.",
+        "compareFallback": false,
+        "compareError": null
+      },
+      {
+        "caseId": "p05-easy-list",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro"
+        ],
+        "rationale": "Both endpoints returned identical and correct JSON deliverables: {\"answer\":\"red, blue, green\"}. Each meets all checklist requirements (lists three colors, includes answer key, non-empty string). There are no differences in quality, so they are tied.",
+        "compareFallback": false,
+        "compareError": null
+      },
+      {
+        "caseId": "p06-medium-explain",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro"
+        ],
+        "rationale": "Both answers correctly explain reverse proxy functionality and its use with LLM runtimes, providing relevant technical detail. They are substantively equivalent and fully meet the checklist requirements.",
+        "compareFallback": false,
+        "compareError": null
+      },
+      {
+        "caseId": "p07-medium-compare",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro"
+        ],
+        "rationale": "Both answers provide relevant technical pros and cons. The first answer offers a more comprehensive and detailed breakdown of factors including privacy, offline capability, latency, customization, costs, hardware requirements, model size, maintenance, energy, scalability, and vendor lock-in, while the second answer covers the key points but with less depth. Thus the first answer is ranked higher.",
+        "compareFallback": false,
+        "compareError": null
+      },
+      {
+        "caseId": "p08-medium-summarize",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro"
+        ],
+        "rationale": "Both answers correctly describe the routing strategy and its benefits. The flash-model answer additionally mentions balancing computational load and improving throughput, providing more detailed technical substantiation beyond the basic cost/latency/privacy points, making it slightly more comprehensive.",
+        "compareFallback": false,
+        "compareError": null
+      },
+      {
+        "caseId": "p09-medium-howto",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro"
+        ],
+        "rationale": "Both answers correctly set the base URL and provide example code. However, v4-flash includes the required api_key placeholder, making it more complete, while v4-pro omits it in the new client example and includes a deprecated method.",
+        "compareFallback": false,
+        "compareError": null
+      },
+      {
+        "caseId": "p10-long-context",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash"
+        ],
+        "rationale": "The pro model's answer precisely mirrors the incident report, listing both root causes and the single merge-preserving fix without extraneous suggestions. The flash model's answer, while identifying both root causes, introduced an additional fix (adjusting throughput SLA) not described in the report, reducing alignment with the exemplar.",
+        "compareFallback": false,
+        "compareError": null
+      },
+      {
+        "caseId": "p11-long-multi-turn",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro"
+        ],
+        "rationale": "Both extend the checklist with logs, telemetry, and Strategy C alias tests as requested, but the Flash model provides more concrete and actionable details (log ingestion/search, specific metrics, C-prefixed routing assertion) which makes it slightly more correct and informative.",
+        "compareFallback": false,
+        "compareError": null
+      },
+      {
+        "caseId": "p12-code-patch",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro"
+        ],
+        "rationale": "Both models failed to provide a unified diff patch with ---/+++ hunks for router.ts and a refactor rationale, as no code-edit workflow was supplied. Each response is an error message, equally lacking the required deliverables. No substantive difference in correctness.",
+        "compareFallback": false,
+        "compareError": null
+      },
+      {
+        "caseId": "p13-code-debug",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash"
+        ],
+        "rationale": "The pro model provides a comprehensive list of concrete eligibility checks (health, filters, circuit breaker, rate limiting, capabilities) that directly address why an endpoint might be missing from the registry and cause an empty chosen_endpoint_id. This is more actionable and substantive than the flash model's generic suggestions (e.g., 'ensure chosen_endpoint_id is not empty') which restate the symptom rather than probing underlying causes. While neither matches the exemplar's specific mention of throughput SLA or allowEndpoints, the pro answer better covers the range of relevant checks, making it the superior response.",
+        "compareFallback": false,
+        "compareError": null
+      },
+      {
+        "caseId": "p14-schema-validate",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro"
+        ],
+        "rationale": "Both responses fail to engage substantively with the code-edit or debugging request, as they merely state that the schema and test suite were not provided and request the input. Neither performs any validation, analysis, or refactoring, resulting in identical scores and no substantive differentiation. The ranking places them in a tied order; either could be considered equally insufficient.",
+        "compareFallback": false,
+        "compareError": null
+      },
+      {
+        "caseId": "p15-tools-read-one",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro"
+        ],
+        "rationale": "Both responses correctly emit a read_file tool call without refusing, meeting the MUST criteria. The choice of file path differs but is not specified in the prompt, making both attempts equally valid. No substantive difference in correctness.",
+        "compareFallback": false,
+        "compareError": null
+      },
+      {
+        "caseId": "p16-tools-search",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro"
+        ],
+        "rationale": "Both models scored 0 and provided no valid deliverable, failing to attempt the requested tool workflow. They are tied for worst.",
+        "compareFallback": false,
+        "compareError": null
+      },
+      {
+        "caseId": "p17-tools-multi-hard",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro"
+        ],
+        "rationale": "Both responses are identical: they include only a read_file tool call, missing the required apply_patch call, the 'answer' field, and any schema/test validation acknowledgement. Thus both are equally incorrect, ranking tied at the bottom.",
+        "compareFallback": false,
+        "compareError": null
+      },
+      {
+        "caseId": "p18-tools-agent",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro"
+        ],
+        "rationale": "Both models produced empty deliverables, thus neither attempted the required tool workflow. Both are equally non-compliant, resulting in a tie for last place. The ranking order is arbitrary.",
+        "compareFallback": false,
+        "compareError": null
+      },
+      {
+        "caseId": "p19-decompose-plan",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro"
+        ],
+        "rationale": "Both responses provide structured decomposition with phases, milestones, and verification criteria, meeting the required MUSTs. The v4-flash deliverable is more detailed, covering a feasibility phase, data pipeline, model training, shadow testing, gradual rollout, and continuous learning, which aligns closely with the 'difficulty learning' aspect. The v4-pro deliverable is also valid but is slightly more generic and less comprehensive in its learning-specific steps. Thus, v4-flash ranks higher.",
+        "compareFallback": false,
+        "compareError": null
+      },
+      {
+        "caseId": "p20-decompose-arch",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro"
+        ],
+        "rationale": "Both responses provide a clear, structured decomposition of the routing pipeline into six phases with extension points, satisfying the checklist requirement. The first response adds a cohesive final statement about a plugin model, showing slightly more thorough synthesis, though both are otherwise substantively equivalent. Ranking is based on this minor distinction in elaboration.",
+        "compareFallback": false,
+        "compareError": null
+      },
+      {
+        "caseId": "p24-exact-local",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro"
+        ],
+        "rationale": "Both outputs exactly match the required deliverable: a JSON with answer 'routed-local', satisfying all MUST criteria and scoring perfectly.",
+        "compareFallback": false,
+        "compareError": null
+      },
+      {
+        "caseId": "p25-exact-remote",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro"
+        ],
+        "rationale": "Both endpoints provided the exact required JSON response {\"answer\":\"routed-remote\"} with correct format, no errors, and fully satisfy the checklist. They are indistinguishable in correctness.",
+        "compareFallback": false,
+        "compareError": null
+      },
+      {
+        "caseId": "t01-tools-list-dir",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro"
+        ],
+        "rationale": "Both deliverables are empty, so neither fulfills the requirement to produce a JSON answer. Both fail to attempt the tool workflow, which is a MUST criterion. Since they are equally non-compliant and both score 0, alphabetical ordering is used for tie-breaking, listing the flash variant first.",
+        "compareFallback": false,
+        "compareError": null
+      },
+      {
+        "caseId": "t02-tools-triple",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash"
+        ],
+        "rationale": "The pro model provided a valid answer meeting all MUST requirements (coherent plan, required JSON key 'answer', no MUST-NOT violations) and achieved a score of 1. The flash model failed to produce any valid deliverable (score 0), likely due to refusal or malformed output. Therefore, pro is the better response.",
+        "compareFallback": false,
+        "compareError": null
+      },
+      {
+        "caseId": "t03-tools-agent-plan",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro"
+        ],
+        "rationale": "Both models provided empty deliverables with no response content, failing to attempt the requested tool workflow in any way. They are equally non-substantive and score zero.",
+        "compareFallback": false,
+        "compareError": null
+      },
+      {
+        "caseId": "x01-max-signal",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro"
+        ],
+        "rationale": "Both models omitted the mandatory apply_patch tool call and did not output the required JSON with plan, patch_summary, and test_snippet. As they are equally incomplete and fail the core checklist, they are ranked arbitrarily with both considered equally poor.",
+        "compareFallback": false,
+        "compareError": null
+      },
+      {
+        "caseId": "x02-max-context-tools",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro"
+        ],
+        "rationale": "Neither deliverable addresses the incident context or provides routing recommendations for hard prompts. Both responses are empty or missing required JSON structure, failing to meet the minimum criteria.",
+        "compareFallback": false,
+        "compareError": null
+      }
+    ],
+    "caseAudits": [
+      {
+        "caseId": "e01-yes-no",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 3188,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "e02-single-word",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 1646,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "e03-count",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 1976,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "e04-capitalize",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 2347,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "e05-emoji",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 2453,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "e06-timezone",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 2325,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "e07-boolean",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 1646,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "e08-format-json",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 7426,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "p01-easy-greet",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 2240,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "p02-easy-math",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 11844,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "p03-easy-define",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 2619,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "p04-easy-translate",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 2472,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "p05-easy-list",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 1955,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "p06-medium-explain",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 7654,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "p07-medium-compare",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 10278,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "p08-medium-summarize",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 4462,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "p09-medium-howto",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 4343,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "p10-long-context",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 16680,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "p11-long-multi-turn",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 2928,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "l01-verbose-incident",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 4786,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "l02-many-constraints",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 14019,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "p12-code-patch",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 4810,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "p13-code-debug",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 8973,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "p14-schema-validate",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 5749,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "c01-full-refactor",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 77356,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "c02-ts-generics",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 49280,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "p15-tools-read-one",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 2190,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "p16-tools-search",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 4072,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "t01-tools-list-dir",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 3912,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "p17-tools-multi-hard",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 4030,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "p18-tools-agent",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 4087,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "t02-tools-triple",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 6833,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "t03-tools-agent-plan",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 4495,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "p19-decompose-plan",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 9909,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "p20-decompose-arch",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 7828,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "d01-milestones-heavy",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 42243,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "x01-max-signal",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 4349,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "x02-max-context-tools",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 11552,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "p24-exact-local",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 1882,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "p25-exact-remote",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 1444,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "h01-implement-two-sum",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 4043,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "h02-fix-async-counter",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 17969,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "h03-implement-lru-cache",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 4743,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "h04-tool-read-router",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 4021,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "h05-tool-grep-eligibility",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 9464,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "h06-tool-apply-patch",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 2059,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "h07-multi-turn-sla-guard",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 16160,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "h08-multi-turn-tool-refine",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 4462,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "h09-agent-metrics-chain",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 5018,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "h10-agent-read-grep-patch",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 2645,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "h11-decompose-code-verify",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 4421,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "h12-four-turn-architecture",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 7453,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "h13-parse-nested-json",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 7247,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "h14-refactor-extract-helper",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 10049,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "h15-max-signal-v3",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 4236,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "e01-yes-no",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 1761,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "e02-single-word",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 1546,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "e03-count",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 1479,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "e04-capitalize",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 1470,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "e05-emoji",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 1522,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "e06-timezone",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 1428,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "e07-boolean",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 1646,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "e08-format-json",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 6738,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "p01-easy-greet",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 1183,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "p02-easy-math",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 9741,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "p03-easy-define",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 1424,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "p04-easy-translate",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 1587,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "p05-easy-list",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 1837,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "p06-medium-explain",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 2695,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "p07-medium-compare",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 4476,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "p08-medium-summarize",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 2700,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "p09-medium-howto",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 12354,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "p10-long-context",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 5045,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "p11-long-multi-turn",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 2462,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "l01-verbose-incident",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 3141,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "l02-many-constraints",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 9441,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "p12-code-patch",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 6076,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "p13-code-debug",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 3883,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "p14-schema-validate",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 6374,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "c01-full-refactor",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 41658,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "c02-ts-generics",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 26201,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "p15-tools-read-one",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 1163,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "p16-tools-search",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 3712,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "t01-tools-list-dir",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 3778,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "p17-tools-multi-hard",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 3395,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "p18-tools-agent",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 3323,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "t02-tools-triple",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 3518,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "t03-tools-agent-plan",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 4094,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "p19-decompose-plan",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 19869,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "p20-decompose-arch",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 4857,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "d01-milestones-heavy",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 11981,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "x01-max-signal",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 3599,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "x02-max-context-tools",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 4195,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "p24-exact-local",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 1310,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "p25-exact-remote",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 1452,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "h01-implement-two-sum",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 4159,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "h02-fix-async-counter",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 5214,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "h03-implement-lru-cache",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 4368,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "h04-tool-read-router",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 3508,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "h05-tool-grep-eligibility",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 3543,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "h06-tool-apply-patch",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 1612,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "h07-multi-turn-sla-guard",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 7701,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "h08-multi-turn-tool-refine",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 3214,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "h09-agent-metrics-chain",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 3383,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "h10-agent-read-grep-patch",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 7813,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "h11-decompose-code-verify",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 3713,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "h12-four-turn-architecture",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 5728,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "h13-parse-nested-json",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 3780,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "h14-refactor-extract-helper",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 6394,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "h15-max-signal-v3",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 4288,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      }
+    ],
+    "manifest": {
+      "executionCompletedAtMs": 1781458221014,
+      "gradingCompletedAtMs": 1781459755732,
+      "judgeArtifactCount": 220,
+      "compareArtifactCount": 55
+    }
+  },
+  "quick": {
+    "runId": "b9fba560-fbe1-4d7b-8acf-aa94af06c20c",
+    "completedAtMs": 1781457250066,
+    "mode": "quick",
+    "suiteId": "routing-capability-v2",
+    "suiteVersion": "3.2",
+    "judgeEndpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+    "judgeModelId": "deepseek/deepseek-v4-pro",
+    "artifactRoot": "b9fba560-fbe1-4d7b-8acf-aa94af06c20c",
+    "subjects": [
+      {
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "modelId": "deepseek/deepseek-v4-pro",
+        "overallScore": 0.5,
+        "scoresByBucket": {
+          "easy": {
+            "cases": 0,
+            "score": 0
+          },
+          "medium": {
+            "cases": 0,
+            "score": 0
+          },
+          "hard": {
+            "cases": 12,
+            "score": 0.5
+          }
+        },
+        "passingCaseIds": [
+          "h01-implement-two-sum",
+          "h02-fix-async-counter",
+          "h05-tool-grep-eligibility",
+          "h06-tool-apply-patch",
+          "h07-multi-turn-sla-guard",
+          "h10-agent-read-grep-patch"
+        ],
+        "caseCount": 12
+      },
+      {
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "modelId": "deepseek/deepseek-v4-flash",
+        "overallScore": 0.25,
+        "scoresByBucket": {
+          "easy": {
+            "cases": 0,
+            "score": 0
+          },
+          "medium": {
+            "cases": 0,
+            "score": 0
+          },
+          "hard": {
+            "cases": 12,
+            "score": 0.25
+          }
+        },
+        "passingCaseIds": [
+          "h01-implement-two-sum",
+          "h02-fix-async-counter",
+          "h06-tool-apply-patch"
+        ],
+        "caseCount": 12
+      }
+    ],
+    "caseComparisons": [
+      {
+        "caseId": "h01-implement-two-sum",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash"
+        ],
+        "rationale": "Both implement O(n) single-pass with Map, return two indices, and have no nested loops. The v4-pro version throws an Error when no pair is found, exactly matching the exemplar; the v4-flash version returns [-1, -1] with a comment, which is a minor style deviation. Both are functionally correct, but v4-pro is more consistent with the provided exemplar.",
+        "compareFallback": false,
+        "compareError": null
+      },
+      {
+        "caseId": "h02-fix-async-counter",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash"
+        ],
+        "rationale": "Both solutions implement a mutex to serialize increments, fixing the race condition and reliably producing count 3. The deepseek-v4-pro version includes a try/finally block for safe lock release, making it marginally more robust. Both are complete and comply with the checklist.",
+        "compareFallback": false,
+        "compareError": null
+      },
+      {
+        "caseId": "h04-tool-read-router",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro"
+        ],
+        "rationale": "Both models failed to provide the required `answer` JSON after tools succeeded. They only emitted tool calls without the final deliverable, missing the `answer` key and function name. Thus, both are equally incorrect and rank at the bottom.",
+        "compareFallback": false,
+        "compareError": null
+      },
+      {
+        "caseId": "h05-tool-grep-eligibility",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash"
+        ],
+        "rationale": "DeepSeek Pro fulfilled all mandatory requirements: it called grep_search with the correct pattern 'evaluateEligibility' and provided the required two bullets summarizing eligibility checks. DeepSeek Flash omitted the bullets entirely, making the response incomplete and non-compliant with the deliverable format.",
+        "compareFallback": false,
+        "compareError": null
+      },
+      {
+        "caseId": "h06-tool-apply-patch",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro"
+        ],
+        "rationale": "Both calls use apply_patch with a diff containing ---/+++ headers and correctly changing 'baseline' to 'difficulty'. The first response adds extra context (export line) that does not harm correctness, the second minimal diff is also valid. Neither violates MUST NOT rules, and both satisfy all MUST and SHOULD criteria.",
+        "compareFallback": false,
+        "compareError": null
+      },
+      {
+        "caseId": "h07-multi-turn-sla-guard",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash"
+        ],
+        "rationale": "The pro endpoint delivers a clean, simple guard that correctly allows sole-candidate fallback when the only endpoint is hard-denied due to throughput SLA. It directly addresses the requirement without unnecessary constraints. The flash endpoint introduces extraneous checks (remote-only type, HTTP 400 status, specific error codes) that over-specify the scenario, making it less general and less aligned with a straightforward implementation of the sole-candidate fallback condition. Both use multi-turn context, but the pro function's logic is more substantively correct against the described case and the provided exemplar's intent.",
+        "compareFallback": false,
+        "compareError": null
+      },
+      {
+        "caseId": "h08-multi-turn-tool-refine",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro"
+        ],
+        "rationale": "Both deliverables only included a tool_calls object without the required answer JSON fence. The benchmark rules require after tool calls to output a ```json fence with an answer key, which neither provided. They are identically incomplete, so ranking order is arbitrary.",
+        "compareFallback": false,
+        "compareError": null
+      },
+      {
+        "caseId": "h09-agent-metrics-chain",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro"
+        ],
+        "rationale": "Both endpoints failed to call get_metrics and only emitted list_endpoints, violating the MUST requirement to call both APIs before summarizing latency. Neither delivered a final answer JSON, resulting in substantively incomplete responses. Thus they are ranked equally worst.",
+        "compareFallback": false,
+        "compareError": null
+      },
+      {
+        "caseId": "h10-agent-read-grep-patch",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash"
+        ],
+        "rationale": "The pro model output all three required tool calls (read_file, grep_search for 'evaluateEligibility', apply_patch) and the apply_patch diff includes proper ---/+++ headers and a @@ hunk marker with real content, meeting the checklist. The flash model only emitted read_file and grep_search, completely missing apply_patch, which is a mandatory tool call.",
+        "compareFallback": false,
+        "compareError": null
+      },
+      {
+        "caseId": "h15-max-signal-v3",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro"
+        ],
+        "rationale": "Both endpoints produced identical deliverables that omit the required apply_patch tool call, plan, patch_summary, and test_snippet, making them equally incomplete and incorrect against the checklist. Neither meets the substantive criteria, so no meaningful ranking distinction exists.",
+        "compareFallback": false,
+        "compareError": null
+      },
+      {
+        "caseId": "p17-tools-multi-hard",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro"
+        ],
+        "rationale": "Both responses call read_file but omit the required apply_patch tool call and the answer JSON. They fail the MUST checklist items equally, so no meaningful ranking difference.",
+        "compareFallback": false,
+        "compareError": null
+      },
+      {
+        "caseId": "x01-max-signal",
+        "relativeRanking": [
+          "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+          "deepseek.litellm.global.deepseek-deepseek-v4-pro"
+        ],
+        "rationale": "Both responses are equally incomplete: they provide only read_file and grep_search tool calls, missing the required apply_patch, structured plan, patch_summary, and test_snippet. No substantive difference in correctness.",
+        "compareFallback": false,
+        "compareError": null
+      }
+    ],
+    "caseAudits": [
+      {
+        "caseId": "p17-tools-multi-hard",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 4034,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "x01-max-signal",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 4486,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "h01-implement-two-sum",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 6788,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "h02-fix-async-counter",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 9871,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "h04-tool-read-router",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 3467,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "h05-tool-grep-eligibility",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 7190,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "h06-tool-apply-patch",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 1952,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "h07-multi-turn-sla-guard",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 18559,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "h08-multi-turn-tool-refine",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 3994,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "h09-agent-metrics-chain",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 4911,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "h10-agent-read-grep-patch",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 2882,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "h15-max-signal-v3",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+        "latencyMs": 4354,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "p17-tools-multi-hard",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 3661,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "x01-max-signal",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 3937,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "h01-implement-two-sum",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 2078,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "h02-fix-async-counter",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 5949,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "h04-tool-read-router",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 3696,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "h05-tool-grep-eligibility",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 3854,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "h06-tool-apply-patch",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 1870,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "h07-multi-turn-sla-guard",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 7185,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "h08-multi-turn-tool-refine",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 3552,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "h09-agent-metrics-chain",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 3457,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "h10-agent-read-grep-patch",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 5585,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      {
+        "caseId": "h15-max-signal-v3",
+        "endpointId": "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+        "latencyMs": 3589,
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      }
+    ],
+    "manifest": {
+      "executionCompletedAtMs": 1781456809643,
+      "gradingCompletedAtMs": 1781457250066,
+      "judgeArtifactCount": 48,
+      "compareArtifactCount": 12
+    }
+  }
+}

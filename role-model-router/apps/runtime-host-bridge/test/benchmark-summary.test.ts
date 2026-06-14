@@ -11,7 +11,10 @@ import {
 import {
   EMPTY_BENCHMARK_SUMMARY,
   buildBenchmarkCapabilityForEndpoint,
+  listBenchmarkRuns,
+  readBenchmarkSummariesByMode,
   readLatestBenchmarkSummary,
+  readLatestBenchmarkSummaryByMode,
   writeBenchmarkRunResult,
 } from "../src/benchmark-summary.js";
 
@@ -166,6 +169,7 @@ describe("benchmark-summary", () => {
       {
         caseId: "h05",
         endpointId: "moonshot.kimi",
+        latencyMs: undefined,
         parseSuccess: undefined,
         judgeError: undefined,
         judgeUnavailable: undefined,
@@ -174,6 +178,74 @@ describe("benchmark-summary", () => {
       {
         caseId: "h06",
         endpointId: "moonshot.kimi",
+        latencyMs: undefined,
+        parseSuccess: undefined,
+        judgeError: undefined,
+        judgeUnavailable: undefined,
+        cappedByValidator: undefined,
+      },
+    ]);
+  });
+
+  test("round-trips latencyMs in result.json", async () => {
+    const root = await createArtifactRoot();
+    const runId = "run-latency";
+
+    await writeBenchmarkRunManifest(root, {
+      runId,
+      suiteId: "routing-capability-v2",
+      mode: "quick",
+      judgeEndpointId: "judge.latency",
+      startedAtMs: 1,
+      executionCompletedAtMs: 2,
+      gradingCompletedAtMs: 3,
+      endpointIds: ["local.lfm"],
+      caseIds: ["h01"],
+      responseCount: 1,
+      judgeArtifactCount: 1,
+      compareArtifactCount: 0,
+    });
+    await writeBenchmarkRunResult(root, {
+      runId,
+      suiteId: "routing-capability-v2",
+      suiteVersion: "2.0",
+      mode: "quick",
+      judgeEndpointId: "judge.latency",
+      startedAtMs: 1,
+      completedAtMs: 3,
+      endpointGrades: [
+        {
+          endpointId: "local.lfm",
+          modelId: "lfm2.5",
+          sourceType: "local",
+          overallScore: 0.8,
+          byDifficulty: {
+            easy: { score: 0, cases: 0 },
+            medium: { score: 0, cases: 0 },
+            hard: { score: 0.8, cases: 1 },
+          },
+          caseResults: [
+            {
+              caseId: "h01",
+              difficultyBucket: "hard",
+              score: 0.8,
+              latencyMs: 1_234,
+            },
+          ],
+        },
+      ],
+    });
+
+    const summary = await readLatestBenchmarkSummary({
+      artifactRoot: root,
+      resolveModelId: () => "lfm2.5",
+    });
+
+    expect(summary.caseAudits).toEqual([
+      {
+        caseId: "h01",
+        endpointId: "local.lfm",
+        latencyMs: 1_234,
         parseSuccess: undefined,
         judgeError: undefined,
         judgeUnavailable: undefined,
@@ -237,5 +309,160 @@ describe("benchmark-summary", () => {
     expect(capability?.benchmarkSamples).toBe(12);
     expect(capability?.lastRunId).toBe("run-newer");
     expect(capability?.scoresByBucket?.hard?.score).toBe(0.4);
+  });
+
+  test("lists completed runs and resolves latest summary per mode", async () => {
+    const root = await createArtifactRoot();
+    const fullRunId = "run-full";
+    const quickRunId = "run-quick";
+
+    await writeBenchmarkRunManifest(root, {
+      runId: fullRunId,
+      suiteId: "routing-capability-v2",
+      mode: "full",
+      judgeEndpointId: "judge.full",
+      startedAtMs: 100,
+      executionCompletedAtMs: 200,
+      gradingCompletedAtMs: 300,
+      endpointIds: ["endpoint.full"],
+      caseIds: ["f01", "f02", "f03"],
+      responseCount: 3,
+      judgeArtifactCount: 3,
+      compareArtifactCount: 0,
+    });
+    await writeBenchmarkRunResult(root, {
+      runId: fullRunId,
+      suiteId: "routing-capability-v2",
+      suiteVersion: "2.0",
+      mode: "full",
+      judgeEndpointId: "judge.full",
+      startedAtMs: 100,
+      completedAtMs: 300,
+      endpointGrades: [
+        {
+          endpointId: "endpoint.full",
+          modelId: "model-full",
+          sourceType: "local",
+          overallScore: 0.82,
+          byDifficulty: {
+            easy: { score: 0.9, cases: 1 },
+            medium: { score: 0.8, cases: 1 },
+            hard: { score: 0.75, cases: 1 },
+          },
+          caseResults: [
+            { caseId: "f01", difficultyBucket: "easy", score: 0.9 },
+            { caseId: "f02", difficultyBucket: "medium", score: 0.8 },
+            { caseId: "f03", difficultyBucket: "hard", score: 0.75 },
+          ],
+        },
+      ],
+    });
+
+    await writeBenchmarkRunManifest(root, {
+      runId: quickRunId,
+      suiteId: "routing-capability-v2",
+      mode: "quick",
+      judgeEndpointId: "judge.quick",
+      startedAtMs: 400,
+      executionCompletedAtMs: 500,
+      gradingCompletedAtMs: 600,
+      endpointIds: ["endpoint.quick"],
+      caseIds: ["q01"],
+      responseCount: 1,
+      judgeArtifactCount: 1,
+      compareArtifactCount: 0,
+    });
+    await writeBenchmarkRunResult(root, {
+      runId: quickRunId,
+      suiteId: "routing-capability-v2",
+      suiteVersion: "2.0",
+      mode: "quick",
+      judgeEndpointId: "judge.quick",
+      startedAtMs: 400,
+      completedAtMs: 600,
+      endpointGrades: [
+        {
+          endpointId: "endpoint.quick",
+          modelId: "model-quick",
+          sourceType: "remote",
+          overallScore: 0.71,
+          byDifficulty: {
+            easy: { score: 0, cases: 0 },
+            medium: { score: 0, cases: 0 },
+            hard: { score: 0.71, cases: 1 },
+          },
+          caseResults: [{ caseId: "q01", difficultyBucket: "hard", score: 0.71 }],
+        },
+      ],
+    });
+
+    await expect(listBenchmarkRuns(root)).resolves.toEqual([
+      {
+        runId: quickRunId,
+        mode: "quick",
+        completedAtMs: 600,
+        suiteId: "routing-capability-v2",
+        caseCount: 1,
+        endpointIds: ["endpoint.quick"],
+      },
+      {
+        runId: fullRunId,
+        mode: "full",
+        completedAtMs: 300,
+        suiteId: "routing-capability-v2",
+        caseCount: 3,
+        endpointIds: ["endpoint.full"],
+      },
+    ]);
+
+    await expect(
+      readLatestBenchmarkSummaryByMode({
+        artifactRoot: root,
+        mode: "full",
+        resolveModelId: (endpointId) => endpointId,
+      }),
+    ).resolves.toEqual(
+      expect.objectContaining({
+        runId: fullRunId,
+        mode: "full",
+        completedAtMs: 300,
+        subjects: [
+          expect.objectContaining({
+            endpointId: "endpoint.full",
+            overallScore: 0.82,
+          }),
+        ],
+      }),
+    );
+
+    await expect(
+      readLatestBenchmarkSummaryByMode({
+        artifactRoot: root,
+        mode: "quick",
+        resolveModelId: (endpointId) => endpointId,
+      }),
+    ).resolves.toEqual(
+      expect.objectContaining({
+        runId: quickRunId,
+        mode: "quick",
+        completedAtMs: 600,
+        subjects: [
+          expect.objectContaining({
+            endpointId: "endpoint.quick",
+            overallScore: 0.71,
+          }),
+        ],
+      }),
+    );
+
+    await expect(
+      readBenchmarkSummariesByMode({
+        artifactRoot: root,
+        resolveModelId: (endpointId) => endpointId,
+      }),
+    ).resolves.toEqual({
+      full: expect.objectContaining({ runId: fullRunId, mode: "full" }),
+      quick: expect.objectContaining({ runId: quickRunId, mode: "quick" }),
+    });
   });
 });

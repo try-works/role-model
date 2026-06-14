@@ -1,0 +1,20 @@
+
+> @role-model-router/runtime-ui@ test D:\DEV\role-model\.worktrees\43-benchmark-routing-display\role-model-router\apps\runtime-ui
+> vitest run app/lib/runtime-api.test.ts app/lib/view-models.test.ts app/lib/device-authorization.test.ts app/lib/design-system.test.ts app/lib/provider-account-state.test.ts app/lib/router-candidate-labels.test.ts app/lib/benchmark-latency.test.ts
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/43-benchmark-routing-display/role-model-router/apps/runtime-ui
+
+ Γ£ô app/lib/device-authorization.test.ts (11 tests) 19ms
+ Γ£ô app/lib/provider-account-state.test.ts (2 tests) 9ms
+ Γ£ô app/lib/benchmark-latency.test.ts (2 tests) 7ms
+ Γ£ô app/lib/router-candidate-labels.test.ts (3 tests) 6ms
+ Γ£ô app/lib/view-models.test.ts (22 tests) 82ms
+ Γ£ô app/lib/runtime-api.test.ts (37 tests) 87ms
+ Γ£ô app/lib/design-system.test.ts (22 tests) 106ms
+
+ Test Files  7 passed (7)
+      Tests  99 passed (99)
+   Start at  14:39:57
+   Duration  2.43s (transform 1.36s, setup 0ms, collect 2.39s, tests 316ms, environment 3ms, prepare 2.21s)
+

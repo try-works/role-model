@@ -1,0 +1,5 @@
+SP43-B RED — benchmark-routing-quality module missing on baseline
+Command: corepack pnpm --filter @role-model-router/profile-aggregator test
+
+Error: Cannot find module './benchmark-routing-quality.js' / test file missing
+Phase 3 adds packages/profile-aggregator/src/benchmark-routing-quality.ts + tests.

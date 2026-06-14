@@ -639,6 +639,16 @@ export interface RouterCandidate {
   readonly difficultyProfiles?: Record<string, unknown>;
   readonly advisoryMaxDifficultyRecommendation?: Record<string, unknown> | null;
   readonly benchmarkCapability?: BenchmarkCapability | null;
+  readonly routingBenchmarkQuality?: {
+    readonly hardBlend?: {
+      readonly full: number;
+      readonly quick: number;
+      readonly blended: number;
+    };
+    readonly quality_score?: number;
+    readonly judge_score?: number;
+  } | null;
+  readonly routingQualityScore?: number | null;
 }
 
 export interface BenchmarkCaseComparison {
@@ -652,11 +662,32 @@ export interface BenchmarkCaseComparison {
 export interface BenchmarkCaseAuditEntry {
   readonly caseId: string;
   readonly endpointId: string;
+  readonly latencyMs?: number;
   readonly parseSuccess?: boolean;
   readonly judgeError?: string | null;
   readonly judgeUnavailable?: boolean;
   readonly cappedByValidator?: boolean;
   readonly gradingMethod?: string;
+}
+
+export interface BenchmarkSummariesByMode {
+  readonly full: BenchmarkSummary;
+  readonly quick: BenchmarkSummary;
+}
+
+export interface BenchmarkRunListEntry {
+  readonly runId: string;
+  readonly mode: "quick" | "full";
+  readonly completedAtMs: number;
+  readonly suiteId: string;
+  readonly caseCount: number;
+  readonly endpointIds: readonly string[];
+}
+
+export interface BenchmarkClearAllResult {
+  readonly clearedSampleCount: number;
+  readonly affectedEndpointCount: number;
+  readonly clearedRunCount: number;
 }
 
 export interface BenchmarkSummarySubject {
@@ -1176,6 +1207,29 @@ export async function fetchBenchmarkSummary(
   fetcher: RuntimeFetcher = fetch,
 ): Promise<BenchmarkSummary> {
   return fetchJson<BenchmarkSummary>("/api/role-model/benchmark/summary", fetcher);
+}
+
+export async function fetchBenchmarkSummariesByMode(
+  fetcher: RuntimeFetcher = fetch,
+): Promise<BenchmarkSummariesByMode> {
+  return fetchJson<BenchmarkSummariesByMode>(
+    "/api/role-model/benchmark/summaries/by-mode",
+    fetcher,
+  );
+}
+
+export async function fetchBenchmarkRuns(
+  fetcher: RuntimeFetcher = fetch,
+): Promise<readonly BenchmarkRunListEntry[]> {
+  return fetchJson<readonly BenchmarkRunListEntry[]>("/api/role-model/benchmark/runs", fetcher);
+}
+
+export async function clearAllBenchmarkData(
+  fetcher: RuntimeFetcher = fetch,
+): Promise<BenchmarkClearAllResult> {
+  return fetchJson<BenchmarkClearAllResult>("/api/role-model/benchmark/data", fetcher, {
+    method: "DELETE",
+  });
 }
 
 export async function fetchRuntimeSummary(

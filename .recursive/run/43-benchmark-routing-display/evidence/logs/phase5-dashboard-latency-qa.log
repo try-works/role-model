@@ -1,0 +1,5 @@
+=== Q1/Q2 telemetry QA ===
+Q1 chat status=200 body={"id":"chatcmpl-role-model","object":"chat.completion","created":1781445467,"model":"deepseek/deepseek-v4-flash","choices":[{"index":0,"message":{"role":"assistant","content":""},"finish_reason":"leng
+Q1 telemetry: avg=1055 p95=1055 requests=1
+Q2 failure chat expected error status=400
+Q2 telemetry: avg=21 p95=21 failures=1

@@ -197,3 +197,10 @@
   - Craft declared-tools ask-mode: declared tools without active `tool`/`tool_calls` usage use last-user-turn rubric with `toolCount: 0` for difficulty scoring
   - Packaged `:3456` DeepSeek verification: connect (`provider-openai`), chat pong, quick capability benchmark 60/60
   - 48/48 targeted bridge tests green
+
+- Run 43 (Benchmark Routing Display) on branch `recursive/43-benchmark-routing-display`:
+  - Closes benchmark → profile → routing → UI loop: per-mode summaries, routing quality aggregator with `hardBlend`, candidate enrichment, dashboard latency detail, benchmark latency visibility, global benchmark clear
+  - **Addendum 01:** Models → Benchmark dual full+quick inside each model card (not standalone section); run history at page bottom; `benchmark_mode` on sqlite persist; Q5′ `hardBlend` on candidates after quick re-run on SEA
+  - **Addendum 02:** `credential-ref-env.ts` blocks inline `sk-` in sqlite `credential_ref`; external runtime config uses `${DEEPSEEK_API_KEY}` with host env var
+  - Worktree evidence: `evidence/logs/green/sp43-*.log`, addenda under `/.recursive/run/43-benchmark-routing-display/addenda/`; memory episode `/.recursive/memory/episodes/run-43-benchmark-routing-display.md`
+  - Ready for merge to `main`

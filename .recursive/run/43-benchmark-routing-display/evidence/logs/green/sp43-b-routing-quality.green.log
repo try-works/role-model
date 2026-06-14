@@ -1,0 +1,14 @@
+
+> @role-model-router/profile-aggregator@0.0.0 test D:\DEV\role-model\.worktrees\43-benchmark-routing-display\role-model-router\packages\profile-aggregator
+> vitest run test/benchmark-routing-quality.test.ts
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/43-benchmark-routing-display/role-model-router/packages/profile-aggregator
+
+ Γ£ô test/benchmark-routing-quality.test.ts (3 tests) 10ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  14:39:30
+   Duration  874ms (transform 120ms, setup 0ms, collect 129ms, tests 10ms, environment 0ms, prepare 261ms)
+
