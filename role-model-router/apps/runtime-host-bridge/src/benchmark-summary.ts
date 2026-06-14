@@ -4,6 +4,21 @@ import path from "node:path";
 import type { BenchmarkCompareRecord, BenchmarkRunManifest } from "./benchmark-artifacts.js";
 import { resolveBenchmarkRunArtifactDir } from "./benchmark-artifacts.js";
 
+interface CompletedBenchmarkRun {
+  readonly runId: string;
+  readonly manifest: BenchmarkRunManifest;
+  readonly result: BenchmarkPersistedRunResult | null;
+}
+
+export interface BenchmarkRunListEntry {
+  readonly runId: string;
+  readonly mode: "quick" | "full";
+  readonly completedAtMs: number;
+  readonly suiteId: string;
+  readonly caseCount: number;
+  readonly endpointIds: readonly string[];
+}
+
 export interface BenchmarkPersistedEndpointGrade {
   readonly endpointId: string;
   readonly modelId: string;
@@ -17,6 +32,7 @@ export interface BenchmarkPersistedEndpointGrade {
     readonly caseId: string;
     readonly difficultyBucket: "easy" | "medium" | "hard";
     readonly score: number;
+    readonly latencyMs?: number;
     readonly parseSuccess?: boolean;
     readonly judgeError?: string | null;
     readonly judgeUnavailable?: boolean;
@@ -46,6 +62,7 @@ export interface BenchmarkCaseComparison {
 export interface BenchmarkCaseAuditEntry {
   readonly caseId: string;
   readonly endpointId: string;
+  readonly latencyMs?: number;
   readonly parseSuccess?: boolean;
   readonly judgeError?: string | null;
   readonly judgeUnavailable?: boolean;
@@ -155,6 +172,173 @@ export async function readBenchmarkCaseComparisons(
   return comparisons.sort((left, right) => left.caseId.localeCompare(right.caseId));
 }
 
+async function listCompletedBenchmarkRuns(artifactRoot: string): Promise<CompletedBenchmarkRun[]> {
+  let runIds: string[];
+  try {
+    runIds = await readdir(artifactRoot);
+  } catch {
+    return [];
+  }
+
+  const completed: CompletedBenchmarkRun[] = [];
+  for (const runId of runIds) {
+    const manifestPath = path.join(artifactRoot, runId, "manifest.json");
+    try {
+      const manifestRaw = await readFile(manifestPath, "utf8");
+      const manifest = JSON.parse(manifestRaw) as BenchmarkRunManifest;
+      if (typeof manifest.gradingCompletedAtMs !== "number") {
+        continue;
+      }
+      const result = await readBenchmarkRunResult(artifactRoot, runId);
+      completed.push({ runId, manifest, result });
+    } catch {
+      // skip malformed or incomplete run directories
+    }
+  }
+  return completed;
+}
+
+function resolveRunCaseCount(manifest: BenchmarkRunManifest, result: BenchmarkPersistedRunResult | null): number {
+  if (manifest.caseIds.length > 0) {
+    return manifest.caseIds.length;
+  }
+  if (!result) {
+    return 0;
+  }
+  return result.endpointGrades.reduce((total, grade) => total + grade.caseResults.length, 0);
+}
+
+function pickLatestCompletedRun(
+  runs: readonly CompletedBenchmarkRun[],
+  mode?: "quick" | "full",
+): CompletedBenchmarkRun | null {
+  const filtered = mode
+    ? runs.filter((run) => (run.manifest.mode ?? run.result?.mode ?? "full") === mode)
+    : runs;
+  if (filtered.length === 0) {
+    return null;
+  }
+  return filtered.reduce((latest, current) => {
+    const latestCompletedAtMs = latest.manifest.gradingCompletedAtMs ?? 0;
+    const currentCompletedAtMs = current.manifest.gradingCompletedAtMs ?? 0;
+    return currentCompletedAtMs > latestCompletedAtMs ? current : latest;
+  });
+}
+
+async function buildBenchmarkSummaryResponse(input: {
+  readonly artifactRoot: string;
+  readonly runId: string;
+  readonly manifest: BenchmarkRunManifest;
+  readonly result: BenchmarkPersistedRunResult | null;
+  readonly resolveModelId: (endpointId: string) => string | null;
+}): Promise<BenchmarkSummaryResponse> {
+  const { manifest, result, runId } = input;
+  const subjects: BenchmarkSummarySubject[] = [];
+
+  if (result) {
+    for (const grade of result.endpointGrades) {
+      const passingCaseIds = grade.caseResults
+        .filter((caseResult) => caseResult.score > 0)
+        .map((caseResult) => caseResult.caseId);
+      subjects.push({
+        endpointId: grade.endpointId,
+        modelId: grade.modelId,
+        overallScore: grade.overallScore,
+        scoresByBucket: grade.byDifficulty,
+        passingCaseIds,
+        caseCount: grade.caseResults.length,
+      });
+    }
+  }
+
+  const judgeEndpointId = manifest.judgeEndpointId ?? result?.judgeEndpointId ?? null;
+  const caseComparisons = await readBenchmarkCaseComparisons(input.artifactRoot, runId);
+  const caseAudits: BenchmarkCaseAuditEntry[] = [];
+  if (result) {
+    for (const grade of result.endpointGrades) {
+      for (const caseResult of grade.caseResults) {
+        caseAudits.push({
+          caseId: caseResult.caseId,
+          endpointId: grade.endpointId,
+          latencyMs: caseResult.latencyMs,
+          parseSuccess: caseResult.parseSuccess,
+          judgeError: caseResult.judgeError,
+          judgeUnavailable: caseResult.judgeUnavailable,
+          cappedByValidator: caseResult.cappedByValidator,
+        });
+      }
+    }
+  }
+
+  return {
+    runId,
+    completedAtMs: manifest.gradingCompletedAtMs ?? result?.completedAtMs ?? null,
+    mode: manifest.mode ?? result?.mode ?? null,
+    suiteId: manifest.suiteId ?? result?.suiteId ?? null,
+    suiteVersion: result?.suiteVersion ?? null,
+    judgeEndpointId,
+    judgeModelId: judgeEndpointId ? input.resolveModelId(judgeEndpointId) : null,
+    artifactRoot: runId,
+    subjects,
+    caseComparisons,
+    caseAudits,
+    manifest: {
+      executionCompletedAtMs: manifest.executionCompletedAtMs,
+      gradingCompletedAtMs: manifest.gradingCompletedAtMs ?? 0,
+      judgeArtifactCount: manifest.judgeArtifactCount ?? 0,
+      compareArtifactCount: manifest.compareArtifactCount ?? 0,
+    },
+  };
+}
+
+export async function listBenchmarkRuns(artifactRoot: string): Promise<readonly BenchmarkRunListEntry[]> {
+  const runs = await listCompletedBenchmarkRuns(artifactRoot);
+  return runs
+    .map(({ runId, manifest, result }) => ({
+      runId,
+      mode: manifest.mode ?? result?.mode ?? "full",
+      completedAtMs: manifest.gradingCompletedAtMs ?? result?.completedAtMs ?? 0,
+      suiteId: manifest.suiteId ?? result?.suiteId ?? "",
+      caseCount: resolveRunCaseCount(manifest, result),
+      endpointIds: manifest.endpointIds.length > 0
+        ? manifest.endpointIds
+        : (result?.endpointGrades.map((grade) => grade.endpointId) ?? []),
+    }))
+    .sort((left, right) => right.completedAtMs - left.completedAtMs);
+}
+
+export async function readLatestBenchmarkSummaryByMode(input: {
+  readonly artifactRoot: string;
+  readonly mode: "quick" | "full";
+  readonly resolveModelId: (endpointId: string) => string | null;
+}): Promise<BenchmarkSummaryResponse> {
+  const latest = pickLatestCompletedRun(await listCompletedBenchmarkRuns(input.artifactRoot), input.mode);
+  if (!latest) {
+    return EMPTY_BENCHMARK_SUMMARY;
+  }
+  return buildBenchmarkSummaryResponse({
+    artifactRoot: input.artifactRoot,
+    runId: latest.runId,
+    manifest: latest.manifest,
+    result: latest.result,
+    resolveModelId: input.resolveModelId,
+  });
+}
+
+export async function readBenchmarkSummariesByMode(input: {
+  readonly artifactRoot: string;
+  readonly resolveModelId: (endpointId: string) => string | null;
+}): Promise<{
+  readonly full: BenchmarkSummaryResponse;
+  readonly quick: BenchmarkSummaryResponse;
+}> {
+  const [full, quick] = await Promise.all([
+    readLatestBenchmarkSummaryByMode({ ...input, mode: "full" }),
+    readLatestBenchmarkSummaryByMode({ ...input, mode: "quick" }),
+  ]);
+  return { full, quick };
+}
+
 function asRecord(value: unknown): Record<string, unknown> | null {
   return typeof value === "object" && value !== null ? (value as Record<string, unknown>) : null;
 }
@@ -190,103 +374,17 @@ export async function readLatestBenchmarkSummary(input: {
   readonly artifactRoot: string;
   readonly resolveModelId: (endpointId: string) => string | null;
 }): Promise<BenchmarkSummaryResponse> {
-  let runIds: string[];
-  try {
-    runIds = await readdir(input.artifactRoot);
-  } catch {
-    return EMPTY_BENCHMARK_SUMMARY;
-  }
-
-  let latest:
-    | {
-        readonly runId: string;
-        readonly manifest: BenchmarkRunManifest;
-        readonly result: BenchmarkPersistedRunResult | null;
-      }
-    | null = null;
-
-  for (const runId of runIds) {
-    const manifestPath = path.join(input.artifactRoot, runId, "manifest.json");
-    let manifestRaw: string;
-    try {
-      manifestRaw = await readFile(manifestPath, "utf8");
-    } catch {
-      continue;
-    }
-    const manifest = JSON.parse(manifestRaw) as BenchmarkRunManifest;
-    if (typeof manifest.gradingCompletedAtMs !== "number") {
-      continue;
-    }
-    if (
-      latest &&
-      (latest.manifest.gradingCompletedAtMs ?? 0) >= manifest.gradingCompletedAtMs
-    ) {
-      continue;
-    }
-    const result = await readBenchmarkRunResult(input.artifactRoot, runId);
-    latest = { runId, manifest, result };
-  }
-
+  const latest = pickLatestCompletedRun(await listCompletedBenchmarkRuns(input.artifactRoot));
   if (!latest) {
     return EMPTY_BENCHMARK_SUMMARY;
   }
-
-  const { manifest, result, runId } = latest;
-  const subjects: BenchmarkSummarySubject[] = [];
-
-  if (result) {
-    for (const grade of result.endpointGrades) {
-      const passingCaseIds = grade.caseResults
-        .filter((caseResult) => caseResult.score > 0)
-        .map((caseResult) => caseResult.caseId);
-      subjects.push({
-        endpointId: grade.endpointId,
-        modelId: grade.modelId,
-        overallScore: grade.overallScore,
-        scoresByBucket: grade.byDifficulty,
-        passingCaseIds,
-        caseCount: grade.caseResults.length,
-      });
-    }
-  }
-
-  const judgeEndpointId = manifest.judgeEndpointId ?? result?.judgeEndpointId ?? null;
-  const caseComparisons = await readBenchmarkCaseComparisons(input.artifactRoot, runId);
-  const caseAudits: BenchmarkCaseAuditEntry[] = [];
-  if (result) {
-    for (const grade of result.endpointGrades) {
-      for (const caseResult of grade.caseResults) {
-        caseAudits.push({
-          caseId: caseResult.caseId,
-          endpointId: grade.endpointId,
-          parseSuccess: caseResult.parseSuccess,
-          judgeError: caseResult.judgeError,
-          judgeUnavailable: caseResult.judgeUnavailable,
-          cappedByValidator: caseResult.cappedByValidator,
-        });
-      }
-    }
-  }
-
-  return {
-    runId,
-    completedAtMs: manifest.gradingCompletedAtMs ?? result?.completedAtMs ?? null,
-    mode: manifest.mode ?? result?.mode ?? null,
-    suiteId: manifest.suiteId ?? result?.suiteId ?? null,
-    suiteVersion: result?.suiteVersion ?? null,
-    judgeEndpointId,
-    judgeModelId: judgeEndpointId ? input.resolveModelId(judgeEndpointId) : null,
-    artifactRoot: runId,
-    subjects,
-    caseComparisons,
-    caseAudits,
-    manifest: {
-      executionCompletedAtMs: manifest.executionCompletedAtMs,
-      gradingCompletedAtMs: manifest.gradingCompletedAtMs ?? 0,
-      judgeArtifactCount: manifest.judgeArtifactCount ?? 0,
-      compareArtifactCount: manifest.compareArtifactCount ?? 0,
-    },
-  };
+  return buildBenchmarkSummaryResponse({
+    artifactRoot: input.artifactRoot,
+    runId: latest.runId,
+    manifest: latest.manifest,
+    result: latest.result,
+    resolveModelId: input.resolveModelId,
+  });
 }
 
 export async function readBenchmarkPreferences(

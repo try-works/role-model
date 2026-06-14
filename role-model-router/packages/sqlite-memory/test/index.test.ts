@@ -14,14 +14,18 @@ import { runRuntimeStateValidation } from "../src/cli.ts";
 import * as sqliteMemory from "../src/index.ts";
 import {
   clearObservedBenchmarkDataForEndpoint,
+  clearAllObservedBenchmarkData,
   initializeSqliteMemory,
   persistContinuitySnapshot,
   persistObservedBenchmarkSample,
   persistProviderAccounts,
   persistRetrievalReceipt,
+  persistRuntimeTelemetryFailure,
   readConversationContinuity,
   readLatestObservedProfile,
+  readObservedPerformanceSamples,
   readRetrievalReceipts,
+  readRuntimeTelemetrySummary,
   resolveSqliteMemoryLocation,
 } from "../src/index.ts";
 
@@ -174,6 +178,7 @@ describe("initializeSqliteMemory", () => {
         credential_ref: "OPENAI_API_KEY",
       },
     ]);
+    expect(rows.every((row) => !/^sk-[A-Za-z0-9]/.test(row.credential_ref))).toBe(true);
     expect(columns.some((column) => column.name === "secret_value")).toBe(false);
   });
 
@@ -1733,6 +1738,38 @@ describe("initializeSqliteMemory", () => {
     ]);
   });
 
+  test("persistRuntimeTelemetryFailure records latencyMs in telemetry summary average", async () => {
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+    const validation = await runRuntimeAdapterValidation({
+      repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      runtimeStateRoot,
+      scopeId: "workspace-dev",
+    });
+
+    persistRuntimeTelemetryFailure({
+      databasePath: validation.databasePath,
+      requestId: "req-failure-latency-850",
+      modelId: "local/mock-llama",
+      statusCode: 504,
+      errorClass: "execution_failed",
+      latencyMs: 850,
+    });
+
+    expect(
+      readRuntimeTelemetrySummary({
+        databasePath: validation.databasePath,
+        windowMs: 60_000,
+      }),
+    ).toEqual(
+      expect.objectContaining({
+        requestCount: 1,
+        failureCount: 1,
+        averageLatencyMs: 850,
+      }),
+    );
+  });
+
   test("exports persisted runtime state for operator drills", async () => {
     expect(
       typeof (
@@ -2039,6 +2076,95 @@ describe("initializeSqliteMemory", () => {
         nowMs: 1_762_000_700_001,
       }),
     ).toBeNull();
+  });
+});
+
+describe("clearAllObservedBenchmarkData", () => {
+  test("removes all benchmark samples across endpoints and clears profiles", async () => {
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+    const initialized = initializeSqliteMemory({
+      runtimeStateRoot,
+      scopeId: "workspace-dev-clear-all-benchmark",
+    });
+    const endpointA = "local.test.model-a";
+    const endpointB = "local.test.model-b";
+
+    persistObservedBenchmarkSample({
+      databasePath: initialized.databasePath,
+      sample: {
+        endpoint_id: endpointA,
+        endpoint_version: "v1",
+        source_type: "benchmark",
+        difficulty_bucket: "hard",
+        timestamp_ms: 1_000,
+        latency_ms: 900,
+        judge_score: 0.35,
+      },
+    });
+    persistObservedBenchmarkSample({
+      databasePath: initialized.databasePath,
+      sample: {
+        endpoint_id: endpointB,
+        endpoint_version: "v1",
+        source_type: "benchmark",
+        difficulty_bucket: "easy",
+        timestamp_ms: 2_000,
+        latency_ms: 800,
+        judge_score: 0.9,
+      },
+    });
+
+    const cleared = clearAllObservedBenchmarkData({
+      databasePath: initialized.databasePath,
+      nowMs: 3_000,
+    });
+    expect(cleared).toEqual({ clearedSampleCount: 2, affectedEndpointCount: 2 });
+
+    expect(
+      readLatestObservedProfile({
+        databasePath: initialized.databasePath,
+        endpointId: endpointA,
+      }),
+    ).toBeNull();
+    expect(
+      readLatestObservedProfile({
+        databasePath: initialized.databasePath,
+        endpointId: endpointB,
+      }),
+    ).toBeNull();
+  });
+});
+
+describe("persistObservedBenchmarkSample benchmark_mode", () => {
+  test("retains benchmark_mode on readback for quick benchmark samples", async () => {
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+    const initialized = initializeSqliteMemory({
+      runtimeStateRoot,
+      scopeId: "workspace-dev-benchmark-mode",
+    });
+    const endpointId = "local.test.model";
+
+    persistObservedBenchmarkSample({
+      databasePath: initialized.databasePath,
+      sample: {
+        endpoint_id: endpointId,
+        endpoint_version: "v1",
+        source_type: "benchmark",
+        benchmark_mode: "quick",
+        difficulty_bucket: "hard",
+        timestamp_ms: 1_000,
+        latency_ms: 900,
+        judge_score: 0.71,
+        request_id: "quick-hard-1",
+      },
+    });
+
+    const samples = readObservedPerformanceSamples({
+      databasePath: initialized.databasePath,
+      endpointId,
+    });
+    expect(samples).toHaveLength(1);
+    expect(samples[0]?.benchmark_mode).toBe("quick");
   });
 });
 

@@ -25,6 +25,7 @@ export interface ObservedPerformanceSample {
   error_class?: string;
   request_id?: string;
   routing_decision_id?: string;
+  benchmark_mode?: "quick" | "full";
 }
 
 export interface AggregateObservedPerformanceOptions {
@@ -187,6 +188,20 @@ export function aggregateObservedPerformanceSamples(
   validateObservedPerformanceProfileConsistency(profile);
   return profile;
 }
+
+export {
+  applyRoutingBenchmarkQualityToProfile,
+  applyRoutingBenchmarkQualityToProfiles,
+  normalizeBenchmarkSampleVersions,
+  resolveRoutingBenchmarkQuality,
+} from "./benchmark-routing-quality.js";
+export type {
+  BenchmarkBucketScore,
+  BenchmarkDifficultyBucket,
+  BenchmarkHardBlend,
+  BenchmarkRoutingMode,
+  RoutingBenchmarkQuality,
+} from "./benchmark-routing-quality.js";
 
 export function aggregateObservedPerformance(
   sample: BenchmarkResultSample,

@@ -8,6 +8,11 @@ import {
   SectionCard,
   StatusPill,
 } from "../components/page-primitives";
+import { computeLatencyPercentiles } from "../lib/benchmark-latency";
+import {
+  describeHardBlend,
+  resolveSubjectFromSummary,
+} from "../lib/benchmark-model-cards";
 import {
   fieldClassName,
   listRowClassName,
@@ -16,19 +21,25 @@ import {
   secondaryButtonClassName,
 } from "../lib/design-system";
 import {
+  type BenchmarkCaseAuditEntry,
+  type BenchmarkCaseComparison,
   type BenchmarkEndpointGrade,
+  type BenchmarkRunListEntry,
   type BenchmarkRunProgress,
   type BenchmarkRunResult,
   type BenchmarkSuite,
-  type BenchmarkCaseComparison,
   type BenchmarkSummary,
   type BenchmarkSummarySubject,
+  type BenchmarkSummariesByMode,
   type RouterCandidate,
+  clearAllBenchmarkData,
   clearBenchmarkEndpointData,
   fetchActiveBenchmarkRun,
   fetchBenchmarkPreferences,
   fetchBenchmarkRunProgress,
+  fetchBenchmarkRuns,
   fetchBenchmarkSuite,
+  fetchBenchmarkSummariesByMode,
   fetchBenchmarkSummary,
   fetchRouterCandidates,
   fetchRuntimeSummary,
@@ -41,6 +52,21 @@ import { formatScore, formatScoreFraction } from "../lib/format-score";
 const BENCHMARK_POLL_MS = 1500;
 const BENCHMARK_STALL_MS = 90_000;
 const ACTIVE_BENCHMARK_RUN_KEY = "role-model.benchmark.activeRunId";
+
+const EMPTY_BENCHMARK_SUMMARY: BenchmarkSummary = {
+  runId: null,
+  completedAtMs: null,
+  mode: null,
+  suiteId: null,
+  suiteVersion: null,
+  judgeEndpointId: null,
+  judgeModelId: null,
+  artifactRoot: null,
+  subjects: [],
+  caseComparisons: [],
+  caseAudits: [],
+  manifest: null,
+};
 
 function formatElapsed(ms: number): string {
   const totalSeconds = Math.max(0, Math.floor(ms / 1000));
@@ -120,6 +146,94 @@ function pickNumber(record: Record<string, unknown> | null, ...keys: string[]): 
   return null;
 }
 
+function formatLatencyMs(value: number | null | undefined): string {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return "n/a";
+  }
+  return `${Math.round(value)} ms`;
+}
+
+function resolveJudgeLabel(
+  summary: BenchmarkSummary,
+  candidates: readonly RouterCandidate[],
+): string | null {
+  return (
+    summary.judgeModelId ??
+    candidates.find((candidate) => candidate.endpointId === summary.judgeEndpointId)?.modelId ??
+    summary.judgeEndpointId ??
+    null
+  );
+}
+
+function collectEndpointLatencies(input: {
+  readonly endpointId: string;
+  readonly caseResults: BenchmarkEndpointGrade["caseResults"] | null;
+  readonly caseAudits: readonly BenchmarkCaseAuditEntry[] | undefined;
+}): readonly number[] {
+  const fromCaseResults = (input.caseResults ?? [])
+    .map((caseResult) => caseResult.latencyMs)
+    .filter((value): value is number => typeof value === "number" && Number.isFinite(value));
+  if (fromCaseResults.length > 0) {
+    return fromCaseResults;
+  }
+  return (input.caseAudits ?? [])
+    .filter((audit) => audit.endpointId === input.endpointId)
+    .map((audit) => audit.latencyMs)
+    .filter((value): value is number => typeof value === "number" && Number.isFinite(value));
+}
+
+function EndpointModeRunSnapshot({
+  title,
+  summary,
+  endpointId,
+  judgeLabel,
+}: {
+  readonly title: string;
+  readonly summary: BenchmarkSummary;
+  readonly endpointId: string;
+  readonly judgeLabel: string | null;
+}) {
+  if (!summary.runId) {
+    return (
+      <div className={`${mutedPanelClassName} p-3`}>
+        <p className="text-sm font-medium text-[var(--rm-fg)]">{title}</p>
+        <p className="mt-2 text-sm text-[var(--rm-secondary)]">No completed run yet.</p>
+      </div>
+    );
+  }
+
+  const subject = resolveSubjectFromSummary(summary, endpointId);
+  const completedAtLabel = summary.completedAtMs
+    ? new Date(summary.completedAtMs).toLocaleString()
+    : "unknown";
+
+  return (
+    <div className={`${mutedPanelClassName} p-3`}>
+      <p className="text-sm font-medium text-[var(--rm-fg)]">{title}</p>
+      <p className="mt-1 text-xs text-[var(--rm-secondary)]">
+        Completed {completedAtLabel}
+        {judgeLabel ? ` • judge: ${judgeLabel}` : ""}
+      </p>
+      {subject ? (
+        <>
+          <p className="mt-2 text-sm font-medium text-[var(--rm-fg)]">
+            {formatScore(subject.overallScore)} overall
+          </p>
+          <p className="mt-1 text-sm text-[var(--rm-secondary)]">
+            easy {formatScore(subject.scoresByBucket.easy.score)} • medium{" "}
+            {formatScore(subject.scoresByBucket.medium.score)} • hard{" "}
+            {formatScore(subject.scoresByBucket.hard.score)}
+          </p>
+        </>
+      ) : (
+        <p className="mt-2 text-sm text-[var(--rm-secondary)]">
+          This endpoint was not graded in the last {summary.mode ?? "benchmark"} run.
+        </p>
+      )}
+    </div>
+  );
+}
+
 function describeRoutingImpact(candidate: RouterCandidate): string {
   const profile = asRecord(candidate.latestProfile);
   const sources = asRecord(profile?.sources);
@@ -156,6 +270,10 @@ function describeRoutingImpact(candidate: RouterCandidate): string {
       `${benchmarkSamples} benchmark sample${benchmarkSamples === 1 ? "" : "s"} are merged into the observed profile used on future routing decisions.`,
     );
   }
+  const hardBlendDetail = describeHardBlend(candidate);
+  if (hardBlendDetail) {
+    parts.push(hardBlendDetail);
+  }
   return parts.length > 0
     ? parts.join(" ")
     : "Run a benchmark to write judge scores into this endpoint's observed routing profile.";
@@ -169,6 +287,8 @@ interface ModelScoreRow {
   readonly scoresByBucket: BenchmarkSummarySubject["scoresByBucket"] | null;
   readonly profileQualityScore: number | null;
   readonly benchmarkSamples: number;
+  readonly latencyP50: number | null;
+  readonly latencyP95: number | null;
   readonly caseResults: BenchmarkEndpointGrade["caseResults"] | null;
   readonly candidate: RouterCandidate;
 }
@@ -210,6 +330,14 @@ function buildModelScoreRows(
     const profileQualityScore = pickNumber(profile, "judge_score", "quality_score");
     const benchmarkSamples = pickNumber(sources, "benchmark_samples") ?? 0;
     const capability = candidate.benchmarkCapability;
+    const caseResults = grade?.caseResults ?? null;
+    const { p50: latencyP50, p95: latencyP95 } = computeLatencyPercentiles(
+      collectEndpointLatencies({
+        endpointId: candidate.endpointId,
+        caseResults,
+        caseAudits: summary?.caseAudits,
+      }),
+    );
 
     if (!grade && !capability && benchmarkSamples === 0 && profileQualityScore === null) {
       continue;
@@ -243,7 +371,9 @@ function buildModelScoreRows(
           : null),
       profileQualityScore,
       benchmarkSamples,
-      caseResults: grade?.caseResults ?? null,
+      latencyP50,
+      latencyP95,
+      caseResults,
       candidate,
     });
   }
@@ -262,9 +392,12 @@ export default function ControlBenchmarkRoute() {
   const [progress, setProgress] = useState<BenchmarkRunProgress | null>(null);
   const [result, setResult] = useState<BenchmarkRunResult | null>(null);
   const [lastSummary, setLastSummary] = useState<BenchmarkSummary | null>(null);
+  const [summariesByMode, setSummariesByMode] = useState<BenchmarkSummariesByMode | null>(null);
+  const [runHistory, setRunHistory] = useState<readonly BenchmarkRunListEntry[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [runtimeSummary, setRuntimeSummary] = useState<RuntimeSummary | null>(null);
   const [clearingEndpointId, setClearingEndpointId] = useState<string | null>(null);
+  const [clearingAll, setClearingAll] = useState(false);
   const [nowMs, setNowMs] = useState(() => Date.now());
 
   const resolveJudgeEndpointId = (
@@ -285,10 +418,18 @@ export default function ControlBenchmarkRoute() {
     );
   };
 
-  const refreshSummary = useCallback(async () => {
-    const summary = await fetchBenchmarkSummary();
+  const refreshBenchmarkState = useCallback(async () => {
+    const [summary, byMode, runs, candidateValue] = await Promise.all([
+      fetchBenchmarkSummary(),
+      fetchBenchmarkSummariesByMode(),
+      fetchBenchmarkRuns(),
+      fetchRouterCandidates(),
+    ]);
     setLastSummary(summary);
-    return summary;
+    setSummariesByMode(byMode);
+    setRunHistory(runs);
+    setCandidates(candidateValue);
+    return { summary, byMode, runs, candidateValue };
   }, []);
 
   useEffect(() => {
@@ -296,19 +437,33 @@ export default function ControlBenchmarkRoute() {
       fetchBenchmarkSuite(),
       fetchRouterCandidates(),
       fetchBenchmarkSummary(),
+      fetchBenchmarkSummariesByMode(),
+      fetchBenchmarkRuns(),
       fetchBenchmarkPreferences(),
       fetchRuntimeSummary(),
     ])
-      .then(([suiteValue, candidateValue, summaryValue, preferences, runtimeSummaryValue]) => {
+      .then(
+        ([
+          suiteValue,
+          candidateValue,
+          summaryValue,
+          summariesByModeValue,
+          runHistoryValue,
+          preferences,
+          runtimeSummaryValue,
+        ]) => {
         setSuite(suiteValue);
         setCandidates(candidateValue);
         setLastSummary(summaryValue);
+        setSummariesByMode(summariesByModeValue);
+        setRunHistory(runHistoryValue);
         setRuntimeSummary(runtimeSummaryValue);
         const healthy = candidateValue.filter((candidate) => candidate.healthStatus !== "offline");
         setSelectedEndpointIds(healthy.map((candidate) => candidate.endpointId));
         setJudgeEndpointId(resolveJudgeEndpointId(candidateValue, preferences.judgeEndpointId));
         setError(null);
-      })
+      },
+      )
       .catch((value: unknown) =>
         setError(value instanceof Error ? value.message : "Could not load benchmark data."),
       );
@@ -346,7 +501,7 @@ export default function ControlBenchmarkRoute() {
         sessionStorage.removeItem(ACTIVE_BENCHMARK_RUN_KEY);
         if (snapshot.status === "completed" && snapshot.result) {
           setResult(snapshot.result);
-          void refreshSummary();
+          void refreshBenchmarkState();
         }
       } catch {
         sessionStorage.removeItem(ACTIVE_BENCHMARK_RUN_KEY);
@@ -357,7 +512,7 @@ export default function ControlBenchmarkRoute() {
     return () => {
       cancelled = true;
     };
-  }, [candidates, refreshSummary, suite]);
+  }, [candidates, refreshBenchmarkState, suite]);
 
   const eligibleCaseCount = useMemo(() => {
     if (!suite) {
@@ -431,18 +586,13 @@ export default function ControlBenchmarkRoute() {
     }
   }, [judgeEndpointId, mode, selectedEndpointIds]);
 
-  const clearBenchmarkData = useCallback(
+  const clearEndpointRoutingProfile = useCallback(
     async (endpointId: string) => {
       setClearingEndpointId(endpointId);
       setError(null);
       try {
         await clearBenchmarkEndpointData(endpointId);
-        const [candidateValue, summaryValue] = await Promise.all([
-          fetchRouterCandidates(),
-          fetchBenchmarkSummary(),
-        ]);
-        setCandidates(candidateValue);
-        setLastSummary(summaryValue);
+        await refreshBenchmarkState();
         if (result) {
           setResult({
             ...result,
@@ -453,14 +603,35 @@ export default function ControlBenchmarkRoute() {
         }
       } catch (value: unknown) {
         setError(
-          value instanceof Error ? value.message : "Could not clear benchmark data for this model.",
+          value instanceof Error ? value.message : "Could not clear routing profile for this model.",
         );
       } finally {
         setClearingEndpointId(null);
       }
     },
-    [result],
+    [refreshBenchmarkState, result],
   );
+
+  const handleClearAllBenchmarkData = useCallback(async () => {
+    const confirmed = window.confirm(
+      "Clear all benchmark data? This removes every benchmark run, artifact, and routing profile sample. This cannot be undone.",
+    );
+    if (!confirmed) {
+      return;
+    }
+
+    setClearingAll(true);
+    setError(null);
+    try {
+      await clearAllBenchmarkData();
+      setResult(null);
+      await refreshBenchmarkState();
+    } catch (value: unknown) {
+      setError(value instanceof Error ? value.message : "Could not clear all benchmark data.");
+    } finally {
+      setClearingAll(false);
+    }
+  }, [refreshBenchmarkState]);
 
   useEffect(() => {
     if (!running) {
@@ -485,7 +656,7 @@ export default function ControlBenchmarkRoute() {
         setProgress(snapshot);
         if (snapshot.status === "completed" && snapshot.result) {
           setResult(snapshot.result);
-          void refreshSummary();
+          void refreshBenchmarkState();
           setRunning(false);
           setActiveRunId(null);
           sessionStorage.removeItem(ACTIVE_BENCHMARK_RUN_KEY);
@@ -511,7 +682,7 @@ export default function ControlBenchmarkRoute() {
       cancelled = true;
       window.clearInterval(timer);
     };
-  }, [activeRunId, refreshSummary]);
+  }, [activeRunId, refreshBenchmarkState]);
 
   const progressPercent = progress
     ? progress.totalSteps > 0
@@ -535,12 +706,11 @@ export default function ControlBenchmarkRoute() {
   const lastRunLabel = lastSummary?.completedAtMs
     ? new Date(lastSummary.completedAtMs).toLocaleString()
     : null;
-  const judgeLabel =
-    lastSummary?.judgeModelId ??
-    candidates.find((candidate) => candidate.endpointId === lastSummary?.judgeEndpointId)
-      ?.modelId ??
-    lastSummary?.judgeEndpointId ??
-    null;
+  const judgeLabel = lastSummary ? resolveJudgeLabel(lastSummary, candidates) : null;
+  const fullSummary = summariesByMode?.full ?? EMPTY_BENCHMARK_SUMMARY;
+  const quickSummary = summariesByMode?.quick ?? EMPTY_BENCHMARK_SUMMARY;
+  const fullJudgeLabel = fullSummary.runId ? resolveJudgeLabel(fullSummary, candidates) : null;
+  const quickJudgeLabel = quickSummary.runId ? resolveJudgeLabel(quickSummary, candidates) : null;
 
   return (
     <div className="space-y-6">
@@ -582,6 +752,10 @@ export default function ControlBenchmarkRoute() {
                         ? ` (${row.benchmarkSamples} benchmark sample${row.benchmarkSamples === 1 ? "" : "s"})`
                         : ""}
                     </p>
+                    <p>
+                      <span className="font-medium text-[var(--rm-fg)]">Benchmark latency:</span> p50{" "}
+                      {formatLatencyMs(row.latencyP50)} • p95 {formatLatencyMs(row.latencyP95)}
+                    </p>
                   </div>
 
                   {row.scoresByBucket ? (
@@ -598,6 +772,21 @@ export default function ControlBenchmarkRoute() {
                     {describeRoutingImpact(row.candidate)}
                   </p>
 
+                  <div className="grid gap-3 md:grid-cols-2">
+                    <EndpointModeRunSnapshot
+                      title="Last full run"
+                      summary={fullSummary}
+                      endpointId={row.endpointId}
+                      judgeLabel={fullJudgeLabel}
+                    />
+                    <EndpointModeRunSnapshot
+                      title="Last quick run (12 hard)"
+                      summary={quickSummary}
+                      endpointId={row.endpointId}
+                      judgeLabel={quickJudgeLabel}
+                    />
+                  </div>
+
                   {row.caseResults && row.caseResults.length > 0 ? (
                     <details className="text-sm text-[var(--rm-secondary)]">
                       <summary className="cursor-pointer font-medium text-[var(--rm-fg)]">
@@ -611,7 +800,7 @@ export default function ControlBenchmarkRoute() {
                           >
                             <p className="font-medium text-[var(--rm-fg)]">
                               {caseResult.caseId} • {formatScore(caseResult.score)} •{" "}
-                              {caseResult.difficultyBucket}
+                              {caseResult.difficultyBucket} • {formatLatencyMs(caseResult.latencyMs)}
                             </p>
                             <div className="mt-1 flex flex-wrap gap-2 text-xs">
                               {caseResult.gradingMethod ? (
@@ -658,11 +847,11 @@ export default function ControlBenchmarkRoute() {
                     type="button"
                     className={secondaryButtonClassName}
                     disabled={running || clearingEndpointId === row.endpointId}
-                    onClick={() => void clearBenchmarkData(row.endpointId)}
+                    onClick={() => void clearEndpointRoutingProfile(row.endpointId)}
                   >
                     {clearingEndpointId === row.endpointId
-                      ? "Clearing benchmark data…"
-                      : "Clear benchmark data"}
+                      ? "Clearing routing profile…"
+                      : "Clear routing profile"}
                   </button>
                 </div>
               </div>
@@ -821,6 +1010,44 @@ export default function ControlBenchmarkRoute() {
         ) : null}
 
         {error ? <p className="mt-4 text-sm text-red-600">{error}</p> : null}
+      </SectionCard>
+
+      <SectionCard
+        title="Run history"
+        description="Completed benchmark runs stored on this runtime. Global clear removes artifacts and routing profile samples for every model."
+      >
+        {runHistory.length === 0 ? (
+          <EmptyState label="No completed benchmark runs yet." />
+        ) : (
+          <div className="space-y-3">
+            {runHistory.map((run) => (
+              <div key={run.runId} className={listRowClassName}>
+                <div>
+                  <p className="font-medium text-[var(--rm-fg)]">{run.runId}</p>
+                  <p className="text-sm text-[var(--rm-secondary)]">
+                    {run.mode} • {run.caseCount} cases • {run.endpointIds.length} model
+                    {run.endpointIds.length === 1 ? "" : "s"}
+                  </p>
+                  <p className="text-sm text-[var(--rm-secondary)]">
+                    {new Date(run.completedAtMs).toLocaleString()} • {run.suiteId}
+                  </p>
+                </div>
+                <StatusPill tone={run.mode === "quick" ? "accent" : "neutral"}>{run.mode}</StatusPill>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="mt-6 border-t border-[var(--rm-border)] pt-4">
+          <button
+            type="button"
+            className={secondaryButtonClassName}
+            disabled={running || clearingAll}
+            onClick={() => void handleClearAllBenchmarkData()}
+          >
+            {clearingAll ? "Clearing all benchmark data…" : "Clear all benchmark data"}
+          </button>
+        </div>
       </SectionCard>
     </div>
   );

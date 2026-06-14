@@ -2,10 +2,13 @@ import { describe, expect, test, vi } from "vitest";
 
 import {
   activateRuntimeEndpoint,
+  clearAllBenchmarkData,
   createRolePolicyRole,
   fetchActivityCapture,
   fetchActivityMetrics,
   fetchAudioVoices,
+  fetchBenchmarkRuns,
+  fetchBenchmarkSummariesByMode,
   fetchControllerAssignment,
   fetchDownstreamOpenAIProviderConfig,
   fetchLocalModels,
@@ -1706,5 +1709,78 @@ describe("role policy APIs", () => {
         default_benchmark_suites: [],
       },
     ]);
+  });
+});
+
+describe("benchmark display endpoints", () => {
+  test("fetchBenchmarkSummariesByMode loads full and quick summaries", async () => {
+    const fetcher = vi.fn(async (input: string | URL | Request) => {
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      if (url === "/api/role-model/benchmark/summaries/by-mode") {
+        return jsonResponse({
+          full: { runId: "run-full", completedAtMs: 20, mode: "full", subjects: [] },
+          quick: { runId: "run-quick", completedAtMs: 10, mode: "quick", subjects: [] },
+        });
+      }
+      throw new Error(`unexpected url ${url}`);
+    });
+
+    await expect(fetchBenchmarkSummariesByMode(fetcher)).resolves.toEqual({
+      full: { runId: "run-full", completedAtMs: 20, mode: "full", subjects: [] },
+      quick: { runId: "run-quick", completedAtMs: 10, mode: "quick", subjects: [] },
+    });
+  });
+
+  test("fetchBenchmarkRuns loads completed run history", async () => {
+    const fetcher = vi.fn(async (input: string | URL | Request) => {
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      if (url === "/api/role-model/benchmark/runs") {
+        return jsonResponse([
+          {
+            runId: "run-quick",
+            mode: "quick",
+            completedAtMs: 10,
+            suiteId: "routing-capability-v2",
+            caseCount: 12,
+            endpointIds: ["local.a", "remote.b"],
+          },
+        ]);
+      }
+      throw new Error(`unexpected url ${url}`);
+    });
+
+    await expect(fetchBenchmarkRuns(fetcher)).resolves.toEqual([
+      {
+        runId: "run-quick",
+        mode: "quick",
+        completedAtMs: 10,
+        suiteId: "routing-capability-v2",
+        caseCount: 12,
+        endpointIds: ["local.a", "remote.b"],
+      },
+    ]);
+  });
+
+  test("clearAllBenchmarkData deletes global benchmark state", async () => {
+    const fetcher = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      if (url === "/api/role-model/benchmark/data" && init?.method === "DELETE") {
+        return jsonResponse({
+          clearedSampleCount: 4,
+          affectedEndpointCount: 2,
+          clearedRunCount: 3,
+        });
+      }
+      throw new Error(`unexpected url ${url}`);
+    });
+
+    await expect(clearAllBenchmarkData(fetcher)).resolves.toEqual({
+      clearedSampleCount: 4,
+      affectedEndpointCount: 2,
+      clearedRunCount: 3,
+    });
   });
 });

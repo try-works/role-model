@@ -10,6 +10,7 @@ import {
   StatusPill,
 } from "../components/page-primitives";
 import { listRowClassName, secondaryButtonClassName } from "../lib/design-system";
+import { formatCandidateLatencyLine } from "../lib/router-candidate-labels";
 import { type RouterCandidate, fetchRouterCandidates } from "../lib/runtime-api";
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -103,7 +104,6 @@ export default function RouterCandidatesRoute() {
           <div className="space-y-3">
             {candidates.map((candidate) => {
               const latestProfile = asRecord(candidate.latestProfile);
-              const latencyMs = pickNumber(latestProfile, "latency_ms", "latencyMs");
               const throughput = pickNumber(latestProfile, "tokens_per_second", "tokensPerSecond");
               const failureRate = pickNumber(latestProfile, "failure_rate", "failureRate");
               const capability = candidate.benchmarkCapability;
@@ -122,8 +122,8 @@ export default function RouterCandidatesRoute() {
                       {candidate.toolCallingSupported ? "supported" : "not advertised"}
                     </p>
                     <p className="text-sm text-[var(--rm-secondary)]">
-                      Latency {latencyMs ?? "n/a"} ms • Throughput {throughput ?? "n/a"} tps •
-                      Failure rate {failureRate ?? "n/a"}
+                      {formatCandidateLatencyLine(latestProfile)} • Throughput {throughput ?? "n/a"}{" "}
+                      tps • Failure rate {failureRate ?? "n/a"}
                     </p>
                     {capability ? (
                       <p className="text-sm text-[var(--rm-secondary)]">

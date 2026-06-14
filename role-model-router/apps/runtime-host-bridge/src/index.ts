@@ -18,6 +18,7 @@ import type { EndpointRegistryResult } from "@role-model-router/endpoint-registr
 import { type RegistrySources, buildEndpointRegistry } from "@role-model-router/endpoint-registry";
 import { ProcessSupervisor } from "@role-model-router/process-supervisor";
 import type { ObservedPerformanceSample } from "@role-model-router/profile-aggregator";
+import { resolveRoutingBenchmarkQuality } from "@role-model-router/profile-aggregator";
 import {
   type RoutingModelSelection,
   routeRuntimeRequest,
@@ -56,6 +57,8 @@ import {
   persistRuntimeObservationBundle,
   persistRuntimeTelemetryFailure,
   clearObservedBenchmarkDataForEndpoint,
+  clearAllObservedBenchmarkData,
+  clearBenchmarkRunArtifacts,
   readAdvisoryMaxDifficultyRecommendation,
   readConversationContinuity,
   readDifficultyClassificationCache,
@@ -103,6 +106,7 @@ import {
   readLlamaSwapRoleIdsByModelId,
   resolveEndpointRoleIds,
 } from "./local-model-role-bindings.js";
+import { resolveEnvCredentialRef } from "./credential-ref-env.js";
 import { resolveOauthCredentialRef } from "./oauth-credential.js";
 import {
   type OperatorIntentDiagnostic,
@@ -145,7 +149,9 @@ import {
 import { evaluateBenchmarkStartGuards } from "./benchmark-start-guards.js";
 import {
   buildBenchmarkCapabilityForEndpoint,
+  listBenchmarkRuns,
   readBenchmarkPreferences,
+  readBenchmarkSummariesByMode,
   readLatestBenchmarkSummary,
   writeBenchmarkPreferences,
 } from "./benchmark-summary.js";
@@ -1275,7 +1281,10 @@ export interface StartBridgeServerOptions {
   readonly readBenchmarkRun?: (runId: string) => Promise<unknown>;
   readonly readActiveBenchmarkRun?: () => Promise<unknown>;
   readonly clearBenchmarkEndpointData?: (endpointId: string) => Promise<unknown>;
+  readonly clearBenchmarkData?: () => Promise<unknown>;
   readonly readBenchmarkSummary?: () => Promise<unknown>;
+  readonly listBenchmarkRuns?: () => Promise<unknown>;
+  readonly readBenchmarkSummariesByMode?: () => Promise<unknown>;
   readonly readBenchmarkPreferences?: () => Promise<unknown>;
   readonly updateBenchmarkPreferences?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly staticRoot?: string;
@@ -1517,7 +1526,10 @@ export interface RuntimeBridgeBackend {
   readBenchmarkRun(runId: string): Promise<unknown>;
   readActiveBenchmarkRun(): Promise<unknown>;
   clearBenchmarkEndpointData(endpointId: string): Promise<unknown>;
+  clearBenchmarkData(): Promise<unknown>;
   readBenchmarkSummary(): Promise<unknown>;
+  listBenchmarkRuns(): Promise<unknown>;
+  readBenchmarkSummariesByMode(): Promise<unknown>;
   readBenchmarkPreferences(): Promise<unknown>;
   updateBenchmarkPreferences(body: Record<string, unknown>): Promise<unknown>;
   listLocalModels(): Promise<
@@ -1653,23 +1665,6 @@ function slugify(value: string): string {
     .replace(/[^a-zA-Z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
     .toLowerCase();
-}
-
-function resolveEnvCredentialRef(
-  value: string | null,
-  fallbackName: string,
-): ProviderAccountRecord["credentialRef"] {
-  if (!value) {
-    return {
-      backend: "env",
-      ref: fallbackName,
-    };
-  }
-  const envMatch = /^\$\{([A-Z0-9_]+)\}$/.exec(value.trim());
-  return {
-    backend: "env",
-    ref: envMatch?.[1] ?? value,
-  };
 }
 
 function createVendorError(vendorId: string, message: string): BridgeHttpError {
@@ -5787,12 +5782,39 @@ function createRequestHandler(options: StartBridgeServerOptions) {
       return;
     }
 
+    if (request.method === "GET" && url.pathname === "/api/role-model/benchmark/runs") {
+      if (!options.listBenchmarkRuns) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.listBenchmarkRuns());
+      return;
+    }
+
     if (request.method === "GET" && url.pathname === "/api/role-model/benchmark/runs/active") {
       if (!options.readActiveBenchmarkRun) {
         writeJson(response, 404, { error: "not found" });
         return;
       }
       writeJson(response, 200, await options.readActiveBenchmarkRun());
+      return;
+    }
+
+    if (
+      request.method === "DELETE" &&
+      url.pathname === "/api/role-model/benchmark/data"
+    ) {
+      if (!options.clearBenchmarkData) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      try {
+        writeJson(response, 200, await options.clearBenchmarkData());
+      } catch (error) {
+        writeJson(response, 400, {
+          error: error instanceof Error ? error.message : "benchmark data clear failed",
+        });
+      }
       return;
     }
 
@@ -5865,6 +5887,15 @@ function createRequestHandler(options: StartBridgeServerOptions) {
         return;
       }
       writeJson(response, 200, await options.readBenchmarkSummary());
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/role-model/benchmark/summaries/by-mode") {
+      if (!options.readBenchmarkSummariesByMode) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.readBenchmarkSummariesByMode());
       return;
     }
 
@@ -7894,6 +7925,11 @@ export async function createRuntimeBridgeBackend(
         difficultyProfiles: profile.difficultyProfiles as Record<string, unknown> | null,
         summary: benchmarkSummary,
       });
+      const benchmarkSamples = profile.recentSamples.filter(
+        (sample) => sample.source_type === "benchmark",
+      );
+      const routingBenchmarkQuality = resolveRoutingBenchmarkQuality(benchmarkSamples);
+      const routingQualityScore = routingBenchmarkQuality?.quality_score ?? null;
       return {
         endpointId,
         modelId: endpoint.identity.model_id,
@@ -7924,6 +7960,12 @@ export async function createRuntimeBridgeBackend(
         difficultyProfiles: profile.difficultyProfiles,
         advisoryMaxDifficultyRecommendation: profile.advisoryMaxDifficultyRecommendation,
         ...(benchmarkCapability ? { benchmarkCapability } : {}),
+        ...(routingBenchmarkQuality
+          ? {
+              routingBenchmarkQuality,
+              routingQualityScore,
+            }
+          : {}),
       };
     });
   };
@@ -8730,6 +8772,7 @@ export async function createRuntimeBridgeBackend(
       streamWriter?: BridgeStreamWriter,
       requestOptions?: BridgeExecutionRequestOptions,
     ): Promise<BridgeChatCompletionsExecutionResult> {
+      let executionStartedAtMs = 0;
       const recordChatCompletionFailure = (error: unknown): void => {
         const statusCode = error instanceof BridgeHttpError ? error.statusCode : 400;
         persistRuntimeTelemetryFailure({
@@ -8738,9 +8781,11 @@ export async function createRuntimeBridgeBackend(
           modelId: body.model,
           statusCode,
           errorClass: "execution_failed",
+          latencyMs: Math.max(0, Date.now() - executionStartedAtMs),
         });
       };
       try {
+      executionStartedAtMs = Date.now();
       if (
         currentUnifiedRuntimeConfig?.executionMode === "decision_only" &&
         currentRegistry.endpoints.length === 0
@@ -9919,6 +9964,15 @@ export async function createRuntimeBridgeBackend(
       });
       return subjects.length > 0 ? { ...summary, subjects } : summary;
     },
+    async listBenchmarkRuns(): Promise<unknown> {
+      return listBenchmarkRuns(benchmarkArtifactRoot);
+    },
+    async readBenchmarkSummariesByMode(): Promise<unknown> {
+      return readBenchmarkSummariesByMode({
+        artifactRoot: benchmarkArtifactRoot,
+        resolveModelId: resolveBenchmarkEndpointModelId,
+      });
+    },
     async readBenchmarkPreferences(): Promise<unknown> {
       return readBenchmarkPreferences(benchmarkPreferencesPath);
     },
@@ -10145,6 +10199,18 @@ export async function createRuntimeBridgeBackend(
         databasePath: initialization.databasePath,
         endpointId,
       });
+    },
+    async clearBenchmarkData(): Promise<unknown> {
+      const sqliteResult = clearAllObservedBenchmarkData({
+        databasePath: initialization.databasePath,
+      });
+      const artifactResult = clearBenchmarkRunArtifacts({
+        artifactRoot: benchmarkArtifactRoot,
+      });
+      return {
+        ...sqliteResult,
+        ...artifactResult,
+      };
     },
     async listLocalModels(): Promise<
       readonly {

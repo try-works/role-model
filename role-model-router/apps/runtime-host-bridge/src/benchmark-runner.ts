@@ -1718,6 +1718,8 @@ function toObservedSample(input: {
 
   failure: boolean;
 
+  benchmarkMode: "quick" | "full";
+
 }): ObservedPerformanceSample {
 
   const nowMs = Date.now();
@@ -1729,6 +1731,8 @@ function toObservedSample(input: {
     endpoint_version: input.endpointVersion,
 
     source_type: "benchmark",
+
+    benchmark_mode: input.benchmarkMode,
 
     difficulty_bucket: input.caseItem.difficulty_bucket,
 
@@ -2290,6 +2294,8 @@ export async function runRoutingCapabilityBenchmark(
 
             failure: stored.failure,
 
+            benchmarkMode: mode,
+
           }),
 
         });
@@ -2492,6 +2498,7 @@ export async function runRoutingCapabilityBenchmark(
           caseId: caseResult.caseId,
           difficultyBucket: caseResult.difficultyBucket,
           score: caseResult.score,
+          latencyMs: caseResult.latencyMs,
           parseSuccess: caseResult.parseSuccess,
           judgeError: caseResult.judgeError,
           judgeUnavailable: caseResult.judgeUnavailable,

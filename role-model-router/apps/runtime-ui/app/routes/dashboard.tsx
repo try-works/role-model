@@ -67,7 +67,13 @@ export default function DashboardRoute() {
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {statCards.map((card, index) => (
-          <FactCard key={card.label} label={card.label} value={card.value} emphasis={index === 0} />
+          <FactCard
+            key={card.label}
+            label={card.label}
+            value={card.value}
+            detail={card.detail}
+            emphasis={index === 0}
+          />
         ))}
       </div>
 
