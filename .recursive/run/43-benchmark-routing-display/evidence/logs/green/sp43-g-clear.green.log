@@ -1,0 +1,5 @@
+SP43-G GREEN — global benchmark clear
+Command: corepack pnpm --filter @role-model-router/runtime-host-bridge exec vitest run test/benchmark-data-clear.test.ts
+
+ ✓ test/benchmark-data-clear.test.ts (3 tests)
+   ✓ DELETE /api/role-model/benchmark/data clears sqlite samples and artifact runs

@@ -1,0 +1,5 @@
+Run 43 Phase 5 Q11 spot-check
+SEA SHA256: 771eef88a2e78392d4872bdb1d48ac80b7f4f0d3bc693f2195d8b5967b1cc1f9
+deepseek.providerKind=provider-openai
+chat status=200
+RESULT: PASS

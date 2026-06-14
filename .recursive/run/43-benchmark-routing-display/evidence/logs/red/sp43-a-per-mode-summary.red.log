@@ -1,0 +1,5 @@
+SP43-A RED — per-mode summary helpers missing on baseline
+Command: corepack pnpm --filter @role-model-router/runtime-host-bridge exec vitest run test/benchmark-summary.test.ts -t "reads latest completed run per mode"
+
+Error: readLatestBenchmarkSummaryByMode is not exported from benchmark-summary.js
+Tests added in Phase 3 fail until helpers implemented.

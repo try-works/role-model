@@ -1,0 +1,4 @@
+2026-06-14T20:39:00+02:00 SP43-R1 GREEN
+- Removed standalone "Last runs by mode" SectionCard from control-benchmark.tsx
+- Added EndpointModeRunSnapshot per model card (full + quick from summariesByMode)
+- corepack pnpm exec vitest run app/lib/benchmark-model-cards.test.ts — 4 passed

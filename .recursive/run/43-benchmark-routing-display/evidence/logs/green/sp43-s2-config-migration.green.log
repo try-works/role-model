@@ -1,0 +1,3 @@
+2026-06-14T20:58:00+02:00 SP43-S2 GREEN
+- migrate-deepseek-env-credential.ps1 updated external runtime-config.yaml to ${DEEPSEEK_API_KEY}
+- DEEPSEEK_API_KEY set in user environment (value redacted)

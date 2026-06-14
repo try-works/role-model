@@ -1,0 +1,4 @@
+2026-06-14T20:38:00+02:00 SP43-R3 GREEN
+- benchmark-runner.ts toObservedSample sets benchmark_mode from run mode
+- sqlite-memory test: persistObservedBenchmarkSample benchmark_mode readback — PASS (23/23)
+- benchmark-candidates-routing-quality.test.ts hardBlend fixture — PASS

@@ -1,0 +1,16 @@
+
+> @role-model-router/sqlite-memory@0.0.0 test D:\DEV\role-model\.worktrees\43-benchmark-routing-display\role-model-router\packages\sqlite-memory
+> vitest run test/index.test.ts
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/43-benchmark-routing-display/role-model-router/packages/sqlite-memory
+
+(node:2452) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ Γ£ô test/index.test.ts (22 tests) 3015ms
+
+ Test Files  1 passed (1)
+      Tests  22 passed (22)
+   Start at  14:39:33
+   Duration  4.41s (transform 445ms, setup 0ms, collect 579ms, tests 3.01s, environment 0ms, prepare 232ms)
+

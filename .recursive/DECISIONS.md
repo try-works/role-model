@@ -1130,3 +1130,23 @@
   - no catalog export rewrite; no per-provider-id exception branches; full 19-id parameterized phase5 connect loop deferred to unit/integration tests
 - Known issues / follow-ups:
   - DeepSeek reasoning models need sufficient `max_tokens` for chat probes; overlap CI guard should run on catalog/LiteLLM inventory changes
+
+### Run `43-benchmark-routing-display`
+
+- Run folder: `/.recursive/run/43-benchmark-routing-display/`
+- Artifacts: `00-requirements.md` through `08-memory-impact.md`; addenda `01` and `02` under `addenda/`; RED/GREEN and phase5/addendum QA logs
+- What changed:
+  - per-mode benchmark API (`/benchmark/summaries/by-mode`, `/benchmark/runs`) and Models → Benchmark UI with routing quality separation
+  - `benchmark-routing-quality.ts` with case-weighted overall, hard full+quick blend, `benchmark_mode` tagging on sample persist
+  - dashboard latency detail (run 41 completion), failure telemetry latency, global benchmark clear, benchmark/candidate latency UI
+  - **Addendum 01:** dual-run in model cards, run history order, live `hardBlend` on candidates API
+  - **Addendum 02:** `credential-ref-env.ts`; `${DEEPSEEK_API_KEY}` external config pattern; sqlite stores env ref name only
+- Why:
+  - operators lost full-run context when quick ran; artifact vs routing scores conflated; dashboard latency showed n/a; inline API keys leaked into sqlite
+- How:
+  - strict TDD for bridge/sqlite slices; pragmatic UI addendum; agent-operated packaged QA on `:3456`; self-audit closeout phases 6–8 with addenda reconciliation
+- What was not done:
+  - no benchmark case/rubric changes; no catalog export rewrite; full 55-case re-run not required for addendum 01 closure
+- Known issues / follow-ups:
+  - legacy scope folders under same runtime state root (e.g. `run42-verify`) may retain pre-migration credential rows; QA must target active scope sqlite
+  - operator should keep LiteLLM keys in env vars, not inline yaml, when using unified runtime config
