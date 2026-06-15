@@ -78,7 +78,7 @@ import {
   upsertProviderAccount as upsertSqliteProviderAccount,
   upsertRuntimeEndpoint as upsertSqliteRuntimeEndpoint,
 } from "@role-model-router/sqlite-memory";
-import { listProviderDeviceAuthSessions } from "@role-model-router/sqlite-memory";
+import { listProviderDeviceAuthSessions, type ConversationContinuitySnapshot } from "@role-model-router/sqlite-memory";
 import {
   type ToolConnector,
   type ToolRegistry,
@@ -106,7 +106,7 @@ import {
   readLlamaSwapRoleIdsByModelId,
   resolveEndpointRoleIds,
 } from "./local-model-role-bindings.js";
-import { resolveEnvCredentialRef } from "./credential-ref-env.js";
+import { looksLikeInlineApiKey, resolveEnvCredentialRef } from "./credential-ref-env.js";
 import { resolveOauthCredentialRef } from "./oauth-credential.js";
 import {
   type OperatorIntentDiagnostic,
@@ -6434,8 +6434,8 @@ export async function createRuntimeBridgeBackend(
   options: CreateRuntimeBridgeBackendOptions,
 ): Promise<RuntimeBridgeBackend> {
   const networkFetcher = options.networkFetcher ?? fetch;
-  const fixtureRoot =
-    options.fixtureRoot ?? path.join(options.repoRoot, "testdata", "router-runtime", "fixtures");
+  const fixtureRoot = options.fixtureRoot ?? null;
+  const useFixtures = fixtureRoot !== null;
   const initialUnifiedRuntimeConfig = options.unifiedRuntimeConfigPath
     ? await readFile(options.unifiedRuntimeConfigPath, "utf8")
         .then((text) => parseUnifiedRuntimeConfigText(text))
@@ -6459,53 +6459,75 @@ export async function createRuntimeBridgeBackend(
   );
   const liteLLMModelPrices = await loadLiteLLMModelPrices(options.repoRoot);
   let liteLLMProviders = liteLLMModelPrices ? deriveLiteLLMProviders(liteLLMModelPrices) : [];
-  const providerAccountsFixture = await readJson<{ accounts: ProviderAccountRecord[] }>(
-    path.join(fixtureRoot, "provider-accounts.json"),
-  );
-  const registrySourcesFixture = await readJson<RegistrySources>(
-    path.join(fixtureRoot, "registry-sources.json"),
-  );
-  const fixtureAccounts = synthesizeFixtureProviderAccounts(
-    baseCatalog,
-    providerAccountsFixture.accounts,
-    registrySourcesFixture,
-  );
-  const continuityFixture = await readJson<{
-    session: Parameters<typeof persistContinuitySnapshot>[0]["session"];
-    conversation: Parameters<typeof persistContinuitySnapshot>[0]["conversation"];
-    turns: Parameters<typeof persistContinuitySnapshot>[0]["turns"];
-    artifacts: Parameters<typeof persistContinuitySnapshot>[0]["artifacts"];
-    artifactLinks: Parameters<typeof persistContinuitySnapshot>[0]["artifactLinks"];
-    handoffs: Parameters<typeof persistContinuitySnapshot>[0]["handoffs"];
-    selection: {
-      maxTurns: number;
-      maxArtifacts: number;
-      tokenBudget: number;
-    };
-  }>(path.join(fixtureRoot, "context-envelope.json"));
-  const fixtureRoutingModel = await readJson<RoutingModelSelection>(
-    path.join(fixtureRoot, "routing-model-guidance.json"),
-  ).catch(() => undefined);
+  const providerAccountsFixture = useFixtures
+    ? await readJson<{ accounts: ProviderAccountRecord[] }>(
+        path.join(fixtureRoot!, "provider-accounts.json"),
+      )
+    : { accounts: [] };
+  const registrySourcesFixture = useFixtures
+    ? await readJson<RegistrySources>(path.join(fixtureRoot!, "registry-sources.json"))
+    : { cloud: [], local: [] };
+  const fixtureAccounts = useFixtures
+    ? synthesizeFixtureProviderAccounts(
+        baseCatalog,
+        providerAccountsFixture.accounts,
+        registrySourcesFixture,
+      )
+    : [];
+  const continuityFixture = useFixtures
+    ? await readJson<{
+        session: Parameters<typeof persistContinuitySnapshot>[0]["session"];
+        conversation: Parameters<typeof persistContinuitySnapshot>[0]["conversation"];
+        turns: Parameters<typeof persistContinuitySnapshot>[0]["turns"];
+        artifacts: Parameters<typeof persistContinuitySnapshot>[0]["artifacts"];
+        artifactLinks: Parameters<typeof persistContinuitySnapshot>[0]["artifactLinks"];
+        handoffs: Parameters<typeof persistContinuitySnapshot>[0]["handoffs"];
+        selection: {
+          maxTurns: number;
+          maxArtifacts: number;
+          tokenBudget: number;
+        };
+      }>(path.join(fixtureRoot!, "context-envelope.json"))
+    : null;
+  const fixtureRoutingModel = useFixtures
+    ? await readJson<RoutingModelSelection>(
+        path.join(fixtureRoot!, "routing-model-guidance.json"),
+      ).catch(() => undefined)
+    : undefined;
   let routingModel: RoutingModelSelection | undefined;
-  const captureFixtureMap = await readJson<CaptureFixtureMap>(
-    path.join(fixtureRoot, "adapter-captures.json"),
-  );
-  const observabilityHistory = await readJson<{
-    byEndpointId: Record<string, ObservedPerformanceSample[]>;
-  }>(path.join(fixtureRoot, "observability-history.json"));
-  const observabilityPolicy = await readJson<RuntimeCapturePolicy>(
-    path.join(fixtureRoot, "observability-policy.json"),
-  );
-  const fixtureProviderPresets = await readJson<ProviderPresetCatalog>(
-    path.join(fixtureRoot, "provider-presets.json"),
-  );
+  const captureFixtureMap = useFixtures
+    ? await readJson<CaptureFixtureMap>(path.join(fixtureRoot!, "adapter-captures.json"))
+    : { byEndpointId: {}, byRequestId: {} };
+  const observabilityHistory = useFixtures
+    ? await readJson<{
+        byEndpointId: Record<string, ObservedPerformanceSample[]>;
+      }>(path.join(fixtureRoot!, "observability-history.json"))
+    : { byEndpointId: {} };
+  const observabilityPolicy = useFixtures
+    ? await readJson<RuntimeCapturePolicy>(
+        path.join(fixtureRoot!, "observability-policy.json"),
+      )
+    : ({ captureMode: "none" } as RuntimeCapturePolicy);
+  const fixtureProviderPresets = useFixtures
+    ? await readJson<ProviderPresetCatalog>(
+        path.join(fixtureRoot!, "provider-presets.json"),
+      )
+    : { providers: {} };
   const repoProviderPresets = await readJson<ProviderPresetCatalog>(
     path.join(options.repoRoot, "testdata", "router-runtime", "provider-presets.json"),
-  );
-  const legacyPlaceholderFixturePaths = [
-    path.join(options.repoRoot, "testdata", "router-runtime", "provider-accounts.json"),
-    path.join(options.repoRoot, "testdata", "router-runtime", "fixtures", "provider-accounts.json"),
-  ];
+  ).catch(() => ({ providers: {} } as ProviderPresetCatalog));
+  const legacyPlaceholderFixturePaths = useFixtures
+    ? [
+        path.join(options.repoRoot, "testdata", "router-runtime", "provider-accounts.json"),
+        path.join(
+          options.repoRoot,
+          "testdata",
+          "router-runtime",
+          "fixtures",
+          "provider-accounts.json",
+        ),
+      ]
+    : [];
   const legacyPlaceholderAccounts = (
     await Promise.all(
       legacyPlaceholderFixturePaths.map((fixturePath) =>
@@ -6555,15 +6577,17 @@ export async function createRuntimeBridgeBackend(
     currentRuntimeRoles.roleSummaries.map((role) => role.roleId);
   const deviceId = randomUUID();
 
-  persistContinuitySnapshot({
-    databasePath: initialization.databasePath,
-    session: continuityFixture.session,
-    conversation: continuityFixture.conversation,
-    turns: continuityFixture.turns,
-    artifacts: continuityFixture.artifacts,
-    artifactLinks: continuityFixture.artifactLinks,
-    handoffs: continuityFixture.handoffs,
-  });
+  if (continuityFixture) {
+    persistContinuitySnapshot({
+      databasePath: initialization.databasePath,
+      session: continuityFixture.session,
+      conversation: continuityFixture.conversation,
+      turns: continuityFixture.turns,
+      artifacts: continuityFixture.artifacts,
+      artifactLinks: continuityFixture.artifactLinks,
+      handoffs: continuityFixture.handoffs,
+    });
+  }
 
   let currentUnifiedRuntimeConfig = initialUnifiedRuntimeConfig;
   const catalogWithFixtureModels = withBuiltinLocalOpenAIProvider(
@@ -6763,7 +6787,16 @@ export async function createRuntimeBridgeBackend(
       sources: getCurrentRegistrySources(),
     });
     if (currentRegistry.diagnostics.length > 0) {
-      throw new Error("Endpoint-registry validation failed after runtime state update.");
+      console.error(
+        "Endpoint-registry diagnostics:",
+        JSON.stringify(currentRegistry.diagnostics, null, 2),
+      );
+      const summary = currentRegistry.diagnostics
+        .map((d) => `[${d.severity}] ${d.message}`)
+        .join("; ");
+      throw new Error(
+        `Endpoint-registry validation failed after runtime state update: ${summary}`,
+      );
     }
     currentModelOverrides = readModelOverridesFromDisk(options.runtimeStateRoot);
     syncRoutingModelSelection();
@@ -7288,10 +7321,6 @@ export async function createRuntimeBridgeBackend(
     if (!account) {
       throw new Error(`Provider account ${providerAccountId} was not found.`);
     }
-    const envCredentialError = readEnvCredentialError(account, fixtureAccountIds);
-    if (envCredentialError) {
-      throw new Error(envCredentialError);
-    }
     if (account.status !== "active" || account.healthStatus !== "healthy") {
       throw new Error(
         `Provider account ${providerAccountId} is not ready for endpoint activation.`,
@@ -7614,27 +7643,60 @@ export async function createRuntimeBridgeBackend(
     await applyUnifiedRuntimeConfigState(currentUnifiedRuntimeConfig);
   }
 
-  const continuity = readConversationContinuity({
-    databasePath: initialization.databasePath,
-    conversationId: continuityFixture.conversation.conversationId,
-  });
-  const envelope = assembleContextEnvelope({
-    continuity,
-    maxTurns: continuityFixture.selection.maxTurns,
-    maxArtifacts: continuityFixture.selection.maxArtifacts,
-    tokenBudget: continuityFixture.selection.tokenBudget,
-  });
-  const retrievalReceipt = createRetrievalReceipt({
-    envelope,
-    totalTurns: continuity.turns.length,
-    totalArtifacts: continuity.artifacts.length,
-  });
-  persistRetrievalReceipt({
-    databasePath: initialization.databasePath,
-    retrievalReceiptId: retrievalReceipt.receiptId,
-    conversationId: retrievalReceipt.conversationId,
-    receiptSummary: JSON.stringify(retrievalReceipt.summary),
-  });
+  let envelope: ReturnType<typeof assembleContextEnvelope>;
+  let retrievalReceipt: ReturnType<typeof createRetrievalReceipt>;
+  if (continuityFixture) {
+    const continuity = readConversationContinuity({
+      databasePath: initialization.databasePath,
+      conversationId: continuityFixture.conversation.conversationId,
+    });
+    envelope = assembleContextEnvelope({
+      continuity,
+      maxTurns: continuityFixture.selection.maxTurns,
+      maxArtifacts: continuityFixture.selection.maxArtifacts,
+      tokenBudget: continuityFixture.selection.tokenBudget,
+    });
+    retrievalReceipt = createRetrievalReceipt({
+      envelope,
+      totalTurns: continuity.turns.length,
+      totalArtifacts: continuity.artifacts.length,
+    });
+    persistRetrievalReceipt({
+      databasePath: initialization.databasePath,
+      retrievalReceiptId: retrievalReceipt.receiptId,
+      conversationId: retrievalReceipt.conversationId,
+      receiptSummary: JSON.stringify(retrievalReceipt.summary),
+    });
+  } else {
+    const emptySnapshot: ConversationContinuitySnapshot = {
+      session: {
+        sessionId: `${options.scopeId}-empty-session`,
+        workspaceScope: options.scopeId,
+        createdAtMs: 0,
+        updatedAtMs: 0,
+      },
+      conversation: {
+        conversationId: `${options.scopeId}-empty-conversation`,
+        sessionId: `${options.scopeId}-empty-session`,
+        createdAtMs: 0,
+        updatedAtMs: 0,
+      },
+      turns: [],
+      artifacts: [],
+      handoffs: [],
+    };
+    envelope = assembleContextEnvelope({
+      continuity: emptySnapshot,
+      maxTurns: 0,
+      maxArtifacts: 0,
+      tokenBudget: 0,
+    });
+    retrievalReceipt = createRetrievalReceipt({
+      envelope,
+      totalTurns: 0,
+      totalArtifacts: 0,
+    });
+  }
 
   const captures = await loadResponseCaptures(options.repoRoot, captureFixtureMap);
   const getRegistryEndpoint = (
@@ -9472,6 +9534,71 @@ export async function createRuntimeBridgeBackend(
       return listCurrentProviderDeviceAuthorizations();
     },
     async upsertProviderAccount(account: Record<string, unknown>): Promise<ProviderAccountRecord> {
+      const credentialRef = account.credentialRef as
+        | { backend: string; ref: string }
+        | undefined;
+      if (
+        credentialRef?.backend === "env" &&
+        typeof credentialRef.ref === "string" &&
+        looksLikeInlineApiKey(credentialRef.ref)
+      ) {
+        const providerId = String(account.providerId ?? "unknown");
+        const providerAccountId = String(account.providerAccountId ?? "unknown");
+        const apiKeyRef = `api-key/${sanitizeSegment(providerId)}/${sanitizeSegment(providerAccountId)}`;
+        await persistStaticCredentialFile(
+          options.runtimeStateRoot,
+          options.scopeId,
+          apiKeyRef,
+          credentialRef.ref,
+        );
+        account.credentialRef = {
+          backend: "local-file",
+          ref: apiKeyRef,
+        };
+      }
+
+      const providerAccountId = String(account.providerAccountId ?? "");
+      const existingAccount = currentAccounts.find(
+        (entry) => entry.providerAccountId === providerAccountId,
+      );
+      if (existingAccount) {
+        const newAllowedModels = Array.isArray(account.allowedModels)
+          ? (account.allowedModels as string[])
+          : [];
+        const mergedAllowedModels = [
+          ...new Set([...existingAccount.allowedModels, ...newAllowedModels]),
+        ];
+        account.allowedModels = mergedAllowedModels;
+
+        if (Array.isArray(account.modelRoleBindings) && (existingAccount.modelRoleBindings?.length ?? 0) > 0) {
+          const newBindings = account.modelRoleBindings as { modelId: string; roleIds: string[] }[];
+          const existingBindings = existingAccount.modelRoleBindings ?? [];
+          const mergedBindings = [
+            ...existingBindings,
+            ...newBindings.filter(
+              (b) =>
+                !existingBindings.some(
+                  (eb) => eb.modelId === b.modelId,
+                ),
+            ),
+          ];
+          account.modelRoleBindings = mergedBindings;
+        }
+
+        if (!account.credentialRef) {
+          account.credentialRef = existingAccount.credentialRef;
+        }
+        if (account.status === undefined && existingAccount.status) {
+          account.status = existingAccount.status;
+        }
+        if (account.healthStatus === undefined && existingAccount.healthStatus) {
+          account.healthStatus = existingAccount.healthStatus;
+        }
+        if (account.rotationState === undefined && existingAccount.rotationState) {
+          account.rotationState = existingAccount.rotationState;
+        }
+      }
+
       const validationResult = validateProviderAccounts({
         catalog: currentNormalizedCatalog,
         additionalProviders: liteLLMProviders,
@@ -11086,7 +11213,7 @@ export function resolveBridgeServerOptions(input: {
 
   return {
     host: input.host?.trim() || "127.0.0.1",
-    port: input.port ? Number.parseInt(input.port, 10) : 8091,
+    port: input.port ? Number.parseInt(input.port, 10) : 3456,
     repoRoot,
     runtimeStateRoot,
     scopeId: input.scopeId?.trim() || "runtime-host-bridge",

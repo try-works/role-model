@@ -130,7 +130,7 @@ describe("OpenAI provider adapter", () => {
     expect(capabilities.structuredOutputs).toBe("native");
     expect(requestCapture.url).toBe("https://api.openai.test/v1/responses");
     expect(requestCapture.body).toMatchObject({
-      model: "openai/gpt-4.1-mini-fast",
+      model: "gpt-4.1-mini-fast",
       temperature: 0.2,
       max_output_tokens: 256,
     });
@@ -320,7 +320,7 @@ describe("OpenAI provider adapter", () => {
 
     expect(requestCapture.url).toBe("https://api.kimi.test/coding/v1/chat/completions");
     expect(requestCapture.body).toMatchObject({
-      model: "moonshot/kimi-k2.5",
+      model: "kimi-k2.5",
       messages: [{ role: "user", content: "Reply with the word ok." }],
       temperature: 0.1,
       max_tokens: 128,

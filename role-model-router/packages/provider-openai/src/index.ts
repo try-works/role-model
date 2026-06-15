@@ -569,7 +569,9 @@ export function buildOpenAIRequest(
         authorization: `Bearer ${input.target.account?.credentialRef.ref ?? "OPENAI_API_KEY"}`,
       },
       body: {
-        model: input.target.modelId,
+        model: input.target.modelId.includes("/")
+          ? input.target.modelId.split("/").slice(1).join("/")
+          : input.target.modelId,
         messages: toOpenAIInput(input.executionRequest.messages),
         ...(typeof input.executionRequest.temperature === "number"
           ? { temperature: input.executionRequest.temperature }
@@ -607,7 +609,9 @@ export function buildOpenAIRequest(
       "OpenAI-Beta": "responses=v1",
     },
     body: {
-      model: input.target.modelId,
+      model: input.target.modelId.includes("/")
+        ? input.target.modelId.split("/").slice(1).join("/")
+        : input.target.modelId,
       input: toOpenAIInput(input.executionRequest.messages),
       ...(typeof input.executionRequest.temperature === "number"
         ? { temperature: input.executionRequest.temperature }

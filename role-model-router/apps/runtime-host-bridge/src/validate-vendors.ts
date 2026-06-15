@@ -25,7 +25,7 @@ function createSimpleLocalVendorScript(): string {
   return `const http=require("node:http");const port=Number(process.env.PORT??process.argv[2]);const server=http.createServer((req,res)=>{if(req.url==="/health"){res.statusCode=200;res.end("ok");return;}if(req.url==="/v1/responses"){let body="";req.on("data",chunk=>body+=chunk);req.on("end",()=>{const parsed=JSON.parse(body||"{}");if(parsed.stream){res.writeHead(200,{"content-type":"text/event-stream; charset=utf-8"});res.write('data: {"type":"response.created","response":{"id":"resp-local","created_at":1,"model":"local/llama-3.1-8b-instruct"}}'+"\\n\\n");setTimeout(()=>{res.write('data: {"type":"response.output_text.delta","item_id":"msg_1","delta":"local llama summary"}'+"\\n\\n");setTimeout(()=>{res.end('data: {"type":"response.completed","response":{"usage":{"input_tokens":11,"output_tokens":4}},"_hidden_params":{"response_cost":0.0005,"cache_hit":false}}'+"\\n\\n"+'data: [DONE]'+"\\n\\n");},10);},10);return;}res.setHeader("content-type","application/json");res.end(JSON.stringify({id:"resp-local",output:[{type:"message",role:"assistant",content:[{type:"output_text",text:"local llama summary"}]}],usage:{input_tokens:11,output_tokens:4},_hidden_params:{response_cost:0.0005,cache_hit:false}}));});return;}if(req.url==="/v1/chat/completions"){let body="";req.on("data",chunk=>body+=chunk);req.on("end",()=>{const parsed=JSON.parse(body||"{}");if(parsed.stream){res.writeHead(200,{"content-type":"text/event-stream; charset=utf-8"});res.write('data: {"id":"chat-local","object":"chat.completion.chunk","created":1,"model":"local/llama-3.1-8b-instruct","choices":[{"index":0,"delta":{"role":"assistant","content":"local "},"finish_reason":null}]}'+"\\n\\n");setTimeout(()=>{res.write('data: {"id":"chat-local","object":"chat.completion.chunk","created":1,"model":"local/llama-3.1-8b-instruct","choices":[{"index":0,"delta":{"content":"llama summary"},"finish_reason":null}]}'+"\\n\\n");setTimeout(()=>{res.end('data: {"id":"chat-local","object":"chat.completion.chunk","created":1,"model":"local/llama-3.1-8b-instruct","choices":[{"index":0,"delta":{},"finish_reason":"stop"}],"usage":{"prompt_tokens":11,"completion_tokens":4},"_hidden_params":{"response_cost":0.0005,"cache_hit":false}}'+"\\n\\n"+'data: [DONE]'+"\\n\\n");},10);},10);return;}res.setHeader("content-type","application/json");res.end(JSON.stringify({id:"chat-local",object:"chat.completion",choices:[{index:0,message:{role:"assistant",content:"local llama summary"},finish_reason:"stop"}],usage:{prompt_tokens:11,completion_tokens:4,total_tokens:15},_hidden_params:{response_cost:0.0005,cache_hit:false}}));});return;}res.statusCode=404;res.end("missing");});server.listen(port,"127.0.0.1");const shutdown=()=>server.close(()=>process.exit(0));process.on("SIGTERM",shutdown);process.on("SIGINT",shutdown);`;
 }
 function createRemoteVendorScript(): string {
-  return `const http=require("node:http");const port=Number(process.env.PORT??process.argv[2]);const server=http.createServer((req,res)=>{if(req.url==="/health/liveliness"){res.statusCode=200;res.end("ok");return;}if(req.url==="/v1/responses"){let body="";req.on("data",chunk=>body+=chunk);req.on("end",()=>{const parsed=JSON.parse(body||"{}");const joinedInput=typeof parsed.input==="string"?parsed.input:JSON.stringify(parsed.input??"");const isClassifier=joinedInput.includes("ROLE_MODEL_DIFFICULTY_CLASSIFIER");const isController=joinedInput.includes("ROLE_MODEL_ROUTING_CONTROLLER");const isHardPrompt=joinedInput.includes("Analyze this code-edit workflow")||joinedInput.includes('\"toolCount\":2')||joinedInput.includes('\"toolCount\": 2')||joinedInput.includes('\"codeOrSchemaBurden\":true')||joinedInput.includes('\"codeOrSchemaBurden\": true');const classifierResponse=isHardPrompt?JSON.stringify({difficulty:"hard"}):JSON.stringify({difficulty:"easy"});const controllerResponse=joinedInput.includes("invalid-controller-fallback")?"not-json-controller-output":JSON.stringify({strategy:"quality",preferredEndpointIds:["openai.litellm.global.openai-gpt-4-1-mini-fast"]});const responseText=isController?controllerResponse:(isClassifier?classifierResponse:"remote litellm summary");if(parsed.stream){res.writeHead(200,{"content-type":"text/event-stream; charset=utf-8"});res.write('data: {"type":"response.created","response":{"id":"resp-remote","created_at":1,"model":"openai/gpt-4.1-mini-fast"}}'+"\\n\\n");setTimeout(()=>{res.write('data: {"type":"response.output_text.delta","item_id":"msg_1","delta":'+JSON.stringify(responseText)+'}'+"\\n\\n");setTimeout(()=>{res.end('data: {"type":"response.completed","response":{"usage":{"input_tokens":14,"output_tokens":5}},"_hidden_params":{"response_cost":0.0042,"cache_hit":true}}'+"\\n\\n"+'data: [DONE]'+"\\n\\n");},10);},10);return;}res.setHeader("content-type","application/json");res.end(JSON.stringify({id:"resp-remote",output:[{type:"message",role:"assistant",content:[{type:"output_text",text:responseText}]}],usage:{input_tokens:14,output_tokens:5,prompt_tokens_details:{cached_tokens:9}},_hidden_params:{response_cost:0.0042,cache_hit:true}}));});return;}if(req.url==="/v1/chat/completions"){let body="";req.on("data",chunk=>body+=chunk);req.on("end",()=>{const parsed=JSON.parse(body||"{}");const joinedMessages=JSON.stringify(parsed.messages??[]);const isClassifier=joinedMessages.includes("ROLE_MODEL_DIFFICULTY_CLASSIFIER");const isController=joinedMessages.includes("ROLE_MODEL_ROUTING_CONTROLLER");const isHardPrompt=joinedMessages.includes("Analyze this code-edit workflow")||joinedMessages.includes('\"toolCount\":2')||joinedMessages.includes('\"toolCount\": 2')||joinedMessages.includes('\"codeOrSchemaBurden\":true')||joinedMessages.includes('\"codeOrSchemaBurden\": true');const classifierResponse=isHardPrompt?JSON.stringify({difficulty:"hard"}):JSON.stringify({difficulty:"easy"});const controllerResponse=joinedMessages.includes("invalid-controller-fallback")?"not-json-controller-output":JSON.stringify({strategy:"quality",preferredEndpointIds:["openai.litellm.global.openai-gpt-4-1-mini-fast"]});const responseText=isController?controllerResponse:(isClassifier?classifierResponse:"remote litellm summary");if(parsed.stream){res.writeHead(200,{"content-type":"text/event-stream; charset=utf-8"});res.write('data: {"id":"chat-remote","object":"chat.completion.chunk","created":1,"model":"openai/gpt-4.1-mini-fast","choices":[{"index":0,"delta":{"role":"assistant","content":"remote "},"finish_reason":null}]}'+"\\n\\n");setTimeout(()=>{res.write('data: {"id":"chat-remote","object":"chat.completion.chunk","created":1,"model":"openai/gpt-4.1-mini-fast","choices":[{"index":0,"delta":{"content":"litellm summary"},"finish_reason":null}]}'+"\\n\\n");setTimeout(()=>{res.end('data: {"id":"chat-remote","object":"chat.completion.chunk","created":1,"model":"openai/gpt-4.1-mini-fast","choices":[{"index":0,"delta":{},"finish_reason":"stop"}],"usage":{"prompt_tokens":14,"completion_tokens":5},"_hidden_params":{"response_cost":0.0042,"cache_hit":true}}'+"\\n\\n"+'data: [DONE]'+"\\n\\n");},10);},10);return;}res.setHeader("content-type","application/json");res.end(JSON.stringify({id:"chat-remote",object:"chat.completion",choices:[{index:0,message:{role:"assistant",content:responseText},finish_reason:"stop"}],usage:{prompt_tokens:14,completion_tokens:5,total_tokens:19},_hidden_params:{response_cost:0.0042,cache_hit:true}}));});return;}res.statusCode=404;res.end("missing");});server.listen(port,"127.0.0.1");const shutdown=()=>server.close(()=>process.exit(0));process.on("SIGTERM",shutdown);process.on("SIGINT",shutdown);`;
+  return `const http=require("node:http");const port=Number(process.env.PORT??process.argv[2]);const server=http.createServer((req,res)=>{if(req.url==="/health/liveliness"){res.statusCode=200;res.end("ok");return;}if(req.url==="/v1/models"){res.setHeader("content-type","application/json");res.end(JSON.stringify({object:"list",data:[{id:"openai/gpt-4.1-mini-fast",object:"model",owned_by:"openai"}]}));return;}if(req.url==="/v1/responses"){let body="";req.on("data",chunk=>body+=chunk);req.on("end",()=>{const parsed=JSON.parse(body||"{}");const joinedInput=typeof parsed.input==="string"?parsed.input:JSON.stringify(parsed.input??"");const isClassifier=joinedInput.includes("ROLE_MODEL_DIFFICULTY_CLASSIFIER");const isController=joinedInput.includes("ROLE_MODEL_ROUTING_CONTROLLER");const isHardPrompt=joinedInput.includes("Analyze this code-edit workflow")||joinedInput.includes('\"toolCount\":2')||joinedInput.includes('\"toolCount\": 2')||joinedInput.includes('\"codeOrSchemaBurden\":true')||joinedInput.includes('\"codeOrSchemaBurden\": true');const classifierResponse=isHardPrompt?JSON.stringify({difficulty:"hard"}):JSON.stringify({difficulty:"easy"});const controllerResponse=joinedInput.includes("invalid-controller-fallback")?"not-json-controller-output":JSON.stringify({strategy:"quality",preferredEndpointIds:["openai.litellm.global.openai-gpt-4-1-mini-fast"]});const responseText=isController?controllerResponse:(isClassifier?classifierResponse:"remote litellm summary");if(parsed.stream){res.writeHead(200,{"content-type":"text/event-stream; charset=utf-8"});res.write('data: {"type":"response.created","response":{"id":"resp-remote","created_at":1,"model":"openai/gpt-4.1-mini-fast"}}'+"\\n\\n");setTimeout(()=>{res.write('data: {"type":"response.output_text.delta","item_id":"msg_1","delta":'+JSON.stringify(responseText)+'}'+"\\n\\n");setTimeout(()=>{res.end('data: {"type":"response.completed","response":{"usage":{"input_tokens":14,"output_tokens":5}},"_hidden_params":{"response_cost":0.0042,"cache_hit":true}}'+"\\n\\n"+'data: [DONE]'+"\\n\\n");},10);},10);return;}res.setHeader("content-type","application/json");res.end(JSON.stringify({id:"resp-remote",output:[{type:"message",role:"assistant",content:[{type:"output_text",text:responseText}]}],usage:{input_tokens:14,output_tokens:5,prompt_tokens_details:{cached_tokens:9}},_hidden_params:{response_cost:0.0042,cache_hit:true}}));});return;}if(req.url==="/v1/chat/completions"){let body="";req.on("data",chunk=>body+=chunk);req.on("end",()=>{const parsed=JSON.parse(body||"{}");const joinedMessages=JSON.stringify(parsed.messages??[]);const isClassifier=joinedMessages.includes("ROLE_MODEL_DIFFICULTY_CLASSIFIER");const isController=joinedMessages.includes("ROLE_MODEL_ROUTING_CONTROLLER");const isHardPrompt=joinedMessages.includes("Analyze this code-edit workflow")||joinedMessages.includes('\"toolCount\":2')||joinedMessages.includes('\"toolCount\": 2')||joinedMessages.includes('\"codeOrSchemaBurden\":true')||joinedMessages.includes('\"codeOrSchemaBurden\": true');const classifierResponse=isHardPrompt?JSON.stringify({difficulty:"hard"}):JSON.stringify({difficulty:"easy"});const controllerResponse=joinedMessages.includes("invalid-controller-fallback")?"not-json-controller-output":JSON.stringify({strategy:"quality",preferredEndpointIds:["openai.litellm.global.openai-gpt-4-1-mini-fast"]});const responseText=isController?controllerResponse:(isClassifier?classifierResponse:"remote litellm summary");if(parsed.stream){res.writeHead(200,{"content-type":"text/event-stream; charset=utf-8"});res.write('data: {"id":"chat-remote","object":"chat.completion.chunk","created":1,"model":"openai/gpt-4.1-mini-fast","choices":[{"index":0,"delta":{"role":"assistant","content":"remote "},"finish_reason":null}]}'+"\\n\\n");setTimeout(()=>{res.write('data: {"id":"chat-remote","object":"chat.completion.chunk","created":1,"model":"openai/gpt-4.1-mini-fast","choices":[{"index":0,"delta":{"content":"litellm summary"},"finish_reason":null}]}'+"\\n\\n");setTimeout(()=>{res.end('data: {"id":"chat-remote","object":"chat.completion.chunk","created":1,"model":"openai/gpt-4.1-mini-fast","choices":[{"index":0,"delta":{},"finish_reason":"stop"}],"usage":{"prompt_tokens":14,"completion_tokens":5},"_hidden_params":{"response_cost":0.0042,"cache_hit":true}}'+"\\n\\n"+'data: [DONE]'+"\\n\\n");},10);},10);return;}res.setHeader("content-type","application/json");res.end(JSON.stringify({id:"chat-remote",object:"chat.completion",choices:[{index:0,message:{role:"assistant",content:responseText},finish_reason:"stop"}],usage:{prompt_tokens:14,completion_tokens:5,total_tokens:19},_hidden_params:{response_cost:0.0042,cache_hit:true}}));});return;}res.statusCode=404;res.end("missing");});server.listen(port,"127.0.0.1");const shutdown=()=>server.close(()=>process.exit(0));process.on("SIGTERM",shutdown);process.on("SIGINT",shutdown);`;
 }
 
 async function postResponses(
@@ -83,6 +83,35 @@ async function collectStreamedResponse(
   };
 }
 
+async function waitForRuntimeModelEndpointsReady(
+  backend: Pick<RuntimeBridgeBackend, "listEndpoints">,
+  modelIds: readonly string[],
+  timeoutMs = 30_000,
+): Promise<void> {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const endpoints = await backend.listEndpoints();
+    const readyByModelId = new Map(
+      modelIds.map((modelId) => [
+        modelId,
+        endpoints.some(
+          (endpoint) =>
+            endpoint.modelId === modelId &&
+            endpoint.status === "active" &&
+            endpoint.healthStatus === "healthy",
+        ),
+      ]),
+    );
+    if ([...readyByModelId.values()].every(Boolean)) {
+      return;
+    }
+    await delay(50);
+  }
+  throw new Error(
+    `Timed out waiting for runtime endpoints for models: ${modelIds.join(", ")}.`,
+  );
+}
+
 type RuntimeVendorValidationHarnessMode = "mock" | "real";
 
 type LlamaSwapValidationModelConfig = {
@@ -121,6 +150,13 @@ type RuntimeValidationConfig = {
   readonly version: "1.0";
   readonly routing: {
     readonly strategy: "balanced";
+  };
+  readonly observed_data?: {
+    readonly difficulty_learning?: {
+      readonly override?: {
+        readonly min_samples?: number;
+      };
+    };
   };
   readonly model_aliases?: Record<
     string,
@@ -184,6 +220,13 @@ function createDecisionConfig(): RuntimeValidationConfig {
     version: "1.0",
     routing: {
       strategy: "balanced",
+    },
+    observed_data: {
+      difficulty_learning: {
+        override: {
+          min_samples: 999,
+        },
+      },
     },
   };
 }
@@ -736,6 +779,7 @@ export async function runRuntimeVendorValidation(options: {
         config: plan.localConfig,
       });
       try {
+        await waitForRuntimeModelEndpointsReady(localRuntime.backend, [plan.localModelId]);
         const localResponse = await postResponses(
           localRuntime.baseUrl,
           plan.localModelId,
@@ -761,6 +805,7 @@ export async function runRuntimeVendorValidation(options: {
           config: plan.remoteConfig,
         });
         try {
+          await waitForRuntimeModelEndpointsReady(remoteRuntime.backend, [plan.remoteModelId]);
           const remoteResponse = await postResponses(
             remoteRuntime.baseUrl,
             plan.remoteModelId,
@@ -786,6 +831,10 @@ export async function runRuntimeVendorValidation(options: {
             config: plan.hybridConfig,
           });
           try {
+            await waitForRuntimeModelEndpointsReady(hybridRuntime.backend, [
+              plan.localModelId,
+              plan.remoteModelId,
+            ]);
             const hybridLocal = await hybridRuntime.backend.executeResponses(
               {
                 model: plan.localModelId,

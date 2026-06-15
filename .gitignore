@@ -7,3 +7,4 @@ coverage/
 role-model-router/rust/target/
 runtime-output/
 .cache/
+.cursor/session.md

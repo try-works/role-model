@@ -1688,18 +1688,19 @@ describe("runtime-host-bridge", () => {
       },
     );
 
-    expect(result.routingRequest.strategy).toBe("quality");
+    expect(result.routingRequest.strategy).toBe("balanced");
     expect(result.routingRequest.allowEndpoints).toEqual([
       "moonshot.personal.primary.global.kimi-k2.5",
     ]);
     expect(result.routingDiagnostics?.difficultyRouting).toEqual({
-      difficulty: "hard",
-      strategy: "quality",
+      difficulty: "medium",
+      strategy: "balanced",
       fallbackApplied: false,
       excludedEndpointIds: ["moonshot.personal.kimi-code.global.kimi-k2.5"],
       rubricSignals: expect.objectContaining({
-        toolCount: 2,
-        historyTurnCount: 4,
+        toolCount: 0,
+        historyTurnCount: 2,
+        codeOrSchemaBurden: true,
       }),
     });
   });
@@ -3428,7 +3429,8 @@ describe("runtime-host-bridge", () => {
           notes: [
             "Configure downstream tooling as an OpenAI-compatible provider.",
             "Use GET /v1/models to discover the current model ids.",
-            "Use POST /v1/chat/completions or POST /v1/responses for routed inference.",
+            "Use POST /v1/chat/completions for routed inference and multi-turn tool history.",
+            "POST /v1/responses supports string or string-content message input only; use chat-completions for tool-turn histories.",
           ],
         },
       });
@@ -4590,7 +4592,7 @@ describe("runtime-host-bridge", () => {
           request: {
             requestCapture: {
               body: {
-                model: "deepseek/chat-capture-v1",
+                model: "chat-capture-v1",
                 input: [
                   {
                     role: "system",
@@ -4940,8 +4942,8 @@ describe("runtime-host-bridge", () => {
           strategy: "quality",
           fallbackApplied: false,
           rubricSignals: expect.objectContaining({
-            toolCount: 2,
-            historyTurnCount: 4,
+            toolCount: 0,
+            historyTurnCount: 2,
             codeOrSchemaBurden: true,
           }),
         }),
@@ -5369,12 +5371,12 @@ describe("runtime-host-bridge", () => {
         requestId,
       ),
     ).resolves.toMatchObject({
-      endpointId: "anthropic.litellm.global.claude-3-7-sonnet",
+      endpointId: "openai.litellm.global.openai-gpt-4-1-mini-fast",
     });
 
     await expect(backend.readRequestObservation(requestId)).resolves.toMatchObject({
       requestId,
-      endpointId: "anthropic.litellm.global.claude-3-7-sonnet",
+      endpointId: "openai.litellm.global.openai-gpt-4-1-mini-fast",
       routingDiagnostics: {
         difficultyRouting: expect.objectContaining({
           difficulty: "hard",
@@ -5382,12 +5384,12 @@ describe("runtime-host-bridge", () => {
           fallbackApplied: false,
         }),
         observedProfile: {
-          endpointId: "anthropic.litellm.global.claude-3-7-sonnet",
+          endpointId: "openai.litellm.global.openai-gpt-4-1-mini-fast",
           source: "runtime-state",
           readMode: "per-request",
           difficultyBucket: "hard",
           bucketOverrideApplied: true,
-          measuredAtMs: 11_100,
+          measuredAtMs: 11_000,
         },
       },
     });
@@ -6147,7 +6149,7 @@ describe("runtime-host-bridge", () => {
             }),
           );
           expect(JSON.parse(String(init?.body))).toMatchObject({
-            model: "moonshot/kimi-k2.5",
+            model: "kimi-k2.5",
             messages: [{ role: "user", content: "Summarize the chosen endpoint." }],
             stream: true,
           });
@@ -6314,7 +6316,9 @@ describe("runtime-host-bridge", () => {
         modelId: "moonshot/kimi-k2.5",
         region: "global",
       }),
-    ).rejects.toThrow("Environment credential MOONSHOT_API_KEY is not set.");
+    ).rejects.toThrow(
+      "Provider account moonshot.personal.primary is not ready for endpoint activation.",
+    );
 
     const pending = await backend.startProviderDeviceAuthorization?.({
       providerAccountId: "moonshot.personal.kimi-code",
@@ -6636,7 +6640,7 @@ describe("runtime-host-bridge", () => {
               }),
             );
             expect(JSON.parse(String(init?.body))).toMatchObject({
-              model: "moonshot/kimi-k2.5",
+              model: "kimi-k2.5",
               messages: [{ role: "user", content: "Summarize the chosen endpoint." }],
             });
             return new Response(
@@ -7349,7 +7353,7 @@ describe("runtime-host-bridge", () => {
             }),
           );
           expect(JSON.parse(String(init?.body))).toMatchObject({
-            model: "moonshot/kimi-k2.5",
+            model: "kimi-k2.5",
             messages: [{ role: "user", content: "Summarize the chosen endpoint." }],
             stream: true,
           });
@@ -7659,7 +7663,7 @@ describe("runtime-host-bridge", () => {
           request: {
             requestCapture: {
               body: {
-                model: "deepseek/chat-capture-v1",
+                model: "chat-capture-v1",
                 input: [
                   {
                     role: "system",
@@ -8233,23 +8237,23 @@ describe("runtime-host-bridge", () => {
       },
     });
 
-    // Verify moonshot-oauth variant is exposed via LiteLLM (no preset required)
+    // Verify the Kimi Code OAuth variant is exposed via LiteLLM (no preset required)
     const providers = (await backend.listProviders?.()) as Array<{
       providerId: string;
       variants: Array<{ variantId: string; authMode: string; oauth?: { clientId: string } }>;
     }>;
     const moonshotProvider = providers.find((p) => p.providerId === "moonshot");
     expect(moonshotProvider).toBeDefined();
-    const oauthVariant = moonshotProvider?.variants.find((v) => v.variantId === "moonshot-oauth");
+    const oauthVariant = moonshotProvider?.variants.find((v) => v.variantId === "kimi-code");
     expect(oauthVariant).toBeDefined();
     expect(oauthVariant?.authMode).toBe("oauth2-device-code");
     expect(oauthVariant?.oauth?.clientId).toBe("17e5f671-d194-4dfb-9706-5516cb48c098");
 
     // Full OAuth device-code flow using the LiteLLM-derived variant
     const pending = await backend.startProviderDeviceAuthorization?.({
-      providerAccountId: "moonshot.personal.moonshot-oauth",
+      providerAccountId: "moonshot.personal.kimi-code",
       providerId: "moonshot",
-      variantId: "moonshot-oauth",
+      variantId: "kimi-code",
       orgScope: "personal",
       accountScope: "workspace-default",
       allowedModels: ["moonshot/kimi-k2.5"],
@@ -8269,7 +8273,7 @@ describe("runtime-host-bridge", () => {
     expect(connected).toEqual(expect.objectContaining({ status: "connected" }));
 
     await backend.activateEndpoint?.({
-      providerAccountId: "moonshot.personal.moonshot-oauth",
+      providerAccountId: "moonshot.personal.kimi-code",
       modelId: "moonshot/kimi-k2.5",
       region: "global",
     });
@@ -8565,7 +8569,7 @@ describe("runtime-host-bridge", () => {
 
     expect(result).toEqual({
       host: "127.0.0.1",
-      port: 8091,
+      port: 3456,
       repoRoot,
       runtimeStateRoot: "C:\\Users\\tester\\AppData\\Local\\Role Model Runtime\\state",
       scopeId: "runtime-host-bridge",
@@ -8605,7 +8609,7 @@ describe("runtime-host-bridge", () => {
 
     expect(result).toEqual({
       host: "127.0.0.1",
-      port: 8091,
+      port: 3456,
       repoRoot: "/home/tester/role-model",
       runtimeStateRoot: "/home/tester/.local/share/Role Model Runtime/state",
       scopeId: "runtime-host-bridge",

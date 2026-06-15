@@ -530,23 +530,32 @@ version: "1.0"
       unifiedRuntimeConfigPath,
     });
 
-    await expect(backend.listProviders()).resolves.toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          providerId: "moonshot",
-          modelIds: ["moonshot/kimi-k2.6", "moonshot/kimi-k2.5"],
-          variants: expect.arrayContaining([
-            expect.objectContaining({
-              variantId: "moonshot-api-key",
-              modelIds: ["moonshot/kimi-k2.6", "moonshot/kimi-k2.5"],
-            }),
-            expect.objectContaining({
-              variantId: "moonshot-oauth",
-              modelIds: ["moonshot/kimi-k2.6", "moonshot/kimi-k2.5"],
-            }),
-          ]),
-        }),
-      ]),
+    const providers = await backend.listProviders();
+    const moonshot = providers.find((provider) => provider.providerId === "moonshot");
+    expect(moonshot).toEqual(
+      expect.objectContaining({
+        providerId: "moonshot",
+        modelIds: expect.arrayContaining([
+          "moonshot/kimi-k2.5",
+          "moonshot/kimi-k2.6",
+        ]),
+        variants: expect.arrayContaining([
+          expect.objectContaining({
+            variantId: "moonshot-open-platform",
+            modelIds: expect.arrayContaining([
+              "moonshot/kimi-k2.5",
+              "moonshot/kimi-k2.6",
+            ]),
+          }),
+          expect.objectContaining({
+            variantId: "kimi-code",
+            modelIds: expect.arrayContaining([
+              "moonshot/kimi-k2.5",
+              "moonshot/kimi-k2.6",
+            ]),
+          }),
+        ]),
+      }),
     );
 
     await expect(backend.listEndpoints()).resolves.toEqual(

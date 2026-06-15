@@ -617,6 +617,29 @@ export function shouldOmitToolsForTurn(
   return resolveAnswerFormat(caseItem).kind !== "tool_calls";
 }
 
+const MOCK_TOOL_CONTENT: Record<string, string> = {
+  list_endpoints:
+    '{"endpoints":[{"endpoint_id":"ep-1","model_id":"gpt-4","status":"active"}]}',
+  get_metrics: '{"p95_latency_ms":245,"request_count":120,"error_rate":0.01}',
+  read_file:
+    'export function createRouter(config: RouterConfig): Router {\n  return new RouterImpl(config);\n}\n',
+  grep_search:
+    'Found 3 matches in src/router.ts:\nline 42: evaluateEligibility(endpoint)\nline 89: evaluateEligibility\nline 156: // evaluateEligibility helper',
+  apply_patch:
+    'Patch applied successfully. 1 file changed, 2 insertions(+), 1 deletion(-).',
+};
+
+function buildToolMessage(
+  toolName: string,
+  toolCallId: string,
+): Record<string, unknown> {
+  return {
+    role: "tool",
+    tool_call_id: toolCallId,
+    content: MOCK_TOOL_CONTENT[toolName] ?? `Mock response from ${toolName}.`,
+  };
+}
+
 export function buildScaffoldFollowUp(
   caseItem: AnswerFormatCaseRef,
   priorMessages: readonly Record<string, unknown>[],
@@ -628,14 +651,23 @@ export function buildScaffoldFollowUp(
   const assistantMessage = buildAssistantScaffoldMessage(assistantOutput, toolCalls);
   const expectedTools = caseItem.expected_tool_names ?? [];
   const missingTools = expectedTools.filter((name) => !structuredToolNames.includes(name));
+
+  // Build role:"tool" messages for all completed tool calls
+  const completedToolMsgs = (toolCalls ?? []).map((_tc, index) =>
+    buildToolMessage(
+      toolCalls?.[index]?.function?.name ?? "unknown",
+      `bench_scaffold_${index}`,
+    ),
+  );
+
   if (missingTools.length > 0) {
-    const nextTool = missingTools[0];
     return [
       ...priorMessages,
       assistantMessage,
+      ...completedToolMsgs,
       {
         role: "user",
-        content: `Emit exactly one API tool call now (no prose): ${nextTool}`,
+        content: `Emit exactly one API tool call now (no prose): ${missingTools[0]}`,
       },
     ];
   }
@@ -644,6 +676,7 @@ export function buildScaffoldFollowUp(
   return [
     ...priorMessages,
     assistantMessage,
+    ...completedToolMsgs,
     {
       role: "user",
       content: textDeliverableFollowUp(format),

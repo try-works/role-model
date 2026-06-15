@@ -773,7 +773,7 @@
           "content": "API workflow: read_file src/router.ts, apply_patch minimal diff (---/+++), then JSON {\"answer\":\"what schema fields and tests you validated\"}."
         }
       ],
-      "max_tokens": 512,
+      "max_tokens": 1024,
       "expected_response": "read_file and apply_patch tool calls plus validation plan",
       "grading_criteria": "Must call read_file and apply_patch; acknowledges schema/test validation steps.",
       "accept_patterns": [
@@ -2043,7 +2043,7 @@
           "content": "Phase 2: ```json {\"answer\":\"<one sentence remote vs local p95 latency>\"}"
         }
       ],
-      "max_tokens": 448,
+      "max_tokens": 1024,
       "expected_response": "list_endpoints then get_metrics tool calls and latency comparison",
       "grading_criteria": "Must call list_endpoints and get_metrics before summarizing latency.",
       "accept_patterns": [
@@ -2349,7 +2349,7 @@
           "content": "Workflow: (1) API read_file src/router.ts (2) grep_search throughputSla (3) apply_patch adding sole-candidate fallback comment (4) JSON plan with milestones, patch_summary, test_snippet."
         }
       ],
-      "max_tokens": 512,
+      "max_tokens": 1024,
       "expected_response": "Sections A-D with milestones, tool calls, patch, and test snippet",
       "grading_criteria": "Has A/B/C/D sections; read_file and grep_search and apply_patch tool calls; includes test snippet.",
       "accept_patterns": [

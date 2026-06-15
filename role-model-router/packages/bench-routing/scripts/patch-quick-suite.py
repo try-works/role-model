@@ -200,7 +200,7 @@ UPDATES: dict[str, dict] = {
                 "content": 'Phase 2: ```json {"answer":"<one sentence remote vs local p95 latency>"}',
             },
         ],
-        "max_tokens": 448,
+        "max_tokens": 1024,
     },
     "h10-agent-read-grep-patch": {
         "answer_format": TOOL_CALLS,
@@ -227,7 +227,7 @@ UPDATES: dict[str, dict] = {
                 ),
             }
         ],
-        "max_tokens": 512,
+        "max_tokens": 1024,
     },
     "p17-tools-multi-hard": {
         "answer_format": {
@@ -251,7 +251,7 @@ UPDATES: dict[str, dict] = {
                 ),
             }
         ],
-        "max_tokens": 512,
+        "max_tokens": 1024,
     },
     "x01-max-signal": {
         "answer_format": TOOL_CALLS_WITH_PLAN,
@@ -282,7 +282,7 @@ def main() -> None:
         case.update(UPDATES[case_id])
         updated += 1
 
-    suite["suite_version"] = "3.1"
+    suite["suite_version"] = "3.2"
     with SUITE_PATH.open("w", encoding="utf-8") as handle:
         json.dump(suite, handle, indent=2)
         handle.write("\n")
