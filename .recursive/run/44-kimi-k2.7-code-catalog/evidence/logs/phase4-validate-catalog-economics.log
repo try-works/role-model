@@ -1,0 +1,21 @@
+
+> role-model@0.0.0 runtime:validate-catalog-economics D:\DEV\role-model\.worktrees\44-kimi-k2.7-code-catalog
+> corepack pnpm --filter @role-model-router/runtime-host-bridge exec tsx src/validate-catalog-economics.ts
+
+(node:37636) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+{
+  "moonshotOperatorProviderPresent": true,
+  "moonshotaiHiddenFromProviders": true,
+  "routedRequestId": "req-validate-catalog-economics-001",
+  "selectedEndpointId": "local-openai-compatible.personal.catalog-economics-peer.local.lfm2.5-8b-a1b",
+  "selectedModelId": "lfm2.5-8b-a1b",
+  "difficultyStrategy": "cost",
+  "localPeerSelectedOverKimi": true,
+  "catalogEconomics": {
+    "canonicalModelId": "lfm2.5-8b-a1b",
+    "tokenEconomicsSource": "local-free",
+    "cost_per_1k_tokens_est": 0,
+    "estimatedRequestUsd": 0
+  }
+}

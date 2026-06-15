@@ -1,0 +1,15 @@
+
+> @role-model-router/catalog@0.0.0 test D:\DEV\role-model\.worktrees\44-kimi-k2.7-code-catalog\role-model-router\packages\catalog
+> vitest run test
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/44-kimi-k2.7-code-catalog/role-model-router/packages/catalog
+
+ Γ£ô test/token-economics.test.ts (5 tests) 174ms
+ Γ£ô test/index.test.ts (11 tests) 673ms
+
+ Test Files  2 passed (2)
+      Tests  16 passed (16)
+   Start at  22:03:12
+   Duration  1.85s (transform 283ms, setup 0ms, collect 380ms, tests 847ms, environment 1ms, prepare 661ms)
+

@@ -15,6 +15,7 @@ export interface TokenEconomics {
 /** Operator model ids mapped to models.dev-aligned catalog rows for pricing lookup. */
 export const CANONICAL_MODEL_ID_ALIASES: Readonly<Record<string, string>> = {
   "moonshot/kimi-k2.6": "moonshotai/kimi-k2.6",
+  "moonshot/kimi-k2.7-code": "moonshotai/kimi-k2.7-code",
 };
 
 /** Catalog provider ids used for metadata/pricing only — hidden from operator picker. */

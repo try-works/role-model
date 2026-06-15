@@ -40,4 +40,48 @@ version: "1.0"
 
     await backend.shutdown();
   });
+
+  test("lists moonshot/kimi-k2.7-code on moonshot and kimi-code variants", async () => {
+    const tempRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-run44-providers-"));
+    const runtimeStateRoot = path.join(tempRoot, "state");
+    const unifiedRuntimeConfigPath = path.join(tempRoot, "runtime-config.yaml");
+
+    await writeFile(
+      unifiedRuntimeConfigPath,
+      `
+version: "1.0"
+`,
+      "utf8",
+    );
+
+    const backend = await createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      runtimeStateRoot,
+      scopeId: "runtime-host-run44-providers",
+      unifiedRuntimeConfigPath,
+    });
+
+    const providers = await backend.listProviders();
+    const moonshot = providers.find((provider) => provider.providerId === "moonshot");
+    expect(moonshot).toBeDefined();
+    expect(moonshot?.modelIds).toEqual(
+      expect.arrayContaining([
+        "moonshot/kimi-k2.5",
+        "moonshot/kimi-k2.6",
+        "moonshot/kimi-k2.7-code",
+      ]),
+    );
+
+    const openPlatform = moonshot?.variants.find(
+      (variant) => variant.variantId === "moonshot-open-platform",
+    );
+    const kimiCode = moonshot?.variants.find((variant) => variant.variantId === "kimi-code");
+    expect(openPlatform?.modelIds).toEqual(
+      expect.arrayContaining(["moonshot/kimi-k2.7-code"]),
+    );
+    expect(kimiCode?.modelIds).toEqual(expect.arrayContaining(["moonshot/kimi-k2.7-code"]));
+
+    await backend.shutdown();
+  });
 });

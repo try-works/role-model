@@ -1,0 +1,6 @@
+
+> role-model@0.0.0 catalog:export D:\DEV\role-model\.worktrees\44-kimi-k2.7-code-catalog
+> corepack pnpm --filter @role-model-router/catalog exec tsx src/cli.ts
+
+D:\DEV\role-model\.worktrees\44-kimi-k2.7-code-catalog\runtime-output\router-catalog\normalized-catalog.json
+D:\DEV\role-model\.worktrees\44-kimi-k2.7-code-catalog\runtime-output\router-catalog\vendor-version-ledger.json

@@ -16,6 +16,7 @@ interface ModelsDevApiModel {
   readonly name?: string;
   readonly tool_call?: boolean;
   readonly reasoning?: boolean;
+  readonly structured_output?: boolean;
   readonly modalities?: {
     readonly input?: readonly string[];
     readonly output?: readonly string[];
@@ -85,7 +86,7 @@ function inferAdapterFamilyHint(npmPackage: string): string {
   return `ai-sdk-${npmPackage.slice("@ai-sdk/".length).replace(/\//gu, "-")}`;
 }
 
-function deriveCapabilities(model: ModelsDevApiModel): string[] {
+export function deriveCapabilities(model: ModelsDevApiModel): string[] {
   const capabilities: string[] = [];
   const outputModalities = new Set(model.modalities?.output ?? []);
 
@@ -97,6 +98,9 @@ function deriveCapabilities(model: ModelsDevApiModel): string[] {
   }
   if (model.reasoning) {
     capabilities.push("reasoning");
+  }
+  if (model.structured_output) {
+    capabilities.push("structured.output");
   }
 
   return capabilities;

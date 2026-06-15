@@ -127,6 +127,27 @@
           "label": "Long context reasoning"
         }
       ]
+    },
+    {
+      "modelId": "moonshot/kimi-k2.7-code",
+      "providerId": "moonshot",
+      "displayName": "Kimi K2.7 Code",
+      "version": "2026-06-12",
+      "capabilities": ["text.chat", "tools.function_calling", "reasoning", "structured.output"],
+      "modalities": ["text", "image", "video"],
+      "contextWindow": 262144,
+      "maxOutputTokens": 262144,
+      "requestShapeHints": {
+        "providerShape": "openai.chat.completions",
+        "bodyKeys": ["temperature", "max_tokens", "tools"],
+        "headerKeys": ["Authorization"]
+      },
+      "experimentalModes": [
+        {
+          "modeId": "reasoning.long-context",
+          "label": "Long context reasoning"
+        }
+      ]
     }
   ]
 }
