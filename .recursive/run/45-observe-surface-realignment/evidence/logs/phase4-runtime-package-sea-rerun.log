@@ -1,0 +1,146 @@
+
+> role-model@0.0.0 runtime:package-sea D:\DEV\role-model\.worktrees\45-observe-surface-realignment
+> corepack pnpm --filter @role-model-router/runtime-ui build && corepack pnpm --filter @role-model-router/runtime-host-bridge... build && corepack pnpm --filter @role-model-router/runtime-host-bridge run package-sea
+
+
+> @role-model-router/runtime-ui@ build D:\DEV\role-model\.worktrees\45-observe-surface-realignment\role-model-router\apps\runtime-ui
+> react-router build && tsc --noEmit
+
+[36mvite v7.3.2 [32mbuilding client environment for production...[36m[39m
+transforming...
+[32mΓ£ô[39m 1740 modules transformed.
+rendering chunks...
+computing gzip size...
+[2mbuild/client/[22m[32m.vite/manifest.json                          [39m[1m[2m 21.40 kB[22m[1m[22m[2m Γöé gzip:  1.97 kB[22m
+[2mbuild/client/[22m[35massets/root-BDePoXW4.css                     [39m[1m[2m 29.02 kB[22m[1m[22m[2m Γöé gzip:  6.09 kB[22m
+[2mbuild/client/[22m[36massets/index-D9YEhZOf.js                     [39m[1m[2m  0.15 kB[22m[1m[22m[2m Γöé gzip:  0.15 kB[22m
+[2mbuild/client/[22m[36massets/router-config-CGX7BrIJ.js             [39m[1m[2m  0.15 kB[22m[1m[22m[2m Γöé gzip:  0.16 kB[22m
+[2mbuild/client/[22m[36massets/local-models-C_DXsyGE.js              [39m[1m[2m  0.16 kB[22m[1m[22m[2m Γöé gzip:  0.16 kB[22m
+[2mbuild/client/[22m[36massets/local-matrix-DmBowcIJ.js              [39m[1m[2m  0.18 kB[22m[1m[22m[2m Γöé gzip:  0.18 kB[22m
+[2mbuild/client/[22m[36massets/shell-header-context-k5Z0xjQc.js      [39m[1m[2m  0.70 kB[22m[1m[22m[2m Γöé gzip:  0.38 kB[22m
+[2mbuild/client/[22m[36massets/not-found-Dg8-uJkr.js                 [39m[1m[2m  1.00 kB[22m[1m[22m[2m Γöé gzip:  0.53 kB[22m
+[2mbuild/client/[22m[36massets/routing-mode-CgPzO0mQ.js              [39m[1m[2m  1.13 kB[22m[1m[22m[2m Γöé gzip:  0.50 kB[22m
+[2mbuild/client/[22m[36massets/legacy-redirect-DHcNzmDw.js           [39m[1m[2m  1.19 kB[22m[1m[22m[2m Γöé gzip:  0.43 kB[22m
+[2mbuild/client/[22m[36massets/llama-swap-setup-DjrOlpYQ.js          [39m[1m[2m  1.50 kB[22m[1m[22m[2m Γöé gzip:  0.74 kB[22m
+[2mbuild/client/[22m[36massets/local-model-role-picker-Dyg5rYIP.js   [39m[1m[2m  1.51 kB[22m[1m[22m[2m Γöé gzip:  0.75 kB[22m
+[2mbuild/client/[22m[36massets/local-choose-CEAfMwIm.js              [39m[1m[2m  1.67 kB[22m[1m[22m[2m Γöé gzip:  0.79 kB[22m
+[2mbuild/client/[22m[36massets/root-C_gsbLpf.js                      [39m[1m[2m  1.71 kB[22m[1m[22m[2m Γöé gzip:  0.86 kB[22m
+[2mbuild/client/[22m[36massets/local-swap-BVoacEaX.js                [39m[1m[2m  2.09 kB[22m[1m[22m[2m Γöé gzip:  0.95 kB[22m
+[2mbuild/client/[22m[36massets/requests-Ds_om3iC.js                  [39m[1m[2m  2.41 kB[22m[1m[22m[2m Γöé gzip:  1.10 kB[22m
+[2mbuild/client/[22m[36massets/router-decisions-BIZTXoUk.js          [39m[1m[2m  2.50 kB[22m[1m[22m[2m Γöé gzip:  1.11 kB[22m
+[2mbuild/client/[22m[36massets/page-primitives-rprZlqoE.js           [39m[1m[2m  2.54 kB[22m[1m[22m[2m Γöé gzip:  0.93 kB[22m
+[2mbuild/client/[22m[36massets/dashboard-ISuvstCD.js                 [39m[1m[2m  2.90 kB[22m[1m[22m[2m Γöé gzip:  1.17 kB[22m
+[2mbuild/client/[22m[36massets/app-layout-CDLvzMEA.js                [39m[1m[2m  3.14 kB[22m[1m[22m[2m Γöé gzip:  1.19 kB[22m
+[2mbuild/client/[22m[36massets/control-runtime-config-D9JxTppX.js    [39m[1m[2m  3.14 kB[22m[1m[22m[2m Γöé gzip:  1.47 kB[22m
+[2mbuild/client/[22m[36massets/local-policy-3JRW3MEP.js              [39m[1m[2m  3.37 kB[22m[1m[22m[2m Γöé gzip:  1.40 kB[22m
+[2mbuild/client/[22m[36massets/integrations-downstream-C06dZVaH.js   [39m[1m[2m  3.60 kB[22m[1m[22m[2m Γöé gzip:  1.30 kB[22m
+[2mbuild/client/[22m[36massets/local-peers-B_YmxP6s.js               [39m[1m[2m  3.92 kB[22m[1m[22m[2m Γöé gzip:  1.62 kB[22m
+[2mbuild/client/[22m[36massets/integrations-upstream-yN1F9bFV.js     [39m[1m[2m  4.02 kB[22m[1m[22m[2m Γöé gzip:  1.52 kB[22m
+[2mbuild/client/[22m[36massets/router-decision-detail-gjsDmxOj.js    [39m[1m[2m  4.12 kB[22m[1m[22m[2m Γöé gzip:  1.67 kB[22m
+[2mbuild/client/[22m[36massets/local-logs-3YHLMbDR.js                [39m[1m[2m  4.15 kB[22m[1m[22m[2m Γöé gzip:  1.56 kB[22m
+[2mbuild/client/[22m[36massets/router-candidates-CbtVxP5J.js         [39m[1m[2m  4.25 kB[22m[1m[22m[2m Γöé gzip:  1.73 kB[22m
+[2mbuild/client/[22m[36massets/system-peers-BRNJ--gi.js              [39m[1m[2m  4.34 kB[22m[1m[22m[2m Γöé gzip:  1.73 kB[22m
+[2mbuild/client/[22m[36massets/control-controller-WECkKDWT.js        [39m[1m[2m  4.54 kB[22m[1m[22m[2m Γöé gzip:  1.66 kB[22m
+[2mbuild/client/[22m[36massets/runtime-cm9wCqXv.js                   [39m[1m[2m  4.68 kB[22m[1m[22m[2m Γöé gzip:  1.47 kB[22m
+[2mbuild/client/[22m[36massets/studio-rerank-DAaKXnL1.js             [39m[1m[2m  4.74 kB[22m[1m[22m[2m Γöé gzip:  1.90 kB[22m
+[2mbuild/client/[22m[36massets/observe-activity-Bz6up1jF.js          [39m[1m[2m  4.86 kB[22m[1m[22m[2m Γöé gzip:  1.69 kB[22m
+[2mbuild/client/[22m[36massets/observe-logs-CDyFqlnx.js              [39m[1m[2m  4.95 kB[22m[1m[22m[2m Γöé gzip:  1.83 kB[22m
+[2mbuild/client/[22m[36massets/local-peer-models-BLYerJd0.js         [39m[1m[2m  4.96 kB[22m[1m[22m[2m Γöé gzip:  1.95 kB[22m
+[2mbuild/client/[22m[36massets/session-readiness-BgwQMuqB.js         [39m[1m[2m  5.01 kB[22m[1m[22m[2m Γöé gzip:  1.69 kB[22m
+[2mbuild/client/[22m[36massets/router-Do7myjHo.js                    [39m[1m[2m  5.24 kB[22m[1m[22m[2m Γöé gzip:  1.71 kB[22m
+[2mbuild/client/[22m[36massets/studio-images-CZryqFpj.js             [39m[1m[2m  5.37 kB[22m[1m[22m[2m Γöé gzip:  1.97 kB[22m
+[2mbuild/client/[22m[36massets/studio-advanced-WTcJ1iJq.js           [39m[1m[2m  5.40 kB[22m[1m[22m[2m Γöé gzip:  2.11 kB[22m
+[2mbuild/client/[22m[36massets/endpoints-D3wQRzJI.js                 [39m[1m[2m  5.88 kB[22m[1m[22m[2m Γöé gzip:  1.63 kB[22m
+[2mbuild/client/[22m[36massets/llama-swap-setup-hint-BCeYaky6.js     [39m[1m[2m  5.88 kB[22m[1m[22m[2m Γöé gzip:  2.01 kB[22m
+[2mbuild/client/[22m[36massets/local-llama-swap-models-tm1l0vNk.js   [39m[1m[2m  6.44 kB[22m[1m[22m[2m Γöé gzip:  2.26 kB[22m
+[2mbuild/client/[22m[36massets/studio-audio-CHaDCKkE.js              [39m[1m[2m  6.87 kB[22m[1m[22m[2m Γöé gzip:  2.45 kB[22m
+[2mbuild/client/[22m[36massets/workbench-Bc96E5Xh.js                 [39m[1m[2m  8.01 kB[22m[1m[22m[2m Γöé gzip:  2.57 kB[22m
+[2mbuild/client/[22m[36massets/runtime-api-DOFp5e01.js               [39m[1m[2m  8.41 kB[22m[1m[22m[2m Γöé gzip:  1.92 kB[22m
+[2mbuild/client/[22m[36massets/request-detail-DN-Kec1l.js            [39m[1m[2m 11.54 kB[22m[1m[22m[2m Γöé gzip:  3.75 kB[22m
+[2mbuild/client/[22m[36massets/control-roles-D2Yre1KQ.js             [39m[1m[2m 12.02 kB[22m[1m[22m[2m Γöé gzip:  3.14 kB[22m
+[2mbuild/client/[22m[36massets/control-routing-strategy-Dm4WKUeN.js  [39m[1m[2m 12.32 kB[22m[1m[22m[2m Γöé gzip:  3.54 kB[22m
+[2mbuild/client/[22m[36massets/control-models-BM_UT7dF.js            [39m[1m[2m 12.42 kB[22m[1m[22m[2m Γöé gzip:  3.65 kB[22m
+[2mbuild/client/[22m[36massets/view-models-BjubYyEB.js               [39m[1m[2m 16.14 kB[22m[1m[22m[2m Γöé gzip:  5.35 kB[22m
+[2mbuild/client/[22m[36massets/providers-CUDYNPUC.js                 [39m[1m[2m 16.45 kB[22m[1m[22m[2m Γöé gzip:  4.77 kB[22m
+[2mbuild/client/[22m[36massets/control-benchmark-DwdUvMBM.js         [39m[1m[2m 19.85 kB[22m[1m[22m[2m Γöé gzip:  6.26 kB[22m
+[2mbuild/client/[22m[36massets/design-system-qjJ1Niyq.js             [39m[1m[2m 47.03 kB[22m[1m[22m[2m Γöé gzip: 14.99 kB[22m
+[2mbuild/client/[22m[36massets/chunk-EVOBXE3Y-Nl2fzMWo.js            [39m[1m[2m127.79 kB[22m[1m[22m[2m Γöé gzip: 43.05 kB[22m
+[2mbuild/client/[22m[36massets/entry.client-Dy6QV84X.js              [39m[1m[2m190.57 kB[22m[1m[22m[2m Γöé gzip: 60.05 kB[22m
+[32mΓ£ô built in 9.05s[39m
+[36mvite v7.3.2 [32mbuilding ssr environment for production...[36m[39m
+transforming...
+[32mΓ£ô[39m 9 modules transformed.
+rendering chunks...
+[2mbuild/server/[22m[32m.vite/manifest.json               [39m[1m[2m 0.23 kB[22m[1m[22m
+[2mbuild/server/[22m[35massets/server-build-Dv-5SBn8.css  [39m[1m[2m39.94 kB[22m[1m[22m
+[2mbuild/server/[22m[36mindex.js                          [39m[1m[2m63.50 kB[22m[1m[22m
+
+[32mΓ£ô[39m 1 asset cleaned from React Router server build.
+[2mbuild\server\assets\server-build-Dv-5SBn8.css[22m
+
+SPA Mode: Generated [1mbuild\client\index.html[22m
+Removing the server build in [32mD:\DEV\role-model\.worktrees\45-observe-surface-realignment\role-model-router\apps\runtime-ui\build\server[39m due to ssr:false
+[32mΓ£ô built in 541ms[39m
+Scope: 26 of 43 workspace projects
+role-model-router/packages/catalog build$ tsc -p tsconfig.json
+packages/protocol-types build$ tsc -p tsconfig.json
+role-model-router/packages/bench-judge build$ tsc -p tsconfig.json
+.../packages/process-supervisor build$ tsc -p tsconfig.json
+packages/protocol-types build: Done
+role-model-router/packages/tool-registry build$ tsc -p tsconfig.json
+role-model-router/packages/bench-judge build: Done
+.../packages/vendor-abstraction build$ tsc -p tsconfig.json
+.../packages/process-supervisor build: Done
+role-model-router/packages/catalog build: Done
+role-model-router/packages/tool-registry build: Done
+.../packages/vendor-abstraction build: Done
+.../packages/profile-aggregator build$ tsc -p tsconfig.json
+.../packages/provider-account build$ tsc -p tsconfig.json
+role-model-router/packages/core build$ tsc -p tsconfig.json
+role-model-router/packages/trace build$ tsc -p tsconfig.json
+role-model-router/packages/trace build: Done
+role-model-router/packages/usage build$ tsc -p tsconfig.json
+.../packages/profile-aggregator build: Done
+role-model-router/packages/bench-routing build$ tsc -p tsconfig.json
+.../packages/provider-account build: Done
+.../packages/vendor-llama-swap build$ tsc -p tsconfig.json
+role-model-router/packages/core build: Done
+.../packages/vendor-litellm build$ tsc -p tsconfig.json
+role-model-router/packages/usage build: Done
+role-model-router/packages/bench-routing build: Done
+.../packages/vendor-llama-swap build: Done
+.../packages/vendor-litellm build: Done
+role-model-router/packages/sqlite-memory build$ tsc -p tsconfig.json
+role-model-router/packages/provider-mcp build$ tsc -p tsconfig.json
+role-model-router/packages/provider-mcp build: Done
+role-model-router/packages/sqlite-memory build: Done
+.../packages/context-envelope build$ tsc -p tsconfig.json
+.../packages/context-envelope build: Done
+.../packages/retrieval-receipt build$ tsc -p tsconfig.json
+.../packages/retrieval-receipt build: Done
+.../packages/endpoint-registry build$ tsc -p tsconfig.json
+.../packages/endpoint-registry build: Done
+.../packages/protocol-routing build$ tsc -p tsconfig.json
+.../packages/protocol-routing build: Done
+.../packages/adapter-execution build$ tsc -p tsconfig.json
+.../packages/provider-anthropic build$ tsc -p tsconfig.json
+.../packages/provider-anthropic build: Done
+.../packages/adapter-execution build: Done
+.../packages/provider-openai build$ tsc -p tsconfig.json
+.../packages/runtime-observability build$ tsc -p tsconfig.json
+.../packages/provider-openai build: Done
+.../packages/runtime-observability build: Done
+.../packages/provider-litellm build$ tsc -p tsconfig.json
+.../packages/provider-litellm build: Done
+.../apps/runtime-host-bridge build$ tsc -p tsconfig.json
+.../apps/runtime-host-bridge build: Done
+
+> @role-model-router/runtime-host-bridge@0.0.0 package-sea D:\DEV\role-model\.worktrees\45-observe-surface-realignment\role-model-router\apps\runtime-host-bridge
+> tsx src/package-sea.ts
+
+Wrote single executable preparation blob to ./dist/sea-prep.blob
+{
+  "outputPath": "D:\\DEV\\role-model\\.worktrees\\45-observe-surface-realignment\\role-model-router\\dist\\release\\win32-x64\\role-model-runtime.exe",
+  "target": "win32-x64",
+  "sha256": "fd436344797209f464687ab8f86eca013d42924dff41d6b191717ee1d708927b"
+}

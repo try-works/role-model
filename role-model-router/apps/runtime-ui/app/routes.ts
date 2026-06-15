@@ -51,6 +51,7 @@ export default [
     route("router/candidates", "routes/router-candidates.tsx"),
     route("router/decisions", "routes/router-decisions.tsx"),
     route("router/decisions/:requestId", "routes/router-decision-detail.tsx"),
+    route("observe", "routes/legacy-redirect.tsx", { id: "legacy-observe" }),
     route("observe/activity", "routes/observe-activity.tsx"),
     route("observe/requests", "routes/requests.tsx"),
     route("observe/requests/:requestId", "routes/request-detail.tsx"),

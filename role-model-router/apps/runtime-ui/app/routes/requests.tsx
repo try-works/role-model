@@ -8,25 +8,25 @@ import {
   LoadingState,
   SectionCard,
 } from "../components/page-primitives";
-import { listRowClassName } from "../lib/design-system";
+import { listRowClassName, secondaryButtonClassName } from "../lib/design-system";
 import {
-  type RuntimeTelemetryRequestRecord,
-  fetchTelemetryRequests,
+  type RuntimeTelemetryDashboard,
+  fetchTelemetryDashboard,
   subscribeTelemetryStream,
 } from "../lib/runtime-api";
-import { buildTelemetryRequestRows } from "../lib/view-models";
+import { buildTelemetryRequestRows, summarizeTelemetryStats } from "../lib/view-models";
 
 export default function RequestsRoute() {
-  const [requests, setRequests] = useState<readonly RuntimeTelemetryRequestRecord[] | null>(null);
+  const [dashboard, setDashboard] = useState<RuntimeTelemetryDashboard | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let disposed = false;
     const load = async () => {
       try {
-        const result = await fetchTelemetryRequests({ limit: 50 });
+        const result = await fetchTelemetryDashboard();
         if (!disposed) {
-          setRequests(result);
+          setDashboard(result);
           setError(null);
         }
       } catch (value) {
@@ -50,22 +50,40 @@ export default function RequestsRoute() {
   if (error) {
     return <ErrorState label={error} />;
   }
-  if (!requests) {
+  if (!dashboard) {
     return <LoadingState label="Loading telemetry ledger…" />;
   }
 
-  const ledgerRows = buildTelemetryRequestRows(requests);
-  const requestsWithEndpoint = requests.filter((request) => request.endpointId).length;
-  const distinctEndpoints = new Set(requests.map((request) => request.endpointId).filter(Boolean))
-    .size;
+  const statCards = summarizeTelemetryStats(dashboard.summary);
+  const ledgerRows = buildTelemetryRequestRows(dashboard.requests);
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-3">
-        <FactCard label="Requests" value={requests.length} emphasis />
-        <FactCard label="Endpoint-linked" value={requestsWithEndpoint} />
-        <FactCard label="Distinct endpoints" value={distinctEndpoints} />
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {statCards.map((card, index) => (
+          <FactCard
+            key={card.label}
+            label={card.label}
+            value={card.value}
+            detail={card.detail}
+            emphasis={index === 0}
+          />
+        ))}
       </div>
+
+      <SectionCard
+        title="Adjacent raw-host tools"
+        description="Use preserved host surfaces when you need raw metrics, captures, or combined logs beyond the canonical request ledger."
+      >
+        <div className="flex flex-wrap gap-3">
+          <Link className={secondaryButtonClassName} to="/app/observe/activity">
+            Host activity & captures
+          </Link>
+          <Link className={secondaryButtonClassName} to="/app/observe/logs">
+            Host logs
+          </Link>
+        </div>
+      </SectionCard>
 
       <SectionCard title="Recent telemetry requests">
         {ledgerRows.length === 0 ? (

@@ -1,6 +1,6 @@
 Type: `domain`
 Status: `CURRENT`
-Scope: `Stable baseline ownership for the repo workspace, canonical protocol tree, shared packages, router family, fixtures, validation surfaces, and the repo-owned runtime/operator baseline extended through the routing-strategy UI convergence baseline in run 30, unified vendor execution, telemetry dashboard remediation, runtime-config control, the run-32 models.dev metadata/readiness baseline, the run-34 runtime-owned role-policy/operator-control baseline, the run-35 Connect/de-clutter operator shell, and the run-36 packaged-runtime consumption, benchmark workflow, and consumer-routing validation baseline.`
+Scope: `Stable baseline ownership for the repo workspace, canonical protocol tree, shared packages, router family, fixtures, validation surfaces, and the repo-owned runtime/operator baseline extended through the routing-strategy UI convergence baseline in run 30, unified vendor execution, telemetry dashboard remediation, runtime-config control, the run-32 models.dev metadata/readiness baseline, the run-34 runtime-owned role-policy/operator-control baseline, the run-35 Connect/de-clutter operator shell, the run-36 packaged-runtime consumption, benchmark workflow, and consumer-routing validation baseline, and the run-45 Observe surface realignment baseline.`
 Owns-Paths:
 - `/README.md`
 - `/LICENSE`
@@ -50,8 +50,9 @@ Source-Runs:
 - `34-router-runtime-role-policy-and-ui-fixture-reduction`
 - `35-runtime-ui-connect-declutter`
 - `36-runtime-consumption-telemetry-remediation`
+- `45-observe-surface-realignment`
 Validated-At-Commit: `working-tree`
-Last-Validated: `2026-06-10T12:00:00Z`
+Last-Validated: `2026-06-15T07:55:00Z`
 Tags:
 - `baseline`
 - `workspace`
@@ -156,6 +157,7 @@ This repository now has a real product baseline rather than only recursive scaff
 - Run 36 addendum 02 fixed sole-candidate throughput SLA hard-deny (SP7) and partial runtime-config merge (SP8); exact-remote below 24 tps still needs SLA disabled or alias pools
 - Run 36 addendum 03 recorded a 46-prompt × 4-strategy routing matrix for tuning; consumer difficulty E2E on `mixed.local-remote` passed 14/15 with cache-probe caveat on shared `conversationId`
 - Run 36 addenda 04–10 delivered the benchmark operator workflow: `/.recursive/BENCHMARK-WORKFLOW.md`, **Models → Benchmark** at `/app/models/benchmark`, `validate-benchmark-run.py`, judge pipeline hardening; operator run `c0b66038` is VALID with HEALTHY control (Kimi 92% > LFM 17%)
+- Run 45 realigned Observe around canonical telemetry ownership: `/app/observe` resolves to Requests, request detail remains the richest canonical inspector, Activity and Logs are preserved raw-host adjacency surfaces, and packaged Logs now parse bracketed timestamp rows into request-detail links on the real operator runtime at `:3456`
 
 ## Validation Path
 
@@ -165,6 +167,7 @@ This repository now has a real product baseline rather than only recursive scaff
 - On Windows, CRLF-only worktree churn can make local status noisier than the real Linux CI content diff; use `git diff` to identify the actual files that need formatter commits
 - The repo-local runtime validation floor is the staged command family `runtime:validate-state`, `runtime:validate-registry`, `runtime:validate-routing`, `runtime:validate-adapter`, `runtime:validate-ui`, `runtime:validate-host`, `runtime:validate-vendors`, `runtime:validate-packaging`, `runtime:validate-observability`, `runtime:validate-operations`, `runtime:validate-tools`, plus `smoke`
 - For models.dev metadata work, prefer the explicit refresh/export entrypoints (`corepack pnpm run catalog:refresh` and `corepack pnpm run catalog:export`) plus the focused runtime-ui/runtime-host suites and `runtime:validate-host`/`runtime:validate-packaging` before claiming the metadata layer is fully integrated
+- For Observe or other runtime-UI telemetry work that claims packaged-operator parity, prefer focused `runtime-ui` tests/builds plus the repository-root `corepack pnpm run runtime:package-sea`, then verify the rebuilt runtime in a browser on `http://127.0.0.1:3456` instead of relying on a dev-only preview
 - When validating runtime work, treat the focused runtime validators and package tests as the run-owned baseline; broader root `build` now fails on the unrelated `provider-acp` / `provider-cli` `endpoint_kind` mismatch, broader root `test` can still fail on the workspace-level `process-supervisor` crash-callback case while the isolated package rerun passes, and vendored proxy or full Go tests on Windows still reproduce the upstream `sleep` PATH assumption
 
 ## Scope Boundary

@@ -779,7 +779,8 @@ export function buildStructuredLogRows(
       const structuredMatch = line.match(
         /^(\S+)\s+(DEBUG|INFO|WARN|ERROR)\s+([^\s]+)(?:\s+(req-[^\s]+))?\s+(.+)$/i,
       );
-      const timestamp = structuredMatch?.[1] ?? null;
+      const packagedMatch = line.match(/^\[([^\]]+)\]\s+(req-[^\s]+)\s+(.+)$/i);
+      const timestamp = structuredMatch?.[1] ?? packagedMatch?.[1] ?? null;
       const severity = structuredMatch?.[2]?.toLowerCase() as
         | "debug"
         | "info"
@@ -787,8 +788,8 @@ export function buildStructuredLogRows(
         | "error"
         | undefined;
       const sourceClass = structuredMatch?.[3] ?? fallbackSourceClass;
-      const requestId = structuredMatch?.[4] ?? null;
-      const message = structuredMatch?.[5] ?? line;
+      const requestId = structuredMatch?.[4] ?? packagedMatch?.[2] ?? null;
+      const message = structuredMatch?.[5] ?? packagedMatch?.[3] ?? line;
 
       return {
         key: `${line}-${occurrence}`,

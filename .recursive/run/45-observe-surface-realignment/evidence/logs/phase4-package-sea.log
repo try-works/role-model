@@ -1,0 +1,365 @@
+
+> @role-model-router/runtime-host-bridge@0.0.0 package-sea D:\DEV\role-model\.worktrees\45-observe-surface-realignment\role-model-router\apps\runtime-host-bridge
+> tsx src/package-sea.ts
+
+go: downloading github.com/gin-gonic/gin v1.10.0
+go: downloading github.com/billziss-gh/golib v0.2.0
+go: downloading gopkg.in/yaml.v3 v3.0.1
+go: downloading github.com/klauspost/compress v1.18.5
+go: downloading github.com/tidwall/sjson v1.2.5
+go: downloading github.com/fxamacker/cbor/v2 v2.9.1
+go: downloading github.com/tidwall/gjson v1.18.0
+go: downloading github.com/tidwall/pretty v1.2.1
+go: downloading github.com/tidwall/match v1.1.1
+go: downloading github.com/x448/float16 v0.8.4
+go: downloading github.com/mattn/go-isatty v0.0.20
+go: downloading github.com/gin-contrib/sse v0.1.0
+go: downloading golang.org/x/net v0.47.0
+go: downloading google.golang.org/protobuf v1.34.1
+go: downloading github.com/go-playground/validator/v10 v10.20.0
+go: downloading github.com/ugorji/go/codec v1.2.12
+go: downloading github.com/pelletier/go-toml/v2 v2.2.2
+go: downloading golang.org/x/text v0.31.0
+go: downloading github.com/go-playground/universal-translator v0.18.1
+go: downloading github.com/leodido/go-urn v1.4.0
+go: downloading github.com/gabriel-vasile/mimetype v1.4.3
+go: downloading golang.org/x/crypto v0.45.0
+go: downloading github.com/go-playground/locales v0.14.1
+go: downloading golang.org/x/sys v0.38.0
+X [ERROR] Could not resolve "@role-model-router/context-envelope"
+
+    dist/index.js:10:40:
+      10 Γöé ...embleContextEnvelope } from "@role-model-router/context-envelope";
+         Γò╡                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/context-envelope/package.json:9:17:
+      9 Γöé       "runtime": "./dist/index.js",
+        Γò╡                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/context-envelope" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+X [ERROR] Could not resolve "@role-model-router/endpoint-registry"
+
+    dist/index.js:11:38:
+      11 Γöé ...ildEndpointRegistry } from "@role-model-router/endpoint-registry";
+         Γò╡                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/endpoint-registry/package.json:9:17:
+      9 Γöé       "runtime": "./dist/index.js",
+        Γò╡                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/endpoint-registry" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+X [ERROR] Could not resolve "@role-model-router/process-supervisor"
+
+    dist/index.js:12:34:
+      12 Γöé ... ProcessSupervisor } from "@role-model-router/process-supervisor";
+         Γò╡                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/process-supervisor/package.json:9:17:
+      9 Γöé       "runtime": "./dist/index.js",
+        Γò╡                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/process-supervisor" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+X [ERROR] Could not resolve "@role-model-router/profile-aggregator"
+
+    dist/index.js:13:47:
+      13 Γöé ...ngBenchmarkQuality } from "@role-model-router/profile-aggregator";
+         Γò╡                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/profile-aggregator/package.json:9:17:
+      9 Γöé       "runtime": "./dist/index.js",
+        Γò╡                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/profile-aggregator" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+X [ERROR] Could not resolve "@role-model-router/protocol-routing"
+
+    dist/index.js:14:37:
+      14 Γöé ...routeRuntimeRequest, } from "@role-model-router/protocol-routing";
+         Γò╡                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/protocol-routing/package.json:9:17:
+      9 Γöé       "runtime": "./dist/index.js",
+        Γò╡                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/protocol-routing" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+X [ERROR] Could not resolve "@role-model-router/provider-account"
+
+    dist/index.js:15:42:
+      15 Γöé ...ateProviderAccounts, } from "@role-model-router/provider-account";
+         Γò╡                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/provider-account/package.json:9:17:
+      9 Γöé       "runtime": "./dist/index.js",
+        Γò╡                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/provider-account" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+X [ERROR] Could not resolve "@role-model-router/provider-anthropic"
+
+    dist/index.js:16:47:
+      16 Γöé ...picProviderAdapter } from "@role-model-router/provider-anthropic";
+         Γò╡                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/provider-anthropic/package.json:9:17:
+      9 Γöé       "runtime": "./dist/index.js",
+        Γò╡                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/provider-anthropic" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+X [ERROR] Could not resolve "@role-model-router/provider-litellm"
+
+    dist/index.js:17:45:
+      17 Γöé ...teLLMProviderAdapter } from "@role-model-router/provider-litellm";
+         Γò╡                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/provider-litellm/package.json:9:17:
+      9 Γöé       "runtime": "./dist/index.js",
+        Γò╡                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/provider-litellm" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+X [ERROR] Could not resolve "@role-model-router/provider-mcp"
+
+    dist/index.js:18:47:
+      18 Γöé ...McpConnectorDefinitions, } from "@role-model-router/provider-mcp";
+         Γò╡                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/provider-mcp/package.json:9:17:
+      9 Γöé       "runtime": "./dist/index.js",
+        Γò╡                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/provider-mcp" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+X [ERROR] Could not resolve "@role-model-router/provider-openai"
+
+    dist/index.js:19:44:
+      19 Γöé ...OpenAIProviderAdapter } from "@role-model-router/provider-openai";
+         Γò╡                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/provider-openai/package.json:9:17:
+      9 Γöé       "runtime": "./dist/index.js",
+        Γò╡                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/provider-openai" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+X [ERROR] Could not resolve "@role-model-router/retrieval-receipt"
+
+    dist/index.js:20:39:
+      20 Γöé ...ateRetrievalReceipt } from "@role-model-router/retrieval-receipt";
+         Γò╡                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/retrieval-receipt/package.json:9:17:
+      9 Γöé       "runtime": "./dist/index.js",
+        Γò╡                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/retrieval-receipt" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+X [ERROR] Could not resolve "@role-model-router/runtime-observability"
+
+    dist/index.js:21:48:
+      21 Γöé ...ervationBundle, } from "@role-model-router/runtime-observability";
+         Γò╡                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/runtime-observability/package.json:9:17:
+      9 Γöé       "runtime": "./dist/index.js",
+        Γò╡                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/runtime-observability" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+X [ERROR] Could not resolve "@role-model-router/sqlite-memory"
+
+    dist/index.js:22:1097:
+      22 Γöé ...tSqliteRuntimeEndpoint, } from "@role-model-router/sqlite-memory";
+         Γò╡                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/sqlite-memory/package.json:9:17:
+      9 Γöé       "runtime": "./dist/index.js",
+        Γò╡                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/sqlite-memory" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+X [ERROR] Could not resolve "@role-model-router/tool-registry"
+
+    dist/index.js:24:54:
+      24 Γöé ...stry, executeToolCalls, } from "@role-model-router/tool-registry";
+         Γò╡                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/tool-registry/package.json:9:17:
+      9 Γöé       "runtime": "./dist/index.js",
+        Γò╡                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/tool-registry" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+X [ERROR] Could not resolve "@role-model-router/adapter-execution"
+
+    dist/index.js:25:42:
+      25 Γöé ...eLiveRoutedRequest, } from "@role-model-router/adapter-execution";
+         Γò╡                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/adapter-execution/package.json:9:17:
+      9 Γöé       "runtime": "./dist/index.js",
+        Γò╡                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/adapter-execution" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+X [ERROR] Could not resolve "@role-model-router/vendor-abstraction"
+
+    dist/index.js:26:47:
+      26 Γöé ...NotConfiguredError } from "@role-model-router/vendor-abstraction";
+         Γò╡                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/vendor-abstraction/package.json:9:17:
+      9 Γöé       "runtime": "./dist/index.js",
+        Γò╡                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/vendor-abstraction" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+X [ERROR] Could not resolve "@role-model-router/vendor-litellm"
+
+    dist/index.js:27:35:
+      27 Γöé ...t { startLiteLLMVendor } from "@role-model-router/vendor-litellm";
+         Γò╡                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/vendor-litellm/package.json:9:17:
+      9 Γöé       "runtime": "./dist/index.js",
+        Γò╡                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/vendor-litellm" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+X [ERROR] Could not resolve "@role-model-router/vendor-llama-swap"
+
+    dist/index.js:28:37:
+      28 Γöé ...tartLlamaSwapVendor } from "@role-model-router/vendor-llama-swap";
+         Γò╡                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/vendor-llama-swap/package.json:9:17:
+      9 Γöé       "runtime": "./dist/index.js",
+        Γò╡                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/vendor-llama-swap" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+X [ERROR] Could not resolve "@role-model-router/catalog"
+
+    dist/index.js:40:126:
+      40 Γöé ..._HIDDEN_CATALOG_PROVIDER_IDS, } from "@role-model-router/catalog";
+         Γò╡                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/catalog/package.json:9:17:
+      9 Γöé       "runtime": "./dist/index.js",
+        Γò╡                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/catalog" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+X [ERROR] Could not resolve "@role-model-router/protocol-routing"
+
+    dist/local-model-role-bindings.js:1:36:
+      1 Γöé ...{ routeRuntimeRequest } from "@role-model-router/protocol-routing";
+        Γò╡                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/protocol-routing/package.json:9:17:
+      9 Γöé       "runtime": "./dist/index.js",
+        Γò╡                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/protocol-routing" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+X [ERROR] Could not resolve "@role-model-router/vendor-llama-swap"
+
+    dist/runtime-assets.js:5:46:
+      5 Γöé ...SwapAssetDefinition, } from "@role-model-router/vendor-llama-swap";
+        Γò╡                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/vendor-llama-swap/package.json:9:17:
+      9 Γöé       "runtime": "./dist/index.js",
+        Γò╡                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/vendor-llama-swap" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+X [ERROR] Could not resolve "@role-model-router/sqlite-memory"
+
+    dist/benchmark-runner.js:5:47:
+      5 Γöé ...tObservedBenchmarkSample } from "@role-model-router/sqlite-memory";
+        Γò╡                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/sqlite-memory/package.json:9:17:
+      9 Γöé       "runtime": "./dist/index.js",
+        Γò╡                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/sqlite-memory" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+D:\DEV\role-model\.worktrees\45-observe-surface-realignment\node_modules\.pnpm\esbuild@0.25.12\node_modules\esbuild\lib\main.js:1467
+  let error = new Error(text);
+              ^
+
+Error: Build failed with 22 errors:
+dist/benchmark-runner.js:5:47: ERROR: Could not resolve "@role-model-router/sqlite-memory"
+dist/index.js:10:40: ERROR: Could not resolve "@role-model-router/context-envelope"
+dist/index.js:11:38: ERROR: Could not resolve "@role-model-router/endpoint-registry"
+dist/index.js:12:34: ERROR: Could not resolve "@role-model-router/process-supervisor"
+dist/index.js:13:47: ERROR: Could not resolve "@role-model-router/profile-aggregator"
+...
+    at failureErrorWithLog (D:\DEV\role-model\.worktrees\45-observe-surface-realignment\node_modules\.pnpm\esbuild@0.25.12\node_modules\esbuild\lib\main.js:1467:15)
+    at D:\DEV\role-model\.worktrees\45-observe-surface-realignment\node_modules\.pnpm\esbuild@0.25.12\node_modules\esbuild\lib\main.js:926:25
+    at D:\DEV\role-model\.worktrees\45-observe-surface-realignment\node_modules\.pnpm\esbuild@0.25.12\node_modules\esbuild\lib\main.js:878:52
+    at buildResponseToResult (D:\DEV\role-model\.worktrees\45-observe-surface-realignment\node_modules\.pnpm\esbuild@0.25.12\node_modules\esbuild\lib\main.js:924:7)
+    at D:\DEV\role-model\.worktrees\45-observe-surface-realignment\node_modules\.pnpm\esbuild@0.25.12\node_modules\esbuild\lib\main.js:951:16
+    at responseCallbacks.<computed> (D:\DEV\role-model\.worktrees\45-observe-surface-realignment\node_modules\.pnpm\esbuild@0.25.12\node_modules\esbuild\lib\main.js:603:9)
+    at handleIncomingPacket (D:\DEV\role-model\.worktrees\45-observe-surface-realignment\node_modules\.pnpm\esbuild@0.25.12\node_modules\esbuild\lib\main.js:658:12)
+    at Socket.readFromStdout (D:\DEV\role-model\.worktrees\45-observe-surface-realignment\node_modules\.pnpm\esbuild@0.25.12\node_modules\esbuild\lib\main.js:581:7)
+    at Socket.emit (node:events:508:28)
+    at addChunk (node:internal/streams/readable:559:12) {
+  errors: [Getter/Setter],
+  warnings: [Getter/Setter]
+}
+
+Node.js v24.11.0
+D:\DEV\role-model\.worktrees\45-observe-surface-realignment\role-model-router\apps\runtime-host-bridge:
+ΓÇëERR_PNPM_RECURSIVE_RUN_FIRST_FAILΓÇë @role-model-router/runtime-host-bridge@0.0.0 package-sea: `tsx src/package-sea.ts`
+Exit status 1

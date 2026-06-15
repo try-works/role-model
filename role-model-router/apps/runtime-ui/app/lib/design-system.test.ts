@@ -133,6 +133,11 @@ const shellHeaderContextSource = readFileSync(
   new URL("./shell-header-context.tsx", import.meta.url),
   "utf8",
 );
+const routesSource = readFileSync(new URL("../routes.ts", import.meta.url), "utf8");
+const legacyRedirectSource = readFileSync(
+  new URL("../routes/legacy-redirect.tsx", import.meta.url),
+  "utf8",
+);
 const routesDir = path.dirname(fileURLToPath(new URL("../routes", import.meta.url)));
 const routeSources = readdirSync(routesDir)
   .filter((name) => name.endsWith(".tsx"))
@@ -326,6 +331,19 @@ describe("runtime design system", () => {
     expect(getRuntimeRouteDefinition("/app/endpoints/downstream")).toEqual(
       expect.objectContaining({
         id: "connect-downstream",
+      }),
+    );
+    expect(getRuntimeRouteDefinition("/app/observe")).toEqual(
+      expect.objectContaining({
+        id: "observe-requests",
+        section: "Observe",
+        title: "Telemetry request ledger",
+      }),
+    );
+    expect(getRuntimeRouteDefinition("/app/observe/logs")).toEqual(
+      expect.objectContaining({
+        id: "observe-logs",
+        title: "Host logs",
       }),
     );
   });
@@ -654,6 +672,44 @@ describe("runtime design system", () => {
     expect(localLogsSource).toContain("Request");
     expect(localLogsSource).toContain("Proxy log stream");
     expect(localLogsSource).toContain("Llama-swap log stream");
+  });
+
+  test("observe ownership keeps requests canonical and raw-host surfaces adjacent", () => {
+    expect(routesSource).toContain('route("observe", "routes/legacy-redirect.tsx"');
+    expect(legacyRedirectSource).toContain('"/app/observe": "/app/observe/requests"');
+    expect(designSystemDocSource).toContain(
+      "| `/app/observe` | redirect | — | Redirects to `/app/observe/requests`. |",
+    );
+    expect(designSystemDocSource).toContain(
+      "| `/app/observe/activity` | live | `ledger-inspector` | Preserved raw-host activity ledger",
+    );
+    expect(designSystemDocSource).toContain(
+      "| `/app/observe/requests` | live | `ledger-inspector` | Canonical telemetry request ledger",
+    );
+    expect(designSystemDocSource).toContain(
+      "| `/app/observe/logs` | live | `dual-console` | Preserved raw-host log shell",
+    );
+  });
+
+  test("requests and request detail stay telemetry-first while exposing raw-host handoffs", () => {
+    expect(requestsRouteSource).toContain("fetchTelemetryDashboard");
+    expect(requestsRouteSource).toContain("summarizeTelemetryStats");
+    expect(requestsRouteSource).toContain("/app/observe/activity");
+    expect(requestsRouteSource).toContain("/app/observe/logs");
+    expect(requestDetailRouteSource).toContain("/app/observe/activity");
+    expect(requestDetailRouteSource).toContain("/app/observe/logs");
+  });
+
+  test("activity route frames raw-host metrics as adjacent to canonical telemetry", () => {
+    expect(observeActivityRouteSource).toContain("/app/observe/requests");
+    expect(observeActivityRouteSource).toContain("canonical structured telemetry");
+    expect(observeActivityRouteSource).toContain("Raw metrics");
+  });
+
+  test("logs route exposes request-detail handoffs while preserving raw-host framing", () => {
+    expect(observeLogsSource).toContain("/app/observe/requests/");
+    expect(observeLogsSource).toContain("canonical telemetry");
+    expect(observeLogsSource).toContain("Open raw proxy stream");
   });
 
   test("registry and system layouts avoid redundant KPI strips and placeholder note panels", () => {

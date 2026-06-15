@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router";
 
 import {
   EmptyState,
@@ -85,6 +86,17 @@ export default function ObserveLogsRoute() {
       </div>
 
       <SectionCard
+        title="Canonical telemetry handoff"
+        description="Preserved raw-host logs stay adjacent to canonical telemetry; use correlated request ids to jump into the request-detail inspector when you need structured interpretation."
+      >
+        <div className="flex flex-wrap gap-3">
+          <Link className={secondaryButtonClassName} to="/app/observe/requests">
+            Open canonical request ledger
+          </Link>
+        </div>
+      </SectionCard>
+
+      <SectionCard
         title="Source filter"
         description="Filter preserved-host log lines by source class before drilling into raw lines or correlated request entries."
       >
@@ -148,7 +160,18 @@ export default function ObserveLogsRoute() {
                         <span className="text-[var(--rm-muted)]">—</span>
                       )}
                     </td>
-                    <td className="py-3 text-[var(--rm-secondary)]">{row.requestId ?? "—"}</td>
+                    <td className="py-3 text-[var(--rm-secondary)]">
+                      {row.requestId ? (
+                        <Link
+                          className="font-medium text-[var(--rm-accent)]"
+                          to={`/app/observe/requests/${row.requestId}`}
+                        >
+                          {row.requestId}
+                        </Link>
+                      ) : (
+                        "—"
+                      )}
+                    </td>
                     <td className="py-3 text-[var(--rm-secondary)]">{row.message}</td>
                   </tr>
                 ))}

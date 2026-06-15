@@ -666,6 +666,27 @@ describe("buildStructuredLogRows", () => {
       },
     ]);
   });
+
+  test("preserves request correlation for packaged runtime log lines without explicit severity tokens", () => {
+    expect(
+      buildStructuredLogRows(
+        "[2026-06-15T07:46:25.679Z] req-runtime-host-bridge endpoint=moonshot.personal.primary.global.kimi-k2.5 model=moonshot/kimi-k2.5 status=200 latency_ms=63",
+        "combined",
+      ),
+    ).toEqual([
+      {
+        key: "[2026-06-15T07:46:25.679Z] req-runtime-host-bridge endpoint=moonshot.personal.primary.global.kimi-k2.5 model=moonshot/kimi-k2.5 status=200 latency_ms=63-1",
+        timestamp: "2026-06-15T07:46:25.679Z",
+        sourceClass: "combined",
+        severity: null,
+        requestId: "req-runtime-host-bridge",
+        message:
+          "endpoint=moonshot.personal.primary.global.kimi-k2.5 model=moonshot/kimi-k2.5 status=200 latency_ms=63",
+        rawLine:
+          "[2026-06-15T07:46:25.679Z] req-runtime-host-bridge endpoint=moonshot.personal.primary.global.kimi-k2.5 model=moonshot/kimi-k2.5 status=200 latency_ms=63",
+      },
+    ]);
+  });
 });
 
 describe("buildAccountModelCatalogIds", () => {

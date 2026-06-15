@@ -160,10 +160,11 @@ The runtime hierarchy remains:
 | `/app/local/logs` | redirect | — | Redirects to `/app/local/llama-swap/logs`. |
 | `/app/local/matrix` | redirect | — | Redirects to `/app/local/llama-swap/matrix`. |
 | `/app/connect` | live | `registry-detail` | Consumer-facing registry of models and endpoints client applications can call after provider onboarding. |
+| `/app/observe` | redirect | — | Redirects to `/app/observe/requests`. |
 | `/app/observe/activity` | live | `ledger-inspector` | Preserved raw-host activity ledger over `/api/metrics` with inline capture drill-ins from `/api/captures/:id` and adjacent access to `/api/events`. |
 | `/app/observe/requests` | live | `ledger-inspector` | Canonical telemetry request ledger over `/api/role-model/telemetry/requests` with latency, token, cache, and source context. |
 | `/app/observe/requests/:requestId` | live | `ledger-inspector` | Telemetry-first request inspector with usage, cache, captures, endpoint profile, tooling receipts, and raw observation detail. |
-| `/app/observe/logs` | live | `dual-console` | Repo-owned log shell with preserved `/logs` history plus split proxy/upstream consoles over `/logs/stream/*`. |
+| `/app/observe/logs` | live | `dual-console` | Preserved raw-host log shell with `/logs` history, request-level handoffs, and raw `/logs/stream/*` access. |
 | `/app/connect/downstream` | live | `contract-reference` | Downstream OpenAI-compatible contract, auth, model discovery, and tool-calling expectations for client applications. |
 | `/app/connect/upstream` | live | `contract-reference` | Upstream passthrough reference with model-specific upstream target inventory, boundary guidance, and contextual raw `/upstream/*` escape hatches. |
 | `/app/system/runtime` | live | `system-topology` | Runtime health, controller posture, version/provenance facts, host controls, validation floor, and vendor-policy summary. |

@@ -1073,6 +1073,36 @@
   - llama-swap live load+role browser proof in operator env (llama-swap disabled); isolated git worktree not created (feature branch at repo root)
 - Known issues / follow-ups:
   - peer-models prerequisites flash fix in working tree requires SEA rebuild to ship; optional llama-swap-enabled QA for `R3`/`R7` scenario B
+
+### Run `45-observe-surface-realignment`
+
+- Run folder: `/.recursive/run/45-observe-surface-realignment/`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - reasserted `Observe → Requests` and `Observe → Request detail` as the canonical structured telemetry path, with `/app/observe` landing on `/app/observe/requests`
+  - reframed `Observe → Activity` and `Observe → Logs` as preserved raw-host adjacency surfaces with explicit handoffs back into canonical telemetry
+  - upgraded Requests to consume telemetry dashboard summary data and strengthened request-detail adjacency links
+  - fixed packaged-runtime log correlation by teaching the shared log-row parser to recognize bracketed timestamp lines like `[timestamp] req-runtime-host-bridge ...`, so real packaged logs can deep-link into request detail
+  - completed packaged-runtime verification by rebuilding the SEA executable and proving the Observe flow in the browser on `http://127.0.0.1:3456`
+- Why:
+  - run 35 left Observe drifted: Requests had become the real telemetry surface, while Activity and Logs still read like parallel primaries and packaged Logs could not correlate real request ids back into the canonical inspector
+- How:
+  - implemented design-system-first in an isolated worktree with strict TDD, captured RED/GREEN evidence for every production slice, rebuilt the packaged runtime, and ran agent-operated browser QA on the rebuilt runtime
+- What was not done:
+  - the run did not add new bridge APIs or a broader observability subsystem; backend expansion remained out of scope because the required handoffs were achievable in the frontend and shared view-model layer
+- Known issues / follow-ups:
+  - packaged Activity can still be empty when no host metrics or captures exist; its reframing is intentional and does not attempt to synthesize raw-host activity from canonical telemetry
+  - the run intentionally keeps raw `/api/metrics`, `/api/captures/:id`, `/logs`, and `/logs/stream/*` surfaces as preserved operator tools rather than replacing them
 - **Addendum 01** (`llama-swap-setup-scaffold-and-ui-hints`):
   - Artifacts: `addenda/00-requirements.llama-swap-setup-scaffold-and-ui-hints.addendum-01.md`, `03-implementation-summary.addendum-01.md`, `05-manual-qa.addendum-01.md`
   - What changed: `llama-swap-setup.ts` scaffold helpers; runtime-config **Insert llama-swap scaffold**; setup hints + modal on llama-swap Local surfaces when not operational

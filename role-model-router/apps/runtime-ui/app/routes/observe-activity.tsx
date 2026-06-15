@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router";
 
 import {
   CodeBlock,
@@ -111,6 +112,17 @@ export default function ObserveActivityRoute() {
           />
         ))}
       </div>
+
+      <SectionCard
+        title="Canonical structured telemetry"
+        description="This preserved raw-host ledger is adjacent to the canonical structured telemetry flow rather than the primary request interpretation surface."
+      >
+        <div className="flex flex-wrap gap-3">
+          <Link className={secondaryButtonClassName} to="/app/observe/requests">
+            Open canonical request ledger
+          </Link>
+        </div>
+      </SectionCard>
 
       <div className="grid grid-cols-12 gap-4">
         <SectionCard className="col-span-12 xl:col-span-8" title="Recent host activity">

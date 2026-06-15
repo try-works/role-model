@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router";
+import { Link, useParams } from "react-router";
 
 import {
   CodeBlock,
@@ -11,6 +11,7 @@ import {
   SectionCard,
   StatusPill,
 } from "../components/page-primitives";
+import { secondaryButtonClassName } from "../lib/design-system";
 import { formatRoutingModeLabel } from "../lib/routing-mode";
 import { useShellHeaderOverride } from "../lib/shell-header-context";
 import { fetchRequestDetail } from "../lib/runtime-api";
@@ -304,6 +305,23 @@ export default function RequestDetailRoute() {
           detail="Captured cache posture using explicit support semantics rather than zero-only inference."
         />
       </div>
+
+      <SectionCard
+        title="Adjacent raw-host tools"
+        description="Structured telemetry is canonical here; preserved host surfaces are available when you need raw metrics, captures, or combined logs."
+      >
+        <div className="flex flex-wrap gap-3">
+          <Link className={secondaryButtonClassName} to="/app/observe/requests">
+            Back to request ledger
+          </Link>
+          <Link className={secondaryButtonClassName} to="/app/observe/activity">
+            Host activity & captures
+          </Link>
+          <Link className={secondaryButtonClassName} to="/app/observe/logs">
+            Host logs
+          </Link>
+        </div>
+      </SectionCard>
 
       <div className="grid gap-4 xl:grid-cols-[0.8fr_1.2fr]">
         <SectionCard

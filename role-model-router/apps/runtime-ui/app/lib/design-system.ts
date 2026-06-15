@@ -414,9 +414,9 @@ const observeLogsRoute = createRoute({
   section: "Observe",
   icon: Logs,
   template: "dual-console",
-  title: "Logs",
+  title: "Host logs",
   description:
-    "Preserved log surfaces remain accessible from a repo-owned shell with a cleaner operator frame.",
+    "Preserved raw-host logs stay adjacent to canonical telemetry with request-level handoffs when correlation exists.",
 });
 
 const integrationsDownstreamRoute = createRoute({
@@ -759,6 +759,9 @@ export function getRuntimeRouteDefinition(pathname: string): RuntimeRouteDefinit
   }
   if (pathname === "/app/endpoints/upstream") {
     return integrationsUpstreamRoute;
+  }
+  if (pathname === "/app/observe") {
+    return observeRequestsRoute;
   }
   if (pathname === "/app/requests") {
     return observeRequestsRoute;

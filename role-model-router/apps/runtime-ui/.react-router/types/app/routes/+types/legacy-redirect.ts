@@ -142,6 +142,15 @@ type Matches = [{
   id: "routes/app-layout";
   module: typeof import("../app-layout.js");
 }, {
+  id: "legacy-observe";
+  module: typeof import("../legacy-redirect.js");
+}] | [{
+  id: "root";
+  module: typeof import("../../root.js");
+}, {
+  id: "routes/app-layout";
+  module: typeof import("../app-layout.js");
+}, {
   id: "legacy-endpoints-downstream";
   module: typeof import("../legacy-redirect.js");
 }] | [{

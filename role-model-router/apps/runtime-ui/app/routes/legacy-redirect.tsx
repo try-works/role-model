@@ -19,6 +19,7 @@ const legacyRouteMap: Record<string, string> = {
   "/app/endpoints": "/app/connect",
   "/app/endpoints/downstream": "/app/connect/downstream",
   "/app/endpoints/upstream": "/app/connect/upstream",
+  "/app/observe": "/app/observe/requests",
   "/app/integrations/downstream": "/app/connect/downstream",
   "/app/integrations/upstream": "/app/connect/upstream",
 };
