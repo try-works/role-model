@@ -1,0 +1,14 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/44-kimi-k2.7-code-catalog/role-model-router/apps/runtime-host-bridge
+
+(node:41504) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ Γ£ô test/catalog-economics-providers.test.ts (2 tests) 1138ms
+   Γ£ô catalog economics provider surfaces > hides moonshotai from listProviders while keeping operator moonshot  591ms
+   Γ£ô catalog economics provider surfaces > lists moonshot/kimi-k2.7-code on moonshot and kimi-code variants  544ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  22:06:19
+   Duration  3.87s (transform 1.26s, setup 0ms, collect 1.77s, tests 1.14s, environment 0ms, prepare 258ms)
+

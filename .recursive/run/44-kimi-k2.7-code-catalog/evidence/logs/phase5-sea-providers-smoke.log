@@ -1,0 +1,5 @@
+[2026-06-14T22:34:10.2424507+02:00] run44 SEA smoke
+SHA256=9a3e4888a877236de8ccb1bed12ef1f0306d357719ec225ed26f786467e7079f
+moonshotModelIds=moonshot/kimi-k2.5,moonshot/kimi-k2.6,moonshot/kimi-k2.7-code
+kimiCodeModelIds=moonshot/kimi-k2.5,moonshot/kimi-k2.6,moonshot/kimi-k2.7-code
+PASS k2.7 on packaged :3456

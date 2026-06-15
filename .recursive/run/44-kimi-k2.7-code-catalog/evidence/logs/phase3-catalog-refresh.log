@@ -1,0 +1,7 @@
+
+> role-model@0.0.0 catalog:refresh D:\DEV\role-model\.worktrees\44-kimi-k2.7-code-catalog
+> corepack pnpm --filter @role-model-router/catalog exec tsx src/refresh.ts
+
+D:\DEV\role-model\.worktrees\44-kimi-k2.7-code-catalog\testdata\catalog\models-dev-snapshot.json
+146 providers
+5268 models

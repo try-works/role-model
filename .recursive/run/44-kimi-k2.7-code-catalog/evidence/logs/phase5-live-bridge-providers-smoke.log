@@ -1,0 +1,21 @@
+(node:37456) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+{
+  "moonshotOperatorProviderPresent": true,
+  "moonshotaiHidden": true,
+  "moonshotModelIds": [
+    "moonshot/kimi-k2.5",
+    "moonshot/kimi-k2.6",
+    "moonshot/kimi-k2.7-code"
+  ],
+  "kimiCodeModelIds": [
+    "moonshot/kimi-k2.5",
+    "moonshot/kimi-k2.6",
+    "moonshot/kimi-k2.7-code"
+  ],
+  "openPlatformModelIds": [
+    "moonshot/kimi-k2.5",
+    "moonshot/kimi-k2.6",
+    "moonshot/kimi-k2.7-code"
+  ]
+}

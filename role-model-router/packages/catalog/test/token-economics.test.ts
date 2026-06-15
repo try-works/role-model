@@ -45,6 +45,22 @@ describe("token-economics", () => {
     expect(economics.outputPer1M).toBe(4);
   });
 
+  test("maps operator Kimi K2.7 Code model id to models.dev pricing row", async () => {
+    const catalog = await loadNormalizedCatalog();
+    expect(resolveCanonicalModelId("moonshot/kimi-k2.7-code")).toBe("moonshotai/kimi-k2.7-code");
+    expect(CANONICAL_MODEL_ID_ALIASES["moonshot/kimi-k2.7-code"]).toBe("moonshotai/kimi-k2.7-code");
+
+    const economics = resolveTokenEconomics({
+      modelId: "moonshot/kimi-k2.7-code",
+      catalog,
+      isLocalEndpoint: false,
+    });
+
+    expect(economics.source).toBe("catalog");
+    expect(economics.inputPer1M).toBe(0.95);
+    expect(economics.outputPer1M).toBe(4);
+  });
+
   test("uses local-free economics for local endpoints", () => {
     const catalog = { catalogVersion: "1", source: {}, providers: [], models: [] } as NormalizedCatalog;
     const economics = resolveTokenEconomics({

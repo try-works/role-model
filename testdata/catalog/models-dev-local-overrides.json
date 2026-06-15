@@ -27,6 +27,9 @@
     },
     "moonshot/kimi-k2.5": {
       "localNotes": ["Moonshot Open Platform catalog slice with Kimi Code OAuth onboarding support"]
+    },
+    "moonshot/kimi-k2.7-code": {
+      "localNotes": ["Moonshot Open Platform catalog slice with Kimi Code OAuth onboarding support"]
     }
   }
 }

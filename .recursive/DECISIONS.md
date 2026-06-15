@@ -1150,3 +1150,20 @@
 - Known issues / follow-ups:
   - legacy scope folders under same runtime state root (e.g. `run42-verify`) may retain pre-migration credential rows; QA must target active scope sqlite
   - operator should keep LiteLLM keys in env vars, not inline yaml, when using unified runtime config
+
+### Run `44-kimi-k2.7-code-catalog`
+
+- Run folder: `/.recursive/run/44-kimi-k2.7-code-catalog/`
+- Artifacts: `00-requirements.md` through `08-memory-impact.md`; catalog refresh/export logs; SEA + provider smoke logs
+- What changed:
+  - added `moonshotai/kimi-k2.7-code` via models.dev refresh and operator slice `moonshot/kimi-k2.7-code`
+  - pricing alias `moonshot/kimi-k2.7-code` → `moonshotai/kimi-k2.7-code`; `structured_output` capability mapping in catalog refresh
+  - LiteLLM fixture row for k2.7; bridge test for `listProviders` variant listing
+- Why:
+  - Kimi K2.7 Code was on models.dev but never merged to `main`; Connect Kimi Code variant omitted the model because normalized catalog stopped at k2.6
+- How:
+  - catalog pipeline only (no Connect UI changes); strict TDD; packaged SEA rebuild and `:3456` provider API smoke
+- What was not done:
+  - no new providers; no `resolveModelIds` union refactor; optional Kimi Code OAuth chat not run
+- Known issues / follow-ups:
+  - vendored LiteLLM submodule may still lack upstream k2.7 row; repo fixture covers validation until vendor refresh

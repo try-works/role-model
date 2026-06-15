@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 
 import { runCatalogExportCli } from "../src/cli.ts";
+import { deriveCapabilities } from "../src/refresh.ts";
 import {
   deriveLiteLLMProviders,
   deriveVendorVersionLedger,
@@ -81,6 +82,20 @@ async function createCatalogRefreshFixtureRepoRoot(): Promise<string> {
   await mkdir(path.join(tempRepoRoot, "testdata", "catalog"), { recursive: true });
   return tempRepoRoot;
 }
+
+describe("deriveCapabilities", () => {
+  test("maps models.dev structured_output to structured.output capability", () => {
+    expect(
+      deriveCapabilities({
+        id: "kimi-k2.7-code",
+        tool_call: true,
+        reasoning: true,
+        structured_output: true,
+        modalities: { output: ["text"] },
+      }),
+    ).toEqual(["text.chat", "tools.function_calling", "reasoning", "structured.output"]);
+  });
+});
 
 describe("normalizeCatalogSnapshot", () => {
   test("preserves upstream provenance while layering role-model enrichment", () => {
@@ -269,6 +284,56 @@ describe("normalizeCatalogSnapshot", () => {
       providerKind: "provider-openai",
       authFamily: "api-key",
       displayName: "Kimi K2.5",
+    });
+  });
+
+  test("normalizes moonshot/kimi-k2.7-code operator slice with structured output", () => {
+    const snapshot = JSON.parse(`{
+      "source": {
+        "vendor": "models.dev",
+        "commit": "moonshot-k27-test",
+        "capturedAt": "2026-06-14T12:00:00Z",
+        "schemaVersion": "models.dev.v1"
+      },
+      "providers": [
+        {
+          "providerId": "moonshot",
+          "displayName": "Moonshot AI",
+          "npmPackage": "@ai-sdk/openai-compatible",
+          "apiBase": "https://api.moonshot.ai/v1",
+          "envVars": ["MOONSHOT_API_KEY"],
+          "adapterFamilyHint": "ai-sdk-openai-compatible"
+        }
+      ],
+      "models": [
+        {
+          "modelId": "moonshot/kimi-k2.7-code",
+          "providerId": "moonshot",
+          "displayName": "Kimi K2.7 Code",
+          "version": "2026-06-12",
+          "capabilities": ["text.chat", "tools.function_calling", "reasoning", "structured.output"],
+          "modalities": ["text", "image", "video"],
+          "contextWindow": 262144,
+          "maxOutputTokens": 262144
+        }
+      ]
+    }`);
+
+    const catalog = normalizeCatalogSnapshot(snapshot, {});
+    const kimiModel = catalog.models.find((model) => model.modelId === "moonshot/kimi-k2.7-code");
+
+    expect(kimiModel).toMatchObject({
+      modelId: "moonshot/kimi-k2.7-code",
+      providerId: "moonshot",
+      displayName: "Kimi K2.7 Code",
+      capabilities: expect.arrayContaining([
+        "text.chat",
+        "tools.function_calling",
+        "reasoning",
+        "structured.output",
+      ]),
+      contextWindow: 262144,
+      maxOutputTokens: 262144,
     });
   });
 

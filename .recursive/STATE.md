@@ -204,3 +204,10 @@
   - **Addendum 02:** `credential-ref-env.ts` blocks inline `sk-` in sqlite `credential_ref`; external runtime config uses `${DEEPSEEK_API_KEY}` with host env var
   - Worktree evidence: `evidence/logs/green/sp43-*.log`, addenda under `/.recursive/run/43-benchmark-routing-display/addenda/`; memory episode `/.recursive/memory/episodes/run-43-benchmark-routing-display.md`
   - Ready for merge to `main`
+
+- Run 44 (Kimi K2.7 Code Catalog) on branch `recursive/44-kimi-k2.7-code-catalog`:
+  - Added `moonshot/kimi-k2.7-code` to operator Moonshot catalog (Open Platform + Kimi Code variants) via models.dev refresh, supplement, alias, export
+  - `deriveCapabilities` maps `structured_output`; LiteLLM fixture row for k2.7
+  - Catalog 16/16 tests + economics validation + bridge provider tests green
+  - Packaged SEA SHA256 `9a3e4888a877236de8ccb1bed12ef1f0306d357719ec225ed26f786467e7079f`; `:3456` providers smoke PASS
+  - Worktree: `.worktrees/44-kimi-k2.7-code-catalog`; ready for merge to `main`

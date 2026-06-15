@@ -1,0 +1,182 @@
+
+> role-model@0.0.0 runtime:package-sea D:\DEV\role-model\.worktrees\44-kimi-k2.7-code-catalog
+> corepack pnpm --filter @role-model-router/runtime-ui build && corepack pnpm --filter @role-model-router/runtime-host-bridge... build && corepack pnpm --filter @role-model-router/runtime-host-bridge run package-sea
+
+
+> @role-model-router/runtime-ui@ build D:\DEV\role-model\.worktrees\44-kimi-k2.7-code-catalog\role-model-router\apps\runtime-ui
+> react-router build && tsc --noEmit
+
+vite v7.3.2 building client environment for production...
+transforming...
+Γ£ô 1740 modules transformed.
+rendering chunks...
+computing gzip size...
+build/client/.vite/manifest.json                           21.40 kB Γöé gzip:  1.97 kB
+build/client/assets/root-BDePoXW4.css                      29.02 kB Γöé gzip:  6.09 kB
+build/client/assets/index-D9YEhZOf.js                       0.15 kB Γöé gzip:  0.15 kB
+build/client/assets/router-config-CGX7BrIJ.js               0.15 kB Γöé gzip:  0.16 kB
+build/client/assets/local-models-C_DXsyGE.js                0.16 kB Γöé gzip:  0.16 kB
+build/client/assets/local-matrix-DmBowcIJ.js                0.18 kB Γöé gzip:  0.18 kB
+build/client/assets/shell-header-context-k5Z0xjQc.js        0.70 kB Γöé gzip:  0.38 kB
+build/client/assets/not-found-Bk1wTjo8.js                   1.00 kB Γöé gzip:  0.54 kB
+build/client/assets/routing-mode-CgPzO0mQ.js                1.13 kB Γöé gzip:  0.50 kB
+build/client/assets/legacy-redirect-CsW8bJJh.js             1.15 kB Γöé gzip:  0.42 kB
+build/client/assets/llama-swap-setup-DjrOlpYQ.js            1.50 kB Γöé gzip:  0.74 kB
+build/client/assets/local-model-role-picker-HY2P0XYi.js     1.51 kB Γöé gzip:  0.75 kB
+build/client/assets/local-choose-x3pHB4lt.js                1.67 kB Γöé gzip:  0.79 kB
+build/client/assets/root-L2FiNXoo.js                        1.71 kB Γöé gzip:  0.86 kB
+build/client/assets/local-swap-Bq-d7icH.js                  2.09 kB Γöé gzip:  0.96 kB
+build/client/assets/requests-v2l813Rb.js                    2.11 kB Γöé gzip:  0.97 kB
+build/client/assets/router-decisions-DHq5dBzM.js            2.50 kB Γöé gzip:  1.11 kB
+build/client/assets/page-primitives-DlHuPeRL.js             2.54 kB Γöé gzip:  0.92 kB
+build/client/assets/dashboard-C6wBQZWF.js                   2.90 kB Γöé gzip:  1.17 kB
+build/client/assets/app-layout-BjFUwfjW.js                  3.14 kB Γöé gzip:  1.19 kB
+build/client/assets/control-runtime-config-Cr_HylNp.js      3.14 kB Γöé gzip:  1.47 kB
+build/client/assets/local-policy-WAgB_3ZI.js                3.37 kB Γöé gzip:  1.40 kB
+build/client/assets/integrations-downstream-VGxs_5-_.js     3.60 kB Γöé gzip:  1.30 kB
+build/client/assets/local-peers-BRXH_YRR.js                 3.92 kB Γöé gzip:  1.62 kB
+build/client/assets/integrations-upstream-DEpPVjTO.js       4.02 kB Γöé gzip:  1.52 kB
+build/client/assets/router-decision-detail-BZUmvO1z.js      4.12 kB Γöé gzip:  1.67 kB
+build/client/assets/local-logs-CSUAN-Kj.js                  4.15 kB Γöé gzip:  1.56 kB
+build/client/assets/router-candidates-D9gi9dNT.js           4.25 kB Γöé gzip:  1.73 kB
+build/client/assets/system-peers-BevNd5Uu.js                4.34 kB Γöé gzip:  1.73 kB
+build/client/assets/observe-logs-Ciw-O0dU.js                4.43 kB Γöé gzip:  1.68 kB
+build/client/assets/observe-activity-CK-JK7YC.js            4.49 kB Γöé gzip:  1.55 kB
+build/client/assets/control-controller-CQuu7Q1X.js          4.54 kB Γöé gzip:  1.66 kB
+build/client/assets/runtime-B2v5U54D.js                     4.68 kB Γöé gzip:  1.48 kB
+build/client/assets/studio-rerank-BhBBbwAI.js               4.74 kB Γöé gzip:  1.90 kB
+build/client/assets/local-peer-models-BQ7oVRzh.js           4.96 kB Γöé gzip:  1.95 kB
+build/client/assets/session-readiness-p0d99xHS.js           5.01 kB Γöé gzip:  1.69 kB
+build/client/assets/router-BnmGsvKe.js                      5.24 kB Γöé gzip:  1.71 kB
+build/client/assets/studio-images-Du70tMPq.js               5.37 kB Γöé gzip:  1.97 kB
+build/client/assets/studio-advanced-D9Cvtk-e.js             5.40 kB Γöé gzip:  2.11 kB
+build/client/assets/endpoints-DrwBJrhm.js                   5.88 kB Γöé gzip:  1.63 kB
+build/client/assets/llama-swap-setup-hint-D4ZV6Iti.js       5.88 kB Γöé gzip:  2.01 kB
+build/client/assets/local-llama-swap-models-Bz8-MPHY.js     6.44 kB Γöé gzip:  2.26 kB
+build/client/assets/studio-audio-C8D2OFNu.js                6.87 kB Γöé gzip:  2.45 kB
+build/client/assets/workbench-MFGalYVM.js                   8.01 kB Γöé gzip:  2.57 kB
+build/client/assets/runtime-api-C3pD4my3.js                 8.79 kB Γöé gzip:  2.05 kB
+build/client/assets/request-detail-CGvwT9ph.js             11.02 kB Γöé gzip:  3.58 kB
+build/client/assets/control-roles-Dk3H8Bxq.js              12.02 kB Γöé gzip:  3.14 kB
+build/client/assets/control-routing-strategy-CJ7l5ZBU.js   12.32 kB Γöé gzip:  3.55 kB
+build/client/assets/control-models-CLxVNI3Z.js             12.42 kB Γöé gzip:  3.65 kB
+build/client/assets/view-models-DRNYqhRz.js                16.07 kB Γöé gzip:  5.33 kB
+build/client/assets/providers-Db6hbxIv.js                  16.45 kB Γöé gzip:  4.77 kB
+build/client/assets/control-benchmark-DYmgxqrW.js          19.86 kB Γöé gzip:  6.26 kB
+build/client/assets/design-system-DfFioFiq.js              46.99 kB Γöé gzip: 14.98 kB
+build/client/assets/chunk-EVOBXE3Y-Nl2fzMWo.js            127.79 kB Γöé gzip: 43.05 kB
+build/client/assets/entry.client-Dy6QV84X.js              190.57 kB Γöé gzip: 60.05 kB
+Γ£ô built in 8.94s
+vite v7.3.2 building ssr environment for production...
+transforming...
+Γ£ô 9 modules transformed.
+rendering chunks...
+build/server/.vite/manifest.json                0.23 kB
+build/server/assets/server-build-Dv-5SBn8.css  39.94 kB
+build/server/index.js                          62.73 kB
+
+Γ£ô 1 asset cleaned from React Router server build.
+build\server\assets\server-build-Dv-5SBn8.css
+
+SPA Mode: Generated build\client\index.html
+Removing the server build in D:\DEV\role-model\.worktrees\44-kimi-k2.7-code-catalog\role-model-router\apps\runtime-ui\build\server due to ssr:false
+Γ£ô built in 555ms
+Scope: 26 of 43 workspace projects
+packages/protocol-types build$ tsc -p tsconfig.json
+role-model-router/packages/bench-judge build$ tsc -p tsconfig.json
+role-model-router/packages/catalog build$ tsc -p tsconfig.json
+.../packages/process-supervisor build$ tsc -p tsconfig.json
+packages/protocol-types build: Done
+role-model-router/packages/tool-registry build$ tsc -p tsconfig.json
+role-model-router/packages/bench-judge build: Done
+.../packages/vendor-abstraction build$ tsc -p tsconfig.json
+.../packages/process-supervisor build: Done
+role-model-router/packages/catalog build: Done
+role-model-router/packages/tool-registry build: Done
+.../packages/vendor-abstraction build: Done
+.../packages/profile-aggregator build$ tsc -p tsconfig.json
+.../packages/provider-account build$ tsc -p tsconfig.json
+role-model-router/packages/core build$ tsc -p tsconfig.json
+role-model-router/packages/trace build$ tsc -p tsconfig.json
+role-model-router/packages/trace build: Done
+role-model-router/packages/usage build$ tsc -p tsconfig.json
+.../packages/profile-aggregator build: Done
+role-model-router/packages/bench-routing build$ tsc -p tsconfig.json
+.../packages/provider-account build: Done
+.../packages/vendor-llama-swap build$ tsc -p tsconfig.json
+role-model-router/packages/core build: Done
+.../packages/vendor-litellm build$ tsc -p tsconfig.json
+role-model-router/packages/usage build: Done
+role-model-router/packages/bench-routing build: Done
+.../packages/vendor-llama-swap build: Done
+.../packages/vendor-litellm build: Done
+role-model-router/packages/sqlite-memory build$ tsc -p tsconfig.json
+role-model-router/packages/provider-mcp build$ tsc -p tsconfig.json
+role-model-router/packages/provider-mcp build: Done
+role-model-router/packages/sqlite-memory build: Done
+.../packages/context-envelope build$ tsc -p tsconfig.json
+.../packages/context-envelope build: Done
+.../packages/retrieval-receipt build$ tsc -p tsconfig.json
+.../packages/retrieval-receipt build: Done
+.../packages/endpoint-registry build$ tsc -p tsconfig.json
+.../packages/endpoint-registry build: Done
+.../packages/protocol-routing build$ tsc -p tsconfig.json
+.../packages/protocol-routing build: Done
+.../packages/adapter-execution build$ tsc -p tsconfig.json
+.../packages/provider-anthropic build$ tsc -p tsconfig.json
+.../packages/provider-anthropic build: Done
+.../packages/adapter-execution build: Done
+.../packages/provider-openai build$ tsc -p tsconfig.json
+.../packages/runtime-observability build$ tsc -p tsconfig.json
+.../packages/provider-openai build: Done
+.../packages/runtime-observability build: Done
+.../packages/provider-litellm build$ tsc -p tsconfig.json
+.../packages/provider-litellm build: Done
+.../apps/runtime-host-bridge build$ tsc -p tsconfig.json
+.../apps/runtime-host-bridge build: Done
+
+> @role-model-router/runtime-host-bridge@0.0.0 package-sea D:\DEV\role-model\.worktrees\44-kimi-k2.7-code-catalog\role-model-router\apps\runtime-host-bridge
+> tsx src/package-sea.ts
+
+go: downloading github.com/gin-gonic/gin v1.10.0
+go: downloading github.com/billziss-gh/golib v0.2.0
+go: downloading gopkg.in/yaml.v3 v3.0.1
+go: downloading github.com/klauspost/compress v1.18.5
+go: downloading github.com/fxamacker/cbor/v2 v2.9.1
+go: downloading github.com/tidwall/sjson v1.2.5
+go: downloading github.com/tidwall/gjson v1.18.0
+go: downloading github.com/tidwall/pretty v1.2.1
+go: downloading github.com/tidwall/match v1.1.1
+go: downloading github.com/x448/float16 v0.8.4
+go: downloading google.golang.org/protobuf v1.34.1
+go: downloading github.com/go-playground/validator/v10 v10.20.0
+go: downloading github.com/mattn/go-isatty v0.0.20
+go: downloading github.com/gin-contrib/sse v0.1.0
+go: downloading github.com/pelletier/go-toml/v2 v2.2.2
+go: downloading golang.org/x/net v0.47.0
+go: downloading github.com/ugorji/go/codec v1.2.12
+go: downloading github.com/leodido/go-urn v1.4.0
+go: downloading golang.org/x/text v0.31.0
+go: downloading golang.org/x/crypto v0.45.0
+go: downloading github.com/go-playground/universal-translator v0.18.1
+go: downloading github.com/gabriel-vasile/mimetype v1.4.3
+go: downloading github.com/go-playground/locales v0.14.1
+go: downloading golang.org/x/sys v0.38.0
+golang.org/x/net/http2/h2c: write C:\Users\erikb\AppData\Local\Temp\go-build2461447709\b262\importcfg: There is not enough space on the disk.
+# github.com/ugorji/go/codec
+compile: writing output: write $WORK\b228\_pkg_.a: There is not enough space on the disk.
+D:\DEV\role-model\.worktrees\44-kimi-k2.7-code-catalog\role-model-router\apps\runtime-host-bridge\src\package-sea.ts:134
+    throw new Error(`Command failed: ${command} ${args.join(" ")}`);
+          ^
+
+Error: Command failed: C:\Program Files\Go\bin\go.exe build -o D:\DEV\role-model\.worktrees\44-kimi-k2.7-code-catalog\role-model-router\vendor\llama-swap\dist-assets\win32-x64\llama-swap.exe .
+    at runOrThrow (D:\DEV\role-model\.worktrees\44-kimi-k2.7-code-catalog\role-model-router\apps\runtime-host-bridge\src\package-sea.ts:134:11)
+    at buildLlamaSwapAsset (D:\DEV\role-model\.worktrees\44-kimi-k2.7-code-catalog\role-model-router\apps\runtime-host-bridge\src\package-sea.ts:185:3)
+    at async packageSeaRuntime (D:\DEV\role-model\.worktrees\44-kimi-k2.7-code-catalog\role-model-router\apps\runtime-host-bridge\src\package-sea.ts:365:3)
+    at async <anonymous> (D:\DEV\role-model\.worktrees\44-kimi-k2.7-code-catalog\role-model-router\apps\runtime-host-bridge\src\package-sea.ts:421:18)
+
+Node.js v24.11.0
+D:\DEV\role-model\.worktrees\44-kimi-k2.7-code-catalog\role-model-router\apps\runtime-host-bridge:
+ΓÇëERR_PNPM_RECURSIVE_RUN_FIRST_FAILΓÇë @role-model-router/runtime-host-bridge@0.0.0 package-sea: `tsx src/package-sea.ts`
+Exit status 1
+ΓÇëELIFECYCLEΓÇë Command failed with exit code 1.
