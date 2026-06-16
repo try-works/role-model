@@ -1230,3 +1230,25 @@
   - no new providers; no `resolveModelIds` union refactor; optional Kimi Code OAuth chat not run
 - Known issues / follow-ups:
   - vendored LiteLLM submodule may still lack upstream k2.7 row; repo fixture covers validation until vendor refresh
+
+### Maintenance `ci-release-automation-hardening`
+
+- Run folder: `n/a` (workflow maintenance outside a numbered recursive run folder)
+- Artifacts:
+  - `/docs/operations/02-ci-and-release-flow.md`
+  - `/docs/operations/03-release-checklist.md`
+  - `/CHANGELOG.md`
+  - `/scripts/generate-recursive-release-changelog.mjs`
+- What changed:
+  - split `/.github/workflows/ci.yml` into phase-attributed validation steps so GitHub failures identify the failing stage directly
+  - changed `/.github/workflows/docs-site-deploy.yml` to build on pull requests without deployment secrets and deploy only on non-PR events after explicit Cloudflare guards
+  - changed `/.github/workflows/build-binaries.yml` so matrix jobs only build and attest archives, while one final tag-gated publish job assembles installer scripts, checksums, and release assets
+  - added `/.github/release.yml` plus recursive-artifact changelog generation so GitHub releases combine generated notes with repo-authored implementation, decision, and state receipts
+- Why:
+  - GitHub-only failures were too opaque, docs validation was coupled to deploy-only concerns, and release assets plus release notes were not yet reproducible from the repository truth
+- How:
+  - workflow hardening first, canonical docs second, then local verification through `corepack pnpm run ci:check`, `corepack pnpm run lint`, `corepack pnpm run docs:build`, and `corepack pnpm run runtime:package-sea` before relying on tag-gated GitHub release publication
+- What was not done:
+  - no npm distribution channel was introduced; installation remains source checkout or released binaries with install scripts
+- Known issues / follow-ups:
+  - GitHub release publication still depends on real tag pushes plus repo-side permissions and environment policy; keep the operations docs aligned whenever workflows or release assets change

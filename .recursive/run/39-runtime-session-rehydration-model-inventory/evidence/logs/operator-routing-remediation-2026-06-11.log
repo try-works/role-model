@@ -1,0 +1,38 @@
+# Operator routing remediation — 2026-06-11
+
+## 1. runtime-config.yaml
+
+Path: C:\Users\erikb\AppData\Local\Role Model Runtime\runtime-config.yaml
+Change: mixed.local-remote model_ids lfm2.5-1.2b-instruct -> lfm2.5-8b-a1b
+Reload: PUT http://127.0.0.1:3456/api/role-model/runtime/config (applied: true)
+
+## 2. Observed sample purge
+
+Script: scripts/operator-purge-observed-test-samples.ts
+Database: C:\Users\erikb\AppData\Local\Role Model Runtime\standalone-runtime\memory\memory.sqlite
+
+Results:
+- local...lfm2.5-1.2b-instruct: deleted benchmark 12+12, test_live 10+8, remaining live 184
+- local...lfm2.5-8b-a1b: deleted benchmark 12+12, test_live 3+3, remaining live 0
+- moonshot...kimi-k2.6: deleted benchmark 12+12, test_live 23+19, remaining live 27
+
+Post-purge inspect: 0 test/benchmark-ish request_ids; 211 live_request samples total
+Post-purge moonshot profile: sample_size=27, tokens_per_sec=20, latency_ms_p50=4749
+
+## 3. Craft Agent payload inspection
+
+Script: scripts/operator-inspect-craft-agent-payload.ts
+
+difficulty_classification_cache (conversation-main):
+  difficulty=medium, historyTurnCount=2, codeOrSchemaBurden=true, contextTokens=56
+
+Hypothesized Craft system+user rubric:
+  matched terms: contract, schema, validation
+  score=3 -> medium
+
+Action: DELETE FROM difficulty_classification_cache WHERE conversation_id='conversation-main' (1 row)
+
+## 4. Addendum authored
+
+Path: .recursive/run/39-runtime-session-rehydration-model-inventory/addenda/00-requirements.routing-diagnostics-remediation.addendum-01.md
+Proposed code requirements: R10 (hide stale fixture routingModel), R11 (exclude system prompt from codeOrSchemaBurden)
