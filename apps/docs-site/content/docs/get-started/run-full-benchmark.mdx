@@ -1,0 +1,66 @@
+---
+title: Run the full benchmark
+description: Benchmark the exact endpoint set you plan to route across so role-model can write real quality signals into observed profiles.
+---
+
+# Run the full benchmark
+
+Benchmarking is part of first-time setup, not an optional afterthought.
+
+Once your endpoints, models, and roles are configured, run the **full benchmark** before you choose a
+routing strategy.
+
+## Why benchmark before strategy selection
+
+The router can use measured and benchmark-derived quality information when ranking candidates.
+
+If you choose a routing strategy before benchmarking, you are effectively tuning policy without the evidence
+that should inform that policy.
+
+## What the benchmark does
+
+The benchmark flow:
+
+- runs the configured benchmark cases against the selected endpoint set
+- grades outputs through the benchmark judge path
+- writes judge scores into observed endpoint profiles
+- makes those quality signals available to later routing decisions
+
+That means the benchmark is not just a report. It actively improves the quality evidence that Router uses.
+
+<BenchmarkStrategyLoopDiagram />
+
+## Recommended first-run benchmark policy
+
+For your first full setup:
+
+1. benchmark the real endpoints you intend to route across
+2. prefer the full run instead of a quick sanity check
+3. wait for the run to finish before touching routing-strategy settings
+4. review the endpoint-level quality spread, failures, and latency tradeoffs
+
+## Where to run it
+
+Use **Models -> Benchmark** in the operator UI.
+
+That page is the canonical surface for:
+
+- starting the run
+- seeing per-model scores
+- comparing recent runs
+- understanding how benchmark scores feed later routing quality
+
+## What you want to learn from the first full run
+
+You are trying to answer:
+
+- which endpoints are clearly strong for your workload
+- which endpoints are weak or unstable
+- whether local and remote candidates are both viable
+- whether cost, latency, or quality tradeoffs are large enough to justify a specific strategy
+- whether any endpoint changes should force another benchmark before you trust later routing decisions
+
+## Next
+
+After the benchmark completes, continue to
+[Choose and save the routing strategy](/get-started/choose-routing-strategy).

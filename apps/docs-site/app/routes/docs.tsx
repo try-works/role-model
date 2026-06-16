@@ -13,10 +13,35 @@ import {
   MarkdownCopyButton,
   ViewOptionsPopover,
 } from "fumadocs-ui/layouts/docs/page";
+import { redirect } from "react-router";
 import type { Route } from "./+types/docs";
 
+const legacyRedirects: Record<string, string> = {
+  operators: "/runtime/runtime-ui-tour",
+  "operators/runtime-ui-tour": "/runtime/runtime-ui-tour",
+  "operators/models-and-role-activation": "/runtime/models-and-role-activation",
+  "operators/benchmarks-and-evaluation": "/runtime/benchmarks-and-evaluation",
+  "operators/routing-controls-and-decision-review": "/runtime/routing-controls-and-decision-review",
+  routing: "/router/overview",
+  "routing/candidate-discovery": "/router/candidate-selection-and-eligibility",
+  "routing/eligibility-and-rejection": "/router/candidate-selection-and-eligibility",
+  "routing/comparison-and-tradeoffs": "/router/scoring-tie-breaks-and-decisions",
+  "routing/decision-semantics": "/router/scoring-tie-breaks-and-decisions",
+  "routing/routing-outcomes-and-failure-modes": "/router/fallbacks-failures-and-observability",
+  "routing/observability-of-routing": "/router/fallbacks-failures-and-observability",
+  "routing/how-routing-works-end-to-end": "/router/how-routing-works-end-to-end",
+  "routing/protocol-to-router-mapping": "/router/protocol-to-router-mapping",
+  "router/candidate-selection": "/router/candidate-selection-and-eligibility",
+  "router/scoring-and-tie-breaks": "/router/scoring-tie-breaks-and-decisions",
+  "router/decisions-fallbacks-and-failures": "/router/fallbacks-failures-and-observability",
+};
+
 export async function loader({ params }: Route.LoaderArgs) {
-  const slugs = (params["*"] ?? "").split("/").filter((v) => v.length > 0);
+  const path = (params["*"] ?? "").replace(/^\/+|\/+$/g, "");
+  const redirectTarget = legacyRedirects[path];
+  if (redirectTarget) throw redirect(redirectTarget, 301);
+
+  const slugs = path.split("/").filter((v) => v.length > 0);
   const page = source.getPage(slugs);
   if (!page) throw new Response("Not found", { status: 404 });
 

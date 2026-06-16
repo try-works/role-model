@@ -1,22 +1,107 @@
 ---
 title: Routing overview
-description: A concise summary of the reference routing flow.
+description: A concise but current summary of how the reference router filters, scores, ties, and explains a decision.
 ---
 
 # Routing overview
 
-The reference router performs four big steps:
+Routing in `role-model` is deterministic and explainable.
 
-1. build an effective policy snapshot from request intent
+The goal is not only to choose an endpoint, but to produce answers to two questions:
+
+1. which endpoints were valid candidates?
+2. why was the final endpoint chosen over the others?
+
+## The routing order
+
+The baseline router applies this order:
+
+1. normalize request intent into an effective policy snapshot
 2. reject candidates that fail hard constraints
-3. score the remaining candidates using measured and declared evidence
-4. emit a `RouterDecision` with fallbacks and reason codes
+3. score the remaining candidates across quality, latency, throughput, cost, reliability, and preference
+4. redistribute weight when an entire metric is unknown for every eligible candidate
+5. break near-ties by higher quality, lower latency, higher reliability, then stable `endpoint_id`
+6. emit a `RouterDecision` with ranked fallbacks and reason codes
 
-The deep routing pages are:
+## Eligibility comes first
 
-- [/routing/how-routing-works-end-to-end](/routing/how-routing-works-end-to-end)
-- [/routing/eligibility-and-rejection](/routing/eligibility-and-rejection)
-- [/routing/comparison-and-tradeoffs](/routing/comparison-and-tradeoffs)
-- [/routing/decision-semantics](/routing/decision-semantics)
+Before scoring, the router filters out endpoints that cannot legally or practically satisfy the request.
 
-For the decision artifact itself, read [/protocol/router-decision-artifact](/protocol/router-decision-artifact).
+Baseline exclusion families include:
+
+- `CAPABILITY_MISSING`
+- `MODALITY_UNSUPPORTED`
+- `CONTEXT_TOO_SMALL`
+- `TOOLS_UNSUPPORTED`
+- `POLICY_DENY_ENDPOINT`
+- `POLICY_DENY_REMOTE`
+- `BUDGET_EXCEEDED`
+- `PROVIDER_OFFLINE`
+
+This matters because the router should never "score its way out of" a hard incompatibility.
+
+## Measured evidence beats declarations
+
+After eligibility, the router prefers measured evidence when it exists:
+
+- latency and throughput
+- failure behavior
+- quality signals
+- freshness and confidence
+- cost estimates
+
+Catalog-derived cost data and declared profiles still matter, but measured evidence wins when it is present.
+
+## Worked example: the gateway smoke route
+
+The smoke request asks for:
+
+- `code.edit`
+- text output
+- tool support
+- balanced strategy
+- local preference
+- a strict per-request budget cap
+
+The candidate set contains three endpoints:
+
+| Endpoint | Result |
+| --- | --- |
+| `cli.local.coder` | eligible |
+| `acp.remote.general` | excluded |
+| `mcp.remote.embedder` | excluded |
+
+Why the exclusions happen:
+
+- `acp.remote.general` does not provide the required `code.edit` capability
+- `mcp.remote.embedder` does not provide the required `code.edit` capability
+
+Both exclusions are recorded as `CAPABILITY_MISSING`.
+
+That leaves `cli.local.coder` as the only eligible candidate. The router then records the final decision
+with selection reasons such as:
+
+- `BEST_TOTAL_SCORE`
+- `DECLARED_PROFILE_USED`
+- `MEASURED_PROFILE_USED`
+- `LOCAL_PREFERENCE_APPLIED`
+
+## Why the artifacts matter
+
+The decision is only one artifact in the routing story.
+
+The baseline can also emit:
+
+- `trace-spans.json` to show routing phases such as eligibility, scoring, and selection
+- `usage-events.jsonl` to show request and accounting metadata
+- `observed-performance.json` to show measured endpoint behavior
+
+That artifact set is what makes routing explainable after the fact.
+
+## Read next
+
+- [Router overview](/router/overview)
+- [How routing works end to end](/router/how-routing-works-end-to-end)
+- [Candidate selection and eligibility](/router/candidate-selection-and-eligibility)
+- [Scoring, tie-breaks, and decisions](/router/scoring-tie-breaks-and-decisions)
+- [Router decision artifact](/protocol/router-decision-artifact)

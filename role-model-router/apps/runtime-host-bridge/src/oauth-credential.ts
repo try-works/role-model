@@ -53,10 +53,7 @@ function readStoredRefreshToken(payload: Record<string, unknown> | null): string
   return typeof payload?.refresh_token === "string" ? payload.refresh_token.trim() : "";
 }
 
-function credentialRefHasToken(
-  location: OauthCredentialLocation,
-  credentialRef: string,
-): boolean {
+function credentialRefHasToken(location: OauthCredentialLocation, credentialRef: string): boolean {
   if (!credentialRefFileExists(location, credentialRef)) {
     return false;
   }
@@ -64,9 +61,7 @@ function credentialRefHasToken(
     const payload = JSON.parse(
       readFileSync(resolveOauthCredentialFilePath(location, credentialRef), "utf8"),
     ) as Record<string, unknown>;
-    return (
-      readStoredAccessToken(payload).length > 0 || readStoredRefreshToken(payload).length > 0
-    );
+    return readStoredAccessToken(payload).length > 0 || readStoredRefreshToken(payload).length > 0;
   } catch {
     return false;
   }

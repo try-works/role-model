@@ -1,0 +1,82 @@
+---
+title: Benchmarks and evaluation
+description: Use the Models benchmark surface to grade the configured endpoint set and feed routing-quality evidence back into the runtime.
+---
+
+# Benchmarks and evaluation
+
+Benchmarking is the operator bridge between model setup and routing strategy.
+
+## What the benchmark page is for
+
+The **Models -> Benchmark** surface is where operators:
+
+- run full or quick benchmark suites
+- compare endpoint output quality
+- inspect recent run history
+- understand how benchmark results feed observed routing profiles
+
+## Why this page matters to Router
+
+Benchmark results are not isolated lab output.
+
+They are written back into the quality evidence that Router can later use for candidate ranking and decision
+explainability.
+
+That is why the first full benchmark is part of setup, not just periodic maintenance.
+
+<BenchmarkStrategyLoopDiagram />
+
+## What benchmark evidence actually affects
+
+Benchmarking most directly strengthens the **quality** dimension of routing by populating judge-backed or
+quality-backed observed profiles.
+
+It does **not** replace the other decision inputs Router uses later:
+
+- observed latency still feeds the latency side of candidate scoring
+- catalog model economics and observed cost still feed the cost side of candidate scoring
+- reliability and policy still decide whether an endpoint should even stay eligible
+
+It also helps operators see:
+
+- whether latency tradeoffs are real enough to justify a `latency` strategy
+- whether cost spread is meaningful enough to justify a `cost` strategy
+- whether weak or unstable endpoints should be removed before any strategy choice
+
+That means the benchmark is not the whole routing story, but it is the main evidence source that keeps
+strategy selection from turning into guesswork.
+
+## Recommended first-run discipline
+
+For a fresh deployment:
+
+1. finish endpoint and role setup
+2. run the full benchmark
+3. review score spread, health, and latency tradeoffs
+4. only then choose and save the routing strategy
+
+## What to watch for
+
+Use the first benchmark to find:
+
+- clearly dominant or weak candidates
+- unstable endpoints
+- surprising local vs remote tradeoffs
+- endpoints that should probably not remain in the active routing pool
+
+## Use benchmark output to choose a strategy, not just to admire scores
+
+After a full run, decide explicitly:
+
+- should the best-quality endpoint win more often, even if it is slower?
+- should the fastest healthy endpoint win because UX is sensitive?
+- should the cheapest healthy endpoint win because budget is constrained?
+- or is the set healthy enough that a balanced tradeoff is the right default?
+
+If operators cannot answer those questions from the benchmark page and Router page together, the strategy is
+not yet ready to save.
+
+## Next
+
+Continue to [Routing controls and decision review](/runtime/routing-controls-and-decision-review).

@@ -1,0 +1,209 @@
+---
+title: Scoring strategies and tradeoffs
+description: What balanced, quality, latency, and cost scoring strategies do, and how benchmark, latency, reliability, and budget signals affect each one.
+---
+
+# Scoring strategies and tradeoffs
+
+This page covers the **scoring-strategy** layer of routing:
+
+- `balanced`
+- `quality`
+- `latency`
+- `cost`
+
+If you are looking for runtime routing modes such as `baseline`, `controller`, `difficulty`, or `hybrid`,
+or for `local_only` / `remote_only` execution scope, read
+[/router/routing-modes-locality-and-execution](/router/routing-modes-locality-and-execution) first.
+
+The saved scoring strategy is the policy mode that changes how Router ranks already-eligible candidates.
+
+It answers this practical question:
+
+> once hard constraints are satisfied, what should the router optimize for?
+
+## What strategy changes and what it does not
+
+Strategy changes the comparison weights used during candidate scoring.
+
+Strategy does **not**:
+
+- override hard eligibility failures
+- bring back endpoints excluded by privacy, capability, tool, or budget rules
+- replace the need for benchmark or live evidence
+
+That means strategy only matters **after** Router has a clean eligible set.
+
+## The four baseline strategies
+
+| Strategy | Primary bias | Best fit | What usually wins | Main risk |
+| --- | --- | --- | --- | --- |
+| `balanced` | mixed quality, latency, cost, reliability | general-purpose default routing | the endpoint with the healthiest overall profile | can hide a clearly better quality winner if the spread is large |
+| `quality` | benchmarked quality and reliability | high-stakes tasks where answer quality matters most | the highest-quality healthy endpoint | can accept slower or more expensive winners if the quality gap is real |
+| `latency` | effective latency and throughput | interactive chat, UX-sensitive flows, fast feedback loops | the fastest healthy endpoint | can favor a quicker but weaker model if quality is only slightly considered |
+| `cost` | observed or catalog cost with a reliability floor | background work, high-volume workloads, budget-sensitive paths | the cheapest healthy eligible endpoint | weak cost evidence can make the strategy less decisive than operators expect |
+
+## Current baseline weights
+
+The current reference router baseline uses these weight sets:
+
+| Strategy | quality | latency | throughput | cost | reliability | preference |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| `balanced` | 0.30 | 0.20 | 0.10 | 0.20 | 0.15 | 0.05 |
+| `quality` | 0.50 | 0.10 | 0.05 | 0.10 | 0.20 | 0.05 |
+| `latency` | 0.15 | 0.45 | 0.15 | 0.05 | 0.15 | 0.05 |
+| `cost` | 0.15 | 0.10 | 0.05 | 0.50 | 0.15 | 0.05 |
+
+These exact weights are part of the current reference-router behavior, not a timeless protocol guarantee.
+
+## Which signals feed strategy decisions
+
+Different evidence feeds different scoring dimensions:
+
+- **benchmark and judge output** mainly strengthen the **quality** dimension
+- **latency samples** feed the **latency** dimension through effective `p50` and `p95`
+- **tokens per second** feed the **throughput** dimension
+- **failure behavior** feeds the **reliability** dimension
+- **observed or catalog cost estimates** feed the **cost** dimension
+- **role locality and preferred-capability matches** feed the **preference** dimension
+
+The key operational implication is that the benchmark does **not** drive every strategy equally.
+
+It matters most for `quality`, still matters for `balanced`, and is only part of the story for `latency` and
+`cost`, which also depend heavily on measured execution behavior and budget context.
+
+## How Router actually uses benchmark, latency, and catalog cost
+
+The three most important operator-visible evidence sources are not interchangeable.
+
+### Benchmark results
+
+Benchmark results most directly feed the **quality** side of routing.
+
+In practical terms, the benchmark run writes quality-oriented evidence back into endpoint profiles so Router
+can later compare candidates using benchmark-backed signals rather than treating every endpoint as an unknown.
+
+This matters most when:
+
+- a `quality` strategy is active
+- a `balanced` strategy is trying to decide whether a quality leader deserves to win overall
+- a `difficulty` runtime routing mode wants to understand which endpoints are safe for harder requests
+
+### Observed latency
+
+Observed latency feeds the **latency** dimension, not the quality dimension.
+
+The current baseline uses measured `p50` and `p95` latency to derive an effective latency score. That means
+live or recent observed execution behavior is what makes a `latency` strategy real rather than aspirational.
+
+This matters most when:
+
+- a `latency` strategy is active
+- two candidates are otherwise close and speed should separate them
+- an operator is checking whether the winning endpoint is actually fast in practice instead of only sounding
+  fast on paper
+
+### Catalog model cost
+
+Catalog economics feed the **cost** dimension, especially when a request budget or cost target is part of the
+decision.
+
+The important operator point is that cost routing does not depend only on benchmark scores. It depends on cost
+estimates being available and on the request or policy making cost matter.
+
+This matters most when:
+
+- a `cost` strategy is active
+- budget enforcement is enabled
+- operators want a deterministic cheap-path default even before a large amount of live request cost telemetry
+  exists
+
+## Evidence precedence in the current baseline
+
+The current baseline does not treat every signal equally.
+
+The practical order is:
+
+1. hard eligibility and policy gates narrow the candidate set first
+2. benchmark-backed or observed quality evidence strengthens the quality metric
+3. observed latency and throughput shape the speed metrics
+4. catalog or observed cost shapes the cost metric
+5. reliability, locality preference, and preferred-capability matches refine the result
+6. near-ties are broken deterministically by quality, then latency, then reliability, then `endpoint_id`
+
+That means a benchmark winner does not automatically win the route, a fast endpoint does not automatically win
+the route, and a cheap endpoint does not automatically win the route. The active scoring strategy decides
+which of those signals should dominate after eligibility is satisfied.
+
+## What this looks like in a real decision
+
+When you inspect a routed decision, read the evidence story in this order:
+
+1. did policy or eligibility remove any candidates before scoring?
+2. is the winner benefiting from benchmark-backed quality evidence?
+3. is the winner benefiting from lower observed latency?
+4. is the winner benefiting from cheaper catalog or observed cost?
+5. does that match the saved scoring strategy?
+
+If the answer to step 5 is no, the problem is usually stale or missing evidence, not just a wrong strategy
+selection.
+
+## How benchmarks affect each strategy
+
+### `balanced`
+
+Use `balanced` when the benchmark shows no dramatic quality winner and you want Router to respect latency,
+cost, and reliability instead of overcommitting to a single dimension.
+
+### `quality`
+
+Use `quality` when the benchmark shows a real quality spread and the best endpoint is worth paying for in
+latency or cost.
+
+This is the strategy most directly improved by a strong full benchmark run.
+
+### `latency`
+
+Use `latency` when user experience depends on response speed more than absolute output quality.
+
+The benchmark still matters because it helps prevent obviously weak endpoints from looking attractive just
+because they are fast, but the decisive signals are effective latency, throughput, and health.
+
+### `cost`
+
+Use `cost` when routing spend is part of the product constraint rather than an afterthought.
+
+This strategy becomes much more meaningful when cost estimates are present and budget controls are active.
+
+## Budget, targets, and hard constraints still win first
+
+Operators often expect strategy to override policy. It does not.
+
+Before weighted scoring happens, Router can still exclude candidates through:
+
+- required capabilities and modalities
+- tool requirements
+- locality and privacy rules
+- provider and endpoint denies
+- budget enforcement
+
+So a `quality` strategy will not rescue an endpoint that violates budget or privacy policy, and a `cost`
+strategy will not keep a cheap endpoint alive if it cannot satisfy the request contract.
+
+## How to read a saved strategy in practice
+
+After saving a strategy, inspect the next routed decision and ask:
+
+- is `policy_snapshot.strategy` the mode I intended to save?
+- does the winner reflect the metric mix that mode should prefer?
+- did budget, privacy, or capability rules narrow the set before strategy even mattered?
+- are benchmark-backed quality signals, latency samples, or cost estimates actually present?
+
+If the answer to the last question is no, the issue is often weak evidence, not a bad strategy choice.
+
+## Read next
+
+- [Choose and save the routing strategy](/get-started/choose-routing-strategy)
+- [Routing modes, locality, and execution](/router/routing-modes-locality-and-execution)
+- [Scoring, tie-breaks, and decisions](/router/scoring-tie-breaks-and-decisions)
+- [Fallbacks, failures, and observability](/router/fallbacks-failures-and-observability)

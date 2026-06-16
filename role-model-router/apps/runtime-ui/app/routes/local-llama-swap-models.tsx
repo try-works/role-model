@@ -16,7 +16,6 @@ import {
   primaryButtonClassName,
   secondaryButtonClassName,
 } from "../lib/design-system";
-import { usePageActions } from "../lib/shell-header-context";
 import {
   type ModelOverride,
   type RuntimeLocalModel,
@@ -29,6 +28,7 @@ import {
   unloadLocalModel,
   updateModelOverrides,
 } from "../lib/runtime-api";
+import { usePageActions } from "../lib/shell-header-context";
 
 type ModelViewMode = "list" | "grid";
 
@@ -49,9 +49,7 @@ export default function LocalLlamaSwapModelsRoute() {
   const llamaSwapOperational = llamaSwapStatus?.operational ?? false;
   const declaredModelIds = llamaSwapStatus?.declaredModelIds ?? [];
   const loadPlaceholder =
-    declaredModelIds.length > 0
-      ? declaredModelIds.join(", ")
-      : "lfm2.5-8b-a1b";
+    declaredModelIds.length > 0 ? declaredModelIds.join(", ") : "lfm2.5-8b-a1b";
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -81,12 +79,7 @@ export default function LocalLlamaSwapModelsRoute() {
   }, [refresh]);
 
   usePageActions(
-    <button
-      type="button"
-      onClick={refresh}
-      disabled={loading}
-      className={secondaryButtonClassName}
-    >
+    <button type="button" onClick={refresh} disabled={loading} className={secondaryButtonClassName}>
       {loading ? "Refreshing…" : "Refresh"}
     </button>,
     [loading, refresh],
@@ -160,8 +153,8 @@ export default function LocalLlamaSwapModelsRoute() {
           </p>
           {!llamaSwapOperational ? (
             <p className="text-sm text-[var(--rm-secondary)]">
-              Load model stays disabled until runtime config declares a llama-swap model with a valid
-              GGUF path. Open Setup guide above to copy the scaffold.
+              Load model stays disabled until runtime config declares a llama-swap model with a
+              valid GGUF path. Open Setup guide above to copy the scaffold.
             </p>
           ) : null}
           <button

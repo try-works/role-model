@@ -1,13 +1,13 @@
 import { describe, expect, test } from "vitest";
 
 import routingCapabilitySuite from "../data/routing-capability-suite.json" with { type: "json" };
+import { selectBenchmarkCases } from "../src/index.js";
 import {
   buildJudgeDeliverablesChecklist,
   buildJudgeGradingBrief,
   formatQuestionTranscript,
   resolveExemplarAnswer,
 } from "../src/judge-brief.js";
-import { selectBenchmarkCases } from "../src/index.js";
 
 const QUICK_CASE_IDS = selectBenchmarkCases(routingCapabilitySuite, { mode: "quick" }).map(
   (caseItem) => caseItem.case_id,
@@ -55,9 +55,7 @@ describe("judge-brief contract", () => {
     }
 
     const checklist = buildJudgeDeliverablesChecklist(codeCase);
-    expect(
-      checklist.some((item) => item.toLowerCase().includes("typescript")),
-    ).toBe(true);
+    expect(checklist.some((item) => item.toLowerCase().includes("typescript"))).toBe(true);
   });
 
   test("representative quick case ids remain covered", () => {
@@ -71,8 +69,8 @@ describe("judge-brief contract", () => {
   });
 
   test("resolveExemplarAnswer prefers authored deliverables when present", () => {
-    const caseItem = selectBenchmarkCases(routingCapabilitySuite, { mode: "quick" }).find(
-      (item) => item.example_deliverable?.trim(),
+    const caseItem = selectBenchmarkCases(routingCapabilitySuite, { mode: "quick" }).find((item) =>
+      item.example_deliverable?.trim(),
     );
     if (!caseItem) {
       return;

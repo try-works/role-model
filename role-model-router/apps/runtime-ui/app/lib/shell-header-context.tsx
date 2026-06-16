@@ -59,7 +59,7 @@ export function usePageActions(actions: ReactNode, deps: DependencyList = []): v
     return () => {
       setActions(null);
     };
-  }, deps);
+  }, [actions, setActions, ...deps]);
 }
 
 export function useShellHeaderOverride(
@@ -73,5 +73,5 @@ export function useShellHeaderOverride(
     return () => {
       setOverride(null);
     };
-  }, deps);
+  }, [override, setOverride, ...deps]);
 }

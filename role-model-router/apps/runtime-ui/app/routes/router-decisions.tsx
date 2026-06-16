@@ -96,8 +96,7 @@ export default function RouterDecisionsRoute() {
                     {decision.strategyLabel
                       ? formatRoutingModeLabel(decision.strategyLabel)
                       : "no strategy label"}{" "}
-                    •{" "}
-                    {decision.sourceType ?? "unknown source"}
+                    • {decision.sourceType ?? "unknown source"}
                   </p>
                 </div>
                 <div className="flex flex-col items-end gap-2 text-right">

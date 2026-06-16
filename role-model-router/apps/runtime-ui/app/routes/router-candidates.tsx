@@ -156,9 +156,7 @@ export default function RouterCandidatesRoute() {
                         : (candidate.healthStatus ?? "unknown")}
                     </StatusPill>
                     {capability ? (
-                      <StatusPill tone="success">
-                        {formatScore(capability.overallScore)}
-                      </StatusPill>
+                      <StatusPill tone="success">{formatScore(capability.overallScore)}</StatusPill>
                     ) : null}
                     {candidate.preferred ? <StatusPill tone="success">preferred</StatusPill> : null}
                     {candidate.ignored ? <StatusPill tone="warning">ignored</StatusPill> : null}

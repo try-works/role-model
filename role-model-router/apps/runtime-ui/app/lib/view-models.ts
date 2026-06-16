@@ -1,12 +1,12 @@
 import type {
   RuntimeAccount,
   RuntimeActivityLogEntry,
-  RuntimeCredentialLifecycleProviderRollup,
-  RuntimeModelAlias,
   RuntimeControllerAssignment,
+  RuntimeCredentialLifecycleProviderRollup,
   RuntimeDeviceAuthorization,
   RuntimeDownstreamOpenAIProviderConfig,
   RuntimeEndpoint,
+  RuntimeModelAlias,
   RuntimeModelRecord,
   RuntimeProvider,
   RuntimeRequestListItem,
@@ -274,7 +274,9 @@ function buildCredentialStoragePosture(input: {
     case "env-ref":
       return {
         label: "Environment reference",
-        detail: input.credentialRef?.ref ? `Variable: ${input.credentialRef.ref}` : "Variable required",
+        detail: input.credentialRef?.ref
+          ? `Variable: ${input.credentialRef.ref}`
+          : "Variable required",
       };
     default:
       if (input.authMode === "oauth2-device-code") {
@@ -286,7 +288,9 @@ function buildCredentialStoragePosture(input: {
       if (input.credentialRef?.backend === "env") {
         return {
           label: "Environment reference",
-          detail: input.credentialRef.ref ? `Variable: ${input.credentialRef.ref}` : "Variable required",
+          detail: input.credentialRef.ref
+            ? `Variable: ${input.credentialRef.ref}`
+            : "Variable required",
         };
       }
       return {
@@ -386,19 +390,19 @@ export function buildCredentialLifecycleAccountRows(
         return left.blocking ? -1 : 1;
       }
       return sortLexical(left.providerAccountId, right.providerAccountId);
-     })
-     .map((account) => ({
-       key: account.providerAccountId,
-       providerAccountId: account.providerAccountId,
-       providerId: account.providerId,
-       lifecycleState: account.lifecycleState,
-       lifecycleLabel: lifecycleStateLabel(account.lifecycleState),
-       reasonLabel: lifecycleReasonLabel(account.reasonCode),
-       blocking: account.blocking,
-       tone: lifecycleTone(account.lifecycleState, account.blocking),
-       availableActionsLabel: lifecycleActionsLabel(account.availableActions),
-       activeEndpointCount: account.activeEndpointIds.length,
-     }));
+    })
+    .map((account) => ({
+      key: account.providerAccountId,
+      providerAccountId: account.providerAccountId,
+      providerId: account.providerId,
+      lifecycleState: account.lifecycleState,
+      lifecycleLabel: lifecycleStateLabel(account.lifecycleState),
+      reasonLabel: lifecycleReasonLabel(account.reasonCode),
+      blocking: account.blocking,
+      tone: lifecycleTone(account.lifecycleState, account.blocking),
+      availableActionsLabel: lifecycleActionsLabel(account.availableActions),
+      activeEndpointCount: account.activeEndpointIds.length,
+    }));
 }
 
 export function buildProviderMaintenanceRows(input: {
@@ -427,7 +431,9 @@ export function buildProviderMaintenanceRows(input: {
   const lifecycleAccountsById = new Map(
     lifecycleAccounts.map((account) => [account.providerAccountId, account]),
   );
-  const accountsById = new Map(input.accounts.map((account) => [account.providerAccountId, account]));
+  const accountsById = new Map(
+    input.accounts.map((account) => [account.providerAccountId, account]),
+  );
   const allAccountIds = uniqueStrings([
     ...lifecycleAccounts.map((account) => account.providerAccountId),
     ...input.accounts.map((account) => account.providerAccountId),
@@ -478,7 +484,7 @@ export function buildProviderMaintenanceRows(input: {
             : "warning",
         reasonLabel: lifecycleAccount
           ? lifecycleReasonLabel(lifecycleAccount.reasonCode)
-          : account?.healthStatus ?? account?.status ?? "Lifecycle details unavailable",
+          : (account?.healthStatus ?? account?.status ?? "Lifecycle details unavailable"),
         storageLabel: storagePosture.label,
         storageDetail: storagePosture.detail,
         sourceProvenanceLabel:
@@ -506,7 +512,10 @@ export function buildArchivedArtifactRows(
 }> {
   return [...(summary.credentialLifecycle?.archivedArtifacts ?? [])]
     .sort((left, right) => {
-      const accountCompare = sortLexical(left.providerAccountId ?? "", right.providerAccountId ?? "");
+      const accountCompare = sortLexical(
+        left.providerAccountId ?? "",
+        right.providerAccountId ?? "",
+      );
       if (accountCompare !== 0) {
         return accountCompare;
       }
@@ -534,9 +543,7 @@ const BOOTSTRAP_STAGE_LABELS: Record<string, string> = {
   inventory: "Inventory",
 };
 
-function bootstrapStageTone(
-  status: string,
-): "success" | "warning" | "neutral" | "accent" {
+function bootstrapStageTone(status: string): "success" | "warning" | "neutral" | "accent" {
   switch (status) {
     case "ready":
       return "success";
@@ -610,15 +617,12 @@ export function buildInventorySummaryStats(
     { label: "Remote endpoints", value: String(inventory.remoteEndpointCount) },
     {
       label: "Empty alias pools",
-      value:
-        inventory.emptyAliasIds.length > 0 ? inventory.emptyAliasIds.join(", ") : "none",
+      value: inventory.emptyAliasIds.length > 0 ? inventory.emptyAliasIds.join(", ") : "none",
     },
   ];
 }
 
-export function buildAliasDriftRows(
-  summary: Pick<RuntimeSummary, "aliasDrift">,
-): Array<{
+export function buildAliasDriftRows(summary: Pick<RuntimeSummary, "aliasDrift">): Array<{
   aliasId: string;
   hintModelId: string;
   suggestedModelIds: readonly string[];
@@ -627,9 +631,7 @@ export function buildAliasDriftRows(
   return [...(summary.aliasDrift ?? [])];
 }
 
-export function buildOperatorIntentSummary(
-  summary: Pick<RuntimeSummary, "operatorIntent">,
-): {
+export function buildOperatorIntentSummary(summary: Pick<RuntimeSummary, "operatorIntent">): {
   label: string;
   detail: string;
   tone: "success" | "warning" | "neutral";
@@ -748,10 +750,7 @@ export function summarizeTelemetryStats(
     },
     {
       label: "Latency",
-      value:
-        summary.averageLatencyMs !== null
-          ? `${summary.averageLatencyMs} ms avg`
-          : "n/a",
+      value: summary.averageLatencyMs !== null ? `${summary.averageLatencyMs} ms avg` : "n/a",
       detail:
         summary.p95LatencyMs !== null && summary.averageLatencyMs !== null
           ? `${summary.p95LatencyMs} ms p95 / ${summary.averageLatencyMs} ms avg across structured telemetry`
@@ -948,31 +947,38 @@ export function buildDashboardLatestRequestRows(
     rowsByInteraction.set(interactionKey, currentRows);
   }
 
-  return [...rowsByInteraction.values()]
-    .slice(0, limit)
-    .map((interactionRows) => {
-      const latestRow = interactionRows[0]!;
-      const renderedRow = buildTelemetryRequestRows([latestRow])[0]!;
-      const endpointIds = uniqueStrings(interactionRows.map((row) => row.endpointId));
-      const primaryLabel =
-        typeof latestRow.clientRequestId === "string" && latestRow.clientRequestId.length > 0
-          ? latestRow.clientRequestId
-          : latestRow.requestId;
-      const secondaryLabel =
-        interactionRows.length > 1
-          ? `${interactionRows.length} routed executions`
-          : latestRow.clientRequestId && latestRow.clientRequestId !== latestRow.requestId
-            ? latestRow.requestId
-            : null;
+  return [...rowsByInteraction.values()].slice(0, limit).map((interactionRows) => {
+    const latestRow = interactionRows[0];
+    if (!latestRow) {
+      throw new Error("Expected at least one telemetry row per grouped interaction.");
+    }
+    const renderedRow = buildTelemetryRequestRows([latestRow])[0];
+    if (!renderedRow) {
+      throw new Error("Expected a rendered telemetry row for the latest interaction row.");
+    }
+    const endpointIds = uniqueStrings(interactionRows.map((row) => row.endpointId));
+    const primaryLabel =
+      typeof latestRow.clientRequestId === "string" && latestRow.clientRequestId.length > 0
+        ? latestRow.clientRequestId
+        : latestRow.requestId;
+    const secondaryLabel =
+      interactionRows.length > 1
+        ? `${interactionRows.length} routed executions`
+        : latestRow.clientRequestId && latestRow.clientRequestId !== latestRow.requestId
+          ? latestRow.requestId
+          : null;
 
-      return {
-        ...renderedRow,
-        primaryLabel,
-        secondaryLabel,
-        endpointLabel: endpointIds.length === 1 ? endpointIds[0]! : `${endpointIds.length} endpoints`,
-        interactionCount: interactionRows.length,
-      };
-    });
+    return {
+      ...renderedRow,
+      primaryLabel,
+      secondaryLabel,
+      endpointLabel:
+        endpointIds.length === 1 && endpointIds[0] !== undefined
+          ? endpointIds[0]
+          : `${endpointIds.length} endpoints`,
+      interactionCount: interactionRows.length,
+    };
+  });
 }
 
 export function buildWorkbenchModelOptions(
@@ -1317,7 +1323,9 @@ export function buildConfiguredProviderRows(input: {
     const providerEndpoints = input.endpoints.filter(
       (endpoint) => endpoint.providerId === providerId,
     );
-    const providerRollup = input.providerRollups?.find((rollup) => rollup.providerId === providerId);
+    const providerRollup = input.providerRollups?.find(
+      (rollup) => rollup.providerId === providerId,
+    );
     const pendingDeviceAuthorizationAccountIds = new Set(
       (input.deviceAuthorizations ?? [])
         .filter(
@@ -1341,8 +1349,7 @@ export function buildConfiguredProviderRows(input: {
 
     if (providerRollup) {
       pendingDeviceAuthorizationCount = providerRollup.countsByLifecycle.pendingAuthorization;
-      credentialsMissingAccountCount =
-        providerRollup.countsByLifecycle.credentialsMissing;
+      credentialsMissingAccountCount = providerRollup.countsByLifecycle.credentialsMissing;
       connectedWithoutEndpointCount = providerRollup.countsByLifecycle.connectedNoEndpoint;
       readyAccountCount = providerRollup.countsByLifecycle.executionReady;
     } else {
@@ -1594,9 +1601,7 @@ export function summarizeWorkbenchResult(result: Record<string, unknown>): {
   rawPayload: string;
 } {
   const choiceMessage =
-    Array.isArray(result.choices) &&
-    result.choices[0] &&
-    typeof result.choices[0] === "object"
+    Array.isArray(result.choices) && result.choices[0] && typeof result.choices[0] === "object"
       ? (
           result.choices[0] as {
             message?: { content?: string; reasoning_content?: string };
@@ -1677,18 +1682,18 @@ export function buildActivitySummary(entries: readonly RuntimeActivityLogEntry[]
   }>;
 } {
   const rows = entries.map((entry) => ({
-      id: entry.id,
-      timestamp: entry.timestamp,
-      model: entry.model,
-      path: entry.req_path,
-      status: String(entry.resp_status_code),
-      durationLabel: `${entry.duration_ms} ms`,
-      captureLabel: entry.has_capture ? "Capture available" : "No capture",
-      hasCapture: entry.has_capture,
-      inputTokens: String(entry.tokens.input_tokens),
-      outputTokens: String(entry.tokens.output_tokens),
-      cacheTokens: String(entry.tokens.cache_tokens),
-    }));
+    id: entry.id,
+    timestamp: entry.timestamp,
+    model: entry.model,
+    path: entry.req_path,
+    status: String(entry.resp_status_code),
+    durationLabel: `${entry.duration_ms} ms`,
+    captureLabel: entry.has_capture ? "Capture available" : "No capture",
+    hasCapture: entry.has_capture,
+    inputTokens: String(entry.tokens.input_tokens),
+    outputTokens: String(entry.tokens.output_tokens),
+    cacheTokens: String(entry.tokens.cache_tokens),
+  }));
 
   const captureCount = entries.filter((entry) => entry.has_capture).length;
   const errorCount = entries.filter((entry) => entry.resp_status_code >= 400).length;

@@ -24,8 +24,8 @@ import {
 } from "../lib/device-authorization";
 import { resolveProviderAccountLifecycle } from "../lib/provider-account-state";
 import {
-  type RuntimeDeviceAuthorization,
   type RuntimeAccount,
+  type RuntimeDeviceAuthorization,
   type RuntimeProvider,
   type RuntimeSnapshot,
   activateRuntimeEndpoint,
@@ -316,7 +316,9 @@ export default function ProvidersRoute() {
       provider.variants?.find(
         (entry) =>
           entry.authMode === account.authMode &&
-          (account.baseUrlOverride ? (entry.baseUrl ?? provider.apiBase) === account.baseUrlOverride : true),
+          (account.baseUrlOverride
+            ? (entry.baseUrl ?? provider.apiBase) === account.baseUrlOverride
+            : true),
       ) ??
       provider.variants?.find((entry) => entry.authMode === account.authMode) ??
       provider.variants?.[0];
@@ -363,7 +365,9 @@ export default function ProvidersRoute() {
     return <LoadingState label="Loading provider catalog…" />;
   }
   if (remoteProviders.length === 0) {
-    return <EmptyState label="No LiteLLM-backed remote providers are currently available from the runtime catalog." />;
+    return (
+      <EmptyState label="No LiteLLM-backed remote providers are currently available from the runtime catalog." />
+    );
   }
 
   const onProviderChange = (nextProviderId: string) => {
@@ -567,232 +571,234 @@ export default function ProvidersRoute() {
     <>
       <div className="space-y-6">
         <div className="grid gap-4 xl:grid-cols-[0.95fr_1.05fr]">
-        <SectionCard
-          title="Choose provider and models"
-          description="Select the provider, connection method, model set, and role bindings that should flow into the runtime registry."
-        >
-          <form className="space-y-4" onSubmit={onSubmit}>
-            <label className="grid gap-2 text-sm">
-              <span className="font-medium text-[var(--rm-fg)]">Provider</span>
-              <select
-                className={inputClass}
-                value={selectedProvider?.providerId ?? ""}
-                onChange={(event) => onProviderChange(event.target.value)}
-              >
-                {remoteProviders.map((provider) => (
-                  <option key={provider.providerId} value={provider.providerId}>
-                    {provider.displayName}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <label className="grid gap-2 text-sm">
-              <span className="font-medium text-[var(--rm-fg)]">Connection method</span>
-              <select
-                className={inputClass}
-                value={selectedVariant?.variantId ?? ""}
-                onChange={(event) => onVariantChange(event.target.value)}
-              >
-                {(selectedProvider?.variants ?? []).map((variant) => (
-                  <option key={variant.variantId} value={variant.variantId}>
-                    {variant.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <label className="grid gap-2 text-sm">
-              <span className="font-medium text-[var(--rm-fg)]">Provider connection id</span>
-              <input
-                className={inputClass}
-                value={providerAccountId}
-                onChange={(event) => setProviderAccountId(event.target.value)}
-              />
-            </label>
-
-            {selectedVariant?.authMode === "api-key-static" ? (
+          <SectionCard
+            title="Choose provider and models"
+            description="Select the provider, connection method, model set, and role bindings that should flow into the runtime registry."
+          >
+            <form className="space-y-4" onSubmit={onSubmit}>
               <label className="grid gap-2 text-sm">
-                <span className="font-medium text-[var(--rm-fg)]">Credential reference</span>
+                <span className="font-medium text-[var(--rm-fg)]">Provider</span>
+                <select
+                  className={inputClass}
+                  value={selectedProvider?.providerId ?? ""}
+                  onChange={(event) => onProviderChange(event.target.value)}
+                >
+                  {remoteProviders.map((provider) => (
+                    <option key={provider.providerId} value={provider.providerId}>
+                      {provider.displayName}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="grid gap-2 text-sm">
+                <span className="font-medium text-[var(--rm-fg)]">Connection method</span>
+                <select
+                  className={inputClass}
+                  value={selectedVariant?.variantId ?? ""}
+                  onChange={(event) => onVariantChange(event.target.value)}
+                >
+                  {(selectedProvider?.variants ?? []).map((variant) => (
+                    <option key={variant.variantId} value={variant.variantId}>
+                      {variant.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="grid gap-2 text-sm">
+                <span className="font-medium text-[var(--rm-fg)]">Provider connection id</span>
                 <input
                   className={inputClass}
-                  value={credentialRef}
-                  onChange={(event) => setCredentialRef(event.target.value)}
+                  value={providerAccountId}
+                  onChange={(event) => setProviderAccountId(event.target.value)}
                 />
               </label>
-            ) : (
+
+              {selectedVariant?.authMode === "api-key-static" ? (
+                <label className="grid gap-2 text-sm">
+                  <span className="font-medium text-[var(--rm-fg)]">Credential reference</span>
+                  <input
+                    className={inputClass}
+                    value={credentialRef}
+                    onChange={(event) => setCredentialRef(event.target.value)}
+                  />
+                </label>
+              ) : (
+                <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
+                  <p className="font-medium text-[var(--rm-fg)]">
+                    Runtime-managed credential reference
+                  </p>
+                  <p className="mt-2">
+                    OAuth-backed providers store the resulting token locally and expose only the
+                    generated credential reference back to the control plane.
+                  </p>
+                </div>
+              )}
+
               <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
-                <p className="font-medium text-[var(--rm-fg)]">
-                  Runtime-managed credential reference
+                <p className="font-medium text-[var(--rm-fg)]">LiteLLM-backed remote onboarding</p>
+                <p className="mt-2">
+                  Remote providers are activated through LiteLLM so the router can evaluate shared
+                  remote candidates alongside local llama-swap endpoints.
                 </p>
                 <p className="mt-2">
-                  OAuth-backed providers store the resulting token locally and expose only the
-                  generated credential reference back to the control plane.
+                  Models.dev metadata stays additive only: it enriches endpoint and model readback
+                  but does not replace the live LiteLLM connection path.
                 </p>
               </div>
-            )}
 
-            <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
-              <p className="font-medium text-[var(--rm-fg)]">LiteLLM-backed remote onboarding</p>
-              <p className="mt-2">
-                Remote providers are activated through LiteLLM so the router can evaluate shared
-                remote candidates alongside local llama-swap endpoints.
-              </p>
-              <p className="mt-2">
-                Models.dev metadata stays additive only: it enriches endpoint and model readback but
-                does not replace the live LiteLLM connection path.
-              </p>
-            </div>
+              <label className="grid gap-2 text-sm">
+                <span className="font-medium text-[var(--rm-fg)]">Model</span>
+                <select
+                  className={inputClass}
+                  value={selectedModel}
+                  onChange={(event) => onModelSelect(event.target.value)}
+                >
+                  <option value="">Select a model…</option>
+                  {availableModels.map((modelId) => (
+                    <option key={modelId} value={modelId}>
+                      {modelId}
+                    </option>
+                  ))}
+                </select>
+              </label>
 
-            <label className="grid gap-2 text-sm">
-              <span className="font-medium text-[var(--rm-fg)]">Model</span>
-              <select
-                className={inputClass}
-                value={selectedModel}
-                onChange={(event) => onModelSelect(event.target.value)}
-              >
-                <option value="">Select a model…</option>
-                {availableModels.map((modelId) => (
-                  <option key={modelId} value={modelId}>
-                    {modelId}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            {selectedModel !== "" ? (
-              <div className="space-y-3 text-sm">
-                <div>
-                  <p className="font-medium text-[var(--rm-fg)]">Model roles</p>
-                  <p className="text-[var(--rm-secondary)]">
-                    Assign runtime roles to the selected model so the resulting endpoint registry
-                    preserves operator intent.
-                  </p>
-                </div>
-                <div className={`${mutedPanelClassName} space-y-3 p-4`}>
-                  <div className={`${raisedPanelClassName} space-y-2 p-3`}>
-                    <p className="font-medium text-[var(--rm-fg)]">{selectedModel}</p>
-                    {availableRoles.length > 0 ? (
-                      <div className="flex flex-wrap gap-3">
-                        {availableRoles.map((role) => (
-                          <label
-                            key={`${selectedModel}:${role.roleId}`}
-                            className="flex items-center gap-2 rounded-none border border-[var(--rm-border)] px-3 py-1.5"
-                          >
-                            <input
-                              checked={(selectedModelRoles[selectedModel] ?? []).includes(
-                                role.roleId,
-                              )}
-                              type="checkbox"
-                              onChange={() => toggleModelRole(selectedModel, role.roleId)}
-                            />
-                            <span className="text-[var(--rm-secondary)]">{role.label}</span>
-                          </label>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-[var(--rm-secondary)]">
-                        No runtime roles are available from the host bridge yet.
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ) : null}
-
-            {selectedVariant ? (
-              <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
-                <div className="flex flex-wrap items-center gap-2">
-                  <p className="font-medium text-[var(--rm-fg)]">{selectedVariant.label}</p>
-                  <StatusPill
-                    tone={selectedVariant.availability === "ready" ? "success" : "warning"}
-                  >
-                    {selectedVariant.availability}
-                  </StatusPill>
-                  <StatusPill tone="neutral">{selectedVariant.authMode}</StatusPill>
-                </div>
-                <p className="mt-2">{selectedVariant.description}</p>
-                <div className="mt-3 grid gap-2 md:grid-cols-2">
-                  <p>
-                    <span className="font-medium text-[var(--rm-fg)]">Catalog models:</span>{" "}
-                    {availableModels.length}
-                  </p>
-                  <p>
-                    <span className="font-medium text-[var(--rm-fg)]">API base:</span>{" "}
-                    {selectedVariant.baseUrl ?? selectedProvider?.apiBase}
-                  </p>
-                  <p>
-                    <span className="font-medium text-[var(--rm-fg)]">SDK package:</span>{" "}
-                    {selectedProvider?.npmPackage ?? "Not cataloged"}
-                  </p>
-                  <p>
-                    <span className="font-medium text-[var(--rm-fg)]">Docs:</span>{" "}
-                    {selectedProvider?.docsUrl ? (
-                      <a
-                        className="underline decoration-[var(--rm-border-strong)] underline-offset-4"
-                        href={selectedProvider.docsUrl}
-                        rel="noreferrer"
-                        target="_blank"
-                      >
-                        {selectedProvider.docsUrl}
-                      </a>
-                    ) : (
-                      "Not cataloged"
-                    )}
-                  </p>
-                </div>
-                {selectedVariant.oauth ? (
-                  <div className={`mt-3 ${raisedPanelClassName} p-3`}>
-                    <p className="font-medium text-[var(--rm-fg)]">OAuth metadata</p>
-                    <p className="mt-2">
-                      <span className="font-medium text-[var(--rm-fg)]">Client id:</span>{" "}
-                      {selectedVariant.oauth.clientId}
-                    </p>
-                    <p>
-                      <span className="font-medium text-[var(--rm-fg)]">Device endpoint:</span>{" "}
-                      {selectedVariant.oauth.deviceAuthorizationEndpoint}
+              {selectedModel !== "" ? (
+                <div className="space-y-3 text-sm">
+                  <div>
+                    <p className="font-medium text-[var(--rm-fg)]">Model roles</p>
+                    <p className="text-[var(--rm-secondary)]">
+                      Assign runtime roles to the selected model so the resulting endpoint registry
+                      preserves operator intent.
                     </p>
                   </div>
-                ) : null}
-              </div>
-            ) : null}
-
-            <div className="flex flex-wrap gap-3">
-              <button
-                className={buttonClass}
-                disabled={submitting || !selectedProvider || !selectedVariant || selectedModel === ""}
-                type="submit"
-              >
-                {submitting ? "Saving…" : "Save provider"}
-              </button>
-
-              {selectedVariant?.authMode === "oauth2-device-code" ? (
-                <>
-                  <button
-                    className={secondaryButtonClassName}
-                    disabled={authorizing || selectedModel === ""}
-                    type="button"
-                    onClick={() => void onStartDeviceAuthorization()}
-                  >
-                    {authorizing ? "Starting…" : "Start OAuth"}
-                  </button>
-                  <button
-                    className={secondaryButtonClassName}
-                    disabled={polling || !oauthState?.authRequestId}
-                    type="button"
-                    onClick={() => void onPollDeviceAuthorization()}
-                  >
-                    {polling ? "Checking…" : "Check now"}
-                  </button>
-                </>
+                  <div className={`${mutedPanelClassName} space-y-3 p-4`}>
+                    <div className={`${raisedPanelClassName} space-y-2 p-3`}>
+                      <p className="font-medium text-[var(--rm-fg)]">{selectedModel}</p>
+                      {availableRoles.length > 0 ? (
+                        <div className="flex flex-wrap gap-3">
+                          {availableRoles.map((role) => (
+                            <label
+                              key={`${selectedModel}:${role.roleId}`}
+                              className="flex items-center gap-2 rounded-none border border-[var(--rm-border)] px-3 py-1.5"
+                            >
+                              <input
+                                checked={(selectedModelRoles[selectedModel] ?? []).includes(
+                                  role.roleId,
+                                )}
+                                type="checkbox"
+                                onChange={() => toggleModelRole(selectedModel, role.roleId)}
+                              />
+                              <span className="text-[var(--rm-secondary)]">{role.label}</span>
+                            </label>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-[var(--rm-secondary)]">
+                          No runtime roles are available from the host bridge yet.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
               ) : null}
 
-              <Link className={secondaryButtonClassName} to="/app/connect">
-                View in Connect registry
-              </Link>
-            </div>
-          </form>
-        </SectionCard>
+              {selectedVariant ? (
+                <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="font-medium text-[var(--rm-fg)]">{selectedVariant.label}</p>
+                    <StatusPill
+                      tone={selectedVariant.availability === "ready" ? "success" : "warning"}
+                    >
+                      {selectedVariant.availability}
+                    </StatusPill>
+                    <StatusPill tone="neutral">{selectedVariant.authMode}</StatusPill>
+                  </div>
+                  <p className="mt-2">{selectedVariant.description}</p>
+                  <div className="mt-3 grid gap-2 md:grid-cols-2">
+                    <p>
+                      <span className="font-medium text-[var(--rm-fg)]">Catalog models:</span>{" "}
+                      {availableModels.length}
+                    </p>
+                    <p>
+                      <span className="font-medium text-[var(--rm-fg)]">API base:</span>{" "}
+                      {selectedVariant.baseUrl ?? selectedProvider?.apiBase}
+                    </p>
+                    <p>
+                      <span className="font-medium text-[var(--rm-fg)]">SDK package:</span>{" "}
+                      {selectedProvider?.npmPackage ?? "Not cataloged"}
+                    </p>
+                    <p>
+                      <span className="font-medium text-[var(--rm-fg)]">Docs:</span>{" "}
+                      {selectedProvider?.docsUrl ? (
+                        <a
+                          className="underline decoration-[var(--rm-border-strong)] underline-offset-4"
+                          href={selectedProvider.docsUrl}
+                          rel="noreferrer"
+                          target="_blank"
+                        >
+                          {selectedProvider.docsUrl}
+                        </a>
+                      ) : (
+                        "Not cataloged"
+                      )}
+                    </p>
+                  </div>
+                  {selectedVariant.oauth ? (
+                    <div className={`mt-3 ${raisedPanelClassName} p-3`}>
+                      <p className="font-medium text-[var(--rm-fg)]">OAuth metadata</p>
+                      <p className="mt-2">
+                        <span className="font-medium text-[var(--rm-fg)]">Client id:</span>{" "}
+                        {selectedVariant.oauth.clientId}
+                      </p>
+                      <p>
+                        <span className="font-medium text-[var(--rm-fg)]">Device endpoint:</span>{" "}
+                        {selectedVariant.oauth.deviceAuthorizationEndpoint}
+                      </p>
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
+
+              <div className="flex flex-wrap gap-3">
+                <button
+                  className={buttonClass}
+                  disabled={
+                    submitting || !selectedProvider || !selectedVariant || selectedModel === ""
+                  }
+                  type="submit"
+                >
+                  {submitting ? "Saving…" : "Save provider"}
+                </button>
+
+                {selectedVariant?.authMode === "oauth2-device-code" ? (
+                  <>
+                    <button
+                      className={secondaryButtonClassName}
+                      disabled={authorizing || selectedModel === ""}
+                      type="button"
+                      onClick={() => void onStartDeviceAuthorization()}
+                    >
+                      {authorizing ? "Starting…" : "Start OAuth"}
+                    </button>
+                    <button
+                      className={secondaryButtonClassName}
+                      disabled={polling || !oauthState?.authRequestId}
+                      type="button"
+                      onClick={() => void onPollDeviceAuthorization()}
+                    >
+                      {polling ? "Checking…" : "Check now"}
+                    </button>
+                  </>
+                ) : null}
+
+                <Link className={secondaryButtonClassName} to="/app/connect">
+                  View in Connect registry
+                </Link>
+              </div>
+            </form>
+          </SectionCard>
 
           <SectionCard
             title="Configured provider connections"
@@ -802,7 +808,9 @@ export default function ProvidersRoute() {
               {oauthState ? (
                 <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-medium text-[var(--rm-fg)]">Current provider authorization</p>
+                    <p className="font-medium text-[var(--rm-fg)]">
+                      Current provider authorization
+                    </p>
                     <StatusPill
                       tone={
                         oauthState.status === "connected"
@@ -851,9 +859,7 @@ export default function ProvidersRoute() {
                   {providerMaintenanceRows.map((row) => (
                     <div key={row.providerAccountId} className={`${mutedPanelClassName} p-4`}>
                       <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="font-medium text-[var(--rm-fg)]">
-                          {row.providerAccountId}
-                        </h3>
+                        <h3 className="font-medium text-[var(--rm-fg)]">{row.providerAccountId}</h3>
                         <StatusPill tone="neutral">{row.providerId}</StatusPill>
                         <StatusPill tone={row.lifecycleTone}>{row.lifecycleLabel}</StatusPill>
                         <StatusPill tone="neutral">{row.storageLabel}</StatusPill>
@@ -876,9 +882,7 @@ export default function ProvidersRoute() {
                           {row.baseUrlOverride ?? "Provider default"}
                         </p>
                         <p>
-                          <span className="font-medium text-[var(--rm-fg)]">
-                            Lifecycle reason:
-                          </span>{" "}
+                          <span className="font-medium text-[var(--rm-fg)]">Lifecycle reason:</span>{" "}
                           {row.reasonLabel}
                         </p>
                         <p>
@@ -894,9 +898,7 @@ export default function ProvidersRoute() {
                           {row.availableActionsLabel}
                         </p>
                         <p>
-                          <span className="font-medium text-[var(--rm-fg)]">
-                            Active endpoints:
-                          </span>{" "}
+                          <span className="font-medium text-[var(--rm-fg)]">Active endpoints:</span>{" "}
                           {row.activeEndpointCount}
                         </p>
                       </div>
@@ -983,9 +985,7 @@ export default function ProvidersRoute() {
                               <StatusPill tone="warning">{artifact.label}</StatusPill>
                             </div>
                             <p className="mt-2 text-sm text-[var(--rm-secondary)]">
-                              <span className="font-medium text-[var(--rm-fg)]">
-                                Account:
-                              </span>{" "}
+                              <span className="font-medium text-[var(--rm-fg)]">Account:</span>{" "}
                               {artifact.providerAccountId}
                             </p>
                             <p className="text-sm text-[var(--rm-secondary)]">{artifact.detail}</p>
@@ -1001,24 +1001,25 @@ export default function ProvidersRoute() {
         </div>
       </div>
       {apiKeyModalAccount ? (
-        <div
-          className="fixed inset-0 z-50 overflow-y-auto bg-[var(--rm-accent-ghost)] p-4 backdrop-blur-[1px]"
-          role="presentation"
-          onClick={() => {
-            if (savingApiKey) {
-              return;
-            }
-            setApiKeyModalAccount(null);
-            setApiKeyDraft("");
-            setApiKeyError(null);
-          }}
-        >
-          <div
-            className="mx-auto max-w-2xl rounded-none border border-[var(--rm-border)] bg-[var(--rm-surface)] p-6 shadow-[var(--rm-shadow-card)]"
-            role="dialog"
+        <div className="fixed inset-0 z-50 overflow-y-auto p-4" role="presentation">
+          <button
+            aria-label="Close API key update modal"
+            className="absolute inset-0 bg-[var(--rm-accent-ghost)] backdrop-blur-[1px]"
+            type="button"
+            onClick={() => {
+              if (savingApiKey) {
+                return;
+              }
+              setApiKeyModalAccount(null);
+              setApiKeyDraft("");
+              setApiKeyError(null);
+            }}
+          />
+          <dialog
+            open
             aria-modal="true"
+            className="relative mx-auto max-w-2xl rounded-none border border-[var(--rm-border)] bg-[var(--rm-surface)] p-6 shadow-[var(--rm-shadow-card)]"
             aria-labelledby="provider-api-key-modal-title"
-            onClick={(event) => event.stopPropagation()}
           >
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
@@ -1082,7 +1083,7 @@ export default function ProvidersRoute() {
                 Cancel
               </button>
             </div>
-          </div>
+          </dialog>
         </div>
       ) : null}
     </>

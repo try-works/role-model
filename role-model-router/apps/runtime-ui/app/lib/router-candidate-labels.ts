@@ -12,7 +12,9 @@ function pickNumber(record: Record<string, unknown> | null, ...keys: string[]): 
   return null;
 }
 
-export function formatCandidateLatencyLine(profile: Record<string, unknown> | null | undefined): string {
+export function formatCandidateLatencyLine(
+  profile: Record<string, unknown> | null | undefined,
+): string {
   const record = asRecord(profile);
   const latencyP50 = pickNumber(record, "latency_ms_p50", "latencyMsP50");
   const latencyP95 = pickNumber(record, "latency_ms_p95", "latencyMsP95");

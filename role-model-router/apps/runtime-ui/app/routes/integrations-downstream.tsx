@@ -1,21 +1,16 @@
 import { useEffect, useState } from "react";
 
-import {
-  ErrorState,
-  LoadingState,
-  SectionCard,
-  StatusPill,
-} from "../components/page-primitives";
+import { ErrorState, LoadingState, SectionCard, StatusPill } from "../components/page-primitives";
 import {
   codeBlockClassName,
   mutedPanelClassName,
   secondaryButtonClassName,
 } from "../lib/design-system";
-import { usePageActions } from "../lib/shell-header-context";
 import {
   type RuntimeDownstreamOpenAIProviderConfig,
   fetchDownstreamOpenAIProviderConfig,
 } from "../lib/runtime-api";
+import { usePageActions } from "../lib/shell-header-context";
 import { buildDownstreamProviderGuide } from "../lib/view-models";
 
 export default function IntegrationsDownstreamRoute() {
@@ -115,9 +110,9 @@ export default function IntegrationsDownstreamRoute() {
           <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
             <p className="font-medium text-[var(--rm-fg)]">Tool calling</p>
             <p className="mt-2">
-              Multi-turn tool history with `tool_calls` and tool results must use
-              `POST /v1/chat/completions`. `tool_calls` compatibility follows the selected routed
-              model and remains inspectable in request detail.
+              Multi-turn tool history with `tool_calls` and tool results must use `POST
+              /v1/chat/completions`. `tool_calls` compatibility follows the selected routed model
+              and remains inspectable in request detail.
             </p>
           </div>
           <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>

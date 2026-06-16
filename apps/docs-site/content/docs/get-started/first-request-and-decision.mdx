@@ -1,0 +1,47 @@
+---
+title: First request and inspect the decision
+description: Validate the setup by sending a real routed request and reading the Router and Observe evidence that explains the result.
+---
+
+# First request and inspect the decision
+
+Once the endpoints are configured, roles are assigned, the full benchmark has completed, and the routing
+strategy is saved, send a real request through the runtime.
+
+## What to validate
+
+Your first request should confirm:
+
+- the expected candidates appear in Router
+- excluded endpoints show sensible reason codes
+- the chosen endpoint matches the configured strategy and the benchmark evidence
+- the fallback list is plausible
+- Observe surfaces show the request, telemetry, and decision receipts you expect
+
+## Where to inspect it
+
+Use these UI areas together:
+
+- **Router -> Candidates** to inspect the current competitive set
+- **Router -> Decisions** to inspect the ranked result
+- **Router -> Decision detail** to inspect the selected endpoint, fallbacks, and evidence
+- **Observe** to inspect the request and telemetry trail around that decision
+
+## What a healthy first result looks like
+
+A healthy first result is not just “the request returned text.”
+
+It should also be true that:
+
+- the winning endpoint is explainable
+- exclusions are legible
+- benchmark-influenced quality signals make sense
+- the saved strategy is actually visible in the decision context
+
+That is the key product promise of role-model: not only routing, but explainable routing.
+
+## Continue deeper
+
+- [Router overview](/router/overview)
+- [Runtime UI tour](/runtime/runtime-ui-tour)
+- [Decisions, fallbacks, and failures](/router/decisions-fallbacks-and-failures)

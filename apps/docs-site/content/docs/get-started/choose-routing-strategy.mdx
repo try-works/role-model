@@ -1,0 +1,121 @@
+---
+title: Choose and save the routing strategy
+description: Use the benchmark results to select an evidence-based routing strategy instead of guessing up front.
+---
+
+# Choose and save the routing strategy
+
+After the full benchmark finishes, review the results and then decide how Router should optimize.
+
+## The rule
+
+Do **not** choose the routing strategy first and then benchmark to justify it.
+
+The benchmark should come first. Strategy selection should be a response to observed quality, latency, cost,
+and reliability tradeoffs in your configured endpoint set.
+
+## First separate the knobs
+
+The runtime exposes more than one routing control:
+
+- **scoring strategy**: `balanced`, `quality`, `latency`, `cost`
+- **runtime routing mode**: `baseline`, `controller`, `difficulty`, `hybrid`
+- **execution scope**: `hybrid`, `local_only`, `remote_only`, `decision_only`
+
+This page is primarily about choosing the **scoring strategy** after benchmarking.
+
+If you are choosing whether the runtime should use difficulty-aware routing, controller guidance, or local vs
+remote execution scope, read
+[/router/routing-modes-locality-and-execution](/router/routing-modes-locality-and-execution) too.
+
+## The baseline strategy modes
+
+The current baseline strategy vocabulary is:
+
+- `balanced`
+- `quality`
+- `latency`
+- `cost`
+
+These strategies change how the router weights quality, latency, throughput, cost, reliability, and
+preference during candidate comparison.
+
+## What each strategy is trying to do
+
+| Strategy | What it optimizes for | Good first use case | What evidence matters most |
+| --- | --- | --- | --- |
+| `balanced` | overall health across quality, latency, cost, and reliability | default production posture when no single metric should dominate | mixed benchmark and runtime evidence |
+| `quality` | strongest output quality with reliability support | coding, review, and other quality-sensitive tasks | benchmark judge scores and quality spread |
+| `latency` | fastest healthy response | interactive UX and low-wait experiences | latency, throughput, and endpoint health |
+| `cost` | cheapest healthy eligible execution path | budget-sensitive or high-volume workloads | cost estimates, budget context, and failure behavior |
+
+Strategy does not bypass hard routing rules. Capability, privacy, tools, and budget constraints still remove
+candidates before scoring starts.
+
+## Where difficulty and local/remote choices fit
+
+`difficulty` is not just another weight preset beside `balanced` or `quality`.
+
+It is a **runtime routing mode** that classifies the request as `easy`, `medium`, or `hard` and then uses
+that signal to decide which endpoints should stay in play for the request.
+
+Likewise, `local_only`, `remote_only`, and `hybrid` are **execution-scope** choices, not scoring weights.
+
+Those settings answer:
+
+- should the runtime be allowed to execute locally, remotely, or both?
+- should controller guidance participate?
+- should difficulty-aware endpoint ceilings participate?
+
+Then the scoring strategy answers how the remaining candidate set should be compared.
+
+## How to interpret the benchmark before deciding
+
+Use the benchmark results to decide:
+
+- whether quality differences are large enough to justify `quality`
+- whether latency differences dominate user experience strongly enough to justify `latency`
+- whether cost variation is meaningful enough to justify `cost`
+- whether the set is healthy and balanced enough for `balanced`
+
+The benchmark most directly improves the **quality** side of routing because it writes quality evidence back
+into observed profiles.
+
+Latency, throughput, reliability, and cost still matter too, but they are often shaped by a mix of benchmark
+results, live usage, and budget or target settings.
+
+## The practical selection rule
+
+Choose the strategy that matches the tradeoff you actually want to preserve in production:
+
+- pick `balanced` when you want the healthiest all-around winner
+- pick `quality` when a quality leader is worth extra latency or spend
+- pick `latency` when user wait time is the main product constraint
+- pick `cost` when routing spend is a first-class operational constraint
+
+For the full operator-facing explanation, including baseline weights and signal behavior, read
+[/router/strategy-modes-and-tradeoffs](/router/strategy-modes-and-tradeoffs) and
+[/router/routing-modes-locality-and-execution](/router/routing-modes-locality-and-execution).
+
+## Save strategy after the evidence review
+
+The canonical first-time flow is:
+
+1. configure endpoints and roles
+2. run the full benchmark
+3. review benchmark and routing-quality outcomes
+4. choose and save the routing strategy
+5. validate with a real routed request
+
+## What to inspect after saving
+
+After you save the strategy, use Router surfaces to check:
+
+- candidate rankings
+- benchmark-influenced quality posture
+- fallback order
+- whether the chosen strategy matches the benchmark story you just saw
+
+## Next
+
+Continue to [Send the first request and inspect the decision](/get-started/first-request-and-decision).

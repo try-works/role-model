@@ -13,8 +13,8 @@ import {
 } from "../components/page-primitives";
 import { secondaryButtonClassName } from "../lib/design-system";
 import { formatRoutingModeLabel } from "../lib/routing-mode";
-import { useShellHeaderOverride } from "../lib/shell-header-context";
 import { fetchRequestDetail } from "../lib/runtime-api";
+import { useShellHeaderOverride } from "../lib/shell-header-context";
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   return typeof value === "object" && value !== null ? (value as Record<string, unknown>) : null;
@@ -399,11 +399,16 @@ export default function RequestDetailRoute() {
             {[
               [
                 "Effective mode",
-                routingModeSummary ? formatRoutingModeLabel(routingModeSummary) : routingModeSummary,
+                routingModeSummary
+                  ? formatRoutingModeLabel(routingModeSummary)
+                  : routingModeSummary,
               ],
               ["Mode source", routingModeSource],
               ["Requested override", routingRequestedOverride],
-              ["Alias mode", routingAliasMode ? formatRoutingModeLabel(routingAliasMode) : routingAliasMode],
+              [
+                "Alias mode",
+                routingAliasMode ? formatRoutingModeLabel(routingAliasMode) : routingAliasMode,
+              ],
               ["Rewrite", rewriteSummary],
               ["Rewrite reason", rewriteReason],
               ["Difficulty bucket", difficultyBucket],
@@ -433,98 +438,98 @@ export default function RequestDetailRoute() {
       </div>
 
       <DisclosureSection summary="Tooling">
-          <div className="space-y-4">
-            <div>
-              <div className="flex items-center justify-between">
-                <p className="font-medium text-[var(--rm-fg)]">Tool calls</p>
-                <StatusPill tone={toolCalls.length > 0 ? "accent" : "neutral"}>
-                  {toolCalls.length}
-                </StatusPill>
-              </div>
-              <div className="mt-3 space-y-3">
-                {toolCalls.length === 0 ? (
-                  <EmptyState label="No tool calls were recorded for this request." />
-                ) : (
-                  toolCalls.map((toolCall, index) => (
+        <div className="space-y-4">
+          <div>
+            <div className="flex items-center justify-between">
+              <p className="font-medium text-[var(--rm-fg)]">Tool calls</p>
+              <StatusPill tone={toolCalls.length > 0 ? "accent" : "neutral"}>
+                {toolCalls.length}
+              </StatusPill>
+            </div>
+            <div className="mt-3 space-y-3">
+              {toolCalls.length === 0 ? (
+                <EmptyState label="No tool calls were recorded for this request." />
+              ) : (
+                toolCalls.map((toolCall, index) => (
+                  <div
+                    key={String((asRecord(toolCall)?.toolCallId as string | undefined) ?? index)}
+                    className="rounded-none border border-[var(--rm-border)] bg-[var(--rm-panel)] p-3"
+                  >
+                    <p className="font-medium text-[var(--rm-fg)]">
+                      {String(asRecord(toolCall)?.toolName ?? "unknown")}
+                    </p>
+                    <CodeBlock className="mt-3 text-xs">
+                      {JSON.stringify(asRecord(toolCall)?.arguments ?? {}, null, 2)}
+                    </CodeBlock>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between">
+              <p className="font-medium text-[var(--rm-fg)]">Execution receipts</p>
+              <StatusPill tone={toolExecutions.length > 0 ? "success" : "neutral"}>
+                {toolExecutions.length}
+              </StatusPill>
+            </div>
+            <div className="mt-3 space-y-3">
+              {toolExecutions.length === 0 ? (
+                <EmptyState label="No runtime tool executions were persisted for this request." />
+              ) : (
+                toolExecutions.map((execution, index) => {
+                  const executionRecord = asRecord(execution) ?? {};
+                  return (
                     <div
-                      key={String((asRecord(toolCall)?.toolCallId as string | undefined) ?? index)}
+                      key={String(executionRecord.executionId ?? index)}
                       className="rounded-none border border-[var(--rm-border)] bg-[var(--rm-panel)] p-3"
                     >
-                      <p className="font-medium text-[var(--rm-fg)]">
-                        {String(asRecord(toolCall)?.toolName ?? "unknown")}
-                      </p>
-                      <CodeBlock className="mt-3 text-xs">
-                        {JSON.stringify(asRecord(toolCall)?.arguments ?? {}, null, 2)}
-                      </CodeBlock>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-
-            <div>
-              <div className="flex items-center justify-between">
-                <p className="font-medium text-[var(--rm-fg)]">Execution receipts</p>
-                <StatusPill tone={toolExecutions.length > 0 ? "success" : "neutral"}>
-                  {toolExecutions.length}
-                </StatusPill>
-              </div>
-              <div className="mt-3 space-y-3">
-                {toolExecutions.length === 0 ? (
-                  <EmptyState label="No runtime tool executions were persisted for this request." />
-                ) : (
-                  toolExecutions.map((execution, index) => {
-                    const executionRecord = asRecord(execution) ?? {};
-                    return (
-                      <div
-                        key={String(executionRecord.executionId ?? index)}
-                        className="rounded-none border border-[var(--rm-border)] bg-[var(--rm-panel)] p-3"
-                      >
-                        <div className="flex flex-wrap items-center gap-2">
-                          <p className="font-medium text-[var(--rm-fg)]">
-                            {String(executionRecord.toolName ?? "Unnamed tool")}
-                          </p>
-                          {executionRecord.status ? (
-                            <StatusPill
-                              tone={executionRecord.status === "success" ? "success" : "warning"}
-                            >
-                              {String(executionRecord.status)}
-                            </StatusPill>
-                          ) : null}
-                        </div>
-                        <p className="mt-2 text-sm text-[var(--rm-secondary)]">
-                          {String(executionRecord.connectorId ?? "Unknown connector")}
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="font-medium text-[var(--rm-fg)]">
+                          {String(executionRecord.toolName ?? "Unnamed tool")}
                         </p>
+                        {executionRecord.status ? (
+                          <StatusPill
+                            tone={executionRecord.status === "success" ? "success" : "warning"}
+                          >
+                            {String(executionRecord.status)}
+                          </StatusPill>
+                        ) : null}
                       </div>
-                    );
-                  })
-                )}
-              </div>
+                      <p className="mt-2 text-sm text-[var(--rm-secondary)]">
+                        {String(executionRecord.connectorId ?? "Unknown connector")}
+                      </p>
+                    </div>
+                  );
+                })
+              )}
             </div>
-
-            {toolDiagnostics.length > 0 ? (
-              <CodeBlock>{JSON.stringify(toolDiagnostics, null, 2)}</CodeBlock>
-            ) : null}
           </div>
+
+          {toolDiagnostics.length > 0 ? (
+            <CodeBlock>{JSON.stringify(toolDiagnostics, null, 2)}</CodeBlock>
+          ) : null}
+        </div>
       </DisclosureSection>
 
       <DisclosureSection summary="Captures and profile">
-          <div className="space-y-4">
-            <div className="grid gap-4 xl:grid-cols-2">
-              <div>
-                <p className="mb-2 font-medium text-[var(--rm-fg)]">Request capture</p>
-                <CodeBlock>{JSON.stringify(requestCapture, null, 2)}</CodeBlock>
-              </div>
-              <div>
-                <p className="mb-2 font-medium text-[var(--rm-fg)]">Response capture</p>
-                <CodeBlock>{JSON.stringify(responseCapture, null, 2)}</CodeBlock>
-              </div>
+        <div className="space-y-4">
+          <div className="grid gap-4 xl:grid-cols-2">
+            <div>
+              <p className="mb-2 font-medium text-[var(--rm-fg)]">Request capture</p>
+              <CodeBlock>{JSON.stringify(requestCapture, null, 2)}</CodeBlock>
             </div>
             <div>
-              <p className="mb-2 font-medium text-[var(--rm-fg)]">Endpoint profile history</p>
-              <CodeBlock>{JSON.stringify({ latestProfile, recentSamples }, null, 2)}</CodeBlock>
+              <p className="mb-2 font-medium text-[var(--rm-fg)]">Response capture</p>
+              <CodeBlock>{JSON.stringify(responseCapture, null, 2)}</CodeBlock>
             </div>
           </div>
+          <div>
+            <p className="mb-2 font-medium text-[var(--rm-fg)]">Endpoint profile history</p>
+            <CodeBlock>{JSON.stringify({ latestProfile, recentSamples }, null, 2)}</CodeBlock>
+          </div>
+        </div>
       </DisclosureSection>
 
       <DisclosureSection summary="Raw observation bundle">

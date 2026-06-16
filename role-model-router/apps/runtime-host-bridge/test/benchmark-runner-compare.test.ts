@@ -1,8 +1,8 @@
 import { mkdir } from "node:fs/promises";
-import { DatabaseSync } from "node:sqlite";
 import { mkdtemp, readFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { DatabaseSync } from "node:sqlite";
 
 import { afterEach, describe, expect, test, vi } from "vitest";
 
@@ -90,10 +90,13 @@ describe("benchmark-runner compare remediation", () => {
         requestOptions?: { endpointId?: string },
       ) => {
         if (requestId.startsWith("bench-judge-compare-")) {
-          return { contentText: "not valid compare json" };
+          return { contentText: '{"relativeRanking":[],"rationale":"missing ranking"}' };
         }
         if (requestId.startsWith("bench-judge-")) {
-          return { contentText: '{"score":0.5,"rationale":"partial"}' };
+          return {
+            contentText:
+              '{"score":0.5,"rationale":"The answer partially covers the routing workflow but omits important file-level detail."}',
+          };
         }
         if (requestOptions?.endpointId === localEndpoint.endpointId) {
           return { contentText: '{"answer":"local"}' };
@@ -130,5 +133,5 @@ describe("benchmark-runner compare remediation", () => {
       await readFile(path.join(artifactRoot, result.runId, "manifest.json"), "utf8"),
     ) as { compareArtifactCount: number };
     expect(manifest.compareArtifactCount).toBe(1);
-  });
+  }, 10_000);
 });

@@ -1,6 +1,5 @@
 import { describe, expect, test } from "vitest";
 
-import type { RuntimeConfig, RuntimeConfigRecord } from "./runtime-api";
 import {
   LLAMA_SWAP_SCAFFOLD_MODEL_ID,
   LLAMA_SWAP_SCAFFOLD_YAML,
@@ -8,6 +7,7 @@ import {
   createLlamaSwapScaffoldModel,
   readLlamaSwapConfigStatus,
 } from "./llama-swap-setup";
+import type { RuntimeConfig, RuntimeConfigRecord } from "./runtime-api";
 
 function createBaseConfig(models: RuntimeConfig["llamaSwap"]["models"] = []): RuntimeConfig {
   return {
@@ -52,7 +52,7 @@ function asRecord(config: RuntimeConfig): RuntimeConfigRecord {
 
 describe("llama-swap-setup", () => {
   test("scaffold YAML includes model id and Windows path placeholder", () => {
-    expect(LLAMA_SWAP_SCAFFOLD_YAML).toContain(`llama_swap:`);
+    expect(LLAMA_SWAP_SCAFFOLD_YAML).toContain("llama_swap:");
     expect(LLAMA_SWAP_SCAFFOLD_YAML).toContain(LLAMA_SWAP_SCAFFOLD_MODEL_ID);
     expect(LLAMA_SWAP_SCAFFOLD_YAML).toContain("path:");
     expect(LLAMA_SWAP_SCAFFOLD_YAML).toContain("# context_window:");
@@ -69,9 +69,7 @@ describe("llama-swap-setup", () => {
   });
 
   test("applyLlamaSwapScaffold is idempotent when models already exist", () => {
-    const existing = createBaseConfig([
-      { modelId: "lfm2.5-8b-a1b", path: "D:\\models\\lfm.gguf" },
-    ]);
+    const existing = createBaseConfig([{ modelId: "lfm2.5-8b-a1b", path: "D:\\models\\lfm.gguf" }]);
     const merged = applyLlamaSwapScaffold(existing);
     expect(merged).toBe(existing);
     expect(merged.llamaSwap.models).toHaveLength(1);

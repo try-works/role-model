@@ -43,7 +43,9 @@ describe("bench-routing", () => {
       ],
     } as const;
 
-    expect(selectBenchmarkCases(suite, { mode: "quick" }).map((item) => item.case_id)).toEqual(["a"]);
+    expect(selectBenchmarkCases(suite, { mode: "quick" }).map((item) => item.case_id)).toEqual([
+      "a",
+    ]);
     expect(selectBenchmarkCases(suite, { mode: "full" }).map((item) => item.case_id)).toEqual([
       "a",
       "b",

@@ -107,9 +107,7 @@ async function waitForRuntimeModelEndpointsReady(
     }
     await delay(50);
   }
-  throw new Error(
-    `Timed out waiting for runtime endpoints for models: ${modelIds.join(", ")}.`,
-  );
+  throw new Error(`Timed out waiting for runtime endpoints for models: ${modelIds.join(", ")}.`);
 }
 
 type RuntimeVendorValidationHarnessMode = "mock" | "real";

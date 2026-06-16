@@ -1,4 +1,8 @@
-import { buildAnswerFormatInstruction, resolveAnswerFormat, type BenchmarkAnswerFormat } from "./answer-format.js";
+import {
+  type BenchmarkAnswerFormat,
+  buildAnswerFormatInstruction,
+  resolveAnswerFormat,
+} from "./answer-format.js";
 
 export interface JudgeBriefCaseRef {
   readonly case_id: string;
@@ -58,9 +62,7 @@ export function buildJudgeDeliverablesChecklist(caseItem: JudgeBriefCaseRef): st
   }
 
   if (caseItem.expected_tool_names?.length) {
-    checklist.push(
-      `[MUST] Emit API tool calls: ${caseItem.expected_tool_names.join(", ")}`,
-    );
+    checklist.push(`[MUST] Emit API tool calls: ${caseItem.expected_tool_names.join(", ")}`);
   }
 
   const format = resolveAnswerFormat(caseItem);
@@ -82,7 +84,9 @@ export function buildJudgeDeliverablesChecklist(caseItem: JudgeBriefCaseRef): st
   }
 
   if (caseItem.category === "code-implementation" || format.kind === "code_fence") {
-    checklist.push("[MUST] Provide complete working TypeScript — no placeholders or partial helpers only");
+    checklist.push(
+      "[MUST] Provide complete working TypeScript — no placeholders or partial helpers only",
+    );
   }
 
   return checklist;
@@ -100,9 +104,7 @@ function deriveExemplarAnswer(caseItem: JudgeBriefCaseRef): string {
     parts.push(
       `Tool calls: ${toolNames
         .map((name) =>
-          name === "apply_patch"
-            ? `${name} with valid unified diff (---/+++/@@)`
-            : name,
+          name === "apply_patch" ? `${name} with valid unified diff (---/+++/@@)` : name,
         )
         .join(", ")}`,
     );

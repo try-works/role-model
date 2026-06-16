@@ -28,12 +28,12 @@ import {
   augmentCaseMessages,
   buildAnswerFormatInstruction,
   buildScaffoldFollowUp,
+  buildTextDeliverableResponseFormat,
   deliverableCompleteness,
   extractFormattedAnswer,
   isValidDeliverable,
   resolveAnswerFormat,
   shouldOmitToolsForTurn,
-  buildTextDeliverableResponseFormat,
 } from "./answer-format.js";
 
 export type BenchmarkDifficultyBucket = "easy" | "medium" | "hard";
@@ -77,7 +77,7 @@ const CATEGORY_DIFFICULTY: Record<string, BenchmarkDifficultyBucket> = {
   "code-burden": "medium",
   "tools-light": "medium",
   "tools-heavy": "hard",
-  "decomposition": "medium",
+  decomposition: "medium",
   "max-signal": "hard",
   "exact-model": "easy",
   "cache-probe": "easy",
@@ -96,7 +96,7 @@ const CATEGORY_CAPABILITIES: Record<string, readonly string[]> = {
   "code-burden": ["code_generation", "debugging"],
   "tools-light": ["tool_calling"],
   "tools-heavy": ["tool_calling", "agentic_workflow"],
-  "decomposition": ["planning", "reasoning"],
+  decomposition: ["planning", "reasoning"],
   "max-signal": ["tool_calling", "code_generation", "planning"],
   "exact-model": ["instruction_following"],
   "cache-probe": ["instruction_following"],
@@ -183,10 +183,7 @@ function gradeBenchmarkCaseHeuristic(input: {
   readonly actualResponse: string;
   readonly structuredToolNames?: readonly string[];
 }): JudgeGradingResult {
-  const toolGrade = gradeRequiredToolCalls(
-    input.caseItem,
-    input.structuredToolNames ?? [],
-  );
+  const toolGrade = gradeRequiredToolCalls(input.caseItem, input.structuredToolNames ?? []);
   const gradingInput: JudgeGradingInput = {
     caseId: input.caseItem.case_id,
     promptSummary: summarizePrompt(input.caseItem),
@@ -353,7 +350,10 @@ export interface BenchmarkEndpointGrade {
   readonly modelId: string;
   readonly sourceType: string | null;
   readonly overallScore: number;
-  readonly byDifficulty: Record<BenchmarkDifficultyBucket, { readonly score: number; readonly cases: number }>;
+  readonly byDifficulty: Record<
+    BenchmarkDifficultyBucket,
+    { readonly score: number; readonly cases: number }
+  >;
   readonly caseResults: readonly {
     readonly caseId: string;
     readonly difficultyBucket: BenchmarkDifficultyBucket;

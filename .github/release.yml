@@ -1,0 +1,40 @@
+changelog:
+  exclude:
+    authors:
+      - github-actions[bot]
+      - dependabot[bot]
+  categories:
+    - title: Breaking
+      labels:
+        - breaking
+        - breaking-change
+        - semver-major
+    - title: Added
+      labels:
+        - feature
+        - enhancement
+        - semver-minor
+    - title: Fixed
+      labels:
+        - bug
+        - bugfix
+        - fix
+        - regression
+        - semver-patch
+    - title: Security
+      labels:
+        - security
+    - title: Docs
+      labels:
+        - docs
+        - documentation
+    - title: Build And CI
+      labels:
+        - ci
+        - build
+        - release
+        - tooling
+        - dependencies
+    - title: Other
+      labels:
+        - "*"

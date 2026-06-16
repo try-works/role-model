@@ -122,7 +122,10 @@ describe("operator-intent", () => {
       },
     );
 
-    const withoutRemote = removeRemoteActivation(intent, "moonshot.personal.kimi-code.global.kimi-k2.6");
+    const withoutRemote = removeRemoteActivation(
+      intent,
+      "moonshot.personal.kimi-code.global.kimi-k2.6",
+    );
     const withoutPeer = removePeerLoad(withoutRemote, "default", "lfm2.5-8b-a1b");
 
     expect(withoutRemote.remoteActivations).toHaveLength(0);
@@ -143,9 +146,7 @@ describe("operator-intent", () => {
         status: "corrupt",
         message: expect.any(String),
       });
-      expect(() =>
-        persistOperatorIntent(location, (current) => current),
-      ).toThrow(/corrupt/i);
+      expect(() => persistOperatorIntent(location, (current) => current)).toThrow(/corrupt/i);
     } finally {
       await rm(runtimeStateRoot, { recursive: true, force: true });
     }
@@ -165,9 +166,10 @@ describe("operator-intent", () => {
         }),
       );
 
-      const raw = JSON.parse(
-        readFileSync(resolveOperatorIntentPath(location), "utf8"),
-      ) as Record<string, unknown>;
+      const raw = JSON.parse(readFileSync(resolveOperatorIntentPath(location), "utf8")) as Record<
+        string,
+        unknown
+      >;
       expect(raw.schemaVersion).toBe(1);
       expect(raw.updatedAt).toEqual(expect.any(String));
       expect(raw.remoteActivations).toEqual([

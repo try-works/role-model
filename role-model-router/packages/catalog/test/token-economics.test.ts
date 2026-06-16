@@ -62,7 +62,12 @@ describe("token-economics", () => {
   });
 
   test("uses local-free economics for local endpoints", () => {
-    const catalog = { catalogVersion: "1", source: {}, providers: [], models: [] } as NormalizedCatalog;
+    const catalog = {
+      catalogVersion: "1",
+      source: {},
+      providers: [],
+      models: [],
+    } as NormalizedCatalog;
     const economics = resolveTokenEconomics({
       modelId: "lfm2.5-8b-a1b",
       catalog,

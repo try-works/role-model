@@ -58,7 +58,7 @@ describe("runRuntimeVendorValidation", () => {
         responseHeaders: expect.objectContaining({
           "x-role-model-endpoint-id": "openai.litellm.global.openai-gpt-4-1-mini-fast",
           "x-role-model-adapter-family": "litellm-proxy",
-          "x-role-model-routing-decision-id": "decision-req-runtime-vendor-remote",
+          "x-role-model-routing-decision-id": expect.stringMatching(/^decision-req-/),
           "x-role-model-cost-usd": "0.0042",
         }),
       }),

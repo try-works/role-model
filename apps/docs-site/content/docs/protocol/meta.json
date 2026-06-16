@@ -3,6 +3,7 @@
   "description": "Canonical protocol objects and field semantics.",
   "defaultOpen": true,
   "pages": [
+    "index",
     "endpoint-identity",
     "declared-capability-profiles",
     "observed-performance-profiles",

@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { type ReactElement, createElement } from "react";
@@ -75,7 +75,10 @@ const localPeersSource = readFileSync(
   new URL("../routes/local-peers.tsx", import.meta.url),
   "utf8",
 );
-const observeLogsSource = readFileSync(new URL("../routes/observe-logs.tsx", import.meta.url), "utf8");
+const observeLogsSource = readFileSync(
+  new URL("../routes/observe-logs.tsx", import.meta.url),
+  "utf8",
+);
 const endpointsRouteSource = readFileSync(
   new URL("../routes/endpoints.tsx", import.meta.url),
   "utf8",
@@ -496,9 +499,7 @@ describe("runtime design system", () => {
     expect(getRuntimeRouteDefinition("/app/local/llama-swap/matrix")?.title).toBe(
       "Llama-swap matrix",
     );
-    expect(getRuntimeRouteDefinition("/app/router/candidates")?.title).toBe(
-      "Candidate inventory",
-    );
+    expect(getRuntimeRouteDefinition("/app/router/candidates")?.title).toBe("Candidate inventory");
     expect(getRuntimeRouteDefinition("/app/router/decisions")?.title).toBe("Routing decisions");
     expect(
       getRuntimeRouteDefinition("/app/router/decisions/req-runtime-bridge-route-001")?.title,
@@ -533,7 +534,8 @@ describe("runtime design system", () => {
 
   test("providers surface uses an explicit save-cancel modal for api-key maintenance", () => {
     expect(designSystemDocSource).toContain("explicit **Save** and **Cancel** controls");
-    expect(providersRouteSource).toContain('role="dialog"');
+    expect(providersRouteSource).toContain("<dialog");
+    expect(providersRouteSource).toContain('aria-modal="true"');
     expect(providersRouteSource).toContain("API key");
     expect(providersRouteSource).toContain("Save");
     expect(providersRouteSource).toContain("Cancel");
@@ -551,7 +553,9 @@ describe("runtime design system", () => {
   });
 
   test("providers saved-account cards use canonical lifecycle rows and bounded archived diagnostics", () => {
-    expect(designSystemDocSource).toContain("lifecycle badge from the canonical backend lifecycle contract");
+    expect(designSystemDocSource).toContain(
+      "lifecycle badge from the canonical backend lifecycle contract",
+    );
     expect(designSystemDocSource).toContain("normalized storage-mode/credential posture");
     expect(designSystemDocSource).toContain("bounded diagnostics separate from active accounts");
     expect(providersRouteSource).toContain("buildProviderMaintenanceRows");
@@ -616,13 +620,21 @@ describe("runtime design system", () => {
     expect(designSystemDocSource).toContain(
       "| `/app/system/runtime-config` | live | `registry-detail` |",
     );
-    expect(designSystemDocSource).toContain("| `/app/remote/providers` | live | `registry-detail` |");
+    expect(designSystemDocSource).toContain(
+      "| `/app/remote/providers` | live | `registry-detail` |",
+    );
     expect(designSystemDocSource).toContain("| `/app/models` | live | `model-inventory` |");
     expect(designSystemDocSource).toContain("| `/app/models/roles` | live | `registry-detail` |");
-    expect(designSystemDocSource).toContain("| `/app/models/benchmark` | live | `registry-detail` |");
+    expect(designSystemDocSource).toContain(
+      "| `/app/models/benchmark` | live | `registry-detail` |",
+    );
     expect(designSystemDocSource).toContain("| `/app/router` | live | `registry-detail` |");
-    expect(designSystemDocSource).toContain("| `/app/router/controller` | live | `registry-detail` |");
-    expect(designSystemDocSource).not.toContain("| `/app/router/config` | live | `registry-detail` |");
+    expect(designSystemDocSource).toContain(
+      "| `/app/router/controller` | live | `registry-detail` |",
+    );
+    expect(designSystemDocSource).not.toContain(
+      "| `/app/router/config` | live | `registry-detail` |",
+    );
     expect(designSystemDocSource).toContain(
       "| `/app/router/candidates` | live | `ledger-inspector` |",
     );

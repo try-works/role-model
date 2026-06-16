@@ -23,10 +23,11 @@ The reference router in `role-model-router/packages/core` adds baseline implemen
 
 - how request flags become an effective policy snapshot
 - the exact strategy weights
+- runtime routing modes such as `baseline`, `controller`, `difficulty`, and `hybrid`
 - the neutral defaults used when metrics are missing
 - the redistribution rule for unknown metrics
 - the tie epsilon and tie-break ordering
-- the current `baseline-v1` scoring version
+- the current `baseline-v2` scoring version
 
 These choices are useful and coherent, but they are not themselves the canonical protocol.
 
@@ -42,6 +43,10 @@ The protocol surface is broader than the current router implementation in a few 
 
 These are not contradictions in the protocol. They indicate that the protocol reserves more expressive surface
 than the current reference implementation actively uses.
+
+The packaged runtime also introduces implementation-level routing modes that sit above the pure policy
+strategy layer. Those modes are useful product behavior, but they are not themselves part of the canonical
+protocol strategy enum.
 
 ## From model lineage to candidate endpoint
 

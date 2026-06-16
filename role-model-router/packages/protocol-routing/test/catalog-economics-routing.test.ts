@@ -148,9 +148,9 @@ describe("catalog economics routing", () => {
     });
 
     expect(result.decision.chosen_endpoint_id).toBe("peer.local.lfm");
-    expect(
-      result.catalogEconomicsByEndpointId["peer.local.lfm"]?.tokenEconomicsSource,
-    ).toBe("local-free");
+    expect(result.catalogEconomicsByEndpointId["peer.local.lfm"]?.tokenEconomicsSource).toBe(
+      "local-free",
+    );
     expect(
       result.catalogEconomicsByEndpointId["moonshot.personal.kimi-code.global.kimi-k2.6"]
         ?.canonicalModelId,

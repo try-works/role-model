@@ -9,20 +9,24 @@ import {
   SectionCard,
   StatusPill,
 } from "../components/page-primitives";
-import { listRowClassName, mutedPanelClassName, secondaryButtonClassName } from "../lib/design-system";
-import { usePageActions } from "../lib/shell-header-context";
+import {
+  listRowClassName,
+  mutedPanelClassName,
+  secondaryButtonClassName,
+} from "../lib/design-system";
 import {
   type RuntimeHealthStatus,
   type RuntimeSummary,
   fetchHealthStatus,
   fetchRuntimeSummary,
 } from "../lib/runtime-api";
+import { usePageActions } from "../lib/shell-header-context";
 import {
   buildAliasDriftRows,
   buildArchivedArtifactRows,
-  buildCredentialReadinessRows,
   buildCredentialLifecycleAccountRows,
   buildCredentialLifecycleBanner,
+  buildCredentialReadinessRows,
   buildInventorySummaryStats,
   buildOperatorIntentSummary,
   buildSessionBootstrapRows,
@@ -215,14 +219,16 @@ export default function SessionReadinessRoute() {
 
       <SectionCard title="Operator intent manifest">
         {operatorIntentSummary ? (
-          <div className={mutedPanelClassName + " p-4"}>
+          <div className={`${mutedPanelClassName} p-4`}>
             <div className="flex flex-wrap items-center gap-2">
               <p className="font-medium text-[var(--rm-fg)]">{operatorIntentSummary.label}</p>
               <StatusPill tone={operatorIntentSummary.tone}>
                 {summary.operatorIntent?.status ?? "unknown"}
               </StatusPill>
             </div>
-            <p className="mt-2 text-sm text-[var(--rm-secondary)]">{operatorIntentSummary.detail}</p>
+            <p className="mt-2 text-sm text-[var(--rm-secondary)]">
+              {operatorIntentSummary.detail}
+            </p>
             {summary.operatorIntent?.path ? (
               <p className="mt-2 text-xs text-[var(--rm-muted)]">{summary.operatorIntent.path}</p>
             ) : null}
@@ -276,11 +282,17 @@ export default function SessionReadinessRoute() {
 
       <SectionCard title="Related surfaces">
         <div className="grid gap-3 md:grid-cols-2">
-          <Link className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`} to="/app/system/runtime">
+          <Link
+            className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}
+            to="/app/system/runtime"
+          >
             <span className="block font-medium text-[var(--rm-fg)]">Runtime topology</span>
             Lifecycle, controller posture, and preserved host diagnostics
           </Link>
-          <Link className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`} to="/app/remote/providers">
+          <Link
+            className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}
+            to="/app/remote/providers"
+          >
             <span className="block font-medium text-[var(--rm-fg)]">Remote providers</span>
             OAuth, credentials, and remote endpoint activation
           </Link>

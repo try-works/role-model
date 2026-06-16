@@ -1,15 +1,19 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
 
-import { LlamaSwapSetupModal } from "./llama-swap-setup-modal";
+import {
+  mutedPanelClassName,
+  primaryButtonClassName,
+  secondaryButtonClassName,
+} from "../lib/design-system";
 import {
   type LlamaSwapConfigStatus,
   llamaSwapHintDetail,
   llamaSwapHintHeadline,
   readLlamaSwapConfigStatus,
 } from "../lib/llama-swap-setup";
-import { mutedPanelClassName, primaryButtonClassName, secondaryButtonClassName } from "../lib/design-system";
 import { fetchRuntimeConfig } from "../lib/runtime-api";
+import { LlamaSwapSetupModal } from "./llama-swap-setup-modal";
 
 export function useLlamaSwapConfigStatus(): {
   status: LlamaSwapConfigStatus | null;
@@ -60,7 +64,9 @@ export function LlamaSwapSetupHint({
         <p className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]">
           Llama-swap setup
         </p>
-        <p className="mt-3 text-sm font-medium text-[var(--rm-fg)]">{llamaSwapHintHeadline(status)}</p>
+        <p className="mt-3 text-sm font-medium text-[var(--rm-fg)]">
+          {llamaSwapHintHeadline(status)}
+        </p>
         {variant === "prominent" ? (
           <p className="mt-2 max-w-[60ch] text-sm leading-6 text-[var(--rm-secondary)]">
             {llamaSwapHintDetail()}

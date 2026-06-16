@@ -1,4 +1,11 @@
-import { existsSync, mkdirSync, readFileSync, renameSync, unlinkSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  renameSync,
+  unlinkSync,
+  writeFileSync,
+} from "node:fs";
 import path from "node:path";
 
 export const OPERATOR_INTENT_SCHEMA_VERSION = 1 as const;
@@ -149,9 +156,7 @@ export function validateOperatorIntent(value: unknown): OperatorIntentV1 {
   }
   const record = value as Record<string, unknown>;
   if (record.schemaVersion !== OPERATOR_INTENT_SCHEMA_VERSION) {
-    throw new Error(
-      `operator intent schemaVersion must be ${OPERATOR_INTENT_SCHEMA_VERSION}`,
-    );
+    throw new Error(`operator intent schemaVersion must be ${OPERATOR_INTENT_SCHEMA_VERSION}`);
   }
   if (!Array.isArray(record.remoteActivations)) {
     throw new Error("remoteActivations must be an array");
@@ -172,7 +177,9 @@ export function validateOperatorIntent(value: unknown): OperatorIntentV1 {
   };
 }
 
-export function readOperatorIntentResult(location: OperatorIntentLocation): OperatorIntentReadResult {
+export function readOperatorIntentResult(
+  location: OperatorIntentLocation,
+): OperatorIntentReadResult {
   const intentPath = resolveOperatorIntentPath(location);
   if (!existsSync(intentPath)) {
     return { intent: null, diagnostic: { status: "missing" } };
@@ -233,7 +240,10 @@ export function upsertRemoteActivation(
   };
 }
 
-export function removeRemoteActivation(intent: OperatorIntentV1, endpointId: string): OperatorIntentV1 {
+export function removeRemoteActivation(
+  intent: OperatorIntentV1,
+  endpointId: string,
+): OperatorIntentV1 {
   return {
     ...intent,
     remoteActivations: intent.remoteActivations.filter((entry) => entry.endpointId !== endpointId),
@@ -297,9 +307,7 @@ export function persistOperatorIntent(
 ): OperatorIntentV1 {
   const readResult = readOperatorIntentResult(location);
   if (readResult.diagnostic.status === "corrupt") {
-    throw new Error(
-      `operator intent manifest is corrupt: ${readResult.diagnostic.message}`,
-    );
+    throw new Error(`operator intent manifest is corrupt: ${readResult.diagnostic.message}`);
   }
   const current = readResult.intent ?? createEmptyOperatorIntent();
   const next = updater(current);

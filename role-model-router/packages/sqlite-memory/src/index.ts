@@ -1691,7 +1691,8 @@ function mapRuntimeTelemetryRecord(row: {
       row.request_class === "unknown"
         ? row.request_class
         : null,
-    sourceType: row.source_type === "local" || row.source_type === "remote" ? row.source_type : null,
+    sourceType:
+      row.source_type === "local" || row.source_type === "remote" ? row.source_type : null,
     modelId: row.model_id,
     providerKind: row.provider_kind,
     providerFamily: row.provider_family,
@@ -1952,7 +1953,9 @@ function rebuildObservedProfilesForEndpoint(
     .all(endpointId) as Array<{ sample_json: string }>;
 
   if (remainingRows.length === 0) {
-    database.prepare("DELETE FROM observed_profile_snapshots WHERE endpoint_id = ?").run(endpointId);
+    database
+      .prepare("DELETE FROM observed_profile_snapshots WHERE endpoint_id = ?")
+      .run(endpointId);
   } else {
     const samples = remainingRows.map(
       (row) => JSON.parse(row.sample_json) as ObservedPerformanceSample,
@@ -2065,7 +2068,9 @@ export function clearAllObservedBenchmarkData(
     .prepare("DELETE FROM observed_performance_samples WHERE source_type = 'benchmark'")
     .run();
   database
-    .prepare("DELETE FROM observed_performance_samples_by_difficulty WHERE source_type = 'benchmark'")
+    .prepare(
+      "DELETE FROM observed_performance_samples_by_difficulty WHERE source_type = 'benchmark'",
+    )
     .run();
 
   for (const row of endpointRows) {
@@ -2168,7 +2173,9 @@ export function persistObservedBenchmarkSample(input: PersistObservedBenchmarkSa
       "SELECT sample_json FROM observed_performance_samples WHERE endpoint_id = ? ORDER BY timestamp_ms ASC, sample_id ASC",
     )
     .all(sample.endpoint_id) as Array<{ sample_json: string }>;
-  const allSamples = priorRows.map((row) => JSON.parse(row.sample_json) as ObservedPerformanceSample);
+  const allSamples = priorRows.map(
+    (row) => JSON.parse(row.sample_json) as ObservedPerformanceSample,
+  );
   const profile = aggregateObservedPerformanceSamples(allSamples, {
     nowMs: sample.timestamp_ms,
   });

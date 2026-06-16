@@ -1,6 +1,6 @@
 import type { EndpointRegistryResult } from "@role-model-router/endpoint-registry";
+import type { routeRuntimeRequest } from "@role-model-router/protocol-routing";
 import type { ProviderAccountRecord } from "@role-model-router/provider-account";
-import { routeRuntimeRequest } from "@role-model-router/protocol-routing";
 
 type RuntimeRoleDefinitionRecord = NonNullable<
   Parameters<typeof routeRuntimeRequest>[0]["roleDefinitions"]
@@ -24,9 +24,7 @@ export function buildAccountEndpointRoleBindings(input: {
   readonly roleDefinitions: readonly RuntimeRoleDefinitionRecord[];
   readonly sanitizeSegment: (value: string) => string;
 }): readonly RuntimeRoleBindingRecord[] {
-  const roleDefinitionsById = new Map(
-    input.roleDefinitions.map((role) => [role.role_id, role]),
-  );
+  const roleDefinitionsById = new Map(input.roleDefinitions.map((role) => [role.role_id, role]));
   const capabilitiesByEndpointId = new Map(
     input.registry.endpoints.map((endpoint) => [
       endpoint.identity.endpoint_id,
@@ -75,9 +73,7 @@ export function buildLlamaSwapRegistryRoleBindings(input: {
   readonly roleIdsByModelId: Readonly<Record<string, readonly string[]>>;
   readonly sanitizeSegment: (value: string) => string;
 }): readonly RuntimeRoleBindingRecord[] {
-  const roleDefinitionsById = new Map(
-    input.roleDefinitions.map((role) => [role.role_id, role]),
-  );
+  const roleDefinitionsById = new Map(input.roleDefinitions.map((role) => [role.role_id, role]));
   const bindings: RuntimeRoleBindingRecord[] = [];
 
   for (const endpoint of input.registry.endpoints) {

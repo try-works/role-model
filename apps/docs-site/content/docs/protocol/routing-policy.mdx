@@ -38,6 +38,16 @@ The schema's `compute_preference` enum is:
 In the reference router, request flags such as `preferLocal`, `computePreference`, and `denyRemote` are
 folded into the effective policy snapshot before routing proceeds.
 
+The important distinction is:
+
+- `strategy` describes scoring intent such as quality vs latency vs cost
+- `compute_preference` describes locality posture such as local vs remote
+
+They are related, but they are not the same control.
+
+`hybrid` in `compute_preference` should be understood as protocol surface that keeps both pools expressible.
+The current baseline router most directly applies locality preference when the value is `local` or `remote`.
+
 ## Hard-constraint fields
 
 These fields participate directly in eligibility:
@@ -70,9 +80,9 @@ The `targets` object models optimization goals such as:
 
 The reference router currently snapshots a default tie-break order of:
 
-1. `prefer_local`
-2. lower cost
-3. lower `latency_ms_p95`
+1. higher `quality`
+2. lower `latency_ms`
+3. higher `reliability`
 4. stable `endpoint_id`
 
 That snapshot is important because the final `RouterDecision` should explain the policy that was actually

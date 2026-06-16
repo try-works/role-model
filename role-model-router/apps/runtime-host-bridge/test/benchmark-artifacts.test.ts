@@ -141,7 +141,9 @@ describe("benchmark-artifacts", () => {
       mode: "quick",
       judgeEndpointId: "moonshot.kimi",
       judgeSubjectOverlap: true,
-      startWarnings: ["judge_subject_overlap: judge endpoint is also a benchmark subject; judge exhaustion risk"],
+      startWarnings: [
+        "judge_subject_overlap: judge endpoint is also a benchmark subject; judge exhaustion risk",
+      ],
       startedAtMs: 1,
       executionCompletedAtMs: 2,
       gradingCompletedAtMs: 3,

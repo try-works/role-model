@@ -52,9 +52,7 @@ describe("answer-format", () => {
       structuredToolNames: [],
     });
     expect(extracted.extractionMethod).toBe("code_fence");
-    expect(
-      isValidDeliverable({ caseItem, extracted, structuredToolNames: [] }),
-    ).toBe(true);
+    expect(isValidDeliverable({ caseItem, extracted, structuredToolNames: [] })).toBe(true);
   });
 
   test("finds answer json from earlier turn when later turn is empty", () => {

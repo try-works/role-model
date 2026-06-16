@@ -1,0 +1,71 @@
+---
+title: Overview
+description: The shortest accurate explanation of how role-model turns a configured endpoint set into an explainable routed choice.
+---
+
+# Router overview
+
+The Router layer is where role-model turns a role-aware request and a configured endpoint set into an
+explainable decision.
+
+## What Router is responsible for
+
+Router answers four questions:
+
+1. which endpoints are even allowed to compete
+2. which endpoints are excluded and why
+3. how the remaining candidates compare
+4. why the final winner and fallback order were chosen
+
+## The baseline flow
+
+The current baseline does this in order:
+
+1. normalize request intent into the effective policy snapshot
+2. narrow the set through role, task, and policy compatibility
+3. apply hard eligibility checks
+4. score the eligible endpoints using the saved routing strategy
+5. break near-ties deterministically
+6. emit a `RouterDecision`
+
+## Strategy is part of the comparison stage
+
+The docs now distinguish between two different layers that were previously easy to blur together:
+
+- **scoring strategy** such as `balanced`, `quality`, `latency`, or `cost`
+- **runtime routing mode** such as `baseline`, `controller`, `difficulty`, or `hybrid`
+
+The saved scoring strategy is the policy mode that changes what Router optimizes for once the eligible set is
+clean.
+
+The four baseline modes are:
+
+- `balanced`
+- `quality`
+- `latency`
+- `cost`
+
+They all score the same eligible candidates, but they weight quality, latency, throughput, cost,
+reliability, and preference differently.
+
+Read [Scoring strategies and tradeoffs](/router/strategy-modes-and-tradeoffs) for the weighting guide and
+[Routing modes, locality, and execution](/router/routing-modes-locality-and-execution) for the runtime-mode
+and local/remote scope guide.
+
+## What makes the result useful
+
+Router is not only trying to produce a winner. It is trying to leave behind enough evidence that an operator
+can inspect the decision later and understand:
+
+- what policy was in force
+- what got excluded
+- what got ranked
+- which measured or declared signals mattered
+
+## Read next
+
+- [Routing modes, locality, and execution](/router/routing-modes-locality-and-execution)
+- [Scoring strategies and tradeoffs](/router/strategy-modes-and-tradeoffs)
+- [Candidate selection and eligibility](/router/candidate-selection-and-eligibility)
+- [Scoring, tie-breaks, and decisions](/router/scoring-tie-breaks-and-decisions)
+- [Fallbacks, failures, and observability](/router/fallbacks-failures-and-observability)

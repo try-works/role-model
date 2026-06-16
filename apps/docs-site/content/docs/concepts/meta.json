@@ -1,7 +1,14 @@
 {
-  "title": "Summaries",
-  "description": "High-level summaries kept for direct links from the earlier docs set.",
+  "title": "Concepts",
+  "description": "High-level system, protocol, and routing guides for new readers.",
   "collapsible": true,
-  "defaultOpen": false,
-  "pages": ["how-role-model-works", "protocol-overview", "routing-overview"]
+  "defaultOpen": true,
+  "pages": [
+    "how-role-model-works",
+    "roles-tasks-and-capabilities",
+    "endpoints-and-profiles",
+    "policy-and-observability",
+    "protocol-overview",
+    "routing-overview"
+  ]
 }

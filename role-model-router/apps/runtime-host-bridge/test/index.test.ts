@@ -326,7 +326,10 @@ describe("runtime-host-bridge", () => {
     };
 
     await bootstrapQaControlPlane(
-      backend as Pick<Parameters<typeof createQaServerOptions>[1], "upsertProviderAccount" | "activateEndpoint">,
+      backend as Pick<
+        Parameters<typeof createQaServerOptions>[1],
+        "upsertProviderAccount" | "activateEndpoint"
+      >,
     );
 
     expect(calls).toEqual([
@@ -520,15 +523,15 @@ describe("runtime-host-bridge", () => {
           listRouterCandidates?: unknown;
           listRouterDecisions?: unknown;
           readRouterDecision?: unknown;
-           listLocalModels?: unknown;
-           getLocalLogs?: unknown;
-           readRolePolicy?: unknown;
-           createRolePolicyRole?: unknown;
-           updateRolePolicyRole?: unknown;
-           listTaskDefinitions?: unknown;
-           updateTaskDefinitions?: unknown;
-           readModelOverrides?: unknown;
-           updateModelOverrides?: unknown;
+          listLocalModels?: unknown;
+          getLocalLogs?: unknown;
+          readRolePolicy?: unknown;
+          createRolePolicyRole?: unknown;
+          updateRolePolicyRole?: unknown;
+          listTaskDefinitions?: unknown;
+          updateTaskDefinitions?: unknown;
+          readModelOverrides?: unknown;
+          updateModelOverrides?: unknown;
           readPeers?: unknown;
           reconnectProviderAccount?: unknown;
           updateProviderApiKey?: unknown;
@@ -8487,6 +8490,7 @@ describe("runtime-host-bridge", () => {
 
     const capturedRequestHeaders: Record<string, string>[] = [];
     const streamedChunks: Record<string, unknown>[] = [];
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-litellm-oauth-"));
     const backend = await (
       bridge as {
         createRuntimeBridgeBackend: (options: {
@@ -8517,7 +8521,7 @@ describe("runtime-host-bridge", () => {
     ).createRuntimeBridgeBackend({
       repoRoot,
       fixtureRoot: testFixtureRoot,
-      runtimeStateRoot: path.join(os.tmpdir(), "role-model-litellm-oauth-tests"),
+      runtimeStateRoot,
       scopeId: "runtime-litellm-oauth-tests",
       networkFetcher: async (input, init) => {
         const url =
@@ -8578,80 +8582,83 @@ describe("runtime-host-bridge", () => {
         throw new Error(`Unexpected network request: ${url}`);
       },
     });
+    try {
+      // Verify the Kimi Code OAuth variant is exposed via LiteLLM (no preset required)
+      const providers = (await backend.listProviders?.()) as Array<{
+        providerId: string;
+        variants: Array<{ variantId: string; authMode: string; oauth?: { clientId: string } }>;
+      }>;
+      const moonshotProvider = providers.find((p) => p.providerId === "moonshot");
+      expect(moonshotProvider).toBeDefined();
+      const oauthVariant = moonshotProvider?.variants.find((v) => v.variantId === "kimi-code");
+      expect(oauthVariant).toBeDefined();
+      expect(oauthVariant?.authMode).toBe("oauth2-device-code");
+      expect(oauthVariant?.oauth?.clientId).toBe("17e5f671-d194-4dfb-9706-5516cb48c098");
 
-    // Verify the Kimi Code OAuth variant is exposed via LiteLLM (no preset required)
-    const providers = (await backend.listProviders?.()) as Array<{
-      providerId: string;
-      variants: Array<{ variantId: string; authMode: string; oauth?: { clientId: string } }>;
-    }>;
-    const moonshotProvider = providers.find((p) => p.providerId === "moonshot");
-    expect(moonshotProvider).toBeDefined();
-    const oauthVariant = moonshotProvider?.variants.find((v) => v.variantId === "kimi-code");
-    expect(oauthVariant).toBeDefined();
-    expect(oauthVariant?.authMode).toBe("oauth2-device-code");
-    expect(oauthVariant?.oauth?.clientId).toBe("17e5f671-d194-4dfb-9706-5516cb48c098");
+      // Full OAuth device-code flow using the LiteLLM-derived variant
+      const pending = await backend.startProviderDeviceAuthorization?.({
+        providerAccountId: "moonshot.personal.kimi-code",
+        providerId: "moonshot",
+        variantId: "kimi-code",
+        orgScope: "personal",
+        accountScope: "workspace-default",
+        allowedModels: ["moonshot/kimi-k2.5"],
+        deniedModels: [],
+        entitlementTags: ["chat"],
+      });
+      expect(pending).toEqual(
+        expect.objectContaining({
+          status: "pending",
+          userCode: "LITELLM-TEST",
+        }),
+      );
 
-    // Full OAuth device-code flow using the LiteLLM-derived variant
-    const pending = await backend.startProviderDeviceAuthorization?.({
-      providerAccountId: "moonshot.personal.kimi-code",
-      providerId: "moonshot",
-      variantId: "kimi-code",
-      orgScope: "personal",
-      accountScope: "workspace-default",
-      allowedModels: ["moonshot/kimi-k2.5"],
-      deniedModels: [],
-      entitlementTags: ["chat"],
-    });
-    expect(pending).toEqual(
-      expect.objectContaining({
-        status: "pending",
-        userCode: "LITELLM-TEST",
-      }),
-    );
+      const connected = await backend.pollProviderDeviceAuthorization?.({
+        authRequestId: (pending as { authRequestId: string }).authRequestId,
+      });
+      expect(connected).toEqual(expect.objectContaining({ status: "connected" }));
 
-    const connected = await backend.pollProviderDeviceAuthorization?.({
-      authRequestId: (pending as { authRequestId: string }).authRequestId,
-    });
-    expect(connected).toEqual(expect.objectContaining({ status: "connected" }));
+      await backend.activateEndpoint?.({
+        providerAccountId: "moonshot.personal.kimi-code",
+        modelId: "moonshot/kimi-k2.5",
+        region: "global",
+      });
 
-    await backend.activateEndpoint?.({
-      providerAccountId: "moonshot.personal.kimi-code",
-      modelId: "moonshot/kimi-k2.5",
-      region: "global",
-    });
+      // Execute chat — must reach the Kimi Code base URL with Bearer token + X-Msh-* headers
+      const result = await backend.executeChatCompletions(
+        {
+          model: "moonshot/kimi-k2.5",
+          stream: true,
+          messages: [{ role: "user", content: "Test LiteLLM OAuth." }],
+        },
+        "req-litellm-oauth-001",
+        async (chunk) => {
+          streamedChunks.push(chunk);
+        },
+      );
 
-    // Execute chat — must reach the Kimi Code base URL with Bearer token + X-Msh-* headers
-    const result = await backend.executeChatCompletions(
-      {
-        model: "moonshot/kimi-k2.5",
-        stream: true,
-        messages: [{ role: "user", content: "Test LiteLLM OAuth." }],
-      },
-      "req-litellm-oauth-001",
-      async (chunk) => {
-        streamedChunks.push(chunk);
-      },
-    );
+      expect(result.outputText).toBe("moonshot oauth works");
+      expect(result.endpointId).toBe("moonshot.personal.kimi-code.global.kimi-k2.5");
 
-    expect(result.outputText).toBe("moonshot oauth works");
-    expect(result.endpointId).toBe("moonshot.personal.moonshot-oauth.global.kimi-k2.5");
-
-    // Verify the outgoing request to Moonshot carried the OAuth Bearer token
-    expect(capturedRequestHeaders.length).toBeGreaterThan(0);
-    expect(capturedRequestHeaders[0]).toEqual(
-      expect.objectContaining({
-        authorization: "Bearer litellm-access-token-001",
-      }),
-    );
-    // Verify Kimi-specific headers are present (from LiteLLM OAuth requiredHeaders)
-    expect(capturedRequestHeaders[0]).toEqual(
-      expect.objectContaining({
-        "X-Msh-Platform": "kimi_cli",
-        "X-Msh-Version": expect.any(String),
-        "X-Msh-Device-Name": expect.any(String),
-        "X-Msh-Device-Id": expect.any(String),
-      }),
-    );
+      // Verify the outgoing request to Moonshot carried the OAuth Bearer token
+      expect(capturedRequestHeaders.length).toBeGreaterThan(0);
+      expect(capturedRequestHeaders[0]).toEqual(
+        expect.objectContaining({
+          authorization: "Bearer litellm-access-token-001",
+        }),
+      );
+      // Verify Kimi-specific headers are present (from LiteLLM OAuth requiredHeaders)
+      expect(capturedRequestHeaders[0]).toEqual(
+        expect.objectContaining({
+          "X-Msh-Platform": "kimi_cli",
+          "X-Msh-Version": expect.any(String),
+          "X-Msh-Device-Name": expect.any(String),
+          "X-Msh-Device-Id": expect.any(String),
+        }),
+      );
+    } finally {
+      await rm(runtimeStateRoot, { recursive: true, force: true });
+    }
   });
 
   test("executes chat-completions through an api-key-static provider via environment credential", async () => {
@@ -8869,13 +8876,7 @@ describe("runtime-host-bridge", () => {
   });
 
   test("resolves packaged bridge server options from executable path defaults", () => {
-    const packageDir = path.join(
-      repoRoot,
-      "role-model-router",
-      "dist",
-      "release",
-      "win32-x64",
-    );
+    const packageDir = path.join(repoRoot, "role-model-router", "dist", "release", "win32-x64");
     const packagedStaticRoot = path.join(packageDir, "build", "client");
     const devStaticRoot = path.join(
       repoRoot,
@@ -8956,7 +8957,8 @@ describe("runtime-host-bridge", () => {
       runtimeStateRoot: "/home/tester/.local/share/Role Model Runtime/state",
       scopeId: "runtime-host-bridge",
       staticRoot: "/home/tester/role-model/role-model-router/apps/runtime-ui/build/client",
-      unifiedRuntimeConfigPath: "/home/tester/.local/share/Role Model Runtime/state/runtime-config.yaml",
+      unifiedRuntimeConfigPath:
+        "/home/tester/.local/share/Role Model Runtime/state/runtime-config.yaml",
     });
   });
 });

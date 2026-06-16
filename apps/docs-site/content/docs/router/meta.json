@@ -1,0 +1,15 @@
+{
+  "title": "Router",
+  "description": "The product-facing explanation of how role-model evaluates, ranks, and explains endpoint choices.",
+  "defaultOpen": true,
+  "pages": [
+    "overview",
+    "routing-modes-locality-and-execution",
+    "strategy-modes-and-tradeoffs",
+    "candidate-selection-and-eligibility",
+    "scoring-tie-breaks-and-decisions",
+    "fallbacks-failures-and-observability",
+    "how-routing-works-end-to-end",
+    "protocol-to-router-mapping"
+  ]
+}

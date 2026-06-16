@@ -1,0 +1,77 @@
+---
+title: Protocol
+description: "The canonical protocol layer behind role-model: what is standardized, how the object graph fits together, and where to go for field-level semantics."
+---
+
+# Protocol
+
+The `role-model` protocol is the canonical contract behind the runtime router.
+
+The runtime and operator UI are the fastest way to get value from role-model, but the protocol is still the
+source of truth for how requests, endpoints, policy, and explainable routing artifacts are represented.
+
+## What this section is for
+
+Use the Protocol section when you need to understand:
+
+- what role-model standardizes versus what a router implementation is free to choose
+- how endpoint identity, declared profiles, observed profiles, roles, tasks, and policy fit together
+- the field semantics of the canonical protocol artifacts
+- the exact contract that the reference router consumes and emits
+
+## The protocol boundary
+
+role-model standardizes the artifacts around routing:
+
+- endpoint identity
+- declared capability
+- observed performance
+- roles and tasks
+- routing policy
+- router decisions
+- traces and usage
+
+The protocol does **not** make every runtime or router implementation detail canonical. It defines the
+contract they must speak.
+
+## Why the protocol is still endpoint-centric
+
+The protocol does not route by model name alone.
+
+It preserves model lineage inside `EndpointIdentity`, then reasons over concrete endpoints because that is
+where meaningful operational differences actually live:
+
+- provider
+- runtime
+- region or locality
+- quantization or precision
+- tool support
+- measured latency, quality, reliability, freshness, and cost
+
+## Start here in this section
+
+If you want the best high-signal entry points into the deeper protocol material, start with:
+
+1. [Protocol object model](/protocol-object-model)
+2. [Protocol lifecycle](/protocol-lifecycle)
+3. [Endpoint identity](/protocol/endpoint-identity)
+4. [Roles and tasks](/protocol/roles-and-tasks)
+5. [Routing policy](/protocol/routing-policy)
+6. [Router decision artifact](/protocol/router-decision-artifact)
+
+## How this section relates to the rest of the docs
+
+The public docs now intentionally start with runtime setup, benchmarking, routing strategy selection, and
+live decision review.
+
+That ordering is for new operators. It does **not** replace the deeper protocol material. This section is the
+lower-sidebar, protocol-first layer for readers who need the canonical contract rather than just the runtime
+workflow.
+
+## Read next
+
+- [What role-model defines](/introduction)
+- [Protocol object model](/protocol-object-model)
+- [Protocol lifecycle](/protocol-lifecycle)
+- [Endpoint identity](/protocol/endpoint-identity)
+- [Trace and usage artifacts](/protocol/trace-and-usage-artifacts)

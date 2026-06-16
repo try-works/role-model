@@ -3,57 +3,32 @@ import { randomUUID } from "node:crypto";
 import path from "node:path";
 
 import {
-
   type BenchmarkEndpointGrade,
-
-  type RoutingBenchmarkCase,
-
-  augmentCaseMessages,
-
-  buildCompareRequestMessages,
-
-  buildHeuristicCompareRanking,
-
-  buildJudgeGradingBrief,
-
-  buildJudgeRequestMessages,
-
   JUDGE_GRADING_SYSTEM_PROMPT,
-
+  type RoutingBenchmarkCase,
+  augmentCaseMessages,
+  buildCompareRequestMessages,
+  buildHeuristicCompareRanking,
+  buildJudgeGradingBrief,
+  buildJudgeRequestMessages,
   buildScaffoldFollowUp,
-
   capJudgeScoreForInvalidDeliverable,
-
   deliverableCompleteness,
-
   extractFormattedAnswer,
-
   gradeBenchmarkCase,
-
   isValidDeliverable,
-
-  shouldOmitToolsForTurn,
-
   loadRoutingCapabilitySuite,
-
   selectBenchmarkCases,
-
+  shouldOmitToolsForTurn,
   summarizeEndpointGrade,
-
 } from "@role-model-router/bench-routing";
 
 import {
-
   JUDGE_JSON_ONLY_FOLLOW_UP,
-
-  extractJudgeGradingJsonText,
-
   type JudgeGradingResult,
-
+  extractJudgeGradingJsonText,
   parseCompareGradingResponse,
-
   parseJudgeGradingResponse,
-
 } from "@role-model-router/bench-judge";
 
 import type { ObservedPerformanceSample } from "@role-model-router/profile-aggregator";
@@ -61,127 +36,72 @@ import type { ObservedPerformanceSample } from "@role-model-router/profile-aggre
 import { persistObservedBenchmarkSample } from "@role-model-router/sqlite-memory";
 
 import {
-
   type BenchmarkResponseRecord,
-
   toBenchmarkArtifactRelativePath,
-
   writeBenchmarkCompareRecord,
-
   writeBenchmarkJudgeRecord,
-
   writeBenchmarkJudgeSummary,
-
   writeBenchmarkResponseRecord,
-
   writeBenchmarkRunManifest,
-
 } from "./benchmark-artifacts.js";
 
 import { writeBenchmarkRunResult } from "./benchmark-summary.js";
 
 import {
-
   completeBenchmarkRunProgress,
-
   createBenchmarkRunProgress,
-
   failBenchmarkRunProgress,
-
   updateBenchmarkRunProgress,
-
 } from "./benchmark-progress.js";
 
 import {
-
   awaitJudgeThrottle,
-
   describeResponseChannels,
-
   isJudgeCircuitOpen,
-
-  recordJudgeCallOutcome,
-
-  resetBenchmarkJudgeRuntimeForTests,
-
   isJudgeSubjectOverlapMode,
-
+  recordJudgeCallOutcome,
+  resetBenchmarkJudgeRuntimeForTests,
   setJudgeSubjectOverlapMode,
-
 } from "./benchmark-judge-runtime.js";
 
 import { evaluateBenchmarkStartGuards } from "./benchmark-start-guards.js";
 
 import {
-
   BENCHMARK_MAX_ANSWER_TURNS,
-
   type BenchmarkChatCompletionsExecutionResult,
-
   readBenchmarkContentText,
-
   readBenchmarkReasoningText,
-
   readCompareGradingText,
-
   readJudgeGradingText,
-
 } from "./benchmark-reasoning.js";
 
 export { resetBenchmarkJudgeRuntimeForTests };
 
-
-
 export type { BenchmarkChatCompletionsExecutionResult };
 
-
-
 export interface BenchmarkExecutionRequestOptions {
-
   readonly endpointId?: string;
-
 }
 
-
-
-function formatBenchmarkRawResponse(
-
-  result: BenchmarkChatCompletionsExecutionResult,
-
-): string {
-
+function formatBenchmarkRawResponse(result: BenchmarkChatCompletionsExecutionResult): string {
   const chunks: string[] = [];
 
   const content = readBenchmarkContentText(result);
 
   if (content) {
-
     chunks.push(content);
-
   }
 
   if (result.toolCalls?.length) {
-
     for (const toolCall of result.toolCalls) {
-
-      chunks.push(
-
-        `TOOL_CALL name=${toolCall.function.name} args=${toolCall.function.arguments}`,
-
-      );
-
+      chunks.push(`TOOL_CALL name=${toolCall.function.name} args=${toolCall.function.arguments}`);
     }
-
   }
 
   return chunks.join("\n");
-
 }
 
-
-
 export interface BenchmarkRunRequest {
-
   readonly runId?: string;
 
   readonly endpointIds?: readonly string[];
@@ -195,19 +115,14 @@ export interface BenchmarkRunRequest {
   readonly useJudge?: boolean;
 
   readonly preflightProbe?: boolean;
-
 }
 
-
-
 type BenchmarkEndpointRef = {
-
   readonly endpointId: string;
 
   readonly modelId: string;
 
   readonly sourceType: "local" | "remote";
-
 };
 
 export function orderEndpointsForGrading(
@@ -227,7 +142,6 @@ export function orderEndpointsForGrading(
 }
 
 interface BenchmarkCaseExecution {
-
   readonly requestId: string;
 
   readonly actualResponse: string;
@@ -251,11 +165,9 @@ interface BenchmarkCaseExecution {
   readonly responseRecord: BenchmarkResponseRecord;
 
   readonly answerTurns: number;
-
 }
 
 interface JudgeGradeOutcome {
-
   readonly grade: JudgeGradingResult;
 
   readonly parseSuccess: boolean;
@@ -267,37 +179,24 @@ interface JudgeGradeOutcome {
   readonly judgeError?: string | null;
 
   readonly cappedByValidator?: boolean;
-
 }
 
-
-
 function extractStructuredToolNames(
-
   result: BenchmarkChatCompletionsExecutionResult,
-
 ): readonly string[] {
-
   if (!result.toolCalls?.length) {
-
     return [];
-
   }
 
   return [
-
     ...new Set(
-
       result.toolCalls
 
         .map((toolCall) => toolCall.function.name)
 
         .filter((name) => name.length > 0),
-
     ),
-
   ];
-
 }
 
 type BenchmarkToolCall = NonNullable<BenchmarkChatCompletionsExecutionResult["toolCalls"]>[number];
@@ -336,10 +235,7 @@ function readTurnRawContent(result: BenchmarkChatCompletionsExecutionResult): st
     .join("\n");
 }
 
-
-
 export interface BenchmarkRunResult {
-
   readonly runId: string;
 
   readonly suiteId: string;
@@ -357,21 +253,15 @@ export interface BenchmarkRunResult {
   readonly artifactRoot: string;
 
   readonly endpointGrades: readonly BenchmarkEndpointGrade[];
-
 }
 
-
-
 export interface BenchmarkRunnerDependencies {
-
   readonly databasePath: string;
 
   readonly benchmarkArtifactRoot?: string;
 
   readonly listConfiguredEndpoints: () => Promise<
-
     readonly {
-
       endpointId: string;
 
       modelId: string;
@@ -379,15 +269,11 @@ export interface BenchmarkRunnerDependencies {
       sourceType: "local" | "remote";
 
       healthStatus: string;
-
     }[]
-
   >;
 
   readonly executeChatCompletions: (
-
     body: {
-
       model: string;
 
       messages: readonly Record<string, unknown>[];
@@ -399,39 +285,25 @@ export interface BenchmarkRunnerDependencies {
       response_format?: Record<string, unknown>;
 
       temperature?: number;
-
     },
 
     requestId: string,
 
     requestOptions?: BenchmarkExecutionRequestOptions,
-
   ) => Promise<BenchmarkChatCompletionsExecutionResult>;
 
   readonly deriveEndpointVersion: (endpointId: string) => string;
-
 }
-
-
 
 function isHealthyEndpoint(healthStatus: string): boolean {
-
   return healthStatus !== "policy-blocked" && healthStatus !== "offline";
-
 }
-
-
 
 function resolveBenchmarkArtifactRoot(deps: BenchmarkRunnerDependencies): string {
-
   return deps.benchmarkArtifactRoot ?? path.join(path.dirname(deps.databasePath), "benchmark-runs");
-
 }
 
-
-
 async function executeBenchmarkTurn(
-
   deps: BenchmarkRunnerDependencies,
 
   endpoint: { endpointId: string; modelId: string },
@@ -443,45 +315,33 @@ async function executeBenchmarkTurn(
   requestSuffix: string,
 
   options?: { readonly omitTools?: boolean },
-
 ): Promise<BenchmarkChatCompletionsExecutionResult> {
-
   const requestId = `bench-${caseItem.case_id}-${endpoint.endpointId}-${requestSuffix}-${randomUUID()}`;
 
   const omitTools = options?.omitTools === true;
 
   return deps.executeChatCompletions(
-
     {
-
       model: endpoint.modelId,
 
       messages,
 
       ...(caseItem.tools && !omitTools ? { tools: caseItem.tools } : {}),
-
     },
 
     requestId,
 
     { endpointId: endpoint.endpointId },
-
   );
-
 }
 
-
-
 async function runCaseOnEndpoint(
-
   deps: BenchmarkRunnerDependencies,
 
   endpoint: { endpointId: string; modelId: string },
 
   caseItem: RoutingBenchmarkCase,
-
 ): Promise<{
-
   actualResponse: string;
 
   rawResponse: string;
@@ -497,9 +357,7 @@ async function runCaseOnEndpoint(
   failure: boolean;
 
   answerTurns: number;
-
 }> {
-
   const started = Date.now();
 
   let messages: Record<string, unknown>[] = augmentCaseMessages(caseItem);
@@ -520,16 +378,11 @@ async function runCaseOnEndpoint(
 
   let bestCompleteness = -1;
 
-
-
   try {
-
     for (let turn = 1; turn <= BENCHMARK_MAX_ANSWER_TURNS; turn += 1) {
-
       answerTurns = turn;
 
       latestResult = await executeBenchmarkTurn(
-
         deps,
 
         endpoint,
@@ -541,7 +394,6 @@ async function runCaseOnEndpoint(
         `turn${turn}`,
 
         { omitTools: shouldOmitToolsForTurn(caseItem, accumulatedToolNames) },
-
       );
 
       const turnToolNames = extractStructuredToolNames(latestResult);
@@ -559,7 +411,6 @@ async function runCaseOnEndpoint(
       turnRawContents.push(turnRawContent);
 
       const extracted = extractFormattedAnswer({
-
         caseItem,
 
         rawContent: turnRawContent,
@@ -569,7 +420,6 @@ async function runCaseOnEndpoint(
         structuredToolNames: accumulatedToolNames,
 
         toolCalls: accumulatedToolCalls,
-
       });
 
       const completeness = deliverableCompleteness({
@@ -605,7 +455,6 @@ async function runCaseOnEndpoint(
         extracted,
         latestResult.toolCalls,
       );
-
     }
 
     const rawResponse = formatBenchmarkRawResponse(latestResult);
@@ -613,7 +462,6 @@ async function runCaseOnEndpoint(
     const extracted =
       bestExtracted ??
       extractFormattedAnswer({
-
         caseItem,
 
         rawContent: turnRawContents.at(-1) ?? readTurnRawContent(latestResult),
@@ -623,13 +471,9 @@ async function runCaseOnEndpoint(
         structuredToolNames: accumulatedToolNames,
 
         toolCalls: accumulatedToolCalls,
-
       });
 
-
-
     return {
-
       actualResponse: extracted.serialized || rawResponse,
 
       rawResponse,
@@ -645,13 +489,9 @@ async function runCaseOnEndpoint(
       failure: false,
 
       answerTurns,
-
     };
-
   } catch {
-
     return {
-
       actualResponse: "",
 
       rawResponse: "",
@@ -667,53 +507,37 @@ async function runCaseOnEndpoint(
       failure: true,
 
       answerTurns,
-
     };
-
   }
-
 }
 
-
-
 const JUDGE_RESPONSE_FORMAT = {
-
   type: "json_schema",
 
   json_schema: {
-
     name: "benchmark_grade",
 
     strict: true,
 
     schema: {
-
       type: "object",
 
       additionalProperties: false,
 
       properties: {
-
         score: { type: "number" },
 
         rationale: { type: "string" },
-
       },
 
       required: ["score", "rationale"],
-
     },
-
   },
-
 } as const;
 
 const JUDGE_RETRY_BASE_MS = 2_000;
 
-const GENERIC_JUDGE_RATIONALES = new Set([
-  "Judge provided score.",
-  "Compare ranking provided.",
-]);
+const GENERIC_JUDGE_RATIONALES = new Set(["Judge provided score.", "Compare ranking provided."]);
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => {
@@ -732,8 +556,7 @@ export async function probeJudgeEndpoint(
       { role: "system", content: JUDGE_GRADING_SYSTEM_PROMPT },
       {
         role: "user",
-        content:
-          'Grade this stub deliverable. Output ONLY {"score":1,"rationale":"probe ok"}.',
+        content: 'Grade this stub deliverable. Output ONLY {"score":1,"rationale":"probe ok"}.',
       },
     ],
     "preflight-probe",
@@ -745,7 +568,6 @@ export async function probeJudgeEndpoint(
 }
 
 async function executeJudgeRequest(
-
   deps: BenchmarkRunnerDependencies,
 
   judgeEndpoint: { endpointId: string; modelId: string },
@@ -755,7 +577,6 @@ async function executeJudgeRequest(
   requestSuffix: string,
 
   options?: { readonly structuredOutput?: boolean },
-
 ): Promise<{
   readonly requestId: string;
   readonly rawResponse: string | null;
@@ -764,7 +585,6 @@ async function executeJudgeRequest(
   readonly responseChannel?: ReturnType<typeof describeResponseChannels>;
   readonly judgeCircuitOpen: boolean;
 }> {
-
   const requestId = `bench-judge-${requestSuffix}-${randomUUID()}`;
 
   const circuitOpenAtStart = isJudgeCircuitOpen();
@@ -772,7 +592,6 @@ async function executeJudgeRequest(
   await awaitJudgeThrottle();
 
   try {
-
     const startedAtMs = Date.now();
 
     const structuredOutput = options?.structuredOutput !== false;
@@ -788,11 +607,9 @@ async function executeJudgeRequest(
       ...(structuredOutput ? { response_format: JUDGE_RESPONSE_FORMAT } : {}),
     };
 
-    const result = await deps.executeChatCompletions(
-      requestBody,
-      requestId,
-      { endpointId: judgeEndpoint.endpointId },
-    );
+    const result = await deps.executeChatCompletions(requestBody, requestId, {
+      endpointId: judgeEndpoint.endpointId,
+    });
 
     const latencyMs = Date.now() - startedAtMs;
 
@@ -808,7 +625,6 @@ async function executeJudgeRequest(
     }
 
     if (!rawResponse) {
-
       recordJudgeCallOutcome({ success: false, latencyMs });
 
       return {
@@ -819,7 +635,6 @@ async function executeJudgeRequest(
         responseChannel,
         judgeCircuitOpen: circuitOpenAtStart,
       };
-
     }
 
     recordJudgeCallOutcome({ success: true, latencyMs });
@@ -832,13 +647,10 @@ async function executeJudgeRequest(
       responseChannel,
       judgeCircuitOpen: circuitOpenAtStart,
     };
-
   } catch (error) {
-
     recordJudgeCallOutcome({ success: false, latencyMs: 0 });
 
     return {
-
       requestId,
 
       rawResponse: null,
@@ -848,22 +660,13 @@ async function executeJudgeRequest(
       errorMessage: error instanceof Error ? error.message : "judge_request_failed",
 
       judgeCircuitOpen: circuitOpenAtStart,
-
     };
-
   }
-
 }
-
-
 
 function resolveJudgeDeliverable(responseRecord: BenchmarkResponseRecord): string {
-
   return responseRecord.formattedDeliverable?.trim() || responseRecord.actualResponse;
-
 }
-
-
 
 function isSubstantiveJudgeRationale(rationale: string): boolean {
   const trimmed = rationale.trim();
@@ -877,7 +680,6 @@ function isSubstantiveJudgeRationale(rationale: string): boolean {
 }
 
 async function gradeWithJudge(input: {
-
   readonly deps: BenchmarkRunnerDependencies;
 
   readonly artifactRoot: string;
@@ -895,19 +697,15 @@ async function gradeWithJudge(input: {
   readonly sourceArtifactPath: string;
 
   readonly structuredToolNames: readonly string[];
-
 }): Promise<JudgeGradeOutcome> {
-
   const deliverable = resolveJudgeDeliverable(input.responseRecord);
 
   const gradingBrief = buildJudgeGradingBrief(input.caseItem);
 
   const judgeSelfGrade =
-    input.gradedEndpointId === input.judgeEndpoint.endpointId &&
-    isJudgeSubjectOverlapMode();
+    input.gradedEndpointId === input.judgeEndpoint.endpointId && isJudgeSubjectOverlapMode();
 
   const baseMessages = buildJudgeRequestMessages(
-
     input.caseItem,
 
     deliverable,
@@ -915,11 +713,9 @@ async function gradeWithJudge(input: {
     input.structuredToolNames,
 
     { strictSelfGrade: judgeSelfGrade },
-
   );
 
   const persistedBrief = {
-
     questionTranscript: gradingBrief.questionTranscript,
 
     exemplarAnswer: gradingBrief.exemplarAnswer,
@@ -929,7 +725,6 @@ async function gradeWithJudge(input: {
     deliverablesChecklist: gradingBrief.deliverablesChecklist,
 
     antiPatterns: gradingBrief.antiPatterns,
-
   };
 
   const maxAttempts = isJudgeSubjectOverlapMode() ? 4 : 3;
@@ -944,22 +739,14 @@ async function gradeWithJudge(input: {
 
   let lastJudgeError: string | null = null;
 
-
-
   for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
-
     if (attempt > 1 && lastJudgeError) {
-
-      const retryDelay =
-
-        JUDGE_RETRY_BASE_MS * attempt * (isJudgeSubjectOverlapMode() ? 2 : 1);
+      const retryDelay = JUDGE_RETRY_BASE_MS * attempt * (isJudgeSubjectOverlapMode() ? 2 : 1);
 
       await sleep(retryDelay);
-
     }
 
     const initial = await executeJudgeRequest(
-
       input.deps,
 
       input.judgeEndpoint,
@@ -967,11 +754,9 @@ async function gradeWithJudge(input: {
       baseMessages,
 
       `${input.caseItem.case_id}-a${attempt}`,
-
     );
 
     const attemptRecords: Array<{
-
       readonly requestId: string;
 
       readonly rawResponse: string;
@@ -985,17 +770,12 @@ async function gradeWithJudge(input: {
       readonly responseChannel?: ReturnType<typeof describeResponseChannels>;
 
       readonly judgeCircuitOpen: boolean;
-
     }> = [];
 
-
-
     if (initial.rawResponse) {
-
       const parsed = parseJudgeGradingResponse(initial.rawResponse);
 
       attemptRecords.push({
-
         requestId: initial.requestId,
 
         rawResponse: initial.rawResponse,
@@ -1009,65 +789,49 @@ async function gradeWithJudge(input: {
         responseChannel: initial.responseChannel,
 
         judgeCircuitOpen: initial.judgeCircuitOpen,
-
       });
 
       if (parsed && isSubstantiveJudgeRationale(parsed.rationale)) {
-
         const capped = capJudgeScoreForInvalidDeliverable({
-
           score: parsed.score,
 
           rationale: parsed.rationale,
 
           deliverable,
-
         });
 
         if (capped.score < parsed.score) {
-
           cappedByValidator = true;
-
         }
 
         winningGrade = {
-
           ...parsed,
 
           score: capped.score,
 
           rationale: capped.rationale,
-
         };
-
       } else {
-
         const followUp = await executeJudgeRequest(
-
           input.deps,
 
           input.judgeEndpoint,
 
           [
-
             ...baseMessages,
 
             { role: "assistant", content: initial.rawResponse },
 
             { role: "user", content: JUDGE_JSON_ONLY_FOLLOW_UP },
-
           ],
 
           `${input.caseItem.case_id}-a${attempt}-followup`,
-
         );
 
         if (followUp.rawResponse) {
-
           const followUpParsed = parseJudgeGradingResponse(followUp.rawResponse);
 
           attemptRecords.push({
-
             requestId: followUp.requestId,
 
             rawResponse: followUp.rawResponse,
@@ -1075,13 +839,11 @@ async function gradeWithJudge(input: {
             parsed: followUpParsed,
 
             promptMessages: [
-
               ...baseMessages,
 
               { role: "assistant", content: initial.rawResponse },
 
               { role: "user", content: JUDGE_JSON_ONLY_FOLLOW_UP },
-
             ],
 
             judgeError: followUpParsed ? null : followUp.errorMessage,
@@ -1089,45 +851,32 @@ async function gradeWithJudge(input: {
             responseChannel: followUp.responseChannel,
 
             judgeCircuitOpen: followUp.judgeCircuitOpen,
-
           });
 
           if (followUpParsed && isSubstantiveJudgeRationale(followUpParsed.rationale)) {
-
             const capped = capJudgeScoreForInvalidDeliverable({
-
               score: followUpParsed.score,
 
               rationale: followUpParsed.rationale,
 
               deliverable,
-
             });
 
             if (capped.score < followUpParsed.score) {
-
               cappedByValidator = true;
-
             }
 
             winningGrade = {
-
               ...followUpParsed,
 
               score: capped.score,
 
               rationale: capped.rationale,
-
             };
-
           }
-
         }
-
       }
-
     } else {
-
       lastJudgeError = initial.errorMessage;
 
       const reasoningAssistant = initial.reasoningText?.trim() ?? "";
@@ -1213,33 +962,26 @@ async function gradeWithJudge(input: {
       }
 
       if (!winningGrade && reasoningAssistant) {
-
         const reasoningFollowUp = await executeJudgeRequest(
-
           input.deps,
 
           input.judgeEndpoint,
 
           [
-
             ...baseMessages,
 
             { role: "assistant", content: reasoningAssistant },
 
             { role: "user", content: JUDGE_JSON_ONLY_FOLLOW_UP },
-
           ],
 
           `${input.caseItem.case_id}-a${attempt}-reasoning-followup`,
-
         );
 
         if (reasoningFollowUp.rawResponse) {
-
           const reasoningParsed = parseJudgeGradingResponse(reasoningFollowUp.rawResponse);
 
           attemptRecords.push({
-
             requestId: reasoningFollowUp.requestId,
 
             rawResponse: reasoningFollowUp.rawResponse,
@@ -1247,13 +989,11 @@ async function gradeWithJudge(input: {
             parsed: reasoningParsed,
 
             promptMessages: [
-
               ...baseMessages,
 
               { role: "assistant", content: reasoningAssistant },
 
               { role: "user", content: JUDGE_JSON_ONLY_FOLLOW_UP },
-
             ],
 
             judgeError: reasoningParsed ? null : reasoningFollowUp.errorMessage,
@@ -1261,47 +1001,34 @@ async function gradeWithJudge(input: {
             responseChannel: reasoningFollowUp.responseChannel,
 
             judgeCircuitOpen: reasoningFollowUp.judgeCircuitOpen,
-
           });
 
           if (reasoningParsed) {
-
             const capped = capJudgeScoreForInvalidDeliverable({
-
               score: reasoningParsed.score,
 
               rationale: reasoningParsed.rationale,
 
               deliverable,
-
             });
 
             if (capped.score < reasoningParsed.score) {
-
               cappedByValidator = true;
-
             }
 
             winningGrade = {
-
               ...reasoningParsed,
 
               score: capped.score,
 
               rationale: capped.rationale,
-
             };
-
           }
-
         }
-
       }
 
       if (!winningGrade) {
-
         attemptRecords.push({
-
           requestId: initial.requestId,
 
           rawResponse: "",
@@ -1315,21 +1042,14 @@ async function gradeWithJudge(input: {
           responseChannel: initial.responseChannel,
 
           judgeCircuitOpen: initial.judgeCircuitOpen,
-
         });
-
       }
-
     }
 
-
-
     for (const record of attemptRecords) {
-
       artifactAttempt += 1;
 
       const artifactPath = await writeBenchmarkJudgeRecord(input.artifactRoot, {
-
         runId: input.runId,
 
         caseId: input.caseItem.case_id,
@@ -1365,41 +1085,27 @@ async function gradeWithJudge(input: {
         judgeCircuitOpen: record.judgeCircuitOpen,
 
         recordedAtMs: Date.now(),
-
       });
 
       attemptArtifactPaths.push(artifactPath);
 
       if (record.judgeError) {
-
         lastJudgeError = record.judgeError;
-
       }
-
     }
 
-
-
     if (winningGrade) {
-
       break;
-
     }
 
     if (attempt < maxAttempts) {
-
       await sleep(JUDGE_RETRY_BASE_MS * attempt);
-
     }
-
   }
-
-
 
   const parseSuccess = winningGrade !== null;
 
   const summaryArtifactPath = await writeBenchmarkJudgeSummary(input.artifactRoot, {
-
     runId: input.runId,
 
     endpointId: input.responseRecord.endpointId,
@@ -1417,29 +1123,20 @@ async function gradeWithJudge(input: {
     sourceArtifactPath: input.sourceArtifactPath,
 
     attemptArtifactPaths: attemptArtifactPaths.map((artifactPath) =>
-
       toBenchmarkArtifactRelativePath(path.join(input.artifactRoot, input.runId), artifactPath),
-
     ),
 
     recordedAtMs: Date.now(),
-
   });
 
   const summaryRelativePath = toBenchmarkArtifactRelativePath(
-
     path.join(input.artifactRoot, input.runId),
 
     summaryArtifactPath,
-
   );
 
-
-
   if (winningGrade) {
-
     return {
-
       grade: winningGrade,
 
       parseSuccess: true,
@@ -1451,23 +1148,16 @@ async function gradeWithJudge(input: {
       judgeError: null,
 
       cappedByValidator,
-
     };
-
   }
 
-
-
   return {
-
     grade: {
-
       score: 0,
 
       rationale: `Judge parse failed after retries; see ${summaryRelativePath}.`,
 
       method: "judge",
-
     },
 
     parseSuccess: false,
@@ -1479,55 +1169,38 @@ async function gradeWithJudge(input: {
     judgeError: lastJudgeError,
 
     cappedByValidator,
-
   };
-
 }
 
-
-
 const COMPARE_RESPONSE_FORMAT = {
-
   type: "json_schema",
 
   json_schema: {
-
     name: "benchmark_compare",
 
     strict: true,
 
     schema: {
-
       type: "object",
 
       additionalProperties: false,
 
       properties: {
-
         relativeRanking: {
-
           type: "array",
 
           items: { type: "string" },
-
         },
 
         rationale: { type: "string" },
-
       },
 
       required: ["relativeRanking", "rationale"],
-
     },
-
   },
-
 } as const;
 
-
-
 async function gradeCompareAcrossModels(input: {
-
   readonly deps: BenchmarkRunnerDependencies;
 
   readonly artifactRoot: string;
@@ -1539,21 +1212,16 @@ async function gradeCompareAcrossModels(input: {
   readonly caseItem: RoutingBenchmarkCase;
 
   readonly models: readonly {
-
     readonly endpointId: string;
 
     readonly deliverable: string;
 
     readonly perCaseScore: number;
-
   }[];
-
 }): Promise<string> {
-
   const gradingBrief = buildJudgeGradingBrief(input.caseItem);
 
   const persistedBrief = {
-
     questionTranscript: gradingBrief.questionTranscript,
 
     exemplarAnswer: gradingBrief.exemplarAnswer,
@@ -1563,7 +1231,6 @@ async function gradeCompareAcrossModels(input: {
     deliverablesChecklist: gradingBrief.deliverablesChecklist,
 
     antiPatterns: gradingBrief.antiPatterns,
-
   };
 
   const compareMessages = buildCompareRequestMessages(input.caseItem, input.models);
@@ -1583,17 +1250,13 @@ async function gradeCompareAcrossModels(input: {
   let parsed: ReturnType<typeof parseCompareGradingResponse> = null;
 
   try {
-
     if (!compareCircuitOpen) {
-
       await awaitJudgeThrottle();
 
       const startedAtMs = Date.now();
 
       const result = await input.deps.executeChatCompletions(
-
         {
-
           model: input.judgeEndpoint.modelId,
 
           messages: compareMessages,
@@ -1601,13 +1264,11 @@ async function gradeCompareAcrossModels(input: {
           temperature: 0,
 
           response_format: COMPARE_RESPONSE_FORMAT,
-
         },
 
         requestId,
 
         { endpointId: input.judgeEndpoint.endpointId },
-
       );
 
       const latencyMs = Date.now() - startedAtMs;
@@ -1617,63 +1278,46 @@ async function gradeCompareAcrossModels(input: {
       rawResponse = readCompareGradingText(result);
 
       if (!rawResponse) {
-
         compareError = "empty_compare_response";
 
         const failureState = recordJudgeCallOutcome({ success: false, latencyMs });
 
         compareCircuitOpen = compareCircuitOpen || failureState.circuitOpen;
-
       } else {
-
         parsed = parseCompareGradingResponse(rawResponse);
 
         if (parsed) {
-
           recordJudgeCallOutcome({ success: true, latencyMs });
-
         } else {
-
           compareError = "compare_parse_failed";
 
           const failureState = recordJudgeCallOutcome({ success: false, latencyMs });
 
           compareCircuitOpen = compareCircuitOpen || failureState.circuitOpen;
-
         }
-
       }
-
     } else {
-
       compareError = "compare_circuit_open";
-
     }
-
   } catch (error) {
-
     compareError = error instanceof Error ? error.message : "compare_request_failed";
 
     const failureState = recordJudgeCallOutcome({ success: false, latencyMs: 0 });
 
     compareCircuitOpen = compareCircuitOpen || failureState.circuitOpen;
-
   }
 
   return writeBenchmarkCompareRecord(input.artifactRoot, {
-
     runId: input.runId,
 
     caseId: input.caseItem.case_id,
 
     models: input.models.map((model) => ({
-
       endpointId: model.endpointId,
 
       deliverablePreview: model.deliverable.slice(0, 240),
 
       perCaseScore: model.perCaseScore,
-
     })),
 
     relativeRanking: parsed?.relativeRanking ?? heuristic.relativeRanking,
@@ -1695,15 +1339,10 @@ async function gradeCompareAcrossModels(input: {
     responseChannel,
 
     recordedAtMs: Date.now(),
-
   });
-
 }
 
-
-
 function toObservedSample(input: {
-
   endpointId: string;
 
   endpointVersion: string;
@@ -1719,13 +1358,10 @@ function toObservedSample(input: {
   failure: boolean;
 
   benchmarkMode: "quick" | "full";
-
 }): ObservedPerformanceSample {
-
   const nowMs = Date.now();
 
   return {
-
     endpoint_id: input.endpointId,
 
     endpoint_version: input.endpointVersion,
@@ -1749,19 +1385,13 @@ function toObservedSample(input: {
     ...(input.failure ? { error_class: "benchmark_execution_failed" } : {}),
 
     request_id: input.requestId,
-
   };
-
 }
 
-
-
 async function persistResponseRecord(
-
   artifactRoot: string,
 
   input: {
-
     runId: string;
 
     suiteId: string;
@@ -1787,21 +1417,15 @@ async function persistResponseRecord(
     failure: boolean;
 
     answerTurns: number;
-
   },
-
 ): Promise<{
-
   readonly artifactPath: string;
 
   readonly record: BenchmarkResponseRecord;
 
   readonly sourceArtifactPath: string;
-
 }> {
-
   const record: BenchmarkResponseRecord = {
-
     runId: input.runId,
 
     suiteId: input.suiteId,
@@ -1829,39 +1453,28 @@ async function persistResponseRecord(
     failure: input.failure,
 
     recordedAtMs: Date.now(),
-
   };
 
   const artifactPath = await writeBenchmarkResponseRecord(artifactRoot, record);
 
   return {
-
     artifactPath,
 
     record,
 
     sourceArtifactPath: toBenchmarkArtifactRelativePath(
-
       path.join(artifactRoot, record.runId),
 
       artifactPath,
-
     ),
-
   };
-
 }
 
-
-
 export async function runRoutingCapabilityBenchmark(
-
   deps: BenchmarkRunnerDependencies,
 
   request: BenchmarkRunRequest,
-
 ): Promise<BenchmarkRunResult> {
-
   const suite = loadRoutingCapabilitySuite();
 
   const mode = request.mode ?? "quick";
@@ -1869,19 +1482,15 @@ export async function runRoutingCapabilityBenchmark(
   const useJudge = request.useJudge !== false;
 
   const startGuards = evaluateBenchmarkStartGuards({
-
     endpointIds: request.endpointIds,
 
     judgeEndpointId: request.judgeEndpointId,
 
     useJudge,
-
   });
 
   if (!startGuards.allowed) {
-
     throw new Error(startGuards.warnings[0] ?? "benchmark_start_rejected");
-
   }
 
   setJudgeSubjectOverlapMode(startGuards.judgeSubjectOverlap);
@@ -1889,35 +1498,25 @@ export async function runRoutingCapabilityBenchmark(
   const cases = selectBenchmarkCases(suite, { mode, caseIds: request.caseIds });
 
   const endpoints = (await deps.listConfiguredEndpoints()).filter((endpoint) =>
-
     isHealthyEndpoint(endpoint.healthStatus),
-
   );
 
   const targetEndpoints = request.endpointIds?.length
-
     ? endpoints.filter((endpoint) => request.endpointIds?.includes(endpoint.endpointId))
-
     : endpoints;
 
   if (targetEndpoints.length === 0) {
-
     throw new Error("No healthy configured endpoints available for benchmarking.");
-
   }
 
   const judgeEndpointId = request.judgeEndpointId ?? null;
 
   const judgeEndpoint = judgeEndpointId
-
     ? endpoints.find((endpoint) => endpoint.endpointId === judgeEndpointId)
-
-    : endpoints.find((endpoint) => endpoint.sourceType === "remote") ?? targetEndpoints[0];
+    : (endpoints.find((endpoint) => endpoint.sourceType === "remote") ?? targetEndpoints[0]);
 
   if (!judgeEndpoint) {
-
     throw new Error("No judge endpoint available. Configure a capable remote model.");
-
   }
 
   const runId = request.runId ?? randomUUID();
@@ -1932,11 +1531,9 @@ export async function runRoutingCapabilityBenchmark(
 
   const executionByEndpoint = new Map<string, Map<string, BenchmarkCaseExecution>>();
 
-  const compareCaseCount =
-    useJudge && targetEndpoints.length >= 2 ? cases.length : 0;
+  const compareCaseCount = useJudge && targetEndpoints.length >= 2 ? cases.length : 0;
 
   createBenchmarkRunProgress({
-
     runId,
 
     mode,
@@ -1952,29 +1549,22 @@ export async function runRoutingCapabilityBenchmark(
     compareCaseCount,
 
     artifactRoot,
-
   });
 
   try {
-
     if (request.preflightProbe) {
-
       await probeJudgeEndpoint(deps, judgeEndpoint);
-
     }
 
     for (const [endpointIndex, endpoint] of targetEndpoints.entries()) {
-
       const endpointExecutions = new Map<string, BenchmarkCaseExecution>();
 
       executionByEndpoint.set(endpoint.endpointId, endpointExecutions);
 
       for (const [caseIndex, caseItem] of cases.entries()) {
-
         const requestId = `bench-${runId}-${caseItem.case_id}-${endpoint.endpointId}`;
 
         updateBenchmarkRunProgress(runId, {
-
           runPhase: "execution",
 
           endpointIndex: endpointIndex + 1,
@@ -1990,13 +1580,11 @@ export async function runRoutingCapabilityBenchmark(
           currentPhase: "execute",
 
           activeJudgeEndpointId: judgeEndpoint.endpointId,
-
         });
 
         const execution = await runCaseOnEndpoint(deps, endpoint, caseItem);
 
         const persisted = await persistResponseRecord(artifactRoot, {
-
           runId,
 
           suiteId: suite.suite_id,
@@ -2022,11 +1610,9 @@ export async function runRoutingCapabilityBenchmark(
           failure: execution.failure,
 
           answerTurns: execution.answerTurns,
-
         });
 
         endpointExecutions.set(caseItem.case_id, {
-
           requestId,
 
           actualResponse: execution.actualResponse,
@@ -2050,21 +1636,17 @@ export async function runRoutingCapabilityBenchmark(
           responseRecord: persisted.record,
 
           answerTurns: execution.answerTurns,
-
         });
 
         completedSteps += 1;
 
         updateBenchmarkRunProgress(runId, { completedSteps, currentPhase: null });
-
       }
-
     }
 
     const executionCompletedAtMs = Date.now();
 
     await writeBenchmarkRunManifest(artifactRoot, {
-
       runId,
 
       suiteId: suite.suite_id,
@@ -2086,25 +1668,19 @@ export async function runRoutingCapabilityBenchmark(
       caseIds: cases.map((caseItem) => caseItem.case_id),
 
       responseCount: executionSteps,
-
     });
 
     const endpointGrades: BenchmarkEndpointGrade[] = [];
 
     const compareByCase = new Map<
-
       string,
-
       Array<{
-
         readonly endpointId: string;
 
         readonly deliverable: string;
 
         readonly perCaseScore: number;
-
       }>
-
     >();
 
     let judgeArtifactCount = 0;
@@ -2112,7 +1688,6 @@ export async function runRoutingCapabilityBenchmark(
     let compareArtifactCount = 0;
 
     updateBenchmarkRunProgress(runId, {
-
       runPhase: "grading",
 
       endpointIndex: 0,
@@ -2126,7 +1701,6 @@ export async function runRoutingCapabilityBenchmark(
       currentCaseId: null,
 
       currentPhase: null,
-
     });
 
     if (startGuards.judgeSubjectOverlap && process.env.VITEST !== "true") {
@@ -2138,37 +1712,27 @@ export async function runRoutingCapabilityBenchmark(
     });
 
     const caseResultsByEndpoint = new Map<
-
       string,
-
       Array<BenchmarkEndpointGrade["caseResults"][number]>
-
     >();
 
     for (const [endpointIndex, endpoint] of gradingEndpoints.entries()) {
-
       const caseResults: Array<BenchmarkEndpointGrade["caseResults"][number]> = [];
 
       const endpointExecutions = executionByEndpoint.get(endpoint.endpointId);
 
       if (!endpointExecutions) {
-
         continue;
-
       }
 
       for (const [caseIndex, caseItem] of cases.entries()) {
-
         const stored = endpointExecutions.get(caseItem.case_id);
 
         if (!stored) {
-
           continue;
-
         }
 
         updateBenchmarkRunProgress(runId, {
-
           runPhase: "grading",
 
           endpointIndex: endpointIndex + 1,
@@ -2184,15 +1748,11 @@ export async function runRoutingCapabilityBenchmark(
           currentPhase: useJudge ? "judge" : null,
 
           activeJudgeEndpointId: judgeEndpoint.endpointId,
-
         });
 
         const judgeOutcome =
-
           useJudge && !stored.failure
-
             ? await gradeWithJudge({
-
                 deps,
 
                 artifactRoot,
@@ -2210,30 +1770,21 @@ export async function runRoutingCapabilityBenchmark(
                 sourceArtifactPath: stored.sourceArtifactPath,
 
                 structuredToolNames: stored.structuredToolNames,
-
               })
-
             : null;
 
         if (judgeOutcome) {
-
           judgeArtifactCount += judgeOutcome.attemptArtifactPaths.length + 1;
-
         }
 
         if (useJudge) {
-
           completedSteps += 1;
 
           updateBenchmarkRunProgress(runId, { completedSteps, currentPhase: null });
 
-          if (
-            startGuards.judgeSubjectOverlap &&
-            process.env.VITEST !== "true"
-          ) {
+          if (startGuards.judgeSubjectOverlap && process.env.VITEST !== "true") {
             await sleep(1_500);
           }
-
         }
 
         const judgeSucceeded = judgeOutcome?.parseSuccess === true;
@@ -2241,45 +1792,37 @@ export async function runRoutingCapabilityBenchmark(
         const judgeUnavailable = useJudge && judgeOutcome !== null && !judgeSucceeded;
 
         const grade = stored.failure
-
           ? { score: 0, rationale: "Benchmark execution failed.", method: "heuristic" as const }
-
           : gradeBenchmarkCase({
-
               caseItem,
 
               actualResponse: stored.actualResponse,
 
               structuredToolNames: stored.structuredToolNames,
 
-              judgeGrade: judgeSucceeded ? judgeOutcome?.grade ?? null : null,
+              judgeGrade: judgeSucceeded ? (judgeOutcome?.grade ?? null) : null,
 
               requireJudge: useJudge && judgeSucceeded,
 
               judgeUnavailable,
-
             });
 
         const existingCompare = compareByCase.get(caseItem.case_id) ?? [];
 
         existingCompare.push({
-
           endpointId: endpoint.endpointId,
 
           deliverable: resolveJudgeDeliverable(stored.responseRecord),
 
           perCaseScore: grade.score,
-
         });
 
         compareByCase.set(caseItem.case_id, existingCompare);
 
         persistObservedBenchmarkSample({
-
           databasePath: deps.databasePath,
 
           sample: toObservedSample({
-
             endpointId: endpoint.endpointId,
 
             endpointVersion: deps.deriveEndpointVersion(endpoint.endpointId),
@@ -2295,13 +1838,10 @@ export async function runRoutingCapabilityBenchmark(
             failure: stored.failure,
 
             benchmarkMode: mode,
-
           }),
-
         });
 
         caseResults.push({
-
           caseId: caseItem.case_id,
 
           difficultyBucket: caseItem.difficulty_bucket,
@@ -2323,23 +1863,17 @@ export async function runRoutingCapabilityBenchmark(
           judgeUnavailable,
 
           cappedByValidator: judgeOutcome?.cappedByValidator ?? false,
-
         });
-
       }
 
       caseResultsByEndpoint.set(endpoint.endpointId, caseResults);
-
     }
 
     for (const endpoint of targetEndpoints) {
-
       const caseResults = caseResultsByEndpoint.get(endpoint.endpointId) ?? [];
 
       endpointGrades.push(
-
         summarizeEndpointGrade(
-
           endpoint.endpointId,
 
           endpoint.modelId,
@@ -2347,17 +1881,12 @@ export async function runRoutingCapabilityBenchmark(
           endpoint.sourceType,
 
           caseResults,
-
         ),
-
       );
-
     }
 
     if (useJudge && targetEndpoints.length >= 2) {
-
       updateBenchmarkRunProgress(runId, {
-
         runPhase: "compare",
 
         endpointIndex: 0,
@@ -2371,21 +1900,16 @@ export async function runRoutingCapabilityBenchmark(
         currentCaseId: null,
 
         currentPhase: null,
-
       });
 
       for (const [caseIndex, caseItem] of cases.entries()) {
-
         const models = compareByCase.get(caseItem.case_id) ?? [];
 
         if (models.length < 2) {
-
           continue;
-
         }
 
         updateBenchmarkRunProgress(runId, {
-
           runPhase: "compare",
 
           caseIndex: caseIndex + 1,
@@ -2395,11 +1919,9 @@ export async function runRoutingCapabilityBenchmark(
           currentPhase: "compare",
 
           activeJudgeEndpointId: judgeEndpoint.endpointId,
-
         });
 
         await gradeCompareAcrossModels({
-
           deps,
 
           artifactRoot,
@@ -2411,7 +1933,6 @@ export async function runRoutingCapabilityBenchmark(
           caseItem,
 
           models,
-
         });
 
         compareArtifactCount += 1;
@@ -2419,15 +1940,12 @@ export async function runRoutingCapabilityBenchmark(
         completedSteps += 1;
 
         updateBenchmarkRunProgress(runId, { completedSteps, currentPhase: null });
-
       }
-
     }
 
     const gradingCompletedAtMs = Date.now();
 
     await writeBenchmarkRunManifest(artifactRoot, {
-
       runId,
 
       suiteId: suite.suite_id,
@@ -2455,11 +1973,9 @@ export async function runRoutingCapabilityBenchmark(
       judgeArtifactCount,
 
       compareArtifactCount,
-
     });
 
     const result: BenchmarkRunResult = {
-
       runId,
 
       suiteId: suite.suite_id,
@@ -2477,7 +1993,6 @@ export async function runRoutingCapabilityBenchmark(
       artifactRoot: path.join(artifactRoot, runId),
 
       endpointGrades,
-
     };
 
     await writeBenchmarkRunResult(artifactRoot, {
@@ -2510,29 +2025,17 @@ export async function runRoutingCapabilityBenchmark(
     completeBenchmarkRunProgress(runId, result);
 
     return result;
-
   } catch (error) {
-
     failBenchmarkRunProgress(
-
       runId,
 
       error instanceof Error ? error.message : "benchmark run failed",
-
     );
 
     throw error;
-
   }
-
 }
-
-
 
 export function readRoutingCapabilityBenchmarkSuite() {
-
   return loadRoutingCapabilitySuite();
-
 }
-
-

@@ -3,12 +3,7 @@ export type RuntimeFetcher = (
   init?: RequestInit,
 ) => Promise<Response>;
 
-export type SessionBootstrapStatus =
-  | "pending"
-  | "running"
-  | "ready"
-  | "degraded"
-  | "blocked";
+export type SessionBootstrapStatus = "pending" | "running" | "ready" | "degraded" | "blocked";
 
 export type BootstrapStageStatus =
   | "pending"
@@ -1573,10 +1568,7 @@ export async function fetchLocalModels(
 export async function fetchPeerLocalModels(
   fetcher: RuntimeFetcher = fetch,
 ): Promise<readonly RuntimeLocalModel[]> {
-  return fetchJson<readonly RuntimeLocalModel[]>(
-    "/api/role-model/local/peer/models",
-    fetcher,
-  );
+  return fetchJson<readonly RuntimeLocalModel[]>("/api/role-model/local/peer/models", fetcher);
 }
 
 export async function fetchLlamaSwapLocalModels(

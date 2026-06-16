@@ -1,0 +1,72 @@
+---
+title: Routing controls and decision review
+description: Save the routing strategy after benchmarking, then inspect Router and Observe to verify that live decisions match the evidence.
+---
+
+# Routing controls and decision review
+
+Once the benchmark evidence is in place, Router controls become meaningful.
+
+## What `/app/router/strategy` actually controls
+
+The runtime strategy page is doing more than choosing a single weight preset.
+
+It owns:
+
+- the persisted runtime routing mode such as `baseline`, `controller`, `difficulty`, or `hybrid`
+- the execution mode such as `hybrid`, `local_only`, `remote_only`, or `decision_only`
+- the saved runtime posture that later requests should inherit
+
+That means operators should stop thinking of this page as only "balanced vs latency vs cost."
+
+## Save strategy after benchmarking
+
+The operator flow should be:
+
+1. configure the candidate set
+2. run the full benchmark
+3. review the outcomes
+4. save the routing strategy
+
+This keeps strategy selection evidence-based instead of guess-based.
+
+## Where to verify the result
+
+After saving the strategy, use:
+
+- **Router** to inspect candidates, decisions, fallbacks, and strategy posture
+- **Observe** to inspect the request and telemetry trail around live traffic
+
+Read [/router/strategy-modes-and-tradeoffs](/router/strategy-modes-and-tradeoffs) for scoring weights and
+[/router/routing-modes-locality-and-execution](/router/routing-modes-locality-and-execution) for runtime
+mode plus local/remote execution scope.
+
+## What you want to confirm
+
+- the saved strategy is visible in decision context
+- the winner is consistent with benchmark quality and policy intent
+- fallback order looks sane
+- the request trail in Observe supports the Router story
+
+## Strategy-specific checks
+
+After saving:
+
+- `balanced`: confirm the winner looks like the healthiest overall choice, not just the fastest or cheapest
+- `quality`: confirm benchmark-backed quality actually explains the winner
+- `latency`: confirm measured latency and throughput explain the winner without obvious quality collapse
+- `cost`: confirm budget and cost evidence explain the winner instead of accidental missing-metric behavior
+
+Also confirm the larger runtime posture:
+
+- if execution mode is `local_only`, no remote endpoint should appear as the real execution winner
+- if execution mode is `remote_only`, local candidates should not be the actual execution path
+- if routing mode is `difficulty`, request diagnostics should show difficulty classification
+- if routing mode is `hybrid`, the final decision should make it possible to understand whether controller
+  guidance, difficulty signals, or both dominated
+
+## Operational rule of thumb
+
+If Router and Observe tell different stories, investigate before tuning weights or swapping models. The first
+problem is usually inventory, role activation, endpoint health, or evidence freshness rather than strategy
+selection itself.

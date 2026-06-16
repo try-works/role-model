@@ -29,7 +29,9 @@ export const ROUTING_MODE_OPTIONS: ReadonlyArray<{
   },
 ] as const;
 
-export function normalizeRoutingModeValue(value: string | null | undefined): RuntimeRoutingMode | null {
+export function normalizeRoutingModeValue(
+  value: string | null | undefined,
+): RuntimeRoutingMode | null {
   const normalized = value?.trim().toLowerCase() ?? "";
   switch (normalized) {
     case "baseline":

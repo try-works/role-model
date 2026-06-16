@@ -13,12 +13,12 @@ import {
   primaryButtonClassName,
   secondaryButtonClassName,
 } from "../lib/design-system";
-import { usePageActions } from "../lib/shell-header-context";
 import {
   type RuntimeSnapshot,
   fetchRuntimeSnapshot,
   submitAdvancedRequest,
 } from "../lib/runtime-api";
+import { usePageActions } from "../lib/shell-header-context";
 import { buildCredentialLifecycleBanner, buildWorkbenchModelOptions } from "../lib/view-models";
 
 const advancedFamilies = [
@@ -189,9 +189,7 @@ export default function StudioAdvancedRoute() {
               {lifecycleBanner.authorityLabel}
             </span>
             {lifecycleBanner.archivedStaleCount > 0 ? (
-              <span
-                className="inline-flex items-center rounded-full border border-[var(--rm-border)] px-3 py-1 text-xs font-medium text-[var(--rm-secondary)]"
-              >
+              <span className="inline-flex items-center rounded-full border border-[var(--rm-border)] px-3 py-1 text-xs font-medium text-[var(--rm-secondary)]">
                 Archived stale {lifecycleBanner.archivedStaleCount}
               </span>
             ) : null}

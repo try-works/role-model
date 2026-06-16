@@ -1,0 +1,154 @@
+---
+title: Scoring, tie-breaks, and decisions
+description: How Router scores eligible endpoints, handles missing evidence, breaks near-ties, and turns ranking into a stable decision artifact.
+---
+
+# Scoring, tie-breaks, and decisions
+
+Once Router has a clean eligible set, it compares those endpoints across multiple metrics.
+
+## What gets scored
+
+The current baseline compares eligible endpoints across:
+
+- quality
+- latency
+- throughput
+- cost
+- reliability
+- preference
+
+Measured evidence is preferred when it exists. Declared and catalog-derived data help fill the rest of the
+picture, and neutral defaults prevent unknown metrics from becoming accidental hard penalties.
+
+## What strategy actually changes
+
+The strategy does not change which metrics exist. It changes how much each metric matters in the total score.
+
+- `quality` leans hardest on benchmark-backed quality evidence
+- `latency` leans hardest on effective latency and throughput
+- `cost` leans hardest on observed or catalog cost, especially when budget context exists
+- `balanced` keeps the broadest mix across quality, latency, cost, and reliability
+
+For the explicit mode-by-mode guide, read
+[/router/strategy-modes-and-tradeoffs](/router/strategy-modes-and-tradeoffs).
+
+## Baseline weight sets
+
+The current reference router uses these baseline weights:
+
+| Strategy | quality | latency | throughput | cost | reliability | preference |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| `balanced` | 0.30 | 0.20 | 0.10 | 0.20 | 0.15 | 0.05 |
+| `quality` | 0.50 | 0.10 | 0.05 | 0.10 | 0.20 | 0.05 |
+| `latency` | 0.15 | 0.45 | 0.15 | 0.05 | 0.15 | 0.05 |
+| `cost` | 0.15 | 0.10 | 0.05 | 0.50 | 0.15 | 0.05 |
+
+These exact values are current baseline behavior, not a timeless protocol guarantee.
+
+## How evidence sources map into the score
+
+Operators should read the baseline evidence story like this:
+
+- **benchmark results** primarily improve quality evidence
+- **observed latency samples** primarily improve latency scoring
+- **observed throughput samples** primarily improve throughput scoring
+- **catalog model economics** and observed cost estimates primarily improve cost scoring
+- **failure behavior** primarily improves reliability scoring
+
+This is why a benchmark page and a routing decision page are both needed. The benchmark explains why an
+endpoint may be strong on quality, while the routing decision explains whether that quality advantage actually
+won against latency, cost, reliability, and policy.
+
+## Important metric details
+
+### Quality
+
+- uses `judge_score` when present
+- otherwise uses `quality_score`
+- otherwise falls back to `0.5` and marks the metric unknown
+
+### Latency
+
+The baseline derives an effective latency from `p50` and `p95`, then normalizes that value against target
+and max latency defaults.
+
+### Throughput
+
+`tokens_per_sec` is normalized logarithmically against a target throughput.
+
+### Cost
+
+Cost can be driven by catalog-derived cost estimates or observed cost estimates, and it becomes more
+important when budget or cost posture is part of the request.
+
+### Reliability
+
+Reliability uses `1 - failure_rate` when present, otherwise a mildly optimistic default of `0.7`.
+
+### Preference
+
+Preference encodes locality and preferred capability matches. It also gets a bonus when an active role
+binding exists.
+
+## Unknown-metric redistribution
+
+If every eligible candidate has a given metric marked unknown, the router:
+
+1. removes that metric's base weight
+2. redistributes the removed weight proportionally across the remaining known metrics
+
+This prevents the score from being anchored to a dimension nobody has evidence for.
+
+## Small bonuses that refine close contests
+
+On top of weighted metrics, the baseline adds a small `0.01` bonus each for:
+
+- role preferred-capability matches
+- task preferred-capability matches
+
+Those bonuses are deliberately small so they refine close contests without overwhelming the main metric mix.
+
+## Near-tie behavior
+
+When total scores are effectively tied, the current baseline resolves the order deterministically by:
+
+1. higher quality score
+2. lower effective latency
+3. higher reliability score
+4. stable lexical `endpoint_id`
+
+This keeps the result inspectable and reproducible even when candidates are very close.
+
+## What makes the final decision stable
+
+The fallback chain is not a second pass. It is simply the remaining scored candidates after ranking.
+
+A useful `RouterDecision` must say:
+
+- what policy snapshot was applied
+- which candidates were rejected and why
+- which candidates were scored
+- which endpoint won
+- why that endpoint won
+- whether measured evidence was used
+- which scoring version produced the result
+
+## Versioned scoring matters
+
+The current baseline stamps the decision with `scoring_version: "baseline-v2"`.
+
+That matters because metric formulas, weights, or tie-break logic can evolve over time. A decision artifact
+without a scoring version is harder to interpret historically.
+
+## Stable but not frozen
+
+The protocol requires explainability and stable semantics. It does not require every implementation to use
+the same weights forever. Instead, it requires routers to make their choices legible in decision artifacts.
+
+## Read next
+
+- [Fallbacks, failures, and observability](/router/fallbacks-failures-and-observability)
+- [How routing works end to end](/router/how-routing-works-end-to-end)
+- [Protocol-to-router mapping](/router/protocol-to-router-mapping)
+- [Routing policy](/protocol/routing-policy)

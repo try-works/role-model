@@ -1,14 +1,14 @@
 import { useEffect } from "react";
 import { Link } from "react-router";
 
-import { CodeBlock } from "./page-primitives";
+import { primaryButtonClassName, secondaryButtonClassName } from "../lib/design-system";
 import {
   LLAMA_SWAP_SCAFFOLD_YAML,
-  createLlamaSwapScaffoldJsonSnippet,
   type LlamaSwapConfigStatus,
+  createLlamaSwapScaffoldJsonSnippet,
   llamaSwapHintDetail,
 } from "../lib/llama-swap-setup";
-import { primaryButtonClassName, secondaryButtonClassName } from "../lib/design-system";
+import { CodeBlock } from "./page-primitives";
 
 async function copyText(value: string): Promise<void> {
   await navigator.clipboard.writeText(value);
@@ -34,17 +34,18 @@ export function LlamaSwapSetupModal({
   const jsonSnippet = JSON.stringify({ llamaSwap: createLlamaSwapScaffoldJsonSnippet() }, null, 2);
 
   return (
-    <div
-      className="fixed inset-0 z-50 overflow-y-auto bg-[var(--rm-accent-ghost)] p-4 backdrop-blur-[1px]"
-      onClick={onClose}
-      role="presentation"
-    >
-      <div
-        className="mx-auto max-w-4xl rounded-none border border-[var(--rm-border)] bg-[var(--rm-surface)] p-6 shadow-[var(--rm-shadow-card)]"
-        onClick={(event) => event.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
+    <div className="fixed inset-0 z-50 overflow-y-auto p-4" role="presentation">
+      <button
+        aria-label="Close llama-swap setup modal"
+        className="absolute inset-0 bg-[var(--rm-accent-ghost)] backdrop-blur-[1px]"
+        type="button"
+        onClick={onClose}
+      />
+      <dialog
+        open
         aria-labelledby="llama-swap-setup-title"
+        aria-modal="true"
+        className="relative mx-auto max-w-4xl rounded-none border border-[var(--rm-border)] bg-[var(--rm-surface)] p-6 shadow-[var(--rm-shadow-card)]"
       >
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
@@ -71,22 +72,26 @@ export function LlamaSwapSetupModal({
             <h3 className="text-base font-medium text-[var(--rm-fg)]">What llama-swap does</h3>
             <p className="mt-2">
               role-model runs the llama-swap process, swaps one GGUF model at a time on your GPU,
-              and exposes it through the same local routing surface as peer-backed models. Peer-backed
-              local keeps using servers you already operate; llama-swap is for GGUF files role-model
-              should load and manage.
+              and exposes it through the same local routing surface as peer-backed models.
+              Peer-backed local keeps using servers you already operate; llama-swap is for GGUF
+              files role-model should load and manage.
             </p>
           </section>
 
           <section>
             <h3 className="text-base font-medium text-[var(--rm-fg)]">Setup steps</h3>
             <ol className="mt-2 list-decimal space-y-2 pl-5">
-              <li>Place a GGUF weights file on disk (for example under your user models folder).</li>
+              <li>
+                Place a GGUF weights file on disk (for example under your user models folder).
+              </li>
               <li>
                 Add a <span className="font-mono text-[var(--rm-fg)]">llama_swap.models</span> entry
                 in runtime config with a stable model id and absolute path.
               </li>
               <li>Save and apply runtime config from System → Runtime config.</li>
-              <li>Restart the role-model runtime if the control plane asks you to reload host policy.</li>
+              <li>
+                Restart the role-model runtime if the control plane asks you to reload host policy.
+              </li>
               <li>Return to Local → Llama-swap models and load the declared model id.</li>
               <li>Optional: assign roles and review host policy on the llama-swap pages.</li>
             </ol>
@@ -140,7 +145,11 @@ export function LlamaSwapSetupModal({
         </div>
 
         <div className="mt-6 flex flex-wrap gap-3">
-          <Link className={primaryButtonClassName} to="/app/system/runtime-config" onClick={onClose}>
+          <Link
+            className={primaryButtonClassName}
+            to="/app/system/runtime-config"
+            onClick={onClose}
+          >
             Open runtime config
           </Link>
           <Link
@@ -151,7 +160,7 @@ export function LlamaSwapSetupModal({
             Back to llama-swap models
           </Link>
         </div>
-      </div>
+      </dialog>
     </div>
   );
 }

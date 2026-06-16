@@ -86,11 +86,14 @@ describe("benchmark global data clear", () => {
 
       const firstEndpointId = backend.registry.endpoints[0]?.identity.endpoint_id;
       expect(firstEndpointId).toBeTruthy();
+      if (!firstEndpointId) {
+        throw new Error("Expected at least one endpoint in the benchmark clear test.");
+      }
 
       persistObservedBenchmarkSample({
         databasePath: path.join(runtimeStateRoot, scopeId, "memory", "memory.sqlite"),
         sample: {
-          endpoint_id: firstEndpointId!,
+          endpoint_id: firstEndpointId,
           endpoint_version: "v1",
           source_type: "benchmark",
           difficulty_bucket: "hard",

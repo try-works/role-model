@@ -1,9 +1,9 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
 
 import {
+  JUDGE_CIRCUIT_FAILURE_THRESHOLD,
   computeAdaptiveThrottleMs,
   describeResponseChannels,
-  JUDGE_CIRCUIT_FAILURE_THRESHOLD,
   recordJudgeCallOutcome,
   resetBenchmarkJudgeRuntimeForTests,
 } from "../src/benchmark-judge-runtime.js";

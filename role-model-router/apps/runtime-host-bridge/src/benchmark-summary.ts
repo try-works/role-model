@@ -1,4 +1,4 @@
-import { readdir, readFile, writeFile } from "node:fs/promises";
+import { readFile, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import type { BenchmarkCompareRecord, BenchmarkRunManifest } from "./benchmark-artifacts.js";
@@ -139,7 +139,11 @@ export async function readBenchmarkCaseComparisons(
   artifactRoot: string,
   runId: string,
 ): Promise<BenchmarkCaseComparison[]> {
-  const compareDir = path.join(resolveBenchmarkRunArtifactDir(artifactRoot, runId), "judge", "compare");
+  const compareDir = path.join(
+    resolveBenchmarkRunArtifactDir(artifactRoot, runId),
+    "judge",
+    "compare",
+  );
   let entries: string[];
   try {
     entries = await readdir(compareDir);
@@ -198,7 +202,10 @@ async function listCompletedBenchmarkRuns(artifactRoot: string): Promise<Complet
   return completed;
 }
 
-function resolveRunCaseCount(manifest: BenchmarkRunManifest, result: BenchmarkPersistedRunResult | null): number {
+function resolveRunCaseCount(
+  manifest: BenchmarkRunManifest,
+  result: BenchmarkPersistedRunResult | null,
+): number {
   if (manifest.caseIds.length > 0) {
     return manifest.caseIds.length;
   }
@@ -291,7 +298,9 @@ async function buildBenchmarkSummaryResponse(input: {
   };
 }
 
-export async function listBenchmarkRuns(artifactRoot: string): Promise<readonly BenchmarkRunListEntry[]> {
+export async function listBenchmarkRuns(
+  artifactRoot: string,
+): Promise<readonly BenchmarkRunListEntry[]> {
   const runs = await listCompletedBenchmarkRuns(artifactRoot);
   return runs
     .map(({ runId, manifest, result }) => ({
@@ -300,9 +309,10 @@ export async function listBenchmarkRuns(artifactRoot: string): Promise<readonly 
       completedAtMs: manifest.gradingCompletedAtMs ?? result?.completedAtMs ?? 0,
       suiteId: manifest.suiteId ?? result?.suiteId ?? "",
       caseCount: resolveRunCaseCount(manifest, result),
-      endpointIds: manifest.endpointIds.length > 0
-        ? manifest.endpointIds
-        : (result?.endpointGrades.map((grade) => grade.endpointId) ?? []),
+      endpointIds:
+        manifest.endpointIds.length > 0
+          ? manifest.endpointIds
+          : (result?.endpointGrades.map((grade) => grade.endpointId) ?? []),
     }))
     .sort((left, right) => right.completedAtMs - left.completedAtMs);
 }
@@ -312,7 +322,10 @@ export async function readLatestBenchmarkSummaryByMode(input: {
   readonly mode: "quick" | "full";
   readonly resolveModelId: (endpointId: string) => string | null;
 }): Promise<BenchmarkSummaryResponse> {
-  const latest = pickLatestCompletedRun(await listCompletedBenchmarkRuns(input.artifactRoot), input.mode);
+  const latest = pickLatestCompletedRun(
+    await listCompletedBenchmarkRuns(input.artifactRoot),
+    input.mode,
+  );
   if (!latest) {
     return EMPTY_BENCHMARK_SUMMARY;
   }
@@ -352,7 +365,10 @@ export async function writeBenchmarkRunResult(
   artifactRoot: string,
   result: BenchmarkPersistedRunResult,
 ): Promise<string> {
-  const filePath = path.join(resolveBenchmarkRunArtifactDir(artifactRoot, result.runId), "result.json");
+  const filePath = path.join(
+    resolveBenchmarkRunArtifactDir(artifactRoot, result.runId),
+    "result.json",
+  );
   await writeFile(filePath, `${JSON.stringify(result, null, 2)}\n`, "utf8");
   return filePath;
 }
@@ -419,8 +435,7 @@ export function buildBenchmarkCapability(input: {
 
   const sources = asRecord(profile.sources);
   const benchmarkSamples = readNumber(sources, "benchmark_samples") ?? 0;
-  const overallScore =
-    readNumber(profile, "judge_score") ?? readNumber(profile, "quality_score");
+  const overallScore = readNumber(profile, "judge_score") ?? readNumber(profile, "quality_score");
   if (benchmarkSamples === 0 && overallScore === null) {
     return null;
   }

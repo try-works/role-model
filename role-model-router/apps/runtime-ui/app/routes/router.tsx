@@ -10,7 +10,6 @@ import {
   StatusPill,
 } from "../components/page-primitives";
 import { secondaryButtonClassName } from "../lib/design-system";
-import { usePageActions } from "../lib/shell-header-context";
 import {
   type RouterSummary,
   type RuntimeConfigRecord,
@@ -19,6 +18,7 @@ import {
   fetchRuntimeConfig,
   fetchRuntimeSnapshot,
 } from "../lib/runtime-api";
+import { usePageActions } from "../lib/shell-header-context";
 import { buildAliasReadinessRows } from "../lib/view-models";
 
 export default function RouterOverviewRoute() {
@@ -40,44 +40,42 @@ export default function RouterOverviewRoute() {
       );
   }, []);
 
-  const aliasRows = useMemo(
-    () => {
-      if ((summary?.aliasInventory?.length ?? 0) > 0) {
-        return summary!.aliasInventory!.map((alias) => ({
-          aliasId: alias.aliasId,
-          modeLabel: alias.mode,
-          configuredHints: [...alias.configuredHintModelIds],
-          resolvedModelIds: [...alias.resolvedModelIds],
-          allowedEndpoints: [...alias.allowEndpointIds],
-          endpointCount: alias.allowEndpointIds.length,
-          localEndpointCount: alias.localEndpointCount,
-          remoteEndpointCount: alias.remoteEndpointCount,
-          activeEndpointCount: alias.activeEndpointCount,
-          healthyEndpointCount: alias.healthyEndpointCount,
-          readinessLabel: alias.readiness,
-          driftWarnings: alias.driftWarnings,
-        }));
-      }
-      return buildAliasReadinessRows(
-        configRecord?.config?.modelAliases ?? configRecord?.config?.model_aliases ?? [],
-        snapshot?.endpoints ?? [],
-      ).map((alias) => ({
+  const aliasRows = useMemo(() => {
+    const aliasInventory = summary?.aliasInventory;
+    if (aliasInventory && aliasInventory.length > 0) {
+      return aliasInventory.map((alias) => ({
         aliasId: alias.aliasId,
-        modeLabel: alias.modeLabel,
-        configuredHints: [...alias.modelIds],
-        resolvedModelIds: [...alias.modelIds],
-        allowedEndpoints: [],
-        endpointCount: alias.endpointCount,
+        modeLabel: alias.mode,
+        configuredHints: [...alias.configuredHintModelIds],
+        resolvedModelIds: [...alias.resolvedModelIds],
+        allowedEndpoints: [...alias.allowEndpointIds],
+        endpointCount: alias.allowEndpointIds.length,
         localEndpointCount: alias.localEndpointCount,
         remoteEndpointCount: alias.remoteEndpointCount,
         activeEndpointCount: alias.activeEndpointCount,
         healthyEndpointCount: alias.healthyEndpointCount,
-        readinessLabel: alias.readinessLabel,
-        driftWarnings: [],
+        readinessLabel: alias.readiness,
+        driftWarnings: alias.driftWarnings,
       }));
-    },
-    [configRecord, snapshot, summary],
-  );
+    }
+    return buildAliasReadinessRows(
+      configRecord?.config?.modelAliases ?? configRecord?.config?.model_aliases ?? [],
+      snapshot?.endpoints ?? [],
+    ).map((alias) => ({
+      aliasId: alias.aliasId,
+      modeLabel: alias.modeLabel,
+      configuredHints: [...alias.modelIds],
+      resolvedModelIds: [...alias.modelIds],
+      allowedEndpoints: [],
+      endpointCount: alias.endpointCount,
+      localEndpointCount: alias.localEndpointCount,
+      remoteEndpointCount: alias.remoteEndpointCount,
+      activeEndpointCount: alias.activeEndpointCount,
+      healthyEndpointCount: alias.healthyEndpointCount,
+      readinessLabel: alias.readinessLabel,
+      driftWarnings: [],
+    }));
+  }, [configRecord, snapshot, summary]);
   usePageActions(
     <>
       <Link className={secondaryButtonClassName} to="/app/router/strategy">
@@ -102,10 +100,7 @@ export default function RouterOverviewRoute() {
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <FactCard label="Strategy" value={summary.strategy ?? "unset"} emphasis />
         <FactCard label="Execution mode" value={summary.executionMode} />
-        <FactCard
-          label="Controller"
-          value={summary.controller?.modelId ?? "unassigned"}
-        />
+        <FactCard label="Controller" value={summary.controller?.modelId ?? "unassigned"} />
         <FactCard label="Alias pools" value={String(aliasRows.length)} />
       </div>
 

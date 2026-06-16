@@ -60,7 +60,11 @@ describe("bench-judge grading prompts", () => {
       gradingCriteria: "Must call read_file and apply_patch",
       models: [
         { endpointId: "lfm", deliverable: P17_LFM_DELIVERABLE, perCaseScore: 1 },
-        { endpointId: "kimi", deliverable: '{"tool_calls":[{"name":"read_file"}]}', perCaseScore: 0 },
+        {
+          endpointId: "kimi",
+          deliverable: '{"tool_calls":[{"name":"read_file"}]}',
+          perCaseScore: 0,
+        },
       ],
     });
 

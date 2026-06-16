@@ -14,9 +14,7 @@ describe("formatCandidateLatencyLine", () => {
   });
 
   test("shows n/a when percentile fields are missing even if latency_ms is present", () => {
-    expect(formatCandidateLatencyLine({ latency_ms: 999 })).toBe(
-      "Latency p50 n/a ms • p95 n/a ms",
-    );
+    expect(formatCandidateLatencyLine({ latency_ms: 999 })).toBe("Latency p50 n/a ms • p95 n/a ms");
   });
 
   test("accepts camelCase percentile aliases", () => {

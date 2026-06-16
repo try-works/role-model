@@ -61,7 +61,45 @@ Today this repository is a **real baseline**, not only a design sketch:
 - the smoke path and emitted artifacts are implemented
 - some future host/runtime families are still architecture-stage rather than production-ready
 
-## Building
+## Install
+
+For end users, prefer the packaged standalone runtime over a source build.
+
+### macOS and Linux
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/try-works/role-model/main/scripts/install.sh | sh
+```
+
+The installer downloads the latest GitHub Release archive, installs it under
+`~/.local/share/role-model-router/<version>/<target>/`, and exposes a `role-model-router` launcher in
+`~/.local/bin`.
+
+### Windows
+
+```powershell
+irm https://raw.githubusercontent.com/try-works/role-model/main/scripts/install.ps1 | iex
+```
+
+The installer downloads the latest GitHub Release archive, installs it under
+`%LOCALAPPDATA%\Programs\RoleModelRouter\<version>\<target>\`, and creates a `role-model-router.cmd`
+launcher.
+
+### Manual downloads
+
+If you do not want to use installer scripts, download the matching archive from GitHub Releases:
+
+- `role-model-router-linux-x64.tar.gz`
+- `role-model-router-darwin-x64.tar.gz`
+- `role-model-router-darwin-arm64.tar.gz`
+- `role-model-router-win32-x64.zip`
+
+After extracting:
+
+- Windows: run `Role-Model.bat` or `role-model-runtime.exe`
+- macOS/Linux: run `role-model-runtime`
+
+## Building from source
 
 ### Prerequisites
 
@@ -130,11 +168,11 @@ Then double-click `role-model-launcher.exe` in `dist/release/win32-x64/`. It wil
 
 ### Platform-specific notes
 
-| Platform | Binary | Launcher | Notes |
-| --- | --- | --- | --- |
-| Windows | `role-model-runtime.exe` | `role-model-launcher.exe` | Edge app mode for dedicated window |
-| macOS | `role-model-runtime` | `open` command | Uses default browser |
-| Linux | `role-model-runtime` | `xdg-open` | Uses default browser |
+| Platform | Launch command | Notes |
+| --- | --- | --- |
+| Windows | `Role-Model.bat` or `role-model-runtime.exe` | `Role-Model.bat` uses the dedicated launcher when present |
+| macOS | `role-model-runtime` | Launching the packaged runtime directly opens the default browser |
+| Linux | `role-model-runtime` | Launching the packaged runtime directly opens the default browser |
 
 ## Quick start
 
@@ -146,6 +184,10 @@ pnpm run smoke
 ```
 
 For a fuller walkthrough, see [`docs/public/quickstart.md`](docs/public/quickstart.md).
+For GitHub workflow ownership, release automation, and CI diagnostics, see
+[`docs/operations/02-ci-and-release-flow.md`](docs/operations/02-ci-and-release-flow.md).
+The per-release history and operator checklist live in [`CHANGELOG.md`](CHANGELOG.md) and
+[`docs/operations/03-release-checklist.md`](docs/operations/03-release-checklist.md).
 
 ## Repository layout
 

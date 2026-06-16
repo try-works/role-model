@@ -15,7 +15,6 @@ import {
   primaryButtonClassName,
   secondaryButtonClassName,
 } from "../lib/design-system";
-import { usePageActions } from "../lib/shell-header-context";
 import {
   type RuntimeAudioVoiceRecord,
   type RuntimeSnapshot,
@@ -24,6 +23,7 @@ import {
   submitAudioTranscription,
   submitSpeechGeneration,
 } from "../lib/runtime-api";
+import { usePageActions } from "../lib/shell-header-context";
 import { buildWorkbenchModelOptions } from "../lib/view-models";
 
 type AudioMode = "speech" | "transcription";

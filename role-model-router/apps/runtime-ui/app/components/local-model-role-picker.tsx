@@ -1,7 +1,7 @@
 import { Link } from "react-router";
 
-import type { RuntimeRolePolicy } from "../lib/runtime-api";
 import { mutedPanelClassName } from "../lib/design-system";
+import type { RuntimeRolePolicy } from "../lib/runtime-api";
 
 export function LocalModelRolePicker({
   rolePolicy,
@@ -60,7 +60,9 @@ export function LocalModelRolePicker({
                 <span>
                   <span className="font-medium">{role.name}</span>
                   {role.description ? (
-                    <span className="mt-1 block text-[var(--rm-secondary)]">{role.description}</span>
+                    <span className="mt-1 block text-[var(--rm-secondary)]">
+                      {role.description}
+                    </span>
                   ) : null}
                 </span>
               </label>

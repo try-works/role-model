@@ -1,6 +1,6 @@
 ---
 title: Roles and tasks
-description: The semantic split between execution roles, task definitions, bindings, and task execution patches.
+description: The baseline role IDs, task types, and protocol objects that let role-model separate semantic work from concrete endpoint routing.
 ---
 
 # Roles and tasks
@@ -11,6 +11,34 @@ The protocol separates **what kind of work is being done** from **how that work 
 - `RoleDefinition` models the execution persona and operating contract.
 - `RoleBinding` attaches a role to a concrete endpoint.
 - `TaskExecutionProfile` adjusts execution requirements for a particular task/role combination.
+
+## Baseline role set
+
+The current baseline role IDs are:
+
+| Role ID | Primary task types | What it is for |
+| --- | --- | --- |
+| `general.chat` | `text.chat` | general conversational replies |
+| `coder.patch` | `code.edit` | patch-oriented code editing |
+| `coder.review` | `code.edit`, `json.schema_adherence` | review, critique, and structured pass/fail output |
+| `tool.agent` | `tools.function_calling` | tool orchestration and invocation-ready arguments |
+| `embedder` | `embeddings.text` | retrieval and vector generation |
+| `classifier` | `text.classification` | deterministic labeling or taxonomy assignment |
+| `language.detector` | `text.language_detection` | language identification |
+
+## Baseline task set
+
+The baseline task IDs paired with those roles include:
+
+| Task type | Common roles | What it represents |
+| --- | --- | --- |
+| `text.chat` | `general.chat` | user-facing chat or assistant responses |
+| `code.edit` | `coder.patch`, `coder.review` | repository or patch-oriented code work |
+| `json.schema_adherence` | `coder.review` | structured outputs that must match a required schema |
+| `tools.function_calling` | `tool.agent` | tasks that require tool calls with structured arguments |
+| `embeddings.text` | `embedder` | vector generation for retrieval or indexing |
+| `text.classification` | `classifier` | taxonomy or label selection |
+| `text.language_detection` | `language.detector` | normalized language detection |
 
 ## Why roles and tasks are separate
 
@@ -36,9 +64,6 @@ Role definitions carry:
 - `output_contracts`
 - `safety_policy_refs`
 
-The baseline role set includes examples such as `general.chat`, `coder.patch`, `coder.review`,
-`tool.agent`, `embedder`, `classifier`, and `language.detector`.
-
 ## `TaskDefinition`
 
 Task definitions carry:
@@ -49,9 +74,6 @@ Task definitions carry:
 - `quality_metrics`
 - `allowed_roles`
 - `default_benchmark_suites`
-
-The baseline task set includes `text.chat`, `code.edit`, `tools.function_calling`, `embeddings.text`,
-`text.classification`, `text.language_detection`, and `json.schema_adherence`.
 
 ## `RoleBinding`
 

@@ -70,9 +70,7 @@ describe("resolveRoutingBenchmarkQuality", () => {
     const enriched = applyRoutingBenchmarkQualityToProfiles({
       latestProfile: null,
       difficultyProfiles: {},
-      samples: [
-        benchmarkSample({ id: "quick-h1", bucket: "hard", mode: "quick", score: 0.8 }),
-      ],
+      samples: [benchmarkSample({ id: "quick-h1", bucket: "hard", mode: "quick", score: 0.8 })],
     });
 
     expect(enriched.latestProfile?.judge_score).toBeCloseTo(0.8, 5);

@@ -3,8 +3,8 @@ import {
   extractJudgeGradingJsonText,
 } from "@role-model-router/bench-judge";
 import {
-  buildAnswerFormatInstruction,
   type AnswerFormatCaseRef,
+  buildAnswerFormatInstruction,
 } from "@role-model-router/bench-routing";
 
 export interface BenchmarkChatCompletionsExecutionResult {
@@ -98,9 +98,7 @@ export function looksLikeReasoningPreamble(text: string): boolean {
   return trimmed.length >= 120;
 }
 
-export function needsFinalAnswerFollowUp(
-  result: BenchmarkChatCompletionsExecutionResult,
-): boolean {
+export function needsFinalAnswerFollowUp(result: BenchmarkChatCompletionsExecutionResult): boolean {
   if (result.toolCalls?.length) {
     return false;
   }

@@ -9,11 +9,7 @@ import {
   StatusPill,
 } from "../components/page-primitives";
 import { mutedPanelClassName, secondaryButtonClassName } from "../lib/design-system";
-import {
-  type RuntimeSnapshot,
-  fetchRuntimeConfig,
-  fetchRuntimeSnapshot,
-} from "../lib/runtime-api";
+import { type RuntimeSnapshot, fetchRuntimeConfig, fetchRuntimeSnapshot } from "../lib/runtime-api";
 import {
   buildConfiguredProviderRows,
   buildCredentialReadinessRows,

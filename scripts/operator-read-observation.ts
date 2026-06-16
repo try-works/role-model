@@ -1,5 +1,5 @@
-import { DatabaseSync } from "node:sqlite";
 import path from "node:path";
+import { DatabaseSync } from "node:sqlite";
 
 const requestId = process.argv[2] ?? "req-runtime-host-bridge";
 const dbPath =
@@ -35,9 +35,6 @@ const parsed = JSON.parse(row.observation_json) as {
 
 console.log("request_id:", row.request_id);
 console.log("created_at_ms:", row.created_at_ms);
-console.log(
-  "difficulty:",
-  JSON.stringify(parsed.routingDiagnostics?.difficultyRouting, null, 2),
-);
+console.log("difficulty:", JSON.stringify(parsed.routingDiagnostics?.difficultyRouting, null, 2));
 
 database.close();

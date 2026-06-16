@@ -14,13 +14,13 @@ import {
   primaryButtonClassName,
   secondaryButtonClassName,
 } from "../lib/design-system";
-import { usePageActions } from "../lib/shell-header-context";
 import {
   type RuntimeSnapshot,
   fetchRuntimeSnapshot,
   submitImageGeneration,
   submitSdApiTxt2Img,
 } from "../lib/runtime-api";
+import { usePageActions } from "../lib/shell-header-context";
 import { buildWorkbenchModelOptions } from "../lib/view-models";
 
 type ImageResult =

@@ -1,0 +1,140 @@
+---
+title: Candidate selection and eligibility
+description: How candidates enter the router, which hard checks remove them, and why role-aware eligibility always happens before scoring.
+---
+
+# Candidate selection and eligibility
+
+Before any scoring happens, Router has to decide which endpoints are even allowed to compete.
+
+## Candidate selection comes before optimization
+
+This is a hard rule in role-model:
+
+an endpoint that fails compatibility or policy should be excluded, not "rescued" by a good score.
+
+## What a candidate is
+
+In these docs, a **candidate** means a **candidate endpoint**.
+
+The candidate set may include:
+
+- endpoints serving different models
+- multiple endpoints serving the same model
+- local, remote, or mixed execution paths
+
+That is why routing happens at the endpoint layer instead of the model-name layer.
+
+## What enters the candidate set before Router starts filtering
+
+The reference router does not discover endpoints by itself. It consumes a request input that already contains
+a candidate set plus the protocol records needed to interpret it.
+
+Each candidate should carry:
+
+- `identity`
+- `declared`
+- optional `observed`
+- `status`
+- optional policy-deny markers
+
+Additional context can also be supplied alongside the candidates:
+
+- `roleDefinitions`
+- `taskDefinitions`
+- `roleBindings`
+
+This is the upstream discovery boundary:
+
+- discovery says which endpoints are in scope
+- routing says how those endpoints are evaluated and ranked
+
+## Why role bindings matter
+
+Role assignment is part of candidate construction, not just a label on top.
+
+If a request needs `coder.patch`, an endpoint without an active compatible binding for that role should not
+compete, even if the underlying model looks strong in the abstract.
+
+## Actual exclusion checks in the current baseline
+
+The baseline hard-filtering phase can remove candidates for reasons such as:
+
+- missing required capabilities
+- unsupported modalities
+- insufficient context window
+- missing tool support
+- policy deny lists
+- remote denial or locality restrictions
+- budget incompatibility
+- inactive or incompatible role bindings
+
+`evaluateEligibility()` currently emits these concrete rejection codes:
+
+| Code | Trigger in the current baseline |
+| --- | --- |
+| `PROVIDER_OFFLINE` | candidate status is `offline` |
+| `REVOKED` | candidate status is `revoked` |
+| `POLICY_DENY_ENDPOINT` | explicit deny markers, allow-list misses, provider allow/deny failures, or forbidden role capabilities |
+| `POLICY_DENY_REMOTE` | request forbids remote routing and the candidate is not local |
+| `ROLE_BINDING_INACTIVE` | a requested role has a non-active binding for this endpoint |
+| `TASK_NOT_SUPPORTED` | the requested role does not support the request's task type |
+| `ROLE_NOT_ALLOWED` | the task definition does not allow the requested role |
+| `CAPABILITY_MISSING` | one or more effective required capabilities are missing |
+| `MODALITY_UNSUPPORTED` | one or more required modalities are missing |
+| `CONTEXT_TOO_SMALL` | requested context tokens exceed `max_context_tokens` |
+| `TOOLS_UNSUPPORTED` | the request needs tools and the endpoint does not support tool calling |
+| `BUDGET_EXCEEDED` | observed cost estimate exceeds the request budget |
+
+## Effective required capabilities
+
+The router does not only look at request-level required capabilities. It merges:
+
+- request required capabilities
+- requested role required capabilities
+- requested task required capabilities
+
+This is why a candidate can be rejected even if it satisfied the request-level capability list alone.
+
+## One policy code can represent several policy sources
+
+The baseline intentionally collapses several policy failures into `POLICY_DENY_ENDPOINT`, including:
+
+- explicit endpoint deny lists
+- allow-list misses
+- provider-kind allow-list misses
+- provider-kind denies
+- role-forbidden capability conflicts
+
+The important semantic point is not which exact config branch fired first. It is that policy removed this
+endpoint before scoring began.
+
+## Reserved vocabulary versus active baseline behavior
+
+The broader protocol surface names additional codes such as:
+
+- `PACKAGE_NOT_INSTALLED`
+- `VARIANT_INCOMPATIBLE`
+- `ENTITLEMENT_MISSING`
+
+Those should be read as reserved vocabulary unless the current baseline actually emits them.
+
+## Why this matters operationally
+
+This is why the first-time setup order matters:
+
+1. connect endpoints
+2. activate models
+3. assign roles
+4. benchmark
+5. save strategy
+
+If the role and activation layer is wrong, the benchmark and later strategy selection will be operating on
+the wrong candidate set.
+
+## Read next
+
+- [Scoring strategies and tradeoffs](/router/strategy-modes-and-tradeoffs)
+- [Scoring, tie-breaks, and decisions](/router/scoring-tie-breaks-and-decisions)
+- [How routing works end to end](/router/how-routing-works-end-to-end)
+- [Reason codes and rejection taxonomy](/reference/reason-codes-and-rejection-taxonomy)

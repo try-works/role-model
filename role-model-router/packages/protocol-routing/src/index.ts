@@ -1,6 +1,6 @@
-import type { ContextEnvelopeResult } from "@role-model-router/context-envelope";
 import type { NormalizedCatalog } from "@role-model-router/catalog";
 import { resolveRoutingCostEstimate } from "@role-model-router/catalog";
+import type { ContextEnvelopeResult } from "@role-model-router/context-envelope";
 import type {
   CatalogCostEstimateSignals,
   EndpointCandidate as CoreEndpointCandidate,
@@ -192,9 +192,7 @@ export function projectRuntimeRouteInput(
       routingModel: routingModelEnabled
         ? {
             enabled: true,
-            endpointId: endpointIdRoutable
-              ? endpointId
-              : (routablePreferredEndpointIds[0] ?? null),
+            endpointId: endpointIdRoutable ? endpointId : (routablePreferredEndpointIds[0] ?? null),
             preferredEndpointIds: routablePreferredEndpointIds,
             ignoredEndpointIds,
           }

@@ -76,8 +76,7 @@ export function estimateRequestCostUsd(input: {
   }
 
   const inputCost = (Math.max(0, input.contextTokens) / 1_000_000) * input.economics.inputPer1M;
-  const outputCost =
-    (Math.max(0, input.maxOutputTokens) / 1_000_000) * input.economics.outputPer1M;
+  const outputCost = (Math.max(0, input.maxOutputTokens) / 1_000_000) * input.economics.outputPer1M;
   return inputCost + outputCost;
 }
 

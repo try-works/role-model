@@ -144,8 +144,7 @@ describe("benchmark-summary", () => {
 
     const summary = await readLatestBenchmarkSummary({
       artifactRoot: root,
-      resolveModelId: (endpointId) =>
-        endpointId === "moonshot.kimi" ? "kimi-k2.6" : endpointId,
+      resolveModelId: (endpointId) => (endpointId === "moonshot.kimi" ? "kimi-k2.6" : endpointId),
     });
 
     expect(summary.runId).toBe(newerRunId);

@@ -57,8 +57,7 @@ export function evaluateBenchmarkStartGuards(
   }
 
   const judgeSubjectOverlap = Boolean(
-    input.judgeEndpointId &&
-      input.endpointIds?.includes(input.judgeEndpointId),
+    input.judgeEndpointId && input.endpointIds?.includes(input.judgeEndpointId),
   );
   if (judgeSubjectOverlap) {
     warnings.push(JUDGE_SUBJECT_OVERLAP_WARNING);

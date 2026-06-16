@@ -1,0 +1,51 @@
+---
+title: Runtime UI tour
+description: The operator-facing map of the runtime UI and which section owns each part of setup and routing review.
+---
+
+# Runtime UI tour
+
+The runtime UI is the main operator surface for bringing role-model to life on a machine.
+
+## The core sections
+
+The current shell is organized around:
+
+- **Connect** for the first-run entry point into local and remote setup
+- **Local** for local backends and local model state
+- **Remote** for provider accounts and remote execution posture
+- **Models** for benchmark and model-level routing context
+- **Router** for candidate, config, and decision views
+- **Observe** for request, telemetry, and evidence review
+- **System** for runtime and readiness diagnostics
+
+<OperatorShellDiagram />
+
+## Who owns what
+
+| Section | Primary responsibility |
+| --- | --- |
+| `Connect` | onboarding handoff into local and remote setup paths |
+| `Local` | local runtime connectivity and local model inventory |
+| `Remote` | provider accounts and remote execution availability |
+| `Models` | benchmark workflow and model-facing routing quality |
+| `Router` | candidates, strategy context, decisions, and fallbacks |
+| `Observe` | request history, telemetry, and investigation |
+| `System` | readiness and runtime health context |
+
+## First-time setup path
+
+The canonical operator path is:
+
+1. connect local or remote models
+2. assign roles
+3. run the full benchmark
+4. review results
+5. choose and save routing strategy
+6. validate with a real request
+
+## Read next
+
+- [Models and role activation](/runtime/models-and-role-activation)
+- [Benchmarks and evaluation](/runtime/benchmarks-and-evaluation)
+- [Routing controls and decision review](/runtime/routing-controls-and-decision-review)

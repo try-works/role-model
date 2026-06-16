@@ -10,9 +10,9 @@ import {
   SectionCard,
 } from "../components/page-primitives";
 import { secondaryButtonClassName } from "../lib/design-system";
-import { usePageActions } from "../lib/shell-header-context";
 import { formatRoutingModeLabel } from "../lib/routing-mode";
 import { type RouterDecisionDetail, fetchRouterDecisionDetail } from "../lib/runtime-api";
+import { usePageActions } from "../lib/shell-header-context";
 
 export default function RouterDecisionDetailRoute() {
   const { requestId = "" } = useParams();

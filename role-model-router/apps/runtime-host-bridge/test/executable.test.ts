@@ -208,10 +208,21 @@ describe("runtime-host-bridge executable packaging", () => {
 
   test("ships install and compose artifacts for packaged runtime distribution", async () => {
     const installScriptPath = path.join(repoRoot, "scripts", "install.sh");
+    const installPowerShellPath = path.join(repoRoot, "scripts", "install.ps1");
     const composePath = path.join(repoRoot, "docker-compose.yml");
 
     await expect(access(installScriptPath)).resolves.toBeUndefined();
+    await expect(access(installPowerShellPath)).resolves.toBeUndefined();
     await expect(access(composePath)).resolves.toBeUndefined();
+
+    const installScript = await readFile(installScriptPath, "utf8");
+    const installPowerShell = await readFile(installPowerShellPath, "utf8");
+
+    expect(installScript).toContain("role-model-router-${TARGET}.tar.gz");
+    expect(installScript).toContain("role-model-router");
+    expect(installScript).toContain(".local/bin");
+    expect(installPowerShell).toContain("role-model-router-$target.zip");
+    expect(installPowerShell).toContain("role-model-router.cmd");
   });
 
   test("wires device-authorization readback into the packaged runtime cli server", async () => {
@@ -249,7 +260,9 @@ describe("runtime-host-bridge executable packaging", () => {
     expect(validatePackagingText).toContain("/v1/chat/completions");
     expect(validatePackagingText).toContain("/v1/responses");
     expect(validatePackagingText).toContain("--fixture-root");
-    expect(validatePackagingText).toContain('path.join(packagedRepoRoot, "testdata", "router-runtime", "fixtures")');
+    expect(validatePackagingText).toContain(
+      'path.join(packagedRepoRoot, "testdata", "router-runtime", "fixtures")',
+    );
   });
 
   test("packaged runtime validation rebuilds the bridge before creating the SEA executable", async () => {

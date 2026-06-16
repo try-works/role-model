@@ -4,8 +4,8 @@ import type { ObservedPerformanceSample } from "@role-model-router/profile-aggre
 import { resolveRoutingBenchmarkQuality } from "@role-model-router/profile-aggregator";
 
 import {
-  buildBenchmarkCapabilityForEndpoint,
   type BenchmarkSummaryResponse,
+  buildBenchmarkCapabilityForEndpoint,
 } from "../src/benchmark-summary.js";
 
 const endpointId = "deepseek.litellm.global.deepseek-v4-pro";

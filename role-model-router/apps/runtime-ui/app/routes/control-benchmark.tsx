@@ -9,10 +9,7 @@ import {
   StatusPill,
 } from "../components/page-primitives";
 import { computeLatencyPercentiles } from "../lib/benchmark-latency";
-import {
-  describeHardBlend,
-  resolveSubjectFromSummary,
-} from "../lib/benchmark-model-cards";
+import { describeHardBlend, resolveSubjectFromSummary } from "../lib/benchmark-model-cards";
 import {
   fieldClassName,
   listRowClassName,
@@ -20,6 +17,7 @@ import {
   primaryButtonClassName,
   secondaryButtonClassName,
 } from "../lib/design-system";
+import { formatScore, formatScoreFraction } from "../lib/format-score";
 import {
   type BenchmarkCaseAuditEntry,
   type BenchmarkCaseComparison,
@@ -28,10 +26,11 @@ import {
   type BenchmarkRunProgress,
   type BenchmarkRunResult,
   type BenchmarkSuite,
+  type BenchmarkSummariesByMode,
   type BenchmarkSummary,
   type BenchmarkSummarySubject,
-  type BenchmarkSummariesByMode,
   type RouterCandidate,
+  type RuntimeSummary,
   clearAllBenchmarkData,
   clearBenchmarkEndpointData,
   fetchActiveBenchmarkRun,
@@ -45,9 +44,7 @@ import {
   fetchRuntimeSummary,
   startCapabilityBenchmark,
   updateBenchmarkPreferences,
-  type RuntimeSummary,
 } from "../lib/runtime-api";
-import { formatScore, formatScoreFraction } from "../lib/format-score";
 
 const BENCHMARK_POLL_MS = 1500;
 const BENCHMARK_STALL_MS = 90_000;
@@ -238,8 +235,13 @@ function describeRoutingImpact(candidate: RouterCandidate): string {
   const profile = asRecord(candidate.latestProfile);
   const sources = asRecord(profile?.sources);
   const advisory = asRecord(candidate.advisoryMaxDifficultyRecommendation);
-  const qualityScore =
-    pickNumber(profile, "judge_score", "quality_score", "judgeScore", "qualityScore");
+  const qualityScore = pickNumber(
+    profile,
+    "judge_score",
+    "quality_score",
+    "judgeScore",
+    "qualityScore",
+  );
   const benchmarkSamples = pickNumber(sources, "benchmark_samples", "benchmarkSamples") ?? 0;
   const recommended =
     typeof advisory?.recommended_max_difficulty === "string"
@@ -262,7 +264,9 @@ function describeRoutingImpact(candidate: RouterCandidate): string {
       `Difficulty routing treats ${recommended} as the recommended max prompt difficulty for this endpoint.`,
     );
     if (minQuality !== null) {
-      parts.push(`Per-bucket quality must stay above ${formatScore(minQuality)} to raise that ceiling.`);
+      parts.push(
+        `Per-bucket quality must stay above ${formatScore(minQuality)} to raise that ceiling.`,
+      );
     }
   }
   if (benchmarkSamples > 0) {
@@ -347,10 +351,7 @@ function buildModelScoreRows(
       endpointId: candidate.endpointId,
       modelId: candidate.modelId,
       sourceType: candidate.sourceType,
-      overallScore:
-        grade?.overallScore ??
-        capability?.overallScore ??
-        profileQualityScore,
+      overallScore: grade?.overallScore ?? capability?.overallScore ?? profileQualityScore,
       scoresByBucket:
         grade?.scoresByBucket ??
         (capability?.scoresByBucket
@@ -400,23 +401,23 @@ export default function ControlBenchmarkRoute() {
   const [clearingAll, setClearingAll] = useState(false);
   const [nowMs, setNowMs] = useState(() => Date.now());
 
-  const resolveJudgeEndpointId = (
-    candidateValue: readonly RouterCandidate[],
-    savedJudgeEndpointId?: string,
-  ): string => {
-    const healthy = candidateValue.filter((candidate) => candidate.healthStatus !== "offline");
-    if (
-      savedJudgeEndpointId &&
-      healthy.some((candidate) => candidate.endpointId === savedJudgeEndpointId)
-    ) {
-      return savedJudgeEndpointId;
-    }
-    return (
-      healthy.find((candidate) => candidate.sourceType === "remote")?.endpointId ??
-      healthy[0]?.endpointId ??
-      ""
-    );
-  };
+  const resolveJudgeEndpointId = useCallback(
+    (candidateValue: readonly RouterCandidate[], savedJudgeEndpointId?: string): string => {
+      const healthy = candidateValue.filter((candidate) => candidate.healthStatus !== "offline");
+      if (
+        savedJudgeEndpointId &&
+        healthy.some((candidate) => candidate.endpointId === savedJudgeEndpointId)
+      ) {
+        return savedJudgeEndpointId;
+      }
+      return (
+        healthy.find((candidate) => candidate.sourceType === "remote")?.endpointId ??
+        healthy[0]?.endpointId ??
+        ""
+      );
+    },
+    [],
+  );
 
   const refreshBenchmarkState = useCallback(async () => {
     const [summary, byMode, runs, candidateValue] = await Promise.all([
@@ -452,22 +453,24 @@ export default function ControlBenchmarkRoute() {
           preferences,
           runtimeSummaryValue,
         ]) => {
-        setSuite(suiteValue);
-        setCandidates(candidateValue);
-        setLastSummary(summaryValue);
-        setSummariesByMode(summariesByModeValue);
-        setRunHistory(runHistoryValue);
-        setRuntimeSummary(runtimeSummaryValue);
-        const healthy = candidateValue.filter((candidate) => candidate.healthStatus !== "offline");
-        setSelectedEndpointIds(healthy.map((candidate) => candidate.endpointId));
-        setJudgeEndpointId(resolveJudgeEndpointId(candidateValue, preferences.judgeEndpointId));
-        setError(null);
-      },
+          setSuite(suiteValue);
+          setCandidates(candidateValue);
+          setLastSummary(summaryValue);
+          setSummariesByMode(summariesByModeValue);
+          setRunHistory(runHistoryValue);
+          setRuntimeSummary(runtimeSummaryValue);
+          const healthy = candidateValue.filter(
+            (candidate) => candidate.healthStatus !== "offline",
+          );
+          setSelectedEndpointIds(healthy.map((candidate) => candidate.endpointId));
+          setJudgeEndpointId(resolveJudgeEndpointId(candidateValue, preferences.judgeEndpointId));
+          setError(null);
+        },
       )
       .catch((value: unknown) =>
         setError(value instanceof Error ? value.message : "Could not load benchmark data."),
       );
-  }, []);
+  }, [resolveJudgeEndpointId]);
 
   useEffect(() => {
     if (!suite || !candidates) {
@@ -530,10 +533,7 @@ export default function ControlBenchmarkRoute() {
     judgeEndpointId.length > 0 && selectedEndpointIds.includes(judgeEndpointId);
 
   const canRunBenchmark =
-    Boolean(suite) &&
-    gradedEndpointCount >= 2 &&
-    judgeEndpointId.length > 0 &&
-    !running;
+    Boolean(suite) && gradedEndpointCount >= 2 && judgeEndpointId.length > 0 && !running;
 
   const modelScoreRows = useMemo(
     () => (candidates ? buildModelScoreRows(candidates, result, lastSummary) : []),
@@ -603,7 +603,9 @@ export default function ControlBenchmarkRoute() {
         }
       } catch (value: unknown) {
         setError(
-          value instanceof Error ? value.message : "Could not clear routing profile for this model.",
+          value instanceof Error
+            ? value.message
+            : "Could not clear routing profile for this model.",
         );
       } finally {
         setClearingEndpointId(null);
@@ -690,9 +692,7 @@ export default function ControlBenchmarkRoute() {
       : 0
     : 0;
   const progressStalled = Boolean(
-    progress &&
-      progress.status === "running" &&
-      nowMs - progress.updatedAtMs >= BENCHMARK_STALL_MS,
+    progress && progress.status === "running" && nowMs - progress.updatedAtMs >= BENCHMARK_STALL_MS,
   );
   const progressDescription = progress ? describeBenchmarkProgress(progress) : null;
 
@@ -746,15 +746,17 @@ export default function ControlBenchmarkRoute() {
                         : formatScore(row.overallScore)}
                     </p>
                     <p>
-                      <span className="font-medium text-[var(--rm-fg)]">Profile quality score:</span>{" "}
+                      <span className="font-medium text-[var(--rm-fg)]">
+                        Profile quality score:
+                      </span>{" "}
                       {formatScore(row.profileQualityScore)}
                       {row.benchmarkSamples > 0
                         ? ` (${row.benchmarkSamples} benchmark sample${row.benchmarkSamples === 1 ? "" : "s"})`
                         : ""}
                     </p>
                     <p>
-                      <span className="font-medium text-[var(--rm-fg)]">Benchmark latency:</span> p50{" "}
-                      {formatLatencyMs(row.latencyP50)} • p95 {formatLatencyMs(row.latencyP95)}
+                      <span className="font-medium text-[var(--rm-fg)]">Benchmark latency:</span>{" "}
+                      p50 {formatLatencyMs(row.latencyP50)} • p95 {formatLatencyMs(row.latencyP95)}
                     </p>
                   </div>
 
@@ -793,44 +795,46 @@ export default function ControlBenchmarkRoute() {
                         Per-case benchmark results
                       </summary>
                       <div className="mt-3 space-y-2">
-                        {row.caseResults.map((caseResult) => (
-                          <div
-                            key={caseResult.caseId}
-                            className="rounded-none border border-[var(--rm-border)] p-3"
-                          >
-                            <p className="font-medium text-[var(--rm-fg)]">
-                              {caseResult.caseId} • {formatScore(caseResult.score)} •{" "}
-                              {caseResult.difficultyBucket} • {formatLatencyMs(caseResult.latencyMs)}
-                            </p>
-                            <div className="mt-1 flex flex-wrap gap-2 text-xs">
-                              {caseResult.gradingMethod ? (
-                                <StatusPill tone="neutral">{caseResult.gradingMethod}</StatusPill>
-                              ) : null}
-                              {caseResult.judgeUnavailable ? (
-                                <StatusPill tone="warning">judge unavailable</StatusPill>
-                              ) : null}
-                              {caseResult.parseSuccess === false ? (
-                                <StatusPill tone="warning">parse failed</StatusPill>
-                              ) : null}
-                              {caseResult.cappedByValidator ? (
-                                <StatusPill tone="warning">validator cap</StatusPill>
+                        {row.caseResults.map((caseResult) => {
+                          const compareResult = compareByCaseId.get(caseResult.caseId);
+                          return (
+                            <div
+                              key={caseResult.caseId}
+                              className="rounded-none border border-[var(--rm-border)] p-3"
+                            >
+                              <p className="font-medium text-[var(--rm-fg)]">
+                                {caseResult.caseId} • {formatScore(caseResult.score)} •{" "}
+                                {caseResult.difficultyBucket} •{" "}
+                                {formatLatencyMs(caseResult.latencyMs)}
+                              </p>
+                              <div className="mt-1 flex flex-wrap gap-2 text-xs">
+                                {caseResult.gradingMethod ? (
+                                  <StatusPill tone="neutral">{caseResult.gradingMethod}</StatusPill>
+                                ) : null}
+                                {caseResult.judgeUnavailable ? (
+                                  <StatusPill tone="warning">judge unavailable</StatusPill>
+                                ) : null}
+                                {caseResult.parseSuccess === false ? (
+                                  <StatusPill tone="warning">parse failed</StatusPill>
+                                ) : null}
+                                {caseResult.cappedByValidator ? (
+                                  <StatusPill tone="warning">validator cap</StatusPill>
+                                ) : null}
+                              </div>
+                              <p>{caseResult.rationale}</p>
+                              {compareResult ? (
+                                <p className="mt-2 text-xs text-[var(--rm-secondary)]">
+                                  <span className="font-medium text-[var(--rm-fg)]">
+                                    Head-to-head ranking:
+                                  </span>{" "}
+                                  {compareResult.relativeRanking.join(" › ")}
+                                  {" — "}
+                                  {compareResult.rationale}
+                                </p>
                               ) : null}
                             </div>
-                            <p>{caseResult.rationale}</p>
-                            {compareByCaseId.get(caseResult.caseId) ? (
-                              <p className="mt-2 text-xs text-[var(--rm-secondary)]">
-                                <span className="font-medium text-[var(--rm-fg)]">
-                                  Head-to-head ranking:
-                                </span>{" "}
-                                {compareByCaseId
-                                  .get(caseResult.caseId)!
-                                  .relativeRanking.join(" › ")}
-                                {" — "}
-                                {compareByCaseId.get(caseResult.caseId)!.rationale}
-                              </p>
-                            ) : null}
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </details>
                   ) : null}
@@ -868,9 +872,7 @@ export default function ControlBenchmarkRoute() {
           <p className="mb-4 text-sm text-[var(--rm-secondary)]">
             Runtime scope: {runtimeSummary.scopeId ?? "unknown"} • endpoints:{" "}
             {runtimeSummary.endpointCount}
-            {runtimeSummary.runtimeStateRoot
-              ? ` • state: ${runtimeSummary.runtimeStateRoot}`
-              : ""}
+            {runtimeSummary.runtimeStateRoot ? ` • state: ${runtimeSummary.runtimeStateRoot}` : ""}
           </p>
         ) : null}
         {judgeSubjectOverlap ? (
@@ -1032,7 +1034,9 @@ export default function ControlBenchmarkRoute() {
                     {new Date(run.completedAtMs).toLocaleString()} • {run.suiteId}
                   </p>
                 </div>
-                <StatusPill tone={run.mode === "quick" ? "accent" : "neutral"}>{run.mode}</StatusPill>
+                <StatusPill tone={run.mode === "quick" ? "accent" : "neutral"}>
+                  {run.mode}
+                </StatusPill>
               </div>
             ))}
           </div>

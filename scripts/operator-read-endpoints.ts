@@ -1,5 +1,5 @@
-import { DatabaseSync } from "node:sqlite";
 import path from "node:path";
+import { DatabaseSync } from "node:sqlite";
 
 const dbPath = path.join(
   process.env.LOCALAPPDATA ?? "",

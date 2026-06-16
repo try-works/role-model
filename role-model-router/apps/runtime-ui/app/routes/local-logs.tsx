@@ -44,10 +44,7 @@ export default function LocalLogsRoute() {
   }, [autoRefresh, refresh]);
 
   const logRows = useMemo(() => buildStructuredLogRows(logs, "local"), [logs]);
-  const proxyRows = useMemo(
-    () => logRows.filter((row) => row.sourceClass === "proxy"),
-    [logRows],
-  );
+  const proxyRows = useMemo(() => logRows.filter((row) => row.sourceClass === "proxy"), [logRows]);
   const llamaSwapRows = useMemo(
     () => logRows.filter((row) => row.sourceClass !== "proxy"),
     [logRows],

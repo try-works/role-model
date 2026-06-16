@@ -1,8 +1,8 @@
-import { DatabaseSync } from "node:sqlite";
 import path from "node:path";
+import { DatabaseSync } from "node:sqlite";
 import {
-  aggregateObservedPerformanceSamples,
   type ObservedPerformanceSample,
+  aggregateObservedPerformanceSamples,
 } from "../role-model-router/packages/profile-aggregator/src/index.ts";
 
 const DIFFICULTY_BUCKETS = ["easy", "medium", "hard"] as const;
@@ -35,7 +35,11 @@ function resolveDatabasePath(argvPath?: string): string {
   );
 }
 
-function rebuildProfilesForEndpoint(database: DatabaseSync, endpointId: string, nowMs: number): void {
+function rebuildProfilesForEndpoint(
+  database: DatabaseSync,
+  endpointId: string,
+  nowMs: number,
+): void {
   const remainingRows = database
     .prepare(
       "SELECT sample_json FROM observed_performance_samples WHERE endpoint_id = ? ORDER BY timestamp_ms ASC, sample_id ASC",
@@ -43,7 +47,9 @@ function rebuildProfilesForEndpoint(database: DatabaseSync, endpointId: string, 
     .all(endpointId) as Array<{ sample_json: string }>;
 
   if (remainingRows.length === 0) {
-    database.prepare("DELETE FROM observed_profile_snapshots WHERE endpoint_id = ?").run(endpointId);
+    database
+      .prepare("DELETE FROM observed_profile_snapshots WHERE endpoint_id = ?")
+      .run(endpointId);
   } else {
     const samples = remainingRows.map(
       (row) => JSON.parse(row.sample_json) as ObservedPerformanceSample,

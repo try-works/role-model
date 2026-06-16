@@ -1,0 +1,43 @@
+---
+title: Models and role activation
+description: Configure the actual local or remote models you want to route across, then assign the roles they are allowed to serve.
+---
+
+# Models and role activation
+
+Role-model only works as well as the active model and role inventory you give it.
+
+## The operator job here
+
+Before benchmarking or routing, the operator needs to make four things true:
+
+- the provider or local backend is connected
+- the target models or endpoints are actually active
+- the intended roles are assigned
+- the candidate set reflects real production intent
+
+## Do not over-activate
+
+Avoid assigning every role to every model just because you can.
+
+If a model is only meant to serve `general.chat`, do not also assign `coder.patch` or `tool.agent` unless you
+want it to compete for those requests and be benchmarked as part of those routing stories.
+
+## Why role activation comes before benchmarking
+
+The benchmark should grade the same role-aware candidate set that Router will later use.
+
+If the role assignments change after the benchmark, your benchmark story and your routing story will drift.
+
+## Useful baseline roles
+
+Typical first-run role assignments are:
+
+- `general.chat` for general assistant routes
+- `coder.patch` for patch-oriented code work
+- `coder.review` for review and structured verdicts
+- `tool.agent` when tool calling is part of the route
+
+## Next
+
+Continue to [Benchmarks and evaluation](/runtime/benchmarks-and-evaluation).
