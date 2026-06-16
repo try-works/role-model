@@ -3,13 +3,5 @@
   "description": "Public docs for role-model covering install, quickstart, routing concepts, protocol semantics, and reference material.",
   "root": true,
   "defaultOpen": true,
-  "pages": [
-    "index",
-    "get-started",
-    "runtime",
-    "router",
-    "concepts",
-    "reference",
-    "protocol"
-  ]
+  "pages": ["index", "get-started", "runtime", "router", "concepts", "reference", "protocol"]
 }

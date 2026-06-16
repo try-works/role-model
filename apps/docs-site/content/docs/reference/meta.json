@@ -2,9 +2,5 @@
   "title": "Reference",
   "description": "Protocol-heavy and schema-heavy material for readers who need the deeper contract details.",
   "defaultOpen": true,
-  "pages": [
-    "overview",
-    "canonical-schemas-reference",
-    "reason-codes-and-rejection-taxonomy"
-  ]
+  "pages": ["overview", "canonical-schemas-reference", "reason-codes-and-rejection-taxonomy"]
 }

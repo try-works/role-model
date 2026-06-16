@@ -174,11 +174,13 @@ export function FirstRunSetupDiagram() {
         },
         {
           title: "Activate models and assign roles",
-          detail: "Publish the real endpoint inventory and bind each model only to the roles it should serve.",
+          detail:
+            "Publish the real endpoint inventory and bind each model only to the roles it should serve.",
         },
         {
           title: "Run the full benchmark",
-          detail: "Grade the configured candidate set and write measured quality into observed profiles.",
+          detail:
+            "Grade the configured candidate set and write measured quality into observed profiles.",
         },
         {
           title: "Choose and save routing strategy",
@@ -186,7 +188,8 @@ export function FirstRunSetupDiagram() {
         },
         {
           title: "Validate a real routed request",
-          detail: "Inspect Router and Observe to confirm the winner, fallbacks, and reasons match the evidence.",
+          detail:
+            "Inspect Router and Observe to confirm the winner, fallbacks, and reasons match the evidence.",
         },
       ]}
     />
@@ -200,15 +203,18 @@ export function DocumentationArchitectureDiagram() {
       steps={[
         {
           title: "Get Started",
-          detail: "Install, connect endpoints, benchmark the real set, choose strategy, and validate the first decision.",
+          detail:
+            "Install, connect endpoints, benchmark the real set, choose strategy, and validate the first decision.",
         },
         {
           title: "Runtime",
-          detail: "Use the actual runtime UI for model activation, benchmarking, strategy control, and live decision review.",
+          detail:
+            "Use the actual runtime UI for model activation, benchmarking, strategy control, and live decision review.",
         },
         {
           title: "Router",
-          detail: "Explain candidate selection, scoring, tie-breaks, exclusions, and decision behavior.",
+          detail:
+            "Explain candidate selection, scoring, tie-breaks, exclusions, and decision behavior.",
         },
         {
           title: "Concepts",
@@ -216,7 +222,8 @@ export function DocumentationArchitectureDiagram() {
         },
         {
           title: "Reference",
-          detail: "Provide the schema-level vocabulary and canonical artifact semantics when exact contracts matter.",
+          detail:
+            "Provide the schema-level vocabulary and canonical artifact semantics when exact contracts matter.",
         },
       ]}
     />
@@ -237,10 +244,7 @@ export function OperatorShellDiagram() {
             detail="Local runtimes, local models, and local endpoint readiness."
             title="Local"
           />
-          <DiagramCard
-            detail="Provider accounts and remote execution posture."
-            title="Remote"
-          />
+          <DiagramCard detail="Provider accounts and remote execution posture." title="Remote" />
           <DiagramCard
             detail="Model inventory, role activation, and benchmark operations."
             title="Models"
@@ -287,7 +291,8 @@ export function BenchmarkStrategyLoopDiagram() {
         },
         {
           title: "Choose routing strategy",
-          detail: "Pick balanced, quality, latency, or cost from the benchmark story instead of prior assumptions.",
+          detail:
+            "Pick balanced, quality, latency, or cost from the benchmark story instead of prior assumptions.",
         },
         {
           title: "Validate live routed requests",
@@ -295,7 +300,8 @@ export function BenchmarkStrategyLoopDiagram() {
         },
         {
           title: "Re-benchmark after inventory changes",
-          detail: "Any material provider, model, or role change should refresh the evidence before further tuning.",
+          detail:
+            "Any material provider, model, or role change should refresh the evidence before further tuning.",
         },
       ]}
     />
