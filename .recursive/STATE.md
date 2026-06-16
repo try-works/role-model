@@ -213,3 +213,7 @@
   - Catalog 16/16 tests + economics validation + bridge provider tests green
   - Packaged SEA SHA256 `9a3e4888a877236de8ccb1bed12ef1f0306d357719ec225ed26f786467e7079f`; `:3456` providers smoke PASS
   - Worktree: `.worktrees/44-kimi-k2.7-code-catalog`; ready for merge to `main`
+- GitHub Actions validation in `/.github/workflows/ci.yml` is now phase-attributed instead of collapsing into one opaque parity step: install, lint, typecheck, test, docs build, and workspace validation fail independently so GitHub-only regressions are diagnosable from the failing phase.
+- `/.github/workflows/docs-site-deploy.yml` now always builds docs on pushes and pull requests, uploads the static site artifact for inspection, and only deploys to Cloudflare Pages on non-PR events after explicit secret and account guards.
+- `/.github/workflows/build-binaries.yml` now treats release publication as a single tag-gated publish flow: matrix builds produce per-platform archives plus attestations, then one final publish job assembles archives, `install.sh`, `install.ps1`, and `SHA256SUMS.txt` before creating or updating the GitHub release.
+- GitHub release notes are now layered: `/.github/release.yml` controls GitHub-generated note categories, while `/scripts/generate-recursive-release-changelog.mjs` appends a repo-authored `Recursive Change Log` synthesized from changed `03-implementation-summary`, `06-decisions-update`, and `07-state-update` artifacts in the tagged commit range, with fallback to direct `/.recursive/STATE.md` and `/.recursive/DECISIONS.md` diff bullets.

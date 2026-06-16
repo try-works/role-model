@@ -1,0 +1,89 @@
+# Operator persistence + R11 gap audit — 2026-06-11
+
+## Environment
+
+- Packaged runtime: http://127.0.0.1:3456
+- Runtime state root: %LOCALAPPDATA%\Role Model Runtime
+- Scope: standalone-runtime
+- Source tree audited: D:\DEV\role-model (main workspace, not run 39 worktree)
+
+## Persistence audit (scripts/operator-audit-persistence.ts)
+
+### runtime_endpoints (after manual re-activation during investigation)
+
+- local-openai-compatible.personal.54fc2746-6472-42b0-901b-f2b178f5c0d0.local.lfm2.5-8b-a1b (active)
+- moonshot.personal.kimi-code.global.kimi-k2.6 (active)
+
+Note: Immediately after cold restart (before manual POST /api/role-model/endpoints), runtime_endpoints count was 0.
+
+### peers.json
+
+```json
+[{"id":"54fc2746-6472-42b0-901b-f2b178f5c0d0","url":"http://127.0.0.1:1234"}]
+```
+
+### OAuth token files
+
+- moonshot.personal.kimi-code.json: access token present, expiresAtMs=1781180993439, not expired at audit time
+- moonshot.personal.moonshot-oauth.json: access token present, expired
+
+### provider_accounts (oauth)
+
+- moonshot.personal.kimi-code: active / healthy
+- moonshot.personal.moonshot-oauth: active / healthy (stale token file)
+
+### provider_device_auth_sessions
+
+- Multiple connected rows for both accounts
+- 1 pending row on moonshot.personal.moonshot-oauth (inflates pendingDeviceAuthorizationCount)
+
+### operator-intent.json
+
+Present at standalone-runtime/operator-intent.json with peerLoads + remoteActivations.
+grep operator-intent over role-model-router/: NO matches — manifest is orphan on main branch.
+
+## Code findings (main branch)
+
+- clearRuntimeEndpoints() called unconditionally at createRuntimeBridgeBackend init (index.ts ~6354)
+- hydrateOauthProviderAccounts() promotes account health from token file but does not activate endpoints
+- resolveCredentialValue() refreshes OAuth only on execution, not bootstrap
+- loadPeerModel() / activateRuntimeEndpoint() persist endpoints but wiped on next init
+
+## Classification audit
+
+### req-runtime-host-bridge (live Craft ingress, default x-request-id)
+
+created_at_ms: 1781180231031
+difficulty: medium
+contextTokens: 99
+historyTurnCount: 2
+toolCount: 0
+codeOrSchemaBurden: true
+
+### probe-r11-v2-live (controlled assistant preamble + user hello)
+
+difficulty: easy
+contextTokens: 26
+codeOrSchemaBurden: false
+selected: moonshot/kimi-k2.6 (latency scoring)
+
+### Rubric replay hypothesis
+
+user-role Craft preamble + user hello → contextTokens ~99, codeOrSchemaBurden true, medium
+assistant-role preamble + user hello → easy under R11 v2
+
+### difficulty_classification_cache (conversation-main)
+
+Later polluted to hard (toolCount 33, contextTokens 8922) — shared cache key across consumers.
+
+## Packaged binary
+
+role-model-runtime.exe SHA256 (2026-06-11 rebuild): 9220ffe8c2976de28f740d4b58a03c73e1ccc385c955b9d1b3f3dae255c99e65
+
+R11 v2 present in source; insufficient for Craft user-role preamble pattern.
+
+## Conclusion
+
+1. Restart pain = G1 endpoint wipe + unread operator-intent (run 39 not merged to main)
+2. OAuth files persist; UI "re-auth" is mostly connectedWithoutEndpoint + pending session noise
+3. Craft medium = R11 gap (all user messages scanned); not assistant preamble case

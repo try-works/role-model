@@ -1,0 +1,50 @@
+Run: 39-runtime-session-rehydration-model-inventory
+Date: 2026-06-11T10:38:00+02:00
+QA Execution Mode: agent-operated (browser + HTTP)
+Executor: Cursor controller (audit session)
+Worktree: D:\DEV\role-model\.worktrees\39-runtime-session-rehydration-model-inventory
+Server: start-for-qa.ts @ http://127.0.0.1:3456 (readHealthStatus wired)
+
+## HTTP API verification (R8)
+
+GET /healthz
+- status: degraded (expected: remote probe auth failure on QA key)
+- sessionBootstrap.status: degraded
+- sessionBootstrap.stages: credentials=ready, endpoints=ready, peers=skipped, vendors=ready, local-reload=skipped, remote-health=degraded, inventory=degraded
+
+GET /api/role-model/runtime/summary
+- readinessSummary.connectedWithoutEndpointCount: 0
+- sessionBootstrap present (mirrors /healthz)
+- inventorySummary.modelIdCount: 1
+- aliasDrift[0].aliasId: mixed.local-remote (drift warning present)
+
+## Browser verification (R8)
+
+1. Navigate http://127.0.0.1:3456/app/system/session-readiness
+   PASS — page renders:
+   - KPI cards: Bootstrap status (Degraded), Host health, Execution mode (local_only), Routable endpoints (1)
+   - Session bootstrap section with 7 stages and status badges
+   - Credential readiness section
+   - Routable inventory section (models/endpoints/local/remote counts)
+   - Alias drift warnings (mixed.local-remote hint drift + suggested ids)
+   - System nav includes Session readiness as first System item
+   - Health JSON / Runtime JSON action links present
+
+2. Navigate http://127.0.0.1:3456/app/control/session-readiness (legacy)
+   PASS — redirects to /app/system/session-readiness (same content)
+
+## Programmatic UI tests (R0, R8)
+
+vitest apps/runtime-ui/app/lib/design-system.test.ts — PASS (includes /app/system/session-readiness nav)
+vitest apps/runtime-ui/app/lib/view-models.test.ts — PASS (22/22)
+
+## Bridge focused suite (R1–R9 floor)
+
+vitest 11 files (endpoint-rehydration, restart-rehydration, session-readiness-api, session-bootstrap-health, remote-health-bootstrap, routable-inventory-bootstrap, operator-intent, oauth-credential, session-bootstrap, remote-health-probe, local-model-role-bindings) — PASS 32/32
+
+## Known non-blockers documented in audit
+
+- validate-ui.test.ts mixedAliasModelListIncludesAlias — FAIL on worktree AND main (pre-existing; inventory-empty alias omission in /v1/models)
+- Packaged SEA restart drill on :3456 — not executed (deferred per Phase 5)
+
+Result: Browser + programmatic R8 verification PASS. R6/R9 packaged drill remains deferred.

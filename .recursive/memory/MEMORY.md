@@ -21,6 +21,7 @@ Control-plane docs are not memory docs:
 - If the task plans delegated review, subagent help, review bundles, smoke-harness portability work, or capability-sensitive execution, read `/.recursive/memory/skills/SKILLS.md` and then load the relevant skill-memory shards.
 - If Phase 8 will need to promote durable lessons, first capture run-local skill usage in the run artifact and only then promote generalized conclusions into skill-memory shards.
 - Benchmark routing display and env credential lessons: `/.recursive/memory/episodes/run-43-benchmark-routing-display.md`
+- GitHub Actions validation, docs deploy, binary release publication, and recursive-artifact changelog generation: `/.recursive/memory/patterns/github-ci-and-release-workflow.md`
 - Prefer `Status: CURRENT` docs for planning and execution.
 - `Status: SUSPECT` docs may be used as leads, but revalidate them before trust.
 - Exclude `STALE` and `DEPRECATED` docs from default retrieval unless doing historical analysis.

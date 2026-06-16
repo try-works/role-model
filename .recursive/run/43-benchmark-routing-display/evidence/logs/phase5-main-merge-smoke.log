@@ -1,0 +1,22 @@
+
+[2026-06-14T21:29:20.4149310+02:00] === main merge smoke @ fa9f3d1 ===
+[2026-06-14T21:29:20.4266681+02:00] SEA SHA256=644028da0e39f7ec5836e33e581c1332b2e3f08b86ca1367dda101f53714adf7
+[2026-06-14T21:29:20.5061445+02:00] git=fa9f3d1
+[2026-06-14T21:29:20.6223541+02:00] PASS healthz
+[2026-06-14T21:29:20.6919905+02:00] DeepSeek endpoints=2 health=healthy,healthy
+[2026-06-14T21:29:20.9854335+02:00] deepseek.providerKind=provider-openai
+[2026-06-14T21:29:21.0519006+02:00] byMode full=1820b2d1-840b-4e6a-9a05-71e3aa44a659 quick=bc654f6d-a327-427a-995e-d2af4a41c305 fullOk=True quickOk=True distinct=True
+[2026-06-14T21:29:21.0820810+02:00] PASS dual-run by-mode
+[2026-06-14T21:29:21.1865964+02:00] Q5 ep1 routingQualityScore=0.593929804372842 artifact=0.416666666666667 hardBlend=True
+[2026-06-14T21:29:21.2327429+02:00]   hardBlend full=0.424242424242424 quick=0.416666666666667 blended=0.420454545454545
+[2026-06-14T21:29:21.2458963+02:00] PASS hardBlend present
+[2026-06-14T21:29:21.2661470+02:00] run history count=3
+[2026-06-14T21:29:21.2818744+02:00] PASS run history
+[2026-06-14T21:29:21.3348856+02:00] dashboard latency value= detail=
+[2026-06-14T21:29:21.3492479+02:00] FAIL dashboard latency detail missing
+[2026-06-14T21:29:21.3761813+02:00] benchmark page HTTP=200 len=2665
+[2026-06-14T21:29:21.3897911+02:00] PASS benchmark page serves
+[2026-06-14T21:29:21.4053733+02:00] SMOKE FAIL (1 failures)
+[2026-06-14T21:30:19.5666520+02:00] CORRECTED dashboard latency value=41 ms avg detail=41 ms p95 / 41 ms avg across structured telemetry
+[2026-06-14T21:30:19.5823625+02:00] PASS dashboard latency detail (telemetry/summary)
+[2026-06-14T21:30:19.5988451+02:00] SMOKE PASS overall (7/7 after corrected telemetry endpoint)
