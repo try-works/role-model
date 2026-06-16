@@ -404,6 +404,8 @@ describe("runtime-host-bridge", () => {
       upsertProviderAccount: async () => ({ providerAccountId: "acct-1" }),
       startProviderDeviceAuthorization: async () => ({ status: "pending" }),
       pollProviderDeviceAuthorization: async () => ({ status: "pending" }),
+      reconnectProviderAccount: async () => ({ status: "pending" }),
+      updateProviderApiKey: async () => ({ providerAccountId: "acct-1" }),
       activateEndpoint: async () => ({ success: true }),
       readControllerAssignment: async () => null,
       updateControllerAssignment: async () => ({
@@ -471,6 +473,8 @@ describe("runtime-host-bridge", () => {
       listTaskDefinitions: async () => [],
       updateTaskDefinitions: async () => [],
       listSwapHistory: async () => [],
+      listActivityMetrics: async () => [{ id: 1 }],
+      readActivityCapture: async () => ({ id: 1 }),
       getLocalLogs: async () => "logs",
       readModelOverrides: async () => ({}),
       updateModelOverrides: async () => ({}),
@@ -509,6 +513,8 @@ describe("runtime-host-bridge", () => {
           backend: typeof backend,
         ) => {
           staticRoot?: string;
+          listActivityMetrics?: unknown;
+          readActivityCapture?: unknown;
           readRouterSummary?: unknown;
           readRouterConfig?: unknown;
           listRouterCandidates?: unknown;
@@ -523,7 +529,9 @@ describe("runtime-host-bridge", () => {
            updateTaskDefinitions?: unknown;
            readModelOverrides?: unknown;
            updateModelOverrides?: unknown;
-           readPeers?: unknown;
+          readPeers?: unknown;
+          reconnectProviderAccount?: unknown;
+          updateProviderApiKey?: unknown;
           updatePeers?: unknown;
           checkPeerHealth?: unknown;
         };
@@ -538,6 +546,8 @@ describe("runtime-host-bridge", () => {
     );
 
     expect(options.staticRoot).toBe(staticRoot);
+    expect(options.listActivityMetrics).toBe(backend.listActivityMetrics);
+    expect(options.readActivityCapture).toBe(backend.readActivityCapture);
     expect(options.readRouterSummary).toBe(readRouterSummary);
     expect(options.readRouterConfig).toBe(readRouterConfig);
     expect(options.listRouterCandidates).toBe(listRouterCandidates);
@@ -553,6 +563,8 @@ describe("runtime-host-bridge", () => {
     expect(options.readModelOverrides).toBe(backend.readModelOverrides);
     expect(options.updateModelOverrides).toBe(backend.updateModelOverrides);
     expect(options.readPeers).toBe(backend.readPeers);
+    expect(options.reconnectProviderAccount).toBe(backend.reconnectProviderAccount);
+    expect(options.updateProviderApiKey).toBe(backend.updateProviderApiKey);
     expect(options.updatePeers).toBe(backend.updatePeers);
     expect(options.checkPeerHealth).toBe(backend.checkPeerHealth);
   });
@@ -2490,8 +2502,9 @@ describe("runtime-host-bridge", () => {
     }
   });
 
-  test("accepts x-role-model-request-id as the bridge request id alias", async () => {
+  test("preserves x-role-model-request-id as client correlation metadata while generating a canonical request id", async () => {
     let capturedRequestId = "";
+    let capturedClientRequestId: string | undefined;
     const server = await (
       bridge as {
         startBridgeServer: (options: {
@@ -2501,6 +2514,10 @@ describe("runtime-host-bridge", () => {
           executeChatCompletions: (
             body: Record<string, unknown>,
             requestId: string,
+            streamWriter?: unknown,
+            requestOptions?: {
+              clientRequestId?: string;
+            },
           ) => Promise<unknown>;
         }) => Promise<{ port: number; close(): Promise<void> }>;
       }
@@ -2508,8 +2525,9 @@ describe("runtime-host-bridge", () => {
       host: "127.0.0.1",
       port: 0,
       registry,
-      executeChatCompletions: async (_body, requestId) => {
+      executeChatCompletions: async (_body, requestId, _streamWriter, requestOptions) => {
         capturedRequestId = requestId;
+        capturedClientRequestId = requestOptions?.clientRequestId;
         return {
           model: "moonshot/kimi-k2.5",
           endpointId: "moonshot.personal.primary.global.kimi-k2.5",
@@ -2538,7 +2556,70 @@ describe("runtime-host-bridge", () => {
         }),
       });
       expect(response.status).toBe(200);
-      expect(capturedRequestId).toBe("req-alias-36");
+      expect(capturedRequestId).toMatch(/^req-/);
+      expect(capturedRequestId).not.toBe("req-alias-36");
+      expect(capturedClientRequestId).toBe("req-alias-36");
+    } finally {
+      await server.close();
+    }
+  });
+
+  test("generates a unique canonical request id for each request when headers omit request ids", async () => {
+    const capturedRequestIds: string[] = [];
+    const server = await (
+      bridge as {
+        startBridgeServer: (options: {
+          host: string;
+          port: number;
+          registry: EndpointRegistryResult;
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+          ) => Promise<unknown>;
+        }) => Promise<{ port: number; close(): Promise<void> }>;
+      }
+    ).startBridgeServer({
+      host: "127.0.0.1",
+      port: 0,
+      registry,
+      executeChatCompletions: async (_body, requestId) => {
+        capturedRequestIds.push(requestId);
+        return {
+          model: "moonshot/kimi-k2.5",
+          endpointId: "moonshot.personal.primary.global.kimi-k2.5",
+          adapterFamily: "ai-sdk-openai-compatible",
+          routingDecisionId: `decision-${requestId}`,
+          outputText: "ok",
+          finishReason: "stop",
+          usage: {
+            inputTokens: 1,
+            outputTokens: 1,
+          },
+        };
+      },
+    });
+
+    try {
+      for (let index = 0; index < 2; index += 1) {
+        const response = await fetch(`http://127.0.0.1:${server.port}/v1/chat/completions`, {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "moonshot/kimi-k2.5",
+            messages: [{ role: "user", content: `ping-${index}` }],
+          }),
+        });
+        expect(response.status).toBe(200);
+      }
+
+      expect(capturedRequestIds).toHaveLength(2);
+      expect(capturedRequestIds[0]).toMatch(/^req-/);
+      expect(capturedRequestIds[1]).toMatch(/^req-/);
+      expect(capturedRequestIds[0]).not.toBe("req-runtime-host-bridge");
+      expect(capturedRequestIds[1]).not.toBe("req-runtime-host-bridge");
+      expect(capturedRequestIds[0]).not.toBe(capturedRequestIds[1]);
     } finally {
       await server.close();
     }
@@ -4784,6 +4865,18 @@ describe("runtime-host-bridge", () => {
             endpointId: string;
           }>;
           readRequestObservation: (requestId: string) => Promise<unknown>;
+          listTelemetryRequests: () => Promise<
+            readonly {
+              requestId: string;
+              requestClass?: string;
+            }[]
+          >;
+          listActivityMetrics: () => Promise<
+            readonly {
+              req_path: string;
+              model: string;
+            }[]
+          >;
         }>;
       }
     ).createRuntimeBridgeBackend({
@@ -4814,6 +4907,21 @@ describe("runtime-host-bridge", () => {
         },
       },
     });
+    await expect(backend.listTelemetryRequests()).resolves.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          requestId,
+          requestClass: "live_request",
+        }),
+      ]),
+    );
+    await expect(backend.listActivityMetrics()).resolves.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          req_path: "/v1/chat/completions",
+        }),
+      ]),
+    );
   });
 
   test("persists difficulty-routing diagnostics for runtime-backed chat requests", async () => {
@@ -6371,7 +6479,7 @@ describe("runtime-host-bridge", () => {
           };
         }
       ).readinessSummary?.credentialsMissingAccountCount,
-    ).toBeGreaterThan(0);
+    ).toBe(0);
 
     const connected = await backend.pollProviderDeviceAuthorization?.({
       authRequestId: (pending as { authRequestId: string }).authRequestId,
@@ -7734,8 +7842,10 @@ describe("runtime-host-bridge", () => {
     ).createRuntimeBridgeBackend({
       repoRoot,
       fixtureRoot: testFixtureRoot,
-      runtimeStateRoot: path.join(os.tmpdir(), "role-model-runtime-host-route-tests"),
-      scopeId: "runtime-host-route-tests",
+      runtimeStateRoot: await mkdtemp(
+        path.join(os.tmpdir(), "role-model-runtime-host-route-tests-"),
+      ),
+      scopeId: `runtime-host-route-tests-${Date.now()}`,
     });
 
     expect(typeof backend.listRecentRequestObservations).toBe("function");
@@ -7778,14 +7888,14 @@ describe("runtime-host-bridge", () => {
     });
 
     try {
-      const requestId = "req-runtime-bridge-route-001";
+      const clientRequestId = "req-runtime-bridge-route-001";
       const completionResponse = await fetch(
         `http://127.0.0.1:${server.port}/v1/chat/completions`,
         {
           method: "POST",
           headers: {
             "content-type": "application/json",
-            "x-request-id": requestId,
+            "x-request-id": clientRequestId,
           },
           body: JSON.stringify({
             model: "deepseek/chat-capture-v1",
@@ -7794,6 +7904,22 @@ describe("runtime-host-bridge", () => {
         },
       );
       expect(completionResponse.status).toBe(200);
+      const telemetryRequestsResponse = await fetch(
+        `http://127.0.0.1:${server.port}/api/role-model/telemetry/requests`,
+      );
+      expect(telemetryRequestsResponse.status).toBe(200);
+      const telemetryRequests = (await telemetryRequestsResponse.json()) as Array<{
+        requestId: string;
+        clientRequestId?: string | null;
+        endpointId: string;
+      }>;
+      const requestId =
+        telemetryRequests.find((entry) => entry.clientRequestId === clientRequestId)?.requestId ??
+        null;
+      expect(requestId).toMatch(/^req-/);
+      if (!requestId) {
+        throw new Error("Expected a canonical request id for the correlated request.");
+      }
 
       const recentResponse = await fetch(`http://127.0.0.1:${server.port}/api/role-model/requests`);
       expect(recentResponse.status).toBe(200);
@@ -7801,6 +7927,7 @@ describe("runtime-host-bridge", () => {
         expect.arrayContaining([
           expect.objectContaining({
             requestId,
+            clientRequestId,
             endpointId: "test.capture.chat-v1",
           }),
         ]),
@@ -7839,14 +7966,11 @@ describe("runtime-host-bridge", () => {
         ]),
       );
 
-      const telemetryRequestsResponse = await fetch(
-        `http://127.0.0.1:${server.port}/api/role-model/telemetry/requests`,
-      );
-      expect(telemetryRequestsResponse.status).toBe(200);
-      expect(await telemetryRequestsResponse.json()).toEqual(
+      expect(telemetryRequests).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             requestId,
+            clientRequestId,
             endpointId: "test.capture.chat-v1",
             sourceType: "remote",
             providerFamily: "ai-sdk-openai-compatible",
@@ -7866,6 +7990,7 @@ describe("runtime-host-bridge", () => {
       expect(await requestDetailResponse.json()).toEqual(
         expect.objectContaining({
           requestId,
+          clientRequestId,
           endpointId: "test.capture.chat-v1",
           sourceType: "remote",
           capturePolicy: expect.objectContaining({
@@ -7885,6 +8010,222 @@ describe("runtime-host-bridge", () => {
             endpoint_id: "test.capture.chat-v1",
           }),
         }),
+      );
+    } finally {
+      await server.close();
+    }
+  });
+
+  test("keeps duplicate caller request ids as separate canonical telemetry rows", async () => {
+    expect(
+      typeof (bridge as { createRuntimeBridgeBackend?: unknown }).createRuntimeBridgeBackend,
+    ).toBe("function");
+
+    const runtimeStateRoot = await mkdtemp(
+      path.join(os.tmpdir(), "role-model-runtime-host-correlation-tests-"),
+    );
+    const backend = await (
+      bridge as {
+        createRuntimeBridgeBackend: (options: {
+          repoRoot: string;
+          fixtureRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+        }) => Promise<{
+          registry: EndpointRegistryResult;
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+            streamWriter?: unknown,
+            requestOptions?: {
+              clientRequestId?: string;
+            },
+          ) => Promise<unknown>;
+          executeResponses: (body: Record<string, unknown>, requestId: string) => Promise<unknown>;
+          listTelemetryRequests: () => Promise<
+            readonly {
+              requestId: string;
+              clientRequestId?: string | null;
+            }[]
+          >;
+          readRequestObservation: (requestId: string) => Promise<unknown>;
+        }>;
+      }
+    ).createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: testFixtureRoot,
+      runtimeStateRoot,
+      scopeId: "runtime-host-correlation-tests",
+    });
+
+    const server = await (
+      bridge as {
+        startBridgeServer: (options: {
+          host: string;
+          port: number;
+          registry: EndpointRegistryResult;
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+            streamWriter?: unknown,
+            requestOptions?: {
+              clientRequestId?: string;
+            },
+          ) => Promise<unknown>;
+          executeResponses: (body: Record<string, unknown>, requestId: string) => Promise<unknown>;
+          listTelemetryRequests?: () => Promise<unknown>;
+          readRequestObservation?: (requestId: string) => Promise<unknown>;
+        }) => Promise<{ port: number; close(): Promise<void> }>;
+      }
+    ).startBridgeServer({
+      host: "127.0.0.1",
+      port: 0,
+      registry: backend.registry,
+      executeChatCompletions: backend.executeChatCompletions,
+      executeResponses: backend.executeResponses,
+      listTelemetryRequests: backend.listTelemetryRequests,
+      readRequestObservation: backend.readRequestObservation,
+    });
+
+    try {
+      for (let index = 0; index < 2; index += 1) {
+        const response = await fetch(`http://127.0.0.1:${server.port}/v1/chat/completions`, {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            "x-request-id": "req-shared-correlation-001",
+          },
+          body: JSON.stringify({
+            model: "deepseek/chat-capture-v1",
+            messages: [{ role: "user", content: `repeat-${index}` }],
+          }),
+        });
+        expect(response.status).toBe(200);
+      }
+
+      const telemetryRequestsResponse = await fetch(
+        `http://127.0.0.1:${server.port}/api/role-model/telemetry/requests`,
+      );
+      expect(telemetryRequestsResponse.status).toBe(200);
+      const requestRows = (await telemetryRequestsResponse.json()) as Array<{
+        requestId: string;
+        clientRequestId?: string | null;
+      }>;
+      const correlatedRows = requestRows.filter(
+        (entry) => entry.clientRequestId === "req-shared-correlation-001",
+      );
+      expect(correlatedRows).toHaveLength(2);
+      expect(new Set(correlatedRows.map((entry) => entry.requestId)).size).toBe(2);
+
+      for (const row of correlatedRows) {
+        const detailResponse = await fetch(
+          `http://127.0.0.1:${server.port}/api/role-model/requests/${row.requestId}`,
+        );
+        expect(detailResponse.status).toBe(200);
+        await expect(detailResponse.json()).resolves.toEqual(
+          expect.objectContaining({
+            requestId: row.requestId,
+            clientRequestId: "req-shared-correlation-001",
+          }),
+        );
+      }
+    } finally {
+      await server.close();
+    }
+  });
+
+  test("records caller correlation and live request classification for failed chat completions", async () => {
+    expect(
+      typeof (bridge as { createRuntimeBridgeBackend?: unknown }).createRuntimeBridgeBackend,
+    ).toBe("function");
+
+    const runtimeStateRoot = await mkdtemp(
+      path.join(os.tmpdir(), "role-model-runtime-host-failed-telemetry-"),
+    );
+    const backend = await (
+      bridge as {
+        createRuntimeBridgeBackend: (options: {
+          repoRoot: string;
+          fixtureRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+        }) => Promise<{
+          registry: EndpointRegistryResult;
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+            streamWriter?: unknown,
+            requestOptions?: {
+              clientRequestId?: string;
+            },
+          ) => Promise<unknown>;
+          executeResponses: (body: Record<string, unknown>, requestId: string) => Promise<unknown>;
+          listTelemetryRequests?: () => Promise<unknown>;
+          readRequestObservation?: (requestId: string) => Promise<unknown>;
+        }>;
+      }
+    ).createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: testFixtureRoot,
+      runtimeStateRoot,
+      scopeId: "runtime-host-failed-telemetry-tests",
+    });
+
+    const server = await (
+      bridge as {
+        startBridgeServer: (options: {
+          host: string;
+          port: number;
+          registry: EndpointRegistryResult;
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+            streamWriter?: unknown,
+            requestOptions?: {
+              clientRequestId?: string;
+            },
+          ) => Promise<unknown>;
+          executeResponses: (body: Record<string, unknown>, requestId: string) => Promise<unknown>;
+          listTelemetryRequests?: () => Promise<unknown>;
+          readRequestObservation?: (requestId: string) => Promise<unknown>;
+        }) => Promise<{ port: number; close(): Promise<void> }>;
+      }
+    ).startBridgeServer({
+      host: "127.0.0.1",
+      port: 0,
+      registry: backend.registry,
+      executeChatCompletions: backend.executeChatCompletions,
+      executeResponses: backend.executeResponses,
+      listTelemetryRequests: backend.listTelemetryRequests,
+      readRequestObservation: backend.readRequestObservation,
+    });
+
+    try {
+      const clientRequestId = "req-client-failure-001";
+      const response = await fetch(`http://127.0.0.1:${server.port}/v1/chat/completions`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-request-id": clientRequestId,
+        },
+        body: JSON.stringify({
+          model: "nonexistent/model-for-failure",
+          messages: [{ role: "user", content: "Force a telemetry failure row." }],
+        }),
+      });
+      expect(response.status).toBe(400);
+
+      const telemetryRequestsResponse = await fetch(
+        `http://127.0.0.1:${server.port}/api/role-model/telemetry/requests`,
+      );
+      expect(telemetryRequestsResponse.status).toBe(200);
+      expect(await telemetryRequestsResponse.json()).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            clientRequestId,
+            requestClass: "live_request",
+          }),
+        ]),
       );
     } finally {
       await server.close();
@@ -8118,7 +8459,7 @@ describe("runtime-host-bridge", () => {
       });
 
       let transcript = "";
-      while (!transcript.includes("req-runtime-bridge-sse-001")) {
+      while (!transcript.includes('"clientRequestId":"req-runtime-bridge-sse-001"')) {
         const chunk = await reader.read();
         transcript += decoder.decode(chunk.value ?? new Uint8Array(), { stream: !chunk.done });
         if (chunk.done) {
@@ -8127,7 +8468,8 @@ describe("runtime-host-bridge", () => {
       }
 
       expect(transcript).toContain("event: telemetry.update");
-      expect(transcript).toContain('"requestId":"req-runtime-bridge-sse-001"');
+      expect(transcript).toContain('"clientRequestId":"req-runtime-bridge-sse-001"');
+      expect(transcript).toMatch(/"requestId":"req-[^"]+"/);
       expect(transcript).toContain('"sourceType":"remote"');
     } finally {
       abortController.abort();

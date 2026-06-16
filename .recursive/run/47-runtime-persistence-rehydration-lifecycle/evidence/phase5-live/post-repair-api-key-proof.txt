@@ -1,0 +1,3 @@
+Credential path: D:\DEV\role-model\.worktrees\47-runtime-persistence-rehydration-lifecycle\.recursive\run\47-runtime-persistence-rehydration-lifecycle\evidence\phase5-live\runtime-state\run47-phase5-live\credentials\api-key\moonshot\moonshot.personal.api-key.json
+SHA256: CD4CE109975853F75A74547DAD00105A5E4F51D71CBED8D77C470179C51D3864
+Contains rotated key token: True

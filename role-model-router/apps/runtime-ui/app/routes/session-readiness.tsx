@@ -19,7 +19,10 @@ import {
 } from "../lib/runtime-api";
 import {
   buildAliasDriftRows,
+  buildArchivedArtifactRows,
   buildCredentialReadinessRows,
+  buildCredentialLifecycleAccountRows,
+  buildCredentialLifecycleBanner,
   buildInventorySummaryStats,
   buildOperatorIntentSummary,
   buildSessionBootstrapRows,
@@ -65,19 +68,28 @@ export default function SessionReadinessRoute() {
   const bootstrapStatus = summarizeSessionBootstrapStatus(summary);
   const bootstrapRows = buildSessionBootstrapRows(summary);
   const readinessRows = buildCredentialReadinessRows(summary).filter((row) => row.value > 0);
+  const lifecycleBanner = buildCredentialLifecycleBanner(summary);
+  const lifecycleAccountRows = buildCredentialLifecycleAccountRows(summary).filter(
+    (row) => row.blocking,
+  );
+  const archivedRows = buildArchivedArtifactRows(summary);
   const inventoryStats = buildInventorySummaryStats(summary);
   const driftRows = buildAliasDriftRows(summary);
   const operatorIntentSummary = buildOperatorIntentSummary(summary);
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
         <FactCard
           label="Bootstrap status"
           value={bootstrapStatus?.label ?? "Unavailable"}
           emphasis
         />
         <FactCard label="Host health" value={health.status} />
+        <FactCard
+          label="Lifecycle authority"
+          value={lifecycleBanner?.authorityLabel ?? "Unavailable"}
+        />
         <FactCard label="Execution mode" value={summary.executionMode ?? "unknown"} />
         <FactCard
           label="Routable endpoints"
@@ -135,6 +147,70 @@ export default function SessionReadinessRoute() {
             ))
           )}
         </div>
+      </SectionCard>
+
+      <SectionCard title="Canonical lifecycle">
+        <div className="mb-4 flex flex-wrap items-center gap-3">
+          {lifecycleBanner ? (
+            <>
+              <StatusPill tone={lifecycleBanner.authorityTone}>
+                {lifecycleBanner.authorityLabel}
+              </StatusPill>
+              {lifecycleBanner.archivedStaleCount > 0 ? (
+                <StatusPill tone="neutral">
+                  Archived stale {lifecycleBanner.archivedStaleCount}
+                </StatusPill>
+              ) : null}
+            </>
+          ) : (
+            <StatusPill tone="neutral">Lifecycle contract unavailable</StatusPill>
+          )}
+        </div>
+        {lifecycleBanner ? (
+          <p className="mb-4 text-sm text-[var(--rm-secondary)]">{lifecycleBanner.detail}</p>
+        ) : null}
+        {lifecycleAccountRows.length === 0 ? (
+          <EmptyState label="No blocking account lifecycle rows." />
+        ) : (
+          <div className="space-y-3">
+            {lifecycleAccountRows.map((row) => (
+              <div key={row.key} className={listRowClassName}>
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="font-medium text-[var(--rm-fg)]">{row.providerAccountId}</p>
+                    <StatusPill tone={row.tone}>{row.lifecycleLabel}</StatusPill>
+                  </div>
+                  <p className="mt-2 text-sm text-[var(--rm-secondary)]">
+                    {row.reasonLabel} • Actions: {row.availableActionsLabel}
+                  </p>
+                </div>
+                <div className="text-right text-sm text-[var(--rm-secondary)]">
+                  <p>{row.providerId}</p>
+                  <p>{row.activeEndpointCount} active endpoints</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </SectionCard>
+
+      <SectionCard title="Archived stale diagnostics">
+        {archivedRows.length === 0 ? (
+          <EmptyState label="No archived stale lifecycle artifacts." />
+        ) : (
+          <div className="space-y-3">
+            {archivedRows.map((row) => (
+              <div
+                key={row.key}
+                className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}
+              >
+                <p className="font-medium text-[var(--rm-fg)]">{row.label}</p>
+                <p className="mt-2">{row.providerAccountId}</p>
+                <p className="mt-1">{row.detail}</p>
+              </div>
+            ))}
+          </div>
+        )}
       </SectionCard>
 
       <SectionCard title="Operator intent manifest">

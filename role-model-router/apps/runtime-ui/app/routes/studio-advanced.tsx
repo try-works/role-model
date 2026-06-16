@@ -19,7 +19,7 @@ import {
   fetchRuntimeSnapshot,
   submitAdvancedRequest,
 } from "../lib/runtime-api";
-import { buildCredentialReadinessRows, buildWorkbenchModelOptions } from "../lib/view-models";
+import { buildCredentialLifecycleBanner, buildWorkbenchModelOptions } from "../lib/view-models";
 
 const advancedFamilies = [
   {
@@ -127,10 +127,8 @@ export default function StudioAdvancedRoute() {
   );
   const selectedFamily =
     advancedFamilies.find((entry) => entry.path === path) ?? advancedFamilies[0];
-  const readinessRows = snapshot
-    ? buildCredentialReadinessRows(snapshot.summary).filter((row) => row.value > 0)
-    : [];
-  const blockingReadinessRows = readinessRows.filter((row) => row.key !== "ready");
+  const lifecycleBanner = snapshot ? buildCredentialLifecycleBanner(snapshot.summary) : null;
+  const blockingReadinessRows = lifecycleBanner?.blockingRows ?? [];
   const hasModels = modelOptions.length > 0;
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -178,13 +176,29 @@ export default function StudioAdvancedRoute() {
 
       {error ? <ErrorState label={error} /> : null}
 
-      {blockingReadinessRows.length > 0 ? (
+      {lifecycleBanner &&
+      (blockingReadinessRows.length > 0 ||
+        lifecycleBanner.archivedStaleCount > 0 ||
+        lifecycleBanner.authorityTone === "accent") ? (
         <SectionCard
           title="Execution readiness"
           description="Advanced request families use the same execution-ready model inventory as Workbench and the OpenAI-compatible bridge surfaces."
         >
+          <div className="mb-4 flex flex-wrap gap-3">
+            <span className="inline-flex items-center rounded-full border border-[var(--rm-border)] px-3 py-1 text-xs font-medium text-[var(--rm-secondary)]">
+              {lifecycleBanner.authorityLabel}
+            </span>
+            {lifecycleBanner.archivedStaleCount > 0 ? (
+              <span
+                className="inline-flex items-center rounded-full border border-[var(--rm-border)] px-3 py-1 text-xs font-medium text-[var(--rm-secondary)]"
+              >
+                Archived stale {lifecycleBanner.archivedStaleCount}
+              </span>
+            ) : null}
+          </div>
+          <p className="mb-4 text-sm text-[var(--rm-secondary)]">{lifecycleBanner.detail}</p>
           <div className="flex flex-wrap gap-3">
-            {readinessRows.map((row) => (
+            {blockingReadinessRows.map((row) => (
               <span
                 key={row.key}
                 className="inline-flex items-center rounded-full border border-[var(--rm-border)] px-3 py-1 text-xs font-medium text-[var(--rm-secondary)]"

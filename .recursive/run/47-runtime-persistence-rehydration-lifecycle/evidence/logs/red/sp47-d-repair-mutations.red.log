@@ -1,0 +1,46 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/47-runtime-persistence-rehydration-lifecycle/role-model-router/apps/runtime-host-bridge[39m
+
+(node:4480) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [31mΓ¥»[39m test/account-repair.test.ts [2m([22m[2m2 tests[22m[2m | [22m[31m2 failed[39m[2m)[22m[33m 724[2mms[22m[39m
+[31m   [31m├ù[31m account repair mutations[2m > [22mreconnect returns the current pending device-authorization session for the same account[39m[33m 373[2mms[22m[39m
+[31m     ΓåÆ You must provide a Promise to expect() when using .resolves, not 'undefined'.[39m
+[31m   [31m├ù[31m account repair mutations[2m > [22mupdate API key preserves account identity, bindings, and endpoint associations[39m[33m 349[2mms[22m[39m
+[31m     ΓåÆ You must provide a Promise to expect() when using .resolves, not 'undefined'.[39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 2 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/account-repair.test.ts > account repair mutations > reconnect returns the current pending device-authorization session for the same account
+TypeError: You must provide a Promise to expect() when using .resolves, not 'undefined'.
+ Γ¥» test/account-repair.test.ts:72:7
+     70|           providerAccountId: "moonshot.personal.kimi-code",
+     71|         }),
+     72|       ).resolves.toEqual(
+       |       ^
+     73|         expect.objectContaining({
+     74|           authRequestId: pending.authRequestId,
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/2]ΓÄ»
+
+ FAIL  test/account-repair.test.ts > account repair mutations > update API key preserves account identity, bindings, and endpoint associations
+TypeError: You must provide a Promise to expect() when using .resolves, not 'undefined'.
+ Γ¥» test/account-repair.test.ts:145:7
+
+    143|           apiKey: "sk-inline-updated-key",
+    144|         }),
+    145|       ).resolves.toEqual(
+       |       ^
+    146|         expect.objectContaining({
+    147|           providerAccountId: "moonshot.personal.primary",
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m2 failed[39m[22m[90m (2)[39m
+[2m   Start at [22m 19:45:34
+[2m   Duration [22m 3.11s[2m (transform 1.07s, setup 0ms, collect 1.52s, tests 724ms, environment 0ms, prepare 212ms)[22m
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[2/2]ΓÄ»
+
+undefined
+D:\DEV\role-model\.worktrees\47-runtime-persistence-rehydration-lifecycle\role-model-router\apps\runtime-host-bridge:
+ΓÇëERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓÇë Command failed with exit code 1: vitest run test/account-repair.test.ts

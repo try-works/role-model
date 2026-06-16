@@ -1,0 +1,370 @@
+{
+  "lifecycleSummary": {
+    "active": 6,
+    "degraded": 1,
+    "offline": 0
+  },
+  "providerCount": 232,
+  "accountCount": 7,
+  "endpointCount": 7,
+  "scopeId": "run47-phase5-live",
+  "runtimeStateRoot": "D:\\DEV\\role-model\\.worktrees\\47-runtime-persistence-rehydration-lifecycle\\.recursive\\run\\47-runtime-persistence-rehydration-lifecycle\\evidence\\phase5-live\\runtime-state",
+  "readinessSummary": {
+    "pendingDeviceAuthorizationCount": 1,
+    "credentialsMissingAccountCount": 0,
+    "connectedWithoutEndpointCount": 0,
+    "readyAccountCount": 4
+  },
+  "credentialLifecycle": {
+    "version": 1,
+    "authority": {
+      "state": "authoritative",
+      "bootstrapStatus": "ready"
+    },
+    "counts": {
+      "executionReady": 4,
+      "connectedNoEndpoint": 0,
+      "pendingAuthorization": 1,
+      "expiredAuth": 0,
+      "credentialsMissing": 0,
+      "envUnresolved": 2,
+      "archivedStale": 0
+    },
+    "accounts": [
+      {
+        "logicalAccountId": "anthropic.team.shared",
+        "providerAccountId": "anthropic.team.shared",
+        "providerId": "anthropic",
+        "sourceProvenance": [
+          "manual"
+        ],
+        "authMode": "api-key-static",
+        "credentialStorageMode": "env-ref",
+        "credentialBackendCanonical": "env",
+        "lifecycleState": "env-unresolved",
+        "reasonCode": "env-var-missing",
+        "blocking": true,
+        "activeEndpointIds": [],
+        "configuredModelIds": [
+          "claude-3.7-sonnet"
+        ],
+        "availableActions": [
+          "set-env"
+        ]
+      },
+      {
+        "logicalAccountId": "local-openai-compatible.personal.local-main",
+        "providerAccountId": "local-openai-compatible.personal.local-main",
+        "providerId": "local-openai-compatible",
+        "sourceProvenance": [
+          "manual"
+        ],
+        "authMode": "api-key-static",
+        "credentialStorageMode": "persisted-local",
+        "credentialBackendCanonical": "local-file",
+        "lifecycleState": "execution-ready",
+        "reasonCode": "active-endpoint-present",
+        "blocking": false,
+        "activeEndpointIds": [
+          "local-openai-compatible.personal.local-main.local.lfm2.5-1.2b-instruct"
+        ],
+        "configuredModelIds": [],
+        "availableActions": []
+      },
+      {
+        "logicalAccountId": "moonshot.personal.api-key",
+        "providerAccountId": "moonshot.personal.api-key",
+        "providerId": "moonshot",
+        "sourceProvenance": [
+          "manual"
+        ],
+        "authMode": "api-key-static",
+        "credentialStorageMode": "persisted-local",
+        "credentialBackendCanonical": "local-file",
+        "lifecycleState": "execution-ready",
+        "reasonCode": "active-endpoint-present",
+        "blocking": false,
+        "activeEndpointIds": [
+          "moonshot.personal.api-key.global.kimi-k2.5"
+        ],
+        "configuredModelIds": [
+          "moonshot/kimi-k2.5"
+        ],
+        "availableActions": [
+          "update-api-key"
+        ]
+      },
+      {
+        "logicalAccountId": "moonshot.personal.oauth-ready",
+        "providerAccountId": "moonshot.personal.oauth-ready",
+        "providerId": "moonshot",
+        "sourceProvenance": [
+          "manual"
+        ],
+        "authMode": "oauth2-device-code",
+        "credentialStorageMode": "oauth-local",
+        "credentialBackendCanonical": "local-file",
+        "lifecycleState": "execution-ready",
+        "reasonCode": "active-endpoint-present",
+        "blocking": false,
+        "activeEndpointIds": [
+          "moonshot.personal.oauth-ready.global.kimi-k2.5"
+        ],
+        "configuredModelIds": [
+          "moonshot/kimi-k2.5"
+        ],
+        "availableActions": []
+      },
+      {
+        "logicalAccountId": "moonshot.personal.oauth-repair",
+        "providerAccountId": "moonshot.personal.oauth-repair",
+        "providerId": "moonshot",
+        "sourceProvenance": [
+          "manual"
+        ],
+        "authMode": "oauth2-device-code",
+        "credentialStorageMode": "oauth-local",
+        "credentialBackendCanonical": "local-file",
+        "lifecycleState": "execution-ready",
+        "reasonCode": "active-endpoint-present",
+        "blocking": false,
+        "activeEndpointIds": [
+          "moonshot.personal.oauth-repair.global.kimi-k2.5"
+        ],
+        "configuredModelIds": [
+          "moonshot/kimi-k2.5"
+        ],
+        "availableActions": []
+      },
+      {
+        "logicalAccountId": "moonshot.personal.oauth-stale",
+        "providerAccountId": "moonshot.personal.oauth-stale",
+        "providerId": "moonshot",
+        "sourceProvenance": [
+          "manual"
+        ],
+        "authMode": "oauth2-device-code",
+        "credentialStorageMode": "oauth-local",
+        "credentialBackendCanonical": "local-file",
+        "lifecycleState": "pending-authorization",
+        "reasonCode": "pending-device-authorization",
+        "blocking": true,
+        "activeEndpointIds": [],
+        "configuredModelIds": [
+          "moonshot/kimi-k2.5"
+        ],
+        "availableActions": [
+          "reconnect"
+        ]
+      },
+      {
+        "logicalAccountId": "openai.personal.primary",
+        "providerAccountId": "openai.personal.primary",
+        "providerId": "openai",
+        "sourceProvenance": [
+          "manual"
+        ],
+        "authMode": "api-key-static",
+        "credentialStorageMode": "env-ref",
+        "credentialBackendCanonical": "env",
+        "lifecycleState": "env-unresolved",
+        "reasonCode": "env-var-missing",
+        "blocking": true,
+        "activeEndpointIds": [],
+        "configuredModelIds": [
+          "openai/gpt-4.1-mini-fast"
+        ],
+        "availableActions": [
+          "set-env"
+        ]
+      }
+    ],
+    "providerRollups": [
+      {
+        "providerId": "anthropic",
+        "accountIds": [
+          "anthropic.team.shared"
+        ],
+        "countsByLifecycle": {
+          "executionReady": 0,
+          "connectedNoEndpoint": 0,
+          "pendingAuthorization": 0,
+          "expiredAuth": 0,
+          "credentialsMissing": 0,
+          "envUnresolved": 1,
+          "archivedStale": 0
+        },
+        "readyAccountIds": [],
+        "attentionAccountIds": [
+          "anthropic.team.shared"
+        ],
+        "hasArchivedArtifacts": false
+      },
+      {
+        "providerId": "local-openai-compatible",
+        "accountIds": [
+          "local-openai-compatible.personal.local-main"
+        ],
+        "countsByLifecycle": {
+          "executionReady": 1,
+          "connectedNoEndpoint": 0,
+          "pendingAuthorization": 0,
+          "expiredAuth": 0,
+          "credentialsMissing": 0,
+          "envUnresolved": 0,
+          "archivedStale": 0
+        },
+        "readyAccountIds": [
+          "local-openai-compatible.personal.local-main"
+        ],
+        "attentionAccountIds": [],
+        "hasArchivedArtifacts": false
+      },
+      {
+        "providerId": "moonshot",
+        "accountIds": [
+          "moonshot.personal.api-key",
+          "moonshot.personal.oauth-ready",
+          "moonshot.personal.oauth-repair",
+          "moonshot.personal.oauth-stale"
+        ],
+        "countsByLifecycle": {
+          "executionReady": 3,
+          "connectedNoEndpoint": 0,
+          "pendingAuthorization": 1,
+          "expiredAuth": 0,
+          "credentialsMissing": 0,
+          "envUnresolved": 0,
+          "archivedStale": 0
+        },
+        "readyAccountIds": [
+          "moonshot.personal.api-key",
+          "moonshot.personal.oauth-ready",
+          "moonshot.personal.oauth-repair"
+        ],
+        "attentionAccountIds": [
+          "moonshot.personal.oauth-stale"
+        ],
+        "hasArchivedArtifacts": false
+      },
+      {
+        "providerId": "openai",
+        "accountIds": [
+          "openai.personal.primary"
+        ],
+        "countsByLifecycle": {
+          "executionReady": 0,
+          "connectedNoEndpoint": 0,
+          "pendingAuthorization": 0,
+          "expiredAuth": 0,
+          "credentialsMissing": 0,
+          "envUnresolved": 1,
+          "archivedStale": 0
+        },
+        "readyAccountIds": [],
+        "attentionAccountIds": [
+          "openai.personal.primary"
+        ],
+        "hasArchivedArtifacts": false
+      }
+    ],
+    "archivedArtifacts": []
+  },
+  "executionMode": "decision_only",
+  "unifiedConfig": {
+    "enabled": false,
+    "path": "D:\\DEV\\role-model\\.worktrees\\47-runtime-persistence-rehydration-lifecycle\\.recursive\\run\\47-runtime-persistence-rehydration-lifecycle\\evidence\\phase5-live\\runtime-state\\runtime-config.yaml"
+  },
+  "sessionBootstrap": {
+    "status": "ready",
+    "startedAt": "2026-06-15T20:31:15.524Z",
+    "finishedAt": "2026-06-15T20:31:15.556Z",
+    "stages": [
+      {
+        "stageId": "credentials",
+        "status": "ready",
+        "startedAt": "2026-06-15T20:31:15.524Z",
+        "finishedAt": "2026-06-15T20:31:15.540Z",
+        "details": {
+          "pendingAttempted": 0,
+          "pendingSucceeded": 0,
+          "pendingConnected": 0,
+          "pendingFailed": 0,
+          "pendingDeferred": 0,
+          "refreshAttempted": 0,
+          "refreshSucceeded": 0,
+          "refreshFailed": 0
+        }
+      },
+      {
+        "stageId": "endpoints",
+        "status": "ready",
+        "startedAt": "2026-06-15T20:31:15.551Z",
+        "finishedAt": "2026-06-15T20:31:15.554Z",
+        "details": {
+          "reconciled": 0,
+          "failed": 0
+        }
+      },
+      {
+        "stageId": "peers",
+        "status": "skipped",
+        "startedAt": "2026-06-15T20:31:15.554Z",
+        "finishedAt": "2026-06-15T20:31:15.554Z",
+        "message": "no peer loads in manifest",
+        "details": {
+          "reloaded": 0,
+          "failed": 0
+        }
+      },
+      {
+        "stageId": "vendors",
+        "status": "skipped",
+        "startedAt": "2026-06-15T20:31:15.555Z",
+        "finishedAt": "2026-06-15T20:31:15.555Z",
+        "message": "unified runtime config disabled"
+      },
+      {
+        "stageId": "local-reload",
+        "status": "skipped",
+        "startedAt": "2026-06-15T20:31:15.555Z",
+        "finishedAt": "2026-06-15T20:31:15.555Z",
+        "message": "no llama-swap loads in manifest"
+      },
+      {
+        "stageId": "remote-health",
+        "status": "skipped",
+        "startedAt": "2026-06-15T20:31:15.555Z",
+        "finishedAt": "2026-06-15T20:31:15.555Z",
+        "message": "execution probes skipped in decision_only mode"
+      },
+      {
+        "stageId": "inventory",
+        "status": "ready",
+        "startedAt": "2026-06-15T20:31:15.555Z",
+        "finishedAt": "2026-06-15T20:31:15.555Z",
+        "details": {
+          "modelIdCount": 3,
+          "endpointIdCount": 3,
+          "localEndpointCount": 1,
+          "remoteEndpointCount": 2,
+          "emptyAliasIds": [],
+          "driftWarningCount": 0,
+          "driftWarnings": []
+        }
+      }
+    ]
+  },
+  "inventorySummary": {
+    "modelIdCount": 5,
+    "endpointIdCount": 7,
+    "localEndpointCount": 2,
+    "remoteEndpointCount": 5,
+    "emptyAliasIds": []
+  },
+  "aliasDrift": [],
+  "operatorIntent": {
+    "path": "D:\\DEV\\role-model\\.worktrees\\47-runtime-persistence-rehydration-lifecycle\\.recursive\\run\\47-runtime-persistence-rehydration-lifecycle\\evidence\\phase5-live\\runtime-state\\run47-phase5-live\\operator-intent.json",
+    "status": "missing"
+  }
+}

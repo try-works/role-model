@@ -1,0 +1,92 @@
+[
+  {
+    "at": "2026-06-15T20:31:17.529Z",
+    "healthBootstrap": "running",
+    "summaryBootstrap": "running",
+    "authority": {
+      "state": "provisional",
+      "bootstrapStatus": "running"
+    },
+    "counts": {
+      "executionReady": 3,
+      "connectedNoEndpoint": 0,
+      "pendingAuthorization": 0,
+      "expiredAuth": 1,
+      "credentialsMissing": 0,
+      "envUnresolved": 2,
+      "archivedStale": 1
+    }
+  },
+  {
+    "at": "2026-06-15T20:31:17.761Z",
+    "healthBootstrap": "running",
+    "summaryBootstrap": "running",
+    "authority": {
+      "state": "provisional",
+      "bootstrapStatus": "running"
+    },
+    "counts": {
+      "executionReady": 3,
+      "connectedNoEndpoint": 0,
+      "pendingAuthorization": 0,
+      "expiredAuth": 1,
+      "credentialsMissing": 0,
+      "envUnresolved": 2,
+      "archivedStale": 1
+    }
+  },
+  {
+    "at": "2026-06-15T20:31:17.977Z",
+    "healthBootstrap": "running",
+    "summaryBootstrap": "running",
+    "authority": {
+      "state": "provisional",
+      "bootstrapStatus": "running"
+    },
+    "counts": {
+      "executionReady": 3,
+      "connectedNoEndpoint": 0,
+      "pendingAuthorization": 0,
+      "expiredAuth": 1,
+      "credentialsMissing": 0,
+      "envUnresolved": 2,
+      "archivedStale": 1
+    }
+  },
+  {
+    "at": "2026-06-15T20:31:18.210Z",
+    "healthBootstrap": "running",
+    "summaryBootstrap": "running",
+    "authority": {
+      "state": "provisional",
+      "bootstrapStatus": "running"
+    },
+    "counts": {
+      "executionReady": 3,
+      "connectedNoEndpoint": 0,
+      "pendingAuthorization": 0,
+      "expiredAuth": 1,
+      "credentialsMissing": 0,
+      "envUnresolved": 2,
+      "archivedStale": 1
+    }
+  },
+  {
+    "at": "2026-06-15T20:31:18.444Z",
+    "healthBootstrap": "degraded",
+    "summaryBootstrap": "degraded",
+    "authority": {
+      "state": "authoritative",
+      "bootstrapStatus": "degraded"
+    },
+    "counts": {
+      "executionReady": 3,
+      "connectedNoEndpoint": 0,
+      "pendingAuthorization": 0,
+      "expiredAuth": 1,
+      "credentialsMissing": 0,
+      "envUnresolved": 2,
+      "archivedStale": 1
+    }
+  }
+]

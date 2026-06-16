@@ -1109,6 +1109,39 @@
   - Why: peer-only operators had no onboarding path when `llama_swap.models` empty (run 38 `R3`/`R7` scenario B deferred)
   - Verified: 6/6 unit tests; browser QA on `:3456` with peer-only config; SEA SHA256 `acf14c9829f6b7b9144dc5e9334fc212c8ce8fbd4eff873dec44aaf1b492dce5`
 
+### Run `47-runtime-persistence-rehydration-lifecycle`
+
+- Run folder: `/.recursive/run/47-runtime-persistence-rehydration-lifecycle/`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+  - addenda `02-to-be-plan.addendum-01.md` through `02-to-be-plan.addendum-03.md`
+  - follow-up receipts `03-implementation-summary.upstream-gap.02-to-be-plan.addendum-01.md`, `04-test-summary.upstream-gap.02-to-be-plan.addendum-01.md`, `05-manual-qa.addendum-02.md`, and `05-manual-qa.addendum-03.md`
+- What changed:
+  - base run: made runtime session/bootstrap state durable across reload and restart, preserving provider-account lifecycle truth, operator intent, endpoint inventory, and readiness/reporting without requiring a UI revisit
+  - follow-up addenda: failed telemetry rows now preserve caller correlation and classification in the canonical request ledger; `/app` leads with the telemetry summary row and an interaction-level latest-requests rail; `/app/observe/activity` preserves backend newest-first ordering; `/app/router` alias inventory now separates configured hints, resolved models, allowed endpoints, and readiness
+  - post-closeout router cleanup: `/app/router` removes the redundant `Allowed endpoints`, `Execution-ready aliases`, `Guidance provenance`, and `Policy inputs` sections, and `/app/router/strategy` removes `Current control-plane context` so the surviving router surfaces stay focused on canonical inventory and routing controls
+  - verification-first alias-drift slice closed without new production code once the canonical config-removal regression proved that stale warnings clear correctly when the persisted hint is actually removed
+- Why:
+  - the base run fixed restart/rehydration lifecycle gaps, while the later operator QA exposed telemetry/dashboard/router presentation and failure-ledger truth gaps that had to be repaired without regressing the new persistence baseline
+- How:
+  - strict TDD for the owned production slices, targeted runtime-ui/sqlite-memory/host-bridge verification, packaged SEA rebuild, direct API proof on the rebuilt runtime at `:3456`, and browser verification of `/app`, `/app/router`, `/app/observe/activity`, and `/app/observe/requests`
+  - final router-surface cleanup was validated with focused `runtime-ui` design-system regression coverage plus explicit manual QA pass on the live runtime
+- What was not done:
+  - the follow-up did not backfill historical pre-fix failure rows in SQLite, suppress backend-truth alias-drift warnings, or widen into unrelated host-bridge suite flakes
+- Known issues / follow-ups:
+  - older pre-fix failure rows can still show legacy fallback markers such as `unknown.endpoint`; the forward path is fixed, but existing telemetry is not migrated
+  - the live `moonshot/kimi-k2.6` warning on `:3456` remains correct until the persisted operator config is changed
+  - the broader Windows host-bridge suite still has an unrelated OAuth temp-file rename `EPERM` flake outside run-47 scope
+
 ### Run `39-runtime-session-rehydration-model-inventory`
 
 - Run folder: `/.recursive/run/39-runtime-session-rehydration-model-inventory/`

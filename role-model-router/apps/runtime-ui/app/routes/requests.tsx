@@ -94,6 +94,11 @@ export default function RequestsRoute() {
               <div key={request.requestId} className={`${listRowClassName} md:items-center`}>
                 <div>
                   <p className="font-medium text-[var(--rm-fg)]">{request.requestId}</p>
+                  {request.clientRequestId && request.clientRequestId !== request.requestId ? (
+                    <p className="text-sm text-[var(--rm-secondary)]">
+                      Correlation • {request.clientRequestId}
+                    </p>
+                  ) : null}
                   <p className="text-sm text-[var(--rm-secondary)]">{request.endpointId}</p>
                   <p className="mt-2 text-sm text-[var(--rm-secondary)]">
                     Routing decision • {request.routingDecisionLabel}

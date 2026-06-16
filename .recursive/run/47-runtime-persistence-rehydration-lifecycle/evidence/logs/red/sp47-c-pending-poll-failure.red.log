@@ -1,0 +1,57 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/47-runtime-persistence-rehydration-lifecycle/role-model-router/apps/runtime-host-bridge[39m
+
+(node:37264) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [31mΓ¥»[39m test/restart-rehydration.test.ts [2m([22m[2m3 tests[22m[2m | [22m[31m1 failed[39m[2m | [22m[33m2 skipped[39m[2m)[22m[33m 757[2mms[22m[39m
+   [2m[90mΓåô[39m[22m restart rehydration[2m > [22mrestores activated endpoints and session readiness summary after backend restart
+   [2m[90mΓåô[39m[22m restart rehydration[2m > [22mdoes not count expired pending device authorization as an active readiness blocker after restart
+[31m   [31m├ù[31m restart rehydration[2m > [22msurfaces failed pending authorization polling in bootstrap stage details after restart[39m[33m 752[2mms[22m[39m
+[31m     ΓåÆ expected { stageId: 'credentials', ΓÇª(4) } to deeply equal ObjectContaining{ΓÇª}[39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/restart-rehydration.test.ts > restart rehydration > surfaces failed pending authorization polling in bootstrap stage details after restart
+AssertionError: expected { stageId: 'credentials', ΓÇª(4) } to deeply equal ObjectContaining{ΓÇª}
+
+- Expected
++ Received
+
+- ObjectContaining {
+-   "details": ObjectContaining {
+-     "pendingAttempted": 1,
+-     "pendingFailed": 1,
+-     "pendingSucceeded": 0,
++ {
++   "details": {
++     "pendingConnected": 0,
++     "pendingPolled": 0,
++     "refreshAttempted": 0,
++     "refreshSucceeded": 0,
+    },
+-   "status": "degraded",
++   "finishedAt": "2026-06-15T16:50:35.925Z",
++   "stageId": "credentials",
++   "startedAt": "2026-06-15T16:50:35.892Z",
++   "status": "ready",
+  }
+
+ Γ¥» test/restart-rehydration.test.ts:311:34
+    309|           (stage) => stage.stageId === "credentials",
+    310|         );
+    311|         expect(credentialsStage).toEqual(
+       |                                  ^
+    312|           expect.objectContaining({
+    313|             status: "degraded",
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[33m2 skipped[39m[90m (3)[39m
+[2m   Start at [22m 18:50:31
+[2m   Duration [22m 4.27s[2m (transform 1.63s, setup 0ms, collect 2.24s, tests 757ms, environment 0ms, prepare 524ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\47-runtime-persistence-rehydration-lifecycle\role-model-router\apps\runtime-host-bridge:
+ΓÇëERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓÇë Command failed with exit code 1: vitest run test/restart-rehydration.test.ts -t surfaces failed pending authorization polling in bootstrap stage details after restart

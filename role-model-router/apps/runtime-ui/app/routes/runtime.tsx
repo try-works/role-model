@@ -18,7 +18,7 @@ import {
   fetchRuntimeSnapshot,
   fetchVersionInfo,
 } from "../lib/runtime-api";
-import { buildCredentialReadinessRows } from "../lib/view-models";
+import { buildCredentialLifecycleBanner } from "../lib/view-models";
 
 export default function RuntimeRoute() {
   const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(null);
@@ -59,9 +59,7 @@ export default function RuntimeRoute() {
     return <LoadingState label="Loading runtime summary…" />;
   }
 
-  const readinessRows = buildCredentialReadinessRows(snapshot.summary).filter(
-    (row) => row.value > 0,
-  );
+  const lifecycleBanner = buildCredentialLifecycleBanner(snapshot.summary);
 
   return (
     <div className="space-y-6">
@@ -91,12 +89,31 @@ export default function RuntimeRoute() {
         </div>
       </SectionCard>
 
-      <SectionCard title="Credential readiness">
-        <div className="flex flex-wrap gap-3">
-          {readinessRows.length === 0 ? (
-            <StatusPill tone="neutral">No saved provider readiness state yet</StatusPill>
+      <SectionCard title="Execution readiness">
+        <div className="mb-4 flex flex-wrap gap-3">
+          {lifecycleBanner ? (
+            <>
+              <StatusPill tone={lifecycleBanner.authorityTone}>
+                {lifecycleBanner.authorityLabel}
+              </StatusPill>
+              {lifecycleBanner.archivedStaleCount > 0 ? (
+                <StatusPill tone="neutral">
+                  Archived stale {lifecycleBanner.archivedStaleCount}
+                </StatusPill>
+              ) : null}
+            </>
           ) : (
-            readinessRows.map((row) => (
+            <StatusPill tone="neutral">Lifecycle contract unavailable</StatusPill>
+          )}
+        </div>
+        {lifecycleBanner ? (
+          <p className="mb-4 text-sm text-[var(--rm-secondary)]">{lifecycleBanner.detail}</p>
+        ) : null}
+        <div className="flex flex-wrap gap-3">
+          {!lifecycleBanner || lifecycleBanner.blockingRows.length === 0 ? (
+            <StatusPill tone="neutral">No blocking credential lifecycle rows</StatusPill>
+          ) : (
+            lifecycleBanner.blockingRows.map((row) => (
               <StatusPill key={row.key} tone={row.tone}>
                 {row.label} {row.value}
               </StatusPill>

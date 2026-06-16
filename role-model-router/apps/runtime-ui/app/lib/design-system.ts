@@ -60,9 +60,9 @@ const overviewSummaryRoute = createRoute({
   section: "Overview",
   icon: LayoutDashboard,
   template: "summary-board",
-  title: "Unified telemetry",
+  title: "Runtime overview",
   description:
-    "A telemetry-first overview of local and remote runtime posture, comparison rows, controller state, and recent request flow.",
+    "Current runtime state, endpoint inventory, controller posture, and recent request flow with a separate recent telemetry window.",
 });
 
 const studioChatRoute = createRoute({

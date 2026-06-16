@@ -1,0 +1,47 @@
+{
+  "object": "list",
+  "data": [
+    {
+      "id": "claude-3.7-sonnet",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [
+        "anthropic.team.shared.us-east-1.default"
+      ]
+    },
+    {
+      "id": "gpt-5.4",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [
+        "cli.local.coder"
+      ]
+    },
+    {
+      "id": "lfm2.5-1.2b-instruct",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [
+        "local-openai-compatible.personal.local-main.local.lfm2.5-1.2b-instruct"
+      ]
+    },
+    {
+      "id": "moonshot/kimi-k2.5",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [
+        "moonshot.personal.api-key.global.kimi-k2.5",
+        "moonshot.personal.oauth-ready.global.kimi-k2.5",
+        "moonshot.personal.oauth-repair.global.kimi-k2.5"
+      ]
+    },
+    {
+      "id": "openai/gpt-4.1-mini-fast",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [
+        "openai.personal.primary.us-east-1.fast"
+      ]
+    }
+  ]
+}

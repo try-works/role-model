@@ -11,17 +11,23 @@ import {
 } from "../components/page-primitives";
 import { listRowClassName, mutedPanelClassName } from "../lib/design-system";
 import {
+  type RuntimeSnapshot,
+  type RuntimeSummary,
   type RuntimeTelemetryDashboard,
+  fetchRuntimeSnapshot,
+  fetchRuntimeSummary,
   fetchTelemetryDashboard,
   subscribeTelemetryStream,
 } from "../lib/runtime-api";
 import {
-  buildTelemetryComparisonCards,
-  buildTelemetryRequestRows,
+  buildDashboardLatestRequestRows,
+  buildEndpointCatalogRows,
   summarizeTelemetryStats,
 } from "../lib/view-models";
 
 export default function DashboardRoute() {
+  const [summary, setSummary] = useState<RuntimeSummary | null>(null);
+  const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(null);
   const [dashboard, setDashboard] = useState<RuntimeTelemetryDashboard | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -29,14 +35,20 @@ export default function DashboardRoute() {
     let disposed = false;
     const load = async () => {
       try {
-        const result = await fetchTelemetryDashboard();
+        const [nextSummary, nextSnapshot, nextDashboard] = await Promise.all([
+          fetchRuntimeSummary(),
+          fetchRuntimeSnapshot(),
+          fetchTelemetryDashboard(),
+        ]);
         if (!disposed) {
-          setDashboard(result);
+          setSummary(nextSummary);
+          setSnapshot(nextSnapshot);
+          setDashboard(nextDashboard);
           setError(null);
         }
       } catch (value) {
         if (!disposed) {
-          setError(value instanceof Error ? value.message : "Could not load runtime telemetry.");
+          setError(value instanceof Error ? value.message : "Could not load runtime overview.");
         }
       }
     };
@@ -55,64 +67,65 @@ export default function DashboardRoute() {
   if (error) {
     return <ErrorState label={error} />;
   }
-  if (!dashboard) {
-    return <LoadingState label="Loading runtime telemetry…" />;
+  if (!summary || !snapshot || !dashboard) {
+    return <LoadingState label="Loading runtime overview…" />;
   }
 
-  const statCards = summarizeTelemetryStats(dashboard.summary);
-  const comparisonCards = buildTelemetryComparisonCards(dashboard.rows);
-  const requestRows = buildTelemetryRequestRows(dashboard.requests);
+  const endpointRows = buildEndpointCatalogRows(snapshot.endpoints);
+  const telemetryCards = summarizeTelemetryStats(dashboard.summary);
+  const requestRows = buildDashboardLatestRequestRows(dashboard.requests);
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {statCards.map((card, index) => (
-          <FactCard
-            key={card.label}
-            label={card.label}
-            value={card.value}
-            detail={card.detail}
-            emphasis={index === 0}
-          />
-        ))}
-      </div>
+      <SectionCard
+        title="Recent telemetry window"
+        description="These cards are the primary overview summary and reflect the recent structured request ledger."
+      >
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {telemetryCards.map((card, index) => (
+            <FactCard
+              key={card.label}
+              label={card.label}
+              value={card.value}
+              detail={card.detail}
+              emphasis={index === 0}
+            />
+          ))}
+        </div>
+      </SectionCard>
 
       <div className="grid grid-cols-12 gap-4">
-        <SectionCard className="col-span-12 xl:col-span-8" title="Endpoint comparison">
-          {comparisonCards.length === 0 ? (
-            <EmptyState label="No telemetry comparison rows are available yet." />
+        <SectionCard className="col-span-12 xl:col-span-8" title="Current endpoint inventory">
+          {endpointRows.length === 0 ? (
+            <EmptyState label="No routable endpoints are available yet." />
           ) : (
             <div className="space-y-3">
-              {comparisonCards.map((row) => (
+              {endpointRows.map((row) => (
                 <div key={row.endpointId} className={`${listRowClassName} md:items-center`}>
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="font-medium text-[var(--rm-fg)]">
-                        {row.modelId ?? row.endpointId}
+                        {row.modelId}
                       </p>
                       <StatusPill tone={row.sourceLabel === "Remote" ? "accent" : "neutral"}>
                         {row.sourceLabel}
                       </StatusPill>
                       <StatusPill
                         tone={
-                          row.statusLabel === "healthy" || row.statusLabel === "active"
+                          row.healthStatus === "healthy" || row.status === "active"
                             ? "success"
                             : "warning"
                         }
                       >
-                        {row.statusLabel}
+                        {row.healthStatus}
                       </StatusPill>
                     </div>
                     <p className="text-sm text-[var(--rm-secondary)]">{row.endpointId}</p>
                     <p className="mt-2 text-sm text-[var(--rm-secondary)]">
-                      {row.requestCountLabel} • {row.latencyLabel} • {row.tokenLabel} •{" "}
-                      {row.costLabel}
-                    </p>
-                    <p className="mt-1 text-sm text-[var(--rm-secondary)]">
-                      {row.providerLabel} • {row.cacheLabel} • {row.reliabilityLabel}
+                      {row.providerLabel} • {row.endpointKind} • {row.servingSource}
                     </p>
                   </div>
-                  <p className="text-right text-sm text-[var(--rm-secondary)]">{row.roleSummary}</p>
+                  <p className="text-right text-sm text-[var(--rm-secondary)]">{row.status}</p>
                 </div>
               ))}
             </div>
@@ -125,14 +138,18 @@ export default function DashboardRoute() {
               <EmptyState label="No recent requests yet." />
             ) : (
               <div className="space-y-2">
-                {requestRows.slice(0, 3).map((request) => (
+                {requestRows.map((request) => (
                   <div
                     key={request.requestId}
-                    className={`${mutedPanelClassName} flex items-center justify-between gap-3 p-3 text-sm`}
+                    className={`${mutedPanelClassName} flex flex-col gap-2 p-3 text-sm`}
                   >
-                    <span className="font-medium text-[var(--rm-fg)]">{request.requestId}</span>
+                    <span className="font-medium text-[var(--rm-fg)]">{request.primaryLabel}</span>
+                    {request.secondaryLabel ? (
+                      <span className="text-[var(--rm-secondary)]">{request.secondaryLabel}</span>
+                    ) : null}
+                    <span className="text-[var(--rm-secondary)]">{request.endpointLabel}</span>
                     <span className="text-[var(--rm-secondary)]">
-                      {request.statusLabel} • {request.latencyLabel}
+                      {request.statusLabel} • {request.latencyLabel} • {request.tokenLabel}
                     </span>
                   </div>
                 ))}

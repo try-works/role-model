@@ -26,6 +26,7 @@ import {
   fetchTextLogs,
   fetchVersionInfo,
   pollRuntimeDeviceAuthorization,
+  reconnectRuntimeAccount,
   startRuntimeDeviceAuthorization,
   submitAdvancedRequest,
   submitAudioTranscription,
@@ -36,6 +37,7 @@ import {
   submitWorkbenchChat,
   subscribeTelemetryStream,
   updateControllerAssignment,
+  updateRuntimeAccountApiKey,
   updateRolePolicyRole,
   updateRuntimeConfig,
   updateTaskDefinitions,
@@ -336,6 +338,7 @@ describe("fetchRequestDetail", () => {
         case "/api/role-model/requests/req-001":
           return jsonResponse({
             requestId: "req-001",
+            clientRequestId: "req-client-001",
             endpointId: "openai.personal.primary.us-east-1.fast",
           });
         case "/api/role-model/endpoints/openai.personal.primary.us-east-1.fast/profile":
@@ -352,6 +355,7 @@ describe("fetchRequestDetail", () => {
     await expect(fetchRequestDetail("req-001", fetcher)).resolves.toEqual({
       request: {
         requestId: "req-001",
+        clientRequestId: "req-client-001",
         endpointId: "openai.personal.primary.us-east-1.fast",
       },
       endpointProfile: {
@@ -381,6 +385,24 @@ describe("router APIs", () => {
             },
             configuredCandidateCount: 2,
             recentDecisionCount: 3,
+            aliasInventory: [
+              {
+                aliasId: "mixed.local-remote",
+                mode: "difficulty",
+                configuredHintModelIds: ["gpt-5.4", "moonshot/kimi-k2.5"],
+                allowEndpointIds: [
+                  "cli.local.coder",
+                  "moonshot.personal.primary.global.kimi-k2.5",
+                ],
+                resolvedModelIds: ["gpt-5.4", "moonshot/kimi-k2.5"],
+                driftWarnings: [],
+                localEndpointCount: 1,
+                remoteEndpointCount: 1,
+                activeEndpointCount: 2,
+                healthyEndpointCount: 1,
+                readiness: "degraded",
+              },
+            ],
           });
         case "/api/role-model/router/config":
           return jsonResponse({
@@ -463,6 +485,21 @@ describe("router APIs", () => {
       },
       configuredCandidateCount: 2,
       recentDecisionCount: 3,
+      aliasInventory: [
+        {
+          aliasId: "mixed.local-remote",
+          mode: "difficulty",
+          configuredHintModelIds: ["gpt-5.4", "moonshot/kimi-k2.5"],
+          allowEndpointIds: ["cli.local.coder", "moonshot.personal.primary.global.kimi-k2.5"],
+          resolvedModelIds: ["gpt-5.4", "moonshot/kimi-k2.5"],
+          driftWarnings: [],
+          localEndpointCount: 1,
+          remoteEndpointCount: 1,
+          activeEndpointCount: 2,
+          healthyEndpointCount: 1,
+          readiness: "degraded",
+        },
+      ],
     });
     await expect(fetchRouterConfig(fetcher)).resolves.toEqual({
       persisted: {
@@ -623,6 +660,7 @@ describe("telemetry APIs", () => {
             cachedRequestCount: 1,
             totalActualCostUsd: 0.0042,
             totalEstimatedCostUsd: 0.0053,
+            totalEffectiveCostUsd: 0.0053,
             averageLatencyMs: 420,
             p95LatencyMs: 880,
             lastSeenAtMs: 1_770_000_000_100,
@@ -680,8 +718,10 @@ describe("telemetry APIs", () => {
           return jsonResponse([
             {
               requestId: "req-002",
+              clientRequestId: "req-client-002",
               endpointId: "openai.personal.primary.us-east-1.fast",
               sourceType: "remote",
+              requestClass: "live_request",
               providerFamily: "ai-sdk-openai",
               finishReason: "stop",
               promptCacheSupported: true,
@@ -696,6 +736,7 @@ describe("telemetry APIs", () => {
     await expect(fetchTelemetryDashboard(fetcher)).resolves.toEqual({
       summary: expect.objectContaining({
         requestCount: 3,
+        totalEffectiveCostUsd: 0.0053,
         sourceBreakdown: expect.objectContaining({
           local: expect.objectContaining({ requestCount: 1 }),
           remote: expect.objectContaining({ requestCount: 2 }),
@@ -722,8 +763,10 @@ describe("telemetry APIs", () => {
       requests: [
         {
           requestId: "req-002",
+          clientRequestId: "req-client-002",
           endpointId: "openai.personal.primary.us-east-1.fast",
           sourceType: "remote",
+          requestClass: "live_request",
           providerFamily: "ai-sdk-openai",
           finishReason: "stop",
           promptCacheSupported: true,
@@ -1339,6 +1382,41 @@ describe("startRuntimeDeviceAuthorization", () => {
   });
 });
 
+describe("reconnectRuntimeAccount", () => {
+  test("posts the saved account id to the explicit reconnect repair path", async () => {
+    const fetcher = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      expect(url).toBe("/api/role-model/accounts/repair/reconnect");
+      expect(init?.method).toBe("POST");
+      expect(init?.body).toBe(
+        JSON.stringify({
+          providerAccountId: "moonshot.personal.kimi-code",
+        }),
+      );
+
+      return jsonResponse({
+        authRequestId: "auth-001",
+        providerAccountId: "moonshot.personal.kimi-code",
+        status: "pending",
+      });
+    });
+
+    await expect(
+      reconnectRuntimeAccount(
+        {
+          providerAccountId: "moonshot.personal.kimi-code",
+        },
+        fetcher,
+      ),
+    ).resolves.toEqual({
+      authRequestId: "auth-001",
+      providerAccountId: "moonshot.personal.kimi-code",
+      status: "pending",
+    });
+  });
+});
+
 describe("pollRuntimeDeviceAuthorization", () => {
   test("posts the auth request id to the runtime device-auth poll path", async () => {
     const fetcher = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
@@ -1359,6 +1437,47 @@ describe("pollRuntimeDeviceAuthorization", () => {
       authRequestId: "auth-001",
       providerAccountId: "moonshot.personal.kimi-code",
       status: "connected",
+    });
+  });
+});
+
+describe("updateRuntimeAccountApiKey", () => {
+  test("posts the saved account id and replacement key to the explicit repair path", async () => {
+    const fetcher = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      expect(url).toBe("/api/role-model/accounts/repair/update-key");
+      expect(init?.method).toBe("POST");
+      expect(init?.body).toBe(
+        JSON.stringify({
+          providerAccountId: "moonshot.personal.primary",
+          apiKey: "sk-inline-updated-key",
+        }),
+      );
+
+      return jsonResponse({
+        providerAccountId: "moonshot.personal.primary",
+        credentialRef: {
+          backend: "local-file",
+          ref: "api-key/moonshot/moonshot.personal.primary",
+        },
+      });
+    });
+
+    await expect(
+      updateRuntimeAccountApiKey(
+        {
+          providerAccountId: "moonshot.personal.primary",
+          apiKey: "sk-inline-updated-key",
+        },
+        fetcher,
+      ),
+    ).resolves.toEqual({
+      providerAccountId: "moonshot.personal.primary",
+      credentialRef: {
+        backend: "local-file",
+        ref: "api-key/moonshot/moonshot.personal.primary",
+      },
     });
   });
 });

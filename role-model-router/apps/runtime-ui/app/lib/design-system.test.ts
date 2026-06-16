@@ -94,6 +94,10 @@ const requestDetailRouteSource = readFileSync(
   new URL("../routes/request-detail.tsx", import.meta.url),
   "utf8",
 );
+const sessionReadinessRouteSource = readFileSync(
+  new URL("../routes/session-readiness.tsx", import.meta.url),
+  "utf8",
+);
 const routerCandidatesRouteSource = readFileSync(
   new URL("../routes/router-candidates.tsx", import.meta.url),
   "utf8",
@@ -111,6 +115,10 @@ const routerDecisionsRouteSource = readFileSync(
   "utf8",
 );
 const routerRouteSource = readFileSync(new URL("../routes/router.tsx", import.meta.url), "utf8");
+const studioAdvancedRouteSource = readFileSync(
+  new URL("../routes/studio-advanced.tsx", import.meta.url),
+  "utf8",
+);
 const workbenchRouteSource = readFileSync(
   new URL("../routes/workbench.tsx", import.meta.url),
   "utf8",
@@ -218,6 +226,9 @@ describe("runtime design system", () => {
       expect.objectContaining({
         id: "overview-summary",
         template: "summary-board",
+        title: "Runtime overview",
+        description:
+          "Current runtime state, endpoint inventory, controller posture, and recent request flow with a separate recent telemetry window.",
       }),
     );
     expect(getRuntimeRouteDefinition("/app/models")).toEqual(
@@ -498,9 +509,12 @@ describe("runtime design system", () => {
 
   test("router, connect registry, and remote surfaces expose alias/readiness ownership instead of generic filler", () => {
     expect(routerRouteSource).toContain("Alias inventory");
-    expect(routerRouteSource).toContain("Execution-ready aliases");
-    expect(routerRouteSource).toContain("Guidance provenance");
-    expect(routerRouteSource).toContain("Policy inputs");
+    expect(routerRouteSource).not.toContain("Execution-ready aliases");
+    expect(routerRouteSource).not.toContain("Guidance provenance");
+    expect(routerRouteSource).not.toContain("Policy inputs");
+    expect(routerRouteSource).toContain("Configured hints");
+    expect(routerRouteSource).toContain("Resolved models");
+    expect(routerRouteSource).not.toContain("Allowed endpoints");
     expect(routerRouteSource).not.toContain("Control remains the editing surface");
     expect(endpointsRouteSource).not.toContain("Alias readiness");
     expect(endpointsRouteSource).not.toContain("Alias coverage");
@@ -508,6 +522,55 @@ describe("runtime design system", () => {
     expect(providersRouteSource).toContain("LiteLLM");
     expect(providersRouteSource).toContain("Models.dev metadata");
     expect(providersRouteSource).not.toContain('providerKind === "local-engine"');
+  });
+
+  test("providers surface exposes explicit in-place maintenance actions for saved remote accounts", () => {
+    expect(designSystemDocSource).toContain("explicit **Reconnect**");
+    expect(designSystemDocSource).toContain("explicit **Update API key**");
+    expect(providersRouteSource).toContain("Reconnect");
+    expect(providersRouteSource).toContain("Update API key");
+  });
+
+  test("providers surface uses an explicit save-cancel modal for api-key maintenance", () => {
+    expect(designSystemDocSource).toContain("explicit **Save** and **Cancel** controls");
+    expect(providersRouteSource).toContain('role="dialog"');
+    expect(providersRouteSource).toContain("API key");
+    expect(providersRouteSource).toContain("Save");
+    expect(providersRouteSource).toContain("Cancel");
+  });
+
+  test("providers surface keeps oauth reconnect as a one-click saved-account action", () => {
+    expect(designSystemDocSource).toContain("explicit **Reconnect**");
+    expect(providersRouteSource).toContain("Reconnect");
+    expect(providersRouteSource).toContain("onReconnectAccount");
+  });
+
+  test("providers maintenance flows call explicit repair APIs instead of generic account writes", () => {
+    expect(providersRouteSource).toContain("reconnectRuntimeAccount");
+    expect(providersRouteSource).toContain("updateRuntimeAccountApiKey");
+  });
+
+  test("providers saved-account cards use canonical lifecycle rows and bounded archived diagnostics", () => {
+    expect(designSystemDocSource).toContain("lifecycle badge from the canonical backend lifecycle contract");
+    expect(designSystemDocSource).toContain("normalized storage-mode/credential posture");
+    expect(designSystemDocSource).toContain("bounded diagnostics separate from active accounts");
+    expect(providersRouteSource).toContain("buildProviderMaintenanceRows");
+    expect(providersRouteSource).toContain("buildArchivedArtifactRows");
+    expect(providersRouteSource).toContain("Archived stale diagnostics");
+    expect(providersRouteSource).not.toContain("credentialRef.backend");
+  });
+
+  test("runtime, session readiness, workbench, and advanced surfaces use canonical lifecycle diagnostics", () => {
+    expect(designSystemDocSource).toContain(
+      "Provisional-vs-authoritative bootstrap posture must read consistently across these surfaces.",
+    );
+    expect(runtimeRouteSource).toContain("buildCredentialLifecycleBanner");
+    expect(sessionReadinessRouteSource).toContain("buildCredentialLifecycleBanner");
+    expect(sessionReadinessRouteSource).toContain("buildCredentialLifecycleAccountRows");
+    expect(sessionReadinessRouteSource).toContain("buildArchivedArtifactRows");
+    expect(sessionReadinessRouteSource).toContain("Archived stale diagnostics");
+    expect(workbenchRouteSource).toContain("buildCredentialLifecycleBanner");
+    expect(studioAdvancedRouteSource).toContain("buildCredentialLifecycleBanner");
   });
 
   test("router routes preserve empty-state and observe-link affordances", () => {
@@ -520,8 +583,8 @@ describe("runtime design system", () => {
   test("merged router overview stays observational while routing strategy owns editing controls", () => {
     expect(routerRouteSource).not.toContain("updateRuntimeConfig");
     expect(routerRouteSource).not.toContain("Save and apply strategy");
-    expect(routerRouteSource).toContain("Guidance provenance");
-    expect(routerRouteSource).toContain("Policy inputs");
+    expect(routerRouteSource).not.toContain("Guidance provenance");
+    expect(routerRouteSource).not.toContain("Policy inputs");
     expect(routerRouteSource).toContain("/app/router/strategy");
     expect(routingModeSource).toContain("Strategy A - Baseline");
     expect(controlRoutingStrategySource).toContain("updateRuntimeConfig");
@@ -725,6 +788,25 @@ describe("runtime design system", () => {
   test("dashboard passes telemetry detail to FactCard for Latency", () => {
     expect(dashboardRouteSource).toContain("detail={card.detail}");
     expect(dashboardRouteSource).toMatch(/FactCard[\s\S]*detail=\{card\.detail\}/);
+  });
+
+  test("overview metadata and design doc describe a telemetry-first summary with an interaction rail", () => {
+    expect(dashboardRouteSource).not.toContain('label: "Providers"');
+    expect(dashboardRouteSource).not.toContain('label: "Execution-ready"');
+    expect(dashboardRouteSource.indexOf('title="Recent telemetry window"')).toBeLessThan(
+      dashboardRouteSource.indexOf('title="Current endpoint inventory"'),
+    );
+    expect(dashboardRouteSource).toContain("request.primaryLabel");
+    expect(designSystemSource).not.toContain("current-state cards and endpoint inventory");
+    expect(designSystemDocSource).toContain(
+      "Lead with the recent telemetry window as the primary summary surface, then keep current endpoint inventory and a latest-interactions rail below it.",
+    );
+    expect(designSystemDocSource).toContain(
+      "Replace the old Providers / Endpoints / Execution-ready / Bootstrap strip with the telemetry window instead of duplicating summary posture.",
+    );
+    expect(designSystemDocSource).toContain(
+      "Latest requests is an interaction rail, not a raw canonical request ledger.",
+    );
   });
 
   test("workbench and observe routes expose routing controls and receipts in repo-owned UI surfaces", () => {

@@ -27,6 +27,62 @@ export interface BootstrapStageReceipt {
   readonly details?: Record<string, unknown>;
 }
 
+export interface RuntimeCredentialLifecycleCounts {
+  readonly executionReady: number;
+  readonly connectedNoEndpoint: number;
+  readonly pendingAuthorization: number;
+  readonly expiredAuth: number;
+  readonly credentialsMissing: number;
+  readonly envUnresolved: number;
+  readonly archivedStale: number;
+}
+
+export interface RuntimeCredentialLifecycleAccountRecord {
+  readonly logicalAccountId: string;
+  readonly providerAccountId: string;
+  readonly providerId: string;
+  readonly sourceProvenance: readonly string[];
+  readonly authMode: string;
+  readonly credentialStorageMode: string;
+  readonly credentialBackendCanonical: string;
+  readonly lifecycleState: string;
+  readonly reasonCode: string;
+  readonly blocking: boolean;
+  readonly activeEndpointIds: readonly string[];
+  readonly configuredModelIds: readonly string[];
+  readonly availableActions: readonly string[];
+}
+
+export interface RuntimeCredentialLifecycleProviderRollup {
+  readonly providerId: string;
+  readonly accountIds: readonly string[];
+  readonly countsByLifecycle: RuntimeCredentialLifecycleCounts;
+  readonly readyAccountIds: readonly string[];
+  readonly attentionAccountIds: readonly string[];
+  readonly hasArchivedArtifacts: boolean;
+}
+
+export interface RuntimeCredentialLifecycleArchivedArtifact {
+  readonly artifactId: string;
+  readonly providerId: string | null;
+  readonly providerAccountId: string | null;
+  readonly artifactType: string;
+  readonly reasonCode: string;
+}
+
+export interface RuntimeCredentialLifecycleSummary {
+  readonly version: 1;
+  readonly authority: {
+    readonly state: "provisional" | "authoritative";
+    readonly bootstrapStatus: SessionBootstrapStatus;
+    readonly reason?: string;
+  };
+  readonly counts: RuntimeCredentialLifecycleCounts;
+  readonly accounts: readonly RuntimeCredentialLifecycleAccountRecord[];
+  readonly providerRollups: readonly RuntimeCredentialLifecycleProviderRollup[];
+  readonly archivedArtifacts: readonly RuntimeCredentialLifecycleArchivedArtifact[];
+}
+
 export interface RuntimeSummary {
   readonly providerCount: number;
   readonly accountCount: number;
@@ -44,6 +100,7 @@ export interface RuntimeSummary {
     readonly connectedWithoutEndpointCount: number;
     readonly readyAccountCount: number;
   };
+  readonly credentialLifecycle?: RuntimeCredentialLifecycleSummary;
   readonly lifecycleSummary?: {
     readonly active: number;
     readonly degraded: number;
@@ -319,6 +376,7 @@ export interface RuntimeTelemetrySummary extends RuntimeTelemetrySourceSummary {
     readonly local: RuntimeTelemetrySourceSummary;
     readonly remote: RuntimeTelemetrySourceSummary;
   };
+  readonly totalEffectiveCostUsd: number;
 }
 
 export interface RuntimeTelemetryComparisonRow extends RuntimeTelemetrySourceSummary {
@@ -338,8 +396,10 @@ export interface RuntimeTelemetryComparisonRow extends RuntimeTelemetrySourceSum
 
 export interface RuntimeTelemetryRequestRecord {
   readonly requestId: string;
+  readonly clientRequestId?: string | null;
   readonly routingDecisionId?: string;
   readonly endpointId: string;
+  readonly requestClass?: "benchmark" | "live_request" | "unknown";
   readonly conversationId?: string;
   readonly createdAtMs: number;
   readonly modelId?: string | null;
@@ -578,6 +638,24 @@ export interface RouterSummary {
   readonly controller: RuntimeControllerAssignment | null;
   readonly configuredCandidateCount: number;
   readonly recentDecisionCount: number;
+  readonly aliasInventory?: readonly {
+    readonly aliasId: string;
+    readonly mode: string;
+    readonly configuredHintModelIds: readonly string[];
+    readonly allowEndpointIds: readonly string[];
+    readonly resolvedModelIds: readonly string[];
+    readonly driftWarnings: readonly {
+      readonly aliasId: string;
+      readonly hintModelId: string;
+      readonly suggestedModelIds: readonly string[];
+      readonly message: string;
+    }[];
+    readonly localEndpointCount: number;
+    readonly remoteEndpointCount: number;
+    readonly activeEndpointCount: number;
+    readonly healthyEndpointCount: number;
+    readonly readiness: "ready" | "degraded" | "unavailable";
+  }[];
   readonly guidance?: {
     readonly endpointId?: string | null;
     readonly preferredEndpointIds?: readonly string[];
@@ -1337,6 +1415,23 @@ export async function startRuntimeDeviceAuthorization(
   });
 }
 
+export async function reconnectRuntimeAccount(
+  payload: Record<string, unknown>,
+  fetcher: RuntimeFetcher = fetch,
+): Promise<RuntimeDeviceAuthorization> {
+  return fetchJson<RuntimeDeviceAuthorization>(
+    "/api/role-model/accounts/repair/reconnect",
+    fetcher,
+    {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    },
+  );
+}
+
 export async function pollRuntimeDeviceAuthorization(
   authRequestId: string,
   fetcher: RuntimeFetcher = fetch,
@@ -1347,6 +1442,19 @@ export async function pollRuntimeDeviceAuthorization(
       "content-type": "application/json",
     },
     body: JSON.stringify({ authRequestId }),
+  });
+}
+
+export async function updateRuntimeAccountApiKey(
+  payload: Record<string, unknown>,
+  fetcher: RuntimeFetcher = fetch,
+): Promise<RuntimeAccount> {
+  return fetchJson<RuntimeAccount>("/api/role-model/accounts/repair/update-key", fetcher, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+    },
+    body: JSON.stringify(payload),
   });
 }
 

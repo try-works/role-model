@@ -27,6 +27,8 @@ type QaBridgeBackend = Pick<
   | "registry"
   | "executeChatCompletions"
   | "executeResponses"
+  | "listActivityMetrics"
+  | "readActivityCapture"
   | "readRuntimeSummary"
   | "readRuntimeConfig"
   | "updateRuntimeConfig"
@@ -171,7 +173,8 @@ export function createQaServerOptions(
     executeChatCompletions: backend.executeChatCompletions,
     executeResponses: backend.executeResponses,
     readVersionInfo: async () => ({ version: "0.0.0-qa", build: "dev" }),
-    listActivityMetrics: async () => [],
+    listActivityMetrics: backend.listActivityMetrics,
+    readActivityCapture: backend.readActivityCapture,
     readLogs: async () => "No logs available in QA mode.",
     readRuntimeSummary: backend.readRuntimeSummary,
     readHealthStatus: backend.readHealthStatus,

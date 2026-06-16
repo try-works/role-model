@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-06-15T20:34:31.515Z",
+  "remoteActivations": [
+    {
+      "providerAccountId": "moonshot.personal.oauth-ready",
+      "modelId": "moonshot/kimi-k2.5",
+      "region": "global",
+      "endpointId": "moonshot.personal.oauth-ready.global.kimi-k2.5",
+      "modelRoleBindings": [
+        {
+          "modelId": "moonshot/kimi-k2.5",
+          "roleIds": [
+            "general.chat"
+          ]
+        }
+      ]
+    },
+    {
+      "providerAccountId": "moonshot.personal.api-key",
+      "modelId": "moonshot/kimi-k2.5",
+      "region": "global",
+      "endpointId": "moonshot.personal.api-key.global.kimi-k2.5",
+      "modelRoleBindings": [
+        {
+          "modelId": "moonshot/kimi-k2.5",
+          "roleIds": [
+            "general.chat"
+          ]
+        }
+      ]
+    },
+    {
+      "providerAccountId": "moonshot.personal.oauth-repair",
+      "modelId": "moonshot/kimi-k2.5",
+      "region": "global",
+      "endpointId": "moonshot.personal.oauth-repair.global.kimi-k2.5",
+      "modelRoleBindings": [
+        {
+          "modelId": "moonshot/kimi-k2.5",
+          "roleIds": [
+            "general.chat"
+          ]
+        }
+      ]
+    }
+  ],
+  "peerLoads": [
+    {
+      "peerId": "local-main",
+      "modelId": "lfm2.5-1.2b-instruct",
+      "roleIds": [
+        "general.chat"
+      ],
+      "autoReload": true
+    }
+  ],
+  "llamaSwapLoads": []
+}

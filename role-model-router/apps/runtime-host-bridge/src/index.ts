@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
-import { existsSync, readFileSync } from "node:fs";
-import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { type IncomingMessage, type Server, type ServerResponse, createServer } from "node:http";
 import os from "node:os";
 import path from "node:path";
@@ -135,6 +135,7 @@ import {
 import {
   createPendingBootstrapState,
   runSessionBootstrapStages,
+  type BootstrapStageResult,
   type SessionBootstrapState,
 } from "./session-bootstrap.js";
 import {
@@ -1177,6 +1178,8 @@ export interface BridgeTelemetryQuery {
 export type BridgeTelemetryRequestRecord = ReturnType<
   typeof listRuntimeTelemetryRecords
 >[number] & {
+  readonly clientRequestId?: string | null;
+  readonly requestClass?: "benchmark" | "live_request" | "unknown";
   readonly sourceType: "local" | "remote";
   readonly providerId: string | null;
   readonly endpointKind: string | null;
@@ -1186,9 +1189,9 @@ export type BridgeTelemetryRequestRecord = ReturnType<
   readonly roleIds: readonly string[];
 };
 
-export type BridgeTelemetryEndpointMeta = Omit<
+export type BridgeTelemetryEndpointMeta = Pick<
   BridgeTelemetryRequestRecord,
-  keyof ReturnType<typeof listRuntimeTelemetryRecords>[number]
+  "sourceType" | "providerId" | "endpointKind" | "servingSource" | "healthStatus" | "status" | "roleIds"
 >;
 
 export type BridgeTelemetryComparisonRow = ReturnType<
@@ -1250,6 +1253,8 @@ export interface StartBridgeServerOptions {
   readonly listAccounts?: () => Promise<readonly unknown[]>;
   readonly listProviderDeviceAuthorizations?: () => Promise<readonly unknown[]>;
   readonly upsertProviderAccount?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly reconnectProviderAccount?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly updateProviderApiKey?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly startProviderDeviceAuthorization?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly pollProviderDeviceAuthorization?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly readRuntimeConfig?: () => Promise<unknown>;
@@ -1371,6 +1376,8 @@ export interface StartBridgeServerOptions {
 
 export interface RuntimeBridgeBackend {
   readonly registry: EndpointRegistryResult;
+  listActivityMetrics(): Promise<readonly unknown[]>;
+  readActivityCapture(captureId: number): Promise<unknown | null>;
   executeChatCompletions: (
     body: OpenAIChatCompletionsBody,
     requestId: string,
@@ -1384,49 +1391,13 @@ export interface RuntimeBridgeBackend {
     requestOptions?: BridgeExecutionRequestOptions,
   ) => Promise<BridgeResponsesExecutionResult>;
   readVersionInfo(): Promise<unknown>;
-  readRuntimeSummary(): Promise<{
-    lifecycleSummary: EndpointRegistryResult["lifecycleSummary"];
-    providerCount: number;
-    accountCount: number;
-    endpointCount: number;
-    scopeId: string;
-    runtimeStateRoot: string;
-    readinessSummary: {
-      pendingDeviceAuthorizationCount: number;
-      credentialsMissingAccountCount: number;
-      connectedWithoutEndpointCount: number;
-      readyAccountCount: number;
-    };
-    executionMode: UnifiedRuntimeExecutionMode;
-    unifiedConfig: {
-      enabled: boolean;
-      path: string | null;
-    };
-    sessionBootstrap: {
-      status: SessionBootstrapState["status"];
-      startedAt: string | null;
-      finishedAt: string | null;
-      stages: SessionBootstrapState["stages"];
-    };
-    inventorySummary: {
-      modelIdCount: number;
-      endpointIdCount: number;
-      localEndpointCount: number;
-      remoteEndpointCount: number;
-      emptyAliasIds: readonly string[];
-    };
-    aliasDrift: readonly {
-      aliasId: string;
-      hintModelId: string;
-      suggestedModelIds: readonly string[];
-      message: string;
-    }[];
-  }>;
+  readRuntimeSummary(): Promise<RuntimeBridgeSummary>;
   readHealthStatus(): Promise<{
     status: "healthy" | "degraded";
     executionMode: UnifiedRuntimeExecutionMode;
     vendors: Record<string, VendorRuntimeStatus>;
     inactiveVendors: string[];
+    credentialLifecycleAuthority: RuntimeCredentialLifecycleSummary["authority"];
     sessionBootstrap: {
       status: SessionBootstrapState["status"];
       startedAt: string | null;
@@ -1462,6 +1433,8 @@ export interface RuntimeBridgeBackend {
   listAccounts(): Promise<ReturnType<typeof listProviderAccounts>>;
   listProviderDeviceAuthorizations(): Promise<readonly DeviceAuthorizationReadbackResult[]>;
   upsertProviderAccount(account: Record<string, unknown>): Promise<ProviderAccountRecord>;
+  reconnectProviderAccount(body: Record<string, unknown>): Promise<DeviceAuthorizationStartResult>;
+  updateProviderApiKey(body: Record<string, unknown>): Promise<ProviderAccountRecord>;
   startProviderDeviceAuthorization(
     body: Record<string, unknown>,
   ): Promise<DeviceAuthorizationStartResult>;
@@ -1619,6 +1592,127 @@ export interface RuntimeBridgeBackend {
   shutdown(): Promise<void>;
 }
 
+type CredentialLifecycleState =
+  | "execution-ready"
+  | "connected-no-endpoint"
+  | "pending-authorization"
+  | "expired-auth"
+  | "credentials-missing"
+  | "env-unresolved"
+  | "archived-stale";
+
+type CredentialLifecycleAction =
+  | "reconnect"
+  | "update-api-key"
+  | "activate-endpoint"
+  | "set-env";
+
+type CredentialLifecycleSourceProvenance =
+  | "manual"
+  | "runtime-config"
+  | "legacy-manifest";
+
+interface CredentialLifecycleCounts {
+  executionReady: number;
+  connectedNoEndpoint: number;
+  pendingAuthorization: number;
+  expiredAuth: number;
+  credentialsMissing: number;
+  envUnresolved: number;
+  archivedStale: number;
+}
+
+interface CredentialLifecycleAccountRecord {
+  logicalAccountId: string;
+  providerAccountId: string;
+  providerId: string;
+  sourceProvenance: readonly CredentialLifecycleSourceProvenance[];
+  authMode: string;
+  credentialStorageMode: "persisted-local" | "env-ref" | "oauth-local" | "unknown";
+  credentialBackendCanonical: string;
+  lifecycleState: CredentialLifecycleState;
+  reasonCode: string;
+  blocking: boolean;
+  activeEndpointIds: readonly string[];
+  configuredModelIds: readonly string[];
+  availableActions: readonly CredentialLifecycleAction[];
+}
+
+interface CredentialLifecycleProviderRollup {
+  providerId: string;
+  accountIds: readonly string[];
+  countsByLifecycle: CredentialLifecycleCounts;
+  readyAccountIds: readonly string[];
+  attentionAccountIds: readonly string[];
+  hasArchivedArtifacts: boolean;
+}
+
+interface CredentialLifecycleArchivedArtifact {
+  artifactId: string;
+  providerId: string | null;
+  providerAccountId: string | null;
+  artifactType: string;
+  reasonCode: string;
+}
+
+interface RuntimeCredentialLifecycleSummary {
+  version: 1;
+  authority: {
+    state: "provisional" | "authoritative";
+    bootstrapStatus: SessionBootstrapState["status"];
+    reason?: string;
+  };
+  counts: CredentialLifecycleCounts;
+  accounts: readonly CredentialLifecycleAccountRecord[];
+  providerRollups: readonly CredentialLifecycleProviderRollup[];
+  archivedArtifacts: readonly CredentialLifecycleArchivedArtifact[];
+}
+
+interface RuntimeBridgeSummary {
+  lifecycleSummary: EndpointRegistryResult["lifecycleSummary"];
+  providerCount: number;
+  accountCount: number;
+  endpointCount: number;
+  scopeId: string;
+  runtimeStateRoot: string;
+  readinessSummary: {
+    pendingDeviceAuthorizationCount: number;
+    credentialsMissingAccountCount: number;
+    connectedWithoutEndpointCount: number;
+    readyAccountCount: number;
+  };
+  credentialLifecycle: RuntimeCredentialLifecycleSummary;
+  executionMode: UnifiedRuntimeExecutionMode;
+  unifiedConfig: {
+    enabled: boolean;
+    path: string | null;
+  };
+  sessionBootstrap: {
+    status: SessionBootstrapState["status"];
+    startedAt: string | null;
+    finishedAt: string | null;
+    stages: SessionBootstrapState["stages"];
+  };
+  inventorySummary: {
+    modelIdCount: number;
+    endpointIdCount: number;
+    localEndpointCount: number;
+    remoteEndpointCount: number;
+    emptyAliasIds: readonly string[];
+  };
+  aliasDrift: readonly {
+    aliasId: string;
+    hintModelId: string;
+    suggestedModelIds: readonly string[];
+    message: string;
+  }[];
+  operatorIntent?: {
+    path: string;
+    status: OperatorIntentDiagnostic["status"];
+    message?: string;
+  };
+}
+
 export interface CreateRuntimeBridgeBackendOptions {
   readonly repoRoot: string;
   readonly runtimeStateRoot: string;
@@ -1642,6 +1736,7 @@ export interface BridgeExecutionRequestOptions {
   readonly routingModeOverride?: RuntimeRoutingMode;
   readonly endpointId?: string;
   readonly requestedRoleId?: string;
+  readonly clientRequestId?: string;
 }
 
 class BridgeHttpError extends Error {
@@ -1716,11 +1811,8 @@ function normalizeConfiguredRoutingMode(value: string | null | undefined): Runti
 }
 
 function readBridgeRequestId(request: IncomingMessage): string {
-  return (
-    request.headers["x-request-id"]?.toString().trim() ||
-    request.headers["x-role-model-request-id"]?.toString().trim() ||
-    "req-runtime-host-bridge"
-  );
+  void request;
+  return `req-${randomUUID()}`;
 }
 
 function formatRuntimeTelemetryLogs(
@@ -1740,15 +1832,24 @@ function formatRuntimeTelemetryLogs(
 function readBridgeExecutionRequestOptions(
   request: IncomingMessage,
 ): BridgeExecutionRequestOptions | undefined {
+  const clientRequestId =
+    request.headers["x-request-id"]?.toString().trim() ||
+    request.headers["x-role-model-request-id"]?.toString().trim();
   const routingModeOverrideHeader = request.headers["x-role-model-routing-mode"]?.toString().trim();
   const endpointIdHeader = request.headers["x-role-model-endpoint-id"]?.toString().trim();
   const requestedRoleIdHeader = request.headers["x-role-model-requested-role-id"]
     ?.toString()
     .trim();
-  if (!routingModeOverrideHeader && !endpointIdHeader && !requestedRoleIdHeader) {
+  if (
+    !clientRequestId &&
+    !routingModeOverrideHeader &&
+    !endpointIdHeader &&
+    !requestedRoleIdHeader
+  ) {
     return undefined;
   }
   return {
+    ...(clientRequestId ? { clientRequestId } : {}),
     ...(routingModeOverrideHeader
       ? { routingModeOverride: parseRuntimeRoutingModeOverride(routingModeOverrideHeader) }
       : {}),
@@ -2166,10 +2267,16 @@ function createUnifiedProviderAccounts(
   liteLLMBaseUrl: string | null,
   runtimeStateRoot: string,
   scopeId: string,
+  persistedAccounts: readonly ProviderAccountRecord[] = [],
 ): ProviderAccountRecord[] {
   if (!liteLLMBaseUrl) {
     return [];
   }
+  const manualAccountsById = new Map(
+    persistedAccounts
+      .filter((account) => !isRuntimeConfigProviderAccount(account))
+      .map((account) => [account.providerAccountId, account]),
+  );
   return config.liteLLM.providers.map((providerConfig) => {
     const catalogProvider = catalog.providers.find(
       (entry) => entry.providerId === providerConfig.providerId,
@@ -2212,7 +2319,7 @@ function createUnifiedProviderAccounts(
             `${provider.providerId.toUpperCase()}_API_KEY`,
           );
 
-    return {
+    const runtimeConfigAccount: ProviderAccountRecord = {
       providerAccountId,
       providerId: provider.providerId,
       providerKind: mergedMetadata?.providerKind ?? provider.providerKind,
@@ -2234,6 +2341,10 @@ function createUnifiedProviderAccounts(
       healthStatus: "healthy",
       rotationState: "stable",
     };
+    const manualAccount = manualAccountsById.get(providerAccountId);
+    return manualAccount
+      ? mergeRuntimeConfigProviderAccount(manualAccount, runtimeConfigAccount)
+      : runtimeConfigAccount;
   });
 }
 
@@ -2803,6 +2914,75 @@ const defaultTaskDefinitions: readonly RuntimeTaskDefinitionRecord[] = [
 
 function compareText(left: string, right: string): number {
   return left.localeCompare(right, "en");
+}
+
+type ProviderAccountModelRoleBinding = NonNullable<ProviderAccountRecord["modelRoleBindings"]>[number];
+
+function isRuntimeConfigProviderAccount(account: ProviderAccountRecord): boolean {
+  return account.orgScope === "runtime-config" || account.accountScope === "runtime-config";
+}
+
+function mergeProviderAccountAllowedModels(
+  manualAllowedModels: readonly string[],
+  runtimeConfigAllowedModels: readonly string[],
+): string[] {
+  return [...new Set([...manualAllowedModels, ...runtimeConfigAllowedModels])].sort(compareText);
+}
+
+function mergeProviderAccountModelRoleBindings(
+  manualBindings: readonly ProviderAccountModelRoleBinding[],
+  runtimeConfigBindings: readonly ProviderAccountModelRoleBinding[],
+): ProviderAccountRecord["modelRoleBindings"] {
+  const mergedBindings = new Map<string, Set<string>>();
+  for (const binding of [...manualBindings, ...runtimeConfigBindings]) {
+    const roleIds = mergedBindings.get(binding.modelId) ?? new Set<string>();
+    for (const roleId of binding.roleIds) {
+      roleIds.add(roleId);
+    }
+    mergedBindings.set(binding.modelId, roleIds);
+  }
+
+  if (mergedBindings.size === 0) {
+    return undefined;
+  }
+
+  return [...mergedBindings.entries()]
+    .sort(([leftModelId], [rightModelId]) => compareText(leftModelId, rightModelId))
+    .map(([modelId, roleIds]) => ({
+      modelId,
+      roleIds: [...roleIds].sort(compareText),
+    }));
+}
+
+function mergeRuntimeConfigProviderAccount(
+  manualAccount: ProviderAccountRecord,
+  runtimeConfigAccount: ProviderAccountRecord,
+): ProviderAccountRecord {
+  return {
+    ...runtimeConfigAccount,
+    providerKind: manualAccount.providerKind,
+    orgScope: manualAccount.orgScope,
+    accountScope: manualAccount.accountScope,
+    credentialRef: manualAccount.credentialRef,
+    authMode: manualAccount.authMode,
+    regionPolicy: manualAccount.regionPolicy,
+    baseUrlOverride: manualAccount.baseUrlOverride ?? runtimeConfigAccount.baseUrlOverride,
+    allowedModels: mergeProviderAccountAllowedModels(
+      manualAccount.allowedModels,
+      runtimeConfigAccount.allowedModels,
+    ),
+    modelRoleBindings: mergeProviderAccountModelRoleBindings(
+      manualAccount.modelRoleBindings ?? [],
+      runtimeConfigAccount.modelRoleBindings ?? [],
+    ),
+    deniedModels: manualAccount.deniedModels,
+    entitlementTags: manualAccount.entitlementTags,
+    budgetPolicyRef: manualAccount.budgetPolicyRef,
+    quotaPolicyRef: manualAccount.quotaPolicyRef,
+    status: manualAccount.status,
+    healthStatus: manualAccount.healthStatus,
+    rotationState: manualAccount.rotationState,
+  };
 }
 
 function titleCaseWords(value: string): string {
@@ -4214,6 +4394,10 @@ function createCredentialRef(providerId: string, providerAccountId: string): str
   return `oauth/${sanitizeSegment(providerId)}/${sanitizeSegment(providerAccountId)}`;
 }
 
+function normalizeArchivedReasonCode(code: string): string {
+  return code.trim().toLowerCase().replace(/_/g, "-");
+}
+
 function resolveCredentialFilePath(
   runtimeStateRoot: string,
   scopeId: string,
@@ -4262,8 +4446,10 @@ async function persistOauthTokenFile(
   payload: Record<string, unknown>,
 ): Promise<void> {
   const filePath = resolveCredentialFilePath(runtimeStateRoot, scopeId, credentialRef);
+  const tempFilePath = `${filePath}.${randomUUID()}.tmp`;
   await mkdir(path.dirname(filePath), { recursive: true });
-  await writeFile(filePath, JSON.stringify(payload, null, 2), "utf8");
+  await writeFile(tempFilePath, JSON.stringify(payload, null, 2), "utf8");
+  await rename(tempFilePath, filePath);
 }
 
 async function persistStaticCredentialFile(
@@ -4330,6 +4516,32 @@ function readStoredOauthTokenFileSync(
   }
 }
 
+function listStoredCredentialRefsSync(runtimeStateRoot: string, scopeId: string): string[] {
+  const credentialsRoot = path.join(runtimeStateRoot, scopeId, "credentials");
+  if (!existsSync(credentialsRoot)) {
+    return [];
+  }
+
+  const refs: string[] = [];
+  const walk = (directoryPath: string, relativeSegments: readonly string[]): void => {
+    for (const entry of readdirSync(directoryPath, { withFileTypes: true })) {
+      const nextPath = path.join(directoryPath, entry.name);
+      if (entry.isDirectory()) {
+        walk(nextPath, [...relativeSegments, entry.name]);
+        continue;
+      }
+      if (!entry.isFile() || !entry.name.endsWith(".json")) {
+        continue;
+      }
+      const fileName = entry.name.slice(0, -".json".length);
+      refs.push([...relativeSegments, fileName].join("/"));
+    }
+  };
+
+  walk(credentialsRoot, []);
+  return refs.sort(compareText);
+}
+
 function hydrateOauthProviderAccounts(
   runtimeStateRoot: string,
   scopeId: string,
@@ -4357,10 +4569,20 @@ function hydrateOauthProviderAccounts(
       scopeId,
       resolvedCredential.ref,
     );
+    const preserveRefreshFailure =
+      tokenNeedsRefresh(payload) &&
+      account.rotationState === "failed" &&
+      (account.healthStatus === "refresh-failing" || account.healthStatus === "provider-auth-error");
     const hasStoredToken =
       readStoredAccessToken(payload).length > 0 || readStoredRefreshToken(payload).length > 0;
     if (!hasStoredToken) {
       return account;
+    }
+    if (preserveRefreshFailure) {
+      return {
+        ...account,
+        credentialRef: resolvedCredential,
+      };
     }
 
     const hydratedAccount = {
@@ -5965,6 +6187,42 @@ function createRequestHandler(options: StartBridgeServerOptions) {
       return;
     }
 
+    if (request.method === "POST" && url.pathname === "/api/role-model/accounts/repair/reconnect") {
+      if (!options.reconnectProviderAccount) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+
+      try {
+        writeJson(
+          response,
+          200,
+          await options.reconnectProviderAccount(await readJsonBody(request)),
+        );
+      } catch (error) {
+        writeJson(response, 400, {
+          error: error instanceof Error ? error.message : "provider reconnect failed",
+        });
+      }
+      return;
+    }
+
+    if (request.method === "POST" && url.pathname === "/api/role-model/accounts/repair/update-key") {
+      if (!options.updateProviderApiKey) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+
+      try {
+        writeJson(response, 200, await options.updateProviderApiKey(await readJsonBody(request)));
+      } catch (error) {
+        writeJson(response, 400, {
+          error: error instanceof Error ? error.message : "provider API key update failed",
+        });
+      }
+      return;
+    }
+
     if (request.method === "POST" && url.pathname === "/api/role-model/accounts/device/start") {
       if (!options.startProviderDeviceAuthorization) {
         writeJson(response, 404, { error: "not found" });
@@ -6610,16 +6868,28 @@ export async function createRuntimeBridgeBackend(
           local: createUnifiedLocalSources(currentUnifiedRuntimeConfig),
         }
       : registrySourcesFixture;
+  const activeProviderAccountRepairs = new Set<string>();
   const readCurrentAccounts = (): ProviderAccountRecord[] => {
     const persistedAccounts = listProviderAccounts({ databasePath: initialization.databasePath });
-    const ignoredAccountIds = new Set([...fixtureAccountIds, ...runtimeConfigProviderAccountIds]);
+    const validation = validateProviderAccounts({
+      catalog: currentNormalizedCatalog,
+      additionalProviders: liteLLMProviders,
+      accounts: persistedAccounts,
+      allowedRoleIds: getAllowedRoleIds(),
+    });
+    const ignoredAccountIds = new Set([
+      ...fixtureAccountIds,
+      ...validation.accounts
+        .filter((account) => isRuntimeConfigProviderAccount(account))
+        .map((account) => account.providerAccountId),
+    ]);
     const hydratedAccounts = hydrateOauthProviderAccounts(
       options.runtimeStateRoot,
       options.scopeId,
-      hydrateEnvProviderAccounts(persistedAccounts, ignoredAccountIds),
+      hydrateEnvProviderAccounts(validation.accounts, ignoredAccountIds),
     );
     const changedAccounts = hydratedAccounts.filter((account, index) => {
-      const persistedAccount = persistedAccounts[index];
+      const persistedAccount = validation.accounts[index];
       return (
         persistedAccount !== undefined &&
         (persistedAccount.status !== account.status ||
@@ -6659,50 +6929,373 @@ export async function createRuntimeBridgeBackend(
         expiresAtMs: session.expiresAtMs,
         ...(session.lastError ? { lastError: session.lastError } : {}),
       }));
+  const buildCredentialLifecycleSummary = (): RuntimeCredentialLifecycleSummary => {
+    const persistedAccounts = listProviderAccounts({ databasePath: initialization.databasePath });
+    const accountValidation = validateProviderAccounts({
+      catalog: currentNormalizedCatalog,
+      additionalProviders: liteLLMProviders,
+      accounts: persistedAccounts,
+      allowedRoleIds: getAllowedRoleIds(),
+    });
+    const invalidAccountsById = new Map(
+      persistedAccounts.map((account) => [account.providerAccountId, account]),
+    );
+    const latestAccounts = readCurrentAccounts();
+    const latestEndpoints = listRuntimeEndpoints({
+      databasePath: initialization.databasePath,
+    });
+    const nowMs = Date.now();
+    const validAccountIds = new Set(latestAccounts.map((account) => account.providerAccountId));
+    const deviceAuthorizationSessions = listProviderDeviceAuthSessions({
+      databasePath: initialization.databasePath,
+    }).filter(
+      (
+        session,
+      ): session is typeof session & { status: DeviceAuthorizationReadbackResult["status"] } =>
+        session.status === "pending" ||
+        session.status === "connected" ||
+        session.status === "expired" ||
+        session.status === "failed",
+    );
+    const deviceAuthorizations = deviceAuthorizationSessions
+      .filter((session) => validAccountIds.has(session.providerAccountId))
+      .map((session) => ({
+        authRequestId: session.authRequestId,
+        providerAccountId: session.providerAccountId,
+        providerId: session.providerId,
+        variantId: session.variantId,
+        status: session.status,
+        userCode: session.userCode,
+        verificationUri: session.verificationUri,
+        verificationUriComplete: session.verificationUriComplete,
+        intervalSeconds: session.intervalSeconds,
+        expiresAtMs: session.expiresAtMs,
+        ...(session.lastError ? { lastError: session.lastError } : {}),
+      }));
+    const orphanDeviceAuthorizations = deviceAuthorizationSessions.filter(
+      (session) => !validAccountIds.has(session.providerAccountId),
+    );
+    const pendingAuthorizations = deviceAuthorizations.filter(
+      (authorization) => authorization.status === "pending" && authorization.expiresAtMs > nowMs,
+    );
+    const expiredPendingAuthorizations = deviceAuthorizations.filter(
+      (authorization) => authorization.status === "pending" && authorization.expiresAtMs <= nowMs,
+    );
+    const pendingAccountIds = new Set(
+      pendingAuthorizations.map((authorization) => authorization.providerAccountId),
+    );
+    const activeEndpointIdsByAccountId = new Map<string, string[]>();
+    for (const endpoint of latestEndpoints) {
+      if (
+        endpoint.lifecycleState !== "active" ||
+        typeof endpoint.providerAccountId !== "string" ||
+        endpoint.providerAccountId.length === 0
+      ) {
+        continue;
+      }
+      const current = activeEndpointIdsByAccountId.get(endpoint.providerAccountId) ?? [];
+      current.push(endpoint.endpointId);
+      activeEndpointIdsByAccountId.set(endpoint.providerAccountId, current);
+    }
+
+    const emptyCounts = (): CredentialLifecycleCounts => ({
+      executionReady: 0,
+      connectedNoEndpoint: 0,
+      pendingAuthorization: 0,
+      expiredAuth: 0,
+      credentialsMissing: 0,
+      envUnresolved: 0,
+      archivedStale: 0,
+    });
+    const normalizeCredentialBackend = (backend: string | undefined): string => {
+      if (backend === "local-encrypted-file") {
+        return "local-file";
+      }
+      return backend ?? "unknown";
+    };
+    const resolveCredentialStorageMode = (
+      account: ProviderAccountRecord,
+    ): CredentialLifecycleAccountRecord["credentialStorageMode"] => {
+      const backend = normalizeCredentialBackend(account.credentialRef?.backend);
+      if (backend === "env") {
+        return "env-ref";
+      }
+      if (backend === "local-file") {
+        return account.authMode === "oauth2-device-code" ? "oauth-local" : "persisted-local";
+      }
+      return "unknown";
+    };
+    const resolveSourceProvenance = (
+      account: ProviderAccountRecord,
+    ): readonly CredentialLifecycleSourceProvenance[] => {
+      if (isRuntimeConfigProviderAccount(account)) {
+        return ["runtime-config"];
+      }
+      if (runtimeConfigProviderAccountIds.has(account.providerAccountId)) {
+        return ["manual", "runtime-config"];
+      }
+      return ["manual"];
+    };
+    const hasResolvedEnvCredential = (account: ProviderAccountRecord): boolean => {
+      if (account.credentialRef?.backend !== "env") {
+        return false;
+      }
+      const value = process.env[account.credentialRef.ref];
+      return typeof value === "string" && value.trim().length > 0;
+    };
+
+    const lifecycleAccounts: CredentialLifecycleAccountRecord[] = latestAccounts.map((account) => {
+      const activeEndpointIds = [
+        ...(activeEndpointIdsByAccountId.get(account.providerAccountId) ?? []),
+      ].sort((left, right) => compareText(left, right));
+      const configuredModelIds = [...new Set(account.allowedModels ?? [])].sort((left, right) =>
+        compareText(left, right),
+      );
+      const credentialBackendCanonical = normalizeCredentialBackend(account.credentialRef?.backend);
+      const credentialStorageMode = resolveCredentialStorageMode(account);
+      const pendingAuthorization = pendingAccountIds.has(account.providerAccountId);
+      const envUnresolved =
+        credentialBackendCanonical === "env" &&
+        account.credentialRef !== undefined &&
+        !hasResolvedEnvCredential(account);
+      const expiredAuth =
+        !pendingAuthorization &&
+        !envUnresolved &&
+        account.authMode === "oauth2-device-code" &&
+        account.rotationState === "failed" &&
+        (account.healthStatus === "refresh-failing" || account.healthStatus === "provider-auth-error");
+      const executionReady = activeEndpointIds.length > 0;
+      const credentialsMissing =
+        !pendingAuthorization &&
+        !envUnresolved &&
+        !expiredAuth &&
+        account.healthStatus === "credentials-missing";
+      const connectedNoEndpoint =
+        !pendingAuthorization &&
+        !envUnresolved &&
+        !expiredAuth &&
+        !credentialsMissing &&
+        !executionReady &&
+        account.status === "active" &&
+        account.healthStatus === "healthy";
+
+      let lifecycleState: CredentialLifecycleState = "connected-no-endpoint";
+      let reasonCode = "connected-no-endpoint";
+      if (pendingAuthorization) {
+        lifecycleState = "pending-authorization";
+        reasonCode = "pending-device-authorization";
+      } else if (envUnresolved) {
+        lifecycleState = "env-unresolved";
+        reasonCode = "env-var-missing";
+      } else if (expiredAuth) {
+        lifecycleState = "expired-auth";
+        reasonCode = "oauth-refresh-failed";
+      } else if (credentialsMissing) {
+        lifecycleState = "credentials-missing";
+        reasonCode = "credential-material-missing";
+      } else if (executionReady) {
+        lifecycleState = "execution-ready";
+        reasonCode = "active-endpoint-present";
+      } else if (connectedNoEndpoint) {
+        lifecycleState = "connected-no-endpoint";
+        reasonCode = "active-without-endpoint";
+      }
+
+      const supportsRemoteApiKeyMaintenance =
+        account.authMode === "api-key-static" &&
+        !isLocalPeerProviderAccountId(account.providerAccountId);
+
+      const availableActions = (() => {
+        switch (lifecycleState) {
+          case "pending-authorization":
+          case "expired-auth":
+            return ["reconnect"] as const;
+          case "env-unresolved":
+            return ["set-env"] as const;
+          case "credentials-missing":
+            return account.authMode === "oauth2-device-code"
+              ? (["reconnect"] as const)
+              : supportsRemoteApiKeyMaintenance
+                ? (["update-api-key"] as const)
+                : ([] as const);
+          case "connected-no-endpoint":
+            return supportsRemoteApiKeyMaintenance
+              ? (["activate-endpoint", "update-api-key"] as const)
+              : (["activate-endpoint"] as const);
+          case "execution-ready":
+            return supportsRemoteApiKeyMaintenance ? (["update-api-key"] as const) : ([] as const);
+          default:
+            return [] as const;
+        }
+      })();
+
+      return {
+        logicalAccountId: account.providerAccountId,
+        providerAccountId: account.providerAccountId,
+        providerId: account.providerId,
+        sourceProvenance: resolveSourceProvenance(account),
+        authMode: account.authMode,
+        credentialStorageMode,
+        credentialBackendCanonical,
+        lifecycleState,
+        reasonCode,
+        blocking: lifecycleState !== "execution-ready",
+        activeEndpointIds,
+        configuredModelIds,
+        availableActions,
+      };
+    });
+
+    const counts = lifecycleAccounts.reduce<CredentialLifecycleCounts>((result, account) => {
+      switch (account.lifecycleState) {
+        case "execution-ready":
+          result.executionReady += 1;
+          break;
+        case "connected-no-endpoint":
+          result.connectedNoEndpoint += 1;
+          break;
+        case "pending-authorization":
+          result.pendingAuthorization += 1;
+          break;
+        case "expired-auth":
+          result.expiredAuth += 1;
+          break;
+        case "credentials-missing":
+          result.credentialsMissing += 1;
+          break;
+        case "env-unresolved":
+          result.envUnresolved += 1;
+          break;
+        case "archived-stale":
+          result.archivedStale += 1;
+          break;
+      }
+      return result;
+    }, emptyCounts());
+    const referencedCredentialRefs = new Set<string>([
+      ...latestAccounts
+        .map((account) => {
+          const backend = account.credentialRef?.backend;
+          return backend === "local-file" || backend === "local-encrypted-file"
+            ? account.credentialRef?.ref
+            : undefined;
+        })
+        .filter((value): value is string => typeof value === "string" && value.length > 0),
+      ...deviceAuthorizationSessions
+        .map((session) => session.credentialRef)
+        .filter((value): value is string => typeof value === "string" && value.length > 0),
+    ]);
+    const orphanCredentialArtifacts = listStoredCredentialRefsSync(options.runtimeStateRoot, options.scopeId)
+      .filter((credentialRef) => !referencedCredentialRefs.has(credentialRef))
+      .map((credentialRef) => ({
+        artifactId: `credential-file/${credentialRef}`,
+        providerId: credentialRef.split("/")[1] ?? null,
+        providerAccountId: null,
+        artifactType: "credential-file",
+        reasonCode: "orphan-credential-file",
+      }));
+    const archivedArtifacts: CredentialLifecycleArchivedArtifact[] = [
+      ...expiredPendingAuthorizations.map((authorization) => ({
+        artifactId: authorization.authRequestId,
+        providerId: authorization.providerId,
+        providerAccountId: authorization.providerAccountId,
+        artifactType: "device-authorization",
+        reasonCode: "expired-pending-authorization",
+      })),
+      ...orphanDeviceAuthorizations.map((session) => ({
+        artifactId: session.authRequestId,
+        providerId: session.providerId,
+        providerAccountId: session.providerAccountId,
+        artifactType: "device-authorization",
+        reasonCode: "orphan-device-authorization",
+      })),
+      ...accountValidation.diagnostics.map((diagnostic) => ({
+        artifactId: `provider-account/${diagnostic.providerAccountId}`,
+        providerId: invalidAccountsById.get(diagnostic.providerAccountId)?.providerId ?? null,
+        providerAccountId: diagnostic.providerAccountId,
+        artifactType: "provider-account",
+        reasonCode: normalizeArchivedReasonCode(diagnostic.code),
+      })),
+      ...orphanCredentialArtifacts,
+    ];
+    counts.archivedStale += archivedArtifacts.length;
+
+    const providerIds = [...new Set(lifecycleAccounts.map((account) => account.providerId))].sort(
+      (left, right) => compareText(left, right),
+    );
+    const providerRollups: CredentialLifecycleProviderRollup[] = providerIds.map((providerId) => {
+      const providerAccounts = lifecycleAccounts.filter((account) => account.providerId === providerId);
+      const countsByLifecycle = providerAccounts.reduce<CredentialLifecycleCounts>((result, account) => {
+        switch (account.lifecycleState) {
+          case "execution-ready":
+            result.executionReady += 1;
+            break;
+          case "connected-no-endpoint":
+            result.connectedNoEndpoint += 1;
+            break;
+          case "pending-authorization":
+            result.pendingAuthorization += 1;
+            break;
+          case "expired-auth":
+            result.expiredAuth += 1;
+            break;
+          case "credentials-missing":
+            result.credentialsMissing += 1;
+            break;
+          case "env-unresolved":
+            result.envUnresolved += 1;
+            break;
+          case "archived-stale":
+            result.archivedStale += 1;
+            break;
+        }
+        return result;
+      }, emptyCounts());
+
+      return {
+        providerId,
+        accountIds: providerAccounts.map((account) => account.providerAccountId).sort(compareText),
+        countsByLifecycle,
+        readyAccountIds: providerAccounts
+          .filter((account) => account.lifecycleState === "execution-ready")
+          .map((account) => account.providerAccountId)
+          .sort(compareText),
+        attentionAccountIds: providerAccounts
+          .filter((account) => account.blocking)
+          .map((account) => account.providerAccountId)
+          .sort(compareText),
+        hasArchivedArtifacts: archivedArtifacts.some((artifact) => artifact.providerId === providerId),
+      };
+    });
+
+    return {
+      version: 1,
+      authority: buildCredentialLifecycleAuthority(),
+      counts,
+      accounts: lifecycleAccounts,
+      providerRollups,
+      archivedArtifacts,
+    };
+  };
+  const buildCredentialLifecycleAuthority = (): RuntimeCredentialLifecycleSummary["authority"] => ({
+    state:
+      sessionBootstrapState.status === "pending" || sessionBootstrapState.status === "running"
+        ? "provisional"
+        : "authoritative",
+    bootstrapStatus: sessionBootstrapState.status,
+  });
   const buildCredentialReadinessSummary = (): {
     pendingDeviceAuthorizationCount: number;
     credentialsMissingAccountCount: number;
     connectedWithoutEndpointCount: number;
     readyAccountCount: number;
   } => {
-    const latestAccounts = readCurrentAccounts();
-    const latestEndpoints = listRuntimeEndpoints({
-      databasePath: initialization.databasePath,
-    });
-    const pendingAccountIds = new Set(
-      listCurrentProviderDeviceAuthorizations()
-        .filter((authorization) => authorization.status === "pending")
-        .map((authorization) => authorization.providerAccountId),
-    );
-    const readyAccountIds = new Set(
-      latestEndpoints
-        .filter((endpoint) => endpoint.lifecycleState === "active")
-        .map((endpoint) => endpoint.providerAccountId),
-    );
-    let credentialsMissingAccountCount = 0;
-    let connectedWithoutEndpointCount = 0;
-
-    for (const account of latestAccounts) {
-      if (
-        readyAccountIds.has(account.providerAccountId) ||
-        pendingAccountIds.has(account.providerAccountId)
-      ) {
-        continue;
-      }
-      if (account.healthStatus === "credentials-missing") {
-        credentialsMissingAccountCount += 1;
-        continue;
-      }
-      if (account.status === "active" && account.healthStatus === "healthy") {
-        connectedWithoutEndpointCount += 1;
-      }
-    }
-
+    const lifecycle = buildCredentialLifecycleSummary();
     return {
-      pendingDeviceAuthorizationCount: pendingAccountIds.size,
-      credentialsMissingAccountCount,
-      connectedWithoutEndpointCount,
-      readyAccountCount: readyAccountIds.size,
+      pendingDeviceAuthorizationCount: lifecycle.counts.pendingAuthorization,
+      credentialsMissingAccountCount: lifecycle.counts.credentialsMissing,
+      connectedWithoutEndpointCount: lifecycle.counts.connectedNoEndpoint,
+      readyAccountCount: lifecycle.counts.executionReady,
     };
   };
   let currentAccounts = [...readCurrentAccounts()];
@@ -6801,6 +7394,20 @@ export async function createRuntimeBridgeBackend(
     currentModelOverrides = readModelOverridesFromDisk(options.runtimeStateRoot);
     syncRoutingModelSelection();
     refreshRoutableInventoryState();
+  };
+  const withProviderAccountRepairLock = async <T>(
+    providerAccountId: string,
+    operation: () => Promise<T>,
+  ): Promise<T> => {
+    if (activeProviderAccountRepairs.has(providerAccountId)) {
+      throw new Error(`Provider account ${providerAccountId} already has a repair in progress.`);
+    }
+    activeProviderAccountRepairs.add(providerAccountId);
+    try {
+      return await operation();
+    } finally {
+      activeProviderAccountRepairs.delete(providerAccountId);
+    }
   };
   const resolveProbeAuthorization = async (providerAccountId: string): Promise<string | null> => {
     const account = currentAccounts.find((entry) => entry.providerAccountId === providerAccountId);
@@ -7554,6 +8161,7 @@ export async function createRuntimeBridgeBackend(
         : null;
 
     if (nextConfig !== null) {
+      const persistedAccounts = listProviderAccounts({ databasePath: initialization.databasePath });
       const validation = validateProviderAccounts({
         catalog: nextNormalizedCatalog,
         additionalProviders: liteLLMProviders,
@@ -7564,6 +8172,7 @@ export async function createRuntimeBridgeBackend(
           nextLiteLLMVendor?.readStatus().baseUrl ?? null,
           options.runtimeStateRoot,
           options.scopeId,
+          persistedAccounts,
         ),
         allowedRoleIds: getAllowedRoleIds(),
       });
@@ -7733,9 +8342,38 @@ export async function createRuntimeBridgeBackend(
       totalEstimatedCostUsd: Number(
         records.reduce((sum, record) => sum + (record.estimatedCostUsd ?? 0), 0).toFixed(6),
       ),
+      totalEffectiveCostUsd: Number(
+        records
+          .reduce((sum, record) => {
+            if (typeof record.actualCostUsd === "number") {
+              return sum + record.actualCostUsd;
+            }
+            if (typeof record.estimatedCostUsd === "number") {
+              return sum + record.estimatedCostUsd;
+            }
+            return sum;
+          }, 0)
+          .toFixed(6),
+      ),
       averageLatencyMs: latencies.length > 0 ? Math.round(totalLatency / latencies.length) : null,
       p95LatencyMs: p95Index >= 0 ? (latencies[p95Index] ?? null) : null,
       lastSeenAtMs: records[0]?.createdAtMs ?? null,
+    };
+  };
+  const readObservationTelemetryMeta = (
+    requestId: string,
+  ): Pick<BridgeTelemetryRequestRecord, "clientRequestId" | "requestClass"> => {
+    const observation = readRuntimeObservationBundle({
+      databasePath: initialization.databasePath,
+      requestId,
+    }) as Record<string, unknown> | null;
+    const observedPerformance = asObjectRecord(observation?.observedPerformance);
+    const sample = asObjectRecord(observedPerformance?.sample);
+    const sourceType = asStringValue(sample?.source_type);
+    return {
+      clientRequestId: asStringValue(observation?.clientRequestId) ?? null,
+      requestClass:
+        sourceType === "benchmark" || sourceType === "live_request" ? sourceType : "unknown",
     };
   };
   const getTelemetryEndpointMeta = (endpointId: string): BridgeTelemetryEndpointMeta => {
@@ -7784,10 +8422,17 @@ export async function createRuntimeBridgeBackend(
     return listRuntimeTelemetryRecords({
       databasePath: initialization.databasePath,
       ...normalizedQuery,
-    }).map((record) => ({
-      ...record,
-      ...getTelemetryEndpointMeta(record.endpointId),
-    }));
+    }).map((record) => {
+      const observationMeta = readObservationTelemetryMeta(record.requestId);
+      const endpointMeta = getTelemetryEndpointMeta(record.endpointId);
+      return {
+        ...record,
+        clientRequestId: record.clientRequestId ?? observationMeta.clientRequestId,
+        requestClass: record.requestClass ?? observationMeta.requestClass,
+        ...endpointMeta,
+        sourceType: record.sourceType ?? endpointMeta.sourceType,
+      };
+    });
   };
   const readTelemetrySummaryData = (query?: BridgeTelemetryQuery): BridgeTelemetrySummary => {
     const normalizedQuery = normalizeTelemetryQuery(query);
@@ -7864,6 +8509,114 @@ export async function createRuntimeBridgeBackend(
     typeof value === "object" && value !== null ? (value as Record<string, unknown>) : null;
   const asStringValue = (value: unknown): string | null =>
     typeof value === "string" && value.length > 0 ? value : null;
+  const encodeCaptureBody = (value: unknown): string =>
+    Buffer.from(
+      typeof value === "string" ? value : JSON.stringify(value ?? {}, null, 2),
+      "utf8",
+    ).toString("base64");
+  const inferActivityRequestPath = (body: Record<string, unknown> | null): string => {
+    if (!body) {
+      return "/v1/chat/completions";
+    }
+    if (Array.isArray(body.messages)) {
+      return "/v1/chat/completions";
+    }
+    if ("input" in body) {
+      return "/v1/responses";
+    }
+    if ("prompt" in body) {
+      return "/completion";
+    }
+    return "/v1/chat/completions";
+  };
+  const buildObservedActivityEntries = () => {
+    const recent = listRecentRuntimeObservations({
+      databasePath: initialization.databasePath,
+      limit: DEFAULT_TELEMETRY_LIMIT,
+    });
+    return recent
+      .map((entry, index) => {
+        const observation = readRuntimeObservationBundle({
+          databasePath: initialization.databasePath,
+          requestId: entry.requestId,
+        }) as Record<string, unknown> | null;
+        if (!observation) {
+          return null;
+        }
+        const usageEvent = asObjectRecord(observation.usageEvent);
+        const inspection = asObjectRecord(observation.inspection);
+        const inspectionRequest = asObjectRecord(inspection?.request);
+        const requestCapture = asObjectRecord(inspectionRequest?.requestCapture);
+        const responseCapture = asObjectRecord(inspectionRequest?.responseCapture);
+        const requestBody = asObjectRecord(requestCapture?.body);
+        const requestHeaders = asObjectRecord(requestCapture?.headers) ?? {};
+        const responseBody = responseCapture?.body ?? {};
+        const responseHeaders = asObjectRecord(responseCapture?.headers) ?? {};
+        const cacheObservability = asObjectRecord(observation.cacheObservability);
+        const requestPath = inferActivityRequestPath(requestBody);
+        const statusCode =
+          typeof responseCapture?.statusCode === "number"
+            ? responseCapture.statusCode
+            : usageEvent?.error_class
+              ? 500
+              : 200;
+        const id = index + 1;
+        const durationMs =
+          typeof usageEvent?.latency_ms === "number" ? usageEvent.latency_ms : 0;
+        return {
+          id,
+          metric: {
+            id,
+            timestamp: new Date(
+              typeof usageEvent?.timestamp_ms === "number" ? usageEvent.timestamp_ms : Date.now(),
+            ).toISOString(),
+            model:
+              asStringValue(usageEvent?.model_id) ??
+              entry.endpointId,
+            req_path: requestPath,
+            resp_content_type:
+              asStringValue(responseHeaders["content-type"]) ?? "application/json",
+            resp_status_code: statusCode,
+            tokens: {
+              cache_tokens: typeof cacheObservability?.cacheReadTokens === "number"
+                ? Number(cacheObservability.cacheReadTokens)
+                : 0,
+              input_tokens:
+                typeof usageEvent?.tokens_in === "number" ? usageEvent.tokens_in : 0,
+              output_tokens:
+                typeof usageEvent?.tokens_out === "number" ? usageEvent.tokens_out : 0,
+              prompt_per_second:
+                durationMs > 0 && typeof usageEvent?.tokens_in === "number"
+                  ? Number(((usageEvent.tokens_in * 1000) / durationMs).toFixed(1))
+                  : 0,
+              tokens_per_second:
+                durationMs > 0 && typeof usageEvent?.tokens_out === "number"
+                  ? Number(((usageEvent.tokens_out * 1000) / durationMs).toFixed(1))
+                  : 0,
+            },
+            duration_ms: durationMs,
+            has_capture: requestCapture !== null || responseCapture !== null,
+          },
+          capture:
+            requestCapture || responseCapture
+              ? {
+                  id,
+                  req_path: requestPath,
+                  req_headers: requestHeaders,
+                  req_body: encodeCaptureBody(requestCapture?.body ?? {}),
+                  resp_headers:
+                    Object.keys(responseHeaders).length > 0
+                      ? responseHeaders
+                      : {
+                          "content-type": "application/json",
+                        },
+                  resp_body: encodeCaptureBody(responseBody),
+                }
+              : null,
+        };
+      })
+      .filter((entry): entry is NonNullable<typeof entry> => entry !== null);
+  };
   const getCurrentControllerAssignment = (): BridgeControllerAssignment | null => {
     const persisted = readPersistedControllerAssignment();
     if (persisted) {
@@ -7913,14 +8666,57 @@ export async function createRuntimeBridgeBackend(
       }),
     };
   };
-  const readRouterSummaryData = () => ({
-    strategy: currentUnifiedRuntimeConfig?.routingStrategy ?? null,
-    executionMode: currentUnifiedRuntimeConfig?.executionMode ?? "decision_only",
-    controller: getCurrentControllerAssignment(),
-    guidance: getRouterGuidance(),
-    configuredCandidateCount: currentRegistry.endpoints.length,
-    recentDecisionCount: listTelemetryRequestRecords({ limit: DEFAULT_TELEMETRY_LIMIT }).length,
-  });
+  const readRouterSummaryData = () => {
+    const aliasInventory = (currentUnifiedRuntimeConfig?.modelAliases ?? []).map((alias) => {
+      const resolution = resolveAliasAllowEndpoints(
+        alias,
+        currentRoutableInventory,
+        currentRegistry,
+      );
+      const endpointMeta = resolution.allowEndpoints.map((endpointId) => ({
+        endpointId,
+        ...getTelemetryEndpointMeta(endpointId),
+      }));
+      const activeEndpointCount = endpointMeta.filter((entry) => entry.status === "active").length;
+      const healthyEndpointCount = endpointMeta.filter(
+        (entry) => entry.healthStatus === "healthy",
+      ).length;
+      const readiness =
+        resolution.allowEndpoints.length === 0 || activeEndpointCount === 0
+          ? "unavailable"
+          : activeEndpointCount === resolution.allowEndpoints.length &&
+              healthyEndpointCount === resolution.allowEndpoints.length
+            ? "ready"
+            : "degraded";
+      return {
+        aliasId: alias.aliasId,
+        mode: alias.mode ?? "basic",
+        configuredHintModelIds: [...alias.modelIds],
+        allowEndpointIds: [...resolution.allowEndpoints].sort(compareText),
+        resolvedModelIds: [...resolution.resolvedModelIds].sort(compareText),
+        driftWarnings: resolution.driftWarnings.map((warning) => ({
+          aliasId: warning.aliasId,
+          hintModelId: warning.hintModelId,
+          suggestedModelIds: warning.suggestedModelIds,
+          message: warning.message,
+        })),
+        localEndpointCount: endpointMeta.filter((entry) => entry.sourceType === "local").length,
+        remoteEndpointCount: endpointMeta.filter((entry) => entry.sourceType === "remote").length,
+        activeEndpointCount,
+        healthyEndpointCount,
+        readiness,
+      };
+    });
+    return {
+      strategy: currentUnifiedRuntimeConfig?.routingStrategy ?? null,
+      executionMode: currentUnifiedRuntimeConfig?.executionMode ?? "decision_only",
+      controller: getCurrentControllerAssignment(),
+      guidance: getRouterGuidance(),
+      configuredCandidateCount: currentRegistry.endpoints.length,
+      recentDecisionCount: listTelemetryRequestRecords({ limit: DEFAULT_TELEMETRY_LIMIT }).length,
+      aliasInventory,
+    };
+  };
   const readRouterConfigData = () => ({
     persisted: {
       strategy: currentUnifiedRuntimeConfig?.routingStrategy ?? null,
@@ -8450,6 +9246,7 @@ export async function createRuntimeBridgeBackend(
         : undefined;
       const bundle = createRuntimeObservationBundle({
         decision: routed.decision,
+        clientRequestId: executionOptions?.requestOptions?.clientRequestId,
         routingDiagnostics: {
           ...routed.routingDiagnostics,
           ...plan.routingDiagnostics,
@@ -8828,6 +9625,14 @@ export async function createRuntimeBridgeBackend(
         build_date: "runtime-derived",
       };
     },
+    async listActivityMetrics(): Promise<readonly unknown[]> {
+      return buildObservedActivityEntries().map((entry) => entry.metric);
+    },
+    async readActivityCapture(captureId: number): Promise<unknown | null> {
+      return (
+        buildObservedActivityEntries().find((entry) => entry.id === captureId)?.capture ?? null
+      );
+    },
     async executeChatCompletions(
       body: OpenAIChatCompletionsBody,
       requestId: string,
@@ -8835,11 +9640,21 @@ export async function createRuntimeBridgeBackend(
       requestOptions?: BridgeExecutionRequestOptions,
     ): Promise<BridgeChatCompletionsExecutionResult> {
       let executionStartedAtMs = 0;
+      const fallbackFailureEndpointId =
+        requestOptions?.endpointId && requestOptions.endpointId.trim().length > 0
+          ? requestOptions.endpointId
+          : "routing.failed.pre-execution";
+      const fallbackFailureSourceType: "local" | "remote" =
+        currentUnifiedRuntimeConfig?.executionMode === "remote_only" ? "remote" : "local";
       const recordChatCompletionFailure = (error: unknown): void => {
         const statusCode = error instanceof BridgeHttpError ? error.statusCode : 400;
         persistRuntimeTelemetryFailure({
           databasePath: initialization.databasePath,
           requestId,
+          clientRequestId: requestOptions?.clientRequestId ?? null,
+          requestClass: "live_request",
+          sourceType: fallbackFailureSourceType,
+          endpointId: fallbackFailureEndpointId,
           modelId: body.model,
           statusCode,
           errorClass: "execution_failed",
@@ -9092,49 +9907,8 @@ export async function createRuntimeBridgeBackend(
           : {}),
       };
     },
-    async readRuntimeSummary(): Promise<{
-      lifecycleSummary: EndpointRegistryResult["lifecycleSummary"];
-      providerCount: number;
-      accountCount: number;
-      endpointCount: number;
-      scopeId: string;
-      runtimeStateRoot: string;
-      readinessSummary: {
-        pendingDeviceAuthorizationCount: number;
-        credentialsMissingAccountCount: number;
-        connectedWithoutEndpointCount: number;
-        readyAccountCount: number;
-      };
-      executionMode: UnifiedRuntimeExecutionMode;
-      unifiedConfig: {
-        enabled: boolean;
-        path: string | null;
-      };
-      sessionBootstrap: {
-        status: SessionBootstrapState["status"];
-        startedAt: string | null;
-        finishedAt: string | null;
-        stages: SessionBootstrapState["stages"];
-      };
-      inventorySummary: {
-        modelIdCount: number;
-        endpointIdCount: number;
-        localEndpointCount: number;
-        remoteEndpointCount: number;
-        emptyAliasIds: readonly string[];
-      };
-      aliasDrift: readonly {
-        aliasId: string;
-        hintModelId: string;
-        suggestedModelIds: readonly string[];
-        message: string;
-      }[];
-      operatorIntent: {
-        path: string;
-        status: OperatorIntentDiagnostic["status"];
-        message?: string;
-      };
-    }> {
+    async readRuntimeSummary(): Promise<RuntimeBridgeSummary> {
+      const credentialLifecycle = buildCredentialLifecycleSummary();
       return {
         lifecycleSummary: currentRegistry.lifecycleSummary,
         providerCount:
@@ -9147,7 +9921,13 @@ export async function createRuntimeBridgeBackend(
         endpointCount: currentRegistry.endpoints.length,
         scopeId: options.scopeId,
         runtimeStateRoot: options.runtimeStateRoot,
-        readinessSummary: buildCredentialReadinessSummary(),
+        readinessSummary: {
+          pendingDeviceAuthorizationCount: credentialLifecycle.counts.pendingAuthorization,
+          credentialsMissingAccountCount: credentialLifecycle.counts.credentialsMissing,
+          connectedWithoutEndpointCount: credentialLifecycle.counts.connectedNoEndpoint,
+          readyAccountCount: credentialLifecycle.counts.executionReady,
+        },
+        credentialLifecycle,
         executionMode: currentUnifiedRuntimeConfig?.executionMode ?? "decision_only",
         unifiedConfig: {
           enabled: currentUnifiedRuntimeConfig !== null,
@@ -9180,6 +9960,7 @@ export async function createRuntimeBridgeBackend(
       executionMode: UnifiedRuntimeExecutionMode;
       vendors: Record<string, VendorRuntimeStatus>;
       inactiveVendors: string[];
+      credentialLifecycleAuthority: RuntimeCredentialLifecycleSummary["authority"];
       sessionBootstrap: {
         status: SessionBootstrapState["status"];
         startedAt: string | null;
@@ -9200,6 +9981,7 @@ export async function createRuntimeBridgeBackend(
         executionMode: currentUnifiedRuntimeConfig?.executionMode ?? "decision_only",
         vendors,
         inactiveVendors: summarized.inactiveVendors,
+        credentialLifecycleAuthority: buildCredentialLifecycleAuthority(),
         sessionBootstrap: {
           status: sessionBootstrapState.status,
           startedAt: sessionBootstrapState.startedAt,
@@ -9532,6 +10314,220 @@ export async function createRuntimeBridgeBackend(
       readonly DeviceAuthorizationReadbackResult[]
     > {
       return listCurrentProviderDeviceAuthorizations();
+    },
+    async reconnectProviderAccount(
+      body: Record<string, unknown>,
+    ): Promise<DeviceAuthorizationStartResult> {
+      const providerAccountId = readRequiredString(
+        body,
+        "providerAccountId",
+        "reconnectProviderAccount",
+      );
+      return withProviderAccountRepairLock(providerAccountId, async () => {
+        currentAccounts = [...readCurrentAccounts()];
+        const existingAccount = currentAccounts.find(
+          (entry) => entry.providerAccountId === providerAccountId,
+        );
+        if (!existingAccount) {
+          throw new Error(`Provider account ${providerAccountId} was not found.`);
+        }
+        if (existingAccount.authMode !== "oauth2-device-code") {
+          throw new Error(
+            `Provider account ${providerAccountId} does not use OAuth device authorization.`,
+          );
+        }
+
+        const activePendingSession = listCurrentProviderDeviceAuthorizations().find(
+          (session) =>
+            session.providerAccountId === providerAccountId &&
+            session.status === "pending" &&
+            session.expiresAtMs > Date.now(),
+        );
+        if (activePendingSession) {
+          return {
+            authRequestId: activePendingSession.authRequestId,
+            providerAccountId: activePendingSession.providerAccountId,
+            status: "pending",
+            userCode: activePendingSession.userCode,
+            verificationUri: activePendingSession.verificationUri,
+            verificationUriComplete: activePendingSession.verificationUriComplete,
+            intervalSeconds: activePendingSession.intervalSeconds,
+            expiresAtMs: activePendingSession.expiresAtMs,
+          };
+        }
+
+        const catalogProvider = currentNormalizedCatalog.providers.find(
+          (entry) => entry.providerId === existingAccount.providerId,
+        );
+        const liteLLMProvider = liteLLMProviders.find(
+          (entry) => entry.providerId === existingAccount.providerId,
+        );
+        const provider = catalogProvider ?? liteLLMProvider;
+        if (!provider) {
+          throw new Error(
+            `Provider ${existingAccount.providerId} is not present in the normalized catalog or LiteLLM provider list.`,
+          );
+        }
+        const mergedMetadata = catalogProvider
+          ? resolveValidationProviderMetadata({
+              catalogProvider,
+              liteLLMProvider,
+            })
+          : null;
+        const effectiveModelIds =
+          readUnifiedLiteLLMProviderModelIds(currentUnifiedRuntimeConfig, existingAccount.providerId) ??
+          currentNormalizedCatalog.models
+            .filter((model) => model.providerId === existingAccount.providerId)
+            .map((model) => model.modelId);
+        const presetVariants = (
+          providerPresets.providers[existingAccount.providerId]?.variants ?? []
+        ).map((entry) => ({
+          ...entry,
+          modelIds: effectiveModelIds.length > 0 ? effectiveModelIds : entry.modelIds,
+        }));
+        const variants = resolveProviderVariants({
+          providerId: existingAccount.providerId,
+          displayName: provider.displayName,
+          apiBase: mergedMetadata?.apiBase ?? provider.apiBase,
+          modelIds: effectiveModelIds,
+          presetVariants,
+          supportedAuthModes: liteLLMProvider?.supportedAuthModes ?? provider.supportedAuthModes,
+          oauth: liteLLMProvider?.oauth,
+        });
+        const variant =
+          variants.find(
+            (entry) =>
+              entry.authMode === existingAccount.authMode &&
+              (existingAccount.baseUrlOverride
+                ? (entry.baseUrl ?? provider.apiBase) === existingAccount.baseUrlOverride
+                : true),
+          ) ?? variants.find((entry) => entry.authMode === existingAccount.authMode);
+        if (!variant?.oauth) {
+          throw new Error(
+            `Provider account ${providerAccountId} does not expose a reconnectable OAuth variant.`,
+          );
+        }
+
+        const deviceAuthParams = new URLSearchParams({
+          client_id: variant.oauth.clientId,
+        });
+        if (variant.oauth.scope) {
+          deviceAuthParams.set("scope", variant.oauth.scope);
+        }
+        const deviceResponse = await networkFetcher(variant.oauth.deviceAuthorizationEndpoint, {
+          method: "POST",
+          headers: createDeviceHeaders(deviceId, variant.oauth.requiredHeaders),
+          body: deviceAuthParams,
+        });
+        const devicePayload = (await deviceResponse.json()) as Record<string, unknown>;
+        if (!deviceResponse.ok) {
+          throw new Error(
+            typeof devicePayload.error_description === "string"
+              ? devicePayload.error_description
+              : "Device authorization failed.",
+          );
+        }
+
+        const authRequestId = randomUUID();
+        upsertProviderDeviceAuthSession({
+          databasePath: initialization.databasePath,
+          session: {
+            authRequestId,
+            providerAccountId,
+            providerId: existingAccount.providerId,
+            variantId: variant.variantId,
+            credentialBackend:
+              existingAccount.credentialRef.backend === "local-encrypted-file"
+                ? "local-file"
+                : existingAccount.credentialRef.backend,
+            credentialRef:
+              existingAccount.credentialRef.ref ||
+              createCredentialRef(existingAccount.providerId, providerAccountId),
+            authMode: existingAccount.authMode,
+            verificationUri: String(devicePayload.verification_uri ?? ""),
+            verificationUriComplete: String(devicePayload.verification_uri_complete ?? ""),
+            userCode: String(devicePayload.user_code ?? ""),
+            deviceCode: String(devicePayload.device_code ?? ""),
+            intervalSeconds: Number(devicePayload.interval ?? 5),
+            status: "pending",
+            lastError: null,
+            expiresAtMs: Date.now() + Number(devicePayload.expires_in ?? 900) * 1000,
+          },
+        });
+        rebuildCurrentState();
+
+        return {
+          authRequestId,
+          providerAccountId,
+          status: "pending",
+          userCode: String(devicePayload.user_code ?? ""),
+          verificationUri: String(devicePayload.verification_uri ?? ""),
+          verificationUriComplete: String(devicePayload.verification_uri_complete ?? ""),
+          intervalSeconds: Number(devicePayload.interval ?? 5),
+          expiresAtMs: Date.now() + Number(devicePayload.expires_in ?? 900) * 1000,
+        };
+      });
+    },
+    async updateProviderApiKey(body: Record<string, unknown>): Promise<ProviderAccountRecord> {
+      const providerAccountId = readRequiredString(body, "providerAccountId", "updateProviderApiKey");
+      const apiKey = readRequiredString(body, "apiKey", "updateProviderApiKey");
+      return withProviderAccountRepairLock(providerAccountId, async () => {
+        currentAccounts = [...readCurrentAccounts()];
+        const existingAccount = currentAccounts.find(
+          (entry) => entry.providerAccountId === providerAccountId,
+        );
+        if (!existingAccount) {
+          throw new Error(`Provider account ${providerAccountId} was not found.`);
+        }
+        if (
+          existingAccount.authMode !== "api-key-static" &&
+          existingAccount.authMode !== "api-key-rotating-ref"
+        ) {
+          throw new Error(`Provider account ${providerAccountId} does not use an API key auth mode.`);
+        }
+        const activePendingSession = listCurrentProviderDeviceAuthorizations().find(
+          (session) =>
+            session.providerAccountId === providerAccountId &&
+            session.status === "pending" &&
+            session.expiresAtMs > Date.now(),
+        );
+        if (activePendingSession) {
+          throw new Error(`Provider account ${providerAccountId} already has a reconnect in progress.`);
+        }
+
+        const apiKeyRef = `api-key/${sanitizeSegment(existingAccount.providerId)}/${sanitizeSegment(providerAccountId)}`;
+        const validationResult = validateProviderAccounts({
+          catalog: currentNormalizedCatalog,
+          additionalProviders: liteLLMProviders,
+          allowedRoleIds: getAllowedRoleIds(),
+          accounts: [
+            {
+              ...existingAccount,
+              credentialRef: {
+                backend: "local-file",
+                ref: apiKeyRef,
+              },
+              status: "active",
+              healthStatus: "healthy",
+              rotationState: "stable",
+            },
+          ],
+        });
+        if (validationResult.diagnostics.length > 0 || validationResult.accounts.length !== 1) {
+          const message =
+            validationResult.diagnostics[0]?.message ?? "Provider API-key repair validation failed.";
+          throw new Error(message);
+        }
+
+        const [validatedAccount] = validationResult.accounts;
+        await persistStaticCredentialFile(options.runtimeStateRoot, options.scopeId, apiKeyRef, apiKey);
+        upsertSqliteProviderAccount({
+          databasePath: initialization.databasePath,
+          account: validatedAccount,
+        });
+        rebuildCurrentState();
+        return validatedAccount;
+      });
     },
     async upsertProviderAccount(account: Record<string, unknown>): Promise<ProviderAccountRecord> {
       const credentialRef = account.credentialRef as
@@ -10749,24 +11745,38 @@ export async function createRuntimeBridgeBackend(
           (authorization) =>
             authorization.status === "pending" && authorization.expiresAtMs > Date.now(),
         );
-        let pendingPolled = 0;
+        const pendingToPoll = [...pendingAuthorizations]
+          .sort((left, right) => {
+            const expiresDelta = left.expiresAtMs - right.expiresAtMs;
+            if (expiresDelta !== 0) {
+              return expiresDelta;
+            }
+            return compareText(left.authRequestId, right.authRequestId);
+          })
+          .slice(0, 5);
+        let pendingAttempted = 0;
+        let pendingSucceeded = 0;
         let pendingConnected = 0;
-        for (const authorization of pendingAuthorizations.slice(0, 5)) {
+        let pendingFailed = 0;
+        const pendingDeferred = Math.max(0, pendingAuthorizations.length - pendingToPoll.length);
+        for (const authorization of pendingToPoll) {
+          pendingAttempted += 1;
           try {
             const pollResult = await backend.pollProviderDeviceAuthorization({
               authRequestId: authorization.authRequestId,
             });
-            pendingPolled += 1;
+            pendingSucceeded += 1;
             if (pollResult.status === "connected") {
               pendingConnected += 1;
             }
           } catch {
-            // Continue polling other pending authorizations.
+            pendingFailed += 1;
           }
         }
 
         let refreshAttempted = 0;
         let refreshSucceeded = 0;
+        let refreshFailed = 0;
         for (const account of currentAccounts) {
           if (account.authMode !== "oauth2-device-code") {
             continue;
@@ -10799,19 +11809,48 @@ export async function createRuntimeBridgeBackend(
                 rebuildCurrentState();
               },
             );
+            upsertSqliteProviderAccount({
+              databasePath: initialization.databasePath,
+              account: {
+                ...account,
+                status: "active",
+                healthStatus: "healthy",
+                rotationState: "stable",
+              },
+            });
+            currentAccounts = [...readCurrentAccounts()];
+            rebuildCurrentState();
             refreshSucceeded += 1;
           } catch {
-            // Continue refreshing other OAuth accounts.
+            upsertSqliteProviderAccount({
+              databasePath: initialization.databasePath,
+              account: {
+                ...account,
+                status: "active",
+                healthStatus: "refresh-failing",
+                rotationState: "failed",
+              },
+            });
+            currentAccounts = [...readCurrentAccounts()];
+            rebuildCurrentState();
+            refreshFailed += 1;
           }
         }
 
+        const credentialsStatus: BootstrapStageResult["status"] =
+          pendingFailed > 0 || refreshFailed > 0 ? "degraded" : "ready";
+
         return {
-          status: "ready",
+          status: credentialsStatus,
           details: {
-            pendingPolled,
+            pendingAttempted,
+            pendingSucceeded,
             pendingConnected,
+            pendingFailed,
+            pendingDeferred,
             refreshAttempted,
             refreshSucceeded,
+            refreshFailed,
           },
         };
       },

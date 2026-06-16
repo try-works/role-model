@@ -1,0 +1,220 @@
+[
+  {
+    "providerAccountId": "anthropic.team.shared",
+    "providerId": "anthropic",
+    "providerKind": "provider-anthropic",
+    "orgScope": "team",
+    "accountScope": "shared",
+    "credentialRef": {
+      "backend": "env",
+      "ref": "ANTHROPIC_API_KEY"
+    },
+    "authMode": "api-key-static",
+    "regionPolicy": {
+      "mode": "allow",
+      "regions": [
+        "us-east-1"
+      ]
+    },
+    "baseUrlOverride": null,
+    "allowedModels": [
+      "claude-3.7-sonnet"
+    ],
+    "modelRoleBindings": [],
+    "deniedModels": [],
+    "entitlementTags": [
+      "chat"
+    ],
+    "budgetPolicyRef": "budget.default",
+    "quotaPolicyRef": "quota.default",
+    "status": "active",
+    "healthStatus": "healthy",
+    "rotationState": "stable"
+  },
+  {
+    "providerAccountId": "local-openai-compatible.personal.local-main",
+    "providerId": "local-openai-compatible",
+    "providerKind": "provider-openai",
+    "orgScope": "personal",
+    "accountScope": "local-main",
+    "credentialRef": {
+      "backend": "local-file",
+      "ref": "local-peers/local-openai-compatible.personal.local-main"
+    },
+    "authMode": "api-key-static",
+    "regionPolicy": {
+      "mode": "prefer",
+      "regions": [
+        "local"
+      ]
+    },
+    "baseUrlOverride": "http://127.0.0.1:64185/v1",
+    "allowedModels": [],
+    "modelRoleBindings": [
+      {
+        "modelId": "lfm2.5-1.2b-instruct",
+        "roleIds": [
+          "general.chat"
+        ]
+      }
+    ],
+    "deniedModels": [],
+    "entitlementTags": [
+      "chat"
+    ],
+    "budgetPolicyRef": "budget.default",
+    "quotaPolicyRef": "quota.default",
+    "status": "active",
+    "healthStatus": "healthy",
+    "rotationState": "stable"
+  },
+  {
+    "providerAccountId": "moonshot.personal.api-key",
+    "providerId": "moonshot",
+    "providerKind": "provider-openai",
+    "orgScope": "personal",
+    "accountScope": "workspace-default",
+    "credentialRef": {
+      "backend": "local-file",
+      "ref": "api-key/moonshot/moonshot.personal.api-key"
+    },
+    "authMode": "api-key-static",
+    "regionPolicy": {
+      "mode": "prefer",
+      "regions": [
+        "global"
+      ]
+    },
+    "baseUrlOverride": "http://127.0.0.1:64183/v1",
+    "allowedModels": [
+      "moonshot/kimi-k2.5"
+    ],
+    "modelRoleBindings": [
+      {
+        "modelId": "moonshot/kimi-k2.5",
+        "roleIds": [
+          "general.chat"
+        ]
+      }
+    ],
+    "deniedModels": [],
+    "entitlementTags": [
+      "chat"
+    ],
+    "budgetPolicyRef": "budget.default",
+    "quotaPolicyRef": "quota.default",
+    "status": "active",
+    "healthStatus": "healthy",
+    "rotationState": "stable"
+  },
+  {
+    "providerAccountId": "moonshot.personal.oauth-ready",
+    "providerId": "moonshot",
+    "providerKind": "provider-openai",
+    "orgScope": "personal",
+    "accountScope": "workspace-default",
+    "credentialRef": {
+      "backend": "local-file",
+      "ref": "oauth/moonshot/moonshot.personal.oauth-ready"
+    },
+    "authMode": "oauth2-device-code",
+    "regionPolicy": {
+      "mode": "prefer",
+      "regions": [
+        "global"
+      ]
+    },
+    "baseUrlOverride": "http://127.0.0.1:64184/v1",
+    "allowedModels": [
+      "moonshot/kimi-k2.5"
+    ],
+    "modelRoleBindings": [
+      {
+        "modelId": "moonshot/kimi-k2.5",
+        "roleIds": [
+          "general.chat"
+        ]
+      }
+    ],
+    "deniedModels": [],
+    "entitlementTags": [
+      "chat"
+    ],
+    "budgetPolicyRef": "budget.default",
+    "quotaPolicyRef": "quota.default",
+    "status": "active",
+    "healthStatus": "healthy",
+    "rotationState": "stable"
+  },
+  {
+    "providerAccountId": "moonshot.personal.oauth-repair",
+    "providerId": "moonshot",
+    "providerKind": "provider-openai",
+    "orgScope": "personal",
+    "accountScope": "workspace-default",
+    "credentialRef": {
+      "backend": "local-file",
+      "ref": "oauth/moonshot/moonshot.personal.oauth-repair"
+    },
+    "authMode": "oauth2-device-code",
+    "regionPolicy": {
+      "mode": "prefer",
+      "regions": [
+        "global"
+      ]
+    },
+    "baseUrlOverride": "http://127.0.0.1:64184/v1",
+    "allowedModels": [
+      "moonshot/kimi-k2.5"
+    ],
+    "modelRoleBindings": [
+      {
+        "modelId": "moonshot/kimi-k2.5",
+        "roleIds": [
+          "general.chat"
+        ]
+      }
+    ],
+    "deniedModels": [],
+    "entitlementTags": [
+      "chat"
+    ],
+    "budgetPolicyRef": "budget.default",
+    "quotaPolicyRef": "quota.default",
+    "status": "active",
+    "healthStatus": "refresh-failing",
+    "rotationState": "failed"
+  },
+  {
+    "providerAccountId": "openai.personal.primary",
+    "providerId": "openai",
+    "providerKind": "provider-openai",
+    "orgScope": "personal",
+    "accountScope": "primary",
+    "credentialRef": {
+      "backend": "env",
+      "ref": "OPENAI_API_KEY"
+    },
+    "authMode": "api-key-static",
+    "regionPolicy": {
+      "mode": "allow",
+      "regions": [
+        "us-east-1"
+      ]
+    },
+    "baseUrlOverride": null,
+    "allowedModels": [
+      "openai/gpt-4.1-mini-fast"
+    ],
+    "modelRoleBindings": [],
+    "deniedModels": [],
+    "entitlementTags": [
+      "chat"
+    ],
+    "budgetPolicyRef": "budget.default",
+    "quotaPolicyRef": "quota.default",
+    "status": "active",
+    "healthStatus": "healthy",
+    "rotationState": "stable"
+  }
+]

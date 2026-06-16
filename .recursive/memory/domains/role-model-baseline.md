@@ -1,6 +1,6 @@
 Type: `domain`
 Status: `CURRENT`
-Scope: `Stable baseline ownership for the repo workspace, canonical protocol tree, shared packages, router family, fixtures, validation surfaces, and the repo-owned runtime/operator baseline extended through the routing-strategy UI convergence baseline in run 30, unified vendor execution, telemetry dashboard remediation, runtime-config control, the run-32 models.dev metadata/readiness baseline, the run-34 runtime-owned role-policy/operator-control baseline, the run-35 Connect/de-clutter operator shell, the run-36 packaged-runtime consumption, benchmark workflow, and consumer-routing validation baseline, and the run-45 Observe surface realignment baseline.`
+Scope: `Stable baseline ownership for the repo workspace, canonical protocol tree, shared packages, router family, fixtures, validation surfaces, and the repo-owned runtime/operator baseline extended through the routing-strategy UI convergence baseline in run 30, unified vendor execution, telemetry dashboard remediation, runtime-config control, the run-32 models.dev metadata/readiness baseline, the run-34 runtime-owned role-policy/operator-control baseline, the run-35 Connect/de-clutter operator shell, the run-36 packaged-runtime consumption, benchmark workflow, and consumer-routing validation baseline, the run-45 Observe surface realignment baseline, and the run-47 runtime persistence plus telemetry/dashboard/router operator-baseline follow-up.`
 Owns-Paths:
 - `/README.md`
 - `/LICENSE`
@@ -51,8 +51,9 @@ Source-Runs:
 - `35-runtime-ui-connect-declutter`
 - `36-runtime-consumption-telemetry-remediation`
 - `45-observe-surface-realignment`
+- `47-runtime-persistence-rehydration-lifecycle`
 Validated-At-Commit: `working-tree`
-Last-Validated: `2026-06-15T07:55:00Z`
+Last-Validated: `2026-06-16T08:10:00Z`
 Tags:
 - `baseline`
 - `workspace`
@@ -113,6 +114,7 @@ This repository now has a real product baseline rather than only recursive scaff
 - The repo-owned validation floor now includes `runtime:validate-vendors`, which proves the decision-only/local-only/remote-only/hybrid execution matrix end to end with managed vendor processes, plus separate live-vendor and browser-backed closeout proof for the final local llama-swap and remote LiteLLM bridge paths
 - The runtime now has a first SEA packaging path through `/role-model-router/sea-config.json`, `/role-model-router/apps/runtime-host-bridge/src/package-sea.ts`, `runtime:package-sea`, `runtime:validate-packaging`, and `/.github/workflows/build-binaries.yml`; the packaged executable embeds platform-aware llama-swap assets and is validated by booting the SEA binary and exercising `/healthz` plus `/v1/models`
 - The runtime now also exposes a canonical unified telemetry baseline for mixed local and remote execution, including summary, ledger, request-detail, and `/api/role-model/telemetry/stream` SSE surfaces in `/role-model-router/apps/runtime-host-bridge/` and matching dashboard, requests, and request-detail consumers in `/role-model-router/apps/runtime-ui/`
+- Failed execution rows in that canonical telemetry ledger now preserve caller correlation, request classification, source posture, and explicit failure-stage endpoint markers, so summary failures and request-ledger truth no longer diverge for new requests
 - The repo-owned control plane now includes mutable runtime-config read and write routes, `Control > Runtime Config`, live account save and Kimi device-OAuth state, endpoint activation, and honest zero-endpoint `decision_only` controller or models or runtime empty states instead of 500 or loading traps
 - The runtime now also owns router-grade role/task policy persistence at `runtimeStateRoot\role-policy.json`, with bridge CRUD/readback routes and router inputs consuming the runtime-owned policy instead of the earlier fixture-fed `adapter-role-task.json` source
 - The repo-owned runtime UI now also includes `Control > Roles` for live role create/edit and task allowlist authoring, while `Control > Models` can mutate model-side role bindings against the same runtime-owned policy surface instead of staying inspect-only
@@ -158,6 +160,7 @@ This repository now has a real product baseline rather than only recursive scaff
 - Run 36 addendum 03 recorded a 46-prompt × 4-strategy routing matrix for tuning; consumer difficulty E2E on `mixed.local-remote` passed 14/15 with cache-probe caveat on shared `conversationId`
 - Run 36 addenda 04–10 delivered the benchmark operator workflow: `/.recursive/BENCHMARK-WORKFLOW.md`, **Models → Benchmark** at `/app/models/benchmark`, `validate-benchmark-run.py`, judge pipeline hardening; operator run `c0b66038` is VALID with HEALTHY control (Kimi 92% > LFM 17%)
 - Run 45 realigned Observe around canonical telemetry ownership: `/app/observe` resolves to Requests, request detail remains the richest canonical inspector, Activity and Logs are preserved raw-host adjacency surfaces, and packaged Logs now parse bracketed timestamp rows into request-detail links on the real operator runtime at `:3456`
+- Run 47 extended the operator telemetry baseline: `/app` now leads with `Recent telemetry window` and an interaction-level latest-requests rail, `/app/observe/activity` preserves backend newest-first metrics order, `/app/router` alias inventory distinguishes configured hints, resolved models, and readiness while leaving backend-truth alias-drift warnings visible until config changes, and redundant router overview or strategy context panels are removed so router surfaces emphasize canonical inventory and live controls instead of duplicate summary copy
 
 ## Validation Path
 

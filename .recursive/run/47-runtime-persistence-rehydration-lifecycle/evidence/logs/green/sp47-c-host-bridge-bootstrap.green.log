@@ -1,0 +1,33 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/47-runtime-persistence-rehydration-lifecycle/role-model-router/apps/runtime-host-bridge[39m
+
+(node:37116) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:41236) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:60116) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:34416) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:17036) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [32mΓ£ô[39m test/session-bootstrap-health.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 506[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m session bootstrap health[2m > [22mexposes bootstrap receipts on /healthz summary after async startup [33m 504[2mms[22m[39m
+ [32mΓ£ô[39m test/operator-intent-corrupt-bootstrap.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 557[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m operator intent corrupt manifest[2m > [22msurfaces corrupt operator-intent diagnostics and blocks bootstrap [33m 554[2mms[22m[39m
+ [32mΓ£ô[39m test/routable-inventory-bootstrap.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 574[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m routable inventory bootstrap[2m > [22mexposes inventory summary and inventory bootstrap stage after startup [33m 542[2mms[22m[39m
+ [32mΓ£ô[39m test/session-readiness-api.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 585[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m session readiness API[2m > [22mexposes bootstrap, inventory, and readiness fields over HTTP [33m 583[2mms[22m[39m
+ [32mΓ£ô[39m test/restart-rehydration.test.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 3499[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m restart rehydration[2m > [22mrestores activated endpoints and session readiness summary after backend restart [33m 850[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m restart rehydration[2m > [22mdoes not count expired pending device authorization as an active readiness blocker after restart [33m 534[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m restart rehydration[2m > [22msurfaces failed pending authorization polling in bootstrap stage details after restart [33m 673[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m restart rehydration[2m > [22mclassifies failed startup OAuth refresh as expired auth after restart [33m 573[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m restart rehydration[2m > [22mpolls the earliest-expiring pending authorizations first and surfaces deferred count [33m 866[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m5 passed[39m[22m[90m (5)[39m
+[2m      Tests [22m [1m[32m11 passed[39m[22m[90m (11)[39m
+[2m   Start at [22m 19:43:42
+[2m   Duration [22m 6.14s[2m (transform 1.65s, setup 0ms, collect 7.87s, tests 5.72s, environment 2ms, prepare 1.76s)[22m
+

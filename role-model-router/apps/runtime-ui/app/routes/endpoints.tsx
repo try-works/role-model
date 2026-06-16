@@ -42,6 +42,7 @@ export default function EndpointsRoute() {
             accounts: snapshot.accounts,
             deviceAuthorizations: snapshot.deviceAuthorizations,
             endpoints: snapshot.endpoints,
+            providerRollups: snapshot.summary.credentialLifecycle?.providerRollups,
           })
         : [],
     [snapshot],

@@ -191,6 +191,10 @@ export default function RequestDetailRoute() {
     pickString(usageEvent, "provider_kind", "providerKind") ??
     pickString(endpointIdentity, "provider_kind", "providerKind");
   const endpointId = pickString(request, "endpointId") ?? "unknown";
+  const clientRequestId =
+    pickString(request, "clientRequestId") ??
+    pickString(inspectionRequest, "clientRequestId") ??
+    null;
   const streamTextDeltaCount =
     pickNumber(request, "streamTextDeltaCount") ?? pickNumber(executionStream, "textDeltas") ?? 0;
   const streamToolCallDeltaCount =
@@ -269,6 +273,11 @@ export default function RequestDetailRoute() {
           value={endpointId}
           detail="Endpoint id currently associated with the captured request."
           emphasis
+        />
+        <FactCard
+          label="Correlation"
+          value={renderMetricValue(clientRequestId)}
+          detail="Caller-supplied correlation id preserved alongside the canonical request ledger id."
         />
         <FactCard
           label="Source"

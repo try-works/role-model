@@ -1,0 +1,43 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/47-runtime-persistence-rehydration-lifecycle/role-model-router/apps/runtime-host-bridge[39m
+
+(node:46552) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [31mΓ¥»[39m test/restart-rehydration.test.ts [2m([22m[2m5 tests[22m[2m | [22m[31m1 failed[39m[2m | [22m[33m4 skipped[39m[2m)[22m[33m 678[2mms[22m[39m
+   [2m[90mΓåô[39m[22m restart rehydration[2m > [22mrestores activated endpoints and session readiness summary after backend restart
+   [2m[90mΓåô[39m[22m restart rehydration[2m > [22mdoes not count expired pending device authorization as an active readiness blocker after restart
+   [2m[90mΓåô[39m[22m restart rehydration[2m > [22msurfaces failed pending authorization polling in bootstrap stage details after restart
+[31m   [31m├ù[31m restart rehydration[2m > [22mclassifies failed startup OAuth refresh as expired auth after restart[39m[33m 676[2mms[22m[39m
+[31m     ΓåÆ expected 1 to be +0 // Object.is equality[39m
+   [2m[90mΓåô[39m[22m restart rehydration[2m > [22mpolls the earliest-expiring pending authorizations first and surfaces deferred count
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/restart-rehydration.test.ts > restart rehydration > classifies failed startup OAuth refresh as expired auth after restart
+AssertionError: expected 1 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ 1
+
+ Γ¥» test/restart-rehydration.test.ts:470:60
+
+    468|           }),
+    469|         );
+    470|         expect(summary.readinessSummary.readyAccountCount).toBe(0);
+       |                                                            ^
+    471|         expect(summary.credentialLifecycle.counts.executionReady).toBeΓÇª
+    472|         expect(summary.credentialLifecycle.counts.expiredAuth).toBe(1);
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[33m4 skipped[39m[90m (5)[39m
+[2m   Start at [22m 19:43:01
+[2m   Duration [22m 3.33s[2m (transform 1.17s, setup 0ms, collect 1.59s, tests 678ms, environment 0ms, prepare 374ms)[22m
+
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+undefined
+D:\DEV\role-model\.worktrees\47-runtime-persistence-rehydration-lifecycle\role-model-router\apps\runtime-host-bridge:
+ΓÇëERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓÇë Command failed with exit code 1: vitest run test/restart-rehydration.test.ts -t classifies failed startup OAuth refresh as expired auth after restart

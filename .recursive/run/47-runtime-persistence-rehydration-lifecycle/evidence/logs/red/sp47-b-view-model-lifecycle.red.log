@@ -1,0 +1,145 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/47-runtime-persistence-rehydration-lifecycle/role-model-router/apps/runtime-ui[39m
+
+ [31mΓ¥»[39m app/lib/view-models.test.ts [2m([22m[2m25 tests[22m[2m | [22m[31m2 failed[39m[2m | [22m[33m23 skipped[39m[2m)[22m[32m 33[2mms[22m[39m
+   [2m[90mΓåô[39m[22m buildProviderCards[2m > [22mturns provider variants and account state into provider cards for the onboarding page
+   [2m[90mΓåô[39m[22m summarizeRuntimeStats[2m > [22mcreates stable dashboard stat cards from the runtime summary counts
+   [2m[90mΓåô[39m[22m session readiness view models[2m > [22mbuilds bootstrap rows and inventory stats from runtime summary
+   [2m[90mΓåô[39m[22m buildCredentialReadinessRows[2m > [22mturns the runtime readiness summary into operator-facing readiness rows
+[31m   [31m├ù[31m buildCredentialReadinessRows[2m > [22mprefers canonical credential lifecycle counts when they are present[39m[32m 24[2mms[22m[39m
+[31m     ΓåÆ expected [] to deeply equal [ { ΓÇª(4) }, ΓÇª(5) ][39m
+   [2m[90mΓåô[39m[22m buildWorkbenchModelOptions[2m > [22msorts and deduplicates model options for the workbench composer
+   [2m[90mΓåô[39m[22m buildWorkbenchEndpointOptions[2m > [22mprefers saved OAuth endpoints over shared LiteLLM endpoints for the selected model
+   [2m[90mΓåô[39m[22m buildConfiguredModelCards[2m > [22mbuilds unified local and remote model cards with controller and tooling state
+   [2m[90mΓåô[39m[22m buildConfiguredModelMetadataRows[2m > [22mformats model specifications and pricing for the inspection panel
+   [2m[90mΓåô[39m[22m buildModelCatalogRows[2m > [22mturns the runtime model catalog into sorted rows with endpoint ids
+   [2m[90mΓåô[39m[22m buildEndpointCatalogRows[2m > [22mturns the runtime endpoint registry into stable endpoint catalog rows
+   [2m[90mΓåô[39m[22m countActiveEndpointModels[2m > [22mcounts distinct active local and remote model ids from registry endpoints
+   [2m[90mΓåô[39m[22m buildAliasReadinessRows[2m > [22msummarizes alias pools across mixed local and remote endpoint candidates
+   [2m[90mΓåô[39m[22m buildStructuredLogRows[2m > [22mparses raw logs into structured rows with source, severity, and request correlation when available
+   [2m[90mΓåô[39m[22m buildStructuredLogRows[2m > [22mpreserves request correlation for packaged runtime log lines without explicit severity tokens
+   [2m[90mΓåô[39m[22m buildAccountModelCatalogIds[2m > [22mprefers provider catalog order while constraining to account-allowed models
+   [2m[90mΓåô[39m[22m buildConfiguredProviderRows[2m > [22msummarizes configured providers and models from saved accounts plus live endpoints
+[31m   [31m├ù[31m buildConfiguredProviderRows[2m > [22mprefers canonical provider rollups over route-local readiness inference[39m[32m 6[2mms[22m[39m
+[31m     ΓåÆ expected [ { providerId: 'moonshot', ΓÇª(11) } ] to deeply equal [ ObjectContaining{ΓÇª} ][39m
+   [2m[90mΓåô[39m[22m summarizeWorkbenchResult[2m > [22mextracts text, tool calls, tool executions, and usage for the studio inspector
+   [2m[90mΓåô[39m[22m summarizeWorkbenchResult[2m > [22mfalls back to reasoning_content when chat completion content is empty
+   [2m[90mΓåô[39m[22m buildDownstreamProviderGuide[2m > [22mcreates stable connection rows and examples for downstream OpenAI-compatible clients
+   [2m[90mΓåô[39m[22m buildActivitySummary[2m > [22mturns raw activity metrics into operator summary cards and ledger rows
+   [2m[90mΓåô[39m[22m telemetry view models[2m > [22mcreates stable summary cards from the canonical telemetry summary
+   [2m[90mΓåô[39m[22m telemetry view models[2m > [22mbuilds telemetry comparison cards for local and remote endpoint rows
+   [2m[90mΓåô[39m[22m telemetry view models[2m > [22mbuilds telemetry-backed request ledger rows in newest-first order
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 2 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  app/lib/view-models.test.ts > buildCredentialReadinessRows > prefers canonical credential lifecycle counts when they are present
+AssertionError: expected [] to deeply equal [ { ΓÇª(4) }, ΓÇª(5) ]
+
+- Expected
++ Received
+
+- [
+-   {
+-     "key": "pending-device-authorization",
+-     "label": "Pending OAuth",
+-     "tone": "warning",
+-     "value": 1,
+-   },
+-   {
+-     "key": "env-unresolved",
+-     "label": "Env unresolved",
+-     "tone": "warning",
+-     "value": 1,
+-   },
+-   {
+-     "key": "credentials-missing",
+-     "label": "Credentials missing",
+-     "tone": "warning",
+-     "value": 2,
+-   },
+-   {
+-     "key": "expired-auth",
+-     "label": "Reconnect required",
+-     "tone": "warning",
+-     "value": 2,
+-   },
+-   {
+-     "key": "connected-without-endpoint",
+-     "label": "Connected, no endpoint",
+-     "tone": "warning",
+-     "value": 1,
+-   },
+-   {
+-     "key": "ready",
+-     "label": "Execution-ready",
+-     "tone": "success",
+-     "value": 3,
+-   },
+- ]
++ []
+
+ Γ¥» app/lib/view-models.test.ts:208:7
+    206|         },
+    207|       } as never),
+    208|     ).toEqual([
+       |       ^
+    209|       {
+    210|         key: "pending-device-authorization",
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/2]ΓÄ»
+
+ FAIL  app/lib/view-models.test.ts > buildConfiguredProviderRows > prefers canonical provider rollups over route-local readiness inference
+AssertionError: expected [ { providerId: 'moonshot', ΓÇª(11) } ] to deeply equal [ ObjectContaining{ΓÇª} ]
+
+- Expected
++ Received
+
+  [
+-   ObjectContaining {
+-     "connectedWithoutEndpointCount": 3,
+-     "credentialsMissingAccountCount": 5,
+-     "pendingDeviceAuthorizationCount": 2,
++   {
++     "accountIds": [
++       "moonshot.personal.primary",
++     ],
++     "activeEndpointCount": 0,
++     "authModes": [
++       "api-key-static",
++     ],
++     "configuredModels": [
++       "moonshot/kimi-k2.6",
++     ],
++     "connectedWithoutEndpointCount": 1,
++     "credentialsMissingAccountCount": 0,
++     "endpointCount": 0,
++     "endpointModels": [],
++     "healthStatuses": [
++       "healthy",
++     ],
++     "pendingDeviceAuthorizationCount": 0,
+      "providerId": "moonshot",
+-     "readyAccountCount": 4,
++     "readyAccountCount": 0,
+    },
+  ]
+
+ Γ¥» app/lib/view-models.test.ts:886:7
+    884|         ],
+    885|       } as never),
+    886|     ).toEqual([
+       |       ^
+    887|       expect.objectContaining({
+    888|         providerId: "moonshot",
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[2/2]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m2 failed[39m[22m[2m | [22m[33m23 skipped[39m[90m (25)[39m
+[2m   Start at [22m 18:46:05
+[2m   Duration [22m 1.89s[2m (transform 129ms, setup 0ms, collect 177ms, tests 33ms, environment 0ms, prepare 397ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\47-runtime-persistence-rehydration-lifecycle\role-model-router\apps\runtime-ui:
+ΓÇëERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓÇë Command failed with exit code 1: vitest run app/lib/view-models.test.ts -t prefers canonical credential lifecycle counts when they are present|prefers canonical provider rollups over route-local readiness inference

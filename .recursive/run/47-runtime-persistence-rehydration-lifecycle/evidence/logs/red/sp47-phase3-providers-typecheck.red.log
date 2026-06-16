@@ -1,0 +1,5 @@
+app/routes/providers.tsx(909,68): error TS2345: Argument of type 'RuntimeAccount | null' is not assignable to parameter of type 'RuntimeAccount'.
+  Type 'null' is not assignable to type 'RuntimeAccount'.
+undefined
+D:\DEV\role-model\.worktrees\47-runtime-persistence-rehydration-lifecycle\role-model-router\apps\runtime-ui:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 2: tsc --noEmit

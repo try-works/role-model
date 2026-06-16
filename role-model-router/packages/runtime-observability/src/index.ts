@@ -212,6 +212,7 @@ export interface RuntimeObservationBundleInput {
     readonly app_id: string;
     readonly org_id?: string | null;
   };
+  readonly clientRequestId?: string;
   readonly routingDiagnostics?: RuntimeRoutingDiagnostics;
   readonly retrievalReceipt: RuntimeRetrievalReceipt;
   readonly contextEnvelope: RuntimeContextEnvelopeSummary;
@@ -243,6 +244,7 @@ export interface RuntimeObservationCapturePolicyReceipt {
 
 export interface RuntimeObservationBundle {
   readonly requestId: string;
+  readonly clientRequestId?: string;
   readonly routingDecisionId: string;
   readonly endpointId: string;
   readonly conversationId: string;
@@ -301,6 +303,7 @@ export interface RuntimeObservationBundle {
   readonly inspection: {
     readonly request: {
       readonly requestId: string;
+      readonly clientRequestId?: string;
       readonly routingDecisionId: string;
       readonly requestCapture: {
         readonly headers: Record<string, string>;
@@ -626,6 +629,7 @@ export function createRuntimeObservationBundle(
 
   return {
     requestId: input.decision.request_id,
+    ...(input.clientRequestId ? { clientRequestId: input.clientRequestId } : {}),
     routingDecisionId: input.decision.routing_decision_id,
     endpointId: input.decision.chosen_endpoint_id,
     conversationId: input.contextEnvelope.conversationId,
@@ -670,6 +674,7 @@ export function createRuntimeObservationBundle(
     inspection: {
       request: {
         requestId: input.decision.request_id,
+        ...(input.clientRequestId ? { clientRequestId: input.clientRequestId } : {}),
         routingDecisionId: input.decision.routing_decision_id,
         requestCapture: redactRequestCapture(input, capturePolicy),
         responseCapture: redactResponseCapture(input, capturePolicy),

@@ -1,6 +1,7 @@
 import type {
   RuntimeAccount,
   RuntimeActivityLogEntry,
+  RuntimeCredentialLifecycleProviderRollup,
   RuntimeModelAlias,
   RuntimeControllerAssignment,
   RuntimeDeviceAuthorization,
@@ -58,6 +59,10 @@ function formatPricingValue(value: RuntimeModelRecord["pricing"]): string {
   return `$${value.inputPer1M} / 1M input • $${value.outputPer1M} / 1M output`;
 }
 
+function formatEffectiveCurrency(value: number): string {
+  return `${formatCurrency(value, "estimate").replace(" est.", "")} effective`;
+}
+
 export function buildProviderCards(
   providers: readonly RuntimeProvider[],
   accounts: readonly RuntimeAccount[],
@@ -96,26 +101,48 @@ export function summarizeRuntimeStats(
 }
 
 export function buildCredentialReadinessRows(
-  summary: Pick<RuntimeSummary, "readinessSummary">,
+  summary: Pick<RuntimeSummary, "readinessSummary" | "credentialLifecycle">,
 ): Array<{
   key:
     | "pending-device-authorization"
+    | "env-unresolved"
     | "credentials-missing"
+    | "expired-auth"
     | "connected-without-endpoint"
     | "ready";
   label: string;
   value: number;
   tone: "warning" | "success" | "neutral";
 }> {
-  const readiness = summary.readinessSummary;
-  if (!readiness) {
+  const counts = summary.credentialLifecycle?.counts
+    ? {
+        pendingAuthorization: summary.credentialLifecycle.counts.pendingAuthorization,
+        envUnresolved: summary.credentialLifecycle.counts.envUnresolved,
+        credentialsMissing: summary.credentialLifecycle.counts.credentialsMissing,
+        expiredAuth: summary.credentialLifecycle.counts.expiredAuth,
+        connectedNoEndpoint: summary.credentialLifecycle.counts.connectedNoEndpoint,
+        executionReady: summary.credentialLifecycle.counts.executionReady,
+      }
+    : summary.readinessSummary
+      ? {
+          pendingAuthorization: summary.readinessSummary.pendingDeviceAuthorizationCount,
+          envUnresolved: 0,
+          credentialsMissing: summary.readinessSummary.credentialsMissingAccountCount,
+          expiredAuth: 0,
+          connectedNoEndpoint: summary.readinessSummary.connectedWithoutEndpointCount,
+          executionReady: summary.readinessSummary.readyAccountCount,
+        }
+      : null;
+  if (!counts) {
     return [];
   }
 
   const rows: Array<{
     key:
       | "pending-device-authorization"
+      | "env-unresolved"
       | "credentials-missing"
+      | "expired-auth"
       | "connected-without-endpoint"
       | "ready";
     label: string;
@@ -123,27 +150,43 @@ export function buildCredentialReadinessRows(
     tone: "warning" | "success" | "neutral";
   }> = [];
 
-  if (readiness.pendingDeviceAuthorizationCount > 0) {
+  if (counts.pendingAuthorization > 0) {
     rows.push({
       key: "pending-device-authorization",
       label: "Pending OAuth",
-      value: readiness.pendingDeviceAuthorizationCount,
+      value: counts.pendingAuthorization,
       tone: "warning",
     });
   }
-  if (readiness.credentialsMissingAccountCount > 0) {
+  if (counts.envUnresolved > 0) {
+    rows.push({
+      key: "env-unresolved",
+      label: "Env unresolved",
+      value: counts.envUnresolved,
+      tone: "warning",
+    });
+  }
+  if (counts.credentialsMissing > 0) {
     rows.push({
       key: "credentials-missing",
       label: "Credentials missing",
-      value: readiness.credentialsMissingAccountCount,
+      value: counts.credentialsMissing,
       tone: "warning",
     });
   }
-  if (readiness.connectedWithoutEndpointCount > 0) {
+  if (counts.expiredAuth > 0) {
+    rows.push({
+      key: "expired-auth",
+      label: "Reconnect required",
+      value: counts.expiredAuth,
+      tone: "warning",
+    });
+  }
+  if (counts.connectedNoEndpoint > 0) {
     rows.push({
       key: "connected-without-endpoint",
       label: "Connected, no endpoint",
-      value: readiness.connectedWithoutEndpointCount,
+      value: counts.connectedNoEndpoint,
       tone: "warning",
     });
   }
@@ -151,11 +194,334 @@ export function buildCredentialReadinessRows(
   rows.push({
     key: "ready",
     label: "Execution-ready",
-    value: readiness.readyAccountCount,
-    tone: readiness.readyAccountCount > 0 ? "success" : "neutral",
+    value: counts.executionReady,
+    tone: counts.executionReady > 0 ? "success" : "neutral",
   });
 
   return rows;
+}
+
+const LIFECYCLE_STATE_LABELS: Record<string, string> = {
+  "execution-ready": "Execution-ready",
+  "connected-no-endpoint": "Connected, no endpoint",
+  "pending-authorization": "Pending OAuth",
+  "expired-auth": "Reconnect required",
+  "credentials-missing": "Credentials missing",
+  "env-unresolved": "Env unresolved",
+  "archived-stale": "Archived stale",
+};
+
+const LIFECYCLE_REASON_LABELS: Record<string, string> = {
+  "active-endpoint-present": "Active endpoint is available",
+  "active-without-endpoint": "Credential is usable but no endpoint is active",
+  "pending-device-authorization": "Device authorization is still pending",
+  "oauth-refresh-failed": "Stored OAuth token failed refresh",
+  "credential-material-missing": "Credential material is missing",
+  "env-var-missing": "Referenced environment variable is missing",
+};
+
+const LIFECYCLE_ACTION_LABELS: Record<string, string> = {
+  reconnect: "Reconnect",
+  "update-api-key": "Update API key",
+  "activate-endpoint": "Activate endpoint",
+  "set-env": "Set env",
+};
+
+function lifecycleStateLabel(lifecycleState: string): string {
+  return LIFECYCLE_STATE_LABELS[lifecycleState] ?? lifecycleState;
+}
+
+function lifecycleReasonLabel(reasonCode: string): string {
+  return LIFECYCLE_REASON_LABELS[reasonCode] ?? reasonCode;
+}
+
+function lifecycleTone(
+  lifecycleState: string,
+  blocking: boolean,
+): "success" | "warning" | "neutral" {
+  if (lifecycleState === "execution-ready") {
+    return "success";
+  }
+  return blocking ? "warning" : "neutral";
+}
+
+function lifecycleActionsLabel(actions: readonly string[]): string {
+  return actions.length > 0
+    ? actions.map((action) => LIFECYCLE_ACTION_LABELS[action] ?? action).join(" • ")
+    : "None";
+}
+
+function buildCredentialStoragePosture(input: {
+  readonly authMode?: string;
+  readonly credentialRef?: RuntimeAccount["credentialRef"];
+  readonly credentialStorageMode?: string;
+  readonly credentialBackendCanonical?: string;
+}): {
+  label: string;
+  detail: string;
+} {
+  switch (input.credentialStorageMode) {
+    case "persisted-local":
+      return {
+        label: "Persisted local credential",
+        detail: `Canonical backend: ${input.credentialBackendCanonical ?? "local-file"}`,
+      };
+    case "oauth-local":
+      return {
+        label: "Runtime-managed OAuth token",
+        detail: `Canonical backend: ${input.credentialBackendCanonical ?? "local-file"}`,
+      };
+    case "env-ref":
+      return {
+        label: "Environment reference",
+        detail: input.credentialRef?.ref ? `Variable: ${input.credentialRef.ref}` : "Variable required",
+      };
+    default:
+      if (input.authMode === "oauth2-device-code") {
+        return {
+          label: "Runtime-managed OAuth token",
+          detail: `Canonical backend: ${input.credentialBackendCanonical ?? "local-file"}`,
+        };
+      }
+      if (input.credentialRef?.backend === "env") {
+        return {
+          label: "Environment reference",
+          detail: input.credentialRef.ref ? `Variable: ${input.credentialRef.ref}` : "Variable required",
+        };
+      }
+      return {
+        label: "Persisted local credential",
+        detail: `Canonical backend: ${input.credentialBackendCanonical ?? "local-file"}`,
+      };
+  }
+}
+
+export function buildCredentialLifecycleBanner(
+  summary: Pick<RuntimeSummary, "readinessSummary" | "credentialLifecycle">,
+): {
+  authorityLabel: string;
+  authorityTone: "success" | "warning" | "neutral" | "accent";
+  detail: string;
+  archivedStaleCount: number;
+  blockingRows: Array<{
+    key:
+      | "pending-device-authorization"
+      | "env-unresolved"
+      | "credentials-missing"
+      | "expired-auth"
+      | "connected-without-endpoint";
+    label: string;
+    value: number;
+    tone: "warning";
+  }>;
+} | null {
+  const readinessRows = buildCredentialReadinessRows(summary).filter(
+    (
+      row,
+    ): row is typeof row & {
+      key:
+        | "pending-device-authorization"
+        | "env-unresolved"
+        | "credentials-missing"
+        | "expired-auth"
+        | "connected-without-endpoint";
+      tone: "warning";
+    } => row.key !== "ready" && row.value > 0,
+  );
+  const lifecycle = summary.credentialLifecycle;
+  if (!lifecycle) {
+    if (!summary.readinessSummary) {
+      return null;
+    }
+    return {
+      authorityLabel: "Compatibility readiness summary",
+      authorityTone: "neutral",
+      detail:
+        "Blocking counts are coming from the legacy readiness alias until the canonical lifecycle payload is available.",
+      archivedStaleCount: 0,
+      blockingRows: readinessRows,
+    };
+  }
+
+  if (lifecycle.authority.state === "provisional") {
+    return {
+      authorityLabel: "Provisional lifecycle snapshot",
+      authorityTone: "accent",
+      detail: "Bootstrap is still reconciling credentials, activations, and archived stale state.",
+      archivedStaleCount: lifecycle.counts.archivedStale,
+      blockingRows: readinessRows,
+    };
+  }
+
+  return {
+    authorityLabel: "Authoritative lifecycle snapshot",
+    authorityTone: readinessRows.length > 0 ? "warning" : "success",
+    detail:
+      readinessRows.length > 0
+        ? "Canonical lifecycle data is authoritative; remaining blockers are ready for repair."
+        : "Canonical lifecycle data is authoritative and no credential blockers remain.",
+    archivedStaleCount: lifecycle.counts.archivedStale,
+    blockingRows: readinessRows,
+  };
+}
+
+export function buildCredentialLifecycleAccountRows(
+  summary: Pick<RuntimeSummary, "credentialLifecycle">,
+): Array<{
+  key: string;
+  providerAccountId: string;
+  providerId: string;
+  lifecycleState: string;
+  lifecycleLabel: string;
+  reasonLabel: string;
+  blocking: boolean;
+  tone: "success" | "warning" | "neutral";
+  availableActionsLabel: string;
+  activeEndpointCount: number;
+}> {
+  const accounts = [...(summary.credentialLifecycle?.accounts ?? [])];
+  return accounts
+    .sort((left, right) => {
+      if (left.blocking !== right.blocking) {
+        return left.blocking ? -1 : 1;
+      }
+      return sortLexical(left.providerAccountId, right.providerAccountId);
+     })
+     .map((account) => ({
+       key: account.providerAccountId,
+       providerAccountId: account.providerAccountId,
+       providerId: account.providerId,
+       lifecycleState: account.lifecycleState,
+       lifecycleLabel: lifecycleStateLabel(account.lifecycleState),
+       reasonLabel: lifecycleReasonLabel(account.reasonCode),
+       blocking: account.blocking,
+       tone: lifecycleTone(account.lifecycleState, account.blocking),
+       availableActionsLabel: lifecycleActionsLabel(account.availableActions),
+       activeEndpointCount: account.activeEndpointIds.length,
+     }));
+}
+
+export function buildProviderMaintenanceRows(input: {
+  readonly accounts: readonly RuntimeAccount[];
+  readonly summary: Pick<RuntimeSummary, "credentialLifecycle">;
+}): Array<{
+  key: string;
+  account: RuntimeAccount | null;
+  providerAccountId: string;
+  providerId: string;
+  authMode: string;
+  lifecycleLabel: string;
+  lifecycleTone: "success" | "warning" | "neutral";
+  reasonLabel: string;
+  storageLabel: string;
+  storageDetail: string;
+  sourceProvenanceLabel: string;
+  availableActions: readonly string[];
+  availableActionsLabel: string;
+  activeEndpointCount: number;
+  baseUrlOverride: string | null;
+  allowedModels: readonly string[];
+  modelRoleBindings: NonNullable<RuntimeAccount["modelRoleBindings"]>;
+}> {
+  const lifecycleAccounts = input.summary.credentialLifecycle?.accounts ?? [];
+  const lifecycleAccountsById = new Map(
+    lifecycleAccounts.map((account) => [account.providerAccountId, account]),
+  );
+  const accountsById = new Map(input.accounts.map((account) => [account.providerAccountId, account]));
+  const allAccountIds = uniqueStrings([
+    ...lifecycleAccounts.map((account) => account.providerAccountId),
+    ...input.accounts.map((account) => account.providerAccountId),
+  ]);
+
+  return allAccountIds
+    .sort((left, right) => {
+      const leftLifecycle = lifecycleAccountsById.get(left);
+      const rightLifecycle = lifecycleAccountsById.get(right);
+      if ((leftLifecycle?.blocking ?? false) !== (rightLifecycle?.blocking ?? false)) {
+        return leftLifecycle?.blocking ? -1 : 1;
+      }
+      return sortLexical(left, right);
+    })
+    .map((providerAccountId) => {
+      const lifecycleAccount = lifecycleAccountsById.get(providerAccountId);
+      const account = accountsById.get(providerAccountId) ?? null;
+      const authMode = lifecycleAccount?.authMode ?? account?.authMode ?? "unknown";
+      const storagePosture = buildCredentialStoragePosture({
+        authMode,
+        credentialRef: account?.credentialRef,
+        credentialStorageMode: lifecycleAccount?.credentialStorageMode,
+        credentialBackendCanonical: lifecycleAccount?.credentialBackendCanonical,
+      });
+      const availableActions =
+        lifecycleAccount?.availableActions ??
+        (authMode === "oauth2-device-code"
+          ? ["reconnect"]
+          : authMode === "api-key-static"
+            ? ["update-api-key"]
+            : []);
+
+      return {
+        key: providerAccountId,
+        account,
+        providerAccountId,
+        providerId: lifecycleAccount?.providerId ?? account?.providerId ?? "unknown-provider",
+        authMode,
+        lifecycleLabel: lifecycleAccount
+          ? lifecycleStateLabel(lifecycleAccount.lifecycleState)
+          : account?.healthStatus === "healthy"
+            ? "Execution-ready"
+            : "Legacy account snapshot",
+        lifecycleTone: lifecycleAccount
+          ? lifecycleTone(lifecycleAccount.lifecycleState, lifecycleAccount.blocking)
+          : account?.healthStatus === "healthy"
+            ? "success"
+            : "warning",
+        reasonLabel: lifecycleAccount
+          ? lifecycleReasonLabel(lifecycleAccount.reasonCode)
+          : account?.healthStatus ?? account?.status ?? "Lifecycle details unavailable",
+        storageLabel: storagePosture.label,
+        storageDetail: storagePosture.detail,
+        sourceProvenanceLabel:
+          lifecycleAccount?.sourceProvenance.length && lifecycleAccount.sourceProvenance.length > 0
+            ? [...lifecycleAccount.sourceProvenance].sort(sortLexical).join(" • ")
+            : "legacy account snapshot",
+        availableActions,
+        availableActionsLabel: lifecycleActionsLabel(availableActions),
+        activeEndpointCount: lifecycleAccount?.activeEndpointIds.length ?? 0,
+        baseUrlOverride: account?.baseUrlOverride ?? null,
+        allowedModels: account?.allowedModels ?? lifecycleAccount?.configuredModelIds ?? [],
+        modelRoleBindings: account?.modelRoleBindings ?? [],
+      };
+    });
+}
+
+export function buildArchivedArtifactRows(
+  summary: Pick<RuntimeSummary, "credentialLifecycle">,
+): Array<{
+  key: string;
+  providerAccountId: string;
+  providerId: string;
+  label: string;
+  detail: string;
+}> {
+  return [...(summary.credentialLifecycle?.archivedArtifacts ?? [])]
+    .sort((left, right) => {
+      const accountCompare = sortLexical(left.providerAccountId ?? "", right.providerAccountId ?? "");
+      if (accountCompare !== 0) {
+        return accountCompare;
+      }
+      return sortLexical(left.artifactId, right.artifactId);
+    })
+    .map((artifact) => ({
+      key: artifact.artifactId,
+      providerAccountId: artifact.providerAccountId ?? "unknown-account",
+      providerId: artifact.providerId ?? "unknown-provider",
+      label:
+        artifact.reasonCode === "expired-pending-authorization"
+          ? "Expired pending authorization archived"
+          : "Archived stale artifact",
+      detail: `${artifact.artifactType} • ${artifact.reasonCode}`,
+    }));
 }
 
 const BOOTSTRAP_STAGE_LABELS: Record<string, string> = {
@@ -398,7 +764,7 @@ export function summarizeTelemetryStats(
     {
       label: "Tokens",
       value: String(summary.totalTokens),
-      detail: `${summary.cachedRequestCount} cached request${summary.cachedRequestCount === 1 ? "" : "s"} and ${formatCurrency(summary.totalActualCostUsd, "actual")} cost recorded`,
+      detail: `${summary.cachedRequestCount} cached request${summary.cachedRequestCount === 1 ? "" : "s"} and ${formatEffectiveCurrency(summary.totalEffectiveCostUsd)} cost recorded`,
     },
   ];
 }
@@ -446,6 +812,7 @@ export function buildTelemetryRequestRows(
     Pick<
       RuntimeTelemetryRequestRecord,
       | "requestId"
+      | "clientRequestId"
       | "routingDecisionId"
       | "endpointId"
       | "modelId"
@@ -474,6 +841,7 @@ export function buildTelemetryRequestRows(
   >,
 ): Array<{
   requestId: string;
+  clientRequestId: string | null;
   routingDecisionLabel: string;
   endpointId: string;
   modelId: string | null | undefined;
@@ -492,6 +860,7 @@ export function buildTelemetryRequestRows(
     .sort((left, right) => right.createdAtMs - left.createdAtMs)
     .map((row) => ({
       requestId: row.requestId,
+      clientRequestId: row.clientRequestId ?? null,
       routingDecisionLabel: row.routingDecisionId ?? "n/a",
       endpointId: row.endpointId,
       modelId: row.modelId,
@@ -520,6 +889,90 @@ export function buildTelemetryRequestRows(
         minute: "2-digit",
       }),
     }));
+}
+
+export function buildDashboardLatestRequestRows(
+  rows: ReadonlyArray<
+    Pick<
+      RuntimeTelemetryRequestRecord,
+      | "requestId"
+      | "clientRequestId"
+      | "routingDecisionId"
+      | "endpointId"
+      | "requestClass"
+      | "modelId"
+      | "sourceType"
+      | "createdAtMs"
+      | "latencyMs"
+      | "totalTokens"
+      | "actualCostUsd"
+      | "estimatedCostUsd"
+      | "errorClass"
+      | "statusCode"
+      | "providerFamily"
+      | "providerKind"
+      | "providerId"
+      | "finishReason"
+      | "promptCacheSupported"
+      | "promptCacheRequested"
+      | "promptCacheUsed"
+      | "streamTextDeltaCount"
+      | "streamTextSupported"
+      | "streamToolCallDeltaCount"
+      | "streamToolCallSupported"
+      | "streamToolArgumentDeltaCount"
+      | "streamToolArgumentSupported"
+    >
+  >,
+  limit = 3,
+): Array<
+  ReturnType<typeof buildTelemetryRequestRows>[number] & {
+    primaryLabel: string;
+    secondaryLabel: string | null;
+    endpointLabel: string;
+    interactionCount: number;
+  }
+> {
+  const liveRows = rows.filter((row) => row.requestClass !== "benchmark");
+  const selectedRows = liveRows.length > 0 ? liveRows : rows;
+  const sortedRows = [...selectedRows].sort((left, right) => right.createdAtMs - left.createdAtMs);
+  const rowsByInteraction = new Map<string, typeof sortedRows>();
+
+  for (const row of sortedRows) {
+    const interactionKey =
+      typeof row.clientRequestId === "string" && row.clientRequestId.length > 0
+        ? row.clientRequestId
+        : row.requestId;
+    const currentRows = rowsByInteraction.get(interactionKey) ?? [];
+    currentRows.push(row);
+    rowsByInteraction.set(interactionKey, currentRows);
+  }
+
+  return [...rowsByInteraction.values()]
+    .slice(0, limit)
+    .map((interactionRows) => {
+      const latestRow = interactionRows[0]!;
+      const renderedRow = buildTelemetryRequestRows([latestRow])[0]!;
+      const endpointIds = uniqueStrings(interactionRows.map((row) => row.endpointId));
+      const primaryLabel =
+        typeof latestRow.clientRequestId === "string" && latestRow.clientRequestId.length > 0
+          ? latestRow.clientRequestId
+          : latestRow.requestId;
+      const secondaryLabel =
+        interactionRows.length > 1
+          ? `${interactionRows.length} routed executions`
+          : latestRow.clientRequestId && latestRow.clientRequestId !== latestRow.requestId
+            ? latestRow.requestId
+            : null;
+
+      return {
+        ...renderedRow,
+        primaryLabel,
+        secondaryLabel,
+        endpointLabel: endpointIds.length === 1 ? endpointIds[0]! : `${endpointIds.length} endpoints`,
+        interactionCount: interactionRows.length,
+      };
+    });
 }
 
 export function buildWorkbenchModelOptions(
@@ -837,6 +1290,7 @@ export function buildConfiguredProviderRows(input: {
   readonly accounts: readonly RuntimeAccount[];
   readonly deviceAuthorizations?: readonly RuntimeDeviceAuthorization[];
   readonly endpoints: readonly RuntimeEndpoint[];
+  readonly providerRollups?: readonly RuntimeCredentialLifecycleProviderRollup[];
 }): Array<{
   providerId: string;
   accountIds: string[];
@@ -855,6 +1309,7 @@ export function buildConfiguredProviderRows(input: {
     ...input.accounts.map((account) => account.providerId),
     ...(input.deviceAuthorizations ?? []).map((authorization) => authorization.providerId),
     ...input.endpoints.map((endpoint) => endpoint.providerId),
+    ...(input.providerRollups ?? []).map((rollup) => rollup.providerId),
   ]).sort(sortLexical);
 
   return providerIds.map((providerId) => {
@@ -862,6 +1317,7 @@ export function buildConfiguredProviderRows(input: {
     const providerEndpoints = input.endpoints.filter(
       (endpoint) => endpoint.providerId === providerId,
     );
+    const providerRollup = input.providerRollups?.find((rollup) => rollup.providerId === providerId);
     const pendingDeviceAuthorizationAccountIds = new Set(
       (input.deviceAuthorizations ?? [])
         .filter(
@@ -883,29 +1339,40 @@ export function buildConfiguredProviderRows(input: {
     let connectedWithoutEndpointCount = 0;
     let readyAccountCount = 0;
 
-    for (const account of providerAccounts) {
-      if (readyAccountIds.has(account.providerAccountId)) {
-        readyAccountCount += 1;
-        continue;
-      }
-      if (pendingDeviceAuthorizationAccountIds.has(account.providerAccountId)) {
-        pendingDeviceAuthorizationCount += 1;
-        continue;
-      }
-      if (account.healthStatus === "credentials-missing") {
-        credentialsMissingAccountCount += 1;
-        continue;
-      }
-      if (account.status === "active" && account.healthStatus === "healthy") {
-        connectedWithoutEndpointCount += 1;
+    if (providerRollup) {
+      pendingDeviceAuthorizationCount = providerRollup.countsByLifecycle.pendingAuthorization;
+      credentialsMissingAccountCount =
+        providerRollup.countsByLifecycle.credentialsMissing;
+      connectedWithoutEndpointCount = providerRollup.countsByLifecycle.connectedNoEndpoint;
+      readyAccountCount = providerRollup.countsByLifecycle.executionReady;
+    } else {
+      for (const account of providerAccounts) {
+        if (readyAccountIds.has(account.providerAccountId)) {
+          readyAccountCount += 1;
+          continue;
+        }
+        if (pendingDeviceAuthorizationAccountIds.has(account.providerAccountId)) {
+          pendingDeviceAuthorizationCount += 1;
+          continue;
+        }
+        if (account.healthStatus === "credentials-missing") {
+          credentialsMissingAccountCount += 1;
+          continue;
+        }
+        if (account.status === "active" && account.healthStatus === "healthy") {
+          connectedWithoutEndpointCount += 1;
+        }
       }
     }
 
     return {
       providerId,
-      accountIds: uniqueStrings(providerAccounts.map((account) => account.providerAccountId)).sort(
-        sortLexical,
-      ),
+      accountIds:
+        providerRollup && providerRollup.accountIds.length > 0
+          ? [...providerRollup.accountIds].sort(sortLexical)
+          : uniqueStrings(providerAccounts.map((account) => account.providerAccountId)).sort(
+              sortLexical,
+            ),
       authModes: uniqueStrings(providerAccounts.map((account) => account.authMode)).sort(
         sortLexical,
       ),
@@ -1209,9 +1676,7 @@ export function buildActivitySummary(entries: readonly RuntimeActivityLogEntry[]
     cacheTokens: string;
   }>;
 } {
-  const rows = [...entries]
-    .sort((left, right) => right.id - left.id)
-    .map((entry) => ({
+  const rows = entries.map((entry) => ({
       id: entry.id,
       timestamp: entry.timestamp,
       model: entry.model,

@@ -1,0 +1,15 @@
+{
+  "requestId": "req-routing-validation",
+  "appId": "app-runtime",
+  "orgId": "org-runtime",
+  "requestedRoleId": "developer",
+  "taskType": "code.edit",
+  "requiredCapabilities": ["code.edit"],
+  "preferredCapabilities": ["reasoning.multi_step"],
+  "requiredModalities": ["text"],
+  "contextTokens": 180,
+  "needsTools": false,
+  "strategy": "balanced",
+  "preferLocal": true,
+  "budgetLimit": 0.01
+}
