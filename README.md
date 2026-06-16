@@ -184,6 +184,10 @@ pnpm run smoke
 ```
 
 For a fuller walkthrough, see [`docs/public/quickstart.md`](docs/public/quickstart.md).
+For GitHub workflow ownership, release automation, and CI diagnostics, see
+[`docs/operations/02-ci-and-release-flow.md`](docs/operations/02-ci-and-release-flow.md).
+The per-release history and operator checklist live in [`CHANGELOG.md`](CHANGELOG.md) and
+[`docs/operations/03-release-checklist.md`](docs/operations/03-release-checklist.md).
 
 ## Repository layout
 

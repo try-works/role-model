@@ -159,6 +159,149 @@ export function RoleModelRoutingDiagram() {
   );
 }
 
+export function FirstRunSetupDiagram() {
+  return (
+    <VerticalStepsDiagram
+      caption="The first-time setup path should establish the real candidate set first, then benchmark it, then choose strategy from evidence."
+      steps={[
+        {
+          title: "Install and launch the runtime",
+          detail: "Start the packaged router and open the operator UI on the local machine.",
+        },
+        {
+          title: "Connect providers and local backends",
+          detail: "Wire in the exact local and remote execution paths you plan to route across.",
+        },
+        {
+          title: "Activate models and assign roles",
+          detail: "Publish the real endpoint inventory and bind each model only to the roles it should serve.",
+        },
+        {
+          title: "Run the full benchmark",
+          detail: "Grade the configured candidate set and write measured quality into observed profiles.",
+        },
+        {
+          title: "Choose and save routing strategy",
+          detail: "Set balanced, quality, latency, or cost after the benchmark evidence exists.",
+        },
+        {
+          title: "Validate a real routed request",
+          detail: "Inspect Router and Observe to confirm the winner, fallbacks, and reasons match the evidence.",
+        },
+      ]}
+    />
+  );
+}
+
+export function DocumentationArchitectureDiagram() {
+  return (
+    <VerticalStepsDiagram
+      caption="The docs now move from first-time setup into runtime operation, then into router behavior and deeper protocol reference instead of splitting routing into two top-level sections."
+      steps={[
+        {
+          title: "Get Started",
+          detail: "Install, connect endpoints, benchmark the real set, choose strategy, and validate the first decision.",
+        },
+        {
+          title: "Runtime",
+          detail: "Use the actual runtime UI for model activation, benchmarking, strategy control, and live decision review.",
+        },
+        {
+          title: "Router",
+          detail: "Explain candidate selection, scoring, tie-breaks, exclusions, and decision behavior.",
+        },
+        {
+          title: "Concepts",
+          detail: "Build the mental model for roles, tasks, endpoints, policy, and observability.",
+        },
+        {
+          title: "Reference",
+          detail: "Provide the schema-level vocabulary and canonical artifact semantics when exact contracts matter.",
+        },
+      ]}
+    />
+  );
+}
+
+export function OperatorShellDiagram() {
+  return (
+    <DiagramFrame caption="The operator shell separates first-time setup from ongoing decision review so operators can move left-to-right through the lifecycle.">
+      <div className="space-y-4">
+        <DiagramLabel>Setup surfaces</DiagramLabel>
+        <div className="grid gap-3 md:grid-cols-4">
+          <DiagramCard
+            detail="Onboarding entry point that links operators into the local and remote setup paths."
+            title="Connect"
+          />
+          <DiagramCard
+            detail="Local runtimes, local models, and local endpoint readiness."
+            title="Local"
+          />
+          <DiagramCard
+            detail="Provider accounts and remote execution posture."
+            title="Remote"
+          />
+          <DiagramCard
+            detail="Model inventory, role activation, and benchmark operations."
+            title="Models"
+          />
+        </div>
+        <DownArrow />
+        <DiagramLabel>Decision review surfaces</DiagramLabel>
+        <div className="grid gap-3 md:grid-cols-2">
+          <DiagramCard
+            detail="Candidate sets, strategy posture, scored decisions, and fallbacks."
+            title="Router"
+          />
+          <DiagramCard
+            detail="Request history, telemetry, usage, logs, and endpoint evidence."
+            title="Observe"
+          />
+        </div>
+        <DownArrow />
+        <DiagramCard
+          detail="Readiness, runtime health, and diagnostics that explain whether the shell itself is healthy."
+          title="System"
+        />
+      </div>
+    </DiagramFrame>
+  );
+}
+
+export function BenchmarkStrategyLoopDiagram() {
+  return (
+    <VerticalStepsDiagram
+      caption="Benchmarking is the evidence loop that turns a configured inventory into an informed routing strategy and a checkable live decision."
+      steps={[
+        {
+          title: "Configured endpoint set",
+          detail: "The active local and remote endpoints that actually compete for the work.",
+        },
+        {
+          title: "Run the full benchmark",
+          detail: "Exercise the candidate set and grade outcomes through the benchmark judge path.",
+        },
+        {
+          title: "Observed profiles update",
+          detail: "Benchmark-derived quality and health signals become routable evidence.",
+        },
+        {
+          title: "Choose routing strategy",
+          detail: "Pick balanced, quality, latency, or cost from the benchmark story instead of prior assumptions.",
+        },
+        {
+          title: "Validate live routed requests",
+          detail: "Confirm Router and Observe tell the same story once traffic starts flowing.",
+        },
+        {
+          title: "Re-benchmark after inventory changes",
+          detail: "Any material provider, model, or role change should refresh the evidence before further tuning.",
+        },
+      ]}
+    />
+  );
+}
+
 export function ProtocolLifecycleDiagram() {
   return (
     <VerticalStepsDiagram

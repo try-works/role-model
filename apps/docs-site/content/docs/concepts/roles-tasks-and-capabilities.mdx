@@ -1,0 +1,39 @@
+---
+title: Roles, tasks, and capabilities
+description: The mental model for how role-model separates worker intent, unit of work, and concrete execution features.
+---
+
+# Roles, tasks, and capabilities
+
+Role-model separates three concepts that many systems collapse together:
+
+- **role**: what kind of worker or behavior is being requested
+- **task**: the unit of work to perform
+- **capability**: the concrete feature required to perform that work
+
+## Why that separation matters
+
+This separation lets Router reason more durably than “pick model X for prompt Y.”
+
+For example, a route might combine:
+
+- role `coder.patch`
+- task `code.edit`
+- capabilities `code.edit`, `reasoning.multi_step`, and `tools.function_calling`
+
+That gives you semantic control without pretending that one model label permanently owns one workflow.
+
+## Baseline role examples
+
+The baseline role set includes:
+
+- `general.chat`
+- `coder.patch`
+- `coder.review`
+- `tool.agent`
+- `embedder`
+- `classifier`
+- `language.detector`
+
+Start with this page for the product mental model, then use [Roles and tasks](/protocol/roles-and-tasks)
+when you need the protocol-level contract.

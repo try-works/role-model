@@ -1,21 +1,59 @@
 ---
 title: What role-model defines
-description: The protocol boundary, what is canonical, and what belongs to a router implementation.
+description: What role-model is, what ships today, and where the protocol ends and router implementation choices begin.
 ---
 
 # What role-model defines
 
+`role-model` is an open protocol for capability-aware AI routing.
+
+It gives a system a shared way to describe:
+
+- the request being routed
+- the task and role requirements behind that request
+- the concrete endpoints that can satisfy it
+- the routing policy that constrains selection
+- the observability artifacts that explain what happened
+
+## Why this exists
+
+Most AI integrations start by hard-coding a model name and then slowly accumulate one-off rules for cost,
+latency, locality, tool support, and fallback behavior.
+
+`role-model` turns that into an explicit contract:
+
+1. define the work as a task
+2. describe the endpoint as a concrete routable identity with declared and observed profiles
+3. apply policy consistently
+4. emit explainable artifacts for the final decision
+
+That makes routing easier to audit, compare, evolve, and move across hosts or providers.
+
+## What role-model is
+
+`role-model` is best understood as two connected layers:
+
+| Layer | Purpose |
+| --- | --- |
+| `role-model` | the protocol and contract layer |
+| `role-model-router` | the deterministic reference implementation and packaged runtime |
+
+The protocol defines the vocabulary. The router shows how that vocabulary can be implemented in a stable
+baseline.
+
+## The protocol boundary
+
 role-model standardizes the **protocol artifacts** that describe AI endpoints and the decisions made about
 them. It does **not** make the router implementation canonical.
 
-The core design rule is simple:
+The design rule is simple:
 
 > The combination of protocol docs and JSON Schemas under `protocol/schemas/` is the canonical contract.
 
 That means generated types, validators, adapters, registries, or routers are allowed to mirror the protocol,
 but they are not allowed to redefine it.
 
-## The protocol boundary
+## Protocol ownership versus router ownership
 
 | Protocol-owned | Router-implementation-owned |
 | --- | --- |
@@ -26,6 +64,18 @@ but they are not allowed to redefine it.
 
 The reference router is important because it demonstrates a coherent mapping from those protocol objects to a
 selection outcome, but the router remains **an implementation of the protocol**, not the definition of it.
+
+## What role-model is not
+
+`role-model` is not:
+
+- a promise that one model permanently owns one role
+- a single hosted runtime or orchestration product
+- a provider-specific SDK abstraction
+- a replacement for low-level schemas, traces, or usage records
+
+Roles in `role-model` are assigned through routing metadata and policy, not by pinning a role forever to a
+single model name.
 
 ## The problem domains role-model models
 
@@ -70,16 +120,28 @@ The same base model may be served by multiple endpoints with different:
 role-model therefore preserves the model inside endpoint identity, but performs routing at the endpoint level
 where those operational differences are actually visible.
 
+## What is implemented today
+
+Today the repository already includes a working baseline:
+
+- canonical JSON Schemas and fixtures
+- generated types and schema tooling
+- a deterministic reference router core
+- a packaged runtime you can install from GitHub Releases
+- a local operator UI and reference routing artifacts for decisions, traces, usage, and observed performance
+
+Some future host families and runtime surfaces are still architecture-stage. The public docs describe the
+implemented baseline first and treat future extensions as exactly that: extensions.
+
 ## The canonical dataflow
 
 <ProtocolPipelineDiagram />
 
-## What this site optimizes for
+## Where to go next
 
-This is a **definition and semantics** site, not an install guide. The main reading path focuses on:
-
-1. what the protocol objects mean
-2. how those objects relate
-3. how the reference router uses them to produce deterministic, explainable outcomes
-
-Next: read the [core vocabulary](/core-vocabulary) and the [protocol object model](/protocol-object-model).
+- [Install](/get-started/install)
+- [First launch and connect models](/get-started/first-launch-and-connect-models)
+- [Run the full benchmark](/get-started/run-full-benchmark)
+- [How role-model works](/concepts/how-role-model-works)
+- [Routing overview](/concepts/routing-overview)
+- [Core vocabulary](/core-vocabulary)

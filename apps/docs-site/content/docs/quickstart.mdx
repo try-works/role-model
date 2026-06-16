@@ -1,23 +1,43 @@
 ---
-title: Reading path
-description: A short guide to navigating the protocol-first documentation set.
+title: Quickstart
+description: Compatibility page for the older quickstart URL, with pointers to the new Get Started flow and repository smoke path.
 ---
 
-# Reading path
+# Quickstart
 
-This docs site is intentionally **not** organized as an installation walkthrough.
+This top-level URL is kept for compatibility with older links.
 
-If you want the shortest path through the material:
+The canonical onboarding flow now lives under **Get Started**.
 
-1. read [What role-model defines](/introduction)
-2. read [Core vocabulary](/core-vocabulary)
-3. read [Protocol object model](/protocol-object-model)
-4. read [How routing works end to end](/routing/how-routing-works-end-to-end)
-5. use the [schema reference](/reference/canonical-schemas-reference) and
-   [reason-code reference](/reference/reason-codes-and-rejection-taxonomy) while reading deeper pages
+## Use the new onboarding path
 
-If you are debugging or reviewing routing behavior, the most useful pairing is:
+If you are setting up the runtime for real use, follow these pages in order:
 
+1. [Install](/get-started/install)
+2. [First launch and connect models](/get-started/first-launch-and-connect-models)
+3. [Run the full benchmark](/get-started/run-full-benchmark)
+4. [Choose and save the routing strategy](/get-started/choose-routing-strategy)
+5. [First request and inspect the decision](/get-started/first-request-and-decision)
+
+That path is the recommended first-run sequence because benchmarking now belongs before routing-strategy
+selection.
+
+## Use the repository smoke flow when you want source-level proof
+
+If you want to understand the protocol and router behavior from source instead of operating the packaged
+runtime, use:
+
+```bash
+corepack enable
+corepack pnpm install
+corepack pnpm run smoke
+```
+
+## Read next
+
+- [Install](/get-started/install)
+- [Run the full benchmark](/get-started/run-full-benchmark)
+- [How role-model works](/concepts/how-role-model-works)
+- [Routing overview](/concepts/routing-overview)
+- [How routing works end to end](/router/how-routing-works-end-to-end)
 - [Router decision artifact](/protocol/router-decision-artifact)
-- [Eligibility and rejection](/routing/eligibility-and-rejection)
-- [Decision semantics](/routing/decision-semantics)

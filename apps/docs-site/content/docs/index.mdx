@@ -1,83 +1,85 @@
 ---
-title: role-model protocol and routing
-description: The canonical role-model protocol and the routing semantics built on top of it.
+title: role-model
+description: Capability-aware AI routing with a packaged reference runtime, explainable router decisions, and a protocol you can actually inspect.
 ---
 
-# role-model protocol and routing
+# role-model
 
-This site explains how **role-model assigns roles and tasks to concrete model-serving endpoints**.
+`role-model` is an open protocol for capability-aware AI routing, plus a packaged reference router runtime.
 
-The protocol does not route by model name alone. It carries model identity inside endpoint identity, then
-routes across eligible endpoints using declared capability, routing policy, and observed performance.
+It gives a system a durable way to describe:
 
-That distinction matters because the same model can be served by multiple endpoints with different provider,
-runtime, region, quantization, locality, and measured behavior.
+- what a request needs
+- which roles and tasks are being asked for
+- which concrete endpoints can satisfy the work
+- what policy allows or forbids
+- why the final routing decision was made
 
-## Why it is called role-model
+The router does **not** pick by model name alone. It routes across concrete endpoints using role and task
+metadata, declared capability, routing policy, and observed performance.
 
-The name reflects the two layers the protocol is trying to connect:
+## Start here if you are new
 
-1. **roles and tasks** describe the work the system needs done
-2. **models** provide the underlying capability, but they are reached through concrete endpoints
+1. [Install](/get-started/install)
+2. [First launch and connect models](/get-started/first-launch-and-connect-models)
+3. [Run the full benchmark](/get-started/run-full-benchmark)
+4. [Choose and save the routing strategy](/get-started/choose-routing-strategy)
+5. [Send the first request and inspect the decision](/get-started/first-request-and-decision)
 
-In practice, the router assigns work to **model-serving endpoints**, not to abstract model labels. The model
-still matters, but the endpoint is the concrete routing unit because that is where runtime, deployment, and
-observed-performance differences become visible.
+## What role-model does
 
-## The routing stack
+At a high level, role-model separates routing into a few stable pieces:
 
-role-model works across four levels:
+1. **Requests** describe task type, required capabilities, modalities, tool needs, and constraints.
+2. **Roles and tasks** describe the semantic shape of the work.
+3. **Endpoint identities and profiles** describe concrete routable endpoints rather than abstract model names.
+4. **Routing policy** applies hard denies, preferences, budgets, and deterministic tie-break rules.
+5. **Observability artifacts** record the decision, traces, usage, and measured performance.
 
-- **Role / task** - what kind of work is being requested
-- **Model lineage** - which model family the endpoint belongs to
-- **Endpoint identity** - the concrete deployment target the router can actually choose
-- **Observed performance + policy** - why one eligible endpoint wins over another
+That makes routing explainable and portable across different providers, hosts, and deployment shapes.
 
-This is why role-model is both **role-aware** and **endpoint-aware**: the model matters, but routing must
-still choose the right concrete endpoint serving that model.
+## How the router makes a decision
 
-<RoleModelRoutingDiagram />
+The reference router follows a stable flow:
 
-## Why not just route by model name?
+1. **Normalize request intent.** Build the effective policy snapshot from the request plus role/task metadata.
+2. **Narrow the candidate set.** Keep only endpoints that match the requested role, task, and policy scope.
+3. **Apply hard eligibility checks.** Reject endpoints that fail capability, modality, tool, locality, budget, or binding requirements.
+4. **Score the eligible endpoints.** Compare quality, latency, throughput, cost, reliability, and preference using measured evidence first, then declared data and neutral defaults.
+5. **Emit an explainable decision.** Return a `RouterDecision` with the chosen endpoint, fallbacks, exclusions, and selection reasons.
 
-A model name is too coarse for reliable routing.
+The result is deterministic enough to inspect later, not just a hidden runtime guess.
 
-The same base model may appear through multiple endpoints:
+## Baseline roles
 
-- in different regions
-- through different providers
-- under different runtimes
-- with different quantization or precision
-- with different measured latency, quality, failure rate, freshness, or cost
+The current baseline role set includes:
 
-role-model therefore treats the **endpoint** as the routing unit while still preserving the **model lineage**
-inside endpoint identity.
+| Role ID | Primary task types | Typical use |
+| --- | --- | --- |
+| `general.chat` | `text.chat` | general conversational responses |
+| `coder.patch` | `code.edit` | patch-oriented code editing |
+| `coder.review` | `code.edit`, `json.schema_adherence` | review, critique, and structured verdicts |
+| `tool.agent` | `tools.function_calling` | tool orchestration and structured tool calls |
+| `embedder` | `embeddings.text` | retrieval and vector generation |
+| `classifier` | `text.classification` | labeling and taxonomy selection |
+| `language.detector` | `text.language_detection` | language identification |
 
-## What to read first
+For the full role and task mental model, read
+[Roles, tasks, and capabilities](/concepts/roles-tasks-and-capabilities). The deeper protocol contract
+still lives in [Roles and tasks](/protocol/roles-and-tasks).
 
-| If you want to understand... | Start here |
-| --- | --- |
-| what role-model actually standardizes | [/introduction](/introduction) |
-| how roles, models, and endpoints fit together | [/introduction](/introduction), [/core-vocabulary](/core-vocabulary), [/protocol/endpoint-identity](/protocol/endpoint-identity), [/protocol/roles-and-tasks](/protocol/roles-and-tasks) |
-| the protocol vocabulary and object graph | [/core-vocabulary](/core-vocabulary), [/protocol-object-model](/protocol-object-model) |
-| endpoint identity and profile semantics | [/protocol/endpoint-identity](/protocol/endpoint-identity), [/protocol/declared-capability-profiles](/protocol/declared-capability-profiles), [/protocol/observed-performance-profiles](/protocol/observed-performance-profiles) |
-| how routing works end to end | [/routing/how-routing-works-end-to-end](/routing/how-routing-works-end-to-end) |
-| why a router accepted or rejected a candidate | [/routing/eligibility-and-rejection](/routing/eligibility-and-rejection), [/reference/reason-codes-and-rejection-taxonomy](/reference/reason-codes-and-rejection-taxonomy) |
-| the field-level schema inventory | [/reference/canonical-schemas-reference](/reference/canonical-schemas-reference) |
+## The first-time setup architecture
 
-## Site structure
+The canonical first-run sequence is now:
 
-- **Overview** explains the protocol boundary, vocabulary, object model, and lifecycle.
-- **Protocol** defines the canonical objects and their field semantics.
-- **Routing** explains how the reference router evaluates, scores, selects, and records outcomes.
-- **Reference** collects schema-by-schema and reason-code reference material.
+1. install and launch the packaged runtime
+2. connect the local or remote endpoints you actually plan to use
+3. activate models and assign roles
+4. run the full benchmark on that real candidate set
+5. review the benchmark results
+6. choose and save the routing strategy
+7. validate with a real routed request and inspect the decision
 
-## Canonical sources
+This keeps routing strategy selection evidence-based instead of guess-based.
 
-- `protocol/README.md`
-- `protocol/schemas/*.schema.json`
-- `docs/decisions/0001-protocol-is-canonical.md`
-- `docs/decisions/0004-observed-performance-is-first-class.md`
-- `docs/protocol/*.md`
-- `role-model-router/packages/core/**`
-
+<FirstRunSetupDiagram />

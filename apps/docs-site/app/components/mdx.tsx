@@ -1,6 +1,10 @@
 import defaultMdxComponents from "fumadocs-ui/mdx";
 import type { MDXComponents } from "mdx/types";
 import {
+  BenchmarkStrategyLoopDiagram,
+  DocumentationArchitectureDiagram,
+  FirstRunSetupDiagram,
+  OperatorShellDiagram,
   ProtocolLifecycleDiagram,
   ProtocolObjectModelDiagram,
   ProtocolPipelineDiagram,
@@ -13,6 +17,10 @@ export function getMDXComponents(components?: MDXComponents) {
   return {
     ...defaultMdxComponents,
     h1: () => null,
+    BenchmarkStrategyLoopDiagram,
+    DocumentationArchitectureDiagram,
+    FirstRunSetupDiagram,
+    OperatorShellDiagram,
     ProtocolLifecycleDiagram,
     ProtocolObjectModelDiagram,
     ProtocolPipelineDiagram,

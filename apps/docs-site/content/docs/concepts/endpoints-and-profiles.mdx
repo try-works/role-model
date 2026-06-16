@@ -1,0 +1,42 @@
+---
+title: Endpoints and profiles
+description: Why role-model routes against concrete endpoints and uses both declared and observed profiles to compare them.
+---
+
+# Endpoints and profiles
+
+Role-model is endpoint-aware on purpose.
+
+## Why not route by model name alone
+
+One base model can appear through multiple endpoints with different:
+
+- providers
+- runtimes
+- regions or local devices
+- tool support
+- costs
+- measured latency and reliability
+
+That means routing should happen at the endpoint layer, where those operational differences are visible.
+
+## The two main profile types
+
+Role-model uses:
+
+- **declared profiles** for what an endpoint says it supports
+- **observed profiles** for what measurements and benchmark evidence say it actually does
+
+Declared data helps establish compatibility. Observed data helps compare real candidates once they are
+eligible.
+
+## Why this matters operationally
+
+This is also why the benchmark belongs in first-time setup. It helps populate observed quality data for the
+exact endpoints you activated and assigned roles to.
+
+For deeper reference, use:
+
+- [Endpoint identity](/protocol/endpoint-identity)
+- [Declared capability profiles](/protocol/declared-capability-profiles)
+- [Observed performance profiles](/protocol/observed-performance-profiles)

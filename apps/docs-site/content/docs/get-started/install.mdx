@@ -1,0 +1,70 @@
+---
+title: Install
+description: Install the packaged role-model router runtime from GitHub Releases, or choose a source build if you are developing the repo.
+---
+
+# Install
+
+For most users, the right install path is the packaged standalone `role-model-router` runtime.
+
+It ships as a release archive plus installer scripts. Source builds are still supported, but they are
+primarily for contributors working on the router or protocol implementation itself.
+
+## Recommended: packaged release
+
+### macOS and Linux
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/try-works/role-model/main/scripts/install.sh | sh
+```
+
+This installs the latest GitHub Release archive under
+`~/.local/share/role-model-router/<version>/<target>/` and creates a `role-model-router` launcher in
+`~/.local/bin`.
+
+### Windows
+
+```powershell
+irm https://raw.githubusercontent.com/try-works/role-model/main/scripts/install.ps1 | iex
+```
+
+This installs the latest GitHub Release archive under
+`%LOCALAPPDATA%\Programs\RoleModelRouter\<version>\<target>\` and creates a `role-model-router.cmd`
+launcher.
+
+If your shell cannot find `role-model-router` immediately after installation, open a new terminal so it
+picks up the updated `PATH`.
+
+## Manual downloads
+
+If you do not want to use the installer scripts, download the matching archive from
+[GitHub Releases](https://github.com/try-works/role-model/releases).
+
+Current release assets are expected to include:
+
+- `role-model-router-linux-x64.tar.gz`
+- `role-model-router-darwin-x64.tar.gz`
+- `role-model-router-darwin-arm64.tar.gz`
+- `role-model-router-win32-x64.zip`
+- `SHA256SUMS.txt`
+
+Before running a manual download, verify the archive checksum against `SHA256SUMS.txt`.
+
+After extracting:
+
+- Windows: run `Role-Model.bat` or `role-model-runtime.exe`
+- macOS/Linux: run `role-model-runtime`
+
+## Source builds
+
+Use a source build when you want to:
+
+- modify the router itself
+- work on the runtime UI or host bridge
+- validate changes against the repository test and packaging flows
+
+For that workflow, use the repository root `README.md` and contributor build commands.
+
+## Next
+
+After install, continue to [First launch and connect models](/get-started/first-launch-and-connect-models).

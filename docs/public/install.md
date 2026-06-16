@@ -35,11 +35,14 @@ Every tagged release should publish one archive per supported platform:
 - `role-model-router-darwin-x64.tar.gz`
 - `role-model-router-darwin-arm64.tar.gz`
 - `role-model-router-win32-x64.zip`
+- `SHA256SUMS.txt`
 
 After extracting the archive:
 
 - Windows: run `Role-Model.bat` or `role-model-runtime.exe`
 - macOS/Linux: run `role-model-runtime`
+
+Before running a manual download, verify its checksum against `SHA256SUMS.txt`.
 
 When launched without extra runtime arguments, the packaged runtime opens the local UI in your default
 browser.

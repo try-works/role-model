@@ -1,0 +1,12 @@
+{
+  "title": "Get Started",
+  "description": "Install the runtime, connect real models, benchmark them, choose a routing strategy, and inspect the first routed decision.",
+  "defaultOpen": true,
+  "pages": [
+    "install",
+    "first-launch-and-connect-models",
+    "run-full-benchmark",
+    "choose-routing-strategy",
+    "first-request-and-decision"
+  ]
+}

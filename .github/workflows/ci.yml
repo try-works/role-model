@@ -10,6 +10,7 @@ env:
 jobs:
   validate:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -20,7 +21,23 @@ jobs:
           node-version: 24
           cache: pnpm
       - uses: dtolnay/rust-toolchain@stable
+      - name: Print toolchain versions
+        run: |
+          node --version
+          pnpm --version
+          rustc --version
+          cargo --version
       - name: Install dependencies
         run: pnpm install --frozen-lockfile=false
-      - name: CI parity
-        run: pnpm run ci:check
+      - name: Lint
+        run: pnpm run lint
+      - name: Validate schemas
+        run: pnpm run schemas:validate
+      - name: Build
+        run: pnpm run build
+      - name: Test
+        run: pnpm run test
+      - name: Test Rust
+        run: pnpm run test:rust
+      - name: Smoke
+        run: pnpm run smoke

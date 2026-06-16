@@ -1,0 +1,149 @@
+---
+title: Fallbacks, failures, and observability
+description: How RouterDecision, fallback ordering, no-match outcomes, and observability artifacts fit into one inspectable routing story.
+---
+
+# Fallbacks, failures, and observability
+
+The end product of Router is a `RouterDecision`.
+
+That artifact is not only "who won." It records the policy snapshot, exclusions, ranked candidates, chosen
+endpoint, and fallback order.
+
+## Fallbacks are part of the same ranked result
+
+Fallbacks are not a separate speculative pass.
+
+They are simply the remaining eligible candidates after the same deterministic ranking that produced the
+winner.
+
+That means a valid decision contains:
+
+- one chosen endpoint
+- zero or more fallback endpoints already in deterministic order
+
+## What a healthy decision tells you
+
+A good decision record lets you answer:
+
+- what policy was active
+- which candidates were rejected
+- which candidates were scored
+- why the winner beat the others
+- whether measured evidence, benchmark evidence, or declared-only evidence carried the result
+
+## How strategy shows up in a decision
+
+The decision artifact should make strategy visible rather than implicit.
+
+When reading a decision, confirm:
+
+- the saved strategy appears in `policy_snapshot`
+- the winner matches the kind of tradeoff that strategy should prefer
+- the fallback order also reflects the same strategy rather than a separate hidden rule
+
+If you need the mode-by-mode explanation first, read
+[/router/strategy-modes-and-tradeoffs](/router/strategy-modes-and-tradeoffs).
+
+## Success, no-match, and degraded-evidence outcomes
+
+Routing can succeed, fail cleanly, or succeed with thin evidence.
+
+### Successful selection
+
+Success means:
+
+- at least one candidate was eligible
+- at least one candidate was scored
+- `chosen_endpoint_id` is populated
+- `selection_reasons` explain the winning choice
+
+If more than one candidate was eligible, the decision also carries a fallback chain.
+
+### No eligible endpoint
+
+When nothing is eligible, Router should still return a useful artifact:
+
+- all candidates appear in `eligibility`
+- each rejected candidate carries exclusion details
+- no scored candidates
+- no chosen endpoint
+- no fallback list
+
+This is not an exception-shaped outcome. It is still a valid protocol artifact.
+
+### Policy conflict
+
+Policy conflict usually appears as "all candidates rejected by policy," for example:
+
+- every endpoint is denied by allow/deny rules
+- remote routing is forbidden but no local candidate exists
+- role-forbidden capabilities eliminate the remaining candidates
+
+The important point is that the protocol communicates this through candidate-level exclusions rather than
+through one special top-level error code.
+
+### Degraded selection with defaults
+
+A router can still select an endpoint without rich observed performance evidence. In that case the decision
+will typically include default-driven scoring signals rather than a hard failure.
+
+Insufficient evidence is usually represented as a weaker, more default-driven decision rather than as a
+rejection.
+
+## Observability extends the decision story
+
+`RouterDecision` is the summary artifact, but it is not the only one.
+
+<RoutingObservabilityDiagram />
+
+### Decision as summary
+
+`RouterDecision` explains:
+
+- policy
+- eligibility
+- ranking
+- winner
+- fallbacks
+- reasons
+
+### Traces as phase-level explanation
+
+Trace spans and events explain how the request moved through routing and execution:
+
+- when eligibility opened and closed
+- when scoring ran
+- whether fallback or retry happened
+- where provider-side latency accumulated
+
+### Usage as outcome and accounting
+
+`UsageEvent` answers the practical outcome questions:
+
+- which endpoint actually served the request
+- how many tokens were consumed
+- how long it took
+- what it likely cost
+- whether an error class occurred
+
+### Feedback loop
+
+The observability model is not write-only. Usage and benchmark samples become new measured evidence, and the
+profile aggregator folds them into updated observed profiles with freshness and confidence scores.
+
+That is how routing becomes a feedback system rather than a static policy engine.
+
+## Inspect in product, then in reference
+
+Use product surfaces first:
+
+- Router -> Decisions
+- Router -> Decision detail
+- Observe -> request and telemetry detail
+
+Then use deeper reference when needed:
+
+- [/protocol/router-decision-artifact](/protocol/router-decision-artifact)
+- [/protocol/trace-and-usage-artifacts](/protocol/trace-and-usage-artifacts)
+- [/router/protocol-to-router-mapping](/router/protocol-to-router-mapping)

@@ -29,7 +29,7 @@
     "pages:create": "wrangler pages project create role-model-dev --production-branch main --compatibility-date 2026-05-04",
     "pages:dev": "npm run build && wrangler pages dev ./build/client",
     "pages:deploy": "npm run build && wrangler pages deploy ./build/client --project-name role-model-dev",
-    "start": "serve ./build/client --config ./serve.json",
+    "start": "serve ./build/client",
     "types:check": "react-router typegen && fumadocs-mdx && tsc --noEmit",
     "upstream:sync": "node ./scripts/upstream-sync.mjs --write",
     "upstream:sync:latest": "node ./scripts/upstream-sync.mjs --write --ref main"

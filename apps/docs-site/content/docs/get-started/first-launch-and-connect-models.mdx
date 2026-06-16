@@ -1,0 +1,68 @@
+---
+title: First launch and connect models
+description: Launch the runtime, connect the local or remote models you actually plan to use, and assign their roles before benchmarking.
+---
+
+# First launch and connect models
+
+After installation:
+
+```bash
+role-model-router
+```
+
+The packaged runtime opens the local operator UI and serves the router on your machine.
+
+## The first-time setup sequence
+
+Use this order:
+
+1. launch the runtime
+2. connect the local backend or remote provider accounts you plan to use
+3. activate the actual models or endpoints that should compete in routing
+4. assign roles to those models
+5. only then run the full benchmark
+
+That order matters because the benchmark should grade the real candidate set you intend to route across.
+
+<FirstRunSetupDiagram />
+
+## What to configure in the UI
+
+The operator shell is organized around a few core areas:
+
+- **Connect** for the first-run handoff into the local and remote setup paths
+- **Local** for local backends, local models, and local endpoint state
+- **Remote** for provider accounts and remote execution paths
+- **Models** for benchmark and model-level routing context
+- **Router** for candidate, config, and decision visibility
+- **Observe** for request and telemetry evidence
+- **System** for readiness and runtime health diagnostics
+
+## Which roles to assign
+
+The baseline role IDs include:
+
+- `general.chat`
+- `coder.patch`
+- `coder.review`
+- `tool.agent`
+- `embedder`
+- `classifier`
+- `language.detector`
+
+Only assign the roles you genuinely want a model to serve. The benchmark and later routing decisions should
+reflect your real operator intent, not a maximal test matrix.
+
+## What “ready” means before benchmarking
+
+Before you move on, you should have:
+
+- the providers or local backends connected
+- the endpoint or model activations in place
+- the intended role bindings assigned
+- at least two plausible candidates for any route family you want to compare
+
+## Next
+
+Continue to [Run the full benchmark](/get-started/run-full-benchmark).

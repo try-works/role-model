@@ -1,0 +1,201 @@
+---
+title: Routing modes, locality, and execution
+description: How baseline, controller, difficulty, and hybrid routing modes differ from scoring strategies, and how local, remote, and hybrid execution scope affects what Router can actually do.
+---
+
+# Routing modes, locality, and execution
+
+One source of confusion in `role-model` today is that the product exposes **multiple routing controls** that
+sound similar but do different jobs.
+
+This page separates them.
+
+## The three main knobs
+
+| Knob | Examples | What it changes |
+| --- | --- | --- |
+| scoring strategy | `balanced`, `quality`, `latency`, `cost` | how already-eligible candidates are weighted during baseline scoring |
+| runtime routing mode | `baseline`, `controller`, `difficulty`, `hybrid` | which runtime routing planner is active before the final endpoint is chosen |
+| execution / locality scope | `hybrid`, `local_only`, `remote_only`, `decision_only` | whether the runtime is allowed to execute against local backends, remote backends, both, or neither |
+
+If you collapse those into one concept, the docs become misleading.
+
+## Scoring strategy is the protocol-level optimization intent
+
+The canonical policy strategy vocabulary is:
+
+- `balanced`
+- `quality`
+- `latency`
+- `cost`
+
+That strategy feeds the baseline weighted scoring model described in
+[/router/strategy-modes-and-tradeoffs](/router/strategy-modes-and-tradeoffs).
+
+This is the layer that answers:
+
+> once the eligible set is known, should the winner lean toward quality, latency, cost, or a mixed posture?
+
+## Runtime routing mode is the packaged runtime planner choice
+
+The packaged runtime and runtime UI also expose routing modes:
+
+- `baseline`
+- `controller`
+- `difficulty`
+- `hybrid`
+
+These are implementation-level runtime modes, not the canonical protocol strategy enum.
+
+### `baseline`
+
+Use the deterministic baseline route without controller or difficulty guidance.
+
+This is the most direct path from canonical request + policy into the reference-router scoring model.
+
+### `controller`
+
+Use controller-guided endpoint selection when the routing controller is available.
+
+In practice this means the runtime can accept controller directives such as preferred endpoint IDs, updated
+capability posture, or strategy hints before the final execution plan is applied.
+
+### `difficulty`
+
+Use difficulty-aware routing that matches the request to endpoint difficulty bounds.
+
+The runtime records difficulty diagnostics such as:
+
+- `easy`, `medium`, or `hard` request classification
+- rubric signals like tool count, context size, history turns, and code/schema burden
+- excluded endpoints whose recommended max difficulty ceiling is too low
+
+The operator UI already treats this as **Strategy C - Difficulty** and shows benchmark-informed difficulty
+advisories per candidate.
+
+### `hybrid`
+
+Blend controller guidance with difficulty-aware fallback behavior.
+
+This mode lets controller and difficulty signals both participate, with runtime arbitration deciding whether
+the dominant signal came from:
+
+- `difficulty`
+- `controller`
+- `aligned`
+
+## Execution mode is a separate operator control
+
+The runtime config also exposes execution modes:
+
+- `hybrid`
+- `local_only`
+- `remote_only`
+- `decision_only`
+
+These affect which execution surfaces the runtime can actually use.
+
+| Execution mode | What it means |
+| --- | --- |
+| `hybrid` | keep both local llama-swap and remote LiteLLM execution available |
+| `local_only` | route only through local execution surfaces |
+| `remote_only` | route only through remote provider-backed execution surfaces |
+| `decision_only` | keep routing and diagnostics active without enabling local or remote execution |
+
+This is different from scoring strategy.
+
+A runtime can be in `quality` scoring posture while still being `local_only`, or use `difficulty` routing
+mode while remaining `hybrid` for execution.
+
+## Local, remote, and hybrid also appear in policy locality
+
+The protocol surface includes `compute_preference` values:
+
+- `auto`
+- `local`
+- `remote`
+- `hybrid`
+
+This is the policy-facing locality preference layer, not the runtime execution mode dropdown.
+
+In the current baseline reference router:
+
+- `local` gives local candidates a preference boost
+- `remote` gives remote candidates a preference boost
+- `auto` keeps locality neutral
+- `hybrid` exists in the protocol surface but is currently best understood as "keep both pools available"
+  rather than as a special new scoring bonus
+
+For most operators, **execution mode** is the stronger coarse control and **compute preference** is the
+lighter routing preference inside the remaining pool.
+
+## How benchmark evidence fits into these layers
+
+Benchmarking feeds these controls differently:
+
+- baseline scoring strategies use benchmark evidence most directly for quality weighting
+- difficulty mode uses benchmark and observed profile evidence to recommend per-endpoint max difficulty
+- controller mode may still consume strategy hints or preferred endpoint posture, but it is not the same as a
+  benchmark score table
+- execution mode does not come from the benchmark at all; it is an operator scope decision
+
+So benchmarks help answer:
+
+- which endpoint is strongest on quality?
+- which endpoint is fast enough?
+- which endpoint is trustworthy for harder requests?
+
+Benchmarks do **not** decide whether the runtime should be `local_only` or `remote_only`.
+
+## Practical operator examples
+
+### Example 1: local-first coding workstation
+
+- routing mode: `difficulty`
+- execution mode: `hybrid`
+- compute preference: `local`
+- scoring strategy inside baseline-compatible decisions: `quality`
+
+Meaning:
+
+Hard requests can escalate to stronger endpoints when difficulty routing says they should, but the runtime
+still prefers local execution when the request is easy enough and a local endpoint is eligible.
+
+### Example 2: remote SaaS path with strict spend control
+
+- routing mode: `baseline`
+- execution mode: `remote_only`
+- compute preference: `remote`
+- scoring strategy: `cost`
+
+Meaning:
+
+The runtime cannot pick local endpoints at all, and among the remote eligible set it tries to optimize for
+cost.
+
+### Example 3: experimentation with controller plus fallback
+
+- routing mode: `hybrid`
+- execution mode: `hybrid`
+
+Meaning:
+
+The runtime lets controller guidance shape the plan but still keeps difficulty-aware fallback behavior
+available when the controller signal is weak or conflicts with observed endpoint posture.
+
+## The important docs rule
+
+When the docs say **strategy**, they need to specify which layer they mean:
+
+- scoring strategy
+- runtime routing mode
+- execution mode
+- locality preference
+
+Without that qualifier, the term is ambiguous in the current product.
+
+## Read next
+
+- [/router/strategy-modes-and-tradeoffs](/router/strategy-modes-and-tradeoffs)
+- [/runtime/routing-controls-and-decision-review](/runtime/routing-controls-and-decision-review)
+- [/protocol/routing-policy](/protocol/routing-policy)

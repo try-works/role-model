@@ -1,0 +1,41 @@
+---
+title: Policy and observability
+description: "The two pieces that make role-model more than a model picker: explicit routing policy and inspectable runtime evidence."
+---
+
+# Policy and observability
+
+Role-model is not only about choosing a model-serving endpoint. It is also about making that choice
+constrained and inspectable.
+
+## Policy
+
+Routing policy gives the router explicit knobs for:
+
+- strategy
+- locality preferences
+- capability and modality requirements
+- tool requirements
+- endpoint or provider allow and deny lists
+- budget and privacy constraints
+
+That lets operators express hard limits and optimization intent instead of burying them in ad hoc code.
+
+## Observability
+
+The runtime can emit artifacts such as:
+
+- `RouterDecision`
+- trace spans and events
+- usage events
+- observed performance profiles
+
+Together these make routing reviewable after the fact.
+
+## Why these two belong together
+
+Policy without observability becomes opaque configuration.
+
+Observability without policy becomes a post-hoc explanation of behavior you never constrained properly.
+
+Role-model treats both as first-class parts of the routing contract.

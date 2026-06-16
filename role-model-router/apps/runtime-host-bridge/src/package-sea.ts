@@ -124,14 +124,33 @@ function runOrThrow(
   cwd: string,
   env?: NodeJS.ProcessEnv,
 ): void {
+  const renderedCommand = `${command} ${args.join(" ")}`.trim();
   const result = spawnSync(command, args, {
     cwd,
     env: env ? { ...process.env, ...env } : process.env,
-    stdio: "inherit",
+    encoding: "utf8",
+    stdio: ["inherit", "pipe", "pipe"],
     shell: process.platform === "win32" && command.toLowerCase().endsWith(".cmd"),
   });
+  if (result.stdout) {
+    process.stdout.write(result.stdout);
+  }
+  if (result.stderr) {
+    process.stderr.write(result.stderr);
+  }
+  if (result.error) {
+    throw result.error;
+  }
   if (result.status !== 0) {
-    throw new Error(`Command failed: ${command} ${args.join(" ")}`);
+    const failureDetails = [
+      `Command failed with exit code ${result.status}: ${renderedCommand}`,
+      `cwd: ${cwd}`,
+      result.stdout?.trim() ? `stdout:\n${result.stdout.trimEnd()}` : null,
+      result.stderr?.trim() ? `stderr:\n${result.stderr.trimEnd()}` : null,
+    ]
+      .filter((value): value is string => Boolean(value))
+      .join("\n\n");
+    throw new Error(failureDetails);
   }
 }
 

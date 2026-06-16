@@ -1,0 +1,11 @@
+{
+  "title": "Runtime",
+  "description": "The runtime product surface for configuring endpoints, benchmarking models, saving strategy, and inspecting live routed behavior.",
+  "defaultOpen": true,
+  "pages": [
+    "runtime-ui-tour",
+    "models-and-role-activation",
+    "benchmarks-and-evaluation",
+    "routing-controls-and-decision-review"
+  ]
+}

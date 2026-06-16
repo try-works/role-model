@@ -1,0 +1,17 @@
+/operators /runtime/runtime-ui-tour 301
+/operators/runtime-ui-tour /runtime/runtime-ui-tour 301
+/operators/models-and-role-activation /runtime/models-and-role-activation 301
+/operators/benchmarks-and-evaluation /runtime/benchmarks-and-evaluation 301
+/operators/routing-controls-and-decision-review /runtime/routing-controls-and-decision-review 301
+/routing /router/overview 301
+/routing/candidate-discovery /router/candidate-selection-and-eligibility 301
+/routing/eligibility-and-rejection /router/candidate-selection-and-eligibility 301
+/routing/comparison-and-tradeoffs /router/scoring-tie-breaks-and-decisions 301
+/routing/decision-semantics /router/scoring-tie-breaks-and-decisions 301
+/routing/routing-outcomes-and-failure-modes /router/fallbacks-failures-and-observability 301
+/routing/observability-of-routing /router/fallbacks-failures-and-observability 301
+/routing/how-routing-works-end-to-end /router/how-routing-works-end-to-end 301
+/routing/protocol-to-router-mapping /router/protocol-to-router-mapping 301
+/router/candidate-selection /router/candidate-selection-and-eligibility 301
+/router/scoring-and-tie-breaks /router/scoring-tie-breaks-and-decisions 301
+/router/decisions-fallbacks-and-failures /router/fallbacks-failures-and-observability 301
