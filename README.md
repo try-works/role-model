@@ -169,4 +169,31 @@ For a fuller walkthrough, see [`docs/public/quickstart.md`](docs/public/quicksta
 
 ## License
 
-Apache-2.0
+As of 2026-06-16, the current root license for this repository is
+`BUSL-1.1` with a project-specific `Additional Use Grant`.
+
+Allowed under the root license:
+
+- internal production use inside your organization
+- internal production use inside affiliates under common control
+- use of contractors or service providers acting only on your behalf to support that internal use
+- evaluation, development, modification, and non-production redistribution
+
+Not allowed under the root license without a separate commercial license from
+`try-works`:
+
+- offering `role-model` as a hosted or managed service to third parties
+- embedding or bundling `role-model` into a paid product or service for third-party use
+- selling or otherwise commercializing `role-model` or a derivative work for third-party use
+
+The full terms are in [LICENSE](LICENSE).
+
+Contributions are governed by [CLA.md](CLA.md), which gives `try-works` broad
+relicensing and sublicensing rights for future versions of the project.
+
+Only individual contributions are accepted. If an employer, client, company,
+or other entity has rights in a proposed contribution, that contribution must
+not be submitted here.
+
+Commits published before 2026-06-16 remain under the license that applied
+when they were published, including the earlier `Apache-2.0` history.

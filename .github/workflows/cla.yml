@@ -1,0 +1,48 @@
+name: CLA
+
+on:
+  issue_comment:
+    types: [created]
+  pull_request_target:
+    types: [opened, synchronize, reopened, closed]
+
+permissions:
+  actions: write
+  contents: write
+  issues: write
+  pull-requests: write
+  statuses: write
+
+jobs:
+  cla:
+    runs-on: ubuntu-latest
+    steps:
+      - name: CLA assistant
+        if: >-
+          (github.event.comment.body ==
+          'I have read cla/CLA-v1.0.md and I hereby agree to the role-model Contributor License Agreement.')
+          || github.event.comment.body == 'recheck'
+          || github.event_name == 'pull_request_target'
+        uses: contributor-assistant/github-action@ca4a40a7d1004f18d9960b404b97e5f30a505a08 # v2.6.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          path-to-document: https://raw.githubusercontent.com/try-works/role-model/cla-v1.0/cla/CLA-v1.0.md
+          path-to-signatures: signatures/cla-v1.json
+          branch: main
+          allowlist: dependabot[bot],github-actions[bot]
+          custom-notsigned-prcomment: >
+            Thank you for the contribution. Before this pull request can merge,
+            every contributor must explicitly agree to the role-model CLA at
+            https://raw.githubusercontent.com/try-works/role-model/cla-v1.0/cla/CLA-v1.0.md.
+            Contributions are accepted only from individuals acting in their
+            personal capacity. If an employer, client, company, or other
+            entity has rights in the contribution, it must not be submitted
+            here.
+            To sign it, reply on this pull request with the exact sentence:
+            `I have read cla/CLA-v1.0.md and I hereby agree to the role-model Contributor License Agreement.`
+          custom-pr-sign-comment: I have read cla/CLA-v1.0.md and I hereby agree to the role-model Contributor License Agreement.
+          custom-allsigned-prcomment: All contributors for this pull request have signed the role-model CLA.
+          signed-commit-message: $contributorName signed CLA v1.0 for PR #$pullRequestNo
+          create-file-commit-message: Create role-model CLA signatures store
+          lock-pullrequest-aftermerge: true
