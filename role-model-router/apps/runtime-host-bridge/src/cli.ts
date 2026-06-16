@@ -16,6 +16,8 @@ type CliBackend = Pick<
   | "executeChatCompletions"
   | "executeResponses"
   | "readVersionInfo"
+  | "listActivityMetrics"
+  | "readActivityCapture"
   | "readRuntimeSummary"
   | "readRuntimeConfig"
   | "updateRuntimeConfig"
@@ -32,6 +34,8 @@ type CliBackend = Pick<
   | "upsertProviderAccount"
   | "startProviderDeviceAuthorization"
   | "pollProviderDeviceAuthorization"
+  | "reconnectProviderAccount"
+  | "updateProviderApiKey"
   | "activateEndpoint"
   | "readControllerAssignment"
   | "updateControllerAssignment"
@@ -105,7 +109,8 @@ export function createCliServerOptions(
     executeChatCompletions: backend.executeChatCompletions,
     executeResponses: backend.executeResponses,
     readVersionInfo: backend.readVersionInfo,
-    listActivityMetrics: async () => [],
+    listActivityMetrics: backend.listActivityMetrics,
+    readActivityCapture: backend.readActivityCapture,
     readLogs: async () => (await backend.getLocalLogs()).logs,
     proxyVendorLogStream: backend.proxyVendorLogStream,
     readRuntimeSummary: backend.readRuntimeSummary,
@@ -124,6 +129,8 @@ export function createCliServerOptions(
     upsertProviderAccount: backend.upsertProviderAccount,
     startProviderDeviceAuthorization: backend.startProviderDeviceAuthorization,
     pollProviderDeviceAuthorization: backend.pollProviderDeviceAuthorization,
+    reconnectProviderAccount: backend.reconnectProviderAccount,
+    updateProviderApiKey: backend.updateProviderApiKey,
     activateEndpoint: backend.activateEndpoint,
     readControllerAssignment: backend.readControllerAssignment,
     updateControllerAssignment: backend.updateControllerAssignment,

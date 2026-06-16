@@ -1,0 +1,60 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/47-runtime-persistence-rehydration-lifecycle/role-model-router/apps/runtime-host-bridge[39m
+
+(node:60692) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [31m❯[39m test/backend-unified-runtime-config.test.ts [2m([22m[2m10 tests[22m[2m | [22m[31m1 failed[39m[2m | [22m[33m9 skipped[39m[2m)[22m[33m 508[2mms[22m[39m
+   [2m[90m↓[39m[22m runtime-host-bridge unified runtime backend[2m > [22msurfaces the derived execution mode in the runtime summary when a unified config file is provided
+   [2m[90m↓[39m[22m runtime-host-bridge unified runtime backend[2m > [22mreads and updates unified runtime config through the backend
+[31m   [31m×[31m runtime-host-bridge unified runtime backend[2m > [22mmerges partial runtime config updates without dropping existing routing strategy[39m[33m 505[2mms[22m[39m
+[31m     → expected { strategy: 'difficulty', …(5) } to deeply equal ObjectContaining{…}[39m
+   [2m[90m↓[39m[22m runtime-host-bridge unified runtime backend[2m > [22mcreates and updates unified runtime config when the configured path does not exist yet
+   [2m[90m↓[39m[22m runtime-host-bridge unified runtime backend[2m > [22mdoes not mark all candidates ignored when routing guidance has no preferred endpoints
+   [2m[90m↓[39m[22m runtime-host-bridge unified runtime backend[2m > [22mpreserves synthesized activated endpoint models across runtime config updates
+   [2m[90m↓[39m[22m runtime-host-bridge unified runtime backend[2m > [22mreturns no controller assignment when the unified config has no endpoints yet
+   [2m[90m↓[39m[22m runtime-host-bridge unified runtime backend[2m > [22msurfaces normalized provider docs and npm metadata through listProviders
+   [2m[90m↓[39m[22m runtime-host-bridge unified runtime backend[2m > [22mpreserves manual account authority and provenance on exact runtime-config account-id collision
+   [2m[90m↓[39m[22m runtime-host-bridge unified runtime backend[2m > [22msurfaces LiteLLM-backed Moonshot models and endpoints from unified runtime config
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/backend-unified-runtime-config.test.ts > runtime-host-bridge unified runtime backend > merges partial runtime config updates without dropping existing routing strategy
+AssertionError: expected { strategy: 'difficulty', …(5) } to deeply equal ObjectContaining{…}
+
+- Expected
++ Received
+
+- ObjectContaining {
+-   "aliasInventory": ArrayContaining [
+-     ObjectContaining {
+-       "aliasId": "mixed.local-remote",
+-       "allowEndpointIds": Any<Array>,
+-       "configuredHintModelIds": [
+-         "lfm2.5-1.2b-instruct",
+-         "moonshot/kimi-k2.6",
+-       ],
+-       "driftWarnings": Any<Array>,
+-       "mode": "difficulty",
+-       "resolvedModelIds": Any<Array>,
++ {
++   "configuredCandidateCount": 0,
++   "controller": null,
++   "executionMode": "decision_only",
++   "guidance": {
++     "endpointId": null,
++     "ignoredEndpointIds": [],
++     "preferredEndpointIds": [],
+    },
+-   ],
++   "recentDecisionCount": 0,
++   "strategy": "difficulty",
+  }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[33m9 skipped[39m[90m (10)[39m
+[2m   Start at [22m 05:30:37
+[2m   Duration [22m 4.94s[2m (transform 2.65s, setup 0ms, collect 3.11s, tests 508ms, environment 0ms, prepare 596ms)[22m
+

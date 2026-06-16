@@ -25,15 +25,22 @@ import {
 import { resolveProviderAccountLifecycle } from "../lib/provider-account-state";
 import {
   type RuntimeDeviceAuthorization,
+  type RuntimeAccount,
   type RuntimeProvider,
   type RuntimeSnapshot,
   activateRuntimeEndpoint,
   fetchRuntimeSnapshot,
   pollRuntimeDeviceAuthorization,
+  reconnectRuntimeAccount,
   startRuntimeDeviceAuthorization,
+  updateRuntimeAccountApiKey,
   upsertRuntimeAccount,
 } from "../lib/runtime-api";
-import { buildAccountModelCatalogIds } from "../lib/view-models";
+import {
+  buildAccountModelCatalogIds,
+  buildArchivedArtifactRows,
+  buildProviderMaintenanceRows,
+} from "../lib/view-models";
 
 const inputClass = fieldClassName;
 const buttonClass = primaryButtonClassName;
@@ -121,6 +128,10 @@ export default function ProvidersRoute() {
   const [submitting, setSubmitting] = useState(false);
   const [authorizing, setAuthorizing] = useState(false);
   const [polling, setPolling] = useState(false);
+  const [apiKeyModalAccount, setApiKeyModalAccount] = useState<RuntimeAccount | null>(null);
+  const [apiKeyDraft, setApiKeyDraft] = useState("");
+  const [apiKeyError, setApiKeyError] = useState<string | null>(null);
+  const [savingApiKey, setSavingApiKey] = useState(false);
 
   const applyProviderSelection = useCallback(
     (
@@ -280,6 +291,70 @@ export default function ProvidersRoute() {
     [providerAccountId, snapshot],
   );
   const availableRoles = snapshot?.roles ?? [];
+  const providerMaintenanceRows = useMemo(
+    () =>
+      snapshot
+        ? buildProviderMaintenanceRows({
+            accounts: snapshot.accounts,
+            summary: snapshot.summary,
+          })
+        : [],
+    [snapshot],
+  );
+  const archivedArtifactRows = useMemo(
+    () => (snapshot ? buildArchivedArtifactRows(snapshot.summary) : []),
+    [snapshot],
+  );
+
+  const onReconnectAccount = async (account: RuntimeAccount) => {
+    const provider = remoteProviders.find((entry) => entry.providerId === account.providerId);
+    if (!provider) {
+      setError(`Could not locate provider ${account.providerId} for reconnect.`);
+      return;
+    }
+    const variant =
+      provider.variants?.find(
+        (entry) =>
+          entry.authMode === account.authMode &&
+          (account.baseUrlOverride ? (entry.baseUrl ?? provider.apiBase) === account.baseUrlOverride : true),
+      ) ??
+      provider.variants?.find((entry) => entry.authMode === account.authMode) ??
+      provider.variants?.[0];
+    if (!variant) {
+      setError(`Could not locate a reconnect variant for ${account.providerAccountId}.`);
+      return;
+    }
+
+    const restoredModelIds = [...(account.allowedModels ?? [])];
+    setProviderId(provider.providerId);
+    setVariantId(variant.variantId);
+    setProviderAccountId(account.providerAccountId);
+    setCredentialRef(defaultCredentialRef(provider));
+    setSelectedModel(restoredModelIds[0] ?? "");
+    setSelectedModelRoles(buildModelRoleSelection(restoredModelIds, account.modelRoleBindings));
+    setOauthConnected(false);
+    setAuthorizing(true);
+    setError(null);
+    try {
+      const result = await reconnectRuntimeAccount({
+        providerAccountId: account.providerAccountId,
+      });
+      setOauthState(result);
+      const verificationUrl = resolveVerificationWindowUrl(result);
+      if (verificationUrl) {
+        try {
+          window.open(verificationUrl, "_blank", "noopener,noreferrer");
+        } catch {
+          // Keep the inline verification link visible as the fallback path.
+        }
+      }
+      await load();
+    } catch (value) {
+      setError(value instanceof Error ? value.message : "Could not start provider reconnect.");
+    } finally {
+      setAuthorizing(false);
+    }
+  };
 
   if (error) {
     return <ErrorState label={error} />;
@@ -453,9 +528,45 @@ export default function ProvidersRoute() {
     }
   };
 
+  const onSaveApiKey = async () => {
+    if (!apiKeyModalAccount) {
+      return;
+    }
+    if (apiKeyDraft.trim().length === 0) {
+      setApiKeyError("Enter an API key before saving this credential.");
+      return;
+    }
+
+    setSavingApiKey(true);
+    setApiKeyError(null);
+    setError(null);
+    try {
+      await updateRuntimeAccountApiKey({
+        providerAccountId: apiKeyModalAccount.providerAccountId,
+        apiKey: apiKeyDraft.trim(),
+      });
+      const modelId = apiKeyModalAccount.allowedModels?.[0];
+      if (modelId) {
+        await activateRuntimeEndpoint({
+          providerAccountId: apiKeyModalAccount.providerAccountId,
+          modelId,
+          region: "global",
+        });
+      }
+      await load();
+      setApiKeyModalAccount(null);
+      setApiKeyDraft("");
+    } catch (value) {
+      setApiKeyError(value instanceof Error ? value.message : "Could not update API key.");
+    } finally {
+      setSavingApiKey(false);
+    }
+  };
+
   return (
-    <div className="space-y-6">
-      <div className="grid gap-4 xl:grid-cols-[0.95fr_1.05fr]">
+    <>
+      <div className="space-y-6">
+        <div className="grid gap-4 xl:grid-cols-[0.95fr_1.05fr]">
         <SectionCard
           title="Choose provider and models"
           description="Select the provider, connection method, model set, and role bindings that should flow into the runtime registry."
@@ -683,130 +794,297 @@ export default function ProvidersRoute() {
           </form>
         </SectionCard>
 
-        <SectionCard
-          title="Configured provider connections"
-          description="Saved provider connections stay visible here with credential references, model access, and live authorization state."
-        >
-          <div className="space-y-4">
-            {oauthState ? (
-              <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
-                <div className="flex flex-wrap items-center gap-2">
-                  <p className="font-medium text-[var(--rm-fg)]">Current provider authorization</p>
-                  <StatusPill
-                    tone={
-                      oauthState.status === "connected"
-                        ? "success"
-                        : oauthState.status === "pending"
-                          ? "accent"
-                          : "warning"
-                    }
-                  >
-                    {oauthState.status}
-                  </StatusPill>
-                </div>
-                {oauthState.userCode ? (
-                  <p className="mt-2">
-                    <span className="font-medium text-[var(--rm-fg)]">User code:</span>{" "}
-                    {oauthState.userCode}
-                  </p>
-                ) : null}
-                {shouldAutoPollDeviceAuthorization(oauthState) ? (
-                  <p className="mt-2">
-                    The verification page opens in a new tab and this screen keeps checking
-                    automatically. Successful completion activates the selected models into the
-                    runtime endpoint registry.
-                  </p>
-                ) : null}
-                {oauthState.verificationUriComplete ? (
-                  <p className="mt-2 break-all">
-                    <span className="font-medium text-[var(--rm-fg)]">Verification URL:</span>{" "}
-                    <a
-                      className="text-[var(--rm-accent)] underline"
-                      href={oauthState.verificationUriComplete}
-                      rel="noreferrer"
-                      target="_blank"
+          <SectionCard
+            title="Configured provider connections"
+            description="Saved provider connections stay visible here with canonical lifecycle badges, normalized credential posture, model access, and live repair state."
+          >
+            <div className="space-y-4">
+              {oauthState ? (
+                <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="font-medium text-[var(--rm-fg)]">Current provider authorization</p>
+                    <StatusPill
+                      tone={
+                        oauthState.status === "connected"
+                          ? "success"
+                          : oauthState.status === "pending"
+                            ? "accent"
+                            : "warning"
+                      }
                     >
-                      {oauthState.verificationUriComplete}
-                    </a>
-                  </p>
-                ) : null}
-              </div>
-            ) : null}
+                      {oauthState.status}
+                    </StatusPill>
+                  </div>
+                  {oauthState.userCode ? (
+                    <p className="mt-2">
+                      <span className="font-medium text-[var(--rm-fg)]">User code:</span>{" "}
+                      {oauthState.userCode}
+                    </p>
+                  ) : null}
+                  {shouldAutoPollDeviceAuthorization(oauthState) ? (
+                    <p className="mt-2">
+                      The verification page opens in a new tab and this screen keeps checking
+                      automatically. Successful completion activates the selected models into the
+                      runtime endpoint registry.
+                    </p>
+                  ) : null}
+                  {oauthState.verificationUriComplete ? (
+                    <p className="mt-2 break-all">
+                      <span className="font-medium text-[var(--rm-fg)]">Verification URL:</span>{" "}
+                      <a
+                        className="text-[var(--rm-accent)] underline"
+                        href={oauthState.verificationUriComplete}
+                        rel="noreferrer"
+                        target="_blank"
+                      >
+                        {oauthState.verificationUriComplete}
+                      </a>
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
 
-            {snapshot.accounts.length === 0 ? (
-              <EmptyState label="No providers are configured yet. Save one from the setup form to populate the runtime registry." />
-            ) : (
-              <>
-                {snapshot.accounts.map((account) => (
-                  <div key={account.providerAccountId} className={`${mutedPanelClassName} p-4`}>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="font-medium text-[var(--rm-fg)]">
-                        {account.providerAccountId}
-                      </h3>
-                      <StatusPill tone="neutral">{account.providerId}</StatusPill>
-                      {account.healthStatus ? (
-                        <StatusPill
-                          tone={account.healthStatus === "healthy" ? "success" : "warning"}
-                        >
-                          {account.healthStatus}
-                        </StatusPill>
+              {providerMaintenanceRows.length === 0 ? (
+                <EmptyState label="No providers are configured yet. Save one from the setup form to populate the runtime registry." />
+              ) : (
+                <>
+                  {providerMaintenanceRows.map((row) => (
+                    <div key={row.providerAccountId} className={`${mutedPanelClassName} p-4`}>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="font-medium text-[var(--rm-fg)]">
+                          {row.providerAccountId}
+                        </h3>
+                        <StatusPill tone="neutral">{row.providerId}</StatusPill>
+                        <StatusPill tone={row.lifecycleTone}>{row.lifecycleLabel}</StatusPill>
+                        <StatusPill tone="neutral">{row.storageLabel}</StatusPill>
+                      </div>
+                      <div className="mt-3 grid gap-1 text-sm text-[var(--rm-secondary)]">
+                        <p>
+                          <span className="font-medium text-[var(--rm-fg)]">
+                            Connection method:
+                          </span>{" "}
+                          {row.authMode}
+                        </p>
+                        <p>
+                          <span className="font-medium text-[var(--rm-fg)]">
+                            Credential posture:
+                          </span>{" "}
+                          {row.storageDetail}
+                        </p>
+                        <p>
+                          <span className="font-medium text-[var(--rm-fg)]">Base URL:</span>{" "}
+                          {row.baseUrlOverride ?? "Provider default"}
+                        </p>
+                        <p>
+                          <span className="font-medium text-[var(--rm-fg)]">
+                            Lifecycle reason:
+                          </span>{" "}
+                          {row.reasonLabel}
+                        </p>
+                        <p>
+                          <span className="font-medium text-[var(--rm-fg)]">
+                            Source provenance:
+                          </span>{" "}
+                          {row.sourceProvenanceLabel}
+                        </p>
+                        <p>
+                          <span className="font-medium text-[var(--rm-fg)]">
+                            Available actions:
+                          </span>{" "}
+                          {row.availableActionsLabel}
+                        </p>
+                        <p>
+                          <span className="font-medium text-[var(--rm-fg)]">
+                            Active endpoints:
+                          </span>{" "}
+                          {row.activeEndpointCount}
+                        </p>
+                      </div>
+                      <div className="mt-3 flex flex-wrap gap-3">
+                        {(() => {
+                          const account = row.account;
+                          if (!account) {
+                            return null;
+                          }
+                          return (
+                            <>
+                              {row.availableActions.includes("reconnect") ? (
+                                <button
+                                  className={secondaryButtonClassName}
+                                  disabled={authorizing}
+                                  type="button"
+                                  onClick={() => void onReconnectAccount(account)}
+                                >
+                                  Reconnect
+                                </button>
+                              ) : null}
+                              {row.availableActions.includes("update-api-key") ? (
+                                <button
+                                  className={secondaryButtonClassName}
+                                  type="button"
+                                  onClick={() => {
+                                    setApiKeyModalAccount(account);
+                                    setApiKeyDraft("");
+                                    setApiKeyError(null);
+                                  }}
+                                >
+                                  Update API key
+                                </button>
+                              ) : null}
+                            </>
+                          );
+                        })()}
+                      </div>
+                      {row.allowedModels.length > 0 ? (
+                        <div className="mt-3 space-y-3">
+                          {row.allowedModels.map((modelId) => {
+                            const roleIds =
+                              row.modelRoleBindings.find((binding) => binding.modelId === modelId)
+                                ?.roleIds ?? [];
+                            return (
+                              <div key={modelId} className={`${raisedPanelClassName} p-3`}>
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <StatusPill tone="accent">{modelId}</StatusPill>
+                                  {roleIds.length > 0 ? (
+                                    roleIds.map((roleId) => (
+                                      <StatusPill key={`${modelId}:${roleId}`} tone="neutral">
+                                        {roleId}
+                                      </StatusPill>
+                                    ))
+                                  ) : (
+                                    <span className="text-sm text-[var(--rm-secondary)]">
+                                      No roles assigned
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
                       ) : null}
                     </div>
-                    <div className="mt-3 grid gap-1 text-sm text-[var(--rm-secondary)]">
-                      <p>
-                        <span className="font-medium text-[var(--rm-fg)]">Connection method:</span>{" "}
-                        {account.authMode}
-                      </p>
-                      <p>
-                        <span className="font-medium text-[var(--rm-fg)]">Credential ref:</span>{" "}
-                        {account.credentialRef
-                          ? `${account.credentialRef.backend}:${account.credentialRef.ref}`
-                          : "Not set"}
-                      </p>
-                      <p>
-                        <span className="font-medium text-[var(--rm-fg)]">Base URL:</span>{" "}
-                        {account.baseUrlOverride ?? "Provider default"}
-                      </p>
-                      <p>
-                        <span className="font-medium text-[var(--rm-fg)]">Status:</span>{" "}
-                        {account.status ?? "unknown"}
-                      </p>
-                    </div>
-                    {account.allowedModels?.length ? (
-                      <div className="mt-3 space-y-3">
-                        {account.allowedModels.map((modelId) => {
-                          const roleIds =
-                            account.modelRoleBindings?.find(
-                              (binding) => binding.modelId === modelId,
-                            )?.roleIds ?? [];
-                          return (
-                            <div key={modelId} className={`${raisedPanelClassName} p-3`}>
-                              <div className="flex flex-wrap items-center gap-2">
-                                <StatusPill tone="accent">{modelId}</StatusPill>
-                                {roleIds.length > 0 ? (
-                                  roleIds.map((roleId) => (
-                                    <StatusPill key={`${modelId}:${roleId}`} tone="neutral">
-                                      {roleId}
-                                    </StatusPill>
-                                  ))
-                                ) : (
-                                  <span className="text-sm text-[var(--rm-secondary)]">
-                                    No roles assigned
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })}
+                  ))}
+                  {archivedArtifactRows.length > 0 ? (
+                    <div className={`${mutedPanelClassName} p-4`}>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="font-medium text-[var(--rm-fg)]">
+                          Archived stale diagnostics
+                        </h3>
+                        <StatusPill tone="neutral">{archivedArtifactRows.length}</StatusPill>
                       </div>
-                    ) : null}
-                  </div>
-                ))}
-              </>
-            )}
-          </div>
-        </SectionCard>
+                      <p className="mt-2 text-sm text-[var(--rm-secondary)]">
+                        Archived stale artifacts stay separate from active saved-account blockers.
+                      </p>
+                      <div className="mt-3 space-y-3">
+                        {archivedArtifactRows.map((artifact) => (
+                          <div key={artifact.key} className={`${raisedPanelClassName} p-3`}>
+                            <div className="flex flex-wrap items-center gap-2">
+                              <StatusPill tone="neutral">{artifact.providerId}</StatusPill>
+                              <StatusPill tone="warning">{artifact.label}</StatusPill>
+                            </div>
+                            <p className="mt-2 text-sm text-[var(--rm-secondary)]">
+                              <span className="font-medium text-[var(--rm-fg)]">
+                                Account:
+                              </span>{" "}
+                              {artifact.providerAccountId}
+                            </p>
+                            <p className="text-sm text-[var(--rm-secondary)]">{artifact.detail}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+                </>
+              )}
+            </div>
+          </SectionCard>
+        </div>
       </div>
-    </div>
+      {apiKeyModalAccount ? (
+        <div
+          className="fixed inset-0 z-50 overflow-y-auto bg-[var(--rm-accent-ghost)] p-4 backdrop-blur-[1px]"
+          role="presentation"
+          onClick={() => {
+            if (savingApiKey) {
+              return;
+            }
+            setApiKeyModalAccount(null);
+            setApiKeyDraft("");
+            setApiKeyError(null);
+          }}
+        >
+          <div
+            className="mx-auto max-w-2xl rounded-none border border-[var(--rm-border)] bg-[var(--rm-surface)] p-6 shadow-[var(--rm-shadow-card)]"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="provider-api-key-modal-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">
+                  Saved provider maintenance
+                </p>
+                <h2
+                  id="provider-api-key-modal-title"
+                  className="mt-2 text-2xl font-light tracking-tight text-[var(--rm-fg)]"
+                >
+                  Update API key
+                </h2>
+                <p className="mt-2 max-w-[60ch] text-sm leading-6 text-[var(--rm-secondary)]">
+                  Enter a replacement API key for{" "}
+                  <span className="font-medium text-[var(--rm-fg)]">
+                    {apiKeyModalAccount.providerAccountId}
+                  </span>
+                  . The key is saved into runtime-managed local credential storage after this dialog
+                  submits successfully.
+                </p>
+              </div>
+            </div>
+            <div className="mt-6 space-y-4">
+              <label className="grid gap-2 text-sm">
+                <span className="font-medium text-[var(--rm-fg)]">API key</span>
+                <input
+                  className={inputClass}
+                  type="password"
+                  value={apiKeyDraft}
+                  onChange={(event) => setApiKeyDraft(event.target.value)}
+                />
+              </label>
+              {apiKeyError ? (
+                <ErrorState label={apiKeyError} />
+              ) : (
+                <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
+                  The existing saved-account identity, model bindings, and endpoint linkage stay in
+                  place while the API key rotates.
+                </div>
+              )}
+            </div>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <button
+                className={buttonClass}
+                disabled={savingApiKey}
+                type="button"
+                onClick={() => void onSaveApiKey()}
+              >
+                {savingApiKey ? "Saving…" : "Save"}
+              </button>
+              <button
+                className={secondaryButtonClassName}
+                disabled={savingApiKey}
+                type="button"
+                onClick={() => {
+                  setApiKeyModalAccount(null);
+                  setApiKeyDraft("");
+                  setApiKeyError(null);
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </>
   );
 }

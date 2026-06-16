@@ -18,7 +18,7 @@ import {
   submitWorkbenchChat,
 } from "../lib/runtime-api";
 import {
-  buildCredentialReadinessRows,
+  buildCredentialLifecycleBanner,
   buildWorkbenchEndpointOptions,
   buildWorkbenchModelOptions,
   summarizeWorkbenchResult,
@@ -159,10 +159,8 @@ export default function WorkbenchRoute() {
   const toolCapableEndpoints = snapshot.endpoints.filter(
     (endpoint) => endpoint.toolCallingSupported,
   ).length;
-  const readinessRows = buildCredentialReadinessRows(snapshot.summary).filter(
-    (row) => row.value > 0,
-  );
-  const blockingReadinessRows = readinessRows.filter((row) => row.key !== "ready");
+  const lifecycleBanner = buildCredentialLifecycleBanner(snapshot.summary);
+  const blockingReadinessRows = lifecycleBanner?.blockingRows ?? [];
   const hasModels = modelOptions.length > 0;
   const routingModeLabel = formatRoutingModeLabel(routingModeOverride);
 
@@ -175,18 +173,30 @@ export default function WorkbenchRoute() {
         <FactCard label="Routing mode" value={routingModeLabel} />
       </div>
 
-      {blockingReadinessRows.length > 0 ? (
+      {lifecycleBanner &&
+      (blockingReadinessRows.length > 0 ||
+        lifecycleBanner.archivedStaleCount > 0 ||
+        lifecycleBanner.authorityTone === "accent") ? (
         <div
           className={`${mutedPanelClassName} flex flex-wrap items-center gap-3 p-4 text-sm text-[var(--rm-secondary)]`}
         >
-          <span className="font-medium text-[var(--rm-fg)]">Provider setup incomplete:</span>
+          <StatusPill tone={lifecycleBanner.authorityTone}>{lifecycleBanner.authorityLabel}</StatusPill>
+          <span className="font-medium text-[var(--rm-fg)]">{lifecycleBanner.detail}</span>
           {blockingReadinessRows.map((row) => (
             <StatusPill key={row.key} tone={row.tone}>
               {row.label} {row.value}
             </StatusPill>
           ))}
+          {lifecycleBanner.archivedStaleCount > 0 ? (
+            <StatusPill tone="neutral">
+              Archived stale {lifecycleBanner.archivedStaleCount}
+            </StatusPill>
+          ) : null}
           <Link className="text-[var(--rm-accent)]" to="/app/remote/providers">
             Remote → Providers
+          </Link>
+          <Link className="text-[var(--rm-accent)]" to="/app/system/session-readiness">
+            System → Session readiness
           </Link>
         </div>
       ) : null}

@@ -9,7 +9,11 @@ import {
   buildConfiguredProviderRows,
   countActiveEndpointModels,
   buildAliasDriftRows,
+  buildArchivedArtifactRows,
   buildCredentialReadinessRows,
+  buildCredentialLifecycleAccountRows,
+  buildCredentialLifecycleBanner,
+  buildProviderMaintenanceRows,
   buildInventorySummaryStats,
   buildSessionBootstrapRows,
   summarizeSessionBootstrapStatus,
@@ -18,6 +22,7 @@ import {
   buildStructuredLogRows,
   buildModelCatalogRows,
   buildProviderCards,
+  buildDashboardLatestRequestRows,
   buildTelemetryComparisonCards,
   buildTelemetryRequestRows,
   buildWorkbenchEndpointOptions,
@@ -186,6 +191,268 @@ describe("buildCredentialReadinessRows", () => {
         label: "Execution-ready",
         value: 3,
         tone: "success",
+      },
+    ]);
+  });
+
+  test("prefers canonical credential lifecycle counts when they are present", () => {
+    expect(
+      buildCredentialReadinessRows({
+        credentialLifecycle: {
+          counts: {
+            executionReady: 3,
+            connectedNoEndpoint: 1,
+            pendingAuthorization: 1,
+            expiredAuth: 2,
+            credentialsMissing: 2,
+            envUnresolved: 1,
+            archivedStale: 4,
+          },
+        },
+      } as never),
+    ).toEqual([
+      {
+        key: "pending-device-authorization",
+        label: "Pending OAuth",
+        value: 1,
+        tone: "warning",
+      },
+      {
+        key: "env-unresolved",
+        label: "Env unresolved",
+        value: 1,
+        tone: "warning",
+      },
+      {
+        key: "credentials-missing",
+        label: "Credentials missing",
+        value: 2,
+        tone: "warning",
+      },
+      {
+        key: "expired-auth",
+        label: "Reconnect required",
+        value: 2,
+        tone: "warning",
+      },
+      {
+        key: "connected-without-endpoint",
+        label: "Connected, no endpoint",
+        value: 1,
+        tone: "warning",
+      },
+      {
+        key: "ready",
+        label: "Execution-ready",
+        value: 3,
+        tone: "success",
+      },
+    ]);
+  });
+});
+
+describe("buildCredentialLifecycleBanner", () => {
+  test("summarizes authority, blocking rows, and archived stale counts from the canonical lifecycle contract", () => {
+    expect(
+      buildCredentialLifecycleBanner({
+        credentialLifecycle: {
+          authority: {
+            state: "provisional",
+            bootstrapStatus: "running",
+          },
+          counts: {
+            executionReady: 1,
+            connectedNoEndpoint: 1,
+            pendingAuthorization: 0,
+            expiredAuth: 1,
+            credentialsMissing: 0,
+            envUnresolved: 0,
+            archivedStale: 2,
+          },
+          accounts: [],
+          providerRollups: [],
+          archivedArtifacts: [
+            {
+              artifactId: "auth-001",
+              providerId: "moonshot",
+              providerAccountId: "moonshot.personal.pending",
+              artifactType: "device-authorization",
+              reasonCode: "expired-pending-authorization",
+            },
+          ],
+        },
+      } as never),
+    ).toEqual({
+      authorityLabel: "Provisional lifecycle snapshot",
+      authorityTone: "accent",
+      detail: "Bootstrap is still reconciling credentials, activations, and archived stale state.",
+      archivedStaleCount: 2,
+      blockingRows: [
+        {
+          key: "expired-auth",
+          label: "Reconnect required",
+          value: 1,
+          tone: "warning",
+        },
+        {
+          key: "connected-without-endpoint",
+          label: "Connected, no endpoint",
+          value: 1,
+          tone: "warning",
+        },
+      ],
+    });
+  });
+});
+
+describe("buildCredentialLifecycleAccountRows", () => {
+  test("returns canonical lifecycle account diagnostics for blocking and ready accounts", () => {
+    expect(
+      buildCredentialLifecycleAccountRows({
+        credentialLifecycle: {
+          authority: {
+            state: "authoritative",
+            bootstrapStatus: "ready",
+          },
+          counts: {
+            executionReady: 1,
+            connectedNoEndpoint: 0,
+            pendingAuthorization: 0,
+            expiredAuth: 1,
+            credentialsMissing: 0,
+            envUnresolved: 1,
+            archivedStale: 0,
+          },
+          accounts: [
+            {
+              logicalAccountId: "moonshot.personal.primary",
+              providerAccountId: "moonshot.personal.primary",
+              providerId: "moonshot",
+              sourceProvenance: ["manual"],
+              authMode: "api-key-static",
+              credentialStorageMode: "persisted-local",
+              credentialBackendCanonical: "local-file",
+              lifecycleState: "execution-ready",
+              reasonCode: "active-endpoint-present",
+              blocking: false,
+              activeEndpointIds: ["moonshot.personal.primary.global.kimi-k2.5"],
+              configuredModelIds: ["moonshot/kimi-k2.5"],
+              availableActions: [],
+            },
+            {
+              logicalAccountId: "moonshot.personal.oauth",
+              providerAccountId: "moonshot.personal.oauth",
+              providerId: "moonshot",
+              sourceProvenance: ["manual"],
+              authMode: "oauth2-device-code",
+              credentialStorageMode: "oauth-local",
+              credentialBackendCanonical: "local-file",
+              lifecycleState: "expired-auth",
+              reasonCode: "oauth-refresh-failed",
+              blocking: true,
+              activeEndpointIds: [],
+              configuredModelIds: ["moonshot/kimi-k2.5"],
+              availableActions: ["reconnect"],
+            },
+            {
+              logicalAccountId: "openai.personal.env",
+              providerAccountId: "openai.personal.env",
+              providerId: "openai",
+              sourceProvenance: ["manual"],
+              authMode: "api-key-static",
+              credentialStorageMode: "env-ref",
+              credentialBackendCanonical: "env",
+              lifecycleState: "env-unresolved",
+              reasonCode: "env-var-missing",
+              blocking: true,
+              activeEndpointIds: [],
+              configuredModelIds: ["openai/gpt-4.1-mini-fast"],
+              availableActions: ["set-env"],
+            },
+          ],
+          providerRollups: [],
+          archivedArtifacts: [],
+        },
+      } as never),
+    ).toEqual([
+      {
+        key: "moonshot.personal.oauth",
+        providerAccountId: "moonshot.personal.oauth",
+        providerId: "moonshot",
+        lifecycleState: "expired-auth",
+        lifecycleLabel: "Reconnect required",
+        reasonLabel: "Stored OAuth token failed refresh",
+        blocking: true,
+        tone: "warning",
+        availableActionsLabel: "Reconnect",
+        activeEndpointCount: 0,
+      },
+      {
+        key: "openai.personal.env",
+        providerAccountId: "openai.personal.env",
+        providerId: "openai",
+        lifecycleState: "env-unresolved",
+        lifecycleLabel: "Env unresolved",
+        reasonLabel: "Referenced environment variable is missing",
+        blocking: true,
+        tone: "warning",
+        availableActionsLabel: "Set env",
+        activeEndpointCount: 0,
+      },
+      {
+        key: "moonshot.personal.primary",
+        providerAccountId: "moonshot.personal.primary",
+        providerId: "moonshot",
+        lifecycleState: "execution-ready",
+        lifecycleLabel: "Execution-ready",
+        reasonLabel: "Active endpoint is available",
+        blocking: false,
+        tone: "success",
+        availableActionsLabel: "None",
+        activeEndpointCount: 1,
+      },
+    ]);
+  });
+});
+
+describe("buildArchivedArtifactRows", () => {
+  test("returns archived stale diagnostics separately from blocking lifecycle rows", () => {
+    expect(
+      buildArchivedArtifactRows({
+        credentialLifecycle: {
+          authority: {
+            state: "authoritative",
+            bootstrapStatus: "ready",
+          },
+          counts: {
+            executionReady: 0,
+            connectedNoEndpoint: 0,
+            pendingAuthorization: 0,
+            expiredAuth: 0,
+            credentialsMissing: 0,
+            envUnresolved: 0,
+            archivedStale: 1,
+          },
+          accounts: [],
+          providerRollups: [],
+          archivedArtifacts: [
+            {
+              artifactId: "auth-001",
+              providerId: "moonshot",
+              providerAccountId: "moonshot.personal.pending",
+              artifactType: "device-authorization",
+              reasonCode: "expired-pending-authorization",
+            },
+          ],
+        },
+      } as never),
+    ).toEqual([
+      {
+        key: "auth-001",
+        providerAccountId: "moonshot.personal.pending",
+        providerId: "moonshot",
+        label: "Expired pending authorization archived",
+        detail: "device-authorization • expired-pending-authorization",
       },
     ]);
   });
@@ -625,6 +892,110 @@ describe("buildAliasReadinessRows", () => {
   });
 });
 
+describe("buildDashboardLatestRequestRows", () => {
+  test("prefers live canonical requests over benchmark telemetry rows in the overview rail", () => {
+    expect(
+      buildDashboardLatestRequestRows([
+        {
+          requestId: "req-benchmark-003",
+          endpointId: "benchmark.endpoint",
+          sourceType: "remote",
+          createdAtMs: 300,
+          requestClass: "benchmark",
+        },
+        {
+          requestId: "req-live-002",
+          clientRequestId: "req-client-002",
+          endpointId: "openai.personal.primary.us-east-1.fast",
+          sourceType: "remote",
+          createdAtMs: 200,
+          latencyMs: 420,
+          totalTokens: 88,
+          requestClass: "live_request",
+        },
+        {
+          requestId: "req-live-001",
+          endpointId: "llama-swap.local.lfm2.5-1.2b-instruct",
+          sourceType: "local",
+          createdAtMs: 100,
+          latencyMs: 120,
+          totalTokens: 32,
+          requestClass: "live_request",
+        },
+      ]),
+    ).toEqual([
+      expect.objectContaining({
+        requestId: "req-live-002",
+        clientRequestId: "req-client-002",
+      }),
+      expect.objectContaining({
+        requestId: "req-live-001",
+      }),
+    ]);
+  });
+
+  test("groups repeated alias-routed executions by caller interaction in the overview rail", () => {
+    expect(
+      buildDashboardLatestRequestRows([
+        {
+          requestId: "req-alias-003",
+          clientRequestId: "req-client-007",
+          endpointId: "openai.personal.primary.us-east-1.fast",
+          sourceType: "remote",
+          createdAtMs: 300,
+          latencyMs: 480,
+          totalTokens: 144,
+          requestClass: "live_request",
+          statusCode: 200,
+        },
+        {
+          requestId: "req-alias-002",
+          clientRequestId: "req-client-007",
+          endpointId: "llama-swap.local.lfm2.5-1.2b-instruct",
+          sourceType: "local",
+          createdAtMs: 250,
+          latencyMs: 130,
+          totalTokens: 42,
+          requestClass: "live_request",
+          statusCode: 200,
+        },
+        {
+          requestId: "req-benchmark-001",
+          clientRequestId: "bench-001",
+          endpointId: "benchmark.endpoint",
+          sourceType: "remote",
+          createdAtMs: 200,
+          requestClass: "benchmark",
+        },
+        {
+          requestId: "req-live-standalone-001",
+          endpointId: "moonshot.personal.primary.global.kimi-k2.6",
+          sourceType: "remote",
+          createdAtMs: 150,
+          latencyMs: 910,
+          totalTokens: 96,
+          requestClass: "live_request",
+          statusCode: 500,
+          errorClass: "execution_failed",
+        },
+      ]),
+    ).toEqual([
+      expect.objectContaining({
+        requestId: "req-alias-003",
+        clientRequestId: "req-client-007",
+        primaryLabel: "req-client-007",
+        secondaryLabel: "2 routed executions",
+        endpointLabel: "2 endpoints",
+      }),
+      expect.objectContaining({
+        requestId: "req-live-standalone-001",
+        primaryLabel: "req-live-standalone-001",
+        endpointLabel: "moonshot.personal.primary.global.kimi-k2.6",
+      }),
+    ]);
+  });
+});
+
 describe("buildStructuredLogRows", () => {
   test("parses raw logs into structured rows with source, severity, and request correlation when available", () => {
     expect(
@@ -791,6 +1162,116 @@ describe("buildConfiguredProviderRows", () => {
         connectedWithoutEndpointCount: 1,
         readyAccountCount: 1,
       },
+    ]);
+  });
+
+  test("prefers canonical provider rollups over route-local readiness inference", () => {
+    expect(
+      buildConfiguredProviderRows({
+        accounts: [
+          {
+            providerAccountId: "moonshot.personal.primary",
+            providerId: "moonshot",
+            authMode: "api-key-static",
+            healthStatus: "healthy",
+            status: "active",
+            allowedModels: ["moonshot/kimi-k2.6"],
+          },
+        ],
+        endpoints: [],
+        deviceAuthorizations: [],
+        providerRollups: [
+          {
+            providerId: "moonshot",
+            accountIds: ["moonshot.personal.primary"],
+            countsByLifecycle: {
+              executionReady: 4,
+              connectedNoEndpoint: 3,
+              pendingAuthorization: 2,
+              expiredAuth: 1,
+              credentialsMissing: 5,
+              envUnresolved: 6,
+              archivedStale: 0,
+            },
+            readyAccountIds: ["moonshot.personal.primary"],
+            attentionAccountIds: ["moonshot.personal.primary"],
+            hasArchivedArtifacts: false,
+          },
+        ],
+      } as never),
+    ).toEqual([
+      expect.objectContaining({
+        providerId: "moonshot",
+        pendingDeviceAuthorizationCount: 2,
+        credentialsMissingAccountCount: 5,
+        connectedWithoutEndpointCount: 3,
+        readyAccountCount: 4,
+      }),
+    ]);
+  });
+});
+
+describe("buildProviderMaintenanceRows", () => {
+  test("formats saved-account lifecycle badges and normalized credential posture from the canonical lifecycle contract", () => {
+    expect(
+      buildProviderMaintenanceRows({
+        accounts: [
+          {
+            providerAccountId: "moonshot.personal.primary",
+            providerId: "moonshot",
+            authMode: "api-key-static",
+            credentialRef: {
+              backend: "local-encrypted-file",
+              ref: "api-key/moonshot/moonshot.personal.primary",
+            },
+            baseUrlOverride: "https://api.moonshot.ai",
+            allowedModels: ["moonshot/kimi-k2.6"],
+            modelRoleBindings: [
+              {
+                modelId: "moonshot/kimi-k2.6",
+                roleIds: ["chat"],
+              },
+            ],
+          },
+        ],
+        summary: {
+          credentialLifecycle: {
+            accounts: [
+              {
+                logicalAccountId: "moonshot.personal.primary",
+                providerAccountId: "moonshot.personal.primary",
+                providerId: "moonshot",
+                sourceProvenance: ["manual"],
+                authMode: "api-key-static",
+                credentialStorageMode: "persisted-local",
+                credentialBackendCanonical: "local-file",
+                lifecycleState: "credentials-missing",
+                reasonCode: "credential-material-missing",
+                blocking: true,
+                activeEndpointIds: [],
+                configuredModelIds: ["moonshot/kimi-k2.6"],
+                availableActions: ["update-api-key"],
+              },
+            ],
+          },
+        } as never,
+      }),
+    ).toEqual([
+      expect.objectContaining({
+        providerAccountId: "moonshot.personal.primary",
+        providerId: "moonshot",
+        authMode: "api-key-static",
+        lifecycleLabel: "Credentials missing",
+        lifecycleTone: "warning",
+        reasonLabel: "Credential material is missing",
+        storageLabel: "Persisted local credential",
+        storageDetail: "Canonical backend: local-file",
+        sourceProvenanceLabel: "manual",
+        availableActions: ["update-api-key"],
+        availableActionsLabel: "Update API key",
+        activeEndpointCount: 0,
+        allowedModels: ["moonshot/kimi-k2.6"],
+      }),
     ]);
   });
 });
@@ -975,7 +1456,7 @@ describe("buildActivitySummary", () => {
     ).toEqual({
       facts: [
         { label: "Entries", value: "2", detail: "1 with captures" },
-        { label: "Errors", value: "1", detail: "Most recent status: 500" },
+        { label: "Errors", value: "1", detail: "Most recent status: 200" },
         { label: "Prompt tokens", value: "54", detail: "19 output tokens recorded" },
         {
           label: "Cached tokens",
@@ -985,14 +1466,6 @@ describe("buildActivitySummary", () => {
       ],
       rows: [
         expect.objectContaining({
-          id: 8,
-          model: "openai/gpt-4.1-mini-fast",
-          path: "/v1/responses",
-          status: "500",
-          durationLabel: "1600 ms",
-          captureLabel: "No capture",
-        }),
-        expect.objectContaining({
           id: 7,
           model: "moonshot/kimi-k2.5",
           path: "/v1/chat/completions",
@@ -1000,8 +1473,57 @@ describe("buildActivitySummary", () => {
           durationLabel: "840 ms",
           captureLabel: "Capture available",
         }),
+        expect.objectContaining({
+          id: 8,
+          model: "openai/gpt-4.1-mini-fast",
+          path: "/v1/responses",
+          status: "500",
+          durationLabel: "1600 ms",
+          captureLabel: "No capture",
+        }),
       ],
     });
+  });
+
+  test("preserves newest-first activity order from the metrics API instead of re-sorting by synthetic ids", () => {
+    expect(
+      buildActivitySummary([
+        {
+          id: 1,
+          timestamp: "2026-05-07T04:01:00.000Z",
+          model: "openai/gpt-4.1-mini-fast",
+          req_path: "/v1/responses",
+          resp_content_type: "application/json",
+          resp_status_code: 200,
+          tokens: {
+            cache_tokens: 0,
+            input_tokens: 10,
+            output_tokens: 12,
+            prompt_per_second: 12.4,
+            tokens_per_second: 20,
+          },
+          duration_ms: 1600,
+          has_capture: false,
+        },
+        {
+          id: 99,
+          timestamp: "2026-05-07T04:00:00.000Z",
+          model: "moonshot/kimi-k2.5",
+          req_path: "/v1/chat/completions",
+          resp_content_type: "application/json",
+          resp_status_code: 200,
+          tokens: {
+            cache_tokens: 12,
+            input_tokens: 44,
+            output_tokens: 19,
+            prompt_per_second: 88.1,
+            tokens_per_second: 45.2,
+          },
+          duration_ms: 840,
+          has_capture: true,
+        },
+      ]).rows.map((row) => row.id),
+    ).toEqual([1, 99]);
   });
 });
 
@@ -1018,6 +1540,7 @@ describe("telemetry view models", () => {
         cachedRequestCount: 1,
         totalActualCostUsd: 0.0042,
         totalEstimatedCostUsd: 0.0053,
+        totalEffectiveCostUsd: 0.0053,
         averageLatencyMs: 420,
         p95LatencyMs: 880,
         lastSeenAtMs: 1_770_000_000_100,
@@ -1067,7 +1590,7 @@ describe("telemetry view models", () => {
       {
         label: "Tokens",
         value: "126",
-        detail: "1 cached request and $0.0042 actual cost recorded",
+        detail: "1 cached request and $0.0053 effective cost recorded",
       },
     ]);
   });

@@ -53,6 +53,22 @@ describe("session readiness API", () => {
           readinessSummary: {
             readyAccountCount: number;
             connectedWithoutEndpointCount: number;
+            pendingDeviceAuthorizationCount: number;
+            credentialsMissingAccountCount: number;
+          };
+          credentialLifecycle?: {
+            authority: {
+              state: string;
+              bootstrapStatus: string;
+            };
+            counts: {
+              executionReady: number;
+              connectedNoEndpoint: number;
+              pendingAuthorization: number;
+              credentialsMissing: number;
+            };
+            providerRollups: readonly unknown[];
+            archivedArtifacts: readonly unknown[];
           };
           sessionBootstrap: {
             status: string;
@@ -65,6 +81,27 @@ describe("session readiness API", () => {
         };
 
         expect(summary.readinessSummary).toBeDefined();
+        expect(summary.credentialLifecycle).toBeDefined();
+        expect(summary.credentialLifecycle?.authority.bootstrapStatus).toBe(
+          summary.sessionBootstrap.status,
+        );
+        expect(["provisional", "authoritative"]).toContain(
+          summary.credentialLifecycle?.authority.state,
+        );
+        expect(summary.credentialLifecycle?.counts.executionReady).toBe(
+          summary.readinessSummary.readyAccountCount,
+        );
+        expect(summary.credentialLifecycle?.counts.connectedNoEndpoint).toBe(
+          summary.readinessSummary.connectedWithoutEndpointCount,
+        );
+        expect(summary.credentialLifecycle?.counts.pendingAuthorization).toBe(
+          summary.readinessSummary.pendingDeviceAuthorizationCount,
+        );
+        expect(summary.credentialLifecycle?.counts.credentialsMissing).toBe(
+          summary.readinessSummary.credentialsMissingAccountCount,
+        );
+        expect(Array.isArray(summary.credentialLifecycle?.providerRollups)).toBe(true);
+        expect(Array.isArray(summary.credentialLifecycle?.archivedArtifacts)).toBe(true);
         expect(summary.sessionBootstrap.stages.map((stage) => stage.stageId)).toContain(
           "inventory",
         );
@@ -75,8 +112,15 @@ describe("session readiness API", () => {
         expect(healthResponse.ok).toBe(true);
         const healthPayload = (await healthResponse.json()) as {
           sessionBootstrap: { status: string };
+          credentialLifecycleAuthority?: {
+            state: string;
+            bootstrapStatus: string;
+          };
         };
         expect(["ready", "degraded", "blocked"]).toContain(healthPayload.sessionBootstrap.status);
+        expect(healthPayload.credentialLifecycleAuthority).toEqual(
+          summary.credentialLifecycle?.authority,
+        );
       } finally {
         await server.close();
         await backend.shutdown();

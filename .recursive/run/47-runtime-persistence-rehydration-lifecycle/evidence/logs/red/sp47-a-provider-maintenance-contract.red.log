@@ -1,0 +1,1687 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/47-runtime-persistence-rehydration-lifecycle/role-model-router/apps/runtime-ui[39m
+
+ [31mΓ¥»[39m app/lib/design-system.test.ts [2m([22m[2m27 tests[22m[2m | [22m[31m1 failed[39m[2m | [22m[33m26 skipped[39m[2m)[22m[32m 27[2mms[22m[39m
+   [2m[90mΓåô[39m[22m runtime design system[2m > [22mdefines navigation groups and layout templates for every runtime route
+   [2m[90mΓåô[39m[22m runtime design system[2m > [22mkeeps the shell on restrained radii and explicit content widths
+   [2m[90mΓåô[39m[22m runtime design system[2m > [22mglobal shell chrome keeps legacy vendor ui out of the main runtime contract
+   [2m[90mΓåô[39m[22m runtime design system[2m > [22mstudio implementation targets render repo-owned workspace sections instead of placeholder blueprints
+   [2m[90mΓåô[39m[22m runtime design system[2m > [22mintegration and system implementation targets render live upstream and peer surfaces
+   [2m[90mΓåô[39m[22m runtime design system[2m > [22mrouter implementation targets render repo-owned routing explanation surfaces
+   [2m[90mΓåô[39m[22m runtime design system[2m > [22mrouter, connect registry, and remote surfaces expose alias/readiness ownership instead of generic filler
+[31m   [31m├ù[31m runtime design system[2m > [22mproviders surface exposes explicit in-place maintenance actions for saved remote accounts[39m[32m 25[2mms[22m[39m
+[31m     ΓåÆ expected 'import { useCallback, useEffect, useMΓÇª' to contain 'Reconnect'[39m
+   [2m[90mΓåô[39m[22m runtime design system[2m > [22mrouter routes preserve empty-state and observe-link affordances
+   [2m[90mΓåô[39m[22m runtime design system[2m > [22mmerged router overview stays observational while routing strategy owns editing controls
+   [2m[90mΓåô[39m[22m runtime design system[2m > [22mmeta-guidance panels stay removed from overview and observe routes
+   [2m[90mΓåô[39m[22m runtime design system[2m > [22mdesign system doc marks the converted pages as live routes
+   [2m[90mΓåô[39m[22m runtime design system[2m > [22mcontrol routes tolerate an unassigned controller before endpoint activation
+   [2m[90mΓåô[39m[22m runtime design system[2m > [22mapplies the swiss stone palette, ibm plex typography, and dual-scheme browser contract in shared app chrome
+   [2m[90mΓåô[39m[22m runtime design system[2m > [22mkeeps shared states on the stone plus single-accent palette
+   [2m[90mΓåô[39m[22m runtime design system[2m > [22mremote, models, router, and system runtime config routes are first-class pages in the retained taxonomy
+   [2m[90mΓåô[39m[22m runtime design system[2m > [22mlocal setup surfaces stay discoverable from navigation and empty registry states
+   [2m[90mΓåô[39m[22m runtime design system[2m > [22mobserve and local log surfaces render structured ledgers rather than raw iframe placeholders
+   [2m[90mΓåô[39m[22m runtime design system[2m > [22mobserve ownership keeps requests canonical and raw-host surfaces adjacent
+   [2m[90mΓåô[39m[22m runtime design system[2m > [22mrequests and request detail stay telemetry-first while exposing raw-host handoffs
+   [2m[90mΓåô[39m[22m runtime design system[2m > [22mactivity route frames raw-host metrics as adjacent to canonical telemetry
+   [2m[90mΓåô[39m[22m runtime design system[2m > [22mlogs route exposes request-detail handoffs while preserving raw-host framing
+   [2m[90mΓåô[39m[22m runtime design system[2m > [22mregistry and system layouts avoid redundant KPI strips and placeholder note panels
+   [2m[90mΓåô[39m[22m runtime design system[2m > [22mdashboard passes telemetry detail to FactCard for Latency
+   [2m[90mΓåô[39m[22m runtime design system[2m > [22mworkbench and observe routes expose routing controls and receipts in repo-owned UI surfaces
+   [2m[90mΓåô[39m[22m runtime design system[2m > [22mshell header owns route metadata and page actions without duplicate page headers
+   [2m[90mΓåô[39m[22m runtime design system[2m > [22mruntime route definitions stay slim and future scaffolds avoid duplicate header props
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  app/lib/design-system.test.ts > runtime design system > providers surface exposes explicit in-place maintenance actions for saved remote accounts
+AssertionError: expected 'import { useCallback, useEffect, useMΓÇª' to contain 'Reconnect'
+
+- Expected
++ Received
+
+- Reconnect
++ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+
++ import { Link, useSearchParams } from "react-router";
+
++ 
+
++ import {
+
++   EmptyState,
+
++   ErrorState,
+
++   LoadingState,
+
++   SectionCard,
+
++   StatusPill,
+
++ } from "../components/page-primitives";
+
++ import {
+
++   fieldClassName,
+
++   mutedPanelClassName,
+
++   primaryButtonClassName,
+
++   raisedPanelClassName,
+
++   secondaryButtonClassName,
+
++ } from "../lib/design-system";
+
++ import {
+
++   getDeviceAuthorizationPollDelayMs,
+
++   resolveVerificationWindowUrl,
+
++   restorePersistedDeviceAuthorization,
+
++   shouldAutoPollDeviceAuthorization,
+
++   syncConnectedDeviceAuthorizationEndpoints,
+
++ } from "../lib/device-authorization";
+
++ import { resolveProviderAccountLifecycle } from "../lib/provider-account-state";
+
++ import {
+
++   type RuntimeDeviceAuthorization,
+
++   type RuntimeProvider,
+
++   type RuntimeSnapshot,
+
++   activateRuntimeEndpoint,
+
++   fetchRuntimeSnapshot,
+
++   pollRuntimeDeviceAuthorization,
+
++   startRuntimeDeviceAuthorization,
+
++   upsertRuntimeAccount,
+
++ } from "../lib/runtime-api";
+
++ import { buildAccountModelCatalogIds } from "../lib/view-models";
+
++ 
+
++ const inputClass = fieldClassName;
+
++ const buttonClass = primaryButtonClassName;
+
++ 
+
++ type ModelRoleSelection = Record<string, string[]>;
+
++ 
+
++ function defaultVariantId(provider?: RuntimeProvider): string {
+
++   return provider?.variants?.[0]?.variantId ?? "";
+
++ }
+
++ 
+
++ function slugifyAccountSegment(value: string): string {
+
++   const normalized = value
+
++     .trim()
+
++     .toLowerCase()
+
++     .replace(/[^a-z0-9]+/g, "-")
+
++     .replace(/^-+|-+$/g, "");
+
++   return normalized.length > 0 ? normalized : "primary";
+
++ }
+
++ 
+
++ function defaultProviderAccountId(providerId: string, variantId: string): string {
+
++   return `${providerId}.personal.${slugifyAccountSegment(variantId)}`;
+
++ }
+
++ 
+
++ function defaultCredentialRef(provider?: RuntimeProvider): string {
+
++   return provider?.envVars?.[0] ?? "API_KEY";
+
++ }
+
++ 
+
++ function buildModelRoleSelection(
+
++   modelIds: readonly string[],
+
++   bindings?: readonly {
+
++     readonly modelId: string;
+
++     readonly roleIds: readonly string[];
+
++   }[],
+
++ ): ModelRoleSelection {
+
++   const byModelId = new Map(
+
++     (bindings ?? []).map((binding) => [binding.modelId, [...binding.roleIds].sort()]),
+
++   );
+
++   return Object.fromEntries(modelIds.map((modelId) => [modelId, byModelId.get(modelId) ?? []]));
+
++ }
+
++ 
+
++ function buildModelRoleBindings(selectedModels: readonly string[], selection: ModelRoleSelection) {
+
++   return selectedModels.flatMap((modelId) => {
+
++     const roleIds = [...new Set(selection[modelId] ?? [])].sort((left, right) =>
+
++       left.localeCompare(right, "en"),
+
++     );
+
++     return roleIds.length > 0 ? [{ modelId, roleIds }] : [];
+
++   });
+
++ }
+
++ 
+
++ function buildAvailableModels(input: {
+
++   readonly snapshot: RuntimeSnapshot;
+
++   readonly provider: RuntimeProvider | undefined;
+
++   readonly variantId: string | undefined;
+
++ }): string[] {
+
++   if (!input.provider) {
+
++     return [];
+
++   }
+
++ 
+
++   const variant =
+
++     input.provider.variants?.find((entry) => entry.variantId === input.variantId) ??
+
++     input.provider.variants?.[0];
+
++   return buildAccountModelCatalogIds({
+
++     account: {
+
++       providerId: input.provider.providerId,
+
++       allowedModels: variant?.modelIds ?? input.provider.modelIds ?? [],
+
++     },
+
++     providers: input.snapshot.providers,
+
++     models: input.snapshot.models,
+
++   });
+
++ }
+
++ 
+
++ export default function ProvidersRoute() {
+
++   const [searchParams] = useSearchParams();
+
++   const initializedRef = useRef(false);
+
++   const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(null);
+
++   const [error, setError] = useState<string | null>(null);
+
++   const [providerAccountId, setProviderAccountId] = useState("");
+
++   const [providerId, setProviderId] = useState("");
+
++   const [variantId, setVariantId] = useState("");
+
++   const [credentialRef, setCredentialRef] = useState("");
+
++   const [selectedModel, setSelectedModel] = useState<string>("");
+
++   const [selectedModelRoles, setSelectedModelRoles] = useState<ModelRoleSelection>({});
+
++   const [oauthState, setOauthState] = useState<RuntimeDeviceAuthorization | null>(null);
+
++   const [oauthConnected, setOauthConnected] = useState(false);
+
++   const [submitting, setSubmitting] = useState(false);
+
++   const [authorizing, setAuthorizing] = useState(false);
+
++   const [polling, setPolling] = useState(false);
+
++ 
+
++   const applyProviderSelection = useCallback(
+
++     (
+
++       nextSnapshot: RuntimeSnapshot,
+
++       requestedProviderId?: string | null,
+
++       requestedVariantId?: string | null,
+
++     ) => {
+
++       const remoteProviders = nextSnapshot.providers.filter(
+
++         (provider) => provider.providerKind !== "local-engine",
+
++       );
+
++       const nextProvider =
+
++         remoteProviders.find((provider) => provider.providerId === requestedProviderId) ??
+
++         remoteProviders[0];
+
++       if (!nextProvider) {
+
++         return;
+
++       }
+
++       const nextVariantId =
+
++         requestedVariantId &&
+
++         nextProvider.variants?.some((variant) => variant.variantId === requestedVariantId)
+
++           ? requestedVariantId
+
++           : defaultVariantId(nextProvider);
+
++       const nextModels = buildAvailableModels({
+
++         snapshot: nextSnapshot,
+
++         provider: nextProvider,
+
++         variantId: nextVariantId,
+
++       });
+
++ 
+
++       setProviderId(nextProvider.providerId);
+
++       setVariantId(nextVariantId);
+
++       setProviderAccountId(defaultProviderAccountId(nextProvider.providerId, nextVariantId));
+
++       setCredentialRef(defaultCredentialRef(nextProvider));
+
++       setSelectedModel("");
+
++       setSelectedModelRoles({});
+
++       setOauthState(null);
+
++       setOauthConnected(false);
+
++     },
+
++     [],
+
++   );
+
++ 
+
++   const load = useCallback(async () => {
+
++     try {
+
++       const nextSnapshot = await fetchRuntimeSnapshot();
+
++       setSnapshot(nextSnapshot);
+
++       setError(null);
+
++ 
+
++       if (!initializedRef.current) {
+
++         applyProviderSelection(
+
++           nextSnapshot,
+
++           searchParams.get("providerId"),
+
++           searchParams.get("variantId"),
+
++         );
+
++         initializedRef.current = true;
+
++         return;
+
++       }
+
++ 
+
++       if (
+
++         !nextSnapshot.providers
+
++           .filter((provider) => provider.providerKind !== "local-engine")
+
++           .some((provider) => provider.providerId === providerId)
+
++       ) {
+
++         applyProviderSelection(nextSnapshot, null, null);
+
++       }
+
++     } catch (value: unknown) {
+
++       setError(value instanceof Error ? value.message : "Could not load providers.");
+
++     }
+
++   }, [applyProviderSelection, providerId, searchParams]);
+
++ 
+
++   const syncConnectedEndpoints = useCallback(
+
++     async (session: RuntimeDeviceAuthorization) => {
+
++       await syncConnectedDeviceAuthorizationEndpoints({
+
++         session,
+
++         selectedModels: selectedModel ? [selectedModel] : [],
+
++         activateEndpoint: activateRuntimeEndpoint,
+
++       });
+
++     },
+
++     [selectedModel],
+
++   );
+
++ 
+
++   useEffect(() => {
+
++     void load();
+
++   }, [load]);
+
++ 
+
++   useEffect(() => {
+
++     if (!shouldAutoPollDeviceAuthorization(oauthState) || polling || !oauthState) {
+
++       return;
+
++     }
+
++ 
+
++     const pendingOauthState = oauthState;
+
++     const timer = window.setTimeout(() => {
+
++       setPolling(true);
+
++       void pollRuntimeDeviceAuthorization(pendingOauthState.authRequestId)
+
++         .then(async (result) => {
+
++           setOauthState((current) => (current ? { ...current, ...result } : result));
+
++           if (result.status !== "pending") {
+
++             await syncConnectedEndpoints(result);
+
++             await load();
+
++             if (result.status === "connected") {
+
++               setOauthConnected(true);
+
++               window.setTimeout(() => setOauthState(null), 2000);
+
++             }
+
++           }
+
++         })
+
++         .catch((value) =>
+
++           setError(
+
++             value instanceof Error ? value.message : "Could not refresh provider authorization.",
+
++           ),
+
++         )
+
++         .finally(() => setPolling(false));
+
++     }, getDeviceAuthorizationPollDelayMs(pendingOauthState));
+
++ 
+
++     return () => window.clearTimeout(timer);
+
++   }, [load, oauthState, polling, syncConnectedEndpoints]);
+
++ 
+
++   useEffect(() => {
+
++     if (!snapshot) {
+
++       return;
+
++     }
+
++ 
+
++     setOauthState((current) =>
+
++       restorePersistedDeviceAuthorization({
+
++         current,
+
++         providerAccountId,
+
++         persistedSessions: snapshot.deviceAuthorizations,
+
++       }),
+
++     );
+
++   }, [providerAccountId, snapshot]);
+
++ 
+
++   const remoteProviders = useMemo(
+
++     () => snapshot?.providers.filter((provider) => provider.providerKind !== "local-engine") ?? [],
+
++     [snapshot],
+
++   );
+
++   const selectedProvider = useMemo(
+
++     () =>
+
++       remoteProviders.find((provider) => provider.providerId === providerId) ?? remoteProviders[0],
+
++     [providerId, remoteProviders],
+
++   );
+
++   const selectedVariant = useMemo(
+
++     () =>
+
++       selectedProvider?.variants?.find((variant) => variant.variantId === variantId) ??
+
++       selectedProvider?.variants?.[0],
+
++     [selectedProvider, variantId],
+
++   );
+
++   const availableModels = useMemo(
+
++     () =>
+
++       snapshot && selectedProvider
+
++         ? buildAvailableModels({
+
++             snapshot,
+
++             provider: selectedProvider,
+
++             variantId: selectedVariant?.variantId,
+
++           })
+
++         : [],
+
++     [selectedProvider, selectedVariant, snapshot],
+
++   );
+
++   const selectedSavedAccount = useMemo(
+
++     () =>
+
++       snapshot?.accounts.find((account) => account.providerAccountId === providerAccountId) ?? null,
+
++     [providerAccountId, snapshot],
+
++   );
+
++   const availableRoles = snapshot?.roles ?? [];
+
++ 
+
++   if (error) {
+
++     return <ErrorState label={error} />;
+
++   }
+
++   if (!snapshot) {
+
++     return <LoadingState label="Loading provider catalogΓÇª" />;
+
++   }
+
++   if (remoteProviders.length === 0) {
+
++     return <EmptyState label="No LiteLLM-backed remote providers are currently available from the runtime catalog." />;
+
++   }
+
++ 
+
++   const onProviderChange = (nextProviderId: string) => {
+
++     applyProviderSelection(snapshot, nextProviderId, null);
+
++   };
+
++ 
+
++   const onVariantChange = (nextVariantId: string) => {
+
++     applyProviderSelection(snapshot, selectedProvider?.providerId ?? providerId, nextVariantId);
+
++   };
+
++ 
+
++   const onModelSelect = (modelId: string) => {
+
++     setSelectedModel(modelId);
+
++     setSelectedModelRoles((current) => (modelId ? { [modelId]: current[modelId] ?? [] } : {}));
+
++   };
+
++ 
+
++   const toggleModelRole = (modelId: string, roleId: string) => {
+
++     setSelectedModelRoles((current) => {
+
++       const currentRoles = current[modelId] ?? [];
+
++       const nextRoles = currentRoles.includes(roleId)
+
++         ? currentRoles.filter((entry) => entry !== roleId)
+
++         : [...currentRoles, roleId];
+
++       return {
+
++         ...current,
+
++         [modelId]: nextRoles.sort((left, right) => left.localeCompare(right, "en")),
+
++       };
+
++     });
+
++   };
+
++ 
+
++   const buildProviderPayload = () => {
+
++     if (!selectedProvider || !selectedVariant) {
+
++       throw new Error("Select a provider before saving configuration.");
+
++     }
+
++     const lifecycle = resolveProviderAccountLifecycle({
+
++       authMode: selectedVariant.authMode,
+
++       providerAccountId,
+
++       oauthState,
+
++       existingAccount: selectedSavedAccount,
+
++     });
+
++ 
+
++     return {
+
++       providerAccountId,
+
++       providerId: selectedProvider.providerId,
+
++       providerKind: selectedProvider.providerKind,
+
++       orgScope: "personal",
+
++       accountScope: "workspace-default",
+
++       credentialRef:
+
++         selectedVariant.authMode === "api-key-static"
+
++           ? {
+
++               backend: "env",
+
++               ref: credentialRef,
+
++             }
+
++           : {
+
++               backend: "local-file",
+
++               ref: `oauth/${selectedProvider.providerId}/${providerAccountId}`,
+
++             },
+
++       authMode: selectedVariant.authMode,
+
++       regionPolicy: {
+
++         mode: "prefer",
+
++         regions: ["global"],
+
++       },
+
++       baseUrlOverride: selectedVariant.baseUrl ?? selectedProvider.apiBase,
+
++       allowedModels: selectedModel ? [selectedModel] : [],
+
++       modelRoleBindings: buildModelRoleBindings(
+
++         selectedModel ? [selectedModel] : [],
+
++         selectedModelRoles,
+
++       ),
+
++       deniedModels: [],
+
++       entitlementTags: ["chat"],
+
++       budgetPolicyRef: "budget.default",
+
++       quotaPolicyRef: "quota.default",
+
++       status: lifecycle.status,
+
++       healthStatus: lifecycle.healthStatus,
+
++       rotationState: lifecycle.rotationState,
+
++     };
+
++   };
+
++ 
+
++   const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+
++     event.preventDefault();
+
++     if (!selectedProvider || !selectedVariant) {
+
++       return;
+
++     }
+
++ 
+
++     setSubmitting(true);
+
++     setError(null);
+
++     try {
+
++       await upsertRuntimeAccount(buildProviderPayload());
+
++       if (selectedVariant.authMode === "api-key-static" || oauthConnected) {
+
++         await activateRuntimeEndpoint({
+
++           providerAccountId,
+
++           modelId: selectedModel,
+
++           region: "global",
+
++         });
+
++       }
+
++       await load();
+
++     } catch (value) {
+
++       setError(value instanceof Error ? value.message : "Could not save provider configuration.");
+
++     } finally {
+
++       setSubmitting(false);
+
++     }
+
++   };
+
++ 
+
++   const onStartDeviceAuthorization = async () => {
+
++     if (!selectedProvider || !selectedVariant) {
+
++       return;
+
++     }
+
++     setAuthorizing(true);
+
++     setError(null);
+
++     try {
+
++       const result = await startRuntimeDeviceAuthorization({
+
++         providerAccountId,
+
++         providerId: selectedProvider.providerId,
+
++         providerKind: selectedProvider.providerKind,
+
++         variantId: selectedVariant.variantId,
+
++         allowedModels: selectedModel ? [selectedModel] : [],
+
++         modelRoleBindings: buildModelRoleBindings(
+
++           selectedModel ? [selectedModel] : [],
+
++           selectedModelRoles,
+
++         ),
+
++         deniedModels: [],
+
++         entitlementTags: ["chat"],
+
++         budgetPolicyRef: "budget.default",
+
++         quotaPolicyRef: "quota.default",
+
++       });
+
++       setOauthState(result);
+
++       const verificationUrl = resolveVerificationWindowUrl(result);
+
++       if (verificationUrl) {
+
++         try {
+
++           window.open(verificationUrl, "_blank", "noopener,noreferrer");
+
++         } catch {
+
++           // Keep the inline verification link visible as the fallback path.
+
++         }
+
++       }
+
++       await load();
+
++     } catch (value) {
+
++       setError(value instanceof Error ? value.message : "Could not start provider authorization.");
+
++     } finally {
+
++       setAuthorizing(false);
+
++     }
+
++   };
+
++ 
+
++   const onPollDeviceAuthorization = async () => {
+
++     if (!oauthState?.authRequestId) {
+
++       return;
+
++     }
+
++     setPolling(true);
+
++     setError(null);
+
++     try {
+
++       const result = await pollRuntimeDeviceAuthorization(oauthState.authRequestId);
+
++       setOauthState((current) => (current ? { ...current, ...result } : result));
+
++       await syncConnectedEndpoints(result);
+
++       await load();
+
++       if (result.status === "connected") {
+
++         setOauthConnected(true);
+
++         window.setTimeout(() => setOauthState(null), 2000);
+
++       }
+
++     } catch (value) {
+
++       setError(
+
++         value instanceof Error ? value.message : "Could not refresh provider authorization.",
+
++       );
+
++     } finally {
+
++       setPolling(false);
+
++     }
+
++   };
+
++ 
+
++   return (
+
++     <div className="space-y-6">
+
++       <div className="grid gap-4 xl:grid-cols-[0.95fr_1.05fr]">
+
++         <SectionCard
+
++           title="Choose provider and models"
+
++           description="Select the provider, connection method, model set, and role bindings that should flow into the runtime registry."
+
++         >
+
++           <form className="space-y-4" onSubmit={onSubmit}>
+
++             <label className="grid gap-2 text-sm">
+
++               <span className="font-medium text-[var(--rm-fg)]">Provider</span>
+
++               <select
+
++                 className={inputClass}
+
++                 value={selectedProvider?.providerId ?? ""}
+
++                 onChange={(event) => onProviderChange(event.target.value)}
+
++               >
+
++                 {remoteProviders.map((provider) => (
+
++                   <option key={provider.providerId} value={provider.providerId}>
+
++                     {provider.displayName}
+
++                   </option>
+
++                 ))}
+
++               </select>
+
++             </label>
+
++ 
+
++             <label className="grid gap-2 text-sm">
+
++               <span className="font-medium text-[var(--rm-fg)]">Connection method</span>
+
++               <select
+
++                 className={inputClass}
+
++                 value={selectedVariant?.variantId ?? ""}
+
++                 onChange={(event) => onVariantChange(event.target.value)}
+
++               >
+
++                 {(selectedProvider?.variants ?? []).map((variant) => (
+
++                   <option key={variant.variantId} value={variant.variantId}>
+
++                     {variant.label}
+
++                   </option>
+
++                 ))}
+
++               </select>
+
++             </label>
+
++ 
+
++             <label className="grid gap-2 text-sm">
+
++               <span className="font-medium text-[var(--rm-fg)]">Provider connection id</span>
+
++               <input
+
++                 className={inputClass}
+
++                 value={providerAccountId}
+
++                 onChange={(event) => setProviderAccountId(event.target.value)}
+
++               />
+
++             </label>
+
++ 
+
++             {selectedVariant?.authMode === "api-key-static" ? (
+
++               <label className="grid gap-2 text-sm">
+
++                 <span className="font-medium text-[var(--rm-fg)]">Credential reference</span>
+
++                 <input
+
++                   className={inputClass}
+
++                   value={credentialRef}
+
++                   onChange={(event) => setCredentialRef(event.target.value)}
+
++                 />
+
++               </label>
+
++             ) : (
+
++               <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
+
++                 <p className="font-medium text-[var(--rm-fg)]">
+
++                   Runtime-managed credential reference
+
++                 </p>
+
++                 <p className="mt-2">
+
++                   OAuth-backed providers store the resulting token locally and expose only the
+
++                   generated credential reference back to the control plane.
+
++                 </p>
+
++               </div>
+
++             )}
+
++ 
+
++             <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
+
++               <p className="font-medium text-[var(--rm-fg)]">LiteLLM-backed remote onboarding</p>
+
++               <p className="mt-2">
+
++                 Remote providers are activated through LiteLLM so the router can evaluate shared
+
++                 remote candidates alongside local llama-swap endpoints.
+
++               </p>
+
++               <p className="mt-2">
+
++                 Models.dev metadata stays additive only: it enriches endpoint and model readback but
+
++                 does not replace the live LiteLLM connection path.
+
++               </p>
+
++             </div>
+
++ 
+
++             <label className="grid gap-2 text-sm">
+
++               <span className="font-medium text-[var(--rm-fg)]">Model</span>
+
++               <select
+
++                 className={inputClass}
+
++                 value={selectedModel}
+
++                 onChange={(event) => onModelSelect(event.target.value)}
+
++               >
+
++                 <option value="">Select a modelΓÇª</option>
+
++                 {availableModels.map((modelId) => (
+
++                   <option key={modelId} value={modelId}>
+
++                     {modelId}
+
++                   </option>
+
++                 ))}
+
++               </select>
+
++             </label>
+
++ 
+
++             {selectedModel !== "" ? (
+
++               <div className="space-y-3 text-sm">
+
++                 <div>
+
++                   <p className="font-medium text-[var(--rm-fg)]">Model roles</p>
+
++                   <p className="text-[var(--rm-secondary)]">
+
++                     Assign runtime roles to the selected model so the resulting endpoint registry
+
++                     preserves operator intent.
+
++                   </p>
+
++                 </div>
+
++                 <div className={`${mutedPanelClassName} space-y-3 p-4`}>
+
++                   <div className={`${raisedPanelClassName} space-y-2 p-3`}>
+
++                     <p className="font-medium text-[var(--rm-fg)]">{selectedModel}</p>
+
++                     {availableRoles.length > 0 ? (
+
++                       <div className="flex flex-wrap gap-3">
+
++                         {availableRoles.map((role) => (
+
++                           <label
+
++                             key={`${selectedModel}:${role.roleId}`}
+
++                             className="flex items-center gap-2 rounded-none border border-[var(--rm-border)] px-3 py-1.5"
+
++                           >
+
++                             <input
+
++                               checked={(selectedModelRoles[selectedModel] ?? []).includes(
+
++                                 role.roleId,
+
++                               )}
+
++                               type="checkbox"
+
++                               onChange={() => toggleModelRole(selectedModel, role.roleId)}
+
++                             />
+
++                             <span className="text-[var(--rm-secondary)]">{role.label}</span>
+
++                           </label>
+
++                         ))}
+
++                       </div>
+
++                     ) : (
+
++                       <p className="text-[var(--rm-secondary)]">
+
++                         No runtime roles are available from the host bridge yet.
+
++                       </p>
+
++                     )}
+
++                   </div>
+
++                 </div>
+
++               </div>
+
++             ) : null}
+
++ 
+
++             {selectedVariant ? (
+
++               <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
+
++                 <div className="flex flex-wrap items-center gap-2">
+
++                   <p className="font-medium text-[var(--rm-fg)]">{selectedVariant.label}</p>
+
++                   <StatusPill
+
++                     tone={selectedVariant.availability === "ready" ? "success" : "warning"}
+
++                   >
+
++                     {selectedVariant.availability}
+
++                   </StatusPill>
+
++                   <StatusPill tone="neutral">{selectedVariant.authMode}</StatusPill>
+
++                 </div>
+
++                 <p className="mt-2">{selectedVariant.description}</p>
+
++                 <div className="mt-3 grid gap-2 md:grid-cols-2">
+
++                   <p>
+
++                     <span className="font-medium text-[var(--rm-fg)]">Catalog models:</span>{" "}
+
++                     {availableModels.length}
+
++                   </p>
+
++                   <p>
+
++                     <span className="font-medium text-[var(--rm-fg)]">API base:</span>{" "}
+
++                     {selectedVariant.baseUrl ?? selectedProvider?.apiBase}
+
++                   </p>
+
++                   <p>
+
++                     <span className="font-medium text-[var(--rm-fg)]">SDK package:</span>{" "}
+
++                     {selectedProvider?.npmPackage ?? "Not cataloged"}
+
++                   </p>
+
++                   <p>
+
++                     <span className="font-medium text-[var(--rm-fg)]">Docs:</span>{" "}
+
++                     {selectedProvider?.docsUrl ? (
+
++                       <a
+
++                         className="underline decoration-[var(--rm-border-strong)] underline-offset-4"
+
++                         href={selectedProvider.docsUrl}
+
++                         rel="noreferrer"
+
++                         target="_blank"
+
++                       >
+
++                         {selectedProvider.docsUrl}
+
++                       </a>
+
++                     ) : (
+
++                       "Not cataloged"
+
++                     )}
+
++                   </p>
+
++                 </div>
+
++                 {selectedVariant.oauth ? (
+
++                   <div className={`mt-3 ${raisedPanelClassName} p-3`}>
+
++                     <p className="font-medium text-[var(--rm-fg)]">OAuth metadata</p>
+
++                     <p className="mt-2">
+
++                       <span className="font-medium text-[var(--rm-fg)]">Client id:</span>{" "}
+
++                       {selectedVariant.oauth.clientId}
+
++                     </p>
+
++                     <p>
+
++                       <span className="font-medium text-[var(--rm-fg)]">Device endpoint:</span>{" "}
+
++                       {selectedVariant.oauth.deviceAuthorizationEndpoint}
+
++                     </p>
+
++                   </div>
+
++                 ) : null}
+
++               </div>
+
++             ) : null}
+
++ 
+
++             <div className="flex flex-wrap gap-3">
+
++               <button
+
++                 className={buttonClass}
+
++                 disabled={submitting || !selectedProvider || !selectedVariant || selectedModel === ""}
+
++                 type="submit"
+
++               >
+
++                 {submitting ? "SavingΓÇª" : "Save provider"}
+
++               </button>
+
++ 
+
++               {selectedVariant?.authMode === "oauth2-device-code" ? (
+
++                 <>
+
++                   <button
+
++                     className={secondaryButtonClassName}
+
++                     disabled={authorizing || selectedModel === ""}
+
++                     type="button"
+
++                     onClick={() => void onStartDeviceAuthorization()}
+
++                   >
+
++                     {authorizing ? "StartingΓÇª" : "Start OAuth"}
+
++                   </button>
+
++                   <button
+
++                     className={secondaryButtonClassName}
+
++                     disabled={polling || !oauthState?.authRequestId}
+
++                     type="button"
+
++                     onClick={() => void onPollDeviceAuthorization()}
+
++                   >
+
++                     {polling ? "CheckingΓÇª" : "Check now"}
+
++                   </button>
+
++                 </>
+
++               ) : null}
+
++ 
+
++               <Link className={secondaryButtonClassName} to="/app/connect">
+
++                 View in Connect registry
+
++               </Link>
+
++             </div>
+
++           </form>
+
++         </SectionCard>
+
++ 
+
++         <SectionCard
+
++           title="Configured provider connections"
+
++           description="Saved provider connections stay visible here with credential references, model access, and live authorization state."
+
++         >
+
++           <div className="space-y-4">
+
++             {oauthState ? (
+
++               <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
+
++                 <div className="flex flex-wrap items-center gap-2">
+
++                   <p className="font-medium text-[var(--rm-fg)]">Current provider authorization</p>
+
++                   <StatusPill
+
++                     tone={
+
++                       oauthState.status === "connected"
+
++                         ? "success"
+
++                         : oauthState.status === "pending"
+
++                           ? "accent"
+
++                           : "warning"
+
++                     }
+
++                   >
+
++                     {oauthState.status}
+
++                   </StatusPill>
+
++                 </div>
+
++                 {oauthState.userCode ? (
+
++                   <p className="mt-2">
+
++                     <span className="font-medium text-[var(--rm-fg)]">User code:</span>{" "}
+
++                     {oauthState.userCode}
+
++                   </p>
+
++                 ) : null}
+
++                 {shouldAutoPollDeviceAuthorization(oauthState) ? (
+
++                   <p className="mt-2">
+
++                     The verification page opens in a new tab and this screen keeps checking
+
++                     automatically. Successful completion activates the selected models into the
+
++                     runtime endpoint registry.
+
++                   </p>
+
++                 ) : null}
+
++                 {oauthState.verificationUriComplete ? (
+
++                   <p className="mt-2 break-all">
+
++                     <span className="font-medium text-[var(--rm-fg)]">Verification URL:</span>{" "}
+
++                     <a
+
++                       className="text-[var(--rm-accent)] underline"
+
++                       href={oauthState.verificationUriComplete}
+
++                       rel="noreferrer"
+
++                       target="_blank"
+
++                     >
+
++                       {oauthState.verificationUriComplete}
+
++                     </a>
+
++                   </p>
+
++                 ) : null}
+
++               </div>
+
++             ) : null}
+
++ 
+
++             {snapshot.accounts.length === 0 ? (
+
++               <EmptyState label="No providers are configured yet. Save one from the setup form to populate the runtime registry." />
+
++             ) : (
+
++               <>
+
++                 {snapshot.accounts.map((account) => (
+
++                   <div key={account.providerAccountId} className={`${mutedPanelClassName} p-4`}>
+
++                     <div className="flex flex-wrap items-center gap-2">
+
++                       <h3 className="font-medium text-[var(--rm-fg)]">
+
++                         {account.providerAccountId}
+
++                       </h3>
+
++                       <StatusPill tone="neutral">{account.providerId}</StatusPill>
+
++                       {account.healthStatus ? (
+
++                         <StatusPill
+
++                           tone={account.healthStatus === "healthy" ? "success" : "warning"}
+
++                         >
+
++                           {account.healthStatus}
+
++                         </StatusPill>
+
++                       ) : null}
+
++                     </div>
+
++                     <div className="mt-3 grid gap-1 text-sm text-[var(--rm-secondary)]">
+
++                       <p>
+
++                         <span className="font-medium text-[var(--rm-fg)]">Connection method:</span>{" "}
+
++                         {account.authMode}
+
++                       </p>
+
++                       <p>
+
++                         <span className="font-medium text-[var(--rm-fg)]">Credential ref:</span>{" "}
+
++                         {account.credentialRef
+
++                           ? `${account.credentialRef.backend}:${account.credentialRef.ref}`
+
++                           : "Not set"}
+
++                       </p>
+
++                       <p>
+
++                         <span className="font-medium text-[var(--rm-fg)]">Base URL:</span>{" "}
+
++                         {account.baseUrlOverride ?? "Provider default"}
+
++                       </p>
+
++                       <p>
+
++                         <span className="font-medium text-[var(--rm-fg)]">Status:</span>{" "}
+
++                         {account.status ?? "unknown"}
+
++                       </p>
+
++                     </div>
+
++                     {account.allowedModels?.length ? (
+
++                       <div className="mt-3 space-y-3">
+
++                         {account.allowedModels.map((modelId) => {
+
++                           const roleIds =
+
++                             account.modelRoleBindings?.find(
+
++                               (binding) => binding.modelId === modelId,
+
++                             )?.roleIds ?? [];
+
++                           return (
+
++                             <div key={modelId} className={`${raisedPanelClassName} p-3`}>
+
++                               <div className="flex flex-wrap items-center gap-2">
+
++                                 <StatusPill tone="accent">{modelId}</StatusPill>
+
++                                 {roleIds.length > 0 ? (
+
++                                   roleIds.map((roleId) => (
+
++                                     <StatusPill key={`${modelId}:${roleId}`} tone="neutral">
+
++                                       {roleId}
+
++                                     </StatusPill>
+
++                                   ))
+
++                                 ) : (
+
++                                   <span className="text-sm text-[var(--rm-secondary)]">
+
++                                     No roles assigned
+
++                                   </span>
+
++                                 )}
+
++                               </div>
+
++                             </div>
+
++                           );
+
++                         })}
+
++                       </div>
+
++                     ) : null}
+
++                   </div>
+
++                 ))}
+
++               </>
+
++             )}
+
++           </div>
+
++         </SectionCard>
+
++       </div>
+
++     </div>
+
++   );
+
++ }
+
++
+
+ Γ¥» app/lib/design-system.test.ts:516:34
+    514|     expect(designSystemDocSource).toContain("explicit **Reconnect**");
+    515|     expect(designSystemDocSource).toContain("explicit **Update API keyΓÇª
+    516|     expect(providersRouteSource).toContain("Reconnect");
+       |                                  ^
+    517|     expect(providersRouteSource).toContain("Update API key");
+    518|   });
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[33m26 skipped[39m[90m (27)[39m
+[2m   Start at [22m 18:39:00
+[2m   Duration [22m 2.86s[2m (transform 1.03s, setup 0ms, collect 1.53s, tests 27ms, environment 0ms, prepare 536ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\47-runtime-persistence-rehydration-lifecycle\role-model-router\apps\runtime-ui:
+ΓÇëERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓÇë Command failed with exit code 1: vitest run app/lib/design-system.test.ts -t providers surface exposes explicit in-place maintenance actions for saved remote accounts

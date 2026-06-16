@@ -1,0 +1,19 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/47-runtime-persistence-rehydration-lifecycle/role-model-router/apps/runtime-host-bridge[39m
+
+(node:940) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [32mΓ£ô[39m test/restart-rehydration.test.ts [2m([22m[2m7 tests[22m[2m)[22m[33m 4479[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m restart rehydration[2m > [22mrestores activated endpoints and session readiness summary after backend restart [33m 742[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m restart rehydration[2m > [22mdoes not count expired pending device authorization as an active readiness blocker after restart [33m 564[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m restart rehydration[2m > [22marchives orphan pending authorizations and orphan credential files instead of counting them as active readiness [33m 531[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m restart rehydration[2m > [22marchives invalid persisted provider accounts instead of surfacing them as active lifecycle records [33m 509[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m restart rehydration[2m > [22msurfaces failed pending authorization polling in bootstrap stage details after restart [33m 566[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m restart rehydration[2m > [22mclassifies failed startup OAuth refresh as expired auth after restart [33m 572[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m restart rehydration[2m > [22mpolls the earliest-expiring pending authorizations first and surfaces deferred count [33m 991[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m7 passed[39m[22m[90m (7)[39m
+[2m   Start at [22m 20:13:11
+[2m   Duration [22m 7.15s[2m (transform 1.21s, setup 0ms, collect 1.69s, tests 4.48s, environment 0ms, prepare 286ms)[22m
+

@@ -1,0 +1,26 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/47-runtime-persistence-rehydration-lifecycle/role-model-router/apps/runtime-host-bridge[39m
+
+(node:59016) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:59360) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:46472) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [32mΓ£ô[39m test/session-readiness-api.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 744[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m session readiness API[2m > [22mexposes bootstrap, inventory, and readiness fields over HTTP [33m 741[2mms[22m[39m
+ [32mΓ£ô[39m test/account-repair.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 1090[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m account repair mutations[2m > [22mreconnect returns the current pending device-authorization session for the same account [33m 693[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m account repair mutations[2m > [22mupdate API key preserves account identity, bindings, and endpoint associations [33m 393[2mms[22m[39m
+ [32mΓ£ô[39m test/restart-rehydration.test.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 3605[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m restart rehydration[2m > [22mrestores activated endpoints and session readiness summary after backend restart [33m 1031[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m restart rehydration[2m > [22mdoes not count expired pending device authorization as an active readiness blocker after restart [33m 564[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m restart rehydration[2m > [22msurfaces failed pending authorization polling in bootstrap stage details after restart [33m 556[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m restart rehydration[2m > [22mclassifies failed startup OAuth refresh as expired auth after restart [33m 564[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m restart rehydration[2m > [22mpolls the earliest-expiring pending authorizations first and surfaces deferred count [33m 888[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m3 passed[39m[22m[90m (3)[39m
+[2m      Tests [22m [1m[32m8 passed[39m[22m[90m (8)[39m
+[2m   Start at [22m 19:47:52
+[2m   Duration [22m 6.73s[2m (transform 2.11s, setup 0ms, collect 6.66s, tests 5.44s, environment 1ms, prepare 1.01s)[22m
+

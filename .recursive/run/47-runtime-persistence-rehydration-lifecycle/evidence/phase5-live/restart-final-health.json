@@ -1,0 +1,101 @@
+{
+  "status": "degraded",
+  "executionMode": "decision_only",
+  "vendors": {
+    "llama-swap": {
+      "vendorId": "llama-swap",
+      "healthStatus": "inactive"
+    },
+    "litellm": {
+      "vendorId": "litellm",
+      "healthStatus": "inactive"
+    }
+  },
+  "inactiveVendors": [
+    "llama-swap",
+    "litellm"
+  ],
+  "credentialLifecycleAuthority": {
+    "state": "authoritative",
+    "bootstrapStatus": "degraded"
+  },
+  "sessionBootstrap": {
+    "status": "degraded",
+    "startedAt": "2026-06-15T20:31:17.351Z",
+    "finishedAt": "2026-06-15T20:31:18.413Z",
+    "stages": [
+      {
+        "stageId": "credentials",
+        "status": "degraded",
+        "startedAt": "2026-06-15T20:31:17.351Z",
+        "finishedAt": "2026-06-15T20:31:17.487Z",
+        "details": {
+          "pendingAttempted": 0,
+          "pendingSucceeded": 0,
+          "pendingConnected": 0,
+          "pendingFailed": 0,
+          "pendingDeferred": 0,
+          "refreshAttempted": 1,
+          "refreshSucceeded": 0,
+          "refreshFailed": 1
+        }
+      },
+      {
+        "stageId": "endpoints",
+        "status": "ready",
+        "startedAt": "2026-06-15T20:31:17.487Z",
+        "finishedAt": "2026-06-15T20:31:17.498Z",
+        "details": {
+          "source": "sqlite",
+          "count": 4
+        }
+      },
+      {
+        "stageId": "peers",
+        "status": "ready",
+        "startedAt": "2026-06-15T20:31:17.498Z",
+        "finishedAt": "2026-06-15T20:31:18.409Z",
+        "details": {
+          "reloaded": 1,
+          "failed": 0
+        }
+      },
+      {
+        "stageId": "vendors",
+        "status": "skipped",
+        "startedAt": "2026-06-15T20:31:18.409Z",
+        "finishedAt": "2026-06-15T20:31:18.409Z",
+        "message": "unified runtime config disabled"
+      },
+      {
+        "stageId": "local-reload",
+        "status": "skipped",
+        "startedAt": "2026-06-15T20:31:18.409Z",
+        "finishedAt": "2026-06-15T20:31:18.413Z",
+        "message": "no llama-swap loads in manifest"
+      },
+      {
+        "stageId": "remote-health",
+        "status": "skipped",
+        "startedAt": "2026-06-15T20:31:18.413Z",
+        "finishedAt": "2026-06-15T20:31:18.413Z",
+        "message": "execution probes skipped in decision_only mode"
+      },
+      {
+        "stageId": "inventory",
+        "status": "ready",
+        "startedAt": "2026-06-15T20:31:18.413Z",
+        "finishedAt": "2026-06-15T20:31:18.413Z",
+        "details": {
+          "modelIdCount": 5,
+          "endpointIdCount": 6,
+          "localEndpointCount": 2,
+          "remoteEndpointCount": 4,
+          "emptyAliasIds": [],
+          "driftWarningCount": 0,
+          "driftWarnings": []
+        }
+      }
+    ]
+  }
+}

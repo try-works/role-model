@@ -1,0 +1,39 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/47-runtime-persistence-rehydration-lifecycle/role-model-router/apps/runtime-host-bridge[39m
+
+(node:58348) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [31mΓ¥»[39m test/restart-rehydration.test.ts [2m([22m[2m4 tests[22m[2m | [22m[31m1 failed[39m[2m | [22m[33m3 skipped[39m[2m)[22m[33m 1793[2mms[22m[39m
+   [2m[90mΓåô[39m[22m restart rehydration[2m > [22mrestores activated endpoints and session readiness summary after backend restart
+   [2m[90mΓåô[39m[22m restart rehydration[2m > [22mdoes not count expired pending device authorization as an active readiness blocker after restart
+   [2m[90mΓåô[39m[22m restart rehydration[2m > [22msurfaces failed pending authorization polling in bootstrap stage details after restart
+[31m   [31m├ù[31m restart rehydration[2m > [22mpolls the earliest-expiring pending authorizations first and surfaces deferred count[39m[33m 1787[2mms[22m[39m
+[31m     ΓåÆ expected 'pending' to be 'connected' // Object.is equality[39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/restart-rehydration.test.ts > restart rehydration > polls the earliest-expiring pending authorizations first and surfaces deferred count
+AssertionError: expected 'pending' to be 'connected' // Object.is equality
+
+Expected: "connected"
+Received: "pending"
+
+ Γ¥» test/restart-rehydration.test.ts:455:70
+    453|           sessions.map((session) => [session.providerAccountId, sessioΓÇª
+    454|         );
+    455|         expect(statusByAccountId.get("moonshot.personal.pending-5")).tΓÇª
+       |                                                                      ^
+    456|         expect(statusByAccountId.get("moonshot.personal.pending-4")).tΓÇª
+    457|       } finally {
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[33m3 skipped[39m[90m (4)[39m
+[2m   Start at [22m 19:02:17
+[2m   Duration [22m 6.03s[2m (transform 2.12s, setup 0ms, collect 2.78s, tests 1.79s, environment 0ms, prepare 734ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\47-runtime-persistence-rehydration-lifecycle\role-model-router\apps\runtime-host-bridge:
+ΓÇëERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓÇë Command failed with exit code 1: vitest run test/restart-rehydration.test.ts -t polls the earliest-expiring pending authorizations first and surfaces deferred count

@@ -174,6 +174,9 @@ CREATE TABLE IF NOT EXISTS runtime_telemetry_records (
   endpoint_id TEXT NOT NULL,
   conversation_id TEXT NOT NULL,
   created_at_ms INTEGER NOT NULL,
+  client_request_id TEXT,
+  request_class TEXT,
+  source_type TEXT,
   model_id TEXT,
   provider_kind TEXT,
   provider_family TEXT,
@@ -589,6 +592,7 @@ export interface RestoreRuntimeStateInput {
 
 export interface RuntimeObservationSummaryRecord {
   readonly requestId: string;
+  readonly clientRequestId?: string | null;
   readonly routingDecisionId: string;
   readonly endpointId: string;
   readonly createdAtMs: number;
@@ -605,6 +609,9 @@ export interface RuntimeTelemetryRecord {
   readonly endpointId: string;
   readonly conversationId: string;
   readonly createdAtMs: number;
+  readonly clientRequestId: string | null;
+  readonly requestClass: "benchmark" | "live_request" | "unknown" | null;
+  readonly sourceType: "local" | "remote" | null;
   readonly modelId: string | null;
   readonly providerKind: string | null;
   readonly providerFamily: string | null;
@@ -646,6 +653,7 @@ export interface RuntimeTelemetrySummary {
   readonly cachedRequestCount: number;
   readonly totalActualCostUsd: number;
   readonly totalEstimatedCostUsd: number;
+  readonly totalEffectiveCostUsd: number;
   readonly averageLatencyMs: number | null;
   readonly p95LatencyMs: number | null;
   readonly lastSeenAtMs: number | null;
@@ -680,6 +688,7 @@ export interface RuntimeTelemetryQueryInput {
 
 export interface PersistedRuntimeObservationBundle {
   readonly requestId: string;
+  readonly clientRequestId?: string | null;
   readonly routingDecisionId: string;
   readonly endpointId: string;
   readonly conversationId: string;
@@ -778,6 +787,9 @@ function initializeSchema(database: DatabaseSync): void {
     ).map((row) => row.name),
   );
   const telemetryColumnDefinitions = [
+    "client_request_id TEXT",
+    "request_class TEXT",
+    "source_type TEXT",
     "provider_family TEXT",
     "finish_reason TEXT",
     "prompt_cache_supported INTEGER NOT NULL DEFAULT 0",
@@ -1633,6 +1645,9 @@ function mapRuntimeTelemetryRecord(row: {
   endpoint_id: string;
   conversation_id: string;
   created_at_ms: number;
+  client_request_id: string | null;
+  request_class: string | null;
+  source_type: string | null;
   model_id: string | null;
   provider_kind: string | null;
   provider_family: string | null;
@@ -1669,6 +1684,14 @@ function mapRuntimeTelemetryRecord(row: {
     endpointId: row.endpoint_id,
     conversationId: row.conversation_id,
     createdAtMs: row.created_at_ms,
+    clientRequestId: row.client_request_id,
+    requestClass:
+      row.request_class === "benchmark" ||
+      row.request_class === "live_request" ||
+      row.request_class === "unknown"
+        ? row.request_class
+        : null,
+    sourceType: row.source_type === "local" || row.source_type === "remote" ? row.source_type : null,
     modelId: row.model_id,
     providerKind: row.provider_kind,
     providerFamily: row.provider_family,
@@ -1714,6 +1737,13 @@ function toRuntimeTelemetryRecord(
     endpointId: observation.endpointId,
     conversationId: observation.conversationId,
     createdAtMs: observation.usageEvent.timestamp_ms,
+    clientRequestId: observation.clientRequestId ?? null,
+    requestClass:
+      observation.observedPerformance.sample.source_type === "benchmark" ||
+      observation.observedPerformance.sample.source_type === "live_request"
+        ? observation.observedPerformance.sample.source_type
+        : "unknown",
+    sourceType: null,
     modelId: observation.usageEvent.model_id ?? null,
     providerKind: observation.usageEvent.provider_kind ?? null,
     providerFamily: executionTelemetry?.providerFamily ?? null,
@@ -1769,7 +1799,7 @@ function listRuntimeTelemetryRecordsInternal(
   const limitClause = typeof input.limit === "number" ? " LIMIT ?" : "";
   const rows = database
     .prepare(
-      `SELECT request_id, routing_decision_id, endpoint_id, conversation_id, created_at_ms, model_id, provider_kind, provider_family, input_tokens, output_tokens, total_tokens, latency_ms, error_class, status_code, finish_reason, prompt_cache_requested, prompt_cache_supported, prompt_cache_used, cache_read_tokens, cache_read_tokens_supported, cache_write_tokens, cache_write_tokens_supported, stream_text_delta_count, stream_text_supported, stream_tool_call_delta_count, stream_tool_call_supported, stream_tool_argument_delta_count, stream_tool_argument_supported, tool_call_count, tool_execution_count, cost_provenance, actual_cost_usd, estimated_cost_usd, currency FROM runtime_telemetry_records WHERE ${clauses.join(
+      `SELECT request_id, routing_decision_id, endpoint_id, conversation_id, created_at_ms, client_request_id, request_class, source_type, model_id, provider_kind, provider_family, input_tokens, output_tokens, total_tokens, latency_ms, error_class, status_code, finish_reason, prompt_cache_requested, prompt_cache_supported, prompt_cache_used, cache_read_tokens, cache_read_tokens_supported, cache_write_tokens, cache_write_tokens_supported, stream_text_delta_count, stream_text_supported, stream_tool_call_delta_count, stream_tool_call_supported, stream_tool_argument_delta_count, stream_tool_argument_supported, tool_call_count, tool_execution_count, cost_provenance, actual_cost_usd, estimated_cost_usd, currency FROM runtime_telemetry_records WHERE ${clauses.join(
         " AND ",
       )} ORDER BY created_at_ms DESC, request_id DESC${limitClause}`,
     )
@@ -1779,6 +1809,9 @@ function listRuntimeTelemetryRecordsInternal(
     endpoint_id: string;
     conversation_id: string;
     created_at_ms: number;
+    client_request_id: string | null;
+    request_class: string | null;
+    source_type: string | null;
     model_id: string | null;
     provider_kind: string | null;
     provider_family: string | null;
@@ -2234,7 +2267,7 @@ export function persistRuntimeObservationBundle(input: PersistRuntimeObservation
     );
   database
     .prepare(
-      "INSERT OR REPLACE INTO runtime_telemetry_records (request_id, routing_decision_id, endpoint_id, conversation_id, created_at_ms, model_id, provider_kind, provider_family, input_tokens, output_tokens, total_tokens, latency_ms, error_class, status_code, finish_reason, prompt_cache_requested, prompt_cache_supported, prompt_cache_used, cache_read_tokens, cache_read_tokens_supported, cache_write_tokens, cache_write_tokens_supported, stream_text_delta_count, stream_text_supported, stream_tool_call_delta_count, stream_tool_call_supported, stream_tool_argument_delta_count, stream_tool_argument_supported, tool_call_count, tool_execution_count, cost_provenance, actual_cost_usd, estimated_cost_usd, currency) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      "INSERT OR REPLACE INTO runtime_telemetry_records (request_id, routing_decision_id, endpoint_id, conversation_id, created_at_ms, client_request_id, request_class, source_type, model_id, provider_kind, provider_family, input_tokens, output_tokens, total_tokens, latency_ms, error_class, status_code, finish_reason, prompt_cache_requested, prompt_cache_supported, prompt_cache_used, cache_read_tokens, cache_read_tokens_supported, cache_write_tokens, cache_write_tokens_supported, stream_text_delta_count, stream_text_supported, stream_tool_call_delta_count, stream_tool_call_supported, stream_tool_argument_delta_count, stream_tool_argument_supported, tool_call_count, tool_execution_count, cost_provenance, actual_cost_usd, estimated_cost_usd, currency) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
     )
     .run(
       telemetryRecord.requestId,
@@ -2242,6 +2275,9 @@ export function persistRuntimeObservationBundle(input: PersistRuntimeObservation
       telemetryRecord.endpointId,
       telemetryRecord.conversationId,
       telemetryRecord.createdAtMs,
+      telemetryRecord.clientRequestId,
+      telemetryRecord.requestClass,
+      telemetryRecord.sourceType,
       telemetryRecord.modelId,
       telemetryRecord.providerKind,
       telemetryRecord.providerFamily,
@@ -2284,16 +2320,19 @@ export interface PersistRuntimeTelemetryFailureInput {
   readonly statusCode: number;
   readonly errorClass: string;
   readonly latencyMs?: number;
+  readonly clientRequestId?: string | null;
+  readonly requestClass?: "benchmark" | "live_request" | "unknown";
+  readonly sourceType?: "local" | "remote" | null;
 }
 
 export function persistRuntimeTelemetryFailure(input: PersistRuntimeTelemetryFailureInput): void {
   const database = new DatabaseSync(input.databasePath);
   const createdAtMs = Date.now();
   const routingDecisionId = input.routingDecisionId ?? `decision-${input.requestId}`;
-  const endpointId = input.endpointId ?? "unknown.endpoint";
+  const endpointId = input.endpointId ?? "routing.failed.pre-execution";
   database
     .prepare(
-      "INSERT OR REPLACE INTO runtime_telemetry_records (request_id, routing_decision_id, endpoint_id, conversation_id, created_at_ms, model_id, provider_kind, provider_family, input_tokens, output_tokens, total_tokens, latency_ms, error_class, status_code, finish_reason, prompt_cache_requested, prompt_cache_supported, prompt_cache_used, cache_read_tokens, cache_read_tokens_supported, cache_write_tokens, cache_write_tokens_supported, stream_text_delta_count, stream_text_supported, stream_tool_call_delta_count, stream_tool_call_supported, stream_tool_argument_delta_count, stream_tool_argument_supported, tool_call_count, tool_execution_count, cost_provenance, actual_cost_usd, estimated_cost_usd, currency) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      "INSERT OR REPLACE INTO runtime_telemetry_records (request_id, routing_decision_id, endpoint_id, conversation_id, created_at_ms, client_request_id, request_class, source_type, model_id, provider_kind, provider_family, input_tokens, output_tokens, total_tokens, latency_ms, error_class, status_code, finish_reason, prompt_cache_requested, prompt_cache_supported, prompt_cache_used, cache_read_tokens, cache_read_tokens_supported, cache_write_tokens, cache_write_tokens_supported, stream_text_delta_count, stream_text_supported, stream_tool_call_delta_count, stream_tool_call_supported, stream_tool_argument_delta_count, stream_tool_argument_supported, tool_call_count, tool_execution_count, cost_provenance, actual_cost_usd, estimated_cost_usd, currency) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
     )
     .run(
       input.requestId,
@@ -2301,6 +2340,9 @@ export function persistRuntimeTelemetryFailure(input: PersistRuntimeTelemetryFai
       endpointId,
       "conversation-main",
       createdAtMs,
+      input.clientRequestId ?? null,
+      input.requestClass ?? "unknown",
+      input.sourceType ?? null,
       input.modelId ?? null,
       null,
       null,
@@ -2539,18 +2581,25 @@ export function listRecentRuntimeObservations(
   const database = new DatabaseSync(input.databasePath);
   const rows = database
     .prepare(
-      "SELECT request_id, routing_decision_id, endpoint_id, created_at_ms FROM runtime_observations ORDER BY created_at_ms DESC, request_id DESC LIMIT ?",
+      "SELECT request_id, routing_decision_id, endpoint_id, created_at_ms, observation_json FROM runtime_observations ORDER BY created_at_ms DESC, request_id DESC LIMIT ?",
     )
     .all(input.limit ?? 20) as Array<{
     request_id: string;
     routing_decision_id: string;
     endpoint_id: string;
     created_at_ms: number;
+    observation_json: string;
   }>;
   database.close();
 
   return rows.map((row) => ({
     requestId: row.request_id,
+    clientRequestId:
+      (
+        JSON.parse(row.observation_json) as PersistedRuntimeObservationBundle & {
+          clientRequestId?: string | null;
+        }
+      ).clientRequestId ?? null,
     routingDecisionId: row.routing_decision_id,
     endpointId: row.endpoint_id,
     createdAtMs: row.created_at_ms,
@@ -2591,6 +2640,17 @@ export function readRuntimeTelemetrySummary(
     ),
     totalEstimatedCostUsd: roundMetric(
       records.reduce((sum, record) => sum + (record.estimatedCostUsd ?? 0), 0),
+    ),
+    totalEffectiveCostUsd: roundMetric(
+      records.reduce((sum, record) => {
+        if (typeof record.actualCostUsd === "number") {
+          return sum + record.actualCostUsd;
+        }
+        if (typeof record.estimatedCostUsd === "number") {
+          return sum + record.estimatedCostUsd;
+        }
+        return sum;
+      }, 0),
     ),
     averageLatencyMs:
       latencyValues.length > 0 ? Math.round(totalLatency / latencyValues.length) : null,

@@ -1,0 +1,50 @@
+[
+  {
+    "server": "peer",
+    "method": "GET",
+    "path": "/v1/models",
+    "at": "2026-06-15T20:31:15.807Z"
+  },
+  {
+    "server": "oauth",
+    "method": "POST",
+    "path": "/oauth/device_authorization",
+    "at": "2026-06-15T20:31:16.752Z"
+  },
+  {
+    "server": "oauth",
+    "method": "POST",
+    "path": "/oauth/token",
+    "at": "2026-06-15T20:31:16.788Z"
+  },
+  {
+    "server": "oauth",
+    "method": "POST",
+    "path": "/oauth/device_authorization",
+    "at": "2026-06-15T20:31:16.841Z"
+  },
+  {
+    "server": "oauth",
+    "method": "POST",
+    "path": "/oauth/token",
+    "at": "2026-06-15T20:31:16.874Z"
+  },
+  {
+    "server": "oauth",
+    "method": "POST",
+    "path": "/oauth/device_authorization",
+    "at": "2026-06-15T20:31:16.921Z"
+  },
+  {
+    "server": "oauth",
+    "method": "POST",
+    "path": "/oauth/token",
+    "at": "2026-06-15T20:31:17.445Z"
+  },
+  {
+    "server": "peer",
+    "method": "GET",
+    "path": "/v1/models",
+    "at": "2026-06-15T20:31:17.544Z"
+  }
+]

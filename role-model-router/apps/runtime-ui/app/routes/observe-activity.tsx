@@ -21,6 +21,7 @@ import {
   type RuntimeActivityLogEntry,
   fetchActivityCapture,
   fetchActivityMetrics,
+  subscribeTelemetryStream,
 } from "../lib/runtime-api";
 import { buildActivitySummary } from "../lib/view-models";
 
@@ -41,16 +42,34 @@ export default function ObserveActivityRoute() {
   const [captureLoading, setCaptureLoading] = useState(false);
 
   useEffect(() => {
-    void fetchActivityMetrics()
-      .then((value) => {
+    let disposed = false;
+    const load = async () => {
+      try {
+        const value = await fetchActivityMetrics();
+        if (disposed) {
+          return;
+        }
         setMetrics(value);
         setSelectedCaptureId(
           (current) => current ?? value.find((entry) => entry.has_capture)?.id ?? null,
         );
-      })
-      .catch((value: unknown) =>
-        setError(value instanceof Error ? value.message : "Could not load activity metrics."),
-      );
+        setError(null);
+      } catch (value) {
+        if (!disposed) {
+          setError(value instanceof Error ? value.message : "Could not load activity metrics.");
+        }
+      }
+    };
+
+    void load();
+    const unsubscribe = subscribeTelemetryStream(() => {
+      void load();
+    });
+
+    return () => {
+      disposed = true;
+      unsubscribe();
+    };
   }, []);
 
   useEffect(() => {

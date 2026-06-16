@@ -17,7 +17,6 @@ import {
 import { usePageActions } from "../lib/shell-header-context";
 import {
   ROUTING_MODE_OPTIONS,
-  describeRoutingMode,
   formatRoutingModeLabel,
   normalizeRoutingModeValue,
   type RuntimeRoutingMode,
@@ -34,7 +33,6 @@ import {
   fetchRuntimeSnapshot,
   updateRuntimeConfig,
 } from "../lib/runtime-api";
-import { countActiveEndpointModels } from "../lib/view-models";
 
 type RoutingStrategyChoice = RuntimeRoutingMode | "unset" | "custom";
 type RuntimeExecutionMode = NonNullable<RuntimeConfig["executionMode"]>;
@@ -197,12 +195,6 @@ export default function ControlRoutingStrategyRoute() {
   }
 
   const config = configRecord.config ?? createDefaultRuntimeConfig();
-  const activeEndpointModels = countActiveEndpointModels(snapshot.endpoints);
-  const configLocalModelCount = config.llamaSwap.models.length;
-  const configRemoteMappingCount = config.liteLLM.providers.reduce(
-    (count, provider) => count + provider.modelMappings.length,
-    0,
-  );
   const selectedStrategyDetails = (() => {
     if (selectedRoutingStrategy === "unset") {
       return {
@@ -491,92 +483,6 @@ export default function ControlRoutingStrategyRoute() {
         </div>
       </SectionCard>
 
-      <SectionCard
-        title="Current control-plane context"
-        description="Use the routing strategy page as the persisted control surface, then verify the live outcome through the controller, router, and request-ledger views."
-      >
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <div className={`${mutedPanelClassName} p-4`}>
-            <p className="text-xs uppercase tracking-[0.2em] text-[var(--rm-muted)]">
-              Persisted strategy
-            </p>
-            <p className="mt-2 text-sm font-medium text-[var(--rm-fg)]">
-              {config.routingStrategy ? formatRoutingModeLabel(config.routingStrategy) : "runtime default"}
-            </p>
-            {describeRoutingMode(config.routingStrategy) ? (
-              <p className="mt-2 text-sm text-[var(--rm-secondary)]">
-                {describeRoutingMode(config.routingStrategy)}
-              </p>
-            ) : null}
-          </div>
-          <div className={`${mutedPanelClassName} p-4`}>
-            <p className="text-xs uppercase tracking-[0.2em] text-[var(--rm-muted)]">
-              Execution mode
-            </p>
-            <p className="mt-2 text-sm font-medium text-[var(--rm-fg)]">
-              {config.executionMode ?? "pending"}
-            </p>
-          </div>
-          <div className={`${mutedPanelClassName} p-4`}>
-            <p className="text-xs uppercase tracking-[0.2em] text-[var(--rm-muted)]">
-              Local models
-            </p>
-            <p className="mt-2 text-sm font-medium text-[var(--rm-fg)]">
-              {activeEndpointModels.localModelCount}
-            </p>
-            <p className="mt-2 text-sm text-[var(--rm-secondary)]">
-              Active local models with registry endpoints.
-              {configLocalModelCount > 0
-                ? ` Runtime config also declares ${configLocalModelCount} llama-swap model${configLocalModelCount === 1 ? "" : "s"}.`
-                : ""}
-            </p>
-          </div>
-          <div className={`${mutedPanelClassName} p-4`}>
-            <p className="text-xs uppercase tracking-[0.2em] text-[var(--rm-muted)]">
-              Remote mappings
-            </p>
-            <p className="mt-2 text-sm font-medium text-[var(--rm-fg)]">
-              {activeEndpointModels.remoteModelCount}
-            </p>
-            <p className="mt-2 text-sm text-[var(--rm-secondary)]">
-              Active remote models with registry endpoints.
-              {configRemoteMappingCount > 0
-                ? ` Runtime config also declares ${configRemoteMappingCount} LiteLLM mapping${configRemoteMappingCount === 1 ? "" : "s"}.`
-                : ""}
-            </p>
-          </div>
-        </div>
-        <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <Link
-            className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}
-            to="/app/router/controller"
-          >
-            <span className="block font-medium text-[var(--rm-fg)]">Controller</span>
-            Review or change the current controller assignment.
-          </Link>
-          <Link
-            className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}
-            to="/app/router"
-          >
-            <span className="block font-medium text-[var(--rm-fg)]">Router detail</span>
-            Inspect routing provenance, controller guidance, and policy inputs.
-          </Link>
-          <Link
-            className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}
-            to="/app/studio/chat"
-          >
-            <span className="block font-medium text-[var(--rm-fg)]">Workbench</span>
-            Run routed requests against the live runtime.
-          </Link>
-          <Link
-            className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}
-            to="/app/observe/requests"
-          >
-            <span className="block font-medium text-[var(--rm-fg)]">Requests</span>
-            Inspect routing receipts and raw request observations.
-          </Link>
-        </div>
-      </SectionCard>
     </div>
   );
 }

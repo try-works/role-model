@@ -1,0 +1,7 @@
+[
+  {
+    "id": "local-main",
+    "url": "http://127.0.0.1:64185",
+    "authToken": "peer-secret"
+  }
+]

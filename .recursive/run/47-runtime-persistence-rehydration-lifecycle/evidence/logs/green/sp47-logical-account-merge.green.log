@@ -1,0 +1,21 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/47-runtime-persistence-rehydration-lifecycle/role-model-router/apps/runtime-host-bridge[39m
+
+(node:31472) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [32mΓ£ô[39m test/backend-unified-runtime-config.test.ts [2m([22m[2m10 tests[22m[2m)[22m[33m 4968[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m runtime-host-bridge unified runtime backend[2m > [22msurfaces the derived execution mode in the runtime summary when a unified config file is provided [33m 349[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m runtime-host-bridge unified runtime backend[2m > [22mreads and updates unified runtime config through the backend [33m 319[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m runtime-host-bridge unified runtime backend[2m > [22mcreates and updates unified runtime config when the configured path does not exist yet [33m 329[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m runtime-host-bridge unified runtime backend[2m > [22mdoes not mark all candidates ignored when routing guidance has no preferred endpoints [33m 372[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m runtime-host-bridge unified runtime backend[2m > [22mpreserves synthesized activated endpoint models across runtime config updates [33m 375[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m runtime-host-bridge unified runtime backend[2m > [22mreturns no controller assignment when the unified config has no endpoints yet [33m 399[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m runtime-host-bridge unified runtime backend[2m > [22msurfaces normalized provider docs and npm metadata through listProviders [33m 507[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m runtime-host-bridge unified runtime backend[2m > [22mpreserves manual account authority and provenance on exact runtime-config account-id collision [33m 1061[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m runtime-host-bridge unified runtime backend[2m > [22msurfaces LiteLLM-backed Moonshot models and endpoints from unified runtime config [33m 970[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m10 passed[39m[22m[90m (10)[39m
+[2m   Start at [22m 20:15:27
+[2m   Duration [22m 7.33s[2m (transform 1.08s, setup 0ms, collect 1.53s, tests 4.97s, environment 0ms, prepare 312ms)[22m
+

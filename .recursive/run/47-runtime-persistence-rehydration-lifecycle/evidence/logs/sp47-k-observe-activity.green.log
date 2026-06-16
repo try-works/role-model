@@ -1,0 +1,11 @@
+# command
+curl.exe -s "http://127.0.0.1:3461/api/metrics"
+
+# output
+[{"id":1,"timestamp":"2026-06-16T03:59:07.217Z","model":"moonshot/kimi-k2.5","req_path":"/v1/chat/completions","resp_content_type":"application/json","resp_status_code":200,"tokens":{"cache_tokens":0,"input_tokens":32,"output_tokens":24,"prompt_per_second":266.7,"tokens_per_second":200},"duration_ms":120,"has_capture":true},{"id":2,"timestamp":"2026-06-16T03:59:07.216Z","model":"moonshot/kimi-k2.5","req_path":"/v1/chat/completions","resp_content_type":"application/json","resp_status_code":200,"tokens":{"cache_tokens":0,"input_tokens":32,"output_tokens":24,"prompt_per_second":266.7,"tokens_per_second":200},"duration_ms":120,"has_capture":true}]
+
+# command
+curl.exe -s "http://127.0.0.1:3461/api/captures/1"
+
+# output
+{"id":1,"req_path":"/v1/chat/completions","req_headers":{"authorization":"[redacted]","OpenAI-Beta":"responses=v1"},"req_body":"ewogICJzdXBwcmVzc2VkIjogdHJ1ZSwKICAicmVhc29uIjogInBvbGljeS5yYXdDYXB0dXJlLnJlcXVlc3RCb2R5LmRpc2FibGVkIgp9","resp_headers":{"content-type":"application/json"},"resp_body":"ewogICJzdXBwcmVzc2VkIjogdHJ1ZSwKICAicmVhc29uIjogInBvbGljeS5yYXdDYXB0dXJlLnJlc3BvbnNlQm9keS5kaXNhYmxlZCIKfQ=="}

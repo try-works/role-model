@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 
 import {
-  CodeBlock,
   EmptyState,
   ErrorState,
   FactCard,
@@ -10,43 +9,30 @@ import {
   SectionCard,
   StatusPill,
 } from "../components/page-primitives";
-import { mutedPanelClassName, secondaryButtonClassName } from "../lib/design-system";
+import { secondaryButtonClassName } from "../lib/design-system";
 import { usePageActions } from "../lib/shell-header-context";
 import {
-  type RouterConfig,
   type RouterSummary,
   type RuntimeConfigRecord,
   type RuntimeSnapshot,
-  fetchRouterConfig,
   fetchRouterSummary,
   fetchRuntimeConfig,
   fetchRuntimeSnapshot,
 } from "../lib/runtime-api";
 import { buildAliasReadinessRows } from "../lib/view-models";
 
-function asStringValue(value: unknown): string | null {
-  return typeof value === "string" && value.length > 0 ? value : null;
-}
-
 export default function RouterOverviewRoute() {
   const [summary, setSummary] = useState<RouterSummary | null>(null);
   const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(null);
   const [configRecord, setConfigRecord] = useState<RuntimeConfigRecord | null>(null);
-  const [routerConfig, setRouterConfig] = useState<RouterConfig | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    void Promise.all([
-      fetchRouterSummary(),
-      fetchRuntimeSnapshot(),
-      fetchRuntimeConfig(),
-      fetchRouterConfig(),
-    ])
-      .then(([nextSummary, nextSnapshot, nextConfigRecord, nextRouterConfig]) => {
+    void Promise.all([fetchRouterSummary(), fetchRuntimeSnapshot(), fetchRuntimeConfig()])
+      .then(([nextSummary, nextSnapshot, nextConfigRecord]) => {
         setSummary(nextSummary);
         setSnapshot(nextSnapshot);
         setConfigRecord(nextConfigRecord);
-        setRouterConfig(nextRouterConfig);
         setError(null);
       })
       .catch((value: unknown) =>
@@ -55,15 +41,43 @@ export default function RouterOverviewRoute() {
   }, []);
 
   const aliasRows = useMemo(
-    () =>
-      buildAliasReadinessRows(
+    () => {
+      if ((summary?.aliasInventory?.length ?? 0) > 0) {
+        return summary!.aliasInventory!.map((alias) => ({
+          aliasId: alias.aliasId,
+          modeLabel: alias.mode,
+          configuredHints: [...alias.configuredHintModelIds],
+          resolvedModelIds: [...alias.resolvedModelIds],
+          allowedEndpoints: [...alias.allowEndpointIds],
+          endpointCount: alias.allowEndpointIds.length,
+          localEndpointCount: alias.localEndpointCount,
+          remoteEndpointCount: alias.remoteEndpointCount,
+          activeEndpointCount: alias.activeEndpointCount,
+          healthyEndpointCount: alias.healthyEndpointCount,
+          readinessLabel: alias.readiness,
+          driftWarnings: alias.driftWarnings,
+        }));
+      }
+      return buildAliasReadinessRows(
         configRecord?.config?.modelAliases ?? configRecord?.config?.model_aliases ?? [],
         snapshot?.endpoints ?? [],
-      ),
-    [configRecord, snapshot],
+      ).map((alias) => ({
+        aliasId: alias.aliasId,
+        modeLabel: alias.modeLabel,
+        configuredHints: [...alias.modelIds],
+        resolvedModelIds: [...alias.modelIds],
+        allowedEndpoints: [],
+        endpointCount: alias.endpointCount,
+        localEndpointCount: alias.localEndpointCount,
+        remoteEndpointCount: alias.remoteEndpointCount,
+        activeEndpointCount: alias.activeEndpointCount,
+        healthyEndpointCount: alias.healthyEndpointCount,
+        readinessLabel: alias.readinessLabel,
+        driftWarnings: [],
+      }));
+    },
+    [configRecord, snapshot, summary],
   );
-  const readyAliasCount = aliasRows.filter((row) => row.readinessLabel === "ready").length;
-
   usePageActions(
     <>
       <Link className={secondaryButtonClassName} to="/app/router/strategy">
@@ -79,7 +93,7 @@ export default function RouterOverviewRoute() {
   if (error) {
     return <ErrorState label={error} />;
   }
-  if (!summary || !snapshot || !configRecord || !routerConfig) {
+  if (!summary || !snapshot || !configRecord) {
     return <LoadingState label="Loading router overview…" />;
   }
 
@@ -105,8 +119,8 @@ export default function RouterOverviewRoute() {
                 <tr>
                   <th className="pb-3 font-medium">Alias</th>
                   <th className="pb-3 font-medium">Mode</th>
-                  <th className="pb-3 font-medium">Alias coverage</th>
-                  <th className="pb-3 font-medium">Endpoints</th>
+                  <th className="pb-3 font-medium">Configured hints</th>
+                  <th className="pb-3 font-medium">Resolved models</th>
                   <th className="pb-3 font-medium">Readiness</th>
                 </tr>
               </thead>
@@ -116,21 +130,47 @@ export default function RouterOverviewRoute() {
                     <td className="py-3 font-medium text-[var(--rm-fg)]">{row.aliasId}</td>
                     <td className="py-3 text-[var(--rm-secondary)]">{row.modeLabel}</td>
                     <td className="py-3 text-[var(--rm-secondary)]">
-                      {row.modelIds.join(", ") || "—"}
+                      {row.configuredHints.length > 0 ? (
+                        <div className="space-y-1">
+                          {row.configuredHints.map((modelId) => (
+                            <div key={`${row.aliasId}-hint-${modelId}`}>{modelId}</div>
+                          ))}
+                        </div>
+                      ) : (
+                        "—"
+                      )}
                     </td>
-                    <td className="py-3 text-[var(--rm-secondary)]">{row.sourceSummary}</td>
+                    <td className="py-3 text-[var(--rm-secondary)]">
+                      {row.resolvedModelIds.length > 0 ? (
+                        <div className="space-y-1">
+                          {row.resolvedModelIds.map((modelId) => (
+                            <div key={`${row.aliasId}-resolved-${modelId}`}>{modelId}</div>
+                          ))}
+                        </div>
+                      ) : (
+                        "—"
+                      )}
+                    </td>
                     <td className="py-3">
-                      <StatusPill
-                        tone={
-                          row.readinessLabel === "ready"
-                            ? "success"
-                            : row.readinessLabel === "degraded"
-                              ? "warning"
-                              : "neutral"
-                        }
-                      >
-                        {row.readinessLabel}
-                      </StatusPill>
+                      <div className="space-y-1">
+                        <StatusPill
+                          tone={
+                            row.readinessLabel === "ready"
+                              ? "success"
+                              : row.readinessLabel === "degraded"
+                                ? "warning"
+                                : "neutral"
+                          }
+                        >
+                          {row.readinessLabel}
+                        </StatusPill>
+                        {"driftWarnings" in row && row.driftWarnings.length > 0 ? (
+                          <div className="text-xs text-[var(--rm-muted)]">
+                            {row.driftWarnings.length} drift warning
+                            {row.driftWarnings.length === 1 ? "" : "s"}
+                          </div>
+                        ) : null}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -139,85 +179,6 @@ export default function RouterOverviewRoute() {
           </div>
         )}
       </SectionCard>
-
-      <SectionCard title="Execution-ready aliases">
-        {readyAliasCount === 0 ? (
-          <EmptyState label="No aliases are execution-ready yet. Activate matching local or remote endpoints first." />
-        ) : (
-          <div className="flex flex-wrap gap-2">
-            {aliasRows
-              .filter((row) => row.readinessLabel === "ready")
-              .map((row) => (
-                <StatusPill key={row.aliasId} tone="success">
-                  {row.aliasId}
-                </StatusPill>
-              ))}
-          </div>
-        )}
-      </SectionCard>
-
-      <div className="grid gap-4 xl:grid-cols-[0.85fr_1.15fr]">
-        <SectionCard title="Guidance provenance">
-          <div className="space-y-4">
-            <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
-              <p className="font-medium text-[var(--rm-fg)]">Guidance endpoint</p>
-              <p className="mt-2">
-                {routerConfig.guidance.endpointId ?? "No routing-model endpoint is configured."}
-              </p>
-            </div>
-            {routerConfig.guidance.preferredEndpointIds.length === 0 &&
-            routerConfig.guidance.ignoredEndpointIds.length === 0 ? (
-              <EmptyState label="No preferred or ignored endpoints are currently configured." />
-            ) : (
-              <dl className="grid gap-4 text-sm md:grid-cols-2">
-                <div className={`${mutedPanelClassName} p-4`}>
-                  <dt className="font-medium text-[var(--rm-fg)]">Preferred endpoints</dt>
-                  <dd className="mt-2 whitespace-pre-wrap text-[var(--rm-secondary)]">
-                    {routerConfig.guidance.preferredEndpointIds.join("\n") || "n/a"}
-                  </dd>
-                </div>
-                <div className={`${mutedPanelClassName} p-4`}>
-                  <dt className="font-medium text-[var(--rm-fg)]">Ignored endpoints</dt>
-                  <dd className="mt-2 whitespace-pre-wrap text-[var(--rm-secondary)]">
-                    {routerConfig.guidance.ignoredEndpointIds.join("\n") || "n/a"}
-                  </dd>
-                </div>
-              </dl>
-            )}
-          </div>
-        </SectionCard>
-
-        <SectionCard title="Policy inputs">
-          <div className="space-y-4">
-            {routerConfig.policySources.roles.length === 0 ? (
-              <EmptyState label="No role policy inputs are currently available." />
-            ) : (
-              routerConfig.policySources.roles.map((role, index) => (
-                <div
-                  key={`${asStringValue(role.role_id) ?? "role"}-${index}`}
-                  className={`${mutedPanelClassName} p-4`}
-                >
-                  <p className="font-medium text-[var(--rm-fg)]">
-                    {asStringValue(role.role_id) ?? "Unnamed role"}
-                  </p>
-                  <p className="mt-2 text-sm text-[var(--rm-secondary)]">
-                    {asStringValue(role.description) ?? "No role description provided."}
-                  </p>
-                  <div className="mt-3">
-                    <CodeBlock>
-                      {JSON.stringify(role.routing_policy_overrides ?? {}, null, 2)}
-                    </CodeBlock>
-                  </div>
-                </div>
-              ))
-            )}
-            <div className={`${mutedPanelClassName} p-4`}>
-              <p className="font-medium text-[var(--rm-fg)]">Task definitions</p>
-              <CodeBlock>{JSON.stringify(routerConfig.policySources.tasks, null, 2)}</CodeBlock>
-            </div>
-          </div>
-        </SectionCard>
-      </div>
     </div>
   );
 }

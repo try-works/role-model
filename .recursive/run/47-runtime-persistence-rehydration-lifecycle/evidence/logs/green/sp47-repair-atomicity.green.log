@@ -1,0 +1,14 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/47-runtime-persistence-rehydration-lifecycle/role-model-router/apps/runtime-host-bridge[39m
+
+(node:34200) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [32mΓ£ô[39m test/account-repair.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 1010[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m account repair mutations[2m > [22mreconnect returns the current pending device-authorization session for the same account [33m 399[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m account repair mutations[2m > [22mupdate API key preserves account identity, bindings, and endpoint associations [33m 315[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m3 passed[39m[22m[90m (3)[39m
+[2m   Start at [22m 20:17:07
+[2m   Duration [22m 3.11s[2m (transform 1.01s, setup 0ms, collect 1.40s, tests 1.01s, environment 0ms, prepare 226ms)[22m
+

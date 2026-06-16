@@ -1,0 +1,140 @@
+[
+  {
+    "endpointId": "openai.personal.primary.us-east-1.fast",
+    "modelId": "openai/gpt-4.1-mini-fast",
+    "providerId": "openai",
+    "roleIds": [],
+    "endpointKind": "remote_api",
+    "servingSource": "remote-service",
+    "sourceType": "remote",
+    "healthStatus": "healthy",
+    "capabilities": [
+      "text.chat",
+      "tools.function_calling",
+      "structured.output",
+      "latency.optimized"
+    ],
+    "toolCallingSupported": true,
+    "toolCallingStyle": "openai",
+    "status": "active"
+  },
+  {
+    "endpointId": "anthropic.team.shared.us-east-1.default",
+    "modelId": "claude-3.7-sonnet",
+    "providerId": "anthropic",
+    "roleIds": [],
+    "endpointKind": "remote_api",
+    "servingSource": "remote-service",
+    "sourceType": "remote",
+    "healthStatus": "healthy",
+    "capabilities": [
+      "text.chat",
+      "tools.function_calling"
+    ],
+    "toolCallingSupported": true,
+    "toolCallingStyle": "openai",
+    "status": "degraded"
+  },
+  {
+    "endpointId": "local-openai-compatible.personal.local-main.local.lfm2.5-1.2b-instruct",
+    "modelId": "lfm2.5-1.2b-instruct",
+    "providerId": "local-openai-compatible",
+    "providerAccountId": "local-openai-compatible.personal.local-main",
+    "roleIds": [
+      "general.chat"
+    ],
+    "localModelSource": "peer-backed",
+    "endpointKind": "local_engine",
+    "servingSource": "local-peer",
+    "sourceType": "local",
+    "healthStatus": "healthy",
+    "capabilities": [
+      "text.chat",
+      "tools.function_calling"
+    ],
+    "toolCallingSupported": true,
+    "toolCallingStyle": "none",
+    "status": "active"
+  },
+  {
+    "endpointId": "moonshot.personal.api-key.global.kimi-k2.5",
+    "modelId": "moonshot/kimi-k2.5",
+    "providerId": "moonshot",
+    "providerAccountId": "moonshot.personal.api-key",
+    "roleIds": [
+      "general.chat"
+    ],
+    "endpointKind": "remote_api",
+    "servingSource": "remote-service",
+    "sourceType": "remote",
+    "healthStatus": "healthy",
+    "capabilities": [
+      "text.chat",
+      "tools.function_calling",
+      "structured.output"
+    ],
+    "toolCallingSupported": true,
+    "toolCallingStyle": "openai",
+    "status": "active"
+  },
+  {
+    "endpointId": "moonshot.personal.oauth-ready.global.kimi-k2.5",
+    "modelId": "moonshot/kimi-k2.5",
+    "providerId": "moonshot",
+    "providerAccountId": "moonshot.personal.oauth-ready",
+    "roleIds": [
+      "general.chat"
+    ],
+    "endpointKind": "remote_api",
+    "servingSource": "remote-service",
+    "sourceType": "remote",
+    "healthStatus": "healthy",
+    "capabilities": [
+      "text.chat",
+      "tools.function_calling",
+      "structured.output"
+    ],
+    "toolCallingSupported": true,
+    "toolCallingStyle": "openai",
+    "status": "active"
+  },
+  {
+    "endpointId": "moonshot.personal.oauth-repair.global.kimi-k2.5",
+    "modelId": "moonshot/kimi-k2.5",
+    "providerId": "moonshot",
+    "providerAccountId": "moonshot.personal.oauth-repair",
+    "roleIds": [
+      "general.chat"
+    ],
+    "endpointKind": "remote_api",
+    "servingSource": "remote-service",
+    "sourceType": "remote",
+    "healthStatus": "healthy",
+    "capabilities": [
+      "text.chat",
+      "tools.function_calling",
+      "structured.output"
+    ],
+    "toolCallingSupported": true,
+    "toolCallingStyle": "openai",
+    "status": "active"
+  },
+  {
+    "endpointId": "cli.local.coder",
+    "modelId": "gpt-5.4",
+    "providerId": "local-cli",
+    "roleIds": [],
+    "endpointKind": "local_engine",
+    "servingSource": "local-process",
+    "sourceType": "local",
+    "healthStatus": "healthy",
+    "capabilities": [
+      "code.edit",
+      "reasoning.multi_step",
+      "tools.function_calling"
+    ],
+    "toolCallingSupported": true,
+    "toolCallingStyle": "openai",
+    "status": "active"
+  }
+]

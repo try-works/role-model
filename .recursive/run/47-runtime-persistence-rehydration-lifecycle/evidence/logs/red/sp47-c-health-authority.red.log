@@ -1,0 +1,42 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/47-runtime-persistence-rehydration-lifecycle/role-model-router/apps/runtime-host-bridge[39m
+
+(node:58676) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [31mΓ¥»[39m test/session-readiness-api.test.ts [2m([22m[2m1 test[22m[2m | [22m[31m1 failed[39m[2m)[22m[33m 583[2mms[22m[39m
+[31m   [31m├ù[31m session readiness API[2m > [22mexposes bootstrap, inventory, and readiness fields over HTTP[39m[33m 580[2mms[22m[39m
+[31m     ΓåÆ expected undefined to deeply equal { state: 'authoritative', ΓÇª(1) }[39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/session-readiness-api.test.ts > session readiness API > exposes bootstrap, inventory, and readiness fields over HTTP
+AssertionError: expected undefined to deeply equal { state: 'authoritative', ΓÇª(1) }
+
+- Expected: 
+{
+  "bootstrapStatus": "ready",
+  "state": "authoritative",
+}
+
++ Received: 
+undefined
+
+ Γ¥» test/session-readiness-api.test.ts:121:60
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m   Start at [22m 19:00:07
+[2m   Duration [22m 5.17s[2m (transform 2.04s, setup 0ms, collect 2.67s, tests 583ms, environment 0ms, prepare 480ms)[22m
+
+    119|         };
+    120|         expect(["ready", "degraded", "blocked"]).toContain(healthPayloΓÇª
+    121|         expect(healthPayload.credentialLifecycleAuthority).toEqual(
+       |                                                            ^
+    122|           summary.credentialLifecycle?.authority,
+    123|         );
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+undefined
+D:\DEV\role-model\.worktrees\47-runtime-persistence-rehydration-lifecycle\role-model-router\apps\runtime-host-bridge:
+ΓÇëERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓÇë Command failed with exit code 1: vitest run test/session-readiness-api.test.ts

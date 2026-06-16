@@ -16,6 +16,7 @@ import {
   clearObservedBenchmarkDataForEndpoint,
   clearAllObservedBenchmarkData,
   initializeSqliteMemory,
+  listRuntimeTelemetryRecords,
   persistContinuitySnapshot,
   persistObservedBenchmarkSample,
   persistProviderAccounts,
@@ -1607,6 +1608,7 @@ describe("initializeSqliteMemory", () => {
         cachedRequestCount: 1,
         totalActualCostUsd: 0.0042,
         totalEstimatedCostUsd: 0.0053,
+        totalEffectiveCostUsd: 0.0053,
         averageLatencyMs: 1020,
         p95LatencyMs: 1200,
         lastSeenAtMs: localTimestampMs,
@@ -1767,6 +1769,46 @@ describe("initializeSqliteMemory", () => {
         failureCount: 1,
         averageLatencyMs: 850,
       }),
+    );
+  });
+
+  test("persistRuntimeTelemetryFailure preserves caller correlation and request classification for failed rows", async () => {
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+    const validation = await runRuntimeAdapterValidation({
+      repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      runtimeStateRoot,
+      scopeId: "workspace-dev",
+    });
+
+    persistRuntimeTelemetryFailure({
+      databasePath: validation.databasePath,
+      requestId: "req-failure-metadata-001",
+      endpointId: "routing.failed.pre-execution",
+      modelId: "mixed.local-remote",
+      statusCode: 400,
+      errorClass: "execution_failed",
+      latencyMs: 120,
+      clientRequestId: "req-client-failure-001",
+      requestClass: "live_request",
+      sourceType: "local",
+    });
+
+    expect(
+      listRuntimeTelemetryRecords({
+        databasePath: validation.databasePath,
+        windowMs: 60_000,
+      }),
+    ).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          requestId: "req-failure-metadata-001",
+          endpointId: "routing.failed.pre-execution",
+          clientRequestId: "req-client-failure-001",
+          requestClass: "live_request",
+          sourceType: "local",
+        }),
+      ]),
     );
   });
 

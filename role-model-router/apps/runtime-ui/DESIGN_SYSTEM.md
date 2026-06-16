@@ -130,13 +130,13 @@ The runtime hierarchy remains:
 
 | Route | Status | Template | Purpose |
 | --- | --- | --- | --- |
-| `/app` | live | `summary-board` | Lead with canonical local/remote telemetry KPIs, comparison rows, current controller assignment, recent requests, and major exceptions. |
+| `/app` | live | `summary-board` | Lead with the recent telemetry window as the primary summary surface, then keep current endpoint inventory and a latest-interactions rail below it. |
 | `/app/studio/chat` | live | `studio-workspace` | Routed chat workspace with assistant output, tool calls, execution receipts, usage, and raw payload inspection. |
 | `/app/studio/images` | live | `studio-workspace` | Image workspace with two first-slice request modes in one page: OpenAI-style generation over `/v1/images/generations` and SDAPI generation over `/sdapi/v1/txt2img`; editing and img2img stay backlog-visible rather than first-slice requirements. |
 | `/app/studio/audio` | live | `studio-workspace` | Unified audio workspace over `/v1/audio/speech`, `/v1/audio/voices`, and `/v1/audio/transcriptions` so voice discovery, speech generation, and transcript workflows remain one operator surface. |
 | `/app/studio/rerank` | live | `studio-workspace` | Ranked-input evaluation workspace over `/v1/rerank` and `/v1/reranking` with a compact request rail, ordered score ledger, and raw payload inspection. |
 | `/app/studio/advanced` | live | `studio-workspace` | Contract-and-request workspace for advanced families that stay under Studio: `/v1/responses`, `/v1/messages`, `/v1/messages/count_tokens`, `/v1/embeddings`, `/completion`, and `/infill`. |
-| `/app/remote/providers` | live | `registry-detail` | Primary remote-provider onboarding route for choosing a LiteLLM-backed provider, selecting provider models, and completing either API-key or OAuth setup without leaving the page. |
+| `/app/remote/providers` | live | `registry-detail` | Primary remote-provider onboarding and maintenance route for choosing a LiteLLM-backed provider, selecting provider models, completing API-key or OAuth setup, and repairing saved accounts in place with explicit **Reconnect** and **Update API key** actions. |
 | `/app/models` | live | `model-inventory` | Unified local/remote model inventory with inspect-only card drill-ins, explicit handoff to the runtime-config editor, and a non-error pre-activation state when no controller exists yet. |
 | `/app/models/roles` | live | `registry-detail` | Runtime role policy authoring and task allowlist management over the live router policy surface. |
 | `/app/models/benchmark` | live | `registry-detail` | Capability benchmark for configured models with judge grading, persisted scores, and routing-impact explanation. |
@@ -159,7 +159,7 @@ The runtime hierarchy remains:
 | `/app/local/policy` | redirect | — | Redirects to `/app/local/llama-swap/policy`. |
 | `/app/local/logs` | redirect | — | Redirects to `/app/local/llama-swap/logs`. |
 | `/app/local/matrix` | redirect | — | Redirects to `/app/local/llama-swap/matrix`. |
-| `/app/connect` | live | `registry-detail` | Consumer-facing registry of models and endpoints client applications can call after provider onboarding. |
+| `/app/connect` | live | `registry-detail` | Consumer-facing registry of models and endpoints client applications can call after provider onboarding, with provider rollups and readiness posture sourced from the canonical backend lifecycle contract. |
 | `/app/observe` | redirect | — | Redirects to `/app/observe/requests`. |
 | `/app/observe/activity` | live | `ledger-inspector` | Preserved raw-host activity ledger over `/api/metrics` with inline capture drill-ins from `/api/captures/:id` and adjacent access to `/api/events`. |
 | `/app/observe/requests` | live | `ledger-inspector` | Canonical telemetry request ledger over `/api/role-model/telemetry/requests` with latency, token, cache, and source context. |
@@ -167,7 +167,7 @@ The runtime hierarchy remains:
 | `/app/observe/logs` | live | `dual-console` | Preserved raw-host log shell with `/logs` history, request-level handoffs, and raw `/logs/stream/*` access. |
 | `/app/connect/downstream` | live | `contract-reference` | Downstream OpenAI-compatible contract, auth, model discovery, and tool-calling expectations for client applications. |
 | `/app/connect/upstream` | live | `contract-reference` | Upstream passthrough reference with model-specific upstream target inventory, boundary guidance, and contextual raw `/upstream/*` escape hatches. |
-| `/app/system/runtime` | live | `system-topology` | Runtime health, controller posture, version/provenance facts, host controls, validation floor, and vendor-policy summary. |
+| `/app/system/runtime` | live | `system-topology` | Runtime health, controller posture, canonical lifecycle/readiness rollups, version/provenance facts, host controls, validation floor, and vendor-policy summary. |
 | `/app/system/runtime-config` | live | `registry-detail` | Repo-owned editor for the unified runtime contract covering local llama-swap models, remote LiteLLM providers, and process policy. |
 | `/app/system/peers` | live | `system-topology` | Peer inventory and policy page for `peers` config, including remote model sources, auth posture, timeouts, request filters, matrix/group/runtime-policy relationships, and a real empty-state contract when no peers are configured. |
 
@@ -181,7 +181,7 @@ All templates assume the shell header is already visible. Page content begins di
 
 | Template | Layout definition |
 | --- | --- |
-| `summary-board` | Content starts under the shell header. Two-tier dashboard: telemetry summary cards first, then a split between cross-vendor comparison and recent request/configuration posture. |
+| `summary-board` | Content starts under the shell header. Current-state cards and endpoint inventory first, then a recent request rail plus a separate recent telemetry window. |
 | `studio-workspace` | Content starts under the shell header. Left composition rail, dominant result surface, and secondary inspection region for payload, captures, or contracts. |
 | `registry-detail` | Content starts under the shell header. Dense registry/editor split: compact editing or selection on one side, operational state ledger on the other. |
 | `model-inventory` | Content starts under the shell header. Mobile-first card grid with modal drill-in; cards are the default object representation, not rows. |
@@ -197,7 +197,7 @@ No current runtime route may rely on `FutureSurface`, fixture rows, or other pla
 
 | Template | Implemented reading order |
 | --- | --- |
-| `summary-board` | `/app` leads with telemetry KPI cards, then a dominant local-vs-remote comparison/readiness split with recent request context below. |
+| `summary-board` | `/app` leads with the recent telemetry window, then keeps current endpoint inventory beside a latest-interactions rail instead of duplicating summary posture with a second KPI strip. Replace the old Providers / Endpoints / Execution-ready / Bootstrap strip with the telemetry window instead of duplicating summary posture. Latest requests is an interaction rail, not a raw canonical request ledger. |
 | `studio-workspace` | `/app/studio/chat` uses a compact composer, dominant response stage, and adjacent usage/tooling/payload inspection. |
 | `registry-detail` | Provider, runtime-config, controller, and endpoint pages keep the primary editor/ledger split and use summary chrome only when it changes the operator decision. |
 | `model-inventory` | `/app/models` uses fact strips before a responsive configured-model card grid and an inspect-only modal. |
@@ -243,6 +243,23 @@ These routes are no longer vague placeholder ideas. Their layout contracts are i
 - Narrow contract/reference column
 - Larger model/upstream target inventory pane
 - Raw passthrough links stay contextual rather than global shell chrome
+
+### `Remote > Providers` and lifecycle maintenance
+
+- The route keeps the existing onboarding form on one side and saved-account operational state on the other.
+- Saved-account cards must expose:
+  - lifecycle badge from the canonical backend lifecycle contract
+  - normalized storage-mode/credential posture
+  - explicit **Reconnect** for repairable OAuth accounts
+  - explicit **Update API key** for API-key accounts
+- **Update API key** uses a rectilinear modal with explicit **Save** and **Cancel** controls, clear saving/error states, and no secret echo/backfill.
+- Archived stale legacy artifacts are never shown as current blocking setup rows on the saved-account surface; if surfaced, they appear only as bounded diagnostics separate from active accounts.
+
+### Runtime / Session readiness / Studio execution surfaces
+
+- `System > Runtime`, `System > Session readiness`, `Connect`, `Workbench`, and `Studio > Advanced` must use the same canonical lifecycle/readiness vocabulary.
+- Blocking banners and provider rollups come from the backend lifecycle contract, not route-local inference from raw account fields.
+- Provisional-vs-authoritative bootstrap posture must read consistently across these surfaces.
 
 ### `Local > Choose` and llama-swap setup hints
 
