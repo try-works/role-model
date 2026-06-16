@@ -180,7 +180,9 @@ export default function WorkbenchRoute() {
         <div
           className={`${mutedPanelClassName} flex flex-wrap items-center gap-3 p-4 text-sm text-[var(--rm-secondary)]`}
         >
-          <StatusPill tone={lifecycleBanner.authorityTone}>{lifecycleBanner.authorityLabel}</StatusPill>
+          <StatusPill tone={lifecycleBanner.authorityTone}>
+            {lifecycleBanner.authorityLabel}
+          </StatusPill>
           <span className="font-medium text-[var(--rm-fg)]">{lifecycleBanner.detail}</span>
           {blockingReadinessRows.map((row) => (
             <StatusPill key={row.key} tone={row.tone}>

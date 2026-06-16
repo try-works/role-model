@@ -1,8 +1,8 @@
 import { mkdir } from "node:fs/promises";
-import { DatabaseSync } from "node:sqlite";
 import { mkdtemp } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { DatabaseSync } from "node:sqlite";
 
 import { afterEach, describe, expect, test, vi } from "vitest";
 
@@ -97,10 +97,9 @@ describe("benchmark-runner judge remediation", () => {
       modelId: "lfm2.5-1.2b-instruct",
       sourceType: "local" as const,
     };
-    expect(orderEndpointsForGrading([local, judge], judge.endpointId).map((e) => e.endpointId)).toEqual([
-      "moonshot.kimi",
-      "local.lfm",
-    ]);
+    expect(
+      orderEndpointsForGrading([local, judge], judge.endpointId).map((e) => e.endpointId),
+    ).toEqual(["moonshot.kimi", "local.lfm"]);
   });
 
   test("orderEndpointsForGrading grades non-judge subjects first when overlap risk is flagged", () => {
@@ -216,7 +215,9 @@ describe("benchmark-runner judge remediation", () => {
       sourceArtifactPath: string;
     };
     expect(judgeSummary.parseSuccess).toBe(true);
-    expect(judgeSummary.sourceArtifactPath).toContain("responses/moonshot.kimi/h04-tool-read-router.json");
+    expect(judgeSummary.sourceArtifactPath).toContain(
+      "responses/moonshot.kimi/h04-tool-read-router.json",
+    );
 
     const manifest = JSON.parse(
       await readFile(path.join(artifactRoot, result.runId, "manifest.json"), "utf8"),

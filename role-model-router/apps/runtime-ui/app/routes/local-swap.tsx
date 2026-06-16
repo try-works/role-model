@@ -1,12 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { LlamaSwapSetupBanner } from "../components/llama-swap-setup-hint";
-import {
-  EmptyState,
-  ErrorState,
-  LoadingState,
-  SectionCard,
-} from "../components/page-primitives";
+import { EmptyState, ErrorState, LoadingState, SectionCard } from "../components/page-primitives";
 import { mutedPanelClassName } from "../lib/design-system";
 import { fetchSwapHistory } from "../lib/runtime-api";
 

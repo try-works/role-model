@@ -14,7 +14,10 @@ describe("judge-brief", () => {
       (item) => item.case_id === "h07-multi-turn-sla-guard",
     );
     expect(caseItem).toBeTruthy();
-    const transcript = formatQuestionTranscript(caseItem!);
+    if (!caseItem) {
+      throw new Error("Expected benchmark case h07-multi-turn-sla-guard.");
+    }
+    const transcript = formatQuestionTranscript(caseItem);
     expect(transcript).toContain("[user]");
     expect(transcript).toContain("[assistant]");
     expect(transcript.length).toBeGreaterThan(240);
@@ -25,7 +28,10 @@ describe("judge-brief", () => {
       (item) => item.case_id === "p17-tools-multi-hard",
     );
     expect(caseItem).toBeTruthy();
-    const checklist = buildJudgeDeliverablesChecklist(caseItem!);
+    if (!caseItem) {
+      throw new Error("Expected benchmark case p17-tools-multi-hard.");
+    }
+    const checklist = buildJudgeDeliverablesChecklist(caseItem);
     expect(checklist.some((line) => line.includes("@@ hunk"))).toBe(true);
   });
 
@@ -43,7 +49,10 @@ describe("judge-brief", () => {
       (item) => item.case_id === "h02-fix-async-counter",
     );
     expect(caseItem).toBeTruthy();
-    const brief = buildJudgeGradingBrief(caseItem!);
+    if (!caseItem) {
+      throw new Error("Expected benchmark case h02-fix-async-counter.");
+    }
+    const brief = buildJudgeGradingBrief(caseItem);
     expect(brief.exemplarQuality).toBe("authored");
     expect(brief.exemplarAnswer).toContain("withLock");
   });

@@ -16,7 +16,6 @@ import {
   primaryButtonClassName,
   secondaryButtonClassName,
 } from "../lib/design-system";
-import { usePageActions } from "../lib/shell-header-context";
 import {
   type RuntimeLocalModel,
   type RuntimeRolePolicy,
@@ -27,6 +26,7 @@ import {
   setPeerModelRoles,
   unloadPeerModel,
 } from "../lib/runtime-api";
+import { usePageActions } from "../lib/shell-header-context";
 
 export default function LocalPeerModelsRoute() {
   const [models, setModels] = useState<RuntimeLocalModel[]>([]);
@@ -68,12 +68,7 @@ export default function LocalPeerModelsRoute() {
   }, [refresh]);
 
   usePageActions(
-    <button
-      type="button"
-      onClick={refresh}
-      disabled={loading}
-      className={secondaryButtonClassName}
-    >
+    <button type="button" onClick={refresh} disabled={loading} className={secondaryButtonClassName}>
       {loading ? "Refreshing…" : "Refresh"}
     </button>,
     [loading, refresh],
@@ -143,47 +138,47 @@ export default function LocalPeerModelsRoute() {
       ) : null}
 
       {peersReady ? (
-      <SectionCard
-        title="Register model"
-        description="Model ID must appear in GET /v1/models on a configured endpoint. Registration adds a router endpoint; it does not download weights."
-      >
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <label
-              htmlFor="peer-model-id"
-              className="block text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]"
-            >
-              Model ID
-            </label>
-            <input
-              id="peer-model-id"
-              type="text"
-              value={loadModelId}
-              onChange={(event) => setLoadModelId(event.target.value)}
-              placeholder="lfm2.5-8b-a1b"
-              className={fieldClassName}
+        <SectionCard
+          title="Register model"
+          description="Model ID must appear in GET /v1/models on a configured endpoint. Registration adds a router endpoint; it does not download weights."
+        >
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label
+                htmlFor="peer-model-id"
+                className="block text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]"
+              >
+                Model ID
+              </label>
+              <input
+                id="peer-model-id"
+                type="text"
+                value={loadModelId}
+                onChange={(event) => setLoadModelId(event.target.value)}
+                placeholder="lfm2.5-8b-a1b"
+                className={fieldClassName}
+              />
+            </div>
+            <LocalModelRolePicker
+              rolePolicy={rolePolicy}
+              selectedRoleIds={loadRoleIds}
+              onChange={setLoadRoleIds}
+              disabled={actioning.__register__}
             />
+            <p className="text-sm text-[var(--rm-secondary)]">
+              Roles determine which tasks and aliases may prefer this endpoint. Leave empty to
+              register without role coverage.
+            </p>
+            <button
+              type="button"
+              onClick={handleRegister}
+              disabled={!loadModelId.trim() || actioning.__register__}
+              className={primaryButtonClassName}
+            >
+              {actioning.__register__ ? "Registering…" : "Register model"}
+            </button>
           </div>
-          <LocalModelRolePicker
-            rolePolicy={rolePolicy}
-            selectedRoleIds={loadRoleIds}
-            onChange={setLoadRoleIds}
-            disabled={actioning.__register__}
-          />
-          <p className="text-sm text-[var(--rm-secondary)]">
-            Roles determine which tasks and aliases may prefer this endpoint. Leave empty to
-            register without role coverage.
-          </p>
-          <button
-            type="button"
-            onClick={handleRegister}
-            disabled={!loadModelId.trim() || actioning.__register__}
-            className={primaryButtonClassName}
-          >
-            {actioning.__register__ ? "Registering…" : "Register model"}
-          </button>
-        </div>
-      </SectionCard>
+        </SectionCard>
       ) : null}
 
       <SectionCard

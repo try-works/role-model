@@ -155,9 +155,7 @@ export function failBenchmarkRunProgress(
   return next;
 }
 
-export function readBenchmarkRunProgress(
-  runId: string,
-): BenchmarkRunProgressSnapshot | null {
+export function readBenchmarkRunProgress(runId: string): BenchmarkRunProgressSnapshot | null {
   return activeRuns.get(runId) ?? null;
 }
 

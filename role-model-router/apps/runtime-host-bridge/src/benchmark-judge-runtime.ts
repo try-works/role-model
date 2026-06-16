@@ -88,9 +88,7 @@ export async function awaitJudgeThrottle(): Promise<void> {
   lastJudgeRequestAtMs = Date.now();
 }
 
-export function describeResponseChannels(
-  result: BenchmarkChatCompletionsExecutionResult,
-): {
+export function describeResponseChannels(result: BenchmarkChatCompletionsExecutionResult): {
   readonly hasContentText: boolean;
   readonly hasReasoningText: boolean;
   readonly hasOutputText: boolean;

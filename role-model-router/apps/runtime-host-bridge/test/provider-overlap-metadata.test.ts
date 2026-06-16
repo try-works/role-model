@@ -1,14 +1,11 @@
+import { readFileSync } from "node:fs";
 import { mkdtemp, writeFile } from "node:fs/promises";
 import os from "node:os";
-import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import type { NormalizedCatalog } from "@role-model-router/catalog";
-import {
-  deriveLiteLLMProviders,
-  loadLiteLLMModelPrices,
-} from "@role-model-router/catalog";
+import { deriveLiteLLMProviders, loadLiteLLMModelPrices } from "@role-model-router/catalog";
 import { validateProviderAccounts } from "@role-model-router/provider-account";
 import { describe, expect, test } from "vitest";
 
@@ -59,6 +56,17 @@ function buildUiEquivalentAccount(providerId: string, providerKind: string) {
   };
 }
 
+function expectDefinedProvider<TValue>(
+  value: TValue | undefined,
+  providerId: string,
+  source: string,
+): TValue {
+  if (value === undefined) {
+    throw new Error(`Expected provider ${providerId} in ${source}.`);
+  }
+  return value;
+}
+
 describe("provider overlap metadata (R1)", () => {
   test("legacy listProviders metadata mismatches exactly the 19 known overlap ids", async () => {
     const catalog = loadCatalog();
@@ -96,17 +104,20 @@ describe("provider overlap metadata (R1)", () => {
       const liteLLMProvider = liteLLMProviders.find((entry) => entry.providerId === providerId);
       expect(catalogProvider).toBeDefined();
       expect(liteLLMProvider).toBeDefined();
+      const resolvedCatalogProvider = expectDefinedProvider(
+        catalogProvider,
+        providerId,
+        "catalog providers",
+      );
 
       const operatorMetadata = resolveValidationProviderMetadata({
-        catalogProvider: catalogProvider!,
+        catalogProvider: resolvedCatalogProvider,
         liteLLMProvider,
       });
       const validation = validateProviderAccounts({
         catalog,
         additionalProviders: liteLLMProviders,
-        accounts: [
-          buildUiEquivalentAccount(providerId, operatorMetadata.providerKind),
-        ],
+        accounts: [buildUiEquivalentAccount(providerId, operatorMetadata.providerKind)],
       });
 
       expect(validation.diagnostics).toEqual([]);
@@ -123,12 +134,17 @@ describe("provider overlap metadata (R1)", () => {
       const liteLLMProvider = liteLLMProviders.find((entry) => entry.providerId === providerId);
       expect(catalogProvider).toBeDefined();
       expect(liteLLMProvider).toBeDefined();
+      const resolvedCatalogProvider = expectDefinedProvider(
+        catalogProvider,
+        providerId,
+        "catalog providers",
+      );
 
       const operatorMetadata = resolveValidationProviderMetadata({
-        catalogProvider: catalogProvider!,
+        catalogProvider: resolvedCatalogProvider,
         liteLLMProvider,
       });
-      expect(operatorMetadata.providerKind).toBe(catalogProvider!.providerKind);
+      expect(operatorMetadata.providerKind).toBe(resolvedCatalogProvider.providerKind);
     },
   );
 });
@@ -157,9 +173,14 @@ describe("listProviders overlap metadata (R1 integration)", () => {
         const liteLLMProvider = liteLLMProviders.find((entry) => entry.providerId === providerId);
         expect(catalogProvider).toBeDefined();
         expect(liteLLMProvider).toBeDefined();
+        const resolvedCatalogProvider = expectDefinedProvider(
+          catalogProvider,
+          providerId,
+          "catalog providers",
+        );
 
         const expected = resolveValidationProviderMetadata({
-          catalogProvider: catalogProvider!,
+          catalogProvider: resolvedCatalogProvider,
           liteLLMProvider,
         });
         const providers = await backend.listProviders();

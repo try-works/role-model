@@ -16,7 +16,12 @@ export interface ExtractedBenchmarkAnswer {
   readonly format: BenchmarkAnswerFormat;
   readonly payload: unknown;
   readonly serialized: string;
-  readonly extractionMethod: "api_tool_calls" | "json_fence" | "json_object" | "code_fence" | "missing";
+  readonly extractionMethod:
+    | "api_tool_calls"
+    | "json_fence"
+    | "json_object"
+    | "code_fence"
+    | "missing";
 }
 
 const JSON_FENCE_PATTERN = /```(?:json)?\s*([\s\S]*?)```/gi;
@@ -62,7 +67,7 @@ export function resolveAnswerFormat(caseItem: AnswerFormatCaseRef): BenchmarkAns
       return {
         kind: "tool_calls_with_summary",
         instruction:
-          "Step 1: emit required API tool calls. Step 2: after tools, output ONLY a ```json fence: {\"bullets\":[\"...\",\"...\"]}. No reasoning in the JSON.",
+          'Step 1: emit required API tool calls. Step 2: after tools, output ONLY a ```json fence: {"bullets":["...","..."]}. No reasoning in the JSON.',
         schema: {
           type: "object",
           required: ["bullets"],
@@ -74,7 +79,7 @@ export function resolveAnswerFormat(caseItem: AnswerFormatCaseRef): BenchmarkAns
       return {
         kind: "tool_calls_with_answer",
         instruction:
-          "Step 1: emit required API tool calls. Step 2: after tools, output ONLY a ```json fence: {\"answer\":\"...\"} with your final short answer. No reasoning in the JSON.",
+          'Step 1: emit required API tool calls. Step 2: after tools, output ONLY a ```json fence: {"answer":"..."} with your final short answer. No reasoning in the JSON.',
         schema: {
           type: "object",
           required: ["answer"],
@@ -82,11 +87,15 @@ export function resolveAnswerFormat(caseItem: AnswerFormatCaseRef): BenchmarkAns
         },
       };
     }
-    if (caseItem.category === "max-signal" || caseItem.case_id.startsWith("x01") || caseItem.case_id.startsWith("h15")) {
+    if (
+      caseItem.category === "max-signal" ||
+      caseItem.case_id.startsWith("x01") ||
+      caseItem.case_id.startsWith("h15")
+    ) {
       return {
         kind: "tool_calls_with_summary",
         instruction:
-          "Step 1: emit read_file, grep_search, apply_patch via API as needed. Step 2: output ONLY ```json with {\"plan\":[\"milestone 1\",...],\"patch_summary\":\"...\",\"test_snippet\":\"...\"}.",
+          'Step 1: emit read_file, grep_search, apply_patch via API as needed. Step 2: output ONLY ```json with {"plan":["milestone 1",...],"patch_summary":"...","test_snippet":"..."}.',
         schema: {
           type: "object",
           required: ["plan", "patch_summary"],
@@ -130,7 +139,7 @@ export function buildAnswerFormatInstruction(caseItem: AnswerFormatCaseRef): str
   return [
     "BENCHMARK DELIVERABLE RULES:",
     format.instruction,
-    ...(schemaText ? [`Schema:`, schemaText] : []),
+    ...(schemaText ? ["Schema:", schemaText] : []),
     "Reasoning is allowed before the deliverable, but only the formatted deliverable is graded.",
   ].join("\n");
 }
@@ -206,7 +215,7 @@ function looksLikeReasoningProse(code: string): boolean {
 function collectCodeFences(raw: string, language?: string): string[] {
   const results: string[] = [];
   for (const lang of [language ?? "typescript", "ts", "typescript"]) {
-    const pattern = new RegExp("```" + lang + "\\s*([\\s\\S]*?)```", "gi");
+    const pattern = new RegExp(`\`\`\`${lang}\\s*([\\s\\S]*?)\`\`\``, "gi");
     for (const match of raw.matchAll(pattern)) {
       const body = match[1]?.trim();
       if (body) {
@@ -275,7 +284,10 @@ function recordHasNonPlaceholderRequiredFields(
       return !isPlaceholderString(value);
     }
     if (Array.isArray(value)) {
-      return value.length > 0 && value.every((item) => typeof item === "string" && !isPlaceholderString(item));
+      return (
+        value.length > 0 &&
+        value.every((item) => typeof item === "string" && !isPlaceholderString(item))
+      );
     }
     return value !== undefined && value !== null;
   });
@@ -297,14 +309,20 @@ function pickJsonPayload(candidates: unknown[], format: BenchmarkAnswerFormat): 
     if (required.length === 0) {
       return candidate;
     }
-    if (required.every((key) => key in record) && recordHasNonPlaceholderRequiredFields(record, required)) {
+    if (
+      required.every((key) => key in record) &&
+      recordHasNonPlaceholderRequiredFields(record, required)
+    ) {
       return candidate;
     }
   }
   return null;
 }
 
-function extractTextJsonFields(raw: string, format: BenchmarkAnswerFormat): Record<string, unknown> {
+function extractTextJsonFields(
+  raw: string,
+  format: BenchmarkAnswerFormat,
+): Record<string, unknown> {
   const fenceCandidates = collectJsonFenceCandidates(raw);
   const objectCandidates = collectJsonObjectCandidates(raw);
   const jsonPayload = pickJsonPayload([...fenceCandidates, ...objectCandidates], format);
@@ -420,7 +438,8 @@ export function extractFormattedAnswer(input: {
       format,
       payload,
       serialized: JSON.stringify(payload, null, 2),
-      extractionMethod: hasTools || hasText ? (hasTools ? "api_tool_calls" : "json_fence") : "missing",
+      extractionMethod:
+        hasTools || hasText ? (hasTools ? "api_tool_calls" : "json_fence") : "missing",
     };
   }
 
@@ -543,11 +562,11 @@ export function isValidDeliverable(input: {
 
 function textDeliverableFollowUp(format: BenchmarkAnswerFormat): string {
   if (format.kind === "tool_calls_with_answer") {
-    return "Tools received. Reply with ONLY a ```json fence containing {\"answer\":\"...\"} — a real short answer, not instructions.";
+    return 'Tools received. Reply with ONLY a ```json fence containing {"answer":"..."} — a real short answer, not instructions.';
   }
   if (format.kind === "tool_calls_with_summary") {
     if (format.schema && "bullets" in (format.schema.properties as Record<string, unknown>)) {
-      return "Tools received. Reply with ONLY ```json {\"bullets\":[\"...\",\"...\"]} with two real eligibility-check summary bullets.";
+      return 'Tools received. Reply with ONLY ```json {"bullets":["...","..."]} with two real eligibility-check summary bullets.';
     }
     return 'Tools received. Reply with ONLY ```json {"plan":["<step>"],"patch_summary":"<what changed>","test_snippet":"<test idea>"} using real content.';
   }
@@ -618,21 +637,16 @@ export function shouldOmitToolsForTurn(
 }
 
 const MOCK_TOOL_CONTENT: Record<string, string> = {
-  list_endpoints:
-    '{"endpoints":[{"endpoint_id":"ep-1","model_id":"gpt-4","status":"active"}]}',
+  list_endpoints: '{"endpoints":[{"endpoint_id":"ep-1","model_id":"gpt-4","status":"active"}]}',
   get_metrics: '{"p95_latency_ms":245,"request_count":120,"error_rate":0.01}',
   read_file:
-    'export function createRouter(config: RouterConfig): Router {\n  return new RouterImpl(config);\n}\n',
+    "export function createRouter(config: RouterConfig): Router {\n  return new RouterImpl(config);\n}\n",
   grep_search:
-    'Found 3 matches in src/router.ts:\nline 42: evaluateEligibility(endpoint)\nline 89: evaluateEligibility\nline 156: // evaluateEligibility helper',
-  apply_patch:
-    'Patch applied successfully. 1 file changed, 2 insertions(+), 1 deletion(-).',
+    "Found 3 matches in src/router.ts:\nline 42: evaluateEligibility(endpoint)\nline 89: evaluateEligibility\nline 156: // evaluateEligibility helper",
+  apply_patch: "Patch applied successfully. 1 file changed, 2 insertions(+), 1 deletion(-).",
 };
 
-function buildToolMessage(
-  toolName: string,
-  toolCallId: string,
-): Record<string, unknown> {
+function buildToolMessage(toolName: string, toolCallId: string): Record<string, unknown> {
   return {
     role: "tool",
     tool_call_id: toolCallId,
@@ -654,10 +668,7 @@ export function buildScaffoldFollowUp(
 
   // Build role:"tool" messages for all completed tool calls
   const completedToolMsgs = (toolCalls ?? []).map((_tc, index) =>
-    buildToolMessage(
-      toolCalls?.[index]?.function?.name ?? "unknown",
-      `bench_scaffold_${index}`,
-    ),
+    buildToolMessage(toolCalls?.[index]?.function?.name ?? "unknown", `bench_scaffold_${index}`),
   );
 
   if (missingTools.length > 0) {

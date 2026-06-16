@@ -15,7 +15,6 @@ import {
   mutedPanelClassName,
   secondaryButtonClassName,
 } from "../lib/design-system";
-import { usePageActions } from "../lib/shell-header-context";
 import {
   type RuntimeActivityCapture,
   type RuntimeActivityLogEntry,
@@ -23,6 +22,7 @@ import {
   fetchActivityMetrics,
   subscribeTelemetryStream,
 } from "../lib/runtime-api";
+import { usePageActions } from "../lib/shell-header-context";
 import { buildActivitySummary } from "../lib/view-models";
 
 function decodeCaptureBody(encoded: string): string {

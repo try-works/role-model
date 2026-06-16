@@ -1,6 +1,6 @@
-import { DatabaseSync } from "node:sqlite";
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
+import { DatabaseSync } from "node:sqlite";
 
 const runtimeRoot = path.join(process.env.LOCALAPPDATA ?? "", "Role Model Runtime");
 const scopeId = "standalone-runtime";
@@ -24,9 +24,7 @@ console.log(accounts);
 console.log("\n=== provider_device_auth_sessions ===");
 console.log(
   database
-    .prepare(
-      "SELECT provider_account_id, status, expires_at_ms FROM provider_device_auth_sessions",
-    )
+    .prepare("SELECT provider_account_id, status, expires_at_ms FROM provider_device_auth_sessions")
     .all(),
 );
 

@@ -1,18 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
 
-import {
-  EmptyState,
-  ErrorState,
-  LoadingState,
-  SectionCard,
-} from "../components/page-primitives";
+import { EmptyState, ErrorState, LoadingState, SectionCard } from "../components/page-primitives";
 import {
   fieldClassName,
   primaryButtonClassName,
   secondaryButtonClassName,
 } from "../lib/design-system";
-import { usePageActions } from "../lib/shell-header-context";
 import { checkPeerHealth, fetchPeers, updatePeers } from "../lib/runtime-api";
+import { usePageActions } from "../lib/shell-header-context";
 
 interface PeerConfig {
   id: string;
@@ -106,12 +101,7 @@ export default function LocalPeersRoute() {
   };
 
   usePageActions(
-    <button
-      type="button"
-      onClick={refresh}
-      disabled={loading}
-      className={secondaryButtonClassName}
-    >
+    <button type="button" onClick={refresh} disabled={loading} className={secondaryButtonClassName}>
       {loading ? "Refreshing…" : "Refresh"}
     </button>,
     [loading, refresh],

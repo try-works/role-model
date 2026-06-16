@@ -18,12 +18,7 @@ export type BootstrapStageStatus =
   | "failed"
   | "skipped";
 
-export type SessionBootstrapStatus =
-  | "pending"
-  | "running"
-  | "ready"
-  | "degraded"
-  | "blocked";
+export type SessionBootstrapStatus = "pending" | "running" | "ready" | "degraded" | "blocked";
 
 export interface BootstrapStageReceipt {
   readonly stageId: BootstrapStageId;
@@ -57,10 +52,7 @@ export interface SessionBootstrapHandlers {
   readonly inventory: () => Promise<BootstrapStageResult>;
 }
 
-const STAGE_HANDLER_KEYS: Record<
-  BootstrapStageId,
-  keyof SessionBootstrapHandlers
-> = {
+const STAGE_HANDLER_KEYS: Record<BootstrapStageId, keyof SessionBootstrapHandlers> = {
   credentials: "credentials",
   endpoints: "endpoints",
   peers: "peers",

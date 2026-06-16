@@ -9,8 +9,8 @@ import {
   StatusPill,
 } from "../components/page-primitives";
 import { mutedPanelClassName, secondaryButtonClassName } from "../lib/design-system";
-import { usePageActions } from "../lib/shell-header-context";
 import { type RuntimeSnapshot, fetchRuntimeSnapshot } from "../lib/runtime-api";
+import { usePageActions } from "../lib/shell-header-context";
 
 export default function SystemPeersRoute() {
   const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(null);

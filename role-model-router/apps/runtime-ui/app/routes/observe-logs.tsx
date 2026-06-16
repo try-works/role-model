@@ -10,8 +10,8 @@ import {
   StatusPill,
 } from "../components/page-primitives";
 import { secondaryButtonClassName } from "../lib/design-system";
-import { usePageActions } from "../lib/shell-header-context";
 import { fetchTextLogs } from "../lib/runtime-api";
+import { usePageActions } from "../lib/shell-header-context";
 import { buildStructuredLogRows } from "../lib/view-models";
 
 export default function ObserveLogsRoute() {

@@ -701,8 +701,7 @@ export function normalizeOpenAIResponse(
             (input.requestCapture.body.stream as boolean | undefined) ??
             false,
         ),
-        textDeltas:
-          streamedBody?.streamStats.textDeltas ?? (outputText || reasoningText ? 1 : 0),
+        textDeltas: streamedBody?.streamStats.textDeltas ?? (outputText || reasoningText ? 1 : 0),
         toolCallDeltas: streamedBody?.streamStats.toolCallDeltas ?? toolCalls.length,
         toolArgumentDeltas: streamedBody?.streamStats.toolArgumentDeltas ?? toolCalls.length,
       },

@@ -1,5 +1,5 @@
-import { DatabaseSync } from "node:sqlite";
 import path from "node:path";
+import { DatabaseSync } from "node:sqlite";
 
 const CODE_OR_SCHEMA_RE = /\b(code|diff|patch|refactor|schema|contract|validation|test)\b/i;
 
@@ -45,7 +45,11 @@ function scoreDifficulty(signals: {
   return "easy";
 }
 
-function summarizeSignals(combined: string, historyTurnCount: number, toolCount = 0): {
+function summarizeSignals(
+  combined: string,
+  historyTurnCount: number,
+  toolCount = 0,
+): {
   contextTokens: number;
   toolCount: number;
   historyTurnCount: number;
@@ -62,14 +66,15 @@ function summarizeSignals(combined: string, historyTurnCount: number, toolCount 
     ) ?? []
   ).length;
   const decompositionKeywordCount = (
-    lower.match(/\b(analyze|compare|iterate|plan|step|decompose|refactor|workflow|multi-step|across)\b/g) ??
-    []
+    lower.match(
+      /\b(analyze|compare|iterate|plan|step|decompose|refactor|workflow|multi-step|across)\b/g,
+    ) ?? []
   ).length;
   const matchedCodeOrSchemaTerms = [
     ...new Set(
-      (combined.match(/\b(code|diff|patch|refactor|schema|contract|validation|test)\b/gi) ?? []).map(
-        (term) => term.toLowerCase(),
-      ),
+      (
+        combined.match(/\b(code|diff|patch|refactor|schema|contract|validation|test)\b/gi) ?? []
+      ).map((term) => term.toLowerCase()),
     ),
   ];
   const signals = {
@@ -104,12 +109,8 @@ function main(): void {
   for (const turn of turns) {
     const artifact = turn.content_ref
       ? (database
-          .prepare(
-            "SELECT artifact_kind, storage_ref FROM context_artifacts WHERE artifact_id = ?",
-          )
-          .get(turn.content_ref) as
-          | { artifact_kind: string; storage_ref: string }
-          | undefined)
+          .prepare("SELECT artifact_kind, storage_ref FROM context_artifacts WHERE artifact_id = ?")
+          .get(turn.content_ref) as { artifact_kind: string; storage_ref: string } | undefined)
       : undefined;
     let text = turn.content_ref ?? "";
     if (artifact?.storage_ref) {
@@ -139,13 +140,7 @@ function main(): void {
     "You are Craft Agent, powered by Craft Agents Backend. Help users connect data sources, automate workflows, and validate integrations. Follow the system contract and schema for tool validation.";
   const userOnly = "Whats your name";
   console.log("\n=== hypothesized Craft Agent first-turn payload ===");
-  console.log(
-    JSON.stringify(
-      summarizeSignals(`${craftLikeSystem}\n${userOnly}`, 2, 0),
-      null,
-      2,
-    ),
-  );
+  console.log(JSON.stringify(summarizeSignals(`${craftLikeSystem}\n${userOnly}`, 2, 0), null, 2));
 
   const obs = database
     .prepare(

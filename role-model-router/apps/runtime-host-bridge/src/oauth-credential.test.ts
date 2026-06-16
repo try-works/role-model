@@ -25,7 +25,11 @@ describe("oauth-credential", () => {
         JSON.stringify({ access_token: "token-value", saved_at_ms: Date.now() }),
       );
 
-      const resolved = resolveOauthCredentialRef(location, "moonshot", "moonshot.personal.kimi-code");
+      const resolved = resolveOauthCredentialRef(
+        location,
+        "moonshot",
+        "moonshot.personal.kimi-code",
+      );
       expect(resolved).toEqual({
         backend: "local-file",
         ref: unifiedRef,
@@ -50,10 +54,15 @@ describe("oauth-credential", () => {
         JSON.stringify({ access_token: "account-token", saved_at_ms: Date.now() }),
       );
 
-      const resolved = resolveOauthCredentialRef(location, "moonshot", "moonshot.personal.kimi-code", {
-        backend: "local-file",
-        ref: preferredRef,
-      });
+      const resolved = resolveOauthCredentialRef(
+        location,
+        "moonshot",
+        "moonshot.personal.kimi-code",
+        {
+          backend: "local-file",
+          ref: preferredRef,
+        },
+      );
       expect(resolved?.ref).toBe(preferredRef);
     } finally {
       await rm(runtimeStateRoot, { recursive: true, force: true });

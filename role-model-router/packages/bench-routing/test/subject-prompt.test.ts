@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import { augmentCaseMessages, BENCHMARK_SUBJECT_SYSTEM_PROMPT } from "../src/index.ts";
+import { BENCHMARK_SUBJECT_SYSTEM_PROMPT, augmentCaseMessages } from "../src/index.ts";
 
 describe("subject prompt", () => {
   test("augmentCaseMessages uses model-agnostic JSON-only subject system prompt", () => {

@@ -68,9 +68,7 @@ export default function IntegrationsUpstreamRoute() {
       {error ? <ErrorState label={error} /> : null}
 
       <div className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
-        <SectionCard
-          title="Provider accounts in scope"
-        >
+        <SectionCard title="Provider accounts in scope">
           {!snapshot ? (
             <LoadingState label="Loading upstream provider posture…" />
           ) : providerCards.length === 0 ? (
@@ -102,9 +100,7 @@ export default function IntegrationsUpstreamRoute() {
           )}
         </SectionCard>
 
-        <SectionCard
-          title="Upstream target inventory"
-        >
+        <SectionCard title="Upstream target inventory">
           {!snapshot ? (
             <LoadingState label="Loading upstream targets…" />
           ) : modelTargets.length === 0 ? (
@@ -134,9 +130,7 @@ export default function IntegrationsUpstreamRoute() {
         </SectionCard>
       </div>
 
-      <SectionCard
-        title="Boundary notes"
-      >
+      <SectionCard title="Boundary notes">
         <div className="grid gap-4 md:grid-cols-3">
           <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
             <p className="font-medium text-[var(--rm-fg)]">When to use `/upstream/`</p>

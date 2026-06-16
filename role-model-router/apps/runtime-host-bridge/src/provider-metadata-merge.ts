@@ -76,8 +76,11 @@ export function listOverlapProviderKindMismatches(input: {
   operatorKind: string;
   validationKind: string;
 }[] {
-  const liteLLMById = new Map(input.liteLLMProviders.map((provider) => [provider.providerId, provider]));
-  const resolveOperatorMetadata = input.resolveOperatorMetadata ?? resolveValidationProviderMetadata;
+  const liteLLMById = new Map(
+    input.liteLLMProviders.map((provider) => [provider.providerId, provider]),
+  );
+  const resolveOperatorMetadata =
+    input.resolveOperatorMetadata ?? resolveValidationProviderMetadata;
   const mismatches: Array<{
     providerId: string;
     operatorKind: string;
@@ -90,7 +93,10 @@ export function listOverlapProviderKindMismatches(input: {
       continue;
     }
     const operatorMetadata = resolveOperatorMetadata({ catalogProvider, liteLLMProvider });
-    const validationMetadata = resolveValidationProviderMetadata({ catalogProvider, liteLLMProvider });
+    const validationMetadata = resolveValidationProviderMetadata({
+      catalogProvider,
+      liteLLMProvider,
+    });
     if (operatorMetadata.providerKind !== validationMetadata.providerKind) {
       mismatches.push({
         providerId: catalogProvider.providerId,

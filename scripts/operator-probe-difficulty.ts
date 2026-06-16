@@ -1,8 +1,7 @@
 /**
  * Probe ask-mode difficulty rubric with user-only code/schema burden (R11).
  */
-const CODE_OR_SCHEMA_RE =
-  /\b(code|diff|patch|refactor|schema|contract|validation|test)\b/i;
+const CODE_OR_SCHEMA_RE = /\b(code|diff|patch|refactor|schema|contract|validation|test)\b/i;
 
 function readText(content: unknown): string {
   if (typeof content === "string") return content;
@@ -22,9 +21,7 @@ function combineMessages(
   messages: Array<{ role: string; content: unknown }>,
   roles?: string[],
 ): string {
-  const selected = roles
-    ? messages.filter((message) => roles.includes(message.role))
-    : messages;
+  const selected = roles ? messages.filter((message) => roles.includes(message.role)) : messages;
   return selected.map((message) => readText(message.content)).join("\n");
 }
 
@@ -33,17 +30,20 @@ function summarize(
   toolCount = 0,
 ): Record<string, unknown> {
   const combined = combineMessages(messages);
-  const askModeBurdenSource =
-    toolCount === 0 ? combineMessages(messages, ["user"]) : combined;
+  const askModeBurdenSource = toolCount === 0 ? combineMessages(messages, ["user"]) : combined;
   const instructionConstraintCount = (
-    askModeBurdenSource.toLowerCase().match(
-      /\b(must|should|need to|required|preserve|verify|strict|do not|don't|never|without|constraint|compatible)\b/g,
-    ) ?? []
+    askModeBurdenSource
+      .toLowerCase()
+      .match(
+        /\b(must|should|need to|required|preserve|verify|strict|do not|don't|never|without|constraint|compatible)\b/g,
+      ) ?? []
   ).length;
   const decompositionKeywordCount = (
-    combined.toLowerCase().match(
-      /\b(analyze|compare|iterate|plan|step|decompose|refactor|workflow|multi-step|across)\b/g,
-    ) ?? []
+    combined
+      .toLowerCase()
+      .match(
+        /\b(analyze|compare|iterate|plan|step|decompose|refactor|workflow|multi-step|across)\b/g,
+      ) ?? []
   ).length;
   const codeOrSchemaBurden = CODE_OR_SCHEMA_RE.test(askModeBurdenSource);
   let score = 0;
@@ -82,18 +82,17 @@ for (const label of [
   "system+user hello",
   "user only hello",
 ]) {
-  const messages =
-    label.startsWith("assistant")
+  const messages = label.startsWith("assistant")
+    ? [
+        { role: "assistant", content: craftAssistant },
+        { role: "user", content: "hello" },
+      ]
+    : label.startsWith("system")
       ? [
-          { role: "assistant", content: craftAssistant },
+          { role: "system", content: craftAssistant },
           { role: "user", content: "hello" },
         ]
-      : label.startsWith("system")
-        ? [
-            { role: "system", content: craftAssistant },
-            { role: "user", content: "hello" },
-          ]
-        : [{ role: "user", content: "hello" }];
+      : [{ role: "user", content: "hello" }];
   console.log(`\n=== ${label} ===`);
   console.log(JSON.stringify(summarize(messages), null, 2));
 }

@@ -3,9 +3,9 @@ import { Link } from "react-router";
 
 import {
   CodeBlock,
+  DisclosureSection,
   EmptyState,
   ErrorState,
-  DisclosureSection,
   FactCard,
   LoadingState,
   SectionCard,
@@ -292,79 +292,79 @@ export default function ControlModelsRoute() {
               {cards.map((card) => {
                 const capabilityScore = capabilityByModelId.get(card.modelId);
                 return (
-                <article
-                  key={card.modelId}
-                  className="rounded-none border border-[var(--rm-border)] bg-[var(--rm-surface)] p-5"
-                >
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">
-                        {card.sourceSummary}
+                  <article
+                    key={card.modelId}
+                    className="rounded-none border border-[var(--rm-border)] bg-[var(--rm-surface)] p-5"
+                  >
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">
+                          {card.sourceSummary}
+                        </p>
+                        <h3 className="mt-2 text-lg font-medium text-[var(--rm-fg)]">
+                          {card.displayName}
+                        </h3>
+                        <p className="mt-2 break-all text-sm text-[var(--rm-secondary)]">
+                          {card.modelId}
+                        </p>
+                      </div>
+                      <StatusPill
+                        tone={
+                          card.controllerState === "active"
+                            ? "accent"
+                            : card.status === "active"
+                              ? "success"
+                              : "warning"
+                        }
+                      >
+                        {card.controllerState === "active" ? "controller" : card.status}
+                      </StatusPill>
+                    </div>
+
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <StatusPill tone={card.toolCallingSupported ? "success" : "neutral"}>
+                        {card.toolCallingSupported ? "tool calling" : "no tool calling"}
+                      </StatusPill>
+                      <StatusPill tone={card.endpointCount > 0 ? "neutral" : "warning"}>
+                        {card.endpointCount} endpoint{card.endpointCount === 1 ? "" : "s"}
+                      </StatusPill>
+                      <StatusPill tone={card.requestCount > 0 ? "neutral" : "warning"}>
+                        {card.requestCount} request{card.requestCount === 1 ? "" : "s"}
+                      </StatusPill>
+                      {typeof capabilityScore === "number" ? (
+                        <StatusPill tone="success">
+                          Capability {Math.round(capabilityScore * 100)}%
+                        </StatusPill>
+                      ) : null}
+                    </div>
+
+                    <div className="mt-4 grid gap-3 md:grid-cols-2 text-sm text-[var(--rm-secondary)]">
+                      <p>
+                        <span className="font-medium text-[var(--rm-fg)]">Roles:</span>{" "}
+                        {card.roleIds.join(", ") || "None"}
                       </p>
-                      <h3 className="mt-2 text-lg font-medium text-[var(--rm-fg)]">
-                        {card.displayName}
-                      </h3>
-                      <p className="mt-2 break-all text-sm text-[var(--rm-secondary)]">
-                        {card.modelId}
+                      <p>
+                        <span className="font-medium text-[var(--rm-fg)]">Endpoints:</span>{" "}
+                        {card.endpointIds.join(", ") || "None"}
                       </p>
                     </div>
-                    <StatusPill
-                      tone={
-                        card.controllerState === "active"
-                          ? "accent"
-                          : card.status === "active"
-                            ? "success"
-                            : "warning"
-                      }
-                    >
-                      {card.controllerState === "active" ? "controller" : card.status}
-                    </StatusPill>
-                  </div>
 
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    <StatusPill tone={card.toolCallingSupported ? "success" : "neutral"}>
-                      {card.toolCallingSupported ? "tool calling" : "no tool calling"}
-                    </StatusPill>
-                    <StatusPill tone={card.endpointCount > 0 ? "neutral" : "warning"}>
-                      {card.endpointCount} endpoint{card.endpointCount === 1 ? "" : "s"}
-                    </StatusPill>
-                    <StatusPill tone={card.requestCount > 0 ? "neutral" : "warning"}>
-                      {card.requestCount} request{card.requestCount === 1 ? "" : "s"}
-                    </StatusPill>
-                    {typeof capabilityScore === "number" ? (
-                      <StatusPill tone="success">
-                        Capability {Math.round(capabilityScore * 100)}%
-                      </StatusPill>
-                    ) : null}
-                  </div>
-
-                  <div className="mt-4 grid gap-3 md:grid-cols-2 text-sm text-[var(--rm-secondary)]">
-                    <p>
-                      <span className="font-medium text-[var(--rm-fg)]">Roles:</span>{" "}
-                      {card.roleIds.join(", ") || "None"}
-                    </p>
-                    <p>
-                      <span className="font-medium text-[var(--rm-fg)]">Endpoints:</span>{" "}
-                      {card.endpointIds.join(", ") || "None"}
-                    </p>
-                  </div>
-
-                  <div className="mt-5 flex flex-wrap gap-2">
-                    <button
-                      className={secondaryButtonClassName}
-                      type="button"
-                      onClick={() => setSelectedModelId(card.modelId)}
-                    >
-                      Inspect
-                    </button>
-                    {typeof capabilityScore === "number" ? (
-                      <Link className={secondaryButtonClassName} to="/app/models/benchmark">
-                        View benchmark
-                      </Link>
-                    ) : null}
-                  </div>
-                </article>
-              );
+                    <div className="mt-5 flex flex-wrap gap-2">
+                      <button
+                        className={secondaryButtonClassName}
+                        type="button"
+                        onClick={() => setSelectedModelId(card.modelId)}
+                      >
+                        Inspect
+                      </button>
+                      {typeof capabilityScore === "number" ? (
+                        <Link className={secondaryButtonClassName} to="/app/models/benchmark">
+                          View benchmark
+                        </Link>
+                      ) : null}
+                    </div>
+                  </article>
+                );
               })}
             </div>
           )}

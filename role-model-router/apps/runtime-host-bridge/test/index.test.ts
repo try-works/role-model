@@ -326,7 +326,10 @@ describe("runtime-host-bridge", () => {
     };
 
     await bootstrapQaControlPlane(
-      backend as Pick<Parameters<typeof createQaServerOptions>[1], "upsertProviderAccount" | "activateEndpoint">,
+      backend as Pick<
+        Parameters<typeof createQaServerOptions>[1],
+        "upsertProviderAccount" | "activateEndpoint"
+      >,
     );
 
     expect(calls).toEqual([
@@ -520,15 +523,15 @@ describe("runtime-host-bridge", () => {
           listRouterCandidates?: unknown;
           listRouterDecisions?: unknown;
           readRouterDecision?: unknown;
-           listLocalModels?: unknown;
-           getLocalLogs?: unknown;
-           readRolePolicy?: unknown;
-           createRolePolicyRole?: unknown;
-           updateRolePolicyRole?: unknown;
-           listTaskDefinitions?: unknown;
-           updateTaskDefinitions?: unknown;
-           readModelOverrides?: unknown;
-           updateModelOverrides?: unknown;
+          listLocalModels?: unknown;
+          getLocalLogs?: unknown;
+          readRolePolicy?: unknown;
+          createRolePolicyRole?: unknown;
+          updateRolePolicyRole?: unknown;
+          listTaskDefinitions?: unknown;
+          updateTaskDefinitions?: unknown;
+          readModelOverrides?: unknown;
+          updateModelOverrides?: unknown;
           readPeers?: unknown;
           reconnectProviderAccount?: unknown;
           updateProviderApiKey?: unknown;
@@ -8869,13 +8872,7 @@ describe("runtime-host-bridge", () => {
   });
 
   test("resolves packaged bridge server options from executable path defaults", () => {
-    const packageDir = path.join(
-      repoRoot,
-      "role-model-router",
-      "dist",
-      "release",
-      "win32-x64",
-    );
+    const packageDir = path.join(repoRoot, "role-model-router", "dist", "release", "win32-x64");
     const packagedStaticRoot = path.join(packageDir, "build", "client");
     const devStaticRoot = path.join(
       repoRoot,
@@ -8956,7 +8953,8 @@ describe("runtime-host-bridge", () => {
       runtimeStateRoot: "/home/tester/.local/share/Role Model Runtime/state",
       scopeId: "runtime-host-bridge",
       staticRoot: "/home/tester/role-model/role-model-router/apps/runtime-ui/build/client",
-      unifiedRuntimeConfigPath: "/home/tester/.local/share/Role Model Runtime/state/runtime-config.yaml",
+      unifiedRuntimeConfigPath:
+        "/home/tester/.local/share/Role Model Runtime/state/runtime-config.yaml",
     });
   });
 });

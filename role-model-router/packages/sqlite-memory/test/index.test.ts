@@ -13,8 +13,8 @@ import { createRuntimeObservationBundle } from "../../runtime-observability/src/
 import { runRuntimeStateValidation } from "../src/cli.ts";
 import * as sqliteMemory from "../src/index.ts";
 import {
-  clearObservedBenchmarkDataForEndpoint,
   clearAllObservedBenchmarkData,
+  clearObservedBenchmarkDataForEndpoint,
   initializeSqliteMemory,
   listRuntimeTelemetryRecords,
   persistContinuitySnapshot,

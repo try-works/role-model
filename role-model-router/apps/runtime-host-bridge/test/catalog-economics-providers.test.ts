@@ -77,9 +77,7 @@ version: "1.0"
       (variant) => variant.variantId === "moonshot-open-platform",
     );
     const kimiCode = moonshot?.variants.find((variant) => variant.variantId === "kimi-code");
-    expect(openPlatform?.modelIds).toEqual(
-      expect.arrayContaining(["moonshot/kimi-k2.7-code"]),
-    );
+    expect(openPlatform?.modelIds).toEqual(expect.arrayContaining(["moonshot/kimi-k2.7-code"]));
     expect(kimiCode?.modelIds).toEqual(expect.arrayContaining(["moonshot/kimi-k2.7-code"]));
 
     await backend.shutdown();

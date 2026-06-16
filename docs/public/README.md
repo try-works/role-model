@@ -9,10 +9,11 @@ documentation.
 ## Start here
 
 1. [Introduction](introduction.md)
-2. [Quickstart](quickstart.md)
-3. [How role-model works](concepts/how-role-model-works.md)
-4. [Protocol overview](concepts/protocol-overview.md)
-5. [Routing overview](concepts/routing-overview.md)
+2. [Install the router](install.md)
+3. [Quickstart](quickstart.md)
+4. [How role-model works](concepts/how-role-model-works.md)
+5. [Protocol overview](concepts/protocol-overview.md)
+6. [Routing overview](concepts/routing-overview.md)
 
 ## What these docs cover
 
@@ -37,6 +38,6 @@ The public docs summarize and link to the deeper reference material instead of d
 
 | Path | Best for |
 | --- | --- |
-| [Introduction](introduction.md) -> [Quickstart](quickstart.md) | first-time readers |
+| [Introduction](introduction.md) -> [Install the router](install.md) -> [Quickstart](quickstart.md) | first-time readers |
 | [Introduction](introduction.md) -> [Protocol overview](concepts/protocol-overview.md) | protocol/design readers |
 | [Introduction](introduction.md) -> [How role-model works](concepts/how-role-model-works.md) -> [Routing overview](concepts/routing-overview.md) | routing and system readers |

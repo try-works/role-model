@@ -1,9 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import {
-  looksLikeInlineApiKey,
-  resolveEnvCredentialRef,
-} from "../src/credential-ref-env.js";
+import { looksLikeInlineApiKey, resolveEnvCredentialRef } from "../src/credential-ref-env.js";
 
 describe("resolveEnvCredentialRef", () => {
   test("uses explicit env placeholder name from ${DEEPSEEK_API_KEY}", () => {

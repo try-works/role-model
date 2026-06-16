@@ -4,18 +4,25 @@
     "enabled": true,
     "indentStyle": "space",
     "indentWidth": 2,
-    "lineWidth": 100
+    "lineWidth": 100,
+    "lineEnding": "lf"
   },
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true
+      "recommended": true,
+      "performance": {
+        "noDelete": "off"
+      }
     }
   },
   "files": {
     "maxSize": 2000000,
     "ignore": [
+      "**/.agents/**",
       "**/.cache/**",
+      "**/biome-report.json",
+      "**/.recursive/**",
       "**/.react-router/**",
       "**/.source/**",
       "**/.worktrees/**",
@@ -23,6 +30,7 @@
       "**/dist/**",
       "**/role-model-router/packages/catalog/data/normalized-catalog.json",
       "**/testdata/catalog/models-dev-snapshot.json",
+      "**/vendor/**",
       "**/target/**",
       "**/runtime-output/**"
     ]

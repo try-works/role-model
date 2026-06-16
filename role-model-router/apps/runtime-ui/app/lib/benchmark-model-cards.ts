@@ -1,10 +1,6 @@
 import type { BenchmarkSummary, BenchmarkSummarySubject } from "./runtime-api";
 
-export const BENCHMARK_SECTION_ORDER = [
-  "model-scores",
-  "run-benchmark",
-  "run-history",
-] as const;
+export const BENCHMARK_SECTION_ORDER = ["model-scores", "run-benchmark", "run-history"] as const;
 
 /** Operator addendum F1: dual-run belongs in model cards, not a page-level section. */
 export const STANDALONE_LAST_RUNS_BY_MODE_ENABLED = false;

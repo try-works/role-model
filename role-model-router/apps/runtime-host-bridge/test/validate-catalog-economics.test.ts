@@ -10,9 +10,7 @@ const testFixtureRoot = path.join(import.meta.dirname, "fixtures");
 
 describe("runCatalogEconomicsValidation", () => {
   test("hides moonshotai, routes easy cost work to local peer, and emits catalogEconomics", async () => {
-    const runtimeStateRoot = await mkdtemp(
-      path.join(os.tmpdir(), "role-model-catalog-economics-"),
-    );
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-catalog-economics-"));
 
     const result = await runCatalogEconomicsValidation({
       repoRoot,

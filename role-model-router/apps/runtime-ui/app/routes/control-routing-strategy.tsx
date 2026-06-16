@@ -1,12 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router";
 
-import {
-  ErrorState,
-  LoadingState,
-  SectionCard,
-  StatusPill,
-} from "../components/page-primitives";
+import { ErrorState, LoadingState, SectionCard, StatusPill } from "../components/page-primitives";
 import {
   fieldClassName,
   getSelectablePanelClassName,
@@ -14,12 +9,11 @@ import {
   primaryButtonClassName,
   secondaryButtonClassName,
 } from "../lib/design-system";
-import { usePageActions } from "../lib/shell-header-context";
 import {
   ROUTING_MODE_OPTIONS,
+  type RuntimeRoutingMode,
   formatRoutingModeLabel,
   normalizeRoutingModeValue,
-  type RuntimeRoutingMode,
 } from "../lib/routing-mode";
 import {
   type RouterCandidate,
@@ -33,6 +27,7 @@ import {
   fetchRuntimeSnapshot,
   updateRuntimeConfig,
 } from "../lib/runtime-api";
+import { usePageActions } from "../lib/shell-header-context";
 
 type RoutingStrategyChoice = RuntimeRoutingMode | "unset" | "custom";
 type RuntimeExecutionMode = NonNullable<RuntimeConfig["executionMode"]>;
@@ -92,6 +87,37 @@ function createDefaultRuntimeConfig(): RuntimeConfig {
   };
 }
 
+function RoutingStrategyOptionCard({
+  checked,
+  description,
+  label,
+  name,
+  onChange,
+  value,
+}: {
+  readonly checked: boolean;
+  readonly description: string;
+  readonly label: string;
+  readonly name: string;
+  readonly onChange: (value: RoutingStrategyChoice) => void;
+  readonly value: RoutingStrategyChoice;
+}) {
+  return (
+    <label className={getSelectablePanelClassName(checked)}>
+      <input
+        checked={checked}
+        className="sr-only"
+        name={name}
+        type="radio"
+        value={value}
+        onChange={() => onChange(value)}
+      />
+      <span className="block font-medium text-[var(--rm-fg)]">{label}</span>
+      <span className="mt-2 block text-sm text-[var(--rm-secondary)]">{description}</span>
+    </label>
+  );
+}
+
 function toRoutingStrategyDraft(strategy: string | null | undefined): {
   readonly choice: RoutingStrategyChoice;
   readonly customValue: string;
@@ -113,7 +139,10 @@ function toRoutingStrategyDraft(strategy: string | null | undefined): {
   };
 }
 
-function applyExecutionMode(config: RuntimeConfig, executionMode: RuntimeExecutionMode): RuntimeConfig {
+function applyExecutionMode(
+  config: RuntimeConfig,
+  executionMode: RuntimeExecutionMode,
+): RuntimeConfig {
   return {
     ...config,
     executionMode,
@@ -138,7 +167,8 @@ export default function ControlRoutingStrategyRoute() {
   const [selectedRoutingStrategy, setSelectedRoutingStrategy] =
     useState<RoutingStrategyChoice>("unset");
   const [customRoutingStrategy, setCustomRoutingStrategy] = useState("");
-  const [selectedExecutionMode, setSelectedExecutionMode] = useState<RuntimeExecutionMode>("hybrid");
+  const [selectedExecutionMode, setSelectedExecutionMode] =
+    useState<RuntimeExecutionMode>("hybrid");
   const [candidates, setCandidates] = useState<readonly RouterCandidate[]>([]);
 
   const syncDrafts = useCallback((nextRecord: RuntimeConfigRecord) => {
@@ -199,7 +229,8 @@ export default function ControlRoutingStrategyRoute() {
     if (selectedRoutingStrategy === "unset") {
       return {
         label: "Unset strategy",
-        detail: "Persist no explicit strategy and let the runtime fall back to its baseline default.",
+        detail:
+          "Persist no explicit strategy and let the runtime fall back to its baseline default.",
       };
     }
     if (selectedRoutingStrategy === "custom") {
@@ -262,45 +293,33 @@ export default function ControlRoutingStrategyRoute() {
             <div className="space-y-3" role="radiogroup" aria-label="Routing strategy">
               <p className="text-sm font-medium text-[var(--rm-fg)]">Routing strategy</p>
               <div className="grid gap-3 md:grid-cols-2">
-                <button
-                  type="button"
-                  role="radio"
-                  aria-checked={selectedRoutingStrategy === "unset"}
-                  className={getSelectablePanelClassName(selectedRoutingStrategy === "unset")}
-                  onClick={() => setSelectedRoutingStrategy("unset")}
-                >
-                  <span className="block font-medium text-[var(--rm-fg)]">Use runtime default</span>
-                  <span className="mt-2 block text-sm text-[var(--rm-secondary)]">
-                    Leave the persisted routing mode unset.
-                  </span>
-                </button>
+                <RoutingStrategyOptionCard
+                  checked={selectedRoutingStrategy === "unset"}
+                  description="Leave the persisted routing mode unset."
+                  label="Use runtime default"
+                  name="routing-strategy"
+                  value="unset"
+                  onChange={setSelectedRoutingStrategy}
+                />
                 {ROUTING_MODE_OPTIONS.map((option) => (
-                  <button
+                  <RoutingStrategyOptionCard
                     key={option.value}
-                    type="button"
-                    role="radio"
-                    aria-checked={selectedRoutingStrategy === option.value}
-                    className={getSelectablePanelClassName(selectedRoutingStrategy === option.value)}
-                    onClick={() => setSelectedRoutingStrategy(option.value)}
-                  >
-                    <span className="block font-medium text-[var(--rm-fg)]">{option.label}</span>
-                    <span className="mt-2 block text-sm text-[var(--rm-secondary)]">
-                      {option.detail}
-                    </span>
-                  </button>
+                    checked={selectedRoutingStrategy === option.value}
+                    description={option.detail}
+                    label={option.label}
+                    name="routing-strategy"
+                    value={option.value}
+                    onChange={setSelectedRoutingStrategy}
+                  />
                 ))}
-                <button
-                  type="button"
-                  role="radio"
-                  aria-checked={selectedRoutingStrategy === "custom"}
-                  className={getSelectablePanelClassName(selectedRoutingStrategy === "custom")}
-                  onClick={() => setSelectedRoutingStrategy("custom")}
-                >
-                  <span className="block font-medium text-[var(--rm-fg)]">Custom strategy</span>
-                  <span className="mt-2 block text-sm text-[var(--rm-secondary)]">
-                    Preserve a custom persisted routing mode string.
-                  </span>
-                </button>
+                <RoutingStrategyOptionCard
+                  checked={selectedRoutingStrategy === "custom"}
+                  description="Preserve a custom persisted routing mode string."
+                  label="Custom strategy"
+                  name="routing-strategy"
+                  value="custom"
+                  onChange={setSelectedRoutingStrategy}
+                />
               </div>
               {selectedRoutingStrategy === "custom" ? (
                 <label className="grid gap-2 text-sm">
@@ -410,79 +429,78 @@ export default function ControlRoutingStrategyRoute() {
         title="Benchmark-informed difficulty advisory"
         description="When Strategy C (difficulty) is active, per-endpoint quality scores from Models → Benchmark inform the recommended max difficulty ceiling."
       >
-        {candidates.length === 0 ? (
-          <p className="text-sm text-[var(--rm-secondary)]">No routing candidates are available.</p>
-        ) : (
-          <div className="space-y-3">
-            {candidates.map((candidate) => {
-              const advisory =
-                typeof candidate.advisoryMaxDifficultyRecommendation === "object" &&
-                candidate.advisoryMaxDifficultyRecommendation !== null
-                  ? (candidate.advisoryMaxDifficultyRecommendation as Record<string, unknown>)
+        candidates.length === 0 ? (
+        <p className="text-sm text-[var(--rm-secondary)]">No routing candidates are available.</p>)
+        : (
+        <div className="space-y-3">
+          {candidates.map((candidate) => {
+            const advisory =
+              typeof candidate.advisoryMaxDifficultyRecommendation === "object" &&
+              candidate.advisoryMaxDifficultyRecommendation !== null
+                ? (candidate.advisoryMaxDifficultyRecommendation as Record<string, unknown>)
+                : null;
+            const latestProfile =
+              typeof candidate.latestProfile === "object" && candidate.latestProfile !== null
+                ? (candidate.latestProfile as Record<string, unknown>)
+                : null;
+            const sources =
+              typeof latestProfile?.sources === "object" && latestProfile.sources !== null
+                ? (latestProfile.sources as Record<string, unknown>)
+                : null;
+            const benchmarkSamples =
+              typeof sources?.benchmark_samples === "number" ? sources.benchmark_samples : 0;
+            const qualityScore =
+              typeof latestProfile?.quality_score === "number"
+                ? latestProfile.quality_score
+                : typeof latestProfile?.judge_score === "number"
+                  ? latestProfile.judge_score
                   : null;
-              const latestProfile =
-                typeof candidate.latestProfile === "object" && candidate.latestProfile !== null
-                  ? (candidate.latestProfile as Record<string, unknown>)
+            const minQualityScore =
+              typeof advisory?.min_quality_score === "number"
+                ? advisory.min_quality_score
+                : typeof advisory?.minQualityScore === "number"
+                  ? advisory.minQualityScore
                   : null;
-              const sources =
-                typeof latestProfile?.sources === "object" && latestProfile.sources !== null
-                  ? (latestProfile.sources as Record<string, unknown>)
-                  : null;
-              const benchmarkSamples =
-                typeof sources?.benchmark_samples === "number" ? sources.benchmark_samples : 0;
-              const qualityScore =
-                typeof latestProfile?.quality_score === "number"
-                  ? latestProfile.quality_score
-                  : typeof latestProfile?.judge_score === "number"
-                    ? latestProfile.judge_score
-                    : null;
-              const minQualityScore =
-                typeof advisory?.min_quality_score === "number"
-                  ? advisory.min_quality_score
-                  : typeof advisory?.minQualityScore === "number"
-                    ? advisory.minQualityScore
-                    : null;
-              const recommended =
-                typeof advisory?.recommended_max_difficulty === "string"
-                  ? advisory.recommended_max_difficulty
-                  : typeof advisory?.recommendedMaxDifficulty === "string"
-                    ? advisory.recommendedMaxDifficulty
-                    : "n/a";
+            const recommended =
+              typeof advisory?.recommended_max_difficulty === "string"
+                ? advisory.recommended_max_difficulty
+                : typeof advisory?.recommendedMaxDifficulty === "string"
+                  ? advisory.recommendedMaxDifficulty
+                  : "n/a";
 
-              return (
-                <div key={candidate.endpointId} className={`${mutedPanelClassName} p-4 text-sm`}>
-                  <p className="font-medium text-[var(--rm-fg)]">
-                    {candidate.modelId} • {candidate.endpointId}
-                  </p>
-                  <p className="mt-2 text-[var(--rm-secondary)]">
-                    Recommended max difficulty:{" "}
-                    <span className="font-medium text-[var(--rm-fg)]">{recommended}</span>
-                  </p>
-                  <p className="mt-1 text-[var(--rm-secondary)]">
-                    Quality score{" "}
-                    {qualityScore !== null ? `${Math.round(qualityScore * 100)}%` : "n/a"}
-                    {minQualityScore !== null
-                      ? ` vs threshold ${Math.round(minQualityScore * 100)}%`
-                      : ""}
-                  </p>
-                  <p className="mt-1 text-[var(--rm-secondary)]">
-                    Score source:{" "}
-                    {benchmarkSamples > 0
-                      ? `Models → Benchmark (${benchmarkSamples} benchmark sample${benchmarkSamples === 1 ? "" : "s"})`
-                      : "live requests only"}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
-        )}
+            return (
+              <div key={candidate.endpointId} className={`${mutedPanelClassName} p-4 text-sm`}>
+                <p className="font-medium text-[var(--rm-fg)]">
+                  {candidate.modelId} • {candidate.endpointId}
+                </p>
+                <p className="mt-2 text-[var(--rm-secondary)]">
+                  Recommended max difficulty:{" "}
+                  <span className="font-medium text-[var(--rm-fg)]">{recommended}</span>
+                </p>
+                <p className="mt-1 text-[var(--rm-secondary)]">
+                  Quality score{" "}
+                  {qualityScore !== null ? `${Math.round(qualityScore * 100)}%` : "n/a"}
+                  {minQualityScore !== null
+                    ? ` vs threshold ${Math.round(minQualityScore * 100)}%`
+                    : ""}
+                </p>
+                <p className="mt-1 text-[var(--rm-secondary)]">
+                  Score source:{" "}
+                  {benchmarkSamples > 0
+                    ? `Models → Benchmark (${benchmarkSamples} benchmark sample${benchmarkSamples === 1 ? "" : "s"})`
+                    : "live requests only"}
+                </p>
+              </div>
+            );
+          })}
+        </div>
+        )
         <div className="mt-4">
           <Link className={secondaryButtonClassName} to="/app/models/benchmark">
             Open Models → Benchmark
           </Link>
         </div>
       </SectionCard>
-
     </div>
   );
 }

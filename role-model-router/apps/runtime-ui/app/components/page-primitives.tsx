@@ -144,10 +144,7 @@ export function DisclosureSection({
   defaultOpen?: boolean;
 }) {
   return (
-    <details
-      className={`${cardClassName} px-5 py-4 md:px-6`}
-      open={defaultOpen ? true : undefined}
-    >
+    <details className={`${cardClassName} px-5 py-4 md:px-6`} open={defaultOpen ? true : undefined}>
       <summary className="cursor-pointer list-none text-lg font-normal text-[var(--rm-fg)] marker:content-none [&::-webkit-details-marker]:hidden">
         {summary}
       </summary>
@@ -155,4 +152,3 @@ export function DisclosureSection({
     </details>
   );
 }
-

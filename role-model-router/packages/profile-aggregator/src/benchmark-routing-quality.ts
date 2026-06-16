@@ -93,7 +93,9 @@ export function resolveRoutingBenchmarkQuality(
     return null;
   }
 
-  const fullHardMean = meanJudgeScores(bucketSamples({ samples: benchmarkSamples, bucket: "hard", mode: "full" }));
+  const fullHardMean = meanJudgeScores(
+    bucketSamples({ samples: benchmarkSamples, bucket: "hard", mode: "full" }),
+  );
   const quickHardMean = meanJudgeScores(
     bucketSamples({ samples: benchmarkSamples, bucket: "hard", mode: "quick" }),
   );

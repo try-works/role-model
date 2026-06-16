@@ -47,8 +47,7 @@ describe("benchmark-reasoning", () => {
   test("readJudgeGradingText extracts parseable judge JSON from reasoning channel", () => {
     expect(
       readJudgeGradingText({
-        reasoningText:
-          'Analysis complete. {"score":0.25,"rationale":"partial tool call only"}',
+        reasoningText: 'Analysis complete. {"score":0.25,"rationale":"partial tool call only"}',
       }),
     ).toContain('"score":0.25');
   });

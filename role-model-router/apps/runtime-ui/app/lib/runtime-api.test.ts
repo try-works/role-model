@@ -37,8 +37,8 @@ import {
   submitWorkbenchChat,
   subscribeTelemetryStream,
   updateControllerAssignment,
-  updateRuntimeAccountApiKey,
   updateRolePolicyRole,
+  updateRuntimeAccountApiKey,
   updateRuntimeConfig,
   updateTaskDefinitions,
 } from "./runtime-api";
@@ -390,10 +390,7 @@ describe("router APIs", () => {
                 aliasId: "mixed.local-remote",
                 mode: "difficulty",
                 configuredHintModelIds: ["gpt-5.4", "moonshot/kimi-k2.5"],
-                allowEndpointIds: [
-                  "cli.local.coder",
-                  "moonshot.personal.primary.global.kimi-k2.5",
-                ],
+                allowEndpointIds: ["cli.local.coder", "moonshot.personal.primary.global.kimi-k2.5"],
                 resolvedModelIds: ["gpt-5.4", "moonshot/kimi-k2.5"],
                 driftWarnings: [],
                 localEndpointCount: 1,

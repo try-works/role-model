@@ -497,12 +497,16 @@ function getCostMetric(
   input: RouteRequestInput,
 ): MetricEntry {
   const catalogEstimate = candidate.routingSignals?.catalogCostEstimate;
-  const costPer1k =
+  const catalogCostPer1k =
     typeof catalogEstimate?.cost_per_1k_tokens_est === "number"
       ? catalogEstimate.cost_per_1k_tokens_est
       : undefined;
+  const observedCostPer1k =
+    typeof candidate.observed?.cost_per_1k_tokens_est === "number"
+      ? candidate.observed.cost_per_1k_tokens_est
+      : undefined;
 
-  if (typeof costPer1k !== "number") {
+  if (typeof catalogCostPer1k !== "number" && typeof observedCostPer1k !== "number") {
     return {
       value: 0.5,
       source: "default",
@@ -510,15 +514,27 @@ function getCostMetric(
   }
 
   const targetCost = policySnapshot.budget.target_cost_per_request ?? DEFAULT_COST_TARGET;
+  const costPer1k = catalogCostPer1k ?? observedCostPer1k ?? targetCost;
   const observedValue = clamp(1 - costPer1k / targetCost);
-  // Catalog-derived estimates use fixed rate tables; do not decay toward neutral based on
-  // stale observed-profile freshness (R6/R7).
-  const value = observedValue;
+  const freshnessWeight = getFreshnessWeight(
+    input,
+    candidate,
+    input.observedDataConfig?.metricHalflives.costMs ?? 1,
+  );
+  const value =
+    typeof catalogCostPer1k === "number"
+      ? observedValue
+      : input.observedDataConfig?.enabled
+        ? decayToNeutral(observedValue, FRESHNESS_NEUTRAL, freshnessWeight)
+        : observedValue;
   return {
     value,
-    source: "catalog",
+    source: typeof catalogCostPer1k === "number" ? "catalog" : "measured",
     raw: {
       cost_per_1k_tokens_est: costPer1k,
+      measured_at_ms: candidate.observed?.measured_at_ms ?? null,
+      freshness_weight: typeof catalogCostPer1k === "number" ? 1 : freshnessWeight,
+      neutral_value: FRESHNESS_NEUTRAL,
       estimated_request_usd: catalogEstimate?.estimatedRequestUsd ?? null,
       input_per_1m: catalogEstimate?.inputPer1M ?? null,
       output_per_1m: catalogEstimate?.outputPer1M ?? null,
@@ -740,10 +756,7 @@ function toCandidateExclusion(code: CandidateExclusion["code"]): CandidateExclus
   };
 }
 
-function isThroughputSlaHardDeny(
-  input: RouteRequestInput,
-  candidate: EndpointCandidate,
-): boolean {
+function isThroughputSlaHardDeny(input: RouteRequestInput, candidate: EndpointCandidate): boolean {
   return (
     getActiveThroughputPenaltyState(input, candidate)?.penaltyFactor === 0 &&
     input.observedDataConfig?.throughputSla.enabled === true
@@ -754,10 +767,7 @@ function isAllowListedCandidate(
   candidate: EndpointCandidate,
   allowEndpoints: readonly string[],
 ): boolean {
-  return (
-    allowEndpoints.length === 0 ||
-    allowEndpoints.includes(candidate.identity.endpoint_id)
-  );
+  return allowEndpoints.length === 0 || allowEndpoints.includes(candidate.identity.endpoint_id);
 }
 
 function applyThroughputSlaEligibility(
@@ -825,7 +835,7 @@ function evaluateEligibility(
   eligible: EndpointCandidate[];
   eligibility: RouterDecisionRecord["eligibility"];
 } {
-  let eligible: EndpointCandidate[] = [];
+  const eligible: EndpointCandidate[] = [];
   const eligibility: RouterDecisionRecord["eligibility"] = [];
   const requestedRoleId = input.request.requestedRoleId;
   const { requestedRole, requestedTask } = getRequestedRoleAndTask(input);

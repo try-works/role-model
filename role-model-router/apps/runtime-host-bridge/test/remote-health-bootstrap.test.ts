@@ -40,7 +40,11 @@ describe("remote health bootstrap", () => {
       });
 
       let health = await backend.readHealthStatus();
-      for (let attempt = 0; attempt < 20 && health.sessionBootstrap.status === "running"; attempt += 1) {
+      for (
+        let attempt = 0;
+        attempt < 20 && health.sessionBootstrap.status === "running";
+        attempt += 1
+      ) {
         await delay(50);
         health = await backend.readHealthStatus();
       }

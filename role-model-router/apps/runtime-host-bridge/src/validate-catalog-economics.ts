@@ -1,14 +1,11 @@
 import { mkdir, rm, writeFile } from "node:fs/promises";
-import { createServer, type Server } from "node:http";
+import { type Server, createServer } from "node:http";
 import os from "node:os";
 import path from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
 
-import {
-  createRuntimeBridgeBackend,
-  startBridgeServer,
-} from "./index.js";
+import { createRuntimeBridgeBackend, startBridgeServer } from "./index.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -161,9 +158,7 @@ function readObservationFields(observation: Record<string, unknown>): {
   readonly difficultyStrategy: string | null;
   readonly catalogEconomics: CatalogEconomicsValidationResult["catalogEconomics"];
 } {
-  const routingDiagnostics = observation.routingDiagnostics as
-    | Record<string, unknown>
-    | undefined;
+  const routingDiagnostics = observation.routingDiagnostics as Record<string, unknown> | undefined;
   const difficultyRouting = routingDiagnostics?.difficultyRouting as
     | Record<string, unknown>
     | undefined;
@@ -184,9 +179,7 @@ function readObservationFields(observation: Record<string, unknown>): {
   const modelId =
     (typeof target?.modelId === "string" && target.modelId) ||
     (typeof usageEvent?.model_id === "string" ? usageEvent.model_id : "") ||
-    (typeof vendorMetadata?.resolvedModelId === "string"
-      ? vendorMetadata.resolvedModelId
-      : "") ||
+    (typeof vendorMetadata?.resolvedModelId === "string" ? vendorMetadata.resolvedModelId : "") ||
     extractModelIdFromEndpointId(endpointId) ||
     "";
 
@@ -227,11 +220,7 @@ export async function runCatalogEconomicsValidation(
   const mockPeer = await startMockPeerServer(localModelId);
 
   await mkdir(options.runtimeStateRoot, { recursive: true });
-  await writeFile(
-    unifiedRuntimeConfigPath,
-    createCatalogEconomicsRuntimeConfigText(),
-    "utf8",
-  );
+  await writeFile(unifiedRuntimeConfigPath, createCatalogEconomicsRuntimeConfigText(), "utf8");
 
   try {
     const backend = await createRuntimeBridgeBackend({
@@ -358,14 +347,45 @@ export async function runCatalogEconomicsValidation(
           );
         }
 
-        const observationResponse = await fetch(
-          `${baseUrl}/api/role-model/requests/${encodeURIComponent(validationRequestId)}`,
-          { headers: requestHeaders },
-        );
-        if (!observationResponse.ok) {
-          throw new Error(
-            `Catalog economics validation could not read request observation (${observationResponse.status}).`,
+        let observationResponse: Response | null = null;
+        let routedRequestId: string | null = null;
+        for (let attempt = 0; attempt < 20; attempt += 1) {
+          const recentResponse = await fetch(`${baseUrl}/api/role-model/requests`, {
+            headers: requestHeaders,
+          });
+          if (!recentResponse.ok) {
+            throw new Error(
+              `Catalog economics validation could not list request observations (${recentResponse.status}).`,
+            );
+          }
+          const recentRequests = (await recentResponse.json()) as Array<Record<string, unknown>>;
+          const matchingRequest = recentRequests.find(
+            (request) =>
+              request.clientRequestId === validationRequestId ||
+              request.requestId === validationRequestId,
           );
+          routedRequestId =
+            matchingRequest && typeof matchingRequest.requestId === "string"
+              ? matchingRequest.requestId
+              : null;
+          if (routedRequestId) {
+            observationResponse = await fetch(
+              `${baseUrl}/api/role-model/requests/${encodeURIComponent(routedRequestId)}`,
+              { headers: requestHeaders },
+            );
+            if (observationResponse.ok) {
+              break;
+            }
+            if (observationResponse.status !== 404) {
+              throw new Error(
+                `Catalog economics validation could not read request observation (${observationResponse.status}).`,
+              );
+            }
+          }
+          await delay(100);
+        }
+        if (!observationResponse?.ok) {
+          throw new Error("Catalog economics validation could not read request observation (404).");
         }
         const observation = (await observationResponse.json()) as Record<string, unknown>;
         const fields = readObservationFields(observation);
@@ -394,7 +414,7 @@ export async function runCatalogEconomicsValidation(
         return {
           moonshotOperatorProviderPresent,
           moonshotaiHiddenFromProviders,
-          routedRequestId: validationRequestId,
+          routedRequestId: routedRequestId ?? validationRequestId,
           selectedEndpointId: fields.endpointId,
           selectedModelId: fields.modelId,
           difficultyStrategy: fields.difficultyStrategy,

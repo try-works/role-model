@@ -52,10 +52,7 @@ describe("resolveRuntimeRoutingModelSelection", () => {
       resolveRuntimeRoutingModelSelection({
         fixtureRoutingModel: {
           endpointId: "openai.personal.primary.us-east-1.fast",
-          preferredEndpointIds: [
-            "openai.personal.primary.us-east-1.fast",
-            "cli.local.coder",
-          ],
+          preferredEndpointIds: ["openai.personal.primary.us-east-1.fast", "cli.local.coder"],
         },
         unifiedConfig: null,
         routableEndpointIds: ["cli.local.coder"],

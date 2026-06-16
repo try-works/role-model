@@ -9,7 +9,6 @@ import {
   StatusPill,
 } from "../components/page-primitives";
 import { mutedPanelClassName, secondaryButtonClassName } from "../lib/design-system";
-import { usePageActions } from "../lib/shell-header-context";
 import {
   type RuntimeControllerAssignment,
   type RuntimeSnapshot,
@@ -18,6 +17,7 @@ import {
   fetchRuntimeSnapshot,
   fetchVersionInfo,
 } from "../lib/runtime-api";
+import { usePageActions } from "../lib/shell-header-context";
 import { buildCredentialLifecycleBanner } from "../lib/view-models";
 
 export default function RuntimeRoute() {

@@ -249,8 +249,8 @@ export async function runRuntimeUiValidation(
           executionMode: "hybrid",
           routingStrategy: "baseline",
           llamaSwap: {
-            ...((runtimeConfigRecord.config as { llamaSwap?: Record<string, unknown> } | null)?.llamaSwap ??
-              {}),
+            ...((runtimeConfigRecord.config as { llamaSwap?: Record<string, unknown> } | null)
+              ?.llamaSwap ?? {}),
             enabled: true,
             models: [
               {
@@ -673,11 +673,16 @@ export async function runRuntimeUiValidation(
         };
       };
     };
-    const mixedAliasRouterDecisionsResponse = await fetch(`${baseUrl}/api/role-model/router/decisions`, {
-      headers: requestHeaders,
-    });
+    const mixedAliasRouterDecisionsResponse = await fetch(
+      `${baseUrl}/api/role-model/router/decisions`,
+      {
+        headers: requestHeaders,
+      },
+    );
     if (!mixedAliasRouterDecisionsResponse.ok) {
-      throw new Error("Runtime UI validation could not read the mixed alias router decisions ledger.");
+      throw new Error(
+        "Runtime UI validation could not read the mixed alias router decisions ledger.",
+      );
     }
     const mixedAliasRouterDecision =
       (

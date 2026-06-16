@@ -104,9 +104,7 @@ export default function DashboardRoute() {
                 <div key={row.endpointId} className={`${listRowClassName} md:items-center`}>
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="font-medium text-[var(--rm-fg)]">
-                        {row.modelId}
-                      </p>
+                      <p className="font-medium text-[var(--rm-fg)]">{row.modelId}</p>
                       <StatusPill tone={row.sourceLabel === "Remote" ? "accent" : "neutral"}>
                         {row.sourceLabel}
                       </StatusPill>

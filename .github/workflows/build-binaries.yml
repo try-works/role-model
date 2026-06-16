@@ -8,6 +8,9 @@ on:
     tags:
       - "v*"
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   build-runtime:
     name: build ${{ matrix.target }}
@@ -69,14 +72,38 @@ jobs:
             }
           }
 
+      - name: Archive standalone package (Unix)
+        if: matrix.target != 'win32-x64'
+        run: |
+          mkdir -p role-model-router/dist/archive
+          tar -czf "role-model-router/dist/archive/role-model-router-${{ matrix.target }}.tar.gz" \
+            -C "role-model-router/dist/release/${{ matrix.target }}" .
+
+      - name: Archive standalone package (Windows)
+        if: matrix.target == 'win32-x64'
+        shell: pwsh
+        run: |
+          $archiveDir = "role-model-router/dist/archive"
+          $packageDir = "role-model-router/dist/release/win32-x64"
+          New-Item -ItemType Directory -Force -Path $archiveDir | Out-Null
+          Compress-Archive -Path "$packageDir\*" -DestinationPath "$archiveDir\role-model-router-win32-x64.zip" -Force
+
       - name: Upload workflow artifact
         uses: actions/upload-artifact@v4
         with:
           name: role-model-runtime-${{ matrix.target }}
-          path: role-model-router/dist/release/${{ matrix.target }}/
+          path: role-model-router/dist/archive/role-model-router-${{ matrix.target }}.*
 
-      - name: Publish release artifacts
+      - name: Publish release archive
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          files: role-model-router/dist/release/${{ matrix.target }}/*
+          files: role-model-router/dist/archive/role-model-router-${{ matrix.target }}.*
+
+      - name: Publish installer scripts
+        if: startsWith(github.ref, 'refs/tags/') && matrix.target == 'linux-x64'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            scripts/install.sh
+            scripts/install.ps1

@@ -212,7 +212,8 @@ const localPeersRoute = createRoute({
   icon: Network,
   template: "registry-detail",
   title: "Local endpoints",
-  description: "Register OpenAI-compatible servers you operate. Required before loading peer models.",
+  description:
+    "Register OpenAI-compatible servers you operate. Required before loading peer models.",
 });
 
 const controlProvidersRoute = createRoute({
@@ -581,7 +582,12 @@ export const runtimeNavigationSections: readonly RuntimeNavigationSection[] = [
   {
     title: "System",
     icon: Gauge,
-    items: [systemSessionReadinessRoute, systemRuntimeRoute, controlRuntimeConfigRoute, systemPeersRoute],
+    items: [
+      systemSessionReadinessRoute,
+      systemRuntimeRoute,
+      controlRuntimeConfigRoute,
+      systemPeersRoute,
+    ],
   },
 ] as const;
 

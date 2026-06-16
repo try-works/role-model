@@ -1,8 +1,5 @@
 import { describe, expect, test } from "vitest";
-import {
-  buildScaffoldFollowUp,
-  type AnswerFormatCaseRef,
-} from "../src/answer-format.js";
+import { type AnswerFormatCaseRef, buildScaffoldFollowUp } from "../src/answer-format.js";
 
 type TestToolCall = { function: { name: string; arguments: string } };
 
@@ -22,6 +19,10 @@ describe("buildScaffoldFollowUp", () => {
     const caseItem = makeCase({
       expected_tool_names: ["read_file", "apply_patch"],
     });
+    const answerFormat = caseItem.answer_format;
+    if (!answerFormat) {
+      throw new Error("Expected answer format for scaffold follow-up test case.");
+    }
 
     const toolCalls: TestToolCall[] = [
       { function: { name: "read_file", arguments: '{"path":"src/router.ts"}' } },
@@ -32,7 +33,12 @@ describe("buildScaffoldFollowUp", () => {
       [{ role: "user", content: "Workflow: read_file and apply_patch" }],
       "",
       ["read_file"],
-      { format: caseItem.answer_format!, payload: null, serialized: "", extractionMethod: "missing" },
+      {
+        format: answerFormat,
+        payload: null,
+        serialized: "",
+        extractionMethod: "missing",
+      },
       toolCalls,
     );
 
@@ -51,6 +57,10 @@ describe("buildScaffoldFollowUp", () => {
     const caseItem = makeCase({
       expected_tool_names: ["read_file", "apply_patch"],
     });
+    const answerFormat = caseItem.answer_format;
+    if (!answerFormat) {
+      throw new Error("Expected answer format for scaffold follow-up test case.");
+    }
 
     const toolCalls: TestToolCall[] = [
       { function: { name: "read_file", arguments: "{}" } },
@@ -62,7 +72,12 @@ describe("buildScaffoldFollowUp", () => {
       [{ role: "user", content: "Workflow" }],
       "",
       ["read_file", "apply_patch"],
-      { format: caseItem.answer_format!, payload: null, serialized: "", extractionMethod: "missing" },
+      {
+        format: answerFormat,
+        payload: null,
+        serialized: "",
+        extractionMethod: "missing",
+      },
       toolCalls,
     );
 
@@ -87,7 +102,12 @@ describe("buildScaffoldFollowUp", () => {
       [{ role: "user", content: "Write code" }],
       "some code output",
       [],
-      { format: { kind: "code_fence", instruction: "", language: "typescript" }, payload: null, serialized: "", extractionMethod: "missing" },
+      {
+        format: { kind: "code_fence", instruction: "", language: "typescript" },
+        payload: null,
+        serialized: "",
+        extractionMethod: "missing",
+      },
       [],
     );
 
@@ -96,13 +116,20 @@ describe("buildScaffoldFollowUp", () => {
     // Assistant message present
     expect(result.some((m) => m.role === "assistant")).toBe(true);
     // User prompt present
-    expect(result.some((m) => m.role === "user" && String(m.content).includes("Reply with ONLY"))).toBe(true);
+    expect(
+      result.some((m) => m.role === "user" && String(m.content).includes("Reply with ONLY")),
+    ).toBe(true);
   });
 
   test("generates unique tool_call_ids when multiple calls present", () => {
     const caseItem = makeCase({
       expected_tool_names: ["read_file", "grep_search", "apply_patch"],
     });
+    const answerFormat = caseItem.answer_format;
+    expect(answerFormat).toBeDefined();
+    if (!answerFormat) {
+      throw new Error("Expected answer_format to be defined for scaffold follow-up tests.");
+    }
 
     const toolCalls: TestToolCall[] = [
       { function: { name: "read_file", arguments: "{}" } },
@@ -115,7 +142,12 @@ describe("buildScaffoldFollowUp", () => {
       [{ role: "user", content: "Workflow" }],
       "",
       ["read_file", "grep_search", "apply_patch"],
-      { format: caseItem.answer_format!, payload: null, serialized: "", extractionMethod: "missing" },
+      {
+        format: answerFormat,
+        payload: null,
+        serialized: "",
+        extractionMethod: "missing",
+      },
       toolCalls,
     );
 

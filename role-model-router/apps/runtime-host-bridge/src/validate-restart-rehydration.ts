@@ -4,10 +4,7 @@ import path from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
 
-import {
-  createRuntimeBridgeBackend,
-  startBridgeServer,
-} from "./index.js";
+import { createRuntimeBridgeBackend, startBridgeServer } from "./index.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -76,11 +73,7 @@ export async function runRestartRehydrationValidation(
   const unifiedRuntimeConfigPath = path.join(options.runtimeStateRoot, "runtime-config.yaml");
 
   await mkdir(options.runtimeStateRoot, { recursive: true });
-  await writeFile(
-    unifiedRuntimeConfigPath,
-    createRestartValidationRuntimeConfigText(),
-    "utf8",
-  );
+  await writeFile(unifiedRuntimeConfigPath, createRestartValidationRuntimeConfigText(), "utf8");
 
   const createBackend = () =>
     createRuntimeBridgeBackend({

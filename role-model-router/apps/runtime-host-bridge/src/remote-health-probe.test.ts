@@ -119,7 +119,9 @@ describe("remote-health-probe", () => {
     expect(buildModelsProbeUrl("https://api.moonshot.ai/v1")).toBe(
       "https://api.moonshot.ai/v1/models",
     );
-    expect(buildModelsProbeUrl("https://api.moonshot.ai")).toBe("https://api.moonshot.ai/v1/models");
+    expect(buildModelsProbeUrl("https://api.moonshot.ai")).toBe(
+      "https://api.moonshot.ai/v1/models",
+    );
   });
 
   it("extracts model ids from OpenAI-style model list payloads", () => {

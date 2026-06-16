@@ -6,13 +6,13 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 
 import { runCatalogExportCli } from "../src/cli.ts";
-import { deriveCapabilities } from "../src/refresh.ts";
 import {
   deriveLiteLLMProviders,
   deriveVendorVersionLedger,
   exportCatalogArtifacts,
   normalizeCatalogSnapshot,
 } from "../src/index.ts";
+import { deriveCapabilities } from "../src/refresh.ts";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

@@ -56,7 +56,7 @@ export function buildJudgeGradingPrompt(input: JudgeGradingInput): string {
 
   const preamble = [
     "You are grading a model response for a routing capability benchmark.",
-    'Return JSON only with keys: score (number 0 to 1), rationale (string). No markdown fences.',
+    "Return JSON only with keys: score (number 0 to 1), rationale (string). No markdown fences.",
     "Score 1.0 = fully meets expected response and grading criteria.",
     "Score 0.0 = completely wrong or refusal without attempt.",
     "Ignore chain-of-thought or reasoning preambles. Grade ONLY the extracted formatted deliverable.",
@@ -278,18 +278,17 @@ export interface CompareGradingResult {
 }
 
 export function buildCompareGradingPrompt(input: CompareGradingInput): string {
-  const modelLines = input.models.map(
-    (model) =>
-      [
-        `Endpoint: ${model.endpointId}`,
-        `Per-case score: ${model.perCaseScore}`,
-        `Deliverable: ${model.deliverable}`,
-      ].join("\n"),
+  const modelLines = input.models.map((model) =>
+    [
+      `Endpoint: ${model.endpointId}`,
+      `Per-case score: ${model.perCaseScore}`,
+      `Deliverable: ${model.deliverable}`,
+    ].join("\n"),
   );
 
   const preamble = [
     "You compare benchmark responses from multiple models for the same case.",
-    'Return JSON only with keys: relativeRanking (string array of endpoint ids, best to worst), rationale (string).',
+    "Return JSON only with keys: relativeRanking (string array of endpoint ids, best to worst), rationale (string).",
     "Use the endpoint ids exactly as provided.",
     "Rank by substantive correctness against the exemplar and checklist — not tool-name presence alone.",
     "",

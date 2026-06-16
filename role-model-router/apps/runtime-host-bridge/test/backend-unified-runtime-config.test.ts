@@ -201,7 +201,9 @@ observed_data:
       }),
     );
 
-    await expect(readFile(unifiedRuntimeConfigPath, "utf8")).resolves.toContain("strategy: difficulty");
+    await expect(readFile(unifiedRuntimeConfigPath, "utf8")).resolves.toContain(
+      "strategy: difficulty",
+    );
     await expect(backend.readRouterSummary()).resolves.toEqual(
       expect.objectContaining({
         aliasInventory: expect.arrayContaining([
@@ -231,7 +233,7 @@ observed_data:
       [
         'version: "1.0"',
         "model_aliases:",
-        '  mixed.local-remote:',
+        "  mixed.local-remote:",
         '    mode: "difficulty"',
         "    model_ids:",
         '      - "lfm2.5-1.2b-instruct"',
@@ -444,12 +446,7 @@ observed_data:
 
     await writeFile(
       unifiedRuntimeConfigPath,
-      [
-        'version: "1.0"',
-        "routing:",
-        "  strategy: difficulty",
-        "",
-      ].join("\n"),
+      ['version: "1.0"', "routing:", "  strategy: difficulty", ""].join("\n"),
       "utf8",
     );
 
@@ -691,7 +688,9 @@ version: "1.0"
 
       try {
         const accounts = await mergedBackend.listAccounts();
-        const mergedAccounts = accounts.filter((account) => account.providerAccountId === "moonshot.litellm");
+        const mergedAccounts = accounts.filter(
+          (account) => account.providerAccountId === "moonshot.litellm",
+        );
         expect(mergedAccounts).toHaveLength(1);
         expect(mergedAccounts[0]).toEqual(
           expect.objectContaining({
@@ -784,24 +783,15 @@ version: "1.0"
     expect(moonshot).toEqual(
       expect.objectContaining({
         providerId: "moonshot",
-        modelIds: expect.arrayContaining([
-          "moonshot/kimi-k2.5",
-          "moonshot/kimi-k2.6",
-        ]),
+        modelIds: expect.arrayContaining(["moonshot/kimi-k2.5", "moonshot/kimi-k2.6"]),
         variants: expect.arrayContaining([
           expect.objectContaining({
             variantId: "moonshot-open-platform",
-            modelIds: expect.arrayContaining([
-              "moonshot/kimi-k2.5",
-              "moonshot/kimi-k2.6",
-            ]),
+            modelIds: expect.arrayContaining(["moonshot/kimi-k2.5", "moonshot/kimi-k2.6"]),
           }),
           expect.objectContaining({
             variantId: "kimi-code",
-            modelIds: expect.arrayContaining([
-              "moonshot/kimi-k2.5",
-              "moonshot/kimi-k2.6",
-            ]),
+            modelIds: expect.arrayContaining(["moonshot/kimi-k2.5", "moonshot/kimi-k2.6"]),
           }),
         ]),
       }),
