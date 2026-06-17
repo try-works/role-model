@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import {
   Links,
   Meta,
@@ -9,30 +9,81 @@ import {
 } from "react-router";
 
 import "./app.css";
+import {
+  extractRuntimeUiAssetSignature,
+  shouldReloadForUpdatedRuntimeUiBuild,
+} from "./lib/build-sync";
+import { getThemeBootstrapScript } from "./lib/theme";
 import NotFoundRoute from "./routes/not-found";
 
-export const links = () => [
-  { rel: "preconnect", href: "https://fonts.googleapis.com" },
-  {
-    rel: "preconnect",
-    href: "https://fonts.gstatic.com",
-    crossOrigin: "anonymous",
-  },
-  {
-    rel: "stylesheet",
-    href: "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap",
-  },
-];
+const themeBootstrapScript = getThemeBootstrapScript("rm-runtime-ui-theme");
+
+export const links = () => [];
 
 export function Layout({ children }: { children: ReactNode }) {
+  useEffect(() => {
+    let disposed = false;
+    const currentAssetMarkup = Array.from(
+      document.querySelectorAll('link[rel="modulepreload"], link[rel="stylesheet"]'),
+    )
+      .map((element) => element.getAttribute("href") ?? "")
+      .filter((value) => value.length > 0)
+      .join("\n");
+
+    if (currentAssetMarkup.length === 0) {
+      return () => {
+        disposed = true;
+      };
+    }
+
+    void fetch(window.location.pathname, {
+      cache: "no-store",
+      headers: {
+        accept: "text/html",
+      },
+    })
+      .then(async (response) => {
+        if (!response.ok || disposed) {
+          return;
+        }
+        const serverHtml = await response.text();
+        if (
+          disposed ||
+          !shouldReloadForUpdatedRuntimeUiBuild({
+            currentAssetMarkup,
+            serverHtml,
+          })
+        ) {
+          return;
+        }
+        const serverSignature = extractRuntimeUiAssetSignature(serverHtml);
+        if (!serverSignature) {
+          return;
+        }
+        const reloadKey = `rm-runtime-ui-build-sync:${window.location.pathname}`;
+        if (window.sessionStorage.getItem(reloadKey) === serverSignature) {
+          return;
+        }
+        window.sessionStorage.setItem(reloadKey, serverSignature);
+        window.location.reload();
+      })
+      .catch(() => {
+        // The runtime UI should stay usable even if this background freshness check fails.
+      });
+
+    return () => {
+      disposed = true;
+    };
+  }, []);
+
   return (
-    <html lang="en">
+    <html lang="en" data-theme="light" suppressHydrationWarning>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="color-scheme" content="light dark" />
-        <meta name="theme-color" content="#fafaf9" media="(prefers-color-scheme: light)" />
-        <meta name="theme-color" content="#0c0a09" media="(prefers-color-scheme: dark)" />
+        <meta name="theme-color" content="#f5f5f7" />
+        <script dangerouslySetInnerHTML={{ __html: themeBootstrapScript }} />
         <Meta />
         <Links />
       </head>
@@ -64,7 +115,7 @@ export function ErrorBoundary({ error }: { error: unknown }) {
 
   return (
     <div className="min-h-screen bg-[var(--rm-bg)] p-4">
-      <main className="mx-auto max-w-3xl rounded-none border border-[var(--rm-accent)] bg-[var(--rm-surface)] p-8 text-[var(--rm-fg)]">
+      <main className="mx-auto max-w-3xl rounded-[var(--rm-radius-panel)] border border-[var(--rm-accent)] bg-[var(--rm-surface)] p-8 text-[var(--rm-fg)]">
         <h1 className="text-2xl font-light">{message}</h1>
         <p className="mt-3 text-[var(--rm-secondary)]">{details}</p>
       </main>

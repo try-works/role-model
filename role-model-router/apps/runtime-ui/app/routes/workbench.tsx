@@ -290,8 +290,8 @@ export default function WorkbenchRoute() {
           description="Tooling-aware response summary aligned with the runtime host payload."
         >
           {submitError ? (
-            <div className={`${mutedPanelClassName} border-l-4 border-red-500 p-4`}>
-              <p className="text-xs font-normal uppercase tracking-[0.2em] text-red-500">
+            <div className={`${mutedPanelClassName} border-l-4 border-[var(--rm-error)] p-4`}>
+              <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-error)]">
                 Request failed
               </p>
               <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-[var(--rm-fg)]">

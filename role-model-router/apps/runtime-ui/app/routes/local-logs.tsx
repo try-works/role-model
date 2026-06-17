@@ -74,7 +74,7 @@ export default function LocalLogsRoute() {
               id="autoRefresh"
               checked={autoRefresh}
               onChange={(event) => setAutoRefresh(event.target.checked)}
-              className="h-4 w-4 rounded-none border-[var(--rm-border-strong)] accent-[var(--rm-accent)]"
+              className="h-4 w-4 rounded-[var(--rm-radius-sm)] border-[var(--rm-border-strong)] bg-[var(--rm-surface)] accent-[var(--rm-accent)]"
             />
             <label htmlFor="autoRefresh" className="text-sm text-[var(--rm-fg)]">
               Auto-refresh (3s)

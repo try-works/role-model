@@ -29,7 +29,7 @@ export default function StudioRerankRoute() {
   const [model, setModel] = useState("");
   const [query, setQuery] = useState("Which option best summarizes the runtime?");
   const [documentsText, setDocumentsText] = useState(
-    "The runtime routes requests.\nThe runtime owns provider account onboarding.\nThe runtime UI is a Swiss-style operator shell.",
+    "The runtime routes requests.\nThe runtime owns provider account onboarding.\nThe runtime UI is a calm Apple-inspired operator shell.",
   );
   const [path, setPath] = useState<"/v1/rerank" | "/v1/reranking">("/v1/rerank");
   const [submitting, setSubmitting] = useState(false);

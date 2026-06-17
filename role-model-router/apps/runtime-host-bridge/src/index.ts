@@ -12205,7 +12205,9 @@ export function resolveStandaloneStaticRoot(input: {
   readonly repoPath: typeof path;
   readonly repoRoot: string;
   readonly executablePath?: string;
+  readonly preferRepoRootBuild?: boolean;
 }): string {
+  const repoBuildRoot = input.repoPath.join(input.repoRoot, "build", "client");
   const devStaticRoot = input.repoPath.join(
     input.repoRoot,
     "role-model-router",
@@ -12215,12 +12217,16 @@ export function resolveStandaloneStaticRoot(input: {
     "client",
   );
   const candidates: string[] = [];
+  if (input.preferRepoRootBuild) {
+    candidates.push(repoBuildRoot, devStaticRoot);
+  }
   if (input.executablePath) {
     const executableDir = input.repoPath.dirname(input.repoPath.resolve(input.executablePath));
     candidates.push(input.repoPath.join(executableDir, "build", "client"));
   }
-  candidates.push(input.repoPath.join(input.repoRoot, "build", "client"));
-  candidates.push(devStaticRoot);
+  if (!input.preferRepoRootBuild) {
+    candidates.push(repoBuildRoot, devStaticRoot);
+  }
   for (const candidate of candidates) {
     if (existsSync(input.repoPath.join(candidate, "index.html"))) {
       return candidate;
@@ -12283,6 +12289,7 @@ export function resolveBridgeServerOptions(input: {
       repoPath,
       repoRoot,
       executablePath: input.executablePath,
+      preferRepoRootBuild: Boolean(input.repoRoot?.trim()),
     }),
     unifiedRuntimeConfigPath:
       input.unifiedRuntimeConfigPath?.trim() ||

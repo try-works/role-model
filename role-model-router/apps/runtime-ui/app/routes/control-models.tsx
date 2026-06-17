@@ -294,7 +294,7 @@ export default function ControlModelsRoute() {
                 return (
                   <article
                     key={card.modelId}
-                    className="rounded-none border border-[var(--rm-border)] bg-[var(--rm-surface)] p-5"
+                    className="rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] bg-[var(--rm-surface)] p-5"
                   >
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
@@ -373,7 +373,7 @@ export default function ControlModelsRoute() {
 
       {selectedCard ? (
         <div className="fixed inset-0 z-50 overflow-y-auto bg-[var(--rm-accent-ghost)] p-4 backdrop-blur-[1px]">
-          <div className="mx-auto max-w-5xl rounded-none border border-[var(--rm-border)] bg-[var(--rm-surface)] p-6 shadow-[var(--rm-shadow-card)]">
+          <div className="mx-auto max-w-5xl rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] bg-[var(--rm-surface)] p-6 shadow-[var(--rm-shadow-card)]">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">
@@ -442,7 +442,7 @@ export default function ControlModelsRoute() {
                     {selectedModelAccounts.map((account) => (
                       <div
                         key={account.providerAccountId}
-                        className="rounded-none border border-[var(--rm-border)] bg-[var(--rm-surface)] p-4"
+                        className="rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] bg-[var(--rm-surface)] p-4"
                       >
                         <div className="flex flex-wrap items-start justify-between gap-3">
                           <div>
@@ -463,7 +463,7 @@ export default function ControlModelsRoute() {
                           {(rolePolicy?.roleDefinitions ?? []).map((role) => (
                             <label
                               key={`${account.providerAccountId}:${role.role_id}`}
-                              className="flex items-center gap-2 rounded-none border border-[var(--rm-border)] px-3 py-2 text-sm text-[var(--rm-secondary)]"
+                              className="flex items-center gap-2 rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-panel)] px-3 py-2 text-sm text-[var(--rm-secondary)]"
                             >
                               <input
                                 checked={(

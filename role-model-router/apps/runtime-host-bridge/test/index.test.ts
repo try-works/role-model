@@ -8924,6 +8924,44 @@ describe("runtime-host-bridge", () => {
     });
   });
 
+  test("prefers repoRoot frontend assets over packaged assets when repoRoot is explicit", () => {
+    const packageDir = path.join(repoRoot, "role-model-router", "dist", "release", "win32-x64");
+    const devStaticRoot = path.join(
+      repoRoot,
+      "role-model-router",
+      "apps",
+      "runtime-ui",
+      "build",
+      "client",
+    );
+    const result = (
+      bridge as {
+        resolveBridgeServerOptions: (value: {
+          host?: string;
+          port?: string;
+          repoRoot?: string;
+          runtimeStateRoot?: string;
+          scopeId?: string;
+          executablePath?: string;
+          localAppData?: string;
+        }) => {
+          host: string;
+          port: number;
+          repoRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+          staticRoot: string;
+        };
+      }
+    ).resolveBridgeServerOptions({
+      repoRoot,
+      executablePath: path.join(packageDir, "role-model-runtime.exe"),
+      localAppData: "C:\\Users\\tester\\AppData\\Local",
+    });
+
+    expect(result.staticRoot).toBe(devStaticRoot);
+  });
+
   test("resolves packaged bridge server options from POSIX executable path defaults", () => {
     const result = (
       bridge as {

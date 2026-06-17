@@ -4,10 +4,10 @@ import { Link } from "react-router";
 import {
   EmptyState,
   ErrorState,
-  FactCard,
   LoadingState,
   SectionCard,
   StatusPill,
+  TelemetryFactCard,
 } from "../components/page-primitives";
 import { listRowClassName, mutedPanelClassName } from "../lib/design-system";
 import {
@@ -79,11 +79,11 @@ export default function DashboardRoute() {
     <div className="space-y-6">
       <SectionCard
         title="Recent telemetry window"
-        description="These cards are the primary overview summary and reflect the recent structured request ledger."
+        description="Primary overview summary from recent structured telemetry."
       >
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {telemetryCards.map((card, index) => (
-            <FactCard
+            <TelemetryFactCard
               key={card.label}
               label={card.label}
               value={card.value}

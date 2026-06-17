@@ -800,7 +800,7 @@ export default function ControlBenchmarkRoute() {
                           return (
                             <div
                               key={caseResult.caseId}
-                              className="rounded-none border border-[var(--rm-border)] p-3"
+                              className="rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] bg-[var(--rm-surface)] p-3"
                             >
                               <p className="font-medium text-[var(--rm-fg)]">
                                 {caseResult.caseId} • {formatScore(caseResult.score)} •{" "}
@@ -1003,7 +1003,7 @@ export default function ControlBenchmarkRoute() {
               <p className="text-sm text-[var(--rm-fg)]">{progressDescription.detail}</p>
             ) : null}
             {progressStalled ? (
-              <p className="text-sm text-amber-700">
+              <p className="text-sm text-[var(--rm-warning)]">
                 No progress update in the last 90 seconds. The run may still be waiting on a slow
                 model response.
               </p>
@@ -1011,7 +1011,7 @@ export default function ControlBenchmarkRoute() {
           </div>
         ) : null}
 
-        {error ? <p className="mt-4 text-sm text-red-600">{error}</p> : null}
+        {error ? <p className="mt-4 text-sm text-[var(--rm-error)]">{error}</p> : null}
       </SectionCard>
 
       <SectionCard

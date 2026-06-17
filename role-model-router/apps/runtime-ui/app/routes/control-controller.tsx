@@ -119,7 +119,7 @@ export default function ControlControllerRoute() {
             {candidates.map((endpoint) => (
               <div
                 key={endpoint.endpointId}
-                className="col-span-12 rounded-none border border-[var(--rm-border)] bg-[var(--rm-surface)] p-5 xl:col-span-6"
+                className="col-span-12 rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] bg-[var(--rm-surface)] p-5 xl:col-span-6"
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>

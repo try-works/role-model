@@ -1,6 +1,6 @@
 Type: `domain`
 Status: `CURRENT`
-Scope: `Stable baseline ownership for the repo workspace, canonical protocol tree, shared packages, router family, fixtures, validation surfaces, and the repo-owned runtime/operator baseline extended through the routing-strategy UI convergence baseline in run 30, unified vendor execution, telemetry dashboard remediation, runtime-config control, the run-32 models.dev metadata/readiness baseline, the run-34 runtime-owned role-policy/operator-control baseline, the run-35 Connect/de-clutter operator shell, the run-36 packaged-runtime consumption, benchmark workflow, and consumer-routing validation baseline, the run-45 Observe surface realignment baseline, and the run-47 runtime persistence plus telemetry/dashboard/router operator-baseline follow-up.`
+Scope: `Stable baseline ownership for the repo workspace, canonical protocol tree, shared packages, router family, fixtures, validation surfaces, and the repo-owned runtime/operator baseline extended through the routing-strategy UI convergence baseline in run 30, unified vendor execution, telemetry dashboard remediation, runtime-config control, the run-32 models.dev metadata/readiness baseline, the run-34 runtime-owned role-policy/operator-control baseline, the run-35 Connect/de-clutter operator shell, the run-36 packaged-runtime consumption, benchmark workflow, and consumer-routing validation baseline, the run-45 Observe surface realignment baseline, the run-47 runtime persistence plus telemetry/dashboard/router operator-baseline follow-up, and the run-48 Apple-inspired runtime-ui design-system baseline.`
 Owns-Paths:
 - `/README.md`
 - `/LICENSE`
@@ -52,8 +52,9 @@ Source-Runs:
 - `36-runtime-consumption-telemetry-remediation`
 - `45-observe-surface-realignment`
 - `47-runtime-persistence-rehydration-lifecycle`
+- `48-runtime-ui-design-system-apple-theme`
 Validated-At-Commit: `working-tree`
-Last-Validated: `2026-06-16T08:10:00Z`
+Last-Validated: `2026-06-17T05:45:09Z`
 Tags:
 - `baseline`
 - `workspace`
@@ -161,6 +162,8 @@ This repository now has a real product baseline rather than only recursive scaff
 - Run 36 addenda 04–10 delivered the benchmark operator workflow: `/.recursive/BENCHMARK-WORKFLOW.md`, **Models → Benchmark** at `/app/models/benchmark`, `validate-benchmark-run.py`, judge pipeline hardening; operator run `c0b66038` is VALID with HEALTHY control (Kimi 92% > LFM 17%)
 - Run 45 realigned Observe around canonical telemetry ownership: `/app/observe` resolves to Requests, request detail remains the richest canonical inspector, Activity and Logs are preserved raw-host adjacency surfaces, and packaged Logs now parse bracketed timestamp rows into request-detail links on the real operator runtime at `:3456`
 - Run 47 extended the operator telemetry baseline: `/app` now leads with `Recent telemetry window` and an interaction-level latest-requests rail, `/app/observe/activity` preserves backend newest-first metrics order, `/app/router` alias inventory distinguishes configured hints, resolved models, and readiness while leaving backend-truth alias-drift warnings visible until config changes, and redundant router overview or strategy context panels are removed so router surfaces emphasize canonical inventory and live controls instead of duplicate summary copy
+- Run 48 establishes the repo-owned runtime-ui design baseline: `role-model-router/apps/runtime-ui/DESIGN_APPLE_REFERENCE.md` is the original inspiration, `DESIGN_SYSTEM.md` is the authoritative contract, Swiss-design references are removed from the runtime-ui authority chain, SF Pro Display/Text with Inter fallback are the shared UI fonts, the only shipped operator-selectable themes are `Light` and `Dark`, the theme toggle lives in the sidebar, semantic status pills keep transparent backgrounds, shared shell/card/disclosure primitives do not draw internal divider lines by default, and shared custom selects replace raw native control styling for the runtime operator surfaces
+- The runtime-ui shell-header contract is now stable across route metadata, per-page actions, and packaged-runtime rendering; runtime-ui browser QA claims should assume the packaged runtime must serve the rebuilt repo-root `build/client` assets when an explicit `repoRoot` is provided rather than trusting stale embedded assets
 
 ## Validation Path
 
@@ -171,6 +174,7 @@ This repository now has a real product baseline rather than only recursive scaff
 - The repo-local runtime validation floor is the staged command family `runtime:validate-state`, `runtime:validate-registry`, `runtime:validate-routing`, `runtime:validate-adapter`, `runtime:validate-ui`, `runtime:validate-host`, `runtime:validate-vendors`, `runtime:validate-packaging`, `runtime:validate-observability`, `runtime:validate-operations`, `runtime:validate-tools`, plus `smoke`
 - For models.dev metadata work, prefer the explicit refresh/export entrypoints (`corepack pnpm run catalog:refresh` and `corepack pnpm run catalog:export`) plus the focused runtime-ui/runtime-host suites and `runtime:validate-host`/`runtime:validate-packaging` before claiming the metadata layer is fully integrated
 - For Observe or other runtime-UI telemetry work that claims packaged-operator parity, prefer focused `runtime-ui` tests/builds plus the repository-root `corepack pnpm run runtime:package-sea`, then verify the rebuilt runtime in a browser on `http://127.0.0.1:3456` instead of relying on a dev-only preview
+- For runtime-ui theme/design-system work, use strict RED/GREEN coverage on the shared design-system slice first, then rebuild the packaged runtime and verify the real browser result against the packaged operator surface; late manual-QA defects such as shared-control spacing drift are not closed until the rebuilt browser artifact is rechecked
 - When validating runtime work, treat the focused runtime validators and package tests as the run-owned baseline; broader root `build` now fails on the unrelated `provider-acp` / `provider-cli` `endpoint_kind` mismatch, broader root `test` can still fail on the workspace-level `process-supervisor` crash-callback case while the isolated package rerun passes, and vendored proxy or full Go tests on Windows still reproduce the upstream `sleep` PATH assumption
 
 ## Scope Boundary

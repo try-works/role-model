@@ -56,7 +56,7 @@ export default function LocalSwapRoute() {
                     <span className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]">
                       {new Date(event.timestamp).toLocaleString()}
                     </span>
-                    <span className="rounded-none border border-[var(--rm-border)] bg-[var(--rm-bg)] px-2 py-0.5 text-[11px] font-medium uppercase tracking-[0.14em] text-[var(--rm-secondary)]">
+                    <span className="rounded-[var(--rm-radius-pill)] border border-[var(--rm-border)] bg-[var(--rm-panel)] px-3 py-1 text-[11px] font-medium uppercase tracking-[0.14em] text-[var(--rm-secondary)]">
                       {event.reason}
                     </span>
                   </div>

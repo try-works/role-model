@@ -2,65 +2,77 @@
 
 ## Intent
 
-The runtime UI is a repo-owned operator shell for the role-model router runtime. It uses the Swiss-design baseline from the repo-local skill material together with the current React/Tailwind runtime surfaces:
+The runtime UI is a repo-owned operator shell for the role-model router runtime. Its active styling inspiration is the repo-local [DESIGN_APPLE_REFERENCE.md](./DESIGN_APPLE_REFERENCE.md) artifact together with the current React/Tailwind runtime surfaces. The Apple reference governs theme tokens, typography feel, surface treatment, and interaction restraint for this refresh. It does not change the runtime UI's route architecture or information architecture.
 
-- grid first
+- calm layered surfaces
 - mobile first
 - whitespace as structure
-- opacity, not hue, for hierarchy
-- one accent color
-- rectilinear surfaces
+- restrained neutral contrast
+- a single accent family for primary emphasis
+- rounded shell and panel geometry with minimal decorative effects
 
 This shell must not clone the vendored llama-swap UI. It should absorb the vendor's real operator workflows into the role-model information architecture so routing, tooling, multimodal APIs, host controls, and observability read as one system.
 
 ## Core rules
 
-1. **No rounded structural elements.** Cards, inputs, buttons, nav items, badges, code blocks, and drawers stay rectilinear.
-2. **One accent color.** Accent only marks primary action, active route, and a small number of high-attention states.
-3. **Typography stays light and precise.** `IBM Plex Sans` is primary; `IBM Plex Mono` is reserved for ids, paths, payloads, and API shapes.
-4. **12-column thinking, even when implemented as split panes.** Mobile stacks first; larger breakpoints introduce asymmetry and inspection tension.
-5. **Body copy stays narrow.** Explanatory text should stay near `60ch`.
+1. **Styling authority is repo-local and Apple-inspired.** `/role-model-router/apps/runtime-ui/DESIGN_APPLE_REFERENCE.md` is the original styling inspiration for this refresh; route structure and application ownership remain repo-owned.
+2. **Surfaces are restrained, not rigid.** Cards, inputs, buttons, nav items, badges, code blocks, and drawers use controlled radii (`8px`, `11px`, `18px`, or pill) with thin borders and quiet contrast.
+3. **Typography stays light and precise.** `SF Pro Display` and `SF Pro Text` are preferred when available, `Inter` is the first fallback, and `IBM Plex Mono` remains reserved for ids, paths, payloads, and API shapes.
+4. **The theme toggle exposes only `Light` and `Dark`.** System preference determines only the initial default theme until the operator makes an explicit choice.
+5. **Semantic status pills keep transparent backgrounds.** `healthy`, `degraded`, `offline`, and similar states use semantic text and border colors without semantic fill backgrounds.
 6. **Operator chrome stays quiet.** The shell header exposes only the section eyebrow, route title, description, optional page actions, and section-local tabs; no redundant in-page title blocks, note cards, or fixed JSON/log quick-link strips.
 
 ## Tokens
 
 ### Typography
 
-- Primary font: `IBM Plex Sans`
-- Mono font: `IBM Plex Mono`
-- Labels: uppercase with wide tracking
-- Page titles: light or normal weight, never heavy display bolding
+| Role | Font stack | Size | Weight | Line height | Tracking | Runtime use |
+| --- | --- | --- | --- | --- | --- | --- |
+| `display-title` | `"SF Pro Display", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif` | `34px` | `600` | `40px` | `-0.022em` | Shell route titles and major numeric highlights |
+| `section-title` | `"SF Pro Display", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif` | `21px` | `600` | `25px` | `0.011em` | Rail brand label, section cards, disclosure headers |
+| `body` | `"SF Pro Text", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif` | `17px` | `400` | `25px` | `-0.022em` | Shell descriptions, form inputs, supporting copy |
+| `body-strong` | `"SF Pro Text", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif` | `17px` | `600` | `21px` | `-0.022em` | Inline emphasis and compact strong values |
+| `utility` | `"SF Pro Text", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif` | `14px` | `400` | `18px` | `-0.016em` | Utility controls, secondary tabs, segmented toggles |
+| `nav-link` | `"SF Pro Text", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif` | `12px` | `400` | `12px` | `-0.01em` | Left-rail section navigation |
+| `eyebrow` | `"SF Pro Text", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif` | `11px` | `400` | `11px` | `0.24em` | Uppercase labels and section eyebrows |
+| `mono` | `"IBM Plex Mono", "JetBrains Mono", ui-monospace, monospace` | context-specific | `400` | context-specific | default | ids, paths, payloads, and API shapes only |
 
 ### Color
 
-- Page background: `stone-50` (`#fafaf9`) in light mode and `stone-950` (`#0c0a09`) in dark mode
-- Surface/card: `stone-100` (`#f5f5f4`) in light mode and `stone-900` (`#1c1917`) in dark mode
-- Subtle surface/panel: `stone-200` (`#e7e5e4`) in light mode and `stone-800` (`#292524`) in dark mode
-- Border: `stone-200` in light mode and `stone-800` in dark mode; subtle border uses `stone-100` / `stone-900`
-- Primary text: `stone-900` in light mode and `stone-50` in dark mode
-- Secondary text: foreground hue at `70%` opacity
-- Tertiary text: foreground hue at `40%` opacity
-- Placeholder/ghosted text: foreground hue at `20%` opacity
-- Accent: Swiss red `#C8102E`
-- Accent opacities:
-  - full `#C8102E`
-  - muted `rgba(200, 16, 46, 0.60)`
-  - subtle `rgba(200, 16, 46, 0.20)`
-  - ghost `rgba(200, 16, 46, 0.10)`
+| Semantic token | Light | Dark | Notes |
+| --- | --- | --- | --- |
+| `--rm-bg` | `#f5f5f7` | `#000000` | Default page canvas |
+| `--rm-surface` | `#ffffff` | `#272729` | Primary card and shell surface |
+| `--rm-surface-strong` | `#ffffff` | `#2a2a2c` | Raised emphasis surface |
+| `--rm-panel` | `#fafafc` | `#252527` | Quiet secondary panel |
+| `--rm-fg` | `#1d1d1f` | `#ffffff` | Primary text |
+| `--rm-secondary` | `rgba(29, 29, 31, 0.72)` | `rgba(255, 255, 255, 0.72)` | Supporting text |
+| `--rm-muted` | `rgba(29, 29, 31, 0.48)` | `rgba(255, 255, 255, 0.48)` | Eyebrows and tertiary text |
+| `--rm-border` | `#e0e0e0` | `rgba(255, 255, 255, 0.12)` | Hairline border |
+| `--rm-border-strong` | `#d2d2d7` | `rgba(255, 255, 255, 0.18)` | Active and selected border |
+| `--rm-accent` | `#0066cc` | `#0066cc` | Primary action blue |
+| `--rm-accent-focus` | `#0071e3` | `#0071e3` | Focus ring and hover border |
+| `--rm-accent-on-dark` | `#2997ff` | `#2997ff` | Dark-surface inline link accent |
+| `--rm-accent-muted` | `rgba(0, 102, 204, 0.72)` | `rgba(0, 102, 204, 0.72)` | Muted accent text/border |
+| `--rm-accent-subtle` | `rgba(0, 102, 204, 0.14)` | `rgba(41, 151, 255, 0.18)` | Focus halo and low-key emphasis |
+| `--rm-accent-ghost` | `rgba(0, 102, 204, 0.08)` | `rgba(41, 151, 255, 0.10)` | Selection wash |
+| `--rm-error` | `#c8102e` | `#fb7185` | Failure text and borders |
+| `--rm-warning` | `#b45309` | `#fbbf24` | Degraded/waiting text and borders |
+| `--rm-success` | `#166534` | `#86efac` | Healthy/success text and borders |
 
 ### Geometry
 
-- Radius: `0`
+- Radius scale: `8px`, `11px`, `18px`, and pill
 - Border weight: hairline default, stronger only for active/focus states
-- Shadows: subtle depth only on shell-level surfaces
+- Shadows: shared UI surfaces stay shadow-free by default; any deeper product framing must remain explicit and rare
 
 ### Token layers
 
-- **Primitive tokens** define the Swiss baseline:
-  - stone neutrals
-  - Swiss red accent
-  - 8px spacing rhythm
-  - `IBM Plex Sans` / `IBM Plex Mono`
+- **Primitive tokens** define the Apple-inspired baseline:
+  - warm-neutral light and dark surfaces
+  - Apple-blue accent family
+  - `4px` to `48px` spacing rhythm with explicit section spacing
+  - `SF Pro Display` / `SF Pro Text` / `IBM Plex Mono`
 - **Semantic tokens** are the runtime CSS variables:
   - `--rm-bg`
   - `--rm-surface`
@@ -252,7 +264,7 @@ These routes are no longer vague placeholder ideas. Their layout contracts are i
   - normalized storage-mode/credential posture
   - explicit **Reconnect** for repairable OAuth accounts
   - explicit **Update API key** for API-key accounts
-- **Update API key** uses a rectilinear modal with explicit **Save** and **Cancel** controls, clear saving/error states, and no secret echo/backfill.
+- **Update API key** uses a shared utility modal with explicit **Save** and **Cancel** controls, clear saving/error states, and no secret echo/backfill.
 - Archived stale legacy artifacts are never shown as current blocking setup rows on the saved-account surface; if surfaced, they appear only as bounded diagnostics separate from active accounts.
 
 ### Runtime / Session readiness / Studio execution surfaces
@@ -462,22 +474,21 @@ During the conversion window, some placeholder routes may still expose a context
 
 ### Buttons
 
-- Rectilinear only
-- Minimum height `44px`
-- Primary: filled foreground or accent
-- Secondary: outlined
+- Primary CTA: `44px` minimum height, pill radius, Action Blue fill, `17px / 400` body typography, and the shared press-scale interaction
+- Secondary CTA: transparent fill with Action Blue text and border, same pill geometry and typography as the primary CTA
+- Utility controls: `44px` minimum height, `11px` or `18px` radius depending on context, `14px / 400` utility typography, quiet surface-first treatment
 
 ### Inputs
 
-- Transparent or light surface
-- Explicit focus border or ring
-- No rounded treatments
+- Default text inputs use body typography (`17px / 400 / 25px`) on the current surface with explicit focus border and accent halo
+- Generic editor fields keep the `11px` field radius; pill search treatments are reserved for search-specific affordances
+- Text and search inputs inherit the body font; mono remains reserved for payload/code surfaces
 
 ### Badges
 
-- Rectilinear labels
-- Uppercase tracked text
-- Use stone + accent only; never introduce amber, emerald, rose, or another semantic hue for shared states
+- Status pills remain transparent with semantic text and border colors only
+- Uppercase tracked text stays compact and quiet
+- Semantic warning / success / error hues are allowed for runtime state, but only as border and text treatments without fill backgrounds
 
 ### Tables and payload blocks
 
@@ -527,5 +538,3 @@ The run-13 tool/MCP baseline remains part of the runtime design contract rather 
    - expose runtime policy, peers, and config-watch posture from the vendored host, with version facts folded into Runtime
 4. **Integrations**
    - finish upstream reference surfaces after the operator pages are concrete, with compatibility guidance folded into Downstream
-
-

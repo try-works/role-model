@@ -8,6 +8,7 @@ import {
   SectionCard,
   StatusPill,
 } from "../components/page-primitives";
+import { ThemedSelect } from "../components/themed-select";
 import {
   fieldClassName,
   mutedPanelClassName,
@@ -291,6 +292,27 @@ export default function ProvidersRoute() {
     [providerAccountId, snapshot],
   );
   const availableRoles = snapshot?.roles ?? [];
+  const providerOptions = useMemo(
+    () =>
+      remoteProviders.map((provider) => ({
+        value: provider.providerId,
+        label: provider.displayName,
+      })),
+    [remoteProviders],
+  );
+  const variantOptions = useMemo(
+    () =>
+      (selectedProvider?.variants ?? []).map((variant) => ({
+        value: variant.variantId,
+        label: variant.label,
+        description: variant.description,
+      })),
+    [selectedProvider],
+  );
+  const modelOptions = useMemo(
+    () => availableModels.map((modelId) => ({ value: modelId, label: modelId })),
+    [availableModels],
+  );
   const providerMaintenanceRows = useMemo(
     () =>
       snapshot
@@ -576,35 +598,29 @@ export default function ProvidersRoute() {
             description="Select the provider, connection method, model set, and role bindings that should flow into the runtime registry."
           >
             <form className="space-y-4" onSubmit={onSubmit}>
-              <label className="grid gap-2 text-sm">
-                <span className="font-medium text-[var(--rm-fg)]">Provider</span>
-                <select
-                  className={inputClass}
+              <div className="grid gap-2 text-sm">
+                <span className="font-medium text-[var(--rm-fg)]" id="providers-provider-label">
+                  Provider
+                </span>
+                <ThemedSelect
+                  ariaLabelledBy="providers-provider-label"
+                  options={providerOptions}
                   value={selectedProvider?.providerId ?? ""}
-                  onChange={(event) => onProviderChange(event.target.value)}
-                >
-                  {remoteProviders.map((provider) => (
-                    <option key={provider.providerId} value={provider.providerId}>
-                      {provider.displayName}
-                    </option>
-                  ))}
-                </select>
-              </label>
+                  onChange={onProviderChange}
+                />
+              </div>
 
-              <label className="grid gap-2 text-sm">
-                <span className="font-medium text-[var(--rm-fg)]">Connection method</span>
-                <select
-                  className={inputClass}
+              <div className="grid gap-2 text-sm">
+                <span className="font-medium text-[var(--rm-fg)]" id="providers-variant-label">
+                  Connection method
+                </span>
+                <ThemedSelect
+                  ariaLabelledBy="providers-variant-label"
+                  options={variantOptions}
                   value={selectedVariant?.variantId ?? ""}
-                  onChange={(event) => onVariantChange(event.target.value)}
-                >
-                  {(selectedProvider?.variants ?? []).map((variant) => (
-                    <option key={variant.variantId} value={variant.variantId}>
-                      {variant.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
+                  onChange={onVariantChange}
+                />
+              </div>
 
               <label className="grid gap-2 text-sm">
                 <span className="font-medium text-[var(--rm-fg)]">Provider connection id</span>
@@ -636,33 +652,18 @@ export default function ProvidersRoute() {
                 </div>
               )}
 
-              <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
-                <p className="font-medium text-[var(--rm-fg)]">LiteLLM-backed remote onboarding</p>
-                <p className="mt-2">
-                  Remote providers are activated through LiteLLM so the router can evaluate shared
-                  remote candidates alongside local llama-swap endpoints.
-                </p>
-                <p className="mt-2">
-                  Models.dev metadata stays additive only: it enriches endpoint and model readback
-                  but does not replace the live LiteLLM connection path.
-                </p>
-              </div>
-
-              <label className="grid gap-2 text-sm">
-                <span className="font-medium text-[var(--rm-fg)]">Model</span>
-                <select
-                  className={inputClass}
+              <div className="grid gap-2 text-sm">
+                <span className="font-medium text-[var(--rm-fg)]" id="providers-model-label">
+                  Model
+                </span>
+                <ThemedSelect
+                  ariaLabelledBy="providers-model-label"
+                  options={modelOptions}
+                  placeholder="Select a model…"
                   value={selectedModel}
-                  onChange={(event) => onModelSelect(event.target.value)}
-                >
-                  <option value="">Select a model…</option>
-                  {availableModels.map((modelId) => (
-                    <option key={modelId} value={modelId}>
-                      {modelId}
-                    </option>
-                  ))}
-                </select>
-              </label>
+                  onChange={onModelSelect}
+                />
+              </div>
 
               {selectedModel !== "" ? (
                 <div className="space-y-3 text-sm">
@@ -681,7 +682,7 @@ export default function ProvidersRoute() {
                           {availableRoles.map((role) => (
                             <label
                               key={`${selectedModel}:${role.roleId}`}
-                              className="flex items-center gap-2 rounded-none border border-[var(--rm-border)] px-3 py-1.5"
+                              className="flex items-center gap-2 rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-surface)] px-3 py-2"
                             >
                               <input
                                 checked={(selectedModelRoles[selectedModel] ?? []).includes(
@@ -1018,7 +1019,7 @@ export default function ProvidersRoute() {
           <dialog
             open
             aria-modal="true"
-            className="relative mx-auto max-w-2xl rounded-none border border-[var(--rm-border)] bg-[var(--rm-surface)] p-6 shadow-[var(--rm-shadow-card)]"
+            className="relative mx-auto max-w-2xl rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] bg-[var(--rm-surface)] p-6 shadow-[var(--rm-shadow-card)]"
             aria-labelledby="provider-api-key-modal-title"
           >
             <div className="flex flex-wrap items-start justify-between gap-4">

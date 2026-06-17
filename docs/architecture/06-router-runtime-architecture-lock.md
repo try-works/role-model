@@ -119,8 +119,8 @@ The router-runtime sequence inherits, and must not redefine:
   but they are not a copy of a `models.dev` frontend shell.
 - operator and investigation surfaces may borrow workflow ideas from `llama-swap`, but they are not required to adopt
   `llama-swap` layout or component structure.
-- styling rules may reference `C:\Users\erikb\OneDrive\##### DEV\role-model\requirements\DESIGN.md` and the Swiss
-  design bundle during planning, but structural layout and shared-component references must later be rewritten inside
+- styling rules may reference repo-local runtime UI design artifacts such as
+  `/role-model-router/apps/runtime-ui/DESIGN_APPLE_REFERENCE.md` during planning, but structural layout and shared-component references must later be rewritten inside
   the role-model repo as a role-model-native design-system document.
 - run 04 locks these boundaries only; it does not implement the UI surfaces themselves.
 

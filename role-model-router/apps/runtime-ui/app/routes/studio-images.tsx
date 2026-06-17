@@ -40,7 +40,7 @@ export default function StudioImagesRoute() {
   const [error, setError] = useState<string | null>(null);
   const [mode, setMode] = useState<"openai" | "sdapi">("openai");
   const [model, setModel] = useState("");
-  const [prompt, setPrompt] = useState("A Swiss-style operator console poster.");
+  const [prompt, setPrompt] = useState("A photography-first operator console poster.");
   const [size, setSize] = useState("1024x1024");
   const [width, setWidth] = useState("1024");
   const [height, setHeight] = useState("1024");

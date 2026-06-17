@@ -2,10 +2,15 @@ import type { ReactNode } from "react";
 
 import { cn } from "../lib/cn";
 import {
+  bodyTextClassName,
   cardClassName,
   codeBlockClassName,
+  eyebrowClassName,
+  largeValueClassName,
   mutedPanelClassName,
   raisedPanelClassName,
+  sectionTitleClassName,
+  utilityLabelClassName,
 } from "../lib/design-system";
 
 export function SectionCard({
@@ -21,10 +26,10 @@ export function SectionCard({
 }) {
   return (
     <section className={cn(`${cardClassName} px-5 py-5 md:px-6 md:py-6`, className)}>
-      <div className="mb-5 border-b border-[var(--rm-border)] pb-4">
-        <h2 className="text-lg font-normal text-[var(--rm-fg)]">{title}</h2>
+      <div className="mb-5">
+        <h2 className={`text-[var(--rm-fg)] ${sectionTitleClassName}`}>{title}</h2>
         {description ? (
-          <p className="mt-2 max-w-[60ch] text-sm leading-6 text-[var(--rm-secondary)]">
+          <p className={`mt-2 max-w-[60ch] ${bodyTextClassName} text-[var(--rm-secondary)]`}>
             {description}
           </p>
         ) : null}
@@ -34,13 +39,33 @@ export function SectionCard({
   );
 }
 
+export function RegistryDetailLayout({
+  primary,
+  secondary,
+  className,
+}: {
+  primary: ReactNode;
+  secondary: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div
+      className={cn(
+        "grid gap-6 xl:grid-cols-[minmax(0,1.25fr)_minmax(360px,0.75fr)] xl:items-start",
+        className,
+      )}
+    >
+      <div className="min-w-0 space-y-6">{primary}</div>
+      <div className="min-w-0 space-y-6">{secondary}</div>
+    </div>
+  );
+}
+
 export function StatCard({ label, value }: { label: string; value: string }) {
   return (
     <div className={`${raisedPanelClassName} p-5`}>
-      <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">
-        {label}
-      </p>
-      <p className="mt-4 text-3xl font-light text-[var(--rm-fg)]">{value}</p>
+      <p className={eyebrowClassName}>{label}</p>
+      <p className={`mt-4 text-[var(--rm-fg)] ${largeValueClassName}`}>{value}</p>
     </div>
   );
 }
@@ -65,14 +90,51 @@ export function FactCard({
         className,
       )}
     >
-      <p className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]">
-        {label}
-      </p>
-      <p className="mt-3 break-words text-xl font-light leading-snug tabular-nums text-[var(--rm-fg)] md:text-2xl">
+      <p className={eyebrowClassName}>{label}</p>
+      <p
+        className={`mt-3 break-words tabular-nums text-[var(--rm-fg)] ${largeValueClassName}`}
+      >
         {value}
       </p>
       {detail ? (
-        <p className="mt-2 max-w-[28ch] text-sm leading-6 text-[var(--rm-secondary)]">{detail}</p>
+        <p className={`mt-2 max-w-[28ch] ${bodyTextClassName} text-[var(--rm-secondary)]`}>
+          {detail}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+export function TelemetryFactCard({
+  label,
+  value,
+  detail,
+  emphasis = false,
+  className,
+}: {
+  label: string;
+  value: ReactNode;
+  detail?: ReactNode;
+  emphasis?: boolean;
+  className?: string;
+}) {
+  return (
+    <div
+      className={cn(
+        `${emphasis ? raisedPanelClassName : mutedPanelClassName} p-5 md:p-6`,
+        className,
+      )}
+    >
+      <p className={eyebrowClassName}>{label}</p>
+      <p
+        className={`mt-4 break-words tabular-nums text-[var(--rm-fg)] ${largeValueClassName}`}
+      >
+        {value}
+      </p>
+      {detail ? (
+        <p className={`mt-3 max-w-[24ch] text-[var(--rm-secondary)] ${utilityLabelClassName}`}>
+          {detail}
+        </p>
       ) : null}
     </div>
   );
@@ -87,17 +149,17 @@ export function StatusPill({
 }) {
   const toneClass =
     tone === "accent"
-      ? "border-[color:var(--rm-accent-muted)] bg-[var(--rm-accent-ghost)] text-[var(--rm-accent)]"
+      ? "border-[color:var(--rm-accent-muted)] bg-transparent text-[var(--rm-accent)]"
       : tone === "warning"
-        ? "border-[var(--rm-warning)] bg-[var(--rm-warning-muted)] text-[var(--rm-warning)]"
+        ? "border-[var(--rm-warning)] bg-transparent text-[var(--rm-warning)]"
         : tone === "success"
-          ? "border-[var(--rm-success)] bg-[var(--rm-success-subtle)] text-[var(--rm-success)]"
-          : "border-[var(--rm-border)] bg-[var(--rm-bg)] text-[var(--rm-secondary)]";
+          ? "border-[var(--rm-success)] bg-transparent text-[var(--rm-success)]"
+          : "border-[var(--rm-border)] bg-transparent text-[var(--rm-secondary)]";
 
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-none border px-2.5 py-1 text-xs font-medium tracking-[0.14em] uppercase",
+        "inline-flex items-center rounded-[var(--rm-radius-pill)] border px-3 py-1.5 text-[12px] font-normal uppercase tracking-[0.16em] leading-3",
         toneClass,
       )}
     >
@@ -124,7 +186,7 @@ export function EmptyState({ label }: { label: string }) {
 
 export function ErrorState({ label }: { label: string }) {
   return (
-    <p className="rounded-none border border-[var(--rm-error)] bg-[var(--rm-error-ghost)] p-6 text-sm text-[var(--rm-error)]">
+    <p className="rounded-[var(--rm-radius-panel)] border border-[var(--rm-error)] bg-[var(--rm-error-ghost)] p-6 text-sm text-[var(--rm-error)]">
       {label}
     </p>
   );
@@ -145,10 +207,12 @@ export function DisclosureSection({
 }) {
   return (
     <details className={`${cardClassName} px-5 py-4 md:px-6`} open={defaultOpen ? true : undefined}>
-      <summary className="cursor-pointer list-none text-lg font-normal text-[var(--rm-fg)] marker:content-none [&::-webkit-details-marker]:hidden">
+      <summary
+        className={`cursor-pointer list-none text-[var(--rm-fg)] marker:content-none [&::-webkit-details-marker]:hidden ${sectionTitleClassName}`}
+      >
         {summary}
       </summary>
-      <div className="mt-4 border-t border-[var(--rm-border)] pt-4">{children}</div>
+      <div className="mt-4">{children}</div>
     </details>
   );
 }

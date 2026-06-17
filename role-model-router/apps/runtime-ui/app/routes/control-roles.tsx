@@ -563,7 +563,7 @@ export default function ControlRolesRoute() {
                       {policy.roleDefinitions.map((role) => (
                         <label
                           key={`${task.task_type}:${role.role_id}`}
-                          className="flex items-center gap-2 rounded-none border border-[var(--rm-border)] px-3 py-2 text-sm text-[var(--rm-secondary)]"
+                          className="flex items-center gap-2 rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-panel)] px-3 py-2 text-sm text-[var(--rm-secondary)]"
                         >
                           <input
                             checked={(taskRoleSelections[task.task_type] ?? []).includes(

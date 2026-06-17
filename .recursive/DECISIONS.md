@@ -1142,6 +1142,36 @@
   - the live `moonshot/kimi-k2.6` warning on `:3456` remains correct until the persisted operator config is changed
   - the broader Windows host-bridge suite still has an unrelated OAuth temp-file rename `EPERM` flake outside run-47 scope
 
+### Run `48-runtime-ui-design-system-apple-theme`
+
+- Run folder: `/.recursive/run/48-runtime-ui-design-system-apple-theme/`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+  - `addenda/05-manual-qa.upstream-gap.02-to-be-plan.addendum-01.md`
+- What changed:
+  - replaced the remaining Swiss-authority runtime-ui contract with the repo-owned Apple-inspired design baseline documented in `role-model-router/apps/runtime-ui/DESIGN_APPLE_REFERENCE.md` and `DESIGN_SYSTEM.md`
+  - standardized the operator shell on explicit Light/Dark themes, sidebar-owned theme switching, Apple typography tokens, transparent semantic status pills, no shared internal divider lines, and themed shared controls including custom selects
+  - repaired the shared shell-header contract, route action plumbing, and packaged-runtime asset-sync path so rebuilt runtime-ui assets and route headers stay stable on the packaged operator surface
+  - completed late packaged-runtime QA remediations including sidebar containment, divider and eyebrow removal, route rollout verification, and the final Remote Providers select-chevron alignment fix
+- Why:
+  - the previous runtime-ui baseline no longer matched the approved design reference, still carried Swiss-era wording and token drift, and exposed packaged-runtime UI failures that only appeared after the browser QA pass
+- How:
+  - implemented the refresh with strict RED/GREEN coverage on shared design-system slices, rebuilt the SEA runtime repeatedly against the worktree, ran controller-owned packaged-runtime route and screenshot QA on `:3457`, and closed the run only after explicit user approval of the final browser state
+- What was not done:
+  - the run did not redesign route architecture, backend provider onboarding semantics, or non-UI runtime subsystems beyond the stability work needed to serve the corrected frontend baseline
+- Known issues / follow-ups:
+  - controller-owned screenshot capture in this environment remained light-mode only, so final dark-mode and persistence acceptance stayed hybrid with explicit user sign-off plus deterministic theme tests
+  - root-level runtime-ui screenshot copies and temporary QA runtime state remain local validation residue rather than product-source changes
+
 ### Run `39-runtime-session-rehydration-model-inventory`
 
 - Run folder: `/.recursive/run/39-runtime-session-rehydration-model-inventory/`

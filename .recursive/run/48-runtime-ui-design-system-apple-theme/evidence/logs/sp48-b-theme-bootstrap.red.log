@@ -1,0 +1,193 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/48-runtime-ui-design-system-apple-theme/role-model-router/apps/runtime-ui[39m
+
+ [31m❯[39m app/lib/design-system.test.ts [2m([22m[2m34 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[33m 5465[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mdefines navigation groups and layout templates for every runtime route[32m 20[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mdefines the Apple-inspired runtime theme contract with explicit tokenized radii and content width[32m 67[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime design system[2m > [22mglobal shell chrome keeps legacy vendor ui out of the main runtime contract [33m 1104[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime design system[2m > [22mstudio implementation targets render repo-owned workspace sections instead of placeholder blueprints [33m 1319[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime design system[2m > [22mintegration and system implementation targets render live upstream and peer surfaces [33m 371[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mrouter implementation targets render repo-owned routing explanation surfaces[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mrouter, connect registry, and remote surfaces expose alias/readiness ownership instead of generic filler[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mproviders surface exposes explicit in-place maintenance actions for saved remote accounts[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mproviders surface uses an explicit save-cancel modal for api-key maintenance[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mproviders surface keeps oauth reconnect as a one-click saved-account action[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mproviders maintenance flows call explicit repair APIs instead of generic account writes[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mproviders saved-account cards use canonical lifecycle rows and bounded archived diagnostics[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mruntime, session readiness, workbench, and advanced surfaces use canonical lifecycle diagnostics[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mrouter routes preserve empty-state and observe-link affordances[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mmerged router overview stays observational while routing strategy owns editing controls[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mmeta-guidance panels stay removed from overview and observe routes[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mdesign system doc marks the converted pages as live routes[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mcontrol routes tolerate an unassigned controller before endpoint activation[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mdesign-system docs and architecture point at the Apple reference instead of Swiss authority[32m 1[2mms[22m[39m
+[31m   [31m×[31m runtime design system[2m > [22mshared app bootstrap uses explicit Light and Dark theme tokens instead of media-query-only IBM Plex chrome[39m[33m 1914[2mms[22m[39m
+[31m     → expected '@import "tailwindcss";\n\n:root {\n  …' to contain '--rm-font-display: "SF Pro Display", …'[39m
+   [32m✓[39m runtime design system[2m > [22mkeeps shared states on semantic design tokens instead of Tailwind utility palettes[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mremote, models, router, and system runtime config routes are first-class pages in the retained taxonomy[32m 46[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mlocal setup surfaces stay discoverable from navigation and empty registry states[32m 109[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mobserve and local log surfaces render structured ledgers rather than raw iframe placeholders[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mobserve ownership keeps requests canonical and raw-host surfaces adjacent[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mrequests and request detail stay telemetry-first while exposing raw-host handoffs[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mactivity route frames raw-host metrics as adjacent to canonical telemetry[32m 103[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mlogs route exposes request-detail handoffs while preserving raw-host framing[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mregistry and system layouts avoid redundant KPI strips and placeholder note panels[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mdashboard passes telemetry detail to FactCard for Latency[32m 2[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22moverview metadata and design doc describe a telemetry-first summary with an interaction rail[32m 75[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mworkbench and observe routes expose routing controls and receipts in repo-owned UI surfaces[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mshell header owns route metadata and page actions without duplicate page headers[32m 2[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mruntime route definitions stay slim and future scaffolds avoid duplicate header props[32m 93[2mms[22m[39m
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  app/lib/theme.test.ts [ app/lib/theme.test.ts ]
+Error: Cannot find module './theme' imported from 'D:/DEV/role-model/.worktrees/48-runtime-ui-design-system-apple-theme/role-model-router/apps/runtime-ui/app/lib/theme.test.ts'
+ ❯ app/lib/theme.test.ts:3:1
+      1| import { describe, expect, test } from "vitest";
+      2| 
+      3| import {
+       | ^
+      4|   THEME_STORAGE_KEY,
+      5|   getThemeColor,
+
+Caused by: Error: Failed to load url ./theme (resolved id: ./theme) in D:/DEV/role-model/.worktrees/48-runtime-ui-design-system-apple-theme/role-model-router/apps/runtime-ui/app/lib/theme.test.ts. Does the file exist?
+ ❯ loadAndTransform ../../../node_modules/.pnpm/vite@7.3.2_@types+node@22.1_f7dc1826a0f6bcfe28ab74fd91d23836/node_modules/vite/dist/node/chunks/config.js:22663:33
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  app/lib/design-system.test.ts > runtime design system > shared app bootstrap uses explicit Light and Dark theme tokens instead of media-query-only IBM Plex chrome
+AssertionError: expected '@import "tailwindcss";\n\n:root {\n  …' to contain '--rm-font-display: "SF Pro Display", …'
+
+- Expected
++ Received
+
+- --rm-font-display: "SF Pro Display", "Inter", -apple-system
++ @import "tailwindcss";
++
++ :root {
++   --rm-bg: #fafaf9;
++   --rm-surface: #f5f5f4;
++   --rm-surface-strong: #f5f5f4;
++   --rm-panel: #e7e5e4;
++   --rm-fg: #1c1917;
++   --rm-secondary: rgba(28, 25, 23, 0.7);
++   --rm-muted: rgba(28, 25, 23, 0.4);
++   --rm-border: #e7e5e4;
++   --rm-border-strong: #d6d3d1;
++   --rm-accent: #003b8e;
++   --rm-accent-muted: rgba(0, 59, 142, 0.6);
++   --rm-accent-subtle: rgba(0, 59, 142, 0.2);
++   --rm-accent-ghost: rgba(0, 59, 142, 0.1);
++   --rm-error: #c8102e;
++   --rm-error-muted: rgba(200, 16, 46, 0.6);
++   --rm-error-subtle: rgba(200, 16, 46, 0.2);
++   --rm-error-ghost: rgba(200, 16, 46, 0.1);
++   --rm-success: #166534;
++   --rm-success-muted: rgba(22, 101, 52, 0.6);
++   --rm-success-subtle: rgba(22, 101, 52, 0.2);
++   --rm-warning: #b45309;
++   --rm-warning-muted: rgba(180, 83, 9, 0.6);
++   --rm-telemetry-local: #1f2937;
++   --rm-telemetry-remote: #003b8e;
++   --rm-telemetry-healthy: #166534;
++   --rm-telemetry-degraded: #b45309;
++   --rm-telemetry-raw: #57534e;
++   --rm-radius-shell: 0px;
++   --rm-radius-panel: 0px;
++   --rm-radius-field: 0px;
++   --rm-shadow-card: 0 18px 40px rgba(28, 25, 23, 0.04);
++   --rm-shell-width: 1480px;
++ }
++
++ @media (prefers-color-scheme: dark) {
++   :root {
++     --rm-bg: #0c0a09;
++     --rm-surface: #1c1917;
++     --rm-surface-strong: #1c1917;
++     --rm-panel: #292524;
++     --rm-fg: #fafaf9;
++     --rm-secondary: rgba(250, 250, 249, 0.7);
++     --rm-muted: rgba(250, 250, 249, 0.4);
++     --rm-border: #292524;
++     --rm-border-strong: #57534e;
++     --rm-telemetry-local: #d6d3d1;
++     --rm-telemetry-remote: #60a5fa;
++     --rm-telemetry-healthy: #86efac;
++     --rm-telemetry-degraded: #fbbf24;
++     --rm-telemetry-raw: #a8a29e;
++     --rm-accent: #60a5fa;
++     --rm-accent-muted: rgba(96, 165, 250, 0.6);
++     --rm-accent-subtle: rgba(96, 165, 250, 0.2);
++     --rm-accent-ghost: rgba(96, 165, 250, 0.1);
++     --rm-error: #fb7185;
++     --rm-error-muted: rgba(251, 113, 133, 0.6);
++     --rm-error-subtle: rgba(251, 113, 133, 0.2);
++     --rm-error-ghost: rgba(251, 113, 133, 0.1);
++     --rm-success: #86efac;
++     --rm-success-muted: rgba(134, 239, 172, 0.6);
++     --rm-success-subtle: rgba(134, 239, 172, 0.2);
++     --rm-warning: #fbbf24;
++     --rm-warning-muted: rgba(251, 191, 36, 0.6);
++   }
++ }
++
++ html {
++   scrollbar-gutter: stable;
++   color-scheme: light dark;
++   background: var(--rm-bg);
++ }
++
++ body {
++   margin: 0;
++   background: var(--rm-bg);
++   color: var(--rm-fg);
++   font-family: "IBM Plex Sans", "Hanken Grotesk", "Barlow", "Host Grotesk", "DM Sans", system-ui,
++     sans-serif;
++ }
++
++ ::selection {
++   background: var(--rm-accent-ghost);
++ }
++
++ code,
++ pre,
++ textarea,
++ input[type="text"] {
++   font-family: "IBM Plex Mono", "JetBrains Mono", ui-monospace, monospace;
++ }
++
++ a {
++   color: inherit;
++   text-decoration: none;
++ }
++
++ button,
++ input,
++ select,
++ textarea {
++   font: inherit;
++ }
++
+
+ ❯ app/lib/design-system.test.ts:706:20
+    704| 
+    705|   test("shared app bootstrap uses explicit Light and Dark theme tokens…
+    706|     expect(appCss).toContain('--rm-font-display: "SF Pro Display", "In…
+       |                    ^
+    707|     expect(appCss).toContain('--rm-font-body: "SF Pro Text", "Inter", …
+    708|     expect(appCss).toContain("--rm-bg: #f5f5f7;");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+[2m Test Files [22m [1m[31m2 failed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m33 passed[39m[22m[90m (34)[39m
+[2m   Start at [22m 20:31:44
+[2m   Duration [22m 46.55s[2m (transform 20.26s, setup 0ms, collect 25.76s, tests 5.47s, environment 1ms, prepare 5.89s)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\48-runtime-ui-design-system-apple-theme\role-model-router\apps\runtime-ui:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run app/lib/theme.test.ts app/lib/design-system.test.ts

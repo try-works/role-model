@@ -128,7 +128,7 @@ export default function LocalPolicyRoute() {
                 id="autoUnload"
                 checked={autoUnload}
                 onChange={(e) => setField("autoUnload", e.target.checked)}
-                className="h-4 w-4 rounded-none border-[var(--rm-border-strong)] accent-[var(--rm-accent)]"
+                className="h-4 w-4 rounded-[var(--rm-radius-sm)] border-[var(--rm-border-strong)] bg-[var(--rm-surface)] accent-[var(--rm-accent)]"
               />
               <label htmlFor="autoUnload" className="text-sm text-[var(--rm-fg)]">
                 Auto-unload idle models

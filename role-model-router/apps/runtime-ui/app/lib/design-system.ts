@@ -592,71 +592,81 @@ export const runtimeNavigationSections: readonly RuntimeNavigationSection[] = [
 ] as const;
 
 export const runtimeTheme = {
-  maxContentWidth: "1480px",
+  maxContentWidth: "1440px",
   radii: {
-    shell: "0px",
-    panel: "0px",
-    field: "0px",
-    badge: "0px",
+    sm: "8px",
+    md: "11px",
+    lg: "18px",
+    pill: "9999px",
+    shell: "18px",
+    panel: "18px",
+    field: "11px",
+    badge: "9999px",
   },
   colors: {
     light: {
-      bg: "#fafaf9",
-      surface: "#f5f5f4",
-      surfaceStrong: "#f5f5f4",
-      panel: "#e7e5e4",
-      fg: "#1c1917",
-      secondary: "rgba(28, 25, 23, 0.70)",
-      muted: "rgba(28, 25, 23, 0.40)",
-      border: "#e7e5e4",
-      borderStrong: "#f5f5f4",
-      accent: "#003B8E",
-      accentMuted: "rgba(0, 59, 142, 0.60)",
-      accentSubtle: "rgba(0, 59, 142, 0.20)",
-      accentGhost: "rgba(0, 59, 142, 0.10)",
+      bg: "#f5f5f7",
+      surface: "#ffffff",
+      surfaceStrong: "#ffffff",
+      panel: "#fafafc",
+      fg: "#1d1d1f",
+      secondary: "rgba(29, 29, 31, 0.72)",
+      muted: "rgba(29, 29, 31, 0.48)",
+      border: "#e0e0e0",
+      borderStrong: "#d2d2d7",
+      accent: "#0066CC",
+      accentFocus: "#0071E3",
+      accentOnDark: "#2997FF",
+      accentMuted: "rgba(0, 102, 204, 0.72)",
+      accentSubtle: "rgba(0, 102, 204, 0.14)",
+      accentGhost: "rgba(0, 102, 204, 0.08)",
       error: "#C8102E",
-      errorMuted: "rgba(200, 16, 46, 0.60)",
-      errorSubtle: "rgba(200, 16, 46, 0.20)",
-      errorGhost: "rgba(200, 16, 46, 0.10)",
+      errorMuted: "rgba(200, 16, 46, 0.72)",
+      errorSubtle: "rgba(200, 16, 46, 0.14)",
+      errorGhost: "rgba(200, 16, 46, 0.08)",
       success: "#166534",
-      successMuted: "rgba(22, 101, 52, 0.60)",
-      successSubtle: "rgba(22, 101, 52, 0.20)",
+      successMuted: "rgba(22, 101, 52, 0.72)",
+      successSubtle: "rgba(22, 101, 52, 0.14)",
       warning: "#b45309",
-      warningMuted: "rgba(180, 83, 9, 0.60)",
-      telemetryLocal: "#1f2937",
-      telemetryRemote: "#003B8E",
+      warningMuted: "rgba(180, 83, 9, 0.72)",
+      warningSubtle: "rgba(180, 83, 9, 0.14)",
+      telemetryLocal: "#1d1d1f",
+      telemetryRemote: "#0066CC",
       telemetryHealthy: "#166534",
       telemetryDegraded: "#b45309",
-      telemetryRaw: "#57534e",
+      telemetryRaw: "#7a7a7a",
     },
     dark: {
-      bg: "#0c0a09",
-      surface: "#1c1917",
-      surfaceStrong: "#1c1917",
-      panel: "#292524",
-      fg: "#fafaf9",
-      secondary: "rgba(250, 250, 249, 0.70)",
-      muted: "rgba(250, 250, 249, 0.40)",
-      border: "#292524",
-      borderStrong: "#1c1917",
-      accent: "#60a5fa",
-      accentMuted: "rgba(96, 165, 250, 0.60)",
-      accentSubtle: "rgba(96, 165, 250, 0.20)",
-      accentGhost: "rgba(96, 165, 250, 0.10)",
-      error: "#fb7185",
-      errorMuted: "rgba(251, 113, 133, 0.60)",
-      errorSubtle: "rgba(251, 113, 133, 0.20)",
+      bg: "#000000",
+      surface: "#272729",
+      surfaceStrong: "#2a2a2c",
+      panel: "#252527",
+      fg: "#FFFFFF",
+      secondary: "rgba(255, 255, 255, 0.72)",
+      muted: "rgba(255, 255, 255, 0.48)",
+      border: "rgba(255, 255, 255, 0.12)",
+      borderStrong: "rgba(255, 255, 255, 0.18)",
+      accent: "#0066CC",
+      accentFocus: "#0071E3",
+      accentOnDark: "#2997FF",
+      accentMuted: "rgba(0, 102, 204, 0.72)",
+      accentSubtle: "rgba(41, 151, 255, 0.18)",
+      accentGhost: "rgba(41, 151, 255, 0.10)",
+      error: "#FB7185",
+      errorMuted: "rgba(251, 113, 133, 0.72)",
+      errorSubtle: "rgba(251, 113, 133, 0.18)",
       errorGhost: "rgba(251, 113, 133, 0.10)",
-      success: "#86efac",
-      successMuted: "rgba(134, 239, 172, 0.60)",
-      successSubtle: "rgba(134, 239, 172, 0.20)",
-      warning: "#fbbf24",
-      warningMuted: "rgba(251, 191, 36, 0.60)",
-      telemetryLocal: "#d6d3d1",
-      telemetryRemote: "#60a5fa",
+      success: "#86EFAC",
+      successMuted: "rgba(134, 239, 172, 0.72)",
+      successSubtle: "rgba(134, 239, 172, 0.18)",
+      warning: "#FBBF24",
+      warningMuted: "rgba(251, 191, 36, 0.72)",
+      warningSubtle: "rgba(251, 191, 36, 0.18)",
+      telemetryLocal: "#FFFFFF",
+      telemetryRemote: "#2997FF",
       telemetryHealthy: "#86efac",
       telemetryDegraded: "#fbbf24",
-      telemetryRaw: "#a8a29e",
+      telemetryRaw: "#cccccc",
     },
   },
 } as const;
@@ -670,26 +680,53 @@ export const shellQuickLinks = [
 ] as const;
 
 export const cardClassName =
-  "rounded-none border border-[var(--rm-border)] bg-[var(--rm-surface)] shadow-[var(--rm-shadow-card)]";
+  "rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] bg-[var(--rm-surface)] shadow-[var(--rm-shadow-card)]";
 
 export const raisedPanelClassName =
-  "rounded-none border border-[var(--rm-border)] bg-[var(--rm-surface-strong)]";
+  "rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] bg-[var(--rm-surface-strong)]";
 
 export const mutedPanelClassName =
-  "rounded-none border border-[var(--rm-border)] bg-[var(--rm-panel)]";
+  "rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] bg-[var(--rm-panel)]";
+
+export const eyebrowClassName =
+  "text-[11px] font-normal uppercase tracking-[0.24em] text-[var(--rm-muted)]";
+
+export const navLabelClassName =
+  "text-[14px] font-normal leading-[18px] tracking-[-0.016em]";
+
+export const utilityLabelClassName =
+  "text-[14px] font-normal leading-[18px] tracking-[-0.016em]";
+
+export const bodyTextClassName =
+  "text-[17px] font-normal leading-[25px] tracking-[-0.022em]";
+
+export const bodyStrongTextClassName =
+  "text-[17px] font-semibold leading-[21px] tracking-[-0.022em]";
+
+export const displayTitleClassName =
+  "[font-family:var(--rm-font-display)] text-[34px] font-semibold leading-[40px] tracking-[-0.022em]";
+
+export const sectionTitleClassName =
+  "[font-family:var(--rm-font-display)] text-[21px] font-semibold leading-[25px] tracking-[0.011em]";
+
+export const largeValueClassName =
+  "[font-family:var(--rm-font-display)] text-[28px] font-normal leading-8 tracking-[0.007em] md:text-[34px] md:leading-[40px] md:tracking-[-0.022em]";
 
 export const fieldClassName =
-  "w-full rounded-none border border-[var(--rm-border-strong)] bg-[var(--rm-surface-strong)] px-3 py-2.5 text-sm text-[var(--rm-fg)] shadow-sm outline-none transition placeholder:text-[var(--rm-muted)] focus:border-[var(--rm-accent)] focus:ring-2 focus:ring-[var(--rm-accent-subtle)]";
+  "w-full rounded-[var(--rm-radius-field)] border border-[var(--rm-border-strong)] bg-[var(--rm-surface)] px-[20px] py-3 text-[17px] font-normal leading-[25px] tracking-[-0.022em] text-[var(--rm-fg)] outline-none transition placeholder:text-[var(--rm-muted)] focus:border-[var(--rm-accent-focus)] focus:ring-2 focus:ring-[var(--rm-accent-subtle)]";
 
 export const primaryButtonClassName =
-  "inline-flex min-h-[44px] items-center justify-center rounded-none border border-[var(--rm-accent)] bg-[var(--rm-accent)] px-4 py-2 text-sm font-medium tracking-wide text-[var(--rm-bg)] transition hover:border-[color:var(--rm-accent-muted)] hover:bg-[color:var(--rm-accent-muted)] disabled:opacity-60";
+  "inline-flex min-h-[44px] items-center justify-center rounded-[var(--rm-radius-pill)] border border-[var(--rm-accent)] bg-[var(--rm-accent)] px-[22px] py-[11px] text-[17px] font-normal leading-[17px] tracking-[-0.022em] text-white transition hover:border-[var(--rm-accent-focus)] hover:bg-[var(--rm-accent-focus)] active:scale-95 disabled:opacity-60";
 
 export const secondaryButtonClassName =
-  "inline-flex min-h-[44px] items-center justify-center rounded-none border border-[var(--rm-border-strong)] bg-[var(--rm-surface-strong)] px-4 py-2 text-sm font-medium tracking-wide text-[var(--rm-fg)] shadow-sm transition hover:border-[var(--rm-fg)]";
+  "inline-flex min-h-[44px] items-center justify-center rounded-[var(--rm-radius-pill)] border border-[var(--rm-border-strong)] bg-[var(--rm-panel)] px-[22px] py-[11px] text-[17px] font-normal leading-[17px] tracking-[-0.022em] text-[var(--rm-accent-ink)] transition hover:border-[var(--rm-accent)] hover:bg-[var(--rm-accent-ghost)] hover:text-[var(--rm-accent-ink)] active:scale-95 disabled:opacity-60";
+
+export const utilityButtonClassName =
+  "inline-flex min-h-[44px] items-center justify-center rounded-[var(--rm-radius-md)] border border-[var(--rm-border)] bg-[var(--rm-surface)] px-[15px] py-2 text-[14px] font-normal leading-[18px] tracking-[-0.016em] text-[var(--rm-fg)] transition hover:border-[var(--rm-border-strong)] hover:bg-[var(--rm-panel)]";
 
 export function getSelectablePanelClassName(selected: boolean): string {
   return [
-    "w-full rounded-none border p-4 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--rm-accent-subtle)]",
+    "w-full rounded-[var(--rm-radius-panel)] border p-4 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--rm-accent-subtle)]",
     selected
       ? "border-[var(--rm-accent)] bg-[var(--rm-accent-ghost)] text-[var(--rm-fg)]"
       : "border-[var(--rm-border)] bg-[var(--rm-surface)] text-[var(--rm-secondary)] hover:border-[var(--rm-fg)]",
@@ -697,10 +734,10 @@ export function getSelectablePanelClassName(selected: boolean): string {
 }
 
 export const codeBlockClassName =
-  "overflow-x-auto rounded-none border border-[var(--rm-border)] bg-[var(--rm-panel)] p-4 text-xs leading-6 text-[var(--rm-secondary)]";
+  "overflow-x-auto rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] bg-[var(--rm-panel)] p-4 text-xs leading-6 text-[var(--rm-secondary)]";
 
 export const listRowClassName =
-  "flex flex-col gap-3 rounded-none border border-[var(--rm-border)] bg-[var(--rm-panel)] p-4 md:flex-row md:items-start md:justify-between";
+  "flex flex-col gap-3 rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] bg-[var(--rm-panel)] p-4 md:flex-row md:items-start md:justify-between";
 
 export function getRuntimeRouteDefinition(pathname: string): RuntimeRouteDefinition | undefined {
   if (pathname === "/app/local/peers") {

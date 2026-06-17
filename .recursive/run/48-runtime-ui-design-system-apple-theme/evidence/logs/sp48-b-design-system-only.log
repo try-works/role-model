@@ -1,0 +1,14 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/48-runtime-ui-design-system-apple-theme[39m
+
+ [32m✓[39m role-model-router/apps/runtime-ui/app/lib/design-system.test.ts [2m([22m[2m34 tests[22m[2m)[22m[33m 4073[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime design system[2m > [22mglobal shell chrome keeps legacy vendor ui out of the main runtime contract [33m 1916[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime design system[2m > [22mstudio implementation targets render repo-owned workspace sections instead of placeholder blueprints [33m 914[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime design system[2m > [22mintegration and system implementation targets render live upstream and peer surfaces [33m 625[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime design system[2m > [22mshell header owns route metadata and page actions without duplicate page headers [33m 306[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m34 passed[39m[22m[90m (34)[39m
+[2m   Start at [22m 20:57:13
+[2m   Duration [22m 52.63s[2m (transform 18.12s, setup 0ms, collect 25.19s, tests 4.07s, environment 0ms, prepare 6.54s)[22m
+

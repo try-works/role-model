@@ -1,0 +1,332 @@
+[
+  {
+    "Route": "/app",
+    "Status": 200,
+    "Location": "",
+    "Ok": true
+  },
+  {
+    "Route": "/app/studio/chat",
+    "Status": 200,
+    "Location": "",
+    "Ok": true
+  },
+  {
+    "Route": "/app/studio/images",
+    "Status": 200,
+    "Location": "",
+    "Ok": true
+  },
+  {
+    "Route": "/app/studio/audio",
+    "Status": 200,
+    "Location": "",
+    "Ok": true
+  },
+  {
+    "Route": "/app/studio/rerank",
+    "Status": 200,
+    "Location": "",
+    "Ok": true
+  },
+  {
+    "Route": "/app/studio/advanced",
+    "Status": 200,
+    "Location": "",
+    "Ok": true
+  },
+  {
+    "Route": "/app/local/choose",
+    "Status": 200,
+    "Location": "",
+    "Ok": true
+  },
+  {
+    "Route": "/app/local/models",
+    "Status": 200,
+    "Location": "",
+    "Ok": true
+  },
+  {
+    "Route": "/app/local/peer-models",
+    "Status": 200,
+    "Location": "",
+    "Ok": true
+  },
+  {
+    "Route": "/app/local/llama-swap/models",
+    "Status": 200,
+    "Location": "",
+    "Ok": true
+  },
+  {
+    "Route": "/app/local/llama-swap/swap",
+    "Status": 200,
+    "Location": "",
+    "Ok": true
+  },
+  {
+    "Route": "/app/local/llama-swap/policy",
+    "Status": 200,
+    "Location": "",
+    "Ok": true
+  },
+  {
+    "Route": "/app/local/llama-swap/logs",
+    "Status": 200,
+    "Location": "",
+    "Ok": true
+  },
+  {
+    "Route": "/app/local/llama-swap/matrix",
+    "Status": 200,
+    "Location": "",
+    "Ok": true
+  },
+  {
+    "Route": "/app/local/swap",
+    "Status": 200,
+    "Location": "",
+    "Ok": true
+  },
+  {
+    "Route": "/app/local/policy",
+    "Status": 200,
+    "Location": "",
+    "Ok": true
+  },
+  {
+    "Route": "/app/local/logs",
+    "Status": 200,
+    "Location": "",
+    "Ok": true
+  },
+  {
+    "Route": "/app/local/matrix",
+    "Status": 200,
+    "Location": "",
+    "Ok": true
+  },
+  {
+    "Route": "/app/local/endpoints",
+    "Status": 200,
+    "Location": "",
+    "Ok": true
+  },
+  {
+    "Route": "/app/local/peers",
+    "Status": 200,
+    "Location": "",
+    "Ok": true
+  },
+  {
+    "Route": "/app/remote/providers",
+    "Status": 200,
+    "Location": "",
+    "Ok": true
+  },
+  {
+    "Route": "/app/control/providers",
+    "Status": 200,
+    "Location": "",
+    "Ok": true
+  },
+  {
+    "Route": "/app/router/strategy",
+    "Status": 200,
+    "Location": "",
+    "Ok": true
+  },
+  {
+    "Route": "/app/control/routing-strategy",
+    "Status": 200,
+    "Location": "",
+    "Ok": true
+  },
+  {
+    "Route": "/app/system/runtime-config",
+    "Status": 200,
+    "Location": "",
+    "Ok": true
+  },
+  {
+    "Route": "/app/control/runtime-config",
+    "Status": 200,
+    "Location": "",
+    "Ok": true
+  },
+  {
+    "Route": "/app/router/controller",
+    "Status": 200,
+    "Location": "",
+    "Ok": true
+  },
+  {
+    "Route": "/app/control/controller",
+    "Status": 200,
+    "Location": "",
+    "Ok": true
+  },
+  {
+    "Route": "/app/connect",
+    "Status": 200,
+    "Location": "",
+    "Ok": true
+  },
+  {
+    "Route": "/app/connect/downstream",
+    "Status": 200,
+    "Location": "",
+    "Ok": true
+  },
+  {
+    "Route": "/app/connect/upstream",
+    "Status": 200,
+    "Location": "",
+    "Ok": true
+  },
+  {
+    "Route": "/app/endpoints",
+    "Status": 200,
+    "Location": "",
+    "Ok": true
+  },
+  {
+    "Route": "/app/control/endpoints",
+    "Status": 200,
+    "Location": "",
+    "Ok": true
+  },
+  {
+    "Route": "/app/models/roles",
+    "Status": 200,
+    "Location": "",
+    "Ok": true
+  },
+  {
+    "Route": "/app/control/roles",
+    "Status": 200,
+    "Location": "",
+    "Ok": true
+  },
+  {
+    "Route": "/app/models",
+    "Status": 200,
+    "Location": "",
+    "Ok": true
+  },
+  {
+    "Route": "/app/models/benchmark",
+    "Status": 200,
+    "Location": "",
+    "Ok": true
+  },
+  {
+    "Route": "/app/control/benchmark",
+    "Status": 200,
+    "Location": "",
+    "Ok": true
+  },
+  {
+    "Route": "/app/control/models",
+    "Status": 200,
+    "Location": "",
+    "Ok": true
+  },
+  {
+    "Route": "/app/router",
+    "Status": 200,
+    "Location": "",
+    "Ok": true
+  },
+  {
+    "Route": "/app/router/config",
+    "Status": 200,
+    "Location": "",
+    "Ok": true
+  },
+  {
+    "Route": "/app/router/candidates",
+    "Status": 200,
+    "Location": "",
+    "Ok": true
+  },
+  {
+    "Route": "/app/router/decisions",
+    "Status": 200,
+    "Location": "",
+    "Ok": true
+  },
+  {
+    "Route": "/app/observe",
+    "Status": 200,
+    "Location": "",
+    "Ok": true
+  },
+  {
+    "Route": "/app/observe/activity",
+    "Status": 200,
+    "Location": "",
+    "Ok": true
+  },
+  {
+    "Route": "/app/observe/requests",
+    "Status": 200,
+    "Location": "",
+    "Ok": true
+  },
+  {
+    "Route": "/app/observe/logs",
+    "Status": 200,
+    "Location": "",
+    "Ok": true
+  },
+  {
+    "Route": "/app/endpoints/downstream",
+    "Status": 200,
+    "Location": "",
+    "Ok": true
+  },
+  {
+    "Route": "/app/integrations/downstream",
+    "Status": 200,
+    "Location": "",
+    "Ok": true
+  },
+  {
+    "Route": "/app/endpoints/upstream",
+    "Status": 200,
+    "Location": "",
+    "Ok": true
+  },
+  {
+    "Route": "/app/integrations/upstream",
+    "Status": 200,
+    "Location": "",
+    "Ok": true
+  },
+  {
+    "Route": "/app/system/runtime",
+    "Status": 200,
+    "Location": "",
+    "Ok": true
+  },
+  {
+    "Route": "/app/system/session-readiness",
+    "Status": 200,
+    "Location": "",
+    "Ok": true
+  },
+  {
+    "Route": "/app/control/session-readiness",
+    "Status": 200,
+    "Location": "",
+    "Ok": true
+  },
+  {
+    "Route": "/app/system/peers",
+    "Status": 200,
+    "Location": "",
+    "Ok": true
+  }
+]

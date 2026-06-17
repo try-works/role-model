@@ -1,0 +1,628 @@
+
+> @role-model-router/runtime-ui@ test D:\DEV\role-model\.worktrees\48-runtime-ui-design-system-apple-theme\role-model-router\apps\runtime-ui
+> vitest run app/lib/runtime-api.test.ts app/lib/view-models.test.ts app/lib/device-authorization.test.ts app/lib/design-system.test.ts app/lib/provider-account-state.test.ts app/lib/router-candidate-labels.test.ts app/lib/benchmark-latency.test.ts app/lib/benchmark-model-cards.test.ts
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/48-runtime-ui-design-system-apple-theme/role-model-router/apps/runtime-ui[39m
+
+ [32m✓[39m app/lib/view-models.test.ts [2m([22m[2m32 tests[22m[2m)[22m[33m 986[2mms[22m[39m
+ [32m✓[39m app/lib/runtime-api.test.ts [2m([22m[2m39 tests[22m[2m)[22m[33m 1169[2mms[22m[39m
+ [32m✓[39m app/lib/device-authorization.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 30[2mms[22m[39m
+ [32m✓[39m app/lib/benchmark-model-cards.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [31m❯[39m app/lib/design-system.test.ts [2m([22m[2m33 tests[22m[2m | [22m[31m2 failed[39m[2m)[22m[33m 3186[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mdefines navigation groups and layout templates for every runtime route[32m 8[2mms[22m[39m
+[31m   [31m×[31m runtime design system[2m > [22mdefines the Apple-inspired runtime theme contract with explicit tokenized radii and content width[39m[33m 402[2mms[22m[39m
+[31m     → expected '1480px' to be '1440px' // Object.is equality[39m
+   [33m[2m✓[22m[39m runtime design system[2m > [22mglobal shell chrome keeps legacy vendor ui out of the main runtime contract [33m 933[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mstudio implementation targets render repo-owned workspace sections instead of placeholder blueprints[32m 254[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime design system[2m > [22mintegration and system implementation targets render live upstream and peer surfaces [33m 465[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mrouter implementation targets render repo-owned routing explanation surfaces[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mrouter, connect registry, and remote surfaces expose alias/readiness ownership instead of generic filler[32m 2[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mproviders surface exposes explicit in-place maintenance actions for saved remote accounts[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mproviders surface uses an explicit save-cancel modal for api-key maintenance[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mproviders surface keeps oauth reconnect as a one-click saved-account action[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mproviders maintenance flows call explicit repair APIs instead of generic account writes[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mproviders saved-account cards use canonical lifecycle rows and bounded archived diagnostics[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mruntime, session readiness, workbench, and advanced surfaces use canonical lifecycle diagnostics[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mrouter routes preserve empty-state and observe-link affordances[32m 37[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mmerged router overview stays observational while routing strategy owns editing controls[32m 3[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mmeta-guidance panels stay removed from overview and observe routes[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mdesign system doc marks the converted pages as live routes[32m 89[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mcontrol routes tolerate an unassigned controller before endpoint activation[32m 1[2mms[22m[39m
+[31m   [31m×[31m runtime design system[2m > [22mdesign-system docs and architecture point at the Apple reference instead of Swiss authority[39m[33m 627[2mms[22m[39m
+[31m     → expected '# Runtime UI Design System\n\n## Inte…' to contain 'DESIGN_APPLE_REFERENCE.md'[39m
+   [32m✓[39m runtime design system[2m > [22mkeeps shared states on semantic design tokens instead of Tailwind utility palettes[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mremote, models, router, and system runtime config routes are first-class pages in the retained taxonomy[32m 130[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mlocal setup surfaces stay discoverable from navigation and empty registry states[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mobserve and local log surfaces render structured ledgers rather than raw iframe placeholders[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mobserve ownership keeps requests canonical and raw-host surfaces adjacent[32m 2[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mrequests and request detail stay telemetry-first while exposing raw-host handoffs[32m 11[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mactivity route frames raw-host metrics as adjacent to canonical telemetry[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mlogs route exposes request-detail handoffs while preserving raw-host framing[32m 148[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mregistry and system layouts avoid redundant KPI strips and placeholder note panels[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mdashboard passes telemetry detail to FactCard for Latency[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22moverview metadata and design doc describe a telemetry-first summary with an interaction rail[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mworkbench and observe routes expose routing controls and receipts in repo-owned UI surfaces[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mshell header owns route metadata and page actions without duplicate page headers[32m 2[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mruntime route definitions stay slim and future scaffolds avoid duplicate header props[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/provider-account-state.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32m✓[39m app/lib/benchmark-latency.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 19[2mms[22m[39m
+ [32m✓[39m app/lib/router-candidate-labels.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  app/lib/design-system.test.ts > runtime design system > defines the Apple-inspired runtime theme contract with explicit tokenized radii and content width
+AssertionError: expected '1480px' to be '1440px' // Object.is equality
+
+Expected: "1440px"
+Received: "1480px"
+
+ ❯ app/lib/design-system.test.ts:370:42
+    368| 
+    369|   test("defines the Apple-inspired runtime theme contract with explici…
+    370|     expect(runtimeTheme.maxContentWidth).toBe("1440px");
+       |                                          ^
+    371|     expect(runtimeTheme.radii).toEqual({
+    372|       sm: "8px",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  app/lib/design-system.test.ts > runtime design system > design-system docs and architecture point at the Apple reference instead of Swiss authority
+AssertionError: expected '# Runtime UI Design System\n\n## Inte…' to contain 'DESIGN_APPLE_REFERENCE.md'
+
+- Expected
++ Received
+
+- DESIGN_APPLE_REFERENCE.md
++ # Runtime UI Design System
++
++ ## Intent
++
++ The runtime UI is a repo-owned operator shell for the role-model router runtime. It uses the Swiss-design baseline from the repo-local skill material together with the current React/Tailwind runtime surfaces:
++
++ - grid first
++ - mobile first
++ - whitespace as structure
++ - opacity, not hue, for hierarchy
++ - one accent color
++ - rectilinear surfaces
++
++ This shell must not clone the vendored llama-swap UI. It should absorb the vendor's real operator workflows into the role-model information architecture so routing, tooling, multimodal APIs, host controls, and observability read as one system.
++
++ ## Core rules
++
++ 1. **No rounded structural elements.** Cards, inputs, buttons, nav items, badges, code blocks, and drawers stay rectilinear.
++ 2. **One accent color.** Accent only marks primary action, active route, and a small number of high-attention states.
++ 3. **Typography stays light and precise.** `IBM Plex Sans` is primary; `IBM Plex Mono` is reserved for ids, paths, payloads, and API shapes.
++ 4. **12-column thinking, even when implemented as split panes.** Mobile stacks first; larger breakpoints introduce asymmetry and inspection tension.
++ 5. **Body copy stays narrow.** Explanatory text should stay near `60ch`.
++ 6. **Operator chrome stays quiet.** The shell header exposes only the section eyebrow, route title, description, optional page actions, and section-local tabs; no redundant in-page title blocks, note cards, or fixed JSON/log quick-link strips.
++
++ ## Tokens
++
++ ### Typography
++
++ - Primary font: `IBM Plex Sans`
++ - Mono font: `IBM Plex Mono`
++ - Labels: uppercase with wide tracking
++ - Page titles: light or normal weight, never heavy display bolding
++
++ ### Color
++
++ - Page background: `stone-50` (`#fafaf9`) in light mode and `stone-950` (`#0c0a09`) in dark mode
++ - Surface/card: `stone-100` (`#f5f5f4`) in light mode and `stone-900` (`#1c1917`) in dark mode
++ - Subtle surface/panel: `stone-200` (`#e7e5e4`) in light mode and `stone-800` (`#292524`) in dark mode
++ - Border: `stone-200` in light mode and `stone-800` in dark mode; subtle border uses `stone-100` / `stone-900`
++ - Primary text: `stone-900` in light mode and `stone-50` in dark mode
++ - Secondary text: foreground hue at `70%` opacity
++ - Tertiary text: foreground hue at `40%` opacity
++ - Placeholder/ghosted text: foreground hue at `20%` opacity
++ - Accent: Swiss red `#C8102E`
++ - Accent opacities:
++   - full `#C8102E`
++   - muted `rgba(200, 16, 46, 0.60)`
++   - subtle `rgba(200, 16, 46, 0.20)`
++   - ghost `rgba(200, 16, 46, 0.10)`
++
++ ### Geometry
++
++ - Radius: `0`
++ - Border weight: hairline default, stronger only for active/focus states
++ - Shadows: subtle depth only on shell-level surfaces
++
++ ### Token layers
++
++ - **Primitive tokens** define the Swiss baseline:
++   - stone neutrals
++   - Swiss red accent
++   - 8px spacing rhythm
++   - `IBM Plex Sans` / `IBM Plex Mono`
++ - **Semantic tokens** are the runtime CSS variables:
++   - `--rm-bg`
++   - `--rm-surface`
++   - `--rm-surface-strong`
++   - `--rm-panel`
++   - `--rm-fg`
++   - `--rm-secondary`
++   - `--rm-muted`
++   - `--rm-border`
++   - `--rm-border-strong`
++   - `--rm-accent`
++   - accent opacity variants
++   - telemetry semantic accents:
++     - `--rm-telemetry-local`
++     - `--rm-telemetry-remote`
++     - `--rm-telemetry-healthy`
++     - `--rm-telemetry-degraded`
++     - `--rm-telemetry-raw`
++ - **Component tokens** sit above the semantic layer:
++   - `--rm-shell-width`
++   - `--rm-radius-*`
++   - `--rm-shadow-card`
++   - the shared shell/card/field/button/payload class contracts
++
++ ## Shell layout
++
++ - Desktop: fixed primary left rail, main content region, and section-local top tabs
++ - Mobile: section rail stacks above content and secondary navigation becomes a horizontal scroll row
++ - The left rail contains the primary section list plus a quiet preserved-host-tools list for `/logs` and `/api/metrics`
++ - The shell header is the **only** route-level header. It contains:
++   - section eyebrow (from `RuntimeRouteDefinition.section`)
++   - page title (from `RuntimeRouteDefinition.title`, overridable on detail routes)
++   - concise technical description (from `RuntimeRouteDefinition.description`)
++   - optional page actions (registered by the active route via `usePageActions()`)
++ - Secondary navigation sits beneath the shell header as section-local page tabs
++ - Page content begins immediately in `<main>` with template primitives (`FactCard`, `SectionCard`, …)
++ - Route files must **not** repeat eyebrow, title, or description metadata
++ - Preserve vendor-host escape hatches as contextual page actions or route-local references, not as a global `/ui` affordance in shell chrome
++
++ ## Navigation model
++
++ The runtime hierarchy remains:
++
++ | Section | Purpose | Route family |
++ | --- | --- | --- |
++ | Overview | Runtime-wide posture and attention items | `/app` |
++ | Studio | Request composition and multimodal API workspaces | `/app/studio/*` |
++ | Local | Two local inference backends: **peer** (you run the server) and **llama-swap** (role-model runs the swap manager). Peer and llama-swap pages are never combined. Role assignment happens on the model page for the backend in use. | `/app/local/*` |
++ | Remote | LiteLLM-backed remote provider onboarding and remote model availability | `/app/remote/*` |
++ | Models | Unified configured-model inventory and runtime role policy surfaces | `/app/models*` |
++ | Router | Routing explanation, policy visibility, candidate comparison, and decision drill-in | `/app/router/*` |
++ | Connect | How client applications use role-model as an inference provider: registry, downstream contract, upstream passthrough | `/app/connect*` |
++ | Observe | Request ledgers, raw host activity, logs, metrics, and captures | `/app/observe/*` |
++ | System | Host/runtime topology, peer inventory, version, auth, and policy posture | `/app/system/*` |
++
++ ## Header metadata ownership
++
++ | Field | Owner | API |
++ | --- | --- | --- |
++ | section eyebrow | `RuntimeRouteDefinition.section` | `getRuntimeRouteDefinition()` |
++ | title | `RuntimeRouteDefinition.title` | shell default; `useShellHeaderOverride()` on detail routes |
++ | description | `RuntimeRouteDefinition.description` | shell default; override rarely |
++ | page actions | active route component | `usePageActions()` only — not `RuntimeRouteDefinition` (actions are often dynamic, conditional, or stateful) |
++ | section tabs | `runtimeNavigationSections` | `AppShell` |
++
++ ## Route and layout contract
++
++ | Route | Status | Template | Purpose |
++ | --- | --- | --- | --- |
++ | `/app` | live | `summary-board` | Lead with the recent telemetry window as the primary summary surface, then keep current endpoint inventory and a latest-interactions rail below it. |
++ | `/app/studio/chat` | live | `studio-workspace` | Routed chat workspace with assistant output, tool calls, execution receipts, usage, and raw payload inspection. |
++ | `/app/studio/images` | live | `studio-workspace` | Image workspace with two first-slice request modes in one page: OpenAI-style generation over `/v1/images/generations` and SDAPI generation over `/sdapi/v1/txt2img`; editing and img2img stay backlog-visible rather than first-slice requirements. |
++ | `/app/studio/audio` | live | `studio-workspace` | Unified audio workspace over `/v1/audio/speech`, `/v1/audio/voices`, and `/v1/audio/transcriptions` so voice discovery, speech generation, and transcript workflows remain one operator surface. |
++ | `/app/studio/rerank` | live | `studio-workspace` | Ranked-input evaluation workspace over `/v1/rerank` and `/v1/reranking` with a compact request rail, ordered score ledger, and raw payload inspection. |
++ | `/app/studio/advanced` | live | `studio-workspace` | Contract-and-request workspace for advanced families that stay under Studio: `/v1/responses`, `/v1/messages`, `/v1/messages/count_tokens`, `/v1/embeddings`, `/completion`, and `/infill`. |
++ | `/app/remote/providers` | live | `registry-detail` | Primary remote-provider onboarding and maintenance route for choosing a LiteLLM-backed provider, selecting provider models, completing API-key or OAuth setup, and repairing saved accounts in place with explicit **Reconnect** and **Update API key** actions. |
++ | `/app/models` | live | `model-inventory` | Unified local/remote model inventory with inspect-only card drill-ins, explicit handoff to the runtime-config editor, and a non-error pre-activation state when no controller exists yet. |
++ | `/app/models/roles` | live | `registry-detail` | Runtime role policy authoring and task allowlist management over the live router policy surface. |
++ | `/app/models/benchmark` | live | `registry-detail` | Capability benchmark for configured models with judge grading, persisted scores, and routing-impact explanation. |
++ | `/app/router` | live | `registry-detail` | First-class routing overview that summarizes active posture, recent decisions, and operator handoff into config, candidates, and decision interpretation. |
++ | `/app/router/strategy` | live | `registry-detail` | Structured routing-strategy posture for execution mode, controller state, and handoff into advanced config plus request verification. |
++ | `/app/router/controller` | live | `registry-detail` | Explicit controller assignment with candidate health, source type, role coverage, tooling posture, and an honest empty state before any endpoint is activated. |
++ | `/app/router/candidates` | live | `ledger-inspector` | Unified local and remote candidate inventory with health, role coverage, and observed routing-signal posture. |
++ | `/app/router/decisions` | live | `ledger-inspector` | Explainable routing decision ledger keyed by request identity with direct drill-in to policy and scoring detail. |
++ | `/app/router/decisions/:requestId` | live | `ledger-inspector` | Request-keyed routing decision explanation with scored candidates, diagnostics, and Observe request-detail handoff. |
++ | `/app/local/choose` | live | `registry-detail` | Backend chooser: peer-backed vs llama-swap workflows with handoff links to endpoints, model pages, and runtime config. |
++ | `/app/local/endpoints` | live | `registry-detail` | Peer endpoint inventory for OpenAI-compatible servers you operate. Required before registering peer models. |
++ | `/app/local/peer-models` | live | `registry-detail` | Register peer-backed models with the router and assign runtime roles for routing. |
++ | `/app/local/llama-swap/models` | live | `registry-detail` | Load llama-swap-managed models, assign runtime roles, and edit per-model overrides. |
++ | `/app/local/llama-swap/swap` | live | `ledger-inspector` | Chronological llama-swap load and swap events. |
++ | `/app/local/llama-swap/policy` | live | `registry-detail` | TTL, auto-unload, and concurrency for the managed llama-swap runtime. |
++ | `/app/local/llama-swap/logs` | live | `dual-console` | Live proxy and upstream logs from the llama-swap process. |
++ | `/app/local/llama-swap/matrix` | live | `matrix-grid` | Grid of concurrently loaded llama-swap models. |
++ | `/app/local/models` | redirect | — | Redirects to `/app/local/choose`. |
++ | `/app/local/swap` | redirect | — | Redirects to `/app/local/llama-swap/swap`. |
++ | `/app/local/policy` | redirect | — | Redirects to `/app/local/llama-swap/policy`. |
++ | `/app/local/logs` | redirect | — | Redirects to `/app/local/llama-swap/logs`. |
++ | `/app/local/matrix` | redirect | — | Redirects to `/app/local/llama-swap/matrix`. |
++ | `/app/connect` | live | `registry-detail` | Consumer-facing registry of models and endpoints client applications can call after provider onboarding, with provider rollups and readiness posture sourced from the canonical backend lifecycle contract. |
++ | `/app/observe` | redirect | — | Redirects to `/app/observe/requests`. |
++ | `/app/observe/activity` | live | `ledger-inspector` | Preserved raw-host activity ledger over `/api/metrics` with inline capture drill-ins from `/api/captures/:id` and adjacent access to `/api/events`. |
++ | `/app/observe/requests` | live | `ledger-inspector` | Canonical telemetry request ledger over `/api/role-model/telemetry/requests` with latency, token, cache, and source context. |
++ | `/app/observe/requests/:requestId` | live | `ledger-inspector` | Telemetry-first request inspector with usage, cache, captures, endpoint profile, tooling receipts, and raw observation detail. |
++ | `/app/observe/logs` | live | `dual-console` | Preserved raw-host log shell with `/logs` history, request-level handoffs, and raw `/logs/stream/*` access. |
++ | `/app/connect/downstream` | live | `contract-reference` | Downstream OpenAI-compatible contract, auth, model discovery, and tool-calling expectations for client applications. |
++ | `/app/connect/upstream` | live | `contract-reference` | Upstream passthrough reference with model-specific upstream target inventory, boundary guidance, and contextual raw `/upstream/*` escape hatches. |
++ | `/app/system/runtime` | live | `system-topology` | Runtime health, controller posture, canonical lifecycle/readiness rollups, version/provenance facts, host controls, validation floor, and vendor-policy summary. |
++ | `/app/system/runtime-config` | live | `registry-detail` | Repo-owned editor for the unified runtime contract covering local llama-swap models, remote LiteLLM providers, and process policy. |
++ | `/app/system/peers` | live | `system-topology` | Peer inventory and policy page for `peers` config, including remote model sources, auth posture, timeouts, request filters, matrix/group/runtime-policy relationships, and a real empty-state contract when no peers are configured. |
++
++ Status note:
++
++ - `live` means the repo-owned page is implemented today.
++
++ ## Page templates
++
++ All templates assume the shell header is already visible. Page content begins directly with template primitives (`FactCard`, `SectionCard`, …)—never with a duplicate title block.
++
++ | Template | Layout definition |
++ | --- | --- |
++ | `summary-board` | Content starts under the shell header. Current-state cards and endpoint inventory first, then a recent request rail plus a separate recent telemetry window. |
++ | `studio-workspace` | Content starts under the shell header. Left composition rail, dominant result surface, and secondary inspection region for payload, captures, or contracts. |
++ | `registry-detail` | Content starts under the shell header. Dense registry/editor split: compact editing or selection on one side, operational state ledger on the other. |
++ | `model-inventory` | Content starts under the shell header. Mobile-first card grid with modal drill-in; cards are the default object representation, not rows. |
++ | `ledger-inspector` | Content starts under the shell header. Dense sortable ledger plus adjacent inspector or drill-in drawer for telemetry facts, captures, payloads, and profile context. |
++ | `dual-console` | Content starts under the shell header. Two raw log consoles or stream panes with clear source labels and a small operator toolbar. |
++ | `contract-reference` | Content starts under the shell header. Narrow reference column plus implementation contract panels and example payloads. |
++ | `matrix-grid` | Content starts under the shell header. Dense grid of concurrent operational cells: status-first, then resource metrics, with add/remove controls and honest empty state. |
++ | `system-topology` | Content starts under the shell header. Layered operational summary: health and version first, then host/runtime policy panels and contextual host diagnostics. |
++
++ No current runtime route may rely on `FutureSurface`, fixture rows, or other placeholder scaffolds; live routes must render honest data or explicit empty states.
++
++ ## Live template receipts
++
++ | Template | Implemented reading order |
++ | --- | --- |
++ | `summary-board` | `/app` leads with the recent telemetry window, then keeps current endpoint inventory beside a latest-interactions rail instead of duplicating summary posture with a second KPI strip. Replace the old Providers / Endpoints / Execution-ready / Bootstrap strip with the telemetry window instead of duplicating summary posture. Latest requests is an interaction rail, not a raw canonical request ledger. |
++ | `studio-workspace` | `/app/studio/chat` uses a compact composer, dominant response stage, and adjacent usage/tooling/payload inspection. |
++ | `registry-detail` | Provider, runtime-config, controller, and endpoint pages keep the primary editor/ledger split and use summary chrome only when it changes the operator decision. |
++ | `model-inventory` | `/app/models` uses fact strips before a responsive configured-model card grid and an inspect-only modal. |
++ | `ledger-inspector` | Requests and request detail lead with telemetry facts while Activity remains the raw-host adjacency surface for metrics, captures, and payload drill-ins. |
++ | `dual-console` | `/app/observe/logs` and `/app/local/logs` start with combined history, then split proxy and upstream consoles into mirrored panes. |
++ | `contract-reference` | `/app/connect/downstream` keeps connection facts in a narrow reference column and examples/compatibility in the larger contract pane. |
++ | `system-topology` | `/app/system/runtime` layers lifecycle, controller posture, live version facts, and preserved host diagnostics without extra note-only panels. |
++ | `matrix-grid` | Local Models grid view shows a dense status-first grid of concurrently loaded models with engine and loaded state. |
++
++ ## Live route layouts
++
++ These routes are no longer vague placeholder ideas. Their layout contracts are implemented and should remain the baseline for future refinement.
++
++ ### `Studio > Images`
++
++ - Compact left request rail
++ - Dominant image stage
++ - Secondary raw response / generation detail panel
++ - One workspace with OpenAI-style and SDAPI generation modes
++
++ ### `Studio > Audio`
++
++ - Compact left mode/form rail
++ - Dominant transcript or player stage
++ - Secondary request/result detail stack
++ - One workspace for voices, speech synthesis, and transcription
++
++ ### `Studio > Rerank`
++
++ - Compact query/candidate form rail
++ - Dominant ordered result ledger
++ - Secondary JSON/request inspector
++
++ ### `Studio > Advanced APIs`
++
++ - Compact endpoint-family selector
++ - Dominant response/result stage
++ - Secondary example/template panel
++ - Only advanced families with real vendor/runtime backing belong here
++
++ ### `Connect > Upstream`
++
++ - Narrow contract/reference column
++ - Larger model/upstream target inventory pane
++ - Raw passthrough links stay contextual rather than global shell chrome
++
++ ### `Remote > Providers` and lifecycle maintenance
++
++ - The route keeps the existing onboarding form on one side and saved-account operational state on the other.
++ - Saved-account cards must expose:
++   - lifecycle badge from the canonical backend lifecycle contract
++   - normalized storage-mode/credential posture
++   - explicit **Reconnect** for repairable OAuth accounts
++   - explicit **Update API key** for API-key accounts
++ - **Update API key** uses a rectilinear modal with explicit **Save** and **Cancel** controls, clear saving/error states, and no secret echo/backfill.
++ - Archived stale legacy artifacts are never shown as current blocking setup rows on the saved-account surface; if surfaced, they appear only as bounded diagnostics separate from active accounts.
++
++ ### Runtime / Session readiness / Studio execution surfaces
++
++ - `System > Runtime`, `System > Session readiness`, `Connect`, `Workbench`, and `Studio > Advanced` must use the same canonical lifecycle/readiness vocabulary.
++ - Blocking banners and provider rollups come from the backend lifecycle contract, not route-local inference from raw account fields.
++ - Provisional-vs-authoritative bootstrap posture must read consistently across these surfaces.
++
++ ### `Local > Choose` and llama-swap setup hints
++
++ - **Choose** keeps peer-backed and llama-swap cards on separate columns; never mix load workflows on one page.
++ - When llama-swap is not operational (no declared models or missing GGUF paths), llama-swap surfaces show honest setup hints instead of implying the host is broken.
++ - **Prominent hint** on `/app/local/llama-swap/models`: headline, one-sentence peer vs llama-swap distinction, primary **Setup guide** CTA, secondary link to System → Runtime config.
++ - **Compact note** on `/app/local/choose` (llama-swap card only) and compact banners on satellite llama-swap pages (`policy`, `swap`, `logs`, `matrix`).
++ - **Setup guide modal** owns detailed numbered steps plus YAML/JSON scaffold copy blocks; inline hints stay short.
++ - Load model stays visible but disabled with helper text until config is operational; declared model ids may appear as placeholders.
++ - System → Runtime config exposes **Insert llama-swap scaffold** when `llamaSwap.models` is empty; operator must still Save and apply explicitly.
++
++ ### `Local > Models`
++
++ - Loaded model cards first: model ID, engine type, uptime, status
++ - Load/unload actions per card
++ - Global "Unload All" action
++ - Model selector + "Load" control
++ - **Per-model override panel** (collapsed by default): TTL, context window, concurrency limit
++ - Overrides visually distinct via subtle border or muted panel
++ - Empty state when no models are in memory
++
++ ### `Local > Swap`
++
++ - Chronological event ledger
++ - Filter by model ID
++ - Event detail: timestamp, old model, new model, reason
++
++ ### `Local > Policy`
++
++ - Policy form: TTL, auto-unload toggle
++ - Read-only fields: startPort, logLevel
++ - Current values summary
++
++ ### `Local > Logs`
++
++ - Split proxy/upstream console panes
++ - Live stream from `/logs/stream` (SSE or polling)
++ - Historical buffer from `/logs`
++ - Source toggle, auto-scroll toggle, clear/filter controls
++ - Empty state when llama-swap is not running
++
++ ### `Local > Matrix`
++
++ - Grid of loaded models (from `GET /running`)
++ - Each cell: model ID, engine, memory, uptime
++ - Status: healthy (stone), loading (accent muted), error (accent full)
++ - Add/remove model controls
++ - Empty state when no models loaded
++
++ ### `Local > Peers`
++
++ - Peer inventory list
++ - Peer health and model availability
++ - Add peer form (URL, auth token)
++ - Remove peer control
++ - Empty state when no peers configured
++
++ ### `System > Peers`
++
++ - Concise topology overview first
++ - Split between peer inventory and peer contract/policy detail
++ - Real empty state when peers are absent
++
++ ## Vendor exposure plan
++
++ The vendored llama-swap audit changes how the placeholder pages should be interpreted.
++
++ ### First-class role-model pages
++
++ These are first-class runtime pages because they are part of the main operator loop:
++
++ 1. **Local runtime state**
++    - models (loaded state, load/unload controls, per-model overrides)
++    - swap history (event ledger)
++    - policy (TTL, auto-unload, host controls)
++    - logs (real-time streaming from `/logs/stream` and `/logs`)
++    - matrix (concurrent loaded model grid)
++    - peers (peer instance inventory and management)
++ 2. **Studio multimodal workspaces**
++    - images
++    - audio
++    - rerank
++    - advanced API families
++ 2. **Observe raw host ledgers** (activity and logs are already live; captures remain drill-ins)
++    - activity
++    - logs
++    - captures and metrics as drill-in from activity/request detail
++ 3. **System runtime policy** (version facts are already live in `System > Runtime`)
++    - `/health`
++    - `/api/version`
++    - config-watch posture
++    - global TTL
++    - start port
++    - capture and metrics buffers
++    - API-key/auth posture
++ 4. **Peers and upstream contract surfaces**
++    - peer model sources
++    - peer filters and timeouts
++    - upstream passthrough expectations
++
++ ### Fold into existing pages instead of creating vendor-clone routes
++
++ These belong inside existing role-model pages, not in a separate vendor-style settings screen:
++
++ - model-level `aliases`
++ - `useModelName`
++ - `checkEndpoint`
++ - `ttl`
++ - `concurrencyLimit`
++ - `sendLoadingState`
++ - per-model `timeouts`
++ - request `filters`
++ - `cmdStop` presence and command ownership
++ - arbitrary model `metadata`
++ - startup preload hooks
++ - matrix/eviction policy summaries
++
++ Placement rules:
++
++ - **Control > Runtime Config** owns editable local/remote runtime policy and model/provider metadata.
++ - **Control > Models** owns inspect-first model inventory and links back to editable surfaces.
++ - **Control > Models** and **Control > Controller** must render honest pre-activation empty states when the runtime has zero configured endpoints.
++ - **Connect > Registry** owns consumer-facing endpoint/model visibility after onboarding; alias adjudication defers to **Router**.
++ - **System > Runtime** owns global host policy and matrix summary.
++ - **System > Peers** owns remote-peer config and upstream auth posture.
++
++ ### Preserve as adjacent host tools
++
++ These remain linked as preserved host surfaces until a repo-owned page fully supersedes them:
++
++ - raw `/upstream/*` passthrough targets
++ - direct log and capture endpoints for copy/paste/debug workflows
++ - raw `/health` and similar host diagnostics when they belong to a route-local system view
++
++ During the conversion window, some placeholder routes may still expose a contextual `/ui` link. `/ui` is not part of the long-term runtime shell contract and must not return to global shell chrome.
++
++ ## Component rules
++
++ ### Shell and shared primitives
++
++ - `AppShell` owns the section rail, the shell header (eyebrow, title, description, optional actions), and the section-local tab row
++ - `ShellHeaderProvider` plus `usePageActions()` and `useShellHeaderOverride()` let active routes register page-local actions or dynamic titles without reintroducing in-page header blocks
++ - Route files must not render duplicate title/description blocks; metadata lives once in `RuntimeRouteDefinition`
++ - `SectionCard` is the default sectional frame: one heading block, then content.
++ - `DisclosureSection` collapses dense secondary detail; default closed unless a route needs primary content expanded.
++ - Copy budget: shell has no page counts; route `description` values stay one sentence (max 120 chars); ledger/meta routes omit `SectionCard.description` and non-essential `FactCard.detail`.
++ - `FactCard` is the default live summary primitive for top-of-page fact strips; prefer 3-4 cards and emphasize only the primary one.
++ - `CodeBlock` is the canonical payload/log container for mono transport artifacts.
++ - Long ids, endpoint ids, and routes must wrap rather than overflow summary cards or metadata cells.
++ - Global browser chrome must opt into both schemes:
++   - `<meta name="color-scheme" content="light dark">`
++   - paired light/dark `theme-color` meta tags
++   - `html { color-scheme: light dark; }`
++
++ ### Temporary conversion scaffolds
++
++ - Live routes must not rely on placeholder scaffolds; use honest empty states instead.
++
++ ### Cards and panels
++
++ - Use borders and spacing for separation.
++ - Prefer internal dividers over nested decorative containers.
++ - Do not use decorative accent rules in page or shell headers; reserve accent for primary actions, active routes, and explicit status emphasis.
++
++ ### Configured model cards
++
++ - Every configured model appears in one unified inventory surface regardless of whether it is local, remote, or peer-backed.
++ - The default representation for configured models is a **card**, not a plain table row.
++ - The model inventory uses a mobile-first responsive grid:
++   - `grid-cols-1` on mobile
++   - `md:grid-cols-2` on medium screens
++   - `lg:grid-cols-3` when readable density holds
++ - Each model card must expose at least:
++   - display name and model id
++   - source classification
++   - state / health
++   - configured roles
++   - capability summary
++   - high-level metrics
++   - endpoint binding or peer source
++   - controller state when applicable
++   - one inspect action
++ - The inspect action opens a shared **model inspection modal** and links back to `Control > Runtime Config` rather than pretending inline edits are persisted here.
++ - The modal sections are:
++   1. overview
++   2. roles
++   3. capabilities
++   4. metrics
++   5. routing / identifiers
++   6. tooling / MCP
++   7. host policy
++
++ ### Ledgers, logs, and captures
++
++ - Activity, requests, metrics, and tooling execution read as ledgers first, not dashboards first.
++ - Dense tables may scroll horizontally, but request id, status, model, and primary action remain readable without opening a modal.
++ - Capture drill-ins open in an adjacent inspector or modal with mono payload blocks and explicit transport metadata.
++ - Capture bodies are treated as transport payloads; decode base64 request/response bodies for readable inspection while keeping headers and path explicit.
++ - Log views prefer split proxy/upstream consoles with source toggles rather than stacked accordions.
++
++ ### Buttons
++
++ - Rectilinear only
++ - Minimum height `44px`
++ - Primary: filled foreground or accent
++ - Secondary: outlined
++
++ ### Inputs
++
++ - Transparent or light surface
++ - Explicit focus border or ring
++ - No rounded treatments
++
++ ### Badges
++
++ - Rectilinear labels
++ - Uppercase tracked text
++ - Use stone + accent only; never introduce amber, emerald, rose, or another semantic hue for shared states
++
++ ### Tables and payload blocks
++
++ - Always allow horizontal overflow
++ - Use mono for ids, paths, models, and JSON
++ - Use tabular numerals where numeric comparison matters
++
++ ## Tooling and MCP integration
++
++ The run-13 tool/MCP baseline remains part of the runtime design contract rather than a parallel subsystem.
++
++ ### Cross-surface rules
++
++ - Tooling state uses the same stone hierarchy, mono identifiers, uppercase labels, and sparse accent.
++ - Tooling must be visible at three levels:
++   1. capability
++   2. configuration
++   3. execution
++
++ ### Control surfaces
++
++ - **Models** show tool-calling and MCP posture in the same card/modal system as roles, capabilities, metrics, endpoint binding, and controller state.
++ - **Controller** candidate views show whether a candidate is healthy and tooling-capable enough for adjudication work.
++
++ ### Studio and observation surfaces
++
++ - **Chat** renders assistant `tool_calls`, execution receipts, and diagnostics as structured secondary content.
++ - **Requests** and request detail expose persisted tool execution receipts beside captures and endpoint/profile data.
++ - **Activity** should surface when a captured request included tool execution and whether a capture bundle is available.
++
++ ### Runtime and integration surfaces
++
++ - Runtime/system pages acknowledge:
++   - MCP connector-definition support
++   - runtime tool registry posture
++   - `runtime:validate-tools`
++ - `System > Runtime` renders live `/api/version` facts in-page rather than relying on a raw-link-only affordance.
++ - Downstream/integration pages state when OpenAI-compatible consumers can expect `tool_calls` and what compatibility limits still apply.
++
++ ## Rollout order
++
++ 1. **Observe**
++    - complete: native activity and logs pages now expose metrics, captures, preserved history, and split raw consoles
++ 2. **Studio**
++    - replace multimodal placeholders with images, audio, rerank, and advanced workspaces
++ 3. **System**
++    - expose runtime policy, peers, and config-watch posture from the vendored host, with version facts folded into Runtime
++ 4. **Integrations**
++    - finish upstream reference surfaces after the operator pages are concrete, with compatibility guidance folded into Downstream
++
++
++
+
+ ❯ app/lib/design-system.test.ts:694:35
+    692| 
+    693|   test("design-system docs and architecture point at the Apple referen…
+    694|     expect(designSystemDocSource).toContain("DESIGN_APPLE_REFERENCE.md…
+       |                                   ^
+    695|     expect(designSystemDocSource).toContain('"SF Pro Display"');
+    696|     expect(designSystemDocSource).toContain('"SF Pro Text"');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m7 passed[39m[22m[90m (8)[39m
+[2m      Tests [22m [1m[31m2 failed[39m[22m[2m | [22m[1m[32m124 passed[39m[22m[90m (126)[39m
+[2m   Start at [22m 20:23:11
+[2m   Duration [22m 56.49s[2m (transform 38.84s, setup 0ms, collect 53.17s, tests 5.42s, environment 5ms, prepare 23.81s)[22m
+
+D:\DEV\role-model\.worktrees\48-runtime-ui-design-system-apple-theme\role-model-router\apps\runtime-ui:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @role-model-router/runtime-ui@ test: `vitest run app/lib/runtime-api.test.ts app/lib/view-models.test.ts app/lib/device-authorization.test.ts app/lib/design-system.test.ts app/lib/provider-account-state.test.ts app/lib/router-candidate-labels.test.ts app/lib/benchmark-latency.test.ts app/lib/benchmark-model-cards.test.ts`
+Exit status 1

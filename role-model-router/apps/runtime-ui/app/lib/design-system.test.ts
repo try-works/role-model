@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { type ReactElement, createElement } from "react";
@@ -41,12 +41,28 @@ const appShellSource = readFileSync(
   new URL("../components/app-shell.tsx", import.meta.url),
   "utf8",
 );
+const themeToggleSource = existsSync(fileURLToPath(new URL("../components/theme-toggle.tsx", import.meta.url)))
+  ? readFileSync(new URL("../components/theme-toggle.tsx", import.meta.url), "utf8")
+  : "";
+const themedSelectSource = existsSync(
+  fileURLToPath(new URL("../components/themed-select.tsx", import.meta.url)),
+)
+  ? readFileSync(new URL("../components/themed-select.tsx", import.meta.url), "utf8")
+  : "";
 const pagePrimitivesSource = readFileSync(
   new URL("../components/page-primitives.tsx", import.meta.url),
   "utf8",
 );
+const llamaSwapSetupModalSource = readFileSync(
+  new URL("../components/llama-swap-setup-modal.tsx", import.meta.url),
+  "utf8",
+);
 const controlControllerSource = readFileSync(
   new URL("../routes/control-controller.tsx", import.meta.url),
+  "utf8",
+);
+const controlBenchmarkSource = readFileSync(
+  new URL("../routes/control-benchmark.tsx", import.meta.url),
   "utf8",
 );
 const controlRuntimeConfigSource = readFileSync(
@@ -60,6 +76,10 @@ const controlRoutingStrategySource = readFileSync(
 const routingModeSource = readFileSync(new URL("./routing-mode.ts", import.meta.url), "utf8");
 const controlModelsSource = readFileSync(
   new URL("../routes/control-models.tsx", import.meta.url),
+  "utf8",
+);
+const controlRolesSource = readFileSync(
+  new URL("../routes/control-roles.tsx", import.meta.url),
   "utf8",
 );
 const localPeerModelsSource = readFileSync(
@@ -91,6 +111,12 @@ const requestsRouteSource = readFileSync(
   new URL("../routes/requests.tsx", import.meta.url),
   "utf8",
 );
+const dashboardSource = readFileSync(new URL("../routes/dashboard.tsx", import.meta.url), "utf8");
+const localPolicySource = readFileSync(
+  new URL("../routes/local-policy.tsx", import.meta.url),
+  "utf8",
+);
+const localSwapSource = readFileSync(new URL("../routes/local-swap.tsx", import.meta.url), "utf8");
 const rootSource = readFileSync(new URL("../root.tsx", import.meta.url), "utf8");
 const runtimeRouteSource = readFileSync(new URL("../routes/runtime.tsx", import.meta.url), "utf8");
 const requestDetailRouteSource = readFileSync(
@@ -122,12 +148,24 @@ const studioAdvancedRouteSource = readFileSync(
   new URL("../routes/studio-advanced.tsx", import.meta.url),
   "utf8",
 );
+const studioImagesRouteSource = readFileSync(
+  new URL("../routes/studio-images.tsx", import.meta.url),
+  "utf8",
+);
+const studioRerankRouteSource = readFileSync(
+  new URL("../routes/studio-rerank.tsx", import.meta.url),
+  "utf8",
+);
 const workbenchRouteSource = readFileSync(
   new URL("../routes/workbench.tsx", import.meta.url),
   "utf8",
 );
 const designSystemDocSource = readFileSync(
   new URL("../../DESIGN_SYSTEM.md", import.meta.url),
+  "utf8",
+);
+const architectureLockSource = readFileSync(
+  new URL("../../../../../docs/architecture/06-router-runtime-architecture-lock.md", import.meta.url),
   "utf8",
 );
 const designSystemSource = readFileSync(new URL("./design-system.ts", import.meta.url), "utf8");
@@ -362,69 +400,81 @@ describe("runtime design system", () => {
     );
   });
 
-  test("keeps the shell on restrained radii and explicit content widths", () => {
-    expect(runtimeTheme.maxContentWidth).toBe("1480px");
-    expect(runtimeTheme.radii.shell).toBe("0px");
-    expect(runtimeTheme.radii.panel).toBe("0px");
-    expect(runtimeTheme.radii.field).toBe("0px");
-    expect(runtimeTheme.radii.badge).toBe("0px");
+  test("defines the Apple-inspired runtime theme contract with explicit tokenized radii and content width", () => {
+    expect(runtimeTheme.maxContentWidth).toBe("1440px");
+    expect(runtimeTheme.radii).toEqual({
+      sm: "8px",
+      md: "11px",
+      lg: "18px",
+      pill: "9999px",
+      shell: "18px",
+      panel: "18px",
+      field: "11px",
+      badge: "9999px",
+    });
     expect(runtimeTheme.colors.light).toEqual({
-      bg: "#fafaf9",
-      surface: "#f5f5f4",
-      surfaceStrong: "#f5f5f4",
-      panel: "#e7e5e4",
-      fg: "#1c1917",
-      secondary: "rgba(28, 25, 23, 0.70)",
-      muted: "rgba(28, 25, 23, 0.40)",
-      border: "#e7e5e4",
-      borderStrong: "#f5f5f4",
-      accent: "#003B8E",
-      accentMuted: "rgba(0, 59, 142, 0.60)",
-      accentSubtle: "rgba(0, 59, 142, 0.20)",
-      accentGhost: "rgba(0, 59, 142, 0.10)",
-      telemetryLocal: "#1f2937",
-      telemetryRemote: "#003B8E",
+      bg: "#f5f5f7",
+      surface: "#ffffff",
+      surfaceStrong: "#ffffff",
+      panel: "#fafafc",
+      fg: "#1d1d1f",
+      secondary: "rgba(29, 29, 31, 0.72)",
+      muted: "rgba(29, 29, 31, 0.48)",
+      border: "#e0e0e0",
+      borderStrong: "#d2d2d7",
+      accent: "#0066CC",
+      accentFocus: "#0071E3",
+      accentOnDark: "#2997FF",
+      accentMuted: "rgba(0, 102, 204, 0.72)",
+      accentSubtle: "rgba(0, 102, 204, 0.14)",
+      accentGhost: "rgba(0, 102, 204, 0.08)",
+      telemetryLocal: "#1d1d1f",
+      telemetryRemote: "#0066CC",
       telemetryHealthy: "#166534",
       telemetryDegraded: "#b45309",
-      telemetryRaw: "#57534e",
+      telemetryRaw: "#7a7a7a",
       error: "#C8102E",
-      errorMuted: "rgba(200, 16, 46, 0.60)",
-      errorSubtle: "rgba(200, 16, 46, 0.20)",
-      errorGhost: "rgba(200, 16, 46, 0.10)",
+      errorMuted: "rgba(200, 16, 46, 0.72)",
+      errorSubtle: "rgba(200, 16, 46, 0.14)",
+      errorGhost: "rgba(200, 16, 46, 0.08)",
       success: "#166534",
-      successMuted: "rgba(22, 101, 52, 0.60)",
-      successSubtle: "rgba(22, 101, 52, 0.20)",
+      successMuted: "rgba(22, 101, 52, 0.72)",
+      successSubtle: "rgba(22, 101, 52, 0.14)",
       warning: "#b45309",
-      warningMuted: "rgba(180, 83, 9, 0.60)",
+      warningMuted: "rgba(180, 83, 9, 0.72)",
+      warningSubtle: "rgba(180, 83, 9, 0.14)",
     });
     expect(runtimeTheme.colors.dark).toEqual({
-      bg: "#0c0a09",
-      surface: "#1c1917",
-      surfaceStrong: "#1c1917",
-      panel: "#292524",
-      fg: "#fafaf9",
-      secondary: "rgba(250, 250, 249, 0.70)",
-      muted: "rgba(250, 250, 249, 0.40)",
-      border: "#292524",
-      borderStrong: "#1c1917",
-      telemetryLocal: "#d6d3d1",
-      telemetryRemote: "#60a5fa",
+      bg: "#000000",
+      surface: "#272729",
+      surfaceStrong: "#2a2a2c",
+      panel: "#252527",
+      fg: "#FFFFFF",
+      secondary: "rgba(255, 255, 255, 0.72)",
+      muted: "rgba(255, 255, 255, 0.48)",
+      border: "rgba(255, 255, 255, 0.12)",
+      borderStrong: "rgba(255, 255, 255, 0.18)",
+      accent: "#0066CC",
+      accentFocus: "#0071E3",
+      accentOnDark: "#2997FF",
+      accentMuted: "rgba(0, 102, 204, 0.72)",
+      accentSubtle: "rgba(41, 151, 255, 0.18)",
+      accentGhost: "rgba(41, 151, 255, 0.10)",
+      telemetryLocal: "#FFFFFF",
+      telemetryRemote: "#2997FF",
       telemetryHealthy: "#86efac",
       telemetryDegraded: "#fbbf24",
-      telemetryRaw: "#a8a29e",
-      accent: "#60a5fa",
-      accentMuted: "rgba(96, 165, 250, 0.60)",
-      accentSubtle: "rgba(96, 165, 250, 0.20)",
-      accentGhost: "rgba(96, 165, 250, 0.10)",
-      error: "#fb7185",
-      errorMuted: "rgba(251, 113, 133, 0.60)",
-      errorSubtle: "rgba(251, 113, 133, 0.20)",
+      telemetryRaw: "#cccccc",
+      error: "#FB7185",
+      errorMuted: "rgba(251, 113, 133, 0.72)",
+      errorSubtle: "rgba(251, 113, 133, 0.18)",
       errorGhost: "rgba(251, 113, 133, 0.10)",
-      success: "#86efac",
-      successMuted: "rgba(134, 239, 172, 0.60)",
-      successSubtle: "rgba(134, 239, 172, 0.20)",
-      warning: "#fbbf24",
-      warningMuted: "rgba(251, 191, 36, 0.60)",
+      success: "#86EFAC",
+      successMuted: "rgba(134, 239, 172, 0.72)",
+      successSubtle: "rgba(134, 239, 172, 0.18)",
+      warning: "#FBBF24",
+      warningMuted: "rgba(251, 191, 36, 0.72)",
+      warningSubtle: "rgba(251, 191, 36, 0.18)",
     });
   });
 
@@ -520,8 +570,8 @@ describe("runtime design system", () => {
     expect(endpointsRouteSource).not.toContain("Alias readiness");
     expect(endpointsRouteSource).not.toContain("Alias coverage");
     expect(endpointsRouteSource).toContain("View alias posture");
-    expect(providersRouteSource).toContain("LiteLLM");
-    expect(providersRouteSource).toContain("Models.dev metadata");
+    expect(providersRouteSource).not.toContain("LiteLLM-backed remote onboarding");
+    expect(providersRouteSource).not.toContain("Models.dev metadata stays additive only");
     expect(providersRouteSource).not.toContain('providerKind === "local-engine"');
   });
 
@@ -539,6 +589,15 @@ describe("runtime design system", () => {
     expect(providersRouteSource).toContain("API key");
     expect(providersRouteSource).toContain("Save");
     expect(providersRouteSource).toContain("Cancel");
+  });
+
+  test("providers setup fields use a repo-owned themed selector instead of raw native selects", () => {
+    expect(providersRouteSource).toContain("ThemedSelect");
+    expect(providersRouteSource).not.toContain("<select");
+    expect(themedSelectSource).toContain('role="listbox"');
+    expect(themedSelectSource).toContain("aria-haspopup=\"listbox\"");
+    expect(themedSelectSource).toContain("pr-[20px]");
+    expect(themedSelectSource).not.toContain("pr-[46px]");
   });
 
   test("providers surface keeps oauth reconnect as a one-click saved-account action", () => {
@@ -674,27 +733,133 @@ describe("runtime design system", () => {
     expect(runtimeRouteSource).toContain("No controller assigned");
   });
 
-  test("applies the swiss stone palette, ibm plex typography, and dual-scheme browser contract in shared app chrome", () => {
-    expect(appCss).toContain("--rm-bg: #fafaf9;");
-    expect(appCss).toContain("--rm-surface: #f5f5f4;");
-    expect(appCss).toContain("--rm-surface-strong: #f5f5f4;");
-    expect(appCss).toContain("--rm-panel: #e7e5e4;");
-    expect(appCss).toContain("--rm-fg: #1c1917;");
-    expect(appCss).toContain("--rm-secondary: rgba(28, 25, 23, 0.7);");
-    expect(appCss).toContain("--rm-muted: rgba(28, 25, 23, 0.4);");
-    expect(appCss).toContain("--rm-accent: #003b8e;");
-    expect(appCss).toContain('"IBM Plex Mono"');
-    expect(appCss).toContain("@media (prefers-color-scheme: dark)");
-    expect(appCss).toContain("color-scheme: light dark;");
-    expect(rootSource).toContain('meta name="color-scheme" content="light dark"');
-    expect(rootSource).toContain("family=IBM+Plex+Mono");
+  test("design-system docs and architecture point at the Apple reference instead of Swiss authority", () => {
+    expect(designSystemDocSource).toContain("DESIGN_APPLE_REFERENCE.md");
+    expect(designSystemDocSource).toContain('"SF Pro Display"');
+    expect(designSystemDocSource).toContain('"SF Pro Text"');
+    expect(designSystemDocSource).toContain("theme toggle");
+    expect(designSystemDocSource).toContain("transparent backgrounds");
+    expect(designSystemDocSource).not.toContain("Swiss-design baseline");
+    expect(designSystemDocSource).not.toContain("Swiss red");
+    expect(designSystemDocSource).not.toContain("IBM Plex Sans` is primary");
+    expect(architectureLockSource).not.toContain("the Swiss");
   });
 
-  test("keeps shared states on the stone plus single-accent palette", () => {
+  test("shared app bootstrap uses explicit Light and Dark theme tokens instead of media-query-only IBM Plex chrome", () => {
+    expect(appCss).toContain('--rm-font-display: "SF Pro Display", "Inter", -apple-system');
+    expect(appCss).toContain('--rm-font-body: "SF Pro Text", "Inter", -apple-system');
+    expect(appCss).toContain("--rm-bg: #f5f5f7;");
+    expect(appCss).toContain("--rm-surface: #ffffff;");
+    expect(appCss).toContain("--rm-accent: #0066cc;");
+    expect(appCss).toContain("--rm-select-chevron:");
+    expect(appCss).toContain('[data-theme="light"]');
+    expect(appCss).toContain('[data-theme="dark"]');
+    expect(appCss).not.toContain("@media (prefers-color-scheme: dark)");
+    expect(rootSource).not.toContain("fonts.googleapis.com");
+    expect(rootSource).not.toContain("family=IBM+Plex+Mono");
+    expect(rootSource).toContain("rm-runtime-ui-theme");
+    expect(rootSource).toContain('meta name="theme-color"');
+  });
+
+  test("shared shell and primitives own the global Light/Dark toggle and transparent semantic pills", () => {
+    expect(themeToggleSource).toContain("Light");
+    expect(themeToggleSource).toContain("Dark");
+    expect(themeToggleSource).not.toContain("System");
+    expect(appShellSource).not.toContain(
+      "mt-4 shrink-0 overflow-hidden border-t border-[var(--rm-border)] pt-5",
+    );
+    expect(appShellSource).toContain('className="mt-4 shrink-0 overflow-hidden"');
+    expect(themeToggleSource).toContain("w-full max-w-[272px]");
+    expect(themeToggleSource).toContain("mx-auto");
+    expect(themeToggleSource).toContain("flex-1 min-w-0");
+    expect(appShellSource).not.toContain("<ThemeToggle />\n                {actions}");
+    expect(designSystemSource).not.toContain("rounded-none");
+    expect(appShellSource).not.toContain("rounded-none");
+    expect(pagePrimitivesSource).not.toContain("bg-[var(--rm-warning-muted)]");
+    expect(pagePrimitivesSource).not.toContain("bg-[var(--rm-success-subtle)]");
+    expect(pagePrimitivesSource).not.toContain("bg-[var(--rm-accent-ghost)]");
+  });
+
+  test("sidebar keeps nav items inside the shell card at shorter viewport heights", () => {
+    expect(appShellSource).not.toContain("max-h-[calc(100svh-2rem)]");
+    expect(appShellSource).toContain("lg:max-h-[calc(100vh-2rem)]");
+    expect(appShellSource).toContain("lg:overflow-hidden");
+    expect(appShellSource).toContain("lg:flex-1 lg:min-h-0 lg:overflow-y-auto lg:pr-1");
+    expect(appShellSource).toContain("shrink-0 overflow-hidden");
+    expect(appShellSource).not.toContain(
+      'className="mt-4 shrink-0 overflow-hidden border-t border-[var(--rm-border)] pt-5"',
+    );
+  });
+
+  test("shared shell-header hooks do not depend on inline JSX or object identity", () => {
+    expect(shellHeaderContextSource).not.toContain("[actions, setActions, ...deps]");
+    expect(shellHeaderContextSource).not.toContain("[override, setOverride, ...deps]");
+  });
+
+  test("design-system docs no longer carry conflicting Swiss-era downstream rules", () => {
+    expect(designSystemDocSource).not.toContain("Rectilinear only");
+    expect(designSystemDocSource).not.toContain("No rounded treatments");
+    expect(designSystemDocSource).not.toContain("never introduce amber, emerald, rose");
+  });
+
+  test("shared shell and controls align to the approved Apple typography and control grammar", () => {
+    expect(appShellSource).not.toContain("text-2xl font-medium");
+    expect(appShellSource).not.toContain("text-3xl font-semibold");
+    expect(appShellSource).not.toContain("border-b border-[var(--rm-border)] pb-5");
+    expect(appShellSource).not.toContain("mt-5 border-t border-[var(--rm-border)] pt-4");
+    expect(appShellSource).toContain('<div className="pb-2">');
+    expect(appShellSource).not.toMatch(
+      /<p className=\{eyebrowClassName\}>\s*\{route\?\.section \?\? "Overview"\}\s*<\/p>/,
+    );
+    expect(appShellSource).not.toContain('<p className={eyebrowClassName}>Theme</p>');
+    expect(pagePrimitivesSource).not.toContain("text-3xl font-light");
+    expect(pagePrimitivesSource).not.toContain("text-xl font-light md:text-2xl");
+    expect(pagePrimitivesSource).not.toContain("mb-5 border-b border-[var(--rm-border)] pb-4");
+    expect(pagePrimitivesSource).not.toContain("mt-4 border-t border-[var(--rm-border)] pt-4");
+    expect(designSystemSource).not.toContain("text-sm font-medium");
+    expect(designSystemSource).toContain("export const navLabelClassName =");
+    expect(designSystemSource).toContain('"text-[14px] font-normal leading-[18px] tracking-[-0.016em]"');
+    expect(designSystemSource).toContain("border-[var(--rm-border-strong)] bg-[var(--rm-panel)]");
+    expect(themeToggleSource).not.toContain("min-h-[36px]");
+    expect(appCss).not.toContain('textarea,\n  input[type="text"],\n  input[type="search"] {');
+    expect(appCss).toContain("select {");
+    expect(appCss).toContain("appearance: none;");
+    expect(appCss).toContain("option {");
+  });
+
+  test("studio copy and route surfaces no longer describe the runtime UI as Swiss-style", () => {
+    expect(studioImagesRouteSource).not.toContain("Swiss-style");
+    expect(studioRerankRouteSource).not.toContain("Swiss-style");
+  });
+
+  test("overview and dense inspector routes drop square-edge drift in favor of shared panel and field radii", () => {
+    expect(dashboardSource).toContain("listRowClassName");
+    expect(dashboardSource).not.toContain("rounded-none");
+    expect(requestDetailRouteSource).not.toContain("rounded-none");
+    expect(controlControllerSource).not.toContain("rounded-none");
+    expect(controlModelsSource).not.toContain("rounded-none");
+    expect(controlRolesSource).not.toContain("rounded-none");
+    expect(controlBenchmarkSource).not.toContain("rounded-none");
+    expect(providersRouteSource).not.toContain("rounded-none");
+    expect(localSwapSource).not.toContain("rounded-none");
+    expect(localPolicySource).not.toContain("rounded-none");
+    expect(localLogsSource).not.toContain("rounded-none");
+    expect(llamaSwapSetupModalSource).not.toContain("rounded-none");
+    expect(rootSource).not.toContain("rounded-none");
+    expect(localSwapSource).toContain("rounded-[var(--rm-radius-pill)]");
+    expect(localPolicySource).toContain("rounded-[var(--rm-radius-sm)]");
+    expect(localLogsSource).toContain("rounded-[var(--rm-radius-sm)]");
+  });
+
+  test("keeps shared states on semantic design tokens instead of Tailwind utility palettes", () => {
     expect(pagePrimitivesSource).not.toMatch(/amber|emerald|rose/);
     expect(controlModelsSource).not.toContain("bg-black");
     expect(rootSource).not.toContain("bg-white");
     expect(rootSource).not.toMatch(/rose-/);
+    expect(controlBenchmarkSource).not.toContain("text-amber-700");
+    expect(controlBenchmarkSource).not.toContain("text-red-600");
+    expect(workbenchRouteSource).not.toContain("border-red-500");
+    expect(workbenchRouteSource).not.toContain("text-red-500");
   });
 
   test("remote, models, router, and system runtime config routes are first-class pages in the retained taxonomy", () => {
@@ -729,6 +894,8 @@ describe("runtime design system", () => {
     expect(localLlamaSwapModelsSource).toContain("Llama-swap");
     expect(localPeersSource).toContain("Endpoint inventory");
     expect(localPeersSource).toContain("Add endpoint");
+    expect(pagePrimitivesSource).toContain("export function RegistryDetailLayout");
+    expect(localPeersSource).toContain("RegistryDetailLayout");
     expect(endpointsRouteSource).toContain("/app/local/endpoints");
     expect(endpointsRouteSource).toContain("/app/connect/downstream");
     expect(controlModelsSource).toContain("/app/local/choose");
@@ -799,7 +966,8 @@ describe("runtime design system", () => {
 
   test("dashboard passes telemetry detail to FactCard for Latency", () => {
     expect(dashboardRouteSource).toContain("detail={card.detail}");
-    expect(dashboardRouteSource).toMatch(/FactCard[\s\S]*detail=\{card\.detail\}/);
+    expect(dashboardRouteSource).toContain("TelemetryFactCard");
+    expect(pagePrimitivesSource).toContain("export function TelemetryFactCard");
   });
 
   test("overview metadata and design doc describe a telemetry-first summary with an interaction rail", () => {
@@ -843,6 +1011,7 @@ describe("runtime design system", () => {
     expect(designSystemDocSource).toContain(
       "All templates assume the shell header is already visible.",
     );
+    expect(appShellSource).toContain("activeSection.items.length > 1");
     for (const template of [
       "summary-board",
       "studio-workspace",

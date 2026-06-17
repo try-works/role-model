@@ -5,6 +5,7 @@ import {
   useContext,
   useLayoutEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 
@@ -53,13 +54,16 @@ export function useShellHeaderState(): Pick<ShellHeaderContextValue, "actions" |
 
 export function usePageActions(actions: ReactNode, deps: DependencyList = []): void {
   const { setActions } = useShellHeaderContext();
+  const actionsRef = useRef(actions);
+
+  actionsRef.current = actions;
 
   useLayoutEffect(() => {
-    setActions(actions);
+    setActions(actionsRef.current);
     return () => {
       setActions(null);
     };
-  }, [actions, setActions, ...deps]);
+  }, [setActions, ...deps]);
 }
 
 export function useShellHeaderOverride(
@@ -67,11 +71,14 @@ export function useShellHeaderOverride(
   deps: DependencyList = [],
 ): void {
   const { setOverride } = useShellHeaderContext();
+  const overrideRef = useRef(override);
+
+  overrideRef.current = override;
 
   useLayoutEffect(() => {
-    setOverride(override);
+    setOverride(overrideRef.current);
     return () => {
       setOverride(null);
     };
-  }, [override, setOverride, ...deps]);
+  }, [setOverride, ...deps]);
 }

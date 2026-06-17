@@ -45,7 +45,7 @@ export function LlamaSwapSetupModal({
         open
         aria-labelledby="llama-swap-setup-title"
         aria-modal="true"
-        className="relative mx-auto max-w-4xl rounded-none border border-[var(--rm-border)] bg-[var(--rm-surface)] p-6 shadow-[var(--rm-shadow-card)]"
+        className="relative mx-auto max-w-4xl rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] bg-[var(--rm-surface)] p-6 shadow-[var(--rm-shadow-card)]"
       >
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
@@ -129,7 +129,7 @@ export function LlamaSwapSetupModal({
             </div>
           </section>
 
-          <section className="rounded-none border border-[var(--rm-border)] bg-[var(--rm-panel)] p-4">
+          <section className="rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] bg-[var(--rm-panel)] p-4">
             <p>
               <span className="font-medium text-[var(--rm-fg)]">Live status:</span>{" "}
               {status.operational ? "operational" : status.variant.replaceAll("_", " ")}

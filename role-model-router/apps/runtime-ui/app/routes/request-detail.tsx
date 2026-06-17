@@ -453,7 +453,7 @@ export default function RequestDetailRoute() {
                 toolCalls.map((toolCall, index) => (
                   <div
                     key={String((asRecord(toolCall)?.toolCallId as string | undefined) ?? index)}
-                    className="rounded-none border border-[var(--rm-border)] bg-[var(--rm-panel)] p-3"
+                    className="rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] bg-[var(--rm-panel)] p-3"
                   >
                     <p className="font-medium text-[var(--rm-fg)]">
                       {String(asRecord(toolCall)?.toolName ?? "unknown")}
@@ -483,7 +483,7 @@ export default function RequestDetailRoute() {
                   return (
                     <div
                       key={String(executionRecord.executionId ?? index)}
-                      className="rounded-none border border-[var(--rm-border)] bg-[var(--rm-panel)] p-3"
+                      className="rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] bg-[var(--rm-panel)] p-3"
                     >
                       <div className="flex flex-wrap items-center gap-2">
                         <p className="font-medium text-[var(--rm-fg)]">
