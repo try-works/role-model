@@ -1,0 +1,8 @@
+
+> @role-model-router/runtime-ui@ test D:\DEV\role-model\.worktrees\48-runtime-ui-design-system-apple-theme\role-model-router\apps\runtime-ui
+> vitest run app/lib/runtime-api.test.ts app/lib/view-models.test.ts app/lib/device-authorization.test.ts app/lib/theme.test.ts app/lib/design-system.test.ts app/lib/provider-account-state.test.ts app/lib/router-candidate-labels.test.ts app/lib/benchmark-latency.test.ts app/lib/benchmark-model-cards.test.ts
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/48-runtime-ui-design-system-apple-theme/role-model-router/apps/runtime-ui[39m
+
+ [32m✓[39m app/lib/theme.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 48[2mms[22m[39m

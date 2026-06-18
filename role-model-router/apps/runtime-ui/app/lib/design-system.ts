@@ -751,14 +751,11 @@ export const mutedPanelClassName =
 export const eyebrowClassName =
   "text-[11px] font-normal uppercase tracking-[0.24em] text-[var(--rm-muted)]";
 
-export const navLabelClassName =
-  "text-[15px] font-normal leading-[20px] tracking-[-0.016em]";
+export const navLabelClassName = "text-[15px] font-normal leading-[20px] tracking-[-0.016em]";
 
-export const utilityLabelClassName =
-  "text-[14px] font-normal leading-[18px] tracking-[-0.016em]";
+export const utilityLabelClassName = "text-[14px] font-normal leading-[18px] tracking-[-0.016em]";
 
-export const bodyTextClassName =
-  "text-[17px] font-normal leading-[25px] tracking-[-0.022em]";
+export const bodyTextClassName = "text-[17px] font-normal leading-[25px] tracking-[-0.022em]";
 
 export const bodyStrongTextClassName =
   "text-[17px] font-semibold leading-[21px] tracking-[-0.022em]";

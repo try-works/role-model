@@ -103,10 +103,7 @@ function isRuntimeTelemetryRoutingMode(
   value: string | null | undefined,
 ): value is RuntimeTelemetryRecord["routingMode"] {
   return (
-    value === "baseline" ||
-    value === "difficulty" ||
-    value === "controller" ||
-    value === "hybrid"
+    value === "baseline" || value === "difficulty" || value === "controller" || value === "hybrid"
   );
 }
 
@@ -2104,7 +2101,9 @@ function toRuntimeTelemetryRecord(
     (routingMode ? "balanced" : null);
   const statusCode = observation.inspection?.request?.responseCapture?.statusCode ?? null;
   const errorClass =
-    observation.usageEvent.error_class ?? observation.observedPerformance.sample.error_class ?? null;
+    observation.usageEvent.error_class ??
+    observation.observedPerformance.sample.error_class ??
+    null;
   const statusFamily: RuntimeTelemetryRecord["statusFamily"] =
     typeof statusCode === "number"
       ? statusCode >= 200 && statusCode < 400

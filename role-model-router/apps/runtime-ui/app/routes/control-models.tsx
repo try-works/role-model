@@ -423,7 +423,9 @@ export default function ControlModelsRoute() {
               <div className={`${mutedPanelClassName} p-4`}>
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <p className="font-semibold text-[var(--rm-fg)]">Backing account role bindings</p>
+                    <p className="font-semibold text-[var(--rm-fg)]">
+                      Backing account role bindings
+                    </p>
                     <p className="mt-2 text-sm text-[var(--rm-secondary)]">
                       Assign live runtime roles per provider account for this model. These bindings
                       feed router-visible endpoint role coverage directly.

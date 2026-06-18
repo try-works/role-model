@@ -135,7 +135,6 @@ function resolveMetricColorToken(metric: RuntimeTelemetryAnalyticsMetric): strin
     case "cacheBackedRequestRate":
     case "cacheHitTokenRate":
       return "var(--rm-chart-cache-rate)";
-    case "requestCount":
     default:
       return "var(--rm-chart-link-blue)";
   }
@@ -193,7 +192,10 @@ function pickBreakdownSeriesKeys(
   const totalsByKey = new Map<string, number>();
   for (const bucket of response.buckets) {
     for (const series of bucket.series) {
-      totalsByKey.set(series.key, (totalsByKey.get(series.key) ?? 0) + (series.metrics[metric] ?? 0));
+      totalsByKey.set(
+        series.key,
+        (totalsByKey.get(series.key) ?? 0) + (series.metrics[metric] ?? 0),
+      );
     }
   }
   return [...totalsByKey.entries()]
@@ -269,10 +271,9 @@ export function buildTelemetryTimeSeriesChartModel(
         bucketEndMs: bucket.endAtMs,
         bucketLabel: formatBucketLabel(bucket.startAtMs, response.granularity),
         ...Object.fromEntries(
-          selectedSeries.map((series) => [
-            `series:${series.key}`,
-            series.metrics[primaryMetric] ?? null,
-          ] as const),
+          selectedSeries.map(
+            (series) => [`series:${series.key}`, series.metrics[primaryMetric] ?? null] as const,
+          ),
         ),
       };
     }),
@@ -288,7 +289,9 @@ export function buildTelemetryTimeSeriesChartModel(
           fillOpacity: style.fillOpacity,
         };
       }),
-      ...(response.buckets.some((bucket) => bucket.series.some((series) => !includedSeries.has(series.key)))
+      ...(response.buckets.some((bucket) =>
+        bucket.series.some((series) => !includedSeries.has(series.key)),
+      )
         ? [
             {
               key: "other",

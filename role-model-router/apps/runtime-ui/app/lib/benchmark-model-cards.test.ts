@@ -86,9 +86,8 @@ describe("benchmark model cards addendum layout", () => {
       },
     ] as RouterCandidate[];
 
-    expect(filterBenchmarkRunnableCandidates(candidates).map((candidate) => candidate.endpointId)).toEqual([
-      "local.lfm",
-      "legacy.unspecified",
-    ]);
+    expect(
+      filterBenchmarkRunnableCandidates(candidates).map((candidate) => candidate.endpointId),
+    ).toEqual(["local.lfm", "legacy.unspecified"]);
   });
 });

@@ -293,7 +293,8 @@ export default function StudioAudioRoute() {
                     <span className="font-semibold text-[var(--rm-fg)]">
                       {result.voice || "unspecified"}
                     </span>{" "}
-                    on model <span className="font-semibold text-[var(--rm-fg)]">{result.model}</span>
+                    on model{" "}
+                    <span className="font-semibold text-[var(--rm-fg)]">{result.model}</span>
                   </p>
                 </div>
                 {result.audioUrl ? (

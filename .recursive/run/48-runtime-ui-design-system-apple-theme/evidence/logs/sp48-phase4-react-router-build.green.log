@@ -1,0 +1,76 @@
+[36mvite v7.3.2 [32mbuilding client environment for production...[36m[39m
+transforming...
+[32m✓[39m 1742 modules transformed.
+rendering chunks...
+computing gzip size...
+[2mbuild/client/[22m[32m.vite/manifest.json                          [39m[1m[2m 21.52 kB[22m[1m[22m[2m │ gzip:  1.99 kB[22m
+[2mbuild/client/[22m[35massets/root-BXL2MbQ2.css                     [39m[1m[2m 33.52 kB[22m[1m[22m[2m │ gzip:  6.82 kB[22m
+[2mbuild/client/[22m[36massets/index-D9YEhZOf.js                     [39m[1m[2m  0.15 kB[22m[1m[22m[2m │ gzip:  0.15 kB[22m
+[2mbuild/client/[22m[36massets/router-config-CGX7BrIJ.js             [39m[1m[2m  0.15 kB[22m[1m[22m[2m │ gzip:  0.16 kB[22m
+[2mbuild/client/[22m[36massets/local-models-C_DXsyGE.js              [39m[1m[2m  0.16 kB[22m[1m[22m[2m │ gzip:  0.16 kB[22m
+[2mbuild/client/[22m[36massets/local-matrix-DmBowcIJ.js              [39m[1m[2m  0.18 kB[22m[1m[22m[2m │ gzip:  0.18 kB[22m
+[2mbuild/client/[22m[36massets/shell-header-context-sKb8fgOL.js      [39m[1m[2m  0.72 kB[22m[1m[22m[2m │ gzip:  0.39 kB[22m
+[2mbuild/client/[22m[36massets/not-found-7W7gfJjV.js                 [39m[1m[2m  1.00 kB[22m[1m[22m[2m │ gzip:  0.54 kB[22m
+[2mbuild/client/[22m[36massets/routing-mode-0L6xYTH_.js              [39m[1m[2m  1.04 kB[22m[1m[22m[2m │ gzip:  0.48 kB[22m
+[2mbuild/client/[22m[36massets/theme-Cwgg-C9Q.js                     [39m[1m[2m  1.12 kB[22m[1m[22m[2m │ gzip:  0.52 kB[22m
+[2mbuild/client/[22m[36massets/legacy-redirect-DHcNzmDw.js           [39m[1m[2m  1.19 kB[22m[1m[22m[2m │ gzip:  0.43 kB[22m
+[2mbuild/client/[22m[36massets/root-D4pSmnWP.js                      [39m[1m[2m  1.49 kB[22m[1m[22m[2m │ gzip:  0.80 kB[22m
+[2mbuild/client/[22m[36massets/llama-swap-setup-DjrOlpYQ.js          [39m[1m[2m  1.50 kB[22m[1m[22m[2m │ gzip:  0.74 kB[22m
+[2mbuild/client/[22m[36massets/local-model-role-picker-Dz-IyB7x.js   [39m[1m[2m  1.51 kB[22m[1m[22m[2m │ gzip:  0.75 kB[22m
+[2mbuild/client/[22m[36massets/local-choose-cx7sOmm1.js              [39m[1m[2m  1.67 kB[22m[1m[22m[2m │ gzip:  0.79 kB[22m
+[2mbuild/client/[22m[36massets/local-swap-BitBDJHz.js                [39m[1m[2m  2.11 kB[22m[1m[22m[2m │ gzip:  0.96 kB[22m
+[2mbuild/client/[22m[36massets/router-decisions-DVmcE92y.js          [39m[1m[2m  2.50 kB[22m[1m[22m[2m │ gzip:  1.12 kB[22m
+[2mbuild/client/[22m[36massets/page-primitives-BaGF7c8r.js           [39m[1m[2m  2.53 kB[22m[1m[22m[2m │ gzip:  0.93 kB[22m
+[2mbuild/client/[22m[36massets/requests-BURQTa-K.js                  [39m[1m[2m  2.58 kB[22m[1m[22m[2m │ gzip:  1.14 kB[22m
+[2mbuild/client/[22m[36massets/control-runtime-config-CXekZEiw.js    [39m[1m[2m  3.14 kB[22m[1m[22m[2m │ gzip:  1.47 kB[22m
+[2mbuild/client/[22m[36massets/dashboard-D405eoOo.js                 [39m[1m[2m  3.16 kB[22m[1m[22m[2m │ gzip:  1.29 kB[22m
+[2mbuild/client/[22m[36massets/local-policy-Djy8kF7u.js              [39m[1m[2m  3.41 kB[22m[1m[22m[2m │ gzip:  1.42 kB[22m
+[2mbuild/client/[22m[36massets/integrations-downstream-CjgShKhN.js   [39m[1m[2m  3.60 kB[22m[1m[22m[2m │ gzip:  1.30 kB[22m
+[2mbuild/client/[22m[36massets/local-peers-DE63xyDE.js               [39m[1m[2m  3.92 kB[22m[1m[22m[2m │ gzip:  1.62 kB[22m
+[2mbuild/client/[22m[36massets/integrations-upstream-gejEsWwg.js     [39m[1m[2m  4.02 kB[22m[1m[22m[2m │ gzip:  1.52 kB[22m
+[2mbuild/client/[22m[36massets/router-CTLlRbRg.js                    [39m[1m[2m  4.09 kB[22m[1m[22m[2m │ gzip:  1.38 kB[22m
+[2mbuild/client/[22m[36massets/router-decision-detail-Czq6uCEd.js    [39m[1m[2m  4.12 kB[22m[1m[22m[2m │ gzip:  1.67 kB[22m
+[2mbuild/client/[22m[36massets/local-logs-B0ZNqP9f.js                [39m[1m[2m  4.19 kB[22m[1m[22m[2m │ gzip:  1.58 kB[22m
+[2mbuild/client/[22m[36massets/router-candidates-BYkUDMs3.js         [39m[1m[2m  4.25 kB[22m[1m[22m[2m │ gzip:  1.73 kB[22m
+[2mbuild/client/[22m[36massets/system-peers-DZOxsYpR.js              [39m[1m[2m  4.34 kB[22m[1m[22m[2m │ gzip:  1.73 kB[22m
+[2mbuild/client/[22m[36massets/app-layout-D7_yHF2w.js                [39m[1m[2m  4.41 kB[22m[1m[22m[2m │ gzip:  1.65 kB[22m
+[2mbuild/client/[22m[36massets/control-controller-Csh3E9YU.js        [39m[1m[2m  4.57 kB[22m[1m[22m[2m │ gzip:  1.67 kB[22m
+[2mbuild/client/[22m[36massets/studio-rerank-aPWrv2Ex.js             [39m[1m[2m  4.74 kB[22m[1m[22m[2m │ gzip:  1.90 kB[22m
+[2mbuild/client/[22m[36massets/observe-logs-zHHiA6Qw.js              [39m[1m[2m  4.95 kB[22m[1m[22m[2m │ gzip:  1.84 kB[22m
+[2mbuild/client/[22m[36massets/local-peer-models-B8RTY19l.js         [39m[1m[2m  4.96 kB[22m[1m[22m[2m │ gzip:  1.95 kB[22m
+[2mbuild/client/[22m[36massets/observe-activity-DQKmBAQ9.js          [39m[1m[2m  4.97 kB[22m[1m[22m[2m │ gzip:  1.77 kB[22m
+[2mbuild/client/[22m[36massets/runtime-CXhRgpx8.js                   [39m[1m[2m  5.11 kB[22m[1m[22m[2m │ gzip:  1.59 kB[22m
+[2mbuild/client/[22m[36massets/studio-images-D1lfRxsL.js             [39m[1m[2m  5.37 kB[22m[1m[22m[2m │ gzip:  1.97 kB[22m
+[2mbuild/client/[22m[36massets/endpoints-BfFx1S9R.js                 [39m[1m[2m  5.94 kB[22m[1m[22m[2m │ gzip:  1.66 kB[22m
+[2mbuild/client/[22m[36massets/studio-advanced-CjFZPrmH.js           [39m[1m[2m  5.99 kB[22m[1m[22m[2m │ gzip:  2.20 kB[22m
+[2mbuild/client/[22m[36massets/llama-swap-setup-hint-D75Do9J2.js     [39m[1m[2m  6.00 kB[22m[1m[22m[2m │ gzip:  2.03 kB[22m
+[2mbuild/client/[22m[36massets/local-llama-swap-models-ClQ_XZ6v.js   [39m[1m[2m  6.44 kB[22m[1m[22m[2m │ gzip:  2.27 kB[22m
+[2mbuild/client/[22m[36massets/session-readiness-Cr7AmEg7.js         [39m[1m[2m  6.81 kB[22m[1m[22m[2m │ gzip:  2.00 kB[22m
+[2mbuild/client/[22m[36massets/studio-audio-BBLzha7H.js              [39m[1m[2m  6.87 kB[22m[1m[22m[2m │ gzip:  2.45 kB[22m
+[2mbuild/client/[22m[36massets/workbench-DoSU6hLk.js                 [39m[1m[2m  8.31 kB[22m[1m[22m[2m │ gzip:  2.67 kB[22m
+[2mbuild/client/[22m[36massets/runtime-api-CwGGFvuk.js               [39m[1m[2m  8.68 kB[22m[1m[22m[2m │ gzip:  1.94 kB[22m
+[2mbuild/client/[22m[36massets/control-routing-strategy-reDgF3Ni.js  [39m[1m[2m  9.00 kB[22m[1m[22m[2m │ gzip:  3.06 kB[22m
+[2mbuild/client/[22m[36massets/request-detail-2YYz-gue.js            [39m[1m[2m 11.77 kB[22m[1m[22m[2m │ gzip:  3.81 kB[22m
+[2mbuild/client/[22m[36massets/control-roles-wilaQ_iI.js             [39m[1m[2m 12.06 kB[22m[1m[22m[2m │ gzip:  3.16 kB[22m
+[2mbuild/client/[22m[36massets/control-models-CghGMkfZ.js            [39m[1m[2m 12.52 kB[22m[1m[22m[2m │ gzip:  3.68 kB[22m
+[2mbuild/client/[22m[36massets/control-benchmark-Cgato99R.js         [39m[1m[2m 20.01 kB[22m[1m[22m[2m │ gzip:  6.35 kB[22m
+[2mbuild/client/[22m[36massets/providers-CrzLYkuR.js                 [39m[1m[2m 21.99 kB[22m[1m[22m[2m │ gzip:  6.08 kB[22m
+[2mbuild/client/[22m[36massets/view-models-Dg_sYxTz.js               [39m[1m[2m 22.59 kB[22m[1m[22m[2m │ gzip:  7.11 kB[22m
+[2mbuild/client/[22m[36massets/design-system-DHx9E_jS.js             [39m[1m[2m 47.22 kB[22m[1m[22m[2m │ gzip: 15.02 kB[22m
+[2mbuild/client/[22m[36massets/chunk-EVOBXE3Y-Nl2fzMWo.js            [39m[1m[2m127.79 kB[22m[1m[22m[2m │ gzip: 43.05 kB[22m
+[2mbuild/client/[22m[36massets/entry.client-Dy6QV84X.js              [39m[1m[2m190.57 kB[22m[1m[22m[2m │ gzip: 60.05 kB[22m
+[32m✓ built in 9.13s[39m
+[36mvite v7.3.2 [32mbuilding ssr environment for production...[36m[39m
+transforming...
+[32m✓[39m 10 modules transformed.
+rendering chunks...
+[2mbuild/server/[22m[32m.vite/manifest.json               [39m[1m[2m 0.23 kB[22m[1m[22m
+[2mbuild/server/[22m[35massets/server-build-BkC9rLqX.css  [39m[1m[2m41.74 kB[22m[1m[22m
+[2mbuild/server/[22m[36mindex.js                          [39m[1m[2m64.40 kB[22m[1m[22m
+
+[32m✓[39m 1 asset cleaned from React Router server build.
+[2mbuild\server\assets\server-build-BkC9rLqX.css[22m
+
+SPA Mode: Generated [1mbuild\client\index.html[22m
+Removing the server build in [32mD:\DEV\role-model\.worktrees\48-runtime-ui-design-system-apple-theme\role-model-router\apps\runtime-ui\build\server[39m due to ssr:false
+[32m✓ built in 588ms[39m

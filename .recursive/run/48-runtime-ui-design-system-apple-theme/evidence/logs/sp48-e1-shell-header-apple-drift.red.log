@@ -1,0 +1,2203 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/48-runtime-ui-design-system-apple-theme/role-model-router/apps/runtime-ui[39m
+
+ [31m❯[39m app/lib/design-system.test.ts [2m([22m[2m40 tests[22m[2m | [22m[31m5 failed[39m[2m)[22m[32m 157[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mdefines navigation groups and layout templates for every runtime route[32m 6[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mdefines the Apple-inspired runtime theme contract with explicit tokenized radii and content width[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mglobal shell chrome keeps legacy vendor ui out of the main runtime contract[32m 63[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mstudio implementation targets render repo-owned workspace sections instead of placeholder blueprints[32m 15[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mintegration and system implementation targets render live upstream and peer surfaces[32m 9[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mrouter implementation targets render repo-owned routing explanation surfaces[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mrouter, connect registry, and remote surfaces expose alias/readiness ownership instead of generic filler[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mproviders surface exposes explicit in-place maintenance actions for saved remote accounts[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mproviders surface uses an explicit save-cancel modal for api-key maintenance[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mproviders surface keeps oauth reconnect as a one-click saved-account action[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mproviders maintenance flows call explicit repair APIs instead of generic account writes[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mproviders saved-account cards use canonical lifecycle rows and bounded archived diagnostics[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mruntime, session readiness, workbench, and advanced surfaces use canonical lifecycle diagnostics[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mrouter routes preserve empty-state and observe-link affordances[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mmerged router overview stays observational while routing strategy owns editing controls[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mmeta-guidance panels stay removed from overview and observe routes[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mdesign system doc marks the converted pages as live routes[32m 2[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mcontrol routes tolerate an unassigned controller before endpoint activation[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mdesign-system docs and architecture point at the Apple reference instead of Swiss authority[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mshared app bootstrap uses explicit Light and Dark theme tokens instead of media-query-only IBM Plex chrome[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mshared shell and primitives own the global Light/Dark toggle and transparent semantic pills[32m 0[2mms[22m[39m
+[31m   [31m×[31m runtime design system[2m > [22mshared shell-header hooks do not depend on inline JSX or object identity[39m[32m 18[2mms[22m[39m
+[31m     → expected 'import {\n  type DependencyList,\n  t…' not to contain '[actions, setActions, ...deps]'[39m
+[31m   [31m×[31m runtime design system[2m > [22mdesign-system docs no longer carry conflicting Swiss-era downstream rules[39m[32m 4[2mms[22m[39m
+[31m     → expected '# Runtime UI Design System\n\n## Inte…' not to contain 'Rectilinear only'[39m
+[31m   [31m×[31m runtime design system[2m > [22mshared shell and controls align to the approved Apple typography and control grammar[39m[32m 4[2mms[22m[39m
+[31m     → expected 'import type { ReactNode } from "react…' not to contain 'text-2xl font-medium'[39m
+[31m   [31m×[31m runtime design system[2m > [22mstudio copy and route surfaces no longer describe the runtime UI as Swiss-style[39m[32m 3[2mms[22m[39m
+[31m     → expected 'import { useEffect, useMemo, useState…' not to contain 'Swiss-style'[39m
+   [32m✓[39m runtime design system[2m > [22moverview and dense inspector routes drop square-edge drift in favor of shared panel and field radii[32m 1[2mms[22m[39m
+[31m   [31m×[31m runtime design system[2m > [22mkeeps shared states on semantic design tokens instead of Tailwind utility palettes[39m[32m 4[2mms[22m[39m
+[31m     → expected 'import { useCallback, useEffect, useM…' not to contain 'text-amber-700'[39m
+   [32m✓[39m runtime design system[2m > [22mremote, models, router, and system runtime config routes are first-class pages in the retained taxonomy[32m 10[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mlocal setup surfaces stay discoverable from navigation and empty registry states[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mobserve and local log surfaces render structured ledgers rather than raw iframe placeholders[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mobserve ownership keeps requests canonical and raw-host surfaces adjacent[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mrequests and request detail stay telemetry-first while exposing raw-host handoffs[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mactivity route frames raw-host metrics as adjacent to canonical telemetry[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mlogs route exposes request-detail handoffs while preserving raw-host framing[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mregistry and system layouts avoid redundant KPI strips and placeholder note panels[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mdashboard passes telemetry detail to FactCard for Latency[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22moverview metadata and design doc describe a telemetry-first summary with an interaction rail[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mworkbench and observe routes expose routing controls and receipts in repo-owned UI surfaces[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mshell header owns route metadata and page actions without duplicate page headers[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mruntime route definitions stay slim and future scaffolds avoid duplicate header props[32m 1[2mms[22m[39m
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  app/lib/design-system.test.ts > runtime design system > shared shell-header hooks do not depend on inline JSX or object identity
+AssertionError: expected 'import {\n  type DependencyList,\n  t…' not to contain '[actions, setActions, ...deps]'
+
+- Expected
++ Received
+
+- [actions, setActions, ...deps]
++ import {
++   type DependencyList,
++   type ReactNode,
++   createContext,
++   useContext,
++   useLayoutEffect,
++   useMemo,
++   useState,
++ } from "react";
++
++ export interface ShellHeaderOverride {
++   readonly title?: string;
++   readonly description?: string;
++ }
++
++ interface ShellHeaderContextValue {
++   readonly actions: ReactNode | null;
++   readonly override: ShellHeaderOverride | null;
++   readonly setActions: (actions: ReactNode | null) => void;
++   readonly setOverride: (override: ShellHeaderOverride | null) => void;
++ }
++
++ const ShellHeaderContext = createContext<ShellHeaderContextValue | null>(null);
++
++ export function ShellHeaderProvider({ children }: { children: ReactNode }) {
++   const [actions, setActions] = useState<ReactNode | null>(null);
++   const [override, setOverride] = useState<ShellHeaderOverride | null>(null);
++   const value = useMemo(
++     () => ({
++       actions,
++       override,
++       setActions,
++       setOverride,
++     }),
++     [actions, override],
++   );
++
++   return <ShellHeaderContext.Provider value={value}>{children}</ShellHeaderContext.Provider>;
++ }
++
++ function useShellHeaderContext(): ShellHeaderContextValue {
++   const context = useContext(ShellHeaderContext);
++   if (!context) {
++     throw new Error("Shell header hooks must be used within ShellHeaderProvider.");
++   }
++   return context;
++ }
++
++ export function useShellHeaderState(): Pick<ShellHeaderContextValue, "actions" | "override"> {
++   const { actions, override } = useShellHeaderContext();
++   return { actions, override };
++ }
++
++ export function usePageActions(actions: ReactNode, deps: DependencyList = []): void {
++   const { setActions } = useShellHeaderContext();
++
++   useLayoutEffect(() => {
++     setActions(actions);
++     return () => {
++       setActions(null);
++     };
++   }, [actions, setActions, ...deps]);
++ }
++
++ export function useShellHeaderOverride(
++   override: ShellHeaderOverride,
++   deps: DependencyList = [],
++ ): void {
++   const { setOverride } = useShellHeaderContext();
++
++   useLayoutEffect(() => {
++     setOverride(override);
++     return () => {
++       setOverride(null);
++     };
++   }, [override, setOverride, ...deps]);
++ }
++
+
+ ❯ app/lib/design-system.test.ts:761:42
+    759| 
+    760|   test("shared shell-header hooks do not depend on inline JSX or objec…
+    761|     expect(shellHeaderContextSource).not.toContain("[actions, setActio…
+       |                                          ^
+    762|     expect(shellHeaderContextSource).not.toContain("[override, setOver…
+    763|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  app/lib/design-system.test.ts > runtime design system > design-system docs no longer carry conflicting Swiss-era downstream rules
+AssertionError: expected '# Runtime UI Design System\n\n## Inte…' not to contain 'Rectilinear only'
+
+- Expected
++ Received
+
+- Rectilinear only
++ # Runtime UI Design System
++
++ ## Intent
++
++ The runtime UI is a repo-owned operator shell for the role-model router runtime. Its active styling inspiration is the repo-local [DESIGN_APPLE_REFERENCE.md](./DESIGN_APPLE_REFERENCE.md) artifact together with the current React/Tailwind runtime surfaces. The Apple reference governs theme tokens, typography feel, surface treatment, and interaction restraint for this refresh. It does not change the runtime UI's route architecture or information architecture.
++
++ - calm layered surfaces
++ - mobile first
++ - whitespace as structure
++ - restrained neutral contrast
++ - a single accent family for primary emphasis
++ - rounded shell and panel geometry with minimal decorative effects
++
++ This shell must not clone the vendored llama-swap UI. It should absorb the vendor's real operator workflows into the role-model information architecture so routing, tooling, multimodal APIs, host controls, and observability read as one system.
++
++ ## Core rules
++
++ 1. **Styling authority is repo-local and Apple-inspired.** `/role-model-router/apps/runtime-ui/DESIGN_APPLE_REFERENCE.md` is the original styling inspiration for this refresh; route structure and application ownership remain repo-owned.
++ 2. **Surfaces are restrained, not rigid.** Cards, inputs, buttons, nav items, badges, code blocks, and drawers use controlled radii (`8px`, `11px`, `18px`, or pill) with thin borders and quiet contrast.
++ 3. **Typography stays light and precise.** `SF Pro Display` and `SF Pro Text` are preferred when available, `Inter` is the first fallback, and `IBM Plex Mono` remains reserved for ids, paths, payloads, and API shapes.
++ 4. **The theme toggle exposes only `Light` and `Dark`.** System preference determines only the initial default theme until the operator makes an explicit choice.
++ 5. **Semantic status pills keep transparent backgrounds.** `healthy`, `degraded`, `offline`, and similar states use semantic text and border colors without semantic fill backgrounds.
++ 6. **Operator chrome stays quiet.** The shell header exposes only the section eyebrow, route title, description, optional page actions, and section-local tabs; no redundant in-page title blocks, note cards, or fixed JSON/log quick-link strips.
++
++ ## Tokens
++
++ ### Typography
++
++ - Display font: `"SF Pro Display", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`
++ - Body font: `"SF Pro Text", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`
++ - Mono font: `IBM Plex Mono`
++ - Labels: uppercase with wide tracking
++ - Page titles: restrained display weight, never heavy marketing bolding
++
++ ### Color
++
++ - Page background: `#f5f5f7` in light mode and `#000000` in dark mode
++ - Surface/card: `#ffffff` in light mode and `#272729` in dark mode
++ - Subtle surface/panel: `#fafafc` in light mode and `#252527` in dark mode
++ - Border: `#e0e0e0` in light mode and `rgba(255, 255, 255, 0.12)` in dark mode; stronger border uses `#d2d2d7` / `rgba(255, 255, 255, 0.18)`
++ - Primary text: `#1d1d1f` in light mode and `#ffffff` in dark mode
++ - Secondary text: foreground hue at `72%` opacity
++ - Tertiary text: foreground hue at `48%` opacity
++ - Accent: Apple-inspired blue `#0066CC`
++ - Accent opacities:
++   - full `#0066CC`
++   - muted `rgba(0, 102, 204, 0.72)`
++   - subtle `rgba(0, 102, 204, 0.14)` in light mode / `rgba(41, 151, 255, 0.18)` in dark mode
++   - ghost `rgba(0, 102, 204, 0.08)` in light mode / `rgba(41, 151, 255, 0.10)` in dark mode
++
++ ### Geometry
++
++ - Radius scale: `8px`, `11px`, `18px`, and pill
++ - Border weight: hairline default, stronger only for active/focus states
++ - Shadows: shared UI surfaces stay shadow-free by default; any deeper product framing must remain explicit and rare
++
++ ### Token layers
++
++ - **Primitive tokens** define the Apple-inspired baseline:
++   - warm-neutral light and dark surfaces
++   - Apple-blue accent family
++   - `4px` to `48px` spacing rhythm with explicit section spacing
++   - `SF Pro Display` / `SF Pro Text` / `IBM Plex Mono`
++ - **Semantic tokens** are the runtime CSS variables:
++   - `--rm-bg`
++   - `--rm-surface`
++   - `--rm-surface-strong`
++   - `--rm-panel`
++   - `--rm-fg`
++   - `--rm-secondary`
++   - `--rm-muted`
++   - `--rm-border`
++   - `--rm-border-strong`
++   - `--rm-accent`
++   - accent opacity variants
++   - telemetry semantic accents:
++     - `--rm-telemetry-local`
++     - `--rm-telemetry-remote`
++     - `--rm-telemetry-healthy`
++     - `--rm-telemetry-degraded`
++     - `--rm-telemetry-raw`
++ - **Component tokens** sit above the semantic layer:
++   - `--rm-shell-width`
++   - `--rm-radius-*`
++   - `--rm-shadow-card`
++   - the shared shell/card/field/button/payload class contracts
++
++ ## Shell layout
++
++ - Desktop: fixed primary left rail, main content region, and section-local top tabs
++ - Mobile: section rail stacks above content and secondary navigation becomes a horizontal scroll row
++ - The left rail contains the primary section list plus a quiet preserved-host-tools list for `/logs` and `/api/metrics`
++ - The shell header is the **only** route-level header. It contains:
++   - section eyebrow (from `RuntimeRouteDefinition.section`)
++   - page title (from `RuntimeRouteDefinition.title`, overridable on detail routes)
++   - concise technical description (from `RuntimeRouteDefinition.description`)
++   - optional page actions (registered by the active route via `usePageActions()`)
++ - Secondary navigation sits beneath the shell header as section-local page tabs
++ - Page content begins immediately in `<main>` with template primitives (`FactCard`, `SectionCard`, …)
++ - Route files must **not** repeat eyebrow, title, or description metadata
++ - Preserve vendor-host escape hatches as contextual page actions or route-local references, not as a global `/ui` affordance in shell chrome
++
++ ## Navigation model
++
++ The runtime hierarchy remains:
++
++ | Section | Purpose | Route family |
++ | --- | --- | --- |
++ | Overview | Runtime-wide posture and attention items | `/app` |
++ | Studio | Request composition and multimodal API workspaces | `/app/studio/*` |
++ | Local | Two local inference backends: **peer** (you run the server) and **llama-swap** (role-model runs the swap manager). Peer and llama-swap pages are never combined. Role assignment happens on the model page for the backend in use. | `/app/local/*` |
++ | Remote | LiteLLM-backed remote provider onboarding and remote model availability | `/app/remote/*` |
++ | Models | Unified configured-model inventory and runtime role policy surfaces | `/app/models*` |
++ | Router | Routing explanation, policy visibility, candidate comparison, and decision drill-in | `/app/router/*` |
++ | Connect | How client applications use role-model as an inference provider: registry, downstream contract, upstream passthrough | `/app/connect*` |
++ | Observe | Request ledgers, raw host activity, logs, metrics, and captures | `/app/observe/*` |
++ | System | Host/runtime topology, peer inventory, version, auth, and policy posture | `/app/system/*` |
++
++ ## Header metadata ownership
++
++ | Field | Owner | API |
++ | --- | --- | --- |
++ | section eyebrow | `RuntimeRouteDefinition.section` | `getRuntimeRouteDefinition()` |
++ | title | `RuntimeRouteDefinition.title` | shell default; `useShellHeaderOverride()` on detail routes |
++ | description | `RuntimeRouteDefinition.description` | shell default; override rarely |
++ | page actions | active route component | `usePageActions()` only — not `RuntimeRouteDefinition` (actions are often dynamic, conditional, or stateful) |
++ | section tabs | `runtimeNavigationSections` | `AppShell` |
++
++ ## Route and layout contract
++
++ | Route | Status | Template | Purpose |
++ | --- | --- | --- | --- |
++ | `/app` | live | `summary-board` | Lead with the recent telemetry window as the primary summary surface, then keep current endpoint inventory and a latest-interactions rail below it. |
++ | `/app/studio/chat` | live | `studio-workspace` | Routed chat workspace with assistant output, tool calls, execution receipts, usage, and raw payload inspection. |
++ | `/app/studio/images` | live | `studio-workspace` | Image workspace with two first-slice request modes in one page: OpenAI-style generation over `/v1/images/generations` and SDAPI generation over `/sdapi/v1/txt2img`; editing and img2img stay backlog-visible rather than first-slice requirements. |
++ | `/app/studio/audio` | live | `studio-workspace` | Unified audio workspace over `/v1/audio/speech`, `/v1/audio/voices`, and `/v1/audio/transcriptions` so voice discovery, speech generation, and transcript workflows remain one operator surface. |
++ | `/app/studio/rerank` | live | `studio-workspace` | Ranked-input evaluation workspace over `/v1/rerank` and `/v1/reranking` with a compact request rail, ordered score ledger, and raw payload inspection. |
++ | `/app/studio/advanced` | live | `studio-workspace` | Contract-and-request workspace for advanced families that stay under Studio: `/v1/responses`, `/v1/messages`, `/v1/messages/count_tokens`, `/v1/embeddings`, `/completion`, and `/infill`. |
++ | `/app/remote/providers` | live | `registry-detail` | Primary remote-provider onboarding and maintenance route for choosing a LiteLLM-backed provider, selecting provider models, completing API-key or OAuth setup, and repairing saved accounts in place with explicit **Reconnect** and **Update API key** actions. |
++ | `/app/models` | live | `model-inventory` | Unified local/remote model inventory with inspect-only card drill-ins, explicit handoff to the runtime-config editor, and a non-error pre-activation state when no controller exists yet. |
++ | `/app/models/roles` | live | `registry-detail` | Runtime role policy authoring and task allowlist management over the live router policy surface. |
++ | `/app/models/benchmark` | live | `registry-detail` | Capability benchmark for configured models with judge grading, persisted scores, and routing-impact explanation. |
++ | `/app/router` | live | `registry-detail` | First-class routing overview that summarizes active posture, recent decisions, and operator handoff into config, candidates, and decision interpretation. |
++ | `/app/router/strategy` | live | `registry-detail` | Structured routing-strategy posture for execution mode, controller state, and handoff into advanced config plus request verification. |
++ | `/app/router/controller` | live | `registry-detail` | Explicit controller assignment with candidate health, source type, role coverage, tooling posture, and an honest empty state before any endpoint is activated. |
++ | `/app/router/candidates` | live | `ledger-inspector` | Unified local and remote candidate inventory with health, role coverage, and observed routing-signal posture. |
++ | `/app/router/decisions` | live | `ledger-inspector` | Explainable routing decision ledger keyed by request identity with direct drill-in to policy and scoring detail. |
++ | `/app/router/decisions/:requestId` | live | `ledger-inspector` | Request-keyed routing decision explanation with scored candidates, diagnostics, and Observe request-detail handoff. |
++ | `/app/local/choose` | live | `registry-detail` | Backend chooser: peer-backed vs llama-swap workflows with handoff links to endpoints, model pages, and runtime config. |
++ | `/app/local/endpoints` | live | `registry-detail` | Peer endpoint inventory for OpenAI-compatible servers you operate. Required before registering peer models. |
++ | `/app/local/peer-models` | live | `registry-detail` | Register peer-backed models with the router and assign runtime roles for routing. |
++ | `/app/local/llama-swap/models` | live | `registry-detail` | Load llama-swap-managed models, assign runtime roles, and edit per-model overrides. |
++ | `/app/local/llama-swap/swap` | live | `ledger-inspector` | Chronological llama-swap load and swap events. |
++ | `/app/local/llama-swap/policy` | live | `registry-detail` | TTL, auto-unload, and concurrency for the managed llama-swap runtime. |
++ | `/app/local/llama-swap/logs` | live | `dual-console` | Live proxy and upstream logs from the llama-swap process. |
++ | `/app/local/llama-swap/matrix` | live | `matrix-grid` | Grid of concurrently loaded llama-swap models. |
++ | `/app/local/models` | redirect | — | Redirects to `/app/local/choose`. |
++ | `/app/local/swap` | redirect | — | Redirects to `/app/local/llama-swap/swap`. |
++ | `/app/local/policy` | redirect | — | Redirects to `/app/local/llama-swap/policy`. |
++ | `/app/local/logs` | redirect | — | Redirects to `/app/local/llama-swap/logs`. |
++ | `/app/local/matrix` | redirect | — | Redirects to `/app/local/llama-swap/matrix`. |
++ | `/app/connect` | live | `registry-detail` | Consumer-facing registry of models and endpoints client applications can call after provider onboarding, with provider rollups and readiness posture sourced from the canonical backend lifecycle contract. |
++ | `/app/observe` | redirect | — | Redirects to `/app/observe/requests`. |
++ | `/app/observe/activity` | live | `ledger-inspector` | Preserved raw-host activity ledger over `/api/metrics` with inline capture drill-ins from `/api/captures/:id` and adjacent access to `/api/events`. |
++ | `/app/observe/requests` | live | `ledger-inspector` | Canonical telemetry request ledger over `/api/role-model/telemetry/requests` with latency, token, cache, and source context. |
++ | `/app/observe/requests/:requestId` | live | `ledger-inspector` | Telemetry-first request inspector with usage, cache, captures, endpoint profile, tooling receipts, and raw observation detail. |
++ | `/app/observe/logs` | live | `dual-console` | Preserved raw-host log shell with `/logs` history, request-level handoffs, and raw `/logs/stream/*` access. |
++ | `/app/connect/downstream` | live | `contract-reference` | Downstream OpenAI-compatible contract, auth, model discovery, and tool-calling expectations for client applications. |
++ | `/app/connect/upstream` | live | `contract-reference` | Upstream passthrough reference with model-specific upstream target inventory, boundary guidance, and contextual raw `/upstream/*` escape hatches. |
++ | `/app/system/runtime` | live | `system-topology` | Runtime health, controller posture, canonical lifecycle/readiness rollups, version/provenance facts, host controls, validation floor, and vendor-policy summary. |
++ | `/app/system/runtime-config` | live | `registry-detail` | Repo-owned editor for the unified runtime contract covering local llama-swap models, remote LiteLLM providers, and process policy. |
++ | `/app/system/peers` | live | `system-topology` | Peer inventory and policy page for `peers` config, including remote model sources, auth posture, timeouts, request filters, matrix/group/runtime-policy relationships, and a real empty-state contract when no peers are configured. |
++
++ Status note:
++
++ - `live` means the repo-owned page is implemented today.
++
++ ## Page templates
++
++ All templates assume the shell header is already visible. Page content begins directly with template primitives (`FactCard`, `SectionCard`, …)—never with a duplicate title block.
++
++ | Template | Layout definition |
++ | --- | --- |
++ | `summary-board` | Content starts under the shell header. Current-state cards and endpoint inventory first, then a recent request rail plus a separate recent telemetry window. |
++ | `studio-workspace` | Content starts under the shell header. Left composition rail, dominant result surface, and secondary inspection region for payload, captures, or contracts. |
++ | `registry-detail` | Content starts under the shell header. Dense registry/editor split: compact editing or selection on one side, operational state ledger on the other. |
++ | `model-inventory` | Content starts under the shell header. Mobile-first card grid with modal drill-in; cards are the default object representation, not rows. |
++ | `ledger-inspector` | Content starts under the shell header. Dense sortable ledger plus adjacent inspector or drill-in drawer for telemetry facts, captures, payloads, and profile context. |
++ | `dual-console` | Content starts under the shell header. Two raw log consoles or stream panes with clear source labels and a small operator toolbar. |
++ | `contract-reference` | Content starts under the shell header. Narrow reference column plus implementation contract panels and example payloads. |
++ | `matrix-grid` | Content starts under the shell header. Dense grid of concurrent operational cells: status-first, then resource metrics, with add/remove controls and honest empty state. |
++ | `system-topology` | Content starts under the shell header. Layered operational summary: health and version first, then host/runtime policy panels and contextual host diagnostics. |
++
++ No current runtime route may rely on `FutureSurface`, fixture rows, or other placeholder scaffolds; live routes must render honest data or explicit empty states.
++
++ ## Live template receipts
++
++ | Template | Implemented reading order |
++ | --- | --- |
++ | `summary-board` | `/app` leads with the recent telemetry window, then keeps current endpoint inventory beside a latest-interactions rail instead of duplicating summary posture with a second KPI strip. Replace the old Providers / Endpoints / Execution-ready / Bootstrap strip with the telemetry window instead of duplicating summary posture. Latest requests is an interaction rail, not a raw canonical request ledger. |
++ | `studio-workspace` | `/app/studio/chat` uses a compact composer, dominant response stage, and adjacent usage/tooling/payload inspection. |
++ | `registry-detail` | Provider, runtime-config, controller, and endpoint pages keep the primary editor/ledger split and use summary chrome only when it changes the operator decision. |
++ | `model-inventory` | `/app/models` uses fact strips before a responsive configured-model card grid and an inspect-only modal. |
++ | `ledger-inspector` | Requests and request detail lead with telemetry facts while Activity remains the raw-host adjacency surface for metrics, captures, and payload drill-ins. |
++ | `dual-console` | `/app/observe/logs` and `/app/local/logs` start with combined history, then split proxy and upstream consoles into mirrored panes. |
++ | `contract-reference` | `/app/connect/downstream` keeps connection facts in a narrow reference column and examples/compatibility in the larger contract pane. |
++ | `system-topology` | `/app/system/runtime` layers lifecycle, controller posture, live version facts, and preserved host diagnostics without extra note-only panels. |
++ | `matrix-grid` | Local Models grid view shows a dense status-first grid of concurrently loaded models with engine and loaded state. |
++
++ ## Live route layouts
++
++ These routes are no longer vague placeholder ideas. Their layout contracts are implemented and should remain the baseline for future refinement.
++
++ ### `Studio > Images`
++
++ - Compact left request rail
++ - Dominant image stage
++ - Secondary raw response / generation detail panel
++ - One workspace with OpenAI-style and SDAPI generation modes
++
++ ### `Studio > Audio`
++
++ - Compact left mode/form rail
++ - Dominant transcript or player stage
++ - Secondary request/result detail stack
++ - One workspace for voices, speech synthesis, and transcription
++
++ ### `Studio > Rerank`
++
++ - Compact query/candidate form rail
++ - Dominant ordered result ledger
++ - Secondary JSON/request inspector
++
++ ### `Studio > Advanced APIs`
++
++ - Compact endpoint-family selector
++ - Dominant response/result stage
++ - Secondary example/template panel
++ - Only advanced families with real vendor/runtime backing belong here
++
++ ### `Connect > Upstream`
++
++ - Narrow contract/reference column
++ - Larger model/upstream target inventory pane
++ - Raw passthrough links stay contextual rather than global shell chrome
++
++ ### `Remote > Providers` and lifecycle maintenance
++
++ - The route keeps the existing onboarding form on one side and saved-account operational state on the other.
++ - Saved-account cards must expose:
++   - lifecycle badge from the canonical backend lifecycle contract
++   - normalized storage-mode/credential posture
++   - explicit **Reconnect** for repairable OAuth accounts
++   - explicit **Update API key** for API-key accounts
++ - **Update API key** uses a shared utility modal with explicit **Save** and **Cancel** controls, clear saving/error states, and no secret echo/backfill.
++ - Archived stale legacy artifacts are never shown as current blocking setup rows on the saved-account surface; if surfaced, they appear only as bounded diagnostics separate from active accounts.
++
++ ### Runtime / Session readiness / Studio execution surfaces
++
++ - `System > Runtime`, `System > Session readiness`, `Connect`, `Workbench`, and `Studio > Advanced` must use the same canonical lifecycle/readiness vocabulary.
++ - Blocking banners and provider rollups come from the backend lifecycle contract, not route-local inference from raw account fields.
++ - Provisional-vs-authoritative bootstrap posture must read consistently across these surfaces.
++
++ ### `Local > Choose` and llama-swap setup hints
++
++ - **Choose** keeps peer-backed and llama-swap cards on separate columns; never mix load workflows on one page.
++ - When llama-swap is not operational (no declared models or missing GGUF paths), llama-swap surfaces show honest setup hints instead of implying the host is broken.
++ - **Prominent hint** on `/app/local/llama-swap/models`: headline, one-sentence peer vs llama-swap distinction, primary **Setup guide** CTA, secondary link to System → Runtime config.
++ - **Compact note** on `/app/local/choose` (llama-swap card only) and compact banners on satellite llama-swap pages (`policy`, `swap`, `logs`, `matrix`).
++ - **Setup guide modal** owns detailed numbered steps plus YAML/JSON scaffold copy blocks; inline hints stay short.
++ - Load model stays visible but disabled with helper text until config is operational; declared model ids may appear as placeholders.
++ - System → Runtime config exposes **Insert llama-swap scaffold** when `llamaSwap.models` is empty; operator must still Save and apply explicitly.
++
++ ### `Local > Models`
++
++ - Loaded model cards first: model ID, engine type, uptime, status
++ - Load/unload actions per card
++ - Global "Unload All" action
++ - Model selector + "Load" control
++ - **Per-model override panel** (collapsed by default): TTL, context window, concurrency limit
++ - Overrides visually distinct via subtle border or muted panel
++ - Empty state when no models are in memory
++
++ ### `Local > Swap`
++
++ - Chronological event ledger
++ - Filter by model ID
++ - Event detail: timestamp, old model, new model, reason
++
++ ### `Local > Policy`
++
++ - Policy form: TTL, auto-unload toggle
++ - Read-only fields: startPort, logLevel
++ - Current values summary
++
++ ### `Local > Logs`
++
++ - Split proxy/upstream console panes
++ - Live stream from `/logs/stream` (SSE or polling)
++ - Historical buffer from `/logs`
++ - Source toggle, auto-scroll toggle, clear/filter controls
++ - Empty state when llama-swap is not running
++
++ ### `Local > Matrix`
++
++ - Grid of loaded models (from `GET /running`)
++ - Each cell: model ID, engine, memory, uptime
++ - Status: healthy (stone), loading (accent muted), error (accent full)
++ - Add/remove model controls
++ - Empty state when no models loaded
++
++ ### `Local > Peers`
++
++ - Peer inventory list
++ - Peer health and model availability
++ - Add peer form (URL, auth token)
++ - Remove peer control
++ - Empty state when no peers configured
++
++ ### `System > Peers`
++
++ - Concise topology overview first
++ - Split between peer inventory and peer contract/policy detail
++ - Real empty state when peers are absent
++
++ ## Vendor exposure plan
++
++ The vendored llama-swap audit changes how the placeholder pages should be interpreted.
++
++ ### First-class role-model pages
++
++ These are first-class runtime pages because they are part of the main operator loop:
++
++ 1. **Local runtime state**
++    - models (loaded state, load/unload controls, per-model overrides)
++    - swap history (event ledger)
++    - policy (TTL, auto-unload, host controls)
++    - logs (real-time streaming from `/logs/stream` and `/logs`)
++    - matrix (concurrent loaded model grid)
++    - peers (peer instance inventory and management)
++ 2. **Studio multimodal workspaces**
++    - images
++    - audio
++    - rerank
++    - advanced API families
++ 2. **Observe raw host ledgers** (activity and logs are already live; captures remain drill-ins)
++    - activity
++    - logs
++    - captures and metrics as drill-in from activity/request detail
++ 3. **System runtime policy** (version facts are already live in `System > Runtime`)
++    - `/health`
++    - `/api/version`
++    - config-watch posture
++    - global TTL
++    - start port
++    - capture and metrics buffers
++    - API-key/auth posture
++ 4. **Peers and upstream contract surfaces**
++    - peer model sources
++    - peer filters and timeouts
++    - upstream passthrough expectations
++
++ ### Fold into existing pages instead of creating vendor-clone routes
++
++ These belong inside existing role-model pages, not in a separate vendor-style settings screen:
++
++ - model-level `aliases`
++ - `useModelName`
++ - `checkEndpoint`
++ - `ttl`
++ - `concurrencyLimit`
++ - `sendLoadingState`
++ - per-model `timeouts`
++ - request `filters`
++ - `cmdStop` presence and command ownership
++ - arbitrary model `metadata`
++ - startup preload hooks
++ - matrix/eviction policy summaries
++
++ Placement rules:
++
++ - **Control > Runtime Config** owns editable local/remote runtime policy and model/provider metadata.
++ - **Control > Models** owns inspect-first model inventory and links back to editable surfaces.
++ - **Control > Models** and **Control > Controller** must render honest pre-activation empty states when the runtime has zero configured endpoints.
++ - **Connect > Registry** owns consumer-facing endpoint/model visibility after onboarding; alias adjudication defers to **Router**.
++ - **System > Runtime** owns global host policy and matrix summary.
++ - **System > Peers** owns remote-peer config and upstream auth posture.
++
++ ### Preserve as adjacent host tools
++
++ These remain linked as preserved host surfaces until a repo-owned page fully supersedes them:
++
++ - raw `/upstream/*` passthrough targets
++ - direct log and capture endpoints for copy/paste/debug workflows
++ - raw `/health` and similar host diagnostics when they belong to a route-local system view
++
++ During the conversion window, some placeholder routes may still expose a contextual `/ui` link. `/ui` is not part of the long-term runtime shell contract and must not return to global shell chrome.
++
++ ## Component rules
++
++ ### Shell and shared primitives
++
++ - `AppShell` owns the section rail, the shell header (eyebrow, title, description, optional actions), and the section-local tab row
++ - `ShellHeaderProvider` plus `usePageActions()` and `useShellHeaderOverride()` let active routes register page-local actions or dynamic titles without reintroducing in-page header blocks
++ - Route files must not render duplicate title/description blocks; metadata lives once in `RuntimeRouteDefinition`
++ - `SectionCard` is the default sectional frame: one heading block, then content.
++ - `DisclosureSection` collapses dense secondary detail; default closed unless a route needs primary content expanded.
++ - Copy budget: shell has no page counts; route `description` values stay one sentence (max 120 chars); ledger/meta routes omit `SectionCard.description` and non-essential `FactCard.detail`.
++ - `FactCard` is the default live summary primitive for top-of-page fact strips; prefer 3-4 cards and emphasize only the primary one.
++ - `CodeBlock` is the canonical payload/log container for mono transport artifacts.
++ - Long ids, endpoint ids, and routes must wrap rather than overflow summary cards or metadata cells.
++ - Global browser chrome must opt into both schemes:
++   - `<meta name="color-scheme" content="light dark">`
++   - paired light/dark `theme-color` meta tags
++   - `html { color-scheme: light dark; }`
++
++ ### Temporary conversion scaffolds
++
++ - Live routes must not rely on placeholder scaffolds; use honest empty states instead.
++
++ ### Cards and panels
++
++ - Use borders and spacing for separation.
++ - Prefer internal dividers over nested decorative containers.
++ - Do not use decorative accent rules in page or shell headers; reserve accent for primary actions, active routes, and explicit status emphasis.
++
++ ### Configured model cards
++
++ - Every configured model appears in one unified inventory surface regardless of whether it is local, remote, or peer-backed.
++ - The default representation for configured models is a **card**, not a plain table row.
++ - The model inventory uses a mobile-first responsive grid:
++   - `grid-cols-1` on mobile
++   - `md:grid-cols-2` on medium screens
++   - `lg:grid-cols-3` when readable density holds
++ - Each model card must expose at least:
++   - display name and model id
++   - source classification
++   - state / health
++   - configured roles
++   - capability summary
++   - high-level metrics
++   - endpoint binding or peer source
++   - controller state when applicable
++   - one inspect action
++ - The inspect action opens a shared **model inspection modal** and links back to `Control > Runtime Config` rather than pretending inline edits are persisted here.
++ - The modal sections are:
++   1. overview
++   2. roles
++   3. capabilities
++   4. metrics
++   5. routing / identifiers
++   6. tooling / MCP
++   7. host policy
++
++ ### Ledgers, logs, and captures
++
++ - Activity, requests, metrics, and tooling execution read as ledgers first, not dashboards first.
++ - Dense tables may scroll horizontally, but request id, status, model, and primary action remain readable without opening a modal.
++ - Capture drill-ins open in an adjacent inspector or modal with mono payload blocks and explicit transport metadata.
++ - Capture bodies are treated as transport payloads; decode base64 request/response bodies for readable inspection while keeping headers and path explicit.
++ - Log views prefer split proxy/upstream consoles with source toggles rather than stacked accordions.
++
++ ### Buttons
++
++ - Rectilinear only
++ - Minimum height `44px`
++ - Primary: filled foreground or accent
++ - Secondary: outlined
++
++ ### Inputs
++
++ - Transparent or light surface
++ - Explicit focus border or ring
++ - No rounded treatments
++
++ ### Badges
++
++ - Rectilinear labels
++ - Uppercase tracked text
++ - Use stone + accent only; never introduce amber, emerald, rose, or another semantic hue for shared states
++
++ ### Tables and payload blocks
++
++ - Always allow horizontal overflow
++ - Use mono for ids, paths, models, and JSON
++ - Use tabular numerals where numeric comparison matters
++
++ ## Tooling and MCP integration
++
++ The run-13 tool/MCP baseline remains part of the runtime design contract rather than a parallel subsystem.
++
++ ### Cross-surface rules
++
++ - Tooling state uses the same stone hierarchy, mono identifiers, uppercase labels, and sparse accent.
++ - Tooling must be visible at three levels:
++   1. capability
++   2. configuration
++   3. execution
++
++ ### Control surfaces
++
++ - **Models** show tool-calling and MCP posture in the same card/modal system as roles, capabilities, metrics, endpoint binding, and controller state.
++ - **Controller** candidate views show whether a candidate is healthy and tooling-capable enough for adjudication work.
++
++ ### Studio and observation surfaces
++
++ - **Chat** renders assistant `tool_calls`, execution receipts, and diagnostics as structured secondary content.
++ - **Requests** and request detail expose persisted tool execution receipts beside captures and endpoint/profile data.
++ - **Activity** should surface when a captured request included tool execution and whether a capture bundle is available.
++
++ ### Runtime and integration surfaces
++
++ - Runtime/system pages acknowledge:
++   - MCP connector-definition support
++   - runtime tool registry posture
++   - `runtime:validate-tools`
++ - `System > Runtime` renders live `/api/version` facts in-page rather than relying on a raw-link-only affordance.
++ - Downstream/integration pages state when OpenAI-compatible consumers can expect `tool_calls` and what compatibility limits still apply.
++
++ ## Rollout order
++
++ 1. **Observe**
++    - complete: native activity and logs pages now expose metrics, captures, preserved history, and split raw consoles
++ 2. **Studio**
++    - replace multimodal placeholders with images, audio, rerank, and advanced workspaces
++ 3. **System**
++    - expose runtime policy, peers, and config-watch posture from the vendored host, with version facts folded into Runtime
++ 4. **Integrations**
++    - finish upstream reference surfaces after the operator pages are concrete, with compatibility guidance folded into Downstream
++
++
+
+ ❯ app/lib/design-system.test.ts:766:39
+    764| 
+    765|   test("design-system docs no longer carry conflicting Swiss-era downs…
+    766|     expect(designSystemDocSource).not.toContain("Rectilinear only");
+       |                                       ^
+    767|     expect(designSystemDocSource).not.toContain("No rounded treatments…
+    768|     expect(designSystemDocSource).not.toContain("never introduce amber…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  app/lib/design-system.test.ts > runtime design system > shared shell and controls align to the approved Apple typography and control grammar
+AssertionError: expected 'import type { ReactNode } from "react…' not to contain 'text-2xl font-medium'
+
+- Expected
++ Received
+
+- text-2xl font-medium
++ import type { ReactNode } from "react";
++ import { NavLink, useLocation } from "react-router";
++
++ import { cn } from "../lib/cn";
++ import {
++   cardClassName,
++   getRuntimeRouteDefinition,
++   runtimeNavigationSections,
++ } from "../lib/design-system";
++ import { useShellHeaderState } from "../lib/shell-header-context";
++ import { ThemeToggle } from "./theme-toggle";
++
++ function primarySectionLinkClass(isActive: boolean): string {
++   return cn(
++     "flex min-h-[52px] items-center justify-between gap-3 rounded-[var(--rm-radius-panel)] border px-4 py-3 text-sm transition-colors",
++     isActive
++       ? "border-[var(--rm-border-strong)] bg-[var(--rm-surface-strong)] text-[var(--rm-fg)]"
++       : "border-transparent text-[var(--rm-secondary)] hover:border-[var(--rm-border)] hover:bg-[var(--rm-panel)] hover:text-[var(--rm-fg)]",
++   );
++ }
++
++ function secondaryNavLinkClass(isActive: boolean): string {
++   return cn(
++     "inline-flex min-h-[44px] items-center gap-2 rounded-[var(--rm-radius-pill)] border px-3 py-2 text-sm transition-colors",
++     isActive
++       ? "border-[var(--rm-border-strong)] bg-[var(--rm-surface-strong)] text-[var(--rm-fg)]"
++       : "border-[var(--rm-border)] bg-[var(--rm-panel)] text-[var(--rm-secondary)] hover:border-[var(--rm-border-strong)] hover:text-[var(--rm-fg)]",
++   );
++ }
++
++ export function AppShell({ children }: { children: ReactNode }) {
++   const location = useLocation();
++   const { actions, override } = useShellHeaderState();
++   const route = getRuntimeRouteDefinition(location.pathname) ?? getRuntimeRouteDefinition("/app");
++   const activeSection =
++     runtimeNavigationSections.find((section) => section.title === route?.section) ??
++     runtimeNavigationSections[0];
++   const title = override?.title ?? route?.title ?? "Runtime overview";
++   const description =
++     override?.description ??
++     route?.description ??
++     "Runtime, provider onboarding, endpoint visibility, and request inspection in one shell.";
++
++   return (
++     <div className="min-h-screen bg-[var(--rm-bg)] text-[var(--rm-fg)]">
++       <div className="mx-auto grid min-h-screen max-w-[var(--rm-shell-width)] gap-5 px-4 py-4 lg:grid-cols-[220px_minmax(0,1fr)]">
++         <aside className={`${cardClassName} p-5 lg:sticky lg:top-4 lg:h-[calc(100vh-2rem)]`}>
++           <div className="border-b border-[var(--rm-border)] pb-5">
++             <h1 className="text-2xl font-medium tracking-tight">role-model</h1>
++           </div>
++           <div className="mt-5 space-y-5">
++             {runtimeNavigationSections.map((section) => (
++               <div key={section.title}>
++                 <NavLink
++                   to={section.items[0]?.to ?? "/app"}
++                   end={section.title === "Overview"}
++                   className={() => primarySectionLinkClass(route?.section === section.title)}
++                 >
++                   <span className="flex items-center gap-3">
++                     <section.icon size={16} />
++                     <span>{section.title}</span>
++                   </span>
++                 </NavLink>
++               </div>
++             ))}
++           </div>
++         </aside>
++
++         <div className="min-w-0 space-y-5">
++           <header className={`${cardClassName} px-5 py-5`}>
++             <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
++               <div>
++                 <p className="text-xs font-normal uppercase tracking-[0.24em] text-[var(--rm-muted)]">
++                   {route?.section ?? "Overview"}
++                 </p>
++                 <h2 className="mt-3 max-w-[16ch] text-balance text-3xl font-semibold tracking-[-0.03em]">
++                   {title}
++                 </h2>
++                 <p className="mt-3 max-w-[60ch] text-sm leading-6 text-[var(--rm-secondary)]">
++                   {description}
++                 </p>
++               </div>
++               <div className="flex flex-wrap items-center gap-2 xl:justify-end">
++                 <ThemeToggle />
++                 {actions}
++               </div>
++             </div>
++             <div className="mt-5 border-t border-[var(--rm-border)] pt-4">
++               <nav className="flex flex-wrap gap-2">
++                 {activeSection.items.map((item) => (
++                   <NavLink
++                     key={item.to}
++                     to={item.to}
++                     end={item.to === "/app"}
++                     className={({ isActive }) => secondaryNavLinkClass(isActive)}
++                   >
++                     <item.icon size={14} />
++                     <span>{item.label}</span>
++                   </NavLink>
++                 ))}
++               </nav>
++             </div>
++           </header>
++           <main className="space-y-6">{children}</main>
++         </div>
++       </div>
++     </div>
++   );
++ }
++
+
+ ❯ app/lib/design-system.test.ts:772:32
+    770| 
+    771|   test("shared shell and controls align to the approved Apple typograp…
+    772|     expect(appShellSource).not.toContain("text-2xl font-medium");
+       |                                ^
+    773|     expect(appShellSource).not.toContain("text-3xl font-semibold");
+    774|     expect(pagePrimitivesSource).not.toContain("text-3xl font-light");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  app/lib/design-system.test.ts > runtime design system > studio copy and route surfaces no longer describe the runtime UI as Swiss-style
+AssertionError: expected 'import { useEffect, useMemo, useState…' not to contain 'Swiss-style'
+
+- Expected
++ Received
+
+- Swiss-style
++ import { useEffect, useMemo, useState } from "react";
++
++ import {
++   CodeBlock,
++   EmptyState,
++   ErrorState,
++   FactCard,
++   LoadingState,
++   SectionCard,
++ } from "../components/page-primitives";
++ import {
++   fieldClassName,
++   mutedPanelClassName,
++   primaryButtonClassName,
++   secondaryButtonClassName,
++ } from "../lib/design-system";
++ import {
++   type RuntimeSnapshot,
++   fetchRuntimeSnapshot,
++   submitImageGeneration,
++   submitSdApiTxt2Img,
++ } from "../lib/runtime-api";
++ import { usePageActions } from "../lib/shell-header-context";
++ import { buildWorkbenchModelOptions } from "../lib/view-models";
++
++ type ImageResult =
++   | {
++       readonly mode: "openai";
++       readonly images: readonly string[];
++       readonly rawPayload: string;
++     }
++   | {
++       readonly mode: "sdapi";
++       readonly images: readonly string[];
++       readonly rawPayload: string;
++     };
++
++ export default function StudioImagesRoute() {
++   const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(null);
++   const [error, setError] = useState<string | null>(null);
++   const [mode, setMode] = useState<"openai" | "sdapi">("openai");
++   const [model, setModel] = useState("");
++   const [prompt, setPrompt] = useState("A Swiss-style operator console poster.");
++   const [size, setSize] = useState("1024x1024");
++   const [width, setWidth] = useState("1024");
++   const [height, setHeight] = useState("1024");
++   const [submitting, setSubmitting] = useState(false);
++   const [result, setResult] = useState<ImageResult | null>(null);
++
++   useEffect(() => {
++     void fetchRuntimeSnapshot()
++       .then((value) => {
++         setSnapshot(value);
++         setModel((current) => current || value.models[0]?.id || "");
++       })
++       .catch((value: unknown) =>
++         setError(
++           value instanceof Error ? value.message : "Could not load image workspace context.",
++         ),
++       );
++   }, []);
++
++   const modelOptions = useMemo(
++     () => buildWorkbenchModelOptions(snapshot?.models ?? []),
++     [snapshot?.models],
++   );
++
++   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
++     event.preventDefault();
++     if (!model) {
++       setError("Choose a model before running an image request.");
++       return;
++     }
++
++     setSubmitting(true);
++     setError(null);
++
++     try {
++       if (mode === "openai") {
++         const response = await submitImageGeneration({
++           model,
++           prompt,
++           size,
++         });
++         setResult({
++           mode,
++           images: response.data
++             .map((entry) =>
++               entry.url
++                 ? entry.url
++                 : entry.b64_json
++                   ? `data:image/png;base64,${entry.b64_json}`
++                   : null,
++             )
++             .filter((entry): entry is string => typeof entry === "string"),
++           rawPayload: JSON.stringify(response, null, 2),
++         });
++       } else {
++         const response = await submitSdApiTxt2Img({
++           model,
++           prompt,
++           width: Number(width) || 1024,
++           height: Number(height) || 1024,
++         });
++         setResult({
++           mode,
++           images: response.images.map((image) => `data:image/png;base64,${image}`),
++           rawPayload: JSON.stringify(response, null, 2),
++         });
++       }
++     } catch (value) {
++       setError(value instanceof Error ? value.message : "Image request failed.");
++     } finally {
++       setSubmitting(false);
++     }
++   }
++
++   usePageActions(
++     <>
++       <a className={secondaryButtonClassName} href="/v1/models">
++         Model list
++       </a>
++       <a className={secondaryButtonClassName} href="/sdapi/v1/loras">
++         SDAPI LoRAs
++       </a>
++     </>,
++     [],
++   );
++
++   return (
++     <div className="space-y-6">
++       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
++         <FactCard
++           label="Available models"
++           value={snapshot?.models.length ?? 0}
++           detail="The current runtime model listing drives the request rail."
++           emphasis
++         />
++         <FactCard
++           label="Request mode"
++           value={mode === "openai" ? "OpenAI" : "SDAPI"}
++           detail="Switch request families without leaving the studio section."
++         />
++         <FactCard
++           label="Returned images"
++           value={result?.images.length ?? 0}
++           detail="Generated images remain in the dominant result stage with raw response details adjacent."
++         />
++       </div>
++
++       {error ? <ErrorState label={error} /> : null}
++
++       <div className="grid gap-4 xl:grid-cols-[360px_minmax(0,1fr)]">
++         <SectionCard
++           title="Image request modes"
++           description="Choose an OpenAI-style or SDAPI-style request and keep the parameter rail compact."
++         >
++           {!snapshot ? (
++             <LoadingState label="Loading image request context…" />
++           ) : (
++             <form className="space-y-4" onSubmit={onSubmit}>
++               <label className="grid gap-2 text-sm">
++                 <span className="font-medium text-[var(--rm-fg)]">Mode</span>
++                 <select
++                   className={fieldClassName}
++                   value={mode}
++                   onChange={(event) => setMode(event.target.value as "openai" | "sdapi")}
++                 >
++                   <option value="openai">OpenAI-style generation</option>
++                   <option value="sdapi">SDAPI txt2img</option>
++                 </select>
++               </label>
++               <label className="grid gap-2 text-sm">
++                 <span className="font-medium text-[var(--rm-fg)]">Model</span>
++                 <select
++                   className={fieldClassName}
++                   value={model}
++                   onChange={(event) => setModel(event.target.value)}
++                 >
++                   {modelOptions.map((option) => (
++                     <option key={option.value} value={option.value}>
++                       {option.label}
++                     </option>
++                   ))}
++                 </select>
++               </label>
++               <label className="grid gap-2 text-sm">
++                 <span className="font-medium text-[var(--rm-fg)]">Prompt</span>
++                 <textarea
++                   className={`${fieldClassName} min-h-36`}
++                   value={prompt}
++                   onChange={(event) => setPrompt(event.target.value)}
++                 />
++               </label>
++               {mode === "openai" ? (
++                 <label className="grid gap-2 text-sm">
++                   <span className="font-medium text-[var(--rm-fg)]">Size</span>
++                   <select
++                     className={fieldClassName}
++                     value={size}
++                     onChange={(event) => setSize(event.target.value)}
++                   >
++                     <option value="1024x1024">1024x1024</option>
++                     <option value="1536x1024">1536x1024</option>
++                     <option value="1024x1536">1024x1536</option>
++                   </select>
++                 </label>
++               ) : (
++                 <div className="grid gap-4 md:grid-cols-2">
++                   <label className="grid gap-2 text-sm">
++                     <span className="font-medium text-[var(--rm-fg)]">Width</span>
++                     <input
++                       className={fieldClassName}
++                       inputMode="numeric"
++                       value={width}
++                       onChange={(event) => setWidth(event.target.value)}
++                     />
++                   </label>
++                   <label className="grid gap-2 text-sm">
++                     <span className="font-medium text-[var(--rm-fg)]">Height</span>
++                     <input
++                       className={fieldClassName}
++                       inputMode="numeric"
++                       value={height}
++                       onChange={(event) => setHeight(event.target.value)}
++                     />
++                   </label>
++                 </div>
++               )}
++               <button className={primaryButtonClassName} disabled={submitting} type="submit">
++                 {submitting ? "Running…" : "Run image request"}
++               </button>
++             </form>
++           )}
++         </SectionCard>
++
++         <div className="space-y-4">
++           <SectionCard
++             title="Image result stage"
++             description="The dominant pane belongs to generated images first, not the request form."
++           >
++             {!result ? (
++               <EmptyState label="Run an image request to populate the result stage." />
++             ) : result.images.length === 0 ? (
++               <EmptyState label="The runtime returned no image payloads for this request." />
++             ) : (
++               <div className="grid gap-4 md:grid-cols-2">
++                 {result.images.map((image, index) => (
++                   <div key={`${result.mode}-${index}`} className={`${mutedPanelClassName} p-3`}>
++                     <img
++                       alt={`Generated result ${index + 1}`}
++                       className="aspect-square w-full object-cover"
++                       src={image}
++                     />
++                   </div>
++                 ))}
++               </div>
++             )}
++           </SectionCard>
++
++           <SectionCard
++             title="Raw response"
++             description="Payloads stay adjacent to the stage so operators can compare visual output and transport details together."
++           >
++             <CodeBlock className="min-h-60 text-sm">
++               {result?.rawPayload ?? '{\n  "status": "No image request yet"\n}'}
++             </CodeBlock>
++           </SectionCard>
++         </div>
++       </div>
++     </div>
++   );
++ }
++
+
+ ❯ app/lib/design-system.test.ts:782:41
+    780| 
+    781|   test("studio copy and route surfaces no longer describe the runtime …
+    782|     expect(studioImagesRouteSource).not.toContain("Swiss-style");
+       |                                         ^
+    783|     expect(studioRerankRouteSource).not.toContain("Swiss-style");
+    784|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  app/lib/design-system.test.ts > runtime design system > keeps shared states on semantic design tokens instead of Tailwind utility palettes
+AssertionError: expected 'import { useCallback, useEffect, useM…' not to contain 'text-amber-700'
+
+- Expected
++ Received
+
+- text-amber-700
++ import { useCallback, useEffect, useMemo, useState } from "react";
++
++ import {
++   EmptyState,
++   ErrorState,
++   FactCard,
++   LoadingState,
++   SectionCard,
++   StatusPill,
++ } from "../components/page-primitives";
++ import { computeLatencyPercentiles } from "../lib/benchmark-latency";
++ import { describeHardBlend, resolveSubjectFromSummary } from "../lib/benchmark-model-cards";
++ import {
++   fieldClassName,
++   listRowClassName,
++   mutedPanelClassName,
++   primaryButtonClassName,
++   secondaryButtonClassName,
++ } from "../lib/design-system";
++ import { formatScore, formatScoreFraction } from "../lib/format-score";
++ import {
++   type BenchmarkCaseAuditEntry,
++   type BenchmarkCaseComparison,
++   type BenchmarkEndpointGrade,
++   type BenchmarkRunListEntry,
++   type BenchmarkRunProgress,
++   type BenchmarkRunResult,
++   type BenchmarkSuite,
++   type BenchmarkSummariesByMode,
++   type BenchmarkSummary,
++   type BenchmarkSummarySubject,
++   type RouterCandidate,
++   type RuntimeSummary,
++   clearAllBenchmarkData,
++   clearBenchmarkEndpointData,
++   fetchActiveBenchmarkRun,
++   fetchBenchmarkPreferences,
++   fetchBenchmarkRunProgress,
++   fetchBenchmarkRuns,
++   fetchBenchmarkSuite,
++   fetchBenchmarkSummariesByMode,
++   fetchBenchmarkSummary,
++   fetchRouterCandidates,
++   fetchRuntimeSummary,
++   startCapabilityBenchmark,
++   updateBenchmarkPreferences,
++ } from "../lib/runtime-api";
++
++ const BENCHMARK_POLL_MS = 1500;
++ const BENCHMARK_STALL_MS = 90_000;
++ const ACTIVE_BENCHMARK_RUN_KEY = "role-model.benchmark.activeRunId";
++
++ const EMPTY_BENCHMARK_SUMMARY: BenchmarkSummary = {
++   runId: null,
++   completedAtMs: null,
++   mode: null,
++   suiteId: null,
++   suiteVersion: null,
++   judgeEndpointId: null,
++   judgeModelId: null,
++   artifactRoot: null,
++   subjects: [],
++   caseComparisons: [],
++   caseAudits: [],
++   manifest: null,
++ };
++
++ function formatElapsed(ms: number): string {
++   const totalSeconds = Math.max(0, Math.floor(ms / 1000));
++   const minutes = Math.floor(totalSeconds / 60);
++   const seconds = totalSeconds % 60;
++   return minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`;
++ }
++
++ function describeBenchmarkProgress(progress: BenchmarkRunProgress): {
++   readonly phaseLabel: string;
++   readonly detail: string;
++ } {
++   if (progress.runPhase === "execution") {
++     return {
++       phaseLabel: "Phase 1 of 3 · Recording responses",
++       detail: [
++         progress.currentEndpointModelId
++           ? `model ${progress.endpointIndex}/${progress.endpointCount}: ${progress.currentEndpointModelId}`
++           : null,
++         progress.currentCaseId
++           ? `case ${progress.caseIndex}/${progress.caseCount} (${progress.currentCaseId})`
++           : null,
++         progress.currentPhase === "execute"
++           ? "running benchmark cases and saving deliverables"
++           : "preparing execution pass",
++       ]
++         .filter(Boolean)
++         .join(" • "),
++     };
++   }
++
++   if (progress.runPhase === "compare") {
++     return {
++       phaseLabel: "Phase 3 of 3 · Head-to-head compare",
++       detail: [
++         progress.currentCaseId
++           ? `case ${progress.caseIndex}/${progress.caseCount} (${progress.currentCaseId})`
++           : null,
++         progress.currentPhase === "compare"
++           ? "ranking subjects for this case"
++           : "preparing compare pass",
++       ]
++         .filter(Boolean)
++         .join(" • "),
++     };
++   }
++
++   return {
++     phaseLabel: "Phase 2 of 3 · Judge grading",
++     detail: [
++       progress.currentEndpointModelId
++         ? `model ${progress.endpointIndex}/${progress.endpointCount}: ${progress.currentEndpointModelId}`
++         : null,
++       progress.currentCaseId
++         ? `case ${progress.caseIndex}/${progress.caseCount} (${progress.currentCaseId})`
++         : null,
++       progress.currentPhase === "judge"
++         ? "scoring recorded deliverables"
++         : "grading saved responses",
++     ]
++       .filter(Boolean)
++       .join(" • "),
++   };
++ }
++
++ function asRecord(value: unknown): Record<string, unknown> | null {
++   return typeof value === "object" && value !== null ? (value as Record<string, unknown>) : null;
++ }
++
++ function pickNumber(record: Record<string, unknown> | null, ...keys: string[]): number | null {
++   for (const key of keys) {
++     const value = record?.[key];
++     if (typeof value === "number" && Number.isFinite(value)) {
++       return value;
++     }
++   }
++   return null;
++ }
++
++ function formatLatencyMs(value: number | null | undefined): string {
++   if (typeof value !== "number" || !Number.isFinite(value)) {
++     return "n/a";
++   }
++   return `${Math.round(value)} ms`;
++ }
++
++ function resolveJudgeLabel(
++   summary: BenchmarkSummary,
++   candidates: readonly RouterCandidate[],
++ ): string | null {
++   return (
++     summary.judgeModelId ??
++     candidates.find((candidate) => candidate.endpointId === summary.judgeEndpointId)?.modelId ??
++     summary.judgeEndpointId ??
++     null
++   );
++ }
++
++ function collectEndpointLatencies(input: {
++   readonly endpointId: string;
++   readonly caseResults: BenchmarkEndpointGrade["caseResults"] | null;
++   readonly caseAudits: readonly BenchmarkCaseAuditEntry[] | undefined;
++ }): readonly number[] {
++   const fromCaseResults = (input.caseResults ?? [])
++     .map((caseResult) => caseResult.latencyMs)
++     .filter((value): value is number => typeof value === "number" && Number.isFinite(value));
++   if (fromCaseResults.length > 0) {
++     return fromCaseResults;
++   }
++   return (input.caseAudits ?? [])
++     .filter((audit) => audit.endpointId === input.endpointId)
++     .map((audit) => audit.latencyMs)
++     .filter((value): value is number => typeof value === "number" && Number.isFinite(value));
++ }
++
++ function EndpointModeRunSnapshot({
++   title,
++   summary,
++   endpointId,
++   judgeLabel,
++ }: {
++   readonly title: string;
++   readonly summary: BenchmarkSummary;
++   readonly endpointId: string;
++   readonly judgeLabel: string | null;
++ }) {
++   if (!summary.runId) {
++     return (
++       <div className={`${mutedPanelClassName} p-3`}>
++         <p className="text-sm font-medium text-[var(--rm-fg)]">{title}</p>
++         <p className="mt-2 text-sm text-[var(--rm-secondary)]">No completed run yet.</p>
++       </div>
++     );
++   }
++
++   const subject = resolveSubjectFromSummary(summary, endpointId);
++   const completedAtLabel = summary.completedAtMs
++     ? new Date(summary.completedAtMs).toLocaleString()
++     : "unknown";
++
++   return (
++     <div className={`${mutedPanelClassName} p-3`}>
++       <p className="text-sm font-medium text-[var(--rm-fg)]">{title}</p>
++       <p className="mt-1 text-xs text-[var(--rm-secondary)]">
++         Completed {completedAtLabel}
++         {judgeLabel ? ` • judge: ${judgeLabel}` : ""}
++       </p>
++       {subject ? (
++         <>
++           <p className="mt-2 text-sm font-medium text-[var(--rm-fg)]">
++             {formatScore(subject.overallScore)} overall
++           </p>
++           <p className="mt-1 text-sm text-[var(--rm-secondary)]">
++             easy {formatScore(subject.scoresByBucket.easy.score)} • medium{" "}
++             {formatScore(subject.scoresByBucket.medium.score)} • hard{" "}
++             {formatScore(subject.scoresByBucket.hard.score)}
++           </p>
++         </>
++       ) : (
++         <p className="mt-2 text-sm text-[var(--rm-secondary)]">
++           This endpoint was not graded in the last {summary.mode ?? "benchmark"} run.
++         </p>
++       )}
++     </div>
++   );
++ }
++
++ function describeRoutingImpact(candidate: RouterCandidate): string {
++   const profile = asRecord(candidate.latestProfile);
++   const sources = asRecord(profile?.sources);
++   const advisory = asRecord(candidate.advisoryMaxDifficultyRecommendation);
++   const qualityScore = pickNumber(
++     profile,
++     "judge_score",
++     "quality_score",
++     "judgeScore",
++     "qualityScore",
++   );
++   const benchmarkSamples = pickNumber(sources, "benchmark_samples", "benchmarkSamples") ?? 0;
++   const recommended =
++     typeof advisory?.recommended_max_difficulty === "string"
++       ? advisory.recommended_max_difficulty
++       : typeof advisory?.recommendedMaxDifficulty === "string"
++         ? advisory.recommendedMaxDifficulty
++         : null;
++   const minQuality =
++     pickNumber(advisory, "min_quality_score", "minQualityScore") ??
++     pickNumber(asRecord(advisory?.thresholds), "min_quality_score", "minQualityScore");
++
++   const parts: string[] = [];
++   if (qualityScore !== null) {
++     parts.push(
++       `Router ranks this candidate using a ${formatScore(qualityScore)} quality score (from benchmark judge grades).`,
++     );
++   }
++   if (recommended) {
++     parts.push(
++       `Difficulty routing treats ${recommended} as the recommended max prompt difficulty for this endpoint.`,
++     );
++     if (minQuality !== null) {
++       parts.push(
++         `Per-bucket quality must stay above ${formatScore(minQuality)} to raise that ceiling.`,
++       );
++     }
++   }
++   if (benchmarkSamples > 0) {
++     parts.push(
++       `${benchmarkSamples} benchmark sample${benchmarkSamples === 1 ? "" : "s"} are merged into the observed profile used on future routing decisions.`,
++     );
++   }
++   const hardBlendDetail = describeHardBlend(candidate);
++   if (hardBlendDetail) {
++     parts.push(hardBlendDetail);
++   }
++   return parts.length > 0
++     ? parts.join(" ")
++     : "Run a benchmark to write judge scores into this endpoint's observed routing profile.";
++ }
++
++ interface ModelScoreRow {
++   readonly endpointId: string;
++   readonly modelId: string;
++   readonly sourceType: string;
++   readonly overallScore: number | null;
++   readonly scoresByBucket: BenchmarkSummarySubject["scoresByBucket"] | null;
++   readonly profileQualityScore: number | null;
++   readonly benchmarkSamples: number;
++   readonly latencyP50: number | null;
++   readonly latencyP95: number | null;
++   readonly caseResults: BenchmarkEndpointGrade["caseResults"] | null;
++   readonly candidate: RouterCandidate;
++ }
++
++ function buildModelScoreRows(
++   candidates: readonly RouterCandidate[],
++   result: BenchmarkRunResult | null,
++   summary: BenchmarkSummary | null,
++ ): ModelScoreRow[] {
++   const gradeByEndpoint = new Map<
++     string,
++     {
++       overallScore: number;
++       scoresByBucket: BenchmarkSummarySubject["scoresByBucket"];
++       caseResults: BenchmarkEndpointGrade["caseResults"] | null;
++     }
++   >();
++
++   for (const subject of summary?.subjects ?? []) {
++     gradeByEndpoint.set(subject.endpointId, {
++       overallScore: subject.overallScore,
++       scoresByBucket: subject.scoresByBucket,
++       caseResults: null,
++     });
++   }
++   for (const grade of result?.endpointGrades ?? []) {
++     gradeByEndpoint.set(grade.endpointId, {
++       overallScore: grade.overallScore,
++       scoresByBucket: grade.byDifficulty,
++       caseResults: grade.caseResults,
++     });
++   }
++
++   const rows: ModelScoreRow[] = [];
++   for (const candidate of candidates) {
++     const grade = gradeByEndpoint.get(candidate.endpointId);
++     const profile = asRecord(candidate.latestProfile);
++     const sources = asRecord(profile?.sources);
++     const profileQualityScore = pickNumber(profile, "judge_score", "quality_score");
++     const benchmarkSamples = pickNumber(sources, "benchmark_samples") ?? 0;
++     const capability = candidate.benchmarkCapability;
++     const caseResults = grade?.caseResults ?? null;
++     const { p50: latencyP50, p95: latencyP95 } = computeLatencyPercentiles(
++       collectEndpointLatencies({
++         endpointId: candidate.endpointId,
++         caseResults,
++         caseAudits: summary?.caseAudits,
++       }),
++     );
++
++     if (!grade && !capability && benchmarkSamples === 0 && profileQualityScore === null) {
++       continue;
++     }
++
++     rows.push({
++       endpointId: candidate.endpointId,
++       modelId: candidate.modelId,
++       sourceType: candidate.sourceType,
++       overallScore: grade?.overallScore ?? capability?.overallScore ?? profileQualityScore,
++       scoresByBucket:
++         grade?.scoresByBucket ??
++         (capability?.scoresByBucket
++           ? {
++               easy: {
++                 score: capability.scoresByBucket.easy?.score ?? 0,
++                 cases: capability.scoresByBucket.easy?.cases ?? 0,
++               },
++               medium: {
++                 score: capability.scoresByBucket.medium?.score ?? 0,
++                 cases: capability.scoresByBucket.medium?.cases ?? 0,
++               },
++               hard: {
++                 score: capability.scoresByBucket.hard?.score ?? 0,
++                 cases: capability.scoresByBucket.hard?.cases ?? 0,
++               },
++             }
++           : null),
++       profileQualityScore,
++       benchmarkSamples,
++       latencyP50,
++       latencyP95,
++       caseResults,
++       candidate,
++     });
++   }
++
++   return rows.sort((left, right) => right.modelId.localeCompare(left.modelId, "en"));
++ }
++
++ export default function ControlBenchmarkRoute() {
++   const [suite, setSuite] = useState<BenchmarkSuite | null>(null);
++   const [candidates, setCandidates] = useState<readonly RouterCandidate[] | null>(null);
++   const [selectedEndpointIds, setSelectedEndpointIds] = useState<string[]>([]);
++   const [judgeEndpointId, setJudgeEndpointId] = useState<string>("");
++   const [mode, setMode] = useState<"quick" | "full">("quick");
++   const [running, setRunning] = useState(false);
++   const [activeRunId, setActiveRunId] = useState<string | null>(null);
++   const [progress, setProgress] = useState<BenchmarkRunProgress | null>(null);
++   const [result, setResult] = useState<BenchmarkRunResult | null>(null);
++   const [lastSummary, setLastSummary] = useState<BenchmarkSummary | null>(null);
++   const [summariesByMode, setSummariesByMode] = useState<BenchmarkSummariesByMode | null>(null);
++   const [runHistory, setRunHistory] = useState<readonly BenchmarkRunListEntry[]>([]);
++   const [error, setError] = useState<string | null>(null);
++   const [runtimeSummary, setRuntimeSummary] = useState<RuntimeSummary | null>(null);
++   const [clearingEndpointId, setClearingEndpointId] = useState<string | null>(null);
++   const [clearingAll, setClearingAll] = useState(false);
++   const [nowMs, setNowMs] = useState(() => Date.now());
++
++   const resolveJudgeEndpointId = useCallback(
++     (candidateValue: readonly RouterCandidate[], savedJudgeEndpointId?: string): string => {
++       const healthy = candidateValue.filter((candidate) => candidate.healthStatus !== "offline");
++       if (
++         savedJudgeEndpointId &&
++         healthy.some((candidate) => candidate.endpointId === savedJudgeEndpointId)
++       ) {
++         return savedJudgeEndpointId;
++       }
++       return (
++         healthy.find((candidate) => candidate.sourceType === "remote")?.endpointId ??
++         healthy[0]?.endpointId ??
++         ""
++       );
++     },
++     [],
++   );
++
++   const refreshBenchmarkState = useCallback(async () => {
++     const [summary, byMode, runs, candidateValue] = await Promise.all([
++       fetchBenchmarkSummary(),
++       fetchBenchmarkSummariesByMode(),
++       fetchBenchmarkRuns(),
++       fetchRouterCandidates(),
++     ]);
++     setLastSummary(summary);
++     setSummariesByMode(byMode);
++     setRunHistory(runs);
++     setCandidates(candidateValue);
++     return { summary, byMode, runs, candidateValue };
++   }, []);
++
++   useEffect(() => {
++     void Promise.all([
++       fetchBenchmarkSuite(),
++       fetchRouterCandidates(),
++       fetchBenchmarkSummary(),
++       fetchBenchmarkSummariesByMode(),
++       fetchBenchmarkRuns(),
++       fetchBenchmarkPreferences(),
++       fetchRuntimeSummary(),
++     ])
++       .then(
++         ([
++           suiteValue,
++           candidateValue,
++           summaryValue,
++           summariesByModeValue,
++           runHistoryValue,
++           preferences,
++           runtimeSummaryValue,
++         ]) => {
++           setSuite(suiteValue);
++           setCandidates(candidateValue);
++           setLastSummary(summaryValue);
++           setSummariesByMode(summariesByModeValue);
++           setRunHistory(runHistoryValue);
++           setRuntimeSummary(runtimeSummaryValue);
++           const healthy = candidateValue.filter(
++             (candidate) => candidate.healthStatus !== "offline",
++           );
++           setSelectedEndpointIds(healthy.map((candidate) => candidate.endpointId));
++           setJudgeEndpointId(resolveJudgeEndpointId(candidateValue, preferences.judgeEndpointId));
++           setError(null);
++         },
++       )
++       .catch((value: unknown) =>
++         setError(value instanceof Error ? value.message : "Could not load benchmark data."),
++       );
++   }, [resolveJudgeEndpointId]);
++
++   useEffect(() => {
++     if (!suite || !candidates) {
++       return;
++     }
++
++     let cancelled = false;
++
++     const resumeActiveRun = async () => {
++       try {
++         const activeRun = await fetchActiveBenchmarkRun();
++         const storedRunId = sessionStorage.getItem(ACTIVE_BENCHMARK_RUN_KEY);
++         const runId = activeRun?.runId ?? storedRunId;
++         if (!runId) {
++           return;
++         }
++
++         const snapshot = await fetchBenchmarkRunProgress(runId);
++         if (cancelled) {
++           return;
++         }
++
++         if (snapshot.status === "running") {
++           setActiveRunId(runId);
++           setRunning(true);
++           setProgress(snapshot);
++           sessionStorage.setItem(ACTIVE_BENCHMARK_RUN_KEY, runId);
++           return;
++         }
++
++         sessionStorage.removeItem(ACTIVE_BENCHMARK_RUN_KEY);
++         if (snapshot.status === "completed" && snapshot.result) {
++           setResult(snapshot.result);
++           void refreshBenchmarkState();
++         }
++       } catch {
++         sessionStorage.removeItem(ACTIVE_BENCHMARK_RUN_KEY);
++       }
++     };
++
++     void resumeActiveRun();
++     return () => {
++       cancelled = true;
++     };
++   }, [candidates, refreshBenchmarkState, suite]);
++
++   const eligibleCaseCount = useMemo(() => {
++     if (!suite) {
++       return 0;
++     }
++     if (mode === "quick") {
++       return suite.cases.filter((item) => item.benchmark_eligible && item.quick_benchmark).length;
++     }
++     return suite.cases.filter((item) => item.benchmark_eligible).length;
++   }, [mode, suite]);
++
++   const gradedEndpointCount = selectedEndpointIds.length;
++
++   const judgeSubjectOverlap =
++     judgeEndpointId.length > 0 && selectedEndpointIds.includes(judgeEndpointId);
++
++   const canRunBenchmark =
++     Boolean(suite) && gradedEndpointCount >= 2 && judgeEndpointId.length > 0 && !running;
++
++   const modelScoreRows = useMemo(
++     () => (candidates ? buildModelScoreRows(candidates, result, lastSummary) : []),
++     [candidates, lastSummary, result],
++   );
++
++   const compareByCaseId = useMemo(() => {
++     const map = new Map<string, BenchmarkCaseComparison>();
++     for (const entry of lastSummary?.caseComparisons ?? []) {
++       map.set(entry.caseId, entry);
++     }
++     return map;
++   }, [lastSummary]);
++
++   const toggleEndpoint = (endpointId: string) => {
++     setSelectedEndpointIds((current) =>
++       current.includes(endpointId)
++         ? current.filter((value) => value !== endpointId)
++         : [...current, endpointId],
++     );
++   };
++
++   const runBenchmark = useCallback(async () => {
++     if (selectedEndpointIds.length < 2) {
++       setError("Select at least two endpoints for compare-capable benchmark runs.");
++       return;
++     }
++     if (!judgeEndpointId) {
++       setError("Select a judge endpoint.");
++       return;
++     }
++     setRunning(true);
++     setError(null);
++     setProgress(null);
++     setActiveRunId(null);
++     try {
++       await updateBenchmarkPreferences({ judgeEndpointId });
++       const started = await startCapabilityBenchmark({
++         endpointIds: selectedEndpointIds,
++         judgeEndpointId,
++         mode,
++         useJudge: true,
++       });
++       sessionStorage.setItem(ACTIVE_BENCHMARK_RUN_KEY, started.runId);
++       setActiveRunId(started.runId);
++     } catch (value: unknown) {
++       setError(value instanceof Error ? value.message : "Benchmark run failed.");
++       setRunning(false);
++       sessionStorage.removeItem(ACTIVE_BENCHMARK_RUN_KEY);
++     }
++   }, [judgeEndpointId, mode, selectedEndpointIds]);
++
++   const clearEndpointRoutingProfile = useCallback(
++     async (endpointId: string) => {
++       setClearingEndpointId(endpointId);
++       setError(null);
++       try {
++         await clearBenchmarkEndpointData(endpointId);
++         await refreshBenchmarkState();
++         if (result) {
++           setResult({
++             ...result,
++             endpointGrades: result.endpointGrades.filter(
++               (grade) => grade.endpointId !== endpointId,
++             ),
++           });
++         }
++       } catch (value: unknown) {
++         setError(
++           value instanceof Error
++             ? value.message
++             : "Could not clear routing profile for this model.",
++         );
++       } finally {
++         setClearingEndpointId(null);
++       }
++     },
++     [refreshBenchmarkState, result],
++   );
++
++   const handleClearAllBenchmarkData = useCallback(async () => {
++     const confirmed = window.confirm(
++       "Clear all benchmark data? This removes every benchmark run, artifact, and routing profile sample. This cannot be undone.",
++     );
++     if (!confirmed) {
++       return;
++     }
++
++     setClearingAll(true);
++     setError(null);
++     try {
++       await clearAllBenchmarkData();
++       setResult(null);
++       await refreshBenchmarkState();
++     } catch (value: unknown) {
++       setError(value instanceof Error ? value.message : "Could not clear all benchmark data.");
++     } finally {
++       setClearingAll(false);
++     }
++   }, [refreshBenchmarkState]);
++
++   useEffect(() => {
++     if (!running) {
++       return;
++     }
++     const timer = window.setInterval(() => setNowMs(Date.now()), 1000);
++     return () => window.clearInterval(timer);
++   }, [running]);
++
++   useEffect(() => {
++     if (!activeRunId) {
++       return;
++     }
++     let cancelled = false;
++
++     const poll = async () => {
++       try {
++         const snapshot = await fetchBenchmarkRunProgress(activeRunId);
++         if (cancelled) {
++           return;
++         }
++         setProgress(snapshot);
++         if (snapshot.status === "completed" && snapshot.result) {
++           setResult(snapshot.result);
++           void refreshBenchmarkState();
++           setRunning(false);
++           setActiveRunId(null);
++           sessionStorage.removeItem(ACTIVE_BENCHMARK_RUN_KEY);
++         } else if (snapshot.status === "failed") {
++           setError(snapshot.errorMessage ?? "Benchmark run failed.");
++           setRunning(false);
++           setActiveRunId(null);
++           sessionStorage.removeItem(ACTIVE_BENCHMARK_RUN_KEY);
++         }
++       } catch (value: unknown) {
++         if (!cancelled) {
++           setError(value instanceof Error ? value.message : "Could not read benchmark progress.");
++           setRunning(false);
++           setActiveRunId(null);
++           sessionStorage.removeItem(ACTIVE_BENCHMARK_RUN_KEY);
++         }
++       }
++     };
++
++     void poll();
++     const timer = window.setInterval(() => void poll(), BENCHMARK_POLL_MS);
++     return () => {
++       cancelled = true;
++       window.clearInterval(timer);
++     };
++   }, [activeRunId, refreshBenchmarkState]);
++
++   const progressPercent = progress
++     ? progress.totalSteps > 0
++       ? Math.min(100, Math.round((progress.completedSteps / progress.totalSteps) * 100))
++       : 0
++     : 0;
++   const progressStalled = Boolean(
++     progress && progress.status === "running" && nowMs - progress.updatedAtMs >= BENCHMARK_STALL_MS,
++   );
++   const progressDescription = progress ? describeBenchmarkProgress(progress) : null;
++
++   if (error && !suite && !candidates) {
++     return <ErrorState label={error} />;
++   }
++   if (!suite || !candidates) {
++     return <LoadingState label="Loading capability benchmark…" />;
++   }
++
++   const lastRunLabel = lastSummary?.completedAtMs
++     ? new Date(lastSummary.completedAtMs).toLocaleString()
++     : null;
++   const judgeLabel = lastSummary ? resolveJudgeLabel(lastSummary, candidates) : null;
++   const fullSummary = summariesByMode?.full ?? EMPTY_BENCHMARK_SUMMARY;
++   const quickSummary = summariesByMode?.quick ?? EMPTY_BENCHMARK_SUMMARY;
++   const fullJudgeLabel = fullSummary.runId ? resolveJudgeLabel(fullSummary, candidates) : null;
++   const quickJudgeLabel = quickSummary.runId ? resolveJudgeLabel(quickSummary, candidates) : null;
++
++   return (
++     <div className="space-y-6">
++       <SectionCard
++         title="Model scores and routing profiles"
++         description="Each benchmark run grades model output, then writes judge scores into observed endpoint profiles. Router uses those profiles for candidate quality ranking and difficulty ceilings on later requests."
++       >
++         {lastRunLabel ? (
++           <p className="mb-4 text-sm text-[var(--rm-secondary)]">
++             Last completed run: {lastRunLabel}
++             {lastSummary?.mode ? ` • ${lastSummary.mode} suite` : ""}
++             {judgeLabel ? ` • judge: ${judgeLabel}` : ""}
++           </p>
++         ) : null}
++
++         {modelScoreRows.length === 0 ? (
++           <EmptyState label="No benchmark scores are in routing profiles yet. Run the benchmark below to grade each model and update observed profiles." />
++         ) : (
++           <div className="space-y-4">
++             {modelScoreRows.map((row) => (
++               <div key={row.endpointId} className={listRowClassName}>
++                 <div className="space-y-3">
++                   <div>
++                     <p className="font-medium text-[var(--rm-fg)]">{row.modelId}</p>
++                     <p className="text-sm text-[var(--rm-secondary)]">{row.endpointId}</p>
++                   </div>
++
++                   <div className="grid gap-2 text-sm text-[var(--rm-secondary)] md:grid-cols-2">
++                     <p>
++                       <span className="font-medium text-[var(--rm-fg)]">Benchmark overall:</span>{" "}
++                       {row.caseResults?.length
++                         ? formatScoreFraction(row.overallScore, row.caseResults.length)
++                         : formatScore(row.overallScore)}
++                     </p>
++                     <p>
++                       <span className="font-medium text-[var(--rm-fg)]">
++                         Profile quality score:
++                       </span>{" "}
++                       {formatScore(row.profileQualityScore)}
++                       {row.benchmarkSamples > 0
++                         ? ` (${row.benchmarkSamples} benchmark sample${row.benchmarkSamples === 1 ? "" : "s"})`
++                         : ""}
++                     </p>
++                     <p>
++                       <span className="font-medium text-[var(--rm-fg)]">Benchmark latency:</span>{" "}
++                       p50 {formatLatencyMs(row.latencyP50)} • p95 {formatLatencyMs(row.latencyP95)}
++                     </p>
++                   </div>
++
++                   {row.scoresByBucket ? (
++                     <p className="text-sm text-[var(--rm-secondary)]">
++                       <span className="font-medium text-[var(--rm-fg)]">By difficulty:</span> easy{" "}
++                       {formatScore(row.scoresByBucket.easy.score)} • medium{" "}
++                       {formatScore(row.scoresByBucket.medium.score)} • hard{" "}
++                       {formatScore(row.scoresByBucket.hard.score)}
++                     </p>
++                   ) : null}
++
++                   <p className="text-sm leading-6 text-[var(--rm-secondary)]">
++                     <span className="font-medium text-[var(--rm-fg)]">Routing impact:</span>{" "}
++                     {describeRoutingImpact(row.candidate)}
++                   </p>
++
++                   <div className="grid gap-3 md:grid-cols-2">
++                     <EndpointModeRunSnapshot
++                       title="Last full run"
++                       summary={fullSummary}
++                       endpointId={row.endpointId}
++                       judgeLabel={fullJudgeLabel}
++                     />
++                     <EndpointModeRunSnapshot
++                       title="Last quick run (12 hard)"
++                       summary={quickSummary}
++                       endpointId={row.endpointId}
++                       judgeLabel={quickJudgeLabel}
++                     />
++                   </div>
++
++                   {row.caseResults && row.caseResults.length > 0 ? (
++                     <details className="text-sm text-[var(--rm-secondary)]">
++                       <summary className="cursor-pointer font-medium text-[var(--rm-fg)]">
++                         Per-case benchmark results
++                       </summary>
++                       <div className="mt-3 space-y-2">
++                         {row.caseResults.map((caseResult) => {
++                           const compareResult = compareByCaseId.get(caseResult.caseId);
++                           return (
++                             <div
++                               key={caseResult.caseId}
++                               className="rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] bg-[var(--rm-surface)] p-3"
++                             >
++                               <p className="font-medium text-[var(--rm-fg)]">
++                                 {caseResult.caseId} • {formatScore(caseResult.score)} •{" "}
++                                 {caseResult.difficultyBucket} •{" "}
++                                 {formatLatencyMs(caseResult.latencyMs)}
++                               </p>
++                               <div className="mt-1 flex flex-wrap gap-2 text-xs">
++                                 {caseResult.gradingMethod ? (
++                                   <StatusPill tone="neutral">{caseResult.gradingMethod}</StatusPill>
++                                 ) : null}
++                                 {caseResult.judgeUnavailable ? (
++                                   <StatusPill tone="warning">judge unavailable</StatusPill>
++                                 ) : null}
++                                 {caseResult.parseSuccess === false ? (
++                                   <StatusPill tone="warning">parse failed</StatusPill>
++                                 ) : null}
++                                 {caseResult.cappedByValidator ? (
++                                   <StatusPill tone="warning">validator cap</StatusPill>
++                                 ) : null}
++                               </div>
++                               <p>{caseResult.rationale}</p>
++                               {compareResult ? (
++                                 <p className="mt-2 text-xs text-[var(--rm-secondary)]">
++                                   <span className="font-medium text-[var(--rm-fg)]">
++                                     Head-to-head ranking:
++                                   </span>{" "}
++                                   {compareResult.relativeRanking.join(" › ")}
++                                   {" — "}
++                                   {compareResult.rationale}
++                                 </p>
++                               ) : null}
++                             </div>
++                           );
++                         })}
++                       </div>
++                     </details>
++                   ) : null}
++                 </div>
++
++                 <div className="flex flex-col items-end gap-2">
++                   <div className="flex flex-wrap items-start justify-end gap-2">
++                     <StatusPill tone={row.sourceType === "remote" ? "accent" : "neutral"}>
++                       {row.sourceType}
++                     </StatusPill>
++                     <StatusPill tone="success">{formatScore(row.overallScore)}</StatusPill>
++                   </div>
++                   <button
++                     type="button"
++                     className={secondaryButtonClassName}
++                     disabled={running || clearingEndpointId === row.endpointId}
++                     onClick={() => void clearEndpointRoutingProfile(row.endpointId)}
++                   >
++                     {clearingEndpointId === row.endpointId
++                       ? "Clearing routing profile…"
++                       : "Clear routing profile"}
++                   </button>
++                 </div>
++               </div>
++             ))}
++           </div>
++         )}
++       </SectionCard>
++
++       <SectionCard
++         title="Run capability benchmark"
++         description="Grade configured endpoints against the routing capability suite. Scores above are written into each endpoint's observed profile for future routing."
++       >
++         {runtimeSummary ? (
++           <p className="mb-4 text-sm text-[var(--rm-secondary)]">
++             Runtime scope: {runtimeSummary.scopeId ?? "unknown"} • endpoints:{" "}
++             {runtimeSummary.endpointCount}
++             {runtimeSummary.runtimeStateRoot ? ` • state: ${runtimeSummary.runtimeStateRoot}` : ""}
++           </p>
++         ) : null}
++         {judgeSubjectOverlap ? (
++           <p className="mb-4 text-sm text-[var(--rm-warning-fg,orange)]">
++             Judge endpoint is also a benchmark subject. Expect slower grading and higher judge
++             failure risk — prefer a dedicated judge when available.
++           </p>
++         ) : null}
++         <div className="grid gap-4 md:grid-cols-3">
++           <FactCard
++             label="Suite"
++             value={suite.cases.filter((item) => item.benchmark_eligible).length}
++             detail={`${suite.suite_id} v${suite.suite_version}`}
++             emphasis
++           />
++           <FactCard
++             label="Run size"
++             value={eligibleCaseCount}
++             detail={
++               mode === "quick"
++                 ? "Hard subset: code, tools, and multi-step cases."
++                 : "Full eligible benchmark set."
++             }
++           />
++           <FactCard
++             label="Judge"
++             value={
++               candidates.find((candidate) => candidate.endpointId === judgeEndpointId)?.modelId ??
++               "not selected"
++             }
++             detail="Grading-only endpoint; scores stored deliverables after execution completes."
++           />
++         </div>
++
++         <div className="mt-4 grid gap-4 md:grid-cols-2">
++           <label className="space-y-2 text-sm text-[var(--rm-secondary)]">
++             <span>Benchmark mode</span>
++             <select
++               className={fieldClassName}
++               value={mode}
++               onChange={(event) => setMode(event.target.value === "full" ? "full" : "quick")}
++             >
++               <option value="quick">Quick (12 hard cases)</option>
++               <option value="full">Full (all eligible cases)</option>
++             </select>
++           </label>
++           <label className="space-y-2 text-sm text-[var(--rm-secondary)]">
++             <span>Judge endpoint (grading only)</span>
++             <select
++               className={fieldClassName}
++               value={judgeEndpointId}
++               onChange={(event) => {
++                 const nextJudgeEndpointId = event.target.value;
++                 setJudgeEndpointId(nextJudgeEndpointId);
++                 void updateBenchmarkPreferences({ judgeEndpointId: nextJudgeEndpointId }).catch(
++                   () => undefined,
++                 );
++               }}
++             >
++               {candidates.map((candidate) => (
++                 <option key={candidate.endpointId} value={candidate.endpointId}>
++                   {candidate.modelId} ({candidate.sourceType})
++                 </option>
++               ))}
++             </select>
++           </label>
++         </div>
++
++         <div className="mt-4 space-y-2">
++           <p className="text-sm font-medium text-[var(--rm-fg)]">Endpoints to grade</p>
++           <div className="space-y-2">
++             {candidates.map((candidate) => (
++               <label
++                 key={candidate.endpointId}
++                 className={`${mutedPanelClassName} flex cursor-pointer items-start gap-3 p-3`}
++               >
++                 <input
++                   type="checkbox"
++                   checked={selectedEndpointIds.includes(candidate.endpointId)}
++                   onChange={() => toggleEndpoint(candidate.endpointId)}
++                 />
++                 <span className="space-y-1">
++                   <span className="block font-medium text-[var(--rm-fg)]">{candidate.modelId}</span>
++                   <span className="block text-sm text-[var(--rm-secondary)]">
++                     {candidate.endpointId}
++                   </span>
++                 </span>
++               </label>
++             ))}
++           </div>
++         </div>
++
++         <div className="mt-6 border-t border-[var(--rm-border)] pt-4">
++           <button
++             type="button"
++             className={primaryButtonClassName}
++             disabled={running || !canRunBenchmark}
++             onClick={() => void runBenchmark()}
++           >
++             {running
++               ? "Running benchmark…"
++               : `Run ${mode} benchmark (${gradedEndpointCount} model${gradedEndpointCount === 1 ? "" : "s"}, ${eligibleCaseCount} cases)`}
++           </button>
++         </div>
++
++         {running ? (
++           <div className={`${mutedPanelClassName} mt-4 space-y-3 p-4`}>
++             <div className="flex flex-wrap items-center justify-between gap-2">
++               <p className="font-medium text-[var(--rm-fg)]">
++                 {progressDescription?.phaseLabel ?? "Benchmark in progress"}
++               </p>
++               <StatusPill tone={progressStalled ? "warning" : "accent"}>
++                 {progressStalled ? "No recent updates" : "Running"}
++               </StatusPill>
++             </div>
++             <div className="h-2 overflow-hidden rounded-full bg-[var(--rm-border)]">
++               <div
++                 className="h-full rounded-full bg-[var(--rm-accent)] transition-all duration-500"
++                 style={{ width: `${progressPercent}%` }}
++               />
++             </div>
++             <p className="text-sm text-[var(--rm-secondary)]">
++               {progress
++                 ? `${progress.completedSteps} / ${progress.totalSteps} steps (${progressPercent}%) • elapsed ${formatElapsed(nowMs - progress.startedAtMs)}`
++                 : "Starting benchmark run…"}
++             </p>
++             {progressDescription ? (
++               <p className="text-sm text-[var(--rm-fg)]">{progressDescription.detail}</p>
++             ) : null}
++             {progressStalled ? (
++               <p className="text-sm text-amber-700">
++                 No progress update in the last 90 seconds. The run may still be waiting on a slow
++                 model response.
++               </p>
++             ) : null}
++           </div>
++         ) : null}
++
++         {error ? <p className="mt-4 text-sm text-red-600">{error}</p> : null}
++       </SectionCard>
++
++       <SectionCard
++         title="Run history"
++         description="Completed benchmark runs stored on this runtime. Global clear removes artifacts and routing profile samples for every model."
++       >
++         {runHistory.length === 0 ? (
++           <EmptyState label="No completed benchmark runs yet." />
++         ) : (
++           <div className="space-y-3">
++             {runHistory.map((run) => (
++               <div key={run.runId} className={listRowClassName}>
++                 <div>
++                   <p className="font-medium text-[var(--rm-fg)]">{run.runId}</p>
++                   <p className="text-sm text-[var(--rm-secondary)]">
++                     {run.mode} • {run.caseCount} cases • {run.endpointIds.length} model
++                     {run.endpointIds.length === 1 ? "" : "s"}
++                   </p>
++                   <p className="text-sm text-[var(--rm-secondary)]">
++                     {new Date(run.completedAtMs).toLocaleString()} • {run.suiteId}
++                   </p>
++                 </div>
++                 <StatusPill tone={run.mode === "quick" ? "accent" : "neutral"}>
++                   {run.mode}
++                 </StatusPill>
++               </div>
++             ))}
++           </div>
++         )}
++
++         <div className="mt-6 border-t border-[var(--rm-border)] pt-4">
++           <button
++             type="button"
++             className={secondaryButtonClassName}
++             disabled={running || clearingAll}
++             onClick={() => void handleClearAllBenchmarkData()}
++           >
++             {clearingAll ? "Clearing all benchmark data…" : "Clear all benchmark data"}
++           </button>
++         </div>
++       </SectionCard>
++     </div>
++   );
++ }
++
+
+ ❯ app/lib/design-system.test.ts:810:40
+    808|     expect(rootSource).not.toContain("bg-white");
+    809|     expect(rootSource).not.toMatch(/rose-/);
+    810|     expect(controlBenchmarkSource).not.toContain("text-amber-700");
+       |                                        ^
+    811|     expect(controlBenchmarkSource).not.toContain("text-red-600");
+    812|     expect(workbenchRouteSource).not.toContain("border-red-500");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m5 failed[39m[22m[2m | [22m[1m[32m35 passed[39m[22m[90m (40)[39m
+[2m   Start at [22m 22:40:21
+[2m   Duration [22m 3.30s[2m (transform 894ms, setup 0ms, collect 1.46s, tests 157ms, environment 0ms, prepare 245ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\48-runtime-ui-design-system-apple-theme\role-model-router\apps\runtime-ui:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run app/lib/design-system.test.ts

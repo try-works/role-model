@@ -5,8 +5,8 @@ import {
   EmptyState,
   ErrorState,
   LoadingState,
-  SelectField,
   SectionCard,
+  SelectField,
   StatusPill,
 } from "../components/page-primitives";
 import {
@@ -693,8 +693,8 @@ export default function ProvidersRoute() {
                   </div>
                   <p className="mt-2">{selectedVariant.description}</p>
                   <p className="mt-2">
-                    Models.dev metadata enriches provider and model readback while the runtime
-                    keeps LiteLLM as the live connection path.
+                    Models.dev metadata enriches provider and model readback while the runtime keeps
+                    LiteLLM as the live connection path.
                   </p>
                   <div className="mt-3 grid gap-2 md:grid-cols-2">
                     <p>
@@ -839,7 +839,9 @@ export default function ProvidersRoute() {
                   {providerMaintenanceRows.map((row) => (
                     <div key={row.providerAccountId} className={`${mutedPanelClassName} p-4`}>
                       <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="font-semibold text-[var(--rm-fg)]">{row.providerAccountId}</h3>
+                        <h3 className="font-semibold text-[var(--rm-fg)]">
+                          {row.providerAccountId}
+                        </h3>
                         <StatusPill tone="neutral">{row.providerId}</StatusPill>
                         <StatusPill tone={row.lifecycleTone}>{row.lifecycleLabel}</StatusPill>
                         <StatusPill tone="neutral">{row.storageLabel}</StatusPill>
@@ -862,7 +864,9 @@ export default function ProvidersRoute() {
                           {row.baseUrlOverride ?? "Provider default"}
                         </p>
                         <p>
-                          <span className="font-semibold text-[var(--rm-fg)]">Lifecycle reason:</span>{" "}
+                          <span className="font-semibold text-[var(--rm-fg)]">
+                            Lifecycle reason:
+                          </span>{" "}
                           {row.reasonLabel}
                         </p>
                         <p>
@@ -878,7 +882,9 @@ export default function ProvidersRoute() {
                           {row.availableActionsLabel}
                         </p>
                         <p>
-                          <span className="font-semibold text-[var(--rm-fg)]">Active endpoints:</span>{" "}
+                          <span className="font-semibold text-[var(--rm-fg)]">
+                            Active endpoints:
+                          </span>{" "}
                           {row.activeEndpointCount}
                         </p>
                       </div>

@@ -194,7 +194,9 @@ export default function StudioRerankRoute() {
                   <div key={`${row.index}-${row.score}`} className={listRowClassName}>
                     <div className="space-y-2">
                       <div className="flex flex-wrap items-center gap-2">
-                        <p className="font-semibold text-[var(--rm-fg)]">Document {row.index + 1}</p>
+                        <p className="font-semibold text-[var(--rm-fg)]">
+                          Document {row.index + 1}
+                        </p>
                         <StatusPill tone="accent">{row.score.toFixed(4)}</StatusPill>
                       </div>
                       <p className="text-sm text-[var(--rm-secondary)]">{row.text}</p>

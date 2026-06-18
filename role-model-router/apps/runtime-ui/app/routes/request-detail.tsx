@@ -176,10 +176,7 @@ export default function RequestDetailRoute() {
     "baselineMaxEligibleCostUsd",
     "baseline_max_eligible_cost_usd",
   );
-  const routingCostSavingsUsd = pickCostNumber(
-    "routingCostSavingsUsd",
-    "routing_cost_savings_usd",
-  );
+  const routingCostSavingsUsd = pickCostNumber("routingCostSavingsUsd", "routing_cost_savings_usd");
   const cacheCostSavingsUsd = pickCostNumber("cacheCostSavingsUsd", "cache_cost_savings_usd");
   const totalAvoidedCostUsd = pickCostNumber("totalAvoidedCostUsd", "total_avoided_cost_usd");
   const costCalculationBasis = pickCostString("costCalculationBasis", "cost_calculation_basis");
@@ -422,7 +419,9 @@ export default function RequestDetailRoute() {
                 <dt className="text-xs uppercase tracking-[0.24em] text-[var(--rm-muted)]">
                   {label}
                 </dt>
-                <dd className="mt-1 font-semibold text-[var(--rm-fg)]">{renderMetricValue(value)}</dd>
+                <dd className="mt-1 font-semibold text-[var(--rm-fg)]">
+                  {renderMetricValue(value)}
+                </dd>
               </div>
             ))}
           </dl>
@@ -451,7 +450,9 @@ export default function RequestDetailRoute() {
                 <dt className="text-xs uppercase tracking-[0.24em] text-[var(--rm-muted)]">
                   {label}
                 </dt>
-                <dd className="mt-1 font-semibold text-[var(--rm-fg)]">{renderMetricValue(value)}</dd>
+                <dd className="mt-1 font-semibold text-[var(--rm-fg)]">
+                  {renderMetricValue(value)}
+                </dd>
               </div>
             ))}
           </dl>
@@ -493,7 +494,9 @@ export default function RequestDetailRoute() {
                 <dt className="text-xs uppercase tracking-[0.24em] text-[var(--rm-muted)]">
                   {label}
                 </dt>
-                <dd className="mt-1 font-semibold text-[var(--rm-fg)]">{renderMetricValue(value)}</dd>
+                <dd className="mt-1 font-semibold text-[var(--rm-fg)]">
+                  {renderMetricValue(value)}
+                </dd>
               </div>
             ))}
           </dl>

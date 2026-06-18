@@ -11,8 +11,8 @@ import { stringify } from "yaml";
 import type { EndpointRegistryResult } from "@role-model-router/endpoint-registry";
 import { createRuntimeObservationBundle } from "@role-model-router/runtime-observability";
 import {
-  persistRuntimeTelemetryFailure,
   persistRuntimeObservationBundle,
+  persistRuntimeTelemetryFailure,
   resolveSqliteMemoryLocation,
   upsertProviderAccount as upsertSqliteProviderAccount,
 } from "@role-model-router/sqlite-memory";
@@ -212,10 +212,7 @@ describe("runtime-host-bridge", () => {
         decision: {
           chosen_endpoint_id: "remote.fast",
           fallback_endpoint_ids: ["local.free"],
-          scored_candidates: [
-            { endpoint_id: "remote.fast" },
-            { endpoint_id: "local.free" },
-          ],
+          scored_candidates: [{ endpoint_id: "remote.fast" }, { endpoint_id: "local.free" }],
         },
         projected: {
           routeInput: {
@@ -5353,9 +5350,7 @@ describe("runtime-host-bridge", () => {
       ),
     ).toEqual(["local.llama.lfm"]);
     expect(
-      filter?.(mixedRegistry, "hybrid").endpoints.map(
-        (endpoint) => endpoint.identity.endpoint_id,
-      ),
+      filter?.(mixedRegistry, "hybrid").endpoints.map((endpoint) => endpoint.identity.endpoint_id),
     ).toEqual(["local.llama.lfm", "remote.moonshot.kimi"]);
     expect(
       filter?.(mixedRegistry, "decision_only").endpoints.map(
@@ -5375,7 +5370,9 @@ describe("runtime-host-bridge", () => {
     expect(source).toContain("get effectiveRegistry(): EndpointRegistryResult");
     expect(source).toContain("getEffectiveRoutableInventory(): RoutableInventory | null");
     expect(source).toContain("isControllerAssignmentAllowedByExecutionMode(");
-    expect(source).toContain("async readControllerAssignment(): Promise<BridgeControllerAssignment | null> {\n      return getCurrentControllerAssignment();\n    }");
+    expect(source).toContain(
+      "async readControllerAssignment(): Promise<BridgeControllerAssignment | null> {\n      return getCurrentControllerAssignment();\n    }",
+    );
     expect(source).toContain("const executionRegistry = getRouterEffectiveRegistry();");
     expect(source).toContain("const executionInventory = getRouterEffectiveRoutableInventory();");
     expect(source).not.toContain("mapChatCompletionsRequest(\n          currentRegistry,");
@@ -9466,9 +9463,7 @@ describe("runtime-host-bridge", () => {
     );
   });
 
-  test(
-    "streams canonical telemetry updates over SSE after new requests are persisted",
-    async () => {
+  test("streams canonical telemetry updates over SSE after new requests are persisted", async () => {
     expect(
       typeof (bridge as { createRuntimeBridgeBackend?: unknown }).createRuntimeBridgeBackend,
     ).toBe("function");
@@ -9580,9 +9575,7 @@ describe("runtime-host-bridge", () => {
       await delay(10);
       await server.close();
     }
-    },
-    15_000,
-  );
+  }, 15_000);
 
   test("executes chat-completions through a LiteLLM-derived moonshot-oauth endpoint with X-Msh headers", async () => {
     // This test exercises the PRODUCTION path where provider-presets.json is empty
@@ -10025,6 +10018,44 @@ describe("runtime-host-bridge", () => {
       unifiedRuntimeConfigPath:
         "C:\\Users\\tester\\AppData\\Local\\Role Model Runtime\\state\\runtime-config.yaml",
     });
+  });
+
+  test("prefers repoRoot frontend assets over packaged assets when repoRoot is explicit", () => {
+    const packageDir = path.join(repoRoot, "role-model-router", "dist", "release", "win32-x64");
+    const devStaticRoot = path.join(
+      repoRoot,
+      "role-model-router",
+      "apps",
+      "runtime-ui",
+      "build",
+      "client",
+    );
+    const result = (
+      bridge as {
+        resolveBridgeServerOptions: (value: {
+          host?: string;
+          port?: string;
+          repoRoot?: string;
+          runtimeStateRoot?: string;
+          scopeId?: string;
+          executablePath?: string;
+          localAppData?: string;
+        }) => {
+          host: string;
+          port: number;
+          repoRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+          staticRoot: string;
+        };
+      }
+    ).resolveBridgeServerOptions({
+      repoRoot,
+      executablePath: path.join(packageDir, "role-model-runtime.exe"),
+      localAppData: "C:\\Users\\tester\\AppData\\Local",
+    });
+
+    expect(result.staticRoot).toBe(devStaticRoot);
   });
 
   test("resolves packaged bridge server options from POSIX executable path defaults", () => {

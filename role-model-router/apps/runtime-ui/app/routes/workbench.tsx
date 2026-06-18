@@ -291,7 +291,10 @@ export default function WorkbenchRoute() {
                 <p className="mt-3 text-sm leading-6 text-[var(--rm-fg)]">
                   Requested mode: <span className="font-semibold">{routingModeLabel}</span>. Verify
                   the persisted routing receipt in{" "}
-                  <Link className="font-semibold text-[var(--rm-accent)]" to="/app/observe/requests">
+                  <Link
+                    className="font-semibold text-[var(--rm-accent)]"
+                    to="/app/observe/requests"
+                  >
                     Telemetry ledger
                   </Link>{" "}
                   after the request completes.

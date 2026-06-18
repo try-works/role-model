@@ -80,7 +80,9 @@ export function AppShell({ children }: { children: ReactNode }) {
           <header className={`${cardClassName} px-5 py-5`}>
             <div>
               <div>
-                <h2 className={`max-w-[16ch] text-balance text-[var(--rm-fg)] ${displayTitleClassName}`}>
+                <h2
+                  className={`max-w-[16ch] text-balance text-[var(--rm-fg)] ${displayTitleClassName}`}
+                >
                   {title}
                 </h2>
                 <p className={`mt-3 max-w-[60ch] ${bodyTextClassName} text-[var(--rm-secondary)]`}>

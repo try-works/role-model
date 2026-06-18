@@ -1282,13 +1282,11 @@ export interface BridgeTelemetryAnalyticsResponse {
   readonly breakdown: BridgeTelemetryAnalyticsDimension | null;
   readonly buckets: readonly BridgeTelemetryAnalyticsBucket[];
   readonly totals: Readonly<Record<string, number | null>>;
-  readonly ranking:
-    | {
-        readonly dimension: BridgeTelemetryAnalyticsDimension;
-        readonly metric: BridgeTelemetryAnalyticsMetric;
-        readonly rows: readonly BridgeTelemetryAnalyticsRankingRow[];
-      }
-    | null;
+  readonly ranking: {
+    readonly dimension: BridgeTelemetryAnalyticsDimension;
+    readonly metric: BridgeTelemetryAnalyticsMetric;
+    readonly rows: readonly BridgeTelemetryAnalyticsRankingRow[];
+  } | null;
   readonly labels: Partial<Record<BridgeTelemetryAnalyticsDimension, Record<string, string>>>;
 }
 
@@ -1382,7 +1380,9 @@ export function buildRuntimeTelemetrySnapshot(input: {
     )
     .filter((value): value is number => value !== null);
   const baselineMaxEligibleCostUsd =
-    eligibleEstimatedCosts.length > 0 ? Math.max(...eligibleEstimatedCosts) : selectedUncachedCostUsd;
+    eligibleEstimatedCosts.length > 0
+      ? Math.max(...eligibleEstimatedCosts)
+      : selectedUncachedCostUsd;
   const routingCostSavingsUsd =
     baselineMaxEligibleCostUsd !== null && selectedUncachedCostUsd !== null
       ? roundTelemetryUsd(Math.max(0, baselineMaxEligibleCostUsd - selectedUncachedCostUsd))
@@ -1774,9 +1774,7 @@ export interface RuntimeBridgeBackend {
   listTelemetryRequests(
     query?: BridgeTelemetryQuery,
   ): Promise<readonly BridgeTelemetryRequestRecord[]>;
-  queryTelemetryAnalytics(
-    body: Record<string, unknown>,
-  ): Promise<BridgeTelemetryAnalyticsResponse>;
+  queryTelemetryAnalytics(body: Record<string, unknown>): Promise<BridgeTelemetryAnalyticsResponse>;
   subscribeTelemetry(listener: (event: RuntimeTelemetryStreamEvent) => void): () => void;
   readRequestObservation(
     requestId: string,
@@ -6051,7 +6049,11 @@ function createRequestHandler(options: StartBridgeServerOptions) {
         return;
       }
       try {
-        writeJson(response, 200, await options.queryTelemetryAnalytics(await readJsonBody(request)));
+        writeJson(
+          response,
+          200,
+          await options.queryTelemetryAnalytics(await readJsonBody(request)),
+        );
       } catch (error) {
         writeJson(response, 400, {
           error: error instanceof Error ? error.message : "telemetry analytics query failed",
@@ -8715,25 +8717,15 @@ export async function createRuntimeBridgeBackend(
     "statusFamily",
     "requestOperation",
   ];
-  const readTelemetryAnalyticsMetric = (
-    value: string,
-  ): BridgeTelemetryAnalyticsMetric => {
-    if (
-      !SUPPORTED_TELEMETRY_ANALYTICS_METRICS.includes(
-        value as BridgeTelemetryAnalyticsMetric,
-      )
-    ) {
+  const readTelemetryAnalyticsMetric = (value: string): BridgeTelemetryAnalyticsMetric => {
+    if (!SUPPORTED_TELEMETRY_ANALYTICS_METRICS.includes(value as BridgeTelemetryAnalyticsMetric)) {
       throw new Error(`unsupported telemetry analytics metric: ${value}`);
     }
     return value as BridgeTelemetryAnalyticsMetric;
   };
-  const readTelemetryAnalyticsDimension = (
-    value: string,
-  ): BridgeTelemetryAnalyticsDimension => {
+  const readTelemetryAnalyticsDimension = (value: string): BridgeTelemetryAnalyticsDimension => {
     if (
-      !SUPPORTED_TELEMETRY_ANALYTICS_DIMENSIONS.includes(
-        value as BridgeTelemetryAnalyticsDimension,
-      )
+      !SUPPORTED_TELEMETRY_ANALYTICS_DIMENSIONS.includes(value as BridgeTelemetryAnalyticsDimension)
     ) {
       throw new Error(`unsupported telemetry analytics dimension: ${value}`);
     }
@@ -8891,9 +8883,7 @@ export async function createRuntimeBridgeBackend(
     ) {
       throw new Error("metrics must be a non-empty array of strings");
     }
-    const parsedMetrics = metrics.map((metric) =>
-      readTelemetryAnalyticsMetric(metric as string),
-    );
+    const parsedMetrics = metrics.map((metric) => readTelemetryAnalyticsMetric(metric as string));
     const breakdown =
       typeof body.breakdown === "string"
         ? readTelemetryAnalyticsDimension(body.breakdown)
@@ -8942,7 +8932,9 @@ export async function createRuntimeBridgeBackend(
     const endAtMs =
       typeof body.endAtMs === "number" && Number.isFinite(body.endAtMs) ? body.endAtMs : undefined;
     const windowMs =
-      typeof body.windowMs === "number" && Number.isFinite(body.windowMs) ? body.windowMs : undefined;
+      typeof body.windowMs === "number" && Number.isFinite(body.windowMs)
+        ? body.windowMs
+        : undefined;
     if (typeof body.startAtMs !== "undefined" && startAtMs === undefined) {
       throw new Error("startAtMs must be a finite number when provided");
     }
@@ -9121,7 +9113,10 @@ export async function createRuntimeBridgeBackend(
       if (filters.modelIds && !(record.modelId && filters.modelIds.includes(record.modelId))) {
         return false;
       }
-      if (filters.providerIds && !(record.providerId && filters.providerIds.includes(record.providerId))) {
+      if (
+        filters.providerIds &&
+        !(record.providerId && filters.providerIds.includes(record.providerId))
+      ) {
         return false;
       }
       if (
@@ -9138,10 +9133,7 @@ export async function createRuntimeBridgeBackend(
       }
       if (
         filters.providerAccountIds &&
-        !(
-          record.providerAccountId &&
-          filters.providerAccountIds.includes(record.providerAccountId)
-        )
+        !(record.providerAccountId && filters.providerAccountIds.includes(record.providerAccountId))
       ) {
         return false;
       }
@@ -9157,7 +9149,10 @@ export async function createRuntimeBridgeBackend(
       ) {
         return false;
       }
-      if (filters.routingModes && !(record.routingMode && filters.routingModes.includes(record.routingMode))) {
+      if (
+        filters.routingModes &&
+        !(record.routingMode && filters.routingModes.includes(record.routingMode))
+      ) {
         return false;
       }
       if (
@@ -9363,30 +9358,35 @@ export async function createRuntimeBridgeBackend(
       const totals = Object.fromEntries(
         query.metrics.map((metric) => [metric, computeTelemetryMetricValue(metric, bucketRecords)]),
       );
-      const series =
-        query.breakdown === null || query.breakdown === undefined
-          ? []
-          : [...new Set(
-              bucketRecords
-                .map((record) => getTelemetryDimensionValue(record, query.breakdown!))
-                .filter((value): value is string => Boolean(value)),
-            )]
-              .sort((left, right) => left.localeCompare(right))
-              .map((key) => {
-                const seriesRecords = bucketRecords.filter(
-                  (record) => getTelemetryDimensionValue(record, query.breakdown!) === key,
-                );
-                return {
-                  key,
-                  label: getTelemetryDimensionLabel(query.breakdown!, key),
-                  metrics: Object.fromEntries(
-                    query.metrics.map((metric) => [
-                      metric,
-                      computeTelemetryMetricValue(metric, seriesRecords),
-                    ]),
-                  ),
-                } satisfies BridgeTelemetryAnalyticsSeries;
-              });
+      const series = (() => {
+        const breakdownDimension = query.breakdown;
+        if (breakdownDimension === null || breakdownDimension === undefined) {
+          return [];
+        }
+        return [
+          ...new Set(
+            bucketRecords
+              .map((record) => getTelemetryDimensionValue(record, breakdownDimension))
+              .filter((value): value is string => Boolean(value)),
+          ),
+        ]
+          .sort((left, right) => left.localeCompare(right))
+          .map((key) => {
+            const seriesRecords = bucketRecords.filter(
+              (record) => getTelemetryDimensionValue(record, breakdownDimension) === key,
+            );
+            return {
+              key,
+              label: getTelemetryDimensionLabel(breakdownDimension, key),
+              metrics: Object.fromEntries(
+                query.metrics.map((metric) => [
+                  metric,
+                  computeTelemetryMetricValue(metric, seriesRecords),
+                ]),
+              ),
+            } satisfies BridgeTelemetryAnalyticsSeries;
+          });
+      })();
       buckets.push({
         startAtMs: bucketStartMs,
         endAtMs: bucketEndMs,
@@ -9409,46 +9409,49 @@ export async function createRuntimeBridgeBackend(
     );
     for (const dimension of labelDimensions) {
       labels[dimension] = Object.fromEntries(
-        [...new Set(
-          requestRecords
-            .map((record) => getTelemetryDimensionValue(record, dimension))
-            .filter((value): value is string => Boolean(value)),
-        )]
+        [
+          ...new Set(
+            requestRecords
+              .map((record) => getTelemetryDimensionValue(record, dimension))
+              .filter((value): value is string => Boolean(value)),
+          ),
+        ]
           .sort((left, right) => left.localeCompare(right))
           .map((key) => [key, getTelemetryDimensionLabel(dimension, key)]),
       );
     }
-    const ranking =
-      query.ranking === null || query.ranking === undefined
-        ? null
-        : (() => {
-            const grouped = new Map<string, BridgeTelemetryRequestRecord[]>();
-            for (const record of requestRecords) {
-              const key = getTelemetryDimensionValue(record, query.ranking.dimension);
-              if (!key) {
-                continue;
-              }
-              const existing = grouped.get(key) ?? [];
-              existing.push(record);
-              grouped.set(key, existing);
-            }
-            return {
-              dimension: query.ranking.dimension,
-              metric: query.ranking.metric,
-              rows: [...grouped.entries()]
-                .map(([key, groupedRecords]) => ({
-                  key,
-                  label: getTelemetryDimensionLabel(query.ranking!.dimension, key),
-                  value: computeTelemetryMetricValue(query.ranking!.metric, groupedRecords),
-                }))
-                .sort(
-                  (left, right) =>
-                    (right.value ?? Number.NEGATIVE_INFINITY) -
-                      (left.value ?? Number.NEGATIVE_INFINITY) || left.key.localeCompare(right.key),
-                )
-                .slice(0, query.ranking.limit ?? DEFAULT_TELEMETRY_LIMIT),
-            };
-          })();
+    const ranking = (() => {
+      const rankingQuery = query.ranking;
+      if (rankingQuery === null || rankingQuery === undefined) {
+        return null;
+      }
+      const grouped = new Map<string, BridgeTelemetryRequestRecord[]>();
+      for (const record of requestRecords) {
+        const key = getTelemetryDimensionValue(record, rankingQuery.dimension);
+        if (!key) {
+          continue;
+        }
+        const existing = grouped.get(key) ?? [];
+        existing.push(record);
+        grouped.set(key, existing);
+      }
+      return {
+        dimension: rankingQuery.dimension,
+        metric: rankingQuery.metric,
+        rows: [...grouped.entries()]
+          .map(([key, groupedRecords]) => ({
+            key,
+            label: getTelemetryDimensionLabel(rankingQuery.dimension, key),
+            value: computeTelemetryMetricValue(rankingQuery.metric, groupedRecords),
+          }))
+          .sort(
+            (left, right) =>
+              (right.value ?? Number.NEGATIVE_INFINITY) -
+                (left.value ?? Number.NEGATIVE_INFINITY) || left.key.localeCompare(right.key),
+          )
+          .slice(0, rankingQuery.limit ?? DEFAULT_TELEMETRY_LIMIT),
+      };
+    })();
     return {
       startAtMs,
       endAtMs,
@@ -9671,11 +9674,7 @@ export async function createRuntimeBridgeBackend(
     const effectiveRegistry = getRouterEffectiveRegistry();
     const effectiveInventory = getRouterEffectiveRoutableInventory();
     const aliasInventory = (currentUnifiedRuntimeConfig?.modelAliases ?? []).map((alias) => {
-      const resolution = resolveAliasAllowEndpoints(
-        alias,
-        effectiveInventory,
-        effectiveRegistry,
-      );
+      const resolution = resolveAliasAllowEndpoints(alias, effectiveInventory, effectiveRegistry);
       const endpointMeta = resolution.allowEndpoints.map((endpointId) => ({
         endpointId,
         ...getTelemetryEndpointMeta(endpointId),
@@ -13365,7 +13364,9 @@ export function resolveStandaloneStaticRoot(input: {
   readonly repoPath: typeof path;
   readonly repoRoot: string;
   readonly executablePath?: string;
+  readonly preferRepoRootBuild?: boolean;
 }): string {
+  const repoBuildRoot = input.repoPath.join(input.repoRoot, "build", "client");
   const devStaticRoot = input.repoPath.join(
     input.repoRoot,
     "role-model-router",
@@ -13375,12 +13376,16 @@ export function resolveStandaloneStaticRoot(input: {
     "client",
   );
   const candidates: string[] = [];
+  if (input.preferRepoRootBuild) {
+    candidates.push(repoBuildRoot, devStaticRoot);
+  }
   if (input.executablePath) {
     const executableDir = input.repoPath.dirname(input.repoPath.resolve(input.executablePath));
     candidates.push(input.repoPath.join(executableDir, "build", "client"));
   }
-  candidates.push(input.repoPath.join(input.repoRoot, "build", "client"));
-  candidates.push(devStaticRoot);
+  if (!input.preferRepoRootBuild) {
+    candidates.push(repoBuildRoot, devStaticRoot);
+  }
   for (const candidate of candidates) {
     if (existsSync(input.repoPath.join(candidate, "index.html"))) {
       return candidate;
@@ -13443,6 +13448,7 @@ export function resolveBridgeServerOptions(input: {
       repoPath,
       repoRoot,
       executablePath: input.executablePath,
+      preferRepoRootBuild: Boolean(input.repoRoot?.trim()),
     }),
     unifiedRuntimeConfigPath:
       input.unifiedRuntimeConfigPath?.trim() ||

@@ -54,6 +54,7 @@ export function Layout({ children }: { children: ReactNode }) {
         <meta name="color-scheme" content="light dark" />
         <meta name="theme-color" content="#f5f5f7" />
         <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
+        {/* biome-ignore lint/security/noDangerouslySetInnerHtml: Static bootstrap prevents a theme flash before React hydration. */}
         <script dangerouslySetInnerHTML={{ __html: themeBootstrapScript }} />
         <Meta />
         <Links />

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import { getSelectTypeaheadMatchIndex, type SelectOptionModel } from "./page-primitives";
+import { type SelectOptionModel, getSelectTypeaheadMatchIndex } from "./page-primitives";
 
 const providerOptions: SelectOptionModel[] = [
   { value: "302ai", label: "302.AI", disabled: false },

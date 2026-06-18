@@ -3,8 +3,7 @@
 :root {
   --rm-font-display: "SF Pro Display", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;
-  --rm-font-body: "SF Pro Text", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
-    sans-serif;
+  --rm-font-body: "SF Pro Text", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --rm-font-mono: "IBM Plex Mono", "JetBrains Mono", ui-monospace, monospace;
   --rm-radius-sm: 8px;
   --rm-radius-md: 11px;

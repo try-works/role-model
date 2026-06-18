@@ -47,7 +47,11 @@ function statusTone(status: string): "success" | "warning" | "neutral" {
 }
 
 function healthTone(healthStatus: string): "success" | "warning" | "neutral" {
-  return healthStatus === "healthy" ? "success" : healthStatus === "unknown" ? "neutral" : "warning";
+  return healthStatus === "healthy"
+    ? "success"
+    : healthStatus === "unknown"
+      ? "neutral"
+      : "warning";
 }
 
 function buildRuntimeConnectionRows(input: {
@@ -65,7 +69,9 @@ function buildRuntimeConnectionRows(input: {
   readinessLabel: string;
   readinessTone: "success" | "warning" | "neutral";
 }> {
-  const providersById = new Map(input.providerRows.map((provider) => [provider.providerId, provider]));
+  const providersById = new Map(
+    input.providerRows.map((provider) => [provider.providerId, provider]),
+  );
   const endpointProviderIds = new Set<string>();
   const endpointRows = input.endpointRows.map((endpoint) => {
     endpointProviderIds.add(endpoint.providerLabel);

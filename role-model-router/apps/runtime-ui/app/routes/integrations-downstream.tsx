@@ -98,7 +98,6 @@ export default function IntegrationsDownstreamRoute() {
           </div>
         </div>
       </SectionCard>
-
     </div>
   );
 }

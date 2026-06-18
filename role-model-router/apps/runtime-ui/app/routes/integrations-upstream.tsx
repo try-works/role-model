@@ -129,7 +129,6 @@ export default function IntegrationsUpstreamRoute() {
           )}
         </SectionCard>
       </div>
-
     </div>
   );
 }

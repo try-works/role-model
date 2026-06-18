@@ -109,7 +109,7 @@ function RoutingStrategyOptionCard({
   readonly value: RoutingStrategyChoice;
 }) {
   return (
-    <label className={getSelectablePanelClassName(checked)} onClick={() => onChange(value)}>
+    <label className={getSelectablePanelClassName(checked)}>
       <input
         checked={checked}
         className="sr-only"
@@ -200,13 +200,12 @@ export default function ControlRoutingStrategyRoute() {
 
   const loadState = useCallback(async () => {
     try {
-      const [nextConfigRecord, nextSnapshot, nextController, nextCandidates] =
-        await Promise.all([
-          fetchRuntimeConfig(),
-          fetchRuntimeSnapshot(),
-          fetchControllerAssignment(),
-          fetchRouterCandidates(),
-        ]);
+      const [nextConfigRecord, nextSnapshot, nextController, nextCandidates] = await Promise.all([
+        fetchRuntimeConfig(),
+        fetchRuntimeSnapshot(),
+        fetchControllerAssignment(),
+        fetchRouterCandidates(),
+      ]);
       setConfigRecord(nextConfigRecord);
       setSnapshot(nextSnapshot);
       setController(nextController);
@@ -465,9 +464,7 @@ export default function ControlRoutingStrategyRoute() {
         description="When Strategy C (difficulty) is active, per-endpoint quality scores from Models → Benchmark inform the recommended max difficulty ceiling."
       >
         {candidates.length === 0 ? (
-          <p className="text-sm text-[var(--rm-secondary)]">
-            No routing candidates are available.
-          </p>
+          <p className="text-sm text-[var(--rm-secondary)]">No routing candidates are available.</p>
         ) : (
           <div className="space-y-3">
             {candidates.map((candidate) => {

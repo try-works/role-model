@@ -1,12 +1,12 @@
-import { SelectField } from "./page-primitives";
 import {
   fieldClassName,
   primaryButtonClassName,
   secondaryButtonClassName,
   utilityLabelClassName,
 } from "../lib/design-system";
-import type { TelemetryTimeRangeValue } from "../lib/telemetry-route-models";
 import { telemetryTimeRangeOptions } from "../lib/telemetry-chart-config";
+import type { TelemetryTimeRangeValue } from "../lib/telemetry-route-models";
+import { SelectField } from "./page-primitives";
 
 export function TelemetryTimeRangeControl({
   value,

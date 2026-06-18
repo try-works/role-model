@@ -2,8 +2,8 @@ import { startTransition, useEffect, useState } from "react";
 
 import { cn } from "../lib/cn";
 import {
-  THEME_STORAGE_KEY,
   type RuntimeTheme,
+  THEME_STORAGE_KEY,
   normalizeStoredTheme,
   resolveInitialTheme,
   syncDocumentTheme,
@@ -35,10 +35,9 @@ export function ThemeToggle() {
   }
 
   return (
-    <div
+    <fieldset
       aria-label="Theme toggle"
       className="mx-auto flex w-full max-w-[272px] items-center gap-1 rounded-[var(--rm-radius-pill)] border border-[var(--rm-border)] bg-[var(--rm-surface)] p-1"
-      role="group"
     >
       {(["light", "dark"] as const).map((option) => (
         <button
@@ -55,6 +54,6 @@ export function ThemeToggle() {
           {option === "light" ? "Light" : "Dark"}
         </button>
       ))}
-    </div>
+    </fieldset>
   );
 }

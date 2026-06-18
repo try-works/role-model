@@ -1,13 +1,13 @@
 import {
   Children,
+  type ReactElement,
+  type ReactNode,
   isValidElement,
   useEffect,
   useId,
   useMemo,
   useRef,
   useState,
-  type ReactElement,
-  type ReactNode,
 } from "react";
 
 import { cn } from "../lib/cn";
@@ -83,9 +83,7 @@ export function FactCard({
       )}
     >
       <p className={eyebrowClassName}>{label}</p>
-      <p
-        className={`mt-3 break-words tabular-nums text-[var(--rm-fg)] ${valueClassName}`}
-      >
+      <p className={`mt-3 break-words tabular-nums text-[var(--rm-fg)] ${valueClassName}`}>
         {value}
       </p>
       {detail ? (
@@ -216,7 +214,9 @@ export function SelectField({
   const selectedOption = selectedIndex >= 0 ? options[selectedIndex] : null;
   const firstEnabledIndex = options.findIndex((option) => !option.disabled);
   const [open, setOpen] = useState(false);
-  const [activeIndex, setActiveIndex] = useState(selectedIndex >= 0 ? selectedIndex : firstEnabledIndex);
+  const [activeIndex, setActiveIndex] = useState(
+    selectedIndex >= 0 ? selectedIndex : firstEnabledIndex,
+  );
 
   useEffect(() => {
     setActiveIndex(selectedIndex >= 0 ? selectedIndex : firstEnabledIndex);
@@ -354,6 +354,7 @@ export function SelectField({
           className="absolute left-0 top-full z-50 mt-2 max-h-[320px] w-full overflow-y-auto rounded-[var(--rm-radius-panel)] border border-[var(--rm-border-strong)] bg-[var(--rm-surface)] p-1 shadow-[0_18px_48px_rgba(0,0,0,0.18)]"
           id={listboxId}
           role="listbox"
+          tabIndex={-1}
         >
           {options.map((option, index) => {
             const selected = option.value === value;

@@ -555,7 +555,13 @@ export default function ControlBenchmarkRoute() {
     if (judgeEndpointId && !runnableEndpointIds.has(judgeEndpointId)) {
       setJudgeEndpointId(resolveJudgeEndpointId(runnableCandidates));
     }
-  }, [candidates, judgeEndpointId, resolveJudgeEndpointId, runnableCandidates, runnableEndpointIds]);
+  }, [
+    candidates,
+    judgeEndpointId,
+    resolveJudgeEndpointId,
+    runnableCandidates,
+    runnableEndpointIds,
+  ]);
 
   const gradedEndpointCount = selectedEndpointIds.length;
 
@@ -988,7 +994,9 @@ export default function ControlBenchmarkRoute() {
                   onChange={() => toggleEndpoint(candidate.endpointId)}
                 />
                 <span className="space-y-1">
-                  <span className="block font-semibold text-[var(--rm-fg)]">{candidate.modelId}</span>
+                  <span className="block font-semibold text-[var(--rm-fg)]">
+                    {candidate.modelId}
+                  </span>
                   <span className="block text-sm text-[var(--rm-secondary)]">
                     {candidate.endpointId}
                   </span>

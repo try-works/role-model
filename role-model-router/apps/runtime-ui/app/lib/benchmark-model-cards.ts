@@ -31,7 +31,9 @@ export function describeHardBlend(candidate: {
   return `Hard routing blend: full ${hardBlend.full.toFixed(3)} + quick ${hardBlend.quick.toFixed(3)} → blended ${hardBlend.blended.toFixed(3)}.`;
 }
 
-export function isBenchmarkRunnableCandidate(candidate: Pick<RouterCandidate, "executionModeEligible">): boolean {
+export function isBenchmarkRunnableCandidate(
+  candidate: Pick<RouterCandidate, "executionModeEligible">,
+): boolean {
   return candidate.executionModeEligible !== false;
 }
 

@@ -741,19 +741,19 @@ export function summarizeTelemetryStats(
     {
       label: "Requests",
       value: String(summary.requestCount),
-      detail: `${summary.sourceBreakdown.local.requestCount} local / ${summary.sourceBreakdown.remote.requestCount} remote in the current telemetry window`,
+      detail: `${summary.sourceBreakdown.local.requestCount} local · ${summary.sourceBreakdown.remote.requestCount} remote`,
     },
     {
       label: "Failures",
       value: String(summary.failureCount),
-      detail: `${summary.successCount} successful requests recorded`,
+      detail: `${summary.successCount} successful requests`,
     },
     {
       label: "Latency",
       value: summary.averageLatencyMs !== null ? `${summary.averageLatencyMs} ms avg` : "n/a",
       detail:
         summary.p95LatencyMs !== null && summary.averageLatencyMs !== null
-          ? `${summary.p95LatencyMs} ms p95 / ${summary.averageLatencyMs} ms avg across structured telemetry`
+          ? `${summary.p95LatencyMs} ms p95 · ${summary.averageLatencyMs} ms avg`
           : summary.p95LatencyMs !== null
             ? `${summary.p95LatencyMs} ms p95 — average not available`
             : summary.averageLatencyMs !== null
@@ -763,7 +763,7 @@ export function summarizeTelemetryStats(
     {
       label: "Tokens",
       value: String(summary.totalTokens),
-      detail: `${summary.cachedRequestCount} cached request${summary.cachedRequestCount === 1 ? "" : "s"} and ${formatEffectiveCurrency(summary.totalEffectiveCostUsd)} cost recorded`,
+      detail: `${summary.cachedRequestCount} cached · ${formatEffectiveCurrency(summary.totalEffectiveCostUsd)}`,
     },
   ];
 }

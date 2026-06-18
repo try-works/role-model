@@ -547,13 +547,11 @@ export interface RuntimeTelemetryAnalyticsResponse {
   readonly breakdown: RuntimeTelemetryAnalyticsDimension | null;
   readonly buckets: readonly RuntimeTelemetryAnalyticsBucket[];
   readonly totals: Readonly<Record<string, number | null>>;
-  readonly ranking:
-    | {
-        readonly dimension: RuntimeTelemetryAnalyticsDimension;
-        readonly metric: RuntimeTelemetryAnalyticsMetric;
-        readonly rows: readonly RuntimeTelemetryAnalyticsRankingRow[];
-      }
-    | null;
+  readonly ranking: {
+    readonly dimension: RuntimeTelemetryAnalyticsDimension;
+    readonly metric: RuntimeTelemetryAnalyticsMetric;
+    readonly rows: readonly RuntimeTelemetryAnalyticsRankingRow[];
+  } | null;
   readonly labels: Partial<Record<RuntimeTelemetryAnalyticsDimension, Record<string, string>>>;
 }
 

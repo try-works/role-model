@@ -29,13 +29,11 @@ function buildBaseQuery(input: {
   readonly metrics: readonly RuntimeTelemetryAnalyticsMetric[];
   readonly breakdown?: RuntimeTelemetryAnalyticsDimension | null;
   readonly filters?: RuntimeTelemetryAnalyticsFilters;
-  readonly ranking?:
-    | {
-        readonly dimension: RuntimeTelemetryAnalyticsDimension;
-        readonly metric: RuntimeTelemetryAnalyticsMetric;
-        readonly limit?: number;
-      }
-    | null;
+  readonly ranking?: {
+    readonly dimension: RuntimeTelemetryAnalyticsDimension;
+    readonly metric: RuntimeTelemetryAnalyticsMetric;
+    readonly limit?: number;
+  } | null;
 }): RuntimeTelemetryAnalyticsQuery {
   const windowMs = getWindowMs(input.timeRange);
   return {
@@ -112,8 +110,10 @@ export function buildOverviewChartDefinitions(input: {
         timeRange: input.timeRange,
         metrics: ["averageLatencyMs", "p95LatencyMs"],
         breakdown:
-          input.breakdown === "sourceType" || input.breakdown === null || input.breakdown === undefined
-            ? input.breakdown ?? null
+          input.breakdown === "sourceType" ||
+          input.breakdown === null ||
+          input.breakdown === undefined
+            ? (input.breakdown ?? null)
             : null,
         filters,
       }),
@@ -129,8 +129,10 @@ export function buildOverviewChartDefinitions(input: {
         timeRange: input.timeRange,
         metrics: ["cacheHitTokens", "cacheHitTokenRate"],
         breakdown:
-          input.breakdown === "sourceType" || input.breakdown === null || input.breakdown === undefined
-            ? input.breakdown ?? null
+          input.breakdown === "sourceType" ||
+          input.breakdown === null ||
+          input.breakdown === undefined
+            ? (input.breakdown ?? null)
             : null,
         filters,
       }),

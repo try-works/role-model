@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 import {
+  Area,
+  AreaChart,
   Bar,
   BarChart,
   CartesianGrid,
@@ -11,19 +13,9 @@ import {
   Tooltip,
   XAxis,
   YAxis,
-  Area,
-  AreaChart,
 } from "recharts";
 
 import { cn } from "../lib/cn";
-import type {
-  TelemetryRankingChartModel,
-  TelemetryTimeSeriesChartModel,
-} from "../lib/telemetry-analytics";
-import {
-  buildTelemetryRankingChartModel,
-  buildTelemetryTimeSeriesChartModel,
-} from "../lib/telemetry-analytics";
 import {
   bodyTextClassName,
   chartAxisCategoryTickStyle,
@@ -35,8 +27,16 @@ import {
   sectionTitleClassName,
   utilityLabelClassName,
 } from "../lib/design-system";
-import type { TelemetryRouteChartDefinition } from "../lib/telemetry-route-models";
 import type { RuntimeTelemetryAnalyticsResponse } from "../lib/runtime-api";
+import type {
+  TelemetryRankingChartModel,
+  TelemetryTimeSeriesChartModel,
+} from "../lib/telemetry-analytics";
+import {
+  buildTelemetryRankingChartModel,
+  buildTelemetryTimeSeriesChartModel,
+} from "../lib/telemetry-analytics";
+import type { TelemetryRouteChartDefinition } from "../lib/telemetry-route-models";
 
 function ChartLegendContent(props: {
   readonly payload?: ReadonlyArray<{
@@ -273,7 +273,13 @@ export function TelemetryBarTimeSeriesChart({
           <Tooltip content={<ChartTooltipContent />} cursor={{ fill: "var(--rm-panel)" }} />
           <Legend content={<ChartLegendContent />} />
           {model.series.map((series) => (
-            <Bar key={series.key} dataKey={series.dataKey} fill={series.colorToken} name={series.label} radius={chartBarRadius} />
+            <Bar
+              key={series.key}
+              dataKey={series.dataKey}
+              fill={series.colorToken}
+              name={series.label}
+              radius={chartBarRadius}
+            />
           ))}
         </BarChart>
       </ResponsiveContainer>

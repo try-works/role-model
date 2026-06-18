@@ -306,7 +306,6 @@ describe("initializeSqliteMemory", () => {
         ],
       }),
     ]);
-
   });
 
   test("persists runtime-managed endpoint activations for dynamic registry materialization", async () => {
@@ -374,7 +373,6 @@ describe("initializeSqliteMemory", () => {
         region: "global",
       }),
     ]);
-
   });
 
   test("persists and reads the global controller assignment for the runtime control plane", async () => {
@@ -2090,7 +2088,9 @@ describe("initializeSqliteMemory", () => {
     });
 
     const database = new DatabaseSync(validation.databasePath);
-    const columns = database.prepare("PRAGMA table_info(runtime_telemetry_records)").all() as Array<{
+    const columns = database
+      .prepare("PRAGMA table_info(runtime_telemetry_records)")
+      .all() as Array<{
       name: string;
     }>;
     const persistedRow = database

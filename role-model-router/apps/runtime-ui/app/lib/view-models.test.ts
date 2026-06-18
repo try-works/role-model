@@ -1579,18 +1579,18 @@ describe("telemetry view models", () => {
       {
         label: "Requests",
         value: "3",
-        detail: "1 local / 2 remote in the current telemetry window",
+        detail: "1 local · 2 remote",
       },
-      { label: "Failures", value: "1", detail: "2 successful requests recorded" },
+      { label: "Failures", value: "1", detail: "2 successful requests" },
       {
         label: "Latency",
         value: "420 ms avg",
-        detail: "880 ms p95 / 420 ms avg across structured telemetry",
+        detail: "880 ms p95 · 420 ms avg",
       },
       {
         label: "Tokens",
         value: "126",
-        detail: "1 cached request and $0.0053 effective cost recorded",
+        detail: "1 cached · $0.0053 effective",
       },
     ]);
   });

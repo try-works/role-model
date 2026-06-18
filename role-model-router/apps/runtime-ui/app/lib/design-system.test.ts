@@ -201,9 +201,7 @@ const routesDir = path.dirname(fileURLToPath(new URL("../routes", import.meta.ur
 const routeSources = readdirSync(routesDir)
   .filter((name) => name.endsWith(".tsx"))
   .map((name) => readFileSync(path.join(routesDir, name), "utf8"));
-const componentSourcesDir = path.dirname(
-  fileURLToPath(new URL("../components", import.meta.url)),
-);
+const componentSourcesDir = path.dirname(fileURLToPath(new URL("../components", import.meta.url)));
 const productionUiSources = [
   ...readdirSync(routesDir)
     .filter((name) => name.endsWith(".tsx"))
@@ -586,11 +584,7 @@ describe("runtime design system", () => {
   });
 
   test("chart tokens used together resolve to distinct visual colors in each theme", () => {
-    const tokenUsageSeries = [
-      "--rm-chart-link-blue",
-      "--rm-chart-cyan",
-      "--rm-chart-tokens",
-    ];
+    const tokenUsageSeries = ["--rm-chart-link-blue", "--rm-chart-cyan", "--rm-chart-tokens"];
     const costSeries = ["--rm-chart-cost", "--rm-chart-link-blue", "--rm-chart-cyan"];
     const avoidedCostSeries = ["--rm-chart-violet", "--rm-chart-link-blue", "--rm-chart-cyan"];
     const cacheSeries = ["--rm-chart-cache-hit", "--rm-chart-cache-rate"];
@@ -831,14 +825,14 @@ describe("runtime design system", () => {
     expect(controlRoutingStrategySource).not.toContain("\r\n        )\r\n        <div");
   });
 
-test("routing strategy settings separate saved posture from draft edits and refresh derived state after save", () => {
-  expect(controlRoutingStrategySource).toContain("Saved routing settings");
-  expect(controlRoutingStrategySource).toContain("Draft selection");
-  expect(controlRoutingStrategySource).toContain("hasUnsavedChanges");
-  expect(controlRoutingStrategySource).toContain("onClick={() => onChange(value)}");
-  expect(controlRoutingStrategySource).toContain("await loadState();");
-  expect(controlRoutingStrategySource).not.toContain("void Promise.all([");
-});
+  test("routing strategy settings separate saved posture from draft edits and refresh derived state after save", () => {
+    expect(controlRoutingStrategySource).toContain("Saved routing settings");
+    expect(controlRoutingStrategySource).toContain("Draft selection");
+    expect(controlRoutingStrategySource).toContain("hasUnsavedChanges");
+    expect(controlRoutingStrategySource).toContain("onClick={() => onChange(value)}");
+    expect(controlRoutingStrategySource).toContain("await loadState();");
+    expect(controlRoutingStrategySource).not.toContain("void Promise.all([");
+  });
 
   test("meta-guidance panels stay removed from overview and observe routes", () => {
     expect(dashboardRouteSource).not.toContain("Reading order");
@@ -933,7 +927,7 @@ test("routing strategy settings separate saved posture from draft edits and refr
   test("shared panels and provider selectors are owned by Apple-theme primitives", () => {
     expect(designSystemSource).not.toContain("rounded-none");
     expect(designSystemSource).toContain("export const selectFieldClassName");
-    expect(designSystemSource).toContain("backgroundImage: \"var(--rm-select-chevron)\"");
+    expect(designSystemSource).toContain('backgroundImage: "var(--rm-select-chevron)"');
     expect(designSystemSource).toContain("rounded-[var(--rm-radius-panel)]");
     expect(pagePrimitivesSource).not.toContain("<select");
     expect(pagePrimitivesSource).toContain('role="listbox"');
@@ -1164,18 +1158,14 @@ test("routing strategy settings separate saved posture from draft edits and refr
   });
 
   test("shell headers do not render section eyebrow labels", () => {
-    expect(appShellSource).not.toContain("{route?.section ?? \"Overview\"}");
+    expect(appShellSource).not.toContain('{route?.section ?? "Overview"}');
     expect(appShellSource).not.toContain("uppercase tracking-[0.24em]");
     expect(designSystemDocSource).not.toContain("section eyebrow");
   });
 
   test("routes do not register refresh controls as shell header actions", () => {
-    for (const source of [
-      localLlamaSwapModelsSource,
-      localPeerModelsSource,
-      localPeersSource,
-    ]) {
-      const pageActionBlocks = [...source.matchAll(/usePageActions\(([\s\S]*?)\r?\n  \);/g)].map(
+    for (const source of [localLlamaSwapModelsSource, localPeerModelsSource, localPeersSource]) {
+      const pageActionBlocks = [...source.matchAll(/usePageActions\(([\s\S]*?)\r?\n {2}\);/g)].map(
         ([, block]) => block,
       );
       for (const block of pageActionBlocks) {
@@ -1196,7 +1186,9 @@ test("routing strategy settings separate saved posture from draft edits and refr
 
   test("production UI sources do not bypass Apple theme token primitives", () => {
     expect(
-      findSourceViolations(/\b(?:text|border|bg)-(?:red|amber|orange|yellow|blue|gray|slate|zinc)-\d+\b/),
+      findSourceViolations(
+        /\b(?:text|border|bg)-(?:red|amber|orange|yellow|blue|gray|slate|zinc)-\d+\b/,
+      ),
     ).toEqual([]);
     expect(findExactSourceViolations("text-white")).toEqual([]);
     expect(appCss).toContain("--rm-on-primary:");

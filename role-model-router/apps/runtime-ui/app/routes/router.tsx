@@ -11,8 +11,8 @@ import {
 } from "../components/page-primitives";
 import { secondaryButtonClassName } from "../lib/design-system";
 import {
-  type RouterSummary,
   type RouterCandidate,
+  type RouterSummary,
   type RuntimeConfigRecord,
   type RuntimeSnapshot,
   fetchRouterCandidates,
@@ -54,9 +54,7 @@ export default function RouterOverviewRoute() {
       configRecord?.config?.modelAliases ?? configRecord?.config?.model_aliases ?? [],
       snapshot?.endpoints ?? [],
     );
-    const runtimeAliasRowsById = new Map(
-      runtimeAliasRows.map((alias) => [alias.aliasId, alias]),
-    );
+    const runtimeAliasRowsById = new Map(runtimeAliasRows.map((alias) => [alias.aliasId, alias]));
     const summaryAliasRowsById = new Map(
       (summary?.aliasInventory ?? []).map((alias) => [alias.aliasId, alias]),
     );
@@ -220,9 +218,7 @@ export default function RouterOverviewRoute() {
               <tbody>
                 {candidates.map((candidate) => (
                   <tr key={candidate.endpointId} className="border-t border-[var(--rm-border)]">
-                    <td className="py-3 font-semibold text-[var(--rm-fg)]">
-                      {candidate.modelId}
-                    </td>
+                    <td className="py-3 font-semibold text-[var(--rm-fg)]">{candidate.modelId}</td>
                     <td className="max-w-[32rem] break-all py-3 text-[var(--rm-secondary)]">
                       {candidate.endpointId}
                     </td>
@@ -245,7 +241,9 @@ export default function RouterOverviewRoute() {
                         {candidate.controllerEligible ? (
                           <StatusPill tone="accent">controller</StatusPill>
                         ) : null}
-                        {candidate.preferred ? <StatusPill tone="accent">preferred</StatusPill> : null}
+                        {candidate.preferred ? (
+                          <StatusPill tone="accent">preferred</StatusPill>
+                        ) : null}
                         {candidate.ignored ? <StatusPill tone="neutral">ignored</StatusPill> : null}
                         {candidate.executionModeEligible === false ? (
                           <StatusPill tone="neutral">excluded by mode</StatusPill>

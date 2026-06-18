@@ -1,11 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 
-import {
-  EmptyState,
-  ErrorState,
-  SectionCard,
-} from "../components/page-primitives";
+import { EmptyState, ErrorState, SectionCard } from "../components/page-primitives";
 import { TelemetryAnalyticsChartCard } from "../components/telemetry-charts";
 import {
   TelemetrySelectField,
@@ -13,11 +9,6 @@ import {
   TelemetryTimeRangeControl,
 } from "../components/telemetry-controls";
 import { listRowClassName, secondaryButtonClassName } from "../lib/design-system";
-import {
-  telemetryBreakdownOptions,
-  telemetryMetricOptions,
-  telemetryTimeRangeOptions,
-} from "../lib/telemetry-chart-config";
 import type {
   RuntimeTelemetryAnalyticsDimension,
   RuntimeTelemetryAnalyticsFilters,
@@ -30,7 +21,15 @@ import {
   fetchTelemetryRequests,
   subscribeTelemetryStream,
 } from "../lib/runtime-api";
-import type { TelemetryRouteChartDefinition, TelemetryTimeRangeValue } from "../lib/telemetry-route-models";
+import {
+  telemetryBreakdownOptions,
+  telemetryMetricOptions,
+  telemetryTimeRangeOptions,
+} from "../lib/telemetry-chart-config";
+import type {
+  TelemetryRouteChartDefinition,
+  TelemetryTimeRangeValue,
+} from "../lib/telemetry-route-models";
 import { buildObserveRequestsChartDefinitions } from "../lib/telemetry-route-models";
 import { buildTelemetryRequestRows } from "../lib/view-models";
 
@@ -84,7 +83,10 @@ function matchesRequestFilters(
   if (filters.modelIds && !(request.modelId && filters.modelIds.includes(request.modelId))) {
     return false;
   }
-  if (filters.providerIds && !(request.providerId && filters.providerIds.includes(request.providerId))) {
+  if (
+    filters.providerIds &&
+    !(request.providerId && filters.providerIds.includes(request.providerId))
+  ) {
     return false;
   }
   if (filters.statusFamilies) {
@@ -126,19 +128,18 @@ export default function RequestsRoute() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  const filters = useMemo(
-    () =>
-      ({
-        ...(sourceFilter === "all" ? {} : { sourceTypes: [sourceFilter] }),
-        ...(statusFamily === "all" ? {} : { statusFamilies: [statusFamily] }),
-        ...(normalizeOptionalId(endpointId) ? { endpointIds: [normalizeOptionalId(endpointId)!] } : {}),
-        ...(normalizeOptionalId(modelId) ? { modelIds: [normalizeOptionalId(modelId)!] } : {}),
-        ...(normalizeOptionalId(providerId)
-          ? { providerIds: [normalizeOptionalId(providerId)!] }
-          : {}),
-      }) satisfies RuntimeTelemetryAnalyticsFilters,
-    [endpointId, modelId, providerId, sourceFilter, statusFamily],
-  );
+  const filters = useMemo(() => {
+    const normalizedEndpointId = normalizeOptionalId(endpointId);
+    const normalizedModelId = normalizeOptionalId(modelId);
+    const normalizedProviderId = normalizeOptionalId(providerId);
+    return {
+      ...(sourceFilter === "all" ? {} : { sourceTypes: [sourceFilter] }),
+      ...(statusFamily === "all" ? {} : { statusFamilies: [statusFamily] }),
+      ...(normalizedEndpointId ? { endpointIds: [normalizedEndpointId] } : {}),
+      ...(normalizedModelId ? { modelIds: [normalizedModelId] } : {}),
+      ...(normalizedProviderId ? { providerIds: [normalizedProviderId] } : {}),
+    } satisfies RuntimeTelemetryAnalyticsFilters;
+  }, [endpointId, modelId, providerId, sourceFilter, statusFamily]);
 
   const breakdown = breakdownValue === "" ? null : breakdownValue;
 
@@ -146,8 +147,7 @@ export default function RequestsRoute() {
     let disposed = false;
 
     const load = async (background = false) => {
-      const hasExisting = charts.length > 0 || requests.length > 0;
-      if (!background && !hasExisting) {
+      if (!background) {
         setLoading(true);
       } else {
         setRefreshing(true);
@@ -223,7 +223,9 @@ export default function RequestsRoute() {
           <div className="grid gap-4 xl:grid-cols-4">
             <TelemetrySelectField
               label="Breakdown"
-              onChange={(value) => setBreakdownValue(value as "" | RuntimeTelemetryAnalyticsDimension)}
+              onChange={(value) =>
+                setBreakdownValue(value as "" | RuntimeTelemetryAnalyticsDimension)
+              }
               options={requestBreakdownOptions}
               value={breakdownValue}
             />

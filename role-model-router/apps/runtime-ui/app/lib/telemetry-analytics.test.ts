@@ -135,9 +135,7 @@ describe("telemetry analytics view models", () => {
         ],
       }),
     );
-    expect(new Set(model.series.map((series) => series.colorToken)).size).toBe(
-      model.series.length,
-    );
+    expect(new Set(model.series.map((series) => series.colorToken)).size).toBe(model.series.length);
   });
 
   test("assigns distinct colors to each visible metric series in the same chart", () => {
@@ -169,7 +167,7 @@ describe("telemetry analytics view models", () => {
     };
 
     const model = buildTelemetryTimeSeriesChartModel(response, {
-        title: "Effective Cost Over Time",
+      title: "Effective Cost Over Time",
       metrics: ["routingCostSavingsUsd", "cacheCostSavingsUsd", "totalAvoidedCostUsd"],
     });
 
@@ -178,9 +176,7 @@ describe("telemetry analytics view models", () => {
       "cacheCostSavingsUsd",
       "totalAvoidedCostUsd",
     ]);
-    expect(new Set(model.series.map((series) => series.colorToken)).size).toBe(
-      model.series.length,
-    );
+    expect(new Set(model.series.map((series) => series.colorToken)).size).toBe(model.series.length);
   });
 
   test("collapses long breakdowns into top series plus Other using backend labels", () => {

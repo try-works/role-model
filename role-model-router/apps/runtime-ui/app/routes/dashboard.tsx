@@ -8,14 +8,13 @@ import {
   SectionCard,
   StatusPill,
 } from "../components/page-primitives";
+import { TelemetryAnalyticsChartCard } from "../components/telemetry-charts";
+import { TelemetrySelectField, TelemetryTimeRangeControl } from "../components/telemetry-controls";
 import {
-  TelemetryAnalyticsChartCard,
-} from "../components/telemetry-charts";
-import {
-  TelemetrySelectField,
-  TelemetryTimeRangeControl,
-} from "../components/telemetry-controls";
-import { listRowClassName, mutedPanelClassName, secondaryButtonClassName } from "../lib/design-system";
+  listRowClassName,
+  mutedPanelClassName,
+  secondaryButtonClassName,
+} from "../lib/design-system";
 import type {
   RuntimeSnapshot,
   RuntimeTelemetryAnalyticsDimension,
@@ -28,17 +27,14 @@ import {
   fetchTelemetryRequests,
   subscribeTelemetryStream,
 } from "../lib/runtime-api";
+import { usePageActions } from "../lib/shell-header-context";
+import { telemetryTimeRangeOptions } from "../lib/telemetry-chart-config";
 import {
   type TelemetryRouteChartDefinition,
   type TelemetryTimeRangeValue,
   buildOverviewChartDefinitions,
 } from "../lib/telemetry-route-models";
-import { telemetryTimeRangeOptions } from "../lib/telemetry-chart-config";
-import {
-  buildDashboardLatestRequestRows,
-  buildEndpointCatalogRows,
-} from "../lib/view-models";
-import { usePageActions } from "../lib/shell-header-context";
+import { buildDashboardLatestRequestRows, buildEndpointCatalogRows } from "../lib/view-models";
 
 const overviewBreakdownOptions: Array<{
   label: string;
@@ -71,15 +67,14 @@ export default function DashboardRoute() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  const sourceTypes = sourceFilter === "all" ? [] : ([sourceFilter] as const);
+  const sourceTypes = useMemo(() => (sourceFilter === "all" ? [] : [sourceFilter]), [sourceFilter]);
   const breakdown = breakdownValue === "" ? null : breakdownValue;
 
   useEffect(() => {
     let disposed = false;
 
     const load = async (background = false) => {
-      const hasExisting = snapshot !== null || charts.length > 0 || requests.length > 0;
-      if (!background && !hasExisting) {
+      if (!background) {
         setLoading(true);
       } else {
         setRefreshing(true);
@@ -134,7 +129,7 @@ export default function DashboardRoute() {
       disposed = true;
       unsubscribe();
     };
-  }, [breakdown, sourceFilter, timeRange]);
+  }, [breakdown, sourceTypes, timeRange]);
 
   const endpointRows = useMemo(
     () =>
@@ -251,7 +246,9 @@ export default function DashboardRoute() {
                     key={request.requestId}
                     className={`${mutedPanelClassName} flex flex-col gap-2 p-3 text-sm`}
                   >
-                    <span className="font-semibold text-[var(--rm-fg)]">{request.primaryLabel}</span>
+                    <span className="font-semibold text-[var(--rm-fg)]">
+                      {request.primaryLabel}
+                    </span>
                     {request.secondaryLabel ? (
                       <span className="text-[var(--rm-secondary)]">{request.secondaryLabel}</span>
                     ) : null}

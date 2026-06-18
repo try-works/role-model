@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 
 import { ErrorState, SectionCard } from "../components/page-primitives";
@@ -8,14 +8,17 @@ import {
   TelemetryTextField,
   TelemetryTimeRangeControl,
 } from "../components/telemetry-controls";
+import { secondaryButtonClassName } from "../lib/design-system";
 import type {
   RuntimeTelemetryAnalyticsDimension,
   RuntimeTelemetryAnalyticsFilters,
   RuntimeTelemetryAnalyticsResponse,
 } from "../lib/runtime-api";
 import { fetchTelemetryAnalytics, subscribeTelemetryStream } from "../lib/runtime-api";
-import { secondaryButtonClassName } from "../lib/design-system";
-import type { TelemetryRouteChartDefinition, TelemetryTimeRangeValue } from "../lib/telemetry-route-models";
+import type {
+  TelemetryRouteChartDefinition,
+  TelemetryTimeRangeValue,
+} from "../lib/telemetry-route-models";
 import { buildObserveRoutingChartDefinitions } from "../lib/telemetry-route-models";
 
 const routingBreakdownOptions = [
@@ -45,14 +48,17 @@ export default function ObserveRoutingRoute() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  const filters: RuntimeTelemetryAnalyticsFilters = {
-    ...(sourceFilter === "all" ? {} : { sourceTypes: [sourceFilter] }),
-    ...(difficulty === "all" ? {} : { difficultyBuckets: [difficulty] }),
-    ...(requestedRoleId.trim().length > 0 ? { requestedRoleIds: [requestedRoleId.trim()] } : {}),
-    ...(selectedStrategy.trim().length > 0
-      ? { selectedStrategies: [selectedStrategy.trim()] }
-      : {}),
-  };
+  const filters: RuntimeTelemetryAnalyticsFilters = useMemo(
+    () => ({
+      ...(sourceFilter === "all" ? {} : { sourceTypes: [sourceFilter] }),
+      ...(difficulty === "all" ? {} : { difficultyBuckets: [difficulty] }),
+      ...(requestedRoleId.trim().length > 0 ? { requestedRoleIds: [requestedRoleId.trim()] } : {}),
+      ...(selectedStrategy.trim().length > 0
+        ? { selectedStrategies: [selectedStrategy.trim()] }
+        : {}),
+    }),
+    [difficulty, requestedRoleId, selectedStrategy, sourceFilter],
+  );
 
   const breakdown = breakdownValue === "" ? null : breakdownValue;
 
@@ -60,8 +66,7 @@ export default function ObserveRoutingRoute() {
     let disposed = false;
 
     const load = async (background = false) => {
-      const hasExisting = charts.length > 0;
-      if (!background && !hasExisting) {
+      if (!background) {
         setLoading(true);
       } else {
         setRefreshing(true);
@@ -88,9 +93,7 @@ export default function ObserveRoutingRoute() {
         setError(null);
       } catch (value) {
         if (!disposed) {
-          setError(
-            value instanceof Error ? value.message : "Could not load routing analytics.",
-          );
+          setError(value instanceof Error ? value.message : "Could not load routing analytics.");
         }
       } finally {
         if (!disposed) {
@@ -109,7 +112,7 @@ export default function ObserveRoutingRoute() {
       disposed = true;
       unsubscribe();
     };
-  }, [breakdown, difficulty, requestedRoleId, selectedStrategy, sourceFilter, timeRange]);
+  }, [breakdown, filters, timeRange]);
 
   if (error) {
     return <ErrorState label={error} />;
@@ -126,7 +129,9 @@ export default function ObserveRoutingRoute() {
           <div className="grid gap-4 xl:grid-cols-4">
             <TelemetrySelectField
               label="Breakdown"
-              onChange={(value) => setBreakdownValue(value as "" | RuntimeTelemetryAnalyticsDimension)}
+              onChange={(value) =>
+                setBreakdownValue(value as "" | RuntimeTelemetryAnalyticsDimension)
+              }
               options={routingBreakdownOptions}
               value={breakdownValue}
             />

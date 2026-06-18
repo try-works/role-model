@@ -52,7 +52,9 @@ export function evaluateBenchmarkTargetEligibility(
     allowed: ineligibleEndpointIds.length === 0,
     warnings:
       ineligibleEndpointIds.length > 0
-        ? [`${EXECUTION_MODE_INELIGIBLE_ENDPOINT_WARNING_PREFIX}: ${ineligibleEndpointIds.join(", ")}`]
+        ? [
+            `${EXECUTION_MODE_INELIGIBLE_ENDPOINT_WARNING_PREFIX}: ${ineligibleEndpointIds.join(", ")}`,
+          ]
         : [],
     ineligibleEndpointIds,
   };
