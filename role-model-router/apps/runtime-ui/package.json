@@ -5,10 +5,11 @@
   "scripts": {
     "build": "react-router build && tsc --noEmit",
     "dev": "react-router dev",
-    "test": "vitest run app/lib/runtime-api.test.ts app/lib/view-models.test.ts app/lib/device-authorization.test.ts app/lib/theme.test.ts app/lib/design-system.test.ts app/lib/provider-account-state.test.ts app/lib/router-candidate-labels.test.ts app/lib/benchmark-latency.test.ts app/lib/benchmark-model-cards.test.ts"
+    "test": "vitest run app/lib/runtime-api.test.ts app/lib/view-models.test.ts app/lib/device-authorization.test.ts app/lib/design-system.test.ts app/lib/provider-account-state.test.ts app/lib/router-candidate-labels.test.ts app/lib/benchmark-latency.test.ts app/lib/benchmark-model-cards.test.ts app/lib/telemetry-analytics.test.ts app/lib/telemetry-route-models.test.ts app/components/telemetry-charts.test.tsx app/components/page-primitives.test.tsx"
   },
   "dependencies": {
     "@react-router/node": "^7.14.2",
+    "recharts": "^2.15.4",
     "lucide-react": "^0.511.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",

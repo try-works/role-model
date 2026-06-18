@@ -69,7 +69,7 @@ export function LlamaSwapSetupModal({
 
         <div className="mt-6 space-y-6 text-sm leading-6 text-[var(--rm-secondary)]">
           <section>
-            <h3 className="text-base font-medium text-[var(--rm-fg)]">What llama-swap does</h3>
+            <h3 className="text-base font-semibold text-[var(--rm-fg)]">What llama-swap does</h3>
             <p className="mt-2">
               role-model runs the llama-swap process, swaps one GGUF model at a time on your GPU,
               and exposes it through the same local routing surface as peer-backed models.
@@ -79,7 +79,7 @@ export function LlamaSwapSetupModal({
           </section>
 
           <section>
-            <h3 className="text-base font-medium text-[var(--rm-fg)]">Setup steps</h3>
+            <h3 className="text-base font-semibold text-[var(--rm-fg)]">Setup steps</h3>
             <ol className="mt-2 list-decimal space-y-2 pl-5">
               <li>
                 Place a GGUF weights file on disk (for example under your user models folder).
@@ -99,7 +99,7 @@ export function LlamaSwapSetupModal({
 
           <section>
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <h3 className="text-base font-medium text-[var(--rm-fg)]">YAML scaffold</h3>
+              <h3 className="text-base font-semibold text-[var(--rm-fg)]">YAML scaffold</h3>
               <button
                 className={secondaryButtonClassName}
                 type="button"
@@ -115,7 +115,9 @@ export function LlamaSwapSetupModal({
 
           <section>
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <h3 className="text-base font-medium text-[var(--rm-fg)]">JSON llamaSwap snippet</h3>
+              <h3 className="text-base font-semibold text-[var(--rm-fg)]">
+                JSON llamaSwap snippet
+              </h3>
               <button
                 className={secondaryButtonClassName}
                 type="button"
@@ -131,11 +133,11 @@ export function LlamaSwapSetupModal({
 
           <section className="rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] bg-[var(--rm-panel)] p-4">
             <p>
-              <span className="font-medium text-[var(--rm-fg)]">Live status:</span>{" "}
+              <span className="font-semibold text-[var(--rm-fg)]">Live status:</span>{" "}
               {status.operational ? "operational" : status.variant.replaceAll("_", " ")}
             </p>
             <p className="mt-2">
-              <span className="font-medium text-[var(--rm-fg)]">Execution mode:</span>{" "}
+              <span className="font-semibold text-[var(--rm-fg)]">Execution mode:</span>{" "}
               {status.executionMode ?? "pending"}
             </p>
             <p className="mt-2 break-all font-mono text-xs text-[var(--rm-muted)]">

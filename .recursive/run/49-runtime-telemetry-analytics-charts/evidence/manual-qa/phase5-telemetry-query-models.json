@@ -1,0 +1,212 @@
+{
+  "startAtMs": 1781613903532,
+  "endAtMs": 1781700303532,
+  "granularity": "hour",
+  "metrics": [
+    "requestCount",
+    "totalEffectiveCostUsd",
+    "cachedRequestCount"
+  ],
+  "breakdown": "selectedModelId",
+  "buckets": [
+    {
+      "startAtMs": 1781613903532,
+      "endAtMs": 1781617503532,
+      "totals": {
+        "requestCount": 0
+      },
+      "series": []
+    },
+    {
+      "startAtMs": 1781617503532,
+      "endAtMs": 1781621103532,
+      "totals": {
+        "requestCount": 0
+      },
+      "series": []
+    },
+    {
+      "startAtMs": 1781621103532,
+      "endAtMs": 1781624703532,
+      "totals": {
+        "requestCount": 0
+      },
+      "series": []
+    },
+    {
+      "startAtMs": 1781624703532,
+      "endAtMs": 1781628303532,
+      "totals": {
+        "requestCount": 0
+      },
+      "series": []
+    },
+    {
+      "startAtMs": 1781628303532,
+      "endAtMs": 1781631903532,
+      "totals": {
+        "requestCount": 0
+      },
+      "series": []
+    },
+    {
+      "startAtMs": 1781631903532,
+      "endAtMs": 1781635503532,
+      "totals": {
+        "requestCount": 0
+      },
+      "series": []
+    },
+    {
+      "startAtMs": 1781635503532,
+      "endAtMs": 1781639103532,
+      "totals": {
+        "requestCount": 0
+      },
+      "series": []
+    },
+    {
+      "startAtMs": 1781639103532,
+      "endAtMs": 1781642703532,
+      "totals": {
+        "requestCount": 0
+      },
+      "series": []
+    },
+    {
+      "startAtMs": 1781642703532,
+      "endAtMs": 1781646303532,
+      "totals": {
+        "requestCount": 0
+      },
+      "series": []
+    },
+    {
+      "startAtMs": 1781646303532,
+      "endAtMs": 1781649903532,
+      "totals": {
+        "requestCount": 0
+      },
+      "series": []
+    },
+    {
+      "startAtMs": 1781649903532,
+      "endAtMs": 1781653503532,
+      "totals": {
+        "requestCount": 0
+      },
+      "series": []
+    },
+    {
+      "startAtMs": 1781653503532,
+      "endAtMs": 1781657103532,
+      "totals": {
+        "requestCount": 0
+      },
+      "series": []
+    },
+    {
+      "startAtMs": 1781657103532,
+      "endAtMs": 1781660703532,
+      "totals": {
+        "requestCount": 0
+      },
+      "series": []
+    },
+    {
+      "startAtMs": 1781660703532,
+      "endAtMs": 1781664303532,
+      "totals": {
+        "requestCount": 0
+      },
+      "series": []
+    },
+    {
+      "startAtMs": 1781664303532,
+      "endAtMs": 1781667903532,
+      "totals": {
+        "requestCount": 0
+      },
+      "series": []
+    },
+    {
+      "startAtMs": 1781667903532,
+      "endAtMs": 1781671503532,
+      "totals": {
+        "requestCount": 0
+      },
+      "series": []
+    },
+    {
+      "startAtMs": 1781671503532,
+      "endAtMs": 1781675103532,
+      "totals": {
+        "requestCount": 0
+      },
+      "series": []
+    },
+    {
+      "startAtMs": 1781675103532,
+      "endAtMs": 1781678703532,
+      "totals": {
+        "requestCount": 0
+      },
+      "series": []
+    },
+    {
+      "startAtMs": 1781678703532,
+      "endAtMs": 1781682303532,
+      "totals": {
+        "requestCount": 0
+      },
+      "series": []
+    },
+    {
+      "startAtMs": 1781682303532,
+      "endAtMs": 1781685903532,
+      "totals": {
+        "requestCount": 0
+      },
+      "series": []
+    },
+    {
+      "startAtMs": 1781685903532,
+      "endAtMs": 1781689503532,
+      "totals": {
+        "requestCount": 0
+      },
+      "series": []
+    },
+    {
+      "startAtMs": 1781689503532,
+      "endAtMs": 1781693103532,
+      "totals": {
+        "requestCount": 0
+      },
+      "series": []
+    },
+    {
+      "startAtMs": 1781693103532,
+      "endAtMs": 1781696703532,
+      "totals": {
+        "requestCount": 2
+      },
+      "series": []
+    },
+    {
+      "startAtMs": 1781696703532,
+      "endAtMs": 1781700303532,
+      "totals": {
+        "requestCount": 4
+      },
+      "series": []
+    }
+  ],
+  "totals": {
+    "requestCount": 6
+  },
+  "ranking": null,
+  "labels": {
+    "selectedModelId": {}
+  }
+}

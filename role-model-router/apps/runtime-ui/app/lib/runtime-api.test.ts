@@ -21,6 +21,7 @@ import {
   fetchRouterSummary,
   fetchRuntimeConfig,
   fetchRuntimeSnapshot,
+  fetchTelemetryAnalytics,
   fetchTelemetryDashboard,
   fetchTelemetryRequests,
   fetchTextLogs,
@@ -794,6 +795,137 @@ describe("telemetry APIs", () => {
         sourceType: "local",
       },
     ]);
+  });
+
+  test("posts the generic telemetry analytics query payload", async () => {
+    const fetcher = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+      expect(url).toBe("/api/role-model/telemetry/query");
+      expect(init?.method).toBe("POST");
+      expect(init?.headers).toEqual({
+        "content-type": "application/json",
+      });
+      expect(JSON.parse(String(init?.body))).toEqual({
+        startAtMs: 1_700_000_000_000,
+        endAtMs: 1_700_086_400_000,
+        granularity: "hour",
+        metrics: ["requestCount", "effectiveCostUsd", "routingCostSavingsUsd"],
+        breakdown: "sourceType",
+        filters: {
+          sourceTypes: ["local", "remote"],
+        },
+        ranking: {
+          dimension: "modelId",
+          metric: "requestCount",
+          limit: 5,
+        },
+      });
+
+      return jsonResponse({
+        startAtMs: 1_700_000_000_000,
+        endAtMs: 1_700_086_400_000,
+        granularity: "hour",
+        metrics: ["requestCount", "effectiveCostUsd", "routingCostSavingsUsd"],
+        breakdown: "sourceType",
+        buckets: [
+          {
+            startAtMs: 1_700_000_000_000,
+            endAtMs: 1_700_003_600_000,
+            totals: {
+              requestCount: 2,
+              effectiveCostUsd: 0.0053,
+              routingCostSavingsUsd: 0.0054,
+            },
+            series: [
+              {
+                key: "local",
+                label: "Local",
+                metrics: {
+                  requestCount: 1,
+                  effectiveCostUsd: 0.0011,
+                  routingCostSavingsUsd: 0,
+                },
+              },
+              {
+                key: "remote",
+                label: "Remote",
+                metrics: {
+                  requestCount: 1,
+                  effectiveCostUsd: 0.0042,
+                  routingCostSavingsUsd: 0.0054,
+                },
+              },
+            ],
+          },
+        ],
+        totals: {
+          requestCount: 2,
+          effectiveCostUsd: 0.0053,
+          routingCostSavingsUsd: 0.0054,
+        },
+        ranking: {
+          dimension: "modelId",
+          metric: "requestCount",
+          rows: [
+            {
+              key: "local/mock-llama",
+              label: "local/mock-llama",
+              value: 1,
+            },
+            {
+              key: "openai/gpt-4.1-mini-fast",
+              label: "openai/gpt-4.1-mini-fast",
+              value: 1,
+            },
+          ],
+        },
+        labels: {
+          sourceType: {
+            local: "Local",
+            remote: "Remote",
+          },
+        },
+      });
+    });
+
+    await expect(
+      fetchTelemetryAnalytics(
+        {
+          startAtMs: 1_700_000_000_000,
+          endAtMs: 1_700_086_400_000,
+          granularity: "hour",
+          metrics: ["requestCount", "effectiveCostUsd", "routingCostSavingsUsd"],
+          breakdown: "sourceType",
+          filters: {
+            sourceTypes: ["local", "remote"],
+          },
+          ranking: {
+            dimension: "modelId",
+            metric: "requestCount",
+            limit: 5,
+          },
+        },
+        fetcher,
+      ),
+    ).resolves.toEqual(
+      expect.objectContaining({
+        breakdown: "sourceType",
+        buckets: expect.arrayContaining([
+          expect.objectContaining({
+            totals: expect.objectContaining({
+              requestCount: 2,
+            }),
+          }),
+        ]),
+        labels: expect.objectContaining({
+          sourceType: expect.objectContaining({
+            local: "Local",
+            remote: "Remote",
+          }),
+        }),
+      }),
+    );
   });
 
   test("subscribes to canonical telemetry SSE updates and closes the source on cleanup", () => {

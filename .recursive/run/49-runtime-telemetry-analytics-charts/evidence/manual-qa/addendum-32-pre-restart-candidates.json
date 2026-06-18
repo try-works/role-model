@@ -1,0 +1,3213 @@
+[
+  {
+    "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+    "modelId": "deepseek/deepseek-v4-flash",
+    "providerId": "deepseek",
+    "sourceType": "remote",
+    "endpointKind": "remote_api",
+    "servingSource": "remote-service",
+    "region": "global",
+    "status": "active",
+    "healthStatus": "healthy",
+    "roleBindings": [
+      "classifier",
+      "coder.patch",
+      "coder.review",
+      "embedder",
+      "general.chat",
+      "language.detector",
+      "tool.agent"
+    ],
+    "capabilities": [
+      "text.chat",
+      "tools.function_calling",
+      "reasoning",
+      "structured.output"
+    ],
+    "toolCallingSupported": true,
+    "toolCallingStyle": "none",
+    "executionModeEligible": false,
+    "controllerEligible": false,
+    "preferred": false,
+    "ignored": false,
+    "latestProfile": {
+      "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+      "endpoint_version": "run07-registry-v1:custom-base-url",
+      "measured_at_ms": 1781765792761,
+      "measurement_window": {
+        "started_at_ms": 1781765710285,
+        "ended_at_ms": 1781765792761
+      },
+      "sample_size": 55,
+      "sources": {
+        "live_request_samples": 0,
+        "benchmark_samples": 55
+      },
+      "latency_ms_p50": 11,
+      "latency_ms_p95": 12.299999999999997,
+      "failure_rate": 1,
+      "freshness_score": 1,
+      "confidence_score": 1,
+      "judge_score": 0,
+      "quality_score": 0,
+      "error_class_rates": {
+        "benchmark_execution_failed": 1
+      }
+    },
+    "recentSamples": [
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781765710285,
+        "latency_ms": 14,
+        "latency_ms_p95": 14,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-e01-yes-no-deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781765711806,
+        "latency_ms": 12,
+        "latency_ms_p95": 12,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-e02-single-word-deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781765713326,
+        "latency_ms": 12,
+        "latency_ms_p95": 12,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-e03-count-deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781765714851,
+        "latency_ms": 11,
+        "latency_ms_p95": 11,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-e04-capitalize-deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781765716377,
+        "latency_ms": 10,
+        "latency_ms_p95": 10,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-e05-emoji-deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781765717908,
+        "latency_ms": 11,
+        "latency_ms_p95": 11,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-e06-timezone-deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781765719438,
+        "latency_ms": 11,
+        "latency_ms_p95": 11,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-e07-boolean-deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781765720957,
+        "latency_ms": 13,
+        "latency_ms_p95": 13,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-e08-format-json-deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781765722475,
+        "latency_ms": 12,
+        "latency_ms_p95": 12,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p01-easy-greet-deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781765723996,
+        "latency_ms": 11,
+        "latency_ms_p95": 11,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p02-easy-math-deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781765725515,
+        "latency_ms": 11,
+        "latency_ms_p95": 11,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p03-easy-define-deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781765727051,
+        "latency_ms": 11,
+        "latency_ms_p95": 11,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p04-easy-translate-deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781765728577,
+        "latency_ms": 10,
+        "latency_ms_p95": 10,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p05-easy-list-deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781765730110,
+        "latency_ms": 11,
+        "latency_ms_p95": 11,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p06-medium-explain-deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781765731636,
+        "latency_ms": 11,
+        "latency_ms_p95": 11,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p07-medium-compare-deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781765733161,
+        "latency_ms": 10,
+        "latency_ms_p95": 10,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p08-medium-summarize-deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781765734691,
+        "latency_ms": 10,
+        "latency_ms_p95": 10,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p09-medium-howto-deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781765736211,
+        "latency_ms": 10,
+        "latency_ms_p95": 10,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p10-long-context-deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781765737736,
+        "latency_ms": 10,
+        "latency_ms_p95": 10,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p11-long-multi-turn-deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781765739260,
+        "latency_ms": 10,
+        "latency_ms_p95": 10,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-l01-verbose-incident-deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781765740781,
+        "latency_ms": 10,
+        "latency_ms_p95": 10,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-l02-many-constraints-deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781765742321,
+        "latency_ms": 10,
+        "latency_ms_p95": 10,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p12-code-patch-deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781765743846,
+        "latency_ms": 12,
+        "latency_ms_p95": 12,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p13-code-debug-deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781765745371,
+        "latency_ms": 11,
+        "latency_ms_p95": 11,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p14-schema-validate-deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781765746891,
+        "latency_ms": 11,
+        "latency_ms_p95": 11,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-c01-full-refactor-deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781765748415,
+        "latency_ms": 12,
+        "latency_ms_p95": 12,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-c02-ts-generics-deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781765749941,
+        "latency_ms": 12,
+        "latency_ms_p95": 12,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p15-tools-read-one-deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781765751479,
+        "latency_ms": 13,
+        "latency_ms_p95": 13,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p16-tools-search-deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781765753009,
+        "latency_ms": 10,
+        "latency_ms_p95": 10,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-t01-tools-list-dir-deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781765754531,
+        "latency_ms": 11,
+        "latency_ms_p95": 11,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p17-tools-multi-hard-deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781765756052,
+        "latency_ms": 10,
+        "latency_ms_p95": 10,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p18-tools-agent-deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781765757586,
+        "latency_ms": 11,
+        "latency_ms_p95": 11,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-t02-tools-triple-deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781765759116,
+        "latency_ms": 12,
+        "latency_ms_p95": 12,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-t03-tools-agent-plan-deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781765760641,
+        "latency_ms": 12,
+        "latency_ms_p95": 12,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p19-decompose-plan-deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781765762166,
+        "latency_ms": 11,
+        "latency_ms_p95": 11,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p20-decompose-arch-deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781765763686,
+        "latency_ms": 12,
+        "latency_ms_p95": 12,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-d01-milestones-heavy-deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781765765210,
+        "latency_ms": 9,
+        "latency_ms_p95": 9,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-x01-max-signal-deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781765766731,
+        "latency_ms": 10,
+        "latency_ms_p95": 10,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-x02-max-context-tools-deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781765768261,
+        "latency_ms": 9,
+        "latency_ms_p95": 9,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p24-exact-local-deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781765769782,
+        "latency_ms": 12,
+        "latency_ms_p95": 12,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p25-exact-remote-deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781765771315,
+        "latency_ms": 10,
+        "latency_ms_p95": 10,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-h01-implement-two-sum-deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781765772846,
+        "latency_ms": 10,
+        "latency_ms_p95": 10,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-h02-fix-async-counter-deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781765774381,
+        "latency_ms": 9,
+        "latency_ms_p95": 9,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-h03-implement-lru-cache-deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781765775910,
+        "latency_ms": 9,
+        "latency_ms_p95": 9,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-h04-tool-read-router-deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781765777440,
+        "latency_ms": 9,
+        "latency_ms_p95": 9,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-h05-tool-grep-eligibility-deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781765778966,
+        "latency_ms": 9,
+        "latency_ms_p95": 9,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-h06-tool-apply-patch-deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781765780492,
+        "latency_ms": 9,
+        "latency_ms_p95": 9,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-h07-multi-turn-sla-guard-deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781765782026,
+        "latency_ms": 9,
+        "latency_ms_p95": 9,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-h08-multi-turn-tool-refine-deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781765783559,
+        "latency_ms": 11,
+        "latency_ms_p95": 11,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-h09-agent-metrics-chain-deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781765785093,
+        "latency_ms": 10,
+        "latency_ms_p95": 10,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-h10-agent-read-grep-patch-deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781765786626,
+        "latency_ms": 10,
+        "latency_ms_p95": 10,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-h11-decompose-code-verify-deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781765788180,
+        "latency_ms": 10,
+        "latency_ms_p95": 10,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-h12-four-turn-architecture-deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781765789711,
+        "latency_ms": 10,
+        "latency_ms_p95": 10,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-h13-parse-nested-json-deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781765791235,
+        "latency_ms": 11,
+        "latency_ms_p95": 11,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-h14-refactor-extract-helper-deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781765792761,
+        "latency_ms": 10,
+        "latency_ms_p95": 10,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-h15-max-signal-v3-deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+      }
+    ],
+    "difficultyProfiles": {
+      "easy": {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "measured_at_ms": 1781765769782,
+        "measurement_window": {
+          "started_at_ms": 1781765710285,
+          "ended_at_ms": 1781765769782
+        },
+        "sample_size": 15,
+        "sources": {
+          "live_request_samples": 0,
+          "benchmark_samples": 15
+        },
+        "latency_ms_p50": 11,
+        "latency_ms_p95": 13.299999999999999,
+        "failure_rate": 1,
+        "freshness_score": 1,
+        "confidence_score": 0.7051657375555284,
+        "judge_score": 0,
+        "quality_score": 0,
+        "error_class_rates": {
+          "benchmark_execution_failed": 1
+        }
+      },
+      "medium": {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "measured_at_ms": 1781765763686,
+        "measurement_window": {
+          "started_at_ms": 1781765730110,
+          "ended_at_ms": 1781765763686
+        },
+        "sample_size": 19,
+        "sources": {
+          "live_request_samples": 0,
+          "benchmark_samples": 19
+        },
+        "latency_ms_p50": 11,
+        "latency_ms_p95": 12.099999999999998,
+        "failure_rate": 1,
+        "freshness_score": 1,
+        "confidence_score": 0.7619189031733016,
+        "judge_score": 0,
+        "quality_score": 0,
+        "error_class_rates": {
+          "benchmark_execution_failed": 1
+        }
+      },
+      "hard": {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "measured_at_ms": 1781765792761,
+        "measurement_window": {
+          "started_at_ms": 1781765754531,
+          "ended_at_ms": 1781765792761
+        },
+        "sample_size": 21,
+        "sources": {
+          "live_request_samples": 0,
+          "benchmark_samples": 21
+        },
+        "latency_ms_p50": 10,
+        "latency_ms_p95": 11,
+        "failure_rate": 1,
+        "freshness_score": 1,
+        "confidence_score": 0.7861595966087034,
+        "judge_score": 0,
+        "quality_score": 0,
+        "error_class_rates": {
+          "benchmark_execution_failed": 1
+        }
+      }
+    },
+    "advisoryMaxDifficultyRecommendation": {
+      "recommendedMaxDifficulty": null,
+      "thresholds": {
+        "minSamples": 4,
+        "maxFailureRate": 0.2,
+        "minQualityScore": 0.8,
+        "minTokensPerSec": 22
+      },
+      "evaluations": {
+        "easy": {
+          "eligible": false,
+          "rejectionReasons": [
+            "max-failure-rate",
+            "min-quality-score"
+          ],
+          "profile": {
+            "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+            "endpoint_version": "run07-registry-v1:custom-base-url",
+            "measured_at_ms": 1781765769782,
+            "measurement_window": {
+              "started_at_ms": 1781765710285,
+              "ended_at_ms": 1781765769782
+            },
+            "sample_size": 15,
+            "sources": {
+              "live_request_samples": 0,
+              "benchmark_samples": 15
+            },
+            "latency_ms_p50": 11,
+            "latency_ms_p95": 13.299999999999999,
+            "failure_rate": 1,
+            "freshness_score": 1,
+            "confidence_score": 0.7051657375555284,
+            "judge_score": 0,
+            "quality_score": 0,
+            "error_class_rates": {
+              "benchmark_execution_failed": 1
+            }
+          }
+        },
+        "medium": {
+          "eligible": false,
+          "rejectionReasons": [
+            "max-failure-rate",
+            "min-quality-score"
+          ],
+          "profile": {
+            "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+            "endpoint_version": "run07-registry-v1:custom-base-url",
+            "measured_at_ms": 1781765763686,
+            "measurement_window": {
+              "started_at_ms": 1781765730110,
+              "ended_at_ms": 1781765763686
+            },
+            "sample_size": 19,
+            "sources": {
+              "live_request_samples": 0,
+              "benchmark_samples": 19
+            },
+            "latency_ms_p50": 11,
+            "latency_ms_p95": 12.099999999999998,
+            "failure_rate": 1,
+            "freshness_score": 1,
+            "confidence_score": 0.7619189031733016,
+            "judge_score": 0,
+            "quality_score": 0,
+            "error_class_rates": {
+              "benchmark_execution_failed": 1
+            }
+          }
+        },
+        "hard": {
+          "eligible": false,
+          "rejectionReasons": [
+            "max-failure-rate",
+            "min-quality-score"
+          ],
+          "profile": {
+            "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+            "endpoint_version": "run07-registry-v1:custom-base-url",
+            "measured_at_ms": 1781765792761,
+            "measurement_window": {
+              "started_at_ms": 1781765754531,
+              "ended_at_ms": 1781765792761
+            },
+            "sample_size": 21,
+            "sources": {
+              "live_request_samples": 0,
+              "benchmark_samples": 21
+            },
+            "latency_ms_p50": 10,
+            "latency_ms_p95": 11,
+            "failure_rate": 1,
+            "freshness_score": 1,
+            "confidence_score": 0.7861595966087034,
+            "judge_score": 0,
+            "quality_score": 0,
+            "error_class_rates": {
+              "benchmark_execution_failed": 1
+            }
+          }
+        }
+      }
+    },
+    "benchmarkCapability": {
+      "overallScore": 0,
+      "scoresByBucket": {
+        "easy": {
+          "cases": 15,
+          "score": 0
+        },
+        "medium": {
+          "cases": 19,
+          "score": 0
+        },
+        "hard": {
+          "cases": 21,
+          "score": 0
+        }
+      },
+      "benchmarkSamples": 55,
+      "sampleCount": 55,
+      "measuredAtMs": 1781765792761,
+      "freshnessScore": 1,
+      "lastRunId": "627e5e7d-fcb6-4c65-a620-d5d009f22b6c",
+      "lastRunCompletedAtMs": 1781765800902,
+      "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+    },
+    "routingBenchmarkQuality": {
+      "judge_score": 0,
+      "quality_score": 0,
+      "benchmark_samples": 55,
+      "scoresByBucket": {
+        "easy": {
+          "score": 0,
+          "cases": 15
+        },
+        "medium": {
+          "score": 0,
+          "cases": 19
+        },
+        "hard": {
+          "score": 0,
+          "cases": 21
+        }
+      }
+    },
+    "routingQualityScore": 0
+  },
+  {
+    "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+    "modelId": "deepseek/deepseek-v4-pro",
+    "providerId": "deepseek",
+    "sourceType": "remote",
+    "endpointKind": "remote_api",
+    "servingSource": "remote-service",
+    "region": "global",
+    "status": "active",
+    "healthStatus": "healthy",
+    "roleBindings": [
+      "classifier",
+      "coder.patch",
+      "coder.review",
+      "embedder",
+      "general.chat",
+      "language.detector",
+      "tool.agent"
+    ],
+    "capabilities": [
+      "text.chat",
+      "tools.function_calling",
+      "reasoning",
+      "structured.output"
+    ],
+    "toolCallingSupported": true,
+    "toolCallingStyle": "none",
+    "executionModeEligible": false,
+    "controllerEligible": false,
+    "preferred": false,
+    "ignored": false,
+    "latestProfile": {
+      "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+      "endpoint_version": "run07-registry-v1:custom-base-url",
+      "measured_at_ms": 1781765624736,
+      "measurement_window": {
+        "started_at_ms": 1781765542346,
+        "ended_at_ms": 1781765624736
+      },
+      "sample_size": 55,
+      "sources": {
+        "live_request_samples": 0,
+        "benchmark_samples": 55
+      },
+      "latency_ms_p50": 10,
+      "latency_ms_p95": 14,
+      "failure_rate": 1,
+      "freshness_score": 1,
+      "confidence_score": 1,
+      "judge_score": 0,
+      "quality_score": 0,
+      "error_class_rates": {
+        "benchmark_execution_failed": 1
+      }
+    },
+    "recentSamples": [
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781765542346,
+        "latency_ms": 9,
+        "latency_ms_p95": 9,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-e01-yes-no-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781765543876,
+        "latency_ms": 9,
+        "latency_ms_p95": 9,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-e02-single-word-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781765545395,
+        "latency_ms": 10,
+        "latency_ms_p95": 10,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-e03-count-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781765546919,
+        "latency_ms": 9,
+        "latency_ms_p95": 9,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-e04-capitalize-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781765548437,
+        "latency_ms": 10,
+        "latency_ms_p95": 10,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-e05-emoji-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781765549967,
+        "latency_ms": 9,
+        "latency_ms_p95": 9,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-e06-timezone-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781765551486,
+        "latency_ms": 9,
+        "latency_ms_p95": 9,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-e07-boolean-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781765553013,
+        "latency_ms": 9,
+        "latency_ms_p95": 9,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-e08-format-json-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781765554536,
+        "latency_ms": 9,
+        "latency_ms_p95": 9,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p01-easy-greet-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781765556065,
+        "latency_ms": 9,
+        "latency_ms_p95": 9,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p02-easy-math-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781765557595,
+        "latency_ms": 13,
+        "latency_ms_p95": 13,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p03-easy-define-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781765559121,
+        "latency_ms": 16,
+        "latency_ms_p95": 16,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p04-easy-translate-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781765560636,
+        "latency_ms": 23,
+        "latency_ms_p95": 23,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p05-easy-list-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781765562156,
+        "latency_ms": 14,
+        "latency_ms_p95": 14,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p06-medium-explain-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781765563676,
+        "latency_ms": 9,
+        "latency_ms_p95": 9,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p07-medium-compare-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781765565196,
+        "latency_ms": 10,
+        "latency_ms_p95": 10,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p08-medium-summarize-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781765566724,
+        "latency_ms": 11,
+        "latency_ms_p95": 11,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p09-medium-howto-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781765568250,
+        "latency_ms": 11,
+        "latency_ms_p95": 11,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p10-long-context-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781765569770,
+        "latency_ms": 11,
+        "latency_ms_p95": 11,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p11-long-multi-turn-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781765571300,
+        "latency_ms": 11,
+        "latency_ms_p95": 11,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-l01-verbose-incident-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781765572835,
+        "latency_ms": 10,
+        "latency_ms_p95": 10,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-l02-many-constraints-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781765574365,
+        "latency_ms": 11,
+        "latency_ms_p95": 11,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p12-code-patch-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781765575883,
+        "latency_ms": 9,
+        "latency_ms_p95": 9,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p13-code-debug-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781765577420,
+        "latency_ms": 11,
+        "latency_ms_p95": 11,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p14-schema-validate-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781765578946,
+        "latency_ms": 10,
+        "latency_ms_p95": 10,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-c01-full-refactor-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781765580462,
+        "latency_ms": 10,
+        "latency_ms_p95": 10,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-c02-ts-generics-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781765581995,
+        "latency_ms": 12,
+        "latency_ms_p95": 12,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p15-tools-read-one-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781765583520,
+        "latency_ms": 12,
+        "latency_ms_p95": 12,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p16-tools-search-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781765585040,
+        "latency_ms": 12,
+        "latency_ms_p95": 12,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-t01-tools-list-dir-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781765586566,
+        "latency_ms": 10,
+        "latency_ms_p95": 10,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p17-tools-multi-hard-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781765588092,
+        "latency_ms": 10,
+        "latency_ms_p95": 10,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p18-tools-agent-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781765589610,
+        "latency_ms": 11,
+        "latency_ms_p95": 11,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-t02-tools-triple-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781765591131,
+        "latency_ms": 10,
+        "latency_ms_p95": 10,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-t03-tools-agent-plan-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781765592656,
+        "latency_ms": 12,
+        "latency_ms_p95": 12,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p19-decompose-plan-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781765594186,
+        "latency_ms": 11,
+        "latency_ms_p95": 11,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p20-decompose-arch-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781765595705,
+        "latency_ms": 10,
+        "latency_ms_p95": 10,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-d01-milestones-heavy-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781765597240,
+        "latency_ms": 14,
+        "latency_ms_p95": 14,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-x01-max-signal-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781765598769,
+        "latency_ms": 9,
+        "latency_ms_p95": 9,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-x02-max-context-tools-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781765600295,
+        "latency_ms": 9,
+        "latency_ms_p95": 9,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p24-exact-local-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781765601815,
+        "latency_ms": 10,
+        "latency_ms_p95": 10,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p25-exact-remote-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781765603340,
+        "latency_ms": 13,
+        "latency_ms_p95": 13,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-h01-implement-two-sum-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781765604866,
+        "latency_ms": 12,
+        "latency_ms_p95": 12,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-h02-fix-async-counter-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781765606400,
+        "latency_ms": 10,
+        "latency_ms_p95": 10,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-h03-implement-lru-cache-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781765607921,
+        "latency_ms": 11,
+        "latency_ms_p95": 11,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-h04-tool-read-router-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781765609446,
+        "latency_ms": 9,
+        "latency_ms_p95": 9,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-h05-tool-grep-eligibility-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781765610970,
+        "latency_ms": 9,
+        "latency_ms_p95": 9,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-h06-tool-apply-patch-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781765612510,
+        "latency_ms": 10,
+        "latency_ms_p95": 10,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-h07-multi-turn-sla-guard-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781765614036,
+        "latency_ms": 12,
+        "latency_ms_p95": 12,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-h08-multi-turn-tool-refine-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781765615557,
+        "latency_ms": 10,
+        "latency_ms_p95": 10,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-h09-agent-metrics-chain-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781765617081,
+        "latency_ms": 10,
+        "latency_ms_p95": 10,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-h10-agent-read-grep-patch-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781765618609,
+        "latency_ms": 10,
+        "latency_ms_p95": 10,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-h11-decompose-code-verify-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781765620137,
+        "latency_ms": 10,
+        "latency_ms_p95": 10,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-h12-four-turn-architecture-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781765621671,
+        "latency_ms": 9,
+        "latency_ms_p95": 9,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-h13-parse-nested-json-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781765623200,
+        "latency_ms": 9,
+        "latency_ms_p95": 9,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-h14-refactor-extract-helper-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781765624736,
+        "latency_ms": 11,
+        "latency_ms_p95": 11,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-h15-max-signal-v3-deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+      }
+    ],
+    "difficultyProfiles": {
+      "easy": {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "measured_at_ms": 1781765601815,
+        "measurement_window": {
+          "started_at_ms": 1781765542346,
+          "ended_at_ms": 1781765601815
+        },
+        "sample_size": 15,
+        "sources": {
+          "live_request_samples": 0,
+          "benchmark_samples": 15
+        },
+        "latency_ms_p50": 9,
+        "latency_ms_p95": 18.099999999999994,
+        "failure_rate": 1,
+        "freshness_score": 1,
+        "confidence_score": 0.7051657375555284,
+        "judge_score": 0,
+        "quality_score": 0,
+        "error_class_rates": {
+          "benchmark_execution_failed": 1
+        }
+      },
+      "medium": {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "measured_at_ms": 1781765595705,
+        "measurement_window": {
+          "started_at_ms": 1781765562156,
+          "ended_at_ms": 1781765595705
+        },
+        "sample_size": 19,
+        "sources": {
+          "live_request_samples": 0,
+          "benchmark_samples": 19
+        },
+        "latency_ms_p50": 11,
+        "latency_ms_p95": 12.199999999999996,
+        "failure_rate": 1,
+        "freshness_score": 1,
+        "confidence_score": 0.7619189031733016,
+        "judge_score": 0,
+        "quality_score": 0,
+        "error_class_rates": {
+          "benchmark_execution_failed": 1
+        }
+      },
+      "hard": {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "measured_at_ms": 1781765624736,
+        "measurement_window": {
+          "started_at_ms": 1781765586566,
+          "ended_at_ms": 1781765624736
+        },
+        "sample_size": 21,
+        "sources": {
+          "live_request_samples": 0,
+          "benchmark_samples": 21
+        },
+        "latency_ms_p50": 10,
+        "latency_ms_p95": 13,
+        "failure_rate": 1,
+        "freshness_score": 1,
+        "confidence_score": 0.7861595966087034,
+        "judge_score": 0,
+        "quality_score": 0,
+        "error_class_rates": {
+          "benchmark_execution_failed": 1
+        }
+      }
+    },
+    "advisoryMaxDifficultyRecommendation": {
+      "recommendedMaxDifficulty": null,
+      "thresholds": {
+        "minSamples": 4,
+        "maxFailureRate": 0.2,
+        "minQualityScore": 0.8,
+        "minTokensPerSec": 22
+      },
+      "evaluations": {
+        "easy": {
+          "eligible": false,
+          "rejectionReasons": [
+            "max-failure-rate",
+            "min-quality-score"
+          ],
+          "profile": {
+            "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+            "endpoint_version": "run07-registry-v1:custom-base-url",
+            "measured_at_ms": 1781765601815,
+            "measurement_window": {
+              "started_at_ms": 1781765542346,
+              "ended_at_ms": 1781765601815
+            },
+            "sample_size": 15,
+            "sources": {
+              "live_request_samples": 0,
+              "benchmark_samples": 15
+            },
+            "latency_ms_p50": 9,
+            "latency_ms_p95": 18.099999999999994,
+            "failure_rate": 1,
+            "freshness_score": 1,
+            "confidence_score": 0.7051657375555284,
+            "judge_score": 0,
+            "quality_score": 0,
+            "error_class_rates": {
+              "benchmark_execution_failed": 1
+            }
+          }
+        },
+        "medium": {
+          "eligible": false,
+          "rejectionReasons": [
+            "max-failure-rate",
+            "min-quality-score"
+          ],
+          "profile": {
+            "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+            "endpoint_version": "run07-registry-v1:custom-base-url",
+            "measured_at_ms": 1781765595705,
+            "measurement_window": {
+              "started_at_ms": 1781765562156,
+              "ended_at_ms": 1781765595705
+            },
+            "sample_size": 19,
+            "sources": {
+              "live_request_samples": 0,
+              "benchmark_samples": 19
+            },
+            "latency_ms_p50": 11,
+            "latency_ms_p95": 12.199999999999996,
+            "failure_rate": 1,
+            "freshness_score": 1,
+            "confidence_score": 0.7619189031733016,
+            "judge_score": 0,
+            "quality_score": 0,
+            "error_class_rates": {
+              "benchmark_execution_failed": 1
+            }
+          }
+        },
+        "hard": {
+          "eligible": false,
+          "rejectionReasons": [
+            "max-failure-rate",
+            "min-quality-score"
+          ],
+          "profile": {
+            "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+            "endpoint_version": "run07-registry-v1:custom-base-url",
+            "measured_at_ms": 1781765624736,
+            "measurement_window": {
+              "started_at_ms": 1781765586566,
+              "ended_at_ms": 1781765624736
+            },
+            "sample_size": 21,
+            "sources": {
+              "live_request_samples": 0,
+              "benchmark_samples": 21
+            },
+            "latency_ms_p50": 10,
+            "latency_ms_p95": 13,
+            "failure_rate": 1,
+            "freshness_score": 1,
+            "confidence_score": 0.7861595966087034,
+            "judge_score": 0,
+            "quality_score": 0,
+            "error_class_rates": {
+              "benchmark_execution_failed": 1
+            }
+          }
+        }
+      }
+    },
+    "benchmarkCapability": {
+      "overallScore": 0,
+      "scoresByBucket": {
+        "easy": {
+          "cases": 15,
+          "score": 0
+        },
+        "medium": {
+          "cases": 19,
+          "score": 0
+        },
+        "hard": {
+          "cases": 21,
+          "score": 0
+        }
+      },
+      "benchmarkSamples": 55,
+      "sampleCount": 55,
+      "measuredAtMs": 1781765624736,
+      "freshnessScore": 1,
+      "lastRunId": "627e5e7d-fcb6-4c65-a620-d5d009f22b6c",
+      "lastRunCompletedAtMs": 1781765800902,
+      "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+    },
+    "routingBenchmarkQuality": {
+      "judge_score": 0,
+      "quality_score": 0,
+      "benchmark_samples": 55,
+      "scoresByBucket": {
+        "easy": {
+          "score": 0,
+          "cases": 15
+        },
+        "medium": {
+          "score": 0,
+          "cases": 19
+        },
+        "hard": {
+          "score": 0,
+          "cases": 21
+        }
+      }
+    },
+    "routingQualityScore": 0
+  },
+  {
+    "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+    "modelId": "moonshot/kimi-k2.7-code",
+    "providerId": "moonshot",
+    "sourceType": "remote",
+    "endpointKind": "remote_api",
+    "servingSource": "remote-service",
+    "region": "global",
+    "status": "active",
+    "healthStatus": "healthy",
+    "roleBindings": [
+      "classifier",
+      "coder.patch",
+      "coder.review",
+      "embedder",
+      "general.chat",
+      "language.detector",
+      "tool.agent"
+    ],
+    "capabilities": [
+      "text.chat",
+      "tools.function_calling",
+      "reasoning",
+      "structured.output"
+    ],
+    "toolCallingSupported": true,
+    "toolCallingStyle": "openai",
+    "executionModeEligible": false,
+    "controllerEligible": false,
+    "preferred": false,
+    "ignored": false,
+    "latestProfile": {
+      "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+      "endpoint_version": "run07-registry-v1:custom-base-url",
+      "measured_at_ms": 1781765708756,
+      "measurement_window": {
+        "started_at_ms": 1781765626261,
+        "ended_at_ms": 1781765708756
+      },
+      "sample_size": 55,
+      "sources": {
+        "live_request_samples": 0,
+        "benchmark_samples": 55
+      },
+      "latency_ms_p50": 11,
+      "latency_ms_p95": 12,
+      "failure_rate": 1,
+      "freshness_score": 1,
+      "confidence_score": 1,
+      "judge_score": 0,
+      "quality_score": 0,
+      "error_class_rates": {
+        "benchmark_execution_failed": 1
+      }
+    },
+    "recentSamples": [
+      {
+        "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781765626261,
+        "latency_ms": 10,
+        "latency_ms_p95": 10,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-e01-yes-no-moonshot.personal.kimi-code.global.kimi-k2.7-code"
+      },
+      {
+        "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781765627796,
+        "latency_ms": 12,
+        "latency_ms_p95": 12,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-e02-single-word-moonshot.personal.kimi-code.global.kimi-k2.7-code"
+      },
+      {
+        "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781765629329,
+        "latency_ms": 11,
+        "latency_ms_p95": 11,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-e03-count-moonshot.personal.kimi-code.global.kimi-k2.7-code"
+      },
+      {
+        "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781765630859,
+        "latency_ms": 11,
+        "latency_ms_p95": 11,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-e04-capitalize-moonshot.personal.kimi-code.global.kimi-k2.7-code"
+      },
+      {
+        "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781765632381,
+        "latency_ms": 11,
+        "latency_ms_p95": 11,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-e05-emoji-moonshot.personal.kimi-code.global.kimi-k2.7-code"
+      },
+      {
+        "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781765633910,
+        "latency_ms": 10,
+        "latency_ms_p95": 10,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-e06-timezone-moonshot.personal.kimi-code.global.kimi-k2.7-code"
+      },
+      {
+        "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781765635438,
+        "latency_ms": 11,
+        "latency_ms_p95": 11,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-e07-boolean-moonshot.personal.kimi-code.global.kimi-k2.7-code"
+      },
+      {
+        "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781765636966,
+        "latency_ms": 12,
+        "latency_ms_p95": 12,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-e08-format-json-moonshot.personal.kimi-code.global.kimi-k2.7-code"
+      },
+      {
+        "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781765638495,
+        "latency_ms": 10,
+        "latency_ms_p95": 10,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p01-easy-greet-moonshot.personal.kimi-code.global.kimi-k2.7-code"
+      },
+      {
+        "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781765640025,
+        "latency_ms": 9,
+        "latency_ms_p95": 9,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p02-easy-math-moonshot.personal.kimi-code.global.kimi-k2.7-code"
+      },
+      {
+        "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781765641542,
+        "latency_ms": 9,
+        "latency_ms_p95": 9,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p03-easy-define-moonshot.personal.kimi-code.global.kimi-k2.7-code"
+      },
+      {
+        "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781765643079,
+        "latency_ms": 9,
+        "latency_ms_p95": 9,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p04-easy-translate-moonshot.personal.kimi-code.global.kimi-k2.7-code"
+      },
+      {
+        "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781765644601,
+        "latency_ms": 9,
+        "latency_ms_p95": 9,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p05-easy-list-moonshot.personal.kimi-code.global.kimi-k2.7-code"
+      },
+      {
+        "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781765646130,
+        "latency_ms": 12,
+        "latency_ms_p95": 12,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p06-medium-explain-moonshot.personal.kimi-code.global.kimi-k2.7-code"
+      },
+      {
+        "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781765647660,
+        "latency_ms": 10,
+        "latency_ms_p95": 10,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p07-medium-compare-moonshot.personal.kimi-code.global.kimi-k2.7-code"
+      },
+      {
+        "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781765649201,
+        "latency_ms": 11,
+        "latency_ms_p95": 11,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p08-medium-summarize-moonshot.personal.kimi-code.global.kimi-k2.7-code"
+      },
+      {
+        "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781765650733,
+        "latency_ms": 14,
+        "latency_ms_p95": 14,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p09-medium-howto-moonshot.personal.kimi-code.global.kimi-k2.7-code"
+      },
+      {
+        "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781765652265,
+        "latency_ms": 10,
+        "latency_ms_p95": 10,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p10-long-context-moonshot.personal.kimi-code.global.kimi-k2.7-code"
+      },
+      {
+        "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781765653800,
+        "latency_ms": 12,
+        "latency_ms_p95": 12,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p11-long-multi-turn-moonshot.personal.kimi-code.global.kimi-k2.7-code"
+      },
+      {
+        "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781765655317,
+        "latency_ms": 12,
+        "latency_ms_p95": 12,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-l01-verbose-incident-moonshot.personal.kimi-code.global.kimi-k2.7-code"
+      },
+      {
+        "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781765656840,
+        "latency_ms": 12,
+        "latency_ms_p95": 12,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-l02-many-constraints-moonshot.personal.kimi-code.global.kimi-k2.7-code"
+      },
+      {
+        "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781765658363,
+        "latency_ms": 11,
+        "latency_ms_p95": 11,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p12-code-patch-moonshot.personal.kimi-code.global.kimi-k2.7-code"
+      },
+      {
+        "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781765659891,
+        "latency_ms": 12,
+        "latency_ms_p95": 12,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p13-code-debug-moonshot.personal.kimi-code.global.kimi-k2.7-code"
+      },
+      {
+        "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781765661421,
+        "latency_ms": 12,
+        "latency_ms_p95": 12,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p14-schema-validate-moonshot.personal.kimi-code.global.kimi-k2.7-code"
+      },
+      {
+        "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781765662939,
+        "latency_ms": 11,
+        "latency_ms_p95": 11,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-c01-full-refactor-moonshot.personal.kimi-code.global.kimi-k2.7-code"
+      },
+      {
+        "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781765664472,
+        "latency_ms": 11,
+        "latency_ms_p95": 11,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-c02-ts-generics-moonshot.personal.kimi-code.global.kimi-k2.7-code"
+      },
+      {
+        "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781765665998,
+        "latency_ms": 11,
+        "latency_ms_p95": 11,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p15-tools-read-one-moonshot.personal.kimi-code.global.kimi-k2.7-code"
+      },
+      {
+        "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781765667521,
+        "latency_ms": 11,
+        "latency_ms_p95": 11,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p16-tools-search-moonshot.personal.kimi-code.global.kimi-k2.7-code"
+      },
+      {
+        "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781765669041,
+        "latency_ms": 12,
+        "latency_ms_p95": 12,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-t01-tools-list-dir-moonshot.personal.kimi-code.global.kimi-k2.7-code"
+      },
+      {
+        "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781765670575,
+        "latency_ms": 12,
+        "latency_ms_p95": 12,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p17-tools-multi-hard-moonshot.personal.kimi-code.global.kimi-k2.7-code"
+      },
+      {
+        "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781765672106,
+        "latency_ms": 11,
+        "latency_ms_p95": 11,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p18-tools-agent-moonshot.personal.kimi-code.global.kimi-k2.7-code"
+      },
+      {
+        "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781765673635,
+        "latency_ms": 12,
+        "latency_ms_p95": 12,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-t02-tools-triple-moonshot.personal.kimi-code.global.kimi-k2.7-code"
+      },
+      {
+        "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781765675164,
+        "latency_ms": 11,
+        "latency_ms_p95": 11,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-t03-tools-agent-plan-moonshot.personal.kimi-code.global.kimi-k2.7-code"
+      },
+      {
+        "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781765676697,
+        "latency_ms": 12,
+        "latency_ms_p95": 12,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p19-decompose-plan-moonshot.personal.kimi-code.global.kimi-k2.7-code"
+      },
+      {
+        "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781765678231,
+        "latency_ms": 11,
+        "latency_ms_p95": 11,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p20-decompose-arch-moonshot.personal.kimi-code.global.kimi-k2.7-code"
+      },
+      {
+        "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "medium",
+        "timestamp_ms": 1781765679760,
+        "latency_ms": 12,
+        "latency_ms_p95": 12,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-d01-milestones-heavy-moonshot.personal.kimi-code.global.kimi-k2.7-code"
+      },
+      {
+        "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781765681291,
+        "latency_ms": 10,
+        "latency_ms_p95": 10,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-x01-max-signal-moonshot.personal.kimi-code.global.kimi-k2.7-code"
+      },
+      {
+        "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781765682811,
+        "latency_ms": 11,
+        "latency_ms_p95": 11,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-x02-max-context-tools-moonshot.personal.kimi-code.global.kimi-k2.7-code"
+      },
+      {
+        "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781765684341,
+        "latency_ms": 12,
+        "latency_ms_p95": 12,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p24-exact-local-moonshot.personal.kimi-code.global.kimi-k2.7-code"
+      },
+      {
+        "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1781765685876,
+        "latency_ms": 10,
+        "latency_ms_p95": 10,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-p25-exact-remote-moonshot.personal.kimi-code.global.kimi-k2.7-code"
+      },
+      {
+        "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781765687406,
+        "latency_ms": 10,
+        "latency_ms_p95": 10,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-h01-implement-two-sum-moonshot.personal.kimi-code.global.kimi-k2.7-code"
+      },
+      {
+        "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781765688928,
+        "latency_ms": 11,
+        "latency_ms_p95": 11,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-h02-fix-async-counter-moonshot.personal.kimi-code.global.kimi-k2.7-code"
+      },
+      {
+        "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781765690446,
+        "latency_ms": 11,
+        "latency_ms_p95": 11,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-h03-implement-lru-cache-moonshot.personal.kimi-code.global.kimi-k2.7-code"
+      },
+      {
+        "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781765691971,
+        "latency_ms": 12,
+        "latency_ms_p95": 12,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-h04-tool-read-router-moonshot.personal.kimi-code.global.kimi-k2.7-code"
+      },
+      {
+        "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781765693496,
+        "latency_ms": 10,
+        "latency_ms_p95": 10,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-h05-tool-grep-eligibility-moonshot.personal.kimi-code.global.kimi-k2.7-code"
+      },
+      {
+        "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781765695016,
+        "latency_ms": 11,
+        "latency_ms_p95": 11,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-h06-tool-apply-patch-moonshot.personal.kimi-code.global.kimi-k2.7-code"
+      },
+      {
+        "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781765696541,
+        "latency_ms": 10,
+        "latency_ms_p95": 10,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-h07-multi-turn-sla-guard-moonshot.personal.kimi-code.global.kimi-k2.7-code"
+      },
+      {
+        "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781765698066,
+        "latency_ms": 11,
+        "latency_ms_p95": 11,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-h08-multi-turn-tool-refine-moonshot.personal.kimi-code.global.kimi-k2.7-code"
+      },
+      {
+        "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781765699600,
+        "latency_ms": 10,
+        "latency_ms_p95": 10,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-h09-agent-metrics-chain-moonshot.personal.kimi-code.global.kimi-k2.7-code"
+      },
+      {
+        "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781765701136,
+        "latency_ms": 10,
+        "latency_ms_p95": 10,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-h10-agent-read-grep-patch-moonshot.personal.kimi-code.global.kimi-k2.7-code"
+      },
+      {
+        "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781765702669,
+        "latency_ms": 11,
+        "latency_ms_p95": 11,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-h11-decompose-code-verify-moonshot.personal.kimi-code.global.kimi-k2.7-code"
+      },
+      {
+        "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781765704195,
+        "latency_ms": 11,
+        "latency_ms_p95": 11,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-h12-four-turn-architecture-moonshot.personal.kimi-code.global.kimi-k2.7-code"
+      },
+      {
+        "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781765705714,
+        "latency_ms": 12,
+        "latency_ms_p95": 12,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-h13-parse-nested-json-moonshot.personal.kimi-code.global.kimi-k2.7-code"
+      },
+      {
+        "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781765707232,
+        "latency_ms": 11,
+        "latency_ms_p95": 11,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-h14-refactor-extract-helper-moonshot.personal.kimi-code.global.kimi-k2.7-code"
+      },
+      {
+        "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "benchmark",
+        "benchmark_mode": "full",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1781765708756,
+        "latency_ms": 10,
+        "latency_ms_p95": 10,
+        "judge_score": 0,
+        "failure": true,
+        "error_class": "benchmark_execution_failed",
+        "request_id": "bench-627e5e7d-fcb6-4c65-a620-d5d009f22b6c-h15-max-signal-v3-moonshot.personal.kimi-code.global.kimi-k2.7-code"
+      }
+    ],
+    "difficultyProfiles": {
+      "easy": {
+        "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "measured_at_ms": 1781765685876,
+        "measurement_window": {
+          "started_at_ms": 1781765626261,
+          "ended_at_ms": 1781765685876
+        },
+        "sample_size": 15,
+        "sources": {
+          "live_request_samples": 0,
+          "benchmark_samples": 15
+        },
+        "latency_ms_p50": 10,
+        "latency_ms_p95": 12,
+        "failure_rate": 1,
+        "freshness_score": 1,
+        "confidence_score": 0.7051657375555284,
+        "judge_score": 0,
+        "quality_score": 0,
+        "error_class_rates": {
+          "benchmark_execution_failed": 1
+        }
+      },
+      "medium": {
+        "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "measured_at_ms": 1781765679760,
+        "measurement_window": {
+          "started_at_ms": 1781765646130,
+          "ended_at_ms": 1781765679760
+        },
+        "sample_size": 19,
+        "sources": {
+          "live_request_samples": 0,
+          "benchmark_samples": 19
+        },
+        "latency_ms_p50": 12,
+        "latency_ms_p95": 12.199999999999996,
+        "failure_rate": 1,
+        "freshness_score": 1,
+        "confidence_score": 0.7619189031733016,
+        "judge_score": 0,
+        "quality_score": 0,
+        "error_class_rates": {
+          "benchmark_execution_failed": 1
+        }
+      },
+      "hard": {
+        "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "measured_at_ms": 1781765708756,
+        "measurement_window": {
+          "started_at_ms": 1781765670575,
+          "ended_at_ms": 1781765708756
+        },
+        "sample_size": 21,
+        "sources": {
+          "live_request_samples": 0,
+          "benchmark_samples": 21
+        },
+        "latency_ms_p50": 11,
+        "latency_ms_p95": 12,
+        "failure_rate": 1,
+        "freshness_score": 1,
+        "confidence_score": 0.7861595966087034,
+        "judge_score": 0,
+        "quality_score": 0,
+        "error_class_rates": {
+          "benchmark_execution_failed": 1
+        }
+      }
+    },
+    "advisoryMaxDifficultyRecommendation": {
+      "recommendedMaxDifficulty": null,
+      "thresholds": {
+        "minSamples": 4,
+        "maxFailureRate": 0.2,
+        "minQualityScore": 0.8,
+        "minTokensPerSec": 22
+      },
+      "evaluations": {
+        "easy": {
+          "eligible": false,
+          "rejectionReasons": [
+            "max-failure-rate",
+            "min-quality-score"
+          ],
+          "profile": {
+            "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+            "endpoint_version": "run07-registry-v1:custom-base-url",
+            "measured_at_ms": 1781765685876,
+            "measurement_window": {
+              "started_at_ms": 1781765626261,
+              "ended_at_ms": 1781765685876
+            },
+            "sample_size": 15,
+            "sources": {
+              "live_request_samples": 0,
+              "benchmark_samples": 15
+            },
+            "latency_ms_p50": 10,
+            "latency_ms_p95": 12,
+            "failure_rate": 1,
+            "freshness_score": 1,
+            "confidence_score": 0.7051657375555284,
+            "judge_score": 0,
+            "quality_score": 0,
+            "error_class_rates": {
+              "benchmark_execution_failed": 1
+            }
+          }
+        },
+        "medium": {
+          "eligible": false,
+          "rejectionReasons": [
+            "max-failure-rate",
+            "min-quality-score"
+          ],
+          "profile": {
+            "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+            "endpoint_version": "run07-registry-v1:custom-base-url",
+            "measured_at_ms": 1781765679760,
+            "measurement_window": {
+              "started_at_ms": 1781765646130,
+              "ended_at_ms": 1781765679760
+            },
+            "sample_size": 19,
+            "sources": {
+              "live_request_samples": 0,
+              "benchmark_samples": 19
+            },
+            "latency_ms_p50": 12,
+            "latency_ms_p95": 12.199999999999996,
+            "failure_rate": 1,
+            "freshness_score": 1,
+            "confidence_score": 0.7619189031733016,
+            "judge_score": 0,
+            "quality_score": 0,
+            "error_class_rates": {
+              "benchmark_execution_failed": 1
+            }
+          }
+        },
+        "hard": {
+          "eligible": false,
+          "rejectionReasons": [
+            "max-failure-rate",
+            "min-quality-score"
+          ],
+          "profile": {
+            "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+            "endpoint_version": "run07-registry-v1:custom-base-url",
+            "measured_at_ms": 1781765708756,
+            "measurement_window": {
+              "started_at_ms": 1781765670575,
+              "ended_at_ms": 1781765708756
+            },
+            "sample_size": 21,
+            "sources": {
+              "live_request_samples": 0,
+              "benchmark_samples": 21
+            },
+            "latency_ms_p50": 11,
+            "latency_ms_p95": 12,
+            "failure_rate": 1,
+            "freshness_score": 1,
+            "confidence_score": 0.7861595966087034,
+            "judge_score": 0,
+            "quality_score": 0,
+            "error_class_rates": {
+              "benchmark_execution_failed": 1
+            }
+          }
+        }
+      }
+    },
+    "benchmarkCapability": {
+      "overallScore": 0,
+      "scoresByBucket": {
+        "easy": {
+          "cases": 15,
+          "score": 0
+        },
+        "medium": {
+          "cases": 19,
+          "score": 0
+        },
+        "hard": {
+          "cases": 21,
+          "score": 0
+        }
+      },
+      "benchmarkSamples": 55,
+      "sampleCount": 55,
+      "measuredAtMs": 1781765708756,
+      "freshnessScore": 1,
+      "lastRunId": "627e5e7d-fcb6-4c65-a620-d5d009f22b6c",
+      "lastRunCompletedAtMs": 1781765800902,
+      "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+    },
+    "routingBenchmarkQuality": {
+      "judge_score": 0,
+      "quality_score": 0,
+      "benchmark_samples": 55,
+      "scoresByBucket": {
+        "easy": {
+          "score": 0,
+          "cases": 15
+        },
+        "medium": {
+          "score": 0,
+          "cases": 19
+        },
+        "hard": {
+          "score": 0,
+          "cases": 21
+        }
+      }
+    },
+    "routingQualityScore": 0
+  },
+  {
+    "endpointId": "llama-swap.local.lfm2-5-1-2b-instruct",
+    "modelId": "lfm2.5-1.2b-instruct",
+    "providerId": null,
+    "sourceType": "local",
+    "endpointKind": "local_engine",
+    "servingSource": "vendor-llama-swap",
+    "region": "local",
+    "status": "active",
+    "healthStatus": "healthy",
+    "roleBindings": [],
+    "capabilities": [
+      "text.chat",
+      "tools.function_calling"
+    ],
+    "toolCallingSupported": true,
+    "toolCallingStyle": "openai",
+    "executionModeEligible": true,
+    "controllerEligible": true,
+    "preferred": false,
+    "ignored": false,
+    "latestProfile": null,
+    "recentSamples": [],
+    "difficultyProfiles": {
+      "easy": null,
+      "medium": null,
+      "hard": null
+    },
+    "advisoryMaxDifficultyRecommendation": {
+      "recommendedMaxDifficulty": null,
+      "thresholds": {
+        "minSamples": 4,
+        "maxFailureRate": 0.2,
+        "minQualityScore": 0.8,
+        "minTokensPerSec": 22
+      },
+      "evaluations": {
+        "easy": {
+          "eligible": false,
+          "rejectionReasons": [
+            "no-profile"
+          ],
+          "profile": null
+        },
+        "medium": {
+          "eligible": false,
+          "rejectionReasons": [
+            "no-profile"
+          ],
+          "profile": null
+        },
+        "hard": {
+          "eligible": false,
+          "rejectionReasons": [
+            "no-profile"
+          ],
+          "profile": null
+        }
+      }
+    }
+  }
+]

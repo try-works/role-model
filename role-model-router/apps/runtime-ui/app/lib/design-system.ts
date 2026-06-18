@@ -396,6 +396,18 @@ const observeRequestsRoute = createRoute({
     "Canonical runtime telemetry rows with direct drill-in to request captures, endpoint profile context, and tooling receipts.",
 });
 
+const observeRoutingRoute = createRoute({
+  id: "observe-routing",
+  to: "/app/observe/routing",
+  label: "Routing",
+  section: "Observe",
+  icon: GitBranch,
+  template: "ledger-inspector",
+  title: "Routing analytics",
+  description:
+    "Historical routing mix, difficulty, model selection, and avoided-cost analytics from persisted request-time telemetry facts.",
+});
+
 const observeRequestDetailRoute = createRoute({
   id: "observe-request-detail",
   to: "/app/observe/requests/:requestId",
@@ -510,6 +522,7 @@ const runtimeRouteDefinitions = [
   routerDecisionDetailRoute,
   observeActivityRoute,
   observeRequestsRoute,
+  observeRoutingRoute,
   observeLogsRoute,
   integrationsDownstreamRoute,
   integrationsUpstreamRoute,
@@ -572,7 +585,7 @@ export const runtimeNavigationSections: readonly RuntimeNavigationSection[] = [
   {
     title: "Observe",
     icon: Activity,
-    items: [observeActivityRoute, observeRequestsRoute, observeLogsRoute],
+    items: [observeRequestsRoute, observeRoutingRoute, observeActivityRoute, observeLogsRoute],
   },
   {
     title: "Connect",
@@ -620,6 +633,14 @@ export const runtimeTheme = {
       accentMuted: "rgba(0, 102, 204, 0.72)",
       accentSubtle: "rgba(0, 102, 204, 0.14)",
       accentGhost: "rgba(0, 102, 204, 0.08)",
+      dividerSoft: "#f0f0f0",
+      hairline: "#e0e0e0",
+      chipTranslucent: "rgba(210, 210, 215, 0.64)",
+      telemetryLocal: "#1d1d1f",
+      telemetryRemote: "#0066CC",
+      telemetryHealthy: "#166534",
+      telemetryDegraded: "#b45309",
+      telemetryRaw: "#7a7a7a",
       error: "#C8102E",
       errorMuted: "rgba(200, 16, 46, 0.72)",
       errorSubtle: "rgba(200, 16, 46, 0.14)",
@@ -630,11 +651,6 @@ export const runtimeTheme = {
       warning: "#b45309",
       warningMuted: "rgba(180, 83, 9, 0.72)",
       warningSubtle: "rgba(180, 83, 9, 0.14)",
-      telemetryLocal: "#1d1d1f",
-      telemetryRemote: "#0066CC",
-      telemetryHealthy: "#166534",
-      telemetryDegraded: "#b45309",
-      telemetryRaw: "#7a7a7a",
     },
     dark: {
       bg: "#000000",
@@ -652,6 +668,14 @@ export const runtimeTheme = {
       accentMuted: "rgba(0, 102, 204, 0.72)",
       accentSubtle: "rgba(41, 151, 255, 0.18)",
       accentGhost: "rgba(41, 151, 255, 0.10)",
+      dividerSoft: "rgba(255, 255, 255, 0.1)",
+      hairline: "rgba(255, 255, 255, 0.12)",
+      chipTranslucent: "rgba(210, 210, 215, 0.24)",
+      telemetryLocal: "#FFFFFF",
+      telemetryRemote: "#2997FF",
+      telemetryHealthy: "#86efac",
+      telemetryDegraded: "#fbbf24",
+      telemetryRaw: "#cccccc",
       error: "#FB7185",
       errorMuted: "rgba(251, 113, 133, 0.72)",
       errorSubtle: "rgba(251, 113, 133, 0.18)",
@@ -662,14 +686,50 @@ export const runtimeTheme = {
       warning: "#FBBF24",
       warningMuted: "rgba(251, 191, 36, 0.72)",
       warningSubtle: "rgba(251, 191, 36, 0.18)",
-      telemetryLocal: "#FFFFFF",
-      telemetryRemote: "#2997FF",
-      telemetryHealthy: "#86efac",
-      telemetryDegraded: "#fbbf24",
-      telemetryRaw: "#cccccc",
     },
   },
 } as const;
+
+export const chartColors = {
+  local: "var(--rm-chart-local)",
+  remote: "var(--rm-chart-remote)",
+  tokens: "var(--rm-chart-tokens)",
+  cacheHit: "var(--rm-chart-cache-hit)",
+  cacheRate: "var(--rm-chart-cache-rate)",
+  latency: "var(--rm-chart-latency)",
+  cost: "var(--rm-chart-cost)",
+  failure: "var(--rm-chart-failure)",
+  success: "var(--rm-chart-success)",
+  neutral1: "var(--rm-chart-neutral-1)",
+  neutral2: "var(--rm-chart-neutral-2)",
+  ink: "var(--rm-chart-ink)",
+  cyan: "var(--rm-chart-cyan)",
+  highlightPink: "var(--rm-chart-highlight-pink)",
+  violet: "var(--rm-chart-violet)",
+  linkBlue: "var(--rm-chart-link-blue)",
+  linkDeep: "var(--rm-chart-link-deep)",
+  linkSoft: "var(--rm-chart-link-soft)",
+  error: "var(--rm-chart-error)",
+  errorDeep: "var(--rm-chart-error-deep)",
+  errorSoft: "var(--rm-chart-error-soft)",
+  warning: "var(--rm-chart-warning)",
+  warningDeep: "var(--rm-chart-warning-deep)",
+  warningSoft: "var(--rm-chart-warning-soft)",
+} as const;
+
+export const chartAxisTickStyle = {
+  fill: "var(--rm-muted)",
+  fontSize: 12,
+} as const;
+
+export const chartAxisCategoryTickStyle = {
+  fill: "var(--rm-secondary)",
+  fontSize: 13,
+} as const;
+
+export const chartBarRadius: [number, number, number, number] = [8, 8, 0, 0];
+
+export const chartRankingBarRadius: [number, number, number, number] = [0, 8, 8, 0];
 
 export const shellQuickLinks = [
   { label: "Controller JSON", href: "/api/role-model/controller" },
@@ -691,14 +751,11 @@ export const mutedPanelClassName =
 export const eyebrowClassName =
   "text-[11px] font-normal uppercase tracking-[0.24em] text-[var(--rm-muted)]";
 
-export const navLabelClassName =
-  "text-[14px] font-normal leading-[18px] tracking-[-0.016em]";
+export const navLabelClassName = "text-[15px] font-normal leading-[20px] tracking-[-0.016em]";
 
-export const utilityLabelClassName =
-  "text-[14px] font-normal leading-[18px] tracking-[-0.016em]";
+export const utilityLabelClassName = "text-[14px] font-normal leading-[18px] tracking-[-0.016em]";
 
-export const bodyTextClassName =
-  "text-[17px] font-normal leading-[25px] tracking-[-0.022em]";
+export const bodyTextClassName = "text-[17px] font-normal leading-[25px] tracking-[-0.022em]";
 
 export const bodyStrongTextClassName =
   "text-[17px] font-semibold leading-[21px] tracking-[-0.022em]";
@@ -715,8 +772,19 @@ export const largeValueClassName =
 export const fieldClassName =
   "w-full rounded-[var(--rm-radius-field)] border border-[var(--rm-border-strong)] bg-[var(--rm-surface)] px-[20px] py-3 text-[17px] font-normal leading-[25px] tracking-[-0.022em] text-[var(--rm-fg)] outline-none transition placeholder:text-[var(--rm-muted)] focus:border-[var(--rm-accent-focus)] focus:ring-2 focus:ring-[var(--rm-accent-subtle)]";
 
+export const selectFieldClassName =
+  "w-full min-h-[44px] rounded-[var(--rm-radius-field)] border border-[var(--rm-border-strong)] bg-[var(--rm-surface)] py-2 pl-[20px] pr-10 text-[17px] font-normal leading-[25px] tracking-[-0.022em] text-[var(--rm-fg)] outline-none transition focus:border-[var(--rm-accent-focus)] focus:ring-2 focus:ring-[var(--rm-accent-subtle)]";
+
+export const selectChevronStyle = {
+  appearance: "none",
+  backgroundImage: "var(--rm-select-chevron)",
+  backgroundPosition: "right 16px center",
+  backgroundRepeat: "no-repeat",
+  backgroundSize: "12px 8px",
+} as const;
+
 export const primaryButtonClassName =
-  "inline-flex min-h-[44px] items-center justify-center rounded-[var(--rm-radius-pill)] border border-[var(--rm-accent)] bg-[var(--rm-accent)] px-[22px] py-[11px] text-[17px] font-normal leading-[17px] tracking-[-0.022em] text-white transition hover:border-[var(--rm-accent-focus)] hover:bg-[var(--rm-accent-focus)] active:scale-95 disabled:opacity-60";
+  "inline-flex min-h-[44px] items-center justify-center rounded-[var(--rm-radius-pill)] border border-[var(--rm-accent)] bg-[var(--rm-accent)] px-[22px] py-[11px] text-[17px] font-normal leading-[17px] tracking-[-0.022em] text-[var(--rm-on-primary)] transition hover:border-[var(--rm-accent-focus)] hover:bg-[var(--rm-accent-focus)] active:scale-95 disabled:opacity-60";
 
 export const secondaryButtonClassName =
   "inline-flex min-h-[44px] items-center justify-center rounded-[var(--rm-radius-pill)] border border-[var(--rm-border-strong)] bg-[var(--rm-panel)] px-[22px] py-[11px] text-[17px] font-normal leading-[17px] tracking-[-0.022em] text-[var(--rm-accent-ink)] transition hover:border-[var(--rm-accent)] hover:bg-[var(--rm-accent-ghost)] hover:text-[var(--rm-accent-ink)] active:scale-95 disabled:opacity-60";
@@ -734,7 +802,7 @@ export function getSelectablePanelClassName(selected: boolean): string {
 }
 
 export const codeBlockClassName =
-  "overflow-x-auto rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] bg-[var(--rm-panel)] p-4 text-xs leading-6 text-[var(--rm-secondary)]";
+  "max-w-full overflow-x-auto whitespace-pre-wrap break-words [overflow-wrap:anywhere] rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] bg-[var(--rm-panel)] p-4 text-xs leading-6 text-[var(--rm-secondary)]";
 
 export const listRowClassName =
   "flex flex-col gap-3 rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] bg-[var(--rm-panel)] p-4 md:flex-row md:items-start md:justify-between";
@@ -805,6 +873,9 @@ export function getRuntimeRouteDefinition(pathname: string): RuntimeRouteDefinit
   }
   if (pathname === "/app/observe") {
     return observeRequestsRoute;
+  }
+  if (pathname === "/app/observe/routing") {
+    return observeRoutingRoute;
   }
   if (pathname === "/app/requests") {
     return observeRequestsRoute;

@@ -1,0 +1,484 @@
+
+> @role-model-router/runtime-host-bridge@0.0.0 test D:\DEV\role-model\.worktrees\49-runtime-telemetry-analytics-charts\role-model-router\apps\runtime-host-bridge
+> vitest run test/index.test.ts test/account-repair.test.ts test/endpoint-rehydration.test.ts test/restart-rehydration.test.ts test/session-readiness-api.test.ts test/session-bootstrap-health.test.ts test/remote-health-bootstrap.test.ts test/routable-inventory-bootstrap.test.ts test/operator-intent-corrupt-bootstrap.test.ts test/validate-restart-rehydration.test.ts test/validate-catalog-economics.test.ts test/backend-unified-runtime-config.test.ts test/executable.test.ts test/runtime-assets.test.ts test/unified-runtime-config.test.ts test/validate-operations.test.ts test/validate-tools.test.ts test/validate-vendors.test.ts test/local-policy.test.ts test/benchmark-artifacts.test.ts test/benchmark-candidates-routing-quality.test.ts test/benchmark-data-clear.test.ts test/benchmark-start-guards.test.ts test/benchmark-validation-metrics.test.ts test/benchmark-runner-judge.test.ts test/benchmark-runner-compare.test.ts test/benchmark-judge-runtime.test.ts test/benchmark-progress.test.ts test/benchmark-summary.test.ts src/benchmark-reasoning.test.ts src/local-model-role-bindings.test.ts src/operator-intent.test.ts src/oauth-credential.test.ts src/session-bootstrap.test.ts src/remote-health-probe.test.ts src/routable-inventory.test.ts "--" "test/index.test.ts" "-t" "builds QA backend options"
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/49-runtime-telemetry-analytics-charts/role-model-router/apps/runtime-host-bridge[39m
+
+(node:18388) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:15204) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:19568) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:13860) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:10000) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:19944) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:6360) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:9028) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:5024) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:19792) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:21316) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:2628) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:16120) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:9940) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [32m✓[39m test/validate-operations.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 1351[2mms[22m[39m
+   [33m[2m✓[22m[39m runRuntimeOperationsValidation[2m > [22mvalidates isolated scopes and runtime-state maintenance drills [33m 1348[2mms[22m[39m
+ [32m✓[39m test/routable-inventory-bootstrap.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 936[2mms[22m[39m
+   [33m[2m✓[22m[39m routable inventory bootstrap[2m > [22mexposes inventory summary and inventory bootstrap stage after startup [33m 886[2mms[22m[39m
+ [32m✓[39m test/operator-intent-corrupt-bootstrap.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 952[2mms[22m[39m
+   [33m[2m✓[22m[39m operator intent corrupt manifest[2m > [22msurfaces corrupt operator-intent diagnostics and blocks bootstrap [33m 947[2mms[22m[39m
+ [32m✓[39m test/session-readiness-api.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 1121[2mms[22m[39m
+   [33m[2m✓[22m[39m session readiness API[2m > [22mexposes bootstrap, inventory, and readiness fields over HTTP [33m 1118[2mms[22m[39m
+ [32m✓[39m test/benchmark-data-clear.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 1213[2mms[22m[39m
+   [33m[2m✓[22m[39m benchmark global data clear[2m > [22mDELETE /api/role-model/benchmark/data clears sqlite samples and artifact runs [33m 974[2mms[22m[39m
+(node:18284) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:10580) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [32m✓[39m test/endpoint-rehydration.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 1847[2mms[22m[39m
+   [33m[2m✓[22m[39m endpoint rehydration[2m > [22mrehydrates sqlite runtime endpoints across backend restart without re-activation [33m 1844[2mms[22m[39m
+(node:21492) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:10452) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:16868) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [32m✓[39m test/benchmark-runner-compare.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 246[2mms[22m[39m
+ [32m✓[39m test/benchmark-runner-judge.test.ts [2m([22m[2m7 tests[22m[2m)[22m[33m 486[2mms[22m[39m
+ [32m✓[39m test/remote-health-bootstrap.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 675[2mms[22m[39m
+   [33m[2m✓[22m[39m remote health bootstrap[2m > [22mskips remote-health probes in decision_only mode [33m 672[2mms[22m[39m
+ [32m✓[39m test/session-bootstrap-health.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 884[2mms[22m[39m
+   [33m[2m✓[22m[39m session bootstrap health[2m > [22mexposes bootstrap receipts on /healthz summary after async startup [33m 879[2mms[22m[39m
+ [32m✓[39m test/validate-tools.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 813[2mms[22m[39m
+   [33m[2m✓[22m[39m runRuntimeToolsValidation[2m > [22mexecutes runtime-owned MCP tool calls and persists their observation receipts [33m 810[2mms[22m[39m
+ [32m✓[39m test/validate-catalog-economics.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 3127[2mms[22m[39m
+   [33m[2m✓[22m[39m runCatalogEconomicsValidation[2m > [22mhides moonshotai, routes easy cost work to local peer, and emits catalogEconomics [33m 3124[2mms[22m[39m
+ [32m✓[39m test/runtime-assets.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 91[2mms[22m[39m
+ [32m✓[39m test/benchmark-summary.test.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 817[2mms[22m[39m
+   [33m[2m✓[22m[39m benchmark-summary[2m > [22mlists completed runs and resolves latest summary per mode [33m 478[2mms[22m[39m
+ [32m✓[39m test/account-repair.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 4076[2mms[22m[39m
+   [33m[2m✓[22m[39m account repair mutations[2m > [22mreconnect returns the current pending device-authorization session for the same account [33m 971[2mms[22m[39m
+   [33m[2m✓[22m[39m account repair mutations[2m > [22mupdate API key preserves account identity, bindings, and endpoint associations [33m 1405[2mms[22m[39m
+   [33m[2m✓[22m[39m account repair mutations[2m > [22mrejects overlapping repair mutations for the same account without partially mutating state [33m 1692[2mms[22m[39m
+ [32m✓[39m src/oauth-credential.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 115[2mms[22m[39m
+ [32m✓[39m test/unified-runtime-config.test.ts [2m([22m[2m16 tests[22m[2m)[22m[32m 114[2mms[22m[39m
+ [32m✓[39m src/operator-intent.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 228[2mms[22m[39m
+ [32m✓[39m src/routable-inventory.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 62[2mms[22m[39m
+ [32m✓[39m test/benchmark-artifacts.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 110[2mms[22m[39m
+ [32m✓[39m src/remote-health-probe.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 24[2mms[22m[39m
+ [32m✓[39m src/session-bootstrap.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+ [32m✓[39m src/local-model-role-bindings.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+ [32m✓[39m test/benchmark-candidates-routing-quality.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m src/benchmark-reasoning.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m test/benchmark-start-guards.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m test/benchmark-judge-runtime.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m test/benchmark-validation-metrics.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m test/benchmark-progress.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m test/local-policy.test.ts [2m([22m[2m13 tests[22m[2m)[22m[33m 7259[2mms[22m[39m
+   [33m[2m✓[22m[39m local policy persistence[2m > [22mreadLocalPolicy returns defaults when file does not exist [33m 585[2mms[22m[39m
+   [33m[2m✓[22m[39m local policy persistence[2m > [22mupdateLocalPolicy writes merged policy to file [33m 371[2mms[22m[39m
+   [33m[2m✓[22m[39m local policy persistence[2m > [22mreadLocalPolicy reads persisted file [33m 484[2mms[22m[39m
+   [33m[2m✓[22m[39m local policy persistence[2m > [22mupdateLocalPolicy merges with existing policy [33m 576[2mms[22m[39m
+   [33m[2m✓[22m[39m local swap history[2m > [22mlistSwapHistory returns empty array when no events [33m 609[2mms[22m[39m
+   [33m[2m✓[22m[39m local swap history[2m > [22mlistSwapHistory returns events in descending order [33m 797[2mms[22m[39m
+   [33m[2m✓[22m[39m model overrides[2m > [22mreadModelOverrides returns empty object when file does not exist [33m 590[2mms[22m[39m
+   [33m[2m✓[22m[39m model overrides[2m > [22mupdateModelOverrides writes to file [33m 868[2mms[22m[39m
+   [33m[2m✓[22m[39m model overrides[2m > [22mreadModelOverrides reads persisted file [33m 679[2mms[22m[39m
+   [33m[2m✓[22m[39m peer configuration[2m > [22mreadPeers returns empty array when file does not exist [33m 389[2mms[22m[39m
+   [33m[2m✓[22m[39m peer configuration[2m > [22mupdatePeers writes to file [33m 611[2mms[22m[39m
+   [33m[2m✓[22m[39m peer configuration[2m > [22mreadPeers reads persisted file [33m 369[2mms[22m[39m
+   [33m[2m✓[22m[39m peer configuration[2m > [22mcheckPeerHealth returns false for unreachable url [33m 325[2mms[22m[39m
+ [32m✓[39m test/restart-rehydration.test.ts [2m([22m[2m7 tests[22m[2m)[22m[33m 11251[2mms[22m[39m
+   [33m[2m✓[22m[39m restart rehydration[2m > [22mrestores activated endpoints and session readiness summary after backend restart [33m 1923[2mms[22m[39m
+   [33m[2m✓[22m[39m restart rehydration[2m > [22mdoes not count expired pending device authorization as an active readiness blocker after restart [33m 2425[2mms[22m[39m
+   [33m[2m✓[22m[39m restart rehydration[2m > [22marchives orphan pending authorizations and orphan credential files instead of counting them as active readiness [33m 1928[2mms[22m[39m
+   [33m[2m✓[22m[39m restart rehydration[2m > [22marchives invalid persisted provider accounts instead of surfacing them as active lifecycle records [33m 922[2mms[22m[39m
+   [33m[2m✓[22m[39m restart rehydration[2m > [22msurfaces failed pending authorization polling in bootstrap stage details after restart [33m 819[2mms[22m[39m
+   [33m[2m✓[22m[39m restart rehydration[2m > [22mclassifies failed startup OAuth refresh as expired auth after restart [33m 993[2mms[22m[39m
+   [33m[2m✓[22m[39m restart rehydration[2m > [22mpolls the earliest-expiring pending authorizations first and surfaces deferred count [33m 2234[2mms[22m[39m
+ [32m✓[39m test/validate-vendors.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 13228[2mms[22m[39m
+   [33m[2m✓[22m[39m runRuntimeVendorValidation[2m > [22mexecutes decision-only, local-only, remote-only, and hybrid vendor modes end to end [33m 13154[2mms[22m[39m
+ [32m✓[39m test/backend-unified-runtime-config.test.ts [2m([22m[2m11 tests[22m[2m)[22m[33m 14489[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge unified runtime backend[2m > [22msurfaces the derived execution mode in the runtime summary when a unified config file is provided [33m 922[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge unified runtime backend[2m > [22mreads and updates unified runtime config through the backend [33m 1425[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge unified runtime backend[2m > [22mmerges partial runtime config updates without dropping existing routing strategy [33m 1592[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge unified runtime backend[2m > [22mclears stale alias drift warnings after the canonical config removes the stale hint [33m 2986[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge unified runtime backend[2m > [22mcreates and updates unified runtime config when the configured path does not exist yet [33m 487[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge unified runtime backend[2m > [22mdoes not mark all candidates ignored when routing guidance has no preferred endpoints [33m 593[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge unified runtime backend[2m > [22mpreserves synthesized activated endpoint models across runtime config updates [33m 715[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge unified runtime backend[2m > [22mreturns no controller assignment when the unified config has no endpoints yet [33m 430[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge unified runtime backend[2m > [22msurfaces normalized provider docs and npm metadata through listProviders [33m 568[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge unified runtime backend[2m > [22mpreserves manual account authority and provenance on exact runtime-config account-id collision [33m 2776[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge unified runtime backend[2m > [22msurfaces LiteLLM-backed Moonshot models and endpoints from unified runtime config [33m 1990[2mms[22m[39m
+ [31m❯[39m test/index.test.ts [2m([22m[2m78 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[33m 33689[2mms[22m[39m
+   [32m✓[39m runtime-host-bridge[2m > [22mcreates a stable model-list response grouped by model id[32m 46[2mms[22m[39m
+   [32m✓[39m runtime-host-bridge[2m > [22mcreates alias entries in the model-list response alongside real models[32m 2[2mms[22m[39m
+   [32m✓[39m runtime-host-bridge[2m > [22mbuilds QA bootstrap options with router surfaces and complete fixtures[32m 14[2mms[22m[39m
+[31m   [31m×[31m runtime-host-bridge[2m > [22mbuilds QA backend options that preserve runtime config without starting local vendors[39m[32m 78[2mms[22m[39m
+[31m     → (0 , createQaRuntimeBridgeBackendOptions) is not a function[39m
+   [32m✓[39m runtime-host-bridge[2m > [22mbootstraps QA control-plane state for mixed local+remote routing proof[32m 1[2mms[22m[39m
+   [32m✓[39m runtime-host-bridge[2m > [22mbuilds packaged CLI options with static UI, router surfaces, and fixture-root defaults[32m 4[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22msuppresses placeholder provider accounts when using the packaged CLI defaults [33m 741[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mremoves legacy placeholder provider accounts from persisted runtime state when using packaged defaults [33m 2109[2mms[22m[39m
+   [32m✓[39m runtime-host-bridge[2m > [22mmaps a chat-completions request into role-model routing and execution inputs[32m 5[2mms[22m[39m
+   [32m✓[39m runtime-host-bridge[2m > [22mmaps chat-completions tool-turn history with null assistant content without crashing[32m 1[2mms[22m[39m
+   [32m✓[39m runtime-host-bridge[2m > [22mmaps an alias chat-completions request into a pooled endpoint allow-list and alias diagnostics[32m 1[2mms[22m[39m
+   [32m✓[39m runtime-host-bridge[2m > [22mkeeps exact-model routing unchanged when aliases are configured[32m 2[2mms[22m[39m
+   [32m✓[39m runtime-host-bridge[2m > [22mnarrows exact-model chat routing to an explicitly requested endpoint[32m 1[2mms[22m[39m
+   [32m✓[39m runtime-host-bridge[2m > [22mmaps validated controller guidance into an intelligent alias routing plan[32m 3[2mms[22m[39m
+   [32m✓[39m runtime-host-bridge[2m > [22muses a baseline override to bypass intelligent alias controller routing[32m 1[2mms[22m[39m
+   [32m✓[39m runtime-host-bridge[2m > [22mapplies a directly requested role to chat routing and execution policy[32m 2[2mms[22m[39m
+   [32m✓[39m runtime-host-bridge[2m > [22mrecords explicit hybrid arbitration when controller guidance alters the difficulty plan[32m 3[2mms[22m[39m
+   [32m✓[39m runtime-host-bridge[2m > [22mmaps a difficulty-mode alias chat request into a gated allow-list and difficulty diagnostics[32m 2[2mms[22m[39m
+   [32m✓[39m runtime-host-bridge[2m > [22muses a baseline override to bypass difficulty alias gating[32m 1[2mms[22m[39m
+   [32m✓[39m runtime-host-bridge[2m > [22muses the persisted Strategy B mode as the default routing mode when no alias mode or request override is set[32m 1[2mms[22m[39m
+   [32m✓[39m runtime-host-bridge[2m > [22mmaps an alias responses request into a pooled endpoint allow-list and alias diagnostics[32m 1[2mms[22m[39m
+   [32m✓[39m runtime-host-bridge[2m > [22mmaps a difficulty-mode responses request into an easy strategy and keeps eligible endpoints[32m 1[2mms[22m[39m
+   [32m✓[39m runtime-host-bridge[2m > [22mapplies requested role execution policy to responses requests[32m 1[2mms[22m[39m
+   [32m✓[39m runtime-host-bridge[2m > [22mprefers a configured alias in downstream OpenAI provider config[32m 1[2mms[22m[39m
+   [32m✓[39m runtime-host-bridge[2m > [22mserves health and model-list endpoints[32m 130[2mms[22m[39m
+   [32m✓[39m runtime-host-bridge[2m > [22mserves alias entries in model-list and downstream provider config from runtime config[32m 39[2mms[22m[39m
+   [32m✓[39m runtime-host-bridge[2m > [22mserves preserved host observability and vendor-facing utility endpoints[32m 34[2mms[22m[39m
+   [32m✓[39m runtime-host-bridge[2m > [22mreturns JSON for /logs/stream before static root catch-all[32m 117[2mms[22m[39m
+   [32m✓[39m runtime-host-bridge[2m > [22mpreserves x-role-model-request-id as client correlation metadata while generating a canonical request id[32m 30[2mms[22m[39m
+   [32m✓[39m runtime-host-bridge[2m > [22mgenerates a unique canonical request id for each request when headers omit request ids[32m 21[2mms[22m[39m
+   [32m✓[39m runtime-host-bridge[2m > [22mserves runtime control-plane summary, provider, account, and endpoint routes[32m 101[2mms[22m[39m
+   [32m✓[39m runtime-host-bridge[2m > [22mserves canonical telemetry summary, comparison, and recent request routes[32m 15[2mms[22m[39m
+   [32m✓[39m runtime-host-bridge[2m > [22mserves the generic telemetry analytics query route[32m 11[2mms[22m[39m
+   [32m✓[39m runtime-host-bridge[2m > [22mserves downstream OpenAI-compatible provider metadata for consumer apps[32m 8[2mms[22m[39m
+   [32m✓[39m runtime-host-bridge[2m > [22mserves chat-completions responses with role-model execution metadata[32m 11[2mms[22m[39m
+   [32m✓[39m runtime-host-bridge[2m > [22mserves OpenAI-compatible SSE events for streaming responses requests[32m 84[2mms[22m[39m
+   [32m✓[39m runtime-host-bridge[2m > [22msurfaces tool calls on chat-completions responses when the backend returns them[32m 29[2mms[22m[39m
+   [32m✓[39m runtime-host-bridge[2m > [22mstreams provider deltas through the bridge as they arrive[32m 102[2mms[22m[39m
+   [32m✓[39m runtime-host-bridge[2m > [22mforwards x-role-model-routing-mode to chat-completions execution[32m 13[2mms[22m[39m
+   [32m✓[39m runtime-host-bridge[2m > [22mrejects an invalid x-role-model-routing-mode header[32m 9[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mcreates a runtime backend that executes chat-completions through the real routing and adapter path [33m 1651[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mcreates a runtime backend that persists structured request and endpoint inspection state [33m 890[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mpersists routing-mode override and rewrite-skipped diagnostics for exact-model runtime-backed chat requests [33m 524[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mpersists applied role policy diagnostics and injected system instructions for runtime-backed chat requests [33m 612[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mdoes not seed placeholder Anthropic/OpenAI accounts, endpoints, models, or router guidance in the default runtime bootstrap [33m 446[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mpersists alias-resolution diagnostics for runtime-backed chat requests [33m 875[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mpersists difficulty-routing diagnostics for runtime-backed chat requests [33m 660[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mallows an observed max-difficulty override when bucketed performance supports a harder request [33m 1694[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mroutes hard requests using bucketed observed profiles and records the selected difficulty bucket [33m 1890[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22muses the configured remote classifier result for difficulty-mode runtime-backed chat requests [33m 1170[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22muses the configured remote controller result for intelligent runtime-backed chat requests [33m 683[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mpersists alias-default hybrid arbitration and rewrite-applied diagnostics for runtime-backed chat requests [33m 677[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mfalls back deterministically when the configured classifier times out [33m 1094[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mreuses cached difficulty classification for repeated requests in the same conversation when invalidation thresholds are not exceeded [33m 684[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mreports cache invalidation reasons before reclassifying a repeated request [33m 656[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mcreates a runtime backend that exposes provider presets, runtime summary, and account upserts [33m 1087[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mpersists runtime-managed role policy and task allowlists across backend restart [33m 620[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mexecutes env-backed api-key accounts through the live provider path when the env credential resolves [33m 477[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mregisters configured local OpenAI-compatible peers as execution-ready model endpoints [33m 494[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mexposes llama-swap ownership and config metadata on local model and endpoint readback [33m 688[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mrejects local model activation when no configured local endpoint exposes the requested model [33m 753[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mrehydrates connected OAuth accounts from stored token files on backend restart [33m 764[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mrestores pending OAuth device-authorizations from SQLite after backend restart [33m 1170[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mexecutes chat-completions through an activated Kimi Code endpoint [33m 551[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mcreates a runtime backend that executes responses through the real routing and adapter path [33m 322[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mpersists applied role policy diagnostics and injected policy messages for runtime-backed responses requests [33m 353[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mserves structured request and endpoint inspection routes through the bridge server [33m 463[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22maggregates generic telemetry analytics from persisted request-time routing and cost facts [33m 799[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mkeeps duplicate caller request ids as separate canonical telemetry rows [33m 993[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mrecords caller correlation and live request classification for failed chat completions [33m 654[2mms[22m[39m
+   [32m✓[39m runtime-host-bridge[2m > [22mreads bucketed endpoint profiles with an advisory max-difficulty recommendation[32m 286[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mstreams canonical telemetry updates over SSE after new requests are persisted [33m 4337[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mexecutes chat-completions through a LiteLLM-derived moonshot-oauth endpoint with X-Msh headers [33m 572[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mexecutes chat-completions through an api-key-static provider via environment credential [33m 300[2mms[22m[39m
+   [32m✓[39m runtime-host-bridge[2m > [22mresolves bridge server options from explicit values and defaults[32m 1[2mms[22m[39m
+   [32m✓[39m runtime-host-bridge[2m > [22mkeeps repoRoot-derived static paths stable when runtimeStateRoot uses a different path dialect[32m 0[2mms[22m[39m
+   [32m✓[39m runtime-host-bridge[2m > [22mresolves packaged bridge server options from executable path defaults[32m 1[2mms[22m[39m
+   [32m✓[39m runtime-host-bridge[2m > [22mresolves packaged bridge server options from POSIX executable path defaults[32m 1[2mms[22m[39m
+X [ERROR] Could not resolve "@role-model-router/context-envelope"
+
+    dist/index.js:10:40:
+      10 │ ...embleContextEnvelope } from "@role-model-router/context-envelope";
+         ╵                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/context-envelope/package.json:9:17:
+      9 │       "runtime": "./dist/index.js",
+        ╵                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/context-envelope" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+X [ERROR] Could not resolve "@role-model-router/endpoint-registry"
+
+    dist/index.js:11:38:
+      11 │ ...ildEndpointRegistry } from "@role-model-router/endpoint-registry";
+         ╵                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/endpoint-registry/package.json:9:17:
+      9 │       "runtime": "./dist/index.js",
+        ╵                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/endpoint-registry" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+X [ERROR] Could not resolve "@role-model-router/process-supervisor"
+
+    dist/index.js:12:34:
+      12 │ ... ProcessSupervisor } from "@role-model-router/process-supervisor";
+         ╵                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/process-supervisor/package.json:9:17:
+      9 │       "runtime": "./dist/index.js",
+        ╵                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/process-supervisor" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+X [ERROR] Could not resolve "@role-model-router/profile-aggregator"
+
+    dist/index.js:13:47:
+      13 │ ...ngBenchmarkQuality } from "@role-model-router/profile-aggregator";
+         ╵                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/profile-aggregator/package.json:9:17:
+      9 │       "runtime": "./dist/index.js",
+        ╵                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/profile-aggregator" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+X [ERROR] Could not resolve "@role-model-router/protocol-routing"
+
+    dist/index.js:14:37:
+      14 │ ...routeRuntimeRequest, } from "@role-model-router/protocol-routing";
+         ╵                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/protocol-routing/package.json:9:17:
+      9 │       "runtime": "./dist/index.js",
+        ╵                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/protocol-routing" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+X [ERROR] Could not resolve "@role-model-router/provider-account"
+
+    dist/index.js:15:42:
+      15 │ ...ateProviderAccounts, } from "@role-model-router/provider-account";
+         ╵                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/provider-account/package.json:9:17:
+      9 │       "runtime": "./dist/index.js",
+        ╵                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/provider-account" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+X [ERROR] Could not resolve "@role-model-router/provider-anthropic"
+
+    dist/index.js:16:47:
+      16 │ ...picProviderAdapter } from "@role-model-router/provider-anthropic";
+         ╵                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/provider-anthropic/package.json:9:17:
+      9 │       "runtime": "./dist/index.js",
+        ╵                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/provider-anthropic" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+X [ERROR] Could not resolve "@role-model-router/provider-litellm"
+
+    dist/index.js:17:45:
+      17 │ ...teLLMProviderAdapter } from "@role-model-router/provider-litellm";
+         ╵                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/provider-litellm/package.json:9:17:
+      9 │       "runtime": "./dist/index.js",
+        ╵                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/provider-litellm" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+X [ERROR] Could not resolve "@role-model-router/provider-mcp"
+
+    dist/index.js:18:47:
+      18 │ ...McpConnectorDefinitions, } from "@role-model-router/provider-mcp";
+         ╵                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/provider-mcp/package.json:9:17:
+      9 │       "runtime": "./dist/index.js",
+        ╵                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/provider-mcp" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+X [ERROR] Could not resolve "@role-model-router/provider-openai"
+
+    dist/index.js:19:44:
+      19 │ ...OpenAIProviderAdapter } from "@role-model-router/provider-openai";
+         ╵                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/provider-openai/package.json:9:17:
+      9 │       "runtime": "./dist/index.js",
+        ╵                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/provider-openai" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+X [ERROR] Could not resolve "@role-model-router/retrieval-receipt"
+
+    dist/index.js:20:39:
+      20 │ ...ateRetrievalReceipt } from "@role-model-router/retrieval-receipt";
+         ╵                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/retrieval-receipt/package.json:9:17:
+      9 │       "runtime": "./dist/index.js",
+        ╵                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/retrieval-receipt" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+X [ERROR] Could not resolve "@role-model-router/tool-registry"
+
+    dist/index.js:24:54:
+      24 │ ...stry, executeToolCalls, } from "@role-model-router/tool-registry";
+         ╵                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/tool-registry/package.json:9:17:
+      9 │       "runtime": "./dist/index.js",
+        ╵                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/tool-registry" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+X [ERROR] Could not resolve "@role-model-router/adapter-execution"
+
+    dist/index.js:25:42:
+      25 │ ...eLiveRoutedRequest, } from "@role-model-router/adapter-execution";
+         ╵                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/adapter-execution/package.json:9:17:
+      9 │       "runtime": "./dist/index.js",
+        ╵                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/adapter-execution" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+X [ERROR] Could not resolve "@role-model-router/vendor-abstraction"
+
+    dist/index.js:26:47:
+      26 │ ...NotConfiguredError } from "@role-model-router/vendor-abstraction";
+         ╵                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/vendor-abstraction/package.json:9:17:
+      9 │       "runtime": "./dist/index.js",
+        ╵                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/vendor-abstraction" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+X [ERROR] Could not resolve "@role-model-router/vendor-litellm"
+
+    dist/index.js:27:35:
+      27 │ ...t { startLiteLLMVendor } from "@role-model-router/vendor-litellm";
+         ╵                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/vendor-litellm/package.json:9:17:
+      9 │       "runtime": "./dist/index.js",
+        ╵                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/vendor-litellm" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+X [ERROR] Could not resolve "@role-model-router/vendor-llama-swap"
+
+    dist/index.js:28:37:
+      28 │ ...tartLlamaSwapVendor } from "@role-model-router/vendor-llama-swap";
+         ╵                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/vendor-llama-swap/package.json:9:17:
+      9 │       "runtime": "./dist/index.js",
+        ╵                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/vendor-llama-swap" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+X [ERROR] Could not resolve "@role-model-router/catalog"
+
+    dist/index.js:40:126:
+      40 │ ...lIds, loadLiteLLMModelPrices, } from "@role-model-router/catalog";
+         ╵                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/catalog/package.json:9:17:
+      9 │       "runtime": "./dist/index.js",
+        ╵                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/catalog" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+X [ERROR] Could not resolve "@role-model-router/vendor-llama-swap"
+
+    dist/runtime-assets.js:5:46:
+      5 │ ...SwapAssetDefinition, } from "@role-model-router/vendor-llama-swap";
+        ╵                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    node_modules/@role-model-router/vendor-llama-swap/package.json:9:17:
+      9 │       "runtime": "./dist/index.js",
+        ╵                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/vendor-llama-swap" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+X [ERROR] Could not resolve "@role-model-router/profile-aggregator"
+
+    ../../packages/runtime-observability/dist/index.js:1:53:
+      1 │ ...PerformanceSamples, } from "@role-model-router/profile-aggregator";
+        ╵                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    ../../packages/runtime-observability/node_modules/@role-model-router/profile-aggregator/package.json:9:17:
+      9 │       "runtime": "./dist/index.js",
+        ╵                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/profile-aggregator" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+X [ERROR] Could not resolve "@role-model-router/profile-aggregator"
+
+    ../../packages/sqlite-memory/dist/index.js:5:53:
+      5 │ ...PerformanceSamples, } from "@role-model-router/profile-aggregator";
+        ╵                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The module "./dist/index.js" was not found on the file system:
+
+    ../../packages/sqlite-memory/node_modules/@role-model-router/profile-aggregator/package.json:9:17:
+      9 │       "runtime": "./dist/index.js",
+        ╵                  ~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@role-model-router/profile-aggregator" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+

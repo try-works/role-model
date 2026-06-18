@@ -53,10 +53,10 @@ export default function LocalSwapRoute() {
               >
                 <div className="flex-1">
                   <div className="mb-2 flex flex-wrap items-center gap-2">
-                    <span className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]">
+                    <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--rm-muted)]">
                       {new Date(event.timestamp).toLocaleString()}
                     </span>
-                    <span className="rounded-[var(--rm-radius-pill)] border border-[var(--rm-border)] bg-[var(--rm-panel)] px-3 py-1 text-[11px] font-medium uppercase tracking-[0.14em] text-[var(--rm-secondary)]">
+                    <span className="rounded-[var(--rm-radius-pill)] border border-[var(--rm-border)] bg-[var(--rm-bg)] px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--rm-secondary)]">
                       {event.reason}
                     </span>
                   </div>
@@ -71,7 +71,7 @@ export default function LocalSwapRoute() {
                     ) : (
                       <span className="text-sm text-[var(--rm-muted)]">Initial load →</span>
                     )}
-                    <span className="break-words font-mono text-sm font-medium text-[var(--rm-fg)]">
+                    <span className="break-words font-mono text-sm font-semibold text-[var(--rm-fg)]">
                       {event.newModel}
                     </span>
                   </div>

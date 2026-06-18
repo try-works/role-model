@@ -1,0 +1,7 @@
+RUN  v3.2.4 D:/DEV/role-model/.worktrees/49-runtime-telemetry-analytics-charts/role-model-router/apps/runtime-host-bridge
+
+FAIL test/index.test.ts > runtime-host-bridge > serves the generic telemetry analytics query route
+AssertionError: expected 404 to be 200 // Object.is equality
+
+FAIL test/index.test.ts > runtime-host-bridge > aggregates generic telemetry analytics from persisted request-time routing and cost facts
+TypeError: The "path" argument must be a string, Uint8Array, or URL without null bytes.

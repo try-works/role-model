@@ -82,7 +82,7 @@ export default function ControlControllerRoute() {
               <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">
                 Endpoint
               </p>
-              <p className="mt-2 break-all text-sm font-medium text-[var(--rm-fg)]">
+              <p className="mt-2 break-all text-sm font-semibold text-[var(--rm-fg)]">
                 {controller.endpointId}
               </p>
             </div>
@@ -90,7 +90,7 @@ export default function ControlControllerRoute() {
               <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">
                 Model
               </p>
-              <p className="mt-2 text-sm font-medium text-[var(--rm-fg)]">{controller.modelId}</p>
+              <p className="mt-2 text-sm font-semibold text-[var(--rm-fg)]">{controller.modelId}</p>
             </div>
             <div className={`${mutedPanelClassName} p-4`}>
               <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">
@@ -126,7 +126,7 @@ export default function ControlControllerRoute() {
                     <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">
                       {endpoint.sourceType ?? "unknown"}
                     </p>
-                    <h3 className="mt-2 text-lg font-medium text-[var(--rm-fg)]">
+                    <h3 className="mt-2 text-lg font-semibold text-[var(--rm-fg)]">
                       {toDisplayLabel(endpoint.modelId)}
                     </h3>
                     <p className="mt-2 break-all text-sm text-[var(--rm-secondary)]">
@@ -159,11 +159,11 @@ export default function ControlControllerRoute() {
 
                 <div className="mt-4 grid gap-3 md:grid-cols-2 text-sm text-[var(--rm-secondary)]">
                   <p>
-                    <span className="font-medium text-[var(--rm-fg)]">Roles:</span>{" "}
+                    <span className="font-semibold text-[var(--rm-fg)]">Roles:</span>{" "}
                     {endpoint.roleIds?.join(", ") || "None"}
                   </p>
                   <p>
-                    <span className="font-medium text-[var(--rm-fg)]">Serving source:</span>{" "}
+                    <span className="font-semibold text-[var(--rm-fg)]">Serving source:</span>{" "}
                     {endpoint.servingSource ?? "unknown"}
                   </p>
                 </div>

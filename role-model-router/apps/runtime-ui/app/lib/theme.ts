@@ -1,28 +1,30 @@
+export const THEME_STORAGE_KEY = "role-model-runtime-theme";
+
 export type RuntimeTheme = "light" | "dark";
 
-export const THEME_STORAGE_KEY = "rm-runtime-ui-theme";
-
-const LIGHT_THEME_COLOR = "#f5f5f7";
-const DARK_THEME_COLOR = "#000000";
-
-export function normalizeStoredTheme(value: string | null | undefined): RuntimeTheme | null {
-  return value === "light" || value === "dark" ? value : null;
+export function normalizeStoredTheme(value: string | null): RuntimeTheme | null {
+  if (value === "light" || value === "dark") {
+    return value;
+  }
+  return null;
 }
 
-export function resolveInitialTheme({
-  storedTheme,
-  systemPrefersDark,
-}: {
-  storedTheme: string | null | undefined;
+export function resolveInitialTheme(input: {
+  storedTheme: RuntimeTheme | null;
   systemPrefersDark: boolean;
 }): RuntimeTheme {
-  return normalizeStoredTheme(storedTheme) ?? (systemPrefersDark ? "dark" : "light");
+  if (input.storedTheme) {
+    return input.storedTheme;
+  }
+  return input.systemPrefersDark ? "dark" : "light";
 }
 
 export function getThemeColor(theme: RuntimeTheme): string {
-  return theme === "dark" ? DARK_THEME_COLOR : LIGHT_THEME_COLOR;
+  return theme === "dark" ? "#000000" : "#f5f5f7";
 }
 
-export function getThemeBootstrapScript(storageKey = THEME_STORAGE_KEY): string {
-  return `(function(){const storageKey=${JSON.stringify(storageKey)};const lightColor=${JSON.stringify(LIGHT_THEME_COLOR)};const darkColor=${JSON.stringify(DARK_THEME_COLOR)};const normalize=function(value){return value==="light"||value==="dark"?value:null;};const resolve=function(storedTheme,systemPrefersDark){return normalize(storedTheme)||(systemPrefersDark?"dark":"light");};const readStoredTheme=function(){try{return window.localStorage.getItem(storageKey);}catch{return null;}};const root=document.documentElement;const systemPrefersDark=!!(window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches);const theme=resolve(readStoredTheme(),systemPrefersDark);root.dataset.theme=theme;root.style.colorScheme=theme;const meta=document.querySelector('meta[name="theme-color"]');if(meta){meta.setAttribute("content",theme==="dark"?darkColor:lightColor);}})();`;
+export function syncDocumentTheme(theme: RuntimeTheme): void {
+  document.documentElement.dataset.theme = theme;
+  document.documentElement.style.colorScheme = theme;
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", getThemeColor(theme));
 }

@@ -1,23 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 
+import { EmptyState, ErrorState, LoadingState, SectionCard } from "../components/page-primitives";
 import {
-  EmptyState,
-  ErrorState,
-  LoadingState,
-  RegistryDetailLayout,
-  SectionCard,
-  StatusPill,
-} from "../components/page-primitives";
-import {
-  bodyStrongTextClassName,
-  bodyTextClassName,
   fieldClassName,
-  mutedPanelClassName,
   primaryButtonClassName,
   secondaryButtonClassName,
 } from "../lib/design-system";
 import { checkPeerHealth, fetchPeers, updatePeers } from "../lib/runtime-api";
-import { usePageActions } from "../lib/shell-header-context";
 
 interface PeerConfig {
   id: string;
@@ -41,17 +30,19 @@ export default function LocalPeersRoute() {
     try {
       const data = await fetchPeers();
       setPeers([...data]);
-      const status: Record<string, boolean | null> = {};
-      for (const peer of data) {
-        status[peer.id] = healthStatus[peer.id] ?? null;
-      }
-      setHealthStatus(status);
+      setHealthStatus((previousStatus) => {
+        const status: Record<string, boolean | null> = {};
+        for (const peer of data) {
+          status[peer.id] = previousStatus[peer.id] ?? null;
+        }
+        return status;
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load peers");
     } finally {
       setLoading(false);
     }
-  }, [healthStatus]);
+  }, []);
 
   useEffect(() => {
     refresh();
@@ -110,135 +101,115 @@ export default function LocalPeersRoute() {
     }
   };
 
-  usePageActions(
-    <button type="button" onClick={refresh} disabled={loading} className={secondaryButtonClassName}>
-      {loading ? "Refreshing…" : "Refresh"}
-    </button>,
-    [loading, refresh],
-  );
-
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {error ? <ErrorState label={error} /> : null}
-      <RegistryDetailLayout
-        primary={
-          <SectionCard
-            title="Endpoint inventory"
-            description="role-model probes each server at /v1/models before peer models can be registered."
-          >
-            {loading && peers.length === 0 ? (
-              <LoadingState label="Loading local endpoints…" />
-            ) : peers.length === 0 ? (
-              <EmptyState label="No peer endpoints configured. Add a server URL below to use peer-backed local models." />
-            ) : (
-              <div className="space-y-3">
-                {peers.map((peer) => {
-                  const peerStatus = healthStatus[peer.id];
-                  const peerTone =
-                    peerStatus === true
-                      ? "success"
-                      : peerStatus === false
-                        ? "warning"
-                        : "neutral";
-                  const peerStatusLabel =
-                    peerStatus === null || peerStatus === undefined
-                      ? "Unknown"
-                      : peerStatus
-                        ? "Healthy"
-                        : "Unhealthy";
 
-                  return (
-                    <div
-                      key={peer.id}
-                      className={`${mutedPanelClassName} flex flex-col gap-4 p-5 lg:flex-row lg:items-start lg:justify-between`}
-                    >
-                      <div className="min-w-0 space-y-3">
-                        <p className={`break-all text-[var(--rm-fg)] ${bodyStrongTextClassName}`}>
-                          {peer.url}
-                        </p>
-                        <div className="flex flex-wrap items-center gap-3">
-                          <StatusPill tone={peerTone}>{peerStatusLabel}</StatusPill>
-                          <p className={`text-[var(--rm-secondary)] ${bodyTextClassName}`}>
-                            {peer.authToken ? "Bearer token configured" : "No bearer token saved"}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        <button
-                          type="button"
-                          onClick={() => handleCheckHealth(peer)}
-                          disabled={checkingHealth[peer.id]}
-                          className={secondaryButtonClassName}
-                        >
-                          {checkingHealth[peer.id] ? "Checking…" : "Check health"}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleRemove(peer.id)}
-                          disabled={saving}
-                          className={`${secondaryButtonClassName} text-[var(--rm-error)]`}
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </SectionCard>
-        }
-        secondary={
-          <SectionCard
-            title="Add peer endpoint"
-            description="Base URL of your OpenAI-compatible API (with or without /v1). Optional bearer token if the server requires auth."
-            className="xl:sticky xl:top-4"
-          >
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <label
-                  htmlFor="peer-url"
-                  className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]"
-                >
-                  Endpoint URL
-                </label>
-                <input
-                  id="peer-url"
-                  type="url"
-                  value={newUrl}
-                  onChange={(e) => setNewUrl(e.target.value)}
-                  placeholder="http://127.0.0.1:1234"
-                  className={fieldClassName}
-                />
-              </div>
-              <div className="space-y-2">
-                <label
-                  htmlFor="peer-auth-token"
-                  className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]"
-                >
-                  Auth token (optional)
-                </label>
-                <input
-                  id="peer-auth-token"
-                  type="password"
-                  value={newToken}
-                  onChange={(e) => setNewToken(e.target.value)}
-                  placeholder="Bearer token (optional)"
-                  className={fieldClassName}
-                />
-              </div>
-              <button
-                type="button"
-                onClick={handleAdd}
-                disabled={!newUrl.trim() || saving}
-                className={primaryButtonClassName}
+      <SectionCard
+        title="Endpoint inventory"
+        description="role-model probes each server at /v1/models before peer models can be registered."
+      >
+        {loading && peers.length === 0 ? (
+          <LoadingState label="Loading local endpoints…" />
+        ) : peers.length === 0 ? (
+          <EmptyState label="No peer endpoints configured. Add a server URL below to use peer-backed local models." />
+        ) : (
+          <div className="space-y-3">
+            {peers.map((peer) => (
+              <div
+                key={peer.id}
+                className="flex items-center justify-between border border-[var(--rm-border)] bg-[var(--rm-surface)] p-4"
               >
-                {saving ? "Saving…" : "Add endpoint"}
-              </button>
-            </div>
-          </SectionCard>
-        }
-      />
+                <div className="space-y-1">
+                  <div className="font-mono text-sm text-[var(--rm-fg)]">{peer.url}</div>
+                  <div className="flex items-center gap-2 text-xs text-[var(--rm-muted)]">
+                    <span>
+                      Status:{" "}
+                      {healthStatus[peer.id] === null || healthStatus[peer.id] === undefined
+                        ? "unknown"
+                        : healthStatus[peer.id]
+                          ? "healthy"
+                          : "unhealthy"}
+                    </span>
+                    {healthStatus[peer.id] === true && (
+                      <span className="inline-block h-2 w-2 rounded-full bg-[var(--rm-success)]" />
+                    )}
+                    {healthStatus[peer.id] === false && (
+                      <span className="inline-block h-2 w-2 rounded-full bg-[var(--rm-error)]" />
+                    )}
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleCheckHealth(peer)}
+                    disabled={checkingHealth[peer.id]}
+                    className={secondaryButtonClassName}
+                  >
+                    {checkingHealth[peer.id] ? "Checking…" : "Check health"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleRemove(peer.id)}
+                    disabled={saving}
+                    className={`${secondaryButtonClassName} text-[var(--rm-error)]`}
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </SectionCard>
+
+      <SectionCard
+        title="Add peer endpoint"
+        description="Base URL of your OpenAI-compatible API (with or without /v1). Optional bearer token if the server requires auth."
+      >
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <label
+              htmlFor="peer-url"
+              className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--rm-muted)]"
+            >
+              Endpoint URL
+            </label>
+            <input
+              id="peer-url"
+              type="url"
+              value={newUrl}
+              onChange={(e) => setNewUrl(e.target.value)}
+              placeholder="http://127.0.0.1:1234"
+              className={fieldClassName}
+            />
+          </div>
+          <div className="space-y-2">
+            <label
+              htmlFor="peer-auth-token"
+              className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--rm-muted)]"
+            >
+              Auth token (optional)
+            </label>
+            <input
+              id="peer-auth-token"
+              type="password"
+              value={newToken}
+              onChange={(e) => setNewToken(e.target.value)}
+              placeholder="Bearer token (optional)"
+              className={fieldClassName}
+            />
+          </div>
+          <button
+            type="button"
+            onClick={handleAdd}
+            disabled={!newUrl.trim() || saving}
+            className={primaryButtonClassName}
+          >
+            {saving ? "Saving…" : "Add endpoint"}
+          </button>
+        </div>
+      </SectionCard>
     </div>
   );
 }

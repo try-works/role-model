@@ -1,0 +1,61 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/49-runtime-telemetry-analytics-charts/role-model-router/apps/runtime-host-bridge[39m
+
+(node:19780) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [2m[90m↓[39m[22m test/backend-unified-runtime-config.test.ts[2m > [22mruntime-host-bridge unified runtime backend[2m > [22msurfaces the derived execution mode in the runtime summary when a unified config file is provided
+ [2m[90m↓[39m[22m test/backend-unified-runtime-config.test.ts[2m > [22mruntime-host-bridge unified runtime backend[2m > [22mreads and updates unified runtime config through the backend
+ [2m[90m↓[39m[22m test/backend-unified-runtime-config.test.ts[2m > [22mruntime-host-bridge unified runtime backend[2m > [22mmerges partial runtime config updates without dropping existing routing strategy
+ [2m[90m↓[39m[22m test/backend-unified-runtime-config.test.ts[2m > [22mruntime-host-bridge unified runtime backend[2m > [22mclears stale alias drift warnings after the canonical config removes the stale hint
+ [2m[90m↓[39m[22m test/backend-unified-runtime-config.test.ts[2m > [22mruntime-host-bridge unified runtime backend[2m > [22mcreates and updates unified runtime config when the configured path does not exist yet
+ [2m[90m↓[39m[22m test/backend-unified-runtime-config.test.ts[2m > [22mruntime-host-bridge unified runtime backend[2m > [22mpersists explicit hybrid execution mode from routing strategy updates
+ [31m×[39m test/backend-unified-runtime-config.test.ts[2m > [22mruntime-host-bridge unified runtime backend[2m > [22mrenames the primary routing alias when routing strategy and execution mode change[33m 376[2mms[22m[39m
+[31m   → expected [ { …(3) } ] to deeply equal [ ObjectContaining{…} ][39m
+ [2m[90m↓[39m[22m test/backend-unified-runtime-config.test.ts[2m > [22mruntime-host-bridge unified runtime backend[2m > [22mdoes not mark all candidates ignored when routing guidance has no preferred endpoints
+ [2m[90m↓[39m[22m test/backend-unified-runtime-config.test.ts[2m > [22mruntime-host-bridge unified runtime backend[2m > [22mpreserves synthesized activated endpoint models across runtime config updates
+ [2m[90m↓[39m[22m test/backend-unified-runtime-config.test.ts[2m > [22mruntime-host-bridge unified runtime backend[2m > [22mreturns no controller assignment when the unified config has no endpoints yet
+ [2m[90m↓[39m[22m test/backend-unified-runtime-config.test.ts[2m > [22mruntime-host-bridge unified runtime backend[2m > [22msurfaces normalized provider docs and npm metadata through listProviders
+ [2m[90m↓[39m[22m test/backend-unified-runtime-config.test.ts[2m > [22mruntime-host-bridge unified runtime backend[2m > [22mpreserves manual account authority and provenance on exact runtime-config account-id collision
+ [2m[90m↓[39m[22m test/backend-unified-runtime-config.test.ts[2m > [22mruntime-host-bridge unified runtime backend[2m > [22msurfaces LiteLLM-backed Moonshot models and endpoints from unified runtime config
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/backend-unified-runtime-config.test.ts > runtime-host-bridge unified runtime backend > renames the primary routing alias when routing strategy and execution mode change
+AssertionError: expected [ { …(3) } ] to deeply equal [ ObjectContaining{…} ]
+
+- Expected
++ Received
+
+@@ -1,9 +1,9 @@
+  [
+-   ObjectContaining {
+-     "aliasId": "hybrid.remote-only",
+-     "mode": "hybrid",
++   {
++     "aliasId": "mixed.local-remote",
++     "mode": "difficulty",
+      "modelIds": [
+        "lfm2.5-1.2b-instruct",
+        "moonshot/kimi-k2.7-code",
+      ],
+    },
+
+ ❯ test/backend-unified-runtime-config.test.ts:503:42
+    501|     });
+    502| 
+    503|     expect(updated.config?.modelAliases).toEqual([
+       |                                          ^
+    504|       expect.objectContaining({
+    505|         aliasId: "hybrid.remote-only",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[33m12 skipped[39m[90m (13)[39m
+[2m   Start at [22m 06:43:25
+[2m   Duration [22m 3.41s[2m (transform 1.31s, setup 0ms, collect 1.76s, tests 378ms, environment 0ms, prepare 374ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\49-runtime-telemetry-analytics-charts\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/backend-unified-runtime-config.test.ts -t renames the primary routing alias --reporter=verbose

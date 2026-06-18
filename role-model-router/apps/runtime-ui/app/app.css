@@ -3,8 +3,7 @@
 :root {
   --rm-font-display: "SF Pro Display", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;
-  --rm-font-body: "SF Pro Text", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
-    sans-serif;
+  --rm-font-body: "SF Pro Text", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --rm-font-mono: "IBM Plex Mono", "JetBrains Mono", ui-monospace, monospace;
   --rm-radius-sm: 8px;
   --rm-radius-md: 11px;
@@ -31,17 +30,25 @@
   --rm-sticky-bar-height: 64px;
   --rm-field-height: 44px;
   --rm-icon-button-size: 44px;
-  --rm-divider-soft: #f0f0f0;
-  --rm-hairline: #e0e0e0;
-  --rm-chip-translucent: rgba(210, 210, 215, 0.64);
   --rm-button-pill-padding: 11px 22px;
   --rm-button-utility-padding: 8px 15px;
-  --rm-button-pearl-padding: 8px 14px;
   --rm-button-hero-padding: 14px 28px;
-  --rm-chip-padding: 12px 16px;
-  --rm-search-padding: 12px 20px;
   --rm-card-padding: 24px;
-  --rm-sticky-bar-padding: 12px 32px;
+  --rm-search-padding: 12px 20px;
+  --rm-on-primary: #ffffff;
+  --rm-chart-ink: #171717;
+  --rm-chart-cyan: #50e3c2;
+  --rm-chart-highlight-pink: #ff0080;
+  --rm-chart-violet: #7928ca;
+  --rm-chart-link-blue: #0070f3;
+  --rm-chart-link-deep: #0761d1;
+  --rm-chart-link-soft: #d3e5ff;
+  --rm-chart-error: #ee0000;
+  --rm-chart-error-deep: #c50000;
+  --rm-chart-error-soft: #f7d4d6;
+  --rm-chart-warning: #f5a623;
+  --rm-chart-warning-deep: #ab570a;
+  --rm-chart-warning-soft: #ffefcf;
 }
 
 html[data-theme="light"] {
@@ -55,6 +62,9 @@ html[data-theme="light"] {
   --rm-muted: rgba(29, 29, 31, 0.48);
   --rm-border: #e0e0e0;
   --rm-border-strong: #d2d2d7;
+  --rm-divider-soft: #f0f0f0;
+  --rm-hairline: #e0e0e0;
+  --rm-chip-translucent: rgba(210, 210, 215, 0.64);
   --rm-accent: #0066cc;
   --rm-accent-ink: #0066cc;
   --rm-accent-focus: #0071e3;
@@ -77,6 +87,21 @@ html[data-theme="light"] {
   --rm-telemetry-healthy: #166534;
   --rm-telemetry-degraded: #b45309;
   --rm-telemetry-raw: #7a7a7a;
+  --rm-chart-local: #1d1d1f;
+  --rm-chart-remote: #0066cc;
+  --rm-chart-tokens: #ff0080;
+  --rm-chart-cache-hit: #7928ca;
+  --rm-chart-cache-rate: #0761d1;
+  --rm-chart-latency: #ff0080;
+  --rm-chart-cost: #0761d1;
+  --rm-chart-failure: #ee0000;
+  --rm-chart-success: #166534;
+  --rm-chart-neutral-1: rgba(29, 29, 31, 0.72);
+  --rm-chart-neutral-2: rgba(29, 29, 31, 0.38);
+  --rm-chart-grid: rgba(29, 29, 31, 0.1);
+  --rm-chart-tooltip-bg: rgba(255, 255, 255, 0.96);
+  --rm-chart-tooltip-border: rgba(29, 29, 31, 0.12);
+  --rm-chart-skeleton: rgba(29, 29, 31, 0.08);
   --rm-select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5 6 6.5 11 1.5' stroke='%236b7280' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
 }
 
@@ -91,6 +116,9 @@ html[data-theme="dark"] {
   --rm-muted: rgba(255, 255, 255, 0.48);
   --rm-border: rgba(255, 255, 255, 0.12);
   --rm-border-strong: rgba(255, 255, 255, 0.18);
+  --rm-divider-soft: rgba(255, 255, 255, 0.1);
+  --rm-hairline: rgba(255, 255, 255, 0.12);
+  --rm-chip-translucent: rgba(210, 210, 215, 0.24);
   --rm-accent: #0066cc;
   --rm-accent-ink: #2997ff;
   --rm-accent-focus: #0071e3;
@@ -113,9 +141,21 @@ html[data-theme="dark"] {
   --rm-telemetry-healthy: #86efac;
   --rm-telemetry-degraded: #fbbf24;
   --rm-telemetry-raw: #cccccc;
-  --rm-divider-soft: rgba(255, 255, 255, 0.1);
-  --rm-hairline: rgba(255, 255, 255, 0.12);
-  --rm-chip-translucent: rgba(210, 210, 215, 0.24);
+  --rm-chart-local: #f5f5f7;
+  --rm-chart-remote: #2997ff;
+  --rm-chart-tokens: #ff5ca8;
+  --rm-chart-cache-hit: #a86cf7;
+  --rm-chart-cache-rate: #8bc6ff;
+  --rm-chart-latency: #ff5ca8;
+  --rm-chart-cost: #4da3ff;
+  --rm-chart-failure: #fb7185;
+  --rm-chart-success: #86efac;
+  --rm-chart-neutral-1: rgba(255, 255, 255, 0.72);
+  --rm-chart-neutral-2: rgba(255, 255, 255, 0.38);
+  --rm-chart-grid: rgba(255, 255, 255, 0.12);
+  --rm-chart-tooltip-bg: rgba(39, 39, 41, 0.96);
+  --rm-chart-tooltip-border: rgba(255, 255, 255, 0.12);
+  --rm-chart-skeleton: rgba(255, 255, 255, 0.08);
   --rm-select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5 6 6.5 11 1.5' stroke='%23d2d2d7' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
 }
 
@@ -167,10 +207,10 @@ textarea {
 select {
   appearance: none;
   background-image: var(--rm-select-chevron);
-  background-position: right 18px center;
+  background-position: right 14px center;
   background-repeat: no-repeat;
   background-size: 12px 8px;
-  padding-right: 46px;
+  padding-right: 42px;
 }
 
 select::-ms-expand {

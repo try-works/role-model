@@ -203,6 +203,8 @@ interface RawLiteLLMProvider {
 
 interface RawUnifiedRuntimeConfig {
   readonly version?: string;
+  readonly execution_mode?: string;
+  readonly executionMode?: string;
   readonly routing?: {
     readonly strategy?: string;
   };
@@ -368,6 +370,21 @@ function readAliasRoutingMode(value: unknown, path: string): UnifiedRuntimeAlias
     return value;
   }
   throw new Error(`${path} must be basic, difficulty, intelligent, or hybrid.`);
+}
+
+function readExecutionMode(value: unknown, path: string): UnifiedRuntimeExecutionMode | null {
+  if (value === undefined || value === null || value === "") {
+    return null;
+  }
+  if (
+    value === "decision_only" ||
+    value === "hybrid" ||
+    value === "local_only" ||
+    value === "remote_only"
+  ) {
+    return value;
+  }
+  throw new Error(`${path} must be decision_only, hybrid, local_only, or remote_only.`);
 }
 
 function readClassifierSourceType(value: unknown, path: string): "local" | "remote" {
@@ -1293,6 +1310,82 @@ export function deriveUnifiedRuntimeExecutionMode(config: {
   return "decision_only";
 }
 
+function normalizeRoutingStrategyForAlias(strategy: string | null): string {
+  const normalized = strategy?.trim().toLowerCase() ?? "";
+  switch (normalized) {
+    case "baseline":
+    case "basic":
+    case "balanced":
+    case "latency":
+    case "quality":
+    case "cost":
+    case "low-latency":
+    case "high-quality":
+    case "low-cost":
+    case "latency-first":
+      return "baseline";
+    case "controller":
+    case "intelligent":
+      return "controller";
+    case "difficulty":
+      return "difficulty";
+    case "hybrid":
+      return "hybrid";
+    default:
+      return normalized.length > 0
+        ? normalized.replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "custom"
+        : "default";
+  }
+}
+
+function deriveAliasRoutingMode(
+  strategy: string | null,
+  fallback: UnifiedRuntimeAliasRoutingMode | null | undefined,
+): UnifiedRuntimeAliasRoutingMode | null {
+  switch (normalizeRoutingStrategyForAlias(strategy)) {
+    case "baseline":
+    case "default":
+      return "basic";
+    case "controller":
+      return "intelligent";
+    case "difficulty":
+      return "difficulty";
+    case "hybrid":
+      return "hybrid";
+    default:
+      return fallback ?? "basic";
+  }
+}
+
+export function deriveUnifiedRuntimeRoutingAliasId(config: {
+  readonly routingStrategy: string | null;
+  readonly executionMode: UnifiedRuntimeExecutionMode;
+}): string {
+  return `${normalizeRoutingStrategyForAlias(config.routingStrategy)}.${config.executionMode.replaceAll(
+    "_",
+    "-",
+  )}`;
+}
+
+function canonicalizeUnifiedRuntimeRoutingAliases(
+  config: UnifiedRuntimeConfig,
+): UnifiedRuntimeConfig {
+  if (!config.modelAliases || config.modelAliases.length !== 1 || config.routingStrategy === null) {
+    return config;
+  }
+  const [primaryAlias] = config.modelAliases;
+  return {
+    ...config,
+    modelAliases: [
+      {
+        ...primaryAlias,
+        aliasId: deriveUnifiedRuntimeRoutingAliasId(config),
+        mode: deriveAliasRoutingMode(config.routingStrategy, primaryAlias.mode),
+      },
+    ],
+  };
+}
+
 export function parseUnifiedRuntimeConfigText(text: string): UnifiedRuntimeConfig {
   const rawDocument = parse(text) as unknown;
   ensureObject(rawDocument, "Unified runtime config root must be an object.");
@@ -1300,8 +1393,12 @@ export function parseUnifiedRuntimeConfigText(text: string): UnifiedRuntimeConfi
 
   const llamaSwap = parseLlamaSwapModels(rawConfig);
   const liteLLM = parseLiteLLMProviders(rawConfig);
+  const explicitExecutionMode = readExecutionMode(
+    rawConfig.execution_mode ?? rawConfig.executionMode,
+    "execution_mode",
+  );
 
-  return {
+  return canonicalizeUnifiedRuntimeRoutingAliases({
     version:
       typeof rawConfig.version === "string" && rawConfig.version.trim().length > 0
         ? rawConfig.version
@@ -1311,10 +1408,12 @@ export function parseUnifiedRuntimeConfigText(text: string): UnifiedRuntimeConfi
       rawConfig.routing.strategy.trim().length > 0
         ? rawConfig.routing.strategy
         : null,
-    executionMode: deriveUnifiedRuntimeExecutionMode({
-      llamaSwapEnabled: llamaSwap.enabled,
-      liteLLMEnabled: liteLLM.enabled,
-    }),
+    executionMode:
+      explicitExecutionMode ??
+      deriveUnifiedRuntimeExecutionMode({
+        llamaSwapEnabled: llamaSwap.enabled,
+        liteLLMEnabled: liteLLM.enabled,
+      }),
     ...(rawConfig.controller
       ? { controller: normalizeControllerInput(rawConfig.controller, "controller") }
       : {}),
@@ -1334,7 +1433,7 @@ export function parseUnifiedRuntimeConfigText(text: string): UnifiedRuntimeConfi
       : {}),
     llamaSwap,
     liteLLM,
-  };
+  });
 }
 
 export function normalizeUnifiedRuntimeConfigInput(input: unknown): UnifiedRuntimeConfig {
@@ -1373,16 +1472,27 @@ export function normalizeUnifiedRuntimeConfigInput(input: unknown): UnifiedRunti
         ? input.model_aliases
         : undefined;
 
-  return {
+  const explicitExecutionMode = readExecutionMode(
+    "executionMode" in input
+      ? input.executionMode
+      : "execution_mode" in input
+        ? input.execution_mode
+        : undefined,
+    "executionMode",
+  );
+
+  return canonicalizeUnifiedRuntimeRoutingAliases({
     version: readNonEmptyString(input.version) ?? "1.0",
     routingStrategy:
       readNonEmptyString(
         "routingStrategy" in input ? input.routingStrategy : routingStrategyInput,
       ) ?? null,
-    executionMode: deriveUnifiedRuntimeExecutionMode({
-      llamaSwapEnabled: llamaSwap.enabled,
-      liteLLMEnabled: liteLLM.enabled,
-    }),
+    executionMode:
+      explicitExecutionMode ??
+      deriveUnifiedRuntimeExecutionMode({
+        llamaSwapEnabled: llamaSwap.enabled,
+        liteLLMEnabled: liteLLM.enabled,
+      }),
     ...(controllerSource !== undefined
       ? {
           controller: normalizeControllerInput(controllerSource, "controller"),
@@ -1408,7 +1518,7 @@ export function normalizeUnifiedRuntimeConfigInput(input: unknown): UnifiedRunti
       : {}),
     llamaSwap,
     liteLLM,
-  };
+  });
 }
 
 function hasProcessConfig(config: UnifiedRuntimeProcessConfig): boolean {
@@ -1444,6 +1554,7 @@ function renderProcessConfig(config: UnifiedRuntimeProcessConfig): Record<string
 export function renderUnifiedRuntimeConfigText(config: UnifiedRuntimeConfig): string {
   const document: Record<string, unknown> = {
     version: config.version,
+    execution_mode: config.executionMode,
   };
 
   if (config.routingStrategy !== null) {
@@ -1617,6 +1728,13 @@ function normalizeRuntimeConfigPatchDocument(
   ) {
     normalized.routing = { strategy: normalized.routing_strategy };
     delete normalized.routing_strategy;
+  }
+  if (
+    Object.prototype.hasOwnProperty.call(normalized, "executionMode") &&
+    !Object.prototype.hasOwnProperty.call(normalized, "execution_mode")
+  ) {
+    normalized.execution_mode = normalized.executionMode;
+    delete normalized.executionMode;
   }
   return normalized;
 }

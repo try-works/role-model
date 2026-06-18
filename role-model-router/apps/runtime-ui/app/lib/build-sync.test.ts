@@ -1,9 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  extractRuntimeUiAssetSignature,
-  shouldReloadForUpdatedRuntimeUiBuild,
-} from "./build-sync";
+import { extractRuntimeUiAssetSignature, shouldReloadForUpdatedRuntimeUiBuild } from "./build-sync";
 
 describe("runtime-ui build sync", () => {
   it("extracts a stable signature from runtime-ui asset references", () => {

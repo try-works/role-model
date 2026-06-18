@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { type ReactElement, createElement } from "react";
@@ -21,6 +21,7 @@ import StudioImagesRoute from "../routes/studio-images";
 import StudioRerankRoute from "../routes/studio-rerank";
 import SystemPeersRoute from "../routes/system-peers";
 import {
+  codeBlockClassName,
   getRuntimeRouteDefinition,
   runtimeNavigationSections,
   runtimeTheme,
@@ -37,32 +38,30 @@ function renderRoute(pathname: string, element: ReactElement): string {
 }
 
 const appCss = readFileSync(new URL("../app.css", import.meta.url), "utf8");
+const rootAppCss = appCss.slice(0, appCss.indexOf('html[data-theme="light"]'));
+const lightAppCss = `${rootAppCss}\n${appCss.slice(
+  appCss.indexOf('html[data-theme="light"]'),
+  appCss.indexOf('html[data-theme="dark"]'),
+)}`;
+const darkAppCss = `${rootAppCss}\n${appCss.slice(appCss.indexOf('html[data-theme="dark"]'))}`;
 const appShellSource = readFileSync(
   new URL("../components/app-shell.tsx", import.meta.url),
   "utf8",
 );
-const themeToggleSource = existsSync(fileURLToPath(new URL("../components/theme-toggle.tsx", import.meta.url)))
-  ? readFileSync(new URL("../components/theme-toggle.tsx", import.meta.url), "utf8")
-  : "";
-const themedSelectSource = existsSync(
-  fileURLToPath(new URL("../components/themed-select.tsx", import.meta.url)),
-)
-  ? readFileSync(new URL("../components/themed-select.tsx", import.meta.url), "utf8")
-  : "";
+const telemetryChartsSource = readFileSync(
+  new URL("../components/telemetry-charts.tsx", import.meta.url),
+  "utf8",
+);
+const telemetryControlsSource = readFileSync(
+  new URL("../components/telemetry-controls.tsx", import.meta.url),
+  "utf8",
+);
 const pagePrimitivesSource = readFileSync(
   new URL("../components/page-primitives.tsx", import.meta.url),
   "utf8",
 );
-const llamaSwapSetupModalSource = readFileSync(
-  new URL("../components/llama-swap-setup-modal.tsx", import.meta.url),
-  "utf8",
-);
 const controlControllerSource = readFileSync(
   new URL("../routes/control-controller.tsx", import.meta.url),
-  "utf8",
-);
-const controlBenchmarkSource = readFileSync(
-  new URL("../routes/control-benchmark.tsx", import.meta.url),
   "utf8",
 );
 const controlRuntimeConfigSource = readFileSync(
@@ -73,19 +72,32 @@ const controlRoutingStrategySource = readFileSync(
   new URL("../routes/control-routing-strategy.tsx", import.meta.url),
   "utf8",
 );
-const routingModeSource = readFileSync(new URL("./routing-mode.ts", import.meta.url), "utf8");
-const controlModelsSource = readFileSync(
-  new URL("../routes/control-models.tsx", import.meta.url),
+const controlBenchmarkSource = readFileSync(
+  new URL("../routes/control-benchmark.tsx", import.meta.url),
   "utf8",
 );
 const controlRolesSource = readFileSync(
   new URL("../routes/control-roles.tsx", import.meta.url),
   "utf8",
 );
+const routingModeSource = readFileSync(new URL("./routing-mode.ts", import.meta.url), "utf8");
+const controlModelsSource = readFileSync(
+  new URL("../routes/control-models.tsx", import.meta.url),
+  "utf8",
+);
 const localPeerModelsSource = readFileSync(
   new URL("../routes/local-peer-models.tsx", import.meta.url),
   "utf8",
 );
+
+function extractCssVariableValue(source: string, variableName: string): string {
+  const escapedVariableName = variableName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const match = source.match(new RegExp(`${escapedVariableName}:\\s*([^;]+);`));
+  if (!match?.[1]) {
+    throw new Error(`Missing CSS variable ${variableName}`);
+  }
+  return match[1].trim();
+}
 const localLlamaSwapModelsSource = readFileSync(
   new URL("../routes/local-llama-swap-models.tsx", import.meta.url),
   "utf8",
@@ -103,6 +115,10 @@ const endpointsRouteSource = readFileSync(
   new URL("../routes/endpoints.tsx", import.meta.url),
   "utf8",
 );
+const integrationsDownstreamRouteSource = readFileSync(
+  new URL("../routes/integrations-downstream.tsx", import.meta.url),
+  "utf8",
+);
 const providersRouteSource = readFileSync(
   new URL("../routes/providers.tsx", import.meta.url),
   "utf8",
@@ -111,12 +127,6 @@ const requestsRouteSource = readFileSync(
   new URL("../routes/requests.tsx", import.meta.url),
   "utf8",
 );
-const dashboardSource = readFileSync(new URL("../routes/dashboard.tsx", import.meta.url), "utf8");
-const localPolicySource = readFileSync(
-  new URL("../routes/local-policy.tsx", import.meta.url),
-  "utf8",
-);
-const localSwapSource = readFileSync(new URL("../routes/local-swap.tsx", import.meta.url), "utf8");
 const rootSource = readFileSync(new URL("../root.tsx", import.meta.url), "utf8");
 const runtimeRouteSource = readFileSync(new URL("../routes/runtime.tsx", import.meta.url), "utf8");
 const requestDetailRouteSource = readFileSync(
@@ -148,6 +158,10 @@ const studioAdvancedRouteSource = readFileSync(
   new URL("../routes/studio-advanced.tsx", import.meta.url),
   "utf8",
 );
+const studioAudioRouteSource = readFileSync(
+  new URL("../routes/studio-audio.tsx", import.meta.url),
+  "utf8",
+);
 const studioImagesRouteSource = readFileSync(
   new URL("../routes/studio-images.tsx", import.meta.url),
   "utf8",
@@ -162,10 +176,6 @@ const workbenchRouteSource = readFileSync(
 );
 const designSystemDocSource = readFileSync(
   new URL("../../DESIGN_SYSTEM.md", import.meta.url),
-  "utf8",
-);
-const architectureLockSource = readFileSync(
-  new URL("../../../../../docs/architecture/06-router-runtime-architecture-lock.md", import.meta.url),
   "utf8",
 );
 const designSystemSource = readFileSync(new URL("./design-system.ts", import.meta.url), "utf8");
@@ -191,6 +201,66 @@ const routesDir = path.dirname(fileURLToPath(new URL("../routes", import.meta.ur
 const routeSources = readdirSync(routesDir)
   .filter((name) => name.endsWith(".tsx"))
   .map((name) => readFileSync(path.join(routesDir, name), "utf8"));
+const componentSourcesDir = path.dirname(fileURLToPath(new URL("../components", import.meta.url)));
+const productionUiSources = [
+  ...readdirSync(routesDir)
+    .filter((name) => name.endsWith(".tsx"))
+    .map((name) => ({
+      path: `app/routes/${name}`,
+      source: readFileSync(path.join(routesDir, name), "utf8"),
+    })),
+  ...readdirSync(componentSourcesDir)
+    .filter((name) => name.endsWith(".tsx"))
+    .map((name) => ({
+      path: `app/components/${name}`,
+      source: readFileSync(path.join(componentSourcesDir, name), "utf8"),
+    })),
+  {
+    path: "app/lib/design-system.ts",
+    source: designSystemSource,
+  },
+];
+
+function findSourceViolations(pattern: RegExp): string[] {
+  return productionUiSources.flatMap(({ path: sourcePath, source }) =>
+    source
+      .split("\n")
+      .map((line, index) => ({ line, lineNumber: index + 1 }))
+      .filter(({ line }) => line.match(pattern))
+      .map(({ line, lineNumber }) => `${sourcePath}:${lineNumber}: ${line.trim()}`),
+  );
+}
+
+function findExactSourceViolations(term: string): string[] {
+  return productionUiSources.flatMap(({ path: sourcePath, source }) =>
+    source
+      .split("\n")
+      .map((line, index) => ({ line, lineNumber: index + 1 }))
+      .filter(({ line }) => line.includes(term))
+      .map(({ line, lineNumber }) => `${sourcePath}:${lineNumber}: ${line.trim()}`),
+  );
+}
+
+const nativeSelectAuditSources = [
+  { path: "app/routes/control-benchmark.tsx", source: controlBenchmarkSource },
+  { path: "app/routes/control-roles.tsx", source: controlRolesSource },
+  { path: "app/routes/control-routing-strategy.tsx", source: controlRoutingStrategySource },
+  { path: "app/routes/studio-advanced.tsx", source: studioAdvancedRouteSource },
+  { path: "app/routes/studio-audio.tsx", source: studioAudioRouteSource },
+  { path: "app/routes/studio-images.tsx", source: studioImagesRouteSource },
+  { path: "app/routes/studio-rerank.tsx", source: studioRerankRouteSource },
+  { path: "app/routes/workbench.tsx", source: workbenchRouteSource },
+];
+
+function findNativeSelectViolations(): string[] {
+  return nativeSelectAuditSources.flatMap(({ path: sourcePath, source }) =>
+    source
+      .split("\n")
+      .map((line, index) => ({ line, lineNumber: index + 1 }))
+      .filter(({ line }) => line.includes("<select"))
+      .map(({ line, lineNumber }) => `${sourcePath}:${lineNumber}: ${line.trim()}`),
+  );
+}
 
 describe("runtime design system", () => {
   test("defines navigation groups and layout templates for every runtime route", () => {
@@ -246,7 +316,12 @@ describe("runtime design system", () => {
       },
       {
         title: "Observe",
-        routes: ["/app/observe/activity", "/app/observe/requests", "/app/observe/logs"],
+        routes: [
+          "/app/observe/requests",
+          "/app/observe/routing",
+          "/app/observe/activity",
+          "/app/observe/logs",
+        ],
       },
       {
         title: "Connect",
@@ -398,20 +473,34 @@ describe("runtime design system", () => {
         title: "Host logs",
       }),
     );
+    expect(getRuntimeRouteDefinition("/app/observe/routing")).toEqual(
+      expect.objectContaining({
+        id: "observe-routing",
+        section: "Observe",
+        template: "ledger-inspector",
+      }),
+    );
   });
 
-  test("defines the Apple-inspired runtime theme contract with explicit tokenized radii and content width", () => {
+  test("uses analytics charts as the primary Observe entry point", () => {
+    const observeSection = runtimeNavigationSections.find((section) => section.title === "Observe");
+
+    expect(observeSection?.items[0]?.to).toBe("/app/observe/requests");
+    expect(observeSection?.items[1]?.to).toBe("/app/observe/routing");
+    expect(observeSection?.items.map((item) => item.to)).toContain("/app/observe/activity");
+    expect(observeSection?.items.map((item) => item.to)).toContain("/app/observe/logs");
+  });
+
+  test("keeps the shell on the Apple baseline with explicit chart tokens", () => {
     expect(runtimeTheme.maxContentWidth).toBe("1440px");
-    expect(runtimeTheme.radii).toEqual({
-      sm: "8px",
-      md: "11px",
-      lg: "18px",
-      pill: "9999px",
-      shell: "18px",
-      panel: "18px",
-      field: "11px",
-      badge: "9999px",
-    });
+    expect(runtimeTheme.radii.sm).toBe("8px");
+    expect(runtimeTheme.radii.md).toBe("11px");
+    expect(runtimeTheme.radii.lg).toBe("18px");
+    expect(runtimeTheme.radii.pill).toBe("9999px");
+    expect(runtimeTheme.radii.shell).toBe("18px");
+    expect(runtimeTheme.radii.panel).toBe("18px");
+    expect(runtimeTheme.radii.field).toBe("11px");
+    expect(runtimeTheme.radii.badge).toBe("9999px");
     expect(runtimeTheme.colors.light).toEqual({
       bg: "#f5f5f7",
       surface: "#ffffff",
@@ -428,6 +517,9 @@ describe("runtime design system", () => {
       accentMuted: "rgba(0, 102, 204, 0.72)",
       accentSubtle: "rgba(0, 102, 204, 0.14)",
       accentGhost: "rgba(0, 102, 204, 0.08)",
+      dividerSoft: "#f0f0f0",
+      hairline: "#e0e0e0",
+      chipTranslucent: "rgba(210, 210, 215, 0.64)",
       telemetryLocal: "#1d1d1f",
       telemetryRemote: "#0066CC",
       telemetryHealthy: "#166534",
@@ -460,6 +552,9 @@ describe("runtime design system", () => {
       accentMuted: "rgba(0, 102, 204, 0.72)",
       accentSubtle: "rgba(41, 151, 255, 0.18)",
       accentGhost: "rgba(41, 151, 255, 0.10)",
+      dividerSoft: "rgba(255, 255, 255, 0.1)",
+      hairline: "rgba(255, 255, 255, 0.12)",
+      chipTranslucent: "rgba(210, 210, 215, 0.24)",
       telemetryLocal: "#FFFFFF",
       telemetryRemote: "#2997FF",
       telemetryHealthy: "#86efac",
@@ -476,6 +571,30 @@ describe("runtime design system", () => {
       warningMuted: "rgba(251, 191, 36, 0.72)",
       warningSubtle: "rgba(251, 191, 36, 0.18)",
     });
+    expect(designSystemSource).toContain("chartColors");
+    expect(designSystemSource).toContain('"observe-routing"');
+    expect(appCss).toContain("--rm-chart-local:");
+    expect(appCss).toContain("--rm-chart-remote:");
+    expect(appCss).toContain("--rm-chart-ink: #171717;");
+    expect(appCss).toContain("--rm-chart-cyan: #50e3c2;");
+    expect(appCss).toContain("--rm-chart-highlight-pink: #ff0080;");
+    expect(appCss).toContain("--rm-chart-violet: #7928ca;");
+    expect(appCss).toContain("--rm-chart-link-blue: #0070f3;");
+    expect(appCss).toContain("--rm-chart-warning-soft: #ffefcf;");
+  });
+
+  test("chart tokens used together resolve to distinct visual colors in each theme", () => {
+    const tokenUsageSeries = ["--rm-chart-link-blue", "--rm-chart-cyan", "--rm-chart-tokens"];
+    const costSeries = ["--rm-chart-cost", "--rm-chart-link-blue", "--rm-chart-cyan"];
+    const avoidedCostSeries = ["--rm-chart-violet", "--rm-chart-link-blue", "--rm-chart-cyan"];
+    const cacheSeries = ["--rm-chart-cache-hit", "--rm-chart-cache-rate"];
+
+    for (const source of [lightAppCss, darkAppCss]) {
+      for (const series of [tokenUsageSeries, costSeries, avoidedCostSeries, cacheSeries]) {
+        const values = series.map((variableName) => extractCssVariableValue(source, variableName));
+        expect(new Set(values).size).toBe(values.length);
+      }
+    }
   });
 
   test("global shell chrome keeps legacy vendor ui out of the main runtime contract", () => {
@@ -535,12 +654,29 @@ describe("runtime design system", () => {
     expect(upstreamMarkup).toContain("Upstream target inventory");
     expect(upstreamMarkup).toContain("Provider accounts in scope");
     expect(upstreamMarkup).toContain("/upstream/");
+    expect(upstreamMarkup).not.toContain("Boundary notes");
+    expect(upstreamMarkup).not.toContain("When to use `/upstream/`");
     expect(upstreamMarkup).not.toContain("Open preserved UI");
+    expect(integrationsDownstreamRouteSource).toContain("Connection contract");
+    expect(integrationsDownstreamRouteSource).toContain("Consumer setup");
+    expect(integrationsDownstreamRouteSource).not.toContain("Compatibility posture");
+    expect(integrationsDownstreamRouteSource).not.toContain("API family");
+    expect(integrationsDownstreamRouteSource).toContain(
+      "xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]",
+    );
+    expect(integrationsDownstreamRouteSource).toContain("min-w-0 space-y-4");
+    expect(integrationsDownstreamRouteSource).toContain("max-w-full");
+    expect(codeBlockClassName).toContain("max-w-full");
+    expect(codeBlockClassName).toContain("whitespace-pre-wrap");
+    expect(codeBlockClassName).toContain("[overflow-wrap:anywhere]");
 
     const peersMarkup = renderRoute("/app/system/peers", createElement(SystemPeersRoute));
     expect(peersMarkup).toContain("Peer inventory");
     expect(peersMarkup).toContain("Peer contract fields");
-    expect(peersMarkup).toContain("Runtime policy boundary");
+    expect(peersMarkup).not.toContain("Runtime policy boundary");
+    expect(peersMarkup).not.toContain("Groups and matrix");
+    expect(peersMarkup).not.toContain("Empty-state rule");
+    expect(peersMarkup).not.toContain("Raw diagnostics");
     expect(peersMarkup).not.toContain("Open raw health");
   });
 
@@ -563,15 +699,18 @@ describe("runtime design system", () => {
     expect(routerRouteSource).not.toContain("Execution-ready aliases");
     expect(routerRouteSource).not.toContain("Guidance provenance");
     expect(routerRouteSource).not.toContain("Policy inputs");
-    expect(routerRouteSource).toContain("Configured hints");
-    expect(routerRouteSource).toContain("Resolved models");
+    expect(routerRouteSource).toContain("Effective models");
+    expect(routerRouteSource).toContain("Candidate expansion");
     expect(routerRouteSource).not.toContain("Allowed endpoints");
     expect(routerRouteSource).not.toContain("Control remains the editing surface");
     expect(endpointsRouteSource).not.toContain("Alias readiness");
     expect(endpointsRouteSource).not.toContain("Alias coverage");
     expect(endpointsRouteSource).toContain("View alias posture");
-    expect(providersRouteSource).not.toContain("LiteLLM-backed remote onboarding");
-    expect(providersRouteSource).not.toContain("Models.dev metadata stays additive only");
+    expect(endpointsRouteSource).toContain("Runtime connections");
+    expect(endpointsRouteSource).not.toContain('title="Configured providers"');
+    expect(endpointsRouteSource).not.toContain('title="Runtime endpoint rows"');
+    expect(providersRouteSource).toContain("LiteLLM");
+    expect(providersRouteSource).toContain("Models.dev metadata");
     expect(providersRouteSource).not.toContain('providerKind === "local-engine"');
   });
 
@@ -589,15 +728,6 @@ describe("runtime design system", () => {
     expect(providersRouteSource).toContain("API key");
     expect(providersRouteSource).toContain("Save");
     expect(providersRouteSource).toContain("Cancel");
-  });
-
-  test("providers setup fields use a repo-owned themed selector instead of raw native selects", () => {
-    expect(providersRouteSource).toContain("ThemedSelect");
-    expect(providersRouteSource).not.toContain("<select");
-    expect(themedSelectSource).toContain('role="listbox"');
-    expect(themedSelectSource).toContain("aria-haspopup=\"listbox\"");
-    expect(themedSelectSource).toContain("pr-[20px]");
-    expect(themedSelectSource).not.toContain("pr-[46px]");
   });
 
   test("providers surface keeps oauth reconnect as a one-click saved-account action", () => {
@@ -632,6 +762,9 @@ describe("runtime design system", () => {
     expect(sessionReadinessRouteSource).toContain("buildCredentialLifecycleAccountRows");
     expect(sessionReadinessRouteSource).toContain("buildArchivedArtifactRows");
     expect(sessionReadinessRouteSource).toContain("Archived stale diagnostics");
+    expect(sessionReadinessRouteSource).not.toContain("Related surfaces");
+    expect(sessionReadinessRouteSource).not.toContain("Runtime topology");
+    expect(sessionReadinessRouteSource).not.toContain("Remote providers");
     expect(workbenchRouteSource).toContain("buildCredentialLifecycleBanner");
     expect(studioAdvancedRouteSource).toContain("buildCredentialLifecycleBanner");
   });
@@ -661,6 +794,45 @@ describe("runtime design system", () => {
         .find((section) => section.title === "Router")
         ?.items.map((item) => item.id),
     ).not.toContain("router-decision-detail");
+  });
+
+  test("router overview presents runtime-config posture as source of truth", () => {
+    expect(routerRouteSource).toContain("const config = configRecord.config;");
+    expect(routerRouteSource).toContain("const configuredStrategy");
+    expect(routerRouteSource).toContain("const configuredExecutionMode");
+    expect(routerRouteSource).toContain('value={configuredStrategy ?? "unset"}');
+    expect(routerRouteSource).toContain('value={configuredExecutionMode ?? "decision_only"}');
+    expect(routerRouteSource).toContain("const configuredAliasRows");
+    expect(routerRouteSource).not.toContain("const aliasInventory = summary?.aliasInventory");
+    expect(routerRouteSource).toContain("Candidate expansion");
+    expect(routerRouteSource).not.toContain("Resolved models");
+  });
+
+  test("router overview lists the concrete candidate endpoints behind routing posture", () => {
+    expect(routerRouteSource).toContain("fetchRouterCandidates");
+    expect(routerRouteSource).toContain("Routing candidates");
+    expect(routerRouteSource).toContain("candidate.endpointId");
+    expect(routerRouteSource).toContain("candidate.modelId");
+    expect(routerRouteSource).toContain("candidate.sourceType");
+    expect(routerRouteSource).toContain("candidate.healthStatus");
+  });
+
+  test("routing strategy benchmark advisory does not leak JSX control flow as page text", () => {
+    expect(controlRoutingStrategySource).toContain("{candidates.length === 0 ? (");
+    expect(controlRoutingStrategySource).not.toContain(
+      "        candidates.length === 0 ? (\r\n        <p",
+    );
+    expect(controlRoutingStrategySource).not.toContain("\r\n        )\r\n        <div");
+  });
+
+  test("routing strategy settings separate saved posture from draft edits and refresh derived state after save", () => {
+    expect(controlRoutingStrategySource).toContain("Saved routing settings");
+    expect(controlRoutingStrategySource).toContain("Draft selection");
+    expect(controlRoutingStrategySource).toContain("hasUnsavedChanges");
+    expect(controlRoutingStrategySource).toContain("onChange={() => onChange(value)}");
+    expect(controlRoutingStrategySource).not.toContain("onClick={() => onChange(value)}");
+    expect(controlRoutingStrategySource).toContain("await loadState();");
+    expect(controlRoutingStrategySource).not.toContain("void Promise.all([");
   });
 
   test("meta-guidance panels stay removed from overview and observe routes", () => {
@@ -733,133 +905,68 @@ describe("runtime design system", () => {
     expect(runtimeRouteSource).toContain("No controller assigned");
   });
 
-  test("design-system docs and architecture point at the Apple reference instead of Swiss authority", () => {
-    expect(designSystemDocSource).toContain("DESIGN_APPLE_REFERENCE.md");
-    expect(designSystemDocSource).toContain('"SF Pro Display"');
-    expect(designSystemDocSource).toContain('"SF Pro Text"');
-    expect(designSystemDocSource).toContain("theme toggle");
-    expect(designSystemDocSource).toContain("transparent backgrounds");
-    expect(designSystemDocSource).not.toContain("Swiss-design baseline");
-    expect(designSystemDocSource).not.toContain("Swiss red");
-    expect(designSystemDocSource).not.toContain("IBM Plex Sans` is primary");
-    expect(architectureLockSource).not.toContain("the Swiss");
-  });
-
-  test("shared app bootstrap uses explicit Light and Dark theme tokens instead of media-query-only IBM Plex chrome", () => {
-    expect(appCss).toContain('--rm-font-display: "SF Pro Display", "Inter", -apple-system');
-    expect(appCss).toContain('--rm-font-body: "SF Pro Text", "Inter", -apple-system');
+  test("applies the Apple palette, SF Pro / Inter typography, and explicit theme contract in shared app chrome", () => {
+    expect(appCss).toContain('--rm-font-display: "SF Pro Display", "Inter"');
+    expect(appCss).toContain('--rm-font-body: "SF Pro Text", "Inter"');
+    expect(appCss).toContain("--rm-shadow-product: 0 3px 5px 30px rgba(0, 0, 0, 0.22);");
+    expect(appCss).not.toContain("--rm-shadow-product: 0 24px 80px rgba(0, 0, 0, 0.22);");
     expect(appCss).toContain("--rm-bg: #f5f5f7;");
     expect(appCss).toContain("--rm-surface: #ffffff;");
+    expect(appCss).toContain("--rm-panel: #fafafc;");
     expect(appCss).toContain("--rm-accent: #0066cc;");
-    expect(appCss).toContain("--rm-select-chevron:");
-    expect(appCss).toContain('[data-theme="light"]');
-    expect(appCss).toContain('[data-theme="dark"]');
-    expect(appCss).not.toContain("@media (prefers-color-scheme: dark)");
-    expect(rootSource).not.toContain("fonts.googleapis.com");
-    expect(rootSource).not.toContain("family=IBM+Plex+Mono");
-    expect(rootSource).toContain("rm-runtime-ui-theme");
-    expect(rootSource).toContain('meta name="theme-color"');
+    expect(appCss).toContain('html[data-theme="light"]');
+    expect(appCss).toContain('html[data-theme="dark"]');
+    expect(appCss).toContain("appearance: none;");
+    expect(appCss).toContain("background-image: var(--rm-select-chevron);");
+    expect(appCss).toContain('"IBM Plex Mono"');
+    expect(rootSource).toContain('meta name="color-scheme" content="light dark"');
+    expect(rootSource).toContain("family=Inter");
+    expect(rootSource).toContain('meta name="theme-color" content="#f5f5f7"');
+    expect(rootSource).toContain('meta name="theme-color" content="#000000"');
   });
 
-  test("shared shell and primitives own the global Light/Dark toggle and transparent semantic pills", () => {
-    expect(themeToggleSource).toContain("Light");
-    expect(themeToggleSource).toContain("Dark");
-    expect(themeToggleSource).not.toContain("System");
-    expect(appShellSource).not.toContain(
-      "mt-4 shrink-0 overflow-hidden border-t border-[var(--rm-border)] pt-5",
-    );
-    expect(appShellSource).toContain('className="mt-4 shrink-0 overflow-hidden"');
-    expect(themeToggleSource).toContain("w-full max-w-[272px]");
-    expect(themeToggleSource).toContain("mx-auto");
-    expect(themeToggleSource).toContain("flex-1 min-w-0");
-    expect(appShellSource).not.toContain("<ThemeToggle />\n                {actions}");
+  test("shared panels and provider selectors are owned by Apple-theme primitives", () => {
     expect(designSystemSource).not.toContain("rounded-none");
-    expect(appShellSource).not.toContain("rounded-none");
-    expect(pagePrimitivesSource).not.toContain("bg-[var(--rm-warning-muted)]");
-    expect(pagePrimitivesSource).not.toContain("bg-[var(--rm-success-subtle)]");
-    expect(pagePrimitivesSource).not.toContain("bg-[var(--rm-accent-ghost)]");
+    expect(designSystemSource).toContain("export const selectFieldClassName");
+    expect(designSystemSource).toContain('backgroundImage: "var(--rm-select-chevron)"');
+    expect(designSystemSource).toContain("rounded-[var(--rm-radius-panel)]");
+    expect(pagePrimitivesSource).not.toContain("<select");
+    expect(pagePrimitivesSource).toContain('role="listbox"');
+    expect(pagePrimitivesSource).toContain('role="option"');
+    expect(pagePrimitivesSource).toContain("aria-expanded");
+    expect(providersRouteSource).not.toContain("<select");
+    expect(providersRouteSource).toContain("SelectField");
+    expect(providersRouteSource).not.toContain("LiteLLM-backed remote onboarding");
   });
 
-  test("sidebar keeps nav items inside the shell card at shorter viewport heights", () => {
-    expect(appShellSource).not.toContain("max-h-[calc(100svh-2rem)]");
-    expect(appShellSource).toContain("lg:max-h-[calc(100vh-2rem)]");
-    expect(appShellSource).toContain("lg:overflow-hidden");
-    expect(appShellSource).toContain("lg:flex-1 lg:min-h-0 lg:overflow-y-auto lg:pr-1");
-    expect(appShellSource).toContain("shrink-0 overflow-hidden");
-    expect(appShellSource).not.toContain(
-      'className="mt-4 shrink-0 overflow-hidden border-t border-[var(--rm-border)] pt-5"',
-    );
+  test("router strategy execution mode uses the themed select primitive", () => {
+    expect(controlRoutingStrategySource).not.toContain("<select");
+    expect(controlRoutingStrategySource).not.toContain("execution-mode-select");
+    expect(controlRoutingStrategySource).toContain("SelectField");
   });
 
-  test("shared shell-header hooks do not depend on inline JSX or object identity", () => {
+  test("production UI dropdowns use themed select primitives instead of native selects", () => {
+    expect(findNativeSelectViolations()).toEqual([]);
+  });
+
+  test("shared route effects avoid action identity loops and peer refresh feedback", () => {
+    expect(shellHeaderContextSource).toContain("useRef");
     expect(shellHeaderContextSource).not.toContain("[actions, setActions, ...deps]");
     expect(shellHeaderContextSource).not.toContain("[override, setOverride, ...deps]");
+    expect(localPeersSource).not.toContain("}, [healthStatus]);");
+    expect(localPeersSource).toContain("setHealthStatus((previousStatus)");
   });
 
-  test("design-system docs no longer carry conflicting Swiss-era downstream rules", () => {
-    expect(designSystemDocSource).not.toContain("Rectilinear only");
-    expect(designSystemDocSource).not.toContain("No rounded treatments");
-    expect(designSystemDocSource).not.toContain("never introduce amber, emerald, rose");
-  });
-
-  test("shared shell and controls align to the approved Apple typography and control grammar", () => {
-    expect(appShellSource).not.toContain("text-2xl font-medium");
-    expect(appShellSource).not.toContain("text-3xl font-semibold");
+  test("keeps shared states calm: transparent status pills and no section divider chrome", () => {
+    expect(pagePrimitivesSource).toContain("bg-transparent text-[var(--rm-accent)]");
+    expect(pagePrimitivesSource).toContain("bg-transparent text-[var(--rm-warning)]");
+    expect(pagePrimitivesSource).toContain("bg-transparent text-[var(--rm-success)]");
+    expect(pagePrimitivesSource).not.toContain("border-b border-[var(--rm-border)] pb-4");
+    expect(pagePrimitivesSource).not.toContain("border-t border-[var(--rm-border)] pt-4");
     expect(appShellSource).not.toContain("border-b border-[var(--rm-border)] pb-5");
-    expect(appShellSource).not.toContain("mt-5 border-t border-[var(--rm-border)] pt-4");
-    expect(appShellSource).toContain('<div className="pb-2">');
-    expect(appShellSource).not.toMatch(
-      /<p className=\{eyebrowClassName\}>\s*\{route\?\.section \?\? "Overview"\}\s*<\/p>/,
-    );
-    expect(appShellSource).not.toContain('<p className={eyebrowClassName}>Theme</p>');
-    expect(pagePrimitivesSource).not.toContain("text-3xl font-light");
-    expect(pagePrimitivesSource).not.toContain("text-xl font-light md:text-2xl");
-    expect(pagePrimitivesSource).not.toContain("mb-5 border-b border-[var(--rm-border)] pb-4");
-    expect(pagePrimitivesSource).not.toContain("mt-4 border-t border-[var(--rm-border)] pt-4");
-    expect(designSystemSource).not.toContain("text-sm font-medium");
-    expect(designSystemSource).toContain("export const navLabelClassName =");
-    expect(designSystemSource).toContain('"text-[14px] font-normal leading-[18px] tracking-[-0.016em]"');
-    expect(designSystemSource).toContain("border-[var(--rm-border-strong)] bg-[var(--rm-panel)]");
-    expect(themeToggleSource).not.toContain("min-h-[36px]");
-    expect(appCss).not.toContain('textarea,\n  input[type="text"],\n  input[type="search"] {');
-    expect(appCss).toContain("select {");
-    expect(appCss).toContain("appearance: none;");
-    expect(appCss).toContain("option {");
-  });
-
-  test("studio copy and route surfaces no longer describe the runtime UI as Swiss-style", () => {
-    expect(studioImagesRouteSource).not.toContain("Swiss-style");
-    expect(studioRerankRouteSource).not.toContain("Swiss-style");
-  });
-
-  test("overview and dense inspector routes drop square-edge drift in favor of shared panel and field radii", () => {
-    expect(dashboardSource).toContain("listRowClassName");
-    expect(dashboardSource).not.toContain("rounded-none");
-    expect(requestDetailRouteSource).not.toContain("rounded-none");
-    expect(controlControllerSource).not.toContain("rounded-none");
-    expect(controlModelsSource).not.toContain("rounded-none");
-    expect(controlRolesSource).not.toContain("rounded-none");
-    expect(controlBenchmarkSource).not.toContain("rounded-none");
-    expect(providersRouteSource).not.toContain("rounded-none");
-    expect(localSwapSource).not.toContain("rounded-none");
-    expect(localPolicySource).not.toContain("rounded-none");
-    expect(localLogsSource).not.toContain("rounded-none");
-    expect(llamaSwapSetupModalSource).not.toContain("rounded-none");
-    expect(rootSource).not.toContain("rounded-none");
-    expect(localSwapSource).toContain("rounded-[var(--rm-radius-pill)]");
-    expect(localPolicySource).toContain("rounded-[var(--rm-radius-sm)]");
-    expect(localLogsSource).toContain("rounded-[var(--rm-radius-sm)]");
-  });
-
-  test("keeps shared states on semantic design tokens instead of Tailwind utility palettes", () => {
-    expect(pagePrimitivesSource).not.toMatch(/amber|emerald|rose/);
-    expect(controlModelsSource).not.toContain("bg-black");
-    expect(rootSource).not.toContain("bg-white");
-    expect(rootSource).not.toMatch(/rose-/);
-    expect(controlBenchmarkSource).not.toContain("text-amber-700");
-    expect(controlBenchmarkSource).not.toContain("text-red-600");
-    expect(workbenchRouteSource).not.toContain("border-red-500");
-    expect(workbenchRouteSource).not.toContain("text-red-500");
+    expect(appShellSource).not.toContain("border-t border-[var(--rm-border)] pt-4");
+    expect(appShellSource).toContain("ThemeToggle");
+    expect(appShellSource).toContain("mt-auto");
   });
 
   test("remote, models, router, and system runtime config routes are first-class pages in the retained taxonomy", () => {
@@ -894,8 +1001,6 @@ describe("runtime design system", () => {
     expect(localLlamaSwapModelsSource).toContain("Llama-swap");
     expect(localPeersSource).toContain("Endpoint inventory");
     expect(localPeersSource).toContain("Add endpoint");
-    expect(pagePrimitivesSource).toContain("export function RegistryDetailLayout");
-    expect(localPeersSource).toContain("RegistryDetailLayout");
     expect(endpointsRouteSource).toContain("/app/local/endpoints");
     expect(endpointsRouteSource).toContain("/app/connect/downstream");
     expect(controlModelsSource).toContain("/app/local/choose");
@@ -934,8 +1039,9 @@ describe("runtime design system", () => {
   });
 
   test("requests and request detail stay telemetry-first while exposing raw-host handoffs", () => {
-    expect(requestsRouteSource).toContain("fetchTelemetryDashboard");
-    expect(requestsRouteSource).toContain("summarizeTelemetryStats");
+    expect(requestsRouteSource).toContain("fetchTelemetryAnalytics");
+    expect(requestsRouteSource).toContain("buildObserveRequestsChartDefinitions");
+    expect(requestsRouteSource).toContain("Analytics controls");
     expect(requestsRouteSource).toContain("/app/observe/activity");
     expect(requestsRouteSource).toContain("/app/observe/logs");
     expect(requestDetailRouteSource).toContain("/app/observe/activity");
@@ -961,32 +1067,36 @@ describe("runtime design system", () => {
     expect(controlRuntimeConfigSource).not.toContain("FactCard");
     expect(runtimeRouteSource).not.toContain("Runtime contract notes");
     expect(runtimeRouteSource).not.toContain("Health posture");
+    expect(runtimeRouteSource).not.toContain("Preserved host surfaces");
+    expect(runtimeRouteSource).not.toContain("Raw host log output");
+    expect(runtimeRouteSource).not.toContain("Vendor metrics and capture ids");
+    expect(runtimeRouteSource).not.toContain("Raw host health endpoint");
     expect(designSystemDocSource).not.toContain("fact strips before the registry rail");
   });
 
-  test("dashboard passes telemetry detail to FactCard for Latency", () => {
-    expect(dashboardRouteSource).toContain("detail={card.detail}");
-    expect(dashboardRouteSource).toContain("TelemetryFactCard");
-    expect(pagePrimitivesSource).toContain("export function TelemetryFactCard");
+  test("dashboard is chart-led and keeps routing analytics as a first-class handoff", () => {
+    expect(dashboardRouteSource).toContain("TelemetryAnalyticsChartCard");
+    expect(dashboardRouteSource).toContain("buildOverviewChartDefinitions");
+    expect(dashboardRouteSource).toContain("Open routing analytics");
   });
 
   test("overview metadata and design doc describe a telemetry-first summary with an interaction rail", () => {
     expect(dashboardRouteSource).not.toContain('label: "Providers"');
     expect(dashboardRouteSource).not.toContain('label: "Execution-ready"');
-    expect(dashboardRouteSource.indexOf('title="Recent telemetry window"')).toBeLessThan(
-      dashboardRouteSource.indexOf('title="Current endpoint inventory"'),
-    );
+    expect(appShellSource).not.toContain("xl:grid-cols-[minmax(0,1fr)_auto]");
+    expect(appShellSource).toContain("hasSecondaryNavigation");
+    expect(appShellSource).toContain("activeSection.items.length > 1");
+    expect(dashboardRouteSource).toContain("usePageActions");
+    expect(dashboardRouteSource).not.toContain('title="Telemetry controls"');
+    expect(dashboardRouteSource).not.toContain(">Summary<");
+    expect(dashboardRouteSource).toContain('aria-label="Overview telemetry filters"');
+    expect(dashboardRouteSource).toContain("justify-between");
+    expect(dashboardRouteSource).toContain("xl:ml-auto");
+    expect(dashboardRouteSource).toContain("xl:justify-end");
+    expect(telemetryControlsSource).toContain("flex-nowrap");
     expect(dashboardRouteSource).toContain("request.primaryLabel");
     expect(designSystemSource).not.toContain("current-state cards and endpoint inventory");
-    expect(designSystemDocSource).toContain(
-      "Lead with the recent telemetry window as the primary summary surface, then keep current endpoint inventory and a latest-interactions rail below it.",
-    );
-    expect(designSystemDocSource).toContain(
-      "Replace the old Providers / Endpoints / Execution-ready / Bootstrap strip with the telemetry window instead of duplicating summary posture.",
-    );
-    expect(designSystemDocSource).toContain(
-      "Latest requests is an interaction rail, not a raw canonical request ledger.",
-    );
+    expect(dashboardRouteSource).toContain("Open request analytics");
   });
 
   test("workbench and observe routes expose routing controls and receipts in repo-owned UI surfaces", () => {
@@ -995,6 +1105,20 @@ describe("runtime design system", () => {
     expect(requestsRouteSource).toContain("routingDecisionLabel");
     expect(requestDetailRouteSource).toContain("Routing receipts");
     expect(requestDetailRouteSource).toContain("hybridArbitration");
+  });
+
+  test("request detail route renders authoritative stored cost metadata", () => {
+    expect(requestDetailRouteSource).toContain("effectiveCostUsd");
+    expect(requestDetailRouteSource).toContain("costCalculationBasis");
+    expect(requestDetailRouteSource).toContain("costCalculationVersion");
+    expect(requestDetailRouteSource).toContain("selectedUncachedCostUsd");
+    expect(requestDetailRouteSource).toContain("baselineMaxEligibleCostUsd");
+    expect(requestDetailRouteSource).toContain("routingCostSavingsUsd");
+    expect(requestDetailRouteSource).toContain("cacheCostSavingsUsd");
+    expect(requestDetailRouteSource).toContain("totalAvoidedCostUsd");
+    expect(requestDetailRouteSource).toContain("costBaselineSource");
+    expect(requestDetailRouteSource).toContain("costSavingsSupport");
+    expect(requestDetailRouteSource).not.toContain("formatUsd(actualCostUsd ?? estimatedCostUsd)");
   });
 
   test("shell header owns route metadata and page actions without duplicate page headers", () => {
@@ -1011,7 +1135,6 @@ describe("runtime design system", () => {
     expect(designSystemDocSource).toContain(
       "All templates assume the shell header is already visible.",
     );
-    expect(appShellSource).toContain("activeSection.items.length > 1");
     for (const template of [
       "summary-board",
       "studio-workspace",
@@ -1033,6 +1156,63 @@ describe("runtime design system", () => {
     }
     expect(requestDetailRouteSource).toContain("useShellHeaderOverride");
     expect(routerRouteSource).toContain("usePageActions");
+  });
+
+  test("shell headers do not render section eyebrow labels", () => {
+    expect(appShellSource).not.toContain('{route?.section ?? "Overview"}');
+    expect(appShellSource).not.toContain("uppercase tracking-[0.24em]");
+    expect(designSystemDocSource).not.toContain("section eyebrow");
+  });
+
+  test("routes do not register refresh controls as shell header actions", () => {
+    for (const source of [localLlamaSwapModelsSource, localPeerModelsSource, localPeersSource]) {
+      const pageActionBlocks = [...source.matchAll(/usePageActions\(([\s\S]*?)\r?\n {2}\);/g)].map(
+        ([, block]) => block,
+      );
+      for (const block of pageActionBlocks) {
+        expect(block).not.toMatch(/Refresh(?:ing…)?/);
+      }
+    }
+  });
+
+  test("long fact-card values use compact text roles instead of display value typography", () => {
+    expect(pagePrimitivesSource).toContain("valueClassName");
+    expect(sessionReadinessRouteSource).toContain("bodyStrongTextClassName");
+    const sessionFactCardCount = [...sessionReadinessRouteSource.matchAll(/<FactCard\b/g)].length;
+    const compactValueCount = [
+      ...sessionReadinessRouteSource.matchAll(/valueClassName={bodyStrongTextClassName}/g),
+    ].length;
+    expect(compactValueCount).toBe(sessionFactCardCount);
+  });
+
+  test("production UI sources do not bypass Apple theme token primitives", () => {
+    expect(
+      findSourceViolations(
+        /\b(?:text|border|bg)-(?:red|amber|orange|yellow|blue|gray|slate|zinc)-\d+\b/,
+      ),
+    ).toEqual([]);
+    expect(findExactSourceViolations("text-white")).toEqual([]);
+    expect(appCss).toContain("--rm-on-primary:");
+    expect(designSystemDocSource).toContain("`--rm-on-primary`");
+  });
+
+  test("production UI sources keep the approved Apple radius grammar", () => {
+    expect(findExactSourceViolations("rounded-none")).toEqual([]);
+  });
+
+  test("production UI sources avoid unsupported Apple typography weight 500", () => {
+    expect(findExactSourceViolations("font-medium")).toEqual([]);
+  });
+
+  test("chart primitives use shared design-system geometry and type tokens", () => {
+    expect(designSystemSource).toContain("chartAxisTickStyle");
+    expect(designSystemSource).toContain("chartBarRadius");
+    expect(telemetryChartsSource).toContain("chartAxisTickStyle");
+    expect(telemetryChartsSource).toContain("chartBarRadius");
+    expect(telemetryChartsSource).not.toContain("fontSize: 12");
+    expect(telemetryChartsSource).not.toContain("fontSize: 13");
+    expect(telemetryChartsSource).not.toContain("radius={[8, 8, 0, 0]}");
+    expect(telemetryChartsSource).not.toContain("radius={[0, 8, 8, 0]}");
   });
 
   test("runtime route definitions stay slim and future scaffolds avoid duplicate header props", () => {

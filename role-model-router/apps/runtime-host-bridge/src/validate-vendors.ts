@@ -593,8 +593,8 @@ async function startRuntimeForConfig(input: {
   const server = await startBridgeServer({
     host: "127.0.0.1",
     port: 0,
-    registry: backend.registry,
-    getRegistry: () => backend.registry,
+    registry: backend.effectiveRegistry,
+    getRegistry: () => backend.effectiveRegistry,
     executeChatCompletions: backend.executeChatCompletions,
     executeResponses: backend.executeResponses,
     readRuntimeSummary: backend.readRuntimeSummary,

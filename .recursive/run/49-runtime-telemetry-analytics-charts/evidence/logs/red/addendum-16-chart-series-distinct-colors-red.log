@@ -1,0 +1,76 @@
+
+> @role-model-router/runtime-ui@ test D:\DEV\role-model\.worktrees\49-runtime-telemetry-analytics-charts\role-model-router\apps\runtime-ui
+> vitest run app/lib/runtime-api.test.ts app/lib/view-models.test.ts app/lib/device-authorization.test.ts app/lib/design-system.test.ts app/lib/provider-account-state.test.ts app/lib/router-candidate-labels.test.ts app/lib/benchmark-latency.test.ts app/lib/benchmark-model-cards.test.ts app/lib/telemetry-analytics.test.ts app/lib/telemetry-route-models.test.ts app/components/telemetry-charts.test.tsx "--" "app/lib/telemetry-analytics.test.ts"
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/49-runtime-telemetry-analytics-charts/role-model-router/apps/runtime-ui[39m
+
+ [32m✓[39m app/lib/device-authorization.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 23[2mms[22m[39m
+ [32m✓[39m app/lib/benchmark-latency.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m app/lib/runtime-api.test.ts [2m([22m[2m40 tests[22m[2m)[22m[33m 367[2mms[22m[39m
+ [32m✓[39m app/lib/router-candidate-labels.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m app/lib/benchmark-model-cards.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m app/lib/provider-account-state.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m app/lib/telemetry-route-models.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 34[2mms[22m[39m
+ [32m✓[39m app/lib/view-models.test.ts [2m([22m[2m32 tests[22m[2m)[22m[32m 255[2mms[22m[39m
+ [31m❯[39m app/lib/telemetry-analytics.test.ts [2m([22m[2m6 tests[22m[2m | [22m[31m2 failed[39m[2m)[22m[32m 109[2mms[22m[39m
+   [32m✓[39m telemetry analytics view models[2m > [22mbuilds semantic metric series when the backend response is not broken down by dimension[32m 9[2mms[22m[39m
+[31m   [31m×[31m telemetry analytics view models[2m > [22mpreserves all requested metrics when a query includes breakdown data that the chart does not directly compare[39m[32m 80[2mms[22m[39m
+[31m     → expected 1 to be 3 // Object.is equality[39m
+[31m   [31m×[31m telemetry analytics view models[2m > [22massigns distinct colors to each visible metric series in the same chart[39m[32m 7[2mms[22m[39m
+[31m     → expected 1 to be 3 // Object.is equality[39m
+   [32m✓[39m telemetry analytics view models[2m > [22mcollapses long breakdowns into top series plus Other using backend labels[32m 5[2mms[22m[39m
+   [32m✓[39m telemetry analytics view models[2m > [22mbuilds ranked routing comparison rows from the analytics response[32m 2[2mms[22m[39m
+   [32m✓[39m telemetry analytics view models[2m > [22mselects stable query granularity from approved time ranges[32m 1[2mms[22m[39m
+ [32m✓[39m app/components/telemetry-charts.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 69[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts [2m([22m[2m46 tests[22m[2m)[22m[33m 423[2mms[22m[39m
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  app/lib/telemetry-analytics.test.ts > telemetry analytics view models > preserves all requested metrics when a query includes breakdown data that the chart does not directly compare
+AssertionError: expected 1 to be 3 // Object.is equality
+
+- Expected
++ Received
+
+- 3
++ 1
+
+ ❯ app/lib/telemetry-analytics.test.ts:138:75
+    136|       }),
+    137|     );
+    138|     expect(new Set(model.series.map((series) => series.colorToken)).si…
+       |                                                                           ^
+    139|       model.series.length,
+    140|     );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  app/lib/telemetry-analytics.test.ts > telemetry analytics view models > assigns distinct colors to each visible metric series in the same chart
+AssertionError: expected 1 to be 3 // Object.is equality
+
+- Expected
++ Received
+
+- 3
++ 1
+
+ ❯ app/lib/telemetry-analytics.test.ts:181:75
+    179|       "totalAvoidedCostUsd",
+    180|     ]);
+    181|     expect(new Set(model.series.map((series) => series.colorToken)).si…
+       |                                                                           ^
+    182|       model.series.length,
+    183|     );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m10 passed[39m[22m[90m (11)[39m
+[2m      Tests [22m [1m[31m2 failed[39m[22m[2m | [22m[1m[32m149 passed[39m[22m[90m (151)[39m
+[2m   Start at [22m 21:13:24
+[2m   Duration [22m 9.85s[2m (transform 17.65s, setup 0ms, collect 33.28s, tests 1.34s, environment 8ms, prepare 13.04s)[22m
+
+D:\DEV\role-model\.worktrees\49-runtime-telemetry-analytics-charts\role-model-router\apps\runtime-ui:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @role-model-router/runtime-ui@ test: `vitest run app/lib/runtime-api.test.ts app/lib/view-models.test.ts app/lib/device-authorization.test.ts app/lib/design-system.test.ts app/lib/provider-account-state.test.ts app/lib/router-candidate-labels.test.ts app/lib/benchmark-latency.test.ts app/lib/benchmark-model-cards.test.ts app/lib/telemetry-analytics.test.ts app/lib/telemetry-route-models.test.ts app/components/telemetry-charts.test.tsx "--" "app/lib/telemetry-analytics.test.ts"`
+Exit status 1

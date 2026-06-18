@@ -198,6 +198,35 @@ export interface RuntimeAccountState {
   readonly rotationState: string;
 }
 
+export interface RuntimeTelemetrySnapshot {
+  readonly providerId: string | null;
+  readonly providerAccountId: string | null;
+  readonly sourceType: "local" | "remote";
+  readonly endpointKind: string;
+  readonly servingSource: string;
+  readonly region: string | null;
+  readonly lifecycleStateAtRequest: string;
+  readonly healthStatusAtRequest: string | null;
+  readonly requestedModelId: string | null;
+  readonly selectedModelId?: string | null;
+  readonly requestOperation: string;
+  readonly roleIds: readonly string[];
+  readonly toolingUsed: boolean;
+  readonly cacheState: string;
+  readonly eligibleEndpointIds: readonly string[];
+  readonly eligibleModelIds: readonly string[];
+  readonly candidateCostSnapshot: Record<string, unknown>;
+  readonly selectedPricingSnapshot: Record<string, unknown> | null;
+  readonly selectedUncachedCostUsd: number | null;
+  readonly baselineMaxEligibleCostUsd: number | null;
+  readonly routingCostSavingsUsd: number;
+  readonly cacheCostSavingsUsd: number;
+  readonly totalAvoidedCostUsd: number;
+  readonly costBaselineSource: string | null;
+  readonly costSavingsSupport: string | null;
+  readonly dimensions?: Record<string, unknown>;
+}
+
 export interface RuntimeDiagnostic {
   readonly code: string;
   readonly severity: "info" | "warning" | "error";
@@ -224,6 +253,7 @@ export interface RuntimeObservationBundleInput {
   readonly tooling?: {
     readonly executions: readonly ToolRegistryExecution[];
   };
+  readonly telemetrySnapshot?: RuntimeTelemetrySnapshot;
 }
 
 export interface RedactedCaptureBody {
@@ -300,6 +330,7 @@ export interface RuntimeObservationBundle {
     readonly executions: readonly ToolRegistryExecution[];
     readonly diagnostics: readonly RuntimeDiagnostic[];
   };
+  readonly telemetrySnapshot?: RuntimeTelemetrySnapshot;
   readonly inspection: {
     readonly request: {
       readonly requestId: string;
@@ -671,6 +702,7 @@ export function createRuntimeObservationBundle(
         Boolean(input.routingDiagnostics?.routingModel?.enabled),
     },
     tooling,
+    ...(input.telemetrySnapshot ? { telemetrySnapshot: input.telemetrySnapshot } : {}),
     inspection: {
       request: {
         requestId: input.decision.request_id,

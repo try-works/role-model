@@ -1,0 +1,59 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/49-runtime-telemetry-analytics-charts/role-model-router/apps/runtime-ui[39m
+
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mdefines navigation groups and layout templates for every runtime route[32m 8[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22muses analytics charts as the primary Observe entry point[32m 2[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mkeeps the shell on the Apple baseline with explicit chart tokens[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mchart tokens used together resolve to distinct visual colors in each theme[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mglobal shell chrome keeps legacy vendor ui out of the main runtime contract[32m 70[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mstudio implementation targets render repo-owned workspace sections instead of placeholder blueprints[32m 22[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mintegration and system implementation targets render live upstream and peer surfaces[32m 20[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mrouter implementation targets render repo-owned routing explanation surfaces[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mrouter, connect registry, and remote surfaces expose alias/readiness ownership instead of generic filler[32m 2[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mproviders surface exposes explicit in-place maintenance actions for saved remote accounts[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mproviders surface uses an explicit save-cancel modal for api-key maintenance[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mproviders surface keeps oauth reconnect as a one-click saved-account action[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mproviders maintenance flows call explicit repair APIs instead of generic account writes[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mproviders saved-account cards use canonical lifecycle rows and bounded archived diagnostics[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mruntime, session readiness, workbench, and advanced surfaces use canonical lifecycle diagnostics[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mrouter routes preserve empty-state and observe-link affordances[32m 0[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mmerged router overview stays observational while routing strategy owns editing controls[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mrouter overview presents runtime-config posture as source of truth[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mrouter overview lists the concrete candidate endpoints behind routing posture[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mrouting strategy benchmark advisory does not leak JSX control flow as page text[32m 0[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mmeta-guidance panels stay removed from overview and observe routes[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mdesign system doc marks the converted pages as live routes[32m 2[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mcontrol routes tolerate an unassigned controller before endpoint activation[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mapplies the Apple palette, SF Pro / Inter typography, and explicit theme contract in shared app chrome[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mshared panels and provider selectors are owned by Apple-theme primitives[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mrouter strategy execution mode uses the themed select primitive[32m 0[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mproduction UI dropdowns use themed select primitives instead of native selects[32m 2[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mshared route effects avoid action identity loops and peer refresh feedback[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mkeeps shared states calm: transparent status pills and no section divider chrome[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mremote, models, router, and system runtime config routes are first-class pages in the retained taxonomy[32m 19[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mlocal setup surfaces stay discoverable from navigation and empty registry states[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mobserve and local log surfaces render structured ledgers rather than raw iframe placeholders[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mobserve ownership keeps requests canonical and raw-host surfaces adjacent[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mrequests and request detail stay telemetry-first while exposing raw-host handoffs[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mactivity route frames raw-host metrics as adjacent to canonical telemetry[32m 0[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mlogs route exposes request-detail handoffs while preserving raw-host framing[32m 0[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mregistry and system layouts avoid redundant KPI strips and placeholder note panels[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mdashboard is chart-led and keeps routing analytics as a first-class handoff[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22moverview metadata and design doc describe a telemetry-first summary with an interaction rail[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mworkbench and observe routes expose routing controls and receipts in repo-owned UI surfaces[32m 0[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mrequest detail route renders authoritative stored cost metadata[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mshell header owns route metadata and page actions without duplicate page headers[32m 2[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mshell headers do not render section eyebrow labels[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mroutes do not register refresh controls as shell header actions[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mlong fact-card values use compact text roles instead of display value typography[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mproduction UI sources do not bypass Apple theme token primitives[32m 3[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mproduction UI sources keep the approved Apple radius grammar[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mproduction UI sources avoid unsupported Apple typography weight 500[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mchart primitives use shared design-system geometry and type tokens[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mruntime route definitions stay slim and future scaffolds avoid duplicate header props[32m 2[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m50 passed[39m[22m[90m (50)[39m
+[2m   Start at [22m 23:38:02
+[2m   Duration [22m 2.98s[2m (transform 1.10s, setup 0ms, collect 1.73s, tests 190ms, environment 0ms, prepare 275ms)[22m
+

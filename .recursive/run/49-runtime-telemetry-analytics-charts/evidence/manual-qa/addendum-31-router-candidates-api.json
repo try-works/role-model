@@ -1,0 +1,61 @@
+{
+  "endpointId": "llama-swap.local.lfm2-5-1-2b-instruct",
+  "modelId": "lfm2.5-1.2b-instruct",
+  "providerId": null,
+  "sourceType": "local",
+  "endpointKind": "local_engine",
+  "servingSource": "vendor-llama-swap",
+  "region": "local",
+  "status": "active",
+  "healthStatus": "healthy",
+  "roleBindings": [],
+  "capabilities": [
+    "text.chat",
+    "tools.function_calling"
+  ],
+  "toolCallingSupported": true,
+  "toolCallingStyle": "openai",
+  "executionModeEligible": true,
+  "controllerEligible": true,
+  "preferred": false,
+  "ignored": false,
+  "latestProfile": null,
+  "recentSamples": [],
+  "difficultyProfiles": {
+    "easy": null,
+    "medium": null,
+    "hard": null
+  },
+  "advisoryMaxDifficultyRecommendation": {
+    "recommendedMaxDifficulty": null,
+    "thresholds": {
+      "minSamples": 4,
+      "maxFailureRate": 0.2,
+      "minQualityScore": 0.8,
+      "minTokensPerSec": 22
+    },
+    "evaluations": {
+      "easy": {
+        "eligible": false,
+        "rejectionReasons": [
+          "no-profile"
+        ],
+        "profile": null
+      },
+      "medium": {
+        "eligible": false,
+        "rejectionReasons": [
+          "no-profile"
+        ],
+        "profile": null
+      },
+      "hard": {
+        "eligible": false,
+        "rejectionReasons": [
+          "no-profile"
+        ],
+        "profile": null
+      }
+    }
+  }
+}

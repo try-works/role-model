@@ -1,0 +1,53 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/49-runtime-telemetry-analytics-charts/role-model-router/apps/runtime-ui[39m
+
+ [32m✓[39m app/lib/benchmark-model-cards.test.ts[2m > [22mbenchmark model cards addendum layout[2m > [22muses model-scores → run-benchmark → run-history section order[32m 5[2mms[22m[39m
+ [32m✓[39m app/lib/benchmark-model-cards.test.ts[2m > [22mbenchmark model cards addendum layout[2m > [22mdoes not enable standalone Last runs by mode section[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/benchmark-model-cards.test.ts[2m > [22mbenchmark model cards addendum layout[2m > [22mresolves per-endpoint subjects from full and quick summaries independently[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/benchmark-model-cards.test.ts[2m > [22mbenchmark model cards addendum layout[2m > [22mformats hardBlend copy for routing impact[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/runtime-api.test.ts[2m > [22mfetchRuntimeSnapshot[2m > [22mloads the operator shell data from the runtime control-plane endpoints[32m 20[2mms[22m[39m
+ [32m✓[39m app/lib/runtime-api.test.ts[2m > [22mfetchLocalModels[2m > [22mpreserves local ownership and llama-swap config metadata from the runtime API[32m 2[2mms[22m[39m
+ [32m✓[39m app/lib/runtime-api.test.ts[2m > [22mfetchDownstreamOpenAIProviderConfig[2m > [22mloads the downstream OpenAI-compatible provider contract for consumer apps[32m 2[2mms[22m[39m
+ [32m✓[39m app/lib/runtime-api.test.ts[2m > [22mfetchRequestDetail[2m > [22mloads request detail and the linked endpoint profile for the inspector pane[32m 2[2mms[22m[39m
+ [32m✓[39m app/lib/runtime-api.test.ts[2m > [22mrouter APIs[2m > [22mloads the router summary, config, candidates, and decision ledger from router-specific endpoints[32m 3[2mms[22m[39m
+ [32m✓[39m app/lib/runtime-api.test.ts[2m > [22mrouter APIs[2m > [22mloads router decision detail from the router decision endpoint[32m 2[2mms[22m[39m
+ [32m✓[39m app/lib/runtime-api.test.ts[2m > [22mtelemetry APIs[2m > [22mloads the canonical telemetry dashboard reads from the role-model telemetry endpoints[32m 3[2mms[22m[39m
+ [32m✓[39m app/lib/runtime-api.test.ts[2m > [22mtelemetry APIs[2m > [22mloads telemetry request rows with limit parameters[32m 2[2mms[22m[39m
+ [32m✓[39m app/lib/runtime-api.test.ts[2m > [22mtelemetry APIs[2m > [22mposts the generic telemetry analytics query payload[32m 3[2mms[22m[39m
+ [32m✓[39m app/lib/runtime-api.test.ts[2m > [22mtelemetry APIs[2m > [22msubscribes to canonical telemetry SSE updates and closes the source on cleanup[32m 7[2mms[22m[39m
+ [32m✓[39m app/lib/runtime-api.test.ts[2m > [22mobserve APIs[2m > [22mloads vendor activity metrics for the observe activity page[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/runtime-api.test.ts[2m > [22mobserve APIs[2m > [22mloads a persisted request/response capture by id[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/runtime-api.test.ts[2m > [22mobserve APIs[2m > [22mreturns null when an activity capture is not found[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/runtime-api.test.ts[2m > [22mobserve APIs[2m > [22mloads raw log text for observe log consoles[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/runtime-api.test.ts[2m > [22mobserve APIs[2m > [22mloads vendor version info for the runtime system surface[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/runtime-api.test.ts[2m > [22mcontroller assignment APIs[2m > [22mloads the current global controller assignment[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/runtime-api.test.ts[2m > [22mcontroller assignment APIs[2m > [22mloads a null controller assignment when no controller is configured yet[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/runtime-api.test.ts[2m > [22mcontroller assignment APIs[2m > [22mpatches the selected controller candidate[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/runtime-api.test.ts[2m > [22msubmitWorkbenchChat[2m > [22mposts a chat-completions payload to the runtime workbench path[32m 2[2mms[22m[39m
+ [32m✓[39m app/lib/runtime-api.test.ts[2m > [22msubmitWorkbenchChat[2m > [22msends routing-mode override as a header instead of leaking it into the OpenAI-compatible body[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/runtime-api.test.ts[2m > [22msubmitWorkbenchChat[2m > [22msends endpoint override as a header instead of leaking it into the OpenAI-compatible body[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/runtime-api.test.ts[2m > [22mstudio vendor API helpers[2m > [22mposts an OpenAI image-generation request[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/runtime-api.test.ts[2m > [22mstudio vendor API helpers[2m > [22mposts an SDAPI txt2img request[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/runtime-api.test.ts[2m > [22mstudio vendor API helpers[2m > [22mloads available speech voices for a selected model[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/runtime-api.test.ts[2m > [22mstudio vendor API helpers[2m > [22mposts a speech-generation request and returns audio bytes as a blob[32m 3[2mms[22m[39m
+ [32m✓[39m app/lib/runtime-api.test.ts[2m > [22mstudio vendor API helpers[2m > [22mposts a multipart transcription request[32m 2[2mms[22m[39m
+ [32m✓[39m app/lib/runtime-api.test.ts[2m > [22mstudio vendor API helpers[2m > [22mposts a rerank request to the selected vendor path[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/runtime-api.test.ts[2m > [22mstudio vendor API helpers[2m > [22mposts a raw advanced API request to the selected endpoint family[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/runtime-api.test.ts[2m > [22mstartRuntimeDeviceAuthorization[2m > [22mposts the selected provider account payload to the runtime device-auth start path[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/runtime-api.test.ts[2m > [22mreconnectRuntimeAccount[2m > [22mposts the saved account id to the explicit reconnect repair path[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/runtime-api.test.ts[2m > [22mpollRuntimeDeviceAuthorization[2m > [22mposts the auth request id to the runtime device-auth poll path[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/runtime-api.test.ts[2m > [22mupdateRuntimeAccountApiKey[2m > [22mposts the saved account id and replacement key to the explicit repair path[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/runtime-api.test.ts[2m > [22mactivateRuntimeEndpoint[2m > [22mposts endpoint activation payload to the runtime endpoints mutation path[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/runtime-api.test.ts[2m > [22mfetchRuntimeConfig[2m > [22mloads the normalized unified runtime config from the runtime control plane[32m 2[2mms[22m[39m
+ [32m✓[39m app/lib/runtime-api.test.ts[2m > [22mupdateRuntimeConfig[2m > [22mputs the normalized unified runtime config to the runtime control plane[32m 2[2mms[22m[39m
+ [32m✓[39m app/lib/runtime-api.test.ts[2m > [22mrole policy APIs[2m > [22mloads the full runtime-managed role policy from the control plane[32m 2[2mms[22m[39m
+ [32m✓[39m app/lib/runtime-api.test.ts[2m > [22mrole policy APIs[2m > [22mposts role creation, puts role updates, and puts task allowlists to the control plane[32m 3[2mms[22m[39m
+ [32m✓[39m app/lib/runtime-api.test.ts[2m > [22mbenchmark display endpoints[2m > [22mfetchBenchmarkSummariesByMode loads full and quick summaries[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/runtime-api.test.ts[2m > [22mbenchmark display endpoints[2m > [22mfetchBenchmarkRuns loads completed run history[32m 3[2mms[22m[39m
+ [32m✓[39m app/lib/runtime-api.test.ts[2m > [22mbenchmark display endpoints[2m > [22mclearAllBenchmarkData deletes global benchmark state[32m 1[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m2 passed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[32m44 passed[39m[22m[90m (44)[39m
+[2m   Start at [22m 08:45:14
+[2m   Duration [22m 1.68s[2m (transform 321ms, setup 0ms, collect 643ms, tests 109ms, environment 1ms, prepare 1.15s)[22m
+

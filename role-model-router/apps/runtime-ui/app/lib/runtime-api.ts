@@ -448,6 +448,113 @@ export interface RuntimeTelemetryStreamEvent {
   readonly request: RuntimeTelemetryRequestRecord;
 }
 
+export type RuntimeTelemetryAnalyticsGranularity = "hour" | "day" | "week";
+
+export type RuntimeTelemetryAnalyticsMetric =
+  | "requestCount"
+  | "successCount"
+  | "failureCount"
+  | "inputTokens"
+  | "outputTokens"
+  | "totalTokens"
+  | "cacheHitTokens"
+  | "cacheReadTokens"
+  | "cacheBackedRequestRate"
+  | "cacheHitTokenRate"
+  | "actualCostUsd"
+  | "estimatedCostUsd"
+  | "effectiveCostUsd"
+  | "selectedUncachedCostUsd"
+  | "baselineMaxEligibleCostUsd"
+  | "routingCostSavingsUsd"
+  | "cacheCostSavingsUsd"
+  | "totalAvoidedCostUsd"
+  | "averageLatencyMs"
+  | "p95LatencyMs";
+
+export type RuntimeTelemetryAnalyticsDimension =
+  | "sourceType"
+  | "endpointId"
+  | "modelId"
+  | "providerId"
+  | "providerKind"
+  | "providerFamily"
+  | "providerAccountId"
+  | "requestedRoleId"
+  | "selectedStrategy"
+  | "routingMode"
+  | "difficultyBucket"
+  | "statusFamily"
+  | "requestOperation";
+
+export interface RuntimeTelemetryAnalyticsFilters {
+  readonly sourceTypes?: readonly ("local" | "remote")[];
+  readonly endpointIds?: readonly string[];
+  readonly modelIds?: readonly string[];
+  readonly providerIds?: readonly string[];
+  readonly providerKinds?: readonly string[];
+  readonly providerFamilies?: readonly string[];
+  readonly providerAccountIds?: readonly string[];
+  readonly requestedRoleIds?: readonly string[];
+  readonly selectedStrategies?: readonly string[];
+  readonly routingModes?: readonly ("baseline" | "difficulty" | "controller" | "hybrid")[];
+  readonly difficultyBuckets?: readonly ("easy" | "medium" | "hard")[];
+  readonly statusFamilies?: readonly ("success" | "failure" | "unknown")[];
+  readonly requestOperations?: readonly string[];
+}
+
+export interface RuntimeTelemetryAnalyticsRanking {
+  readonly dimension: RuntimeTelemetryAnalyticsDimension;
+  readonly metric: RuntimeTelemetryAnalyticsMetric;
+  readonly limit?: number;
+}
+
+export interface RuntimeTelemetryAnalyticsQuery {
+  readonly startAtMs?: number;
+  readonly endAtMs?: number;
+  readonly windowMs?: number;
+  readonly granularity: RuntimeTelemetryAnalyticsGranularity;
+  readonly metrics: readonly RuntimeTelemetryAnalyticsMetric[];
+  readonly breakdown?: RuntimeTelemetryAnalyticsDimension | null;
+  readonly filters?: RuntimeTelemetryAnalyticsFilters;
+  readonly ranking?: RuntimeTelemetryAnalyticsRanking | null;
+}
+
+export interface RuntimeTelemetryAnalyticsSeries {
+  readonly key: string;
+  readonly label: string;
+  readonly metrics: Readonly<Record<string, number | null>>;
+}
+
+export interface RuntimeTelemetryAnalyticsBucket {
+  readonly startAtMs: number;
+  readonly endAtMs: number;
+  readonly totals: Readonly<Record<string, number | null>>;
+  readonly series: readonly RuntimeTelemetryAnalyticsSeries[];
+}
+
+export interface RuntimeTelemetryAnalyticsRankingRow {
+  readonly key: string;
+  readonly label: string;
+  readonly value: number | null;
+}
+
+export interface RuntimeTelemetryAnalyticsResponse {
+  readonly startAtMs: number;
+  readonly endAtMs: number;
+  readonly granularity: RuntimeTelemetryAnalyticsGranularity;
+  readonly metrics: readonly RuntimeTelemetryAnalyticsMetric[];
+  readonly breakdown: RuntimeTelemetryAnalyticsDimension | null;
+  readonly buckets: readonly RuntimeTelemetryAnalyticsBucket[];
+  readonly totals: Readonly<Record<string, number | null>>;
+  readonly ranking: {
+    readonly dimension: RuntimeTelemetryAnalyticsDimension;
+    readonly metric: RuntimeTelemetryAnalyticsMetric;
+    readonly rows: readonly RuntimeTelemetryAnalyticsRankingRow[];
+  } | null;
+  readonly labels: Partial<Record<RuntimeTelemetryAnalyticsDimension, Record<string, string>>>;
+}
+
 export interface RuntimeEventSourceLike {
   addEventListener(type: string, listener: (event: MessageEvent<string>) => void): void;
   close(): void;
@@ -624,6 +731,20 @@ export interface RuntimeSnapshot {
 export interface RuntimeRequestDetail {
   readonly requestId: string;
   readonly endpointId: string;
+  readonly effectiveCostUsd?: number;
+  readonly costCalculationBasis?:
+    | "actual_vendor_cost"
+    | "estimated_vendor_cost"
+    | "no_execution_zero"
+    | "unknown";
+  readonly costCalculationVersion?: string;
+  readonly selectedUncachedCostUsd?: number | null;
+  readonly baselineMaxEligibleCostUsd?: number | null;
+  readonly routingCostSavingsUsd?: number;
+  readonly cacheCostSavingsUsd?: number;
+  readonly totalAvoidedCostUsd?: number;
+  readonly costBaselineSource?: string | null;
+  readonly costSavingsSupport?: string | null;
   readonly [key: string]: unknown;
 }
 
@@ -701,6 +822,7 @@ export interface RouterCandidate {
   readonly healthStatus?: string;
   readonly status?: string;
   readonly controllerEligible?: boolean;
+  readonly executionModeEligible?: boolean;
   readonly preferred?: boolean;
   readonly ignored?: boolean;
   readonly roleBindings?: readonly string[];
@@ -964,6 +1086,7 @@ function buildTelemetryQueryString(input?: {
   readonly limit?: number;
   readonly windowMs?: number;
   readonly endAtMs?: number;
+  readonly startAtMs?: number;
 }): string {
   const params = new URLSearchParams();
   if (typeof input?.limit === "number") {
@@ -974,6 +1097,9 @@ function buildTelemetryQueryString(input?: {
   }
   if (typeof input?.endAtMs === "number") {
     params.set("endAtMs", String(input.endAtMs));
+  }
+  if (typeof input?.startAtMs === "number") {
+    params.set("startAtMs", String(input.startAtMs));
   }
   const query = params.toString();
   return query.length > 0 ? `?${query}` : "";
@@ -1000,11 +1126,23 @@ export async function fetchTelemetryRequests(
     readonly limit?: number;
     readonly windowMs?: number;
     readonly endAtMs?: number;
+    readonly startAtMs?: number;
   } = {},
   fetcher: RuntimeFetcher = fetch,
 ): Promise<RuntimeTelemetryRequestRecord[]> {
   return fetchJson<RuntimeTelemetryRequestRecord[]>(
     `/api/role-model/telemetry/requests${buildTelemetryQueryString(input)}`,
+    fetcher,
+  );
+}
+
+export async function fetchTelemetryAnalytics(
+  payload: RuntimeTelemetryAnalyticsQuery,
+  fetcher: RuntimeFetcher = fetch,
+): Promise<RuntimeTelemetryAnalyticsResponse> {
+  return postJson<RuntimeTelemetryAnalyticsResponse>(
+    "/api/role-model/telemetry/query",
+    payload,
     fetcher,
   );
 }

@@ -129,7 +129,7 @@ export default function RuntimeRoute() {
               <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">
                 Endpoint
               </p>
-              <p className="mt-2 break-all text-sm font-medium text-[var(--rm-fg)]">
+              <p className="mt-2 break-all text-sm font-semibold text-[var(--rm-fg)]">
                 {controller.endpointId}
               </p>
             </div>
@@ -137,7 +137,7 @@ export default function RuntimeRoute() {
               <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">
                 Model
               </p>
-              <p className="mt-2 text-sm font-medium text-[var(--rm-fg)]">{controller.modelId}</p>
+              <p className="mt-2 text-sm font-semibold text-[var(--rm-fg)]">{controller.modelId}</p>
             </div>
             <div className={`${mutedPanelClassName} p-4`}>
               <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">
@@ -158,7 +158,7 @@ export default function RuntimeRoute() {
       <SectionCard title="Version and boundary facts">
         <div className="grid gap-3 md:grid-cols-2">
           <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
-            <p className="font-medium text-[var(--rm-fg)]">Vendor host version</p>
+            <p className="font-semibold text-[var(--rm-fg)]">Vendor host version</p>
             <p className="mt-2 text-base text-[var(--rm-fg)]">{version.version}</p>
             <p className="mt-2 break-all">Commit {version.commit}</p>
             <p className="mt-1">Built {version.build_date}</p>
@@ -167,36 +167,10 @@ export default function RuntimeRoute() {
             className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}
             href="/api/role-model/runtime/summary"
           >
-            <span className="block font-medium text-[var(--rm-fg)]">
+            <span className="block font-semibold text-[var(--rm-fg)]">
               /api/role-model/runtime/summary
             </span>
             Repo-owned runtime topology and lifecycle summary
-          </a>
-        </div>
-      </SectionCard>
-
-      <SectionCard title="Preserved host surfaces">
-        <div className="grid gap-3 md:grid-cols-2">
-          <a
-            className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}
-            href="/logs"
-          >
-            <span className="block font-medium text-[var(--rm-fg)]">/logs</span>
-            Raw host log output
-          </a>
-          <a
-            className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}
-            href="/api/metrics"
-          >
-            <span className="block font-medium text-[var(--rm-fg)]">/api/metrics</span>
-            Vendor metrics and capture ids
-          </a>
-          <a
-            className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}
-            href="/health"
-          >
-            <span className="block font-medium text-[var(--rm-fg)]">/health</span>
-            Raw host health endpoint for route-local diagnostics
           </a>
         </div>
       </SectionCard>

@@ -153,7 +153,7 @@ export default function ObserveActivityRoute() {
                 <div key={row.id} className={listRowClassName}>
                   <div className="space-y-2">
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="font-medium text-[var(--rm-fg)]">{row.model}</p>
+                      <p className="font-semibold text-[var(--rm-fg)]">{row.model}</p>
                       <StatusPill tone={Number(row.status) >= 400 ? "warning" : "success"}>
                         {row.status}
                       </StatusPill>
@@ -173,7 +173,7 @@ export default function ObserveActivityRoute() {
                     </p>
                     {row.hasCapture ? (
                       <button
-                        className="text-sm font-medium text-[var(--rm-accent)]"
+                        className="text-sm font-semibold text-[var(--rm-accent)]"
                         onClick={() => setSelectedCaptureId(row.id)}
                         type="button"
                       >
@@ -202,29 +202,29 @@ export default function ObserveActivityRoute() {
             ) : (
               <>
                 <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
-                  <p className="font-medium text-[var(--rm-fg)]">{selectedCapture.req_path}</p>
+                  <p className="font-semibold text-[var(--rm-fg)]">{selectedCapture.req_path}</p>
                   <p className="mt-2">Capture {selectedCapture.id}</p>
                 </div>
                 <div>
-                  <p className="mb-2 text-xs font-medium uppercase tracking-[0.18em] text-[var(--rm-muted)]">
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--rm-muted)]">
                     Request headers
                   </p>
                   <CodeBlock>{JSON.stringify(selectedCapture.req_headers, null, 2)}</CodeBlock>
                 </div>
                 <div>
-                  <p className="mb-2 text-xs font-medium uppercase tracking-[0.18em] text-[var(--rm-muted)]">
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--rm-muted)]">
                     Request body
                   </p>
                   <CodeBlock>{decodeCaptureBody(selectedCapture.req_body) || "(empty)"}</CodeBlock>
                 </div>
                 <div>
-                  <p className="mb-2 text-xs font-medium uppercase tracking-[0.18em] text-[var(--rm-muted)]">
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--rm-muted)]">
                     Response headers
                   </p>
                   <CodeBlock>{JSON.stringify(selectedCapture.resp_headers, null, 2)}</CodeBlock>
                 </div>
                 <div>
-                  <p className="mb-2 text-xs font-medium uppercase tracking-[0.18em] text-[var(--rm-muted)]">
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--rm-muted)]">
                     Response body
                   </p>
                   <CodeBlock>{decodeCaptureBody(selectedCapture.resp_body) || "(empty)"}</CodeBlock>

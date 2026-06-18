@@ -1,0 +1,150 @@
+{
+  "checkedAt": "2026-06-17T18:27:04.041Z",
+  "routeAudit": [
+    {
+      "hasRouteError": false,
+      "nativeSelectCount": 0,
+      "themedSelectButtonCount": 3,
+      "themedSelectLabels": [
+        "Provider",
+        "Connection method",
+        "Model"
+      ],
+      "url": "http://127.0.0.1:3456/app/remote/providers"
+    },
+    {
+      "hasRouteError": false,
+      "nativeSelectCount": 0,
+      "themedSelectButtonCount": 3,
+      "themedSelectLabels": [
+        "Mode",
+        "Model",
+        "Size"
+      ],
+      "url": "http://127.0.0.1:3456/app/studio/images"
+    },
+    {
+      "hasRouteError": false,
+      "nativeSelectCount": 0,
+      "themedSelectButtonCount": 3,
+      "themedSelectLabels": [
+        "Mode",
+        "Model",
+        "Voice"
+      ],
+      "url": "http://127.0.0.1:3456/app/studio/audio"
+    },
+    {
+      "hasRouteError": false,
+      "nativeSelectCount": 0,
+      "themedSelectButtonCount": 2,
+      "themedSelectLabels": [
+        "Contract",
+        "Model"
+      ],
+      "url": "http://127.0.0.1:3456/app/studio/rerank"
+    },
+    {
+      "hasRouteError": false,
+      "nativeSelectCount": 0,
+      "themedSelectButtonCount": 2,
+      "themedSelectLabels": [
+        "Family",
+        "Model"
+      ],
+      "url": "http://127.0.0.1:3456/app/studio/advanced"
+    },
+    {
+      "hasRouteError": false,
+      "nativeSelectCount": 0,
+      "themedSelectButtonCount": 3,
+      "themedSelectLabels": [
+        "Model",
+        "Endpoint",
+        "Routing mode"
+      ],
+      "url": "http://127.0.0.1:3456/app/studio/chat"
+    },
+    {
+      "hasRouteError": false,
+      "nativeSelectCount": 0,
+      "themedSelectButtonCount": 2,
+      "themedSelectLabels": [
+        "Benchmark mode",
+        "Judge endpoint (grading only)"
+      ],
+      "url": "http://127.0.0.1:3456/app/models/benchmark"
+    },
+    {
+      "hasRouteError": false,
+      "nativeSelectCount": 0,
+      "themedSelectButtonCount": 2,
+      "themedSelectLabels": [
+        "Tool policy mode",
+        "Tool policy mode"
+      ],
+      "url": "http://127.0.0.1:3456/app/models/roles"
+    },
+    {
+      "hasRouteError": false,
+      "loadingTextPresent": false,
+      "nativeSelectCount": 0,
+      "themedSelectButtonCount": 1,
+      "themedSelectLabels": [
+        "Execution mode"
+      ],
+      "url": "http://127.0.0.1:3456/app/router/strategy"
+    }
+  ],
+  "openedMenus": [
+    {
+      "expectedLabel": "Provider",
+      "listboxBg": "rgb(39, 39, 41)",
+      "listboxBorder": "rgba(255, 255, 255, 0.18)",
+      "nativeSelectCount": 0,
+      "openListboxCount": 1,
+      "optionCount": 231,
+      "selectedOptionBg": "rgb(0, 102, 204)",
+      "selectedOptionColor": "rgb(255, 255, 255)",
+      "status": "opened",
+      "url": "http://127.0.0.1:3456/app/remote/providers"
+    },
+    {
+      "expectedLabel": "Mode",
+      "listboxBg": "rgb(39, 39, 41)",
+      "listboxBorder": "rgba(255, 255, 255, 0.18)",
+      "nativeSelectCount": 0,
+      "openListboxCount": 1,
+      "optionCount": 2,
+      "selectedOptionBg": "rgb(0, 102, 204)",
+      "selectedOptionColor": "rgb(255, 255, 255)",
+      "status": "opened",
+      "url": "http://127.0.0.1:3456/app/studio/images"
+    },
+    {
+      "expectedLabel": "Benchmark mode",
+      "listboxBg": "rgb(39, 39, 41)",
+      "listboxBorder": "rgba(255, 255, 255, 0.18)",
+      "nativeSelectCount": 0,
+      "openListboxCount": 1,
+      "optionCount": 2,
+      "selectedOptionBg": "rgb(0, 102, 204)",
+      "selectedOptionColor": "rgb(255, 255, 255)",
+      "status": "opened",
+      "url": "http://127.0.0.1:3456/app/models/benchmark"
+    },
+    {
+      "expectedLabel": "Execution mode",
+      "listboxBg": "rgb(39, 39, 41)",
+      "listboxBorder": "rgba(255, 255, 255, 0.18)",
+      "nativeSelectCount": 0,
+      "openListboxCount": 1,
+      "optionCount": 4,
+      "selectedOptionBg": "rgb(0, 102, 204)",
+      "selectedOptionColor": "rgb(255, 255, 255)",
+      "status": "opened",
+      "url": "http://127.0.0.1:3456/app/router/strategy"
+    }
+  ],
+  "updatedAt": "2026-06-17T18:27:25.942Z"
+}

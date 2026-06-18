@@ -1,0 +1,44 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/49-runtime-telemetry-analytics-charts/role-model-router/apps/runtime-host-bridge[39m
+
+(node:8924) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[31mx[39m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m[33m[39m[2m[90m-[39m[22m
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/index.test.ts > runtime-host-bridge > aggregates generic telemetry analytics from persisted request-time routing and cost facts
+AssertionError: expected null to deeply equal ObjectContaining{…}
+
+- Expected: 
+ObjectContaining {
+  "baselineMaxEligibleCostUsd": 0,
+  "cacheCostSavingsUsd": 0,
+  "costBaselineSource": "none",
+  "costCalculationBasis": "pre_execution_failure_zero_cost",
+  "costCalculationVersion": "run49.v1",
+  "costSavingsSupport": "none",
+  "effectiveCostUsd": 0,
+  "endpointId": "routing.failed.pre-execution",
+  "requestId": "req-telemetry-analytics-failure-only-001",
+  "routingCostSavingsUsd": 0,
+  "routingDecisionId": "decision-telemetry-analytics-failure-only-001",
+  "selectedUncachedCostUsd": 0,
+  "statusFamily": "failure",
+  "totalAvoidedCostUsd": 0,
+}
+
++ Received: 
+null
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[33m77 skipped[39m[90m (78)[39m
+[2m   Start at [22m 18:52:24
+[2m   Duration [22m 3.63s[2m (transform 1.49s, setup 0ms, collect 2.04s, tests 632ms, environment 0ms, prepare 397ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\49-runtime-telemetry-analytics-charts\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/index.test.ts -t aggregates generic telemetry analytics --reporter=dot

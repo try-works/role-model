@@ -30,7 +30,7 @@ export function LocalModelRolePicker({
   return (
     <div className={`${mutedPanelClassName} space-y-3 p-4`}>
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--rm-muted)]">
           Runtime roles
         </p>
         <Link
@@ -58,7 +58,7 @@ export function LocalModelRolePicker({
                   onChange={() => toggleRole(role.role_id)}
                 />
                 <span>
-                  <span className="font-medium">{role.name}</span>
+                  <span className="font-semibold">{role.name}</span>
                   {role.description ? (
                     <span className="mt-1 block text-[var(--rm-secondary)]">
                       {role.description}

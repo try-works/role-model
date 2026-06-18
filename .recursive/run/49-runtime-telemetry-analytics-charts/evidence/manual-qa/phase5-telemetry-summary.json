@@ -1,0 +1,47 @@
+{
+  "requestCount": 6,
+  "successCount": 5,
+  "failureCount": 1,
+  "totalInputTokens": 12950,
+  "totalOutputTokens": 3370,
+  "totalTokens": 16320,
+  "cachedRequestCount": 1,
+  "totalActualCostUsd": 0.145,
+  "totalEstimatedCostUsd": 0.145,
+  "totalEffectiveCostUsd": 0.145,
+  "averageLatencyMs": 943,
+  "p95LatencyMs": 1840,
+  "lastSeenAtMs": 1781699444804,
+  "sourceBreakdown": {
+    "local": {
+      "requestCount": 2,
+      "successCount": 2,
+      "failureCount": 0,
+      "totalInputTokens": 4050,
+      "totalOutputTokens": 1200,
+      "totalTokens": 5250,
+      "cachedRequestCount": 0,
+      "totalActualCostUsd": 0,
+      "totalEstimatedCostUsd": 0,
+      "totalEffectiveCostUsd": 0,
+      "averageLatencyMs": 675,
+      "p95LatencyMs": 730,
+      "lastSeenAtMs": 1781698844804
+    },
+    "remote": {
+      "requestCount": 4,
+      "successCount": 3,
+      "failureCount": 1,
+      "totalInputTokens": 8900,
+      "totalOutputTokens": 2170,
+      "totalTokens": 11070,
+      "cachedRequestCount": 1,
+      "totalActualCostUsd": 0.145,
+      "totalEstimatedCostUsd": 0.145,
+      "totalEffectiveCostUsd": 0.145,
+      "averageLatencyMs": 1078,
+      "p95LatencyMs": 1840,
+      "lastSeenAtMs": 1781699444804
+    }
+  }
+}

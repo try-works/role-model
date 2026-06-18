@@ -28,7 +28,6 @@ import {
   unloadLocalModel,
   updateModelOverrides,
 } from "../lib/runtime-api";
-import { usePageActions } from "../lib/shell-header-context";
 
 type ModelViewMode = "list" | "grid";
 
@@ -78,13 +77,6 @@ export default function LocalLlamaSwapModelsRoute() {
     refresh();
   }, [refresh]);
 
-  usePageActions(
-    <button type="button" onClick={refresh} disabled={loading} className={secondaryButtonClassName}>
-      {loading ? "Refreshing…" : "Refresh"}
-    </button>,
-    [loading, refresh],
-  );
-
   const handleLoad = async (modelId: string, roleIds?: readonly string[]) => {
     setActioning((prev) => ({ ...prev, [modelId]: true }));
     try {
@@ -124,7 +116,7 @@ export default function LocalLlamaSwapModelsRoute() {
           <div className="space-y-2">
             <label
               htmlFor="llama-swap-model-id"
-              className="block text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]"
+              className="block text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--rm-muted)]"
             >
               Model ID
             </label>
@@ -218,7 +210,7 @@ export default function LocalLlamaSwapModelsRoute() {
             {models.map((model) => (
               <div key={model.modelId} className={`${mutedPanelClassName} p-5`}>
                 <div className="mb-4 flex flex-wrap items-start justify-between gap-2">
-                  <p className="break-words font-mono text-sm font-medium text-[var(--rm-fg)]">
+                  <p className="break-words font-mono text-sm font-semibold text-[var(--rm-fg)]">
                     {model.modelId}
                   </p>
                   <div className="flex flex-wrap gap-2">
@@ -284,7 +276,7 @@ export default function LocalLlamaSwapModelsRoute() {
                 </div>
                 {editingOverrides[model.modelId] ? (
                   <div className="mt-4 space-y-2 border border-[var(--rm-border)] p-3">
-                    <p className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--rm-muted)]">
                       Overrides
                     </p>
                     <div className="grid gap-2 sm:grid-cols-3">

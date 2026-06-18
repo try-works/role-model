@@ -1,0 +1,16 @@
+(node:2628) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+probe:start D:\DEV\role-model\.worktrees\49-runtime-telemetry-analytics-charts
+probe:before backend
+probe:after backend
+D:\DEV\role-model\.worktrees\49-runtime-telemetry-analytics-charts\role-model-router\apps\runtime-host-bridge\src\index.ts:8075
+      throw new Error(
+            ^
+
+Error: Provider account moonshot.personal.primary is not ready for endpoint activation.
+    at activateRuntimeEndpoint (D:\DEV\role-model\.worktrees\49-runtime-telemetry-analytics-charts\role-model-router\apps\runtime-host-bridge\src\index.ts:8075:13)
+    at Object.activateEndpoint (D:\DEV\role-model\.worktrees\49-runtime-telemetry-analytics-charts\role-model-router\apps\runtime-host-bridge\src\index.ts:11618:14)
+    at bootstrapQaControlPlane (D:\DEV\role-model\.worktrees\49-runtime-telemetry-analytics-charts\role-model-router\apps\runtime-host-bridge\scripts\start-for-qa.ts:166:17)
+    at async file:///D:/DEV/role-model/.worktrees/49-runtime-telemetry-analytics-charts/.recursive/run/49-runtime-telemetry-analytics-charts/evidence/logs/qa-startup-probe.mjs:18:1
+
+Node.js v24.11.0

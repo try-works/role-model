@@ -1,0 +1,36 @@
+{
+  "checkedAt": "2026-06-18T01:20:00+02:00",
+  "route": "http://127.0.0.1:3456/app/router",
+  "runtimeState": {
+    "strategy": "hybrid",
+    "executionMode": "remote_only",
+    "configuredCandidateCount": 1,
+    "aliasInventory": [
+      {
+        "aliasId": "mixed.local-remote",
+        "resolvedModelIds": ["moonshot/kimi-k2.7-code"],
+        "allowEndpointIds": ["moonshot.personal.kimi-code.global.kimi-k2.7-code"],
+        "localEndpointCount": 0,
+        "remoteEndpointCount": 1,
+        "readiness": "ready"
+      }
+    ],
+    "candidateSourceTypes": ["remote"],
+    "candidateModelIds": ["moonshot/kimi-k2.7-code"]
+  },
+  "browserVerification": {
+    "hasEffectiveModelsHeader": true,
+    "aliasTableHasLocalHint": false,
+    "aliasTableHasRemoteModel": true,
+    "candidateTableHasLocalEndpoint": false,
+    "candidateTableHasRemoteEndpoint": true,
+    "sample": "Strategy hybrid; Execution mode remote_only; Controller moonshot/kimi-k2.7-code; Alias inventory shows Effective models moonshot/kimi-k2.7-code; Routing candidates shows only moonshot.personal.kimi-code.global.kimi-k2.7-code as remote."
+  },
+  "evidence": {
+    "red": ".recursive/run/49-runtime-telemetry-analytics-charts/evidence/logs/red/addendum-24-remote-only-router-effective-candidates-red.log",
+    "green": ".recursive/run/49-runtime-telemetry-analytics-charts/evidence/logs/green/addendum-24-remote-only-router-effective-candidates-green.log",
+    "hostBridgeBuild": ".recursive/run/49-runtime-telemetry-analytics-charts/evidence/logs/green/addendum-24-runtime-host-bridge-build.log",
+    "runtimeUiBuild": ".recursive/run/49-runtime-telemetry-analytics-charts/evidence/logs/green/addendum-24-runtime-ui-router-effective-models-build.log",
+    "qaServer": ".recursive/run/49-runtime-telemetry-analytics-charts/evidence/phase5-qa-server-addendum-24-remote-only-router-rebuilt.log"
+  }
+}

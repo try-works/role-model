@@ -168,6 +168,7 @@ export function ThemedSelect({
           className="absolute inset-x-0 top-[calc(100%+8px)] z-30 max-h-80 overflow-y-auto rounded-[var(--rm-radius-panel)] border border-[var(--rm-border-strong)] bg-[var(--rm-surface-strong)] p-2 shadow-[var(--rm-shadow-ui)]"
           id={listboxId}
           role="listbox"
+          tabIndex={-1}
         >
           {options.map((option, index) => {
             const selected = option.value === value;

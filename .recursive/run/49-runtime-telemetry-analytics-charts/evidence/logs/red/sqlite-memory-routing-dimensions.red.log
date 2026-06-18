@@ -1,0 +1,112 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/49-runtime-telemetry-analytics-charts/role-model-router/packages/sqlite-memory[39m
+
+(node:58208) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [31m❯[39m test/index.test.ts [2m([22m[2m25 tests[22m[2m | [22m[31m1 failed[39m[2m | [22m[33m24 skipped[39m[2m)[22m[33m 346[2mms[22m[39m
+   [2m[90m↓[39m[22m initializeSqliteMemory[2m > [22mcreates the planned schema, WAL mode, and initial migration receipt under the runtime state root
+   [2m[90m↓[39m[22m initializeSqliteMemory[2m > [22mpersists validated provider accounts by credential reference without storing raw secrets
+   [2m[90m↓[39m[22m initializeSqliteMemory[2m > [22mupserts and lists provider accounts for runtime control-plane reads
+   [2m[90m↓[39m[22m initializeSqliteMemory[2m > [22mpersists runtime-managed endpoint activations for dynamic registry materialization
+   [2m[90m↓[39m[22m initializeSqliteMemory[2m > [22mpersists and reads the global controller assignment for the runtime control plane
+   [2m[90m↓[39m[22m initializeSqliteMemory[2m > [22mpersists device-auth session state for runtime OAuth polling
+   [2m[90m↓[39m[22m initializeSqliteMemory[2m > [22mrecords explicit maintenance defaults and idempotent migration behavior
+   [2m[90m↓[39m[22m initializeSqliteMemory[2m > [22mpersists and reloads the continuity rows needed for bounded context assembly
+   [2m[90m↓[39m[22m initializeSqliteMemory[2m > [22mpersists retrieval receipts for later routing diagnostics
+   [2m[90m↓[39m[22m initializeSqliteMemory[2m > [22mpersists runtime observation bundles, profile snapshots, and maintenance-policy reads
+   [2m[90m↓[39m[22m initializeSqliteMemory[2m > [22mstores and reads conversation-level difficulty classification cache entries
+   [2m[90m↓[39m[22m initializeSqliteMemory[2m > [22mpersists and reads segmented observed samples and profiles by difficulty bucket
+   [2m[90m↓[39m[22m initializeSqliteMemory[2m > [22mderives an advisory max-difficulty recommendation from bucketed observed profiles
+   [2m[90m↓[39m[22m initializeSqliteMemory[2m > [22mreads the latest observed profiles for a set of endpoint ids
+[31m   [31m×[31m initializeSqliteMemory[2m > [22mflattens persisted runtime observations into canonical telemetry summary, comparison, and request rows[39m[33m 343[2mms[22m[39m
+[31m     → expected [ { …(40) }, { …(40) } ] to deeply equal [ ObjectContaining{…}, …(1) ][39m
+   [2m[90m↓[39m[22m initializeSqliteMemory[2m > [22mpersistRuntimeTelemetryFailure records latencyMs in telemetry summary average
+   [2m[90m↓[39m[22m initializeSqliteMemory[2m > [22mpersistRuntimeTelemetryFailure preserves caller correlation and request classification for failed rows
+   [2m[90m↓[39m[22m initializeSqliteMemory[2m > [22mpersistRuntimeTelemetryFailure persists authoritative zero-cost metadata for pre-execution failures
+   [2m[90m↓[39m[22m initializeSqliteMemory[2m > [22mexports persisted runtime state for operator drills
+   [2m[90m↓[39m[22m initializeSqliteMemory[2m > [22mrestores runtime state from a backup after scoped deletion
+   [2m[90m↓[39m[22m initializeSqliteMemory[2m > [22mpersists throughput penalty state and expires it after the penalty window
+   [2m[90m↓[39m[22m clearAllObservedBenchmarkData[2m > [22mremoves all benchmark samples across endpoints and clears profiles
+   [2m[90m↓[39m[22m persistObservedBenchmarkSample benchmark_mode[2m > [22mretains benchmark_mode on readback for quick benchmark samples
+   [2m[90m↓[39m[22m clearObservedBenchmarkDataForEndpoint[2m > [22mremoves benchmark samples and clears the endpoint profile when no live samples remain
+   [2m[90m↓[39m[22m runRuntimeStateValidation[2m > [22mvalidates provider accounts and initializes SQLite through the local validation path
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/index.test.ts > initializeSqliteMemory > flattens persisted runtime observations into canonical telemetry summary, comparison, and request rows
+AssertionError: expected [ { …(40) }, { …(40) } ] to deeply equal [ ObjectContaining{…}, …(1) ]
+
+- Expected
++ Received
+
+@@ -28,20 +28,23 @@
+      "streamToolCallDeltaCount": 0,
+      "streamToolCallSupported": false,
+      "toolCallCount": 0,
+      "totalTokens": 32,
+    },
+-   ObjectContaining {
++   {
+      "actualCostUsd": 0.0042,
+      "cacheReadTokens": 16,
+      "cacheReadTokensSupported": true,
+      "cacheWriteTokens": 8,
+      "cacheWriteTokensSupported": true,
++     "clientRequestId": null,
++     "conversationId": "conversation-main",
+      "costCalculationBasis": "actual_vendor_cost",
+      "costCalculationVersion": "run49.v1",
+      "costProvenance": "actual",
+-     "difficultyBucket": "easy",
++     "createdAtMs": 1781691637343,
++     "currency": "USD",
+      "effectiveCostUsd": 0.0042,
+      "endpointId": "openai.personal.primary.us-east-1.fast",
+      "errorClass": null,
+      "estimatedCostUsd": 0.0042,
+      "finishReason": "stop",
+@@ -52,20 +55,21 @@
+      "promptCacheRequested": true,
+      "promptCacheSupported": true,
+      "promptCacheUsed": true,
+      "providerFamily": "ai-sdk-openai",
+      "providerKind": "remote_openai_compat",
++     "requestClass": "live_request",
+      "requestId": "req-telemetry-remote-001",
+-     "requestedRoleId": "coder.patch",
+-     "routingMode": "hybrid",
+-     "selectedStrategy": "quality",
++     "routingDecisionId": "decision-telemetry-remote-001",
++     "sourceType": null,
+      "statusCode": 200,
+      "streamTextDeltaCount": 4,
+      "streamTextSupported": true,
+      "streamToolArgumentDeltaCount": 2,
+      "streamToolArgumentSupported": true,
+      "streamToolCallDeltaCount": 1,
+      "streamToolCallSupported": true,
+      "toolCallCount": 1,
++     "toolExecutionCount": 0,
+      "totalTokens": 168,
+    },
+  ]
+
+ ❯ test/index.test.ts:1722:7
+    1720|         limit: 10,
+    1721|       }),
+    1722|     ).toEqual([
+       |       ^
+    1723|       expect.objectContaining({
+    1724|         requestId: "req-telemetry-local-001",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[33m24 skipped[39m[90m (25)[39m
+[2m   Start at [22m 12:20:35
+[2m   Duration [22m 2.50s[2m (transform 663ms, setup 0ms, collect 790ms, tests 346ms, environment 0ms, prepare 329ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\49-runtime-telemetry-analytics-charts\role-model-router\packages\sqlite-memory:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/index.test.ts -t flattens persisted runtime observations into canonical telemetry summary, comparison, and request rows

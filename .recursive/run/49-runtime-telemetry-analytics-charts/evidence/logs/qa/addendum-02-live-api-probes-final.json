@@ -1,0 +1,92 @@
+{
+  "summary": {
+    "requestCount": 6,
+    "successCount": 5,
+    "failureCount": 1,
+    "totalInputTokens": 12950,
+    "totalOutputTokens": 3370,
+    "totalTokens": 16320,
+    "cachedRequestCount": 1,
+    "totalActualCostUsd": 0.145,
+    "totalEstimatedCostUsd": 0.145,
+    "totalEffectiveCostUsd": 0.145,
+    "averageLatencyMs": 943,
+    "p95LatencyMs": 1840,
+    "lastSeenAtMs": 1781714902801,
+    "sourceBreakdown": {
+      "local": {
+        "requestCount": 2,
+        "successCount": 2,
+        "failureCount": 0,
+        "totalInputTokens": 4050,
+        "totalOutputTokens": 1200,
+        "totalTokens": 5250,
+        "cachedRequestCount": 0,
+        "totalActualCostUsd": 0,
+        "totalEstimatedCostUsd": 0,
+        "totalEffectiveCostUsd": 0,
+        "averageLatencyMs": 675,
+        "p95LatencyMs": 730,
+        "lastSeenAtMs": 1781714302801
+      },
+      "remote": {
+        "requestCount": 4,
+        "successCount": 3,
+        "failureCount": 1,
+        "totalInputTokens": 8900,
+        "totalOutputTokens": 2170,
+        "totalTokens": 11070,
+        "cachedRequestCount": 1,
+        "totalActualCostUsd": 0.145,
+        "totalEstimatedCostUsd": 0.145,
+        "totalEffectiveCostUsd": 0.145,
+        "averageLatencyMs": 1078,
+        "p95LatencyMs": 1840,
+        "lastSeenAtMs": 1781714902801
+      }
+    }
+  },
+  "requestCount": 6,
+  "firstRequestId": "req-phase5-006",
+  "requestDetailCost": {
+    "status": "loaded",
+    "effectiveCostUsd": 0.031,
+    "costCalculationBasis": "actual_vendor_cost",
+    "costCalculationVersion": "run49.v1",
+    "selectedUncachedCostUsd": 0.031,
+    "baselineMaxEligibleCostUsd": 0.061,
+    "routingCostSavingsUsd": 0.03,
+    "cacheCostSavingsUsd": 0,
+    "totalAvoidedCostUsd": 0.03,
+    "costBaselineSource": "eligible-max",
+    "costSavingsSupport": "complete"
+  },
+  "overviewTotals": {
+    "requestCount": 6,
+    "effectiveCostUsd": 0.145,
+    "totalAvoidedCostUsd": 0.252,
+    "cacheHitTokens": 1400,
+    "cacheHitTokenRate": null,
+    "averageLatencyMs": 943
+  },
+  "overviewChartCount": 1,
+  "overviewPointCounts": [
+    {
+      "points": 1,
+      "id": null
+    }
+  ],
+  "routingTotals": {
+    "requestCount": 6,
+    "routingCostSavingsUsd": 0.232,
+    "cacheCostSavingsUsd": 0.02,
+    "totalAvoidedCostUsd": 0.252
+  },
+  "routingRankingCount": 3,
+  "routingBreakdownLabels": [],
+  "invalidMetric": {
+    "error": "Response status code does not indicate success: 400 (Bad Request).",
+    "body": "Method invocation failed because [System.Net.Http.HttpResponseMessage] does not contain a method named 'GetResponseStream'.",
+    "status": 400
+  }
+}

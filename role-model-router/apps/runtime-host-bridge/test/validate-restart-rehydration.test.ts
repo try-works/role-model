@@ -24,7 +24,7 @@ describe("runRestartRehydrationValidation", () => {
     expect(result.connectedWithoutEndpointCount).toBe(0);
     expect(result.rehydratedEndpointCount).toBeGreaterThan(0);
     expect(result.modelIdsAfterRestart).toEqual(
-      expect.arrayContaining(["moonshot/kimi-k2.5", "mixed.local-remote"]),
+      expect.arrayContaining(["moonshot/kimi-k2.5", "baseline.hybrid"]),
     );
     expect(result.mixedAliasModelListIncludesAlias).toBe(true);
   }, 120_000);

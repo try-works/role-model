@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 
 import {
@@ -7,104 +7,209 @@ import {
   LoadingState,
   SectionCard,
   StatusPill,
-  TelemetryFactCard,
 } from "../components/page-primitives";
-import { listRowClassName, mutedPanelClassName } from "../lib/design-system";
+import { TelemetryAnalyticsChartCard } from "../components/telemetry-charts";
+import { TelemetrySelectField, TelemetryTimeRangeControl } from "../components/telemetry-controls";
 import {
-  type RuntimeSnapshot,
-  type RuntimeSummary,
-  type RuntimeTelemetryDashboard,
-  fetchRuntimeSnapshot,
-  fetchRuntimeSummary,
-  fetchTelemetryDashboard,
-  subscribeTelemetryStream,
+  listRowClassName,
+  mutedPanelClassName,
+  secondaryButtonClassName,
+} from "../lib/design-system";
+import type {
+  RuntimeSnapshot,
+  RuntimeTelemetryAnalyticsDimension,
+  RuntimeTelemetryAnalyticsResponse,
+  RuntimeTelemetryRequestRecord,
 } from "../lib/runtime-api";
 import {
-  buildDashboardLatestRequestRows,
-  buildEndpointCatalogRows,
-  summarizeTelemetryStats,
-} from "../lib/view-models";
+  fetchRuntimeSnapshot,
+  fetchTelemetryAnalytics,
+  fetchTelemetryRequests,
+  subscribeTelemetryStream,
+} from "../lib/runtime-api";
+import { usePageActions } from "../lib/shell-header-context";
+import { telemetryTimeRangeOptions } from "../lib/telemetry-chart-config";
+import {
+  type TelemetryRouteChartDefinition,
+  type TelemetryTimeRangeValue,
+  buildOverviewChartDefinitions,
+} from "../lib/telemetry-route-models";
+import { buildDashboardLatestRequestRows, buildEndpointCatalogRows } from "../lib/view-models";
+
+const overviewBreakdownOptions: Array<{
+  label: string;
+  value: "" | RuntimeTelemetryAnalyticsDimension;
+}> = [
+  { label: "Total", value: "" },
+  { label: "By source", value: "sourceType" },
+  { label: "By endpoint", value: "endpointId" },
+  { label: "By model", value: "modelId" },
+  { label: "By provider", value: "providerId" },
+];
+
+function getWindowMs(timeRange: TelemetryTimeRangeValue): number {
+  return telemetryTimeRangeOptions.find((option) => option.value === timeRange)?.windowMs ?? 0;
+}
+
+type OverviewChartRecord = {
+  readonly definition: TelemetryRouteChartDefinition;
+  readonly response: RuntimeTelemetryAnalyticsResponse;
+};
 
 export default function DashboardRoute() {
-  const [summary, setSummary] = useState<RuntimeSummary | null>(null);
   const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(null);
-  const [dashboard, setDashboard] = useState<RuntimeTelemetryDashboard | null>(null);
+  const [requests, setRequests] = useState<readonly RuntimeTelemetryRequestRecord[]>([]);
+  const [charts, setCharts] = useState<readonly OverviewChartRecord[]>([]);
+  const [timeRange, setTimeRange] = useState<TelemetryTimeRangeValue>("week");
+  const [breakdownValue, setBreakdownValue] = useState<"" | RuntimeTelemetryAnalyticsDimension>("");
+  const [sourceFilter, setSourceFilter] = useState<"all" | "local" | "remote">("all");
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const sourceTypes = useMemo(() => (sourceFilter === "all" ? [] : [sourceFilter]), [sourceFilter]);
+  const breakdown = breakdownValue === "" ? null : breakdownValue;
 
   useEffect(() => {
     let disposed = false;
-    const load = async () => {
+
+    const load = async (background = false) => {
+      if (!background) {
+        setLoading(true);
+      } else {
+        setRefreshing(true);
+      }
+
       try {
-        const [nextSummary, nextSnapshot, nextDashboard] = await Promise.all([
-          fetchRuntimeSummary(),
+        const definitions = buildOverviewChartDefinitions({
+          timeRange,
+          sourceTypes,
+          breakdown,
+        });
+        const [nextSnapshot, nextRequests, ...responses] = await Promise.all([
           fetchRuntimeSnapshot(),
-          fetchTelemetryDashboard(),
+          fetchTelemetryRequests({
+            limit: 60,
+            windowMs: getWindowMs(timeRange),
+          }),
+          ...definitions.map((definition) => fetchTelemetryAnalytics(definition.query)),
         ]);
-        if (!disposed) {
-          setSummary(nextSummary);
-          setSnapshot(nextSnapshot);
-          setDashboard(nextDashboard);
-          setError(null);
+
+        if (disposed) {
+          return;
         }
+
+        setSnapshot(nextSnapshot);
+        setRequests(nextRequests);
+        setCharts(
+          definitions.map((definition, index) => ({
+            definition,
+            response: responses[index] as RuntimeTelemetryAnalyticsResponse,
+          })),
+        );
+        setError(null);
       } catch (value) {
         if (!disposed) {
           setError(value instanceof Error ? value.message : "Could not load runtime overview.");
+        }
+      } finally {
+        if (!disposed) {
+          setLoading(false);
+          setRefreshing(false);
         }
       }
     };
 
     void load();
     const unsubscribe = subscribeTelemetryStream(() => {
-      void load();
+      void load(true);
     });
 
     return () => {
       disposed = true;
       unsubscribe();
     };
-  }, []);
+  }, [breakdown, sourceTypes, timeRange]);
+
+  const endpointRows = useMemo(
+    () =>
+      snapshot
+        ? buildEndpointCatalogRows(snapshot.endpoints).filter((row) =>
+            sourceFilter === "all"
+              ? true
+              : sourceFilter === "local"
+                ? row.sourceLabel === "Local"
+                : row.sourceLabel === "Remote",
+          )
+        : [],
+    [snapshot, sourceFilter],
+  );
+  const requestRows = useMemo(() => buildDashboardLatestRequestRows(requests), [requests]);
+
+  usePageActions(
+    <div
+      aria-label="Overview telemetry filters"
+      className="flex w-full flex-wrap items-end justify-between gap-3"
+    >
+      <div className="flex min-w-0 items-end justify-start overflow-x-auto">
+        <TelemetryTimeRangeControl onChange={setTimeRange} value={timeRange} />
+      </div>
+      <div className="grid min-w-0 flex-1 gap-3 sm:grid-cols-2 xl:ml-auto xl:max-w-[520px] xl:justify-end">
+        <TelemetrySelectField
+          className="min-w-0"
+          label="Breakdown"
+          onChange={(value) => setBreakdownValue(value as "" | RuntimeTelemetryAnalyticsDimension)}
+          options={overviewBreakdownOptions}
+          value={breakdownValue}
+        />
+        <TelemetrySelectField
+          className="min-w-0"
+          label="Source filter"
+          onChange={(value) => setSourceFilter(value as "all" | "local" | "remote")}
+          options={[
+            { label: "All sources", value: "all" },
+            { label: "Local only", value: "local" },
+            { label: "Remote only", value: "remote" },
+          ]}
+          value={sourceFilter}
+        />
+      </div>
+    </div>,
+    [breakdownValue, sourceFilter, timeRange],
+  );
 
   if (error) {
     return <ErrorState label={error} />;
   }
-  if (!summary || !snapshot || !dashboard) {
+  if (loading && !snapshot && charts.length === 0) {
     return <LoadingState label="Loading runtime overview…" />;
   }
 
-  const endpointRows = buildEndpointCatalogRows(snapshot.endpoints);
-  const telemetryCards = summarizeTelemetryStats(dashboard.summary);
-  const requestRows = buildDashboardLatestRequestRows(dashboard.requests);
-
   return (
     <div className="space-y-6">
-      <SectionCard
-        title="Recent telemetry window"
-        description="Primary overview summary from recent structured telemetry."
-      >
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {telemetryCards.map((card, index) => (
-            <TelemetryFactCard
-              key={card.label}
-              label={card.label}
-              value={card.value}
-              detail={card.detail}
-              emphasis={index === 0}
+      <div className="grid grid-cols-12 gap-4">
+        {charts.map((chart) => (
+          <div key={chart.definition.title} className={chart.definition.className ?? "col-span-12"}>
+            <TelemetryAnalyticsChartCard
+              definition={chart.definition}
+              refreshing={refreshing}
+              response={chart.response}
             />
-          ))}
-        </div>
-      </SectionCard>
+          </div>
+        ))}
+      </div>
 
       <div className="grid grid-cols-12 gap-4">
         <SectionCard className="col-span-12 xl:col-span-8" title="Current endpoint inventory">
           {endpointRows.length === 0 ? (
-            <EmptyState label="No routable endpoints are available yet." />
+            <EmptyState label="No routable endpoints are available for the current source filter." />
           ) : (
             <div className="space-y-3">
               {endpointRows.map((row) => (
                 <div key={row.endpointId} className={`${listRowClassName} md:items-center`}>
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="font-medium text-[var(--rm-fg)]">{row.modelId}</p>
+                      <p className="font-semibold text-[var(--rm-fg)]">{row.modelId}</p>
                       <StatusPill tone={row.sourceLabel === "Remote" ? "accent" : "neutral"}>
                         {row.sourceLabel}
                       </StatusPill>
@@ -133,7 +238,7 @@ export default function DashboardRoute() {
         <div className="col-span-12 space-y-4 xl:col-span-4">
           <SectionCard title="Latest requests">
             {requestRows.length === 0 ? (
-              <EmptyState label="No recent requests yet." />
+              <EmptyState label="No recent requests exist for the selected historical window." />
             ) : (
               <div className="space-y-2">
                 {requestRows.map((request) => (
@@ -141,7 +246,9 @@ export default function DashboardRoute() {
                     key={request.requestId}
                     className={`${mutedPanelClassName} flex flex-col gap-2 p-3 text-sm`}
                   >
-                    <span className="font-medium text-[var(--rm-fg)]">{request.primaryLabel}</span>
+                    <span className="font-semibold text-[var(--rm-fg)]">
+                      {request.primaryLabel}
+                    </span>
                     {request.secondaryLabel ? (
                       <span className="text-[var(--rm-secondary)]">{request.secondaryLabel}</span>
                     ) : null}
@@ -153,12 +260,14 @@ export default function DashboardRoute() {
                 ))}
               </div>
             )}
-            <Link
-              className="mt-4 inline-block text-sm font-medium text-[var(--rm-accent)]"
-              to="/app/observe/requests"
-            >
-              View all requests →
-            </Link>
+            <div className="mt-4 flex flex-wrap gap-3">
+              <Link className={secondaryButtonClassName} to="/app/observe/requests">
+                Open request analytics
+              </Link>
+              <Link className={secondaryButtonClassName} to="/app/observe/routing">
+                Open routing analytics
+              </Link>
+            </div>
           </SectionCard>
         </div>
       </div>

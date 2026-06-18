@@ -1,9 +1,11 @@
 import { describe, expect, test } from "vitest";
 
 import {
+  EXECUTION_MODE_INELIGIBLE_ENDPOINT_WARNING_PREFIX,
   INSUFFICIENT_SUBJECTS_WARNING,
   JUDGE_SUBJECT_OVERLAP_WARNING,
   evaluateBenchmarkStartGuards,
+  evaluateBenchmarkTargetEligibility,
   selectPreferredJudgeEndpoint,
 } from "../src/benchmark-start-guards.js";
 
@@ -79,5 +81,22 @@ describe("benchmark-start-guards", () => {
     });
     expect(result.allowed).toBe(true);
     expect(result.compareExpected).toBe(false);
+  });
+
+  test("rejects benchmark targets excluded by the current execution mode", () => {
+    const result = evaluateBenchmarkTargetEligibility({
+      endpointIds: ["local.lfm", "moonshot.kimi"],
+      judgeEndpointId: "moonshot.kimi",
+      endpoints: [
+        { endpointId: "local.lfm", executionModeEligible: true },
+        { endpointId: "moonshot.kimi", executionModeEligible: false },
+      ],
+    });
+
+    expect(result.allowed).toBe(false);
+    expect(result.ineligibleEndpointIds).toEqual(["moonshot.kimi"]);
+    expect(result.warnings).toContain(
+      `${EXECUTION_MODE_INELIGIBLE_ENDPOINT_WARNING_PREFIX}: moonshot.kimi`,
+    );
   });
 });

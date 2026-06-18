@@ -58,6 +58,41 @@ routing:
     expect(result.liteLLM.enabled).toBe(false);
   });
 
+  test("preserves explicit execution mode from parsed YAML and normalized API payloads", () => {
+    expect(
+      parseUnifiedRuntimeConfigText(`
+version: "1.0"
+execution_mode: hybrid
+llama_swap:
+  models:
+    lfm2.5-1.2b-instruct:
+      path: ./models/lfm2.5-1.2b-instruct.gguf
+`).executionMode,
+    ).toBe("hybrid");
+
+    const normalized = normalizeUnifiedRuntimeConfigInput({
+      version: "1.1",
+      routingStrategy: "controller",
+      executionMode: "hybrid",
+      llamaSwap: {
+        enabled: true,
+        models: [
+          {
+            modelId: "lfm2.5-1.2b-instruct",
+            path: "./models/lfm2.5-1.2b-instruct.gguf",
+          },
+        ],
+      },
+      liteLLM: {
+        enabled: false,
+        providers: [],
+      },
+    });
+
+    expect(normalized.executionMode).toBe("hybrid");
+    expect(renderUnifiedRuntimeConfigText(normalized)).toContain("execution_mode: hybrid");
+  });
+
   test("derives remote-only mode when only the LiteLLM section is populated", () => {
     const result = parseUnifiedRuntimeConfigText(`
 version: "1.0"
@@ -932,11 +967,11 @@ observed_data:
 
     expect(merged.routingStrategy).toBe("difficulty");
     expect(merged.modelAliases).toEqual([
-      expect.objectContaining({
-        aliasId: "mixed.local-remote",
+      {
+        aliasId: "difficulty.decision-only",
         mode: "difficulty",
         modelIds: ["lfm2.5-1.2b-instruct", "moonshot/kimi-k2.6"],
-      }),
+      },
     ]);
     expect(merged.observedData?.throughputSla.enabled).toBe(true);
   });
@@ -958,6 +993,38 @@ observed_data:
     );
 
     expect(merged.routingStrategy).toBe("difficulty");
-    expect(merged.modelAliases?.[0]?.aliasId).toBe("mixed.local-remote");
+    expect(merged.modelAliases?.[0]?.aliasId).toBe("difficulty.decision-only");
+  });
+
+  test("derives the primary routing alias from routing strategy and execution mode", () => {
+    const merged = mergeUnifiedRuntimeConfigDocuments(
+      {
+        version: "1.0",
+        routing: {
+          strategy: "difficulty",
+        },
+        execution_mode: "hybrid",
+        model_aliases: {
+          "mixed.local-remote": {
+            mode: "difficulty",
+            model_ids: ["lfm2.5-1.2b-instruct", "moonshot/kimi-k2.7-code"],
+          },
+        },
+      },
+      {
+        routing_strategy: "hybrid",
+        execution_mode: "remote_only",
+      },
+    );
+
+    expect(merged.routingStrategy).toBe("hybrid");
+    expect(merged.executionMode).toBe("remote_only");
+    expect(merged.modelAliases).toEqual([
+      {
+        aliasId: "hybrid.remote-only",
+        mode: "hybrid",
+        modelIds: ["lfm2.5-1.2b-instruct", "moonshot/kimi-k2.7-code"],
+      },
+    ]);
   });
 });

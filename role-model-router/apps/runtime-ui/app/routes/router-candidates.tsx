@@ -111,7 +111,7 @@ export default function RouterCandidatesRoute() {
               return (
                 <div key={candidate.endpointId} className={listRowClassName}>
                   <div className="space-y-2">
-                    <p className="font-medium text-[var(--rm-fg)]">{candidate.endpointId}</p>
+                    <p className="font-semibold text-[var(--rm-fg)]">{candidate.endpointId}</p>
                     <p className="text-sm text-[var(--rm-secondary)]">{candidate.modelId}</p>
                     <p className="text-sm text-[var(--rm-secondary)]">
                       {candidate.sourceType} • {candidate.endpointKind ?? "unknown kind"} •{" "}

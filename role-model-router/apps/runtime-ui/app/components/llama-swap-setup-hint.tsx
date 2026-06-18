@@ -61,10 +61,10 @@ export function LlamaSwapSetupHint({
   return (
     <>
       <div className={panelClassName}>
-        <p className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--rm-muted)]">
           Llama-swap setup
         </p>
-        <p className="mt-3 text-sm font-medium text-[var(--rm-fg)]">
+        <p className="mt-3 text-sm font-semibold text-[var(--rm-fg)]">
           {llamaSwapHintHeadline(status)}
         </p>
         {variant === "prominent" ? (

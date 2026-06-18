@@ -1,0 +1,4 @@
+[FAIL] Refusing to lock .recursive\run\49-runtime-telemetry-analytics-charts\04-test-summary.md
+Workflow Profile: recursive-mode-audit-v2
+- Missing or empty section: ## Prior Recursive Evidence Reviewed
+- Missing required section heading: ## Prior Recursive Evidence Reviewed

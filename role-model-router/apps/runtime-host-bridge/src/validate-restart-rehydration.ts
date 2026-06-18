@@ -27,6 +27,7 @@ export interface RestartRehydrationValidationResult {
 function createRestartValidationRuntimeConfigText(): string {
   return [
     'version: "1.1"',
+    "execution_mode: hybrid",
     "routing:",
     "  strategy: baseline",
     "model_aliases:",
@@ -130,7 +131,7 @@ export async function runRestartRehydrationValidation(
 
       const summary = await restartedBackend.readRuntimeSummary();
       const endpoints = await restartedBackend.listEndpoints();
-      const mixedAliasId = "mixed.local-remote";
+      const mixedAliasId = "baseline.hybrid";
 
       const server = await startBridgeServer({
         host: "127.0.0.1",

@@ -85,6 +85,8 @@ type CliBackend = Pick<
   | "updatePeers"
   | "checkPeerHealth"
   | "getRoutableInventory"
+  | "effectiveRegistry"
+  | "getEffectiveRoutableInventory"
   | "shutdown"
 >;
 
@@ -104,8 +106,8 @@ export function createCliServerOptions(
     host: options.host,
     port: options.port,
     staticRoot: options.staticRoot,
-    registry: backend.registry,
-    getRegistry: () => backend.registry,
+    registry: backend.effectiveRegistry,
+    getRegistry: () => backend.effectiveRegistry,
     executeChatCompletions: backend.executeChatCompletions,
     executeResponses: backend.executeResponses,
     readVersionInfo: backend.readVersionInfo,
@@ -178,7 +180,7 @@ export function createCliServerOptions(
     readPeers: backend.readPeers,
     updatePeers: backend.updatePeers,
     checkPeerHealth: backend.checkPeerHealth,
-    getRoutableInventory: backend.getRoutableInventory,
+    getRoutableInventory: backend.getEffectiveRoutableInventory,
   };
 }
 

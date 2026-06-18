@@ -1,0 +1,24 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/49-runtime-telemetry-analytics-charts/role-model-router/apps/runtime-host-bridge[39m
+
+(node:25628) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [2m[90m↓[39m[22m test/backend-unified-runtime-config.test.ts[2m > [22mruntime-host-bridge unified runtime backend[2m > [22msurfaces the derived execution mode in the runtime summary when a unified config file is provided
+ [2m[90m↓[39m[22m test/backend-unified-runtime-config.test.ts[2m > [22mruntime-host-bridge unified runtime backend[2m > [22mreads and updates unified runtime config through the backend
+ [32m✓[39m test/backend-unified-runtime-config.test.ts[2m > [22mruntime-host-bridge unified runtime backend[2m > [22mmerges partial runtime config updates without dropping existing routing strategy[33m 471[2mms[22m[39m
+ [2m[90m↓[39m[22m test/backend-unified-runtime-config.test.ts[2m > [22mruntime-host-bridge unified runtime backend[2m > [22mclears stale alias drift warnings after the canonical config removes the stale hint
+ [2m[90m↓[39m[22m test/backend-unified-runtime-config.test.ts[2m > [22mruntime-host-bridge unified runtime backend[2m > [22mcreates and updates unified runtime config when the configured path does not exist yet
+ [2m[90m↓[39m[22m test/backend-unified-runtime-config.test.ts[2m > [22mruntime-host-bridge unified runtime backend[2m > [22mpersists explicit hybrid execution mode from routing strategy updates
+ [32m✓[39m test/backend-unified-runtime-config.test.ts[2m > [22mruntime-host-bridge unified runtime backend[2m > [22mrenames the primary routing alias when routing strategy and execution mode change[33m 317[2mms[22m[39m
+ [2m[90m↓[39m[22m test/backend-unified-runtime-config.test.ts[2m > [22mruntime-host-bridge unified runtime backend[2m > [22mdoes not mark all candidates ignored when routing guidance has no preferred endpoints
+ [2m[90m↓[39m[22m test/backend-unified-runtime-config.test.ts[2m > [22mruntime-host-bridge unified runtime backend[2m > [22mpreserves synthesized activated endpoint models across runtime config updates
+ [2m[90m↓[39m[22m test/backend-unified-runtime-config.test.ts[2m > [22mruntime-host-bridge unified runtime backend[2m > [22mreturns no controller assignment when the unified config has no endpoints yet
+ [2m[90m↓[39m[22m test/backend-unified-runtime-config.test.ts[2m > [22mruntime-host-bridge unified runtime backend[2m > [22msurfaces normalized provider docs and npm metadata through listProviders
+ [2m[90m↓[39m[22m test/backend-unified-runtime-config.test.ts[2m > [22mruntime-host-bridge unified runtime backend[2m > [22mpreserves manual account authority and provenance on exact runtime-config account-id collision
+ [2m[90m↓[39m[22m test/backend-unified-runtime-config.test.ts[2m > [22mruntime-host-bridge unified runtime backend[2m > [22msurfaces LiteLLM-backed Moonshot models and endpoints from unified runtime config
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m2 passed[39m[22m[2m | [22m[33m11 skipped[39m[90m (13)[39m
+[2m   Start at [22m 06:49:46
+[2m   Duration [22m 5.02s[2m (transform 1.77s, setup 0ms, collect 2.44s, tests 790ms, environment 0ms, prepare 355ms)[22m
+

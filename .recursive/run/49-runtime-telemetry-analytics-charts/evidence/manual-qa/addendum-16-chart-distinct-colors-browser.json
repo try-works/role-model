@@ -1,0 +1,72 @@
+{
+  "timestamp": "2026-06-17T21:25:35.3765938+02:00",
+  "finding": "Some charts reused the same resolved visual color for different visible metrics in the same chart.",
+  "routes": [
+    {
+      "url": "http://127.0.0.1:3456/app",
+      "chartCount": 6,
+      "hasAnyDuplicateLegendColors": false,
+      "hasDocumentHorizontalOverflow": false,
+      "charts": [
+        {
+          "title": "Token Usage Over Time",
+          "seriesCount": 3,
+          "uniqueColorCount": 3,
+          "entries": [
+            { "label": "Input tokens", "color": "rgb(0, 112, 243)" },
+            { "label": "Output tokens", "color": "rgb(80, 227, 194)" },
+            { "label": "Total tokens", "color": "rgb(255, 92, 168)" }
+          ]
+        },
+        {
+          "title": "Effective Cost Over Time",
+          "seriesCount": 3,
+          "uniqueColorCount": 3,
+          "entries": [
+            { "label": "Actual cost", "color": "rgb(77, 163, 255)" },
+            { "label": "Estimated cost", "color": "rgb(0, 112, 243)" },
+            { "label": "Effective cost", "color": "rgb(80, 227, 194)" }
+          ]
+        },
+        {
+          "title": "Cost Avoided Over Time",
+          "seriesCount": 3,
+          "uniqueColorCount": 3,
+          "entries": [
+            { "label": "Routing avoided cost", "color": "rgb(121, 40, 202)" },
+            { "label": "Cache avoided cost", "color": "rgb(0, 112, 243)" },
+            { "label": "Total avoided cost", "color": "rgb(80, 227, 194)" }
+          ]
+        },
+        {
+          "title": "Latency Trend",
+          "seriesCount": 2,
+          "uniqueColorCount": 2
+        },
+        {
+          "title": "Cache Efficiency Trend",
+          "seriesCount": 2,
+          "uniqueColorCount": 2
+        },
+        {
+          "title": "Success vs Failure Volume",
+          "seriesCount": 2,
+          "uniqueColorCount": 2
+        }
+      ]
+    },
+    {
+      "url": "http://127.0.0.1:3456/app/observe/requests",
+      "chartCount": 6,
+      "hasAnyDuplicateLegendColors": false,
+      "hasDocumentHorizontalOverflow": false
+    },
+    {
+      "url": "http://127.0.0.1:3456/app/observe/routing",
+      "chartCount": 3,
+      "hasAnyDuplicateLegendColors": false,
+      "hasDocumentHorizontalOverflow": false
+    }
+  ],
+  "status": "pass"
+}

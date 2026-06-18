@@ -1357,6 +1357,51 @@ describe("initializeSqliteMemory", () => {
       requestId: "req-telemetry-remote-001",
       routingDecisionId: "decision-telemetry-remote-001",
       endpointId: "openai.personal.primary.us-east-1.fast",
+      routingDiagnostics: {
+        ...baseBundle.routingDiagnostics,
+        routingMode: {
+          source: "alias-default",
+          aliasMode: "hybrid",
+          effectiveMode: "hybrid",
+        },
+        difficultyRouting: {
+          difficulty: "easy",
+          strategy: "cost",
+          fallbackApplied: false,
+          rubricSignals: {
+            contextTokens: 32,
+            toolCount: 0,
+            historyTurnCount: 1,
+            instructionConstraintCount: 0,
+            decompositionKeywordCount: 0,
+            codeOrSchemaBurden: false,
+          },
+        },
+        controllerRouting: {
+          active: true,
+          acceptedDirectives: {
+            requestedRoleId: "coder.patch",
+            strategy: "quality",
+            preferLocal: true,
+          },
+        },
+        hybridArbitration: {
+          active: true,
+          difficultyStrategy: "cost",
+          finalStrategy: "quality",
+          controllerChangedPlan: true,
+          dominantSignal: "controller",
+        },
+        rolePolicy: {
+          requestedRoleId: "coder.patch",
+          appliedRoleId: "coder.patch",
+          defaultSystemInstructionsApplied: true,
+          toolPolicyMode: "limited",
+          allowedTools: ["run_tests"],
+          outputContracts: ["review.checklist"],
+          safetyPolicyRefs: ["safety.review"],
+        },
+      },
       usageEvent: {
         ...baseBundle.usageEvent,
         request_id: "req-telemetry-remote-001",
@@ -1437,6 +1482,57 @@ describe("initializeSqliteMemory", () => {
           },
         ],
         executions: [],
+      },
+      telemetrySnapshot: {
+        providerId: "openai",
+        providerAccountId: "openai.personal",
+        sourceType: "remote",
+        endpointKind: "remote_api",
+        servingSource: "remote-service",
+        region: "us-east-1",
+        lifecycleStateAtRequest: "active",
+        healthStatusAtRequest: "healthy",
+        requestedModelId: "mixed.local-remote",
+        requestOperation: "chat",
+        roleIds: ["coder.patch", "general.chat"],
+        toolingUsed: true,
+        cacheState: "hit",
+        eligibleEndpointIds: [
+          "openai.personal.primary.us-east-1.fast",
+          "llama-swap.local.local-mock-llama",
+        ],
+        eligibleModelIds: ["openai/gpt-4.1-mini-fast", "local/mock-llama"],
+        candidateCostSnapshot: {
+          "openai.personal.primary.us-east-1.fast": {
+            modelId: "openai/gpt-4.1-mini-fast",
+            providerId: "openai",
+            sourceType: "remote",
+            estimatedRequestUsd: 0.0062,
+          },
+          "llama-swap.local.local-mock-llama": {
+            modelId: "local/mock-llama",
+            providerId: "llama-swap",
+            sourceType: "local",
+            estimatedRequestUsd: 0.0116,
+          },
+        },
+        selectedPricingSnapshot: {
+          modelId: "openai/gpt-4.1-mini-fast",
+          providerId: "openai",
+          sourceType: "remote",
+          estimatedRequestUsd: 0.0062,
+        },
+        selectedUncachedCostUsd: 0.0062,
+        baselineMaxEligibleCostUsd: 0.0116,
+        routingCostSavingsUsd: 0.0054,
+        cacheCostSavingsUsd: 0.002,
+        totalAvoidedCostUsd: 0.0074,
+        costBaselineSource: "eligible_candidate_max",
+        costSavingsSupport: "full",
+        dimensions: {
+          requestedModelFamily: "mixed.local-remote",
+          chartSourceLabel: "Remote",
+        },
       },
       inspection: {
         ...baseBundle.inspection,
@@ -1538,6 +1634,48 @@ describe("initializeSqliteMemory", () => {
         ...baseBundle.tooling,
         toolCalls: [],
         executions: [],
+      },
+      telemetrySnapshot: {
+        providerId: "llama-swap",
+        providerAccountId: null,
+        sourceType: "local",
+        endpointKind: "local_engine",
+        servingSource: "local-process",
+        region: "local",
+        lifecycleStateAtRequest: "active",
+        healthStatusAtRequest: "healthy",
+        requestedModelId: "local/mock-llama",
+        requestOperation: "chat",
+        roleIds: ["general.chat"],
+        toolingUsed: false,
+        cacheState: "unsupported",
+        eligibleEndpointIds: ["llama-swap.local.local-mock-llama"],
+        eligibleModelIds: ["local/mock-llama"],
+        candidateCostSnapshot: {
+          "llama-swap.local.local-mock-llama": {
+            modelId: "local/mock-llama",
+            providerId: "llama-swap",
+            sourceType: "local",
+            estimatedRequestUsd: 0.0011,
+          },
+        },
+        selectedPricingSnapshot: {
+          modelId: "local/mock-llama",
+          providerId: "llama-swap",
+          sourceType: "local",
+          estimatedRequestUsd: 0.0011,
+        },
+        selectedUncachedCostUsd: 0.0011,
+        baselineMaxEligibleCostUsd: 0.0011,
+        routingCostSavingsUsd: 0,
+        cacheCostSavingsUsd: 0,
+        totalAvoidedCostUsd: 0,
+        costBaselineSource: "selected_only",
+        costSavingsSupport: "partial",
+        dimensions: {
+          requestedModelFamily: "local/mock-llama",
+          chartSourceLabel: "Local",
+        },
       },
       inspection: {
         ...baseBundle.inspection,
@@ -1680,6 +1818,19 @@ describe("initializeSqliteMemory", () => {
         endpointId: "llama-swap.local.local-mock-llama",
         modelId: "local/mock-llama",
         providerKind: "local_openai_compat",
+        sourceType: "local",
+        endpointKind: "local_engine",
+        servingSource: "local-process",
+        requestedModelId: "local/mock-llama",
+        requestOperation: "chat",
+        statusFamily: "failure",
+        toolingUsed: false,
+        cacheState: "unsupported",
+        selectedUncachedCostUsd: 0.0011,
+        baselineMaxEligibleCostUsd: 0.0011,
+        routingCostSavingsUsd: 0,
+        cacheCostSavingsUsd: 0,
+        totalAvoidedCostUsd: 0,
         latencyMs: 1200,
         inputTokens: 32,
         outputTokens: 0,
@@ -1711,6 +1862,14 @@ describe("initializeSqliteMemory", () => {
         endpointId: "openai.personal.primary.us-east-1.fast",
         modelId: "openai/gpt-4.1-mini-fast",
         providerKind: "remote_openai_compat",
+        sourceType: "remote",
+        endpointKind: "remote_api",
+        servingSource: "remote-service",
+        requestedModelId: "mixed.local-remote",
+        requestOperation: "chat",
+        statusFamily: "success",
+        toolingUsed: true,
+        cacheState: "hit",
         latencyMs: 840,
         inputTokens: 120,
         outputTokens: 48,
@@ -1736,8 +1895,102 @@ describe("initializeSqliteMemory", () => {
         costProvenance: "actual",
         actualCostUsd: 0.0042,
         estimatedCostUsd: 0.0042,
+        effectiveCostUsd: 0.0042,
+        costCalculationBasis: "actual_vendor_cost",
+        costCalculationVersion: "run49.v1",
+        difficultyBucket: "easy",
+        routingMode: "hybrid",
+        requestedRoleId: "coder.patch",
+        selectedStrategy: "quality",
+        providerId: "openai",
+        providerAccountId: "openai.personal",
+        healthStatusAtRequest: "healthy",
+        selectedUncachedCostUsd: 0.0062,
+        baselineMaxEligibleCostUsd: 0.0116,
+        routingCostSavingsUsd: 0.0054,
+        cacheCostSavingsUsd: 0.002,
+        totalAvoidedCostUsd: 0.0074,
+        costBaselineSource: "eligible_candidate_max",
+        costSavingsSupport: "full",
       }),
     ]);
+
+    const controllerFallbackTimestampMs = Date.now();
+    const controllerFallbackBundle = {
+      ...baseBundle,
+      requestId: "req-telemetry-controller-fallback-001",
+      routingDecisionId: "decision-telemetry-controller-fallback-001",
+      endpointId: "openai.personal.primary.us-east-1.fast",
+      routingDiagnostics: {
+        ...baseBundle.routingDiagnostics,
+        routingMode: {
+          source: "runtime-config",
+          effectiveMode: "controller",
+        },
+        controllerRouting: {
+          active: true,
+        },
+      },
+      usageEvent: {
+        ...baseBundle.usageEvent,
+        request_id: "req-telemetry-controller-fallback-001",
+        routing_decision_id: "decision-telemetry-controller-fallback-001",
+        endpoint_id: "openai.personal.primary.us-east-1.fast",
+        model_id: "openai/gpt-4.1-mini-fast",
+        provider_kind: "remote_openai_compat",
+        tokens_in: 20,
+        tokens_out: 5,
+        latency_ms: 320,
+        timestamp_ms: controllerFallbackTimestampMs,
+      },
+      observedPerformance: {
+        ...baseBundle.observedPerformance,
+        sample: {
+          ...baseBundle.observedPerformance.sample,
+          request_id: "req-telemetry-controller-fallback-001",
+          routing_decision_id: "decision-telemetry-controller-fallback-001",
+          endpoint_id: "openai.personal.primary.us-east-1.fast",
+          timestamp_ms: controllerFallbackTimestampMs,
+          latency_ms: 320,
+          latency_ms_p95: 320,
+        },
+      },
+    } as ReturnType<typeof createRuntimeObservationBundle>;
+
+    (
+      sqliteMemory as {
+        persistRuntimeObservationBundle(input: {
+          databasePath: string;
+          observation: ReturnType<typeof createRuntimeObservationBundle>;
+        }): void;
+      }
+    ).persistRuntimeObservationBundle({
+      databasePath: validation.databasePath,
+      observation: controllerFallbackBundle,
+    });
+
+    expect(
+      (
+        sqliteMemory as {
+          listRuntimeTelemetryRecords(input: {
+            databasePath: string;
+            windowMs?: number;
+            limit?: number;
+          }): Array<Record<string, number | string | boolean | null>>;
+        }
+      )
+        .listRuntimeTelemetryRecords({
+          databasePath: validation.databasePath,
+          windowMs: 60_000,
+          limit: 10,
+        })
+        .find((record) => record.requestId === "req-telemetry-controller-fallback-001"),
+    ).toEqual(
+      expect.objectContaining({
+        routingMode: "controller",
+        selectedStrategy: "balanced",
+      }),
+    );
   });
 
   test("persistRuntimeTelemetryFailure records latencyMs in telemetry summary average", async () => {
@@ -1810,6 +2063,61 @@ describe("initializeSqliteMemory", () => {
         }),
       ]),
     );
+  });
+
+  test("persistRuntimeTelemetryFailure persists authoritative zero-cost metadata for pre-execution failures", async () => {
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+    const validation = await runRuntimeAdapterValidation({
+      repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      runtimeStateRoot,
+      scopeId: "workspace-dev",
+    });
+
+    persistRuntimeTelemetryFailure({
+      databasePath: validation.databasePath,
+      requestId: "req-failure-cost-001",
+      endpointId: "routing.failed.pre-execution",
+      modelId: "mixed.local-remote",
+      statusCode: 400,
+      errorClass: "execution_failed",
+      latencyMs: 120,
+      clientRequestId: "req-client-failure-cost-001",
+      requestClass: "live_request",
+      sourceType: "remote",
+    });
+
+    const database = new DatabaseSync(validation.databasePath);
+    const columns = database
+      .prepare("PRAGMA table_info(runtime_telemetry_records)")
+      .all() as Array<{
+      name: string;
+    }>;
+    const persistedRow = database
+      .prepare(
+        "SELECT effective_cost_usd, cost_calculation_basis, cost_calculation_version FROM runtime_telemetry_records WHERE request_id = ?",
+      )
+      .get("req-failure-cost-001") as
+      | {
+          effective_cost_usd: number;
+          cost_calculation_basis: string;
+          cost_calculation_version: string;
+        }
+      | undefined;
+    database.close();
+
+    expect(columns.map((column) => column.name)).toEqual(
+      expect.arrayContaining([
+        "effective_cost_usd",
+        "cost_calculation_basis",
+        "cost_calculation_version",
+      ]),
+    );
+    expect(persistedRow).toEqual({
+      effective_cost_usd: 0,
+      cost_calculation_basis: "no_execution_zero",
+      cost_calculation_version: "run49.v1",
+    });
   });
 
   test("exports persisted runtime state for operator drills", async () => {

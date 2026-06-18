@@ -16,6 +16,109 @@ import {
   buildEndpointCatalogRows,
 } from "../lib/view-models";
 
+type ProviderRow = ReturnType<typeof buildConfiguredProviderRows>[number];
+type EndpointRow = ReturnType<typeof buildEndpointCatalogRows>[number];
+
+function formatProviderReadiness(provider: ProviderRow): string {
+  return (
+    [
+      provider.pendingDeviceAuthorizationCount > 0
+        ? `${provider.pendingDeviceAuthorizationCount} pending OAuth`
+        : null,
+      provider.credentialsMissingAccountCount > 0
+        ? `${provider.credentialsMissingAccountCount} missing credentials`
+        : null,
+      provider.connectedWithoutEndpointCount > 0
+        ? `${provider.connectedWithoutEndpointCount} connected, no endpoint`
+        : null,
+      provider.readyAccountCount > 0 ? `${provider.readyAccountCount} ready` : null,
+    ]
+      .filter((value): value is string => value !== null)
+      .join(" • ") || "—"
+  );
+}
+
+function statusTone(status: string): "success" | "warning" | "neutral" {
+  return status === "active" || status === "ready" || status === "execution-ready"
+    ? "success"
+    : status === "degraded" || status === "unknown"
+      ? "warning"
+      : "neutral";
+}
+
+function healthTone(healthStatus: string): "success" | "warning" | "neutral" {
+  return healthStatus === "healthy"
+    ? "success"
+    : healthStatus === "unknown"
+      ? "neutral"
+      : "warning";
+}
+
+function buildRuntimeConnectionRows(input: {
+  providerRows: readonly ProviderRow[];
+  endpointRows: readonly EndpointRow[];
+}): Array<{
+  key: string;
+  providerLabel: string;
+  connectionLabel: string;
+  modelLabel: string;
+  endpointLabel: string;
+  sourceLabel: string;
+  healthLabel: string;
+  healthTone: "success" | "warning" | "neutral";
+  readinessLabel: string;
+  readinessTone: "success" | "warning" | "neutral";
+}> {
+  const providersById = new Map(
+    input.providerRows.map((provider) => [provider.providerId, provider]),
+  );
+  const endpointProviderIds = new Set<string>();
+  const endpointRows = input.endpointRows.map((endpoint) => {
+    endpointProviderIds.add(endpoint.providerLabel);
+    const provider = providersById.get(endpoint.providerLabel);
+    return {
+      key: `endpoint:${endpoint.endpointId}`,
+      providerLabel: endpoint.providerLabel,
+      connectionLabel: provider?.accountIds.join(", ") || "—",
+      modelLabel: endpoint.modelId,
+      endpointLabel: endpoint.endpointId,
+      sourceLabel: `${endpoint.sourceLabel} / ${endpoint.endpointKind}`,
+      healthLabel: endpoint.healthStatus,
+      healthTone: healthTone(endpoint.healthStatus),
+      readinessLabel: endpoint.status,
+      readinessTone: statusTone(endpoint.status),
+    };
+  });
+
+  const providerOnlyRows = input.providerRows
+    .filter((provider) => !endpointProviderIds.has(provider.providerId))
+    .map((provider) => {
+      const blocking = [
+        provider.pendingDeviceAuthorizationCount,
+        provider.credentialsMissingAccountCount,
+        provider.connectedWithoutEndpointCount,
+      ].some((value) => value > 0);
+      const healthLabel = provider.healthStatuses.join(", ") || "unknown";
+      const readinessTone: "success" | "warning" | "neutral" =
+        provider.readyAccountCount > 0 && !blocking ? "success" : "warning";
+      return {
+        key: `provider:${provider.providerId}`,
+        providerLabel: provider.providerId,
+        connectionLabel: provider.accountIds.join(", ") || "—",
+        modelLabel:
+          provider.configuredModels.length > 0 ? provider.configuredModels.join(", ") : "No model",
+        endpointLabel: `${provider.activeEndpointCount}/${provider.endpointCount} active`,
+        sourceLabel: provider.authModes.join(", ") || "provider account",
+        healthLabel,
+        healthTone: healthTone(healthLabel),
+        readinessLabel: formatProviderReadiness(provider),
+        readinessTone,
+      };
+    });
+
+  return [...endpointRows, ...providerOnlyRows];
+}
+
 export default function EndpointsRoute() {
   const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -52,6 +155,10 @@ export default function EndpointsRoute() {
       snapshot ? buildCredentialReadinessRows(snapshot.summary).filter((row) => row.value > 0) : [],
     [snapshot],
   );
+  const connectionRows = useMemo(
+    () => buildRuntimeConnectionRows({ providerRows, endpointRows }),
+    [providerRows, endpointRows],
+  );
 
   if (error) {
     return <ErrorState label={error} />;
@@ -66,7 +173,7 @@ export default function EndpointsRoute() {
         <div
           className={`${mutedPanelClassName} flex flex-wrap items-center gap-3 p-4 text-sm text-[var(--rm-secondary)]`}
         >
-          <span className="font-medium text-[var(--rm-fg)]">Provider onboarding pending:</span>
+          <span className="font-semibold text-[var(--rm-fg)]">Provider onboarding pending:</span>
           {readinessRows.map((row) => (
             <StatusPill key={row.key} tone={row.tone}>
               {row.label} {row.value}
@@ -87,7 +194,7 @@ export default function EndpointsRoute() {
         </Link>
       </div>
 
-      {providerRows.length === 0 && endpointRows.length === 0 ? (
+      {connectionRows.length === 0 ? (
         <SectionCard title="No configured endpoints yet">
           <EmptyState label="No providers or endpoints are configured yet." />
           <div className="mt-4 flex flex-wrap gap-3">
@@ -103,140 +210,43 @@ export default function EndpointsRoute() {
           </div>
         </SectionCard>
       ) : (
-        <div className="grid gap-4 xl:grid-cols-[0.92fr_1.08fr]">
-          <SectionCard title="Configured providers">
-            {providerRows.length === 0 ? (
-              <EmptyState label="No providers are configured yet." />
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="min-w-full text-left text-sm">
-                  <thead className="text-[var(--rm-muted)]">
-                    <tr>
-                      <th className="pb-3 font-medium">Provider</th>
-                      <th className="pb-3 font-medium">Connections</th>
-                      <th className="pb-3 font-medium">Auth</th>
-                      <th className="pb-3 font-medium">Models</th>
-                      <th className="pb-3 font-medium">Health</th>
-                      <th className="pb-3 font-medium">Readiness</th>
-                      <th className="pb-3 font-medium">Endpoints</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {providerRows.map((provider) => (
-                      <tr key={provider.providerId} className="border-t border-[var(--rm-border)]">
-                        <td className="py-3 font-medium text-[var(--rm-fg)]">
-                          {provider.providerId}
-                        </td>
-                        <td className="py-3 text-[var(--rm-secondary)]">
-                          {provider.accountIds.join(", ") || "—"}
-                        </td>
-                        <td className="py-3 text-[var(--rm-secondary)]">
-                          {provider.authModes.join(", ") || "—"}
-                        </td>
-                        <td className="py-3 text-[var(--rm-secondary)]">
-                          {provider.configuredModels.length > 0
-                            ? provider.configuredModels.join(", ")
-                            : "—"}
-                        </td>
-                        <td className="py-3 text-[var(--rm-secondary)]">
-                          {provider.healthStatuses.join(", ") || "unknown"}
-                        </td>
-                        <td className="py-3 text-[var(--rm-secondary)]">
-                          {[
-                            provider.pendingDeviceAuthorizationCount > 0
-                              ? `${provider.pendingDeviceAuthorizationCount} pending OAuth`
-                              : null,
-                            provider.credentialsMissingAccountCount > 0
-                              ? `${provider.credentialsMissingAccountCount} missing credentials`
-                              : null,
-                            provider.connectedWithoutEndpointCount > 0
-                              ? `${provider.connectedWithoutEndpointCount} connected, no endpoint`
-                              : null,
-                            provider.readyAccountCount > 0
-                              ? `${provider.readyAccountCount} ready`
-                              : null,
-                          ]
-                            .filter((value): value is string => value !== null)
-                            .join(" • ") || "—"}
-                        </td>
-                        <td className="py-3 text-[var(--rm-secondary)]">
-                          {provider.activeEndpointCount}/{provider.endpointCount} active
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </SectionCard>
-
-          <SectionCard title="Runtime endpoint rows">
-            {endpointRows.length === 0 ? (
-              <EmptyState
-                label={
-                  readinessRows.length > 0
-                    ? "No runtime endpoint rows are active yet. Saved providers still need OAuth completion, credentials, or endpoint activation."
-                    : "No runtime endpoint rows are active yet. Configure a provider from Providers to populate this registry."
-                }
-              />
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="min-w-full text-left text-sm">
-                  <thead className="text-[var(--rm-muted)]">
-                    <tr>
-                      <th className="pb-3 font-medium">Endpoint</th>
-                      <th className="pb-3 font-medium">Model</th>
-                      <th className="pb-3 font-medium">Provider</th>
-                      <th className="pb-3 font-medium">Source</th>
-                      <th className="pb-3 font-medium">Serving source</th>
-                      <th className="pb-3 font-medium">Health</th>
-                      <th className="pb-3 font-medium">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {endpointRows.map((endpoint) => (
-                      <tr key={endpoint.endpointId} className="border-t border-[var(--rm-border)]">
-                        <td className="py-3 font-medium text-[var(--rm-fg)]">
-                          {endpoint.endpointId}
-                        </td>
-                        <td className="py-3 text-[var(--rm-secondary)]">{endpoint.modelId}</td>
-                        <td className="py-3 text-[var(--rm-secondary)]">
-                          {endpoint.providerLabel}
-                        </td>
-                        <td className="py-3 text-[var(--rm-secondary)]">
-                          {endpoint.sourceLabel} / {endpoint.endpointKind}
-                        </td>
-                        <td className="py-3 text-[var(--rm-secondary)]">
-                          {endpoint.servingSource}
-                        </td>
-                        <td className="py-3">
-                          <StatusPill
-                            tone={endpoint.healthStatus === "healthy" ? "success" : "warning"}
-                          >
-                            {endpoint.healthStatus}
-                          </StatusPill>
-                        </td>
-                        <td className="py-3">
-                          <StatusPill
-                            tone={
-                              endpoint.status === "active"
-                                ? "success"
-                                : endpoint.status === "degraded"
-                                  ? "warning"
-                                  : "neutral"
-                            }
-                          >
-                            {endpoint.status}
-                          </StatusPill>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </SectionCard>
-        </div>
+        <SectionCard
+          title="Runtime connections"
+          description="Provider, model, and endpoint state are merged into one registry view so operators can see what is usable without comparing duplicate tables."
+        >
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-left text-sm">
+              <thead className="text-[var(--rm-muted)]">
+                <tr>
+                  <th className="pb-3 font-semibold">Provider</th>
+                  <th className="pb-3 font-semibold">Connection</th>
+                  <th className="pb-3 font-semibold">Model</th>
+                  <th className="pb-3 font-semibold">Endpoint</th>
+                  <th className="pb-3 font-semibold">Source</th>
+                  <th className="pb-3 font-semibold">Health</th>
+                  <th className="pb-3 font-semibold">Readiness</th>
+                </tr>
+              </thead>
+              <tbody>
+                {connectionRows.map((row) => (
+                  <tr key={row.key} className="border-t border-[var(--rm-border)]">
+                    <td className="py-3 font-semibold text-[var(--rm-fg)]">{row.providerLabel}</td>
+                    <td className="py-3 text-[var(--rm-secondary)]">{row.connectionLabel}</td>
+                    <td className="py-3 text-[var(--rm-secondary)]">{row.modelLabel}</td>
+                    <td className="py-3 text-[var(--rm-secondary)]">{row.endpointLabel}</td>
+                    <td className="py-3 text-[var(--rm-secondary)]">{row.sourceLabel}</td>
+                    <td className="py-3">
+                      <StatusPill tone={row.healthTone}>{row.healthLabel}</StatusPill>
+                    </td>
+                    <td className="py-3">
+                      <StatusPill tone={row.readinessTone}>{row.readinessLabel}</StatusPill>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </SectionCard>
       )}
     </div>
   );

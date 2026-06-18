@@ -7,6 +7,7 @@ import {
   FactCard,
   LoadingState,
   SectionCard,
+  SelectField,
   StatusPill,
 } from "../components/page-primitives";
 import {
@@ -221,52 +222,35 @@ export default function StudioAudioRoute() {
             <LoadingState label="Loading audio request context…" />
           ) : (
             <form className="space-y-4" onSubmit={onSubmit}>
-              <label className="grid gap-2 text-sm">
-                <span className="font-medium text-[var(--rm-fg)]">Mode</span>
-                <select
-                  className={fieldClassName}
-                  value={mode}
-                  onChange={(event) => setMode(event.target.value as AudioMode)}
-                >
-                  <option value="speech">Speech synthesis</option>
-                  <option value="transcription">Transcription</option>
-                </select>
-              </label>
-              <label className="grid gap-2 text-sm">
-                <span className="font-medium text-[var(--rm-fg)]">Model</span>
-                <select
-                  className={fieldClassName}
-                  value={model}
-                  onChange={(event) => setModel(event.target.value)}
-                >
-                  {modelOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              <SelectField
+                label="Mode"
+                value={mode}
+                onChange={(value) => setMode(value as AudioMode)}
+              >
+                <option value="speech">Speech synthesis</option>
+                <option value="transcription">Transcription</option>
+              </SelectField>
+              <SelectField label="Model" value={model} onChange={setModel}>
+                {modelOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </SelectField>
               {mode === "speech" ? (
                 <>
+                  <SelectField label="Voice" value={voice} onChange={setVoice}>
+                    {voices.map((entry) => {
+                      const id = getVoiceId(entry);
+                      return (
+                        <option key={id} value={id}>
+                          {getVoiceLabel(entry)}
+                        </option>
+                      );
+                    })}
+                  </SelectField>
                   <label className="grid gap-2 text-sm">
-                    <span className="font-medium text-[var(--rm-fg)]">Voice</span>
-                    <select
-                      className={fieldClassName}
-                      value={voice}
-                      onChange={(event) => setVoice(event.target.value)}
-                    >
-                      {voices.map((entry) => {
-                        const id = getVoiceId(entry);
-                        return (
-                          <option key={id} value={id}>
-                            {getVoiceLabel(entry)}
-                          </option>
-                        );
-                      })}
-                    </select>
-                  </label>
-                  <label className="grid gap-2 text-sm">
-                    <span className="font-medium text-[var(--rm-fg)]">Input</span>
+                    <span className="font-semibold text-[var(--rm-fg)]">Input</span>
                     <textarea
                       className={`${fieldClassName} min-h-32`}
                       value={speechInput}
@@ -276,7 +260,7 @@ export default function StudioAudioRoute() {
                 </>
               ) : (
                 <label className="grid gap-2 text-sm">
-                  <span className="font-medium text-[var(--rm-fg)]">Audio file</span>
+                  <span className="font-semibold text-[var(--rm-fg)]">Audio file</span>
                   <input
                     className={fieldClassName}
                     onChange={(event) => setTranscriptionFile(event.target.files?.[0] ?? null)}
@@ -306,10 +290,11 @@ export default function StudioAudioRoute() {
                   </p>
                   <p className="mt-2 text-sm text-[var(--rm-secondary)]">
                     Voice{" "}
-                    <span className="font-medium text-[var(--rm-fg)]">
+                    <span className="font-semibold text-[var(--rm-fg)]">
                       {result.voice || "unspecified"}
                     </span>{" "}
-                    on model <span className="font-medium text-[var(--rm-fg)]">{result.model}</span>
+                    on model{" "}
+                    <span className="font-semibold text-[var(--rm-fg)]">{result.model}</span>
                   </p>
                 </div>
                 {result.audioUrl ? (

@@ -1,4 +1,4 @@
-import type { BenchmarkSummary, BenchmarkSummarySubject } from "./runtime-api";
+import type { BenchmarkSummary, BenchmarkSummarySubject, RouterCandidate } from "./runtime-api";
 
 export const BENCHMARK_SECTION_ORDER = ["model-scores", "run-benchmark", "run-history"] as const;
 
@@ -29,4 +29,16 @@ export function describeHardBlend(candidate: {
     return null;
   }
   return `Hard routing blend: full ${hardBlend.full.toFixed(3)} + quick ${hardBlend.quick.toFixed(3)} → blended ${hardBlend.blended.toFixed(3)}.`;
+}
+
+export function isBenchmarkRunnableCandidate(
+  candidate: Pick<RouterCandidate, "executionModeEligible">,
+): boolean {
+  return candidate.executionModeEligible !== false;
+}
+
+export function filterBenchmarkRunnableCandidates(
+  candidates: readonly RouterCandidate[],
+): readonly RouterCandidate[] {
+  return candidates.filter(isBenchmarkRunnableCandidate);
 }

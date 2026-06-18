@@ -1,0 +1,963 @@
+{
+  "generatedAt": "2026-06-17T17:40:39.673Z",
+  "baseUrl": "http://127.0.0.1:3456",
+  "totalRoutes": 36,
+  "failures": [],
+  "loadingRoutes": [],
+  "chartRoutes": [
+    {
+      "path": "/app",
+      "pageHeadings": [
+        "Telemetry controls",
+        "Token Usage Over Time",
+        "Effective Cost Over Time",
+        "Cost Avoided Over Time",
+        "Latency Trend",
+        "Cache Efficiency Trend",
+        "Success vs Failure Volume",
+        "Current endpoint inventory",
+        "Latest requests"
+      ],
+      "rechartsWrapperCount": 6,
+      "chartSvgCount": 6,
+      "mainPreview": "Telemetry controlsAdjust the recent historical slice for the runtime overview charts without leaving the operator shell.DayWeekMonth90 daysBreakdownTotalBy sourceBy endpointBy modelBy providerSource filterAll sourcesLoca"
+    },
+    {
+      "path": "/app/observe/requests",
+      "pageHeadings": [
+        "Analytics controls",
+        "Request Volume Over Time",
+        "Token Usage Over Time",
+        "Effective Cost Over Time",
+        "Latency Trend",
+        "Cache Efficiency Trend",
+        "Failure Trend",
+        "Ranked Comparison",
+        "Adjacent raw-host tools",
+        "Recent telemetry requests"
+      ],
+      "rechartsWrapperCount": 7,
+      "chartSvgCount": 7,
+      "mainPreview": "Analytics controlsScope the structured telemetry history and comparison target without leaving the canonical request ledger.DayWeekMonth90 daysBreakdownTotalSourceEndpointModelProviderRanking metricRequestsTotal tokensEf"
+    },
+    {
+      "path": "/app/observe/routing",
+      "pageHeadings": [
+        "Routing analytics controls",
+        "Cost Avoided By Routing",
+        "Routing Decision Volume",
+        "Difficulty Distribution",
+        "Strategy Selection Trend",
+        "Role Demand",
+        "Model Selection"
+      ],
+      "rechartsWrapperCount": 6,
+      "chartSvgCount": 6,
+      "mainPreview": "Routing analytics controlsInspect routing mix, difficulty distribution, and avoided cost without leaving the Observe pillar.DayWeekMonth90 daysBreakdownTotalBy sourceBy requested roleBy modelBy strategySourceAll sourcesL"
+    }
+  ],
+  "routes": [
+    {
+      "chartSvgCount": 6,
+      "hasMain": true,
+      "hasSidebar": true,
+      "loadingState": false,
+      "mainPreview": "Telemetry controlsAdjust the recent historical slice for the runtime overview charts without leaving the operator shell.DayWeekMonth90 daysBreakdownTotalBy sourceBy endpointBy modelBy providerSource filterAll sourcesLocal onlyRemote onlyToken Usage Over TimeInput, output, and total token flow across the selected telemetry window.Jun 10Jun 11Jun 12Jun 13Jun 14Jun 15Jun 160450090001350018000Input tokensOutput tokensTotal tokensEffective Cost Over TimeAuthoritative effective cost based on stored re",
+      "pageHeadings": [
+        "Telemetry controls",
+        "Token Usage Over Time",
+        "Effective Cost Over Time",
+        "Cost Avoided Over Time",
+        "Latency Trend",
+        "Cache Efficiency Trend",
+        "Success vs Failure Volume",
+        "Current endpoint inventory",
+        "Latest requests"
+      ],
+      "rawClassLeakCount": 0,
+      "rawClassLeakSamples": [],
+      "rechartsWrapperCount": 6,
+      "runtimeErrorText": null,
+      "selectCount": 2,
+      "themeTokens": {
+        "bg": "#000",
+        "chartCyan": "#50e3c2",
+        "onPrimary": "#fff",
+        "surface": "#272729"
+      },
+      "title": "",
+      "url": "http://127.0.0.1:3456/app"
+    },
+    {
+      "chartSvgCount": 0,
+      "hasMain": true,
+      "hasSidebar": true,
+      "loadingState": false,
+      "mainPreview": "Models3Tool-capable endpoints3Selected modelclaude-3.7-sonnetRouting modeAlias defaultAuthoritative lifecycle snapshotCanonical lifecycle data is authoritative; remaining blockers are ready for repair.Connected, no endpoint 2Remote → ProvidersSystem → Session readinessComposerThis form posts directly to the runtime-host `/v1/chat/completions` route.ModelClaude 3.7 SonnetGPT 5.4GPT 4.1 Mini FastEndpointanthropic.team.shared.us-east-1.defaultRouting modeAlias default (use configured strategy)Basel",
+      "pageHeadings": [
+        "Composer",
+        "Result workspace"
+      ],
+      "rawClassLeakCount": 0,
+      "rawClassLeakSamples": [],
+      "rechartsWrapperCount": 0,
+      "runtimeErrorText": null,
+      "selectCount": 3,
+      "themeTokens": {
+        "bg": "#000",
+        "chartCyan": "#50e3c2",
+        "onPrimary": "#fff",
+        "surface": "#272729"
+      },
+      "title": "",
+      "url": "http://127.0.0.1:3456/app/studio/chat"
+    },
+    {
+      "chartSvgCount": 0,
+      "hasMain": true,
+      "hasSidebar": true,
+      "loadingState": false,
+      "mainPreview": "Available models3The current runtime model listing drives the request rail.Request modeOpenAISwitch request families without leaving the studio section.Returned images0Generated images remain in the dominant result stage with raw response details adjacent.Image request modesChoose an OpenAI-style or SDAPI-style request and keep the parameter rail compact.ModeOpenAI-style generationSDAPI txt2imgModelClaude 3.7 SonnetGPT 5.4GPT 4.1 Mini FastPromptA calm operator console poster.Size1024x10241536x10",
+      "pageHeadings": [
+        "Image request modes",
+        "Image result stage",
+        "Raw response"
+      ],
+      "rawClassLeakCount": 0,
+      "rawClassLeakSamples": [],
+      "rechartsWrapperCount": 0,
+      "runtimeErrorText": null,
+      "selectCount": 3,
+      "themeTokens": {
+        "bg": "#000",
+        "chartCyan": "#50e3c2",
+        "onPrimary": "#fff",
+        "surface": "#272729"
+      },
+      "title": "",
+      "url": "http://127.0.0.1:3456/app/studio/images"
+    },
+    {
+      "chartSvgCount": 0,
+      "hasMain": true,
+      "hasSidebar": true,
+      "loadingState": false,
+      "mainPreview": "Available models3Audio requests reuse the runtime model listing.Available voices0Voice discovery stays adjacent to speech synthesis.Active modeSpeechSwitch audio families without leaving the studio section.Audio mode and requestUse one request rail for speech and transcription instead of splitting the operator flow across duplicate pages.ModeSpeech synthesisTranscriptionModelClaude 3.7 SonnetGPT 5.4GPT 4.1 Mini FastVoiceInputExplain the current runtime posture in one short sentence.Run audio req",
+      "pageHeadings": [
+        "Audio mode and request",
+        "Audio result stage",
+        "Voice inventory"
+      ],
+      "rawClassLeakCount": 0,
+      "rawClassLeakSamples": [],
+      "rechartsWrapperCount": 0,
+      "runtimeErrorText": null,
+      "selectCount": 3,
+      "themeTokens": {
+        "bg": "#000",
+        "chartCyan": "#50e3c2",
+        "onPrimary": "#fff",
+        "surface": "#272729"
+      },
+      "title": "",
+      "url": "http://127.0.0.1:3456/app/studio/audio"
+    },
+    {
+      "chartSvgCount": 0,
+      "hasMain": true,
+      "hasSidebar": true,
+      "loadingState": false,
+      "mainPreview": "Available models3The runtime model listing drives the rerank model selector.Candidate documents3Each non-empty line in the request rail becomes a rerank candidate.Active contract/v1/rerankSwitch between the two vendor-backed rerank route families without leaving the page.Rerank requestUse a compact request rail for the query, contract path, and candidate set.Contract/v1/rerank/v1/rerankingModelClaude 3.7 SonnetGPT 5.4GPT 4.1 Mini FastQueryWhich option best summarizes the runtime?Candidate docume",
+      "pageHeadings": [
+        "Rerank request",
+        "Ranked results",
+        "Contract details"
+      ],
+      "rawClassLeakCount": 0,
+      "rawClassLeakSamples": [],
+      "rechartsWrapperCount": 0,
+      "runtimeErrorText": null,
+      "selectCount": 2,
+      "themeTokens": {
+        "bg": "#000",
+        "chartCyan": "#50e3c2",
+        "onPrimary": "#fff",
+        "surface": "#272729"
+      },
+      "title": "",
+      "url": "http://127.0.0.1:3456/app/studio/rerank"
+    },
+    {
+      "chartSvgCount": 0,
+      "hasMain": true,
+      "hasSidebar": true,
+      "loadingState": false,
+      "mainPreview": "Endpoint families6Only advanced families with real runtime backing belong here.Selected familyResponsesOpenAI responses-style request/response board.Available models3The same runtime model listing feeds the advanced request templates.Execution readinessAdvanced request families use the same execution-ready model inventory as Workbench and the OpenAI-compatible bridge surfaces.Authoritative lifecycle snapshotCanonical lifecycle data is authoritative; remaining blockers are ready for repair.Connec",
+      "pageHeadings": [
+        "Execution readiness",
+        "Endpoint family",
+        "Response workspace",
+        "Request template"
+      ],
+      "rawClassLeakCount": 0,
+      "rawClassLeakSamples": [],
+      "rechartsWrapperCount": 0,
+      "runtimeErrorText": null,
+      "selectCount": 2,
+      "themeTokens": {
+        "bg": "#000",
+        "chartCyan": "#50e3c2",
+        "onPrimary": "#fff",
+        "surface": "#272729"
+      },
+      "title": "",
+      "url": "http://127.0.0.1:3456/app/studio/advanced"
+    },
+    {
+      "chartSvgCount": 0,
+      "hasMain": true,
+      "hasSidebar": true,
+      "loadingState": false,
+      "mainPreview": "External serverPeer-backed modelsUse this when you already run an OpenAI-compatible server (LM Studio, llama.cpp, vLLM, or similar). Register the server under Endpoints, then register models and roles here. role-model routes to your server; it does not load GGUF files for you.Open peer modelsConfigure endpointsManaged by role-modelLlama-swap modelsUse this when role-model should run the local llama-swap process, swap models on one GPU, and apply TTL auto-unload. Models are declared in Runtime co",
+      "pageHeadings": [],
+      "rawClassLeakCount": 0,
+      "rawClassLeakSamples": [],
+      "rechartsWrapperCount": 0,
+      "runtimeErrorText": null,
+      "selectCount": 0,
+      "themeTokens": {
+        "bg": "#000",
+        "chartCyan": "#50e3c2",
+        "onPrimary": "#fff",
+        "surface": "#272729"
+      },
+      "title": "",
+      "url": "http://127.0.0.1:3456/app/local/choose"
+    },
+    {
+      "chartSvgCount": 0,
+      "hasMain": true,
+      "hasSidebar": true,
+      "loadingState": false,
+      "mainPreview": "Endpoint inventoryrole-model probes each server at /v1/models before peer models can be registered.No peer endpoints configured. Add a server URL below to use peer-backed local models.Add peer endpointBase URL of your OpenAI-compatible API (with or without /v1). Optional bearer token if the server requires auth.Endpoint URLAuth token (optional)Add endpoint",
+      "pageHeadings": [
+        "Endpoint inventory",
+        "Add peer endpoint"
+      ],
+      "rawClassLeakCount": 0,
+      "rawClassLeakSamples": [],
+      "rechartsWrapperCount": 0,
+      "runtimeErrorText": null,
+      "selectCount": 0,
+      "themeTokens": {
+        "bg": "#000",
+        "chartCyan": "#50e3c2",
+        "onPrimary": "#fff",
+        "surface": "#272729"
+      },
+      "title": "",
+      "url": "http://127.0.0.1:3456/app/local/endpoints"
+    },
+    {
+      "chartSvgCount": 0,
+      "hasMain": true,
+      "hasSidebar": true,
+      "loadingState": false,
+      "mainPreview": "PrerequisitesConfigure peer endpoints firstConfigure at least one peer endpoint before registering models.Open endpointsRegistered modelsModels currently registered with the router from peer endpoints.Configure peer endpoints before registering models.",
+      "pageHeadings": [
+        "Registered models"
+      ],
+      "rawClassLeakCount": 0,
+      "rawClassLeakSamples": [],
+      "rechartsWrapperCount": 0,
+      "runtimeErrorText": null,
+      "selectCount": 0,
+      "themeTokens": {
+        "bg": "#000",
+        "chartCyan": "#50e3c2",
+        "onPrimary": "#fff",
+        "surface": "#272729"
+      },
+      "title": "",
+      "url": "http://127.0.0.1:3456/app/local/peer-models"
+    },
+    {
+      "chartSvgCount": 0,
+      "hasMain": true,
+      "hasSidebar": true,
+      "loadingState": true,
+      "mainPreview": "Llama-swap setupLlama-swap is not configured in runtime config yet.Peer-backed local uses your external OpenAI-compatible server; role-model-managed llama-swap runs the swap process and loads declared GGUF models for you.Setup guideOpen runtime configLoad modelModel must be declared in runtime config. Loading triggers llama-swap to start or swap to this model.Model IDRuntime rolesManage role definitionsRoles control which routing tasks can select this model.General ChatGeneral-purpose chat, assi",
+      "pageHeadings": [
+        "Load model",
+        "Loaded models"
+      ],
+      "rawClassLeakCount": 0,
+      "rawClassLeakSamples": [],
+      "rechartsWrapperCount": 0,
+      "runtimeErrorText": null,
+      "selectCount": 0,
+      "themeTokens": {
+        "bg": "#000",
+        "chartCyan": "#50e3c2",
+        "onPrimary": "#fff",
+        "surface": "#272729"
+      },
+      "title": "",
+      "url": "http://127.0.0.1:3456/app/local/llama-swap/models"
+    },
+    {
+      "chartSvgCount": 0,
+      "hasMain": true,
+      "hasSidebar": true,
+      "loadingState": false,
+      "mainPreview": "Llama-swap setupLlama-swap is not configured in runtime config yet.Setup guideEvent ledgerMost recent swap events first.No swap events recorded yet.",
+      "pageHeadings": [
+        "Event ledger"
+      ],
+      "rawClassLeakCount": 0,
+      "rawClassLeakSamples": [],
+      "rechartsWrapperCount": 0,
+      "runtimeErrorText": null,
+      "selectCount": 0,
+      "themeTokens": {
+        "bg": "#000",
+        "chartCyan": "#50e3c2",
+        "onPrimary": "#fff",
+        "surface": "#272729"
+      },
+      "title": "",
+      "url": "http://127.0.0.1:3456/app/local/llama-swap/swap"
+    },
+    {
+      "chartSvgCount": 0,
+      "hasMain": true,
+      "hasSidebar": true,
+      "loadingState": false,
+      "mainPreview": "Llama-swap setupLlama-swap is not configured in runtime config yet.Setup guidePolicy configurationEdit runtime behavior for local model loading and unloading.TTL (seconds)Seconds a model stays loaded after last request before auto-unload.Max concurrencyMaximum number of models loaded simultaneously.Auto-unload idle modelsSave policyResetRaw policyCurrent persisted policy payload.{ \"ttl\": 300, \"maxConcurrency\": 1, \"autoUnload\": true }",
+      "pageHeadings": [
+        "Policy configuration",
+        "Raw policy"
+      ],
+      "rawClassLeakCount": 0,
+      "rawClassLeakSamples": [],
+      "rechartsWrapperCount": 0,
+      "runtimeErrorText": null,
+      "selectCount": 0,
+      "themeTokens": {
+        "bg": "#000",
+        "chartCyan": "#50e3c2",
+        "onPrimary": "#fff",
+        "surface": "#272729"
+      },
+      "title": "",
+      "url": "http://127.0.0.1:3456/app/local/llama-swap/policy"
+    },
+    {
+      "chartSvgCount": 0,
+      "hasMain": true,
+      "hasSidebar": true,
+      "loadingState": false,
+      "mainPreview": "Llama-swap setupLlama-swap is not configured in runtime config yet.Setup guideStructured local log historyRows are parsed into Timestamp, Source, Severity, Request, and message fields so local runtime behavior can be inspected without raw console noise.RefreshAuto-refresh (3s)6 rowsTimestampSourceSeverityRequestEntry2026-06-17T16:48:22.801Zlocal—req-phase5-006endpoint=openai.personal.primary.us-east-1.fast model=openai/gpt-4.1-mini-fast status=200 latency_ms=10802026-06-17T16:38:22.801Zlocal—req",
+      "pageHeadings": [
+        "Structured local log history",
+        "Raw log streams"
+      ],
+      "rawClassLeakCount": 0,
+      "rawClassLeakSamples": [],
+      "rechartsWrapperCount": 0,
+      "runtimeErrorText": null,
+      "selectCount": 0,
+      "themeTokens": {
+        "bg": "#000",
+        "chartCyan": "#50e3c2",
+        "onPrimary": "#fff",
+        "surface": "#272729"
+      },
+      "title": "",
+      "url": "http://127.0.0.1:3456/app/local/llama-swap/logs"
+    },
+    {
+      "chartSvgCount": 0,
+      "hasMain": true,
+      "hasSidebar": true,
+      "loadingState": true,
+      "mainPreview": "Llama-swap setupLlama-swap is not configured in runtime config yet.Peer-backed local uses your external OpenAI-compatible server; role-model-managed llama-swap runs the swap process and loads declared GGUF models for you.Setup guideOpen runtime configLoad modelModel must be declared in runtime config. Loading triggers llama-swap to start or swap to this model.Model IDRuntime rolesManage role definitionsRoles control which routing tasks can select this model.General ChatGeneral-purpose chat, assi",
+      "pageHeadings": [
+        "Load model",
+        "Loaded models"
+      ],
+      "rawClassLeakCount": 0,
+      "rawClassLeakSamples": [],
+      "rechartsWrapperCount": 0,
+      "runtimeErrorText": null,
+      "selectCount": 0,
+      "themeTokens": {
+        "bg": "#000",
+        "chartCyan": "#50e3c2",
+        "onPrimary": "#fff",
+        "surface": "#272729"
+      },
+      "title": "",
+      "url": "http://127.0.0.1:3456/app/local/llama-swap/models?view=grid"
+    },
+    {
+      "chartSvgCount": 0,
+      "hasMain": true,
+      "hasSidebar": true,
+      "loadingState": false,
+      "mainPreview": "Choose provider and modelsSelect the provider, connection method, model set, and role bindings that should flow into the runtime registry.Provider302.AIAbacusabliteration.aiAI21 LabsAIHubMixAimlAlibabaAlibaba (China)Alibaba Coding PlanAlibaba Coding Plan (China)Alibaba Token PlanAlibaba Token Plan (China)Amazon NovaAmazon BedrockAmbientAnthropicAnyAPIAnyscaleAssemblyaiAtomic ChatAurikoAws PollyAzureAzure AIAzure TextAzure Cognitive ServicesBailingBasetenAmazon BedrockAmazon Bedrock (Converse)Bed",
+      "pageHeadings": [
+        "Choose provider and models",
+        "Configured provider connections",
+        "anthropic.team.shared",
+        "openai.personal.primary"
+      ],
+      "rawClassLeakCount": 0,
+      "rawClassLeakSamples": [],
+      "rechartsWrapperCount": 0,
+      "runtimeErrorText": null,
+      "selectCount": 3,
+      "themeTokens": {
+        "bg": "#000",
+        "chartCyan": "#50e3c2",
+        "onPrimary": "#fff",
+        "surface": "#272729"
+      },
+      "title": "",
+      "url": "http://127.0.0.1:3456/app/remote/providers"
+    },
+    {
+      "chartSvgCount": 0,
+      "hasMain": true,
+      "hasSidebar": true,
+      "loadingState": false,
+      "mainPreview": "Configured models3Every configured model appears once in the merged inventory.Active models2Models whose endpoint summary currently resolves to active.Tool-capable3Models with at least one tool-calling capable endpoint.Observed requests6Request count currently available to the inventory as runtime context.Model inventoryEvery configured model appears once, with local and remote endpoint state merged into a card-based registry.remoteGPT-4.1 Mini Fastopenai/gpt-4.1-mini-fastcontrollertool calling1",
+      "pageHeadings": [
+        "Model inventory",
+        "GPT-4.1 Mini Fast",
+        "Claude 3.7 Sonnet",
+        "Gpt 5.4"
+      ],
+      "rawClassLeakCount": 0,
+      "rawClassLeakSamples": [],
+      "rechartsWrapperCount": 0,
+      "runtimeErrorText": null,
+      "selectCount": 0,
+      "themeTokens": {
+        "bg": "#000",
+        "chartCyan": "#50e3c2",
+        "onPrimary": "#fff",
+        "surface": "#272729"
+      },
+      "title": "",
+      "url": "http://127.0.0.1:3456/app/models"
+    },
+    {
+      "chartSvgCount": 0,
+      "hasMain": true,
+      "hasSidebar": true,
+      "loadingState": false,
+      "mainPreview": "Roles7Router-visible role definitions from the live runtime policy.Tasks7Task contracts currently participating in role allowlists.Restricted tool policy0Roles whose tool policy is limited or disabled.Selected rolegeneral.chatUse the editor below to change the selected role definition.Role catalogScan live roles, supported task types, and tool posture before selecting a definition to edit.General Chatgeneral.chatallowedGeneral-purpose chat, assistant, and conversational tasks.text.chatCoder Patc",
+      "pageHeadings": [
+        "Role catalog",
+        "Create role",
+        "Edit selected role",
+        "Task allowlists"
+      ],
+      "rawClassLeakCount": 0,
+      "rawClassLeakSamples": [],
+      "rechartsWrapperCount": 0,
+      "runtimeErrorText": null,
+      "selectCount": 2,
+      "themeTokens": {
+        "bg": "#000",
+        "chartCyan": "#50e3c2",
+        "onPrimary": "#fff",
+        "surface": "#272729"
+      },
+      "title": "",
+      "url": "http://127.0.0.1:3456/app/models/roles"
+    },
+    {
+      "chartSvgCount": 0,
+      "hasMain": true,
+      "hasSidebar": true,
+      "loadingState": false,
+      "mainPreview": "Model scores and routing profilesEach benchmark run grades model output, then writes judge scores into observed endpoint profiles. Router uses those profiles for candidate quality ranking and difficulty ceilings on later requests.No benchmark scores are in routing profiles yet. Run the benchmark below to grade each model and update observed profiles.Run capability benchmarkGrade configured endpoints against the routing capability suite. Scores above are written into each endpoint's observed prof",
+      "pageHeadings": [
+        "Model scores and routing profiles",
+        "Run capability benchmark",
+        "Run history"
+      ],
+      "rawClassLeakCount": 0,
+      "rawClassLeakSamples": [],
+      "rechartsWrapperCount": 0,
+      "runtimeErrorText": null,
+      "selectCount": 2,
+      "themeTokens": {
+        "bg": "#000",
+        "chartCyan": "#50e3c2",
+        "onPrimary": "#fff",
+        "surface": "#272729"
+      },
+      "title": "",
+      "url": "http://127.0.0.1:3456/app/models/benchmark"
+    },
+    {
+      "chartSvgCount": 0,
+      "hasMain": true,
+      "hasSidebar": true,
+      "loadingState": false,
+      "mainPreview": "StrategyunsetExecution modedecision_onlyControlleropenai/gpt-4.1-mini-fastAlias pools0Alias inventoryNo model aliases are configured yet.",
+      "pageHeadings": [
+        "Alias inventory"
+      ],
+      "rawClassLeakCount": 0,
+      "rawClassLeakSamples": [],
+      "rechartsWrapperCount": 0,
+      "runtimeErrorText": null,
+      "selectCount": 0,
+      "themeTokens": {
+        "bg": "#000",
+        "chartCyan": "#50e3c2",
+        "onPrimary": "#fff",
+        "surface": "#272729"
+      },
+      "title": "",
+      "url": "http://127.0.0.1:3456/app/router"
+    },
+    {
+      "chartSvgCount": 0,
+      "hasMain": true,
+      "hasSidebar": true,
+      "loadingState": false,
+      "mainPreview": "Persisted routing postureChange the saved Strategy A/B/C routing mode and the effective execution mode here; both write through the runtime config control-plane record instead of living as placeholder UI state.Routing strategyUse runtime defaultLeave the persisted routing mode unset.Strategy A - BaselineUse the deterministic baseline route without controller or difficulty guidance.Strategy B - IntelligentUse controller-guided endpoint selection when the routing controller is available.Strategy C",
+      "pageHeadings": [
+        "Persisted routing posture",
+        "Benchmark-informed difficulty advisory"
+      ],
+      "rawClassLeakCount": 0,
+      "rawClassLeakSamples": [],
+      "rechartsWrapperCount": 0,
+      "runtimeErrorText": null,
+      "selectCount": 1,
+      "themeTokens": {
+        "bg": "#000",
+        "chartCyan": "#50e3c2",
+        "onPrimary": "#fff",
+        "surface": "#272729"
+      },
+      "title": "",
+      "url": "http://127.0.0.1:3456/app/router/strategy"
+    },
+    {
+      "chartSvgCount": 0,
+      "hasMain": true,
+      "hasSidebar": true,
+      "loadingState": false,
+      "mainPreview": "Current assignmentThe controller is persisted in the runtime control plane and can be changed without editing seed data.Endpointopenai.personal.primary.us-east-1.fastModelopenai/gpt-4.1-mini-fastSourceremoteController candidatesCandidates show source type, health, role coverage, and tooling posture before you promote them. 3 endpoints are currently available for review.remotegpt 4.1 mini fastopenai.personal.primary.us-east-1.fastcontrollertooling openaihealthyRoles: NoneServing source: remote-se",
+      "pageHeadings": [
+        "Current assignment",
+        "Controller candidates",
+        "gpt 4.1 mini fast",
+        "gpt 5.4",
+        "claude 3.7 sonnet"
+      ],
+      "rawClassLeakCount": 0,
+      "rawClassLeakSamples": [],
+      "rechartsWrapperCount": 0,
+      "runtimeErrorText": null,
+      "selectCount": 0,
+      "themeTokens": {
+        "bg": "#000",
+        "chartCyan": "#50e3c2",
+        "onPrimary": "#fff",
+        "surface": "#272729"
+      },
+      "title": "",
+      "url": "http://127.0.0.1:3456/app/router/controller"
+    },
+    {
+      "chartSvgCount": 0,
+      "hasMain": true,
+      "hasSidebar": true,
+      "loadingState": false,
+      "mainPreview": "Candidates31 local / 2 remote candidates currently visible.Benchmarked0Candidates with capability scores from Models → Benchmark.Ignored0Candidates currently excluded by guidance even though they exist in the registry.Comparable inventoryCapability scores come from Models → Benchmark observed profiles. Latency, throughput, and failure rate remain live routing signals.openai.personal.primary.us-east-1.fastopenai/gpt-4.1-mini-fastremote • remote_api • remote-serviceRoles: none • Tools: supportedLa",
+      "pageHeadings": [
+        "Comparable inventory"
+      ],
+      "rawClassLeakCount": 0,
+      "rawClassLeakSamples": [],
+      "rechartsWrapperCount": 0,
+      "runtimeErrorText": null,
+      "selectCount": 0,
+      "themeTokens": {
+        "bg": "#000",
+        "chartCyan": "#50e3c2",
+        "onPrimary": "#fff",
+        "surface": "#272729"
+      },
+      "title": "",
+      "url": "http://127.0.0.1:3456/app/router/candidates"
+    },
+    {
+      "chartSvgCount": 0,
+      "hasMain": true,
+      "hasSidebar": true,
+      "loadingState": false,
+      "mainPreview": "Decisions6Recent request-backed routing decisions in the canonical Router ledger.Local2Recent decisions resolved to local execution surfaces.Remote4Recent decisions resolved to remote execution surfaces.Decision ledgerKeep the list scanable: request, chosen endpoint/model, strategy summary, and direct drill-in links.req-phase5-006openai.personal.primary.us-east-1.fastopenai/gpt-4.1-mini-fast • Strategy A - Baseline • remote6/17/2026, 6:48:22 PMOpen Router detailOpen Observe detailreq-phase5-005c",
+      "pageHeadings": [
+        "Decision ledger"
+      ],
+      "rawClassLeakCount": 0,
+      "rawClassLeakSamples": [],
+      "rechartsWrapperCount": 0,
+      "runtimeErrorText": null,
+      "selectCount": 0,
+      "themeTokens": {
+        "bg": "#000",
+        "chartCyan": "#50e3c2",
+        "onPrimary": "#fff",
+        "surface": "#272729"
+      },
+      "title": "",
+      "url": "http://127.0.0.1:3456/app/router/decisions"
+    },
+    {
+      "chartSvgCount": 0,
+      "hasMain": true,
+      "hasSidebar": true,
+      "loadingState": false,
+      "mainPreview": "Request to /api/role-model/router/decisions/req-runtime-bridge-route-001 failed with 404: request not found",
+      "pageHeadings": [],
+      "rawClassLeakCount": 0,
+      "rawClassLeakSamples": [],
+      "rechartsWrapperCount": 0,
+      "runtimeErrorText": null,
+      "selectCount": 0,
+      "themeTokens": {
+        "bg": "#000",
+        "chartCyan": "#50e3c2",
+        "onPrimary": "#fff",
+        "surface": "#272729"
+      },
+      "title": "",
+      "url": "http://127.0.0.1:3456/app/router/decisions/req-runtime-bridge-route-001"
+    },
+    {
+      "chartSvgCount": 7,
+      "hasMain": true,
+      "hasSidebar": true,
+      "loadingState": false,
+      "mainPreview": "Analytics controlsScope the structured telemetry history and comparison target without leaving the canonical request ledger.DayWeekMonth90 daysBreakdownTotalSourceEndpointModelProviderRanking metricRequestsTotal tokensEffective costAverage latencyCache hit rateRanking targetEndpointsModelsProvidersSourceAll sourcesLocal onlyRemote onlyEndpoint idModel idProvider idStatus familyAll statusesSuccess onlyFailure onlyUnknown onlyRequest Volume Over TimeHistorical request volume across the selected st",
+      "pageHeadings": [
+        "Analytics controls",
+        "Request Volume Over Time",
+        "Token Usage Over Time",
+        "Effective Cost Over Time",
+        "Latency Trend",
+        "Cache Efficiency Trend",
+        "Failure Trend",
+        "Ranked Comparison",
+        "Adjacent raw-host tools",
+        "Recent telemetry requests"
+      ],
+      "rawClassLeakCount": 0,
+      "rawClassLeakSamples": [],
+      "rechartsWrapperCount": 7,
+      "runtimeErrorText": null,
+      "selectCount": 5,
+      "themeTokens": {
+        "bg": "#000",
+        "chartCyan": "#50e3c2",
+        "onPrimary": "#fff",
+        "surface": "#272729"
+      },
+      "title": "",
+      "url": "http://127.0.0.1:3456/app/observe/requests"
+    },
+    {
+      "chartSvgCount": 0,
+      "hasMain": true,
+      "hasSidebar": true,
+      "loadingState": false,
+      "mainPreview": "Request to /api/role-model/requests/req-runtime-bridge-route-001 failed with 404: runtime observation not found",
+      "pageHeadings": [],
+      "rawClassLeakCount": 0,
+      "rawClassLeakSamples": [],
+      "rechartsWrapperCount": 0,
+      "runtimeErrorText": null,
+      "selectCount": 0,
+      "themeTokens": {
+        "bg": "#000",
+        "chartCyan": "#50e3c2",
+        "onPrimary": "#fff",
+        "surface": "#272729"
+      },
+      "title": "",
+      "url": "http://127.0.0.1:3456/app/observe/requests/req-runtime-bridge-route-001"
+    },
+    {
+      "chartSvgCount": 6,
+      "hasMain": true,
+      "hasSidebar": true,
+      "loadingState": false,
+      "mainPreview": "Routing analytics controlsInspect routing mix, difficulty distribution, and avoided cost without leaving the Observe pillar.DayWeekMonth90 daysBreakdownTotalBy sourceBy requested roleBy modelBy strategySourceAll sourcesLocal onlyRemote onlyDifficultyAll bucketsEasy onlyMedium onlyHard onlyRequested role idSelected strategyOpen router configurationOpen request analyticsCost Avoided By RoutingAvoided spend based on the selected route versus the highest-cost eligible configured candidate, plus cach",
+      "pageHeadings": [
+        "Routing analytics controls",
+        "Cost Avoided By Routing",
+        "Routing Decision Volume",
+        "Difficulty Distribution",
+        "Strategy Selection Trend",
+        "Role Demand",
+        "Model Selection"
+      ],
+      "rawClassLeakCount": 0,
+      "rawClassLeakSamples": [],
+      "rechartsWrapperCount": 6,
+      "runtimeErrorText": null,
+      "selectCount": 3,
+      "themeTokens": {
+        "bg": "#000",
+        "chartCyan": "#50e3c2",
+        "onPrimary": "#fff",
+        "surface": "#272729"
+      },
+      "title": "",
+      "url": "http://127.0.0.1:3456/app/observe/routing"
+    },
+    {
+      "chartSvgCount": 0,
+      "hasMain": true,
+      "hasSidebar": true,
+      "loadingState": false,
+      "mainPreview": "Entries66 with capturesErrors1Most recent status: 200Prompt tokens129503370 output tokens recordedCached tokens1400Across the current in-memory metrics windowCanonical structured telemetryThis preserved raw-host ledger is adjacent to the canonical structured telemetry flow rather than the primary request interpretation surface.Open canonical request ledgerRecent host activityopenai/gpt-4.1-mini-fast200/v1/chat/completionsId 11080 ms2600 input610 output0 cached6/17/2026, 6:48:22 PMInspect capture",
+      "pageHeadings": [
+        "Canonical structured telemetry",
+        "Recent host activity",
+        "Capture inspector"
+      ],
+      "rawClassLeakCount": 0,
+      "rawClassLeakSamples": [],
+      "rechartsWrapperCount": 0,
+      "runtimeErrorText": null,
+      "selectCount": 0,
+      "themeTokens": {
+        "bg": "#000",
+        "chartCyan": "#50e3c2",
+        "onPrimary": "#fff",
+        "surface": "#272729"
+      },
+      "title": "",
+      "url": "http://127.0.0.1:3456/app/observe/activity"
+    },
+    {
+      "chartSvgCount": 0,
+      "hasMain": true,
+      "hasSidebar": true,
+      "loadingState": false,
+      "mainPreview": "Structured log history1Parsed rows currently visible from the combined host log.Sources1Distinct source labels detected in the combined log.Correlated requests0Rows that include a request identifier you can match to Observe receipts.Canonical telemetry handoffPreserved raw-host logs stay adjacent to canonical telemetry; use correlated request ids to jump into the request-detail inspector when you need structured interpretation.Open canonical request ledgerSource filterFilter preserved-host log l",
+      "pageHeadings": [
+        "Canonical telemetry handoff",
+        "Source filter",
+        "Structured log history",
+        "Raw lines",
+        "Raw stream endpoints"
+      ],
+      "rawClassLeakCount": 0,
+      "rawClassLeakSamples": [],
+      "rechartsWrapperCount": 0,
+      "runtimeErrorText": null,
+      "selectCount": 0,
+      "themeTokens": {
+        "bg": "#000",
+        "chartCyan": "#50e3c2",
+        "onPrimary": "#fff",
+        "surface": "#272729"
+      },
+      "title": "",
+      "url": "http://127.0.0.1:3456/app/observe/logs"
+    },
+    {
+      "chartSvgCount": 0,
+      "hasMain": true,
+      "hasSidebar": true,
+      "loadingState": false,
+      "mainPreview": "Provider onboarding pending:Connected, no endpoint 2Remote → ProvidersSystem → RuntimeView alias posture → RouterConfigured providersProviderConnectionsAuthModelsHealthReadinessEndpointsanthropicanthropic.team.sharedapi-key-rotating-refanthropic/claude-3.7-sonnethealthy1 connected, no endpoint0/1 activelocal-cli———unknown—1/1 activeopenaiopenai.personal.primaryapi-key-staticopenai/gpt-4.1-mini-fasthealthy1 connected, no endpoint1/1 activeRuntime endpoint rowsEndpointModelProviderSourceServing so",
+      "pageHeadings": [
+        "Configured providers",
+        "Runtime endpoint rows"
+      ],
+      "rawClassLeakCount": 0,
+      "rawClassLeakSamples": [],
+      "rechartsWrapperCount": 0,
+      "runtimeErrorText": null,
+      "selectCount": 0,
+      "themeTokens": {
+        "bg": "#000",
+        "chartCyan": "#50e3c2",
+        "onPrimary": "#fff",
+        "surface": "#272729"
+      },
+      "title": "",
+      "url": "http://127.0.0.1:3456/app/connect"
+    },
+    {
+      "chartSvgCount": 0,
+      "hasMain": true,
+      "hasSidebar": true,
+      "loadingState": false,
+      "mainPreview": "Connection contractProvider typeOpenAI-compatibleBase URL (standard)http://127.0.0.1:3456Base URL (/v1 suffix)http://127.0.0.1:3456/v1Models endpointhttp://127.0.0.1:3456/v1/modelsChat endpointhttp://127.0.0.1:3456/v1/chat/completionsAuth headerAuthorization: Bearer role-model-localConsumer setupSetup stepsChoose an OpenAI-compatible provider entry in the downstream client.Set the base URL to http://127.0.0.1:3456 (most clients) or http://127.0.0.1:3456/v1 (clients that expect /v1 in the base UR",
+      "pageHeadings": [
+        "Connection contract",
+        "Consumer setup",
+        "Compatibility posture"
+      ],
+      "rawClassLeakCount": 0,
+      "rawClassLeakSamples": [],
+      "rechartsWrapperCount": 0,
+      "runtimeErrorText": null,
+      "selectCount": 0,
+      "themeTokens": {
+        "bg": "#000",
+        "chartCyan": "#50e3c2",
+        "onPrimary": "#fff",
+        "surface": "#272729"
+      },
+      "title": "",
+      "url": "http://127.0.0.1:3456/app/connect/downstream"
+    },
+    {
+      "chartSvgCount": 0,
+      "hasMain": true,
+      "hasSidebar": true,
+      "loadingState": false,
+      "mainPreview": "Providers235Provider and account posture stays visible here without duplicating the editable Control pages.Accounts2Configured provider accounts that feed current upstream model access.Upstream targets3Each target keeps a contextual `/upstream/<model>/` doorway instead of a global legacy-ui link.Provider accounts in scopeAnthropic1 accountAnthropic API KeyOpenAI1 accountOpenAI API KeyUpstream target inventoryclaude-3.7-sonnet1 endpointOwner role-model/upstream/claude-3.7-sonnet/gpt-5.41 endpoint",
+      "pageHeadings": [
+        "Provider accounts in scope",
+        "Upstream target inventory",
+        "Boundary notes"
+      ],
+      "rawClassLeakCount": 0,
+      "rawClassLeakSamples": [],
+      "rechartsWrapperCount": 0,
+      "runtimeErrorText": null,
+      "selectCount": 0,
+      "themeTokens": {
+        "bg": "#000",
+        "chartCyan": "#50e3c2",
+        "onPrimary": "#fff",
+        "surface": "#272729"
+      },
+      "title": "",
+      "url": "http://127.0.0.1:3456/app/connect/upstream"
+    },
+    {
+      "chartSvgCount": 0,
+      "hasMain": true,
+      "hasSidebar": true,
+      "loadingState": false,
+      "mainPreview": "Bootstrap statusReadyHost healthhealthyLifecycle authorityAuthoritative lifecycle snapshotExecution modedecision_onlyRoutable endpoints3Session bootstrapReadyStarted 2026-06-17T16:56:22.571Z • Finished 2026-06-17T16:56:22.597ZCredentialsreadycredentialsEndpointsreadyendpointsPeersskippedno peer loads in manifestpeersVendorsskippedunified runtime config disabledvendorsLocal reloadskippedno llama-swap loads in manifestlocal-reloadRemote healthskippedexecution probes skipped in decision_only modere",
+      "pageHeadings": [
+        "Session bootstrap",
+        "Credential readiness",
+        "Canonical lifecycle",
+        "Archived stale diagnostics",
+        "Operator intent manifest",
+        "Routable inventory",
+        "Alias drift warnings",
+        "Related surfaces"
+      ],
+      "rawClassLeakCount": 0,
+      "rawClassLeakSamples": [],
+      "rechartsWrapperCount": 0,
+      "runtimeErrorText": null,
+      "selectCount": 0,
+      "themeTokens": {
+        "bg": "#000",
+        "chartCyan": "#50e3c2",
+        "onPrimary": "#fff",
+        "surface": "#272729"
+      },
+      "title": "",
+      "url": "http://127.0.0.1:3456/app/system/session-readiness"
+    },
+    {
+      "chartSvgCount": 0,
+      "hasMain": true,
+      "hasSidebar": true,
+      "loadingState": false,
+      "mainPreview": "Session readinessBootstrap receipts, routable inventory, and alias drift warnings live on the dedicated session readiness surface.Open session readinessLifecycle summaryActive 2Degraded 1Offline 0Execution readinessAuthoritative lifecycle snapshotCanonical lifecycle data is authoritative; remaining blockers are ready for repair.Connected, no endpoint 2Controller postureEndpointopenai.personal.primary.us-east-1.fastModelopenai/gpt-4.1-mini-fastSourceremoteVersion and boundary factsVendor host ver",
+      "pageHeadings": [
+        "Session readiness",
+        "Lifecycle summary",
+        "Execution readiness",
+        "Controller posture",
+        "Version and boundary facts",
+        "Preserved host surfaces"
+      ],
+      "rawClassLeakCount": 0,
+      "rawClassLeakSamples": [],
+      "rechartsWrapperCount": 0,
+      "runtimeErrorText": null,
+      "selectCount": 0,
+      "themeTokens": {
+        "bg": "#000",
+        "chartCyan": "#50e3c2",
+        "onPrimary": "#fff",
+        "surface": "#272729"
+      },
+      "title": "",
+      "url": "http://127.0.0.1:3456/app/system/runtime"
+    },
+    {
+      "chartSvgCount": 0,
+      "hasMain": true,
+      "hasSidebar": true,
+      "loadingState": false,
+      "mainPreview": "Config editorEdit the canonical JSON payload directly, then save and apply it through the role-model runtime control plane. Current scope: 0 local models, 0 remote mappings, execution mode pending.{ \"version\": \"1.0\", \"routingStrategy\": null, \"llamaSwap\": { \"models\": [], \"process\": { \"command\": null, \"args\": [], \"env\": {}, \"cwd\": null, \"startupTimeoutMs\": null } }, \"liteLLM\": { \"providers\": [], \"process\": { \"command\": null, \"args\": [], \"env\": {}, \"cwd\": null, \"startupTimeoutMs\": null } } }Save an",
+      "pageHeadings": [
+        "Config editor",
+        "Applied config snapshot"
+      ],
+      "rawClassLeakCount": 0,
+      "rawClassLeakSamples": [],
+      "rechartsWrapperCount": 0,
+      "runtimeErrorText": null,
+      "selectCount": 0,
+      "themeTokens": {
+        "bg": "#000",
+        "chartCyan": "#50e3c2",
+        "onPrimary": "#fff",
+        "surface": "#272729"
+      },
+      "title": "",
+      "url": "http://127.0.0.1:3456/app/system/runtime-config"
+    },
+    {
+      "chartSvgCount": 0,
+      "hasMain": true,
+      "hasSidebar": true,
+      "loadingState": false,
+      "mainPreview": "Configured peers0Peer groups observed in the current runtime model list.Peer models0Models currently attributed to a peer source in the runtime listing.Runtime models3Total runtime-visible model count used as context for peer posture.Peer inventoryInventory first: show explicit peer-backed model groups when they exist, otherwise keep the empty state explicit.No peers configured in the current host config.Peer contract fieldsThese fields come from the vendored host contract and define how a peer ",
+      "pageHeadings": [
+        "Peer inventory",
+        "Peer contract fields",
+        "Runtime policy boundary"
+      ],
+      "rawClassLeakCount": 0,
+      "rawClassLeakSamples": [],
+      "rechartsWrapperCount": 0,
+      "runtimeErrorText": null,
+      "selectCount": 0,
+      "themeTokens": {
+        "bg": "#000",
+        "chartCyan": "#50e3c2",
+        "onPrimary": "#fff",
+        "surface": "#272729"
+      },
+      "title": "",
+      "url": "http://127.0.0.1:3456/app/system/peers"
+    }
+  ]
+}

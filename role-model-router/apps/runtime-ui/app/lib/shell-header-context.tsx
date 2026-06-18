@@ -55,7 +55,6 @@ export function useShellHeaderState(): Pick<ShellHeaderContextValue, "actions" |
 export function usePageActions(actions: ReactNode, deps: DependencyList = []): void {
   const { setActions } = useShellHeaderContext();
   const actionsRef = useRef(actions);
-
   actionsRef.current = actions;
 
   useLayoutEffect(() => {
@@ -72,7 +71,6 @@ export function useShellHeaderOverride(
 ): void {
   const { setOverride } = useShellHeaderContext();
   const overrideRef = useRef(override);
-
   overrideRef.current = override;
 
   useLayoutEffect(() => {

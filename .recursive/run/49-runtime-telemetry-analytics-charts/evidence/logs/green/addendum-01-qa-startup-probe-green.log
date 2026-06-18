@@ -1,0 +1,7 @@
+(node:6620) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+probe:start D:\DEV\role-model\.worktrees\49-runtime-telemetry-analytics-charts
+probe:before backend
+probe:after backend
+probe:after bootstrap
+probe:done

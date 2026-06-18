@@ -2,119 +2,213 @@
 
 ## Intent
 
-The runtime UI is a repo-owned operator shell for the role-model router runtime. Its active styling inspiration is the repo-local [DESIGN_APPLE_REFERENCE.md](./DESIGN_APPLE_REFERENCE.md) artifact together with the current React/Tailwind runtime surfaces. The Apple reference governs theme tokens, typography feel, surface treatment, and interaction restraint for this refresh. It does not change the runtime UI's route architecture or information architecture.
+The runtime UI is a repo-owned operator shell for the role-model router runtime. Its active styling authority is the Apple-inspired reference at `/role-model-router/apps/runtime-ui/DESIGN_APPLE_REFERENCE.md`, adapted for a practical operator product rather than a marketing site.
 
-- calm layered surfaces
-- mobile first
-- whitespace as structure
-- restrained neutral contrast
-- a single accent family for primary emphasis
-- rounded shell and panel geometry with minimal decorative effects
-
-This shell must not clone the vendored llama-swap UI. It should absorb the vendor's real operator workflows into the role-model information architecture so routing, tooling, multimodal APIs, host controls, and observability read as one system.
+This shell must not clone the vendored llama-swap UI, and it must not treat Swiss-design guidance as authoritative for runtime UI styling. The runtime information architecture, route ownership, and workflow structure stay repo-owned; the Apple reference informs theme tokens, typography, surface treatment, restraint, and control grammar.
 
 ## Core rules
 
-1. **Styling authority is repo-local and Apple-inspired.** `/role-model-router/apps/runtime-ui/DESIGN_APPLE_REFERENCE.md` is the original styling inspiration for this refresh; route structure and application ownership remain repo-owned.
-2. **Surfaces are restrained, not rigid.** Cards, inputs, buttons, nav items, badges, code blocks, and drawers use controlled radii (`8px`, `11px`, `18px`, or pill) with thin borders and quiet contrast.
-3. **Typography stays light and precise.** `SF Pro Display` and `SF Pro Text` are preferred when available, `Inter` is the first fallback, and `IBM Plex Mono` remains reserved for ids, paths, payloads, and API shapes.
-4. **The theme toggle exposes only `Light` and `Dark`.** System preference determines only the initial default theme until the operator makes an explicit choice.
-5. **Semantic status pills keep transparent backgrounds.** `healthy`, `degraded`, `offline`, and similar states use semantic text and border colors without semantic fill backgrounds.
-6. **Operator chrome stays quiet.** The shell header exposes only the section eyebrow, route title, description, optional page actions, and section-local tabs; no redundant in-page title blocks, note cards, or fixed JSON/log quick-link strips.
+1. **Light and Dark only.** The operator UI exposes exactly `Light` and `Dark`; system preference is initial-default logic only until the operator chooses.
+2. **Quiet chrome, strong content.** Shell, cards, tables, and controls stay restrained so runtime facts, ledgers, and results remain primary.
+3. **Action Blue is the main interactive accent.** Primary actions, active states, links, and focus treatment inherit the Apple blue family.
+4. **Soft radii replace the old rectilinear contract.** Shared surfaces use `8px`, `11px`, and `18px` radii with pill actions where appropriate.
+5. **Typography is Apple-inspired but platform-safe.** `SF Pro Display` / `SF Pro Text` lead, `Inter` is the first fallback, and mono is reserved for ids, paths, JSON, and transport artifacts.
+6. **One shell header.** The shell header is the **only** route-level header. Route files do not duplicate eyebrow, title, or description blocks.
+7. **Analytics routes and evidence routes stay distinct.** `/app` and charted Observe pages lead with analytics bands; raw-host and request-detail pages remain evidence-first.
+8. **Status pills stay transparent.** Semantic status pills keep semantic text and border colors, with no tinted semantic background fill.
 
-## Tokens
+## Theme contract
 
-### Typography
+### Typography tokens
 
-| Role | Font stack | Size | Weight | Line height | Tracking | Runtime use |
-| --- | --- | --- | --- | --- | --- | --- |
-| `display-title` | `"SF Pro Display", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif` | `34px` | `600` | `40px` | `-0.022em` | Shell route titles and major numeric highlights |
-| `section-title` | `"SF Pro Display", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif` | `21px` | `600` | `25px` | `0.011em` | Rail brand label, section cards, disclosure headers |
-| `body` | `"SF Pro Text", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif` | `17px` | `400` | `25px` | `-0.022em` | Shell descriptions, form inputs, supporting copy |
-| `body-strong` | `"SF Pro Text", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif` | `17px` | `600` | `21px` | `-0.022em` | Inline emphasis and compact strong values |
-| `utility` | `"SF Pro Text", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif` | `14px` | `400` | `18px` | `-0.016em` | Utility controls, secondary tabs, segmented toggles |
-| `nav-link` | `"SF Pro Text", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif` | `12px` | `400` | `12px` | `-0.01em` | Left-rail section navigation |
-| `eyebrow` | `"SF Pro Text", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif` | `11px` | `400` | `11px` | `0.24em` | Uppercase labels and section eyebrows |
-| `mono` | `"IBM Plex Mono", "JetBrains Mono", ui-monospace, monospace` | context-specific | `400` | context-specific | default | ids, paths, payloads, and API shapes only |
+| Token | Value |
+| --- | --- |
+| `--rm-font-display` | `"SF Pro Display", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif` |
+| `--rm-font-body` | `"SF Pro Text", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif` |
+| `--rm-font-mono` | `"IBM Plex Mono", "JetBrains Mono", ui-monospace, monospace` |
 
-### Color
+### Typography scale
 
-| Semantic token | Light | Dark | Notes |
-| --- | --- | --- | --- |
-| `--rm-bg` | `#f5f5f7` | `#000000` | Default page canvas |
-| `--rm-surface` | `#ffffff` | `#272729` | Primary card and shell surface |
-| `--rm-surface-strong` | `#ffffff` | `#2a2a2c` | Raised emphasis surface |
-| `--rm-panel` | `#fafafc` | `#252527` | Quiet secondary panel |
-| `--rm-fg` | `#1d1d1f` | `#ffffff` | Primary text |
-| `--rm-secondary` | `rgba(29, 29, 31, 0.72)` | `rgba(255, 255, 255, 0.72)` | Supporting text |
-| `--rm-muted` | `rgba(29, 29, 31, 0.48)` | `rgba(255, 255, 255, 0.48)` | Eyebrows and tertiary text |
-| `--rm-border` | `#e0e0e0` | `rgba(255, 255, 255, 0.12)` | Hairline border |
-| `--rm-border-strong` | `#d2d2d7` | `rgba(255, 255, 255, 0.18)` | Active and selected border |
-| `--rm-accent` | `#0066cc` | `#0066cc` | Primary action blue |
-| `--rm-accent-focus` | `#0071e3` | `#0071e3` | Focus ring and hover border |
-| `--rm-accent-on-dark` | `#2997ff` | `#2997ff` | Dark-surface inline link accent |
-| `--rm-accent-muted` | `rgba(0, 102, 204, 0.72)` | `rgba(0, 102, 204, 0.72)` | Muted accent text/border |
-| `--rm-accent-subtle` | `rgba(0, 102, 204, 0.14)` | `rgba(41, 151, 255, 0.18)` | Focus halo and low-key emphasis |
-| `--rm-accent-ghost` | `rgba(0, 102, 204, 0.08)` | `rgba(41, 151, 255, 0.10)` | Selection wash |
-| `--rm-error` | `#c8102e` | `#fb7185` | Failure text and borders |
-| `--rm-warning` | `#b45309` | `#fbbf24` | Degraded/waiting text and borders |
-| `--rm-success` | `#166534` | `#86efac` | Healthy/success text and borders |
+| Use | Size | Weight | Line height | Tracking |
+| --- | --- | --- | --- | --- |
+| Hero display | `56px` | `600` | `1.07` | `-0.28px` |
+| Display / shell title | `40px` | `600` | `1.10` | `0` |
+| Section heading | `34px` | `600` | `1.47` | `-0.374px` |
+| Lead | `28px` | `400` | `1.14` | `0.196px` |
+| Lead airy | `24px` | `300` | `1.50` | `0` |
+| Tagline | `21px` | `600` | `1.19` | `0.231px` |
+| Body | `17px` | `400` | `1.47` | `-0.374px` |
+| Body strong | `17px` | `600` | `1.24` | `-0.374px` |
+| Dense link | `17px` | `400` | `2.41` | `0` |
+| Caption | `14px` | `400` | `1.43` | `-0.224px` |
+| Caption strong | `14px` | `600` | `1.29` | `-0.224px` |
+| Button large | `18px` | `300` | `1.0` | `0` |
+| Button utility | `14px` | `400` | `1.29` | `-0.224px` |
+| Fine print | `12px` | `400` | `1.0` | `-0.12px` |
+| Micro legal | `10px` | `400` | `1.3` | `-0.08px` |
+| Nav link | `12px` | `400` | `1.0` | `-0.12px` |
+| Utility label | `12px` | `400` | `1.0` | `-0.12px` |
 
-### Geometry
+### Surface and text tokens
 
-- Radius scale: `8px`, `11px`, `18px`, and pill
-- Border weight: hairline default, stronger only for active/focus states
-- Shadows: shared UI surfaces stay shadow-free by default; any deeper product framing must remain explicit and rare
+| Token | Light | Dark |
+| --- | --- | --- |
+| `--rm-bg` | `#f5f5f7` | `#000000` |
+| `--rm-surface` | `#ffffff` | `#272729` |
+| `--rm-surface-strong` | `#ffffff` | `#2a2a2c` |
+| `--rm-panel` | `#fafafc` | `#252527` |
+| `--rm-fg` | `#1d1d1f` | `#ffffff` |
+| `--rm-secondary` | `rgba(29, 29, 31, 0.72)` | `rgba(255, 255, 255, 0.72)` |
+| `--rm-muted` | `rgba(29, 29, 31, 0.48)` | `rgba(255, 255, 255, 0.48)` |
+| `--rm-border` | `#e0e0e0` | `rgba(255, 255, 255, 0.12)` |
+| `--rm-border-strong` | `#d2d2d7` | `rgba(255, 255, 255, 0.18)` |
 
-### Token layers
+### Accent tokens
 
-- **Primitive tokens** define the Apple-inspired baseline:
-  - warm-neutral light and dark surfaces
-  - Apple-blue accent family
-  - `4px` to `48px` spacing rhythm with explicit section spacing
-  - `SF Pro Display` / `SF Pro Text` / `IBM Plex Mono`
-- **Semantic tokens** are the runtime CSS variables:
-  - `--rm-bg`
-  - `--rm-surface`
-  - `--rm-surface-strong`
-  - `--rm-panel`
-  - `--rm-fg`
-  - `--rm-secondary`
-  - `--rm-muted`
-  - `--rm-border`
-  - `--rm-border-strong`
-  - `--rm-accent`
-  - accent opacity variants
-  - telemetry semantic accents:
-    - `--rm-telemetry-local`
-    - `--rm-telemetry-remote`
-    - `--rm-telemetry-healthy`
-    - `--rm-telemetry-degraded`
-    - `--rm-telemetry-raw`
-- **Component tokens** sit above the semantic layer:
-  - `--rm-shell-width`
-  - `--rm-radius-*`
-  - `--rm-shadow-card`
-  - the shared shell/card/field/button/payload class contracts
+| Token | Light | Dark |
+| --- | --- | --- |
+| `--rm-accent` | `#0066cc` | `#0066cc` |
+| `--rm-accent-focus` | `#0071e3` | `#0071e3` |
+| `--rm-accent-on-dark` | `#2997ff` | `#2997ff` |
+| `--rm-accent-muted` | `rgba(0, 102, 204, 0.72)` | `rgba(0, 102, 204, 0.72)` |
+| `--rm-accent-subtle` | `rgba(0, 102, 204, 0.14)` | `rgba(41, 151, 255, 0.18)` |
+| `--rm-accent-ghost` | `rgba(0, 102, 204, 0.08)` | `rgba(41, 151, 255, 0.10)` |
+| `--rm-on-primary` | `#ffffff` | `#ffffff` |
+
+### Semantic status tokens
+
+| Token | Light | Dark |
+| --- | --- | --- |
+| `--rm-success` | `#166534` | `#86efac` |
+| `--rm-success-muted` | `rgba(22, 101, 52, 0.72)` | `rgba(134, 239, 172, 0.72)` |
+| `--rm-success-subtle` | `rgba(22, 101, 52, 0.14)` | `rgba(134, 239, 172, 0.18)` |
+| `--rm-warning` | `#b45309` | `#fbbf24` |
+| `--rm-warning-muted` | `rgba(180, 83, 9, 0.72)` | `rgba(251, 191, 36, 0.72)` |
+| `--rm-warning-subtle` | `rgba(180, 83, 9, 0.14)` | `rgba(251, 191, 36, 0.18)` |
+| `--rm-error` | `#c8102e` | `#fb7185` |
+| `--rm-error-muted` | `rgba(200, 16, 46, 0.72)` | `rgba(251, 113, 133, 0.72)` |
+| `--rm-error-subtle` | `rgba(200, 16, 46, 0.14)` | `rgba(251, 113, 133, 0.18)` |
+| `--rm-error-ghost` | `rgba(200, 16, 46, 0.08)` | `rgba(251, 113, 133, 0.10)` |
+
+### Telemetry semantic tokens
+
+| Token | Light | Dark |
+| --- | --- | --- |
+| `--rm-telemetry-local` | `#1d1d1f` | `#ffffff` |
+| `--rm-telemetry-remote` | `#0066cc` | `#2997ff` |
+| `--rm-telemetry-healthy` | `#166534` | `#86efac` |
+| `--rm-telemetry-degraded` | `#b45309` | `#fbbf24` |
+| `--rm-telemetry-raw` | `#7a7a7a` | `#cccccc` |
+
+### Radius, shadow, spacing, and shell tokens
+
+| Token | Value |
+| --- | --- |
+| `--rm-radius-sm` | `8px` |
+| `--rm-radius-md` | `11px` |
+| `--rm-radius-lg` | `18px` |
+| `--rm-radius-pill` | `9999px` |
+| `--rm-radius-shell` | `18px` |
+| `--rm-radius-panel` | `18px` |
+| `--rm-radius-field` | `11px` |
+| `--rm-radius-badge` | `9999px` |
+| `--rm-shadow-card` | `none` |
+| `--rm-shadow-ui` | `none` |
+| `--rm-shadow-product` | `0 3px 5px 30px rgba(0, 0, 0, 0.22)` |
+| `--rm-shell-width` | `1440px` |
+| `--rm-space-xxs` | `4px` |
+| `--rm-space-xs` | `8px` |
+| `--rm-space-sm` | `12px` |
+| `--rm-space-md` | `17px` |
+| `--rm-space-lg` | `24px` |
+| `--rm-space-xl` | `32px` |
+| `--rm-space-xxl` | `48px` |
+| `--rm-space-section` | `80px` |
+| `--rm-nav-height-global` | `44px` |
+| `--rm-nav-height-sub` | `52px` |
+| `--rm-sticky-bar-height` | `64px` |
+| `--rm-field-height` | `44px` |
+| `--rm-icon-button-size` | `44px` |
+| `--rm-button-pill-padding` | `11px 22px` |
+| `--rm-button-utility-padding` | `8px 15px` |
+| `--rm-button-pearl-padding` | `8px 14px` |
+| `--rm-button-hero-padding` | `14px 28px` |
+| `--rm-chip-padding` | `12px 16px` |
+| `--rm-search-padding` | `12px 20px` |
+| `--rm-card-padding` | `24px` |
+| `--rm-sticky-bar-padding` | `12px 32px` |
+
+### Border and utility surface tokens
+
+| Token | Light | Dark |
+| --- | --- | --- |
+| `--rm-divider-soft` | `#f0f0f0` | `rgba(255, 255, 255, 0.10)` |
+| `--rm-hairline` | `#e0e0e0` | `rgba(255, 255, 255, 0.12)` |
+| `--rm-chip-translucent` | `rgba(210, 210, 215, 0.64)` | `rgba(210, 210, 215, 0.24)` |
+
+## Chart system contract
+
+Charts inherit the same theme and typography system as the rest of runtime UI. There is no separate chart mini-theme.
+
+### Semantic chart tokens
+
+- `--rm-chart-local`
+- `--rm-chart-remote`
+- `--rm-chart-tokens`
+- `--rm-chart-cache-hit`
+- `--rm-chart-cache-rate`
+- `--rm-chart-latency`
+- `--rm-chart-cost`
+- `--rm-chart-failure`
+- `--rm-chart-success`
+- `--rm-chart-neutral-1`
+- `--rm-chart-neutral-2`
+
+### Categorical chart palette
+
+| Token | Value |
+| --- | --- |
+| `--rm-chart-ink` | `#171717` |
+| `--rm-chart-cyan` | `#50e3c2` |
+| `--rm-chart-highlight-pink` | `#ff0080` |
+| `--rm-chart-violet` | `#7928ca` |
+| `--rm-chart-link-blue` | `#0070f3` |
+| `--rm-chart-link-deep` | `#0761d1` |
+| `--rm-chart-link-soft` | `#d3e5ff` |
+| `--rm-chart-error` | `#ee0000` |
+| `--rm-chart-error-deep` | `#c50000` |
+| `--rm-chart-error-soft` | `#f7d4d6` |
+| `--rm-chart-warning` | `#f5a623` |
+| `--rm-chart-warning-deep` | `#ab570a` |
+| `--rm-chart-warning-soft` | `#ffefcf` |
+
+### Chart behavior rules
+
+- legends display explicit human-readable labels for endpoint, model, provider, role, strategy, and source series
+- color assignment is deterministic where feasible so the same series identity keeps the same token across charts
+- a single chart must not reuse the same resolved visual color for different visible metrics or series
+- chart containers define explicit height or minimum-height values to prevent collapse on first render
+- tooltips, legends, axis labels, and helper copy inherit runtime caption/body roles
+- grids, axes, and separators use the runtime hairline family
+- loading, empty, and error states are distinct
+- `/app` and charted Observe routes keep primary chart containers visible even when there is no data
+- no fake sample series may be rendered in production empty states
 
 ## Shell layout
 
 - Desktop: fixed primary left rail, main content region, and section-local top tabs
 - Mobile: section rail stacks above content and secondary navigation becomes a horizontal scroll row
-- The left rail contains the primary section list plus a quiet preserved-host-tools list for `/logs` and `/api/metrics`
-- The shell header is the **only** route-level header. It contains:
-  - section eyebrow (from `RuntimeRouteDefinition.section`)
+- The left rail contains the primary section list plus quiet preserved-host-tools links
+- The shell header contains:
   - page title (from `RuntimeRouteDefinition.title`, overridable on detail routes)
   - concise technical description (from `RuntimeRouteDefinition.description`)
   - optional page actions (registered by the active route via `usePageActions()`)
 - Secondary navigation sits beneath the shell header as section-local page tabs
 - Page content begins immediately in `<main>` with template primitives (`FactCard`, `SectionCard`, …)
-- Route files must **not** repeat eyebrow, title, or description metadata
-- Preserve vendor-host escape hatches as contextual page actions or route-local references, not as a global `/ui` affordance in shell chrome
+- Route files must **not** repeat title or description metadata
+- Preserve vendor-host escape hatches as contextual page actions or route-local references, not as global shell chrome
 
 ## Navigation model
-
-The runtime hierarchy remains:
 
 | Section | Purpose | Route family |
 | --- | --- | --- |
@@ -124,15 +218,14 @@ The runtime hierarchy remains:
 | Remote | LiteLLM-backed remote provider onboarding and remote model availability | `/app/remote/*` |
 | Models | Unified configured-model inventory and runtime role policy surfaces | `/app/models*` |
 | Router | Routing explanation, policy visibility, candidate comparison, and decision drill-in | `/app/router/*` |
+| Observe | Request ledgers, raw host activity, logs, metrics, captures, and analytics | `/app/observe/*` |
 | Connect | How client applications use role-model as an inference provider: registry, downstream contract, upstream passthrough | `/app/connect*` |
-| Observe | Request ledgers, raw host activity, logs, metrics, and captures | `/app/observe/*` |
 | System | Host/runtime topology, peer inventory, version, auth, and policy posture | `/app/system/*` |
 
 ## Header metadata ownership
 
 | Field | Owner | API |
 | --- | --- | --- |
-| section eyebrow | `RuntimeRouteDefinition.section` | `getRuntimeRouteDefinition()` |
 | title | `RuntimeRouteDefinition.title` | shell default; `useShellHeaderOverride()` on detail routes |
 | description | `RuntimeRouteDefinition.description` | shell default; override rarely |
 | page actions | active route component | `usePageActions()` only — not `RuntimeRouteDefinition` (actions are often dynamic, conditional, or stateful) |
@@ -142,7 +235,7 @@ The runtime hierarchy remains:
 
 | Route | Status | Template | Purpose |
 | --- | --- | --- | --- |
-| `/app` | live | `summary-board` | Lead with the recent telemetry window as the primary summary surface, then keep current endpoint inventory and a latest-interactions rail below it. |
+| `/app` | live | `summary-board` | Lead with shared telemetry controls and a chart-led runtime overview, then keep current endpoint inventory beside a latest-interactions rail below the analytics band. |
 | `/app/studio/chat` | live | `studio-workspace` | Routed chat workspace with assistant output, tool calls, execution receipts, usage, and raw payload inspection. |
 | `/app/studio/images` | live | `studio-workspace` | Image workspace with two first-slice request modes in one page: OpenAI-style generation over `/v1/images/generations` and SDAPI generation over `/sdapi/v1/txt2img`; editing and img2img stay backlog-visible rather than first-slice requirements. |
 | `/app/studio/audio` | live | `studio-workspace` | Unified audio workspace over `/v1/audio/speech`, `/v1/audio/voices`, and `/v1/audio/transcriptions` so voice discovery, speech generation, and transcript workflows remain one operator surface. |
@@ -174,7 +267,8 @@ The runtime hierarchy remains:
 | `/app/connect` | live | `registry-detail` | Consumer-facing registry of models and endpoints client applications can call after provider onboarding, with provider rollups and readiness posture sourced from the canonical backend lifecycle contract. |
 | `/app/observe` | redirect | — | Redirects to `/app/observe/requests`. |
 | `/app/observe/activity` | live | `ledger-inspector` | Preserved raw-host activity ledger over `/api/metrics` with inline capture drill-ins from `/api/captures/:id` and adjacent access to `/api/events`. |
-| `/app/observe/requests` | live | `ledger-inspector` | Canonical telemetry request ledger over `/api/role-model/telemetry/requests` with latency, token, cache, and source context. |
+| `/app/observe/requests` | live | `ledger-inspector` | Canonical telemetry request ledger with a primary structured telemetry analytics band above it. |
+| `/app/observe/routing` | live | `ledger-inspector` | Routing analytics surface for avoided cost, difficulty mix, strategy selection, requested-role demand, and historical model-selection trends from persisted request-time telemetry facts. |
 | `/app/observe/requests/:requestId` | live | `ledger-inspector` | Telemetry-first request inspector with usage, cache, captures, endpoint profile, tooling receipts, and raw observation detail. |
 | `/app/observe/logs` | live | `dual-console` | Preserved raw-host log shell with `/logs` history, request-level handoffs, and raw `/logs/stream/*` access. |
 | `/app/connect/downstream` | live | `contract-reference` | Downstream OpenAI-compatible contract, auth, model discovery, and tool-calling expectations for client applications. |
@@ -189,11 +283,11 @@ Status note:
 
 ## Page templates
 
-All templates assume the shell header is already visible. Page content begins directly with template primitives (`FactCard`, `SectionCard`, …)—never with a duplicate title block.
+All templates assume the shell header is already visible. Page content begins directly with template primitives (`FactCard`, `SectionCard`, …) and never with a duplicate page-title block.
 
 | Template | Layout definition |
 | --- | --- |
-| `summary-board` | Content starts under the shell header. Current-state cards and endpoint inventory first, then a recent request rail plus a separate recent telemetry window. |
+| `summary-board` | Content starts under the shell header. Shared analytics controls and chart-led posture first, then current endpoint inventory beside a latest-request interaction rail. |
 | `studio-workspace` | Content starts under the shell header. Left composition rail, dominant result surface, and secondary inspection region for payload, captures, or contracts. |
 | `registry-detail` | Content starts under the shell header. Dense registry/editor split: compact editing or selection on one side, operational state ledger on the other. |
 | `model-inventory` | Content starts under the shell header. Mobile-first card grid with modal drill-in; cards are the default object representation, not rows. |
@@ -209,54 +303,17 @@ No current runtime route may rely on `FutureSurface`, fixture rows, or other pla
 
 | Template | Implemented reading order |
 | --- | --- |
-| `summary-board` | `/app` leads with the recent telemetry window, then keeps current endpoint inventory beside a latest-interactions rail instead of duplicating summary posture with a second KPI strip. Replace the old Providers / Endpoints / Execution-ready / Bootstrap strip with the telemetry window instead of duplicating summary posture. Latest requests is an interaction rail, not a raw canonical request ledger. |
+| `summary-board` | `/app` leads with telemetry controls plus a chart-led posture band for tokens, cost, avoided cost, latency, cache, and success/failure volume; current endpoint inventory and latest requests stay below as drill-in context rather than a competing KPI strip. Latest requests is an interaction rail, not a raw canonical request ledger. |
 | `studio-workspace` | `/app/studio/chat` uses a compact composer, dominant response stage, and adjacent usage/tooling/payload inspection. |
 | `registry-detail` | Provider, runtime-config, controller, and endpoint pages keep the primary editor/ledger split and use summary chrome only when it changes the operator decision. |
 | `model-inventory` | `/app/models` uses fact strips before a responsive configured-model card grid and an inspect-only modal. |
-| `ledger-inspector` | Requests and request detail lead with telemetry facts while Activity remains the raw-host adjacency surface for metrics, captures, and payload drill-ins. |
+| `ledger-inspector` | Requests and Observe Routing now lead with shared analytics controls plus chart-led history above their canonical ledgers or comparison bands, while request detail stays telemetry-first and Activity remains the raw-host adjacency surface for metrics, captures, and payload drill-ins. |
 | `dual-console` | `/app/observe/logs` and `/app/local/logs` start with combined history, then split proxy and upstream consoles into mirrored panes. |
 | `contract-reference` | `/app/connect/downstream` keeps connection facts in a narrow reference column and examples/compatibility in the larger contract pane. |
 | `system-topology` | `/app/system/runtime` layers lifecycle, controller posture, live version facts, and preserved host diagnostics without extra note-only panels. |
 | `matrix-grid` | Local Models grid view shows a dense status-first grid of concurrently loaded models with engine and loaded state. |
 
-## Live route layouts
-
-These routes are no longer vague placeholder ideas. Their layout contracts are implemented and should remain the baseline for future refinement.
-
-### `Studio > Images`
-
-- Compact left request rail
-- Dominant image stage
-- Secondary raw response / generation detail panel
-- One workspace with OpenAI-style and SDAPI generation modes
-
-### `Studio > Audio`
-
-- Compact left mode/form rail
-- Dominant transcript or player stage
-- Secondary request/result detail stack
-- One workspace for voices, speech synthesis, and transcription
-
-### `Studio > Rerank`
-
-- Compact query/candidate form rail
-- Dominant ordered result ledger
-- Secondary JSON/request inspector
-
-### `Studio > Advanced APIs`
-
-- Compact endpoint-family selector
-- Dominant response/result stage
-- Secondary example/template panel
-- Only advanced families with real vendor/runtime backing belong here
-
-### `Connect > Upstream`
-
-- Narrow contract/reference column
-- Larger model/upstream target inventory pane
-- Raw passthrough links stay contextual rather than global shell chrome
-
-### `Remote > Providers` and lifecycle maintenance
+## Runtime, session readiness, and provider-maintenance rules
 
 - The route keeps the existing onboarding form on one side and saved-account operational state on the other.
 - Saved-account cards must expose:
@@ -264,102 +321,81 @@ These routes are no longer vague placeholder ideas. Their layout contracts are i
   - normalized storage-mode/credential posture
   - explicit **Reconnect** for repairable OAuth accounts
   - explicit **Update API key** for API-key accounts
-- **Update API key** uses a shared utility modal with explicit **Save** and **Cancel** controls, clear saving/error states, and no secret echo/backfill.
+- **Update API key** uses a restrained modal with explicit **Save** and **Cancel** controls, clear saving/error states, and no secret echo/backfill.
 - Archived stale legacy artifacts are never shown as current blocking setup rows on the saved-account surface; if surfaced, they appear only as bounded diagnostics separate from active accounts.
-
-### Runtime / Session readiness / Studio execution surfaces
-
 - `System > Runtime`, `System > Session readiness`, `Connect`, `Workbench`, and `Studio > Advanced` must use the same canonical lifecycle/readiness vocabulary.
 - Blocking banners and provider rollups come from the backend lifecycle contract, not route-local inference from raw account fields.
 - Provisional-vs-authoritative bootstrap posture must read consistently across these surfaces.
 
-### `Local > Choose` and llama-swap setup hints
+## Component rules
 
-- **Choose** keeps peer-backed and llama-swap cards on separate columns; never mix load workflows on one page.
-- When llama-swap is not operational (no declared models or missing GGUF paths), llama-swap surfaces show honest setup hints instead of implying the host is broken.
-- **Prominent hint** on `/app/local/llama-swap/models`: headline, one-sentence peer vs llama-swap distinction, primary **Setup guide** CTA, secondary link to System → Runtime config.
-- **Compact note** on `/app/local/choose` (llama-swap card only) and compact banners on satellite llama-swap pages (`policy`, `swap`, `logs`, `matrix`).
-- **Setup guide modal** owns detailed numbered steps plus YAML/JSON scaffold copy blocks; inline hints stay short.
-- Load model stays visible but disabled with helper text until config is operational; declared model ids may appear as placeholders.
-- System → Runtime config exposes **Insert llama-swap scaffold** when `llamaSwap.models` is empty; operator must still Save and apply explicitly.
+### Shell and shared primitives
 
-### `Local > Models`
+- `AppShell` owns the section rail, shell header, and section-local tab row
+- `ShellHeaderProvider` plus `usePageActions()` and `useShellHeaderOverride()` let active routes register page-local actions or dynamic titles without reintroducing duplicate page headers
+- `SectionCard` is the default sectional frame: one heading block, then content
+- `DisclosureSection` collapses dense secondary detail; default closed unless a route needs primary content expanded
+- route descriptions stay one sentence; shell chrome stays quiet
+- long ids, endpoint ids, and routes must wrap rather than overflow
+- global browser chrome must opt into:
+  - `<meta name="color-scheme" content="light dark">`
+  - paired light/dark `theme-color` meta tags
+  - `html { color-scheme: light dark; }`
 
-- Loaded model cards first: model ID, engine type, uptime, status
-- Load/unload actions per card
-- Global "Unload All" action
-- Model selector + "Load" control
-- **Per-model override panel** (collapsed by default): TTL, context window, concurrency limit
-- Overrides visually distinct via subtle border or muted panel
-- Empty state when no models are in memory
+### Cards and panels
 
-### `Local > Swap`
+- Use restrained borders and spacing for separation
+- Prefer surface contrast and spacing over decorative divider rules
+- Default UI shadows stay off; only the explicit product-shadow token exists, and it is not general shell chrome
 
-- Chronological event ledger
-- Filter by model ID
-- Event detail: timestamp, old model, new model, reason
+### Buttons
 
-### `Local > Policy`
+- Primary actions use the accent blue family with pill radius and `11px 22px` padding
+- Secondary actions use neutral or outline styling with the same radius grammar
+- Utility controls may use the compact `8px 15px` padding grammar
+- Active/pressed scale may be used consistently across shared button primitives
 
-- Policy form: TTL, auto-unload toggle
-- Read-only fields: startPort, logLevel
-- Current values summary
+### Inputs and filters
 
-### `Local > Logs`
+- Shared fields target `44px` height
+- Inputs, selects, and filter controls use the field radius and border grammar from the shared token set
+- Search/select affordances may use pill or field treatment, but they must stay consistent across light and dark themes
+- Generic search or text inputs do not default to mono typography
 
-- Split proxy/upstream console panes
-- Live stream from `/logs/stream` (SSE or polling)
-- Historical buffer from `/logs`
-- Source toggle, auto-scroll toggle, clear/filter controls
-- Empty state when llama-swap is not running
+### Badges and status pills
 
-### `Local > Matrix`
+- Shared semantic status pills for `healthy`, `degraded`, `offline`, and similar runtime states keep transparent backgrounds
+- semantic meaning is carried by text and border color
+- no low-alpha semantic background fill is used for those shared pills
 
-- Grid of loaded models (from `GET /running`)
-- Each cell: model ID, engine, memory, uptime
-- Status: healthy (stone), loading (accent muted), error (accent full)
-- Add/remove model controls
-- Empty state when no models loaded
+### Ledgers, logs, and payload blocks
 
-### `Local > Peers`
-
-- Peer inventory list
-- Peer health and model availability
-- Add peer form (URL, auth token)
-- Remove peer control
-- Empty state when no peers configured
-
-### `System > Peers`
-
-- Concise topology overview first
-- Split between peer inventory and peer contract/policy detail
-- Real empty state when peers are absent
+- Activity, requests, metrics, and tooling execution read as ledgers first, not dashboards first
+- Dense tables may scroll horizontally, but request id, status, model, and primary action remain readable without opening a modal
+- Capture drill-ins open in an adjacent inspector or modal with mono payload blocks and explicit transport metadata
+- Log views prefer split proxy/upstream consoles with source toggles rather than stacked accordions
 
 ## Vendor exposure plan
-
-The vendored llama-swap audit changes how the placeholder pages should be interpreted.
-
-### First-class role-model pages
 
 These are first-class runtime pages because they are part of the main operator loop:
 
 1. **Local runtime state**
-   - models (loaded state, load/unload controls, per-model overrides)
-   - swap history (event ledger)
-   - policy (TTL, auto-unload, host controls)
-   - logs (real-time streaming from `/logs/stream` and `/logs`)
-   - matrix (concurrent loaded model grid)
-   - peers (peer instance inventory and management)
+   - models
+   - swap history
+   - policy
+   - logs
+   - matrix
+   - peers
 2. **Studio multimodal workspaces**
    - images
    - audio
    - rerank
    - advanced API families
-2. **Observe raw host ledgers** (activity and logs are already live; captures remain drill-ins)
+3. **Observe raw host ledgers**
    - activity
    - logs
-   - captures and metrics as drill-in from activity/request detail
-3. **System runtime policy** (version facts are already live in `System > Runtime`)
+   - captures and metrics as drill-ins from activity or request detail
+4. **System runtime policy**
    - `/health`
    - `/api/version`
    - config-watch posture
@@ -367,174 +403,26 @@ These are first-class runtime pages because they are part of the main operator l
    - start port
    - capture and metrics buffers
    - API-key/auth posture
-4. **Peers and upstream contract surfaces**
+5. **Peers and upstream contract surfaces**
    - peer model sources
    - peer filters and timeouts
    - upstream passthrough expectations
 
-### Fold into existing pages instead of creating vendor-clone routes
-
-These belong inside existing role-model pages, not in a separate vendor-style settings screen:
-
-- model-level `aliases`
-- `useModelName`
-- `checkEndpoint`
-- `ttl`
-- `concurrencyLimit`
-- `sendLoadingState`
-- per-model `timeouts`
-- request `filters`
-- `cmdStop` presence and command ownership
-- arbitrary model `metadata`
-- startup preload hooks
-- matrix/eviction policy summaries
-
 Placement rules:
 
-- **Control > Runtime Config** owns editable local/remote runtime policy and model/provider metadata.
-- **Control > Models** owns inspect-first model inventory and links back to editable surfaces.
-- **Control > Models** and **Control > Controller** must render honest pre-activation empty states when the runtime has zero configured endpoints.
-- **Connect > Registry** owns consumer-facing endpoint/model visibility after onboarding; alias adjudication defers to **Router**.
-- **System > Runtime** owns global host policy and matrix summary.
-- **System > Peers** owns remote-peer config and upstream auth posture.
-
-### Preserve as adjacent host tools
-
-These remain linked as preserved host surfaces until a repo-owned page fully supersedes them:
-
-- raw `/upstream/*` passthrough targets
-- direct log and capture endpoints for copy/paste/debug workflows
-- raw `/health` and similar host diagnostics when they belong to a route-local system view
-
-During the conversion window, some placeholder routes may still expose a contextual `/ui` link. `/ui` is not part of the long-term runtime shell contract and must not return to global shell chrome.
-
-## Component rules
-
-### Shell and shared primitives
-
-- `AppShell` owns the section rail, the shell header (eyebrow, title, description, optional actions), and the section-local tab row
-- `ShellHeaderProvider` plus `usePageActions()` and `useShellHeaderOverride()` let active routes register page-local actions or dynamic titles without reintroducing in-page header blocks
-- Route files must not render duplicate title/description blocks; metadata lives once in `RuntimeRouteDefinition`
-- `SectionCard` is the default sectional frame: one heading block, then content.
-- `DisclosureSection` collapses dense secondary detail; default closed unless a route needs primary content expanded.
-- Copy budget: shell has no page counts; route `description` values stay one sentence (max 120 chars); ledger/meta routes omit `SectionCard.description` and non-essential `FactCard.detail`.
-- `FactCard` is the default live summary primitive for top-of-page fact strips; prefer 3-4 cards and emphasize only the primary one.
-- `CodeBlock` is the canonical payload/log container for mono transport artifacts.
-- Long ids, endpoint ids, and routes must wrap rather than overflow summary cards or metadata cells.
-- Global browser chrome must opt into both schemes:
-  - `<meta name="color-scheme" content="light dark">`
-  - paired light/dark `theme-color` meta tags
-  - `html { color-scheme: light dark; }`
-
-### Temporary conversion scaffolds
-
-- Live routes must not rely on placeholder scaffolds; use honest empty states instead.
-
-### Cards and panels
-
-- Use borders and spacing for separation.
-- Prefer internal dividers over nested decorative containers.
-- Do not use decorative accent rules in page or shell headers; reserve accent for primary actions, active routes, and explicit status emphasis.
-
-### Configured model cards
-
-- Every configured model appears in one unified inventory surface regardless of whether it is local, remote, or peer-backed.
-- The default representation for configured models is a **card**, not a plain table row.
-- The model inventory uses a mobile-first responsive grid:
-  - `grid-cols-1` on mobile
-  - `md:grid-cols-2` on medium screens
-  - `lg:grid-cols-3` when readable density holds
-- Each model card must expose at least:
-  - display name and model id
-  - source classification
-  - state / health
-  - configured roles
-  - capability summary
-  - high-level metrics
-  - endpoint binding or peer source
-  - controller state when applicable
-  - one inspect action
-- The inspect action opens a shared **model inspection modal** and links back to `Control > Runtime Config` rather than pretending inline edits are persisted here.
-- The modal sections are:
-  1. overview
-  2. roles
-  3. capabilities
-  4. metrics
-  5. routing / identifiers
-  6. tooling / MCP
-  7. host policy
-
-### Ledgers, logs, and captures
-
-- Activity, requests, metrics, and tooling execution read as ledgers first, not dashboards first.
-- Dense tables may scroll horizontally, but request id, status, model, and primary action remain readable without opening a modal.
-- Capture drill-ins open in an adjacent inspector or modal with mono payload blocks and explicit transport metadata.
-- Capture bodies are treated as transport payloads; decode base64 request/response bodies for readable inspection while keeping headers and path explicit.
-- Log views prefer split proxy/upstream consoles with source toggles rather than stacked accordions.
-
-### Buttons
-
-- Primary CTA: `44px` minimum height, pill radius, Action Blue fill, `17px / 400` body typography, and the shared press-scale interaction
-- Secondary CTA: transparent fill with Action Blue text and border, same pill geometry and typography as the primary CTA
-- Utility controls: `44px` minimum height, `11px` or `18px` radius depending on context, `14px / 400` utility typography, quiet surface-first treatment
-
-### Inputs
-
-- Default text inputs use body typography (`17px / 400 / 25px`) on the current surface with explicit focus border and accent halo
-- Generic editor fields keep the `11px` field radius; pill search treatments are reserved for search-specific affordances
-- Text and search inputs inherit the body font; mono remains reserved for payload/code surfaces
-
-### Badges
-
-- Status pills remain transparent with semantic text and border colors only
-- Uppercase tracked text stays compact and quiet
-- Semantic warning / success / error hues are allowed for runtime state, but only as border and text treatments without fill backgrounds
-
-### Tables and payload blocks
-
-- Always allow horizontal overflow
-- Use mono for ids, paths, models, and JSON
-- Use tabular numerals where numeric comparison matters
-
-## Tooling and MCP integration
-
-The run-13 tool/MCP baseline remains part of the runtime design contract rather than a parallel subsystem.
-
-### Cross-surface rules
-
-- Tooling state uses the same stone hierarchy, mono identifiers, uppercase labels, and sparse accent.
-- Tooling must be visible at three levels:
-  1. capability
-  2. configuration
-  3. execution
-
-### Control surfaces
-
-- **Models** show tool-calling and MCP posture in the same card/modal system as roles, capabilities, metrics, endpoint binding, and controller state.
-- **Controller** candidate views show whether a candidate is healthy and tooling-capable enough for adjudication work.
-
-### Studio and observation surfaces
-
-- **Chat** renders assistant `tool_calls`, execution receipts, and diagnostics as structured secondary content.
-- **Requests** and request detail expose persisted tool execution receipts beside captures and endpoint/profile data.
-- **Activity** should surface when a captured request included tool execution and whether a capture bundle is available.
-
-### Runtime and integration surfaces
-
-- Runtime/system pages acknowledge:
-  - MCP connector-definition support
-  - runtime tool registry posture
-  - `runtime:validate-tools`
-- `System > Runtime` renders live `/api/version` facts in-page rather than relying on a raw-link-only affordance.
-- Downstream/integration pages state when OpenAI-compatible consumers can expect `tool_calls` and what compatibility limits still apply.
+- **Control > Runtime Config** owns editable local/remote runtime policy and model/provider metadata
+- **Control > Models** owns inspect-first model inventory and links back to editable surfaces
+- **Connect > Registry** owns consumer-facing endpoint/model visibility after onboarding; alias adjudication defers to **Router**
+- **System > Runtime** owns global host policy and matrix summary
+- **System > Peers** owns remote-peer config and upstream auth posture
 
 ## Rollout order
 
 1. **Observe**
-   - complete: native activity and logs pages now expose metrics, captures, preserved history, and split raw consoles
+   - complete: native activity and logs pages expose metrics, captures, preserved history, and split raw consoles
 2. **Studio**
-   - replace multimodal placeholders with images, audio, rerank, and advanced workspaces
+   - multimodal workspaces replace placeholders with repo-owned implementations
 3. **System**
-   - expose runtime policy, peers, and config-watch posture from the vendored host, with version facts folded into Runtime
+   - runtime policy, peers, and config-watch posture stay visible from the repo-owned shell
 4. **Integrations**
-   - finish upstream reference surfaces after the operator pages are concrete, with compatibility guidance folded into Downstream
+   - upstream reference surfaces remain contextual and subordinate to the operator workflow

@@ -4,6 +4,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import {
+  type CreateRuntimeBridgeBackendOptions,
   type RuntimeBridgeBackend,
   type StartBridgeServerOptions,
   createRuntimeBridgeBackend,
@@ -21,6 +22,8 @@ const port = 3456;
 const qaProviderAccountId = "moonshot.personal.primary";
 const qaActivatedModelId = "moonshot/kimi-k2.5";
 const qaActivatedEndpointRegion = "global";
+const qaMoonshotApiKeyEnv = "MOONSHOT_API_KEY";
+const qaPlaceholderApiKey = "role-model-runtime-qa-placeholder";
 
 type QaBridgeBackend = Pick<
   RuntimeBridgeBackend,
@@ -35,6 +38,7 @@ type QaBridgeBackend = Pick<
   | "readTelemetrySummary"
   | "listTelemetryComparisonRows"
   | "listTelemetryRequests"
+  | "queryTelemetryAnalytics"
   | "subscribeTelemetry"
   | "listProviders"
   | "listRoles"
@@ -61,6 +65,17 @@ type QaBridgeBackend = Pick<
   | "listRecentRequestObservations"
   | "readRequestObservation"
   | "readEndpointProfile"
+  | "readBenchmarkSuite"
+  | "runBenchmark"
+  | "readBenchmarkRun"
+  | "readActiveBenchmarkRun"
+  | "clearBenchmarkEndpointData"
+  | "clearBenchmarkData"
+  | "readBenchmarkSummary"
+  | "listBenchmarkRuns"
+  | "readBenchmarkSummariesByMode"
+  | "readBenchmarkPreferences"
+  | "updateBenchmarkPreferences"
   | "listLocalModels"
   | "listPeerLocalModels"
   | "listLlamaSwapLocalModels"
@@ -91,6 +106,21 @@ export function createQaFixtureRoot(value: string): string {
 
 export function createQaRuntimeConfigPath(value: string): string {
   return path.join(value, "runtime-config.yaml");
+}
+
+export function createQaRuntimeBridgeBackendOptions(
+  currentRepoRoot: string,
+  currentRuntimeStateRoot: string,
+  currentScopeId: string,
+): CreateRuntimeBridgeBackendOptions {
+  return {
+    fixtureRoot: createQaFixtureRoot(currentRepoRoot),
+    repoRoot: currentRepoRoot,
+    runtimeStateRoot: currentRuntimeStateRoot,
+    scopeId: currentScopeId,
+    unifiedRuntimeConfigPath: createQaRuntimeConfigPath(currentRuntimeStateRoot),
+    runtimeVendorStartup: "disabled",
+  };
 }
 
 export function createQaRuntimeConfigText(): string {
@@ -168,8 +198,8 @@ export function createQaServerOptions(
       "build",
       "client",
     ),
-    registry: backend.registry,
-    getRegistry: () => backend.registry,
+    registry: backend.effectiveRegistry,
+    getRegistry: () => backend.effectiveRegistry,
     executeChatCompletions: backend.executeChatCompletions,
     executeResponses: backend.executeResponses,
     readVersionInfo: async () => ({ version: "0.0.0-qa", build: "dev" }),
@@ -183,6 +213,7 @@ export function createQaServerOptions(
     readTelemetrySummary: backend.readTelemetrySummary,
     listTelemetryComparisonRows: backend.listTelemetryComparisonRows,
     listTelemetryRequests: backend.listTelemetryRequests,
+    queryTelemetryAnalytics: backend.queryTelemetryAnalytics,
     subscribeTelemetry: backend.subscribeTelemetry,
     listProviders: backend.listProviders,
     listRoles: backend.listRoles,
@@ -209,6 +240,17 @@ export function createQaServerOptions(
     listRecentRequestObservations: backend.listRecentRequestObservations,
     readRequestObservation: backend.readRequestObservation,
     readEndpointProfile: backend.readEndpointProfile,
+    readBenchmarkSuite: backend.readBenchmarkSuite,
+    runBenchmark: backend.runBenchmark,
+    readBenchmarkRun: backend.readBenchmarkRun,
+    readActiveBenchmarkRun: backend.readActiveBenchmarkRun,
+    clearBenchmarkEndpointData: backend.clearBenchmarkEndpointData,
+    clearBenchmarkData: backend.clearBenchmarkData,
+    readBenchmarkSummary: backend.readBenchmarkSummary,
+    listBenchmarkRuns: backend.listBenchmarkRuns,
+    readBenchmarkSummariesByMode: backend.readBenchmarkSummariesByMode,
+    readBenchmarkPreferences: backend.readBenchmarkPreferences,
+    updateBenchmarkPreferences: backend.updateBenchmarkPreferences,
     listLocalModels: backend.listLocalModels,
     listPeerLocalModels: backend.listPeerLocalModels,
     listLlamaSwapLocalModels: backend.listLlamaSwapLocalModels,
@@ -228,7 +270,7 @@ export function createQaServerOptions(
     readPeers: backend.readPeers,
     updatePeers: backend.updatePeers,
     checkPeerHealth: backend.checkPeerHealth,
-    getRoutableInventory: backend.getRoutableInventory,
+    getRoutableInventory: backend.getEffectiveRoutableInventory,
   };
 }
 
@@ -237,6 +279,10 @@ export async function main(): Promise<void> {
   console.log(`[QA] repoRoot: ${repoRoot}`);
   console.log(`[QA] runtimeStateRoot: ${runtimeStateRoot}`);
   console.log(`[QA] scopeId: ${scopeId}`);
+  if (!process.env[qaMoonshotApiKeyEnv]) {
+    process.env[qaMoonshotApiKeyEnv] = qaPlaceholderApiKey;
+    console.log(`[QA] Seeded placeholder ${qaMoonshotApiKeyEnv} for local UI QA.`);
+  }
 
   // Clear any stale SQLite state from previous runs to ensure clean startup
   console.log("[QA] Clearing stale runtime state...");
@@ -252,13 +298,9 @@ export async function main(): Promise<void> {
   await writeFile(unifiedRuntimeConfigPath, createQaRuntimeConfigText(), "utf8");
   console.log(`[QA] Seeded runtime config: ${unifiedRuntimeConfigPath}`);
 
-  const backend = await createRuntimeBridgeBackend({
-    fixtureRoot: createQaFixtureRoot(repoRoot),
-    repoRoot,
-    runtimeStateRoot,
-    scopeId,
-    unifiedRuntimeConfigPath,
-  });
+  const backend = await createRuntimeBridgeBackend(
+    createQaRuntimeBridgeBackendOptions(repoRoot, runtimeStateRoot, scopeId),
+  );
   await bootstrapQaControlPlane(backend);
 
   const server = await startBridgeServer(createQaServerOptions(repoRoot, backend));

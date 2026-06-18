@@ -1,0 +1,34 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/49-runtime-telemetry-analytics-charts/role-model-router/apps/runtime-ui[39m
+
+ [31m❯[39m app/lib/benchmark-model-cards.test.ts [2m([22m[2m5 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 16[2mms[22m[39m
+   [32m✓[39m benchmark model cards addendum layout[2m > [22muses model-scores → run-benchmark → run-history section order[32m 4[2mms[22m[39m
+   [32m✓[39m benchmark model cards addendum layout[2m > [22mdoes not enable standalone Last runs by mode section[32m 1[2mms[22m[39m
+   [32m✓[39m benchmark model cards addendum layout[2m > [22mresolves per-endpoint subjects from full and quick summaries independently[32m 1[2mms[22m[39m
+   [32m✓[39m benchmark model cards addendum layout[2m > [22mformats hardBlend copy for routing impact[32m 1[2mms[22m[39m
+[31m   [31m×[31m benchmark model cards addendum layout[2m > [22mexcludes execution-mode-ineligible endpoints from benchmark runnable candidates[39m[32m 8[2mms[22m[39m
+[31m     → (0 , filterBenchmarkRunnableCandidates) is not a function[39m
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  app/lib/benchmark-model-cards.test.ts > benchmark model cards addendum layout > excludes execution-mode-ineligible endpoints from benchmark runnable candidates
+TypeError: (0 , filterBenchmarkRunnableCandidates) is not a function
+ ❯ app/lib/benchmark-model-cards.test.ts:89:12
+     87|     ] as RouterCandidate[];
+     88| 
+     89|     expect(filterBenchmarkRunnableCandidates(candidates).map((candidat…
+       |            ^
+     90|       "local.lfm",
+     91|       "legacy.unspecified",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m4 passed[39m[22m[90m (5)[39m
+[2m   Start at [22m 09:06:56
+[2m   Duration [22m 996ms[2m (transform 49ms, setup 0ms, collect 84ms, tests 16ms, environment 0ms, prepare 272ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\49-runtime-telemetry-analytics-charts\role-model-router\apps\runtime-ui:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run app/lib/benchmark-model-cards.test.ts

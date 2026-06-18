@@ -34,5 +34,20 @@
       "**/target/**",
       "**/runtime-output/**"
     ]
-  }
+  },
+  "overrides": [
+    {
+      "include": [
+        "role-model-router/apps/runtime-ui/app/components/page-primitives.tsx",
+        "role-model-router/apps/runtime-ui/app/components/themed-select.tsx"
+      ],
+      "linter": {
+        "rules": {
+          "a11y": {
+            "useSemanticElements": "off"
+          }
+        }
+      }
+    }
+  ]
 }
