@@ -2,12 +2,21 @@ import { access, readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { describe, expect, test } from "vitest";
+import { afterEach, describe, expect, test } from "vitest";
 import * as packageSea from "../src/package-sea.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "..", "..", "..", "..");
+const originalGoBinary = process.env.GO_BINARY;
+
+afterEach(() => {
+  if (originalGoBinary === undefined) {
+    delete process.env.GO_BINARY;
+  } else {
+    process.env.GO_BINARY = originalGoBinary;
+  }
+});
 
 interface PackageManifest {
   readonly name?: string;
@@ -92,6 +101,28 @@ async function collectRuntimeDependencyGraph(): Promise<
 }
 
 describe("runtime-host-bridge executable packaging", () => {
+  test("resolves Go through PATH unless GO_BINARY overrides it", () => {
+    delete process.env.GO_BINARY;
+
+    expect(
+      (
+        packageSea as {
+          resolveGoCommand: () => string;
+        }
+      ).resolveGoCommand(),
+    ).toBe("go");
+
+    process.env.GO_BINARY = "C:\\tools\\go\\bin\\go.exe";
+
+    expect(
+      (
+        packageSea as {
+          resolveGoCommand: () => string;
+        }
+      ).resolveGoCommand(),
+    ).toBe("C:\\tools\\go\\bin\\go.exe");
+  });
+
   test("declares a runtime export condition for the built runtime dependency graph", async () => {
     const runtimeGraph = await collectRuntimeDependencyGraph();
 
