@@ -5233,9 +5233,10 @@ describe("runtime-host-bridge", () => {
     });
 
     const requestId = "req-runtime-bridge-alias-001";
+    const runtimeAliasId = "baseline.remote-only";
     await backend.executeChatCompletions(
       {
-        model: "gpt-5.4",
+        model: runtimeAliasId,
         messages: [{ role: "user", content: "Route through the alias pool." }],
       },
       requestId,
@@ -5245,8 +5246,8 @@ describe("runtime-host-bridge", () => {
       requestId,
       routingDiagnostics: {
         aliasResolution: {
-          requestedModel: "gpt-5.4",
-          aliasId: "gpt-5.4",
+          requestedModel: runtimeAliasId,
+          aliasId: runtimeAliasId,
           resolvedModelIds: ["openai/gpt-4.1-mini-fast"],
           allowEndpoints: ["openai.litellm.global.openai-gpt-4-1-mini-fast"],
         },
@@ -6646,6 +6647,8 @@ describe("runtime-host-bridge", () => {
       typeof (bridge as { createRuntimeBridgeBackend?: unknown }).createRuntimeBridgeBackend,
     ).toBe("function");
 
+    const previousMoonshotApiKey = process.env.MOONSHOT_API_KEY;
+    delete process.env.MOONSHOT_API_KEY;
     const controlPlaneTestId = `runtime-host-control-plane-tests-${Date.now()}`;
     const backend = await (
       bridge as {
@@ -7000,6 +7003,11 @@ describe("runtime-host-bridge", () => {
         sourceType: "remote",
       }),
     );
+    if (previousMoonshotApiKey === undefined) {
+      delete process.env.MOONSHOT_API_KEY;
+    } else {
+      process.env.MOONSHOT_API_KEY = previousMoonshotApiKey;
+    }
   });
 
   test("persists runtime-managed role policy and task allowlists across backend restart", async () => {
