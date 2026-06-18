@@ -1,0 +1,49 @@
+[FAIL] Refusing to lock .recursive\run\49-runtime-telemetry-analytics-charts\03-implementation-summary.md
+Workflow Profile: recursive-mode-audit-v2
+- Approval gate must be PASS before locking
+- Artifact Status must be DRAFT before locking (found completed)
+- Audit Context section is empty
+- Coverage gate must be PASS before locking
+- Missing Traceability section content
+- Missing or empty audited-phase section: ## Audit Context
+- Missing or empty audited-phase section: ## Audit Verdict
+- Missing or empty audited-phase section: ## Earlier Phase Reconciliation
+- Missing or empty audited-phase section: ## Effective Inputs Re-read
+- Missing or empty audited-phase section: ## Gaps Found
+- Missing or empty audited-phase section: ## Repair Work Performed
+- Missing or empty audited-phase section: ## Requirement Completion Status
+- Missing or empty audited-phase section: ## Subagent Contribution Verification
+- Missing or empty audited-phase section: ## Worktree Diff Audit
+- Missing or empty section: ## Requirement Completion Status
+- Missing or empty section: ## Subagent Contribution Verification
+- Missing required audit verdict line: Audit: PASS|FAIL
+- Missing required gate line: Approval: PASS|FAIL
+- Missing required gate line: Coverage: PASS|FAIL
+- Missing required gate line: TDD Compliance: PASS|FAIL
+- Missing required header field(s): Inputs, Outputs, Scope note
+- Missing required section heading: ## Approval Gate
+- Missing required section heading: ## Audit Context
+- Missing required section heading: ## Audit Verdict
+- Missing required section heading: ## Changes Applied
+- Missing required section heading: ## Coverage Gate
+- Missing required section heading: ## Earlier Phase Reconciliation
+- Missing required section heading: ## Effective Inputs Re-read
+- Missing required section heading: ## Gaps Found
+- Missing required section heading: ## Implementation Evidence
+- Missing required section heading: ## Plan Deviations
+- Missing required section heading: ## Repair Work Performed
+- Missing required section heading: ## Requirement Completion Status
+- Missing required section heading: ## Subagent Contribution Verification
+- Missing required section heading: ## TDD Compliance Log
+- Missing required section heading: ## TODO
+- Missing required section heading: ## Traceability
+- Missing required section heading: ## Worktree Diff Audit
+- Missing required section: ## TODO
+- TDD Compliance Log is missing TDD Mode: strict|pragmatic
+- TDD Compliance gate must be PASS before locking Phase 3
+- Worktree Diff Audit is missing: Baseline reference:
+- Worktree Diff Audit is missing: Baseline type:
+- Worktree Diff Audit is missing: Comparison reference:
+- Worktree Diff Audit is missing: Normalized baseline:
+- Worktree Diff Audit is missing: Normalized comparison:
+- Worktree Diff Audit is missing: Normalized diff command:

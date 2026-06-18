@@ -1,0 +1,40 @@
+{
+  "timestamp": "2026-06-17T20:50:58+02:00",
+  "route": "http://127.0.0.1:3456/app/connect/downstream",
+  "finding": "Consumer setup available-model and example-command components previously overflowed their container and created page-level horizontal scroll.",
+  "verification": {
+    "bodyClientWidth": 723,
+    "bodyScrollWidth": 723,
+    "hasDocumentHorizontalOverflow": false,
+    "consumerClientWidth": 689,
+    "consumerScrollWidth": 689,
+    "consumerOverflows": false,
+    "availableClientWidth": 648,
+    "availableScrollWidth": 648,
+    "availableOverflows": false,
+    "examplesClientWidth": 648,
+    "examplesScrollWidth": 648,
+    "examplesOverflows": false,
+    "preMetrics": [
+      {
+        "textPrefix": "curl http://127.0.0.1:3456/v1/models",
+        "clientWidth": 615,
+        "scrollWidth": 615,
+        "whiteSpace": "pre-wrap",
+        "overflowWrap": "break-word",
+        "rectRight": 669.3333358764648,
+        "parentRight": 686.0000419616699
+      },
+      {
+        "textPrefix": "curl http://127.0.0.1:3456/v1/chat/completions -H \"content-type: application/jso",
+        "clientWidth": 615,
+        "scrollWidth": 615,
+        "whiteSpace": "pre-wrap",
+        "overflowWrap": "break-word",
+        "rectRight": 669.3333358764648,
+        "parentRight": 686.0000419616699
+      }
+    ]
+  },
+  "status": "pass"
+}

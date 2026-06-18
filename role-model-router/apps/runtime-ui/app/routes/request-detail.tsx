@@ -117,6 +117,7 @@ export default function RequestDetailRoute() {
   const endpointIdentity =
     asRecord(latestProfile.endpoint_identity ?? latestProfile.endpointIdentity) ?? {};
   const usageEvent = asRecord(request.usageEvent) ?? {};
+  const telemetrySnapshot = asRecord(request.telemetrySnapshot) ?? {};
   const executionTelemetry = asRecord(request.executionTelemetry) ?? {};
   const executionStream = asRecord(executionTelemetry.stream) ?? {};
   const executionStreamSupport = asRecord(executionTelemetry.streamSupport) ?? {};
@@ -158,8 +159,36 @@ export default function RequestDetailRoute() {
       const completionTokens = outputTokens ?? 0;
       return promptTokens > 0 || completionTokens > 0 ? promptTokens + completionTokens : null;
     })();
+  const pickCostNumber = (...keys: string[]): number | null =>
+    pickNumber(request, ...keys) ??
+    pickNumber(telemetrySnapshot, ...keys) ??
+    pickNumber(usageEvent, ...keys);
+  const pickCostString = (...keys: string[]): string | null =>
+    pickString(request, ...keys) ?? pickString(telemetrySnapshot, ...keys);
   const actualCostUsd = pickNumber(usageEvent, "cost_actual", "actualCostUsd");
   const estimatedCostUsd = pickNumber(usageEvent, "cost_estimate", "estimatedCostUsd");
+  const effectiveCostUsd = pickCostNumber("effectiveCostUsd", "effective_cost_usd");
+  const selectedUncachedCostUsd = pickCostNumber(
+    "selectedUncachedCostUsd",
+    "selected_uncached_cost_usd",
+  );
+  const baselineMaxEligibleCostUsd = pickCostNumber(
+    "baselineMaxEligibleCostUsd",
+    "baseline_max_eligible_cost_usd",
+  );
+  const routingCostSavingsUsd = pickCostNumber(
+    "routingCostSavingsUsd",
+    "routing_cost_savings_usd",
+  );
+  const cacheCostSavingsUsd = pickCostNumber("cacheCostSavingsUsd", "cache_cost_savings_usd");
+  const totalAvoidedCostUsd = pickCostNumber("totalAvoidedCostUsd", "total_avoided_cost_usd");
+  const costCalculationBasis = pickCostString("costCalculationBasis", "cost_calculation_basis");
+  const costCalculationVersion = pickCostString(
+    "costCalculationVersion",
+    "cost_calculation_version",
+  );
+  const costBaselineSource = pickCostString("costBaselineSource", "cost_baseline_source");
+  const costSavingsSupport = pickCostString("costSavingsSupport", "cost_savings_support");
   const providerFamily = pickString(executionTelemetry, "providerFamily");
   const finishReason = pickString(executionTelemetry, "finishReason");
   const promptCacheSupported =
@@ -301,11 +330,13 @@ export default function RequestDetailRoute() {
         />
         <FactCard
           label="Cost"
-          value={formatUsd(actualCostUsd ?? estimatedCostUsd)}
+          value={formatUsd(effectiveCostUsd)}
           detail={
-            actualCostUsd !== null
-              ? "Actual USD cost from the execution receipt."
-              : "Estimated USD cost from the persisted runtime usage event."
+            costCalculationBasis || costCalculationVersion
+              ? `Stored effective cost • ${costCalculationBasis ?? "unknown basis"} • ${
+                  costCalculationVersion ?? "unknown version"
+                }`
+              : "Stored authoritative per-request effective cost."
           }
         />
         <FactCard
@@ -332,6 +363,44 @@ export default function RequestDetailRoute() {
         </div>
       </SectionCard>
 
+      <SectionCard
+        title="Cost audit"
+        description="Stored per-request cost calculation and savings metadata used by analytics and request detail surfaces."
+      >
+        <dl className="grid gap-3 text-sm md:grid-cols-2 xl:grid-cols-4">
+          {[
+            ["Effective cost", formatUsd(effectiveCostUsd)],
+            ["Selected uncached cost", formatUsd(selectedUncachedCostUsd)],
+            ["Baseline max eligible", formatUsd(baselineMaxEligibleCostUsd)],
+            ["Routing savings", formatUsd(routingCostSavingsUsd)],
+            ["Cache savings", formatUsd(cacheCostSavingsUsd)],
+            ["Total avoided cost", formatUsd(totalAvoidedCostUsd)],
+            ["Calculation basis", costCalculationBasis],
+            ["Calculation version", costCalculationVersion],
+            ["Baseline source", costBaselineSource],
+            ["Savings support", costSavingsSupport],
+            [
+              "Raw actual cost",
+              actualCostUsd === null ? null : `${formatUsd(actualCostUsd)} provenance`,
+            ],
+            [
+              "Raw estimated cost",
+              estimatedCostUsd === null ? null : `${formatUsd(estimatedCostUsd)} provenance`,
+            ],
+          ].map(([label, value]) => (
+            <div
+              key={label}
+              className="rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-panel-muted)] p-3"
+            >
+              <dt className="text-xs uppercase tracking-[0.24em] text-[var(--rm-muted)]">
+                {label}
+              </dt>
+              <dd className="mt-1 font-semibold text-[var(--rm-fg)]">{renderMetricValue(value)}</dd>
+            </div>
+          ))}
+        </dl>
+      </SectionCard>
+
       <div className="grid gap-4 xl:grid-cols-[0.8fr_1.2fr]">
         <SectionCard
           title="Telemetry summary"
@@ -349,11 +418,11 @@ export default function RequestDetailRoute() {
               ["Profile measured", formatDateTime(measuredAtMs)],
               ["Stream deltas", streamSummary.length > 0 ? streamSummary : null],
             ].map(([label, value]) => (
-              <div key={label} className="border-b border-[var(--rm-border)] pb-3">
+              <div key={label} className="rounded-[var(--rm-radius-md)] bg-[var(--rm-panel)] p-3">
                 <dt className="text-xs uppercase tracking-[0.24em] text-[var(--rm-muted)]">
                   {label}
                 </dt>
-                <dd className="mt-1 font-medium text-[var(--rm-fg)]">{renderMetricValue(value)}</dd>
+                <dd className="mt-1 font-semibold text-[var(--rm-fg)]">{renderMetricValue(value)}</dd>
               </div>
             ))}
           </dl>
@@ -378,16 +447,16 @@ export default function RequestDetailRoute() {
                   : "No recent samples",
               ],
             ].map(([label, value]) => (
-              <div key={label} className="border-b border-[var(--rm-border)] pb-3">
+              <div key={label} className="rounded-[var(--rm-radius-md)] bg-[var(--rm-panel)] p-3">
                 <dt className="text-xs uppercase tracking-[0.24em] text-[var(--rm-muted)]">
                   {label}
                 </dt>
-                <dd className="mt-1 font-medium text-[var(--rm-fg)]">{renderMetricValue(value)}</dd>
+                <dd className="mt-1 font-semibold text-[var(--rm-fg)]">{renderMetricValue(value)}</dd>
               </div>
             ))}
           </dl>
           <div className="mt-4">
-            <p className="mb-2 font-medium text-[var(--rm-fg)]">Latest profile snapshot</p>
+            <p className="mb-2 font-semibold text-[var(--rm-fg)]">Latest profile snapshot</p>
             <CodeBlock>{JSON.stringify(latestProfile, null, 2)}</CodeBlock>
           </div>
         </SectionCard>
@@ -420,11 +489,11 @@ export default function RequestDetailRoute() {
               ["Hybrid final strategy", hybridStrategy],
               ["Rubric signals", rubricSignalSummary],
             ].map(([label, value]) => (
-              <div key={label} className="border-b border-[var(--rm-border)] pb-3">
+              <div key={label} className="rounded-[var(--rm-radius-md)] bg-[var(--rm-panel)] p-3">
                 <dt className="text-xs uppercase tracking-[0.24em] text-[var(--rm-muted)]">
                   {label}
                 </dt>
-                <dd className="mt-1 font-medium text-[var(--rm-fg)]">{renderMetricValue(value)}</dd>
+                <dd className="mt-1 font-semibold text-[var(--rm-fg)]">{renderMetricValue(value)}</dd>
               </div>
             ))}
           </dl>
@@ -441,7 +510,7 @@ export default function RequestDetailRoute() {
         <div className="space-y-4">
           <div>
             <div className="flex items-center justify-between">
-              <p className="font-medium text-[var(--rm-fg)]">Tool calls</p>
+              <p className="font-semibold text-[var(--rm-fg)]">Tool calls</p>
               <StatusPill tone={toolCalls.length > 0 ? "accent" : "neutral"}>
                 {toolCalls.length}
               </StatusPill>
@@ -453,9 +522,9 @@ export default function RequestDetailRoute() {
                 toolCalls.map((toolCall, index) => (
                   <div
                     key={String((asRecord(toolCall)?.toolCallId as string | undefined) ?? index)}
-                    className="rounded-none border border-[var(--rm-border)] bg-[var(--rm-panel)] p-3"
+                    className="rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] bg-[var(--rm-panel)] p-3"
                   >
-                    <p className="font-medium text-[var(--rm-fg)]">
+                    <p className="font-semibold text-[var(--rm-fg)]">
                       {String(asRecord(toolCall)?.toolName ?? "unknown")}
                     </p>
                     <CodeBlock className="mt-3 text-xs">
@@ -469,7 +538,7 @@ export default function RequestDetailRoute() {
 
           <div>
             <div className="flex items-center justify-between">
-              <p className="font-medium text-[var(--rm-fg)]">Execution receipts</p>
+              <p className="font-semibold text-[var(--rm-fg)]">Execution receipts</p>
               <StatusPill tone={toolExecutions.length > 0 ? "success" : "neutral"}>
                 {toolExecutions.length}
               </StatusPill>
@@ -483,10 +552,10 @@ export default function RequestDetailRoute() {
                   return (
                     <div
                       key={String(executionRecord.executionId ?? index)}
-                      className="rounded-none border border-[var(--rm-border)] bg-[var(--rm-panel)] p-3"
+                      className="rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] bg-[var(--rm-panel)] p-3"
                     >
                       <div className="flex flex-wrap items-center gap-2">
-                        <p className="font-medium text-[var(--rm-fg)]">
+                        <p className="font-semibold text-[var(--rm-fg)]">
                           {String(executionRecord.toolName ?? "Unnamed tool")}
                         </p>
                         {executionRecord.status ? (
@@ -517,16 +586,16 @@ export default function RequestDetailRoute() {
         <div className="space-y-4">
           <div className="grid gap-4 xl:grid-cols-2">
             <div>
-              <p className="mb-2 font-medium text-[var(--rm-fg)]">Request capture</p>
+              <p className="mb-2 font-semibold text-[var(--rm-fg)]">Request capture</p>
               <CodeBlock>{JSON.stringify(requestCapture, null, 2)}</CodeBlock>
             </div>
             <div>
-              <p className="mb-2 font-medium text-[var(--rm-fg)]">Response capture</p>
+              <p className="mb-2 font-semibold text-[var(--rm-fg)]">Response capture</p>
               <CodeBlock>{JSON.stringify(responseCapture, null, 2)}</CodeBlock>
             </div>
           </div>
           <div>
-            <p className="mb-2 font-medium text-[var(--rm-fg)]">Endpoint profile history</p>
+            <p className="mb-2 font-semibold text-[var(--rm-fg)]">Endpoint profile history</p>
             <CodeBlock>{JSON.stringify({ latestProfile, recentSamples }, null, 2)}</CodeBlock>
           </div>
         </div>

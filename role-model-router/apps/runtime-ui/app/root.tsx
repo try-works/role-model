@@ -20,9 +20,30 @@ export const links = () => [
   },
   {
     rel: "stylesheet",
-    href: "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap",
+    href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap",
   },
 ];
+
+const themeBootstrapScript = `
+(() => {
+  try {
+    const key = "role-model-runtime-theme";
+    const stored = window.localStorage.getItem(key);
+    const theme =
+      stored === "light" || stored === "dark"
+        ? stored
+        : window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark"
+          : "light";
+    document.documentElement.dataset.theme = theme;
+    document.documentElement.style.colorScheme = theme;
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) {
+      meta.setAttribute("content", theme === "dark" ? "#000000" : "#f5f5f7");
+    }
+  } catch {}
+})();
+`;
 
 export function Layout({ children }: { children: ReactNode }) {
   return (
@@ -31,8 +52,9 @@ export function Layout({ children }: { children: ReactNode }) {
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="color-scheme" content="light dark" />
-        <meta name="theme-color" content="#fafaf9" media="(prefers-color-scheme: light)" />
-        <meta name="theme-color" content="#0c0a09" media="(prefers-color-scheme: dark)" />
+        <meta name="theme-color" content="#f5f5f7" />
+        <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
+        <script dangerouslySetInnerHTML={{ __html: themeBootstrapScript }} />
         <Meta />
         <Links />
       </head>
@@ -64,8 +86,8 @@ export function ErrorBoundary({ error }: { error: unknown }) {
 
   return (
     <div className="min-h-screen bg-[var(--rm-bg)] p-4">
-      <main className="mx-auto max-w-3xl rounded-none border border-[var(--rm-accent)] bg-[var(--rm-surface)] p-8 text-[var(--rm-fg)]">
-        <h1 className="text-2xl font-light">{message}</h1>
+      <main className="mx-auto max-w-3xl rounded-[var(--rm-radius-panel)] border border-[var(--rm-accent)] bg-[var(--rm-surface)] p-8 text-[var(--rm-fg)]">
+        <h1 className="text-2xl font-semibold">{message}</h1>
         <p className="mt-3 text-[var(--rm-secondary)]">{details}</p>
       </main>
     </div>

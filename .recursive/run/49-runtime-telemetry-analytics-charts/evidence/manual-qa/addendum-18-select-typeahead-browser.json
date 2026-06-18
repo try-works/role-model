@@ -1,0 +1,14 @@
+{
+  "addendum": 18,
+  "route": "http://127.0.0.1:3456/app/remote/providers",
+  "verifiedAt": "2026-06-17T21:45:00+02:00",
+  "scenario": "Open the Provider themed select list and press the printable key m.",
+  "expected": "The active option moves to an enabled provider whose label starts with m while the themed list remains open.",
+  "observed": {
+    "listboxVisible": true,
+    "selectedText": "302.AI",
+    "activeText": "Meganova",
+    "activeOptionStartsWithM": true
+  },
+  "result": "pass"
+}

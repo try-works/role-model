@@ -118,8 +118,8 @@ export async function runRuntimeUiValidation(
   const server = await startBridgeServer({
     host: "127.0.0.1",
     port: 0,
-    registry: backend.registry,
-    getRegistry: () => backend.registry,
+    registry: backend.effectiveRegistry,
+    getRegistry: () => backend.effectiveRegistry,
     executeChatCompletions: backend.executeChatCompletions,
     executeResponses: backend.executeResponses,
     readRuntimeSummary: backend.readRuntimeSummary,
@@ -144,7 +144,7 @@ export async function runRuntimeUiValidation(
     readEndpointProfile: backend.readEndpointProfile,
     listRouterDecisions: backend.listRouterDecisions,
     readRouterDecision: backend.readRouterDecision,
-    getRoutableInventory: backend.getRoutableInventory,
+    getRoutableInventory: backend.getEffectiveRoutableInventory,
     readHealthStatus: backend.readHealthStatus,
   });
 

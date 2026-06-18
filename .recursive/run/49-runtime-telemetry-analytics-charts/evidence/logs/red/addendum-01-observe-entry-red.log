@@ -1,0 +1,117 @@
+
+> @role-model-router/runtime-ui@ test D:\DEV\role-model\.worktrees\49-runtime-telemetry-analytics-charts\role-model-router\apps\runtime-ui
+> vitest run app/lib/runtime-api.test.ts app/lib/view-models.test.ts app/lib/device-authorization.test.ts app/lib/design-system.test.ts app/lib/provider-account-state.test.ts app/lib/router-candidate-labels.test.ts app/lib/benchmark-latency.test.ts app/lib/benchmark-model-cards.test.ts app/lib/telemetry-analytics.test.ts app/lib/telemetry-route-models.test.ts app/components/telemetry-charts.test.tsx "--" "app/lib/design-system.test.ts"
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/49-runtime-telemetry-analytics-charts/role-model-router/apps/runtime-ui[39m
+
+ [32m✓[39m app/lib/device-authorization.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m app/lib/provider-account-state.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m app/lib/router-candidate-labels.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m app/lib/benchmark-latency.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m app/lib/benchmark-model-cards.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m app/lib/runtime-api.test.ts [2m([22m[2m40 tests[22m[2m)[22m[32m 92[2mms[22m[39m
+ [32m✓[39m app/lib/view-models.test.ts [2m([22m[2m32 tests[22m[2m)[22m[32m 106[2mms[22m[39m
+ [32m✓[39m app/lib/telemetry-route-models.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32m✓[39m app/lib/telemetry-analytics.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32m✓[39m app/components/telemetry-charts.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 37[2mms[22m[39m
+ [31m❯[39m app/lib/design-system.test.ts [2m([22m[2m37 tests[22m[2m | [22m[31m2 failed[39m[2m)[22m[32m 141[2mms[22m[39m
+[31m   [31m×[31m runtime design system[2m > [22mdefines navigation groups and layout templates for every runtime route[39m[32m 22[2mms[22m[39m
+[31m     → expected [ { title: 'Overview', …(1) }, …(8) ] to deeply equal [ { title: 'Overview', …(1) }, …(8) ][39m
+[31m   [31m×[31m runtime design system[2m > [22muses analytics charts as the primary Observe entry point[39m[32m 5[2mms[22m[39m
+[31m     → expected '/app/observe/activity' to be '/app/observe/requests' // Object.is equality[39m
+   [32m✓[39m runtime design system[2m > [22mkeeps the shell on the Apple baseline with explicit chart tokens[32m 2[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mglobal shell chrome keeps legacy vendor ui out of the main runtime contract[32m 63[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mstudio implementation targets render repo-owned workspace sections instead of placeholder blueprints[32m 15[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mintegration and system implementation targets render live upstream and peer surfaces[32m 8[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mrouter implementation targets render repo-owned routing explanation surfaces[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mrouter, connect registry, and remote surfaces expose alias/readiness ownership instead of generic filler[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mproviders surface exposes explicit in-place maintenance actions for saved remote accounts[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mproviders surface uses an explicit save-cancel modal for api-key maintenance[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mproviders surface keeps oauth reconnect as a one-click saved-account action[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mproviders maintenance flows call explicit repair APIs instead of generic account writes[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mproviders saved-account cards use canonical lifecycle rows and bounded archived diagnostics[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mruntime, session readiness, workbench, and advanced surfaces use canonical lifecycle diagnostics[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mrouter routes preserve empty-state and observe-link affordances[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mmerged router overview stays observational while routing strategy owns editing controls[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mmeta-guidance panels stay removed from overview and observe routes[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mdesign system doc marks the converted pages as live routes[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mcontrol routes tolerate an unassigned controller before endpoint activation[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mapplies the Apple palette, SF Pro / Inter typography, and explicit theme contract in shared app chrome[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mshared panels and provider selectors are owned by Apple-theme primitives[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mshared route effects avoid action identity loops and peer refresh feedback[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mkeeps shared states calm: transparent status pills and no section divider chrome[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mremote, models, router, and system runtime config routes are first-class pages in the retained taxonomy[32m 10[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mlocal setup surfaces stay discoverable from navigation and empty registry states[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mobserve and local log surfaces render structured ledgers rather than raw iframe placeholders[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mobserve ownership keeps requests canonical and raw-host surfaces adjacent[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mrequests and request detail stay telemetry-first while exposing raw-host handoffs[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mactivity route frames raw-host metrics as adjacent to canonical telemetry[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mlogs route exposes request-detail handoffs while preserving raw-host framing[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mregistry and system layouts avoid redundant KPI strips and placeholder note panels[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mdashboard is chart-led and keeps routing analytics as a first-class handoff[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22moverview metadata and design doc describe a telemetry-first summary with an interaction rail[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mworkbench and observe routes expose routing controls and receipts in repo-owned UI surfaces[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mshell header owns route metadata and page actions without duplicate page headers[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mshell headers do not render section eyebrow labels[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mruntime route definitions stay slim and future scaffolds avoid duplicate header props[32m 1[2mms[22m[39m
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  app/lib/design-system.test.ts > runtime design system > defines navigation groups and layout templates for every runtime route
+AssertionError: expected [ { title: 'Overview', …(1) }, …(8) ] to deeply equal [ { title: 'Overview', …(1) }, …(8) ]
+
+- Expected
++ Received
+
+@@ -51,13 +51,13 @@
+      ],
+      "title": "Router",
+    },
+    {
+      "routes": [
++       "/app/observe/activity",
+        "/app/observe/requests",
+        "/app/observe/routing",
+-       "/app/observe/activity",
+        "/app/observe/logs",
+      ],
+      "title": "Observe",
+    },
+    {
+
+ ❯ app/lib/design-system.test.ts:164:7
+    162|         routes: section.items.map((item) => item.to),
+    163|       })),
+    164|     ).toEqual([
+       |       ^
+    165|       {
+    166|         title: "Overview",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  app/lib/design-system.test.ts > runtime design system > uses analytics charts as the primary Observe entry point
+AssertionError: expected '/app/observe/activity' to be '/app/observe/requests' // Object.is equality
+
+Expected: "/app/observe/requests"
+Received: "/app/observe/activity"
+
+ ❯ app/lib/design-system.test.ts:380:42
+    378|     const observeSection = runtimeNavigationSections.find((section) =>…
+    379| 
+    380|     expect(observeSection?.items[0]?.to).toBe("/app/observe/requests");
+       |                                          ^
+    381|     expect(observeSection?.items[1]?.to).toBe("/app/observe/routing");
+    382|     expect(observeSection?.items.map((item) => item.to)).toContain("/a…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m10 passed[39m[22m[90m (11)[39m
+[2m      Tests [22m [1m[31m2 failed[39m[22m[2m | [22m[1m[32m139 passed[39m[22m[90m (141)[39m
+[2m   Start at [22m 18:20:38
+[2m   Duration [22m 3.06s[2m (transform 3.03s, setup 0ms, collect 7.33s, tests 450ms, environment 5ms, prepare 4.09s)[22m
+
+D:\DEV\role-model\.worktrees\49-runtime-telemetry-analytics-charts\role-model-router\apps\runtime-ui:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @role-model-router/runtime-ui@ test: `vitest run app/lib/runtime-api.test.ts app/lib/view-models.test.ts app/lib/device-authorization.test.ts app/lib/design-system.test.ts app/lib/provider-account-state.test.ts app/lib/router-candidate-labels.test.ts app/lib/benchmark-latency.test.ts app/lib/benchmark-model-cards.test.ts app/lib/telemetry-analytics.test.ts app/lib/telemetry-route-models.test.ts app/components/telemetry-charts.test.tsx "--" "app/lib/design-system.test.ts"`
+Exit status 1

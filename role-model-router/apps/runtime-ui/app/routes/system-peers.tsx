@@ -86,7 +86,7 @@ export default function SystemPeersRoute() {
               {peerGroups.map((group) => (
                 <div key={group.peerId} className={`${mutedPanelClassName} p-4`}>
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <p className="font-medium text-[var(--rm-fg)]">{group.peerId}</p>
+                    <p className="font-semibold text-[var(--rm-fg)]">{group.peerId}</p>
                     <StatusPill tone="accent">
                       {group.modelIds.length} model{group.modelIds.length === 1 ? "" : "s"}
                     </StatusPill>
@@ -120,42 +120,13 @@ export default function SystemPeersRoute() {
                 key={label}
                 className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}
               >
-                <p className="font-medium text-[var(--rm-fg)]">{label}</p>
+                <p className="font-semibold text-[var(--rm-fg)]">{label}</p>
                 <p className="mt-2">{detail}</p>
               </div>
             ))}
           </div>
         </SectionCard>
       </div>
-
-      <SectionCard
-        title="Runtime policy boundary"
-        description="Peer topology should stay explicit without duplicating the broader runtime health surface."
-      >
-        <div className="grid gap-4 md:grid-cols-3">
-          <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
-            <p className="font-medium text-[var(--rm-fg)]">Groups and matrix</p>
-            <p className="mt-2">
-              Peer posture belongs beside group and matrix policy notes so operators can reason
-              about eviction, exclusivity, and remote sourcing together.
-            </p>
-          </div>
-          <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
-            <p className="font-medium text-[var(--rm-fg)]">Empty-state rule</p>
-            <p className="mt-2">
-              When the host has no peers configured, the page still stays live by showing the
-              explicit empty inventory plus the supported peer contract fields.
-            </p>
-          </div>
-          <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
-            <p className="font-medium text-[var(--rm-fg)]">Raw diagnostics</p>
-            <p className="mt-2">
-              Route-local diagnostics belong on Runtime and Observe; this page stays focused on
-              topology and contract posture.
-            </p>
-          </div>
-        </div>
-      </SectionCard>
     </div>
   );
 }

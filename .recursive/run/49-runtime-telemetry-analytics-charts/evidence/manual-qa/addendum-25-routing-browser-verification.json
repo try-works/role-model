@@ -1,0 +1,29 @@
+{
+  "generatedAt": "2026-06-17T23:38:43.535Z",
+  "routes": [
+    {
+      "route": "/app/router",
+      "headingText": "role-model | Routing overview | Alias inventory | Routing candidates",
+      "hasHybrid": true,
+      "hasRemoteOnly": true,
+      "hasMoonshot": true,
+      "hasStaleLocalController": false,
+      "hasLocalRoutingCandidate": false,
+      "hasRemoteCandidate": true,
+      "hasCodeLeak": false,
+      "bodyExcerpt": "role-model\nOverview\nStudio\nLocal\nRemote\nModels\nRouter\nObserve\nConnect\nSystem\nLight\nDark\nRouting overview\n\nFirst-class operator summary for routing posture, decision flow, and the live handoff between config, candidates, and request outcomes.\n\nEdit strategy\nOpen decisions\nOverview\nRouting Strategy\nController\nCandidates\nDecisions\n\nSTRATEGY\n\nhybrid\n\nEXECUTION MODE\n\nremote_only\n\nCONTROLLER\n\nmoonshot/kimi-k2.7-code\n\nALIAS POOLS\n\n1\n\nAlias inventory\nAlias\tMode\tEffective models\tCandidate expansion\tReadiness\nmixed.local-remote\thybrid\t\nmoonshot/kimi-k2.7-code\n\t1 model / 1 endpoint\t\nREADY\n1 drift warning\nRouting candidates\n\nConcrete endpoint and model candidates currently visible to the router for this runtime posture.\n\nModel\tEndpoint\tSource\tHealth\tRouting\nmoonshot/kimi-k2.7-code\tmoonshot.personal.kimi-code.global.kimi-k2.7-code\tremote\tHEALTHY\t\nCONTROLLER"
+    },
+    {
+      "route": "/app/router/strategy",
+      "headingText": "role-model | Routing strategy | Persisted routing posture | Benchmark-informed difficulty advisory",
+      "hasHybrid": true,
+      "hasRemoteOnly": true,
+      "hasMoonshot": true,
+      "hasStaleLocalController": false,
+      "hasLocalRoutingCandidate": false,
+      "hasRemoteCandidate": true,
+      "hasCodeLeak": false,
+      "bodyExcerpt": "role-model\nOverview\nStudio\nLocal\nRemote\nModels\nRouter\nObserve\nConnect\nSystem\nLight\nDark\nRouting strategy\n\nEditable routing posture for the persisted scoring strategy and execution mode, with controller context and direct verification links.\n\nAdvanced config\nRouter detail\nOverview\nRouting Strategy\nController\nCandidates\nDecisions\nPersisted routing posture\n\nChange the saved Strategy A/B/C routing mode and the effective execution mode here; both write through the runtime config control-plane record instead of living as placeholder UI state.\n\nRouting strategy\n\nUse runtime default\nLeave the persisted routing mode unset.\nStrategy A - Baseline\nUse the deterministic baseline route without controller or difficulty guidance.\nStrategy B - Intelligent\nUse controller-guided endpoint selection when the routing controller is available.\nStrategy C - Difficulty\nUse difficulty-aware routing that matches the request to endpoint difficulty bounds.\nHybrid\nBlend controller guidance with difficulty-aware fallback behavior.\nCustom strategy\nPreserve a custom persisted routing mode string.\nExecution mode\nRemote only\n\nRoute only through remote provider-backed endpoints.\n\nSave and apply strategy\nReset form\n\nSaved routing settings\n\nThese are the persisted settings returned by the runtime config control plane.\n\nCONFIG APPLIED\nHYBRID\nREMOTE_ONLY\n\nDraft selection\n\nHybrid\n\nBlend controller guidance with difficulty-aware fallback behavior.\n\nMATCHES SAVED\nHYBRID\nREMOTE_ONLY\n\nCurrent controller\n\nmoonshot.personal.kimi-code.global.kimi-k2.7-code\n\nmoonshot/kimi-k2.7-code (remote)\n\nApplied config record\n\nC:\\Users\\erikb\\AppData\\Local\\Temp\\role-model-runtime-qa-phase5\\runtime-config.yaml\n\nBenchmark-informed difficulty advisory\n\nWhen Strategy C (difficulty) is active, per-endpoint quality scores from Models → Be"
+    }
+  ]
+}

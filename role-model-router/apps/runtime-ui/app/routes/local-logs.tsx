@@ -74,7 +74,7 @@ export default function LocalLogsRoute() {
               id="autoRefresh"
               checked={autoRefresh}
               onChange={(event) => setAutoRefresh(event.target.checked)}
-              className="h-4 w-4 rounded-none border-[var(--rm-border-strong)] accent-[var(--rm-accent)]"
+              className="h-4 w-4 rounded-[var(--rm-radius-sm)] border-[var(--rm-border-strong)] accent-[var(--rm-accent)]"
             />
             <label htmlFor="autoRefresh" className="text-sm text-[var(--rm-fg)]">
               Auto-refresh (3s)
@@ -92,11 +92,11 @@ export default function LocalLogsRoute() {
             <table className="min-w-full text-left text-sm">
               <thead className="text-[var(--rm-muted)]">
                 <tr>
-                  <th className="pb-3 font-medium">Timestamp</th>
-                  <th className="pb-3 font-medium">Source</th>
-                  <th className="pb-3 font-medium">Severity</th>
-                  <th className="pb-3 font-medium">Request</th>
-                  <th className="pb-3 font-medium">Entry</th>
+                  <th className="pb-3 font-semibold">Timestamp</th>
+                  <th className="pb-3 font-semibold">Source</th>
+                  <th className="pb-3 font-semibold">Severity</th>
+                  <th className="pb-3 font-semibold">Request</th>
+                  <th className="pb-3 font-semibold">Entry</th>
                 </tr>
               </thead>
               <tbody>
@@ -139,7 +139,7 @@ export default function LocalLogsRoute() {
       >
         <div className="grid gap-4 xl:grid-cols-2">
           <div>
-            <p className="mb-2 font-medium text-[var(--rm-fg)]">Proxy log stream</p>
+            <p className="mb-2 font-semibold text-[var(--rm-fg)]">Proxy log stream</p>
             {proxyRows.length === 0 ? (
               <EmptyState label="No proxy log lines are available yet." />
             ) : (
@@ -149,7 +149,7 @@ export default function LocalLogsRoute() {
             )}
           </div>
           <div>
-            <p className="mb-2 font-medium text-[var(--rm-fg)]">Llama-swap log stream</p>
+            <p className="mb-2 font-semibold text-[var(--rm-fg)]">Llama-swap log stream</p>
             {llamaSwapRows.length === 0 ? (
               <EmptyState label="No llama-swap log lines are available yet." />
             ) : (

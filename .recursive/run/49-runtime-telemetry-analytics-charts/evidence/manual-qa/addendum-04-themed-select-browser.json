@@ -1,0 +1,35 @@
+{
+  "generatedAt": "2026-06-17T17:49:15.231Z",
+  "route": "http://127.0.0.1:3456/app/remote/providers",
+  "openState": {
+    "listboxBackground": "rgb(39, 39, 41)",
+    "listboxBorder": "rgba(255, 255, 255, 0.18)",
+    "listboxRadius": "18px",
+    "listboxVisible": true,
+    "nativeSelectCount": 0,
+    "optionCount": 231,
+    "providerTriggerCount": 3,
+    "selectedBackground": "rgb(0, 102, 204)",
+    "selectedColor": "rgb(255, 255, 255)",
+    "selectedText": "302.AI"
+  },
+  "interaction": {
+    "nativeSelectCount": 0,
+    "openListboxCount": 0,
+    "selectedProviderTriggerText": "Abacus",
+    "triggers": [
+      {
+        "expanded": "false",
+        "text": "Abacus"
+      },
+      {
+        "expanded": "false",
+        "text": "Abacus API Key"
+      },
+      {
+        "expanded": "false",
+        "text": "Select a model…"
+      }
+    ]
+  }
+}

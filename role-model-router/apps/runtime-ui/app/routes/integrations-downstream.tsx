@@ -61,9 +61,9 @@ export default function IntegrationsDownstreamRoute() {
       </SectionCard>
 
       <SectionCard title="Consumer setup">
-        <div className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
-          <div className={`${mutedPanelClassName} p-4`}>
-            <p className="font-medium text-[var(--rm-fg)]">Setup steps</p>
+        <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+          <div className={`${mutedPanelClassName} min-w-0 p-4`}>
+            <p className="font-semibold text-[var(--rm-fg)]">Setup steps</p>
             <ol className="mt-3 space-y-2 text-sm text-[var(--rm-secondary)]">
               {guide.opencodeSteps.map((step) => (
                 <li key={step}>{step}</li>
@@ -74,23 +74,24 @@ export default function IntegrationsDownstreamRoute() {
             </p>
           </div>
 
-          <div className="space-y-4">
-            <div className={`${mutedPanelClassName} p-4`}>
-              <p className="font-medium text-[var(--rm-fg)]">Available models</p>
-              <div className="mt-3 flex flex-wrap gap-2">
+          <div className="min-w-0 space-y-4">
+            <div className={`${mutedPanelClassName} min-w-0 p-4`}>
+              <p className="font-semibold text-[var(--rm-fg)]">Available models</p>
+              <div className="mt-3 flex min-w-0 flex-wrap gap-2">
                 {guide.availableModels.map((modelId) => (
                   <StatusPill
                     key={modelId}
+                    className="max-w-full whitespace-normal leading-4"
                     tone={modelId === provider.setup.recommendedModel ? "accent" : "neutral"}
                   >
-                    {modelId}
+                    <span className="min-w-0 break-all">{modelId}</span>
                   </StatusPill>
                 ))}
               </div>
             </div>
 
-            <div className={`${mutedPanelClassName} p-4`}>
-              <p className="font-medium text-[var(--rm-fg)]">Example commands</p>
+            <div className={`${mutedPanelClassName} min-w-0 p-4`}>
+              <p className="font-semibold text-[var(--rm-fg)]">Example commands</p>
               <pre className={`mt-3 ${codeBlockClassName}`}>{guide.examples.modelsCurl}</pre>
               <pre className={`mt-3 ${codeBlockClassName}`}>{guide.examples.chatCurl}</pre>
             </div>
@@ -98,32 +99,6 @@ export default function IntegrationsDownstreamRoute() {
         </div>
       </SectionCard>
 
-      <SectionCard title="Compatibility posture">
-        <div className="grid gap-3 md:grid-cols-3">
-          <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
-            <p className="font-medium text-[var(--rm-fg)]">API family</p>
-            <p className="mt-2">
-              Downstream consumers should treat this runtime as an OpenAI-compatible provider
-              surfaced through the model listing and chat-completions contract shown above.
-            </p>
-          </div>
-          <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
-            <p className="font-medium text-[var(--rm-fg)]">Tool calling</p>
-            <p className="mt-2">
-              Multi-turn tool history with `tool_calls` and tool results must use `POST
-              /v1/chat/completions`. `tool_calls` compatibility follows the selected routed model
-              and remains inspectable in request detail.
-            </p>
-          </div>
-          <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
-            <p className="font-medium text-[var(--rm-fg)]">MCP boundary</p>
-            <p className="mt-2">
-              MCP and runtime-owned tool execution stay backend-governed; downstream clients consume
-              the compatible response surface rather than negotiating connector state directly.
-            </p>
-          </div>
-        </div>
-      </SectionCard>
     </div>
   );
 }

@@ -1,0 +1,33 @@
+{
+  "verifiedAt": "2026-06-17T23:40:01.1908176+02:00",
+  "route": "http://127.0.0.1:3456/app/router",
+  "issue": "Router overview showed local_only after user selected hybrid and did not list concrete candidate endpoints.",
+  "api": {
+    "runtimeExecutionMode": "hybrid",
+    "runtimeStrategy": "controller",
+    "routerExecutionMode": "hybrid",
+    "routerStrategy": "controller",
+    "controllerModel": "lfm2.5-1.2b-instruct",
+    "candidateCount": 1,
+    "candidateModels": [
+      "lfm2.5-1.2b-instruct"
+    ],
+    "candidateEndpoints": [
+      "llama-swap.local.lfm2-5-1-2b-instruct"
+    ]
+  },
+  "browser": {
+    "hasCandidateSection": true,
+    "hasHybrid": true,
+    "hasLocalModel": true,
+    "hasEndpoint": true
+  },
+  "tests": [
+    ".recursive/run/49-runtime-telemetry-analytics-charts/evidence/logs/red/addendum-21-explicit-execution-mode-red.log",
+    ".recursive/run/49-runtime-telemetry-analytics-charts/evidence/logs/green/addendum-21-explicit-execution-mode-green.log",
+    ".recursive/run/49-runtime-telemetry-analytics-charts/evidence/logs/red/addendum-21-router-candidates-red.log",
+    ".recursive/run/49-runtime-telemetry-analytics-charts/evidence/logs/green/addendum-21-router-candidates-green.log",
+    ".recursive/run/49-runtime-telemetry-analytics-charts/evidence/logs/green/addendum-21-runtime-host-bridge-build.log",
+    ".recursive/run/49-runtime-telemetry-analytics-charts/evidence/logs/green/addendum-21-runtime-ui-build.log"
+  ]
+}

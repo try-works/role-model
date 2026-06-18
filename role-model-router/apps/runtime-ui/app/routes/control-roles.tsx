@@ -14,6 +14,7 @@ import {
   FactCard,
   LoadingState,
   SectionCard,
+  SelectField,
   StatusPill,
 } from "../components/page-primitives";
 import {
@@ -139,7 +140,7 @@ function RoleForm({
   return (
     <div className="grid gap-4 md:grid-cols-2">
       <label className="grid gap-2 text-sm">
-        <span className="font-medium text-[var(--rm-fg)]">Role id</span>
+        <span className="font-semibold text-[var(--rm-fg)]">Role id</span>
         <input
           className={fieldClassName}
           value={draft.roleId}
@@ -147,7 +148,7 @@ function RoleForm({
         />
       </label>
       <label className="grid gap-2 text-sm">
-        <span className="font-medium text-[var(--rm-fg)]">Name</span>
+        <span className="font-semibold text-[var(--rm-fg)]">Name</span>
         <input
           className={fieldClassName}
           value={draft.name}
@@ -155,7 +156,7 @@ function RoleForm({
         />
       </label>
       <label className="grid gap-2 text-sm md:col-span-2">
-        <span className="font-medium text-[var(--rm-fg)]">Description</span>
+        <span className="font-semibold text-[var(--rm-fg)]">Description</span>
         <textarea
           className={`${fieldClassName} min-h-24`}
           value={draft.description}
@@ -163,27 +164,24 @@ function RoleForm({
         />
       </label>
       <label className="grid gap-2 text-sm">
-        <span className="font-medium text-[var(--rm-fg)]">Role kind</span>
+        <span className="font-semibold text-[var(--rm-fg)]">Role kind</span>
         <input
           className={fieldClassName}
           value={draft.roleKind}
           onChange={(event) => update("roleKind", event.target.value)}
         />
       </label>
-      <label className="grid gap-2 text-sm">
-        <span className="font-medium text-[var(--rm-fg)]">Tool policy mode</span>
-        <select
-          className={fieldClassName}
-          value={draft.toolPolicyMode}
-          onChange={(event) => update("toolPolicyMode", event.target.value)}
-        >
-          <option value="allowed">allowed</option>
-          <option value="limited">limited</option>
-          <option value="disabled">disabled</option>
-        </select>
-      </label>
+      <SelectField
+        label="Tool policy mode"
+        value={draft.toolPolicyMode}
+        onChange={(value) => update("toolPolicyMode", value)}
+      >
+        <option value="allowed">allowed</option>
+        <option value="limited">limited</option>
+        <option value="disabled">disabled</option>
+      </SelectField>
       <label className="grid gap-2 text-sm md:col-span-2">
-        <span className="font-medium text-[var(--rm-fg)]">Default system instructions</span>
+        <span className="font-semibold text-[var(--rm-fg)]">Default system instructions</span>
         <textarea
           className={`${fieldClassName} min-h-28`}
           value={draft.defaultSystemInstructions}
@@ -191,7 +189,7 @@ function RoleForm({
         />
       </label>
       <label className="grid gap-2 text-sm">
-        <span className="font-medium text-[var(--rm-fg)]">Supported task types</span>
+        <span className="font-semibold text-[var(--rm-fg)]">Supported task types</span>
         <textarea
           className={`${fieldClassName} min-h-24`}
           value={draft.taskTypesSupported}
@@ -199,7 +197,7 @@ function RoleForm({
         />
       </label>
       <label className="grid gap-2 text-sm">
-        <span className="font-medium text-[var(--rm-fg)]">Allowed tools</span>
+        <span className="font-semibold text-[var(--rm-fg)]">Allowed tools</span>
         <textarea
           className={`${fieldClassName} min-h-24`}
           value={draft.allowedTools}
@@ -207,7 +205,7 @@ function RoleForm({
         />
       </label>
       <label className="grid gap-2 text-sm">
-        <span className="font-medium text-[var(--rm-fg)]">Required capabilities</span>
+        <span className="font-semibold text-[var(--rm-fg)]">Required capabilities</span>
         <textarea
           className={`${fieldClassName} min-h-24`}
           value={draft.requiredCapabilities}
@@ -215,7 +213,7 @@ function RoleForm({
         />
       </label>
       <label className="grid gap-2 text-sm">
-        <span className="font-medium text-[var(--rm-fg)]">Preferred capabilities</span>
+        <span className="font-semibold text-[var(--rm-fg)]">Preferred capabilities</span>
         <textarea
           className={`${fieldClassName} min-h-24`}
           value={draft.preferredCapabilities}
@@ -223,7 +221,7 @@ function RoleForm({
         />
       </label>
       <label className="grid gap-2 text-sm">
-        <span className="font-medium text-[var(--rm-fg)]">Forbidden capabilities</span>
+        <span className="font-semibold text-[var(--rm-fg)]">Forbidden capabilities</span>
         <textarea
           className={`${fieldClassName} min-h-24`}
           value={draft.forbiddenCapabilities}
@@ -231,7 +229,7 @@ function RoleForm({
         />
       </label>
       <label className="grid gap-2 text-sm">
-        <span className="font-medium text-[var(--rm-fg)]">Output contracts</span>
+        <span className="font-semibold text-[var(--rm-fg)]">Output contracts</span>
         <textarea
           className={`${fieldClassName} min-h-24`}
           value={draft.outputContracts}
@@ -239,7 +237,7 @@ function RoleForm({
         />
       </label>
       <label className="grid gap-2 text-sm">
-        <span className="font-medium text-[var(--rm-fg)]">Safety policy refs</span>
+        <span className="font-semibold text-[var(--rm-fg)]">Safety policy refs</span>
         <textarea
           className={`${fieldClassName} min-h-24`}
           value={draft.safetyPolicyRefs}
@@ -247,7 +245,7 @@ function RoleForm({
         />
       </label>
       <label className="grid gap-2 text-sm md:col-span-2">
-        <span className="font-medium text-[var(--rm-fg)]">Routing policy overrides (JSON)</span>
+        <span className="font-semibold text-[var(--rm-fg)]">Routing policy overrides (JSON)</span>
         <textarea
           className={`${fieldClassName} min-h-32 font-mono text-xs`}
           spellCheck={false}
@@ -443,7 +441,7 @@ export default function ControlRolesRoute() {
                   >
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
-                        <p className="text-sm font-medium text-[var(--rm-fg)]">{role.name}</p>
+                        <p className="text-sm font-semibold text-[var(--rm-fg)]">{role.name}</p>
                         <p className="mt-1 break-all text-xs uppercase tracking-[0.16em] text-[var(--rm-muted)]">
                           {role.role_id}
                         </p>
@@ -549,7 +547,7 @@ export default function ControlRolesRoute() {
                 {policy.taskDefinitions.map((task) => (
                   <div key={task.task_type} className={`${mutedPanelClassName} space-y-3 p-4`}>
                     <div>
-                      <p className="font-medium text-[var(--rm-fg)]">{task.task_type}</p>
+                      <p className="font-semibold text-[var(--rm-fg)]">{task.task_type}</p>
                       <p className="mt-1 text-sm text-[var(--rm-secondary)]">{task.description}</p>
                     </div>
                     <div className="flex flex-wrap gap-2">
@@ -563,7 +561,7 @@ export default function ControlRolesRoute() {
                       {policy.roleDefinitions.map((role) => (
                         <label
                           key={`${task.task_type}:${role.role_id}`}
-                          className="flex items-center gap-2 rounded-none border border-[var(--rm-border)] px-3 py-2 text-sm text-[var(--rm-secondary)]"
+                          className="flex items-center gap-2 rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] px-3 py-2 text-sm text-[var(--rm-secondary)]"
                         >
                           <input
                             checked={(taskRoleSelections[task.task_type] ?? []).includes(

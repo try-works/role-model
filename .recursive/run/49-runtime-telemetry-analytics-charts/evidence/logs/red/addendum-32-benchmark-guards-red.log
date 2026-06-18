@@ -1,0 +1,37 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/49-runtime-telemetry-analytics-charts/role-model-router/apps/runtime-host-bridge[39m
+
+ [31m❯[39m test/benchmark-start-guards.test.ts [2m([22m[2m8 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 22[2mms[22m[39m
+   [32m✓[39m benchmark-start-guards[2m > [22mrejects start when useJudge and explicit endpointIds has fewer than two subjects[32m 5[2mms[22m[39m
+   [32m✓[39m benchmark-start-guards[2m > [22mallows start when two or more explicit subjects are configured[32m 1[2mms[22m[39m
+   [32m✓[39m benchmark-start-guards[2m > [22mwarns when judge endpoint overlaps benchmark subjects[32m 1[2mms[22m[39m
+   [32m✓[39m benchmark-start-guards[2m > [22mdoes not flag overlap when judge is outside subject list[32m 1[2mms[22m[39m
+   [32m✓[39m benchmark-start-guards[2m > [22mprefers a non-subject judge endpoint when one is available[32m 1[2mms[22m[39m
+   [32m✓[39m benchmark-start-guards[2m > [22mprefers remote Kimi as judge when overlap is unavoidable[32m 1[2mms[22m[39m
+   [32m✓[39m benchmark-start-guards[2m > [22mskips compare guard when useJudge is false[32m 0[2mms[22m[39m
+[31m   [31m×[31m benchmark-start-guards[2m > [22mrejects benchmark targets excluded by the current execution mode[39m[32m 11[2mms[22m[39m
+[31m     → (0 , evaluateBenchmarkTargetEligibility) is not a function[39m
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/benchmark-start-guards.test.ts > benchmark-start-guards > rejects benchmark targets excluded by the current execution mode
+TypeError: (0 , evaluateBenchmarkTargetEligibility) is not a function
+ ❯ test/benchmark-start-guards.test.ts:87:20
+     85| 
+     86|   test("rejects benchmark targets excluded by the current execution mo…
+     87|     const result = evaluateBenchmarkTargetEligibility({
+       |                    ^
+     88|       endpointIds: ["local.lfm", "moonshot.kimi"],
+     89|       judgeEndpointId: "moonshot.kimi",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m7 passed[39m[22m[90m (8)[39m
+[2m   Start at [22m 09:06:49
+[2m   Duration [22m 1.18s[2m (transform 163ms, setup 0ms, collect 126ms, tests 22ms, environment 0ms, prepare 422ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\49-runtime-telemetry-analytics-charts\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/benchmark-start-guards.test.ts

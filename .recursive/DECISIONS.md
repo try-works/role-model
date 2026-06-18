@@ -969,7 +969,7 @@
 - What was not done:
   - the run did not widen into new routing-strategy modes, broad repo-wide formatter remediation, or a QA-launcher runtime-config persistence redesign
 - Known issues / follow-ups:
-  - the QA launcher still has no `unifiedRuntimeConfigPath`, so browser proof remains suitable for live operator workflows but not for runtime-config-save plus downstream alias-routing proof
+  - resolved in run 49 Phase 5 Addendum 19: the QA launcher now seeds and passes `unifiedRuntimeConfigPath`, so runtime-config save and routing-strategy browser proof are covered by the live QA harness
   - the broader worktree still contains unrelated status noise outside run 34 scope, including older nested `role-model-router/.recursive/run/*` history and a Python `__pycache__` artifact
 
 ### Run `35-runtime-ui-connect-declutter`
@@ -1252,3 +1252,36 @@
   - no npm distribution channel was introduced; installation remains source checkout or released binaries with install scripts
 - Known issues / follow-ups:
   - GitHub release publication still depends on real tag pushes plus repo-side permissions and environment policy; keep the operations docs aligned whenever workflows or release assets change
+
+### Run `49-runtime-telemetry-analytics-charts`
+
+- Run folder: `/.recursive/run/49-runtime-telemetry-analytics-charts/`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+  - addenda `addenda/05-manual-qa.upstream-gap.02-to-be-plan.addendum-01.md` through `addenda/05-manual-qa.upstream-gap.02-to-be-plan.addendum-04.md`
+- What changed:
+  - added backend-owned historical telemetry analytics over persisted request-time facts, including effective/request cost, avoided cost, cache-hit tokens, routing strategy, difficulty, role, model, endpoint, provider, status, and latency dimensions
+  - added `POST /api/role-model/telemetry/query` plus runtime UI chart models for `/app`, `/app/observe/requests`, and `/app/observe/routing`; chart display remains out of setup/config routes
+  - extended the runtime UI design system with Apple-themed chart tokens, chart palette, shared chart primitives, themed selects/listboxes, typography/control repairs, quiet shell panels, light/dark support, and route-wide design-system adherence
+  - repaired run 49 Phase 5 gaps through addenda: restored run 48 Apple-theme shell contract, fixed broken routes, removed redundant panels/dividers/header refresh buttons, repaired dropdown/listbox theming and keyboard behavior, enforced per-chart color uniqueness, normalized fact-card type, merged overview telemetry controls into the header, and cleaned Connect/System redundant components
+  - repaired routing strategy persistence/readback and derived alias consistency so strategy plus execution mode determine the effective routing alias; `/api/role-model/router/candidates` is now the canonical configured candidate source with execution-mode eligibility metadata used by Router and Models -> Benchmark
+  - repaired benchmark startup so execution-mode-ineligible endpoints are excluded in the UI and rejected synchronously by the backend instead of producing instant blank benchmark failures
+- Why:
+  - FAS-7 required future-proof backend telemetry storage/querying plus chart-led operator analytics, and Phase 5 found that the chart work had regressed the approved run 48 Apple-themed runtime UI contract and exposed routing/config/candidate truth gaps
+- How:
+  - implemented with strict RED/GREEN TDD for backend, persistence, runtime UI, design-system, route, routing strategy, canonical candidates, and benchmark guard slices; rebuilt the runtime UI; verified direct APIs and all chart pages in the in-app browser; completed hybrid manual QA with operator approval on `2026-06-18`
+- What was not done:
+  - the run did not add charts to Router, Models, Local, Remote, or Connect setup pages; analytics charts intentionally live only on `/app` and Observe analytics pages
+  - the Phase 5 QA launcher still disables vendor startup, so fresh successful live-completion chart generation was not possible in that harness
+- Known issues / follow-ups:
+  - dashboard graph E2E proved fresh router probes are ingested into analytics through failed request rows; successful token/cost/cache chart metrics were verified from seeded successful telemetry rows rather than fresh successful completions because vendor execution is disabled in the QA launcher
+  - build assets under `role-model-router/apps/runtime-ui/build/` are QA byproducts and should remain untracked

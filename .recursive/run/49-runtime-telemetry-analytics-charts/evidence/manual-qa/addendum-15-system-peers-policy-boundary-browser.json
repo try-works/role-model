@@ -1,0 +1,18 @@
+{
+  "timestamp": "2026-06-17T21:11:01.5505349+02:00",
+  "route": "http://127.0.0.1:3456/app/system/peers",
+  "finding": "System peers rendered a redundant Runtime policy boundary component below the peer inventory and peer contract fields.",
+  "verification": {
+    "url": "http://127.0.0.1:3456/app/system/peers",
+    "hasRuntimePolicyBoundary": false,
+    "hasGroupsAndMatrix": false,
+    "hasEmptyStateRule": false,
+    "hasRawDiagnostics": false,
+    "hasPeerInventory": true,
+    "hasPeerContractFields": true,
+    "bodyClientWidth": 723,
+    "bodyScrollWidth": 723,
+    "hasDocumentHorizontalOverflow": false
+  },
+  "status": "pass"
+}

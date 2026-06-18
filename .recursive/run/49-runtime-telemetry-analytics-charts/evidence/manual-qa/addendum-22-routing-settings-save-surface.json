@@ -1,0 +1,63 @@
+{
+  "timestamp": "2026-06-18T00:02:13.6935916+02:00",
+  "finding": "Routing strategy settings needed to persist both strategy and execution mode, then surface the saved values consistently on the strategy and overview pages.",
+  "implementation": {
+    "route": "/app/router/strategy",
+    "changes": [
+      "The strategy page separates persisted saved settings from draft selections.",
+      "The save path awaits the runtime config update and reloads config, snapshot, controller, and candidates after persistence.",
+      "Visible routing-strategy option card clicks now update the controlled React draft state before save."
+    ]
+  },
+  "tdd": {
+    "red": [
+      ".recursive/run/49-runtime-telemetry-analytics-charts/evidence/logs/red/addendum-22-routing-settings-ui-red.log",
+      ".recursive/run/49-runtime-telemetry-analytics-charts/evidence/logs/red/addendum-22-routing-card-click-red.log"
+    ],
+    "green": [
+      ".recursive/run/49-runtime-telemetry-analytics-charts/evidence/logs/green/addendum-22-routing-settings-ui-green.log",
+      ".recursive/run/49-runtime-telemetry-analytics-charts/evidence/logs/green/addendum-22-runtime-ui-build.log",
+      ".recursive/run/49-runtime-telemetry-analytics-charts/evidence/logs/green/addendum-22-routing-card-click-green.log",
+      ".recursive/run/49-runtime-telemetry-analytics-charts/evidence/logs/green/addendum-22-routing-card-click-build.log"
+    ]
+  },
+  "rebuiltRuntime": {
+    "url": "http://127.0.0.1:3456",
+    "stdout": ".recursive/run/49-runtime-telemetry-analytics-charts/evidence/phase5-qa-server-addendum-22-routing-card.log",
+    "stderr": ".recursive/run/49-runtime-telemetry-analytics-charts/evidence/phase5-qa-server-addendum-22-routing-card.err.log"
+  },
+  "browserVerification": {
+    "steps": [
+      "Opened http://127.0.0.1:3456/app/router/strategy after rebuilding the runtime.",
+      "Clicked the visible Strategy B - Intelligent card.",
+      "Opened the themed execution-mode selector and selected Hybrid.",
+      "Clicked Save and apply strategy.",
+      "Verified the strategy page saved card and draft card both report Strategy B - Intelligent and HYBRID with MATCHES SAVED.",
+      "Opened http://127.0.0.1:3456/app/router and verified the fact cards report strategy controller and execution mode hybrid."
+    ],
+    "strategyPage": {
+      "url": "http://127.0.0.1:3456/app/router/strategy",
+      "savedCardExcerpt": "Saved routing settings ... CONFIG APPLIED ... STRATEGY B - INTELLIGENT ... HYBRID ... Draft selection ... MATCHES SAVED ... STRATEGY B - INTELLIGENT ... HYBRID",
+      "hasSavedMessage": true,
+      "matchesSaved": true
+    },
+    "routerOverview": {
+      "url": "http://127.0.0.1:3456/app/router",
+      "strategy": "controller",
+      "executionMode": "hybrid",
+      "hasRoutingCandidates": true
+    }
+  },
+  "apiVerification": {
+    "runtimeConfig": {
+      "routingStrategy": "controller",
+      "executionMode": "hybrid"
+    },
+    "routerSummary": {
+      "strategy": "controller",
+      "executionMode": "hybrid",
+      "configuredCandidateCount": 1
+    }
+  },
+  "result": "PASS"
+}

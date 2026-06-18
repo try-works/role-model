@@ -21,6 +21,7 @@ import StudioImagesRoute from "../routes/studio-images";
 import StudioRerankRoute from "../routes/studio-rerank";
 import SystemPeersRoute from "../routes/system-peers";
 import {
+  codeBlockClassName,
   getRuntimeRouteDefinition,
   runtimeNavigationSections,
   runtimeTheme,
@@ -37,8 +38,22 @@ function renderRoute(pathname: string, element: ReactElement): string {
 }
 
 const appCss = readFileSync(new URL("../app.css", import.meta.url), "utf8");
+const rootAppCss = appCss.slice(0, appCss.indexOf('html[data-theme="light"]'));
+const lightAppCss = `${rootAppCss}\n${appCss.slice(
+  appCss.indexOf('html[data-theme="light"]'),
+  appCss.indexOf('html[data-theme="dark"]'),
+)}`;
+const darkAppCss = `${rootAppCss}\n${appCss.slice(appCss.indexOf('html[data-theme="dark"]'))}`;
 const appShellSource = readFileSync(
   new URL("../components/app-shell.tsx", import.meta.url),
+  "utf8",
+);
+const telemetryChartsSource = readFileSync(
+  new URL("../components/telemetry-charts.tsx", import.meta.url),
+  "utf8",
+);
+const telemetryControlsSource = readFileSync(
+  new URL("../components/telemetry-controls.tsx", import.meta.url),
   "utf8",
 );
 const pagePrimitivesSource = readFileSync(
@@ -57,6 +72,14 @@ const controlRoutingStrategySource = readFileSync(
   new URL("../routes/control-routing-strategy.tsx", import.meta.url),
   "utf8",
 );
+const controlBenchmarkSource = readFileSync(
+  new URL("../routes/control-benchmark.tsx", import.meta.url),
+  "utf8",
+);
+const controlRolesSource = readFileSync(
+  new URL("../routes/control-roles.tsx", import.meta.url),
+  "utf8",
+);
 const routingModeSource = readFileSync(new URL("./routing-mode.ts", import.meta.url), "utf8");
 const controlModelsSource = readFileSync(
   new URL("../routes/control-models.tsx", import.meta.url),
@@ -66,6 +89,15 @@ const localPeerModelsSource = readFileSync(
   new URL("../routes/local-peer-models.tsx", import.meta.url),
   "utf8",
 );
+
+function extractCssVariableValue(source: string, variableName: string): string {
+  const escapedVariableName = variableName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const match = source.match(new RegExp(`${escapedVariableName}:\\s*([^;]+);`));
+  if (!match?.[1]) {
+    throw new Error(`Missing CSS variable ${variableName}`);
+  }
+  return match[1].trim();
+}
 const localLlamaSwapModelsSource = readFileSync(
   new URL("../routes/local-llama-swap-models.tsx", import.meta.url),
   "utf8",
@@ -81,6 +113,10 @@ const observeLogsSource = readFileSync(
 );
 const endpointsRouteSource = readFileSync(
   new URL("../routes/endpoints.tsx", import.meta.url),
+  "utf8",
+);
+const integrationsDownstreamRouteSource = readFileSync(
+  new URL("../routes/integrations-downstream.tsx", import.meta.url),
   "utf8",
 );
 const providersRouteSource = readFileSync(
@@ -122,6 +158,18 @@ const studioAdvancedRouteSource = readFileSync(
   new URL("../routes/studio-advanced.tsx", import.meta.url),
   "utf8",
 );
+const studioAudioRouteSource = readFileSync(
+  new URL("../routes/studio-audio.tsx", import.meta.url),
+  "utf8",
+);
+const studioImagesRouteSource = readFileSync(
+  new URL("../routes/studio-images.tsx", import.meta.url),
+  "utf8",
+);
+const studioRerankRouteSource = readFileSync(
+  new URL("../routes/studio-rerank.tsx", import.meta.url),
+  "utf8",
+);
 const workbenchRouteSource = readFileSync(
   new URL("../routes/workbench.tsx", import.meta.url),
   "utf8",
@@ -153,6 +201,68 @@ const routesDir = path.dirname(fileURLToPath(new URL("../routes", import.meta.ur
 const routeSources = readdirSync(routesDir)
   .filter((name) => name.endsWith(".tsx"))
   .map((name) => readFileSync(path.join(routesDir, name), "utf8"));
+const componentSourcesDir = path.dirname(
+  fileURLToPath(new URL("../components", import.meta.url)),
+);
+const productionUiSources = [
+  ...readdirSync(routesDir)
+    .filter((name) => name.endsWith(".tsx"))
+    .map((name) => ({
+      path: `app/routes/${name}`,
+      source: readFileSync(path.join(routesDir, name), "utf8"),
+    })),
+  ...readdirSync(componentSourcesDir)
+    .filter((name) => name.endsWith(".tsx"))
+    .map((name) => ({
+      path: `app/components/${name}`,
+      source: readFileSync(path.join(componentSourcesDir, name), "utf8"),
+    })),
+  {
+    path: "app/lib/design-system.ts",
+    source: designSystemSource,
+  },
+];
+
+function findSourceViolations(pattern: RegExp): string[] {
+  return productionUiSources.flatMap(({ path: sourcePath, source }) =>
+    source
+      .split("\n")
+      .map((line, index) => ({ line, lineNumber: index + 1 }))
+      .filter(({ line }) => line.match(pattern))
+      .map(({ line, lineNumber }) => `${sourcePath}:${lineNumber}: ${line.trim()}`),
+  );
+}
+
+function findExactSourceViolations(term: string): string[] {
+  return productionUiSources.flatMap(({ path: sourcePath, source }) =>
+    source
+      .split("\n")
+      .map((line, index) => ({ line, lineNumber: index + 1 }))
+      .filter(({ line }) => line.includes(term))
+      .map(({ line, lineNumber }) => `${sourcePath}:${lineNumber}: ${line.trim()}`),
+  );
+}
+
+const nativeSelectAuditSources = [
+  { path: "app/routes/control-benchmark.tsx", source: controlBenchmarkSource },
+  { path: "app/routes/control-roles.tsx", source: controlRolesSource },
+  { path: "app/routes/control-routing-strategy.tsx", source: controlRoutingStrategySource },
+  { path: "app/routes/studio-advanced.tsx", source: studioAdvancedRouteSource },
+  { path: "app/routes/studio-audio.tsx", source: studioAudioRouteSource },
+  { path: "app/routes/studio-images.tsx", source: studioImagesRouteSource },
+  { path: "app/routes/studio-rerank.tsx", source: studioRerankRouteSource },
+  { path: "app/routes/workbench.tsx", source: workbenchRouteSource },
+];
+
+function findNativeSelectViolations(): string[] {
+  return nativeSelectAuditSources.flatMap(({ path: sourcePath, source }) =>
+    source
+      .split("\n")
+      .map((line, index) => ({ line, lineNumber: index + 1 }))
+      .filter(({ line }) => line.includes("<select"))
+      .map(({ line, lineNumber }) => `${sourcePath}:${lineNumber}: ${line.trim()}`),
+  );
+}
 
 describe("runtime design system", () => {
   test("defines navigation groups and layout templates for every runtime route", () => {
@@ -208,7 +318,12 @@ describe("runtime design system", () => {
       },
       {
         title: "Observe",
-        routes: ["/app/observe/activity", "/app/observe/requests", "/app/observe/logs"],
+        routes: [
+          "/app/observe/requests",
+          "/app/observe/routing",
+          "/app/observe/activity",
+          "/app/observe/logs",
+        ],
       },
       {
         title: "Connect",
@@ -360,72 +475,132 @@ describe("runtime design system", () => {
         title: "Host logs",
       }),
     );
+    expect(getRuntimeRouteDefinition("/app/observe/routing")).toEqual(
+      expect.objectContaining({
+        id: "observe-routing",
+        section: "Observe",
+        template: "ledger-inspector",
+      }),
+    );
   });
 
-  test("keeps the shell on restrained radii and explicit content widths", () => {
-    expect(runtimeTheme.maxContentWidth).toBe("1480px");
-    expect(runtimeTheme.radii.shell).toBe("0px");
-    expect(runtimeTheme.radii.panel).toBe("0px");
-    expect(runtimeTheme.radii.field).toBe("0px");
-    expect(runtimeTheme.radii.badge).toBe("0px");
+  test("uses analytics charts as the primary Observe entry point", () => {
+    const observeSection = runtimeNavigationSections.find((section) => section.title === "Observe");
+
+    expect(observeSection?.items[0]?.to).toBe("/app/observe/requests");
+    expect(observeSection?.items[1]?.to).toBe("/app/observe/routing");
+    expect(observeSection?.items.map((item) => item.to)).toContain("/app/observe/activity");
+    expect(observeSection?.items.map((item) => item.to)).toContain("/app/observe/logs");
+  });
+
+  test("keeps the shell on the Apple baseline with explicit chart tokens", () => {
+    expect(runtimeTheme.maxContentWidth).toBe("1440px");
+    expect(runtimeTheme.radii.sm).toBe("8px");
+    expect(runtimeTheme.radii.md).toBe("11px");
+    expect(runtimeTheme.radii.lg).toBe("18px");
+    expect(runtimeTheme.radii.pill).toBe("9999px");
+    expect(runtimeTheme.radii.shell).toBe("18px");
+    expect(runtimeTheme.radii.panel).toBe("18px");
+    expect(runtimeTheme.radii.field).toBe("11px");
+    expect(runtimeTheme.radii.badge).toBe("9999px");
     expect(runtimeTheme.colors.light).toEqual({
-      bg: "#fafaf9",
-      surface: "#f5f5f4",
-      surfaceStrong: "#f5f5f4",
-      panel: "#e7e5e4",
-      fg: "#1c1917",
-      secondary: "rgba(28, 25, 23, 0.70)",
-      muted: "rgba(28, 25, 23, 0.40)",
-      border: "#e7e5e4",
-      borderStrong: "#f5f5f4",
-      accent: "#003B8E",
-      accentMuted: "rgba(0, 59, 142, 0.60)",
-      accentSubtle: "rgba(0, 59, 142, 0.20)",
-      accentGhost: "rgba(0, 59, 142, 0.10)",
-      telemetryLocal: "#1f2937",
-      telemetryRemote: "#003B8E",
+      bg: "#f5f5f7",
+      surface: "#ffffff",
+      surfaceStrong: "#ffffff",
+      panel: "#fafafc",
+      fg: "#1d1d1f",
+      secondary: "rgba(29, 29, 31, 0.72)",
+      muted: "rgba(29, 29, 31, 0.48)",
+      border: "#e0e0e0",
+      borderStrong: "#d2d2d7",
+      accent: "#0066CC",
+      accentFocus: "#0071E3",
+      accentOnDark: "#2997FF",
+      accentMuted: "rgba(0, 102, 204, 0.72)",
+      accentSubtle: "rgba(0, 102, 204, 0.14)",
+      accentGhost: "rgba(0, 102, 204, 0.08)",
+      dividerSoft: "#f0f0f0",
+      hairline: "#e0e0e0",
+      chipTranslucent: "rgba(210, 210, 215, 0.64)",
+      telemetryLocal: "#1d1d1f",
+      telemetryRemote: "#0066CC",
       telemetryHealthy: "#166534",
       telemetryDegraded: "#b45309",
-      telemetryRaw: "#57534e",
+      telemetryRaw: "#7a7a7a",
       error: "#C8102E",
-      errorMuted: "rgba(200, 16, 46, 0.60)",
-      errorSubtle: "rgba(200, 16, 46, 0.20)",
-      errorGhost: "rgba(200, 16, 46, 0.10)",
+      errorMuted: "rgba(200, 16, 46, 0.72)",
+      errorSubtle: "rgba(200, 16, 46, 0.14)",
+      errorGhost: "rgba(200, 16, 46, 0.08)",
       success: "#166534",
-      successMuted: "rgba(22, 101, 52, 0.60)",
-      successSubtle: "rgba(22, 101, 52, 0.20)",
+      successMuted: "rgba(22, 101, 52, 0.72)",
+      successSubtle: "rgba(22, 101, 52, 0.14)",
       warning: "#b45309",
-      warningMuted: "rgba(180, 83, 9, 0.60)",
+      warningMuted: "rgba(180, 83, 9, 0.72)",
+      warningSubtle: "rgba(180, 83, 9, 0.14)",
     });
     expect(runtimeTheme.colors.dark).toEqual({
-      bg: "#0c0a09",
-      surface: "#1c1917",
-      surfaceStrong: "#1c1917",
-      panel: "#292524",
-      fg: "#fafaf9",
-      secondary: "rgba(250, 250, 249, 0.70)",
-      muted: "rgba(250, 250, 249, 0.40)",
-      border: "#292524",
-      borderStrong: "#1c1917",
-      telemetryLocal: "#d6d3d1",
-      telemetryRemote: "#60a5fa",
+      bg: "#000000",
+      surface: "#272729",
+      surfaceStrong: "#2a2a2c",
+      panel: "#252527",
+      fg: "#FFFFFF",
+      secondary: "rgba(255, 255, 255, 0.72)",
+      muted: "rgba(255, 255, 255, 0.48)",
+      border: "rgba(255, 255, 255, 0.12)",
+      borderStrong: "rgba(255, 255, 255, 0.18)",
+      accent: "#0066CC",
+      accentFocus: "#0071E3",
+      accentOnDark: "#2997FF",
+      accentMuted: "rgba(0, 102, 204, 0.72)",
+      accentSubtle: "rgba(41, 151, 255, 0.18)",
+      accentGhost: "rgba(41, 151, 255, 0.10)",
+      dividerSoft: "rgba(255, 255, 255, 0.1)",
+      hairline: "rgba(255, 255, 255, 0.12)",
+      chipTranslucent: "rgba(210, 210, 215, 0.24)",
+      telemetryLocal: "#FFFFFF",
+      telemetryRemote: "#2997FF",
       telemetryHealthy: "#86efac",
       telemetryDegraded: "#fbbf24",
-      telemetryRaw: "#a8a29e",
-      accent: "#60a5fa",
-      accentMuted: "rgba(96, 165, 250, 0.60)",
-      accentSubtle: "rgba(96, 165, 250, 0.20)",
-      accentGhost: "rgba(96, 165, 250, 0.10)",
-      error: "#fb7185",
-      errorMuted: "rgba(251, 113, 133, 0.60)",
-      errorSubtle: "rgba(251, 113, 133, 0.20)",
+      telemetryRaw: "#cccccc",
+      error: "#FB7185",
+      errorMuted: "rgba(251, 113, 133, 0.72)",
+      errorSubtle: "rgba(251, 113, 133, 0.18)",
       errorGhost: "rgba(251, 113, 133, 0.10)",
-      success: "#86efac",
-      successMuted: "rgba(134, 239, 172, 0.60)",
-      successSubtle: "rgba(134, 239, 172, 0.20)",
-      warning: "#fbbf24",
-      warningMuted: "rgba(251, 191, 36, 0.60)",
+      success: "#86EFAC",
+      successMuted: "rgba(134, 239, 172, 0.72)",
+      successSubtle: "rgba(134, 239, 172, 0.18)",
+      warning: "#FBBF24",
+      warningMuted: "rgba(251, 191, 36, 0.72)",
+      warningSubtle: "rgba(251, 191, 36, 0.18)",
     });
+    expect(designSystemSource).toContain("chartColors");
+    expect(designSystemSource).toContain('"observe-routing"');
+    expect(appCss).toContain("--rm-chart-local:");
+    expect(appCss).toContain("--rm-chart-remote:");
+    expect(appCss).toContain("--rm-chart-ink: #171717;");
+    expect(appCss).toContain("--rm-chart-cyan: #50e3c2;");
+    expect(appCss).toContain("--rm-chart-highlight-pink: #ff0080;");
+    expect(appCss).toContain("--rm-chart-violet: #7928ca;");
+    expect(appCss).toContain("--rm-chart-link-blue: #0070f3;");
+    expect(appCss).toContain("--rm-chart-warning-soft: #ffefcf;");
+  });
+
+  test("chart tokens used together resolve to distinct visual colors in each theme", () => {
+    const tokenUsageSeries = [
+      "--rm-chart-link-blue",
+      "--rm-chart-cyan",
+      "--rm-chart-tokens",
+    ];
+    const costSeries = ["--rm-chart-cost", "--rm-chart-link-blue", "--rm-chart-cyan"];
+    const avoidedCostSeries = ["--rm-chart-violet", "--rm-chart-link-blue", "--rm-chart-cyan"];
+    const cacheSeries = ["--rm-chart-cache-hit", "--rm-chart-cache-rate"];
+
+    for (const source of [lightAppCss, darkAppCss]) {
+      for (const series of [tokenUsageSeries, costSeries, avoidedCostSeries, cacheSeries]) {
+        const values = series.map((variableName) => extractCssVariableValue(source, variableName));
+        expect(new Set(values).size).toBe(values.length);
+      }
+    }
   });
 
   test("global shell chrome keeps legacy vendor ui out of the main runtime contract", () => {
@@ -485,12 +660,29 @@ describe("runtime design system", () => {
     expect(upstreamMarkup).toContain("Upstream target inventory");
     expect(upstreamMarkup).toContain("Provider accounts in scope");
     expect(upstreamMarkup).toContain("/upstream/");
+    expect(upstreamMarkup).not.toContain("Boundary notes");
+    expect(upstreamMarkup).not.toContain("When to use `/upstream/`");
     expect(upstreamMarkup).not.toContain("Open preserved UI");
+    expect(integrationsDownstreamRouteSource).toContain("Connection contract");
+    expect(integrationsDownstreamRouteSource).toContain("Consumer setup");
+    expect(integrationsDownstreamRouteSource).not.toContain("Compatibility posture");
+    expect(integrationsDownstreamRouteSource).not.toContain("API family");
+    expect(integrationsDownstreamRouteSource).toContain(
+      "xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]",
+    );
+    expect(integrationsDownstreamRouteSource).toContain("min-w-0 space-y-4");
+    expect(integrationsDownstreamRouteSource).toContain("max-w-full");
+    expect(codeBlockClassName).toContain("max-w-full");
+    expect(codeBlockClassName).toContain("whitespace-pre-wrap");
+    expect(codeBlockClassName).toContain("[overflow-wrap:anywhere]");
 
     const peersMarkup = renderRoute("/app/system/peers", createElement(SystemPeersRoute));
     expect(peersMarkup).toContain("Peer inventory");
     expect(peersMarkup).toContain("Peer contract fields");
-    expect(peersMarkup).toContain("Runtime policy boundary");
+    expect(peersMarkup).not.toContain("Runtime policy boundary");
+    expect(peersMarkup).not.toContain("Groups and matrix");
+    expect(peersMarkup).not.toContain("Empty-state rule");
+    expect(peersMarkup).not.toContain("Raw diagnostics");
     expect(peersMarkup).not.toContain("Open raw health");
   });
 
@@ -513,13 +705,16 @@ describe("runtime design system", () => {
     expect(routerRouteSource).not.toContain("Execution-ready aliases");
     expect(routerRouteSource).not.toContain("Guidance provenance");
     expect(routerRouteSource).not.toContain("Policy inputs");
-    expect(routerRouteSource).toContain("Configured hints");
-    expect(routerRouteSource).toContain("Resolved models");
+    expect(routerRouteSource).toContain("Configured models");
+    expect(routerRouteSource).toContain("Candidate expansion");
     expect(routerRouteSource).not.toContain("Allowed endpoints");
     expect(routerRouteSource).not.toContain("Control remains the editing surface");
     expect(endpointsRouteSource).not.toContain("Alias readiness");
     expect(endpointsRouteSource).not.toContain("Alias coverage");
     expect(endpointsRouteSource).toContain("View alias posture");
+    expect(endpointsRouteSource).toContain("Runtime connections");
+    expect(endpointsRouteSource).not.toContain('title="Configured providers"');
+    expect(endpointsRouteSource).not.toContain('title="Runtime endpoint rows"');
     expect(providersRouteSource).toContain("LiteLLM");
     expect(providersRouteSource).toContain("Models.dev metadata");
     expect(providersRouteSource).not.toContain('providerKind === "local-engine"');
@@ -573,6 +768,9 @@ describe("runtime design system", () => {
     expect(sessionReadinessRouteSource).toContain("buildCredentialLifecycleAccountRows");
     expect(sessionReadinessRouteSource).toContain("buildArchivedArtifactRows");
     expect(sessionReadinessRouteSource).toContain("Archived stale diagnostics");
+    expect(sessionReadinessRouteSource).not.toContain("Related surfaces");
+    expect(sessionReadinessRouteSource).not.toContain("Runtime topology");
+    expect(sessionReadinessRouteSource).not.toContain("Remote providers");
     expect(workbenchRouteSource).toContain("buildCredentialLifecycleBanner");
     expect(studioAdvancedRouteSource).toContain("buildCredentialLifecycleBanner");
   });
@@ -603,6 +801,44 @@ describe("runtime design system", () => {
         ?.items.map((item) => item.id),
     ).not.toContain("router-decision-detail");
   });
+
+  test("router overview presents runtime-config posture as source of truth", () => {
+    expect(routerRouteSource).toContain("const config = configRecord.config;");
+    expect(routerRouteSource).toContain("const configuredStrategy");
+    expect(routerRouteSource).toContain("const configuredExecutionMode");
+    expect(routerRouteSource).toContain('value={configuredStrategy ?? "unset"}');
+    expect(routerRouteSource).toContain('value={configuredExecutionMode ?? "decision_only"}');
+    expect(routerRouteSource).toContain("const configuredAliasRows");
+    expect(routerRouteSource).not.toContain("const aliasInventory = summary?.aliasInventory");
+    expect(routerRouteSource).toContain("Candidate expansion");
+    expect(routerRouteSource).not.toContain("Resolved models");
+  });
+
+  test("router overview lists the concrete candidate endpoints behind routing posture", () => {
+    expect(routerRouteSource).toContain("fetchRouterCandidates");
+    expect(routerRouteSource).toContain("Routing candidates");
+    expect(routerRouteSource).toContain("candidate.endpointId");
+    expect(routerRouteSource).toContain("candidate.modelId");
+    expect(routerRouteSource).toContain("candidate.sourceType");
+    expect(routerRouteSource).toContain("candidate.healthStatus");
+  });
+
+  test("routing strategy benchmark advisory does not leak JSX control flow as page text", () => {
+    expect(controlRoutingStrategySource).toContain("{candidates.length === 0 ? (");
+    expect(controlRoutingStrategySource).not.toContain(
+      "        candidates.length === 0 ? (\r\n        <p",
+    );
+    expect(controlRoutingStrategySource).not.toContain("\r\n        )\r\n        <div");
+  });
+
+test("routing strategy settings separate saved posture from draft edits and refresh derived state after save", () => {
+  expect(controlRoutingStrategySource).toContain("Saved routing settings");
+  expect(controlRoutingStrategySource).toContain("Draft selection");
+  expect(controlRoutingStrategySource).toContain("hasUnsavedChanges");
+  expect(controlRoutingStrategySource).toContain("onClick={() => onChange(value)}");
+  expect(controlRoutingStrategySource).toContain("await loadState();");
+  expect(controlRoutingStrategySource).not.toContain("void Promise.all([");
+});
 
   test("meta-guidance panels stay removed from overview and observe routes", () => {
     expect(dashboardRouteSource).not.toContain("Reading order");
@@ -674,27 +910,68 @@ describe("runtime design system", () => {
     expect(runtimeRouteSource).toContain("No controller assigned");
   });
 
-  test("applies the swiss stone palette, ibm plex typography, and dual-scheme browser contract in shared app chrome", () => {
-    expect(appCss).toContain("--rm-bg: #fafaf9;");
-    expect(appCss).toContain("--rm-surface: #f5f5f4;");
-    expect(appCss).toContain("--rm-surface-strong: #f5f5f4;");
-    expect(appCss).toContain("--rm-panel: #e7e5e4;");
-    expect(appCss).toContain("--rm-fg: #1c1917;");
-    expect(appCss).toContain("--rm-secondary: rgba(28, 25, 23, 0.7);");
-    expect(appCss).toContain("--rm-muted: rgba(28, 25, 23, 0.4);");
-    expect(appCss).toContain("--rm-accent: #003b8e;");
+  test("applies the Apple palette, SF Pro / Inter typography, and explicit theme contract in shared app chrome", () => {
+    expect(appCss).toContain('--rm-font-display: "SF Pro Display", "Inter"');
+    expect(appCss).toContain('--rm-font-body: "SF Pro Text", "Inter"');
+    expect(appCss).toContain("--rm-shadow-product: 0 3px 5px 30px rgba(0, 0, 0, 0.22);");
+    expect(appCss).not.toContain("--rm-shadow-product: 0 24px 80px rgba(0, 0, 0, 0.22);");
+    expect(appCss).toContain("--rm-bg: #f5f5f7;");
+    expect(appCss).toContain("--rm-surface: #ffffff;");
+    expect(appCss).toContain("--rm-panel: #fafafc;");
+    expect(appCss).toContain("--rm-accent: #0066cc;");
+    expect(appCss).toContain('html[data-theme="light"]');
+    expect(appCss).toContain('html[data-theme="dark"]');
+    expect(appCss).toContain("appearance: none;");
+    expect(appCss).toContain("background-image: var(--rm-select-chevron);");
     expect(appCss).toContain('"IBM Plex Mono"');
-    expect(appCss).toContain("@media (prefers-color-scheme: dark)");
-    expect(appCss).toContain("color-scheme: light dark;");
     expect(rootSource).toContain('meta name="color-scheme" content="light dark"');
-    expect(rootSource).toContain("family=IBM+Plex+Mono");
+    expect(rootSource).toContain("family=Inter");
+    expect(rootSource).toContain('meta name="theme-color" content="#f5f5f7"');
+    expect(rootSource).toContain('meta name="theme-color" content="#000000"');
   });
 
-  test("keeps shared states on the stone plus single-accent palette", () => {
-    expect(pagePrimitivesSource).not.toMatch(/amber|emerald|rose/);
-    expect(controlModelsSource).not.toContain("bg-black");
-    expect(rootSource).not.toContain("bg-white");
-    expect(rootSource).not.toMatch(/rose-/);
+  test("shared panels and provider selectors are owned by Apple-theme primitives", () => {
+    expect(designSystemSource).not.toContain("rounded-none");
+    expect(designSystemSource).toContain("export const selectFieldClassName");
+    expect(designSystemSource).toContain("backgroundImage: \"var(--rm-select-chevron)\"");
+    expect(designSystemSource).toContain("rounded-[var(--rm-radius-panel)]");
+    expect(pagePrimitivesSource).not.toContain("<select");
+    expect(pagePrimitivesSource).toContain('role="listbox"');
+    expect(pagePrimitivesSource).toContain('role="option"');
+    expect(pagePrimitivesSource).toContain("aria-expanded");
+    expect(providersRouteSource).not.toContain("<select");
+    expect(providersRouteSource).toContain("SelectField");
+    expect(providersRouteSource).not.toContain("LiteLLM-backed remote onboarding");
+  });
+
+  test("router strategy execution mode uses the themed select primitive", () => {
+    expect(controlRoutingStrategySource).not.toContain("<select");
+    expect(controlRoutingStrategySource).not.toContain("execution-mode-select");
+    expect(controlRoutingStrategySource).toContain("SelectField");
+  });
+
+  test("production UI dropdowns use themed select primitives instead of native selects", () => {
+    expect(findNativeSelectViolations()).toEqual([]);
+  });
+
+  test("shared route effects avoid action identity loops and peer refresh feedback", () => {
+    expect(shellHeaderContextSource).toContain("useRef");
+    expect(shellHeaderContextSource).not.toContain("[actions, setActions, ...deps]");
+    expect(shellHeaderContextSource).not.toContain("[override, setOverride, ...deps]");
+    expect(localPeersSource).not.toContain("}, [healthStatus]);");
+    expect(localPeersSource).toContain("setHealthStatus((previousStatus)");
+  });
+
+  test("keeps shared states calm: transparent status pills and no section divider chrome", () => {
+    expect(pagePrimitivesSource).toContain("bg-transparent text-[var(--rm-accent)]");
+    expect(pagePrimitivesSource).toContain("bg-transparent text-[var(--rm-warning)]");
+    expect(pagePrimitivesSource).toContain("bg-transparent text-[var(--rm-success)]");
+    expect(pagePrimitivesSource).not.toContain("border-b border-[var(--rm-border)] pb-4");
+    expect(pagePrimitivesSource).not.toContain("border-t border-[var(--rm-border)] pt-4");
+    expect(appShellSource).not.toContain("border-b border-[var(--rm-border)] pb-5");
+    expect(appShellSource).not.toContain("border-t border-[var(--rm-border)] pt-4");
+    expect(appShellSource).toContain("ThemeToggle");
+    expect(appShellSource).toContain("mt-auto");
   });
 
   test("remote, models, router, and system runtime config routes are first-class pages in the retained taxonomy", () => {
@@ -767,8 +1044,9 @@ describe("runtime design system", () => {
   });
 
   test("requests and request detail stay telemetry-first while exposing raw-host handoffs", () => {
-    expect(requestsRouteSource).toContain("fetchTelemetryDashboard");
-    expect(requestsRouteSource).toContain("summarizeTelemetryStats");
+    expect(requestsRouteSource).toContain("fetchTelemetryAnalytics");
+    expect(requestsRouteSource).toContain("buildObserveRequestsChartDefinitions");
+    expect(requestsRouteSource).toContain("Analytics controls");
     expect(requestsRouteSource).toContain("/app/observe/activity");
     expect(requestsRouteSource).toContain("/app/observe/logs");
     expect(requestDetailRouteSource).toContain("/app/observe/activity");
@@ -794,31 +1072,36 @@ describe("runtime design system", () => {
     expect(controlRuntimeConfigSource).not.toContain("FactCard");
     expect(runtimeRouteSource).not.toContain("Runtime contract notes");
     expect(runtimeRouteSource).not.toContain("Health posture");
+    expect(runtimeRouteSource).not.toContain("Preserved host surfaces");
+    expect(runtimeRouteSource).not.toContain("Raw host log output");
+    expect(runtimeRouteSource).not.toContain("Vendor metrics and capture ids");
+    expect(runtimeRouteSource).not.toContain("Raw host health endpoint");
     expect(designSystemDocSource).not.toContain("fact strips before the registry rail");
   });
 
-  test("dashboard passes telemetry detail to FactCard for Latency", () => {
-    expect(dashboardRouteSource).toContain("detail={card.detail}");
-    expect(dashboardRouteSource).toMatch(/FactCard[\s\S]*detail=\{card\.detail\}/);
+  test("dashboard is chart-led and keeps routing analytics as a first-class handoff", () => {
+    expect(dashboardRouteSource).toContain("TelemetryAnalyticsChartCard");
+    expect(dashboardRouteSource).toContain("buildOverviewChartDefinitions");
+    expect(dashboardRouteSource).toContain("Open routing analytics");
   });
 
   test("overview metadata and design doc describe a telemetry-first summary with an interaction rail", () => {
     expect(dashboardRouteSource).not.toContain('label: "Providers"');
     expect(dashboardRouteSource).not.toContain('label: "Execution-ready"');
-    expect(dashboardRouteSource.indexOf('title="Recent telemetry window"')).toBeLessThan(
-      dashboardRouteSource.indexOf('title="Current endpoint inventory"'),
-    );
+    expect(appShellSource).not.toContain("xl:grid-cols-[minmax(0,1fr)_auto]");
+    expect(appShellSource).toContain("hasSecondaryNavigation");
+    expect(appShellSource).toContain("activeSection.items.length > 1");
+    expect(dashboardRouteSource).toContain("usePageActions");
+    expect(dashboardRouteSource).not.toContain('title="Telemetry controls"');
+    expect(dashboardRouteSource).not.toContain(">Summary<");
+    expect(dashboardRouteSource).toContain('aria-label="Overview telemetry filters"');
+    expect(dashboardRouteSource).toContain("justify-between");
+    expect(dashboardRouteSource).toContain("xl:ml-auto");
+    expect(dashboardRouteSource).toContain("xl:justify-end");
+    expect(telemetryControlsSource).toContain("flex-nowrap");
     expect(dashboardRouteSource).toContain("request.primaryLabel");
     expect(designSystemSource).not.toContain("current-state cards and endpoint inventory");
-    expect(designSystemDocSource).toContain(
-      "Lead with the recent telemetry window as the primary summary surface, then keep current endpoint inventory and a latest-interactions rail below it.",
-    );
-    expect(designSystemDocSource).toContain(
-      "Replace the old Providers / Endpoints / Execution-ready / Bootstrap strip with the telemetry window instead of duplicating summary posture.",
-    );
-    expect(designSystemDocSource).toContain(
-      "Latest requests is an interaction rail, not a raw canonical request ledger.",
-    );
+    expect(dashboardRouteSource).toContain("Open request analytics");
   });
 
   test("workbench and observe routes expose routing controls and receipts in repo-owned UI surfaces", () => {
@@ -827,6 +1110,20 @@ describe("runtime design system", () => {
     expect(requestsRouteSource).toContain("routingDecisionLabel");
     expect(requestDetailRouteSource).toContain("Routing receipts");
     expect(requestDetailRouteSource).toContain("hybridArbitration");
+  });
+
+  test("request detail route renders authoritative stored cost metadata", () => {
+    expect(requestDetailRouteSource).toContain("effectiveCostUsd");
+    expect(requestDetailRouteSource).toContain("costCalculationBasis");
+    expect(requestDetailRouteSource).toContain("costCalculationVersion");
+    expect(requestDetailRouteSource).toContain("selectedUncachedCostUsd");
+    expect(requestDetailRouteSource).toContain("baselineMaxEligibleCostUsd");
+    expect(requestDetailRouteSource).toContain("routingCostSavingsUsd");
+    expect(requestDetailRouteSource).toContain("cacheCostSavingsUsd");
+    expect(requestDetailRouteSource).toContain("totalAvoidedCostUsd");
+    expect(requestDetailRouteSource).toContain("costBaselineSource");
+    expect(requestDetailRouteSource).toContain("costSavingsSupport");
+    expect(requestDetailRouteSource).not.toContain("formatUsd(actualCostUsd ?? estimatedCostUsd)");
   });
 
   test("shell header owns route metadata and page actions without duplicate page headers", () => {
@@ -864,6 +1161,65 @@ describe("runtime design system", () => {
     }
     expect(requestDetailRouteSource).toContain("useShellHeaderOverride");
     expect(routerRouteSource).toContain("usePageActions");
+  });
+
+  test("shell headers do not render section eyebrow labels", () => {
+    expect(appShellSource).not.toContain("{route?.section ?? \"Overview\"}");
+    expect(appShellSource).not.toContain("uppercase tracking-[0.24em]");
+    expect(designSystemDocSource).not.toContain("section eyebrow");
+  });
+
+  test("routes do not register refresh controls as shell header actions", () => {
+    for (const source of [
+      localLlamaSwapModelsSource,
+      localPeerModelsSource,
+      localPeersSource,
+    ]) {
+      const pageActionBlocks = [...source.matchAll(/usePageActions\(([\s\S]*?)\r?\n  \);/g)].map(
+        ([, block]) => block,
+      );
+      for (const block of pageActionBlocks) {
+        expect(block).not.toMatch(/Refresh(?:ing…)?/);
+      }
+    }
+  });
+
+  test("long fact-card values use compact text roles instead of display value typography", () => {
+    expect(pagePrimitivesSource).toContain("valueClassName");
+    expect(sessionReadinessRouteSource).toContain("bodyStrongTextClassName");
+    const sessionFactCardCount = [...sessionReadinessRouteSource.matchAll(/<FactCard\b/g)].length;
+    const compactValueCount = [
+      ...sessionReadinessRouteSource.matchAll(/valueClassName={bodyStrongTextClassName}/g),
+    ].length;
+    expect(compactValueCount).toBe(sessionFactCardCount);
+  });
+
+  test("production UI sources do not bypass Apple theme token primitives", () => {
+    expect(
+      findSourceViolations(/\b(?:text|border|bg)-(?:red|amber|orange|yellow|blue|gray|slate|zinc)-\d+\b/),
+    ).toEqual([]);
+    expect(findExactSourceViolations("text-white")).toEqual([]);
+    expect(appCss).toContain("--rm-on-primary:");
+    expect(designSystemDocSource).toContain("`--rm-on-primary`");
+  });
+
+  test("production UI sources keep the approved Apple radius grammar", () => {
+    expect(findExactSourceViolations("rounded-none")).toEqual([]);
+  });
+
+  test("production UI sources avoid unsupported Apple typography weight 500", () => {
+    expect(findExactSourceViolations("font-medium")).toEqual([]);
+  });
+
+  test("chart primitives use shared design-system geometry and type tokens", () => {
+    expect(designSystemSource).toContain("chartAxisTickStyle");
+    expect(designSystemSource).toContain("chartBarRadius");
+    expect(telemetryChartsSource).toContain("chartAxisTickStyle");
+    expect(telemetryChartsSource).toContain("chartBarRadius");
+    expect(telemetryChartsSource).not.toContain("fontSize: 12");
+    expect(telemetryChartsSource).not.toContain("fontSize: 13");
+    expect(telemetryChartsSource).not.toContain("radius={[8, 8, 0, 0]}");
+    expect(telemetryChartsSource).not.toContain("radius={[0, 8, 8, 0]}");
   });
 
   test("runtime route definitions stay slim and future scaffolds avoid duplicate header props", () => {

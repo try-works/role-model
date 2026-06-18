@@ -26,7 +26,6 @@ import {
   setPeerModelRoles,
   unloadPeerModel,
 } from "../lib/runtime-api";
-import { usePageActions } from "../lib/shell-header-context";
 
 export default function LocalPeerModelsRoute() {
   const [models, setModels] = useState<RuntimeLocalModel[]>([]);
@@ -66,13 +65,6 @@ export default function LocalPeerModelsRoute() {
   useEffect(() => {
     refresh();
   }, [refresh]);
-
-  usePageActions(
-    <button type="button" onClick={refresh} disabled={loading} className={secondaryButtonClassName}>
-      {loading ? "Refreshing…" : "Refresh"}
-    </button>,
-    [loading, refresh],
-  );
 
   const handleRegister = async () => {
     const modelId = loadModelId.trim();
@@ -146,7 +138,7 @@ export default function LocalPeerModelsRoute() {
             <div className="space-y-2">
               <label
                 htmlFor="peer-model-id"
-                className="block text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]"
+                className="block text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--rm-muted)]"
               >
                 Model ID
               </label>
@@ -196,7 +188,7 @@ export default function LocalPeerModelsRoute() {
             {models.map((model) => (
               <div key={model.modelId} className={`${mutedPanelClassName} p-5`}>
                 <div className="mb-4 flex flex-wrap items-start justify-between gap-2">
-                  <p className="break-words font-mono text-sm font-medium text-[var(--rm-fg)]">
+                  <p className="break-words font-mono text-sm font-semibold text-[var(--rm-fg)]">
                     {model.modelId}
                   </p>
                   <div className="flex flex-wrap gap-2">

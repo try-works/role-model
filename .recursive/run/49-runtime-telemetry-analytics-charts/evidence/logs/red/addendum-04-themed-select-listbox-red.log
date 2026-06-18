@@ -1,0 +1,269 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/49-runtime-telemetry-analytics-charts/role-model-router/apps/runtime-ui[39m
+
+ [31m❯[39m app/lib/design-system.test.ts [2m([22m[2m42 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 168[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mdefines navigation groups and layout templates for every runtime route[32m 7[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22muses analytics charts as the primary Observe entry point[32m 2[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mkeeps the shell on the Apple baseline with explicit chart tokens[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mglobal shell chrome keeps legacy vendor ui out of the main runtime contract[32m 68[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mstudio implementation targets render repo-owned workspace sections instead of placeholder blueprints[32m 17[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mintegration and system implementation targets render live upstream and peer surfaces[32m 10[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mrouter implementation targets render repo-owned routing explanation surfaces[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mrouter, connect registry, and remote surfaces expose alias/readiness ownership instead of generic filler[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mproviders surface exposes explicit in-place maintenance actions for saved remote accounts[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mproviders surface uses an explicit save-cancel modal for api-key maintenance[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mproviders surface keeps oauth reconnect as a one-click saved-account action[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mproviders maintenance flows call explicit repair APIs instead of generic account writes[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mproviders saved-account cards use canonical lifecycle rows and bounded archived diagnostics[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mruntime, session readiness, workbench, and advanced surfaces use canonical lifecycle diagnostics[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mrouter routes preserve empty-state and observe-link affordances[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mmerged router overview stays observational while routing strategy owns editing controls[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mmeta-guidance panels stay removed from overview and observe routes[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mdesign system doc marks the converted pages as live routes[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mcontrol routes tolerate an unassigned controller before endpoint activation[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mapplies the Apple palette, SF Pro / Inter typography, and explicit theme contract in shared app chrome[32m 1[2mms[22m[39m
+[31m   [31m×[31m runtime design system[2m > [22mshared panels and provider selectors are owned by Apple-theme primitives[39m[32m 22[2mms[22m[39m
+[31m     → expected 'import type { ReactNode } from "react…' not to contain '<select'[39m
+   [32m✓[39m runtime design system[2m > [22mshared route effects avoid action identity loops and peer refresh feedback[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mkeeps shared states calm: transparent status pills and no section divider chrome[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mremote, models, router, and system runtime config routes are first-class pages in the retained taxonomy[32m 13[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mlocal setup surfaces stay discoverable from navigation and empty registry states[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mobserve and local log surfaces render structured ledgers rather than raw iframe placeholders[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mobserve ownership keeps requests canonical and raw-host surfaces adjacent[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mrequests and request detail stay telemetry-first while exposing raw-host handoffs[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mactivity route frames raw-host metrics as adjacent to canonical telemetry[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mlogs route exposes request-detail handoffs while preserving raw-host framing[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mregistry and system layouts avoid redundant KPI strips and placeholder note panels[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mdashboard is chart-led and keeps routing analytics as a first-class handoff[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22moverview metadata and design doc describe a telemetry-first summary with an interaction rail[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mworkbench and observe routes expose routing controls and receipts in repo-owned UI surfaces[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mrequest detail route renders authoritative stored cost metadata[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mshell header owns route metadata and page actions without duplicate page headers[32m 2[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mshell headers do not render section eyebrow labels[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mproduction UI sources do not bypass Apple theme token primitives[32m 3[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mproduction UI sources keep the approved Apple radius grammar[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mproduction UI sources avoid unsupported Apple typography weight 500[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mchart primitives use shared design-system geometry and type tokens[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mruntime route definitions stay slim and future scaffolds avoid duplicate header props[32m 1[2mms[22m[39m
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  app/lib/design-system.test.ts > runtime design system > shared panels and provider selectors are owned by Apple-theme primitives
+AssertionError: expected 'import type { ReactNode } from "react…' not to contain '<select'
+
+- Expected
++ Received
+
+- <select
++ import type { ReactNode } from "react";
++
++ import { cn } from "../lib/cn";
++ import {
++   bodyTextClassName,
++   cardClassName,
++   codeBlockClassName,
++   eyebrowClassName,
++   largeValueClassName,
++   mutedPanelClassName,
++   raisedPanelClassName,
++   sectionTitleClassName,
++   selectChevronStyle,
++   selectFieldClassName,
++   utilityLabelClassName,
++ } from "../lib/design-system";
++
++ export function SectionCard({
++   title,
++   description,
++   children,
++   className,
++ }: {
++   title: string;
++   description?: string;
++   children: ReactNode;
++   className?: string;
++ }) {
++   return (
++     <section className={cn(`${cardClassName} px-5 py-5 md:px-6 md:py-6`, className)}>
++       <div className="mb-5">
++         <h2 className={`text-[var(--rm-fg)] ${sectionTitleClassName}`}>{title}</h2>
++         {description ? (
++           <p className={`mt-2 max-w-[60ch] ${bodyTextClassName} text-[var(--rm-secondary)]`}>
++             {description}
++           </p>
++         ) : null}
++       </div>
++       {children}
++     </section>
++   );
++ }
++
++ export function StatCard({ label, value }: { label: string; value: string }) {
++   return (
++     <div className={`${raisedPanelClassName} p-5`}>
++       <p className={eyebrowClassName}>{label}</p>
++       <p className={`mt-4 text-[var(--rm-fg)] ${largeValueClassName}`}>{value}</p>
++     </div>
++   );
++ }
++
++ export function FactCard({
++   label,
++   value,
++   detail,
++   emphasis = false,
++   className,
++ }: {
++   label: string;
++   value: ReactNode;
++   detail?: ReactNode;
++   emphasis?: boolean;
++   className?: string;
++ }) {
++   return (
++     <div
++       className={cn(
++         `${emphasis ? raisedPanelClassName : mutedPanelClassName} p-4 md:p-5`,
++         className,
++       )}
++     >
++       <p className={eyebrowClassName}>{label}</p>
++       <p
++         className={`mt-3 break-words tabular-nums text-[var(--rm-fg)] ${largeValueClassName}`}
++       >
++         {value}
++       </p>
++       {detail ? (
++         <p className={`mt-2 max-w-[28ch] ${bodyTextClassName} text-[var(--rm-secondary)]`}>
++           {detail}
++         </p>
++       ) : null}
++     </div>
++   );
++ }
++
++ export function StatusPill({
++   tone,
++   children,
++ }: {
++   tone: "neutral" | "accent" | "warning" | "success";
++   children: ReactNode;
++ }) {
++   const toneClass =
++     tone === "accent"
++       ? "border-[color:var(--rm-accent-muted)] bg-transparent text-[var(--rm-accent)]"
++       : tone === "warning"
++         ? "border-[var(--rm-warning)] bg-transparent text-[var(--rm-warning)]"
++         : tone === "success"
++           ? "border-[var(--rm-success)] bg-transparent text-[var(--rm-success)]"
++           : "border-[var(--rm-border)] bg-transparent text-[var(--rm-secondary)]";
++
++   return (
++     <span
++       className={cn(
++         "inline-flex items-center rounded-[var(--rm-radius-pill)] border px-3 py-1.5 text-[12px] font-normal uppercase tracking-[0.16em] leading-3",
++         toneClass,
++       )}
++     >
++       {children}
++     </span>
++   );
++ }
++
++ export function SelectField({
++   label,
++   value,
++   children,
++   onChange,
++   className,
++ }: {
++   label: string;
++   value: string;
++   children: ReactNode;
++   onChange: (value: string) => void;
++   className?: string;
++ }) {
++   return (
++     <label className="grid gap-2">
++       <span className={`${utilityLabelClassName} text-[var(--rm-fg)]`}>{label}</span>
++       <select
++         className={cn(selectFieldClassName, className)}
++         style={selectChevronStyle}
++         value={value}
++         onChange={(event) => onChange(event.currentTarget.value)}
++       >
++         {children}
++       </select>
++     </label>
++   );
++ }
++
++ export function LoadingState({ label }: { label: string }) {
++   return (
++     <p className={`${mutedPanelClassName} border-dashed p-6 text-sm text-[var(--rm-secondary)]`}>
++       {label}
++     </p>
++   );
++ }
++
++ export function EmptyState({ label }: { label: string }) {
++   return (
++     <p className={`${mutedPanelClassName} border-dashed p-6 text-sm text-[var(--rm-secondary)]`}>
++       {label}
++     </p>
++   );
++ }
++
++ export function ErrorState({ label }: { label: string }) {
++   return (
++     <p className="rounded-[var(--rm-radius-panel)] border border-[var(--rm-error)] bg-[var(--rm-error-ghost)] p-6 text-sm text-[var(--rm-error)]">
++       {label}
++     </p>
++   );
++ }
++
++ export function CodeBlock({ children, className }: { children: ReactNode; className?: string }) {
++   return <pre className={cn(codeBlockClassName, className)}>{children}</pre>;
++ }
++
++ export function DisclosureSection({
++   summary,
++   children,
++   defaultOpen = false,
++ }: {
++   summary: string;
++   children: ReactNode;
++   defaultOpen?: boolean;
++ }) {
++   return (
++     <details className={`${cardClassName} px-5 py-4 md:px-6`} open={defaultOpen ? true : undefined}>
++       <summary
++         className={`cursor-pointer list-none text-[var(--rm-fg)] marker:content-none [&::-webkit-details-marker]:hidden ${sectionTitleClassName}`}
++       >
++         {summary}
++       </summary>
++       <div className="mt-4">{children}</div>
++     </details>
++   );
++ }
++
+
+ ❯ app/lib/design-system.test.ts:794:38
+    792|     expect(designSystemSource).toContain("backgroundImage: \"var(--rm-…
+    793|     expect(designSystemSource).toContain("rounded-[var(--rm-radius-pan…
+    794|     expect(pagePrimitivesSource).not.toContain("<select");
+       |                                      ^
+    795|     expect(pagePrimitivesSource).toContain('role="listbox"');
+    796|     expect(pagePrimitivesSource).toContain('role="option"');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m41 passed[39m[22m[90m (42)[39m
+[2m   Start at [22m 19:46:04
+[2m   Duration [22m 3.30s[2m (transform 1.18s, setup 0ms, collect 1.80s, tests 168ms, environment 0ms, prepare 374ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\49-runtime-telemetry-analytics-charts\role-model-router\apps\runtime-ui:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run app/lib/design-system.test.ts

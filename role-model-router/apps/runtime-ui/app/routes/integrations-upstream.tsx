@@ -8,7 +8,7 @@ import {
   SectionCard,
   StatusPill,
 } from "../components/page-primitives";
-import { codeBlockClassName, mutedPanelClassName } from "../lib/design-system";
+import { mutedPanelClassName } from "../lib/design-system";
 import { type RuntimeSnapshot, fetchRuntimeSnapshot } from "../lib/runtime-api";
 import { buildProviderCards } from "../lib/view-models";
 
@@ -78,7 +78,7 @@ export default function IntegrationsUpstreamRoute() {
               {providerCards.map((provider) => (
                 <div key={provider.providerId} className={`${mutedPanelClassName} p-4`}>
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <p className="font-medium text-[var(--rm-fg)]">{provider.title}</p>
+                    <p className="font-semibold text-[var(--rm-fg)]">{provider.title}</p>
                     <StatusPill tone={provider.accountCount > 0 ? "accent" : "warning"}>
                       {provider.accountCount} account{provider.accountCount === 1 ? "" : "s"}
                     </StatusPill>
@@ -116,7 +116,7 @@ export default function IntegrationsUpstreamRoute() {
                   rel="noreferrer"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <p className="break-all font-medium text-[var(--rm-fg)]">{target.modelId}</p>
+                    <p className="break-all font-semibold text-[var(--rm-fg)]">{target.modelId}</p>
                     <StatusPill tone="accent">
                       {target.endpointCount} endpoint{target.endpointCount === 1 ? "" : "s"}
                     </StatusPill>
@@ -130,27 +130,6 @@ export default function IntegrationsUpstreamRoute() {
         </SectionCard>
       </div>
 
-      <SectionCard title="Boundary notes">
-        <div className="grid gap-4 md:grid-cols-3">
-          <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
-            <p className="font-medium text-[var(--rm-fg)]">When to use `/upstream/`</p>
-            <p className="mt-2">
-              Use `/upstream/&lt;model&gt;/` when you need raw vendor behavior for a concrete model
-              target and the repo-owned page intentionally stays reference-first.
-            </p>
-          </div>
-          <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
-            <p className="font-medium text-[var(--rm-fg)]">What stays here</p>
-            <p className="mt-2">
-              Provider/account posture, passthrough expectations, and model-specific raw links stay
-              together so the integration boundary remains clear.
-            </p>
-          </div>
-          <pre className={`p-4 text-sm ${codeBlockClassName}`}>
-            {"/upstream/<model>/\nopens the vendor passthrough for a single model target"}
-          </pre>
-        </div>
-      </SectionCard>
     </div>
   );
 }

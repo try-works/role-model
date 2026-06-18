@@ -20,6 +20,7 @@ import { ProcessSupervisor } from "@role-model-router/process-supervisor";
 import type { ObservedPerformanceSample } from "@role-model-router/profile-aggregator";
 import { resolveRoutingBenchmarkQuality } from "@role-model-router/profile-aggregator";
 import {
+  type RouteRuntimeRequestResult,
   type RoutingModelSelection,
   routeRuntimeRequest,
 } from "@role-model-router/protocol-routing";
@@ -40,6 +41,7 @@ import {
   type RuntimeObservationBundle,
   type RuntimeRoutingDiagnostics,
   type RuntimeRoutingMode,
+  type RuntimeTelemetrySnapshot,
   createRuntimeObservationBundle,
 } from "@role-model-router/runtime-observability";
 import {
@@ -93,6 +95,7 @@ import {
 import {
   type ProviderRequestCapture,
   type ResolvedExecutionTarget,
+  type RoutedExecutionResult,
   type RuntimeExecutionRequest,
   type RuntimeResponseCaptureMap,
   executeLiveRoutedRequest,
@@ -111,7 +114,10 @@ import {
   readRoutingCapabilityBenchmarkSuite,
   runRoutingCapabilityBenchmark,
 } from "./benchmark-runner.js";
-import { evaluateBenchmarkStartGuards } from "./benchmark-start-guards.js";
+import {
+  evaluateBenchmarkStartGuards,
+  evaluateBenchmarkTargetEligibility,
+} from "./benchmark-start-guards.js";
 import {
   buildBenchmarkCapabilityForEndpoint,
   listBenchmarkRuns,
@@ -1174,6 +1180,277 @@ export interface BridgeTelemetryQuery {
   readonly windowMs?: number;
   readonly limit?: number;
   readonly endAtMs?: number;
+  readonly startAtMs?: number;
+}
+
+export type BridgeTelemetryAnalyticsGranularity = "hour" | "day" | "week";
+
+export type BridgeTelemetryAnalyticsMetric =
+  | "requestCount"
+  | "successCount"
+  | "failureCount"
+  | "inputTokens"
+  | "outputTokens"
+  | "totalTokens"
+  | "cacheHitTokens"
+  | "cacheReadTokens"
+  | "cacheBackedRequestRate"
+  | "cacheHitTokenRate"
+  | "actualCostUsd"
+  | "estimatedCostUsd"
+  | "effectiveCostUsd"
+  | "selectedUncachedCostUsd"
+  | "baselineMaxEligibleCostUsd"
+  | "routingCostSavingsUsd"
+  | "cacheCostSavingsUsd"
+  | "totalAvoidedCostUsd"
+  | "averageLatencyMs"
+  | "p95LatencyMs";
+
+export type BridgeTelemetryAnalyticsDimension =
+  | "sourceType"
+  | "endpointId"
+  | "modelId"
+  | "providerId"
+  | "providerKind"
+  | "providerFamily"
+  | "providerAccountId"
+  | "requestedRoleId"
+  | "selectedStrategy"
+  | "routingMode"
+  | "difficultyBucket"
+  | "statusFamily"
+  | "requestOperation";
+
+export interface BridgeTelemetryAnalyticsFilters {
+  readonly sourceTypes?: readonly ("local" | "remote")[];
+  readonly endpointIds?: readonly string[];
+  readonly modelIds?: readonly string[];
+  readonly providerIds?: readonly string[];
+  readonly providerKinds?: readonly string[];
+  readonly providerFamilies?: readonly string[];
+  readonly providerAccountIds?: readonly string[];
+  readonly requestedRoleIds?: readonly string[];
+  readonly selectedStrategies?: readonly string[];
+  readonly routingModes?: readonly ("baseline" | "difficulty" | "controller" | "hybrid")[];
+  readonly difficultyBuckets?: readonly ("easy" | "medium" | "hard")[];
+  readonly statusFamilies?: readonly ("success" | "failure" | "unknown")[];
+  readonly requestOperations?: readonly string[];
+}
+
+export interface BridgeTelemetryAnalyticsRanking {
+  readonly dimension: BridgeTelemetryAnalyticsDimension;
+  readonly metric: BridgeTelemetryAnalyticsMetric;
+  readonly limit?: number;
+}
+
+export interface BridgeTelemetryAnalyticsQuery {
+  readonly startAtMs?: number;
+  readonly endAtMs?: number;
+  readonly windowMs?: number;
+  readonly granularity: BridgeTelemetryAnalyticsGranularity;
+  readonly metrics: readonly BridgeTelemetryAnalyticsMetric[];
+  readonly breakdown?: BridgeTelemetryAnalyticsDimension | null;
+  readonly filters?: BridgeTelemetryAnalyticsFilters;
+  readonly ranking?: BridgeTelemetryAnalyticsRanking | null;
+}
+
+export interface BridgeTelemetryAnalyticsSeries {
+  readonly key: string;
+  readonly label: string;
+  readonly metrics: Readonly<Record<string, number | null>>;
+}
+
+export interface BridgeTelemetryAnalyticsBucket {
+  readonly startAtMs: number;
+  readonly endAtMs: number;
+  readonly totals: Readonly<Record<string, number | null>>;
+  readonly series: readonly BridgeTelemetryAnalyticsSeries[];
+}
+
+export interface BridgeTelemetryAnalyticsRankingRow {
+  readonly key: string;
+  readonly label: string;
+  readonly value: number | null;
+}
+
+export interface BridgeTelemetryAnalyticsResponse {
+  readonly startAtMs: number;
+  readonly endAtMs: number;
+  readonly granularity: BridgeTelemetryAnalyticsGranularity;
+  readonly metrics: readonly BridgeTelemetryAnalyticsMetric[];
+  readonly breakdown: BridgeTelemetryAnalyticsDimension | null;
+  readonly buckets: readonly BridgeTelemetryAnalyticsBucket[];
+  readonly totals: Readonly<Record<string, number | null>>;
+  readonly ranking:
+    | {
+        readonly dimension: BridgeTelemetryAnalyticsDimension;
+        readonly metric: BridgeTelemetryAnalyticsMetric;
+        readonly rows: readonly BridgeTelemetryAnalyticsRankingRow[];
+      }
+    | null;
+  readonly labels: Partial<Record<BridgeTelemetryAnalyticsDimension, Record<string, string>>>;
+}
+
+function roundTelemetryUsd(value: number): number {
+  return Number(value.toFixed(6));
+}
+
+function uniqueTelemetryStrings(values: readonly (string | null | undefined)[]): readonly string[] {
+  return Array.from(new Set(values.filter((value): value is string => typeof value === "string")));
+}
+
+function telemetrySourceTypeFromEndpointKind(endpointKind: string): "local" | "remote" {
+  return endpointKind.startsWith("remote") || endpointKind === "remote_api" ? "remote" : "local";
+}
+
+function finiteTelemetryNumber(value: unknown): number | null {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+export function buildRuntimeTelemetrySnapshot(input: {
+  readonly routed: RouteRuntimeRequestResult;
+  readonly execution: Pick<RoutedExecutionResult, "target" | "normalized">;
+  readonly requestOperation: string;
+  readonly requestedModelId?: string | null;
+  readonly roleIds?: readonly string[];
+  readonly toolingUsed?: boolean;
+}): RuntimeTelemetrySnapshot {
+  const candidateByEndpointId = new Map(
+    input.routed.projected.routeInput.candidates.map((candidate) => [
+      candidate.identity.endpoint_id,
+      candidate,
+    ]),
+  );
+  const scoredEndpointIds = input.routed.decision.scored_candidates.map(
+    (candidate) => candidate.endpoint_id,
+  );
+  const eligibleEndpointIds = uniqueTelemetryStrings([
+    input.routed.decision.chosen_endpoint_id,
+    ...scoredEndpointIds,
+    ...input.routed.decision.fallback_endpoint_ids,
+  ]);
+  const selectedEndpointId = input.routed.decision.chosen_endpoint_id;
+  const selectedCandidate = candidateByEndpointId.get(selectedEndpointId);
+  const selectedEconomics = input.routed.catalogEconomicsByEndpointId[selectedEndpointId] ?? null;
+  const selectedSourceType = telemetrySourceTypeFromEndpointKind(
+    input.execution.target.candidate.identity.endpoint_kind,
+  );
+  const candidateCostSnapshot = Object.fromEntries(
+    eligibleEndpointIds.map((endpointId) => {
+      const candidate = candidateByEndpointId.get(endpointId);
+      const economics = input.routed.catalogEconomicsByEndpointId[endpointId] ?? null;
+      const candidateSourceType = candidate
+        ? telemetrySourceTypeFromEndpointKind(candidate.identity.endpoint_kind)
+        : endpointId === selectedEndpointId
+          ? selectedSourceType
+          : "remote";
+      return [
+        endpointId,
+        {
+          modelId:
+            candidate?.identity.model_id ??
+            (endpointId === selectedEndpointId ? input.execution.target.modelId : endpointId),
+          providerId: endpointId === selectedEndpointId ? input.execution.target.providerId : null,
+          providerKind: candidate?.identity.provider_kind ?? null,
+          sourceType: candidateSourceType,
+          endpointKind: candidate?.identity.endpoint_kind ?? null,
+          servingSource: candidate?.identity.serving_source ?? null,
+          region: candidate?.identity.region ?? null,
+          tokenEconomicsSource: economics?.tokenEconomicsSource ?? "unknown",
+          estimatedRequestUsd: economics?.estimatedRequestUsd ?? null,
+          costPer1kTokensEst: economics?.cost_per_1k_tokens_est ?? null,
+          inputPer1M: economics?.inputPer1M ?? null,
+          outputPer1M: economics?.outputPer1M ?? null,
+        },
+      ];
+    }),
+  );
+  const eligibleModelIds = uniqueTelemetryStrings(
+    eligibleEndpointIds.map(
+      (endpointId) =>
+        candidateByEndpointId.get(endpointId)?.identity.model_id ??
+        (endpointId === selectedEndpointId ? input.execution.target.modelId : null),
+    ),
+  );
+  const selectedUncachedCostUsd = finiteTelemetryNumber(selectedEconomics?.estimatedRequestUsd);
+  const eligibleEstimatedCosts = eligibleEndpointIds
+    .map((endpointId) =>
+      finiteTelemetryNumber(
+        input.routed.catalogEconomicsByEndpointId[endpointId]?.estimatedRequestUsd,
+      ),
+    )
+    .filter((value): value is number => value !== null);
+  const baselineMaxEligibleCostUsd =
+    eligibleEstimatedCosts.length > 0 ? Math.max(...eligibleEstimatedCosts) : selectedUncachedCostUsd;
+  const routingCostSavingsUsd =
+    baselineMaxEligibleCostUsd !== null && selectedUncachedCostUsd !== null
+      ? roundTelemetryUsd(Math.max(0, baselineMaxEligibleCostUsd - selectedUncachedCostUsd))
+      : 0;
+  const cacheCostSavingsUsd =
+    input.execution.normalized.promptCache.used &&
+    input.execution.normalized.promptCache.readTokens > 0 &&
+    typeof selectedEconomics?.inputPer1M === "number"
+      ? roundTelemetryUsd(
+          (input.execution.normalized.promptCache.readTokens * selectedEconomics.inputPer1M) /
+            1_000_000,
+        )
+      : 0;
+  const selectedPricingSnapshot = selectedEconomics
+    ? {
+        modelId: selectedCandidate?.identity.model_id ?? input.execution.target.modelId,
+        providerId: input.execution.target.providerId,
+        providerAccountId: input.execution.target.providerAccountId,
+        sourceType: selectedSourceType,
+        tokenEconomicsSource: selectedEconomics.tokenEconomicsSource,
+        estimatedRequestUsd: selectedEconomics.estimatedRequestUsd,
+        costPer1kTokensEst: selectedEconomics.cost_per_1k_tokens_est,
+        inputPer1M: selectedEconomics.inputPer1M,
+        outputPer1M: selectedEconomics.outputPer1M,
+      }
+    : null;
+
+  return {
+    providerId: input.execution.target.providerId ?? null,
+    providerAccountId: input.execution.target.providerAccountId ?? null,
+    sourceType: selectedSourceType,
+    endpointKind: input.execution.target.candidate.identity.endpoint_kind,
+    servingSource: input.execution.target.candidate.identity.serving_source,
+    region: input.execution.target.candidate.identity.region ?? null,
+    lifecycleStateAtRequest: input.execution.target.candidate.status,
+    healthStatusAtRequest: input.execution.target.account?.healthStatus ?? null,
+    requestedModelId: input.requestedModelId ?? null,
+    selectedModelId: input.execution.target.modelId,
+    requestOperation: input.requestOperation,
+    roleIds: input.roleIds ?? [],
+    toolingUsed: input.toolingUsed ?? input.execution.normalized.toolCalls.length > 0,
+    cacheState: input.execution.normalized.promptCache.used
+      ? "hit"
+      : input.execution.normalized.promptCache.requested
+        ? "miss"
+        : "unsupported",
+    eligibleEndpointIds,
+    eligibleModelIds,
+    candidateCostSnapshot,
+    selectedPricingSnapshot,
+    selectedUncachedCostUsd,
+    baselineMaxEligibleCostUsd,
+    routingCostSavingsUsd,
+    cacheCostSavingsUsd,
+    totalAvoidedCostUsd: roundTelemetryUsd(routingCostSavingsUsd + cacheCostSavingsUsd),
+    costBaselineSource:
+      baselineMaxEligibleCostUsd === null
+        ? null
+        : eligibleEndpointIds.length > 1
+          ? "eligible_candidate_max"
+          : "selected_only",
+    costSavingsSupport:
+      baselineMaxEligibleCostUsd !== null && selectedUncachedCostUsd !== null ? "full" : "partial",
+    dimensions: {
+      selectedEndpointId,
+      candidateCount: eligibleEndpointIds.length,
+    },
+  };
 }
 
 export type BridgeTelemetryRequestRecord = ReturnType<
@@ -1283,6 +1560,9 @@ export interface StartBridgeServerOptions {
     query?: BridgeTelemetryQuery,
   ) => Promise<readonly unknown[]>;
   readonly listTelemetryRequests?: (query?: BridgeTelemetryQuery) => Promise<readonly unknown[]>;
+  readonly queryTelemetryAnalytics?: (
+    body: Record<string, unknown>,
+  ) => Promise<BridgeTelemetryAnalyticsResponse>;
   readonly subscribeTelemetry?: (
     listener: (event: RuntimeTelemetryStreamEvent) => void,
   ) => () => void;
@@ -1383,6 +1663,7 @@ export interface StartBridgeServerOptions {
 
 export interface RuntimeBridgeBackend {
   readonly registry: EndpointRegistryResult;
+  readonly effectiveRegistry: EndpointRegistryResult;
   listActivityMetrics(): Promise<readonly unknown[]>;
   readActivityCapture(captureId: number): Promise<unknown | null>;
   executeChatCompletions: (
@@ -1412,6 +1693,7 @@ export interface RuntimeBridgeBackend {
       stages: SessionBootstrapState["stages"];
     };
   }>;
+  getEffectiveRoutableInventory(): RoutableInventory | null;
   listProviders(): Promise<
     readonly {
       providerId: string;
@@ -1492,6 +1774,9 @@ export interface RuntimeBridgeBackend {
   listTelemetryRequests(
     query?: BridgeTelemetryQuery,
   ): Promise<readonly BridgeTelemetryRequestRecord[]>;
+  queryTelemetryAnalytics(
+    body: Record<string, unknown>,
+  ): Promise<BridgeTelemetryAnalyticsResponse>;
   subscribeTelemetry(listener: (event: RuntimeTelemetryStreamEvent) => void): () => void;
   readRequestObservation(
     requestId: string,
@@ -1720,6 +2005,7 @@ export interface CreateRuntimeBridgeBackendOptions {
   readonly unifiedRuntimeConfigPath?: string;
   readonly networkFetcher?: typeof fetch;
   readonly fixtureRoot?: string;
+  readonly runtimeVendorStartup?: "enabled" | "disabled";
 }
 
 export interface BridgeServerOptions {
@@ -5087,6 +5373,31 @@ function toSourceType(
   return endpointKind === "remote_api" ? "remote" : "local";
 }
 
+export function filterRouterRegistryByExecutionMode(
+  registry: EndpointRegistryResult,
+  executionMode: UnifiedRuntimeExecutionMode,
+): EndpointRegistryResult {
+  const endpoints =
+    executionMode === "remote_only"
+      ? registry.endpoints.filter(
+          (endpoint) => toSourceType(endpoint.identity.endpoint_kind) === "remote",
+        )
+      : executionMode === "local_only"
+        ? registry.endpoints.filter(
+            (endpoint) => toSourceType(endpoint.identity.endpoint_kind) === "local",
+          )
+        : registry.endpoints;
+  return {
+    ...registry,
+    endpoints,
+    lifecycleSummary: {
+      active: endpoints.filter((endpoint) => endpoint.status === "active").length,
+      degraded: endpoints.filter((endpoint) => endpoint.status === "degraded").length,
+      offline: endpoints.filter((endpoint) => endpoint.status === "offline").length,
+    },
+  };
+}
+
 function toControllerAssignmentFromEndpoint(
   endpoint: EndpointRegistryResult["endpoints"][number],
 ): BridgeControllerAssignment {
@@ -5096,6 +5407,17 @@ function toControllerAssignmentFromEndpoint(
     modelId: endpoint.identity.model_id,
     sourceType: toSourceType(endpoint.identity.endpoint_kind),
   };
+}
+
+function isControllerAssignmentAllowedByExecutionMode(
+  controller: BridgeControllerAssignment,
+  registry: EndpointRegistryResult,
+): boolean {
+  return registry.endpoints.some(
+    (endpoint) =>
+      endpoint.identity.endpoint_id === controller.endpointId &&
+      toSourceType(endpoint.identity.endpoint_kind) === controller.sourceType,
+  );
 }
 
 function mergeRegistrySources(
@@ -5720,6 +6042,21 @@ function createRequestHandler(options: StartBridgeServerOptions) {
         return;
       }
       writeJson(response, 200, await options.listTelemetryRequests(readTelemetryQuery(url)));
+      return;
+    }
+
+    if (request.method === "POST" && url.pathname === "/api/role-model/telemetry/query") {
+      if (!options.queryTelemetryAnalytics) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      try {
+        writeJson(response, 200, await options.queryTelemetryAnalytics(await readJsonBody(request)));
+      } catch (error) {
+        writeJson(response, 400, {
+          error: error instanceof Error ? error.message : "telemetry analytics query failed",
+        });
+      }
       return;
     }
 
@@ -6698,6 +7035,7 @@ export async function createRuntimeBridgeBackend(
   options: CreateRuntimeBridgeBackendOptions,
 ): Promise<RuntimeBridgeBackend> {
   const networkFetcher = options.networkFetcher ?? fetch;
+  const runtimeVendorStartup = options.runtimeVendorStartup ?? "enabled";
   const fixtureRoot = options.fixtureRoot ?? null;
   const useFixtures = fixtureRoot !== null;
   const initialUnifiedRuntimeConfig = options.unifiedRuntimeConfigPath
@@ -7330,6 +7668,12 @@ export async function createRuntimeBridgeBackend(
   let currentLiteLLMVendor: VendorRuntime | null = null;
   const getCurrentRegistrySources = (): RegistrySources =>
     mergeRegistrySources(currentRegistrySources, runtimeEndpoints);
+  const getRouterExecutionMode = (): UnifiedRuntimeExecutionMode =>
+    currentUnifiedRuntimeConfig?.executionMode ?? "decision_only";
+  const getRouterEffectiveRegistry = (): EndpointRegistryResult =>
+    filterRouterRegistryByExecutionMode(currentRegistry, getRouterExecutionMode());
+  const getRouterEffectiveRoutableInventory = (): RoutableInventory =>
+    buildRoutableInventory(getRouterEffectiveRegistry(), getCurrentRegistrySources());
   const getCurrentExecutionCatalog = (): NormalizedCatalog =>
     withRuntimeEndpointFallbackModels(currentNormalizedCatalog, currentAccounts, runtimeEndpoints);
   const emptyRoutableInventory = (): RoutableInventory => ({
@@ -8134,7 +8478,7 @@ export async function createRuntimeBridgeBackend(
     await Promise.all([currentLlamaSwapVendor?.shutdown(), currentLiteLLMVendor?.shutdown()]);
 
     const nextLlamaSwapVendor =
-      nextConfig?.llamaSwap.enabled && supervisor
+      runtimeVendorStartup === "enabled" && nextConfig?.llamaSwap.enabled && supervisor
         ? await startLlamaSwapVendor({
             repoRoot: options.repoRoot,
             runtimeStateRoot: options.runtimeStateRoot,
@@ -8151,7 +8495,7 @@ export async function createRuntimeBridgeBackend(
           })
         : null;
     const nextLiteLLMVendor =
-      nextConfig?.liteLLM.enabled && supervisor
+      runtimeVendorStartup === "enabled" && nextConfig?.liteLLM.enabled && supervisor
         ? await startLiteLLMVendor({
             runtimeStateRoot: options.runtimeStateRoot,
             supervisor,
@@ -8327,7 +8671,516 @@ export async function createRuntimeBridgeBackend(
     windowMs: query?.windowMs ?? DEFAULT_TELEMETRY_WINDOW_MS,
     limit: query?.limit ?? DEFAULT_TELEMETRY_LIMIT,
     ...(typeof query?.endAtMs === "number" ? { endAtMs: query.endAtMs } : {}),
+    ...(typeof query?.startAtMs === "number" ? { startAtMs: query.startAtMs } : {}),
   });
+  const TELEMETRY_ANALYTICS_GRANULARITY_MS: Record<BridgeTelemetryAnalyticsGranularity, number> = {
+    hour: 60 * 60 * 1000,
+    day: 24 * 60 * 60 * 1000,
+    week: 7 * 24 * 60 * 60 * 1000,
+  };
+  const SUPPORTED_TELEMETRY_ANALYTICS_METRICS: readonly BridgeTelemetryAnalyticsMetric[] = [
+    "requestCount",
+    "successCount",
+    "failureCount",
+    "inputTokens",
+    "outputTokens",
+    "totalTokens",
+    "cacheHitTokens",
+    "cacheReadTokens",
+    "cacheBackedRequestRate",
+    "cacheHitTokenRate",
+    "actualCostUsd",
+    "estimatedCostUsd",
+    "effectiveCostUsd",
+    "selectedUncachedCostUsd",
+    "baselineMaxEligibleCostUsd",
+    "routingCostSavingsUsd",
+    "cacheCostSavingsUsd",
+    "totalAvoidedCostUsd",
+    "averageLatencyMs",
+    "p95LatencyMs",
+  ];
+  const SUPPORTED_TELEMETRY_ANALYTICS_DIMENSIONS: readonly BridgeTelemetryAnalyticsDimension[] = [
+    "sourceType",
+    "endpointId",
+    "modelId",
+    "providerId",
+    "providerKind",
+    "providerFamily",
+    "providerAccountId",
+    "requestedRoleId",
+    "selectedStrategy",
+    "routingMode",
+    "difficultyBucket",
+    "statusFamily",
+    "requestOperation",
+  ];
+  const readTelemetryAnalyticsMetric = (
+    value: string,
+  ): BridgeTelemetryAnalyticsMetric => {
+    if (
+      !SUPPORTED_TELEMETRY_ANALYTICS_METRICS.includes(
+        value as BridgeTelemetryAnalyticsMetric,
+      )
+    ) {
+      throw new Error(`unsupported telemetry analytics metric: ${value}`);
+    }
+    return value as BridgeTelemetryAnalyticsMetric;
+  };
+  const readTelemetryAnalyticsDimension = (
+    value: string,
+  ): BridgeTelemetryAnalyticsDimension => {
+    if (
+      !SUPPORTED_TELEMETRY_ANALYTICS_DIMENSIONS.includes(
+        value as BridgeTelemetryAnalyticsDimension,
+      )
+    ) {
+      throw new Error(`unsupported telemetry analytics dimension: ${value}`);
+    }
+    return value as BridgeTelemetryAnalyticsDimension;
+  };
+  const percentile95 = (values: readonly number[]): number | null => {
+    if (values.length === 0) {
+      return null;
+    }
+    const sorted = [...values].sort((left, right) => left - right);
+    return sorted[Math.max(0, Math.ceil(sorted.length * 0.95) - 1)] ?? null;
+  };
+  const roundAnalyticsValue = (value: number): number => Number(value.toFixed(6));
+  const computeTelemetryMetricValue = (
+    metric: BridgeTelemetryAnalyticsMetric,
+    records: readonly BridgeTelemetryRequestRecord[],
+  ): number | null => {
+    switch (metric) {
+      case "requestCount":
+        return records.length;
+      case "successCount":
+        return records.filter((record) => record.errorClass === null).length;
+      case "failureCount":
+        return records.filter((record) => record.errorClass !== null).length;
+      case "inputTokens":
+        return records.reduce((sum, record) => sum + record.inputTokens, 0);
+      case "outputTokens":
+        return records.reduce((sum, record) => sum + record.outputTokens, 0);
+      case "totalTokens":
+        return records.reduce((sum, record) => sum + record.totalTokens, 0);
+      case "cacheHitTokens":
+      case "cacheReadTokens":
+        return records.reduce((sum, record) => sum + record.cacheReadTokens, 0);
+      case "cacheBackedRequestRate":
+        return records.length === 0
+          ? null
+          : roundAnalyticsValue(
+              records.filter((record) => record.promptCacheUsed).length / records.length,
+            );
+      case "cacheHitTokenRate": {
+        if (records.some((record) => !record.cacheReadTokensSupported)) {
+          return null;
+        }
+        const cacheReadTokens = records.reduce((sum, record) => sum + record.cacheReadTokens, 0);
+        const tokenDenominator = records.reduce(
+          (sum, record) => sum + record.inputTokens + record.cacheReadTokens,
+          0,
+        );
+        return tokenDenominator === 0
+          ? null
+          : roundAnalyticsValue(cacheReadTokens / tokenDenominator);
+      }
+      case "actualCostUsd":
+        return roundAnalyticsValue(
+          records.reduce((sum, record) => sum + (record.actualCostUsd ?? 0), 0),
+        );
+      case "estimatedCostUsd":
+        return roundAnalyticsValue(
+          records.reduce((sum, record) => sum + (record.estimatedCostUsd ?? 0), 0),
+        );
+      case "effectiveCostUsd":
+        return roundAnalyticsValue(
+          records.reduce((sum, record) => sum + record.effectiveCostUsd, 0),
+        );
+      case "selectedUncachedCostUsd":
+        return roundAnalyticsValue(
+          records.reduce((sum, record) => sum + (record.selectedUncachedCostUsd ?? 0), 0),
+        );
+      case "baselineMaxEligibleCostUsd":
+        return roundAnalyticsValue(
+          records.reduce((sum, record) => sum + (record.baselineMaxEligibleCostUsd ?? 0), 0),
+        );
+      case "routingCostSavingsUsd":
+        return roundAnalyticsValue(
+          records.reduce((sum, record) => sum + record.routingCostSavingsUsd, 0),
+        );
+      case "cacheCostSavingsUsd":
+        return roundAnalyticsValue(
+          records.reduce((sum, record) => sum + record.cacheCostSavingsUsd, 0),
+        );
+      case "totalAvoidedCostUsd":
+        return roundAnalyticsValue(
+          records.reduce((sum, record) => sum + record.totalAvoidedCostUsd, 0),
+        );
+      case "averageLatencyMs": {
+        const latencies = records
+          .map((record) => record.latencyMs)
+          .filter((value): value is number => typeof value === "number");
+        return latencies.length === 0
+          ? null
+          : Math.round(latencies.reduce((sum, value) => sum + value, 0) / latencies.length);
+      }
+      case "p95LatencyMs": {
+        const latencies = records
+          .map((record) => record.latencyMs)
+          .filter((value): value is number => typeof value === "number");
+        return percentile95(latencies);
+      }
+    }
+  };
+  const getTelemetryDimensionValue = (
+    record: BridgeTelemetryRequestRecord,
+    dimension: BridgeTelemetryAnalyticsDimension,
+  ): string | null => {
+    switch (dimension) {
+      case "sourceType":
+        return record.sourceType;
+      case "endpointId":
+        return record.endpointId;
+      case "modelId":
+        return record.modelId;
+      case "providerId":
+        return record.providerId;
+      case "providerKind":
+        return record.providerKind;
+      case "providerFamily":
+        return record.providerFamily;
+      case "providerAccountId":
+        return record.providerAccountId;
+      case "requestedRoleId":
+        return record.requestedRoleId;
+      case "selectedStrategy":
+        return record.selectedStrategy;
+      case "routingMode":
+        return record.routingMode;
+      case "difficultyBucket":
+        return record.difficultyBucket;
+      case "statusFamily":
+        return record.statusFamily;
+      case "requestOperation":
+        return record.requestOperation;
+    }
+  };
+  const getTelemetryDimensionLabel = (
+    dimension: BridgeTelemetryAnalyticsDimension,
+    key: string,
+  ): string => {
+    if (dimension === "sourceType") {
+      return key === "local" ? "Local" : key === "remote" ? "Remote" : key;
+    }
+    return key;
+  };
+  const readTelemetryAnalyticsQuery = (
+    body: Record<string, unknown>,
+  ): BridgeTelemetryAnalyticsQuery => {
+    const granularity = body.granularity;
+    if (granularity !== "hour" && granularity !== "day" && granularity !== "week") {
+      throw new Error("granularity must be one of: hour, day, week");
+    }
+    const metrics = body.metrics;
+    if (
+      !Array.isArray(metrics) ||
+      metrics.length === 0 ||
+      metrics.some((metric) => typeof metric !== "string")
+    ) {
+      throw new Error("metrics must be a non-empty array of strings");
+    }
+    const parsedMetrics = metrics.map((metric) =>
+      readTelemetryAnalyticsMetric(metric as string),
+    );
+    const breakdown =
+      typeof body.breakdown === "string"
+        ? readTelemetryAnalyticsDimension(body.breakdown)
+        : body.breakdown === null || body.breakdown === undefined
+          ? null
+          : (() => {
+              throw new Error("breakdown must be a string when provided");
+            })();
+    const rankingBody =
+      body.ranking === undefined || body.ranking === null
+        ? null
+        : asObject(body.ranking, "ranking");
+    const filtersBody =
+      body.filters === undefined || body.filters === null
+        ? undefined
+        : asObject(body.filters, "filters");
+    const readStringList = (value: unknown, label: string): string[] | undefined => {
+      if (value === undefined) {
+        return undefined;
+      }
+      if (!Array.isArray(value) || value.some((entry) => typeof entry !== "string")) {
+        throw new Error(`${label} must be an array of strings`);
+      }
+      return [...value];
+    };
+    const readEnumStringList = <T extends string>(
+      value: unknown,
+      label: string,
+      allowed: readonly T[],
+    ): T[] | undefined => {
+      const entries = readStringList(value, label);
+      if (entries === undefined) {
+        return undefined;
+      }
+      for (const entry of entries) {
+        if (!allowed.includes(entry as T)) {
+          throw new Error(`${label} contains unsupported value: ${entry}`);
+        }
+      }
+      return entries as T[];
+    };
+    const startAtMs =
+      typeof body.startAtMs === "number" && Number.isFinite(body.startAtMs)
+        ? body.startAtMs
+        : undefined;
+    const endAtMs =
+      typeof body.endAtMs === "number" && Number.isFinite(body.endAtMs) ? body.endAtMs : undefined;
+    const windowMs =
+      typeof body.windowMs === "number" && Number.isFinite(body.windowMs) ? body.windowMs : undefined;
+    if (typeof body.startAtMs !== "undefined" && startAtMs === undefined) {
+      throw new Error("startAtMs must be a finite number when provided");
+    }
+    if (typeof body.endAtMs !== "undefined" && endAtMs === undefined) {
+      throw new Error("endAtMs must be a finite number when provided");
+    }
+    if (typeof body.windowMs !== "undefined" && windowMs === undefined) {
+      throw new Error("windowMs must be a finite number when provided");
+    }
+    if (typeof windowMs === "number" && windowMs <= 0) {
+      throw new Error("windowMs must be greater than zero");
+    }
+    if (typeof startAtMs === "number" && typeof endAtMs === "number" && endAtMs <= startAtMs) {
+      throw new Error("endAtMs must be greater than startAtMs");
+    }
+    if (
+      rankingBody &&
+      typeof rankingBody.limit !== "undefined" &&
+      (!Number.isInteger(rankingBody.limit) || (rankingBody.limit as number) <= 0)
+    ) {
+      throw new Error("ranking.limit must be a positive integer");
+    }
+    return {
+      ...(typeof startAtMs === "number" ? { startAtMs } : {}),
+      ...(typeof endAtMs === "number" ? { endAtMs } : {}),
+      ...(typeof windowMs === "number" ? { windowMs } : {}),
+      granularity,
+      metrics: parsedMetrics,
+      ...(breakdown ? { breakdown } : {}),
+      ...(filtersBody
+        ? {
+            filters: {
+              ...(readEnumStringList(filtersBody.sourceTypes, "filters.sourceTypes", [
+                "local",
+                "remote",
+              ] as const)
+                ? {
+                    sourceTypes: readEnumStringList(
+                      filtersBody.sourceTypes,
+                      "filters.sourceTypes",
+                      ["local", "remote"] as const,
+                    ),
+                  }
+                : {}),
+              ...(readStringList(filtersBody.endpointIds, "filters.endpointIds")
+                ? { endpointIds: readStringList(filtersBody.endpointIds, "filters.endpointIds") }
+                : {}),
+              ...(readStringList(filtersBody.modelIds, "filters.modelIds")
+                ? { modelIds: readStringList(filtersBody.modelIds, "filters.modelIds") }
+                : {}),
+              ...(readStringList(filtersBody.providerIds, "filters.providerIds")
+                ? { providerIds: readStringList(filtersBody.providerIds, "filters.providerIds") }
+                : {}),
+              ...(readStringList(filtersBody.providerKinds, "filters.providerKinds")
+                ? {
+                    providerKinds: readStringList(
+                      filtersBody.providerKinds,
+                      "filters.providerKinds",
+                    ),
+                  }
+                : {}),
+              ...(readStringList(filtersBody.providerFamilies, "filters.providerFamilies")
+                ? {
+                    providerFamilies: readStringList(
+                      filtersBody.providerFamilies,
+                      "filters.providerFamilies",
+                    ),
+                  }
+                : {}),
+              ...(readStringList(filtersBody.providerAccountIds, "filters.providerAccountIds")
+                ? {
+                    providerAccountIds: readStringList(
+                      filtersBody.providerAccountIds,
+                      "filters.providerAccountIds",
+                    ),
+                  }
+                : {}),
+              ...(readStringList(filtersBody.requestedRoleIds, "filters.requestedRoleIds")
+                ? {
+                    requestedRoleIds: readStringList(
+                      filtersBody.requestedRoleIds,
+                      "filters.requestedRoleIds",
+                    ),
+                  }
+                : {}),
+              ...(readStringList(filtersBody.selectedStrategies, "filters.selectedStrategies")
+                ? {
+                    selectedStrategies: readStringList(
+                      filtersBody.selectedStrategies,
+                      "filters.selectedStrategies",
+                    ),
+                  }
+                : {}),
+              ...(readEnumStringList(filtersBody.routingModes, "filters.routingModes", [
+                "baseline",
+                "difficulty",
+                "controller",
+                "hybrid",
+              ] as const)
+                ? {
+                    routingModes: readEnumStringList(
+                      filtersBody.routingModes,
+                      "filters.routingModes",
+                      ["baseline", "difficulty", "controller", "hybrid"] as const,
+                    ),
+                  }
+                : {}),
+              ...(readEnumStringList(filtersBody.difficultyBuckets, "filters.difficultyBuckets", [
+                "easy",
+                "medium",
+                "hard",
+              ] as const)
+                ? {
+                    difficultyBuckets: readEnumStringList(
+                      filtersBody.difficultyBuckets,
+                      "filters.difficultyBuckets",
+                      ["easy", "medium", "hard"] as const,
+                    ),
+                  }
+                : {}),
+              ...(readEnumStringList(filtersBody.statusFamilies, "filters.statusFamilies", [
+                "success",
+                "failure",
+                "unknown",
+              ] as const)
+                ? {
+                    statusFamilies: readEnumStringList(
+                      filtersBody.statusFamilies,
+                      "filters.statusFamilies",
+                      ["success", "failure", "unknown"] as const,
+                    ),
+                  }
+                : {}),
+              ...(readStringList(filtersBody.requestOperations, "filters.requestOperations")
+                ? {
+                    requestOperations: readStringList(
+                      filtersBody.requestOperations,
+                      "filters.requestOperations",
+                    ),
+                  }
+                : {}),
+            },
+          }
+        : {}),
+      ...(rankingBody
+        ? {
+            ranking: {
+              dimension: readTelemetryAnalyticsDimension(
+                readRequiredString(rankingBody, "dimension", "ranking"),
+              ),
+              metric: readTelemetryAnalyticsMetric(
+                readRequiredString(rankingBody, "metric", "ranking"),
+              ),
+              ...(typeof rankingBody.limit === "number" && Number.isFinite(rankingBody.limit)
+                ? { limit: rankingBody.limit }
+                : {}),
+            },
+          }
+        : {}),
+    };
+  };
+  const filterTelemetryRequestRecords = (
+    records: readonly BridgeTelemetryRequestRecord[],
+    filters?: BridgeTelemetryAnalyticsFilters,
+  ): readonly BridgeTelemetryRequestRecord[] => {
+    if (!filters) {
+      return records;
+    }
+    return records.filter((record) => {
+      if (filters.sourceTypes && !filters.sourceTypes.includes(record.sourceType)) {
+        return false;
+      }
+      if (filters.endpointIds && !filters.endpointIds.includes(record.endpointId)) {
+        return false;
+      }
+      if (filters.modelIds && !(record.modelId && filters.modelIds.includes(record.modelId))) {
+        return false;
+      }
+      if (filters.providerIds && !(record.providerId && filters.providerIds.includes(record.providerId))) {
+        return false;
+      }
+      if (
+        filters.providerKinds &&
+        !(record.providerKind && filters.providerKinds.includes(record.providerKind))
+      ) {
+        return false;
+      }
+      if (
+        filters.providerFamilies &&
+        !(record.providerFamily && filters.providerFamilies.includes(record.providerFamily))
+      ) {
+        return false;
+      }
+      if (
+        filters.providerAccountIds &&
+        !(
+          record.providerAccountId &&
+          filters.providerAccountIds.includes(record.providerAccountId)
+        )
+      ) {
+        return false;
+      }
+      if (
+        filters.requestedRoleIds &&
+        !(record.requestedRoleId && filters.requestedRoleIds.includes(record.requestedRoleId))
+      ) {
+        return false;
+      }
+      if (
+        filters.selectedStrategies &&
+        !(record.selectedStrategy && filters.selectedStrategies.includes(record.selectedStrategy))
+      ) {
+        return false;
+      }
+      if (filters.routingModes && !(record.routingMode && filters.routingModes.includes(record.routingMode))) {
+        return false;
+      }
+      if (
+        filters.difficultyBuckets &&
+        !(record.difficultyBucket && filters.difficultyBuckets.includes(record.difficultyBucket))
+      ) {
+        return false;
+      }
+      if (
+        filters.statusFamilies &&
+        !(record.statusFamily && filters.statusFamilies.includes(record.statusFamily))
+      ) {
+        return false;
+      }
+      if (
+        filters.requestOperations &&
+        !(record.requestOperation && filters.requestOperations.includes(record.requestOperation))
+      ) {
+        return false;
+      }
+      return true;
+    });
+  };
   const summarizeTelemetryRequestRecords = (
     records: readonly BridgeTelemetryRequestRecord[],
   ): ReturnType<typeof readRuntimeTelemetrySummary> => {
@@ -8353,17 +9206,7 @@ export async function createRuntimeBridgeBackend(
         records.reduce((sum, record) => sum + (record.estimatedCostUsd ?? 0), 0).toFixed(6),
       ),
       totalEffectiveCostUsd: Number(
-        records
-          .reduce((sum, record) => {
-            if (typeof record.actualCostUsd === "number") {
-              return sum + record.actualCostUsd;
-            }
-            if (typeof record.estimatedCostUsd === "number") {
-              return sum + record.estimatedCostUsd;
-            }
-            return sum;
-          }, 0)
-          .toFixed(6),
+        records.reduce((sum, record) => sum + record.effectiveCostUsd, 0).toFixed(6),
       ),
       averageLatencyMs: latencies.length > 0 ? Math.round(totalLatency / latencies.length) : null,
       p95LatencyMs: p95Index >= 0 ? (latencies[p95Index] ?? null) : null,
@@ -8441,6 +9284,12 @@ export async function createRuntimeBridgeBackend(
         requestClass: record.requestClass ?? observationMeta.requestClass,
         ...endpointMeta,
         sourceType: record.sourceType ?? endpointMeta.sourceType,
+        providerId: record.providerId ?? endpointMeta.providerId,
+        endpointKind: record.endpointKind ?? endpointMeta.endpointKind,
+        servingSource: record.servingSource ?? endpointMeta.servingSource,
+        healthStatus: record.healthStatusAtRequest ?? endpointMeta.healthStatus,
+        status: record.lifecycleStateAtRequest ?? endpointMeta.status,
+        roleIds: record.roleIds.length > 0 ? record.roleIds : endpointMeta.roleIds,
       };
     });
   };
@@ -8466,13 +9315,151 @@ export async function createRuntimeBridgeBackend(
     query?: BridgeTelemetryQuery,
   ): readonly BridgeTelemetryComparisonRow[] => {
     const normalizedQuery = normalizeTelemetryQuery(query);
+    const requestMetaByEndpointId = new Map(
+      listTelemetryRequestRecords(normalizedQuery).map((record) => [
+        record.endpointId,
+        {
+          sourceType: record.sourceType,
+          providerId: record.providerId,
+          endpointKind: record.endpointKind,
+          servingSource: record.servingSource,
+          healthStatus: record.healthStatusAtRequest ?? record.healthStatus,
+          status: record.lifecycleStateAtRequest ?? record.status,
+          roleIds: record.roleIds,
+        } satisfies BridgeTelemetryEndpointMeta,
+      ]),
+    );
     return listRuntimeTelemetryComparisonRows({
       databasePath: initialization.databasePath,
       ...normalizedQuery,
     }).map((row) => ({
       ...row,
-      ...getTelemetryEndpointMeta(row.endpointId),
+      ...(requestMetaByEndpointId.get(row.endpointId) ?? getTelemetryEndpointMeta(row.endpointId)),
     }));
+  };
+  const queryTelemetryAnalyticsData = (
+    rawBody: Record<string, unknown>,
+  ): BridgeTelemetryAnalyticsResponse => {
+    const query = readTelemetryAnalyticsQuery(rawBody);
+    const endAtMs = query.endAtMs ?? Date.now();
+    const startAtMs = query.startAtMs ?? endAtMs - (query.windowMs ?? DEFAULT_TELEMETRY_WINDOW_MS);
+    const requestRecords = filterTelemetryRequestRecords(
+      listTelemetryRequestRecords({
+        startAtMs,
+        endAtMs,
+        windowMs: endAtMs - startAtMs,
+      }),
+      query.filters,
+    );
+    const bucketSizeMs = TELEMETRY_ANALYTICS_GRANULARITY_MS[query.granularity];
+    const bucketCount = Math.max(1, Math.ceil(Math.max(1, endAtMs - startAtMs) / bucketSizeMs));
+    const buckets: BridgeTelemetryAnalyticsBucket[] = [];
+    for (let index = 0; index < bucketCount; index += 1) {
+      const bucketStartMs = startAtMs + bucketSizeMs * index;
+      const bucketEndMs = Math.min(endAtMs, bucketStartMs + bucketSizeMs);
+      const bucketRecords = requestRecords.filter(
+        (record) => record.createdAtMs >= bucketStartMs && record.createdAtMs < bucketEndMs,
+      );
+      const totals = Object.fromEntries(
+        query.metrics.map((metric) => [metric, computeTelemetryMetricValue(metric, bucketRecords)]),
+      );
+      const series =
+        query.breakdown === null || query.breakdown === undefined
+          ? []
+          : [...new Set(
+              bucketRecords
+                .map((record) => getTelemetryDimensionValue(record, query.breakdown!))
+                .filter((value): value is string => Boolean(value)),
+            )]
+              .sort((left, right) => left.localeCompare(right))
+              .map((key) => {
+                const seriesRecords = bucketRecords.filter(
+                  (record) => getTelemetryDimensionValue(record, query.breakdown!) === key,
+                );
+                return {
+                  key,
+                  label: getTelemetryDimensionLabel(query.breakdown!, key),
+                  metrics: Object.fromEntries(
+                    query.metrics.map((metric) => [
+                      metric,
+                      computeTelemetryMetricValue(metric, seriesRecords),
+                    ]),
+                  ),
+                } satisfies BridgeTelemetryAnalyticsSeries;
+              });
+      buckets.push({
+        startAtMs: bucketStartMs,
+        endAtMs: bucketEndMs,
+        totals,
+        series,
+      });
+    }
+    const totals = Object.fromEntries(
+      query.metrics.map((metric) => [metric, computeTelemetryMetricValue(metric, requestRecords)]),
+    );
+    const labels: Partial<Record<BridgeTelemetryAnalyticsDimension, Record<string, string>>> = {};
+    const labelDimensions = new Set<BridgeTelemetryAnalyticsDimension>(
+      [
+        query.breakdown ?? undefined,
+        query.ranking?.dimension,
+        ...(query.filters?.sourceTypes ? (["sourceType"] as const) : []),
+        ...(query.filters?.requestedRoleIds ? (["requestedRoleId"] as const) : []),
+        ...(query.filters?.selectedStrategies ? (["selectedStrategy"] as const) : []),
+      ].filter((value): value is BridgeTelemetryAnalyticsDimension => Boolean(value)),
+    );
+    for (const dimension of labelDimensions) {
+      labels[dimension] = Object.fromEntries(
+        [...new Set(
+          requestRecords
+            .map((record) => getTelemetryDimensionValue(record, dimension))
+            .filter((value): value is string => Boolean(value)),
+        )]
+          .sort((left, right) => left.localeCompare(right))
+          .map((key) => [key, getTelemetryDimensionLabel(dimension, key)]),
+      );
+    }
+    const ranking =
+      query.ranking === null || query.ranking === undefined
+        ? null
+        : (() => {
+            const grouped = new Map<string, BridgeTelemetryRequestRecord[]>();
+            for (const record of requestRecords) {
+              const key = getTelemetryDimensionValue(record, query.ranking.dimension);
+              if (!key) {
+                continue;
+              }
+              const existing = grouped.get(key) ?? [];
+              existing.push(record);
+              grouped.set(key, existing);
+            }
+            return {
+              dimension: query.ranking.dimension,
+              metric: query.ranking.metric,
+              rows: [...grouped.entries()]
+                .map(([key, groupedRecords]) => ({
+                  key,
+                  label: getTelemetryDimensionLabel(query.ranking!.dimension, key),
+                  value: computeTelemetryMetricValue(query.ranking!.metric, groupedRecords),
+                }))
+                .sort(
+                  (left, right) =>
+                    (right.value ?? Number.NEGATIVE_INFINITY) -
+                      (left.value ?? Number.NEGATIVE_INFINITY) || left.key.localeCompare(right.key),
+                )
+                .slice(0, query.ranking.limit ?? DEFAULT_TELEMETRY_LIMIT),
+            };
+          })();
+    return {
+      startAtMs,
+      endAtMs,
+      granularity: query.granularity,
+      metrics: query.metrics,
+      breakdown: query.breakdown ?? null,
+      buckets,
+      totals,
+      ranking,
+      labels,
+    };
   };
   const emitTelemetryUpdate = (requestId: string): void => {
     const request = listTelemetryRequestRecords({ limit: DEFAULT_TELEMETRY_LIMIT }).find(
@@ -8492,9 +9479,10 @@ export async function createRuntimeBridgeBackend(
     }
   };
   const getDefaultControllerAssignment = (): BridgeControllerAssignment | null => {
+    const effectiveRegistry = getRouterEffectiveRegistry();
     const guidance = summarizeRouterGuidance({
       routingModel,
-      routableEndpointIds: currentRegistry.endpoints.map(
+      routableEndpointIds: effectiveRegistry.endpoints.map(
         (endpoint) => endpoint.identity.endpoint_id,
       ),
     });
@@ -8504,7 +9492,7 @@ export async function createRuntimeBridgeBackend(
         return toControllerAssignmentFromEndpoint(defaultEndpoint);
       }
     }
-    const fallbackEndpoint = currentRegistry.endpoints[0];
+    const fallbackEndpoint = effectiveRegistry.endpoints[0];
     if (!fallbackEndpoint) {
       return null;
     }
@@ -8625,18 +9613,26 @@ export async function createRuntimeBridgeBackend(
   const getCurrentControllerAssignment = (): BridgeControllerAssignment | null => {
     const persisted = readPersistedControllerAssignment();
     if (persisted) {
-      return {
+      const normalizedPersisted: BridgeControllerAssignment = {
         ...persisted,
         scope: "global",
         sourceType: persisted.sourceType === "remote" ? "remote" : "local",
       };
+      if (
+        isControllerAssignmentAllowedByExecutionMode(
+          normalizedPersisted,
+          getRouterEffectiveRegistry(),
+        )
+      ) {
+        return normalizedPersisted;
+      }
     }
     return getDefaultControllerAssignment();
   };
   const getRouterGuidance = () =>
     summarizeRouterGuidance({
       routingModel,
-      routableEndpointIds: currentRegistry.endpoints.map(
+      routableEndpointIds: getRouterEffectiveRegistry().endpoints.map(
         (endpoint) => endpoint.identity.endpoint_id,
       ),
     });
@@ -8672,11 +9668,13 @@ export async function createRuntimeBridgeBackend(
     };
   };
   const readRouterSummaryData = () => {
+    const effectiveRegistry = getRouterEffectiveRegistry();
+    const effectiveInventory = getRouterEffectiveRoutableInventory();
     const aliasInventory = (currentUnifiedRuntimeConfig?.modelAliases ?? []).map((alias) => {
       const resolution = resolveAliasAllowEndpoints(
         alias,
-        currentRoutableInventory,
-        currentRegistry,
+        effectiveInventory,
+        effectiveRegistry,
       );
       const endpointMeta = resolution.allowEndpoints.map((endpointId) => ({
         endpointId,
@@ -8714,7 +9712,7 @@ export async function createRuntimeBridgeBackend(
     });
     return {
       strategy: currentUnifiedRuntimeConfig?.routingStrategy ?? null,
-      executionMode: currentUnifiedRuntimeConfig?.executionMode ?? "decision_only",
+      executionMode: getRouterExecutionMode(),
       controller: getCurrentControllerAssignment(),
       guidance: getRouterGuidance(),
       configuredCandidateCount: currentRegistry.endpoints.length,
@@ -8779,6 +9777,9 @@ export async function createRuntimeBridgeBackend(
     const controller = getCurrentControllerAssignment();
     const guidance = getRouterGuidance();
     const benchmarkSummary = await readBenchmarkSummaryData();
+    const executionEndpointIds = new Set(
+      getRouterEffectiveRegistry().endpoints.map((endpoint) => endpoint.identity.endpoint_id),
+    );
     return currentRegistry.endpoints.map((endpoint) => {
       const endpointId = endpoint.identity.endpoint_id;
       const profile = readEndpointProfileData(endpointId);
@@ -8815,6 +9816,7 @@ export async function createRuntimeBridgeBackend(
         capabilities: endpoint.declared.capabilities,
         toolCallingSupported: endpoint.declared.tool_calling.supported,
         toolCallingStyle: endpoint.declared.tool_calling.style,
+        executionModeEligible: executionEndpointIds.has(endpointId),
         controllerEligible: controller?.endpointId === endpointId,
         preferred: guidance.preferredEndpointIds.includes(endpointId),
         ignored: guidance.ignoredEndpointIds.includes(endpointId),
@@ -8903,6 +9905,7 @@ export async function createRuntimeBridgeBackend(
       readonly persistObservation?: boolean;
       readonly requestOptions?: BridgeExecutionRequestOptions;
       readonly requestedModel?: string;
+      readonly requestOperation?: string;
     },
   ) => {
     const observedDataConfig = resolveUnifiedRuntimeObservedDataConfig(currentUnifiedRuntimeConfig);
@@ -9249,6 +10252,19 @@ export async function createRuntimeBridgeBackend(
             downstreamModelId: execution.target.modelId,
           })
         : undefined;
+      const telemetrySnapshot = buildRuntimeTelemetrySnapshot({
+        routed,
+        execution,
+        requestOperation: executionOptions?.requestOperation ?? "chat",
+        requestedModelId: executionOptions?.requestedModel ?? null,
+        roleIds: uniqueTelemetryStrings([
+          plan.routingRequest.requestedRoleId,
+          plan.routingDiagnostics?.rolePolicy?.requestedRoleId,
+          plan.routingDiagnostics?.rolePolicy?.appliedRoleId,
+        ]),
+        toolingUsed:
+          execution.normalized.toolCalls.length > 0 || toolExecutionResult.executions.length > 0,
+      });
       const bundle = createRuntimeObservationBundle({
         decision: routed.decision,
         clientRequestId: executionOptions?.requestOptions?.clientRequestId,
@@ -9287,6 +10303,7 @@ export async function createRuntimeBridgeBackend(
         tooling: {
           executions: toolExecutionResult.executions,
         },
+        telemetrySnapshot,
         ...(providerAccount
           ? {
               accountState: {
@@ -9529,7 +10546,10 @@ export async function createRuntimeBridgeBackend(
       return undefined;
     }
 
-    const controllerAllowEndpoints = currentRegistry.endpoints
+    const executionRegistry = getRouterEffectiveRegistry();
+    const executionInventory = getRouterEffectiveRoutableInventory();
+
+    const controllerAllowEndpoints = executionRegistry.endpoints
       .filter(
         (endpoint) =>
           endpoint.identity.model_id === controller.modelId &&
@@ -9547,10 +10567,10 @@ export async function createRuntimeBridgeBackend(
     }
 
     const candidateEndpointIds = resolveRequestedModelPool(
-      currentRegistry,
+      executionRegistry,
       input.requestedModel,
       modelAliases,
-      currentRoutableInventory.endpointIds.length > 0 ? currentRoutableInventory : null,
+      executionInventory.endpointIds.length > 0 ? executionInventory : null,
     ).allowEndpoints;
     const controllerMessages = buildControllerRoutingMessages({
       requestedModel: input.requestedModel,
@@ -9618,6 +10638,9 @@ export async function createRuntimeBridgeBackend(
   const backend = {
     get registry(): EndpointRegistryResult {
       return currentRegistry;
+    },
+    get effectiveRegistry(): EndpointRegistryResult {
+      return getRouterEffectiveRegistry();
     },
     async readVersionInfo(): Promise<{
       version: string;
@@ -9692,8 +10715,10 @@ export async function createRuntimeBridgeBackend(
           toolCount: body.tools?.length ?? 0,
           requestOptions,
         });
+        const executionRegistry = getRouterEffectiveRegistry();
+        const executionInventory = getRouterEffectiveRoutableInventory();
         const plan = mapChatCompletionsRequest(
-          currentRegistry,
+          executionRegistry,
           body,
           requestId,
           currentUnifiedRuntimeConfig?.modelAliases ?? [],
@@ -9707,7 +10732,7 @@ export async function createRuntimeBridgeBackend(
                   overrideRecommendedMaxDifficultyByEndpointId:
                     readObservedOverrideMaxDifficultyByEndpointId({
                       databasePath: initialization.databasePath,
-                      endpointIds: currentRegistry.endpoints.map(
+                      endpointIds: executionRegistry.endpoints.map(
                         (endpoint) => endpoint.identity.endpoint_id,
                       ),
                       observedDataConfig: resolveUnifiedRuntimeObservedDataConfig(
@@ -9724,7 +10749,7 @@ export async function createRuntimeBridgeBackend(
           requestOptions,
           currentRolePolicy.roleDefinitions,
           normalizeConfiguredRoutingMode(currentUnifiedRuntimeConfig?.routingStrategy) ?? undefined,
-          currentRoutableInventory.endpointIds.length > 0 ? currentRoutableInventory : null,
+          executionInventory.endpointIds.length > 0 ? executionInventory : null,
         );
         const { execution, toolExecutionResult, routingDecisionId } = await executeBridgePlan(
           plan,
@@ -9734,6 +10759,7 @@ export async function createRuntimeBridgeBackend(
           {
             requestOptions,
             requestedModel: body.model,
+            requestOperation: "chat",
             persistObservation: !requestId.startsWith("bench-"),
           },
         );
@@ -9824,8 +10850,10 @@ export async function createRuntimeBridgeBackend(
         toolCount: body.tools?.length ?? 0,
         requestOptions,
       });
+      const executionRegistry = getRouterEffectiveRegistry();
+      const executionInventory = getRouterEffectiveRoutableInventory();
       const plan = mapResponsesRequest(
-        currentRegistry,
+        executionRegistry,
         body,
         requestId,
         currentUnifiedRuntimeConfig?.modelAliases ?? [],
@@ -9839,7 +10867,7 @@ export async function createRuntimeBridgeBackend(
                 overrideRecommendedMaxDifficultyByEndpointId:
                   readObservedOverrideMaxDifficultyByEndpointId({
                     databasePath: initialization.databasePath,
-                    endpointIds: currentRegistry.endpoints.map(
+                    endpointIds: executionRegistry.endpoints.map(
                       (endpoint) => endpoint.identity.endpoint_id,
                     ),
                     observedDataConfig: resolveUnifiedRuntimeObservedDataConfig(
@@ -9856,7 +10884,7 @@ export async function createRuntimeBridgeBackend(
         requestOptions,
         currentRolePolicy.roleDefinitions,
         normalizeConfiguredRoutingMode(currentUnifiedRuntimeConfig?.routingStrategy) ?? undefined,
-        currentRoutableInventory.endpointIds.length > 0 ? currentRoutableInventory : null,
+        executionInventory.endpointIds.length > 0 ? executionInventory : null,
       );
       const { execution, routingDecisionId } = await executeBridgePlan(
         plan,
@@ -9866,6 +10894,7 @@ export async function createRuntimeBridgeBackend(
         {
           requestOptions,
           requestedModel: body.model,
+          requestOperation: "responses",
         },
       );
       const costUsd =
@@ -9997,6 +11026,10 @@ export async function createRuntimeBridgeBackend(
     },
     getRoutableInventory(): RoutableInventory | null {
       return currentRoutableInventory.endpointIds.length > 0 ? currentRoutableInventory : null;
+    },
+    getEffectiveRoutableInventory(): RoutableInventory | null {
+      const inventory = getRouterEffectiveRoutableInventory();
+      return inventory.endpointIds.length > 0 ? inventory : null;
     },
     async readRuntimeConfig(): Promise<{
       applied: boolean;
@@ -10963,17 +11996,7 @@ export async function createRuntimeBridgeBackend(
       return activateRuntimeEndpoint(body);
     },
     async readControllerAssignment(): Promise<BridgeControllerAssignment | null> {
-      const persisted = readPersistedControllerAssignment();
-      if (persisted) {
-        return {
-          scope: "global",
-          endpointId: persisted.endpointId,
-          modelId: persisted.modelId,
-          sourceType: persisted.sourceType === "remote" ? "remote" : "local",
-          updatedAtMs: persisted.updatedAtMs,
-        };
-      }
-      return getDefaultControllerAssignment();
+      return getCurrentControllerAssignment();
     },
     async updateControllerAssignment(
       body: Record<string, unknown>,
@@ -11163,6 +12186,11 @@ export async function createRuntimeBridgeBackend(
     ): Promise<readonly BridgeTelemetryRequestRecord[]> {
       return listTelemetryRequestRecords(query);
     },
+    async queryTelemetryAnalytics(
+      body: Record<string, unknown>,
+    ): Promise<BridgeTelemetryAnalyticsResponse> {
+      return queryTelemetryAnalyticsData(body);
+    },
     subscribeTelemetry(listener: (event: RuntimeTelemetryStreamEvent) => void): () => void {
       telemetryListeners.add(listener);
       return () => {
@@ -11172,16 +12200,116 @@ export async function createRuntimeBridgeBackend(
     async readRequestObservation(
       requestId: string,
     ): Promise<(RuntimeObservationBundle & BridgeTelemetryEndpointMeta) | null> {
+      const telemetryRecord = listTelemetryRequestRecords({
+        startAtMs: 0,
+        endAtMs: Date.now() + DEFAULT_TELEMETRY_WINDOW_MS,
+        limit: DEFAULT_TELEMETRY_LIMIT,
+      }).find((record) => record.requestId === requestId);
       const observation = readRuntimeObservationBundle({
         databasePath: initialization.databasePath,
         requestId,
       }) as RuntimeObservationBundle | null;
       if (!observation) {
-        return null;
+        if (!telemetryRecord) {
+          return null;
+        }
+        return {
+          requestId: telemetryRecord.requestId,
+          routingDecisionId: telemetryRecord.routingDecisionId,
+          endpointId: telemetryRecord.endpointId,
+          clientRequestId: telemetryRecord.clientRequestId ?? null,
+          sourceType: telemetryRecord.sourceType,
+          providerId: telemetryRecord.providerId,
+          endpointKind: telemetryRecord.endpointKind,
+          servingSource: telemetryRecord.servingSource,
+          healthStatus: telemetryRecord.healthStatus,
+          status: telemetryRecord.status,
+          roleIds: telemetryRecord.roleIds,
+          statusFamily: telemetryRecord.statusFamily,
+          usageEvent: {
+            request_id: telemetryRecord.requestId,
+            routing_decision_id: telemetryRecord.routingDecisionId,
+            endpoint_id: telemetryRecord.endpointId,
+            model_id: telemetryRecord.modelId,
+            provider_kind: telemetryRecord.providerKind,
+            tokens_in: telemetryRecord.inputTokens,
+            tokens_out: telemetryRecord.outputTokens,
+            latency_ms: telemetryRecord.latencyMs,
+            cost_actual: telemetryRecord.actualCostUsd,
+            cost_estimate: telemetryRecord.estimatedCostUsd,
+            currency: telemetryRecord.currency ?? "USD",
+            error_class: telemetryRecord.errorClass,
+            timestamp_ms: telemetryRecord.createdAtMs,
+          },
+          executionTelemetry: {
+            providerFamily: telemetryRecord.providerFamily,
+            finishReason: telemetryRecord.finishReason,
+            promptCaching: {
+              supported: telemetryRecord.promptCacheSupported,
+            },
+            usageSupport: {
+              inputTokens: true,
+              outputTokens: true,
+              cacheReadTokens: telemetryRecord.cacheReadTokensSupported,
+              cacheWriteTokens: telemetryRecord.cacheWriteTokensSupported,
+            },
+            costProvenance: telemetryRecord.costProvenance,
+          },
+          telemetrySnapshot: {
+            providerId: telemetryRecord.providerId,
+            providerAccountId: telemetryRecord.providerAccountId,
+            sourceType: telemetryRecord.sourceType,
+            endpointKind: telemetryRecord.endpointKind,
+            servingSource: telemetryRecord.servingSource,
+            region: telemetryRecord.region,
+            lifecycleStateAtRequest: telemetryRecord.status,
+            healthStatusAtRequest: telemetryRecord.healthStatus,
+            requestedModelId: telemetryRecord.requestedModelId,
+            requestOperation: telemetryRecord.requestOperation,
+            roleIds: telemetryRecord.roleIds,
+            toolingUsed: telemetryRecord.toolingUsed,
+            cacheState: telemetryRecord.cacheState,
+            eligibleEndpointIds: telemetryRecord.eligibleEndpointIds,
+            eligibleModelIds: telemetryRecord.eligibleModelIds,
+            candidateCostSnapshot: telemetryRecord.candidateCostSnapshot,
+            selectedPricingSnapshot: telemetryRecord.selectedPricingSnapshot,
+            selectedUncachedCostUsd: telemetryRecord.selectedUncachedCostUsd,
+            baselineMaxEligibleCostUsd: telemetryRecord.baselineMaxEligibleCostUsd,
+            routingCostSavingsUsd: telemetryRecord.routingCostSavingsUsd,
+            cacheCostSavingsUsd: telemetryRecord.cacheCostSavingsUsd,
+            totalAvoidedCostUsd: telemetryRecord.totalAvoidedCostUsd,
+            costBaselineSource: telemetryRecord.costBaselineSource,
+            costSavingsSupport: telemetryRecord.costSavingsSupport,
+          },
+          effectiveCostUsd: telemetryRecord.effectiveCostUsd,
+          costCalculationBasis: telemetryRecord.costCalculationBasis,
+          costCalculationVersion: telemetryRecord.costCalculationVersion,
+          selectedUncachedCostUsd: telemetryRecord.selectedUncachedCostUsd,
+          baselineMaxEligibleCostUsd: telemetryRecord.baselineMaxEligibleCostUsd,
+          routingCostSavingsUsd: telemetryRecord.routingCostSavingsUsd,
+          cacheCostSavingsUsd: telemetryRecord.cacheCostSavingsUsd,
+          totalAvoidedCostUsd: telemetryRecord.totalAvoidedCostUsd,
+          costBaselineSource: telemetryRecord.costBaselineSource,
+          costSavingsSupport: telemetryRecord.costSavingsSupport,
+        } as unknown as RuntimeObservationBundle & BridgeTelemetryEndpointMeta;
       }
       return {
         ...observation,
         ...getTelemetryEndpointMeta(observation.endpointId),
+        ...(telemetryRecord
+          ? {
+              effectiveCostUsd: telemetryRecord.effectiveCostUsd,
+              costCalculationBasis: telemetryRecord.costCalculationBasis,
+              costCalculationVersion: telemetryRecord.costCalculationVersion,
+              selectedUncachedCostUsd: telemetryRecord.selectedUncachedCostUsd,
+              baselineMaxEligibleCostUsd: telemetryRecord.baselineMaxEligibleCostUsd,
+              routingCostSavingsUsd: telemetryRecord.routingCostSavingsUsd,
+              cacheCostSavingsUsd: telemetryRecord.cacheCostSavingsUsd,
+              totalAvoidedCostUsd: telemetryRecord.totalAvoidedCostUsd,
+              costBaselineSource: telemetryRecord.costBaselineSource,
+              costSavingsSupport: telemetryRecord.costSavingsSupport,
+            }
+          : {}),
       };
     },
     async listRecentRequestObservations(): Promise<
@@ -11236,6 +12364,18 @@ export async function createRuntimeBridgeBackend(
       if (!startGuards.allowed) {
         throw new Error(startGuards.warnings[0] ?? "benchmark_start_rejected");
       }
+      const benchmarkCandidates = await listRouterCandidateData();
+      const targetEligibility = evaluateBenchmarkTargetEligibility({
+        endpointIds,
+        judgeEndpointId,
+        endpoints: benchmarkCandidates.map((candidate) => ({
+          endpointId: candidate.endpointId,
+          executionModeEligible: candidate.executionModeEligible,
+        })),
+      });
+      if (!targetEligibility.allowed) {
+        throw new Error(targetEligibility.warnings[0] ?? "benchmark_endpoint_ineligible");
+      }
       if (judgeEndpointId && resolveHealthyEndpoint(judgeEndpointId)) {
         await writeBenchmarkPreferences(benchmarkPreferencesPath, { judgeEndpointId });
       }
@@ -11251,12 +12391,22 @@ export async function createRuntimeBridgeBackend(
             {
               databasePath: initialization.databasePath,
               listConfiguredEndpoints: async () => {
-                const endpoints = await backend.listEndpoints();
+                const [endpoints, candidates] = await Promise.all([
+                  backend.listEndpoints(),
+                  listRouterCandidateData(),
+                ]);
+                const executionEligibilityByEndpointId = new Map(
+                  candidates.map((candidate) => [
+                    candidate.endpointId,
+                    candidate.executionModeEligible,
+                  ]),
+                );
                 return endpoints.map((endpoint) => ({
                   endpointId: endpoint.endpointId,
                   modelId: endpoint.modelId,
                   sourceType: endpoint.sourceType,
                   healthStatus: endpoint.healthStatus,
+                  executionModeEligible: executionEligibilityByEndpointId.get(endpoint.endpointId),
                 }));
               },
               executeChatCompletions: async (chatBody, requestId, requestOptions) =>
@@ -11280,12 +12430,22 @@ export async function createRuntimeBridgeBackend(
           databasePath: initialization.databasePath,
           benchmarkArtifactRoot,
           listConfiguredEndpoints: async () => {
-            const endpoints = await backend.listEndpoints();
+            const [endpoints, candidates] = await Promise.all([
+              backend.listEndpoints(),
+              listRouterCandidateData(),
+            ]);
+            const executionEligibilityByEndpointId = new Map(
+              candidates.map((candidate) => [
+                candidate.endpointId,
+                candidate.executionModeEligible,
+              ]),
+            );
             return endpoints.map((endpoint) => ({
               endpointId: endpoint.endpointId,
               modelId: endpoint.modelId,
               sourceType: endpoint.sourceType,
               healthStatus: endpoint.healthStatus,
+              executionModeEligible: executionEligibilityByEndpointId.get(endpoint.endpointId),
             }));
           },
           executeChatCompletions: async (chatBody, requestId, requestOptions) =>

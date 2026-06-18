@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router";
 
 import {
   EmptyState,
@@ -10,6 +9,7 @@ import {
   StatusPill,
 } from "../components/page-primitives";
 import {
+  bodyStrongTextClassName,
   listRowClassName,
   mutedPanelClassName,
   secondaryButtonClassName,
@@ -87,17 +87,28 @@ export default function SessionReadinessRoute() {
         <FactCard
           label="Bootstrap status"
           value={bootstrapStatus?.label ?? "Unavailable"}
+          valueClassName={bodyStrongTextClassName}
           emphasis
         />
-        <FactCard label="Host health" value={health.status} />
+        <FactCard
+          label="Host health"
+          value={health.status}
+          valueClassName={bodyStrongTextClassName}
+        />
         <FactCard
           label="Lifecycle authority"
           value={lifecycleBanner?.authorityLabel ?? "Unavailable"}
+          valueClassName={bodyStrongTextClassName}
         />
-        <FactCard label="Execution mode" value={summary.executionMode ?? "unknown"} />
+        <FactCard
+          label="Execution mode"
+          value={summary.executionMode ?? "unknown"}
+          valueClassName={bodyStrongTextClassName}
+        />
         <FactCard
           label="Routable endpoints"
           value={String(summary.inventorySummary?.endpointIdCount ?? summary.endpointCount)}
+          valueClassName={bodyStrongTextClassName}
         />
       </div>
 
@@ -125,7 +136,7 @@ export default function SessionReadinessRoute() {
               <div key={row.stageId} className={listRowClassName}>
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-medium text-[var(--rm-fg)]">{row.label}</p>
+                    <p className="font-semibold text-[var(--rm-fg)]">{row.label}</p>
                     <StatusPill tone={row.tone}>{row.status}</StatusPill>
                   </div>
                   {row.message ? (
@@ -181,7 +192,7 @@ export default function SessionReadinessRoute() {
               <div key={row.key} className={listRowClassName}>
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-medium text-[var(--rm-fg)]">{row.providerAccountId}</p>
+                    <p className="font-semibold text-[var(--rm-fg)]">{row.providerAccountId}</p>
                     <StatusPill tone={row.tone}>{row.lifecycleLabel}</StatusPill>
                   </div>
                   <p className="mt-2 text-sm text-[var(--rm-secondary)]">
@@ -208,7 +219,7 @@ export default function SessionReadinessRoute() {
                 key={row.key}
                 className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}
               >
-                <p className="font-medium text-[var(--rm-fg)]">{row.label}</p>
+                <p className="font-semibold text-[var(--rm-fg)]">{row.label}</p>
                 <p className="mt-2">{row.providerAccountId}</p>
                 <p className="mt-1">{row.detail}</p>
               </div>
@@ -221,7 +232,7 @@ export default function SessionReadinessRoute() {
         {operatorIntentSummary ? (
           <div className={`${mutedPanelClassName} p-4`}>
             <div className="flex flex-wrap items-center gap-2">
-              <p className="font-medium text-[var(--rm-fg)]">{operatorIntentSummary.label}</p>
+              <p className="font-semibold text-[var(--rm-fg)]">{operatorIntentSummary.label}</p>
               <StatusPill tone={operatorIntentSummary.tone}>
                 {summary.operatorIntent?.status ?? "unknown"}
               </StatusPill>
@@ -248,7 +259,7 @@ export default function SessionReadinessRoute() {
                 <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">
                   {stat.label}
                 </p>
-                <p className="mt-2 text-sm font-medium text-[var(--rm-fg)]">{stat.value}</p>
+                <p className="mt-2 text-sm font-semibold text-[var(--rm-fg)]">{stat.value}</p>
               </div>
             ))}
           </div>
@@ -265,7 +276,7 @@ export default function SessionReadinessRoute() {
                 key={`${row.aliasId}:${row.hintModelId}`}
                 className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}
               >
-                <p className="font-medium text-[var(--rm-fg)]">
+                <p className="font-semibold text-[var(--rm-fg)]">
                   {row.aliasId} • hint {row.hintModelId}
                 </p>
                 <p className="mt-2">{row.message}</p>
@@ -278,25 +289,6 @@ export default function SessionReadinessRoute() {
             ))}
           </div>
         )}
-      </SectionCard>
-
-      <SectionCard title="Related surfaces">
-        <div className="grid gap-3 md:grid-cols-2">
-          <Link
-            className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}
-            to="/app/system/runtime"
-          >
-            <span className="block font-medium text-[var(--rm-fg)]">Runtime topology</span>
-            Lifecycle, controller posture, and preserved host diagnostics
-          </Link>
-          <Link
-            className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}
-            to="/app/remote/providers"
-          >
-            <span className="block font-medium text-[var(--rm-fg)]">Remote providers</span>
-            OAuth, credentials, and remote endpoint activation
-          </Link>
-        </div>
       </SectionCard>
     </div>
   );

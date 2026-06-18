@@ -82,7 +82,7 @@ export default function LocalPolicyRoute() {
               <div className="space-y-2">
                 <label
                   htmlFor={ttlFieldId}
-                  className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]"
+                  className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--rm-muted)]"
                 >
                   TTL (seconds)
                 </label>
@@ -102,7 +102,7 @@ export default function LocalPolicyRoute() {
               <div className="space-y-2">
                 <label
                   htmlFor={maxConcurrencyFieldId}
-                  className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]"
+                  className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--rm-muted)]"
                 >
                   Max concurrency
                 </label>
@@ -128,7 +128,7 @@ export default function LocalPolicyRoute() {
                 id="autoUnload"
                 checked={autoUnload}
                 onChange={(e) => setField("autoUnload", e.target.checked)}
-                className="h-4 w-4 rounded-none border-[var(--rm-border-strong)] accent-[var(--rm-accent)]"
+                className="h-4 w-4 rounded-[var(--rm-radius-sm)] border-[var(--rm-border-strong)] accent-[var(--rm-accent)]"
               />
               <label htmlFor="autoUnload" className="text-sm text-[var(--rm-fg)]">
                 Auto-unload idle models

@@ -1,0 +1,40 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/49-runtime-telemetry-analytics-charts/role-model-router/apps/runtime-host-bridge[39m
+
+(node:17904) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [32m✓[39m test/unified-runtime-config.test.ts[2m > [22munified runtime config[2m > [22mderives hybrid mode when both vendor sections are populated[32m 24[2mms[22m[39m
+ [32m✓[39m test/unified-runtime-config.test.ts[2m > [22munified runtime config[2m > [22mderives decision-only mode when no vendor sections are active[32m 1[2mms[22m[39m
+ [32m✓[39m test/unified-runtime-config.test.ts[2m > [22munified runtime config[2m > [22mpreserves explicit execution mode from parsed YAML and normalized API payloads[32m 8[2mms[22m[39m
+ [32m✓[39m test/unified-runtime-config.test.ts[2m > [22munified runtime config[2m > [22mderives remote-only mode when only the LiteLLM section is populated[32m 2[2mms[22m[39m
+ [32m✓[39m test/unified-runtime-config.test.ts[2m > [22munified runtime config[2m > [22mpreserves advanced real-vendor settings for llama-swap and litellm[32m 2[2mms[22m[39m
+ [32m✓[39m test/unified-runtime-config.test.ts[2m > [22munified runtime config[2m > [22mleaves process startup timeouts unset unless the unified config specifies them[32m 2[2mms[22m[39m
+ [32m✓[39m test/unified-runtime-config.test.ts[2m > [22munified runtime config[2m > [22mnormalizes object input and round-trips advanced vendor settings back to config text[32m 7[2mms[22m[39m
+ [32m✓[39m test/unified-runtime-config.test.ts[2m > [22munified runtime config[2m > [22mparses observed-data policy and round-trips it back to config text[32m 6[2mms[22m[39m
+ [32m✓[39m test/unified-runtime-config.test.ts[2m > [22munified runtime config[2m > [22mrejects invalid observed-data throughput SLA policy values[32m 4[2mms[22m[39m
+ [32m✓[39m test/unified-runtime-config.test.ts[2m > [22munified runtime config[2m > [22mparses difficulty-learning policy and round-trips it back to config text[32m 6[2mms[22m[39m
+ [32m✓[39m test/unified-runtime-config.test.ts[2m > [22munified runtime config[2m > [22mparses model-alias policy and round-trips it back to config text[32m 2[2mms[22m[39m
+ [32m✓[39m test/unified-runtime-config.test.ts[2m > [22munified runtime config[2m > [22mrejects invalid model-alias definitions[32m 3[2mms[22m[39m
+ [32m✓[39m test/unified-runtime-config.test.ts[2m > [22munified runtime config[2m > [22mparses difficulty-classifier policy, alias difficulty mode, and max-difficulty settings[32m 5[2mms[22m[39m
+ [32m✓[39m test/unified-runtime-config.test.ts[2m > [22munified runtime config[2m > [22mparses and renders controller config for intelligent aliases[32m 3[2mms[22m[39m
+ [32m✓[39m test/unified-runtime-config.test.ts[2m > [22munified runtime config[2m > [22mrejects invalid difficulty-classifier and max-difficulty settings[32m 2[2mms[22m[39m
+ [32m✓[39m test/unified-runtime-config.test.ts[2m > [22munified runtime config[2m > [22mmerges partial runtime config patches without dropping existing routing strategy[32m 4[2mms[22m[39m
+ [32m✓[39m test/unified-runtime-config.test.ts[2m > [22munified runtime config[2m > [22maccepts routing_strategy alias in partial runtime config patches[32m 2[2mms[22m[39m
+ [32m✓[39m test/backend-unified-runtime-config.test.ts[2m > [22mruntime-host-bridge unified runtime backend[2m > [22msurfaces the derived execution mode in the runtime summary when a unified config file is provided[33m 382[2mms[22m[39m
+ [32m✓[39m test/backend-unified-runtime-config.test.ts[2m > [22mruntime-host-bridge unified runtime backend[2m > [22mreads and updates unified runtime config through the backend[33m 303[2mms[22m[39m
+ [32m✓[39m test/backend-unified-runtime-config.test.ts[2m > [22mruntime-host-bridge unified runtime backend[2m > [22mmerges partial runtime config updates without dropping existing routing strategy[33m 333[2mms[22m[39m
+ [32m✓[39m test/backend-unified-runtime-config.test.ts[2m > [22mruntime-host-bridge unified runtime backend[2m > [22mclears stale alias drift warnings after the canonical config removes the stale hint[33m 1181[2mms[22m[39m
+ [32m✓[39m test/backend-unified-runtime-config.test.ts[2m > [22mruntime-host-bridge unified runtime backend[2m > [22mcreates and updates unified runtime config when the configured path does not exist yet[32m 298[2mms[22m[39m
+ [32m✓[39m test/backend-unified-runtime-config.test.ts[2m > [22mruntime-host-bridge unified runtime backend[2m > [22mpersists explicit hybrid execution mode from routing strategy updates[33m 1383[2mms[22m[39m
+ [32m✓[39m test/backend-unified-runtime-config.test.ts[2m > [22mruntime-host-bridge unified runtime backend[2m > [22mdoes not mark all candidates ignored when routing guidance has no preferred endpoints[33m 412[2mms[22m[39m
+ [32m✓[39m test/backend-unified-runtime-config.test.ts[2m > [22mruntime-host-bridge unified runtime backend[2m > [22mpreserves synthesized activated endpoint models across runtime config updates[33m 448[2mms[22m[39m
+ [32m✓[39m test/backend-unified-runtime-config.test.ts[2m > [22mruntime-host-bridge unified runtime backend[2m > [22mreturns no controller assignment when the unified config has no endpoints yet[33m 352[2mms[22m[39m
+ [32m✓[39m test/backend-unified-runtime-config.test.ts[2m > [22mruntime-host-bridge unified runtime backend[2m > [22msurfaces normalized provider docs and npm metadata through listProviders[33m 536[2mms[22m[39m
+ [32m✓[39m test/backend-unified-runtime-config.test.ts[2m > [22mruntime-host-bridge unified runtime backend[2m > [22mpreserves manual account authority and provenance on exact runtime-config account-id collision[33m 908[2mms[22m[39m
+ [32m✓[39m test/backend-unified-runtime-config.test.ts[2m > [22mruntime-host-bridge unified runtime backend[2m > [22msurfaces LiteLLM-backed Moonshot models and endpoints from unified runtime config[33m 964[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m2 passed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[32m29 passed[39m[22m[90m (29)[39m
+[2m   Start at [22m 23:32:13
+[2m   Duration [22m 10.27s[2m (transform 1.44s, setup 0ms, collect 2.44s, tests 7.59s, environment 1ms, prepare 842ms)[22m
+

@@ -117,14 +117,14 @@ export default function RouterDecisionDetailRoute() {
           <div className="space-y-2 text-sm text-[var(--rm-secondary)]">
             <p>
               Benchmark judge score:{" "}
-              <span className="font-medium text-[var(--rm-fg)]">
+              <span className="font-semibold text-[var(--rm-fg)]">
                 {Math.round(judgeScore * 100)}%
               </span>
             </p>
             {measuredAtMs !== null ? (
               <p>
                 Profile measured at:{" "}
-                <span className="font-medium text-[var(--rm-fg)]">
+                <span className="font-semibold text-[var(--rm-fg)]">
                   {new Date(measuredAtMs).toLocaleString()}
                 </span>
               </p>

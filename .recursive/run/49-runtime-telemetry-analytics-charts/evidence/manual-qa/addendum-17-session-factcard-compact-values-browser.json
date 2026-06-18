@@ -1,0 +1,50 @@
+{
+  "timestamp": "2026-06-17T21:31:49.1095413+02:00",
+  "route": "http://127.0.0.1:3456/app/system/session-readiness",
+  "finding": "Session readiness fact cards used inconsistent value typography; Bootstrap status and Host health rendered larger than Lifecycle authority.",
+  "verification": {
+    "url": "http://127.0.0.1:3456/app/system/session-readiness",
+    "allFactCardValuesSameFontSize": true,
+    "uniqueFontSizes": ["17px"],
+    "cards": [
+      {
+        "label": "Bootstrap status",
+        "value": "Ready",
+        "fontSize": "17px",
+        "lineHeight": "21px",
+        "fontWeight": "600"
+      },
+      {
+        "label": "Host health",
+        "value": "healthy",
+        "fontSize": "17px",
+        "lineHeight": "21px",
+        "fontWeight": "600"
+      },
+      {
+        "label": "Lifecycle authority",
+        "value": "Authoritative lifecycle snapshot",
+        "fontSize": "17px",
+        "lineHeight": "21px",
+        "fontWeight": "600"
+      },
+      {
+        "label": "Execution mode",
+        "value": "decision_only",
+        "fontSize": "17px",
+        "lineHeight": "21px",
+        "fontWeight": "600"
+      },
+      {
+        "label": "Routable endpoints",
+        "value": "3",
+        "fontSize": "17px",
+        "lineHeight": "21px",
+        "fontWeight": "600"
+      }
+    ],
+    "hasSessionBootstrap": true,
+    "hasDocumentHorizontalOverflow": false
+  },
+  "status": "pass"
+}

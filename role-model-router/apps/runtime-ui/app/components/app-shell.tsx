@@ -3,15 +3,20 @@ import { NavLink, useLocation } from "react-router";
 
 import { cn } from "../lib/cn";
 import {
+  bodyTextClassName,
   cardClassName,
+  displayTitleClassName,
   getRuntimeRouteDefinition,
+  navLabelClassName,
   runtimeNavigationSections,
+  sectionTitleClassName,
 } from "../lib/design-system";
 import { useShellHeaderState } from "../lib/shell-header-context";
+import { ThemeToggle } from "./theme-toggle";
 
 function primarySectionLinkClass(isActive: boolean): string {
   return cn(
-    "flex min-h-[52px] items-center justify-between gap-3 rounded-none border px-4 py-3 text-sm transition-colors",
+    `flex min-h-[52px] items-center justify-between gap-3 rounded-[var(--rm-radius-panel)] border px-4 py-3 transition-colors ${navLabelClassName}`,
     isActive
       ? "border-[var(--rm-border-strong)] bg-[var(--rm-surface-strong)] text-[var(--rm-fg)]"
       : "border-transparent text-[var(--rm-secondary)] hover:border-[var(--rm-border)] hover:bg-[var(--rm-panel)] hover:text-[var(--rm-fg)]",
@@ -20,7 +25,7 @@ function primarySectionLinkClass(isActive: boolean): string {
 
 function secondaryNavLinkClass(isActive: boolean): string {
   return cn(
-    "inline-flex min-h-[44px] items-center gap-2 rounded-none border px-3 py-2 text-sm transition-colors",
+    `inline-flex min-h-[44px] items-center gap-2 rounded-[var(--rm-radius-pill)] border px-3 py-2 ${navLabelClassName} transition-colors`,
     isActive
       ? "border-[var(--rm-border-strong)] bg-[var(--rm-surface-strong)] text-[var(--rm-fg)]"
       : "border-[var(--rm-border)] bg-[var(--rm-panel)] text-[var(--rm-secondary)] hover:border-[var(--rm-border-strong)] hover:text-[var(--rm-fg)]",
@@ -39,13 +44,16 @@ export function AppShell({ children }: { children: ReactNode }) {
     override?.description ??
     route?.description ??
     "Runtime, provider onboarding, endpoint visibility, and request inspection in one shell.";
+  const hasSecondaryNavigation = activeSection.items.length > 1;
 
   return (
     <div className="min-h-screen bg-[var(--rm-bg)] text-[var(--rm-fg)]">
       <div className="mx-auto grid min-h-screen max-w-[var(--rm-shell-width)] gap-5 px-4 py-4 lg:grid-cols-[220px_minmax(0,1fr)]">
-        <aside className={`${cardClassName} p-5 lg:sticky lg:top-4 lg:h-[calc(100vh-2rem)]`}>
-          <div className="border-b border-[var(--rm-border)] pb-5">
-            <h1 className="text-2xl font-medium tracking-tight">role-model</h1>
+        <aside
+          className={`${cardClassName} flex flex-col p-5 lg:sticky lg:top-4 lg:self-start lg:min-h-[calc(100vh-2rem)]`}
+        >
+          <div>
+            <h1 className={`text-[var(--rm-fg)] ${sectionTitleClassName}`}>role-model</h1>
           </div>
           <div className="mt-5 space-y-5">
             {runtimeNavigationSections.map((section) => (
@@ -57,47 +65,49 @@ export function AppShell({ children }: { children: ReactNode }) {
                 >
                   <span className="flex items-center gap-3">
                     <section.icon size={16} />
-                    <span>{section.title}</span>
+                    <span className={navLabelClassName}>{section.title}</span>
                   </span>
                 </NavLink>
               </div>
             ))}
           </div>
+          <div className="mt-auto pt-2">
+            <ThemeToggle />
+          </div>
         </aside>
 
         <div className="min-w-0 space-y-5">
           <header className={`${cardClassName} px-5 py-5`}>
-            <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end">
+            <div>
               <div>
-                <p className="text-xs font-normal uppercase tracking-[0.24em] text-[var(--rm-muted)]">
-                  {route?.section ?? "Overview"}
-                </p>
-                <h2 className="mt-3 max-w-[16ch] text-balance text-3xl font-light tracking-tight">
+                <h2 className={`max-w-[16ch] text-balance text-[var(--rm-fg)] ${displayTitleClassName}`}>
                   {title}
                 </h2>
-                <p className="mt-3 max-w-[60ch] text-sm leading-6 text-[var(--rm-secondary)]">
+                <p className={`mt-3 max-w-[60ch] ${bodyTextClassName} text-[var(--rm-secondary)]`}>
                   {description}
                 </p>
               </div>
-              {actions ? (
-                <div className="flex flex-wrap gap-2 xl:justify-end xl:self-end">{actions}</div>
-              ) : null}
             </div>
-            <div className="mt-5 border-t border-[var(--rm-border)] pt-4">
-              <nav className="flex flex-wrap gap-2">
-                {activeSection.items.map((item) => (
-                  <NavLink
-                    key={item.to}
-                    to={item.to}
-                    end={item.to === "/app"}
-                    className={({ isActive }) => secondaryNavLinkClass(isActive)}
-                  >
-                    <item.icon size={14} />
-                    <span>{item.label}</span>
-                  </NavLink>
-                ))}
-              </nav>
-            </div>
+            {hasSecondaryNavigation || actions ? (
+              <div className="mt-5 flex flex-wrap items-end gap-3">
+                {hasSecondaryNavigation ? (
+                  <nav className="flex flex-wrap gap-2">
+                    {activeSection.items.map((item) => (
+                      <NavLink
+                        key={item.to}
+                        to={item.to}
+                        end={item.to === "/app"}
+                        className={({ isActive }) => secondaryNavLinkClass(isActive)}
+                      >
+                        <item.icon size={14} />
+                        <span className={navLabelClassName}>{item.label}</span>
+                      </NavLink>
+                    ))}
+                  </nav>
+                ) : null}
+                {actions ? <div className="min-w-0 flex-1">{actions}</div> : null}
+              </div>
+            ) : null}
           </header>
           <main className="space-y-6">{children}</main>
         </div>

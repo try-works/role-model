@@ -1,0 +1,18 @@
+{
+  "addendum": 19,
+  "route": "http://127.0.0.1:3456/app/router/strategy",
+  "verifiedAt": "2026-06-17T21:59:00+02:00",
+  "rootCause": "The Phase 5 QA launcher constructed createRuntimeBridgeBackend without unifiedRuntimeConfigPath, so /api/role-model/runtime/config loaded path null and PUT returned 400.",
+  "fix": "Seeded runtime-config.yaml in the Phase 5 QA launcher and reused createQaRuntimeBridgeBackendOptions so the backend receives unifiedRuntimeConfigPath.",
+  "apiVerification": {
+    "runtimeConfigPath": "C:\\Users\\erikb\\AppData\\Local\\Temp\\role-model-runtime-qa-phase5\\runtime-config.yaml",
+    "putSucceeded": true,
+    "applied": true
+  },
+  "browserVerification": {
+    "hasSavedStatus": true,
+    "hasUnifiedRuntimeConfigPathError": false,
+    "route": "http://127.0.0.1:3456/app/router/strategy"
+  },
+  "result": "pass"
+}

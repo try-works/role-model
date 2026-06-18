@@ -7,7 +7,6 @@ import {
   secondaryButtonClassName,
 } from "../lib/design-system";
 import { checkPeerHealth, fetchPeers, updatePeers } from "../lib/runtime-api";
-import { usePageActions } from "../lib/shell-header-context";
 
 interface PeerConfig {
   id: string;
@@ -31,17 +30,19 @@ export default function LocalPeersRoute() {
     try {
       const data = await fetchPeers();
       setPeers([...data]);
-      const status: Record<string, boolean | null> = {};
-      for (const peer of data) {
-        status[peer.id] = healthStatus[peer.id] ?? null;
-      }
-      setHealthStatus(status);
+      setHealthStatus((previousStatus) => {
+        const status: Record<string, boolean | null> = {};
+        for (const peer of data) {
+          status[peer.id] = previousStatus[peer.id] ?? null;
+        }
+        return status;
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load peers");
     } finally {
       setLoading(false);
     }
-  }, [healthStatus]);
+  }, []);
 
   useEffect(() => {
     refresh();
@@ -99,13 +100,6 @@ export default function LocalPeersRoute() {
       setCheckingHealth((prev) => ({ ...prev, [peer.id]: false }));
     }
   };
-
-  usePageActions(
-    <button type="button" onClick={refresh} disabled={loading} className={secondaryButtonClassName}>
-      {loading ? "Refreshing…" : "Refresh"}
-    </button>,
-    [loading, refresh],
-  );
 
   return (
     <div className="space-y-8">
@@ -177,7 +171,7 @@ export default function LocalPeersRoute() {
           <div className="space-y-2">
             <label
               htmlFor="peer-url"
-              className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]"
+              className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--rm-muted)]"
             >
               Endpoint URL
             </label>
@@ -193,7 +187,7 @@ export default function LocalPeersRoute() {
           <div className="space-y-2">
             <label
               htmlFor="peer-auth-token"
-              className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]"
+              className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--rm-muted)]"
             >
               Auth token (optional)
             </label>

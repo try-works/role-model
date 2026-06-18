@@ -294,14 +294,14 @@ export default function ControlModelsRoute() {
                 return (
                   <article
                     key={card.modelId}
-                    className="rounded-none border border-[var(--rm-border)] bg-[var(--rm-surface)] p-5"
+                    className="rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] bg-[var(--rm-surface)] p-5"
                   >
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
                         <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">
                           {card.sourceSummary}
                         </p>
-                        <h3 className="mt-2 text-lg font-medium text-[var(--rm-fg)]">
+                        <h3 className="mt-2 text-lg font-semibold text-[var(--rm-fg)]">
                           {card.displayName}
                         </h3>
                         <p className="mt-2 break-all text-sm text-[var(--rm-secondary)]">
@@ -340,11 +340,11 @@ export default function ControlModelsRoute() {
 
                     <div className="mt-4 grid gap-3 md:grid-cols-2 text-sm text-[var(--rm-secondary)]">
                       <p>
-                        <span className="font-medium text-[var(--rm-fg)]">Roles:</span>{" "}
+                        <span className="font-semibold text-[var(--rm-fg)]">Roles:</span>{" "}
                         {card.roleIds.join(", ") || "None"}
                       </p>
                       <p>
-                        <span className="font-medium text-[var(--rm-fg)]">Endpoints:</span>{" "}
+                        <span className="font-semibold text-[var(--rm-fg)]">Endpoints:</span>{" "}
                         {card.endpointIds.join(", ") || "None"}
                       </p>
                     </div>
@@ -373,7 +373,7 @@ export default function ControlModelsRoute() {
 
       {selectedCard ? (
         <div className="fixed inset-0 z-50 overflow-y-auto bg-[var(--rm-accent-ghost)] p-4 backdrop-blur-[1px]">
-          <div className="mx-auto max-w-5xl rounded-none border border-[var(--rm-border)] bg-[var(--rm-surface)] p-6 shadow-[var(--rm-shadow-card)]">
+          <div className="mx-auto max-w-5xl rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] bg-[var(--rm-surface)] p-6 shadow-[var(--rm-shadow-card)]">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">
@@ -397,7 +397,7 @@ export default function ControlModelsRoute() {
 
             <div className="mt-6 space-y-4">
               <div className={`${mutedPanelClassName} p-4`}>
-                <p className="font-medium text-[var(--rm-fg)]">Roles and controller</p>
+                <p className="font-semibold text-[var(--rm-fg)]">Roles and controller</p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {selectedCard.roleIds.length === 0 ? (
                     <StatusPill tone="warning">No roles</StatusPill>
@@ -423,7 +423,7 @@ export default function ControlModelsRoute() {
               <div className={`${mutedPanelClassName} p-4`}>
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <p className="font-medium text-[var(--rm-fg)]">Backing account role bindings</p>
+                    <p className="font-semibold text-[var(--rm-fg)]">Backing account role bindings</p>
                     <p className="mt-2 text-sm text-[var(--rm-secondary)]">
                       Assign live runtime roles per provider account for this model. These bindings
                       feed router-visible endpoint role coverage directly.
@@ -442,11 +442,11 @@ export default function ControlModelsRoute() {
                     {selectedModelAccounts.map((account) => (
                       <div
                         key={account.providerAccountId}
-                        className="rounded-none border border-[var(--rm-border)] bg-[var(--rm-surface)] p-4"
+                        className="rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] bg-[var(--rm-surface)] p-4"
                       >
                         <div className="flex flex-wrap items-start justify-between gap-3">
                           <div>
-                            <p className="font-medium text-[var(--rm-fg)]">
+                            <p className="font-semibold text-[var(--rm-fg)]">
                               {account.providerAccountId}
                             </p>
                             <p className="mt-1 text-sm text-[var(--rm-secondary)]">
@@ -463,7 +463,7 @@ export default function ControlModelsRoute() {
                           {(rolePolicy?.roleDefinitions ?? []).map((role) => (
                             <label
                               key={`${account.providerAccountId}:${role.role_id}`}
-                              className="flex items-center gap-2 rounded-none border border-[var(--rm-border)] px-3 py-2 text-sm text-[var(--rm-secondary)]"
+                              className="flex items-center gap-2 rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] px-3 py-2 text-sm text-[var(--rm-secondary)]"
                             >
                               <input
                                 checked={(
@@ -513,19 +513,19 @@ export default function ControlModelsRoute() {
               <DisclosureSection summary="Metrics">
                 <div className="grid gap-3 md:grid-cols-2 text-sm text-[var(--rm-secondary)]">
                   <p>
-                    <span className="font-medium text-[var(--rm-fg)]">Requests observed:</span>{" "}
+                    <span className="font-semibold text-[var(--rm-fg)]">Requests observed:</span>{" "}
                     {selectedCard.requestCount}
                   </p>
                   <p>
-                    <span className="font-medium text-[var(--rm-fg)]">Configured endpoints:</span>{" "}
+                    <span className="font-semibold text-[var(--rm-fg)]">Configured endpoints:</span>{" "}
                     {selectedCard.endpointCount}
                   </p>
                   <p>
-                    <span className="font-medium text-[var(--rm-fg)]">Source mix:</span>{" "}
+                    <span className="font-semibold text-[var(--rm-fg)]">Source mix:</span>{" "}
                     {selectedCard.sourceSummary}
                   </p>
                   <p>
-                    <span className="font-medium text-[var(--rm-fg)]">Status:</span>{" "}
+                    <span className="font-semibold text-[var(--rm-fg)]">Status:</span>{" "}
                     {selectedCard.status}
                   </p>
                 </div>
@@ -535,7 +535,7 @@ export default function ControlModelsRoute() {
                 <div className="grid gap-3 md:grid-cols-2 text-sm text-[var(--rm-secondary)]">
                   {selectedMetadataRows.map((row) => (
                     <p key={row.label}>
-                      <span className="font-medium text-[var(--rm-fg)]">{row.label}:</span>{" "}
+                      <span className="font-semibold text-[var(--rm-fg)]">{row.label}:</span>{" "}
                       {row.value}
                     </p>
                   ))}
@@ -574,7 +574,7 @@ export default function ControlModelsRoute() {
             ) : null}
 
             <div className="mt-4">
-              <p className="mb-2 font-medium text-[var(--rm-fg)]">Endpoint and model ids</p>
+              <p className="mb-2 font-semibold text-[var(--rm-fg)]">Endpoint and model ids</p>
               <CodeBlock>
                 {JSON.stringify(
                   {

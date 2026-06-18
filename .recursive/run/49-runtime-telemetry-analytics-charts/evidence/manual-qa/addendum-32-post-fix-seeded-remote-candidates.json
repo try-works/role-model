@@ -1,0 +1,16 @@
+[
+  {
+    "endpointId": "moonshot.personal.primary.global.kimi-k2.5",
+    "modelId": "moonshot/kimi-k2.5",
+    "sourceType": "remote",
+    "executionModeEligible": false,
+    "healthStatus": "healthy"
+  },
+  {
+    "endpointId": "llama-swap.local.lfm2-5-1-2b-instruct",
+    "modelId": "lfm2.5-1.2b-instruct",
+    "sourceType": "local",
+    "executionModeEligible": true,
+    "healthStatus": "healthy"
+  }
+]

@@ -5,6 +5,7 @@ import {
   EmptyState,
   ErrorState,
   LoadingState,
+  SelectField,
   SectionCard,
   StatusPill,
 } from "../components/page-primitives";
@@ -576,38 +577,32 @@ export default function ProvidersRoute() {
             description="Select the provider, connection method, model set, and role bindings that should flow into the runtime registry."
           >
             <form className="space-y-4" onSubmit={onSubmit}>
-              <label className="grid gap-2 text-sm">
-                <span className="font-medium text-[var(--rm-fg)]">Provider</span>
-                <select
-                  className={inputClass}
-                  value={selectedProvider?.providerId ?? ""}
-                  onChange={(event) => onProviderChange(event.target.value)}
-                >
-                  {remoteProviders.map((provider) => (
-                    <option key={provider.providerId} value={provider.providerId}>
-                      {provider.displayName}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              <SelectField
+                label="Provider"
+                value={selectedProvider?.providerId ?? ""}
+                onChange={onProviderChange}
+              >
+                {remoteProviders.map((provider) => (
+                  <option key={provider.providerId} value={provider.providerId}>
+                    {provider.displayName}
+                  </option>
+                ))}
+              </SelectField>
+
+              <SelectField
+                label="Connection method"
+                value={selectedVariant?.variantId ?? ""}
+                onChange={onVariantChange}
+              >
+                {(selectedProvider?.variants ?? []).map((variant) => (
+                  <option key={variant.variantId} value={variant.variantId}>
+                    {variant.label}
+                  </option>
+                ))}
+              </SelectField>
 
               <label className="grid gap-2 text-sm">
-                <span className="font-medium text-[var(--rm-fg)]">Connection method</span>
-                <select
-                  className={inputClass}
-                  value={selectedVariant?.variantId ?? ""}
-                  onChange={(event) => onVariantChange(event.target.value)}
-                >
-                  {(selectedProvider?.variants ?? []).map((variant) => (
-                    <option key={variant.variantId} value={variant.variantId}>
-                      {variant.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label className="grid gap-2 text-sm">
-                <span className="font-medium text-[var(--rm-fg)]">Provider connection id</span>
+                <span className="font-semibold text-[var(--rm-fg)]">Provider connection id</span>
                 <input
                   className={inputClass}
                   value={providerAccountId}
@@ -617,7 +612,7 @@ export default function ProvidersRoute() {
 
               {selectedVariant?.authMode === "api-key-static" ? (
                 <label className="grid gap-2 text-sm">
-                  <span className="font-medium text-[var(--rm-fg)]">Credential reference</span>
+                  <span className="font-semibold text-[var(--rm-fg)]">Credential reference</span>
                   <input
                     className={inputClass}
                     value={credentialRef}
@@ -626,7 +621,7 @@ export default function ProvidersRoute() {
                 </label>
               ) : (
                 <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
-                  <p className="font-medium text-[var(--rm-fg)]">
+                  <p className="font-semibold text-[var(--rm-fg)]">
                     Runtime-managed credential reference
                   </p>
                   <p className="mt-2">
@@ -636,38 +631,19 @@ export default function ProvidersRoute() {
                 </div>
               )}
 
-              <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
-                <p className="font-medium text-[var(--rm-fg)]">LiteLLM-backed remote onboarding</p>
-                <p className="mt-2">
-                  Remote providers are activated through LiteLLM so the router can evaluate shared
-                  remote candidates alongside local llama-swap endpoints.
-                </p>
-                <p className="mt-2">
-                  Models.dev metadata stays additive only: it enriches endpoint and model readback
-                  but does not replace the live LiteLLM connection path.
-                </p>
-              </div>
-
-              <label className="grid gap-2 text-sm">
-                <span className="font-medium text-[var(--rm-fg)]">Model</span>
-                <select
-                  className={inputClass}
-                  value={selectedModel}
-                  onChange={(event) => onModelSelect(event.target.value)}
-                >
-                  <option value="">Select a model…</option>
-                  {availableModels.map((modelId) => (
-                    <option key={modelId} value={modelId}>
-                      {modelId}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              <SelectField label="Model" value={selectedModel} onChange={onModelSelect}>
+                <option value="">Select a model…</option>
+                {availableModels.map((modelId) => (
+                  <option key={modelId} value={modelId}>
+                    {modelId}
+                  </option>
+                ))}
+              </SelectField>
 
               {selectedModel !== "" ? (
                 <div className="space-y-3 text-sm">
                   <div>
-                    <p className="font-medium text-[var(--rm-fg)]">Model roles</p>
+                    <p className="font-semibold text-[var(--rm-fg)]">Model roles</p>
                     <p className="text-[var(--rm-secondary)]">
                       Assign runtime roles to the selected model so the resulting endpoint registry
                       preserves operator intent.
@@ -675,13 +651,13 @@ export default function ProvidersRoute() {
                   </div>
                   <div className={`${mutedPanelClassName} space-y-3 p-4`}>
                     <div className={`${raisedPanelClassName} space-y-2 p-3`}>
-                      <p className="font-medium text-[var(--rm-fg)]">{selectedModel}</p>
+                      <p className="font-semibold text-[var(--rm-fg)]">{selectedModel}</p>
                       {availableRoles.length > 0 ? (
                         <div className="flex flex-wrap gap-3">
                           {availableRoles.map((role) => (
                             <label
                               key={`${selectedModel}:${role.roleId}`}
-                              className="flex items-center gap-2 rounded-none border border-[var(--rm-border)] px-3 py-1.5"
+                              className="flex items-center gap-2 rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] px-3 py-1.5"
                             >
                               <input
                                 checked={(selectedModelRoles[selectedModel] ?? []).includes(
@@ -707,7 +683,7 @@ export default function ProvidersRoute() {
               {selectedVariant ? (
                 <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-medium text-[var(--rm-fg)]">{selectedVariant.label}</p>
+                    <p className="font-semibold text-[var(--rm-fg)]">{selectedVariant.label}</p>
                     <StatusPill
                       tone={selectedVariant.availability === "ready" ? "success" : "warning"}
                     >
@@ -716,21 +692,25 @@ export default function ProvidersRoute() {
                     <StatusPill tone="neutral">{selectedVariant.authMode}</StatusPill>
                   </div>
                   <p className="mt-2">{selectedVariant.description}</p>
+                  <p className="mt-2">
+                    Models.dev metadata enriches provider and model readback while the runtime
+                    keeps LiteLLM as the live connection path.
+                  </p>
                   <div className="mt-3 grid gap-2 md:grid-cols-2">
                     <p>
-                      <span className="font-medium text-[var(--rm-fg)]">Catalog models:</span>{" "}
+                      <span className="font-semibold text-[var(--rm-fg)]">Catalog models:</span>{" "}
                       {availableModels.length}
                     </p>
                     <p>
-                      <span className="font-medium text-[var(--rm-fg)]">API base:</span>{" "}
+                      <span className="font-semibold text-[var(--rm-fg)]">API base:</span>{" "}
                       {selectedVariant.baseUrl ?? selectedProvider?.apiBase}
                     </p>
                     <p>
-                      <span className="font-medium text-[var(--rm-fg)]">SDK package:</span>{" "}
+                      <span className="font-semibold text-[var(--rm-fg)]">SDK package:</span>{" "}
                       {selectedProvider?.npmPackage ?? "Not cataloged"}
                     </p>
                     <p>
-                      <span className="font-medium text-[var(--rm-fg)]">Docs:</span>{" "}
+                      <span className="font-semibold text-[var(--rm-fg)]">Docs:</span>{" "}
                       {selectedProvider?.docsUrl ? (
                         <a
                           className="underline decoration-[var(--rm-border-strong)] underline-offset-4"
@@ -747,13 +727,13 @@ export default function ProvidersRoute() {
                   </div>
                   {selectedVariant.oauth ? (
                     <div className={`mt-3 ${raisedPanelClassName} p-3`}>
-                      <p className="font-medium text-[var(--rm-fg)]">OAuth metadata</p>
+                      <p className="font-semibold text-[var(--rm-fg)]">OAuth metadata</p>
                       <p className="mt-2">
-                        <span className="font-medium text-[var(--rm-fg)]">Client id:</span>{" "}
+                        <span className="font-semibold text-[var(--rm-fg)]">Client id:</span>{" "}
                         {selectedVariant.oauth.clientId}
                       </p>
                       <p>
-                        <span className="font-medium text-[var(--rm-fg)]">Device endpoint:</span>{" "}
+                        <span className="font-semibold text-[var(--rm-fg)]">Device endpoint:</span>{" "}
                         {selectedVariant.oauth.deviceAuthorizationEndpoint}
                       </p>
                     </div>
@@ -808,7 +788,7 @@ export default function ProvidersRoute() {
               {oauthState ? (
                 <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-medium text-[var(--rm-fg)]">
+                    <p className="font-semibold text-[var(--rm-fg)]">
                       Current provider authorization
                     </p>
                     <StatusPill
@@ -825,7 +805,7 @@ export default function ProvidersRoute() {
                   </div>
                   {oauthState.userCode ? (
                     <p className="mt-2">
-                      <span className="font-medium text-[var(--rm-fg)]">User code:</span>{" "}
+                      <span className="font-semibold text-[var(--rm-fg)]">User code:</span>{" "}
                       {oauthState.userCode}
                     </p>
                   ) : null}
@@ -838,7 +818,7 @@ export default function ProvidersRoute() {
                   ) : null}
                   {oauthState.verificationUriComplete ? (
                     <p className="mt-2 break-all">
-                      <span className="font-medium text-[var(--rm-fg)]">Verification URL:</span>{" "}
+                      <span className="font-semibold text-[var(--rm-fg)]">Verification URL:</span>{" "}
                       <a
                         className="text-[var(--rm-accent)] underline"
                         href={oauthState.verificationUriComplete}
@@ -859,46 +839,46 @@ export default function ProvidersRoute() {
                   {providerMaintenanceRows.map((row) => (
                     <div key={row.providerAccountId} className={`${mutedPanelClassName} p-4`}>
                       <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="font-medium text-[var(--rm-fg)]">{row.providerAccountId}</h3>
+                        <h3 className="font-semibold text-[var(--rm-fg)]">{row.providerAccountId}</h3>
                         <StatusPill tone="neutral">{row.providerId}</StatusPill>
                         <StatusPill tone={row.lifecycleTone}>{row.lifecycleLabel}</StatusPill>
                         <StatusPill tone="neutral">{row.storageLabel}</StatusPill>
                       </div>
                       <div className="mt-3 grid gap-1 text-sm text-[var(--rm-secondary)]">
                         <p>
-                          <span className="font-medium text-[var(--rm-fg)]">
+                          <span className="font-semibold text-[var(--rm-fg)]">
                             Connection method:
                           </span>{" "}
                           {row.authMode}
                         </p>
                         <p>
-                          <span className="font-medium text-[var(--rm-fg)]">
+                          <span className="font-semibold text-[var(--rm-fg)]">
                             Credential posture:
                           </span>{" "}
                           {row.storageDetail}
                         </p>
                         <p>
-                          <span className="font-medium text-[var(--rm-fg)]">Base URL:</span>{" "}
+                          <span className="font-semibold text-[var(--rm-fg)]">Base URL:</span>{" "}
                           {row.baseUrlOverride ?? "Provider default"}
                         </p>
                         <p>
-                          <span className="font-medium text-[var(--rm-fg)]">Lifecycle reason:</span>{" "}
+                          <span className="font-semibold text-[var(--rm-fg)]">Lifecycle reason:</span>{" "}
                           {row.reasonLabel}
                         </p>
                         <p>
-                          <span className="font-medium text-[var(--rm-fg)]">
+                          <span className="font-semibold text-[var(--rm-fg)]">
                             Source provenance:
                           </span>{" "}
                           {row.sourceProvenanceLabel}
                         </p>
                         <p>
-                          <span className="font-medium text-[var(--rm-fg)]">
+                          <span className="font-semibold text-[var(--rm-fg)]">
                             Available actions:
                           </span>{" "}
                           {row.availableActionsLabel}
                         </p>
                         <p>
-                          <span className="font-medium text-[var(--rm-fg)]">Active endpoints:</span>{" "}
+                          <span className="font-semibold text-[var(--rm-fg)]">Active endpoints:</span>{" "}
                           {row.activeEndpointCount}
                         </p>
                       </div>
@@ -969,7 +949,7 @@ export default function ProvidersRoute() {
                   {archivedArtifactRows.length > 0 ? (
                     <div className={`${mutedPanelClassName} p-4`}>
                       <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="font-medium text-[var(--rm-fg)]">
+                        <h3 className="font-semibold text-[var(--rm-fg)]">
                           Archived stale diagnostics
                         </h3>
                         <StatusPill tone="neutral">{archivedArtifactRows.length}</StatusPill>
@@ -985,7 +965,7 @@ export default function ProvidersRoute() {
                               <StatusPill tone="warning">{artifact.label}</StatusPill>
                             </div>
                             <p className="mt-2 text-sm text-[var(--rm-secondary)]">
-                              <span className="font-medium text-[var(--rm-fg)]">Account:</span>{" "}
+                              <span className="font-semibold text-[var(--rm-fg)]">Account:</span>{" "}
                               {artifact.providerAccountId}
                             </p>
                             <p className="text-sm text-[var(--rm-secondary)]">{artifact.detail}</p>
@@ -1018,7 +998,7 @@ export default function ProvidersRoute() {
           <dialog
             open
             aria-modal="true"
-            className="relative mx-auto max-w-2xl rounded-none border border-[var(--rm-border)] bg-[var(--rm-surface)] p-6 shadow-[var(--rm-shadow-card)]"
+            className="relative mx-auto max-w-2xl rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] bg-[var(--rm-surface)] p-6 shadow-[var(--rm-shadow-card)]"
             aria-labelledby="provider-api-key-modal-title"
           >
             <div className="flex flex-wrap items-start justify-between gap-4">
@@ -1034,7 +1014,7 @@ export default function ProvidersRoute() {
                 </h2>
                 <p className="mt-2 max-w-[60ch] text-sm leading-6 text-[var(--rm-secondary)]">
                   Enter a replacement API key for{" "}
-                  <span className="font-medium text-[var(--rm-fg)]">
+                  <span className="font-semibold text-[var(--rm-fg)]">
                     {apiKeyModalAccount.providerAccountId}
                   </span>
                   . The key is saved into runtime-managed local credential storage after this dialog
@@ -1044,7 +1024,7 @@ export default function ProvidersRoute() {
             </div>
             <div className="mt-6 space-y-4">
               <label className="grid gap-2 text-sm">
-                <span className="font-medium text-[var(--rm-fg)]">API key</span>
+                <span className="font-semibold text-[var(--rm-fg)]">API key</span>
                 <input
                   className={inputClass}
                   type="password"

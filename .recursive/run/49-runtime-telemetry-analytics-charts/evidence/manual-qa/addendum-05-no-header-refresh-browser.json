@@ -1,0 +1,49 @@
+{
+  "checkedAt": "2026-06-17T20:02:00+02:00",
+  "runtime": "http://127.0.0.1:3456",
+  "result": "pass",
+  "routes": [
+    {
+      "url": "http://127.0.0.1:3456/app/local/llama-swap/models",
+      "headerTitle": "Llama-swap models",
+      "headerButtons": [],
+      "headerLinks": [
+        "Endpoints",
+        "Peer models",
+        "Models",
+        "Swap history",
+        "Host policy",
+        "Logs",
+        "Matrix"
+      ]
+    },
+    {
+      "url": "http://127.0.0.1:3456/app/local/peer-models",
+      "headerTitle": "Peer models",
+      "headerButtons": [],
+      "headerLinks": [
+        "Endpoints",
+        "Peer models",
+        "Models",
+        "Swap history",
+        "Host policy",
+        "Logs",
+        "Matrix"
+      ]
+    },
+    {
+      "url": "http://127.0.0.1:3456/app/local/endpoints",
+      "headerTitle": "Local endpoints",
+      "headerButtons": [],
+      "headerLinks": [
+        "Endpoints",
+        "Peer models",
+        "Models",
+        "Swap history",
+        "Host policy",
+        "Logs",
+        "Matrix"
+      ]
+    }
+  ]
+}

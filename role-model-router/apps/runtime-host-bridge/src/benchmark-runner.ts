@@ -64,7 +64,10 @@ import {
   setJudgeSubjectOverlapMode,
 } from "./benchmark-judge-runtime.js";
 
-import { evaluateBenchmarkStartGuards } from "./benchmark-start-guards.js";
+import {
+  evaluateBenchmarkStartGuards,
+  evaluateBenchmarkTargetEligibility,
+} from "./benchmark-start-guards.js";
 
 import {
   BENCHMARK_MAX_ANSWER_TURNS,
@@ -269,6 +272,8 @@ export interface BenchmarkRunnerDependencies {
       sourceType: "local" | "remote";
 
       healthStatus: string;
+
+      executionModeEligible?: boolean;
     }[]
   >;
 
@@ -490,11 +495,12 @@ async function runCaseOnEndpoint(
 
       answerTurns,
     };
-  } catch {
+  } catch (value) {
+    const errorMessage = value instanceof Error ? value.message : "Benchmark execution failed.";
     return {
-      actualResponse: "",
+      actualResponse: errorMessage,
 
-      rawResponse: "",
+      rawResponse: errorMessage,
 
       formattedDeliverable: "",
 
@@ -1500,6 +1506,15 @@ export async function runRoutingCapabilityBenchmark(
   const endpoints = (await deps.listConfiguredEndpoints()).filter((endpoint) =>
     isHealthyEndpoint(endpoint.healthStatus),
   );
+
+  const targetEligibility = evaluateBenchmarkTargetEligibility({
+    endpointIds: request.endpointIds,
+    judgeEndpointId: request.judgeEndpointId,
+    endpoints,
+  });
+  if (!targetEligibility.allowed) {
+    throw new Error(targetEligibility.warnings[0] ?? "benchmark_endpoint_ineligible");
+  }
 
   const targetEndpoints = request.endpointIds?.length
     ? endpoints.filter((endpoint) => request.endpointIds?.includes(endpoint.endpointId))

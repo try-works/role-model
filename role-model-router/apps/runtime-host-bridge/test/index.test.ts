@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { cp, mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -9,14 +9,19 @@ import { describe, expect, test } from "vitest";
 import { stringify } from "yaml";
 
 import type { EndpointRegistryResult } from "@role-model-router/endpoint-registry";
+import { createRuntimeObservationBundle } from "@role-model-router/runtime-observability";
 import {
+  persistRuntimeTelemetryFailure,
+  persistRuntimeObservationBundle,
   resolveSqliteMemoryLocation,
   upsertProviderAccount as upsertSqliteProviderAccount,
 } from "@role-model-router/sqlite-memory";
+import { runRuntimeAdapterValidation } from "../../../packages/adapter-execution/src/cli.ts";
 
 import {
   bootstrapQaControlPlane,
   createQaFixtureRoot,
+  createQaRuntimeBridgeBackendOptions,
   createQaRuntimeConfigPath,
   createQaRuntimeConfigText,
   createQaServerOptions,
@@ -186,6 +191,155 @@ describe("runtime-host-bridge", () => {
     });
   });
 
+  test("builds request-time routing telemetry snapshots from live routing candidates", () => {
+    expect(
+      typeof (bridge as { buildRuntimeTelemetrySnapshot?: unknown }).buildRuntimeTelemetrySnapshot,
+    ).toBe("function");
+
+    const snapshot = (
+      bridge as {
+        buildRuntimeTelemetrySnapshot: (input: {
+          routed: Record<string, unknown>;
+          execution: Record<string, unknown>;
+          requestOperation: string;
+          requestedModelId?: string;
+          roleIds?: readonly string[];
+          toolingUsed?: boolean;
+        }) => Record<string, unknown>;
+      }
+    ).buildRuntimeTelemetrySnapshot({
+      routed: {
+        decision: {
+          chosen_endpoint_id: "remote.fast",
+          fallback_endpoint_ids: ["local.free"],
+          scored_candidates: [
+            { endpoint_id: "remote.fast" },
+            { endpoint_id: "local.free" },
+          ],
+        },
+        projected: {
+          routeInput: {
+            candidates: [
+              {
+                identity: {
+                  endpoint_id: "remote.fast",
+                  endpoint_kind: "remote_api",
+                  provider_kind: "remote_openai_compat",
+                  serving_source: "remote-service",
+                  model_id: "provider/fast",
+                  region: "us-east-1",
+                },
+                status: "active",
+              },
+              {
+                identity: {
+                  endpoint_id: "local.free",
+                  endpoint_kind: "local_engine",
+                  provider_kind: "gguf",
+                  serving_source: "local-process",
+                  model_id: "local/free",
+                  region: "local",
+                },
+                status: "active",
+              },
+            ],
+          },
+        },
+        catalogEconomicsByEndpointId: {
+          "remote.fast": {
+            canonicalModelId: "provider/fast",
+            tokenEconomicsSource: "catalog",
+            inputPer1M: 5,
+            outputPer1M: 15,
+            estimatedRequestUsd: 0.004,
+            cost_per_1k_tokens_est: 0.004,
+          },
+          "local.free": {
+            canonicalModelId: "local/free",
+            tokenEconomicsSource: "local-free",
+            inputPer1M: 0,
+            outputPer1M: 0,
+            estimatedRequestUsd: 0.01,
+            cost_per_1k_tokens_est: 0.01,
+          },
+        },
+      },
+      execution: {
+        target: {
+          endpointId: "remote.fast",
+          modelId: "provider/fast",
+          providerId: "provider",
+          providerAccountId: "provider.personal",
+          candidate: {
+            identity: {
+              endpoint_kind: "remote_api",
+              serving_source: "remote-service",
+              region: "us-east-1",
+            },
+            status: "active",
+          },
+          account: {
+            healthStatus: "healthy",
+          },
+        },
+        normalized: {
+          promptCache: {
+            requested: true,
+            used: true,
+            readTokens: 100,
+            writeTokens: 0,
+          },
+          toolCalls: [],
+        },
+      },
+      requestOperation: "chat",
+      requestedModelId: "hybrid.remote-only",
+      roleIds: ["general.chat"],
+      toolingUsed: false,
+    });
+
+    expect(snapshot).toEqual(
+      expect.objectContaining({
+        providerId: "provider",
+        providerAccountId: "provider.personal",
+        sourceType: "remote",
+        endpointKind: "remote_api",
+        servingSource: "remote-service",
+        selectedModelId: "provider/fast",
+        requestedModelId: "hybrid.remote-only",
+        requestOperation: "chat",
+        roleIds: ["general.chat"],
+        toolingUsed: false,
+        cacheState: "hit",
+        eligibleEndpointIds: ["remote.fast", "local.free"],
+        eligibleModelIds: ["provider/fast", "local/free"],
+        selectedUncachedCostUsd: 0.004,
+        baselineMaxEligibleCostUsd: 0.01,
+        routingCostSavingsUsd: 0.006,
+        cacheCostSavingsUsd: 0.0005,
+        totalAvoidedCostUsd: 0.0065,
+        costBaselineSource: "eligible_candidate_max",
+        costSavingsSupport: "full",
+      }),
+    );
+    expect(snapshot.candidateCostSnapshot).toEqual(
+      expect.objectContaining({
+        "remote.fast": expect.objectContaining({
+          modelId: "provider/fast",
+          providerId: "provider",
+          sourceType: "remote",
+          estimatedRequestUsd: 0.004,
+        }),
+        "local.free": expect.objectContaining({
+          modelId: "local/free",
+          providerKind: "gguf",
+          sourceType: "local",
+          estimatedRequestUsd: 0.01,
+        }),
+      }),
+    );
+  });
+
   test("builds QA bootstrap options with router surfaces and complete fixtures", () => {
     const readRouterSummary = async () => ({ section: "router-summary" });
     const readRouterConfig = async () => ({ section: "router-config" });
@@ -208,6 +362,17 @@ describe("runtime-host-bridge", () => {
     const readPeers = async () => [];
     const updatePeers = async () => [];
     const checkPeerHealth = async () => ({ healthy: true });
+    const readBenchmarkSuite = async () => ({ cases: [] });
+    const runBenchmark = async () => ({ runId: "run-1", status: "running" });
+    const readBenchmarkRun = async () => ({ runId: "run-1", status: "completed" });
+    const readActiveBenchmarkRun = async () => null;
+    const clearBenchmarkEndpointData = async () => ({ deleted: 0 });
+    const clearBenchmarkData = async () => ({ deleted: 0 });
+    const readBenchmarkSummary = async () => ({ subjects: [] });
+    const listBenchmarkRuns = async () => [];
+    const readBenchmarkSummariesByMode = async () => ({ quick: null, full: null });
+    const readBenchmarkPreferences = async () => ({ judgeEndpointId: null });
+    const updateBenchmarkPreferences = async () => ({ judgeEndpointId: "endpoint-1" });
 
     const backend = {
       registry,
@@ -268,6 +433,17 @@ describe("runtime-host-bridge", () => {
       readPeers,
       updatePeers,
       checkPeerHealth,
+      readBenchmarkSuite,
+      runBenchmark,
+      readBenchmarkRun,
+      readActiveBenchmarkRun,
+      clearBenchmarkEndpointData,
+      clearBenchmarkData,
+      readBenchmarkSummary,
+      listBenchmarkRuns,
+      readBenchmarkSummariesByMode,
+      readBenchmarkPreferences,
+      updateBenchmarkPreferences,
       shutdown: async () => undefined,
     } as Parameters<typeof createQaServerOptions>[1];
 
@@ -310,6 +486,31 @@ describe("runtime-host-bridge", () => {
     expect(options.readPeers).toBe(readPeers);
     expect(options.updatePeers).toBe(updatePeers);
     expect(options.checkPeerHealth).toBe(checkPeerHealth);
+    expect(options.readBenchmarkSuite).toBe(readBenchmarkSuite);
+    expect(options.runBenchmark).toBe(runBenchmark);
+    expect(options.readBenchmarkRun).toBe(readBenchmarkRun);
+    expect(options.readActiveBenchmarkRun).toBe(readActiveBenchmarkRun);
+    expect(options.clearBenchmarkEndpointData).toBe(clearBenchmarkEndpointData);
+    expect(options.clearBenchmarkData).toBe(clearBenchmarkData);
+    expect(options.readBenchmarkSummary).toBe(readBenchmarkSummary);
+    expect(options.listBenchmarkRuns).toBe(listBenchmarkRuns);
+    expect(options.readBenchmarkSummariesByMode).toBe(readBenchmarkSummariesByMode);
+    expect(options.readBenchmarkPreferences).toBe(readBenchmarkPreferences);
+    expect(options.updateBenchmarkPreferences).toBe(updateBenchmarkPreferences);
+  });
+
+  test("builds QA backend options that preserve runtime config without starting local vendors", () => {
+    const runtimeStateRoot = path.join(os.tmpdir(), "role-model-runtime-host-qa-options-test");
+    const scopeId = "runtime-qa";
+
+    expect(createQaRuntimeBridgeBackendOptions(repoRoot, runtimeStateRoot, scopeId)).toEqual({
+      fixtureRoot: createQaFixtureRoot(repoRoot),
+      repoRoot,
+      runtimeStateRoot,
+      scopeId,
+      unifiedRuntimeConfigPath: createQaRuntimeConfigPath(runtimeStateRoot),
+      runtimeVendorStartup: "disabled",
+    });
   });
 
   test("bootstraps QA control-plane state for mixed local+remote routing proof", async () => {
@@ -2505,6 +2706,51 @@ describe("runtime-host-bridge", () => {
     }
   });
 
+  test("serves the runtime UI shell from root and app routes when static root exists", async () => {
+    const staticRoot = path.join(os.tmpdir(), `role-model-static-root-${Date.now()}`);
+    await mkdir(staticRoot, { recursive: true });
+    await writeFile(
+      path.join(staticRoot, "index.html"),
+      "<!doctype html><html><body>runtime ui shell</body></html>",
+      "utf8",
+    );
+
+    const server = await (
+      bridge as {
+        startBridgeServer: (options: {
+          host: string;
+          port: number;
+          registry: EndpointRegistryResult;
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+          ) => Promise<unknown>;
+          staticRoot: string;
+        }) => Promise<{ port: number; close(): Promise<void> }>;
+      }
+    ).startBridgeServer({
+      host: "127.0.0.1",
+      port: 0,
+      registry,
+      staticRoot,
+      executeChatCompletions: async () => {
+        throw new Error("not used");
+      },
+    });
+
+    try {
+      for (const route of ["/", "/app", "/app/router/strategy"]) {
+        const response = await fetch(`http://127.0.0.1:${server.port}${route}`);
+        expect(response.status).toBe(200);
+        expect(response.headers.get("content-type")).toContain("text/html");
+        expect(await response.text()).toContain("runtime ui shell");
+      }
+    } finally {
+      await server.close();
+      await rm(staticRoot, { recursive: true, force: true });
+    }
+  });
+
   test("preserves x-role-model-request-id as client correlation metadata while generating a canonical request id", async () => {
     let capturedRequestId = "";
     let capturedClientRequestId: string | undefined;
@@ -3445,6 +3691,72 @@ describe("runtime-host-bridge", () => {
           endpointId: "moonshot.personal.primary.global.kimi-k2.5",
         },
       ]);
+    } finally {
+      await server.close();
+    }
+  });
+
+  test("serves the generic telemetry analytics query route", async () => {
+    expect(typeof (bridge as { startBridgeServer?: unknown }).startBridgeServer).toBe("function");
+
+    const server = await (
+      bridge as {
+        startBridgeServer: (options: {
+          host: string;
+          port: number;
+          registry: EndpointRegistryResult;
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+          ) => Promise<unknown>;
+          executeResponses: (body: Record<string, unknown>, requestId: string) => Promise<unknown>;
+          queryTelemetryAnalytics: (body: Record<string, unknown>) => Promise<unknown>;
+        }) => Promise<{ port: number; close(): Promise<void> }>;
+      }
+    ).startBridgeServer({
+      host: "127.0.0.1",
+      port: 0,
+      registry,
+      executeChatCompletions: async () => {
+        throw new Error("not used");
+      },
+      executeResponses: async () => {
+        throw new Error("not used");
+      },
+      queryTelemetryAnalytics: async (body) => ({
+        echoedQuery: body,
+        buckets: [],
+        ranking: null,
+      }),
+    });
+
+    try {
+      const analyticsResponse = await fetch(
+        `http://127.0.0.1:${server.port}/api/role-model/telemetry/query`,
+        {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({
+            windowMs: 86_400_000,
+            granularity: "hour",
+            metrics: ["requestCount", "effectiveCostUsd"],
+            breakdown: "sourceType",
+          }),
+        },
+      );
+      expect(analyticsResponse.status).toBe(200);
+      expect(await analyticsResponse.json()).toEqual({
+        echoedQuery: {
+          windowMs: 86_400_000,
+          granularity: "hour",
+          metrics: ["requestCount", "effectiveCostUsd"],
+          breakdown: "sourceType",
+        },
+        buckets: [],
+        ranking: null,
+      });
     } finally {
       await server.close();
     }
@@ -4418,13 +4730,45 @@ describe("runtime-host-bridge", () => {
       firstRequestId,
     );
 
-    await expect(backend.readRequestObservation?.(firstRequestId)).resolves.toMatchObject({
+    const firstObservation = (await backend.readRequestObservation?.(firstRequestId)) as {
+      telemetrySnapshot?: {
+        selectedModelId?: string;
+        requestedModelId?: string | null;
+        requestOperation?: string | null;
+        eligibleEndpointIds?: readonly string[];
+        eligibleModelIds?: readonly string[];
+        candidateCostSnapshot?: Record<string, unknown>;
+        baselineMaxEligibleCostUsd?: number | null;
+        costSavingsSupport?: string | null;
+      };
+    } | null;
+    expect(firstObservation).toMatchObject({
       requestId: firstRequestId,
       endpointId: result.endpointId,
       capturePolicy: {
         structuredInspectionAvailable: true,
       },
     });
+    expect(firstObservation?.telemetrySnapshot).toEqual(
+      expect.objectContaining({
+        selectedModelId: result.model,
+        requestedModelId: "deepseek/chat-capture-v1",
+        requestOperation: "chat",
+        eligibleEndpointIds: expect.arrayContaining([result.endpointId]),
+        eligibleModelIds: expect.arrayContaining([result.model]),
+        candidateCostSnapshot: expect.objectContaining({
+          [result.endpointId]: expect.objectContaining({
+            modelId: result.model,
+            sourceType: "remote",
+          }),
+        }),
+        selectedPricingSnapshot: expect.objectContaining({
+          modelId: result.model,
+          providerId: "deepseek",
+        }),
+        costSavingsSupport: "partial",
+      }),
+    );
     await expect(backend.readEndpointProfile?.(result.endpointId)).resolves.toMatchObject({
       endpointId: result.endpointId,
       latestProfile: {
@@ -4485,6 +4829,7 @@ describe("runtime-host-bridge", () => {
     );
 
     try {
+      process.env.MOONSHOT_API_KEY = "test-moonshot-key";
       const backend = await (
         bridge as {
           createRuntimeBridgeBackend: (options: {
@@ -4925,6 +5270,117 @@ describe("runtime-host-bridge", () => {
         }),
       ]),
     );
+  });
+
+  test("filters router summary aliases and candidates by explicit remote-only execution mode", () => {
+    const filter = (
+      bridge as {
+        filterRouterRegistryByExecutionMode?: (
+          registry: EndpointRegistryResult,
+          executionMode: "decision_only" | "local_only" | "remote_only" | "hybrid",
+        ) => EndpointRegistryResult;
+      }
+    ).filterRouterRegistryByExecutionMode;
+    expect(filter).toBeTypeOf("function");
+
+    const mixedRegistry: EndpointRegistryResult = {
+      endpoints: [
+        {
+          identity: {
+            endpoint_id: "local.llama.lfm",
+            endpoint_kind: "local_engine",
+            provider_kind: "local_llama_swap",
+            serving_source: "llama-swap",
+            model_id: "lfm2.5-1.2b-instruct",
+            runtime_version: "test-registry-v1",
+            region: "local",
+          },
+          declared: {
+            endpoint_id: "local.llama.lfm",
+            capabilities: ["text.chat"],
+            modalities: ["text"],
+            max_context_tokens: 4096,
+            tool_calling: {
+              supported: true,
+              style: "openai",
+            },
+            supports_embeddings: false,
+            platform_constraints: [],
+          },
+          status: "active",
+        },
+        {
+          identity: {
+            endpoint_id: "remote.moonshot.kimi",
+            endpoint_kind: "remote_api",
+            provider_kind: "remote_openai_compat",
+            serving_source: "remote-service",
+            model_id: "moonshot/kimi-k2.5",
+            runtime_version: "test-registry-v1",
+            region: "global",
+          },
+          declared: {
+            endpoint_id: "remote.moonshot.kimi",
+            capabilities: ["text.chat"],
+            modalities: ["text"],
+            max_context_tokens: 128000,
+            tool_calling: {
+              supported: true,
+              style: "openai",
+            },
+            supports_embeddings: false,
+            platform_constraints: [],
+          },
+          status: "active",
+        },
+      ],
+      diagnostics: [],
+      lifecycleSummary: {
+        active: 2,
+        degraded: 0,
+        offline: 0,
+      },
+    };
+
+    expect(
+      filter?.(mixedRegistry, "remote_only").endpoints.map(
+        (endpoint) => endpoint.identity.endpoint_id,
+      ),
+    ).toEqual(["remote.moonshot.kimi"]);
+    expect(
+      filter?.(mixedRegistry, "local_only").endpoints.map(
+        (endpoint) => endpoint.identity.endpoint_id,
+      ),
+    ).toEqual(["local.llama.lfm"]);
+    expect(
+      filter?.(mixedRegistry, "hybrid").endpoints.map(
+        (endpoint) => endpoint.identity.endpoint_id,
+      ),
+    ).toEqual(["local.llama.lfm", "remote.moonshot.kimi"]);
+    expect(
+      filter?.(mixedRegistry, "decision_only").endpoints.map(
+        (endpoint) => endpoint.identity.endpoint_id,
+      ),
+    ).toEqual(["local.llama.lfm", "remote.moonshot.kimi"]);
+    expect(filter?.(mixedRegistry, "remote_only").lifecycleSummary).toEqual({
+      active: 1,
+      degraded: 0,
+      offline: 0,
+    });
+  });
+
+  test("routes execution-facing planning through the effective execution-mode registry", () => {
+    const source = readFileSync(new URL("../src/index.ts", import.meta.url), "utf8");
+
+    expect(source).toContain("get effectiveRegistry(): EndpointRegistryResult");
+    expect(source).toContain("getEffectiveRoutableInventory(): RoutableInventory | null");
+    expect(source).toContain("isControllerAssignmentAllowedByExecutionMode(");
+    expect(source).toContain("async readControllerAssignment(): Promise<BridgeControllerAssignment | null> {\n      return getCurrentControllerAssignment();\n    }");
+    expect(source).toContain("const executionRegistry = getRouterEffectiveRegistry();");
+    expect(source).toContain("const executionInventory = getRouterEffectiveRoutableInventory();");
+    expect(source).not.toContain("mapChatCompletionsRequest(\n          currentRegistry,");
+    expect(source).not.toContain("mapResponsesRequest(\n          currentRegistry,");
+    expect(source).not.toContain("resolveRequestedModelPool(\n      currentRegistry,");
   });
 
   test("persists difficulty-routing diagnostics for runtime-backed chat requests", async () => {
@@ -8019,6 +8475,649 @@ describe("runtime-host-bridge", () => {
     }
   });
 
+  test("aggregates generic telemetry analytics from persisted request-time routing and cost facts", async () => {
+    expect(
+      typeof (bridge as { createRuntimeBridgeBackend?: unknown }).createRuntimeBridgeBackend,
+    ).toBe("function");
+
+    const runtimeStateRoot = await mkdtemp(
+      path.join(os.tmpdir(), "role-model-runtime-host-telemetry-analytics-tests-"),
+    );
+    const scopeId = "runtime-host-telemetry-analytics-tests";
+    const backend = await (
+      bridge as {
+        createRuntimeBridgeBackend: (options: {
+          repoRoot: string;
+          fixtureRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+        }) => Promise<{
+          queryTelemetryAnalytics?: (body: Record<string, unknown>) => Promise<unknown>;
+          readRequestObservation?: (requestId: string) => Promise<unknown>;
+        }>;
+      }
+    ).createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: testFixtureRoot,
+      runtimeStateRoot,
+      scopeId,
+    });
+
+    const validation = await runRuntimeAdapterValidation({
+      repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      runtimeStateRoot,
+      scopeId,
+    });
+    const databasePath = resolveSqliteMemoryLocation({
+      runtimeStateRoot,
+      scopeId,
+    });
+    const remoteTimestampMs = 1_700_000_000_000;
+    const localTimestampMs = remoteTimestampMs + 1_200;
+    const baseBundle = createRuntimeObservationBundle({
+      decision: validation.decision,
+      routingDiagnostics: validation.routingDiagnostics,
+      retrievalReceipt: validation.retrievalReceipt,
+      contextEnvelope: validation.contextEnvelope,
+      execution: validation.execution,
+      priorSamples: [],
+      maintenancePolicy: {
+        "redaction.level": "strict",
+        "retention.class": "standard",
+        "backup.policy": "wal-copy-on-demand",
+        "deletion.policy": "explicit-export-delete",
+      },
+      capturePolicy: {},
+      accountState: {
+        providerAccountId: validation.execution.target.providerAccountId,
+        status: "active",
+        healthStatus: "healthy",
+        rotationState: "stable",
+      },
+    });
+
+    const remoteBundle = {
+      ...baseBundle,
+      requestId: "req-telemetry-analytics-remote-001",
+      routingDecisionId: "decision-telemetry-analytics-remote-001",
+      endpointId: "openai.personal.primary.us-east-1.fast",
+      routingDiagnostics: {
+        ...baseBundle.routingDiagnostics,
+        routingMode: {
+          source: "alias-default",
+          aliasMode: "hybrid",
+          effectiveMode: "hybrid",
+        },
+        difficultyRouting: {
+          difficulty: "easy",
+          strategy: "cost",
+          fallbackApplied: false,
+          rubricSignals: {
+            contextTokens: 32,
+            toolCount: 0,
+            historyTurnCount: 1,
+            instructionConstraintCount: 0,
+            decompositionKeywordCount: 0,
+            codeOrSchemaBurden: false,
+          },
+        },
+        controllerRouting: {
+          active: true,
+          acceptedDirectives: {
+            requestedRoleId: "coder.patch",
+            strategy: "quality",
+            preferLocal: true,
+          },
+        },
+        hybridArbitration: {
+          active: true,
+          difficultyStrategy: "cost",
+          finalStrategy: "quality",
+          controllerChangedPlan: true,
+          dominantSignal: "controller",
+        },
+        rolePolicy: {
+          requestedRoleId: "coder.patch",
+          appliedRoleId: "coder.patch",
+          defaultSystemInstructionsApplied: true,
+          toolPolicyMode: "limited",
+          allowedTools: ["run_tests"],
+          outputContracts: ["review.checklist"],
+          safetyPolicyRefs: ["safety.review"],
+        },
+      },
+      usageEvent: {
+        ...baseBundle.usageEvent,
+        request_id: "req-telemetry-analytics-remote-001",
+        routing_decision_id: "decision-telemetry-analytics-remote-001",
+        endpoint_id: "openai.personal.primary.us-east-1.fast",
+        model_id: "openai/gpt-4.1-mini-fast",
+        provider_kind: "remote_openai_compat",
+        tokens_in: 120,
+        tokens_out: 48,
+        latency_ms: 840,
+        cost_actual: 0.0042,
+        cost_estimate: 0.0042,
+        currency: "USD",
+        timestamp_ms: remoteTimestampMs,
+      },
+      observedPerformance: {
+        ...baseBundle.observedPerformance,
+        sample: {
+          ...baseBundle.observedPerformance.sample,
+          request_id: "req-telemetry-analytics-remote-001",
+          routing_decision_id: "decision-telemetry-analytics-remote-001",
+          endpoint_id: "openai.personal.primary.us-east-1.fast",
+          timestamp_ms: remoteTimestampMs,
+          latency_ms: 840,
+          latency_ms_p95: 840,
+          source_type: "live_request",
+          difficulty_bucket: "easy",
+        },
+        profile: {
+          ...baseBundle.observedPerformance.profile,
+          endpoint_id: "openai.personal.primary.us-east-1.fast",
+          measured_at_ms: remoteTimestampMs,
+        },
+      },
+      cacheObservability: {
+        promptCacheRequested: true,
+        promptCacheUsed: true,
+        cacheReadTokens: 16,
+        cacheWriteTokens: 8,
+        routingCacheAffinity: true,
+      },
+      executionTelemetry: {
+        providerFamily: "ai-sdk-openai",
+        finishReason: "stop",
+        stream: {
+          requested: true,
+          textDeltas: 4,
+          toolCallDeltas: 1,
+          toolArgumentDeltas: 2,
+        },
+        streamSupport: {
+          text: "delta",
+          toolCalls: "delta",
+          toolArguments: "delta",
+        },
+        promptCaching: {
+          supported: true,
+          mode: "provider-managed",
+        },
+        usageSupport: {
+          inputTokens: true,
+          outputTokens: true,
+          cacheReadTokens: true,
+          cacheWriteTokens: true,
+        },
+        costProvenance: "actual",
+      },
+      tooling: {
+        ...baseBundle.tooling,
+        toolCalls: [],
+        executions: [],
+      },
+      telemetrySnapshot: {
+        providerId: "openai",
+        providerAccountId: "openai.personal",
+        sourceType: "remote",
+        endpointKind: "remote_api",
+        servingSource: "remote-service",
+        region: "us-east-1",
+        lifecycleStateAtRequest: "active",
+        healthStatusAtRequest: "healthy",
+        requestedModelId: "mixed.local-remote",
+        requestOperation: "chat",
+        roleIds: ["coder.patch", "general.chat"],
+        toolingUsed: false,
+        cacheState: "hit",
+        eligibleEndpointIds: [
+          "openai.personal.primary.us-east-1.fast",
+          "llama-swap.local.local-mock-llama",
+        ],
+        eligibleModelIds: ["openai/gpt-4.1-mini-fast", "local/mock-llama"],
+        candidateCostSnapshot: {
+          "openai.personal.primary.us-east-1.fast": {
+            modelId: "openai/gpt-4.1-mini-fast",
+            providerId: "openai",
+            sourceType: "remote",
+            estimatedRequestUsd: 0.0062,
+          },
+          "llama-swap.local.local-mock-llama": {
+            modelId: "local/mock-llama",
+            providerId: "llama-swap",
+            sourceType: "local",
+            estimatedRequestUsd: 0.0116,
+          },
+        },
+        selectedPricingSnapshot: {
+          modelId: "openai/gpt-4.1-mini-fast",
+          providerId: "openai",
+          sourceType: "remote",
+          estimatedRequestUsd: 0.0062,
+        },
+        selectedUncachedCostUsd: 0.0062,
+        baselineMaxEligibleCostUsd: 0.0116,
+        routingCostSavingsUsd: 0.0054,
+        cacheCostSavingsUsd: 0.002,
+        totalAvoidedCostUsd: 0.0074,
+        costBaselineSource: "eligible_candidate_max",
+        costSavingsSupport: "full",
+      },
+      inspection: {
+        ...baseBundle.inspection,
+        request: {
+          ...baseBundle.inspection.request,
+          requestId: "req-telemetry-analytics-remote-001",
+          routingDecisionId: "decision-telemetry-analytics-remote-001",
+          responseCapture: {
+            ...baseBundle.inspection.request.responseCapture,
+            statusCode: 200,
+          },
+        },
+      },
+    };
+
+    const localBundle = {
+      ...baseBundle,
+      requestId: "req-telemetry-analytics-local-001",
+      routingDecisionId: "decision-telemetry-analytics-local-001",
+      endpointId: "llama-swap.local.local-mock-llama",
+      usageEvent: {
+        ...baseBundle.usageEvent,
+        request_id: "req-telemetry-analytics-local-001",
+        routing_decision_id: "decision-telemetry-analytics-local-001",
+        endpoint_id: "llama-swap.local.local-mock-llama",
+        model_id: "local/mock-llama",
+        provider_kind: "local_openai_compat",
+        tokens_in: 32,
+        tokens_out: 0,
+        latency_ms: 1200,
+        cost_actual: undefined,
+        cost_estimate: 0.0011,
+        currency: "USD",
+        error_class: "upstream_timeout",
+        timestamp_ms: localTimestampMs,
+      },
+      observedPerformance: {
+        ...baseBundle.observedPerformance,
+        sample: {
+          ...baseBundle.observedPerformance.sample,
+          request_id: "req-telemetry-analytics-local-001",
+          routing_decision_id: "decision-telemetry-analytics-local-001",
+          endpoint_id: "llama-swap.local.local-mock-llama",
+          timestamp_ms: localTimestampMs,
+          latency_ms: 1200,
+          latency_ms_p95: 1200,
+          source_type: "live_request",
+          failure: true,
+          error_class: "upstream_timeout",
+        },
+        profile: {
+          ...baseBundle.observedPerformance.profile,
+          endpoint_id: "llama-swap.local.local-mock-llama",
+          measured_at_ms: localTimestampMs,
+        },
+      },
+      cacheObservability: {
+        promptCacheRequested: false,
+        promptCacheUsed: false,
+        cacheReadTokens: 0,
+        cacheWriteTokens: 0,
+        routingCacheAffinity: false,
+      },
+      executionTelemetry: {
+        providerFamily: "llama-swap",
+        finishReason: "error",
+        stream: {
+          requested: true,
+          textDeltas: 2,
+          toolCallDeltas: 0,
+          toolArgumentDeltas: 0,
+        },
+        streamSupport: {
+          text: "delta",
+          toolCalls: "unsupported",
+          toolArguments: "unsupported",
+        },
+        promptCaching: {
+          supported: false,
+          mode: "unsupported",
+        },
+        usageSupport: {
+          inputTokens: true,
+          outputTokens: true,
+          cacheReadTokens: false,
+          cacheWriteTokens: false,
+        },
+        costProvenance: "estimated",
+      },
+      tooling: {
+        ...baseBundle.tooling,
+        toolCalls: [],
+        executions: [],
+      },
+      telemetrySnapshot: {
+        providerId: "llama-swap",
+        providerAccountId: null,
+        sourceType: "local",
+        endpointKind: "local_engine",
+        servingSource: "local-process",
+        region: "local",
+        lifecycleStateAtRequest: "active",
+        healthStatusAtRequest: "healthy",
+        requestedModelId: "local/mock-llama",
+        requestOperation: "chat",
+        roleIds: ["general.chat"],
+        toolingUsed: false,
+        cacheState: "unsupported",
+        eligibleEndpointIds: ["llama-swap.local.local-mock-llama"],
+        eligibleModelIds: ["local/mock-llama"],
+        candidateCostSnapshot: {
+          "llama-swap.local.local-mock-llama": {
+            modelId: "local/mock-llama",
+            providerId: "llama-swap",
+            sourceType: "local",
+            estimatedRequestUsd: 0.0011,
+          },
+        },
+        selectedPricingSnapshot: {
+          modelId: "local/mock-llama",
+          providerId: "llama-swap",
+          sourceType: "local",
+          estimatedRequestUsd: 0.0011,
+        },
+        selectedUncachedCostUsd: 0.0011,
+        baselineMaxEligibleCostUsd: 0.0011,
+        routingCostSavingsUsd: 0,
+        cacheCostSavingsUsd: 0,
+        totalAvoidedCostUsd: 0,
+        costBaselineSource: "selected_only",
+        costSavingsSupport: "partial",
+      },
+      inspection: {
+        ...baseBundle.inspection,
+        request: {
+          ...baseBundle.inspection.request,
+          requestId: "req-telemetry-analytics-local-001",
+          routingDecisionId: "decision-telemetry-analytics-local-001",
+          responseCapture: {
+            ...baseBundle.inspection.request.responseCapture,
+            statusCode: 504,
+          },
+        },
+      },
+    };
+
+    persistRuntimeObservationBundle({
+      databasePath,
+      observation: remoteBundle,
+    });
+    persistRuntimeObservationBundle({
+      databasePath,
+      observation: localBundle,
+    });
+    persistRuntimeTelemetryFailure({
+      databasePath,
+      requestId: "req-telemetry-analytics-failure-only-001",
+      routingDecisionId: "decision-telemetry-analytics-failure-only-001",
+      endpointId: "routing.failed.pre-execution",
+      modelId: "routing/failed",
+      statusCode: 503,
+      errorClass: "no_candidate",
+      latencyMs: 12,
+      clientRequestId: "client-telemetry-analytics-failure-only-001",
+      requestClass: "live_request",
+      sourceType: null,
+    });
+
+    await expect(
+      backend.queryTelemetryAnalytics?.({
+        startAtMs: remoteTimestampMs - 1_000,
+        endAtMs: localTimestampMs + 1_000,
+        granularity: "hour",
+        metrics: ["requestCount", "effectiveCostUsd", "totalAvoidedCostUsd"],
+        breakdown: "sourceType",
+        ranking: {
+          dimension: "modelId",
+          metric: "requestCount",
+          limit: 5,
+        },
+      }),
+    ).resolves.toEqual(
+      expect.objectContaining({
+        breakdown: "sourceType",
+        metrics: ["requestCount", "effectiveCostUsd", "totalAvoidedCostUsd"],
+        buckets: [
+          expect.objectContaining({
+            totals: expect.objectContaining({
+              requestCount: 2,
+              effectiveCostUsd: 0.0053,
+              totalAvoidedCostUsd: 0.0074,
+            }),
+            series: expect.arrayContaining([
+              expect.objectContaining({
+                key: "local",
+                label: "Local",
+                metrics: expect.objectContaining({
+                  requestCount: 1,
+                  effectiveCostUsd: 0.0011,
+                  totalAvoidedCostUsd: 0,
+                }),
+              }),
+              expect.objectContaining({
+                key: "remote",
+                label: "Remote",
+                metrics: expect.objectContaining({
+                  requestCount: 1,
+                  effectiveCostUsd: 0.0042,
+                  totalAvoidedCostUsd: 0.0074,
+                }),
+              }),
+            ]),
+          }),
+        ],
+        ranking: expect.objectContaining({
+          dimension: "modelId",
+          metric: "requestCount",
+          rows: expect.arrayContaining([
+            expect.objectContaining({
+              key: "openai/gpt-4.1-mini-fast",
+              value: 1,
+            }),
+            expect.objectContaining({
+              key: "local/mock-llama",
+              value: 1,
+            }),
+          ]),
+        }),
+      }),
+    );
+
+    await expect(
+      backend.queryTelemetryAnalytics?.({
+        startAtMs: remoteTimestampMs - 1_000,
+        endAtMs: localTimestampMs + 1_000,
+        granularity: "hour",
+        metrics: ["requestCount", "routingCostSavingsUsd"],
+        breakdown: "selectedStrategy",
+        filters: {
+          requestedRoleIds: ["coder.patch"],
+        },
+        ranking: {
+          dimension: "selectedStrategy",
+          metric: "routingCostSavingsUsd",
+          limit: 5,
+        },
+      }),
+    ).resolves.toEqual(
+      expect.objectContaining({
+        buckets: [
+          expect.objectContaining({
+            totals: expect.objectContaining({
+              requestCount: 1,
+              routingCostSavingsUsd: 0.0054,
+            }),
+            series: [
+              expect.objectContaining({
+                key: "quality",
+                metrics: expect.objectContaining({
+                  requestCount: 1,
+                  routingCostSavingsUsd: 0.0054,
+                }),
+              }),
+            ],
+          }),
+        ],
+        ranking: expect.objectContaining({
+          dimension: "selectedStrategy",
+          metric: "routingCostSavingsUsd",
+          rows: [
+            expect.objectContaining({
+              key: "quality",
+              value: 0.0054,
+            }),
+          ],
+        }),
+      }),
+    );
+
+    await expect(
+      backend.queryTelemetryAnalytics?.({
+        startAtMs: remoteTimestampMs - 1_000,
+        endAtMs: localTimestampMs + 1_000,
+        granularity: "hour",
+        metrics: ["totalEffectiveCostUsd"],
+      }),
+    ).rejects.toThrow("unsupported telemetry analytics metric: totalEffectiveCostUsd");
+
+    await expect(
+      backend.queryTelemetryAnalytics?.({
+        startAtMs: remoteTimestampMs - 1_000,
+        endAtMs: localTimestampMs + 1_000,
+        granularity: "hour",
+        metrics: ["requestCount"],
+        breakdown: "selectedModelId",
+      }),
+    ).rejects.toThrow("unsupported telemetry analytics dimension: selectedModelId");
+
+    await expect(
+      backend.queryTelemetryAnalytics?.({
+        startAtMs: remoteTimestampMs - 1_000,
+        endAtMs: localTimestampMs + 1_000,
+        granularity: "hour",
+        metrics: ["requestCount"],
+        ranking: {
+          dimension: "selectedModelId",
+          metric: "requestCount",
+          limit: 5,
+        },
+      }),
+    ).rejects.toThrow("unsupported telemetry analytics dimension: selectedModelId");
+
+    await expect(
+      backend.queryTelemetryAnalytics?.({
+        startAtMs: remoteTimestampMs - 1_000,
+        endAtMs: localTimestampMs + 1_000,
+        granularity: "hour",
+        metrics: ["requestCount"],
+        ranking: {
+          dimension: "modelId",
+          metric: "totalEffectiveCostUsd",
+          limit: 5,
+        },
+      }),
+    ).rejects.toThrow("unsupported telemetry analytics metric: totalEffectiveCostUsd");
+
+    await expect(
+      backend.queryTelemetryAnalytics?.({
+        startAtMs: remoteTimestampMs - 1_000,
+        endAtMs: localTimestampMs + 1_000,
+        granularity: "hour",
+        metrics: ["requestCount"],
+        ranking: {
+          dimension: "modelId",
+          metric: "requestCount",
+          limit: 0,
+        },
+      }),
+    ).rejects.toThrow("ranking.limit must be a positive integer");
+
+    await expect(
+      backend.queryTelemetryAnalytics?.({
+        startAtMs: remoteTimestampMs - 1_000,
+        endAtMs: localTimestampMs + 1_000,
+        granularity: "hour",
+        metrics: ["cacheHitTokenRate"],
+      }),
+    ).resolves.toEqual(
+      expect.objectContaining({
+        totals: expect.objectContaining({
+          cacheHitTokenRate: null,
+        }),
+      }),
+    );
+
+    await expect(
+      backend.queryTelemetryAnalytics?.({
+        startAtMs: remoteTimestampMs - 1_000,
+        endAtMs: localTimestampMs + 1_000,
+        granularity: "hour",
+        metrics: ["cacheHitTokenRate"],
+        filters: {
+          sourceTypes: ["remote"],
+        },
+      }),
+    ).resolves.toEqual(
+      expect.objectContaining({
+        totals: expect.objectContaining({
+          cacheHitTokenRate: 0.117647,
+        }),
+      }),
+    );
+
+    await expect(
+      backend.readRequestObservation?.("req-telemetry-analytics-remote-001"),
+    ).resolves.toEqual(
+      expect.objectContaining({
+        requestId: "req-telemetry-analytics-remote-001",
+        effectiveCostUsd: 0.0042,
+        costCalculationBasis: "actual_vendor_cost",
+        costCalculationVersion: "run49.v1",
+        selectedUncachedCostUsd: 0.0062,
+        baselineMaxEligibleCostUsd: 0.0116,
+        routingCostSavingsUsd: 0.0054,
+        cacheCostSavingsUsd: 0.002,
+        totalAvoidedCostUsd: 0.0074,
+        costBaselineSource: "eligible_candidate_max",
+        costSavingsSupport: "full",
+      }),
+    );
+
+    await expect(
+      backend.readRequestObservation?.("req-telemetry-analytics-failure-only-001"),
+    ).resolves.toEqual(
+      expect.objectContaining({
+        requestId: "req-telemetry-analytics-failure-only-001",
+        routingDecisionId: "decision-telemetry-analytics-failure-only-001",
+        endpointId: "routing.failed.pre-execution",
+        statusFamily: "failure",
+        effectiveCostUsd: 0,
+        costCalculationBasis: "no_execution_zero",
+        costCalculationVersion: "run49.v1",
+        selectedUncachedCostUsd: 0,
+        baselineMaxEligibleCostUsd: 0,
+        routingCostSavingsUsd: 0,
+        cacheCostSavingsUsd: 0,
+        totalAvoidedCostUsd: 0,
+        costBaselineSource: null,
+        costSavingsSupport: null,
+      }),
+    );
+  });
+
   test("keeps duplicate caller request ids as separate canonical telemetry rows", async () => {
     expect(
       typeof (bridge as { createRuntimeBridgeBackend?: unknown }).createRuntimeBridgeBackend,
@@ -8367,7 +9466,9 @@ describe("runtime-host-bridge", () => {
     );
   });
 
-  test("streams canonical telemetry updates over SSE after new requests are persisted", async () => {
+  test(
+    "streams canonical telemetry updates over SSE after new requests are persisted",
+    async () => {
     expect(
       typeof (bridge as { createRuntimeBridgeBackend?: unknown }).createRuntimeBridgeBackend,
     ).toBe("function");
@@ -8479,7 +9580,9 @@ describe("runtime-host-bridge", () => {
       await delay(10);
       await server.close();
     }
-  });
+    },
+    15_000,
+  );
 
   test("executes chat-completions through a LiteLLM-derived moonshot-oauth endpoint with X-Msh headers", async () => {
     // This test exercises the PRODUCTION path where provider-presets.json is empty

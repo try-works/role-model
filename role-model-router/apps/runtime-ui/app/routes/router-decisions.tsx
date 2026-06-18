@@ -87,7 +87,7 @@ export default function RouterDecisionsRoute() {
             {decisions.map((decision) => (
               <div key={decision.requestId} className={`${listRowClassName} md:items-center`}>
                 <div>
-                  <p className="font-medium text-[var(--rm-fg)]">{decision.requestId}</p>
+                  <p className="font-semibold text-[var(--rm-fg)]">{decision.requestId}</p>
                   <p className="text-sm text-[var(--rm-secondary)]">
                     {decision.selectedEndpointId}
                   </p>
@@ -104,7 +104,7 @@ export default function RouterDecisionsRoute() {
                     {decision.decidedAtMs ? new Date(decision.decidedAtMs).toLocaleString() : "n/a"}
                   </p>
                   <Link
-                    className="text-sm font-medium text-[var(--rm-accent)]"
+                    className="text-sm font-semibold text-[var(--rm-accent)]"
                     to={`/app/router/decisions/${decision.requestId}`}
                   >
                     Open Router detail

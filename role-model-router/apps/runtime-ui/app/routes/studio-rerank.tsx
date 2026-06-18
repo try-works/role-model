@@ -7,6 +7,7 @@ import {
   FactCard,
   LoadingState,
   SectionCard,
+  SelectField,
   StatusPill,
 } from "../components/page-primitives";
 import {
@@ -29,7 +30,7 @@ export default function StudioRerankRoute() {
   const [model, setModel] = useState("");
   const [query, setQuery] = useState("Which option best summarizes the runtime?");
   const [documentsText, setDocumentsText] = useState(
-    "The runtime routes requests.\nThe runtime owns provider account onboarding.\nThe runtime UI is a Swiss-style operator shell.",
+    "The runtime routes requests.\nThe runtime owns provider account onboarding.\nThe runtime UI is a calm Apple-inspired operator shell.",
   );
   const [path, setPath] = useState<"/v1/rerank" | "/v1/reranking">("/v1/rerank");
   const [submitting, setSubmitting] = useState(false);
@@ -140,35 +141,23 @@ export default function StudioRerankRoute() {
             <LoadingState label="Loading rerank request context…" />
           ) : (
             <form className="space-y-4" onSubmit={onSubmit}>
+              <SelectField
+                label="Contract"
+                value={path}
+                onChange={(value) => setPath(value as "/v1/rerank" | "/v1/reranking")}
+              >
+                <option value="/v1/rerank">/v1/rerank</option>
+                <option value="/v1/reranking">/v1/reranking</option>
+              </SelectField>
+              <SelectField label="Model" value={model} onChange={setModel}>
+                {modelOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </SelectField>
               <label className="grid gap-2 text-sm">
-                <span className="font-medium text-[var(--rm-fg)]">Contract</span>
-                <select
-                  className={fieldClassName}
-                  value={path}
-                  onChange={(event) =>
-                    setPath(event.target.value as "/v1/rerank" | "/v1/reranking")
-                  }
-                >
-                  <option value="/v1/rerank">/v1/rerank</option>
-                  <option value="/v1/reranking">/v1/reranking</option>
-                </select>
-              </label>
-              <label className="grid gap-2 text-sm">
-                <span className="font-medium text-[var(--rm-fg)]">Model</span>
-                <select
-                  className={fieldClassName}
-                  value={model}
-                  onChange={(event) => setModel(event.target.value)}
-                >
-                  {modelOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="grid gap-2 text-sm">
-                <span className="font-medium text-[var(--rm-fg)]">Query</span>
+                <span className="font-semibold text-[var(--rm-fg)]">Query</span>
                 <textarea
                   className={`${fieldClassName} min-h-28`}
                   value={query}
@@ -176,7 +165,7 @@ export default function StudioRerankRoute() {
                 />
               </label>
               <label className="grid gap-2 text-sm">
-                <span className="font-medium text-[var(--rm-fg)]">Candidate documents</span>
+                <span className="font-semibold text-[var(--rm-fg)]">Candidate documents</span>
                 <textarea
                   className={`${fieldClassName} min-h-40`}
                   value={documentsText}
@@ -205,7 +194,7 @@ export default function StudioRerankRoute() {
                   <div key={`${row.index}-${row.score}`} className={listRowClassName}>
                     <div className="space-y-2">
                       <div className="flex flex-wrap items-center gap-2">
-                        <p className="font-medium text-[var(--rm-fg)]">Document {row.index + 1}</p>
+                        <p className="font-semibold text-[var(--rm-fg)]">Document {row.index + 1}</p>
                         <StatusPill tone="accent">{row.score.toFixed(4)}</StatusPill>
                       </div>
                       <p className="text-sm text-[var(--rm-secondary)]">{row.text}</p>

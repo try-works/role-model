@@ -1,0 +1,44 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/49-runtime-telemetry-analytics-charts/role-model-router/apps/runtime-ui[39m
+
+ [31m❯[39m app/components/page-primitives.test.tsx [2m([22m[2m2 tests[22m[2m | [22m[31m2 failed[39m[2m)[22m[32m 22[2mms[22m[39m
+[31m   [31m×[31m SelectField typeahead[2m > [22mmatches the next enabled option by typed prefix[39m[32m 17[2mms[22m[39m
+[31m     → (0 , getSelectTypeaheadMatchIndex) is not a function[39m
+[31m   [31m×[31m SelectField typeahead[2m > [22mcycles repeated same-letter typeahead across enabled matches[39m[32m 1[2mms[22m[39m
+[31m     → (0 , getSelectTypeaheadMatchIndex) is not a function[39m
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  app/components/page-primitives.test.tsx > SelectField typeahead > matches the next enabled option by typed prefix
+TypeError: (0 , getSelectTypeaheadMatchIndex) is not a function
+ ❯ app/components/page-primitives.test.tsx:16:12
+     14| describe("SelectField typeahead", () => {
+     15|   test("matches the next enabled option by typed prefix", () => {
+     16|     expect(getSelectTypeaheadMatchIndex(providerOptions, "m", 0)).toBe…
+       |            ^
+     17|     expect(getSelectTypeaheadMatchIndex(providerOptions, "mis", 1)).to…
+     18|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  app/components/page-primitives.test.tsx > SelectField typeahead > cycles repeated same-letter typeahead across enabled matches
+TypeError: (0 , getSelectTypeaheadMatchIndex) is not a function
+ ❯ app/components/page-primitives.test.tsx:21:12
+     19| 
+     20|   test("cycles repeated same-letter typeahead across enabled matches",…
+     21|     expect(getSelectTypeaheadMatchIndex(providerOptions, "m", 1)).toBe…
+       |            ^
+     22|     expect(getSelectTypeaheadMatchIndex(providerOptions, "m", 2)).toBe…
+     23|     expect(getSelectTypeaheadMatchIndex(providerOptions, "m", 3)).toBe…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m2 failed[39m[22m[90m (2)[39m
+[2m   Start at [22m 21:42:15
+[2m   Duration [22m 2.14s[2m (transform 348ms, setup 0ms, collect 536ms, tests 22ms, environment 1ms, prepare 524ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\49-runtime-telemetry-analytics-charts\role-model-router\apps\runtime-ui:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run app/components/page-primitives.test.tsx

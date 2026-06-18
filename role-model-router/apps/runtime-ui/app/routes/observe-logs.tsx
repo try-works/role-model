@@ -129,11 +129,11 @@ export default function ObserveLogsRoute() {
             <table className="min-w-full text-left text-sm">
               <thead className="text-[var(--rm-muted)]">
                 <tr>
-                  <th className="pb-3 font-medium">Timestamp</th>
-                  <th className="pb-3 font-medium">Source</th>
-                  <th className="pb-3 font-medium">Severity</th>
-                  <th className="pb-3 font-medium">Request</th>
-                  <th className="pb-3 font-medium">Entry</th>
+                  <th className="pb-3 font-semibold">Timestamp</th>
+                  <th className="pb-3 font-semibold">Source</th>
+                  <th className="pb-3 font-semibold">Severity</th>
+                  <th className="pb-3 font-semibold">Request</th>
+                  <th className="pb-3 font-semibold">Entry</th>
                 </tr>
               </thead>
               <tbody>
@@ -163,7 +163,7 @@ export default function ObserveLogsRoute() {
                     <td className="py-3 text-[var(--rm-secondary)]">
                       {row.requestId ? (
                         <Link
-                          className="font-medium text-[var(--rm-accent)]"
+                          className="font-semibold text-[var(--rm-accent)]"
                           to={`/app/observe/requests/${row.requestId}`}
                         >
                           {row.requestId}

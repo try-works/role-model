@@ -1,0 +1,31 @@
+{
+  "checkedAt": "2026-06-17T18:35:23.373Z",
+  "documentScrollWidth": 723,
+  "hasConfiguredProviders": false,
+  "hasRouteError": false,
+  "hasRuntimeConnections": true,
+  "hasRuntimeEndpointRows": false,
+  "headings": [
+    "Runtime connections"
+  ],
+  "mainClientWidth": 691,
+  "mainScrollWidth": 691,
+  "tableCount": 1,
+  "tables": [
+    {
+      "headers": [
+        "Provider",
+        "Connection",
+        "Model",
+        "Endpoint",
+        "Source",
+        "Health",
+        "Readiness"
+      ],
+      "rowCount": 3,
+      "textExcerpt": "ProviderConnectionModelEndpointSourceHealthReadinessanthropicanthropic.team.sharedclaude-3.7-sonnetanthropic.team.shared.us-east-1.defaultRemote / remote_apihealthydegradedlocal-cli—gpt-5.4cli.local.coderLocal / local_enginehealthyactiveopenaiopenai.personal.primaryopenai/gpt-4.1-mini-fastopenai.personal.primary.us-east-1.fastRemote / remote_apihealthyactive"
+    }
+  ],
+  "url": "http://127.0.0.1:3456/app/connect",
+  "viewportWidth": 738
+}

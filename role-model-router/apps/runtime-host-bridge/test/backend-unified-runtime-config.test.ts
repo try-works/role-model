@@ -23,6 +23,202 @@ afterEach(async () => {
 });
 
 describe("runtime-host-bridge unified runtime backend", () => {
+  test("router candidates expose every configured endpoint and mark current execution-mode eligibility", async () => {
+    const tempRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-run49-candidates-"));
+    tempRoots.push(tempRoot);
+    const runtimeStateRoot = path.join(tempRoot, "state");
+    const unifiedRuntimeConfigPath = path.join(tempRoot, "runtime-config.yaml");
+
+    await writeFile(
+      unifiedRuntimeConfigPath,
+      `
+version: "1.0"
+execution_mode: remote_only
+llama_swap:
+  models:
+    lfm2.5-1.2b-instruct:
+      path: ./models/lfm2.5-1.2b-instruct.gguf
+litellm_proxy:
+  command: "node"
+  args:
+    - "-e"
+    - 'const http=require("node:http");const port=Number(process.env.PORT);const server=http.createServer((req,res)=>{if(req.url==="/health/liveliness"){res.statusCode=200;res.end("ok");return;}res.statusCode=404;res.end("missing");});server.listen(port,"127.0.0.1");const shutdown=()=>server.close(()=>process.exit(0));process.on("SIGTERM",shutdown);process.on("SIGINT",shutdown);'
+  providers:
+    moonshot:
+      api_key: "$\{MOONSHOT_API_KEY}"
+      model_list:
+        - model_name: moonshot/kimi-k2.6
+          litellm_params:
+            model: moonshot/kimi-k2.6
+            api_base: https://api.moonshot.ai/v1
+`,
+      "utf8",
+    );
+
+    const seedBackend = await createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: testFixtureRoot,
+      runtimeStateRoot,
+      scopeId: "runtime-host-run49-candidates",
+    });
+    await seedBackend.upsertProviderAccount({
+      providerAccountId: "moonshot.litellm",
+      providerId: "moonshot",
+      providerKind: "provider-openai",
+      orgScope: "personal",
+      accountScope: "workspace-default",
+      credentialRef: {
+        backend: "env",
+        ref: "MOONSHOT_API_KEY",
+      },
+      authMode: "api-key-static",
+      regionPolicy: {
+        mode: "prefer",
+        regions: ["global"],
+      },
+      baseUrlOverride: "https://api.moonshot.ai/v1",
+      allowedModels: ["moonshot/kimi-k2.6"],
+      modelRoleBindings: [
+        {
+          modelId: "moonshot/kimi-k2.6",
+          roleIds: ["general.chat"],
+        },
+      ],
+      deniedModels: [],
+      entitlementTags: ["chat"],
+      budgetPolicyRef: "budget.default",
+      quotaPolicyRef: "quota.default",
+      status: "active",
+      healthStatus: "healthy",
+      rotationState: "stable",
+    });
+    await seedBackend.shutdown();
+
+    const backend = await createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: testFixtureRoot,
+      runtimeStateRoot,
+      scopeId: "runtime-host-run49-candidates",
+      unifiedRuntimeConfigPath,
+      runtimeVendorStartup: "disabled",
+    });
+
+    const candidates = (await backend.listRouterCandidates()) as Array<Record<string, unknown>>;
+
+    expect(candidates.map((candidate) => candidate.modelId).sort()).toEqual([
+      "lfm2.5-1.2b-instruct",
+      "moonshot/kimi-k2.6",
+    ]);
+    expect(candidates).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          modelId: "moonshot/kimi-k2.6",
+          sourceType: "remote",
+          executionModeEligible: true,
+        }),
+        expect.objectContaining({
+          modelId: "lfm2.5-1.2b-instruct",
+          sourceType: "local",
+          executionModeEligible: false,
+        }),
+      ]),
+    );
+
+    await backend.shutdown();
+  }, 20_000);
+
+  test("rejects benchmark runs that target endpoints excluded by execution mode", async () => {
+    const tempRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-run49-benchmark-mode-"));
+    tempRoots.push(tempRoot);
+    const runtimeStateRoot = path.join(tempRoot, "state");
+    const unifiedRuntimeConfigPath = path.join(tempRoot, "runtime-config.yaml");
+
+    await writeFile(
+      unifiedRuntimeConfigPath,
+      `
+version: "1.0"
+execution_mode: local_only
+llama_swap:
+  models:
+    lfm2.5-1.2b-instruct:
+      path: ./models/lfm2.5-1.2b-instruct.gguf
+litellm_proxy:
+  providers:
+    moonshot:
+      api_key: "$\{MOONSHOT_API_KEY}"
+      model_list:
+        - model_name: moonshot/kimi-k2.6
+          litellm_params:
+            model: moonshot/kimi-k2.6
+            api_base: https://api.moonshot.ai/v1
+`,
+      "utf8",
+    );
+
+    const seedBackend = await createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: testFixtureRoot,
+      runtimeStateRoot,
+      scopeId: "runtime-host-run49-benchmark-mode",
+    });
+    await seedBackend.upsertProviderAccount({
+      providerAccountId: "moonshot.litellm",
+      providerId: "moonshot",
+      providerKind: "provider-openai",
+      orgScope: "personal",
+      accountScope: "workspace-default",
+      credentialRef: {
+        backend: "env",
+        ref: "MOONSHOT_API_KEY",
+      },
+      authMode: "api-key-static",
+      regionPolicy: {
+        mode: "prefer",
+        regions: ["global"],
+      },
+      baseUrlOverride: "https://api.moonshot.ai/v1",
+      allowedModels: ["moonshot/kimi-k2.6"],
+      modelRoleBindings: [
+        {
+          modelId: "moonshot/kimi-k2.6",
+          roleIds: ["general.chat"],
+        },
+      ],
+      deniedModels: [],
+      entitlementTags: ["chat"],
+      budgetPolicyRef: "budget.default",
+      quotaPolicyRef: "quota.default",
+      status: "active",
+      healthStatus: "healthy",
+      rotationState: "stable",
+    });
+    await seedBackend.shutdown();
+
+    const backend = await createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: testFixtureRoot,
+      runtimeStateRoot,
+      scopeId: "runtime-host-run49-benchmark-mode",
+      unifiedRuntimeConfigPath,
+      runtimeVendorStartup: "disabled",
+    });
+
+    const candidates = (await backend.listRouterCandidates()) as Array<Record<string, unknown>>;
+    const remoteEndpoint = candidates.find((candidate) => candidate.sourceType === "remote");
+    const localEndpoint = candidates.find((candidate) => candidate.sourceType === "local");
+
+    await expect(
+      backend.runBenchmark({
+        endpointIds: [remoteEndpoint?.endpointId, localEndpoint?.endpointId],
+        judgeEndpointId: remoteEndpoint?.endpointId,
+        mode: "quick",
+        useJudge: true,
+      }),
+    ).rejects.toThrow("execution_mode_ineligible_endpoints");
+
+    await backend.shutdown();
+  }, 20_000);
+
   test("surfaces the derived execution mode in the runtime summary when a unified config file is provided", async () => {
     const tempRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-run15-config-"));
     tempRoots.push(tempRoot);
@@ -194,7 +390,7 @@ observed_data:
           routingStrategy: "difficulty",
           modelAliases: [
             expect.objectContaining({
-              aliasId: "mixed.local-remote",
+              aliasId: "difficulty.decision-only",
             }),
           ],
         }),
@@ -208,7 +404,7 @@ observed_data:
       expect.objectContaining({
         aliasInventory: expect.arrayContaining([
           expect.objectContaining({
-            aliasId: "mixed.local-remote",
+            aliasId: "difficulty.decision-only",
             mode: "difficulty",
             configuredHintModelIds: ["lfm2.5-1.2b-instruct", "moonshot/kimi-k2.6"],
             allowEndpointIds: expect.any(Array),
@@ -385,6 +581,144 @@ observed_data:
     );
 
     await expect(readFile(unifiedRuntimeConfigPath, "utf8")).resolves.toContain("strategy: hybrid");
+
+    await backend.shutdown();
+  });
+
+  test("persists explicit hybrid execution mode from routing strategy updates", async () => {
+    const tempRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-run49-execution-mode-"));
+    tempRoots.push(tempRoot);
+    const runtimeStateRoot = path.join(tempRoot, "state");
+    const unifiedRuntimeConfigPath = path.join(tempRoot, "runtime-config.yaml");
+
+    await writeFile(
+      unifiedRuntimeConfigPath,
+      [
+        'version: "1.0"',
+        "llama_swap:",
+        "  models:",
+        "    lfm2.5-1.2b-instruct:",
+        '      path: "./models/lfm2.5-1.2b-instruct.gguf"',
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+
+    const backend = await createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: testFixtureRoot,
+      runtimeStateRoot,
+      scopeId: "runtime-host-explicit-execution-mode",
+      unifiedRuntimeConfigPath,
+      runtimeVendorStartup: "disabled",
+    });
+
+    const updated = await backend.updateRuntimeConfig({
+      version: "1.1",
+      routingStrategy: "controller",
+      executionMode: "hybrid",
+      llamaSwap: {
+        enabled: true,
+        models: [
+          {
+            modelId: "lfm2.5-1.2b-instruct",
+            path: "./models/lfm2.5-1.2b-instruct.gguf",
+          },
+        ],
+        process: {
+          command: null,
+          args: [],
+          env: {},
+          cwd: null,
+          startupTimeoutMs: null,
+        },
+      },
+      liteLLM: {
+        enabled: false,
+        providers: [],
+        process: {
+          command: null,
+          args: [],
+          env: {},
+          cwd: null,
+          startupTimeoutMs: null,
+        },
+      },
+    });
+
+    expect(updated.config?.executionMode).toBe("hybrid");
+    await expect(readFile(unifiedRuntimeConfigPath, "utf8")).resolves.toContain(
+      "execution_mode: hybrid",
+    );
+    await expect(backend.readRouterSummary()).resolves.toEqual(
+      expect.objectContaining({
+        strategy: "controller",
+        executionMode: "hybrid",
+      }),
+    );
+
+    await backend.shutdown();
+  });
+
+  test("renames the primary routing alias when routing strategy and execution mode change", async () => {
+    const tempRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-run49-routing-alias-"));
+    tempRoots.push(tempRoot);
+    const runtimeStateRoot = path.join(tempRoot, "state");
+    const unifiedRuntimeConfigPath = path.join(tempRoot, "runtime-config.yaml");
+
+    await writeFile(
+      unifiedRuntimeConfigPath,
+      [
+        'version: "1.0"',
+        "routing:",
+        "  strategy: difficulty",
+        "execution_mode: hybrid",
+        "model_aliases:",
+        "  mixed.local-remote:",
+        "    mode: difficulty",
+        "    model_ids:",
+        "      - lfm2.5-1.2b-instruct",
+        "      - moonshot/kimi-k2.7-code",
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+
+    const backend = await createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: testFixtureRoot,
+      runtimeStateRoot,
+      scopeId: "runtime-host-routing-alias-rename",
+      unifiedRuntimeConfigPath,
+    });
+
+    const updated = await backend.updateRuntimeConfig({
+      routingStrategy: "hybrid",
+      executionMode: "remote_only",
+    });
+
+    expect(updated.config?.modelAliases).toEqual([
+      expect.objectContaining({
+        aliasId: "hybrid.remote-only",
+        mode: "hybrid",
+        modelIds: ["lfm2.5-1.2b-instruct", "moonshot/kimi-k2.7-code"],
+      }),
+    ]);
+    await expect(backend.readRouterSummary()).resolves.toEqual(
+      expect.objectContaining({
+        strategy: "hybrid",
+        executionMode: "remote_only",
+        aliasInventory: expect.arrayContaining([
+          expect.objectContaining({
+            aliasId: "hybrid.remote-only",
+            mode: "hybrid",
+          }),
+        ]),
+      }),
+    );
+    const rendered = await readFile(unifiedRuntimeConfigPath, "utf8");
+    expect(rendered).toContain("hybrid.remote-only:");
+    expect(rendered).not.toContain("mixed.local-remote:");
 
     await backend.shutdown();
   });

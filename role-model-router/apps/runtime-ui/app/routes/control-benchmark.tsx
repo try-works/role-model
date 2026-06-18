@@ -6,12 +6,17 @@ import {
   FactCard,
   LoadingState,
   SectionCard,
+  SelectField,
   StatusPill,
 } from "../components/page-primitives";
 import { computeLatencyPercentiles } from "../lib/benchmark-latency";
-import { describeHardBlend, resolveSubjectFromSummary } from "../lib/benchmark-model-cards";
 import {
-  fieldClassName,
+  describeHardBlend,
+  filterBenchmarkRunnableCandidates,
+  isBenchmarkRunnableCandidate,
+  resolveSubjectFromSummary,
+} from "../lib/benchmark-model-cards";
+import {
   listRowClassName,
   mutedPanelClassName,
   primaryButtonClassName,
@@ -193,7 +198,7 @@ function EndpointModeRunSnapshot({
   if (!summary.runId) {
     return (
       <div className={`${mutedPanelClassName} p-3`}>
-        <p className="text-sm font-medium text-[var(--rm-fg)]">{title}</p>
+        <p className="text-sm font-semibold text-[var(--rm-fg)]">{title}</p>
         <p className="mt-2 text-sm text-[var(--rm-secondary)]">No completed run yet.</p>
       </div>
     );
@@ -206,14 +211,14 @@ function EndpointModeRunSnapshot({
 
   return (
     <div className={`${mutedPanelClassName} p-3`}>
-      <p className="text-sm font-medium text-[var(--rm-fg)]">{title}</p>
+      <p className="text-sm font-semibold text-[var(--rm-fg)]">{title}</p>
       <p className="mt-1 text-xs text-[var(--rm-secondary)]">
         Completed {completedAtLabel}
         {judgeLabel ? ` • judge: ${judgeLabel}` : ""}
       </p>
       {subject ? (
         <>
-          <p className="mt-2 text-sm font-medium text-[var(--rm-fg)]">
+          <p className="mt-2 text-sm font-semibold text-[var(--rm-fg)]">
             {formatScore(subject.overallScore)} overall
           </p>
           <p className="mt-1 text-sm text-[var(--rm-secondary)]">
@@ -403,7 +408,9 @@ export default function ControlBenchmarkRoute() {
 
   const resolveJudgeEndpointId = useCallback(
     (candidateValue: readonly RouterCandidate[], savedJudgeEndpointId?: string): string => {
-      const healthy = candidateValue.filter((candidate) => candidate.healthStatus !== "offline");
+      const healthy = filterBenchmarkRunnableCandidates(candidateValue).filter(
+        (candidate) => candidate.healthStatus !== "offline",
+      );
       if (
         savedJudgeEndpointId &&
         healthy.some((candidate) => candidate.endpointId === savedJudgeEndpointId)
@@ -460,7 +467,8 @@ export default function ControlBenchmarkRoute() {
           setRunHistory(runHistoryValue);
           setRuntimeSummary(runtimeSummaryValue);
           const healthy = candidateValue.filter(
-            (candidate) => candidate.healthStatus !== "offline",
+            (candidate) =>
+              isBenchmarkRunnableCandidate(candidate) && candidate.healthStatus !== "offline",
           );
           setSelectedEndpointIds(healthy.map((candidate) => candidate.endpointId));
           setJudgeEndpointId(resolveJudgeEndpointId(candidateValue, preferences.judgeEndpointId));
@@ -527,13 +535,39 @@ export default function ControlBenchmarkRoute() {
     return suite.cases.filter((item) => item.benchmark_eligible).length;
   }, [mode, suite]);
 
+  const runnableCandidates = useMemo(
+    () => (candidates ? filterBenchmarkRunnableCandidates(candidates) : []),
+    [candidates],
+  );
+
+  const runnableEndpointIds = useMemo(
+    () => new Set(runnableCandidates.map((candidate) => candidate.endpointId)),
+    [runnableCandidates],
+  );
+
+  useEffect(() => {
+    if (!candidates) {
+      return;
+    }
+    setSelectedEndpointIds((current) =>
+      current.filter((endpointId) => runnableEndpointIds.has(endpointId)),
+    );
+    if (judgeEndpointId && !runnableEndpointIds.has(judgeEndpointId)) {
+      setJudgeEndpointId(resolveJudgeEndpointId(runnableCandidates));
+    }
+  }, [candidates, judgeEndpointId, resolveJudgeEndpointId, runnableCandidates, runnableEndpointIds]);
+
   const gradedEndpointCount = selectedEndpointIds.length;
 
   const judgeSubjectOverlap =
     judgeEndpointId.length > 0 && selectedEndpointIds.includes(judgeEndpointId);
 
   const canRunBenchmark =
-    Boolean(suite) && gradedEndpointCount >= 2 && judgeEndpointId.length > 0 && !running;
+    Boolean(suite) &&
+    gradedEndpointCount >= 2 &&
+    judgeEndpointId.length > 0 &&
+    runnableEndpointIds.has(judgeEndpointId) &&
+    !running;
 
   const modelScoreRows = useMemo(
     () => (candidates ? buildModelScoreRows(candidates, result, lastSummary) : []),
@@ -557,11 +591,14 @@ export default function ControlBenchmarkRoute() {
   };
 
   const runBenchmark = useCallback(async () => {
-    if (selectedEndpointIds.length < 2) {
+    const runnableSelectedEndpointIds = selectedEndpointIds.filter((endpointId) =>
+      runnableEndpointIds.has(endpointId),
+    );
+    if (runnableSelectedEndpointIds.length < 2) {
       setError("Select at least two endpoints for compare-capable benchmark runs.");
       return;
     }
-    if (!judgeEndpointId) {
+    if (!judgeEndpointId || !runnableEndpointIds.has(judgeEndpointId)) {
       setError("Select a judge endpoint.");
       return;
     }
@@ -572,7 +609,7 @@ export default function ControlBenchmarkRoute() {
     try {
       await updateBenchmarkPreferences({ judgeEndpointId });
       const started = await startCapabilityBenchmark({
-        endpointIds: selectedEndpointIds,
+        endpointIds: runnableSelectedEndpointIds,
         judgeEndpointId,
         mode,
         useJudge: true,
@@ -584,7 +621,7 @@ export default function ControlBenchmarkRoute() {
       setRunning(false);
       sessionStorage.removeItem(ACTIVE_BENCHMARK_RUN_KEY);
     }
-  }, [judgeEndpointId, mode, selectedEndpointIds]);
+  }, [judgeEndpointId, mode, runnableEndpointIds, selectedEndpointIds]);
 
   const clearEndpointRoutingProfile = useCallback(
     async (endpointId: string) => {
@@ -734,19 +771,19 @@ export default function ControlBenchmarkRoute() {
               <div key={row.endpointId} className={listRowClassName}>
                 <div className="space-y-3">
                   <div>
-                    <p className="font-medium text-[var(--rm-fg)]">{row.modelId}</p>
+                    <p className="font-semibold text-[var(--rm-fg)]">{row.modelId}</p>
                     <p className="text-sm text-[var(--rm-secondary)]">{row.endpointId}</p>
                   </div>
 
                   <div className="grid gap-2 text-sm text-[var(--rm-secondary)] md:grid-cols-2">
                     <p>
-                      <span className="font-medium text-[var(--rm-fg)]">Benchmark overall:</span>{" "}
+                      <span className="font-semibold text-[var(--rm-fg)]">Benchmark overall:</span>{" "}
                       {row.caseResults?.length
                         ? formatScoreFraction(row.overallScore, row.caseResults.length)
                         : formatScore(row.overallScore)}
                     </p>
                     <p>
-                      <span className="font-medium text-[var(--rm-fg)]">
+                      <span className="font-semibold text-[var(--rm-fg)]">
                         Profile quality score:
                       </span>{" "}
                       {formatScore(row.profileQualityScore)}
@@ -755,14 +792,14 @@ export default function ControlBenchmarkRoute() {
                         : ""}
                     </p>
                     <p>
-                      <span className="font-medium text-[var(--rm-fg)]">Benchmark latency:</span>{" "}
+                      <span className="font-semibold text-[var(--rm-fg)]">Benchmark latency:</span>{" "}
                       p50 {formatLatencyMs(row.latencyP50)} • p95 {formatLatencyMs(row.latencyP95)}
                     </p>
                   </div>
 
                   {row.scoresByBucket ? (
                     <p className="text-sm text-[var(--rm-secondary)]">
-                      <span className="font-medium text-[var(--rm-fg)]">By difficulty:</span> easy{" "}
+                      <span className="font-semibold text-[var(--rm-fg)]">By difficulty:</span> easy{" "}
                       {formatScore(row.scoresByBucket.easy.score)} • medium{" "}
                       {formatScore(row.scoresByBucket.medium.score)} • hard{" "}
                       {formatScore(row.scoresByBucket.hard.score)}
@@ -770,7 +807,7 @@ export default function ControlBenchmarkRoute() {
                   ) : null}
 
                   <p className="text-sm leading-6 text-[var(--rm-secondary)]">
-                    <span className="font-medium text-[var(--rm-fg)]">Routing impact:</span>{" "}
+                    <span className="font-semibold text-[var(--rm-fg)]">Routing impact:</span>{" "}
                     {describeRoutingImpact(row.candidate)}
                   </p>
 
@@ -791,7 +828,7 @@ export default function ControlBenchmarkRoute() {
 
                   {row.caseResults && row.caseResults.length > 0 ? (
                     <details className="text-sm text-[var(--rm-secondary)]">
-                      <summary className="cursor-pointer font-medium text-[var(--rm-fg)]">
+                      <summary className="cursor-pointer font-semibold text-[var(--rm-fg)]">
                         Per-case benchmark results
                       </summary>
                       <div className="mt-3 space-y-2">
@@ -800,9 +837,9 @@ export default function ControlBenchmarkRoute() {
                           return (
                             <div
                               key={caseResult.caseId}
-                              className="rounded-none border border-[var(--rm-border)] p-3"
+                              className="rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] p-3"
                             >
-                              <p className="font-medium text-[var(--rm-fg)]">
+                              <p className="font-semibold text-[var(--rm-fg)]">
                                 {caseResult.caseId} • {formatScore(caseResult.score)} •{" "}
                                 {caseResult.difficultyBucket} •{" "}
                                 {formatLatencyMs(caseResult.latencyMs)}
@@ -824,7 +861,7 @@ export default function ControlBenchmarkRoute() {
                               <p>{caseResult.rationale}</p>
                               {compareResult ? (
                                 <p className="mt-2 text-xs text-[var(--rm-secondary)]">
-                                  <span className="font-medium text-[var(--rm-fg)]">
+                                  <span className="font-semibold text-[var(--rm-fg)]">
                                     Head-to-head ranking:
                                   </span>{" "}
                                   {compareResult.relativeRanking.join(" › ")}
@@ -908,64 +945,65 @@ export default function ControlBenchmarkRoute() {
         </div>
 
         <div className="mt-4 grid gap-4 md:grid-cols-2">
-          <label className="space-y-2 text-sm text-[var(--rm-secondary)]">
-            <span>Benchmark mode</span>
-            <select
-              className={fieldClassName}
-              value={mode}
-              onChange={(event) => setMode(event.target.value === "full" ? "full" : "quick")}
-            >
-              <option value="quick">Quick (12 hard cases)</option>
-              <option value="full">Full (all eligible cases)</option>
-            </select>
-          </label>
-          <label className="space-y-2 text-sm text-[var(--rm-secondary)]">
-            <span>Judge endpoint (grading only)</span>
-            <select
-              className={fieldClassName}
-              value={judgeEndpointId}
-              onChange={(event) => {
-                const nextJudgeEndpointId = event.target.value;
-                setJudgeEndpointId(nextJudgeEndpointId);
-                void updateBenchmarkPreferences({ judgeEndpointId: nextJudgeEndpointId }).catch(
-                  () => undefined,
-                );
-              }}
-            >
-              {candidates.map((candidate) => (
-                <option key={candidate.endpointId} value={candidate.endpointId}>
-                  {candidate.modelId} ({candidate.sourceType})
-                </option>
-              ))}
-            </select>
-          </label>
+          <SelectField
+            label="Benchmark mode"
+            value={mode}
+            onChange={(value) => setMode(value === "full" ? "full" : "quick")}
+          >
+            <option value="quick">Quick (12 hard cases)</option>
+            <option value="full">Full (all eligible cases)</option>
+          </SelectField>
+          <SelectField
+            label="Judge endpoint (grading only)"
+            value={judgeEndpointId}
+            onChange={(value) => {
+              setJudgeEndpointId(value);
+              void updateBenchmarkPreferences({ judgeEndpointId: value }).catch(() => undefined);
+            }}
+          >
+            {runnableCandidates.map((candidate) => (
+              <option key={candidate.endpointId} value={candidate.endpointId}>
+                {candidate.modelId} ({candidate.sourceType})
+              </option>
+            ))}
+          </SelectField>
         </div>
 
         <div className="mt-4 space-y-2">
-          <p className="text-sm font-medium text-[var(--rm-fg)]">Endpoints to grade</p>
+          <p className="text-sm font-semibold text-[var(--rm-fg)]">Endpoints to grade</p>
           <div className="space-y-2">
             {candidates.map((candidate) => (
               <label
                 key={candidate.endpointId}
-                className={`${mutedPanelClassName} flex cursor-pointer items-start gap-3 p-3`}
+                className={`${mutedPanelClassName} flex items-start gap-3 p-3 ${
+                  isBenchmarkRunnableCandidate(candidate)
+                    ? "cursor-pointer"
+                    : "cursor-not-allowed opacity-60"
+                }`}
               >
                 <input
                   type="checkbox"
                   checked={selectedEndpointIds.includes(candidate.endpointId)}
+                  disabled={!isBenchmarkRunnableCandidate(candidate)}
                   onChange={() => toggleEndpoint(candidate.endpointId)}
                 />
                 <span className="space-y-1">
-                  <span className="block font-medium text-[var(--rm-fg)]">{candidate.modelId}</span>
+                  <span className="block font-semibold text-[var(--rm-fg)]">{candidate.modelId}</span>
                   <span className="block text-sm text-[var(--rm-secondary)]">
                     {candidate.endpointId}
                   </span>
+                  {!isBenchmarkRunnableCandidate(candidate) ? (
+                    <span className="block text-xs font-semibold uppercase tracking-[0.18em] text-[var(--rm-secondary)]">
+                      Excluded by current execution mode
+                    </span>
+                  ) : null}
                 </span>
               </label>
             ))}
           </div>
         </div>
 
-        <div className="mt-6 border-t border-[var(--rm-border)] pt-4">
+        <div className="mt-6">
           <button
             type="button"
             className={primaryButtonClassName}
@@ -981,7 +1019,7 @@ export default function ControlBenchmarkRoute() {
         {running ? (
           <div className={`${mutedPanelClassName} mt-4 space-y-3 p-4`}>
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className="font-medium text-[var(--rm-fg)]">
+              <p className="font-semibold text-[var(--rm-fg)]">
                 {progressDescription?.phaseLabel ?? "Benchmark in progress"}
               </p>
               <StatusPill tone={progressStalled ? "warning" : "accent"}>
@@ -1003,7 +1041,7 @@ export default function ControlBenchmarkRoute() {
               <p className="text-sm text-[var(--rm-fg)]">{progressDescription.detail}</p>
             ) : null}
             {progressStalled ? (
-              <p className="text-sm text-amber-700">
+              <p className="text-sm text-[var(--rm-warning)]">
                 No progress update in the last 90 seconds. The run may still be waiting on a slow
                 model response.
               </p>
@@ -1011,7 +1049,7 @@ export default function ControlBenchmarkRoute() {
           </div>
         ) : null}
 
-        {error ? <p className="mt-4 text-sm text-red-600">{error}</p> : null}
+        {error ? <p className="mt-4 text-sm text-[var(--rm-error)]">{error}</p> : null}
       </SectionCard>
 
       <SectionCard
@@ -1025,7 +1063,7 @@ export default function ControlBenchmarkRoute() {
             {runHistory.map((run) => (
               <div key={run.runId} className={listRowClassName}>
                 <div>
-                  <p className="font-medium text-[var(--rm-fg)]">{run.runId}</p>
+                  <p className="font-semibold text-[var(--rm-fg)]">{run.runId}</p>
                   <p className="text-sm text-[var(--rm-secondary)]">
                     {run.mode} • {run.caseCount} cases • {run.endpointIds.length} model
                     {run.endpointIds.length === 1 ? "" : "s"}
@@ -1042,7 +1080,7 @@ export default function ControlBenchmarkRoute() {
           </div>
         )}
 
-        <div className="mt-6 border-t border-[var(--rm-border)] pt-4">
+        <div className="mt-6">
           <button
             type="button"
             className={secondaryButtonClassName}

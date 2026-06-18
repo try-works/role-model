@@ -1,0 +1,134 @@
+{
+  "generatedAt": "2026-06-17T17:00:18.922Z",
+  "baseUrl": "http://127.0.0.1:3456",
+  "routes": [
+    {
+      "url": "http://127.0.0.1:3456/app",
+      "errorLike": false,
+      "headingCount": 11,
+      "recharts": 12,
+      "svgCount": 6,
+      "seededTerms": [
+        "openai/gpt-4.1-mini-fast",
+        "gpt-5.4",
+        "req-phase5-006",
+        "1400"
+      ],
+      "requiredActualHeadings": [
+        "Token Usage Over Time",
+        "Effective Cost Over Time",
+        "Cost Avoided Over Time",
+        "Latency Trend",
+        "Cache Efficiency Trend",
+        "Success vs Failure Volume"
+      ],
+      "missingActualHeadings": [],
+      "passed": true
+    },
+    {
+      "url": "http://127.0.0.1:3456/app/observe/requests",
+      "errorLike": false,
+      "headingCount": 12,
+      "recharts": 14,
+      "svgCount": 7,
+      "seededTerms": [
+        "req-phase5-006",
+        "$0.0310",
+        "1400"
+      ],
+      "requiredActualHeadings": [
+        "Request Volume Over Time",
+        "Token Usage Over Time",
+        "Effective Cost Over Time",
+        "Latency Trend",
+        "Cache Efficiency Trend",
+        "Failure Trend",
+        "Ranked Comparison"
+      ],
+      "missingActualHeadings": [],
+      "passed": true
+    },
+    {
+      "url": "http://127.0.0.1:3456/app/observe/routing",
+      "errorLike": false,
+      "headingCount": 9,
+      "recharts": 12,
+      "svgCount": 6,
+      "seededTerms": [
+        "openai/gpt-4.1-mini-fast",
+        "gpt-5.4",
+        "anthropic/claude-3.7-sonnet"
+      ],
+      "requiredActualHeadings": [
+        "Cost Avoided By Routing",
+        "Routing Decision Volume",
+        "Difficulty Distribution",
+        "Strategy Selection Trend",
+        "Role Demand",
+        "Model Selection"
+      ],
+      "missingActualHeadings": [],
+      "passed": true
+    },
+    {
+      "url": "http://127.0.0.1:3456/app/observe/activity",
+      "errorLike": false,
+      "headingCount": 5,
+      "recharts": 0,
+      "svgCount": 0,
+      "seededTerms": [
+        "openai/gpt-4.1-mini-fast",
+        "gpt-5.4",
+        "anthropic/claude-3.7-sonnet",
+        "req-phase5-006",
+        "1400"
+      ],
+      "requiredActualHeadings": [],
+      "missingActualHeadings": [],
+      "passed": true
+    },
+    {
+      "url": "http://127.0.0.1:3456/app/observe/logs",
+      "errorLike": false,
+      "headingCount": 7,
+      "recharts": 0,
+      "svgCount": 0,
+      "seededTerms": [],
+      "requiredActualHeadings": [],
+      "missingActualHeadings": [],
+      "passed": true
+    },
+    {
+      "url": "http://127.0.0.1:3456/app/local/endpoints",
+      "errorLike": false,
+      "headingCount": 4,
+      "recharts": 0,
+      "svgCount": 0,
+      "seededTerms": [],
+      "requiredActualHeadings": [],
+      "missingActualHeadings": [],
+      "passed": true
+    },
+    {
+      "url": "http://127.0.0.1:3456/app/observe/requests/req-phase5-006",
+      "errorLike": false,
+      "headingCount": 6,
+      "recharts": 0,
+      "svgCount": 0,
+      "seededTerms": [
+        "openai/gpt-4.1-mini-fast",
+        "req-phase5-006",
+        "$0.0310"
+      ],
+      "requiredActualHeadings": [
+        "req-phase5-006",
+        "Cost audit",
+        "Telemetry summary",
+        "Observed performance"
+      ],
+      "missingActualHeadings": [],
+      "passed": true
+    }
+  ],
+  "passed": true
+}

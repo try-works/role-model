@@ -1,0 +1,17 @@
+{
+  "controlButtons": [
+    "Day",
+    "Week",
+    "Month",
+    "90 days",
+    "Total",
+    "All sources"
+  ],
+  "hasHeaderControls": true,
+  "headerContainsDayWeekMonth": true,
+  "headerContainsSelectLabels": true,
+  "mainContainsTelemetryControlsHeading": false,
+  "mainFirstSectionText": "Token Usage Over TimeInput, output, and total token flow across the selected telemetry window.Jun 10Jun 11Jun 12Jun 13Ju",
+  "sectionCount": 8,
+  "url": "http://127.0.0.1:3456/app"
+}

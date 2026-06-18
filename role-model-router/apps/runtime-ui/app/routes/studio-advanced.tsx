@@ -7,6 +7,7 @@ import {
   FactCard,
   LoadingState,
   SectionCard,
+  SelectField,
 } from "../components/page-primitives";
 import {
   fieldClassName,
@@ -185,11 +186,11 @@ export default function StudioAdvancedRoute() {
           description="Advanced request families use the same execution-ready model inventory as Workbench and the OpenAI-compatible bridge surfaces."
         >
           <div className="mb-4 flex flex-wrap gap-3">
-            <span className="inline-flex items-center rounded-full border border-[var(--rm-border)] px-3 py-1 text-xs font-medium text-[var(--rm-secondary)]">
+            <span className="inline-flex items-center rounded-full border border-[var(--rm-border)] px-3 py-1 text-xs font-semibold text-[var(--rm-secondary)]">
               {lifecycleBanner.authorityLabel}
             </span>
             {lifecycleBanner.archivedStaleCount > 0 ? (
-              <span className="inline-flex items-center rounded-full border border-[var(--rm-border)] px-3 py-1 text-xs font-medium text-[var(--rm-secondary)]">
+              <span className="inline-flex items-center rounded-full border border-[var(--rm-border)] px-3 py-1 text-xs font-semibold text-[var(--rm-secondary)]">
                 Archived stale {lifecycleBanner.archivedStaleCount}
               </span>
             ) : null}
@@ -199,7 +200,7 @@ export default function StudioAdvancedRoute() {
             {blockingReadinessRows.map((row) => (
               <span
                 key={row.key}
-                className="inline-flex items-center rounded-full border border-[var(--rm-border)] px-3 py-1 text-xs font-medium text-[var(--rm-secondary)]"
+                className="inline-flex items-center rounded-full border border-[var(--rm-border)] px-3 py-1 text-xs font-semibold text-[var(--rm-secondary)]"
               >
                 {row.label} {row.value}
               </span>
@@ -225,36 +226,26 @@ export default function StudioAdvancedRoute() {
             />
           ) : (
             <form className="space-y-4" onSubmit={onSubmit}>
+              <SelectField
+                label="Family"
+                value={path}
+                onChange={(value) => setPath(value as AdvancedPath)}
+              >
+                {advancedFamilies.map((family) => (
+                  <option key={family.path} value={family.path}>
+                    {family.label}
+                  </option>
+                ))}
+              </SelectField>
+              <SelectField label="Model" value={model} onChange={setModel}>
+                {modelOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </SelectField>
               <label className="grid gap-2 text-sm">
-                <span className="font-medium text-[var(--rm-fg)]">Family</span>
-                <select
-                  className={fieldClassName}
-                  value={path}
-                  onChange={(event) => setPath(event.target.value as AdvancedPath)}
-                >
-                  {advancedFamilies.map((family) => (
-                    <option key={family.path} value={family.path}>
-                      {family.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="grid gap-2 text-sm">
-                <span className="font-medium text-[var(--rm-fg)]">Model</span>
-                <select
-                  className={fieldClassName}
-                  value={model}
-                  onChange={(event) => setModel(event.target.value)}
-                >
-                  {modelOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="grid gap-2 text-sm">
-                <span className="font-medium text-[var(--rm-fg)]">JSON payload</span>
+                <span className="font-semibold text-[var(--rm-fg)]">JSON payload</span>
                 <textarea
                   className={`${fieldClassName} min-h-72 font-mono`}
                   value={payloadText}

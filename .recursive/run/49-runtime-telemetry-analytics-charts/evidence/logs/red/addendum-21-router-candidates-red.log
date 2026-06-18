@@ -1,0 +1,254 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/49-runtime-telemetry-analytics-charts/role-model-router/apps/runtime-ui[39m
+
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mdefines navigation groups and layout templates for every runtime route[32m 8[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22muses analytics charts as the primary Observe entry point[32m 3[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mkeeps the shell on the Apple baseline with explicit chart tokens[32m 2[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mchart tokens used together resolve to distinct visual colors in each theme[32m 2[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mglobal shell chrome keeps legacy vendor ui out of the main runtime contract[32m 72[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mstudio implementation targets render repo-owned workspace sections instead of placeholder blueprints[32m 16[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mintegration and system implementation targets render live upstream and peer surfaces[32m 8[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mrouter implementation targets render repo-owned routing explanation surfaces[32m 0[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mrouter, connect registry, and remote surfaces expose alias/readiness ownership instead of generic filler[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mproviders surface exposes explicit in-place maintenance actions for saved remote accounts[32m 0[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mproviders surface uses an explicit save-cancel modal for api-key maintenance[32m 0[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mproviders surface keeps oauth reconnect as a one-click saved-account action[32m 0[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mproviders maintenance flows call explicit repair APIs instead of generic account writes[32m 0[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mproviders saved-account cards use canonical lifecycle rows and bounded archived diagnostics[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mruntime, session readiness, workbench, and advanced surfaces use canonical lifecycle diagnostics[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mrouter routes preserve empty-state and observe-link affordances[32m 0[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mmerged router overview stays observational while routing strategy owns editing controls[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mrouter overview presents runtime-config posture as source of truth[32m 1[2mms[22m[39m
+ [31m×[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mrouter overview lists the concrete candidate endpoints behind routing posture[32m 33[2mms[22m[39m
+[31m   → expected 'import { useEffect, useMemo, useState…' to contain 'fetchRouterCandidates'[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mrouting strategy benchmark advisory does not leak JSX control flow as page text[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mmeta-guidance panels stay removed from overview and observe routes[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mdesign system doc marks the converted pages as live routes[32m 2[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mcontrol routes tolerate an unassigned controller before endpoint activation[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mapplies the Apple palette, SF Pro / Inter typography, and explicit theme contract in shared app chrome[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mshared panels and provider selectors are owned by Apple-theme primitives[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mrouter strategy execution mode uses the themed select primitive[32m 0[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mproduction UI dropdowns use themed select primitives instead of native selects[32m 2[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mshared route effects avoid action identity loops and peer refresh feedback[32m 0[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mkeeps shared states calm: transparent status pills and no section divider chrome[32m 0[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mremote, models, router, and system runtime config routes are first-class pages in the retained taxonomy[32m 15[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mlocal setup surfaces stay discoverable from navigation and empty registry states[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mobserve and local log surfaces render structured ledgers rather than raw iframe placeholders[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mobserve ownership keeps requests canonical and raw-host surfaces adjacent[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mrequests and request detail stay telemetry-first while exposing raw-host handoffs[32m 0[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mactivity route frames raw-host metrics as adjacent to canonical telemetry[32m 0[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mlogs route exposes request-detail handoffs while preserving raw-host framing[32m 0[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mregistry and system layouts avoid redundant KPI strips and placeholder note panels[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mdashboard is chart-led and keeps routing analytics as a first-class handoff[32m 0[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22moverview metadata and design doc describe a telemetry-first summary with an interaction rail[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mworkbench and observe routes expose routing controls and receipts in repo-owned UI surfaces[32m 0[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mrequest detail route renders authoritative stored cost metadata[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mshell header owns route metadata and page actions without duplicate page headers[32m 2[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mshell headers do not render section eyebrow labels[32m 0[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mroutes do not register refresh controls as shell header actions[32m 0[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mlong fact-card values use compact text roles instead of display value typography[32m 0[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mproduction UI sources do not bypass Apple theme token primitives[32m 2[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mproduction UI sources keep the approved Apple radius grammar[32m 0[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mproduction UI sources avoid unsupported Apple typography weight 500[32m 0[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mchart primitives use shared design-system geometry and type tokens[32m 0[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mruntime route definitions stay slim and future scaffolds avoid duplicate header props[32m 1[2mms[22m[39m
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  app/lib/design-system.test.ts > runtime design system > router overview lists the concrete candidate endpoints behind routing posture
+AssertionError: expected 'import { useEffect, useMemo, useState…' to contain 'fetchRouterCandidates'
+
+- Expected
++ Received
+
+- fetchRouterCandidates
++ import { useEffect, useMemo, useState } from "react";
++ import { Link } from "react-router";
++
++ import {
++   EmptyState,
++   ErrorState,
++   FactCard,
++   LoadingState,
++   SectionCard,
++   StatusPill,
++ } from "../components/page-primitives";
++ import { secondaryButtonClassName } from "../lib/design-system";
++ import {
++   type RouterSummary,
++   type RuntimeConfigRecord,
++   type RuntimeSnapshot,
++   fetchRouterSummary,
++   fetchRuntimeConfig,
++   fetchRuntimeSnapshot,
++ } from "../lib/runtime-api";
++ import { usePageActions } from "../lib/shell-header-context";
++ import { buildAliasReadinessRows } from "../lib/view-models";
++
++ export default function RouterOverviewRoute() {
++   const [summary, setSummary] = useState<RouterSummary | null>(null);
++   const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(null);
++   const [configRecord, setConfigRecord] = useState<RuntimeConfigRecord | null>(null);
++   const [error, setError] = useState<string | null>(null);
++
++   useEffect(() => {
++     void Promise.all([fetchRouterSummary(), fetchRuntimeSnapshot(), fetchRuntimeConfig()])
++       .then(([nextSummary, nextSnapshot, nextConfigRecord]) => {
++         setSummary(nextSummary);
++         setSnapshot(nextSnapshot);
++         setConfigRecord(nextConfigRecord);
++         setError(null);
++       })
++       .catch((value: unknown) =>
++         setError(value instanceof Error ? value.message : "Could not load router overview."),
++       );
++   }, []);
++
++   const configuredAliasRows = useMemo(() => {
++     const runtimeAliasRows = buildAliasReadinessRows(
++       configRecord?.config?.modelAliases ?? configRecord?.config?.model_aliases ?? [],
++       snapshot?.endpoints ?? [],
++     );
++     const summaryAliasRowsById = new Map(
++       (summary?.aliasInventory ?? []).map((alias) => [alias.aliasId, alias]),
++     );
++
++     return runtimeAliasRows.map((alias) => {
++       const summaryAlias = summaryAliasRowsById.get(alias.aliasId);
++       return {
++         aliasId: alias.aliasId,
++         modeLabel: alias.modeLabel,
++         configuredModels: [...alias.modelIds],
++         candidateExpansionLabel: summaryAlias
++           ? `${summaryAlias.resolvedModelIds.length} model${
++               summaryAlias.resolvedModelIds.length === 1 ? "" : "s"
++             } / ${summaryAlias.allowEndpointIds.length} endpoint${
++               summaryAlias.allowEndpointIds.length === 1 ? "" : "s"
++             }`
++           : `${alias.endpointCount} endpoint${alias.endpointCount === 1 ? "" : "s"}`,
++         localEndpointCount: alias.localEndpointCount,
++         remoteEndpointCount: alias.remoteEndpointCount,
++         activeEndpointCount: alias.activeEndpointCount,
++         healthyEndpointCount: alias.healthyEndpointCount,
++         readinessLabel: alias.readinessLabel,
++         driftWarnings: summaryAlias?.driftWarnings ?? [],
++       };
++     });
++   }, [configRecord, snapshot, summary]);
++   usePageActions(
++     <>
++       <Link className={secondaryButtonClassName} to="/app/router/strategy">
++         Edit strategy
++       </Link>
++       <Link className={secondaryButtonClassName} to="/app/router/decisions">
++         Open decisions
++       </Link>
++     </>,
++     [],
++   );
++
++   if (error) {
++     return <ErrorState label={error} />;
++   }
++   if (!summary || !snapshot || !configRecord) {
++     return <LoadingState label="Loading router overview…" />;
++   }
++   const config = configRecord.config;
++   const configuredStrategy = config?.routingStrategy ?? null;
++   const configuredExecutionMode = config?.executionMode ?? summary.executionMode;
++
++   return (
++     <div className="space-y-6">
++       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
++         <FactCard label="Strategy" value={configuredStrategy ?? "unset"} emphasis />
++         <FactCard label="Execution mode" value={configuredExecutionMode ?? "decision_only"} />
++         <FactCard label="Controller" value={summary.controller?.modelId ?? "unassigned"} />
++         <FactCard label="Alias pools" value={String(configuredAliasRows.length)} />
++       </div>
++
++       <SectionCard title="Alias inventory">
++         {configuredAliasRows.length === 0 ? (
++           <EmptyState label="No model aliases are configured yet." />
++         ) : (
++           <div className="overflow-x-auto">
++             <table className="min-w-full text-left text-sm">
++               <thead className="text-[var(--rm-muted)]">
++                 <tr>
++                   <th className="pb-3 font-semibold">Alias</th>
++                   <th className="pb-3 font-semibold">Mode</th>
++                   <th className="pb-3 font-semibold">Configured models</th>
++                   <th className="pb-3 font-semibold">Candidate expansion</th>
++                   <th className="pb-3 font-semibold">Readiness</th>
++                 </tr>
++               </thead>
++               <tbody>
++                 {configuredAliasRows.map((row) => (
++                   <tr key={row.aliasId} className="border-t border-[var(--rm-border)]">
++                     <td className="py-3 font-semibold text-[var(--rm-fg)]">{row.aliasId}</td>
++                     <td className="py-3 text-[var(--rm-secondary)]">{row.modeLabel}</td>
++                     <td className="py-3 text-[var(--rm-secondary)]">
++                       {row.configuredModels.length > 0 ? (
++                         <div className="space-y-1">
++                           {row.configuredModels.map((modelId) => (
++                             <div key={`${row.aliasId}-configured-${modelId}`}>{modelId}</div>
++                           ))}
++                         </div>
++                       ) : (
++                         "—"
++                       )}
++                     </td>
++                     <td className="py-3 text-[var(--rm-secondary)]">
++                       {row.candidateExpansionLabel}
++                     </td>
++                     <td className="py-3">
++                       <div className="space-y-1">
++                         <StatusPill
++                           tone={
++                             row.readinessLabel === "ready"
++                               ? "success"
++                               : row.readinessLabel === "degraded"
++                                 ? "warning"
++                                 : "neutral"
++                           }
++                         >
++                           {row.readinessLabel}
++                         </StatusPill>
++                         {"driftWarnings" in row && row.driftWarnings.length > 0 ? (
++                           <div className="text-xs text-[var(--rm-muted)]">
++                             {row.driftWarnings.length} drift warning
++                             {row.driftWarnings.length === 1 ? "" : "s"}
++                           </div>
++                         ) : null}
++                       </div>
++                     </td>
++                   </tr>
++                 ))}
++               </tbody>
++             </table>
++           </div>
++         )}
++       </SectionCard>
++     </div>
++   );
++ }
++
+
+ ❯ app/lib/design-system.test.ts:814:31
+    812| 
+    813|   test("router overview lists the concrete candidate endpoints behind …
+    814|     expect(routerRouteSource).toContain("fetchRouterCandidates");
+       |                               ^
+    815|     expect(routerRouteSource).toContain("Routing candidates");
+    816|     expect(routerRouteSource).toContain("candidate.endpointId");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m49 passed[39m[22m[90m (50)[39m
+[2m   Start at [22m 23:37:02
+[2m   Duration [22m 3.09s[2m (transform 1.15s, setup 0ms, collect 1.71s, tests 189ms, environment 0ms, prepare 394ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\49-runtime-telemetry-analytics-charts\role-model-router\apps\runtime-ui:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run app/lib/design-system.test.ts --reporter=verbose

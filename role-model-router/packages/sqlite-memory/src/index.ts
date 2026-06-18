@@ -12,6 +12,79 @@ import type { ObservedPerformanceProfile } from "@role-model/protocol-types";
 
 const INITIAL_MIGRATION_ID = "run06-v1-initial-schema";
 const CURRENT_SCHEMA_VERSION = 1;
+const COST_CALCULATION_VERSION = "run49.v1";
+const RUNTIME_TELEMETRY_INSERT_COLUMNS = [
+  "request_id",
+  "routing_decision_id",
+  "endpoint_id",
+  "conversation_id",
+  "created_at_ms",
+  "client_request_id",
+  "request_class",
+  "source_type",
+  "model_id",
+  "provider_kind",
+  "provider_family",
+  "provider_id",
+  "provider_account_id",
+  "selected_model_id",
+  "endpoint_kind",
+  "serving_source",
+  "region",
+  "lifecycle_state_at_request",
+  "health_status_at_request",
+  "requested_model_id",
+  "difficulty_bucket",
+  "routing_mode",
+  "requested_role_id",
+  "selected_strategy",
+  "request_operation",
+  "status_family",
+  "tooling_used",
+  "cache_state",
+  "role_ids_json",
+  "eligible_endpoint_ids_json",
+  "eligible_model_ids_json",
+  "candidate_cost_snapshot_json",
+  "selected_pricing_snapshot_json",
+  "input_tokens",
+  "output_tokens",
+  "total_tokens",
+  "latency_ms",
+  "error_class",
+  "status_code",
+  "finish_reason",
+  "prompt_cache_requested",
+  "prompt_cache_supported",
+  "prompt_cache_used",
+  "cache_read_tokens",
+  "cache_read_tokens_supported",
+  "cache_write_tokens",
+  "cache_write_tokens_supported",
+  "stream_text_delta_count",
+  "stream_text_supported",
+  "stream_tool_call_delta_count",
+  "stream_tool_call_supported",
+  "stream_tool_argument_delta_count",
+  "stream_tool_argument_supported",
+  "tool_call_count",
+  "tool_execution_count",
+  "cost_provenance",
+  "actual_cost_usd",
+  "estimated_cost_usd",
+  "effective_cost_usd",
+  "selected_uncached_cost_usd",
+  "baseline_max_eligible_cost_usd",
+  "routing_cost_savings_usd",
+  "cache_cost_savings_usd",
+  "total_avoided_cost_usd",
+  "cost_calculation_basis",
+  "cost_calculation_version",
+  "cost_baseline_source",
+  "cost_savings_support",
+  "currency",
+  "dimensions_json",
+] as const;
 const DIFFICULTY_BUCKETS = ["easy", "medium", "hard"] as const;
 const MAINTENANCE_DEFAULTS = [
   { key: "backup.policy", value: "wal-copy-on-demand" },
@@ -19,6 +92,23 @@ const MAINTENANCE_DEFAULTS = [
   { key: "redaction.level", value: "strict" },
   { key: "retention.class", value: "standard" },
 ] as const;
+
+function isRuntimeTelemetryDifficultyBucket(
+  value: string | null | undefined,
+): value is RuntimeTelemetryRecord["difficultyBucket"] {
+  return value === "easy" || value === "medium" || value === "hard";
+}
+
+function isRuntimeTelemetryRoutingMode(
+  value: string | null | undefined,
+): value is RuntimeTelemetryRecord["routingMode"] {
+  return (
+    value === "baseline" ||
+    value === "difficulty" ||
+    value === "controller" ||
+    value === "hybrid"
+  );
+}
 
 const SCHEMA_SQL = `
 CREATE TABLE IF NOT EXISTS provider_accounts (
@@ -180,6 +270,28 @@ CREATE TABLE IF NOT EXISTS runtime_telemetry_records (
   model_id TEXT,
   provider_kind TEXT,
   provider_family TEXT,
+  provider_id TEXT,
+  provider_account_id TEXT,
+  selected_model_id TEXT,
+  endpoint_kind TEXT,
+  serving_source TEXT,
+  region TEXT,
+  lifecycle_state_at_request TEXT,
+  health_status_at_request TEXT,
+  requested_model_id TEXT,
+  difficulty_bucket TEXT,
+  routing_mode TEXT,
+  requested_role_id TEXT,
+  selected_strategy TEXT,
+  request_operation TEXT,
+  status_family TEXT,
+  tooling_used INTEGER NOT NULL DEFAULT 0,
+  cache_state TEXT,
+  role_ids_json TEXT NOT NULL DEFAULT '[]',
+  eligible_endpoint_ids_json TEXT NOT NULL DEFAULT '[]',
+  eligible_model_ids_json TEXT NOT NULL DEFAULT '[]',
+  candidate_cost_snapshot_json TEXT,
+  selected_pricing_snapshot_json TEXT,
   input_tokens INTEGER NOT NULL,
   output_tokens INTEGER NOT NULL,
   total_tokens INTEGER NOT NULL,
@@ -205,7 +317,18 @@ CREATE TABLE IF NOT EXISTS runtime_telemetry_records (
   cost_provenance TEXT NOT NULL DEFAULT 'unavailable',
   actual_cost_usd REAL,
   estimated_cost_usd REAL,
-  currency TEXT
+  effective_cost_usd REAL NOT NULL DEFAULT 0,
+  selected_uncached_cost_usd REAL,
+  baseline_max_eligible_cost_usd REAL,
+  routing_cost_savings_usd REAL NOT NULL DEFAULT 0,
+  cache_cost_savings_usd REAL NOT NULL DEFAULT 0,
+  total_avoided_cost_usd REAL NOT NULL DEFAULT 0,
+  cost_calculation_basis TEXT NOT NULL DEFAULT 'unavailable',
+  cost_calculation_version TEXT NOT NULL DEFAULT 'run49.v1',
+  cost_baseline_source TEXT,
+  cost_savings_support TEXT,
+  currency TEXT,
+  dimensions_json TEXT
  );
 CREATE INDEX IF NOT EXISTS runtime_telemetry_records_created_at_idx
   ON runtime_telemetry_records (created_at_ms DESC, request_id DESC);
@@ -615,6 +738,28 @@ export interface RuntimeTelemetryRecord {
   readonly modelId: string | null;
   readonly providerKind: string | null;
   readonly providerFamily: string | null;
+  readonly providerId: string | null;
+  readonly providerAccountId: string | null;
+  readonly selectedModelId: string | null;
+  readonly endpointKind: string | null;
+  readonly servingSource: string | null;
+  readonly region: string | null;
+  readonly lifecycleStateAtRequest: string | null;
+  readonly healthStatusAtRequest: string | null;
+  readonly requestedModelId: string | null;
+  readonly difficultyBucket: "easy" | "medium" | "hard" | null;
+  readonly routingMode: "baseline" | "difficulty" | "controller" | "hybrid" | null;
+  readonly requestedRoleId: string | null;
+  readonly selectedStrategy: string | null;
+  readonly requestOperation: string | null;
+  readonly statusFamily: "success" | "failure" | "unknown" | null;
+  readonly toolingUsed: boolean;
+  readonly cacheState: string | null;
+  readonly roleIds: readonly string[];
+  readonly eligibleEndpointIds: readonly string[];
+  readonly eligibleModelIds: readonly string[];
+  readonly candidateCostSnapshot: Record<string, unknown> | null;
+  readonly selectedPricingSnapshot: Record<string, unknown> | null;
   readonly inputTokens: number;
   readonly outputTokens: number;
   readonly totalTokens: number;
@@ -640,7 +785,22 @@ export interface RuntimeTelemetryRecord {
   readonly costProvenance: "actual" | "estimated" | "unavailable";
   readonly actualCostUsd: number | null;
   readonly estimatedCostUsd: number | null;
+  readonly effectiveCostUsd: number;
+  readonly selectedUncachedCostUsd: number | null;
+  readonly baselineMaxEligibleCostUsd: number | null;
+  readonly routingCostSavingsUsd: number;
+  readonly cacheCostSavingsUsd: number;
+  readonly totalAvoidedCostUsd: number;
+  readonly costCalculationBasis:
+    | "actual_vendor_cost"
+    | "estimated_vendor_cost"
+    | "no_execution_zero"
+    | "unavailable";
+  readonly costCalculationVersion: string;
+  readonly costBaselineSource: string | null;
+  readonly costSavingsSupport: string | null;
   readonly currency: string | null;
+  readonly dimensions: Record<string, unknown> | null;
 }
 
 export interface RuntimeTelemetrySummary {
@@ -684,6 +844,7 @@ export interface RuntimeTelemetryQueryInput {
   readonly windowMs?: number;
   readonly limit?: number;
   readonly endAtMs?: number;
+  readonly startAtMs?: number;
 }
 
 export interface PersistedRuntimeObservationBundle {
@@ -739,9 +900,58 @@ export interface PersistedRuntimeObservationBundle {
     };
     readonly costProvenance?: "actual" | "estimated" | "unavailable";
   };
+  readonly routingDiagnostics?: {
+    readonly routingMode?: {
+      readonly effectiveMode?: string | null;
+    };
+    readonly rolePolicy?: {
+      readonly requestedRoleId?: string | null;
+    };
+    readonly controllerRouting?: {
+      readonly acceptedDirectives?: {
+        readonly strategy?: string | null;
+        readonly requestedRoleId?: string | null;
+      };
+    };
+    readonly hybridArbitration?: {
+      readonly finalStrategy?: string | null;
+    };
+    readonly difficultyRouting?: {
+      readonly difficulty?: string | null;
+      readonly strategy?: string | null;
+    };
+  };
   readonly tooling?: {
     readonly toolCalls?: readonly unknown[];
     readonly executions?: readonly unknown[];
+  };
+  readonly telemetrySnapshot?: {
+    readonly providerId: string | null;
+    readonly providerAccountId: string | null;
+    readonly sourceType: "local" | "remote";
+    readonly endpointKind: string;
+    readonly servingSource: string;
+    readonly region: string | null;
+    readonly lifecycleStateAtRequest: string;
+    readonly healthStatusAtRequest: string | null;
+    readonly requestedModelId: string | null;
+    readonly selectedModelId?: string | null;
+    readonly requestOperation: string;
+    readonly roleIds: readonly string[];
+    readonly toolingUsed: boolean;
+    readonly cacheState: string;
+    readonly eligibleEndpointIds: readonly string[];
+    readonly eligibleModelIds: readonly string[];
+    readonly candidateCostSnapshot: Record<string, unknown>;
+    readonly selectedPricingSnapshot: Record<string, unknown> | null;
+    readonly selectedUncachedCostUsd: number | null;
+    readonly baselineMaxEligibleCostUsd: number | null;
+    readonly routingCostSavingsUsd: number;
+    readonly cacheCostSavingsUsd: number;
+    readonly totalAvoidedCostUsd: number;
+    readonly costBaselineSource: string | null;
+    readonly costSavingsSupport: string | null;
+    readonly dimensions?: Record<string, unknown>;
   };
   readonly inspection?: {
     readonly request?: {
@@ -791,6 +1001,28 @@ function initializeSchema(database: DatabaseSync): void {
     "request_class TEXT",
     "source_type TEXT",
     "provider_family TEXT",
+    "provider_id TEXT",
+    "provider_account_id TEXT",
+    "selected_model_id TEXT",
+    "endpoint_kind TEXT",
+    "serving_source TEXT",
+    "region TEXT",
+    "lifecycle_state_at_request TEXT",
+    "health_status_at_request TEXT",
+    "requested_model_id TEXT",
+    "difficulty_bucket TEXT",
+    "routing_mode TEXT",
+    "requested_role_id TEXT",
+    "selected_strategy TEXT",
+    "request_operation TEXT",
+    "status_family TEXT",
+    "tooling_used INTEGER NOT NULL DEFAULT 0",
+    "cache_state TEXT",
+    "role_ids_json TEXT NOT NULL DEFAULT '[]'",
+    "eligible_endpoint_ids_json TEXT NOT NULL DEFAULT '[]'",
+    "eligible_model_ids_json TEXT NOT NULL DEFAULT '[]'",
+    "candidate_cost_snapshot_json TEXT",
+    "selected_pricing_snapshot_json TEXT",
     "finish_reason TEXT",
     "prompt_cache_supported INTEGER NOT NULL DEFAULT 0",
     "cache_read_tokens_supported INTEGER NOT NULL DEFAULT 0",
@@ -802,6 +1034,17 @@ function initializeSchema(database: DatabaseSync): void {
     "stream_tool_argument_delta_count INTEGER NOT NULL DEFAULT 0",
     "stream_tool_argument_supported INTEGER NOT NULL DEFAULT 0",
     "cost_provenance TEXT NOT NULL DEFAULT 'unavailable'",
+    "effective_cost_usd REAL NOT NULL DEFAULT 0",
+    "selected_uncached_cost_usd REAL",
+    "baseline_max_eligible_cost_usd REAL",
+    "routing_cost_savings_usd REAL NOT NULL DEFAULT 0",
+    "cache_cost_savings_usd REAL NOT NULL DEFAULT 0",
+    "total_avoided_cost_usd REAL NOT NULL DEFAULT 0",
+    "cost_calculation_basis TEXT NOT NULL DEFAULT 'unavailable'",
+    `cost_calculation_version TEXT NOT NULL DEFAULT '${COST_CALCULATION_VERSION}'`,
+    "cost_baseline_source TEXT",
+    "cost_savings_support TEXT",
+    "dimensions_json TEXT",
   ] as const;
   for (const definition of telemetryColumnDefinitions) {
     const [columnName] = definition.split(" ");
@@ -1651,6 +1894,28 @@ function mapRuntimeTelemetryRecord(row: {
   model_id: string | null;
   provider_kind: string | null;
   provider_family: string | null;
+  provider_id: string | null;
+  provider_account_id: string | null;
+  selected_model_id: string | null;
+  endpoint_kind: string | null;
+  serving_source: string | null;
+  region: string | null;
+  lifecycle_state_at_request: string | null;
+  health_status_at_request: string | null;
+  requested_model_id: string | null;
+  difficulty_bucket: string | null;
+  routing_mode: string | null;
+  requested_role_id: string | null;
+  selected_strategy: string | null;
+  request_operation: string | null;
+  status_family: string | null;
+  tooling_used: number;
+  cache_state: string | null;
+  role_ids_json: string | null;
+  eligible_endpoint_ids_json: string | null;
+  eligible_model_ids_json: string | null;
+  candidate_cost_snapshot_json: string | null;
+  selected_pricing_snapshot_json: string | null;
   input_tokens: number;
   output_tokens: number;
   total_tokens: number;
@@ -1676,7 +1941,18 @@ function mapRuntimeTelemetryRecord(row: {
   cost_provenance: string;
   actual_cost_usd: number | null;
   estimated_cost_usd: number | null;
+  effective_cost_usd: number;
+  selected_uncached_cost_usd: number | null;
+  baseline_max_eligible_cost_usd: number | null;
+  routing_cost_savings_usd: number;
+  cache_cost_savings_usd: number;
+  total_avoided_cost_usd: number;
+  cost_calculation_basis: string;
+  cost_calculation_version: string | null;
+  cost_baseline_source: string | null;
+  cost_savings_support: string | null;
   currency: string | null;
+  dimensions_json: string | null;
 }): RuntimeTelemetryRecord {
   return {
     requestId: row.request_id,
@@ -1696,6 +1972,52 @@ function mapRuntimeTelemetryRecord(row: {
     modelId: row.model_id,
     providerKind: row.provider_kind,
     providerFamily: row.provider_family,
+    providerId: row.provider_id,
+    providerAccountId: row.provider_account_id,
+    selectedModelId: row.selected_model_id,
+    endpointKind: row.endpoint_kind,
+    servingSource: row.serving_source,
+    region: row.region,
+    lifecycleStateAtRequest: row.lifecycle_state_at_request,
+    healthStatusAtRequest: row.health_status_at_request,
+    requestedModelId: row.requested_model_id,
+    difficultyBucket:
+      row.difficulty_bucket === "easy" ||
+      row.difficulty_bucket === "medium" ||
+      row.difficulty_bucket === "hard"
+        ? row.difficulty_bucket
+        : null,
+    routingMode:
+      row.routing_mode === "baseline" ||
+      row.routing_mode === "difficulty" ||
+      row.routing_mode === "controller" ||
+      row.routing_mode === "hybrid"
+        ? row.routing_mode
+        : null,
+    requestedRoleId: row.requested_role_id,
+    selectedStrategy: row.selected_strategy,
+    requestOperation: row.request_operation,
+    statusFamily:
+      row.status_family === "success" ||
+      row.status_family === "failure" ||
+      row.status_family === "unknown"
+        ? row.status_family
+        : null,
+    toolingUsed: row.tooling_used === 1,
+    cacheState: row.cache_state,
+    roleIds: row.role_ids_json ? (JSON.parse(row.role_ids_json) as string[]) : [],
+    eligibleEndpointIds: row.eligible_endpoint_ids_json
+      ? (JSON.parse(row.eligible_endpoint_ids_json) as string[])
+      : [],
+    eligibleModelIds: row.eligible_model_ids_json
+      ? (JSON.parse(row.eligible_model_ids_json) as string[])
+      : [],
+    candidateCostSnapshot: row.candidate_cost_snapshot_json
+      ? (JSON.parse(row.candidate_cost_snapshot_json) as Record<string, unknown>)
+      : null,
+    selectedPricingSnapshot: row.selected_pricing_snapshot_json
+      ? (JSON.parse(row.selected_pricing_snapshot_json) as Record<string, unknown>)
+      : null,
     inputTokens: row.input_tokens,
     outputTokens: row.output_tokens,
     totalTokens: row.total_tokens,
@@ -1721,7 +2043,25 @@ function mapRuntimeTelemetryRecord(row: {
     costProvenance: row.cost_provenance as RuntimeTelemetryRecord["costProvenance"],
     actualCostUsd: row.actual_cost_usd,
     estimatedCostUsd: row.estimated_cost_usd,
+    effectiveCostUsd: row.effective_cost_usd,
+    selectedUncachedCostUsd: row.selected_uncached_cost_usd,
+    baselineMaxEligibleCostUsd: row.baseline_max_eligible_cost_usd,
+    routingCostSavingsUsd: row.routing_cost_savings_usd,
+    cacheCostSavingsUsd: row.cache_cost_savings_usd,
+    totalAvoidedCostUsd: row.total_avoided_cost_usd,
+    costCalculationBasis:
+      row.cost_calculation_basis === "actual_vendor_cost" ||
+      row.cost_calculation_basis === "estimated_vendor_cost" ||
+      row.cost_calculation_basis === "no_execution_zero"
+        ? row.cost_calculation_basis
+        : "unavailable",
+    costCalculationVersion: row.cost_calculation_version ?? COST_CALCULATION_VERSION,
+    costBaselineSource: row.cost_baseline_source,
+    costSavingsSupport: row.cost_savings_support,
     currency: row.currency,
+    dimensions: row.dimensions_json
+      ? (JSON.parse(row.dimensions_json) as Record<string, unknown>)
+      : null,
   };
 }
 
@@ -1732,6 +2072,47 @@ function toRuntimeTelemetryRecord(
   const outputTokens = observation.usageEvent.tokens_out ?? 0;
   const executionTelemetry = observation.executionTelemetry;
   const streamSupport = executionTelemetry?.streamSupport;
+  const actualCostUsd = observation.usageEvent.cost_actual ?? null;
+  const estimatedCostUsd = observation.usageEvent.cost_estimate ?? null;
+  const effectiveCostUsd = actualCostUsd ?? estimatedCostUsd ?? 0;
+  const costCalculationBasis: RuntimeTelemetryRecord["costCalculationBasis"] =
+    typeof actualCostUsd === "number"
+      ? "actual_vendor_cost"
+      : typeof estimatedCostUsd === "number"
+        ? "estimated_vendor_cost"
+        : "unavailable";
+  const routingDiagnostics = observation.routingDiagnostics;
+  const telemetrySnapshot = observation.telemetrySnapshot;
+  const difficultyBucketCandidate =
+    routingDiagnostics?.difficultyRouting?.difficulty ??
+    observation.observedPerformance.sample.difficulty_bucket ??
+    null;
+  const difficultyBucket: RuntimeTelemetryRecord["difficultyBucket"] =
+    isRuntimeTelemetryDifficultyBucket(difficultyBucketCandidate)
+      ? difficultyBucketCandidate
+      : null;
+  const routingModeCandidate = routingDiagnostics?.routingMode?.effectiveMode ?? null;
+  const routingMode: RuntimeTelemetryRecord["routingMode"] = isRuntimeTelemetryRoutingMode(
+    routingModeCandidate,
+  )
+    ? routingModeCandidate
+    : null;
+  const selectedStrategy =
+    routingDiagnostics?.hybridArbitration?.finalStrategy ??
+    routingDiagnostics?.controllerRouting?.acceptedDirectives?.strategy ??
+    routingDiagnostics?.difficultyRouting?.strategy ??
+    (routingMode ? "balanced" : null);
+  const statusCode = observation.inspection?.request?.responseCapture?.statusCode ?? null;
+  const errorClass =
+    observation.usageEvent.error_class ?? observation.observedPerformance.sample.error_class ?? null;
+  const statusFamily: RuntimeTelemetryRecord["statusFamily"] =
+    typeof statusCode === "number"
+      ? statusCode >= 200 && statusCode < 400
+        ? "success"
+        : "failure"
+      : errorClass
+        ? "failure"
+        : "unknown";
   return {
     requestId: observation.requestId,
     routingDecisionId: observation.routingDecisionId,
@@ -1744,10 +2125,38 @@ function toRuntimeTelemetryRecord(
       observation.observedPerformance.sample.source_type === "live_request"
         ? observation.observedPerformance.sample.source_type
         : "unknown",
-    sourceType: null,
+    sourceType: telemetrySnapshot?.sourceType ?? null,
     modelId: observation.usageEvent.model_id ?? null,
     providerKind: observation.usageEvent.provider_kind ?? null,
     providerFamily: executionTelemetry?.providerFamily ?? null,
+    providerId: telemetrySnapshot?.providerId ?? null,
+    providerAccountId: telemetrySnapshot?.providerAccountId ?? null,
+    selectedModelId: telemetrySnapshot?.selectedModelId ?? observation.usageEvent.model_id ?? null,
+    endpointKind: telemetrySnapshot?.endpointKind ?? null,
+    servingSource: telemetrySnapshot?.servingSource ?? null,
+    region: telemetrySnapshot?.region ?? null,
+    lifecycleStateAtRequest: telemetrySnapshot?.lifecycleStateAtRequest ?? null,
+    healthStatusAtRequest: telemetrySnapshot?.healthStatusAtRequest ?? null,
+    requestedModelId: telemetrySnapshot?.requestedModelId ?? null,
+    difficultyBucket,
+    routingMode,
+    requestedRoleId:
+      routingDiagnostics?.rolePolicy?.requestedRoleId ??
+      routingDiagnostics?.controllerRouting?.acceptedDirectives?.requestedRoleId ??
+      null,
+    selectedStrategy,
+    requestOperation: telemetrySnapshot?.requestOperation ?? null,
+    statusFamily,
+    toolingUsed:
+      telemetrySnapshot?.toolingUsed ??
+      ((observation.tooling?.toolCalls?.length ?? 0) > 0 ||
+        (observation.tooling?.executions?.length ?? 0) > 0),
+    cacheState: telemetrySnapshot?.cacheState ?? null,
+    roleIds: telemetrySnapshot?.roleIds ?? [],
+    eligibleEndpointIds: telemetrySnapshot?.eligibleEndpointIds ?? [],
+    eligibleModelIds: telemetrySnapshot?.eligibleModelIds ?? [],
+    candidateCostSnapshot: telemetrySnapshot?.candidateCostSnapshot ?? null,
+    selectedPricingSnapshot: telemetrySnapshot?.selectedPricingSnapshot ?? null,
     inputTokens,
     outputTokens,
     totalTokens: inputTokens + outputTokens,
@@ -1755,11 +2164,8 @@ function toRuntimeTelemetryRecord(
       observation.usageEvent.latency_ms ??
       observation.observedPerformance.sample.latency_ms ??
       null,
-    errorClass:
-      observation.usageEvent.error_class ??
-      observation.observedPerformance.sample.error_class ??
-      null,
-    statusCode: observation.inspection?.request?.responseCapture?.statusCode ?? null,
+    errorClass,
+    statusCode,
     finishReason: executionTelemetry?.finishReason ?? null,
     promptCacheRequested: observation.cacheObservability?.promptCacheRequested ?? false,
     promptCacheSupported: executionTelemetry?.promptCaching?.supported ?? false,
@@ -1777,9 +2183,177 @@ function toRuntimeTelemetryRecord(
     toolCallCount: observation.tooling?.toolCalls?.length ?? 0,
     toolExecutionCount: observation.tooling?.executions?.length ?? 0,
     costProvenance: executionTelemetry?.costProvenance ?? "unavailable",
-    actualCostUsd: observation.usageEvent.cost_actual ?? null,
-    estimatedCostUsd: observation.usageEvent.cost_estimate ?? null,
+    actualCostUsd,
+    estimatedCostUsd,
+    effectiveCostUsd,
+    selectedUncachedCostUsd: telemetrySnapshot?.selectedUncachedCostUsd ?? estimatedCostUsd,
+    baselineMaxEligibleCostUsd: telemetrySnapshot?.baselineMaxEligibleCostUsd ?? estimatedCostUsd,
+    routingCostSavingsUsd: telemetrySnapshot?.routingCostSavingsUsd ?? 0,
+    cacheCostSavingsUsd: telemetrySnapshot?.cacheCostSavingsUsd ?? 0,
+    totalAvoidedCostUsd: telemetrySnapshot?.totalAvoidedCostUsd ?? 0,
+    costCalculationBasis,
+    costCalculationVersion: COST_CALCULATION_VERSION,
+    costBaselineSource: telemetrySnapshot?.costBaselineSource ?? null,
+    costSavingsSupport: telemetrySnapshot?.costSavingsSupport ?? null,
     currency: observation.usageEvent.currency ?? null,
+    dimensions: telemetrySnapshot?.dimensions ?? null,
+  };
+}
+
+function runtimeTelemetryInsertValues(
+  record: RuntimeTelemetryRecord,
+): readonly (string | number | null)[] {
+  return [
+    record.requestId,
+    record.routingDecisionId,
+    record.endpointId,
+    record.conversationId,
+    record.createdAtMs,
+    record.clientRequestId,
+    record.requestClass,
+    record.sourceType,
+    record.modelId,
+    record.providerKind,
+    record.providerFamily,
+    record.providerId,
+    record.providerAccountId,
+    record.selectedModelId,
+    record.endpointKind,
+    record.servingSource,
+    record.region,
+    record.lifecycleStateAtRequest,
+    record.healthStatusAtRequest,
+    record.requestedModelId,
+    record.difficultyBucket,
+    record.routingMode,
+    record.requestedRoleId,
+    record.selectedStrategy,
+    record.requestOperation,
+    record.statusFamily,
+    record.toolingUsed ? 1 : 0,
+    record.cacheState,
+    JSON.stringify(record.roleIds),
+    JSON.stringify(record.eligibleEndpointIds),
+    JSON.stringify(record.eligibleModelIds),
+    record.candidateCostSnapshot ? JSON.stringify(record.candidateCostSnapshot) : null,
+    record.selectedPricingSnapshot ? JSON.stringify(record.selectedPricingSnapshot) : null,
+    record.inputTokens,
+    record.outputTokens,
+    record.totalTokens,
+    record.latencyMs,
+    record.errorClass,
+    record.statusCode,
+    record.finishReason,
+    record.promptCacheRequested ? 1 : 0,
+    record.promptCacheSupported ? 1 : 0,
+    record.promptCacheUsed ? 1 : 0,
+    record.cacheReadTokens,
+    record.cacheReadTokensSupported ? 1 : 0,
+    record.cacheWriteTokens,
+    record.cacheWriteTokensSupported ? 1 : 0,
+    record.streamTextDeltaCount,
+    record.streamTextSupported ? 1 : 0,
+    record.streamToolCallDeltaCount,
+    record.streamToolCallSupported ? 1 : 0,
+    record.streamToolArgumentDeltaCount,
+    record.streamToolArgumentSupported ? 1 : 0,
+    record.toolCallCount,
+    record.toolExecutionCount,
+    record.costProvenance,
+    record.actualCostUsd,
+    record.estimatedCostUsd,
+    record.effectiveCostUsd,
+    record.selectedUncachedCostUsd,
+    record.baselineMaxEligibleCostUsd,
+    record.routingCostSavingsUsd,
+    record.cacheCostSavingsUsd,
+    record.totalAvoidedCostUsd,
+    record.costCalculationBasis,
+    record.costCalculationVersion,
+    record.costBaselineSource,
+    record.costSavingsSupport,
+    record.currency,
+    record.dimensions ? JSON.stringify(record.dimensions) : null,
+  ];
+}
+
+function toFailureRuntimeTelemetryRecord(
+  input: PersistRuntimeTelemetryFailureInput,
+  routingDecisionId: string,
+  endpointId: string,
+  createdAtMs: number,
+): RuntimeTelemetryRecord {
+  return {
+    requestId: input.requestId,
+    routingDecisionId,
+    endpointId,
+    conversationId: "conversation-main",
+    createdAtMs,
+    clientRequestId: input.clientRequestId ?? null,
+    requestClass: input.requestClass ?? "unknown",
+    sourceType: input.sourceType ?? null,
+    modelId: input.modelId ?? null,
+    providerKind: null,
+    providerFamily: null,
+    providerId: null,
+    providerAccountId: null,
+    selectedModelId: null,
+    endpointKind: null,
+    servingSource: null,
+    region: null,
+    lifecycleStateAtRequest: null,
+    healthStatusAtRequest: null,
+    requestedModelId: null,
+    difficultyBucket: null,
+    routingMode: null,
+    requestedRoleId: null,
+    selectedStrategy: null,
+    requestOperation: null,
+    statusFamily: "failure",
+    toolingUsed: false,
+    cacheState: null,
+    roleIds: [],
+    eligibleEndpointIds: [],
+    eligibleModelIds: [],
+    candidateCostSnapshot: null,
+    selectedPricingSnapshot: null,
+    inputTokens: 0,
+    outputTokens: 0,
+    totalTokens: 0,
+    latencyMs: input.latencyMs ?? null,
+    errorClass: input.errorClass,
+    statusCode: input.statusCode,
+    finishReason: null,
+    promptCacheRequested: false,
+    promptCacheSupported: true,
+    promptCacheUsed: false,
+    cacheReadTokens: 0,
+    cacheReadTokensSupported: true,
+    cacheWriteTokens: 0,
+    cacheWriteTokensSupported: true,
+    streamTextDeltaCount: 0,
+    streamTextSupported: true,
+    streamToolCallDeltaCount: 0,
+    streamToolCallSupported: true,
+    streamToolArgumentDeltaCount: 0,
+    streamToolArgumentSupported: true,
+    toolCallCount: 0,
+    toolExecutionCount: 0,
+    costProvenance: "unavailable",
+    actualCostUsd: null,
+    estimatedCostUsd: null,
+    effectiveCostUsd: 0,
+    selectedUncachedCostUsd: 0,
+    baselineMaxEligibleCostUsd: 0,
+    routingCostSavingsUsd: 0,
+    cacheCostSavingsUsd: 0,
+    totalAvoidedCostUsd: 0,
+    costCalculationBasis: "no_execution_zero",
+    costCalculationVersion: COST_CALCULATION_VERSION,
+    costBaselineSource: null,
+    costSavingsSupport: null,
+    currency: null,
+    dimensions: null,
   };
 }
 
@@ -1790,9 +2364,15 @@ function listRuntimeTelemetryRecordsInternal(
   const clauses: string[] = [];
   const parameters: Array<number> = [];
   const endAtMs = input.endAtMs ?? Date.now();
-  if (typeof input.windowMs === "number") {
+  const startAtMs =
+    typeof input.startAtMs === "number"
+      ? input.startAtMs
+      : typeof input.windowMs === "number"
+        ? endAtMs - input.windowMs
+        : undefined;
+  if (typeof startAtMs === "number") {
     clauses.push("created_at_ms >= ?");
-    parameters.push(endAtMs - input.windowMs);
+    parameters.push(startAtMs);
   }
   clauses.push("created_at_ms <= ?");
   parameters.push(endAtMs);
@@ -1800,7 +2380,7 @@ function listRuntimeTelemetryRecordsInternal(
   const limitClause = typeof input.limit === "number" ? " LIMIT ?" : "";
   const rows = database
     .prepare(
-      `SELECT request_id, routing_decision_id, endpoint_id, conversation_id, created_at_ms, client_request_id, request_class, source_type, model_id, provider_kind, provider_family, input_tokens, output_tokens, total_tokens, latency_ms, error_class, status_code, finish_reason, prompt_cache_requested, prompt_cache_supported, prompt_cache_used, cache_read_tokens, cache_read_tokens_supported, cache_write_tokens, cache_write_tokens_supported, stream_text_delta_count, stream_text_supported, stream_tool_call_delta_count, stream_tool_call_supported, stream_tool_argument_delta_count, stream_tool_argument_supported, tool_call_count, tool_execution_count, cost_provenance, actual_cost_usd, estimated_cost_usd, currency FROM runtime_telemetry_records WHERE ${clauses.join(
+      `SELECT request_id, routing_decision_id, endpoint_id, conversation_id, created_at_ms, client_request_id, request_class, source_type, model_id, provider_kind, provider_family, provider_id, provider_account_id, selected_model_id, endpoint_kind, serving_source, region, lifecycle_state_at_request, health_status_at_request, requested_model_id, difficulty_bucket, routing_mode, requested_role_id, selected_strategy, request_operation, status_family, tooling_used, cache_state, role_ids_json, eligible_endpoint_ids_json, eligible_model_ids_json, candidate_cost_snapshot_json, selected_pricing_snapshot_json, input_tokens, output_tokens, total_tokens, latency_ms, error_class, status_code, finish_reason, prompt_cache_requested, prompt_cache_supported, prompt_cache_used, cache_read_tokens, cache_read_tokens_supported, cache_write_tokens, cache_write_tokens_supported, stream_text_delta_count, stream_text_supported, stream_tool_call_delta_count, stream_tool_call_supported, stream_tool_argument_delta_count, stream_tool_argument_supported, tool_call_count, tool_execution_count, cost_provenance, actual_cost_usd, estimated_cost_usd, effective_cost_usd, selected_uncached_cost_usd, baseline_max_eligible_cost_usd, routing_cost_savings_usd, cache_cost_savings_usd, total_avoided_cost_usd, cost_calculation_basis, cost_calculation_version, cost_baseline_source, cost_savings_support, currency, dimensions_json FROM runtime_telemetry_records WHERE ${clauses.join(
         " AND ",
       )} ORDER BY created_at_ms DESC, request_id DESC${limitClause}`,
     )
@@ -1816,6 +2396,28 @@ function listRuntimeTelemetryRecordsInternal(
     model_id: string | null;
     provider_kind: string | null;
     provider_family: string | null;
+    provider_id: string | null;
+    provider_account_id: string | null;
+    selected_model_id: string | null;
+    endpoint_kind: string | null;
+    serving_source: string | null;
+    region: string | null;
+    lifecycle_state_at_request: string | null;
+    health_status_at_request: string | null;
+    requested_model_id: string | null;
+    difficulty_bucket: string | null;
+    routing_mode: string | null;
+    requested_role_id: string | null;
+    selected_strategy: string | null;
+    request_operation: string | null;
+    status_family: string | null;
+    tooling_used: number;
+    cache_state: string | null;
+    role_ids_json: string | null;
+    eligible_endpoint_ids_json: string | null;
+    eligible_model_ids_json: string | null;
+    candidate_cost_snapshot_json: string | null;
+    selected_pricing_snapshot_json: string | null;
     input_tokens: number;
     output_tokens: number;
     total_tokens: number;
@@ -1841,7 +2443,18 @@ function listRuntimeTelemetryRecordsInternal(
     cost_provenance: string;
     actual_cost_usd: number | null;
     estimated_cost_usd: number | null;
+    effective_cost_usd: number;
+    selected_uncached_cost_usd: number | null;
+    baseline_max_eligible_cost_usd: number | null;
+    routing_cost_savings_usd: number;
+    cache_cost_savings_usd: number;
+    total_avoided_cost_usd: number;
+    cost_calculation_basis: string;
+    cost_calculation_version: string | null;
+    cost_baseline_source: string | null;
+    cost_savings_support: string | null;
     currency: string | null;
+    dimensions_json: string | null;
   }>;
 
   return rows.map(mapRuntimeTelemetryRecord);
@@ -2274,47 +2887,9 @@ export function persistRuntimeObservationBundle(input: PersistRuntimeObservation
     );
   database
     .prepare(
-      "INSERT OR REPLACE INTO runtime_telemetry_records (request_id, routing_decision_id, endpoint_id, conversation_id, created_at_ms, client_request_id, request_class, source_type, model_id, provider_kind, provider_family, input_tokens, output_tokens, total_tokens, latency_ms, error_class, status_code, finish_reason, prompt_cache_requested, prompt_cache_supported, prompt_cache_used, cache_read_tokens, cache_read_tokens_supported, cache_write_tokens, cache_write_tokens_supported, stream_text_delta_count, stream_text_supported, stream_tool_call_delta_count, stream_tool_call_supported, stream_tool_argument_delta_count, stream_tool_argument_supported, tool_call_count, tool_execution_count, cost_provenance, actual_cost_usd, estimated_cost_usd, currency) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      `INSERT OR REPLACE INTO runtime_telemetry_records (${RUNTIME_TELEMETRY_INSERT_COLUMNS.join(", ")}) VALUES (${RUNTIME_TELEMETRY_INSERT_COLUMNS.map(() => "?").join(", ")})`,
     )
-    .run(
-      telemetryRecord.requestId,
-      telemetryRecord.routingDecisionId,
-      telemetryRecord.endpointId,
-      telemetryRecord.conversationId,
-      telemetryRecord.createdAtMs,
-      telemetryRecord.clientRequestId,
-      telemetryRecord.requestClass,
-      telemetryRecord.sourceType,
-      telemetryRecord.modelId,
-      telemetryRecord.providerKind,
-      telemetryRecord.providerFamily,
-      telemetryRecord.inputTokens,
-      telemetryRecord.outputTokens,
-      telemetryRecord.totalTokens,
-      telemetryRecord.latencyMs,
-      telemetryRecord.errorClass,
-      telemetryRecord.statusCode,
-      telemetryRecord.finishReason,
-      telemetryRecord.promptCacheRequested ? 1 : 0,
-      telemetryRecord.promptCacheSupported ? 1 : 0,
-      telemetryRecord.promptCacheUsed ? 1 : 0,
-      telemetryRecord.cacheReadTokens,
-      telemetryRecord.cacheReadTokensSupported ? 1 : 0,
-      telemetryRecord.cacheWriteTokens,
-      telemetryRecord.cacheWriteTokensSupported ? 1 : 0,
-      telemetryRecord.streamTextDeltaCount,
-      telemetryRecord.streamTextSupported ? 1 : 0,
-      telemetryRecord.streamToolCallDeltaCount,
-      telemetryRecord.streamToolCallSupported ? 1 : 0,
-      telemetryRecord.streamToolArgumentDeltaCount,
-      telemetryRecord.streamToolArgumentSupported ? 1 : 0,
-      telemetryRecord.toolCallCount,
-      telemetryRecord.toolExecutionCount,
-      telemetryRecord.costProvenance,
-      telemetryRecord.actualCostUsd,
-      telemetryRecord.estimatedCostUsd,
-      telemetryRecord.currency,
-    );
+    .run(...runtimeTelemetryInsertValues(telemetryRecord));
   database.close();
 }
 
@@ -2337,49 +2912,17 @@ export function persistRuntimeTelemetryFailure(input: PersistRuntimeTelemetryFai
   const createdAtMs = Date.now();
   const routingDecisionId = input.routingDecisionId ?? `decision-${input.requestId}`;
   const endpointId = input.endpointId ?? "routing.failed.pre-execution";
+  const telemetryRecord = toFailureRuntimeTelemetryRecord(
+    input,
+    routingDecisionId,
+    endpointId,
+    createdAtMs,
+  );
   database
     .prepare(
-      "INSERT OR REPLACE INTO runtime_telemetry_records (request_id, routing_decision_id, endpoint_id, conversation_id, created_at_ms, client_request_id, request_class, source_type, model_id, provider_kind, provider_family, input_tokens, output_tokens, total_tokens, latency_ms, error_class, status_code, finish_reason, prompt_cache_requested, prompt_cache_supported, prompt_cache_used, cache_read_tokens, cache_read_tokens_supported, cache_write_tokens, cache_write_tokens_supported, stream_text_delta_count, stream_text_supported, stream_tool_call_delta_count, stream_tool_call_supported, stream_tool_argument_delta_count, stream_tool_argument_supported, tool_call_count, tool_execution_count, cost_provenance, actual_cost_usd, estimated_cost_usd, currency) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      `INSERT OR REPLACE INTO runtime_telemetry_records (${RUNTIME_TELEMETRY_INSERT_COLUMNS.join(", ")}) VALUES (${RUNTIME_TELEMETRY_INSERT_COLUMNS.map(() => "?").join(", ")})`,
     )
-    .run(
-      input.requestId,
-      routingDecisionId,
-      endpointId,
-      "conversation-main",
-      createdAtMs,
-      input.clientRequestId ?? null,
-      input.requestClass ?? "unknown",
-      input.sourceType ?? null,
-      input.modelId ?? null,
-      null,
-      null,
-      0,
-      0,
-      0,
-      input.latencyMs ?? null,
-      input.errorClass,
-      input.statusCode,
-      null,
-      0,
-      1,
-      0,
-      0,
-      1,
-      0,
-      1,
-      0,
-      1,
-      0,
-      1,
-      0,
-      1,
-      0,
-      0,
-      "unavailable",
-      null,
-      null,
-      null,
-    );
+    .run(...runtimeTelemetryInsertValues(telemetryRecord));
   database.close();
 }
 
@@ -2649,15 +3192,7 @@ export function readRuntimeTelemetrySummary(
       records.reduce((sum, record) => sum + (record.estimatedCostUsd ?? 0), 0),
     ),
     totalEffectiveCostUsd: roundMetric(
-      records.reduce((sum, record) => {
-        if (typeof record.actualCostUsd === "number") {
-          return sum + record.actualCostUsd;
-        }
-        if (typeof record.estimatedCostUsd === "number") {
-          return sum + record.estimatedCostUsd;
-        }
-        return sum;
-      }, 0),
+      records.reduce((sum, record) => sum + record.effectiveCostUsd, 0),
     ),
     averageLatencyMs:
       latencyValues.length > 0 ? Math.round(totalLatency / latencyValues.length) : null,

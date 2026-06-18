@@ -1,0 +1,15 @@
+{
+  "timestamp": "2026-06-17T20:59:45+02:00",
+  "route": "http://127.0.0.1:3456/app/system/session-readiness",
+  "finding": "Session readiness rendered a redundant Related surfaces component below Alias drift warnings.",
+  "verification": {
+    "url": "http://127.0.0.1:3456/app/system/session-readiness",
+    "hasRelatedSurfaces": false,
+    "hasRuntimeTopologyShortcut": false,
+    "hasRemoteProvidersShortcut": false,
+    "bodyClientWidth": 738,
+    "bodyScrollWidth": 723,
+    "hasDocumentHorizontalOverflow": false
+  },
+  "status": "pass"
+}

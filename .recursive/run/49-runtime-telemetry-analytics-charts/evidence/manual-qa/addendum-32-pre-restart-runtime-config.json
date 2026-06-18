@@ -1,0 +1,52 @@
+{
+  "applied": true,
+  "path": "C:\\Users\\erikb\\AppData\\Local\\Temp\\role-model-runtime-qa-phase5\\runtime-config.yaml",
+  "config": {
+    "version": "1.1",
+    "routingStrategy": "baseline",
+    "executionMode": "local_only",
+    "modelAliases": [
+      {
+        "aliasId": "baseline.local-only",
+        "mode": "basic",
+        "modelIds": [
+          "lfm2.5-1.2b-instruct",
+          "openai/gpt-4.1-mini-fast"
+        ]
+      }
+    ],
+    "llamaSwap": {
+      "enabled": true,
+      "models": [
+        {
+          "modelId": "lfm2.5-1.2b-instruct",
+          "path": "./models/lfm2.5-1.2b-instruct.gguf",
+          "contextWindow": null,
+          "command": null,
+          "proxyBaseUrl": null,
+          "checkEndpoint": null,
+          "useModelName": null,
+          "maxDifficulty": null
+        }
+      ],
+      "process": {
+        "command": null,
+        "args": [],
+        "env": {},
+        "cwd": null,
+        "startupTimeoutMs": null
+      }
+    },
+    "liteLLM": {
+      "enabled": false,
+      "providers": [],
+      "process": {
+        "command": null,
+        "args": [],
+        "env": {},
+        "cwd": null,
+        "startupTimeoutMs": null
+      }
+    }
+  }
+}
