@@ -699,7 +699,7 @@ describe("runtime design system", () => {
     expect(routerRouteSource).not.toContain("Execution-ready aliases");
     expect(routerRouteSource).not.toContain("Guidance provenance");
     expect(routerRouteSource).not.toContain("Policy inputs");
-    expect(routerRouteSource).toContain("Configured models");
+    expect(routerRouteSource).toContain("Effective models");
     expect(routerRouteSource).toContain("Candidate expansion");
     expect(routerRouteSource).not.toContain("Allowed endpoints");
     expect(routerRouteSource).not.toContain("Control remains the editing surface");
@@ -829,7 +829,8 @@ describe("runtime design system", () => {
     expect(controlRoutingStrategySource).toContain("Saved routing settings");
     expect(controlRoutingStrategySource).toContain("Draft selection");
     expect(controlRoutingStrategySource).toContain("hasUnsavedChanges");
-    expect(controlRoutingStrategySource).toContain("onClick={() => onChange(value)}");
+    expect(controlRoutingStrategySource).toContain("onChange={() => onChange(value)}");
+    expect(controlRoutingStrategySource).not.toContain("onClick={() => onChange(value)}");
     expect(controlRoutingStrategySource).toContain("await loadState();");
     expect(controlRoutingStrategySource).not.toContain("void Promise.all([");
   });

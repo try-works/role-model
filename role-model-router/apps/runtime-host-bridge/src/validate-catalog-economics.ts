@@ -42,7 +42,7 @@ function createCatalogEconomicsRuntimeConfigText(): string {
   return [
     'version: "1.1"',
     "routing:",
-    "  strategy: baseline",
+    "  strategy: difficulty",
     "model_aliases:",
     `  ${mixedAliasId}:`,
     "    model_ids:",
@@ -328,6 +328,27 @@ export async function runCatalogEconomicsValidation(
           throw new Error("Expected moonshotai to be hidden from provider list.");
         }
 
+        const modelsResponse = await fetch(`${baseUrl}/v1/models`, {
+          headers: requestHeaders,
+        });
+        if (!modelsResponse.ok) {
+          throw new Error(
+            `Catalog economics validation could not read model aliases (${modelsResponse.status}).`,
+          );
+        }
+        const modelsPayload = (await modelsResponse.json()) as {
+          data?: Array<{ id?: string; endpoint_ids?: unknown }>;
+        };
+        const runtimeAliasId =
+          modelsPayload.data?.find(
+            (model) =>
+              model.id &&
+              model.id !== localModelId &&
+              model.id !== remoteModelId &&
+              Array.isArray(model.endpoint_ids) &&
+              model.endpoint_ids.length > 1,
+          )?.id ?? mixedAliasId;
+
         const completionResponse = await fetch(`${baseUrl}/v1/chat/completions`, {
           method: "POST",
           headers: {
@@ -336,7 +357,7 @@ export async function runCatalogEconomicsValidation(
             connection: "close",
           },
           body: JSON.stringify({
-            model: mixedAliasId,
+            model: runtimeAliasId,
             messages: [{ role: "user", content: "hello" }],
             max_tokens: 64,
           }),
