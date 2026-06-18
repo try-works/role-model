@@ -160,11 +160,8 @@ function resolvePostjectCommand(): string {
     : path.join(repoRoot, "node_modules", ".bin", "postject");
 }
 
-function resolveGoCommand(): string {
-  return (
-    process.env.GO_BINARY ??
-    (process.platform === "win32" ? "C:\\Program Files\\Go\\bin\\go.exe" : "go")
-  );
+export function resolveGoCommand(): string {
+  return process.env.GO_BINARY ?? "go";
 }
 
 function resolvePackagedRuntimeName(): string {
