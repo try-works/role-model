@@ -9,11 +9,38 @@ type RuntimeRoleDefinitionRecord = NonNullable<
 type RuntimeRoleBindingRecord = NonNullable<
   Parameters<typeof routeRuntimeRequest>[0]["roleBindings"]
 >[number];
+type RuntimeTaskDefinitionRecord = NonNullable<
+  Parameters<typeof routeRuntimeRequest>[0]["taskDefinitions"]
+>[number];
 
 export interface RuntimeEndpointRef {
   readonly endpointId: string;
   readonly providerAccountId: string;
   readonly modelId: string;
+}
+
+function buildEffectiveRoleCapabilities(input: {
+  readonly endpointCapabilities: readonly string[];
+  readonly roleDefinition: RuntimeRoleDefinitionRecord;
+  readonly taskDefinitions: readonly RuntimeTaskDefinitionRecord[];
+}): string[] {
+  const capabilities = new Set<string>(input.endpointCapabilities);
+  for (const capability of input.roleDefinition.required_capabilities ?? []) {
+    capabilities.add(capability);
+  }
+  for (const capability of input.roleDefinition.preferred_capabilities ?? []) {
+    capabilities.add(capability);
+  }
+  for (const taskType of input.roleDefinition.task_types_supported ?? []) {
+    const taskDefinition = input.taskDefinitions.find((entry) => entry.task_type === taskType);
+    for (const capability of taskDefinition?.required_capabilities ?? []) {
+      capabilities.add(capability);
+    }
+    for (const capability of taskDefinition?.preferred_capabilities ?? []) {
+      capabilities.add(capability);
+    }
+  }
+  return [...capabilities];
 }
 
 export function buildAccountEndpointRoleBindings(input: {
@@ -22,6 +49,7 @@ export function buildAccountEndpointRoleBindings(input: {
   readonly accounts: readonly ProviderAccountRecord[];
   readonly registry: EndpointRegistryResult;
   readonly roleDefinitions: readonly RuntimeRoleDefinitionRecord[];
+  readonly taskDefinitions: readonly RuntimeTaskDefinitionRecord[];
   readonly sanitizeSegment: (value: string) => string;
 }): readonly RuntimeRoleBindingRecord[] {
   const roleDefinitionsById = new Map(input.roleDefinitions.map((role) => [role.role_id, role]));
@@ -57,7 +85,11 @@ export function buildAccountEndpointRoleBindings(input: {
           endpoint_id: endpoint.endpointId,
           status: "active" as const,
           policy_overrides: {},
-          effective_capabilities: endpointCapabilities,
+          effective_capabilities: buildEffectiveRoleCapabilities({
+            endpointCapabilities,
+            roleDefinition,
+            taskDefinitions: input.taskDefinitions,
+          }),
           effective_task_types: [...roleDefinition.task_types_supported],
         },
       ];
@@ -70,6 +102,7 @@ export function buildAccountEndpointRoleBindings(input: {
 export function buildLlamaSwapRegistryRoleBindings(input: {
   readonly registry: EndpointRegistryResult;
   readonly roleDefinitions: readonly RuntimeRoleDefinitionRecord[];
+  readonly taskDefinitions: readonly RuntimeTaskDefinitionRecord[];
   readonly roleIdsByModelId: Readonly<Record<string, readonly string[]>>;
   readonly sanitizeSegment: (value: string) => string;
 }): readonly RuntimeRoleBindingRecord[] {
@@ -95,7 +128,11 @@ export function buildLlamaSwapRegistryRoleBindings(input: {
         endpoint_id: endpointId,
         status: "active",
         policy_overrides: {},
-        effective_capabilities: endpointCapabilities,
+        effective_capabilities: buildEffectiveRoleCapabilities({
+          endpointCapabilities,
+          roleDefinition,
+          taskDefinitions: input.taskDefinitions,
+        }),
         effective_task_types: [...roleDefinition.task_types_supported],
       });
     }

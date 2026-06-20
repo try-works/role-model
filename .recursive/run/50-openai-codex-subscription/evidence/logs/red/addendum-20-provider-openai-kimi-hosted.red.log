@@ -1,0 +1,3 @@
+RED failure before the addendum-20 patch:
+- exact Kimi hosted web-search requests were still forced onto the OpenAI Responses path
+- provider-openai Kimi hosted-tool regression failed because the adapter did not preserve chat-completions with builtin_function.$web_search and thinking disabled

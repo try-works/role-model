@@ -72,11 +72,16 @@ function splitAnthropicMessages(
 function toAnthropicTools(
   tools: NonNullable<ProviderAdapterExecutionContext["executionRequest"]["tools"]>,
 ): Array<Record<string, unknown>> {
-  return tools.map((tool) => ({
-    name: tool.name,
-    description: tool.description,
-    input_schema: tool.inputSchema,
-  }));
+  return tools.map((tool) => {
+    if (tool.kind === "hosted") {
+      throw new Error("Hosted OpenAI tools are not supported on the Anthropic adapter.");
+    }
+    return {
+      name: tool.name,
+      description: tool.description,
+      input_schema: tool.inputSchema,
+    };
+  });
 }
 
 export function buildAnthropicRequest(

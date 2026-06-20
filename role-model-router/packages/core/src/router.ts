@@ -26,7 +26,7 @@ function clamp(value: number, minimum = 0, maximum = 1): number {
   return Math.min(maximum, Math.max(minimum, value));
 }
 
-const SCORE_TIE_EPSILON = 0.01;
+export const ROUTER_SCORE_TIE_EPSILON = 0.01;
 const LATENCY_TARGET_MS = 150;
 const LATENCY_MAX_MS = 300;
 const THROUGHPUT_TARGET_TPS = 40;
@@ -97,6 +97,13 @@ type CandidateScoreResult = ScoredCandidate & {
   selectionReasons: SelectionReasonCode[];
   usedMeasured: boolean;
   usedDeclared: boolean;
+};
+
+type QualityScopedObservedProfile = NonNullable<EndpointCandidate["observed"]> & {
+  quality_measured_at_ms?: number;
+  quality_freshness_score?: number;
+  quality_live_request_samples?: number;
+  quality_benchmark_samples?: number;
 };
 
 function getFreshnessWeight(
@@ -324,6 +331,21 @@ function getRoleBindingForCandidate(
   );
 }
 
+function getSupportedCapabilitiesForCandidate(
+  candidate: EndpointCandidate,
+  input: RouteRequestInput,
+): string[] {
+  const roleBinding = getRoleBindingForCandidate(candidate, input);
+  if (roleBinding?.status !== "active") {
+    return candidate.declared.capabilities;
+  }
+
+  return unique([
+    ...candidate.declared.capabilities,
+    ...roleBinding.effective_capabilities,
+  ]);
+}
+
 function getEffectiveLatency(candidate: EndpointCandidate): number {
   if (
     typeof candidate.observed?.latency_ms_p50 === "number" &&
@@ -338,13 +360,51 @@ function getEffectiveLatency(candidate: EndpointCandidate): number {
   return 250;
 }
 
-function getQualityMetric(candidate: EndpointCandidate, input: RouteRequestInput): MetricEntry {
-  if (typeof candidate.observed?.judge_score === "number") {
-    const freshnessWeight = getFreshnessWeight(
+function resolveQualityFreshness(input: RouteRequestInput, candidate: EndpointCandidate): {
+  freshnessWeight: number;
+  measuredAtMs: number | undefined;
+  source: "profile" | "halflife";
+} {
+  const observed = candidate.observed as QualityScopedObservedProfile | undefined;
+  const qualityBenchmarkOnly =
+    typeof observed?.quality_freshness_score === "number" &&
+    (observed.quality_live_request_samples ?? 0) === 0 &&
+    (observed.quality_benchmark_samples ?? 0) > 0;
+  if (qualityBenchmarkOnly) {
+    return {
+      freshnessWeight: clamp(observed.quality_freshness_score ?? 0),
+      measuredAtMs: observed.quality_measured_at_ms ?? observed.measured_at_ms,
+      source: "profile",
+    };
+  }
+
+  const profileBenchmarkOnly =
+    typeof observed?.freshness_score === "number" &&
+    (observed.sources?.live_request_samples ?? 0) === 0 &&
+    (observed.sources?.benchmark_samples ?? 0) > 0;
+  if (profileBenchmarkOnly) {
+    return {
+      freshnessWeight: clamp(observed.freshness_score ?? 0),
+      measuredAtMs: observed.measured_at_ms,
+      source: "profile",
+    };
+  }
+
+  return {
+    freshnessWeight: getFreshnessWeight(
       input,
       candidate,
       input.observedDataConfig?.metricHalflives.qualityMs ?? 1,
-    );
+    ),
+    measuredAtMs: observed?.measured_at_ms,
+    source: "halflife",
+  };
+}
+
+function getQualityMetric(candidate: EndpointCandidate, input: RouteRequestInput): MetricEntry {
+  if (typeof candidate.observed?.judge_score === "number") {
+    const freshness = resolveQualityFreshness(input, candidate);
+    const freshnessWeight = freshness.freshnessWeight;
     const observedValue = clamp(candidate.observed.judge_score);
     const value = input.observedDataConfig?.enabled
       ? decayToNeutral(observedValue, FRESHNESS_NEUTRAL, freshnessWeight)
@@ -354,8 +414,9 @@ function getQualityMetric(candidate: EndpointCandidate, input: RouteRequestInput
       source: "measured",
       raw: {
         judge_score: candidate.observed.judge_score,
-        measured_at_ms: candidate.observed.measured_at_ms,
+        measured_at_ms: freshness.measuredAtMs,
         freshness_weight: freshnessWeight,
+        freshness_source: freshness.source,
         neutral_value: FRESHNESS_NEUTRAL,
         effective_value: value,
       },
@@ -363,11 +424,8 @@ function getQualityMetric(candidate: EndpointCandidate, input: RouteRequestInput
   }
 
   if (typeof candidate.observed?.quality_score === "number") {
-    const freshnessWeight = getFreshnessWeight(
-      input,
-      candidate,
-      input.observedDataConfig?.metricHalflives.qualityMs ?? 1,
-    );
+    const freshness = resolveQualityFreshness(input, candidate);
+    const freshnessWeight = freshness.freshnessWeight;
     const observedValue = clamp(candidate.observed.quality_score);
     const value = input.observedDataConfig?.enabled
       ? decayToNeutral(observedValue, FRESHNESS_NEUTRAL, freshnessWeight)
@@ -377,8 +435,9 @@ function getQualityMetric(candidate: EndpointCandidate, input: RouteRequestInput
       source: "measured",
       raw: {
         quality_score: candidate.observed.quality_score,
-        measured_at_ms: candidate.observed.measured_at_ms,
+        measured_at_ms: freshness.measuredAtMs,
         freshness_weight: freshnessWeight,
+        freshness_source: freshness.source,
         neutral_value: FRESHNESS_NEUTRAL,
         effective_value: value,
       },
@@ -586,6 +645,7 @@ function getPreferenceMetric(
 ): MetricEntry {
   const effectiveRequiredCapabilities = getEffectiveRequiredCapabilities(input);
   const effectivePreferredCapabilities = getEffectivePreferredCapabilities(input);
+  const supportedCapabilities = getSupportedCapabilitiesForCandidate(candidate, input);
   const requestedRoleId = input.request.requestedRoleId;
   const { requestedRole, requestedTask } = getRequestedRoleAndTask(input);
   const activeBinding = getRoleBindingForCandidate(candidate, input)?.status === "active";
@@ -611,7 +671,7 @@ function getPreferenceMetric(
   const preferredCapabilityMatches = effectivePreferredCapabilities.filter(
     (capability) =>
       !effectiveRequiredCapabilities.includes(capability) &&
-      candidate.declared.capabilities.includes(capability),
+      supportedCapabilities.includes(capability),
   ).length;
   if (preferredCapabilityMatches > 0) {
     const delta = Math.min(0.25, preferredCapabilityMatches * 0.25);
@@ -843,6 +903,8 @@ function evaluateEligibility(
 
   for (const candidate of input.candidates) {
     const reasons: CandidateExclusion["code"][] = [];
+    const roleBinding = getRoleBindingForCandidate(candidate, input);
+    const supportedCapabilities = getSupportedCapabilitiesForCandidate(candidate, input);
 
     if (candidate.runtimeEligibility?.accountDisabled) {
       reasons.push("ACCOUNT_DISABLED");
@@ -901,7 +963,7 @@ function evaluateEligibility(
 
     if (
       effectiveRequiredCapabilities.some(
-        (capability) => !candidate.declared.capabilities.includes(capability),
+        (capability) => !supportedCapabilities.includes(capability),
       )
     ) {
       reasons.push("CAPABILITY_MISSING");
@@ -938,7 +1000,6 @@ function evaluateEligibility(
       reasons.push("ROLE_NOT_ALLOWED");
     }
 
-    const roleBinding = getRoleBindingForCandidate(candidate, input);
     if (roleBinding?.status === "inactive") {
       reasons.push("ROLE_BINDING_INACTIVE");
     }
@@ -1130,7 +1191,7 @@ export function routeRequest(input: RouteRequestInput): RouterDecisionRecord {
   );
 
   scored.sort((left, right) => {
-    if (Math.abs(right.total_score - left.total_score) > SCORE_TIE_EPSILON) {
+    if (Math.abs(right.total_score - left.total_score) > ROUTER_SCORE_TIE_EPSILON) {
       return right.total_score - left.total_score;
     }
 
@@ -1151,9 +1212,16 @@ export function routeRequest(input: RouteRequestInput): RouterDecisionRecord {
   });
 
   const chosen = scored[0];
+  const runnerUp = scored[1];
+  const tieBreakApplied =
+    Boolean(chosen) &&
+    Boolean(runnerUp) &&
+    Math.abs((chosen?.total_score ?? 0) - (runnerUp?.total_score ?? 0)) <=
+      ROUTER_SCORE_TIE_EPSILON;
   const selectionReasons: SelectionReasonCode[] = chosen
     ? unique<SelectionReasonCode>([
         "BEST_TOTAL_SCORE",
+        ...(tieBreakApplied ? (["TIE_BREAK_APPLIED"] as const) : []),
         ...chosen.selectionReasons,
         ...(scored.length > 1 ? (["FALLBACK_CHAIN_COMPUTED"] as const) : []),
       ])

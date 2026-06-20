@@ -413,6 +413,54 @@ describe("buildCredentialLifecycleAccountRows", () => {
       },
     ]);
   });
+
+  test("treats Codex Subscription as a standard connected account that can activate an endpoint", () => {
+    expect(
+      buildCredentialLifecycleAccountRows({
+        credentialLifecycle: {
+          authority: {
+            state: "authoritative",
+            bootstrapStatus: "ready",
+          },
+          counts: {
+            executionReady: 0,
+            connectedNoEndpoint: 1,
+            pendingAuthorization: 0,
+            expiredAuth: 0,
+            credentialsMissing: 0,
+            envUnresolved: 0,
+            archivedStale: 0,
+          },
+          accounts: [
+            {
+              logicalAccountId: "openai.personal.codex-subscription",
+              providerAccountId: "openai.personal.codex-subscription",
+              providerId: "openai",
+              sourceProvenance: ["manual"],
+              authMode: "oauth2-device-code",
+              credentialStorageMode: "oauth-local",
+              credentialBackendCanonical: "local-file",
+              lifecycleState: "connected-no-endpoint",
+              reasonCode: "active-without-endpoint",
+              blocking: true,
+              activeEndpointIds: [],
+              configuredModelIds: ["chatgpt/gpt-5.3-codex"],
+              availableActions: ["activate-endpoint"],
+            },
+          ],
+          providerRollups: [],
+          archivedArtifacts: [],
+        },
+      } as never),
+    ).toEqual([
+      expect.objectContaining({
+        key: "openai.personal.codex-subscription",
+        lifecycleLabel: "Connected, no endpoint",
+        reasonLabel: "Credential is usable but no endpoint is active",
+        availableActionsLabel: "Activate endpoint",
+      }),
+    ]);
+  });
 });
 
 describe("buildArchivedArtifactRows", () => {

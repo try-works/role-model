@@ -1,0 +1,43 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/50-openai-codex-subscription/role-model-router/apps/runtime-host-bridge
+
+(node:35500) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/validate-ui-cleanup.test.ts (2 tests | 2 failed) 14ms
+   × cleanupRuntimeUiValidationResources > closes the bridge server and then shuts down the backend 10ms
+     → (0 , cleanupRuntimeUiValidationResources) is not a function
+   × cleanupRuntimeUiValidationResources > tolerates backends without an explicit shutdown hook 1ms
+     → (0 , cleanupRuntimeUiValidationResources) is not a function
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/validate-ui-cleanup.test.ts > cleanupRuntimeUiValidationResources > closes the bridge server and then shuts down the backend
+TypeError: (0 , cleanupRuntimeUiValidationResources) is not a function
+ ❯ test/validate-ui-cleanup.test.ts:19:11
+     17|     };
+     18| 
+     19|     await cleanupRuntimeUiValidationResources({ server, backend });
+       |           ^
+     20| 
+     21|     expect(server.close).toHaveBeenCalledOnce();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  test/validate-ui-cleanup.test.ts > cleanupRuntimeUiValidationResources > tolerates backends without an explicit shutdown hook
+TypeError: (0 , cleanupRuntimeUiValidationResources) is not a function
+ ❯ test/validate-ui-cleanup.test.ts:32:7
+     30| 
+     31|     await expect(
+     32|       cleanupRuntimeUiValidationResources({
+       |       ^
+     33|         server,
+     34|         backend: {},
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed (2)
+   Start at  23:28:07
+   Duration  3.44s (transform 1.56s, setup 0ms, collect 2.19s, tests 14ms, environment 0ms, prepare 398ms)
+

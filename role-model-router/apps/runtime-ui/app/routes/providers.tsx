@@ -9,6 +9,8 @@ import {
   SelectField,
   StatusPill,
 } from "../components/page-primitives";
+import { DeviceAuthorizationCard } from "../components/device-authorization-card";
+import { DeviceAuthorizationModal } from "../components/device-authorization-modal";
 import {
   fieldClassName,
   mutedPanelClassName,
@@ -18,8 +20,10 @@ import {
 } from "../lib/design-system";
 import {
   getDeviceAuthorizationPollDelayMs,
+  isCodexSubscriptionDeviceAuthorization,
   resolveVerificationWindowUrl,
   restorePersistedDeviceAuthorization,
+  shouldAutoOpenDeviceAuthorizationWindow,
   shouldAutoPollDeviceAuthorization,
   syncConnectedDeviceAuthorizationEndpoints,
 } from "../lib/device-authorization";
@@ -113,9 +117,29 @@ function buildAvailableModels(input: {
   });
 }
 
+function buildPendingDeviceAuthorizationModalKey(
+  session: RuntimeDeviceAuthorization | null,
+): string | null {
+  if (
+    !session ||
+    session.status !== "pending" ||
+    !isCodexSubscriptionDeviceAuthorization(session)
+  ) {
+    return null;
+  }
+
+  const userCode = session.userCode?.trim();
+  if (!userCode) {
+    return null;
+  }
+
+  return `${session.authRequestId}:${userCode}`;
+}
+
 export default function ProvidersRoute() {
   const [searchParams] = useSearchParams();
   const initializedRef = useRef(false);
+  const shownDeviceAuthorizationModalKeyRef = useRef<string | null>(null);
   const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [providerAccountId, setProviderAccountId] = useState("");
@@ -126,6 +150,9 @@ export default function ProvidersRoute() {
   const [selectedModelRoles, setSelectedModelRoles] = useState<ModelRoleSelection>({});
   const [oauthState, setOauthState] = useState<RuntimeDeviceAuthorization | null>(null);
   const [oauthConnected, setOauthConnected] = useState(false);
+  const [copiedUserCode, setCopiedUserCode] = useState(false);
+  const [deviceAuthorizationModalSession, setDeviceAuthorizationModalSession] =
+    useState<RuntimeDeviceAuthorization | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [authorizing, setAuthorizing] = useState(false);
   const [polling, setPolling] = useState(false);
@@ -168,6 +195,9 @@ export default function ProvidersRoute() {
       setSelectedModelRoles({});
       setOauthState(null);
       setOauthConnected(false);
+      setCopiedUserCode(false);
+      shownDeviceAuthorizationModalKeyRef.current = null;
+      setDeviceAuthorizationModalSession(null);
     },
     [],
   );
@@ -260,6 +290,29 @@ export default function ProvidersRoute() {
     );
   }, [providerAccountId, snapshot]);
 
+  useEffect(() => {
+    const modalKey = buildPendingDeviceAuthorizationModalKey(oauthState);
+    if (!modalKey || !oauthState) {
+      if (!oauthState || oauthState.status !== "pending") {
+        shownDeviceAuthorizationModalKeyRef.current = null;
+      }
+      setDeviceAuthorizationModalSession(null);
+      return;
+    }
+
+    setDeviceAuthorizationModalSession((current) => {
+      const currentKey = buildPendingDeviceAuthorizationModalKey(current);
+      if (currentKey === modalKey) {
+        return oauthState;
+      }
+      if (shownDeviceAuthorizationModalKeyRef.current === modalKey) {
+        return current;
+      }
+      shownDeviceAuthorizationModalKeyRef.current = modalKey;
+      return oauthState;
+    });
+  }, [oauthState]);
+
   const remoteProviders = useMemo(
     () => snapshot?.providers.filter((provider) => provider.providerKind !== "local-engine") ?? [],
     [snapshot],
@@ -336,6 +389,8 @@ export default function ProvidersRoute() {
     setSelectedModel(restoredModelIds[0] ?? "");
     setSelectedModelRoles(buildModelRoleSelection(restoredModelIds, account.modelRoleBindings));
     setOauthConnected(false);
+    setCopiedUserCode(false);
+    setDeviceAuthorizationModalSession(null);
     setAuthorizing(true);
     setError(null);
     try {
@@ -343,7 +398,8 @@ export default function ProvidersRoute() {
         providerAccountId: account.providerAccountId,
       });
       setOauthState(result);
-      const verificationUrl = resolveVerificationWindowUrl(result);
+      const verificationUrl =
+        shouldAutoOpenDeviceAuthorizationWindow(result) ? resolveVerificationWindowUrl(result) : null;
       if (verificationUrl) {
         try {
           window.open(verificationUrl, "_blank", "noopener,noreferrer");
@@ -476,6 +532,8 @@ export default function ProvidersRoute() {
     }
     setAuthorizing(true);
     setError(null);
+    setCopiedUserCode(false);
+    setDeviceAuthorizationModalSession(null);
     try {
       const result = await startRuntimeDeviceAuthorization({
         providerAccountId,
@@ -493,7 +551,8 @@ export default function ProvidersRoute() {
         quotaPolicyRef: "quota.default",
       });
       setOauthState(result);
-      const verificationUrl = resolveVerificationWindowUrl(result);
+      const verificationUrl =
+        shouldAutoOpenDeviceAuthorizationWindow(result) ? resolveVerificationWindowUrl(result) : null;
       if (verificationUrl) {
         try {
           window.open(verificationUrl, "_blank", "noopener,noreferrer");
@@ -530,6 +589,19 @@ export default function ProvidersRoute() {
       );
     } finally {
       setPolling(false);
+    }
+  };
+
+  const onCopyUserCode = async () => {
+    const userCode = oauthState?.userCode?.trim();
+    if (!userCode) {
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(userCode);
+      setCopiedUserCode(true);
+    } catch {
+      setError("Could not copy the device code. Copy it manually and continue.");
     }
   };
 
@@ -786,50 +858,11 @@ export default function ProvidersRoute() {
           >
             <div className="space-y-4">
               {oauthState ? (
-                <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-semibold text-[var(--rm-fg)]">
-                      Current provider authorization
-                    </p>
-                    <StatusPill
-                      tone={
-                        oauthState.status === "connected"
-                          ? "success"
-                          : oauthState.status === "pending"
-                            ? "accent"
-                            : "warning"
-                      }
-                    >
-                      {oauthState.status}
-                    </StatusPill>
-                  </div>
-                  {oauthState.userCode ? (
-                    <p className="mt-2">
-                      <span className="font-semibold text-[var(--rm-fg)]">User code:</span>{" "}
-                      {oauthState.userCode}
-                    </p>
-                  ) : null}
-                  {shouldAutoPollDeviceAuthorization(oauthState) ? (
-                    <p className="mt-2">
-                      The verification page opens in a new tab and this screen keeps checking
-                      automatically. Successful completion activates the selected models into the
-                      runtime endpoint registry.
-                    </p>
-                  ) : null}
-                  {oauthState.verificationUriComplete ? (
-                    <p className="mt-2 break-all">
-                      <span className="font-semibold text-[var(--rm-fg)]">Verification URL:</span>{" "}
-                      <a
-                        className="text-[var(--rm-accent)] underline"
-                        href={oauthState.verificationUriComplete}
-                        rel="noreferrer"
-                        target="_blank"
-                      >
-                        {oauthState.verificationUriComplete}
-                      </a>
-                    </p>
-                  ) : null}
-                </div>
+                <DeviceAuthorizationCard
+                  session={oauthState}
+                  copyCodeLabel={copiedUserCode ? "Copied" : "Copy code"}
+                  onCopyCode={() => void onCopyUserCode()}
+                />
               ) : null}
 
               {providerMaintenanceRows.length === 0 ? (
@@ -986,6 +1019,14 @@ export default function ProvidersRoute() {
           </SectionCard>
         </div>
       </div>
+      {deviceAuthorizationModalSession ? (
+        <DeviceAuthorizationModal
+          session={deviceAuthorizationModalSession}
+          copyCodeLabel={copiedUserCode ? "Copied" : "Copy code"}
+          onClose={() => setDeviceAuthorizationModalSession(null)}
+          onCopyCode={() => void onCopyUserCode()}
+        />
+      ) : null}
       {apiKeyModalAccount ? (
         <div className="fixed inset-0 z-50 overflow-y-auto p-4" role="presentation">
           <button

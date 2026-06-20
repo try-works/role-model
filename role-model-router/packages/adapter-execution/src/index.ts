@@ -37,11 +37,22 @@ export interface RuntimeExecutionMessage {
   readonly name?: string;
 }
 
-export interface RuntimeExecutionToolDefinition {
+export interface RuntimeExecutionFunctionToolDefinition {
+  readonly kind?: "function";
   readonly name: string;
   readonly description?: string;
   readonly inputSchema: Record<string, unknown>;
 }
+
+export interface RuntimeExecutionHostedToolDefinition {
+  readonly kind: "hosted";
+  readonly name: string;
+  readonly raw: Record<string, unknown>;
+}
+
+export type RuntimeExecutionToolDefinition =
+  | RuntimeExecutionFunctionToolDefinition
+  | RuntimeExecutionHostedToolDefinition;
 
 export interface StructuredOutputRequest {
   readonly name: string;

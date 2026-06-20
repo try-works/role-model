@@ -1,0 +1,84 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/50-openai-codex-subscription/role-model-router/apps/runtime-ui[39m
+
+ [31m❯[39m app/lib/view-models.test.ts [2m([22m[2m33 tests[22m[2m | [22m[31m1 failed[39m[2m | [22m[33m32 skipped[39m[2m)[22m[32m 46[2mms[22m[39m
+   [2m[90m↓[39m[22m buildProviderCards[2m > [22mturns provider variants and account state into provider cards for the onboarding page
+   [2m[90m↓[39m[22m summarizeRuntimeStats[2m > [22mcreates stable dashboard stat cards from the runtime summary counts
+   [2m[90m↓[39m[22m session readiness view models[2m > [22mbuilds bootstrap rows and inventory stats from runtime summary
+   [2m[90m↓[39m[22m buildCredentialReadinessRows[2m > [22mturns the runtime readiness summary into operator-facing readiness rows
+   [2m[90m↓[39m[22m buildCredentialReadinessRows[2m > [22mprefers canonical credential lifecycle counts when they are present
+   [2m[90m↓[39m[22m buildCredentialLifecycleBanner[2m > [22msummarizes authority, blocking rows, and archived stale counts from the canonical lifecycle contract
+   [2m[90m↓[39m[22m buildCredentialLifecycleAccountRows[2m > [22mreturns canonical lifecycle account diagnostics for blocking and ready accounts
+[31m   [31m×[31m buildCredentialLifecycleAccountRows[2m > [22mlabels Codex Subscription transport limits as a blocking connected account without activation actions[39m[32m 42[2mms[22m[39m
+[31m     → expected [ { …(10) } ] to deeply equal [ ObjectContaining{…} ][39m
+   [2m[90m↓[39m[22m buildArchivedArtifactRows[2m > [22mreturns archived stale diagnostics separately from blocking lifecycle rows
+   [2m[90m↓[39m[22m buildWorkbenchModelOptions[2m > [22msorts and deduplicates model options for the workbench composer
+   [2m[90m↓[39m[22m buildWorkbenchEndpointOptions[2m > [22mprefers saved OAuth endpoints over shared LiteLLM endpoints for the selected model
+   [2m[90m↓[39m[22m buildConfiguredModelCards[2m > [22mbuilds unified local and remote model cards with controller and tooling state
+   [2m[90m↓[39m[22m buildConfiguredModelMetadataRows[2m > [22mformats model specifications and pricing for the inspection panel
+   [2m[90m↓[39m[22m buildModelCatalogRows[2m > [22mturns the runtime model catalog into sorted rows with endpoint ids
+   [2m[90m↓[39m[22m buildEndpointCatalogRows[2m > [22mturns the runtime endpoint registry into stable endpoint catalog rows
+   [2m[90m↓[39m[22m countActiveEndpointModels[2m > [22mcounts distinct active local and remote model ids from registry endpoints
+   [2m[90m↓[39m[22m buildAliasReadinessRows[2m > [22msummarizes alias pools across mixed local and remote endpoint candidates
+   [2m[90m↓[39m[22m buildDashboardLatestRequestRows[2m > [22mprefers live canonical requests over benchmark telemetry rows in the overview rail
+   [2m[90m↓[39m[22m buildDashboardLatestRequestRows[2m > [22mgroups repeated alias-routed executions by caller interaction in the overview rail
+   [2m[90m↓[39m[22m buildStructuredLogRows[2m > [22mparses raw logs into structured rows with source, severity, and request correlation when available
+   [2m[90m↓[39m[22m buildStructuredLogRows[2m > [22mpreserves request correlation for packaged runtime log lines without explicit severity tokens
+   [2m[90m↓[39m[22m buildAccountModelCatalogIds[2m > [22mprefers provider catalog order while constraining to account-allowed models
+   [2m[90m↓[39m[22m buildConfiguredProviderRows[2m > [22msummarizes configured providers and models from saved accounts plus live endpoints
+   [2m[90m↓[39m[22m buildConfiguredProviderRows[2m > [22mprefers canonical provider rollups over route-local readiness inference
+   [2m[90m↓[39m[22m buildProviderMaintenanceRows[2m > [22mformats saved-account lifecycle badges and normalized credential posture from the canonical lifecycle contract
+   [2m[90m↓[39m[22m summarizeWorkbenchResult[2m > [22mextracts text, tool calls, tool executions, and usage for the studio inspector
+   [2m[90m↓[39m[22m summarizeWorkbenchResult[2m > [22mfalls back to reasoning_content when chat completion content is empty
+   [2m[90m↓[39m[22m buildDownstreamProviderGuide[2m > [22mcreates stable connection rows and examples for downstream OpenAI-compatible clients
+   [2m[90m↓[39m[22m buildActivitySummary[2m > [22mturns raw activity metrics into operator summary cards and ledger rows
+   [2m[90m↓[39m[22m buildActivitySummary[2m > [22mpreserves newest-first activity order from the metrics API instead of re-sorting by synthetic ids
+   [2m[90m↓[39m[22m telemetry view models[2m > [22mcreates stable summary cards from the canonical telemetry summary
+   [2m[90m↓[39m[22m telemetry view models[2m > [22mbuilds telemetry comparison cards for local and remote endpoint rows
+   [2m[90m↓[39m[22m telemetry view models[2m > [22mbuilds telemetry-backed request ledger rows in newest-first order
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  app/lib/view-models.test.ts > buildCredentialLifecycleAccountRows > labels Codex Subscription transport limits as a blocking connected account without activation actions
+AssertionError: expected [ { …(10) } ] to deeply equal [ ObjectContaining{…} ]
+
+- Expected
++ Received
+
+  [
+-   ObjectContaining {
+-     "availableActions": [],
++   {
++     "activeEndpointCount": 0,
+      "availableActionsLabel": "None",
++     "blocking": true,
+      "key": "openai.personal.codex-subscription",
+      "lifecycleLabel": "Connected, no endpoint",
+-     "reasonLabel": "Connected locally, but direct OpenAI Platform API requests are unavailable for Codex Subscription in this runtime.",
++     "lifecycleState": "connected-no-endpoint",
++     "providerAccountId": "openai.personal.codex-subscription",
++     "providerId": "openai",
++     "reasonLabel": "codex-subscription-platform-api-unavailable",
++     "tone": "warning",
+    },
+  ]
+
+ ❯ app/lib/view-models.test.ts:455:7
+    453|         },
+    454|       } as never),
+    455|     ).toEqual([
+       |       ^
+    456|       expect.objectContaining({
+    457|         key: "openai.personal.codex-subscription",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[33m32 skipped[39m[90m (33)[39m
+[2m   Start at [22m 20:11:28
+[2m   Duration [22m 1.89s[2m (transform 538ms, setup 0ms, collect 632ms, tests 46ms, environment 1ms, prepare 531ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\50-openai-codex-subscription\role-model-router\apps\runtime-ui:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run app/lib/view-models.test.ts --testNamePattern labels Codex Subscription transport limits as a blocking connected account without activation actions

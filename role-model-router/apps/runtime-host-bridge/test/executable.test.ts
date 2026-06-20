@@ -101,6 +101,27 @@ async function collectRuntimeDependencyGraph(): Promise<
 }
 
 describe("runtime-host-bridge executable packaging", () => {
+  test("does not treat imported package-sea modules as direct CLI execution", () => {
+    expect(
+      (
+        packageSea as {
+          isDirectSeaInvocation: (moduleUrl: string, argvEntry?: string) => boolean;
+        }
+      ).isDirectSeaInvocation("file:///repo/src/package-sea.ts", "C:\\tools\\vitest\\entry.mjs"),
+    ).toBe(false);
+
+    expect(
+      (
+        packageSea as {
+          isDirectSeaInvocation: (moduleUrl: string, argvEntry?: string) => boolean;
+        }
+      ).isDirectSeaInvocation(
+        "file:///D:/repo/src/package-sea.ts",
+        "D:\\repo\\src\\package-sea.ts",
+      ),
+    ).toBe(true);
+  });
+
   test("resolves Go through PATH unless GO_BINARY overrides it", () => {
     delete process.env.GO_BINARY;
 

@@ -1,4 +1,4 @@
-import { rm } from "node:fs/promises";
+import { mkdir, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { describe, expect, test } from "vitest";
@@ -349,6 +349,291 @@ describe("account repair mutations", () => {
           { status: 200, headers: { "content-type": "application/json" } },
         ),
       );
+      await backend.shutdown();
+      await rm(runtimeStateRoot, { recursive: true, force: true });
+    }
+  });
+
+  test("codex subscription start returns a real device-code session and poll connects through managed Codex auth", async () => {
+    const runtimeStateRoot = path.join(os.tmpdir(), `account-repair-openai-codex-${Date.now()}`);
+    const scopeId = "account-repair-openai-codex-tests";
+    let networkRequests = 0;
+    let managedCodexHome: string | null = null;
+    const codexExecutionRequests: Array<{
+      requestId: string;
+      providerAccountId: string;
+      modelId: string;
+      requestCapture: {
+        url: string;
+        body: Record<string, unknown>;
+      };
+    }> = [];
+
+    const backend = await createRuntimeBridgeBackend(({
+      repoRoot,
+      fixtureRoot: testFixtureRoot,
+      runtimeStateRoot,
+      scopeId,
+      networkFetcher: async (input) => {
+        const url =
+          typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+        networkRequests += 1;
+        throw new Error(`Unexpected network request: ${url}`);
+      },
+      codexAuthAdapter: {
+        startDeviceCodeLogin: async ({ codexHome }) => {
+          managedCodexHome = codexHome;
+          return {
+            loginId: "login-codex-001",
+            verificationUrl: "https://auth.openai.com/codex/device",
+            userCode: "UDHG-2HKJV",
+            wsUrl: "ws://127.0.0.1:4511",
+            pid: 4321,
+          };
+        },
+        readAccount: async ({ codexHome }) => {
+          await mkdir(codexHome, { recursive: true });
+          await writeFile(
+            path.join(codexHome, "auth.json"),
+            JSON.stringify(
+              {
+                auth_mode: "chatgpt",
+                tokens: {
+                  access_token: "codex-access-001",
+                  refresh_token: "codex-refresh-001",
+                  account_id: "codex-account-001",
+                },
+                last_refresh: "2026-06-18T18:00:00.000Z",
+              },
+              null,
+              2,
+            ),
+            "utf8",
+          );
+          return {
+            account: {
+              type: "chatgpt",
+              email: "user@example.com",
+              planType: "prolite",
+            },
+            requiresOpenaiAuth: true,
+          };
+        },
+      },
+      codexExecutionAdapter: {
+        executeRequest: async ({ requestId, providerAccountId, modelId, requestCapture }) => {
+          codexExecutionRequests.push({
+            requestId,
+            providerAccountId,
+            modelId,
+            requestCapture: {
+              url: requestCapture.url,
+              body: requestCapture.body,
+            },
+          });
+          return {
+            statusCode: 200,
+            body: requestCapture.url.endsWith("/chat/completions")
+              ? {
+                  id: "chatcmpl-codex-001",
+                  choices: [
+                    {
+                      index: 0,
+                      finish_reason: "stop",
+                      message: {
+                        role: "assistant",
+                        content: "Codex subscription reply",
+                      },
+                    },
+                  ],
+                  usage: {
+                    prompt_tokens: 21,
+                    completion_tokens: 7,
+                  },
+                }
+              : {
+                  id: "resp-codex-001",
+                  output: [
+                    {
+                      type: "message",
+                      role: "assistant",
+                      content: [
+                        {
+                          type: "output_text",
+                          text: "Codex subscription reply",
+                        },
+                      ],
+                    },
+                  ],
+                  usage: {
+                    input_tokens: 21,
+                    output_tokens: 7,
+                  },
+                },
+            vendorMetadata: {
+              vendorId: "codex-app-server",
+              latencyMs: 12,
+            },
+          };
+        },
+      },
+    }) as any);
+
+    try {
+      const pending = await backend.startProviderDeviceAuthorization({
+        providerAccountId: "openai.personal.codex-subscription",
+        providerId: "openai",
+        providerKind: "provider-openai",
+        variantId: "openai-codex-subscription",
+        orgScope: "personal",
+        accountScope: "workspace-default",
+        allowedModels: ["chatgpt/gpt-5.3-codex"],
+        deniedModels: [],
+        entitlementTags: ["chat"],
+        budgetPolicyRef: "budget.default",
+        quotaPolicyRef: "quota.default",
+      });
+
+      expect(pending).toEqual(
+        expect.objectContaining({
+          providerAccountId: "openai.personal.codex-subscription",
+          status: "pending",
+          userCode: "UDHG-2HKJV",
+          verificationUri: "https://auth.openai.com/codex/device",
+        }),
+      );
+      expect(managedCodexHome).toBeTruthy();
+
+      await expect(
+        backend.pollProviderDeviceAuthorization({
+          authRequestId: pending.authRequestId,
+        }),
+      ).resolves.toEqual(
+        expect.objectContaining({
+          authRequestId: pending.authRequestId,
+          providerAccountId: "openai.personal.codex-subscription",
+          status: "connected",
+        }),
+      );
+
+      await expect(backend.listAccounts()).resolves.toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            providerAccountId: "openai.personal.codex-subscription",
+            providerId: "openai",
+            authMode: "oauth2-device-code",
+            credentialRef: {
+              backend: "local-file",
+              ref: "oauth/openai/openai.personal.codex-subscription",
+            },
+            status: "active",
+            healthStatus: "healthy",
+            rotationState: "stable",
+          }),
+        ]),
+      );
+
+      await expect(
+        backend.activateEndpoint({
+          providerAccountId: "openai.personal.codex-subscription",
+          modelId: "chatgpt/gpt-5.3-codex",
+          region: "global",
+        }),
+      ).resolves.toEqual(
+        expect.objectContaining({
+          providerAccountId: "openai.personal.codex-subscription",
+          providerId: "openai",
+          modelId: "chatgpt/gpt-5.3-codex",
+          status: "active",
+        }),
+      );
+
+      await expect(backend.listEndpoints()).resolves.toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            endpointId: "openai.personal.codex-subscription.global.gpt-5.3-codex",
+            providerAccountId: "openai.personal.codex-subscription",
+            modelId: "chatgpt/gpt-5.3-codex",
+            toolCallingSupported: true,
+            toolCallingStyle: "none",
+          }),
+        ]),
+      );
+
+      await expect(
+        backend.executeResponses(
+          {
+            model: "chatgpt/gpt-5.3-codex",
+            input: "Reply with Codex subscription reply.",
+          },
+          "req-codex-subscription-001",
+        ),
+      ).resolves.toEqual(
+        expect.objectContaining({
+          responseId: expect.stringMatching(/^(resp|chatcmpl)-codex-/),
+          model: "chatgpt/gpt-5.3-codex",
+          endpointId: "openai.personal.codex-subscription.global.gpt-5.3-codex",
+          outputText: "Codex subscription reply",
+          finishReason: "stop",
+          usage: {
+            inputTokens: 21,
+            outputTokens: 7,
+          },
+        }),
+      );
+
+      expect(codexExecutionRequests).toEqual([
+        expect.objectContaining({
+          requestId: "req-codex-subscription-001",
+          providerAccountId: "openai.personal.codex-subscription",
+          modelId: "chatgpt/gpt-5.3-codex",
+          requestCapture: expect.objectContaining({
+            url: expect.stringMatching(/\/v1\/(chat\/completions|responses)$/),
+            body: expect.objectContaining({
+              model: "gpt-5.3-codex",
+            }),
+          }),
+        }),
+      ]);
+      expect(networkRequests).toBe(0);
+
+      await expect(
+        backend.startProviderDeviceAuthorization({
+          providerAccountId: "openai.personal.codex-subscription",
+          providerId: "openai",
+          providerKind: "provider-openai",
+          variantId: "openai-codex-subscription",
+          orgScope: "personal",
+          accountScope: "workspace-default",
+          allowedModels: ["chatgpt/gpt-5.3-codex"],
+          deniedModels: [],
+          entitlementTags: ["chat"],
+          budgetPolicyRef: "budget.default",
+          quotaPolicyRef: "quota.default",
+        }),
+      ).resolves.toEqual(
+        expect.objectContaining({
+          providerAccountId: "openai.personal.codex-subscription",
+          status: "pending",
+          userCode: "UDHG-2HKJV",
+        }),
+      );
+
+      const summary = await backend.readRuntimeSummary();
+      expect(summary.credentialLifecycle.counts.executionReady).toBe(1);
+      expect(summary.credentialLifecycle.counts.pendingAuthorization).toBe(0);
+      expect(summary.credentialLifecycle.accounts).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            providerAccountId: "openai.personal.codex-subscription",
+            lifecycleState: "execution-ready",
+            reasonCode: "active-endpoint-present",
+            blocking: false,
+            activeEndpointIds: ["openai.personal.codex-subscription.global.gpt-5.3-codex"],
+          }),
+        ]),
+      );
+    } finally {
       await backend.shutdown();
       await rm(runtimeStateRoot, { recursive: true, force: true });
     }

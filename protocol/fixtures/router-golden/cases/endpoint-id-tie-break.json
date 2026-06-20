@@ -105,7 +105,7 @@
   "expected": {
     "chosen_endpoint_id": "alpha",
     "fallback_endpoint_ids": ["beta"],
-    "selection_reasons": ["BEST_TOTAL_SCORE", "FALLBACK_CHAIN_COMPUTED"],
+    "selection_reasons": ["BEST_TOTAL_SCORE", "TIE_BREAK_APPLIED", "FALLBACK_CHAIN_COMPUTED"],
     "eligibility": []
   }
 }

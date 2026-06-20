@@ -4,6 +4,25 @@ export type UnifiedRuntimeExecutionMode = "decision_only" | "hybrid" | "local_on
 
 export type UnifiedRuntimeDifficultyBucket = "easy" | "medium" | "hard";
 export type UnifiedRuntimeAliasRoutingMode = "basic" | "difficulty" | "intelligent" | "hybrid";
+export const DEFAULT_UNIFIED_RUNTIME_CONTROLLER_TIMEOUT_MS = 15_000;
+
+const primaryRoutingAliasPrefixes = [
+  "default",
+  "baseline",
+  "controller",
+  "difficulty",
+  "hybrid",
+] as const;
+const primaryRoutingAliasExecutionSuffixes = [
+  "decision-only",
+  "local-only",
+  "remote-only",
+  "hybrid",
+] as const;
+const legacyPrimaryRoutingAliasIds = new Set<string>([
+  "mixed.local-remote",
+  ...primaryRoutingAliasExecutionSuffixes.map((suffix) => `craft-ask.${suffix}`),
+]);
 
 export interface UnifiedRuntimeConfigModel {
   readonly modelId: string;
@@ -771,7 +790,7 @@ const DEFAULT_UNIFIED_RUNTIME_CONTROLLER_CONFIG: UnifiedRuntimeControllerConfig 
   sourceType: "remote",
   endpointId: null,
   modelId: null,
-  timeoutMs: 1500,
+  timeoutMs: DEFAULT_UNIFIED_RUNTIME_CONTROLLER_TIMEOUT_MS,
 };
 
 function normalizeDifficultyClassifierInput(
@@ -1313,6 +1332,8 @@ export function deriveUnifiedRuntimeExecutionMode(config: {
 function normalizeRoutingStrategyForAlias(strategy: string | null): string {
   const normalized = strategy?.trim().toLowerCase() ?? "";
   switch (normalized) {
+    case "craft-ask":
+      return "default";
     case "baseline":
     case "basic":
     case "balanced":
@@ -1338,7 +1359,15 @@ function normalizeRoutingStrategyForAlias(strategy: string | null): string {
   }
 }
 
-function deriveAliasRoutingMode(
+function normalizeRoutingStrategyInputValue(value: unknown): string | null {
+  const strategy = readNonEmptyString(value);
+  if (!strategy) {
+    return null;
+  }
+  return strategy.trim().toLowerCase() === "craft-ask" ? null : strategy;
+}
+
+export function deriveUnifiedRuntimeRoutingAliasMode(
   strategy: string | null,
   fallback: UnifiedRuntimeAliasRoutingMode | null | undefined,
 ): UnifiedRuntimeAliasRoutingMode | null {
@@ -1367,22 +1396,107 @@ export function deriveUnifiedRuntimeRoutingAliasId(config: {
   )}`;
 }
 
+export function isPrimaryRoutingAliasId(aliasId: string): boolean {
+  if (legacyPrimaryRoutingAliasIds.has(aliasId)) {
+    return true;
+  }
+  return primaryRoutingAliasPrefixes.some((prefix) =>
+    primaryRoutingAliasExecutionSuffixes.some((suffix) => aliasId === `${prefix}.${suffix}`),
+  );
+}
+
+function canonicalizeSinglePrimaryRoutingAlias(
+  alias: UnifiedRuntimeModelAliasConfig,
+  config: UnifiedRuntimeConfig,
+): UnifiedRuntimeModelAliasConfig {
+  return {
+    ...alias,
+    aliasId: deriveUnifiedRuntimeRoutingAliasId(config),
+    mode: deriveUnifiedRuntimeRoutingAliasMode(config.routingStrategy, alias.mode),
+  };
+}
+
+function canonicalizeLegacyRoutingAliasId(
+  alias: UnifiedRuntimeModelAliasConfig,
+  config: UnifiedRuntimeConfig,
+): UnifiedRuntimeModelAliasConfig {
+  if (alias.aliasId === "mixed.local-remote") {
+    return canonicalizeSinglePrimaryRoutingAlias(alias, config);
+  }
+  for (const suffix of primaryRoutingAliasExecutionSuffixes) {
+    if (alias.aliasId === `craft-ask.${suffix}`) {
+      return {
+        ...alias,
+        aliasId: `default.${suffix}`,
+        mode: deriveUnifiedRuntimeRoutingAliasMode(null, alias.mode),
+      };
+    }
+  }
+  return alias;
+}
+
+function mergeCanonicalAliasEntries(
+  aliases: readonly UnifiedRuntimeModelAliasConfig[],
+): readonly UnifiedRuntimeModelAliasConfig[] {
+  const merged = new Map<string, UnifiedRuntimeModelAliasConfig>();
+  for (const alias of aliases) {
+    const existing = merged.get(alias.aliasId);
+    if (!existing) {
+      merged.set(alias.aliasId, alias);
+      continue;
+    }
+    merged.set(alias.aliasId, {
+      aliasId: alias.aliasId,
+      mode: existing.mode ?? alias.mode ?? null,
+      modelIds: [...new Set([...existing.modelIds, ...alias.modelIds])],
+    });
+  }
+  return [...merged.values()];
+}
+
+function sameCanonicalAliasList(
+  left: readonly UnifiedRuntimeModelAliasConfig[],
+  right: readonly UnifiedRuntimeModelAliasConfig[],
+): boolean {
+  return (
+    left.length === right.length &&
+    left.every((alias, index) => {
+      const nextAlias = right[index];
+      return (
+        nextAlias !== undefined &&
+        alias.aliasId === nextAlias.aliasId &&
+        (alias.mode ?? null) === (nextAlias.mode ?? null) &&
+        alias.modelIds.length === nextAlias.modelIds.length &&
+        alias.modelIds.every((modelId, modelIndex) => modelId === nextAlias.modelIds[modelIndex])
+      );
+    })
+  );
+}
+
 function canonicalizeUnifiedRuntimeRoutingAliases(
   config: UnifiedRuntimeConfig,
 ): UnifiedRuntimeConfig {
-  if (!config.modelAliases || config.modelAliases.length !== 1 || config.routingStrategy === null) {
+  if (!config.modelAliases || config.modelAliases.length === 0) {
     return config;
   }
-  const [primaryAlias] = config.modelAliases;
+
+  const normalizedAliases = mergeCanonicalAliasEntries(
+    config.modelAliases.map((alias) => {
+      const canonicalLegacyAlias = canonicalizeLegacyRoutingAliasId(alias, config);
+      if (config.modelAliases?.length === 1 && isPrimaryRoutingAliasId(canonicalLegacyAlias.aliasId)) {
+        return canonicalizeSinglePrimaryRoutingAlias(canonicalLegacyAlias, config);
+      }
+      return canonicalLegacyAlias;
+    }),
+  );
+
+  if (sameCanonicalAliasList(config.modelAliases, normalizedAliases)) {
+    return config;
+  }
+
   return {
     ...config,
-    modelAliases: [
-      {
-        ...primaryAlias,
-        aliasId: deriveUnifiedRuntimeRoutingAliasId(config),
-        mode: deriveAliasRoutingMode(config.routingStrategy, primaryAlias.mode),
-      },
-    ],
+    modelAliases: normalizedAliases,
   };
 }
 
@@ -1403,11 +1517,7 @@ export function parseUnifiedRuntimeConfigText(text: string): UnifiedRuntimeConfi
       typeof rawConfig.version === "string" && rawConfig.version.trim().length > 0
         ? rawConfig.version
         : "1.0",
-    routingStrategy:
-      typeof rawConfig.routing?.strategy === "string" &&
-      rawConfig.routing.strategy.trim().length > 0
-        ? rawConfig.routing.strategy
-        : null,
+    routingStrategy: normalizeRoutingStrategyInputValue(rawConfig.routing?.strategy),
     executionMode:
       explicitExecutionMode ??
       deriveUnifiedRuntimeExecutionMode({
@@ -1483,10 +1593,9 @@ export function normalizeUnifiedRuntimeConfigInput(input: unknown): UnifiedRunti
 
   return canonicalizeUnifiedRuntimeRoutingAliases({
     version: readNonEmptyString(input.version) ?? "1.0",
-    routingStrategy:
-      readNonEmptyString(
-        "routingStrategy" in input ? input.routingStrategy : routingStrategyInput,
-      ) ?? null,
+    routingStrategy: normalizeRoutingStrategyInputValue(
+      "routingStrategy" in input ? input.routingStrategy : routingStrategyInput,
+    ),
     executionMode:
       explicitExecutionMode ??
       deriveUnifiedRuntimeExecutionMode({

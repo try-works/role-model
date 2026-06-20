@@ -25,6 +25,7 @@ type CliBackend = Pick<
   | "readTelemetrySummary"
   | "listTelemetryComparisonRows"
   | "listTelemetryRequests"
+  | "queryTelemetryAnalytics"
   | "subscribeTelemetry"
   | "listProviders"
   | "listModels"
@@ -122,6 +123,7 @@ export function createCliServerOptions(
     readTelemetrySummary: backend.readTelemetrySummary,
     listTelemetryComparisonRows: backend.listTelemetryComparisonRows,
     listTelemetryRequests: backend.listTelemetryRequests,
+    queryTelemetryAnalytics: backend.queryTelemetryAnalytics,
     subscribeTelemetry: backend.subscribeTelemetry,
     listProviders: backend.listProviders,
     listModels: backend.listModels,

@@ -1,0 +1,11 @@
+[QA] Starting Role Model Runtime Bridge...
+[QA] repoRoot: D:\DEV\role-model\.worktrees\50-openai-codex-subscription
+[QA] runtimeStateRoot: C:\Users\erikb\AppData\Local\Temp\role-model-runtime-qa
+[QA] scopeId: runtime-qa
+[QA] Seeded placeholder MOONSHOT_API_KEY for local UI QA.
+[QA] Clearing stale runtime state...
+[QA] Stale runtime state cleared.
+[QA] Seeded runtime config: C:\Users\erikb\AppData\Local\Temp\role-model-runtime-qa\runtime-config.yaml
+undefined
+D:\DEV\role-model\.worktrees\50-openai-codex-subscription\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: tsx scripts/start-for-qa.ts

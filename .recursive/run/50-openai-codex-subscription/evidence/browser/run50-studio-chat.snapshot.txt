@@ -1,0 +1,73 @@
+- complementary:
+  - heading "role-model" [level=1]
+  - link "Overview":
+    - /url: /app
+    - generic: Overview
+  - link "Studio":
+    - /url: /app/studio/chat
+    - generic: Studio
+  - link "Local":
+    - /url: /app/local/endpoints
+    - generic: Local
+  - link "Remote":
+    - /url: /app/remote/providers
+    - generic: Remote
+  - link "Models":
+    - /url: /app/models
+    - generic: Models
+  - link "Router":
+    - /url: /app/router
+    - generic: Router
+  - link "Observe":
+    - /url: /app/observe/requests
+    - generic: Observe
+  - link "Connect":
+    - /url: /app/connect
+    - generic: Connect
+  - link "System":
+    - /url: /app/system/session-readiness
+    - generic: System
+  - group "Theme toggle":
+    - button "Light"
+    - button "Dark"
+- banner:
+  - heading "Chat workspace" [level=2]
+  - paragraph: Compose routed chat requests and inspect assistant output, tool calls, and execution receipts side by side.
+  - navigation:
+    - link "Chat":
+      - /url: /app/studio/chat
+      - generic: Chat
+    - link "Images":
+      - /url: /app/studio/images
+      - generic: Images
+    - link "Audio":
+      - /url: /app/studio/audio
+      - generic: Audio
+    - link "Rerank":
+      - /url: /app/studio/rerank
+      - generic: Rerank
+    - link "Advanced APIs":
+      - /url: /app/studio/advanced
+      - generic: Advanced APIs
+- main:
+  - paragraph: Models
+  - paragraph: "0"
+  - paragraph: Tool-capable endpoints
+  - paragraph: "0"
+  - paragraph: Selected model
+  - paragraph: —
+  - paragraph: Routing mode
+  - paragraph: Alias default
+  - generic: Authoritative lifecycle snapshot
+  - generic: Canonical lifecycle data is authoritative; remaining blockers are ready for repair.
+  - generic: Connected, no endpoint 1
+  - link "Remote → Providers":
+    - /url: /app/remote/providers
+  - link "System → Session readiness":
+    - /url: /app/system/session-readiness
+  - heading "Composer" [level=2]
+  - paragraph: "This form posts directly to the runtime-host `/v1/chat/completions` route."
+  - paragraph: No execution-ready models yet. Complete OAuth, fix credentials, or activate an endpoint from Providers.
+  - heading "Result workspace" [level=2]
+  - paragraph: Tooling-aware response summary aligned with the runtime host payload.
+  - paragraph: No result yet.

@@ -1315,3 +1315,40 @@
 - Known issues / follow-ups:
   - dashboard graph E2E proved fresh router probes are ingested into analytics through failed request rows; successful token/cost/cache chart metrics were verified from seeded successful telemetry rows rather than fresh successful completions because vendor execution is disabled in the QA launcher
   - build assets under `role-model-router/apps/runtime-ui/build/` are QA byproducts and should remain untracked
+
+### Run `50-openai-codex-subscription`
+
+- Run folder: `/.recursive/run/50-openai-codex-subscription/`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+  - addenda `addenda/02-to-be-plan.addendum-01.md` through `addenda/02-to-be-plan.addendum-27.md`
+  - implementation addenda `addenda/03-implementation-summary.addendum-01.md` through `addenda/03-implementation-summary.addendum-27.md` where present
+- What changed:
+  - collapsed operator-facing OpenAI inventory to one provider surface with `API Key` plus `Codex Subscription`, suppressing the duplicate raw `chatgpt` provider row
+  - added a Codex-managed device-code/Auth-cache path for OpenAI subscription onboarding with truthful lifecycle semantics: connected accounts can remain `Connected, no endpoint` / `entitlement-missing` when the cached ChatGPT session does not grant the direct OpenAI Platform API scopes needed by the current runtime transport
+  - curated OpenAI subscription support to the GPT `5.3+` family and verified hosted web-search/function-tool request surfaces for those supported OpenAI models
+  - expanded the same run into routing/control-plane repairs discovered during rebuilt-runtime QA: canonical strategy × execution-mode alias matrix generation, strict legacy `craft-ask` removal, controller timeout/budget/compatibility repair, role-first task-detail UI, non-controller requested-role routing repair, and transport-aware hosted-search capability handling across OpenAI, Kimi, and DeepSeek
+  - normalized DeepSeek DSML search markup into consumer-visible tool calls instead of extending the router runtime into a hosted browser/tool host
+  - repaired `runtime:validate-ui` teardown so the validator shuts down its backend after the HTTP server closes and exits cleanly
+  - updated routing interaction documentation in `/docs/architecture/09-runtime-routing-strategy-interactions.md` to match the current alias matrix, roles/tasks hierarchy, capability metadata, and routing-decision flow
+- Why:
+  - the original requirement was to add a real `Codex Subscription` path under OpenAI without duplicating providers or pretending ChatGPT/Codex auth is the same as an OpenAI API key
+  - live rebuilt-runtime QA exposed coupled runtime truth gaps in alias synthesis, restart health, controller routing, requested-role handling, hosted-search capability semantics, and validator cleanup that had to be repaired before the OpenAI provider work could be considered production-ready
+- How:
+  - implemented with strict RED/GREEN TDD across provider synthesis, auth-cache onboarding, lifecycle truthfulness, hosted-search/tool-surface handling, alias-matrix persistence, controller compatibility, requested-role handling, and validator cleanup
+  - verified through focused host/runtime-ui suites, broader impacted bridge suites, live rebuilt-runtime probes, rebuilt browser/operator proof, and hybrid manual QA with operator approval on `2026-06-20`
+- What was not done:
+  - the runtime still does not convert `Codex Subscription` into a direct OpenAI Platform API transport when the cached ChatGPT/Codex session lacks those scopes; the truthful block is intentional
+  - the router runtime still does not become a generic hosted browser/tool executor for all providers; consumer-visible tool-call normalization remains the chosen boundary for DeepSeek DSML search flows
+- Known issues / follow-ups:
+  - final operator acceptance is anchored to the rebuilt runtime on `:3462` because an older runtime was still listening on `:3461` during intermediate QA
+  - temporary runtime logs and rebuilt UI assets remain verification byproducts and should not be mistaken for new durable product-source requirements beyond the validated behaviors they prove

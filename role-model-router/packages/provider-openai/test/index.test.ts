@@ -250,6 +250,188 @@ describe("OpenAI provider adapter", () => {
     });
   });
 
+  test("preserves hosted OpenAI responses tools instead of coercing them into function tools", () => {
+    const target = {
+      endpointId: "openai.personal.primary.us-east-1.fast",
+      modelId: "chatgpt/gpt-5.4",
+      providerId: "openai",
+      providerKind: "provider-openai",
+      providerAccountId: "openai.personal.primary",
+      adapterFamily: "ai-sdk-openai",
+      authFamily: "api-key",
+      apiBase: "https://api.openai.test/v1",
+      requestShapeHints: {
+        providerShape: "openai.responses",
+        bodyKeys: ["temperature", "max_output_tokens", "tools"],
+        headerKeys: ["OpenAI-Beta"],
+      },
+      candidate: {
+        identity: {
+          endpoint_id: "openai.personal.primary.us-east-1.fast",
+          provider_kind: "remote_openai_compat",
+        },
+      },
+      account: {
+        credentialRef: {
+          backend: "env",
+          ref: "OPENAI_API_KEY",
+        },
+      },
+    };
+
+    const executionRequest = {
+      messages: [{ role: "user", content: "Find the current Cloudflare stock price." }],
+      tools: [
+        {
+          kind: "hosted",
+          name: "web_search",
+          raw: {
+            type: "web_search",
+          },
+        },
+      ],
+    } as any;
+
+    const adapter = createOpenAIProviderAdapter();
+    const capabilities = adapter.negotiateCapabilities({ target, executionRequest });
+    const requestCapture = buildOpenAIRequest({
+      target,
+      executionRequest,
+      capabilities,
+    });
+
+    expect(requestCapture.body.tools).toEqual([
+      {
+        type: "web_search",
+      },
+    ]);
+  });
+
+  test("forces the OpenAI Responses API path when hosted tools are requested", () => {
+    const target = {
+      endpointId: "openai.personal.primary.us-east-1.fast",
+      modelId: "chatgpt/gpt-5.4",
+      providerId: "openai",
+      providerKind: "provider-openai",
+      providerAccountId: "openai.personal.primary",
+      adapterFamily: "ai-sdk-openai",
+      authFamily: "api-key",
+      apiBase: "https://api.openai.test/v1",
+      requestShapeHints: {
+        providerShape: "openai.chat.completions",
+        bodyKeys: ["temperature", "max_tokens", "tools"],
+        headerKeys: [],
+      },
+      candidate: {
+        identity: {
+          endpoint_id: "openai.personal.primary.us-east-1.fast",
+          provider_kind: "remote_openai_compat",
+        },
+      },
+      account: {
+        credentialRef: {
+          backend: "env",
+          ref: "OPENAI_API_KEY",
+        },
+      },
+    };
+
+    const executionRequest = {
+      messages: [{ role: "user", content: "Find the current Cloudflare stock price." }],
+      tools: [
+        {
+          kind: "hosted",
+          name: "web_search",
+          raw: {
+            type: "web_search",
+          },
+        },
+      ],
+    } as any;
+
+    const adapter = createOpenAIProviderAdapter();
+    const capabilities = adapter.negotiateCapabilities({ target, executionRequest });
+    const requestCapture = buildOpenAIRequest({
+      target,
+      executionRequest,
+      capabilities,
+    });
+
+    expect(requestCapture.url).toBe("https://api.openai.test/v1/responses");
+    expect(requestCapture.body.tools).toEqual([
+      {
+        type: "web_search",
+      },
+    ]);
+  });
+
+  test("keeps Kimi hosted web search on chat-completions and disables thinking", () => {
+    const target = {
+      endpointId: "moonshot.personal.kimi-code.global.kimi-k2.6",
+      modelId: "moonshot/kimi-k2.6",
+      providerId: "moonshot",
+      providerKind: "provider-openai",
+      providerAccountId: "moonshot.personal.kimi-code",
+      adapterFamily: "ai-sdk-openai-compatible",
+      authFamily: "api-key",
+      apiBase: "https://api.kimi.test/coding/v1",
+      requestShapeHints: {
+        providerShape: "openai.chat.completions",
+        bodyKeys: ["temperature", "max_tokens", "tools", "thinking"],
+        headerKeys: ["Authorization"],
+      },
+      candidate: {
+        identity: {
+          endpoint_id: "moonshot.personal.kimi-code.global.kimi-k2.6",
+          provider_kind: "remote_openai_compat",
+        },
+      },
+      account: {
+        credentialRef: {
+          backend: "local-encrypted-file",
+          ref: "oauth/moonshot/moonshot.personal.kimi-code",
+        },
+      },
+    };
+
+    const executionRequest = {
+      messages: [{ role: "user", content: "Find the current Cloudflare stock price." }],
+      tools: [
+        {
+          kind: "hosted",
+          name: "web_search",
+          raw: {
+            type: "builtin_function",
+            function: {
+              name: "$web_search",
+            },
+          },
+        },
+      ],
+    } as any;
+
+    const adapter = createOpenAIProviderAdapter("ai-sdk-openai-compatible");
+    const capabilities = adapter.negotiateCapabilities({ target, executionRequest });
+    const requestCapture = buildOpenAIRequest({
+      target,
+      executionRequest,
+      capabilities,
+    });
+
+    expect(requestCapture.url).toBe("https://api.kimi.test/coding/v1/chat/completions");
+    expect(requestCapture.body.tools).toEqual([
+      {
+        type: "builtin_function",
+        function: {
+          name: "$web_search",
+        },
+      },
+    ]);
+    expect(requestCapture.body.thinking).toEqual({
+      type: "disabled",
+    });
+  });
+
   test("builds an OpenAI-compatible chat-completions request for Kimi and normalizes the reply", () => {
     const target = {
       endpointId: "moonshot.personal.kimi-code.global.kimi-k2.5",

@@ -31,6 +31,7 @@ import {
   updateRolePolicyRole,
   updateTaskDefinitions,
 } from "../lib/runtime-api";
+import { RoleCatalogHierarchy, buildRoleTaskHierarchy } from "../lib/role-task-hierarchy";
 
 type RoleDraft = {
   roleId: string;
@@ -260,6 +261,7 @@ function RoleForm({
 export default function ControlRolesRoute() {
   const [policy, setPolicy] = useState<RuntimeRolePolicy | null>(null);
   const [selectedRoleId, setSelectedRoleId] = useState<string | null>(null);
+  const [expandedRoleId, setExpandedRoleId] = useState<string | null>(null);
   const [createDraft, setCreateDraft] = useState<RoleDraft>(createBlankRoleDraft());
   const [editDraft, setEditDraft] = useState<RoleDraft | null>(null);
   const [taskRoleSelections, setTaskRoleSelections] = useState<Record<string, string[]>>({});
@@ -303,6 +305,15 @@ export default function ControlRolesRoute() {
   const selectedRole = useMemo(
     () => policy?.roleDefinitions.find((role) => role.role_id === selectedRoleId) ?? null,
     [policy, selectedRoleId],
+  );
+  const roleTaskHierarchy = useMemo(
+    () =>
+      policy ? buildRoleTaskHierarchy(policy.roleDefinitions, policy.taskDefinitions) : ([] as const),
+    [policy],
+  );
+  const expandedRole = useMemo(
+    () => roleTaskHierarchy.find((role) => role.roleId === expandedRoleId) ?? null,
+    [expandedRoleId, roleTaskHierarchy],
   );
 
   useEffect(() => {
@@ -424,47 +435,21 @@ export default function ControlRolesRoute() {
 
           <SectionCard
             title="Role catalog"
-            description="Scan live roles, supported task types, and tool posture before selecting a definition to edit."
+            description="Scan live roles first, then open task detail only when you want the lower-level task contract for a specific role."
           >
             {policy.roleDefinitions.length === 0 ? (
               <EmptyState label="No runtime roles are defined yet." />
             ) : (
-              <div className="grid gap-4 xl:grid-cols-2">
-                {policy.roleDefinitions.map((role) => (
-                  <button
-                    key={role.role_id}
-                    className={`${mutedPanelClassName} space-y-3 p-4 text-left ${
-                      selectedRoleId === role.role_id ? "border-[var(--rm-accent)]" : ""
-                    }`}
-                    type="button"
-                    onClick={() => setSelectedRoleId(role.role_id)}
-                  >
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div>
-                        <p className="text-sm font-semibold text-[var(--rm-fg)]">{role.name}</p>
-                        <p className="mt-1 break-all text-xs uppercase tracking-[0.16em] text-[var(--rm-muted)]">
-                          {role.role_id}
-                        </p>
-                      </div>
-                      <StatusPill
-                        tone={role.tool_policy.mode === "allowed" ? "success" : "warning"}
-                      >
-                        {role.tool_policy.mode}
-                      </StatusPill>
-                    </div>
-                    <p className="text-sm leading-6 text-[var(--rm-secondary)]">
-                      {role.description}
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {role.task_types_supported.map((taskType) => (
-                        <StatusPill key={taskType} tone="neutral">
-                          {taskType}
-                        </StatusPill>
-                      ))}
-                    </div>
-                  </button>
-                ))}
-              </div>
+              <RoleCatalogHierarchy
+                roleDefinitions={policy.roleDefinitions}
+                taskDefinitions={policy.taskDefinitions}
+                expandedRoleId={expandedRoleId}
+                onToggleTaskDetail={(roleId) =>
+                  setExpandedRoleId((current) => (current === roleId ? null : roleId))
+                }
+                selectedRoleId={selectedRoleId}
+                onSelectRole={setSelectedRoleId}
+              />
             )}
           </SectionCard>
 
@@ -537,43 +522,44 @@ export default function ControlRolesRoute() {
           </SectionCard>
 
           <SectionCard
-            title="Task allowlists"
-            description="Each task keeps its existing contract fields while allowed roles stay editable from the same live policy surface."
+            title="Role task allowlists"
+            description="Tasks stay nested under the selected role so allowlist editing follows the same role-first hierarchy shown in the catalog."
           >
             {policy.taskDefinitions.length === 0 ? (
               <EmptyState label="No task definitions are available yet." />
+            ) : !expandedRole ? (
+              <EmptyState label="Open Task detail on a role to inspect or edit its task memberships." />
             ) : (
               <div className="space-y-4">
-                {policy.taskDefinitions.map((task) => (
-                  <div key={task.task_type} className={`${mutedPanelClassName} space-y-3 p-4`}>
+                <div className={`${mutedPanelClassName} space-y-2 p-4`}>
+                  <p className="text-sm font-semibold text-[var(--rm-fg)]">{expandedRole.label}</p>
+                  <p className="text-sm text-[var(--rm-secondary)]">
+                    Role id: <span className="font-mono">{expandedRole.roleId}</span>
+                  </p>
+                </div>
+                {expandedRole.tasks.map((task) => (
+                  <div key={task.taskType} className={`${mutedPanelClassName} space-y-3 p-4`}>
                     <div>
-                      <p className="font-semibold text-[var(--rm-fg)]">{task.task_type}</p>
+                      <p className="font-semibold text-[var(--rm-fg)]">{task.taskType}</p>
                       <p className="mt-1 text-sm text-[var(--rm-secondary)]">{task.description}</p>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      {task.required_capabilities.map((capability) => (
+                      {task.requiredCapabilities.map((capability) => (
                         <StatusPill key={capability} tone="neutral">
                           {capability}
                         </StatusPill>
                       ))}
                     </div>
-                    <div className="flex flex-wrap gap-3">
-                      {policy.roleDefinitions.map((role) => (
-                        <label
-                          key={`${task.task_type}:${role.role_id}`}
-                          className="flex items-center gap-2 rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] px-3 py-2 text-sm text-[var(--rm-secondary)]"
-                        >
-                          <input
-                            checked={(taskRoleSelections[task.task_type] ?? []).includes(
-                              role.role_id,
-                            )}
-                            type="checkbox"
-                            onChange={() => toggleTaskRole(task.task_type, role.role_id)}
-                          />
-                          <span>{role.role_id}</span>
-                        </label>
-                      ))}
-                    </div>
+                    <label className="flex items-center gap-2 rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] px-3 py-2 text-sm text-[var(--rm-secondary)]">
+                      <input
+                        checked={(taskRoleSelections[task.taskType] ?? []).includes(
+                          expandedRole.roleId,
+                        )}
+                        type="checkbox"
+                        onChange={() => toggleTaskRole(task.taskType, expandedRole.roleId)}
+                      />
+                      <span>{expandedRole.roleId}</span>
+                    </label>
                   </div>
                 ))}
                 <button

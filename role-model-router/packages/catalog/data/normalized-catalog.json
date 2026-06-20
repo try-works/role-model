@@ -44245,7 +44245,8 @@
         "text.chat",
         "tools.function_calling",
         "reasoning",
-        "structured.output"
+        "structured.output",
+        "code.edit"
       ],
       "modalities": [
         "text"
@@ -44263,7 +44264,7 @@
         "baseModelId": null,
         "chain": []
       },
-      "localOverrideApplied": false,
+      "localOverrideApplied": true,
       "localNotes": [],
       "upstreamProvenance": {
         "vendor": "models.dev",
@@ -44283,7 +44284,8 @@
         "text.chat",
         "tools.function_calling",
         "reasoning",
-        "structured.output"
+        "structured.output",
+        "code.edit"
       ],
       "modalities": [
         "text"
@@ -44301,7 +44303,7 @@
         "baseModelId": null,
         "chain": []
       },
-      "localOverrideApplied": false,
+      "localOverrideApplied": true,
       "localNotes": [],
       "upstreamProvenance": {
         "vendor": "models.dev",
@@ -95182,7 +95184,8 @@
         "text.chat",
         "tools.function_calling",
         "reasoning",
-        "structured.output"
+        "structured.output",
+        "code.edit"
       ],
       "modalities": [
         "text",
@@ -132034,7 +132037,8 @@
       "capabilities": [
         "text.chat",
         "tools.function_calling",
-        "structured.output"
+        "structured.output",
+        "code.edit"
       ],
       "modalities": [
         "image",
@@ -132073,7 +132077,8 @@
         "text.chat",
         "tools.function_calling",
         "reasoning",
-        "structured.output"
+        "structured.output",
+        "code.edit"
       ],
       "modalities": [
         "image",
@@ -132113,7 +132118,8 @@
         "text.chat",
         "tools.function_calling",
         "reasoning",
-        "structured.output"
+        "structured.output",
+        "code.edit"
       ],
       "modalities": [
         "image",
@@ -132153,7 +132159,8 @@
         "text.chat",
         "tools.function_calling",
         "reasoning",
-        "structured.output"
+        "structured.output",
+        "code.edit"
       ],
       "modalities": [
         "image",
@@ -132193,7 +132200,8 @@
         "text.chat",
         "tools.function_calling",
         "reasoning",
-        "structured.output"
+        "structured.output",
+        "code.edit"
       ],
       "modalities": [
         "image",
@@ -132232,7 +132240,8 @@
         "text.chat",
         "tools.function_calling",
         "reasoning",
-        "structured.output"
+        "structured.output",
+        "code.edit"
       ],
       "modalities": [
         "image",
@@ -132270,7 +132279,8 @@
       "capabilities": [
         "text.chat",
         "tools.function_calling",
-        "reasoning"
+        "reasoning",
+        "code.edit"
       ],
       "modalities": [
         "image",
@@ -132309,7 +132319,8 @@
         "text.chat",
         "tools.function_calling",
         "reasoning",
-        "structured.output"
+        "structured.output",
+        "code.edit"
       ],
       "modalities": [
         "image",
@@ -132349,7 +132360,8 @@
         "text.chat",
         "tools.function_calling",
         "reasoning",
-        "structured.output"
+        "structured.output",
+        "code.edit"
       ],
       "modalities": [
         "image",

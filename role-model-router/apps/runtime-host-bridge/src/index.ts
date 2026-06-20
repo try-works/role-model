@@ -1,7 +1,9 @@
 import { randomUUID } from "node:crypto";
-import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { type ChildProcessWithoutNullStreams, spawn } from "node:child_process";
+import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { type IncomingMessage, type Server, type ServerResponse, createServer } from "node:http";
+import { createServer as createNetServer } from "node:net";
 import os from "node:os";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
@@ -44,6 +46,11 @@ import {
   type RuntimeTelemetrySnapshot,
   createRuntimeObservationBundle,
 } from "@role-model-router/runtime-observability";
+import {
+  buildCompactControllerSystemPrompt,
+  buildControllerSystemPrompt,
+  parseAndSanitizeControllerRoutingGuidance,
+} from "./controller-routing-contract.js";
 import {
   clearAllObservedBenchmarkData,
   clearBenchmarkRunArtifacts,
@@ -97,6 +104,7 @@ import {
   type ResolvedExecutionTarget,
   type RoutedExecutionResult,
   type RuntimeExecutionRequest,
+  type RuntimeExecutionToolDefinition,
   type RuntimeResponseCaptureMap,
   executeLiveRoutedRequest,
 } from "@role-model-router/adapter-execution";
@@ -180,6 +188,10 @@ import {
   summarizeRouterGuidance,
 } from "./runtime-routing-model.js";
 import {
+  DEFAULT_UNIFIED_RUNTIME_CONTROLLER_TIMEOUT_MS,
+  deriveUnifiedRuntimeRoutingAliasId,
+  deriveUnifiedRuntimeRoutingAliasMode,
+  isPrimaryRoutingAliasId,
   type UnifiedRuntimeConfig,
   type UnifiedRuntimeDifficultyBucket,
   type UnifiedRuntimeDifficultyClassifierConfig,
@@ -203,6 +215,138 @@ interface OpenAIChatCompletionsTool {
 
 const LOCAL_OPENAI_PROVIDER_ID = "local-openai-compatible";
 const LOCAL_OPENAI_PLACEHOLDER_TOKEN = "role-model-local";
+const ROUTING_SELECTION_SCORE_TIE_EPSILON = 0.01;
+const BRIDGE_TOOL_LOOP_MAX_STEPS = 4;
+const BRIDGE_TOOL_LOOP_FOLLOWUP_INSTRUCTION =
+  "Use the provided tool results to answer the original user request directly. Do not call additional tools unless the provided results are empty or unusable.";
+const OPENAI_PROVIDER_ID = "openai";
+const CHATGPT_PROVIDER_ID = "chatgpt";
+const OPENAI_CODEX_SUBSCRIPTION_VARIANT_ID = "openai-codex-subscription";
+const CONTROLLER_MAX_OUTPUT_TOKENS = 1024;
+export type OpenAICodexSubscriptionModelLifecycle = "supported" | "preview" | "deprecated";
+
+export interface OpenAICodexSubscriptionModelProfile {
+  readonly modelId: `chatgpt/gpt-5.${string}`;
+  readonly lifecycle: OpenAICodexSubscriptionModelLifecycle;
+  readonly supportsFunctionCalling: boolean;
+  readonly supportsHostedWebSearch: boolean;
+}
+
+export const OPENAI_CODEX_SUBSCRIPTION_MODEL_MATRIX = [
+  {
+    modelId: "chatgpt/gpt-5.5",
+    lifecycle: "supported",
+    supportsFunctionCalling: true,
+    supportsHostedWebSearch: true,
+  },
+  {
+    modelId: "chatgpt/gpt-5.5-pro",
+    lifecycle: "supported",
+    supportsFunctionCalling: true,
+    supportsHostedWebSearch: true,
+  },
+  {
+    modelId: "chatgpt/gpt-5.4",
+    lifecycle: "supported",
+    supportsFunctionCalling: true,
+    supportsHostedWebSearch: true,
+  },
+  {
+    modelId: "chatgpt/gpt-5.4-mini",
+    lifecycle: "supported",
+    supportsFunctionCalling: true,
+    supportsHostedWebSearch: true,
+  },
+  {
+    modelId: "chatgpt/gpt-5.4-nano",
+    lifecycle: "supported",
+    supportsFunctionCalling: true,
+    supportsHostedWebSearch: true,
+  },
+  {
+    modelId: "chatgpt/gpt-5.4-pro",
+    lifecycle: "supported",
+    supportsFunctionCalling: true,
+    supportsHostedWebSearch: true,
+  },
+  {
+    modelId: "chatgpt/gpt-5.3-codex",
+    lifecycle: "supported",
+    supportsFunctionCalling: true,
+    supportsHostedWebSearch: true,
+  },
+  {
+    modelId: "chatgpt/gpt-5.3-codex-spark",
+    lifecycle: "preview",
+    supportsFunctionCalling: true,
+    supportsHostedWebSearch: true,
+  },
+  {
+    modelId: "chatgpt/gpt-5.3-chat-latest",
+    lifecycle: "deprecated",
+    supportsFunctionCalling: true,
+    supportsHostedWebSearch: true,
+  },
+] as const satisfies readonly OpenAICodexSubscriptionModelProfile[];
+
+export const OPENAI_CODEX_SUBSCRIPTION_MODEL_IDS = OPENAI_CODEX_SUBSCRIPTION_MODEL_MATRIX.map(
+  (entry) => entry.modelId,
+);
+const OPENAI_CODEX_SUBSCRIPTION_MODEL_ID_SET = new Set<string>(
+  OPENAI_CODEX_SUBSCRIPTION_MODEL_IDS,
+);
+const OPENAI_CODEX_SUBSCRIPTION_START_ENDPOINT = "codex://openai/chatgpt-device-code/start";
+const OPENAI_CODEX_SUBSCRIPTION_TOKEN_ENDPOINT = "codex://openai/chatgpt-device-code/token";
+const OPENAI_CODEX_SUBSCRIPTION_VERIFICATION_URL = "https://auth.openai.com/codex/device";
+const OPENAI_CODEX_SUBSCRIPTION_AUTH_MISSING_ERROR =
+  "Codex Subscription is connected on this machine, but the cached Codex auth session is missing or unreadable. Reconnect to continue.";
+const CODEX_APP_SERVER_DEVICE_CODE_PREFIX = "codex-app-server:";
+const CODEX_APP_SERVER_REQUEST_TIMEOUT_MS = 10_000;
+const CODEX_APP_SERVER_TURN_TIMEOUT_MS = 120_000;
+const CANONICAL_ROUTING_ALIAS_STRATEGIES = [
+  null,
+  "baseline",
+  "controller",
+  "difficulty",
+  "hybrid",
+] as const satisfies readonly (string | null)[];
+const CANONICAL_ROUTING_ALIAS_EXECUTION_MODES = [
+  "decision_only",
+  "hybrid",
+  "local_only",
+  "remote_only",
+] as const satisfies readonly UnifiedRuntimeExecutionMode[];
+
+function containsLegacyRoutingAliasConfigText(text: string): boolean {
+  const normalized = text.toLowerCase();
+  return (
+    normalized.includes("craft-ask.") ||
+    normalized.includes("mixed.local-remote") ||
+    normalized.includes('strategy: "craft-ask"') ||
+    normalized.includes("strategy: craft-ask")
+  );
+}
+
+function isOpenAICodexSubscriptionModelId(modelId: string): boolean {
+  return OPENAI_CODEX_SUBSCRIPTION_MODEL_ID_SET.has(modelId);
+}
+
+function isOpenAICodexSubscriptionAccount(input: {
+  readonly providerId: string;
+  readonly authMode: string;
+}): boolean {
+  return input.providerId === OPENAI_PROVIDER_ID && input.authMode === "oauth2-device-code";
+}
+
+function assertOpenAICodexSubscriptionModelIds(modelIds: readonly string[]): void {
+  const unsupported = modelIds.filter((modelId) => !isOpenAICodexSubscriptionModelId(modelId));
+  if (unsupported.length === 0) {
+    return;
+  }
+  throw new Error(
+    `Codex Subscription only supports OpenAI GPT-5.3+ model ids for this runtime: ${unsupported.join(", ")}.`,
+  );
+}
 
 interface LocalPeerConfig {
   readonly id: string;
@@ -334,11 +478,7 @@ export interface BridgeExecutionPlan {
   readonly routingRequest: Parameters<typeof routeRuntimeRequest>[0]["request"];
   readonly executionRequest: {
     readonly messages: readonly OpenAIChatCompletionsMessage[];
-    readonly tools?: readonly {
-      readonly name: string;
-      readonly description?: string;
-      readonly inputSchema: Record<string, unknown>;
-    }[];
+    readonly tools?: readonly RuntimeExecutionToolDefinition[];
     readonly stream?: boolean;
     readonly maxOutputTokens?: number;
     readonly temperature?: number;
@@ -470,11 +610,11 @@ function summarizeDifficultySignals(input: {
     : combined;
   const instructionConstraintCount = countMatches(
     askModeBurdenSource.toLowerCase(),
-    /\b(must|should|need to|required|preserve|verify|strict|do not|don't|never|without|constraint|compatible)\b/g,
+    /\b(must|should|need to|required|preserve|verify|strict|do not|don't|never|without|constraint|compatible|ensure|maintain|avoid|breaking|regression)\b/g,
   );
   const decompositionKeywordCount = countMatches(
     combined.toLowerCase(),
-    /\b(analyze|compare|iterate|plan|step|decompose|refactor|workflow|multi-step|across)\b/g,
+    /\b(analyze|compare|iterate|plan|step|decompose|refactor|workflow|multi-step|across|identify|explain|investigate|debug|patch|regression)\b/g,
   );
   const effectiveToolCount = askMode ? 0 : input.toolCount;
   const effectiveHistoryTurnCount = askMode ? userMessages.length : input.messages.length;
@@ -537,6 +677,9 @@ function classifyDifficultyFromSignals(input: {
   }
   if (input.signals.codeOrSchemaBurden) {
     score += 2;
+  }
+  if (input.signals.codeOrSchemaBurden && input.signals.instructionConstraintCount >= 3) {
+    score += 1;
   }
 
   if (score >= 7) {
@@ -696,75 +839,314 @@ function buildControllerRoutingMessages(input: {
   readonly messages: readonly OpenAIChatCompletionsMessage[];
   readonly toolCount: number;
   readonly candidateEndpointIds: readonly string[];
+  readonly roleDefinitions?: readonly RuntimeRoleDefinitionRecord[];
+  readonly taskDefinitions?: readonly RuntimeTaskDefinitionRecord[];
 }): readonly OpenAIChatCompletionsMessage[] {
+  const userPayload = JSON.stringify(
+    {
+      requestedModel: input.requestedModel,
+      toolCount: input.toolCount,
+      candidateEndpointIds: input.candidateEndpointIds,
+      messages: input.messages,
+    },
+    null,
+    2,
+  );
   return [
     {
       role: "system",
-      content:
-        "ROLE_MODEL_ROUTING_CONTROLLER\nReturn only compact JSON. Optional fields: requestedRoleId, taskType, requiredCapabilities, preferredCapabilities, strategy, preferLocal, preferredEndpointIds.",
+      content: buildControllerSystemPrompt({
+        roleDefinitions: input.roleDefinitions,
+        taskDefinitions: input.taskDefinitions,
+        candidateEndpointIds: input.candidateEndpointIds,
+      }),
     },
     {
       role: "user",
-      content: JSON.stringify(
-        {
-          requestedModel: input.requestedModel,
-          toolCount: input.toolCount,
-          candidateEndpointIds: input.candidateEndpointIds,
-          messages: input.messages,
-        },
-        null,
-        2,
-      ),
+      content: userPayload,
     },
   ];
 }
 
-function readControllerStringArray(value: unknown): readonly string[] | undefined {
-  if (!Array.isArray(value)) {
-    return undefined;
-  }
-  const normalized = value
-    .filter((entry): entry is string => typeof entry === "string")
-    .map((entry) => entry.trim())
-    .filter((entry) => entry.length > 0);
-  return normalized.length > 0 ? [...new Set(normalized)] : undefined;
+function buildCompactControllerRoutingMessages(input: {
+  readonly requestedModel: string;
+  readonly messages: readonly OpenAIChatCompletionsMessage[];
+  readonly toolCount: number;
+  readonly candidateEndpointIds: readonly string[];
+  readonly roleDefinitions?: readonly RuntimeRoleDefinitionRecord[];
+  readonly taskDefinitions?: readonly RuntimeTaskDefinitionRecord[];
+}): readonly OpenAIChatCompletionsMessage[] {
+  const userPayload = JSON.stringify(
+    {
+      requestedModel: input.requestedModel,
+      toolCount: input.toolCount,
+      candidateEndpointIds: input.candidateEndpointIds,
+      messages: input.messages,
+    },
+    null,
+    2,
+  );
+  return [
+    {
+      role: "system",
+      content: buildCompactControllerSystemPrompt({
+        roleDefinitions: input.roleDefinitions,
+        taskDefinitions: input.taskDefinitions,
+        candidateEndpointIds: input.candidateEndpointIds,
+      }),
+    },
+    {
+      role: "user",
+      content: userPayload,
+    },
+  ];
 }
 
 function parseControllerRoutingOutput(
   text: string,
+  input: {
+    readonly roleDefinitions?: readonly RuntimeRoleDefinitionRecord[];
+    readonly taskDefinitions?: readonly RuntimeTaskDefinitionRecord[];
+    readonly candidateEndpointIds: readonly string[];
+  },
 ): NonNullable<RuntimeRoutingDiagnostics["controllerRouting"]>["acceptedDirectives"] | null {
-  const trimmed = text.trim();
-  const jsonSource = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/i)?.[1] ?? trimmed;
-  try {
-    const parsed = JSON.parse(jsonSource) as Record<string, unknown>;
-    const requestedRoleId =
-      typeof parsed.requestedRoleId === "string" ? parsed.requestedRoleId.trim() : "";
-    const taskType = typeof parsed.taskType === "string" ? parsed.taskType.trim() : "";
-    const strategy =
-      parsed.strategy === "balanced" || parsed.strategy === "cost" || parsed.strategy === "quality"
-        ? parsed.strategy
-        : undefined;
-    const acceptedDirectives: NonNullable<
-      RuntimeRoutingDiagnostics["controllerRouting"]
-    >["acceptedDirectives"] = {
-      ...(requestedRoleId.length ? { requestedRoleId } : {}),
-      ...(taskType.length ? { taskType } : {}),
-      ...(readControllerStringArray(parsed.requiredCapabilities)
-        ? { requiredCapabilities: readControllerStringArray(parsed.requiredCapabilities) }
-        : {}),
-      ...(readControllerStringArray(parsed.preferredCapabilities)
-        ? { preferredCapabilities: readControllerStringArray(parsed.preferredCapabilities) }
-        : {}),
-      ...(strategy ? { strategy } : {}),
-      ...(typeof parsed.preferLocal === "boolean" ? { preferLocal: parsed.preferLocal } : {}),
-      ...(readControllerStringArray(parsed.preferredEndpointIds)
-        ? { preferredEndpointIds: readControllerStringArray(parsed.preferredEndpointIds) }
-        : {}),
-    };
-    return Object.keys(acceptedDirectives).length > 0 ? acceptedDirectives : null;
-  } catch {
+  return parseAndSanitizeControllerRoutingGuidance(text, input);
+}
+
+function inferHeuristicControllerGuidance(input: {
+  readonly messages: readonly OpenAIChatCompletionsMessage[];
+  readonly toolCount: number;
+  readonly roleDefinitions?: readonly RuntimeRoleDefinitionRecord[];
+  readonly taskDefinitions?: readonly RuntimeTaskDefinitionRecord[];
+}): NonNullable<RuntimeRoutingDiagnostics["controllerRouting"]>["acceptedDirectives"] | null {
+  const combinedText = input.messages
+    .map((message) => readChatMessageTextContent(message.content).trim())
+    .filter((content) => content.length > 0)
+    .join("\n")
+    .toLowerCase();
+  if (combinedText.length === 0) {
     return null;
   }
+
+  const knownCapabilities = buildKnownControllerCapabilitySet({
+    roleDefinitions: input.roleDefinitions,
+    taskDefinitions: input.taskDefinitions,
+  });
+  const knownRoleIds = new Set((input.roleDefinitions ?? []).map((entry) => entry.role_id));
+  const knownTaskTypes = new Set((input.taskDefinitions ?? []).map((entry) => entry.task_type));
+  const hasCodeSignal =
+    /(code|patch|refactor|schema|test|debug|bug|diff|typescript|javascript|python|verify)/.test(
+      combinedText,
+    ) || input.toolCount > 0;
+  const hasClassificationSignal =
+    /(classif|categor|sentiment|label|language detect|embedding)/.test(combinedText);
+  const taskType = hasCodeSignal
+    ? knownTaskTypes.has("code.edit")
+      ? "code.edit"
+      : undefined
+    : knownTaskTypes.has("text.chat")
+      ? "text.chat"
+      : undefined;
+  const requestedRoleId = hasCodeSignal
+    ? knownRoleIds.has("coder.patch")
+      ? "coder.patch"
+      : knownRoleIds.has("coder.review")
+        ? "coder.review"
+        : undefined
+    : knownRoleIds.has("general.chat")
+      ? "general.chat"
+      : undefined;
+  const requiredCapabilities: string[] = [];
+  if (
+    taskType === "code.edit" &&
+    (knownCapabilities.size === 0 || knownCapabilities.has("code.edit"))
+  ) {
+    requiredCapabilities.push("code.edit");
+  } else if (
+    taskType === "text.chat" &&
+    (knownCapabilities.size === 0 || knownCapabilities.has("text.chat"))
+  ) {
+    requiredCapabilities.push("text.chat");
+  }
+  const preferredCapabilities: string[] = [];
+  if (
+    hasCodeSignal &&
+    (knownCapabilities.size === 0 || knownCapabilities.has("reasoning.multi_step"))
+  ) {
+    preferredCapabilities.push("reasoning.multi_step");
+  }
+  if (
+    input.toolCount > 0 &&
+    (knownCapabilities.size === 0 || knownCapabilities.has("tools.function_calling"))
+  ) {
+    preferredCapabilities.push("tools.function_calling");
+  }
+  const guidance = {
+    ...(requestedRoleId ? { requestedRoleId } : {}),
+    ...(taskType ? { taskType } : {}),
+    ...(requiredCapabilities.length > 0
+      ? { requiredCapabilities: requiredCapabilities as readonly string[] }
+      : {}),
+    ...(preferredCapabilities.length > 0
+      ? { preferredCapabilities: preferredCapabilities as readonly string[] }
+      : {}),
+    strategy: hasCodeSignal ? "quality" : hasClassificationSignal ? "cost" : "balanced",
+  } satisfies NonNullable<RuntimeRoutingDiagnostics["controllerRouting"]>["acceptedDirectives"];
+  return Object.keys(guidance).length > 0 ? guidance : null;
+}
+
+function resolveControllerRequestedRoleId(
+  requestedRoleId: string | undefined,
+  roleDefinitions?: readonly RuntimeRoleDefinitionRecord[],
+): string | undefined {
+  if (!requestedRoleId) {
+    return undefined;
+  }
+  if (!roleDefinitions || roleDefinitions.length === 0) {
+    return requestedRoleId;
+  }
+  return roleDefinitions.some((entry) => entry.role_id === requestedRoleId)
+    ? requestedRoleId
+    : undefined;
+}
+
+function resolveControllerTaskType(
+  taskType: string | undefined,
+  taskDefinitions?: readonly RuntimeTaskDefinitionRecord[],
+): string | undefined {
+  if (!taskType) {
+    return undefined;
+  }
+  if (!taskDefinitions || taskDefinitions.length === 0) {
+    return taskType;
+  }
+  return taskDefinitions.some((entry) => entry.task_type === taskType) ? taskType : undefined;
+}
+
+function buildKnownControllerCapabilitySet(input: {
+  readonly roleDefinitions?: readonly RuntimeRoleDefinitionRecord[];
+  readonly taskDefinitions?: readonly RuntimeTaskDefinitionRecord[];
+}): ReadonlySet<string> {
+  const values = new Set<string>();
+  for (const roleDefinition of input.roleDefinitions ?? []) {
+    for (const capability of roleDefinition.required_capabilities ?? []) {
+      values.add(capability);
+    }
+    for (const capability of roleDefinition.preferred_capabilities ?? []) {
+      values.add(capability);
+    }
+    for (const capability of roleDefinition.forbidden_capabilities ?? []) {
+      values.add(capability);
+    }
+  }
+  for (const taskDefinition of input.taskDefinitions ?? []) {
+    for (const capability of taskDefinition.required_capabilities ?? []) {
+      values.add(capability);
+    }
+    for (const capability of taskDefinition.preferred_capabilities ?? []) {
+      values.add(capability);
+    }
+  }
+  return values;
+}
+
+function filterKnownControllerCapabilities(
+  capabilities: readonly string[] | undefined,
+  knownCapabilities: ReadonlySet<string>,
+): readonly string[] | undefined {
+  if (!capabilities?.length) {
+    return undefined;
+  }
+  if (knownCapabilities.size === 0) {
+    return capabilities;
+  }
+  const filtered = capabilities.filter((capability) => knownCapabilities.has(capability));
+  return filtered.length > 0 ? [...new Set(filtered)] : undefined;
+}
+
+function constrainControllerGuidanceToCandidatePool(input: {
+  readonly guidance: NonNullable<
+    RuntimeRoutingDiagnostics["controllerRouting"]
+  >["acceptedDirectives"];
+  readonly candidateEndpointIds: readonly string[];
+  readonly registry: EndpointRegistryResult;
+  readonly runtimeEndpoints: readonly {
+    endpointId: string;
+    providerAccountId: string;
+    modelId: string;
+  }[];
+  readonly accounts: readonly ProviderAccountRecord[];
+  readonly taskDefinitions?: readonly RuntimeTaskDefinitionRecord[];
+  readonly llamaSwapRoleIdsByModelId?: Readonly<Record<string, readonly string[]>>;
+}): NonNullable<RuntimeRoutingDiagnostics["controllerRouting"]>["acceptedDirectives"] | null {
+  const guidance = input.guidance;
+  if (!guidance) {
+    return null;
+  }
+  const candidateEndpoints = input.registry.endpoints.filter((endpoint) =>
+    input.candidateEndpointIds.includes(endpoint.identity.endpoint_id),
+  );
+  const candidateRoleIds = new Set<string>();
+  const candidateCapabilities = new Set<string>();
+  for (const endpoint of candidateEndpoints) {
+    for (const capability of endpoint.declared.capabilities ?? []) {
+      candidateCapabilities.add(capability);
+    }
+    for (const roleId of getEndpointRoleIds(
+      endpoint.identity.endpoint_id,
+      input.runtimeEndpoints,
+      input.accounts,
+      input.registry,
+      input.llamaSwapRoleIdsByModelId,
+    )) {
+      candidateRoleIds.add(roleId);
+    }
+  }
+
+  const requestedRoleId =
+    guidance.requestedRoleId && candidateRoleIds.has(guidance.requestedRoleId)
+      ? guidance.requestedRoleId
+      : undefined;
+  const taskType = (() => {
+    if (!guidance.taskType) {
+      return undefined;
+    }
+    const taskDefinition = input.taskDefinitions?.find(
+      (entry) => entry.task_type === guidance.taskType,
+    );
+    if (!taskDefinition) {
+      return guidance.taskType;
+    }
+    const allowedRoleMatch = taskDefinition.allowed_roles.some((roleId) => candidateRoleIds.has(roleId));
+    const requiredCapabilityMatch =
+      taskDefinition.required_capabilities.length === 0 ||
+      taskDefinition.required_capabilities.every((capability) =>
+        candidateCapabilities.has(capability),
+      );
+    return allowedRoleMatch || requiredCapabilityMatch ? guidance.taskType : undefined;
+  })();
+  const requiredCapabilities = guidance.requiredCapabilities?.filter((capability) =>
+    candidateCapabilities.has(capability),
+  );
+  const constrained = {
+    ...(requestedRoleId ? { requestedRoleId } : {}),
+    ...(taskType ? { taskType } : {}),
+    ...(requiredCapabilities && requiredCapabilities.length > 0
+      ? { requiredCapabilities: requiredCapabilities as readonly string[] }
+      : {}),
+    ...(guidance.preferredCapabilities?.length
+      ? { preferredCapabilities: guidance.preferredCapabilities }
+      : {}),
+    ...(guidance.strategy ? { strategy: guidance.strategy } : {}),
+    ...(typeof guidance.preferLocal === "boolean"
+      ? { preferLocal: guidance.preferLocal }
+      : {}),
+    ...(guidance.preferredEndpointIds?.length
+      ? { preferredEndpointIds: guidance.preferredEndpointIds }
+      : {}),
+  } satisfies NonNullable<RuntimeRoutingDiagnostics["controllerRouting"]>["acceptedDirectives"];
+
+  return Object.keys(constrained).length > 0 ? constrained : null;
 }
 
 function toDifficultyStrategy(
@@ -970,7 +1352,44 @@ function collectPreferredEndpointIds(
       filtered.push(endpointId);
     }
   }
+  if (allowSet.size > 0 && filtered.length === allowSet.size) {
+    return [];
+  }
   return filtered;
+}
+
+function strategyToObservedDifficultyBucket(
+  strategy: BridgeRoutingStrategy | undefined,
+): UnifiedRuntimeDifficultyBucket | undefined {
+  switch (strategy) {
+    case "quality":
+      return "hard";
+    case "cost":
+      return "easy";
+    case "balanced":
+      return "medium";
+    default:
+      return undefined;
+  }
+}
+
+export function resolveObservedDifficultyBucketForPlan(plan: {
+  readonly routingDiagnostics?: Pick<
+    RuntimeRoutingDiagnostics,
+    "difficultyRouting" | "controllerRouting"
+  >;
+}): UnifiedRuntimeDifficultyBucket | undefined {
+  const difficultyBucket = plan.routingDiagnostics?.difficultyRouting?.difficulty;
+  if (difficultyBucket) {
+    return difficultyBucket;
+  }
+  if (!plan.routingDiagnostics?.controllerRouting?.active) {
+    return undefined;
+  }
+  const strategy = plan.routingDiagnostics.controllerRouting.acceptedDirectives?.strategy;
+  return typeof strategy === "string" && isBridgeRoutingStrategy(strategy)
+    ? strategyToObservedDifficultyBucket(strategy)
+    : undefined;
 }
 
 function maybeApplyControllerRouting(input: {
@@ -983,6 +1402,8 @@ function maybeApplyControllerRouting(input: {
     "aliasResolution" | "routingMode" | "difficultyRouting"
   >;
   readonly controllerContext?: BridgeControllerRoutingContext;
+  readonly roleDefinitions?: readonly RuntimeRoleDefinitionRecord[];
+  readonly taskDefinitions?: readonly RuntimeTaskDefinitionRecord[];
 }): {
   readonly routingRequest: Parameters<typeof routeRuntimeRequest>[0]["request"];
   readonly routingModel?: RoutingModelSelection;
@@ -1034,16 +1455,33 @@ function maybeApplyControllerRouting(input: {
 
   const guidanceStrategy =
     guidance.strategy && isBridgeRoutingStrategy(guidance.strategy) ? guidance.strategy : undefined;
+  const requestedRoleId = resolveControllerRequestedRoleId(
+    guidance.requestedRoleId,
+    input.roleDefinitions,
+  );
+  const taskType = resolveControllerTaskType(guidance.taskType, input.taskDefinitions);
+  const knownCapabilities = buildKnownControllerCapabilitySet({
+    roleDefinitions: input.roleDefinitions,
+    taskDefinitions: input.taskDefinitions,
+  });
+  const requiredCapabilitiesFromGuidance = filterKnownControllerCapabilities(
+    guidance.requiredCapabilities,
+    knownCapabilities,
+  );
+  const preferredCapabilitiesFromGuidance = filterKnownControllerCapabilities(
+    guidance.preferredCapabilities,
+    knownCapabilities,
+  );
   const preferredEndpointIds = collectPreferredEndpointIds(
     input.routingRequest.allowEndpoints ?? [],
     guidance.preferredEndpointIds,
   );
   const requiredCapabilities =
-    guidance.taskType && guidance.taskType !== input.routingRequest.taskType
-      ? (guidance.requiredCapabilities ?? input.routingRequest.requiredCapabilities)
+    taskType && taskType !== input.routingRequest.taskType
+      ? (requiredCapabilitiesFromGuidance ?? input.routingRequest.requiredCapabilities)
       : mergeCapabilityList(
           input.routingRequest.requiredCapabilities,
-          guidance.requiredCapabilities,
+          requiredCapabilitiesFromGuidance,
         );
   const finalStrategy = guidanceStrategy ?? input.routingRequest.strategy;
   const hybridArbitration = summarizeHybridArbitration({
@@ -1058,11 +1496,11 @@ function maybeApplyControllerRouting(input: {
   return {
     routingRequest: {
       ...input.routingRequest,
-      ...(guidance.requestedRoleId ? { requestedRoleId: guidance.requestedRoleId } : {}),
-      ...(guidance.taskType ? { taskType: guidance.taskType } : {}),
+      ...(requestedRoleId ? { requestedRoleId } : {}),
+      ...(taskType ? { taskType } : {}),
       requiredCapabilities,
       preferredCapabilities:
-        guidance.preferredCapabilities ?? input.routingRequest.preferredCapabilities,
+        preferredCapabilitiesFromGuidance ?? input.routingRequest.preferredCapabilities,
       ...(guidanceStrategy ? { strategy: guidanceStrategy } : {}),
       ...(typeof guidance.preferLocal === "boolean" ? { preferLocal: guidance.preferLocal } : {}),
     },
@@ -1083,13 +1521,13 @@ function maybeApplyControllerRouting(input: {
           ? { fallbackReason: input.controllerContext.fallbackReason }
           : {}),
         acceptedDirectives: {
-          ...(guidance.requestedRoleId ? { requestedRoleId: guidance.requestedRoleId } : {}),
-          ...(guidance.taskType ? { taskType: guidance.taskType } : {}),
-          ...(guidance.requiredCapabilities?.length
-            ? { requiredCapabilities: guidance.requiredCapabilities }
+          ...(requestedRoleId ? { requestedRoleId } : {}),
+          ...(taskType ? { taskType } : {}),
+          ...(requiredCapabilitiesFromGuidance?.length
+            ? { requiredCapabilities: requiredCapabilitiesFromGuidance }
             : {}),
-          ...(guidance.preferredCapabilities?.length
-            ? { preferredCapabilities: guidance.preferredCapabilities }
+          ...(preferredCapabilitiesFromGuidance?.length
+            ? { preferredCapabilities: preferredCapabilitiesFromGuidance }
             : {}),
           ...(guidance.strategy ? { strategy: guidance.strategy } : {}),
           ...(typeof guidance.preferLocal === "boolean"
@@ -1147,6 +1585,7 @@ export interface BridgeResponsesExecutionResult {
   readonly outputText: string;
   readonly finishReason: string;
   readonly toolCalls?: readonly BridgeToolCall[];
+  readonly toolExecutions?: readonly ToolRegistryExecution[];
   readonly usage: {
     readonly inputTokens: number;
     readonly outputTokens: number;
@@ -1165,6 +1604,12 @@ export interface BridgeToolCall {
     readonly arguments: string;
   };
 }
+
+type BridgeContinuationToolCall = {
+  readonly name: string;
+  readonly arguments: unknown;
+  readonly providerToolId?: string;
+};
 
 type BridgeStreamMetadata = {
   readonly endpointId: string;
@@ -2004,6 +2449,79 @@ export interface CreateRuntimeBridgeBackendOptions {
   readonly networkFetcher?: typeof fetch;
   readonly fixtureRoot?: string;
   readonly runtimeVendorStartup?: "enabled" | "disabled";
+  readonly codexAuthAdapter?: CodexAuthAdapter;
+  readonly codexExecutionAdapter?: CodexExecutionAdapter;
+}
+
+export interface CodexAuthCacheSnapshot {
+  readonly auth_mode?: string;
+  readonly tokens?: {
+    readonly access_token?: string;
+    readonly refresh_token?: string;
+    readonly account_id?: string;
+  };
+  readonly last_refresh?: string;
+}
+
+interface CodexAuthAdapter {
+  startDeviceCodeLogin(input: {
+    readonly codexHome: string;
+  }): Promise<{
+    readonly loginId: string;
+    readonly verificationUrl: string;
+    readonly userCode: string;
+    readonly wsUrl: string;
+    readonly pid: number;
+  }>;
+  readAccount(input: {
+    readonly codexHome: string;
+    readonly wsUrl: string;
+    readonly refreshToken: boolean;
+  }): Promise<{
+    readonly account:
+      | {
+          readonly type?: string;
+          readonly email?: string;
+          readonly planType?: string;
+        }
+      | null;
+    readonly requiresOpenaiAuth: boolean;
+  }>;
+}
+
+export interface CodexExecutionAdapter {
+  executeRequest(input: {
+    readonly runtimeStateRoot: string;
+    readonly scopeId: string;
+    readonly requestId: string;
+    readonly providerAccountId: string;
+    readonly modelId: string;
+    readonly requestCapture: ProviderRequestCapture;
+    readonly authPayload: CodexAuthCacheSnapshot;
+    readonly executeDynamicToolCall?: (input: {
+      readonly toolCallId: string;
+      readonly toolName: string;
+      readonly toolArguments: unknown;
+    }) => Promise<{
+      readonly success: boolean;
+      readonly contentItems: readonly {
+        readonly type: "inputText";
+        readonly text: string;
+      }[];
+    }>;
+  }): Promise<{
+    readonly statusCode: number;
+    readonly body: unknown;
+    readonly vendorMetadata?: {
+      readonly vendorId: string;
+      readonly latencyMs?: number;
+      readonly costUsd?: number;
+      readonly cacheStatus?: string;
+      readonly cacheUsed?: boolean;
+      readonly cacheReadTokens?: number;
+      readonly cacheWriteTokens?: number;
+    };
+  }>;
 }
 
 export interface BridgeServerOptions {
@@ -2179,6 +2697,73 @@ function createInactiveVendorStatus(vendorId: string): VendorRuntimeStatus {
   };
 }
 
+type RouteObservedProfile =
+  Parameters<typeof routeRuntimeRequest>[0]["observedProfilesByEndpointId"][string];
+
+type QualityScopedRouteObservedProfile = RouteObservedProfile & {
+  quality_measured_at_ms?: number;
+  quality_freshness_score?: number;
+  quality_live_request_samples?: number;
+  quality_benchmark_samples?: number;
+};
+
+function mergeObservedProfileForDifficultyBucket(input: {
+  readonly endpointWideProfile?: RouteObservedProfile;
+  readonly bucketProfile?: RouteObservedProfile;
+}): QualityScopedRouteObservedProfile | undefined {
+  if (!input.endpointWideProfile && !input.bucketProfile) {
+    return undefined;
+  }
+  if (!input.endpointWideProfile && input.bucketProfile) {
+    return {
+      ...input.bucketProfile,
+      ...(typeof input.bucketProfile.measured_at_ms === "number"
+        ? { quality_measured_at_ms: input.bucketProfile.measured_at_ms }
+        : {}),
+      ...(typeof input.bucketProfile.freshness_score === "number"
+        ? { quality_freshness_score: input.bucketProfile.freshness_score }
+        : {}),
+      ...(input.bucketProfile.sources
+        ? {
+            quality_live_request_samples: input.bucketProfile.sources.live_request_samples,
+            quality_benchmark_samples: input.bucketProfile.sources.benchmark_samples,
+          }
+        : {}),
+    };
+  }
+  if (!input.bucketProfile && input.endpointWideProfile) {
+    return input.endpointWideProfile;
+  }
+
+  const endpointWideProfile = input.endpointWideProfile!;
+  const bucketProfile = input.bucketProfile!;
+  const genericProfile =
+    (bucketProfile.measured_at_ms ?? 0) >= (endpointWideProfile.measured_at_ms ?? 0)
+      ? bucketProfile
+      : endpointWideProfile;
+  return {
+    ...genericProfile,
+    ...(typeof bucketProfile.judge_score === "number"
+      ? { judge_score: bucketProfile.judge_score }
+      : {}),
+    ...(typeof bucketProfile.quality_score === "number"
+      ? { quality_score: bucketProfile.quality_score }
+      : {}),
+    ...(typeof bucketProfile.measured_at_ms === "number"
+      ? { quality_measured_at_ms: bucketProfile.measured_at_ms }
+      : {}),
+    ...(typeof bucketProfile.freshness_score === "number"
+      ? { quality_freshness_score: bucketProfile.freshness_score }
+      : {}),
+    ...(bucketProfile.sources
+      ? {
+          quality_live_request_samples: bucketProfile.sources.live_request_samples,
+          quality_benchmark_samples: bucketProfile.sources.benchmark_samples,
+        }
+      : {}),
+  };
+}
+
 function readObservedProfilesForRouting(input: {
   readonly databasePath: string;
   readonly registry: EndpointRegistryResult;
@@ -2212,10 +2797,15 @@ function readObservedProfilesForRouting(input: {
       })
     : {};
   const latestProfilesByEndpointId = input.difficultyBucket
-    ? {
-        ...endpointWideProfilesByEndpointId,
-        ...difficultyBucketProfilesByEndpointId,
-      }
+    ? Object.fromEntries(
+        endpointIds.flatMap((endpointId) => {
+          const mergedProfile = mergeObservedProfileForDifficultyBucket({
+            endpointWideProfile: endpointWideProfilesByEndpointId[endpointId],
+            bucketProfile: difficultyBucketProfilesByEndpointId[endpointId],
+          });
+          return mergedProfile ? [[endpointId, mergedProfile]] : [];
+        }),
+      )
     : endpointWideProfilesByEndpointId;
   const throughputPenaltyStateByEndpointId: NonNullable<
     Parameters<typeof routeRuntimeRequest>[0]["throughputPenaltyStateByEndpointId"]
@@ -2323,6 +2913,43 @@ function summarizeEffectiveMetricsFromDecision(
     throughput: summarizeMetric("throughput"),
     reliability: summarizeMetric("reliability"),
     cost: summarizeMetric("cost"),
+  };
+}
+
+export function summarizeSelectionDiagnosticsFromDecision(
+  decision: ReturnType<typeof routeRuntimeRequest>["decision"],
+): RuntimeRoutingDiagnostics["selection"] | undefined {
+  const chosen = decision.scored_candidates.find(
+    (candidate) => candidate.endpoint_id === decision.chosen_endpoint_id,
+  );
+  if (!chosen) {
+    return undefined;
+  }
+
+  const runnerUp = decision.scored_candidates.find(
+    (candidate) => candidate.endpoint_id !== decision.chosen_endpoint_id,
+  );
+  const scoreDelta =
+    runnerUp && Number.isFinite(runnerUp.total_score)
+      ? Math.abs(chosen.total_score - runnerUp.total_score)
+      : undefined;
+
+  return {
+    mode:
+      typeof scoreDelta === "number" && scoreDelta <= ROUTING_SELECTION_SCORE_TIE_EPSILON
+        ? "tie-break"
+        : "best-total-score",
+    scoreTieEpsilon: ROUTING_SELECTION_SCORE_TIE_EPSILON,
+    ...(typeof scoreDelta === "number" ? { scoreDelta } : {}),
+    winnerEndpointId: chosen.endpoint_id,
+    winnerTotalScore: chosen.total_score,
+    ...(runnerUp
+      ? {
+          runnerUpEndpointId: runnerUp.endpoint_id,
+          runnerUpTotalScore: runnerUp.total_score,
+        }
+      : {}),
+    tieBreakOrder: decision.policy_snapshot.tie_break_order,
   };
 }
 
@@ -2778,6 +3405,28 @@ function createFallbackModelTemplate(catalog: NormalizedCatalog): NormalizedCata
   };
 }
 
+function resolveRuntimeEndpointCatalogTemplate(input: {
+  readonly catalog: NormalizedCatalog;
+  readonly account: ProviderAccountRecord;
+  readonly endpointModelId: string;
+  readonly fallbackTemplate: NormalizedCatalogModel;
+}): NormalizedCatalogModel {
+  if (
+    input.account.providerId === OPENAI_PROVIDER_ID &&
+    input.endpointModelId.startsWith(`${CHATGPT_PROVIDER_ID}/`)
+  ) {
+    const canonicalModelId = `${OPENAI_PROVIDER_ID}/${input.endpointModelId.slice(
+      CHATGPT_PROVIDER_ID.length + 1,
+    )}`;
+    const canonicalModel = input.catalog.models.find((model) => model.modelId === canonicalModelId);
+    if (canonicalModel) {
+      return canonicalModel;
+    }
+  }
+
+  return input.fallbackTemplate;
+}
+
 function withRuntimeEndpointFallbackModels(
   catalog: NormalizedCatalog,
   accounts: readonly ProviderAccountRecord[],
@@ -2802,15 +3451,25 @@ function withRuntimeEndpointFallbackModels(
     if (!account) {
       continue;
     }
+    const baseModel = resolveRuntimeEndpointCatalogTemplate({
+      catalog,
+      account,
+      endpointModelId: endpoint.modelId,
+      fallbackTemplate,
+    });
     synthesizedModels.push({
-      ...fallbackTemplate,
+      ...baseModel,
       modelId: endpoint.modelId,
-      providerId: endpoint.modelId.includes("/")
-        ? endpoint.modelId.split("/")[0]
-        : account.providerId,
-      displayName: readDefaultDisplayNameFromModelId(endpoint.modelId),
+      providerId: account.providerId,
+      displayName:
+        baseModel.modelId === endpoint.modelId
+          ? baseModel.displayName
+          : readDefaultDisplayNameFromModelId(endpoint.modelId),
       localNotes: [
-        "Synthesized during runtime registry rebuild for an activated endpoint model that is not present in the static catalog.",
+        ...baseModel.localNotes,
+        baseModel === fallbackTemplate
+          ? "Synthesized during runtime registry rebuild for an activated endpoint model that is not present in the static catalog."
+          : `Synthesized during runtime registry rebuild by cloning canonical catalog metadata from ${baseModel.modelId}.`,
       ],
     });
     knownModelIds.add(endpoint.modelId);
@@ -3529,6 +4188,9 @@ function buildRuntimeRoleBindings(
   roleDefinitions: readonly NonNullable<
     Parameters<typeof routeRuntimeRequest>[0]["roleDefinitions"]
   >[number][],
+  taskDefinitions: readonly NonNullable<
+    Parameters<typeof routeRuntimeRequest>[0]["taskDefinitions"]
+  >[number][],
   llamaSwapRoleIdsByModelId: Readonly<Record<string, readonly string[]>> = {},
 ): readonly NonNullable<Parameters<typeof routeRuntimeRequest>[0]["roleBindings"]>[number][] {
   const accountBindings = buildAccountEndpointRoleBindings({
@@ -3537,11 +4199,13 @@ function buildRuntimeRoleBindings(
     accounts,
     registry,
     roleDefinitions,
+    taskDefinitions,
     sanitizeSegment,
   });
   const llamaSwapBindings = buildLlamaSwapRegistryRoleBindings({
     registry,
     roleDefinitions,
+    taskDefinitions,
     roleIdsByModelId: llamaSwapRoleIdsByModelId,
     sanitizeSegment,
   });
@@ -3589,35 +4253,85 @@ function estimateContextTokens(
   return Math.max(1, Math.ceil(totalChars / 4) + messages.length * 2 + toolCount);
 }
 
-function toToolDefinition(tool: OpenAIChatCompletionsTool): {
-  readonly name: string;
-  readonly description?: string;
-  readonly inputSchema: Record<string, unknown>;
-} {
-  if (tool.type !== "function" || !tool.function) {
-    throw new Error("Only OpenAI function tools are supported by the runtime host bridge.");
+function toToolDefinition(tool: OpenAIChatCompletionsTool): RuntimeExecutionToolDefinition {
+  if (tool.type === "function" && tool.function) {
+    return {
+      name: tool.function.name,
+      description: tool.function.description,
+      inputSchema: tool.function.parameters,
+    };
+  }
+
+  if (tool.type === "builtin_function" && tool.function && typeof tool.function.name === "string") {
+    return {
+      kind: "hosted",
+      name: tool.function.name === "$web_search" ? "web_search" : tool.function.name,
+      raw: {
+        type: "builtin_function",
+        function: {
+          name: tool.function.name,
+        },
+      },
+    };
+  }
+
+  throw new Error("Only OpenAI function tools are supported by the runtime host bridge.");
+}
+
+function toResponsesToolDefinition(tool: OpenAIResponsesTool): RuntimeExecutionToolDefinition {
+  if (
+    tool.type === "function" &&
+    typeof tool.name === "string" &&
+    typeof tool.parameters === "object" &&
+    tool.parameters !== null
+  ) {
+    return {
+      name: tool.name,
+      description: tool.description,
+      inputSchema: tool.parameters,
+    };
   }
 
   return {
-    name: tool.function.name,
-    description: tool.function.description,
-    inputSchema: tool.function.parameters,
+    kind: "hosted",
+    name: tool.type,
+    raw: { ...tool },
   };
 }
 
-function toResponsesToolDefinition(tool: OpenAIResponsesTool): {
-  readonly name: string;
-  readonly description?: string;
-  readonly inputSchema: Record<string, unknown>;
-} {
-  if (tool.type !== "function" || typeof tool.name !== "string" || !tool.parameters) {
-    throw new Error("Only OpenAI function tools are supported by the runtime host bridge.");
-  }
-
+function createConsumerWebSearchToolDefinition(): RuntimeExecutionToolDefinition {
   return {
-    name: tool.name,
-    description: tool.description,
-    inputSchema: tool.parameters,
+    name: "web_search",
+    description: "Search the web for current information and return structured results.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        query: {
+          type: "string",
+          description: "The search query to execute.",
+        },
+        max_results: {
+          type: "integer",
+          minimum: 1,
+          maximum: 10,
+          description: "Optional maximum number of search results to return.",
+        },
+      },
+      required: ["query"],
+    },
+  };
+}
+
+function createKimiHostedWebSearchToolDefinition(): RuntimeExecutionToolDefinition {
+  return {
+    kind: "hosted",
+    name: "web_search",
+    raw: {
+      type: "builtin_function",
+      function: {
+        name: "$web_search",
+      },
+    },
   };
 }
 
@@ -3661,6 +4375,7 @@ function applyRequestedRoleExecutionPolicy(input: {
   readonly tools?: readonly BridgeExecutionToolDefinition[];
   readonly routingDiagnostics?: BridgeExecutionPlan["routingDiagnostics"];
   readonly roleDefinitions?: readonly RuntimeRoleDefinitionRecord[];
+  readonly taskDefinitions?: readonly RuntimeTaskDefinitionRecord[];
   readonly requestOptions?: BridgeExecutionRequestOptions;
 }): {
   readonly routingRequest: BridgeExecutionPlan["routingRequest"];
@@ -3696,19 +4411,32 @@ function applyRequestedRoleExecutionPolicy(input: {
         ? input.tools?.filter((tool) => allowedTools.includes(tool.name))
         : input.tools;
   const needsTools = Boolean(tools?.length);
+  const resolvedTaskDefinition = resolveRequestedRoleTaskDefinition({
+    roleDefinition,
+    taskDefinitions: input.taskDefinitions,
+    currentTaskType: input.routingRequest.taskType,
+    messages: input.messages,
+    needsTools,
+  });
+  const nextTaskType = resolvedTaskDefinition?.task_type ?? input.routingRequest.taskType;
+  const nextRequiredCapabilities =
+    resolvedTaskDefinition?.required_capabilities ?? input.routingRequest.requiredCapabilities;
+  const nextPreferredCapabilities =
+    resolvedTaskDefinition?.preferred_capabilities ?? input.routingRequest.preferredCapabilities;
 
   return {
     routingRequest: {
       ...input.routingRequest,
       ...(requestedRoleId ? { requestedRoleId } : {}),
+      taskType: nextTaskType,
       needsTools,
       ...(needsTools
         ? {}
         : {
-            requiredCapabilities: input.routingRequest.requiredCapabilities.filter(
+            requiredCapabilities: nextRequiredCapabilities.filter(
               (capability) => capability !== "tools.function_calling",
             ),
-            preferredCapabilities: input.routingRequest.preferredCapabilities.filter(
+            preferredCapabilities: nextPreferredCapabilities.filter(
               (capability) => capability !== "tools.function_calling",
             ),
           }),
@@ -3737,6 +4465,112 @@ function applyRequestedRoleExecutionPolicy(input: {
         ? { routingDiagnostics: input.routingDiagnostics }
         : {}),
   };
+}
+
+function resolveRequestedRoleTaskDefinition(input: {
+  readonly roleDefinition?: RuntimeRoleDefinitionRecord;
+  readonly taskDefinitions?: readonly RuntimeTaskDefinitionRecord[];
+  readonly currentTaskType: string;
+  readonly messages: readonly OpenAIChatCompletionsMessage[];
+  readonly needsTools: boolean;
+}): RuntimeTaskDefinitionRecord | undefined {
+  if (!input.roleDefinition || !input.taskDefinitions?.length) {
+    return undefined;
+  }
+
+  const supportedTaskDefinitions = input.roleDefinition.task_types_supported
+    .map((taskType) =>
+      input.taskDefinitions?.find((taskDefinition) => taskDefinition.task_type === taskType),
+    )
+    .filter((taskDefinition): taskDefinition is RuntimeTaskDefinitionRecord =>
+      Boolean(taskDefinition),
+    );
+
+  if (supportedTaskDefinitions.length === 0) {
+    return undefined;
+  }
+
+  const currentTaskDefinition = supportedTaskDefinitions.find(
+    (taskDefinition) => taskDefinition.task_type === input.currentTaskType,
+  );
+  if (currentTaskDefinition) {
+    return currentTaskDefinition;
+  }
+
+  if (supportedTaskDefinitions.length === 1) {
+    return supportedTaskDefinitions[0];
+  }
+
+  const combinedText = input.messages
+    .map((message) => readChatMessageTextContent(message.content).trim())
+    .filter((content) => content.length > 0)
+    .join("\n")
+    .toLowerCase();
+
+  const hasSchemaSignal =
+    /(json|schema|contract|payload|migration|compatib|validation|telemetry)/.test(combinedText);
+  const hasCodeSignal =
+    /(code|patch|refactor|debug|bug|diff|typescript|javascript|python|review|function|test)/.test(
+      combinedText,
+    );
+
+  const scoredTaskDefinitions = supportedTaskDefinitions.map((taskDefinition) => {
+    let score = 0;
+    switch (taskDefinition.task_type) {
+      case "json.schema_adherence":
+        if (hasSchemaSignal) {
+          score += 4;
+        }
+        if (hasCodeSignal) {
+          score += 1;
+        }
+        break;
+      case "code.edit":
+        if (hasCodeSignal) {
+          score += 3;
+        }
+        if (hasSchemaSignal) {
+          score += 1;
+        }
+        break;
+      case "tools.function_calling":
+        if (input.needsTools) {
+          score += 3;
+        }
+        break;
+      case "text.classification":
+        if (/(classif|categor|sentiment|label)/.test(combinedText)) {
+          score += 3;
+        }
+        break;
+      case "text.language_detection":
+        if (/(language detect|detect the language|what language)/.test(combinedText)) {
+          score += 3;
+        }
+        break;
+      case "embeddings.text":
+        if (/(embedding|vector)/.test(combinedText)) {
+          score += 3;
+        }
+        break;
+      default:
+        break;
+    }
+    return {
+      taskDefinition,
+      score,
+    };
+  });
+
+  const bestScore = Math.max(...scoredTaskDefinitions.map((entry) => entry.score));
+  if (bestScore > 0) {
+    const bestTaskDefinitions = scoredTaskDefinitions.filter((entry) => entry.score === bestScore);
+    if (bestTaskDefinitions.length === 1) {
+      return bestTaskDefinitions[0].taskDefinition;
+    }
+  }
+
+  return supportedTaskDefinitions[0];
 }
 
 function parseChatCompletionsBody(body: Record<string, unknown>): OpenAIChatCompletionsBody {
@@ -3872,6 +4706,312 @@ function collectAllowedEndpointIds(
         .map((endpoint) => endpoint.identity.endpoint_id),
     ),
   ].sort(compareText);
+}
+
+function isResponsesFunctionTool(tool: OpenAIResponsesTool): boolean {
+  return (
+    tool.type === "function" &&
+    typeof tool.name === "string" &&
+    typeof tool.parameters === "object" &&
+    tool.parameters !== null
+  );
+}
+
+function collectHostedResponsesTools(
+  tools: readonly OpenAIResponsesTool[] | undefined,
+): readonly OpenAIResponsesTool[] {
+  return (tools ?? []).filter((tool) => !isResponsesFunctionTool(tool));
+}
+
+function hasOnlyHostedWebSearchTools(
+  tools: readonly OpenAIResponsesTool[] | undefined,
+): boolean {
+  const hostedTools = collectHostedResponsesTools(tools);
+  return hostedTools.length > 0 && hostedTools.every((tool) => tool.type === "web_search");
+}
+
+type HostedWebSearchContract =
+  | "openai.responses.web_search"
+  | "moonshot.chat.builtin_web_search"
+  | "deepseek.anthropic.server_web_search";
+type ActiveRuntimeHostedWebSearchContract = Exclude<
+  HostedWebSearchContract,
+  "deepseek.anthropic.server_web_search"
+>;
+
+export interface EndpointWebSearchSupport {
+  readonly mode: "native" | "runtime-fallback" | "unsupported";
+  readonly currentRuntimeContract: ActiveRuntimeHostedWebSearchContract | null;
+  readonly documentedProviderContract: HostedWebSearchContract | null;
+}
+
+function supportsOrdinaryToolCallingForEndpoint(
+  endpoint: EndpointRegistryResult["endpoints"][number],
+): boolean {
+  return (
+    endpoint.declared.tool_calling?.supported === true ||
+    endpoint.declared.capabilities.includes("tools.function_calling")
+  );
+}
+
+export function resolveEndpointWebSearchSupport(
+  endpoint: EndpointRegistryResult["endpoints"][number],
+): EndpointWebSearchSupport {
+  if (
+    OPENAI_CODEX_SUBSCRIPTION_MODEL_MATRIX.some(
+      (entry) => entry.modelId === endpoint.identity.model_id && entry.supportsHostedWebSearch,
+    )
+  ) {
+    return {
+      mode: "native",
+      currentRuntimeContract: "openai.responses.web_search",
+      documentedProviderContract: "openai.responses.web_search",
+    };
+  }
+  if (
+    endpoint.identity.model_id.startsWith("moonshot/") &&
+    supportsOrdinaryToolCallingForEndpoint(endpoint)
+  ) {
+    return {
+      mode: "native",
+      currentRuntimeContract: "moonshot.chat.builtin_web_search",
+      documentedProviderContract: "moonshot.chat.builtin_web_search",
+    };
+  }
+  if (
+    endpoint.identity.model_id.startsWith("deepseek/") &&
+    supportsOrdinaryToolCallingForEndpoint(endpoint)
+  ) {
+    return {
+      mode: "runtime-fallback",
+      currentRuntimeContract: null,
+      documentedProviderContract: "deepseek.anthropic.server_web_search",
+    };
+  }
+  if (supportsOrdinaryToolCallingForEndpoint(endpoint)) {
+    return {
+      mode: "runtime-fallback",
+      currentRuntimeContract: null,
+      documentedProviderContract: null,
+    };
+  }
+  return {
+    mode: "unsupported",
+    currentRuntimeContract: null,
+    documentedProviderContract: null,
+  };
+}
+
+function resolveHostedWebSearchContractForEndpoint(
+  endpoint: EndpointRegistryResult["endpoints"][number],
+): ActiveRuntimeHostedWebSearchContract | null {
+  const support = resolveEndpointWebSearchSupport(endpoint);
+  return support.mode === "native" ? support.currentRuntimeContract : null;
+}
+
+function supportsHostedResponsesToolForEndpoint(
+  endpoint: EndpointRegistryResult["endpoints"][number],
+  tool: OpenAIResponsesTool,
+): boolean {
+  if (tool.type === "web_search") {
+    return resolveEndpointWebSearchSupport(endpoint).currentRuntimeContract === "openai.responses.web_search";
+  }
+  return true;
+}
+
+function supportsRuntimeWebSearchForEndpoint(
+  endpoint: EndpointRegistryResult["endpoints"][number],
+): boolean {
+  return resolveEndpointWebSearchSupport(endpoint).mode !== "unsupported";
+}
+
+function applyAliasResolutionEndpointFilter(input: {
+  readonly registry: EndpointRegistryResult;
+  readonly allowEndpoints: readonly string[];
+  readonly routingDiagnostics?: Pick<RuntimeRoutingDiagnostics, "aliasResolution">;
+}): Pick<RuntimeRoutingDiagnostics, "aliasResolution"> | undefined {
+  if (!input.routingDiagnostics?.aliasResolution) {
+    return input.routingDiagnostics;
+  }
+
+  const resolvedModelIds = [
+    ...new Set(
+      input.registry.endpoints
+        .filter((endpoint) => input.allowEndpoints.includes(endpoint.identity.endpoint_id))
+        .map((endpoint) => endpoint.identity.model_id),
+    ),
+  ].sort(compareText);
+
+  return {
+    aliasResolution: {
+      ...input.routingDiagnostics.aliasResolution,
+      resolvedModelIds,
+      allowEndpoints: input.allowEndpoints,
+      ...(input.allowEndpoints.length === 0 ? { poolEmptyReason: "ALIAS_POOL_EMPTY" as const } : {}),
+    },
+  };
+}
+
+function filterAllowEndpointsForResponsesHostedTools(input: {
+  readonly registry: EndpointRegistryResult;
+  readonly allowEndpoints: readonly string[];
+  readonly routingDiagnostics?: Pick<RuntimeRoutingDiagnostics, "aliasResolution">;
+  readonly tools?: readonly OpenAIResponsesTool[];
+}): {
+  readonly allowEndpoints: readonly string[];
+  readonly routingDiagnostics?: Pick<RuntimeRoutingDiagnostics, "aliasResolution">;
+  readonly hostedToolFilterApplied: boolean;
+} {
+  const hostedTools = collectHostedResponsesTools(input.tools);
+  if (hostedTools.length === 0) {
+    return {
+      allowEndpoints: input.allowEndpoints,
+      ...(input.routingDiagnostics ? { routingDiagnostics: input.routingDiagnostics } : {}),
+      hostedToolFilterApplied: false,
+    };
+  }
+
+  const eligibleEndpoints = input.registry.endpoints.filter(
+    (endpoint) =>
+      input.allowEndpoints.includes(endpoint.identity.endpoint_id) &&
+      hostedTools.every((tool) => supportsHostedResponsesToolForEndpoint(endpoint, tool)),
+  );
+  const allowEndpoints = eligibleEndpoints
+    .map((endpoint) => endpoint.identity.endpoint_id)
+    .sort(compareText);
+  const resolvedModelIds = [...new Set(eligibleEndpoints.map((endpoint) => endpoint.identity.model_id))].sort(
+    compareText,
+  );
+
+  return {
+    allowEndpoints,
+    ...(input.routingDiagnostics?.aliasResolution
+      ? {
+          routingDiagnostics: {
+            aliasResolution: {
+              ...input.routingDiagnostics.aliasResolution,
+              resolvedModelIds,
+              allowEndpoints,
+              ...(allowEndpoints.length === 0
+                ? { poolEmptyReason: "ALIAS_POOL_EMPTY" as const }
+                : {}),
+            },
+          },
+        }
+      : input.routingDiagnostics
+        ? { routingDiagnostics: input.routingDiagnostics }
+        : {}),
+    hostedToolFilterApplied: true,
+  };
+}
+
+function filterAllowEndpointsForRuntimeWebSearch(input: {
+  readonly registry: EndpointRegistryResult;
+  readonly allowEndpoints: readonly string[];
+  readonly routingDiagnostics?: Pick<RuntimeRoutingDiagnostics, "aliasResolution">;
+}): {
+  readonly allowEndpoints: readonly string[];
+  readonly routingDiagnostics?: Pick<RuntimeRoutingDiagnostics, "aliasResolution">;
+} {
+  const allowEndpoints = input.registry.endpoints
+    .filter(
+      (endpoint) =>
+        input.allowEndpoints.includes(endpoint.identity.endpoint_id) &&
+        supportsRuntimeWebSearchForEndpoint(endpoint),
+    )
+    .map((endpoint) => endpoint.identity.endpoint_id)
+    .sort(compareText);
+
+  return {
+    allowEndpoints,
+    ...(input.routingDiagnostics
+      ? {
+          routingDiagnostics: applyAliasResolutionEndpointFilter({
+            registry: input.registry,
+            allowEndpoints,
+            routingDiagnostics: input.routingDiagnostics,
+          }),
+        }
+      : {}),
+  };
+}
+
+function resolveResponsesToolExecutionPlan(input: {
+  readonly registry: EndpointRegistryResult;
+  readonly allowEndpoints: readonly string[];
+  readonly routingDiagnostics?: Pick<RuntimeRoutingDiagnostics, "aliasResolution">;
+  readonly tools?: readonly OpenAIResponsesTool[];
+}): {
+  readonly allowEndpoints: readonly string[];
+  readonly routingDiagnostics?: Pick<RuntimeRoutingDiagnostics, "aliasResolution">;
+  readonly hostedToolFilterApplied: boolean;
+  readonly tools?: readonly BridgeExecutionToolDefinition[];
+} {
+  if (!input.tools || input.tools.length === 0) {
+    return {
+      allowEndpoints: input.allowEndpoints,
+      ...(input.routingDiagnostics ? { routingDiagnostics: input.routingDiagnostics } : {}),
+      hostedToolFilterApplied: false,
+      tools: undefined,
+    };
+  }
+
+  if (hasOnlyHostedWebSearchTools(input.tools)) {
+    const eligibleEndpoints = input.registry.endpoints.filter((endpoint) =>
+      input.allowEndpoints.includes(endpoint.identity.endpoint_id),
+    );
+    const hostedContracts = [
+      ...new Set(
+        eligibleEndpoints
+          .map((endpoint) => resolveHostedWebSearchContractForEndpoint(endpoint))
+          .filter((contract): contract is HostedWebSearchContract => contract !== null),
+      ),
+    ];
+    if (
+      eligibleEndpoints.length > 0 &&
+      hostedContracts.length === 1 &&
+      eligibleEndpoints.every(
+        (endpoint) => resolveHostedWebSearchContractForEndpoint(endpoint) === hostedContracts[0],
+      )
+    ) {
+      if (hostedContracts[0] === "moonshot.chat.builtin_web_search") {
+        return {
+          allowEndpoints: input.allowEndpoints,
+          ...(input.routingDiagnostics ? { routingDiagnostics: input.routingDiagnostics } : {}),
+          hostedToolFilterApplied: true,
+          tools: [createKimiHostedWebSearchToolDefinition()],
+        };
+      }
+    } else {
+      const functionTools = input.tools
+        .filter(isResponsesFunctionTool)
+        .map((tool) => toResponsesToolDefinition(tool));
+      const normalizedTools = functionTools.some((tool) => tool.name === "web_search")
+        ? functionTools
+        : [...functionTools, createConsumerWebSearchToolDefinition()];
+      const filtered = filterAllowEndpointsForRuntimeWebSearch({
+        registry: input.registry,
+        allowEndpoints: input.allowEndpoints,
+        routingDiagnostics: input.routingDiagnostics,
+      });
+      return {
+        allowEndpoints: filtered.allowEndpoints,
+        ...(filtered.routingDiagnostics ? { routingDiagnostics: filtered.routingDiagnostics } : {}),
+        hostedToolFilterApplied: false,
+        tools: normalizedTools,
+      };
+    }
+  }
+
+  const hostedToolFiltered = filterAllowEndpointsForResponsesHostedTools(input);
+  return {
+    allowEndpoints: hostedToolFiltered.allowEndpoints,
+    ...(hostedToolFiltered.routingDiagnostics
+      ? { routingDiagnostics: hostedToolFiltered.routingDiagnostics }
+      : {}),
+    hostedToolFilterApplied: hostedToolFiltered.hostedToolFilterApplied,
+    tools: input.tools.map((tool) => toResponsesToolDefinition(tool)),
+  };
 }
 
 function resolveRequestedModelPool(
@@ -4179,6 +5319,7 @@ export function mapChatCompletionsRequest(
   roleDefinitions?: readonly RuntimeRoleDefinitionRecord[],
   defaultRoutingMode?: RuntimeRoutingMode,
   inventory: RoutableInventory | null = null,
+  taskDefinitions?: readonly RuntimeTaskDefinitionRecord[],
 ): BridgeExecutionPlan {
   const contextTokens = estimateContextTokens(body.messages, body.tools?.length ?? 0);
   const { allowEndpoints: modelAllowEndpoints, routingDiagnostics } = resolveRequestedModelPool(
@@ -4258,6 +5399,8 @@ export function mapChatCompletionsRequest(
     },
     routingDiagnostics: difficultyRouting.routingDiagnostics,
     controllerContext,
+    roleDefinitions,
+    taskDefinitions,
   });
 
   const rolePolicyExecution = applyRequestedRoleExecutionPolicy({
@@ -4266,6 +5409,7 @@ export function mapChatCompletionsRequest(
     tools,
     routingDiagnostics: controllerRouting.routingDiagnostics,
     roleDefinitions,
+    taskDefinitions,
     requestOptions,
   });
 
@@ -4295,6 +5439,7 @@ export function mapResponsesRequest(
   roleDefinitions?: readonly RuntimeRoleDefinitionRecord[],
   defaultRoutingMode?: RuntimeRoutingMode,
   inventory: RoutableInventory | null = null,
+  taskDefinitions?: readonly RuntimeTaskDefinitionRecord[],
 ): BridgeExecutionPlan {
   const messages = toResponsesInputMessages(body.input);
   const contextTokens = estimateContextTokens(messages, body.tools?.length ?? 0);
@@ -4308,6 +5453,12 @@ export function mapResponsesRequest(
     requestedModel: body.model,
     allowEndpoints: modelAllowEndpoints,
     requestOptions,
+  });
+  const toolExecutionPlan = resolveResponsesToolExecutionPlan({
+    registry,
+    allowEndpoints,
+    routingDiagnostics,
+    tools: body.tools,
   });
   const effectiveRoutingMode = resolveEffectiveRoutingMode({
     requestedModel: body.model,
@@ -4330,15 +5481,15 @@ export function mapResponsesRequest(
   });
   const baseRoutingDiagnostics = aliasDefaultRoutingMode
     ? {
-        ...routingDiagnostics,
+        ...toolExecutionPlan.routingDiagnostics,
         routingMode: aliasDefaultRoutingMode,
       }
     : configuredDefaultRoutingMode
       ? {
-          ...routingDiagnostics,
+          ...toolExecutionPlan.routingDiagnostics,
           routingMode: configuredDefaultRoutingMode,
         }
-      : routingDiagnostics;
+      : toolExecutionPlan.routingDiagnostics;
   const difficultyRouting = maybeApplyDifficultyRouting({
     effectiveRoutingMode,
     requestedModel: body.model,
@@ -4346,16 +5497,20 @@ export function mapResponsesRequest(
     messages,
     contextTokens,
     toolCount: body.tools?.length ?? 0,
-    allowEndpoints,
+    allowEndpoints: toolExecutionPlan.allowEndpoints,
     routingDiagnostics: baseRoutingDiagnostics,
     difficultyContext,
   });
 
   if (difficultyRouting.allowEndpoints.length === 0) {
-    throw new Error(`No registry endpoints are available for requested model ${body.model}.`);
+    throw new Error(
+      toolExecutionPlan.hostedToolFilterApplied
+        ? `No registry endpoints that support hosted responses tools are available for requested model ${body.model}.`
+        : `No registry endpoints are available for requested model ${body.model}.`,
+    );
   }
 
-  const tools = body.tools?.map(toResponsesToolDefinition);
+  const tools = toolExecutionPlan.tools;
 
   const controllerRouting = maybeApplyControllerRouting({
     effectiveRoutingMode,
@@ -4375,6 +5530,8 @@ export function mapResponsesRequest(
     },
     routingDiagnostics: difficultyRouting.routingDiagnostics,
     controllerContext,
+    roleDefinitions,
+    taskDefinitions,
   });
 
   const rolePolicyExecution = applyRequestedRoleExecutionPolicy({
@@ -4383,6 +5540,7 @@ export function mapResponsesRequest(
     tools,
     routingDiagnostics: controllerRouting.routingDiagnostics,
     roleDefinitions,
+    taskDefinitions,
     requestOptions,
   });
 
@@ -4592,6 +5750,7 @@ function createConnectorTool(
     readonly description?: string;
     readonly inputSchema: Record<string, unknown>;
   },
+  networkFetcher: typeof fetch,
 ): ToolConnector["tools"][number] {
   return {
     name: tool.name,
@@ -4615,6 +5774,11 @@ function createConnectorTool(
             },
           };
         }
+        case "$web_search": {
+          return {
+            content: toolArguments,
+          };
+        }
         default:
           throw new Error(`Connector ${connectorId} does not implement tool ${tool.name}.`);
       }
@@ -4625,15 +5789,36 @@ function createConnectorTool(
 async function createRuntimeToolRegistry(
   repoRoot: string,
   registry: EndpointRegistryResult,
+  networkFetcher: typeof fetch,
 ): Promise<ToolRegistry> {
   const definitions = createMcpConnectorDefinitions(await loadMcpConnectorConfigs(repoRoot));
-  const connectors: ToolConnector[] = definitions.map((definition) => ({
-    connectorId: definition.connectorId,
-    connectorKind: definition.connectorKind,
-    tools: definition.tools.map((tool) =>
-      createConnectorTool(registry, definition.connectorId, tool),
-    ),
-  }));
+  const connectors: ToolConnector[] = [
+    {
+      connectorId: "runtime.builtin",
+      connectorKind: "builtin",
+      tools: [
+        createConnectorTool(
+          registry,
+          "runtime.builtin",
+          {
+            name: "$web_search",
+            description: "Passthrough Kimi hosted web-search continuation tool.",
+            inputSchema: {
+              type: "object",
+            },
+          },
+          networkFetcher,
+        ),
+      ],
+    },
+    ...definitions.map((definition) => ({
+      connectorId: definition.connectorId,
+      connectorKind: definition.connectorKind,
+      tools: definition.tools.map((tool) =>
+        createConnectorTool(registry, definition.connectorId, tool, networkFetcher),
+      ),
+    })),
+  ];
   return createToolRegistry({
     connectors,
   });
@@ -4734,10 +5919,24 @@ async function persistOauthTokenFile(
 ): Promise<void> {
   const filePath = resolveCredentialFilePath(runtimeStateRoot, scopeId, credentialRef);
   const tempFilePath = `${filePath}.${randomUUID()}.tmp`;
+  const serializedPayload = JSON.stringify(payload, null, 2);
   await mkdir(path.dirname(filePath), { recursive: true });
-  await writeFile(tempFilePath, JSON.stringify(payload, null, 2), "utf8");
-  await rm(filePath, { force: true });
-  await rename(tempFilePath, filePath);
+  await writeFile(tempFilePath, serializedPayload, "utf8");
+  for (let attempt = 0; attempt < 10; attempt += 1) {
+    try {
+      await rm(filePath, { force: true });
+      await rename(tempFilePath, filePath);
+      return;
+    } catch (error) {
+      const code = (error as NodeJS.ErrnoException).code;
+      if (code !== "EBUSY" && code !== "EPERM" && code !== "ENOTEMPTY") {
+        throw error;
+      }
+      await delay(150);
+    }
+  }
+  await writeFile(filePath, serializedPayload, "utf8");
+  await rm(tempFilePath, { force: true });
 }
 
 async function persistStaticCredentialFile(
@@ -4781,6 +5980,1140 @@ interface StoredOauthTokenPayload {
   readonly scope?: string;
   readonly token_type?: string;
   readonly saved_at_ms?: number;
+  readonly codexAuth?: CodexAuthCacheSnapshot;
+}
+
+interface StoredCodexAuthPayload extends CodexAuthCacheSnapshot {}
+
+interface CodexDeviceCodeSessionPayload {
+  readonly loginId: string;
+  readonly wsUrl: string;
+  readonly codexHome: string;
+  readonly pid: number;
+}
+
+interface MinimalWebSocket {
+  onopen: (() => void) | null;
+  onmessage: ((event: { readonly data: unknown }) => void) | null;
+  onerror: ((event: unknown) => void) | null;
+  onclose: (() => void) | null;
+  send(data: string): void;
+  close(): void;
+}
+
+function isCodexSubscriptionEndpoint(endpoint: string): boolean {
+  return (
+    endpoint === OPENAI_CODEX_SUBSCRIPTION_START_ENDPOINT ||
+    endpoint === OPENAI_CODEX_SUBSCRIPTION_TOKEN_ENDPOINT
+  );
+}
+
+function resolveCodexAuthCachePath(codexHome = os.homedir()): string {
+  return path.join(codexHome, "auth.json");
+}
+
+function readStoredCodexAuthCache(codexHome = path.join(os.homedir(), ".codex")): StoredCodexAuthPayload | null {
+  try {
+    return JSON.parse(readFileSync(resolveCodexAuthCachePath(codexHome), "utf8")) as StoredCodexAuthPayload;
+  } catch {
+    return null;
+  }
+}
+
+async function writeStoredCodexAuthCache(
+  codexHome: string,
+  payload: StoredCodexAuthPayload,
+): Promise<void> {
+  await mkdir(codexHome, { recursive: true });
+  await writeFile(resolveCodexAuthCachePath(codexHome), JSON.stringify(payload, null, 2), "utf8");
+}
+
+function readStoredCodexAuthSnapshot(payload: StoredOauthTokenPayload | null): StoredCodexAuthPayload | null {
+  if (!payload?.codexAuth || payload.codexAuth.auth_mode !== "chatgpt") {
+    return null;
+  }
+  return payload.codexAuth;
+}
+
+function encodeCodexDeviceCodeSessionPayload(payload: CodexDeviceCodeSessionPayload): string {
+  return `${CODEX_APP_SERVER_DEVICE_CODE_PREFIX}${Buffer.from(
+    JSON.stringify(payload),
+    "utf8",
+  ).toString("base64url")}`;
+}
+
+function decodeCodexDeviceCodeSessionPayload(value: string): CodexDeviceCodeSessionPayload | null {
+  if (!value.startsWith(CODEX_APP_SERVER_DEVICE_CODE_PREFIX)) {
+    return null;
+  }
+  try {
+    return JSON.parse(
+      Buffer.from(
+        value.slice(CODEX_APP_SERVER_DEVICE_CODE_PREFIX.length),
+        "base64url",
+      ).toString("utf8"),
+    ) as CodexDeviceCodeSessionPayload;
+  } catch {
+    return null;
+  }
+}
+
+function resolveManagedCodexSubscriptionHome(
+  runtimeStateRoot: string,
+  scopeId: string,
+  authRequestId: string,
+): string {
+  return path.join(runtimeStateRoot, scopeId, "codex-subscription", authRequestId);
+}
+
+function resolveManagedCodexExecutionHome(
+  runtimeStateRoot: string,
+  scopeId: string,
+  requestId: string,
+): string {
+  const localAppData = process.env.LOCALAPPDATA?.trim();
+  const baseRoot =
+    localAppData && localAppData.length > 0
+      ? path.join(localAppData, "RoleModel", "codex-subscription-execution")
+      : path.join(os.homedir(), ".role-model", "codex-subscription-execution");
+  return path.join(baseRoot, sanitizeSegment(scopeId), sanitizeSegment(requestId));
+}
+
+function readCodexAppServerMessageText(data: unknown): string {
+  if (typeof data === "string") {
+    return data;
+  }
+  if (data instanceof ArrayBuffer) {
+    return Buffer.from(data).toString("utf8");
+  }
+  if (ArrayBuffer.isView(data)) {
+    return Buffer.from(data.buffer, data.byteOffset, data.byteLength).toString("utf8");
+  }
+  return String(data);
+}
+
+function readCodexAppServerErrorMessage(error: unknown, fallback: string): string {
+  if (typeof error === "object" && error !== null && "message" in error) {
+    const message = (error as { readonly message?: unknown }).message;
+    if (typeof message === "string" && message.trim().length > 0) {
+      return message;
+    }
+  }
+  return fallback;
+}
+
+function resolveCodexWebSocketConstructor(): (new (url: string) => MinimalWebSocket) | null {
+  return (
+    globalThis as typeof globalThis & {
+      WebSocket?: new (url: string) => MinimalWebSocket;
+    }
+  ).WebSocket ?? null;
+}
+
+async function reserveLoopbackPort(): Promise<number> {
+  return await new Promise<number>((resolve, reject) => {
+    const server = createNetServer();
+    server.unref();
+    server.once("error", reject);
+    server.listen(0, "127.0.0.1", () => {
+      const address = server.address();
+      if (typeof address !== "object" || address === null) {
+        server.close();
+        reject(new Error("Could not reserve a loopback port for Codex app-server."));
+        return;
+      }
+      const port = address.port;
+      server.close((closeError) => {
+        if (closeError) {
+          reject(closeError);
+          return;
+        }
+        resolve(port);
+      });
+    });
+  });
+}
+
+async function waitForCodexAppServerReady(wsUrl: string): Promise<void> {
+  const httpUrl = wsUrl.replace(/^ws:/, "http:").replace(/^wss:/, "https:");
+  const readyUrl = `${httpUrl}/readyz`;
+  const startedAt = Date.now();
+  let lastError: unknown = null;
+  while (Date.now() - startedAt < CODEX_APP_SERVER_REQUEST_TIMEOUT_MS) {
+    try {
+      const response = await fetch(readyUrl, {
+        signal: AbortSignal.timeout(2_000),
+      });
+      if (response.ok) {
+        return;
+      }
+      lastError = new Error(`Codex app-server ready check returned ${response.status}.`);
+    } catch (error) {
+      lastError = error;
+    }
+    await delay(100);
+  }
+  throw lastError instanceof Error
+    ? lastError
+    : new Error("Timed out waiting for the managed Codex app-server.");
+}
+
+async function sendCodexAppServerRequest<TResult>(input: {
+  readonly wsUrl: string;
+  readonly method: string;
+  readonly params: Record<string, unknown>;
+}): Promise<TResult> {
+  const WebSocketConstructor = resolveCodexWebSocketConstructor();
+  if (!WebSocketConstructor) {
+    throw new Error("This Node runtime does not expose a WebSocket client.");
+  }
+
+  return await new Promise<TResult>((resolve, reject) => {
+    const socket = new WebSocketConstructor(input.wsUrl);
+    const timeout = setTimeout(() => {
+      fail(new Error(`Timed out waiting for Codex app-server ${input.method}.`));
+    }, CODEX_APP_SERVER_REQUEST_TIMEOUT_MS);
+    let settled = false;
+
+    const cleanup = (): void => {
+      clearTimeout(timeout);
+      try {
+        socket.close();
+      } catch {
+        // Ignore close failures.
+      }
+    };
+
+    const fail = (error: Error): void => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      cleanup();
+      reject(error);
+    };
+
+    const succeed = (result: TResult): void => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      cleanup();
+      resolve(result);
+    };
+
+    socket.onopen = () => {
+      socket.send(
+        JSON.stringify({
+          method: "initialize",
+          id: 1,
+          params: {
+            clientInfo: {
+              name: "role_model_runtime",
+              title: "Role Model Runtime",
+              version: "0.1.0",
+            },
+          },
+        }),
+      );
+    };
+
+    socket.onmessage = (event) => {
+      let message: Record<string, unknown>;
+      try {
+        message = JSON.parse(readCodexAppServerMessageText(event.data)) as Record<string, unknown>;
+      } catch (error) {
+        fail(
+          error instanceof Error
+            ? error
+            : new Error("Codex app-server returned invalid JSON."),
+        );
+        return;
+      }
+
+      if (message.id === 1) {
+        if (message.error) {
+          fail(
+            new Error(
+              readCodexAppServerErrorMessage(
+                message.error,
+                "Codex app-server initialize failed.",
+              ),
+            ),
+          );
+          return;
+        }
+        socket.send(JSON.stringify({ method: "initialized", params: {} }));
+        socket.send(JSON.stringify({ method: input.method, id: 2, params: input.params }));
+        return;
+      }
+
+      if (message.id !== 2) {
+        return;
+      }
+
+      if (message.error) {
+        fail(
+          new Error(
+            readCodexAppServerErrorMessage(
+              message.error,
+              `Codex app-server ${input.method} failed.`,
+            ),
+          ),
+        );
+        return;
+      }
+
+      succeed(message.result as TResult);
+    };
+
+    socket.onerror = () => {
+      fail(new Error(`Codex app-server ${input.method} failed.`));
+    };
+
+    socket.onclose = () => {
+      if (!settled) {
+        fail(
+          new Error(`Codex app-server connection closed before ${input.method} completed.`),
+        );
+      }
+    };
+  });
+}
+
+function isProcessRunning(pid: number): boolean {
+  if (!Number.isInteger(pid) || pid <= 0) {
+    return false;
+  }
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function cleanupManagedCodexDeviceCodeSession(payload: CodexDeviceCodeSessionPayload): Promise<void> {
+  if (isProcessRunning(payload.pid)) {
+    try {
+      process.kill(payload.pid);
+    } catch {
+      // Ignore cleanup failures.
+    }
+  }
+  await removeDirectoryWithRetries(payload.codexHome).catch(() => undefined);
+}
+
+function resolveCodexCliPath(): string {
+  const configured = process.env.CODEX_CLI_PATH?.trim();
+  if (configured) {
+    return configured;
+  }
+
+  const localAppData = process.env.LOCALAPPDATA?.trim();
+  if (localAppData) {
+    const installRoot = path.join(localAppData, "OpenAI", "Codex", "bin");
+    try {
+      const candidates = readdirSync(installRoot, { withFileTypes: true })
+        .filter((entry) => entry.isDirectory())
+        .map((entry) => path.join(installRoot, entry.name, "codex.exe"))
+        .filter((candidate) => existsSync(candidate))
+        .sort((left, right) => statSync(right).mtimeMs - statSync(left).mtimeMs);
+      if (candidates.length > 0) {
+        return candidates[0] ?? "codex";
+      }
+    } catch {
+      // Fall through to PATH lookup.
+    }
+  }
+
+  return "codex";
+}
+
+function createSystemCodexAuthAdapter(): CodexAuthAdapter {
+  return {
+    async startDeviceCodeLogin(input) {
+      await mkdir(input.codexHome, { recursive: true });
+      const port = await reserveLoopbackPort();
+      const wsUrl = `ws://127.0.0.1:${port}`;
+      const codexCliPath = resolveCodexCliPath();
+      const child = spawn(
+        codexCliPath,
+        [
+          "app-server",
+          "-c",
+          'cli_auth_credentials_store="file"',
+          "--listen",
+          wsUrl,
+        ],
+        {
+          cwd: input.codexHome,
+          detached: true,
+          windowsHide: true,
+          stdio: "ignore",
+          env: {
+            ...process.env,
+            CODEX_HOME: input.codexHome,
+            HOME: input.codexHome,
+            USERPROFILE: input.codexHome,
+          },
+        },
+      );
+      child.unref();
+      await waitForCodexAppServerReady(wsUrl);
+      const login = await sendCodexAppServerRequest<{
+        readonly loginId?: string;
+        readonly verificationUrl?: string;
+        readonly userCode?: string;
+      }>({
+        wsUrl,
+        method: "account/login/start",
+        params: {
+          type: "chatgptDeviceCode",
+        },
+      });
+      const loginId = typeof login.loginId === "string" ? login.loginId.trim() : "";
+      const verificationUrl =
+        typeof login.verificationUrl === "string" ? login.verificationUrl.trim() : "";
+      const userCode = typeof login.userCode === "string" ? login.userCode.trim() : "";
+      if (loginId.length === 0 || verificationUrl.length === 0 || userCode.length === 0) {
+        throw new Error("Codex app-server did not return a usable device-code login session.");
+      }
+      return {
+        loginId,
+        verificationUrl,
+        userCode,
+        wsUrl,
+        pid: child.pid ?? -1,
+      };
+    },
+    async readAccount(input) {
+      return await sendCodexAppServerRequest<{
+        readonly account:
+          | {
+              readonly type?: string;
+              readonly email?: string;
+              readonly planType?: string;
+            }
+          | null;
+        readonly requiresOpenaiAuth: boolean;
+      }>({
+        wsUrl: input.wsUrl,
+        method: "account/read",
+        params: {
+          refreshToken: input.refreshToken,
+        },
+      });
+    },
+  };
+}
+
+function readCodexExecutionRequestShape(requestCapture: ProviderRequestCapture): "responses" | "chat-completions" {
+  return requestCapture.url.endsWith("/chat/completions") ? "chat-completions" : "responses";
+}
+
+function renderCodexMessageContent(content: unknown): string {
+  if (typeof content === "string") {
+    return content;
+  }
+  if (!Array.isArray(content)) {
+    return "";
+  }
+  return content
+    .map((entry) => {
+      if (typeof entry !== "object" || entry === null) {
+        return "";
+      }
+      const record = entry as { readonly text?: unknown };
+      return typeof record.text === "string" ? record.text : "";
+    })
+    .filter((entry) => entry.length > 0)
+    .join("\n");
+}
+
+export function buildCodexDynamicTools(
+  requestCapture: Pick<ProviderRequestCapture, "url" | "body">,
+): readonly Extract<RuntimeExecutionToolDefinition, { readonly kind?: "function" }>[] {
+  const requestShape = readCodexExecutionRequestShape(requestCapture as ProviderRequestCapture);
+  const rawTools =
+    requestShape === "chat-completions"
+      ? (Array.isArray(requestCapture.body.tools) ? requestCapture.body.tools : [])
+      : (Array.isArray(requestCapture.body.tools) ? requestCapture.body.tools : []);
+
+  return rawTools.flatMap((tool) => {
+    if (typeof tool !== "object" || tool === null) {
+      return [];
+    }
+    if (requestShape === "chat-completions") {
+      const record = tool as OpenAIChatCompletionsTool;
+      if (
+        record.type !== "function" ||
+        typeof record.function?.name !== "string" ||
+        typeof record.function.parameters !== "object" ||
+        record.function.parameters === null
+      ) {
+        return [];
+      }
+      return [
+        {
+          name: record.function.name,
+          description: record.function.description,
+          inputSchema: record.function.parameters,
+        },
+      ];
+    }
+
+    const record = tool as OpenAIResponsesTool;
+    if (
+      record.type !== "function" ||
+      typeof record.name !== "string" ||
+      typeof record.parameters !== "object" ||
+      record.parameters === null
+    ) {
+      return [];
+    }
+    return [
+      {
+        name: record.name,
+        description: record.description,
+        inputSchema: record.parameters,
+      },
+    ];
+  });
+}
+
+function readCodexHostedToolNames(
+  requestCapture: Pick<ProviderRequestCapture, "url" | "body">,
+): readonly string[] {
+  const requestShape = readCodexExecutionRequestShape(requestCapture as ProviderRequestCapture);
+  if (requestShape !== "responses" || !Array.isArray(requestCapture.body.tools)) {
+    return [];
+  }
+  return requestCapture.body.tools.flatMap((tool) => {
+    if (typeof tool !== "object" || tool === null) {
+      return [];
+    }
+    const record = tool as OpenAIResponsesTool;
+    return record.type === "function" ? [] : [record.type];
+  });
+}
+
+export function buildCodexTurnPrompt(requestCapture: ProviderRequestCapture): string {
+  const requestShape = readCodexExecutionRequestShape(requestCapture);
+  const rawMessages =
+    requestShape === "chat-completions"
+      ? (Array.isArray(requestCapture.body.messages) ? requestCapture.body.messages : [])
+      : typeof requestCapture.body.input === "string"
+        ? [{ role: "user", content: requestCapture.body.input }]
+        : (Array.isArray(requestCapture.body.input) ? requestCapture.body.input : []);
+  const dynamicToolNames = buildCodexDynamicTools(requestCapture).map((tool) => tool.name);
+  const hostedToolNames = readCodexHostedToolNames(requestCapture);
+  const conversation = rawMessages
+    .map((message) => {
+      if (typeof message !== "object" || message === null) {
+        return null;
+      }
+      const record = message as {
+        readonly role?: unknown;
+        readonly content?: unknown;
+        readonly tool_calls?: unknown;
+        readonly tool_call_id?: unknown;
+      };
+      const role = typeof record.role === "string" ? record.role.toUpperCase() : "MESSAGE";
+      const content = renderCodexMessageContent(record.content);
+      const toolCalls = Array.isArray(record.tool_calls)
+        ? `\nTool calls: ${JSON.stringify(record.tool_calls)}`
+        : "";
+      const toolCallId =
+        typeof record.tool_call_id === "string" ? `\nTool call id: ${record.tool_call_id}` : "";
+      const body = [content, toolCalls, toolCallId].filter((entry) => entry.length > 0).join("");
+      return `[${role}]\n${body.length > 0 ? body : "(empty)"}`;
+    })
+    .filter((entry): entry is string => entry !== null)
+    .join("\n\n");
+
+  return [
+    "You are answering an OpenAI-compatible runtime request through Codex Subscription.",
+    "Respond to the conversation directly.",
+    "Built-in web search is allowed when helpful.",
+    ...(hostedToolNames.length > 0
+      ? [`Requested hosted tools for this turn: ${hostedToolNames.join(", ")}.`]
+      : []),
+    ...(dynamicToolNames.length > 0
+      ? [`Request-scoped dynamic tools are available for this turn: ${dynamicToolNames.join(", ")}.`]
+      : []),
+    "Do not run shell commands, modify files, or ask for approvals.",
+    "Return only the assistant response.",
+    "",
+    "Conversation:",
+    conversation.length > 0 ? conversation : "[USER]\n(empty request)",
+  ].join("\n");
+}
+
+function serializeCodexToolOutput(output: unknown): string {
+  if (typeof output === "string") {
+    return output;
+  }
+  try {
+    return JSON.stringify(output);
+  } catch {
+    return String(output);
+  }
+}
+
+function toCodexDynamicToolCallResult(
+  execution: ToolRegistryExecution,
+): {
+  readonly success: boolean;
+  readonly contentItems: readonly {
+    readonly type: "inputText";
+    readonly text: string;
+  }[];
+} {
+  if (execution.status === "succeeded") {
+    return {
+      success: true,
+      contentItems: [
+        {
+          type: "inputText",
+          text: serializeCodexToolOutput(execution.output),
+        },
+      ],
+    };
+  }
+
+  const message =
+    execution.diagnostics.map((diagnostic) => diagnostic.message).join("\n").trim() ||
+    `Tool ${execution.toolName} failed.`;
+  return {
+    success: false,
+    contentItems: [
+      {
+        type: "inputText",
+        text: message,
+      },
+    ],
+  };
+}
+
+function readCodexStructuredOutputSchema(
+  requestCapture: ProviderRequestCapture,
+): Record<string, unknown> | null {
+  const requestShape = readCodexExecutionRequestShape(requestCapture);
+  if (requestShape === "chat-completions") {
+    const responseFormat = requestCapture.body.response_format;
+    if (typeof responseFormat !== "object" || responseFormat === null) {
+      return null;
+    }
+    const jsonSchema = (responseFormat as { readonly json_schema?: unknown }).json_schema;
+    if (typeof jsonSchema !== "object" || jsonSchema === null) {
+      return null;
+    }
+    const schema = (jsonSchema as { readonly schema?: unknown }).schema;
+    return typeof schema === "object" && schema !== null
+      ? (schema as Record<string, unknown>)
+      : null;
+  }
+
+  const text = requestCapture.body.text;
+  if (typeof text !== "object" || text === null) {
+    return null;
+  }
+  const format = (text as { readonly format?: unknown }).format;
+  if (typeof format !== "object" || format === null) {
+    return null;
+  }
+  const schema = (format as { readonly schema?: unknown }).schema;
+  return typeof schema === "object" && schema !== null
+    ? (schema as Record<string, unknown>)
+    : null;
+}
+
+async function waitForChildExit(child: ChildProcessWithoutNullStreams): Promise<void> {
+  if (child.exitCode !== null || child.killed) {
+    return;
+  }
+
+  await new Promise<void>((resolve) => {
+    let settled = false;
+    const finish = () => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      resolve();
+    };
+    child.once("exit", finish);
+    try {
+      child.kill();
+    } catch {
+      resolve();
+    }
+    setTimeout(finish, 3_000).unref();
+  });
+}
+
+async function removeDirectoryWithRetries(directoryPath: string): Promise<void> {
+  for (let attempt = 0; attempt < 10; attempt += 1) {
+    try {
+      await rm(directoryPath, { recursive: true, force: true });
+      return;
+    } catch (error) {
+      const code = (error as NodeJS.ErrnoException).code;
+      if (code !== "EBUSY" && code !== "EPERM" && code !== "ENOTEMPTY") {
+        throw error;
+      }
+      await delay(150);
+    }
+  }
+  await rm(directoryPath, { recursive: true, force: true });
+}
+
+function createSystemCodexExecutionAdapter(): CodexExecutionAdapter {
+  return {
+    async executeRequest(input) {
+      const codexHome = resolveManagedCodexExecutionHome(
+        input.runtimeStateRoot,
+        input.scopeId,
+        input.requestId,
+      );
+      const workspaceRoot = path.join(codexHome, "workspace");
+      const codexCliPath = resolveCodexCliPath();
+      const port = await reserveLoopbackPort();
+      const wsUrl = `ws://127.0.0.1:${port}`;
+      await rm(codexHome, { recursive: true, force: true });
+      await mkdir(workspaceRoot, { recursive: true });
+      await writeStoredCodexAuthCache(codexHome, input.authPayload);
+
+      const child = spawn(
+        codexCliPath,
+        [
+          "app-server",
+          "-c",
+          'cli_auth_credentials_store="file"',
+          "--listen",
+          wsUrl,
+        ],
+        {
+          cwd: workspaceRoot,
+          stdio: "pipe",
+          windowsHide: true,
+          env: {
+            ...process.env,
+            CODEX_HOME: codexHome,
+            HOME: codexHome,
+            USERPROFILE: codexHome,
+          },
+        },
+      );
+
+      let stderrText = "";
+      child.stderr.setEncoding("utf8");
+      child.stderr.on("data", (chunk: string) => {
+        stderrText = `${stderrText}${chunk}`.slice(-4_000);
+      });
+
+      try {
+        await waitForCodexAppServerReady(wsUrl);
+        const WebSocketConstructor = resolveCodexWebSocketConstructor();
+        if (!WebSocketConstructor) {
+          throw new Error("This Node runtime does not expose a WebSocket client.");
+        }
+
+        const model =
+          typeof input.requestCapture.body.model === "string" &&
+          input.requestCapture.body.model.trim().length > 0
+            ? input.requestCapture.body.model.trim()
+            : input.modelId.includes("/")
+              ? input.modelId.split("/").slice(1).join("/")
+              : input.modelId;
+        const structuredOutputSchema = readCodexStructuredOutputSchema(input.requestCapture);
+        const dynamicTools = buildCodexDynamicTools(input.requestCapture);
+        const startedAt = Date.now();
+        const completedTurn = await new Promise<{
+          readonly finishReason: string;
+          readonly outputText: string;
+          readonly usage: {
+            readonly inputTokens: number;
+            readonly outputTokens: number;
+          };
+        }>((resolve, reject) => {
+          const socket = new WebSocketConstructor(wsUrl);
+          let settled = false;
+          let threadId = "";
+          let outputText = "";
+          let finalAgentText = "";
+          let usage = {
+            inputTokens: 0,
+            outputTokens: 0,
+          };
+
+          const finish = (callback: () => void): void => {
+            if (settled) {
+              return;
+            }
+            settled = true;
+            try {
+              socket.close();
+            } catch {
+              // Ignore close failures.
+            }
+            callback();
+          };
+
+          const fail = (error: Error): void => {
+            finish(() =>
+              reject(
+                new Error(
+                  stderrText.trim().length > 0 ? `${error.message}\n${stderrText.trim()}` : error.message,
+                ),
+              ),
+            );
+          };
+
+          const succeed = (): void => {
+            finish(() =>
+              resolve({
+                finishReason: "stop",
+                outputText: finalAgentText.length > 0 ? finalAgentText : outputText,
+                usage,
+              }),
+            );
+          };
+
+          const timeout = setTimeout(() => {
+            fail(new Error("Timed out waiting for Codex Subscription execution to complete."));
+          }, CODEX_APP_SERVER_TURN_TIMEOUT_MS);
+
+          const send = (message: Record<string, unknown>): void => {
+            socket.send(JSON.stringify(message));
+          };
+
+          socket.onopen = () => {
+            send({
+              id: 1,
+              method: "initialize",
+              params: {
+                clientInfo: {
+                  name: "role_model_runtime",
+                  title: "Role Model Runtime",
+                  version: "0.1.0",
+                },
+                capabilities: {
+                  experimentalApi: true,
+                },
+              },
+            });
+          };
+
+          socket.onmessage = (event) => {
+            void (async () => {
+              let message: Record<string, unknown>;
+              try {
+                message = JSON.parse(readCodexAppServerMessageText(event.data)) as Record<string, unknown>;
+              } catch (error) {
+                fail(error instanceof Error ? error : new Error("Codex app-server returned invalid JSON."));
+                return;
+              }
+
+              if (message.id === 1) {
+                if (message.error) {
+                  fail(
+                    new Error(
+                      readCodexAppServerErrorMessage(
+                        message.error,
+                        "Codex app-server initialize failed.",
+                      ),
+                    ),
+                  );
+                  return;
+                }
+                send({ method: "initialized", params: {} });
+                send({
+                  id: 2,
+                  method: "thread/start",
+                  params: {
+                    model,
+                    ...(dynamicTools.length > 0 ? { dynamicTools } : {}),
+                  },
+                });
+                return;
+              }
+
+              if (message.id === 2) {
+                if (message.error) {
+                  fail(
+                    new Error(
+                      readCodexAppServerErrorMessage(
+                        message.error,
+                        "Codex app-server thread/start failed.",
+                      ),
+                    ),
+                  );
+                  return;
+                }
+                const result = typeof message.result === "object" && message.result !== null
+                  ? (message.result as Record<string, unknown>)
+                  : {};
+                const threadRecord =
+                  typeof result.thread === "object" && result.thread !== null
+                    ? (result.thread as Record<string, unknown>)
+                    : null;
+                threadId =
+                  typeof result.threadId === "string"
+                    ? result.threadId.trim()
+                    : typeof threadRecord?.id === "string"
+                      ? threadRecord.id.trim()
+                      : "";
+                if (threadId.length === 0) {
+                  fail(new Error("Codex app-server did not return a thread id."));
+                  return;
+                }
+                send({
+                  id: 3,
+                  method: "turn/start",
+                  params: {
+                    threadId,
+                    input: [
+                      {
+                        type: "text",
+                        text: buildCodexTurnPrompt(input.requestCapture),
+                      },
+                    ],
+                    cwd: workspaceRoot,
+                    approvalPolicy: "never",
+                    sandboxPolicy: {
+                      type: "readOnly",
+                      access: {
+                        type: "fullAccess",
+                      },
+                    },
+                    ...(structuredOutputSchema ? { outputSchema: structuredOutputSchema } : {}),
+                  },
+                });
+                return;
+              }
+
+              if (message.id === 3) {
+                if (message.error) {
+                  fail(
+                    new Error(
+                      readCodexAppServerErrorMessage(
+                        message.error,
+                        "Codex app-server turn/start failed.",
+                      ),
+                    ),
+                  );
+                }
+                return;
+              }
+
+              if (message.method === "item/tool/call") {
+                const params =
+                  typeof message.params === "object" && message.params !== null
+                    ? (message.params as Record<string, unknown>)
+                    : {};
+                const toolCallId =
+                  typeof params.callId === "string" && params.callId.trim().length > 0
+                    ? params.callId.trim()
+                    : typeof params.id === "string" && params.id.trim().length > 0
+                      ? params.id.trim()
+                      : "";
+                const toolName =
+                  typeof params.tool === "string" && params.tool.trim().length > 0
+                    ? params.tool.trim()
+                    : typeof params.name === "string" && params.name.trim().length > 0
+                      ? params.name.trim()
+                      : "";
+                const toolArguments = params.arguments;
+                if (typeof message.id !== "number") {
+                  fail(new Error("Codex app-server emitted a tool call without a response id."));
+                  return;
+                }
+                const toolResult = input.executeDynamicToolCall
+                  ? await input.executeDynamicToolCall({
+                      toolCallId,
+                      toolName,
+                      toolArguments,
+                    })
+                  : {
+                      success: false,
+                      contentItems: [
+                        {
+                          type: "inputText" as const,
+                          text:
+                            toolName.length > 0
+                              ? `Tool ${toolName} is not available in this runtime.`
+                              : "This runtime does not expose request-scoped dynamic tools.",
+                        },
+                      ],
+                    };
+                send({
+                  id: message.id,
+                  result: {
+                    success: toolResult.success,
+                    contentItems: toolResult.contentItems,
+                  },
+                });
+                return;
+              }
+
+              if (message.method === "item/agentMessage/delta") {
+                const params =
+                  typeof message.params === "object" && message.params !== null
+                    ? (message.params as Record<string, unknown>)
+                    : {};
+                if (typeof params.delta === "string" && params.delta.length > 0) {
+                  outputText += params.delta;
+                }
+                return;
+              }
+
+              if (message.method === "item/completed") {
+                const params =
+                  typeof message.params === "object" && message.params !== null
+                    ? (message.params as Record<string, unknown>)
+                    : {};
+                const item =
+                  typeof params.item === "object" && params.item !== null
+                    ? (params.item as Record<string, unknown>)
+                    : {};
+                if (item.type === "agentMessage" && typeof item.text === "string" && item.text.length > 0) {
+                  finalAgentText = item.text;
+                }
+                return;
+              }
+
+              if (message.method === "turn/failed") {
+                clearTimeout(timeout);
+                const params =
+                  typeof message.params === "object" && message.params !== null
+                    ? (message.params as Record<string, unknown>)
+                    : {};
+                fail(
+                  new Error(
+                    readCodexAppServerErrorMessage(params.error, "Codex Subscription turn failed."),
+                  ),
+                );
+                return;
+              }
+
+              if (message.method === "thread/tokenUsage/updated") {
+                const params =
+                  typeof message.params === "object" && message.params !== null
+                    ? (message.params as Record<string, unknown>)
+                    : {};
+                const tokenUsage =
+                  typeof params.tokenUsage === "object" && params.tokenUsage !== null
+                    ? (params.tokenUsage as Record<string, unknown>)
+                    : {};
+                const usageRecord =
+                  typeof tokenUsage.last === "object" && tokenUsage.last !== null
+                    ? (tokenUsage.last as Record<string, unknown>)
+                    : typeof tokenUsage.total === "object" && tokenUsage.total !== null
+                      ? (tokenUsage.total as Record<string, unknown>)
+                      : {};
+                if (typeof usageRecord.inputTokens === "number") {
+                  usage.inputTokens = usageRecord.inputTokens;
+                }
+                if (typeof usageRecord.outputTokens === "number") {
+                  usage.outputTokens = usageRecord.outputTokens;
+                }
+                return;
+              }
+
+              if (message.method === "turn/completed") {
+                clearTimeout(timeout);
+                succeed();
+              }
+            })().catch((error: unknown) => {
+              fail(error instanceof Error ? error : new Error(String(error)));
+            });
+          };
+
+          socket.onerror = () => {
+            clearTimeout(timeout);
+            fail(new Error("Codex app-server connection failed."));
+          };
+
+          socket.onclose = () => {
+            clearTimeout(timeout);
+            if (!settled) {
+              fail(new Error("Codex app-server connection closed before the request completed."));
+            }
+          };
+        });
+
+        const requestShape = readCodexExecutionRequestShape(input.requestCapture);
+        const body =
+          requestShape === "chat-completions"
+            ? {
+                id: "chatcmpl-codex-subscription",
+                object: "chat.completion",
+                choices: [
+                  {
+                    index: 0,
+                      finish_reason: completedTurn.finishReason,
+                      message: {
+                        role: "assistant",
+                        content: completedTurn.outputText,
+                      },
+                  },
+                ],
+                usage: {
+                  prompt_tokens: completedTurn.usage.inputTokens,
+                  completion_tokens: completedTurn.usage.outputTokens,
+                  },
+                }
+            : {
+                id: `resp_${sanitizeSegment(input.requestId)}`,
+                output: [
+                  {
+                    type: "message",
+                    role: "assistant",
+                    content:
+                      completedTurn.outputText.length > 0
+                        ? [
+                            {
+                              type: "output_text",
+                              text: completedTurn.outputText,
+                            },
+                          ]
+                        : [],
+                  },
+                ],
+                usage: {
+                  input_tokens: completedTurn.usage.inputTokens,
+                  output_tokens: completedTurn.usage.outputTokens,
+                },
+              };
+
+        return {
+          statusCode: 200,
+          body,
+          vendorMetadata: {
+            vendorId: "codex-app-server",
+            latencyMs: Math.max(0, Date.now() - startedAt),
+          },
+        };
+      } finally {
+        await waitForChildExit(child);
+        await removeDirectoryWithRetries(codexHome).catch(() => undefined);
+      }
+    },
+  };
+}
+
+function readStoredCodexAccessToken(payload: StoredCodexAuthPayload | null): string {
+  return payload?.auth_mode === "chatgpt" && typeof payload.tokens?.access_token === "string"
+    ? payload.tokens.access_token.trim()
+    : "";
+}
+
+function readStoredCodexRefreshToken(payload: StoredCodexAuthPayload | null): string {
+  return payload?.auth_mode === "chatgpt" && typeof payload.tokens?.refresh_token === "string"
+    ? payload.tokens.refresh_token.trim()
+    : "";
 }
 
 function readStoredAccessToken(payload: StoredOauthTokenPayload | null): string {
@@ -5043,6 +7376,25 @@ function getOauthVariant(
     };
   }
   throw new Error(`Provider ${providerId} does not expose an OAuth device-code variant.`);
+}
+
+function isCodexSubscriptionAccount(
+  account:
+    | Pick<ProviderAccountRecord, "providerId" | "authMode" | "status">
+    | null
+    | undefined,
+): boolean {
+  return (
+    account?.providerId === OPENAI_PROVIDER_ID &&
+    account.authMode === "oauth2-device-code" &&
+    account.status === "active"
+  );
+}
+
+function normalizeCodexSubscriptionAccountTruth(
+  account: ProviderAccountRecord,
+): ProviderAccountRecord {
+  return account;
 }
 
 async function refreshOauthAccessToken(
@@ -5538,11 +7890,7 @@ function serializeToolCallArguments(value: unknown): string {
 }
 
 function toBridgeToolCall(
-  toolCall: {
-    readonly name: string;
-    readonly arguments: unknown;
-    readonly providerToolId?: string;
-  },
+  toolCall: BridgeContinuationToolCall,
   index: number,
 ): BridgeToolCall {
   return {
@@ -5552,6 +7900,220 @@ function toBridgeToolCall(
       name: toolCall.name,
       arguments: serializeToolCallArguments(toolCall.arguments),
     },
+  };
+}
+
+function serializeToolExecutionContent(execution: ToolRegistryExecution | undefined): string {
+  if (!execution) {
+    return JSON.stringify({
+      status: "missing",
+      error: "No tool execution receipt was recorded for this tool call.",
+    });
+  }
+
+  if (execution.status === "succeeded") {
+    return serializeToolCallArguments(execution.output);
+  }
+
+  return JSON.stringify({
+    status: execution.status,
+    output: execution.output,
+    diagnostics: execution.diagnostics.map((diagnostic) => diagnostic.message),
+  });
+}
+
+function createDeepSeekDsmlInvokePattern(): RegExp {
+  return /<｜｜DSML｜｜invoke\s+name="([^"]+)">([\s\S]*?)(?=<｜｜DSML｜｜invoke\s+name=|$)/g;
+}
+
+function createDeepSeekDsmlParameterPattern(): RegExp {
+  return /<｜｜DSML｜｜parameter\s+name="([^"]+)"[^>]*>([\s\S]*?)<\/｜｜DSML｜｜parameter>/g;
+}
+
+function stripDeepSeekDsmlToolMarkup(outputText: string): string {
+  return outputText
+    .replace(/<｜｜DSML｜｜tool_calls>\s*/g, "")
+    .replace(createDeepSeekDsmlInvokePattern(), "")
+    .trim();
+}
+
+function mapDeepSeekDsmlToolName(providerToolName: string): "web_search" | "web_open" | "web_browse" | null {
+  switch (providerToolName) {
+    case "web_search":
+    case "$web_search":
+      return "web_search";
+    case "web_open":
+      return "web_open";
+    case "web_browse":
+      return "web_browse";
+    default:
+      return null;
+  }
+}
+
+function parseDeepSeekDsmlParameterArguments(rawBody: string): Record<string, string> {
+  const argumentsRecord: Record<string, string> = {};
+  for (const match of rawBody.matchAll(createDeepSeekDsmlParameterPattern())) {
+    const name = match[1]?.trim();
+    const value = match[2]?.trim();
+    if (!name || !value) {
+      continue;
+    }
+    argumentsRecord[name] = value;
+  }
+  return argumentsRecord;
+}
+
+function parseDeepSeekDsmlToolCallArguments(
+  providerToolName: "web_search" | "web_open" | "web_browse",
+  rawBody: string,
+): unknown | null {
+  const parameterArguments = parseDeepSeekDsmlParameterArguments(rawBody);
+  if (Object.keys(parameterArguments).length > 0) {
+    return parameterArguments;
+  }
+  const cleaned = rawBody.replace(/<｜｜DSML｜｜[^>]+>/g, "").trim();
+  if (cleaned.length === 0) {
+    return null;
+  }
+  const firstBrace = cleaned.indexOf("{");
+  const lastBrace = cleaned.lastIndexOf("}");
+  if (firstBrace >= 0 && lastBrace > firstBrace) {
+    const candidate = cleaned.slice(firstBrace, lastBrace + 1).trim();
+    try {
+      return JSON.parse(candidate) as unknown;
+    } catch {
+      // Fall back to a query wrapper when the provider emits non-JSON DSML bodies.
+    }
+  }
+  if (providerToolName === "web_search") {
+    return { query: cleaned };
+  }
+  return { url: cleaned };
+}
+
+function parseDeepSeekDsmlToolCalls(
+  outputText: string,
+  continuationStep: number,
+): readonly BridgeContinuationToolCall[] {
+  if (!outputText.includes("<｜｜DSML｜｜invoke")) {
+    return [];
+  }
+  const toolCalls: BridgeContinuationToolCall[] = [];
+  for (const match of outputText.matchAll(createDeepSeekDsmlInvokePattern())) {
+    const toolName = mapDeepSeekDsmlToolName(match[1]?.trim() ?? "");
+    if (toolName === null) {
+      continue;
+    }
+    const argumentsValue = parseDeepSeekDsmlToolCallArguments(toolName, match[2] ?? "");
+    if (argumentsValue === null) {
+      continue;
+    }
+    toolCalls.push({
+      name: toolName,
+      arguments: argumentsValue,
+      providerToolId: `deepseek_dsml_call_${continuationStep + 1}_${toolCalls.length + 1}`,
+    });
+  }
+  return toolCalls;
+}
+
+function resolveContinuationTurn(input: {
+  readonly providerId: string;
+  readonly outputText: string;
+  readonly toolCalls: readonly BridgeContinuationToolCall[];
+  readonly continuationStep: number;
+}): {
+  readonly outputText: string;
+  readonly toolCalls: readonly BridgeContinuationToolCall[];
+} {
+  if (input.toolCalls.length > 0) {
+    return {
+      outputText: input.outputText,
+      toolCalls: input.toolCalls,
+    };
+  }
+  if (input.providerId !== "deepseek") {
+    return {
+      outputText: input.outputText,
+      toolCalls: [],
+    };
+  }
+  const dsmlToolCalls = parseDeepSeekDsmlToolCalls(input.outputText, input.continuationStep);
+  return {
+    outputText: dsmlToolCalls.length > 0 ? stripDeepSeekDsmlToolMarkup(input.outputText) : input.outputText,
+    toolCalls: dsmlToolCalls,
+  };
+}
+
+function shouldBridgeManageToolContinuation(
+  tools: readonly RuntimeExecutionToolDefinition[] | undefined,
+): boolean {
+  return (tools?.length ?? 0) > 0 && tools!.every((tool) => tool.kind === "hosted");
+}
+
+function surfaceContinuationTurnToExecution(
+  execution: RoutedExecutionResult,
+  continuationTurn: {
+    readonly outputText: string;
+    readonly toolCalls: readonly BridgeContinuationToolCall[];
+  },
+): RoutedExecutionResult {
+  return {
+    ...execution,
+    normalized: {
+      ...execution.normalized,
+      outputText: continuationTurn.outputText,
+      toolCalls: continuationTurn.toolCalls,
+      finishReason: "tool_calls",
+    },
+  };
+}
+
+function buildContinuationExecutionRequest(
+  executionRequest: RuntimeExecutionRequest,
+  toolCalls: readonly {
+    readonly id: string;
+    readonly type: "function";
+    readonly function: {
+      readonly name: string;
+      readonly arguments: string;
+    };
+  }[],
+  toolExecutions: readonly ToolRegistryExecution[],
+  outputText: string,
+  keepTools: boolean,
+): RuntimeExecutionRequest {
+  const continuationBase = keepTools
+    ? executionRequest
+    : (() => {
+        const { tools: _tools, ...rest } = executionRequest;
+        return rest;
+      })();
+  const executionsByToolCallId = new Map(toolExecutions.map((execution) => [execution.toolCallId, execution]));
+  const assistantMessage: OpenAIChatCompletionsMessage = {
+    role: "assistant",
+    content: outputText.length > 0 ? outputText : null,
+    tool_calls: toolCalls,
+  };
+  const toolMessages: OpenAIChatCompletionsMessage[] = toolCalls.map((toolCall) => ({
+    role: "tool",
+    tool_call_id: toolCall.id,
+    content: serializeToolExecutionContent(executionsByToolCallId.get(toolCall.id)),
+  }));
+  const followUpInstructionMessage: OpenAIChatCompletionsMessage = {
+    role: "user",
+    content: BRIDGE_TOOL_LOOP_FOLLOWUP_INSTRUCTION,
+  };
+
+  return {
+    ...continuationBase,
+    messages: [
+      ...executionRequest.messages,
+      assistantMessage,
+      ...toolMessages,
+      followUpInstructionMessage,
+    ],
   };
 }
 
@@ -7037,19 +9599,37 @@ export async function createRuntimeBridgeBackend(
   options: CreateRuntimeBridgeBackendOptions,
 ): Promise<RuntimeBridgeBackend> {
   const networkFetcher = options.networkFetcher ?? fetch;
+  const codexAuthAdapter = options.codexAuthAdapter ?? createSystemCodexAuthAdapter();
+  const codexExecutionAdapter =
+    options.codexExecutionAdapter ?? createSystemCodexExecutionAdapter();
+  const codexDynamicToolExecutionsByRequestId = new Map<string, ToolRegistryExecution[]>();
   const runtimeVendorStartup = options.runtimeVendorStartup ?? "enabled";
   const fixtureRoot = options.fixtureRoot ?? null;
   const useFixtures = fixtureRoot !== null;
-  const initialUnifiedRuntimeConfig = options.unifiedRuntimeConfigPath
-    ? await readFile(options.unifiedRuntimeConfigPath, "utf8")
-        .then((text) => parseUnifiedRuntimeConfigText(text))
-        .catch((error: unknown) => {
+  const initialUnifiedRuntimeConfigText = options.unifiedRuntimeConfigPath
+    ? await readFile(options.unifiedRuntimeConfigPath, "utf8").catch((error: unknown) => {
           if ((error as NodeJS.ErrnoException).code === "ENOENT") {
             return null;
           }
           throw error;
         })
     : null;
+  const initialUnifiedRuntimeConfig = initialUnifiedRuntimeConfigText
+    ? parseUnifiedRuntimeConfigText(initialUnifiedRuntimeConfigText)
+    : null;
+  if (
+    options.unifiedRuntimeConfigPath &&
+    initialUnifiedRuntimeConfigText !== null &&
+    initialUnifiedRuntimeConfig !== null &&
+    containsLegacyRoutingAliasConfigText(initialUnifiedRuntimeConfigText)
+  ) {
+    await mkdir(path.dirname(options.unifiedRuntimeConfigPath), { recursive: true });
+    await writeFile(
+      options.unifiedRuntimeConfigPath,
+      renderUnifiedRuntimeConfigText(initialUnifiedRuntimeConfig),
+      "utf8",
+    );
+  }
   const supervisor = options.unifiedRuntimeConfigPath ? new ProcessSupervisor() : null;
   const baseCatalog = await readJson<NormalizedCatalog>(
     path.join(
@@ -7236,7 +9816,7 @@ export async function createRuntimeBridgeBackend(
       options.runtimeStateRoot,
       options.scopeId,
       hydrateEnvProviderAccounts(validation.accounts, ignoredAccountIds),
-    );
+    ).map(normalizeCodexSubscriptionAccountTruth);
     const changedAccounts = hydratedAccounts.filter((account, index) => {
       const persistedAccount = validation.accounts[index];
       return (
@@ -7402,7 +9982,8 @@ export async function createRuntimeBridgeBackend(
       );
       const credentialBackendCanonical = normalizeCredentialBackend(account.credentialRef?.backend);
       const credentialStorageMode = resolveCredentialStorageMode(account);
-      const pendingAuthorization = pendingAccountIds.has(account.providerAccountId);
+      const pendingAuthorization =
+        pendingAccountIds.has(account.providerAccountId) && activeEndpointIds.length === 0;
       const envUnresolved =
         credentialBackendCanonical === "env" &&
         account.credentialRef !== undefined &&
@@ -7684,6 +10265,94 @@ export async function createRuntimeBridgeBackend(
     entries: [],
     bySourceType: { local: [], remote: [] },
   });
+  const deriveRoutingAliasBootstrapModelIds = (
+    executionMode: UnifiedRuntimeExecutionMode,
+  ): readonly string[] => {
+    const effectiveInventory = buildRoutableInventory(
+      filterRouterRegistryByExecutionMode(currentRegistry, executionMode),
+      getCurrentRegistrySources(),
+    );
+    if (effectiveInventory.modelIds.length > 0) {
+      return effectiveInventory.modelIds;
+    }
+
+    const configuredLocalModelIds = (
+      currentUnifiedRuntimeConfig?.llamaSwap.models.map((model) => model.modelId) ?? []
+    ).sort(compareText);
+    const configuredRemoteModelIds = [
+      ...new Set(
+        (currentUnifiedRuntimeConfig?.liteLLM.providers ?? []).flatMap((provider) =>
+          provider.modelMappings.length > 0
+            ? provider.modelMappings.map((mapping) => mapping.modelId)
+            : provider.modelNames,
+        ),
+      ),
+    ].sort(compareText);
+
+    if (executionMode === "local_only") {
+      return configuredLocalModelIds;
+    }
+    if (executionMode === "remote_only") {
+      return configuredRemoteModelIds;
+    }
+
+    return [...new Set([...configuredLocalModelIds, ...configuredRemoteModelIds])].sort(compareText);
+  };
+  const sameModelIds = (left: readonly string[], right: readonly string[]): boolean =>
+    left.length === right.length && left.every((value, index) => value === right[index]);
+  const sameModelAliases = (
+    left: readonly UnifiedRuntimeModelAliasConfig[],
+    right: readonly UnifiedRuntimeModelAliasConfig[],
+  ): boolean =>
+    left.length === right.length &&
+    left.every((alias, index) => {
+      const nextAlias = right[index];
+      return (
+        nextAlias !== undefined &&
+        alias.aliasId === nextAlias.aliasId &&
+        alias.mode === nextAlias.mode &&
+        sameModelIds(alias.modelIds, nextAlias.modelIds)
+      );
+    });
+  const materializeCanonicalRoutingAliasMatrix = (
+    config: UnifiedRuntimeConfig,
+  ): UnifiedRuntimeConfig => {
+    const preservedCustomAliases = (config.modelAliases ?? []).filter(
+      (alias) => !isPrimaryRoutingAliasId(alias.aliasId),
+    );
+    const canonicalAliases: UnifiedRuntimeModelAliasConfig[] = [];
+
+    for (const executionMode of CANONICAL_ROUTING_ALIAS_EXECUTION_MODES) {
+      const modelIds = deriveRoutingAliasBootstrapModelIds(executionMode);
+      if (modelIds.length === 0) {
+        continue;
+      }
+      for (const routingStrategy of CANONICAL_ROUTING_ALIAS_STRATEGIES) {
+        canonicalAliases.push({
+          aliasId: deriveUnifiedRuntimeRoutingAliasId({
+            routingStrategy,
+            executionMode,
+          }),
+          mode: deriveUnifiedRuntimeRoutingAliasMode(routingStrategy, null),
+          modelIds: [...modelIds],
+        });
+      }
+    }
+
+    if (canonicalAliases.length === 0) {
+      return config;
+    }
+
+    const nextAliases = [...canonicalAliases, ...preservedCustomAliases];
+    if (sameModelAliases(config.modelAliases ?? [], nextAliases)) {
+      return config;
+    }
+
+    return {
+      ...config,
+      modelAliases: nextAliases,
+    };
+  };
   let currentRoutableInventory: RoutableInventory = emptyRoutableInventory();
   let currentAliasDriftWarnings: readonly AliasDriftWarning[] = [];
   const refreshRoutableInventoryState = (): void => {
@@ -7767,28 +10436,95 @@ export async function createRuntimeBridgeBackend(
       activeProviderAccountRepairs.delete(providerAccountId);
     }
   };
-  const resolveProbeAuthorization = async (providerAccountId: string): Promise<string | null> => {
+  const buildProbeExecutionTarget = (
+    providerAccountId: string,
+  ): ResolvedExecutionTarget | null => {
     const account = currentAccounts.find((entry) => entry.providerAccountId === providerAccountId);
     if (!account) {
       return null;
     }
-    if (account.credentialRef.backend === "env") {
-      const value = process.env[account.credentialRef.ref];
-      return typeof value === "string" && value.trim().length > 0 ? value.trim() : null;
+    const source = getCurrentRegistrySources().cloud.find(
+      (entry) => entry.providerAccountId === providerAccountId,
+    );
+    return {
+      endpointId: source?.endpointId ?? account.providerAccountId,
+      modelId: source?.modelId ?? account.allowedModels[0] ?? account.providerId,
+      providerId: account.providerId,
+      providerKind: "remote_openai_compat",
+      providerAccountId: account.providerAccountId,
+      adapterFamily: "ai-sdk-openai-compatible",
+      authFamily: account.authMode,
+      apiBase: account.baseUrlOverride ?? "",
+      requestShapeHints: null,
+      candidate: {} as never,
+      account,
+      provider: null,
+      model: null,
+    };
+  };
+  const resolveProbeAuthorization = async (providerAccountId: string): Promise<string | null> => {
+    const target = buildProbeExecutionTarget(providerAccountId);
+    if (!target) {
+      return null;
     }
-    if (
-      account.credentialRef.backend === "local-file" ||
-      account.credentialRef.backend === "local-encrypted-file"
-    ) {
-      const tokenPayload = readStoredOauthTokenFileSync(
+    try {
+      return await resolveCredentialValue(
         options.runtimeStateRoot,
         options.scopeId,
-        account.credentialRef.ref,
+        target,
+        providerPresets,
+        liteLLMProviders,
+        networkFetcher,
+        deviceId,
+        rebuildCurrentState,
       );
-      const accessToken = readStoredAccessToken(tokenPayload);
-      return accessToken.length > 0 ? accessToken : null;
+    } catch {
+      return null;
     }
-    return null;
+  };
+  const refreshProbeAuthorization = async (providerAccountId: string): Promise<string | null> => {
+    const target = buildProbeExecutionTarget(providerAccountId);
+    if (!target) {
+      return null;
+    }
+    const backend = target.account?.credentialRef.backend;
+    if (backend === "env") {
+      return resolveProbeAuthorization(providerAccountId);
+    }
+    if (
+      (backend === "local-file" || backend === "local-encrypted-file") &&
+      target.account?.authMode === "oauth2-device-code"
+    ) {
+      try {
+        return await refreshOauthAccessToken(
+          options.runtimeStateRoot,
+          options.scopeId,
+          target,
+          providerPresets,
+          liteLLMProviders,
+          networkFetcher,
+          deviceId,
+          rebuildCurrentState,
+        );
+      } catch {
+        return null;
+      }
+    }
+    return resolveProbeAuthorization(providerAccountId);
+  };
+  const resolveProbeHeaders = async (
+    providerAccountId: string,
+  ): Promise<Readonly<Record<string, string>>> => {
+    const account = currentAccounts.find((entry) => entry.providerAccountId === providerAccountId);
+    if (!account || account.authMode !== "oauth2-device-code") {
+      return {};
+    }
+    try {
+      const variant = getOauthVariant(providerPresets, liteLLMProviders, account.providerId);
+      return createDeviceHeaders(deviceId, variant.oauth.requiredHeaders);
+    } catch {
+      return {};
+    }
   };
   const collectRemoteHealthProbeTargets = (): RemoteHealthProbeTarget[] => {
     const accountsById = new Map(
@@ -7804,6 +10540,9 @@ export async function createRuntimeBridgeBackend(
       }
       seenEndpointIds.add(source.endpointId);
       const account = accountsById.get(source.providerAccountId);
+      if (isCodexSubscriptionAccount(account)) {
+        continue;
+      }
       const apiBase =
         account?.baseUrlOverride ??
         (source.servingSource === "vendor-litellm" ? litellmBaseUrl : null) ??
@@ -8289,20 +11028,36 @@ export async function createRuntimeBridgeBackend(
         `Provider account ${providerAccountId} is not ready for endpoint activation.`,
       );
     }
+    if (isOpenAICodexSubscriptionAccount(account)) {
+      assertOpenAICodexSubscriptionModelIds([modelId]);
+    }
     if (account.allowedModels.length > 0 && !account.allowedModels.includes(modelId)) {
       throw new Error(`Model ${modelId} is not enabled for provider account ${providerAccountId}.`);
     }
     let model = currentModelsById.get(modelId);
     if (!model) {
-      const providerId = modelId.includes("/") ? modelId.split("/")[0] : account.providerId;
       const fallbackTemplate = createFallbackModelTemplate(currentNormalizedCatalog);
+      const baseModel = resolveRuntimeEndpointCatalogTemplate({
+        catalog: currentNormalizedCatalog,
+        account,
+        endpointModelId: modelId,
+        fallbackTemplate,
+      });
       model = {
-        ...fallbackTemplate,
+        ...baseModel,
         modelId,
-        providerId,
-        displayName: readDefaultDisplayNameFromModelId(modelId),
+        providerId: account.providerId,
+        displayName:
+          baseModel.modelId === modelId
+            ? baseModel.displayName
+            : readDefaultDisplayNameFromModelId(modelId),
         localOverrideApplied: true,
-        localNotes: ["Synthesized on-demand during endpoint activation."],
+        localNotes: [
+          ...baseModel.localNotes,
+          baseModel === fallbackTemplate
+            ? "Synthesized on-demand during endpoint activation."
+            : `Synthesized on-demand during endpoint activation by cloning canonical catalog metadata from ${baseModel.modelId}.`,
+        ],
         upstreamProvenance: currentNormalizedCatalog.source,
       };
       currentNormalizedCatalog = {
@@ -8385,16 +11140,23 @@ export async function createRuntimeBridgeBackend(
       scope?: string;
     };
   }): readonly ProviderPresetVariant[] => {
+    const isOpenAICanonicalProvider = input.providerId === OPENAI_PROVIDER_ID;
     const generatedOAuthVariants: ProviderPresetVariant[] = input.oauth
       ? [
           {
-            variantId: `${input.providerId}-oauth`,
-            label: `${input.displayName} OAuth`,
-            description: `OAuth device-code authentication for ${input.displayName}.`,
+            variantId: isOpenAICanonicalProvider
+              ? OPENAI_CODEX_SUBSCRIPTION_VARIANT_ID
+              : `${input.providerId}-oauth`,
+            label: isOpenAICanonicalProvider ? "Codex Subscription" : `${input.displayName} OAuth`,
+            description: isOpenAICanonicalProvider
+              ? "Use the current Codex ChatGPT session cached on this machine."
+              : `OAuth device-code authentication for ${input.displayName}.`,
             authMode: "oauth2-device-code",
-            availability: "ready" as const,
+            availability: isOpenAICanonicalProvider ? "backend-limited" : "ready",
             baseUrl: input.oauth.apiBase ?? input.apiBase,
-            modelIds: input.modelIds,
+            modelIds: isOpenAICanonicalProvider
+              ? [...OPENAI_CODEX_SUBSCRIPTION_MODEL_IDS]
+              : input.modelIds,
             oauth: {
               clientId: input.oauth.clientId,
               deviceAuthorizationEndpoint: input.oauth.deviceAuthorizationEndpoint,
@@ -8410,8 +11172,10 @@ export async function createRuntimeBridgeBackend(
         ? [
             {
               variantId: `${input.providerId}-api-key`,
-              label: `${input.displayName} API Key`,
-              description: `API-key authentication for ${input.displayName}.`,
+              label: isOpenAICanonicalProvider ? "API Key" : `${input.displayName} API Key`,
+              description: isOpenAICanonicalProvider
+                ? "Usage-based OpenAI Platform API key authentication."
+                : `API-key authentication for ${input.displayName}.`,
               authMode: "api-key-static",
               availability: "ready" as const,
               baseUrl: input.apiBase,
@@ -8572,14 +11336,30 @@ export async function createRuntimeBridgeBackend(
     currentLiteLLMVendor = nextLiteLLMVendor;
     await syncLocalPeerState(await readStoredPeers());
     rebuildCurrentState();
-    const nextModelAliases = nextConfig?.modelAliases ?? [];
+    if (nextConfig !== null) {
+      const materializedConfig = materializeCanonicalRoutingAliasMatrix(nextConfig);
+      if (materializedConfig !== nextConfig) {
+        currentUnifiedRuntimeConfig = materializedConfig;
+        syncRoutingModelSelection();
+        refreshRoutableInventoryState();
+        if (options.unifiedRuntimeConfigPath) {
+          await mkdir(path.dirname(options.unifiedRuntimeConfigPath), { recursive: true });
+          await writeFile(
+            options.unifiedRuntimeConfigPath,
+            renderUnifiedRuntimeConfigText(materializedConfig),
+            "utf8",
+          );
+        }
+      }
+    }
+    const nextModelAliases = currentUnifiedRuntimeConfig?.modelAliases ?? [];
     if (
-      nextConfig !== null &&
+      currentUnifiedRuntimeConfig !== null &&
       nextModelAliases.length > 0 &&
       currentRoutableInventory.endpointIds.length > 0
     ) {
       const aliasValidation = validateAliasInventoryResolution(
-        nextModelAliases,
+        nextModelAliases.filter((alias) => !isPrimaryRoutingAliasId(alias.aliasId)),
         currentRoutableInventory,
       );
       if (!aliasValidation.valid) {
@@ -9740,6 +12520,7 @@ export async function createRuntimeBridgeBackend(
         currentAccounts,
         currentRegistry,
         currentRuntimeRoles.roleDefinitions,
+        currentRolePolicy.taskDefinitions,
         getLlamaSwapRoleIdsByModelId(),
       ),
     },
@@ -9815,6 +12596,7 @@ export async function createRuntimeBridgeBackend(
         capabilities: endpoint.declared.capabilities,
         toolCallingSupported: endpoint.declared.tool_calling.supported,
         toolCallingStyle: endpoint.declared.tool_calling.style,
+        webSearchSupport: resolveEndpointWebSearchSupport(endpoint),
         executionModeEligible: executionEndpointIds.has(endpointId),
         controllerEligible: controller?.endpointId === endpointId,
         preferred: guidance.preferredEndpointIds.includes(endpointId),
@@ -9913,7 +12695,7 @@ export async function createRuntimeBridgeBackend(
       databasePath: initialization.databasePath,
       registry: currentRegistry,
       observedDataConfig,
-      difficultyBucket: plan.routingDiagnostics?.difficultyRouting?.difficulty,
+      difficultyBucket: resolveObservedDifficultyBucketForPlan(plan),
       routingTimeMs,
     });
     let streamedChunkCount = 0;
@@ -9946,34 +12728,27 @@ export async function createRuntimeBridgeBackend(
         currentAccounts,
         currentRegistry,
         currentRuntimeRoles.roleDefinitions,
+        currentRolePolicy.taskDefinitions,
         getLlamaSwapRoleIdsByModelId(),
       ),
       routingModel: plan.routingModel ?? routingModel ?? undefined,
     });
     const routingDecisionId = routed.decision.routing_decision_id;
-    const execution = await executeLiveRoutedRequest({
-      routeResult: routed,
-      catalog: getCurrentExecutionCatalog(),
-      additionalProviders: liteLLMProviders,
-      accounts: currentAccounts,
-      registry: currentRegistry,
-      registrySources: getCurrentRegistrySources(),
-      executionRequest: plan.executionRequest as RuntimeExecutionRequest,
-      adapters: [
-        ...(currentUnifiedRuntimeConfig?.liteLLM.enabled ? [createLiteLLMProviderAdapter()] : []),
-        createOpenAIProviderAdapter(),
-        createOpenAIProviderAdapter("ai-sdk-openai-compatible"),
-        createAnthropicProviderAdapter(),
-      ],
-      executeProviderRequest: async ({
-        target,
-        requestCapture,
-        fallbackModelIds,
-      }: {
-        target: ResolvedExecutionTarget;
-        requestCapture: ProviderRequestCapture;
-        fallbackModelIds?: readonly string[];
-      }) => {
+    const adapters = [
+      ...(currentUnifiedRuntimeConfig?.liteLLM.enabled ? [createLiteLLMProviderAdapter()] : []),
+      createOpenAIProviderAdapter(),
+      createOpenAIProviderAdapter("ai-sdk-openai-compatible"),
+      createAnthropicProviderAdapter(),
+    ];
+    const executeProviderRequest = async ({
+      target,
+      requestCapture,
+      fallbackModelIds,
+    }: {
+      target: ResolvedExecutionTarget;
+      requestCapture: ProviderRequestCapture;
+      fallbackModelIds?: readonly string[];
+    }) => {
         // File-backed credentials (OAuth, locally-saved API keys) always need direct HTTP execution
         // so that OAuth tokens are correctly resolved and X-Msh-* device headers are applied.
         // In the unified config path, LiteLLM providers get adapterFamily "litellm-proxy", so
@@ -10085,6 +12860,102 @@ export async function createRuntimeBridgeBackend(
             endpointId: target.endpointId,
             statusCode: 200,
             body: capture.body,
+          };
+        }
+
+        const codexAccount = target.account;
+        if (codexAccount && isCodexSubscriptionAccount(codexAccount)) {
+          const credentialPayload = readStoredOauthTokenFileSync(
+            options.runtimeStateRoot,
+            options.scopeId,
+            codexAccount.credentialRef.ref,
+          );
+          const authPayload = readStoredCodexAuthSnapshot(credentialPayload);
+          if (!authPayload) {
+            throw new Error(OPENAI_CODEX_SUBSCRIPTION_AUTH_MISSING_ERROR);
+          }
+          const codexDynamicTools = buildCodexDynamicTools(requestCapture);
+          const dynamicToolNames = new Set(codexDynamicTools.map((tool) => tool.name));
+          const runtimeToolRegistry =
+            codexDynamicTools.length > 0
+              ? await createRuntimeToolRegistry(options.repoRoot, currentRegistry, networkFetcher)
+              : null;
+          const codexResponse = await codexExecutionAdapter.executeRequest({
+            runtimeStateRoot: options.runtimeStateRoot,
+            scopeId: options.scopeId,
+            requestId,
+            providerAccountId: codexAccount.providerAccountId,
+            modelId: target.modelId,
+            requestCapture,
+            authPayload,
+            ...(runtimeToolRegistry
+              ? {
+                  executeDynamicToolCall: async ({
+                    toolCallId,
+                    toolName,
+                    toolArguments,
+                  }: {
+                    readonly toolCallId: string;
+                    readonly toolName: string;
+                    readonly toolArguments: unknown;
+                  }) => {
+                    const executionResult = dynamicToolNames.has(toolName)
+                      ? await executeToolCalls(runtimeToolRegistry, {
+                          requestId,
+                          toolCalls: [
+                            {
+                              name: toolName,
+                              arguments: toolArguments,
+                              providerToolId: toolCallId,
+                            },
+                          ],
+                        })
+                      : {
+                          executions: [
+                            {
+                              toolCallId,
+                              toolName,
+                              connectorId: "request-scoped",
+                              connectorKind: "dynamic-tool",
+                              status: "rejected" as const,
+                              output: null,
+                              diagnostics: [
+                                {
+                                  code: "TOOL_NOT_ALLOWED",
+                                  message: `Tool ${toolName} was not declared for this request.`,
+                                },
+                              ],
+                            },
+                          ],
+                          diagnostics: [],
+                        };
+                    const execution = executionResult.executions[0] ?? {
+                      toolCallId,
+                      toolName,
+                      connectorId: "request-scoped",
+                      connectorKind: "dynamic-tool",
+                      status: "failed" as const,
+                      output: null,
+                      diagnostics: [
+                        {
+                          code: "TOOL_EXECUTION_FAILED",
+                          message: `Tool ${toolName} did not produce an execution record.`,
+                        },
+                      ],
+                    };
+                    const recordedExecutions =
+                      codexDynamicToolExecutionsByRequestId.get(requestId) ?? [];
+                    recordedExecutions.push(execution);
+                    codexDynamicToolExecutionsByRequestId.set(requestId, recordedExecutions);
+                    return toCodexDynamicToolCallResult(execution);
+                  },
+                }
+              : {}),
+          });
+          return {
+            providerFamily: target.adapterFamily,
+            endpointId: target.endpointId,
+            ...codexResponse,
           };
         }
 
@@ -10203,8 +13074,78 @@ export async function createRuntimeBridgeBackend(
           body: parsedBody,
           vendorMetadata: measuredVendorMetadata,
         };
-      },
+      };
+    const executeCurrentExecutionRequest = async (
+      executionRequest: RuntimeExecutionRequest,
+    ): Promise<RoutedExecutionResult> =>
+      executeLiveRoutedRequest({
+        routeResult: routed,
+        catalog: getCurrentExecutionCatalog(),
+        additionalProviders: liteLLMProviders,
+        accounts: currentAccounts,
+        registry: currentRegistry,
+        registrySources: getCurrentRegistrySources(),
+        executionRequest,
+        adapters,
+        executeProviderRequest,
+      });
+    let currentExecutionRequest = plan.executionRequest as RuntimeExecutionRequest;
+    let execution = await executeCurrentExecutionRequest(currentExecutionRequest);
+    const continuedToolCalls: Array<{
+      name: string;
+      arguments: unknown;
+      providerToolId?: string;
+    }> = [];
+    const continuedToolExecutions: ToolRegistryExecution[] = [];
+    let runtimeToolRegistry: ToolRegistry | null = null;
+    let continuationStep = 0;
+    let continuationTurn = resolveContinuationTurn({
+      providerId: execution.target.providerId,
+      outputText: execution.normalized.outputText,
+      toolCalls: execution.normalized.toolCalls,
+      continuationStep,
     });
+    if (!shouldBridgeManageToolContinuation(currentExecutionRequest.tools)) {
+      if (continuationTurn.toolCalls.length > 0) {
+        continuedToolCalls.push(...continuationTurn.toolCalls);
+        execution = surfaceContinuationTurnToExecution(execution, continuationTurn);
+      }
+    } else {
+      while (
+        continuationTurn.toolCalls.length > 0 &&
+        continuationStep < BRIDGE_TOOL_LOOP_MAX_STEPS
+      ) {
+        runtimeToolRegistry ??= await createRuntimeToolRegistry(
+          options.repoRoot,
+          currentRegistry,
+          networkFetcher,
+        );
+        const currentToolCalls = continuationTurn.toolCalls.map((toolCall, index) =>
+          toBridgeToolCall(toolCall, index),
+        );
+        const currentToolExecutionResult = await executeToolCalls(runtimeToolRegistry, {
+          requestId,
+          toolCalls: continuationTurn.toolCalls,
+        });
+        continuedToolCalls.push(...continuationTurn.toolCalls);
+        continuedToolExecutions.push(...currentToolExecutionResult.executions);
+        currentExecutionRequest = buildContinuationExecutionRequest(
+          currentExecutionRequest,
+          currentToolCalls,
+          currentToolExecutionResult.executions,
+          continuationTurn.outputText,
+          execution.target.providerId === "moonshot",
+        );
+        execution = await executeCurrentExecutionRequest(currentExecutionRequest);
+        continuationStep += 1;
+        continuationTurn = resolveContinuationTurn({
+          providerId: execution.target.providerId,
+          outputText: execution.normalized.outputText,
+          toolCalls: execution.normalized.toolCalls,
+          continuationStep,
+        });
+      }
+    }
     if (
       trackedStreamWriter &&
       streamRequested === true &&
@@ -10218,19 +13159,20 @@ export async function createRuntimeBridgeBackend(
         routingDecisionId,
       });
     }
-    const toolExecutionResult =
-      execution.normalized.toolCalls.length > 0
-        ? await executeToolCalls(
-            await createRuntimeToolRegistry(options.repoRoot, currentRegistry),
-            {
-              requestId,
-              toolCalls: execution.normalized.toolCalls,
-            },
-          )
-        : {
-            executions: [],
-            diagnostics: [],
-          };
+    const bridgedToolExecutionResult = {
+      executions: continuedToolExecutions,
+      diagnostics: continuedToolExecutions.flatMap((toolExecution) => toolExecution.diagnostics),
+    };
+    const codexDynamicToolExecutions =
+      codexDynamicToolExecutionsByRequestId.get(requestId) ?? [];
+    codexDynamicToolExecutionsByRequestId.delete(requestId);
+    const toolExecutionResult = {
+      executions: [...codexDynamicToolExecutions, ...bridgedToolExecutionResult.executions],
+      diagnostics: [
+        ...codexDynamicToolExecutions.flatMap((execution) => execution.diagnostics),
+        ...bridgedToolExecutionResult.diagnostics,
+      ],
+    };
     const providerAccount = currentAccounts.find(
       (account) => account.providerAccountId === execution.target.providerAccountId,
     );
@@ -10276,6 +13218,7 @@ export async function createRuntimeBridgeBackend(
           catalogEconomics:
             routed.catalogEconomicsByEndpointId[routed.decision.chosen_endpoint_id] ?? undefined,
           effectiveMetrics: summarizeEffectiveMetricsFromDecision(routed.decision),
+          selection: summarizeSelectionDiagnosticsFromDecision(routed.decision),
           throughputPenalty: summarizeThroughputPenaltyFromDecision(routed.decision),
         },
         retrievalReceipt: {
@@ -10301,6 +13244,7 @@ export async function createRuntimeBridgeBackend(
         capturePolicy: observabilityPolicy,
         tooling: {
           executions: toolExecutionResult.executions,
+          ...(continuedToolCalls.length > 0 ? { toolCalls: continuedToolCalls } : {}),
         },
         telemetrySnapshot,
         ...(providerAccount
@@ -10540,7 +13484,21 @@ export async function createRuntimeBridgeBackend(
       return undefined;
     }
 
-    const controller = currentUnifiedRuntimeConfig?.controller;
+    const configuredController = currentUnifiedRuntimeConfig?.controller;
+    const persistedControllerAssignment =
+      !configuredController?.enabled ? getCurrentControllerAssignment() : null;
+    const controller =
+      configuredController?.enabled
+        ? configuredController
+        : persistedControllerAssignment
+          ? {
+              enabled: true,
+              sourceType: persistedControllerAssignment.sourceType,
+              endpointId: persistedControllerAssignment.endpointId,
+              modelId: persistedControllerAssignment.modelId,
+              timeoutMs: DEFAULT_UNIFIED_RUNTIME_CONTROLLER_TIMEOUT_MS,
+            }
+          : null;
     if (!controller?.enabled) {
       return undefined;
     }
@@ -10576,49 +13534,115 @@ export async function createRuntimeBridgeBackend(
       messages: input.messages,
       toolCount: input.toolCount,
       candidateEndpointIds,
+      roleDefinitions: currentRolePolicy.roleDefinitions,
+      taskDefinitions: currentRolePolicy.taskDefinitions,
     });
-    const controllerPlan: BridgeExecutionPlan = {
-      routingRequest: {
-        requestId: `${input.requestId}:controller`,
-        taskType: "text.chat",
-        requiredCapabilities: ["text.chat"],
-        preferredCapabilities: [],
-        requiredModalities: ["text"],
-        contextTokens: estimateContextTokens(controllerMessages, 0),
-        needsTools: false,
-        strategy: "balanced",
-        preferLocal: false,
-        allowEndpoints: controllerAllowEndpoints,
-      },
-      executionRequest: {
-        messages: controllerMessages,
-        temperature: 0,
-        maxOutputTokens: 256,
-      },
-    };
-
-    try {
+    const compactControllerMessages = buildCompactControllerRoutingMessages({
+      requestedModel: input.requestedModel,
+      messages: input.messages,
+      toolCount: input.toolCount,
+      candidateEndpointIds,
+      roleDefinitions: currentRolePolicy.roleDefinitions,
+      taskDefinitions: currentRolePolicy.taskDefinitions,
+    });
+    const parseControllerGuidanceFromMessages = async (
+      messages: readonly OpenAIChatCompletionsMessage[],
+      attemptLabel: string,
+    ): Promise<
+      NonNullable<RuntimeRoutingDiagnostics["controllerRouting"]>["acceptedDirectives"] | null
+    > => {
+      const controllerPlan: BridgeExecutionPlan = {
+        routingRequest: {
+          requestId: `${input.requestId}:${attemptLabel}`,
+          taskType: "text.chat",
+          requiredCapabilities: ["text.chat"],
+          preferredCapabilities: [],
+          requiredModalities: ["text"],
+          contextTokens: estimateContextTokens(messages, 0),
+          needsTools: false,
+          strategy: "balanced",
+          preferLocal: false,
+          allowEndpoints: controllerAllowEndpoints,
+        },
+        executionRequest: {
+          messages,
+          temperature: 0,
+          maxOutputTokens: CONTROLLER_MAX_OUTPUT_TOKENS,
+        },
+      };
       const controllerExecution = await Promise.race([
-        executeBridgePlan(controllerPlan, `${input.requestId}:controller`, false, undefined, {
+        executeBridgePlan(controllerPlan, `${input.requestId}:${attemptLabel}`, false, undefined, {
           persistObservation: false,
         }),
         delay(Math.max(1, controller.timeoutMs)).then(() => {
           throw new Error("controller-timeout");
         }),
       ]);
-      const guidance = parseControllerRoutingOutput(
-        controllerExecution.execution.normalized.outputText,
-      );
-      if (!guidance) {
+      return parseControllerRoutingOutput(controllerExecution.execution.normalized.outputText, {
+        roleDefinitions: currentRolePolicy.roleDefinitions,
+        taskDefinitions: currentRolePolicy.taskDefinitions,
+        candidateEndpointIds,
+      });
+    };
+
+    try {
+      const guidance =
+        (await parseControllerGuidanceFromMessages(controllerMessages, "controller")) ??
+        (await parseControllerGuidanceFromMessages(
+          compactControllerMessages,
+          "controller:compact-retry",
+        ));
+      if (guidance === null) {
+        const heuristicGuidance = inferHeuristicControllerGuidance({
+          messages: input.messages,
+          toolCount: input.toolCount,
+          roleDefinitions: currentRolePolicy.roleDefinitions,
+          taskDefinitions: currentRolePolicy.taskDefinitions,
+        });
+        const constrainedHeuristicGuidance = heuristicGuidance
+          ? constrainControllerGuidanceToCandidatePool({
+              guidance: heuristicGuidance,
+              candidateEndpointIds,
+              registry: executionRegistry,
+              runtimeEndpoints,
+              accounts: currentAccounts,
+              taskDefinitions: currentRolePolicy.taskDefinitions,
+              llamaSwapRoleIdsByModelId: getLlamaSwapRoleIdsByModelId(),
+            })
+          : null;
+        if (constrainedHeuristicGuidance) {
+          return {
+            active: true,
+            fallbackApplied: true,
+            fallbackReason: "controller-heuristic-fallback",
+            resolvedGuidance: constrainedHeuristicGuidance,
+          };
+        }
         return {
           active: true,
           fallbackApplied: true,
           fallbackReason: "invalid-controller-output",
         };
       }
+      const constrainedGuidance = constrainControllerGuidanceToCandidatePool({
+        guidance,
+        candidateEndpointIds,
+        registry: executionRegistry,
+        runtimeEndpoints,
+        accounts: currentAccounts,
+        taskDefinitions: currentRolePolicy.taskDefinitions,
+        llamaSwapRoleIdsByModelId: getLlamaSwapRoleIdsByModelId(),
+      });
+      if (constrainedGuidance === null) {
+        return {
+          active: true,
+          fallbackApplied: true,
+          fallbackReason: "controller-guidance-no-compatible-candidates",
+        };
+      }
       return {
         active: true,
-        resolvedGuidance: guidance,
+        resolvedGuidance: constrainedGuidance,
       };
     } catch (error) {
       return {
@@ -10749,6 +13773,7 @@ export async function createRuntimeBridgeBackend(
           currentRolePolicy.roleDefinitions,
           normalizeConfiguredRoutingMode(currentUnifiedRuntimeConfig?.routingStrategy) ?? undefined,
           executionInventory.endpointIds.length > 0 ? executionInventory : null,
+          currentRolePolicy.taskDefinitions,
         );
         const { execution, toolExecutionResult, routingDecisionId } = await executeBridgePlan(
           plan,
@@ -10884,8 +13909,9 @@ export async function createRuntimeBridgeBackend(
         currentRolePolicy.roleDefinitions,
         normalizeConfiguredRoutingMode(currentUnifiedRuntimeConfig?.routingStrategy) ?? undefined,
         executionInventory.endpointIds.length > 0 ? executionInventory : null,
+        currentRolePolicy.taskDefinitions,
       );
-      const { execution, routingDecisionId } = await executeBridgePlan(
+      const { execution, toolExecutionResult, routingDecisionId } = await executeBridgePlan(
         plan,
         requestId,
         body.stream,
@@ -10924,6 +13950,11 @@ export async function createRuntimeBridgeBackend(
               toolCalls: execution.normalized.toolCalls.map((toolCall, index) =>
                 toBridgeToolCall(toolCall, index),
               ),
+            }
+          : {}),
+        ...(toolExecutionResult.executions.length
+          ? {
+              toolExecutions: toolExecutionResult.executions,
             }
           : {}),
         usage: {
@@ -11063,13 +14094,19 @@ export async function createRuntimeBridgeBackend(
         ? (parse(previousText) as Record<string, unknown>)
         : null;
       const nextConfig = mergeUnifiedRuntimeConfigDocuments(previousDocument, body);
-      const nextText = renderUnifiedRuntimeConfigText(nextConfig);
+      let finalConfig = nextConfig;
+      let finalText = renderUnifiedRuntimeConfigText(finalConfig);
 
       await mkdir(path.dirname(options.unifiedRuntimeConfigPath), { recursive: true });
-      await writeFile(options.unifiedRuntimeConfigPath, nextText, "utf8");
+      await writeFile(options.unifiedRuntimeConfigPath, finalText, "utf8");
 
       try {
-        await applyUnifiedRuntimeConfigState(nextConfig);
+        await applyUnifiedRuntimeConfigState(finalConfig);
+        if (currentUnifiedRuntimeConfig !== null && currentUnifiedRuntimeConfig !== finalConfig) {
+          finalConfig = currentUnifiedRuntimeConfig;
+          finalText = renderUnifiedRuntimeConfigText(currentUnifiedRuntimeConfig);
+          await writeFile(options.unifiedRuntimeConfigPath, finalText, "utf8");
+        }
       } catch (error) {
         if (previousText === null) {
           await rm(options.unifiedRuntimeConfigPath, { force: true });
@@ -11132,7 +14169,10 @@ export async function createRuntimeBridgeBackend(
       const normalizedProviderIds = new Set(
         currentNormalizedCatalog.providers.map((p) => p.providerId),
       );
-      const liteLLMProviderIds = new Set(liteLLMProviders.map((p) => p.providerId));
+      const visibleLiteLLMProviders = liteLLMProviders.filter(
+        (provider) => provider.providerId !== CHATGPT_PROVIDER_ID,
+      );
+      const liteLLMProviderIds = new Set(visibleLiteLLMProviders.map((p) => p.providerId));
       const localModelIds =
         currentUnifiedRuntimeConfig?.llamaSwap.models.map((m) => m.modelId) ?? [];
       const mergedProviders = [
@@ -11146,7 +14186,7 @@ export async function createRuntimeBridgeBackend(
               ...variant,
               modelIds: effectiveModelIds.length > 0 ? effectiveModelIds : variant.modelIds,
             }));
-            const liteLLMProvider = liteLLMProviders.find(
+            const liteLLMProvider = visibleLiteLLMProviders.find(
               (p) => p.providerId === provider.providerId,
             );
             const mergedMetadata = resolveValidationProviderMetadata({
@@ -11180,7 +14220,7 @@ export async function createRuntimeBridgeBackend(
               variants,
             };
           }),
-        ...liteLLMProviders
+        ...visibleLiteLLMProviders
           .filter((provider) => !normalizedProviderIds.has(provider.providerId))
           .map((provider) => {
             const effectiveModelIds = resolveModelIds(provider.providerId);
@@ -11646,6 +14686,20 @@ export async function createRuntimeBridgeBackend(
         }
       }
 
+      if (
+        typeof account.providerId === "string" &&
+        typeof account.authMode === "string" &&
+        isOpenAICodexSubscriptionAccount({
+          providerId: account.providerId,
+          authMode: account.authMode,
+        })
+      ) {
+        const allowedModels = Array.isArray(account.allowedModels)
+          ? (account.allowedModels as string[])
+          : [];
+        assertOpenAICodexSubscriptionModelIds(allowedModels);
+      }
+
       const validationResult = validateProviderAccounts({
         catalog: currentNormalizedCatalog,
         additionalProviders: liteLLMProviders,
@@ -11732,6 +14786,9 @@ export async function createRuntimeBridgeBackend(
       if (allowedModels.length === 0) {
         throw new Error(`Provider ${providerId} does not expose any selectable models.`);
       }
+      if (providerId === OPENAI_PROVIDER_ID && variantId === OPENAI_CODEX_SUBSCRIPTION_VARIANT_ID) {
+        assertOpenAICodexSubscriptionModelIds(allowedModels);
+      }
 
       const credentialRef = createCredentialRef(providerId, providerAccountId);
       const validationResult = validateProviderAccounts({
@@ -11779,6 +14836,58 @@ export async function createRuntimeBridgeBackend(
           validationResult.diagnostics[0]?.message ??
             "Provider device-authorization validation failed.",
         );
+      }
+
+      if (isCodexSubscriptionEndpoint(variant.oauth.deviceAuthorizationEndpoint)) {
+        const authRequestId = randomUUID();
+        const codexHome = resolveManagedCodexSubscriptionHome(
+          options.runtimeStateRoot,
+          options.scopeId,
+          authRequestId,
+        );
+        const login = await codexAuthAdapter.startDeviceCodeLogin({ codexHome });
+        const expiresAtMs = Date.now() + 15 * 60 * 1000;
+        upsertSqliteProviderAccount({
+          databasePath: initialization.databasePath,
+          account: validationResult.accounts[0],
+        });
+        upsertProviderDeviceAuthSession({
+          databasePath: initialization.databasePath,
+          session: {
+            authRequestId,
+            providerAccountId,
+            providerId,
+            variantId,
+            credentialBackend: "local-file",
+            credentialRef,
+            authMode: variant.authMode,
+            verificationUri: login.verificationUrl,
+            verificationUriComplete: login.verificationUrl,
+            userCode: login.userCode,
+            deviceCode: encodeCodexDeviceCodeSessionPayload({
+              loginId: login.loginId,
+              wsUrl: login.wsUrl,
+              codexHome,
+              pid: login.pid,
+            }),
+            intervalSeconds: 5,
+            status: "pending",
+            lastError: null,
+            expiresAtMs,
+          },
+        });
+        rebuildCurrentState();
+
+        return {
+          authRequestId,
+          providerAccountId,
+          status: "pending",
+          userCode: login.userCode,
+          verificationUri: login.verificationUrl,
+          verificationUriComplete: login.verificationUrl,
+          intervalSeconds: 5,
+          expiresAtMs,
+        };
       }
 
       const deviceAuthParams = new URLSearchParams({
@@ -11886,6 +14995,12 @@ export async function createRuntimeBridgeBackend(
         throw new Error(`Provider variant ${session.variantId} does not expose device OAuth.`);
       }
       if (Date.now() >= session.expiresAtMs) {
+        if (isCodexSubscriptionEndpoint(variant.oauth.tokenEndpoint)) {
+          const payload = decodeCodexDeviceCodeSessionPayload(session.deviceCode);
+          if (payload) {
+            await cleanupManagedCodexDeviceCodeSession(payload);
+          }
+        }
         upsertProviderDeviceAuthSession({
           databasePath: initialization.databasePath,
           session: {
@@ -11899,6 +15014,129 @@ export async function createRuntimeBridgeBackend(
           providerAccountId: session.providerAccountId,
           status: "expired",
           lastError: "Device code expired.",
+        };
+      }
+
+      if (isCodexSubscriptionEndpoint(variant.oauth.tokenEndpoint)) {
+        const payload = decodeCodexDeviceCodeSessionPayload(session.deviceCode);
+        if (!payload) {
+          upsertProviderDeviceAuthSession({
+            databasePath: initialization.databasePath,
+            session: {
+              ...session,
+              status: "failed",
+              lastError:
+                "Codex Subscription device authorization metadata is invalid. Reconnect to continue.",
+            },
+          });
+          return {
+            authRequestId,
+            providerAccountId: session.providerAccountId,
+            status: "failed",
+            lastError:
+              "Codex Subscription device authorization metadata is invalid. Reconnect to continue.",
+          };
+        }
+
+        let accountRead:
+          | {
+              readonly account:
+                | {
+                    readonly type?: string;
+                    readonly email?: string;
+                    readonly planType?: string;
+                  }
+                | null;
+              readonly requiresOpenaiAuth: boolean;
+            }
+          | null = null;
+        try {
+          accountRead = await codexAuthAdapter.readAccount({
+            codexHome: payload.codexHome,
+            wsUrl: payload.wsUrl,
+            refreshToken: false,
+          });
+        } catch {
+          await cleanupManagedCodexDeviceCodeSession(payload);
+          upsertProviderDeviceAuthSession({
+            databasePath: initialization.databasePath,
+            session: {
+              ...session,
+              status: "failed",
+              lastError:
+                "Codex Subscription login helper stopped before the device authorization completed. Reconnect to continue.",
+            },
+          });
+          return {
+            authRequestId,
+            providerAccountId: session.providerAccountId,
+            status: "failed",
+            lastError:
+              "Codex Subscription login helper stopped before the device authorization completed. Reconnect to continue.",
+          };
+        }
+
+        const isConnected =
+          typeof accountRead?.account?.type === "string" &&
+          accountRead.account.type.trim() === "chatgpt";
+        if (!isConnected) {
+          return {
+            authRequestId,
+            providerAccountId: session.providerAccountId,
+            status: "pending",
+            retryAfterSeconds: session.intervalSeconds,
+          };
+        }
+
+        const cachedAuth = readStoredCodexAuthCache(payload.codexHome);
+        const accessToken = readStoredCodexAccessToken(cachedAuth);
+        if (accessToken.length === 0) {
+          return {
+            authRequestId,
+            providerAccountId: session.providerAccountId,
+            status: "pending",
+            retryAfterSeconds: session.intervalSeconds,
+            lastError: "Codex Subscription authorization completed, but the local auth cache is not ready yet.",
+          };
+        }
+
+        await persistOauthTokenFile(options.runtimeStateRoot, options.scopeId, session.credentialRef, {
+          providerId: session.providerId,
+          providerAccountId: session.providerAccountId,
+          access_token: accessToken,
+          refresh_token: readStoredCodexRefreshToken(cachedAuth),
+          token_type: "Bearer",
+          saved_at_ms: Date.now(),
+          codexAuth: cachedAuth,
+        });
+        upsertProviderDeviceAuthSession({
+          databasePath: initialization.databasePath,
+          session: {
+            ...session,
+            status: "connected",
+            lastError: null,
+          },
+        });
+        const account = currentAccounts.find(
+          (entry) => entry.providerAccountId === session.providerAccountId,
+        );
+        if (account) {
+          upsertSqliteProviderAccount({
+            databasePath: initialization.databasePath,
+            account: {
+              ...account,
+              status: "active",
+              healthStatus: "healthy",
+              rotationState: "stable",
+            },
+          });
+          rebuildCurrentState();
+        }
+        await cleanupManagedCodexDeviceCodeSession(payload);
+        return {
+          authRequestId,
+          providerAccountId: session.providerAccountId,
+          status: "connected",
         };
       }
 
@@ -12073,6 +15311,7 @@ export async function createRuntimeBridgeBackend(
           capabilities: endpoint.declared.capabilities,
           toolCallingSupported: endpoint.declared.tool_calling.supported,
           toolCallingStyle: endpoint.declared.tool_calling.style,
+          webSearchSupport: resolveEndpointWebSearchSupport(endpoint),
           status: endpoint.status,
         };
       });
@@ -12963,6 +16202,9 @@ export async function createRuntimeBridgeBackend(
           if (account.authMode !== "oauth2-device-code") {
             continue;
           }
+          if (isCodexSubscriptionAccount(account)) {
+            continue;
+          }
           const tokenPayload = readStoredOauthTokenFileSync(
             options.runtimeStateRoot,
             options.scopeId,
@@ -13241,6 +16483,8 @@ export async function createRuntimeBridgeBackend(
           litellmHealthy,
           targets,
           resolveAuthorization: resolveProbeAuthorization,
+          refreshAuthorization: refreshProbeAuthorization,
+          resolveProbeHeaders,
           networkFetcher,
         });
         applyRemoteHealthProbeResults(summary.results);

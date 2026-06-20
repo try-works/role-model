@@ -275,6 +275,11 @@ export interface RuntimeEndpoint {
   readonly capabilities?: readonly string[];
   readonly toolCallingSupported?: boolean;
   readonly toolCallingStyle?: string;
+  readonly webSearchSupport?: {
+    readonly mode: "native" | "runtime-fallback" | "unsupported";
+    readonly currentRuntimeContract?: string | null;
+    readonly documentedProviderContract?: string | null;
+  };
 }
 
 export interface RuntimeLocalModel {

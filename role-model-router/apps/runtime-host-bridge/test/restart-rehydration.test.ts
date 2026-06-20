@@ -146,6 +146,123 @@ describe("restart rehydration", () => {
     }
   });
 
+  test("keeps restarted remote endpoints healthy when provider /models returns unprefixed ids", async () => {
+    const runtimeStateRoot = path.join(
+      os.tmpdir(),
+      `restart-rehydration-health-${Date.now()}`,
+    );
+    const scopeId = "restart-rehydration-health-tests";
+    const unifiedRuntimeConfigPath = path.join(runtimeStateRoot, "runtime-config.yaml");
+    const originalMoonshotApiKey = process.env.MOONSHOT_API_KEY;
+    process.env.MOONSHOT_API_KEY = "moonshot-restart-health-key";
+
+    const createBackend = (networkFetcher?: typeof fetch) =>
+      createRuntimeBridgeBackend({
+        repoRoot,
+        fixtureRoot: testFixtureRoot,
+        runtimeStateRoot,
+        scopeId,
+        unifiedRuntimeConfigPath,
+        ...(networkFetcher ? { networkFetcher } : {}),
+      });
+
+    try {
+      const firstBackend = await createBackend();
+      await firstBackend.upsertProviderAccount({
+        providerAccountId: "moonshot.personal.primary",
+        providerId: "moonshot",
+        providerKind: "provider-openai",
+        orgScope: "personal",
+        accountScope: "workspace-default",
+        credentialRef: {
+          backend: "env",
+          ref: "MOONSHOT_API_KEY",
+        },
+        authMode: "api-key-static",
+        regionPolicy: {
+          mode: "prefer",
+          regions: ["global"],
+        },
+        baseUrlOverride: "https://api.moonshot.ai/v1",
+        allowedModels: ["moonshot/kimi-k2.5"],
+        modelRoleBindings: [
+          {
+            modelId: "moonshot/kimi-k2.5",
+            roleIds: ["general.chat"],
+          },
+        ],
+        deniedModels: [],
+        entitlementTags: ["chat"],
+        budgetPolicyRef: "budget.default",
+        quotaPolicyRef: "quota.default",
+        status: "active",
+        healthStatus: "healthy",
+        rotationState: "stable",
+      });
+      await firstBackend.updateRuntimeConfig({
+        routingStrategy: "difficulty",
+        executionMode: "remote_only",
+      });
+      const activation = await firstBackend.activateEndpoint({
+        providerAccountId: "moonshot.personal.primary",
+        modelId: "moonshot/kimi-k2.5",
+        region: "global",
+      });
+      await firstBackend.shutdown();
+
+      const secondBackend = await createBackend(async (input) => {
+        const url =
+          typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+        if (url === "https://api.moonshot.ai/v1/models") {
+          return new Response(JSON.stringify({ data: [{ id: "kimi-k2.5" }] }), {
+            status: 200,
+            headers: { "content-type": "application/json" },
+          });
+        }
+        throw new Error(`Unexpected network request after restart: ${url}`);
+      });
+
+      try {
+        let health = await secondBackend.readHealthStatus();
+        for (
+          let attempt = 0;
+          attempt < 20 && health.sessionBootstrap.status === "running";
+          attempt += 1
+        ) {
+          await delay(50);
+          health = await secondBackend.readHealthStatus();
+        }
+
+        const remoteHealthStage = health.sessionBootstrap.stages.find(
+          (stage) => stage.stageId === "remote-health",
+        );
+        expect(remoteHealthStage?.status).toBe("ready");
+
+        const endpoints = await secondBackend.listEndpoints();
+        expect(endpoints).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              endpointId: activation.endpointId,
+              healthStatus: "healthy",
+            }),
+          ]),
+        );
+
+        const summary = await secondBackend.readRuntimeSummary();
+        expect(summary.inventorySummary.endpointIdCount).toBeGreaterThan(0);
+      } finally {
+        await secondBackend.shutdown();
+      }
+    } finally {
+      if (originalMoonshotApiKey === undefined) {
+        delete process.env.MOONSHOT_API_KEY;
+      } else {
+        process.env.MOONSHOT_API_KEY = originalMoonshotApiKey;
+      }
+      await rm(runtimeStateRoot, { recursive: true, force: true });
+    }
+  });
+
   test("does not count expired pending device authorization as an active readiness blocker after restart", async () => {
     const runtimeStateRoot = path.join(os.tmpdir(), `restart-expired-auth-${Date.now()}`);
     const scopeId = "restart-expired-auth-tests";
@@ -863,6 +980,129 @@ describe("restart rehydration", () => {
         );
         expect(statusByAccountId.get("moonshot.personal.pending-5")).toBe("connected");
         expect(statusByAccountId.get("moonshot.personal.pending-4")).toBe("pending");
+      } finally {
+        await secondBackend.shutdown();
+      }
+    } finally {
+      await rm(runtimeStateRoot, { recursive: true, force: true });
+    }
+  });
+
+  test("rehydrates a pending Codex Subscription device-code session after restart", async () => {
+    const runtimeStateRoot = path.join(os.tmpdir(), `restart-codex-subscription-${Date.now()}`);
+    const scopeId = "restart-codex-subscription-tests";
+
+    const firstBackend = await createRuntimeBridgeBackend(({
+      repoRoot,
+      fixtureRoot: testFixtureRoot,
+      runtimeStateRoot,
+      scopeId,
+      codexAuthAdapter: {
+        startDeviceCodeLogin: async ({ codexHome }) => ({
+          loginId: "login-codex-001",
+          verificationUrl: "https://auth.openai.com/codex/device",
+          userCode: "UDHG-2HKJV",
+          wsUrl: "ws://127.0.0.1:4511",
+          pid: 4321,
+        }),
+        readAccount: async () => ({
+          account: null,
+          requiresOpenaiAuth: true,
+        }),
+      },
+    }) as any);
+
+    try {
+      await firstBackend.startProviderDeviceAuthorization({
+        providerAccountId: "openai.personal.codex-subscription",
+        providerId: "openai",
+        providerKind: "provider-openai",
+        variantId: "openai-codex-subscription",
+        orgScope: "personal",
+        accountScope: "workspace-default",
+        allowedModels: ["chatgpt/gpt-5.3-codex"],
+        deniedModels: [],
+        entitlementTags: ["chat"],
+        budgetPolicyRef: "budget.default",
+        quotaPolicyRef: "quota.default",
+      });
+      await firstBackend.shutdown();
+
+      const secondBackend = await createRuntimeBridgeBackend(({
+        repoRoot,
+        fixtureRoot: testFixtureRoot,
+        runtimeStateRoot,
+        scopeId,
+        codexAuthAdapter: {
+          startDeviceCodeLogin: async ({ codexHome }) => ({
+            loginId: "login-codex-002",
+            verificationUrl: "https://auth.openai.com/codex/device",
+            userCode: "UDHG-2HKJW",
+            wsUrl: "ws://127.0.0.1:4512",
+            pid: 4322,
+          }),
+          readAccount: async ({ codexHome }) => {
+            await mkdir(codexHome, { recursive: true });
+            await writeFile(
+              path.join(codexHome, "auth.json"),
+              JSON.stringify(
+                {
+                  auth_mode: "chatgpt",
+                  tokens: {
+                    access_token: "codex-access-001",
+                    refresh_token: "codex-refresh-001",
+                    account_id: "codex-account-001",
+                  },
+                  last_refresh: "2026-06-18T18:00:00.000Z",
+                },
+                null,
+                2,
+              ),
+              "utf8",
+            );
+            return {
+              account: {
+                type: "chatgpt",
+                email: "user@example.com",
+                planType: "prolite",
+              },
+              requiresOpenaiAuth: true,
+            };
+          },
+        },
+      }) as any);
+
+      try {
+        let health = await secondBackend.readHealthStatus();
+        for (
+          let attempt = 0;
+          attempt < 20 && health.sessionBootstrap.status === "running";
+          attempt += 1
+        ) {
+          await delay(50);
+          health = await secondBackend.readHealthStatus();
+        }
+
+        const sessions = await secondBackend.listProviderDeviceAuthorizations();
+        expect(sessions).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              providerAccountId: "openai.personal.codex-subscription",
+              status: "connected",
+              userCode: "UDHG-2HKJV",
+            }),
+          ]),
+        );
+        await expect(secondBackend.listAccounts()).resolves.toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              providerAccountId: "openai.personal.codex-subscription",
+              authMode: "oauth2-device-code",
+              status: "active",
+              healthStatus: "healthy",
+            }),
+          ]),
+        );
       } finally {
         await secondBackend.shutdown();
       }

@@ -1,0 +1,73 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/50-openai-codex-subscription/role-model-router/apps/runtime-ui[39m
+
+ [31m❯[39m app/lib/device-authorization.test.ts [2m([22m[2m12 tests[22m[2m | [22m[31m1 failed[39m[2m | [22m[33m11 skipped[39m[2m)[22m[32m 35[2mms[22m[39m
+   [2m[90m↓[39m[22m resolveVerificationWindowUrl[2m > [22mprefers the complete verification URL when it is available
+   [2m[90m↓[39m[22m resolveVerificationWindowUrl[2m > [22mfalls back to the base verification URL when the complete URL is missing
+   [2m[90m↓[39m[22m resolveVerificationWindowUrl[2m > [22mreturns null when neither verification URL is present
+   [2m[90m↓[39m[22m shouldAutoPollDeviceAuthorization[2m > [22mcontinues polling while the device-auth session is pending
+   [2m[90m↓[39m[22m shouldAutoPollDeviceAuthorization[2m > [22mstops polling once the device-auth session is connected
+   [2m[90m↓[39m[22m getDeviceAuthorizationPollDelayMs[2m > [22muses the provider interval when it is present
+   [2m[90m↓[39m[22m getDeviceAuthorizationPollDelayMs[2m > [22mfalls back to a safe default interval when the session omits it
+   [2m[90m↓[39m[22m syncConnectedDeviceAuthorizationEndpoints[2m > [22mactivates each selected model once after device OAuth connects
+   [2m[90m↓[39m[22m syncConnectedDeviceAuthorizationEndpoints[2m > [22mskips endpoint activation until the device-auth session is connected
+[31m   [31m×[31m syncConnectedDeviceAuthorizationEndpoints[2m > [22mdoes not auto-activate endpoints for Codex Subscription sessions[39m[32m 28[2mms[22m[39m
+[31m     → expected "spy" to not be called at all, but actually been called 1 times[90m
+
+Received: 
+
+[1m  1st spy call:
+
+[22m    Array [
+      Object {
+        "modelId": "chatgpt/gpt-5.3-codex",
+        "providerAccountId": "openai.personal.codex-subscription",
+        "region": "global",
+      },
+    ]
+[31m[90m
+
+Number of calls: [1m1[22m
+[31m[39m
+   [2m[90m↓[39m[22m restorePersistedDeviceAuthorization[2m > [22mrestores a pending persisted device-auth session for the selected provider account
+   [2m[90m↓[39m[22m restorePersistedDeviceAuthorization[2m > [22mpreserves the current session when it already matches the selected provider account
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  app/lib/device-authorization.test.ts > syncConnectedDeviceAuthorizationEndpoints > does not auto-activate endpoints for Codex Subscription sessions
+AssertionError: expected "spy" to not be called at all, but actually been called 1 times
+
+Received: 
+
+  1st spy call:
+
+    Array [
+      Object {
+        "modelId": "chatgpt/gpt-5.3-codex",
+        "providerAccountId": "openai.personal.codex-subscription",
+        "region": "global",
+      },
+    ]
+
+
+Number of calls: 1
+
+ ❯ app/lib/device-authorization.test.ts:149:34
+    147|     });
+    148| 
+    149|     expect(activateEndpoint).not.toHaveBeenCalled();
+       |                                  ^
+    150|   });
+    151| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[33m11 skipped[39m[90m (12)[39m
+[2m   Start at [22m 19:58:21
+[2m   Duration [22m 1.57s[2m (transform 61ms, setup 0ms, collect 83ms, tests 35ms, environment 1ms, prepare 476ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\50-openai-codex-subscription\role-model-router\apps\runtime-ui:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run app/lib/device-authorization.test.ts --testNamePattern does not auto-activate endpoints for Codex Subscription sessions

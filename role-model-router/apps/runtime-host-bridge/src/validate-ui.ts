@@ -109,6 +109,16 @@ export interface RuntimeUiValidationResult {
   readonly mixedAliasEndpointsIncludeSelectedEndpoint: boolean;
 }
 
+export async function cleanupRuntimeUiValidationResources(input: {
+  readonly server: { close(): Promise<void> };
+  readonly backend: {
+    shutdown?: () => Promise<void>;
+  };
+}): Promise<void> {
+  await input.server.close();
+  await input.backend.shutdown?.();
+}
+
 export async function runRuntimeUiValidation(
   options: RuntimeUiValidationOptions,
 ): Promise<RuntimeUiValidationResult> {
@@ -748,7 +758,10 @@ export async function runRuntimeUiValidation(
       ),
     };
   } finally {
-    await server.close();
+    await cleanupRuntimeUiValidationResources({
+      server,
+      backend,
+    });
     await delay(10);
     if (previousMoonshotApiKey === undefined) {
       process.env.MOONSHOT_API_KEY = undefined;

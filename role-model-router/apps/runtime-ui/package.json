@@ -5,7 +5,7 @@
   "scripts": {
     "build": "react-router build && tsc --noEmit",
     "dev": "react-router dev",
-    "test": "vitest run app/lib/runtime-api.test.ts app/lib/view-models.test.ts app/lib/device-authorization.test.ts app/lib/design-system.test.ts app/lib/provider-account-state.test.ts app/lib/router-candidate-labels.test.ts app/lib/benchmark-latency.test.ts app/lib/benchmark-model-cards.test.ts app/lib/telemetry-analytics.test.ts app/lib/telemetry-route-models.test.ts app/components/telemetry-charts.test.tsx app/components/page-primitives.test.tsx"
+    "test": "vitest run app/lib/runtime-api.test.ts app/lib/view-models.test.ts app/lib/device-authorization.test.ts app/lib/design-system.test.ts app/lib/provider-account-state.test.ts app/lib/router-candidate-labels.test.ts app/lib/benchmark-latency.test.ts app/lib/benchmark-model-cards.test.ts app/lib/telemetry-analytics.test.ts app/lib/telemetry-route-models.test.ts app/lib/role-task-hierarchy.test.tsx app/components/telemetry-charts.test.tsx app/components/page-primitives.test.tsx app/components/device-authorization-card.test.tsx app/components/device-authorization-modal.test.tsx"
   },
   "dependencies": {
     "@react-router/node": "^7.14.2",

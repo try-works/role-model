@@ -37,7 +37,7 @@ export function SectionCard({
   className?: string;
 }) {
   return (
-    <section className={cn(`${cardClassName} px-5 py-5 md:px-6 md:py-6`, className)}>
+    <section className={cn(`${cardClassName} min-w-0 px-5 py-5 md:px-6 md:py-6`, className)}>
       <div className="mb-5">
         <h2 className={`text-[var(--rm-fg)] ${sectionTitleClassName}`}>{title}</h2>
         {description ? (
@@ -320,7 +320,7 @@ export function SelectField({
   };
 
   return (
-    <div className="relative grid gap-2" ref={rootRef}>
+    <div className="relative grid min-w-0 gap-2" ref={rootRef}>
       <span className={`${utilityLabelClassName} text-[var(--rm-fg)]`} id={labelId}>
         {label}
       </span>
@@ -329,7 +329,10 @@ export function SelectField({
         aria-expanded={open}
         aria-haspopup="listbox"
         aria-labelledby={labelId}
-        className={cn(`${selectFieldClassName} flex items-center text-left`, className)}
+        className={cn(
+          `${selectFieldClassName} flex min-w-0 items-center justify-between gap-3 text-left`,
+          className,
+        )}
         onClick={() => setOpen((current) => !current)}
         onKeyDown={(event) => {
           if (handleTypeahead(event)) {
@@ -342,9 +345,12 @@ export function SelectField({
           }
         }}
         style={selectChevronStyle}
+        title={selectedOption?.label ?? "Select…"}
         type="button"
       >
-        <span className={selectedOption ? "truncate" : "truncate text-[var(--rm-muted)]"}>
+        <span
+          className={selectedOption ? "min-w-0 flex-1 truncate" : "min-w-0 flex-1 truncate text-[var(--rm-muted)]"}
+        >
           {selectedOption?.label ?? "Select…"}
         </span>
       </button>

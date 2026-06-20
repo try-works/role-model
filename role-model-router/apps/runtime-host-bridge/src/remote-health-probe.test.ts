@@ -67,6 +67,165 @@ describe("remote-health-probe", () => {
     });
   });
 
+  it("retries auth failures once with refreshed authorization", async () => {
+    const seenAuthorizations: string[] = [];
+    let requestCount = 0;
+    const result = await probeRemoteEndpoints({
+      litellmHealthy: true,
+      targets: [
+        {
+          endpointId: "moonshot.personal.primary.global.kimi-k2.7-code",
+          providerAccountId: "moonshot.personal.primary",
+          modelId: "moonshot/kimi-k2.7-code",
+          apiBase: "https://api.moonshot.ai/v1",
+          servingSource: "remote-service",
+        },
+      ],
+      resolveAuthorization: async () => "stale-token",
+      refreshAuthorization: async () => "fresh-token",
+      networkFetcher: async (_input: string | URL | Request, init?: RequestInit) => {
+        requestCount += 1;
+        const authorization = String(
+          init && "headers" in init && init.headers
+            ? (init.headers as Record<string, string>).authorization
+            : "",
+        );
+        seenAuthorizations.push(authorization);
+        if (requestCount === 1) {
+          return new Response(JSON.stringify({ error: "invalid token" }), { status: 401 });
+        }
+        return new Response(
+          JSON.stringify({
+            data: [{ id: "moonshot/kimi-k2.7-code" }],
+          }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        );
+      },
+    } as any);
+
+    expect(requestCount).toBe(2);
+    expect(seenAuthorizations).toEqual(["Bearer stale-token", "Bearer fresh-token"]);
+    expect(result.results[0]).toMatchObject({
+      reason: "healthy",
+      healthStatus: "healthy",
+    });
+  });
+
+  it("stays degraded when refreshed authorization still fails", async () => {
+    let requestCount = 0;
+    const result = await probeRemoteEndpoints({
+      litellmHealthy: true,
+      targets: [
+        {
+          endpointId: "moonshot.personal.primary.global.kimi-k2.7-code",
+          providerAccountId: "moonshot.personal.primary",
+          modelId: "moonshot/kimi-k2.7-code",
+          apiBase: "https://api.moonshot.ai/v1",
+          servingSource: "remote-service",
+        },
+      ],
+      resolveAuthorization: async () => "stale-token",
+      refreshAuthorization: async () => "still-bad-token",
+      networkFetcher: async () => {
+        requestCount += 1;
+        return new Response(JSON.stringify({ error: "invalid token" }), { status: 401 });
+      },
+    } as any);
+
+    expect(requestCount).toBe(2);
+    expect(result.results[0]).toMatchObject({
+      reason: "auth",
+      healthStatus: "degraded",
+    });
+  });
+
+  it("accepts unprefixed provider model ids for canonical runtime model ids", async () => {
+    const result = await probeRemoteEndpoints({
+      litellmHealthy: true,
+      targets: [
+        {
+          endpointId: "deepseek.personal.primary.global.deepseek-v4-flash",
+          providerAccountId: "deepseek.personal.primary",
+          modelId: "deepseek/deepseek-v4-flash",
+          apiBase: "https://api.deepseek.com/v1",
+          servingSource: "remote-service",
+        },
+      ],
+      resolveAuthorization: async () => "deepseek-live-key",
+      networkFetcher: async () =>
+        new Response(JSON.stringify({ data: [{ id: "deepseek-v4-flash" }] }), { status: 200 }),
+    });
+
+    expect(result.results[0]).toMatchObject({
+      reason: "healthy",
+      healthStatus: "healthy",
+    });
+  });
+
+  it("accepts kimi-for-coding as the comparable model id for moonshot coding OAuth", async () => {
+    const result = await probeRemoteEndpoints({
+      litellmHealthy: true,
+      targets: [
+        {
+          endpointId: "moonshot.personal.primary.global.kimi-k2.7-code",
+          providerAccountId: "moonshot.personal.primary",
+          modelId: "moonshot/kimi-k2.7-code",
+          apiBase: "https://api.kimi.com/coding/v1",
+          servingSource: "remote-service",
+        },
+      ],
+      resolveAuthorization: async () => "moonshot-live-key",
+      networkFetcher: async () =>
+        new Response(JSON.stringify({ data: [{ id: "kimi-for-coding" }] }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        }),
+    });
+
+    expect(result.results[0]).toMatchObject({
+      reason: "healthy",
+      healthStatus: "healthy",
+    });
+  });
+
+  it("adds provider-required probe headers when supplied by the caller", async () => {
+    const seenHeaderValues: string[] = [];
+    const result = await probeRemoteEndpoints({
+      litellmHealthy: true,
+      targets: [
+        {
+          endpointId: "moonshot.personal.primary.global.kimi-k2.7-code",
+          providerAccountId: "moonshot.personal.primary",
+          modelId: "moonshot/kimi-k2.7-code",
+          apiBase: "https://api.kimi.com/coding/v1",
+          servingSource: "remote-service",
+        },
+      ],
+      resolveAuthorization: async () => "moonshot-live-key",
+      resolveProbeHeaders: async () => ({
+        "X-Msh-Device-Id": "device-123",
+        "X-Msh-Platform": "windows",
+      }),
+      networkFetcher: async (_input: string | URL | Request, init?: RequestInit) => {
+        const headers = (init?.headers ?? {}) as Record<string, string>;
+        seenHeaderValues.push(String(headers["X-Msh-Device-Id"] ?? ""));
+        if (headers["X-Msh-Device-Id"] !== "device-123") {
+          return new Response(JSON.stringify({ error: "missing-device-header" }), { status: 403 });
+        }
+        return new Response(JSON.stringify({ data: [{ id: "kimi-for-coding" }] }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        });
+      },
+    } as any);
+
+    expect(seenHeaderValues).toEqual(["device-123"]);
+    expect(result.results[0]).toMatchObject({
+      reason: "healthy",
+      healthStatus: "healthy",
+    });
+  });
+
   it("maps missing model ids to model-not-found", async () => {
     const result = await probeRemoteEndpoints({
       litellmHealthy: true,

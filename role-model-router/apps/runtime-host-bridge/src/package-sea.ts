@@ -118,6 +118,16 @@ export function listStandaloneReleaseCopies(): readonly StandaloneReleaseCopy[] 
   return standaloneReleaseCopies;
 }
 
+export function isDirectSeaInvocation(
+  moduleUrl: string,
+  argvEntry: string | undefined = process.argv[1],
+): boolean {
+  if (!argvEntry || argvEntry.trim().length === 0) {
+    return false;
+  }
+  return moduleUrl === pathToFileURL(path.resolve(argvEntry)).href;
+}
+
 function runOrThrow(
   command: string,
   args: readonly string[],
@@ -433,7 +443,7 @@ export async function packageSeaRuntime(): Promise<{
   };
 }
 
-if (import.meta.url === pathToFileURL(__filename).href) {
+if (isDirectSeaInvocation(import.meta.url)) {
   const result = await packageSeaRuntime();
   console.log(JSON.stringify(result, null, 2));
 }

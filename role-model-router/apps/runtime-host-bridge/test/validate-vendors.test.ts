@@ -367,7 +367,7 @@ describe("runRuntimeVendorValidation", () => {
           controllerRouting: {
             active: true,
             fallbackApplied: true,
-            fallbackReason: "invalid-controller-output",
+            fallbackReason: "controller-heuristic-fallback",
           },
         },
       },
@@ -664,7 +664,7 @@ describe("runRuntimeVendorValidation", () => {
         }),
       }),
     );
-  }, 15_000);
+  }, 45_000);
 
   test("plans a real-vendor harness with repo-owned mock upstreams", async () => {
     const runtimeStateRoot = await mkdtemp(

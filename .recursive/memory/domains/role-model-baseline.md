@@ -1,6 +1,6 @@
 Type: `domain`
 Status: `CURRENT`
-Scope: `Stable baseline ownership for the repo workspace, canonical protocol tree, shared packages, router family, fixtures, validation surfaces, and the repo-owned runtime/operator baseline extended through the routing-strategy UI convergence baseline in run 30, unified vendor execution, telemetry dashboard remediation, runtime-config control, the run-32 models.dev metadata/readiness baseline, the run-34 runtime-owned role-policy/operator-control baseline, the run-35 Connect/de-clutter operator shell, the run-36 packaged-runtime consumption, benchmark workflow, and consumer-routing validation baseline, the run-45 Observe surface realignment baseline, the run-47 runtime persistence plus telemetry/dashboard/router operator-baseline follow-up, and the run-49 backend-owned telemetry analytics plus Apple-themed chart/operator UI baseline.`
+Scope: `Stable baseline ownership for the repo workspace, canonical protocol tree, shared packages, router family, fixtures, validation surfaces, and the repo-owned runtime/operator umbrella baseline, with detailed runtime routing and provider-capability semantics split into a dedicated domain shard.`
 Owns-Paths:
 - `/README.md`
 - `/LICENSE`
@@ -52,8 +52,10 @@ Source-Runs:
 - `36-runtime-consumption-telemetry-remediation`
 - `45-observe-surface-realignment`
 - `47-runtime-persistence-rehydration-lifecycle`
+- `49-runtime-telemetry-analytics-charts`
+- `50-openai-codex-subscription`
 Validated-At-Commit: `working-tree`
-Last-Validated: `2026-06-16T08:10:00Z`
+Last-Validated: `2026-06-20T05:30:00Z`
 Tags:
 - `baseline`
 - `workspace`
@@ -114,10 +116,9 @@ This repository now has a real product baseline rather than only recursive scaff
 - The repo-owned validation floor now includes `runtime:validate-vendors`, which proves the decision-only/local-only/remote-only/hybrid execution matrix end to end with managed vendor processes, plus separate live-vendor and browser-backed closeout proof for the final local llama-swap and remote LiteLLM bridge paths
 - The runtime now has a first SEA packaging path through `/role-model-router/sea-config.json`, `/role-model-router/apps/runtime-host-bridge/src/package-sea.ts`, `runtime:package-sea`, `runtime:validate-packaging`, and `/.github/workflows/build-binaries.yml`; the packaged executable embeds platform-aware llama-swap assets and is validated by booting the SEA binary and exercising `/healthz` plus `/v1/models`
 - The runtime now also exposes a canonical unified telemetry baseline for mixed local and remote execution, including summary, ledger, request-detail, and `/api/role-model/telemetry/stream` SSE surfaces in `/role-model-router/apps/runtime-host-bridge/` and matching dashboard, requests, and request-detail consumers in `/role-model-router/apps/runtime-ui/`
-- Run 49 extends unified telemetry into backend-owned historical analytics: request-time rows persist cost, estimated alternative cost, effective cost, cache-hit token savings, routing mode, routing alias, difficulty, endpoint, model, provider, and source facts, and `POST /api/role-model/telemetry/query` serves the chart contracts for `/app`, `/app/observe/requests`, and `/app/observe/routing`
-- Runtime analytics charts now belong only on `/app` and Observe analytics pages. Setup/config surfaces such as Router, Models, Remote, Connect, and System remain operational inventory/control pages rather than chart dashboards.
-- The runtime UI design baseline is Apple-reference themed: shared typography/control roles, quiet rounded panels, no Swiss-era authority, themed keyboard-searchable listbox/dropdown controls, distinct same-chart series colors, compact fact-card values, and removal of redundant eyebrow/divider/context panels.
-- Router inventory and benchmark pages now consume canonical router candidates for configured-and-available models/endpoints. Strategy and execution-mode edits persist through the editable unified runtime config path, aliases are generated from the effective strategy/execution-mode combination, and benchmark starts reject execution-mode-ineligible endpoints before starting work.
+- Detailed runtime routing, provider-capability, alias-matrix, Codex Subscription lifecycle, and hosted-search/tool semantics now live in `/.recursive/memory/domains/runtime-routing-and-provider-capabilities.md`.
+- Run 49 extended unified telemetry into backend-owned historical analytics, and run 50 extended the same runtime baseline into Codex Subscription plus routing/provider-capability truth; the detailed operator-routing and provider semantics for those runs are intentionally split into the dedicated routing/provider domain shard.
+- The runtime UI design baseline remains Apple-reference themed: shared typography/control roles, quiet rounded panels, themed keyboard-searchable listbox/dropdown controls, distinct same-chart series colors, compact fact-card values, and removal of redundant eyebrow/divider/context panels.
 - Failed execution rows in that canonical telemetry ledger now preserve caller correlation, request classification, source posture, and explicit failure-stage endpoint markers, so summary failures and request-ledger truth no longer diverge for new requests
 - The repo-owned control plane now includes mutable runtime-config read and write routes, `Control > Runtime Config`, live account save and Kimi device-OAuth state, endpoint activation, and honest zero-endpoint `decision_only` controller or models or runtime empty states instead of 500 or loading traps
 - The runtime now also owns router-grade role/task policy persistence at `runtimeStateRoot\role-policy.json`, with bridge CRUD/readback routes and router inputs consuming the runtime-owned policy instead of the earlier fixture-fed `adapter-role-task.json` source

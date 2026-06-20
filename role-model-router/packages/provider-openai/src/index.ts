@@ -5,6 +5,7 @@ import type {
   ProviderAdapterNormalizeContext,
   ProviderCapabilityMatrix,
   ProviderRequestCapture,
+  RuntimeExecutionToolDefinition,
 } from "@role-model-router/adapter-execution";
 import { normalizeToolCallArguments } from "@role-model-router/adapter-execution";
 
@@ -77,29 +78,78 @@ function toOpenAIInput(
 function toOpenAITools(
   tools: NonNullable<ProviderAdapterExecutionContext["executionRequest"]["tools"]>,
 ): Array<Record<string, unknown>> {
-  return tools.map((tool) => ({
-    type: "function",
-    name: tool.name,
-    description: tool.description,
-    parameters: tool.inputSchema,
-  }));
+  return tools.map((tool) =>
+    tool.kind === "hosted"
+      ? tool.raw
+      : {
+          type: "function",
+          name: tool.name,
+          description: tool.description,
+          parameters: tool.inputSchema,
+        },
+  );
+}
+
+function isKimiBuiltinHostedTool(tool: RuntimeExecutionToolDefinition): boolean {
+  if (tool.kind !== "hosted") {
+    return false;
+  }
+  const rawType = tool.raw?.type;
+  const rawFunction = tool.raw?.function;
+  return (
+    rawType === "builtin_function" &&
+    typeof rawFunction === "object" &&
+    rawFunction !== null &&
+    (rawFunction as Record<string, unknown>).name === "$web_search"
+  );
+}
+
+function hasOnlyKimiBuiltinHostedTools(
+  tools: readonly RuntimeExecutionToolDefinition[] | undefined,
+): boolean {
+  return Boolean(tools?.length) && (tools ?? []).every((tool) => isKimiBuiltinHostedTool(tool));
 }
 
 function toOpenAIChatTools(
   tools: NonNullable<ProviderAdapterExecutionContext["executionRequest"]["tools"]>,
 ): Array<Record<string, unknown>> {
-  return tools.map((tool) => ({
-    type: "function",
-    function: {
-      name: tool.name,
-      ...(tool.description ? { description: tool.description } : {}),
-      parameters: tool.inputSchema,
-    },
-  }));
+  return tools.map((tool) =>
+    tool.kind === "hosted"
+      ? tool.raw
+      : {
+          type: "function",
+          function: {
+            name: tool.name,
+            ...(tool.description ? { description: tool.description } : {}),
+            parameters: tool.inputSchema,
+          },
+        },
+  );
 }
 
-function resolveProviderShape(target: ProviderAdapterExecutionContext["target"]): string {
-  return target.requestShapeHints?.providerShape ?? "openai.responses";
+function asFunctionToolDefinition(
+  tool: RuntimeExecutionToolDefinition,
+): Extract<RuntimeExecutionToolDefinition, { readonly kind?: "function" }> {
+  if (tool.kind === "hosted") {
+    throw new Error("Hosted OpenAI tools are only supported on the Responses API path.");
+  }
+  return tool;
+}
+
+function resolveProviderShape(input: {
+  readonly target: ProviderAdapterExecutionContext["target"];
+  readonly executionRequest?: ProviderAdapterExecutionContext["executionRequest"];
+}): string {
+  const hasHostedTools = (input.executionRequest?.tools ?? []).some(
+    (tool) => tool.kind === "hosted",
+  );
+  if (hasHostedTools) {
+    if (hasOnlyKimiBuiltinHostedTools(input.executionRequest?.tools)) {
+      return input.target.requestShapeHints?.providerShape ?? "openai.chat.completions";
+    }
+    return "openai.responses";
+  }
+  return input.target.requestShapeHints?.providerShape ?? "openai.responses";
 }
 
 function readLatencyMs(input: {
@@ -559,8 +609,11 @@ export function buildOpenAIRequest(
     readonly capabilities: ProviderCapabilityMatrix;
   },
 ): ProviderRequestCapture {
-  const providerShape = resolveProviderShape(input.target);
+  const providerShape = resolveProviderShape(input);
   if (providerShape === "openai.chat.completions") {
+    const usesKimiBuiltinHostedWebSearch = hasOnlyKimiBuiltinHostedTools(
+      input.executionRequest.tools,
+    );
     return {
       providerFamily: input.target.adapterFamily,
       endpointId: input.target.endpointId,
@@ -582,6 +635,13 @@ export function buildOpenAIRequest(
         ...(input.executionRequest.stream ? { stream: true } : {}),
         ...(input.executionRequest.tools?.length
           ? { tools: toOpenAIChatTools(input.executionRequest.tools ?? []) }
+          : {}),
+        ...(usesKimiBuiltinHostedWebSearch
+          ? {
+              thinking: {
+                type: "disabled",
+              },
+            }
           : {}),
         ...(input.executionRequest.structuredOutput &&
         input.capabilities.structuredOutputs === "native"
@@ -645,7 +705,7 @@ export function normalizeOpenAIResponse(
     readonly executionRequest?: ProviderAdapterNormalizeContext["executionRequest"];
   },
 ): NormalizedProviderResponse {
-  const providerShape = resolveProviderShape(input.target);
+  const providerShape = resolveProviderShape(input);
   if (providerShape === "openai.chat.completions") {
     const streamedBody =
       typeof input.responseCapture.body === "string"

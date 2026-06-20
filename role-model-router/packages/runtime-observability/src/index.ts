@@ -131,6 +131,16 @@ export interface RuntimeRoutingDiagnostics {
       readonly freshnessWeight?: number;
     };
   };
+  readonly selection?: {
+    readonly mode: "best-total-score" | "tie-break";
+    readonly scoreTieEpsilon: number;
+    readonly scoreDelta?: number;
+    readonly winnerEndpointId: string;
+    readonly winnerTotalScore: number;
+    readonly runnerUpEndpointId?: string;
+    readonly runnerUpTotalScore?: number;
+    readonly tieBreakOrder?: readonly string[];
+  };
   readonly throughputPenalty?: {
     readonly endpointId: string;
     readonly active: boolean;
@@ -251,6 +261,11 @@ export interface RuntimeObservationBundleInput {
   readonly capturePolicy?: RuntimeCapturePolicy;
   readonly accountState?: RuntimeAccountState;
   readonly tooling?: {
+    readonly toolCalls?: readonly {
+      readonly name: string;
+      readonly arguments: unknown;
+      readonly providerToolId?: string;
+    }[];
     readonly executions: readonly ToolRegistryExecution[];
   };
   readonly telemetrySnapshot?: RuntimeTelemetrySnapshot;
@@ -492,6 +507,7 @@ function buildMemoryDiagnostics(input: RuntimeObservationBundleInput): RuntimeDi
 }
 
 function buildToolingDiagnostics(input: RuntimeObservationBundleInput): RuntimeDiagnostic[] {
+  const toolCalls = input.tooling?.toolCalls ?? input.execution.normalized.toolCalls;
   const diagnostics = (input.tooling?.executions ?? []).flatMap((execution) =>
     execution.diagnostics.map<RuntimeDiagnostic>((diagnostic) => ({
       code: diagnostic.code,
@@ -500,13 +516,13 @@ function buildToolingDiagnostics(input: RuntimeObservationBundleInput): RuntimeD
     })),
   );
   if (
-    input.execution.normalized.toolCalls.length > 0 &&
+    toolCalls.length > 0 &&
     (input.tooling?.executions.length ?? 0) === 0
   ) {
     diagnostics.push({
       code: "TOOL_EXECUTION_MISSING",
       severity: "warning",
-      message: `Runtime observation captured ${input.execution.normalized.toolCalls.length} tool calls without execution receipts.`,
+      message: `Runtime observation captured ${toolCalls.length} tool calls without execution receipts.`,
     });
   }
   return diagnostics;
@@ -516,8 +532,9 @@ function buildTooling(
   input: RuntimeObservationBundleInput,
   diagnostics: readonly RuntimeDiagnostic[],
 ): RuntimeObservationBundle["tooling"] {
+  const toolCalls = input.tooling?.toolCalls ?? input.execution.normalized.toolCalls;
   return {
-    toolCalls: input.execution.normalized.toolCalls.map((toolCall, index) => ({
+    toolCalls: toolCalls.map((toolCall, index) => ({
       toolCallId: toolCall.providerToolId ?? `${toolCall.name}-${index + 1}`,
       toolName: toolCall.name,
       arguments: toolCall.arguments,

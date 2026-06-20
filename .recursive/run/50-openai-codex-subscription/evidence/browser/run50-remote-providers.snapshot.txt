@@ -1,0 +1,81 @@
+- complementary:
+  - heading "role-model" [level=1]
+  - link "Overview":
+    - /url: /app
+    - generic: Overview
+  - link "Studio":
+    - /url: /app/studio/chat
+    - generic: Studio
+  - link "Local":
+    - /url: /app/local/endpoints
+    - generic: Local
+  - link "Remote":
+    - /url: /app/remote/providers
+    - generic: Remote
+  - link "Models":
+    - /url: /app/models
+    - generic: Models
+  - link "Router":
+    - /url: /app/router
+    - generic: Router
+  - link "Observe":
+    - /url: /app/observe/requests
+    - generic: Observe
+  - link "Connect":
+    - /url: /app/connect
+    - generic: Connect
+  - link "System":
+    - /url: /app/system/session-readiness
+    - generic: System
+  - group "Theme toggle":
+    - button "Light"
+    - button "Dark"
+- banner:
+  - heading "Remote providers" [level=2]
+  - paragraph: Choose a LiteLLM-backed provider, select the models available for that provider, and complete setup from one onboarding surface.
+- main:
+  - heading "Choose provider and models" [level=2]
+  - paragraph: Select the provider, connection method, model set, and role bindings that should flow into the runtime registry.
+  - generic: Provider
+  - button "Provider":
+    - generic: 302.AI
+  - generic: Connection method
+  - button "Connection method":
+    - generic: 302.AI API Key
+  - generic: Provider connection id
+  - textbox "Provider connection id": 302ai.personal.302ai-api-key
+  - generic: Credential reference
+  - textbox "Credential reference": 302AI_API_KEY
+  - generic: Model
+  - button "Model":
+    - generic: Select a model…
+  - paragraph: 302.AI API Key
+  - generic: ready
+  - generic: api-key-static
+  - paragraph: API-key authentication for 302.AI.
+  - paragraph: Models.dev metadata enriches provider and model readback while the runtime keeps LiteLLM as the live connection path.
+  - paragraph: "Catalog models: 97"
+  - paragraph: "API base: https://api.302.ai/v1"
+  - paragraph: "SDK package: @ai-sdk/openai-compatible"
+  - paragraph:
+    - text: "Docs:"
+    - link "https://doc.302.ai":
+      - /url: https://doc.302.ai
+  - button "Save provider" [disabled]
+  - link "View in Connect registry":
+    - /url: /app/connect
+  - heading "Configured provider connections" [level=2]
+  - paragraph: Saved provider connections stay visible here with canonical lifecycle badges, normalized credential posture, model access, and live repair state.
+  - heading "openai.personal.codex-subscription" [level=3]
+  - generic: openai
+  - generic: Connected, no endpoint
+  - generic: Runtime-managed OAuth token
+  - paragraph: "Connection method: oauth2-device-code"
+  - paragraph: "Credential posture: Canonical backend: local-file"
+  - paragraph: "Base URL: https://api.openai.com/v1"
+  - paragraph: "Lifecycle reason: Connected locally, but direct OpenAI Platform API requests are unavailable for Codex Subscription in this runtime."
+  - paragraph: "Source provenance: manual"
+  - paragraph: "Available actions: None"
+  - paragraph: "Active endpoints: 0"
+  - generic: chatgpt/gpt-5.3-codex
+  - generic: No roles assigned

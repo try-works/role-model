@@ -303,6 +303,7 @@ export interface RouterDecision {
   fallback_endpoint_ids: string[];
   selection_reasons: (
     | "BEST_TOTAL_SCORE"
+    | "TIE_BREAK_APPLIED"
     | "MEASURED_PROFILE_USED"
     | "DECLARED_PROFILE_USED"
     | "DEFAULT_PROFILE_USED"

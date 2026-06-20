@@ -1,0 +1,64 @@
+(node:30644) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+{
+  "phase": "start",
+  "pending": {
+    "authRequestId": "3881d539-cc99-44f1-bc4d-d7fffd443d25",
+    "providerAccountId": "openai.personal.codex-subscription",
+    "status": "pending",
+    "userCode": "CODEX-READY",
+    "verificationUri": "https://auth.openai.com/codex/device",
+    "verificationUriComplete": "https://auth.openai.com/codex/device",
+    "intervalSeconds": 1,
+    "expiresAtMs": 1781808902967
+  }
+}
+{
+  "phase": "poll",
+  "connected": {
+    "authRequestId": "3881d539-cc99-44f1-bc4d-d7fffd443d25",
+    "providerAccountId": "openai.personal.codex-subscription",
+    "status": "connected"
+  }
+}
+{
+  "phase": "activate",
+  "error": "Codex Subscription is connected on this machine, but the cached ChatGPT session does not grant OpenAI Platform API request scopes for the current runtime transport."
+}
+{
+  "phase": "accounts",
+  "accounts": [
+    {
+      "providerAccountId": "openai.personal.codex-subscription",
+      "providerId": "openai",
+      "providerKind": "provider-openai",
+      "orgScope": "personal",
+      "accountScope": "workspace-default",
+      "credentialRef": {
+        "backend": "local-file",
+        "ref": "oauth/openai/openai.personal.codex-subscription"
+      },
+      "authMode": "oauth2-device-code",
+      "regionPolicy": {
+        "mode": "prefer",
+        "regions": [
+          "global"
+        ]
+      },
+      "baseUrlOverride": "https://api.openai.com/v1",
+      "allowedModels": [
+        "chatgpt/gpt-5.3-codex"
+      ],
+      "modelRoleBindings": [],
+      "deniedModels": [],
+      "entitlementTags": [
+        "chat"
+      ],
+      "budgetPolicyRef": "budget.default",
+      "quotaPolicyRef": "quota.default",
+      "status": "active",
+      "healthStatus": "entitlement-missing",
+      "rotationState": "stable"
+    }
+  ]
+}

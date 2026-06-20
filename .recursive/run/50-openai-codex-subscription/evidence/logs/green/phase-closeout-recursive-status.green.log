@@ -1,0 +1,76 @@
+Recursive Run: 50-openai-codex-subscription
+===========================================
+
+Workflow Profile: recursive-mode-audit-v2
+Audit Contract: audited phases must reach Audit: PASS before Coverage/Approval may pass
+
+Phase Status:
+  Phase 0 (Requirements)     [LOCKED]
+  Phase 0 (Worktree)         [LOCKED]
+  Phase 1 (AS-IS)            [DRAFT]
+    blockers: Audit verdict is MISSING; Coverage cannot pass before Audit: PASS; ...
+  Phase 1.5 (Root Cause)     [SKIPPED] (not needed)
+  Phase 2 (TO-BE Plan)       [DRAFT]
+    blockers: Audit verdict is MISSING; Coverage cannot pass before Audit: PASS; ...
+  Phase 3 (Implementation)   [DRAFT]
+    blockers: Audit verdict is MISSING; Coverage cannot pass before Audit: PASS; ...
+  Phase 3.5 (Code Review)    [SKIPPED] (not needed)
+  Phase 4 (Test Summary)     [PENDING]
+    blockers: File missing
+  Phase 5 (Manual QA)        [PENDING]
+    blockers: File missing
+  Phase 6 (Decisions)        [PENDING]
+    blockers: File missing
+  Phase 7 (State)            [PENDING]
+    blockers: File missing
+  Phase 8 (Memory)           [PENDING]
+    blockers: File missing
+
+Lock Chain:
+  [OK]  .recursive/run/50-openai-codex-subscription/00-requirements.md
+  [OK]  .recursive/run/50-openai-codex-subscription/00-worktree.md
+  [DRAFT]   .recursive/run/50-openai-codex-subscription/01-as-is.md
+
+Current Phase: 1 (AS-IS)
+Status: DRAFT
+Audit Blockers:
+  - Audit verdict is MISSING
+  - Coverage cannot pass before Audit: PASS
+  - Approval cannot pass before Audit: PASS
+  - Missing Audit Context section
+  - Missing section: ## Audit Context
+  - Missing section: ## Effective Inputs Re-read
+  - Missing section: ## Earlier Phase Reconciliation
+  - Missing section: ## Subagent Contribution Verification
+  - Missing section: ## Worktree Diff Audit
+  - Missing section: ## Gaps Found
+  - Missing section: ## Repair Work Performed
+  - Missing section: ## Requirement Completion Status
+  - Missing section: ## Audit Verdict
+  - Traceability missing requirement IDs: R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12
+  - Missing diff basis field: Baseline type:
+  - Missing diff basis field: Baseline reference:
+  - Missing diff basis field: Comparison reference:
+  - Missing diff basis field: Normalized baseline:
+  - Missing diff basis field: Normalized comparison:
+  - Missing diff basis field: Normalized diff command:
+  - Missing or empty section: ## Prior Recursive Evidence Reviewed
+  - Missing or empty section: ## Requirement Completion Status
+  - Missing or empty section: ## Source Requirement Inventory
+  - Missing or empty section: ## Subagent Contribution Verification
+
+Evidence:
+  Path:   .recursive/run/50-openai-codex-subscription/evidence/
+  Exists: Yes
+  Files:  60
+
+Diff Audit:
+  Changed files reviewed from git diff basis: 122
+
+Next Steps:
+  1. Update .recursive/run/50-openai-codex-subscription/01-as-is.md so the audit sections are complete and grounded in upstream artifacts plus the recorded diff basis.
+  2. Repair any in-scope gaps or unexplained drift, then rerun the audit.
+  3. Only after `Audit: PASS` may Coverage/Approval pass and the phase lock.
+
+Quick Command:
+  Implement requirement '50-openai-codex-subscription'

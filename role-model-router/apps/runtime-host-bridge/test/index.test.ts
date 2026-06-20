@@ -17,6 +17,7 @@ import {
   upsertProviderAccount as upsertSqliteProviderAccount,
 } from "@role-model-router/sqlite-memory";
 import { runRuntimeAdapterValidation } from "../../../packages/adapter-execution/src/cli.ts";
+import { buildRoutableInventory } from "../src/routable-inventory.js";
 
 import {
   bootstrapQaControlPlane,
@@ -102,8 +103,17 @@ function createDifficultyClassifierVendorScript(mode: "valid-hard" | "slow-hard"
   return `const http=require("node:http");const port=Number(process.env.PORT??process.argv[2]);const server=http.createServer((req,res)=>{if(req.url==="/health/liveliness"){res.statusCode=200;res.end("ok");return;}if(req.url==="/v1/chat/completions"){let body="";req.on("data",chunk=>body+=chunk);req.on("end",()=>{const parsed=JSON.parse(body||"{}");const joinedMessages=JSON.stringify(parsed.messages??[]);const isClassifier=joinedMessages.includes("ROLE_MODEL_DIFFICULTY_CLASSIFIER");const respond=()=>{res.setHeader("content-type","application/json");res.end(JSON.stringify({id:"chat-difficulty-remote",object:"chat.completion",choices:[{index:0,message:{role:"assistant",content:isClassifier?JSON.stringify({difficulty:\"hard\"}):"alias remote summary"},finish_reason:"stop"}],usage:{prompt_tokens:12,completion_tokens:4,total_tokens:16},_hidden_params:{response_cost:0.0012,cache_hit:false}}));};if(${responseDelayMs}>0){setTimeout(respond,${responseDelayMs});return;}respond();});return;}res.statusCode=404;res.end("missing");});server.listen(port,"127.0.0.1");const shutdown=()=>server.close(()=>process.exit(0));process.on("SIGTERM",shutdown);process.on("SIGINT",shutdown);`;
 }
 
-function createControllerVendorScript(): string {
-  return `const http=require("node:http");const port=Number(process.env.PORT??process.argv[2]);const server=http.createServer((req,res)=>{if(req.url==="/health/liveliness"){res.statusCode=200;res.end("ok");return;}if(req.url==="/v1/chat/completions"){let body="";req.on("data",chunk=>body+=chunk);req.on("end",()=>{const parsed=JSON.parse(body||"{}");const joinedMessages=JSON.stringify(parsed.messages??[]);const isController=joinedMessages.includes("ROLE_MODEL_ROUTING_CONTROLLER");res.setHeader("content-type","application/json");res.end(JSON.stringify({id:"chat-controller-remote",object:"chat.completion",choices:[{index:0,message:{role:"assistant",content:isController?JSON.stringify({strategy:\"quality\",preferLocal:true}):"alias remote summary"},finish_reason:"stop"}],usage:{prompt_tokens:12,completion_tokens:4,total_tokens:16},_hidden_params:{response_cost:0.0012,cache_hit:false}}));});return;}res.statusCode=404;res.end("missing");});server.listen(port,"127.0.0.1");const shutdown=()=>server.close(()=>process.exit(0));process.on("SIGTERM",shutdown);process.on("SIGINT",shutdown);`;
+function createControllerVendorScript(options?: { readonly responseDelayMs?: number }): string {
+  const responseDelayMs = options?.responseDelayMs ?? 0;
+  return `const http=require("node:http");const port=Number(process.env.PORT??process.argv[2]);const server=http.createServer((req,res)=>{if(req.url==="/health/liveliness"){res.statusCode=200;res.end("ok");return;}if(req.url==="/v1/chat/completions"){let body="";req.on("data",chunk=>body+=chunk);req.on("end",()=>{const parsed=JSON.parse(body||"{}");const joinedMessages=JSON.stringify(parsed.messages??[]);const isController=joinedMessages.includes("ROLE_MODEL_ROUTING_CONTROLLER");const respond=()=>{res.setHeader("content-type","application/json");res.end(JSON.stringify({id:"chat-controller-remote",object:"chat.completion",choices:[{index:0,message:{role:"assistant",content:isController?JSON.stringify({strategy:\"quality\",preferLocal:true}):"alias remote summary"},finish_reason:"stop"}],usage:{prompt_tokens:12,completion_tokens:4,total_tokens:16},_hidden_params:{response_cost:0.0012,cache_hit:false}}));};if(${responseDelayMs}>0){setTimeout(respond,${responseDelayMs});return;}respond();});return;}res.statusCode=404;res.end("missing");});server.listen(port,"127.0.0.1");const shutdown=()=>server.close(()=>process.exit(0));process.on("SIGTERM",shutdown);process.on("SIGINT",shutdown);`;
+}
+
+function createControllerRetryVendorScript(): string {
+  return `const http=require("node:http");const port=Number(process.env.PORT??process.argv[2]);const server=http.createServer((req,res)=>{if(req.url==="/health/liveliness"){res.statusCode=200;res.end("ok");return;}if(req.url==="/v1/chat/completions"){let body="";req.on("data",chunk=>body+=chunk);req.on("end",()=>{const parsed=JSON.parse(body||"{}");const joinedMessages=JSON.stringify(parsed.messages??[]);const isController=joinedMessages.includes("ROLE_MODEL_ROUTING_CONTROLLER");const isCompactRetry=joinedMessages.includes("ROLE_MODEL_ROUTING_CONTROLLER_COMPACT");const isHardCase=joinedMessages.includes("runtime routing regression");const message=isController&&isHardCase&&!isCompactRetry?{role:"assistant",content:""}:{role:"assistant",content:isController?JSON.stringify({requestedRoleId:"coder.patch",taskType:"code.edit",requiredCapabilities:["code.edit"],preferredCapabilities:["reasoning.multi_step"],strategy:"quality"}):"alias remote summary"};const finishReason=isController&&isHardCase&&!isCompactRetry?"length":"stop";res.setHeader("content-type","application/json");res.end(JSON.stringify({id:"chat-controller-retry",object:"chat.completion",choices:[{index:0,message,finish_reason:finishReason}],usage:{prompt_tokens:12,completion_tokens:isController&&isHardCase&&!isCompactRetry?1024:32,total_tokens:128}}));});return;}res.statusCode=404;res.end("missing");});server.listen(port,"127.0.0.1");const shutdown=()=>server.close(()=>process.exit(0));process.on("SIGTERM",shutdown);process.on("SIGINT",shutdown);`;
+}
+
+function createControllerInvalidVendorScript(): string {
+  return `const http=require("node:http");const port=Number(process.env.PORT??process.argv[2]);const server=http.createServer((req,res)=>{if(req.url==="/health/liveliness"){res.statusCode=200;res.end("ok");return;}if(req.url==="/v1/chat/completions"){let body="";req.on("data",chunk=>body+=chunk);req.on("end",()=>{const parsed=JSON.parse(body||"{}");const joinedMessages=JSON.stringify(parsed.messages??[]);const isController=joinedMessages.includes("ROLE_MODEL_ROUTING_CONTROLLER");const content=isController?"This looks like coding work that should use the strongest remote code path and careful reasoning.":"alias remote summary";res.setHeader("content-type","application/json");res.end(JSON.stringify({id:"chat-controller-invalid",object:"chat.completion",choices:[{index:0,message:{role:"assistant",content},finish_reason:"stop"}],usage:{prompt_tokens:12,completion_tokens:24,total_tokens:36}}));});return;}res.statusCode=404;res.end("missing");});server.listen(port,"127.0.0.1");const shutdown=()=>server.close(()=>process.exit(0));process.on("SIGTERM",shutdown);process.on("SIGINT",shutdown);`;
 }
 
 function createHybridArbitrationVendorScript(): string {
@@ -121,6 +131,84 @@ function createLlamaSwapRunningModelsVendorScript(input: {
 }
 
 describe("runtime-host-bridge", () => {
+  test("summarizes selection diagnostics when a tie-break chooses the winner inside the score epsilon", () => {
+    const selection = bridge.summarizeSelectionDiagnosticsFromDecision({
+      routing_decision_id: "decision-test-tie-break",
+      request_id: "req-test-tie-break",
+      app_id: "test-app",
+      org_id: null,
+      policy_snapshot: {
+        policy_id: "quality-policy",
+        strategy: "quality",
+        compute_preference: "auto",
+        prefer_local: false,
+        budget_mode: "disabled",
+        tie_break_order: ["quality", "latency_ms", "reliability", "endpoint_id"],
+        required_capabilities: ["code.edit"],
+        required_modalities: ["text"],
+        require_tools: false,
+        deny_endpoints: [],
+        allow_endpoints: ["kimi", "pro"],
+        deny_provider_kinds: [],
+        allow_provider_kinds: [],
+        budget: {
+          enabled: false,
+          currency: "USD",
+        },
+        privacy: {
+          allow_remote: true,
+        },
+        targets: {
+          latency_target_ms: 150,
+          latency_max_ms: 300,
+          throughput_target_tps: 40,
+        },
+      },
+      eligibility: [],
+      scored_candidates: [
+        {
+          endpoint_id: "kimi",
+          total_score: 0.8204552492682547,
+          metric_breakdown: {} as never,
+          tie_break: {
+            quality: 0.9285714285714286,
+            latency_ms: 47200.625,
+            reliability: 0.9941283473114646,
+            endpoint_id: "kimi",
+          },
+        },
+        {
+          endpoint_id: "pro",
+          total_score: 0.8252557768137551,
+          metric_breakdown: {} as never,
+          tie_break: {
+            quality: 0.8761904761904761,
+            latency_ms: 9655.025,
+            reliability: 0.9937887531154296,
+            endpoint_id: "pro",
+          },
+        },
+      ],
+      chosen_endpoint_id: "kimi",
+      fallback_endpoint_ids: ["pro"],
+      selection_reasons: ["BEST_TOTAL_SCORE"],
+      used_measured: true,
+      used_declared: true,
+      scoring_version: "baseline-v2",
+    });
+
+    expect(selection).toEqual({
+      mode: "tie-break",
+      scoreTieEpsilon: 0.01,
+      scoreDelta: expect.closeTo(0.004800527545500379, 12),
+      winnerEndpointId: "kimi",
+      winnerTotalScore: 0.8204552492682547,
+      runnerUpEndpointId: "pro",
+      runnerUpTotalScore: 0.8252557768137551,
+      tieBreakOrder: ["quality", "latency_ms", "reliability", "endpoint_id"],
+    });
+  });
+
   test("creates a stable model-list response grouped by model id", () => {
     expect(typeof (bridge as { createModelListResponse?: unknown }).createModelListResponse).toBe(
       "function",
@@ -598,6 +686,7 @@ describe("runtime-host-bridge", () => {
       readTelemetrySummary: async () => ({ totalRequests: 0 }),
       listTelemetryComparisonRows: async () => [],
       listTelemetryRequests: async () => [],
+      queryTelemetryAnalytics: async () => ({ buckets: [], ranking: null }),
       subscribeTelemetry: () => () => undefined,
       listProviders: async () => [],
       listRoles: async () => [],
@@ -731,6 +820,7 @@ describe("runtime-host-bridge", () => {
           readModelOverrides?: unknown;
           updateModelOverrides?: unknown;
           readPeers?: unknown;
+          queryTelemetryAnalytics?: unknown;
           reconnectProviderAccount?: unknown;
           updateProviderApiKey?: unknown;
           updatePeers?: unknown;
@@ -764,6 +854,7 @@ describe("runtime-host-bridge", () => {
     expect(options.readModelOverrides).toBe(backend.readModelOverrides);
     expect(options.updateModelOverrides).toBe(backend.updateModelOverrides);
     expect(options.readPeers).toBe(backend.readPeers);
+    expect(options.queryTelemetryAnalytics).toBe(backend.queryTelemetryAnalytics);
     expect(options.reconnectProviderAccount).toBe(backend.reconnectProviderAccount);
     expect(options.updateProviderApiKey).toBe(backend.updateProviderApiKey);
     expect(options.updatePeers).toBe(backend.updatePeers);
@@ -1140,6 +1231,704 @@ describe("runtime-host-bridge", () => {
     ]);
   });
 
+  test("maps hosted OpenAI responses tools without rejecting them as function-only tools", () => {
+    const openaiRegistry: EndpointRegistryResult = {
+      endpoints: [
+        {
+          identity: {
+            endpoint_id: "openai.personal.codex-subscription.global.gpt-5.4",
+            endpoint_kind: "remote_api",
+            provider_kind: "provider-openai",
+            serving_source: "remote-service",
+            model_id: "chatgpt/gpt-5.4",
+            runtime_version: "test-registry-v1",
+            region: "global",
+          },
+          declared: {
+            endpoint_id: "openai.personal.codex-subscription.global.gpt-5.4",
+            capabilities: ["text.chat", "tools.function_calling"],
+            modalities: ["text"],
+            max_context_tokens: 200000,
+            tool_calling: {
+              supported: true,
+              style: "openai",
+            },
+            supports_embeddings: false,
+            platform_constraints: [],
+          },
+          status: "active",
+        },
+      ],
+      diagnostics: [],
+      lifecycleSummary: {
+        active: 1,
+        degraded: 0,
+        offline: 0,
+      },
+    };
+
+    const result = (
+      bridge as {
+        mapResponsesRequest: (
+          value: EndpointRegistryResult,
+          body: Record<string, unknown>,
+          requestId: string,
+        ) => {
+          routingRequest: {
+            needsTools: boolean;
+          };
+          executionRequest: {
+            tools?: readonly unknown[];
+          };
+        };
+      }
+    ).mapResponsesRequest(
+      openaiRegistry,
+      {
+        model: "chatgpt/gpt-5.4",
+        input: "Find the current Cloudflare stock price and cite the source.",
+        tools: [
+          {
+            type: "web_search",
+          },
+        ],
+      },
+      "req-responses-hosted-web-search",
+    );
+
+    expect(result.routingRequest.needsTools).toBe(true);
+    expect(result.executionRequest.tools).toEqual([
+      {
+        kind: "hosted",
+        name: "web_search",
+        raw: {
+          type: "web_search",
+        },
+      },
+    ]);
+  });
+
+  test("maps mixed-provider responses web_search alias pools to runtime tool calling without excluding function-calling providers", () => {
+    const mixedRegistry: EndpointRegistryResult = {
+      endpoints: [
+        {
+          identity: {
+            endpoint_id: "deepseek.personal.primary.global.deepseek-v4-flash",
+            endpoint_kind: "remote_api",
+            provider_kind: "remote_openai_compat",
+            serving_source: "remote-service",
+            model_id: "deepseek/deepseek-v4-flash",
+            runtime_version: "test-registry-v1",
+            region: "global",
+          },
+          declared: {
+            endpoint_id: "deepseek.personal.primary.global.deepseek-v4-flash",
+            capabilities: ["text.chat", "tools.function_calling"],
+            modalities: ["text"],
+            max_context_tokens: 128000,
+            tool_calling: {
+              supported: true,
+              style: "openai",
+            },
+            supports_embeddings: false,
+            platform_constraints: [],
+          },
+          status: "active",
+        },
+        {
+          identity: {
+            endpoint_id: "moonshot.personal.primary.global.kimi-k2.7-code",
+            endpoint_kind: "remote_api",
+            provider_kind: "remote_openai_compat",
+            serving_source: "remote-service",
+            model_id: "moonshot/kimi-k2.7-code",
+            runtime_version: "test-registry-v1",
+            region: "global",
+          },
+          declared: {
+            endpoint_id: "moonshot.personal.primary.global.kimi-k2.7-code",
+            capabilities: ["text.chat", "tools.function_calling"],
+            modalities: ["text"],
+            max_context_tokens: 128000,
+            tool_calling: {
+              supported: true,
+              style: "openai",
+            },
+            supports_embeddings: false,
+            platform_constraints: [],
+          },
+          status: "active",
+        },
+        {
+          identity: {
+            endpoint_id: "openai.personal.codex-subscription.global.gpt-5.4",
+            endpoint_kind: "remote_api",
+            provider_kind: "provider-openai",
+            serving_source: "remote-service",
+            model_id: "chatgpt/gpt-5.4",
+            runtime_version: "test-registry-v1",
+            region: "global",
+          },
+          declared: {
+            endpoint_id: "openai.personal.codex-subscription.global.gpt-5.4",
+            capabilities: ["text.chat", "tools.function_calling"],
+            modalities: ["text"],
+            max_context_tokens: 200000,
+            tool_calling: {
+              supported: true,
+              style: "openai",
+            },
+            supports_embeddings: false,
+            platform_constraints: [],
+          },
+          status: "active",
+        },
+      ],
+      diagnostics: [],
+      lifecycleSummary: {
+        active: 3,
+        degraded: 0,
+        offline: 0,
+      },
+    };
+
+    const result = (
+      bridge as {
+        mapResponsesRequest: (
+          value: EndpointRegistryResult,
+          body: Record<string, unknown>,
+          requestId: string,
+          modelAliases?: readonly {
+            aliasId: string;
+            mode?: "basic" | "difficulty" | "intelligent" | "hybrid" | null;
+            modelIds: readonly string[];
+          }[],
+        ) => {
+          routingRequest: {
+            allowEndpoints: readonly string[];
+          };
+          routingDiagnostics?: {
+            aliasResolution?: {
+              requestedModel: string;
+              aliasId: string;
+              resolvedModelIds: readonly string[];
+              allowEndpoints: readonly string[];
+            };
+          };
+        };
+      }
+    ).mapResponsesRequest(
+      mixedRegistry,
+      {
+        model: "controller.remote-only",
+        input: "Find the current Cloudflare stock price and cite the source.",
+        tools: [
+          {
+            type: "web_search",
+          },
+        ],
+      },
+      "req-hosted-web-search-alias-filter-001",
+      [
+        {
+          aliasId: "controller.remote-only",
+          mode: "intelligent",
+          modelIds: [
+            "chatgpt/gpt-5.4",
+            "deepseek/deepseek-v4-flash",
+            "moonshot/kimi-k2.7-code",
+          ],
+        },
+      ],
+    );
+
+    expect(result.routingRequest.allowEndpoints).toEqual([
+      "deepseek.personal.primary.global.deepseek-v4-flash",
+      "moonshot.personal.primary.global.kimi-k2.7-code",
+      "openai.personal.codex-subscription.global.gpt-5.4",
+    ]);
+    expect(result.routingDiagnostics?.aliasResolution).toEqual({
+      requestedModel: "controller.remote-only",
+      aliasId: "controller.remote-only",
+      resolvedModelIds: [
+        "chatgpt/gpt-5.4",
+        "deepseek/deepseek-v4-flash",
+        "moonshot/kimi-k2.7-code",
+      ],
+      allowEndpoints: [
+        "deepseek.personal.primary.global.deepseek-v4-flash",
+        "moonshot.personal.primary.global.kimi-k2.7-code",
+        "openai.personal.codex-subscription.global.gpt-5.4",
+      ],
+    });
+    expect(result.executionRequest.tools).toEqual([
+      {
+        name: "web_search",
+        description: "Search the web for current information and return structured results.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            query: {
+              type: "string",
+              description: "The search query to execute.",
+            },
+            max_results: {
+              type: "integer",
+              minimum: 1,
+              maximum: 10,
+              description: "Optional maximum number of search results to return.",
+            },
+          },
+          required: ["query"],
+        },
+      },
+    ]);
+  });
+
+  test("maps exact non-OpenAI responses web-search requests to consumer-managed web_search tools", () => {
+    const result = (
+      bridge as {
+        mapResponsesRequest: (
+          value: EndpointRegistryResult,
+          body: Record<string, unknown>,
+          requestId: string,
+        ) => {
+          routingRequest: {
+            allowEndpoints: readonly string[];
+            needsTools: boolean;
+          };
+          executionRequest: {
+            tools?: readonly unknown[];
+          };
+        };
+      }
+    ).mapResponsesRequest(
+        {
+          endpoints: [
+            {
+              identity: {
+                endpoint_id: "deepseek.personal.primary.global.deepseek-v4-flash",
+                endpoint_kind: "remote_api",
+                provider_kind: "remote_openai_compat",
+                serving_source: "remote-service",
+                model_id: "deepseek/deepseek-v4-flash",
+                runtime_version: "test-registry-v1",
+                region: "global",
+              },
+              declared: {
+                endpoint_id: "deepseek.personal.primary.global.deepseek-v4-flash",
+                capabilities: ["text.chat", "tools.function_calling"],
+                modalities: ["text"],
+                max_context_tokens: 128000,
+                tool_calling: {
+                  supported: true,
+                  style: "openai",
+                },
+                supports_embeddings: false,
+                platform_constraints: [],
+              },
+              status: "active",
+            },
+          ],
+          diagnostics: [],
+          lifecycleSummary: {
+            active: 1,
+            degraded: 0,
+            offline: 0,
+          },
+        },
+        {
+          model: "deepseek/deepseek-v4-flash",
+          input: "Find the current Cloudflare stock price and cite the source.",
+          tools: [
+            {
+              type: "web_search",
+            },
+          ],
+        },
+        "req-hosted-web-search-exact-deepseek-001",
+      );
+
+    expect(result.routingRequest.needsTools).toBe(true);
+    expect(result.routingRequest.allowEndpoints).toEqual([
+      "deepseek.personal.primary.global.deepseek-v4-flash",
+    ]);
+    expect(result.executionRequest.tools).toEqual([
+      {
+        name: "web_search",
+        description: "Search the web for current information and return structured results.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            query: {
+              type: "string",
+              description: "The search query to execute.",
+            },
+            max_results: {
+              type: "integer",
+              minimum: 1,
+              maximum: 10,
+              description: "Optional maximum number of search results to return.",
+            },
+          },
+          required: ["query"],
+        },
+      },
+    ]);
+  });
+
+  test("maps exact Kimi responses web-search requests to the hosted builtin_function contract", () => {
+    const result = (
+      bridge as {
+        mapResponsesRequest: (
+          value: EndpointRegistryResult,
+          body: Record<string, unknown>,
+          requestId: string,
+        ) => {
+          routingRequest: {
+            allowEndpoints: readonly string[];
+            needsTools: boolean;
+          };
+          executionRequest: {
+            tools?: readonly unknown[];
+          };
+        };
+      }
+    ).mapResponsesRequest(
+      {
+        endpoints: [
+          {
+            identity: {
+              endpoint_id: "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+              endpoint_kind: "remote_api",
+              provider_kind: "remote_openai_compat",
+              serving_source: "remote-service",
+              model_id: "moonshot/kimi-k2.7-code",
+              runtime_version: "test-registry-v1",
+              region: "global",
+            },
+            declared: {
+              endpoint_id: "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+              capabilities: ["text.chat", "tools.function_calling"],
+              modalities: ["text"],
+              max_context_tokens: 262144,
+              tool_calling: {
+                supported: true,
+                style: "openai",
+              },
+              supports_embeddings: false,
+              platform_constraints: [],
+            },
+            status: "active",
+          },
+        ],
+        diagnostics: [],
+        lifecycleSummary: {
+          active: 1,
+          degraded: 0,
+          offline: 0,
+        },
+      },
+      {
+        model: "moonshot/kimi-k2.7-code",
+        input: "Find the current Cloudflare stock price and cite the source.",
+        tools: [
+          {
+            type: "web_search",
+          },
+        ],
+      },
+      "req-hosted-web-search-exact-kimi-001",
+    );
+
+    expect(result.routingRequest.needsTools).toBe(true);
+    expect(result.routingRequest.allowEndpoints).toEqual([
+      "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+    ]);
+    expect(result.executionRequest.tools).toEqual([
+      {
+        kind: "hosted",
+        name: "web_search",
+        raw: {
+          type: "builtin_function",
+          function: {
+            name: "$web_search",
+          },
+        },
+      },
+    ]);
+  });
+
+  test("maps chat-completions continuation requests with Kimi hosted builtin_function tools", () => {
+    const result = (
+      bridge as {
+        mapChatCompletionsRequest: (
+          value: EndpointRegistryResult,
+          body: Record<string, unknown>,
+          requestId: string,
+        ) => {
+          executionRequest: {
+            tools?: readonly unknown[];
+          };
+        };
+      }
+    ).mapChatCompletionsRequest(
+      {
+        endpoints: [
+          {
+            identity: {
+              endpoint_id: "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+              endpoint_kind: "remote_api",
+              provider_kind: "remote_openai_compat",
+              serving_source: "remote-service",
+              model_id: "moonshot/kimi-k2.7-code",
+              runtime_version: "test-registry-v1",
+              region: "global",
+            },
+            declared: {
+              endpoint_id: "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+              capabilities: ["text.chat", "tools.function_calling"],
+              modalities: ["text"],
+              max_context_tokens: 262144,
+              tool_calling: {
+                supported: true,
+                style: "openai",
+              },
+              supports_embeddings: false,
+              platform_constraints: [],
+            },
+            status: "active",
+          },
+        ],
+        diagnostics: [],
+        lifecycleSummary: {
+          active: 1,
+          degraded: 0,
+          offline: 0,
+        },
+      },
+      {
+        model: "moonshot/kimi-k2.7-code",
+        messages: [
+          {
+            role: "user",
+            content: "Find the current Cloudflare stock price and cite the source.",
+          },
+          {
+            role: "assistant",
+            content: null,
+            tool_calls: [
+              {
+                id: "call_1",
+                type: "function",
+                function: {
+                  name: "$web_search",
+                  arguments: '{"query":"Cloudflare stock price","total_tokens":1234}',
+                },
+              },
+            ],
+          },
+          {
+            role: "tool",
+            tool_call_id: "call_1",
+            content: '{"query":"Cloudflare stock price","total_tokens":1234}',
+          },
+        ],
+        tools: [
+          {
+            type: "builtin_function",
+            function: {
+              name: "$web_search",
+              parameters: {
+                type: "object",
+              },
+            },
+          },
+        ],
+      },
+      "req-kimi-chat-continuation-001",
+    );
+
+    expect(result.executionRequest.tools).toEqual([
+      {
+        kind: "hosted",
+        name: "web_search",
+        raw: {
+          type: "builtin_function",
+          function: {
+            name: "$web_search",
+          },
+        },
+      },
+    ]);
+  });
+
+  test("describes endpoint web-search support by active runtime transport", () => {
+    expect(
+      typeof (bridge as { resolveEndpointWebSearchSupport?: unknown }).resolveEndpointWebSearchSupport,
+    ).toBe("function");
+
+    const resolveEndpointWebSearchSupport = (
+      bridge as {
+        resolveEndpointWebSearchSupport: (endpoint: EndpointRegistryResult["endpoints"][number]) => unknown;
+      }
+    ).resolveEndpointWebSearchSupport;
+
+    const createEndpoint = (input: {
+      endpointId: string;
+      modelId: string;
+      providerKind?: string;
+      toolCallingSupported?: boolean;
+      toolCallingStyle?: string;
+      capabilities?: readonly string[];
+    }): EndpointRegistryResult["endpoints"][number] => ({
+      identity: {
+        endpoint_id: input.endpointId,
+        endpoint_kind: "remote_api",
+        provider_kind: input.providerKind ?? "remote_openai_compat",
+        serving_source: "remote-service",
+        model_id: input.modelId,
+        runtime_version: "test-registry-v1",
+        region: "global",
+      },
+      declared: {
+        endpoint_id: input.endpointId,
+        capabilities: [...(input.capabilities ?? ["text.chat", "tools.function_calling"])],
+        modalities: ["text"],
+        max_context_tokens: 200000,
+        tool_calling: {
+          supported: input.toolCallingSupported ?? true,
+          style: input.toolCallingStyle ?? "openai",
+        },
+        supports_embeddings: false,
+        platform_constraints: [],
+      },
+      status: "active",
+    });
+
+    expect(
+      resolveEndpointWebSearchSupport(
+        createEndpoint({
+          endpointId: "openai.personal.codex-subscription.global.gpt-5.4",
+          modelId: "chatgpt/gpt-5.4",
+          providerKind: "provider-openai",
+          toolCallingStyle: "none",
+        }),
+      ),
+    ).toEqual({
+      mode: "native",
+      currentRuntimeContract: "openai.responses.web_search",
+      documentedProviderContract: "openai.responses.web_search",
+    });
+
+    expect(
+      resolveEndpointWebSearchSupport(
+        createEndpoint({
+          endpointId: "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+          modelId: "moonshot/kimi-k2.7-code",
+        }),
+      ),
+    ).toEqual({
+      mode: "native",
+      currentRuntimeContract: "moonshot.chat.builtin_web_search",
+      documentedProviderContract: "moonshot.chat.builtin_web_search",
+    });
+
+    expect(
+      resolveEndpointWebSearchSupport(
+        createEndpoint({
+          endpointId: "deepseek.personal.primary.global.deepseek-v4-flash",
+          modelId: "deepseek/deepseek-v4-flash",
+        }),
+      ),
+    ).toEqual({
+      mode: "runtime-fallback",
+      currentRuntimeContract: null,
+      documentedProviderContract: "deepseek.anthropic.server_web_search",
+    });
+  });
+
+  test("exports Codex dynamic-tool extraction for request-scoped function tools", () => {
+    expect(typeof (bridge as { buildCodexDynamicTools?: unknown }).buildCodexDynamicTools).toBe(
+      "function",
+    );
+
+    const dynamicTools = (
+      bridge as {
+        buildCodexDynamicTools: (requestCapture: {
+          url: string;
+          body: Record<string, unknown>;
+        }) => readonly unknown[];
+      }
+    ).buildCodexDynamicTools({
+      url: "https://api.openai.test/v1/responses",
+      body: {
+        model: "gpt-5.4",
+        tools: [
+          {
+            type: "function",
+            name: "lookupRegistry",
+            description: "Look up endpoint details.",
+            parameters: {
+              type: "object",
+              properties: {
+                endpointId: {
+                  type: "string",
+                },
+              },
+              required: ["endpointId"],
+            },
+          },
+          {
+            type: "web_search",
+          },
+        ],
+      },
+    });
+
+    expect(dynamicTools).toEqual([
+      {
+        name: "lookupRegistry",
+        description: "Look up endpoint details.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            endpointId: {
+              type: "string",
+            },
+          },
+          required: ["endpointId"],
+        },
+      },
+    ]);
+  });
+
+  test("buildCodexTurnPrompt no longer forbids network access for Codex Subscription turns", () => {
+    expect(typeof (bridge as { buildCodexTurnPrompt?: unknown }).buildCodexTurnPrompt).toBe(
+      "function",
+    );
+
+    const prompt = (
+      bridge as {
+        buildCodexTurnPrompt: (requestCapture: {
+          url: string;
+          body: Record<string, unknown>;
+        }) => string;
+      }
+    ).buildCodexTurnPrompt({
+      url: "https://api.openai.test/v1/responses",
+      body: {
+        model: "gpt-5.4",
+        input: "Find the current Cloudflare stock price with a source.",
+      },
+    });
+
+    expect(prompt).not.toContain(
+      "Do not run commands, modify files, access the network, or ask for approvals.",
+    );
+    expect(prompt).toContain("Built-in web search is allowed when helpful.");
+  });
+
   test("maps an alias chat-completions request into a pooled endpoint allow-list and alias diagnostics", () => {
     const result = (
       bridge as {
@@ -1369,10 +2158,7 @@ describe("runtime-host-bridge", () => {
           preferredCapabilities: ["reasoning.multi_step"],
           strategy: "quality",
           preferLocal: true,
-          preferredEndpointIds: [
-            "moonshot.personal.kimi-code.global.kimi-k2.5",
-            "moonshot.personal.primary.global.kimi-k2.5",
-          ],
+          preferredEndpointIds: ["moonshot.personal.kimi-code.global.kimi-k2.5"],
         },
       },
     );
@@ -1391,10 +2177,7 @@ describe("runtime-host-bridge", () => {
     });
     expect(result.routingModel).toEqual({
       endpointId: "moonshot.personal.kimi-code.global.kimi-k2.5",
-      preferredEndpointIds: [
-        "moonshot.personal.kimi-code.global.kimi-k2.5",
-        "moonshot.personal.primary.global.kimi-k2.5",
-      ],
+      preferredEndpointIds: ["moonshot.personal.kimi-code.global.kimi-k2.5"],
     });
     expect(result.routingDiagnostics?.controllerRouting).toEqual({
       active: true,
@@ -1405,10 +2188,7 @@ describe("runtime-host-bridge", () => {
         preferredCapabilities: ["reasoning.multi_step"],
         strategy: "quality",
         preferLocal: true,
-        preferredEndpointIds: [
-          "moonshot.personal.kimi-code.global.kimi-k2.5",
-          "moonshot.personal.primary.global.kimi-k2.5",
-        ],
+        preferredEndpointIds: ["moonshot.personal.kimi-code.global.kimi-k2.5"],
       },
     });
   });
@@ -1913,6 +2693,82 @@ describe("runtime-host-bridge", () => {
       rubricSignals: expect.objectContaining({
         toolCount: 0,
         historyTurnCount: 2,
+        codeOrSchemaBurden: true,
+      }),
+    });
+  });
+
+  test("escalates a high-risk single-turn code-change ask to hard difficulty and quality routing", () => {
+    const result = (
+      bridge as {
+        mapChatCompletionsRequest: (
+          value: EndpointRegistryResult,
+          body: Record<string, unknown>,
+          requestId: string,
+          modelAliases?: readonly {
+            aliasId: string;
+            mode?: "basic" | "difficulty" | "intelligent" | "hybrid" | null;
+            modelIds: readonly string[];
+          }[],
+          difficultyContext?: {
+            endpointMaxDifficultyByEndpointId?: Record<string, "easy" | "medium" | "hard">;
+          },
+        ) => {
+          routingRequest: {
+            allowEndpoints: readonly string[];
+            strategy: string;
+          };
+          routingDiagnostics?: {
+            difficultyRouting?: {
+              difficulty: "easy" | "medium" | "hard";
+              strategy: string;
+              fallbackApplied: boolean;
+              excludedEndpointIds: readonly string[];
+              rubricSignals: {
+                codeOrSchemaBurden: boolean;
+              };
+            };
+          };
+        };
+      }
+    ).mapChatCompletionsRequest(
+      registry,
+      {
+        model: "gpt-5.4",
+        messages: [
+          {
+            role: "user",
+            content:
+              "Read this TypeScript routing bug report, identify the root cause, preserve the public API, add regression tests, explain how you would verify the fix, and patch the controller output handling without breaking existing alias behavior.",
+          },
+        ],
+      },
+      "req-host-difficulty-chat-hard-ask-001",
+      [
+        {
+          aliasId: "gpt-5.4",
+          mode: "difficulty",
+          modelIds: ["moonshot/kimi-k2.5"],
+        },
+      ],
+      {
+        endpointMaxDifficultyByEndpointId: {
+          "moonshot.personal.primary.global.kimi-k2.5": "hard",
+          "moonshot.personal.kimi-code.global.kimi-k2.5": "easy",
+        },
+      },
+    );
+
+    expect(result.routingRequest.strategy).toBe("quality");
+    expect(result.routingRequest.allowEndpoints).toEqual([
+      "moonshot.personal.primary.global.kimi-k2.5",
+    ]);
+    expect(result.routingDiagnostics?.difficultyRouting).toEqual({
+      difficulty: "hard",
+      strategy: "quality",
+      fallbackApplied: false,
+      excludedEndpointIds: ["moonshot.personal.kimi-code.global.kimi-k2.5"],
+      rubricSignals: expect.objectContaining({
         codeOrSchemaBurden: true,
       }),
     });
@@ -3059,6 +3915,11 @@ describe("runtime-host-bridge", () => {
           endpointId: "moonshot.personal.primary.global.kimi-k2.5",
           providerId: "moonshot",
           modelId: "moonshot/kimi-k2.5",
+          webSearchSupport: {
+            mode: "native",
+            currentRuntimeContract: "moonshot.chat.builtin_web_search",
+            documentedProviderContract: "moonshot.chat.builtin_web_search",
+          },
         },
       ],
       readRouterSummary: async () => ({
@@ -3467,6 +4328,11 @@ describe("runtime-host-bridge", () => {
           endpointId: "moonshot.personal.primary.global.kimi-k2.5",
           providerId: "moonshot",
           modelId: "moonshot/kimi-k2.5",
+          webSearchSupport: {
+            mode: "native",
+            currentRuntimeContract: "moonshot.chat.builtin_web_search",
+            documentedProviderContract: "moonshot.chat.builtin_web_search",
+          },
         },
       ]);
 
@@ -5233,7 +6099,7 @@ describe("runtime-host-bridge", () => {
     });
 
     const requestId = "req-runtime-bridge-alias-001";
-    const runtimeAliasId = "baseline.remote-only";
+    const runtimeAliasId = "gpt-5.4";
     await backend.executeChatCompletions(
       {
         model: runtimeAliasId,
@@ -5269,6 +6135,175 @@ describe("runtime-host-bridge", () => {
       ]),
     );
   });
+
+  test(
+    "executes every canonical remote alias through the runtime-backed chat path",
+    async () => {
+      const cases = [
+        {
+          aliasId: "default.remote-only",
+          requestId: "req-runtime-bridge-alias-default-remote-only-001",
+          litellmCommand: createAliasRemoteVendorScript(),
+        },
+        {
+          aliasId: "baseline.remote-only",
+          requestId: "req-runtime-bridge-alias-baseline-remote-only-001",
+          routingStrategy: "baseline",
+          litellmCommand: createAliasRemoteVendorScript(),
+        },
+        {
+          aliasId: "controller.remote-only",
+          requestId: "req-runtime-bridge-alias-controller-remote-only-001",
+          routingStrategy: "controller",
+          controller: {
+            enabled: true,
+            source_type: "remote",
+            model_id: "openai/gpt-4.1-mini-fast",
+            timeout_ms: 1500,
+          },
+          litellmCommand: createControllerVendorScript(),
+        },
+        {
+          aliasId: "difficulty.remote-only",
+          requestId: "req-runtime-bridge-alias-difficulty-remote-only-001",
+          routingStrategy: "difficulty",
+          difficultyClassifier: {
+            enabled: true,
+            rubric_version: "v1",
+            source_type: "remote",
+            model_id: "openai/gpt-4.1-mini-fast",
+            timeout_ms: 1500,
+            fallback_difficulty: "easy",
+          },
+          litellmCommand: createDifficultyClassifierVendorScript("valid-hard"),
+        },
+        {
+          aliasId: "hybrid.remote-only",
+          requestId: "req-runtime-bridge-alias-hybrid-remote-only-001",
+          routingStrategy: "hybrid",
+          difficultyClassifier: {
+            enabled: true,
+            rubric_version: "v1",
+            source_type: "remote",
+            model_id: "openai/gpt-4.1-mini-fast",
+            timeout_ms: 1500,
+            fallback_difficulty: "easy",
+          },
+          controller: {
+            enabled: true,
+            source_type: "remote",
+            model_id: "openai/gpt-4.1-mini-fast",
+            timeout_ms: 1500,
+          },
+          litellmCommand: createHybridArbitrationVendorScript(),
+        },
+      ] as const;
+
+      for (const testCase of cases) {
+        const runtimeStateRoot = await mkdtemp(
+          path.join(os.tmpdir(), "role-model-runtime-host-alias-remote-matrix-"),
+        );
+        const unifiedRuntimeConfigPath = path.join(runtimeStateRoot, "runtime-config.yaml");
+
+        try {
+          await writeFile(
+            unifiedRuntimeConfigPath,
+            stringify({
+              version: "1.0",
+              ...(testCase.routingStrategy
+                ? {
+                    routing: {
+                      strategy: testCase.routingStrategy,
+                    },
+                  }
+                : {}),
+              execution_mode: "remote_only",
+              ...(testCase.difficultyClassifier
+                ? { difficulty_classifier: testCase.difficultyClassifier }
+                : {}),
+              ...(testCase.controller ? { controller: testCase.controller } : {}),
+              litellm_proxy: {
+                command: "node",
+                args: ["-e", testCase.litellmCommand],
+                providers: {
+                  openai: {
+                    api_key: "${OPENAI_API_KEY}",
+                    model_list: [
+                      {
+                        model_name: "openai/gpt-4.1-mini-fast",
+                        max_difficulty: "hard",
+                        litellm_params: {
+                          model: "openai/gpt-4.1-mini",
+                        },
+                      },
+                    ],
+                  },
+                },
+              },
+            }),
+            "utf8",
+          );
+
+          const backend = await (
+            bridge as {
+              createRuntimeBridgeBackend: (options: {
+                repoRoot: string;
+                fixtureRoot: string;
+                runtimeStateRoot: string;
+                scopeId: string;
+                unifiedRuntimeConfigPath: string;
+              }) => Promise<{
+                executeChatCompletions: (
+                  body: Record<string, unknown>,
+                  requestId: string,
+                ) => Promise<{
+                  endpointId: string;
+                }>;
+                readRequestObservation: (requestId: string) => Promise<unknown>;
+                shutdown?: () => Promise<void>;
+              }>;
+            }
+          ).createRuntimeBridgeBackend({
+            repoRoot,
+            fixtureRoot: testFixtureRoot,
+            runtimeStateRoot,
+            scopeId: `runtime-host-${testCase.aliasId.replaceAll(".", "-")}`,
+            unifiedRuntimeConfigPath,
+          });
+
+          try {
+            await expect(
+              backend.executeChatCompletions(
+                {
+                  model: testCase.aliasId,
+                  messages: [{ role: "user", content: "Say hello in one short sentence." }],
+                },
+                testCase.requestId,
+              ),
+            ).resolves.toMatchObject({
+              endpointId: "openai.litellm.global.openai-gpt-4-1-mini-fast",
+            });
+
+            await expect(backend.readRequestObservation(testCase.requestId)).resolves.toMatchObject({
+              requestId: testCase.requestId,
+              routingDiagnostics: {
+                aliasResolution: {
+                  requestedModel: testCase.aliasId,
+                  aliasId: testCase.aliasId,
+                  allowEndpoints: ["openai.litellm.global.openai-gpt-4-1-mini-fast"],
+                },
+              },
+            });
+          } finally {
+            await Promise.race([backend.shutdown?.() ?? Promise.resolve(), delay(1_000)]);
+          }
+        } finally {
+          await rm(runtimeStateRoot, { recursive: true, force: true });
+        }
+      }
+    },
+    60_000,
+  );
 
   test("filters router summary aliases and candidates by explicit remote-only execution mode", () => {
     const filter = (
@@ -5363,6 +6398,217 @@ describe("runtime-host-bridge", () => {
       degraded: 0,
       offline: 0,
     });
+  });
+
+  test("maps the full canonical alias matrix to non-empty candidate pools when matching inventory exists", () => {
+    const filter = (
+      bridge as {
+        filterRouterRegistryByExecutionMode?: (
+          registry: EndpointRegistryResult,
+          executionMode: "decision_only" | "local_only" | "remote_only" | "hybrid",
+        ) => EndpointRegistryResult;
+      }
+    ).filterRouterRegistryByExecutionMode;
+    expect(filter).toBeTypeOf("function");
+
+    const mixedRegistry: EndpointRegistryResult = {
+      endpoints: [
+        {
+          identity: {
+            endpoint_id: "local.llama.lfm",
+            endpoint_kind: "local_engine",
+            provider_kind: "local_llama_swap",
+            serving_source: "llama-swap",
+            model_id: "lfm2.5-1.2b-instruct",
+            runtime_version: "test-registry-v1",
+            region: "local",
+          },
+          declared: {
+            endpoint_id: "local.llama.lfm",
+            capabilities: ["text.chat"],
+            modalities: ["text"],
+            max_context_tokens: 4096,
+            tool_calling: {
+              supported: true,
+              style: "openai",
+            },
+            supports_embeddings: false,
+            platform_constraints: [],
+          },
+          status: "active",
+        },
+        {
+          identity: {
+            endpoint_id: "remote.moonshot.kimi",
+            endpoint_kind: "remote_api",
+            provider_kind: "remote_openai_compat",
+            serving_source: "remote-service",
+            model_id: "moonshot/kimi-k2.5",
+            runtime_version: "test-registry-v1",
+            region: "global",
+          },
+          declared: {
+            endpoint_id: "remote.moonshot.kimi",
+            capabilities: ["text.chat"],
+            modalities: ["text"],
+            max_context_tokens: 128000,
+            tool_calling: {
+              supported: true,
+              style: "openai",
+            },
+            supports_embeddings: false,
+            platform_constraints: [],
+          },
+          status: "active",
+        },
+      ],
+      diagnostics: [],
+      lifecycleSummary: {
+        active: 2,
+        degraded: 0,
+        offline: 0,
+      },
+    };
+    const mixedSources = {
+      cloud: [
+        {
+          endpointId: "remote.moonshot.kimi",
+          providerAccountId: "moonshot.test.remote",
+          modelId: "moonshot/kimi-k2.5",
+          region: "global",
+          endpointKind: "remote-openai-compatible",
+          servingSource: "remote-service",
+          lifecycleState: "active",
+          healthStatus: "healthy",
+          capabilities: ["text.chat"],
+        },
+      ],
+      local: [
+        {
+          endpointId: "local.llama.lfm",
+          providerKind: "local_llama_swap",
+          providerId: "local-openai-compatible",
+          modelId: "lfm2.5-1.2b-instruct",
+          capabilities: ["text.chat"],
+          modalities: ["text"],
+          endpointKind: "local-engine",
+          servingSource: "llama-swap",
+          lifecycleState: "active",
+          hostClass: "developer-workstation",
+          deviceClass: "developer-workstation",
+          region: "local",
+          orgScope: "personal",
+        },
+      ],
+    };
+    const strategyCases = [
+      { aliasPrefix: "default", aliasMode: "basic", routingStrategy: null },
+      { aliasPrefix: "baseline", aliasMode: "basic", routingStrategy: "baseline" },
+      { aliasPrefix: "baseline", aliasMode: "basic", routingStrategy: "latency-first" },
+      { aliasPrefix: "controller", aliasMode: "intelligent", routingStrategy: "controller" },
+      { aliasPrefix: "controller", aliasMode: "intelligent", routingStrategy: "intelligent" },
+      { aliasPrefix: "difficulty", aliasMode: "difficulty", routingStrategy: "difficulty" },
+      { aliasPrefix: "hybrid", aliasMode: "hybrid", routingStrategy: "hybrid" },
+    ] as const;
+    const executionModeCases = [
+      {
+        executionMode: "decision_only" as const,
+        endpointIds: ["local.llama.lfm", "remote.moonshot.kimi"],
+        modelIds: ["lfm2.5-1.2b-instruct", "moonshot/kimi-k2.5"],
+      },
+      {
+        executionMode: "hybrid" as const,
+        endpointIds: ["local.llama.lfm", "remote.moonshot.kimi"],
+        modelIds: ["lfm2.5-1.2b-instruct", "moonshot/kimi-k2.5"],
+      },
+      {
+        executionMode: "local_only" as const,
+        endpointIds: ["local.llama.lfm"],
+        modelIds: ["lfm2.5-1.2b-instruct"],
+      },
+      {
+        executionMode: "remote_only" as const,
+        endpointIds: ["remote.moonshot.kimi"],
+        modelIds: ["moonshot/kimi-k2.5"],
+      },
+    ];
+
+    for (const strategyCase of strategyCases) {
+      for (const executionModeCase of executionModeCases) {
+        const filteredRegistry = filter!(mixedRegistry, executionModeCase.executionMode);
+        const inventory = buildRoutableInventory(filteredRegistry, mixedSources);
+        const aliasId = `${strategyCase.aliasPrefix}.${executionModeCase.executionMode.replaceAll(
+          "_",
+          "-",
+        )}`;
+        const result = (
+          bridge as {
+            mapChatCompletionsRequest: (
+              value: EndpointRegistryResult,
+              body: Record<string, unknown>,
+              requestId: string,
+              modelAliases?: readonly {
+                aliasId: string;
+                mode?: "basic" | "difficulty" | "intelligent" | "hybrid" | null;
+                modelIds: readonly string[];
+              }[],
+              difficultyContext?: {
+                endpointMaxDifficultyByEndpointId?: Record<string, "easy" | "medium" | "hard">;
+              },
+              controllerContext?: unknown,
+              requestOptions?: unknown,
+              roleDefinitions?: unknown,
+              defaultRoutingMode?: "baseline" | "difficulty" | "controller" | "hybrid",
+              inventory?: unknown,
+            ) => {
+              routingRequest: {
+                allowEndpoints: readonly string[];
+              };
+              routingDiagnostics?: {
+                aliasResolution?: {
+                  requestedModel: string;
+                  aliasId: string;
+                  resolvedModelIds: readonly string[];
+                  allowEndpoints: readonly string[];
+                };
+              };
+            };
+          }
+        ).mapChatCompletionsRequest(
+          filteredRegistry,
+          {
+            model: aliasId,
+            messages: [{ role: "user", content: "Route this through the canonical alias pool." }],
+          },
+          `req-host-alias-matrix-${strategyCase.aliasPrefix}-${executionModeCase.executionMode}`,
+          [
+            {
+              aliasId,
+              mode: strategyCase.aliasMode,
+              modelIds: executionModeCase.modelIds,
+            },
+          ],
+          {
+            endpointMaxDifficultyByEndpointId: Object.fromEntries(
+              executionModeCase.endpointIds.map((endpointId) => [endpointId, "hard"]),
+            ),
+          },
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          inventory,
+        );
+
+        expect(result.routingRequest.allowEndpoints).toEqual(executionModeCase.endpointIds);
+        expect(result.routingDiagnostics?.aliasResolution).toEqual({
+          requestedModel: aliasId,
+          aliasId,
+          resolvedModelIds: executionModeCase.modelIds,
+          allowEndpoints: executionModeCase.endpointIds,
+        });
+      }
+    }
   });
 
   test("routes execution-facing planning through the effective execution-mode registry", () => {
@@ -5960,6 +7206,314 @@ describe("runtime-host-bridge", () => {
     });
   });
 
+  test("infers a hard observed-profile bucket from controller quality strategy when difficulty routing is absent", () => {
+    expect(
+      typeof (bridge as { resolveObservedDifficultyBucketForPlan?: unknown })
+        .resolveObservedDifficultyBucketForPlan,
+    ).toBe("function");
+
+    const result = (
+      bridge as {
+        resolveObservedDifficultyBucketForPlan: (plan: {
+          routingDiagnostics?: {
+            difficultyRouting?: {
+              difficulty?: "easy" | "medium" | "hard";
+            };
+            controllerRouting?: {
+              acceptedDirectives?: {
+                strategy?: "balanced" | "cost" | "quality";
+              };
+            };
+          };
+        }) => "easy" | "medium" | "hard" | undefined;
+      }
+    ).resolveObservedDifficultyBucketForPlan({
+      routingDiagnostics: {
+        controllerRouting: {
+          active: true,
+          acceptedDirectives: {
+            strategy: "quality",
+          },
+        },
+      },
+    });
+
+    expect(result).toBe("hard");
+  });
+
+  test("keeps fresh endpoint-wide metrics when stale hard-bucket quality is overlaid", async () => {
+    const runtimeStateRoot = await mkdtemp(
+      path.join(os.tmpdir(), "role-model-runtime-host-difficulty-merge-tests-"),
+    );
+    const unifiedRuntimeConfigPath = path.join(runtimeStateRoot, "runtime-config.yaml");
+    await writeFile(
+      unifiedRuntimeConfigPath,
+      stringify({
+        version: "1.0",
+        difficulty_classifier: {
+          enabled: true,
+          rubric_version: "v1",
+          source_type: "remote",
+          model_id: "openai/gpt-4.1-mini-fast",
+          timeout_ms: 1500,
+          fallback_difficulty: "easy",
+        },
+        model_aliases: {
+          "gpt-5.4": {
+            mode: "difficulty",
+            model_ids: ["openai/gpt-4.1-mini-fast", "claude-3.7-sonnet"],
+          },
+        },
+        litellm_proxy: {
+          command: "node",
+          args: ["-e", createDifficultyClassifierVendorScript("valid-hard")],
+          providers: {
+            openai: {
+              api_key: "${OPENAI_API_KEY}",
+              model_list: [
+                {
+                  model_name: "openai/gpt-4.1-mini-fast",
+                  max_difficulty: "hard",
+                  litellm_params: {
+                    model: "openai/gpt-4.1-mini",
+                  },
+                },
+              ],
+            },
+            anthropic: {
+              api_key: "${ANTHROPIC_API_KEY}",
+              model_list: [
+                {
+                  model_name: "claude-3.7-sonnet",
+                  max_difficulty: "hard",
+                  litellm_params: {
+                    model: "anthropic/claude-3.7-sonnet",
+                  },
+                },
+              ],
+            },
+          },
+        },
+      }),
+      "utf8",
+    );
+
+    const repoRoot = path.resolve(__dirname, "..", "..", "..", "..");
+    const testFixtureRoot = path.join(__dirname, "fixtures");
+    const scopeId = "runtime-host-difficulty-merge";
+    const backend = await (
+      bridge as {
+        createRuntimeBridgeBackend: (input: {
+          repoRoot: string;
+          fixtureRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+          unifiedRuntimeConfigPath: string;
+        }) => Promise<{
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId?: string,
+          ) => Promise<{
+            endpointId: string;
+          }>;
+          readRequestObservation: (requestId: string) => Promise<unknown>;
+        }>;
+      }
+    ).createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: testFixtureRoot,
+      runtimeStateRoot,
+      scopeId,
+      unifiedRuntimeConfigPath,
+    });
+
+    const databasePath = resolveSqliteMemoryLocation({
+      runtimeStateRoot,
+      scopeId,
+    });
+    const database = new DatabaseSync(databasePath);
+    const insertProfile = database.prepare(
+      "INSERT INTO observed_profile_snapshots (snapshot_id, endpoint_id, measured_at_ms, profile_json) VALUES (?, ?, ?, ?)",
+    );
+    const insertBucketedProfile = database.prepare(
+      "INSERT INTO observed_profile_snapshots_by_difficulty (snapshot_id, endpoint_id, difficulty_bucket, measured_at_ms, profile_json) VALUES (?, ?, ?, ?, ?)",
+    );
+    const buildProfile = (input: {
+      endpointId: string;
+      measuredAtMs: number;
+      qualityScore: number;
+      failureRate: number;
+      tokensPerSec: number;
+      latencyMsP50: number;
+      latencyMsP95: number;
+      liveSamples: number;
+      benchmarkSamples: number;
+      freshnessScore: number;
+    }) => ({
+      endpoint_id: input.endpointId,
+      endpoint_version: "run50-difficulty-merge-v1",
+      measured_at_ms: input.measuredAtMs,
+      measurement_window: {
+        started_at_ms: input.measuredAtMs - 1_000,
+        ended_at_ms: input.measuredAtMs,
+      },
+      sample_size: input.liveSamples + input.benchmarkSamples,
+      sources: {
+        live_request_samples: input.liveSamples,
+        benchmark_samples: input.benchmarkSamples,
+      },
+      latency_ms_p50: input.latencyMsP50,
+      latency_ms_p95: input.latencyMsP95,
+      failure_rate: input.failureRate,
+      freshness_score: input.freshnessScore,
+      confidence_score: 0.95,
+      quality_score: input.qualityScore,
+      tokens_per_sec: input.tokensPerSec,
+      cost_per_1k_tokens_est: 1,
+      currency: "USD",
+    });
+
+    insertProfile.run(
+      "merge-endpoint-openai",
+      "openai.litellm.global.openai-gpt-4-1-mini-fast",
+      100_000,
+      JSON.stringify(
+        buildProfile({
+          endpointId: "openai.litellm.global.openai-gpt-4-1-mini-fast",
+          measuredAtMs: 100_000,
+          qualityScore: 0.2,
+          failureRate: 0.02,
+          tokensPerSec: 36,
+          latencyMsP50: 180,
+          latencyMsP95: 240,
+          liveSamples: 6,
+          benchmarkSamples: 0,
+          freshnessScore: 0.99,
+        }),
+      ),
+    );
+    insertProfile.run(
+      "merge-endpoint-anthropic",
+      "anthropic.litellm.global.claude-3-7-sonnet",
+      100_100,
+      JSON.stringify(
+        buildProfile({
+          endpointId: "anthropic.litellm.global.claude-3-7-sonnet",
+          measuredAtMs: 100_100,
+          qualityScore: 0.1,
+          failureRate: 0.02,
+          tokensPerSec: 34,
+          latencyMsP50: 210,
+          latencyMsP95: 280,
+          liveSamples: 6,
+          benchmarkSamples: 0,
+          freshnessScore: 0.99,
+        }),
+      ),
+    );
+    insertBucketedProfile.run(
+      "merge-hard-openai",
+      "openai.litellm.global.openai-gpt-4-1-mini-fast",
+      "hard",
+      1_000,
+      JSON.stringify(
+        buildProfile({
+          endpointId: "openai.litellm.global.openai-gpt-4-1-mini-fast",
+          measuredAtMs: 1_000,
+          qualityScore: 0.92,
+          failureRate: 0.2,
+          tokensPerSec: 8,
+          latencyMsP50: 900,
+          latencyMsP95: 1_100,
+          liveSamples: 0,
+          benchmarkSamples: 21,
+          freshnessScore: 0.95,
+        }),
+      ),
+    );
+    insertBucketedProfile.run(
+      "merge-hard-anthropic",
+      "anthropic.litellm.global.claude-3-7-sonnet",
+      "hard",
+      1_100,
+      JSON.stringify(
+        buildProfile({
+          endpointId: "anthropic.litellm.global.claude-3-7-sonnet",
+          measuredAtMs: 1_100,
+          qualityScore: 0.3,
+          failureRate: 0.2,
+          tokensPerSec: 8,
+          latencyMsP50: 920,
+          latencyMsP95: 1_120,
+          liveSamples: 0,
+          benchmarkSamples: 21,
+          freshnessScore: 0.95,
+        }),
+      ),
+    );
+    database.close();
+
+    const requestId = "req-runtime-bridge-difficulty-merge-001";
+    await expect(
+      backend.executeChatCompletions(
+        {
+          model: "gpt-5.4",
+          messages: [
+            { role: "system", content: "Preserve strict schema compatibility." },
+            {
+              role: "user",
+              content:
+                "Analyze this code-edit workflow, apply multiple constraints, use the available tools, and verify the final contract end to end.",
+            },
+          ],
+          tools: [
+            {
+              type: "function",
+              function: {
+                name: "readSchema",
+                parameters: { type: "object", properties: {} },
+              },
+            },
+          ],
+        },
+        requestId,
+      ),
+    ).resolves.toMatchObject({
+      endpointId: "openai.litellm.global.openai-gpt-4-1-mini-fast",
+    });
+
+    await expect(backend.readRequestObservation(requestId)).resolves.toMatchObject({
+      requestId,
+      endpointId: "openai.litellm.global.openai-gpt-4-1-mini-fast",
+      routingDiagnostics: {
+        observedProfile: {
+          endpointId: "openai.litellm.global.openai-gpt-4-1-mini-fast",
+          source: "runtime-state",
+          readMode: "per-request",
+          difficultyBucket: "hard",
+          bucketOverrideApplied: true,
+          measuredAtMs: 100_000,
+        },
+        effectiveMetrics: {
+          latency: expect.objectContaining({
+            measuredAtMs: 100_000,
+          }),
+        },
+      },
+    });
+
+    const observation = (await backend.readRequestObservation(requestId)) as {
+      routingDiagnostics?: {
+        effectiveMetrics?: {
+          quality?: {
+            value?: number;
+          };
+        };
+      };
+    };
+    expect(observation.routingDiagnostics?.effectiveMetrics?.quality?.value).toBeGreaterThan(0.85);
+  });
+
   test("uses the configured remote classifier result for difficulty-mode runtime-backed chat requests", async () => {
     const runtimeStateRoot = await mkdtemp(
       path.join(os.tmpdir(), "role-model-runtime-host-difficulty-classifier-tests-"),
@@ -6052,7 +7606,9 @@ describe("runtime-host-bridge", () => {
     });
   });
 
-  test("uses the configured remote controller result for intelligent runtime-backed chat requests", async () => {
+  test(
+    "uses the configured remote controller result for intelligent runtime-backed chat requests",
+    async () => {
     const runtimeStateRoot = await mkdtemp(
       path.join(os.tmpdir(), "role-model-runtime-host-controller-tests-"),
     );
@@ -6144,7 +7700,1446 @@ describe("runtime-host-bridge", () => {
         },
       },
     });
+    },
+    10_000,
+  );
+
+  test("uses the default controller timeout budget for realistic remote controller latency", async () => {
+    const runtimeStateRoot = await mkdtemp(
+      path.join(os.tmpdir(), "role-model-runtime-host-controller-default-timeout-tests-"),
+    );
+    const unifiedRuntimeConfigPath = path.join(runtimeStateRoot, "runtime-config.yaml");
+    await writeFile(
+      unifiedRuntimeConfigPath,
+      stringify({
+        version: "1.0",
+        controller: {
+          enabled: true,
+          source_type: "remote",
+          model_id: "openai/gpt-4.1-mini-fast",
+        },
+        model_aliases: {
+          "gpt-5.4": {
+            mode: "intelligent",
+            model_ids: ["openai/gpt-4.1-mini-fast"],
+          },
+        },
+        litellm_proxy: {
+          command: "node",
+          args: ["-e", createControllerVendorScript({ responseDelayMs: 2000 })],
+          providers: {
+            openai: {
+              api_key: "${OPENAI_API_KEY}",
+              model_list: [
+                {
+                  model_name: "openai/gpt-4.1-mini-fast",
+                  max_difficulty: "hard",
+                  litellm_params: {
+                    model: "openai/gpt-4.1-mini",
+                  },
+                },
+              ],
+            },
+          },
+        },
+      }),
+      "utf8",
+    );
+
+    const backend = await (
+      bridge as {
+        createRuntimeBridgeBackend: (options: {
+          repoRoot: string;
+          fixtureRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+          unifiedRuntimeConfigPath: string;
+        }) => Promise<{
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+          ) => Promise<{
+            endpointId: string;
+          }>;
+          readRequestObservation: (requestId: string) => Promise<unknown>;
+        }>;
+      }
+    ).createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: testFixtureRoot,
+      runtimeStateRoot,
+      scopeId: "runtime-host-controller-default-timeout-tests",
+      unifiedRuntimeConfigPath,
+    });
+
+    const requestId = "req-runtime-bridge-controller-default-timeout-001";
+    await backend.executeChatCompletions(
+      {
+        model: "gpt-5.4",
+        messages: [
+          { role: "user", content: "Prepare a patch plan and preserve the existing contract." },
+        ],
+      },
+      requestId,
+    );
+
+    await expect(backend.readRequestObservation(requestId)).resolves.toMatchObject({
+      requestId,
+      routingDiagnostics: {
+        controllerRouting: {
+          active: true,
+          acceptedDirectives: {
+            strategy: "quality",
+            preferLocal: true,
+          },
+        },
+      },
+    });
+  }, 10_000);
+
+  test(
+    "records sanitized controller guidance through the live HTTP bridge for intelligent aliases",
+    async () => {
+    const runtimeStateRoot = await mkdtemp(
+      path.join(os.tmpdir(), "role-model-runtime-host-controller-http-regression-"),
+    );
+    const unifiedRuntimeConfigPath = path.join(runtimeStateRoot, "runtime-config.yaml");
+    const controllerVendorScript = `const http=require("node:http");const port=Number(process.env.PORT??process.argv[2]);const server=http.createServer((req,res)=>{if(req.url==="/health/liveliness"){res.statusCode=200;res.end("ok");return;}if(req.url==="/v1/chat/completions"){let body="";req.on("data",chunk=>body+=chunk);req.on("end",()=>{const parsed=JSON.parse(body||"{}");const joinedMessages=JSON.stringify(parsed.messages??[]);const isController=joinedMessages.includes("ROLE_MODEL_ROUTING_CONTROLLER");const content=isController?JSON.stringify({requestedRoleId:"general.chat",taskType:"code-generation",requiredCapabilities:["text.chat","capability.fake"],strategy:"capability_based",preferLocal:true,preferredEndpointIds:["openai.litellm.global.openai-gpt-4-1-mini-fast","invalid.endpoint"]}):"alias remote summary";res.setHeader("content-type","application/json");res.end(JSON.stringify({id:"chat-controller-http-regression",object:"chat.completion",choices:[{index:0,message:{role:"assistant",content},finish_reason:"stop"}],usage:{prompt_tokens:12,completion_tokens:4,total_tokens:16},_hidden_params:{response_cost:0.0012,cache_hit:false}}));});return;}res.statusCode=404;res.end("missing");});server.listen(port,"127.0.0.1");const shutdown=()=>server.close(()=>process.exit(0));process.on("SIGTERM",shutdown);process.on("SIGINT",shutdown);`;
+    await writeFile(
+      unifiedRuntimeConfigPath,
+      stringify({
+        version: "1.0",
+        controller: {
+          enabled: true,
+          source_type: "remote",
+          model_id: "openai/gpt-4.1-mini-fast",
+          timeout_ms: 1500,
+        },
+        model_aliases: {
+          "gpt-5.4": {
+            mode: "intelligent",
+            model_ids: ["openai/gpt-4.1-mini-fast"],
+          },
+        },
+        litellm_proxy: {
+          command: "node",
+          args: ["-e", controllerVendorScript],
+          providers: {
+            openai: {
+              api_key: "${OPENAI_API_KEY}",
+              model_list: [
+                {
+                  model_name: "openai/gpt-4.1-mini-fast",
+                  max_difficulty: "hard",
+                  litellm_params: {
+                    model: "openai/gpt-4.1-mini",
+                  },
+                },
+              ],
+            },
+          },
+        },
+      }),
+      "utf8",
+    );
+
+    const backend = await (
+      bridge as {
+        createRuntimeBridgeBackend: (options: {
+          repoRoot: string;
+          fixtureRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+          unifiedRuntimeConfigPath: string;
+        }) => Promise<{
+          registry: EndpointRegistryResult;
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+            streamWriter?: unknown,
+            requestOptions?: {
+              clientRequestId?: string;
+            },
+          ) => Promise<unknown>;
+          executeResponses: (body: Record<string, unknown>, requestId: string) => Promise<unknown>;
+          listTelemetryRequests?: () => Promise<unknown>;
+          readRequestObservation?: (requestId: string) => Promise<unknown>;
+          shutdown?: () => Promise<void>;
+        }>;
+      }
+    ).createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: testFixtureRoot,
+      runtimeStateRoot,
+      scopeId: "runtime-host-controller-http-regression-tests",
+      unifiedRuntimeConfigPath,
+    });
+
+    const selectedEndpointId = backend.registry.endpoints.find(
+      (endpoint) => endpoint.identity.model_id === "openai/gpt-4.1-mini-fast",
+    )?.identity.endpoint_id;
+    expect(selectedEndpointId).toBe("openai.litellm.global.openai-gpt-4-1-mini-fast");
+
+    const server = await (
+      bridge as {
+        startBridgeServer: (options: {
+          host: string;
+          port: number;
+          registry: EndpointRegistryResult;
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+            streamWriter?: unknown,
+            requestOptions?: {
+              clientRequestId?: string;
+            },
+          ) => Promise<unknown>;
+          executeResponses: (body: Record<string, unknown>, requestId: string) => Promise<unknown>;
+          listTelemetryRequests?: () => Promise<unknown>;
+          readRequestObservation?: (requestId: string) => Promise<unknown>;
+        }) => Promise<{ port: number; close(): Promise<void> }>;
+      }
+    ).startBridgeServer({
+      host: "127.0.0.1",
+      port: 0,
+      registry: backend.registry,
+      executeChatCompletions: backend.executeChatCompletions,
+      executeResponses: backend.executeResponses,
+      listTelemetryRequests: backend.listTelemetryRequests,
+      readRequestObservation: backend.readRequestObservation,
+    });
+
+    try {
+      const clientRequestId = "req-controller-http-regression-001";
+      const response = await fetch(`http://127.0.0.1:${server.port}/v1/chat/completions`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-request-id": clientRequestId,
+        },
+        body: JSON.stringify({
+          model: "gpt-5.4",
+          messages: [{ role: "user", content: "Say hello in one short sentence." }],
+        }),
+      });
+      expect(response.status).toBe(200);
+      await response.text();
+
+      const telemetryResponse = await fetch(
+        `http://127.0.0.1:${server.port}/api/role-model/telemetry/requests`,
+      );
+      expect(telemetryResponse.status).toBe(200);
+      const telemetryRows = (await telemetryResponse.json()) as Array<{
+        requestId: string;
+        clientRequestId?: string | null;
+      }>;
+      const requestRow = telemetryRows.find((entry) => entry.clientRequestId === clientRequestId);
+      expect(requestRow?.requestId).toBeTruthy();
+
+      const detailResponse = await fetch(
+        `http://127.0.0.1:${server.port}/api/role-model/requests/${requestRow?.requestId}`,
+      );
+      expect(detailResponse.status).toBe(200);
+      const detail = (await detailResponse.json()) as {
+        routingDiagnostics?: {
+          controllerRouting?: {
+            acceptedDirectives?: Record<string, unknown>;
+          };
+        };
+      };
+
+      expect(detail).toEqual(
+        expect.objectContaining({
+          routingDiagnostics: expect.objectContaining({
+            controllerRouting: expect.objectContaining({
+              active: true,
+              acceptedDirectives: {
+                requiredCapabilities: ["text.chat"],
+                strategy: "quality",
+                preferLocal: true,
+              },
+            }),
+          }),
+        }),
+      );
+      expect(detail.routingDiagnostics?.controllerRouting?.acceptedDirectives).not.toHaveProperty(
+        "taskType",
+      );
+    } finally {
+      await Promise.race([server.close(), delay(1_000)]);
+      await Promise.race([backend.shutdown?.() ?? Promise.resolve(), delay(1_000)]);
+    }
+    },
+    10_000,
+  );
+
+  test(
+    "preserves accepted controller directives for known compatibility strategy aliases",
+    async () => {
+    const runtimeStateRoot = await mkdtemp(
+      path.join(os.tmpdir(), "role-model-runtime-host-controller-compat-alias-"),
+    );
+    const unifiedRuntimeConfigPath = path.join(runtimeStateRoot, "runtime-config.yaml");
+    const compatControllerVendorScript = `const http=require("node:http");const port=Number(process.env.PORT??process.argv[2]);const server=http.createServer((req,res)=>{if(req.url==="/health/liveliness"){res.statusCode=200;res.end("ok");return;}if(req.url==="/v1/chat/completions"){let body="";req.on("data",chunk=>body+=chunk);req.on("end",()=>{const parsed=JSON.parse(body||"{}");const joinedMessages=JSON.stringify(parsed.messages??[]);const isController=joinedMessages.includes("ROLE_MODEL_ROUTING_CONTROLLER");const content=isController?JSON.stringify({strategy:"remote_only"}):"alias remote summary";res.setHeader("content-type","application/json");res.end(JSON.stringify({id:"chat-controller-compat-remote",object:"chat.completion",choices:[{index:0,message:{role:"assistant",content},finish_reason:"stop"}],usage:{prompt_tokens:12,completion_tokens:4,total_tokens:16},_hidden_params:{response_cost:0.0012,cache_hit:false}}));});return;}res.statusCode=404;res.end("missing");});server.listen(port,"127.0.0.1");const shutdown=()=>server.close(()=>process.exit(0));process.on("SIGTERM",shutdown);process.on("SIGINT",shutdown);`;
+    await writeFile(
+      unifiedRuntimeConfigPath,
+      stringify({
+        version: "1.0",
+        routing: {
+          strategy: "controller",
+        },
+        controller: {
+          enabled: true,
+          source_type: "remote",
+          model_id: "openai/gpt-4.1-mini-fast",
+          timeout_ms: 1500,
+        },
+        execution_mode: "remote_only",
+        litellm_proxy: {
+          command: "node",
+          args: ["-e", compatControllerVendorScript],
+          providers: {
+            openai: {
+              api_key: "${OPENAI_API_KEY}",
+              model_list: [
+                {
+                  model_name: "openai/gpt-4.1-mini-fast",
+                  max_difficulty: "hard",
+                  litellm_params: {
+                    model: "openai/gpt-4.1-mini",
+                  },
+                },
+              ],
+            },
+          },
+        },
+      }),
+      "utf8",
+    );
+
+    const backend = await (
+      bridge as {
+        createRuntimeBridgeBackend: (options: {
+          repoRoot: string;
+          fixtureRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+          unifiedRuntimeConfigPath: string;
+        }) => Promise<{
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+          ) => Promise<{
+            endpointId: string;
+          }>;
+          readRequestObservation: (requestId: string) => Promise<unknown>;
+          shutdown?: () => Promise<void>;
+        }>;
+      }
+    ).createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: testFixtureRoot,
+      runtimeStateRoot,
+      scopeId: "runtime-host-controller-compat-alias-tests",
+      unifiedRuntimeConfigPath,
+    });
+
+    try {
+      const requestId = "req-runtime-bridge-controller-compat-alias-001";
+      await backend.executeChatCompletions(
+        {
+          model: "controller.remote-only",
+          messages: [{ role: "user", content: "Say hello in one short sentence." }],
+        },
+        requestId,
+      );
+
+      await expect(backend.readRequestObservation(requestId)).resolves.toMatchObject({
+        requestId,
+        routingDiagnostics: {
+          controllerRouting: {
+            active: true,
+            acceptedDirectives: {
+              preferLocal: false,
+            },
+          },
+        },
+      });
+      await expect(backend.readRequestObservation(requestId)).resolves.not.toMatchObject({
+        routingDiagnostics: {
+          controllerRouting: {
+            fallbackReason: "invalid-controller-output",
+          },
+        },
+      });
+    } finally {
+      await Promise.race([backend.shutdown?.() ?? Promise.resolve(), delay(1_000)]);
+    }
+    },
+    10_000,
+  );
+
+  test("gives controller routing enough output budget to avoid empty truncated guidance", async () => {
+    const runtimeStateRoot = await mkdtemp(
+      path.join(os.tmpdir(), "role-model-runtime-host-controller-budget-"),
+    );
+    const unifiedRuntimeConfigPath = path.join(runtimeStateRoot, "runtime-config.yaml");
+    const budgetAwareControllerVendorScript = `const http=require("node:http");const port=Number(process.env.PORT??process.argv[2]);const server=http.createServer((req,res)=>{if(req.url==="/health/liveliness"){res.statusCode=200;res.end("ok");return;}if(req.url==="/v1/chat/completions"){let body="";req.on("data",chunk=>body+=chunk);req.on("end",()=>{const parsed=JSON.parse(body||"{}");const joinedMessages=JSON.stringify(parsed.messages??[]);const isController=joinedMessages.includes("ROLE_MODEL_ROUTING_CONTROLLER");const maxTokens=Number(parsed.max_tokens??parsed.max_completion_tokens??0);const controllerMessage=isController&&maxTokens<=256?{role:"assistant",content:""}:{role:"assistant",content:JSON.stringify({requestedRoleId:"general.chat",taskType:"text.chat",requiredCapabilities:["text.chat"]})};res.setHeader("content-type","application/json");res.end(JSON.stringify({id:"chat-controller-budget",object:"chat.completion",choices:[{index:0,message:controllerMessage,finish_reason:isController&&maxTokens<=256?"length":"stop"}],usage:{prompt_tokens:12,completion_tokens:isController&&maxTokens<=256?maxTokens:24,total_tokens:36}}));});return;}res.statusCode=404;res.end("missing");});server.listen(port,"127.0.0.1");const shutdown=()=>server.close(()=>process.exit(0));process.on("SIGTERM",shutdown);process.on("SIGINT",shutdown);`;
+    await writeFile(
+      unifiedRuntimeConfigPath,
+      stringify({
+        version: "1.0",
+        routing: {
+          strategy: "controller",
+        },
+        controller: {
+          enabled: true,
+          source_type: "remote",
+          model_id: "openai/gpt-4.1-mini-fast",
+          timeout_ms: 1500,
+        },
+        execution_mode: "remote_only",
+        litellm_proxy: {
+          command: "node",
+          args: ["-e", budgetAwareControllerVendorScript],
+          providers: {
+            openai: {
+              api_key: "${OPENAI_API_KEY}",
+              model_list: [
+                {
+                  model_name: "openai/gpt-4.1-mini-fast",
+                  max_difficulty: "hard",
+                  litellm_params: {
+                    model: "openai/gpt-4.1-mini",
+                  },
+                },
+              ],
+            },
+          },
+        },
+      }),
+      "utf8",
+    );
+
+    const backend = await (
+      bridge as {
+        createRuntimeBridgeBackend: (options: {
+          repoRoot: string;
+          fixtureRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+          unifiedRuntimeConfigPath: string;
+        }) => Promise<{
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+          ) => Promise<{
+            endpointId: string;
+          }>;
+          readRequestObservation: (requestId: string) => Promise<unknown>;
+          shutdown?: () => Promise<void>;
+        }>;
+      }
+    ).createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: testFixtureRoot,
+      runtimeStateRoot,
+      scopeId: "runtime-host-controller-budget-tests",
+      unifiedRuntimeConfigPath,
+    });
+
+    try {
+      const requestId = "req-runtime-bridge-controller-budget-001";
+      await backend.executeChatCompletions(
+        {
+          model: "controller.remote-only",
+          messages: [{ role: "user", content: "Say hello in one short sentence." }],
+        },
+        requestId,
+      );
+
+      await expect(backend.readRequestObservation(requestId)).resolves.toMatchObject({
+        requestId,
+        routingDiagnostics: {
+          controllerRouting: {
+            active: true,
+            acceptedDirectives: {
+              taskType: "text.chat",
+              requiredCapabilities: ["text.chat"],
+            },
+          },
+        },
+      });
+      await expect(backend.readRequestObservation(requestId)).resolves.not.toMatchObject({
+        routingDiagnostics: {
+          controllerRouting: {
+            fallbackReason: "invalid-controller-output",
+          },
+        },
+      });
+    } finally {
+      await Promise.race([backend.shutdown?.() ?? Promise.resolve(), delay(1_000)]);
+    }
+  }, 10_000);
+
+  test(
+    "retries controller routing once with a compact prompt when the first controller response is empty",
+    async () => {
+    const runtimeStateRoot = await mkdtemp(
+      path.join(os.tmpdir(), "role-model-runtime-host-controller-compact-retry-"),
+    );
+    const unifiedRuntimeConfigPath = path.join(runtimeStateRoot, "runtime-config.yaml");
+    await writeFile(
+      unifiedRuntimeConfigPath,
+      stringify({
+        version: "1.0",
+        routing: {
+          strategy: "controller",
+        },
+        controller: {
+          enabled: true,
+          source_type: "remote",
+          model_id: "openai/gpt-4.1-mini-fast",
+          timeout_ms: 2500,
+        },
+        execution_mode: "remote_only",
+        litellm_proxy: {
+          command: "node",
+          args: ["-e", createControllerRetryVendorScript()],
+          providers: {
+            openai: {
+              api_key: "${OPENAI_API_KEY}",
+              model_list: [
+                {
+                  model_name: "openai/gpt-4.1-mini-fast",
+                  max_difficulty: "hard",
+                  litellm_params: {
+                    model: "openai/gpt-4.1-mini",
+                  },
+                },
+              ],
+            },
+          },
+        },
+      }),
+      "utf8",
+    );
+
+    const backend = await (
+      bridge as {
+        createRuntimeBridgeBackend: (options: {
+          repoRoot: string;
+          fixtureRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+          unifiedRuntimeConfigPath: string;
+        }) => Promise<{
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+          ) => Promise<{
+            endpointId: string;
+          }>;
+          readRequestObservation: (requestId: string) => Promise<unknown>;
+          shutdown?: () => Promise<void>;
+        }>;
+      }
+    ).createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: testFixtureRoot,
+      runtimeStateRoot,
+      scopeId: "runtime-host-controller-compact-retry-tests",
+      unifiedRuntimeConfigPath,
+    });
+
+    try {
+      const requestId = "req-runtime-bridge-controller-compact-retry-001";
+      await backend.executeChatCompletions(
+        {
+          model: "openai/gpt-4.1-mini-fast",
+          messages: [
+            {
+              role: "user",
+              content:
+                "Investigate a multi-step runtime routing regression, preserve the public API, add regression tests, and explain how you would verify the fix without breaking alias behavior.",
+            },
+          ],
+        },
+        requestId,
+      );
+
+      await expect(backend.readRequestObservation(requestId)).resolves.toMatchObject({
+        requestId,
+        routingDiagnostics: {
+          controllerRouting: {
+            active: true,
+            acceptedDirectives: {
+              preferredCapabilities: ["reasoning.multi_step"],
+              strategy: "quality",
+            },
+          },
+        },
+      });
+      await expect(backend.readRequestObservation(requestId)).resolves.not.toMatchObject({
+        routingDiagnostics: {
+          controllerRouting: {
+            fallbackReason: "invalid-controller-output",
+          },
+        },
+      });
+    } finally {
+      await Promise.race([backend.shutdown?.() ?? Promise.resolve(), delay(1_000)]);
+    }
+    },
+    10_000,
+  );
+
+  test(
+    "falls back to heuristic controller guidance when the live controller returns prose instead of JSON",
+    async () => {
+      const runtimeStateRoot = await mkdtemp(
+        path.join(os.tmpdir(), "role-model-runtime-host-controller-heuristic-"),
+      );
+      const unifiedRuntimeConfigPath = path.join(runtimeStateRoot, "runtime-config.yaml");
+      await writeFile(
+        unifiedRuntimeConfigPath,
+        stringify({
+          version: "1.0",
+          routing: {
+            strategy: "controller",
+          },
+          controller: {
+            enabled: true,
+            source_type: "remote",
+            model_id: "openai/gpt-4.1-mini-fast",
+            timeout_ms: 1500,
+          },
+          execution_mode: "remote_only",
+          litellm_proxy: {
+            command: "node",
+            args: ["-e", createControllerInvalidVendorScript()],
+            providers: {
+              openai: {
+                api_key: "${OPENAI_API_KEY}",
+                model_list: [
+                  {
+                    model_name: "openai/gpt-4.1-mini-fast",
+                    max_difficulty: "hard",
+                    litellm_params: {
+                      model: "openai/gpt-4.1-mini",
+                    },
+                  },
+                ],
+              },
+            },
+          },
+        }),
+        "utf8",
+      );
+
+      const backend = await (
+        bridge as {
+          createRuntimeBridgeBackend: (options: {
+            repoRoot: string;
+            fixtureRoot: string;
+            runtimeStateRoot: string;
+            scopeId: string;
+            unifiedRuntimeConfigPath: string;
+          }) => Promise<{
+            executeChatCompletions: (
+              body: Record<string, unknown>,
+              requestId: string,
+            ) => Promise<{
+              endpointId: string;
+            }>;
+            readRequestObservation: (requestId: string) => Promise<unknown>;
+            shutdown?: () => Promise<void>;
+          }>;
+        }
+      ).createRuntimeBridgeBackend({
+        repoRoot,
+        fixtureRoot: testFixtureRoot,
+        runtimeStateRoot,
+        scopeId: "runtime-host-controller-heuristic-tests",
+        unifiedRuntimeConfigPath,
+      });
+
+      try {
+        const requestId = "req-runtime-bridge-controller-heuristic-001";
+        await backend.executeChatCompletions(
+          {
+            model: "controller.remote-only",
+            messages: [
+              {
+                role: "user",
+                content:
+                  "Investigate this code-edit regression, update the patch, revise the tests, and verify the final schema behavior.",
+              },
+            ],
+          },
+          requestId,
+        );
+
+        await expect(backend.readRequestObservation(requestId)).resolves.toMatchObject({
+          requestId,
+          routingDiagnostics: {
+            controllerRouting: {
+              active: true,
+              fallbackApplied: true,
+              fallbackReason: "controller-heuristic-fallback",
+              acceptedDirectives: {
+                strategy: "quality",
+              },
+            },
+          },
+        });
+        await expect(backend.readRequestObservation(requestId)).resolves.not.toMatchObject({
+          routingDiagnostics: {
+            controllerRouting: {
+              fallbackReason: "invalid-controller-output",
+            },
+          },
+        });
+      } finally {
+        await Promise.race([backend.shutdown?.() ?? Promise.resolve(), delay(1_000)]);
+      }
+    },
+    10_000,
+  );
+
+  test("keeps controller.remote-only routing inside the remote-only alias slice even when the available inventory is hybrid", () => {
+    const mixedRegistry: EndpointRegistryResult = {
+      endpoints: [
+        {
+          identity: {
+            endpoint_id: "local.llama.lfm",
+            endpoint_kind: "local_engine",
+            provider_kind: "local_llama_swap",
+            serving_source: "llama-swap",
+            model_id: "lfm2.5-1.2b-instruct",
+            runtime_version: "test-registry-v1",
+            region: "local",
+          },
+          declared: {
+            endpoint_id: "local.llama.lfm",
+            capabilities: ["text.chat"],
+            modalities: ["text"],
+            max_context_tokens: 4096,
+            tool_calling: {
+              supported: true,
+              style: "openai",
+            },
+            supports_embeddings: false,
+            platform_constraints: [],
+          },
+          status: "active",
+        },
+        {
+          identity: {
+            endpoint_id: "remote.moonshot.kimi",
+            endpoint_kind: "remote_api",
+            provider_kind: "remote_openai_compat",
+            serving_source: "remote-service",
+            model_id: "moonshot/kimi-k2.5",
+            runtime_version: "test-registry-v1",
+            region: "global",
+          },
+          declared: {
+            endpoint_id: "remote.moonshot.kimi",
+            capabilities: ["text.chat"],
+            modalities: ["text"],
+            max_context_tokens: 128000,
+            tool_calling: {
+              supported: true,
+              style: "openai",
+            },
+            supports_embeddings: false,
+            platform_constraints: [],
+          },
+          status: "active",
+        },
+      ],
+      diagnostics: [],
+      lifecycleSummary: {
+        active: 2,
+        degraded: 0,
+        offline: 0,
+      },
+    };
+    const mixedSources = {
+      cloud: [
+        {
+          endpointId: "remote.moonshot.kimi",
+          providerAccountId: "moonshot.test.remote",
+          modelId: "moonshot/kimi-k2.5",
+          region: "global",
+          endpointKind: "remote-openai-compatible",
+          servingSource: "remote-service",
+          lifecycleState: "active",
+          healthStatus: "healthy",
+          capabilities: ["text.chat"],
+        },
+      ],
+      local: [
+        {
+          endpointId: "local.llama.lfm",
+          providerKind: "local_llama_swap",
+          providerId: "local-openai-compatible",
+          modelId: "lfm2.5-1.2b-instruct",
+          capabilities: ["text.chat"],
+          modalities: ["text"],
+          endpointKind: "local-engine",
+          servingSource: "llama-swap",
+          lifecycleState: "active",
+          hostClass: "developer-workstation",
+          deviceClass: "developer-workstation",
+          region: "local",
+          orgScope: "personal",
+        },
+      ],
+    };
+    const inventory = buildRoutableInventory(mixedRegistry, mixedSources);
+
+    const result = (
+      bridge as {
+        mapChatCompletionsRequest: (
+          value: EndpointRegistryResult,
+          body: Record<string, unknown>,
+          requestId: string,
+          modelAliases?: readonly {
+            aliasId: string;
+            mode?: "basic" | "difficulty" | "intelligent" | "hybrid" | null;
+            modelIds: readonly string[];
+          }[],
+          difficultyContext?: unknown,
+          controllerContext?: unknown,
+          requestOptions?: unknown,
+          roleDefinitions?: unknown,
+          defaultRoutingMode?: "baseline" | "difficulty" | "controller" | "hybrid",
+          inventory?: unknown,
+        ) => {
+          routingRequest: {
+            allowEndpoints: readonly string[];
+          };
+          routingDiagnostics?: {
+            aliasResolution?: {
+              aliasId: string;
+              allowEndpoints: readonly string[];
+              resolvedModelIds: readonly string[];
+            };
+          };
+        };
+      }
+    ).mapChatCompletionsRequest(
+      mixedRegistry,
+      {
+        model: "controller.remote-only",
+        messages: [{ role: "user", content: "Choose a remote endpoint only." }],
+      },
+      "req-host-controller-remote-slice-001",
+      [
+        {
+          aliasId: "controller.remote-only",
+          mode: "intelligent",
+          modelIds: ["moonshot/kimi-k2.5"],
+        },
+      ],
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      "controller",
+      inventory,
+    );
+
+    expect(result.routingRequest.allowEndpoints).toEqual(["remote.moonshot.kimi"]);
+    expect(result.routingDiagnostics?.aliasResolution).toEqual({
+      aliasId: "controller.remote-only",
+      requestedModel: "controller.remote-only",
+      resolvedModelIds: ["moonshot/kimi-k2.5"],
+      allowEndpoints: ["remote.moonshot.kimi"],
+    });
   });
+
+  test("serves coherent live role and task policy over the HTTP control plane", async () => {
+    const runtimeStateRoot = await mkdtemp(
+      path.join(os.tmpdir(), "role-model-runtime-host-role-policy-http-regression-"),
+    );
+    const scopeId = `runtime-host-role-policy-http-regression-${Date.now()}`;
+    const backend = await (
+      bridge as {
+        createRuntimeBridgeBackend: (options: {
+          repoRoot: string;
+          fixtureRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+        }) => Promise<{
+          registry: EndpointRegistryResult;
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+            streamWriter?: unknown,
+            requestOptions?: {
+              clientRequestId?: string;
+            },
+          ) => Promise<unknown>;
+          executeResponses: (body: Record<string, unknown>, requestId: string) => Promise<unknown>;
+          listRoles?: () => Promise<unknown>;
+          readRolePolicy?: () => Promise<unknown>;
+          listTaskDefinitions?: () => Promise<unknown>;
+          shutdown?: () => Promise<void>;
+        }>;
+      }
+    ).createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: testFixtureRoot,
+      runtimeStateRoot,
+      scopeId,
+    });
+
+    const server = await (
+      bridge as {
+        startBridgeServer: (options: {
+          host: string;
+          port: number;
+          registry: EndpointRegistryResult;
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+            streamWriter?: unknown,
+            requestOptions?: {
+              clientRequestId?: string;
+            },
+          ) => Promise<unknown>;
+          executeResponses: (body: Record<string, unknown>, requestId: string) => Promise<unknown>;
+          listRoles?: () => Promise<unknown>;
+          readRolePolicy?: () => Promise<unknown>;
+          listTaskDefinitions?: () => Promise<unknown>;
+        }) => Promise<{ port: number; close(): Promise<void> }>;
+      }
+    ).startBridgeServer({
+      host: "127.0.0.1",
+      port: 0,
+      registry: backend.registry,
+      executeChatCompletions: backend.executeChatCompletions,
+      executeResponses: backend.executeResponses,
+      listRoles: backend.listRoles,
+      readRolePolicy: backend.readRolePolicy,
+      listTaskDefinitions: backend.listTaskDefinitions,
+    });
+
+    try {
+      const [rolesResponse, rolePolicyResponse, tasksResponse] = await Promise.all([
+        fetch(`http://127.0.0.1:${server.port}/api/role-model/roles`),
+        fetch(`http://127.0.0.1:${server.port}/api/role-model/role-policy`),
+        fetch(`http://127.0.0.1:${server.port}/api/role-model/tasks`),
+      ]);
+      expect(rolesResponse.status).toBe(200);
+      expect(rolePolicyResponse.status).toBe(200);
+      expect(tasksResponse.status).toBe(200);
+
+      const roles = (await rolesResponse.json()) as Array<{ roleId: string }>;
+      const rolePolicy = (await rolePolicyResponse.json()) as {
+        roleDefinitions: Array<{ role_id: string; task_types_supported: string[] }>;
+        taskDefinitions: Array<{ task_type: string; allowed_roles: string[] }>;
+      };
+      const tasks = (await tasksResponse.json()) as Array<{
+        task_type: string;
+        allowed_roles: string[];
+      }>;
+
+      const roleIds = new Set(roles.map((entry) => entry.roleId));
+      const policyRoleIds = new Set(rolePolicy.roleDefinitions.map((entry) => entry.role_id));
+      const taskIds = new Set(tasks.map((entry) => entry.task_type));
+
+      expect(roleIds.has("general.chat")).toBe(true);
+      expect(policyRoleIds.has("general.chat")).toBe(true);
+      expect(taskIds.has("text.chat")).toBe(true);
+
+      for (const taskDefinition of tasks) {
+        const policyTask = rolePolicy.taskDefinitions.find(
+          (entry) => entry.task_type === taskDefinition.task_type,
+        );
+        expect(policyTask).toBeDefined();
+        expect((policyTask?.allowed_roles ?? []).slice().sort()).toEqual(
+          taskDefinition.allowed_roles.slice().sort(),
+        );
+        for (const roleId of taskDefinition.allowed_roles) {
+          expect(roleIds.has(roleId)).toBe(true);
+          expect(policyRoleIds.has(roleId)).toBe(true);
+        }
+      }
+
+      for (const roleDefinition of rolePolicy.roleDefinitions) {
+        for (const taskType of roleDefinition.task_types_supported) {
+          expect(taskIds.has(taskType)).toBe(true);
+        }
+      }
+    } finally {
+      await server.close();
+      await backend.shutdown?.();
+    }
+  });
+
+  test("ignores unsupported controller task and capability directives while keeping valid preferred endpoint subsets for coding-role requests", () => {
+    const result = (
+      bridge as {
+        mapChatCompletionsRequest: (
+          value: EndpointRegistryResult,
+          body: Record<string, unknown>,
+          requestId: string,
+          modelAliases?: readonly {
+            aliasId: string;
+            mode?: "basic" | "difficulty" | "intelligent" | "hybrid" | null;
+            modelIds: readonly string[];
+          }[],
+          difficultyContext?: unknown,
+          controllerContext?: {
+            active: boolean;
+            resolvedGuidance?: {
+              taskType?: string;
+              requiredCapabilities?: readonly string[];
+              preferredEndpointIds?: readonly string[];
+            };
+          },
+          requestOptions?: {
+            requestedRoleId?: string;
+          },
+          roleDefinitions?: readonly Record<string, unknown>[],
+          defaultRoutingMode?: "baseline" | "difficulty" | "controller" | "hybrid",
+          inventory?: unknown,
+          taskDefinitions?: readonly Record<string, unknown>[],
+        ) => {
+          routingRequest: {
+            requestedRoleId?: string;
+            taskType: string;
+            requiredCapabilities: readonly string[];
+            preferredCapabilities: readonly string[];
+            allowEndpoints: readonly string[];
+          };
+          routingModel?: {
+            endpointId: string;
+            preferredEndpointIds: readonly string[];
+          };
+          routingDiagnostics?: {
+            controllerRouting?: {
+              active: boolean;
+              acceptedDirectives?: {
+                preferredEndpointIds?: readonly string[];
+              };
+            };
+          };
+        };
+      }
+    ).mapChatCompletionsRequest(
+      registry,
+      {
+        model: "controller.remote-only",
+        messages: [
+          {
+            role: "user",
+            content:
+              "Write a concise TypeScript helper that parses a unified diff hunk header and returns start/count pairs.",
+          },
+        ],
+      },
+      "req-host-controller-sanitize-001",
+      [
+        {
+          aliasId: "controller.remote-only",
+          mode: "intelligent",
+          modelIds: ["moonshot/kimi-k2.5"],
+        },
+      ],
+      undefined,
+      {
+        active: true,
+        resolvedGuidance: {
+          taskType: "code-generation",
+          requiredCapabilities: ["typescript", "code-generation"],
+          preferredEndpointIds: ["moonshot.personal.kimi-code.global.kimi-k2.5"],
+        },
+      },
+      {
+        requestedRoleId: "coder.patch",
+      },
+      [
+        {
+          role_id: "coder.patch",
+          name: "Coder Patch",
+          description: "Code editing tasks.",
+          role_kind: "assistant",
+          default_system_instructions: "Operate as Coder Patch.",
+          task_types_supported: ["code.edit"],
+          required_capabilities: [],
+          preferred_capabilities: [],
+          forbidden_capabilities: [],
+          tool_policy: {
+            mode: "allowed",
+            allowed_tools: [],
+          },
+          routing_policy_overrides: {},
+          output_contracts: [],
+          safety_policy_refs: [],
+        },
+      ],
+      undefined,
+      undefined,
+      [
+        {
+          task_type: "text.chat",
+          description: "General chat task",
+          required_inputs: [],
+          required_capabilities: ["text.chat"],
+          preferred_capabilities: [],
+          quality_metrics: [],
+          allowed_roles: ["general.chat"],
+          default_benchmark_suites: [],
+        },
+        {
+          task_type: "code.edit",
+          description: "Code editing task",
+          required_inputs: [],
+          required_capabilities: ["code.edit"],
+          preferred_capabilities: ["reasoning.multi_step"],
+          quality_metrics: [],
+          allowed_roles: ["coder.patch", "coder.review"],
+          default_benchmark_suites: [],
+        },
+      ],
+    );
+
+    expect(result.routingRequest).toMatchObject({
+      requestedRoleId: "coder.patch",
+      taskType: "code.edit",
+      requiredCapabilities: ["code.edit"],
+      preferredCapabilities: ["reasoning.multi_step"],
+      allowEndpoints: [
+        "moonshot.personal.kimi-code.global.kimi-k2.5",
+        "moonshot.personal.primary.global.kimi-k2.5",
+      ],
+    });
+    expect(result.routingModel).toEqual({
+      endpointId: "moonshot.personal.kimi-code.global.kimi-k2.5",
+      preferredEndpointIds: ["moonshot.personal.kimi-code.global.kimi-k2.5"],
+    });
+    expect(result.routingDiagnostics?.controllerRouting).toEqual({
+      active: true,
+      acceptedDirectives: {
+        preferredEndpointIds: ["moonshot.personal.kimi-code.global.kimi-k2.5"],
+      },
+    });
+  });
+
+  test("resolves explicit non-controller coder.review requests onto a role-compatible task", () => {
+    const result = (
+      bridge as {
+        mapChatCompletionsRequest: (
+          value: EndpointRegistryResult,
+          body: Record<string, unknown>,
+          requestId: string,
+          modelAliases?: readonly {
+            aliasId: string;
+            mode?: "basic" | "difficulty" | "intelligent" | "hybrid" | null;
+            modelIds: readonly string[];
+          }[],
+          difficultyContext?: unknown,
+          controllerContext?: {
+            active: boolean;
+          },
+          requestOptions?: {
+            requestedRoleId?: string;
+          },
+          roleDefinitions?: readonly Record<string, unknown>[],
+          defaultRoutingMode?: "baseline" | "difficulty" | "controller" | "hybrid",
+          inventory?: unknown,
+          taskDefinitions?: readonly Record<string, unknown>[],
+        ) => {
+          routingRequest: {
+            requestedRoleId?: string;
+            taskType: string;
+            requiredCapabilities: readonly string[];
+            preferredCapabilities: readonly string[];
+          };
+        };
+      }
+    ).mapChatCompletionsRequest(
+      registry,
+      {
+        model: "default.remote-only",
+        messages: [
+          {
+            role: "user",
+            content:
+              "Review this JSON schema migration plan and identify two compatibility risks with persisted alias-matrix records and telemetry query payloads.",
+          },
+        ],
+      },
+      "req-host-explicit-role-review-001",
+      [
+        {
+          aliasId: "default.remote-only",
+          modelIds: ["moonshot/kimi-k2.5"],
+        },
+      ],
+      undefined,
+      {
+        active: false,
+      },
+      {
+        requestedRoleId: "coder.review",
+      },
+      [
+        {
+          role_id: "coder.review",
+          name: "Coder Review",
+          description: "Review and schema tasks.",
+          role_kind: "assistant",
+          default_system_instructions: "Operate as Coder Review.",
+          task_types_supported: ["code.edit", "json.schema_adherence"],
+          required_capabilities: [],
+          preferred_capabilities: [],
+          forbidden_capabilities: [],
+          tool_policy: {
+            mode: "allowed",
+            allowed_tools: [],
+          },
+          routing_policy_overrides: {},
+          output_contracts: [],
+          safety_policy_refs: [],
+        },
+      ],
+      undefined,
+      undefined,
+      [
+        {
+          task_type: "text.chat",
+          description: "General chat task",
+          required_inputs: [],
+          required_capabilities: ["text.chat"],
+          preferred_capabilities: [],
+          quality_metrics: [],
+          allowed_roles: ["general.chat"],
+          default_benchmark_suites: [],
+        },
+        {
+          task_type: "code.edit",
+          description: "Code editing task",
+          required_inputs: [],
+          required_capabilities: ["code.edit"],
+          preferred_capabilities: ["reasoning.multi_step"],
+          quality_metrics: [],
+          allowed_roles: ["coder.patch", "coder.review"],
+          default_benchmark_suites: [],
+        },
+        {
+          task_type: "json.schema_adherence",
+          description: "Schema adherence task",
+          required_inputs: [],
+          required_capabilities: ["json.schema_adherence"],
+          preferred_capabilities: ["reasoning.multi_step"],
+          quality_metrics: [],
+          allowed_roles: ["coder.review"],
+          default_benchmark_suites: [],
+        },
+      ],
+    );
+
+    expect(result.routingRequest).toMatchObject({
+      requestedRoleId: "coder.review",
+      taskType: "json.schema_adherence",
+      requiredCapabilities: ["json.schema_adherence"],
+      preferredCapabilities: ["reasoning.multi_step"],
+    });
+  });
+
+  test("drops controller preferred endpoints when they merely restate the full allowed pool", () => {
+    const result = (
+      bridge as {
+        mapChatCompletionsRequest: (
+          value: EndpointRegistryResult,
+          body: Record<string, unknown>,
+          requestId: string,
+          modelAliases?: readonly {
+            aliasId: string;
+            mode?: "basic" | "difficulty" | "intelligent" | "hybrid" | null;
+            modelIds: readonly string[];
+          }[],
+          difficultyContext?: unknown,
+          controllerContext?: {
+            active: boolean;
+            resolvedGuidance?: {
+              preferredEndpointIds?: readonly string[];
+            };
+          },
+          requestOptions?: {
+            requestedRoleId?: string;
+          },
+          roleDefinitions?: readonly Record<string, unknown>[],
+          defaultRoutingMode?: "baseline" | "difficulty" | "controller" | "hybrid",
+          inventory?: unknown,
+          taskDefinitions?: readonly Record<string, unknown>[],
+        ) => {
+          routingRequest: {
+            allowEndpoints: readonly string[];
+          };
+          routingModel?: {
+            endpointId: string;
+            preferredEndpointIds: readonly string[];
+          };
+          routingDiagnostics?: {
+            controllerRouting?: {
+              active: boolean;
+              acceptedDirectives?: {
+                preferredEndpointIds?: readonly string[];
+              };
+            };
+          };
+        };
+      }
+    ).mapChatCompletionsRequest(
+      registry,
+      {
+        model: "controller.remote-only",
+        messages: [{ role: "user", content: "Review the routing candidates." }],
+      },
+      "req-host-controller-full-pool-001",
+      [
+        {
+          aliasId: "controller.remote-only",
+          mode: "intelligent",
+          modelIds: ["moonshot/kimi-k2.5"],
+        },
+      ],
+      undefined,
+      {
+        active: true,
+        resolvedGuidance: {
+          preferredEndpointIds: [
+            "moonshot.personal.kimi-code.global.kimi-k2.5",
+            "moonshot.personal.primary.global.kimi-k2.5",
+          ],
+        },
+      },
+    );
+
+    expect(result.routingRequest.allowEndpoints).toEqual([
+      "moonshot.personal.kimi-code.global.kimi-k2.5",
+      "moonshot.personal.primary.global.kimi-k2.5",
+    ]);
+    expect(result.routingModel).toBeUndefined();
+    expect(result.routingDiagnostics?.controllerRouting).toEqual({
+      active: true,
+      acceptedDirectives: {},
+    });
+  });
+
+  test(
+    "rehydrates persisted controller assignment for controller aliases after restart even without a controller block in runtime config",
+    async () => {
+    const runtimeStateRoot = await mkdtemp(
+      path.join(os.tmpdir(), "role-model-runtime-host-controller-restart-tests-"),
+    );
+    const unifiedRuntimeConfigPath = path.join(runtimeStateRoot, "runtime-config.yaml");
+    await writeFile(
+      unifiedRuntimeConfigPath,
+      stringify({
+        version: "1.0",
+        execution_mode: "remote_only",
+        routing: {
+          strategy: "controller",
+        },
+        model_aliases: {
+          "controller.remote-only": {
+            mode: "intelligent",
+            model_ids: ["openai/gpt-4.1-mini-fast"],
+          },
+        },
+        litellm_proxy: {
+          command: "node",
+          args: ["-e", createControllerVendorScript()],
+          providers: {
+            openai: {
+              api_key: "${OPENAI_API_KEY}",
+              model_list: [
+                {
+                  model_name: "openai/gpt-4.1-mini-fast",
+                  max_difficulty: "hard",
+                  litellm_params: {
+                    model: "openai/gpt-4.1-mini",
+                  },
+                },
+              ],
+            },
+          },
+        },
+      }),
+      "utf8",
+    );
+
+    const createBackend = () =>
+      (
+        bridge as {
+          createRuntimeBridgeBackend: (options: {
+            repoRoot: string;
+            fixtureRoot: string;
+            runtimeStateRoot: string;
+            scopeId: string;
+            unifiedRuntimeConfigPath: string;
+          }) => Promise<{
+            executeChatCompletions: (
+              body: Record<string, unknown>,
+              requestId: string,
+            ) => Promise<{ endpointId: string }>;
+            readRequestObservation: (requestId: string) => Promise<unknown>;
+            updateControllerAssignment: (body: Record<string, unknown>) => Promise<unknown>;
+            shutdown?: () => Promise<void>;
+          }>;
+        }
+      ).createRuntimeBridgeBackend({
+        repoRoot,
+        fixtureRoot: testFixtureRoot,
+        runtimeStateRoot,
+        scopeId: "runtime-host-controller-restart-tests",
+        unifiedRuntimeConfigPath,
+      });
+
+    const firstBackend = await createBackend();
+    try {
+      await firstBackend.updateControllerAssignment({
+        endpointId: "openai.litellm.global.openai-gpt-4-1-mini-fast",
+      });
+    } finally {
+      await Promise.race([firstBackend.shutdown?.() ?? Promise.resolve(), delay(1_000)]);
+    }
+
+    const secondBackend = await createBackend();
+    try {
+      const requestId = "req-runtime-bridge-controller-restart-001";
+      await secondBackend.executeChatCompletions(
+        {
+          model: "controller.remote-only",
+          messages: [
+            { role: "user", content: "Prepare a patch plan and preserve the existing contract." },
+          ],
+        },
+        requestId,
+      );
+
+      await expect(secondBackend.readRequestObservation(requestId)).resolves.toMatchObject({
+        requestId,
+        routingDiagnostics: {
+          controllerRouting: {
+            active: true,
+          },
+        },
+      });
+    } finally {
+      await Promise.race([secondBackend.shutdown?.() ?? Promise.resolve(), delay(1_000)]);
+    }
+    },
+    10_000,
+  );
 
   test("persists alias-default hybrid arbitration and rewrite-applied diagnostics for runtime-backed chat requests", async () => {
     const runtimeStateRoot = await mkdtemp(
@@ -7304,6 +10299,287 @@ describe("runtime-host-bridge", () => {
     }
   });
 
+  test("keeps Kimi Code and DeepSeek coding endpoints coder.patch-eligible from the tracked catalog", async () => {
+    expect(
+      typeof (bridge as { createRuntimeBridgeBackend?: unknown }).createRuntimeBridgeBackend,
+    ).toBe("function");
+
+    const runtimeStateRoot = path.join(
+      os.tmpdir(),
+      `runtime-host-remote-coder-catalog-tests-${Date.now()}`,
+    );
+    const originalMoonshotApiKey = process.env.MOONSHOT_API_KEY;
+    const originalDeepSeekApiKey = process.env.DEEPSEEK_API_KEY;
+    process.env.MOONSHOT_API_KEY = "moonshot-api-key";
+    process.env.DEEPSEEK_API_KEY = "deepseek-api-key";
+
+    try {
+      const backend = await (
+        bridge as {
+          createRuntimeBridgeBackend: (options: {
+            repoRoot: string;
+            fixtureRoot: string;
+            runtimeStateRoot: string;
+            scopeId: string;
+            networkFetcher?: typeof fetch;
+          }) => Promise<{
+            upsertProviderAccount: (input: Record<string, unknown>) => Promise<unknown>;
+            activateEndpoint: (input: {
+              providerAccountId: string;
+              modelId: string;
+              region: string;
+            }) => Promise<{ endpointId: string }>;
+            listRouterCandidates: () => Promise<
+              readonly {
+                endpointId: string;
+                modelId: string;
+                roleBindings: readonly string[];
+                capabilities: readonly string[];
+              }[]
+            >;
+            executeChatCompletions: (
+              body: Record<string, unknown>,
+              requestId: string,
+              streamWriter?: (chunk: Record<string, unknown>) => void | Promise<void>,
+              requestOptions?: { requestedRoleId?: string },
+            ) => Promise<{
+              model: string;
+              endpointId: string;
+              outputText: string;
+            }>;
+            shutdown: () => Promise<void>;
+          }>;
+        }
+      ).createRuntimeBridgeBackend({
+        repoRoot,
+        fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+        runtimeStateRoot,
+        scopeId: "runtime-host-remote-coder-catalog-tests",
+        networkFetcher: async (input, init) => {
+          const url =
+            typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+          const body = init?.body ? JSON.parse(String(init.body)) : {};
+
+          if (url === "https://api.moonshot.ai/v1/chat/completions") {
+            expect(body).toMatchObject({
+              model: "kimi-k2.7-code",
+            });
+            return new Response(
+              JSON.stringify({
+                id: "chatcmpl-moonshot-k27-code",
+                object: "chat.completion",
+                model: "moonshot/kimi-k2.7-code",
+                choices: [
+                  {
+                    index: 0,
+                    message: {
+                      role: "assistant",
+                      content: "live Kimi coding summary",
+                    },
+                    finish_reason: "stop",
+                  },
+                ],
+                usage: {
+                  prompt_tokens: 31,
+                  completion_tokens: 9,
+                  total_tokens: 40,
+                },
+              }),
+              { status: 200, headers: { "content-type": "application/json" } },
+            );
+          }
+
+          if (url === "https://api.deepseek.com/v1/chat/completions") {
+            expect(body).toMatchObject({
+              model: "deepseek-v4-flash",
+            });
+            return new Response(
+              JSON.stringify({
+                id: "chatcmpl-deepseek-v4-flash",
+                object: "chat.completion",
+                model: "deepseek/deepseek-v4-flash",
+                choices: [
+                  {
+                    index: 0,
+                    message: {
+                      role: "assistant",
+                      content: "live DeepSeek coding summary",
+                    },
+                    finish_reason: "stop",
+                  },
+                ],
+                usage: {
+                  prompt_tokens: 27,
+                  completion_tokens: 8,
+                  total_tokens: 35,
+                },
+              }),
+              { status: 200, headers: { "content-type": "application/json" } },
+            );
+          }
+
+          throw new Error(`Unexpected network request: ${url}`);
+        },
+      });
+
+      try {
+        await backend.upsertProviderAccount({
+          providerAccountId: "moonshot.personal.primary",
+          providerId: "moonshot",
+          providerKind: "provider-openai",
+          orgScope: "personal",
+          accountScope: "workspace-default",
+          credentialRef: {
+            backend: "env",
+            ref: "MOONSHOT_API_KEY",
+          },
+          authMode: "api-key-static",
+          regionPolicy: {
+            mode: "prefer",
+            regions: ["global"],
+          },
+          baseUrlOverride: "https://api.moonshot.ai/v1",
+          allowedModels: ["moonshot/kimi-k2.7-code"],
+          modelRoleBindings: [
+            {
+              modelId: "moonshot/kimi-k2.7-code",
+              roleIds: ["general.chat", "coder.patch"],
+            },
+          ],
+          deniedModels: [],
+          entitlementTags: ["chat"],
+          budgetPolicyRef: "budget.default",
+          quotaPolicyRef: "quota.default",
+          status: "active",
+          healthStatus: "healthy",
+          rotationState: "stable",
+        });
+        await backend.upsertProviderAccount({
+          providerAccountId: "deepseek.personal.primary",
+          providerId: "deepseek",
+          providerKind: "provider-openai",
+          orgScope: "personal",
+          accountScope: "workspace-default",
+          credentialRef: {
+            backend: "env",
+            ref: "DEEPSEEK_API_KEY",
+          },
+          authMode: "api-key-static",
+          regionPolicy: {
+            mode: "prefer",
+            regions: ["global"],
+          },
+          baseUrlOverride: "https://api.deepseek.com/v1",
+          allowedModels: ["deepseek/deepseek-v4-flash"],
+          modelRoleBindings: [
+            {
+              modelId: "deepseek/deepseek-v4-flash",
+              roleIds: ["general.chat", "coder.patch"],
+            },
+          ],
+          deniedModels: [],
+          entitlementTags: ["chat"],
+          budgetPolicyRef: "budget.default",
+          quotaPolicyRef: "quota.default",
+          status: "active",
+          healthStatus: "healthy",
+          rotationState: "stable",
+        });
+
+        const kimiEndpoint = await backend.activateEndpoint({
+          providerAccountId: "moonshot.personal.primary",
+          modelId: "moonshot/kimi-k2.7-code",
+          region: "global",
+        });
+        const deepseekEndpoint = await backend.activateEndpoint({
+          providerAccountId: "deepseek.personal.primary",
+          modelId: "deepseek/deepseek-v4-flash",
+          region: "global",
+        });
+
+        await expect(backend.listRouterCandidates()).resolves.toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              endpointId: kimiEndpoint.endpointId,
+              modelId: "moonshot/kimi-k2.7-code",
+              roleBindings: expect.arrayContaining(["coder.patch"]),
+              capabilities: expect.arrayContaining(["code.edit", "tools.function_calling"]),
+            }),
+            expect.objectContaining({
+              endpointId: deepseekEndpoint.endpointId,
+              modelId: "deepseek/deepseek-v4-flash",
+              roleBindings: expect.arrayContaining(["coder.patch"]),
+              capabilities: expect.arrayContaining(["code.edit", "tools.function_calling"]),
+            }),
+          ]),
+        );
+
+        await expect(
+          backend.executeChatCompletions(
+            {
+              model: "moonshot/kimi-k2.7-code",
+              messages: [
+                {
+                  role: "user",
+                  content: "Prepare a small patch plan and preserve the schema contract.",
+                },
+              ],
+            },
+            "req-runtime-bridge-kimi-coder-001",
+            undefined,
+            {
+              requestedRoleId: "coder.patch",
+            },
+          ),
+        ).resolves.toEqual(
+          expect.objectContaining({
+            model: "moonshot/kimi-k2.7-code",
+            endpointId: kimiEndpoint.endpointId,
+            outputText: "live Kimi coding summary",
+          }),
+        );
+
+        await expect(
+          backend.executeChatCompletions(
+            {
+              model: "deepseek/deepseek-v4-flash",
+              messages: [
+                {
+                  role: "user",
+                  content: "Prepare a small patch plan and preserve the schema contract.",
+                },
+              ],
+            },
+            "req-runtime-bridge-deepseek-coder-001",
+            undefined,
+            {
+              requestedRoleId: "coder.patch",
+            },
+          ),
+        ).resolves.toEqual(
+          expect.objectContaining({
+            model: "deepseek/deepseek-v4-flash",
+            endpointId: deepseekEndpoint.endpointId,
+            outputText: "live DeepSeek coding summary",
+          }),
+        );
+      } finally {
+        await backend.shutdown();
+      }
+    } finally {
+      if (originalMoonshotApiKey === undefined) {
+        process.env.MOONSHOT_API_KEY = undefined;
+      } else {
+        process.env.MOONSHOT_API_KEY = originalMoonshotApiKey;
+      }
+      if (originalDeepSeekApiKey === undefined) {
+        process.env.DEEPSEEK_API_KEY = undefined;
+      } else {
+        process.env.DEEPSEEK_API_KEY = originalDeepSeekApiKey;
+      }
+    }
+  });
+
   test("registers configured local OpenAI-compatible peers as execution-ready model endpoints", async () => {
     expect(
       typeof (bridge as { createRuntimeBridgeBackend?: unknown }).createRuntimeBridgeBackend,
@@ -7457,6 +10733,166 @@ describe("runtime-host-bridge", () => {
     expect(result.usage.outputTokens).toBe(4);
   });
 
+  test("executes non-controller requested coder.review requests without empty chosen-endpoint failures", async () => {
+    expect(
+      typeof (bridge as { createRuntimeBridgeBackend?: unknown }).createRuntimeBridgeBackend,
+    ).toBe("function");
+
+    const runtimeStateRoot = path.join(
+      os.tmpdir(),
+      `runtime-host-remote-review-role-tests-${Date.now()}`,
+    );
+    const originalMoonshotApiKey = process.env.MOONSHOT_API_KEY;
+    process.env.MOONSHOT_API_KEY = "moonshot-api-key";
+
+    try {
+      const backend = await (
+        bridge as {
+          createRuntimeBridgeBackend: (options: {
+            repoRoot: string;
+            fixtureRoot: string;
+            runtimeStateRoot: string;
+            scopeId: string;
+            networkFetcher?: typeof fetch;
+          }) => Promise<{
+            upsertProviderAccount: (input: Record<string, unknown>) => Promise<unknown>;
+            activateEndpoint: (input: {
+              providerAccountId: string;
+              modelId: string;
+              region: string;
+            }) => Promise<{ endpointId: string }>;
+            executeChatCompletions: (
+              body: Record<string, unknown>,
+              requestId: string,
+              streamWriter?: (chunk: Record<string, unknown>) => void | Promise<void>,
+              requestOptions?: { requestedRoleId?: string },
+            ) => Promise<{
+              model: string;
+              endpointId: string;
+              outputText: string;
+            }>;
+            shutdown: () => Promise<void>;
+          }>;
+        }
+      ).createRuntimeBridgeBackend({
+        repoRoot,
+        fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+        runtimeStateRoot,
+        scopeId: "runtime-host-remote-review-role-tests",
+        networkFetcher: async (input, init) => {
+          const url =
+            typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+          const body = init?.body ? JSON.parse(String(init.body)) : {};
+
+          if (url === "https://api.moonshot.ai/v1/chat/completions") {
+            expect(body).toMatchObject({
+              model: "kimi-k2.7-code",
+            });
+            return new Response(
+              JSON.stringify({
+                id: "chatcmpl-moonshot-review-role",
+                object: "chat.completion",
+                model: "moonshot/kimi-k2.7-code",
+                choices: [
+                  {
+                    index: 0,
+                    message: {
+                      role: "assistant",
+                      content: "review role succeeded",
+                    },
+                    finish_reason: "stop",
+                  },
+                ],
+                usage: {
+                  prompt_tokens: 28,
+                  completion_tokens: 9,
+                  total_tokens: 37,
+                },
+              }),
+              { status: 200, headers: { "content-type": "application/json" } },
+            );
+          }
+
+          throw new Error(`Unexpected network request: ${url}`);
+        },
+      });
+
+      try {
+        await backend.upsertProviderAccount({
+          providerAccountId: "moonshot.personal.primary",
+          providerId: "moonshot",
+          providerKind: "provider-openai",
+          orgScope: "personal",
+          accountScope: "workspace-default",
+          credentialRef: {
+            backend: "env",
+            ref: "MOONSHOT_API_KEY",
+          },
+          authMode: "api-key-static",
+          regionPolicy: {
+            mode: "prefer",
+            regions: ["global"],
+          },
+          baseUrlOverride: "https://api.moonshot.ai/v1",
+          allowedModels: ["moonshot/kimi-k2.7-code"],
+          modelRoleBindings: [
+            {
+              modelId: "moonshot/kimi-k2.7-code",
+              roleIds: ["general.chat", "coder.review"],
+            },
+          ],
+          deniedModels: [],
+          entitlementTags: ["chat"],
+          budgetPolicyRef: "budget.default",
+          quotaPolicyRef: "quota.default",
+          status: "active",
+          healthStatus: "healthy",
+          rotationState: "stable",
+        });
+
+        const kimiEndpoint = await backend.activateEndpoint({
+          providerAccountId: "moonshot.personal.primary",
+          modelId: "moonshot/kimi-k2.7-code",
+          region: "global",
+        });
+
+        await expect(
+          backend.executeChatCompletions(
+            {
+              model: "moonshot/kimi-k2.7-code",
+              messages: [
+                {
+                  role: "user",
+                  content:
+                    "Review this JSON schema migration plan and identify two compatibility risks with persisted alias-matrix records and telemetry query payloads.",
+                },
+              ],
+            },
+            "req-runtime-bridge-review-role-001",
+            undefined,
+            {
+              requestedRoleId: "coder.review",
+            },
+          ),
+        ).resolves.toEqual(
+          expect.objectContaining({
+            model: "moonshot/kimi-k2.7-code",
+            endpointId: kimiEndpoint.endpointId,
+            outputText: "review role succeeded",
+          }),
+        );
+      } finally {
+        await backend.shutdown();
+      }
+    } finally {
+      if (originalMoonshotApiKey === undefined) {
+        process.env.MOONSHOT_API_KEY = undefined;
+      } else {
+        process.env.MOONSHOT_API_KEY = originalMoonshotApiKey;
+      }
+    }
+  });
+
   test("exposes llama-swap ownership and config metadata on local model and endpoint readback", async () => {
     expect(
       typeof (bridge as { createRuntimeBridgeBackend?: unknown }).createRuntimeBridgeBackend,
@@ -7566,7 +11002,7 @@ describe("runtime-host-bridge", () => {
         ]),
       );
     } finally {
-      await backend.shutdown?.();
+      await Promise.race([backend.shutdown?.() ?? Promise.resolve(), delay(1_000)]);
     }
   });
 
@@ -8033,6 +11469,710 @@ describe("runtime-host-bridge", () => {
     expect(result.usage.outputTokens).toBe(6);
   });
 
+  test("executes exact Kimi hosted web-search requests through to a final assistant answer", async () => {
+    expect(
+      typeof (bridge as { createRuntimeBridgeBackend?: unknown }).createRuntimeBridgeBackend,
+    ).toBe("function");
+
+    let kimiRequestCount = 0;
+    const kimiRequestBodies: Record<string, unknown>[] = [];
+
+    const backend = await (
+      bridge as {
+        createRuntimeBridgeBackend: (options: {
+          repoRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+          fixtureRoot?: string;
+          networkFetcher?: typeof fetch;
+        }) => Promise<{
+          executeResponses: (
+            body: Record<string, unknown>,
+            requestId: string,
+          ) => Promise<{
+            model: string;
+            endpointId: string;
+            adapterFamily: string;
+            outputText: string;
+            finishReason: string;
+            toolCalls?: readonly {
+              id: string;
+              type: "function";
+              function: {
+                name: string;
+                arguments: string;
+              };
+            }[];
+            toolExecutions?: readonly {
+              toolCallId: string;
+              toolName: string;
+              connectorId: string;
+              connectorKind: string;
+              status: string;
+              output: unknown;
+            }[];
+            usage: {
+              inputTokens: number;
+              outputTokens: number;
+            };
+          }>;
+          startProviderDeviceAuthorization?: (body: Record<string, unknown>) => Promise<unknown>;
+          pollProviderDeviceAuthorization?: (body: Record<string, unknown>) => Promise<unknown>;
+          activateEndpoint?: (body: Record<string, unknown>) => Promise<unknown>;
+        }>;
+      }
+    ).createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: testFixtureRoot,
+      runtimeStateRoot: path.join(
+        os.tmpdir(),
+        "role-model-runtime-host-kimi-hosted-web-search-tests",
+      ),
+      scopeId: "runtime-host-kimi-hosted-web-search-tests",
+      networkFetcher: async (input, init) => {
+        const url =
+          typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+        if (url === "https://auth.kimi.com/api/oauth/device_authorization") {
+          return new Response(
+            JSON.stringify({
+              user_code: "ABCD-EFGH",
+              device_code: "device-002",
+              verification_uri: "https://auth.kimi.com/device",
+              verification_uri_complete: "https://auth.kimi.com/device?user_code=ABCD-EFGH",
+              expires_in: 900,
+              interval: 5,
+            }),
+            { status: 200, headers: { "content-type": "application/json" } },
+          );
+        }
+        if (url === "https://auth.kimi.com/api/oauth/token") {
+          return new Response(
+            JSON.stringify({
+              access_token: "access-002",
+              refresh_token: "refresh-002",
+              expires_in: 3600,
+              scope: "openid profile",
+              token_type: "Bearer",
+            }),
+            { status: 200, headers: { "content-type": "application/json" } },
+          );
+        }
+        if (url === "https://api.kimi.com/coding/v1/chat/completions") {
+          kimiRequestCount += 1;
+          expect(init?.method ?? "POST").toBe("POST");
+          expect(init?.headers).toEqual(
+            expect.objectContaining({
+              authorization: "Bearer access-002",
+            }),
+          );
+          const requestBody = JSON.parse(String(init?.body)) as Record<string, unknown>;
+          kimiRequestBodies.push(requestBody);
+          if (kimiRequestCount === 1) {
+            expect(requestBody).toEqual(
+              expect.objectContaining({
+                model: "kimi-k2.7-code",
+                thinking: {
+                  type: "disabled",
+                },
+                tools: [
+                  {
+                    type: "builtin_function",
+                    function: {
+                      name: "$web_search",
+                    },
+                  },
+                ],
+              }),
+            );
+            return new Response(
+              JSON.stringify({
+                choices: [
+                  {
+                    finish_reason: "tool_calls",
+                    message: {
+                      content: null,
+                      tool_calls: [
+                        {
+                          id: "call_1",
+                          type: "function",
+                          function: {
+                            name: "$web_search",
+                            arguments:
+                              '{"query":"Cloudflare stock price","total_tokens":1234}',
+                          },
+                        },
+                      ],
+                    },
+                  },
+                ],
+                usage: {
+                  prompt_tokens: 77,
+                  completion_tokens: 9,
+                },
+              }),
+              { status: 200, headers: { "content-type": "application/json" } },
+            );
+          }
+
+          expect(requestBody).toEqual(
+            expect.objectContaining({
+              model: "kimi-k2.7-code",
+            }),
+          );
+
+          return new Response(
+            JSON.stringify({
+              choices: [
+                {
+                  finish_reason: "stop",
+                  message: {
+                    role: "assistant",
+                    content: "Cloudflare (NYSE: NET) closed at $224.06 according to MarketWatch.",
+                  },
+                },
+              ],
+              usage: {
+                prompt_tokens: 41,
+                completion_tokens: 17,
+              },
+            }),
+            { status: 200, headers: { "content-type": "application/json" } },
+          );
+        }
+
+        throw new Error(`Unexpected network request: ${url}`);
+      },
+    });
+
+    const pending = await backend.startProviderDeviceAuthorization?.({
+      providerAccountId: "moonshot.personal.kimi-code",
+      providerId: "moonshot",
+      providerKind: "provider-openai",
+      variantId: "kimi-code",
+      orgScope: "personal",
+      accountScope: "workspace-default",
+      allowedModels: ["moonshot/kimi-k2.7-code"],
+      deniedModels: [],
+      entitlementTags: ["chat"],
+      budgetPolicyRef: "budget.default",
+      quotaPolicyRef: "quota.default",
+    });
+    await backend.pollProviderDeviceAuthorization?.({
+      authRequestId: (pending as { authRequestId: string }).authRequestId,
+    });
+    await backend.activateEndpoint?.({
+      providerAccountId: "moonshot.personal.kimi-code",
+      modelId: "moonshot/kimi-k2.7-code",
+      region: "global",
+    });
+
+    const result = await backend.executeResponses(
+      {
+        model: "moonshot/kimi-k2.7-code",
+        input: "Find the current Cloudflare stock price and cite the source.",
+        tools: [
+          {
+            type: "web_search",
+          },
+        ],
+      },
+      "req-runtime-bridge-kimi-hosted-web-search-001",
+    );
+
+    expect(result.model).toBe("moonshot/kimi-k2.7-code");
+    expect(result.endpointId).toBe("moonshot.personal.kimi-code.global.kimi-k2.7-code");
+    expect(result.adapterFamily).toBe("ai-sdk-openai-compatible");
+    expect(result.finishReason).toBe("stop");
+    expect(result.outputText).toContain("Cloudflare (NYSE: NET) closed at $224.06");
+    expect(result.toolCalls).toBeUndefined();
+    expect(result.toolExecutions).toEqual([
+      {
+        toolCallId: "call_1",
+        toolName: "$web_search",
+        connectorId: "runtime.builtin",
+        connectorKind: "builtin",
+        status: "succeeded",
+        output: {
+          query: "Cloudflare stock price",
+          total_tokens: 1234,
+        },
+        diagnostics: [],
+      },
+    ]);
+    expect(kimiRequestCount).toBe(2);
+    expect(kimiRequestBodies[1]?.messages).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          role: "assistant",
+          tool_calls: [
+            expect.objectContaining({
+              function: expect.objectContaining({
+                name: "$web_search",
+              }),
+            }),
+          ],
+        }),
+        expect.objectContaining({
+          role: "tool",
+          tool_call_id: "call_1",
+          content: '{"query":"Cloudflare stock price","total_tokens":1234}',
+        }),
+      ]),
+    );
+  });
+
+  for (const deepseekModelId of [
+    "deepseek/deepseek-v4-flash",
+    "deepseek/deepseek-v4-pro",
+  ] as const) {
+    test(`surfaces exact ${deepseekModelId} web-search requests as consumer-managed tool calls`, async () => {
+      expect(
+        typeof (bridge as { createRuntimeBridgeBackend?: unknown }).createRuntimeBridgeBackend,
+      ).toBe("function");
+
+      const runtimeStateRoot = path.join(
+        os.tmpdir(),
+        `runtime-host-${deepseekModelId.replace(/[/.]/g, "-")}-web-search-tests`,
+      );
+      const originalDeepSeekApiKey = process.env.DEEPSEEK_API_KEY;
+      process.env.DEEPSEEK_API_KEY = "deepseek-api-key";
+      let providerRequestCount = 0;
+      const providerRequestBodies: Record<string, unknown>[] = [];
+
+      try {
+        const backend = await (
+          bridge as {
+            createRuntimeBridgeBackend: (options: {
+              repoRoot: string;
+              fixtureRoot: string;
+              runtimeStateRoot: string;
+              scopeId: string;
+              networkFetcher?: typeof fetch;
+            }) => Promise<{
+              upsertProviderAccount: (input: Record<string, unknown>) => Promise<unknown>;
+              activateEndpoint: (input: {
+                providerAccountId: string;
+                modelId: string;
+                region: string;
+              }) => Promise<{ endpointId: string }>;
+              executeChatCompletions: (
+                body: Record<string, unknown>,
+                requestId: string,
+              ) => Promise<{
+                model: string;
+                endpointId: string;
+                adapterFamily: string;
+                outputText: string;
+                finishReason: string;
+                toolCalls?: readonly unknown[];
+                toolExecutions?: readonly unknown[];
+              }>;
+              shutdown: () => Promise<void>;
+            }>;
+          }
+        ).createRuntimeBridgeBackend({
+          repoRoot,
+          fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+          runtimeStateRoot,
+          scopeId: `${deepseekModelId.replace(/[/.]/g, "-")}-web-search-tests`,
+          networkFetcher: async (input, init) => {
+            const url =
+              typeof input === "string"
+                ? input
+                : input instanceof URL
+                ? input.toString()
+                : input.url;
+
+            if (url === "https://api.deepseek.com/v1/chat/completions") {
+              providerRequestCount += 1;
+              const requestBody = JSON.parse(String(init?.body)) as Record<string, unknown>;
+              providerRequestBodies.push(requestBody);
+              expect(requestBody).toEqual(
+                expect.objectContaining({
+                  model: deepseekModelId.split("/").slice(1).join("/"),
+                }),
+              );
+              if (providerRequestCount === 1) {
+                return new Response(
+                  JSON.stringify({
+                    choices: [
+                      {
+                        finish_reason: "tool_calls",
+                        message: {
+                          content: null,
+                          tool_calls: [
+                            {
+                              id: "call_1",
+                              type: "function",
+                              function: {
+                                name: "web_search",
+                                arguments:
+                                  '{"query":"Cloudflare NET stock price today NYSE","max_results":5}',
+                              },
+                            },
+                          ],
+                        },
+                    },
+                  ],
+                  usage: {
+                    prompt_tokens: 52,
+                    completion_tokens: 11,
+                    total_tokens: 63,
+                  },
+                }),
+                { status: 200, headers: { "content-type": "application/json" } },
+              );
+            }
+            }
+
+            throw new Error(`Unexpected network request: ${url}`);
+          },
+        });
+
+        try {
+          await backend.upsertProviderAccount({
+            providerAccountId: "deepseek.personal.primary",
+            providerId: "deepseek",
+            providerKind: "provider-openai",
+            orgScope: "personal",
+            accountScope: "workspace-default",
+            credentialRef: {
+              backend: "env",
+              ref: "DEEPSEEK_API_KEY",
+            },
+            authMode: "api-key-static",
+            regionPolicy: {
+              mode: "prefer",
+              regions: ["global"],
+            },
+            baseUrlOverride: "https://api.deepseek.com/v1",
+            allowedModels: [deepseekModelId],
+            deniedModels: [],
+            entitlementTags: ["chat"],
+            budgetPolicyRef: "budget.default",
+            quotaPolicyRef: "quota.default",
+            status: "active",
+            healthStatus: "healthy",
+            rotationState: "stable",
+          });
+
+          const endpoint = await backend.activateEndpoint({
+            providerAccountId: "deepseek.personal.primary",
+            modelId: deepseekModelId,
+            region: "global",
+          });
+
+          const result = await backend.executeResponses(
+            {
+              model: deepseekModelId,
+              input: "Find the current Cloudflare stock price and cite the source.",
+              tools: [
+                {
+                  type: "web_search",
+                },
+              ],
+            },
+            `req-${deepseekModelId.replace(/[/.]/g, "-")}-web-search-001`,
+          );
+
+          expect(result.model).toBe(deepseekModelId);
+          expect(result.endpointId).toBe(endpoint.endpointId);
+          expect(result.adapterFamily).toBe("ai-sdk-openai-compatible");
+          expect(result.finishReason).toBe("tool_calls");
+          expect(result.outputText).toBe("");
+          expect(result.toolCalls).toEqual([
+            expect.objectContaining({
+              id: "call_1",
+              function: expect.objectContaining({
+                name: "web_search",
+                arguments: '{"query":"Cloudflare NET stock price today NYSE","max_results":5}',
+              }),
+            }),
+          ]);
+          expect(result.toolExecutions).toBeUndefined();
+          expect(providerRequestCount).toBe(1);
+          expect(providerRequestBodies[0]?.tools).toEqual(
+            expect.arrayContaining([
+              expect.objectContaining({
+                function: expect.objectContaining({
+                  name: "web_search",
+                }),
+              }),
+            ]),
+          );
+        } finally {
+          await backend.shutdown();
+        }
+      } finally {
+        if (originalDeepSeekApiKey === undefined) {
+          process.env.DEEPSEEK_API_KEY = undefined;
+        } else {
+          process.env.DEEPSEEK_API_KEY = originalDeepSeekApiKey;
+        }
+      }
+    });
+  }
+
+  for (const dsmlCase of [
+    {
+      name: "web_search",
+      outputText: "",
+      content: [
+        "<｜｜DSML｜｜tool_calls>",
+        '<｜｜DSML｜｜invoke name="web_search">',
+        '{"query":"Cloudflare NET after hours price","max_results":3}',
+      ].join("\n"),
+      expectedArguments: '{"query":"Cloudflare NET after hours price","max_results":3}',
+    },
+    {
+      name: "web_open",
+      outputText: "",
+      content: [
+        "<｜｜DSML｜｜tool_calls>",
+        '<｜｜DSML｜｜invoke name="web_open">',
+        '<｜｜DSML｜｜parameter name="url" string="true">https://www.marketwatch.com/investing/stock/net</｜｜DSML｜｜parameter>',
+        "</｜｜DSML｜｜invoke>",
+      ].join("\n"),
+      expectedArguments: '{"url":"https://www.marketwatch.com/investing/stock/net"}',
+    },
+    {
+      name: "web_browse",
+      outputText: "I need to inspect the finance page directly.",
+      content: [
+        "I need to inspect the finance page directly.",
+        "<｜｜DSML｜｜tool_calls>",
+        '<｜｜DSML｜｜invoke name="web_browse">',
+        '<｜｜DSML｜｜parameter name="url" string="true">https://www.google.com/finance/quote/NET:NYSE</｜｜DSML｜｜parameter>',
+        "</｜｜DSML｜｜invoke>",
+      ].join("\n"),
+      expectedArguments: '{"url":"https://www.google.com/finance/quote/NET:NYSE"}',
+    },
+  ] as const) {
+    test(`normalizes DeepSeek DSML ${dsmlCase.name} markup into consumer-visible tool calls`, async () => {
+      expect(
+        typeof (bridge as { createRuntimeBridgeBackend?: unknown }).createRuntimeBridgeBackend,
+      ).toBe("function");
+
+      const runtimeStateRoot = path.join(
+        os.tmpdir(),
+        `runtime-host-deepseek-dsml-${dsmlCase.name.replace(/[^a-z0-9]+/gi, "-")}-tests`,
+      );
+      const originalDeepSeekApiKey = process.env.DEEPSEEK_API_KEY;
+      process.env.DEEPSEEK_API_KEY = "deepseek-api-key";
+      let providerRequestCount = 0;
+
+      try {
+        const backend = await (
+          bridge as {
+            createRuntimeBridgeBackend: (options: {
+              repoRoot: string;
+              fixtureRoot: string;
+              runtimeStateRoot: string;
+              scopeId: string;
+              networkFetcher?: typeof fetch;
+            }) => Promise<{
+              upsertProviderAccount: (input: Record<string, unknown>) => Promise<unknown>;
+              activateEndpoint: (input: {
+                providerAccountId: string;
+                modelId: string;
+                region: string;
+              }) => Promise<{ endpointId: string }>;
+              executeChatCompletions: (
+                body: Record<string, unknown>,
+                requestId: string,
+              ) => Promise<{
+                model: string;
+                endpointId: string;
+                adapterFamily: string;
+                outputText: string;
+                finishReason: string;
+                toolCalls?: readonly unknown[];
+                toolExecutions?: readonly unknown[];
+              }>;
+              shutdown: () => Promise<void>;
+            }>;
+          }
+        ).createRuntimeBridgeBackend({
+          repoRoot,
+          fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+          runtimeStateRoot,
+          scopeId: `deepseek-dsml-${dsmlCase.name}-tests`,
+          networkFetcher: async (input, init) => {
+            const url =
+              typeof input === "string"
+                ? input
+                : input instanceof URL
+                  ? input.toString()
+                  : input.url;
+
+            if (url === "https://api.deepseek.com/v1/chat/completions") {
+              providerRequestCount += 1;
+              const requestBody = JSON.parse(String(init?.body)) as Record<string, unknown>;
+              expect(requestBody).toEqual(
+                expect.objectContaining({
+                  model: "deepseek-v4-pro",
+                }),
+              );
+              return new Response(
+                JSON.stringify({
+                  choices: [
+                    {
+                      finish_reason: "stop",
+                      message: {
+                        role: "assistant",
+                        content: dsmlCase.content,
+                      },
+                    },
+                  ],
+                  usage: {
+                    prompt_tokens: 34,
+                    completion_tokens: 24,
+                    total_tokens: 58,
+                  },
+                }),
+                { status: 200, headers: { "content-type": "application/json" } },
+              );
+            }
+
+            throw new Error(`Unexpected network request: ${url}`);
+          },
+        });
+
+        try {
+          await backend.upsertProviderAccount({
+            providerAccountId: "deepseek.personal.primary",
+            providerId: "deepseek",
+            providerKind: "provider-openai",
+            orgScope: "personal",
+            accountScope: "workspace-default",
+            credentialRef: {
+              backend: "env",
+              ref: "DEEPSEEK_API_KEY",
+            },
+            authMode: "api-key-static",
+            regionPolicy: {
+              mode: "prefer",
+              regions: ["global"],
+            },
+            baseUrlOverride: "https://api.deepseek.com/v1",
+            allowedModels: ["deepseek/deepseek-v4-pro"],
+            deniedModels: [],
+            entitlementTags: ["chat"],
+            budgetPolicyRef: "budget.default",
+            quotaPolicyRef: "quota.default",
+            status: "active",
+            healthStatus: "healthy",
+            rotationState: "stable",
+          });
+
+          const endpoint = await backend.activateEndpoint({
+            providerAccountId: "deepseek.personal.primary",
+            modelId: "deepseek/deepseek-v4-pro",
+            region: "global",
+          });
+
+          const result = await backend.executeChatCompletions(
+            {
+              model: "deepseek/deepseek-v4-pro",
+              messages: [
+                {
+                  role: "user",
+                  content: "Find the current Cloudflare stock price and cite the source.",
+                },
+                {
+                  role: "assistant",
+                  content: null,
+                  tool_calls: [
+                    {
+                      id: "call_1",
+                      type: "function",
+                      function: {
+                        name: "web_search",
+                        arguments: '{"query":"Cloudflare NET stock price today NYSE","max_results":5}',
+                      },
+                    },
+                  ],
+                },
+                {
+                  role: "tool",
+                  tool_call_id: "call_1",
+                  content:
+                    '{"query":"Cloudflare NET stock price today NYSE","results":[{"title":"Cloudflare","url":"https://example.com"}]}',
+                },
+              ],
+              tools: [
+                {
+                  type: "function",
+                  function: {
+                    name: "web_search",
+                    parameters: {
+                      type: "object",
+                      properties: {
+                        query: { type: "string" },
+                      },
+                      required: ["query"],
+                    },
+                  },
+                },
+                {
+                  type: "function",
+                  function: {
+                    name: "web_open",
+                    parameters: {
+                      type: "object",
+                      properties: {
+                        url: { type: "string" },
+                      },
+                      required: ["url"],
+                    },
+                  },
+                },
+                {
+                  type: "function",
+                  function: {
+                    name: "web_browse",
+                    parameters: {
+                      type: "object",
+                      properties: {
+                        url: { type: "string" },
+                      },
+                      required: ["url"],
+                    },
+                  },
+                },
+              ],
+            },
+            `req-deepseek-dsml-${dsmlCase.name}-001`,
+          );
+
+          expect(result.model).toBe("deepseek/deepseek-v4-pro");
+          expect(result.endpointId).toBe(endpoint.endpointId);
+          expect(result.adapterFamily).toBe("ai-sdk-openai-compatible");
+          expect(result.finishReason).toBe("tool_calls");
+          expect(result.outputText).toBe(dsmlCase.outputText);
+          expect(result.toolCalls).toEqual([
+            expect.objectContaining({
+              function: expect.objectContaining({
+                name: dsmlCase.name,
+                arguments: dsmlCase.expectedArguments,
+              }),
+            }),
+          ]);
+          expect(result.toolExecutions).toBeUndefined();
+          expect(providerRequestCount).toBe(1);
+        } finally {
+          await backend.shutdown();
+        }
+      } finally {
+        if (originalDeepSeekApiKey === undefined) {
+          process.env.DEEPSEEK_API_KEY = undefined;
+        } else {
+          process.env.DEEPSEEK_API_KEY = originalDeepSeekApiKey;
+        }
+      }
+    });
+  }
+
   test("creates a runtime backend that executes responses through the real routing and adapter path", async () => {
     expect(
       typeof (bridge as { createRuntimeBridgeBackend?: unknown }).createRuntimeBridgeBackend,
@@ -8089,7 +12229,7 @@ describe("runtime-host-bridge", () => {
     expect(result.endpointId).toBe("test.capture.chat-v1");
     expect(result.adapterFamily).toBe("ai-sdk-openai-compatible");
     expect(result.outputText).toBe("OpenAI summary");
-    expect(result.finishReason).toBe("stop");
+    expect(result.finishReason).toBe("tool_calls");
     expect(result.usage.inputTokens).toBe(32);
     expect(result.usage.outputTokens).toBe(24);
   });
@@ -8438,7 +12578,7 @@ describe("runtime-host-bridge", () => {
             endpointId: "test.capture.chat-v1",
             sourceType: "remote",
             providerFamily: "ai-sdk-openai-compatible",
-            finishReason: "stop",
+            finishReason: "tool_calls",
             promptCacheSupported: false,
             streamTextDeltaCount: 1,
             streamToolCallDeltaCount: 1,

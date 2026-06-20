@@ -27,9 +27,19 @@ export interface RemoteHealthProbeContext {
   readonly litellmHealthy: boolean;
   readonly targets: readonly RemoteHealthProbeTarget[];
   readonly resolveAuthorization: (providerAccountId: string) => Promise<string | null>;
+  readonly refreshAuthorization?: (providerAccountId: string) => Promise<string | null>;
+  readonly resolveProbeHeaders?: (
+    providerAccountId: string,
+  ) => Promise<Readonly<Record<string, string>>>;
   readonly networkFetcher: typeof fetch;
   readonly probeTimeoutMs?: number;
 }
+
+const COMPARABLE_MODEL_ID_ALIASES: Readonly<Record<string, readonly string[]>> = {
+  "moonshot/kimi-k2.7-code": ["kimi-for-coding"],
+  "kimi-k2.7-code": ["kimi-for-coding"],
+  "kimi-for-coding": ["moonshot/kimi-k2.7-code", "kimi-k2.7-code"],
+};
 
 export interface RemoteHealthProbeSummary {
   readonly results: readonly RemoteHealthProbeResult[];
@@ -72,6 +82,22 @@ export function extractOpenAIModelIds(payload: unknown): readonly string[] {
       return typeof id === "string" ? id : null;
     })
     .filter((entry): entry is string => entry !== null);
+}
+
+function buildComparableModelIds(modelId: string): readonly string[] {
+  const comparable = new Set<string>();
+  const trimmed = modelId.trim();
+  if (trimmed.length === 0) {
+    return [];
+  }
+  comparable.add(trimmed);
+  if (trimmed.includes("/")) {
+    comparable.add(trimmed.split("/").slice(1).join("/"));
+  }
+  for (const alias of COMPARABLE_MODEL_ID_ALIASES[trimmed] ?? []) {
+    comparable.add(alias);
+  }
+  return [...comparable];
 }
 
 export function buildModelsProbeUrl(apiBase: string): string {
@@ -119,17 +145,44 @@ async function probeTarget(
   const startedAt = Date.now();
   const probeUrl = buildModelsProbeUrl(target.apiBase);
   try {
-    const response = await context.networkFetcher(probeUrl, {
-      method: "GET",
-      headers: {
-        accept: "application/json",
-        authorization: authorization.startsWith("Bearer ")
-          ? authorization
-          : `Bearer ${authorization}`,
-      },
-      signal: AbortSignal.timeout(context.probeTimeoutMs ?? 5000),
-    });
-    const latencyMs = Date.now() - startedAt;
+    const probeHeaders = context.resolveProbeHeaders
+      ? await context.resolveProbeHeaders(target.providerAccountId)
+      : {};
+    const executeProbe = async (
+      resolvedAuthorization: string,
+    ): Promise<{ readonly response: Response; readonly latencyMs: number }> => {
+      const probeStartedAt = Date.now();
+      const response = await context.networkFetcher(probeUrl, {
+        method: "GET",
+        headers: {
+          ...probeHeaders,
+          accept: "application/json",
+          authorization: resolvedAuthorization.startsWith("Bearer ")
+            ? resolvedAuthorization
+            : `Bearer ${resolvedAuthorization}`,
+        },
+        signal: AbortSignal.timeout(context.probeTimeoutMs ?? 5000),
+      });
+      return {
+        response,
+        latencyMs: Date.now() - probeStartedAt,
+      };
+    };
+
+    let { response, latencyMs } = await executeProbe(authorization);
+    if (
+      (response.status === 401 || response.status === 403) &&
+      context.refreshAuthorization
+    ) {
+      try {
+        const refreshedAuthorization = await context.refreshAuthorization(target.providerAccountId);
+        if (refreshedAuthorization && refreshedAuthorization.trim().length > 0) {
+          ({ response, latencyMs } = await executeProbe(refreshedAuthorization));
+        }
+      } catch {
+        // Preserve the original auth failure classification if refresh also fails.
+      }
+    }
 
     if (response.status === 401 || response.status === 403) {
       return {
@@ -166,7 +219,11 @@ async function probeTarget(
 
     const payload = (await response.json()) as unknown;
     const modelIds = extractOpenAIModelIds(payload);
-    if (!modelIds.includes(target.modelId)) {
+    const targetComparableIds = new Set(buildComparableModelIds(target.modelId));
+    const matchesTargetModel = modelIds.some((modelId) =>
+      buildComparableModelIds(modelId).some((candidate) => targetComparableIds.has(candidate)),
+    );
+    if (!matchesTargetModel) {
       return {
         endpointId: target.endpointId,
         modelId: target.modelId,
@@ -202,7 +259,7 @@ async function probeTarget(
       modelId: target.modelId,
       reason: "vendor-down",
       healthStatus: mapProbeReasonToHealthStatus("vendor-down"),
-      latencyMs,
+      latencyMs: Date.now() - startedAt,
       message: error instanceof Error ? error.message : "Remote probe failed.",
     };
   }

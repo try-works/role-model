@@ -80,6 +80,10 @@ const controlRolesSource = readFileSync(
   new URL("../routes/control-roles.tsx", import.meta.url),
   "utf8",
 );
+const roleTaskHierarchySource = readFileSync(
+  new URL("./role-task-hierarchy.tsx", import.meta.url),
+  "utf8",
+);
 const routingModeSource = readFileSync(new URL("./routing-mode.ts", import.meta.url), "utf8");
 const controlModelsSource = readFileSync(
   new URL("../routes/control-models.tsx", import.meta.url),
@@ -992,6 +996,18 @@ describe("runtime design system", () => {
     expect(controlModelsSource).toContain("Save bindings");
     expect(controlModelsSource).toContain("/app/system/runtime-config");
     expect(controlModelsSource).toContain("/app/models/roles");
+  });
+
+  test("runtime roles route preserves role-first drill-down language for task detail", () => {
+    expect(controlRolesSource).toContain("Role catalog");
+    expect(controlRolesSource).toContain("Scan live roles first");
+    expect(controlRolesSource).toContain("RoleCatalogHierarchy");
+    expect(controlRolesSource).toContain("Tasks stay nested under the selected role");
+    expect(controlRolesSource).toContain(
+      "Open Task detail on a role to inspect or edit its task memberships.",
+    );
+    expect(roleTaskHierarchySource).toContain("Task detail");
+    expect(roleTaskHierarchySource).toContain("Hide task detail");
   });
 
   test("local setup surfaces stay discoverable from navigation and empty registry states", () => {

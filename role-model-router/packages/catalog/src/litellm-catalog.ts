@@ -40,6 +40,16 @@ const KNOWN_PROVIDER_OVERRIDES: Readonly<Record<string, Partial<LiteLLMProviderI
     adapterFamily: "ai-sdk-openai",
     apiBase: "https://api.openai.com/v1",
     envVars: ["OPENAI_API_KEY"],
+    supportedAuthModes: ["api-key-static", "oauth2-device-code"],
+    controlPlaneRequirements: ["workspace.required", "codex.subscription.cached-login"],
+    oauth: {
+      apiBase: "https://api.openai.com/v1",
+      oauthHost: "https://auth.openai.com",
+      clientId: "codex-subscription",
+      deviceAuthorizationEndpoint: "codex://openai/chatgpt-device-code/start",
+      tokenEndpoint: "codex://openai/chatgpt-device-code/token",
+      requiredHeaders: [],
+    },
   },
   anthropic: {
     displayName: "Anthropic",

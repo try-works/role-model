@@ -1,0 +1,10 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/50-openai-codex-subscription/role-model-router/apps/runtime-host-bridge
+
+ ✓ src/runtime-web-search.test.ts (1 test) 18ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  20:30:16
+   Duration  2.19s (transform 538ms, setup 0ms, collect 193ms, tests 18ms, environment 0ms, prepare 993ms)
+

@@ -1,6 +1,7 @@
+import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, test } from "vitest";
 
-import { type SelectOptionModel, getSelectTypeaheadMatchIndex } from "./page-primitives";
+import { SelectField, type SelectOptionModel, getSelectTypeaheadMatchIndex } from "./page-primitives";
 
 const providerOptions: SelectOptionModel[] = [
   { value: "302ai", label: "302.AI", disabled: false },
@@ -22,5 +23,22 @@ describe("SelectField typeahead", () => {
     expect(getSelectTypeaheadMatchIndex(providerOptions, "m", 2)).toBe(3);
     expect(getSelectTypeaheadMatchIndex(providerOptions, "m", 3)).toBe(5);
     expect(getSelectTypeaheadMatchIndex(providerOptions, "m", 5)).toBe(1);
+  });
+});
+
+describe("SelectField rendering", () => {
+  test("renders the selected label inside a shrinkable truncated span", () => {
+    const markup = renderToStaticMarkup(
+      <SelectField label="Endpoint" onChange={() => undefined} value="endpoint">
+        <option value="endpoint">
+          openai.personal.openai-codex-subscription.global.gpt-5.4
+        </option>
+      </SelectField>,
+    );
+
+    expect(markup).toContain("title=\"openai.personal.openai-codex-subscription.global.gpt-5.4\"");
+    expect(markup).toContain("justify-between");
+    expect(markup).toContain("flex min-w-0 items-center");
+    expect(markup).toContain("min-w-0 flex-1 truncate");
   });
 });
