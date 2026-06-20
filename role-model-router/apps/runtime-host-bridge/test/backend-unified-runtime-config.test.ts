@@ -717,7 +717,7 @@ observed_data:
     );
 
     await backend.shutdown();
-  });
+  }, 60_000);
 
   test("bootstraps a settings-specific primary routing alias for remote-only posture without preconfigured aliases", async () => {
     const tempRoot = await mkdtemp(
@@ -795,649 +795,623 @@ observed_data:
     );
 
     await backend.shutdown();
-  });
+  }, 60_000);
 
-  test(
-    "maintains the routing alias matrix across strategy families and execution modes",
-    async () => {
-      const tempRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-run50-routing-matrix-"));
-      tempRoots.push(tempRoot);
-      const runtimeStateRoot = path.join(tempRoot, "state");
-      const unifiedRuntimeConfigPath = path.join(tempRoot, "runtime-config.yaml");
+  test("maintains the routing alias matrix across strategy families and execution modes", async () => {
+    const tempRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-run50-routing-matrix-"));
+    tempRoots.push(tempRoot);
+    const runtimeStateRoot = path.join(tempRoot, "state");
+    const unifiedRuntimeConfigPath = path.join(tempRoot, "runtime-config.yaml");
 
-      await writeFile(
-        unifiedRuntimeConfigPath,
-        [
-          'version: "1.0"',
-          "llama_swap:",
-          "  models:",
-          "    lfm2.5-1.2b-instruct:",
-          '      path: "./models/lfm2.5-1.2b-instruct.gguf"',
-          "litellm_proxy:",
-          '  command: "node"',
-          "  args:",
-          '    - "-e"',
-          `    - 'const http=require("node:http");const port=Number(process.env.PORT);const server=http.createServer((req,res)=>{if(req.url==="/health/liveliness"){res.statusCode=200;res.end("ok");return;}res.statusCode=404;res.end("missing");});server.listen(port,"127.0.0.1");const shutdown=()=>server.close(()=>process.exit(0));process.on("SIGTERM",shutdown);process.on("SIGINT",shutdown);'`,
-          "  providers:",
-          "    moonshot:",
-          '      api_key: "${MOONSHOT_API_KEY}"',
-          "      model_list:",
-          '        - model_name: "moonshot/kimi-k2.7-code"',
-          "          litellm_params:",
-          '            model: "moonshot/kimi-k2.7-code"',
-          '            api_base: "https://api.moonshot.ai/v1"',
-          "",
-        ].join("\n"),
-        "utf8",
-      );
+    await writeFile(
+      unifiedRuntimeConfigPath,
+      [
+        'version: "1.0"',
+        "llama_swap:",
+        "  models:",
+        "    lfm2.5-1.2b-instruct:",
+        '      path: "./models/lfm2.5-1.2b-instruct.gguf"',
+        "litellm_proxy:",
+        '  command: "node"',
+        "  args:",
+        '    - "-e"',
+        `    - 'const http=require("node:http");const port=Number(process.env.PORT);const server=http.createServer((req,res)=>{if(req.url==="/health/liveliness"){res.statusCode=200;res.end("ok");return;}res.statusCode=404;res.end("missing");});server.listen(port,"127.0.0.1");const shutdown=()=>server.close(()=>process.exit(0));process.on("SIGTERM",shutdown);process.on("SIGINT",shutdown);'`,
+        "  providers:",
+        "    moonshot:",
+        '      api_key: "${MOONSHOT_API_KEY}"',
+        "      model_list:",
+        '        - model_name: "moonshot/kimi-k2.7-code"',
+        "          litellm_params:",
+        '            model: "moonshot/kimi-k2.7-code"',
+        '            api_base: "https://api.moonshot.ai/v1"',
+        "",
+      ].join("\n"),
+      "utf8",
+    );
 
-      const backend = await createRuntimeBridgeBackend({
-        repoRoot,
-        fixtureRoot: testFixtureRoot,
-        runtimeStateRoot,
-        scopeId: "runtime-host-routing-matrix",
-        unifiedRuntimeConfigPath,
-      });
+    const backend = await createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: testFixtureRoot,
+      runtimeStateRoot,
+      scopeId: "runtime-host-routing-matrix",
+      unifiedRuntimeConfigPath,
+    });
 
-      const strategyCases = [
-        { routingStrategy: null, aliasPrefix: "default", aliasMode: "basic" },
-        { routingStrategy: "baseline", aliasPrefix: "baseline", aliasMode: "basic" },
-        { routingStrategy: "latency-first", aliasPrefix: "baseline", aliasMode: "basic" },
-        { routingStrategy: "controller", aliasPrefix: "controller", aliasMode: "intelligent" },
-        { routingStrategy: "intelligent", aliasPrefix: "controller", aliasMode: "intelligent" },
-        { routingStrategy: "difficulty", aliasPrefix: "difficulty", aliasMode: "difficulty" },
-        { routingStrategy: "hybrid", aliasPrefix: "hybrid", aliasMode: "hybrid" },
-      ] as const;
-      const executionModeCases = [
+    const strategyCases = [
+      { routingStrategy: null, aliasPrefix: "default", aliasMode: "basic" },
+      { routingStrategy: "baseline", aliasPrefix: "baseline", aliasMode: "basic" },
+      { routingStrategy: "latency-first", aliasPrefix: "baseline", aliasMode: "basic" },
+      { routingStrategy: "controller", aliasPrefix: "controller", aliasMode: "intelligent" },
+      { routingStrategy: "intelligent", aliasPrefix: "controller", aliasMode: "intelligent" },
+      { routingStrategy: "difficulty", aliasPrefix: "difficulty", aliasMode: "difficulty" },
+      { routingStrategy: "hybrid", aliasPrefix: "hybrid", aliasMode: "hybrid" },
+    ] as const;
+    const executionModeCases = [
+      {
+        executionMode: "decision_only" as const,
+        modelIds: ["lfm2.5-1.2b-instruct", "moonshot/kimi-k2.7-code"],
+      },
+      {
+        executionMode: "hybrid" as const,
+        modelIds: ["lfm2.5-1.2b-instruct", "moonshot/kimi-k2.7-code"],
+      },
+      {
+        executionMode: "local_only" as const,
+        modelIds: ["lfm2.5-1.2b-instruct"],
+      },
+      {
+        executionMode: "remote_only" as const,
+        modelIds: ["moonshot/kimi-k2.7-code"],
+      },
+    ];
+
+    for (const strategyCase of strategyCases) {
+      for (const executionModeCase of executionModeCases) {
+        const updated = await backend.updateRuntimeConfig({
+          routingStrategy: strategyCase.routingStrategy,
+          executionMode: executionModeCase.executionMode,
+        });
+        const expectedAliasId = `${strategyCase.aliasPrefix}.${executionModeCase.executionMode.replaceAll(
+          "_",
+          "-",
+        )}`;
+
+        expect(updated.config?.modelAliases).toHaveLength(20);
+        expect(updated.config?.modelAliases).toEqual(
+          expect.arrayContaining([
+            {
+              aliasId: expectedAliasId,
+              mode: strategyCase.aliasMode,
+              modelIds: executionModeCase.modelIds,
+            },
+          ]),
+        );
+        await expect(backend.readRouterSummary()).resolves.toEqual(
+          expect.objectContaining({
+            strategy: strategyCase.routingStrategy,
+            executionMode: executionModeCase.executionMode,
+            aliasInventory: expect.arrayContaining([
+              expect.objectContaining({
+                aliasId: expectedAliasId,
+                mode: strategyCase.aliasMode,
+                configuredHintModelIds: executionModeCase.modelIds,
+                resolvedModelIds: executionModeCase.modelIds,
+              }),
+            ]),
+          }),
+        );
+      }
+    }
+
+    await backend.shutdown();
+  }, 60_000);
+
+  test("persists the full canonical routing alias matrix instead of a single primary alias", async () => {
+    const tempRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-run50-routing-matrix-"));
+    tempRoots.push(tempRoot);
+    const runtimeStateRoot = path.join(tempRoot, "state");
+    const unifiedRuntimeConfigPath = path.join(tempRoot, "runtime-config.yaml");
+
+    await writeFile(
+      unifiedRuntimeConfigPath,
+      [
+        'version: "1.0"',
+        "llama_swap:",
+        "  models:",
+        "    lfm2.5-1.2b-instruct:",
+        '      path: "./models/lfm2.5-1.2b-instruct.gguf"',
+        "litellm_proxy:",
+        '  command: "node"',
+        "  args:",
+        '    - "-e"',
+        `    - 'const http=require("node:http");const port=Number(process.env.PORT);const server=http.createServer((req,res)=>{if(req.url==="/health/liveliness"){res.statusCode=200;res.end("ok");return;}res.statusCode=404;res.end("missing");});server.listen(port,"127.0.0.1");const shutdown=()=>server.close(()=>process.exit(0));process.on("SIGTERM",shutdown);process.on("SIGINT",shutdown);'`,
+        "  providers:",
+        "    moonshot:",
+        '      api_key: "${MOONSHOT_API_KEY}"',
+        "      model_list:",
+        '        - model_name: "moonshot/kimi-k2.7-code"',
+        "          litellm_params:",
+        '            model: "moonshot/kimi-k2.7-code"',
+        '            api_base: "https://api.moonshot.ai/v1"',
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+
+    const backend = await createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: testFixtureRoot,
+      runtimeStateRoot,
+      scopeId: "runtime-host-full-routing-matrix",
+      unifiedRuntimeConfigPath,
+    });
+
+    const updated = await backend.updateRuntimeConfig({
+      routingStrategy: "controller",
+      executionMode: "hybrid",
+    });
+
+    const aliasInventory = updated.config?.modelAliases ?? [];
+    const aliasIds = aliasInventory.map((alias) => alias.aliasId);
+    expect(aliasIds).toHaveLength(20);
+    expect(aliasIds).toEqual(
+      expect.arrayContaining([
+        "default.decision-only",
+        "default.hybrid",
+        "default.local-only",
+        "default.remote-only",
+        "baseline.decision-only",
+        "baseline.hybrid",
+        "baseline.local-only",
+        "baseline.remote-only",
+        "controller.decision-only",
+        "controller.hybrid",
+        "controller.local-only",
+        "controller.remote-only",
+        "difficulty.decision-only",
+        "difficulty.hybrid",
+        "difficulty.local-only",
+        "difficulty.remote-only",
+        "hybrid.decision-only",
+        "hybrid.hybrid",
+        "hybrid.local-only",
+        "hybrid.remote-only",
+      ]),
+    );
+    expect(aliasInventory).toEqual(
+      expect.arrayContaining([
         {
-          executionMode: "decision_only" as const,
-          modelIds: ["lfm2.5-1.2b-instruct", "moonshot/kimi-k2.7-code"],
+          aliasId: "controller.remote-only",
+          mode: "intelligent",
+          modelIds: ["moonshot/kimi-k2.7-code"],
         },
         {
-          executionMode: "hybrid" as const,
-          modelIds: ["lfm2.5-1.2b-instruct", "moonshot/kimi-k2.7-code"],
-        },
-        {
-          executionMode: "local_only" as const,
+          aliasId: "difficulty.local-only",
+          mode: "difficulty",
           modelIds: ["lfm2.5-1.2b-instruct"],
         },
         {
-          executionMode: "remote_only" as const,
-          modelIds: ["moonshot/kimi-k2.7-code"],
+          aliasId: "default.decision-only",
+          mode: "basic",
+          modelIds: ["lfm2.5-1.2b-instruct", "moonshot/kimi-k2.7-code"],
         },
-      ];
+      ]),
+    );
 
-      for (const strategyCase of strategyCases) {
-        for (const executionModeCase of executionModeCases) {
-          const updated = await backend.updateRuntimeConfig({
-            routingStrategy: strategyCase.routingStrategy,
-            executionMode: executionModeCase.executionMode,
-          });
-          const expectedAliasId = `${strategyCase.aliasPrefix}.${executionModeCase.executionMode.replaceAll(
-            "_",
-            "-",
-          )}`;
+    const rendered = await readFile(unifiedRuntimeConfigPath, "utf8");
+    expect(rendered).toContain("controller.remote-only:");
+    expect(rendered).toContain("difficulty.local-only:");
+    expect(rendered).toContain("default.decision-only:");
 
-          expect(updated.config?.modelAliases).toHaveLength(20);
-          expect(updated.config?.modelAliases).toEqual(
-            expect.arrayContaining([
-              {
-                aliasId: expectedAliasId,
-                mode: strategyCase.aliasMode,
-                modelIds: executionModeCase.modelIds,
-              },
-            ]),
-          );
-          await expect(backend.readRouterSummary()).resolves.toEqual(
+    await backend.shutdown();
+  }, 60_000);
+
+  test("normalizes legacy craft-ask routing strategy updates to the default alias family", async () => {
+    const tempRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-run50-routing-legacy-"));
+    tempRoots.push(tempRoot);
+    const runtimeStateRoot = path.join(tempRoot, "state");
+    const unifiedRuntimeConfigPath = path.join(tempRoot, "runtime-config.yaml");
+
+    await writeFile(
+      unifiedRuntimeConfigPath,
+      [
+        'version: "1.0"',
+        "llama_swap:",
+        "  models:",
+        "    lfm2.5-1.2b-instruct:",
+        '      path: "./models/lfm2.5-1.2b-instruct.gguf"',
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+
+    const backend = await createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: testFixtureRoot,
+      runtimeStateRoot,
+      scopeId: "runtime-host-legacy-craft-ask",
+      unifiedRuntimeConfigPath,
+    });
+
+    const updated = await backend.updateRuntimeConfig({
+      routingStrategy: "craft-ask",
+      executionMode: "local_only",
+    });
+
+    expect(updated.config?.routingStrategy).toBeNull();
+    expect(updated.config?.modelAliases).toEqual(
+      expect.arrayContaining([
+        {
+          aliasId: "default.local-only",
+          mode: "basic",
+          modelIds: ["lfm2.5-1.2b-instruct"],
+        },
+      ]),
+    );
+    expect(
+      updated.config?.modelAliases?.some((alias) => alias.aliasId.startsWith("craft-ask.")),
+    ).toBe(false);
+
+    await backend.shutdown();
+  }, 60_000);
+
+  test("rewrites persisted craft-ask alias ids out of startup config materialization", async () => {
+    const tempRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-run50-legacy-aliases-"));
+    tempRoots.push(tempRoot);
+    const runtimeStateRoot = path.join(tempRoot, "state");
+    const unifiedRuntimeConfigPath = path.join(tempRoot, "runtime-config.yaml");
+
+    await writeFile(
+      unifiedRuntimeConfigPath,
+      [
+        'version: "1.0"',
+        'execution_mode: "remote_only"',
+        "model_aliases:",
+        "  craft-ask.remote-only:",
+        '    mode: "basic"',
+        "    model_ids:",
+        '      - "chatgpt/gpt-5.4"',
+        "litellm_proxy:",
+        '  command: "node"',
+        "  args:",
+        '    - "-e"',
+        `    - 'const http=require("node:http");const port=Number(process.env.PORT);const server=http.createServer((req,res)=>{if(req.url==="/health/liveliness"){res.statusCode=200;res.end("ok");return;}res.statusCode=404;res.end("missing");});server.listen(port,"127.0.0.1");const shutdown=()=>server.close(()=>process.exit(0));process.on("SIGTERM",shutdown);process.on("SIGINT",shutdown);'`,
+        "  providers:",
+        "    openai:",
+        '      api_key: "${OPENAI_API_KEY}"',
+        "      model_list:",
+        '        - model_name: "chatgpt/gpt-5.4"',
+        "          litellm_params:",
+        '            model: "openai/gpt-5.4"',
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+
+    const backend = await createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: testFixtureRoot,
+      runtimeStateRoot,
+      scopeId: "runtime-host-legacy-craft-ask-aliases",
+      unifiedRuntimeConfigPath,
+    });
+
+    await expect(backend.readRuntimeConfig()).resolves.toEqual(
+      expect.objectContaining({
+        config: expect.objectContaining({
+          modelAliases: expect.arrayContaining([
             expect.objectContaining({
-              strategy: strategyCase.routingStrategy,
-              executionMode: executionModeCase.executionMode,
-              aliasInventory: expect.arrayContaining([
-                expect.objectContaining({
-                  aliasId: expectedAliasId,
-                  mode: strategyCase.aliasMode,
-                  configuredHintModelIds: executionModeCase.modelIds,
-                  resolvedModelIds: executionModeCase.modelIds,
-                }),
-              ]),
+              aliasId: "default.remote-only",
+              mode: "basic",
+              modelIds: ["chatgpt/gpt-5.4"],
             }),
-          );
-        }
-      }
-
-      await backend.shutdown();
-    },
-    60_000,
-  );
-
-  test(
-    "persists the full canonical routing alias matrix instead of a single primary alias",
-    async () => {
-      const tempRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-run50-routing-matrix-"));
-      tempRoots.push(tempRoot);
-      const runtimeStateRoot = path.join(tempRoot, "state");
-      const unifiedRuntimeConfigPath = path.join(tempRoot, "runtime-config.yaml");
-
-      await writeFile(
-        unifiedRuntimeConfigPath,
-        [
-          'version: "1.0"',
-          "llama_swap:",
-          "  models:",
-          "    lfm2.5-1.2b-instruct:",
-          '      path: "./models/lfm2.5-1.2b-instruct.gguf"',
-          "litellm_proxy:",
-          '  command: "node"',
-          "  args:",
-          '    - "-e"',
-          `    - 'const http=require("node:http");const port=Number(process.env.PORT);const server=http.createServer((req,res)=>{if(req.url==="/health/liveliness"){res.statusCode=200;res.end("ok");return;}res.statusCode=404;res.end("missing");});server.listen(port,"127.0.0.1");const shutdown=()=>server.close(()=>process.exit(0));process.on("SIGTERM",shutdown);process.on("SIGINT",shutdown);'`,
-          "  providers:",
-          "    moonshot:",
-          '      api_key: "${MOONSHOT_API_KEY}"',
-          "      model_list:",
-          '        - model_name: "moonshot/kimi-k2.7-code"',
-          "          litellm_params:",
-          '            model: "moonshot/kimi-k2.7-code"',
-          '            api_base: "https://api.moonshot.ai/v1"',
-          "",
-        ].join("\n"),
-        "utf8",
-      );
-
-      const backend = await createRuntimeBridgeBackend({
-        repoRoot,
-        fixtureRoot: testFixtureRoot,
-        runtimeStateRoot,
-        scopeId: "runtime-host-full-routing-matrix",
-        unifiedRuntimeConfigPath,
-      });
-
-      const updated = await backend.updateRuntimeConfig({
-        routingStrategy: "controller",
-        executionMode: "hybrid",
-      });
-
-      const aliasInventory = updated.config?.modelAliases ?? [];
-      const aliasIds = aliasInventory.map((alias) => alias.aliasId);
-      expect(aliasIds).toHaveLength(20);
-      expect(aliasIds).toEqual(
-        expect.arrayContaining([
-          "default.decision-only",
-          "default.hybrid",
-          "default.local-only",
-          "default.remote-only",
-          "baseline.decision-only",
-          "baseline.hybrid",
-          "baseline.local-only",
-          "baseline.remote-only",
-          "controller.decision-only",
-          "controller.hybrid",
-          "controller.local-only",
-          "controller.remote-only",
-          "difficulty.decision-only",
-          "difficulty.hybrid",
-          "difficulty.local-only",
-          "difficulty.remote-only",
-          "hybrid.decision-only",
-          "hybrid.hybrid",
-          "hybrid.local-only",
-          "hybrid.remote-only",
-        ]),
-      );
-      expect(aliasInventory).toEqual(
-        expect.arrayContaining([
-          {
-            aliasId: "controller.remote-only",
-            mode: "intelligent",
-            modelIds: ["moonshot/kimi-k2.7-code"],
-          },
-          {
-            aliasId: "difficulty.local-only",
-            mode: "difficulty",
-            modelIds: ["lfm2.5-1.2b-instruct"],
-          },
-          {
-            aliasId: "default.decision-only",
-            mode: "basic",
-            modelIds: ["lfm2.5-1.2b-instruct", "moonshot/kimi-k2.7-code"],
-          },
-        ]),
-      );
-
-      const rendered = await readFile(unifiedRuntimeConfigPath, "utf8");
-      expect(rendered).toContain("controller.remote-only:");
-      expect(rendered).toContain("difficulty.local-only:");
-      expect(rendered).toContain("default.decision-only:");
-
-      await backend.shutdown();
-    },
-    60_000,
-  );
-
-  test(
-    "normalizes legacy craft-ask routing strategy updates to the default alias family",
-    async () => {
-      const tempRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-run50-routing-legacy-"));
-      tempRoots.push(tempRoot);
-      const runtimeStateRoot = path.join(tempRoot, "state");
-      const unifiedRuntimeConfigPath = path.join(tempRoot, "runtime-config.yaml");
-
-      await writeFile(
-        unifiedRuntimeConfigPath,
-        [
-          'version: "1.0"',
-          "llama_swap:",
-          "  models:",
-          "    lfm2.5-1.2b-instruct:",
-          '      path: "./models/lfm2.5-1.2b-instruct.gguf"',
-          "",
-        ].join("\n"),
-        "utf8",
-      );
-
-      const backend = await createRuntimeBridgeBackend({
-        repoRoot,
-        fixtureRoot: testFixtureRoot,
-        runtimeStateRoot,
-        scopeId: "runtime-host-legacy-craft-ask",
-        unifiedRuntimeConfigPath,
-      });
-
-      const updated = await backend.updateRuntimeConfig({
-        routingStrategy: "craft-ask",
-        executionMode: "local_only",
-      });
-
-      expect(updated.config?.routingStrategy).toBeNull();
-      expect(updated.config?.modelAliases).toEqual(
-        expect.arrayContaining([
-          {
-            aliasId: "default.local-only",
-            mode: "basic",
-            modelIds: ["lfm2.5-1.2b-instruct"],
-          },
-        ]),
-      );
-      expect(updated.config?.modelAliases?.some((alias) => alias.aliasId.startsWith("craft-ask."))).toBe(
-        false,
-      );
-
-      await backend.shutdown();
-    },
-    60_000,
-  );
-
-  test(
-    "rewrites persisted craft-ask alias ids out of startup config materialization",
-    async () => {
-      const tempRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-run50-legacy-aliases-"));
-      tempRoots.push(tempRoot);
-      const runtimeStateRoot = path.join(tempRoot, "state");
-      const unifiedRuntimeConfigPath = path.join(tempRoot, "runtime-config.yaml");
-
-      await writeFile(
-        unifiedRuntimeConfigPath,
-        [
-          'version: "1.0"',
-          'execution_mode: "remote_only"',
-          "model_aliases:",
-          "  craft-ask.remote-only:",
-          '    mode: "basic"',
-          "    model_ids:",
-          '      - "chatgpt/gpt-5.4"',
-          "litellm_proxy:",
-          '  command: "node"',
-          "  args:",
-          '    - "-e"',
-          `    - 'const http=require("node:http");const port=Number(process.env.PORT);const server=http.createServer((req,res)=>{if(req.url==="/health/liveliness"){res.statusCode=200;res.end("ok");return;}res.statusCode=404;res.end("missing");});server.listen(port,"127.0.0.1");const shutdown=()=>server.close(()=>process.exit(0));process.on("SIGTERM",shutdown);process.on("SIGINT",shutdown);'`,
-          "  providers:",
-          "    openai:",
-          '      api_key: "${OPENAI_API_KEY}"',
-          "      model_list:",
-          '        - model_name: "chatgpt/gpt-5.4"',
-          "          litellm_params:",
-          '            model: "openai/gpt-5.4"',
-          "",
-        ].join("\n"),
-        "utf8",
-      );
-
-      const backend = await createRuntimeBridgeBackend({
-        repoRoot,
-        fixtureRoot: testFixtureRoot,
-        runtimeStateRoot,
-        scopeId: "runtime-host-legacy-craft-ask-aliases",
-        unifiedRuntimeConfigPath,
-      });
-
-      await expect(backend.readRuntimeConfig()).resolves.toEqual(
-        expect.objectContaining({
-          config: expect.objectContaining({
-            modelAliases: expect.arrayContaining([
-              expect.objectContaining({
-                aliasId: "default.remote-only",
-                mode: "basic",
-                modelIds: ["chatgpt/gpt-5.4"],
-              }),
-            ]),
-          }),
+          ]),
         }),
-      );
-      await expect(backend.readRuntimeConfig()).resolves.toEqual(
-        expect.objectContaining({
-          config: expect.objectContaining({
-            modelAliases: expect.not.arrayContaining([
-              expect.objectContaining({
-                aliasId: "craft-ask.remote-only",
-              }),
-            ]),
-          }),
+      }),
+    );
+    await expect(backend.readRuntimeConfig()).resolves.toEqual(
+      expect.objectContaining({
+        config: expect.objectContaining({
+          modelAliases: expect.not.arrayContaining([
+            expect.objectContaining({
+              aliasId: "craft-ask.remote-only",
+            }),
+          ]),
         }),
-      );
+      }),
+    );
 
-      const rendered = await readFile(unifiedRuntimeConfigPath, "utf8");
-      expect(rendered).toContain("default.remote-only:");
-      expect(rendered).not.toContain("craft-ask.remote-only:");
+    const rendered = await readFile(unifiedRuntimeConfigPath, "utf8");
+    expect(rendered).toContain("default.remote-only:");
+    expect(rendered).not.toContain("craft-ask.remote-only:");
 
-      await backend.shutdown();
-    },
-    60_000,
-  );
+    await backend.shutdown();
+  }, 60_000);
 
-  test(
-    "rewrites legacy craft-ask matrix rows from persisted config even when the canonical matrix already exists",
-    async () => {
-      const tempRoot = await mkdtemp(
-        path.join(os.tmpdir(), "role-model-run50-legacy-alias-matrix-"),
-      );
-      tempRoots.push(tempRoot);
-      const runtimeStateRoot = path.join(tempRoot, "state");
-      const unifiedRuntimeConfigPath = path.join(tempRoot, "runtime-config.yaml");
+  test("rewrites legacy craft-ask matrix rows from persisted config even when the canonical matrix already exists", async () => {
+    const tempRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-run50-legacy-alias-matrix-"));
+    tempRoots.push(tempRoot);
+    const runtimeStateRoot = path.join(tempRoot, "state");
+    const unifiedRuntimeConfigPath = path.join(tempRoot, "runtime-config.yaml");
 
-      await writeFile(
-        unifiedRuntimeConfigPath,
-        [
-          'version: "1.0"',
-          'execution_mode: "remote_only"',
-          "model_aliases:",
-          "  default.decision-only:",
-          '    mode: "basic"',
-          "    model_ids:",
-          '      - "chatgpt/gpt-5.4"',
-          "  baseline.decision-only:",
-          '    mode: "basic"',
-          "    model_ids:",
-          '      - "chatgpt/gpt-5.4"',
-          "  controller.decision-only:",
-          '    mode: "intelligent"',
-          "    model_ids:",
-          '      - "chatgpt/gpt-5.4"',
-          "  difficulty.decision-only:",
-          '    mode: "difficulty"',
-          "    model_ids:",
-          '      - "chatgpt/gpt-5.4"',
-          "  hybrid.decision-only:",
-          '    mode: "hybrid"',
-          "    model_ids:",
-          '      - "chatgpt/gpt-5.4"',
-          "  craft-ask.decision-only:",
-          '    mode: "basic"',
-          "    model_ids:",
-          '      - "chatgpt/gpt-5.4"',
-          "  default.remote-only:",
-          '    mode: "basic"',
-          "    model_ids:",
-          '      - "chatgpt/gpt-5.4"',
-          "  default.hybrid:",
-          '    mode: "basic"',
-          "    model_ids:",
-          '      - "chatgpt/gpt-5.4"',
-          "  baseline.hybrid:",
-          '    mode: "basic"',
-          "    model_ids:",
-          '      - "chatgpt/gpt-5.4"',
-          "  controller.hybrid:",
-          '    mode: "intelligent"',
-          "    model_ids:",
-          '      - "chatgpt/gpt-5.4"',
-          "  difficulty.hybrid:",
-          '    mode: "difficulty"',
-          "    model_ids:",
-          '      - "chatgpt/gpt-5.4"',
-          "  hybrid.hybrid:",
-          '    mode: "hybrid"',
-          "    model_ids:",
-          '      - "chatgpt/gpt-5.4"',
-          "  craft-ask.hybrid:",
-          '    mode: "basic"',
-          "    model_ids:",
-          '      - "chatgpt/gpt-5.4"',
-          "  baseline.remote-only:",
-          '    mode: "basic"',
-          "    model_ids:",
-          '      - "chatgpt/gpt-5.4"',
-          "  controller.remote-only:",
-          '    mode: "intelligent"',
-          "    model_ids:",
-          '      - "chatgpt/gpt-5.4"',
-          "  difficulty.remote-only:",
-          '    mode: "difficulty"',
-          "    model_ids:",
-          '      - "chatgpt/gpt-5.4"',
-          "  hybrid.remote-only:",
-          '    mode: "hybrid"',
-          "    model_ids:",
-          '      - "chatgpt/gpt-5.4"',
-          "  craft-ask.remote-only:",
-          '    mode: "basic"',
-          "    model_ids:",
-          '      - "chatgpt/gpt-5.4"',
-          "litellm_proxy:",
-          '  command: "node"',
-          "  args:",
-          '    - "-e"',
-          `    - 'const http=require("node:http");const port=Number(process.env.PORT);const server=http.createServer((req,res)=>{if(req.url==="/health/liveliness"){res.statusCode=200;res.end("ok");return;}res.statusCode=404;res.end("missing");});server.listen(port,"127.0.0.1");const shutdown=()=>server.close(()=>process.exit(0));process.on("SIGTERM",shutdown);process.on("SIGINT",shutdown);'`,
-          "  providers:",
-          "    openai:",
-          '      api_key: "${OPENAI_API_KEY}"',
-          "      model_list:",
-          '        - model_name: "chatgpt/gpt-5.4"',
-          "          litellm_params:",
-          '            model: "openai/gpt-5.4"',
-          "",
-        ].join("\n"),
-        "utf8",
-      );
+    await writeFile(
+      unifiedRuntimeConfigPath,
+      [
+        'version: "1.0"',
+        'execution_mode: "remote_only"',
+        "model_aliases:",
+        "  default.decision-only:",
+        '    mode: "basic"',
+        "    model_ids:",
+        '      - "chatgpt/gpt-5.4"',
+        "  baseline.decision-only:",
+        '    mode: "basic"',
+        "    model_ids:",
+        '      - "chatgpt/gpt-5.4"',
+        "  controller.decision-only:",
+        '    mode: "intelligent"',
+        "    model_ids:",
+        '      - "chatgpt/gpt-5.4"',
+        "  difficulty.decision-only:",
+        '    mode: "difficulty"',
+        "    model_ids:",
+        '      - "chatgpt/gpt-5.4"',
+        "  hybrid.decision-only:",
+        '    mode: "hybrid"',
+        "    model_ids:",
+        '      - "chatgpt/gpt-5.4"',
+        "  craft-ask.decision-only:",
+        '    mode: "basic"',
+        "    model_ids:",
+        '      - "chatgpt/gpt-5.4"',
+        "  default.remote-only:",
+        '    mode: "basic"',
+        "    model_ids:",
+        '      - "chatgpt/gpt-5.4"',
+        "  default.hybrid:",
+        '    mode: "basic"',
+        "    model_ids:",
+        '      - "chatgpt/gpt-5.4"',
+        "  baseline.hybrid:",
+        '    mode: "basic"',
+        "    model_ids:",
+        '      - "chatgpt/gpt-5.4"',
+        "  controller.hybrid:",
+        '    mode: "intelligent"',
+        "    model_ids:",
+        '      - "chatgpt/gpt-5.4"',
+        "  difficulty.hybrid:",
+        '    mode: "difficulty"',
+        "    model_ids:",
+        '      - "chatgpt/gpt-5.4"',
+        "  hybrid.hybrid:",
+        '    mode: "hybrid"',
+        "    model_ids:",
+        '      - "chatgpt/gpt-5.4"',
+        "  craft-ask.hybrid:",
+        '    mode: "basic"',
+        "    model_ids:",
+        '      - "chatgpt/gpt-5.4"',
+        "  baseline.remote-only:",
+        '    mode: "basic"',
+        "    model_ids:",
+        '      - "chatgpt/gpt-5.4"',
+        "  controller.remote-only:",
+        '    mode: "intelligent"',
+        "    model_ids:",
+        '      - "chatgpt/gpt-5.4"',
+        "  difficulty.remote-only:",
+        '    mode: "difficulty"',
+        "    model_ids:",
+        '      - "chatgpt/gpt-5.4"',
+        "  hybrid.remote-only:",
+        '    mode: "hybrid"',
+        "    model_ids:",
+        '      - "chatgpt/gpt-5.4"',
+        "  craft-ask.remote-only:",
+        '    mode: "basic"',
+        "    model_ids:",
+        '      - "chatgpt/gpt-5.4"',
+        "litellm_proxy:",
+        '  command: "node"',
+        "  args:",
+        '    - "-e"',
+        `    - 'const http=require("node:http");const port=Number(process.env.PORT);const server=http.createServer((req,res)=>{if(req.url==="/health/liveliness"){res.statusCode=200;res.end("ok");return;}res.statusCode=404;res.end("missing");});server.listen(port,"127.0.0.1");const shutdown=()=>server.close(()=>process.exit(0));process.on("SIGTERM",shutdown);process.on("SIGINT",shutdown);'`,
+        "  providers:",
+        "    openai:",
+        '      api_key: "${OPENAI_API_KEY}"',
+        "      model_list:",
+        '        - model_name: "chatgpt/gpt-5.4"',
+        "          litellm_params:",
+        '            model: "openai/gpt-5.4"',
+        "",
+      ].join("\n"),
+      "utf8",
+    );
 
-      const backend = await createRuntimeBridgeBackend({
-        repoRoot,
-        fixtureRoot: testFixtureRoot,
-        runtimeStateRoot,
-        scopeId: "runtime-host-legacy-craft-ask-matrix",
-        unifiedRuntimeConfigPath,
-      });
+    const backend = await createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: testFixtureRoot,
+      runtimeStateRoot,
+      scopeId: "runtime-host-legacy-craft-ask-matrix",
+      unifiedRuntimeConfigPath,
+    });
 
-      const rendered = await readFile(unifiedRuntimeConfigPath, "utf8");
-      expect(rendered).toContain("default.remote-only:");
-      expect(rendered).not.toContain("craft-ask.decision-only:");
-      expect(rendered).not.toContain("craft-ask.remote-only:");
+    const rendered = await readFile(unifiedRuntimeConfigPath, "utf8");
+    expect(rendered).toContain("default.remote-only:");
+    expect(rendered).not.toContain("craft-ask.decision-only:");
+    expect(rendered).not.toContain("craft-ask.remote-only:");
 
-      await backend.shutdown();
-    },
-    60_000,
-  );
+    await backend.shutdown();
+  }, 60_000);
 
-  test(
-    "rewrites legacy craft-ask matrix rows from persisted config even when startup does not need to re-materialize aliases",
-    async () => {
-      const tempRoot = await mkdtemp(
-        path.join(os.tmpdir(), "role-model-run50-legacy-alias-no-remat-"),
-      );
-      tempRoots.push(tempRoot);
-      const runtimeStateRoot = path.join(tempRoot, "state");
-      const unifiedRuntimeConfigPath = path.join(tempRoot, "runtime-config.yaml");
+  test("rewrites legacy craft-ask matrix rows from persisted config even when startup does not need to re-materialize aliases", async () => {
+    const tempRoot = await mkdtemp(
+      path.join(os.tmpdir(), "role-model-run50-legacy-alias-no-remat-"),
+    );
+    tempRoots.push(tempRoot);
+    const runtimeStateRoot = path.join(tempRoot, "state");
+    const unifiedRuntimeConfigPath = path.join(tempRoot, "runtime-config.yaml");
 
-      await writeFile(
-        unifiedRuntimeConfigPath,
-        [
-          'version: "1.0"',
-          'execution_mode: "remote_only"',
-          "routing:",
-          "  strategy: difficulty",
-          "controller:",
-          "  enabled: true",
-          "  source_type: remote",
-          '  model_id: "deepseek/deepseek-v4-flash"',
-          "  timeout_ms: 20000",
-          "model_aliases:",
-          "  default.decision-only:",
-          '    mode: "basic"',
-          "    model_ids:",
-          '      - "chatgpt/gpt-5.4"',
-          '      - "deepseek/deepseek-v4-flash"',
-          '      - "deepseek/deepseek-v4-pro"',
-          '      - "moonshot/kimi-k2.7-code"',
-          "  baseline.decision-only:",
-          '    mode: "basic"',
-          "    model_ids:",
-          '      - "chatgpt/gpt-5.4"',
-          '      - "deepseek/deepseek-v4-flash"',
-          '      - "deepseek/deepseek-v4-pro"',
-          '      - "moonshot/kimi-k2.7-code"',
-          "  controller.decision-only:",
-          '    mode: "intelligent"',
-          "    model_ids:",
-          '      - "chatgpt/gpt-5.4"',
-          '      - "deepseek/deepseek-v4-flash"',
-          '      - "deepseek/deepseek-v4-pro"',
-          '      - "moonshot/kimi-k2.7-code"',
-          "  difficulty.decision-only:",
-          '    mode: "difficulty"',
-          "    model_ids:",
-          '      - "chatgpt/gpt-5.4"',
-          '      - "deepseek/deepseek-v4-flash"',
-          '      - "deepseek/deepseek-v4-pro"',
-          '      - "moonshot/kimi-k2.7-code"',
-          "  hybrid.decision-only:",
-          '    mode: "hybrid"',
-          "    model_ids:",
-          '      - "chatgpt/gpt-5.4"',
-          '      - "deepseek/deepseek-v4-flash"',
-          '      - "deepseek/deepseek-v4-pro"',
-          '      - "moonshot/kimi-k2.7-code"',
-          "  craft-ask.decision-only:",
-          '    mode: "basic"',
-          "    model_ids:",
-          '      - "chatgpt/gpt-5.4"',
-          '      - "deepseek/deepseek-v4-flash"',
-          '      - "deepseek/deepseek-v4-pro"',
-          '      - "moonshot/kimi-k2.7-code"',
-          "  default.hybrid:",
-          '    mode: "basic"',
-          "    model_ids:",
-          '      - "chatgpt/gpt-5.4"',
-          '      - "deepseek/deepseek-v4-flash"',
-          '      - "deepseek/deepseek-v4-pro"',
-          '      - "moonshot/kimi-k2.7-code"',
-          "  baseline.hybrid:",
-          '    mode: "basic"',
-          "    model_ids:",
-          '      - "chatgpt/gpt-5.4"',
-          '      - "deepseek/deepseek-v4-flash"',
-          '      - "deepseek/deepseek-v4-pro"',
-          '      - "moonshot/kimi-k2.7-code"',
-          "  controller.hybrid:",
-          '    mode: "intelligent"',
-          "    model_ids:",
-          '      - "chatgpt/gpt-5.4"',
-          '      - "deepseek/deepseek-v4-flash"',
-          '      - "deepseek/deepseek-v4-pro"',
-          '      - "moonshot/kimi-k2.7-code"',
-          "  difficulty.hybrid:",
-          '    mode: "difficulty"',
-          "    model_ids:",
-          '      - "chatgpt/gpt-5.4"',
-          '      - "deepseek/deepseek-v4-flash"',
-          '      - "deepseek/deepseek-v4-pro"',
-          '      - "moonshot/kimi-k2.7-code"',
-          "  hybrid.hybrid:",
-          '    mode: "hybrid"',
-          "    model_ids:",
-          '      - "chatgpt/gpt-5.4"',
-          '      - "deepseek/deepseek-v4-flash"',
-          '      - "deepseek/deepseek-v4-pro"',
-          '      - "moonshot/kimi-k2.7-code"',
-          "  craft-ask.hybrid:",
-          '    mode: "basic"',
-          "    model_ids:",
-          '      - "chatgpt/gpt-5.4"',
-          '      - "deepseek/deepseek-v4-flash"',
-          '      - "deepseek/deepseek-v4-pro"',
-          '      - "moonshot/kimi-k2.7-code"',
-          "  default.remote-only:",
-          '    mode: "basic"',
-          "    model_ids:",
-          '      - "chatgpt/gpt-5.4"',
-          '      - "deepseek/deepseek-v4-flash"',
-          '      - "deepseek/deepseek-v4-pro"',
-          '      - "moonshot/kimi-k2.7-code"',
-          "  baseline.remote-only:",
-          '    mode: "basic"',
-          "    model_ids:",
-          '      - "chatgpt/gpt-5.4"',
-          '      - "deepseek/deepseek-v4-flash"',
-          '      - "deepseek/deepseek-v4-pro"',
-          '      - "moonshot/kimi-k2.7-code"',
-          "  controller.remote-only:",
-          '    mode: "intelligent"',
-          "    model_ids:",
-          '      - "chatgpt/gpt-5.4"',
-          '      - "deepseek/deepseek-v4-flash"',
-          '      - "deepseek/deepseek-v4-pro"',
-          '      - "moonshot/kimi-k2.7-code"',
-          "  difficulty.remote-only:",
-          '    mode: "difficulty"',
-          "    model_ids:",
-          '      - "chatgpt/gpt-5.4"',
-          '      - "deepseek/deepseek-v4-flash"',
-          '      - "deepseek/deepseek-v4-pro"',
-          '      - "moonshot/kimi-k2.7-code"',
-          "  hybrid.remote-only:",
-          '    mode: "hybrid"',
-          "    model_ids:",
-          '      - "chatgpt/gpt-5.4"',
-          '      - "deepseek/deepseek-v4-flash"',
-          '      - "deepseek/deepseek-v4-pro"',
-          '      - "moonshot/kimi-k2.7-code"',
-          "  craft-ask.remote-only:",
-          '    mode: "basic"',
-          "    model_ids:",
-          '      - "chatgpt/gpt-5.4"',
-          '      - "deepseek/deepseek-v4-flash"',
-          '      - "deepseek/deepseek-v4-pro"',
-          '      - "moonshot/kimi-k2.7-code"',
-          "",
-        ].join("\n"),
-        "utf8",
-      );
+    await writeFile(
+      unifiedRuntimeConfigPath,
+      [
+        'version: "1.0"',
+        'execution_mode: "remote_only"',
+        "routing:",
+        "  strategy: difficulty",
+        "controller:",
+        "  enabled: true",
+        "  source_type: remote",
+        '  model_id: "deepseek/deepseek-v4-flash"',
+        "  timeout_ms: 20000",
+        "model_aliases:",
+        "  default.decision-only:",
+        '    mode: "basic"',
+        "    model_ids:",
+        '      - "chatgpt/gpt-5.4"',
+        '      - "deepseek/deepseek-v4-flash"',
+        '      - "deepseek/deepseek-v4-pro"',
+        '      - "moonshot/kimi-k2.7-code"',
+        "  baseline.decision-only:",
+        '    mode: "basic"',
+        "    model_ids:",
+        '      - "chatgpt/gpt-5.4"',
+        '      - "deepseek/deepseek-v4-flash"',
+        '      - "deepseek/deepseek-v4-pro"',
+        '      - "moonshot/kimi-k2.7-code"',
+        "  controller.decision-only:",
+        '    mode: "intelligent"',
+        "    model_ids:",
+        '      - "chatgpt/gpt-5.4"',
+        '      - "deepseek/deepseek-v4-flash"',
+        '      - "deepseek/deepseek-v4-pro"',
+        '      - "moonshot/kimi-k2.7-code"',
+        "  difficulty.decision-only:",
+        '    mode: "difficulty"',
+        "    model_ids:",
+        '      - "chatgpt/gpt-5.4"',
+        '      - "deepseek/deepseek-v4-flash"',
+        '      - "deepseek/deepseek-v4-pro"',
+        '      - "moonshot/kimi-k2.7-code"',
+        "  hybrid.decision-only:",
+        '    mode: "hybrid"',
+        "    model_ids:",
+        '      - "chatgpt/gpt-5.4"',
+        '      - "deepseek/deepseek-v4-flash"',
+        '      - "deepseek/deepseek-v4-pro"',
+        '      - "moonshot/kimi-k2.7-code"',
+        "  craft-ask.decision-only:",
+        '    mode: "basic"',
+        "    model_ids:",
+        '      - "chatgpt/gpt-5.4"',
+        '      - "deepseek/deepseek-v4-flash"',
+        '      - "deepseek/deepseek-v4-pro"',
+        '      - "moonshot/kimi-k2.7-code"',
+        "  default.hybrid:",
+        '    mode: "basic"',
+        "    model_ids:",
+        '      - "chatgpt/gpt-5.4"',
+        '      - "deepseek/deepseek-v4-flash"',
+        '      - "deepseek/deepseek-v4-pro"',
+        '      - "moonshot/kimi-k2.7-code"',
+        "  baseline.hybrid:",
+        '    mode: "basic"',
+        "    model_ids:",
+        '      - "chatgpt/gpt-5.4"',
+        '      - "deepseek/deepseek-v4-flash"',
+        '      - "deepseek/deepseek-v4-pro"',
+        '      - "moonshot/kimi-k2.7-code"',
+        "  controller.hybrid:",
+        '    mode: "intelligent"',
+        "    model_ids:",
+        '      - "chatgpt/gpt-5.4"',
+        '      - "deepseek/deepseek-v4-flash"',
+        '      - "deepseek/deepseek-v4-pro"',
+        '      - "moonshot/kimi-k2.7-code"',
+        "  difficulty.hybrid:",
+        '    mode: "difficulty"',
+        "    model_ids:",
+        '      - "chatgpt/gpt-5.4"',
+        '      - "deepseek/deepseek-v4-flash"',
+        '      - "deepseek/deepseek-v4-pro"',
+        '      - "moonshot/kimi-k2.7-code"',
+        "  hybrid.hybrid:",
+        '    mode: "hybrid"',
+        "    model_ids:",
+        '      - "chatgpt/gpt-5.4"',
+        '      - "deepseek/deepseek-v4-flash"',
+        '      - "deepseek/deepseek-v4-pro"',
+        '      - "moonshot/kimi-k2.7-code"',
+        "  craft-ask.hybrid:",
+        '    mode: "basic"',
+        "    model_ids:",
+        '      - "chatgpt/gpt-5.4"',
+        '      - "deepseek/deepseek-v4-flash"',
+        '      - "deepseek/deepseek-v4-pro"',
+        '      - "moonshot/kimi-k2.7-code"',
+        "  default.remote-only:",
+        '    mode: "basic"',
+        "    model_ids:",
+        '      - "chatgpt/gpt-5.4"',
+        '      - "deepseek/deepseek-v4-flash"',
+        '      - "deepseek/deepseek-v4-pro"',
+        '      - "moonshot/kimi-k2.7-code"',
+        "  baseline.remote-only:",
+        '    mode: "basic"',
+        "    model_ids:",
+        '      - "chatgpt/gpt-5.4"',
+        '      - "deepseek/deepseek-v4-flash"',
+        '      - "deepseek/deepseek-v4-pro"',
+        '      - "moonshot/kimi-k2.7-code"',
+        "  controller.remote-only:",
+        '    mode: "intelligent"',
+        "    model_ids:",
+        '      - "chatgpt/gpt-5.4"',
+        '      - "deepseek/deepseek-v4-flash"',
+        '      - "deepseek/deepseek-v4-pro"',
+        '      - "moonshot/kimi-k2.7-code"',
+        "  difficulty.remote-only:",
+        '    mode: "difficulty"',
+        "    model_ids:",
+        '      - "chatgpt/gpt-5.4"',
+        '      - "deepseek/deepseek-v4-flash"',
+        '      - "deepseek/deepseek-v4-pro"',
+        '      - "moonshot/kimi-k2.7-code"',
+        "  hybrid.remote-only:",
+        '    mode: "hybrid"',
+        "    model_ids:",
+        '      - "chatgpt/gpt-5.4"',
+        '      - "deepseek/deepseek-v4-flash"',
+        '      - "deepseek/deepseek-v4-pro"',
+        '      - "moonshot/kimi-k2.7-code"',
+        "  craft-ask.remote-only:",
+        '    mode: "basic"',
+        "    model_ids:",
+        '      - "chatgpt/gpt-5.4"',
+        '      - "deepseek/deepseek-v4-flash"',
+        '      - "deepseek/deepseek-v4-pro"',
+        '      - "moonshot/kimi-k2.7-code"',
+        "",
+      ].join("\n"),
+      "utf8",
+    );
 
-      const backend = await createRuntimeBridgeBackend({
-        repoRoot,
-        fixtureRoot: testFixtureRoot,
-        runtimeStateRoot,
-        scopeId: "runtime-host-legacy-craft-ask-no-remat",
-        unifiedRuntimeConfigPath,
-      });
+    const backend = await createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: testFixtureRoot,
+      runtimeStateRoot,
+      scopeId: "runtime-host-legacy-craft-ask-no-remat",
+      unifiedRuntimeConfigPath,
+    });
 
-      const rendered = await readFile(unifiedRuntimeConfigPath, "utf8");
-      expect(rendered).not.toContain("craft-ask.decision-only:");
-      expect(rendered).not.toContain("craft-ask.hybrid:");
-      expect(rendered).not.toContain("craft-ask.remote-only:");
+    const rendered = await readFile(unifiedRuntimeConfigPath, "utf8");
+    expect(rendered).not.toContain("craft-ask.decision-only:");
+    expect(rendered).not.toContain("craft-ask.hybrid:");
+    expect(rendered).not.toContain("craft-ask.remote-only:");
 
-      await backend.shutdown();
-    },
-    60_000,
-  );
+    await backend.shutdown();
+  }, 60_000);
 
   test("renames the primary routing alias when routing strategy and execution mode change", async () => {
     const tempRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-run49-routing-alias-"));

@@ -1,0 +1,147 @@
+
+> role-model@0.0.0 runtime:test-critical D:\DEV\role-model\.worktrees\51
+> corepack pnpm --filter @role-model-router/runtime-host-bridge run test:critical && corepack pnpm --filter @role-model-router/runtime-ui run test:critical && corepack pnpm run runtime:validate-ui && corepack pnpm run runtime:validate-observability
+
+
+> @role-model-router/runtime-host-bridge@0.0.0 test:critical D:\DEV\role-model\.worktrees\51\role-model-router\apps\runtime-host-bridge
+> vitest run test/account-repair.test.ts test/unified-runtime-config.test.ts test/provider-overlap-metadata.test.ts test/benchmark-summary.test.ts test/validate-observability.test.ts test/validate-ui.test.ts
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/51/role-model-router/apps/runtime-host-bridge[39m
+
+ [32m✓[39m test/benchmark-summary.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 76[2mms[22m[39m
+(node:37808) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:43764) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [32m✓[39m test/unified-runtime-config.test.ts [2m([22m[2m24 tests[22m[2m)[22m[32m 161[2mms[22m[39m
+(node:43876) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:40312) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [32m✓[39m test/account-repair.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 2021[2mms[22m[39m
+   [33m[2m✓[22m[39m account repair mutations[2m > [22mreconnect returns the current pending device-authorization session for the same account [33m 575[2mms[22m[39m
+   [33m[2m✓[22m[39m account repair mutations[2m > [22mupdate API key preserves account identity, bindings, and endpoint associations [33m 402[2mms[22m[39m
+   [33m[2m✓[22m[39m account repair mutations[2m > [22mrejects overlapping repair mutations for the same account without partially mutating state [33m 465[2mms[22m[39m
+   [33m[2m✓[22m[39m account repair mutations[2m > [22mcodex subscription start returns a real device-code session and poll connects through managed Codex auth [33m 575[2mms[22m[39m
+ [32m✓[39m test/validate-ui.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 13595[2mms[22m[39m
+   [33m[2m✓[22m[39m runRuntimeUiValidation[2m > [22mvalidates runtime config reads and the main control-plane mutations [33m 13592[2mms[22m[39m
+ [32m✓[39m test/validate-observability.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 13605[2mms[22m[39m
+   [33m[2m✓[22m[39m runRuntimeObservabilityValidation[2m > [22mproves structured request, capture, metrics, and otel observability over the real host path [33m 13601[2mms[22m[39m
+ [32m✓[39m test/provider-overlap-metadata.test.ts [2m([22m[2m45 tests[22m[2m)[22m[33m 14237[2mms[22m[39m
+   [33m[2m✓[22m[39m listProviders overlap metadata (R1 integration)[2m > [22mlistProviders exposes validation-canonical providerKind for baseten [33m 675[2mms[22m[39m
+   [33m[2m✓[22m[39m listProviders overlap metadata (R1 integration)[2m > [22mlistProviders exposes validation-canonical providerKind for cerebras [33m 615[2mms[22m[39m
+   [33m[2m✓[22m[39m listProviders overlap metadata (R1 integration)[2m > [22mlistProviders exposes validation-canonical providerKind for cohere [33m 623[2mms[22m[39m
+   [33m[2m✓[22m[39m listProviders overlap metadata (R1 integration)[2m > [22mlistProviders exposes validation-canonical providerKind for databricks [33m 650[2mms[22m[39m
+   [33m[2m✓[22m[39m listProviders overlap metadata (R1 integration)[2m > [22mlistProviders exposes validation-canonical providerKind for deepinfra [33m 673[2mms[22m[39m
+   [33m[2m✓[22m[39m listProviders overlap metadata (R1 integration)[2m > [22mlistProviders exposes validation-canonical providerKind for deepseek [33m 611[2mms[22m[39m
+   [33m[2m✓[22m[39m listProviders overlap metadata (R1 integration)[2m > [22mlistProviders exposes validation-canonical providerKind for groq [33m 705[2mms[22m[39m
+   [33m[2m✓[22m[39m listProviders overlap metadata (R1 integration)[2m > [22mlistProviders exposes validation-canonical providerKind for minimax [33m 531[2mms[22m[39m
+   [33m[2m✓[22m[39m listProviders overlap metadata (R1 integration)[2m > [22mlistProviders exposes validation-canonical providerKind for mistral [33m 523[2mms[22m[39m
+   [33m[2m✓[22m[39m listProviders overlap metadata (R1 integration)[2m > [22mlistProviders exposes validation-canonical providerKind for morph [33m 535[2mms[22m[39m
+   [33m[2m✓[22m[39m listProviders overlap metadata (R1 integration)[2m > [22mlistProviders exposes validation-canonical providerKind for nebius [33m 579[2mms[22m[39m
+   [33m[2m✓[22m[39m listProviders overlap metadata (R1 integration)[2m > [22mlistProviders exposes validation-canonical providerKind for openrouter [33m 545[2mms[22m[39m
+   [33m[2m✓[22m[39m listProviders overlap metadata (R1 integration)[2m > [22mlistProviders exposes validation-canonical providerKind for ovhcloud [33m 526[2mms[22m[39m
+   [33m[2m✓[22m[39m listProviders overlap metadata (R1 integration)[2m > [22mlistProviders exposes validation-canonical providerKind for perplexity [33m 522[2mms[22m[39m
+   [33m[2m✓[22m[39m listProviders overlap metadata (R1 integration)[2m > [22mlistProviders exposes validation-canonical providerKind for sarvam [33m 519[2mms[22m[39m
+   [33m[2m✓[22m[39m listProviders overlap metadata (R1 integration)[2m > [22mlistProviders exposes validation-canonical providerKind for v0 [33m 534[2mms[22m[39m
+   [33m[2m✓[22m[39m listProviders overlap metadata (R1 integration)[2m > [22mlistProviders exposes validation-canonical providerKind for wandb [33m 535[2mms[22m[39m
+   [33m[2m✓[22m[39m listProviders overlap metadata (R1 integration)[2m > [22mlistProviders exposes validation-canonical providerKind for xai [33m 651[2mms[22m[39m
+   [33m[2m✓[22m[39m listProviders overlap metadata (R1 integration)[2m > [22mlistProviders exposes validation-canonical providerKind for zai [33m 609[2mms[22m[39m
+   [33m[2m✓[22m[39m listProviders overlap metadata (R1 integration)[2m > [22mlistProviders exposes one OpenAI provider with API Key and Codex Subscription variants [33m 666[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m6 passed[39m[22m[90m (6)[39m
+[2m      Tests [22m [1m[32m80 passed[39m[22m[90m (80)[39m
+[2m   Start at [22m 14:31:22
+[2m   Duration [22m 17.25s[2m (transform 2.52s, setup 0ms, collect 8.65s, tests 43.69s, environment 3ms, prepare 2.58s)[22m
+
+
+> @role-model-router/runtime-ui@ test:critical D:\DEV\role-model\.worktrees\51\role-model-router\apps\runtime-ui
+> vitest run app/lib/runtime-api.test.ts app/lib/view-models.test.ts app/lib/telemetry-analytics.test.ts app/lib/telemetry-chart-config.test.ts app/lib/theme.test.ts app/components/page-primitives.test.tsx
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/51/role-model-router/apps/runtime-ui[39m
+
+ [32m✓[39m app/lib/theme.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m app/lib/telemetry-chart-config.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m app/lib/view-models.test.ts [2m([22m[2m33 tests[22m[2m)[22m[32m 77[2mms[22m[39m
+ [32m✓[39m app/lib/runtime-api.test.ts [2m([22m[2m40 tests[22m[2m)[22m[32m 64[2mms[22m[39m
+ [32m✓[39m app/lib/telemetry-analytics.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m app/components/page-primitives.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[32m 34[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m6 passed[39m[22m[90m (6)[39m
+[2m      Tests [22m [1m[32m88 passed[39m[22m[90m (88)[39m
+[2m   Start at [22m 14:31:43
+[2m   Duration [22m 1.63s[2m (transform 568ms, setup 0ms, collect 1.86s, tests 206ms, environment 2ms, prepare 2.24s)[22m
+
+
+> role-model@0.0.0 runtime:validate-ui D:\DEV\role-model\.worktrees\51
+> corepack pnpm --filter @role-model-router/runtime-host-bridge exec tsx src/validate-ui.ts
+
+(node:45964) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+{
+  "providerCount": 232,
+  "accountCount": 1,
+  "endpointCount": 2,
+  "runtimeConfigPath": "C:\\Users\\erikb\\AppData\\Local\\Temp\\role-model-runtime-ui-validation\\runtime-config.yaml",
+  "runtimeConfigInitialApplied": true,
+  "runtimeConfigUpdatedVersion": "1.1",
+  "runtimeConfigUpdatedRoutingStrategy": "baseline",
+  "moonshotVariantIds": [
+    "moonshot-open-platform",
+    "kimi-code"
+  ],
+  "availableRoleIds": [
+    "classifier",
+    "coder.patch",
+    "coder.review",
+    "embedder",
+    "general.chat",
+    "language.detector",
+    "tool.agent"
+  ],
+  "upsertedAccountId": "moonshot.personal.primary",
+  "accountListIncludesUpsert": true,
+  "accountRoleBindingIncludesUpsert": true,
+  "activatedEndpointId": "moonshot.personal.primary.global.kimi-k2.5",
+  "endpointListIncludesActivation": true,
+  "routedRequestId": "req-runtime-ui-routing-001",
+  "telemetryListIncludesRoutedRequest": true,
+  "routedRequestRoutingDecisionId": "route-runtime-ui-routing-001",
+  "routedRequestEffectiveMode": "baseline",
+  "routedRequestRewriteReason": "requested-model-matches-downstream",
+  "mixedAliasId": "mixed.local-remote",
+  "mixedAliasModelListIncludesAlias": false,
+  "mixedAliasRequestId": "req-runtime-ui-mixed-alias-001",
+  "mixedAliasAllowEndpoints": [
+    "llama-swap.local.lfm2-5-1-2b-instruct",
+    "moonshot.personal.primary.global.kimi-k2.5"
+  ],
+  "mixedAliasResolvedModelIds": [
+    "lfm2.5-1.2b-instruct",
+    "moonshot/kimi-k2.5"
+  ],
+  "mixedAliasTelemetryListIncludesRequest": true,
+  "mixedAliasRequestDetailAliasResolvedModelIds": [
+    "lfm2.5-1.2b-instruct",
+    "moonshot/kimi-k2.5"
+  ],
+  "mixedAliasRouterDecisionMatchesRequest": true,
+  "mixedAliasOverviewIncludesSelectedEndpoint": true,
+  "mixedAliasEndpointsIncludeSelectedEndpoint": true
+}
+
+> role-model@0.0.0 runtime:validate-observability D:\DEV\role-model\.worktrees\51
+> corepack pnpm --filter @role-model-router/runtime-host-bridge exec tsx src/validate-observability.ts
+
+(node:9220) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+{
+  "routedRequestId": "req-runtime-ui-routing-001",
+  "telemetryListIncludesRoutedRequest": true,
+  "routedRequestRoutingDecisionId": "route-runtime-ui-routing-001",
+  "mixedAliasTelemetryListIncludesRequest": true,
+  "mixedAliasRouterDecisionMatchesRequest": true,
+  "mixedAliasOverviewIncludesSelectedEndpoint": true
+}

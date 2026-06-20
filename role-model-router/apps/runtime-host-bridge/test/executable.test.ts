@@ -376,9 +376,9 @@ describe("runtime-host-bridge executable packaging", () => {
         "utf8",
       );
 
-      await expect(
-        packageSea.assertProductionReleaseHasNoQaArtifacts(releaseDir),
-      ).rejects.toThrow(/QA fixture artifacts|QA\/mock data markers/);
+      await expect(packageSea.assertProductionReleaseHasNoQaArtifacts(releaseDir)).rejects.toThrow(
+        /QA fixture artifacts|QA\/mock data markers/,
+      );
     } finally {
       await rm(releaseDir, { recursive: true, force: true });
     }

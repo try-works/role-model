@@ -1,14 +1,14 @@
-import type { RuntimeDeviceAuthorization } from "../lib/runtime-api";
-import {
-  isCodexSubscriptionDeviceAuthorization,
-  resolveVerificationWindowUrl,
-  shouldAutoPollDeviceAuthorization,
-} from "../lib/device-authorization";
 import {
   mutedPanelClassName,
   raisedPanelClassName,
   secondaryButtonClassName,
 } from "../lib/design-system";
+import {
+  isCodexSubscriptionDeviceAuthorization,
+  resolveVerificationWindowUrl,
+  shouldAutoPollDeviceAuthorization,
+} from "../lib/device-authorization";
+import type { RuntimeDeviceAuthorization } from "../lib/runtime-api";
 import { StatusPill } from "./page-primitives";
 
 export function DeviceAuthorizationCard(input: {
@@ -44,11 +44,7 @@ export function DeviceAuthorizationCard(input: {
           </p>
           <p>OpenAI asks for this code after you sign in.</p>
           <div className="flex flex-wrap gap-3">
-            <button
-              className={secondaryButtonClassName}
-              type="button"
-              onClick={input.onCopyCode}
-            >
+            <button className={secondaryButtonClassName} type="button" onClick={input.onCopyCode}>
               {input.copyCodeLabel}
             </button>
             {verificationUrl ? (

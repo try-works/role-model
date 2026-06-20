@@ -1,8 +1,8 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, test } from "vitest";
 
-import type { RuntimeRolePolicyRole, RuntimeTaskDefinition } from "./runtime-api";
 import { RoleCatalogHierarchy } from "./role-task-hierarchy";
+import type { RuntimeRolePolicyRole, RuntimeTaskDefinition } from "./runtime-api";
 
 const roleDefinitions: RuntimeRolePolicyRole[] = [
   {

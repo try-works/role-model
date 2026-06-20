@@ -290,6 +290,7 @@ describe("OpenAI provider adapter", () => {
           },
         },
       ],
+      // biome-ignore lint/suspicious/noExplicitAny: test mock object
     } as any;
 
     const adapter = createOpenAIProviderAdapter();
@@ -347,6 +348,7 @@ describe("OpenAI provider adapter", () => {
           },
         },
       ],
+      // biome-ignore lint/suspicious/noExplicitAny: test mock object
     } as any;
 
     const adapter = createOpenAIProviderAdapter();
@@ -408,6 +410,7 @@ describe("OpenAI provider adapter", () => {
           },
         },
       ],
+      // biome-ignore lint/suspicious/noExplicitAny: test mock object
     } as any;
 
     const adapter = createOpenAIProviderAdapter("ai-sdk-openai-compatible");

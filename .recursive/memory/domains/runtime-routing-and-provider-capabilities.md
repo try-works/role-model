@@ -36,8 +36,9 @@ Source-Runs:
 - `47-runtime-persistence-rehydration-lifecycle`
 - `49-runtime-telemetry-analytics-charts`
 - `50-openai-codex-subscription`
+- `51-runtime-testing-architecture-and-regression-matrix`
 Validated-At-Commit: `working-tree`
-Last-Validated: `2026-06-20T05:30:00Z`
+Last-Validated: `2026-06-20T12:40:00Z`
 Tags:
 - `runtime`
 - `routing`

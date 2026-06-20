@@ -29,4 +29,7 @@ export default defineConfig({
       "/v1": runtimeHostTarget,
     },
   },
+  test: {
+    include: ["app/**/*.test.ts", "app/**/*.test.tsx"],
+  },
 });

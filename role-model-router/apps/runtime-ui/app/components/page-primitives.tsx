@@ -349,7 +349,11 @@ export function SelectField({
         type="button"
       >
         <span
-          className={selectedOption ? "min-w-0 flex-1 truncate" : "min-w-0 flex-1 truncate text-[var(--rm-muted)]"}
+          className={
+            selectedOption
+              ? "min-w-0 flex-1 truncate"
+              : "min-w-0 flex-1 truncate text-[var(--rm-muted)]"
+          }
         >
           {selectedOption?.label ?? "Select…"}
         </span>

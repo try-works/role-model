@@ -56,10 +56,12 @@ describe("OpenAI Codex Subscription model matrix", () => {
         "chatgpt/gpt-5.3-instant",
       ]),
     );
-    expect(OPENAI_CODEX_SUBSCRIPTION_MODEL_MATRIX.every((entry) => entry.supportsHostedWebSearch))
-      .toBe(true);
-    expect(OPENAI_CODEX_SUBSCRIPTION_MODEL_MATRIX.every((entry) => entry.supportsFunctionCalling))
-      .toBe(true);
+    expect(
+      OPENAI_CODEX_SUBSCRIPTION_MODEL_MATRIX.every((entry) => entry.supportsHostedWebSearch),
+    ).toBe(true);
+    expect(
+      OPENAI_CODEX_SUBSCRIPTION_MODEL_MATRIX.every((entry) => entry.supportsFunctionCalling),
+    ).toBe(true);
   });
 
   test("listProviders exposes the full Codex Subscription 5.3+ matrix for OpenAI", async () => {
@@ -130,9 +132,7 @@ describe("OpenAI Codex Subscription model matrix", () => {
     }
   });
 
-  test(
-    "accepts hosted web search and function-tool request surfaces for every supported OpenAI model id",
-    async () => {
+  test("accepts hosted web search and function-tool request surfaces for every supported OpenAI model id", async () => {
     const runtimeStateRoot = path.join(os.tmpdir(), `openai-provider-requests-${Date.now()}`);
     const codexExecutionRequests: Array<{
       modelId: string;
@@ -347,7 +347,9 @@ describe("OpenAI Codex Subscription model matrix", () => {
         functionToolRequests.map((request) => (request.body.model as string | undefined) ?? null),
       ).toEqual(EXPECTED_OPENAI_CODEX_SUBSCRIPTION_MODEL_IDS.map((modelId) => modelId.slice(8)));
       expect(
-        webSearchRequests.map((request) => (request.body.tools as Array<{ type: string }>)[0]?.type),
+        webSearchRequests.map(
+          (request) => (request.body.tools as Array<{ type: string }>)[0]?.type,
+        ),
       ).toEqual(EXPECTED_OPENAI_CODEX_SUBSCRIPTION_MODEL_IDS.map(() => "web_search"));
       expect(
         functionToolRequests.map(
@@ -358,9 +360,7 @@ describe("OpenAI Codex Subscription model matrix", () => {
       await backend.shutdown();
       await rm(runtimeStateRoot, { recursive: true, force: true });
     }
-    },
-    15_000,
-  );
+  }, 15_000);
 
   test("maps mixed-provider controller.remote-only web-search requests to runtime tool calling without excluding supported providers", () => {
     const result = mapResponsesRequest(
@@ -459,11 +459,7 @@ describe("OpenAI Codex Subscription model matrix", () => {
       [
         {
           aliasId: "controller.remote-only",
-          modelIds: [
-            "deepseek/deepseek-v4-flash",
-            "moonshot/kimi-k2.7-code",
-            "chatgpt/gpt-5.4",
-          ],
+          modelIds: ["deepseek/deepseek-v4-flash", "moonshot/kimi-k2.7-code", "chatgpt/gpt-5.4"],
         },
       ],
     );
@@ -650,23 +646,28 @@ describe("OpenAI Codex Subscription model matrix", () => {
 
       expect(
         candidates
-          .filter((candidate) => EXPECTED_OPENAI_CODEX_SUBSCRIPTION_MODEL_IDS.includes(candidate.modelId as any))
+          .filter((candidate) =>
+            EXPECTED_OPENAI_CODEX_SUBSCRIPTION_MODEL_IDS.includes(
+              // biome-ignore lint/suspicious/noExplicitAny: test model id cast
+              candidate.modelId as any,
+            ),
+          )
           .sort((left, right) => left.modelId.localeCompare(right.modelId))
           .map((candidate) => ({
             modelId: candidate.modelId,
             capabilities: [...candidate.capabilities].sort(),
           })),
       ).toEqual(
-        [...EXPECTED_OPENAI_CODEX_SUBSCRIPTION_MODEL_IDS].sort((left, right) =>
-          left.localeCompare(right),
-        ).map((modelId) => ({
-          modelId,
-          capabilities: expect.arrayContaining([
-            "code.edit",
-            "text.chat",
-            "tools.function_calling",
-          ]),
-        })),
+        [...EXPECTED_OPENAI_CODEX_SUBSCRIPTION_MODEL_IDS]
+          .sort((left, right) => left.localeCompare(right))
+          .map((modelId) => ({
+            modelId,
+            capabilities: expect.arrayContaining([
+              "code.edit",
+              "text.chat",
+              "tools.function_calling",
+            ]),
+          })),
       );
 
       for (const modelId of EXPECTED_OPENAI_CODEX_SUBSCRIPTION_MODEL_IDS) {

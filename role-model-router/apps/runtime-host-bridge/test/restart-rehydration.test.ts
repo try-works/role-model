@@ -147,10 +147,7 @@ describe("restart rehydration", () => {
   });
 
   test("keeps restarted remote endpoints healthy when provider /models returns unprefixed ids", async () => {
-    const runtimeStateRoot = path.join(
-      os.tmpdir(),
-      `restart-rehydration-health-${Date.now()}`,
-    );
+    const runtimeStateRoot = path.join(os.tmpdir(), `restart-rehydration-health-${Date.now()}`);
     const scopeId = "restart-rehydration-health-tests";
     const unifiedRuntimeConfigPath = path.join(runtimeStateRoot, "runtime-config.yaml");
     const originalMoonshotApiKey = process.env.MOONSHOT_API_KEY;
@@ -992,7 +989,7 @@ describe("restart rehydration", () => {
     const runtimeStateRoot = path.join(os.tmpdir(), `restart-codex-subscription-${Date.now()}`);
     const scopeId = "restart-codex-subscription-tests";
 
-    const firstBackend = await createRuntimeBridgeBackend(({
+    const firstBackend = await createRuntimeBridgeBackend({
       repoRoot,
       fixtureRoot: testFixtureRoot,
       runtimeStateRoot,
@@ -1010,7 +1007,8 @@ describe("restart rehydration", () => {
           requiresOpenaiAuth: true,
         }),
       },
-    }) as any);
+      // biome-ignore lint/suspicious/noExplicitAny: test mock object
+    } as any);
 
     try {
       await firstBackend.startProviderDeviceAuthorization({
@@ -1028,7 +1026,7 @@ describe("restart rehydration", () => {
       });
       await firstBackend.shutdown();
 
-      const secondBackend = await createRuntimeBridgeBackend(({
+      const secondBackend = await createRuntimeBridgeBackend({
         repoRoot,
         fixtureRoot: testFixtureRoot,
         runtimeStateRoot,
@@ -1070,7 +1068,8 @@ describe("restart rehydration", () => {
             };
           },
         },
-      }) as any);
+        // biome-ignore lint/suspicious/noExplicitAny: test mock object
+      } as any);
 
       try {
         let health = await secondBackend.readHealthStatus();

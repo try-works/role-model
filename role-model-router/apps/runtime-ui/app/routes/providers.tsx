@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 
+import { DeviceAuthorizationCard } from "../components/device-authorization-card";
+import { DeviceAuthorizationModal } from "../components/device-authorization-modal";
 import {
   EmptyState,
   ErrorState,
@@ -9,8 +11,6 @@ import {
   SelectField,
   StatusPill,
 } from "../components/page-primitives";
-import { DeviceAuthorizationCard } from "../components/device-authorization-card";
-import { DeviceAuthorizationModal } from "../components/device-authorization-modal";
 import {
   fieldClassName,
   mutedPanelClassName,
@@ -398,8 +398,9 @@ export default function ProvidersRoute() {
         providerAccountId: account.providerAccountId,
       });
       setOauthState(result);
-      const verificationUrl =
-        shouldAutoOpenDeviceAuthorizationWindow(result) ? resolveVerificationWindowUrl(result) : null;
+      const verificationUrl = shouldAutoOpenDeviceAuthorizationWindow(result)
+        ? resolveVerificationWindowUrl(result)
+        : null;
       if (verificationUrl) {
         try {
           window.open(verificationUrl, "_blank", "noopener,noreferrer");
@@ -551,8 +552,9 @@ export default function ProvidersRoute() {
         quotaPolicyRef: "quota.default",
       });
       setOauthState(result);
-      const verificationUrl =
-        shouldAutoOpenDeviceAuthorizationWindow(result) ? resolveVerificationWindowUrl(result) : null;
+      const verificationUrl = shouldAutoOpenDeviceAuthorizationWindow(result)
+        ? resolveVerificationWindowUrl(result)
+        : null;
       if (verificationUrl) {
         try {
           window.open(verificationUrl, "_blank", "noopener,noreferrer");
@@ -870,7 +872,11 @@ export default function ProvidersRoute() {
               ) : (
                 <>
                   {providerMaintenanceRows.map((row) => (
-                    <div key={row.providerAccountId} className={`${mutedPanelClassName} p-4`}>
+                    <div
+                      key={row.providerAccountId}
+                      className={`${mutedPanelClassName} p-4`}
+                      data-testid={`provider-maintenance-${row.providerAccountId}`}
+                    >
                       <div className="flex flex-wrap items-center gap-2">
                         <h3 className="font-semibold text-[var(--rm-fg)]">
                           {row.providerAccountId}

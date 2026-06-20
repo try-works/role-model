@@ -340,10 +340,7 @@ function getSupportedCapabilitiesForCandidate(
     return candidate.declared.capabilities;
   }
 
-  return unique([
-    ...candidate.declared.capabilities,
-    ...roleBinding.effective_capabilities,
-  ]);
+  return unique([...candidate.declared.capabilities, ...roleBinding.effective_capabilities]);
 }
 
 function getEffectiveLatency(candidate: EndpointCandidate): number {
@@ -360,7 +357,10 @@ function getEffectiveLatency(candidate: EndpointCandidate): number {
   return 250;
 }
 
-function resolveQualityFreshness(input: RouteRequestInput, candidate: EndpointCandidate): {
+function resolveQualityFreshness(
+  input: RouteRequestInput,
+  candidate: EndpointCandidate,
+): {
   freshnessWeight: number;
   measuredAtMs: number | undefined;
   source: "profile" | "halflife";
@@ -1216,8 +1216,7 @@ export function routeRequest(input: RouteRequestInput): RouterDecisionRecord {
   const tieBreakApplied =
     Boolean(chosen) &&
     Boolean(runnerUp) &&
-    Math.abs((chosen?.total_score ?? 0) - (runnerUp?.total_score ?? 0)) <=
-      ROUTER_SCORE_TIE_EPSILON;
+    Math.abs((chosen?.total_score ?? 0) - (runnerUp?.total_score ?? 0)) <= ROUTER_SCORE_TIE_EPSILON;
   const selectionReasons: SelectionReasonCode[] = chosen
     ? unique<SelectionReasonCode>([
         "BEST_TOTAL_SCORE",

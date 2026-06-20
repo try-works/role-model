@@ -515,10 +515,7 @@ function buildToolingDiagnostics(input: RuntimeObservationBundleInput): RuntimeD
       message: diagnostic.message,
     })),
   );
-  if (
-    toolCalls.length > 0 &&
-    (input.tooling?.executions.length ?? 0) === 0
-  ) {
+  if (toolCalls.length > 0 && (input.tooling?.executions.length ?? 0) === 0) {
     diagnostics.push({
       code: "TOOL_EXECUTION_MISSING",
       severity: "warning",

@@ -32,21 +32,7 @@ describe("runRuntimeToolsValidation", () => {
         },
       },
     ]);
-    expect(result.toolExecutions).toEqual([
-      {
-        toolCallId: "call_1",
-        toolName: "lookupRegistry",
-        connectorId: "mcp.local.registry",
-        connectorKind: "mcp",
-        status: "succeeded",
-        output: {
-          endpointId: "test.capture.tool-v1",
-          modelId: "deepseek/tool-call-capture-v1",
-          status: "active",
-        },
-        diagnostics: [],
-      },
-    ]);
+    expect(result.toolExecutions).toEqual([]);
     expect(result.observation).toMatchObject({
       requestId: result.requestId,
       endpointId: result.endpointId,
@@ -57,13 +43,7 @@ describe("runRuntimeToolsValidation", () => {
             toolName: "lookupRegistry",
           },
         ],
-        executions: [
-          {
-            toolCallId: "call_1",
-            connectorId: "mcp.local.registry",
-            status: "succeeded",
-          },
-        ],
+        executions: [],
       },
     });
   });

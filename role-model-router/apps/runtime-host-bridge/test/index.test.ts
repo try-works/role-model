@@ -1351,11 +1351,7 @@ describe("runtime-host-bridge", () => {
         {
           aliasId: "controller.remote-only",
           mode: "intelligent",
-          modelIds: [
-            "chatgpt/gpt-5.4",
-            "deepseek/deepseek-v4-flash",
-            "moonshot/kimi-k2.7-code",
-          ],
+          modelIds: ["chatgpt/gpt-5.4", "deepseek/deepseek-v4-flash", "moonshot/kimi-k2.7-code"],
         },
       ],
     );
@@ -1421,51 +1417,51 @@ describe("runtime-host-bridge", () => {
         };
       }
     ).mapResponsesRequest(
-        {
-          endpoints: [
-            {
-              identity: {
-                endpoint_id: "deepseek.personal.primary.global.deepseek-v4-flash",
-                endpoint_kind: "remote_api",
-                provider_kind: "remote_openai_compat",
-                serving_source: "remote-service",
-                model_id: "deepseek/deepseek-v4-flash",
-                runtime_version: "test-registry-v1",
-                region: "global",
-              },
-              declared: {
-                endpoint_id: "deepseek.personal.primary.global.deepseek-v4-flash",
-                capabilities: ["text.chat", "tools.function_calling"],
-                modalities: ["text"],
-                max_context_tokens: 128000,
-                tool_calling: {
-                  supported: true,
-                  style: "openai",
-                },
-                supports_embeddings: false,
-                platform_constraints: [],
-              },
-              status: "active",
+      {
+        endpoints: [
+          {
+            identity: {
+              endpoint_id: "deepseek.personal.primary.global.deepseek-v4-flash",
+              endpoint_kind: "remote_api",
+              provider_kind: "remote_openai_compat",
+              serving_source: "remote-service",
+              model_id: "deepseek/deepseek-v4-flash",
+              runtime_version: "test-registry-v1",
+              region: "global",
             },
-          ],
-          diagnostics: [],
-          lifecycleSummary: {
-            active: 1,
-            degraded: 0,
-            offline: 0,
+            declared: {
+              endpoint_id: "deepseek.personal.primary.global.deepseek-v4-flash",
+              capabilities: ["text.chat", "tools.function_calling"],
+              modalities: ["text"],
+              max_context_tokens: 128000,
+              tool_calling: {
+                supported: true,
+                style: "openai",
+              },
+              supports_embeddings: false,
+              platform_constraints: [],
+            },
+            status: "active",
           },
+        ],
+        diagnostics: [],
+        lifecycleSummary: {
+          active: 1,
+          degraded: 0,
+          offline: 0,
         },
-        {
-          model: "deepseek/deepseek-v4-flash",
-          input: "Find the current Cloudflare stock price and cite the source.",
-          tools: [
-            {
-              type: "web_search",
-            },
-          ],
-        },
-        "req-hosted-web-search-exact-deepseek-001",
-      );
+      },
+      {
+        model: "deepseek/deepseek-v4-flash",
+        input: "Find the current Cloudflare stock price and cite the source.",
+        tools: [
+          {
+            type: "web_search",
+          },
+        ],
+      },
+      "req-hosted-web-search-exact-deepseek-001",
+    );
 
     expect(result.routingRequest.needsTools).toBe(true);
     expect(result.routingRequest.allowEndpoints).toEqual([
@@ -1683,12 +1679,15 @@ describe("runtime-host-bridge", () => {
 
   test("describes endpoint web-search support by active runtime transport", () => {
     expect(
-      typeof (bridge as { resolveEndpointWebSearchSupport?: unknown }).resolveEndpointWebSearchSupport,
+      typeof (bridge as { resolveEndpointWebSearchSupport?: unknown })
+        .resolveEndpointWebSearchSupport,
     ).toBe("function");
 
     const resolveEndpointWebSearchSupport = (
       bridge as {
-        resolveEndpointWebSearchSupport: (endpoint: EndpointRegistryResult["endpoints"][number]) => unknown;
+        resolveEndpointWebSearchSupport: (
+          endpoint: EndpointRegistryResult["endpoints"][number],
+        ) => unknown;
       }
     ).resolveEndpointWebSearchSupport;
 
@@ -6054,174 +6053,170 @@ describe("runtime-host-bridge", () => {
     );
   });
 
-  test(
-    "executes every canonical remote alias through the runtime-backed chat path",
-    async () => {
-      const cases = [
-        {
-          aliasId: "default.remote-only",
-          requestId: "req-runtime-bridge-alias-default-remote-only-001",
-          litellmCommand: createAliasRemoteVendorScript(),
+  test("executes every canonical remote alias through the runtime-backed chat path", async () => {
+    const cases = [
+      {
+        aliasId: "default.remote-only",
+        requestId: "req-runtime-bridge-alias-default-remote-only-001",
+        litellmCommand: createAliasRemoteVendorScript(),
+      },
+      {
+        aliasId: "baseline.remote-only",
+        requestId: "req-runtime-bridge-alias-baseline-remote-only-001",
+        routingStrategy: "baseline",
+        litellmCommand: createAliasRemoteVendorScript(),
+      },
+      {
+        aliasId: "controller.remote-only",
+        requestId: "req-runtime-bridge-alias-controller-remote-only-001",
+        routingStrategy: "controller",
+        controller: {
+          enabled: true,
+          source_type: "remote",
+          model_id: "openai/gpt-4.1-mini-fast",
+          timeout_ms: 1500,
         },
-        {
-          aliasId: "baseline.remote-only",
-          requestId: "req-runtime-bridge-alias-baseline-remote-only-001",
-          routingStrategy: "baseline",
-          litellmCommand: createAliasRemoteVendorScript(),
+        litellmCommand: createControllerVendorScript(),
+      },
+      {
+        aliasId: "difficulty.remote-only",
+        requestId: "req-runtime-bridge-alias-difficulty-remote-only-001",
+        routingStrategy: "difficulty",
+        difficultyClassifier: {
+          enabled: true,
+          rubric_version: "v1",
+          source_type: "remote",
+          model_id: "openai/gpt-4.1-mini-fast",
+          timeout_ms: 1500,
+          fallback_difficulty: "easy",
         },
-        {
-          aliasId: "controller.remote-only",
-          requestId: "req-runtime-bridge-alias-controller-remote-only-001",
-          routingStrategy: "controller",
-          controller: {
-            enabled: true,
-            source_type: "remote",
-            model_id: "openai/gpt-4.1-mini-fast",
-            timeout_ms: 1500,
-          },
-          litellmCommand: createControllerVendorScript(),
+        litellmCommand: createDifficultyClassifierVendorScript("valid-hard"),
+      },
+      {
+        aliasId: "hybrid.remote-only",
+        requestId: "req-runtime-bridge-alias-hybrid-remote-only-001",
+        routingStrategy: "hybrid",
+        difficultyClassifier: {
+          enabled: true,
+          rubric_version: "v1",
+          source_type: "remote",
+          model_id: "openai/gpt-4.1-mini-fast",
+          timeout_ms: 1500,
+          fallback_difficulty: "easy",
         },
-        {
-          aliasId: "difficulty.remote-only",
-          requestId: "req-runtime-bridge-alias-difficulty-remote-only-001",
-          routingStrategy: "difficulty",
-          difficultyClassifier: {
-            enabled: true,
-            rubric_version: "v1",
-            source_type: "remote",
-            model_id: "openai/gpt-4.1-mini-fast",
-            timeout_ms: 1500,
-            fallback_difficulty: "easy",
-          },
-          litellmCommand: createDifficultyClassifierVendorScript("valid-hard"),
+        controller: {
+          enabled: true,
+          source_type: "remote",
+          model_id: "openai/gpt-4.1-mini-fast",
+          timeout_ms: 1500,
         },
-        {
-          aliasId: "hybrid.remote-only",
-          requestId: "req-runtime-bridge-alias-hybrid-remote-only-001",
-          routingStrategy: "hybrid",
-          difficultyClassifier: {
-            enabled: true,
-            rubric_version: "v1",
-            source_type: "remote",
-            model_id: "openai/gpt-4.1-mini-fast",
-            timeout_ms: 1500,
-            fallback_difficulty: "easy",
-          },
-          controller: {
-            enabled: true,
-            source_type: "remote",
-            model_id: "openai/gpt-4.1-mini-fast",
-            timeout_ms: 1500,
-          },
-          litellmCommand: createHybridArbitrationVendorScript(),
-        },
-      ] as const;
+        litellmCommand: createHybridArbitrationVendorScript(),
+      },
+    ] as const;
 
-      for (const testCase of cases) {
-        const runtimeStateRoot = await mkdtemp(
-          path.join(os.tmpdir(), "role-model-runtime-host-alias-remote-matrix-"),
+    for (const testCase of cases) {
+      const runtimeStateRoot = await mkdtemp(
+        path.join(os.tmpdir(), "role-model-runtime-host-alias-remote-matrix-"),
+      );
+      const unifiedRuntimeConfigPath = path.join(runtimeStateRoot, "runtime-config.yaml");
+
+      try {
+        await writeFile(
+          unifiedRuntimeConfigPath,
+          stringify({
+            version: "1.0",
+            ...(testCase.routingStrategy
+              ? {
+                  routing: {
+                    strategy: testCase.routingStrategy,
+                  },
+                }
+              : {}),
+            execution_mode: "remote_only",
+            ...(testCase.difficultyClassifier
+              ? { difficulty_classifier: testCase.difficultyClassifier }
+              : {}),
+            ...(testCase.controller ? { controller: testCase.controller } : {}),
+            litellm_proxy: {
+              command: "node",
+              args: ["-e", testCase.litellmCommand],
+              providers: {
+                openai: {
+                  api_key: "${OPENAI_API_KEY}",
+                  model_list: [
+                    {
+                      model_name: "openai/gpt-4.1-mini-fast",
+                      max_difficulty: "hard",
+                      litellm_params: {
+                        model: "openai/gpt-4.1-mini",
+                      },
+                    },
+                  ],
+                },
+              },
+            },
+          }),
+          "utf8",
         );
-        const unifiedRuntimeConfigPath = path.join(runtimeStateRoot, "runtime-config.yaml");
+
+        const backend = await (
+          bridge as {
+            createRuntimeBridgeBackend: (options: {
+              repoRoot: string;
+              fixtureRoot: string;
+              runtimeStateRoot: string;
+              scopeId: string;
+              unifiedRuntimeConfigPath: string;
+            }) => Promise<{
+              executeChatCompletions: (
+                body: Record<string, unknown>,
+                requestId: string,
+              ) => Promise<{
+                endpointId: string;
+              }>;
+              readRequestObservation: (requestId: string) => Promise<unknown>;
+              shutdown?: () => Promise<void>;
+            }>;
+          }
+        ).createRuntimeBridgeBackend({
+          repoRoot,
+          fixtureRoot: testFixtureRoot,
+          runtimeStateRoot,
+          scopeId: `runtime-host-${testCase.aliasId.replaceAll(".", "-")}`,
+          unifiedRuntimeConfigPath,
+        });
 
         try {
-          await writeFile(
-            unifiedRuntimeConfigPath,
-            stringify({
-              version: "1.0",
-              ...(testCase.routingStrategy
-                ? {
-                    routing: {
-                      strategy: testCase.routingStrategy,
-                    },
-                  }
-                : {}),
-              execution_mode: "remote_only",
-              ...(testCase.difficultyClassifier
-                ? { difficulty_classifier: testCase.difficultyClassifier }
-                : {}),
-              ...(testCase.controller ? { controller: testCase.controller } : {}),
-              litellm_proxy: {
-                command: "node",
-                args: ["-e", testCase.litellmCommand],
-                providers: {
-                  openai: {
-                    api_key: "${OPENAI_API_KEY}",
-                    model_list: [
-                      {
-                        model_name: "openai/gpt-4.1-mini-fast",
-                        max_difficulty: "hard",
-                        litellm_params: {
-                          model: "openai/gpt-4.1-mini",
-                        },
-                      },
-                    ],
-                  },
-                },
+          await expect(
+            backend.executeChatCompletions(
+              {
+                model: testCase.aliasId,
+                messages: [{ role: "user", content: "Say hello in one short sentence." }],
               },
-            }),
-            "utf8",
-          );
-
-          const backend = await (
-            bridge as {
-              createRuntimeBridgeBackend: (options: {
-                repoRoot: string;
-                fixtureRoot: string;
-                runtimeStateRoot: string;
-                scopeId: string;
-                unifiedRuntimeConfigPath: string;
-              }) => Promise<{
-                executeChatCompletions: (
-                  body: Record<string, unknown>,
-                  requestId: string,
-                ) => Promise<{
-                  endpointId: string;
-                }>;
-                readRequestObservation: (requestId: string) => Promise<unknown>;
-                shutdown?: () => Promise<void>;
-              }>;
-            }
-          ).createRuntimeBridgeBackend({
-            repoRoot,
-            fixtureRoot: testFixtureRoot,
-            runtimeStateRoot,
-            scopeId: `runtime-host-${testCase.aliasId.replaceAll(".", "-")}`,
-            unifiedRuntimeConfigPath,
+              testCase.requestId,
+            ),
+          ).resolves.toMatchObject({
+            endpointId: "openai.litellm.global.openai-gpt-4-1-mini-fast",
           });
 
-          try {
-            await expect(
-              backend.executeChatCompletions(
-                {
-                  model: testCase.aliasId,
-                  messages: [{ role: "user", content: "Say hello in one short sentence." }],
-                },
-                testCase.requestId,
-              ),
-            ).resolves.toMatchObject({
-              endpointId: "openai.litellm.global.openai-gpt-4-1-mini-fast",
-            });
-
-            await expect(backend.readRequestObservation(testCase.requestId)).resolves.toMatchObject({
-              requestId: testCase.requestId,
-              routingDiagnostics: {
-                aliasResolution: {
-                  requestedModel: testCase.aliasId,
-                  aliasId: testCase.aliasId,
-                  allowEndpoints: ["openai.litellm.global.openai-gpt-4-1-mini-fast"],
-                },
+          await expect(backend.readRequestObservation(testCase.requestId)).resolves.toMatchObject({
+            requestId: testCase.requestId,
+            routingDiagnostics: {
+              aliasResolution: {
+                requestedModel: testCase.aliasId,
+                aliasId: testCase.aliasId,
+                allowEndpoints: ["openai.litellm.global.openai-gpt-4-1-mini-fast"],
               },
-            });
-          } finally {
-            await Promise.race([backend.shutdown?.() ?? Promise.resolve(), delay(1_000)]);
-          }
+            },
+          });
         } finally {
-          await rm(runtimeStateRoot, { recursive: true, force: true });
+          await Promise.race([backend.shutdown?.() ?? Promise.resolve(), delay(1_000)]);
         }
+      } finally {
+        await rm(runtimeStateRoot, { recursive: true, force: true });
       }
-    },
-    60_000,
-  );
+    }
+  }, 60_000);
 
   test("filters router summary aliases and candidates by explicit remote-only execution mode", () => {
     const filter = (
@@ -6453,7 +6448,8 @@ describe("runtime-host-bridge", () => {
 
     for (const strategyCase of strategyCases) {
       for (const executionModeCase of executionModeCases) {
-        const filteredRegistry = filter!(mixedRegistry, executionModeCase.executionMode);
+        if (!filter) throw new Error("filter must be defined");
+        const filteredRegistry = filter(mixedRegistry, executionModeCase.executionMode);
         const inventory = buildRoutableInventory(filteredRegistry, mixedSources);
         const aliasId = `${strategyCase.aliasPrefix}.${executionModeCase.executionMode.replaceAll(
           "_",
@@ -7524,9 +7520,7 @@ describe("runtime-host-bridge", () => {
     });
   });
 
-  test(
-    "uses the configured remote controller result for intelligent runtime-backed chat requests",
-    async () => {
+  test("uses the configured remote controller result for intelligent runtime-backed chat requests", async () => {
     const runtimeStateRoot = await mkdtemp(
       path.join(os.tmpdir(), "role-model-runtime-host-controller-tests-"),
     );
@@ -7618,9 +7612,7 @@ describe("runtime-host-bridge", () => {
         },
       },
     });
-    },
-    10_000,
-  );
+  }, 10_000);
 
   test("uses the default controller timeout budget for realistic remote controller latency", async () => {
     const runtimeStateRoot = await mkdtemp(
@@ -7715,9 +7707,7 @@ describe("runtime-host-bridge", () => {
     });
   }, 10_000);
 
-  test(
-    "records sanitized controller guidance through the live HTTP bridge for intelligent aliases",
-    async () => {
+  test("records sanitized controller guidance through the live HTTP bridge for intelligent aliases", async () => {
     const runtimeStateRoot = await mkdtemp(
       path.join(os.tmpdir(), "role-model-runtime-host-controller-http-regression-"),
     );
@@ -7887,13 +7877,9 @@ describe("runtime-host-bridge", () => {
       await Promise.race([server.close(), delay(1_000)]);
       await Promise.race([backend.shutdown?.() ?? Promise.resolve(), delay(1_000)]);
     }
-    },
-    10_000,
-  );
+  }, 10_000);
 
-  test(
-    "preserves accepted controller directives for known compatibility strategy aliases",
-    async () => {
+  test("preserves accepted controller directives for known compatibility strategy aliases", async () => {
     const runtimeStateRoot = await mkdtemp(
       path.join(os.tmpdir(), "role-model-runtime-host-controller-compat-alias-"),
     );
@@ -7993,9 +7979,7 @@ describe("runtime-host-bridge", () => {
     } finally {
       await Promise.race([backend.shutdown?.() ?? Promise.resolve(), delay(1_000)]);
     }
-    },
-    10_000,
-  );
+  }, 10_000);
 
   test("gives controller routing enough output budget to avoid empty truncated guidance", async () => {
     const runtimeStateRoot = await mkdtemp(
@@ -8100,9 +8084,7 @@ describe("runtime-host-bridge", () => {
     }
   }, 10_000);
 
-  test(
-    "retries controller routing once with a compact prompt when the first controller response is empty",
-    async () => {
+  test("retries controller routing once with a compact prompt when the first controller response is empty", async () => {
     const runtimeStateRoot = await mkdtemp(
       path.join(os.tmpdir(), "role-model-runtime-host-controller-compact-retry-"),
     );
@@ -8208,122 +8190,116 @@ describe("runtime-host-bridge", () => {
     } finally {
       await Promise.race([backend.shutdown?.() ?? Promise.resolve(), delay(1_000)]);
     }
-    },
-    10_000,
-  );
+  }, 10_000);
 
-  test(
-    "falls back to heuristic controller guidance when the live controller returns prose instead of JSON",
-    async () => {
-      const runtimeStateRoot = await mkdtemp(
-        path.join(os.tmpdir(), "role-model-runtime-host-controller-heuristic-"),
-      );
-      const unifiedRuntimeConfigPath = path.join(runtimeStateRoot, "runtime-config.yaml");
-      await writeFile(
-        unifiedRuntimeConfigPath,
-        stringify({
-          version: "1.0",
-          routing: {
-            strategy: "controller",
-          },
-          controller: {
-            enabled: true,
-            source_type: "remote",
-            model_id: "openai/gpt-4.1-mini-fast",
-            timeout_ms: 1500,
-          },
-          execution_mode: "remote_only",
-          litellm_proxy: {
-            command: "node",
-            args: ["-e", createControllerInvalidVendorScript()],
-            providers: {
-              openai: {
-                api_key: "${OPENAI_API_KEY}",
-                model_list: [
-                  {
-                    model_name: "openai/gpt-4.1-mini-fast",
-                    max_difficulty: "hard",
-                    litellm_params: {
-                      model: "openai/gpt-4.1-mini",
-                    },
+  test("falls back to heuristic controller guidance when the live controller returns prose instead of JSON", async () => {
+    const runtimeStateRoot = await mkdtemp(
+      path.join(os.tmpdir(), "role-model-runtime-host-controller-heuristic-"),
+    );
+    const unifiedRuntimeConfigPath = path.join(runtimeStateRoot, "runtime-config.yaml");
+    await writeFile(
+      unifiedRuntimeConfigPath,
+      stringify({
+        version: "1.0",
+        routing: {
+          strategy: "controller",
+        },
+        controller: {
+          enabled: true,
+          source_type: "remote",
+          model_id: "openai/gpt-4.1-mini-fast",
+          timeout_ms: 1500,
+        },
+        execution_mode: "remote_only",
+        litellm_proxy: {
+          command: "node",
+          args: ["-e", createControllerInvalidVendorScript()],
+          providers: {
+            openai: {
+              api_key: "${OPENAI_API_KEY}",
+              model_list: [
+                {
+                  model_name: "openai/gpt-4.1-mini-fast",
+                  max_difficulty: "hard",
+                  litellm_params: {
+                    model: "openai/gpt-4.1-mini",
                   },
-                ],
-              },
+                },
+              ],
             },
           },
-        }),
-        "utf8",
+        },
+      }),
+      "utf8",
+    );
+
+    const backend = await (
+      bridge as {
+        createRuntimeBridgeBackend: (options: {
+          repoRoot: string;
+          fixtureRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+          unifiedRuntimeConfigPath: string;
+        }) => Promise<{
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+          ) => Promise<{
+            endpointId: string;
+          }>;
+          readRequestObservation: (requestId: string) => Promise<unknown>;
+          shutdown?: () => Promise<void>;
+        }>;
+      }
+    ).createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: testFixtureRoot,
+      runtimeStateRoot,
+      scopeId: "runtime-host-controller-heuristic-tests",
+      unifiedRuntimeConfigPath,
+    });
+
+    try {
+      const requestId = "req-runtime-bridge-controller-heuristic-001";
+      await backend.executeChatCompletions(
+        {
+          model: "controller.remote-only",
+          messages: [
+            {
+              role: "user",
+              content:
+                "Investigate this code-edit regression, update the patch, revise the tests, and verify the final schema behavior.",
+            },
+          ],
+        },
+        requestId,
       );
 
-      const backend = await (
-        bridge as {
-          createRuntimeBridgeBackend: (options: {
-            repoRoot: string;
-            fixtureRoot: string;
-            runtimeStateRoot: string;
-            scopeId: string;
-            unifiedRuntimeConfigPath: string;
-          }) => Promise<{
-            executeChatCompletions: (
-              body: Record<string, unknown>,
-              requestId: string,
-            ) => Promise<{
-              endpointId: string;
-            }>;
-            readRequestObservation: (requestId: string) => Promise<unknown>;
-            shutdown?: () => Promise<void>;
-          }>;
-        }
-      ).createRuntimeBridgeBackend({
-        repoRoot,
-        fixtureRoot: testFixtureRoot,
-        runtimeStateRoot,
-        scopeId: "runtime-host-controller-heuristic-tests",
-        unifiedRuntimeConfigPath,
+      await expect(backend.readRequestObservation(requestId)).resolves.toMatchObject({
+        requestId,
+        routingDiagnostics: {
+          controllerRouting: {
+            active: true,
+            fallbackApplied: true,
+            fallbackReason: "controller-heuristic-fallback",
+            acceptedDirectives: {
+              strategy: "quality",
+            },
+          },
+        },
       });
-
-      try {
-        const requestId = "req-runtime-bridge-controller-heuristic-001";
-        await backend.executeChatCompletions(
-          {
-            model: "controller.remote-only",
-            messages: [
-              {
-                role: "user",
-                content:
-                  "Investigate this code-edit regression, update the patch, revise the tests, and verify the final schema behavior.",
-              },
-            ],
+      await expect(backend.readRequestObservation(requestId)).resolves.not.toMatchObject({
+        routingDiagnostics: {
+          controllerRouting: {
+            fallbackReason: "invalid-controller-output",
           },
-          requestId,
-        );
-
-        await expect(backend.readRequestObservation(requestId)).resolves.toMatchObject({
-          requestId,
-          routingDiagnostics: {
-            controllerRouting: {
-              active: true,
-              fallbackApplied: true,
-              fallbackReason: "controller-heuristic-fallback",
-              acceptedDirectives: {
-                strategy: "quality",
-              },
-            },
-          },
-        });
-        await expect(backend.readRequestObservation(requestId)).resolves.not.toMatchObject({
-          routingDiagnostics: {
-            controllerRouting: {
-              fallbackReason: "invalid-controller-output",
-            },
-          },
-        });
-      } finally {
-        await Promise.race([backend.shutdown?.() ?? Promise.resolve(), delay(1_000)]);
-      }
-    },
-    10_000,
-  );
+        },
+      });
+    } finally {
+      await Promise.race([backend.shutdown?.() ?? Promise.resolve(), delay(1_000)]);
+    }
+  }, 10_000);
 
   test("keeps controller.remote-only routing inside the remote-only alias slice even when the available inventory is hybrid", () => {
     const mixedRegistry: EndpointRegistryResult = {
@@ -8952,9 +8928,7 @@ describe("runtime-host-bridge", () => {
     });
   });
 
-  test(
-    "rehydrates persisted controller assignment for controller aliases after restart even without a controller block in runtime config",
-    async () => {
+  test("rehydrates persisted controller assignment for controller aliases after restart even without a controller block in runtime config", async () => {
     const runtimeStateRoot = await mkdtemp(
       path.join(os.tmpdir(), "role-model-runtime-host-controller-restart-tests-"),
     );
@@ -9055,9 +9029,7 @@ describe("runtime-host-bridge", () => {
     } finally {
       await Promise.race([secondBackend.shutdown?.() ?? Promise.resolve(), delay(1_000)]);
     }
-    },
-    10_000,
-  );
+  }, 10_000);
 
   test("persists alias-default hybrid arbitration and rewrite-applied diagnostics for runtime-backed chat requests", async () => {
     const runtimeStateRoot = await mkdtemp(
@@ -11515,8 +11487,7 @@ describe("runtime-host-bridge", () => {
                           type: "function",
                           function: {
                             name: "$web_search",
-                            arguments:
-                              '{"query":"Cloudflare stock price","total_tokens":1234}',
+                            arguments: '{"query":"Cloudflare stock price","total_tokens":1234}',
                           },
                         },
                       ],
@@ -11698,8 +11669,8 @@ describe("runtime-host-bridge", () => {
               typeof input === "string"
                 ? input
                 : input instanceof URL
-                ? input.toString()
-                : input.url;
+                  ? input.toString()
+                  : input.url;
 
             if (url === "https://api.deepseek.com/v1/chat/completions") {
               providerRequestCount += 1;
@@ -11730,17 +11701,17 @@ describe("runtime-host-bridge", () => {
                             },
                           ],
                         },
+                      },
+                    ],
+                    usage: {
+                      prompt_tokens: 52,
+                      completion_tokens: 11,
+                      total_tokens: 63,
                     },
-                  ],
-                  usage: {
-                    prompt_tokens: 52,
-                    completion_tokens: 11,
-                    total_tokens: 63,
-                  },
-                }),
-                { status: 200, headers: { "content-type": "application/json" } },
-              );
-            }
+                  }),
+                  { status: 200, headers: { "content-type": "application/json" } },
+                );
+              }
             }
 
             throw new Error(`Unexpected network request: ${url}`);
@@ -12006,7 +11977,8 @@ describe("runtime-host-bridge", () => {
                       type: "function",
                       function: {
                         name: "web_search",
-                        arguments: '{"query":"Cloudflare NET stock price today NYSE","max_results":5}',
+                        arguments:
+                          '{"query":"Cloudflare NET stock price today NYSE","max_results":5}',
                       },
                     },
                   ],

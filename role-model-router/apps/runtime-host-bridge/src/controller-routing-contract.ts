@@ -151,9 +151,7 @@ function inferControllerStrategy(input: {
     [...taskSignals].some((taskType) => COST_STRATEGY_TASK_TYPES.has(taskType)) ||
     [...allCapabilities].some((capability) => COST_STRATEGY_CAPABILITIES.has(capability));
   const hasSemanticGuidance =
-    taskSignals.size > 0 ||
-    allCapabilities.size > 0 ||
-    typeof input.requestedRoleId === "string";
+    taskSignals.size > 0 || allCapabilities.size > 0 || typeof input.requestedRoleId === "string";
   if (!hasSemanticGuidance) {
     return undefined;
   }
@@ -311,9 +309,7 @@ export function buildControllerSystemPrompt(input: ControllerRoutingChoiceSetInp
   ].join("\n");
 }
 
-export function buildCompactControllerSystemPrompt(
-  input: ControllerRoutingChoiceSetInput,
-): string {
+export function buildCompactControllerSystemPrompt(input: ControllerRoutingChoiceSetInput): string {
   const allowedValues = buildControllerAllowedValues(input);
 
   return [
@@ -348,7 +344,9 @@ export function sanitizeControllerRoutingGuidance(
   guidance: RawControllerRoutingGuidance,
   input: ControllerRoutingChoiceSetInput,
 ): SanitizedControllerRoutingGuidance | null {
-  const knownRoleIds = new Set((input.roleDefinitions ?? []).map((roleDefinition) => roleDefinition.role_id));
+  const knownRoleIds = new Set(
+    (input.roleDefinitions ?? []).map((roleDefinition) => roleDefinition.role_id),
+  );
   const knownTaskTypes = new Set(
     (input.taskDefinitions ?? []).map((taskDefinition) => taskDefinition.task_type),
   );
@@ -378,16 +376,16 @@ export function sanitizeControllerRoutingGuidance(
   );
   const compatibleStrategy = normalizeCompatibleStrategy(guidance.strategy);
   const semanticStrategy = inferControllerStrategy({
-      requestedRoleId,
-      taskType,
-      requiredCapabilities,
-      preferredCapabilities,
-      roleDefinitions: input.roleDefinitions,
-    });
+    requestedRoleId,
+    taskType,
+    requiredCapabilities,
+    preferredCapabilities,
+    roleDefinitions: input.roleDefinitions,
+  });
   const effectiveStrategy =
     semanticStrategy && semanticStrategy !== "balanced"
       ? semanticStrategy
-      : compatibleStrategy?.strategy ?? semanticStrategy;
+      : (compatibleStrategy?.strategy ?? semanticStrategy);
 
   const sanitized: SanitizedControllerRoutingGuidance = {
     ...(requestedRoleId ? { requestedRoleId } : {}),

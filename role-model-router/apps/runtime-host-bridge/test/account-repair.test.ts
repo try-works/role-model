@@ -369,7 +369,7 @@ describe("account repair mutations", () => {
       };
     }> = [];
 
-    const backend = await createRuntimeBridgeBackend(({
+    const backend = await createRuntimeBridgeBackend({
       repoRoot,
       fixtureRoot: testFixtureRoot,
       runtimeStateRoot,
@@ -477,7 +477,8 @@ describe("account repair mutations", () => {
           };
         },
       },
-    }) as any);
+      // biome-ignore lint/suspicious/noExplicitAny: test mock object
+    } as any);
 
     try {
       const pending = await backend.startProviderDeviceAuthorization({

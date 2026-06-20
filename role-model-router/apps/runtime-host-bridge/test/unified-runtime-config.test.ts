@@ -1083,20 +1083,22 @@ observed_data:
             executionMode,
           }),
         ).toBe(`${strategyCase.expectedPrefix}.${executionMode.replaceAll("_", "-")}`);
-        expect(
-          deriveUnifiedRuntimeRoutingAliasMode(strategyCase.strategy, null),
-        ).toBe(strategyCase.expectedMode);
+        expect(deriveUnifiedRuntimeRoutingAliasMode(strategyCase.strategy, null)).toBe(
+          strategyCase.expectedMode,
+        );
       }
     }
   });
 
   test("normalizes legacy craft-ask routing strategy inputs out of persisted config", () => {
-    const parsed = parseUnifiedRuntimeConfigText([
-      'version: "1.0"',
-      "routing:",
-      '  strategy: "craft-ask"',
-      'execution_mode: "remote_only"',
-    ].join("\n"));
+    const parsed = parseUnifiedRuntimeConfigText(
+      [
+        'version: "1.0"',
+        "routing:",
+        '  strategy: "craft-ask"',
+        'execution_mode: "remote_only"',
+      ].join("\n"),
+    );
 
     expect(parsed.routingStrategy).toBeNull();
     expect(
@@ -1108,23 +1110,25 @@ observed_data:
   });
 
   test("normalizes persisted craft-ask alias ids out of multi-alias config payloads", () => {
-    const parsed = parseUnifiedRuntimeConfigText([
-      'version: "1.0"',
-      'execution_mode: "remote_only"',
-      "model_aliases:",
-      "  craft-ask.remote-only:",
-      '    mode: "basic"',
-      "    model_ids:",
-      '      - "chatgpt/gpt-5.4"',
-      "  controller.remote-only:",
-      '    mode: "intelligent"',
-      "    model_ids:",
-      '      - "deepseek/deepseek-v4-flash"',
-      "  exact.gpt-5.4:",
-      '    mode: "basic"',
-      "    model_ids:",
-      '      - "chatgpt/gpt-5.4"',
-    ].join("\n"));
+    const parsed = parseUnifiedRuntimeConfigText(
+      [
+        'version: "1.0"',
+        'execution_mode: "remote_only"',
+        "model_aliases:",
+        "  craft-ask.remote-only:",
+        '    mode: "basic"',
+        "    model_ids:",
+        '      - "chatgpt/gpt-5.4"',
+        "  controller.remote-only:",
+        '    mode: "intelligent"',
+        "    model_ids:",
+        '      - "deepseek/deepseek-v4-flash"',
+        "  exact.gpt-5.4:",
+        '    mode: "basic"',
+        "    model_ids:",
+        '      - "chatgpt/gpt-5.4"',
+      ].join("\n"),
+    );
 
     expect(parsed.modelAliases).toEqual([
       {

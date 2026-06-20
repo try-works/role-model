@@ -171,8 +171,12 @@ export function resolveAliasAllowEndpoints(
 ): AliasAllowEndpointResolution {
   const driftWarnings = warnAliasModelIdDrift(alias, inventory);
   const candidateEntries = inventoryEntriesForAlias(alias, inventory);
-  const allowEndpoints = [...new Set(candidateEntries.map((entry) => entry.endpointId))].sort(compareText);
-  const resolvedModelIds = [...new Set(candidateEntries.map((entry) => entry.modelId))].sort(compareText);
+  const allowEndpoints = [...new Set(candidateEntries.map((entry) => entry.endpointId))].sort(
+    compareText,
+  );
+  const resolvedModelIds = [...new Set(candidateEntries.map((entry) => entry.modelId))].sort(
+    compareText,
+  );
 
   if (allowEndpoints.length === 0) {
     return {

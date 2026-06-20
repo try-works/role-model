@@ -1,0 +1,30 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/51/role-model-router/apps/runtime-host-bridge[39m
+
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/validate-observability.test.ts [ test/validate-observability.test.ts ]
+Error: Cannot find module '../src/validate-observability.js' imported from 'D:/DEV/role-model/.worktrees/51/role-model-router/apps/runtime-host-bridge/test/validate-observability.test.ts'
+ ❯ test/validate-observability.test.ts:3:1
+      1| import { describe, expect, test } from "vitest";
+      2| 
+      3| import { runRuntimeObservabilityValidation } from "../src/validate-obs…
+       | ^
+      4| 
+      5| describe("runRuntimeObservabilityValidation", () => {
+
+Caused by: Error: Failed to load url ../src/validate-observability.js (resolved id: ../src/validate-observability.js) in D:/DEV/role-model/.worktrees/51/role-model-router/apps/runtime-host-bridge/test/validate-observability.test.ts. Does the file exist?
+ ❯ loadAndTransform ../../../node_modules/.pnpm/vite@7.3.2_@types+node@22.1_f7dc1826a0f6bcfe28ab74fd91d23836/node_modules/vite/dist/node/chunks/config.js:22663:33
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [2mno tests[22m
+[2m   Start at [22m 14:08:34
+[2m   Duration [22m 1.49s[2m (transform 116ms, setup 0ms, collect 0ms, tests 0ms, environment 0ms, prepare 525ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\51\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/validate-observability.test.ts

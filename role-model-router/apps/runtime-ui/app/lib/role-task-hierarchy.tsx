@@ -109,7 +109,9 @@ export function RoleCatalogHierarchy({
             {isExpanded ? (
               <div className="space-y-3 rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] px-4 py-3">
                 {role.tasks.length === 0 ? (
-                  <p className="text-sm text-[var(--rm-secondary)]">No tasks are currently assigned.</p>
+                  <p className="text-sm text-[var(--rm-secondary)]">
+                    No tasks are currently assigned.
+                  </p>
                 ) : (
                   role.tasks.map((task) => (
                     <div key={task.taskType} className="space-y-2">

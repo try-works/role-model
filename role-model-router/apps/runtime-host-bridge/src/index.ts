@@ -1,5 +1,5 @@
-import { randomUUID } from "node:crypto";
 import { type ChildProcessWithoutNullStreams, spawn } from "node:child_process";
+import { randomUUID } from "node:crypto";
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { type IncomingMessage, type Server, type ServerResponse, createServer } from "node:http";
@@ -47,11 +47,6 @@ import {
   createRuntimeObservationBundle,
 } from "@role-model-router/runtime-observability";
 import {
-  buildCompactControllerSystemPrompt,
-  buildControllerSystemPrompt,
-  parseAndSanitizeControllerRoutingGuidance,
-} from "./controller-routing-contract.js";
-import {
   clearAllObservedBenchmarkData,
   clearBenchmarkRunArtifacts,
   clearObservedBenchmarkDataForEndpoint,
@@ -98,6 +93,11 @@ import {
   createToolRegistry,
   executeToolCalls,
 } from "@role-model-router/tool-registry";
+import {
+  buildCompactControllerSystemPrompt,
+  buildControllerSystemPrompt,
+  parseAndSanitizeControllerRoutingGuidance,
+} from "./controller-routing-contract.js";
 
 import {
   type ProviderRequestCapture,
@@ -189,14 +189,14 @@ import {
 } from "./runtime-routing-model.js";
 import {
   DEFAULT_UNIFIED_RUNTIME_CONTROLLER_TIMEOUT_MS,
-  deriveUnifiedRuntimeRoutingAliasId,
-  deriveUnifiedRuntimeRoutingAliasMode,
-  isPrimaryRoutingAliasId,
   type UnifiedRuntimeConfig,
   type UnifiedRuntimeDifficultyBucket,
   type UnifiedRuntimeDifficultyClassifierConfig,
   type UnifiedRuntimeExecutionMode,
   type UnifiedRuntimeModelAliasConfig,
+  deriveUnifiedRuntimeRoutingAliasId,
+  deriveUnifiedRuntimeRoutingAliasMode,
+  isPrimaryRoutingAliasId,
   mergeUnifiedRuntimeConfigDocuments,
   normalizeUnifiedRuntimeConfigInput,
   parseUnifiedRuntimeConfigText,
@@ -292,9 +292,7 @@ export const OPENAI_CODEX_SUBSCRIPTION_MODEL_MATRIX = [
 export const OPENAI_CODEX_SUBSCRIPTION_MODEL_IDS = OPENAI_CODEX_SUBSCRIPTION_MODEL_MATRIX.map(
   (entry) => entry.modelId,
 );
-const OPENAI_CODEX_SUBSCRIPTION_MODEL_ID_SET = new Set<string>(
-  OPENAI_CODEX_SUBSCRIPTION_MODEL_IDS,
-);
+const OPENAI_CODEX_SUBSCRIPTION_MODEL_ID_SET = new Set<string>(OPENAI_CODEX_SUBSCRIPTION_MODEL_IDS);
 const OPENAI_CODEX_SUBSCRIPTION_START_ENDPOINT = "codex://openai/chatgpt-device-code/start";
 const OPENAI_CODEX_SUBSCRIPTION_TOKEN_ENDPOINT = "codex://openai/chatgpt-device-code/token";
 const OPENAI_CODEX_SUBSCRIPTION_VERIFICATION_URL = "https://auth.openai.com/codex/device";
@@ -364,7 +362,7 @@ type OpenAIChatCompletionsMessageContent =
 
 interface OpenAIChatCompletionsMessage {
   readonly role: string;
-  readonly content?: OpenAIChatCompletionsMessageContent;
+  readonly content: OpenAIChatCompletionsMessageContent;
   readonly tool_calls?: readonly {
     readonly id: string;
     readonly type: string;
@@ -1117,7 +1115,9 @@ function constrainControllerGuidanceToCandidatePool(input: {
     if (!taskDefinition) {
       return guidance.taskType;
     }
-    const allowedRoleMatch = taskDefinition.allowed_roles.some((roleId) => candidateRoleIds.has(roleId));
+    const allowedRoleMatch = taskDefinition.allowed_roles.some((roleId) =>
+      candidateRoleIds.has(roleId),
+    );
     const requiredCapabilityMatch =
       taskDefinition.required_capabilities.length === 0 ||
       taskDefinition.required_capabilities.every((capability) =>
@@ -1138,9 +1138,7 @@ function constrainControllerGuidanceToCandidatePool(input: {
       ? { preferredCapabilities: guidance.preferredCapabilities }
       : {}),
     ...(guidance.strategy ? { strategy: guidance.strategy } : {}),
-    ...(typeof guidance.preferLocal === "boolean"
-      ? { preferLocal: guidance.preferLocal }
-      : {}),
+    ...(typeof guidance.preferLocal === "boolean" ? { preferLocal: guidance.preferLocal } : {}),
     ...(guidance.preferredEndpointIds?.length
       ? { preferredEndpointIds: guidance.preferredEndpointIds }
       : {}),
@@ -2478,13 +2476,11 @@ interface CodexAuthAdapter {
     readonly wsUrl: string;
     readonly refreshToken: boolean;
   }): Promise<{
-    readonly account:
-      | {
-          readonly type?: string;
-          readonly email?: string;
-          readonly planType?: string;
-        }
-      | null;
+    readonly account: {
+      readonly type?: string;
+      readonly email?: string;
+      readonly planType?: string;
+    } | null;
     readonly requiresOpenaiAuth: boolean;
   }>;
 }
@@ -2697,8 +2693,9 @@ function createInactiveVendorStatus(vendorId: string): VendorRuntimeStatus {
   };
 }
 
-type RouteObservedProfile =
-  Parameters<typeof routeRuntimeRequest>[0]["observedProfilesByEndpointId"][string];
+type RouteObservedProfile = Parameters<
+  typeof routeRuntimeRequest
+>[0]["observedProfilesByEndpointId"][string];
 
 type QualityScopedRouteObservedProfile = RouteObservedProfile & {
   quality_measured_at_ms?: number;
@@ -2735,8 +2732,11 @@ function mergeObservedProfileForDifficultyBucket(input: {
     return input.endpointWideProfile;
   }
 
-  const endpointWideProfile = input.endpointWideProfile!;
-  const bucketProfile = input.bucketProfile!;
+  if (!input.endpointWideProfile || !input.bucketProfile) {
+    return undefined;
+  }
+  const endpointWideProfile = input.endpointWideProfile;
+  const bucketProfile = input.bucketProfile;
   const genericProfile =
     (bucketProfile.measured_at_ms ?? 0) >= (endpointWideProfile.measured_at_ms ?? 0)
       ? bucketProfile
@@ -4723,9 +4723,7 @@ function collectHostedResponsesTools(
   return (tools ?? []).filter((tool) => !isResponsesFunctionTool(tool));
 }
 
-function hasOnlyHostedWebSearchTools(
-  tools: readonly OpenAIResponsesTool[] | undefined,
-): boolean {
+function hasOnlyHostedWebSearchTools(tools: readonly OpenAIResponsesTool[] | undefined): boolean {
   const hostedTools = collectHostedResponsesTools(tools);
   return hostedTools.length > 0 && hostedTools.every((tool) => tool.type === "web_search");
 }
@@ -4814,7 +4812,10 @@ function supportsHostedResponsesToolForEndpoint(
   tool: OpenAIResponsesTool,
 ): boolean {
   if (tool.type === "web_search") {
-    return resolveEndpointWebSearchSupport(endpoint).currentRuntimeContract === "openai.responses.web_search";
+    return (
+      resolveEndpointWebSearchSupport(endpoint).currentRuntimeContract ===
+      "openai.responses.web_search"
+    );
   }
   return true;
 }
@@ -4847,7 +4848,9 @@ function applyAliasResolutionEndpointFilter(input: {
       ...input.routingDiagnostics.aliasResolution,
       resolvedModelIds,
       allowEndpoints: input.allowEndpoints,
-      ...(input.allowEndpoints.length === 0 ? { poolEmptyReason: "ALIAS_POOL_EMPTY" as const } : {}),
+      ...(input.allowEndpoints.length === 0
+        ? { poolEmptyReason: "ALIAS_POOL_EMPTY" as const }
+        : {}),
     },
   };
 }
@@ -4879,9 +4882,9 @@ function filterAllowEndpointsForResponsesHostedTools(input: {
   const allowEndpoints = eligibleEndpoints
     .map((endpoint) => endpoint.identity.endpoint_id)
     .sort(compareText);
-  const resolvedModelIds = [...new Set(eligibleEndpoints.map((endpoint) => endpoint.identity.model_id))].sort(
-    compareText,
-  );
+  const resolvedModelIds = [
+    ...new Set(eligibleEndpoints.map((endpoint) => endpoint.identity.model_id)),
+  ].sort(compareText);
 
   return {
     allowEndpoints,
@@ -4964,7 +4967,9 @@ function resolveResponsesToolExecutionPlan(input: {
       ...new Set(
         eligibleEndpoints
           .map((endpoint) => resolveHostedWebSearchContractForEndpoint(endpoint))
-          .filter((contract): contract is HostedWebSearchContract => contract !== null),
+          .filter(
+            (contract): contract is ActiveRuntimeHostedWebSearchContract => contract !== null,
+          ),
       ),
     ];
     if (
@@ -6012,9 +6017,13 @@ function resolveCodexAuthCachePath(codexHome = os.homedir()): string {
   return path.join(codexHome, "auth.json");
 }
 
-function readStoredCodexAuthCache(codexHome = path.join(os.homedir(), ".codex")): StoredCodexAuthPayload | null {
+function readStoredCodexAuthCache(
+  codexHome = path.join(os.homedir(), ".codex"),
+): StoredCodexAuthPayload | null {
   try {
-    return JSON.parse(readFileSync(resolveCodexAuthCachePath(codexHome), "utf8")) as StoredCodexAuthPayload;
+    return JSON.parse(
+      readFileSync(resolveCodexAuthCachePath(codexHome), "utf8"),
+    ) as StoredCodexAuthPayload;
   } catch {
     return null;
   }
@@ -6028,7 +6037,9 @@ async function writeStoredCodexAuthCache(
   await writeFile(resolveCodexAuthCachePath(codexHome), JSON.stringify(payload, null, 2), "utf8");
 }
 
-function readStoredCodexAuthSnapshot(payload: StoredOauthTokenPayload | null): StoredCodexAuthPayload | null {
+function readStoredCodexAuthSnapshot(
+  payload: StoredOauthTokenPayload | null,
+): StoredCodexAuthPayload | null {
   if (!payload?.codexAuth || payload.codexAuth.auth_mode !== "chatgpt") {
     return null;
   }
@@ -6048,10 +6059,9 @@ function decodeCodexDeviceCodeSessionPayload(value: string): CodexDeviceCodeSess
   }
   try {
     return JSON.parse(
-      Buffer.from(
-        value.slice(CODEX_APP_SERVER_DEVICE_CODE_PREFIX.length),
-        "base64url",
-      ).toString("utf8"),
+      Buffer.from(value.slice(CODEX_APP_SERVER_DEVICE_CODE_PREFIX.length), "base64url").toString(
+        "utf8",
+      ),
     ) as CodexDeviceCodeSessionPayload;
   } catch {
     return null;
@@ -6104,10 +6114,12 @@ function readCodexAppServerErrorMessage(error: unknown, fallback: string): strin
 
 function resolveCodexWebSocketConstructor(): (new (url: string) => MinimalWebSocket) | null {
   return (
-    globalThis as typeof globalThis & {
-      WebSocket?: new (url: string) => MinimalWebSocket;
-    }
-  ).WebSocket ?? null;
+    (
+      globalThis as typeof globalThis & {
+        WebSocket?: new (url: string) => MinimalWebSocket;
+      }
+    ).WebSocket ?? null
+  );
 }
 
 async function reserveLoopbackPort(): Promise<number> {
@@ -6223,11 +6235,7 @@ async function sendCodexAppServerRequest<TResult>(input: {
       try {
         message = JSON.parse(readCodexAppServerMessageText(event.data)) as Record<string, unknown>;
       } catch (error) {
-        fail(
-          error instanceof Error
-            ? error
-            : new Error("Codex app-server returned invalid JSON."),
-        );
+        fail(error instanceof Error ? error : new Error("Codex app-server returned invalid JSON."));
         return;
       }
 
@@ -6235,10 +6243,7 @@ async function sendCodexAppServerRequest<TResult>(input: {
         if (message.error) {
           fail(
             new Error(
-              readCodexAppServerErrorMessage(
-                message.error,
-                "Codex app-server initialize failed.",
-              ),
+              readCodexAppServerErrorMessage(message.error, "Codex app-server initialize failed."),
             ),
           );
           return;
@@ -6273,9 +6278,7 @@ async function sendCodexAppServerRequest<TResult>(input: {
 
     socket.onclose = () => {
       if (!settled) {
-        fail(
-          new Error(`Codex app-server connection closed before ${input.method} completed.`),
-        );
+        fail(new Error(`Codex app-server connection closed before ${input.method} completed.`));
       }
     };
   });
@@ -6293,7 +6296,9 @@ function isProcessRunning(pid: number): boolean {
   }
 }
 
-async function cleanupManagedCodexDeviceCodeSession(payload: CodexDeviceCodeSessionPayload): Promise<void> {
+async function cleanupManagedCodexDeviceCodeSession(
+  payload: CodexDeviceCodeSessionPayload,
+): Promise<void> {
   if (isProcessRunning(payload.pid)) {
     try {
       process.kill(payload.pid);
@@ -6339,13 +6344,7 @@ function createSystemCodexAuthAdapter(): CodexAuthAdapter {
       const codexCliPath = resolveCodexCliPath();
       const child = spawn(
         codexCliPath,
-        [
-          "app-server",
-          "-c",
-          'cli_auth_credentials_store="file"',
-          "--listen",
-          wsUrl,
-        ],
+        ["app-server", "-c", 'cli_auth_credentials_store="file"', "--listen", wsUrl],
         {
           cwd: input.codexHome,
           detached: true,
@@ -6389,13 +6388,11 @@ function createSystemCodexAuthAdapter(): CodexAuthAdapter {
     },
     async readAccount(input) {
       return await sendCodexAppServerRequest<{
-        readonly account:
-          | {
-              readonly type?: string;
-              readonly email?: string;
-              readonly planType?: string;
-            }
-          | null;
+        readonly account: {
+          readonly type?: string;
+          readonly email?: string;
+          readonly planType?: string;
+        } | null;
         readonly requiresOpenaiAuth: boolean;
       }>({
         wsUrl: input.wsUrl,
@@ -6408,7 +6405,9 @@ function createSystemCodexAuthAdapter(): CodexAuthAdapter {
   };
 }
 
-function readCodexExecutionRequestShape(requestCapture: ProviderRequestCapture): "responses" | "chat-completions" {
+function readCodexExecutionRequestShape(
+  requestCapture: ProviderRequestCapture,
+): "responses" | "chat-completions" {
   return requestCapture.url.endsWith("/chat/completions") ? "chat-completions" : "responses";
 }
 
@@ -6437,8 +6436,12 @@ export function buildCodexDynamicTools(
   const requestShape = readCodexExecutionRequestShape(requestCapture as ProviderRequestCapture);
   const rawTools =
     requestShape === "chat-completions"
-      ? (Array.isArray(requestCapture.body.tools) ? requestCapture.body.tools : [])
-      : (Array.isArray(requestCapture.body.tools) ? requestCapture.body.tools : []);
+      ? Array.isArray(requestCapture.body.tools)
+        ? requestCapture.body.tools
+        : []
+      : Array.isArray(requestCapture.body.tools)
+        ? requestCapture.body.tools
+        : [];
 
   return rawTools.flatMap((tool) => {
     if (typeof tool !== "object" || tool === null) {
@@ -6502,10 +6505,14 @@ export function buildCodexTurnPrompt(requestCapture: ProviderRequestCapture): st
   const requestShape = readCodexExecutionRequestShape(requestCapture);
   const rawMessages =
     requestShape === "chat-completions"
-      ? (Array.isArray(requestCapture.body.messages) ? requestCapture.body.messages : [])
+      ? Array.isArray(requestCapture.body.messages)
+        ? requestCapture.body.messages
+        : []
       : typeof requestCapture.body.input === "string"
         ? [{ role: "user", content: requestCapture.body.input }]
-        : (Array.isArray(requestCapture.body.input) ? requestCapture.body.input : []);
+        : Array.isArray(requestCapture.body.input)
+          ? requestCapture.body.input
+          : [];
   const dynamicToolNames = buildCodexDynamicTools(requestCapture).map((tool) => tool.name);
   const hostedToolNames = readCodexHostedToolNames(requestCapture);
   const conversation = rawMessages
@@ -6540,7 +6547,9 @@ export function buildCodexTurnPrompt(requestCapture: ProviderRequestCapture): st
       ? [`Requested hosted tools for this turn: ${hostedToolNames.join(", ")}.`]
       : []),
     ...(dynamicToolNames.length > 0
-      ? [`Request-scoped dynamic tools are available for this turn: ${dynamicToolNames.join(", ")}.`]
+      ? [
+          `Request-scoped dynamic tools are available for this turn: ${dynamicToolNames.join(", ")}.`,
+        ]
       : []),
     "Do not run shell commands, modify files, or ask for approvals.",
     "Return only the assistant response.",
@@ -6561,9 +6570,7 @@ function serializeCodexToolOutput(output: unknown): string {
   }
 }
 
-function toCodexDynamicToolCallResult(
-  execution: ToolRegistryExecution,
-): {
+function toCodexDynamicToolCallResult(execution: ToolRegistryExecution): {
   readonly success: boolean;
   readonly contentItems: readonly {
     readonly type: "inputText";
@@ -6583,8 +6590,10 @@ function toCodexDynamicToolCallResult(
   }
 
   const message =
-    execution.diagnostics.map((diagnostic) => diagnostic.message).join("\n").trim() ||
-    `Tool ${execution.toolName} failed.`;
+    execution.diagnostics
+      .map((diagnostic) => diagnostic.message)
+      .join("\n")
+      .trim() || `Tool ${execution.toolName} failed.`;
   return {
     success: false,
     contentItems: [
@@ -6624,9 +6633,7 @@ function readCodexStructuredOutputSchema(
     return null;
   }
   const schema = (format as { readonly schema?: unknown }).schema;
-  return typeof schema === "object" && schema !== null
-    ? (schema as Record<string, unknown>)
-    : null;
+  return typeof schema === "object" && schema !== null ? (schema as Record<string, unknown>) : null;
 }
 
 async function waitForChildExit(child: ChildProcessWithoutNullStreams): Promise<void> {
@@ -6687,13 +6694,7 @@ function createSystemCodexExecutionAdapter(): CodexExecutionAdapter {
 
       const child = spawn(
         codexCliPath,
-        [
-          "app-server",
-          "-c",
-          'cli_auth_credentials_store="file"',
-          "--listen",
-          wsUrl,
-        ],
+        ["app-server", "-c", 'cli_auth_credentials_store="file"', "--listen", wsUrl],
         {
           cwd: workspaceRoot,
           stdio: "pipe",
@@ -6743,7 +6744,7 @@ function createSystemCodexExecutionAdapter(): CodexExecutionAdapter {
           let threadId = "";
           let outputText = "";
           let finalAgentText = "";
-          let usage = {
+          const usage = {
             inputTokens: 0,
             outputTokens: 0,
           };
@@ -6765,7 +6766,9 @@ function createSystemCodexExecutionAdapter(): CodexExecutionAdapter {
             finish(() =>
               reject(
                 new Error(
-                  stderrText.trim().length > 0 ? `${error.message}\n${stderrText.trim()}` : error.message,
+                  stderrText.trim().length > 0
+                    ? `${error.message}\n${stderrText.trim()}`
+                    : error.message,
                 ),
               ),
             );
@@ -6810,9 +6813,16 @@ function createSystemCodexExecutionAdapter(): CodexExecutionAdapter {
             void (async () => {
               let message: Record<string, unknown>;
               try {
-                message = JSON.parse(readCodexAppServerMessageText(event.data)) as Record<string, unknown>;
+                message = JSON.parse(readCodexAppServerMessageText(event.data)) as Record<
+                  string,
+                  unknown
+                >;
               } catch (error) {
-                fail(error instanceof Error ? error : new Error("Codex app-server returned invalid JSON."));
+                fail(
+                  error instanceof Error
+                    ? error
+                    : new Error("Codex app-server returned invalid JSON."),
+                );
                 return;
               }
 
@@ -6852,9 +6862,10 @@ function createSystemCodexExecutionAdapter(): CodexExecutionAdapter {
                   );
                   return;
                 }
-                const result = typeof message.result === "object" && message.result !== null
-                  ? (message.result as Record<string, unknown>)
-                  : {};
+                const result =
+                  typeof message.result === "object" && message.result !== null
+                    ? (message.result as Record<string, unknown>)
+                    : {};
                 const threadRecord =
                   typeof result.thread === "object" && result.thread !== null
                     ? (result.thread as Record<string, unknown>)
@@ -6978,7 +6989,11 @@ function createSystemCodexExecutionAdapter(): CodexExecutionAdapter {
                   typeof params.item === "object" && params.item !== null
                     ? (params.item as Record<string, unknown>)
                     : {};
-                if (item.type === "agentMessage" && typeof item.text === "string" && item.text.length > 0) {
+                if (
+                  item.type === "agentMessage" &&
+                  typeof item.text === "string" &&
+                  item.text.length > 0
+                ) {
                   finalAgentText = item.text;
                 }
                 return;
@@ -7053,18 +7068,18 @@ function createSystemCodexExecutionAdapter(): CodexExecutionAdapter {
                 choices: [
                   {
                     index: 0,
-                      finish_reason: completedTurn.finishReason,
-                      message: {
-                        role: "assistant",
-                        content: completedTurn.outputText,
-                      },
+                    finish_reason: completedTurn.finishReason,
+                    message: {
+                      role: "assistant",
+                      content: completedTurn.outputText,
+                    },
                   },
                 ],
                 usage: {
                   prompt_tokens: completedTurn.usage.inputTokens,
                   completion_tokens: completedTurn.usage.outputTokens,
-                  },
-                }
+                },
+              }
             : {
                 id: `resp_${sanitizeSegment(input.requestId)}`,
                 output: [
@@ -7379,10 +7394,7 @@ function getOauthVariant(
 }
 
 function isCodexSubscriptionAccount(
-  account:
-    | Pick<ProviderAccountRecord, "providerId" | "authMode" | "status">
-    | null
-    | undefined,
+  account: Pick<ProviderAccountRecord, "providerId" | "authMode" | "status"> | null | undefined,
 ): boolean {
   return (
     account?.providerId === OPENAI_PROVIDER_ID &&
@@ -7889,10 +7901,7 @@ function serializeToolCallArguments(value: unknown): string {
   return typeof value === "string" ? value : JSON.stringify(value ?? null);
 }
 
-function toBridgeToolCall(
-  toolCall: BridgeContinuationToolCall,
-  index: number,
-): BridgeToolCall {
+function toBridgeToolCall(toolCall: BridgeContinuationToolCall, index: number): BridgeToolCall {
   return {
     id: toolCall.providerToolId ?? `call_${index + 1}`,
     type: "function",
@@ -7937,7 +7946,9 @@ function stripDeepSeekDsmlToolMarkup(outputText: string): string {
     .trim();
 }
 
-function mapDeepSeekDsmlToolName(providerToolName: string): "web_search" | "web_open" | "web_browse" | null {
+function mapDeepSeekDsmlToolName(
+  providerToolName: string,
+): "web_search" | "web_open" | "web_browse" | null {
   switch (providerToolName) {
     case "web_search":
     case "$web_search":
@@ -8041,7 +8052,8 @@ function resolveContinuationTurn(input: {
   }
   const dsmlToolCalls = parseDeepSeekDsmlToolCalls(input.outputText, input.continuationStep);
   return {
-    outputText: dsmlToolCalls.length > 0 ? stripDeepSeekDsmlToolMarkup(input.outputText) : input.outputText,
+    outputText:
+      dsmlToolCalls.length > 0 ? stripDeepSeekDsmlToolMarkup(input.outputText) : input.outputText,
     toolCalls: dsmlToolCalls,
   };
 }
@@ -8049,7 +8061,7 @@ function resolveContinuationTurn(input: {
 function shouldBridgeManageToolContinuation(
   tools: readonly RuntimeExecutionToolDefinition[] | undefined,
 ): boolean {
-  return (tools?.length ?? 0) > 0 && tools!.every((tool) => tool.kind === "hosted");
+  return tools !== undefined && tools.length > 0 && tools.every((tool) => tool.kind === "hosted");
 }
 
 function surfaceContinuationTurnToExecution(
@@ -8090,7 +8102,9 @@ function buildContinuationExecutionRequest(
         const { tools: _tools, ...rest } = executionRequest;
         return rest;
       })();
-  const executionsByToolCallId = new Map(toolExecutions.map((execution) => [execution.toolCallId, execution]));
+  const executionsByToolCallId = new Map(
+    toolExecutions.map((execution) => [execution.toolCallId, execution]),
+  );
   const assistantMessage: OpenAIChatCompletionsMessage = {
     role: "assistant",
     content: outputText.length > 0 ? outputText : null,
@@ -9608,11 +9622,11 @@ export async function createRuntimeBridgeBackend(
   const useFixtures = fixtureRoot !== null;
   const initialUnifiedRuntimeConfigText = options.unifiedRuntimeConfigPath
     ? await readFile(options.unifiedRuntimeConfigPath, "utf8").catch((error: unknown) => {
-          if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-            return null;
-          }
-          throw error;
-        })
+        if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+          return null;
+        }
+        throw error;
+      })
     : null;
   const initialUnifiedRuntimeConfig = initialUnifiedRuntimeConfigText
     ? parseUnifiedRuntimeConfigText(initialUnifiedRuntimeConfigText)
@@ -10296,7 +10310,9 @@ export async function createRuntimeBridgeBackend(
       return configuredRemoteModelIds;
     }
 
-    return [...new Set([...configuredLocalModelIds, ...configuredRemoteModelIds])].sort(compareText);
+    return [...new Set([...configuredLocalModelIds, ...configuredRemoteModelIds])].sort(
+      compareText,
+    );
   };
   const sameModelIds = (left: readonly string[], right: readonly string[]): boolean =>
     left.length === right.length && left.every((value, index) => value === right[index]);
@@ -10436,9 +10452,7 @@ export async function createRuntimeBridgeBackend(
       activeProviderAccountRepairs.delete(providerAccountId);
     }
   };
-  const buildProbeExecutionTarget = (
-    providerAccountId: string,
-  ): ResolvedExecutionTarget | null => {
+  const buildProbeExecutionTarget = (providerAccountId: string): ResolvedExecutionTarget | null => {
     const account = currentAccounts.find((entry) => entry.providerAccountId === providerAccountId);
     if (!account) {
       return null;
@@ -12749,48 +12763,84 @@ export async function createRuntimeBridgeBackend(
       requestCapture: ProviderRequestCapture;
       fallbackModelIds?: readonly string[];
     }) => {
-        // File-backed credentials (OAuth, locally-saved API keys) always need direct HTTP execution
-        // so that OAuth tokens are correctly resolved and X-Msh-* device headers are applied.
-        // In the unified config path, LiteLLM providers get adapterFamily "litellm-proxy", so
-        // shouldUseLiveProviderExecution would return false for them — this flag bypasses that check.
-        const useDirectExecution =
-          target.account?.credentialRef.backend === "local-file" ||
-          target.account?.credentialRef.backend === "local-encrypted-file";
-        const capture = captures.byEndpointId[target.endpointId];
-        const usesFixtureAccount =
-          target.providerAccountId !== null && fixtureAccountIds.has(target.providerAccountId);
+      // File-backed credentials (OAuth, locally-saved API keys) always need direct HTTP execution
+      // so that OAuth tokens are correctly resolved and X-Msh-* device headers are applied.
+      // In the unified config path, LiteLLM providers get adapterFamily "litellm-proxy", so
+      // shouldUseLiveProviderExecution would return false for them — this flag bypasses that check.
+      const useDirectExecution =
+        target.account?.credentialRef.backend === "local-file" ||
+        target.account?.credentialRef.backend === "local-encrypted-file";
+      const capture = captures.byEndpointId[target.endpointId];
+      const usesFixtureAccount =
+        target.providerAccountId !== null && fixtureAccountIds.has(target.providerAccountId);
 
-        if (
-          !useDirectExecution &&
-          capture &&
-          currentUnifiedRuntimeConfig === null &&
-          usesFixtureAccount
-        ) {
+      if (
+        !useDirectExecution &&
+        capture &&
+        currentUnifiedRuntimeConfig === null &&
+        usesFixtureAccount
+      ) {
+        return {
+          providerFamily: target.adapterFamily,
+          endpointId: target.endpointId,
+          statusCode: 200,
+          body: capture.body,
+        };
+      }
+
+      if (currentUnifiedRuntimeConfig) {
+        if (target.providerAccountId === null) {
+          if (!currentLlamaSwapVendor) {
+            throw createVendorError(
+              "llama-swap",
+              "Configure llama_swap.models to enable local execution.",
+            );
+          }
+          const result = await currentLlamaSwapVendor.execute(
+            {
+              providerFamily: requestCapture.providerFamily,
+              endpointId: requestCapture.endpointId,
+              url: requestCapture.url,
+              headers: requestCapture.headers,
+              body: requestCapture.body,
+            },
+            trackedStreamWriter && requestCapture.body.stream === true
+              ? {
+                  streamWriter: async (chunk) => {
+                    await trackedStreamWriter(chunk, {
+                      endpointId: target.endpointId,
+                      adapterFamily: target.adapterFamily,
+                      routingDecisionId,
+                    });
+                  },
+                }
+              : undefined,
+          );
           return {
             providerFamily: target.adapterFamily,
             endpointId: target.endpointId,
-            statusCode: 200,
-            body: capture.body,
+            statusCode: result.statusCode,
+            body: result.body,
+            vendorMetadata: result.metadata,
           };
         }
-
-        if (currentUnifiedRuntimeConfig) {
-          if (target.providerAccountId === null) {
-            if (!currentLlamaSwapVendor) {
-              throw createVendorError(
-                "llama-swap",
-                "Configure llama_swap.models to enable local execution.",
-              );
-            }
-            const result = await currentLlamaSwapVendor.execute(
-              {
-                providerFamily: requestCapture.providerFamily,
-                endpointId: requestCapture.endpointId,
-                url: requestCapture.url,
-                headers: requestCapture.headers,
-                body: requestCapture.body,
-              },
-              trackedStreamWriter && requestCapture.body.stream === true
+        if (!useDirectExecution) {
+          if (!currentLiteLLMVendor) {
+            throw createVendorError(
+              "litellm",
+              "Configure litellm_proxy.providers to enable remote execution.",
+            );
+          }
+          const result = await currentLiteLLMVendor.execute(
+            {
+              providerFamily: requestCapture.providerFamily,
+              endpointId: requestCapture.endpointId,
+              url: requestCapture.url,
+              headers: requestCapture.headers,
+              body: requestCapture.body,
+            },
+            {
+              ...(trackedStreamWriter && requestCapture.body.stream === true
                 ? {
                     streamWriter: async (chunk) => {
                       await trackedStreamWriter(chunk, {
@@ -12800,166 +12850,172 @@ export async function createRuntimeBridgeBackend(
                       });
                     },
                   }
-                : undefined,
-            );
-            return {
-              providerFamily: target.adapterFamily,
-              endpointId: target.endpointId,
-              statusCode: result.statusCode,
-              body: result.body,
-              vendorMetadata: result.metadata,
-            };
-          }
-          if (!useDirectExecution) {
-            if (!currentLiteLLMVendor) {
-              throw createVendorError(
-                "litellm",
-                "Configure litellm_proxy.providers to enable remote execution.",
-              );
-            }
-            const result = await currentLiteLLMVendor.execute(
-              {
-                providerFamily: requestCapture.providerFamily,
-                endpointId: requestCapture.endpointId,
-                url: requestCapture.url,
-                headers: requestCapture.headers,
-                body: requestCapture.body,
-              },
-              {
-                ...(trackedStreamWriter && requestCapture.body.stream === true
-                  ? {
-                      streamWriter: async (chunk) => {
-                        await trackedStreamWriter(chunk, {
-                          endpointId: target.endpointId,
-                          adapterFamily: target.adapterFamily,
-                          routingDecisionId,
-                        });
-                      },
-                    }
-                  : {}),
-                ...(fallbackModelIds?.length ? { fallbackModelIds } : {}),
-              },
-            );
-            return {
-              providerFamily: target.adapterFamily,
-              endpointId: target.endpointId,
-              statusCode: result.statusCode,
-              body: result.body,
-              vendorMetadata: result.metadata,
-            };
-          }
-          // Fall through to direct HTTP execution for file-backed credential accounts.
-        }
-
-        if (!useDirectExecution && !shouldUseLiveProviderExecution(target)) {
-          if (!capture) {
-            throw new Error(`No response capture is configured for endpoint ${target.endpointId}.`);
-          }
+                : {}),
+              ...(fallbackModelIds?.length ? { fallbackModelIds } : {}),
+            },
+          );
           return {
             providerFamily: target.adapterFamily,
             endpointId: target.endpointId,
-            statusCode: 200,
-            body: capture.body,
+            statusCode: result.statusCode,
+            body: result.body,
+            vendorMetadata: result.metadata,
           };
         }
+        // Fall through to direct HTTP execution for file-backed credential accounts.
+      }
 
-        const codexAccount = target.account;
-        if (codexAccount && isCodexSubscriptionAccount(codexAccount)) {
-          const credentialPayload = readStoredOauthTokenFileSync(
-            options.runtimeStateRoot,
-            options.scopeId,
-            codexAccount.credentialRef.ref,
-          );
-          const authPayload = readStoredCodexAuthSnapshot(credentialPayload);
-          if (!authPayload) {
-            throw new Error(OPENAI_CODEX_SUBSCRIPTION_AUTH_MISSING_ERROR);
-          }
-          const codexDynamicTools = buildCodexDynamicTools(requestCapture);
-          const dynamicToolNames = new Set(codexDynamicTools.map((tool) => tool.name));
-          const runtimeToolRegistry =
-            codexDynamicTools.length > 0
-              ? await createRuntimeToolRegistry(options.repoRoot, currentRegistry, networkFetcher)
-              : null;
-          const codexResponse = await codexExecutionAdapter.executeRequest({
-            runtimeStateRoot: options.runtimeStateRoot,
-            scopeId: options.scopeId,
-            requestId,
-            providerAccountId: codexAccount.providerAccountId,
-            modelId: target.modelId,
-            requestCapture,
-            authPayload,
-            ...(runtimeToolRegistry
-              ? {
-                  executeDynamicToolCall: async ({
+      if (!useDirectExecution && !shouldUseLiveProviderExecution(target)) {
+        if (!capture) {
+          throw new Error(`No response capture is configured for endpoint ${target.endpointId}.`);
+        }
+        return {
+          providerFamily: target.adapterFamily,
+          endpointId: target.endpointId,
+          statusCode: 200,
+          body: capture.body,
+        };
+      }
+
+      const codexAccount = target.account;
+      if (codexAccount && isCodexSubscriptionAccount(codexAccount)) {
+        const credentialPayload = readStoredOauthTokenFileSync(
+          options.runtimeStateRoot,
+          options.scopeId,
+          codexAccount.credentialRef.ref,
+        );
+        const authPayload = readStoredCodexAuthSnapshot(credentialPayload);
+        if (!authPayload) {
+          throw new Error(OPENAI_CODEX_SUBSCRIPTION_AUTH_MISSING_ERROR);
+        }
+        const codexDynamicTools = buildCodexDynamicTools(requestCapture);
+        const dynamicToolNames = new Set(codexDynamicTools.map((tool) => tool.name));
+        const runtimeToolRegistry =
+          codexDynamicTools.length > 0
+            ? await createRuntimeToolRegistry(options.repoRoot, currentRegistry, networkFetcher)
+            : null;
+        const codexResponse = await codexExecutionAdapter.executeRequest({
+          runtimeStateRoot: options.runtimeStateRoot,
+          scopeId: options.scopeId,
+          requestId,
+          providerAccountId: codexAccount.providerAccountId,
+          modelId: target.modelId,
+          requestCapture,
+          authPayload,
+          ...(runtimeToolRegistry
+            ? {
+                executeDynamicToolCall: async ({
+                  toolCallId,
+                  toolName,
+                  toolArguments,
+                }: {
+                  readonly toolCallId: string;
+                  readonly toolName: string;
+                  readonly toolArguments: unknown;
+                }) => {
+                  const executionResult = dynamicToolNames.has(toolName)
+                    ? await executeToolCalls(runtimeToolRegistry, {
+                        requestId,
+                        toolCalls: [
+                          {
+                            name: toolName,
+                            arguments: toolArguments,
+                            providerToolId: toolCallId,
+                          },
+                        ],
+                      })
+                    : {
+                        executions: [
+                          {
+                            toolCallId,
+                            toolName,
+                            connectorId: "request-scoped",
+                            connectorKind: "dynamic-tool",
+                            status: "rejected" as const,
+                            output: null,
+                            diagnostics: [
+                              {
+                                code: "TOOL_NOT_ALLOWED",
+                                message: `Tool ${toolName} was not declared for this request.`,
+                              },
+                            ],
+                          },
+                        ],
+                        diagnostics: [],
+                      };
+                  const execution = executionResult.executions[0] ?? {
                     toolCallId,
                     toolName,
-                    toolArguments,
-                  }: {
-                    readonly toolCallId: string;
-                    readonly toolName: string;
-                    readonly toolArguments: unknown;
-                  }) => {
-                    const executionResult = dynamicToolNames.has(toolName)
-                      ? await executeToolCalls(runtimeToolRegistry, {
-                          requestId,
-                          toolCalls: [
-                            {
-                              name: toolName,
-                              arguments: toolArguments,
-                              providerToolId: toolCallId,
-                            },
-                          ],
-                        })
-                      : {
-                          executions: [
-                            {
-                              toolCallId,
-                              toolName,
-                              connectorId: "request-scoped",
-                              connectorKind: "dynamic-tool",
-                              status: "rejected" as const,
-                              output: null,
-                              diagnostics: [
-                                {
-                                  code: "TOOL_NOT_ALLOWED",
-                                  message: `Tool ${toolName} was not declared for this request.`,
-                                },
-                              ],
-                            },
-                          ],
-                          diagnostics: [],
-                        };
-                    const execution = executionResult.executions[0] ?? {
-                      toolCallId,
-                      toolName,
-                      connectorId: "request-scoped",
-                      connectorKind: "dynamic-tool",
-                      status: "failed" as const,
-                      output: null,
-                      diagnostics: [
-                        {
-                          code: "TOOL_EXECUTION_FAILED",
-                          message: `Tool ${toolName} did not produce an execution record.`,
-                        },
-                      ],
-                    };
-                    const recordedExecutions =
-                      codexDynamicToolExecutionsByRequestId.get(requestId) ?? [];
-                    recordedExecutions.push(execution);
-                    codexDynamicToolExecutionsByRequestId.set(requestId, recordedExecutions);
-                    return toCodexDynamicToolCallResult(execution);
-                  },
-                }
-              : {}),
-          });
-          return {
-            providerFamily: target.adapterFamily,
-            endpointId: target.endpointId,
-            ...codexResponse,
-          };
-        }
+                    connectorId: "request-scoped",
+                    connectorKind: "dynamic-tool",
+                    status: "failed" as const,
+                    output: null,
+                    diagnostics: [
+                      {
+                        code: "TOOL_EXECUTION_FAILED",
+                        message: `Tool ${toolName} did not produce an execution record.`,
+                      },
+                    ],
+                  };
+                  const recordedExecutions =
+                    codexDynamicToolExecutionsByRequestId.get(requestId) ?? [];
+                  recordedExecutions.push(execution);
+                  codexDynamicToolExecutionsByRequestId.set(requestId, recordedExecutions);
+                  return toCodexDynamicToolCallResult(execution);
+                },
+              }
+            : {}),
+        });
+        return {
+          providerFamily: target.adapterFamily,
+          endpointId: target.endpointId,
+          ...codexResponse,
+        };
+      }
 
-        const credentialValue = await resolveCredentialValue(
+      const credentialValue = await resolveCredentialValue(
+        options.runtimeStateRoot,
+        options.scopeId,
+        target,
+        providerPresets,
+        liteLLMProviders,
+        networkFetcher,
+        deviceId,
+        rebuildCurrentState,
+      );
+      const oauthVariant = (() => {
+        if (!target.account || target.account.authMode !== "oauth2-device-code") return null;
+        try {
+          return getOauthVariant(providerPresets, liteLLMProviders, target.providerId ?? "");
+        } catch {
+          return null;
+        }
+      })();
+      const performRequest = async (resolvedCredentialValue: string) => {
+        const startedAtMs = Date.now();
+        const response = await networkFetcher(requestCapture.url, {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            ...(useDirectExecution
+              ? createDeviceHeaders(deviceId, oauthVariant?.oauth?.requiredHeaders)
+              : {}),
+            ...applyCredentialToHeaders(requestCapture.headers, resolvedCredentialValue),
+          },
+          body: JSON.stringify(requestCapture.body),
+        });
+        return {
+          response,
+          latencyMs: Math.max(0, Date.now() - startedAtMs),
+        };
+      };
+      let { response, latencyMs } = await performRequest(credentialValue);
+      if (
+        (response.status === 401 || response.status === 403) &&
+        (target.account?.credentialRef.backend === "local-file" ||
+          target.account?.credentialRef.backend === "local-encrypted-file")
+      ) {
+        const refreshedCredentialValue = await refreshOauthAccessToken(
           options.runtimeStateRoot,
           options.scopeId,
           target,
@@ -12969,112 +13025,70 @@ export async function createRuntimeBridgeBackend(
           deviceId,
           rebuildCurrentState,
         );
-        const oauthVariant = (() => {
-          if (!target.account || target.account.authMode !== "oauth2-device-code") return null;
-          try {
-            return getOauthVariant(providerPresets, liteLLMProviders, target.providerId ?? "");
-          } catch {
-            return null;
-          }
-        })();
-        const performRequest = async (resolvedCredentialValue: string) => {
-          const startedAtMs = Date.now();
-          const response = await networkFetcher(requestCapture.url, {
-            method: "POST",
-            headers: {
-              "content-type": "application/json",
-              ...(useDirectExecution
-                ? createDeviceHeaders(deviceId, oauthVariant?.oauth?.requiredHeaders)
-                : {}),
-              ...applyCredentialToHeaders(requestCapture.headers, resolvedCredentialValue),
-            },
-            body: JSON.stringify(requestCapture.body),
-          });
-          return {
-            response,
-            latencyMs: Math.max(0, Date.now() - startedAtMs),
-          };
-        };
-        let { response, latencyMs } = await performRequest(credentialValue);
-        if (
-          (response.status === 401 || response.status === 403) &&
-          (target.account?.credentialRef.backend === "local-file" ||
-            target.account?.credentialRef.backend === "local-encrypted-file")
-        ) {
-          const refreshedCredentialValue = await refreshOauthAccessToken(
-            options.runtimeStateRoot,
-            options.scopeId,
-            target,
-            providerPresets,
-            liteLLMProviders,
-            networkFetcher,
-            deviceId,
-            rebuildCurrentState,
-          );
-          ({ response, latencyMs } = await performRequest(refreshedCredentialValue));
-        }
-        const measuredVendorMetadata = {
-          vendorId: "direct-http",
-          latencyMs,
-        };
-        if (!response.ok) {
-          const rawBody = await response.text();
-          const parsedBody = parseProviderResponseBody(rawBody);
-          throw new Error(summarizeProviderError(response.status, parsedBody));
-        }
-        if (trackedStreamWriter && requestCapture.body.stream === true) {
-          const rawBody = await readProviderStreamTranscript(response, trackedStreamWriter, {
-            endpointId: target.endpointId,
-            adapterFamily: target.adapterFamily,
-            routingDecisionId,
-          });
-          if (!rawBody.includes("data:")) {
-            return {
-              providerFamily: target.adapterFamily,
-              endpointId: target.endpointId,
-              statusCode: response.status,
-              body: parseProviderResponseBody(rawBody),
-              vendorMetadata: measuredVendorMetadata,
-            };
-          }
-          return {
-            providerFamily: target.adapterFamily,
-            endpointId: target.endpointId,
-            statusCode: response.status,
-            body: rawBody,
-            vendorMetadata: measuredVendorMetadata,
-          };
-        }
-        const responseContentType = response.headers.get("content-type") ?? "";
-        if (responseContentType.includes("text/event-stream")) {
-          const rawBody = await response.text();
-          if (!rawBody.includes("data:")) {
-            return {
-              providerFamily: target.adapterFamily,
-              endpointId: target.endpointId,
-              statusCode: response.status,
-              body: parseProviderResponseBody(rawBody),
-              vendorMetadata: measuredVendorMetadata,
-            };
-          }
-          return {
-            providerFamily: target.adapterFamily,
-            endpointId: target.endpointId,
-            statusCode: response.status,
-            body: rawBody,
-            vendorMetadata: measuredVendorMetadata,
-          };
-        }
+        ({ response, latencyMs } = await performRequest(refreshedCredentialValue));
+      }
+      const measuredVendorMetadata = {
+        vendorId: "direct-http",
+        latencyMs,
+      };
+      if (!response.ok) {
         const rawBody = await response.text();
         const parsedBody = parseProviderResponseBody(rawBody);
+        throw new Error(summarizeProviderError(response.status, parsedBody));
+      }
+      if (trackedStreamWriter && requestCapture.body.stream === true) {
+        const rawBody = await readProviderStreamTranscript(response, trackedStreamWriter, {
+          endpointId: target.endpointId,
+          adapterFamily: target.adapterFamily,
+          routingDecisionId,
+        });
+        if (!rawBody.includes("data:")) {
+          return {
+            providerFamily: target.adapterFamily,
+            endpointId: target.endpointId,
+            statusCode: response.status,
+            body: parseProviderResponseBody(rawBody),
+            vendorMetadata: measuredVendorMetadata,
+          };
+        }
         return {
           providerFamily: target.adapterFamily,
           endpointId: target.endpointId,
           statusCode: response.status,
-          body: parsedBody,
+          body: rawBody,
           vendorMetadata: measuredVendorMetadata,
         };
+      }
+      const responseContentType = response.headers.get("content-type") ?? "";
+      if (responseContentType.includes("text/event-stream")) {
+        const rawBody = await response.text();
+        if (!rawBody.includes("data:")) {
+          return {
+            providerFamily: target.adapterFamily,
+            endpointId: target.endpointId,
+            statusCode: response.status,
+            body: parseProviderResponseBody(rawBody),
+            vendorMetadata: measuredVendorMetadata,
+          };
+        }
+        return {
+          providerFamily: target.adapterFamily,
+          endpointId: target.endpointId,
+          statusCode: response.status,
+          body: rawBody,
+          vendorMetadata: measuredVendorMetadata,
+        };
+      }
+      const rawBody = await response.text();
+      const parsedBody = parseProviderResponseBody(rawBody);
+      return {
+        providerFamily: target.adapterFamily,
+        endpointId: target.endpointId,
+        statusCode: response.status,
+        body: parsedBody,
+        vendorMetadata: measuredVendorMetadata,
       };
+    };
     const executeCurrentExecutionRequest = async (
       executionRequest: RuntimeExecutionRequest,
     ): Promise<RoutedExecutionResult> =>
@@ -13163,8 +13177,7 @@ export async function createRuntimeBridgeBackend(
       executions: continuedToolExecutions,
       diagnostics: continuedToolExecutions.flatMap((toolExecution) => toolExecution.diagnostics),
     };
-    const codexDynamicToolExecutions =
-      codexDynamicToolExecutionsByRequestId.get(requestId) ?? [];
+    const codexDynamicToolExecutions = codexDynamicToolExecutionsByRequestId.get(requestId) ?? [];
     codexDynamicToolExecutionsByRequestId.delete(requestId);
     const toolExecutionResult = {
       executions: [...codexDynamicToolExecutions, ...bridgedToolExecutionResult.executions],
@@ -13485,20 +13498,20 @@ export async function createRuntimeBridgeBackend(
     }
 
     const configuredController = currentUnifiedRuntimeConfig?.controller;
-    const persistedControllerAssignment =
-      !configuredController?.enabled ? getCurrentControllerAssignment() : null;
-    const controller =
-      configuredController?.enabled
-        ? configuredController
-        : persistedControllerAssignment
-          ? {
-              enabled: true,
-              sourceType: persistedControllerAssignment.sourceType,
-              endpointId: persistedControllerAssignment.endpointId,
-              modelId: persistedControllerAssignment.modelId,
-              timeoutMs: DEFAULT_UNIFIED_RUNTIME_CONTROLLER_TIMEOUT_MS,
-            }
-          : null;
+    const persistedControllerAssignment = !configuredController?.enabled
+      ? getCurrentControllerAssignment()
+      : null;
+    const controller = configuredController?.enabled
+      ? configuredController
+      : persistedControllerAssignment
+        ? {
+            enabled: true,
+            sourceType: persistedControllerAssignment.sourceType,
+            endpointId: persistedControllerAssignment.endpointId,
+            modelId: persistedControllerAssignment.modelId,
+            timeoutMs: DEFAULT_UNIFIED_RUNTIME_CONTROLLER_TIMEOUT_MS,
+          }
+        : null;
     if (!controller?.enabled) {
       return undefined;
     }
@@ -15038,18 +15051,14 @@ export async function createRuntimeBridgeBackend(
           };
         }
 
-        let accountRead:
-          | {
-              readonly account:
-                | {
-                    readonly type?: string;
-                    readonly email?: string;
-                    readonly planType?: string;
-                  }
-                | null;
-              readonly requiresOpenaiAuth: boolean;
-            }
-          | null = null;
+        let accountRead: {
+          readonly account: {
+            readonly type?: string;
+            readonly email?: string;
+            readonly planType?: string;
+          } | null;
+          readonly requiresOpenaiAuth: boolean;
+        } | null = null;
         try {
           accountRead = await codexAuthAdapter.readAccount({
             codexHome: payload.codexHome,
@@ -15096,19 +15105,25 @@ export async function createRuntimeBridgeBackend(
             providerAccountId: session.providerAccountId,
             status: "pending",
             retryAfterSeconds: session.intervalSeconds,
-            lastError: "Codex Subscription authorization completed, but the local auth cache is not ready yet.",
+            lastError:
+              "Codex Subscription authorization completed, but the local auth cache is not ready yet.",
           };
         }
 
-        await persistOauthTokenFile(options.runtimeStateRoot, options.scopeId, session.credentialRef, {
-          providerId: session.providerId,
-          providerAccountId: session.providerAccountId,
-          access_token: accessToken,
-          refresh_token: readStoredCodexRefreshToken(cachedAuth),
-          token_type: "Bearer",
-          saved_at_ms: Date.now(),
-          codexAuth: cachedAuth,
-        });
+        await persistOauthTokenFile(
+          options.runtimeStateRoot,
+          options.scopeId,
+          session.credentialRef,
+          {
+            providerId: session.providerId,
+            providerAccountId: session.providerAccountId,
+            access_token: accessToken,
+            refresh_token: readStoredCodexRefreshToken(cachedAuth),
+            token_type: "Bearer",
+            saved_at_ms: Date.now(),
+            codexAuth: cachedAuth,
+          },
+        );
         upsertProviderDeviceAuthSession({
           databasePath: initialization.databasePath,
           session: {

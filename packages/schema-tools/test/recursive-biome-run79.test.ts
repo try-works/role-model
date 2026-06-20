@@ -11,7 +11,6 @@ const repoRoot = path.resolve(__dirname, "..", "..", "..");
 const execFileAsync = promisify(execFile);
 
 const boundedBiomePaths = [
-  "role-model-router/apps/runtime-ui/app/components/future-surface.tsx",
   "role-model-router/apps/runtime-ui/app/components/page-primitives.tsx",
   "role-model-router/apps/runtime-ui/app/routes/control-routing-strategy.tsx",
   "role-model-router/apps/runtime-ui/app/routes/control-runtime-config.tsx",

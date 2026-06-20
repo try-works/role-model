@@ -1,15 +1,6 @@
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import {
-  chmod,
-  copyFile,
-  cp,
-  mkdir,
-  readFile,
-  readdir,
-  rm,
-  writeFile,
-} from "node:fs/promises";
+import { chmod, copyFile, cp, mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
@@ -171,9 +162,7 @@ async function listReleaseFiles(root: string): Promise<string[]> {
   return files;
 }
 
-export async function assertProductionReleaseHasNoQaArtifacts(
-  releaseDir: string,
-): Promise<void> {
+export async function assertProductionReleaseHasNoQaArtifacts(releaseDir: string): Promise<void> {
   const files = await listReleaseFiles(releaseDir);
   const pathViolations = files
     .map((filePath) => normalizeReleasePath(path.relative(releaseDir, filePath)))

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  type RemoteHealthProbeContext,
   buildModelsProbeUrl,
   extractOpenAIModelIds,
   mapProbeReasonToHealthStatus,
@@ -101,7 +102,7 @@ describe("remote-health-probe", () => {
           { status: 200, headers: { "content-type": "application/json" } },
         );
       },
-    } as any);
+    } as unknown as RemoteHealthProbeContext);
 
     expect(requestCount).toBe(2);
     expect(seenAuthorizations).toEqual(["Bearer stale-token", "Bearer fresh-token"]);
@@ -130,7 +131,7 @@ describe("remote-health-probe", () => {
         requestCount += 1;
         return new Response(JSON.stringify({ error: "invalid token" }), { status: 401 });
       },
-    } as any);
+    } as unknown as RemoteHealthProbeContext);
 
     expect(requestCount).toBe(2);
     expect(result.results[0]).toMatchObject({
@@ -217,7 +218,7 @@ describe("remote-health-probe", () => {
           headers: { "content-type": "application/json" },
         });
       },
-    } as any);
+    } as unknown as RemoteHealthProbeContext);
 
     expect(seenHeaderValues).toEqual(["device-123"]);
     expect(result.results[0]).toMatchObject({

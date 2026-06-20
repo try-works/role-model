@@ -170,10 +170,7 @@ async function probeTarget(
     };
 
     let { response, latencyMs } = await executeProbe(authorization);
-    if (
-      (response.status === 401 || response.status === 403) &&
-      context.refreshAuthorization
-    ) {
+    if ((response.status === 401 || response.status === 403) && context.refreshAuthorization) {
       try {
         const refreshedAuthorization = await context.refreshAuthorization(target.providerAccountId);
         if (refreshedAuthorization && refreshedAuthorization.trim().length > 0) {

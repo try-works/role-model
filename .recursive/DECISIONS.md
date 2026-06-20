@@ -1352,3 +1352,40 @@
 - Known issues / follow-ups:
   - final operator acceptance is anchored to the rebuilt runtime on `:3462` because an older runtime was still listening on `:3461` during intermediate QA
   - temporary runtime logs and rebuilt UI assets remain verification byproducts and should not be mistaken for new durable product-source requirements beyond the validated behaviors they prove
+
+### Run `51-runtime-testing-architecture-and-regression-matrix`
+
+- Run folder: `/.recursive/run/51-runtime-testing-architecture-and-regression-matrix/`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+  - addenda `addenda/00-worktree.upstream-gap.00-requirements.addendum-01.md`, `addenda/01-as-is.upstream-gap.00-worktree.addendum-01.md`, `addenda/01-as-is.upstream-gap.00-worktree.addendum-02.md`
+- What changed:
+  - established a repo-owned runtime testing architecture with a 6-layer taxonomy (unit, integration, validator, browser E2E, rebuilt-runtime, packaged-runtime), named root commands, and a changed-path regression matrix
+  - added config-driven test discovery via `vitest.config.ts` (host-bridge) and `vite.config.ts` `test.include` (runtime-ui) so all checked-in tests are reachable by default
+  - added named root commands: `runtime:test-critical`, `runtime:test-validators`, `runtime:test-browser`, `runtime:test-full`; added `runtime:test-critical` to CI workflow
+  - created a distinct `validate-observability.ts` entrypoint that reuses `runRuntimeUiValidation` with a temporary runtime config, replacing the silent alias of `runtime:validate-observability` to `runtime:validate-host`
+  - added a Playwright browser E2E harness (`playwright.config.ts`, `e2e/runtime-shell.spec.ts`) that builds the runtime UI, starts a seeded QA server on port 3462, and exercises providers + session-readiness pages against real runtime HTTP data
+  - fixed orphaned test issues: routing bootstrap timeouts (60s), tool expectation corrections, theme key name fix
+  - added `data-testid` stable selectors to provider maintenance cards for future E2E tests
+  - created `docs/architecture/10-runtime-testing-architecture.md` and `docs/operations/04-runtime-testing-matrix.md`
+- Why:
+  - the repository had strong focused tests and runtime validators but lacked a durable testing architecture that future runs could apply consistently; this run closes that gap with executable commands, reusable harness patterns, and concrete regression coverage
+- How:
+  - implemented with pragmatic TDD (strict RED/GREEN for executable code, pragmatic exceptions for config-only changes); all test suites green (host-bridge 383 tests, runtime-ui 190 tests, critical regression 168 tests + validators, browser E2E 1 test); agent-operated QA via Playwright on rebuilt runtime
+- What was not done:
+  - SP51-B (shared harness extraction) was partially addressed; a standalone shared harness module was not extracted because `validate-ui.ts` already exports a reusable entrypoint
+  - `build-binaries.yml` packaged-runtime verification contract update was deferred; existing `runtime:validate-packaging` remains available and documented
+  - cross-links from `docs/operations/01-router-runtime-hardening-playbook.md` and `docs/operations/02-ci-and-release-flow.md` to the new testing matrix were deferred
+- Known issues / follow-ups:
+  - full repo `biome lint` has 41 pre-existing errors in unchanged files; all 11 changed source files pass individually
+  - Playwright browser E2E uses port 3462 to avoid conflicts with any existing runtime on 3456
+  - README hero, acknowledgements, and screenshot guidance from addenda remain preserved as upstream inputs for a future README implementation run

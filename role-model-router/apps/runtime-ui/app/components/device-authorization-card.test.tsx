@@ -48,7 +48,9 @@ describe("DeviceAuthorizationCard", () => {
     );
 
     expect(markup).toContain("User code:");
-    expect(markup).toContain("The verification page opens in a new tab and this screen keeps checking automatically.");
+    expect(markup).toContain(
+      "The verification page opens in a new tab and this screen keeps checking automatically.",
+    );
     expect(markup).not.toContain("Open OpenAI verification page");
   });
 });

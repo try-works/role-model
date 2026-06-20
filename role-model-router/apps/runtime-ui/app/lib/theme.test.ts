@@ -9,7 +9,7 @@ import {
 
 describe("runtime theme helpers", () => {
   test("normalizes only the supported persisted Light and Dark themes", () => {
-    expect(THEME_STORAGE_KEY).toBe("rm-runtime-ui-theme");
+    expect(THEME_STORAGE_KEY).toBe("role-model-runtime-theme");
     expect(normalizeStoredTheme("light")).toBe("light");
     expect(normalizeStoredTheme("dark")).toBe("dark");
     expect(normalizeStoredTheme("system")).toBeNull();

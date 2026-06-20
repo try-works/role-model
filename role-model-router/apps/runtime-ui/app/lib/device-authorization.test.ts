@@ -4,8 +4,8 @@ import {
   getDeviceAuthorizationPollDelayMs,
   isCodexSubscriptionDeviceAuthorization,
   resolveVerificationWindowUrl,
-  shouldAutoOpenDeviceAuthorizationWindow,
   restorePersistedDeviceAuthorization,
+  shouldAutoOpenDeviceAuthorizationWindow,
   shouldAutoPollDeviceAuthorization,
   syncConnectedDeviceAuthorizationEndpoints,
 } from "./device-authorization";

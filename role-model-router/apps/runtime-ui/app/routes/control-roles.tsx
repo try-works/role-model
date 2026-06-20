@@ -23,6 +23,7 @@ import {
   primaryButtonClassName,
   secondaryButtonClassName,
 } from "../lib/design-system";
+import { RoleCatalogHierarchy, buildRoleTaskHierarchy } from "../lib/role-task-hierarchy";
 import {
   type RuntimeRolePolicy,
   type RuntimeRolePolicyRole,
@@ -31,7 +32,6 @@ import {
   updateRolePolicyRole,
   updateTaskDefinitions,
 } from "../lib/runtime-api";
-import { RoleCatalogHierarchy, buildRoleTaskHierarchy } from "../lib/role-task-hierarchy";
 
 type RoleDraft = {
   roleId: string;
@@ -308,7 +308,9 @@ export default function ControlRolesRoute() {
   );
   const roleTaskHierarchy = useMemo(
     () =>
-      policy ? buildRoleTaskHierarchy(policy.roleDefinitions, policy.taskDefinitions) : ([] as const),
+      policy
+        ? buildRoleTaskHierarchy(policy.roleDefinitions, policy.taskDefinitions)
+        : ([] as const),
     [policy],
   );
   const expandedRole = useMemo(
