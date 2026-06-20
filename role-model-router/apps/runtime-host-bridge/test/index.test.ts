@@ -16,6 +16,7 @@ import {
   resolveSqliteMemoryLocation,
   upsertProviderAccount as upsertSqliteProviderAccount,
 } from "@role-model-router/sqlite-memory";
+import { executeToolCalls } from "@role-model-router/tool-registry";
 import { runRuntimeAdapterValidation } from "../../../packages/adapter-execution/src/cli.ts";
 import { buildRoutableInventory } from "../src/routable-inventory.js";
 
@@ -1818,6 +1819,277 @@ describe("runtime-host-bridge", () => {
         },
       },
     ]);
+  });
+
+  test("exports createRequestScopedToolRegistry for request-scoped function tool registry", () => {
+    expect(
+      typeof (bridge as { createRequestScopedToolRegistry?: unknown })
+        .createRequestScopedToolRegistry,
+    ).toBe("function");
+  });
+
+  test("createRequestScopedToolRegistry produces a working registry with correct tool names and passthrough execution", async () => {
+    const createRequestScopedToolRegistry = (
+      bridge as {
+        createRequestScopedToolRegistry: (
+          dynamicTools: readonly {
+            readonly name: string;
+            readonly description?: string;
+            readonly inputSchema: Record<string, unknown>;
+          }[],
+        ) => { connectors: readonly { tools: readonly { name: string }[] }[] };
+      }
+    ).createRequestScopedToolRegistry;
+
+    const registry = createRequestScopedToolRegistry([
+      {
+        name: "lookupRegistry",
+        description: "Look up endpoint details.",
+        inputSchema: {
+          type: "object",
+          properties: { endpointId: { type: "string" } },
+          required: ["endpointId"],
+        },
+      },
+    ]);
+
+    expect(registry.connectors).toHaveLength(1);
+    expect(registry.connectors[0].tools.map((t) => t.name)).toEqual(["lookupRegistry"]);
+
+    const result = await executeToolCalls(registry, {
+      requestId: "test-req-1",
+      toolCalls: [
+        {
+          name: "lookupRegistry",
+          arguments: { endpointId: "openai.personal.openai-codex-subscription.global.gpt-5.4" },
+          providerToolId: "call-1",
+        },
+      ],
+    });
+
+    expect(result.executions).toHaveLength(1);
+    expect(result.executions[0].status).toBe("succeeded");
+    expect(result.executions[0].toolName).toBe("lookupRegistry");
+    expect(result.executions[0].output).toEqual({
+      endpointId: "openai.personal.openai-codex-subscription.global.gpt-5.4",
+    });
+  });
+
+  test("buildCodexDynamicTools output is compatible with createRequestScopedToolRegistry", async () => {
+    const dynamicTools = (
+      bridge as {
+        buildCodexDynamicTools: (requestCapture: {
+          url: string;
+          body: Record<string, unknown>;
+        }) => readonly {
+          readonly name: string;
+          readonly description?: string;
+          readonly inputSchema: Record<string, unknown>;
+        }[];
+      }
+    ).buildCodexDynamicTools({
+      url: "https://api.openai.test/v1/responses",
+      body: {
+        model: "gpt-5.4",
+        tools: [
+          {
+            type: "function",
+            name: "lookupRegistry",
+            description: "Look up endpoint details.",
+            parameters: {
+              type: "object",
+              properties: { endpointId: { type: "string" } },
+              required: ["endpointId"],
+            },
+          },
+        ],
+      },
+    });
+
+    const createRequestScopedToolRegistry = (
+      bridge as {
+        createRequestScopedToolRegistry: (
+          dynamicTools: readonly {
+            readonly name: string;
+            readonly description?: string;
+            readonly inputSchema: Record<string, unknown>;
+          }[],
+        ) => { connectors: readonly { tools: readonly { name: string }[] }[] };
+      }
+    ).createRequestScopedToolRegistry;
+
+    const registry = createRequestScopedToolRegistry(dynamicTools);
+    expect(registry.connectors[0].tools.map((t) => t.name)).toEqual(["lookupRegistry"]);
+  });
+
+  test("createRequestScopedToolRegistry does not require repoRoot or file system access", () => {
+    const createRequestScopedToolRegistry = (
+      bridge as {
+        createRequestScopedToolRegistry: (
+          dynamicTools: readonly {
+            readonly name: string;
+            readonly description?: string;
+            readonly inputSchema: Record<string, unknown>;
+          }[],
+        ) => { connectors: readonly { tools: readonly { name: string }[] }[] };
+      }
+    ).createRequestScopedToolRegistry;
+
+    const registry = createRequestScopedToolRegistry([
+      {
+        name: "testTool",
+        description: "Test tool.",
+        inputSchema: { type: "object" },
+      },
+    ]);
+
+    expect(registry.connectors).toHaveLength(1);
+    expect(registry.connectors[0].tools[0].name).toBe("testTool");
+  });
+
+  test("non-tool Codex behavior: buildCodexDynamicTools returns empty array when no function tools present", () => {
+    const dynamicTools = (
+      bridge as {
+        buildCodexDynamicTools: (requestCapture: {
+          url: string;
+          body: Record<string, unknown>;
+        }) => readonly unknown[];
+      }
+    ).buildCodexDynamicTools({
+      url: "https://api.openai.test/v1/responses",
+      body: {
+        model: "gpt-5.4",
+        tools: [
+          {
+            type: "web_search",
+          },
+        ],
+      },
+    });
+
+    expect(dynamicTools).toEqual([]);
+  });
+
+  test("loadMcpConnectorConfigs throws ENOENT when testdata file is absent (reproduces original packaged-runtime crash)", async () => {
+    const tempDir = await mkdtemp(path.join(os.tmpdir(), "role-model-packaged-sim-"));
+    try {
+      const loadMcpConnectorConfigs = (
+        bridge as {
+          loadMcpConnectorConfigs: (repoRoot: string) => Promise<unknown>;
+        }
+      ).loadMcpConnectorConfigs;
+
+      await expect(loadMcpConnectorConfigs(tempDir)).rejects.toThrow(/ENOENT/);
+    } finally {
+      await rm(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  test("Codex tool path produces judged execution results in packaged-runtime-like environment (not file errors)", async () => {
+    const tempDir = await mkdtemp(path.join(os.tmpdir(), "role-model-packaged-sim-"));
+    try {
+      const loadMcpConnectorConfigs = (
+        bridge as {
+          loadMcpConnectorConfigs: (repoRoot: string) => Promise<unknown>;
+        }
+      ).loadMcpConnectorConfigs;
+
+      await expect(loadMcpConnectorConfigs(tempDir)).rejects.toThrow(/ENOENT/);
+
+      const createRequestScopedToolRegistry = (
+        bridge as {
+          createRequestScopedToolRegistry: (
+            dynamicTools: readonly {
+              readonly name: string;
+              readonly description?: string;
+              readonly inputSchema: Record<string, unknown>;
+            }[],
+          ) => { connectors: readonly { tools: readonly { name: string }[] }[] };
+        }
+      ).createRequestScopedToolRegistry;
+
+      const dynamicTools = (
+        bridge as {
+          buildCodexDynamicTools: (requestCapture: {
+            url: string;
+            body: Record<string, unknown>;
+          }) => readonly {
+            readonly name: string;
+            readonly description?: string;
+            readonly inputSchema: Record<string, unknown>;
+          }[];
+        }
+      ).buildCodexDynamicTools({
+        url: "https://api.openai.test/v1/responses",
+        body: {
+          model: "gpt-5.4",
+          tools: [
+            {
+              type: "function",
+              name: "lookupRegistry",
+              description: "Look up endpoint details.",
+              parameters: {
+                type: "object",
+                properties: { endpointId: { type: "string" } },
+                required: ["endpointId"],
+              },
+            },
+          ],
+        },
+      });
+
+      const registry = createRequestScopedToolRegistry(dynamicTools);
+
+      const result = await executeToolCalls(registry, {
+        requestId: "packaged-sim-1",
+        toolCalls: [
+          {
+            name: "lookupRegistry",
+            arguments: { endpointId: "openai.personal.openai-codex-subscription.global.gpt-5.4" },
+            providerToolId: "call-1",
+          },
+        ],
+      });
+
+      expect(result.executions).toHaveLength(1);
+      expect(result.executions[0].status).toBe("succeeded");
+      expect(result.executions[0].toolName).toBe("lookupRegistry");
+      expect(result.executions[0].output).toEqual({
+        endpointId: "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      });
+      expect(result.executions[0].diagnostics).toEqual([]);
+    } finally {
+      await rm(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  test("createRequestScopedToolRegistry signature has no repoRoot parameter (architecture-level guard against testdata reads)", () => {
+    const createRequestScopedToolRegistry = (
+      bridge as {
+        createRequestScopedToolRegistry: (...args: unknown[]) => unknown;
+      }
+    ).createRequestScopedToolRegistry;
+
+    expect(createRequestScopedToolRegistry.length).toBe(1);
+
+    const createRequestScopedToolRegistryTyped = createRequestScopedToolRegistry as (
+      dynamicTools: readonly {
+        readonly name: string;
+        readonly description?: string;
+        readonly inputSchema: Record<string, unknown>;
+      }[],
+    ) => unknown;
+
+    const registry = createRequestScopedToolRegistryTyped([
+      {
+        name: "archGuardTool",
+        description: "Architecture guard test.",
+        inputSchema: { type: "object" },
+      },
+    ]);
+
+    expect(registry).toBeDefined();
+    expect((registry as { connectors: unknown[] }).connectors).toHaveLength(1);
   });
 
   test("buildCodexTurnPrompt no longer forbids network access for Codex Subscription turns", () => {

@@ -238,3 +238,10 @@
   - `role-model-router/apps/runtime-host-bridge/scripts/start-for-qa.ts` now accepts `RUNTIME_QA_PORT` env for port isolation.
   - Orphaned test issues fixed: `backend-unified-runtime-config.test.ts` routing bootstrap tests have 60s timeouts; `validate-tools.test.ts` expectations corrected to match current runtime behavior; `theme.test.ts` key name fixed to `"role-model-runtime-theme"`.
   - All test suites green: host-bridge 47 files / 383 tests, runtime-ui 20 files / 190 tests, critical regression 80+88 tests + validators, browser E2E 1 test.
+- Run 52 (Codex Subscription Benchmark Tool Path Fix) completed on branch `recursive/52-codex-subscription-benchmark-tool-path`:
+  - The Codex Subscription benchmark tool path in `role-model-router/apps/runtime-host-bridge/src/index.ts` now uses `createRequestScopedToolRegistry(codexDynamicTools)` (in-memory, no file reads) instead of `createRuntimeToolRegistry(options.repoRoot, currentRegistry, networkFetcher)` (which reads `testdata/router-runtime/mcp-connectors.json`) at the Codex call site (line 12916).
+  - `createRequestScopedToolRegistry` is now exported for direct unit testing.
+  - `createRuntimeToolRegistry` is preserved for the non-Codex hosted-tools continuation path (line ~13152).
+  - 6 new tests added: registry unit test, executeToolCalls integration, buildCodexDynamicTools compatibility, no-FS-access invariant, non-tool regression guard, packaging regression guard.
+  - All test suites green: lint 0 errors, build pass, full test pass, test:critical 80 tests.
+  - Live benchmark on packaged runtime: 12/12 cases completed without ENOENT on `mcp-connectors.json`; tool-bearing cases executed successfully.

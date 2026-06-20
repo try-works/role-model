@@ -5735,7 +5735,9 @@ async function loadResponseCaptures(
   return { byEndpointId };
 }
 
-async function loadMcpConnectorConfigs(repoRoot: string): Promise<DeclaredMcpConnectorConfig[]> {
+export async function loadMcpConnectorConfigs(
+  repoRoot: string,
+): Promise<DeclaredMcpConnectorConfig[]> {
   return readJson<DeclaredMcpConnectorConfig[]>(
     path.join(repoRoot, "testdata", "router-runtime", "mcp-connectors.json"),
   );
@@ -5830,7 +5832,7 @@ async function createRuntimeToolRegistry(
   });
 }
 
-function createRequestScopedToolRegistry(
+export function createRequestScopedToolRegistry(
   dynamicTools: readonly Extract<RuntimeExecutionToolDefinition, { readonly kind?: "function" }>[],
 ): ToolRegistry {
   return createToolRegistry({
@@ -12913,9 +12915,7 @@ export async function createRuntimeBridgeBackend(
         const codexDynamicTools = buildCodexDynamicTools(requestCapture);
         const dynamicToolNames = new Set(codexDynamicTools.map((tool) => tool.name));
         const runtimeToolRegistry =
-          codexDynamicTools.length > 0
-            ? await createRuntimeToolRegistry(options.repoRoot, currentRegistry, networkFetcher)
-            : null;
+          codexDynamicTools.length > 0 ? createRequestScopedToolRegistry(codexDynamicTools) : null;
         const codexResponse = await codexExecutionAdapter.executeRequest({
           runtimeStateRoot: options.runtimeStateRoot,
           scopeId: options.scopeId,

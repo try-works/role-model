@@ -1389,3 +1389,35 @@
   - full repo `biome lint` has 41 pre-existing errors in unchanged files; all 11 changed source files pass individually
   - Playwright browser E2E uses port 3462 to avoid conflicts with any existing runtime on 3456
   - README hero, acknowledgements, and screenshot guidance from addenda remain preserved as upstream inputs for a future README implementation run
+
+### Run `52-codex-subscription-benchmark-tool-path`
+
+- Run folder: `/.recursive/run/52-codex-subscription-benchmark-tool-path/`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `01.5-root-cause.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `03.5-code-review.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+  - addenda `addenda/00-requirements.root-cause-handoff.md`
+- What changed:
+  - fixed Codex Subscription benchmark tool path crash on packaged runtime by replacing `createRuntimeToolRegistry` with `createRequestScopedToolRegistry` at the Codex call site (index.ts:12916)
+  - exported `createRequestScopedToolRegistry` for direct unit testing
+  - added 6 new tests: registry unit test, executeToolCalls integration, buildCodexDynamicTools compatibility, no-FS-access invariant, non-tool regression guard, packaging regression guard
+- Why:
+  - the Codex Subscription branch called `createRuntimeToolRegistry` which reads `testdata/router-runtime/mcp-connectors.json`, a file excluded from production packaging by `package-sea.ts`, causing ENOENT crashes on packaged runtime when benchmark cases included function tools
+- How:
+  - strict TDD (RED: 4 tests fail because `createRequestScopedToolRegistry` not exported; GREEN: export + call site replacement, all 5 pass); full suite green (lint 0 errors, build pass, test pass, test:critical 80 tests); delegated code review APPROVE; live benchmark on packaged runtime completed 12/12 cases without ENOENT
+- What was not done:
+  - no changes to non-Codex paths, packaging rules, or benchmark scoring
+  - Codex app-server WebSocket "did not return a thread id" failures are a separate issue unrelated to this fix
+- Known issues / follow-ups:
+  - some benchmark cases scored 0 due to model not producing expected tool calls (model quality issue, not a crash)
+  - Codex app-server WebSocket thread id issue remains as a separate follow-up

@@ -388,4 +388,23 @@ describe("runtime-host-bridge executable packaging", () => {
       await rm(releaseDir, { recursive: true, force: true });
     }
   });
+
+  test("packaging rules still forbid testdata/router-runtime path fragment including mcp-connectors.json", async () => {
+    const releaseDir = await mkdtemp(path.join(os.tmpdir(), "role-model-mcp-connector-release-"));
+    try {
+      const targetDir = path.join(releaseDir, "testdata", "router-runtime");
+      await mkdir(targetDir, { recursive: true });
+      await writeFile(
+        path.join(targetDir, "mcp-connectors.json"),
+        JSON.stringify([{ connectorId: "lookupRegistry" }]),
+        "utf8",
+      );
+
+      await expect(packageSea.assertProductionReleaseHasNoQaArtifacts(releaseDir)).rejects.toThrow(
+        /QA fixture artifacts|QA\/mock data markers/,
+      );
+    } finally {
+      await rm(releaseDir, { recursive: true, force: true });
+    }
+  });
 });
