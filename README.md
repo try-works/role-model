@@ -6,7 +6,7 @@ that protocol.
 It gives a router a durable contract for describing **what a request needs**, **what an endpoint can do**,
 **what policy allows**, and **why a final routing decision was made**.
 
-![role-model runtime overview](docs/public/images/runtime-overview.jpg)
+![role-model runtime overview](docs/public/images/runtime-overview.png)
 
 ## Why role-model
 
