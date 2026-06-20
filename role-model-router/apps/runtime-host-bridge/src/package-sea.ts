@@ -1,6 +1,15 @@
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { chmod, copyFile, cp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import {
+  chmod,
+  copyFile,
+  cp,
+  mkdir,
+  readFile,
+  readdir,
+  rm,
+  writeFile,
+} from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
@@ -78,10 +87,6 @@ const standaloneReleaseCopies = [
     destinationRelativePath: "build/client",
   },
   {
-    sourceRelativePath: "testdata/router-runtime",
-    destinationRelativePath: "testdata/router-runtime",
-  },
-  {
     sourceRelativePath: "testdata/catalog/litellm-model-prices.json",
     destinationRelativePath: "testdata/catalog/litellm-model-prices.json",
   },
@@ -90,6 +95,34 @@ const standaloneReleaseCopies = [
     destinationRelativePath: "role-model-router/packages/catalog/data/normalized-catalog.json",
   },
 ] as const satisfies readonly StandaloneReleaseCopy[];
+
+const forbiddenProductionReleasePathFragments = [
+  "testdata/router-runtime",
+  ".recursive",
+  "fixtures/provider-accounts.json",
+  "fixtures/observability-history.json",
+  "fixtures/registry-sources.json",
+] as const;
+
+const forbiddenProductionReleaseTextMarkers = [
+  "phase5.mock",
+  "mock.openai",
+  "openai.litellm",
+  "http://127.0.0.1:45679",
+  "anthropic.team.shared",
+  "cli.local.coder",
+] as const;
+
+const productionReleaseTextExtensions = new Set([
+  ".css",
+  ".html",
+  ".js",
+  ".json",
+  ".md",
+  ".txt",
+  ".yaml",
+  ".yml",
+]);
 
 export function resolveBuildTarget(
   platform: NodeJS.Platform = process.platform,
@@ -116,6 +149,68 @@ export function createSeaConfigForTarget(target: BuildTarget): SeaConfigForTarge
 
 export function listStandaloneReleaseCopies(): readonly StandaloneReleaseCopy[] {
   return standaloneReleaseCopies;
+}
+
+function normalizeReleasePath(filePath: string): string {
+  return filePath.split(path.sep).join("/");
+}
+
+async function listReleaseFiles(root: string): Promise<string[]> {
+  const entries = await readdir(root, { withFileTypes: true });
+  const files: string[] = [];
+  for (const entry of entries) {
+    const entryPath = path.join(root, entry.name);
+    if (entry.isDirectory()) {
+      files.push(...(await listReleaseFiles(entryPath)));
+      continue;
+    }
+    if (entry.isFile()) {
+      files.push(entryPath);
+    }
+  }
+  return files;
+}
+
+export async function assertProductionReleaseHasNoQaArtifacts(
+  releaseDir: string,
+): Promise<void> {
+  const files = await listReleaseFiles(releaseDir);
+  const pathViolations = files
+    .map((filePath) => normalizeReleasePath(path.relative(releaseDir, filePath)))
+    .filter((relativePath) =>
+      forbiddenProductionReleasePathFragments.some((fragment) => relativePath.includes(fragment)),
+    );
+  if (pathViolations.length > 0) {
+    throw new Error(
+      [
+        "Production release contains QA fixture artifacts.",
+        ...pathViolations.map((relativePath) => `- ${relativePath}`),
+      ].join("\n"),
+    );
+  }
+
+  const textViolations: string[] = [];
+  for (const filePath of files) {
+    if (!productionReleaseTextExtensions.has(path.extname(filePath))) {
+      continue;
+    }
+    const text = await readFile(filePath, "utf8");
+    for (const marker of forbiddenProductionReleaseTextMarkers) {
+      if (text.includes(marker)) {
+        textViolations.push(
+          `${normalizeReleasePath(path.relative(releaseDir, filePath))}: ${marker}`,
+        );
+      }
+    }
+  }
+  if (textViolations.length > 0) {
+    throw new Error(
+      [
+        "Production release contains QA/mock data markers.",
+        ...textViolations.map((violation) => `- ${violation}`),
+      ].join("\n"),
+    );
+  }
 }
 
 export function isDirectSeaInvocation(
@@ -401,8 +496,8 @@ export async function packageSeaRuntime(): Promise<{
   const releaseDir = path.join(distRoot, "release", releaseTarget);
   const outputPath = path.join(releaseDir, resolvePackagedRuntimeName());
   const blobPath = path.join(distRoot, "sea-prep.blob");
+  await rm(releaseDir, { recursive: true, force: true });
   await mkdir(releaseDir, { recursive: true });
-  await rm(outputPath, { force: true });
   await copyFile(process.execPath, outputPath);
   if (process.platform !== "win32") {
     await chmod(outputPath, 0o755);
@@ -435,6 +530,7 @@ export async function packageSeaRuntime(): Promise<{
     ),
     "utf8",
   );
+  await assertProductionReleaseHasNoQaArtifacts(releaseDir);
 
   return {
     outputPath,

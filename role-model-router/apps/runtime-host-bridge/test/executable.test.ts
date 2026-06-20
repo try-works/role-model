@@ -1,4 +1,5 @@
-import { access, readFile } from "node:fs/promises";
+import { access, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -242,10 +243,6 @@ describe("runtime-host-bridge executable packaging", () => {
           destinationRelativePath: "build/client",
         },
         {
-          sourceRelativePath: "testdata/router-runtime",
-          destinationRelativePath: "testdata/router-runtime",
-        },
-        {
           sourceRelativePath: "testdata/catalog/litellm-model-prices.json",
           destinationRelativePath: "testdata/catalog/litellm-model-prices.json",
         },
@@ -253,6 +250,14 @@ describe("runtime-host-bridge executable packaging", () => {
           sourceRelativePath: "role-model-router/packages/catalog/data/normalized-catalog.json",
           destinationRelativePath:
             "role-model-router/packages/catalog/data/normalized-catalog.json",
+        },
+      ]),
+    );
+    expect(copies).not.toEqual(
+      expect.arrayContaining([
+        {
+          sourceRelativePath: "testdata/router-runtime",
+          destinationRelativePath: "testdata/router-runtime",
         },
       ]),
     );
@@ -313,7 +318,7 @@ describe("runtime-host-bridge executable packaging", () => {
     expect(validatePackagingText).toContain("/v1/responses");
     expect(validatePackagingText).toContain("--fixture-root");
     expect(validatePackagingText).toContain(
-      'path.join(packagedRepoRoot, "testdata", "router-runtime", "fixtures")',
+      'path.join(repoRoot, "testdata", "router-runtime", "fixtures")',
     );
   });
 
@@ -321,5 +326,61 @@ describe("runtime-host-bridge executable packaging", () => {
     const manifest = await readManifest("role-model-router/apps/runtime-host-bridge/package.json");
 
     expect(manifest.scripts?.["validate-packaging"]).toContain("pnpm build &&");
+  });
+
+  test("packaged runtime recreates the release directory to avoid stale fixture artifacts", async () => {
+    const packageSeaPath = path.join(
+      repoRoot,
+      "role-model-router",
+      "apps",
+      "runtime-host-bridge",
+      "src",
+      "package-sea.ts",
+    );
+    const packageSeaText = await readFile(packageSeaPath, "utf8");
+
+    expect(packageSeaText).toContain("await rm(releaseDir, { recursive: true, force: true });");
+  });
+
+  test("production release guard accepts clean runtime artifacts", async () => {
+    const releaseDir = await mkdtemp(path.join(os.tmpdir(), "role-model-clean-release-"));
+    try {
+      await mkdir(path.join(releaseDir, "build", "client"), { recursive: true });
+      await writeFile(
+        path.join(releaseDir, "build", "client", "index.html"),
+        "<!doctype html><title>role-model</title>",
+        "utf8",
+      );
+      await writeFile(
+        path.join(releaseDir, "manifest.json"),
+        JSON.stringify({ executable: "role-model-runtime.exe" }),
+        "utf8",
+      );
+
+      await expect(
+        packageSea.assertProductionReleaseHasNoQaArtifacts(releaseDir),
+      ).resolves.toBeUndefined();
+    } finally {
+      await rm(releaseDir, { recursive: true, force: true });
+    }
+  });
+
+  test("production release guard rejects router fixtures and mock markers", async () => {
+    const releaseDir = await mkdtemp(path.join(os.tmpdir(), "role-model-dirty-release-"));
+    try {
+      const fixtureDir = path.join(releaseDir, "testdata", "router-runtime", "fixtures");
+      await mkdir(fixtureDir, { recursive: true });
+      await writeFile(
+        path.join(fixtureDir, "provider-accounts.json"),
+        JSON.stringify({ accounts: [{ providerAccountId: "phase5.mock.openai" }] }),
+        "utf8",
+      );
+
+      await expect(
+        packageSea.assertProductionReleaseHasNoQaArtifacts(releaseDir),
+      ).rejects.toThrow(/QA fixture artifacts|QA\/mock data markers/);
+    } finally {
+      await rm(releaseDir, { recursive: true, force: true });
+    }
   });
 });

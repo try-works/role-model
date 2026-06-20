@@ -91,8 +91,8 @@ type CliBackend = Pick<
   | "shutdown"
 >;
 
-export function resolveCliFixtureRoot(repoRoot: string, fixtureRoot?: string): string {
-  return fixtureRoot?.trim() || path.join(repoRoot, "testdata", "router-runtime");
+export function resolveCliFixtureRoot(_repoRoot: string, fixtureRoot?: string): string | undefined {
+  return fixtureRoot?.trim() || undefined;
 }
 
 export function createCliServerOptions(

@@ -783,10 +783,17 @@ describe("runtime-host-bridge", () => {
 
     const fixtureRoot = (
       cli as {
-        resolveCliFixtureRoot: (repoRoot: string, fixtureRoot?: string) => string;
+        resolveCliFixtureRoot: (repoRoot: string, fixtureRoot?: string) => string | undefined;
       }
     ).resolveCliFixtureRoot(repoRoot);
-    expect(fixtureRoot).toBe(path.join(repoRoot, "testdata", "router-runtime"));
+    expect(fixtureRoot).toBeUndefined();
+    expect(
+      (
+        cli as {
+          resolveCliFixtureRoot: (repoRoot: string, fixtureRoot?: string) => string | undefined;
+        }
+      ).resolveCliFixtureRoot(repoRoot, path.join(repoRoot, "testdata", "router-runtime")),
+    ).toBe(path.join(repoRoot, "testdata", "router-runtime"));
 
     const staticRoot = path.join(
       repoRoot,
@@ -839,6 +846,7 @@ describe("runtime-host-bridge", () => {
     expect(options.staticRoot).toBe(staticRoot);
     expect(options.listActivityMetrics).toBe(backend.listActivityMetrics);
     expect(options.readActivityCapture).toBe(backend.readActivityCapture);
+    expect(options.queryTelemetryAnalytics).toBe(backend.queryTelemetryAnalytics);
     expect(options.readRouterSummary).toBe(readRouterSummary);
     expect(options.readRouterConfig).toBe(readRouterConfig);
     expect(options.listRouterCandidates).toBe(listRouterCandidates);
@@ -854,7 +862,6 @@ describe("runtime-host-bridge", () => {
     expect(options.readModelOverrides).toBe(backend.readModelOverrides);
     expect(options.updateModelOverrides).toBe(backend.updateModelOverrides);
     expect(options.readPeers).toBe(backend.readPeers);
-    expect(options.queryTelemetryAnalytics).toBe(backend.queryTelemetryAnalytics);
     expect(options.reconnectProviderAccount).toBe(backend.reconnectProviderAccount);
     expect(options.updateProviderApiKey).toBe(backend.updateProviderApiKey);
     expect(options.updatePeers).toBe(backend.updatePeers);
@@ -869,15 +876,16 @@ describe("runtime-host-bridge", () => {
     try {
       const fixtureRoot = (
         cli as {
-          resolveCliFixtureRoot: (repoRoot: string, fixtureRoot?: string) => string;
+          resolveCliFixtureRoot: (repoRoot: string, fixtureRoot?: string) => string | undefined;
         }
       ).resolveCliFixtureRoot(repoRoot);
+      expect(fixtureRoot).toBeUndefined();
 
       const backend = await (
         bridge as {
           createRuntimeBridgeBackend: (options: {
             repoRoot: string;
-            fixtureRoot: string;
+            fixtureRoot?: string;
             runtimeStateRoot: string;
             scopeId: string;
           }) => Promise<{
@@ -887,7 +895,6 @@ describe("runtime-host-bridge", () => {
         }
       ).createRuntimeBridgeBackend({
         repoRoot,
-        fixtureRoot,
         runtimeStateRoot,
         scopeId: "runtime-host-cli-default-fixtures",
       });
@@ -905,106 +912,17 @@ describe("runtime-host-bridge", () => {
     }
   });
 
-  test("removes legacy placeholder provider accounts from persisted runtime state when using packaged defaults", async () => {
+  test("loads placeholder accounts only when fixture-root is explicitly provided", async () => {
     const runtimeStateRoot = await mkdtemp(
-      path.join(os.tmpdir(), "role-model-runtime-host-cli-migration-"),
+      path.join(os.tmpdir(), "role-model-runtime-host-cli-explicit-fixtures-"),
     );
-    const pollutedFixtureRoot = path.join(repoRoot, "testdata", "router-runtime", "fixtures");
-    const packagedFixtureRoot = (
-      cli as {
-        resolveCliFixtureRoot: (repoRoot: string, fixtureRoot?: string) => string;
-      }
-    ).resolveCliFixtureRoot(repoRoot);
 
     try {
-      const bootstrapBackend = await (
-        bridge as {
-          createRuntimeBridgeBackend: (options: {
-            repoRoot: string;
-            fixtureRoot: string;
-            runtimeStateRoot: string;
-            scopeId: string;
-          }) => Promise<{
-            shutdown: () => Promise<void>;
-          }>;
-        }
-      ).createRuntimeBridgeBackend({
-        repoRoot,
-        fixtureRoot: pollutedFixtureRoot,
-        runtimeStateRoot,
-        scopeId: "runtime-host-cli-placeholder-cleanup",
-      });
-      await bootstrapBackend.shutdown();
-
-      const databasePath = resolveSqliteMemoryLocation({
-        runtimeStateRoot,
-        scopeId: "runtime-host-cli-placeholder-cleanup",
-      });
-
-      upsertSqliteProviderAccount({
-        databasePath,
-        account: {
-          providerAccountId: "openai.personal.primary",
-          providerId: "openai",
-          providerKind: "provider-openai",
-          orgScope: "personal",
-          accountScope: "workspace-default",
-          credentialRef: {
-            backend: "env",
-            ref: "OPENAI_API_KEY",
-          },
-          authMode: "api-key-static",
-          regionPolicy: {
-            mode: "prefer",
-            regions: ["us-east-1"],
-          },
-          baseUrlOverride: null,
-          allowedModels: ["openai/gpt-4.1-mini-fast"],
-          modelRoleBindings: [],
-          deniedModels: [],
-          entitlementTags: ["chat"],
-          budgetPolicyRef: "budget.default",
-          quotaPolicyRef: "quota.default",
-          status: "active",
-          healthStatus: "healthy",
-          rotationState: "stable",
-        },
-      });
-      upsertSqliteProviderAccount({
-        databasePath,
-        account: {
-          providerAccountId: "anthropic.team.shared",
-          providerId: "anthropic",
-          providerKind: "provider-anthropic",
-          orgScope: "team",
-          accountScope: "workspace-shared",
-          credentialRef: {
-            backend: "local-keychain",
-            ref: "anthropic/team/shared",
-          },
-          authMode: "api-key-rotating-ref",
-          regionPolicy: {
-            mode: "allow",
-            regions: ["us-east-1"],
-          },
-          baseUrlOverride: null,
-          allowedModels: ["anthropic/claude-3.7-sonnet"],
-          modelRoleBindings: [],
-          deniedModels: [],
-          entitlementTags: ["chat"],
-          budgetPolicyRef: "budget.team",
-          quotaPolicyRef: "quota.team",
-          status: "active",
-          healthStatus: "healthy",
-          rotationState: "stable",
-        },
-      });
-
       const backend = await (
         bridge as {
           createRuntimeBridgeBackend: (options: {
             repoRoot: string;
-            fixtureRoot: string;
+            fixtureRoot?: string;
             runtimeStateRoot: string;
             scopeId: string;
           }) => Promise<{
@@ -1014,14 +932,14 @@ describe("runtime-host-bridge", () => {
         }
       ).createRuntimeBridgeBackend({
         repoRoot,
-        fixtureRoot: packagedFixtureRoot,
+        fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
         runtimeStateRoot,
-        scopeId: "runtime-host-cli-placeholder-cleanup",
+        scopeId: "runtime-host-cli-explicit-fixtures",
       });
 
       try {
         const accounts = await backend.listAccounts();
-        expect(accounts.map((account) => account.providerAccountId)).not.toEqual(
+        expect(accounts.map((account) => account.providerAccountId)).toEqual(
           expect.arrayContaining(["openai.personal.primary", "anthropic.team.shared"]),
         );
       } finally {

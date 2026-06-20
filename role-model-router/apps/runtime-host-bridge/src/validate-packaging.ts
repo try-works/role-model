@@ -335,7 +335,7 @@ export async function runRuntimePackagingValidation(): Promise<{
       "--port",
       String(port),
       "--fixture-root",
-      path.join(packagedRepoRoot, "testdata", "router-runtime", "fixtures"),
+      path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
       "--static-root",
       path.join(packagedRepoRoot, "build", "client"),
     ],

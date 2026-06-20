@@ -76,12 +76,41 @@ jobs:
             "$packageDir/role-model-launcher.exe",
             "$packageDir/Role-Model.bat",
             "$packageDir/build/client/index.html",
-            "$packageDir/testdata/router-runtime/fixtures/provider-accounts.json",
             "$packageDir/testdata/catalog/litellm-model-prices.json",
             "$packageDir/role-model-router/packages/catalog/data/normalized-catalog.json"
           ) | ForEach-Object {
             if (-not (Test-Path $_)) {
               throw "Missing packaged artifact: $_"
+            }
+          }
+
+      - name: Verify package contains no QA fixtures or mock data
+        shell: pwsh
+        run: |
+          $packageDir = "role-model-router/dist/release/${{ matrix.target }}"
+          $forbiddenPaths = @(
+            "$packageDir/testdata/router-runtime",
+            "$packageDir/.recursive"
+          )
+          foreach ($path in $forbiddenPaths) {
+            if (Test-Path $path) {
+              throw "Forbidden QA artifact in packaged runtime: $path"
+            }
+          }
+
+          $markers = @(
+            "phase5.mock",
+            "mock.openai",
+            "openai.litellm",
+            "http://127.0.0.1:45679",
+            "anthropic.team.shared",
+            "cli.local.coder"
+          )
+          $textFiles = Get-ChildItem -Path $packageDir -Recurse -File -Include *.css,*.html,*.js,*.json,*.md,*.txt,*.yaml,*.yml
+          foreach ($marker in $markers) {
+            $hit = $textFiles | Select-String -SimpleMatch $marker | Select-Object -First 1
+            if ($hit) {
+              throw "Forbidden QA/mock marker '$marker' found in packaged runtime: $($hit.Path)"
             }
           }
 
