@@ -52,6 +52,7 @@ import {
   createBenchmarkRunProgress,
   failBenchmarkRunProgress,
   updateBenchmarkRunProgress,
+  updateBenchmarkRunProgressPlan,
 } from "./benchmark-progress.js";
 
 import {
@@ -1503,6 +1504,30 @@ export async function runRoutingCapabilityBenchmark(
 
   const cases = selectBenchmarkCases(suite, { mode, caseIds: request.caseIds });
 
+  const runId = request.runId ?? randomUUID();
+
+  const startedAtMs = Date.now();
+
+  const artifactRoot = resolveBenchmarkArtifactRoot(deps);
+
+  createBenchmarkRunProgress({
+    runId,
+
+    mode,
+
+    endpointCount: request.endpointIds?.length ?? 0,
+
+    caseCount: cases.length,
+
+    judgeEndpointId: request.judgeEndpointId ?? null,
+
+    useJudge,
+
+    compareCaseCount: useJudge && (request.endpointIds?.length ?? 0) >= 2 ? cases.length : 0,
+
+    artifactRoot,
+  });
+
   const endpoints = (await deps.listConfiguredEndpoints()).filter((endpoint) =>
     isHealthyEndpoint(endpoint.healthStatus),
   );
@@ -1534,12 +1559,6 @@ export async function runRoutingCapabilityBenchmark(
     throw new Error("No judge endpoint available. Configure a capable remote model.");
   }
 
-  const runId = request.runId ?? randomUUID();
-
-  const startedAtMs = Date.now();
-
-  const artifactRoot = resolveBenchmarkArtifactRoot(deps);
-
   const executionSteps = targetEndpoints.length * cases.length;
 
   let completedSteps = 0;
@@ -1548,21 +1567,13 @@ export async function runRoutingCapabilityBenchmark(
 
   const compareCaseCount = useJudge && targetEndpoints.length >= 2 ? cases.length : 0;
 
-  createBenchmarkRunProgress({
-    runId,
-
-    mode,
-
+  updateBenchmarkRunProgressPlan(runId, {
     endpointCount: targetEndpoints.length,
-
     caseCount: cases.length,
-
+    totalSteps:
+      executionSteps + (useJudge ? targetEndpoints.length * cases.length : 0) + compareCaseCount,
     judgeEndpointId: judgeEndpoint.endpointId,
-
-    useJudge,
-
-    compareCaseCount,
-
+    activeJudgeEndpointId: judgeEndpoint.endpointId,
     artifactRoot,
   });
 

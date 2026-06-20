@@ -103,6 +103,7 @@ import {
   type ProviderRequestCapture,
   type ResolvedExecutionTarget,
   type RoutedExecutionResult,
+  type RuntimeExecutionMessage,
   type RuntimeExecutionRequest,
   type RuntimeExecutionToolDefinition,
   type RuntimeResponseCaptureMap,
@@ -5829,6 +5830,27 @@ async function createRuntimeToolRegistry(
   });
 }
 
+function createRequestScopedToolRegistry(
+  dynamicTools: readonly Extract<RuntimeExecutionToolDefinition, { readonly kind?: "function" }>[],
+): ToolRegistry {
+  return createToolRegistry({
+    connectors: [
+      {
+        connectorId: "request-scoped",
+        connectorKind: "dynamic-tool",
+        tools: dynamicTools.map((tool) => ({
+          name: tool.name,
+          description: tool.description,
+          inputSchema: tool.inputSchema,
+          execute: async ({ arguments: toolArguments }) => ({
+            content: toolArguments,
+          }),
+        })),
+      },
+    ],
+  });
+}
+
 function asObject(value: unknown, label: string): Record<string, unknown> {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
     throw new Error(`${label} must be an object`);
@@ -8110,12 +8132,12 @@ function buildContinuationExecutionRequest(
     content: outputText.length > 0 ? outputText : null,
     tool_calls: toolCalls,
   };
-  const toolMessages: OpenAIChatCompletionsMessage[] = toolCalls.map((toolCall) => ({
+  const toolMessages: RuntimeExecutionMessage[] = toolCalls.map((toolCall) => ({
     role: "tool",
     tool_call_id: toolCall.id,
     content: serializeToolExecutionContent(executionsByToolCallId.get(toolCall.id)),
   }));
-  const followUpInstructionMessage: OpenAIChatCompletionsMessage = {
+  const followUpInstructionMessage: RuntimeExecutionMessage = {
     role: "user",
     content: BRIDGE_TOOL_LOOP_FOLLOWUP_INSTRUCTION,
   };

@@ -111,15 +111,20 @@ describe("runtime-host-bridge executable packaging", () => {
       ).isDirectSeaInvocation("file:///repo/src/package-sea.ts", "C:\\tools\\vitest\\entry.mjs"),
     ).toBe(false);
 
+    const isWindows = process.platform === "win32";
+    const platformModuleUrl = isWindows
+      ? "file:///D:/repo/src/package-sea.ts"
+      : `file://${process.cwd()}/src/package-sea.ts`;
+    const platformArgvEntry = isWindows
+      ? "D:\\repo\\src\\package-sea.ts"
+      : `${process.cwd()}/src/package-sea.ts`;
+
     expect(
       (
         packageSea as {
           isDirectSeaInvocation: (moduleUrl: string, argvEntry?: string) => boolean;
         }
-      ).isDirectSeaInvocation(
-        "file:///D:/repo/src/package-sea.ts",
-        "D:\\repo\\src\\package-sea.ts",
-      ),
+      ).isDirectSeaInvocation(platformModuleUrl, platformArgvEntry),
     ).toBe(true);
   });
 

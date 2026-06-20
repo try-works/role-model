@@ -6,6 +6,7 @@ import { DatabaseSync } from "node:sqlite";
 
 import { afterEach, describe, expect, test, vi } from "vitest";
 
+import { readBenchmarkRunProgress } from "../src/benchmark-progress.js";
 import { readJudgeGradingText, readJudgeResponseText } from "../src/benchmark-reasoning.js";
 import {
   orderEndpointsForGrading,
@@ -74,6 +75,72 @@ describe("benchmark-runner judge remediation", () => {
     );
     expect(probe.ok).toBe(false);
     expect(probe.error).toBe("empty_judge_response");
+  });
+
+  test("creates run progress before async endpoint discovery resolves", async () => {
+    artifactRoot = await mkdtemp(path.join(os.tmpdir(), "bench-runner-progress-"));
+    const databasePath = path.join(artifactRoot, "state", "memory.db");
+    await mkdir(path.dirname(databasePath), { recursive: true });
+    initBenchmarkDatabase(databasePath);
+
+    const judgeEndpoint = {
+      endpointId: "moonshot.kimi",
+      modelId: "moonshot/kimi-k2.6",
+      sourceType: "remote" as const,
+      healthStatus: "healthy",
+    };
+    const subjectEndpoint = {
+      endpointId: "local.lfm",
+      modelId: "lfm2.5-1.2b-instruct",
+      sourceType: "local" as const,
+      healthStatus: "healthy",
+    };
+
+    let releaseEndpoints: (() => void) | null = null;
+    const endpointsReady = new Promise<void>((resolve) => {
+      releaseEndpoints = resolve;
+    });
+
+    const runId = "run-progress-race";
+    const benchmarkPromise = runRoutingCapabilityBenchmark(
+      {
+        databasePath,
+        benchmarkArtifactRoot: artifactRoot,
+        listConfiguredEndpoints: async () => {
+          await endpointsReady;
+          return [subjectEndpoint, judgeEndpoint];
+        },
+        deriveEndpointVersion: () => "v1",
+        executeChatCompletions: async (body, _requestId, requestOptions) => {
+          if (body.response_format) {
+            return {
+              contentText:
+                '{"score":1,"rationale":"Deliverable satisfies the benchmark requirements."}',
+            };
+          }
+          if (requestOptions?.endpointId === judgeEndpoint.endpointId) {
+            return { contentText: '{"answer":"judge"}' };
+          }
+          return { contentText: '{"answer":"ok"}' };
+        },
+      },
+      {
+        runId,
+        endpointIds: [subjectEndpoint.endpointId, judgeEndpoint.endpointId],
+        judgeEndpointId: judgeEndpoint.endpointId,
+        mode: "quick",
+        caseIds: ["h04-tool-read-router"],
+        useJudge: true,
+      },
+    );
+
+    expect(readBenchmarkRunProgress(runId)).toMatchObject({
+      runId,
+      status: "running",
+    });
+
+    releaseEndpoints?.();
+    await benchmarkPromise;
   });
 
   test("readJudgeResponseText merges reasoning and content channels", () => {

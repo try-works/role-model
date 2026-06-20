@@ -1,3 +1,6 @@
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
 import { describe, expect, test } from "vitest";
 
 import {
@@ -6,6 +9,9 @@ import {
   extractLiteLLMProviderIds,
   loadLiteLLMModelPrices,
 } from "@role-model-router/catalog";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 describe("litellm-catalog", () => {
   test("extracts provider ids from LiteLLM model prices", () => {
@@ -98,10 +104,7 @@ describe("litellm-catalog", () => {
   });
 
   test("loads real LiteLLM model prices from testdata", async () => {
-    // loadLiteLLMModelPrices already imported statically above
-    const repoRoot = process
-      .cwd()
-      .replace(/\\role-model-router[\\/]apps[\\/]runtime-host-bridge$/, "");
+    const repoRoot = path.resolve(__dirname, "..", "..", "..", "..");
 
     const modelPrices = await loadLiteLLMModelPrices(repoRoot);
 

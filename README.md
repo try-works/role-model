@@ -6,6 +6,24 @@ that protocol.
 It gives a router a durable contract for describing **what a request needs**, **what an endpoint can do**,
 **what policy allows**, and **why a final routing decision was made**.
 
+![role-model runtime overview](docs/public/images/runtime-overview.jpg)
+
+## Why role-model
+
+Every AI workload eventually faces the same question: *which model should handle this request?* The answer
+depends on task type, required capabilities, cost, latency, and whether the model is running locally or in
+the cloud. `role-model` makes that decision explicit, explainable, and portable.
+
+The reference router supports **hybrid routing** across three deployment shapes:
+
+- **Local / Local** - route between local models (e.g., llama-swap peers) based on role, task, and capability
+- **Local / Cloud** - route between a local model and a cloud provider based on cost, latency, and task difficulty
+- **Cloud / Cloud** - route between cloud providers (e.g., OpenAI, DeepSeek, Moonshot) based on capability and economics
+
+This means a single runtime can serve a quick chat request from a fast local model, route a complex coding
+task to a capable cloud model, and fall back to a cheaper cloud endpoint when the primary is degraded, all
+under one explainable routing contract.
+
 ## Start here
 
 The public-facing docs live under [`docs/public/`](docs/public/README.md). That folder is intentionally
@@ -208,6 +226,13 @@ The per-release history and operator checklist live in [`CHANGELOG.md`](CHANGELO
 - [`docs/protocol/roles.md`](docs/protocol/roles.md)
 - [`docs/protocol/tasks.md`](docs/protocol/tasks.md)
 - [`role-model-router/README.md`](role-model-router/README.md)
+
+## Acknowledgements
+
+`role-model` builds on the work of several open-source projects:
+
+- [**llama-swap**](https://github.com/mostlygeek/llama-swap) - the vendored local model lifecycle manager that handles process supervision, request forwarding, and model swapping for local endpoints
+- [**LiteLLM**](https://github.com/BerriAI/litellm) - the unified LLM API abstraction whose provider catalog, model metadata, and pricing data inform the routing-compatible provider inventory
 
 ## License
 
