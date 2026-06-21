@@ -1,3 +1,4 @@
+import { spawn } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { cp, mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
@@ -1875,6 +1876,149 @@ describe("runtime-host-bridge", () => {
     });
   });
 
+  test("seedManagedCodexWorkspaceFixture stages benchmark files for Codex tool-heavy cases", async () => {
+    expect(
+      typeof (bridge as { seedManagedCodexWorkspaceFixture?: unknown }).seedManagedCodexWorkspaceFixture,
+    ).toBe("function");
+
+    const workspaceRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-codex-workspace-"));
+    try {
+      await (
+        bridge as {
+          seedManagedCodexWorkspaceFixture: (workspaceRoot: string) => Promise<void>;
+        }
+      ).seedManagedCodexWorkspaceFixture(workspaceRoot);
+
+      await expect(readFileSync(path.join(workspaceRoot, "src", "router.ts"), "utf8")).toContain(
+        "export function routeRuntimeRequest",
+      );
+      await expect(readFileSync(path.join(workspaceRoot, "src", "router.ts"), "utf8")).toContain(
+        "throughputSlaHardDeny",
+      );
+      await expect(
+        readFileSync(path.join(workspaceRoot, "state", "runtime-config.yaml"), "utf8"),
+      ).toContain("strategy: controller");
+      await expect(readFileSync(path.join(workspaceRoot, "src", "config.ts"), "utf8")).toContain(
+        "const MODE = 'baseline';",
+      );
+    } finally {
+      await rm(workspaceRoot, { recursive: true, force: true });
+    }
+  });
+
+  test("createRequestScopedToolRegistry executes read_file, grep_search, and apply_patch against a staged workspace", async () => {
+    const workspaceRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-codex-tools-"));
+    try {
+      await (
+        bridge as {
+          seedManagedCodexWorkspaceFixture: (workspaceRoot: string) => Promise<void>;
+        }
+      ).seedManagedCodexWorkspaceFixture(workspaceRoot);
+
+      const createRequestScopedToolRegistry = (
+        bridge as {
+          createRequestScopedToolRegistry: (
+            dynamicTools: readonly {
+              readonly name: string;
+              readonly description?: string;
+            readonly inputSchema: Record<string, unknown>;
+          }[],
+          options?: {
+            readonly workspaceRoot?: string;
+            readonly applyPatchMode?: "ack" | "mutate";
+          },
+        ) => { connectors: readonly { tools: readonly { name: string }[] }[] };
+      }
+    ).createRequestScopedToolRegistry;
+
+      const registry = createRequestScopedToolRegistry(
+        [
+          {
+            name: "read_file",
+            description: "Read a file from the benchmark workspace.",
+            inputSchema: {
+              type: "object",
+              properties: { path: { type: "string" } },
+              required: ["path"],
+            },
+          },
+          {
+            name: "grep_search",
+            description: "Search within the benchmark workspace.",
+            inputSchema: {
+              type: "object",
+              properties: { pattern: { type: "string" } },
+              required: ["pattern"],
+            },
+          },
+          {
+            name: "apply_patch",
+            description: "Apply a unified diff patch in the benchmark workspace.",
+            inputSchema: {
+              type: "object",
+              properties: { diff: { type: "string" } },
+              required: ["diff"],
+            },
+          },
+        ],
+        { workspaceRoot, applyPatchMode: "mutate" },
+      );
+
+      const readResult = await executeToolCalls(registry, {
+        requestId: "codex-tool-read",
+        toolCalls: [
+          {
+            name: "read_file",
+            arguments: { path: "src/router.ts" },
+            providerToolId: "call-read",
+          },
+        ],
+      });
+      expect(readResult.executions[0]?.status).toBe("succeeded");
+      expect(String(readResult.executions[0]?.output)).toContain("routeRuntimeRequest");
+
+      const grepResult = await executeToolCalls(registry, {
+        requestId: "codex-tool-grep",
+        toolCalls: [
+          {
+            name: "grep_search",
+            arguments: { pattern: "evaluateEligibility" },
+            providerToolId: "call-grep",
+          },
+        ],
+      });
+      expect(grepResult.executions[0]?.status).toBe("succeeded");
+      expect(String(grepResult.executions[0]?.output)).toContain("src/router.ts");
+      expect(String(grepResult.executions[0]?.output)).toContain("evaluateEligibility");
+
+      const patchResult = await executeToolCalls(registry, {
+        requestId: "codex-tool-patch",
+        toolCalls: [
+          {
+            name: "apply_patch",
+            arguments: {
+              diff: [
+                "--- a/src/config.ts",
+                "+++ b/src/config.ts",
+                "@@ -1 +1 @@",
+                "-export const MODE = 'baseline';",
+                "+export const MODE = 'difficulty';",
+              ].join("\n"),
+            },
+            providerToolId: "call-patch",
+          },
+        ],
+      });
+      expect(patchResult.executions[0]?.status).toBe("succeeded");
+      expect(String(patchResult.executions[0]?.output)).toContain("Patch applied successfully");
+      expect(readFileSync(path.join(workspaceRoot, "src", "config.ts"), "utf8")).toContain(
+        "difficulty",
+      );
+    } finally {
+      await rm(workspaceRoot, { recursive: true, force: true });
+    }
+  });
+
   test("buildCodexDynamicTools output is compatible with createRequestScopedToolRegistry", async () => {
     const dynamicTools = (
       bridge as {
@@ -1920,6 +2064,517 @@ describe("runtime-host-bridge", () => {
 
     const registry = createRequestScopedToolRegistry(dynamicTools);
     expect(registry.connectors[0].tools.map((t) => t.name)).toEqual(["lookupRegistry"]);
+  });
+
+  test("buildCodexAppServerDynamicTools namespaces request-scoped tools for the app-server protocol", () => {
+    expect(
+      typeof (bridge as { buildCodexAppServerDynamicTools?: unknown }).buildCodexAppServerDynamicTools,
+    ).toBe("function");
+
+    const dynamicTools = (
+      bridge as {
+        buildCodexAppServerDynamicTools: (requestCapture: {
+          url: string;
+          body: Record<string, unknown>;
+        }) => readonly unknown[];
+      }
+    ).buildCodexAppServerDynamicTools({
+      url: "https://api.openai.test/v1/chat/completions",
+      body: {
+        model: "gpt-5.4",
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "read_file",
+              description: "Read a file from the repository.",
+              parameters: {
+                type: "object",
+                properties: {
+                  path: {
+                    type: "string",
+                  },
+                },
+                required: ["path"],
+              },
+            },
+          },
+          {
+            type: "function",
+            function: {
+              name: "apply_patch",
+              description: "Apply a diff patch.",
+              parameters: {
+                type: "object",
+                properties: {
+                  diff: {
+                    type: "string",
+                  },
+                },
+                required: ["diff"],
+              },
+            },
+          },
+        ],
+      },
+    });
+
+    expect(dynamicTools).toEqual([
+      {
+        type: "namespace",
+        name: "role_model_request",
+        description: "Request-scoped tools bridged from the calling runtime.",
+        tools: [
+          {
+            type: "function",
+            name: "request_read_file",
+            description: "Read a file from the repository.",
+            inputSchema: {
+              type: "object",
+              properties: {
+                path: {
+                  type: "string",
+                },
+              },
+              required: ["path"],
+            },
+          },
+          {
+            type: "function",
+            name: "request_apply_patch",
+            description: "Apply a diff patch.",
+            inputSchema: {
+              type: "object",
+              properties: {
+                diff: {
+                  type: "string",
+                },
+              },
+              required: ["diff"],
+            },
+          },
+        ],
+      },
+    ]);
+  });
+
+  test("readCodexThreadIdFromAppServerMessage accepts both thread/start results and thread/started notifications", () => {
+    expect(
+      typeof (bridge as { readCodexThreadIdFromAppServerMessage?: unknown })
+        .readCodexThreadIdFromAppServerMessage,
+    ).toBe("function");
+
+    const readCodexThreadIdFromAppServerMessage = (
+      bridge as {
+        readCodexThreadIdFromAppServerMessage: (message: Record<string, unknown>) => string;
+      }
+    ).readCodexThreadIdFromAppServerMessage;
+
+    expect(
+      readCodexThreadIdFromAppServerMessage({
+        id: 2,
+        result: {
+          thread: {
+            id: "thr_from_result",
+          },
+        },
+      }),
+    ).toBe("thr_from_result");
+
+    expect(
+      readCodexThreadIdFromAppServerMessage({
+        method: "thread/started",
+        params: {
+          thread: {
+            id: "thr_from_notification",
+          },
+        },
+      }),
+    ).toBe("thr_from_notification");
+  });
+
+  test("normalizeCodexAppServerModelName strips provider prefixes before calling the Codex app-server", () => {
+    expect(
+      typeof (bridge as { normalizeCodexAppServerModelName?: unknown })
+        .normalizeCodexAppServerModelName,
+    ).toBe("function");
+
+    const normalizeCodexAppServerModelName = (
+      bridge as {
+        normalizeCodexAppServerModelName: (model: string) => string;
+      }
+    ).normalizeCodexAppServerModelName;
+
+    expect(normalizeCodexAppServerModelName("chatgpt/gpt-5.4")).toBe("gpt-5.4");
+    expect(normalizeCodexAppServerModelName("openai/gpt-5.5")).toBe("gpt-5.5");
+    expect(normalizeCodexAppServerModelName("gpt-5.4")).toBe("gpt-5.4");
+  });
+
+  test("executeCodexAppServerTurnOverStdio completes a turn over stdio JSONL and returns tool executions", async () => {
+    expect(
+      typeof (bridge as { executeCodexAppServerTurnOverStdio?: unknown })
+        .executeCodexAppServerTurnOverStdio,
+    ).toBe("function");
+
+    const fakeAppServer = spawn(process.execPath, [
+      "-e",
+      [
+        "const readline = require('node:readline');",
+        "const rl = readline.createInterface({ input: process.stdin, crlfDelay: Infinity });",
+        "const send = (message) => process.stdout.write(JSON.stringify(message) + '\\n');",
+        "rl.on('line', (line) => {",
+        "  const message = JSON.parse(line);",
+        "  if (message.id === 1 && message.method === 'initialize') {",
+        "    send({ id: 1, result: { serverInfo: { name: 'fake-codex' } } });",
+        "    return;",
+        "  }",
+        "  if (message.method === 'initialized') {",
+        "    return;",
+        "  }",
+        "  if (message.id === 2 && message.method === 'thread/start') {",
+        "    send({ method: 'thread/started', params: { thread: { id: 'thr_test_stdio' } } });",
+        "    send({ id: 2, result: { thread: { id: 'thr_test_stdio' } } });",
+        "    return;",
+        "  }",
+        "  if (message.id === 3 && message.method === 'turn/start') {",
+        "    send({ id: 3, result: { accepted: true } });",
+        "    send({ method: 'thread/tokenUsage/updated', params: { tokenUsage: { last: { inputTokens: 11, outputTokens: 0 } } } });",
+        "    send({ id: 91, method: 'item/tool/call', params: { callId: 'call_stdio_1', tool: 'request_read_file', arguments: { path: 'README.md' } } });",
+        "    return;",
+        "  }",
+        "  if (message.id === 91) {",
+        "    send({ method: 'item/agentMessage/delta', params: { delta: 'HEL' } });",
+        "    send({ method: 'item/agentMessage/delta', params: { delta: 'LO' } });",
+        "    send({ method: 'item/completed', params: { item: { type: 'agentMessage', text: 'HELLO' } } });",
+        "    send({ method: 'thread/tokenUsage/updated', params: { tokenUsage: { last: { inputTokens: 11, outputTokens: 5 } } } });",
+        "    send({ method: 'turn/completed', params: { turn: { id: 'turn_stdio_1' } } });",
+        "    setTimeout(() => process.exit(0), 0);",
+        "  }",
+        "});",
+      ].join(" "),
+    ], {
+      stdio: ["pipe", "pipe", "pipe"],
+      windowsHide: true,
+    });
+
+    const workspaceRoot = await mkdtemp(path.join(os.tmpdir(), "codex-stdio-turn-"));
+
+    try {
+      const result = await (
+        bridge as {
+          executeCodexAppServerTurnOverStdio: (input: {
+            child: ReturnType<typeof spawn>;
+            model: string;
+            requestCapture: {
+              url: string;
+              body: Record<string, unknown>;
+            };
+            workspaceRoot: string;
+            executeDynamicToolCall: (input: {
+              toolCallId: string;
+              toolName: string;
+              toolArguments: unknown;
+              workspaceRoot: string;
+            }) => Promise<{
+              success: boolean;
+              contentItems: readonly {
+                type: "inputText";
+                text: string;
+              }[];
+              execution: {
+                toolName: string;
+              };
+            }>;
+          }) => Promise<{
+            finishReason: string;
+            outputText: string;
+            usage: {
+              inputTokens: number;
+              outputTokens: number;
+            };
+            dynamicToolCalls: readonly {
+              id: string;
+              type: "function";
+              function: {
+                name: string;
+                arguments: string;
+              };
+            }[];
+            dynamicToolExecutions: readonly {
+              toolName: string;
+            }[];
+          }>;
+        }
+      ).executeCodexAppServerTurnOverStdio({
+        child: fakeAppServer,
+        model: "gpt-5.4",
+        requestCapture: {
+          url: "https://api.openai.com/v1/chat/completions",
+          body: {
+            model: "chatgpt/gpt-5.4",
+            messages: [{ role: "user", content: "Reply with exactly HELLO." }],
+            tools: [
+              {
+                type: "function",
+                function: {
+                  name: "read_file",
+                  description: "Read a file",
+                  parameters: {
+                    type: "object",
+                    properties: {
+                      path: {
+                        type: "string",
+                      },
+                    },
+                    required: ["path"],
+                  },
+                },
+              },
+            ],
+          },
+        },
+        workspaceRoot,
+        executeDynamicToolCall: async ({ toolCallId, toolName, toolArguments }) => ({
+          success: true,
+          contentItems: [
+            {
+              type: "inputText",
+              text: JSON.stringify({ toolCallId, toolName, toolArguments }),
+            },
+          ],
+          execution: {
+            toolName,
+          },
+        }),
+      });
+
+      expect(result).toEqual(
+        expect.objectContaining({
+          finishReason: "stop",
+          outputText: "HELLO",
+          dynamicToolCalls: [
+            {
+              id: "call_stdio_1",
+              type: "function",
+              function: {
+                name: "read_file",
+                arguments: "{\"path\":\"README.md\"}",
+              },
+            },
+          ],
+          usage: {
+            inputTokens: 11,
+            outputTokens: 5,
+          },
+        }),
+      );
+      expect(result.dynamicToolExecutions).toEqual([{ toolName: "request_read_file" }]);
+    } finally {
+      fakeAppServer.kill();
+      await rm(workspaceRoot, { recursive: true, force: true });
+    }
+  });
+
+  test("readCodexExecutionFailureFromSessionArtifacts reports a Codex Subscription usage-limit turn", async () => {
+    expect(
+      typeof (bridge as { readCodexExecutionFailureFromSessionArtifacts?: unknown })
+        .readCodexExecutionFailureFromSessionArtifacts,
+    ).toBe("function");
+
+    const codexHome = await mkdtemp(path.join(os.tmpdir(), "codex-session-limit-"));
+    const workspaceRoot = path.join(codexHome, "ws", "r-test-limit");
+    const sessionDir = path.join(codexHome, "sessions", "2026", "06", "20");
+    const sessionPath = path.join(sessionDir, "rollout-usage-limit.jsonl");
+
+    await mkdir(workspaceRoot, { recursive: true });
+    await mkdir(sessionDir, { recursive: true });
+    await writeFile(
+      sessionPath,
+      [
+        JSON.stringify({
+          timestamp: "2026-06-20T18:45:11.573Z",
+          type: "session_meta",
+          payload: {
+            cwd: workspaceRoot,
+          },
+        }),
+        JSON.stringify({
+          timestamp: "2026-06-20T18:45:16.682Z",
+          type: "event_msg",
+          payload: {
+            type: "token_count",
+            rate_limits: {
+              credits: {
+                has_credits: false,
+                unlimited: false,
+                balance: "0",
+              },
+            },
+          },
+        }),
+        JSON.stringify({
+          timestamp: "2026-06-20T18:45:16.714Z",
+          type: "event_msg",
+          payload: {
+            type: "task_complete",
+            last_agent_message: null,
+          },
+        }),
+      ].join("\n"),
+      "utf8",
+    );
+
+    try {
+      const message = await (
+        bridge as {
+          readCodexExecutionFailureFromSessionArtifacts: (input: {
+            codexHome: string;
+            workspaceRoot: string;
+          }) => Promise<string | null>;
+        }
+      ).readCodexExecutionFailureFromSessionArtifacts({
+        codexHome,
+        workspaceRoot,
+      });
+
+      expect(message).toMatch(/usage limit|credits/i);
+    } finally {
+      await rm(codexHome, { recursive: true, force: true });
+    }
+  });
+
+  test("resolveManagedCodexExecutionHome keeps the shared Codex home short on Windows-style paths", () => {
+    expect(
+      typeof (bridge as { resolveManagedCodexExecutionHome?: unknown }).resolveManagedCodexExecutionHome,
+    ).toBe("function");
+
+    const result = (
+      bridge as {
+        resolveManagedCodexExecutionHome: (
+          runtimeStateRoot: string,
+          scopeId: string,
+          requestId: string,
+        ) => string;
+      }
+    ).resolveManagedCodexExecutionHome(
+      "C:\\Users\\erikb\\AppData\\Local\\Role Model Runtime",
+      "standalone-runtime",
+      "bench-p17-tools-multi-hard-openai.personal.openai-codex-subscription.global.gpt-5.4-turn1-36895931-f445-442a-a0c0-90b0d7fa1ed0",
+    );
+
+    expect(result).toContain("\\RMCS\\");
+    expect(result).toContain("\\s-");
+    expect(result).not.toContain("\\r-");
+    expect(result.length).toBeLessThan(120);
+    expect(result).not.toContain(
+      "bench-p17-tools-multi-hard-openai.personal.openai-codex-subscription.global.gpt-5.4-turn1-36895931-f445-442a-a0c0-90b0d7fa1ed0",
+    );
+  });
+
+  test("resolveManagedCodexWorkspaceRoot keeps request workspaces short under the shared Codex home", () => {
+    expect(
+      typeof (bridge as { resolveManagedCodexWorkspaceRoot?: unknown }).resolveManagedCodexWorkspaceRoot,
+    ).toBe("function");
+
+    const codexHome = (
+      bridge as {
+        resolveManagedCodexExecutionHome: (
+          runtimeStateRoot: string,
+          scopeId: string,
+          requestId: string,
+        ) => string;
+      }
+    ).resolveManagedCodexExecutionHome(
+      "C:\\Users\\erikb\\AppData\\Local\\Role Model Runtime",
+      "standalone-runtime",
+      "bench-p17-tools-multi-hard-openai.personal.openai-codex-subscription.global.gpt-5.4-turn1-36895931-f445-442a-a0c0-90b0d7fa1ed0",
+    );
+
+    const workspaceRoot = (
+      bridge as {
+        resolveManagedCodexWorkspaceRoot: (codexHome: string, requestId: string) => string;
+      }
+    ).resolveManagedCodexWorkspaceRoot(
+      codexHome,
+      "bench-p17-tools-multi-hard-openai.personal.openai-codex-subscription.global.gpt-5.4-turn1-36895931-f445-442a-a0c0-90b0d7fa1ed0",
+    );
+
+    expect(workspaceRoot).toContain("\\ws\\");
+    expect(workspaceRoot).toContain("\\r-");
+    expect(workspaceRoot.length).toBeLessThan(170);
+  });
+
+  test("resolveManagedCodexWorkspaceRoot leaves enough room for deep plugin staging paths on Windows", () => {
+    expect(
+      typeof (bridge as { resolveManagedCodexWorkspaceRoot?: unknown }).resolveManagedCodexWorkspaceRoot,
+    ).toBe("function");
+
+    const codexHome = (
+      bridge as {
+        resolveManagedCodexExecutionHome: (
+          runtimeStateRoot: string,
+          scopeId: string,
+          requestId: string,
+        ) => string;
+      }
+    ).resolveManagedCodexExecutionHome(
+      "C:\\Users\\erikb\\AppData\\Local\\Role Model Runtime",
+      "standalone-runtime",
+      "bench-x01-max-signal-openai.personal.openai-codex-subscription.global.gpt-5.4",
+    );
+
+    const executionHome = (
+      bridge as {
+        resolveManagedCodexWorkspaceRoot: (codexHome: string, requestId: string) => string;
+      }
+    ).resolveManagedCodexWorkspaceRoot(
+      codexHome,
+      "bench-x01-max-signal-openai.personal.openai-codex-subscription.global.gpt-5.4",
+    );
+
+    const stagedPluginPath = path.join(
+      executionHome,
+      ".tmp",
+      "plugins",
+      "plugins",
+      "build-web-data-visualization",
+      "skills",
+      "geospatial-and-cartographic-visualization",
+      "references",
+      "source-method-and-coordinate-ledger.md",
+    );
+
+    expect(stagedPluginPath.length).toBeLessThan(240);
+  });
+
+  test("cleanupManagedCodexExecutionWorkspace removes only the request workspace and preserves the shared Codex home", async () => {
+    expect(
+      typeof (bridge as { cleanupManagedCodexExecutionWorkspace?: unknown })
+        .cleanupManagedCodexExecutionWorkspace,
+    ).toBe("function");
+
+    const codexHome = await mkdtemp(path.join(os.tmpdir(), "role-model-codex-home-"));
+    const workspaceRoot = path.join(codexHome, "ws", "r-1234567890");
+    await mkdir(workspaceRoot, { recursive: true });
+    await mkdir(path.join(codexHome, "auth"), { recursive: true });
+    await writeFile(path.join(codexHome, "auth", "session.json"), '{"ok":true}');
+    await writeFile(path.join(workspaceRoot, "router.ts"), "export const ok = true;\n");
+
+    await (
+      bridge as {
+        cleanupManagedCodexExecutionWorkspace: (
+          codexHome: string,
+          workspaceRoot: string,
+        ) => Promise<void>;
+      }
+    ).cleanupManagedCodexExecutionWorkspace(codexHome, workspaceRoot);
+
+    expect(existsSync(codexHome)).toBe(true);
+    expect(existsSync(path.join(codexHome, "auth", "session.json"))).toBe(true);
+    expect(existsSync(workspaceRoot)).toBe(false);
+    expect(existsSync(path.join(codexHome, "ws"))).toBe(false);
+
+    await rm(codexHome, { recursive: true, force: true });
   });
 
   test("createRequestScopedToolRegistry does not require repoRoot or file system access", () => {

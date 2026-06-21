@@ -1,4 +1,6 @@
 import { mkdtemp, readFile } from "node:fs/promises";
+import { spawn } from "node:child_process";
+import { once } from "node:events";
 import os from "node:os";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
@@ -21,6 +23,7 @@ import {
   persistObservedBenchmarkSample,
   persistProviderAccounts,
   persistRetrievalReceipt,
+  persistRuntimeObservationBundle,
   persistRuntimeTelemetryFailure,
   readConversationContinuity,
   readLatestObservedProfile,
@@ -2515,6 +2518,327 @@ describe("persistObservedBenchmarkSample benchmark_mode", () => {
     });
     expect(samples).toHaveLength(1);
     expect(samples[0]?.benchmark_mode).toBe("quick");
+  });
+
+  test("retries through a transient sqlite write lock when persisting benchmark samples", async () => {
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+    const initialized = initializeSqliteMemory({
+      runtimeStateRoot,
+      scopeId: "workspace-dev-benchmark-lock-retry",
+    });
+    const endpointId = "local.test.model.locked";
+    const locker = spawn(
+      process.execPath,
+      [
+        "--input-type=module",
+        "-e",
+        [
+          'import { DatabaseSync } from "node:sqlite";',
+          "const databasePath = process.argv[1];",
+          "const database = new DatabaseSync(databasePath);",
+          'database.exec("PRAGMA journal_mode = WAL");',
+          'database.exec("BEGIN IMMEDIATE");',
+          'process.stdout.write("locked\\n");',
+          "setTimeout(() => {",
+          "  try {",
+          '    database.exec("COMMIT");',
+          "  } finally {",
+          "    database.close();",
+          "    process.exit(0);",
+          "  }",
+          "}, 250);",
+        ].join(" "),
+        initialized.databasePath,
+      ],
+      { stdio: ["ignore", "pipe", "pipe"] },
+    );
+
+    try {
+      await once(locker.stdout!, "data");
+      persistObservedBenchmarkSample({
+        databasePath: initialized.databasePath,
+        sample: {
+          endpoint_id: endpointId,
+          endpoint_version: "v1",
+          source_type: "benchmark",
+          benchmark_mode: "full",
+          difficulty_bucket: "hard",
+          timestamp_ms: 3_000,
+          latency_ms: 700,
+          judge_score: 0.82,
+          request_id: "full-hard-locked-1",
+        },
+      });
+      await once(locker, "exit");
+    } finally {
+      if (!locker.killed) {
+        locker.kill("SIGTERM");
+      }
+    }
+
+    const samples = readObservedPerformanceSamples({
+      databasePath: initialized.databasePath,
+      endpointId,
+    });
+    expect(samples).toHaveLength(1);
+    expect(samples[0]?.benchmark_mode).toBe("full");
+    expect(samples[0]?.judge_score).toBe(0.82);
+  });
+
+  test("retries through a transient sqlite write lock when persisting runtime observation bundles", async () => {
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+    const initialized = initializeSqliteMemory({
+      runtimeStateRoot,
+      scopeId: "workspace-dev-observation-lock-retry",
+    });
+
+    const validation = await runRuntimeAdapterValidation({
+      repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      runtimeStateRoot,
+      scopeId: "workspace-dev-observation-lock-retry",
+    });
+    const history = await readJson<{
+      byEndpointId: Record<
+        string,
+        Parameters<typeof createRuntimeObservationBundle>[0]["priorSamples"]
+      >;
+    }>("testdata/router-runtime/fixtures/observability-history.json");
+    const policy = await readJson<
+      Parameters<typeof createRuntimeObservationBundle>[0]["capturePolicy"]
+    >("testdata/router-runtime/fixtures/observability-policy.json");
+    const bundle = createRuntimeObservationBundle({
+      decision: validation.decision,
+      routingDiagnostics: validation.routingDiagnostics,
+      retrievalReceipt: validation.retrievalReceipt,
+      contextEnvelope: validation.contextEnvelope,
+      execution: validation.execution,
+      priorSamples: history.byEndpointId[validation.decision.chosen_endpoint_id] ?? [],
+      maintenancePolicy: {
+        "redaction.level": "strict",
+        "retention.class": "standard",
+      },
+      capturePolicy: policy,
+    });
+
+    const locker = spawn(
+      process.execPath,
+      [
+        "--input-type=module",
+        "-e",
+        [
+          'import { DatabaseSync } from "node:sqlite";',
+          "const databasePath = process.argv[1];",
+          "const database = new DatabaseSync(databasePath);",
+          'database.exec("PRAGMA journal_mode = WAL");',
+          'database.exec("BEGIN IMMEDIATE");',
+          'process.stdout.write("locked\\n");',
+          "setTimeout(() => {",
+          "  try {",
+          '    database.exec("COMMIT");',
+          "  } finally {",
+          "    database.close();",
+          "    process.exit(0);",
+          "  }",
+          "}, 250);",
+        ].join(" "),
+        initialized.databasePath,
+      ],
+      { stdio: ["ignore", "pipe", "pipe"] },
+    );
+
+    try {
+      await once(locker.stdout!, "data");
+      expect(() =>
+        persistRuntimeObservationBundle({
+          databasePath: initialized.databasePath,
+          observation: bundle,
+        }),
+      ).not.toThrow();
+      await once(locker, "exit");
+    } finally {
+      if (!locker.killed) {
+        locker.kill("SIGTERM");
+      }
+    }
+  });
+
+  test("waits through a transient sqlite lock when reading difficulty classification cache", async () => {
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+    const initialized = initializeSqliteMemory({
+      runtimeStateRoot,
+      scopeId: "workspace-dev-difficulty-cache-lock-read",
+    });
+
+    const locker = spawn(
+      process.execPath,
+      [
+        "--input-type=module",
+        "-e",
+        [
+          'import { DatabaseSync } from "node:sqlite";',
+          "const databasePath = process.argv[1];",
+          "const database = new DatabaseSync(databasePath);",
+          'database.exec("PRAGMA journal_mode = WAL");',
+          'database.exec("BEGIN IMMEDIATE");',
+          'process.stdout.write("locked\\n");',
+          "setTimeout(() => {",
+          "  try {",
+          '    database.exec("COMMIT");',
+          "  } finally {",
+          "    database.close();",
+          "    process.exit(0);",
+          "  }",
+          "}, 250);",
+        ].join(" "),
+        initialized.databasePath,
+      ],
+      { stdio: ["ignore", "pipe", "pipe"] },
+    );
+
+    try {
+      await once(locker.stdout!, "data");
+      expect(
+        sqliteMemory.readDifficultyClassificationCache({
+          databasePath: initialized.databasePath,
+          conversationId: "bench-conversation",
+        }),
+      ).toBeNull();
+      await once(locker, "exit");
+    } finally {
+      if (!locker.killed) {
+        locker.kill("SIGTERM");
+      }
+    }
+  });
+
+  test("retries through a transient sqlite write lock when persisting difficulty classification cache", async () => {
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+    const initialized = initializeSqliteMemory({
+      runtimeStateRoot,
+      scopeId: "workspace-dev-difficulty-cache-lock-write",
+    });
+
+    const locker = spawn(
+      process.execPath,
+      [
+        "--input-type=module",
+        "-e",
+        [
+          'import { DatabaseSync } from "node:sqlite";',
+          "const databasePath = process.argv[1];",
+          "const database = new DatabaseSync(databasePath);",
+          'database.exec("PRAGMA journal_mode = WAL");',
+          'database.exec("BEGIN IMMEDIATE");',
+          'process.stdout.write("locked\\n");',
+          "setTimeout(() => {",
+          "  try {",
+          '    database.exec("COMMIT");',
+          "  } finally {",
+          "    database.close();",
+          "    process.exit(0);",
+          "  }",
+          "}, 250);",
+        ].join(" "),
+        initialized.databasePath,
+      ],
+      { stdio: ["ignore", "pipe", "pipe"] },
+    );
+
+    try {
+      await once(locker.stdout!, "data");
+      expect(() =>
+        sqliteMemory.upsertDifficultyClassificationCache({
+          databasePath: initialized.databasePath,
+          cache: {
+            conversationId: "bench-conversation",
+            difficulty: "easy",
+            fallbackApplied: false,
+            cachedAtMs: 1_000,
+            expiresAtMs: 2_000,
+            rubricSignals: {
+              codeIndicators: 0,
+              toolCount: 0,
+              historyTurnCount: 0,
+              instructionConstraintCount: 0,
+              contextTokens: 0,
+            },
+          },
+        }),
+      ).not.toThrow();
+      await once(locker, "exit");
+    } finally {
+      if (!locker.killed) {
+        locker.kill("SIGTERM");
+      }
+    }
+
+    expect(
+      sqliteMemory.readDifficultyClassificationCache({
+        databasePath: initialized.databasePath,
+        conversationId: "bench-conversation",
+      }),
+    ).toMatchObject({
+      difficulty: "easy",
+      fallbackApplied: false,
+    });
+  });
+
+  test("waits through a transient sqlite lock when reading advisory max difficulty recommendations", async () => {
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+    const initialized = initializeSqliteMemory({
+      runtimeStateRoot,
+      scopeId: "workspace-dev-advisory-lock-read",
+    });
+
+    const locker = spawn(
+      process.execPath,
+      [
+        "--input-type=module",
+        "-e",
+        [
+          'import { DatabaseSync } from "node:sqlite";',
+          "const databasePath = process.argv[1];",
+          "const database = new DatabaseSync(databasePath);",
+          'database.exec("PRAGMA journal_mode = WAL");',
+          'database.exec("BEGIN IMMEDIATE");',
+          'process.stdout.write("locked\\n");',
+          "setTimeout(() => {",
+          "  try {",
+          '    database.exec("COMMIT");',
+          "  } finally {",
+          "    database.close();",
+          "    process.exit(0);",
+          "  }",
+          "}, 250);",
+        ].join(" "),
+        initialized.databasePath,
+      ],
+      { stdio: ["ignore", "pipe", "pipe"] },
+    );
+
+    try {
+      await once(locker.stdout!, "data");
+      expect(
+        sqliteMemory.readAdvisoryMaxDifficultyRecommendation({
+          databasePath: initialized.databasePath,
+          endpointId: "remote.test.endpoint",
+          thresholds: {
+            minSamples: 1,
+            maxFailureRate: 0.5,
+            minQualityScore: 0.5,
+            minTokensPerSec: 1,
+          },
+        }),
+      ).toMatchObject({
+        recommendedMaxDifficulty: null,
+      });
+      await once(locker, "exit");
+    } finally {
+      if (!locker.killed) {
+        locker.kill("SIGTERM");
+      }
+    }
   });
 });
 

@@ -7,6 +7,7 @@ import {
   JUDGE_GRADING_SYSTEM_PROMPT,
   type RoutingBenchmarkCase,
   augmentCaseMessages,
+  buildTextDeliverableResponseFormat,
   buildCompareRequestMessages,
   buildHeuristicCompareRanking,
   buildJudgeGradingBrief,
@@ -188,19 +189,16 @@ interface JudgeGradeOutcome {
 function extractStructuredToolNames(
   result: BenchmarkChatCompletionsExecutionResult,
 ): readonly string[] {
-  if (!result.toolCalls?.length) {
-    return [];
-  }
+  const toolCallNames =
+    result.toolCalls?.map((toolCall) => toolCall.function.name).filter((name) => name.length > 0) ??
+    [];
+  const executedToolNames =
+    result.toolExecutions
+      ?.filter((execution) => execution.status !== "rejected")
+      .map((execution) => execution.toolName)
+      .filter((name) => name.length > 0) ?? [];
 
-  return [
-    ...new Set(
-      result.toolCalls
-
-        .map((toolCall) => toolCall.function.name)
-
-        .filter((name) => name.length > 0),
-    ),
-  ];
+  return [...new Set([...toolCallNames, ...executedToolNames])];
 }
 
 type BenchmarkToolCall = NonNullable<BenchmarkChatCompletionsExecutionResult["toolCalls"]>[number];
@@ -212,14 +210,7 @@ function mergeBenchmarkToolCalls(
   if (!latest?.length) {
     return prior;
   }
-  const merged = new Map<string, BenchmarkToolCall>();
-  for (const toolCall of prior) {
-    merged.set(toolCall.function.name, toolCall);
-  }
-  for (const toolCall of latest) {
-    merged.set(toolCall.function.name, toolCall);
-  }
-  return [...merged.values()];
+  return [...prior, ...latest];
 }
 
 function mergeStructuredToolNames(
@@ -230,13 +221,7 @@ function mergeStructuredToolNames(
 }
 
 function readTurnRawContent(result: BenchmarkChatCompletionsExecutionResult): string {
-  return [
-    readBenchmarkContentText(result),
-    readBenchmarkReasoningText(result),
-    formatBenchmarkRawResponse(result),
-  ]
-    .filter(Boolean)
-    .join("\n");
+  return formatBenchmarkRawResponse(result) || readBenchmarkContentText(result) || "";
 }
 
 export interface BenchmarkRunResult {
@@ -325,6 +310,7 @@ async function executeBenchmarkTurn(
   const requestId = `bench-${caseItem.case_id}-${endpoint.endpointId}-${requestSuffix}-${randomUUID()}`;
 
   const omitTools = options?.omitTools === true;
+  const responseFormat = buildTextDeliverableResponseFormat(caseItem);
 
   return deps.executeChatCompletions(
     {
@@ -333,6 +319,7 @@ async function executeBenchmarkTurn(
       messages,
 
       ...(caseItem.tools && !omitTools ? { tools: caseItem.tools } : {}),
+      ...(responseFormat ? { response_format: responseFormat } : {}),
     },
 
     requestId,
@@ -384,6 +371,8 @@ async function runCaseOnEndpoint(
 
   let bestCompleteness = -1;
 
+  let scaffoldedToolCallCount = 0;
+
   try {
     for (let turn = 1; turn <= BENCHMARK_MAX_ANSWER_TURNS; turn += 1) {
       answerTurns = turn;
@@ -398,8 +387,7 @@ async function runCaseOnEndpoint(
         messages,
 
         `turn${turn}`,
-
-        { omitTools: shouldOmitToolsForTurn(caseItem, accumulatedToolNames) },
+        { omitTools: shouldOmitToolsForTurn(caseItem, accumulatedToolNames, accumulatedToolCalls) },
       );
 
       const turnToolNames = extractStructuredToolNames(latestResult);
@@ -432,14 +420,19 @@ async function runCaseOnEndpoint(
         caseItem,
         extracted,
         structuredToolNames: accumulatedToolNames,
+        toolCalls: accumulatedToolCalls,
       });
 
-      if (completeness > bestCompleteness) {
+      if (completeness >= bestCompleteness) {
         bestCompleteness = completeness;
         bestExtracted = extracted;
       }
 
-      if (completeness >= 1000) {
+      const requiresPostToolFollowUp =
+        (caseItem.expected_tool_names?.length ?? 0) > 0 &&
+        accumulatedToolCalls.length > scaffoldedToolCallCount;
+
+      if (completeness >= 1000 && !requiresPostToolFollowUp) {
         break;
       }
 
@@ -460,7 +453,9 @@ async function runCaseOnEndpoint(
         accumulatedToolNames,
         extracted,
         latestResult.toolCalls,
+        accumulatedToolCalls,
       );
+      scaffoldedToolCallCount = accumulatedToolCalls.length;
     }
 
     const rawResponse = formatBenchmarkRawResponse(latestResult);

@@ -86,12 +86,53 @@ const RUNTIME_TELEMETRY_INSERT_COLUMNS = [
   "dimensions_json",
 ] as const;
 const DIFFICULTY_BUCKETS = ["easy", "medium", "hard"] as const;
+const SQLITE_BUSY_TIMEOUT_MS = 5_000;
+const SQLITE_BUSY_RETRY_DELAY_MS = 100;
+const SQLITE_BUSY_MAX_ATTEMPTS = 3;
 const MAINTENANCE_DEFAULTS = [
   { key: "backup.policy", value: "wal-copy-on-demand" },
   { key: "deletion.policy", value: "explicit-export-delete" },
   { key: "redaction.level", value: "strict" },
   { key: "retention.class", value: "standard" },
 ] as const;
+
+function openSqliteDatabase(databasePath: string): DatabaseSync {
+  const database = new DatabaseSync(databasePath);
+  database.exec(`PRAGMA busy_timeout = ${SQLITE_BUSY_TIMEOUT_MS}`);
+  return database;
+}
+
+function isSqliteBusyError(error: unknown): boolean {
+  return error instanceof Error && /database is locked|SQLITE_BUSY/i.test(error.message);
+}
+
+function sleepSync(milliseconds: number): void {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, milliseconds);
+}
+
+function withSqliteBusyRetry<T>(databasePath: string, operation: (database: DatabaseSync) => T): T {
+  let lastError: unknown = null;
+  for (let attempt = 1; attempt <= SQLITE_BUSY_MAX_ATTEMPTS; attempt += 1) {
+    const database = openSqliteDatabase(databasePath);
+    try {
+      const result = operation(database);
+      database.close();
+      return result;
+    } catch (error) {
+      lastError = error;
+      try {
+        database.close();
+      } catch {
+        // Ignore close failures while retrying the original busy error.
+      }
+      if (!isSqliteBusyError(error) || attempt >= SQLITE_BUSY_MAX_ATTEMPTS) {
+        throw error;
+      }
+      sleepSync(SQLITE_BUSY_RETRY_DELAY_MS * attempt);
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error("sqlite write failed");
+}
 
 function isRuntimeTelemetryDifficultyBucket(
   value: string | null | undefined,
@@ -2510,7 +2551,7 @@ export function upsertObservedThroughputPenaltyState(
 export function readObservedThroughputPenaltyState(
   input: ReadObservedThroughputPenaltyStateInput,
 ): ObservedThroughputPenaltyStateRecord | null {
-  const database = new DatabaseSync(input.databasePath);
+  const database = openSqliteDatabase(input.databasePath);
   const row = database
     .prepare(
       `SELECT endpoint_id, last_observed_tokens_per_sec, min_tokens_per_sec, penalty_factor, activated_at_ms, expires_at_ms, last_observation_measured_at_ms, updated_at_ms
@@ -2723,173 +2764,184 @@ export function clearBenchmarkRunArtifacts(
 }
 
 export function persistObservedBenchmarkSample(input: PersistObservedBenchmarkSampleInput): void {
-  const database = new DatabaseSync(input.databasePath);
   const sample = {
     ...input.sample,
     source_type: "benchmark" as const,
   };
-  database
-    .prepare(
-      "INSERT OR REPLACE INTO observed_performance_samples (sample_id, endpoint_id, request_id, routing_decision_id, source_type, timestamp_ms, sample_json) VALUES (?, ?, ?, ?, ?, ?, ?)",
-    )
-    .run(
-      sampleIdFor(sample),
-      sample.endpoint_id,
-      sample.request_id ?? null,
-      sample.routing_decision_id ?? null,
-      sample.source_type,
-      sample.timestamp_ms,
-      JSON.stringify(sample),
-    );
-  if (sample.difficulty_bucket) {
-    const difficultyBucket = sample.difficulty_bucket;
-    database
-      .prepare(
-        "INSERT OR REPLACE INTO observed_performance_samples_by_difficulty (sample_id, endpoint_id, difficulty_bucket, request_id, routing_decision_id, source_type, timestamp_ms, sample_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-      )
-      .run(
-        segmentedSampleIdFor(sample),
-        sample.endpoint_id,
-        difficultyBucket,
-        sample.request_id ?? null,
-        sample.routing_decision_id ?? null,
-        sample.source_type,
-        sample.timestamp_ms,
-        JSON.stringify(sample),
+  for (let attempt = 1; ; attempt += 1) {
+    const database = openSqliteDatabase(input.databasePath);
+    try {
+      database
+        .prepare(
+          "INSERT OR REPLACE INTO observed_performance_samples (sample_id, endpoint_id, request_id, routing_decision_id, source_type, timestamp_ms, sample_json) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        )
+        .run(
+          sampleIdFor(sample),
+          sample.endpoint_id,
+          sample.request_id ?? null,
+          sample.routing_decision_id ?? null,
+          sample.source_type,
+          sample.timestamp_ms,
+          JSON.stringify(sample),
+        );
+      if (sample.difficulty_bucket) {
+        const difficultyBucket = sample.difficulty_bucket;
+        database
+          .prepare(
+            "INSERT OR REPLACE INTO observed_performance_samples_by_difficulty (sample_id, endpoint_id, difficulty_bucket, request_id, routing_decision_id, source_type, timestamp_ms, sample_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+          )
+          .run(
+            segmentedSampleIdFor(sample),
+            sample.endpoint_id,
+            difficultyBucket,
+            sample.request_id ?? null,
+            sample.routing_decision_id ?? null,
+            sample.source_type,
+            sample.timestamp_ms,
+            JSON.stringify(sample),
+          );
+        const priorBucketRows = database
+          .prepare(
+            "SELECT sample_json FROM observed_performance_samples_by_difficulty WHERE endpoint_id = ? AND difficulty_bucket = ? ORDER BY timestamp_ms ASC, sample_id ASC",
+          )
+          .all(sample.endpoint_id, difficultyBucket) as Array<{ sample_json: string }>;
+        const bucketSamples = priorBucketRows.map(
+          (row) => JSON.parse(row.sample_json) as ObservedPerformanceSample,
+        );
+        const bucketProfile = aggregateObservedPerformanceSamples(bucketSamples, {
+          nowMs: sample.timestamp_ms,
+        });
+        database
+          .prepare(
+            "INSERT OR REPLACE INTO observed_profile_snapshots_by_difficulty (snapshot_id, endpoint_id, difficulty_bucket, measured_at_ms, profile_json) VALUES (?, ?, ?, ?, ?)",
+          )
+          .run(
+            `${sample.endpoint_id}:${difficultyBucket}:${bucketProfile.measured_at_ms}`,
+            sample.endpoint_id,
+            difficultyBucket,
+            bucketProfile.measured_at_ms,
+            JSON.stringify(bucketProfile),
+          );
+      }
+      const priorRows = database
+        .prepare(
+          "SELECT sample_json FROM observed_performance_samples WHERE endpoint_id = ? ORDER BY timestamp_ms ASC, sample_id ASC",
+        )
+        .all(sample.endpoint_id) as Array<{ sample_json: string }>;
+      const allSamples = priorRows.map(
+        (row) => JSON.parse(row.sample_json) as ObservedPerformanceSample,
       );
-    const priorBucketRows = database
-      .prepare(
-        "SELECT sample_json FROM observed_performance_samples_by_difficulty WHERE endpoint_id = ? AND difficulty_bucket = ? ORDER BY timestamp_ms ASC, sample_id ASC",
-      )
-      .all(sample.endpoint_id, difficultyBucket) as Array<{ sample_json: string }>;
-    const bucketSamples = priorBucketRows.map(
-      (row) => JSON.parse(row.sample_json) as ObservedPerformanceSample,
-    );
-    const bucketProfile = aggregateObservedPerformanceSamples(bucketSamples, {
-      nowMs: sample.timestamp_ms,
-    });
-    database
-      .prepare(
-        "INSERT OR REPLACE INTO observed_profile_snapshots_by_difficulty (snapshot_id, endpoint_id, difficulty_bucket, measured_at_ms, profile_json) VALUES (?, ?, ?, ?, ?)",
-      )
-      .run(
-        `${sample.endpoint_id}:${difficultyBucket}:${bucketProfile.measured_at_ms}`,
-        sample.endpoint_id,
-        difficultyBucket,
-        bucketProfile.measured_at_ms,
-        JSON.stringify(bucketProfile),
-      );
+      const profile = aggregateObservedPerformanceSamples(allSamples, {
+        nowMs: sample.timestamp_ms,
+      });
+      database
+        .prepare(
+          "INSERT OR REPLACE INTO observed_profile_snapshots (snapshot_id, endpoint_id, measured_at_ms, profile_json) VALUES (?, ?, ?, ?)",
+        )
+        .run(
+          `${sample.endpoint_id}:${profile.measured_at_ms}`,
+          sample.endpoint_id,
+          profile.measured_at_ms,
+          JSON.stringify(profile),
+        );
+      return;
+    } catch (error) {
+      if (!isSqliteBusyError(error) || attempt >= SQLITE_BUSY_MAX_ATTEMPTS) {
+        throw error;
+      }
+      sleepSync(SQLITE_BUSY_RETRY_DELAY_MS * attempt);
+    } finally {
+      database.close();
+    }
   }
-  const priorRows = database
-    .prepare(
-      "SELECT sample_json FROM observed_performance_samples WHERE endpoint_id = ? ORDER BY timestamp_ms ASC, sample_id ASC",
-    )
-    .all(sample.endpoint_id) as Array<{ sample_json: string }>;
-  const allSamples = priorRows.map(
-    (row) => JSON.parse(row.sample_json) as ObservedPerformanceSample,
-  );
-  const profile = aggregateObservedPerformanceSamples(allSamples, {
-    nowMs: sample.timestamp_ms,
-  });
-  database
-    .prepare(
-      "INSERT OR REPLACE INTO observed_profile_snapshots (snapshot_id, endpoint_id, measured_at_ms, profile_json) VALUES (?, ?, ?, ?)",
-    )
-    .run(
-      `${sample.endpoint_id}:${profile.measured_at_ms}`,
-      sample.endpoint_id,
-      profile.measured_at_ms,
-      JSON.stringify(profile),
-    );
-  database.close();
 }
 
 export function persistRuntimeObservationBundle(input: PersistRuntimeObservationBundleInput): void {
-  const database = new DatabaseSync(input.databasePath);
   const observation = input.observation;
   const telemetryRecord = toRuntimeTelemetryRecord(observation);
-  database
-    .prepare(
-      "INSERT OR REPLACE INTO runtime_observations (request_id, routing_decision_id, endpoint_id, conversation_id, created_at_ms, observation_json) VALUES (?, ?, ?, ?, ?, ?)",
-    )
-    .run(
-      observation.requestId,
-      observation.routingDecisionId,
-      observation.endpointId,
-      observation.conversationId,
-      observation.usageEvent.timestamp_ms,
-      JSON.stringify(observation),
-    );
-  database
-    .prepare(
-      "INSERT OR REPLACE INTO observed_performance_samples (sample_id, endpoint_id, request_id, routing_decision_id, source_type, timestamp_ms, sample_json) VALUES (?, ?, ?, ?, ?, ?, ?)",
-    )
-    .run(
-      sampleIdFor(observation.observedPerformance.sample),
-      observation.endpointId,
-      observation.observedPerformance.sample.request_id ?? null,
-      observation.observedPerformance.sample.routing_decision_id ?? null,
-      observation.observedPerformance.sample.source_type,
-      observation.observedPerformance.sample.timestamp_ms,
-      JSON.stringify(observation.observedPerformance.sample),
-    );
-  if (observation.observedPerformance.sample.difficulty_bucket) {
-    const difficultyBucket = observation.observedPerformance.sample.difficulty_bucket;
+  withSqliteBusyRetry(input.databasePath, (database) => {
     database
       .prepare(
-        "INSERT OR REPLACE INTO observed_performance_samples_by_difficulty (sample_id, endpoint_id, difficulty_bucket, request_id, routing_decision_id, source_type, timestamp_ms, sample_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT OR REPLACE INTO runtime_observations (request_id, routing_decision_id, endpoint_id, conversation_id, created_at_ms, observation_json) VALUES (?, ?, ?, ?, ?, ?)",
       )
       .run(
-        segmentedSampleIdFor(observation.observedPerformance.sample),
+        observation.requestId,
+        observation.routingDecisionId,
         observation.endpointId,
-        difficultyBucket,
+        observation.conversationId,
+        observation.usageEvent.timestamp_ms,
+        JSON.stringify(observation),
+      );
+    database
+      .prepare(
+        "INSERT OR REPLACE INTO observed_performance_samples (sample_id, endpoint_id, request_id, routing_decision_id, source_type, timestamp_ms, sample_json) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      )
+      .run(
+        sampleIdFor(observation.observedPerformance.sample),
+        observation.endpointId,
         observation.observedPerformance.sample.request_id ?? null,
         observation.observedPerformance.sample.routing_decision_id ?? null,
         observation.observedPerformance.sample.source_type,
         observation.observedPerformance.sample.timestamp_ms,
         JSON.stringify(observation.observedPerformance.sample),
       );
-    const priorBucketRows = database
-      .prepare(
-        "SELECT sample_json FROM observed_performance_samples_by_difficulty WHERE endpoint_id = ? AND difficulty_bucket = ? ORDER BY timestamp_ms ASC, sample_id ASC",
-      )
-      .all(observation.endpointId, difficultyBucket) as Array<{
-      sample_json: string;
-    }>;
-    const bucketSamples = priorBucketRows.map(
-      (row) => JSON.parse(row.sample_json) as ObservedPerformanceSample,
-    );
-    const bucketProfile = aggregateObservedPerformanceSamples(bucketSamples, {
-      nowMs: observation.observedPerformance.sample.timestamp_ms,
-    });
+    if (observation.observedPerformance.sample.difficulty_bucket) {
+      const difficultyBucket = observation.observedPerformance.sample.difficulty_bucket;
+      database
+        .prepare(
+          "INSERT OR REPLACE INTO observed_performance_samples_by_difficulty (sample_id, endpoint_id, difficulty_bucket, request_id, routing_decision_id, source_type, timestamp_ms, sample_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        )
+        .run(
+          segmentedSampleIdFor(observation.observedPerformance.sample),
+          observation.endpointId,
+          difficultyBucket,
+          observation.observedPerformance.sample.request_id ?? null,
+          observation.observedPerformance.sample.routing_decision_id ?? null,
+          observation.observedPerformance.sample.source_type,
+          observation.observedPerformance.sample.timestamp_ms,
+          JSON.stringify(observation.observedPerformance.sample),
+        );
+      const priorBucketRows = database
+        .prepare(
+          "SELECT sample_json FROM observed_performance_samples_by_difficulty WHERE endpoint_id = ? AND difficulty_bucket = ? ORDER BY timestamp_ms ASC, sample_id ASC",
+        )
+        .all(observation.endpointId, difficultyBucket) as Array<{
+        sample_json: string;
+      }>;
+      const bucketSamples = priorBucketRows.map(
+        (row) => JSON.parse(row.sample_json) as ObservedPerformanceSample,
+      );
+      const bucketProfile = aggregateObservedPerformanceSamples(bucketSamples, {
+        nowMs: observation.observedPerformance.sample.timestamp_ms,
+      });
+      database
+        .prepare(
+          "INSERT OR REPLACE INTO observed_profile_snapshots_by_difficulty (snapshot_id, endpoint_id, difficulty_bucket, measured_at_ms, profile_json) VALUES (?, ?, ?, ?, ?)",
+        )
+        .run(
+          `${observation.endpointId}:${difficultyBucket}:${bucketProfile.measured_at_ms}`,
+          observation.endpointId,
+          difficultyBucket,
+          bucketProfile.measured_at_ms,
+          JSON.stringify(bucketProfile),
+        );
+    }
     database
       .prepare(
-        "INSERT OR REPLACE INTO observed_profile_snapshots_by_difficulty (snapshot_id, endpoint_id, difficulty_bucket, measured_at_ms, profile_json) VALUES (?, ?, ?, ?, ?)",
+        "INSERT OR REPLACE INTO observed_profile_snapshots (snapshot_id, endpoint_id, measured_at_ms, profile_json) VALUES (?, ?, ?, ?)",
       )
       .run(
-        `${observation.endpointId}:${difficultyBucket}:${bucketProfile.measured_at_ms}`,
+        `${observation.endpointId}:${observation.observedPerformance.profile.measured_at_ms}`,
         observation.endpointId,
-        difficultyBucket,
-        bucketProfile.measured_at_ms,
-        JSON.stringify(bucketProfile),
+        observation.observedPerformance.profile.measured_at_ms,
+        JSON.stringify(observation.observedPerformance.profile),
       );
-  }
-  database
-    .prepare(
-      "INSERT OR REPLACE INTO observed_profile_snapshots (snapshot_id, endpoint_id, measured_at_ms, profile_json) VALUES (?, ?, ?, ?)",
-    )
-    .run(
-      `${observation.endpointId}:${observation.observedPerformance.profile.measured_at_ms}`,
-      observation.endpointId,
-      observation.observedPerformance.profile.measured_at_ms,
-      JSON.stringify(observation.observedPerformance.profile),
-    );
-  database
-    .prepare(
-      `INSERT OR REPLACE INTO runtime_telemetry_records (${RUNTIME_TELEMETRY_INSERT_COLUMNS.join(", ")}) VALUES (${RUNTIME_TELEMETRY_INSERT_COLUMNS.map(() => "?").join(", ")})`,
-    )
-    .run(...runtimeTelemetryInsertValues(telemetryRecord));
-  database.close();
+    database
+      .prepare(
+        `INSERT OR REPLACE INTO runtime_telemetry_records (${RUNTIME_TELEMETRY_INSERT_COLUMNS.join(", ")}) VALUES (${RUNTIME_TELEMETRY_INSERT_COLUMNS.map(() => "?").join(", ")})`,
+      )
+      .run(...runtimeTelemetryInsertValues(telemetryRecord));
+  });
 }
 
 export interface PersistRuntimeTelemetryFailureInput {
@@ -2907,7 +2959,6 @@ export interface PersistRuntimeTelemetryFailureInput {
 }
 
 export function persistRuntimeTelemetryFailure(input: PersistRuntimeTelemetryFailureInput): void {
-  const database = new DatabaseSync(input.databasePath);
   const createdAtMs = Date.now();
   const routingDecisionId = input.routingDecisionId ?? `decision-${input.requestId}`;
   const endpointId = input.endpointId ?? "routing.failed.pre-execution";
@@ -2917,12 +2968,13 @@ export function persistRuntimeTelemetryFailure(input: PersistRuntimeTelemetryFai
     endpointId,
     createdAtMs,
   );
-  database
-    .prepare(
-      `INSERT OR REPLACE INTO runtime_telemetry_records (${RUNTIME_TELEMETRY_INSERT_COLUMNS.join(", ")}) VALUES (${RUNTIME_TELEMETRY_INSERT_COLUMNS.map(() => "?").join(", ")})`,
-    )
-    .run(...runtimeTelemetryInsertValues(telemetryRecord));
-  database.close();
+  withSqliteBusyRetry(input.databasePath, (database) => {
+    database
+      .prepare(
+        `INSERT OR REPLACE INTO runtime_telemetry_records (${RUNTIME_TELEMETRY_INSERT_COLUMNS.join(", ")}) VALUES (${RUNTIME_TELEMETRY_INSERT_COLUMNS.map(() => "?").join(", ")})`,
+      )
+      .run(...runtimeTelemetryInsertValues(telemetryRecord));
+  });
 }
 
 export function readRuntimeObservationBundle(
@@ -2944,7 +2996,7 @@ export function readRuntimeObservationBundle(
 export function readObservedPerformanceSamples(
   input: ReadObservedPerformanceSamplesInput,
 ): readonly ObservedPerformanceSample[] {
-  const database = new DatabaseSync(input.databasePath);
+  const database = openSqliteDatabase(input.databasePath);
   const rows = (
     input.difficultyBucket
       ? database
@@ -2968,7 +3020,7 @@ export function readObservedPerformanceSamples(
 export function readLatestObservedProfile(
   input: ReadLatestObservedProfileInput,
 ): ObservedPerformanceProfile | null {
-  const database = new DatabaseSync(input.databasePath);
+  const database = openSqliteDatabase(input.databasePath);
   const row = (
     input.difficultyBucket
       ? database
@@ -2998,7 +3050,7 @@ export function readLatestObservedProfilesByEndpointIds(
     return {};
   }
 
-  const database = new DatabaseSync(input.databasePath);
+  const database = openSqliteDatabase(input.databasePath);
   const placeholders = input.endpointIds.map(() => "?").join(", ");
   const rows = (
     input.difficultyBucket
@@ -3100,19 +3152,19 @@ export function readAdvisoryMaxDifficultyRecommendation(
 export function upsertDifficultyClassificationCache(
   input: UpsertDifficultyClassificationCacheInput,
 ): void {
-  const database = new DatabaseSync(input.databasePath);
-  database
-    .prepare(
-      "INSERT OR REPLACE INTO difficulty_classification_cache (conversation_id, cache_json, updated_at_ms) VALUES (?, ?, ?)",
-    )
-    .run(input.cache.conversationId, JSON.stringify(input.cache), input.cache.cachedAtMs);
-  database.close();
+  withSqliteBusyRetry(input.databasePath, (database) => {
+    database
+      .prepare(
+        "INSERT OR REPLACE INTO difficulty_classification_cache (conversation_id, cache_json, updated_at_ms) VALUES (?, ?, ?)",
+      )
+      .run(input.cache.conversationId, JSON.stringify(input.cache), input.cache.cachedAtMs);
+  });
 }
 
 export function readDifficultyClassificationCache(
   input: ReadDifficultyClassificationCacheInput,
 ): DifficultyClassificationCacheRecord | null {
-  const database = new DatabaseSync(input.databasePath);
+  const database = openSqliteDatabase(input.databasePath);
   const row = database
     .prepare("SELECT cache_json FROM difficulty_classification_cache WHERE conversation_id = ?")
     .get(input.conversationId) as
